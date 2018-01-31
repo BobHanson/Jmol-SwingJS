@@ -5,7 +5,7 @@ import java.net.URL;
 import java.util.Map;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolToJSmolInterface;
+import org.jmol.apijs.JmolToJSmolInterface;
 import org.jmol.script.ScriptContext;
 import org.jmol.viewer.Viewer;
 

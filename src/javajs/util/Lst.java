@@ -48,17 +48,7 @@ public class Lst<V> extends ArrayList<V> {
   }
   
   public boolean addLast(V v) {
-    /**
-     * no overloading of add(Object) in JavaScript
-     * 
-     * @j2sNative
-     * 
-     * return this.add1(v);
-     *  
-     */
-    {
       return super.add(v);
-    }
   }
   
   /**

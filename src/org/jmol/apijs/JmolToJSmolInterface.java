@@ -1,4 +1,4 @@
-package org.jmol.api;
+package org.jmol.apijs;
 
 import java.util.Map;
 

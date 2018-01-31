@@ -31,7 +31,7 @@ import java.util.Map;
 import javajs.api.JSInterface;
 import javajs.util.PT;
 
-import org.jmol.api.JmolToJSmolInterface;
+import org.jmol.apijs.JmolToJSmolInterface;
 import org.jmol.util.GenericApplet;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
