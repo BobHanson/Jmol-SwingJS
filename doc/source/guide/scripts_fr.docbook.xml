@@ -1,0 +1,66 @@
+<!--
+  French translation 
+  Translated from default version : scripts.docbook.xml (v 1.7)
+-->
+<chapter id="rasmol" xreflabel="RasMol/Chime Scripts">
+  <title id="rasmol.title">Scripts RasMol/Chime</title>
+  <para>
+    <note>
+      <title>Nouveau Moteur de Script</title>
+      <para>
+        Le moteur de script a &eacute;t&eacute; compl&egrave;tement
+        r&eacute;&eacute;crit avec la version 6 de Jmol. Depuis cette
+        &eacute;criture il doit &ecirc;tre consid&eacute;r&eacute; comme
+        du code *alpha test*. Veuillez s'il vous plait fournir un retour en
+        cas de bugs et/ou de comportement inattendu et/ou de demande de
+        fonctions. Vous pouvez le faire par la page d'accueil de Jmol
+        <ulink url="http://jmol.sourceforge.net">jmol.sourceforge.net</ulink>
+      </para>
+    </note>
+  </para>
+  <para>
+    Jmol support le langage de scription RasMol d&eacute;fini par RasMol.
+    Des informations &agrave; propos de RasMol peuvent se trouver &agrave;
+    <ulink url="http://www.openrasmol.org/">www.openrasmol.org</ulink>
+    L'URL actuelle pour la documentation compl&egrave;te de RasMol est:
+    <ulink url="http://www.openrasmol.org/doc/rasmol.htm">
+      www.openrasmol.org/doc/rasmol.htm
+    </ulink>.
+  </para>
+  <para>
+    Le plug-in Chime pour les navigateurs internet &eacute;tait bas&eacute;
+    sur le code source de RasMol. Diverses extensions ont &eacute;t&eacute;
+    ajout&eacute;es, y compris des commandes de script additionnelles.
+    Des informations &agrave; propos de Chime peuvent se trouver &agrave;
+    <ulink url="http://www.mdlchime.com/">www.mdlchime.com</ulink>
+    L'URL actuelle pour les commandes &eacute;tendues de script chime est:
+    <ulink url="http://www.mdlchime.com/chime/chimerasmol.html">
+      www.mdlchime.com/chime/chimerasmol.html
+    </ulink>.
+  </para>
+  <para>
+    Jmol supporte acutellement beaucoup de commandes de script RasMol/Chime.
+    Notre but est en fin de compte de fournir un support complet sur le script.
+    Ceci fournira une possibilit&eacute; de migration pour ceux qui souhaitent
+    passer &agrave; une solution open source qui supporte un plus grand nombre
+    de formats de fichiers sur une vari&eacute;t&eacute; plus grande de
+    plate-formes mat&eacute;rielles.
+  </para>
+  <para>
+    Ayez l'amabilit&eacute; de nous faire un retoure sur les fonctions que
+    vous utilisez et qui ne sont pas actuellement impl&eacute;ment&eacute;es.
+    Ceci nous aidera &agrave; mettre des priorit&eacute;s dans nos futurs
+    d&eacute;veloppements.
+  </para>
+  <section id="RasMolChimeCommands">
+    <title>Commandes RasMol/Chime</title>
+    <para>
+      Cette documentation est g&eacute;n&eacute;r&eacute;e automatiquement
+      &agrave; partir du contenu du site web:
+      <ulink url="http://www.stolaf.edu/people/hansonr/jmol/docs/">
+        www.stolaf.edu/people/hansonr/jmol/docs/
+      </ulink>.
+    </para>
+    &guideScriptCommands;
+  </section>	
+</chapter>

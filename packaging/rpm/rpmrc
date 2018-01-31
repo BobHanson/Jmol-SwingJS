@@ -1,0 +1,2 @@
+include:        /usr/lib/rpm/rpmrc
+macrofiles: /usr/lib/rpm/macros:/usr/lib/rpm/%{_target}/macros:/etc/rpm/macros.specspo:/etc/rpm/macros:/etc/rpm/%{_target}/macros:@dist.dir@/rpmmacros

@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta content="text/html; charset=windows-1252"
+      http-equiv="content-type">
+    <title>Specifying Path to Jmol Applet</title>
+    <meta content="J. Gutow" name="author">
+    <meta content="Instructions on relative paths" name="description">
+  </head>
+  <body>
+    <hr>
+    <table style="text-align: left; width: 100%;" border="0"
+      cellpadding="2" cellspacing="2">
+      <tbody>
+        <tr valign="top">
+          <td><small>Page Templates</small></td>
+          <td><small>Set Up</small></td>
+        </tr>
+        <tr valign="top">
+          <td><small>&gt; <a href="pop_in_instructions.html">Pop-In</a><br>
+              &gt; <a href="script_btn_instructions.html">Scriptbutton</a><br>
+              &gt; <a href="widget_instructions.html">Widgets</a><br>
+            </small></td>
+          <td><small>&gt;
+              Path to Jmol<br>
+              &gt; <a href="Installing_Applet.html">Jmol on your server</a><br>
+              &gt; <a href="Testing_Pages_Locally.html">Testing locally
+                (no server)</a><br>
+            </small></td>
+        </tr>
+      </tbody>
+    </table>
+    <hr>
+    <p style="text-align: center; font-weight: bold;">The
+      Path to the JSmol/Jmol </p>
+    <p><b>Relative server path to jar files.</b><br>
+      Designate the relative path for your SERVER to
+      the directory 'jsmol' from the directory
+      containing the HTML file. </p>
+    <p><b>Relative local path to jar files.</b><br>
+      Designate the relative path for a LOCAL HARD DRIVE to
+      the directory 'jsmol' from the directory
+      containing the HTML file. Because of recent security changes the
+      only option is to use '.', which will cause Jmol to create the
+      'jsmol' directory inside same folder as the HTML file.&nbsp; The
+      jsmol directory may be removed before uploading the page to your
+      server. </p>
+    <p>Do not forget to account for the fact that the page produced by
+      this
+      program is inside a
+      folder (directory) that you will be adding to your web site.&nbsp;
+    </p>
+    <p>Server Example: 'jsmol' directory is inside the directory
+      /www/applets on the server, and you will be creating
+      directory /www/yourname/thispage to hold the HTML files.
+      The correct path to the JSmol/Jmol is then <b>../../applets/jsmol.</b>
+    </p>
+    <p>Local Example: only '.', without quotes works. </p>
+  </body>
+</html>

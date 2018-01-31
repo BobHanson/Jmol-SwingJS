@@ -1,0 +1,14 @@
+<!--
+  French translation 
+  Translated from default version : intro.docbook.xml (v 1.2)
+-->
+<chapter id="Introduction">
+  <title>Introduction</title>
+  <para>
+    L'Applet Jmol permet un affichage 3D de mol&eacute;cules dans une page web.
+  </para>
+  <para>
+    A l'exception de quelques classes d'emballage, le code de l'Applet Jmol
+    est partag&eacute; avec l'Application Jmol.
+  </para>
+</chapter>

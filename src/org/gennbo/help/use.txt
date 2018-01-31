@@ -1,0 +1,20 @@
+USE.t filename  (use file 'filename' of type 't'
+                       to initiate a modeling session)
+      
+      't' parameters: 
+       .v   = valence coordinate VFILE ([.vfi])
+       .c   = cartesian coordinate CFILE (.cfi)
+       .a   = NBO archive file (.47)
+       .adf = ADF input file (.adf)
+       .g   = Gaussian input file (.gau)
+       .gms = GAMESS input file (.gms)
+       .jag = Jaguar input file (.jag)
+       .l   = Gaussian log file (.log)
+       .mp  = Molpro input file (.mp)
+       .nw  = NWChem input file (.nw)
+       .orc = Orca input file (.orc)
+       .pqs = PQS input file (.pqs)
+       .qc  = Q-Chem input file (.qc)
+      Example:
+       USE.G ACETIC   (use Gaussian-type ACETIC.GAU
+                      input file to start session)

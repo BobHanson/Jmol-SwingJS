@@ -1,0 +1,23 @@
+<project name="JmolEclipseBuild" default="fullBuild" basedir=".">
+
+  <property name="classes.dir" value="build/classes" />
+  <property name="classes.eclipse.dir" value="bin" />
+
+  <target name="fullBuild" id="fullBuild" depends="preBuild,postBuild"
+          description="Default: full build" />
+
+  <target name="preBuild" id="preBuild" depends=""
+          description="Pre-build steps for Eclipse" />
+
+  <target name="postBuild" id="postBuild" depends="copyClasses"
+          description="Post-build steps for Eclipse" />
+
+  <target name="copyClasses"
+  	      description="Copy precompiled classes to Eclipse build directory">
+    <copy includeemptydirs="false" todir="${classes.eclipse.dir}" failonerror="false">
+      <fileset dir="${classes.dir}" includes="org/jmol/translation/**/*.class">
+      </fileset>
+    </copy>
+  </target>
+
+</project>

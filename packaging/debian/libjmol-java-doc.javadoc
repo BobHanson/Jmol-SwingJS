@@ -1,0 +1,10 @@
+org.jmol.adapter.cdk
+org.jmol.adapter.smarter
+org.jmol.api
+org.jmol.applet
+org.jmol.appletwrapper
+org.jmol.bspt
+org.jmol.g3d
+org.jmol.viewer
+org.openscience.jmol.app
+org.openscience.jmol.ui

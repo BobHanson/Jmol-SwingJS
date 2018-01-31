@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<project name="JmolPMD" default="pmd" basedir=".">
+
+    <property name="lib" value="develjars" />
+    <property name="build" value="build" />
+    <property name="src" value="src" />
+    <property name="reports.tests" value="reports" />
+
+    <path id="pmd.classpath">
+        <pathelement location="${build}"/>
+        <fileset dir="${lib}">
+          <include name="asm-3.1.jar"/>
+          <include name="junit-4.4.jar"/>
+          <include name="pmd-4.1.jar"/>
+          <include name="jaxen-1.1.1.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compileRenderer" id="compileRenderer">
+        <javac srcdir="pmd" destdir="${build}"
+               includes="net/sourceforge/pmd/renderers/SummaryVBHTMLRenderer.java">
+            <classpath refid="pmd.classpath" />
+        </javac>
+    </target>
+
+    <taskdef name="pmd" id="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="pmd.classpath"/>
+
+    <target id="pmd" name="pmd"
+            description="Performs a PMD checks on the Jmol source code.">
+
+      <echo message="Running PMD checks..." />
+
+      <mkdir dir="${build}/pmd"/>
+      <pmd shortFilenames="true" rulesetfiles="pmd.config.xml">
+        <formatter type="html" toFile="${build}/pmd/jmol.html"/>
+        <fileset dir="${src}">
+          <include name="**/*.java"/>
+        </fileset>
+      </pmd>
+    </target>
+
+</project>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE history
+[
+<!ENTITY contributors SYSTEM "history/contributors.xml">
+<!ENTITY changes      SYSTEM "history/changes_fr.xml">
+]
+>
+<!--
+  French translation 
+  Translated from default version : JmolHistory.xml (v 1.48)
+-->
+<history>
+  &contributors;
+  &changes;
+</history>

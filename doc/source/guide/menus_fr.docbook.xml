@@ -1,0 +1,171 @@
+<!--
+  French translation 
+  Translated from default version : menus.docbook.xml (v 1.4)
+-->
+<chapter id="menudesc">
+  <title>Description des Menus</title>
+  <section id="FileMenu">
+    <title>Le menu Fichier</title>
+    <section id="FileMenuOpen">
+      <title>Ouvrir</title>
+      <para>
+        Ouvre des fichiers dans Jmol.
+        Jmol peut lire des fichiers des types suivants:
+        <itemizedlist>
+          <listitem><para>
+            <ulink url="http://www.abinit.org/">ABINIT</ulink>
+          </para></listitem>
+          <listitem><para>ACES II</para></listitem>
+          <listitem><para>ADF - Amsterdam Density Functional</para></listitem>
+          <listitem><para>
+            <ulink url="http://www.xml-cml.org/">CML v2.0</ulink>
+          </para></listitem>
+          <listitem><para>GAMESS</para></listitem>
+          <listitem><para>Gaussian 92/94/98</para></listitem>
+          <listitem><para>Ghemical MM</para></listitem>
+          <listitem><para>Jaguar</para></listitem>
+          <listitem><para>MDL molfile</para></listitem>
+          <listitem><para>
+            <ulink url="http://www.pdb.org">PDB</ulink>
+          </para></listitem>
+          <listitem><para>CIF/mmCIF</para></listitem>
+          <listitem><para>XYZ (single and multiple frame)</para></listitem>
+        </itemizedlist>
+      </para>
+    </section>
+    <section id="FileMenuRecentFiles">
+      <title>Fichiers R&eacute;cents...</title>
+      <para>
+        Ouvre une bo&icirc;te de dialogue qui contient une des fichiers ouverts
+        r&eacute;cemment oar le programme. Le fichier peut &ecirc;tre ouvert
+        &agrave; nouveau en le s&eacute;lectionnant et en cliquant sur le
+        bouton Ouvrir.
+      </para>
+    </section>
+    <section id="FileMenuScript">
+      <title>Script...</title>
+      <para>
+        Ouvre une fen&ecirc;tre o&ugrave; des commandes de script
+        Jmol/Rasmol/Chime peuvent &ecirc;tre ex&eacute;cut&eacute;es.
+        <xref linkend="rasmol" />
+        contient des informations sur les scripts RasMol/Chime.
+      </para>
+    </section>
+    
+    <section id="FileMenuExport">
+      <title>Exporter</title>
+      <section id="FileMenuExportImage">
+        <title>Exporter -&gt; Exporter une Image...</title>
+        <para>
+          Jmol peut exporter des images couleur 24 bits des types suivants:
+          <itemizedlist>
+            <listitem><para>JPG</para></listitem>
+            <listitem><para>PNG</para></listitem>
+            <listitem><para>PPM</para></listitem>
+          </itemizedlist>
+        </para>
+      </section>
+      <section id="FileMenuExportPovray">
+        <title>Exporter -&gt; Rendu dans pov-ray...</title>
+        <para>
+          Pour des images de haute qualit&eacute;, Jmol s'interface avec le
+          ray tracer POV-Ray. Pour utiliser cette possibilit&eacute;, vous
+          devez avoir l'utilitaire en ligne de commande
+          <command>povray</command> install&eacute;. Vous pouvez le
+          t&eacute;l&eacute;charger depuis
+          <ulink url="http://www.povray.org/">www.povray.org</ulink>.
+        </para>
+      </section>
+    </section>
+    <section id="FileMenuPrint">
+      <title>Imprimer</title>
+      <para>
+        Des fichiers Postscript peuvent &ecirc;tre export&eacute;es directement
+        vers l'imprimante ou vers un fichier.
+      </para>
+    </section>
+    <section id="FileMenuExit">
+      <title>Quitter</title>
+      <para>Quitte cette session Jmol.</para>
+    </section>
+  </section>
+  <section id="EditMenu">
+    <title>Le menu Edition</title>
+    <section id="EditMenuSelectAll">
+      <title>Tout s&eacute;lectionner</title>
+      <para>
+        S&eacute;lectionne tous les atomes dans l'&eacute;cran de
+        visualisation.
+      </para>
+    </section>
+    <section id="EditMenuDeselectAll">
+      <title>Tout D&eacute;s&eacute;lectionner</title>
+      <para>
+        D&eacute;s&eacute;lectionne tous les atomes dans l'&eacute;cran de
+        visualisation.
+      </para>
+    </section>
+    <section id="EditMenuPreferences">
+      <title>Options...</title>
+      <para>
+        Ce menu ouvre une bo&icirc;te de dialogue pour modifier les
+        param&egrave;tres et laisser l'utilisateur personnaliser ses options.
+        Ces r&eacute;glages sont sauvegard&eacute;s d'une session &agrave;
+        l'autre.
+      </para>
+    </section>
+  </section>
+  <section id="DisplayMenu">
+    <title>Le menu Affichage</title>
+    <para>
+      Dans ce menu les r&eacute;glages/styles d'affichage peuvent &ecirc;tre
+      modifi&eacute;s.
+    </para>
+    <para>
+      En g&eacute;n&eacute;ral, les styles d'affichage sont appliqu&eacute;s
+      au groupe d'atomes et de liens actuellement s&eacute;lectionn&eacute;s.
+    </para>
+    <para>
+      Par d&eacute;faut, tous les atomes et les liens dans une mol&eacute;cule
+      sont s&eacute;lectionn&eacute;s.
+    </para>
+    <para>
+      Vous pouvez s&eacute;lectionner des atomes/liens individuels en utilisant
+      le curseur de s&eacute;lection ou en utilisant des commandes de script.
+    </para>
+  </section>
+  <section id="ViewMenu">
+    <title>Le menu Vue</title>
+    <section id="ViewMenuDirection">
+      <title>Face/Haut/Bas/Droite/Gauche</title>
+      <para>
+        S'explique de soi-m&ecirc;me. Utile avec les structures
+        cristallines.
+      </para>
+    </section>
+  </section>
+  <section id="HelpMenu">
+    <title>Le menu Aide</title>
+    <section id="HelpMenuAbout">
+      <title>A propos de Jmol</title>
+      <para>
+        Ouvre une fen&ecirc;tre avec des informations de copyright pour ce
+        logiciel.
+      </para>
+    </section>
+    <section id="HelpMenuUserGuide">
+      <title>Guide Utilisateur</title>
+      <para>Affiche cette documentation.</para>
+    </section>
+    <section id="HelpMenuNew">
+      <title>Les Nouveaut&eacute;s</title>
+      <para>Montre les modifications entre versions.</para>
+    </section>
+    <section id="HelpMenuConsole">
+      <title>Console Jmol</title>
+      <para>
+        Montre la sortie de System.out et System.err.
+      </para>
+    </section>
+  </section>
+</chapter>

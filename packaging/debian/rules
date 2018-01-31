@@ -1,0 +1,80 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DOCBOOK_DIR=/usr/share/xml/docbook/stylesheet/nwalsh
+
+# include dpatch
+
+include /usr/share/dpatch/dpatch.make
+
+# define compile options
+
+ANT = /usr/bin/ant
+
+JAVADFLAGS += -Ddeprecation=on -Doptimization=off -Ddebug=on
+
+# begin building
+
+build: build-stamp
+
+build-stamp: patch
+	dh_testdir
+	cp appletweb/chime2jmol.pl appletweb/chime2jmol
+	cd debian && xsltproc $(DOCBOOK_DIR)/manpages/docbook.xsl *.[12345678].xml
+	$(ANT) $(JAVADFLAGS) jar applet-jar io-jar apis-jar doc
+	touch build-stamp
+
+clean: unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp patch-stamp
+	$(ANT) spotless
+	-rm -f debian/*.[12345678]
+	-rm *.jar appletweb/chime2jmol
+	dh_clean 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+
+
+# Build architecture-independent files here.
+binary-arch: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installchangelogs -i build/doc/JmolHistory/ChangeLog.html
+	dh_installdocs -i
+	dh_installexamples -i
+	dh_install -i
+	dh_installmenu -i
+	dh_installmime -i
+	dh_installman -i
+	dh_installexamples -i
+	dh_link -i
+#	dh_javadoc -i -plibcdk-java-doc
+	dh_strip -i
+	dh_compress -i
+	gzip debian/jmol-applet/usr/share/doc/jmol-applet/examples/caffeine.xyz
+	dh_fixperms -i
+	dh_perl -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

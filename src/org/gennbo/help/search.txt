@@ -1,0 +1,28 @@
+NBOSearch: COMMAND SYNTAX AND PROGRAM OVERVIEW
+      PROGRAM OVERVIEW:
+Follow menu prompts through the decision tree to the keyword module and datum of interest. Each menu appears with 'Current [V-list] settings' and a scrolling list of output values. All output lines are also echoed to an external NBOLOG$$.DAT file and error messages go to NBOERR$$.DAT for later reference.
+
+      GENERAL 'M V n' COMMAND SYNTAX:
+NBOSearch user responses generally consist of 'commands' (replies to prompts) of the form 'M (V (n))', where
+         M (integer)   = [M]enu selection from displayed items
+         V (character) = [V]ariable data type to be selected
+                         [J](obname)
+                         [B](asis)
+                         [O](rbital number)
+                         [A](tom number, in context)
+                         [U](nit number)
+                         [d](onor NBO number)
+                         [a](cceptor NBO number, in context)
+         n (integer)   = [n]umber of the desired O/A/U/d/a selection
+      Responses may also be of simple 'M', 'V', or 'Vn' form , where
+        'M' : selects a numbered menu choice (for current [V] choices)
+        'V' : requests a menu of [V] choices
+        'Vn': selects [V] number 'n' (and current [S])
+Note that [V]-input is case-insensitive, so 'A' (or 'a') is interpreted as 'atom' or 'acceptor' according to context.  Note also that 'Vn' commands can be given in separated 'V n' form. Although not explicitly included in each active [V]-select list, the 'H'(elp) key is recognized at each prompt.
+
+      For NRT search (only)
+variable [V] may also be 'R' (for resonance structure' and A' (for 'interacting atom'). Current A (atom) and A' (interacting atom) values determine the current A-A\' 'bond' selection small fractional bond order.)
+
+      EXAMPLES:
+        '2 a7'  : requests menu item 2 for atom 7 (if A-select active)
+        '3 o2'  : requests menu item 3 for orbital 2

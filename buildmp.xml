@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<project name="MPJmolApp" default="jar" basedir=".">
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="jar.dir" value="${build.dir}"/>
+	<property name="classes.dir" value="${build.dir}/classes"/>
+	<property name="main-class" value="org.molecularplayground.MPJmolApp"/>
+	
+	<path id="compile.classpath">
+	 <fileset dir="${build.dir}" includes="Jmol.jar"/> 
+<!--		<fileset dir="${lib.dir}" includes="**/*.jar"/>   -->
+	</path>
+	
+	<target name="init">
+		<mkdir dir="${build.dir}"/>
+	</target>
+	
+	<target name="compile" depends="init">
+		<javac destdir="${classes.dir}" includeantruntime="false">
+			<src path="${src.dir}"/>
+			<classpath refid="compile.classpath"/>
+		</javac>
+	</target>
+	
+	<target name="clean">
+		<delete verbose="true">
+			<fileset dir="${build.dir}"/>
+		</delete>
+	</target>
+	
+	<target name="jar" depends="compile">
+		<manifestclasspath property="jar.classpath" jarfile="${jar.dir}/${ant.project.name}.jar">
+			<classpath refid="compile.classpath"/>
+		</manifestclasspath>
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}"/>
+				<attribute name="Class-Path" value="${jar.classpath}"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="run" depends="jar">
+		<java jar="${jar.dir}/${ant.project.name}.jar" fork="true">
+		</java>
+	</target>
+		
+</project>

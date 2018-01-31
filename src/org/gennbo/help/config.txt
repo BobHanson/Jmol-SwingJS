@@ -1,0 +1,13 @@
+NBOPro v.6
+
+The NBOPro6 program suite combines four distinct modules:
+
+ (1) NBOModel (molecular design editor)
+ (2) NBORun (GenNBO)
+ (3) NBOView (orbital viewer)
+ (4) NBOSearch (data miner)
+
+The modules have distinct but interrelated NBO capabilities.
+Each module has its own commands, syntax, and HELP screens.
+
+To get started, you must first locate your NBOServe executable in the CONFIG menu and press Connect.  Once successfully connected, the other modules will be available, and you will not have to revisit the CONFIG menu as long as the location of the NBOServe executable is not changed.  All modules support the raw keyboard input from NBOPro6 by typing commands into the NBO Input line at the bottom of the dialog.

@@ -1,0 +1,14 @@
+<!--
+  French translation 
+  Translated from default version : usage.docbook.xml (v 1.4)
+-->
+<chapter id="AppletUsage">
+  <title>Utilisation de l'Applet Jmol</title>
+  <para>
+    L'utilisation de la librairie JavaScript Jmol.js est document&eacute;e
+    &agrave; l'adresse
+    <ulink url="http://www.jmol.org/jslibrary">
+      www.jmol.org/jslibrary
+    </ulink>
+  </para>
+</chapter>

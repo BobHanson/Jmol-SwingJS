@@ -1,0 +1,19 @@
+# in the biophysics subdirectory; created by pasting from Column A of biophysics.xlsx
+
+while (true) {
+
+loadModel("2k0f-mlck.jmol","ribbons off;zoom 0","2k0f MLCK-CaM binding peptide  - Joel Money (STO)")
+loadModel("1hrc-cytc.jmol","","1 hrc Cytochrome c - Eric Peterson")
+loadModel("1qag-utrophin.jmol","","1qag Utrophin - Ava Yun Lin (U of M)")
+loadModel("1qvc-ecolissbp.jmol","","1qvc E. Coli s.s. Binding Protein - Kelly Culhane (STO)")
+loadModel("1zll-phospent.jmol","","1zll Phospholamban Pentamer - Matthew Perkovich (STO)")
+loadModel("1cfd-apocalmodulin.jmol","","1cfd apo-Calmodulin - Deanna Thorson (STO)")
+loadModel("1cll-holocalmodulin.jmol","","1cll holo-Calmodulin - Ryan Abdella (STO)")
+loadModel("1fmv-myosinII.jmol","","1fmv Myosin II - Jennifer Klein (STO)")
+
+
+
+
+
+
+}

@@ -1,0 +1,215 @@
+/*
+
+Molecular Playground Configuration File
+Bob Hanson, St. Olaf College 12/21/2011
+revised 10/24/12 to delay n seconds after any change
+ 
+See also MPJmolAppRemoteConfig.spt and MPJmolAppDefaultConfig.spt
+
+Organized around "topics" such as "organic" and "biophysics"
+and "subtopics" such as "substitution" or "elimination"
+
+Allows remote control via a PHP call to a server
+for setting topic, subtopic, and delay values.
+This server is then also called by a web page for web-based interaction
+
+
+*/
+
+setlogfile "dblog"
+log "$CLEAR$"
+  
+allowRemote = false
+
+remotedir = ""  // leaving this empty disables remote operation
+password = ""    // set in MPJmolAppRemoteConfig.spt
+remotestatus = "" // PHP file to call for topic/subtopic/delay reading
+remoteupdate = "" // PHP file to call for updating banner and image
+
+try {
+
+  // opportunity to set remote options
+
+  script MPJmolAppRemoteConfig.spt
+}
+
+defaultTopic = "biophysics"
+defaultDelay = 30
+delayMax = 120
+
+try {
+
+  // opportunity to set default options
+
+  script MPJmolAppDefaultConfig.spt
+}
+
+
+function getRemoteStatus() {
+
+	if (!allowRemote) { return }
+
+  // get remote status -- topic, subtopic, and delay
+
+  print "remotedir: " + remotedir
+  if (remotedir == "") { return }
+
+  print remoteStatus
+
+  var scr = load(remoteStatus)
+  print scr
+  try {
+    script inline @scr // sets topic, and subtopic, and mydelay
+  }
+
+  message remotedir = @{remotedir}
+  message topic = @{topic}
+  message subtopic = @{subtopic}
+  message mydelay = @{mydelay}
+}
+
+function remoteSet(s) {
+
+	if (!allowRemote) { return }
+
+  // update remote information for banner and image
+
+  if (remotedir == "") { return }
+  print "remotest " + remoteupdate+s
+  try {
+    var x=load(remoteupdate + s)
+  }
+}
+
+function setDirectory() {
+
+  // Assumption here is that <topic>/<topic>.spt exists.
+  // This is the file with the loadModel() commands and
+  // generally comes from an Excel spreadsheet, Column A.
+
+  if (topic == "") { topic = defaultTopic }
+  NIOcontentScript=topic + "/" + topic + ".spt"
+  cd ""
+  cd @topic
+}
+
+function setMPStatus(doCheckTopic) {
+
+	if (!allowRemote) { return }
+
+  // Check for a remote topic change or delay change and
+  // set directories and delay appropriately.
+
+  var oldtopic = topic
+  getRemoteStatus()
+  setDirectory()
+
+print topic + ".spt"
+
+print load(topic + ".spt")
+
+  if (load(topic + ".spt").find("java.") == 1) {
+    topic = ""
+    setDirectory()
+  }
+
+  if (doCheckTopic && oldtopic != topic) {
+    message @NIOresetMessage
+    quit
+  }
+
+  if (mydelay < 1) mydelay = defaultDelay
+  if (mydelay > delayMax) mydelay = delayMax
+}
+
+function checkSubTopic(info) {
+
+  // simple and/or/not logic checking with parentheses
+  // just words, not phrases
+  // for example: substitution or elimination
+  
+  if (subtopic == "") { return true }
+  if (subtopic.find(" and ") == 0 
+	&& subtopic.find(" or ") == 0
+	&& subtopic.find("not ") == 0) { return (info.find(subtopic) > 0) }
+  var S = subtopic.replace("("," ( ").replace(")"," ) ").split(" ")
+  for (var i = S.length; i > 0; --i) {
+    var item = S[i]
+    if (item == "" || item == "(" || item == ")" || item == "and" || item == "or" || item == "not") { continue }
+    S[i] = (info.find(item) > 0)
+  }
+  x = false
+  try {
+    script inline @{"x=" + S.join(" ")}
+  }
+
+print "x = " + x +  " " + S.join(" ")
+
+  return x
+}
+
+function loadModel(jmolFile,more,banner) {
+
+  /* 
+
+  called from <topic>.spt
+
+  jmolFile -- should be local to this directory but need not be
+  
+  more     -- additional post-load script for this particular file
+  
+  banner   -- may have "subtopic" field after "##"
+              that will be checked but removed before display
+
+  */
+
+print "load model " + jmolFile + " " + more + " " + banner
+
+  setMPStatus(true)
+  if (!jmolFile) { return }
+  if (!checkSubtopic(banner)) { return }
+  zap
+  message banner:
+  var d = 0
+  try {
+    remoteSet("log&info=loading " + jmolFile)
+    load @jmolFile
+    if (more) { script inline @more }
+    
+    
+    banner = banner.split("##")[1]
+    var msg = "banner:" + banner
+    message @msg
+    try {
+      remoteSet("log&info=" + _modelFile)
+      remoteSet("setbanner&banner=" + banner)
+      remoteSet("setimage&?POST?_PNG_")
+    } 
+    catch (err) { print err }
+    d = [300, (_animating ? [myDelay,_animTimeSec * 2].max : myDelay)].min
+  }
+
+  var spinState = script("show state/spin");
+  var orientState = script("show orientation");
+  
+  //log "$NOW$ " + _modelFile
+  while (true) {
+	delay @d
+	if (script("show state/spin") == spinState && (_spinning || script("show orientation") == orientState)) {
+	  break;
+	}
+	log "$NOW$"
+  }
+  // send terminator message to keep Hub happy
+
+  print "terminatormessage=" + NIOterminatormessage
+
+  message @NIOterminatorMessage
+}
+
+
+// initialize:
+
+setMPStatus(false)
+
+message MPJmolAppConfig complete

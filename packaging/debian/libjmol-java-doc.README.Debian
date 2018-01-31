@@ -1,0 +1,7 @@
+libjmol-java-doc for Debian
+---------------------------
+
+The package uses javadoc from Sun to build the documentation, so it was
+put into contrib. javadoc will be replaced by gj-doc in future.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>, Thu,  3 Feb 2005 03:43:09 +0100

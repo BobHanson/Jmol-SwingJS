@@ -1,0 +1,3 @@
+org/jmol/viewer/JmolConstants.java
+org/jmol/api/JmolAdapter.java
+org/jmol/adapter/smarter/*.java

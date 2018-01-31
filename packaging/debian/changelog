@@ -1,0 +1,225 @@
+jmol (10.00+cvs20050203-4) unstable; urgency=low
+
+  * Move package back to contrib in accordance to Debian Policy version
+    3.6.1.1 Chapter 2.2.2. 
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Sat,  5 Feb 2005 01:27:45 +0100
+
+jmol (10.00+cvs20050203-3) unstable; urgency=low
+
+  * Fixed: jmol-applet not working
+    - compiled with Sun Java 1.4.2_06
+    - added JmolApplet[0-6].jar to package
+  * Changed: location of JmolAppletProx.cgi to /usr/lib/cgi-bin
+  * Fixed: path to JmolAppletProx.cgi in JmolApplet.properties
+  * Changed: chime2jmol.pl is provided as /usr/bin/chime2jmol
+  * Added: manpage for chime2jmol
+  * Added: jmol-applet documentation on how to setup a server
+  * Added: website demo.html and file caffeine.xyz.gz as samples
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Fri,  4 Feb 2005 20:20:51 +0100
+
+jmol (10.00+cvs20050203-2) unstable; urgency=low
+
+  * Fix my stupidity: 
+    - Added postinst/postrm for registering the mime type.
+    - Fixed API documentation not in libjmol-java-doc.
+    - Added Missing x-jmol.desktop. 
+  * Added TODO to jmol-applet.
+  * Move all desktop data files into debian/desktop.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Thu,  3 Feb 2005 12:38:57 +0100
+
+jmol (10.00+cvs20050203-1) unstable; urgency=low
+
+  * New upstream version available.
+  * Fixes:
+    - Completely rewritten package files - using dpatch to adjust build
+      script; use deprecation=on flag; removed obsolete Makefile
+      all is done by rules;
+    - Full support for MIME databases.
+    - Avoid using docbook-xml/xsl source packages in jmol source
+      during build process. We now use the related debian packages.
+    - Applet is not longer built with java2-compiler, we use gcj as
+      java-compiler.
+    - Cleaned up dependencies.
+  * Changes:
+    - Packages went into non-free to fit the Debian policy
+    - Packages are built for Architecture: all
+    - jmol does not longer depends on a CDK package
+  * Additions:
+    - Provide Jmol java libraries for developers.
+    - Provide API documentation for devel-libs.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Thu,  3 Feb 2005 04:16:21 +0100
+
+jmol (9+cvs10pre17-2.2) unstable; urgency=low
+
+  * Did some work on the MIME support for GNOME 2.8.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Tue, 23 Nov 2004 19:42:19 +0100
+
+jmol (9+cvs10pre17-2.1) unstable; urgency=low
+
+  * Corrected version conflict (really).
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Tue, 16 Nov 2004 06:17:10 +0100
+
+jmol (9+cvs10pre17-2) unstable; urgency=low
+
+  * Corrected version conflict.
+  * Adjusted Section: for applet (now in contrib/web).
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Tue, 16 Nov 2004 06:06:08 +0100
+
+jmol (9+cvs10pre17-1) unstable; urgency=low
+
+  * New upstream release 10 pre 17.
+  * Adjusted jmol.keys to make it work with jchempaint (still searching for a
+    better way).
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Tue, 16 Nov 2004 05:07:00 +0100
+
+jmol (9+cvs10pre15-1) unstable; urgency=low
+
+  * New upstream release 10 pre 15.
+  * Added script(s) for the jmol-applet to /usr/share/jmol-applet.
+  * Directory of JmolApplet.jar changed to /usr/share/jmol-applet with a
+    symlink to JmolApplet.jar in /usr/share/java.
+  * Small adjustments to MIME support.
+  * Fixed some typos and an install problem in the jmol-applet.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Thu, 15 Oct 2004 00:30:11 +0200
+
+jmol (9+cvs10pre14-2) unstable; urgency=low
+
+  * Changed location for history and developers guide.
+  * Includes some changes from upstream 10pre14b:
+    - fixed: monitor coloring and size options
+    - fixed: slab
+    - fixed: missing null-pointer check causes NPE
+    - fixed: location of About.html
+    - implemented depth command.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Tue, 28 Sep 2004 17:03:15 +0200
+
+jmol (9+cvs10pre14-1) unstable; urgency=low
+
+  * [NEWS] Package-split into an application (jmol) and an applet
+    (jmol-applet) package. Replaced different  cdk-plugin-suggestions
+    with the virtual package libcdk-java-plugins.
+  * New upstream release of jmol pre-release 14.
+  * Added MIME-support for jmol.
+  
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Wed, 22 Sep 2004 04:40:16 +0200
+
+jmol (9-5) unstable; urgency=low
+
+  * Now depends on libcdk-java-common. 
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Wed, 18 Aug 2004 13:35:36 +0200
+
+jmol (9-4) unstable; urgency=low
+
+  * Now suggests libcdk-java-dirbrowser0.8 and libcdk-java-macieplugin0.7
+    instead of libcdk-java-plugins.
+  * Now contains JmolApplet.jar.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Thu, 12 Aug 2004 07:01:05 +0200
+
+jmol (9-3) unstable; urgency=low
+
+  * Fixed a bug, that there was no runtime-dependency to multi.jar.
+  * Fixed an issue in /usr/share/jmol (command-line options are now possible).
+  * Edited man-page.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Wed, 11 Aug 2004 23:33:41 +0200
+
+jmol (9-2) unstable; urgency=low
+
+  * Now built with runtime-dependencies.
+  * Now depends on libcdk-java.
+  * Now suggests libcdk-java-plugins
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Sat, 10 Aug 2004 19:41:50 +0200
+
+jmol (9-1) unstable; urgency=low
+
+  * new upstream release
+  * conform to Policy 3.6.1.1 now
+  * changed Section in control to contrib/sciene
+  * added a menu-entry under Apps/Science
+  * edited the manpage
+  * Build now depends on libgnujaxp-java, libcommons-cli-java, libitext-java
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>  Sat,  7 Aug 2004 08:34:23 +0200
+
+jmol (7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Wed, 28 July 2003 13:21:00 +0100
+
+jmol (6-2) unstable; urgency=low
+
+  * should be conform Policy 3.5.9 now
+  * fixed Section in control to contrib/x11
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Wed, 21 May 2003 16:32:00 +0100
+
+ jmol (6-1) unstable; urgency=low
+
+  * new upstream release
+  * fixed a few lintian errors
+  * cleaned up dependencies
+  * updated URL in manual page
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Sat, 16 May 2003 21:36:15 +0100
+
+jmol (4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Sun, 2 Oct 2002 13:54:41 +0100
+
+jmol (3-2) unstable; urgency=low
+
+  * now depends on junit and lib-saxon-java
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Sun, 12 May 2002 21:47:29 +0100
+
+jmol (3-1) unstable; urgency=low
+
+  * new upstream version
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Sun, 12 May 2002 10:54:16 +0100
+
+jmol (2-1) unstable; urgency=low
+
+  * new upstream version
+  * conform woody Java policy
+  * relicensed to LGPL
+  * now properly requires docbook stylesheets
+  * no longer able to make a .diff.gz
+
+ -- E.L. Willighagen (Egon) <egonw@sci.kun.nl>  Sat, 20 Apr 2002 09:09:16 +0200
+
+jmol (1-3) unstable; urgency=low
+
+  * now able to make a .diff.gz
+
+ -- Egon Willighagen <egonw@sci.kun.nl>  Tue,  5 Jun 2001 20:32:16 +0200
+
+jmol (1-2) unstable; urgency=low
+
+  * now builds from /tmp/jmol-${VERSION}.source.tar.gz
+  * removed dependency in debmake (debstd)
+
+ -- Egon Willighagen <egonw@sci.kun.nl>  Tue,  5 Jun 2001 08:42:21 +0200
+
+jmol (1-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Egon Willighagen <egonw@sci.kun.nl>  Sun, 20 May 2001 08:26:00 +0200

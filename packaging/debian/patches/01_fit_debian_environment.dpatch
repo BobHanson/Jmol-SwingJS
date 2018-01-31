@@ -1,0 +1,277 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 01_fit_debian_environment.dpatch by Daniel Leidert (dale) <daniel.leidert@wgdd.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Some libs are provided by Debian, so we will use them und for the others
+## DP: we use the libs provided by the source.
+## DP: docbook-xml/xsl is part of Debian and can be used.
+## DP: Plugins are built later, so don't care about plugin.dir.
+
+@DPATCH@
+diff -urNad jmol-10.00+cvs20050203/build.xml /tmp/dpep.DXuRpW/jmol-10.00+cvs20050203/build.xml
+--- jmol-10.00+cvs20050203/build.xml	2005-02-03 12:41:15.000000000 +0100
++++ /tmp/dpep.DXuRpW/jmol-10.00+cvs20050203/build.xml	2005-02-03 12:42:03.000000000 +0100
+@@ -17,7 +17,7 @@
+ 
+   <property name="tests.source.dir" value="source-tests" />
+   <property name="lib.dir" value="jars" />
+-  <property name="plugin.dir" value="plugin-jars" />
++  <property name="deb.dir" value="/usr/share/java" />
+   <property name="appjars.dir" value="build/appjars" />
+   <property name="classes.dir" value="build/classes" />
+   <property name="tests.classes.dir" value="build/classes-tests" />
+@@ -25,8 +25,7 @@
+   <property name="applet.classes.dir" value="build/applet-classes" />
+   <property name="tests.dir" value="build/unit.tests" />
+   <property name="javadoc.dir" value="javadoc" />
+-  <property name="docbook-xsl" value="docbook-xsl-1.67.2" />
+-  <property name="docbook-xml" value="docbook-xml-4.3" />
++  <property name="docbook-xsl" value="/usr/share/xml/docbook/stylesheet/nwalsh" />
+ 
+   <!-- you can set this by defining it in ~/.jmol.build.properties -->
+   <property name="keystore.name" value="Must be set by user." />
+@@ -35,15 +34,26 @@
+ 
+   <path id="project.class.path">
+     <fileset dir="${lib.dir}">
+-      <include name="*.jar" />
+-      <exclude name="jmolappletcdk.jar"/>
++      <include name="Acme.jar" />
++      <include name="dadml.jar" />
++      <include name="jmol2cdk.jar" />
++      <include name="netscape.jar" />
++      <include name="vecmath1.2-1.14.jar" />
++    </fileset>
++    <fileset dir="${deb.dir}">
++      <include name="commons-cli.jar" />
++      <include name="itext.jar" />
+     </fileset>
+   </path>
+   
+   <path id="applet-project.class.path">
+     <fileset dir="${lib.dir}">
+-      <include name="*.jar" />
+-      <exclude name="jmol2cdk.jar"/>
++      <include name="jmolappletcdk.jar" />
++      <include name="netscape.jar" />
++      <include name="vecmath1.2-1.14.jar" />
++    </fileset>
++    <fileset dir="${deb.dir}">
++      <include name="commons-cli.jar" />
+     </fileset>
+   </path>
+   
+@@ -60,12 +70,6 @@
+   </target>
+ 
+   <target name="setup" id="setup">
+-    <uptodate property="docbook-xsl.uptodate"
+-	      targetfile="build/${docbook-xsl}"
+-	      srcfile="doc/${docbook-xsl}.tar.gz" />
+-    <uptodate property="docbook-xml.uptodate"
+-	      targetfile="build/docbook-xml"
+-	      srcfile="doc/${docbook-xml}.zip" />
+ 
+     <condition property="jmolGuide.uptodate">
+       <and>
+@@ -120,7 +124,7 @@
+     </condition>
+ 
+     <available classname="com.icl.saxon.StyleSheet"
+-	       classpath="${lib.dir}/saxon.jar"
++	       classpath="${deb.dir}/saxon.jar"
+ 	       property="xsl.available"/>
+     <uptodate property="javadoc.uptodate" targetfile="${javadoc.dir}/index.html">
+       <srcfiles dir="src" includes="**/*.java, **/*.html" />
+@@ -206,13 +210,6 @@
+   <target name="check.cdkjars" id="check.cdkjars">
+     <uptodate property="cdkjars.uptodate" targetfile="${appjars.dir}/org/openscience/cdk">
+       <srcfiles dir="${lib.dir}" includes="jmol2cdk.jar"/>
+-      <srcfiles dir="${lib.dir}" includes="dadml.jar"/>
+-    </uptodate>
+-  </target>
+-  
+-  <target name="check.pluginjars" id="check.pluginjars">
+-    <uptodate property="pluginjars.uptodate" targetfile="${appjars.dir}/org/openscience/cdkplugin">
+-      <srcfiles dir="${plugin.dir}" includes="dirbrowser.jar"/>
+     </uptodate>
+   </target>
+   
+@@ -220,31 +217,23 @@
+     <uptodate property="libjars.uptodate" targetfile="${appjars.dir}">
+       <srcfiles dir="${lib.dir}" includes="vecmath1.2-1.14.jar"/>
+       <srcfiles dir="${lib.dir}" includes="Acme.jar"/>
+-      <srcfiles dir="${lib.dir}" includes="itext-0.94.jar"/>
+-      <srcfiles dir="${lib.dir}" includes="commons-cli-1.0.jar"/>
++      <srcfiles dir="${deb.dir}" includes="itext.jar"/>
++      <srcfiles dir="${deb.dir}" includes="commons-cli.jar"/>
+       <srcfiles dir="${lib.dir}" includes="dadml.jar"/>
+     </uptodate>
+   </target>
+   
+-  <target name="appjars" id="appjars" depends="libjars, cdkjars, pluginjars"/>
++  <target name="appjars" id="appjars" depends="libjars, cdkjars"/>
+   
+   <target name="cdkjars" id="cdkjars" depends="check.cdkjars" unless="cdkjars.uptodate">
+     <mkdir dir="${appjars.dir}"/>
+     <unjar dest="${appjars.dir}" src="${lib.dir}/jmol2cdk.jar"/>
+-    <unjar dest="${appjars.dir}" src="${lib.dir}/dadml.jar"/>
+-  </target>
+-
+-  <target name="pluginjars" id="pluginjars" depends="check.pluginjars" unless="pluginjars.uptodate">
+-    <mkdir dir="${appjars.dir}"/>
+-    <unjar dest="${appjars.dir}" src="${plugin.dir}/dirbrowser.jar"/>
+   </target>
+ 
+   <target name="libjars" id="libjars" depends="check.libjars" unless="libjars.uptodate">
+     <mkdir dir="${appjars.dir}"/>
+     <unjar dest="${appjars.dir}" src="${lib.dir}/vecmath1.2-1.14.jar"/>
+     <unjar dest="${appjars.dir}" src="${lib.dir}/Acme.jar"/>
+-    <unjar dest="${appjars.dir}" src="${lib.dir}/itext-0.94.jar"/>
+-    <unjar dest="${appjars.dir}" src="${lib.dir}/commons-cli-1.0.jar"/>
+     <unjar dest="${appjars.dir}" src="${lib.dir}/dadml.jar"/>
+   </target>
+ 
+@@ -264,7 +253,11 @@
+ 	<include name="**/*.html" />
+       </fileset>
+     </copy>
+-    <jar jarfile="Jmol.jar" manifest="manifest/application.txt">
++    <jar jarfile="Jmol.jar">
++      <manifest>
++        <attribute name="Main-Class" value="org.openscience.jmol.app.Jmol"/>
++        <attribute name="Class-Path" value="${deb.dir}/commons-cli.jar ${deb.dir}/cdk-plugins/dirbrowser.jar ${deb.dir}/itext.jar" />
++      </manifest>
+       <fileset dir="${classes.dir}" >
+ 	<exclude name="**/.*" />
+ 	<exclude name="**/Test*.class" />
+@@ -475,12 +468,6 @@
+       </fileset>
+     </copy>
+ 
+-    <copy todir="build/dist/jmol-${version}/${plugin.dir}" >
+-      <fileset dir="${plugin.dir}">
+-	<exclude name="**/CVS"/>
+-      </fileset>
+-    </copy>
+-
+     <copy todir="build/dist/jmol-${version}/appletweb" >
+       <fileset dir="appletweb">
+ 	<exclude name="**/CVS"/>
+@@ -604,21 +591,8 @@
+   <target name="doc" id="doc"
+ 	  depends="jmolGuide,jmolDevelopersGuide,jmolAppletGuide,jmolHistory,javadoc"/>
+   
+-  <target name="initdoc" depends="init,check.docbook-xml,check.docbook-xsl,check.xsl" />
++  <target name="initdoc" depends="init,check.xsl" />
+   
+-  <target name="check.docbook-xsl" depends="setup" unless="docbook-xsl.uptodate" >
+-    <delete dir="build/${docbook-xsl}" />
+-    <mkdir dir="build/${docbook-xsl}" />
+-    <untar src="doc/${docbook-xsl}.tar.gz" dest="build"
+-	   compression="gzip" />
+-  </target>
+-
+-  <target name="check.docbook-xml" depends="setup" unless="docbook-xml.uptodate" >
+-    <delete dir="build/docbook-xml" />
+-    <mkdir dir="build/docbook-xml" />
+-    <unzip src="doc/${docbook-xml}.zip" dest="build/docbook-xml" />
+-  </target>
+-
+   <target name="check.xsl" depends="setup" unless="xsl.available" >
+     <echo message="XSLT class 'com.icl.saxon.StyleSheet' not found." />
+     <echo message="Note that the documentation is CANNOT generated now." />
+@@ -639,21 +613,21 @@
+     <mkdir dir="build/doc/JmolUserGuide" />
+     <java fork="true" dir="build/doc/JmolUserGuide"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <jvmarg value="${proxyHost}" />
+       <jvmarg value="${proxyPort}" />
+       <arg value="../../../doc/source/JmolGuide.docbook.xml" />
+-      <arg value="../../${docbook-xsl}/html/chunk.xsl" />
++      <arg value="${docbook-xsl}/html/chunk.xsl" />
+     </java>
+     <echo message="Generating user's guide (fr)" />
+     <mkdir dir="build/doc/JmolUserGuide_fr" />
+     <java fork="true" dir="build/doc/JmolUserGuide_fr"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <jvmarg value="${proxyHost}" />
+       <jvmarg value="${proxyPort}" />
+       <arg value="../../../doc/source/JmolGuide_fr.docbook.xml" />
+-      <arg value="../../${docbook-xsl}/html/chunk.xsl" />
++      <arg value="${docbook-xsl}/html/chunk.xsl" />
+     </java>
+   </target>
+ 
+@@ -663,7 +637,7 @@
+     <mkdir dir="build/doc/JmolHistory" />
+     <java fork="true" dir="build/doc/JmolHistory"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="ChangeLog.html" />
+       <arg value="../../../doc/source/JmolHistory.xml" />
+@@ -672,7 +646,7 @@
+     <echo message="Generating history of changes (fr)" />
+     <java fork="true" dir="build/doc/JmolHistory"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="ChangeLog_fr.html" />
+       <arg value="../../../doc/source/JmolHistory_fr.xml" />
+@@ -686,20 +660,20 @@
+     <echo message="Generating developer's guide" />
+     <java fork="true" dir="build/doc"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="JmolDevelopersGuide.html" />
+       <arg value="../../doc/source/JmolDevelopersGuide.docbook.xml" />
+-      <arg value="../${docbook-xsl}/html/docbook.xsl" />
++      <arg value="${docbook-xsl}/html/docbook.xsl" />
+     </java>
+     <echo message="Generating developer's guide (fr)" />
+     <java fork="true" dir="build/doc"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="JmolDevelopersGuide_fr.html" />
+       <arg value="../../doc/source/JmolDevelopersGuide_fr.docbook.xml" />
+-      <arg value="../${docbook-xsl}/html/docbook.xsl" />
++      <arg value="${docbook-xsl}/html/docbook.xsl" />
+     </java>
+   </target>
+ 
+@@ -708,20 +682,20 @@
+     <echo message="Generating applet guide" />
+     <java fork="true" dir="build/doc"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="JmolAppletGuide.html" />
+       <arg value="../../doc/source/JmolAppletGuide.docbook.xml" />
+-      <arg value="../${docbook-xsl}/html/docbook.xsl" />
++      <arg value="${docbook-xsl}/html/docbook.xsl" />
+     </java>
+     <echo message="Generating applet guide (fr)" />
+     <java fork="true" dir="build/doc"
+ 	  classname="com.icl.saxon.StyleSheet"
+-	  classpath="${lib.dir}/saxon.jar" >
++	  classpath="${deb.dir}/saxon.jar" >
+       <arg value="-o" />
+       <arg value="JmolAppletGuide_fr.html" />
+       <arg value="../../doc/source/JmolAppletGuide_fr.docbook.xml" />
+-      <arg value="../${docbook-xsl}/html/docbook.xsl" />
++      <arg value="${docbook-xsl}/html/docbook.xsl" />
+     </java>
+   </target>
+ 

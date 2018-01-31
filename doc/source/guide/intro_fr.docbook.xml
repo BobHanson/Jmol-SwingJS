@@ -1,0 +1,15 @@
+<!--
+  French translation 
+  Translated from default version : intro.docbook.xml (v 1.3)
+-->
+<chapter id="intro">
+<title>Introduction</title>
+<para>
+  Jmol est une application et une applet bas&eacute;es sur Java
+  pour l'affichage d'informations chimiques 3D.
+</para>
+<para>
+  Ce document d&eacute;crit l'application Jmol.
+</para>
+</chapter>
+

@@ -1,0 +1,6 @@
+libjmol-java for Debian
+-----------------------
+
+The package is using precompiled libs. So it was put into non-free.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>, Thu,  3 Feb 2005 03:43:09 +0100

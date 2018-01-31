@@ -1,0 +1,250 @@
+<project name="Jmol-doc" default="main" basedir=".">
+
+  <!--
+      DocumentId  $Id: build-doc-i18n.xml 16646 2011-12-28 12:57:39Z nicove $
+      Summary     create and update applet-, developers- and user-guide
+                  translation
+      Todo        should check for existance of xml2po
+                  translated XML files have lang="Jmol*Guide.LANG", so we need
+                  a workaround to set the correct language in the lang
+                  attribute
+  -->
+
+  <!-- Our properties section -->
+  <property name="lib.dir" value="jars" />
+  <property name="src.dir" value="${basedir}/doc/source" />
+  <property name="pot.dir" value="${basedir}/doc/source/po" />
+  <property name="src.win.dir" value="${basedir}\doc\source" />
+  <property name="pot.win.dir" value="${basedir}\doc\source/po" />
+  <property name="pot.tmp.dir" value="${basedir}/doc/source/po/tmp" />
+  <property name="all.JmolAppletGuide.languages" value="de" />
+  <property name="all.JmolDevelopersGuide.languages" value="de" />
+  <property name="all.JmolGuide.languages" value="de" />
+  <property name="all.guides"
+            value="JmolAppletGuide,JmolDevelopersGuide,JmolGuide" />
+
+  <!-- <for list ...> construct needs ant-contrib.jar -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="${lib.dir}/ant-contrib.jar"/>
+    </classpath>
+  </taskdef>
+
+  <!-- Filesets for the rest of the build -->
+  <fileset id="Jmol.guide.files" dir="${src.dir}">
+    <include name="*Guide.docbook.xml"/>
+  </fileset>
+  <fileset id="Jmol.guide_2.files" dir="${src.dir}">
+    <include name="*/*.docbook.xml"/>
+  </fileset>
+
+  <!-- Main target creates .pot files, update existing .po files and creates
+       translated XML files by default -->
+  <target name="main" id="main"
+          depends="init,create-pot,update-po"/>
+<!--    depends="init,create-pot,update-po,update-xml"/> -->
+
+  <target name="init" id="init">
+    <tstamp/>
+  </target>
+
+  <!-- Parse list of possible guides and create .pot for every guide -->
+  <target name="check-uptodate-pot">
+    <condition property="uptodate-pot">
+      <uptodate targetfile="${pot.dir}/tstamp.pot">
+        <srcfiles refid="Jmol.guide.files"/>
+        <srcfiles refid="Jmol.guide_2.files"/>
+      </uptodate>
+    </condition>
+  </target>
+
+  <target name="create-pot" id="create-pot"
+          depends="check-uptodate-pot"
+          unless="uptodate-pot">
+    <echo message="Generating gettext PO-template file for all Guides ..." level="info"/>
+    <mkdir dir="${pot.tmp.dir}"/>
+    <apply os="Linux"
+           executable="${src.dir}/xml2po.sh"
+           dir="${src.dir}" dest="${pot.tmp.dir}" parallel="false"
+           verbose="true" relative="true" forwardslash="true">
+      <arg value="${src.dir}/xml2po.py"/>
+      <arg value="-e"/>
+      <arg value="-o"/>
+      <targetfile/>
+      <srcfile/>
+      <fileset refid="Jmol.guide.files"/>
+      <mapper type="glob" from="*.docbook.xml" to="${pot.tmp.dir}/*.pot"/>
+    </apply>
+    <apply os="Windows XP,Windows 2000"
+           executable="${src.dir}/xml2po.bat"
+           dir="${src.dir}" dest="${pot.tmp.dir}" parallel="false"
+           verbose="true" relative="true" forwardslash="true">
+      <arg value="${src.dir}/xml2po.py"/>
+      <arg value="-e"/>
+      <arg value="-o"/>
+      <targetfile/>
+      <srcfile/>
+      <fileset refid="Jmol.guide.files"/>
+      <mapper type="glob" from="*.docbook.xml" to="${pot.tmp.dir}/*.pot"/>
+    </apply>
+    <for list="${all.guides}" delimiter="," param="current.guide">
+      <sequential>
+        <if>
+          <and>
+            <available file="${pot.dir}/@{current.guide}.pot"/>
+            <available file="${pot.tmp.dir}/@{current.guide}.pot"/>
+          </and>
+          <then>
+            <!-- Compare both .pot files -->
+            <copy file="${pot.dir}/@{current.guide}.pot"
+                  tofile="${pot.tmp.dir}/@{current.guide}.old.pot"/>
+            <antcall target="shrink-pot-file">
+              <param name="remove_pot_file" value="${pot.tmp.dir}/@{current.guide}.old.pot"/>
+            </antcall>
+            <copy file="${pot.tmp.dir}/@{current.guide}.pot"
+                  tofile="${pot.tmp.dir}/@{current.guide}.new.pot"/>
+            <antcall target="shrink-pot-file">
+              <param name="remove_pot_file" value="${pot.tmp.dir}/@{current.guide}.new.pot"/>
+            </antcall>
+            <if>
+              <not>
+                <filesmatch file1="${pot.tmp.dir}/@{current.guide}.old.pot"
+                            file2="${pot.tmp.dir}/@{current.guide}.new.pot"/>
+              </not>
+              <then>
+                <copy file="${pot.tmp.dir}/@{current.guide}.pot"
+                      tofile="${pot.dir}/@{current.guide}.pot"/>
+              </then>
+            </if>
+          </then>
+          <else>
+            <if>
+              <available file="${pot.tmp.dir}/@{current.language}.pot"/>
+              <then>
+                <copy file="${pot.tmp.dir}/@{current.language}.pot"
+                      tofile="${pot.dir}/@{current.language}.pot"/>
+              </then>
+            </if>
+          </else>
+        </if>
+      </sequential>
+    </for>
+    <touch file="${pot.dir}/tstamp.pot"/>
+  	<delete dir="${pot.tmp.dir}"/>
+  </target>
+
+  <!-- Parse list of possible languages and update LANG.po gettext files -->
+  <target name="update-po" id="update-po">
+    <for list="${all.guides}" delimiter="," param="current.guide">
+      <sequential>
+        <for list="${all.@{current.guide}.languages}" delimiter=","
+             param="current.language">
+          <sequential>
+            <antcall target="update-po-guide-lang">
+              <param name="lang_value" value="@{current.language}"/>
+              <param name="guide_value" value="@{current.guide}"/>
+            </antcall>
+          </sequential>
+        </for>
+      </sequential>
+    </for>
+  </target>  
+
+  <target name="check-uptodate-po">
+    <condition property="uptodate-po-${guide_value}-${lang_value}">
+      <uptodate targetfile="${pot.dir}/tstamp.${guide_value}.${lang_value}.po">
+        <srcfiles file="${src.dir}/${guide_value}.docbook.xml"/>
+        <srcfiles file="${pot.dir}/${guide_value}.${lang_value}.po"/>
+      </uptodate>
+    </condition>
+  </target>
+
+  <target name="update-po-guide-lang" id="update-po-guide-lang"
+          depends="check-uptodate-po"
+          unless="uptodate-po-${guide_value}-${lang_value}">
+    <echo message="Updating ${guide_value}.${lang_value}.po gettext file ..." level="info"/>
+    <exec os="Linux"
+          executable="${src.dir}/xml2po.sh"
+          dir="${pot.dir}">
+      <arg line="${src.dir}/xml2po.py -e
+                 -u ${guide_value}.${lang_value}.po
+                 ${src.dir}/${guide_value}.docbook.xml"/>
+    </exec>
+    <exec os="Windows XP,Windows 2000"
+          executable="${src.win.dir}\xml2po.bat"
+          dir="${pot.win.dir}">
+      <arg line="${src.win.dir}\xml2po.py -e
+                 -u ${guide_value}.${lang_value}.po
+                 ${src.win.dir}\${guide_value}.docbook.xml"/>
+    </exec>
+  </target>
+
+  <!-- Parse list of vailable languages and guides and marge translations back -->
+  <target name="update-xml" id="update-xml" depends="clean-translation">
+    <for list="${all.guides}" delimiter="," param="current.guide">
+      <sequential>
+        <for list="${all.@{current.guide}.languages}" delimiter=","
+             param="current.language">
+          <sequential>
+            <antcall target="update-xml-guide-lang">
+              <param name="lang_value" value="@{current.language}"/>
+              <param name="guide_value" value="@{current.guide}"/>
+            </antcall>
+          </sequential>
+        </for>
+      </sequential>
+    </for>
+  </target>  
+
+  <target name="update-xml-guide-lang" id="update-xml-guide-lang">
+    <echo message="Merging back translations for ${guide_value}.docbook.xml
+    ${line.separator}into ${guide_value}_${lang_value}.docbook.xml file ..." level="info"/>
+    <exec os="Linux" executable="${src.dir}/xml2po.sh" dir="${pot.dir}">
+      <arg line="${src.dir}/xml2po.py -e
+                 -p ${guide_value}.${lang_value}.po
+                 -o ${src.dir}/${guide_value}_${lang_value}.docbook.xml
+                 -l ${lang_value} ${src.dir}/${guide_value}.docbook.xml"/>
+    </exec>
+    <exec os="Windows XP,Windows 2000" executable="${src.win.dir}\xml2po.bat" dir="${pot.win.dir}">
+      <arg line="${src.win.dir}\xml2po.py -e
+                 -p ${guide_value}.${lang_value}.po
+                 -o ${src.win.dir}\${guide_value}_${lang_value}.docbook.xml
+                 -l ${lang_value} ${src.win.dir}\${guide_value}.docbook.xml"/>
+    </exec>
+  </target>
+
+  <!-- We can clean .pot, .LANG.docbook.xml and .xml2po.mo files -->
+  <target name="clean" id="clean">
+    <fileset dir="${pot.dir}">
+      <include name=".xml2po.mo" />
+    </fileset>
+  </target>
+
+  <target name="clean-translation" id="clean-translation">
+    <delete>
+      <fileset dir="${src.dir}">
+        <include name="*_de.docbook.xml" />
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="clean-pot" id="clean-pot">
+    <delete>
+      <fileset dir="${pot.dir}">
+        <include name="*.pot" />
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="shrink-pot-file">
+    <!-- Remove "POT-Creation-Date -->
+    <replaceregexp file='${remove_pot_file}'
+                   match='"POT-Creation-Date:(.*)"'
+                   replace='' flags='g'/>
+    <!-- Remove source files/lines -->
+    <replaceregexp file='${remove_pot_file}'
+                   match='#:(.*)'
+                   replace='' flags='g'/>
+  </target>
+
+</project>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+  "../../build/docbook-xml/docbookx.dtd"
+[
+<!ENTITY appletIntro        SYSTEM "applet/intro.docbook.xml">
+<!ENTITY appletBrowsers     SYSTEM "applet/browsers.docbook.xml">
+<!ENTITY appletHardware     SYSTEM "applet/hardware.docbook.xml">
+<!ENTITY appletServerConfig SYSTEM "applet/serverconfig.docbook.xml">
+<!ENTITY appletUsage        SYSTEM "applet/usage.docbook.xml">
+]
+>
+<book id="jmol-applet-guide">
+
+  <bookinfo>
+    <title>Jmol Applet Documentation</title>
+  </bookinfo>
+
+  &appletIntro;
+  &appletBrowsers;
+  &appletHardware;
+  &appletServerConfig;
+  &appletUsage;
+</book>

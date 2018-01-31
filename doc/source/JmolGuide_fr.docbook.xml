@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+  "../../build/docbook-xml/docbookx.dtd"
+[
+<!ENTITY guideIntro          SYSTEM "guide/intro_fr.docbook.xml">
+<!ENTITY guideCommandLine    SYSTEM "guide/commandline_fr.docbook.xml">
+<!ENTITY guideMenus          SYSTEM "guide/menus_fr.docbook.xml">
+<!ENTITY guideScripts        SYSTEM "guide/scripts_fr.docbook.xml">
+<!ENTITY guideScriptCommands SYSTEM "guide/scriptCommands.docbook.xml">
+]
+>
+<!--
+  French translation 
+  Translated from default version : JmolGuide.docbook.xml (v 1.16)
+-->
+<book lang="fr">
+  <bookinfo>
+    <title>Documentation Jmol</title>
+  </bookinfo>
+  
+  &guideIntro;
+  &guideCommandLine;
+  &guideMenus;
+  &guideScripts;
+
+</book>

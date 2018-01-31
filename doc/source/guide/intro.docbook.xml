@@ -1,0 +1,10 @@
+<chapter id="intro">
+  <title>Introduction</title>
+  <para>
+    Jmol is a Java based application and an applet for
+    displaying 3D chemical information.
+  </para>
+  <para>
+    This document describes the Jmol application.
+  </para>
+</chapter>

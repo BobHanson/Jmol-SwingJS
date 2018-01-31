@@ -1,0 +1,8 @@
+JmolApplet*.jar usr/share/jmol-applet
+appletweb/Jmol.js usr/share/jmol-applet
+appletweb/JmolApplet.properties usr/share/jmol-applet
+
+appletweb/JmolAppletProxy.cgi usr/lib/cgi-bin
+appletweb/chime2jmol usr/bin
+
+build/doc/JmolA*.html usr/share/doc/jmol-applet/html

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- Exclude Jmol code -->
+  <Match>
+    <Package name="~org\.jmol.*"/>
+    <Or>
+      <Bug pattern="DM_EXIT"/>
+      <Bug pattern="DM_GC"/>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+      <Bug pattern="EI_EXPOSE_STATIC_REP2"/>
+      <Bug pattern="ES_COMPARING_PARAMETER_STRING_WITH_EQ"/>
+      <Bug pattern="ES_COMPARING_STRINGS_WITH_EQ"/>
+      <Bug pattern="IS2_INCONSISTENT_SYNC"/>
+      <Bug pattern="MS_EXPOSE_REP"/>
+      <Bug pattern="MS_MUTABLE_ARRAY"/>
+      <Bug pattern="SE_BAD_FIELD_STORE"/>
+      <Bug pattern="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE"/>
+      <Bug pattern="SF_SWITCH_FALLTHROUGH"/>
+    </Or>
+  </Match>
+  <Match>
+    <Package name="~org\.openscience\.jmol\.app.*"/>
+    <Or>
+      <Bug pattern="DM_EXIT"/>
+      <Bug pattern="DM_GC"/>
+      <Bug pattern="IS2_INCONSISTENT_SYNC"/>
+      <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"/>
+    </Or>
+  </Match>
+
+  <!-- Exclude libraries -->
+  <Match>
+    <Package name="~com\.obrador.*"/>
+  </Match>
+
+  <!-- Exclude tests -->
+  <Match>
+    <Class name="org.jmol.adapter.smarter.TestSmarterJmolAdapter"/>
+  </Match>
+</FindBugsFilter>

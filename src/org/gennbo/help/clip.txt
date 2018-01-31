@@ -1,0 +1,6 @@
+CLIP IA IB          (erase bond between IA, IB)
+
+      Example:
+       CLIP 1 2        [erase bond between atoms 1,2]
+
+      Note that CLIP takes no account of electronic requirements for a Lewis-compliant model.

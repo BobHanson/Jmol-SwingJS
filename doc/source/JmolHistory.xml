@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE history
+[
+<!ENTITY contributors SYSTEM "history/contributors.xml">
+<!ENTITY changes      SYSTEM "history/changes.xml">
+]
+>
+<history>
+  &contributors;
+  &changes;
+</history>

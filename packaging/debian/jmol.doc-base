@@ -1,0 +1,12 @@
+Document: jmol
+Title: Debian Jmol user guide
+Author: The Jmol Development Team
+Abstract: This manual describes the functionality of
+ the molecule and crystal 3D-viewer and animator jmol.
+Section: Apps/Science
+
+Format: HTML
+Index: /usr/share/doc/jmol/html/index.html
+Files: /usr/share/doc/jmol/html/*.html
+
+  

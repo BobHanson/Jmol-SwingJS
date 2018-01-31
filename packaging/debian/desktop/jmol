@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Collect -D options as java arguments
+command=java
+param=-Dplugin.dir=/usr/share/java/cdk-plugins
+while [ `echo $1 | egrep '^-D' | wc -l` != 0 ]; do
+	command="$command $1"
+	shift
+done
+
+$command $param -jar /usr/share/java/Jmol.jar $*				

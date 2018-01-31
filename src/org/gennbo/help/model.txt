@@ -1,0 +1,24 @@
+NBOModel COMMAND SYNTAX:
+
+	Command verbs are case-insensitive and can be abbreviated by the leading unique characters.  Arguments are separated by commas or spaces.  Parameters are attached to the command verb after a dot (viz., DRAW.ap MODEL).  Arguments and parameters are case-insensitive, except for chemical formulas and group acronyms.
+
+	Use 'HELP <command>' in command input (e.g., 'HELP SHOW') for further specifics of each COMMAND type.
+
+	COMMAND(.t)   arguments
+	------------------------------------
+	ALTER         IA [IB IC ID] newvalue
+	CLIP          IA IB
+	DRAW          filename
+	FUSE(.R)      IA IB
+	HELP          command
+	LINK          IA IB
+	MUTATE        IA formula
+	ROTATE        AXIS angle
+	SAVE.t        filename
+	SHOW          formula
+	SWITCH        IA IB
+	SYMMETRY
+	TRANSLATE     AXIS shift
+	TWIST         IA IB IC ID newvalue
+	USE.t         filename
+	VALUE         IA [IB IC ID]

@@ -1,0 +1,70 @@
+Source: jmol
+Section: contrib/science
+Priority: optional
+Maintainer: Daniel Leidert (dale) <daniel.leidert@wgdd.de>
+Build-Depends-Indep: debhelper (>= 4.0.0), ant (>= 1.6), docbook-xml (>= 4.2), docbook-xsl (>= 1.66), dpatch, java2-compiler-dummy | java2-compiler, libcommons-cli-java, libitext-java, libsaxon-java, xsltproc
+Standards-Version: 3.6.1.1
+
+Package: jmol
+Architecture: all
+Section: contrib/science
+Depends: j2re1.4 | java2-runtime, libcommons-cli-java, libitext-java
+Recommends: chemicalmime
+Suggests: libcdk-java-dirbrowser
+Description: chemical 3D viewer and animator for molecules and crystals
+ Jmol is a Free and Open Source molecule and crystal viewer and editor.
+ It is a collaboratively developed visualization and measurement tool
+ for chemical scientists.
+ .
+ Jmol is as Java application which supports RasMol and Chime scripting.
+ It can display inter-atomic distances, bond angles, and dihedral angles,
+ vectors (velocity, dipole, etc.), charges, atomic symbols, unit cell
+ boxes and energy bands. With Jmol it is possible to animate the results
+ of simulations and computed vibrational modes. It reads many types of
+ files like: ABINIT, ACES II, ADF (Amsterdam Density Functional),
+ CIF/mmCIF, CML 1/2 (Chemical Markup Language), Dalton, GAMESS,
+ Gaussian 90/92/94/96/98/03, Ghemical, HIN, Jaguar, MDL molfiles,
+ MOPAC 7/97/2002, PDB, VASP, XYZ (XMol). You can print out or export your
+ results in various formats: GIF, JPG, PPM, BMP, PNG, PDF, PostScript
+ and PovRay (including animations).
+
+Package: jmol-applet
+Architecture: all
+Section: contrib/web
+Depends: j2re1.4 | java-runtime | java2-runtime
+Suggests: perl-base (>= 5.8.4)
+Description: applet for molecules and crystals based on jmol
+ Jmol-applet provides most of the functionality of the Jmol application as
+ an web browser applet. For more info see http://jmol.sourceforge.net/applet/.
+ .
+ Jmol is a Free and Open Source molecule and crystal viewer and editor.
+ It is a collaboratively developed visualization and measurement tool
+ for chemical scientists.
+ .
+ Jmol is as Java application which supports RasMol and Chime scripting.
+ It can display inter-atomic distances, bond angles, and dihedral angles,
+ vectors (velocity, dipole, etc.), charges, atomic symbols, unit cell
+ boxes and energy bands. With Jmol it is possible to animate the results
+ of simulations and computed vibrational modes. It reads many types of
+ files like: ABINIT, ACES II, ADF (Amsterdam Density Functional),
+ CIF/mmCIF, CML 1/2 (Chemical Markup Language), Dalton, GAMESS,
+ Gaussian 90/92/94/96/98/03, Ghemical, HIN, Jaguar, MDL molfiles,
+ MOPAC 7/97/2002, PDB, VASP, XYZ (XMol). You can print out or export your
+ results in various formats: GIF, JPG, PPM, BMP, PNG, PDF, PostScript
+ and PovRay (including animations).
+
+Package: libjmol-java
+Architecture: all
+Section: contrib/libs
+Depends: j2re1.4 | java2-runtime
+Suggests: libjmol-java-doc
+Description: jmol APIS and IO java libraries
+ The package contains the APIS and IO java libraries provided by Jmol.
+
+Package: libjmol-java-doc
+Architecture: all
+Section: contrib/doc
+Suggests: libjmol-java
+Description: jmol API documentation
+ The package contains the API documentation for the Jmol java libraries.
+

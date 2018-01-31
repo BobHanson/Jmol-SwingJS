@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Sealed: true
+Codebase: *
+Application-Name: Jmol
+Caller-Allowable-Codebase: *
+Application-Library-Allowable-Codebase: *
+Permissions: sandbox

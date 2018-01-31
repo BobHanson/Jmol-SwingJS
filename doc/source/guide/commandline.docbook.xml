@@ -1,0 +1,191 @@
+<chapter id="commandlineoptions">
+  <title>Command Line Options</title>
+
+  <para>
+    The following sections contain information about the command line
+    options of Jmol. The general syntax is:
+  </para>
+  <cmdsynopsis>
+    <command>jmol</command>
+    <arg><option>OPTIONS</option></arg>
+    <arg><replaceable>FILE</replaceable></arg>
+  </cmdsynopsis>
+  <para>
+    Jmol can be started with one argument, being a file name
+    or no argument:
+  </para>
+  <cmdsynopsis>
+    <command>jmol</command>
+    <arg><replaceable>FILE</replaceable></arg>
+  </cmdsynopsis>
+  
+  <section id="OptionHelp">
+    <title>-h,--help</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-h</option>,
+          <option>--help</option>
+        </term>
+        <listitem>
+          <para>
+            This option will give you a short usage overview.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionScript">
+    <title>-s,--script</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-s</option>,
+          <option>--script</option>
+          <replaceable>RASMOL.script</replaceable>
+        </term>
+        <listitem>
+          <para>
+            This option makes it possible to start jmol with a Rasmol script.
+            The syntax of these scripts is explained
+            in <link linkend="rasmol" endterm="rasmol.title" />.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionGeometry">
+    <title>-g,--geometry</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-g</option>,
+          <option>--geometry</option>
+          <replaceable>WIDTHxHEIGHT</replaceable>
+        </term>
+        <listitem>
+          <para>
+            This option allows setting of the window size. By default the
+            size is 500x500.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionLanguage">
+    <title>-Duser.language</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-Duser.language=<replaceable>de|en|es|fr|nl|pl</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+            Set the GUI language with this option. If Jmol can't determine
+            the user language and you don't use the above option, Jmol will
+            use English by default.
+          </para>
+           <itemizedlist>
+            <para>At this moment these languages are supported:</para>
+            <listitem>
+              <para>English (<emphasis>en</emphasis>)</para>
+            </listitem>
+            <listitem>
+              <para>German (<emphasis>de</emphasis>)</para>
+            </listitem>
+            <listitem>
+              <para>Spanish (<emphasis>es</emphasis>)</para>
+            </listitem>
+            <listitem>
+              <para>French (<emphasis>fr</emphasis>)</para>
+            </listitem>
+            <listitem>
+              <para>Dutch (<emphasis>nl</emphasis>)</para>
+            </listitem>
+            <listitem>
+              <para>Polish (<emphasis>pl</emphasis>)</para>
+            </listitem>
+          </itemizedlist>
+          <para>
+            Alternatively, you can also use the <envar>LANG</envar> environment
+            variable for setting the prefered language. This is common in many
+            UNIX systems, like Linux. However, it is known not to work on
+            Solaris and the above command line option must be used.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionSpeed">
+    <title>-Ddisplay.speed</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-Ddisplay.speed=<replaceable>fps|ms</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+            This option can be used to report the display speed in
+            <emphasis>frames per second</emphasis>
+            or <emphasis>milliseconds per frame</emphasis>. The default
+            is milliseconds per frame.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionPluginDir">
+    <title>-Dplugin.dir</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-Dplugin.dir=<replaceable>/path/to/plugins</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+            This options sets a path, where to find plugins for Jmol.
+            Please note, that this option has no effect on the user
+            (directory) plugin path <filename>~/.jmol/plugins</filename>.
+            Jmol will still search for plugins in this directory, which
+            also means, that this directory does not need to be defined
+            as plugin directory.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+
+  <section id="OptionXmx">
+    <title>-Xmx</title>
+    <variablelist>
+      <title>Syntax</title>
+      <varlistentry>
+        <term>
+          <option>-Xmx<replaceable>SIZE</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+            With this option you can change the maximum heap size the Java
+            virtual machine can address on Java 1.4 systems. By default this
+            is 64 MB. For large files this might not be enough. Use
+            this option to encrease the heap size,
+            e.g. <option>-Xmx512m</option>, which would encrase the heap size
+            to 512 MB. On older Java systems the syntax of this option is
+            different (see <command>java --help</command>).
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+</chapter>

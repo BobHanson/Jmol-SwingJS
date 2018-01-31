@@ -1,0 +1,28 @@
+<!--
+  French translation 
+  Translated from default version : serverconfig.docbook.xml (v 1.4)
+-->
+<chapter id="WebServerConfiguration">
+  <title>Configuration du Serveur Web pour l'Applet Jmol</title>
+  <para>
+    L'Applet Jmol est configur&eacute;e sur le serveur web comme toute autre
+    applet Java.
+  </para>
+  <para>
+    Les fichiers JmolApplet.jar et Jmol.js sont plac&eacute;s dans un
+    r&eacute;pertoire sur votre serveur web.
+    Nous recommandons de les placer dans un r&eacute;pertoire de m&ecirc;me
+    niveau ou un sous r&eacute;pertoire de vos pages .html ... quelque chose
+    comme <command>../jmol</command> ou <command>./jmol</command>
+  </para>
+  <para>
+    Toutes les classes Java dont l'applet a besoin sont contenues dans le
+    fichier JmolApplet.jar.
+  </para>
+  <para>
+    L'applet fonctionne en tant qu'applet non sign&eacute;e/non s&ucirc;re.
+    Par cons&eacute;quent, aucune &eacute;tape suppl&eacute;mentaire n'est
+    n&eacute;cessaire pour la v&eacute;rification de l'authenticit&eacute;
+    de l'applet du c&ocirc;t&eacute; de l'utilisateur.
+  </para>
+</chapter>

@@ -1,0 +1,79 @@
+<!--
+  French translation 
+  Translated from default version : commandline.docbook.xml (v 1.7)
+-->
+<chapter id="commandlineoptions">
+  <title>Options de la Ligne de Commande</title>
+  <para>
+  Le programme Jmol a une option de la ligne de commander pour ex&eacute;cuter
+  des scripts:
+  <cmdsynopsis><arg>--script</arg></cmdsynopsis>. La syntaxe courante est:
+    <cmdsynopsis>
+      <command>jmol</command>
+      <arg>--script <arg choice="req"><replaceable>rasmol.script</replaceable></arg></arg>
+    </cmdsynopsis>
+    Ceci permet de lancer jmol avec un script Rasmol.
+    La syntaxe de ces scripts est expliqu&eacute;e dans
+    <link linkend="rasmol" endterm="rasmol.title" />.
+  </para>
+  <para>
+    Alternativement, Jmol peut &ecirc;tre lanc&eacute; avec un argument
+    &eacute;tant un nom de fichier:
+    <cmdsynopsis>
+      <command>jmol</command>
+      <arg choice="req"><replaceable>file</replaceable></arg>
+    </cmdsynopsis>
+  </para>
+  <section id="OptionGeometry">
+    <title>--geometry</title>
+    <para>
+      Cette option permet de sp&eacute;cifier la taille de la
+      fen&ecirc;tre. Par d&eacute;faut, elle est de 500x500.
+    </para>
+  </section>
+  <section id="OptionLanguage">
+    <title>-Duser.language</title>
+    <para>
+      En plus des options ci-dessus, il y a une option Java importante:
+      <cmdsynopsis><arg>-Duser.language</arg></cmdsynopsis>.
+      Avec cette option la langue de l'IHM peut &ecirc;tre choisie.
+      Actuellement, les langages suivant sont support&eacute;s:
+      <literal>de</literal>,
+      <literal>en</literal>,
+      <literal>es</literal>,
+      <literal>fr</literal>,
+      <literal>nl</literal> et
+      <literal>pl</literal>.
+    </para>
+    <para>
+      Alternativement, vous pouvez aussi utiliser la variable d'environnement
+      <envar>LANG</envar> pour choisir la langue pr&eacute;f&eacute;r&eacute;e.
+      C'est habituel dans beaucoup de syst&egrave;mes UNIX, comme Linux.
+      Toutefois, il est connu que cel&agrave; ne marche pas sous Solaris
+      et l'option ci-dessus de la ligne de commande doit &ecirc;tre
+      utilis&eacute;e.
+    </para>
+  </section>
+  <section id="OptionSpeed">
+    <title>-Ddisplay.speed</title>
+    <para>
+      L'option <cmdsynopsis><arg>-Ddisplay.speed=fps</arg></cmdsynopsis>
+      peut &ecirc;tre utilis&eacute;e pour rendre compte de la vitesse
+      d'affichage en <emphasis>images par seconde</emphasis> au lieu d'en
+      millisecondes par image.
+    </para>
+  </section>
+  <section id="OptionXmx">
+    <title>-Xmx</title>
+    <para>
+      Avec cette option vous pouvez changer la taille maximum du tas que la
+      machine virtuelle Java peut adresser dans les syst&egrave;mes Java 1.4.
+      Par d&eacute;faut, elle est de 64 Mo. Pour de gros fichiers ce peut
+      &ecirc;tre insuffisant. En utilisant
+      <cmdsynopsis><arg>-Xmx512m</arg></cmdsynopsis> la taille du tas est
+      agrandie &agrave; un demi gigaoctet. Sur des syst&egrave;mes Java plus
+      anciens la syntaxe de cette option est diff&eacute;rente
+      (cf. <command>java --help</command>).
+    </para>
+  </section>
+</chapter>

@@ -1,0 +1,488 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2005-10-16 19:10Paris, Madrid (heure d'été)\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: JmolDevelopersGuide.docbook.xml:8(title) 
+msgid "Jmol Developer's Guide"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:12(title) 
+msgid "Prerequisites"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:16(para) JmolDevelopersGuide.docbook.xml:86(para) 
+msgid "Java 2 JDK 1.4 (<ulink url=\"http://java.sun.com/\"/>)"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:21(para) JmolDevelopersGuide.docbook.xml:91(para) 
+msgid "Apache Ant (<ulink url=\"http://jakarta.apache.org/ant\"/>)"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:24(para) 
+msgid "On Linux/Unix/OSX try to install ant using a package installer"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:29(para) 
+msgid "CVS - The definitive CVS documentation is at <ulink url=\"http://cvsbook.red-bean.com/cvsbook.html\"/>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:33(para) 
+msgid "On Win32 you can use wincvs from <ulink url=\"http://www.wincvs.org\"/>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:37(para) 
+msgid "On Mac OSX the cvs software comes on the Developer's CD, which can be downloaded free from Apple."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:46(title) JmolDevelopersGuide.docbook.xml:517(title) 
+msgid "Checking Out Jmol from CVS"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:48(para) 
+msgid "For anonymous checkout from SourceForge cvs:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:51(programlisting) 
+#, no-wrap
+msgid "\n  cvs -d:pserver:anonymous@cvs.sf.net:/cvsroot/jmol login\n    "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:55(para) 
+msgid "Press the <command>Enter</command> key when prompted for the password:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:58(programlisting) 
+#, no-wrap
+msgid "\n  cvs -d:pserver:anonymous@cvs.sf.net:/cvsroot/jmol co -d Jmol-HEAD Jmol\n    "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:62(para) 
+msgid "We work from the directory called <command>Jmol-HEAD</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:65(programlisting) 
+#, no-wrap
+msgid "\n  cd Jmol-HEAD\n    "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:69(para) 
+msgid "Later, to get updates ..."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:72(programlisting) 
+#, no-wrap
+msgid "\n  cd {some-path}/Jmol-HEAD\n  cvs up -dP\n    "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:79(title) JmolDevelopersGuide.docbook.xml:639(title) 
+msgid "Building Jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:82(para) 
+msgid "Prerequisites:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:96(para) 
+msgid "Jmol source code"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:102(para) 
+msgid "The Jmol source code can be either downloaded (see <ulink url=\"http://sourceforge.net/project/showfiles.php?group_id=23629\">SourceForge project files</ulink>) or checked out from the CVS repository (see <ulink url=\"http://sourceforge.net/cvs/?group_id=23629\">SourceForge CVS access</ulink>)."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:110(para) 
+msgid "Once you have all the prerequisites, Jmol can be built from the top source directory with the following command:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:115(para) JmolDevelopersGuide.docbook.xml:137(para) 
+msgid "On Linux/Unix/OSX:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:119(prompt) JmolDevelopersGuide.docbook.xml:141(prompt) 
+msgid "[~/jmol/Jmol-HEAD]$"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:119(command) JmolDevelopersGuide.docbook.xml:126(command) 
+msgid "ant"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:122(para) JmolDevelopersGuide.docbook.xml:144(para) 
+msgid "On Windows:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:126(prompt) JmolDevelopersGuide.docbook.xml:148(prompt) 
+msgid "C:\\jmol\\Jmol-HEAD&gt;"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:131(title) 
+msgid "Running Jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:132(para) 
+msgid "The development version of Jmol is normally run by simply executing the jmol script in the Jmol development directory."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:141(command) 
+msgid "./jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:148(command) 
+msgid "jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:153(title) 
+msgid "Coding Standard"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:157(para) 
+msgid "Your text editor should indent for you. If it doesn't then either learn how to enable it or get another editor."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:163(para) 
+msgid "Indentation level should be two spaces"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:166(programlisting) 
+#, no-wrap
+msgid "\n  class Foo {\n    int someClassVariable;\n    \n    Foo(int evenOrOdd) {\n      someClassVariable = 99;\n    }\n    \n    ...\n  }\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:179(para) 
+msgid "Space characters should be used, not tabs"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:184(para) 
+msgid "Assignment and arithmetic operators generally contain spaces on both sides."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:188(programlisting) 
+#, no-wrap
+msgid "\n  a = b + c;\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:191(para) 
+msgid "you are allowed to eliminate the spaces within expressions in order to make operator precedence more clear"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:195(programlisting) 
+#, no-wrap
+msgid "\n  int cSquared = a*a + b*b;\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:200(para) 
+msgid "spaces follow commas in argument lists"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:203(programlisting) 
+#, no-wrap
+msgid "\n  foo(a, 3.14159, \"jmol\");\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:208(para) 
+msgid "Lines should be no more than 80 characters wide"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:213(para) 
+msgid "Open brace goes on the line that starts the block. Close brace goes on a line by itself."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:217(programlisting) 
+#, no-wrap
+msgid "\n  if (condition) {\n    ...\n  } else {\n    ...\n  }\n  \n  while (condition)\n    ...\n  }\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:230(para) 
+msgid "loop indexes start at 0, not 1."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:235(para) 
+msgid "The <emphasis>only</emphasis> valid comparison operators for loop termination are <command>&lt;</command> and <command>&gt;=</command> ... anything else is probably a bug. If you are <emphasis>sure</emphasis> that it is not a bug then put a comment in the code."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:244(para) 
+msgid "Use long descriptive variable names and method names. Do not be afraid of typing."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:250(para) 
+msgid "line-by-line comments within the code are <emphasis>discouraged</emphasis> ... except in very special circumstances. If you put in lots of comments like this then you may find them deleted."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:258(para) 
+msgid "if you feel obligated to insert comments put them as javadoc before the function body"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:264(para) 
+msgid "If your code is changing then do not put in comments. <emphasis>Bad/outdated comments are worse than no comments.</emphasis>"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:270(para) 
+msgid "You may want to look at <ulink url=\"http://www.amazon.com/exec/obidos/ASIN/0521777682\">The Elements of Java Style by Vermeulen, et al</ulink>"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:280(title) 
+msgid "Making a release"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:282(para) 
+msgid "A Jmol release consists of both the application and the applet. Presumably both will have been well tested."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:287(para) 
+msgid "In the <filename class=\"directory\">samples/</filename> directory a number of test files are located for the input filters. All files below that subdirectory should be checked prior to a release."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:295(title) 
+msgid "Packaging"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:297(para) 
+msgid "Distribution packages will be made for any platform for which a developer promises to provide support. File used to create packages should be commited to CVS under the Jmol/packaging directory. Currently the following packages are available:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:306(para) 
+msgid "Debian (by Daniel Leidert and Egon Wllighagen)"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:311(para) 
+msgid "RPM (by Miguel Howard)"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:319(title) 
+msgid "Working with Jmol's CVS"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:321(para) 
+msgid "This section gives information on how to work with Jmol's CVS at SourceForge."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:327(title) 
+msgid "Tagging CVS"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:329(para) 
+msgid "It is important to tag CVS when a distribution was made. This makes it possible to later retrieve the exact source code from CVS in that release. This can be done with <command>cvs tag <parameter>tag-name</parameter></command> in the directory where the CVS files are stored."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:339(title) 
+msgid "CVS Branches"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:341(para) 
+msgid "Sometimes it is convenient to have separate branches to work on. One for an upcoming release, and one branch for the unstable version. Minor bug fixes can then go into the stable branch, while major changes can go into the unstable branch. This section explains how to access, use, and create branches."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:350(title) 
+msgid "Accessing a branch"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:352(para) 
+msgid "The command <command>cvs checkout <parameter>module</parameter></command> by default gets the source code from the HEAD branch, which is the unstable branch of Jmol."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:358(para) 
+msgid "Accessing a specific branch can be done with, e.g. the b6 branch:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:361(programlisting) 
+#, no-wrap
+msgid "\n  cvs checkout -r b6 -d Jmol-6 Jmol\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:364(para) 
+msgid "This will check out a copy of the Jmol module from the b6 branch into a directory called <filename class=\"directory\">Jmol-6</filename>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:369(para) 
+msgid "To determine to which branch a specific locally stored file belongs, you can do <command>cvs status <parameter>file</parameter></command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:376(title) 
+msgid "Creating a branch"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:378(para) 
+msgid "A branch of HEAD can be created with the <command>cvs rtag -b -r HEAD <parameter>branch-name</parameter><parameter>module</parameter></command> command."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:386(title) 
+msgid "Merging branches"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:388(para) 
+msgid "Bug fixes which have been commited to a branch can be merged to the HEAD branch. To do this, check out (or update) a HEAD branch, and type in that directory <command>cvs update -j <parameter>branch-to-merge</parameter></command>. After this the branch from which the changes were merged with HEAD should be tagged, to make it possible to merge later changes with HEAD too. For example, a session might look like:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:397(programlisting) 
+#, no-wrap
+msgid "\n  &gt; cd ~/data/SF/Jmol/Jmol-HEAD\n  &gt; cvs update -j b6\n  &gt; cd ~/data/SF/Jmol/Jmol-6\n  &gt; cvs tag b6-merged-20030725\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:404(para) 
+msgid "Changes made after this merger to branch b6, can then be merged with HEAD with:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:408(programlisting) 
+#, no-wrap
+msgid "\n  &gt; cd ~/data/SF/Jmol/Jmol-HEAD\n  &gt; cvs update -j b6-merged-20030725 -j b6\n  &gt; cd ~/data/SF/Jmol/Jmol-6\n  &gt; cvs tag b6-merged-20031011\n        "
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:419(title) 
+msgid "Using Eclipse"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:422(title) 
+msgid "Eclipse prerequisites"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:424(para) 
+msgid "This documentation has been tested with Eclipse 3.0.x and 3.1. We recommend Eclipse 3.1.x."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:429(para) 
+msgid "Eclipse must be installed and correctly configured before following this procedure."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:436(title) 
+msgid "CVS Repository configuration"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:438(para) 
+msgid "To configure Eclipse to access Jmol's CVS repository, do the following:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:444(para) 
+msgid "Launch Eclipse."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:449(para) JmolDevelopersGuide.docbook.xml:525(para) 
+msgid "Switch to the <command>CVS Repository Exploring</command> perspective."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:455(para) 
+msgid "Right click in the <command>CVS Repositories</command> windows and select <command>New</command> / <command>Repository Location...</command> in the contextual menu."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:462(para) 
+msgid "In the <command>Add CVS Repository</command> window, enter the following values:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:468(para) 
+msgid "Host: <command>cvs.sourceforge.net</command>"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:473(para) 
+msgid "Repository path: <command>/cvsroot/jmol</command>"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:478(para) 
+msgid "Authentication: <command>anonymous</command> for anonymous access, or your login for developer access."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:484(para) 
+msgid "Password: empty for anonymous access, or your password for developer access."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:490(para) 
+msgid "Connection type: <command>pserver</command> for anonymous access, <command>extssh</command> for developer access."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:496(para) 
+msgid "Check <command>Use Default Port</command> and <command>Validate Connection on Finish</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:502(para) 
+msgid "You can choose to check <command>Save Password</command> or not."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:507(para) 
+msgid "Click on <command>Finish</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:519(para) 
+msgid "To check out Jmol from CVS, do the following:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:531(para) 
+msgid "Deploy the repository location you added in the previous section and deploy <command>HEAD</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:537(para) 
+msgid "Right click on <command>Jmol</command> and select <command>Check Out As...</command> in the contextual menu."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:543(para) 
+msgid "In the <command>Check Out As</command> window, check the <command>Check out as a project in the workspace</command> and type <command>Jmol-HEAD</command> in the <command>Project Name</command> field. Click on <command>Finish</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:551(para) 
+msgid "If you want, you can also check out Jmol-web: Right click on <command>Jmol-web</command> and select <command>Check out</command> in the contextual menu."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:561(title) 
+msgid "Configuring Eclipse to build Jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:563(para) 
+msgid "To configure Eclipse 3.1 to build Jmol, you don't need to do anything. The project is automatically configured when you check out Jmol."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:568(para) 
+msgid "To configure Eclipse 3.0.x to build Jmol, you can do the following:"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:574(para) 
+msgid "Switch to the <command>Java</command> perspective."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:579(para) 
+msgid "Right click on <command>Jmol-HEAD</command> and select <command>Properties</command> in the contextual menu."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:585(para) 
+msgid "In the <command>Properties for Jmol-HEAD</command> window, select <command>Java Compiler</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:591(para) 
+msgid "Check <command>Use project (specific) settings</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:596(para) 
+msgid "In the <command>Style</command> tab, select <command>Warning</command> for every combo-box, except for <command>Unqualified access to instance field</command> and <command>Undocumented empty block</command> where you can select <command>Ignore</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:605(para) 
+msgid "In the <command>Advanced</command> tab, select <command>Warning</command> for every combo-box, except for <command>Local variable declaration hides another field or variable</command>, <command>Usage of deprecated API</command> and <command>Usage of non-externalized strings</command> where you can select <command>Ignore</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:615(para) 
+msgid "In the <command>Unused code</command> tab, select <command>Warning</command> for every combo-box, except for <command>Parameter is never read</command> and <command>Unnecessary cast or 'instance of' operation</command> where you can select <command>Ignore</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:627(title) 
+msgid "Running and Debugging Jmol"
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:629(para) 
+msgid "Eclipse can be used to run and debug Jmol directly in Eclipse."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:633(para) 
+msgid "The main class is <command>org.openscience.jmol.app.Jmol</command>."
+msgstr ""
+
+#: JmolDevelopersGuide.docbook.xml:641(para) 
+msgid "To make a full build of Jmol under Eclipse, just do the following: Right click on <command>build.xml</command> and select <command>Run</command> / <command>Ant Build</command> in the contextual menu."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: JmolDevelopersGuide.docbook.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

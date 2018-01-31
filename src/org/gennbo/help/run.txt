@@ -1,0 +1,9 @@
+NBORun: GENERAL PROGRAM USAGE
+
+By default, the NBORun module performs NBO analysis of the selected wavefunction archive (.47) file 'JOB.47' and writes the output to a corresponding 'JOB.NBO' file (as though the 'GenNBO < JOB.47 > JOB.NBO' command were given).
+
+Alternatively, NBORun can calculate the wavefunction with a chosen ESS program, specified by a corresponding 'ESS.BAT' batch file and 'JOB.ESS' input file (as though the command 'ESS JOB.ESS' were given). This allows you to perform the wavefunction calculation and NBO analysis in a single step.
+ 
+You will be prompted with the list of JOB.47 files as found in the directory last used by Jmol-NBO. After a particular job is selected, the program will display the current list of $NBO keyword options and allow you to insert additional options, if desired.
+
+When notified that the job is finished processing the 'JOB.NBO' output becomes available for NBOView orbital plotting (if the PLOT keyword was included) or NBOSearch data-mining.

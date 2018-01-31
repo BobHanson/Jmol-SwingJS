@@ -1,0 +1,47 @@
+<project name="Jmol.rpm" default="main" basedir=".">
+  <property file="${user.home}/.jmol.build.properties" />
+
+  <property name="name" value="jmol" />
+  <property name="version" value="7" />
+  <property name="release" value="0" />
+  <property name="jmol.source"
+    value="../../build/${name}-${version}.source.tar.gz" />
+  <property name="dist.dir" value="${basedir}/dist" />
+  <property name="docbook-xsl" value="docbook-xsl-1.55.0" />
+  <property name="rpm.docbook.source"
+    value="../../doc/${docbook-xsl}.tar.gz" />
+      
+  <target name="main" depends="init,dist" />
+	
+  <target name="init">
+    <tstamp />
+  </target>
+
+  <target name="dist" depends="init">
+    <mkdir dir="${dist.dir}" />
+    <filter token="version" value="${version}" />
+    <filter token="release" value="${release}" />
+    <filter token="dist.dir" value="${dist.dir}" />
+    <copy filtering="yes" file="${name}.spec"
+      tofile="${dist.dir}/${name}-${version}.spec" />
+    <copy filtering="yes" file="rpmrc" todir="${dist.dir}" />
+    <copy filtering="yes" file="rpmmacros" todir="${dist.dir}" />
+    <copy file="${jmol.source}" todir="${dist.dir}" />
+    <copy file="${rpm.docbook.source}" todir="${dist.dir}" />
+
+    <mkdir dir="${dist.dir}/BUILD" />
+    <mkdir dir="${dist.dir}/RPMS" />
+    <mkdir dir="${dist.dir}/SRPMS" />
+
+    <exec dir="${dist.dir}" executable="rpmbuild">
+      <arg line="--rcfile rpmrc -ba ${name}-${version}.spec"/>
+    </exec>
+
+  </target>
+	
+  <target name="clean" depends="init">
+    <delete dir="${dist.dir}" />
+  </target>
+	
+</project>
+

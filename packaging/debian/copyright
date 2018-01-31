@@ -1,0 +1,98 @@
+This package was debianized by Daniel Leidert (dale) <daniel.leidert@wgdd.de>.
+
+It was downloaded from http://www.jmol.org
+
+Copyright:
+
+	Copyright (C) 2003-2005  Miguel, Jmol Development (Team), www.jmol.org
+
+Portions Copyright for included software and partial code:
+
+  Copyright (C) 1996,1998 by Jef Poskanzer
+  Copyright (C) 1998 by Dean S. Jones
+  Copyright (C) 1998, James R. Weeks and BioElectroMech
+  Copyright (C) 1997,1998,1999 by Kenji Hiranabe.
+	see the source-code or 'About' to get more info ...
+
+Upstream Author:
+
+  Miguel Howard, Egon Willighagen, Tim Driscoll, Nicolas Vervelle,
+  Simon Tyrrell, Oliver Stuker, Rene Kanters, Bob Hanson, Jan Reichert,
+  Fabian Dortu, Bradley A. Smith, Dan Gezelter, Christoph Steinbeck,
+  Tom Grey, Charles Fulton, Mike Beachy, Hugo Garcia, Matthew Meinek,
+  Jochen Junker, Christian Ribeaud, Jonathan C. Rienstra-Kiracofe,
+  Carl Resnikoff, Agustí Sánchez, Chih-Peng Yang, Rajarshi Guha
+
+Table of contents:
+
+1. Copyright and License for Jmol
+2. Copyright and License for JpegEncoder and its associated classes
+... more to come.
+
+
+1. Copyright and license for Jmol
+---------------------------------
+Copyright (C) 2003-2005  Miguel, Jmol Development (Team), www.jmol.org
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+	02111-1307  USA.
+
+On Debian systems, the GNU Lesser General Public License (LGPL) version 2.1,
+is available as the file /usr/share/common-licenses/copyright/LGPL.
+
+
+
+2. Copyright and license for JpegEncoder and its associated classes
+-------------------------------------------------------------------
+Copyright (C) 1998, James R. Weeks and BioElectroMech.
+This software is based in part on the work of the Independent JPEG Group
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+	1. Redistributions of source code must retain the above copyright notice,
+	   this list of conditions, all files included with the source code, and
+	   the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Other projects involved in jmol:
+
+JFA Icon collection (http://www.javalobby.org/jfa/projects/icons/index.html)
+Copyright (C) 1998 by Dean S. Jones (dean@gallant.com).
+
+Acme image encoders (http://www.acme.com/)
+Copyright (C) 1996,1998 by Jef Poskanzer (jef@acme.com).
+
+JPEG Encoder (http://www.abrador.com/essentialjpeg/)
+Copyright (C) 1998 by James R. Weeks (james@abrador.com) and BioElectroMech.
+
+Java Analysis Studio (http://jas.freehep.org/)
+
+Unofficial Java3D vecmath package
+(http://www.esm.co.jp/divisions/open-sys/java/vecmath/)
+Copyright (C) 1997,1998,1999 by Kenji Hiranabe.

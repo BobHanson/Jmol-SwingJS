@@ -1,0 +1,6 @@
+remotedir = "http://your.server.here"
+password = "???????"
+remotestatus = remotedir + "mpstatus.php?q=status"
+remoteupdate = remotestatus + "?POST?&password=" + password + "&q="
+
+

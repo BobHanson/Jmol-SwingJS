@@ -1,0 +1,167 @@
+<project name="Jmol release to Sonatype OSSRH repository" default="snapshot" basedir=".." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+  <!--
+    To use this script, we need to add the tools/maven-ant-tasks-2.1.3.jar to the class path.
+    For details, see https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide#SonatypeOSSMavenRepositoryUsageGuide-4.MavenRepositories
+  -->
+  <taskdef uri="antlib:org.apache.maven.artifact.ant"
+    resource="org/apache/maven/artifact/ant/antlib.xml">
+    <classpath>
+      <pathelement location="tools/maven-ant-tasks-2.1.3.jar" />
+    </classpath>
+  </taskdef>
+
+  <!-- Contributions -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="tools/ant-contrib.jar" />
+    </classpath>
+  </taskdef>
+
+  <property name="src" location="src" />
+  <property name="dist" location="build/dist" />
+  <property name="dist-maven" location="build/dist-maven" />
+
+  <!-- define Maven coordinates -->
+  <property name="groupId" value="net.sourceforge.jmol" />
+  <property name="artifactId" value="jmol" />
+  
+  <property file="${dist}/Jmol.properties" prefix="Jmol.properties" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
+  <propertyregex property="version"
+                 override = "true"
+                 input="${version}"
+                 regexp='"'
+                 replace=""
+                 global="true" />
+  <echo message="version=${version}" />
+
+  <!-- define artifacts' name, which follows the convention of Maven -->
+  <property name="maven-snapshot-jar" value="${dist-maven}/${artifactId}-${version}-SNAPSHOT.jar" />
+  <property name="maven-release-jar" value="${dist-maven}/${artifactId}-${version}.jar" />
+  <property name="maven-javadoc-jar" value="${dist-maven}/${artifactId}-${version}-javadoc.jar" />
+  <property name="maven-sources-jar" value="${dist-maven}/${artifactId}-${version}-sources.jar" />
+
+  <!-- defined maven snapshots and staging repository id and url -->
+  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+  <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
+  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+  <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+  <property name="maven-releases-repository-id" value="releases" />
+
+  <target name="dist-snapshot" description="generate the snapshot distribution">
+    
+    <!-- create the dist folder-->
+    <delete dir="${dist-maven}" />
+    <mkdir dir="${dist-maven}" />
+
+    <!-- copy the pom.xml file -->
+    <filter token="version" value="${version}-SNAPSHOT"/>
+    <copy file="${dist}/pom.xml.template" tofile="${dist-maven}/pom.xml" filtering="true" />
+    
+    <!-- copy the jar artifact -->
+    <copy file="${dist}/Jmol.jar" tofile="${maven-snapshot-jar}" />
+  </target>
+
+  <target name="snapshot" depends="dist-snapshot" description="deploy snapshot version to Maven snapshot repository">
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+      <arg value="-Durl=${maven-snapshots-repository-url}" />
+      <arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
+      <arg value="-DpomFile=${dist-maven}/pom.xml" />
+      <arg value="-Dfile=${maven-snapshot-jar}" />
+    </artifact:mvn>
+  </target>
+
+  <target name="dist-release" description="generate the release distribution">
+    <!-- create the dist folder-->
+    <delete dir="${dist-maven}" />
+    <mkdir dir="${dist-maven}" />
+
+    <!-- copy the pom.xml file -->
+    <filter token="version" value="${version}"/>
+    <copy file="${dist}/pom.xml.template" tofile="${dist-maven}/pom.xml" filtering="true" />
+    
+    <!-- copy the jar artifact -->
+    <copy file="${dist}/Jmol.jar" tofile="${maven-release-jar}" />
+
+    <!-- copy the javadoc artifact -->
+    <copy file="${dist}/jmol-${version}-javadoc.jar" tofile="${maven-javadoc-jar}" />
+
+    <!-- copy the sources artifact -->
+    <copy file="${dist}/jmol-${version}-sources.jar" tofile="${maven-sources-jar}" />
+  </target>
+  
+  <target name="deploy-release" depends="dist-release" description="deploy release version to Maven staging repository">
+    <!-- sign and deploy the main artifact -->
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${dist-maven}/pom.xml" />
+      <arg value="-Dfile=${maven-release-jar}" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the sources artifact -->
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${dist-maven}/pom.xml" />
+      <arg value="-Dfile=${maven-sources-jar}" />
+      <arg value="-Dclassifier=sources" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the javadoc artifact -->
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${dist-maven}/pom.xml" />
+      <arg value="-Dfile=${maven-javadoc-jar}" />
+      <arg value="-Dclassifier=javadoc" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+  </target>
+  
+  <target name="close-release" description="close the current staging repository">
+    <!-- close the staging repository -->
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="nexus:staging-close" />
+      <arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}" />
+    </artifact:mvn>
+  </target>
+
+  <target name="promote-release" description="promote the closed staging repository to release repository">
+    <!-- promote the release -->
+    <artifact:mvn>
+      <arg value="-f" />
+      <arg value="${dist-maven}/pom.xml" />
+      <arg value="nexus:staging-promote" />
+      <arg value="-Dnexus.promote.autoSelectOverride=true" />
+      <arg value="-Dnexus.serverAuthId=${maven-staging-repository-id}" />
+      <arg value="-DtargetRepositoryId=${maven-releases-repository-id}" />
+    </artifact:mvn>
+  </target>
+
+  <target name="release" depends="deploy-release,close-release,promote-release" description="deploy and release a new version of Jmol to the Sonatype Maven repository">
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${dist-maven}" />
+  </target>
+
+</project>

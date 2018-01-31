@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+  "../../build/docbook-xml/docbookx.dtd"
+[
+<!ENTITY guideIntro          SYSTEM "guide/intro.docbook.xml">
+<!ENTITY guideCommandLine    SYSTEM "guide/commandline.docbook.xml">
+<!ENTITY guideMenus          SYSTEM "guide/menus.docbook.xml">
+<!ENTITY guideScripts        SYSTEM "guide/scripts.docbook.xml">
+<!ENTITY guideScriptCommands SYSTEM "guide/scriptCommands.docbook.xml">
+]>
+
+<book>
+  <bookinfo>
+    <title>Jmol Documentation</title>
+  </bookinfo>
+  
+  &guideIntro;
+  &guideCommandLine;
+  &guideMenus;
+  &guideScripts;
+</book>

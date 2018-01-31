@@ -1,0 +1,74 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 02_use_debian_docbook.dpatch by Daniel Leidert (dale) <daniel.leidert@wgdd.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Use DTDs and stylesheets provided by the Debian distribution
+## DP: in docbook-xml and docbook-xsl.
+
+@DPATCH@
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolAppletGuide.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolAppletGuide.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolAppletGuide.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolAppletGuide.docbook.xml	2005-02-03 07:17:20.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ [
+ <!ENTITY appletIntro        SYSTEM "applet/intro.docbook.xml">
+ <!ENTITY appletBrowsers     SYSTEM "applet/browsers.docbook.xml">
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolAppletGuide_fr.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolAppletGuide_fr.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolAppletGuide_fr.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolAppletGuide_fr.docbook.xml	2005-02-03 07:17:07.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ [
+ <!ENTITY appletIntro        SYSTEM "applet/intro_fr.docbook.xml">
+ <!ENTITY appletBrowsers     SYSTEM "applet/browsers_fr.docbook.xml">
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide.docbook.xml	2005-02-03 07:17:45.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ >
+ <book id="jmol-devel-guide">
+   <bookinfo>
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide_fr.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide_fr.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide_fr.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolDevelopersGuide_fr.docbook.xml	2005-02-03 07:17:32.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ >
+ <!--
+   French translation 
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolGuide.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolGuide.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolGuide.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolGuide.docbook.xml	2005-02-03 07:18:02.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ [
+ <!ENTITY guideIntro          SYSTEM "guide/intro.docbook.xml">
+ <!ENTITY guideCommandLine    SYSTEM "guide/commandline.docbook.xml">
+diff -urNad jmol-10.00+cvs20050203/doc/source/JmolGuide_fr.docbook.xml /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolGuide_fr.docbook.xml
+--- jmol-10.00+cvs20050203/doc/source/JmolGuide_fr.docbook.xml	2005-02-03 07:04:34.000000000 +0100
++++ /tmp/dpep.lwSRk1/jmol-10.00+cvs20050203/doc/source/JmolGuide_fr.docbook.xml	2005-02-03 07:18:16.000000000 +0100
+@@ -1,6 +1,6 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+-  "../../build/docbook-xml/docbookx.dtd"
++  "/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"
+ [
+ <!ENTITY guideIntro          SYSTEM "guide/intro_fr.docbook.xml">
+ <!ENTITY guideCommandLine    SYSTEM "guide/commandline_fr.docbook.xml">

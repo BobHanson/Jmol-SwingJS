@@ -1,0 +1,15 @@
+<chapter id="HardwareOSRequirements">
+  <title>Hardware and OS Requirements</title>
+  <para>
+    We recommend a machine with a 600 Mhz CPU and 256 Mb of RAM. This
+    should cover almost every machine made this century. 
+  </para>
+  <para>
+    If you have older CPU with a newer/upgraded operating system,
+    (like Mac OSX or WinXP) then we <emphasis>strongly</emphasis> recommend
+    that you have at least 256 Mb of RAM ... more is better.
+  </para>
+  <para>
+    <emphasis>No specialized video hardware is required.</emphasis>
+  </para>
+</chapter>

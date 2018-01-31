@@ -1,0 +1,6 @@
+TWIST IA IB IC IC newval
+                    IA-IB-IC-ID angle to 'newval')
+
+      Example:
+       SHOW C2H6          ethane (staggered)
+       TWIST 1 2 3 4 0.   ethane (eclipsed)

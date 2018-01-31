@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+  "../../build/docbook-xml/docbookx.dtd"
+[
+<!ENTITY appletIntro        SYSTEM "applet/intro_fr.docbook.xml">
+<!ENTITY appletBrowsers     SYSTEM "applet/browsers_fr.docbook.xml">
+<!ENTITY appletHardware     SYSTEM "applet/hardware_fr.docbook.xml">
+<!ENTITY appletServerConfig SYSTEM "applet/serverconfig_fr.docbook.xml">
+<!ENTITY appletUsage        SYSTEM "applet/usage_fr.docbook.xml">
+]
+>
+<!--
+  French translation 
+  Translated from default version : JmolAppletGuide.docbook.xml (v 1.13)
+-->
+<book id="jmol-applet-guide" lang="fr">
+
+  <bookinfo>
+    <title>Documentation Jmol Applet</title>
+  </bookinfo>
+
+  &appletIntro;
+  &appletBrowsers;
+  &appletHardware;
+  &appletServerConfig;
+  &appletUsage;
+</book>

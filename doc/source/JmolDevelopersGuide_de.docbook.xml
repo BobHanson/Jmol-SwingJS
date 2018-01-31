@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "../../build/docbook-xml/docbookx.dtd">
+<book id="jmol-devel-guide" lang="de">
+
+  <bookinfo>
+    <title>Jmol Anleitung für Entwickler</title>
+  <copyright><year>2005</year><holder>Jmol Development Team (jmol-developers@lists.sourceforge.net)</holder></copyright></bookinfo>
+  
+  <chapter id="Prerequisites">
+    <title>Voraussetzungen</title>
+  
+    <itemizedlist>
+      <listitem>
+        <para>Java 2 JDK 1.4 (<ulink url="http://java.sun.com/"/>)</para>
+      </listitem>
+      <listitem>
+        <para>Apache Ant (<ulink url="http://jakarta.apache.org/ant"/>)</para>
+        <para>Ant sollte auf einem  Linux/Unix/OSX System möglichst mit Hilfe der Paketverwaltung installiert werden.</para>
+      </listitem>
+      <listitem>
+        <para>CVS - The definitive CVS documentation unter <ulink url="http://cvsbook.red-bean.com/cvsbook.html"/>)</para>
+        <para>Für Win32 kann wincvs von <ulink url="http://www.wincvs.org"/> eingesetzt werden.</para>
+        <para>Bei Mac OSX befindet sich die CVS-Software auf der Entwickler-CD, welche kostenlos bei Apple heruntergeladen werden kann.</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+  
+  <chapter id="CheckingOutJmol">
+    <title>Jmol per CVS auschecken</title>
+    
+    <para>Für den anonymen CVS-Checkout bei SourceForge:</para>
+    <programlisting>
+  cvs -d:pserver:anonymous@cvs.sf.net:/cvsroot/jmol login
+    </programlisting>
+
+    <para>Bei der Passwortabfrage einfach <command>Enter</command> betätigen:</para>
+    <programlisting>
+  cvs -d:pserver:anonymous@cvs.sf.net:/cvsroot/jmol co -d Jmol-HEAD Jmol
+    </programlisting>
+    
+    <para>Wir arbeiten im Verzeichnis <command>Jmol-HEAD</command>.</para>
+    <programlisting>
+  cd Jmol-HEAD
+    </programlisting>
+
+    <para>Später, für updates ...</para>
+    <programlisting>
+  cd {some-path}/Jmol-HEAD
+  cvs up -dP
+    </programlisting>
+  </chapter>
+  
+  <chapter id="BuildingJmol">
+    <title>Jmol übersetzen</title>
+    
+    <itemizedlist>
+      <para>Voraussetzungen:</para>
+      <listitem>
+        <para>Java 2 JDK 1.4 (<ulink url="http://java.sun.com/"/>)</para>
+      </listitem>
+      <listitem>
+        <para>Apache Ant (<ulink url="http://jakarta.apache.org/ant"/>)</para>
+      </listitem>
+      <listitem>
+        <para>Jmol Quellcode</para>
+      </listitem>
+    </itemizedlist>
+    
+    <para>Jmol Quellcode kann entweder als Paket herundergeladen (siehe <ulink url="http://sourceforge.net/project/showfiles.php?group_id=23629"> SourceForge Projekt-Dateien</ulink>) oder per CVS ausgecheckt werden (siehe <ulink url="http://sourceforge.net/cvs/?group_id=23629">SourceForge CVS Zugang</ulink>).</para>
+    
+    <para>Wenn die Vorraussetzungen alle erfüllt sind, kann Jmol durch das folgende Kommando, welches im Arbeitsverzeichnis von Jmol ausgeführt werden muss, übersetzt werden:</para>
+    
+    <para>Unter Linux/OSX/Unix:</para>
+    <programlisting>
+  <prompt>[~/jmol/Jmol-HEAD]$</prompt> <command>ant</command>
+    </programlisting>
+    
+    <para>Unter Windows:</para>
+    <programlisting>
+  <prompt>C:\jmol\Jmol-HEAD&gt;</prompt> <command>ant</command>
+    </programlisting>
+  </chapter>
+  
+  <chapter id="RunningJmol">
+    <title>Jmol starten</title>
+    <para>Die Entwickler-Version von Jmol wird normalerweise einfach durch das jmol Skript im Arbeitsverzeichnis gestartet.</para>
+    
+    <para>Unter Linux/OSX/Unix:</para>
+    <programlisting>
+  <prompt>[~/jmol/Jmol-HEAD]$</prompt><command>./jmol</command>
+    </programlisting>
+    
+    <para>Unter Windows:</para>
+    <programlisting>
+  <prompt>C:\jmol\Jmol-HEAD&gt;</prompt><command>jmol</command>
+    </programlisting>
+  </chapter>
+  
+  <chapter id="CodingStandard">
+    <title>Coding-Standard</title>
+    
+    <itemizedlist>
+      <listitem>
+        <para>Der gewählte Editor sollte Zeilen automatisch einrücken. Falls er das nicht tut und sich dieses Feature auch nicht aktivieren lässt, sollte ein anderer Editor benutzt werden.</para>
+      </listitem>
+      <listitem>
+        <para>Die Breite der Einrückung (Tabulatorbreite) soll zwei Leerzeichen betragen.</para>
+        <programlisting>
+  class Foo {
+    int someClassVariable;
+    
+    Foo(int evenOrOdd) {
+      someClassVariable = 99;
+    }
+    
+    ...
+  }
+        </programlisting>
+      </listitem>
+      <listitem>
+        <para>Statt Tabulatoren sollten Leerzeichen benutzt werden</para>
+      </listitem>
+      <listitem>
+        <para>Zuweisungen und arithmetische Operatoren besitzen i.A. auf beiden Seiten Leerzeichen.</para>
+        <programlisting>
+  a = b + c;
+        </programlisting>
+        <para>Es ist erlaubt, die Leerzeichen zwischen Ausdrücken zu entfernen, um die Operator-Priorität zu verdeutlichen.</para>
+        <programlisting>
+  int cSquared = a*a + b*b;
+        </programlisting>
+      </listitem>
+      <listitem>
+        <para>In der Liste der Argumente folgt auf ein Komma ein Leerzeichen.</para>
+        <programlisting>
+  foo(a, 3.14159, "jmol");
+        </programlisting>
+      </listitem>
+      <listitem>
+        <para>Eine Zeile sollte nicht länger als 80 Zeichen sein.</para>
+      </listitem>
+      <listitem>
+        <para>Öffnende Klammern befinden sich in der Zeile, die den Block öffnet. Schließende Klammern werden in eine eigene Zeile geschrieben.</para>
+        <programlisting>
+  if (condition) {
+    ...
+  } else {
+    ...
+  }
+  
+  while (condition)
+    ...
+  }
+        </programlisting>
+      </listitem>
+      <listitem>
+        <para>Schleifen werden bei 0, nicht bei 1 gestartet.</para>
+      </listitem>
+      <listitem>
+        <para><emphasis>Nur </emphasis> <command>&lt;</command> und <command>&gt;=</command> sind valide Vergleichsoperatoren zur Termination von Schleifen ... alles andere ist möglicherweise fehlerhaft. Falls nicht absolute <emphasis>Gewissheit</emphasis> besteht, dass das Gegenteil der Fall ist, sollte in diesen Fällen ein Kommentar im Quellcode hinterlassen.</para>
+      </listitem>
+      <listitem>
+        <para>Variablen- und Methodenbezeichnungen müssen eindeutig und beschreibend sein. Nur keine Hemmungen bei langen Bezeichnungen.</para>
+      </listitem>
+      <listitem>
+        <para>line-by-line Kommentare sind <emphasis>unerwünscht</emphasis> ... in speziellen Fällen kann es Ausnahmen geben. Falls sich viele soclhe Kommentare im Quellcode finden, könnte es passieren, dass sie einfach gelöscht werden.</para>
+      </listitem>
+      <listitem>
+        <para>Falls Kommentare unbedingt notwendig sind, sollten sie als JavaDoc vor der Funktion eingefügt werden</para>
+      </listitem>
+      <listitem>
+        <para>Kommentare sollten nicht in Code eingefügt werden, der gerade verändert wird. <emphasis>Schlechte/veraltete Kommentare sind schlimmer als gar keine Kommentare.</emphasis></para>
+      </listitem>
+      <listitem>
+        <para>Empfehlenswert ist auch ein Blick in <ulink url="http://www.amazon.com/exec/obidos/ASIN/0521777682">The Elements of Java Style von Vermeulen, et al</ulink>.</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+  
+  <chapter id="Releasing">
+    <title>Ein Release erstellen</title>
+    
+    <para>Ein Jmol Release besteht aus der Jmol Applikation und dem Applet. Beide sollten vorher ausführlich getestet werden.</para>
+    
+    <para>Im Verzeichnis <filename class="directory">samples/</filename> befinden sich eine Reihe von Beispiel-Dateien, um den Input-Filter von Jmol zu überprüfen. Alle Dateien in diesem Verzeichnis sollten vor einem Release zu Testzwecken geladen werden.</para>
+  </chapter>
+
+  <chapter id="Packaging">
+    <title>Pakete</title>
+    
+    <para>Um Distributions-Pakete für Plattformen zu erstellen, muss der Entwickler den Support übernehmen. Dateien, die zum Erstellen der Pakete notwendig sind, werden im CVS innerhalb des Verzeichnisses Jmol/packaging abgelegt. Zur Zeit sind folgenden Pakete erhältlich:</para>
+    
+    <itemizedlist>
+      <listitem>
+        <para>Debian (Daniel Leidert &amp; Egon Willighagen)</para>
+      </listitem>
+      <listitem>
+        <para>RPM (Miguel Howard)</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+  
+  <chapter id="CVS">
+    <title>Mit Jmol's CVS-System arbeiten</title>
+    
+    <para>Dieser Abschnitt gibt Auskunft über das Arbeiten mit dem Jmol CVS bei SourceForge.</para>
+    
+    <section id="tagging">
+      <title>CVS Tags</title>
+    
+      <para>Es ist sehr wichtig mit Tags zu arbeiten, vor allem wenn ein neues Release erscheint. Dadurch wird es möglich, dass auch später noch der exakte Quellcode für dieses Release zur Verfügung steht. Tags werden mittls <command>cvs tag <parameter>tag-name</parameter></command> im Arbeitsverzeichnis erstellt.</para>
+    </section>
+    
+    <section id="branching">
+      <title>CVS Entwicklungszweige</title>
+
+      <para>Manchmal ist es auch sehr bequem mit verschiedenen Entwicklungszweigen (auch Branch genannt) zu arbeiten - einer für den nächsten Release, einer für die aktuelle Entickler-Version. Kleinere Bug-Fixes können in den stabilen Entwicklungszweig einfließen, während größere Veränderungen am Quellcode nur in die Entwickler-Version eingehen sollten. Dieser Abschnitt erklärt, wie man mit Entwicklungszweigen arbeitet.</para>
+      
+      <section id="branch_access">
+        <title>Einen Entwicklungszweig auschecken</title>
+        
+        <para>Das Kommando <command>cvs checkout <parameter>module</parameter></command> checkt den Code aus dem HEAD Entwicklungszweig aus (entspricht dem Entwicklungszweig "unstable").</para>
+        
+        <para>Einen bestimmten Entwicklungszeig zu bearbeiten, soll hier am Beispiel des b6-Branch gezeigt werden:</para>
+        <programlisting>
+  cvs checkout -r b6 -d Jmol-6 Jmol
+        </programlisting>
+        <para>Damit checkt man eine Kopie des b6 Entwicklungszweigs aus und platziert diese im Verzeichnis <filename class="directory">Jmol-6</filename>.</para>
+        
+        <para>Um festzustellen, zu welchem Entwicklungszweig eine lokale Datei gehört, nutzt man das Kommando <command>cvs status <parameter>file</parameter></command>.</para>
+      </section>
+      
+      <section id="branch_creating">
+        <title>Einen Entwicklungszweig erstellen</title>
+        
+        <para>Ein Entwicklungszweig von HEAD kann mit dem Kommando <command>cvs rtag -b -r HEAD <parameter>branch-name</parameter><parameter>module</parameter></command> erzeugt werden.</para>
+      </section>
+      
+      <section id="branch_merging">
+        <title>Entwicklungszweige zusammenführen</title>
+      
+        <para>Bug-Fixes, welche in einen bestimmten Entwicklungszweig geflossen sind, sollten auch in HEAD eingehen. Dafür muss zuerst eine Kopie von HEAD ausgecheckt (oder falls vorhanden, aktualisiert) werden. Im Vereichnis von HEAD wird dann der folgende Befehl ausgeführt: <command>cvs update -j <parameter>branch-to-merge</parameter></command>. Danach wird der Entwicklungszweig (Branch), der mit HEAD vermischt wurde, mit einem Tag versehen, um zu gewährleisten, dass spätere Änderungen auch nach HEAD übertragen werden können. Hier ein Beipsiel, wie eine solche Sitzung aussehen könnte: </para>
+        <programlisting>
+  &gt; cd ~/data/SF/Jmol/Jmol-HEAD
+  &gt; cvs update -j b6
+  &gt; cd ~/data/SF/Jmol/Jmol-6
+  &gt; cvs tag b6-merged-20030725
+        </programlisting>
+      
+        <para>Veränderungen, welche sich zu einem späteren Zeitpunkt ergeben, können dann nach HEAD überführt werden:</para>
+        <programlisting>
+  &gt; cd ~/data/SF/Jmol/Jmol-HEAD
+  &gt; cvs update -j b6-merged-20030725 -j b6
+  &gt; cd ~/data/SF/Jmol/Jmol-6
+  &gt; cvs tag b6-merged-20031011
+        </programlisting>
+      </section>
+    </section>
+  </chapter>
+  
+  <chapter id="Eclipse">
+    <title>Eclipse benutzen</title>
+    
+    <section id="Eclipse_prerequisites">
+      <title>Voraussetzungen für Eclipse</title>
+    
+      <para>This documentation has been tested with Eclipse 3.0x and 3.1.</para>
+    
+      <para>Eclipse muss zuerst korrekt installiert und konfiguriert werden, bevor mit den nächsten Schritten fortgefahren werden kann.</para>
+    </section>
+    
+    <section id="Eclipse_CVSConfig">
+      <title>Konfiguration des CVS Repositoriums</title>
+      
+      <para>Der Zugang zum Jmol CVS wird unter Eclipse so konfiguriert:</para>
+    
+      <itemizedlist>
+        <listitem>
+          <para>Eclipse starten.</para>
+        </listitem>
+        <listitem>
+          <para>Zur <command>CVS Repository Exploring</command> Perspektive wechseln.</para>
+        </listitem>
+        <listitem>
+          <para>Rechte Maustaste auf <command>CVS Repositories</command> Fenster und dort <command>New</command> / <command>Repository Location...</command> im Kontextmenü auswählen.</para>
+        </listitem>
+        <listitem>
+          <para>Im Fenster <command>Add CVS Repository</command> werden die folgenden Werte eingegeben:</para>
+          <itemizedlist>
+            <listitem>
+              <para>Host: <command>cvs.sourceforge.net</command></para>
+            </listitem>
+            <listitem>
+              <para>Repository path: <command>/cvsroot/jmol</command></para>
+            </listitem>
+            <listitem>
+              <para>Authentication: <command>anonymous</command> für anonymen Zugriff, oder den Login für den Zugang als Entwickler.</para>
+            </listitem>
+            <listitem>
+              <para>Password: leer oder das Passwort für den Zugang als Entwickler.</para>
+            </listitem>
+            <listitem>
+              <para>Connection type: <command>pserver</command> für anonymen Zugriff, <command>extssh</command> für den Zugang als Entwickler.</para>
+            </listitem>
+            <listitem>
+              <para>Dann sind noch die Optionen <command>Use Default Port</command> und <command>Validate Connection on Finish</command> zu aktivieren.</para>
+            </listitem>
+            <listitem>
+              <para>Das Passwort kann mit der Option <command>Save Password</command> wahlweise gespeicht werden.</para>
+            </listitem>
+            <listitem>
+              <para>Zum Schluss die Einstellungen mit <command>Finish</command> bestätigen.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+    
+    <section id="Eclipse_CheckingOut">
+      <title>Jmol per CVS auschecken</title>
+      
+      <para>Um Jmol aus dem CVS auszuchecken:</para>
+      
+      <itemizedlist>
+        <listitem>
+          <para>Zur <command>CVS Repository Exploring</command> Perspektive wechseln.</para>
+        </listitem>
+        <listitem>
+          <para>Die Adresse des CVS-Repositoriums (siehe vorangegangener Abschnitt) eingeben und <command>HEAD</command> eintragen.</para>
+        </listitem>
+        <listitem>
+          <para>Rechte Maustaste auf <command>Jmol</command> und <command>Check Out As...</command> im Kontextmenü auswählen.</para>
+        </listitem>
+        <listitem>
+          <para>Im Fenster <command>Check Out As</command>, wird die Option <command>Check out as a project in the workspace</command> aktiviert und im Feld <command>Project Name</command> wird <command>Jmol-HEAD</command> eingegeben. Diese Einstellungen müssen noch mit einem Klick auf <command>Finish</command> bestätigt werden.</para>
+        </listitem>
+        <listitem>
+          <para>Falls gewünscht, kann auch Jmol-web ausgecheckt werden. Dazu rechte Maustaste auf <command>Jmol-web</command> und <command>Check out</command> im Kontextmenü auswählen.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    
+    <section id="Eclipse_Configuring">
+      <title>Eclipse zum Übersetzen von Jmol konfigurieren</title>
+      
+      <para>Um Jmol mit Eclipse zu übersetzen:</para>
+      
+      <itemizedlist>
+        <listitem>
+          <para>Zuerst zur <command>Java</command> Perspektive wechseln.</para>
+        </listitem>
+        <listitem>
+          <para>Rechte Maustaste auf <command>Jmol-HEAD</command> und <command>Properties</command> im Kontextmenü auswählen.</para>
+        </listitem>
+        <listitem>
+          <para>In the <command>Properties for Jmol-HEAD</command> window, select <command>Java Compiler</command> (3.0x) or <command>Java Compiler -&gt; Errors/Warnings </command> (3.1).</para>
+        </listitem>
+        <listitem>
+          <para>Check <command>Use project (specific) settings</command>.</para>
+        </listitem>
+        <listitem>
+          <para>In the <command>Style</command> tab, select <command>Warning</command> for every combo-box, except for <command>Unqualified access to instance field</command> and <command>Undocumented empty block</command> where you can select <command>Ignore</command>. For Eclipse 3.1, you will find the necessary options in the <command>Code Style</command> tab.</para>
+        </listitem>
+        <listitem>
+          <para>In the <command>Advanced</command> tab, select <command>Warning</command> for every combo-box, except for <command>Local variable declaration hides another field or variable</command>, <command>Usage of deprecated API</command> and <command>Usage of non-externalized strings</command> where you can select <command>Ignore</command>. For Eclipse 3.1, you will find the necessary options in the <command>Name shadowing and conflicts</command>, <command>Deprectated and restricted API</command> and the <command>Code Style</command> tab.</para>
+        </listitem>
+        <listitem>
+          <para>In the <command>Unused code</command> tab, select <command>Warning</command> for every combo-box, except for <command>Parameter is never read</command> and <command>Unnecessary cast or 'instance of' operation</command> where you can select <command>Ignore</command>. For Eclipse 3.1, you will find the necessary options in the <command>Unnecessary code</command> tab.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    
+    <section id="Eclipse_Running">
+      <title>Jmol starten und debuggen</title>
+      
+      <para>Eclipse kann benutzt werden um Jmol zu starten und zu debuggen.</para>
+      
+      <para>Die Hauptklasse ist <command>org.openscience.jmol.app.Jmol</command></para>
+    </section>
+    
+    <section id="Eclipse_Building">
+      <title>Jmol übersetzen</title>
+    
+      <para>Um das Jmol Projekt unter Eclipse zu erstellen, sind nur wenige Schritte notwendig: Rechte Maustaste auf <command>build.xml</command> und <command>Run</command> / <command>Ant Build</command> im Kontextmenü auswählen.</para>
+    </section>
+    
+  </chapter>
+
+</book>

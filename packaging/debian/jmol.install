@@ -1,0 +1,16 @@
+Jmol.jar usr/share/java
+
+build/doc/JmolUserGuide/*.html usr/share/doc/jmol/html
+build/doc/JmolUserGuide_fr/*.html usr/share/doc/jmol/html/fr
+
+debian/desktop/jmol usr/bin
+
+debian/desktop/jmol.keys usr/share/mime-info
+debian/desktop/jmol.mime usr/share/mime-info
+
+debian/desktop/jmol.desktop usr/share/applications
+debian/desktop/jmol.desktop usr/share/applnk/Edutainment/Science
+debian/desktop/jmol.applications usr/share/application-registry
+debian/desktop/x-jmol.desktop usr/share/mimelnk/application
+
+debian/jmol_icon.xpm usr/share/pixmaps

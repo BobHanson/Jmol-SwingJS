@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="org/jmol/jcamp/" kind="src" path="src"/>
+	<classpathentry excluding="CDKIntegration.java|CDKIntegrationPDB.java" kind="src" path="examples/basic"/>
+	<classpathentry kind="src" path="examples/externalAppletControls"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry excluding="org/jmol/screensaver/JmolScreensaver.java" kind="src" path="screensaver/src/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="jars/netscape.jar"/>
+	<classpathentry kind="lib" path="screensaver/jars/saverbeans-api.jar"/>
+	<classpathentry kind="lib" path="jars/junit.jar"/>
+	<classpathentry kind="lib" path="jars/JSpecView.jar"/>
+	<classpathentry kind="lib" path="jars/naga-3_0.jar"/>
+	<classpathentry kind="lib" path="jars/commons-cli-1.2.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

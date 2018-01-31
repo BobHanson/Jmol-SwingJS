@@ -1,0 +1,689 @@
+<changes version="jmol-10.??">
+  <change contributor="TOHW">
+    Modificate CmlReader.java adaptor pentru a permite LMC de intrare pentru a applet-ul de lectură noduri DOM din browser.
+  </change>
+  <change contributor="EW">
+    Finalizat o mare parte din CdkJmolAdapter: proprietăţile PPB sunt acum suportate,
+    şi ChemSequence / ChemModel este mapat la AtomSetCollection / AtomSet.
+  </change>
+  <change contributor="EW">
+    Adaugata lectură a structurilor de intrare de la fişiere Mopac.
+  </change>
+  <change contributor="NV">
+    Adaugata Folding @ Home (folding.stanford.edu) current.xyz fişiere cititor.
+  </change>
+  <change contributor="MTH">
+    Adaugat suportul Unicode în script-uri.
+  </change>
+  <change contrubutor="MTH">
+    Adaugata de redare a suprafetelor ochiurilor de plasă.
+  </change>
+  <change contributor="MTH">
+    Adaugata de oferire de polyhedrals.
+  </change>
+  <change contributor="ST">
+    Adaugata Drag-and-drop la cererea de JVM 1,5 şi mai bine.
+  </change>
+  <change contributor="EW">
+    Adaugata plugin DADMLBrowser permite regăsirea de informaţii chimice de pe Internet
+    prin interogări asupra indicilor şi URI-uri ca dadml:? / / Orice pdbid / 1CRN.
+  </change>
+  <change contributor="EW">
+    Adăugat suport pentru fişiere smol spartan '04.
+  </change>
+  <change contributor="NV">
+    Adaugata de comandă pentru infrastructura de potrivire de model SMILES.
+  </change>
+  <change contributor="PV,IS,FL,CPN,TIM">
+    Olandeză, estonă, maghiară, portugheză, română traduceri de pagini web Folding @ home.
+  </change>
+  <change contributor="AH">
+    Traducere spaniolă de aplicare, applet şi site-ul web.
+  </change>
+  <change contributor="IS">
+    Traducerea în limba estoniană de aplicare şi Applet.
+  </change>
+</changes>
+
+<changes version="jmol-10">
+  <change contributor="MTH">
+    Rearchitected şi reimplemented Jmol de bază
+  </change>
+  <change contributor="MTH">
+    Proiectat şi implementat de redare grafica org.jmol.g3d motor de înaltă
+    performanţă de randare 3D a moleculelor fără suport hardware
+  </change>
+  <change contributor="MTH">
+    Proiectat şi implementat de bază structurile de date org.jmol.viewer
+  </change>
+  <change contributor="MTH">
+    Sprijin proiectat şi implementat pentru structuri proteice secundar
+  </change>
+  <change contributor="MTH">
+    Rearchitected şi reimplemented io fişiere de sistem
+  </change>
+  <change contributor="MTH">
+    Org.jmol.api.JmolAdapter api proiectat pentru a separa fişier IO de la randarea grafica
+  </change>
+  <change contributor="MTH">
+    A scris org.jmol.adapter.smarter.Resolver de a furniza identificarea automată a tipuri de fişiere
+  </change>
+  <change contributor="MTH">
+    Pus în aplicare cele mai multe tipuri de fişiere în cadrul org.jmol.adapter.smarter,
+    inclusiv xyz, mol, PPB, CIF / mmCif, gaussian, jaguar, shelx, etc
+  </change>
+  <change contributor="MTH">
+    A scris Jmol.js bibliotecă JavaScript pentru a facilita dezvoltarea de aplicatii web.
+  </change>
+  <change contributor="MTH">
+    A scris mecanism JmolAppletControl pentru a sprijini browsere fără JavaScript
+  </change>
+  <change contributor="MTH">
+    Extinsă şi a asigurat portabilitatea JmolApplet de bază pentru a browserelor web cu Java 1.1,
+    inclusiv Netscape 4.7 şi Internet Explorer pe ambele Win32 şi Mac OS 
+  </change>
+  <change contributor="EW">
+    CmlReader, CdkModelAdapter, cdk integeration, wiki, generale ale proiectului de administrare
+  </change>
+  <change contributor="TD">
+    Prestate de sprijin semnificative şi de testare în domeniile de definiţii polimer,
+    dezvoltare de aplicatii web, JavaScript, şi Mac OS X portabilitate.
+  </change>
+  <change contributor="NV">
+    Traducere franceză, de curatare cod, javadoc, cititorii
+  </change>
+  <change contributor="RK">
+    AtomSetChooser mecanism, îmbunătăţit Gaussian cititor, puse în aplicare NWChem cititor
+  </change>
+  <change contributor="JR">
+    Asistenţă în domeniile de mai multe modele, coduri de inserţie, definiţii polimer, testarea applet
+  </change>
+  <change contributor="OS">
+    wiki.jmol.org
+  </change>
+  <change contributor="RH">
+    Interactive scripting tutorial, testarea applet
+  </change>
+</changes>
+
+<changes version="jmol-9">
+  <change contributor="EW">
+    Activat o arhitectura plugin pentru plugin-uri CDK.
+  </change>
+  <change contributor="EW">
+    A stabilit o serie de bug-uri IO (se închide # 783663, # 823957 şi # 826934)
+  </change>
+  <change contributor="EW">
+    Ţintă fixă rula în Ant build.xml.
+  </change>
+  <change contributor="EW">
+    Adăugat feedback-ul privind utilizarea de memorie la bara de stare.
+  </change>
+  <change contributor="RG">
+    Adăugat cititor şi scriitor pentru HIN (HyperChem) format
+  </change>
+  <change contributor="EW">
+    Adaugat pe butonul de ajutor într-o fereastră script.
+  </change>
+  <change contributor="EW">
+    Adăugat element de licenţă în meniul de ajutor.
+  </change>
+  <change contributor="EW">
+    Calcularea fix de unghiuri de celule unitate în caseta de proprietăţi cristal
+    (se închide # 865393 şi # 863644).
+  </change>
+  <change contributor="EW">
+    Lectură fix de unghiuri de celule unitate din fişierele ShelX.
+  </change>
+</changes>
+
+<changes version="jmol-8">
+  <change contributor="EW">
+    De detectare a făcut de lei mol fişiere mai flexibilă, permiţând V2000 cu litere mici prea.
+  </change>
+  <change contributor="MTH">
+    Auto-decomprima fişiere gzip.
+  </change>
+  <change contributor="EW">
+    Documentaţia rectificat să se constate că este necesară J2SE 1.4 (închide # 769822).
+  </change>
+  <change contributor="AS">
+    Pus în aplicare o istorie comandă de script.
+  </change>
+  <change contributor="MTH">
+    Fix ReaderFactory buffer.reset () problema (se închide # 799963)
+  </change>
+  <change contributor="EW">
+    Lectură fix de date CML2 cristal stil (închide # 792091),
+    precum şi detectarea de fişiere LMC fara declaratia XML.
+  </change>
+  <change contributor="MTH">
+    Fişiere Reparat recente, se adaugă dublu clic pentru a selecta, titlul fereastră fixe.
+  </change>
+  <change contributor="EW">
+    A adaugat un - opţiune ajuta la linia de comandă.
+  </change>
+  <change contributor="MTH">
+    Adaugata JmolAppletProxy pentru a permite applet-uri pentru a descărca fişiere de la distanţă.
+  </change>
+  <change contributor="CPY">
+    Adaugata Traducere în chineză GUI.
+  </change>
+  <change contributor="EW">
+    Adaugata CIF / mmCIF cititor cu caracteristici minime. Citeste parametrii unitate de celule,
+    şi coordonează atomice, dar nu spaţiu operaţiunilor de simetrie grup (P1 în mod eficient numai în mod corect).
+  </change>
+</changes>
+
+<changes version="jmol-7">
+  <change contributor="MTH">
+    Reimplementare de rebonding algoritm folosind BST.
+  </change>
+  <change contributor="FD">
+    Adaugata VASP cititor.
+  </change>
+  <change contributor="JRK">
+    Adaugata Gaussian 03 cititor.
+  </change>
+  <change contributor="EW">
+    Lectură fixă de frecvenţe în fişierele de ieşire Jaguar 4.2.77 (problema # 749430).
+  </change>
+  <change contributor="EW">
+    Lectură fixă de frecvenţe în fişierele de ieşire AcesII (bug # 740967).
+  </change>
+  <change contributor="CR2">
+    Adaugata fereastră nouă opţiune (facilitate # 743640).
+  </change>
+  <change contributor="FD">
+    Lectură fixă a unor fişiere de ieşire ABINIT (caracteristica # 746494).
+  </change>
+  <change contributor="EW">
+    Imobilizate unele javadoc.
+  </change>
+</changes>
+
+<changes version="jmol-6">
+  <change contributor="MTH">
+    Reimplementare de randare cu sprijin profunzime perspectivă şi îmbunătăţiri de performanţă. 
+  </change>
+  <change contributor="EW">
+    Mutat clase IO în pachet separat.
+  </change>
+  <change contributor="MTH">
+    Mutat clase de redare în pachet separat.
+  </change>
+  <change contributor="EW">
+    Jmol se bazează acum pe CDK (chimie Development Kit).
+  </change>
+  <change contributor="MTH">
+    Adaugata traducere spaniolă. 
+  </change>
+  <change contributor="EW">
+    Viteza de afişare pot fi afişate în milisecunde şi în cadre pe secundă.
+  </change>
+  <change contributor="MTH">
+    Reimplementare functinality de scripting, cu suport pentru cele mai multe comenzi de scripting RasMol / Chime. 
+  </change>
+</changes>
+
+<changes version="jmol-5">
+  <change contributor="EW">
+    Jmol internaţionalizate şi traducere adăugat olandeză.
+  </change>
+  <change contributor="BS">
+    Fix pentru lectură unele dintre MOPAC 2002 fişiere.
+    (Fişiere fără o linie necompletată după coordonatele.)
+  </change>
+  <change contributor="BS">
+    Fix lectură de fişiere mari PPB. Mai multe modele sunt citite în frame-uri separate.
+  </change>
+  <change contributor="BS">
+    Lectură îmbunătăţită a tipurilor de atom PPB prin utilizarea element din primele două coloane de nume de atom.
+  </change>
+  <change contributor="BS">
+    Îndepărtarea temporară de defecte domenii CONECT parsarea de PPB cititor.
+    Odată fixat, funcţia va fi restabilit.
+  </change>
+  <change contributor="FD">
+    Crystal proprietăţi de dialog, şi unitatea de vizualizare de celule a fost adaugat.
+  </change>
+  <change contributor="FD">
+    ABINIT energie citirea datelor, se adaugă.
+  </change>
+  <change contributor="EW">
+    Adăugat cititor pentru ShelX97 fişiere care conţin o structură de cristal.
+  </change>
+  <change contributor="MTH">
+    Adăugat cititor pentru ShelX97 fişiere care conţin o structură de cristal.
+  </change>
+  <change contributor="EW">
+    Fix PropertyGraph. De date nu mai este duplicat pe redeschidere a dialogului
+    şi a datelor de fişier anterior este şters la deschiderea unul nou.
+  </change>
+  <change contributor="EW">
+    NullPointerException fixe în eliminarea atom, şi bug-uri în determinarea
+    vreme ChemFrameRenderer ar trebui să actualizeze cache.
+  </change>
+</changes>
+
+<changes version="jmol-4">
+  <change contributor="BS">
+    Lectură de MOPAC 97 şi 2002 fişiere. Anterior, doar MOPAC 7 imagini lucrat.
+  </change>
+  <change contributor="EW">
+    Jmol acum pot citi, de asemenea, fişiere în non-LMC cu comanda "jmol &lt;numefişier&gt;".
+    (Caracteristica # 555462).
+  </change>
+  <change contributor="EW">
+    Cititorul PPB acum analizează, de asemenea, domeniile CONECT şi pune în aplicare Rasmol percepţia lui a ordinelor de obligaţiuni.
+  </change>
+  <change contributor="EW">
+    Atomii pot fi, de asemenea, acum colorate de taxa lor atomică parţială. (Caracteristica # 552476)
+  </change>
+  <change contributor="FD">
+    Adăugare a unui cititor ABINIT.
+  </change>
+  <change contributor="BS">
+    PDF export. (Caracteristica # 533212)
+  </change>
+</changes>
+
+<changes version="jmol-3">
+  <change contributor="CR">
+    Exportul de imagini BMP şi PNG.
+  </change>
+  <change contributor="BS, JJ">
+    Rendering de obligaţiuni multiple.
+  </change>
+  <change contributor="BS">
+    Scalarea de varfuri de sageti vector prin amploarea care prezinta vectorii semnificativ mai clar.
+  </change>
+  <change contributor="BS">
+    Bug-uri fixe 547574 şi 548591.
+  </change>
+  <change contributor="BS">
+    Scalarea reglabil de lungime vector -2.0 la 2.0 lungime de ori.
+  </change>
+  <change contributor="EW">
+    Import de fişiere MM Ghemical.
+  </change>
+  <change contributor="BS">
+    Automată tip de fişier utilizat pentru determinarea toate de încărcare a fişierelor.
+  </change>
+</changes>
+
+<changes version="jmol-2">
+  <change>
+    Relicensed ca LGPL.
+  </change>
+  <change contributor="BS">
+    Interfaţă simplificată prin combinarea barelor de instrumente şi de eliminarea elementelor de meniu neimplementat.
+  </change>
+  <change contributor="MM">
+    Interfaţă îmbunătăţită la POV-Ray.
+  </change>
+  <change contributor="BS">
+    Imobilizate vector de redare.
+  </change>
+  <change contributor="JJ">
+    Lei fişier cititor.
+  </change>
+  <change>
+    Imobilizate lectură anumite GAMESS şi fişiere Dalton. (Bug # 529999)
+  </change>
+  <change>
+    Majoră actualizare LGC de import.
+  </change>
+</changes>
+
+<changes version="jmol-1.2">
+  <change>
+    Separator de linie fixă de ieşire XYZ. (Bug # 519101)
+  </change>
+  <change>
+    Adaugata de ieşire rudimentare PPB. (Bug # 519100)
+  </change>
+</changes>
+
+<changes version="jmol-1.1">
+  <change>
+    Bugfix de presă
+  </change>
+  <change>
+    Imobilizate PPB lectură. (Bug # 496332)
+  </change>
+  <change>
+    Script-ul fix Jmol pentru a lucra pe Solaris. (Bug # 425925)
+  </change>
+  <change>
+    Adăugat soluţie alternativă pentru Jmol precompilate pe Solaris. (Bug-uri # 426229, # 508364)
+  </change>
+  <change>
+    Eliminat bucle infinite. (Bug # 426679)
+  </change>
+  <change>
+    Probleme fix cu setarea pentru tipul de fişier
+  </change>
+  <change>
+    Adaugata buton pentru a anula dialog RecentFiles
+  </change>
+  <change>
+    Calcul Bond este acum într-adevăr setable. (Bug # 431146)
+  </change>
+</changes>
+
+<changes version="jmol-1">
+  <change contributor="BS">
+    Citeşte fişiere de ieşire de la Jaguar, Dalton, MOPAC, 90/95 şi Gaussian.
+  </change>
+  <change>
+    Dezvoltare migrat la SourceForge.net
+  </change>
+  <change>
+    Noua schemă a versiunilor
+  </change>
+  <change>
+    Întreţinere
+  </change>
+</changes>
+
+<changes version="jmol-0.6.1">
+  <change contributor="DG">
+    Minore multe rezolvări ale unor probleme
+  </change>
+  <change contributor="TG,BS">
+    Progresele în JmolApplet
+  </change>
+  <change contributor="TG">
+    JmolFileFilter
+  </change>
+  <change contributor="DG">
+    Bug fix în Animarea
+  </change>
+  <change contributor="TG">
+    Splash screen are acum o linie de stare
+  </change>
+  <change contributor="BS">
+    DisplaySettings nu mai sunt folosite ca statice
+  </change>
+  <change contributor="BS">
+    CMLReader înlocuieşte CMLFile
+  </change>
+  <change contributor="BS">
+    Mai puţine dependenţe pe proprietatea jmol.home
+  </change>
+</changes>
+
+
+<changes version="jmol-0.6">
+  <change contributor="BS">
+    New ChemFileReader / ReaderFactory arhitectura
+  </change>
+  <change contributor="BS">
+    Poate citi fisiere de pe acum cu următorul text ab initio cuantica programe de chimie:
+    GAMESS, Gaussian92, Gaussian94, Gaussian98, Amsterdam Densitate funcţionale (ADF),
+    Concepte avansate în Structura II electronice (ACES2)
+  </change>
+  <change contributor="BS">
+    Animaţie de pre-calculate Vibraţiile Modul Normal, prin intermediul Extra -> comanda Vibrare
+  </change>
+  <change contributor="DG">
+    Distanta cu totul nou, unghi, şi diedru arhitectura de măsurare
+  </change>
+  <change contributor="EW">
+    Alegerea de animaţie lin folosind cadre interpolate
+  </change>
+  <change contributor="TG,DG">
+    Wireframe rotaţie alegeri şi meniul de cod
+  </change>
+  <change contributor="CF,BS">
+    Jmol consolă pentru a captura stdout şi stderr
+  </change>
+  <change contributor="BS">
+    DisplaySettings mutat din diferitele clase şi într-o singură clasă
+  </change>
+  <change contributor="BS">
+    Split, de funcţionalitate AtomType în BaseAtomType
+  </change>
+  <change contributor="BS">
+    Clase de testare pentru clasele de diverse alte
+  </change>
+</changes>
+
+
+<changes version="jmol-0.5">
+  <change contributor="DG">
+    Numeroase stabileşte mici bug-uri.
+  </change>
+  <change contributor="DG,EW">
+    Clase FileSaver, XYZSaver şi CMLSaver sunt noi.
+    Aveţi posibilitatea să salvaţi acum structura actuală fie XYZ sau formate LGC.
+  </change>
+  <change contributor="DG">
+    Numele pachetului este acum org.openscience.jmol.
+  </change>
+  <change contributor="EW">
+    Modificările la rutine parsarea LMC de utilizare a LGC-1999-05-15.dtd nou
+  </change>
+  <change contributor="DG">
+    DTD resolver care ne permite să încorporaţi actuale DTD în fişierul jar.
+  </change>
+  <change contributor="DG">
+    Rescrie de fişier-I / O rutina. Ei pună în aplicare toate ChemFile acum.
+  </change> 
+</changes>
+
+<changes version="jmol-0.4">
+  <change contributor="EW">
+    Jmol poate analiza chimică acum Markup Language (LMC), fişiere datorită EL Willighagen
+  </change>
+  <change contributor="DG">
+    Multe dintre schimbările interne în clasele AtomType JTable de sprijin pentru
+    a inversa unele decizii stupide, am facut de timpuriu.
+  </change>
+  <change contributor="DG">
+    AtomTypeTable stochează informaţiile AtomType acum ca o resursă
+  </change>
+  <change contributor="DG">
+    Modificări în anteturi AtomTypeTable pentru a sprijini anteturile mai multe linii
+  </change>
+  <change contributor="DG,CS">
+    StatusBar este acum un set de 3-la nivel de JLabels acest post mai multe informaţii utile
+  </change>
+  <change contributor="DG">
+    Swing 1.1.1 Beta 2 (etichete HTML daca vrem sa le folosim)
+  </change>
+</changes>
+
+
+<changes version="jmol-0.3">
+  <change contributor="DG">
+    PhysicalProperties (taxe, NMRShieldings, vectori, etc) pot fi setate de către cititorii fişier.
+    Christoph Steinbeck a solicitat pentru această iniţial atunci când a scris GaussianFile.
+    A fost o idee bună, şi a fost în valoare de rescriere extinse.
+  </change>
+  <change contributor="DG">
+    Swing 1.1.1 Beta 1 (corectează unele bug-uri enervante pentru Java 1.1 utilizatorilor)
+  </change>
+  <change contributor="CS">
+    Clasa GaussianFile a fost actualizat pentru a citi fisiere generale gaussian (nu doar G98),
+    precum şi pentru a calcula automat schimbarile chimice folosind stocate
+    ab initio valorile pentru schimbare chimice silan tetrametil lui.
+  </change>
+  <change contributor="DG">
+    Unele repararea bug-urilor.
+  </change>
+  <change contributor="DG">
+    Obligaţiuni rece care arata ca cilindri. Ei bine, cel puţin se uita un pic ca cilindri.
+    Capace terminale ar fi un plus frumos, dar am fost un pic ocupat în ultima vreme.
+  </change>
+  <change contributor="DG">
+    Accesorii FileTyper şi ImageTyper pentru JFileChooser face alegerea tipuri de fişiere
+    mai sensibilă decât utilizarea doar filtrul de numele fişierului.
+    Aceste clase au fost raţionalizate după 0.2 au fost deja eliberate.
+    Ei asculta, de asemenea, să JFileChooser pentru a încerca să ghicească ce fel de fişier
+    pe care tocmai aţi selectat (numai dacă UseFileExtensions este setat).
+  </change>
+</changes>
+
+<changes version="jmol-0.2">
+  <change>
+    Multe schimbari interne.
+  </change>
+  <change contributor="DG">
+    Jmol sa mutat la o casă nouă. Am lucrat pe un site web numit "Proiectul OpenScience",
+    şi au înregistrat un domeniu pentru aceasta, astfel încât Jmol este primul de proiecte software,
+    care este găzduit la www.openscience.org
+  </change>
+  <change contributor="CS">
+    Christoph Steinbeck contribuit cu un filtru de intrare nou pentru fişiere log Gaussian 98,
+    complet cu un parser pentru ture chimic RMN.
+  </change>
+  <change contributor="DG">
+    Cititorii fişier acum o clasa mai general (dar foarte simplu) de clasă ChemFile.
+    Acest lucru ar trebui să facă adăugarea de cititori fişiere mai uşor.
+  </change>
+  <change contributor="DG">
+    Selecţia de tip de fişier nu mai este dependentă de extensie a fişierului.
+    Aveţi posibilitatea să selectaţi un "*. JNK" fişier şi spune în mod explicit Jmol
+    ce fel de fişier este atunci când deschideţi fişierul.
+  </change>
+  <change contributor="DG">
+    Există o interacţiune între ciudat fillPolygon în jdk1.2 şi serverul X sub Solaris x86.
+    (Şi în cercurile jdk1.2 arata plin de cocoloaşe pe multe arhitecturi diferite.)
+    Am construit o soluţie care implică în Jmol vorbesc direct la obiect Graphics2D care stau
+    la baza panoul de afişare, pentru a seta unele indicii de redare.
+    Acest ocolis are beneficiul de a face nişte poze foarte frumos atunci când se doreşte
+    de înaltă calitate (dar viteza mai mica).
+    Dacă aveţi jdk1.2, porniţi antialiasing în Preferinţe pentru a vedea diferenţa.
+    Un efect secundar nefericit este că aveţi nevoie acum jdk1.2 clase pentru a compila (dar nu rula) Jmol.
+  </change>
+  <change contributor="DG">
+    Un encoder Jpeg a fost adaugat.
+    JpegEncoder şi clasele sale asociate sunt Copyright (c) 1998, James R. săptămâni şi BioElectroMech.
+    Acest software se bazează în parte pe activitatea Independent JPEG Group.
+  </change>
+  <change contributor="DG">
+    Construiţi proces foloseste acum un Makefile.
+  </change>
+  <change contributor="HG">
+    Makefile are acum abilitatea de a crea javadocs a codului sursă.
+  </change>
+</changes>
+
+<changes version="jmol-0.1.1">
+  <change contributor="DG">
+    Eliminat suplimentare dublu-tampon, care a dus la înţelegerea faptului
+    că nu sunt în mod automat componentele Swing dublu-buffered.
+    Acest lucru a condus la îmbunătăţiri substanţiale de performanţă.
+  </change>
+  <change contributor="DG">
+    Imobilizate unele ciudăţenia în profunzime dimensiunile atom trase
+  </change>
+  <change contributor="DG">
+    Imobilizate obligaţiuni, astfel încât acestea fac mai realist ca molecula este rotit.
+    Capace terminale pentru obligaţiunile sunt încă în curs de desfăşurare.
+  </change>
+  <change contributor="DG">
+    Reorganizate pe butoanele barei de instrumente şi a adaugat un buton pentru
+    deformări molecula care va face în cele din urmă ceva util.
+  </change>
+</changes>
+
+<changes version="jmol-0.1">
+  <change contributor="DG">
+    Există unele caracteristici majore noi, astfel încât numărul de versiune minor a fost incrementează.
+  </change>
+  <change contributor="DG">
+    Tipuri de Atom sunt acum folosind editabile "Properties Atom", în meniul Edit.
+    Aceasta a adăugat o mare parte din codul de interfaţă pentru a face editori JTable
+    şi celule şi sortează coloană. Tipurile de editat atom sunt salvate în directorul.
+    Jmol sub directorul acasă a utilizatorului.
+  </change>
+  <change contributor="DG">
+    De dialog Preferences salvează acum meciului preferinţă in anuar.
+    Jmol sub directorul acasă a utilizatorului.
+  </change>
+  <change contributor="DG">
+    Reorganizarea de clase într-un fişier borcan.
+  </change>
+  <change contributor="DG">
+    Un mecanism de selecţie atom este acum de lucru.
+  </change>
+  <change contributor="DG">
+    Reorganizarea sursa: BondTypeTable este plecat, BondType este acum înlocuit de Bond.
+    Multe alte schimbări pentru AtomTypeTable noi.
+  </change>
+  <change>
+    Silly Splash ecran mic, dar se face de pornire simt mai rapid atunci când există ceva apărut pe ecran aproape imediat.
+  </change>
+  <change contributor="DG">
+    Există acum o "faţă" element din meniul Vizualizare.
+    Acţiunile meniul Vizualizare nu sunt intuitive încă, aşa că se va schimba într-o versiune viitoare.
+    Nu ma obisnuiesc cu ele.
+  </change>
+  <change contributor="DG">
+    Există un nou "fast forward" buton de dialog Animare care ia animaţie la ultimul cadru.
+  </change>
+  <change contributor="DG">
+    Butoanele Derulare înapoi, FastForward, Next, şi anterioară în dialog Animare
+    opri acum animaţie atunci când acestea sunt împinse.
+  </change>
+  <change>
+    Versiune Swing incrementează la 1,1
+  </change>
+</changes>
+
+<changes version="jmol-0.0.4">
+  <change contributor="DG">
+    Acum, folosind swing-1.1beta3, cu toate modificările asociate numele pachetului de la com.sun.java.swing la javax.swing
+  </change>
+  <change contributor="DG">
+    Fixed bug în jmol.bat script
+  </change>
+  <change contributor="DG">
+    "Ce e nou" element de meniu din meniul "Ajutor" afişează un dialog cu privire la conţinutul acestui fişier
+  </change>
+  <change contributor="DG">
+    "Doc" subdirector, gol pentru acum, dar este gândul care contează
+  </change>
+</changes>
+
+<changes version="jmol-0.0.3">
+  <change contributor="DG">
+    Site codificatoare favoare Jef Poskanzer au fost utilizate pentru a exporta fişiere GIF şi PPM
+  </change>
+  <change contributor="DG">
+    Noua "Display" Menu cu submeniurile pentru atomi, obligaţiuni, şi etichete
+  </change>
+  <change contributor="DG">
+    New Icoane favoare Dean Jones s-au folosit ori de câte ori este posibil
+  </change>
+</changes>
+
+<changes version="jmol-0.0.2">
+  <change contributor="DG">
+    Etichete Ato
+  </change>
+  <change contributor="DG">
+    multi-cadru XYZ file-citeşte
+  </change>
+  <change contributor="DG">
+    Animaţie
+  </change>
+  <change contributor="DG">
+    Preferinţe de dialog
+  </change>
+</changes>
+
+<changes version="jmol-0.0.1">
+  <change contributor="DG">
+    Totul
+  </change>
+  <change contributor="MB">
+    Vârfuri Sensible poligon pentru Obligatiuni QuickDraw
+  </change>
+  <change contributor="DG">
+    single-frame fişier citeşte XYZ
+  </change>
+</changes>

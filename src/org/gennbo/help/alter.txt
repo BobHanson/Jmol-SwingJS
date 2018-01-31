@@ -1,0 +1,17 @@
+ALTER IA newval     (nuclear charge of atom IA)
+	IA IB newval          (bond length IA-IB)
+	IA IB IC newval  (valence angle IA-IB-IC)
+	IA IB IC ID newval (dihedral IA-IB-IC-IC)
+
+	Examples:
+	 ALTER 10 14.   [change atom 10 to Si (Z = 14)]
+	 ALTER  2 5 1.69  [change R(5-8) bond to 1.69A]
+	 ALTER  1 2 3 4 180.   [change 1-2-3-4 dihedral
+	                          angle to 180 degrees]
+
+	Note that 'ALTER 1 2 3 4 180.' changes ONLY
+	the 1-2-3-4 dihedral (often giving unphysical
+	distorted geometry).  Use 'TWIST 1 2 3 4 180.'
+	to form a proper torsional rotamer.
+
+	Use VFILE to determine which angles can be safely ALTERed.  Otherwise, the coordinates may be re-defined, with unexpected effects on other variables.

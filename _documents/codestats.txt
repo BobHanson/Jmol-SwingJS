@@ -1,0 +1,14 @@
+Just some stats on the Jmol code as of 6/2016
+
+653 java files
+
+
+type ttt|find /V "//" |find /V "*"|find /V "import "|find /C " "
+
+181928
+
++ 693 that have "*" but not in the beginning of the line
+
+
+so there are roughly 183000 actual lines of code in Jmol.
+

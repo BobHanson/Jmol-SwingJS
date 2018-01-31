@@ -1,0 +1,6 @@
+jmol
+	command=jmol
+	name=Jmol
+	requires_terminal=false
+	can_open_multiple_files=false
+	mime_types=application/x-jmol;chemical/x-cif;chemical/x-cml;chemical/x-gaussian-input;chemical/x-mdl-molfile;chemical/x-mmcif;chemical/x-pdb;chemical/x-xyz			

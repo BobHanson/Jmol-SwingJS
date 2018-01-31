@@ -1,0 +1,9 @@
+NBOView: GENERAL PROGRAM USAGE
+
+NBOView program usage begins with selection of a JOB from available PLOT (.31-.41, .46) files on the current directory. Use the NBORun module to generate PLOT output files from any available archive (.47) file in the directory. 
+
+After selecting a basis set and orbital, press GO to view either a 1D profile or a 2D contour, with the vector/plane defined by the atoms highlighted on the model. 
+
+Selected atoms can be changed by clicking on the model. To view a 3D bitmap image, select one of the nine items in storage and press the '3D' button under display. Raytracing may take some time, so you may need to be patient. 
+
+The program presents many possible options for you to alter details of the view/camera model. If uncertain, the default values shown in the settings can be used.

@@ -1,0 +1,12 @@
+Document: jmol-applet
+Title: Debian Jmol applet user guide
+Author: The Jmol Development Team
+Abstract: This manual describes the applet part of
+ the molecule and crystal 3D-viewer and animator jmol.
+Section: Apps/Web
+
+Format: HTML
+Index: /usr/share/doc/jmol-applet/html/JmolAppletGuide.html
+Files: /usr/share/doc/jmol-applet/html/*.html
+
+  

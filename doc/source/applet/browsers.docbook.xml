@@ -1,0 +1,170 @@
+<chapter id="SupportedBrowsers">
+  <title>Supported Browsers</title>
+
+  <para>
+    The applet is tested and working with Internet Explorer, Netscape,
+    Opera, Mozilla (and derivatives) and Konqueror on various platforms.
+    Test results are given below. But be advised that this table
+    (like most documentation) is often out of date. 
+  </para>
+
+  <para>
+    If you find problems with the browser/operating system/jvm combination
+    of your choice, please send an email to jmol-users@lists.sf.net, stating
+    the exact error (most browsers have a Java Console), and the versions
+    of the browser, the operating system, and the java virtual machine
+    that is used.
+  </para>
+
+  <section id="TestingResults">
+    <title>Testing results</title>
+
+    <para>
+      The JmolApplet has been tested successfully with the following system
+      configurations:
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+        <para>
+          Win32 (98/ME/2K/XP)
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              Microsoft Internet Explorer with Microsoft JVM
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Microsoft Internet Explorer with Sun Java Plugin &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Netscape 4.7/4.8 <emphasis>(slow performance)</emphasis>
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Netscape 7 with Sun Java Plugin &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Mozilla with Sun Java Plugin &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Firefox 1.0 with Sun Java Plugin &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Opera 7.5.4 with Sun Java Plugin &gt;= 1.4
+            </para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>
+          Mac OS X 10.3.3 or greater
+        </para>
+        <para>
+          Mac OS X prior to 10.3.3 did not support LiveConnect
+          communications between JavaScript and Java
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              Safari 1.2 (v125)
+            </para>
+            <para>
+              Previous versions of OSX &amp; Safari have significant problems.
+              Even subsequent versions have problems. Lets hope that
+              Apple can keep things stable.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Netscape 7.2 with javaplugin.sourceforge.net installed
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Mozilla 1.7.3 with javaplugin.sourceforge.net installed
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Firefox 1.0 with javaplugin.sourceforge.net installed
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Opera 7.5.4
+            </para>
+            <para>
+              all versions of Opera OSX up through 7.5.4 are
+              completely broken
+            </para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>
+          Linux/Unix
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              Mozilla 1.6 + Sun Java &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Firefox 1.0 + Sun Java &gt;= 1.4
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Konqueror 3.3
+            </para>
+            <para>
+              all versions of Konqueror up through 3.3 are broken
+            </para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>
+          Mac OS 9
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              Netscape 4.7* <emphasis>marginal performance with limited
+              functionality</emphasis>
+            </para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section id="XHTMLSupport">
+    <title>XHTML support</title>
+    <para>
+      It is possible to use the JmolApplet within an XML/XHTML environment. This is entirely irrelevant for most people's purposes - if you don't know that you need this capability, then you don't.
+    </para>
+    <para> 
+      It requires a browser capable of dealing properly with XHTML documents. At the time of writing, this was limited solely to recent versions of Mozilla-based browsers and of Opera. Note in particular that Internet Explorer will not support this mode of operation within the foreseeable future. It also requires that your documents validate entirely correctly against the appropriate schemata.
+    </para>
+    <para>
+      In addition, the standard Jmol.js Javascript library will not work under properly compliant XML browsers. An alternative, largely similar, but entirely unsupported library is available ... insert address here ...
+    </para>
+    <para>
+      That all said, the XHTML features of JmolApplet have been successfully tested on the following OS/browser/JVM combinations.
+    </para>
+  </section>
+</chapter>

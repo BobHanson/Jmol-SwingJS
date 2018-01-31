@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=MimeType
+MimeType=application/x-jmol
+Comment=Jmol script file
+Comment[de]=Jmol Skript
+Icon=chemistry
+Patterns=*.jmz

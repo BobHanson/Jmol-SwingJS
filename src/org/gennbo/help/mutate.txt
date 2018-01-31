@@ -1,0 +1,8 @@
+MUTATE IA formula (replace atom IA by the group\
+                     of specified chemical 'formula',
+                     if both are of consistent valency)
+
+      Example:
+       MUTATE 4 CH3     [remove monovalent atom 4 and
+                 attach a methyl (CH3) radical in its
+               place, preserving valence consistency]

@@ -1,0 +1,6 @@
+?package(jmol):\
+  needs="X11"\
+  section="Apps/Science"\
+  title="jmol"\
+  icon="/usr/share/pixmaps/jmol_icon.xpm"\
+  command="/usr/bin/jmol"

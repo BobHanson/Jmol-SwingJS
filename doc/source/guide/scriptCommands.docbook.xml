@@ -1,0 +1,1151 @@
+<!-- Last Updated Apr 06, 2006 -->
+<!-- Automatically created from documentation using http://www.stolaf.edu/people/hansonr/jmol/docs/?docbook -->
+<informaltable>
+<tr><td><xref linkend="animation"/></td><td><xref linkend="console"/></td><td><xref linkend="measure"/></td><td><xref linkend="select"/></td><td><xref linkend="ssbonds"/></td></tr>
+<tr><td><xref linkend="atomexpressions"/></td><td><xref linkend="define"/></td><td><xref linkend="meshribbon"/></td><td><xref linkend="setbondstyles"/></td><td><xref linkend="star"/></td></tr>
+<tr><td><xref linkend="backbone"/></td><td><xref linkend="delay"/></td><td><xref linkend="model"/></td><td><xref linkend="setdefaultcolorscheme"/></td><td><xref linkend="stereo"/></td></tr>
+<tr><td><xref linkend="background"/></td><td><xref linkend="depth"/></td><td><xref linkend="move"/></td><td><xref linkend="sethighlights"/></td><td><xref linkend="strands"/></td></tr>
+<tr><td><xref linkend="bondorder"/></td><td><xref linkend="dots"/></td><td><xref linkend="moveto"/></td><td><xref linkend="setlightingandperspective"/></td><td><xref linkend="trace"/></td></tr>
+<tr><td><xref linkend="cartoon"/></td><td><xref linkend="echo"/></td><td><xref linkend="pmesh"/></td><td><xref linkend="setvisibility"/></td><td><xref linkend="translate"/></td></tr>
+<tr><td><xref linkend="center"/></td><td><xref linkend="exit"/></td><td><xref linkend="polyhedra"/></td><td><xref linkend="setchainCaseSensitive"/></td><td><xref linkend="vector"/></td></tr>
+<tr><td><xref linkend="centerAt"/></td><td><xref linkend="font"/></td><td><xref linkend="quit"/></td><td><xref linkend="setdebugScript"/></td><td><xref linkend="vibration"/></td></tr>
+<tr><td><xref linkend="color"/></td><td><xref linkend="frame"/></td><td><xref linkend="refresh"/></td><td><xref linkend="setmeasurement"/></td><td><xref linkend="wireframe"/></td></tr>
+<tr><td><xref linkend="coloratomobject"/></td><td><xref linkend="hbonds"/></td><td><xref linkend="reset"/></td><td><xref linkend="setpicking"/></td><td><xref linkend="zap"/></td></tr>
+<tr><td><xref linkend="colorbondobject"/></td><td><xref linkend="hover"/></td><td><xref linkend="restrict"/></td><td><xref linkend="setspin"/></td><td><xref linkend="zoom"/></td></tr>
+<tr><td><xref linkend="colorelement"/></td><td><xref linkend="isosurface"/></td><td><xref linkend="ribbon"/></td><td><xref linkend="show"/></td></tr>
+<tr><td><xref linkend="colormodelobject"/></td><td><xref linkend="label"/></td><td><xref linkend="rocket"/></td><td><xref linkend="slab"/></td></tr>
+<tr><td><xref linkend="comment"/></td><td><xref linkend="load"/></td><td><xref linkend="rotate"/></td><td><xref linkend="spacefill"/></td></tr>
+<tr><td><xref linkend="connect"/></td><td><xref linkend="loop"/></td><td><xref linkend="script"/></td><td><xref linkend="spin"/></td></tr>
+</informaltable>
+<section xreflabel="animation or anim" id="animation"><title>animation or anim</title>
+<para>Sets selected animation parameters or turns animation on or off. Note that there are four distinct animation types that can be employed using Jmol: (1) files may contain multiple stuctures that are "played" sequencially, (2) Gaussian output files may contain vibrational modes that can be animated, (3) scripts may be run through with delays and loops, and (4) the model may spin or move in a predefined way. The "animation" command only refers to method (1). </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k2" xreflabel="animation ON/OFF{default: ON}">animation ON/OFF{default: ON}</command></term>
+<listitem><para>Turns on or off animation.</para></listitem></varlistentry>
+<varlistentry><term><command id="k3" xreflabel="animation direction -1">animation direction -1</command></term>
+<listitem><para>Sets the animation direction to be from last frame to first frame.</para></listitem></varlistentry>
+<varlistentry><term><command id="k4" xreflabel="animation direction +1">animation direction +1</command></term>
+<listitem><para>Sets the animation direction to be first frame to last frame.</para></listitem></varlistentry>
+<varlistentry><term><command id="k6" xreflabel="animation fps [frames-per-second]">animation fps [frames-per-second]</command></term>
+<listitem><para>Sets the animation frames per second.</para></listitem></varlistentry>
+<varlistentry><term><command id="k7" xreflabel="animation frame (integer >= 1)">animation frame (integer >= 1)</command></term>
+<listitem><para>Go to a specific frame.</para></listitem></varlistentry>
+<varlistentry><term><command id="k8" xreflabel="animation frame 0">animation frame 0</command></term>
+<listitem><para>Overlay all frames.</para></listitem></varlistentry>
+<varlistentry><term><command id="k9" xreflabel="animation frame NEXT">animation frame NEXT</command></term>
+<listitem><para>Go to next frame</para></listitem></varlistentry>
+<varlistentry><term><command id="k10" xreflabel="animation frame -1">animation frame -1</command></term>
+<listitem><para>Go to previous frame.</para></listitem></varlistentry>
+<varlistentry><term><command id="k11" xreflabel="animation mode loop">animation mode loop</command></term>
+<listitem><para>Sets the animation mode to restart the sequence automatically when the last frame has played.</para></listitem></varlistentry>
+<varlistentry><term><command id="k14" xreflabel="animation mode loop [time-delay1] [time-delay2]">animation mode loop [time-delay1] [time-delay2]</command></term>
+<listitem><para>Allows for a time delay at the start and end of the loop.</para></listitem></varlistentry>
+<varlistentry><term><command id="k15" xreflabel="animation mode ONCE">animation mode ONCE</command></term>
+<listitem><para>Sets the animation to play once through and then stop (the default mode).</para></listitem></varlistentry>
+<varlistentry><term><command id="k16" xreflabel="animation mode PALINDROME">animation mode PALINDROME</command></term>
+<listitem><para>Sets the animation to play forward and back endlessly.</para></listitem></varlistentry>
+<varlistentry><term><command id="k17" xreflabel="animation mode PALINDROME [time-delay1] [time-delay2]">animation mode PALINDROME [time-delay1] [time-delay2]</command></term>
+<listitem><para>Allows for a time delay at the start and end of the palindrome.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d5" xreflabel="[frames-per-second]">[frames-per-second]</option></term><listitem><para>is the animation rate -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d12" xreflabel="[time-delay1]">[time-delay1]</option></term><listitem><para>is the time in seconds to pause on the first frame -- (integer|decimal, >=0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d13" xreflabel="[time-delay2]">[time-delay2]</option></term><listitem><para>is the time in seconds to pause on the last frame -- (integer|decimal, >=0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="atom expressions" id="atomexpressions"><title>atom expressions</title>
+<para>The Jmol commands select, restrict, define, center, connect and polyhedra take for parameters expressions that represent collections of atoms in one or more models. While this documentation does not attempt to define these expressions completely, several examples are given here. Note that the substructure() function takes a quoted smiles string for its argument. The first parameter of the within() function can be a decimal distance in Angstroms or one of the words group, chain, or model.</para>
+<variablelist><title>Syntax</title>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>select atomno=1;color purple;spacefill 600
+select nitrogen;color yellow
+select [PRO];color green
+select within(5.0,[PRO]62) and not [PRO]62;color white
+select within(group,within(5.0,[PRO]));color yellow
+select substructure("[Fe][S]");wireframe 1.0
+select 95^a:L # selects chain L, residue 95, insertion code a
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="backbone" id="backbone"><title>backbone</title>
+<para>Shows the backbone of a protein or nucleic acid macromolecule by connecting the alpha carbons. The selection of backbone units to display depends upon the currently selected atoms and the bondmode setting.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k23" xreflabel="backbone ON/OFF{default: ON}">backbone ON/OFF{default: ON}</command></term>
+<listitem><para>Turns the backbone on or off</para></listitem></varlistentry>
+<varlistentry><term><command id="k25" xreflabel="backbone [backbone-radius]">backbone [backbone-radius]</command></term>
+<listitem><para>Backbone radius can be specified in angstroms using a decimal number (1.0, 2.0, etc.)</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d24" xreflabel="[backbone-radius]">[backbone-radius]</option></term><listitem><para>is the radius of the backbone -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="background" id="background"><title>background</title>
+<para>Sets color of the background. For specifications, see color.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k29" xreflabel="background [RGB-color]">background [RGB-color]</command></term>
+<listitem><para>Sets the background of the applet window.</para></listitem></varlistentry>
+<varlistentry><term><command id="k32" xreflabel="background HOVER [color-or-none]">background HOVER [color-or-none]</command></term>
+<listitem><para>Sets the background for the pop-up label box that appear when the mouse "hovers" over an atom. "NONE" results in there being no hover backgrounds. Operates globally, not on selected atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k31" xreflabel="background LABELS [color-or-none]">background LABELS [color-or-none]</command></term>
+<listitem><para>Sets the background of the atom labels that appear with the "label" command. "NONE" results in there being no label background. Operates globally, not on selected atoms.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d28" xreflabel="[RGB-color]">[RGB-color]</option></term><listitem><para>is a name of a color or a red, green, blue color triple in decimal with commas, for example [255,0,255], or as a single hexadecimal number, for example [xFF00FF] (brackets included) -- (color name), [r, g, b], [xRRGGBB]</para></listitem></varlistentry>
+<varlistentry><term><option id="d30" xreflabel="[color-or-none]">[color-or-none]</option></term><listitem><para>is _colorRGB, NONE</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="cartoon"/> <xref linkend="color"/> <xref linkend="coloratomobject"/> <xref linkend="colorbondobject"/> <xref linkend="colorelement"/> <xref linkend="colormodelobject"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="setdefaultcolorscheme"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="bondorder" id="bondorder"><title>bondorder</title>
+<para>Sets the bond order for bonds to previously selected atoms. Bond selection is based on the setting of set bondmode along the lines of wireframe and color. See also connect.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k36" xreflabel="bondorder [bond-order-or-type]">bondorder [bond-order-or-type]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d35" xreflabel="[bond-order-or-type]">[bond-order-or-type]</option></term><listitem><para>is 0, 1, 2, 3, AROMATIC, or HBOND</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="connect"/> <xref linkend="hbonds"/> <xref linkend="setbondstyles"/> <xref linkend="ssbonds"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="cartoon or cartoons" id="cartoon"><title>cartoon or cartoons</title>
+<para>Cartoons are the classic shapes the are used to depict alpha helices and beta-pleated sheets.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k39" xreflabel="cartoon ON/OFF{default: ON}">cartoon ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k41" xreflabel="cartoon [cartoon-radius]">cartoon [cartoon-radius]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d40" xreflabel="[cartoon-radius]">[cartoon-radius]</option></term><listitem><para>is the radius of the cartoon elements -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="center or centre" id="center"><title>center or centre</title>
+<para>Sets the center of rotation to be the center of the set of atoms defined by the atom expression. This is calculated as the mean value of the coordinates of the selected atoms along each of the respective axes. If no atoms are selected then the center is set to the center of the bounding box (the default).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k44" xreflabel="center">center</command></term>
+<listitem><para>Recenters the model on the default center.</para></listitem></varlistentry>
+<varlistentry><term><command id="k46" xreflabel="center [atom-expression]">center [atom-expression]</command></term>
+<listitem><para>Centers the model on the specified atom set. Along with show center, allows for the reading of the coordinated position of a specific atom using, for example, center [CYS]4.O;show center;center. See also centerAt</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d45" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="centerAt"/> <xref linkend="show"/> </para>
+</section>
+<section xreflabel="centerAt" id="centerAt"><title>centerAt</title>
+<para>The centerAt command allows centering of the model in one of three different ways: based on an absolute coordinate position, based on an offset relative to the center of the boundbox (the overall application default), or based on an offset relative to the average position of the currently selected atoms. Centering on a specific atom or atom set without first selecting it is also available using the center command. If the three numerical values are omitted, they default to 0.0 0.0 0.0.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k49" xreflabel="centerAt ABSOLUTE x y z {default: 0.0 0.0 0.0}">centerAt ABSOLUTE x y z {default: 0.0 0.0 0.0}</command></term>
+<listitem><para>specifies an absolute coordinate for the center, in Angstroms</para></listitem></varlistentry>
+<varlistentry><term><command id="k51" xreflabel="centerAt AVERAGE x y z {default: 0.0 0.0 0.0}">centerAt AVERAGE x y z {default: 0.0 0.0 0.0}</command></term>
+<listitem><para>relative to the average atom position (also known as the "unweighted center of gravity")</para></listitem></varlistentry>
+<varlistentry><term><command id="k50" xreflabel="centerAt BOUNDBOX x y z {default: 0.0 0.0 0.0}">centerAt BOUNDBOX x y z {default: 0.0 0.0 0.0}</command></term>
+<listitem><para>relative to the center of the boundbox, which is defined by the minimum and maximum atom center coordinates along each of the cartesian axes</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="center"/> <xref linkend="show"/> </para>
+</section>
+<section xreflabel="color or colour" id="color"><title>color or colour</title>
+<para>The color command takes several forms, depending upon the type of object being colored: an atom object, a bond object, a chemical element, or a model object. In addition, you can set the default color of any chemical element individually. This section of the guide discusses each of these in turn:</para><para></para>
+<itemizedlist mark="bullet">
+<listitem><para>color (atom object)</para></listitem>
+<listitem><para>color (bond object)</para></listitem>
+<listitem><para>color (element)</para></listitem>
+<listitem><para>color (model object)</para></listitem>
+</itemizedlist>
+<para> Additional information external to this documentation can be found in relation to [Jmol color schemes] and [standard JavaScript color names and codes]. In addition, a page is in construction that lays out the [Jmol color command matrix]. </para><para>In general, the color command takes the following syntax:</para><para>color [object] [option]</para><para>The first parameter of the color command specifies the object of that command. If no object is given, then 'color atom' is assumed, and the currently selected atoms are colored. Following that can be a rather wide variety of one- or two-word options, described below and dependent upon the kind of object being colored. </para><para>Translucent/Opaque Options. The color command allows an optional color modifier of 'translucent' or 'opaque', which can be used with any object. For example:</para><para> color atoms translucent orange</para><para> color ribbons translucent [255, 165, 0]</para><para>Setting a color sets the translucency to 'opaque' by default. Thus, 'color atoms red' and 'color atoms opaque red' are synonymous. Translucent and opaque can also be used alone with an object, even without specifying a color:</para><para>color mysetofatoms translucent</para><para> In that case, however, the result is complicated by color inheritance, discussed next. </para><para>Color Inheritance. Many objects inherit both color and opacity from the underlying associated atom (which, themselves "inherit" their color by default from their associated chemical element). For example, by default a bond will inherit the two colors+translucencies of its endpoint atoms. If you simply 'color atoms translucent', then both the atoms and the bonds will be translucent. But if you 'color bonds opaque' or 'color bonds red' and also 'color atoms translucent' only the atoms will be translucent. </para><para>The level of 'translucent' cannot be controlled; it is set at 50%. Note that the implementation of 'translucent' is not as an alpha channel. Rather, translucent objects are "screened" so that every other pixel is painted. If you put an opaque object behind a translucent object, then you will see the object in the back.But if you put a translucent object behind another translucent object, then you will not see the translucent object in the back.</para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="coloratomobject"/> <xref linkend="colorbondobject"/> <xref linkend="colorelement"/> <xref linkend="colormodelobject"/> <xref linkend="setdefaultcolorscheme"/> </para>
+</section>
+<section xreflabel="color (atom object)" id="coloratomobject"><title>color (atom object)</title>
+<para>Sets the color of atom-related objects (atoms, backbone, cartoons, dots, labels, meshribbon, polyhedra, rockets, stars, strands, trace, and vectors).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k57" xreflabel="color [color-scheme]">color [color-scheme]</command></term>
+<listitem><para>Sets the previously selected atom set to a color based on a particular color scheme. Note that to color a specific set of atoms, you MUST select that set first, then use use the color command. You cannot script, for example, "color *.N? green".</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>define myset (*.N?)
+select myset
+color green
+select *
+color cartoons structure
+color rockets chain
+color backbone blue
+</programlisting>
+</listitem></varlistentry>
+<varlistentry><term><command id="k59" xreflabel="color [atom-associated-object] [color-scheme]">color [atom-associated-object] [color-scheme]</command></term>
+<listitem><para>Sets the color of atom-related objects based on a previously selected atom set to a specific color, a color scheme, or back to its default color (CPK), or to inherit the color of its associated atom (NONE). (In the case of "color atom", CPK and NONE both revert to the default color.)</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>select oxygen;color atoms green
+select carbon;color atoms translucent white;color bonds green;
+select carbon;color bonds opaque [255,196,196]
+</programlisting>
+</listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d56" xreflabel="[color-scheme]">[color-scheme]</option></term><listitem><para>is to color based on a scheme. (CPK and NONE are synonymous here) -- (color name), [r, g, b], [xRRGGBB], AMINO, GROUP, CHAIN, FIXEDTEMPERATURE, FORMALCHARGE, MONOMER, PARTIALCHARGE, RELATIVETEMPERATURE, SHAPELY, STRUCTURE, CPK, NONE</para></listitem></varlistentry>
+<varlistentry><term><option id="d58" xreflabel="[atom-associated-object]">[atom-associated-object]</option></term><listitem><para>is an object related to an atom -- ATOM, BACKBONE, CARTOON, DOTS, LABELS, MESHRIBBON, POLYHEDRA, RIBBONS, ROCKETS, STARS, STRANDS, TRACE, VECTORS</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="color"/> <xref linkend="colorbondobject"/> <xref linkend="colorelement"/> <xref linkend="colormodelobject"/> <xref linkend="setdefaultcolorscheme"/> </para>
+</section>
+<section xreflabel="color (bond object)" id="colorbondobject"><title>color (bond object)</title>
+<para>Three types of bonds are distinguished by Jmol for coloring purposes: regular bonds, disulfide bonds, and hydrogen bonds. Each can be colored independently, and hydrogen bond colors in proteins can take on a special coloring scheme based on their connectivity.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k63" xreflabel="color BONDS [color-or-none]">color BONDS [color-or-none]</command></term>
+<listitem><para>Colors selected bonds a specific color or resets them to inherit the color of their associated atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k64" xreflabel="color SSBONDS [color-or-none]">color SSBONDS [color-or-none]</command></term>
+<listitem><para>Colors disulfide bonds a specific color or resets them to inherit their color from their associated atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k65" xreflabel="color HBONDS [color-or-none]">color HBONDS [color-or-none]</command></term>
+<listitem><para>Colors hydrogen bonds a specific color or resets them to inherit their color from their associated atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k66" xreflabel="color HBONDS TYPE">color HBONDS TYPE</command></term>
+<listitem><para>Colors hydrogen bonds specifically in proteins based on how many residues one end is from the other. Note that to get this effect, one must first execute "hbonds ON" and then issue "color hbonds TYPE". The colors assigned are based on the number of redidues between the interacting H atoms. This TENDS to indicate secondary structure, but is not perfect.The correlation between color and offset are as follows:</para><para></para>
+<informaltable><tr ><td >Color</td ><td >Offset</td ></tr ><tr ><td >green</td ><td >-4</td ></tr ><tr ><td >cyan</td ><td >-3</td ></tr ><tr ><td >white</td ><td >+2</td ></tr ><tr ><td >magenta</td ><td >+3 (turns)</td ></tr ><tr ><td >red</td ><td >+4 (alpha-helix)</td ></tr ><tr ><td >orange</td ><td >+5</td ></tr ><tr ><td >yellow</td ><td >other (e.g. beta-pleated sheet)</td ></tr >
+</informaltable>
+<para></para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d62" xreflabel="[color-or-none]">[color-or-none]</option></term><listitem><para>is _colorRGB, NONE</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="color"/> <xref linkend="coloratomobject"/> <xref linkend="colorelement"/> <xref linkend="colormodelobject"/> <xref linkend="setdefaultcolorscheme"/> </para>
+</section>
+<section xreflabel="color (element)" id="colorelement"><title>color (element)</title>
+<para>You can use the 'color' command to specify customized default colors that are used for elements. [default Jmol element colors] </para><para>color carbon limegreen</para><para>color hydrogen [x32CD32];</para><para>These changes are not molecule-specific; they will continue in effect even if new molecules are loaded. However, in a page with multiple applets, each applet will have its own set of element colors.</para><para>If you choose to use this feature, you should consider encapsulating your favorite colors into a script and then executing that script as a subroutine. For example:</para><para>script LoadMyFavoriteColors.txt;</para><para>load foo.xyz;</para><para>load bar.xyz;</para><para>Note:</para><para></para>
+<orderedlist enumeration="arabic">
+<listitem><para>Custom element colors are independent of and are not affected by the currently selected set of atoms.</para></listitem>
+<listitem><para>To reset custom element colors, use 'set defaultColors Jmol' or 'set defaultColors Rasmol'.</para></listitem>
+<listitem><para>'translucent' or 'opaque' cannot be specified as part of the element color specification. (You cannot 'color carbon transparent green', for instance.)</para></listitem>
+<listitem><para>At this time only elements can be custom colored. There is no support for customizing other color palettes such as those used for protein chains or groups.</para></listitem></orderedlist>
+<para></para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k71" xreflabel="color [element-name] [RGB-color]">color [element-name] [RGB-color]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d69" xreflabel="[element-name]">[element-name]</option></term><listitem><para>is to color specific elements such as CARBON or HYDROGEN -- (element name)</para></listitem></varlistentry>
+<varlistentry><term><option id="d70" xreflabel="[RGB-color]">[RGB-color]</option></term><listitem><para>is a name of a color or a red, green, blue color triple in decimal with commas, for example [255,0,255], or as a single hexadecimal number, for example [xFF00FF] (brackets included) -- (color name), [r, g, b], [xRRGGBB]</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="color"/> <xref linkend="coloratomobject"/> <xref linkend="colorbondobject"/> <xref linkend="colormodelobject"/> <xref linkend="setdefaultcolorscheme"/> </para>
+</section>
+<section xreflabel="color (model object)" id="colormodelobject"><title>color (model object)</title>
+<para>Sets the color of various objects (axes, boundbox, echo, hover, measurements, pmesh, and unitcell).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k76" xreflabel="color [model-object] [RGB-color]">color [model-object] [RGB-color]</command></term>
+<listitem><para>Examples:</para>
+<programlisting>select [CYS]32 ;label %a: %x %y %z;color labels white;
+set axes on;color axes green
+set axes on;color axes [xFF00FF];
+</programlisting>
+</listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d74" xreflabel="[model-object]">[model-object]</option></term><listitem><para>is AXES, BOUNDBOX, ECHO, HOVER, ISOSURFACE, MEASUREMENTS, PMESH, UNITCELL</para></listitem></varlistentry>
+<varlistentry><term><option id="d75" xreflabel="[RGB-color]">[RGB-color]</option></term><listitem><para>is a name of a color or a red, green, blue color triple in decimal with commas, for example [255,0,255], or as a single hexadecimal number, for example [xFF00FF] (brackets included) -- (color name), [r, g, b], [xRRGGBB]</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="color"/> <xref linkend="coloratomobject"/> <xref linkend="colorbondobject"/> <xref linkend="colorelement"/> <xref linkend="setdefaultcolorscheme"/> </para>
+</section>
+<section xreflabel="comment (#)" id="comment"><title>comment (#)</title>
+<para>Comments in Jmol are preceded by a number sign, '#'.</para><para></para>
+<informaltable><tr ><td valign="top">#</td ><td > Anything following '#' up until the end of a statement is ignored by Jmol with the following two exceptions. (A statement is terminated by a semicolon ";" or a newline.)</td ></tr ><tr ><td valign="top">#jx</td ><td >Commands prefixed with #jx will be executed by Jmol</td ></tr ><tr ><td valign="top">#jc</td ><td > If the string '#jc' appears anywhere within a statement, then that entire statement will be assumed to be a comment and will be completely ignored by the Jmol interpreter.</td ></tr >
+</informaltable>
+<para></para>
+<variablelist><title>Syntax</title>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting># color by polarity
+color background [xffa0a0] # pink
+#jx set perspectiveDepth on; #executed only in Jmol, not Chime or Rasmol
+zoom 125 #jc; # zoom to 125% in Chime and Rasmol but not in Jmol
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist><para> Similar comment controls exist in Chime. Commands prefixed with #! will be executed in Chime but not in RasMol. Commands containing ## will be ignored by Chime, but the portion preceding the ## will be executed in RasMol. Thus we have: </para><para></para>
+<informaltable><tr ><td ># </td ><td > not read by Jmol, Chime, or Rasmol</td ></tr ><tr ><td >#jx [commands here] </td ><td > Jmol excecution only</td ></tr ><tr ><td >#! [commands here] </td ><td > Chime execution only</td ></tr ><tr ><td >[commands here] ## #jc </td ><td >Rasmol execution only</td ></tr ><tr ><td >[commands here] #jc </td ><td > Chime and Rasmol only </td ></tr ><tr ><td > [commands here] ## </td ><td > Jmol and Rasmol only</td ></tr >
+</informaltable>
+<para></para>
+</section>
+<section xreflabel="connect" id="connect"><title>connect</title>
+<para>The connect command allows real-time bond manipulation, allowing the user or application to connect and disconnect specific atom sets. The general syntax is as follows: </para><para> </para><para> select &lt;sourceAtomSet></para><para>connect &lt;maxDistance> (&lt;targetAtomSet>) </para><para> </para><para>The idea is that you first select a source set of atoms, then specify the maximum distance (in Angstroms) for bonding along with the target atom set. Note that the target atom set is an atom expression that must be enclosed in parentheses. If the maximum distance parameter is not given, all connections between the two atom sets are made, regardless of distance. Newly created connections are automatically assigned single bond order. The connect command then can be used to specify a different bond order if other than single bonding is desired. Bonds already present in the structure are not affected. (New in 10.00.48)</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k81" xreflabel="connect">connect</command></term>
+<listitem><para>With no arguments, connect reinstates the Jmol default connections, all as single bonds. Any multiple bonding designated in the original file is lost.</para></listitem></varlistentry>
+<varlistentry><term><command id="k83" xreflabel="connect ( [atom-expression] )">connect ( [atom-expression] )</command></term>
+<listitem><para>Connect all atoms in the target atom set to all atoms to all atoms in a previously selected atom set.</para></listitem></varlistentry>
+<varlistentry><term><command id="k85" xreflabel="connect [maximum-distance] ( [atom-expression] )">connect [maximum-distance] ( [atom-expression] )</command></term>
+<listitem><para>Connect all atoms in the target atom set to all atoms to all atoms in a previously selected atom set, provided the two atoms are within the given maximum distance.</para></listitem></varlistentry>
+<varlistentry><term><command id="k87" xreflabel="connect [bond-type]">connect [bond-type]</command></term>
+<listitem><para>Assign the specified bond type to preselected atoms that are already connected.</para></listitem></varlistentry>
+<varlistentry><term><command id="k88" xreflabel="connect DELETE">connect DELETE</command></term>
+<listitem><para>Removes selected bonding connections.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d82" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+<varlistentry><term><option id="d84" xreflabel="[maximum-distance]">[maximum-distance]</option></term><listitem><para>is in Angstroms -- (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d86" xreflabel="[bond-type]">[bond-type]</option></term><listitem><para>is SINGLE, DOUBLE, TRIPLE, AROMATIC, or HBOND</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="bondorder"/> <xref linkend="hbonds"/> <xref linkend="setbondstyles"/> <xref linkend="ssbonds"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="console" id="console"><title>console</title>
+<para>Throws up a console window from which a user can enter script commands and monitor the messages returned by Jmol. </para>
+<variablelist><title>Syntax</title>
+</variablelist>
+</section>
+<section xreflabel="define" id="define"><title>define</title>
+<para>Defines the specified variable to the the atoms selected by the atom expression.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k95" xreflabel="define [variable-name] [atom-expression]">define [variable-name] [atom-expression]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d93" xreflabel="[variable-name]">[variable-name]</option></term><listitem><para>is a (string)</para></listitem></varlistentry>
+<varlistentry><term><option id="d94" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>define mygroup within(5.0,[FS4]102)
+select mygroup
+color atoms white
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="delay" id="delay"><title>delay</title>
+<para>Causes the screen to refresh and the script to stop executing for the specified number of seconds. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k100" xreflabel="delay [time-delay]">delay [time-delay]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k98" xreflabel="delay on">delay on</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d99" xreflabel="[time-delay]">[time-delay]</option></term><listitem><para>is in seconds -- (integer|decimal, >=0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="depth" id="depth"><title>depth</title>
+<para> Slab and Depth together control the percentage of the molecule to be displayed based on clipping planes. slab on turns slab/depth on. slab 50 shows the back 50% of the molecule. slab 25 show the back 25% of the molecule. Atoms appear solid; bonds appear hollow. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k104" xreflabel="depth [slab-percent]">depth [slab-percent]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d103" xreflabel="[slab-percent]">[slab-percent]</option></term><listitem><para>is an (integer, 0 to 100)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="slab"/> </para>
+</section>
+<section xreflabel="dots" id="dots"><title>dots</title>
+<para>Turns dotted surface on or off for Van der Waals radii or solvent probe (if in addition set solvent ON).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k107" xreflabel="dots ON/OFF{default: ON}">dots ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="echo" id="echo"><title>echo</title>
+<para>Echos a string of text to the window at the location predefined by the "set echo" command as well as to the Java Console. "echo" by itself deletes the text at the selected position (top, middle, or bottom).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k110" xreflabel="echo (string)">echo (string)</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="font"/> <xref linkend="hover"/> <xref linkend="label"/> <xref linkend="sethighlights"/> </para>
+</section>
+<section xreflabel="exit" id="exit"><title>exit</title>
+<para> Stops execution of the script current script. In the case of a script that is running as a "child" (for example, from a "source" command, execution continues with the parent.</para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="font" id="font"><title>font</title>
+<para>Sets font size and information in labels and other text-bearing elements.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k118" xreflabel="font _object_with_text [font-size] [font-face]{default: SansSerif} [font-style]{default: Plain}">font _object_with_text [font-size] [font-face]{default: SansSerif} [font-style]{default: Plain}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d115" xreflabel="[font-size]">[font-size]</option></term><listitem><para>is approximately the same as Rasmol -- (integer, 6 to 63)</para></listitem></varlistentry>
+<varlistentry><term><option id="d116" xreflabel="[font-face]">[font-face]</option></term><listitem><para>is SERIF, SANSSERIF, or MONOSPACED </para></listitem></varlistentry>
+<varlistentry><term><option id="d117" xreflabel="[font-style]">[font-style]</option></term><listitem><para>is PLAIN, BOLD, ITALIC, or BOLDITALIC</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="echo"/> <xref linkend="hover"/> <xref linkend="label"/> <xref linkend="sethighlights"/> </para>
+</section>
+<section xreflabel="frame" id="frame"><title>frame</title>
+<para>Sets the current animation frame (1 being the first). (Same as the model command.)</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k121" xreflabel="frame (integer >= 1)">frame (integer >= 1)</command></term>
+<listitem><para>Go to a specific frame.</para></listitem></varlistentry>
+<varlistentry><term><command id="k122" xreflabel="frame 0">frame 0</command></term>
+<listitem><para>Overlay all frames.</para></listitem></varlistentry>
+<varlistentry><term><command id="k123" xreflabel="frame NEXT">frame NEXT</command></term>
+<listitem><para>Go to next frame</para></listitem></varlistentry>
+<varlistentry><term><command id="k124" xreflabel="frame -1">frame -1</command></term>
+<listitem><para>Go to previous frame.</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="hbonds" id="hbonds"><title>hbonds</title>
+<para>Hydrogen bonds can be turned on or off, colored, and given custom width in angstroms.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k127" xreflabel="hbonds ON/OFF{default: ON}">hbonds ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k129" xreflabel="hbonds [width-in-angstroms]">hbonds [width-in-angstroms]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k131" xreflabel="hbonds [width-by-Rasmol]">hbonds [width-by-Rasmol]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d128" xreflabel="[width-in-angstroms]">[width-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;2.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d130" xreflabel="[width-by-Rasmol]">[width-by-Rasmol]</option></term><listitem><para>is in 1/250ths of an Angstrom (deprecated) -- (integer, &lt;500)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="bondorder"/> <xref linkend="connect"/> <xref linkend="setbondstyles"/> <xref linkend="ssbonds"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="hover" id="hover"><title>hover</title>
+<para>Turns on and off pop-up labels that appear when the user "hovers" the mouse over the atom. If a string is given, it is used as the label. See also label.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k134" xreflabel="hover ON/OFF/string">hover ON/OFF/string</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="echo"/> <xref linkend="font"/> <xref linkend="label"/> <xref linkend="sethighlights"/> </para>
+</section>
+<section xreflabel="isosurface" id="isosurface"><title>isosurface</title>
+<para><img style="clear:right" src="isosurface.gif" alt="" />Jmol can generate isosurfaces from scalar field data in files of the gaussian .cube format, which contains both atom positions and scalar data. The load command reads only the atom position data from the .cube file.</para><para>A separate isosurface command is used to read the scalar field data and construct the isosurface. This surface represents the points in space where scalar values cross a specified "cutoff" value. Inside the surface, values are greater or equal to a specified positive cutoff or less than or equal to a specified negative cutoff. The default cutoff is 0.02. Note that positive and negative surfaces are created separately. You can give them distinct names and control their display properties independently. </para><para>Parameters to the isosurface command control the cutoff value and the display characteristics of the surface. Any number of display characteristics (such as "DOTS MESH NOFILL") may be included in a single isosurface command. By reading the same .cube file more than once with different parameters, or by reading different .cube files, you can construct different isosurfaces with different shapes and sizes. By naming these individual surfaces with unique identifiers you can control display settings and color for each of the surfaces independently. </para><para>The isosurface command is similar to the pmesh command in terms of options. The isosurface command takes the overall format:</para><para>isosurface surfaceID cutoff [option] "filename.cube".</para><para>Starting in version 10.00.42, you can map a function (based on values in another .cube file) onto an isosurface. This is done by adding to the isosurface command the keywords COLOR ABSOLUTE followed by the negative cutoff, the positive cutoff, and the name of another .cube file. Surface are then colored using a red-->orange-->yellow-->green-->blue rainbow, where red represents minimum values and blue represents maximum values. If absolute cutoff values are not provided, then Jmol will calculate the range based upon the actual data values calculated for the surface points.</para><para>(The filename must be in double quotes, but the extension '.cube' is not necessary.) The .cube file may be gzip-compressed. isosurfaceID is any name that you want to use later to refer to this particular surface.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k137" xreflabel="isosurface isosurfaceID{default: all isosurfaces}">isosurface isosurfaceID{default: all isosurfaces}</command></term>
+<listitem><para>Selects a specific isosurface (or all isosurfaces) for subsequent color commands.</para></listitem></varlistentry>
+<varlistentry><term><command id="k138" xreflabel="isosurface isosurfaceID{default: all} ON/OFF{default: ON}">isosurface isosurfaceID{default: all} ON/OFF{default: ON}</command></term>
+<listitem><para>Turn on/off the specified isosurface.</para></listitem></varlistentry>
+<varlistentry><term><command id="k139" xreflabel="isosurface isosurfaceID{default: all} DELETE">isosurface isosurfaceID{default: all} DELETE</command></term>
+<listitem><para>Delete the specified isosurface.</para></listitem></varlistentry>
+<varlistentry><term><command id="k140" xreflabel="isosurface isosurfaceID(optional) cutoff{default: 0.02} &quot;xyz.cub.gz&quot;">isosurface isosurfaceID(optional) cutoff{default: 0.02} &quot;xyz.cub.gz&quot;</command></term>
+<listitem><para>Loads isosurface file "xyz.cub.gz", optionally assigned id isosurfaceID and </para></listitem></varlistentry>
+<varlistentry><term><command id="k144" xreflabel="isosurface isosurfaceID{default: all} cutoff{default: 0.02} &quot;xyz.cub.gz&quot; COLOR ABSOLUTE -cutoff +cutoff &quot;xyz-map.cub.gz&quot;">isosurface isosurfaceID{default: all} cutoff{default: 0.02} &quot;xyz.cub.gz&quot; COLOR ABSOLUTE -cutoff +cutoff &quot;xyz-map.cub.gz&quot;</command></term>
+<listitem><para>Maps the color values from one .cube file onto the cutoff values of another .cube file based on the range of values given.</para></listitem></varlistentry>
+<varlistentry><term><command id="k145" xreflabel="isosurface isosurfaceID{default: all} cutoff{default: 0.02} &quot;xyz.cub.gz&quot; COLOR &quot;xyz-map.cub.gz&quot;">isosurface isosurfaceID{default: all} cutoff{default: 0.02} &quot;xyz.cub.gz&quot; COLOR &quot;xyz-map.cub.gz&quot;</command></term>
+<listitem><para>Maps the color values from one .cube file onto the cutoff values of another .cube file using the entire range of values given in the map file.</para></listitem></varlistentry>
+<varlistentry><term><command id="k141" xreflabel="isosurface isosurfaceID{default: all} DOTS or NODOTS{default: NODOTS} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}">isosurface isosurfaceID{default: all} DOTS or NODOTS{default: NODOTS} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether or not dots are shown at the isosurface points.</para></listitem></varlistentry>
+<varlistentry><term><command id="k142" xreflabel="isosurface isosurfaceID{default: all} FILL or NOFILL{default: FILL} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}">isosurface isosurfaceID{default: all} FILL or NOFILL{default: FILL} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether the isosurface appears solid (the default).</para></listitem></varlistentry>
+<varlistentry><term><command id="k143" xreflabel="isosurface isosurfaceID{default: all} MESH or NOMESH{default: NOMESH} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}">isosurface isosurfaceID{default: all} MESH or NOMESH{default: NOMESH} cutoff{default: 0.02} &quot;xyz.cub.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether lines between the isosurface points are drawn, given the appearance of a mesh.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>isosurface pos05 0.05 "examples/ethene-HOMO.cub.gz";isosurface neg05 -0.05 "examples/ethene-HOMO.cub.gz";
+# now load some other surface further out;isosurface pos01 0.01 "examples/ethene-HOMO.cub.gz";isosurface neg01 -0.01 "examples/ethene-HOMO.cub.gz";color isosurface translucent; # make neg01 translucent
+isosurface pos01 nofill mesh; # make pos01 a mesh;color isosurface translucent; # make the pos01 mesh translucent, too
+isosurface neg01 dots; # make neg01 show dots, too
+isosurface neg01 nofill; # only dots
+isosurface nodots nomesh fill; #everybody is back to a solid ...;color isosurface opaque; # ... and opaque
+isosurface neg01; #select neg01;color isosurface green;
+isosurface pos01;color isosurface violet;
+slab on; slab 50; # slab in order to see the inside
+slab off; # all done!
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="label or labels" id="label"><title>label or labels</title>
+<para>Turns on and off atom labels based on a previous selection. If a string is given, it is used as the label. See also hover.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k148" xreflabel="label ON/OFF/string">label ON/OFF/string</command></term>
+<listitem><para></para><para>Special characters include: </para><para></para>
+<informaltable><tr ><td >%a</td ><td >atom name</td ></tr ><tr ><td >%b</td ><td >protein B-Factor</td ></tr ><tr ><td >%c</td ><td > protein chain</td ></tr ><tr ><td > %e</td ><td >element symbol</td ></tr ><tr ><td >%C</td ><td >formal charge</td ></tr ><tr ><td >%i </td ><td >sequential number</td ></tr ><tr ><td >%I</td ><td >bonding radius</td ></tr ><tr ><td >%L</td ><td >polymer length</td ></tr ><tr ><td >%m</td ><td >single letter amino acid code, as &lt;X&gt;</td ></tr ><tr ><td >%M</td ><td >model ID</td ></tr ><tr ><td >%n </td ><td >3-letter residue name</td ></tr ><tr ><td >%P</td ><td >partial charge</td ></tr ><tr ><td >%q</td ><td >occupancy</td ></tr ><tr ><td >%r</td ><td >PDB residue number</td ></tr ><tr ><td >%U</td ><td >full PDB designator, same as [%n]%r:%c %a #%i</td ></tr ><tr ><td >%V</td ><td >Van der Wall radius</td ></tr ><tr ><td >%x %y %z</td ><td >coordinates</td ></tr >
+</informaltable>
+<para> </para><para>Starting in version 10.00.43, standard C++ "pformat" formating is available. So, for example, "%.1x" is the x-coordinate rounded to one decimal place; "%-8.3P" is the partial charge left aligned in an 8-character field with 3 digits to the right of the decimal point. </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="echo"/> <xref linkend="font"/> <xref linkend="hover"/> <xref linkend="sethighlights"/> </para>
+</section>
+<section xreflabel="load" id="load"><title>load</title>
+<para>Loads the specified file or URL. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k152" xreflabel="load [file name]">load [file name]</command></term>
+<listitem><para>Jmol automatically determines file type based upon the contents of the file. </para></listitem></varlistentry>
+<varlistentry><term><command id="k154" xreflabel="load [param-ignored] [file name]">load [param-ignored] [file name]</command></term>
+<listitem><para>The format parameter is ignored. This form is allowed for backward compatibility with RasMol/Chime. </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d151" xreflabel="[file name]">[file name]</option></term><listitem><para>is a model filename or URL -- (string)</para></listitem></varlistentry>
+<varlistentry><term><option id="d153" xreflabel="[param-ignored]">[param-ignored]</option></term><listitem><para>is for Rasmol/chime compatibility; ignored -- (string)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="zap"/> </para>
+</section>
+<section xreflabel="loop" id="loop"><title>loop</title>
+<para>Causes the script to restart at the beginning, with an optional time delay.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k159" xreflabel="loop [time-delay]">loop [time-delay]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k157" xreflabel="loop on">loop on</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d158" xreflabel="[time-delay]">[time-delay]</option></term><listitem><para>is in seconds -- (integer|decimal, >=0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="measure or monitor" id="measure"><title>measure or monitor</title>
+<para> Renders a measurement between the specified atoms. See also set measurement.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k162" xreflabel="measure ON/OFF{default: ON}">measure ON/OFF{default: ON}</command></term>
+<listitem><para>Turns on and off the distance, angle, dihedral measurement labels and measurement lines. (To turn off just the labels, use set measurement OFF </para></listitem></varlistentry>
+<varlistentry><term><command id="k164" xreflabel="measure [atom-number] [atom-number]">measure [atom-number] [atom-number]</command></term>
+<listitem><para>Two atoms specify a distance measurement.</para></listitem></varlistentry>
+<varlistentry><term><command id="k165" xreflabel="measure [atom-number] [atom-number] [atom-number]">measure [atom-number] [atom-number] [atom-number]</command></term>
+<listitem><para>Three atoms specify an angle measurement.</para></listitem></varlistentry>
+<varlistentry><term><command id="k166" xreflabel="measure [atom-number] [atom-number] [atom-number] [atom-number]">measure [atom-number] [atom-number] [atom-number] [atom-number]</command></term>
+<listitem><para>Four atoms specify a dihedral angle measurement. </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d163" xreflabel="[atom-number]">[atom-number]</option></term><listitem><para>is the sequential number assigned to the atom -- (integer, >=1)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="meshribbon" id="meshribbon"><title>meshribbon</title>
+<para>A mesh ribbon is similar to a strand, but is more the quality of a loosely woven fabric. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k169" xreflabel="meshribbon ON/OFF{default: ON}">meshribbon ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k171" xreflabel="meshribbon [mesh-ribbon-radius]">meshribbon [mesh-ribbon-radius]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d170" xreflabel="[mesh-ribbon-radius]">[mesh-ribbon-radius]</option></term><listitem><para>is the overall radius of the mesh ribbon -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="model" id="model"><title>model</title>
+<para>Sets the current model (1 being the first). (Same as the frame command.)</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k174" xreflabel="model (integer >= 1)">model (integer >= 1)</command></term>
+<listitem><para>Display a specific model.</para></listitem></varlistentry>
+<varlistentry><term><command id="k175" xreflabel="model 0">model 0</command></term>
+<listitem><para>Overlay all models.</para></listitem></varlistentry>
+<varlistentry><term><command id="k176" xreflabel="model NEXT">model NEXT</command></term>
+<listitem><para>Display the next model.</para></listitem></varlistentry>
+<varlistentry><term><command id="k177" xreflabel="model -1">model -1</command></term>
+<listitem><para>Display the previous model.</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="move" id="move"><title>move</title>
+<para>The move command provides powerful animation capabilities. It allows you to specify rotations, zooming, and translations to be performed in a specified period of time. xRot, yRot, and zRot are rotations about the cartesian axes in degrees. Zoom specifies a zoom factor (there is a good chance this is not currently implemented properly) xTrans, yTrans, and zTrans are translations in the range -100 to 100. If you do not know what slab is, just put in a zero. see the slab command for more information. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k191" xreflabel="move [x-rotation] [y-rotation] [z-rotation] [zoom-factor] [x-translation] [y-translation] [z-translation] [slab-cutoff] [seconds-total] [move-frames-per-second]{default: 30} [maximum-acceleration]{default: 5}">move [x-rotation] [y-rotation] [z-rotation] [zoom-factor] [x-translation] [y-translation] [z-translation] [slab-cutoff] [seconds-total] [move-frames-per-second]{default: 30} [maximum-acceleration]{default: 5}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d180" xreflabel="[x-rotation]">[x-rotation]</option></term><listitem><para>is the degrees of rotation about x -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d181" xreflabel="[y-rotation]">[y-rotation]</option></term><listitem><para>is the degrees of rotation about y -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d182" xreflabel="[z-rotation]">[z-rotation]</option></term><listitem><para>is the degrees of rotation about z -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d183" xreflabel="[zoom-factor]">[zoom-factor]</option></term><listitem><para>is a scaling factor -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d184" xreflabel="[x-translation]">[x-translation]</option></term><listitem><para>is the distance offset along x -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d185" xreflabel="[y-translation]">[y-translation]</option></term><listitem><para>is the distance offset along y -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d186" xreflabel="[z-translation]">[z-translation]</option></term><listitem><para>is the distance offset along z -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d187" xreflabel="[slab-cutoff]">[slab-cutoff]</option></term><listitem><para>is the cutoff for the slab display -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d188" xreflabel="[seconds-total]">[seconds-total]</option></term><listitem><para>is the amount of time to wait -- (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d189" xreflabel="[move-frames-per-second]">[move-frames-per-second]</option></term><listitem><para>is the frames per second to move -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d190" xreflabel="[maximum-acceleration]">[maximum-acceleration]</option></term><listitem><para>is the maximum acceleration -- (integer)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="moveto" id="moveto"><title>moveto</title>
+<para><img src="examples/moveto.gif" alt="" />The moveto command rotates the molecule to a predefined orientation. The first parameter specifies the number of seconds during which the molecule should rotate smoothly from the current orientation to the new orientation. A 0 for this first parameter specifies an instantaneous reorientation. The next three parameters (x, y, and z) define the axis relative to the default orientation about which the molecule should be rotated. The fifth parameter defines the counterclockwise (right-hand) rotation in degrees about this axis. "moveto 0 0 0 0 0" rotates the model to the default orientation (equivalent to "reset"). If the fifth parameter is 0 but any one of x, y, or z is nonzero, then no reorientation occurs (because the axis has been specified, but the rotation is 0 degrees). In conjunction with "show orientation" this command allows reading and restoring specific user-specified orientations.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k198" xreflabel="moveto [time-in-seconds] [coord-value] [coord-value] [coord-value] [cw-rotation-deg] [percent-zoom]">moveto [time-in-seconds] [coord-value] [coord-value] [coord-value] [cw-rotation-deg] [percent-zoom]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d194" xreflabel="[time-in-seconds]">[time-in-seconds]</option></term><listitem><para>is in (seconds)</para></listitem></varlistentry>
+<varlistentry><term><option id="d195" xreflabel="[coord-value]">[coord-value]</option></term><listitem><para>is a (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d196" xreflabel="[cw-rotation-deg]">[cw-rotation-deg]</option></term><listitem><para>is a (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d197" xreflabel="[percent-zoom]">[percent-zoom]</option></term><listitem><para>is an (integer, 5 to 5000)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="pmesh" id="pmesh"><title>pmesh</title>
+<para>With the pmesh command you can add one or more surfaces to a model. The pmesh command is similar to the isosurface command in terms of options. The pmesh command takes the overall format:</para><para>pmesh meshID [option] "filename.pmesh"</para><para>(The filename must be in double quotes, but the extension '.pmesh' is not necessary.) The .pmesh file may be gzip-compressed. meshID is any name that you want to use later to refer to the mesh. The command also sets the 'current' mesh.</para><para>Note: meshes are not currently model-specific and are limited to triangles and quadrilaterals.</para><para>Format of the pmesh files required by Jmol:</para><para>The format of a pmesh file is relatively simple (example file):</para><programlisting>100
+3.0000 3.0000 1.0000
+2.3333 3.0000 1.0000
+...(98 more like this)
+81
+5
+0
+10
+11
+1
+0
+...(80 more sets like this)
+</programlisting><para></para>
+<itemizedlist mark="bullet">
+<listitem><para>The first line defines the number of grid points defining the surface (integer, n)</para></listitem>
+<listitem><para>The next n lines define the Cartesian coordinates of each of the grid points (n lines of x, y, z floating point data points)</para></listitem>
+<listitem><para>The next line specifies the number of polygons, m, to be drawn (81 in this case).</para></listitem>
+<listitem><para>The next m sets of numbers, one number per line, define the polygons. In each set, the first number, p, specifies the number of points in each set. Currently this number must be either 4 (for triangles) or 5 (for quadrilaterals). The next p numbers specify indexes into the list of data points (starting with 0). The first and last of these numbers must be identical in order to "close" the polygon.</para></listitem>
+</itemizedlist>
+<para></para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k201" xreflabel="pmesh pmeshID{default: all pmeshes}">pmesh pmeshID{default: all pmeshes}</command></term>
+<listitem><para>Selects a specific pmesh (or all pmeshes) for subsequent color commands.</para></listitem></varlistentry>
+<varlistentry><term><command id="k202" xreflabel="pmesh pmeshID{default: all pmeshes} ON/OFF{default: ON}">pmesh pmeshID{default: all pmeshes} ON/OFF{default: ON}</command></term>
+<listitem><para>Turn on/off the specified mesh.</para></listitem></varlistentry>
+<varlistentry><term><command id="k203" xreflabel="pmesh pmeshID{default: all pmeshes} DELETE">pmesh pmeshID{default: all pmeshes} DELETE</command></term>
+<listitem><para>Delete the specified mesh.</para></listitem></varlistentry>
+<varlistentry><term><command id="k204" xreflabel="pmesh pmeshID(optional) &quot;xyz.pmesh.gz&quot;">pmesh pmeshID(optional) &quot;xyz.pmesh.gz&quot;</command></term>
+<listitem><para>Loads pmesh file "xyz.pmesh.gz", optionally assigned id pmeshID.</para></listitem></varlistentry>
+<varlistentry><term><command id="k205" xreflabel="pmesh pmeshID{default: all pmeshes} DOTS or NODOTS{default: NODOTS} &quot;xyz.pmesh.gz&quot;{default: current}">pmesh pmeshID{default: all pmeshes} DOTS or NODOTS{default: NODOTS} &quot;xyz.pmesh.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether or not dots are shown at the polygon vertices.</para></listitem></varlistentry>
+<varlistentry><term><command id="k206" xreflabel="pmesh pmeshID{default: all pmeshes} FILL or NOFILL{default: FILL} &quot;xyz.pmesh.gz&quot;{default: current}">pmesh pmeshID{default: all pmeshes} FILL or NOFILL{default: FILL} &quot;xyz.pmesh.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether the polygons are filled (the default).</para></listitem></varlistentry>
+<varlistentry><term><command id="k207" xreflabel="pmesh pmeshID{default: all pmeshes} MESH or NOMESH{default: NOMESH} &quot;xyz.pmesh.gz&quot;{default: current}">pmesh pmeshID{default: all pmeshes} MESH or NOMESH{default: NOMESH} &quot;xyz.pmesh.gz&quot;{default: current}</command></term>
+<listitem><para>Controls whether the edges of the polygons are drawn.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>pmesh myPlane "examples/10x10pmesh.txt"
+# load a pmesh with ID myPlane
+color pmesh translucent yellow
+# make it translucent yellow
+pmesh myWave "examples/wave.pmesh"
+# load another pmesh, with ID myWave
+pmesh dots
+# turn on dots on all loaded pmeshes
+pmesh myWave
+# select pmesh myWave
+color pmesh white
+# color it white
+pmesh myPlane mesh
+# only display the mesh for myPlane
+pmesh myPlane nodots
+# no dots for myPlane
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="polyhedra" id="polyhedra"><title>polyhedra</title>
+<para>Jmol supports polyhedral representation of molecular structures. Jmol will form tetrahedrons and octahedrons.</para><para>Basis. Potential polyhedra centers are defined by the currently selected set of atoms. From this set of centers, polyhedra can be formed based upon bonds (polyhedra BONDS) or upon distance (polyhedra 2.0). If you construct them based on distance, then you may specify an optional set of atoms to be considered as vertices. This set of valid vertex atoms is in the form of a standard Jmol atom expression (such as hydrogen or atomno&lt;12 and not nitrogen) and must be specified in parentheses as shown in the examples given below.</para><para>Valid Polyhedra. The following three rules govern the formation of polyhedra:</para>
+<orderedlist enumeration="arabic">
+<listitem><para>If a center has exactly 4 vertices and the center is inside the 4 planes defined by the vertices when taken as triples, then a tetrahedron is constructed.</para></listitem>
+<listitem><para>If a center has exactly 6 vertices and the center is inside the 8 planes defined by the triples that define the convex surface, then an octagon is constructed.</para></listitem>
+<listitem><para>In any other situation, no polyhedron is constructed.</para></listitem></orderedlist>
+<para>Options. Once the polyhedra are constructed, other options apply based upon whether or not the central atom is selected. The command has a large number of options and is somewhat complicated. See the discussion below in the context of each specific parameter option.</para><para>Note: Polyhedra probably do not interact well with multiple models.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k210" xreflabel="polyhedra">polyhedra</command></term>
+<listitem><para>Sets the current polyhedra to be "all" for subsequent use by the 'color polyhedra' command.</para></listitem></varlistentry>
+<varlistentry><term><command id="k211" xreflabel="polyhedra ON/OFF{default: ON}">polyhedra ON/OFF{default: ON}</command></term>
+<listitem><para>Show or hide polyhedra whose central atom is selected.</para></listitem></varlistentry>
+<varlistentry><term><command id="k213" xreflabel="polyhedra DELETE">polyhedra DELETE</command></term>
+<listitem><para>Delete the polyhedra associated with central atoms that are selected.</para></listitem></varlistentry>
+<varlistentry><term><command id="k212" xreflabel="polyhedra BONDS">polyhedra BONDS</command></term>
+<listitem><para>Constructs polyhedra based upon bonding information. Selected atoms are search for centers that have exactly 4 or 6 bonds with the vertex atoms in a conforming orientation.</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting># build tetrahedrons around silicon
+select silicon; polyhedra bonds
+
+# make some of them green
+select atomno&lt;50; color polyhedra translucent green
+
+# delete some of them
+select atomno>75 and atomno&lt;100; polyhedra delete
+
+# now build octahedrons where oxygens are within 2.0 angstroms of central aluminum atoms
+select atomno&lt;75; polyhedra frontedges
+select aluminum and atomno > 75; color polyhedra none
+polyhedra 2.0 (oxygen); color polyhedra translucent lime
+</programlisting>
+</listitem></varlistentry>
+<varlistentry><term><command id="k215" xreflabel="polyhedra [maximum-distance]">polyhedra [maximum-distance]</command></term>
+<listitem><para>Constructs polyhedra based upon distance. Centers must contain exactly 4 or 6 atoms within the specified radius, in Angstroms (a decimal number).</para></listitem></varlistentry>
+<varlistentry><term><command id="k217" xreflabel="polyhedra [maximum-distance] [atom-expression]">polyhedra [maximum-distance] [atom-expression]</command></term>
+<listitem><para>Constructs polyhedra based upon distance with control over which atoms are considered as vertices. Centers must contain exactly 4 or 6 atoms within the specified atom expression that are also within the specified radius in angstroms. Note that the atom expression must be specified in parentheses.</para></listitem></varlistentry>
+<varlistentry><term><command id="k218" xreflabel="polyhedra EDGES">polyhedra EDGES</command></term>
+<listitem><para>Highlight the edges of the polyhedra whose central atom is in the currently selected set.</para></listitem></varlistentry>
+<varlistentry><term><command id="k219" xreflabel="polyhedra FRONTEDGES">polyhedra FRONTEDGES</command></term>
+<listitem><para>Highlight only the front edges of the polyhedra whose central atom is in the currently selected set.(Useful when color is translucent.)</para></listitem></varlistentry>
+<varlistentry><term><command id="k220" xreflabel="polyhedra NOEDGES">polyhedra NOEDGES</command></term>
+<listitem><para>Turn off edge highlighting.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d214" xreflabel="[maximum-distance]">[maximum-distance]</option></term><listitem><para>is in Angstroms -- (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d216" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>select *;polyhedra bonds; color polyhedra grey
+select atomno=19; polyhedra 3.0 (hydrogen);color polyhedra yellow
+select *;polyhedra 2.0 #all three
+select *;polyhedra 2.0 (not within (1.1225, carbon)) #note how this disallows one of the three
+select *;color polyhedra translucent; # now we can see the carbons inside
+select *; polyhedra edges; # highlight the edges
+color polyhedra translucent orange;
+select *;polyhedra off
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="quit" id="quit"><title>quit</title>
+<para> In the current release of Jmol, quit is synonymous with exit. This is inconsistent with RasMol, where quit means to exit the program. </para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="refresh" id="refresh"><title>refresh</title>
+<para> Forces a screen repaint during script execution. (Unnecessary, and thus deprecated.)</para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="reset"/> <xref linkend="rotate"/> </para>
+</section>
+<section xreflabel="reset" id="reset"><title>reset</title>
+<para>Resets molecule to its original position: zoom 100; center; translate x 0; translate y 0;</para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="refresh"/> <xref linkend="rotate"/> </para>
+</section>
+<section xreflabel="restrict" id="restrict"><title>restrict</title>
+<para>Selects the atoms identified by the atom expression and hides all atoms and bonds which are outside the selection set. For wireframe and backbone, restrict unconditionally follows set bondmode OR, ignoring the current bondmode setting, and hiding any bonds or backbone rods involving any atoms in the restricted set.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k229" xreflabel="restrict {default: ALL}">restrict {default: ALL}</command></term>
+<listitem><para>Restricts to all atoms;possibly not H atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k231" xreflabel="restrict [atom-expression]">restrict [atom-expression]</command></term>
+<listitem><para>Restricts atoms based on an atom expression.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d230" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="ribbon or ribbons" id="ribbon"><title>ribbon or ribbons</title>
+<para> Ribbons offer a representation the protein backbone or nucleic acid helix using a flat band that smoothly traces the midpoints of adjacent alpha carbon atoms (or phosphorus atoms in nucleotide chains). The ribbon is perpendicular to the peptide plane. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k234" xreflabel="ribbon ON/OFF{default: ON}">ribbon ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k236" xreflabel="ribbon [ribbon-radius]">ribbon [ribbon-radius]</command></term>
+<listitem><para>Normally, ribbons vary in width according to the amino acid atom positions. This command sets the width of the ribbon to be a connstant value (a decimal, in Angstroms).</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d235" xreflabel="[ribbon-radius]">[ribbon-radius]</option></term><listitem><para>is half of the overall width of the ribbon -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="rocket or rockets" id="rocket"><title>rocket or rockets</title>
+<para>Creates a "rocket" cartoon.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k239" xreflabel="rocket ON/OFF{default: ON}">rocket ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k241" xreflabel="rocket [rocket-radius]">rocket [rocket-radius]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d240" xreflabel="[rocket-radius]">[rocket-radius]</option></term><listitem><para>is half of the overall width of the rocket barrel -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="rotate" id="rotate"><title>rotate</title>
+<para>Rotates the model the specified angle about the specified axis. Integer values specify degrees.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k245" xreflabel="rotate X/Y/Z [number-of-degrees]">rotate X/Y/Z [number-of-degrees]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d244" xreflabel="[number-of-degrees]">[number-of-degrees]</option></term><listitem><para>is the number of degrees -- (integer)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="refresh"/> <xref linkend="reset"/> </para>
+</section>
+<section xreflabel="script or source" id="script"><title>script or source</title>
+<para> Loads and executes the specified script file/url. The hash/pound/sharp character (#) character marks a comment to the end of the line. The semicolon character (;) separates multiple statements on the same line. A script file may load another script file, up to 10 deep.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k249" xreflabel="script [file-name]">script [file-name]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d248" xreflabel="[file-name]">[file-name]</option></term><listitem><para>is any valid filename or URL -- (string)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="select" id="select"><title>select</title>
+<para>Selects the atoms identified by the expression. If no expression is given then all atoms are selected. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k252" xreflabel="select {default: ALL}">select {default: ALL}</command></term>
+<listitem><para>Selects all atoms (possibly not H atoms).</para></listitem></varlistentry>
+<varlistentry><term><command id="k254" xreflabel="select [atom-expression]">select [atom-expression]</command></term>
+<listitem><para>Selects atoms based on an atom expression. To select atoms specific to a specific model when more than one model is present, use "/n" where "n" is the model number. For example, to select all atoms of model 3, use select */3. </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d253" xreflabel="[atom-expression]">[atom-expression]</option></term><listitem><para>is any expression that evaluates to a set of atoms </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="set (bond styles)" id="setbondstyles"><title>set (bond styles)</title>
+<para>This group of commands sets the appearance of various optional bond effects for the model.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k257" xreflabel="set autobond ON/OFF">set autobond ON/OFF</command></term>
+<listitem><para>Some file formats that Jmol reads, such as XYZ, do not contain bonding information. In these cases, the default action for Jmol is to generate bonds automatically based on an algorithm. When given prior to loading a model, the set autobond command determines whether Jmol should automatically generate bonds (set autobond ON, the default action) or not (set autobond OFF) when the model is loaded. </para></listitem></varlistentry>
+<varlistentry><term><command id="k258" xreflabel="set bonds ON/OFF">set bonds ON/OFF</command></term>
+<listitem><para>In some file formats (.mol files, for example) the connection data may indicate the bond type--single, double, triple, or quadruple. The set bonds command determines whether or not multiple bonds are displayed. Use set bonds OFF when you want all bonds to appear as single bonds. </para></listitem></varlistentry>
+<varlistentry><term><command id="k259" xreflabel="set bondmode AND">set bondmode AND</command></term>
+<listitem><para>When script commands affect a set of atoms, BOTH atoms must be in the set for the bonds between them to also be affected. Similarly affects the display of backbone units in the selection of protein residues and nucleic acid bases.</para></listitem></varlistentry>
+<varlistentry><term><command id="k260" xreflabel="set bondmode OR">set bondmode OR</command></term>
+<listitem><para>When script commands affect a set of atoms, EITHER atom may be in the set for the bonds also to be affected. Similarly affects the display of backbone units in the selection of protein residues and nucleic acid bases.</para></listitem></varlistentry>
+<varlistentry><term><command id="k261" xreflabel="set hbonds BACKBONE or SIDECHAIN">set hbonds BACKBONE or SIDECHAIN</command></term>
+<listitem><para>Hydrogen bonds between protein amino acid residues or nucleic acid base pairs are displayed as lines. These lines can be displayed whether or not the H atoms are present in the file, and can be drawn either between the two non-hydrogen atoms involved in the bond (O or N, typically, the default) or, alternatively, between the two backbone alpha-carbon atoms, depending upon the desired effect.</para></listitem></varlistentry>
+<varlistentry><term><command id="k262" xreflabel="set ssbonds BACKBONE or SIDECHAIN">set ssbonds BACKBONE or SIDECHAIN</command></term>
+<listitem><para>Sulfur-sulfur bonds in cysteine bridges of proteins are displayed as lines. These lines can either be between the two sidechain sulfur atoms (the default) or between the two backbone alpha-carbon atoms, depending upon the desired effect.</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="bondorder"/> <xref linkend="connect"/> <xref linkend="hbonds"/> <xref linkend="ssbonds"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="set (default color scheme)" id="setdefaultcolorscheme"><title>set (default color scheme)</title>
+<para>Sets the default color scheme to be the traditional Rasmol/Chime scheme or the newer, more subtle, Jmol scheme. This command does not actually change the display for an object unless that object is currently being displayed using the default color scheme. See the Jmol Colors page for default color scheme details.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k265" xreflabel="set defaultColors JMOL">set defaultColors JMOL</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k266" xreflabel="set defaultColors RASMOL">set defaultColors RASMOL</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="background"/> <xref linkend="color"/> <xref linkend="coloratomobject"/> <xref linkend="colorbondobject"/> <xref linkend="colorelement"/> <xref linkend="colormodelobject"/> </para>
+</section>
+<section xreflabel="set (highlights)" id="sethighlights"><title>set (highlights)</title>
+<para>This command group allows for annotation and highlighting of atoms in terms of labels and "halos."</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k269" xreflabel="set display SELECTED">set display SELECTED</command></term>
+<listitem><para>Sets the option ON to dispay a "halo" around atoms when they are or become selected as a way of highlighting specific atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k270" xreflabel="set display NORMAL">set display NORMAL</command></term>
+<listitem><para>Turns off selection halos</para></listitem></varlistentry>
+<varlistentry><term><command id="k273" xreflabel="set echo [vertical-position] [horizontal-position]{default: center for top and middle; left for bottom}">set echo [vertical-position] [horizontal-position]{default: center for top and middle; left for bottom}</command></term>
+<listitem><para>Selects which of the three possible echo positions (top, middle, or bottom) will be written to by the next "echo" command and, optionally, sets the horizontal position of that text to left, center, or right.</para></listitem></varlistentry>
+<varlistentry><term><command id="k274" xreflabel="set echo OFF">set echo OFF</command></term>
+<listitem><para>Turns off all three echo texts.</para></listitem></varlistentry>
+<varlistentry><term><command id="k276" xreflabel="set fontsize [font-size]{default: 8}">set fontsize [font-size]{default: 8}</command></term>
+<listitem><para>Sets the font size for atom labels.</para></listitem></varlistentry>
+<varlistentry><term><command id="k277" xreflabel="set frank ON/OFF">set frank ON/OFF</command></term>
+<listitem><para>Determines whether or not "Jmol" is indicated in the bottom right corner of the window.</para></listitem></varlistentry>
+<varlistentry><term><command id="k280" xreflabel="set labeloffset [x-offset] [y-offset]">set labeloffset [x-offset] [y-offset]</command></term>
+<listitem><para>Sets the label offset relative to the atom being labeled.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d271" xreflabel="[vertical-position]">[vertical-position]</option></term><listitem><para>is one of the following: -- TOP, MIDDLE, BOTTOM</para></listitem></varlistentry>
+<varlistentry><term><option id="d272" xreflabel="[horizontal-position]">[horizontal-position]</option></term><listitem><para>is one of the following: -- LEFT, CENTER, RIGHT</para></listitem></varlistentry>
+<varlistentry><term><option id="d275" xreflabel="[font-size]">[font-size]</option></term><listitem><para>is approximately the same as Rasmol -- (integer, 6 to 63)</para></listitem></varlistentry>
+<varlistentry><term><option id="d278" xreflabel="[x-offset]">[x-offset]</option></term><listitem><para>is the x-offset -- (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d279" xreflabel="[y-offset]">[y-offset]</option></term><listitem><para>is the y-offset -- (integer)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="echo"/> <xref linkend="font"/> <xref linkend="hover"/> <xref linkend="label"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="set (lighting and perspective)" id="setlightingandperspective"><title>set (lighting and perspective)</title>
+<para>This commands in this group determine the overall lighting effects, size, and rotation for the model.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k284" xreflabel="set ambient [ambient-percent]">set ambient [ambient-percent]</command></term>
+<listitem><para>Sets the amount of "ambient" light filling the shadows created by the apparent light source. An ambient value of 0 creates an effect of a spotlight on a stage; a value of 100 removes the shadow entirely, creating a flat, nonrealistic effect.</para></listitem></varlistentry>
+<varlistentry><term><command id="k286" xreflabel="set diffuse [diffuse-percent]">set diffuse [diffuse-percent]</command></term>
+<listitem><para>Sets the amount of "diffuse" light apparently emanating from the spotlight, but not hitting and reflecting off the model directly. Setting the diffuse value to 0 turns this effect off; giving the effect of the model in a black-walled room where no light reflection is possible, effectively turning off all shadows.</para></listitem></varlistentry>
+<varlistentry><term><command id="k287" xreflabel="set perspectivedepth ON/OFF">set perspectivedepth ON/OFF</command></term>
+<listitem><para>Sets perspective depth on or off. OFF is required for proper function of absolute scale (set scale3d x).</para></listitem></varlistentry>
+<varlistentry><term><command id="k289" xreflabel="set scale3d [viewing-distance]">set scale3d [viewing-distance]</command></term>
+<listitem><para>Sets the absolute scale of the model by setting the viewing distance from the user to the model in arbitrary units. The actual scale will depend upon the sizes of both the applet window and the screen. </para></listitem>
+<listitem><para>Examples:</para>
+</listitem></varlistentry>
+<varlistentry><term><command id="k291" xreflabel="set specpower [specular-power]">set specpower [specular-power]</command></term>
+<listitem><para>Sets the density of dots in the specular reflection.</para></listitem></varlistentry>
+<varlistentry><term><command id="k293" xreflabel="set specular [specular-percent]">set specular [specular-percent]</command></term>
+<listitem><para>Sets the size of the apparent reflection from a light source. set specular 0 turns off this effect.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d283" xreflabel="[ambient-percent]">[ambient-percent]</option></term><listitem><para>is an (integer, 0 to 100)</para></listitem></varlistentry>
+<varlistentry><term><option id="d285" xreflabel="[diffuse-percent]">[diffuse-percent]</option></term><listitem><para>is an (integer, 0 to 100)</para></listitem></varlistentry>
+<varlistentry><term><option id="d288" xreflabel="[viewing-distance]">[viewing-distance]</option></term><listitem><para>is the apparent distance from the model to the user in arbitrary units -- (integer), (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d290" xreflabel="[specular-power]">[specular-power]</option></term><listitem><para>is an (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d292" xreflabel="[specular-percent]">[specular-percent]</option></term><listitem><para>is an (integer, 0 to 100)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="set (visibility)" id="setvisibility"><title>set (visibility)</title>
+<para>This command group turns on or off specific sets of atoms and axes/cell-related options.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k297" xreflabel="set axes [line-width-or-type]">set axes [line-width-or-type]</command></term>
+<listitem><para>Turns on or off displayed axes, and determines their line style and line width (as a decimal number, in Angstroms).</para></listitem></varlistentry>
+<varlistentry><term><command id="k298" xreflabel="set boundbox [line-width-or-type]">set boundbox [line-width-or-type]</command></term>
+<listitem><para>Turns on or off a wire-frame box that contains the model, and determines the line style and line width (as a decimal number, in Angstroms) of that box.</para></listitem></varlistentry>
+<varlistentry><term><command id="k306" xreflabel="set disablePopupMenu ON/OFF">set disablePopupMenu ON/OFF</command></term>
+<listitem><para>Disables (set disablePopupMenu ON) or enables (set disablePopupMenu OFF) the pop-up menu.</para></listitem></varlistentry>
+<varlistentry><term><command id="k300" xreflabel="set radius [probe-radius-in-angstroms]{default: 1.2}">set radius [probe-radius-in-angstroms]{default: 1.2}</command></term>
+<listitem><para>Sets the radius of the solvent "ball" that would run around the structure defining its outline. After set radius, you must (re)issue dots ON for it to take effect, and the solvent probe option for dots must be set on using set solvent ON (below).</para></listitem></varlistentry>
+<varlistentry><term><command id="k301" xreflabel="set showHydrogens ON/OFF">set showHydrogens ON/OFF</command></term>
+<listitem><para>Turns on and off display of hydrogen atoms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k302" xreflabel="set solvent ON/OFF">set solvent ON/OFF</command></term>
+<listitem><para>Turns on and off display of solvent "probe" that can be displayed using dots. After set solvent ON, a subsequent dots ON shows the surface of the aggregate of selected atoms using dots. This surface is defined by the contact of a spherical probe (representing a solvent molecule) rolled over the surface of the selected atoms. The radius of the probe sphere of 1.4 Angstroms approximates a water molecule. The default radius for Jmol is 1.2 Angstroms, which can be changed using set radius (above). Note that no change in display occurs after set solvent ON until the next dots ON command is encountered. For a detailed discussion of molecular surfaces, see http://www.netsci.org/Science/Compchem/feature14.html.</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>set radius 2.0
+set solvent ON
+select 1-10
+dots ON
+</programlisting>
+</listitem></varlistentry>
+<varlistentry><term><command id="k304" xreflabel="set strands [strand-count]{default: 5}">set strands [strand-count]{default: 5}</command></term>
+<listitem><para>Sets the number of strands to display.</para></listitem></varlistentry>
+<varlistentry><term><command id="k305" xreflabel="set unitcell [line-width-or-type]">set unitcell [line-width-or-type]</command></term>
+<listitem><para>Turns on or off the unit cell for crystal structures, and determines its line style and line width (as a decimal number, in Angstroms).</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d296" xreflabel="[line-width-or-type]">[line-width-or-type]</option></term><listitem><para>is a line width or type for a drawing object -- ON, OFF, DOTTED, (integer, 1 to 19), (decimal, &lt;2.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d299" xreflabel="[probe-radius-in-angstroms]">[probe-radius-in-angstroms]</option></term><listitem><para>is a (decimal)</para></listitem></varlistentry>
+<varlistentry><term><option id="d303" xreflabel="[strand-count]">[strand-count]</option></term><listitem><para>is the number of strands -- (integer, 0 to 20)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="set chainCaseSensitive" id="setchainCaseSensitive"><title>set chainCaseSensitive</title>
+<para>Jmol can be set to read the chain designations in PDB, mmCIF, and related files either with or without case sensitivity. With set chainCaseSensitive OFF, the chain designations are interpreted as case-insensitive. With set chainCaseSensitive ON, the chain designation is read in a case-sensitive manner -- chain "A" is different than chain "a". This supports PDB format model files with more than 26 chains. The default startup up mode is OFF -- chain designation "a" in a SELECT command will refer to chain "A" in a file.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k309" xreflabel="set ON/OFF">set ON/OFF</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+</section>
+<section xreflabel="set debugScript" id="setdebugScript"><title>set debugScript</title>
+<para>Turns on and off debugging (going to a JavaScript message callback).</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k312" xreflabel="set ON/OFF">set ON/OFF</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+</section>
+<section xreflabel="set measurement" id="setmeasurement"><title>set measurement</title>
+<para>Sets characteristics of the measurement labels and lines. See also measure.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k315" xreflabel="set ON/OFF">set ON/OFF</command></term>
+<listitem><para>Turns on and off the distance, angle, dihedral measurement labels while leaving the measurement line itself present.</para></listitem></varlistentry>
+<varlistentry><term><command id="k317" xreflabel="set [width-in-angstroms]">set [width-in-angstroms]</command></term>
+<listitem><para>Sets the width of the measurement line in angstroms.</para></listitem></varlistentry>
+<varlistentry><term><command id="k319" xreflabel="set [linewidth-pixels]">set [linewidth-pixels]</command></term>
+<listitem><para>Sets the width of the measurement line in pixels.</para></listitem></varlistentry>
+<varlistentry><term><command id="k321" xreflabel="set [distance-unit]">set [distance-unit]</command></term>
+<listitem><para>Sets the units for measurement display to be Angstroms, nanometers, or picometers.</para></listitem></varlistentry>
+<varlistentry><term><command id="k322" xreflabel="set -1">set -1</command></term>
+<listitem><para>Sets the measurement line to be dotted.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d316" xreflabel="[width-in-angstroms]">[width-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;2.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d318" xreflabel="[linewidth-pixels]">[linewidth-pixels]</option></term><listitem><para>is an (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d320" xreflabel="[distance-unit]">[distance-unit]</option></term><listitem><para>is ANGSTROMS, NM, NANOMETERS, PM, or PICOMETERS</para></listitem></varlistentry>
+</variablelist>
+</section>
+<section xreflabel="set picking" id="setpicking"><title>set picking</title>
+<para>The set picking command determines the response to clicking of atoms by the user. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k325" xreflabel="set ON/OFF{default: ON}">set ON/OFF{default: ON}</command></term>
+<listitem><para>Turns picking on and off. When turned ON, picking information is sent both to the status line and to the pickcallback function, if defined.</para></listitem></varlistentry>
+<varlistentry><term><command id="k326" xreflabel="set ANGLE">set ANGLE</command></term>
+<listitem><para>Turns picking on and returns atom identities and angle involving three atoms. Four messages are sent to the messagecallback function, if defined: Atom #1 (after the first click), Atom #2 (after the second click), and then Atom #3 and Angle (after the third click).</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>(xyz data in this case)
+Atom #1:C 2 #2
+Atom #2:C 3 #3
+Atom #3:C 4 #4
+Angle C 2 #2 - C 3 #3 - C 4 #4 : 122.3754
+</programlisting>
+</listitem></varlistentry>
+<varlistentry><term><command id="k327" xreflabel="set ATOM">set ATOM</command></term>
+<listitem><para>When the user clicks an atom, the selection of that atom is toggled on or off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k328" xreflabel="set CENTER">set CENTER</command></term>
+<listitem><para>When the user clicks an atom, that atom is set to be the center of rotation.</para></listitem></varlistentry>
+<varlistentry><term><command id="k329" xreflabel="set CHAIN">set CHAIN</command></term>
+<listitem><para>When the user clicks an atom, the selection of the chain associated with that atom is toggled on or off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k330" xreflabel="set DISTANCE">set DISTANCE</command></term>
+<listitem><para>Turns picking on and returns atom identities and distance between two atoms. Three messages are sent to the messagecallback function, if defined: Atom #1 (after the first click) and then Atom #2 and Distance (after the second click).</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>(pdb data in this case)
+Atom #1:[VAL]8.CA #49
+Atom #2:[GLU]23.OE2 #169
+Distance [VAL]8.CA #49 - [GLU]23.OE2 #19 : 16.765396
+</programlisting>
+</listitem></varlistentry>
+<varlistentry><term><command id="k331" xreflabel="set GROUP">set GROUP</command></term>
+<listitem><para>When the user clicks an atom, the selection of the group associated with that atom is toggled on or off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k332" xreflabel="set LABEL">set LABEL</command></term>
+<listitem><para>When the user clicks an atom, the label of that atom is toggled on or off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k333" xreflabel="set TORSION">set TORSION</command></term>
+<listitem><para>Turns picking on and returns atom identities and torsion angle (dihedral angle) involving four atoms. Five messages are sent to the messagecallback function, if defined: Atom #1 (after the first click), Atom #2 (after the second click), Atom #3 (after the third click), and then Atom#4 and Torsion (after the fourth click).</para></listitem>
+<listitem><para>Examples:</para>
+<programlisting>(cml data in this case)
+Atom #1:a7 #7
+Atom #2:a3 #3
+Atom #3:a1 #1
+Atom #4:a2 #2
+Torsion a7 #7 - a3 #3 - a1 #1 - a2 #2 : -4.15209
+</programlisting>
+</listitem></varlistentry>
+</variablelist>
+</section>
+<section xreflabel="set spin" id="setspin"><title>set spin</title>
+<para>Sets the spin axis and rate. No actual spinning occurs until the spin ON command is issued or the user turns spinning on using the mouse menu. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k337" xreflabel="set FPS [frames-per-second]">set FPS [frames-per-second]</command></term>
+<listitem><para>The spin rate, in degrees per second, determines how fast the model rotates; the number of frames per second determines how smoothly the model rotates. </para></listitem></varlistentry>
+<varlistentry><term><command id="k339" xreflabel="set X/Y/Z [degrees-per-second]">set X/Y/Z [degrees-per-second]</command></term>
+<listitem><para>Note that the axes referred to are the fixed axes of the window, not the cartesian axes of the molecular coordinates. Thus, regardless of how the molecule has been rotated by the user or using the move command, x is always the horizontal axis, y is always the vertical axis, and z is always the axis directed toward the user. </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d336" xreflabel="[frames-per-second]">[frames-per-second]</option></term><listitem><para>is an (integer)</para></listitem></varlistentry>
+<varlistentry><term><option id="d338" xreflabel="[degrees-per-second]">[degrees-per-second]</option></term><listitem><para>is an (integer)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="show" id="show"><title>show</title>
+<para>show sends information about the model to the messageCallback function and to the Java Console</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k342" xreflabel="show boundbox">show boundbox</command></term>
+<listitem><para>Delivers the coordinates of the center coordinate and a directional vector defining a box just perfectly enclosing the model. The vector is determined by taking the min and max values for the atom along each cartesian axis. The center is the geometric center of the model, not the default center of rotation (which is the mean atom position). The eight corners of the boundbox are found by adding the center point to the vector, with all possible combinations of +/- component cectors. The length of a side of the boundbox is determined by doubling the appropriate component of the vector. So, for example, the length of the boundbox along the x-axis is (2*vectorX). Units are in Angstroms. Output is in the form </para><para>boundbox: (centerX, centerY, centerZ) (vectorX, vectorY, vectorZ)</para></listitem></varlistentry>
+<varlistentry><term><command id="k343" xreflabel="show center">show center</command></term>
+<listitem><para>Delivers the coordinates of the center of the model. Units are in Angstroms. Output is in the form </para><para>center: (centerX, centerY, centerZ)</para></listitem></varlistentry>
+<varlistentry><term><command id="k344" xreflabel="show file">show file</command></term>
+<listitem><para>Delivers the entire contents of the file for the current model. </para></listitem></varlistentry>
+<varlistentry><term><command id="k345" xreflabel="show file filepath">show file filepath</command></term>
+<listitem><para>Delivers the entire contents of the specified file on the server from which the applet was loaded. The filename must be relative to the current page (not necessarily the directory containing the applet) and must be enclosed in quotation marks.</para></listitem></varlistentry>
+<varlistentry><term><command id="k346" xreflabel="show model">show model</command></term>
+<listitem><para>Delivers properties associated with the currently loaded model. Output includes information about all of the models in the set. This command is still in development. The exact form and content of the output is subject to change (and suggestion).</para></listitem></varlistentry>
+<varlistentry><term><command id="k347" xreflabel="show pdbheader">show pdbheader</command></term>
+<listitem><para>Delivers the PDB file header.</para></listitem></varlistentry>
+<varlistentry><term><command id="k348" xreflabel="show transform">show transform</command></term>
+<listitem><para>Delivers the current 3x3 transformation matrix (rotation only). </para></listitem></varlistentry>
+<varlistentry><term><command id="k349" xreflabel="show zoom">show zoom</command></term>
+<listitem><para>Delivers the current zoom setting. Output is in the form of the zoom command: "zoom n" where "n" is an integer percent of "normal" zoom.</para></listitem></varlistentry>
+<varlistentry><term><command id="k350" xreflabel="show orientation">show orientation</command></term>
+<listitem><para>Delivers the orientation of the model. Output consists of both a "moveTo" command and an alternative sequence of "reset; rotate z; rotate y; rotate z" commands that would result in the current orientation. Thus, this command allows reading and restoring specific user-specified orientations.</para></listitem>
+<listitem><para>Examples:</para>
+</listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="center"/> <xref linkend="centerAt"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="spin"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="slab" id="slab"><title>slab</title>
+<para> Slab and Depth together control the percentage of the molecule to be displayed based on clipping planes. slab on turns slab/depth on. slab 50 shows the back 50% of the molecule. slab 25 show the back 25% of the molecule. Atoms appear solid; bonds appear hollow. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k355" xreflabel="slab [slab-percent]">slab [slab-percent]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k353" xreflabel="slab ON/OFF{default: ON}">slab ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d354" xreflabel="[slab-percent]">[slab-percent]</option></term><listitem><para>is an (integer, 0 to 100)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="depth"/> </para>
+</section>
+<section xreflabel="spacefill" id="spacefill"><title>spacefill</title>
+<para>Renders selected atoms as shaded spheres. A boolean value renders the spheres with the vanderWaals radius. A decimal value specifies the sphere radius in Angstroms. An integer followed by "%" specifies sphere radius as a percentage of the Van der Waals radius. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k358" xreflabel="spacefill ON/OFF{default: ON}">spacefill ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k360" xreflabel="spacefill [radius-in-angstroms]">spacefill [radius-in-angstroms]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k362" xreflabel="spacefill [radius-percent-vdw]">spacefill [radius-percent-vdw]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k364" xreflabel="spacefill [radius-Rasmol]">spacefill [radius-Rasmol]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k366" xreflabel="spacefill IONIC">spacefill IONIC</command></term>
+<listitem><para>Generates a sphere for each atom according to an approximation of its ionic radius.</para></listitem></varlistentry>
+<varlistentry><term><command id="k365" xreflabel="spacefill TEMPERATURE">spacefill TEMPERATURE</command></term>
+<listitem><para>Generates a sphere for each atom according to its crystallographic B-factor</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d359" xreflabel="[radius-in-angstroms]">[radius-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;=3.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d361" xreflabel="[radius-percent-vdw]">[radius-percent-vdw]</option></term><listitem><para>is as a percent of the Van der Waals radius -- (integer, 1 to 200)</para></listitem></varlistentry>
+<varlistentry><term><option id="d363" xreflabel="[radius-Rasmol]">[radius-Rasmol]</option></term><listitem><para>is in 1/250ths of an Angstrom (deprecated) -- (integer, 1 to 750)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="spin" id="spin"><title>spin</title>
+<para>Starts and stops the molecule spinning around the axis determined by set spin.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k369" xreflabel="spin ON/OFF{default: ON}">spin ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="translate"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="ssbonds" id="ssbonds"><title>ssbonds</title>
+<para>Cisteine disulfide bonds can be turned on or off, colored, and given customized widths in Angstroms.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k372" xreflabel="ssbonds ON/OFF{default: ON}">ssbonds ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k374" xreflabel="ssbonds [width-angstroms]">ssbonds [width-angstroms]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k376" xreflabel="ssbonds [width-Rasmol]">ssbonds [width-Rasmol]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d373" xreflabel="[width-angstroms]">[width-angstroms]</option></term><listitem><para>is a (decimal, &lt;2.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d375" xreflabel="[width-Rasmol]">[width-Rasmol]</option></term><listitem><para>is in 1/250ths of an Angstrom (deprecated) -- (integer, &lt;500)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="bondorder"/> <xref linkend="connect"/> <xref linkend="hbonds"/> <xref linkend="setbondstyles"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="star" id="star"><title>star</title>
+<para>The star command places a set of crosshairs of a given size in Angstroms on the selected atoms. The default size of the star is, like spacefill, the nominal Van Der Waals radius for the atom. The default color for the star is that of the atom it is associated with. Use color star [colorname] to then color selected stars the color of your choice.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k379" xreflabel="star ON/OFF{default: ON}">star ON/OFF{default: ON}</command></term>
+<listitem><para>Turn stars on or off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k381" xreflabel="star [length-in-angstroms]">star [length-in-angstroms]</command></term>
+<listitem><para>Sets the length of the selected stars.</para></listitem></varlistentry>
+<varlistentry><term><command id="k383" xreflabel="star [length-percent-vdw]">star [length-percent-vdw]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k385" xreflabel="star [length-Rasmol]">star [length-Rasmol]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k387" xreflabel="star IONIC">star IONIC</command></term>
+<listitem><para>Generates a star for each atom according to an approximation of its ionic radius.</para></listitem></varlistentry>
+<varlistentry><term><command id="k386" xreflabel="star TEMPERATURE">star TEMPERATURE</command></term>
+<listitem><para>Generates a star for each atom according to its crystallographic B-factor</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d380" xreflabel="[length-in-angstroms]">[length-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;=3.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d382" xreflabel="[length-percent-vdw]">[length-percent-vdw]</option></term><listitem><para>is as a percent of the Van der Waals radius -- (integer, 1 to 100)</para></listitem></varlistentry>
+<varlistentry><term><option id="d384" xreflabel="[length-Rasmol]">[length-Rasmol]</option></term><listitem><para>is in 1/250ths of an Angstrom (deprecated) -- (integer, 1 to 750)</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>select *.S?;star ON
+select 40;star 1.0;color star red
+select *;color star NONE
+select *;star OFF
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="stereo" id="stereo"><title>stereo</title>
+<para>Jmol supports two forms of stereo rendering for molecules. In the first form, the two images are placed side by side and rotated so as to appear from slightly different perspectives, creating the illusion of 3D when a practiced user trains one eye on one image and the other eye on the other image. </para><para><img src="glasses.gif" style="clear:right" alt="" />A second form of stereo rendering, analglyphic rendering, nearly superimposes two identical models that are slightly rotated relative to each other. These models are each of a different color (red and one of blue, cyan, or green). The illusion of depth can then be created when the user wears an inexpensive pair of "3D glasses" that have differently colored lenses. </para><para>One should experiment with different background colors when using redcyan or redblue stereo rendering. For many users background grey looks better than background white or background black.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k391" xreflabel="stereo [stereo-viewing-angle]{default: 5}">stereo [stereo-viewing-angle]{default: 5}</command></term>
+<listitem><para>Turns side-by-side stereo viewing on. (Note that if this form of stereo viewing is desired, you will probably want to have the applet width twice the applet height.) If a number of degrees is not given or has not already been specified in a previous command,, the default rotation is 5 degrees. Sets the number of degrees of counter-clockwise vertical-axis rotation of the RIGHT-hand image relative to the LEFT-hand image (which itself does not change rotation when stereo viewing is turned on and off). Positive values correspond to cross-eyed viewing, where the left eye is trained on the right image, and the right eye is trained on the left image. Negative values (clockwise rotation) correspond to "wall-eyed" viewing, where the right eye is trained on the right image and the left eye is trained on the left image. Note that stereo 90 may be useful, as it shows two views of a model that rotate synchronously, a "front view" on the left and a "right side view" on the right.</para></listitem></varlistentry>
+<varlistentry><term><command id="k392" xreflabel="stereo {default: ON}">stereo {default: ON}</command></term>
+<listitem><para>Turns side-by-side stereo viewing on with a previously defined rotation or, if no rotation has been defined, a rotation of 5 degrees.</para></listitem></varlistentry>
+<varlistentry><term><command id="k393" xreflabel="stereo OFF">stereo OFF</command></term>
+<listitem><para>Turns stereo viewing off.</para></listitem></varlistentry>
+<varlistentry><term><command id="k394" xreflabel="stereo REDBLUE [stereo-viewing-angle]{default: 3}">stereo REDBLUE [stereo-viewing-angle]{default: 3}</command></term>
+<listitem><para>Turns red/blue analglyphic rendering on with a specific relative rotation, if desired. The default is 3 degrees.</para></listitem></varlistentry>
+<varlistentry><term><command id="k395" xreflabel="stereo REDCYAN [stereo-viewing-angle]{default: 3}">stereo REDCYAN [stereo-viewing-angle]{default: 3}</command></term>
+<listitem><para>Turns red/cyan analglyphic rendering on with a specific relative rotation, if desired. The default is 3 degrees.</para></listitem></varlistentry>
+<varlistentry><term><command id="k396" xreflabel="stereo REDGREEN [stereo-viewing-angle]{default: 3}">stereo REDGREEN [stereo-viewing-angle]{default: 3}</command></term>
+<listitem><para>Turns red/green analglyphic rendering on with a specific relative rotation, if desired. The default is 3 degrees.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d390" xreflabel="[stereo-viewing-angle]">[stereo-viewing-angle]</option></term><listitem><para>is angle of rotation for stereo viewing -- (integer|decimal)</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Examples</title>
+<varlistentry>
+<listitem>
+<programlisting>zoom 50;background white;stereo ON
+stereo 90
+stereo 5
+stereo -5
+zoom 100;background grey;stereo REDCYAN
+stereo REDBLUE 3
+stereo OFF
+</programlisting>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xreflabel="strands" id="strands"><title>strands</title>
+<para>Strands offer a representation the protein backbone or nucleic acid helix using lines. For proteins, control points are chosen midway between adjacent alpha carbons (or phosphorus atoms in nucleic acids). The strands are arranged perpendicular to the peptide plane. A hermite cubic curve is used to smoothly connect the points.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k399" xreflabel="strands ON/OFF{default: ON}">strands ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k401" xreflabel="strands [strand-radius]">strands [strand-radius]</command></term>
+<listitem><para>Normally, strands vary in width according to the amino acid atom positions. This command sets the radius of the set of strands to be a constant value (a decimal, in Angstroms).</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d400" xreflabel="[strand-radius]">[strand-radius]</option></term><listitem><para>is half of the overall width of the set of strands -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="trace"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="trace" id="trace"><title>trace</title>
+<para>A "trace" is a smooth curve through the center of the carbonyl carbon-alpha carbon bonds of a peptide or the ribose 1-O-P bond. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k404" xreflabel="trace ON/OFF{default: ON}">trace ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k406" xreflabel="trace [trace-radius]">trace [trace-radius]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d405" xreflabel="[trace-radius]">[trace-radius]</option></term><listitem><para>is the radius of the trace -- (decimal, &lt;=4.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="vector"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="translate" id="translate"><title>translate</title>
+<para> Moves the molecule along the specified axes according to the amount specified by value. Value ranges from -100 to 100, and represents the percentage of the display window. Negative values move to the left (for the x axis) and down (for the y axis). A value of 100 will move the molecule completely out of the window. A value of 50 will move the center of the molecule to the edge of the window.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k410" xreflabel="translate X/Y/Z [percent-translation]">translate X/Y/Z [percent-translation]</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d409" xreflabel="[percent-translation]">[percent-translation]</option></term><listitem><para>is an (integer, -100 to 100)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="zoom"/> </para>
+</section>
+<section xreflabel="vector or vectors" id="vector"><title>vector or vectors</title>
+<para>Draws vectors arising from vibrational mode data.</para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k415" xreflabel="vector [diameter-pixels]">vector [diameter-pixels]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k417" xreflabel="vector [radius-in-angstroms]">vector [radius-in-angstroms]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k413" xreflabel="vector ON/OFF{default: ON}">vector ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k419" xreflabel="vector scale [vector-scale]">vector scale [vector-scale]</command></term>
+<listitem><para>Adjusts the scale of the vector independently of the vibration motion.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d414" xreflabel="[diameter-pixels]">[diameter-pixels]</option></term><listitem><para>is a scaling factor -- (integer, 1 to 19)</para></listitem></varlistentry>
+<varlistentry><term><option id="d416" xreflabel="[radius-in-angstroms]">[radius-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;=3.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d418" xreflabel="[vector-scale]">[vector-scale]</option></term><listitem><para>is a (decimal, -10.0 to 10.0)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="cartoon"/> <xref linkend="dots"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="wireframe"/> </para>
+</section>
+<section xreflabel="vibration" id="vibration"><title>vibration</title>
+<para>Provided information is present in the file (xyz format with columns 6-8 indicating dx, dy, and dz, or Gaussian harmonic frequency output), turns on and off display of vibration animation and allows setting of the time period for the vibration (in seconds) and the scale of the motion relative to the default (1). </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k423" xreflabel="vibration [time-period]">vibration [time-period]</command></term>
+<listitem><para>Adjusts the time period for one full vibration in seconds.</para></listitem></varlistentry>
+<varlistentry><term><command id="k425" xreflabel="vibration scale [vibration-scale]">vibration scale [vibration-scale]</command></term>
+<listitem><para>Adjusts the scale of the vibration motion independently of the vector length.</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d422" xreflabel="[time-period]">[time-period]</option></term><listitem><para>is number of seconds per vibration -- (positive number)</para></listitem></varlistentry>
+<varlistentry><term><option id="d424" xreflabel="[vibration-scale]">[vibration-scale]</option></term><listitem><para>is a (decimal, -10.0 to 10.0)</para></listitem></varlistentry>
+</variablelist>
+</section>
+<section xreflabel="wireframe" id="wireframe"><title>wireframe</title>
+<para>Wireframe refers to the bonds drawn between the atoms. A boolean value of ON draws the selected bonds as lines. Alternatively, a numeric value may be used to specify the radius of the bonds. A decimal value such as 0.2 or 0.4 specifies Angstroms. The wireframe command operates on bonds either BETWEEN ANY TWO atoms in a previously selected atom set (having previously set bondmode AND) or TO ANY atoms in a previously selected atom set (having previously set bondmode OR). Note that the selected atoms must already be connected (based on information in the file, Jmol's autobonding algorithm, or from use of the connect or command) in order to show any effect. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k428" xreflabel="wireframe ON/OFF{default: ON}">wireframe ON/OFF{default: ON}</command></term>
+<listitem><para>Turn wireframe on or off</para></listitem></varlistentry>
+<varlistentry><term><command id="k430" xreflabel="wireframe [radius-in-angstroms]">wireframe [radius-in-angstroms]</command></term>
+<listitem><para>Show wireframe with the given cylinder diameter in Angstroms</para></listitem></varlistentry>
+<varlistentry><term><command id="k432" xreflabel="wireframe [radius-Rasmol]">wireframe [radius-Rasmol]</command></term>
+<listitem><para>Show wireframe with the given cylinder diameter in Rasmol units (deprecated).</para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d429" xreflabel="[radius-in-angstroms]">[radius-in-angstroms]</option></term><listitem><para>is a (decimal, &lt;=3.0)</para></listitem></varlistentry>
+<varlistentry><term><option id="d431" xreflabel="[radius-Rasmol]">[radius-Rasmol]</option></term><listitem><para>is in 1/250ths of an Angstrom (deprecated) -- (integer, 1 to 750)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="backbone"/> <xref linkend="background"/> <xref linkend="bondorder"/> <xref linkend="cartoon"/> <xref linkend="connect"/> <xref linkend="dots"/> <xref linkend="hbonds"/> <xref linkend="measure"/> <xref linkend="meshribbon"/> <xref linkend="restrict"/> <xref linkend="ribbon"/> <xref linkend="rocket"/> <xref linkend="select"/> <xref linkend="setbondstyles"/> <xref linkend="sethighlights"/> <xref linkend="setlightingandperspective"/> <xref linkend="setvisibility"/> <xref linkend="spacefill"/> <xref linkend="ssbonds"/> <xref linkend="strands"/> <xref linkend="trace"/> <xref linkend="vector"/> </para>
+</section>
+<section xreflabel="zap" id="zap"><title>zap</title>
+<para> Clears the currently loaded molecule. RasMol forces you to zap prior to loading a new molecule. Jmol currently does not have this restriction and does not enforce it. </para>
+<variablelist><title>Syntax</title>
+</variablelist><para>See also:<xref linkend="load"/> </para>
+</section>
+<section xreflabel="zoom" id="zoom"><title>zoom</title>
+<para> Allows enlarging or shrinking of the displayed model. A percentage value specifies the zoom relative to 100, the default value, which in Jmol is calculated so that all atoms are completely visible on the screen through all rotations using the default vanderWaals rendering percentage. The command "zoom OFF" disables mouse-based zooming and zooms to 100. The command "zoom ON" re-enables zooming at the current zoom setting. If the zoom has been turned off, setting the the zoom using, for example, "zoom 50," though it sets the "current zoom setting," has no effect until the next "zoom ON" command is given. </para>
+<variablelist><title>Syntax</title>
+<varlistentry><term><command id="k439" xreflabel="zoom [percent-zoom]">zoom [percent-zoom]</command></term><listitem><para> </para></listitem></varlistentry>
+<varlistentry><term><command id="k437" xreflabel="zoom ON/OFF{default: ON}">zoom ON/OFF{default: ON}</command></term><listitem><para> </para></listitem></varlistentry>
+</variablelist>
+<variablelist><title>Definitions</title>
+<varlistentry><term><option id="d438" xreflabel="[percent-zoom]">[percent-zoom]</option></term><listitem><para>is an (integer, 5 to 5000)</para></listitem></varlistentry>
+</variablelist><para>See also:<xref linkend="animation"/> <xref linkend="delay"/> <xref linkend="exit"/> <xref linkend="frame"/> <xref linkend="loop"/> <xref linkend="model"/> <xref linkend="move"/> <xref linkend="moveto"/> <xref linkend="quit"/> <xref linkend="script"/> <xref linkend="setspin"/> <xref linkend="show"/> <xref linkend="spin"/> <xref linkend="translate"/> </para>
+</section>
+

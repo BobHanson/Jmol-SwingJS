@@ -1,0 +1,201 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Daniel</firstname>">
+  <!ENTITY dhsurname   "<surname>Leidert</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>21/8/2004</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
+  <!ENTITY dhemail1    "<email>egonw@users.sourceforge.net</email>">
+  <!ENTITY dhemail2    "<email>daniel.leidert@wgdd.de</email>">
+  <!ENTITY dhusername  "The JMol Development Team">
+  <!ENTITY dhusername1 "Egon Willighagen">
+  <!ENTITY dhusername2 "Daniel Leidert">
+  <!ENTITY dhucpackage "<refentrytitle>JMOL</refentrytitle>">
+  <!ENTITY dhpackage   "jmol">
+
+  <!ENTITY debian      "<productname>Debian GNU/Linux</productname>">
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "<acronym>GPL</acronym>">
+]>
+
+<refentry>
+
+  <refentryinfo>
+    <address>
+      &dhemail2;
+    </address>
+    <!-- <author>
+      &dhfirstname;
+      &dhsurname;
+    </author> -->
+    <copyright>
+      <year>2004</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>3D molecule and crystal viewer</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg><replaceable>options</replaceable></arg>
+
+      <arg><replaceable>file</replaceable></arg>
+
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>This manual page documents briefly the
+      <command>&dhpackage;</command> commands.
+    </para>
+
+    <para><command>&dhpackage;</command> is a program that is able to
+      view 3D chemical information like molecular structures, vibrations
+      of bonds or animations.
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <para>Currently accepted options are:
+    </para>
+
+    <variablelist>
+
+      <varlistentry>
+        <term>
+      	  <option>-h</option>,
+      	  <option>--help</option>
+        </term>
+        <listitem>
+       	  <para>Print help on the command line options.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+      	  <option>-g</option>,
+      	  <option>--geometry</option> <replaceable>width</replaceable>x<replaceable>height</replaceable>
+        </term>
+        <listitem>
+       	  <para>Use window-geometry 500x500.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+        	<option>-s</option>,
+      	  <option>--script</option> <replaceable>scriptfile</replaceable>
+        </term>
+        <listitem>
+       	  <para>Run a script.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-D</option>&lt;<replaceable>property</replaceable>&gt;=&lt;<replaceable>value</replaceable>&gt;
+        </term>
+        <listitem>
+          <para>Use value for the given property (for a list see below).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-Dcdk.debugging</option>=<replaceable>true|false</replaceable>
+        </term>
+        <listitem>
+          <para>Set debugging (default: false).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-Dcdk.debug.stdout</option>=<replaceable>true|false</replaceable>
+        </term>
+        <listitem>
+          <para>Set debug to stdout (default: false).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-Duser.language</option>=<replaceable>EN|ES|NL</replaceable>
+        </term>
+        <listitem>
+          <para>Set user language (default: EN).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-Ddisplay.speed</option>=<replaceable>fps|ms</replaceable>
+        </term>
+        <listitem>
+          <para>Set display speed in milli seconds (ms) or frames per second (fps) (default: ms).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-DJmolConsole</option>=<replaceable>true|false</replaceable>
+        </term>
+        <listitem>
+          <para>Start with Jmol-console (default: true).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>-Dplugin.dir</option>=<replaceable>&lt;path to plugins&gt;</replaceable>
+        </term>
+        <listitem>
+          <para>Set path to plugin directory (default: unset). By calling the shell wrapper
+            <filename>/usr/bin/jmol</filename>, the directory is set to
+            <filename>/usr/bin/java</filename>. Plugins installed to
+            <filename>~/.jmol/plugins</filename> are automatically detected.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    
+    <para>More information about Jmol can be found at http://jmol.sourceforge.net/ and 
+    in /usr/share/doc/jmol/html (User-Guide).
+    </para>
+
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+
+    <para>This manual page was written by &dhusername1; &dhemail1; and
+      edited by &dhusername2; &dhemail2; for the Debian GNU/Linux
+      distribution (but may be used by others).
+    </para>
+
+  </refsect1>
+</refentry>
+

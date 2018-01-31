@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Launchpad Tools" default="import-launchpad-export-tgz" basedir="..">
+
+  <property name="build.dir" location="build/launchpad" />
+
+  <target name="import-launchpad-export-tgz" id="import-launchpad-export-tgz">
+    <!-- Clean previous launch -->
+    <delete dir="${build.dir}" />
+
+    <!-- Extract launchpad export -->
+  	<input message="What is the path to launchpad-export.tar.gz ?"
+           defaultvalue="D:/Temp/launchpad-export.tar.gz"
+           addproperty="launchpad.export.tgz" />
+    <mkdir dir="${build.dir}" />
+    <untar src="${launchpad.export.tgz}" dest="${build.dir}" compression="gzip" />
+    <delete dir="${build.dir}" includes="**/*.pot" />
+    <move todir="${build.dir}/Jmol" includeemptydirs="false">
+      <fileset dir="${build.dir}/src/org/jmol/translation/Jmol">
+        <include name="**/Jmol-*.po" />
+      </fileset>
+      <mapper type="glob" from="Jmol-*.po" to="*.po" />
+    </move>
+    <move todir="${build.dir}/JmolApplet" includeemptydirs="false">
+      <fileset dir="${build.dir}/src/org/jmol/translation/JmolApplet">
+        <include name="**/JmolApplet-*.po" />
+      </fileset>
+      <mapper type="glob" from="JmolApplet-*.po" to="*.po" />
+    </move>
+    <copy todir="src/org/jmol/translation/Jmol">
+      <fileset dir="${build.dir}/Jmol" includes="*.po" />
+    </copy>
+    <copy todir="src/org/jmol/translation/JmolApplet">
+      <fileset dir="${build.dir}/JmolApplet" includes="*.po" />
+    </copy>
+
+    <!-- Cleanup -->
+  	<delete dir="${build.dir}" />
+  </target>
+
+  <target name="import-launchpad-export-files" id="import-launchpad-export-files">
+    <!-- Clean previous launch -->
+    <delete dir="${build.dir}" />
+
+    <!-- Extract launchpad export -->
+    <input message="What is the path to launchpad export files ?"
+           defaultvalue="D:/Temp"
+           addproperty="launchpad.export.files" />
+    <mkdir dir="${build.dir}" />
+    <mkdir dir="${build.dir}/Jmol" />
+    <move todir="${build.dir}/Jmol" includeemptydirs="false">
+      <fileset dir="${launchpad.export.files}">
+        <include name="src_org_jmol_translation_Jmol_Jmol-*.po" />
+      </fileset>
+      <mapper type="glob" from="src_org_jmol_translation_Jmol_Jmol-*.po" to="*.po" />
+    </move>
+    <mkdir dir="${build.dir}/JmolApplet" />
+    <move todir="${build.dir}/JmolApplet" includeemptydirs="false">
+      <fileset dir="${launchpad.export.files}">
+        <include name="src_org_jmol_translation_JmolApplet_JmolApplet-*.po" />
+      </fileset>
+      <mapper type="glob" from="src_org_jmol_translation_JmolApplet_JmolApplet-*.po" to="*.po" />
+    </move>
+    <copy todir="src/org/jmol/translation/Jmol">
+      <fileset dir="${build.dir}/Jmol" includes="*.po" />
+    </copy>
+    <copy todir="src/org/jmol/translation/JmolApplet">
+      <fileset dir="${build.dir}/JmolApplet" includes="*.po" />
+    </copy>
+
+    <!-- Cleanup -->
+    <delete dir="${build.dir}" />
+  </target>
+</project>

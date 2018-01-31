@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<jnlp spec="1.0+" codebase="http://jmol.sourceforge.net/jws/" href="jmol.jnlp">
+  <information>
+    <title>Jmol</title>
+
+    <vendor>The Jmol Development Team</vendor>
+    <homepage href="http://jmol.sourceforge.net/" />
+
+    <description>Jmol</description>
+    <description kind="short">Jmol Molecular Viewer</description>
+    <description kind="tooltip">Jmol Molecular Viewer</description>
+
+    <icon href="images/icon.jpg" />
+
+     <offline-allowed />
+  </information>
+
+  <resources>
+    <j2se version="1.2+" max-heap-size="128M" />
+    <jar href="jars/jmol.jar" />
+    <jar href="jars/Acme.jar" />
+    <jar href="jars/multi.jar" />
+    <jar href="jars/vecmath1.1-1.12.jar" />
+    <jar href="jars/jas.jar" />
+    <jar href="jars/gnujaxp.jar" />
+    <jar href="jars/cdk-cml.jar" />
+    <jar href="jars/itext-0.94.jar" />
+  </resources>
+
+  <security>
+    <all-permissions />
+  </security>
+
+  <application-desc main-class="org.openscience.jmol.Jmol" />
+</jnlp>

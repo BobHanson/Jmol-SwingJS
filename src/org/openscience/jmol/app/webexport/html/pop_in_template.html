@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Jmol, see http://www.jmol.org">
+  <meta name="author" content="@AUTHOR@">
+  <meta name="keywords" content="generated_by_Jmol_Webexport">
+  <title>@TITLE@</title>
+  <style type="text/css">
+	h1 { font-size:1.5em; text-align:center; }
+	.section { clear:both; padding:0.6em 0; }
+	.sceneWrapper {
+		border:1px solid gray;
+		border-radius:1ex;
+		margin:0.3em 1ex; 
+		font-size:0.9em; 
+	}
+	.sceneWrapper td {
+		padding:0.5ex;
+	}
+  .JmolDiv { 
+		padding:0.3em 0.5ex; 
+		font-size:0.9em; 
+		background-repeat:no-repeat; 
+		background-position:center;
+  }
+  .floatRight { float:right; }
+  .floatLeft { float:left; }
+  .update-info {
+		clear:both;
+		padding-top:1em;
+		text-align:right;
+		font-size:0.75em;
+		font-style:italic;
+  }
+	.update-info + .update-info {
+		padding-top:0.2em;
+		margin-bottom:1em;
+	}
+	.widgetItemPopin { /* each widget in a PopIn page goes in a div with this class */
+		 margin:0.2em 0;
+	}
+  </style>  
+
+  <!-- Below is used locally but not on server. May generate warnings. -->
+  <script type="text/javascript" src="@LOCALAPPLETPATH@/JSmol.min.js"></script>
+  <script src="support.js" type="text/javascript"></script>
+  @WIDGETJSFILES@
+  
+  <!-- Below is used on server, but not locally. May generate warnings.-->
+  <script type="text/javascript" src="@REMOTEAPPLETPATH@/JSmol.min.js"></script>
+  <script type="text/javascript">
+  var jmolApplet; //our viewer
+  var jmolInfo; //setup parameters
+  ;(function() {
+
+// Developers: The debugCode flag is checked in j2s/java/core.z.js, 
+// and, if TRUE, skips loading the core methods, forcing those
+// to be read from their individual directories. Set this
+// true if you want to do some code debugging by inserting
+// System.out.println, document.title, or alert commands
+// anywhere in the Java or Jmol code.
+
+var s = document.location.search;
+Jmol.debugCode = (s.indexOf("debugcode") >= 0);
+
+jmol_isReady = function(jmolApplet) {
+}		
+
+jmolInfo = { //default values
+	width: "100%",
+	height: "100%",
+	debug: false,
+	color: "white",
+	addSelectionOptions: false,
+	use: "HTML5",
+	coverImage: "@APPLETNAME0@.png",        // initial image instead of applet
+	coverScript: "",	// special script for click of cover image (otherwise equal to script)
+	deferApplet: true,                  // wait to load applet until click
+	deferUncover: true,                 // wait to uncover applet until script completed
+		//The paths below assume your server is set up with standard JSmol directory.  If not
+		//they will need modification for the page to work.
+	jarPath: "@REMOTEAPPLETPATH@/java", //path to applet .jar files on server.
+	j2sPath: "@REMOTEAPPLETPATH@/j2s",//path to javascript version.
+	serverURL: "@REMOTEAPPLETPATH@/php/jsmol.php", //if your own server does not allow php, you can change to http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php
+	makeLiveImg:"@REMOTEAPPLETPATH@/j2s/img/play_make_live.jpg",//path to activate 3-D image.
+	jarFile: "JmolAppletSigned0.jar",
+	isSigned: true,
+	//disableJ2SLoadMonitor: true,
+	disableInitialConsole: true,
+	readyFunction: jmol_isReady,
+	script: ""
+}
+
+// ?_USE=JAVA   ?_USE=SIGNED   ?_USE=HTML5
+   if (s.indexOf("USE=") >= 0)
+     jmolInfo.use = s.split("USE=")[1].split("&")[0]
+   else if (s.indexOf("JAVA") >= 0)
+     jmolInfo.use = "JAVA"
+   else if (s.indexOf("IMAGE") >= 0)
+     jmolInfo.use = "IMAGE"
+   else if (s.indexOf("NOWEBGL") >= 0)
+     jmolInfo.use = "JAVA IMAGE"
+   else if (s.indexOf("WEBGL") >= 0)
+     jmolInfo.use = "WEBGL HTML5"
+   if (s.indexOf("NOWEBGL") >= 0)
+     jmolInfo.use = use.replace(/WEBGL/,"")
+   var useSignedApplet = (s.indexOf("SIGNED") >= 0);
+   if(useSignedApplet && jmolInfo.use == "HTML5") jmolInfo.use = "JAVA";
+
+   var protocol = window.location.protocol.toLowerCase();
+   if (protocol == "file:") { 
+    jmolInfo.jarPath = "@LOCALAPPLETPATH@/java";
+    jmolInfo.j2sPath = "@LOCALAPPLETPATH@/j2s";
+    jmolInfo.serverURL = "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php"; //you can change to your own path
+    jmolInfo.makeLiveImg = "@LOCALAPPLETPATH@/j2s/img/play_make_live.jpg";
+    jmolInfo.jarFile = "JmolAppletSigned.jar";
+    jmolInfo.isSigned= "true";
+  }
+})();
+
+$(document).ready(function(){//set up each of the applet locations
+	@APPLETINITIALIZATION@
+});
+  </script>
+</head>
+<body>
+    <div id="introdiv">
+      <h1 id="titlediv">
+        GT_pop_in_template.html_INSERTTITLE
+      </h1>
+      GT_pop_in_template.html_INSERTINTRO
+    </div>
+
+    @APPLETINFO@
+
+    @APPLETDEFS@
+
+    <div id="creationdiv" class="update-info">
+      @CREATIONDATA@
+    </div>
+    <div id="authordiv" class="update-info">
+      @AUTHORDATA@
+    </div>
+    <div id="logdiv" style="display:none">
+      @LOGDATA@
+    </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+SYMMETRY           (determine point group)
+      
+      Note that exact point-group symmetry is a
+      mathematical idealization. NBOModel recognizes
+      'effective' symmetry, adequate for chemical
+      purposes even if actual atom positions deviate
+      slightly (say, ~0.02A) from idealized symmetry.

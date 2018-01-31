@@ -1,0 +1,35 @@
+jmol-applet for Debian
+----------------------
+
+The package is using precompiled libs. So it was put into non-free.
+
+To setup a server running the Jmol applet, easily do the following:
+
+  1) Create an Alias which points to /usr/share/jmol-applet
+     e.g. for Apache:
+
+     Alias /jmol /usr/share/jmol-applet
+
+     and if necessary, adjust the path to JmolAppletProxy.cgi (which is
+     originally located /usr/lib/cgi-bin) in JmolApplet.properties.
+
+     OR
+
+     copy the content of /usr/share/jmol-applet to a directory of your
+     choice. The JmolAppletProxy.cgi script is located in
+     /usr/share/cgi-bin. Depending on your provided: copy it into
+     a script-directory and adjust the path in JmolApplet.properties.
+
+  2) Now use Jmol.js as you want in your websites. Documentation for
+     the JavaScript library is provided at:
+     http://jmol.sourceforge.net/jslibrary/.
+
+     The package contains a short example under examples. Easily copy
+     these files in a (server-)directory of your choice (e.g. test/),
+     adjust the path to the applet directory (it now points to ../jmol)
+     and start your browser with the related URL (e.g.
+     your-domain.tld/test/demo.html).
+
+Further documentation is provided at http://www.jmol.org.
+
+ -- Daniel Leidert (dale) <daniel.leidert@wgdd.de>, Thu,  4 Feb 2005 23:31:02 +0100

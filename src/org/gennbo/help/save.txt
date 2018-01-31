@@ -1,0 +1,19 @@
+SAVE.t filename     (save current model as file
+                    'filename' of type 't' extension)
+
+      Parameters:
+       .v   = valence coordinate VFILE ([.vfi])
+       .c   = cartesian coordinate CFILE (.cfi)
+       .adf = ADF input file (.adf)
+       .g   = Gaussian input file (.gau)
+       .gms = GAMESS input file (.gms)
+       .jag = Jaguar input file (.jag)
+       .mm  = MM2 molecular mechanics file (.mm2)
+       .mnd = AM1/MINDO-type input file (.mnd)
+       .mp  = Molpro input file (.mp)
+       .nw  = NWChem input file (.nw)
+       .orc = Orca input file (.orc)
+       .pqs = PQS input file (.pqs)
+       .qc  = Q-Chem input file (.qc)
+      Example:
+       SAVE.G job   [save Gaussian-type 'job.gau' file]

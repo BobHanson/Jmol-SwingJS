@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <groupId>net.sourceforge.jmol</groupId>
+  <artifactId>jmol</artifactId>
+  <version>@version@</version>
+ 
+  <packaging>jar</packaging>
+  <name>Jmol</name>
+  <description>Jmol: an open-source Java viewer for chemical structures in 3D</description>
+  <url>http://jmol.sourceforge.net/</url>
+
+  <licenses>
+    <license>
+      <name>GNU LESSER GENERAL PUBLIC LICENSE 2.1</name>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>http://jmol.svn.sourceforge.net/svnroot/jmol/trunk/Jmol/</url>
+    <connection>scm:svn:http://jmol.svn.sourceforge.net/svnroot/jmol/trunk/Jmol/</connection>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>hansonr</id>
+      <name>Bob Hanson</name>
+      <url>http://www.stolaf.edu/people/hansonr/</url>
+    </developer>
+    <developer>
+      <id>egonw</id>
+      <name>Egon Willighagen</name>
+      <url>http://chem-bla-ics.blogspot.com/</url>
+    </developer>
+    <developer>
+      <id>migueljmol</id>
+      <name>Miguel Howard</name>
+    </developer>
+    <developer>
+      <id>nicove</id>
+      <name>Nicolas Vervelle</name>
+    </developer>
+  </developers>
+
+  <dependencies>
+  </dependencies>
+  
+</project>

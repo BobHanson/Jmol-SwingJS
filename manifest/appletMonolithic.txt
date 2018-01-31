@@ -1,0 +1,10 @@
+Main-Class: JmolApplet
+Sealed: true
+Codebase: *
+Caller-Allowable-Codebase: *
+Application-Name: Jmol
+Application-Library-Allowable-Codebase: *
+Permissions: sandbox
+
+Name: org/jmol/api/
+Sealed: false

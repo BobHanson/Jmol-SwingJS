@@ -1,0 +1,272 @@
+# This file is distributed under the same license as the jmol package.
+# German translation by Daniel Leidert <dleidert@users.sourceforge.net>
+msgid ""
+msgstr ""
+"Project-Id-Version: jmol JmolAppletGuide\n"
+"Report-Msgid-Bugs-To: dleidert@users.sourceforge.net\n"
+"POT-Creation-Date: 2005-07-23 17:37+0200\n"
+"PO-Revision-Date: 2005-02-09 00:00+0100\n"
+"Last-Translator: Daniel Leidert <dleidert@users.sourceforge.net>\n"
+"Language-Team: Not a member <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8 bit\n"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:15(title)
+msgid "Jmol Applet Documentation"
+msgstr "Jmol Applet Dokumentation"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:2(title)
+msgid "Introduction"
+msgstr "Einführung"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:3(para)
+msgid "The Jmol Applet allows the 3D display of molecules within a web page."
+msgstr ""
+"Das Jmol Applet erlaubt die 3D-Darstellungen von Molekülen auf einer Web-"
+"Seite."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:6(para)
+msgid ""
+"With the exception of a few wrapper classes, the Jmol Applet code is shared "
+"with the Jmol Application."
+msgstr ""
+"Mit der Ausnahme einiger weniger Wrapper-Klassen nutzt das Jmol Applet die "
+"(selbe) Codebasis wie die Jmol Applikation."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:2(title)
+msgid "Supported Browsers"
+msgstr "Unterstützte Browser"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:4(para)
+msgid ""
+"The applet is tested and working with Internet Explorer, Netscape, Opera, "
+"Mozilla (and derivatives) and Konqueror on various platforms. Test results "
+"are given below. But be advised that this table (like most documentation) is "
+"often out of date."
+msgstr ""
+"Das Applet wurde getestet und arbeitet mit dem Internet Explorer, Netscape, "
+"Opera, Mozilla (und Derivate) und Konqueror auf verschiedenen Plattformen. "
+"Die Testresultate befinden sich weiter unten. Beachten Sie, dass diese "
+"Resultate (wie bei den meisten Dokumentationen) nicht aktuell sein müssen "
+"und es möglicherweise auch nicht sind."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:11(para)
+msgid ""
+"If you find problems with the browser/operating system/jvm combination of "
+"your choice, please send an email to jmol-users@lists.sf.net, stating the "
+"exact error (most browsers have a Java Console), and the versions of the "
+"browser, the operating system, and the java virtual machine that is used."
+msgstr ""
+"Fall Sie Probleme mit der von Ihnen verwendeten Kombination von Browser/"
+"Betriebssystem/JVM feststellen, senden Sie bitte eine E-Mail an jmol-"
+"users@lists.sf.net. Bitte teilen Sie uns die vollständige und exakte "
+"Fehlermeldung (die meisten Browser verfügen über eine Java-Konsole), die "
+"Version des verwendeten Browsers, Betriebssystems und der JVM mit."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:20(title)
+msgid "Testing results"
+msgstr "Testresultate"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:22(para)
+msgid ""
+"The JmolApplet has been tested successfully with the following system "
+"configurations:"
+msgstr ""
+"JmolApplet wurde mit den folgenden System-Konfigurationen erfolgreich "
+"getestet:"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:29(para)
+msgid "Win32 (98/ME/2K/XP)"
+msgstr "Win32 (98/ME/2K/XP)"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:34(para)
+msgid "Microsoft Internet Explorer with Microsoft JVM"
+msgstr "Microsoft Internet Explorer mit Microsoft JVM"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:39(para)
+msgid "Microsoft Internet Explorer with Sun Java Plugin &gt;= 1.4"
+msgstr "Microsoft Internet Explorer mit Sun Java Plugin &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:44(para)
+msgid "Netscape 4.7/4.8 <emphasis>(slow performance)</emphasis>"
+msgstr "Netscape 4.7/4.8 <emphasis>(sehr langsam)</emphasis>"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:49(para)
+msgid "Netscape 7 with Sun Java Plugin &gt;= 1.4"
+msgstr "Netscape 7 mit Sun Java Plugin &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:54(para)
+msgid "Mozilla with Sun Java Plugin &gt;= 1.4"
+msgstr "Mozilla mit Sun Java Plugin &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:59(para)
+msgid "Firefox 1.0 with Sun Java Plugin &gt;= 1.4"
+msgstr "Firefox 1.0 mit Sun Java Plugin &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:64(para)
+msgid "Opera 7.5.4 with Sun Java Plugin &gt;= 1.4"
+msgstr "Opera 7.5.4 mit Sun Java Plugin &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:71(para)
+msgid "Mac OS X 10.3.3 or greater"
+msgstr "Mac OS X 10.3.3 oder höher"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:74(para)
+msgid ""
+"Mac OS X prior to 10.3.3 did not support LiveConnect communications between "
+"JavaScript and Java"
+msgstr ""
+"Mac OS X Versionen vor 10.3.3 unterstützen nicht die LiveConnect-"
+"Kommunikation zwischen JavaScript und Java"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:80(para)
+msgid "Safari 1.2 (v125)"
+msgstr "Safari 1.2 (v125)"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:83(para)
+msgid ""
+"Previous versions of OSX &amp; Safari have significant problems. Even "
+"subsequent versions have problems. Lets hope that Apple can keep things "
+"stable."
+msgstr ""
+"Ältere Versionen von OSX &amp; Safari verursachen erhebliche Probleme. Auch "
+"neuere Versionen zeigen sich nicht problemfrei. Es bleibt zu hoffen, dass "
+"Apple diese Dinge in den Griff bekommt."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:90(para)
+msgid "Netscape 7.2 with javaplugin.sourceforge.net installed"
+msgstr "Netscape 7.2 mit installiertem Plugin von javaplugin.sourceforge.net"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:95(para)
+msgid "Mozilla 1.7.3 with javaplugin.sourceforge.net installed"
+msgstr "Mozilla 1.7.3 mit installiertem Plugin von javaplugin.sourceforge.net"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:100(para)
+msgid "Firefox 1.0 with javaplugin.sourceforge.net installed"
+msgstr "Firefox 1.0 mit installiertem Plugin von javaplugin.sourceforge.net"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:105(para)
+msgid "Opera 7.5.4"
+msgstr "Opera 7.5.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:108(para)
+msgid "all versions of Opera OSX up through 7.5.4 are completely broken"
+msgstr ""
+"Alle Versionen von Opera für OSX bis einschließlich 7.5.4 sind völlig kaputt."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:116(para)
+msgid "Linux/Unix"
+msgstr "Linux/Unix"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:121(para)
+msgid "Mozilla 1.6 + Sun Java &gt;= 1.4"
+msgstr "Mozilla 1.6 + Sun Java &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:126(para)
+msgid "Firefox 1.0 + Sun Java &gt;= 1.4"
+msgstr "Firefox 1.0 + Sun Java &gt;= 1.4"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:131(para)
+msgid "Konqueror 3.3"
+msgstr "Konqueror 3.3"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:134(para)
+msgid "all versions of Konqueror up through 3.3 are broken"
+msgstr "Alle Versionen von Konqueror bis einschließlich 3.3 sind kaputt."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:141(para)
+msgid "Mac OS 9"
+msgstr "Mac OS 9"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:146(para)
+msgid ""
+"Netscape 4.7* <emphasis>marginal performance with limited functionality</"
+"emphasis>"
+msgstr ""
+"Netscape 4.7* <emphasis>schlechte Performance mit eingeschränkter "
+"Funktionalität</emphasis>"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:2(title)
+msgid "Hardware and OS Requirements"
+msgstr "Hardware- und Betriebssystem-Voraussetzungen"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:3(para)
+msgid ""
+"We recommend a machine with a 600 Mhz CPU and 256 Mb of RAM. This should "
+"cover almost every machine made this century."
+msgstr ""
+"Wir empfehlen ein System mit 600 MHz CPU und 256 MB RAM. Damit sollten die "
+"meisten in diesem Jahrhundert hergestellten Computer abgedeckt sein."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:7(para)
+msgid ""
+"If you have older CPU with a newer/upgraded operating system, (like Mac OSX "
+"or WinXP) then we <emphasis>strongly</emphasis> recommend that you have at "
+"least 256 Mb of RAM ... more is better."
+msgstr ""
+"Fall Sie eine ältere CPU mit einem neuen/aktuellen Betriebssystem einsetzen "
+"(z.B. Mac OSX oder WinXP), dann empfehlen wir Ihnen <emphasis>dringend</"
+"emphasis> den Einsatz von <emphasis>mindestens</emphasis> 256 MB RAM ... "
+"mehr ist in diesem Fall besser."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:13(emphasis)
+msgid "No specialized video hardware is required."
+msgstr "Es wird keine spezielle Grafik-/Video-Hardware benötigt."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:2(title)
+msgid "Web Server configuration for the JmolApplet"
+msgstr "Web-Server Konfiguration für den Einsatz von JmolApplet"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:3(para)
+msgid ""
+"The JmolApplet is configured on the web server just like any other Java "
+"applet."
+msgstr ""
+"Das Jmol Applet wird auf dem Web-Server wie jedes andere Java-Applet "
+"konfiguriert."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:7(para)
+msgid ""
+"The JmolApplet.jar and Jmol.js files are placed in a directory on your web "
+"server. We advise placing them in a sibling directory or subdirectory of "
+"your .html pages ... something like <command>../jmol</command> or <command>./"
+"jmol</command>"
+msgstr ""
+"JmolApplet.jar und Jmol.js jar werden in einem Verzeichnis auf Ihrem Server "
+"abgelegt. Wir raten Ihnen, dafür ein Verzeichnis oder Unterverzeichnis in "
+"der Nähe des Quellverzeichnisses Ihrer .html Seiten anzulegen ... z.B. "
+"<command>../jmol</command> or <command>./jmol</command>"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:14(para)
+msgid ""
+"All the java classes needed by the applet are contained in the single "
+"JmolApplet.jar file."
+msgstr ""
+"Alle Java-Klassen, die das Applet benötigt, befinden sich in JmolApplet.jar."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:18(para)
+msgid ""
+"The applet runs as an unsigned/untrusted applet. Therefore, no additional "
+"steps are needed for end-user verification of applet authenticity."
+msgstr ""
+"Das Applet läuft als unsigniertes/nicht vertrauenswürdiges (unsigned/"
+"untrusted) Applet. Daher sind keine weiteren Schritte notwendig, die Applet-"
+"Authentizität für den Endbenutzer zu verifizieren."
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:2(title)
+msgid "Jmol Applet Usage"
+msgstr "Gebrauch des Jmol Applets"
+
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:3(para)
+msgid ""
+"Use the Jmol.js JavaScript library as documented in <ulink url=\"http://www."
+"jmol.org/jslibrary\"/>"
+msgstr ""
+"Benutzen Sie die JavaScript-Bibliothek Jmol.js, wie in der Dokumentation "
+"unter <ulink url=\"http://www.jmol.org/jslibrary\" /> beschrieben."
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: /home/dl/packages/cvs/Jmol/doc/source/JmolAppletGuide.docbook.xml:0(None)
+msgid "translator-credits"
+msgstr "Jmol Development Team <jmol-developers@lists.sourceforge.net>, 2005"

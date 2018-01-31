@@ -1,0 +1,5 @@
+LINK IA IB  (draw a 'bond' between atoms IA, IB)\
+      Examples:
+       LINK 3 17    [draws a 'bond: between atoms 3-17
+
+      Note that this command (unlike FUSE) takes no account of chemical reasonability.

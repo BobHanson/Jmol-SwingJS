@@ -1,0 +1,123 @@
+<!--
+  French translation 
+  Translated from default version : browsers.docbook.xml (v 1.5)
+-->
+<chapter id="SupportedBrowsers">
+  <title>Navigateurs Support&eacute;s</title>
+  <para>
+    L'applet est test&eacute;e et fonctionne avec Internet Explorer, Netscape,
+    Opera, Mozilla (et ses d&eacute;riv&eacute;s) et Konqueror sur diverses
+    plate-formes. Les r&eacute;sultats des tests sont donn&eacute;s ci-dessous.
+    Mais veuillez noter que ce tableau (comme la plupart de la documentation)
+    est souvent p&eacute;rim&eacute;.
+  </para>
+  <para>
+    Si vous trouvez des probl&egrave;mes avec la combinaison
+    navigateur/syst&egrave;me d'exploitation/jvm de votre choix, veuillez
+    envoyer un email &agrave; jmol-users@lists.sf.net, expliquant l'erreur
+    exacte (la plupart des navigateurs ont une Console Java), et les version
+    du navigateur, du syst&egrave;me d'exploitation et de la machine
+    virtuelle java qui sont utilis&eacute;s.
+  </para>
+  <section id="TestingResults">
+    <title>R&eacute;sultats des Tests</title>
+    <para>
+      L'Applet Jmol a &eacute;t&eacute; test&eacute;e avec succ&egrave;s sur
+      les configurations syst&egrave;me suivantes:
+      <itemizedlist>
+        <listitem>
+          <para>Win32 (98/ME/2K/XP)</para>
+            <itemizedlist>
+              <listitem><para>
+                Microsoft Internet Explorer avec JVM Microsoft
+              </para></listitem>
+              <listitem><para>
+                Microsoft Internet Explorer avec Plugin Java Sun &gt;= 1.4
+              </para></listitem>
+              <listitem><para>
+                Netscape 4.7/4.8 <emphasis>(faibles performances)</emphasis>
+              </para></listitem>
+              <listitem><para>
+                Netscape 7 avec Plugin Java Sun &gt;= 1.4
+              </para></listitem>
+              <listitem><para>
+                Mozilla avec Plugin Java Sun &gt;= 1.4
+              </para></listitem>
+              <listitem><para>
+                Firefox 1.0 avec Plugin Java Sun &gt;= 1.4
+              </para></listitem>
+              <listitem><para>
+                Opera 7.5.4 avec Plugin Java Sun &gt;= 1.4
+              </para></listitem>
+            </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>Mac OS X 10.3 ou sup&eacute;rieur</para>
+            <para>
+              Les versions de Mac OS X ant&eacute;rieures &agrave; 10.3.3
+              ne supportent pas les communications LiveConnect entre
+              JavaScript et Java
+            </para>
+            <itemizedlist>
+              <listitem>
+              	<para>Safari 1.2 (v125)</para>
+                <para>
+                  Les versions p&eacute;c&eacute;dentes de OSX &amp; Safari
+                  ont des probl&egrave;mes significatifs. M&ecirc;me les
+                  versions suivantes ont des probl&egrave;mes.
+                  Esp&eacute;rons qu'Apple puisse les garder stables.
+                </para>
+              </listitem>
+              <listitem>
+                <para>Netscape 7.2 avec javaplugin.sourceforge.net install&eacute;</para>
+              </listitem>
+              <listitem>
+                <para>Mozilla 1.7.3 avec javaplugin.sourceforge.net install&eacute;</para>
+              </listitem>
+              <listitem>
+                <para>Firefox 1.0 avec javaplugin.sourceforge.net install&eacute;</para>
+              </listitem>
+              <listitem>
+                <para>Opera 7.5.4</para>
+                <para>
+                  toutes les versions d'Opera OSX jusqu'&agrave; 7.5.4 sont
+                  compl&egrave;tement inutilisables
+                </para>
+              </listitem>
+            </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>Linux/Unix</para>
+            <itemizedlist>
+              <listitem>
+                <para>Mozilla 1.6 + Java Sun &gt;= 1.4</para>
+              </listitem>
+              <listitem>
+                <para>Firefox 1.0 + Java Sun &gt;= 1.4</para>
+              </listitem>
+              <listitem>
+                <para>Konqueror 3.3</para>
+                <para>
+                  toutes les versions de Konqueror jusqu'&agrave; 3.3
+                  sont inutilisables
+                </para>
+              </listitem>
+            </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>
+            Mac OS 9
+            <itemizedlist>
+              <listitem><para>
+                Netscape 4.7*
+                <emphasis>
+                  performances marginales et fonctions limit&eacute;es
+                </emphasis>
+              </para></listitem>
+            </itemizedlist>
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+  </section>
+</chapter>

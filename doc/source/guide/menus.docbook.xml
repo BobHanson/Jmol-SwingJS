@@ -1,0 +1,207 @@
+<chapter id="menudesc">
+  <title>Menu description</title>
+
+  <section id="FileMenu">
+    <title>The File menu</title>
+    
+    <section id="FileMenuOpen">
+      <title>Open</title>
+      <para>
+        Open files in Jmol. Jmol can read a large number of file types,
+        including:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://www.abinit.org/">ABINIT</ulink></para>
+        </listitem>
+        <listitem>
+          <para>ACES II</para>
+        </listitem>
+        <listitem>
+          <para>ADF - Amsterdam Density Functional</para>
+        </listitem>
+        <listitem>
+          <para>
+            <ulink url="http://www.xml-cml.org/">CML v2.0</ulink>
+          </para>
+        </listitem>
+        <listitem>
+          <para>GAMESS</para>
+        </listitem>
+        <listitem>
+          <para>Gaussian 92/94/98</para>
+        </listitem>
+        <listitem>
+          <para>Ghemical MM</para>
+        </listitem>
+        <listitem>
+          <para>Jaguar</para>
+        </listitem>
+        <listitem>
+          <para>MDL molfile</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.pdb.org">PDB</ulink></para>
+        </listitem>
+        <listitem>
+          <para>CIF/mmCIF</para>
+        </listitem>
+        <listitem>
+          <para>XYZ (single and multiple frame)</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section id="FileMenuRecentFiles">
+      <title>Recent Files...</title>
+      <para>
+        Brings up a dialog with a list of the
+        files the program has been asked to
+        open recently. The file can be opened
+        again by selecting it and clicking the
+        Open button.
+      </para>
+    </section>
+
+    <section id="FileMenuScript">
+      <title>Script...</title>
+      <para>
+        Opens a window where Jmol/RasMol/Chime scripting commands
+        can be executed. <xref linkend="rasmol" /> contains information
+        about RasMol/Chime Scripts.
+      </para>
+    </section>
+
+    <section id="FileMenuExport">
+      <title>Export</title>
+      
+      <section id="FileMenuExportImage">
+        <title>Export -&gt; Export Image...</title>
+        <para>
+          Jmol can export 24 bit color images of the following types:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>JPG</para>
+          </listitem>
+          <listitem>
+            <para>PNG</para>
+          </listitem>
+          <listitem>
+            <para>PPM</para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    
+      <section id="FileMenuExportPovray">
+        <title>Export -&gt; Render in pov-ray...</title>
+        <para>
+          For high quality images, Jmol interfaces with the POV-Ray ray tracer.
+          To use this feature, you must have the <command>povray</command>
+          command  line utility installed. You can download it
+          from <ulink url="http://www.povray.org/" />.
+        </para>
+      </section>
+    </section>
+    
+    <section id="FileMenuPrint">
+      <title>Print</title>
+      <para>
+        Postscript files can be exported directly to printer and to file.
+      </para>
+    </section>
+    
+    <section id="FileMenuExit">
+      <title>Exit</title>
+      <para>
+        Quits this Jmol session.
+      </para>
+    </section>
+  </section>
+  
+  <section id="EditMenu">
+    <title>The Edit menu</title>
+    <section id="EditMenuSelectAll">
+      <title>Select All</title>
+      <para>
+        Selects all atoms in the view screen.
+      </para>
+    </section>
+    
+    <section id="EditMenuDeselectAll">
+      <title>Deselect All</title>
+      <para>
+        Deselects all atoms in the view screen.
+      </para>
+    </section>
+
+    <section id="EditMenuPreferences">
+      <title>Preferences...</title>
+      <para>
+        This menu opens a dialog to change settings and make user customized
+        preferences. These settings are saved from one session to the next
+      </para>
+    </section>
+  </section>
+  
+  <section id="DisplayMenu">
+    <title>The Display menu</title>
+    <para>
+      In this menu display settings/styles can be changed.
+    </para>
+    <para>
+      In general, display styles are applied to the currently selected
+      set of atoms and bonds.
+    </para>
+    <para>
+      By default, all atoms and bonds in a molecule are selected.
+    </para>
+    <para>
+      You may select individual atoms/bonds by using the selection cursor
+      or by using script commands.
+    </para>
+  </section>
+  
+  <section id="ViewMenu">
+    <title>The View menu</title>
+
+    <section id="ViewMenuDirection">
+      <title>Front/Top/Bottom/Right/Left</title>
+      <para>
+        Self explanatory. Useful with crystal structures. 
+      </para>
+    </section>
+  </section>
+  
+  <section id="HelpMenu">
+    <title>The Help menu</title>
+    
+    <section id="HelpMenuAbout">
+      <title>About Jmol</title>
+      <para>
+        Popups a window with copyright notice for this software.
+      </para>
+    </section>
+    
+    <section id="HelpMenuUserGuide">
+      <title>User Guide</title>
+      <para>
+        Shows this documentation.
+      </para>
+    </section>
+    
+    <section id="HelpMenuNew">
+      <title>What's New</title>
+      <para>
+        Shows the changes from version to version.
+      </para>
+    </section>
+    
+    <section id="HelpMenuConsole">
+      <title>Jmol Console</title>
+      <para>
+        Shows the output to the System.out and System.err output streams.
+      </para>
+    </section>
+  </section>
+</chapter>

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Jmol
+Name[de]=Jmol
+Comment=A 3D viewer and animator for molecules and crystals
+Comment[de]=3D-Betrachter für Molekül- und Kristall-Strukturen
+Exec=/usr/bin/jmol %f
+MultipleArgs=false
+Terminal=0
+StartupNotify=true
+Type=Application
+Categories=Science;Application;
+MimeType=application/x-jmol;chemical/x-cif;chemical/x-cml;chemical/x-gaussian-input;chemical/x-mdl-molfile;chemical/x-mmcif;chemical/x-pdb;chemical/x-xyz

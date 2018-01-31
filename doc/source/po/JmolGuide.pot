@@ -1,0 +1,2318 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2005-10-16 19:10Paris, Madrid (heure d'été)\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: JmolGuide.docbook.xml:14(title) 
+msgid "Jmol Documentation"
+msgstr ""
+
+#: JmolGuide.docbook.xml:2(title) 
+msgid "Introduction"
+msgstr ""
+
+#: JmolGuide.docbook.xml:3(para) 
+msgid "Jmol is a Java based application and an applet for displaying 3D chemical information."
+msgstr ""
+
+#: JmolGuide.docbook.xml:7(para) 
+msgid "This document describes the Jmol application."
+msgstr ""
+
+#: JmolGuide.docbook.xml:2(title) 
+msgid "Command Line Options"
+msgstr ""
+
+#: JmolGuide.docbook.xml:4(para) 
+msgid "The following sections contain information about the command line options of Jmol. The general syntax is:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:9(command) JmolGuide.docbook.xml:18(command) 
+msgid "jmol"
+msgstr ""
+
+#: JmolGuide.docbook.xml:10(option) 
+msgid "OPTIONS"
+msgstr ""
+
+#: JmolGuide.docbook.xml:11(replaceable) JmolGuide.docbook.xml:19(replaceable) 
+msgid "FILE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:13(para) 
+msgid "Jmol can be started with one argument, being a file name or no argument:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:23(title) 
+msgid "-h,--help"
+msgstr ""
+
+#: JmolGuide.docbook.xml:25(title) JmolGuide.docbook.xml:43(title) JmolGuide.docbook.xml:64(title) JmolGuide.docbook.xml:84(title) JmolGuide.docbook.xml:130(title) JmolGuide.docbook.xml:150(title) JmolGuide.docbook.xml:172(title) JmolGuide.docbook.xml:8(title) JmolGuide.docbook.xml:46(title) JmolGuide.docbook.xml:53(title) JmolGuide.docbook.xml:62(title) JmolGuide.docbook.xml:67(title) JmolGuide.docbook.xml:82(title) JmolGuide.docbook.xml:89(title) JmolGuide.docbook.xml:100(title) JmolGuide.docbook.xml:107(title) JmolGuide.docbook.xml:126(title) JmolGuide.docbook.xml:133(title) JmolGuide.docbook.xml:138(title) JmolGuide.docbook.xml:146(title) JmolGuide.docbook.xml:150(title) JmolGuide.docbook.xml:161(title) JmolGuide.docbook.xml:165(title) JmolGuide.docbook.xml:184(title) JmolGuide.docbook.xml:190(title) JmolGuide.docbook.xml:194(title) JmolGuide.docbook.xml:221(title) JmolGuide.docbook.xml:227(title) JmolGuide.docbook.xml:234(title) JmolGuide.docbook.xml:243(title) JmolGuide.docbook.xml:254(title) JmolGuide.docbook.xml:259(title) JmolGuide.docbook.xml:278(title) JmolGuide.docbook.xml:282(title) JmolGuide.docbook.xml:292(title) JmolGuide.docbook.xml:328(title) JmolGuide.docbook.xml:369(title) JmolGuide.docbook.xml:379(title) JmolGuide.docbook.xml:385(title) JmolGuide.docbook.xml:390(title) JmolGuide.docbook.xml:394(title) JmolGuide.docbook.xml:398(title) JmolGuide.docbook.xml:417(title) JmolGuide.docbook.xml:430(title) JmolGuide.docbook.xml:435(title) JmolGuide.docbook.xml:452(title) JmolGuide.docbook.xml:467(title) 
+msgid "Syntax"
+msgstr ""
+
+#: JmolGuide.docbook.xml:27(term) 
+msgid "<option>-h</option>, <option>--help</option>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:32(para) 
+msgid "This option will give you a short usage overview."
+msgstr ""
+
+#: JmolGuide.docbook.xml:41(title) 
+msgid "-s,--script"
+msgstr ""
+
+#: JmolGuide.docbook.xml:45(term) 
+msgid "<option>-s</option>, <option>--script</option><replaceable>RASMOL.script</replaceable>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:51(para) 
+msgid "This option makes it possible to start jmol with a Rasmol script. The syntax of these scripts is explained in <link linkend=\"rasmol\" endterm=\"rasmol.title\"/>."
+msgstr ""
+
+#: JmolGuide.docbook.xml:62(title) 
+msgid "-g,--geometry"
+msgstr ""
+
+#: JmolGuide.docbook.xml:66(term) 
+msgid "<option>-g</option>, <option>--geometry</option><replaceable>WIDTHxHEIGHT</replaceable>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:72(para) 
+msgid "This option allows setting of the window size. By default the size is 500x500."
+msgstr ""
+
+#: JmolGuide.docbook.xml:82(title) 
+msgid "-Duser.language"
+msgstr ""
+
+#: JmolGuide.docbook.xml:87(replaceable) 
+msgid "de|en|es|fr|nl|pl"
+msgstr ""
+
+#: JmolGuide.docbook.xml:87(option) 
+msgid "-Duser.language=<placeholder-1/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:90(para) 
+msgid "Set the GUI language with this option. If Jmol can't determine the user language and you don't use the above option, Jmol will use English by default."
+msgstr ""
+
+#: JmolGuide.docbook.xml:96(para) 
+msgid "At this moment these languages are supported:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:98(para) 
+msgid "English (<emphasis>en</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:101(para) 
+msgid "German (<emphasis>de</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:104(para) 
+msgid "Spanish (<emphasis>es</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:107(para) 
+msgid "French (<emphasis>fr</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:110(para) 
+msgid "Dutch (<emphasis>nl</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:113(para) 
+msgid "Polish (<emphasis>pl</emphasis>)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:116(para) 
+msgid "Alternatively, you can also use the <envar>LANG</envar> environment variable for setting the prefered language. This is common in many UNIX systems, like Linux. However, it is known not to work on Solaris and the above command line option must be used."
+msgstr ""
+
+#: JmolGuide.docbook.xml:128(title) 
+msgid "-Ddisplay.speed"
+msgstr ""
+
+#: JmolGuide.docbook.xml:133(replaceable) 
+msgid "fps|ms"
+msgstr ""
+
+#: JmolGuide.docbook.xml:133(option) 
+msgid "-Ddisplay.speed=<placeholder-1/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:136(para) 
+msgid "This option can be used to report the display speed in <emphasis>frames per second</emphasis> or <emphasis>milliseconds per frame</emphasis>. The default is milliseconds per frame."
+msgstr ""
+
+#: JmolGuide.docbook.xml:148(title) 
+msgid "-Dplugin.dir"
+msgstr ""
+
+#: JmolGuide.docbook.xml:153(replaceable) 
+msgid "/path/to/plugins"
+msgstr ""
+
+#: JmolGuide.docbook.xml:153(option) 
+msgid "-Dplugin.dir=<placeholder-1/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:156(para) 
+msgid "This options sets a path, where to find plugins for Jmol. Please note, that this option has no effect on the user (directory) plugin path <filename>~/.jmol/plugins</filename>. Jmol will still search for plugins in this directory, which also means, that this directory does not need to be defined as plugin directory."
+msgstr ""
+
+#: JmolGuide.docbook.xml:170(title) 
+msgid "-Xmx"
+msgstr ""
+
+#: JmolGuide.docbook.xml:175(replaceable) 
+msgid "SIZE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:175(option) 
+msgid "-Xmx<placeholder-1/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:178(para) 
+msgid "With this option you can change the maximum heap size the Java virtual machine can address on Java 1.4 systems. By default this is 64 MB. For large files this might not be enough. Use this option to encrease the heap size, e.g. <option>-Xmx512m</option>, which would encrase the heap size to 512 MB. On older Java systems the syntax of this option is different (see <command>java --help</command>)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:2(title) 
+msgid "Menu description"
+msgstr ""
+
+#: JmolGuide.docbook.xml:5(title) 
+msgid "The File menu"
+msgstr ""
+
+#: JmolGuide.docbook.xml:8(title) 
+msgid "Open"
+msgstr ""
+
+#: JmolGuide.docbook.xml:9(para) 
+msgid "Open files in Jmol. Jmol can read a large number of file types, including:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:15(ulink) 
+msgid "ABINIT"
+msgstr ""
+
+#: JmolGuide.docbook.xml:18(para) 
+msgid "ACES II"
+msgstr ""
+
+#: JmolGuide.docbook.xml:21(para) 
+msgid "ADF - Amsterdam Density Functional"
+msgstr ""
+
+#: JmolGuide.docbook.xml:25(ulink) 
+msgid "CML v2.0"
+msgstr ""
+
+#: JmolGuide.docbook.xml:29(para) 
+msgid "GAMESS"
+msgstr ""
+
+#: JmolGuide.docbook.xml:32(para) 
+msgid "Gaussian 92/94/98"
+msgstr ""
+
+#: JmolGuide.docbook.xml:35(para) 
+msgid "Ghemical MM"
+msgstr ""
+
+#: JmolGuide.docbook.xml:38(para) 
+msgid "Jaguar"
+msgstr ""
+
+#: JmolGuide.docbook.xml:41(para) 
+msgid "MDL molfile"
+msgstr ""
+
+#: JmolGuide.docbook.xml:44(ulink) 
+msgid "PDB"
+msgstr ""
+
+#: JmolGuide.docbook.xml:47(para) 
+msgid "CIF/mmCIF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:50(para) 
+msgid "XYZ (single and multiple frame)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:56(title) 
+msgid "Recent Files..."
+msgstr ""
+
+#: JmolGuide.docbook.xml:57(para) 
+msgid "Brings up a dialog with a list of the files the program has been asked to open recently. The file can be opened again by selecting it and clicking the Open button."
+msgstr ""
+
+#: JmolGuide.docbook.xml:67(title) 
+msgid "Script..."
+msgstr ""
+
+#: JmolGuide.docbook.xml:68(para) 
+msgid "Opens a window where Jmol/RasMol/Chime scripting commands can be executed. <xref linkend=\"rasmol\"/> contains information about RasMol/Chime Scripts."
+msgstr ""
+
+#: JmolGuide.docbook.xml:76(title) 
+msgid "Export"
+msgstr ""
+
+#: JmolGuide.docbook.xml:79(title) 
+msgid "Export -&gt; Export Image..."
+msgstr ""
+
+#: JmolGuide.docbook.xml:80(para) 
+msgid "Jmol can export 24 bit color images of the following types:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:85(para) 
+msgid "JPG"
+msgstr ""
+
+#: JmolGuide.docbook.xml:88(para) 
+msgid "PNG"
+msgstr ""
+
+#: JmolGuide.docbook.xml:91(para) 
+msgid "PPM"
+msgstr ""
+
+#: JmolGuide.docbook.xml:97(title) 
+msgid "Export -&gt; Render in pov-ray..."
+msgstr ""
+
+#: JmolGuide.docbook.xml:98(para) 
+msgid "For high quality images, Jmol interfaces with the POV-Ray ray tracer. To use this feature, you must have the <command>povray</command> command line utility installed. You can download it from <ulink url=\"http://www.povray.org/\"/>."
+msgstr ""
+
+#: JmolGuide.docbook.xml:108(title) 
+msgid "Print"
+msgstr ""
+
+#: JmolGuide.docbook.xml:109(para) 
+msgid "Postscript files can be exported directly to printer and to file."
+msgstr ""
+
+#: JmolGuide.docbook.xml:115(title) 
+msgid "Exit"
+msgstr ""
+
+#: JmolGuide.docbook.xml:116(para) 
+msgid "Quits this Jmol session."
+msgstr ""
+
+#: JmolGuide.docbook.xml:123(title) 
+msgid "The Edit menu"
+msgstr ""
+
+#: JmolGuide.docbook.xml:125(title) 
+msgid "Select All"
+msgstr ""
+
+#: JmolGuide.docbook.xml:126(para) 
+msgid "Selects all atoms in the view screen."
+msgstr ""
+
+#: JmolGuide.docbook.xml:132(title) 
+msgid "Deselect All"
+msgstr ""
+
+#: JmolGuide.docbook.xml:133(para) 
+msgid "Deselects all atoms in the view screen."
+msgstr ""
+
+#: JmolGuide.docbook.xml:139(title) 
+msgid "Preferences..."
+msgstr ""
+
+#: JmolGuide.docbook.xml:140(para) 
+msgid "This menu opens a dialog to change settings and make user customized preferences. These settings are saved from one session to the next"
+msgstr ""
+
+#: JmolGuide.docbook.xml:148(title) 
+msgid "The Display menu"
+msgstr ""
+
+#: JmolGuide.docbook.xml:149(para) 
+msgid "In this menu display settings/styles can be changed."
+msgstr ""
+
+#: JmolGuide.docbook.xml:152(para) 
+msgid "In general, display styles are applied to the currently selected set of atoms and bonds."
+msgstr ""
+
+#: JmolGuide.docbook.xml:156(para) 
+msgid "By default, all atoms and bonds in a molecule are selected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:159(para) 
+msgid "You may select individual atoms/bonds by using the selection cursor or by using script commands."
+msgstr ""
+
+#: JmolGuide.docbook.xml:166(title) 
+msgid "The View menu"
+msgstr ""
+
+#: JmolGuide.docbook.xml:169(title) 
+msgid "Front/Top/Bottom/Right/Left"
+msgstr ""
+
+#: JmolGuide.docbook.xml:170(para) 
+msgid "Self explanatory. Useful with crystal structures."
+msgstr ""
+
+#: JmolGuide.docbook.xml:177(title) 
+msgid "The Help menu"
+msgstr ""
+
+#: JmolGuide.docbook.xml:180(title) 
+msgid "About Jmol"
+msgstr ""
+
+#: JmolGuide.docbook.xml:181(para) 
+msgid "Popups a window with copyright notice for this software."
+msgstr ""
+
+#: JmolGuide.docbook.xml:187(title) 
+msgid "User Guide"
+msgstr ""
+
+#: JmolGuide.docbook.xml:188(para) 
+msgid "Shows this documentation."
+msgstr ""
+
+#: JmolGuide.docbook.xml:194(title) 
+msgid "What's New"
+msgstr ""
+
+#: JmolGuide.docbook.xml:195(para) 
+msgid "Shows the changes from version to version."
+msgstr ""
+
+#: JmolGuide.docbook.xml:201(title) 
+msgid "Jmol Console"
+msgstr ""
+
+#: JmolGuide.docbook.xml:202(para) 
+msgid "Shows the output to the System.out and System.err output streams."
+msgstr ""
+
+#: JmolGuide.docbook.xml:2(title) 
+msgid "RasMol/Chime Scripts"
+msgstr ""
+
+#: JmolGuide.docbook.xml:4(title) 
+msgid "New Scripting Engine"
+msgstr ""
+
+#: JmolGuide.docbook.xml:5(para) 
+msgid "The scripting engine has been completely rewritten for Jmol Release 6. As of this writing it should be considered *alpha test* code. Please supply feedback in case of bugs and/or unexpected behavior and/or with feature requests. You can do this through the jmol home page <ulink url=\"http://jmol.sourceforge.net\"/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:13(para) 
+msgid "Jmol supports the RasMol scripting language defined by RasMol. Information about RasMol can be found at <ulink url=\"http://www.openrasmol.org/\"/>. The current URL for full RasMol documentation is: <ulink url=\"http://www.openrasmol.org/doc/rasmol.htm\"/>."
+msgstr ""
+
+#: JmolGuide.docbook.xml:20(para) 
+msgid "The Chime web browser plug-in was based upon the RasMol source code. Various extensions were added, including additional scripting commands. Information about Chime can be found at <ulink url=\"http://www.mdlchime.com/\"/> The current URL for extended chime scripting commands is: <ulink url=\"http://www.mdlchime.com/chime/chimerasmol.html\"/>."
+msgstr ""
+
+#: JmolGuide.docbook.xml:28(para) 
+msgid "Jmol currently supports many of the RasMol/Chime scripting commands. Our goal is to eventually provide full script support. This will provide a migration path for those who wish to move to an open source solution that supports a larger number of file formats on a wider variety of hardware platforms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:35(para) 
+msgid "Please give us feedback on what features you use and that are currently no implemented. This will help us prioritize future development."
+msgstr ""
+
+#: JmolGuide.docbook.xml:41(title) 
+msgid "RasMol/Chime commands"
+msgstr ""
+
+#: JmolGuide.docbook.xml:42(para) 
+msgid "This documentation is autogenerated from the content on this website: <ulink url=\"http://www.stolaf.edu/people/hansonr/jmol/docs/\"/>."
+msgstr ""
+
+#: JmolGuide.docbook.xml:7(title) 
+msgid "animation or anim"
+msgstr ""
+
+#: JmolGuide.docbook.xml:7(para) 
+msgid "Sets selected animation parameters or turns animation on or off. Note that there are four distinct animation types that can be employed using Jmol: (1) files may contain multiple stuctures that are \"played\" sequencially, (2) Gaussian output files may contain vibrational modes that can be animated, (3) scripts may be run through with delays and loops, and (4) the model may spin or move in a predefined way. The \"animation\" command only refers to method (1)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:8(command) 
+msgid "animation ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:9(para) 
+msgid "Turns on or off animation."
+msgstr ""
+
+#: JmolGuide.docbook.xml:10(command) 
+msgid "animation direction -1"
+msgstr ""
+
+#: JmolGuide.docbook.xml:11(para) 
+msgid "Sets the animation direction to be from last frame to first frame."
+msgstr ""
+
+#: JmolGuide.docbook.xml:12(command) 
+msgid "animation direction +1"
+msgstr ""
+
+#: JmolGuide.docbook.xml:13(para) 
+msgid "Sets the animation direction to be first frame to last frame."
+msgstr ""
+
+#: JmolGuide.docbook.xml:14(command) 
+msgid "animation fps [frames-per-second]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:15(para) 
+msgid "Sets the animation frames per second."
+msgstr ""
+
+#: JmolGuide.docbook.xml:16(command) 
+msgid "animation frame (integer &gt;= 1)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:17(para) JmolGuide.docbook.xml:166(para) 
+msgid "Go to a specific frame."
+msgstr ""
+
+#: JmolGuide.docbook.xml:18(command) 
+msgid "animation frame 0"
+msgstr ""
+
+#: JmolGuide.docbook.xml:19(para) JmolGuide.docbook.xml:168(para) 
+msgid "Overlay all frames."
+msgstr ""
+
+#: JmolGuide.docbook.xml:20(command) 
+msgid "animation frame NEXT"
+msgstr ""
+
+#: JmolGuide.docbook.xml:21(para) JmolGuide.docbook.xml:170(para) 
+msgid "Go to next frame"
+msgstr ""
+
+#: JmolGuide.docbook.xml:22(command) 
+msgid "animation frame -1"
+msgstr ""
+
+#: JmolGuide.docbook.xml:23(para) JmolGuide.docbook.xml:172(para) 
+msgid "Go to previous frame."
+msgstr ""
+
+#: JmolGuide.docbook.xml:24(command) 
+msgid "animation mode loop"
+msgstr ""
+
+#: JmolGuide.docbook.xml:25(para) 
+msgid "Sets the animation mode to restart the sequence automatically when the last frame has played."
+msgstr ""
+
+#: JmolGuide.docbook.xml:26(command) 
+msgid "animation mode loop [time-delay1] [time-delay2]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:27(para) 
+msgid "Allows for a time delay at the start and end of the loop."
+msgstr ""
+
+#: JmolGuide.docbook.xml:28(command) 
+msgid "animation mode ONCE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:29(para) 
+msgid "Sets the animation to play once through and then stop (the default mode)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:30(command) 
+msgid "animation mode PALINDROME"
+msgstr ""
+
+#: JmolGuide.docbook.xml:31(para) 
+msgid "Sets the animation to play forward and back endlessly."
+msgstr ""
+
+#: JmolGuide.docbook.xml:32(command) 
+msgid "animation mode PALINDROME [time-delay1] [time-delay2]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:33(para) 
+msgid "Allows for a time delay at the start and end of the palindrome."
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(title) JmolGuide.docbook.xml:50(title) JmolGuide.docbook.xml:59(title) JmolGuide.docbook.xml:64(title) JmolGuide.docbook.xml:71(title) JmolGuide.docbook.xml:86(title) JmolGuide.docbook.xml:96(title) JmolGuide.docbook.xml:102(title) JmolGuide.docbook.xml:108(title) JmolGuide.docbook.xml:127(title) JmolGuide.docbook.xml:135(title) JmolGuide.docbook.xml:139(title) JmolGuide.docbook.xml:162(title) JmolGuide.docbook.xml:187(title) JmolGuide.docbook.xml:231(title) JmolGuide.docbook.xml:236(title) JmolGuide.docbook.xml:251(title) JmolGuide.docbook.xml:256(title) JmolGuide.docbook.xml:279(title) JmolGuide.docbook.xml:283(title) JmolGuide.docbook.xml:347(title) JmolGuide.docbook.xml:373(title) JmolGuide.docbook.xml:382(title) JmolGuide.docbook.xml:387(title) JmolGuide.docbook.xml:391(title) JmolGuide.docbook.xml:395(title) JmolGuide.docbook.xml:402(title) JmolGuide.docbook.xml:449(title) JmolGuide.docbook.xml:464(title) JmolGuide.docbook.xml:479(title) 
+msgid "Definitions"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(option) 
+msgid "[frames-per-second]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(para) 
+msgid "is the animation rate -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(option) 
+msgid "[time-delay1]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(para) 
+msgid "is the time in seconds to pause on the first frame -- (integer|decimal, &gt;=0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(option) 
+msgid "[time-delay2]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:34(para) 
+msgid "is the time in seconds to pause on the last frame -- (integer|decimal, &gt;=0)"
+msgstr ""
+
+#. Automatically created from documentation on http://www.stolaf.edu/people/hansonr/jmol/docs/?xml
+#.      as described in the README in the JmolScriptDocumentation module in CVS.
+#: JmolGuide.docbook.xml:7(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:36(title) 
+msgid "atom expressions"
+msgstr ""
+
+#: JmolGuide.docbook.xml:36(para) 
+msgid "The Jmol commands select, restrict, define, center, and polyhedra take for parameters expressions that represent collections of atoms in one or more models. While this documentation does not attempt to define these expressions completely, several examples are given here. Note that the substructure() function takes a quoted smiles string for its argument. The first parameter of the within() function can be a decimal distance in Angstroms or one of the words group, chain, or model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:37(para) JmolGuide.docbook.xml:71(para) JmolGuide.docbook.xml:108(para) JmolGuide.docbook.xml:116(para) JmolGuide.docbook.xml:127(para) JmolGuide.docbook.xml:139(para) JmolGuide.docbook.xml:151(para) JmolGuide.docbook.xml:173(para) JmolGuide.docbook.xml:208(para) JmolGuide.docbook.xml:222(para) JmolGuide.docbook.xml:236(para) JmolGuide.docbook.xml:267(para) JmolGuide.docbook.xml:283(para) JmolGuide.docbook.xml:307(para) JmolGuide.docbook.xml:348(para) JmolGuide.docbook.xml:373(para) JmolGuide.docbook.xml:402(para) 
+msgid "Examples:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:37(programlisting) 
+#, no-wrap
+msgid "select atomno=1;color purple;spacefill 600\nselect nitrogen;color yellow\nselect [PRO];color green\nselect within(5.0,[PRO]62) and not [PRO]62;color white\nselect within(group,within(5.0,[PRO]));color yellow\nselect substructure(\"[Fe][S]\");wireframe 1.0\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:45(title) 
+msgid "backbone"
+msgstr ""
+
+#: JmolGuide.docbook.xml:45(para) 
+msgid "Shows the backbone of a protein or nucleic acid macromolecule by connecting the alpha carbons."
+msgstr ""
+
+#: JmolGuide.docbook.xml:46(command) 
+msgid "backbone ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:47(para) 
+msgid "Turns the backbone on or off"
+msgstr ""
+
+#: JmolGuide.docbook.xml:48(command) 
+msgid "backbone [backbone-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:49(para) 
+msgid "Backbone radius can be specified in angstroms using a decimal number (1.0, 2.0, etc.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:50(option) 
+msgid "[backbone-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:50(para) 
+msgid "is the radius of the backbone -- (decimal, &lt;=4.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:45(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:52(title) 
+msgid "background"
+msgstr ""
+
+#: JmolGuide.docbook.xml:52(para) 
+msgid "Sets color of the background. For specifications, see color."
+msgstr ""
+
+#: JmolGuide.docbook.xml:53(command) 
+msgid "background [RGB-color]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:54(para) 
+msgid "Sets the background of the applet window."
+msgstr ""
+
+#: JmolGuide.docbook.xml:55(command) 
+msgid "background HOVER [color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:56(para) 
+msgid "Sets the background for the pop-up label box that appear when the mouse \"hovers\" over an atom. \"NONE\" results in there being no hover backgrounds. Operates globally, not on selected atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:57(command) 
+msgid "background LABELS [color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:58(para) 
+msgid "Sets the background of the atom labels that appear with the \"label\" command. \"NONE\" results in there being no label background. Operates globally, not on selected atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:59(option) JmolGuide.docbook.xml:102(option) JmolGuide.docbook.xml:108(option) 
+msgid "[RGB-color]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:59(para) JmolGuide.docbook.xml:102(para) JmolGuide.docbook.xml:108(para) 
+msgid "is a name of a color or a red, green, blue color triple in decimal with commas, for example [255,0,255], or as a single hexadecimal number, for example [xFF00FF] (brackets included) -- (color name), [r, g, b], [xRRGGBB]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:59(option) JmolGuide.docbook.xml:96(option) 
+msgid "[color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:59(para) JmolGuide.docbook.xml:96(para) 
+msgid "is (color name), [r, g, b], [xRRGGBB], NONE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:52(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"color\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"colormodelobject\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"setdefaultcolorscheme\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:61(title) 
+msgid "cartoon or cartoons"
+msgstr ""
+
+#: JmolGuide.docbook.xml:61(para) 
+msgid "Cartoons are the classic shapes the are used to depict alpha helices and beta-pleated sheets."
+msgstr ""
+
+#: JmolGuide.docbook.xml:62(command) 
+msgid "cartoon ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:63(command) 
+msgid "cartoon [cartoon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:64(option) 
+msgid "[cartoon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:64(para) 
+msgid "is the radius of the cartoon elements -- (decimal, &lt;=4.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:61(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:66(title) 
+msgid "center or centre"
+msgstr ""
+
+#: JmolGuide.docbook.xml:66(para) 
+msgid "Sets the center of rotation to be the center of the set of atoms defined by the atom expression. This is calculated as the mean value of the coordinates of the selected atoms along each of the respective axes. If no atoms are selected then the center is set to the center of the bounding box (the default)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:67(command) 
+msgid "center"
+msgstr ""
+
+#: JmolGuide.docbook.xml:68(para) 
+msgid "Recenters the model on the default center."
+msgstr ""
+
+#: JmolGuide.docbook.xml:69(command) 
+msgid "center [atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:70(para) 
+msgid "Centers the model on the specified atom set."
+msgstr ""
+
+#: JmolGuide.docbook.xml:71(option) JmolGuide.docbook.xml:127(option) JmolGuide.docbook.xml:347(option) JmolGuide.docbook.xml:373(option) JmolGuide.docbook.xml:402(option) 
+msgid "[atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:71(para) JmolGuide.docbook.xml:127(para) JmolGuide.docbook.xml:347(para) JmolGuide.docbook.xml:373(para) JmolGuide.docbook.xml:402(para) 
+msgid "is any expression that evaluates to a set of atoms -- (atom-expression)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:71(programlisting) 
+#, no-wrap
+msgid "select [CYS]32\ncenter selected\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:66(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:75(title) 
+msgid "color or colour"
+msgstr ""
+
+#: JmolGuide.docbook.xml:75(para) 
+msgid "The color command takes several forms, depending upon the type of object being colored: an atom object, a bond object, a chemical element, or a model object. In addition, you can set the default color of any chemical element individually. This section of the guide discusses each of these in turn:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:81(title) 
+msgid "color (atom object)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:81(para) 
+msgid "Sets the color of atom-related objects (atoms, backbone, cartoons, dots, labels, meshribbon, polyhedra, rockets, stars, strands, trace, and vectors)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:82(command) 
+msgid "color [color-scheme]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:83(para) 
+msgid "Sets the previously selected atom set to a color based on a particular color scheme. Note that to color a specific set of atoms, you MUST select that set first, then use use the color command. You cannot script, for example, \"color *.N? green\"."
+msgstr ""
+
+#: JmolGuide.docbook.xml:84(command) 
+msgid "color [atom-associated-object] [color-scheme]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:85(para) 
+msgid "Sets the color of atom-related objects based on a previously selected atom set to a specific color, a color scheme, or back to its default color (CPK), or to inherit the color of its associated atom (NONE). (In the case of \"color atom\", CPK and NONE both revert to the default color.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:86(option) 
+msgid "[color-scheme]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:86(para) 
+msgid "is to color based on a scheme. (CPK and NONE are synonymous here) -- (color name), [r, g, b], [xRRGGBB], AMINO, GROUP, CHAIN, FIXEDTEMPERATURE, FORMALCHARGE, MONOMER, PARTIALCHARGE, RELATIVETEMPERATURE, SHAPELY, STRUCTURE, CPK, NONE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:86(option) 
+msgid "[atom-associated-object]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:86(para) 
+msgid "is an object related to an atom -- ATOM, BACKBONE, CARTOON, DOTS, LABELS, MESHRIBBON, POLYHEDRA, RIBBONS, ROCKETS, STARS, STRANDS, TRACE, VECTORS"
+msgstr ""
+
+#: JmolGuide.docbook.xml:81(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"background\"/>, <xref linkend=\"color\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"colormodelobject\"/>, <xref linkend=\"setdefaultcolorscheme\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:88(title) 
+msgid "color (bond object)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:88(para) 
+msgid "Three types of bonds are distinguished by Jmol for coloring purposes: regular bonds, disulfide bonds, and hydrogen bonds. Each can be colored independently, and hydrogen bond colors in proteins can take on a special coloring scheme based on their connectivity."
+msgstr ""
+
+#: JmolGuide.docbook.xml:89(command) 
+msgid "color BONDS [color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:90(para) 
+msgid "Colors selected bonds a specific color or resets them to inherit the color of their associated atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:91(command) 
+msgid "color SSBONDS [color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:92(para) 
+msgid "Colors disulfide bonds a specific color or resets them to inherit their color from their associated atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:93(command) 
+msgid "color HBONDS [color-or-none]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:94(para) 
+msgid "Colors hydrogen bonds a specific color or resets them to inherit their color from their associated atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:95(command) 
+msgid "color HBONDS TYPE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:96(para) 
+msgid "Colors hydrogen bonds specifically in proteins based on how many residues one end is from the other. Note that to get this effect, one must first execute \"hbonds ON\" and then issue \"color hbonds TYPE\". The colors assigned are based on the number of basepairs between the interacting H atoms. This TENDS to indicate secondary structure, but is not perfect.The correlation between color and offset are as follows:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:88(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"background\"/>, <xref linkend=\"color\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"colormodelobject\"/>, <xref linkend=\"setdefaultcolorscheme\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:98(title) 
+msgid "color (element)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:98(para) 
+msgid "You can use the 'color' command to specify customized default colors that are used for elements. [default Jmol element colors] color carbon limegreencolor hydrogen [x32CD32];These changes are not molecule-specific; they will continue in effect even if new molecules are loaded. However, in a page with multiple applets, each applet will have its own set of element colors.If you choose to use this feature, you should consider encapsulating your favorite colors into a script and then executing that script as a subroutine. For example:script LoadMyFavoriteColors.txt;load foo.xyz;load bar.xyz;Note:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:100(command) 
+msgid "color [element-name] [RGB-color]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:102(option) 
+msgid "[element-name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:102(para) 
+msgid "is to color specific elements such as CARBON or HYDROGEN -- (element name)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:106(title) 
+msgid "color (model object)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:106(para) 
+msgid "Sets the color of various objects (axes, boundbox, echo, hover, measurements, pmesh, and unitcell)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:107(command) 
+msgid "color [model-object] [RGB-color]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:108(option) 
+msgid "[model-object]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:108(para) 
+msgid "is AXES, BOUNDBOX, ECHO, HOVER, ISOSURFACE, MEASUREMENTS, PMESH, UNITCELL"
+msgstr ""
+
+#: JmolGuide.docbook.xml:108(programlisting) 
+#, no-wrap
+msgid "select [CYS]32 ;label %a: %x %y %z;color labels white;\nset axes on;color axes green\nset axes on;color axes [xFF00FF];\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:106(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"background\"/>, <xref linkend=\"color\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"setdefaultcolorscheme\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:113(title) 
+msgid "comment (#)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:113(para) 
+msgid "Comments in Jmol are preceded by a number sign, '#'."
+msgstr ""
+
+#: JmolGuide.docbook.xml:116(programlisting) 
+#, no-wrap
+msgid "# color by polarity\ncolor background [xffa0a0] # pink\n#jx set perspectiveDepth on; #executed only in Jmol, not Chime or Rasmol\nzoom 125 #jc; # zoom to 125% in Chime and Rasmol but not in Jmol\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:125(title) 
+msgid "define"
+msgstr ""
+
+#: JmolGuide.docbook.xml:125(para) 
+msgid "Defines the specified variable to the the atoms selected by the atom expression."
+msgstr ""
+
+#: JmolGuide.docbook.xml:126(command) 
+msgid "define [variable-name] [atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:127(option) 
+msgid "[variable-name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:127(para) 
+msgid "is a (string)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:127(programlisting) 
+#, no-wrap
+msgid "define mygroup within(5.0,[FS4]102)\nselect mygroup\ncolor atoms white\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:132(title) 
+msgid "delay"
+msgstr ""
+
+#: JmolGuide.docbook.xml:132(para) 
+msgid "Causes the screen to refresh and the script to stop executing for the specified number of seconds."
+msgstr ""
+
+#: JmolGuide.docbook.xml:133(command) 
+msgid "delay [time-delay]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:134(command) 
+msgid "delay on"
+msgstr ""
+
+#: JmolGuide.docbook.xml:135(option) JmolGuide.docbook.xml:236(option) 
+msgid "[time-delay]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:135(para) JmolGuide.docbook.xml:236(para) 
+msgid "is in seconds -- (integer|decimal, &gt;=0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:132(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:137(title) 
+msgid "depth"
+msgstr ""
+
+#: JmolGuide.docbook.xml:137(para) 
+msgid "Slab and Depth together control the percentage of the molecule to be displayed based on clipping planes. slab on turns slab/depth on. slab 50 shows the back 50% of the molecule. slab 25 show the back 25% of the molecule. Atoms appear solid; bonds appear hollow."
+msgstr ""
+
+#: JmolGuide.docbook.xml:138(command) 
+msgid "depth [slab-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:139(option) 
+msgid "[slab-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:139(para) JmolGuide.docbook.xml:464(para) JmolGuide.docbook.xml:464(para) JmolGuide.docbook.xml:464(para) 
+msgid "is an (integer, 0 to 100)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:139(programlisting) 
+#, no-wrap
+msgid "slab 50; depth 0;slab on; # show the back half of the molecule\nslab 100;depth 50; slab on;# show the front half of the molecule\nslab 75; depth 25;slab on; # show middle 50% of the molecule\nslab 50;depth 50;slab on; # show a plane that is 1 pixel deep\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:137(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"slab\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:145(title) 
+msgid "dots"
+msgstr ""
+
+#: JmolGuide.docbook.xml:145(para) 
+msgid "Turns dotted surface on or off for Van der Waals radii or solvent probe (if in addition set solvent ON)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:146(command) 
+msgid "dots ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:145(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:149(title) 
+msgid "echo"
+msgstr ""
+
+#: JmolGuide.docbook.xml:149(para) 
+msgid "Echos a string of text to the window at the location predefined by the \"set echo\" command as well as to the Java Console. \"echo\" by itself deletes the text at the selected position (top, middle, or bottom)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:150(command) 
+msgid "echo (string)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:151(programlisting) 
+#, no-wrap
+msgid "set echo top left\nfont echo 30 serif bolditalic\ncolor echo green\necho \"I am green top left 30 serif bolditalic\"\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:149(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"font\"/>, <xref linkend=\"hover\"/>, <xref linkend=\"label\"/>, <xref linkend=\"sethighlights\"/>, <placeholder-4/><placeholder-5/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:157(title) 
+msgid "exit"
+msgstr ""
+
+#: JmolGuide.docbook.xml:157(para) 
+msgid "Stops execution of the script current script. In the case of a script that is running as a \"child\" (for example, from a \"source\" command, execution continues with the parent."
+msgstr ""
+
+#: JmolGuide.docbook.xml:157(section) 
+msgid "<placeholder-1/><placeholder-2/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:160(title) 
+msgid "font"
+msgstr ""
+
+#: JmolGuide.docbook.xml:160(para) 
+msgid "Sets font size and information in labels and other text-bearing elements."
+msgstr ""
+
+#: JmolGuide.docbook.xml:161(command) 
+msgid "font _object_with_text [font-size] [font-face]{default: SansSerif} [font-style]{default: Plain}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(option) JmolGuide.docbook.xml:449(option) 
+msgid "[font-size]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(para) JmolGuide.docbook.xml:449(para) 
+msgid "is approximately the same as Rasmol -- (integer, 6 to 63)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(option) 
+msgid "[font-face]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(para) 
+msgid "is SERIF, SANSSERIF, or MONOSPACED"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(option) 
+msgid "[font-style]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:162(para) 
+msgid "is PLAIN, BOLD, ITALIC, or BOLDITALIC"
+msgstr ""
+
+#: JmolGuide.docbook.xml:160(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"echo\"/>, <xref linkend=\"hover\"/>, <xref linkend=\"label\"/>, <xref linkend=\"sethighlights\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:164(title) 
+msgid "frame"
+msgstr ""
+
+#: JmolGuide.docbook.xml:164(para) 
+msgid "Sets the current animation frame (1 being the first). (Same as the model command.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:165(command) 
+msgid "frame (integer &gt;= 1)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:167(command) 
+msgid "frame 0"
+msgstr ""
+
+#: JmolGuide.docbook.xml:169(command) 
+msgid "frame NEXT"
+msgstr ""
+
+#: JmolGuide.docbook.xml:171(command) 
+msgid "frame -1"
+msgstr ""
+
+#: JmolGuide.docbook.xml:173(programlisting) JmolGuide.docbook.xml:267(programlisting) 
+#, no-wrap
+msgid "model 1\nmodel NEXT\nmodel -1\nmodel 0;select *;wireframe 0.1;spacefill 0.2\nanim on\nmodel 0;select *;wireframe off;spacefill off;\nselect */1;wireframe 0.1;spacefill 0.2;color atoms red;\nselect */35;wireframe 0.1;spacefill 0.2;color atoms blue\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:164(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>, <placeholder-4/><placeholder-5/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:183(title) 
+msgid "hbonds"
+msgstr ""
+
+#: JmolGuide.docbook.xml:183(para) 
+msgid "Hydrogen bonds can be turned on or off, colored, and given custom width in angstroms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:184(command) 
+msgid "hbonds ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:185(command) 
+msgid "hbonds [width-in-angstroms]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:186(command) 
+msgid "hbonds [width-by-Rasmol]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:187(option) 
+msgid "[width-in-angstroms]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:187(para) 
+msgid "is a (decimal, 2.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:187(option) 
+msgid "[width-by-Rasmol]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:187(para) 
+msgid "is in 1/250ths of an Angstrom (deprecated) -- (integer, 500)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:183(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"setbondstyles\"/>, <xref linkend=\"ssbonds\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:189(title) 
+msgid "hover"
+msgstr ""
+
+#: JmolGuide.docbook.xml:189(para) 
+msgid "Turns on and off pop-up labels that appear when the user \"hovers\" the mouse over the atom. If a string is given, it is used as the label. Special characters include: %a (atom name), %b (protein B-Factor), %c %s (protein chain and residue), %e (element symbol), %i (sequential number), %m (single letter amino acid code), %n (3-letter residue name), %r (PDB residue number), %U (same as %e %i). For a full list, see the example HTML page."
+msgstr ""
+
+#: JmolGuide.docbook.xml:190(command) 
+msgid "hover ON/OFF/string"
+msgstr ""
+
+#: JmolGuide.docbook.xml:189(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"echo\"/>, <xref linkend=\"font\"/>, <xref linkend=\"label\"/>, <xref linkend=\"sethighlights\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:193(title) 
+msgid "isosurface"
+msgstr ""
+
+#: JmolGuide.docbook.xml:193(para) 
+msgid "Jmol can generate isosurfaces from scalar field data in files of the gaussian .cube format, which contains both atom positions and scalar data. The load command reads only the atom position data from the .cube file.A separate isosurface command is used to read the scalar field data and construct the isosurface. This surface represents the points in space where scalar values cross a specified \"cutoff\" value. Inside the surface, values are greater or equal to a specified positive cutoff or less than or equal to a specified negative cutoff. The default cutoff is 0.02. Note that positive and negative surfaces are created separately. You can give them distinct names and control their display properties independently. Parameters to the isosurface command control the cutoff value and the display characteristics of the surface. By reading the same .cube file more than once with different parameters, or by reading different .cube files, you can construct different isosurfaces with different shapes and sizes. By naming these individual surfaces with unique identifiers you can control display settings and color for each of the surfaces independently.The isosurface command is similar to the pmesh command in terms of options. The isosurface command takes the overall format:isosurface surfaceID cutoff [option] \"filename.cube\"(The filename must be in double quotes, but the extension '.cube' is not necessary.) The .cube file may be gzip-compressed. isosurfaceID is any name that you want to use later to refer to this particular surface."
+msgstr ""
+
+#: JmolGuide.docbook.xml:194(command) 
+msgid "isosurface isosurfaceID{default: all isosurfaces}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:195(para) 
+msgid "Selects a specific isosurface (or all isosurfaces) for subsequent color commands."
+msgstr ""
+
+#: JmolGuide.docbook.xml:196(command) 
+msgid "isosurface isosurfaceID{default: all} ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:197(para) 
+msgid "Turn on/off the specified isosurface."
+msgstr ""
+
+#: JmolGuide.docbook.xml:198(command) 
+msgid "isosurface isosurfaceID{default: all} DELETE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:199(para) 
+msgid "Delete the specified isosurface."
+msgstr ""
+
+#: JmolGuide.docbook.xml:200(command) 
+msgid "isosurface isosurfaceID(optional) xyz.cub.gz"
+msgstr ""
+
+#: JmolGuide.docbook.xml:201(para) 
+msgid "Loads isosurface file \"xyz.cub.gz\", optionally assigned id isosurfaceID."
+msgstr ""
+
+#: JmolGuide.docbook.xml:202(command) 
+msgid "isosurface isosurfaceID{default: all} DOTS or NODOTS{default: NODOTS} xyz.cub.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:203(para) 
+msgid "Controls whether or not dots are shown at the isosurface points."
+msgstr ""
+
+#: JmolGuide.docbook.xml:204(command) 
+msgid "isosurface isosurfaceID{default: all} FILL or NOFILL{default: FILL} xyz.cub.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:205(para) 
+msgid "Controls whether the isosurface appears solid (the default)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:206(command) 
+msgid "isosurface isosurfaceID{default: all} MESH or NOMESH{default: NOMESH} xyz.cub.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:207(para) 
+msgid "Controls whether lines between the isosurface points are drawn, given the appearance of a mesh."
+msgstr ""
+
+#: JmolGuide.docbook.xml:208(programlisting) 
+#, no-wrap
+msgid "isosurface pos05 0.05 \"examples/ethene-HOMO.cub.gz\";isosurface neg05 -0.05 \"examples/ethene-HOMO.cub.gz\";\n# now load some other surface further out;isosurface pos01 0.01 \"examples/ethene-HOMO.cub.gz\";isosurface neg01 -0.01 \"examples/ethene-HOMO.cub.gz\";color isosurface translucent; # make neg01 translucent\nisosurface pos01 nofill mesh; # make pos01 a mesh;color isosurface translucent; # make the pos01 mesh translucent, too\nisosurface neg01 dots; # make neg01 show dots, too\nisosurface neg01 nofill; # only dots\nisosurface nodots nomesh fill; #everybody is back to a solid ...;color isosurface opaque; # ... and opaque\nisosurface neg01; #select neg01;color isosurface green;\nisosurface pos01;color isosurface violet;\nslab on; slab 50; # slab in order to see the inside\nslab off; # all done!\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:220(title) 
+msgid "label or labels"
+msgstr ""
+
+#: JmolGuide.docbook.xml:220(para) 
+msgid "Turns on and off atom labels based on a previous selection. If a string is given, it is used as the label. Special characters include: %a (atom name), %b (protein B-Factor), %c %s (protein chain and residue), %e (element symbol), %i (sequential number), %m (single letter amino acid code), %n (3-letter residue name), %r (PDB residue number), %U (same as %e %i). For a full list, see the example HTML page."
+msgstr ""
+
+#: JmolGuide.docbook.xml:221(command) 
+msgid "label ON/OFF/string"
+msgstr ""
+
+#: JmolGuide.docbook.xml:222(programlisting) 
+#, no-wrap
+msgid "select nitrogen\nlabel %a: %x %y %z\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:220(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"echo\"/>, <xref linkend=\"font\"/>, <xref linkend=\"hover\"/>, <xref linkend=\"sethighlights\"/>, <placeholder-4/><placeholder-5/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:226(title) 
+msgid "load"
+msgstr ""
+
+#: JmolGuide.docbook.xml:226(para) 
+msgid "Loads the specified file or URL."
+msgstr ""
+
+#: JmolGuide.docbook.xml:227(command) 
+msgid "load [file name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:228(para) 
+msgid "Jmol automatically determines file type based upon the contents of the file."
+msgstr ""
+
+#: JmolGuide.docbook.xml:229(command) 
+msgid "load [param-ignored] [file name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:230(para) 
+msgid "The format parameter is ignored. This form is allowed for backward compatibility with RasMol/Chime."
+msgstr ""
+
+#: JmolGuide.docbook.xml:231(option) 
+msgid "[file name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:231(para) 
+msgid "is a model filename or URL -- (string)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:231(option) 
+msgid "[param-ignored]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:231(para) 
+msgid "is for Rasmol/chime compatibility; ignored -- (string)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:226(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"zap\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:233(title) 
+msgid "loop"
+msgstr ""
+
+#: JmolGuide.docbook.xml:233(para) 
+msgid "Causes the script to restart at the beginning, with an optional time delay."
+msgstr ""
+
+#: JmolGuide.docbook.xml:234(command) 
+msgid "loop [time-delay]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:235(command) 
+msgid "loop on"
+msgstr ""
+
+#: JmolGuide.docbook.xml:236(programlisting) 
+#, no-wrap
+msgid "color bonds red\ndelay 3\ncolor bonds green\nloop 1\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:233(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:242(title) 
+msgid "measure or monitor"
+msgstr ""
+
+#: JmolGuide.docbook.xml:242(para) 
+msgid "Renders a measurement between the specified atoms. See also set measurement."
+msgstr ""
+
+#: JmolGuide.docbook.xml:243(command) 
+msgid "measure ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:244(para) 
+msgid "Turns on and off the distance, angle, dihedral measurement labels while leaving the measurement line itself present."
+msgstr ""
+
+#: JmolGuide.docbook.xml:245(command) 
+msgid "measure [atom-number] [atom-number]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:246(para) 
+msgid "Two atoms specify a distance measurement."
+msgstr ""
+
+#: JmolGuide.docbook.xml:247(command) 
+msgid "measure [atom-number] [atom-number] [atom-number]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:248(para) 
+msgid "Three atoms specify an angle measurement."
+msgstr ""
+
+#: JmolGuide.docbook.xml:249(command) 
+msgid "measure [atom-number] [atom-number] [atom-number] [atom-number]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:250(para) 
+msgid "Four atoms specify a dihedral angle measurement."
+msgstr ""
+
+#: JmolGuide.docbook.xml:251(option) 
+msgid "[atom-number]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:251(para) 
+msgid "is the sequential number assigned to the atom -- (integer, &gt;=1)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:242(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:253(title) 
+msgid "meshribbon"
+msgstr ""
+
+#: JmolGuide.docbook.xml:253(para) 
+msgid "A mesh ribbon is similar to a strand, but is more the quality of a loosely woven fabric."
+msgstr ""
+
+#: JmolGuide.docbook.xml:254(command) 
+msgid "meshribbon ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:255(command) 
+msgid "meshribbon [mesh-ribbon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:256(option) 
+msgid "[mesh-ribbon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:256(para) 
+msgid "is the overall radius of the mesh ribbon -- (decimal, =4.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:253(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:258(title) 
+msgid "model"
+msgstr ""
+
+#: JmolGuide.docbook.xml:258(para) 
+msgid "Sets the current model (1 being the first). (Same as the frame command.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:259(command) 
+msgid "model (integer &gt;= 1)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:260(para) 
+msgid "Display a specific model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:261(command) 
+msgid "model 0"
+msgstr ""
+
+#: JmolGuide.docbook.xml:262(para) 
+msgid "Overlay all models."
+msgstr ""
+
+#: JmolGuide.docbook.xml:263(command) 
+msgid "model NEXT"
+msgstr ""
+
+#: JmolGuide.docbook.xml:264(para) 
+msgid "Display the next model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:265(command) 
+msgid "model -1"
+msgstr ""
+
+#: JmolGuide.docbook.xml:266(para) 
+msgid "Display the previous model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:258(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>, <placeholder-4/><placeholder-5/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:277(title) 
+msgid "move"
+msgstr ""
+
+#: JmolGuide.docbook.xml:277(para) 
+msgid "The move command provides powerful animation capabilities. It allows you to specify rotations, zooming, and translations to be performed in a specified period of time. xRot, yRot, and zRot are rotations about the cartesian axes in degrees. Zoom specifies a zoom factor (there is a good chance this is not currently implemented properly) xTrans, yTrans, and zTrans are translations in the range -100 to 100. If you do not know what slab is, just put in a zero. see the slab command for more information."
+msgstr ""
+
+#: JmolGuide.docbook.xml:278(command) 
+msgid "move [x-rotation] [y-rotation] [z-rotation] [zoom-factor] [x-translation] [y-translation] [z-translation] [slab-cutoff] [seconds-total] [move-frames-per-second]{default: 30} [maximum-acceleration]{default: 5}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[x-rotation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the degrees of rotation about x -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[y-rotation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the degrees of rotation about y -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[z-rotation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the degrees of rotation about z -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[zoom-factor]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is a scaling factor -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[x-translation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the distance offset along x -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[y-translation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the distance offset along y -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[z-translation]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the distance offset along z -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[slab-cutoff]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the cutoff for the slab display -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[seconds-total]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the amount of time to wait -- (decimal)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[move-frames-per-second]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the frames per second to move -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(option) 
+msgid "[maximum-acceleration]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:279(para) 
+msgid "is the maximum acceleration -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:277(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:281(title) 
+msgid "moveto"
+msgstr ""
+
+#: JmolGuide.docbook.xml:281(para) 
+msgid "The moveto command rotates the molecule to a predefined orientation. The first parameter specifies the number of seconds during which the molecule should rotate smoothly from the current orientation to the new orientation. A 0 for this first parameter specifies an instantaneous reorientation. The next three parameters (x, y, and z) define the axis relative to the default orientation about which the molecule should be rotated. The fifth parameter defines the counterclockwise (right-hand) rotation in degrees about this axis. \"moveto 0 0 0 0 0\" rotates the model to the default orientation (equivalent to \"reset\"). If the fifth parameter is 0 but any one of x, y, or z is nonzero, then no reorientation occurs (because the axis has been specified, but the rotation is 0 degrees). In conjunction with \"show orientation\" this command allows reading and restoring specific user-specified orientations."
+msgstr ""
+
+#: JmolGuide.docbook.xml:282(command) 
+msgid "moveto [time-in-seconds] [coord-value] [coord-value] [coord-value] [cw-rotation-deg]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(option) 
+msgid "[time-in-seconds]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(para) 
+msgid "is in (seconds)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(option) 
+msgid "[coord-value]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(para) JmolGuide.docbook.xml:283(para) JmolGuide.docbook.xml:479(para) 
+msgid "is a (decimal)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(option) 
+msgid "[cw-rotation-deg]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:283(programlisting) 
+#, no-wrap
+msgid "moveto 0 1 0 0 -90; #view from top\nmoveto 0 0 1 0 90; #view from right\nmoveto 0 0 1 0 -90; #view from left\nmoveto 2 1 0 0 90; #view from bottom with smooth 2-second transition\nmoveto 0 0 0 0 0; #default view with instantaneous transition\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:281(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:290(title) 
+msgid "pmesh"
+msgstr ""
+
+#: JmolGuide.docbook.xml:290(para) 
+msgid "With the pmesh command you can add one or more surfaces to a model. The pmesh command is similar to the isosurface command in terms of options. The pmesh command takes the overall format:pmesh meshID [option] \"filename.pmesh\"(The filename must be in double quotes, but the extension '.pmesh' is not necessary.) The .pmesh file may be gzip-compressed. meshID is any name that you want to use later to refer to the mesh. The command also sets the 'current' mesh.Note: meshes are not currently model-specific and are limited to triangles and quadrilaterals.Format of the pmesh files required by Jmol:The format of a pmesh file is relatively simple (example file):"
+msgstr ""
+
+#: JmolGuide.docbook.xml:292(command) 
+msgid "pmesh pmeshID{default: all pmeshes}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:293(para) 
+msgid "Selects a specific pmesh (or all pmeshes) for subsequent color commands."
+msgstr ""
+
+#: JmolGuide.docbook.xml:294(command) 
+msgid "pmesh pmeshID{default: all pmeshes} ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:295(para) 
+msgid "Turn on/off the specified mesh."
+msgstr ""
+
+#: JmolGuide.docbook.xml:296(command) 
+msgid "pmesh pmeshID{default: all pmeshes} DELETE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:297(para) 
+msgid "Delete the specified mesh."
+msgstr ""
+
+#: JmolGuide.docbook.xml:298(command) 
+msgid "pmesh pmeshID(optional) xyz.pmesh.gz"
+msgstr ""
+
+#: JmolGuide.docbook.xml:299(para) 
+msgid "Loads pmesh file \"xyz.pmesh.gz\", optionally assigned id pmeshID."
+msgstr ""
+
+#: JmolGuide.docbook.xml:300(command) 
+msgid "pmesh pmeshID{default: all pmeshes} DOTS or NODOTS{default: NODOTS} xyz.pmesh.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:301(para) 
+msgid "Controls whether or not dots are shown at the polygon vertices."
+msgstr ""
+
+#: JmolGuide.docbook.xml:302(command) 
+msgid "pmesh pmeshID{default: all pmeshes} FILL or NOFILL{default: FILL} xyz.pmesh.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:303(para) 
+msgid "Controls whether the polygons are filled (the default)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:304(command) 
+msgid "pmesh pmeshID{default: all pmeshes} MESH or NOMESH{default: NOMESH} xyz.pmesh.gz{default: current}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:305(para) 
+msgid "Controls whether the edges of the polygons are drawn."
+msgstr ""
+
+#: JmolGuide.docbook.xml:307(programlisting) 
+#, no-wrap
+msgid "pmesh myPlane \"examples/10x10pmesh.txt\"\n# load a pmesh with ID myPlane\ncolor pmesh translucent yellow\n# make it translucent yellow\npmesh myWave \"examples/wave.pmesh\"\n# load another pmesh, with ID myWave\npmesh dots\n# turn on dots on all loaded pmeshes\npmesh myWave\n# select pmesh myWave\ncolor pmesh white\n# color it white\npmesh myPlane mesh\n# only display the mesh for myPlane\npmesh myPlane nodots\n# no dots for myPlane\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:326(title) JmolGuide.docbook.xml:328(command) 
+msgid "polyhedra"
+msgstr ""
+
+#: JmolGuide.docbook.xml:326(para) 
+msgid "Jmol supports polyhedral representation of molecular structures. Jmol will form tetrahedrons and octahedrons.Basis. Potential polyhedra centers are defined by the currently selected set of atoms. From this set of centers, polyhedra can be formed based upon bonds (polyhedra BONDS) or upon distance (polyhedra 2.0). If you construct them based on distance, then you may specify an optional set of atoms to be considered as vertices. This set of valid vertex atoms is in the form of a standard Jmol atom expression (such as hydrogen or atomno12 and not nitrogen) and must be specified in parentheses as shown in the examples given below.Valid Polyhedra. The following three rules govern the formation of polyhedra:"
+msgstr ""
+
+#: JmolGuide.docbook.xml:329(para) 
+msgid "Sets the current polyhedra to be \"all\" for subsequent use by the 'color polyhedra' command."
+msgstr ""
+
+#: JmolGuide.docbook.xml:330(command) 
+msgid "polyhedra ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:331(para) 
+msgid "Show or hide polyhedra whose central atom is selected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:332(command) 
+msgid "polyhedra DELETE"
+msgstr ""
+
+#: JmolGuide.docbook.xml:333(para) 
+msgid "Delete the polyhedra associated with central atoms that are selected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:334(command) 
+msgid "polyhedra BONDS"
+msgstr ""
+
+#: JmolGuide.docbook.xml:335(para) 
+msgid "Constructs polyhedra based upon bonding information. Selected atoms are search for centers that have exactly 4 or 6 bonds with the vertex atoms in a conforming orientation."
+msgstr ""
+
+#: JmolGuide.docbook.xml:336(command) 
+msgid "polyhedra [maximum-distance-in-angstroms]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:337(para) 
+msgid "Constructs polyhedra based upon distance. Centers must contain exactly 4 or 6 atoms within the specified radius, in Angstroms (a decimal number)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:338(command) 
+msgid "polyhedra [maximum-distance-in-angstroms] [atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:339(para) 
+msgid "Constructs polyhedra based upon distance with control over which atoms are considered as vertices. Centers must contain exactly 4 or 6 atoms within the specified atom expression that are also within the specified radius in angstroms. Note that the atom expression must be specified in parentheses."
+msgstr ""
+
+#: JmolGuide.docbook.xml:340(command) 
+msgid "polyhedra EDGES"
+msgstr ""
+
+#: JmolGuide.docbook.xml:341(para) 
+msgid "Highlight the edges of the polyhedra whose central atom is in the currently selected set."
+msgstr ""
+
+#: JmolGuide.docbook.xml:342(command) 
+msgid "polyhedra FRONTEDGES"
+msgstr ""
+
+#: JmolGuide.docbook.xml:343(para) 
+msgid "Highlight only the front edges of the polyhedra whose central atom is in the currently selected set.(Useful when color is translucent.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:344(command) 
+msgid "polyhedra NOEDGES"
+msgstr ""
+
+#: JmolGuide.docbook.xml:345(para) 
+msgid "Turn off edge highlighting."
+msgstr ""
+
+#: JmolGuide.docbook.xml:348(programlisting) 
+#, no-wrap
+msgid "select *;polyhedra bonds; color polyhedra grey\nselect atomno=19; polyhedra 3.0 (hydrogen);color polyhedra yellow\nselect *;polyhedra 2.0 #all three\nselect *;polyhedra 2.0 (not within (1.1225, carbon)) #note how this disallows one of the three\nselect *;color polyhedra translucent; # now we can see the carbons inside\nselect *; polyhedra edges; # hilite the edges\ncolor polyhedra translucent orange;\nselect *;polyhedra off\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:359(title) 
+msgid "quit"
+msgstr ""
+
+#: JmolGuide.docbook.xml:359(para) 
+msgid "In the current release of Jmol, quit is synonymous with exit. This is inconsistent with RasMol, where quit means to exit the program."
+msgstr ""
+
+#: JmolGuide.docbook.xml:359(section) 
+msgid "<placeholder-1/><placeholder-2/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"script\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:362(title) 
+msgid "refresh"
+msgstr ""
+
+#: JmolGuide.docbook.xml:362(para) 
+msgid "Forces a screen repaint during script execution. (Unnecessary, and thus deprecated.)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:362(section) 
+msgid "<placeholder-1/><placeholder-2/>See also: <xref linkend=\"reset\"/>, <xref linkend=\"rotate\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:365(title) 
+msgid "reset"
+msgstr ""
+
+#: JmolGuide.docbook.xml:365(para) 
+msgid "Resets molecule to its original position: zoom 100; center; translate x 0; translate y 0;"
+msgstr ""
+
+#: JmolGuide.docbook.xml:365(section) 
+msgid "<placeholder-1/><placeholder-2/>See also: <xref linkend=\"refresh\"/>, <xref linkend=\"rotate\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:368(title) 
+msgid "restrict"
+msgstr ""
+
+#: JmolGuide.docbook.xml:368(para) 
+msgid "Selects the atoms identified by the atom expression and hides all atoms and bonds which are outside the selection set. NOTE: This command cannot be reversed without reloading the model!"
+msgstr ""
+
+#: JmolGuide.docbook.xml:369(command) 
+msgid "restrict {default: ALL}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:370(para) 
+msgid "Restricts to all atoms;possibly not H atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:371(command) 
+msgid "restrict [atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:372(para) 
+msgid "Restricts atoms based on an atom expression."
+msgstr ""
+
+#: JmolGuide.docbook.xml:373(programlisting) 
+#, no-wrap
+msgid "restrict protein\nrestrict solvent\nrestrict within(3.0,[FS4]102)\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:368(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:378(title) 
+msgid "ribbon or ribbons"
+msgstr ""
+
+#: JmolGuide.docbook.xml:378(para) 
+msgid "Ribbons offer a representation the protein backbone or nucleic acid helix using a flat band that smoothly traces the midpoints of adjacent alpha carbon atoms (or phosphorus atoms in nucleotide chains). The ribbon is perpendicular to the peptide plane."
+msgstr ""
+
+#: JmolGuide.docbook.xml:379(command) 
+msgid "ribbon ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:380(command) 
+msgid "ribbon [ribbon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:381(para) 
+msgid "Normally, ribbons vary in width according to the amino acid atom positions. This command sets the width of the ribbon to be a connstant value (a decimal, in Angstroms)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:382(option) 
+msgid "[ribbon-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:382(para) 
+msgid "is half of the overall width of the ribbon -- (decimal, =4.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:378(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:384(title) 
+msgid "rocket or rockets"
+msgstr ""
+
+#: JmolGuide.docbook.xml:384(para) 
+msgid "Creates a \"rocket\" cartoon."
+msgstr ""
+
+#: JmolGuide.docbook.xml:385(command) 
+msgid "rocket ON/OFF{default: ON}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:386(command) 
+msgid "rocket [rocket-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:387(option) 
+msgid "[rocket-radius]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:387(para) 
+msgid "is half of the overall width of the rocket barrel -- (decimal, =4.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:384(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:389(title) 
+msgid "rotate"
+msgstr ""
+
+#: JmolGuide.docbook.xml:389(para) 
+msgid "Rotates the model the specified angle about the specified axis. Integer values specify degrees."
+msgstr ""
+
+#: JmolGuide.docbook.xml:390(command) 
+msgid "rotate X/Y/Z [number-of-degrees]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:391(option) 
+msgid "[number-of-degrees]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:391(para) 
+msgid "is the number of degrees -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:389(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"refresh\"/>, <xref linkend=\"reset\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:393(title) 
+msgid "script or source"
+msgstr ""
+
+#: JmolGuide.docbook.xml:393(para) 
+msgid "Loads and executes the specified script file/url. The hash/pound/sharp character (#) character marks a comment to the end of the line. The semicolon character (;) separates multiple statements on the same line. A script file may load another script file, up to 10 deep."
+msgstr ""
+
+#: JmolGuide.docbook.xml:394(command) 
+msgid "script [file-name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:395(option) 
+msgid "[file-name]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:395(para) 
+msgid "is any valid filename or URL -- (string)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:393(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"animation\"/>, <xref linkend=\"delay\"/>, <xref linkend=\"exit\"/>, <xref linkend=\"frame\"/>, <xref linkend=\"loop\"/>, <xref linkend=\"model\"/>, <xref linkend=\"move\"/>, <xref linkend=\"moveto\"/>, <xref linkend=\"quit\"/>, <xref linkend=\"setspin\"/>, <xref linkend=\"show\"/>, <xref linkend=\"spin\"/>, <xref linkend=\"translate\"/>, <xref linkend=\"zoom\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:397(title) 
+msgid "select"
+msgstr ""
+
+#: JmolGuide.docbook.xml:397(para) 
+msgid "Selects the atoms identified by the expression. If no expression is given then all atoms are selected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:398(command) 
+msgid "select {default: ALL}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:399(para) 
+msgid "Selects all atoms (possibly not H atoms)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:400(command) 
+msgid "select [atom-expression]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:401(para) 
+msgid "Selects atoms based on an atom expression. To select atoms specific to a specific model when more than one model is present, use \"/n\" where \"n\" is the model number. For example, to select all atoms of model 3, use select */3."
+msgstr ""
+
+#: JmolGuide.docbook.xml:402(programlisting) 
+#, no-wrap
+msgid "select carbon;color white\nselect protein;ribbons on\nselect *:D;color blue\nselect [HIS]:D;spacefill 300\nselect [HIS]92:D.N;spacefill 600\nselect [HIS]92:D.C?;color orange\nselect [HIS]92.N;color [255,196,196]\nselect elemno7;spacefill 200\nselect within(group, within(10.0, :a));color green;select :a;color red\nselect within(chain, [HIS]92);color white;\nselect within(chain, within(3.0,[HIS]92:D));color purple;\nselect within(chain,within(5.0,[HIS]92));color white # this last a bug?\n"
+msgstr ""
+
+#: JmolGuide.docbook.xml:397(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>, <placeholder-5/><placeholder-6/>"
+msgstr ""
+
+#: JmolGuide.docbook.xml:416(title) 
+msgid "set (bond styles)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:416(para) 
+msgid "This group of commands sets the appearance of various optional bond effects for the model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:417(command) 
+msgid "set bonds ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:418(para) 
+msgid "In some file formats (.mol files, for example) the connection data may indicate the bond type--single, double, triple, or quadruple. The set bonds command determines whether or not multiple bonds are displayed. Use set bonds OFF when you want all bonds to appear as single bonds."
+msgstr ""
+
+#: JmolGuide.docbook.xml:419(command) 
+msgid "set bondmode AND"
+msgstr ""
+
+#: JmolGuide.docbook.xml:420(para) 
+msgid "When script commands affect a set of atoms, BOTH atoms must be in the set for the bonds between them to also be affected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:421(command) 
+msgid "set bondmode OR"
+msgstr ""
+
+#: JmolGuide.docbook.xml:422(para) 
+msgid "When script commands affect a set of atoms, EITHER atom may be in the set for the bonds also to be affected."
+msgstr ""
+
+#: JmolGuide.docbook.xml:423(command) 
+msgid "set hbonds BACKBONE or SIDECHAIN"
+msgstr ""
+
+#: JmolGuide.docbook.xml:424(para) 
+msgid "Hydrogen bonds between protein amino acid residues or nucleic acid base pairs are displayed as lines. These lines can be displayed whether or not the H atoms are present in the file, and can be drawn either between the two non-hydrogen atoms involved in the bond (O or N, typically, the default) or, alternatively, between the two backbone alpha-carbon atoms, depending upon the desired effect."
+msgstr ""
+
+#: JmolGuide.docbook.xml:425(command) 
+msgid "set ssbonds BACKBONE or SIDECHAIN"
+msgstr ""
+
+#: JmolGuide.docbook.xml:426(para) 
+msgid "Sulfur-sulfur bonds in cysteine bridges of proteins are displayed as lines. These lines can either be between the two sidechain sulfur atoms (the default) or between the two backbone alpha-carbon atoms, depending upon the desired effect."
+msgstr ""
+
+#: JmolGuide.docbook.xml:416(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"hbonds\"/>, <xref linkend=\"ssbonds\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:429(title) 
+msgid "set (default color scheme)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:429(para) 
+msgid "Sets the default color scheme to be the traditional Rasmol/Chime scheme or the newer, more subtle, Jmol scheme. This command does not actually change the display for an object unless that object is currently being displayed using the default color scheme. See the Jmol Colors page for default color scheme details."
+msgstr ""
+
+#: JmolGuide.docbook.xml:430(command) 
+msgid "set defaultColors JMOL"
+msgstr ""
+
+#: JmolGuide.docbook.xml:431(command) 
+msgid "set defaultColors RASMOL"
+msgstr ""
+
+#: JmolGuide.docbook.xml:429(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/>See also: <xref linkend=\"background\"/>, <xref linkend=\"color\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"colormodelobject\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:434(title) 
+msgid "set (highlights)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:434(para) 
+msgid "This command group allows for annotation and highlighting of atoms in terms of labels and \"halos.\""
+msgstr ""
+
+#: JmolGuide.docbook.xml:435(command) 
+msgid "set display SELECTED"
+msgstr ""
+
+#: JmolGuide.docbook.xml:436(para) 
+msgid "Sets the option ON to dispay a \"halo\" around atoms when they are or become selected as a way of highlighting specific atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:437(command) 
+msgid "set display NORMAL"
+msgstr ""
+
+#: JmolGuide.docbook.xml:438(para) 
+msgid "Turns off selection halos"
+msgstr ""
+
+#: JmolGuide.docbook.xml:439(command) 
+msgid "set echo [vertical-position] [horizontal-position]{default: center for top and middle; left for bottom}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:440(para) 
+msgid "Selects which of the three possible echo positions (top, middle, or bottom) will be written to by the next \"echo\" command and, optionally, sets the horizontal position of that text to left, center, or right."
+msgstr ""
+
+#: JmolGuide.docbook.xml:441(command) 
+msgid "set echo OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:442(para) 
+msgid "Turns off all three echo texts."
+msgstr ""
+
+#: JmolGuide.docbook.xml:443(command) 
+msgid "set fontsize [font-size]{default: 8}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:444(para) 
+msgid "Sets the font size for atom labels."
+msgstr ""
+
+#: JmolGuide.docbook.xml:445(command) 
+msgid "set frank ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:446(para) 
+msgid "Determines whether or not \"Jmol\" is indicated in the bottom right corner of the window."
+msgstr ""
+
+#: JmolGuide.docbook.xml:447(command) 
+msgid "set labeloffset [x-offset] [y-offset]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:448(para) 
+msgid "Sets the label offset relative to the atom being labeled."
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(option) 
+msgid "[vertical-position]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(para) 
+msgid "is one of the following: -- TOP, MIDDLE, BOTTOM"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(option) 
+msgid "[horizontal-position]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(para) 
+msgid "is one of the following: -- LEFT, CENTER, RIGHT"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(option) 
+msgid "[x-offset]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(para) 
+msgid "is the x-offset -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(option) 
+msgid "[y-offset]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:449(para) 
+msgid "is the y-offset -- (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:434(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"echo\"/>, <xref linkend=\"font\"/>, <xref linkend=\"hover\"/>, <xref linkend=\"label\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:451(title) 
+msgid "set (lighting and perspective)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:451(para) 
+msgid "This commands in this group determine the overall lighting effects, size, and rotation for the model."
+msgstr ""
+
+#: JmolGuide.docbook.xml:452(command) 
+msgid "set ambient [ambient-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:453(para) 
+msgid "Sets the amount of \"ambient\" light filling the shadows created by the apparent light source. An ambient value of 0 creates an effect of a spotlight on a stage; a value of 100 removes the shadow entirely, creating a flat, nonrealistic effect."
+msgstr ""
+
+#: JmolGuide.docbook.xml:454(command) 
+msgid "set diffuse [diffuse-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:455(para) 
+msgid "Sets the amount of \"diffuse\" light apparently emanating from the spotlight, but not hitting and reflecting off the model directly. Setting the diffuse value to 0 turns this effect off; giving the effect of the model in a black-walled room where no light reflection is possible, effectively turning off all shadows."
+msgstr ""
+
+#: JmolGuide.docbook.xml:456(command) 
+msgid "set perspectivedepth ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:457(para) 
+msgid "Sets perspective depth on or off. OFF is required for proper function of absolute scale (set scale3d x)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:458(command) 
+msgid "set scale3d [viewing-distance]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:459(para) 
+msgid "Sets the absolute scale of the model by setting the viewing distance from the user to the model in arbitrary units. The actual scale will depend upon the sizes of both the applet window and the screen."
+msgstr ""
+
+#: JmolGuide.docbook.xml:460(command) 
+msgid "set specpower [specular-power]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:461(para) 
+msgid "Sets the density of dots in the specular reflection."
+msgstr ""
+
+#: JmolGuide.docbook.xml:462(command) 
+msgid "set specular [specular-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:463(para) 
+msgid "Sets the size of the apparent reflection from a light source. set specular 0 turns off this effect."
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(option) 
+msgid "[ambient-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(option) 
+msgid "[diffuse-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(option) 
+msgid "[viewing-distance]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(para) 
+msgid "is the apparent distance from the model to the user in arbitrary units -- (integer), (decimal)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(option) 
+msgid "[specular-power]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(para) 
+msgid "is an (integer)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:464(option) 
+msgid "[specular-percent]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:451(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/>See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setvisibility\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#: JmolGuide.docbook.xml:466(title) 
+msgid "set (visibility)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:466(para) 
+msgid "This command group turns on or off specific sets of atoms and axes/cell-related options."
+msgstr ""
+
+#: JmolGuide.docbook.xml:467(command) 
+msgid "set axes [line-width-or-type]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:468(para) 
+msgid "Turns on or off displayed axes, and determines their line style and line width (as a decimal number, in Angstroms)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:469(command) 
+msgid "set boundbox [line-width-or-type]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:470(para) 
+msgid "Turns on or off a wire-frame box that contains the model, and determines the line style and line width (as a decimal number, in Angstroms) of that box."
+msgstr ""
+
+#: JmolGuide.docbook.xml:471(command) 
+msgid "set disablePopupMenu ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:472(para) 
+msgid "Disables (set disablePopupMenu ON) or enables (set disablePopupMenu OFF) the pop-up menu."
+msgstr ""
+
+#: JmolGuide.docbook.xml:473(command) 
+msgid "set radius [probe-radius-in-angstroms]{default: 1.2}"
+msgstr ""
+
+#: JmolGuide.docbook.xml:474(para) 
+msgid "Sets the radius of the solvent \"ball\" that would run around the structure defining its outline. After set radius, you must (re)issue dots ON for it to take effect, and the solvent probe option for dots must be set on using set solvent ON (below)."
+msgstr ""
+
+#: JmolGuide.docbook.xml:475(command) 
+msgid "set showHydrogens ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:476(para) 
+msgid "Turns on and off display of hydrogen atoms."
+msgstr ""
+
+#: JmolGuide.docbook.xml:477(command) 
+msgid "set solvent ON/OFF"
+msgstr ""
+
+#: JmolGuide.docbook.xml:478(para) 
+msgid "Turns on and off display of solvent \"probe\" that can be displayed using dots. After set solvent ON, a subsequent dots ON"
+msgstr ""
+
+#: JmolGuide.docbook.xml:479(option) 
+msgid "[line-width-or-type]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:479(para) 
+msgid "is a line width or type for a drawing object -- ON, OFF, DOTTED, (integer, 1 to 19), (decimal, 2.0)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:479(option) 
+msgid "[probe-radius-in-angstroms]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:479(option) 
+msgid "[strand-count]"
+msgstr ""
+
+#: JmolGuide.docbook.xml:479(para) 
+msgid "is the number of strands -- (integer, 0 to 20)"
+msgstr ""
+
+#: JmolGuide.docbook.xml:40(section) 
+msgid "<placeholder-1/><placeholder-2/><placeholder-3/><placeholder-4/><placeholder-5/><placeholder-6/><placeholder-7/><placeholder-8/><placeholder-9/>color (atom object)color (bond object)color (element)color (model object) Additional information external to this documentation can be found in relation to [Jmol color schemes] and [standard JavaScript color names and codes]. In addition, a page is in construction that lays out the [Jmol color command matrix]. In general, the color command takes the following syntax:color [object] [option]The first parameter of the color command specifies the object of that command. If no object is given, then 'color atom' is assumed, and the currently selected atoms are colored. Following that can be a rather wide variety of one- or two-word options, described below and dependent upon the kind of object being colored. Translucent/Opaque Options. The color command allows an optional color modifier of 'translucent' or 'opaque', which can be used with any object. For example: color atoms translucent orange color ribbons translucent [255, 165, 0]Setting a color sets the translucency to 'opaque' by default. Thus, 'color atoms red' and 'color atoms opaque red' are synonymous. Translucent and opaque can also be used alone with an object, even without specifying a color:color mysetofatoms translucent In that case, however, the result is complicated by color inheritance, discussed next. Color Inheritance. Many objects inherit both color and opacity from the underlying associated atom (which, themselves \"inherit\" their color by default from their associated chemical element). For example, by default a bond will inherit the two colors+translucencies of its endpoint atoms. If you simply 'color atoms translucent', then both the atoms and the bonds will be translucent. But if you 'color bonds opaque' or 'color bonds red' and also 'color atoms translucent' only the atoms will be translucent. The level of 'translucent' cannot be controlled; it is set at 50%. Note that the implementation of 'translucent' is not as an alpha channel. Rather, translucent objects are \"screened\" so that every other pixel is painted. If you put an opaque object behind a translucent object, then you will see the object in the back.But if you put a translucent object behind another translucent object, then you will not see the translucent object in the back. See also: <xref linkend=\"background\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colorelement\"/>, <xref linkend=\"colormodelobject\"/>, <xref linkend=\"setdefaultcolorscheme\"/>, <placeholder-10/><placeholder-11/><placeholder-12/>Custom element colors are independent of and are not affected by the currently selected set of atoms.To reset custom element colors, use 'set defaultColors Jmol' or 'set defaultColors Rasmol'.'translucent' or 'opaque' cannot be specified as part of the element color specification. (You cannot 'color carbon transparent green', for instance.)At this time only elements can be custom colored. There is no support for customizing other color palettes such as those used for protein chains or groups. <placeholder-13/><placeholder-14/> See also: <xref linkend=\"background\"/>, <xref linkend=\"color\"/>, <xref linkend=\"coloratomobject\"/>, <xref linkend=\"colorbondobject\"/>, <xref linkend=\"colormodelobject\"/>, <xref linkend=\"setdefaultcolorscheme\"/>, <placeholder-15/><placeholder-16/># Anything following '#' up until the end of a statement is ignored by Jmol with the following two exceptions. (A statement is terminated by a semicolon \";\" or a newline.)#jxCommands prefixed with #jx will be executed by Jmol#jc If the string '#jc' appears anywhere within a statement, then that entire statement will be assumed to be a comment and will be completely ignored by the Jmol interpreter. <placeholder-17/><placeholder-18/> Similar comment controls exist in Chime. Commands prefixed with #! will be executed in Chime but not in RasMol. Commands containing ## will be ignored by Chime, but the portion preceding the ## will be executed in RasMol. Thus we have: # not read by Jmol, Chime, or Rasmol#jx [commands here] Jmol excecution only#! [commands here] Chime execution only[commands here] ## #jc Rasmol execution only[commands here] #jc Chime and Rasmol only [commands here] ## Jmol and Rasmol only <placeholder-19/><placeholder-20/><placeholder-21/><placeholder-22/><placeholder-23/><placeholder-24/><placeholder-25/><placeholder-26/><placeholder-27/><placeholder-28/><placeholder-29/><placeholder-30/><placeholder-31/><placeholder-32/><placeholder-33/><placeholder-34/><placeholder-35/><placeholder-36/><placeholder-37/><placeholder-38/>100 3.0000 3.0000 1.0000 2.3333 3.0000 1.0000 ...(98 more like this) 81 5 0 10 11 1 0 ...(80 more sets like this) The first line defines the number of grid points defining the surface (integer, n)The next n lines define the Cartesian coordinates of each of the grid points (n lines of x, y, z floating point data points)The next line specifies the number of polygons, m, to be drawn (81 in this case).The next m sets of numbers, one number per line, define the polygons. In each set, the first number, p, specifies the number of points in each set. Currently this number must be either 4 (for triangles) or 5 (for quadrilaterals). The next p numbers specify indexes into the list of data points (starting with 0). The first and last of these numbers must be identical in order to \"close\" the polygon. <placeholder-39/><placeholder-40/><placeholder-41/><placeholder-42/>If a center has exactly 4 vertices and the center is inside the 4 planes defined by the vertices when taken as triples, then a tetrahedron is constructed.If a center has exactly 6 vertices and the center is inside the 8 planes defined by the triples that define the convex surface, then an octagon is constructed.In any other situation, no polyhedron is constructed.Options. Once the polyhedra are constructed, other options apply based upon whether or not the central atom is selected. The command has a large number of options and is somewhat complicated. See the discussion below in the context of each specific parameter option.Note: Polyhedra probably do not interact well with multiple models. <placeholder-43/><placeholder-44/><placeholder-45/><placeholder-46/><placeholder-47/><placeholder-48/><placeholder-49/><placeholder-50/><placeholder-51/><placeholder-52/><placeholder-53/><placeholder-54/><placeholder-55/><placeholder-56/><placeholder-57/><placeholder-58/><placeholder-59/><placeholder-60/><placeholder-61/> See also: <xref linkend=\"backbone\"/>, <xref linkend=\"background\"/>, <xref linkend=\"cartoon\"/>, <xref linkend=\"center\"/>, <xref linkend=\"dots\"/>, <xref linkend=\"measure\"/>, <xref linkend=\"meshribbon\"/>, <xref linkend=\"restrict\"/>, <xref linkend=\"ribbon\"/>, <xref linkend=\"rocket\"/>, <xref linkend=\"select\"/>, <xref linkend=\"sethighlights\"/>, <xref linkend=\"setlightingandperspective\"/>, <xref linkend=\"spacefill\"/>, <xref linkend=\"strands\"/>, <xref linkend=\"trace\"/>, <xref linkend=\"vector\"/>, <xref linkend=\"wireframe\"/>,"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: JmolGuide.docbook.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

@@ -1,0 +1,6 @@
+application/x-jmol
+	description=Jmol script file
+	description[de]=Jmol Skript
+	short_list_application_ids_for_novice_user_level=jmol
+	short_list_application_ids_for_intermediate_user_level=jmol
+	short_list_application_ids_for_advanced_user_level=jmol

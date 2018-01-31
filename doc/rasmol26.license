@@ -1,0 +1,56 @@
+The source code for versions of RasMol up through 2.6 is in the public domain. See:
+http://www.umass.edu/microbio/rasmol/faq_ras.htm#pubdom
+
+http://www.umass.edu/microbio/rasmol/srccode.htm
+
+In addition, the Jmol project has explicit permission from Roger A Sayle to make use
+of RasMol source code up through 2.6.*
+
+The OpenRasMol project http://www.openrasmol.org, starts with 2.7.* annd has different
+licensing restrictions that are not currently compatible with Gnu licensing terms. 
+
+(Per email communication with Herbert Bernstein)
+
+Miguel Howard
+2003 12 03
+
+-------- Original Message --------
+Subject: Re: RasMol 2.6 licensing & Jmol project
+From: Roger Sayle <roger@eyesopen.com>
+Date: Mon, December 1, 2003 5:07
+To: Miguel Howard <mth@mth.com>
+
+
+Hi Miguel,
+> However, I have taken things about as far as I can go. I am now faced
+> with a specific set of questions about algorithms (such as hbond
+> calculations and protein secondary structure recognition) where having
+> access to the RasMol source code would be very helpful.
+
+Certainly, please feel free to read, re-use, re-code, whatever, any of
+the source code contained in RasMol versions up to and including v2.6.x.
+ All of these release of RasMol were distributed as "public domain",
+i.e. free from any intellectual property rights claims
+whatsoever.  Indeed this is the legal reason why the source code
+could become part of MDL's Chime and MSI's WebLab viewer products.
+
+
+> Nevertheless, I would feel more comfortable if you gave the Jmol
+> project explicit permission to use your source code as a reference. It
+> would make things clean ... and it would just make me feel better.
+
+"You have my blessing".
+
+
+> Thank you for your time and consideration of this matter.
+
+No problem.  I hope this helps.
+
+
+Roger
+--
+Roger Sayle,                         E-mail: roger@eyesopen.com
+OpenEye Scientific Software,         WWW: http://www.eyesopen.com/ Suite
+1107, 3600 Cerrillos Road,     Tel: (+1) 505-473-7385
+Santa Fe, New Mexico, 87507.         Fax: (+1) 505-473-0833
+

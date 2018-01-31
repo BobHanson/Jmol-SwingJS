@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+
+	<mime-type type="application/x-jmol">
+		<comment>Jmol Script File</comment>
+		<comment xml:lang="de">Jmol Skript</comment>
+		<glob pattern="*.jmz" />
+	</mime-type>
+
+</mime-info>

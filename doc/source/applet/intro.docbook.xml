@@ -1,0 +1,10 @@
+<chapter id="Introduction">
+  <title>Introduction</title>
+  <para>
+    The Jmol Applet allows the 3D display of molecules within a web page.
+  </para>
+  <para>
+    With the exception of a few wrapper classes, the Jmol Applet code is
+    shared with the Jmol Application.
+  </para>
+</chapter>
