@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>JSmol-SwingJS</name>
+	<name>Jmol</name>
 	<comment></comment>
 	<projects>
 	</projects>
 	<buildSpec>
 		<buildCommand>
-			<name>org.eclipse.jdt.core.javabuilder</name>
+			<name>net.sf.j2s.core.java2scriptbuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
