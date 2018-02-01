@@ -507,7 +507,7 @@ public class MOReader extends BasisFunctionReader {
       return;
     case HEADER_GAMESS_UK_MO:
       for (int i = 0; i < nThisLine; i++)
-        mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
+        mos[i].put("energy", Float.valueOf(tokens[i]));
       readLines(5);
       return;
     case HEADER_GAMESS_ORIGINAL:
@@ -516,7 +516,7 @@ public class MOReader extends BasisFunctionReader {
       if (tokens.length == 0)
         tokens = PT.getTokens(rd());
       for (int i = 0; i < nThisLine; i++) {
-        mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
+        mos[i].put("energy", Float.valueOf(tokens[i]));
       }
       rd();
       break;

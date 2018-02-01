@@ -475,7 +475,7 @@ public class MoldenReader extends MopacSlaterReader {
       if (haveVib)
         asc.cloneLastAtomSet();
       haveVib = true;
-      asc.setAtomSetFrequency(null, null, "" + PT.dVal(frequencies.get(nFreq)), null);
+      asc.setAtomSetFrequency(null, null, "" + Double.valueOf(frequencies.get(nFreq)), null);
       int i0 = asc.getLastAtomSetAtomIndex();
       for (int i = 0; i < modelAtomCount; i++) {
         tokens = PT.getTokens(rd());
@@ -517,7 +517,7 @@ max-force
     rd(); // energy
     while (rd() != null 
         && line.indexOf("force") < 0)
-      energies.addLast("" + PT.dVal(line.trim()));
+      energies.addLast("" + Double.valueOf(line.trim()));
     skipTo("[GEOMETRIES] XYZ");
     int nGeom = energies.size();
     int firstModel = (optOnly || desiredModelNumber >= 0 ? 0 : 1);

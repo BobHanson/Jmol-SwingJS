@@ -42,6 +42,7 @@ package jspecview.app;
 import java.net.URL;
 import java.util.Map;
 
+import javajs.api.JSInterface;
 import javajs.util.Lst;
 import javajs.util.PT;
 
@@ -51,7 +52,7 @@ import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppInterface;
 import jspecview.api.JSVPanel;
 import jspecview.api.PanelListener;
-
+import jspecview.api.js.JSVAppletObject;
 import jspecview.common.JSVersion;
 import jspecview.common.Spectrum;
 import jspecview.common.JSVFileManager;
@@ -362,7 +363,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	public void repaint() {
 		
 		@SuppressWarnings("unused")
-		Object applet = (vwr == null ? null : vwr.html5Applet);
+		JSVAppletObject applet = (vwr == null ? null : vwr.html5Applet);
     /**
      * Jmol._repaint(applet,asNewThread)
      * 
@@ -478,16 +479,16 @@ public class JSVApp implements PanelListener, JSVAppInterface {
    */
   private void updateJSView(String msg) {
   	
-  	Object applet = this.vwr.html5Applet;
-  	@SuppressWarnings("unused")
+  	JSVAppletObject applet = vwr.html5Applet;
 		JSVPanel panel = (applet == null ? null : vwr.selectedPanel);
     /**
      * @j2sNative
      * 
-     * applet && applet._viewSet != null && applet._updateView(panel, msg);
+     * if (!applet || applet._viewSet == null) return;
      * 
      */
     {}
+    applet._updateView(panel, msg);
   }
 
 	/**

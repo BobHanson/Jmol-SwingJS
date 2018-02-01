@@ -69,19 +69,7 @@ public class JsDialogManager extends DialogManager {
 	public int getOptionFromDialog(Object frame, String[] items, JSVPanel jsvp,
 			String dialogName, String labelName) {
     // for export and others
-		int i = -1;
-		@SuppressWarnings("unused")
-		Object applet = this.vwr.html5Applet;
-		/**
-		 * @j2sNative
-		 * 
-		 * i = applet.getOption(items, dialogName, labelName);
-		 * 
-		 * 
-		 */
-		{
-		}
-	  return i;
+	  return vwr.html5Applet.getOption(items, dialogName, labelName);
 	}
 
 	/**

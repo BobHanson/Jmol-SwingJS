@@ -52,6 +52,7 @@ import org.jmol.util.Logger;
 
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
+import jspecview.api.js.JSVAppletObject;
 import jspecview.common.ExportType;
 import jspecview.common.Spectrum;
 import jspecview.common.JSViewer;
@@ -181,14 +182,8 @@ public class JsPanel implements JSVPanel {
 	@Override
 	public void showMessage(String msg, String title) {
 		Logger.info(msg);
-		@SuppressWarnings("unused")
-		Object applet = vwr.html5Applet;
-		/**
-		 * @j2sNative
-		 * applet._showStatus(msg, title);
-		 */
-		{
-		}
+		if (vwr.html5Applet != null)
+		  vwr.html5Applet._showStatus(msg, title);
 		getFocusNow(true);
 	}
 
@@ -340,15 +335,8 @@ public class JsPanel implements JSVPanel {
 	public void setToolTipText(String s) {
 		int x = pd.mouseX;
 		int y = pd.mouseY;
-		Object applet = vwr.html5Applet;
-		/**
-		 * @j2sNative
-		 * 
-		 * applet._showTooltip && applet._showTooltip(s, x, y);
-		 * 
-		 */
-		{}
-		
+		if (vwr.html5Applet != null)
+		    vwr.html5Applet._showTooltip(s, x, y);
 	}
 
 	@Override

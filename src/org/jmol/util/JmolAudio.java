@@ -28,6 +28,8 @@ import java.util.Map;
 import javajs.util.AU;
 
 import org.jmol.api.JmolAudioPlayer;
+import org.jmol.api.js.JSmolAppletObject;
+import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.viewer.Viewer;
 
 import javax.sound.sampled.AudioInputStream;
@@ -59,6 +61,7 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
    * @param vwr
    * @param htParams
    */
+  @SuppressWarnings({ "null", "unused" })
   public void playAudio(Viewer vwr, Map<String, Object> htParams) {
     try {
       id = (String) htParams.get("id");
@@ -71,15 +74,19 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
       params.put("audioPlayer", this);
       fileName = (String) htParams.get("audioFile");
       vwr.sm.registerAudio(id, htParams);
+      JSmolAppletObject applet = vwr.html5Applet;
+      JmolToJSmolInterface jmol = vwr.jmolObject;
       /**
        * @j2sNative
        * 
+       * jmol = Jmol;
        * 
-       *            Jmol._playAudio(vwr.html5Applet, htParams);
        */
       {
         getClip();
       }
+      if (jmol != null)
+         jmol._playAudio(applet, htParams);
       if (myClip == null)
         return;
       if (htParams.containsKey("action"))

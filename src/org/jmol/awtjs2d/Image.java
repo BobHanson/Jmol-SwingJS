@@ -111,6 +111,7 @@ class Image {
    * @param ascent 
    * @return array
    */
+  @SuppressWarnings("unused")
   public static int[] getTextPixels(String text, Font font3d, Object context, 
                                     int width, int height, int ascent) {
     /**
@@ -121,11 +122,12 @@ class Image {
      * context.fillStyle = "#FFFFFF";
      * context.font = font3d.font;
      * context.fillText(text, 0, ascent);
-     * return this.grabPixels(context, width, height);
      */
     {
-      return null;
+      if (true)
+        return null;
     }
+    return grabPixels(context, width, height);
   }
 
   /**

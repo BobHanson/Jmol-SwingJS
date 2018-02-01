@@ -21,6 +21,7 @@ import javajs.util.SB;
 import javajs.api.BytePoster;
 import javajs.api.GenericFileInterface;
 import javajs.api.GenericPlatform;
+import javajs.api.JSInterface;
 import javajs.api.PlatformViewer;
 import javajs.awt.Dimension;
 
@@ -40,6 +41,7 @@ import jspecview.api.JSVTree;
 import jspecview.api.JSVTreeNode;
 import jspecview.api.ScriptInterface;
 import jspecview.api.VisibleInterface;
+import jspecview.api.js.JSVAppletObject;
 import jspecview.common.Annotation.AType;
 import jspecview.common.Spectrum.IRMode;
 import jspecview.common.PanelData.LinkMode;
@@ -116,7 +118,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	public String appletName;
 	public String fullName;
 	public String syncID;
-	public Object html5Applet; // will be an JavaScript object if this is JavaScript
+	public JSVAppletObject html5Applet; // will be an JavaScript object if this is JavaScript
 
 	public Object display;
 	
@@ -1380,18 +1382,22 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	}
 
 	public void execLoad(String value, String script) {
-		@SuppressWarnings("unused")
-		Object applet = html5Applet;
+		JSVAppletObject applet = html5Applet;
+		boolean isID = false;
 		/**
 		 * When part of a view set, route all internal 
 		 * database requests through this.html5Applet._search.  
 		 * 
 		 * @j2sNative
 		 * 
-		 * if (applet._viewSet != null && !value.startsWith("ID"))
-		 *    return applet._search(value);
+		 * isID = (applet._viewSet != null && !value.startsWith("ID"));
 		 *    
 		 */
+		if (isID) {
+		  // note that this was not functional, as it was missing {}
+	     applet._search(value);
+	     return;
+		}
 		// load   (alone) just runs defaultLoadScript
 		// load ID "xx"...
 		Lst<String> tokens = ScriptToken.getTokens(value);
@@ -1742,7 +1748,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 			selectedPanel.processTwoPointGesture(touches);
 	}
 
-	public Object getApplet() {
+	public JSVAppletObject getApplet() {
 		return html5Applet;
 	}
 
@@ -2048,18 +2054,17 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 				case APPLETID:
 					fullName = appletName + "__" 
 				      + (appletName = value) + "__";
-					Object applet = null;
+					JSVAppletObject applet = null;
 					/**
 					 * @j2sNative
 					 * 
-					 *            if(typeof Jmol != "undefined") applet =
-					 *            Jmol._applets[value];
+					 *            self.Jmol && (applet = Jmol._applets[value]);
 					 * 
 					 * 
 					 */
 					{
 					}
-					this.html5Applet = applet;
+					html5Applet = applet;
 					break;
 				case AUTOINTEGRATE:
 					autoIntegrate = Parameters.isTrue(value);

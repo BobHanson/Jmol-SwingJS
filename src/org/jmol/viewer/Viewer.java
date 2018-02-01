@@ -85,6 +85,8 @@ import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.api.SymmetryInterface;
+import org.jmol.api.js.JSmolAppletObject;
+import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
@@ -237,7 +239,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public GData gdata;
-  public Object html5Applet; // j2s only
+  public JSmolAppletObject html5Applet; // j2s only - TODO: More explicit references of this 
+  public JmolToJSmolInterface jmolObject;
 
   public ActionManager acm;
   public AnimationManager am;
@@ -450,12 +453,15 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       isJS = isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
-      Object applet = null;
+      JSmolAppletObject applet = null;
+      JmolToJSmolInterface jmol = null;
       String javaver = "?";
       /**
        * @j2sNative
        * 
-       *            if(self.Jmol) { applet =
+       *            if(self.Jmol) { 
+       *              jmol = Jmol;
+       *            applet =
        *            Jmol._applets[this.htmlName.split("_object")[0]]; javaver =
        *            Jmol._version; }
        * 
@@ -465,6 +471,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         javaver = null;
       }
       if (javaver != null) {
+        jmolObject = jmol;
         html5Applet = applet;
         strJavaVersion = javaver;
         strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)");
@@ -3412,14 +3419,18 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       case REFRESH_SEND_WEBGL_NEW_ORIENTATION:
         tm.finalizeTransformParameters();
 
+        boolean refreshHTML5 = false;
         /**
          * @j2sNative
          * 
          *            if (!this.html5Applet) return;
-         *            this.html5Applet._refresh();
+         *            refreshHTML5 = true;
          */
         {
         }
+        if (refreshHTML5)
+          html5Applet._refresh();
+
         if (mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
           return;
         break;
@@ -3648,17 +3659,19 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * 
    */
   private void updateJSView(int imodel, int iatom) {
-    @SuppressWarnings("unused")
-    Object applet = this.html5Applet;
+    boolean doViewPick = true;
+    if (this.html5Applet == null)
+      return;
     /**
      * @j2sNative
      * 
-     *            applet && applet._viewSet != null &&
-     *            applet._atomPickedCallback(imodel, iatom);
+     *   doViewPick = (this.html5Applet != null && this.html5Applet._viewSet != null);
      * 
      */
     {
     }
+    if (doViewPick)
+      html5Applet._atomPickedCallback(imodel, iatom);
   }
 
   private boolean updateWindow(int width, int height) {
@@ -3906,18 +3919,19 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                                                         String statusList,
                                                         boolean isQuiet,
                                                         boolean isQueued) {
-    /**
-     * @j2sNative
-     * 
-     *            if (strScript.indexOf("JSCONSOLE") == 0) {
-     *            this.html5Applet._showInfo(strScript.indexOf("CLOSE")<0); if
-     *            (strScript.indexOf("CLEAR") >= 0)
-     *            this.html5Applet._clearConsole(); return null; }
-     */
-    {
+
+    if (isJS) {
+      if (strScript.indexOf("JSCONSOLE") == 0) {
+        this.html5Applet._showInfo(strScript.indexOf("CLOSE") < 0);
+        if (strScript.indexOf("CLEAR") >= 0)
+          this.html5Applet._clearConsole();
+        return null;
+      }
+
     }
-    return (getScriptManager() == null ? null : scm.evalStringWaitStatusQueued(
-        returnType, strScript, statusList, isQuiet, isQueued));
+    return (getScriptManager() == null ? null
+        : scm.evalStringWaitStatusQueued(returnType, strScript, statusList,
+            isQuiet, isQueued));
   }
 
   public void exitJmol() {

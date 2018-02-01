@@ -983,7 +983,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     asc.setAtomSetModelProperty("Ramanactivity", data[3]);
     asc.setAtomSetName((isLongMode ? "LO " : "") + data[0] + " "
         + DF.formatDecimal(freq, 2) + " cm-1 ("
-        + DF.formatDecimal(PT.fVal(data[1]), 0)
+        + DF.formatDecimal(Float.parseFloat(data[1]), 0)
         + " km/Mole), " + activity);
   }
 

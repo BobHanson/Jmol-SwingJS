@@ -1341,7 +1341,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       return CONTINUE;
     }
     if (lookingAtDecimal()) {
-      value = PT.fVal(script.substring(ichToken, ichToken + cchToken));
+      value = Float.parseFloat(script.substring(ichToken, ichToken + cchToken));
       int intValue = (ScriptParam.getFloatEncodedInt(script.substring(ichToken,
           ichToken + cchToken)));
       addNumber(T.decimal, intValue, Float.valueOf(value));
@@ -2815,7 +2815,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (!isOK)
       return Float.NaN;
     cchToken = ichT - ichToken;
-    return (float) PT.dVal(script.substring(pt0, ichT));
+    return Double.valueOf(script.substring(pt0, ichT)).floatValue();
   }
 
   private boolean lookingAtDecimal() {

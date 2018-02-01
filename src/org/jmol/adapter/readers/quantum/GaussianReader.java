@@ -568,7 +568,7 @@ public class GaussianReader extends MOReader {
         if (tokens.length != nThisLine)
           tokens = getStrings(line, nThisLine, 10);
         for (int i = 0; i < nThisLine; i++) {
-          mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
+          mos[i].put("energy", Float.valueOf(tokens[i]));
           //System.out.println(i + " gaussian energy " + mos[i].get("energy"));
         }
         continue;

@@ -492,7 +492,7 @@ public class Resolver {
           return false;
         Integer.parseInt(tokens2.nextToken());
         for (int i = 3; --i >= 0;)
-          PT.fVal(tokens2.nextToken());
+          Float.parseFloat(tokens2.nextToken());
         if (n == 5)
           Integer.parseInt(tokens2.nextToken());
       }

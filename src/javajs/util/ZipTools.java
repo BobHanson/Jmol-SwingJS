@@ -309,16 +309,16 @@ public class ZipTools implements GenericZipTools {
 
   @Override
   public Object getZipOutputStream(Object bos) {
-    /**
-     * @j2sNative
-     * 
-     *            return javajs.api.Interface.getInterface(
-     *            "java.util.zip.ZipOutputStream").setZOS(bos);
-     * 
-     */
-    {
+//    /**
+//     * @j2sNative
+//     * 
+//     *            return javajs.api.Interface.getInterface(
+//     *            "java.util.zip.ZipOutputStream").setZOS(bos);
+//     * 
+//     */
+//    {
       return new ZipOutputStream((OutputStream) bos);
-    }
+//    }
   }
 
   @Override

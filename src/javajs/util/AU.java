@@ -139,7 +139,7 @@ final public class AU {
     /**
      * @j2sNative
      * 
-     *     if (Clazz.newArray$ && newLength < oldLength) return Clazz.newArray$(-1, array, 0, newLength);
+     *     if (newLength < oldLength) return Clazz.array(-1, array, 0, newLength);
      */
     {}
     Object t = newInstanceO(array, newLength);

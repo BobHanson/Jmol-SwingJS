@@ -19,18 +19,18 @@ public interface JmolToJSmolInterface extends J2SObjectInterface {
   Object _newGrayScaleImage(Object context, Object image, int width,
                             int height, int[] grayBuffer);
 
-  void _repaint(Object html5Applet, boolean asNewThread);
+  void _repaint(JSmolAppletObject html5Applet, boolean asNewThread);
 
   void _setCanvasImage(Object canvas, int width, int height);
 
-  void _setCursor(Object html5Applet, int c);
+  void _setCursor(JSmolAppletObject html5Applet, int c);
   
-  Object _getHiddenCanvas(Object html5Applet, String string, int w, int h);
+  Object _getHiddenCanvas(JSmolAppletObject html5Applet, String string, int w, int h);
 
   Object _loadImage(Platform platform, String echoName, String path,
                     byte[] bytes, Object f);
 
-  Object _loadFileAsynchronously(Object fileLoadThread, Object html5Applet, String fileName, Object appData);
+  Object _loadFileAsynchronously(Object fileLoadThread, JSmolAppletObject html5Applet, String fileName, Object appData);
 
   // JSmolConsole.js 
   GenericImageDialog _consoleGetImageDialog(Viewer vwr,
@@ -42,6 +42,8 @@ public interface JmolToJSmolInterface extends J2SObjectInterface {
 
   // JmolCore.js
   boolean _isBinaryUrl(String filename);
+
+  void _playAudio(JSmolAppletObject applet, Map<String, Object> htParams);
 
   
 

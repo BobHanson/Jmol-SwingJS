@@ -422,33 +422,34 @@ public class PT {
     return (ichLast < ich ? "" : str.substring(ich, ichLast + 1));
   }
 
-  public static double dVal(String s) throws NumberFormatException {
-    /**
-     * @j2sNative
-     * 
-     * if(s==null)
-     *   throw new NumberFormatException("null");
-     * var d=parseFloat(s);
-     * if(isNaN(d))
-     *  throw new NumberFormatException("Not a Number : "+s);
-     * return d 
-     * 
-     */
-    {
-      return Double.valueOf(s).doubleValue();
-    }
-  }
-
-  public static float fVal(String s) throws NumberFormatException {
-    /**
-     * @j2sNative
-     * 
-     * return this.dVal(s);
-     */
-    {
-      return Float.parseFloat(s);
-    }
-  }
+//  public static double dVal(String s) throws NumberFormatException {
+//    /**
+//     * @j2sNative
+//     * 
+//     * if(s==null)
+//     *   throw new NumberFormatException("null");
+//     * var d=parseFloat(s);
+//     * if(isNaN(d))
+//     *  throw new NumberFormatException("Not a Number : "+s);
+//     * return d 
+//     * 
+//     */
+//    {
+//      return Double.valueOf(s).doubleValue();
+//    }
+//  }
+//
+//  public static float fVal(String s) throws NumberFormatException {
+//    /**
+//     * @j2sNative
+//     * 
+//     * return this.dVal(s);
+//     */
+//    {
+//      
+//      return Float.parseFloat(s);
+//    }
+//  }
 
   public static int parseIntRange(String str, int ichMax, int[] next) {
     int cch = str.length();
@@ -786,21 +787,21 @@ public class PT {
     return info instanceof Number || info instanceof Boolean;
   }
 
-  private static Object arrayGet(Object info, int i) {
-    /**
-     * 
-     * Note that info will be a primitive in JavaScript
-     * but a wrapped primitive in Java.
-     * 
-     * @j2sNative
-     * 
-     *            return info[i];
-     */
-    {
-      return Array.get(info, i);
-    }
-  }
-  
+//  private static Object arrayGet(Object info, int i) {
+//    /**
+//     * 
+//     * Note that info will be a primitive in JavaScript
+//     * but a wrapped primitive in Java.
+//     * 
+//     * @j2sNative
+//     * 
+//     *            return info[i];
+//     */
+//    {
+//      return Array.get(info, i);
+//    }
+//  }
+//  
   @SuppressWarnings("unchecked")
   public static String toJSON(String infoType, Object info) {
     if (info == null)
@@ -878,7 +879,7 @@ public class PT {
         for (int i = 0; i < n; i++) {
           if (i > 0)
             sb.appendC(',');
-          sb.append(toJSON(null, arrayGet(info, i)));
+          sb.append(toJSON(null, Array.get(info, i)));
         }
         sb.append("]");
         break;

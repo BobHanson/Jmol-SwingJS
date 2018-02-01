@@ -687,7 +687,7 @@ $end
       // we have all the info we need 
       for (int i = 0; i < nMO; i++) {
         MOInfo moInfo = moInfos[moid[i]];
-        mos[i].put("energy", Float.valueOf(PT.fVal(energy[i])));
+        mos[i].put("energy", Float.valueOf(energy[i]));
         mos[i].put("coefficients", mocoef[i]);
         String label = alphaBeta;
         int ne = moInfo.ne;
