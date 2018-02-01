@@ -1,0 +1,350 @@
+<project name="JSmol" default="toJs" basedir=".">
+ 
+   <property name="site.path" value="site/swingjs" />
+
+   <target name="toJs" id="toJs">
+  			
+  	<!-- create a NON svn local directory only containing JS files
+  	
+  	<echo>Deleting the site directory.</echo>
+   	 	<delete quiet="true" dir="site" />
+    -->
+   	
+   	<!-- make core files -->
+ 
+   	<echo>creating and compressing core files - warnings are OK; "does not exist" is trouble</echo>
+
+   	<!-- note: any changes in these next sections must be reflected also
+
+   	<echo>Copying JSmol.html</echo>
+   	<copy file="JSmol.html" tofile="${site.path}/../JSmol.html"></copy>
+
+   	             in package.js -->
+   		
+    <property name="javaCoreAppletFiles" value="
+    	java/util/Hashtable.js
+    	java/util/Dictionary.js
+    	java/lang/Class.js
+    	java/util/MapEntry.js
+    	org/jmol/appletjs/Jmol.js
+    	org/jmol/util/GenericApplet.js
+    	org/jmol/api/JmolStatusListener.js
+    	org/jmol/api/JmolCallbackListener.js
+    	org/jmol/api/JmolAppletInterface.js
+    	org/jmol/api/JmolSyncInterface.js
+    	javajs/api/JSInterface.js
+    	java/util/Collections.js
+    	java/util/AbstractList.js
+    	java/util/AbstractCollection.js
+    	java/util/AbstractSet.js
+    	java/util/AbstractMap.js
+    	javajs/util/PT.js
+    	org/jmol/util/Logger.js
+    	org/jmol/util/DefaultLogger.js
+    	org/jmol/util/LoggerInterface.js
+    	org/jmol/i18n/GT.js
+    	org/jmol/api/Translator.js
+    	org/jmol/viewer/Viewer.js
+    	org/jmol/api/JmolViewer.js
+    	javajs/api/PlatformViewer.js
+    	org/jmol/atomdata/AtomDataServer.js
+    	org/jmol/util/CommandHistory.js
+    	javajs/util/Lst.js
+    	java/util/ArrayList.js
+    	javajs/awt/Dimension.js
+    	org/jmol/atomdata/RadiusData.js
+    	java/lang/Enum.js
+    	org/jmol/c/VDW.js
+    	org/jmol/api/Interface.js
+    	org/jmol/awtjs2d/Platform.js
+    	javajs/api/GenericPlatform.js
+    	javajs/api/FontManager.js
+    	java/net/URL.js
+    	javajs/util/AjaxURLStreamHandlerFactory.js
+    	java/net/URLStreamHandlerFactory.js
+    	java/util/Arrays.js
+    	org/jmol/g3d/Graphics3D.js
+    	org/jmol/util/GData.js
+    	org/jmol/api/JmolGraphicsInterface.js
+    	org/jmol/util/Normix.js
+    	org/jmol/util/Geodesic.js
+    	javajs/util/AU.js
+    	javajs/util/V3.js
+    	javajs/util/T3.js
+    	javajs/api/JSONEncodable.js
+    	org/jmol/api/JmolRendererInterface.js
+    	org/jmol/util/Shader.js
+    	javajs/util/P3i.js
+    	javajs/util/T3i.js
+    	org/jmol/g3d/Platform3D.js
+    	org/jmol/g3d/Pixelator.js
+    	org/jmol/g3d/LineRenderer.js
+    	org/jmol/g3d/PrecisionRenderer.js
+    	org/jmol/g3d/SphereRenderer.js
+    	javajs/util/P3.js
+    	org/jmol/g3d/CylinderRenderer.js
+    	org/jmol/viewer/StateManager.js
+    	org/jmol/viewer/ColorManager.js
+    	org/jmol/util/ColorEncoder.js
+    	org/jmol/c/PAL.js
+    	org/jmol/viewer/JC.js
+    	org/jmol/util/Elements.js
+    	javajs/util/BS.js
+    	org/jmol/viewer/StatusManager.js
+    	org/jmol/viewer/TransformManager.js
+    	javajs/util/M4.js
+    	javajs/util/M34.js
+    	javajs/util/A4.js
+    	javajs/util/M3.js
+    	org/jmol/util/Point3fi.js
+    	org/jmol/c/STER.js
+    	org/jmol/viewer/SelectionManager.js
+    	org/jmol/api/JmolSelectionListener.js
+    	org/jmol/viewer/ActionManager.js
+    	javajs/api/EventManager.js
+    	org/jmol/viewer/MouseState.js
+    	org/jmol/util/Rectangle.js
+    	org/jmol/viewer/binding/JmolBinding.js
+    	org/jmol/viewer/binding/Binding.js
+    	org/jmol/viewer/Gesture.js
+    	org/jmol/viewer/MotionPoint.js
+    	org/jmol/awtjs2d/Mouse.js
+    	javajs/api/GenericMouseInterface.js
+    	org/jmol/viewer/ModelManager.js
+    	org/jmol/viewer/ShapeManager.js
+    	org/jmol/util/TempArray.js
+    	org/jmol/c/STR.js
+    	org/jmol/viewer/AnimationManager.js
+    	org/jmol/render/RepaintManager.js
+    	org/jmol/api/JmolRepaintManager.js
+    	org/jmol/modelset/ModelSet.js
+    	org/jmol/modelset/BondCollection.js
+    	org/jmol/modelset/AtomCollection.js
+    	org/jmol/util/BoxInfo.js
+    	org/jmol/modelset/Model.js
+    	org/jmol/modelset/Atom.js
+    	org/jmol/util/Node.js
+    	org/jmol/util/SimpleNode.js
+    	org/jmol/modelset/Bond.js
+    	org/jmol/util/Edge.js
+    	org/jmol/util/SimpleEdge.js
+    	org/jmol/viewer/GlobalSettings.js
+    	org/jmol/c/CBK.js
+    	javajs/util/SB.js
+    	javajs/util/CU.js
+    	org/jmol/util/C.js
+    	org/jmol/util/Int2IntHash.js
+    	org/jmol/util/Int2IntHashEntry.js
+    	org/jmol/util/Escape.js
+    	org/jmol/script/T.js
+    	org/jmol/viewer/FileManager.js
+    	javajs/api/BytePoster.js
+    	org/jmol/script/SV.js
+    	javajs/util/AjaxURLStreamHandler.js
+    	java/net/URLStreamHandler.js
+    	org/jmol/i18n/Resource.js
+    	org/jmol/i18n/Language.js
+    	java/text/MessageFormat.js
+    	javajs/util/DF.js
+    	org/jmol/script/ScriptManager.js
+    	org/jmol/api/JmolScriptManager.js
+    	java/lang/Thread.js
+    	org/jmol/script/ScriptEval.js
+    	org/jmol/script/ScriptExpr.js
+    	org/jmol/script/ScriptParam.js
+    	org/jmol/script/ScriptError.js
+    	org/jmol/api/JmolScriptEvaluator.js
+    	java/lang/ThreadGroup.js
+    	swingjs/JSThreadGroup.js
+    	javajs/util/JSThread.js
+    	javajs/api/JSFunction.js
+    	org/jmol/script/ScriptCompiler.js
+    	org/jmol/script/ScriptTokenParser.js
+    	org/jmol/modelset/ModelLoader.js
+    	org/jmol/adapter/smarter/SmarterJmolAdapter.js
+    	org/jmol/api/JmolAdapter.js
+    	org/jmol/shape/Shape.js
+    	org/jmol/modelset/Chain.js
+    	org/jmol/modelset/Structure.js
+    	org/jmol/modelset/Group.js
+    	org/jmol/shape/Balls.js
+    	org/jmol/shape/AtomShape.js
+    	org/jmol/shape/Sticks.js
+    	javajs/util/P4.js
+    	javajs/util/T4.js
+    	org/jmol/modelset/Orientation.js
+    	org/jmol/util/BSUtil.js
+    	org/jmol/shape/Frank.js
+    	javajs/awt/Font.js
+    	org/jmol/awtjs2d/JSFont.js
+    	org/jmol/thread/HoverWatcherThread.js
+    	org/jmol/thread/JmolThread.js
+    	org/jmol/modelset/BondIteratorSelected.js
+    	org/jmol/modelset/BondIterator.js
+    	org/jmol/script/ScriptQueueThread.js
+    	org/jmol/script/ScriptContext.js
+    	org/jmol/script/ScriptMathProcessor.js
+    	javajs/util/OC.js
+    	java/io/OutputStream.js
+    	javajs/api/GenericOutputChannel.js
+    	org/jmol/io/FileReader.js
+    	org/jmol/g3d/TextRenderer.js
+    	org/jmol/awtjs2d/JSFile.js
+    	javajs/api/GenericFileInterface.js
+    	javajs/util/AjaxURLConnection.js
+    	java/net/URLConnection.js
+    	javajs/util/Rdr.js
+    	javajs/api/GenericLineReader.js
+    	java/io/BufferedReader.js
+    	java/io/Reader.js
+    	java/lang/Readable.js
+    	java/io/StringReader.js
+    	org/jmol/adapter/smarter/Resolver.js
+    	javajs/util/LimitedLineReader.js
+    	org/jmol/adapter/readers/molxyz/MolReader.js
+    	org/jmol/adapter/smarter/AtomSetCollectionReader.js
+    	org/jmol/adapter/smarter/AtomSetCollection.js
+    	org/jmol/adapter/smarter/Atom.js
+    	org/jmol/adapter/smarter/Bond.js
+    	org/jmol/adapter/smarter/AtomSetObject.js
+    	org/jmol/adapter/smarter/Structure.js
+    	java/util/Properties.js
+    	org/jmol/c/FIL.js
+    	org/jmol/adapter/smarter/AtomIterator.js
+    	org/jmol/api/JmolAdapterAtomIterator.js
+    	org/jmol/adapter/smarter/BondIterator.js
+    	org/jmol/api/JmolAdapterBondIterator.js
+    	org/jmol/awtjs2d/Image.js
+    	org/jmol/render/ShapeRenderer.js
+    	org/jmol/render/BallsRenderer.js
+    	org/jmol/render/SticksRenderer.js
+    	org/jmol/render/FontLineShapeRenderer.js
+    	org/jmol/render/FrankRenderer.js
+    	org/jmol/g3d/TextString.js
+    	org/jmol/awtjs2d/Display.js
+    	org/jmol/shape/Echo.js
+    	org/jmol/shape/TextShape.js
+    	org/jmol/modelset/Text.js
+    	org/jmol/util/Txt.js
+    	org/jmol/render/EchoRenderer.js
+    	org/jmol/render/LabelsRenderer.js
+    	org/jmol/render/TextRenderer.js
+    	org/jmol/script/FileLoadThread.js
+    	org/jmol/script/ScriptInterruption.js
+    	org/jmol/script/ScriptException.js
+    	java/io/BufferedInputStream.js
+    	java/io/FilterInputStream.js
+    	java/io/InputStream.js
+    	java/io/ByteArrayInputStream.js
+    	javajs/util/Encoding.js
+    	java/io/InputStreamReader.js
+    	java/util/StringTokenizer.js
+    	org/jmol/adapter/readers/pdb/PdbReader.js
+    	java/lang/StringBuilder.js
+    	java/lang/AbstractStringBuilder.js
+    	org/jmol/modelsetbio/BioResolver.js
+    	org/jmol/modelsetbio/BioModel.js
+    	org/jmol/modelsetbio/BioModelSet.js
+    	org/jmol/modelsetbio/BioPolymer.js
+    	org/jmol/bspt/Bspf.js
+    	org/jmol/bspt/Bspt.js
+    	org/jmol/bspt/CubeIterator.js
+    	org/jmol/bspt/Leaf.js
+    	org/jmol/bspt/Element.js
+    	org/jmol/bspt/Node.js
+    	org/jmol/modelset/AtomIteratorWithinModel.js
+    	org/jmol/api/AtomIndexIterator.js
+    	org/jmol/modelsetbio/AminoMonomer.js
+    	org/jmol/modelsetbio/AlphaMonomer.js
+    	org/jmol/modelsetbio/Monomer.js
+    	org/jmol/modelsetbio/AminoPolymer.js
+    	org/jmol/modelsetbio/AlphaPolymer.js
+    	org/jmol/adapter/smarter/StructureIterator.js
+    	org/jmol/api/JmolAdapterStructureIterator.js
+    	org/jmol/modelsetbio/Helix.js
+    	org/jmol/modelsetbio/ProteinStructure.js
+    	org/jmol/modelsetbio/Sheet.js
+    	org/jmol/scriptext/MathExt.js
+    	org/jmol/script/ScriptDelayThread.js
+    	org/jmol/shapebio/Cartoon.js
+    	org/jmol/shapebio/Rockets.js
+    	org/jmol/shapebio/BioShapeCollection.js
+    	org/jmol/shapebio/BioShape.js
+    	org/jmol/shape/Mesh.js
+    	org/jmol/util/MeshSurface.js
+    	org/jmol/renderbio/CartoonRenderer.js
+    	org/jmol/renderbio/RocketsRenderer.js
+    	org/jmol/renderbio/StrandsRenderer.js
+    	org/jmol/renderbio/BioShapeRenderer.js
+    	org/jmol/g3d/HermiteRenderer.js
+    	org/jmol/g3d/G3DRenderer.js
+    	org/jmol/g3d/TriangleRenderer.js
+    	org/jmol/util/Rgb16.js
+    	org/jmol/thread/TimeoutThread.js
+    	javajs/api/Interface.js
+    	org/jmol/renderbio/BioMeshRenderer.js
+    	org/jmol/render/MeshRenderer.js
+    	javajs/util/Measure.js
+    	org/jmol/script/ContextToken.js
+    	org/jmol/script/ScriptFlowContext.js
+    	org/jmol/modelsetbio/PhosphorusMonomer.js
+    	org/jmol/modelsetbio/NucleicMonomer.js
+    	org/jmol/awtjs2d/JmolJSPopup.js
+    	org/jmol/popup/JmolGenericPopup.js
+    	org/jmol/popup/GenericSwingPopup.js
+    	javajs/api/GenericMenuInterface.js
+    	org/jmol/popup/JSSwingPopupHelper.js
+    	org/jmol/popup/PopupHelper.js
+    	org/jmol/popup/MainPopupResourceBundle.js
+    	org/jmol/popup/PopupResource.js
+    	javajs/swing/JPopupMenu.js
+    	javajs/swing/AbstractButton.js
+    	javajs/swing/JComponent.js
+    	javajs/awt/Container.js
+    	javajs/awt/Component.js
+    	javajs/api/SC.js
+    	javajs/swing/JMenu.js
+    	javajs/swing/JMenuItem.js
+    	javajs/swing/JCheckBoxMenuItem.js
+    	org/jmol/shape/Hover.js
+    	org/jmol/render/HoverRenderer.js
+    	" />
+
+   	
+    <antcall target="call-core">
+        <param name="call-core.name" value="jsmol" />
+        <param name="call-core.list" value="
+         	${javaCoreAppletFiles}
+        	" />
+    </antcall>
+   	
+    <!-- zip zipfile="dist/VARNA-SwingJS.zip" basedir="site" includes="**" /  -->
+
+  </target>
+
+
+	  <target name="call-core" id="call-core">
+	   	<echo>......Creating core${call-core.name}.js</echo>
+	   	<concat destfile="${site.path}/js/core/tmp.js">
+	   		<filelist dir="${site.path}/j2s" files="${call-core.list}" />
+	   	</concat> 
+
+	  	<replace dir="${site.path}/js/core" includes="tmp.js" token="Clazz." value="Clazz_"/>
+	  	<replace dir="${site.path}/js/core" includes="tmp.js" token="Clazz__" value="Clazz._"/>
+	   	<echo>......Generating ${site.path}/j2s/core/core${call-core.name}.js</echo> 	
+	   	<concat destfile="${site.path}/j2s/core/core${call-core.name}.js"><filelist dir="${site.path}/js" files="
+	   		core/coretop2.js
+	   		core/tmp.js
+	   		core/corebottom2.js
+	   		" />
+	   	</concat>
+	   	<echo>......Generating ${site.path}/j2s/core/core${call-core.name}.z.js</echo> 	
+	   	<java jar="jars/closure_compiler.jar" fork="true" dir="${site.path}/j2s/core" failonerror="false">
+	   		<arg line="--js core${call-core.name}.js --js_output_file core${call-core.name}.z.js" />
+	    </java>
+	 	<delete quiet="true" file="${site.path}/js/core/tmp.js" />
+	  </target>
+
+		
+	
+</project>
