@@ -198,16 +198,21 @@ public class XmlReader extends AtomSetCollectionReader {
       }
       if (o instanceof BufferedInputStream)
         o = Rdr.streamToUTF8String(Rdr.getBIS(data));
+      boolean isjs = false;
       /**
        * 
        * @j2sNative
        * 
-       *            this.domObj[0] = this.createDomNodeJS("xmlReader",o);
-       *            this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
+       * isjs = true;
        * 
        */
       {
         walkDOMTree();
+      }
+      if (isjs) {
+                  this.domObj[0] = this.createDomNodeJS("xmlReader",o);
+                  this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
+        
       }
     } else {
       ((XmlHandler) Interface.getOption("adapter.readers.xml.XmlHandler", vwr,
@@ -216,27 +221,27 @@ public class XmlReader extends AtomSetCollectionReader {
   }
   
   /**
+   * totally untested, probably useless
+   * 
    * @param id  
    * @param data 
+   * @return dom object 
    */
-  void createDomNodeJS(String id, Object data) {
+  Object createDomNodeJS(String id, Object data) {
     // no doubt there is a more efficient way to do this.
     // Firefox, at least, does not recognize "/>" in HTML blocks
     // that are added this way.
     
     @SuppressWarnings("unused")
     Object applet = parent.vwr.html5Applet;
+    Object d = null;
     /**
      * note that there is no need to actually load it into the document
      * 
      * @j2sNative
      * 
-     // id = applet._id + "_" + id;
-     // var d = document.getElementById(id);
-     // if (d)
-     //   document.body.removeChild(d);
       if (!data)
-        return;
+        return null;
       if (data.indexOf("<?") == 0)
         data = data.substring(data.indexOf("<", 1));
       if (data.indexOf("/>") >= 0) {
@@ -257,15 +262,14 @@ public class XmlReader extends AtomSetCollectionReader {
         }
         data = D.join('');
       }
-      var d = document.createElement("_xml");
+      d = document.createElement("_xml");
       d.innerHTML = data;
-      return d;
      * 
      */
     {
       // only called by j2s
     }
-      
+    return d;
   }
   
   @Override

@@ -21,7 +21,7 @@ public interface JmolScriptEvaluator {
 
   void pushContextDown(String why);
 
-  void resumeEval(ScriptContext sc);
+  void resumeEval(Object sc);
 
   boolean getAllowJSThreads();
 

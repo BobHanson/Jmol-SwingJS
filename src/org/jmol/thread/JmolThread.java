@@ -80,7 +80,7 @@ abstract public class JmolThread extends Thread {
     /**
      * @j2sNative
      * 
-     * setTimeout(function() { eval.resumeEval(sc); }, 1);
+     * setTimeout(function() { eval.resumeEval$O(sc); }, 1);
      * 
      */
     {

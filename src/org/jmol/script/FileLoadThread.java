@@ -72,7 +72,7 @@ class FileLoadThread extends JmolThread {
         /**
          * @j2sNative
          * 
-         * jmol = Jmol;
+         * jmol = self.Jmol;
          * 
          */
         {}

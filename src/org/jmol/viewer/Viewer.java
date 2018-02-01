@@ -4717,14 +4717,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void scriptEcho(String strEcho) {
     if (!Logger.isActiveLevel(Logger.LEVEL_INFO))
       return;
-    /**
-     * @j2sNative
-     * 
-     *            System.out.println(strEcho);
-     * 
-     */
-    {
-    }
+    if (isJS)
+      System.out.println(strEcho);
     sm.setScriptEcho(strEcho, isScriptQueued());
     if (listCommands && strEcho != null && strEcho.indexOf("$[") == 0)
       Logger.info(strEcho);
@@ -7965,13 +7959,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         return null;
       molFile = "Jmol " + version_date + molFile.substring(pt);
       if (isApplet) {
-         /**
-          * @j2sNative
-          * 
-          */
-        {
-          
-        }
         //TODO -- can do this if connected
         showUrl(g.nmrUrlFormat + molFile);
         return "opening " + g.nmrUrlFormat;
@@ -8415,12 +8402,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * @param nameOrError
    * @param echoName
    *        if this is an echo rather than the background
-   * @param sc
+   * @param sco
    *        delivered in JavaScript from Platform.java
    * @return false
    */
-  public boolean loadImageData(Object image, String nameOrError, String echoName,
-                     ScriptContext sc) {
+  public boolean loadImageData(Object image, String nameOrError, String echoName, Object sco) {
+    ScriptContext sc = (ScriptContext) sco;
     if (image == null && nameOrError != null)
       scriptEcho(nameOrError);
     if (echoName == null) {
@@ -9623,7 +9610,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
        * @j2sNative
        * 
        *            var me = this; setTimeout(function()
-       *            {me.dragMinimizeAtom(iAtom)}, 100);
+       *            {me.dragMinimizeAtom$I(iAtom)}, 100);
        * 
        */
       {

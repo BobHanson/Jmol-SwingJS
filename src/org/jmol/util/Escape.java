@@ -628,15 +628,6 @@ public class Escape {
     return v.toArray(new String[v.size()]);
   }
 
-  public static boolean isAV(Object x) {
-    /**
-     * @j2sNative
-     *  return Clazz.instanceOf(x[0], org.jmol.script.SV);
-     */
-    {
-    return x instanceof SV[];
-    }
-  }
 
   /**
    * Jmol-specific post-processing of 

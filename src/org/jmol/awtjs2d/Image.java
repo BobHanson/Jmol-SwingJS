@@ -151,12 +151,11 @@ class Image {
      * if (canvas == null) 
      *   canvas = {width:windowWidth,height:windowHeight};
      * canvas.buf32 = pBuffer; 
-     * return canvas;
      * 
      */
     {
-      return null;
     }
+    return canvas;
   }
 
   /**

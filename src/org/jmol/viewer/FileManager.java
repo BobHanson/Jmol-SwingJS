@@ -1451,6 +1451,7 @@ public class FileManager implements BytePoster {
     getCachedPngjBytes(key);
   }
   
+  @SuppressWarnings("null")
   public Object cacheGet(String key, boolean bytesOnly) {
     key = fixDOSName(key);
     // in the case of JavaScript local file reader, 
@@ -1463,16 +1464,15 @@ public class FileManager implements BytePoster {
     /**
      * @j2sNative
      * 
-     * (data = Jmol.Cache.get(key)) || (data = this.cache.get$O(key));
+     * data = Jmol.Cache.get(key);
      * 
      */
     {
-    //if (Logger.debugging)
-      //Logger.debug
-       data = cache.get(key);
-       if (data != null)
-         Logger.info("cacheGet " + key);
     }    
+    if (data == null)
+      data = cache.get(key);
+     if (data != null)
+       Logger.info("cacheGet " + key);
     return (bytesOnly && (data instanceof String) ? null : data);
   }
 

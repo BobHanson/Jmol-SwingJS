@@ -484,7 +484,9 @@ public class ScriptEval extends ScriptExpr {
    */
 
   @Override
-  public void resumeEval(ScriptContext sc) {
+  public void resumeEval(Object sco) {
+    
+    ScriptContext sc = (ScriptContext) sco;
 
     // 
     //
