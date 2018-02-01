@@ -37,8 +37,8 @@ The goal of this site is to fully integrate Jmol and JSpecView into SwingJS so t
 they can run alongside other SwingJS applications such as VARNA and many, many
 other applets.   
 
-Status: Jmol is running as a SwingJS application, though some aspects (menu, console)
-        have not been hooked up yet. JSpecView has not been tested.
+Status: Jmol 15.0.1 is running fully as a SwingJS application.
+        JSpecView/HTML5 has not been tested.
 
 TO BE CONTINUED...  
 
