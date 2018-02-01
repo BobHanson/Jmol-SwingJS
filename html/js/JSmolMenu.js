@@ -177,17 +177,17 @@ Swing.bindMenuActionCommands = function(menu, isBind) {
   // called internally
 	var n = menu.getComponentCount();
 	for(var i = 0; i < n; i++)
-		Swing.bindMenuActionCommands(menu.getComponent(i), isBind);
+		Swing.bindMenuActionCommands(menu.getComponent$I(i), isBind);
 	Jmol.$documentOff('click', menu.id);
 	if (isBind)
 		Jmol.$documentOn('click', menu.id, function() {	
 			if (menu.itemListener) {
 				menu.selected = (menu.btnType == javajs.swing.JMenuItem.TYPE_CHECKBOX ? Jmol.$prop(menu.id + "-cb", "checked") : true); 
 				Swing.hideMenus(menu.applet);
-				menu.itemListener.itemStateChanged({getSource:function(){return menu}});
+				menu.itemListener.itemStateChanged$javajs_awt_event_ItemEvent({getSource:function(){return menu}});
 			}	else if (menu.actionListener) {
 				Swing.hideMenus(menu.applet);
-				menu.actionListener.actionPerformed({getSource:function(){return menu},getActionCommand:function(){return menu.actionCommand}});
+				menu.actionListener.actionPerformed$javajs_awt_event_ActionEvent({getSource:function(){return menu},getActionCommand:function(){return menu.actionCommand}});
 			}
 		});
 }

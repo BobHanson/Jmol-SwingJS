@@ -979,8 +979,11 @@ Jmol = (function(document) {
 			if (url.indexOf(Jmol._binaryTypes[i]) >= 0) return true;
 		return false;
 	}
-/*
-	Jmol._getFileData = function(fileName, fSuccess, doProcess) {
+
+	Jmol._getFileData = J2S._getFileData;
+  
+  /*
+   = function(fileName, fSuccess, doProcess) {
 		// use host-server PHP relay if not from this host
 		var isBinary = Jmol._isBinaryUrl(fileName);
 		var isPDB = (fileName.indexOf(".gz") >= 0 && fileName.indexOf("rcsb.org") >= 0);
@@ -1107,7 +1110,7 @@ Jmol = (function(document) {
 		// we actually cannot suggest a fileName, I believe.
 		if (!Jmol.featureDetection.hasFileReader) {
         var msg = "Local file reading is not enabled in your browser";
-				return (fileLoadThread ? fileLoadThread.setData(msg, null, null, appData, applet) : alert(msg));
+				return (fileLoadThread ? fileLoadThread.setData$S$S$O$O(msg, null, null, appData, applet) : alert(msg));
     }
 		if (!applet._localReader) {
 			var div = '<div id="ID" style="z-index:'+Jmol._getZ(applet, "fileOpener") + ';position:absolute;background:#E0E0E0;left:10px;top:10px"><div style="margin:5px 5px 5px 5px;"><button id="ID_loadurl">URL</button><input type="file" id="ID_files" /><button id="ID_loadfile">load</button><button id="ID_cancel">cancel</button></div><div>'
@@ -1141,20 +1144,20 @@ Jmol = (function(document) {
 		Jmol.$appEvent(applet, "localReader_cancel", "click", function(evt) {
       Jmol._hideLocalFileReader(applet);
       if (fileLoadThread)
-  			fileLoadThread.setData("#CANCELED#", null, null, appData, applet);
+  			fileLoadThread.setData$S$S$O$O("#CANCELED#", null, null, appData, applet);
 		});
 		Jmol.$setVisible(applet._localReader, true);
     applet._readingLocal = true;
 	}
 
   Jmol._setData = function(fileLoadThread, filename, filename0, data, appData, applet) {
-  	data && (data = Jmol._strToBytes(data));
+  	data && (data = J2S._toBytes(data));
 		if (data != null && (fileLoadThread == null || filename.indexOf(".jdx") >= 0))
 			Jmol.Cache.put("cache://" + filename, data); 
     if (fileLoadThread == null) {
-      applet._applet.openFileAsyncSpecial(data == null ? filename : "cache://" + filename, 1);
+      applet._applet.openFileAsyncSpecial$S$I(data == null ? filename : "cache://" + filename, 1);
     } else {          
-		  fileLoadThread.setData(filename, filename0, data, appData);
+		  fileLoadThread.setData$S$S$O$O(filename, filename0, data, appData);
     }    
   }
 
@@ -1220,15 +1223,6 @@ Jmol = (function(document) {
 			Jmol.$val("__jsmolfilename__", "");
 		}
 		return "OK";
-	}
-
-	Jmol._strToBytes = function(s) {
-		if (Clazz.instanceOf(s, self.ArrayBuffer))
-			return Clazz.newByteArray(-1, s);
-		var b = Clazz.newByteArray(s.length, 0);
-		for (var i = s.length; --i >= 0;)
-			b[i] = s.charCodeAt(i) & 0xFF;
-		return b;
 	}
 
 	////////////// applet start-up functionality //////////////
@@ -2413,7 +2407,7 @@ Jmol.Cache.put = function(filename, data) {
 			reader.onloadend = function(evt) {
 				if (evt.target.readyState == FileReader.DONE) {
 					var cacheName = "cache://DROP_" + file.name;
-					var bytes = Clazz.newByteArray(-1, evt.target.result);
+					var bytes = J2S._toBytes(evt.target.result);
 					if (!cacheName.endsWith(".spt"))
 						me._appletPanel.cacheFileByName("cache://DROP_*",false);
 					if (me._viewType == "JSV" || cacheName.endsWith(".jdx")) // shared by Jmol and JSV
@@ -2422,7 +2416,7 @@ Jmol.Cache.put = function(filename, data) {
 						me._appletPanel.cachePut(cacheName, bytes);
 					var xym = Jmol._jsGetXY(me._canvas, e);
 					if(xym && (!me._appletPanel.setStatusDragDropped || me._appletPanel.setStatusDragDropped(0, xym[0], xym[1], cacheName))) {
-						me._appletPanel.openFileAsyncSpecial(cacheName, 1);
+						me._appletPanel.openFileAsyncSpecial$S$I(cacheName, 1);
 					}
 				}
 			};

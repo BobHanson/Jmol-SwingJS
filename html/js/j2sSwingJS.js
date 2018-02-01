@@ -796,6 +796,7 @@ Clazz.isClassDefined = function(clazzName) {
 ///////////////////////// private supporting method creation //////////////////////
 
 var setArray = function(vals, baseClass, paramType, ndims) {
+  ndims = Math.abs(ndims);
   vals.getClass = function () { return arrayClass(baseClass, ndims) };
   vals.__ARRAYTYPE = paramType; // referenced in java.lang.Class
   vals.__BASECLASS = baseClass;
