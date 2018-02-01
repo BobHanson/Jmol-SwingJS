@@ -38,7 +38,7 @@
 	Jmol._isAsync = false; // testing only
 	Jmol._asyncCallbacks = {};
 	
-	Jmol._coreFiles = []; // required for package.js
+	Jmol._coreFiles = J2S._coreFiles; // required for package.js
 
 
 ///////////////////

@@ -1,6 +1,6 @@
-package org.jmol.consolejs;
+package org.jmol.api.js;
 
-abstract interface JSConsole {
+public abstract interface JSConsole {
 
   public abstract void setTitle(String label);
 

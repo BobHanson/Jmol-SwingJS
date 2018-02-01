@@ -17,7 +17,7 @@ Jmol.Console = {
 	buttons:{},
 	buttonWidth:100,
 	click:function(id) {
-		Jmol.Console.buttons[id].console.appletConsole.doAction(Jmol.Console.buttons[id]);
+		Jmol.Console.buttons[id].console.appletConsole.doAction$O(Jmol.Console.buttons[id]);
 	}	
 }
 
@@ -261,7 +261,7 @@ Jmol.Console.Input = function(console) {
 			kcode=10; 
 		// keycode is deprecated, but is essential still
 		if (type == "keyup") { 
-			mode = (kcode == 38 || kcode == 40 ? 1 : this.console.appletConsole.processKey(kcode, 402/*java.awt.event.KeyEvent.KEY_RELEASED*/, isCtrl));
+			mode = (kcode == 38 || kcode == 40 ? 1 : this.console.appletConsole.processKey$I$I$Z(kcode, 402/*java.awt.event.KeyEvent.KEY_RELEASED*/, isCtrl));
 			if ((mode & 1) == 1)
 				ev.preventDefault();
 			return;
@@ -289,7 +289,7 @@ Jmol.Console.Input = function(console) {
 		default:
 			kcode = 0; // nothing to report
 		}					
-		mode = this.console.appletConsole.processKey(kcode, 401/*java.awt.event.KeyEvent.KEY_PRESSED*/, isCtrl);
+		mode = this.console.appletConsole.processKey$I$I$Z(kcode, 401/*java.awt.event.KeyEvent.KEY_PRESSED*/, isCtrl);
 		if (isCtrl && kcode == 10)
 			this.setText(this.getText() + "\n")
 		if (mode == 0 && ev.keyCode == 9) {

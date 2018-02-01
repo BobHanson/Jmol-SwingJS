@@ -34,6 +34,7 @@ import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolScriptEditorInterface;
+import org.jmol.api.js.GenericConsoleTextArea;
 import org.jmol.c.CBK;
 import org.jmol.i18n.GT;
 import org.jmol.script.T;
@@ -42,8 +43,8 @@ import org.jmol.viewer.Viewer;
 
 public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCallbackListener {
   
-  protected GenericTextArea input;
-  protected GenericTextArea output;
+  protected GenericConsoleTextArea input;
+  protected GenericConsoleTextArea output;
 
   public Viewer vwr;
   
