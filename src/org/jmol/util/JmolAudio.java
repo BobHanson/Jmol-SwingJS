@@ -79,8 +79,6 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
       /**
        * @j2sNative
        * 
-       * jmol = Jmol;
-       * 
        */
       {
         getClip();
