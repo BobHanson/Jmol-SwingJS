@@ -6138,7 +6138,8 @@ public class ScriptEval extends ScriptExpr {
                     // -n means number of seconds, not degreesPerSecond
                     -endDegrees / degreesPerSecond
                         : degreesPerSecond);
-
+    if (q == null && endDegrees < 0 && rate > 0)
+      rate = -rate;
     if (dihedralList != null) {
       if (!isSpin) {
         vwr.setDihedrals(dihedralList, null, 1);

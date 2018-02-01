@@ -2120,6 +2120,7 @@ public class TransformManager {
   private void setSpin(JmolScriptEvaluator eval, boolean spinOn,
                        float endDegrees, Lst<P3> endPositions,
                        float[] dihedralList, BS bsAtoms, boolean isGesture) {
+    
     if (navOn && spinOn)
       setNavOn(false);
     if (this.spinOn == spinOn)
