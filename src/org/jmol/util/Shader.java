@@ -105,7 +105,7 @@ public class Shader {
   float intenseFraction = specularPower / 100f;
   float specularFactor = specularPercent / 100f;
   
-  private int[][] ashades = new int[128][];//AU.newInt2(128);
+  private int[][] ashades = AU.newInt2(128);
   private int[][] ashadesGreyscale;
   boolean celOn;
   int celPower = 10;
