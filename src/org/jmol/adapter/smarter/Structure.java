@@ -25,7 +25,7 @@
 package org.jmol.adapter.smarter;
 
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public class Structure {
   public STR structureType;

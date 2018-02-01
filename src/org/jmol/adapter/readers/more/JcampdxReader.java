@@ -38,7 +38,7 @@ import org.jmol.adapter.smarter.Structure;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.api.JmolJDXMOLReader;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;

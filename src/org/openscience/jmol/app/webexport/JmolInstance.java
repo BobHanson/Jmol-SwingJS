@@ -36,7 +36,7 @@ import javax.swing.filechooser.FileSystemView;
 
 import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 class JmolInstance {
   String name;

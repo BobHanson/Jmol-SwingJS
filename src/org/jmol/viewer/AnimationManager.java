@@ -33,7 +33,7 @@ import org.jmol.util.BSUtil;
 //import javajs.util.List;
 
 import org.jmol.api.Interface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
 
 public class AnimationManager {

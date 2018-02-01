@@ -34,7 +34,7 @@ import javajs.util.PT;
 
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Group;
 import org.jmol.script.T;
 import org.jmol.util.Elements;

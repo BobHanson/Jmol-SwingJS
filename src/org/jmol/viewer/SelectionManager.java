@@ -31,7 +31,7 @@ import javajs.util.AU;
 
 import org.jmol.api.JmolSelectionListener;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
 
 public class SelectionManager {

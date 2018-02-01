@@ -65,7 +65,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.jmol.awt.AwtColor;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.C;
 import org.jmol.viewer.Viewer;
 

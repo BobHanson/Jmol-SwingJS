@@ -43,7 +43,7 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.JmolDataManager;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 

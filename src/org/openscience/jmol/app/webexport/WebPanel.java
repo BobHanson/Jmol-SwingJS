@@ -78,7 +78,7 @@ import javax.swing.event.ListSelectionListener;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Logger;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
 import org.openscience.jmol.app.jmolpanel.HelpDialog;

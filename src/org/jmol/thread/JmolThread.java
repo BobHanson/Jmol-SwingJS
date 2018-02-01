@@ -144,7 +144,7 @@ abstract public class JmolThread extends Thread {
     * @j2sNative
     * 
     * var me = this;
-    * setTimeout(function(){me.run1(runPtr)}, Math.max(millis, 0));
+    * setTimeout(function(){me.run1$I(runPtr)}, Math.max(millis, 0));
     * return false;
     *  
     */

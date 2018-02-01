@@ -36,7 +36,7 @@ import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 /**
  * @author Bob Hanson hansonr@stolaf.edu 6/30/2013

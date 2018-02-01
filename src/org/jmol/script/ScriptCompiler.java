@@ -31,7 +31,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 
@@ -66,7 +66,6 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   /**
    * @param vwr
-   * @j2sIgnoreSuperConstructor
    * 
    */
   public ScriptCompiler(Viewer vwr) {

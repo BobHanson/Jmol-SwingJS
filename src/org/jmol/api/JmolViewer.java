@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.BoxInfo;
 
 import javajs.api.GenericPlatform;

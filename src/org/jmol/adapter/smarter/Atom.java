@@ -25,7 +25,7 @@
 package org.jmol.adapter.smarter;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -75,11 +75,6 @@ public class Atom extends P3 implements Cloneable {
   
   public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
 
-  /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
-   */
   public Atom() {
    set(Float.NaN, Float.NaN, Float.NaN);
   }

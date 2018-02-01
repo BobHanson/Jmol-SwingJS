@@ -26,7 +26,7 @@ package org.jmol.quantum;
 import javajs.util.Lst;
 import javajs.util.T3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;

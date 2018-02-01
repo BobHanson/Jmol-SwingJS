@@ -51,7 +51,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;

@@ -34,7 +34,7 @@ import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.readers.Parameters;
 import org.jmol.quantum.QS;

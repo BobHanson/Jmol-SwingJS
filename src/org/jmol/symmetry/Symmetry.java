@@ -43,7 +43,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.bspt.Bspt;
 import org.jmol.bspt.CubeIterator;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;

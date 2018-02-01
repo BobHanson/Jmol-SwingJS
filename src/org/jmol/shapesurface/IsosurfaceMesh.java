@@ -49,7 +49,7 @@ import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.MeshData;
@@ -76,8 +76,6 @@ public class IsosurfaceMesh extends Mesh {
 
   /**
    * @param vwr 
-   * @j2sIgnoreSuperConstructor
-   * 
    * @param thisID
    * @param colix
    * @param index

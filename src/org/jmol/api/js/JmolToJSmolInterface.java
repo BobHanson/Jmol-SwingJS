@@ -1,9 +1,9 @@
-package org.jmol.apijs;
+package org.jmol.api.js;
 
 import java.util.Map;
 
 import javajs.api.GenericImageDialog;
-import javajs.api.JmolObjectInterface;
+import javajs.api.js.J2SObjectInterface;
 
 import org.jmol.awtjs2d.Platform;
 import org.jmol.viewer.Viewer;
@@ -11,7 +11,7 @@ import org.jmol.viewer.Viewer;
 /**
  * methods in JSmol JavaScript accessed in Jmol 
  */
-public interface JmolToJSmolInterface extends JmolObjectInterface {
+public interface JmolToJSmolInterface extends J2SObjectInterface {
 
 
   // JSmol.js

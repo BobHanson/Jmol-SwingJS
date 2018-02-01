@@ -1,6 +1,6 @@
 package org.jmol.symmetry;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;

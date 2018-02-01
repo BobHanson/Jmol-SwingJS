@@ -8,7 +8,7 @@
  * particular file as subject to the "Classpath" exception as provided
  * by Sun in the LICENSE file that accompanied this code.
  *
- * This code is distributed in the hope that it will be useful, but WITHOUT
+ * This code is distributed in the hope that it will be useful, but WITHOUTe
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * version 2 for more details (a copy is included in the LICENSE file that
@@ -26,20 +26,26 @@
 package org.jmol.java;
 
 import javajs.api.JSONEncodable;
-import javajs.util.PT;
 import javajs.util.SB;
+
 
 
 /**
  * 
- * a fast 64-bit BitSet optimized as 32-bit in Java2Script -- about 25 times faster than
- * java.util.BitSet in JavaScript.
+ * a fast 32-bit BitSet optimized for Java2Script -- about 25 times faster than
+ * java.util.BitSet
  * 
  * @author Bob Hanson hansonr@stolaf.edu
  * 
- *         This class implements a 64-bit vector of bits that grows as needed. Each
+ *         Additions by Bob Hanson to allow for JavaScript mix of int/long Note
+ *         that Firefox (Sept 2012) does not really treat "Int32Array" as such,
+ *         because any element can be pushed into being a 64-bit number, which
+ *         really isn't because the last 8 bits are not usable.
+ * 
+ *         This class implements a vector of bits that grows as needed. Each
  *         component of the bit set has a {@code boolean} value. The bits of a
  *         {@code BitSet} are indexed by nonnegative integers. Individual
+ *         indexed bits can be examined, set, or cleared. One {@code BitSet} may
  *         be used to modify the contents of another {@code BitSet} through
  *         logical AND, logical inclusive OR, and logical exclusive OR
  *         operations.
@@ -71,21 +77,22 @@ import javajs.util.SB;
  */
 public class BS implements Cloneable, JSONEncodable {
   /*
-   * BitSets are packed into arrays of "words." Currently a word is a long,
-   * which consists of 64 bits, requiring 6 address bits. The choice of word
-   * size is determined purely by performance concerns.
+   * BitSets are packed into arrays of "words."
+   * 
+   * An int, which consists of 32 bits, requiring 5 address bits, is used for
+   * the JavaScript port.
    */
-  private final static int ADDRESS_BITS_PER_WORD = 6;
+  private final static int ADDRESS_BITS_PER_WORD = 5;
   private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
-//  private final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
 
   /* Used to shift left or right for a partial word mask */
-  private static final long WORD_MASK = 0xffffffffffffffffL;
+  private static final int WORD_MASK = 0xffffffff;
+
 
   /**
    * The internal field corresponding to the serialField "bits".
    */
-  private long[] words;
+  private int[] words;
 
   /**
    * The number of words in the logical size of this BitSet.
@@ -104,10 +111,25 @@ public class BS implements Cloneable, JSONEncodable {
   /**
    * Given a bit index, return word index containing it.
    * @param bitIndex 
-   * @return index
+   * @return b
    */
   private static int wordIndex(int bitIndex) {
     return bitIndex >> ADDRESS_BITS_PER_WORD;
+  }
+
+  /**
+   * Sets the field wordsInUse to the logical size in words of the bit set.
+   * WARNING:This method assumes that the number of words actually in use is
+   * less than or equal to the current value of wordsInUse!
+   */
+  private void recalculateWordsInUse() {
+    // Traverse the bitset until a used word is found
+    int i;
+    for (i = wordsInUse - 1; i >= 0; i--)
+      if (words[i] != 0)
+        break;
+
+    wordsInUse = i + 1; // The new logical size
   }
 
   /**
@@ -135,29 +157,6 @@ public class BS implements Cloneable, JSONEncodable {
     return bs;
   }
 
-  // /**
-  // * Every public method must preserve these invariants.
-  // */
-  // private void checkInvariants() {
-  // assert(wordsInUse == 0 || words[wordsInUse - 1] != 0);
-  // assert(wordsInUse >= 0 && wordsInUse <= words.length);
-  // assert(wordsInUse == words.length || words[wordsInUse] == 0);
-  // }
-  /**
-   * Sets the field wordsInUse to the logical size in words of the bit set.
-   * WARNING:This method assumes that the number of words actually in use is
-   * less than or equal to the current value of wordsInUse!
-   */
-  private void recalculateWordsInUse() {
-    // Traverse the bitset until a used word is found
-    int i;
-    for (i = wordsInUse - 1; i >= 0; i--)
-      if (words[i] != 0)
-        break;
-
-    wordsInUse = i + 1; // The new logical size
-  }
-
   private void init(int nbits) {
     // nbits can't be negative; size 0 is OK
     if (nbits < 0)
@@ -167,7 +166,7 @@ public class BS implements Cloneable, JSONEncodable {
   }
 
   private void initWords(int nbits) {
-    words = new long[wordIndex(nbits - 1) + 1];
+    words = new int[wordIndex(nbits - 1) + 1];
   }
 
   /**
@@ -201,86 +200,6 @@ public class BS implements Cloneable, JSONEncodable {
     }
   }
 
-  // /**
-  // * Checks that fromIndex ... toIndex is a valid range of bit indices.
-  // */
-  // private static void checkRange(int fromIndex, int toIndex) {
-  // if (fromIndex < 0)
-  // throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
-  // if (toIndex < 0)
-  // throw new IndexOutOfBoundsException("toIndex < 0: " + toIndex);
-  // if (fromIndex > toIndex)
-  // throw new IndexOutOfBoundsException("fromIndex: " + fromIndex +
-  // " > toIndex: " + toIndex);
-  // }
-
-//  /**
-//   * Sets the bit at the specified index to the complement of its current value.
-//   * 
-//   * @param bitIndex
-//   *          the index of the bit to flip
-//   * @throws IndexOutOfBoundsException
-//   *           if the specified index is negative
-//   * @since 1.4
-//   */
-//  public void flip(int bitIndex) {
-//    if (bitIndex < 0)
-//      throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
-//
-//    int wordIndex = wordIndex(bitIndex);
-//    expandTo(wordIndex);
-//
-//    words[wordIndex] ^= (1L << bitIndex);
-//
-//    recalculateWordsInUse();
-//    // checkInvariants();
-//  }
-//
-//  /**
-//   * Sets each bit from the specified {@code fromIndex} (inclusive) to the
-//   * specified {@code toIndex} (exclusive) to the complement of its current
-//   * value.
-//   * 
-//   * @param fromIndex
-//   *          index of the first bit to flip
-//   * @param toIndex
-//   *          index after the last bit to flip
-//   * @throws IndexOutOfBoundsException
-//   *           if {@code fromIndex} is negative, or {@code toIndex} is negative,
-//   *           or {@code fromIndex} is larger than {@code toIndex}
-//   * @since 1.4
-//   */
-//  public void flip(int fromIndex, int toIndex) {
-//    // checkRange(fromIndex, toIndex);
-//
-//    if (fromIndex == toIndex)
-//      return;
-//
-//    int startWordIndex = wordIndex(fromIndex);
-//    int endWordIndex = wordIndex(toIndex - 1);
-//    expandTo(endWordIndex);
-//
-//    long firstWordMask = WORD_MASK << fromIndex;
-//    long lastWordMask = WORD_MASK >>> -toIndex;
-//    if (startWordIndex == endWordIndex) {
-//      // Case 1: One word
-//      words[startWordIndex] ^= (firstWordMask & lastWordMask);
-//    } else {
-//      // Case 2: Multiple words
-//      // Handle first word
-//      words[startWordIndex] ^= firstWordMask;
-//
-//      // Handle intermediate words, if any
-//      for (int i = startWordIndex + 1; i < endWordIndex; i++)
-//        words[i] ^= WORD_MASK;
-//
-//      // Handle last word
-//      words[endWordIndex] ^= lastWordMask;
-//    }
-//
-//    recalculateWordsInUse();
-//    // checkInvariants();
-//  }
 
   /**
    * Sets the bit at the specified index to {@code true}.
@@ -298,9 +217,8 @@ public class BS implements Cloneable, JSONEncodable {
     int wordIndex = wordIndex(bitIndex);
     expandTo(wordIndex);
 
-    words[wordIndex] |= (1L << bitIndex); // Restores invariants
+    words[wordIndex] |= (1 << bitIndex); // Restores invariants
 
-    // checkInvariants();
   }
 
   /**
@@ -335,7 +253,6 @@ public class BS implements Cloneable, JSONEncodable {
    * @since 1.4
    */
   public void setBits(int fromIndex, int toIndex) {
-    // checkRange(fromIndex, toIndex);
 
     if (fromIndex == toIndex)
       return;
@@ -345,8 +262,8 @@ public class BS implements Cloneable, JSONEncodable {
     int endWordIndex = wordIndex(toIndex - 1);
     expandTo(endWordIndex);
 
-    long firstWordMask = WORD_MASK << fromIndex;
-    long lastWordMask = WORD_MASK >>> -toIndex;
+    int firstWordMask = WORD_MASK << fromIndex;
+    int lastWordMask = WORD_MASK >>> -toIndex;
     if (startWordIndex == endWordIndex) {
       // Case 1: One word
       words[startWordIndex] |= (firstWordMask & lastWordMask);
@@ -362,31 +279,7 @@ public class BS implements Cloneable, JSONEncodable {
       // Handle last word (restores invariants)
       words[endWordIndex] |= lastWordMask;
     }
-
-    // checkInvariants();
   }
-
-//  /**
-//   * Sets the bits from the specified {@code fromIndex} (inclusive) to the
-//   * specified {@code toIndex} (exclusive) to the specified value.
-//   * 
-//   * @param fromIndex
-//   *          index of the first bit to be set
-//   * @param toIndex
-//   *          index after the last bit to be set
-//   * @param value
-//   *          value to set the selected bits to
-//   * @throws IndexOutOfBoundsException
-//   *           if {@code fromIndex} is negative, or {@code toIndex} is negative,
-//   *           or {@code fromIndex} is larger than {@code toIndex}
-//   * @since 1.4
-//   */
-//  public void setBitsTo(int fromIndex, int toIndex, boolean value) {
-//    if (value)
-//      setBits(fromIndex, toIndex);
-//    else
-//      clear(fromIndex, toIndex);
-//  }
 
   /**
    * Sets the bit specified by the index to {@code false}.
@@ -405,10 +298,9 @@ public class BS implements Cloneable, JSONEncodable {
     if (wordIndex >= wordsInUse)
       return;
 
-    words[wordIndex] &= ~(1L << bitIndex);
+    words[wordIndex] &= ~(1 << bitIndex);
 
     recalculateWordsInUse();
-    // checkInvariants();
   }
 
   /**
@@ -425,8 +317,6 @@ public class BS implements Cloneable, JSONEncodable {
    * @since 1.4
    */
   public void clearBits(int fromIndex, int toIndex) {
-    // checkRange(fromIndex, toIndex);
-
     if (fromIndex == toIndex)
       return;
 
@@ -440,8 +330,8 @@ public class BS implements Cloneable, JSONEncodable {
       endWordIndex = wordsInUse - 1;
     }
 
-    long firstWordMask = WORD_MASK << fromIndex;
-    long lastWordMask = WORD_MASK >>> -toIndex;
+    int firstWordMask = WORD_MASK << fromIndex;
+    int lastWordMask = WORD_MASK >>> -toIndex;
     if (startWordIndex == endWordIndex) {
       // Case 1: One word
       words[startWordIndex] &= ~(firstWordMask & lastWordMask);
@@ -459,7 +349,6 @@ public class BS implements Cloneable, JSONEncodable {
     }
 
     recalculateWordsInUse();
-    // checkInvariants();
   }
 
   /**
@@ -487,70 +376,10 @@ public class BS implements Cloneable, JSONEncodable {
     if (bitIndex < 0)
       throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
 
-    // checkInvariants();
-
     int wordIndex = wordIndex(bitIndex);
     return (wordIndex < wordsInUse)
-        && ((words[wordIndex] & (1L << bitIndex)) != 0);
+        && ((words[wordIndex] & (1 << bitIndex)) != 0);
   }
-//
-//  /**
-//   * Returns a new {@code BitSet} composed of bits from this {@code BitSet} from
-//   * {@code fromIndex} (inclusive) to {@code toIndex} (exclusive).
-//   * 
-//   * @param fromIndex
-//   *          index of the first bit to include
-//   * @param toIndex
-//   *          index after the last bit to include
-//   * @return a new {@code BitSet} from a range of this {@code BitSet}
-//   * @throws IndexOutOfBoundsException
-//   *           if {@code fromIndex} is negative, or {@code toIndex} is negative,
-//   *           or {@code fromIndex} is larger than {@code toIndex}
-//   * @since 1.4
-//   */
-//  public BitSet getBits(int fromIndex, int toIndex) {
-//    // checkRange(fromIndex, toIndex);
-//
-//    // checkInvariants();
-//
-//    int len = length();
-//
-//    // If no set bits in range return empty bitset
-//    if (len <= fromIndex || fromIndex == toIndex)
-//      return newN(0);
-//
-//    // An optimization
-//    if (toIndex > len)
-//      toIndex = len;
-//
-//    BitSet result = newN(toIndex - fromIndex);
-//    int targetWords = wordIndex(toIndex - fromIndex - 1) + 1;
-//    int sourceIndex = wordIndex(fromIndex);
-//    boolean wordAligned = ((fromIndex & BIT_INDEX_MASK) == 0);
-//
-//    // Process all words but the last word
-//    for (int i = 0; i < targetWords - 1; i++, sourceIndex++)
-//      result.words[i] = wordAligned ? words[sourceIndex]
-//          : (words[sourceIndex] >>> fromIndex)
-//              | (words[sourceIndex + 1] << -fromIndex);
-//
-//    // Process the last word
-//    long lastWordMask = WORD_MASK >>> -toIndex;
-//    result.words[targetWords - 1] = ((toIndex - 1) & BIT_INDEX_MASK) < (fromIndex & BIT_INDEX_MASK) ? /*
-//                                                                                                       * straddles
-//                                                                                                       * source
-//                                                                                                       * words
-//                                                                                                       */
-//    ((words[sourceIndex] >>> fromIndex) | (words[sourceIndex + 1] & lastWordMask) << -fromIndex)
-//        : ((words[sourceIndex] & lastWordMask) >>> fromIndex);
-//
-//    // Set wordsInUse correctly
-//    result.wordsInUse = targetWords;
-//    result.recalculateWordsInUse();
-//    // result.checkInvariants();
-//
-//    return result;
-//  }
 
   /**
    * Returns the index of the first bit that is set to {@code true} that occurs
@@ -580,17 +409,15 @@ public class BS implements Cloneable, JSONEncodable {
     if (fromIndex < 0)
       throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
 
-    // checkInvariants();
-
     int u = wordIndex(fromIndex);
     if (u >= wordsInUse)
       return -1;
 
-    long word = words[u] & (WORD_MASK << fromIndex);
+    int word = words[u] & (WORD_MASK << fromIndex);
 
     while (true) {
       if (word != 0)
-        return (u * BITS_PER_WORD) + Long.numberOfTrailingZeros(word);
+        return (u * BITS_PER_WORD) + Integer.numberOfTrailingZeros(word);
       if (++u == wordsInUse)
         return -1;
       word = words[u];
@@ -614,17 +441,15 @@ public class BS implements Cloneable, JSONEncodable {
     if (fromIndex < 0)
       throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
 
-    // checkInvariants();
-
     int u = wordIndex(fromIndex);
     if (u >= wordsInUse)
       return fromIndex;
 
-    long word = ~words[u] & (WORD_MASK << fromIndex);
+    int word = ~words[u] & (WORD_MASK << fromIndex);
 
     while (true) {
       if (word != 0)
-        return (u * BITS_PER_WORD) + Long.numberOfTrailingZeros(word);
+        return (u * BITS_PER_WORD) + Integer.numberOfTrailingZeros(word);
       if (++u == wordsInUse)
         return wordsInUse * BITS_PER_WORD;
       word = ~words[u];
@@ -644,7 +469,7 @@ public class BS implements Cloneable, JSONEncodable {
       return 0;
 
     return BITS_PER_WORD * (wordsInUse - 1)
-        + (BITS_PER_WORD - Long.numberOfLeadingZeros(words[wordsInUse - 1]));
+        + (BITS_PER_WORD - Integer.numberOfLeadingZeros(words[wordsInUse - 1]));
   }
 
   /**
@@ -684,7 +509,7 @@ public class BS implements Cloneable, JSONEncodable {
   public int cardinality() {
     int sum = 0;
     for (int i = 0; i < wordsInUse; i++)
-      sum += Long.bitCount(words[i]);
+      sum += Integer.bitCount(words[i]);
     return sum;
   }
 
@@ -709,7 +534,6 @@ public class BS implements Cloneable, JSONEncodable {
       words[i] &= set.words[i];
 
     recalculateWordsInUse();
-    // checkInvariants();
   }
 
   /**
@@ -741,8 +565,6 @@ public class BS implements Cloneable, JSONEncodable {
       System.arraycopy(set.words, wordsInCommon, words, wordsInCommon,
           wordsInUse - wordsInCommon);
 
-    // recalculateWordsInUse() is unnecessary
-    // checkInvariants();
   }
 
   /**
@@ -777,7 +599,6 @@ public class BS implements Cloneable, JSONEncodable {
           set.wordsInUse - wordsInCommon);
 
     recalculateWordsInUse();
-    // checkInvariants();
   }
 
   /**
@@ -794,7 +615,6 @@ public class BS implements Cloneable, JSONEncodable {
       words[i] &= ~set.words[i];
 
     recalculateWordsInUse();
-    // checkInvariants();
   }
 
   /**
@@ -808,7 +628,7 @@ public class BS implements Cloneable, JSONEncodable {
    * nonnegative values of <code>k</code>) if and only if the expression
    * 
    * <pre>
-   * ((k &gt;&gt; 6) &lt; words.length) &amp;&amp; ((words[k &gt;&gt; 6] &amp; (1L &lt;&lt; (bit &amp; 0x3F))) != 0)
+   * ((k &gt;&gt; 6) &lt; words.length) &amp;&amp; ((words[k &gt;&gt; 6] &amp; (1 &lt;&lt; (bit &amp; 0x3F))) != 0)
    * </pre>
    * 
    * is true. Then the following definition of the <code>hashCode</code> method
@@ -876,9 +696,6 @@ public class BS implements Cloneable, JSONEncodable {
 
     BS set = (BS) obj;
 
-    // checkInvariants();
-    // set.checkInvariants();
-
     if (wordsInUse != set.wordsInUse)
       return false;
 
@@ -889,8 +706,6 @@ public class BS implements Cloneable, JSONEncodable {
 
     return true;
   }
-
-  private final static long[] emptyBitmap = new long[0];
 
   /**
    * Cloning this {@code BitSet} produces a new {@code BitSet} that is equal to
@@ -904,23 +719,28 @@ public class BS implements Cloneable, JSONEncodable {
   public Object clone() {
     if (!sizeIsSticky && wordsInUse != words.length)
       setLength(wordsInUse);
-
-    try {
-      BS result = (BS) super.clone();
-      if (result.wordsInUse == 0)
-        result.words = emptyBitmap;
-      else
-        result.words = words.clone();
-      return result;
-    } catch (CloneNotSupportedException e) {
-      throw new InternalError();
-    }
+    return copy(this);
   }
 
+  /**
+   * Attempts to reduce internal storage used for the bits in this bit set.
+   * Calling this method may, but is not required to, affect the value returned
+   * by a subsequent call to the {@link #size()} method.
+   * @param n 
+   */
   private void setLength(int n) {
-    long[] a = new long[n];
-    System.arraycopy(words, 0, a, 0, Math.min(wordsInUse, n));
-    words = a;
+    /**
+     * @j2sNative
+     *     if (n == this.words.length) return;
+     *     if (n == this.wordsInUse) {
+     *      this.words = Clazz.array(-1, this.words, 0, n);
+     *      return;
+     *     }
+     */
+    {}
+    int[] a = new int[n];
+    System.arraycopy(words, 0, a, 0, wordsInUse);
+    words = a;    
   }
 
   /**
@@ -938,7 +758,7 @@ public class BS implements Cloneable, JSONEncodable {
    * BitSet drPepper = new BitSet();
    * </pre>
    * 
-   * Now {@code drPepper.toString()} returns empty braces.
+   * Now {@code drPepper.toString()} returns "{}".
    * <p>
    * 
    * <pre>
@@ -953,7 +773,7 @@ public class BS implements Cloneable, JSONEncodable {
    * drPepper.set(10);
    * </pre>
    * 
-   * Now {@code drPepper.toString()} returns "({2, 4, 10})".
+   * Now {@code drPepper.toString()} returns "{2, 4, 10}".
    * 
    * @return a string representation of this bit set
    */
@@ -962,6 +782,50 @@ public class BS implements Cloneable, JSONEncodable {
     return escape(this, '(', ')');
   }
   
+  private final static int[] emptyBitmap = new int[0];
+
+  /**
+   * fast copy
+   * 
+   * @param bitsetToCopy
+   * @return bs
+   */
+  public static BS copy(BS bitsetToCopy) {
+    BS bs;
+    /**
+     * Clazz.clone will copy wordsInUse and sizeIsSticky, 
+     * but just a pointer to the words array.
+     * 
+     * @j2sNative
+     * 
+     *            bs = Clazz.clone(bitsetToCopy);
+     * 
+     */
+    {
+      bs = new BS();
+    }
+    int wordCount = bitsetToCopy.wordsInUse;
+    if (wordCount == 0) {
+      bs.words = emptyBitmap;
+    } else {
+      
+      /**
+       * Clazz.clone will copy wordsInUse and sizeIsSticky, 
+       * but just a pointer to the words array.
+       * 
+       * @j2sNative
+       * 
+       *   bs.words = Clazz.array(-1, bitsetToCopy.words, 0, bs.wordsInUse = wordCount);
+       * 
+       */
+      {
+        bs.words = new int[bs.wordsInUse = wordCount];
+        System.arraycopy(bitsetToCopy.words, 0, bs.words, 0, wordCount);
+      }
+
+    }
+    return bs;
+  }
 
   /**
    * 
@@ -978,10 +842,9 @@ public class BS implements Cloneable, JSONEncodable {
 
   @Override
   public String toJSON() {
-    // checkInvariants();
 
-    int numBits = (wordsInUse > 128) ? cardinality() : wordsInUse
-        * BITS_PER_WORD;
+    int numBits = (wordsInUse > 128 ? cardinality() : wordsInUse
+        * BITS_PER_WORD);
     SB b = SB.newN(6 * numBits + 2);
     b.appendC('[');
 
@@ -998,73 +861,6 @@ public class BS implements Cloneable, JSONEncodable {
 
     b.appendC(']');
     return b.toString();
-  }
-  
-  /**
-   * ({ 1 2 3:5 }) or ({null}) or [{ 1 2 3:5 }]
-   * 
-   * @param str
-   * @return BS
-   */
-  public static BS unescape(String str) {
-    char ch;
-    int len;
-    if (str == null || (len = (str = str.trim()).length()) < 4
-        || str.equalsIgnoreCase("({null})") 
-        || (ch = str.charAt(0)) != '(' && ch != '[' 
-        || str.charAt(len - 1) != (ch == '(' ? ')' : ']')
-        || str.charAt(1) != '{' || str.indexOf('}') != len - 2)
-      return null;
-    len -= 2;
-    for (int i = len; --i >= 2;)
-      if (!PT.isDigit(ch = str.charAt(i)) && ch != ' ' && ch != '\t'
-          && ch != ':')
-        return null;
-    int lastN = len;
-    while (PT.isDigit(str.charAt(--lastN))) {
-      // loop
-    }
-    if (++lastN == len)
-      lastN = 0;
-    else
-      try {
-        lastN = Integer.parseInt(str.substring(lastN, len));
-      } catch (NumberFormatException e) {
-        return null;
-      }
-    BS bs = newN(lastN);
-    lastN = -1;
-    int iPrev = -1;
-    int iThis = -2;
-    for (int i = 2; i <= len; i++) {
-      switch (ch = str.charAt(i)) {
-      case '\t':
-      case ' ':
-      case '}':
-        if (iThis < 0)
-          break;
-        if (iThis < lastN)
-          return null;
-        lastN = iThis;
-        if (iPrev < 0)
-          iPrev = iThis;
-        bs.setBits(iPrev, iThis + 1);
-        iPrev = -1;
-        iThis = -2;
-        break;
-      case ':':
-        iPrev = lastN = iThis;
-        iThis = -2;
-        break;
-      default:
-        if (PT.isDigit(ch)) {
-          if (iThis < 0)
-            iThis = 0;
-          iThis = (iThis * 10) + (ch - 48);
-        }
-      }
-    }
-    return (iPrev >= 0 ? null : bs);
   }
 
   public static String escape(BS bs, char chOpen, char chClose) {
@@ -1096,4 +892,66 @@ public class BS implements Cloneable, JSONEncodable {
     s.append("}").appendC(chClose);
     return s.toString();
   }
+
+  public static BS unescape(String str) {
+    char ch;
+    int len;
+    if (str == null || (len = (str = str.trim()).length()) < 4
+        || str.equalsIgnoreCase("({null})") 
+        || (ch = str.charAt(0)) != '(' && ch != '[' 
+        || str.charAt(len - 1) != (ch == '(' ? ')' : ']')
+        || str.charAt(1) != '{' || str.indexOf('}') != len - 2)
+      return null;
+    len -= 2;
+    for (int i = len; --i >= 2;)
+      if (((ch = str.charAt(i)) < 48 || ch > 57) && ch != ' ' && ch != '\t'
+          && ch != ':')
+        return null;
+    int lastN = len;
+    while (48 <= (ch = str.charAt(--lastN)) && ch <= 57) {
+      // loop
+    }
+    if (++lastN == len)
+      lastN = 0;
+    else
+      try {
+        lastN = Integer.parseInt(str.substring(lastN, len));
+      } catch (NumberFormatException e) {
+        return null;
+      }
+    BS bs = BS.newN(lastN);
+    lastN = -1;
+    int iPrev = -1;
+    int iThis = -2;
+    for (int i = 2; i <= len; i++) {
+      switch (ch = str.charAt(i)) {
+      case '\t':
+      case ' ':
+      case '}':
+        if (iThis < 0)
+          break;
+        if (iThis < lastN)
+          return null;
+        lastN = iThis;
+        if (iPrev < 0)
+          iPrev = iThis;
+        bs.setBits(iPrev, iThis + 1);
+        iPrev = -1;
+        iThis = -2;
+        break;
+      case ':':
+        iPrev = lastN = iThis;
+        iThis = -2;
+        break;
+      default:
+        if (48 <= ch && ch <= 57) {
+          if (iThis < 0)
+            iThis = 0;
+          iThis = (iThis * 10) + (ch - 48);
+        }
+      }
+    }
+    return (iPrev >= 0 ? null : bs);
+  }
+
 }

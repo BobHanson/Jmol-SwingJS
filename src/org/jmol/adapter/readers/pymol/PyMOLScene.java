@@ -10,7 +10,7 @@ import org.jmol.api.JmolSceneGenerator;
 import org.jmol.api.PymolAtomReader;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Text;

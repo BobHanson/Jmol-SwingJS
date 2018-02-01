@@ -26,7 +26,7 @@ package org.jmol.renderbio;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelsetbio.BasePair;
 import org.jmol.modelsetbio.NucleicMonomer;

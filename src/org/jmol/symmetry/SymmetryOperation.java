@@ -91,9 +91,6 @@ public class SymmetryOperation extends M4 {
   }
 
   /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
    * @param op
    * @param atoms
    * @param atomIndex

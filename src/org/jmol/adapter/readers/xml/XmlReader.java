@@ -197,7 +197,7 @@ public class XmlReader extends AtomSetCollectionReader {
       {
       }
       if (o instanceof BufferedInputStream)
-        o = Rdr.StreamToUTF8String(Rdr.getBIS(data));
+        o = Rdr.streamToUTF8String(Rdr.getBIS(data));
       /**
        * 
        * @j2sNative

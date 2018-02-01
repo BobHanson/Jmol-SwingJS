@@ -45,7 +45,6 @@ public class ScriptQueueThread extends JmolThread {
    * @param vwr 
    * @param startedByCommandThread 
    * @param pt 
-   * @j2sIgnoreSuperConstructor
    * 
    */
   public ScriptQueueThread(ScriptManager scriptManager, Viewer vwr, boolean startedByCommandThread, int pt) {

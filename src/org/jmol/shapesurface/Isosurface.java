@@ -116,7 +116,7 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.api.MeshDataServer;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;

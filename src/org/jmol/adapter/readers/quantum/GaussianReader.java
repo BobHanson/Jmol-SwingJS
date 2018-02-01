@@ -34,7 +34,7 @@ import javajs.util.V3;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;

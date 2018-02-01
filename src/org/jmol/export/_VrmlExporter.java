@@ -40,7 +40,7 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.GData;
 import org.jmol.util.Geodesic;
 import org.jmol.viewer.Viewer;

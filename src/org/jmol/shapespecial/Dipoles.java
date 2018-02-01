@@ -34,7 +34,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondIterator;

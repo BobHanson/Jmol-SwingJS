@@ -6,7 +6,7 @@ import java.util.Map;
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;

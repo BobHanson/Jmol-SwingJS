@@ -39,7 +39,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.PAL;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Group;

@@ -17,7 +17,7 @@ import javajs.util.SB;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;

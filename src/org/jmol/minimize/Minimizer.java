@@ -31,7 +31,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.minimize.forcefield.ForceField;
 import org.jmol.minimize.forcefield.ForceFieldMMFF;
 import org.jmol.minimize.forcefield.ForceFieldUFF;

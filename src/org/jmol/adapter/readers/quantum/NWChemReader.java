@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;

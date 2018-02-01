@@ -36,7 +36,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import javajs.J2SIgnoreImport;
 import javajs.api.GenericZipInputStream;
 import javajs.api.GenericZipTools;
 import javajs.api.Interface;
@@ -49,7 +48,6 @@ import org.apache.tools.bzip2.CBZip2InputStreamFactory;
  * Note the JSmol/HTML5 must use its own version of java.util.zip.ZipOutputStream.
  * 
  */
-@J2SIgnoreImport({ java.util.zip.ZipOutputStream.class })
 public class ZipTools implements GenericZipTools {
 
   public ZipTools() {

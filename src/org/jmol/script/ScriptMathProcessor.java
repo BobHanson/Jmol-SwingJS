@@ -40,7 +40,7 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;

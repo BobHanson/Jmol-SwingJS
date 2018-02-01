@@ -33,7 +33,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.MepCalculation;
 import org.jmol.quantum.QS;
@@ -53,7 +53,6 @@ import org.jmol.util.MeshCapper;
 import org.jmol.util.Parser;
 import org.jmol.util.Triangulator;
 
-import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.SB;
@@ -73,7 +72,6 @@ import org.jmol.util.TempArray;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
 
-@J2SIgnoreImport(org.jmol.quantum.QS.class)
 public class IsoExt extends ScriptExt {
 
   public IsoExt() {

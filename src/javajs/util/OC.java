@@ -5,12 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 
-import javajs.J2SIgnoreImport;
 import javajs.api.BytePoster;
 import javajs.api.GenericOutputChannel;
-import javajs.api.JmolObjectInterface;
+import javajs.api.js.J2SObjectInterface;
 
 /**
  * 
@@ -45,7 +43,6 @@ import javajs.api.JmolObjectInterface;
  *  
  */
 
-@J2SIgnoreImport({ java.io.FileOutputStream.class })
 public class OC extends OutputStream implements GenericOutputChannel {
  
   private BytePoster bytePoster; // only necessary for writing to http:// or https://
@@ -76,17 +73,17 @@ public class OC extends OutputStream implements GenericOutputChannel {
   public OC setParams(BytePoster bytePoster, String fileName,
                                      boolean asWriter, OutputStream os) {
     this.bytePoster = bytePoster;
-    this.fileName = fileName;
     isBase64 = ";base64,".equals(fileName);
     if (isBase64) {
     	fileName = null;
     	os0 = os;
     	os = null;
     }
+    this.fileName = fileName;
     this.os = os;
     isLocalFile = (fileName != null && !isRemote(fileName));
-    if (asWriter && !isBase64 && os != null)
-      bw = new BufferedWriter(new OutputStreamWriter(os));
+    if (asWriter && !isBase64 && os != null) 
+    	bw = Rdr.getBufferedWriter(os, null);
     return this;
   }
 
@@ -179,7 +176,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
         os = new ByteArrayOutputStream();
       if (bw != null) {
         bw.close();
-        bw = new BufferedWriter(new OutputStreamWriter(os));
+        bw = Rdr.getBufferedWriter(os, null);
       }
     } catch (Exception e) {
       // not perfect here.
@@ -195,12 +192,6 @@ public class OC extends OutputStream implements GenericOutputChannel {
   public void writeByteAsInt(int b) {
     if (os == null)
       initOS();
-    /**
-     * @j2sNative
-     * 
-     *  this.os.writeByteAsInt(b);
-     * 
-     */
     {
       try {
         os.write(b);
@@ -210,15 +201,10 @@ public class OC extends OutputStream implements GenericOutputChannel {
     byteCount++;
   }
   
-  /**
-   * @j2sOverride
-   */
   @Override
   public void write(byte[] buf, int i, int len) {
     if (os == null)
       initOS();
-    if (len < 0)
-      len = buf.length - i;
     try {
       os.write(buf, i, len);
     } catch (IOException e) {
@@ -254,15 +240,6 @@ public class OC extends OutputStream implements GenericOutputChannel {
     }
   }
 
-  /**
-   * Will break JavaScript if used.
-   * 
-   * @j2sIgnore
-   * 
-   * @param b
-   */
-  @Override
-  @Deprecated
   public void write(int b) {
     // required by standard ZipOutputStream -- do not use, as it will break JavaScript methods
     if (os == null)
@@ -274,20 +251,10 @@ public class OC extends OutputStream implements GenericOutputChannel {
     byteCount++;
   }
 
-// not in JSmol's OutputStream class, so not overriding  
-//  /**
-//   * Will break if used; no equivalent in JavaScript.
-//   * 
-//   * @j2sIgnore
-//   * 
-//   * @param b
-//   */
-//  @Override
-//  @Deprecated
-//  public void write(byte[] b) {
-//    // not used in JavaScript due to overloading problem there
-//    write(b, 0, b.length);
-//  }
+  public void write(byte[] b) {
+    // not used in JavaScript due to overloading problem there
+    write(b, 0, b.length);
+  }
 
   public void cancel() {
     isCanceled = true;
@@ -295,7 +262,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
   }
 
   @Override
-  @SuppressWarnings({ "null", "unused" })
+  @SuppressWarnings({ "unused" })
   public String closeChannel() {
     if (closed)
       return null;
@@ -334,7 +301,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
       return (sb == null ? null : sb.toString());
     }
     closed = true;
-    JmolObjectInterface jmol = null;
+    J2SObjectInterface jmol = null;
     Object _function = null;
     /**
      * @j2sNative
@@ -354,9 +321,9 @@ public class OC extends OutputStream implements GenericOutputChannel {
     if (jmol != null) {
       Object data = (sb == null ? toByteArray() : sb.toString());
       if (_function == null)
-        jmol._doAjax(fileName, null, data);
+        jmol._doAjax(fileName, null, data, sb == null);
       else
-        jmol._apply(fileName, data);
+        jmol._apply(_function, data);
     }
     return null;
   }
@@ -398,9 +365,9 @@ public class OC extends OutputStream implements GenericOutputChannel {
   }
 
   public final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:",
-  "cache://", "file:" };
+  "file:" };
   // note that SFTP is not supported
-  public final static int URL_LOCAL = 5;
+  public final static int URL_LOCAL = 4;
 
   public static boolean isRemote(String fileName) {
     if (fileName == null)

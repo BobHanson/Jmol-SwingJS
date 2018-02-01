@@ -40,7 +40,7 @@ import javajs.util.V3;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.BSUtil;

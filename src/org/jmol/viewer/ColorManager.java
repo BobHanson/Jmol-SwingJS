@@ -32,7 +32,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.c.PAL;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Model;

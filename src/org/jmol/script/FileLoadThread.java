@@ -26,7 +26,7 @@
 package org.jmol.script;
 
 import org.jmol.api.JmolScriptEvaluator;
-import org.jmol.apijs.JmolToJSmolInterface;
+import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.thread.JmolThread;
 import org.jmol.viewer.Viewer;
 
@@ -44,8 +44,6 @@ class FileLoadThread extends JmolThread {
    * @param fileName
    * @param key 
    * @param cacheName 
-   * 
-   * @j2sIgnoreSuperConstructor
    * 
    */
   public FileLoadThread(JmolScriptEvaluator eval, Viewer vwr, String fileName, String key, String cacheName) {

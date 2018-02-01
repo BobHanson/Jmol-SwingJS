@@ -43,7 +43,7 @@ import javajs.util.V3;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
@@ -506,7 +506,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
      * @j2sNative
      * 
      * if (e.getMessage)
-     *  s = e.getMessage()
+     *  s = e.getMessage();
      * else
      *  s = e.toString();
      */

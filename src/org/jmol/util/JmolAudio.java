@@ -25,7 +25,6 @@ package org.jmol.util;
 
 import java.util.Map;
 
-import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 
 import org.jmol.api.JmolAudioPlayer;
@@ -40,12 +39,7 @@ import javax.sound.sampled.LineListener;
 import sun.audio.AudioData;
 import sun.audio.AudioDataStream;
 
-@J2SIgnoreImport({ javax.sound.sampled.AudioInputStream.class,
-    javax.sound.sampled.AudioSystem.class, javax.sound.sampled.Clip.class,
-    javax.sound.sampled.Line.class, javax.sound.sampled.LineEvent.class,
-    javax.sound.sampled.LineListener.class, sun.audio.AudioData.class,
-    sun.audio.AudioDataStream.class })
-public class JmolAudio implements javax.sound.sampled.LineListener, JmolAudioPlayer {
+public class JmolAudio implements LineListener, JmolAudioPlayer {
 
   public JmolAudio() {
   }
@@ -102,8 +96,6 @@ public class JmolAudio implements javax.sound.sampled.LineListener, JmolAudioPla
   }
 
   /**
-   * @j2sIgnore
-   * 
    * @throws Exception
    * 
    */
@@ -121,9 +113,6 @@ public class JmolAudio implements javax.sound.sampled.LineListener, JmolAudioPla
   }
 
   @Override
-  /**
-   * @j2sIgnore
-   */
   public void update(LineEvent le) {
     processUpdate(le.getType().toString());
   }

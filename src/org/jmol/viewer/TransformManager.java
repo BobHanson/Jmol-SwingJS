@@ -27,7 +27,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolNavigatorInterface;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.c.STER;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.Escape;

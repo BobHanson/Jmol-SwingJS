@@ -23,17 +23,11 @@
  */
 package org.jmol.viewer;
 
-import javajs.J2SRequireImport;
-import javajs.api.GenericPlatform;
-import javajs.api.EventManager;
-import javajs.awt.event.Event;
-import javajs.util.AU;
-import javajs.util.PT;
 import java.util.Map;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.MeasurementPending;
@@ -44,14 +38,17 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
-
-import javajs.util.P3;
-
 import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
 
-@J2SRequireImport({ org.jmol.i18n.GT.class })
+import javajs.api.EventManager;
+import javajs.api.GenericPlatform;
+import javajs.awt.event.Event;
+import javajs.util.AU;
+import javajs.util.P3;
+import javajs.util.PT;
+
 public class ActionManager implements EventManager {
 
   protected Viewer vwr;

@@ -36,7 +36,7 @@ import javajs.util.SB;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Structure;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
 

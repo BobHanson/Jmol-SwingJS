@@ -25,7 +25,7 @@
 package org.jmol.renderbio;
 
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelsetbio.CarbohydratePolymer;
 import org.jmol.modelsetbio.Monomer;

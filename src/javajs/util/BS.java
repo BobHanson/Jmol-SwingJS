@@ -732,7 +732,7 @@ public class BS implements Cloneable, JSONEncodable {
      * @j2sNative
      *     if (n == this.words.length) return;
      *     if (n == this.wordsInUse) {
-     *      this.words = Clazz.newArray(-1, this.words, 0, n);
+     *      this.words = Clazz.array(-1, this.words, 0, n);
      *      return;
      *     }
      */
@@ -814,7 +814,7 @@ public class BS implements Cloneable, JSONEncodable {
        * 
        * @j2sNative
        * 
-       *   bs.words = Clazz.newArray(-1, bitsetToCopy.words, 0, bs.wordsInUse = wordCount);
+       *   bs.words = Clazz.array(-1, bitsetToCopy.words, 0, bs.wordsInUse = wordCount);
        * 
        */
       {
@@ -903,11 +903,11 @@ public class BS implements Cloneable, JSONEncodable {
       return null;
     len -= 2;
     for (int i = len; --i >= 2;)
-      if (!PT.isDigit(ch = str.charAt(i)) && ch != ' ' && ch != '\t'
+      if (((ch = str.charAt(i)) < 48 || ch > 57) && ch != ' ' && ch != '\t'
           && ch != ':')
         return null;
     int lastN = len;
-    while (PT.isDigit(str.charAt(--lastN))) {
+    while (48 <= (ch = str.charAt(--lastN)) && ch <= 57) {
       // loop
     }
     if (++lastN == len)
@@ -943,7 +943,7 @@ public class BS implements Cloneable, JSONEncodable {
         iThis = -2;
         break;
       default:
-        if (PT.isDigit(ch)) {
+        if (48 <= ch && ch <= 57) {
           if (iThis < 0)
             iThis = 0;
           iThis = (iThis * 10) + (ch - 48);

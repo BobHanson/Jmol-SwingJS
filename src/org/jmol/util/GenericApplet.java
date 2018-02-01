@@ -350,7 +350,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
   
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 
@@ -384,7 +383,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 
@@ -418,7 +416,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 

@@ -28,8 +28,6 @@ import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 
-import javajs.J2SIgnoreImport;
-import javajs.J2SRequireImport;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -40,8 +38,6 @@ import java.io.InputStream;
 import java.util.Properties;
 
 
-@J2SIgnoreImport({java.util.Properties.class,java.io.BufferedInputStream.class})
-@J2SRequireImport({javajs.util.SB.class})
 public final class JC {
 
   // requires 8 bits for rule and type:        rrrba*SR

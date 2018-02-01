@@ -35,7 +35,7 @@ import javajs.util.SB;
 import org.jmol.api.Interface;
 import org.jmol.c.STR;
 import org.jmol.dssx.DSSP;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Group;

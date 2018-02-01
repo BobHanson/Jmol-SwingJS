@@ -33,7 +33,7 @@ import javajs.awt.Font;
 import javajs.util.P3;
 import javajs.util.PT;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Text;
 import org.jmol.util.C;
 import org.jmol.util.Logger;

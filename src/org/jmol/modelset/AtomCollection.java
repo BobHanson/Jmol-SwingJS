@@ -44,7 +44,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.Bspf;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelsetbio.BioModelSet;
 
 import org.jmol.util.Elements;

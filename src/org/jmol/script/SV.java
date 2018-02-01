@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;

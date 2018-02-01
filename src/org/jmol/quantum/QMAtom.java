@@ -46,9 +46,6 @@ class QMAtom extends P3 {
   //boolean isExcluded; -- not implemented?
 
   /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
    * @param i
    * @param xyzAng 
    * @param atom 

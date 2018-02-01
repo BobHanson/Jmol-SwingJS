@@ -34,7 +34,6 @@ import java.net.URLEncoder;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.J2SIgnoreImport;
 import javajs.api.BytePoster;
 import javajs.api.GenericFileInterface;
 import javajs.util.AU;
@@ -61,7 +60,6 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
 
-@J2SIgnoreImport({Rdr.StreamReader.class})
 public class FileManager implements BytePoster {
 
   public static String SIMULATION_PROTOCOL = "http://SIMULATION/";
@@ -1465,7 +1463,7 @@ public class FileManager implements BytePoster {
     /**
      * @j2sNative
      * 
-     * (data = Jmol.Cache.get(key)) || (data = this.cache.get(key));
+     * (data = Jmol.Cache.get(key)) || (data = this.cache.get$O(key));
      * 
      */
     {

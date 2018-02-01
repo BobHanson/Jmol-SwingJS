@@ -36,7 +36,6 @@ public class Bond extends AtomSetObject {
    * @param atomIndex1 
    * @param atomIndex2 
    * @param order 
-   * @j2sIgnoreSuperConstructor
    */
   public Bond (int atomIndex1, int atomIndex2, int order) {
     this.atomIndex1 = atomIndex1;

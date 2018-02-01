@@ -58,7 +58,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.PointIterator;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;

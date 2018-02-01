@@ -3,7 +3,7 @@ package org.jmol.shapesurface;
 import javajs.util.OC;
 import javajs.util.T3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.GData;

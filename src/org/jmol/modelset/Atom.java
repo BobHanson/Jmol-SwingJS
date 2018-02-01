@@ -40,7 +40,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.T;
 import org.jmol.util.C;
@@ -117,8 +117,6 @@ public class Atom extends Point3fi implements Node {
   public int shapeVisibilityFlags;
 
   /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
    * 
    * @param modelIndex
    * @param atomIndex

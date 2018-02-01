@@ -32,7 +32,7 @@ import javajs.util.P3;
 
 import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;

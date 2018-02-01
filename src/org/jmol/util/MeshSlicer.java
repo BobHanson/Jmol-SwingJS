@@ -4,7 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 
 import javajs.util.AU;

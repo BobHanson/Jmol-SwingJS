@@ -28,7 +28,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;

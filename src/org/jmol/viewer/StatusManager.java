@@ -39,7 +39,7 @@ import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDialogInterface;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.c.CBK;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.JmolAudio;

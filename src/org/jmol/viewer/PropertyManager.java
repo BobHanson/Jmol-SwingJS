@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
@@ -54,7 +53,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -87,7 +86,6 @@ import org.jmol.viewer.binding.Binding;
  */
 
 
-@J2SIgnoreImport({ javajs.util.XmlUtil.class })
 public class PropertyManager implements JmolPropertyManager {
 
   public PropertyManager() {

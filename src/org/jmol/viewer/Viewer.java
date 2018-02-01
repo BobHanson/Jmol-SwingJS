@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javajs.J2SIgnoreImport;
 import javajs.api.GenericCifDataParser;
 import javajs.api.GenericMenuInterface;
 import javajs.api.GenericMouseInterface;
@@ -95,7 +94,7 @@ import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -167,7 +166,6 @@ import org.jmol.viewer.binding.Binding;
  * ****************************************************************
  */
 
-@J2SIgnoreImport({ Runtime.class })
 public class Viewer extends JmolViewer implements AtomDataServer,
     PlatformViewer {
 
