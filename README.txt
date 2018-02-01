@@ -1,17 +1,28 @@
 ==============================================================================
 ===              Jmol/JSmol/JSpecView    Java2Script/SwingJs               ===
 ==============================================================================
-       Jmol: an open-source SwingJS application for the visualization and 
+       Jmol: An open-source Java/SwingJS application for the visualization and 
              analysis of 3D molecular structures with features for chemicals, 
-             crystals, materials and biomolecules. Written in Java
-      JSmol: a modular web app derived in real time from Jmol, with options to
-             use WebGL or not (the default)
-  JSpecView: an open-source SwingJS application for working with spectral 
-             NMR, IR, GC, GC/MS, UV/VIS, and general specral data
+             crystals, materials and biomolecules. Written in Java; debugs and
+             runs in both Java and JavaScript.
+             
+      JSmol: A modular web app derived in real time from Jmol, with options to
+             render with or without WebGL.
+             
+  JSpecView: An open-source Java/SwingJS application for working with spectral 
+             NMR, IR, GC, GC/MS, UV/VIS, and general specral data. Written in 
+             Java; debugs and runs in both Java and JavaScript. 
             
-Java2Script: an Eclipse-based transpiler for creating JavaScript from Java 
-    SwingJS: a nearly complete Java Swing-based virtual machine running in 
-             JavaScript           
+Java2Script: An Eclipse-based transpiler for creating JavaScript from Java, 
+             generating both Java class files and their corresponding essentially
+             identical JavaScript equivalents, allowing for immediate debugging
+             in both languages. 
+ 
+    SwingJS: A nearly complete Java Swing-based virtual machine running in 
+             JavaScript; accommodates non-Swing and non-AWT Java applets and 
+             applications as well, allowing them to work both in the standard 
+             stand-along Java fashion, embedded in web pages, or in frames 
+             on top of web pages.              
 ==============================================================================
 
 Feb. 1, 2018  Bob Hanson (hansonr@stolaf.edu)
