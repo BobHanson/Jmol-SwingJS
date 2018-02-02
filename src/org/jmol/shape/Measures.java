@@ -39,7 +39,7 @@ import org.jmol.modelset.TickInfo;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;

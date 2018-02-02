@@ -24,17 +24,18 @@
 package org.jmol.popup;
 
 
-import javajs.api.GenericMenuInterface;
-import javajs.api.SC;
-import javajs.awt.Component;
-import javajs.awt.event.ActionEvent;
-import javajs.awt.event.ItemEvent;
-import javajs.swing.ButtonGroup;
-import javajs.swing.JPopupMenu;
-import javajs.swing.JCheckBoxMenuItem;
-import javajs.swing.JRadioButtonMenuItem;
-import javajs.swing.JMenu;
-import javajs.swing.JMenuItem;
+import org.jmol.api.GenericMenuInterface;
+
+import org.jmol.awtjs.Component;
+import org.jmol.awtjs.SC;
+import org.jmol.awtjs.event.ActionEvent;
+import org.jmol.awtjs.event.ItemEvent;
+import org.jmol.awtjs.swing.ButtonGroup;
+import org.jmol.awtjs.swing.JPopupMenu;
+import org.jmol.awtjs.swing.JCheckBoxMenuItem;
+import org.jmol.awtjs.swing.JRadioButtonMenuItem;
+import org.jmol.awtjs.swing.JMenu;
+import org.jmol.awtjs.swing.JMenuItem;
 
 /**
  * For menus, popup-related awt/swing class references are in this file.

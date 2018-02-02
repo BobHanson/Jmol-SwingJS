@@ -1,7 +1,7 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
-import javajs.awt.BorderLayout;
-import javajs.awt.LayoutManager;
+import org.jmol.awtjs.BorderLayout;
+import org.jmol.awtjs.LayoutManager;
 import javajs.util.SB;
 
 public class JPanel extends JComponent {

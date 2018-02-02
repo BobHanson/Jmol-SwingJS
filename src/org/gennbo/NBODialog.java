@@ -43,7 +43,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Map;
 
-import javajs.swing.SwingConstants;
+import org.jmol.awtjs.swing.SwingConstants;
 import javajs.util.PT;
 
 import javax.swing.BorderFactory;

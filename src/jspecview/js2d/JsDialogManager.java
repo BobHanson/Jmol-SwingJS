@@ -1,12 +1,12 @@
 package jspecview.js2d;
 
-import javajs.awt.Dimension;
-import javajs.swing.JComponent;
-import javajs.swing.JEditorPane;
-import javajs.swing.JDialog;
-import javajs.swing.JLabel;
-import javajs.swing.JScrollPane;
-import javajs.swing.JTable;
+import org.jmol.awtjs.Dimension;
+import org.jmol.awtjs.swing.JComponent;
+import org.jmol.awtjs.swing.JEditorPane;
+import org.jmol.awtjs.swing.JDialog;
+import org.jmol.awtjs.swing.JLabel;
+import org.jmol.awtjs.swing.JScrollPane;
+import org.jmol.awtjs.swing.JTable;
 import javajs.util.PT;
 
 import jspecview.api.JSVPanel;

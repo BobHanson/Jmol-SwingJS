@@ -1,4 +1,4 @@
-package javajs.api;
+package org.jmol.awtjs;
 
 /** 
  * The window.Event in HTML5

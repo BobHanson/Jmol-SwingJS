@@ -1,4 +1,4 @@
-package javajs.awt;
+package org.jmol.awtjs;
 
 import javajs.api.GenericColor;
 

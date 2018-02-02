@@ -1,6 +1,6 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
-import javajs.awt.Component;
+import org.jmol.awtjs.Component;
 
 public class JPopupMenu extends AbstractButton {
   
@@ -14,7 +14,7 @@ public class JPopupMenu extends AbstractButton {
     /**
      * @j2sNative
      * 
-     *            SwingController.setDraggable(javajs.swing.JPopupMenu); 
+     *            SwingController.setDraggable(org.jmol.awtjs.swing.JPopupMenu); 
      */
     {
     }

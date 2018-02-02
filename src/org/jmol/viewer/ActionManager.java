@@ -25,6 +25,8 @@ package org.jmol.viewer;
 
 import java.util.Map;
 
+import org.jmol.api.EventManager;
+import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
 import javajs.util.BS;
@@ -42,9 +44,7 @@ import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
 
-import javajs.api.EventManager;
-import javajs.api.GenericPlatform;
-import javajs.awt.event.Event;
+import org.jmol.awtjs.event.Event;
 import javajs.util.AU;
 import javajs.util.P3;
 import javajs.util.PT;

@@ -28,12 +28,13 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
-import javajs.api.SC;
 import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
+
+import org.jmol.awtjs.SC;
 import javajs.util.BS;
 import org.jmol.modelset.Group;
 import org.jmol.script.T;

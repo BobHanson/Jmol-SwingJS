@@ -25,13 +25,14 @@ package jspecview.java;
 
 import java.awt.Container;
 
-import javajs.api.PlatformViewer;
-import javajs.api.SC;
-
 import javax.swing.JPopupMenu;
 
 import org.jmol.popup.AwtSwingPopupHelper;
 import org.jmol.popup.PopupResource;
+
+import org.jmol.awtjs.SC;
+
+import org.jmol.api.PlatformViewer;
 import org.jmol.popup.AwtSwingComponent;
 
 import jspecview.common.JSViewer;

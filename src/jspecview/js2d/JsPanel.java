@@ -40,14 +40,14 @@ package jspecview.js2d;
 import java.io.OutputStream;
 
 import javajs.api.GenericColor;
-import javajs.api.GenericFileInterface;
-import javajs.api.GenericMouseInterface;
-import javajs.api.GenericPlatform;
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.OC;
 
+import org.jmol.api.GenericFileInterface;
+import org.jmol.api.GenericMouseInterface;
+import org.jmol.api.GenericPlatform;
 import org.jmol.util.Logger;
 
 import jspecview.api.JSVPanel;

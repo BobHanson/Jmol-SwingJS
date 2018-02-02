@@ -1,11 +1,11 @@
-package javajs.api;
+package org.jmol.api;
 
 
 import java.net.URL;
 import java.util.Map;
 
-
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
+import org.jmol.awtjs.FontManager;
 import javajs.util.P3;
 
 public interface GenericPlatform extends FontManager {

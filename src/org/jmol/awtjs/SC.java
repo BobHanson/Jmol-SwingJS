@@ -1,9 +1,9 @@
-package javajs.api;
+package org.jmol.awtjs;
 
 /**
- * SwingComponent interface common to javax.swing and javajs.swing
+ * SwingComponent interface common to javax.swing and org.jmol.awtjs.swing
  * 
- * Can be augmented as needed, provided classes of javajs.swing are also
+ * Can be augmented as needed, provided classes of org.jmol.awtjs.swing are also
  * updated. (SwingComponents in javajs are subclasses of AbstractButton.)
  * 
  */

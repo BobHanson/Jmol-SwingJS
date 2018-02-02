@@ -1,8 +1,8 @@
 package org.jmol.script;
 
-import javajs.api.GenericPlatform;
 import javajs.util.PT;
 
+import org.jmol.api.GenericPlatform;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;

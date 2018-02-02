@@ -1,6 +1,6 @@
-package javajs.awt.event;
+package org.jmol.awtjs.event;
 
-import javajs.awt.event.WindowEvent;
+import org.jmol.awtjs.event.WindowEvent;
 
 public interface WindowListener {
   

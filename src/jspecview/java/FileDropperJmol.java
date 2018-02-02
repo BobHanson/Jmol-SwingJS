@@ -39,9 +39,9 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.List;
 
-import javajs.api.PlatformViewer;
 import javajs.util.PT;
 
+import org.jmol.api.PlatformViewer;
 import org.jmol.util.Logger;
 
 /**

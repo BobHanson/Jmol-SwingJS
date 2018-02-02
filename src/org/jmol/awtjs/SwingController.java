@@ -1,10 +1,7 @@
-package javajs.api;
-
-import javajs.awt.Component;
-import javajs.awt.Dimension;
+package org.jmol.awtjs;
 
 /**
- * SwingController is an interface that javajs.swing classes will need.
+ * SwingController is an interface that org.jmol.awtjs.swing classes will need.
  * It must be implemented as a JavaScript object PRIOR to 
  * any calls to create any components.
  * 

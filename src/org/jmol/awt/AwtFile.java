@@ -9,9 +9,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.AccessControlException;
 
+import org.jmol.api.GenericFileInterface;
 import org.jmol.viewer.Viewer;
 
-import javajs.api.GenericFileInterface;
 import javajs.util.PT;
 
 

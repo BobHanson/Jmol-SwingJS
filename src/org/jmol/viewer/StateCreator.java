@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;

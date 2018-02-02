@@ -26,13 +26,11 @@ package org.jmol.modelkit;
 import java.awt.Component;
 import java.net.URL;
 
-import javajs.api.PlatformViewer;
-import javajs.api.SC;
-
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.popup.AwtSwingComponent;
 import org.jmol.popup.AwtSwingPopupHelper;
@@ -40,6 +38,8 @@ import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
+
+import org.jmol.awtjs.SC;
 
 public class ModelKitPopup extends JmolGenericPopup {
 

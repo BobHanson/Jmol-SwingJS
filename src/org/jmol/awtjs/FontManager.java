@@ -1,6 +1,4 @@
-package javajs.api;
-
-import javajs.awt.Font;
+package org.jmol.awtjs;
 
 /**
  * A generic interface for font queries.

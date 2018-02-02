@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;

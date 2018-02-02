@@ -1,6 +1,6 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
-import javajs.awt.LayoutManager;
+import org.jmol.awtjs.LayoutManager;
 
 public class GridBagLayout extends LayoutManager {
 

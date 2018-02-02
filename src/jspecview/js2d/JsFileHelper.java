@@ -1,6 +1,7 @@
 package jspecview.js2d;
 
-import javajs.api.GenericFileInterface;
+import org.jmol.api.GenericFileInterface;
+
 import javajs.util.PT;
 
 import jspecview.api.JSVFileHelper;

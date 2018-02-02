@@ -1,6 +1,6 @@
 package org.jmol.viewer.binding;
 
-import javajs.awt.event.Event;
+import org.jmol.awtjs.event.Event;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;

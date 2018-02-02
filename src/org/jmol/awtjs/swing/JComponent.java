@@ -1,6 +1,6 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
-import javajs.awt.Container;
+import org.jmol.awtjs.Container;
 
 public abstract class JComponent extends Container {
 
@@ -21,7 +21,7 @@ public abstract class JComponent extends Container {
    * page to do with actionListener what is desired.
    * 
    * In javax.swing, these methods are in AbstractButton, but
-   * this is better for javajs.swing, reducing the duplication
+   * this is better for org.jmol.awtjs.swing, reducing the duplication
    * of JTextField's actionListener business. 
    * 
    * @param listener 

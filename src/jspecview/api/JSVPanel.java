@@ -2,9 +2,10 @@ package jspecview.api;
 
 import java.io.OutputStream;
 
+import org.jmol.api.GenericFileInterface;
+import org.jmol.api.GenericPlatform;
+
 import javajs.api.GenericColor;
-import javajs.api.GenericFileInterface;
-import javajs.api.GenericPlatform;
 import javajs.util.OC;
 
 

@@ -28,12 +28,13 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-import javajs.api.GenericPlatform;
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.P3;
 import javajs.util.PT;
 
 import javajs.util.BS;
+
+import org.jmol.api.GenericPlatform;
 import org.jmol.modelset.Text;
 import org.jmol.util.C;
 import org.jmol.util.Logger;

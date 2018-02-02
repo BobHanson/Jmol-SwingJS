@@ -1,5 +1,6 @@
-package javajs.api;
+package org.jmol.api;
 
+import org.jmol.awtjs.SC;
 
 public interface GenericMenuInterface {
 

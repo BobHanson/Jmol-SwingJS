@@ -1,7 +1,8 @@
 package jspecview.js2d;
 
 
-import javajs.api.PlatformViewer;
+import org.jmol.api.PlatformViewer;
+
 import javajs.util.P3;
 
 

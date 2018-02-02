@@ -1,7 +1,7 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
-import javajs.awt.Color;
-import javajs.awt.Container;
+import org.jmol.awtjs.Color;
+import org.jmol.awtjs.Container;
 import javajs.util.SB;
 
 

@@ -1,5 +1,5 @@
 
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
 import javajs.util.SB;
 

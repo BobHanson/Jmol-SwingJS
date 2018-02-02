@@ -1,4 +1,4 @@
-package javajs.swing;
+package org.jmol.awtjs.swing;
 
 public class JMenuItem extends AbstractButton {
 

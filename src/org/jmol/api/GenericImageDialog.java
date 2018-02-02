@@ -1,4 +1,4 @@
-package javajs.api;
+package org.jmol.api;
 
 public interface GenericImageDialog {
 

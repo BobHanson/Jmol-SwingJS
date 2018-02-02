@@ -2,9 +2,9 @@ package org.jmol.api.js;
 
 import java.util.Map;
 
-import javajs.api.GenericImageDialog;
 import javajs.api.js.J2SObjectInterface;
 
+import org.jmol.api.GenericImageDialog;
 import org.jmol.awtjs2d.Platform;
 import org.jmol.viewer.Viewer;
 

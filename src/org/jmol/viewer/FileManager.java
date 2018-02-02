@@ -35,7 +35,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.BytePoster;
-import javajs.api.GenericFileInterface;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
@@ -49,6 +48,7 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 
 import org.jmol.adapter.readers.spartan.SpartanUtil;
+import org.jmol.api.GenericFileInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDomReaderInterface;
 import org.jmol.api.JmolFilesReaderInterface;

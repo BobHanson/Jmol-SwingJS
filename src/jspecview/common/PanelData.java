@@ -43,9 +43,8 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
-import javajs.awt.event.Event;
-import javajs.api.EventManager;
+import org.jmol.awtjs.Font;
+import org.jmol.awtjs.event.Event;
 import javajs.util.CU;
 import javajs.util.Lst;
 
@@ -57,7 +56,7 @@ import jspecview.common.Annotation.AType;
 import jspecview.common.Spectrum.IRMode;
 import jspecview.dialog.JSVDialog;
 
-
+import org.jmol.api.EventManager;
 import org.jmol.api.GenericGraphics;
 import org.jmol.util.Logger;
 

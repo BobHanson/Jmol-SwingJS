@@ -25,8 +25,7 @@
 
 package org.jmol.thread;
 
-import javajs.api.GenericPlatform;
-
+import org.jmol.api.GenericPlatform;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.MouseState;
 import org.jmol.viewer.Viewer;

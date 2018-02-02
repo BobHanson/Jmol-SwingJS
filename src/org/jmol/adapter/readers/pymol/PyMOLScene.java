@@ -20,7 +20,7 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.Font;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
