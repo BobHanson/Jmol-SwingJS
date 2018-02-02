@@ -448,9 +448,8 @@ public class XmlReader extends AtomSetCollectionReader {
         return;
     }
     // JavaScript only
-    for (int i = nodes.length; --i >= 0;) {
-      atts.put(this.fixLocal(nodes[i].name).toLowerCase(), nodes[i].value);
-    }
+    for (int i = nodes.length; --i >= 0;)
+      atts.put(fixLocal(nodes[i].name).toLowerCase(), nodes[i].value);
 
   }
   
