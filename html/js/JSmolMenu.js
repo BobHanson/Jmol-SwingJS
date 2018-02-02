@@ -1,3 +1,4 @@
+
 // JSmolMenu.js
 // author: Bob Hanson, hansonr@stolaf.edu
 
@@ -15,7 +16,7 @@
 * Includes: jquery.ui.core.js, jquery.ui.widget.js, jquery.ui.mouse.js, jquery.ui.position.js, jquery.ui.menu.js
 * Copyright (c) 2012 jQuery Foundation and other contributors Licensed MIT */
 
-(function(jQuery) {
+;(function(jQuery) {
 
 if (!jQuery.ui)
 try{

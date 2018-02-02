@@ -351,4 +351,3 @@ Jmol.Console.Button.prototype.html = function() {
 	var s = '<input type="button" id="' + this.id + '" style="width:' + Jmol.Console.buttonWidth + 'px" value="' + this.label + '" onClick="Jmol.Console.click(\'' + this.id + '\')"/>'
 	return s;
 }
-

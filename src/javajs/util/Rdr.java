@@ -144,7 +144,7 @@ public class Rdr implements GenericLineReader {
       throws IOException {
     // could also just make sure we have a buffered input stream here.
     if (getUTFEncodingForStream(bis) == Encoding.NONE)
-      return new BufferedReader(new InputStreamReader(bis, (charSet == null ? "UTF-8" : charSet)));
+      return new StreamReader(bis, (charSet == null ? "UTF-8" : charSet));
     byte[] bytes = getLimitedStreamBytes(bis, -1);
     bis.close();
     return getBR(charSet == null ? fixUTF(bytes) : new String(bytes, charSet));

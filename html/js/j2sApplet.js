@@ -660,7 +660,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 	}
 
 	J2S._binaryTypes = [".uk/pdbe/densities/",".bcif?",".au?",".mmtf?",".gz?",".jpg?",".jpeg?",".gif?",".png?",".zip?",".jmol?",".bin?",".smol?",".spartan?",".mrc?",".pse?", ".map?", ".omap?", 
-  ".dcd?",".mp3?",".ogg?", ".wav?", ".au?"];
+  ".dcd?",".ccp4?",".mp3?",".ogg?", ".wav?", ".au?"];
 
 	J2S._isBinaryUrl = function(url) {
     url = url.toLowerCase() + "?";
@@ -781,7 +781,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 		}
 		// we actually cannot suggest a fileName, I believe.
 		if (!J2S.featureDetection.hasFileReader)
-				return fileLoadThread.setData("Local file reading is not enabled in your browser", null, null, appData);
+				return fileLoadThread.setData$S$S$O$O("Local file reading is not enabled in your browser", null, null, appData);
 		if (!applet._localReader) {
 			var div = '<div id="ID" style="z-index:'+J2S._getZ(applet, "fileOpener") + ';position:absolute;background:#E0E0E0;left:10px;top:10px"><div style="margin:5px 5px 5px 5px;"><input type="file" id="ID_files" /><button id="ID_loadfile">load</button><button id="ID_cancel">cancel</button></div><div>'
 			J2S.$after("#" + applet._id + "_appletdiv", div.replace(/ID/g, applet._id + "_localReader"));
@@ -802,7 +802,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 		J2S.$appEvent(applet, "localReader_cancel", "click");
 		J2S.$appEvent(applet, "localReader_cancel", "click", function(evt) {
 			J2S.$css(J2S.$(applet, "localReader"), {display: "none"});
-			fileLoadThread.setData(null, null, null, appData);
+			fileLoadThread.setData$S$S$O$O(null, null, null, appData);
 		});
 		J2S.$css(J2S.$(applet, "localReader"), {display : "block"});
 	}
@@ -811,7 +811,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
   	data = J2S._strToBytes(data);
 		if (filename.indexOf(".jdx") >= 0)
 			J2S.Cache.put("cache://" + filename, data);
-		fileLoadThread.setData(filename, filename0, data, appData);
+		fileLoadThread.setData$S$S$O$O(filename, filename0, data, appData);
   }
   
 	J2S._toBytes = function(data) {
