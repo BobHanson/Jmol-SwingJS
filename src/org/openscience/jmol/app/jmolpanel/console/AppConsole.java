@@ -731,7 +731,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       // Id Control key is down, captures events does command
       // history recall and inhibits caret vertical shift.
 
-      System.out.println("AppConsole: " + ke);
+      //System.out.println("AppConsole: " + ke);
       
       
       int kcode = ke.getKeyCode();
