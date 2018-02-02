@@ -406,41 +406,55 @@ public class XmlReader extends AtomSetCollectionReader {
     }
   }
 
+  private class NVPair {
+    String name;
+    String value;
+  }
+  
+  @SuppressWarnings("unused")
   private void getDOMAttributesA(Object[] attributes) {
-    
+
     atts.clear();
     if (attributes == null)
       return;
+
+    NVPair[] nodes = null;
 
     /**
      * @j2sNative
      * 
      * 
-     *            var nodes = attributes[0]; for (var i = nodes.length; --i >=
-     *            0;) { var key = this.fixLocal(nodes[i].name);
-     *            this.atts.put(key.toLowerCase(), nodes[i].value); }
-     *            return;
-     * 
-     * 
+     *            nodes = attributes[0];
      * 
      */
     {
-      
+
       // Java only -- no longer loading only specific values
-      
+
       Number N = (Number) jsObjectGetMember(attributes, "length");
-      int n  = (N == null ? 0 : N.intValue());
+      int n = (N == null ? 0 : N.intValue());
       for (int i = n; --i >= 0;) {
         attArgs[0] = Integer.valueOf(i);
         attArgs[0] = jsObjectCall(attributes, "item", attArgs);
         if (attArgs[0] != null) {
           String attValue = (String) jsObjectGetMember(attArgs, "value");
           if (attValue != null)
-            atts.put(((String) jsObjectGetMember(attArgs, "name")).toLowerCase(), attValue);
+            atts.put(
+                ((String) jsObjectGetMember(attArgs, "name")).toLowerCase(),
+                attValue);
         }
       }
+      if (true)
+        return;
     }
+    // JavaScript only
+    for (int i = nodes.length; --i >= 0;) {
+      atts.put(this.fixLocal(nodes[i].name).toLowerCase(), nodes[i].value);
+    }
+
   }
+  
+  
 
   /**
    * @j2sIgnore
