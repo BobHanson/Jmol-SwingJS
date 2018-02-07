@@ -497,8 +497,6 @@ public class ModelSet extends BondCollection {
         false, type, index, scale, pts, center, id);
   }
 
-  private SymmetryInterface pointGroup;
-
   private BoxInfo defaultBBox;
 
   private Object calculatePointGroupForFirstModel(BS bsAtoms, boolean doAll,

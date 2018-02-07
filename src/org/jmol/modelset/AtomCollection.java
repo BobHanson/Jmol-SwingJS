@@ -92,6 +92,8 @@ abstract public class AtomCollection {
 
   public Trajectory trajectory;
 
+  protected SymmetryInterface pointGroup;
+
   ////////////////////
   
   private LabelToken labeler;
@@ -1120,6 +1122,7 @@ abstract public class AtomCollection {
     validateBspfForModel(m.trajectoryBaseIndex, false);
     if (m.isBioModel)
       m.resetDSSR(true);
+    pointGroup = null;
   }
 
   private void untaint(int atomIndex, int type) {
