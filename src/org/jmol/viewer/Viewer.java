@@ -2582,7 +2582,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   void echoMessage(String msg) {
     int iShape = JC.SHAPE_ECHO;
     shm.loadShape(iShape);
-    setShapeProperty(iShape, "font", getFont3D("SansSerif", "Plain", 9));
+    setShapeProperty(iShape, "font", getFont3D("SansSerif", "Plain", 20));
     setShapeProperty(iShape, "target", "error");
     setShapeProperty(iShape, "text", msg);
   }
