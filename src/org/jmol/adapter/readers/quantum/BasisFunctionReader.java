@@ -102,6 +102,7 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
     mo.put("index", Integer.valueOf(orbitals.size()));
     if (spin != null)
       mo.put("spin", spin);
+    moData.put("highLEnabled", highLEnabled);
   }
   
   public class MOEnergySorter implements Comparator<Object>{
@@ -116,6 +117,8 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
 
   
   Map<String, String> orbitalMaps = new Hashtable<String, String>();
+
+  private int[] highLEnabled = new int[QS.idSpherical.length];
  
   /**
    * 
@@ -136,6 +139,7 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
                              String jmolList, int minLength) {
     orbitalMaps.put(shell, fileList);
     moData.put("orbitalMaps", orbitalMaps);
+    enableShell(shellType);
     if (fileList.equals(jmolList))
       return true;
     getDfCoefMaps();
@@ -146,6 +150,15 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
           + " -- Cannot read orbital order for: " + fileList + "\n expecting: "
           + jmolList);
     return isOK;
+  }
+
+  /**
+   * This flag must be explicitly set when a reader has been 
+   * verified to properly sort G, H, I,... orbitals.
+   * @param shellType
+   */
+  protected void enableShell(int shellType) {
+    highLEnabled[shellType] = 1;
   }
 
   protected int nCoef;
@@ -165,18 +178,17 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
   }
   
   protected int fixSlaterTypes(int typeOld, int typeNew) {
+    // Molden reader, QchemReader
     // in certain cases we assume Cartesian and then later have to 
     // correct that. 
     if (shells == null)
       return 0;
     nCoef = 0;
-    //System.out.println("----");
     for (int i = shells.size(); --i >=0 ;) {
       int[] slater = shells.get(i);
       if (slater[1] == typeOld)
         slater[1] = typeNew;
       int m = getDfCoefMaps()[slater[1]].length;
-      //System.out.println("i=" + i + " nCoef=" + nCoef + " t=" + slater[1] + " m=" + m);
       nCoef += m;
     }
     return nCoef;

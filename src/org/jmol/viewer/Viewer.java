@@ -5165,6 +5165,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return g.dotScale;
     case T.helixstep:
       return g.helixStep;
+    case T.infofontsize:
+      return g.infoFontSize;
     case T.meshscale:
       return g.meshScale;
     case T.minpixelselradius:
@@ -5964,6 +5966,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.infofontsize:
+      g.infoFontSize = Math.max(0, value);
+      break;
     case T.contextdepthmax:
     case T.historylevel:
     case T.scriptreportinglevel:

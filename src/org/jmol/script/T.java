@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-01-28 23:38:16 -0600 (Sun, 28 Jan 2018) $
- * $Revision: 21814 $
+ * $Date: 2018-02-02 10:28:34 -0600 (Fri, 02 Feb 2018) $
+ * $Revision: 21817 $
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -1210,8 +1210,9 @@ public class T {
   public final static int inchikey       = misc  | 154;
   public final static int increment      = misc  | 157;
   public final static int info    = misc  | 158;
-  public final static int inline         = misc  | 159;
-  public final static int insideout      = misc  | 160;
+  public final static int infofontsize   = misc  | 159;
+   public final static int inline        = misc  | 160;
+  public final static int insideout      = misc  | 161;
   public final static int interior       = misc  | 162;
   public final static int internal       = misc  | 164;
   public final static int intramolecular = misc  | 165;
@@ -2014,6 +2015,7 @@ public class T {
         "ident",
         "image",
         "info",
+        "infoFontSize",
         "inline",
         "insertion",
         "insertions",
@@ -3071,6 +3073,7 @@ public class T {
         -1,                                 // "ident"
         image,                              // "image"
         info,                               // "info"
+        infofontsize,                       // "infofontsize"
         inline,                             // "inline"
         insertion,                          // "insertion"
         -1,                                 // "insertions"

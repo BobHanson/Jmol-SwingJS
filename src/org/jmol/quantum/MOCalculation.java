@@ -23,15 +23,17 @@
  */
 package org.jmol.quantum;
 
-import javajs.api.Interface;
-import javajs.util.Lst;
-import javajs.util.T3;
+import java.util.Map;
 
-import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.modelset.Atom;
-import org.jmol.util.Logger;
 import org.jmol.quantum.mo.DataAdder;
+import org.jmol.util.Logger;
+
+import javajs.api.Interface;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.T3;
 
 
 
@@ -117,9 +119,7 @@ public class MOCalculation extends QuantumCalculation {
   public boolean doNormalize = true;
   public boolean nwChemMode = false;
   //                                           0  S       1   P        2  SP   
-  private int[][] dfCoefMaps = new int[][] {new int[1], new int[3], new int[4], 
-        //    3   DS     4   DC      5   FS      6   FC
-          new int[5], new int[6], new int[7], new int[10]};
+  private int[][] dfCoefMaps;
 
   private float[] linearCombination;
 
@@ -128,25 +128,48 @@ public class MOCalculation extends QuantumCalculation {
   private double moFactor = 1;
   public boolean havePoints;
   boolean testing = true;
+
+  private int[] highLEnabled;
   
   public MOCalculation() {
   }
 
-  public boolean setupCalculation(VolumeData volumeData, BS bsSelected,
-                        String calculationType, T3[] xyz, Atom[] atoms,
-                        int firstAtomOffset, Lst<int[]> shells,
-                        float[][] gaussians,
-                        int[][] dfCoefMaps, Object slaters, float[] moCoefficients,
+//  return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
+//      (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
+//      atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"),
+//      (float[][]) params.moData.get("gaussians"), dfCoefMaps, null, coef,
+//      linearCombination, params.isSquaredLinear, coefs,
+//      params.moData.get("isNormalized") != Boolean.TRUE, points);
+//case Parameters.QM_TYPE_SLATER:
+//  return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
+//      (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
+//      atomData.firstAtomIndex, null, null, null,
+//      params.moData.get("slaters"), coef, linearCombination,
+//      params.isSquaredLinear, coefs, true, points);
+
+  public boolean setupCalculation(Map<String, Object> moData, boolean isSlaters, 
+                                  VolumeData volumeData, BS bsSelected,
+                        T3[] xyz, Atom[] atoms,
+                        int firstAtomOffset, 
+                        int[][] dfCoefMaps, float[] moCoefficients,
                         float[] linearCombination, boolean isSquaredLinear, 
-                        float[][] coefs,
-                        boolean doNormalize, T3[] points) {
+                        float[][] coefs, T3[] points) {
+    
+    String calculationType = (String) moData.get("calculationType");
+    @SuppressWarnings("unchecked")
+    Lst<int[]> shells = (Lst<int[]>) moData.get("shells");
+    float[][] gaussians = (float[][]) moData.get("gaussians");
+    Object slaters = moData.get("slaters");
+    // G H I must be explicitly enabled by the reader
+    // so that we don't accidentally show non-validated results
+    highLEnabled = (int[]) moData.get("highLEnabled"); 
+    boolean doNormalize = (isSlaters || moData.get("isNormalized") != Boolean.TRUE);
     havePoints = (points != null);
     this.calculationType = calculationType;
     this.firstAtomOffset = firstAtomOffset;
     this.shells = shells;
     this.gaussians = gaussians;
-    if (dfCoefMaps != null)
-      this.dfCoefMaps = dfCoefMaps;
+    this.dfCoefMaps = (dfCoefMaps == null ? QS.getNewDfCoefMap() : dfCoefMaps);
     coeffs = new double[this.dfCoefMaps[this.dfCoefMaps.length - 1].length];
     this.slaters = (SlaterData[]) slaters;
     this.moCoefficients = moCoefficients;
@@ -322,7 +345,7 @@ public class MOCalculation extends QuantumCalculation {
       addData5D();
       break;
     case QS.DC:
-        addData6D();
+      addData6D();
       break;
     default:
       if (addHighL(basisType))
@@ -348,6 +371,8 @@ public class MOCalculation extends QuantumCalculation {
    * @return true if implemented
    */
   private boolean addHighL(int basisType) {
+    if (basisType >= QS.GS && highLEnabled[basisType] == 0)
+      return false;
     DataAdder adder = dataAdders[basisType];
     switch (dataAdderOK[basisType]) {
     case 0:
@@ -385,7 +410,7 @@ public class MOCalculation extends QuantumCalculation {
    * 
    * @param el
    * @param cpt
-   * @return
+   * @return normalization for NWChem
    */
   public double getContractionNormalization(int el, int cpt) {
     double sum;

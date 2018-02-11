@@ -285,6 +285,7 @@ public class GlobalSettings {
     setB("highResolution", highResolutionFlag);
     setF("hoverDelay", hoverDelayMs / 1000f);
     setB("imageState", imageState);
+    setI("infoFontSize", infoFontSize);
     setB("isosurfaceKey", isosurfaceKey);
     setB("isosurfacePropertySmoothing", isosurfacePropertySmoothing);
     setI("isosurfacePropertySmoothingPower", isosurfacePropertySmoothingPower);
@@ -504,6 +505,7 @@ public class GlobalSettings {
 
   //rendering
 
+  int infoFontSize = 20;
   boolean antialiasDisplay = false;
   boolean antialiasImages = true;
   boolean imageState = true;

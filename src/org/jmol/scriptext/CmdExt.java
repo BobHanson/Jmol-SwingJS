@@ -1061,7 +1061,7 @@ public class CmdExt extends ScriptExt {
 
         if (bsAtoms2 == null)
           coordTo = eval.getPointArray(++eval.iToken, -1, false);
-        else
+        else if (bsTo != null)
           bsAtoms2.and(bsTo);
         if (vAtomSets == null)
           vAtomSets = new Lst<Object[]>();
@@ -1126,9 +1126,11 @@ public class CmdExt extends ScriptExt {
         bsAtoms1 = BSUtil.copy(bsFrom);
         bsAtoms2 = BSUtil.copy(bsTo);
         bsAtoms1.and(bsSubset);
-        bsAtoms2.and(bsSubset);
         bsAtoms1.and(bsFrom);
-        bsAtoms2.and(bsTo);
+        if (bsAtoms2 != null) {
+          bsAtoms2.and(bsSubset);
+          bsAtoms2.and(bsTo);
+        }
       }
       vAtomSets = new Lst<Object[]>();
       vAtomSets.addLast(new BS[] { bsAtoms1, bsAtoms2 });

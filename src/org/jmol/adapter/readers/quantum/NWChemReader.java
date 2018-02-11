@@ -703,6 +703,7 @@ public class NWChemReader extends MOReader {
   private static String FC_LIST = "XXX   XXY   XXZ   XYY   XYZ   XZZ   YYY   YYZ   YZZ   ZZZ";
 
   private boolean readBasis() throws Exception {
+    // F only; G, H, I not enabled. Just set getDFMap to enable those
     gaussianCount = 0;
     shellCount = 0;
     nBasisFunctions = 0;

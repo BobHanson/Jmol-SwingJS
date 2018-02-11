@@ -295,9 +295,8 @@ public class MOReader extends BasisFunctionReader {
   
   private static String FC_LIST  =       "(F1)  (F2)  (F10) (F4)  (F2)  (F3)  (F6)  (F9)  (F8)  (F5)";
 
-  // inferred from GenNBO, which is: 301 302 303 304 305 306 307 308 309 310
-  //       for xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
-
+  // note that higher-L orbitals (G,H,I) are not enabled here.
+  
   protected void readMolecularOrbitals(int headerType) throws Exception {
     // GamessUK, GamessUS, and general NBO reader
     if (ignoreMOs) {

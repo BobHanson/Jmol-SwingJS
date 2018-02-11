@@ -215,6 +215,12 @@ class IsoMOReader extends AtomDataReader {
       line = PT.formatStringS(line, "U",
           energy != null && params.moData.containsKey("energyUnits")
               && ++rep != 0 ? (String) params.moData.get("energyUnits") : "");
+    if (line.indexOf("%L") >= 0) {
+      String[] labels = (String[]) params.moData.get("nboLabels");
+      line = PT.formatStringS(line, "L", (labels != null
+          && params.qm_moNumber > 0 && ++rep != 0 ?
+      labels[(params.qm_moNumber - 1) % labels.length] : ""));
+    }
     if (line.indexOf("%S") >= 0)
       line = PT.formatStringS(
           line,
@@ -371,19 +377,16 @@ class IsoMOReader extends AtomDataReader {
     switch (params.qmOrbitalType) {
     case Parameters.QM_TYPE_VOLUME_DATA:
       break;
-    case Parameters.QM_TYPE_GAUSSIAN:
-      return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
-          (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
-          atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"),
-          (float[][]) params.moData.get("gaussians"), dfCoefMaps, null, coef,
-          linearCombination, params.isSquaredLinear, coefs,
-          params.moData.get("isNormalized") != Boolean.TRUE, points);
     case Parameters.QM_TYPE_SLATER:
-      return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
-          (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
-          atomData.firstAtomIndex, null, null, null,
-          params.moData.get("slaters"), coef, linearCombination,
-          params.isSquaredLinear, coefs, true, points);
+    case Parameters.QM_TYPE_GAUSSIAN:
+      return ((MOCalculation) q).setupCalculation(
+          params.moData, params.qmOrbitalType == Parameters.QM_TYPE_SLATER,  
+          volumeData, bsMySelected,
+          atomData.xyz, atomData.atoms,
+          atomData.firstAtomIndex,
+          dfCoefMaps, coef,
+          linearCombination, params.isSquaredLinear, 
+          coefs, points);
     case Parameters.QM_TYPE_NCI_PRO:
       return ((NciCalculation) q).setupCalculation(volumeData, bsMySelected,
           params.bsSolvent, atomData.bsMolecules, atomData.atoms,

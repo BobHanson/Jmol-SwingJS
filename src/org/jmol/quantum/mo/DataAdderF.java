@@ -34,17 +34,29 @@ import org.jmol.quantum.MOCalculation;
  */
 
 /**
- * adds cartesian F orbital contributions
+ * adds 10 cartesian F orbital contributions
  */
 public class DataAdderF implements DataAdder {
 
   public DataAdderF() {
   }
 
+  // Ordering from Gaussian:
+  //  16        5XXX        0.00000   0.00000   0.00000   0.00397   0.00000
+  //  17        5YYY        0.00000   0.00000   0.00397   0.00000   0.00000
+  //  18        5ZZZ        0.00000   0.00397   0.00000   0.00000   0.00276
+  //  19        5XYY        0.00000   0.00000   0.00000   0.00142   0.00000
+  //  20        5XXY        0.00000   0.00000   0.00142   0.00000   0.00000
+  //  21        5XXZ        0.00000   0.00142   0.00000   0.00000  -0.03279
+  //  22        5XZZ        0.00000   0.00000   0.00000   0.00142   0.00000
+  //  23        5YZZ        0.00000   0.00000   0.00142   0.00000   0.00000
+  //  24        5YYZ        0.00000   0.00142   0.00000   0.00000  -0.03279
+  //  25        5XYZ        0.00698   0.00000   0.00000   0.00000   0.00000
+  
+  // same as Molden
+  
   @Override
   public boolean addData(MOCalculation calc, boolean havePoints) {
-    // expects 10 orbitals in the order XXX, YYY, ZZZ, XYY, XXY, 
-    //                                  XXZ, XZZ, YZZ, YYZ, XYZ
     double alpha;
     double c1;
     double a;

@@ -306,14 +306,13 @@ public class GenNBOReader extends MOReader {
     return data;
   }
 
-  /*
-   * 14_a Basis set information needed for plotting orbitals
-   * ---------------------------------------------------------------------------
-   * 36 90 162
-   * ---------------------------------------------------------------------------
-   * 6 -2.992884000 -1.750577000 1.960024000 
-   * 6 -2.378528000 -1.339374000 0.620578000
-   */
+// 14_a Basis set information needed for plotting orbitals
+// ---------------------------------------------------------------------------
+// 36 90 162
+// ---------------------------------------------------------------------------
+// 6 -2.992884000 -1.750577000 1.960024000 
+// 6 -2.378528000 -1.339374000 0.620578000
+//
 
   private boolean getFile31() throws Exception {
     String data = getFileData(".31");
@@ -354,13 +353,13 @@ public class GenNBOReader extends MOReader {
 
   private static String FS_LIST = "351   352   353   354   355   356   357";
   // GenNBO is 351 352 353 354 355 356 357
-  //        as 2z3-3x2z-3y2z
-  //               4xz2-x3-xy2
-  //                   4yz2-x2y-y3
-  //                           x2z-y2z
-  //                               xyz
-  //                                  x3-3xy2
-  //                                     3x2y-y3
+  //  f(0)     2z3-3x2z-3y2z   
+  //  f(c1)        4xz2-x3-xy2
+  //  f(s1)            4yz2-x2y-y3
+  //  f(c2)                x2z-y2z
+  //  f(s2)                    xyz
+  //  f(c3)                        x3-3xy2
+  //  f(s3)                            3x2y-y3
   // org.jmol.quantum.MOCalculation expects the same
   private static String FC_LIST = "301   307   310   304   302   303   306   309   308   305";
   // GenNBO is 301 302 303 304 305 306 307 308 309 310
@@ -369,8 +368,48 @@ public class GenNBOReader extends MOReader {
   //           xxx yyy zzz xyy xxy xxz xzz yzz yyz xyz
   //           301 307 310 304 302 303 306 309 308 305
 
+  private static String GS_LIST = "451   452   453   454   455   456   457   458   459"; 
+  // GenNBO assumes same
+  // org.jmol.quantum.MOCalculation expects
+  //  9G: G 0, G+1, G-1, G+2, G-2, G+3, G-3, G+4, G-4
   
+  private static String GC_LIST = "415   414   413   412   411   410   409   408   407   406   405   404   403   402   401";
+  // GenNBO 401  402  403  404  405  406  407  408  409  410 
+  //    for xxxx xxxy xxxz xxyy xxyz xxzz xyyy xyyz xyzz xzzz 
+  // GenNBO 411  412  413  414  415  
+  //        yyyy yyyz yyzz yzzz zzzz
+  // 
+  // Gaussian is exactly opposite this.
+  
+  
+  private static String HS_LIST = "551   552   553   554   555   556   557   558   559   560   561";
+  
+  private static String HC_LIST = 
+      "521   520   519   518   517   516   515   514   513   512   " +
+  		"511   510   509   508   507   506   505   504   503   502   501"; 
+  // GenNBO is 501-521
+  //        501   502   503   504   505   506   507   508   509   510
+  //    for xxxxx xxxxy xxxxz xxxyy xxxyz xxxzz xxyyy xxyyz xxyzz xxzzz
+  //        511   512   513   514   515   516   517   518   519   520
+  //        xyyyy xyyyz xyyzz xyzzz xzzzz yyyyy yyyyz yyyzz yyzzz yzzzz
+  //        521
+  //        zzzzz
+  //
+  // Gaussian is opposite
+  
+  private static String IS_LIST = "651   652   653   654   655   656   657   658   659   660   661   662   663";
 
+  private static String IC_LIST = 
+      "628   627   626   625   624   623   622   621   620   " +
+  		"619   618   617   616   615   614   613   612   611   610   " +
+      "609   608   607   606   605   604   603   602   601";
+  // GenNBO is 601-628
+  // for xxxxxx xxxxxy xxxxxz xxxxyy xxxxyz xxxxzz xxxyyy xxxyyz xxxyzz xxxzzz 
+  //     xxyyyy xxyyyz xxyyzz xxyzzz xxzzzz xyyyyy xyyyyz xyyyzz xyyzzz xyzzzz 
+  //     xzzzzz yyyyyy yyyyyz yyyyzz yyyzzz yyzzzz yzzzzz zzzzzz
+  //
+  // Gaussian is opposite this 
+  
   private void readData47() throws Exception {
     allowNoOrbitals = true;
     discardLinesUntilContains("$COORD");
@@ -385,6 +424,9 @@ public class GenNBOReader extends MOReader {
     int[] labels = getIntData();
     
     discardLinesUntilContains("NSHELL =");
+    
+    
+    
     shellCount = parseIntAt(line, 10);
     gaussianCount = parseIntAt(rd(), 10);
     rd();
@@ -445,7 +487,8 @@ public class GenNBOReader extends MOReader {
       if (!getDFMap("SP", line, QS.SP, SP_LIST, 1))
         return false;
       slater[1] = QS.SP;
-      break;        
+      break;
+      
     case 5:
       if (!getDFMap("DS", line, QS.DS, DS_LIST, 3))
         return false;
@@ -456,6 +499,7 @@ public class GenNBOReader extends MOReader {
         return false;
       slater[1] = QS.DC;
       break;
+      
     case 7:
       if (!getDFMap("FS", line, QS.FS, FS_LIST, 3))
         return false;
@@ -465,6 +509,42 @@ public class GenNBOReader extends MOReader {
       if (!getDFMap("FC", line, QS.FC, FC_LIST, 3))
         return false;
       slater[1] = QS.FC;
+      break;
+      
+    case 9:
+      if (!getDFMap("GS", line, QS.GS, GS_LIST, 3))
+        return false;
+      slater[1] = QS.GS;
+      break;
+    case 15:
+      if (!getDFMap("GC", line, QS.GC, GC_LIST, 3))
+        return false;
+      slater[1] = QS.GC;
+      break;
+      
+    case 11:
+      if (!getDFMap("HS", line, QS.HS, HS_LIST, 3))
+        return false;
+      slater[1] = QS.HS;
+      break;
+    case 21:
+      if (!getDFMap("HC", line, QS.HC, HC_LIST, 3))
+        return false;
+      slater[1] = QS.HC;
+      break;
+      
+    case 13:
+      if (!getDFMap("IS", line, QS.IS, IS_LIST, 3))
+        return false;
+      slater[1] = QS.IS;
+      break;
+    case 28:
+      if (!getDFMap("IC", line, QS.IC, IC_LIST, 3))
+        return false;
+      slater[1] = QS.IC;
+      break;
+    default:
+      Logger.error("Unrecognized orbital slater count: " + n);
       break;
     }
     slater[2] = pt + 1; // gaussian list pointer
@@ -501,6 +581,36 @@ public class GenNBOReader extends MOReader {
   }
 
   private boolean readData31(String line1) throws Exception {
+    
+// HCN(-), E(UB3LYP) = -93.4597027357 [nu: 804(2),2186,3329] Vibrational te
+//     Basis set information needed for plotting orbitals
+//     ---------------------------------------------------------------------------
+//          3    74   111
+//     ---------------------------------------------------------------------------
+//        1      0.000000      0.000000     -1.567118
+//        6      0.000000      0.000000     -0.496424
+//        7      0.000000      0.000000      0.649380
+//     ---------------------------------------------------------------------------
+//          1     1     1     4
+//          1
+//          1     1     5     1
+//          1
+//          1     1     6     1
+//          1
+//          1     1     7     1
+//          1
+//          1     1     8     1
+//          1
+//          1     1     9     1
+//          1
+//          1     3    10     1
+//        101   102   103
+// ...
+//          2    11    66     1
+//        551   552   553   554   555   556   557   558   559   560
+//        561
+
+    
     if (line1 == null) {
       line1 = rd();
       rd();
@@ -542,7 +652,11 @@ public class GenNBOReader extends MOReader {
       int n = parseIntStr(tokens[1]);
       int pt = parseIntStr(tokens[2]) - 1; // gaussian list pointer
       int ng = parseIntStr(tokens[3]);     // number of gaussians
-      line = rd().trim();
+      line = "";
+      for (int j = n / 10 + 1; --j >= 0;)
+        line += rd().substring(1);
+      line = line.trim();
+      System.out.println(line);
       if (!fillSlater(slater, n, pt, ng))
         return false;
     }
@@ -570,7 +684,7 @@ public class GenNBOReader extends MOReader {
       String key = (ab.equals("BETA") ? "beta_" : "") + type;
       if (parseIntStr(count) != nOrbitals) {
         Logger.error("file 46 number of orbitals (" + count + ") does not match nOrbitals: "
-            + nOrbitals);
+            + nOrbitals + "\n");
         return;
       }
       SB sb = new SB();

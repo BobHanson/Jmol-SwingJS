@@ -24,6 +24,7 @@
 package org.jmol.quantum.mo;
 
 import org.jmol.quantum.MOCalculation;
+import org.jmol.quantum.QS;
 
 
 
@@ -34,7 +35,9 @@ import org.jmol.quantum.MOCalculation;
  */
 
 /**
- * adds spherical G orbital contributions
+ * change  QS.MAX_TYPE_SUPPORTED if you implement this
+ * 
+ * adds 9 spherical G orbital contributions
  */
 public class DataAdder9G implements DataAdder {
 

@@ -34,6 +34,8 @@ import org.jmol.quantum.MOCalculation;
  */
 
 /**
+ * change  QS.MAX_TYPE_SUPPORTED if you implement this
+ * 
  * adds spherical H orbital contributions
  */
 public class DataAdder11H implements DataAdder {

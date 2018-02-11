@@ -418,6 +418,14 @@ public class GaussianReader extends MOReader {
         .indexOf("5D") > 0));
     boolean doSphericalF = (calculationType != null && (calculationType
         .indexOf("7F") > 0));
+    boolean doSphericalG = (calculationType != null && (calculationType
+        .indexOf("9G") > 0));
+    boolean doSphericalH = (calculationType != null && (calculationType
+        .indexOf("11H") > 0));
+    boolean doSphericalI = (calculationType != null && (calculationType
+        .indexOf("13I") > 0));
+    boolean doSphericalHighL = (doSphericalG ||doSphericalH ||doSphericalI);
+    boolean doSpherical = (doSphericalD ||doSphericalF || doSphericalHighL);
     boolean isGeneral = (line.indexOf("general basis input") >= 0);
     if (isGeneral) {
       while (rd() != null && line.length() > 0) {
@@ -462,12 +470,19 @@ public class GaussianReader extends MOReader {
         lastAtom = tokens[1];
         slater[0] = ac;
         String oType = tokens[4];
-        if (doSphericalF && oType.indexOf("F") >= 0 || doSphericalD
-            && oType.indexOf("D") >= 0)
+        if (doSpherical && (
+            doSphericalF && oType.indexOf("F") >= 0
+             || doSphericalD && oType.indexOf("D") >= 0
+             || doSphericalHighL && (
+                doSphericalG && oType.indexOf("G") >= 0
+                || doSphericalH && oType.indexOf("H") >= 0
+                || doSphericalI && oType.indexOf("I") >= 0
+                )
+            ))
           slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType);
         else
           slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);
-
+        enableShell(slater[1]); // Gaussian is the reference
         int nGaussians = parseIntStr(tokens[5]);
         slater[2] = gaussianCount + 1; // or parseInt(tokens[7])
         slater[3] = nGaussians;

@@ -34,13 +34,13 @@ import org.jmol.quantum.MOCalculation;
  */
 
 /**
- * adds spherical F orbital contributions
+ * adds 7 spherical F orbital contributions
  */
 public class DataAdder7F implements DataAdder {
 
   public DataAdder7F() {
   }
-
+  
   @Override
   public boolean addData(MOCalculation calc, boolean havePoints) {
     // expects 7 real orbitals in the order f0, f+1, f-1, f+2, f-2, f+3, f-3

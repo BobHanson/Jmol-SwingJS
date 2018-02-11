@@ -40,6 +40,7 @@ public class QS {
   public QS() {
     //
   }
+    
   final public static int S = 0;
   final public static int P = 1;
   final public static int SP = 2;
