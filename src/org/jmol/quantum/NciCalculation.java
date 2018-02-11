@@ -317,7 +317,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
       return;
     for (int ix = xMax; --ix >= xMin;) {
       for (int iy = yMin; iy < yMax; iy++) {
-        vd = voxelData[ix][(havePoints ? 0 : iy)];
+        float[] vd = voxelData[ix][(havePoints ? 0 : iy)];
         for (int iz = zMin; iz < zMax; iz++)
           vd[(havePoints ? 0 : iz)] = getValue(processAtoms(ix, iy, iz, -1), isReducedDensity);
       }

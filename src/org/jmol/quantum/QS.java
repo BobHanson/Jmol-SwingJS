@@ -201,6 +201,14 @@ public class QS {
       xxyy xxzz yyzz xxyz yyxz zzxy
   */
   
+  /**
+   * 
+   * @param map map to fill
+   * @param fileList reader-dependent list
+   * @param jmolList Jmol's reordering of that list
+   * @param minLength minimum token length so that "G 0" is not taken as two token -- depends upon reader
+   * @return true if successful
+   */
   public static boolean createDFMap(int[] map, String fileList,
                                     String jmolList, int minLength) {
 

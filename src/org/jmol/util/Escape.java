@@ -123,7 +123,7 @@ public class Escape {
     if (AU.isAS(x))
       return eAS((String[]) x, true);
     if (x instanceof M34) 
-      return PT.rep(x.toString(), "\t", ",\t");
+      return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
     if (x instanceof A4) {
       A4 a = (A4) x;
       return "{" + a.x + " " + a.y + " " + a.z + " " + (float) (a.angle * 180d/Math.PI) + "}";  

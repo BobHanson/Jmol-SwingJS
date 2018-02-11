@@ -48,12 +48,11 @@ abstract public class QuantumCalculation {
   protected final static float bohr_per_angstrom = 1 / 0.52918f;
 
   protected float[][][] voxelData;
-  protected float[][][] voxelDataTemp;
-  protected float[] vd;
+  public float[][][] voxelDataTemp;
   protected int[] countsXYZ;
   
   protected T3[] points;
-  protected int xMin, xMax, yMin, yMax, zMin, zMax;
+  public int xMin, xMax, yMin, yMax, zMin, zMax;
 
   protected QMAtom[] qmAtoms;
   protected int atomIndex;
@@ -72,10 +71,10 @@ abstract public class QuantumCalculation {
   protected int nX, nY, nZ;
   
   // grid coordinates relative to orbital center in Bohr 
-  protected float[] X, Y, Z;
+  public float[] X, Y, Z;
 
   // grid coordinate squares relative to orbital center in Bohr
-  protected float[] X2, Y2, Z2;
+  public float[] X2, Y2, Z2;
 
   // range in bohr to consider affected by an atomic orbital
   // this is a cube centered on an atom of side rangeBohr*2
@@ -236,7 +235,7 @@ abstract public class QuantumCalculation {
       bohr[j] = bohr[j - 1] + inc;
   }
 
-  protected void setMinMax(int ix) {
+  public void setMinMax(int ix) {
     yMax = zMax = (ix < 0 ? xMax : ix + 1);
     yMin = zMin = (ix < 0 ? 0 : ix);    
   }

@@ -23,6 +23,7 @@
  */
 package org.jmol.quantum;
 
+import javajs.api.Interface;
 import javajs.util.Lst;
 import javajs.util.T3;
 
@@ -30,7 +31,7 @@ import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
-
+import org.jmol.quantum.mo.DataAdder;
 
 
 
@@ -98,19 +99,23 @@ public class MOCalculation extends QuantumCalculation {
   // d-orbital partial coefficients in Bohr
   private double[] DXY, DXZ, DYZ;
     // exp(-alpha x^2...)
-  private double[] EX, EY, EZ;
+  public double[] EX;
+
+  public double[] EY;
+
+  public double[] EZ;
   
   private String calculationType;
   private Lst<int[]> shells;
-  private float[][] gaussians;
+  public float[][] gaussians;
   //Hashtable aoOrdersDF;
   private SlaterData[] slaters;
   private float[] moCoefficients;
   private int moCoeff;
-  private int gaussianPtr;
+  public int gaussianPtr;
   //private float coefMax = Integer.MAX_VALUE;
-  private boolean doNormalize = true;
-  private boolean nwChemMode = false;
+  public boolean doNormalize = true;
+  public boolean nwChemMode = false;
   //                                           0  S       1   P        2  SP   
   private int[][] dfCoefMaps = new int[][] {new int[1], new int[3], new int[4], 
         //    3   DS     4   DC      5   FS      6   FC
@@ -121,7 +126,7 @@ public class MOCalculation extends QuantumCalculation {
   private float[][] coefs;
 
   private double moFactor = 1;
-  private boolean havePoints;
+  public boolean havePoints;
   boolean testing = true;
   
   public MOCalculation() {
@@ -162,7 +167,7 @@ public class MOCalculation extends QuantumCalculation {
   }  
   
   @Override
-  protected void initialize(int nX, int nY, int nZ, T3[] points) {
+  public void initialize(int nX, int nY, int nZ, T3[] points) {
     initialize0(nX, nY, nZ, points);
     CX = new double[this.nX];
     CY = new double[this.nY];
@@ -188,7 +193,7 @@ public class MOCalculation extends QuantumCalculation {
   double sum = -1;
   
   @Override
-  protected void processPoints() {
+  public void processPoints() {
     if (linearCombination == null) {
       process();
     } else {
@@ -214,7 +219,7 @@ public class MOCalculation extends QuantumCalculation {
 
   //private double c = 1;
   @Override
-  protected void process() {
+  public void process() {
     atomIndex = firstAtomOffset - 1;
     moCoeff = 0;
     if (slaters == null) {
@@ -283,7 +288,7 @@ public class MOCalculation extends QuantumCalculation {
 //    return c;
 //  }
 
-  private int nGaussians;
+  public int nGaussians;
   private boolean doShowShellType;
 
   private String warned;
@@ -319,13 +324,9 @@ public class MOCalculation extends QuantumCalculation {
     case QS.DC:
         addData6D();
       break;
-    case QS.FS:
-      addData7F();
-      break;
-    case QS.FC:
-        addData10F();
-      break;
     default:
+      if (addHighL(basisType))
+        return;
       if (warned == null)
         warned = "";
       String key = "=" + (atomIndex + 1) + ": " + QS.getQuantumShellTag(basisType);
@@ -337,6 +338,34 @@ public class MOCalculation extends QuantumCalculation {
     }
   }
   
+  DataAdder[] dataAdders = new DataAdder[20];
+  int[] dataAdderOK = new int[20];
+  
+  /**
+   * modular loading of high-L data adders
+   * 
+   * @param basisType
+   * @return true if implemented
+   */
+  private boolean addHighL(int basisType) {
+    DataAdder adder = dataAdders[basisType];
+    switch (dataAdderOK[basisType]) {
+    case 0:
+      dataAdders[basisType] = adder = (DataAdder) (Interface.getInterface("org.jmol.quantum.mo.DataAdder" + QS.getQuantumShellTag(basisType)));
+      dataAdderOK[basisType] = (adder == null ? -1 : 1);
+      if (adder != null)
+        break;
+      //$FALL-THROUGH$
+    case -1:
+      return false;
+    }
+    if (adder.addData(this, havePoints))
+      return true;
+    dataAdders[basisType] = null;
+    dataAdderOK[basisType] = -1;
+    return false;
+  }
+
   private void addValuesSquared(float occupancy) {
     for (int ix = nX; --ix >= 0;) {
       for (int iy = nY; --iy >= 0;) {
@@ -358,7 +387,7 @@ public class MOCalculation extends QuantumCalculation {
    * @param cpt
    * @return
    */
-  private double getContractionNormalization(int el, int cpt) {
+  public double getContractionNormalization(int el, int cpt) {
     double sum;
     double df = (el == 3 ? 15 : el == 2 ? 3 : 1);
     double f = df * Math.pow(Math.PI, 1.5) / Math.pow(2, el);
@@ -386,7 +415,7 @@ public class MOCalculation extends QuantumCalculation {
     return sum;
   }
 
-  private double[] coeffs;
+  public double[] coeffs;
   private int[] map;
 
   private int lastGaussianPtr = -1;
@@ -450,7 +479,7 @@ public class MOCalculation extends QuantumCalculation {
           setMinMax(ix);
         for (int iy = yMax; --iy >= yMin;) {
           double eXY = eX * EY[iy];
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;)
             vd[(havePoints ? 0 : iz)] += eXY * EZ[iz];
        }
@@ -537,7 +566,7 @@ public class MOCalculation extends QuantumCalculation {
     }
   }
 
-  private void setE(double[] EX, double alpha) {
+  public void setE(double[] EX, double alpha) {
     for (int i = xMax; --i >= xMin;)
       EX[i] =  Math.exp(-X2[i] * alpha) * moFactor;
     for (int i = yMax; --i >= yMin;)
@@ -556,7 +585,7 @@ public class MOCalculation extends QuantumCalculation {
       for (int iy = yMax; --iy >= yMin;) {
         double eXY = eX * EY[iy];
         double cXY = cX + CY[iy];
-        vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+        float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
         for (int iz = zMax; --iz >= zMin;) {
           vd[(havePoints ? 0 : iz)] += (cXY + CZ[iz]) * eXY * EZ[iz];
         }
@@ -621,7 +650,7 @@ public class MOCalculation extends QuantumCalculation {
           double axx_x2__ayy_y2__axy_xy = axx_x2 + (CY[iy] + axy_x) * Y[iy];
           double axz_x__ayz_y = axz_x + DYZ[iy];
           double eXY = eX * EY[iy];
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             vd[(havePoints ? 0 : iz)] += (axx_x2__ayy_y2__axy_xy + (CZ[iz] + axz_x__ayz_y) * Z[iz])
                 * eXY * EZ[iz];
@@ -711,7 +740,7 @@ public class MOCalculation extends QuantumCalculation {
 
           cyy = norm2 * y * y;
           cxy = norm1 * x * y;
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
 
           for (int iz = zMax; --iz >= zMin;) {
             z = Z[iz];
@@ -726,246 +755,6 @@ public class MOCalculation extends QuantumCalculation {
                 + ad1n * cyz 
                 + ad2p * norm3 * (cxx - cyy) 
                 + ad2n * cxy)
-                * eXY * EZ[iz];
-          }
-        }
-      }
-    }
-  }
-
-  private void addData10F() {
-    // expects 10 orbitals in the order XXX, YYY, ZZZ, XYY, XXY, 
-    //                                  XXZ, XZZ, YZZ, YYZ, XYZ
-    double alpha;
-    double c1;
-    double a;
-    double x, y, z, xx, yy, zz;
-    double axxx, ayyy, azzz, axyy, axxy, axxz, axzz, ayzz, ayyz, axyz;
-    double cxxx, cyyy, czzz, cxyy, cxxy, cxxz, cxzz, cyzz, cyyz, cxyz;
-
-    /*
-     Cartesian forms for f (l = 3) basis functions:
-     Type         Normalization
-     xxx          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     xxy          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xxz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xyy          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xyz          [(32768 * alpha^9) / (1 * pi^3))]^(1/4)
-     xzz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     yyy          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     yyz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     yzz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     zzz          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     */
-
-    double norm1, norm2, norm3;
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm1 = getContractionNormalization(3, 1);
-        norm2 = norm1;
-        norm3 = norm1;        
-      } else {
-        norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
-        norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
-      }
-
-    } else {
-      norm1 = norm2 = norm3 = 1;
-    }
-
-    double mxxx = coeffs[0];
-    double myyy = coeffs[1];
-    double mzzz = coeffs[2];
-    double mxyy = coeffs[3];
-    double mxxy = coeffs[4];
-    double mxxz = coeffs[5];
-    double mxzz = coeffs[6];
-    double myzz = coeffs[7];
-    double myyz = coeffs[8];
-    double mxyz = coeffs[9];
-    for (int ig = 0; ig < nGaussians; ig++) {
-      alpha = gaussians[gaussianPtr + ig][0];
-      c1 = gaussians[gaussianPtr + ig][1];
-      setE(EX, alpha);
-
-      // common factor of contraction coefficient and alpha normalization 
-      // factor; only call pow once per primitive
-      a = c1;
-      if (doNormalize)
-        a *= Math.pow(alpha, 2.25);
-
-      axxx = a * norm3 * mxxx;
-      ayyy = a * norm3 * myyy;
-      azzz = a * norm3 * mzzz;
-      axyy = a * norm2 * mxyy;
-      axxy = a * norm2 * mxxy;
-      axxz = a * norm2 * mxxz;
-      axzz = a * norm2 * mxzz;
-      ayzz = a * norm2 * myzz;
-      ayyz = a * norm2 * myyz;
-      axyz = a * norm1 * mxyz;
-
-      for (int ix = xMax; --ix >= xMin;) {
-        x = X[ix];
-        xx = x * x;
-
-        double Ex = EX[ix];
-        cxxx = axxx * xx * x;
-
-        if (havePoints)
-          setMinMax(ix);
-        for (int iy = yMax; --iy >= yMin;) {
-          y = Y[iy];
-          yy = y * y;
-          double Exy = Ex * EY[iy];
-          cyyy = ayyy * yy * y;
-          cxxy = axxy * xx * y;
-          cxyy = axyy * x * yy;
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
-
-          for (int iz = zMax; --iz >= zMin;) {
-            z = Z[iz];
-            zz = z * z;
-            czzz = azzz * zz * z;
-            cxxz = axxz * xx * z;
-            cxzz = axzz * x * zz;
-            cyyz = ayyz * yy * z;
-            cyzz = ayzz * y * zz;
-            cxyz = axyz * x * y * z;
-            vd[(havePoints ? 0 : iz)] += (cxxx + cyyy + czzz + cxyy + cxxy
-                + cxxz + cxzz + cyzz + cyyz + cxyz)
-                * Exy * EZ[iz];
-          }
-        }
-      }
-    }
-  }
-
-  private void addData7F() {
-    // expects 7 real orbitals in the order f0, f+1, f-1, f+2, f-2, f+3, f-3
-
-    double alpha, c1, a;
-    double x, y, z, xx, yy, zz;
-    double cxxx, cyyy, czzz, cxyy, cxxy, cxxz, cxzz, cyzz, cyyz, cxyz;
-    double af0, af1p, af1n, af2p, af2n, af3p, af3n;
-    double f0, f1p, f1n, f2p, f2n, f3p, f3n;
-    /*
-     Cartesian forms for f (l = 3) basis functions:
-     Type         Normalization
-     xxx          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     xxy          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xxz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xyy          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     xyz          [(32768 * alpha^9) / (1 * pi^3))]^(1/4)
-     xzz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     yyy          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     yyz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     yzz          [(32768 * alpha^9) / (9 * pi^3))]^(1/4)
-     zzz          [(32768 * alpha^9) / (225 * pi^3))]^(1/4)
-     */
-
-    
-    // TODO:  Check if norm4 should be -1 for all programs
-    
-    double norm1, norm2, norm3, norm4;
-        
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm3 = getContractionNormalization(3, 1);
-        norm2 = norm3 * Math.sqrt(5);
-        norm1 = norm3 * Math.sqrt(15);
-        norm4 = -1;
-      } else {
-        norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
-        norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
-        // norm4 verified for Gaussian using CeO2.log 
-        norm4 = 1;
-      }
-
-    } else {
-      norm1 = norm2 = norm3 = norm4 = 1;
-    }
-
-    // Linear combination coefficients for the various Cartesian gaussians
-    final double c0_xxz_yyz = 0.6708203932499369; //(3.0 / (2.0 * Math.sqrt(5)));
-
-    final double c1p_xzz = 1.0954451150103321; //Math.sqrt(6.0 / 5.0);
-    final double c1p_xxx = 0.6123724356957945; //Math.sqrt(3.0 / 8.0);
-    final double c1p_xyy = 0.27386127875258304; //Math.sqrt(3.0 / 40.0);
-    final double c1n_yzz = c1p_xzz;
-    final double c1n_yyy = c1p_xxx;
-    final double c1n_xxy = c1p_xyy;
-
-    final double c2p_xxz_yyz = 0.8660254037844386; //Math.sqrt(3.0 / 4.0);
-
-    final double c3p_xxx = 0.7905694150420949; //Math.sqrt(5.0 / 8.0);
-    final double c3p_xyy = 1.0606601717798214; //0.75 * Math.sqrt(2);
-    final double c3n_yyy = c3p_xxx;
-    final double c3n_xxy = c3p_xyy;
-
-    double m0 = coeffs[0];
-    double m1p = coeffs[1];
-    double m1n = coeffs[2];
-    double m2p = coeffs[3];
-    double m2n = coeffs[4];
-    double m3p = coeffs[5];
-    double m3n = coeffs[6];
-
-    for (int ig = 0; ig < nGaussians; ig++) {
-      alpha = gaussians[gaussianPtr + ig][0];
-      c1 = gaussians[gaussianPtr + ig][1];
-      a = c1;
-      if (doNormalize)
-        a *= Math.pow(alpha, 2.25);
-
-      af0 = a * m0;
-      af1p = a * m1p;
-      af1n = a * m1n;
-      af2p = a * m2p;
-      af2n = a * m2n;
-      af3p = a * m3p;
-      af3n = a * m3n;
-
-      setE(EX, alpha);
-
-      for (int ix = xMax; --ix >= xMin;) {
-        x = X[ix];
-        xx = x * x;
-        double eX = EX[ix];
-        cxxx = norm3 * x * xx;
-        if (havePoints)
-          setMinMax(ix);
-        for (int iy = yMax; --iy >= yMin;) {
-          y = Y[iy];
-          yy = y * y;
-          double eXY = eX * EY[iy];
-
-          cyyy = norm3 * y * yy;
-          cxyy = norm2 * x * yy;
-          cxxy = norm2 * xx * y;
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
-
-          for (int iz = zMax; --iz >= zMin;) {
-            z = Z[iz];
-            zz = z * z;
-
-            czzz = norm3 * z * zz;
-            cxxz = norm2 * xx * z;
-            cxzz = norm2 * x * zz;
-            cyyz = norm2 * yy * z;
-            cyzz = norm2 * y * zz;
-            cxyz = norm1 * x * y * z;
-
-            f0 = af0 * (czzz - c0_xxz_yyz * (cxxz + cyyz));
-            f1p = norm4 * af1p * (c1p_xzz * cxzz - c1p_xxx * cxxx - c1p_xyy * cxyy);
-            f1n = af1n * (c1n_yzz * cyzz - c1n_yyy * cyyy - c1n_xxy * cxxy);
-            f2p = af2p * (c2p_xxz_yyz * (cxxz - cyyz));
-            f2n = af2n * cxyz;
-            f3p = norm4 * af3p * (c3p_xxx * cxxx - c3p_xyy * cxyy);
-            f3n = -af3n * (c3n_yyy * cyyy - c3n_xxy * cxxy);
-            vd[(havePoints ? 0 : iz)] += (f0 + f1p + f1n + f2p + f2n + f3p + f3n)
                 * eXY * EZ[iz];
           }
         }
@@ -1029,7 +818,7 @@ public class MOCalculation extends QuantumCalculation {
         for (int iy = yMax; --iy >= yMin;) {
           double dy2 = Y2[iy];
           double dx2y2 = dx2 + dy2;
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
@@ -1063,7 +852,7 @@ public class MOCalculation extends QuantumCalculation {
           double dy2 = Y2[iy];
           double dx2y2 = dx2 + dy2;
           double dx2my2 = coef * (dx2 - dy2);
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
@@ -1120,7 +909,7 @@ public class MOCalculation extends QuantumCalculation {
             vdy *= Y[iy];
             break;
           }
-          vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
