@@ -181,13 +181,17 @@ public class GenNBOReader extends MOReader {
     if (nOrbitals == 0)
       return;
     line = null;
-    if (!isNBO)
-      nOrbitals = nOrbitals0 + nAOs;
-    for (int i = nOrbitals0; i < nOrbitals; i++) {
+//    if (!isNBO)
+//      nOrbitals = nOrbitals0 + nAOs;
+//    
+    int n = nOrbitals0 + nOrbitals;
+    for (int i = nOrbitals0; i < n; i++) {
       Map<String, Object> mo = orbitals.get(i);
       float[] coefs = new float[nAOs];
       mo.put("coefficients", coefs);
-      if (!isAO) {
+      if (isAO) {
+        coefs[(i - nOrbitals0) % nAOs] = 1;
+      } else {
         if (line == null) {
           while (rd() != null && Float.isNaN(parseFloatStr(line))) {
             filterMO(); //switch a/b
@@ -200,8 +204,6 @@ public class GenNBOReader extends MOReader {
           System.out.println("testing gennboreader");
         line = null;
         //setMOType(mo, i);
-      } else {
-        coefs[i] = 1;
       }
     }
     if (nboType.equals("NBO")) {

@@ -40,7 +40,26 @@ public class DataAdder7F implements DataAdder {
 
   public DataAdder7F() {
   }
-  
+
+  // Linear combination coefficients for the various Cartesian gaussians
+  final static double c0_xxz_yyz = 0.6708203932499369; //(3.0 / (2.0 * Math.sqrt(5))); // ok
+
+  final static double c1p_xzz = 1.0954451150103321; //Math.sqrt(3.0 / 5.0) * Math.sqrt(2); // ok
+  final static double c1p_xxx = 0.6123724356957945; //Math.sqrt(3.0 / 4.0) * Math.sqrt(2); // ok
+  final static double c1p_xyy = 0.27386127875258304; //Math.sqrt(3.0 / 5)/4 * Math.sqrt(2); // ok
+  final static double c1n_yzz = c1p_xzz;
+  final static double c1n_yyy = c1p_xxx;
+  final static double c1n_xxy = c1p_xyy;
+
+  final static double c2p_xxz_yyz = 0.8660254037844386; //Math.sqrt(3.0 / 4.0);
+
+  final static double c3p_xxx = 0.7905694150420949; //Math.sqrt(5.0)/4 * Math.sqrt(2); // ok
+              // /2 for NBO? 
+  final static double c3p_xyy = 1.0606601717798214; //0.75 * Math.sqrt(2);
+  final static double c3n_yyy = c3p_xxx;
+  final static double c3n_xxy = c3p_xyy;
+
+
   @Override
   public boolean addData(MOCalculation calc, boolean havePoints) {
     // expects 7 real orbitals in the order f0, f+1, f-1, f+2, f-2, f+3, f-3
@@ -87,23 +106,6 @@ public class DataAdder7F implements DataAdder {
     } else {
       norm1 = norm2 = norm3 = norm4 = 1;
     }
-
-    // Linear combination coefficients for the various Cartesian gaussians
-    final double c0_xxz_yyz = 0.6708203932499369; //(3.0 / (2.0 * Math.sqrt(5)));
-
-    final double c1p_xzz = 1.0954451150103321; //Math.sqrt(6.0 / 5.0);
-    final double c1p_xxx = 0.6123724356957945; //Math.sqrt(3.0 / 8.0);
-    final double c1p_xyy = 0.27386127875258304; //Math.sqrt(3.0 / 40.0);
-    final double c1n_yzz = c1p_xzz;
-    final double c1n_yyy = c1p_xxx;
-    final double c1n_xxy = c1p_xyy;
-
-    final double c2p_xxz_yyz = 0.8660254037844386; //Math.sqrt(3.0 / 4.0);
-
-    final double c3p_xxx = 0.7905694150420949; //Math.sqrt(5.0 / 8.0);
-    final double c3p_xyy = 1.0606601717798214; //0.75 * Math.sqrt(2);
-    final double c3n_yyy = c3p_xxx;
-    final double c3n_xxy = c3p_xyy;
 
     double m0 = calc.coeffs[0];
     double m1p = calc.coeffs[1];
@@ -159,12 +161,19 @@ public class DataAdder7F implements DataAdder {
             cxyz = norm1 * x * y * z;
 
             f0 = af0 * (czzz - c0_xxz_yyz * (cxxz + cyyz));
-            f1p = norm4 * af1p * (c1p_xzz * cxzz - c1p_xxx * cxxx - c1p_xyy * cxyy);
-            f1n = af1n * (c1n_yzz * cyzz - c1n_yyy * cyyy - c1n_xxy * cxxy);
+            f1p = norm4 * af1p * (c1p_xzz * cxzz - c1p_xxx * cxxx
+                - c1p_xyy * cxyy
+                );
+            f1n = af1n * (c1n_yzz * cyzz
+                - c1n_yyy * cyyy
+                - c1n_xxy * cxxy
+                );
             f2p = af2p * (c2p_xxz_yyz * (cxxz - cyyz));
             f2n = af2n * cxyz;
-            f3p = norm4 * af3p * (c3p_xxx * cxxx - c3p_xyy * cxyy);
-            f3n = -af3n * (c3n_yyy * cyyy - c3n_xxy * cxxy);
+            f3p = norm4 * af3p * (c3p_xxx * cxxx
+                - c3p_xyy * cxyy);
+            f3n = -af3n * (c3n_yyy * cyyy
+                - c3n_xxy * cxxy);
             vd[(havePoints ? 0 : iz)] += (f0 + f1p + f1n + f2p + f2n + f3p + f3n)
                 * eXY * calc.EZ[iz];
           }

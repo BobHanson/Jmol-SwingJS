@@ -25,15 +25,16 @@ package org.jmol.quantum;
 
 import java.util.Map;
 
-import org.jmol.jvxl.data.VolumeData;
-import org.jmol.modelset.Atom;
-import org.jmol.quantum.mo.DataAdder;
-import org.jmol.util.Logger;
-
 import javajs.api.Interface;
-import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.T3;
+
+import org.jmol.java.BS;
+import org.jmol.jvxl.data.VolumeData;
+import org.jmol.jvxl.readers.Parameters;
+import org.jmol.modelset.Atom;
+import org.jmol.util.Logger;
+import org.jmol.quantum.mo.DataAdder;
 
 
 
@@ -410,7 +411,7 @@ public class MOCalculation extends QuantumCalculation {
    * 
    * @param el
    * @param cpt
-   * @return normalization for NWChem
+   * @return
    */
   public double getContractionNormalization(int el, int cpt) {
     double sum;
@@ -448,12 +449,6 @@ public class MOCalculation extends QuantumCalculation {
   private boolean setCoeffs(int type, boolean isProcess) {
     boolean isOK = false;
     map = dfCoefMaps[type];
-    if (type > QS.MAX_TYPE_SUPPORTED) {
-      if (isProcess && doDebug)
-        dumpInfo(type);
-      moCoeff += map.length;
-      return false;
-    }
     if (isProcess && thisAtom == null) {
       moCoeff += map.length;
       return false;

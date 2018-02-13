@@ -146,19 +146,21 @@ public class QS {
   }
 
   public void setNboLabels(String[] tokens, int nLabels,
-                                  Lst<Map<String, Object>> orbitals, int nOrbitals0, String moType) {
-    for (int i = 0; i < tokens.length; i += nLabels + 2)
-      if (moType.indexOf(tokens[i]) >= 0) {
-        for (int j = 0; j < nLabels; j++) {
-          Map<String, Object> mo = orbitals.get(j + nOrbitals0);
-          String type = tokens[i + j + 2];
-          mo.put("type", moType + " " + type);
-          // TODO: does not account for SOMO
-          mo.put("occupancy", Float.valueOf(type.indexOf("*") >= 0
-              || type.indexOf("(ry)") >= 0 ? 0 : 2));
-        }
-        return;
-      }
+                           Lst<Map<String, Object>> orbitals, int nOrbitals0,
+                           String moType) {
+    boolean alphaBeta = (orbitals.size() == nLabels * 2);
+    boolean isAO = (moType.indexOf("AO") >= 0);
+    String ab = (!alphaBeta ? "" : nOrbitals0 == 0 ? " alpha" : " beta");
+    for (int j = 0; j < nLabels; j++) {
+      Map<String, Object> mo = orbitals.get(j + nOrbitals0);
+      String type = tokens[j];
+      mo.put("type", moType + " " + type + ab);
+      if (!isAO)
+        mo.put(
+            "occupancy",
+            Float.valueOf(alphaBeta ? 1 : type.indexOf("*") >= 0
+                || type.indexOf("(ry)") >= 0 ? 0 : 2));
+    }
   }
 
   
