@@ -216,7 +216,7 @@ public class GenNBOReader extends MOReader {
     }
     moData.put(nboType + "_coefs", orbitals);
     setMOData(false);
-    moData.put("isNormalized", Boolean.TRUE);
+    //moData.put("isNormalized", Boolean.TRUE);
     moData.put("nboType", nboType);
     Logger.info((orbitals.size() - nOrbitals0) + " orbitals read");
 

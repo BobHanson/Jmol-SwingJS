@@ -81,19 +81,26 @@ public class DataAdderF implements DataAdder {
 
     double norm1, norm2, norm3;
     double[] coeffs = calc.coeffs;
-    if (calc.doNormalize) {
-      if (calc.nwChemMode) {
-        norm1 = calc.getContractionNormalization(3, 1);
-        norm2 = norm1;
-        norm3 = norm1;        
-      } else {
-        norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
-        norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
-      }
-
-    } else {
+    boolean normalizeAlpha = false;
+    switch (calc.normType) {
+    case MOCalculation.NORM_NONE:
+    case MOCalculation.NORM_NBO_AO_SPHERICAL:
+    default:
       norm1 = norm2 = norm3 = 1;
+      break;
+    case MOCalculation.NORM_STANDARD:
+      norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
+      norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
+      norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
+      normalizeAlpha = true;
+      break;
+    case MOCalculation.NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm1 = calc.getContractionNormalization(3, 1);
+      norm2 = norm1;
+      norm3 = norm1;        
+      normalizeAlpha = true;
+      break;
     }
 
     double mxxx = coeffs[0];
@@ -114,7 +121,7 @@ public class DataAdderF implements DataAdder {
       // common factor of contraction coefficient and alpha normalization 
       // factor; only call pow once per primitive
       a = c1;
-      if (calc.doNormalize)
+      if (normalizeAlpha)
         a *= Math.pow(alpha, 2.25);
 
       axxx = a * norm3 * mxxx;

@@ -69,7 +69,17 @@ public class DataAdderG implements DataAdder {
 
   @Override
   public boolean addData(MOCalculation calc, boolean havePoints) {
-    // TODO
-    return false;
+    switch (calc.normType) {
+    case MOCalculation.NORM_NONE:
+    default:
+      return false;
+    case MOCalculation.NORM_NBO_AO_SPHERICAL:
+      return false;
+    case MOCalculation.NORM_STANDARD:
+      return false;
+    case MOCalculation.NORM_NWCHEM:
+      return false;
+    }
+    //return true;
   }
 }

@@ -116,9 +116,16 @@ public class MOCalculation extends QuantumCalculation {
   private int moCoeff;
   public int gaussianPtr;
   //private float coefMax = Integer.MAX_VALUE;
-  public boolean doNormalize = true;
-  public boolean nwChemMode = false;
-  //                                           0  S       1   P        2  SP   
+  
+  public final static int NORM_NONE = 0;
+  public final static int NORM_STANDARD = 1;
+  public final static int NORM_NWCHEM = 2;
+  public final static int NORM_NBO_AO_SPHERICAL = 3;
+
+  public static final double ROOT3 = Math.sqrt(3);
+
+  public int normType = NORM_NONE;
+
   private int[][] dfCoefMaps;
 
   private float[] linearCombination;
@@ -133,19 +140,6 @@ public class MOCalculation extends QuantumCalculation {
   
   public MOCalculation() {
   }
-
-//  return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
-//      (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
-//      atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"),
-//      (float[][]) params.moData.get("gaussians"), dfCoefMaps, null, coef,
-//      linearCombination, params.isSquaredLinear, coefs,
-//      params.moData.get("isNormalized") != Boolean.TRUE, points);
-//case Parameters.QM_TYPE_SLATER:
-//  return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
-//      (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
-//      atomData.firstAtomIndex, null, null, null,
-//      params.moData.get("slaters"), coef, linearCombination,
-//      params.isSquaredLinear, coefs, true, points);
 
   public boolean setupCalculation(Map<String, Object> moData, boolean isSlaters, 
                                   VolumeData volumeData, BS bsSelected,
@@ -163,7 +157,6 @@ public class MOCalculation extends QuantumCalculation {
     // G H I must be explicitly enabled by the reader
     // so that we don't accidentally show non-validated results
     highLEnabled = (int[]) moData.get("highLEnabled"); 
-    boolean doNormalize = (isSlaters || moData.get("isNormalized") != Boolean.TRUE);
     havePoints = (points != null);
     this.calculationType = calculationType;
     this.firstAtomOffset = firstAtomOffset;
@@ -176,8 +169,9 @@ public class MOCalculation extends QuantumCalculation {
     this.linearCombination = linearCombination;
     this.isSquaredLinear = isSquaredLinear;
     this.coefs = coefs;
-    this.doNormalize = doNormalize;
-    Logger.info("Normalizing AOs: " + doNormalize + " slaters:" + (slaters != null));
+    boolean doNormalize = (isSlaters || moData.get("isNormalized") != Boolean.TRUE);
+    if (doNormalize)
+      setNormalization(moData.get("nboType"));
     countsXYZ = volumeData.getVoxelCounts();
     initialize(countsXYZ[0], countsXYZ[1], countsXYZ[2], points);
     voxelData = volumeData.getVoxelData();
@@ -189,6 +183,22 @@ public class MOCalculation extends QuantumCalculation {
     return !bsSelected.isEmpty() && (slaters != null || checkCalculationType());
   }  
   
+  private void setNormalization(Object nboType) {
+    String type = "standard";
+    normType = NORM_STANDARD;
+    if (nboType == "AO") {
+      normType = NORM_NBO_AO_SPHERICAL;
+      type = "NBO-AO";      
+    } else if (calculationType != null) {
+      if (calculationType.indexOf("NWCHEM") >= 0) {
+        normType = NORM_NWCHEM;
+        type = "NWCHEM";
+        Logger.info("Normalization of contractions (NWCHEM)");
+      }        
+    }
+    Logger.info("Normalizing AOs: " + type + " slaters:" + (slaters != null));
+  }
+
   @Override
   public void initialize(int nX, int nY, int nZ, T3[] points) {
     initialize0(nX, nY, nZ, points);
@@ -273,9 +283,6 @@ public class MOCalculation extends QuantumCalculation {
       Logger.warn("calculation type not identified -- continuing");
       return true;
     }
-    nwChemMode = (calculationType.indexOf("NWCHEM") >= 0);
-    if (nwChemMode)
-      Logger.info("Normalization of contractions (NWCHEM)");
     /*if (calculationType.indexOf("5D") >= 0) {
      Logger
      .error("QuantumCalculation.checkCalculationType: can't read 5D basis sets yet: "
@@ -462,24 +469,30 @@ public class MOCalculation extends QuantumCalculation {
   
   private void addDataS() {
     double norm, c1;
-    if (doNormalize) {
-      if (nwChemMode) {
-        // contraction needs to be normalized
-        norm = getContractionNormalization(0, 1);
-      } else {
-        // (8 alpha^3/pi^3)^0.25 exp(-alpha r^2)
-        norm = 0.712705470f; // (8/pi^3)^0.25 = (2/pi)^3/4
-      }
-    } else {
+    boolean normalizeAlpha = false;
+    switch (normType) {
+    case NORM_NONE:
+    case NORM_NBO_AO_SPHERICAL:
+    default:
       norm = 1;
+      break;
+    case NORM_STANDARD:
+      // (8 alpha^3/pi^3)^0.25 exp(-alpha r^2)
+      norm = 0.712705470f; // (8/pi^3)^0.25 = (2/pi)^3/4
+      normalizeAlpha = true;
+      break;
+    case NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm = getContractionNormalization(0, 1);
+      normalizeAlpha = true;
+      break;
     }
-   
     double m1 = coeffs[0];
     for (int ig = 0; ig < nGaussians; ig++) {
       double alpha = gaussians[gaussianPtr + ig][0];
       c1 = gaussians[gaussianPtr + ig][1];
       double a = norm * m1 * c1 * moFactor;
-      if (doNormalize)
+      if (normalizeAlpha)
         a *= Math.pow(alpha, 0.75);
       // the coefficients are all included with the X factor here
       for (int i = xMax; --i >= xMin;) {
@@ -511,23 +524,29 @@ public class MOCalculation extends QuantumCalculation {
     double my = coeffs[1];
     double mz = coeffs[2];
     double norm;
-
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm = getContractionNormalization(1, 1);
-      } else {
-        // (128 alpha^5/pi^3)^0.25 [x|y|z]exp(-alpha r^2)
-        norm = 1.42541094f;
-      }
-    } else {
+    boolean normalizeAlpha = false;
+    switch (normType) {
+    case NORM_NONE:
+    case NORM_NBO_AO_SPHERICAL:
+    default:
       norm = 1;
+      break;
+    case NORM_STANDARD:
+      // (128 alpha^5/pi^3)^0.25 [x|y|z]exp(-alpha r^2)
+      norm = 1.42541094f;
+      normalizeAlpha = true;
+      break;
+    case NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm = getContractionNormalization(1, 1);
+      normalizeAlpha = true;
+      break;
     }
-
     for (int ig = 0; ig < nGaussians; ig++) {
       double alpha = gaussians[gaussianPtr + ig][0];
       double c1 = gaussians[gaussianPtr + ig][1];
       double a = c1;
-      if (doNormalize)
+      if (normalizeAlpha)
         a *= Math.pow(alpha, 1.25) * norm;
       calcSP(alpha, 0, a * mx, a * my, a * mz);
     }
@@ -543,17 +562,26 @@ public class MOCalculation extends QuantumCalculation {
     double my = coeffs[pPt++];
     double mz = coeffs[pPt++];
     double norm1, norm2;
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm1 = getContractionNormalization(0, 1);
-        norm2 = getContractionNormalization(1, 2);
-      } else {
-        norm1 = 0.712705470f;
-        norm2 = 1.42541094f;
-      }
-    } else {
+    boolean doNormalize = false;
+    switch (normType) {
+    case NORM_NONE:
+    case NORM_NBO_AO_SPHERICAL:
+    default:
       norm1 = norm2 = 1;
+      break;
+    case NORM_STANDARD:
+      norm1 = 0.712705470f;
+      norm2 = 1.42541094f;
+      doNormalize = true;
+      break;
+    case NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm1 = getContractionNormalization(0, 1);
+      norm2 = getContractionNormalization(1, 2);
+      doNormalize = true;
+      break;
     }
+
     double a1, a2, c1, c2, alpha;
     for (int ig = 0; ig < nGaussians; ig++) {
       alpha = gaussians[gaussianPtr + ig][0];
@@ -612,8 +640,6 @@ public class MOCalculation extends QuantumCalculation {
     }
   }
 
-  private final static double ROOT3 = 1.73205080756887729f;
-
   private void addData6D() {
     //expects 6 orbitals in the order XX YY ZZ XY XZ YZ
     double mxx = coeffs[0];
@@ -623,25 +649,34 @@ public class MOCalculation extends QuantumCalculation {
     double mxz = coeffs[4];
     double myz = coeffs[5];
     double norm1, norm2;
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm1 = getContractionNormalization(2, 1);
-        norm2 = norm1;
-      } else {
-        norm1 = 2.8508219178923f;
-        norm2 = norm1 / ROOT3;
-      }
-    } else {
-      norm2 = 1 / ROOT3;
+    
+    boolean normalizeAlpha = false;
+    switch (normType) {
+    case NORM_NONE:
+    case NORM_NBO_AO_SPHERICAL:
+    default:
       norm1 = 1;
+      norm2 = 1 / ROOT3;
+      break;
+    case NORM_STANDARD:
+      norm1 = 2.8508219178923f;
+      norm2 = norm1 / ROOT3;
+      normalizeAlpha = true;
+      break;
+    case NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm1 = norm2 = getContractionNormalization(2, 1);
+      normalizeAlpha = true;
+      break;
     }
+    
     for (int ig = 0; ig < nGaussians; ig++) {
       double alpha = gaussians[gaussianPtr + ig][0];
       double c1 = gaussians[gaussianPtr + ig][1];
       // xx|yy|zz: (2048 alpha^7/9pi^3)^0.25 [xx|yy|zz]exp(-alpha r^2)
       // xy|xz|yz: (2048 alpha^7/pi^3)^0.25 [xy|xz|yz]exp(-alpha r^2)
       double a = c1;
-      if (doNormalize)
+      if (normalizeAlpha)
         a *=  Math.pow(alpha, 1.75);
       double axy = a * norm1 * mxy;
       double axz = a * norm1 * mxz;
@@ -706,23 +741,42 @@ public class MOCalculation extends QuantumCalculation {
      zz           [(2048 * alpha^7) / (9 * pi^3))]^(1/4)
      */
 
-    double norm1, norm2, norm3, norm4;
+    double norm1, // for xy, xz, yz 
+           norm2, // for x2,y2,z2
+           norm3, // for d+2 only
+           norm4, // for d+1 only
+           norm5; // for NBO AO d0 only
     
-    if (doNormalize) {
-      if (nwChemMode) {
-        norm2 = getContractionNormalization(2, 1);
-        norm1 = norm2 * ROOT3;
-        norm4 = -1;
-      } else {
-        // same as above, except for norm4. 
-        // norm4 verified using CeO2.log 
-        norm1 = Math.pow(2048.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = norm1 / ROOT3;
-        norm4 = 1;
-      }
+    boolean normalizeAlpha = false;
+    switch (normType) {
+    case NORM_NONE:
+    default:
+      norm1 = norm2 = norm3 = norm4 = norm5 = 1;
+      break;
+    case NORM_NBO_AO_SPHERICAL:
+      norm2 = norm4 = 1;
+      norm1 = 2 * ROOT3;
+      norm3 = ROOT3;
+      norm5 = 2; // from z2 - (1/2)(x2 + y2)   to 2z2 - x2 - y2
+      break;
+    case NORM_STANDARD:
+      // same as NWCHEM, except for norm4. 
+      // norm4 verified using CeO2.log 
+      norm1 = Math.pow(2048.0 / (Math.PI * Math.PI * Math.PI), 0.25);
+      norm2 = norm1 / ROOT3;
       norm3 = ROOT3 / 2; // Normalization constant that shows up for dx^2-y^2
-    } else {
-      norm1 = norm2 = norm3 = norm4 = 1;
+      norm4 = norm5 = 1;
+      normalizeAlpha = true;
+      break;
+    case NORM_NWCHEM:
+      // contraction needs to be normalized
+      norm2 = getContractionNormalization(2, 1);
+      norm1 = norm2 * ROOT3;
+      norm3 = ROOT3 / 2; // Normalization constant that shows up for dx^2-y^2
+      norm4 = -1;
+      norm5 = 1;
+      normalizeAlpha = true;
+      break;
     }
 
     double m0 = coeffs[0];
@@ -735,7 +789,7 @@ public class MOCalculation extends QuantumCalculation {
       alpha = gaussians[gaussianPtr + ig][0];
       c1 = gaussians[gaussianPtr + ig][1];
       a = c1;
-      if (doNormalize)
+      if (normalizeAlpha)
         a *=  Math.pow(alpha, 1.75);
 
       ad0 = a * m0;
@@ -769,7 +823,7 @@ public class MOCalculation extends QuantumCalculation {
             cyz = norm1 * y * z;
 
             vd[(havePoints ? 0 : iz)] += (
-                ad0 * (czz - 0.5f * (cxx + cyy)) 
+                ad0 * norm5 * (czz - 0.5f * (cxx + cyy)) 
                 + ad1p * cxz 
                 + ad1n * cyz 
                 + ad2p * norm3 * (cxx - cyy) 
