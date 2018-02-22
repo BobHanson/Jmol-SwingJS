@@ -213,7 +213,7 @@ class NBOView {
     ///panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     dialog.runScriptQueued("set bondpicking true");
 
-    Box b = createViewSearchJobBox(NBOFileHandler.MODE_VIEW);
+    Box b = createViewSearchJobBox();
     if (!dialog.jmolOptionNONBO)
       panel.add(b, BorderLayout.NORTH);
 
@@ -239,15 +239,13 @@ class NBOView {
     return panel;
   }
 
-  protected Box createViewSearchJobBox(int mode) {
-    Box topBox = NBOUtil.createTitleBox(" Select Job ", dialog.new HelpBtn(
-        (mode == NBOFileHandler.MODE_SEARCH ? "search" : "view")
-            + "_job_help.htm"));
+  protected Box createViewSearchJobBox() { //TODO: change back to view only
+    Box topBox = NBOUtil.createTitleBox(" Select Job ", dialog.new HelpBtn("view"+ "_job_help.htm"));
     Box inputBox = NBOUtil.createBorderBox(true);
     inputBox.setPreferredSize(new Dimension(360, 50));
     inputBox.setMaximumSize(new Dimension(360, 50));
     topBox.add(inputBox);
-    dialog.getNewInputFileHandler(mode);
+    dialog.getNewInputFileHandler(NBOFileHandler.MODE_VIEW);
     inputBox.add(Box.createVerticalStrut(5));
     inputBox.add(dialog.inputFileHandler);
     return topBox;
@@ -328,35 +326,45 @@ class NBOView {
     betaSpin = new JRadioButton("<html>&#x3B2</html>");
     alphaSpin = new JRadioButton("<html>&#x3B1</html>");
     alphaSpin.setSelected(true);
+
+    ActionListener spinListener = new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        doSetSpin(isAlphaSpin() ? null : "beta");
+      }
+    };
+    alphaSpin.addActionListener(spinListener);
+    betaSpin.addActionListener(spinListener);
     ButtonGroup spinSelection = new ButtonGroup();
     spinSelection.add(alphaSpin);
     spinSelection.add(betaSpin);
-    betaSpin.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        EventQueue.invokeLater(new Runnable() {
-
-          @Override
-          public void run() {
-            doSetSpin(isAlphaSpin() ? null : "beta");
-          }
-
-        });
-      }
-    });
-    alphaSpin.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        EventQueue.invokeLater(new Runnable() {
-
-          @Override
-          public void run() {
-            doSetSpin(isAlphaSpin() ? "alpha" : null);
-          }
-
-        });
-      }
-    });
+    
+//    betaSpin.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        EventQueue.invokeLater(new Runnable() {
+//
+//          @Override
+//          public void run() {
+//            doSetSpin(isAlphaSpin() ? null : "beta");
+//          }
+//
+//        });
+//      }
+//    });
+//    alphaSpin.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        EventQueue.invokeLater(new Runnable() {
+//
+//          @Override
+//          public void run() {
+//            doSetSpin(isAlphaSpin() ? "alpha" : null);
+//          }
+//
+//        });
+//      }
+//    });
     horizBox.add(alphaSpin);
     horizBox.add(betaSpin);
     alphaSpin.setVisible(dialog.isOpenShell());
@@ -409,7 +417,8 @@ class NBOView {
     if (NBOConfig.nboView) {
       dialog.runScriptQueued("select *;color bonds lightgrey");
     }
-    doSetNewBasis(false, false);
+
+    doSetNewBasis(false, true);
   }
 
   /**
@@ -1000,7 +1009,9 @@ class NBOView {
       // NBOServe is probably sending a job.
       return null;
     }
-
+    
+    alphaSpin.setVisible(dialog.isOpenShell());
+    betaSpin.setVisible(dialog.isOpenShell());
     boolean isBeta = dialog.isOpenShell() && !isAlphaSpin();
 
     DefaultListModel<String> list = (isBeta ? betaList : alphaList);
@@ -1142,7 +1153,6 @@ class NBOView {
       sb.append(key + i + " " + tmp2 + NBOUtil.sep);
     }
 
-    // I do not understand why a LABEL command has to be given here. A bug? 
 
     postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
         NBOService.MODE_RAW, -1, null, "", "jview.txt", sb.toString());
@@ -1474,6 +1484,7 @@ class NBOView {
    class OrbitalList extends JList<String> implements ListSelectionListener,
       MouseListener, KeyListener {
 
+     // What do these variables mean?
     protected BS bsOn = new BS();
     protected BS bsNeg = new BS();
     protected BS bsKnown = new BS();
@@ -1526,8 +1537,9 @@ class NBOView {
       updateIsosurfacesInJmol(Integer.MIN_VALUE);
     }
 
+    // Can you add some explanation for these variables?
     private JLabel cellLabel;
-    protected boolean myTurn;
+    protected boolean myTurn; // TODO: what does this mean?
     protected boolean toggled;
 
     protected Component renderCell(int index) {
@@ -1623,6 +1635,9 @@ class NBOView {
           } else if (isKnown) {
             // just turn it on
             script += "isosurface mo" + i + " on;";
+            script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
+               isBeta, bsNeg.get(i));                      // the changes to fix bond-click failures. 
+                                                            // But I feel this is not the root solution
           } else {
             bsKnown.set(i);
             // create the isosurface
@@ -1636,8 +1651,9 @@ class NBOView {
 //        }
       }
       updateModelFromBitSet();
-      dialog.runScriptQueued(script);
-      //System.out.println("known" + bsKnown + " on" + bsOn + " neg" + bsNeg + " " + script);
+// TODO: root problem may under this line below, since that is just a script to be passed in this method
+      dialog.runScriptQueued(script);               
+      System.out.println("known" + bsKnown + " on" + bsOn + " neg" + bsNeg + " " + script);
     }
 
     private String updateBitSetFromModel() {

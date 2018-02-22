@@ -104,7 +104,7 @@ class NBORun {
     panel.add(NBOUtil.createTitleBox(" Select Job ", dialog.new HelpBtn(
         "run_job_help.htm")));
     Box inputBox = NBOUtil.createBorderBox(true);
-    inputBox.add(createSourceBox());
+    inputBox.add(createSourceBox_Run());
     inputBox.add(dialog.inputFileHandler);
     inputBox.setMinimumSize(new Dimension(360, 80));
     inputBox.setPreferredSize(new Dimension(360, 80));
@@ -157,7 +157,7 @@ class NBORun {
     //box.add(btnRun);
     panel.add(btnRun);
 
-    if (dialog.inputFileHandler.tfExt.getText().equals("47"))
+    if (dialog.inputFileHandler.tfExt.getText().equals("47")) //TDO: 
       notifyFileLoaded();
     dialog.inputFileHandler.setBrowseEnabled(true);
     return panel;
@@ -168,7 +168,7 @@ class NBORun {
    * 
    * @return Box
    */
-  private Box createSourceBox() {
+  private Box createSourceBox_Run() {
     Box box = Box.createHorizontalBox();
     ButtonGroup bg = new ButtonGroup();
     rbLocal = new JRadioButton("Local");
@@ -190,20 +190,20 @@ class NBORun {
     });
     box.add(btn);
     bg.add(btn);
-    btn = new JRadioButton("WebMO");
-    btn.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        String url = "http://www.webmo.net/demoserver/cgi-bin/webmo/jobmgr.cgi";
-        try {
-          Desktop.getDesktop().browse(new URI(url));
-        } catch (Exception e1) {
-          dialog.alertError("Could not open WebMO");
-        }
-      }
-    });
-    box.add(btn);
-    bg.add(btn);
+//    btn = new JRadioButton("WebMO");
+//    btn.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        String url = "http://www.webmo.net/demoserver/cgi-bin/webmo/jobmgr.cgi";
+//        try {
+//          Desktop.getDesktop().browse(new URI(url));
+//        } catch (Exception e1) {
+//          dialog.alertError("Could not open WebMO");
+//        }
+//      }
+//    });
+//    box.add(btn);
+//    bg.add(btn);
     return box;
   }
 

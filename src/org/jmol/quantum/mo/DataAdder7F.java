@@ -159,7 +159,7 @@ public class DataAdder7F implements DataAdder {
     default:
       norm1 = norm2 = norm3 = 1;
       break;
-    case MOCalculation.NORM_NBO_AO_SPHERICAL:
+    case MOCalculation.NORM_NBO:
       
       norm1 = norm2 = norm3 = 1;
 

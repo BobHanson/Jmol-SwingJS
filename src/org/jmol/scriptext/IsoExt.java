@@ -24,9 +24,20 @@
 
 package org.jmol.scriptext;
 
-import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+
+import org.jmol.adapter.readers.quantum.GenNBOReader;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
@@ -36,7 +47,6 @@ import org.jmol.c.VDW;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.MepCalculation;
-import org.jmol.quantum.QS;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
@@ -49,26 +59,12 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
 import org.jmol.util.Parser;
-import org.jmol.util.Triangulator;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.SB;
-
-import org.jmol.util.Logger;
-
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.TempArray;
+import org.jmol.util.Triangulator;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
 
@@ -1069,77 +1065,21 @@ public class IsoExt extends ScriptExt {
     }
   }
 
-
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("static-access")
   private void setNBOType(Map<String, Object> moData, String type) throws ScriptException {
+
     //         31    32    33    34    35    36    37    38    39    40    41
     int ext = ";AO;  ;PNAO;;NAO; ;PNHO;;NHO; ;PNBO;;NBO; ;PNLMO;NLMO;;MO;  ;NO;"
         .indexOf(";" + type + ";");
     if (ext < 0)
       invArg();
-    ext = ext / 6 + 31;
-    String[] nboLabels = (String[]) moData.get("nboLabels");
-    if (nboLabels == null)
+    if (!moData.containsKey("nboLabels"))
       error(ScriptError.ERROR_moModelError);
     if (chk)
       return;
-    try {
-      Lst<Map<String, Object>> orbitals = (Lst<Map<String, Object>>) moData
-          .get(type + "_coefs");
-      if (orbitals == null) {
-        String fileName = moData.get("nboRoot") + "." + ext;
-        String data = vwr.getFileAsString3(fileName, true, null);
-        if (data == null)
-          error(ScriptError.ERROR_moModelError);
-        orbitals = (Lst<Map<String, Object>>) moData.get("mos");
-        Object dfCoefMaps = orbitals.get(0).get("dfCoefMaps");
-        int n = orbitals.size();
-        orbitals = new Lst<Map<String, Object>>();
-        for (int i = n; --i >= 0;) {
-          Map<String, Object> mo = new Hashtable<String, Object>();
-          orbitals.addLast(mo);
-          mo.put("dfCoefMaps", dfCoefMaps);
-        }
-        ((QS) Interface.getInterface("org.jmol.quantum.QS", vwr, "script"))
-            .setNboLabels(nboLabels, n, orbitals, 0, type);
-        data = data.substring(data.lastIndexOf("--") + 2);
-        int nao = n;
-        if (data.indexOf("alpha") >= 0) {
-          nao = n / 2;
-          data = data.substring(data.indexOf("alpha") + 10);  // "alpha spin"
-        }
-        int len = data.length();
-        int[] next = new int[1];
-        for (int i = 0; i < n; i++) {
-          if (i == nao) {
-            // must skip "beta  spin"
-            next[0] += 12;
-          }
-          Map<String, Object> mo = orbitals.get(i);
-          float[] coefs = new float[nao];
-          mo.put("coefficients", coefs);
-          for (int j = 0; j < nao; j++) {
-            coefs[j] = PT.parseFloatChecked(data, len, next, false);
-            if (Float.isNaN(coefs[j]))
-              System.out.println("oops = IsoExt ");
-          }
-        }
-        if (type.equals("NBO")) {
-          float[] occupancies = new float[n];
-          for (int j = 0; j < n; j++)
-            occupancies[j] = PT.parseFloatChecked(data, len, next, false);
-          for (int i = 0; i < n; i++) {
-            Map<String, Object> mo = orbitals.get(i);
-            mo.put("occupancy", Float.valueOf(occupancies[i]));
-          }
-        }
-        moData.put(type + "_coefs", orbitals);
-      }
-      moData.put("nboType", type);
-      moData.put("mos", orbitals);
-    } catch (Exception e) {
+    if (!((GenNBOReader) Interface.getInterface("org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
+    		.readNBOCoefficients(moData, type, vwr))
       error(ScriptError.ERROR_moModelError);
-    }
   }
 
   private float[] moCombo(Lst<Object[]> propertyList) {

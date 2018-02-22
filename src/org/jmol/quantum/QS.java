@@ -25,9 +25,8 @@
 
 package org.jmol.quantum;
 
-import java.util.Map;
 
-import javajs.util.Lst;
+
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -145,23 +144,7 @@ public class QS {
     return sb.toString();
   }
 
-  public void setNboLabels(String[] tokens, int nLabels,
-                           Lst<Map<String, Object>> orbitals, int nOrbitals0,
-                           String moType) {
-    boolean alphaBeta = (orbitals.size() == nLabels * 2);
-    boolean isAO = (moType.indexOf("AO") >= 0);
-    String ab = (!alphaBeta ? "" : nOrbitals0 == 0 ? " alpha" : " beta");
-    for (int j = 0; j < nLabels; j++) {
-      Map<String, Object> mo = orbitals.get(j + nOrbitals0);
-      String type = tokens[j];
-      mo.put("type", moType + " " + type + ab);
-      if (!isAO)
-        mo.put(
-            "occupancy",
-            Float.valueOf(alphaBeta ? 1 : type.indexOf("*") >= 0
-                || type.indexOf("(ry)") >= 0 ? 0 : 2));
-    }
-  }
+  
 
   
   // Jmol's ordering is based on GAUSSIAN

@@ -49,7 +49,7 @@ public class DataAdder13I implements DataAdder {
     case MOCalculation.NORM_NONE:
     default:
       return false;
-    case MOCalculation.NORM_NBO_AO_SPHERICAL:
+    case MOCalculation.NORM_NBO:
       return false;
     case MOCalculation.NORM_STANDARD:
       return false;

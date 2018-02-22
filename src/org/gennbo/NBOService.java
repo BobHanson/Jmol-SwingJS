@@ -83,8 +83,13 @@ public class NBOService {
   
   private boolean isReady;
 
+  boolean isReady() {
+    return isReady;
+  }
+  
   protected void setReady(boolean tf) {
-    //System.out.println("isready = " + tf);
+    System.out.println("isready = " + tf);
+    
     isReady = tf;
   }
   /**
@@ -207,30 +212,28 @@ public class NBOService {
         return null;
       nboListener = null;
       String path = getServerPath(exeName);
-      
-      System.out.println("startProcess: " + path);
+      System.out.flush();
+      System.out.println("startProcess: " + path + " " + Thread.currentThread());
 
       ProcessBuilder builder = new ProcessBuilder(path);
       
       builder.directory(new File(new File(path).getParent())); // root folder for executable 
       builder.redirectErrorStream(true);
-      nboServer = builder.start();
-      
-      // pick up the NBO stdout
-      
-      nboOut = (BufferedInputStream) nboServer.getInputStream();
-      System.out.println("startProcess:" + nboServer);
-
       // start a listener
       
       nboListener = new Thread(nboRunnable = new NBORunnable());
       nboListener.setName("NBOServiceThread" + System.currentTimeMillis());
       nboListener.start();
-      
-      // open a channel to NBOServe's stdin.
-      
+      nboOut = (BufferedInputStream) (nboServer = builder.start()).getInputStream();
       nboIn = new PrintWriter(nboServer.getOutputStream());
-      
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        System.err.println(e);
+      }
+      if (nboOut.available() > 0)
+        System.out.println("OK!");
+      System.out.println("startProcess:" + nboServer + " " + nboOut.available());
     } catch (IOException e) {
       String s = e.getMessage();
       System.out.println(s);
@@ -247,7 +250,9 @@ public class NBOService {
    * Close the process and all channels associated with it. 
    * @param andPause 
    */
-  public void closeProcess(boolean andPause) {
+  public synchronized void closeProcess(boolean andPause) {
+    System.out.flush();
+    System.out.println("CLOSING PROCESS " +Thread.currentThread());
     
     if (nboRunnable != null) {
       nboRunnable.destroyed = true;
@@ -271,9 +276,10 @@ public class NBOService {
     nboIn = null;
     
     try {
-      nboListener.interrupt();
+      if (nboListener != null)
+        nboListener.interrupt();
     } catch (Exception e) {
-      System.out.println("can't interrupt");
+      System.out.println("can't interrupt " + e);
     }
     nboListener = null;
     
@@ -284,6 +290,9 @@ public class NBOService {
     }
     nboServer = null;
     currentRequest = null;
+    haveLicense = false;
+    dialog.setLicense("\n\n");
+
   }
 
   /**
@@ -361,7 +370,7 @@ public class NBOService {
   //////////////////////////// Send Request to NBOServe ///////////////////////////
 
   /**
-   * Start the current request by writing its metacommands to disk and sending a
+   * Start the current request by writing its meta-commands to disk and sending a
    * command to NBOServe directing it to that file via its stdin.
    * 
    * We allow the Jmol command
@@ -466,7 +475,6 @@ public class NBOService {
       if ((pt = s.lastIndexOf("*start*")) < 0) {
 
         // Note that RUN can dump all kinds of things to SYSOUT prior to completion.
-
         if (currentRequest == null)
           return (removeRequest = true);
         logServerLine(s, (currentRequest.isMessy ? Logger.LEVEL_DEBUG
@@ -483,10 +491,9 @@ public class NBOService {
       }
 
       // standard expectation
-      //System.out.println("*start*\n" + s);
       if (currentRequest == null) {
         if (haveLicense) {
-          System.out.println("TRANSMISSION ERROR: UNSOLICITED!");
+          System.out.println("TRANSMISSION ERROR: UNSOLICITED!>>>>" + s + "<<<<<");
         } else {
           haveLicense = true;
           dialog.setLicense(s);
@@ -560,7 +567,8 @@ public class NBOService {
 
         } catch (Throwable e1) {
           clearQueue();
-          e1.printStackTrace();
+          if (("" + e1.getMessage()).indexOf("sleep") < 0)
+            e1.printStackTrace();
           dialog.setStatus(e1.getMessage());
           continue;
           // includes thread death

@@ -67,7 +67,7 @@ class NBORequest {
    */
   void sendReply(String reply) {
     
-    //System.out.println("CMD IS >>>>" + fileData[1] + "<<<<<");
+    System.out.println("CMD IS >>>>" + fileData[1] + "<<<<<");
     System.out.println("REPLY IS >>>>\n" + reply + "<<<<<");
     this.reply = reply;
     if (callbackMethod != null)

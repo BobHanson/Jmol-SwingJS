@@ -84,7 +84,6 @@ public class DataAdderF implements DataAdder {
     boolean normalizeAlpha = false;
     switch (calc.normType) {
     case MOCalculation.NORM_NONE:
-    case MOCalculation.NORM_NBO_AO_SPHERICAL:
     default:
       norm1 = norm2 = norm3 = 1;
       break;
@@ -100,6 +99,11 @@ public class DataAdderF implements DataAdder {
       norm2 = norm1;
       norm3 = norm1;        
       normalizeAlpha = true;
+      break;
+    case MOCalculation.NORM_NBO:
+      norm1 = Math.sqrt(15);
+      norm2 = Math.sqrt(5);
+      norm3 = 1;
       break;
     }
 

@@ -63,14 +63,31 @@ import org.jmol.viewer.Viewer;
 
 class NBOModel {
 
+  // The main menu
   protected NBODialog dialog;
+  //
   private Viewer vwr;
-
+  
+  /*
+   * constructor to initialize the fields needed in NOBModel
+   */
   protected NBOModel(NBODialog dialog) {
     this.dialog = dialog;
     this.vwr = dialog.vwr;
   }
 
+  /*
+   * Different instructions users may choose
+   * MODEL_ACTION_ALTER: what does it do and possible problem if it has
+   * MODEL_ACTION_CLIP
+   * MODEL_ACTION_FUSE
+   * MODEL_ACTION_LINK
+   * MODEL_ACTION_MUTATE
+   * MODEL_ACTION_SWITCH
+   * MODEL_ACTION_TWIST
+   * MODEL_ACTION_VALUE
+   * MODEL_ACTION_3CHB
+   */
   private final static int MODEL_ACTION_ALTER  = 0;
   private final static int MODEL_ACTION_CLIP   = 1;
   private final static int MODEL_ACTION_FUSE   = 2;
@@ -83,10 +100,19 @@ class NBOModel {
   
   private static final int MODEL_ACTION_MAX    = 9;
 
+  /*
+   * Functions within Model -> Edit Model panel
+   * MODEL_ACTION_REBOND
+   * MODEL_ACTION_SYMMETRY
+   * MODEL_ACTION_HBOND
+   */
   private static final int MODEL_ACTION_REBOND = 9;
   private static final int MODEL_ACTION_SYMMETRY = 10;
   private final static int MODEL_ACTION_HBOND   = 11;
 
+  /*
+   * Model operations
+   */
   static final int MODE_MODEL_EDIT     = 21;
   static final int MODE_MODEL_NEW      = 31; 
   static final int MODE_MODEL_SAVE     = 41;
@@ -158,6 +184,7 @@ class NBOModel {
   
  /**
    * A model is being loaded into Jmol that NBO does not know about yet
+   * 
    */
   private boolean notFromNBO;
 
@@ -173,6 +200,9 @@ class NBOModel {
     notFromNBO = true;
   }
 
+  /*
+   * set the visability of components in buildModelPanel()
+   */
   private void showComponents(boolean tf) {
     editHeader.setVisible(tf);
     editComponent.setVisible(tf);
@@ -180,6 +210,7 @@ class NBOModel {
     saveHeader.setVisible(tf);
     saveComponent.setVisible(tf);
   }
+
 
   void modelSetSaveParametersFromInput(NBOFileHandler nboFileHandler,
                                        String dir, String name, String ext) {
@@ -189,6 +220,9 @@ class NBOModel {
   }
 
 
+  /*
+   *Save Model Panel at the bottom of the frame 
+   */
   protected JPanel buildModelPanel() {
     resetVariables();
     JPanel panel = new JPanel();
@@ -218,7 +252,10 @@ class NBOModel {
     return panel;
 
   }
-
+  
+/*
+ * 
+ */
   private void resetVariables() {
     actionID = 0;
     boxCount = 0;
@@ -228,6 +265,9 @@ class NBOModel {
     serverMode = 0;
   }
 
+  /*
+   * Edit Model horizontal box in the middle
+   */
   private Box getEditHeader() {
     Box topBox = Box.createHorizontalBox();
     undo = new JButton("<HTML>&#8592Undo</HTML>");
@@ -274,13 +314,26 @@ class NBOModel {
     jtNIHInput.setFont(NBOConfig.userInputFont);
     jtLineFormula.setFont(NBOConfig.userInputFont);
     jtLineFormula.add(new JLabel("line formula"));
-    String[] useOps = { "<Select File  Type>", "[.xyz]  XYZ", "[.mol]  MOL",
+    // w1 change
+    String[] useOps = { "<Select File Type>", "[.47]   NBO Archive",
+        "[.gau]  Gaussian Input", "[.log]  Gaussian Output",
+        "[.gms]  GAMESS Input", "[.adf]  ADF Input", "[.jag]  Jaguar Input",
+        "[.mm2]  MM2-Input", "[.mnd]  Dewar Type Input", "[.mp]   Molpro Input", 
+        "[.nw]   NWChem Input", "[.orc]  Orca Input", "[.pqs]  PQS Input", 
+        "[.qc]   Q-Chem Input", "[.cfi]  NBO Cartesian", 
+        "[.vfi]  NBO Valence", "[.xyz]  XYZ", "[.mol]  MOL"};
+    /*
+     * Original version
+     * 
+     *   String[] useOps = { "<Select File  Type>", "[.xyz]  XYZ", "[.mol]  MOL",
         "[.cfi]  NBO Cartesian", "[.vfi]  NBO Valence", "[.47]   NBO Archive",
         "[.gau]  Gaussian Input", "[.log]  Gaussian Output",
         "[.gms]  GAMESS Input", "[.adf]  ADF Input", "[.jag]  Jaguar Input",
         "[.mm2]  MM2-Input", "[.mnd]  Dewar Type Input",
         "[.mp]   Molpro Input", "[.nw]   NWChem Input", "[.orc]  Orca Input",
         "[.pqs]  PQS Input", "[.qc]   Q-Chem Input" };
+     */
+    
     final JComboBox<String> jComboUse = new JComboBox<String>(useOps);
     jComboUse.addActionListener(new ActionListener() {
       @Override
@@ -297,14 +350,16 @@ class NBOModel {
     addFocusListeners(jComboUse, jrFileIn);
 
     inputBox.add(p2);
-    dialog.inputFileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_MODEL_USE, NBOConfig.INPUT_FILE_EXTENSIONS, dialog) {
-      
+    dialog.inputFileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_MODEL_USE, 
+    		NBOConfig.INPUT_FILE_EXTENSIONS, dialog) {
+    
       @Override
       protected boolean doFileBrowsePressed() {
+        
         String folder = tfDir.getText().trim();
-        String name = tfName.getText();
-        if (name.length() == 0)
-          name = "*";
+//        String name = tfName.getText();
+//        if (name.length() == 0)
+          String name = "*";
         String ext = tfExt.getText();
         if (ext.length() == 0)
           ext = "*";
@@ -650,7 +705,7 @@ class NBOModel {
           if (symlist != null) {
             for (int i = 0; i < symlist.length; i++)
               jcSymOps.addItem(symlist[i]);
-            if (currentRebondSymOp > 0)
+            if (currentRebondSymOp > 0) 
               jcSymOps.setSelectedIndex(currentRebondSymOp);
             currentRebondSymOp = 0;
           } else {
@@ -685,7 +740,7 @@ class NBOModel {
   };
   
   private static String[] getRebondSymList(int val) {
-    return  (val - 4 < REBOND_LISTS.length? REBOND_LISTS[val - 4]: null);
+    return  (val - 4 < REBOND_LISTS.length? REBOND_LISTS[val - 4]: null); // why minus 4? but correct here
   }
 
   protected String modelEditGetSelected() {
@@ -695,9 +750,29 @@ class NBOModel {
     return PT.rep(s.trim(), "  ", " ").trim();
   }
 
+  
   private Box getSaveComponent() {
     Box sBox = NBOUtil.createBorderBox(true);
-    final String[] SAVE_OPTIONS = { "<Select File Type>",
+    final String[] SAVE_OPTIONS = {  "<Select File Type>",
+        "Gaussian Input             [.gau]",
+        "Gaussian Input (Cartesian) [.gau]",
+        "Gaussian Input (z-Matrix)  [.gau]",
+        "GAMESS Input               [.gms]",
+        "ADF Input                  [.adf]",
+        "Jaguar Input               [.jag]",
+        "MM2-Input                  [.mm2]",
+        "Dewar Type Input           [.mnd]",
+        "Molpro Input               [.mp]", "NWChem Input               [.nw]",
+        "Orca Input                 [.orc]",
+        "PQS Input                  [.pqs]", "Q-Chem Input               [.qc]",
+        "NBO Cartesian              [.cfi]",
+        "NBO Valence                [.vfi]",
+        "XYZ                        [.xyz]",
+        "MOL                        [.mol]",};
+    
+    /*
+     * Original version
+     *  final String[] SAVE_OPTIONS = { "<Select File Type>",
         "XYZ                        [.xyz]",
         "MOL                        [.mol]",
         "NBO Cartesian              [.cfi]",
@@ -713,6 +788,7 @@ class NBOModel {
         "Molpro Input               [.mp]", "NWChem Input               [.nw]",
         "Orca Input                 [.orc]",
         "PQS Input                  [.pqs]", "Q-Chem Input               [.qc]" };
+     */
     jComboSave = new JComboBox<String>(SAVE_OPTIONS);
 
     jComboSave.setFont(NBOConfig.monoFont);
@@ -809,6 +885,9 @@ class NBOModel {
     addFocusListeners(field, radio);
   }
 
+  /*
+   * function of this method and where it is being used
+   */
   private void addFocusListeners(final JComponent field,
                                    final JRadioButton radio) {
     field.addFocusListener(new FocusListener() {
@@ -875,6 +954,12 @@ class NBOModel {
     }
   }
 
+  /*
+   * According to the model action number through doModelAction(), set the layout
+   * of edit box
+   * 
+   * @para
+   */
   private void setEditBox(String label) {
     if (label == null)
       label = "Select atom" + (boxCount > 1 ? "s" : "") + "...";
@@ -989,6 +1074,7 @@ class NBOModel {
     }
     if (actionID == MODEL_ACTION_REBOND) {
       currentRebondSymOp = jcSymOps.getSelectedIndex();
+      cmd += jcSymOps.getItemAt(currentRebondSymOp); // FIX g1 under Model
     }
 
     //    dialog.runScriptNow("save orientation o2");
@@ -1315,6 +1401,8 @@ class NBOModel {
    * @param statusMessage
    * @param fileName  optional
    * @param fileData  optional
+   *  postNBO(sb, MODE_MODEL_NEW, "model from line input...",
+          null, null);
    */
   private void postNBO(SB sb, final int mode, String statusMessage, String fileName, String fileData) {
     final NBORequest req = new NBORequest();
@@ -1359,6 +1447,8 @@ class NBOModel {
         dialog.logError("Return message from NBOServe was empty.");
         return;
       }
+      // temporary hack, until it is fixed in NBOPro:
+      s = s.replace('\\','/');
       s += NBOConfig.JMOL_FONT_SCRIPT;
 // backing off from this so we can see what NBO6 does and maybe not need to do this
 //      if (mode == MODE_MODEL_EDIT)

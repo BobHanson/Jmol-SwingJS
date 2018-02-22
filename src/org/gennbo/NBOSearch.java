@@ -223,9 +223,11 @@ class NBOSearch extends NBOView {
           " DIy  : dipole moment operator (y component)",
           " DIz  : dipole moment operator (z component)" };
 
+  
   private Box optionBox;
   private JButton back;
   private JButton keyWdBtn;
+  private JRadioButton singleJob, multiJobs;
   protected JLabel unitLabel;
   protected JPanel opList;
   protected JRadioButton[] rBtns = new JRadioButton[12];
@@ -272,41 +274,69 @@ class NBOSearch extends NBOView {
   //  }
   //
   //
+  
+ 
+  private Box createSourceBox_Search() {
+    Box box = Box.createHorizontalBox();
+    ButtonGroup bg = new ButtonGroup();
+    singleJob = new JRadioButton("single Job");
+    singleJob.setSelected(true);
+    singleJob.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        //doSingleJob();    TODO  
+      }
+    });
+    box.add(singleJob);
+    bg.add(singleJob);
+    multiJobs = new JRadioButton("multiple Jobs");
+    multiJobs.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        //doArchiveButton();
+      }
+    });
+    box.add(multiJobs);
+    bg.add(multiJobs);
+    
+    return box;
+  }
+  
+  
+  /////INPUT FILE/////////////
+
   protected JPanel buildSearchPanel() {
 
     JPanel panel = new JPanel();
-    panel.setLayout(new BorderLayout());
-    panel.add(createViewSearchJobBox(NBOFileHandler.MODE_SEARCH),
-        BorderLayout.NORTH);
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    
+    dialog.getNewInputFileHandler(NBOFileHandler.MODE_SEARCH);
+    dialog.inputFileHandler.setBrowseEnabled(false);
+    
+    panel.add(NBOUtil.createTitleBox(" Select Job ",
+                dialog.new HelpBtn("search_job_help.htm")));
+    
+    
+    Box inputBox = NBOUtil.createBorderBox(true);
+    inputBox.add(createSourceBox_Search());
+    inputBox.add(dialog.inputFileHandler);
+    inputBox.setMinimumSize(new Dimension(360, 80));
+    inputBox.setPreferredSize(new Dimension(360, 80));
+    inputBox.setMaximumSize(new Dimension(360, 80));
+    panel.add(inputBox);
+
+   // panel.add(createViewSearchJobBox(NBOFileHandler.MODE_SEARCH),
+    //    BorderLayout.NORTH);
     //    inputFileHandler.tfName.setText("");
 
-    /////INPUT FILE/////////////
-
-    //    Box inputBox = Box.createHorizontalBox();
-    //    inputBox.setAlignmentX(0.0f);
-    //    if (inputFileHandler == null)
-    //      inputFileHandler = newNBOFileHandler("", "47", 4, "47");
-    //    else
-    //      inputFileHandler = newNBOFileHandler(inputFileHandler.jobStem, "47", 4,
-    //          "47");
-    //    inputBox.add(inputFileHandler);
-    //    inputBox.setBorder(BorderFactory.createLineBorder(Color.black));
-    //    inputBox.setMinimumSize(new Dimension(360, 60));
-    //    inputBox.setPreferredSize(new Dimension(360,60));
-    //    inputBox.setMaximumSize(new Dimension(360, 60));
-    //
-    //    Box box1 = createTitleBox(" Select Job ",
-    //        new HelpBtn("search_job_help.htm"));
-    //    box1.add(inputBox);
-    //    
-    //    
-    //    panel.add(box1, BorderLayout.NORTH);
 
     back = new JButton("<html>&#8592Back</html>");
 
     /////ALPHA-BETA SPIN/////////////////
     betaSpin = new JRadioButton("<html>&#x3B2</html>");
     alphaSpin = new JRadioButton("<html>&#x3B1</html>");
+    alphaSpin.setSelected(true);
+
     ActionListener spinListener = new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
@@ -315,7 +345,6 @@ class NBOSearch extends NBOView {
     };
     alphaSpin.addActionListener(spinListener);
     betaSpin.addActionListener(spinListener);
-    alphaSpin.setSelected(true);
     ButtonGroup bg = new ButtonGroup();
     bg.add(alphaSpin);
     bg.add(betaSpin);
@@ -484,6 +513,10 @@ class NBOSearch extends NBOView {
         + "_help.htm");
   }
 
+  /*
+   * After choosing a job, user needs to select a keyword. Keywords are grouped into sections with different
+   * "cmd_basis" that is passed to postListRequest
+   */
   protected void doSetSpin() {
     showLewisStructure();
     switch (keywordID) {
@@ -504,6 +537,7 @@ class NBOSearch extends NBOView {
       postListRequest("d'", comboSearchOrb2);
       break;
     case KEYWD_CMO:
+      postListRequest("c", comboSearchOrb2);
       postListRequest("n", comboSearchOrb1);
       if (radioOrbMO.isSelected())
         radioOrbMO.doClick();
@@ -515,6 +549,9 @@ class NBOSearch extends NBOView {
     }
   }
 
+   /*
+    * The action of "back" button 
+    */
   protected void doBack() {
     if (keywordID == KEYWD_NRT && comboUnit1.getModel().getSize() > 0)
       comboUnit1.setSelectedIndex(0);
@@ -583,6 +620,9 @@ class NBOSearch extends NBOView {
         "Error getting lists, an error may have occured during run");
   }
 
+  /*
+   * setup after a keyword is selected
+   */
   protected void keywordClicked(int index) throws IllegalArgumentException {
     isNewModel = false;
     keywordID = index;
@@ -702,6 +742,7 @@ class NBOSearch extends NBOView {
    *        labels for these
    */
   protected void setKeyword(final String[] items, final String[] labels) {
+
     resetCurrentOrbitalClicked();
     dialog.viewSettingsBox.removeAll();
     dialog.viewSettingsBox.setLayout(new BorderLayout());
@@ -828,6 +869,9 @@ class NBOSearch extends NBOView {
       dialog.runScriptQueued("select on @" + atomno1 + ", @" + atomno2);
   }
 
+  /*
+   * Define the action of combo box inside the keywords
+   */
   private void setComboSearchOrbDefaultAction(final String key) {
     comboSearchOrb1.addActionListener(new ActionListener() {
       @Override
@@ -863,14 +907,25 @@ class NBOSearch extends NBOView {
   //    }
   //}
 
+  
+  /*
+   * If the selection is chosen directly from the combobox, the key equals n and 
+   * show the orbital; else, the selection is made through bond clicking and print out 
+   * the selected orbital 
+   */
   protected void doSearchOrb1Action(String key) {
+
     checkOptionClickForOrbitalSelection();
     if (key.equals("n")) {
       showOrbJmol("NBO", comboSearchOrb1.getSelectedIndex(), key);
       radioOrbNBO.doClick();
-    } else
+    } else{
+//      System.out.println("I'm in doSearchOrb1Action!");
+      System.out.println("the select item is" + comboBasis1.getSelectedItem().toString()
+          + "number is " + comboSearchOrb1.getSelectedIndex());
       showOrbJmol(comboBasis1.getSelectedItem().toString(),
-          comboSearchOrb1.getSelectedIndex(), key);
+          comboSearchOrb1.getSelectedIndex(), key); 
+    }
   }
 
   private void setComboSearchOrb2DefaultAction(final String key,
@@ -1119,6 +1174,8 @@ class NBOSearch extends NBOView {
     }
     if (isLabelAtom) {
       needRelabel = true;
+      dialog
+      .runScriptQueued("isosurface off");
       postNBO_s(sb, MODE_SEARCH_ATOM_VALUES, null, "Getting labels", false);
     } else if (isLabelBonds) {
       needRelabel = true;
@@ -1210,6 +1267,7 @@ class NBOSearch extends NBOView {
    * @param id
    */
   protected void showOrbJmol(String type, int i, String id) {
+    
     if (i <= 0) {
       dialog.runScriptQueued("select visible;isosurface delete");
       dialog.logError("Select an orbital.");
@@ -1286,51 +1344,23 @@ class NBOSearch extends NBOView {
     dialog.runScriptQueued("isosurface delete");
     int at1 = picked[0];
     int at2 = picked[1];
-    if (at2 == Integer.MIN_VALUE) {
-      // single-atom pick
-      switch (keywordID) {
-      case KEYWD_NBO:
-      case KEYWD_BEND:
-      case KEYWD_NLMO:
-      case KEYWD_E2PERT:
-        showOrbital(nextOrbitalForAtomPick(at1,
-            (DefaultComboBoxModel<String>) comboSearchOrb1.getModel()));
-        return;
-      case KEYWD_CMO:
-        showOrbital(nextOrbitalForAtomPick(at1,
-            (DefaultComboBoxModel<String>) comboSearchOrb2.getModel()));
-        return;
-      case KEYWD_NPA:
-      case KEYWD_NRT:
-      case KEYWD_STERIC:
-      case KEYWD_DIPOLE:
-      case KEYWD_OPBAS:
-      case KEYWD_BAS1BAS2:
-        break;
-      }
-      if (comboAtom1 != null && comboAtom2 == null) {
-        comboAtom1.setSelectedIndex(at1);
-        if (optionSelected >= 0 && optionSelected < 3)
-          rBtns[optionSelected].doClick();
-      } else if (comboAtom1 != null && comboAtom2 != null) {
-        secondPick = !secondPick;
-        if (secondPick)
-          comboAtom2.setSelectedIndex(at1);
-        else
-          comboAtom1.setSelectedIndex(at1);
-      }
-      return;
-    }
+    int bondClick = 0;
+    System.out.println("at1 = " + at1 );
+    System.out.println("at2 = " + at2 );
 
     switch (keywordID) {
     case KEYWD_NBO:
     case KEYWD_NLMO:
     case KEYWD_DIPOLE:
     case KEYWD_CMO:
-      comboSearchOrb1.setSelectedIndex(pickBondNBO(at1, at2, comboSearchOrb1));
+      bondClick = pickBondNBO(at1, at2, comboSearchOrb1) ;
+      System.out.println("pickbond = " + bondClick);
+//      comboSearchOrb1.setSelectedIndex(bondClick);
+
       break;
     case KEYWD_BEND:
-      comboSearchOrb1.setSelectedIndex(pickBondNHO(at1, at2, comboSearchOrb1));
+//      comboSearchOrb1.setSelectedIndex(pickBondNHO(at1, at2, comboSearchOrb1));
+      pickBondNHO(at1, at2, comboSearchOrb1);
       break;
     case KEYWD_NRT:
       this.comboAtom1.setSelectedIndex(at1);
@@ -1410,6 +1440,51 @@ class NBOSearch extends NBOView {
         break;
       }
     }
+    System.out.println("selected item" + comboSearchOrb1.getSelectedIndex()); 
+
+/*
+ * Not sure what the following part is doing and it does repetitive work. 
+ * So I comment it out. 
+ */
+    
+//  if (at2 != Integer.MIN_VALUE) { 
+//  // single-atom pick
+//  switch (keywordID) {
+//  case KEYWD_NBO:
+//  case KEYWD_BEND:
+//  case KEYWD_NLMO:
+//  case KEYWD_E2PERT:
+//    System.out.println("I'm in the bottom switch");
+//    showOrbJmol("PNBO", comboSearchOrb1.getSelectedIndex(), "cmo");
+//
+////        showOrbital(nextOrbitalForAtomPick(at1,
+////        (DefaultComboBoxModel<String>) comboSearchOrb1.getModel()));
+//    return;
+//  case KEYWD_CMO:
+//    showOrbital(nextOrbitalForAtomPick(at1,
+//        (DefaultComboBoxModel<String>) comboSearchOrb2.getModel()));
+//    return;
+//  case KEYWD_NPA:
+//  case KEYWD_NRT:
+//  case KEYWD_STERIC:
+//  case KEYWD_DIPOLE:
+//  case KEYWD_OPBAS:
+//  case KEYWD_BAS1BAS2:
+//    break;
+//  }
+//  if (comboAtom1 != null && comboAtom2 == null) {
+//    comboAtom1.setSelectedIndex(at1);
+//    if (optionSelected >= 0 && optionSelected < 3)
+//      rBtns[optionSelected].doClick();
+//  } else if (comboAtom1 != null && comboAtom2 != null) {
+//    secondPick = !secondPick;
+//    if (secondPick)
+//      comboAtom2.setSelectedIndex(at1);
+//    else
+//      comboAtom1.setSelectedIndex(at1);
+//  }
+//  return;
+//}
   }
 
   /**
@@ -1421,7 +1496,9 @@ class NBOSearch extends NBOView {
    * @return the orbital index, one-based
    */
   private int pickBondNBO(int at1, int at2, JComboBox<String> cb) {
-    return selectOnOrb(at1 + "-" + at2, null, cb);
+    String sat1 = vwr.ms.at[at1 - 1].getElementSymbol() + at1;//changed here - Yuke Liang
+    String sat2 = vwr.ms.at[at2 - 1].getElementSymbol() + at2;
+    return selectOnOrb(sat1 + "-" + sat2, null, cb);
   }
 
   /**
@@ -1433,7 +1510,9 @@ class NBOSearch extends NBOView {
    * @return the orbital index, one-based
    */
   private int pickBondNHO(int at1, int at2, JComboBox<String> cb) {
-    return selectOnOrb(at1 + "(" + at2 + ")", at2 + "(" + at1 + ")", cb);
+    String sat1 = vwr.ms.at[at1 - 1].getElementSymbol() + at1;// changed here - Yuke Liang
+    String sat2 = vwr.ms.at[at2 - 1].getElementSymbol() + at2;
+    return selectOnOrb(sat1 + "(" + sat2 + ")", sat2 + "(" + sat1 + ")", cb);
   }
 
   /**
@@ -1446,10 +1525,11 @@ class NBOSearch extends NBOView {
    * @param cb
    * @return an orbital index -- one-based
    */
-  protected int selectOnOrb(String b1, String b2, JComboBox<String> cb) {
+  protected int selectOnOrb(String b1, String b2, JComboBox<String> cb) { 
     DefaultComboBoxModel<String> list = (DefaultComboBoxModel<String>) cb
         .getModel();
     int size = list.getSize();
+//    System.out.println("I'm in selectOnOrb!");
     int curr = (currOrb.contains(b1) ? currOrbIndex : 0);
     for (int i = curr + 1; i < size + curr; i++) {
       int ipt = i % size;
@@ -1472,6 +1552,8 @@ class NBOSearch extends NBOView {
     if (vwr.ms.ac == 0)
       return;
     dialog.runScriptQueued("isosurface delete");
+    resetCurrentOrbitalClicked();
+
 
     optionSelected = -1;
     if (dialog.isOpenShell()) {
@@ -1518,7 +1600,7 @@ class NBOSearch extends NBOView {
     SB sb = getMetaHeader(false);
     String cmd;
     if (keywordID == KEYWD_OPBAS || keywordID == KEYWD_BAS1BAS2) {
-      cmd = "LABEL";
+     cmd = "LABEL";
       JComboBox<String> tmpBas = ((cmd_basis.startsWith("c") && keywordID == KEYWD_BAS1BAS2) ? comboBasis2
           : comboBasis1);
       NBOUtil.postAddGlobalI(sb, "BAS_1", 1, tmpBas);
@@ -1528,9 +1610,10 @@ class NBOSearch extends NBOView {
       NBOUtil.postAddGlobalI(sb, "KEYWORD", keywordID, null);
       cmd = cmd_basis.split(" ")[0];
     }
-    NBOUtil.postAddCmd(sb, cmd);
-    if (keywordID == KEYWD_CMO && cmd_basis.equals("c_cmo"))
+    if (keywordID == KEYWD_CMO && cmd_basis.equals("c_cmo")) 
       mode = MODE_SEARCH_LIST_MO;
+    System.out.println("mode is " + mode);
+    NBOUtil.postAddCmd(sb, cmd);
     postNBO_s(sb, mode, cb, "Getting list " + cmd, false);
   }
 
@@ -1605,7 +1688,9 @@ class NBOSearch extends NBOView {
       break;
     case MODE_SEARCH_LIST_MO:
       list = (DefaultComboBoxModel<String>) cb.getModel();
-      for (int i = 0; i < lines.length; i++)
+      list.removeAllElements();
+      for (int i = 0; i <   lines.length; i++)
+//        list.addElement(lines[i]);
         list.addElement("  " + PT.rep(PT.rep(lines[i], "MO ", ""), " ", ".  "));
       break;
     case MODE_SEARCH_BOND_VALUES:
@@ -1658,7 +1743,7 @@ class NBOSearch extends NBOView {
         return true;
       sb.append("font measures 20; measure id 'm" + atom1 + "_" + atom2 + "' @"
           + atom1 + " @" + atom2 + " radius 0.0 \"" + NBOUtil.round(order, 4)
-          + "\";");
+          + "\";" + ";set fontscaling on;");
       line = vwr.ms.at[atom1 - 1].getAtomName() + " "
           + vwr.ms.at[atom2 - 1].getAtomName() + " " + order;
       break;

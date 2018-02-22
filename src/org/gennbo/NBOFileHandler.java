@@ -6,6 +6,8 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -80,8 +82,8 @@ class NBOFileHandler extends JPanel {
     setPreferredSize(new Dimension(350, 40));
     setMinimumSize(new Dimension(350, 40));
     GridBagConstraints c = new GridBagConstraints();
-    boolean canEditTextFields = (mode == MODE_MODEL_SAVE || mode == MODE_MODEL_USE);
-
+    boolean extShowTextFields = (mode == MODE_MODEL_SAVE || mode == MODE_MODEL_USE);
+    boolean canEditTextFields = false;
     c.gridx = 0;
     c.gridy = 0;
     c.fill = GridBagConstraints.BOTH;
@@ -117,14 +119,14 @@ class NBOFileHandler extends JPanel {
     c.gridy = 0;
     (tfExt = new JTextField()).setPreferredSize(new Dimension(40, 20));
     tfExt.setEditable(canEditTextFields);
-    tfExt.setText(ext);
+    tfExt.setText(ext); 
     //    tfExt.addActionListener(new ActionListener() {
     //      @Override
     //      public void actionPerformed(ActionEvent e) {
     //        browsePressed();
     //      }
     //    });
-    if (canEditTextFields) {
+    if (extShowTextFields) {
       add(tfExt, c);
       c.gridy = 1;
       add(new JLabel("  ext"), c);
@@ -144,6 +146,9 @@ class NBOFileHandler extends JPanel {
     setInput(fullFilePath, jobName, ext);
   }
 
+  /*
+   * Chooser allows multiple jobs selection with *
+   */
   protected boolean doFileBrowsePressed() {
     if (dialog.nboService.isWorking()
         && dialog.statusLab.getText().startsWith("Running")) {
@@ -153,9 +158,53 @@ class NBOFileHandler extends JPanel {
       if (i == JOptionPane.NO_OPTION)
         return false;
     }
+    
+   
+//  JFileChooser myChooser = new JFileChooser();
+//  myChooser.setFileFilter(new FileNameExtensionFilter(useExt, useExt));
+//  myChooser.setFileHidingEnabled(true);
+//  myChooser.setMultiSelectionEnabled(true);
+//  
+//  String folder = tfDir.getText();
+//  File[] filesInDir = new File(folder).listFiles();
+//  List<File> files = new ArrayList<File>();
+//  String name = tfName.getText();
+//  
+//  if(name.contains("*")){
+//    String[] nameComponents = name.split("*");
+//    for(File f: filesInDir){
+//      for(int i =0; i < nameComponents.length; i++){
+//        if(!f.getName().contains(nameComponents[i])){
+//           break;
+//        }
+//      }
+//      files.add(f);
+//    }
+//  }
+//  
+//  for(File f : files){
+//  System.out.println(f.getName());
+//  }
+//  
+// for(File f : files){
+//  if (folder.length() > 0)
+//    fullFilePath = NBOUtil.getWindowsFullNameFor(folder, f.getName().length() == 0 ? " " : f.getName() + (useExt.equals("47") ? ".47" : ""), null);
+//  myChooser.setSelectedFile(new File(fullFilePath));
+//  }
+// 
+// // let chooser remember the previous folder location and thus to save time finding the folder every time
+// if (folder != null)
+//  myChooser.setCurrentDirectory(new File(folder));
+//  int button = myChooser.showDialog(this, GT._("Select"));
+//  if (button == JFileChooser.APPROVE_OPTION)
+//    return loadSelectedFile(myChooser.getSelectedFile());
+// 
+// 
+ // OLD 
     JFileChooser myChooser = new JFileChooser();
     myChooser.setFileFilter(new FileNameExtensionFilter(useExt, useExt));
     myChooser.setFileHidingEnabled(true);
+
     String folder = tfDir.getText();
     String name = tfName.getText();
     if (folder.length() > 0)
@@ -164,6 +213,7 @@ class NBOFileHandler extends JPanel {
     int button = myChooser.showDialog(this, GT._("Select"));
     if (button == JFileChooser.APPROVE_OPTION)
       return loadSelectedFile(myChooser.getSelectedFile());
+ 
     return true;
   }
 
