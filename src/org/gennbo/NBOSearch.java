@@ -331,6 +331,14 @@ class NBOSearch extends NBOView {
 
 
     back = new JButton("<html>&#8592Back</html>");
+    back.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        doBack();
+      }
+    });
+    back.setForeground(Color.blue);
+    back.setEnabled(false);
 
     /////ALPHA-BETA SPIN/////////////////
     betaSpin = new JRadioButton("<html>&#x3B2</html>");
@@ -407,15 +415,6 @@ class NBOSearch extends NBOView {
       }
     });
     Box box2 = NBOUtil.createTitleBox(" Select Keyword ", topBox);
-    back.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent arg0) {
-        doBack();
-      }
-    });
-
-    back.setForeground(Color.blue);
-    back.setEnabled(false);
     buildHome();
 
     box2.setAlignmentX(0.0f);
@@ -500,7 +499,7 @@ class NBOSearch extends NBOView {
   }
 
   protected void doKeywordClicked(int index) {
-    if (dialog.nboService.isWorking()) {
+    if (dialog.nboService.getWorkingMode() == NBODialog.DIALOG_RUN) {
       vwr.alert("Please wait for NBOServe to finish working");
       return;
     }
@@ -563,6 +562,7 @@ class NBOSearch extends NBOView {
     }
     script.append("isosurface delete; select off;refresh");
     dialog.runScriptQueued(script.toString());
+    dialog.clearOutput();
     buildHome();
   }
 
@@ -684,11 +684,8 @@ class NBOSearch extends NBOView {
     case KEYWD_CMO:
       load(40, true);
       comboBasis1.setSelectedIndex(BASIS_MO);
-      if (!dialog.runPanel.cleanNBOKeylist(
-          dialog.inputFileHandler.read47File(false)[1], true).contains("CMO")) {
-        dialog.runPanel.doRunGenNBOJob("CMO");
+      if (!checkForCMO())
         return;
-      }
       setKeyword(new String[] { "b", "c cmo", "n" }, new String[] { "Basis: ",
           "MO: ", "NBO:" });
       changeKey(mo);
@@ -728,7 +725,7 @@ class NBOSearch extends NBOView {
   private void load(int nn, boolean withBondPicking) {
     dialog.iAmLoading = true;
     if (dialog.loadModelFileNow(
-        PT.esc(dialog.inputFileHandler.newNBOFileForExt("" + nn).toString().replace('\\', '/'))
+        PT.esc(dialog.inputFileHandler.newNBOFile("" + nn).toString().replace('\\', '/'))
         + (withBondPicking ? ";set bondpicking true" : "")) == null)
       dialog.iAmLoading = false;
   }
@@ -1025,6 +1022,7 @@ class NBOSearch extends NBOView {
    * @param op  one-based index of the radio buttons for this SEARCH option
    */
   protected void doGetSearchValue(int op) {
+    dialog.clearOutput();
     optionSelected = op - 1;
     // check orbital is selected
     JComboBox<String> orb1 = comboSearchOrb1;
@@ -1032,7 +1030,7 @@ class NBOSearch extends NBOView {
     String labelOrb1 = "ORB_1", labelOrb2 = "ORB_2", labelAtom1 = "ATOM_1", labelAtom2 = "ATOM_2", labelUnit1 = "UNIT_1";
     int offset1 = 0, offset2 = 0;
 
-    final SB sb = getMetaHeader(false);
+    final SB sb = getMetaHeader(false, true);
     NBOUtil.postAddGlobalI(sb, "KEYWORD", keywordID, null);
     boolean isLabelAtom = false;
     boolean isLabelBonds = false;
@@ -1066,7 +1064,7 @@ class NBOSearch extends NBOView {
       labelOrb2 = "a_NBO";
       orb2 = comboSearchOrb2;
       ComboBoxModel<String> x = orb1.getModel();
-      System.out.println(x.getSize());
+      System.out.println("Search x.getSize is " + x.getSize());
       offset2 = orb1.getModel().getSize() - 1;
       break;
     case KEYWD_NRT:
@@ -1597,7 +1595,7 @@ class NBOSearch extends NBOView {
    */
   private void postListRequest(String cmd_basis, JComboBox<String> cb) {
     int mode = MODE_SEARCH_LIST;
-    SB sb = getMetaHeader(false);
+    SB sb = getMetaHeader(false, true);
     String cmd;
     if (keywordID == KEYWD_OPBAS || keywordID == KEYWD_BAS1BAS2) {
      cmd = "LABEL";
@@ -1632,7 +1630,7 @@ class NBOSearch extends NBOView {
   private void postNBO_s(SB sb, final int mode, final JComboBox<String> cb,
                          String statusMessage, boolean isGetValue) {
     final NBORequest req = new NBORequest();
-    req.set(new Runnable() {
+    req.set(NBODialog.DIALOG_SEARCH, new Runnable() {
       @Override
       public void run() {
         processNBO(req, mode, cb);

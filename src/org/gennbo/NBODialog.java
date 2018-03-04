@@ -140,6 +140,7 @@ public class NBODialog extends JDialog {
    * @param jmolOptions
    */
   protected void setJmolOptions(Map<String, Object> jmolOptions) {
+    setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     String options = ("" + (jmolOptions == null ? "" : jmolOptions
         .get("options"))).toUpperCase();
     if (options.equals("VIEW"))
@@ -181,7 +182,7 @@ public class NBODialog extends JDialog {
   protected JSplitPane centerPanel;
   protected JPanel modulePanel;
 
-  protected JLabel statusLab;
+  protected JLabel statusLabel;
   protected JTextPane jpNBODialog;
 
   
@@ -204,8 +205,6 @@ public class NBODialog extends JDialog {
   
   private boolean isCaretEnabled = true;
 
-  private JButton settingsButton;
-  
   protected void setCaretEnabled(boolean tf) {
     isCaretEnabled = tf;
     if (tf)
@@ -264,22 +263,26 @@ public class NBODialog extends JDialog {
       return;
     }
 
-    if (nboService.isWorking()) {
+    boolean wasWorking = (nboService.getWorkingMode() == DIALOG_RUN);
+    if (wasWorking) {
+      System.out.println(nboService.currentRequest.toString());
       int i = JOptionPane.showConfirmDialog(this,
-          "NBOServe is working. Cancel current job?\n"
-              + "This could affect input/output files\n"
-              + "if GenNBO is running.", "Message", JOptionPane.YES_NO_OPTION);
+          "NBOServe is working. Cancel currently running job?\n", "Message", JOptionPane.YES_NO_OPTION);
       if (i == JOptionPane.NO_OPTION) {
         return;
       }
     }
 
+    clearOutput();
     logCmd("Entering " + dialogNames[type]);
 
-    nboService.restart();
-    //  nboService.restartIfNecessary();
     nboService.clearQueue();
+    boolean ok = nboService.restart();
 
+    if (wasWorking)
+      inputFileHandler.checkNBOComplete(false);
+    if (!ok)
+      return;    
     if (!checkEnabled()) {
       doOpenPanel(DIALOG_CONFIG);
       return;
@@ -329,7 +332,7 @@ public class NBODialog extends JDialog {
     setStatus("");
     invalidate();
     setVisible(true);
-    runScriptQueued(jmolOptionNOZAP ? "select none" : "zap");
+    runScriptQueued("image close;" + (jmolOptionNOZAP ? "select none" : "zap"));
   }
 
   /**
@@ -356,7 +359,6 @@ public class NBODialog extends JDialog {
     addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        nboService.closeProcess(false);
         close();
       }
     });
@@ -387,7 +389,7 @@ public class NBODialog extends JDialog {
     config.buildSettingsPanel(settingsPanel);
     settingsDialog.add(settingsPanel);
     this.setVisible(true);
-    if (!jmolOptionNONBO && nboService.isOffLine())
+    if (!jmolOptionNONBO && nboService.cantStartServer)
       settingsDialog.setVisible(true);
   }
 
@@ -455,7 +457,7 @@ public class NBODialog extends JDialog {
       b.add(Box.createRigidArea(new Dimension(20, 0)));
       b.add(getMainButton(searchButton, DIALOG_SEARCH, NBOConfig.topFont));
       b.add(Box.createRigidArea(new Dimension(30, 50)));
-      b.add(settingsButton = getMainButton(new JButton("Settings"), DIALOG_CONFIG,
+      b.add(getMainButton(new JButton("Settings"), DIALOG_CONFIG,
           NBOConfig.settingHelpFont));
       b.add(Box.createRigidArea(new Dimension(20, 0)));
       b.add(getMainButton(helpBtn, DIALOG_HELP, NBOConfig.settingHelpFont));
@@ -752,18 +754,18 @@ public class NBODialog extends JDialog {
     p1.setBorder(null);
     s.add(p1, BorderLayout.CENTER);
     JPanel box = new JPanel(new GridLayout(2, 1));
-    statusLab = new JLabel();
-    statusLab.setForeground(Color.red);
-    statusLab.setBackground(Color.white);
-    statusLab.setFont(NBOConfig.statusFont);
-    statusLab.setOpaque(true);
-    box.add(statusLab);
+    statusLabel = new JLabel();
+    statusLabel.setForeground(Color.red);
+    statusLabel.setBackground(Color.white);
+    statusLabel.setFont(NBOConfig.statusFont);
+    statusLabel.setOpaque(true);
+    box.add(statusLabel);
     Box box2 = Box.createHorizontalBox();
     JButton clear = new JButton("Clear");
     clear.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        doClearOutput();
+        clearOutput();
       }
     });
     box2.add(clear);
@@ -809,10 +811,11 @@ public class NBODialog extends JDialog {
   }
 
   public void close() {
-    if (modulePanel != null)
-      inputFileHandler.clearInputFile(false);
-    runScriptQueued("select off");
-    dispose();
+    boolean wasWorking = (nboService.getWorkingMode() == DIALOG_RUN);
+    nboService.closeProcess(false);
+    if (wasWorking)
+      inputFileHandler.checkNBOComplete(false);
+    runScriptQueued("select off;initialize;");
   }
 
   private void setThis(JButton btn) {
@@ -923,7 +926,7 @@ public class NBODialog extends JDialog {
   /**
    * clear output panel
    */
-  protected void doClearOutput() {
+  protected void clearOutput() {
     nboOutputBodyText = "";
     // String fontFamily = jpNBOLog.getFont().getFamily();
     if (jpNBODialog != null)
@@ -964,7 +967,7 @@ public class NBODialog extends JDialog {
   }
 
   void setLicense(String data) {
-    boolean lost = (data.length() == 2); 
+//    boolean lost = (data.length() == 2); 
     String[] lines = PT.split(data, "\n");
     licenseInfo.setText("<html><div style='text-align: center'>" + lines[1]
         + "</html>");
@@ -983,7 +986,7 @@ public class NBODialog extends JDialog {
 
   protected void setStatus(String statusInfo) {
     boolean isBusy = (statusInfo != null && statusInfo.length() > 0);
-    statusLab.setText(statusInfo);
+    statusLabel.setText(statusInfo);
     centerPanel.setCursor(Cursor
         .getPredefinedCursor(isBusy ? Cursor.WAIT_CURSOR
             : Cursor.DEFAULT_CURSOR));
@@ -1015,7 +1018,7 @@ public class NBODialog extends JDialog {
   private long runStartTime;
 
   protected synchronized void doShowRunTime() {
-    String t = statusLab.getText();
+    String t = statusLabel.getText();
     int pt = t.indexOf("...");
     if (pt < 0)
       return;
@@ -1025,7 +1028,7 @@ public class NBODialog extends JDialog {
       int seconds = (time % 60000) / 1000;
       String s = "00" + seconds;
       s = minutes + ":" + s.substring(s.length() - 2);
-      statusLab.setText(t.substring(0, pt + 3) + " " + s);
+      statusLabel.setText(t.substring(0, pt + 3) + " " + s);
     } catch (Exception e) {
       if (runTimer != null) {
         runTimer.stop();
@@ -1043,10 +1046,15 @@ public class NBODialog extends JDialog {
    */
   protected void showSelected(String s) {
     BS bs = new BS();
+    try {
     for (String x : PT.getTokens(s))
       bs.set((Integer.parseInt(x) - 1));
+    
     String script = "select on " + bs + ";";
     runScriptQueued(script);
+    } catch (NumberFormatException e) {
+      System.out.println("NBODialog showSelected issue with " + s);
+    }
   }
 
 
@@ -1104,6 +1112,10 @@ public class NBODialog extends JDialog {
    *        p, b, r ("red"), i, etc.
    */
   protected synchronized void log(String line, char chFormat) {
+    if (line == null) {
+      System.out.println("NBODialog.log null");
+      return;
+    }
     if (dontLog(line, chFormat))
       return;
     if (line.equals("\n") || line.trim().length() >= 1) {
@@ -1162,6 +1174,7 @@ public class NBODialog extends JDialog {
     saveOrientation = false;
     iAmLoading = true;
     String s = "load \"" + f.getAbsolutePath().replace('\\', '/') + "\""
+        + (dialogMode == DIALOG_RUN ? " filter 'NOMO' " : "")
         + NBOConfig.JMOL_FONT_SCRIPT;
     if (saveOrientation)
       s = "save orientation o1;" + s + ";restore orientation o1";

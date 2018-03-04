@@ -262,7 +262,7 @@ class NBOModel {
     notFromNBO = false;
     showSelectedOnFileLoad = false;
     resetOnAtomClick = true;
-    serverMode = 0;
+//    serverMode = 0;
   }
 
   /*
@@ -1020,7 +1020,7 @@ class NBOModel {
   };
   private boolean showSelectedOnFileLoad;
   private int currentRebondSymOp;
-  private int serverMode;
+//  private int serverMode;
   
   /**
    * Clear out the text fields
@@ -1406,8 +1406,8 @@ class NBOModel {
    */
   private void postNBO(SB sb, final int mode, String statusMessage, String fileName, String fileData) {
     final NBORequest req = new NBORequest();
-    serverMode = mode;
-    req.set(new Runnable() {
+//    serverMode = mode;
+    req.set(NBODialog.DIALOG_MODEL, new Runnable() {
       @Override
       public void run() {
         processNBO(mode, req);

@@ -6,8 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileFilter;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -150,8 +149,7 @@ class NBOFileHandler extends JPanel {
    * Chooser allows multiple jobs selection with *
    */
   protected boolean doFileBrowsePressed() {
-    if (dialog.nboService.isWorking()
-        && dialog.statusLab.getText().startsWith("Running")) {
+    if (dialog.nboService.getWorkingMode() == NBODialog.DIALOG_RUN) {
       int i = JOptionPane.showConfirmDialog(dialog,
           "Warning, changing jobs while running GenNBO can effect output files."
               + "\nContinue anyway?");
@@ -270,10 +268,10 @@ class NBOFileHandler extends JPanel {
     boolean canLoad = true;
     boolean isOK = true;
     String msg = "";
-    if (dialog.dialogMode != NBODialog.DIALOG_MODEL) {
-      for (String x : EXT_ARRAY) {
-        File f3 = newNBOFileForExt(x);
-        if (!f3.exists() || x.equals("36") && f3.length() == 0) {
+    if (dialog.dialogMode != NBODialog.DIALOG_MODEL && dialog.dialogMode != NBODialog.DIALOG_RUN) {
+      for (String nn : EXT_ARRAY) {
+        File f3 = newNBOFile(nn);
+        if (!f3.exists() || nn.equals("36") && f3.length() == 0) {
           msg = "file " + f3 + " is missing or zero length";
           // BH: But this means all  || f3.length() == 0) {
           isOK = false;
@@ -308,7 +306,7 @@ class NBOFileHandler extends JPanel {
    * 
    * @param doAll read the whole thing; else just for keywords (stops at $COORD) 
    * 
-   * @return [ pre-keyword params, keywords, post-keyword params ]
+   * @return [ pre-keyword params, no-file keywords, post-keyword params, all keywords ]
    */
   protected String[] read47File(boolean doAll) {
     String[] fileData = new String[] { "", "", "", "" };
@@ -339,11 +337,21 @@ class NBOFileHandler extends JPanel {
       params.append(s).append(sep).append("$END").append(sep);
     }
     dialog.logInfo("$NBO: " + nboKeywords, Logger.LEVEL_INFO);
-    fileData[0] = NBOUtil.fix47File(preParams.toString());
+    fileData[0] = fix47File(preParams.toString());
     fileData[1] = NBOUtil.removeNBOFileKeyword(nboKeywords, null);
     fileData[2] = postParams.toString();
     fileData[3] = nboKeywords;
     return fileData;
+  }
+
+  /**
+   * I cannot remember why this is important -- BH
+   * 
+   * @param data
+   * @return fixed data
+   */
+  public static String fix47File(String data) {
+    return PT.rep(data, "FORMAT=PRECISE", "");     
   }
 
   public void clear() {
@@ -398,12 +406,12 @@ class NBOFileHandler extends JPanel {
     btnBrowse.setEnabled(b);
   }
 
-  public String getInputFile(String name) {
-    return getFileData(newNBOFileForExt(name).toString());
+  public String getInputFileData(String nn) {
+    return getFileData(newNBOFile(nn).toString());
   }
 
-  public File newNBOFileForExt(String filenum) {
-    return NBOUtil.newNBOFile(inputFile, filenum);
+  public File newNBOFile(String nn) {
+    return NBOUtil.newNBOFile(inputFile, nn);
   }
 
   /**
@@ -423,20 +431,31 @@ class NBOFileHandler extends JPanel {
     return name;
   }
 
+  
 
-  public String[] update47File(String jobName, String keywords) {
+  public String[] update47File(String jobName, String keywords, boolean isRun) {
     if (!useExt.equals("47"))
       return null;
+    String fileName47 = inputFile.getAbsolutePath();
     String[] fileData = read47File(true);
-    if (writeToFile(inputFile.getAbsolutePath(), fileData[0] + "$NBO\n "
-        + "FILE=" + jobName + " " + keywords + "  $END" + sep + fileData[2])) {
+    String oldData = (isRun ? getFileData(fileName47) : null);
+    String newFileData = 
+        fileData[0] 
+        + "$NBO\n "
+        + "FILE=" + jobName + " " + keywords 
+        + "  $END" 
+        + sep 
+        + fileData[2];
+    if (writeToFile(fileName47, newFileData)) {
+      if (oldData != null)
+        writeToFile(fileName47 + "$", oldData);
       fileData[1] = keywords;
       fileData[3] = "FILE=" + jobName + " " + keywords; 
       dialog.runPanel.doLogJobName(jobName);
       dialog.runPanel.doLogKeywords(keywords);
       return fileData;
     }
-    dialog.logInfo("Could not create " + inputFile, Logger.LEVEL_ERROR);
+    dialog.logInfo("Could not create " + fileName47, Logger.LEVEL_ERROR);
     return null;
   }
 
@@ -473,4 +492,100 @@ class NBOFileHandler extends JPanel {
     return true;
   }
 
+  /**
+   * Delete all files ending with $
+   */
+  public void removeAllTemporaryRunFiles() {
+    File[] files = new File(fullFilePath).listFiles(new FileFilter() {
+      @Override
+      public boolean accept(File theFile) {
+        if (theFile.isFile()) {
+          return theFile.getName().endsWith("$");
+        }
+        return false;
+      }
+    });
+    for (File f : files) 
+      deleteFile(f);
+  }
+
+  /**
+   * delete a file
+   * 
+   * @param f
+   */
+  public void deleteFile(File f) {
+    try {
+      if (f.exists())
+        f.delete();
+    } catch (Exception e) {
+      System.out.println("Could not delete " + f);
+    }
+  }
+
+  /**
+   * just get the keywords from the .47 file
+   * 
+   * @return NBO keywords
+   */
+  public String get47Keywords() {
+    return read47File(false)[1];
+  }
+
+  /**
+   * Checks to see that the .nbo file was created fully and, if not, deletes it,
+   * moving its contents to .err$, and deletes all plot files
+   * 
+   * @param saveErr  write the current .nbo as .err$ file  
+   * 
+   * @return true if .nbo file is OK
+   */
+  public boolean checkNBOComplete(boolean saveErr) {
+    deleteFile(newNBOFile("err$"));
+    String data = getInputFileData("nbo");
+    boolean isOK = data != null && data.contains("NBO analysis completed");
+    if (!isOK) {
+      deleteFile(newNBOFile("nbo"));
+      if (saveErr)
+        writeToFile(newNBOFile("err$").getAbsolutePath(), data);
+      writeToFile(newNBOFile("47").getAbsolutePath(), getInputFileData("47$"));
+      deletePlotFiles(fullFilePath);
+    }
+    deleteFile(newNBOFile("47$"));
+    deleteServerFiles();
+    return isOK;
+  }
+
+  /**
+   * 
+   * Delete .3*, .nbo, and .4* in server directory
+   * 
+   */
+  private void deleteServerFiles() {
+    deletePlotFiles(null);   
+  }
+
+  /**
+   * Delete .3*, .nbo, and .4* (other than .47 when path is not null)
+   * @param path optional user directory or null for cleaning the server directory
+   */
+  void deletePlotFiles(String path) {
+    final boolean isServerPath = (path == null);
+      File[] files = new File(isServerPath ? dialog.nboService.getServerPath(null) : path).listFiles(new FileFilter() {
+      @Override
+      public boolean accept(File theFile) {
+        if (theFile.isFile()) {
+          String name = theFile.getName();
+          return (name.startsWith(jobStem + ".3") 
+              || name.startsWith(jobStem + ".4")
+              && (isServerPath || name.indexOf(".47") < 0))
+              || name.equals(jobStem + ".nbo");
+        }
+        return false;
+      }
+      });
+      for (File f : files) 
+        deleteFile(f);
+    }
+  
 }

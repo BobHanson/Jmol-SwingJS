@@ -26,7 +26,6 @@ package org.gennbo;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
@@ -36,7 +35,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -91,15 +89,22 @@ class NBORun {
   protected JButton btnRun;
   protected JTextField tfJobName;
   private JPanel myPanel;
+  private Box titleBox;
 
   //protected String file47Keywords;
 
+  /**
+   * Recreate run panel whenever we enter this module
+   * 
+   * @return new Run panel
+   */
   protected JPanel buildRunPanel() {
     JPanel panel = myPanel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
     dialog.getNewInputFileHandler(NBOFileHandler.MODE_RUN);
     dialog.inputFileHandler.setBrowseEnabled(false);
+    dialog.inputFileHandler.removeAllTemporaryRunFiles();
 
     panel.add(NBOUtil.createTitleBox(" Select Job ", dialog.new HelpBtn(
         "run_job_help.htm")));
@@ -113,7 +118,7 @@ class NBORun {
 
     //EDIT////////////////
     panel.add(
-        NBOUtil.createTitleBox(" Choose $NBO Keywords ", dialog.new HelpBtn(
+        titleBox = NBOUtil.createTitleBox(" Choose $NBO Keywords ", dialog.new HelpBtn(
             "run_keywords_help.htm"))).setVisible(false);
     editBox = NBOUtil.createBorderBox(true);
     editBox.setSize(new Dimension(350, 400));
@@ -136,7 +141,6 @@ class NBORun {
       }
     });
 
-    editBox.setVisible(false);
     panel.add(editBox);
     //BOTTOM OPTIONS///////////////
 
@@ -145,11 +149,11 @@ class NBORun {
     //    box.setAlignmentX(0.5f);
     btnRun = new JButton("Run");
     btnRun.setFont(NBOConfig.runButtonFont);
-    btnRun.setVisible(false);
     btnRun.setEnabled(true);
     btnRun.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        dialog.nboService.closeProcess(false);
         doRunGenNBOJob("");
       }
     });
@@ -160,6 +164,7 @@ class NBORun {
     if (dialog.inputFileHandler.tfExt.getText().equals("47")) //TDO: 
       notifyFileLoaded();
     dialog.inputFileHandler.setBrowseEnabled(true);
+    hideEditBox();
     return panel;
   }
 
@@ -233,7 +238,7 @@ class NBORun {
     final JPanel mainMenuOptions = addMenuOption();
     mainBox.add(mainMenuOptions);
 
-    final JPanel mainTextEditor = addTextOption();
+    final JPanel mainTextEditor = getTextPanel();
     mainBox.add(mainTextEditor);
 
     editBox.removeAll();
@@ -282,7 +287,7 @@ class NBORun {
     btnMenuSelect.doClick();
   }
 
-  private JPanel addTextOption() {
+  private JPanel getTextPanel() {
     JPanel textPanel = new JPanel(new BorderLayout());
     textPanel.setPreferredSize(new Dimension(270, 240));
     textPanel.setMaximumSize(new Dimension(270, 240));
@@ -290,7 +295,7 @@ class NBORun {
 
     keywordTextPane = new JTextPane();
     doSetKeywordTextPane(cleanNBOKeylist(
-        dialog.inputFileHandler.read47File(false)[1], true));
+        dialog.inputFileHandler.get47Keywords(), true));
 
     JScrollPane sp = new JScrollPane();
     sp.getViewport().add(keywordTextPane);
@@ -328,7 +333,7 @@ class NBORun {
     }
     String name = tfJobName.getText().trim();
     name = dialog.inputFileHandler.fixJobName(name);
-    dialog.inputFileHandler.update47File(name, keywords);
+    dialog.inputFileHandler.update47File(name, keywords, false);
     addNBOKeylist();
     tfJobName.setText(name);
     editBox.repaint();
@@ -343,7 +348,7 @@ class NBORun {
     menuPanel.setBorder(BorderFactory.createLoweredBevelBorder());
     keywordButtons = new JRadioButton[RUN_KEYWORD_NAMES.length];
     String keywords = " " + cleanNBOKeylist(
-        dialog.inputFileHandler.read47File(false)[1], false) + " ";
+        dialog.inputFileHandler.get47Keywords(), false) + " ";
     for (int i = 0; i < keywordButtons.length; i++) {
       keywordButtons[i] = new JRadioButton(RUN_KEYWORD_NAMES[i] + ": " + RUN_KEYWORD_DESC[i]);
       if (NBOUtil.findKeyword(keywords, RUN_KEYWORD_NAMES[i], true) >= 0)
@@ -387,7 +392,7 @@ class NBORun {
       tfJobName.setText(dialog.inputFileHandler.jobStem);
     return tmp.trim();
   }
-
+  
   protected void doLogJobName(String name) {
     if (name == null)
       tfJobName.setText(name = tfJobName.getText().trim());
@@ -397,7 +402,18 @@ class NBORun {
   protected void doLogKeywords(String keywords) {
     if (keywords == null)
       keywords = getKeywordsFromButtons();
-    dialog.logValue("Keywords: " + keywords);
+    dialog.logValue("Keywords: " + cleanKeywords(keywords));
+  }
+
+  private String cleanKeywords(String keywords) {
+    String[] tokens = PT.getTokens(keywords);
+    String ret = "";
+    for (int i = 0; i < tokens.length; i++) {
+      if (tokens[i].startsWith("_"))
+          continue;
+      ret += tokens[i] + " ";
+    }
+    return ret.trim();
   }
 
   JTextPane keywordTextPane;
@@ -422,18 +438,27 @@ class NBORun {
   //  }
 
   protected void notifyFileLoaded() {
-    if (vwr.ms.ac == 0)
+    if (vwr.ms.ac == 0) {
+      hideEditBox();
       return;
+    }
     dialog.doSetStructure("alpha");
     addNBOKeylist();
     for (Component c : myPanel.getComponents())
       c.setVisible(true);
     editBox.getParent().setVisible(true);
     editBox.setVisible(true);
+    titleBox.setVisible(true);
     doLogKeywords(null);
     dialog.repaint();
     dialog.revalidate();
 
+  }
+
+  protected void hideEditBox() {
+    titleBox.setVisible(false);
+    editBox.setVisible(false);
+    btnRun.setVisible(false);
   }
 
   //  protected void showConfirmationDialog(String st, File newFile, String ext) {
@@ -602,7 +627,7 @@ class NBORun {
    */
   protected String getKeywordsFromButtons() {
     String keywords = " "
-        + cleanNBOKeylist(dialog.inputFileHandler.read47File(false)[1], false)
+        + cleanNBOKeylist(dialog.inputFileHandler.get47Keywords(), false)
         + " ";
     if (keywordButtons == null)
       return keywords;
@@ -674,6 +699,13 @@ class NBORun {
    * 
    * Note that there are issues with this method.
    * 
+   * Called from:
+   * 
+   *  NBOFileHandler -- setInputFile when not RUN module "PLOT" 
+   *  NBORun.buildRunPanel  -- Run button pressed ""
+   *  NBOView.checkforCMO -- "CMO" when necessary
+   *  NBOView.ensurePlotFile -- "PLOT"
+   * 
    * @param requiredKeyword
    */
   protected void doRunGenNBOJob(String requiredKeyword) {
@@ -714,19 +746,21 @@ class NBORun {
     jobName = (jobName.equals("") ? dialog.inputFileHandler.jobStem : jobName);
 
     String[] fileData = dialog.inputFileHandler.update47File(jobName,
-        newKeywords);
+        newKeywords, true);
     if (fileData == null)
       return;
     SB sb = new SB();
-    NBOUtil.postAddGlobalC(sb, "PATH",
-        dialog.inputFileHandler.inputFile.getParent());
-    NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
+    String path = dialog.inputFileHandler.inputFile.getParent();
+    String jobStem = dialog.inputFileHandler.jobStem;
+    dialog.inputFileHandler.deletePlotFiles(path);
+    NBOUtil.postAddGlobalC(sb, "PATH", path);
+    NBOUtil.postAddGlobalC(sb, "JOBSTEM", jobStem);
     NBOUtil.postAddGlobalC(sb, "ESS", "gennbo");
     NBOUtil.postAddGlobalC(sb, "LABEL_1", "FILE=" + jobName);
-
+    dialog.clearOutput();
     dialog.logCmd("RUN GenNBO FILE=" + jobName + " "
         + cleanNBOKeylist(fileData[1], false));
-
+    
     postNBO(sb, "Running GenNBO...");
   }
 
@@ -739,7 +773,7 @@ class NBORun {
    */
   private void postNBO(SB sb, String statusMessage) {
     final NBORequest req = new NBORequest();
-    req.set(new Runnable() {
+    req.set(NBODialog.DIALOG_RUN, new Runnable() {
       @Override
       public void run() {
         processNBO(req);
@@ -755,6 +789,14 @@ class NBORun {
    */
   protected void processNBO(NBORequest req) {
     dialog.inputFileHandler.setInputFile(dialog.inputFileHandler.inputFile);
+    dialog.clearOutput();
+    if (!dialog.inputFileHandler.checkNBOComplete(true)) {
+      dialog.logError("NBO file was corrupted or not created");
+      dialog.nboService.clearQueue();
+    } else {
+      dialog.logError("job complete");
+    }
+    
   }
 
 }

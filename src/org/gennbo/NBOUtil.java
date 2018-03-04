@@ -263,11 +263,6 @@ public class NBOUtil {
     return new File(pathWithoutExtension(NBOUtil.fixPath(f.toString())) + "." + ext);
   }
 
-  public static String fix47File(String data) {
-    return PT.rep(data, "FORMAT=PRECISE", ""); 
-    
-  }
-
   /**
    * change \ to /
    * 

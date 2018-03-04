@@ -27,7 +27,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -40,6 +39,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -65,7 +65,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.jmol.awt.AwtColor;
-import javajs.util.BS;
 import org.jmol.util.C;
 import org.jmol.viewer.Viewer;
 
@@ -125,10 +124,10 @@ class NBOView {
   
   private JScrollPane orbScroll;
   private Box centerBox, bottomBox;
-  private Box vecBox;
+  private Box axisBox;
   private Box planeBox;
-  private JRadioButton profileBtn, contourBtn, viewBtn;
-  private JRadioButton atomOrient;
+  private JRadioButton btn1D, btn2D, btn3D;
+  private JRadioButton atomOrient, jmolOrient;
   private DefaultListModel<String> alphaList, betaList; // useful for no-NBOServe use?
 
   /**
@@ -258,55 +257,77 @@ class NBOView {
     profBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     profBox.setAlignmentX(0.0f);
 
-    ButtonGroup bg = new ButtonGroup();
-    profileBtn = new JRadioButton("1D Profile");
-    profileBtn.setToolTipText("Produce profile plot from axis parameters");
-    bg.add(profileBtn);
-
     final JButton goBtn = new JButton("GO");
-    goBtn.setEnabled(false);
-
-    ActionListener goEnableAction = new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        goBtn.setEnabled(true);
-      }
-    };
-    profileBtn.addActionListener(goEnableAction);
-    profBox.add(profileBtn);//.setFont(nboFont);
-
-    contourBtn = new JRadioButton("2D Contour");
-    contourBtn.setToolTipText("Produce contour plot from plane parameters");
-    profBox.add(contourBtn);//.setFont(nboFont);
-    contourBtn.addActionListener(goEnableAction);
-    bg.add(contourBtn);
-
-    viewBtn = new JRadioButton("3D view");
-    viewBtn.addActionListener(goEnableAction);
-    bg.add(viewBtn);
-    profBox.add(viewBtn);//.setFont(nboFont);
-
-    vecBox = Box.createHorizontalBox();
-    vecBox.setAlignmentX(0.0f);
-    vecBox.setMaximumSize(new Dimension(120, 25));
-    profBox.add(vecBox);
-
-    planeBox = Box.createHorizontalBox();
-    planeBox.setAlignmentX(0.0f);
-    planeBox.setMaximumSize(new Dimension(120, 25));
-    profBox.add(planeBox);
-
     goBtn.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         doGoPressed();
       }
     });
+
+    ActionListener goEnableAction = new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        setEnabled(goBtn);
+      }
+    };
+
+    ButtonGroup bg = new ButtonGroup();
+    btn1D = new JRadioButton("1D Profile");
+    btn1D.setToolTipText("Produce profile plot from axis parameters");
+    btn1D.addActionListener(goEnableAction);
+    profBox.add(btn1D);//.setFont(nboFont);
+    bg.add(btn1D);
+
+    btn2D = new JRadioButton("2D Contour");
+    btn2D.setToolTipText("Produce contour plot from plane parameters");
+    profBox.add(btn2D);//.setFont(nboFont);
+    btn2D.addActionListener(goEnableAction);
+    bg.add(btn2D);
+
+    btn3D = new JRadioButton("3D view");
+    profBox.add(btn3D);//.setFont(nboFont);
+    btn3D.addActionListener(goEnableAction);    
+    bg.add(btn3D);
+
+    axisBox = Box.createHorizontalBox();
+    axisBox.setAlignmentX(0.0f);
+    axisBox.setMaximumSize(new Dimension(120, 25));
+    profBox.add(axisBox);
+
+    planeBox = Box.createHorizontalBox();
+    planeBox.setAlignmentX(0.0f);
+    planeBox.setMaximumSize(new Dimension(120, 25));
+    profBox.add(planeBox);
+
     profBox.add(goBtn);
 
     bottomBox.add(profBox);
     bottomBox.setVisible(false);
+    
+    setEnabled(goBtn);
+    
     return bottomBox;
+  }
+
+  protected void setEnabled(JButton goBtn) {
+    if (goBtn != null)
+      goBtn.setEnabled(true);
+    boolean axisVis = false;
+    boolean planeVis = false;
+    if (btn1D.isSelected()) {
+      axisVis = true;
+      planeVis = false;
+    } else if (btn2D.isSelected()) {
+      axisVis = false;
+      planeVis = true;
+    } else if (btn3D.isSelected()) {
+      axisVis = false;
+      planeVis = false;
+    }
+    axisBox.setVisible(axisVis && !jmolView);
+    planeBox.setVisible(planeVis && !jmolView);
+    dialog.repaint();
   }
 
   private Component createSelectOrbitalBox() {
@@ -402,12 +423,13 @@ class NBOView {
       return;
     }
     initializeImage();
-    if (profileBtn.isSelected()) {
+    if (btn1D.isSelected()) {
       createImage1or2D(true);
-    } else if (contourBtn.isSelected()) {
+    } else if (btn2D.isSelected()) {
       createImage1or2D(false);
-    } else if (viewBtn.isSelected())
+    } else if (btn3D.isSelected()) {
       createImage3D();
+    }
   }
 
   protected void doSetSpin(String type) {
@@ -433,7 +455,7 @@ class NBOView {
   private File ensurePlotFile(int fileNum) {
     if (fileNum == 0)
       fileNum = 31 + comboBasis1.getSelectedIndex();
-    File f = dialog.inputFileHandler.newNBOFileForExt("" + fileNum);
+    File f = dialog.inputFileHandler.newNBOFile("" + fileNum);
     if (!f.exists() || f.length() == 0) {
       dialog.runPanel.doRunGenNBOJob("PLOT");
       return null;
@@ -488,7 +510,7 @@ class NBOView {
     d.setVisible(true);
     d.add(box);
     centerDialog(d, 175);
-    showSelected(planeFields);
+    showSelected(planeFields, 3);
     d.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
@@ -508,9 +530,9 @@ class NBOView {
     plane.setVisible(true);
   }
 
-  private void showSelected(JTextField[] t) {
+  private void showSelected(JTextField[] t, int n) {
     String s = "";
-    for (int i = t.length; --i >= 0;)
+    for (int i = n; --i >= 0;)
       s += " " + t[i].getText();
     dialog.showSelected(s);
   }
@@ -564,7 +586,7 @@ class NBOView {
     d.setVisible(true);
     d.add(box);
     centerDialog(d, 150);
-    showSelected(vectorFields);
+    showSelected(vectorFields, 2);
     d.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
@@ -909,7 +931,7 @@ class NBOView {
     });
     tmp.add(atomOrient);
 
-    final JRadioButton jmolOrient = new JRadioButton("Jmol");
+    jmolOrient = new JRadioButton("Jmol");
     jmolOrient.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
@@ -972,8 +994,8 @@ class NBOView {
   }
 
   protected void doViewByJmol() {
-    planeBox.setVisible(false);
     jmolView = true;
+    setEnabled(null);
   }
 
   protected void doViewByAtoms() {
@@ -991,16 +1013,10 @@ class NBOView {
     dialog.runScriptQueued("isosurface delete");
     resetCurrentOrbitalClicked();
 
-    if (comboBasis1.getSelectedIndex() == BASIS_MO) {
-      if (!dialog.runPanel.cleanNBOKeylist(
-          dialog.inputFileHandler.read47File(false)[1], true).contains("CMO")) {
-        dialog.runPanel.doRunGenNBOJob("CMO");
-        return null;
-      }
-    }
-
-    if (orbitals == null)
+    if (comboBasis1.getSelectedIndex() == BASIS_MO && !checkForCMO()
+        || orbitals == null)
       return null;
+    
     isNewModel = true;
     orbitals.removeAll();
 
@@ -1039,12 +1055,27 @@ class NBOView {
     }
     if (dialog.jmolOptionNONBO) 
       return f;
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
        MODE_VIEW_LIST, getIbasKey(ibasis, isBeta), list, "Getting list", null, null);
     return null;
   }
 
   /////////////////////// RAW NBOSERVE API ////////////////////
+
+  /**
+   * Check that the .47 keyword list already includes "CMO".
+   * 
+   * @return false if we had to (asynchronously) run a CMO job to get the CMO data
+   * 
+   */
+  protected boolean checkForCMO() {
+    if (!dialog.runPanel.cleanNBOKeylist(
+        dialog.inputFileHandler.get47Keywords(), true).contains("CMO")) {
+      dialog.runPanel.doRunGenNBOJob("CMO");
+      return false;
+    }
+    return true;
+  }
 
   /**
    * get the standard header for a set of META commands, specifically C_PATH and
@@ -1056,15 +1087,17 @@ class NBOView {
    * @return a new string buffer using javajs.util.SB
    * 
    */
-  protected SB getMetaHeader(boolean addBasis) {
+  protected SB getMetaHeader(boolean addBasis, boolean addPathAndJobStem) {
     SB sb = new SB();
-    NBOUtil.postAddGlobalC(sb, "PATH",
-        dialog.inputFileHandler.inputFile.getParent());
-    NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
+    if (addPathAndJobStem) {
+      NBOUtil.postAddGlobalC(sb, "PATH",
+          dialog.inputFileHandler.inputFile.getParent());
+      NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
+    }
     if (addBasis)
       NBOUtil.postAddGlobalI(sb, "BAS_1", 1, comboBasis1);
-    NBOUtil.postAddGlobalI(sb, "SPIN",
-        (!dialog.isOpenShell() ? 0 : isAlphaSpin() ? 1 : -1), null);
+    NBOUtil.postAddGlobalI(sb, "SPIN", (!dialog.isOpenShell() ? 0
+        : isAlphaSpin() ? 1 : -1), null);
     return sb;
   }
 
@@ -1105,17 +1138,12 @@ class NBOView {
 
     // ? needed ? sendJmolOrientation();
 
-    SB sb = getMetaHeader(true);
+    SB sb = getMetaHeader(true, true);
 
     int ind = orbitals.bsOn.nextSetBit(0);
 
     appendOrbitalPhaseSign(sb, ind);
-    appendLineParams(sb);
-    if (oneD) {
-      appendVectorParams(sb);
-    } else {
-      appendPlaneParams(sb);
-    }
+    appendOrientationParams(sb, oneD);
     String cmd = (oneD ? "Profile " : "Contour ") + (ind + 1);
     dialog.logCmd(cmd);
     NBOUtil.postAddCmd(sb, cmd);
@@ -1123,9 +1151,20 @@ class NBOView {
         (oneD ? "Profiling.." : "Contouring.."), null, null);
   }
 
+  private void appendOrientationParams(SB sb, boolean oneD) {
+    appendLineParams(sb);
+    if (oneD) {
+      appendVectorParams(sb);
+    } else {
+      appendPlaneParams(sb);
+    }
+  }
+
   private void appendLineParams(SB sb) {
-    for (int i = 0; i < lineFields.length; i++)
+
+    for (int i = 0; i < lineFields.length; i++) {
       NBOUtil.postAddGlobal(sb, "LINES_" + (char) ('a' + i), lineVal[i] = lineFields[i].getText());
+    }
   }
 
   private void appendVectorParams(SB sb) {
@@ -1134,8 +1173,9 @@ class NBOView {
   }
 
   private void appendPlaneParams(SB sb) {
-    for (int i = 0; i < planeFields.length; i++)
+    for (int i = 0; i < planeFields.length; i++) {
        NBOUtil.postAddGlobal(sb, "PLANE_" + (char) ('a' + i), plVal[i] = planeFields[i].getText());
+    }
   }
 
   private void setJmolView(boolean is2D) {
@@ -1154,7 +1194,7 @@ class NBOView {
     }
 
 
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
         NBOService.MODE_RAW, -1, null, "", "jview.txt", sb.toString());
 
     postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1, null,
@@ -1166,28 +1206,29 @@ class NBOView {
 
   }
 
+  /**
+   * Create a 1D "profile" or 2D "contour" BMP image.
+   * 
+   * @param oneD
+   */
   protected void createImage1or2DMultiple(boolean oneD) {
-
-    //    sb = getMetaHeader(true);
-    //    sb.append("CMD LABEL");
-    //    nboService.rawCmdNew("v", sb, MODE_RAW, null, "");
-    //    
-
     SB sb = new SB();
     String msg = (oneD) ? "Profile" : "Contour";
     String profileList = "";
+    boolean needHeader = true;
     for (int pt = 0, i = orbitals.bsOn.nextSetBit(0); i >= 0; i = orbitals.bsOn
         .nextSetBit(i + 1)) {
-      sb = getMetaHeader(true);
+      sb = getMetaHeader(needHeader, needHeader);
+      needHeader = false;
       appendOrbitalPhaseSign(sb, i);
+      appendOrientationParams(sb, oneD);
       NBOUtil.postAddCmd(sb, (oneD ? "PROFILE " : "CONTOUR ") + (i + 1));
       msg += " " + (i + 1);
       profileList += " " + (++pt);
       postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending " + msg, null, null);
     }
     dialog.logCmd(msg);
-    sb = getMetaHeader(false);
-    appendLineParams(sb);
+    sb = new SB();
     NBOUtil.postAddCmd(sb, "DRAW" + profileList);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Drawing...", null, null);
   }
@@ -1198,7 +1239,7 @@ class NBOView {
     String list = "";
     BS bs = orbitals.bsOn;
     for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      sb = getMetaHeader(true);
+      sb = getMetaHeader(true, true);
       appendOrbitalPhaseSign(sb, i);
       NBOUtil.postAddCmd(sb, "PROFILE " + (i + 1));
       postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending profile " + (i + 1),
@@ -1210,7 +1251,7 @@ class NBOView {
     String jviewData = sb.toString();
     // BH: It turns out it is CRITICAL that if you send camera parameters, you MUST NOT SEND basis information.
     // (no idea why!)
-    sb = getMetaHeader(false);
+    sb = getMetaHeader(false, true);
     appendCameraParams(sb);
     NBOUtil.postAddCmd(sb, "VIEW" + list);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Raytracing...", null, jviewData);
@@ -1218,8 +1259,9 @@ class NBOView {
 
   private void initializeImage() {
     //testingView = NBOConfig.debugVerbose;
-    dialog.runScriptQueued("image close");
-    dialog.nboService.restart();
+    //dialog.runScriptQueued("image close");
+    if (!dialog.nboService.restart())
+      return;
     setDefaultParameterArrays();
     if (jmolView)
       setJmolView(false);
@@ -1244,14 +1286,14 @@ class NBOView {
       if (at2 != Integer.MIN_VALUE)
         return;
       vectorFields[viewVectorPt++].setText("" + at1);
-      showSelected(vectorFields);
+      showSelected(vectorFields, 2);
       viewVectorPt = viewVectorPt % 2;
       break;
     case VIEW_STATE_PLANE:
       if (at2 != Integer.MIN_VALUE)
         return;
       planeFields[viewPlanePt++].setText("" + at1);
-      showSelected(planeFields);
+      showSelected(planeFields, 3);
       viewPlanePt = viewPlanePt % 3;
       break;
     case VIEW_STATE_MAIN:
@@ -1405,10 +1447,10 @@ class NBOView {
       for (int i = 0; i < camFields.length; i++)
         camFields[i] = new JTextField(camVal[i]);
 
-      vecBox.removeAll();
-      vecBox.add(new JLabel("Axis: "));
-      vecBox.add(vectorFields[0]);
-      vecBox.add(vectorFields[1]);
+      axisBox.removeAll();
+      axisBox.add(new JLabel("Axis: "));
+      axisBox.add(vectorFields[0]);
+      axisBox.add(vectorFields[1]);
       planeBox.removeAll();
       planeBox.add(new JLabel("Plane: "));
       planeBox.add(planeFields[0]);
@@ -1444,7 +1486,8 @@ class NBOView {
   }
 
   protected void loadNewFileIfAble() {
-    dialog.nboService.restart();
+    if (!dialog.nboService.restart())
+        return;
     comboBasis1.setEnabled(false);
     if (comboBasis1.getSelectedIndex() != BASIS_MO)
       comboBasis1.setSelectedIndex(BASIS_PNBO);
@@ -1813,7 +1856,7 @@ class NBOView {
                          String statusMessage, String dataFileName,
                          String fileData) {
     final NBORequest req = new NBORequest();
-    req.set(new Runnable() {
+    req.set(NBODialog.DIALOG_VIEW, new Runnable() {
       @Override
       public void run() {
         processNBO_v(req, mode, ikey, list);
@@ -1845,7 +1888,7 @@ class NBOView {
       File f = new File(fname);
       final SB title = new SB();
       String id = "id " + PT.esc(title.toString().trim());
-      String script = "image " + id + " close;image id \"\" "
+      String script = "image close;image id \"\" "
           + PT.esc(f.toString().replace('\\', '/'));
       dialog.runScriptQueued(script);
       break;
