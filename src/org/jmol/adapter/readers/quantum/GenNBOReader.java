@@ -118,6 +118,8 @@ public class GenNBOReader extends MOReader {
     
     if (is47File) {
       readData47();
+      if (doReadMolecularOrbitals)
+        appendLoadNote("basis AOs are unnormalized -- use NBO TYPE AO to view normalized AOs");
       return;
     }
     boolean isOK;
@@ -370,42 +372,45 @@ public class GenNBOReader extends MOReader {
       String[] tokens = getTokens();
       addAtomXYZSymName(tokens, 2, null, null).elementNumber = (short) parseIntStr(tokens[0]);
     }
-    discardLinesUntilContains("$BASIS");
-    int[] centers = getIntData();
-    int[] labels = getIntData();
     
-    discardLinesUntilContains("NSHELL =");
-    
-    
-    
-    shellCount = parseIntAt(line, 10);
-    gaussianCount = parseIntAt(rd(), 10);
-    rd();
-    int[] ncomp = getIntData();
-    int[] nprim = getIntData();
-    int[] nptr = getIntData();
-    // read basis functions
-    shells = new  Lst<int[]>();
-    gaussians = AU.newFloat2(gaussianCount);
-    for (int i = 0; i < gaussianCount; i++)
-      gaussians[i] = new float[6];
-    nOrbitals = 0;
-    int ptCenter = 0;
-    String l = line;
-    for (int i = 0; i < shellCount; i++) {
-      int[] slater = new int[4];
-      int nc = ncomp[i];
-      slater[0] = centers[ptCenter];
-      line = "";
-      for (int ii = 0; ii < nc; ii++)
-        line += labels[ptCenter++] + " ";
-      if (!fillSlater(slater, nc, nptr[i] - 1, nprim[i]))
-        return;
+    if (doReadMolecularOrbitals) {
+      discardLinesUntilContains("$BASIS");
+      int[] centers = getIntData();
+      int[] labels = getIntData();
+      
+      discardLinesUntilContains("NSHELL =");
+      
+      
+      
+      shellCount = parseIntAt(line, 10);
+      gaussianCount = parseIntAt(rd(), 10);
+      rd();
+      int[] ncomp = getIntData();
+      int[] nprim = getIntData();
+      int[] nptr = getIntData();
+      // read basis functions
+      shells = new  Lst<int[]>();
+      gaussians = AU.newFloat2(gaussianCount);
+      for (int i = 0; i < gaussianCount; i++)
+        gaussians[i] = new float[6];
+      nOrbitals = 0;
+      int ptCenter = 0;
+      String l = line;
+      for (int i = 0; i < shellCount; i++) {
+        int[] slater = new int[4];
+        int nc = ncomp[i];
+        slater[0] = centers[ptCenter];
+        line = "";
+        for (int ii = 0; ii < nc; ii++)
+          line += labels[ptCenter++] + " ";
+        if (!fillSlater(slater, nc, nptr[i] - 1, nprim[i]))
+          return;
+      }
+      line = l;
+      getAlphasAndExponents();
+      nboType = "AO";
+      readMOs();
     }
-    line = l;
-    getAlphasAndExponents();
-    nboType = "AO";
-    readMOs();
     continuing = false;
   }
 
@@ -633,11 +638,11 @@ public class GenNBOReader extends MOReader {
       String ab = (isOpenShell ? tokens[1] : "");
       String count = tokens[tokens.length - 1];
       String key = (ab.equals("BETA") ? "beta_" : "") + type;
-      if (parseIntStr(count) != nOrbitals) {
-        Logger.error("file 46 number of orbitals (" + count + ") does not match nOrbitals: "
-            + nOrbitals + "\n");
-        return;
-      }
+//      if (parseIntStr(count) != nOrbitals) {
+//        Logger.error("file 46 number of orbitals (" + count + ") does not match nOrbitals: "
+//            + nOrbitals + "\n");
+//        return;
+//      }
       SB sb = new SB();
       while (rd() != null && line.length() > 4 && " NA NB AO NH".indexOf(line.substring(1, 4)) < 0)
         sb.append(line);
@@ -714,11 +719,14 @@ public class GenNBOReader extends MOReader {
     Map<String, String[]> map = (Map<String, String[]>) moData.get("nboLabelMap");
     String labelKey = getLabelKey(ext >= 40 ? "PNBO" : nboType);
     String[] nboLabels = map.get(labelKey);
-    int nAOs = nboLabels.length;
+    int nMOs = nboLabels.length;
+    int nAOs = map.get("AO").length;
+    // It is possible for nAOs > nMOs. See, for example,
+    // http://nbo6.chem.wisc.edu/jmol_nborxiv/ketamine.47
     if (ext >= 40) {
       // MO and NO need simple MO1 MO2 .. labels
-      nboLabels = new String[nboLabels.length];
-      for (int i = 0; i < nAOs; i++)
+      nboLabels = new String[nMOs];
+      for (int i = 0; i < nMOs; i++)
         nboLabels[i] = nboType + (i + 1);
       labelKey = nboType;
       map.put(nboType, nboLabels);
@@ -740,27 +748,28 @@ public class GenNBOReader extends MOReader {
         }
         orbitals = (Lst<Map<String, Object>>) moData.get("mos");
         Object dfCoefMaps = orbitals.get(0).get("dfCoefMaps");
-        int nOrbitals = orbitals.size();
         orbitals = new Lst<Map<String, Object>>();
-        for (int i = nOrbitals; --i >= 0;) {
+        for (int i = nboLabels.length; --i >= 0;) {
           Map<String, Object> mo = new Hashtable<String, Object>();
           orbitals.addLast(mo);
           mo.put("dfCoefMaps", dfCoefMaps);
         }
-        setNboLabels(nboLabels, nAOs, orbitals, 0, nboType);
+        setNboLabels(nboLabels, nMOs, orbitals, 0, nboType);
         int len = 0;
         int[] next = null;
+        int nOrbitals = nMOs;
         if (!isAO) {
           if (data.indexOf("alpha") >= 0) {
+            nOrbitals *= 2;
             data = data.substring(data.indexOf("alpha") + 10); // "alpha spin"
           }
           len = data.length();
           next = new int[1];
         }
         for (int i = 0; i < nOrbitals; i++) {
-          if (!isAO && i == nAOs) {
+          if (!isAO && i == nMOs) {
             if (isNBO)
-              getNBOOccupanciesStatic(orbitals, nAOs, nOrbitals - nAOs, data, len, next);
+              getNBOOccupanciesStatic(orbitals, nMOs, nOrbitals - nMOs, data, len, next);
             nboLabels = map.get("beta_" + labelKey);
             // always discarding extra here
 
@@ -784,7 +793,7 @@ public class GenNBOReader extends MOReader {
           mo.put("coefficients", coefs);
         }
         if (isNBO)
-          getNBOOccupanciesStatic(orbitals, nAOs, nOrbitals - nAOs, data, len, next);
+          getNBOOccupanciesStatic(orbitals, nMOs, nOrbitals - nMOs, data, len, next);
         moData.put(nboType + "_coefs", orbitals);
       }
       moData.put("nboType", nboType);
