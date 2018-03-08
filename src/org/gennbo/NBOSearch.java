@@ -432,8 +432,8 @@ class NBOSearch extends NBOView {
     String file = vwr.getProperty("String", "filename", null).toString();
     String ext = NBOUtil.getExt(new File(file));
 
-    if (PT.isOneOf(ext, NBOFileHandler.EXTENSIONS))
-      notifyFileLoaded_s();
+//    if (PT.isOneOf(ext, NBOFileHandler.EXTENSIONS))
+//      notifyFileLoaded_s();
 
     return panel;
   }
@@ -1054,8 +1054,14 @@ class NBOSearch extends NBOView {
         }
       }
       break;
-    case KEYWD_NBO:
     case KEYWD_BEND:
+      switch (op) {
+      case 7:
+        orb1 = null;
+        break;
+      }
+      break;
+    case KEYWD_NBO:
     case KEYWD_NLMO:
       // just orb1
       break;

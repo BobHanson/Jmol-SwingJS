@@ -398,7 +398,7 @@ class NBOFileHandler extends JPanel {
   }
 
   boolean writeToFile(String fileName, String s) {
-    String ret = dialog.vwr.writeTextFile(fileName, s);
+    String ret = (s == null ? null : dialog.vwr.writeTextFile(fileName, s));
     return (ret != null && ret.startsWith("OK"));
   }
 
@@ -546,7 +546,7 @@ class NBOFileHandler extends JPanel {
     boolean isOK = data != null && data.contains("NBO analysis completed");
     if (!isOK) {
       deleteFile(newNBOFile("nbo"));
-      if (saveErr)
+      if (saveErr && data != null)
         writeToFile(newNBOFile("err$").getAbsolutePath(), data);
       writeToFile(newNBOFile("47").getAbsolutePath(), getInputFileData("47$"));
       deletePlotFiles(fullFilePath);

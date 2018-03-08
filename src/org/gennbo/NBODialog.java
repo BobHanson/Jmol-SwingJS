@@ -1173,8 +1173,9 @@ public class NBODialog extends JDialog {
     
     saveOrientation = false;
     iAmLoading = true;
-    String s = "load \"" + f.getAbsolutePath().replace('\\', '/') + "\""
-        + (dialogMode == DIALOG_RUN ? " filter 'NOMO' " : "")
+    String path = f.getAbsolutePath();
+    String s = "load \"" + path.replace('\\', '/') + "\""
+        + (path.indexOf(".47") >= 0 ? " filter 'NOMO' " : "")
         + NBOConfig.JMOL_FONT_SCRIPT;
     if (saveOrientation)
       s = "save orientation o1;" + s + ";restore orientation o1";

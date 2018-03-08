@@ -161,8 +161,8 @@ class NBORun {
     //box.add(btnRun);
     panel.add(btnRun);
 
-    if (dialog.inputFileHandler.tfExt.getText().equals("47")) //TDO: 
-      notifyFileLoaded();
+    //if (dialog.inputFileHandler.tfExt.getText().equals("47"))
+      //notifyFileLoaded();
     dialog.inputFileHandler.setBrowseEnabled(true);
     hideEditBox();
     return panel;

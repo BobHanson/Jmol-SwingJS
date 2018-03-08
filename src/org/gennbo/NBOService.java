@@ -345,6 +345,7 @@ public class NBOService {
       System.out.println("SENDING TWICE?");
       nboListener.disconnect();
       nboListener = null;
+      clearQueue();
       return;
     }
     request.timeStamp = System.currentTimeMillis();
