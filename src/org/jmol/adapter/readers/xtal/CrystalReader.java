@@ -967,8 +967,8 @@ public class CrystalReader extends AtomSetCollectionReader {
         setFreqValue(frequencies[i], tokens);
       }
       rd();
-      fillFrequencyData(iAtom0, freqAtomCount, lastAtomCount, ignore, false,
-          14, 10, atomFrag, 0);
+      fillFrequencyData(iAtom0, 0, lastAtomCount, ignore, false,
+          14, 10, atomFrag, 0, null);
       rd();
     }
     return true;

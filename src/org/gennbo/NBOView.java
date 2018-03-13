@@ -102,13 +102,13 @@ class NBOView {
   protected final static int[] basisLabelKey = 
     {//AO   NAO    NHOab     NBOab     MO 
         0,  1, 1,  2, 2,  3, 3, 3, 3,  4, // alpha
-        0,  1, 1,  5, 5,  6, 6, 6, 6,  4  // beta   
+        0,  1, 1,  5, 5,  6, 6, 6, 6,  7  // beta   
     };
   
   private String[][] orbitalLabels;
   
   private void clearLabelSet() {
-    orbitalLabels = new String[7][];
+    orbitalLabels = new String[8][];
   }
 
   private String[] getLabelSet(int ibas, boolean isAlpha) {
@@ -244,7 +244,7 @@ class NBOView {
     inputBox.setPreferredSize(new Dimension(360, 50));
     inputBox.setMaximumSize(new Dimension(360, 50));
     topBox.add(inputBox);
-    dialog.getNewInputFileHandler(NBOFileHandler.MODE_VIEW);
+    dialog.getNewInputFileHandler(NBOFileHandler.MODE_VIEW, null);
     inputBox.add(Box.createVerticalStrut(5));
     inputBox.add(dialog.inputFileHandler);
     return topBox;
@@ -350,42 +350,28 @@ class NBOView {
 
     ActionListener spinListener = new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent arg0) {
-        doSetSpin(isAlphaSpin() ? null : "beta");
+      public void actionPerformed(ActionEvent event) {
+
+        //        if (type != null) {
+//          dialog.doSetStructure(type);
+//        }
+
+        if (NBOConfig.nboView) {
+          dialog.runScriptQueued("select *;color bonds lightgrey");
+        }
+
+        doSetNewBasis(false, true);
+
+        
+        
+//        doSetSpin(event.getSource() == alphaSpin ? "alpha" : "beta");
       }
     };
     alphaSpin.addActionListener(spinListener);
     betaSpin.addActionListener(spinListener);
     ButtonGroup spinSelection = new ButtonGroup();
     spinSelection.add(alphaSpin);
-    spinSelection.add(betaSpin);
-    
-//    betaSpin.addActionListener(new ActionListener() {
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        EventQueue.invokeLater(new Runnable() {
-//
-//          @Override
-//          public void run() {
-//            doSetSpin(isAlphaSpin() ? null : "beta");
-//          }
-//
-//        });
-//      }
-//    });
-//    alphaSpin.addActionListener(new ActionListener() {
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        EventQueue.invokeLater(new Runnable() {
-//
-//          @Override
-//          public void run() {
-//            doSetSpin(isAlphaSpin() ? "alpha" : null);
-//          }
-//
-//        });
-//      }
-//    });
+    spinSelection.add(betaSpin);    
     horizBox.add(alphaSpin);
     horizBox.add(betaSpin);
     alphaSpin.setVisible(dialog.isOpenShell());
@@ -430,17 +416,6 @@ class NBOView {
     } else if (btn3D.isSelected()) {
       createImage3D();
     }
-  }
-
-  protected void doSetSpin(String type) {
-    if (type != null) {
-      dialog.doSetStructure(type);
-    }
-    if (NBOConfig.nboView) {
-      dialog.runScriptQueued("select *;color bonds lightgrey");
-    }
-
-    doSetNewBasis(false, true);
   }
 
   /**
@@ -987,7 +962,7 @@ class NBOView {
       }
     });
 
-    atomOrient.setSelected(true);
+    jmolOrient.setSelected(true);
     dialog.viewSettingsBox.add(btnCam, BorderLayout.SOUTH);
     dialog.repaint();
     dialog.revalidate();
@@ -1028,7 +1003,7 @@ class NBOView {
     
     alphaSpin.setVisible(dialog.isOpenShell());
     betaSpin.setVisible(dialog.isOpenShell());
-    boolean isBeta = dialog.isOpenShell() && !isAlphaSpin();
+    boolean isBeta = !isAlphaSpin();
 
     DefaultListModel<String> list = (isBeta ? betaList : alphaList);
     if (list != null && list.size() > 0) {
@@ -1065,12 +1040,14 @@ class NBOView {
   /**
    * Check that the .47 keyword list already includes "CMO".
    * 
-   * @return false if we had to (asynchronously) run a CMO job to get the CMO data
+   * @return false if we had to (asynchronously) run a CMO job to get the CMO
+   *         data
    * 
    */
   protected boolean checkForCMO() {
-    if (!dialog.runPanel.cleanNBOKeylist(
-        dialog.inputFileHandler.get47Keywords(), true).contains("CMO")) {
+    String keywords = dialog.runPanel.cleanNBOKeylist(dialog.inputFileHandler.get47KeywordsNoFile(), true);
+    keywords = NBOUtil.cleanKeywordsNo_XXX(keywords);
+    if (!keywords.contains("CMO")) {
       dialog.runPanel.doRunGenNBOJob("CMO");
       return false;
     }
@@ -1083,6 +1060,7 @@ class NBOView {
    * 
    * @param addBasis
    *        if desired, from comboBasis
+   * @param addPathAndJobStem 
    * 
    * @return a new string buffer using javajs.util.SB
    * 
@@ -1091,11 +1069,12 @@ class NBOView {
     SB sb = new SB();
     if (addPathAndJobStem) {
       NBOUtil.postAddGlobalC(sb, "PATH",
-          dialog.inputFileHandler.inputFile.getParent());
+          dialog.inputFileHandler.file47.getParent());
       NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
     }
     if (addBasis)
       NBOUtil.postAddGlobalI(sb, "BAS_1", 1, comboBasis1);
+    System.out.println("VIEW spin " + dialog.isOpenShell() + " " + isAlphaSpin());
     NBOUtil.postAddGlobalI(sb, "SPIN", (!dialog.isOpenShell() ? 0
         : isAlphaSpin() ? 1 : -1), null);
     return sb;
@@ -1508,7 +1487,7 @@ class NBOView {
   }
   
   protected boolean isAlphaSpin() {
-   return alphaSpin.isSelected() || !alphaSpin.isVisible();
+   return !(betaSpin.isVisible() && betaSpin.isSelected());
   }
 
 
@@ -1527,10 +1506,8 @@ class NBOView {
    class OrbitalList extends JList<String> implements ListSelectionListener,
       MouseListener, KeyListener {
 
-     // What do these variables mean?
-    protected BS bsOn = new BS();
-    protected BS bsNeg = new BS();
-    protected BS bsKnown = new BS();
+    // Bitsets for isosurface tracking
+    protected BS bsOn = new BS(), bsNeg = new BS(), bsKnownAlpha = new BS(), bsKnownBeta = new BS();
 
     public OrbitalList() {
       super();
@@ -1622,7 +1599,8 @@ class NBOView {
      * @param clearAll
      */
     void clearOrbitals(boolean clearAll) {
-      bsKnown.clearAll();
+      bsKnownAlpha.clearAll();
+      bsKnownBeta.clearAll();
       if (clearAll) {
         bsOn.clearAll();
         bsNeg.clearAll();
@@ -1651,38 +1629,35 @@ class NBOView {
      */
     protected void updateIsosurfacesInJmol(int iClicked) {
       DefaultListModel<String> model = (DefaultListModel<String>) getModel();
-      boolean isBeta = betaSpin.isSelected();
       String type = comboBasis1.getSelectedItem().toString();
       String script = "select 1.1;";
       if (iClicked == Integer.MAX_VALUE)
         script += updateBitSetFromModel();
       else
         updateModelFromBitSet();
-      //System.out.println("update " + bsOn + " " + bsKnown + " " +  iClicked);
+      boolean isBeta = !isAlphaSpin();
       for (int i = 0, n = model.getSize(); i < n; i++) {
         boolean isOn = bsOn.get(i);
-        if (i == iClicked || isOn && !bsKnown.get(i)
+        if (i == iClicked || isOn && !isKnownIsosurface(i)
             || isSelectedIndex(i) != isOn) {
-          String id = "mo" + i;
-          if (!isOn || bsKnown.get(i)) {
+          String id = "mo" + i + (isBeta ? "beta" : "");
+          if (!isOn || isKnownIsosurface(i)) {
             if (isOn && bsNeg.get(i)) {
-              bsKnown.clear(i);
+              setKnownIsosurface(i, false);
               bsNeg.clear(i);
             }
             bsOn.setBitTo(i, isOn = !isOn);
           }
-          boolean isKnown = bsKnown.get(i);
           if (!bsOn.get(i)) {
             // just turn it off
-            script += "isosurface mo" + i + " off;";
-          } else if (isKnown) {
-            // just turn it on
-            script += "isosurface mo" + i + " on;";
-            script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
-               isBeta, bsNeg.get(i));                      // the changes to fix bond-click failures. 
-                                                            // But I feel this is not the root solution
+            script += "isosurface " + id + " off;";
+          } else if (isKnownIsosurface(i)) {
+            // just turn it on - no?
+            script += "isosurface " + id + " on;";
+            //script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
+              // isBeta, bsNeg.get(i));
           } else {
-            bsKnown.set(i);
+            setKnownIsosurface(i, true);
             // create the isosurface
             script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
                 isBeta, bsNeg.get(i));
@@ -1694,9 +1669,7 @@ class NBOView {
 //        }
       }
       updateModelFromBitSet();
-// TODO: root problem may under this line below, since that is just a script to be passed in this method
       dialog.runScriptQueued(script);               
-      System.out.println("known" + bsKnown + " on" + bsOn + " neg" + bsNeg + " " + script);
     }
 
     private String updateBitSetFromModel() {
@@ -1799,13 +1772,20 @@ class NBOView {
         toggled = true;
         // toggle:
         bsNeg.setBitTo(i, !bsNeg.get(i));
-        bsKnown.clear(i); // to - just switch colors?
-        //        toggleOrbitalNegation(i);
+        setKnownIsosurface(i, false);
         repaint();
       }
 
     }
 
+    private void setKnownIsosurface(int i, boolean isON) {
+      (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).setBitTo(i,  isON);      
+    }
+
+    private boolean isKnownIsosurface(int i) {
+      return (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).get(i);
+    }
+    
     @Override
     public void mouseClicked(MouseEvent e) {
     }
@@ -1865,6 +1845,7 @@ class NBOView {
     dialog.nboService.postToNBO(req);
   }
 
+
   /**
    * Process the reply from NBOServe.
    * 
@@ -1883,13 +1864,10 @@ class NBOView {
       orbitals.loadList(lines, list);
       break;
     case MODE_VIEW_IMAGE:
-      String fname = dialog.inputFileHandler.inputFile.getParent() + "\\"
+      String fname = dialog.inputFileHandler.file47.getParent() + "\\"
           + dialog.inputFileHandler.jobStem + ".bmp";
-      File f = new File(fname);
-      final SB title = new SB();
-      String id = "id " + PT.esc(title.toString().trim());
       String script = "image close;image id \"\" "
-          + PT.esc(f.toString().replace('\\', '/'));
+          + PT.esc(new File(fname).toString().replace('\\', '/'));
       dialog.runScriptQueued(script);
       break;
     case NBOService.MODE_RAW:

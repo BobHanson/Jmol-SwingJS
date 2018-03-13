@@ -273,7 +273,7 @@ public class NBODialog extends JDialog {
       }
     }
 
-    clearOutput();
+    //clearOutput();
     logCmd("Entering " + dialogNames[type]);
 
     nboService.clearQueue();
@@ -532,7 +532,7 @@ public class NBODialog extends JDialog {
     lab.setForeground(Color.red);
     p.add(lab);
     lab.setAlignmentX(0.5f);
-    lab = new JLabel("Frank Weinhold, Dylan Phillips, Yuke Liang, and Bob Hanson");
+    lab = new JLabel("Frank Weinhold, Dylan Phillips, Eric Glendening, and Robert Hanson");
     lab.setAlignmentX(0.5f);
     p.add(lab);
     //Body/////////////
@@ -1219,13 +1219,15 @@ public class NBODialog extends JDialog {
   }
 
   /**
-   * not used for MODEL
+   * 
+   * Create a new input file handler.
    * 
    * @param mode
+   * @param acceptor  will be NBOModel
    */
-  protected void getNewInputFileHandler(int mode) {
+  protected void getNewInputFileHandler(int mode, NBOFileAcceptor acceptor) {
     inputFileHandler = new NBOFileHandler(inputFileHandler == null ? ""
-        : inputFileHandler.jobStem, "47", mode, "47", this);
+        : inputFileHandler.jobStem, mode, this, acceptor);
   }
 
   /**

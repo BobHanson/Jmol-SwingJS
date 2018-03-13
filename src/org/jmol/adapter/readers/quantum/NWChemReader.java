@@ -532,7 +532,7 @@ public class NWChemReader extends MOReader {
         asc.setAtomSetFrequency(path, null, tokens[i], null);
       }
       readLines(1);
-      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0, null);
       readLines(3);
     }
 

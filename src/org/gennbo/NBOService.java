@@ -518,20 +518,8 @@ public class NBOService {
 
       try { // with finally clause to remove request from queue
 
-        if ((pt = s.indexOf("***errmess***")) >= 0) {
-          System.out.println(s);
-          try {
-            s = PT.split(s, "\n")[2];
-            logServerLine(s.substring(s.indexOf("\n") + 1), Logger.LEVEL_ERROR);
-          } catch (Exception e) {
-            // ignore
-          }
-          logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
-          return true;
-        }
-
         if ((pt = s.lastIndexOf("*start*")) < 0) {
-//          logServerLine(s, Logger.LEVEL_ERROR);
+          //          logServerLine(s, Logger.LEVEL_ERROR);
           //System.out.println(thisReply);
           if (!currentRequest.isMessy) {
             nboStatus = NBO_STATUS_BAD_REPLY;
@@ -552,22 +540,35 @@ public class NBOService {
         if (currentRequest == null) {
           if (haveLicense) {
             nboStatus = NBO_STATUS_BAD_REPLY;
-            System.out.println("TRANSMISSION ERROR: UNSOLICITED!>>>>" + s + "<<<<<");
+            System.out.println("TRANSMISSION ERROR: UNSOLICITED!>>>>" + s
+                + "<<<<<");
           } else {
-            System.out.println("license found:"  + s);
+            System.out.println("license found:" + s);
             haveLicense = true;
             dialog.setLicense(s);
             nboStatus = NBO_STATUS_READY;
           }
-        } else {
-          nboStatus = NBO_STATUS_LISTENING;
-          currentRequest.sendReply(s.substring(0, pt));
+          return true;
         }
+        
+        if (s.indexOf("***errmess***") >= 0) {
+          try {
+            s = PT.split(s, "\n")[1];
+            logServerLine(s.substring(s.indexOf("\n") + 1), Logger.LEVEL_ERROR);
+          } catch (Exception e) {
+            // ignore
+          }
+          logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
+          return true;
+        }
+
+        nboStatus = NBO_STATUS_LISTENING;
+        currentRequest.sendReply(s.substring(0, pt));
         return true;
       } finally {
         if (currentRequest != null && removeRequest) {
           try {
-          requestQueue.remove();
+            requestQueue.remove();
           } catch (Exception e) {
             System.out.println("NBOService requestQueue empty");
           }

@@ -25,11 +25,13 @@
 package org.jmol.adapter.readers.quantum;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -110,9 +112,13 @@ public class GenNBOReader extends MOReader {
      * molname.nbo output file
      * 
      */
-    String line1 = rd().trim();
+    String line1 = rd().trim().toUpperCase();
     is47File = (line1.indexOf("$GENNBO") >= 0 || line1.indexOf("$NBO") >= 0); // GENNBO 6
     if (is47File) {
+      if (line1.indexOf("BOHR") >= 0) {
+        fileOffset = new P3();
+        fileScaling = P3.new3(ANGSTROMS_PER_BOHR,ANGSTROMS_PER_BOHR,ANGSTROMS_PER_BOHR);
+      }
       readData47();
       return;
     }
@@ -146,20 +152,6 @@ public class GenNBOReader extends MOReader {
     continuing = false;
   }
 
-//  $GENNBO  NATOMS=7  NBAS=28  UPPER  BODM  FORMAT  $END
-//      $NBO  $END
-//      $COORD
-//      Methylamine...RHF/3-21G//Pople-Gordon geometry
-//          6    6       0.745914       0.011106       0.000000
-//          7    7      -0.721743      -0.071848       0.000000
-//          1    1       1.042059       1.060105       0.000000
-//          1    1       1.129298      -0.483355       0.892539
-//          1    1       1.129298      -0.483355      -0.892539
-//          1    1      -1.076988       0.386322      -0.827032
-//          1    1      -1.076988       0.386322       0.827032
-//      $END
-
-
   @Override
   protected void finalizeSubclassReader() throws Exception {
     appendLoadNote("NBO type " + nboType);
@@ -170,6 +162,20 @@ public class GenNBOReader extends MOReader {
   
   private String topoType = "A";
   
+//$GENNBO  NATOMS=7  NBAS=28  UPPER  BODM  FORMAT  $END
+//$NBO  $END
+//$COORD
+//Methylamine...RHF/3-21G//Pople-Gordon geometry
+//    6    6       0.745914       0.011106       0.000000
+//    7    7      -0.721743      -0.071848       0.000000
+//    1    1       1.042059       1.060105       0.000000
+//    1    1       1.129298      -0.483355       0.892539
+//    1    1       1.129298      -0.483355      -0.892539
+//    1    1      -1.076988       0.386322      -0.827032
+//    1    1      -1.076988       0.386322       0.827032
+//$END
+
+
   @Override
   protected boolean checkLine() throws Exception {
     // for .nbo only
@@ -250,24 +256,31 @@ public class GenNBOReader extends MOReader {
     fileName += ext;
     String data = vwr.getFileAsString3(fileName, false, null);
     Logger.info(data.length() + " bytes read from " + fileName);
-    if (data.length() == 0 || data.indexOf("java.io.FileNotFound") >= 0 && nboType != "AO")
+    boolean isError = (data.indexOf("java.io.") >= 0);
+    if (data.length() == 0 || isError && nboType != "AO")
       throw new Exception(" supplemental file " + fileName + " was not found");
-    return data;
+    return (isError ? null : data);
   }
 
-// 14_a Basis set information needed for plotting orbitals
-// ---------------------------------------------------------------------------
-// 36 90 162
-// ---------------------------------------------------------------------------
-// 6 -2.992884000 -1.750577000 1.960024000 
-// 6 -2.378528000 -1.339374000 0.620578000
-//
+  // 14_a Basis set information needed for plotting orbitals
+  // ---------------------------------------------------------------------------
+  // 36 90 162
+  // ---------------------------------------------------------------------------
+  // 6 -2.992884000 -1.750577000 1.960024000 
+  // 6 -2.378528000 -1.339374000 0.620578000
+  //
 
   private boolean getFile31() throws Exception {
-    String data = getFileData(".31");
-    BufferedReader readerSave = reader;
-    reader = Rdr.getBR(data);
-    return (readData31(null) && (reader = readerSave) != null);
+    try {
+      String data = getFileData(".31");
+      if (data == null)
+        return false;
+      BufferedReader readerSave = reader;
+      reader = Rdr.getBR(data);
+      return (readData31(null) && (reader = readerSave) != null);
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   /**
@@ -277,6 +290,8 @@ public class GenNBOReader extends MOReader {
    */
   private void getFile46() throws Exception {
     String data = getFileData(".46");
+    if (data == null)
+      return;
     BufferedReader readerSave = reader;
     reader = Rdr.getBR(data);
     readData46();
@@ -373,9 +388,8 @@ public class GenNBOReader extends MOReader {
       alphaOnly =  true;
       betaOnly =  false;
       
-      appendLoadNote("basis AOs are unnormalized");
-      
       discardLinesUntilContains("$BASIS");
+      appendLoadNote("basis AOs are unnormalized");
       int[] centers = getIntData();
       int[] labels = getIntData();
       
@@ -633,7 +647,7 @@ public class GenNBOReader extends MOReader {
     Map<String, String[]> map = new Hashtable<String, String[]>();
     String[] tokens = new String[0];
     rd();
-    int nNOs = nAOs = nOrbitals;
+    int nNOs = this.nNOs = nAOs = nOrbitals;
     String labelKey = getLabelKey(nboType);
     while (line != null && line.length() > 0) {
       tokens = PT.getTokens(line);
@@ -658,16 +672,15 @@ public class GenNBOReader extends MOReader {
         tokens[i] = PT.rep(sb.substring2(pt, pt + 10), " ","");
       map.put(key, tokens);
     }
-    nNOs = this.nNOs;
     tokens = map.get((betaOnly ? "beta_" : "") + labelKey);
     moData.put("nboLabelMap", map);
     if (tokens == null) {
       tokens = new String[nNOs];
       for (int i = 0; i < nNOs; i++)
         tokens[i] = nboType + (i + 1);
-      map.put(nboType, tokens);
+      map.put(labelKey, tokens);
       if (isOpenShell)
-        map.put("beta_" + nboType, tokens);        
+        map.put("beta_" + labelKey, tokens);        
     }
     moData.put("nboLabels", tokens);
     addBetaSet = (isOpenShell && !betaOnly && !is47File); 
@@ -691,7 +704,7 @@ public class GenNBOReader extends MOReader {
       labelKey = labelKey.substring(1);
     if (labelKey.equals("NLMO"))
       labelKey = "NBO";
-    if (labelKey.equals("MO"))
+    if (labelKey.equals("MO")) // no longer?
       labelKey = "NO";
     return labelKey;
   }
@@ -716,22 +729,22 @@ public class GenNBOReader extends MOReader {
     //boolean discardExtra = PT.isOneOf(nboType, ";NBO;NLMO;");
     boolean hasNoBeta = PT.isOneOf(nboType, ";AO;PNAO;NAO;");
     Map<String, String[]> map = (Map<String, String[]>) moData.get("nboLabelMap");
-    String labelKey = getLabelKey(ext >= 40 ? "PNBO" : nboType);
-    String[] nboLabels = map.get(labelKey);
-    int nMOs = nboLabels.length;
     int nAOs = map.get("AO").length;
-    // It is possible for nAOs > nMOs. See, for example,
-    // http://nbo6.chem.wisc.edu/jmol_nborxiv/ketamine.47
-    if (ext >= 40) {
+    String labelKey = getLabelKey(nboType);
+    String[] nboLabels = map.get(labelKey);
+    if (nboLabels == null) {
       // MO and NO need simple MO1 MO2 .. labels
-      nboLabels = new String[nMOs];
-      for (int i = 0; i < nMOs; i++)
+      nboLabels = new String[nAOs];
+      for (int i = 0; i < nAOs; i++)
         nboLabels[i] = nboType + (i + 1);
       labelKey = nboType;
-      map.put(nboType, nboLabels);
+      map.put(labelKey, nboLabels);
       if (!hasNoBeta)
-        map.put("beta_" + nboType, nboLabels);
+        map.put("beta_" + labelKey, nboLabels);
     }
+    // It is possible for nAOs > nMOs. See, for example,
+    // http://nbo6.chem.wisc.edu/jmol_nborxiv/ketamine.47
+    int nMOs = nboLabels.length;
     try {
       Lst<Map<String, Object>> orbitals = (Lst<Map<String, Object>>) moData
           .get(nboType + "_coefs");

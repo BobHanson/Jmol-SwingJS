@@ -179,7 +179,7 @@ public class DmolReader extends AtomSetCollectionReader {
       }
       rd();
       fillFrequencyData(iAtom0, ac, lastAtomCount, ignore, false, 5, 13,
-          null, 0);
+          null, 0, null);
       readLines(2);
     }
   }

@@ -254,7 +254,7 @@ void processAtomicCharges() throws Exception {
           bsOK.set(vibrationNumber - 1);
           asc.cloneLastAtomSet();
         }
-        fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 2);
+        fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 2, null);
       }
     String[][] info = new String[vibrationNumber][];
     if (line.indexOf("DESCRIPTION") < 0)

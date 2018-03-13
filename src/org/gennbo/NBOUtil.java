@@ -302,6 +302,22 @@ public class NBOUtil {
     return folder;
   }
 
+  /**
+   * remove all _ keywords
+   * @param keywords
+   * @return
+   */
+  static String cleanKeywordsNo_XXX(String keywords) {
+    String[] tokens = PT.getTokens(keywords);
+    String ret = "";
+    for (int i = 0; i < tokens.length; i++) {
+      if (tokens[i].startsWith("_"))
+          continue;
+      ret += tokens[i] + " ";
+    }
+    return ret.trim();
+  }
+
   ///**
   //* Centers the dialog on the screen.
   //* 

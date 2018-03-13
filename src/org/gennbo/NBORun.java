@@ -102,7 +102,7 @@ class NBORun {
     JPanel panel = myPanel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-    dialog.getNewInputFileHandler(NBOFileHandler.MODE_RUN);
+    dialog.getNewInputFileHandler(NBOFileHandler.MODE_RUN, null);
     dialog.inputFileHandler.setBrowseEnabled(false);
     dialog.inputFileHandler.removeAllTemporaryRunFiles();
 
@@ -224,7 +224,7 @@ class NBORun {
   }
 
   protected void addNBOKeylist() {
-    if (dialog.inputFileHandler.inputFile == null)
+    if (dialog.inputFileHandler.file47 == null)
       return;
     Box jobNameOuterBox = Box.createVerticalBox();
     jobNameOuterBox.setSize(new Dimension(250, 75));
@@ -295,7 +295,7 @@ class NBORun {
 
     keywordTextPane = new JTextPane();
     doSetKeywordTextPane(cleanNBOKeylist(
-        dialog.inputFileHandler.get47Keywords(), true));
+        dialog.inputFileHandler.get47KeywordsNoFile(), true));
 
     JScrollPane sp = new JScrollPane();
     sp.getViewport().add(keywordTextPane);
@@ -348,7 +348,7 @@ class NBORun {
     menuPanel.setBorder(BorderFactory.createLoweredBevelBorder());
     keywordButtons = new JRadioButton[RUN_KEYWORD_NAMES.length];
     String keywords = " " + cleanNBOKeylist(
-        dialog.inputFileHandler.get47Keywords(), false) + " ";
+        dialog.inputFileHandler.get47KeywordsNoFile(), false) + " ";
     for (int i = 0; i < keywordButtons.length; i++) {
       keywordButtons[i] = new JRadioButton(RUN_KEYWORD_NAMES[i] + ": " + RUN_KEYWORD_DESC[i]);
       if (NBOUtil.findKeyword(keywords, RUN_KEYWORD_NAMES[i], true) >= 0)
@@ -402,18 +402,7 @@ class NBORun {
   protected void doLogKeywords(String keywords) {
     if (keywords == null)
       keywords = getKeywordsFromButtons();
-    dialog.logValue("Keywords: " + cleanKeywords(keywords));
-  }
-
-  private String cleanKeywords(String keywords) {
-    String[] tokens = PT.getTokens(keywords);
-    String ret = "";
-    for (int i = 0; i < tokens.length; i++) {
-      if (tokens[i].startsWith("_"))
-          continue;
-      ret += tokens[i] + " ";
-    }
-    return ret.trim();
+    dialog.logValue("Keywords: " + NBOUtil.cleanKeywordsNo_XXX(keywords));
   }
 
   JTextPane keywordTextPane;
@@ -627,7 +616,7 @@ class NBORun {
    */
   protected String getKeywordsFromButtons() {
     String keywords = " "
-        + cleanNBOKeylist(dialog.inputFileHandler.get47Keywords(), false)
+        + cleanNBOKeylist(dialog.inputFileHandler.get47KeywordsNoFile(), false)
         + " ";
     if (keywordButtons == null)
       return keywords;
@@ -687,7 +676,7 @@ class NBORun {
       dialog.alertError("Error reading " + s + ": " + e);
     }
     dialog.modelOrigin = NBODialog.ORIGIN_NBO_ARCHIVE;
-    dialog.inputFileHandler.setInputFile(f);
+    dialog.inputFileHandler.setFile47(f);
     dialog.modelOrigin = NBODialog.ORIGIN_NBO_ARCHIVE;
     rbLocal.doClick();
     dialog.modelOrigin = NBODialog.ORIGIN_FILE_INPUT;
@@ -701,10 +690,9 @@ class NBORun {
    * 
    * Called from:
    * 
-   *  NBOFileHandler -- setInputFile when not RUN module "PLOT" 
-   *  NBORun.buildRunPanel  -- Run button pressed ""
-   *  NBOView.checkforCMO -- "CMO" when necessary
-   *  NBOView.ensurePlotFile -- "PLOT"
+   * NBOFileHandler -- setInputFile when not RUN module "PLOT"
+   * NBORun.buildRunPanel -- Run button pressed "" NBOView.checkforCMO -- "CMO"
+   * when necessary NBOView.ensurePlotFile -- "PLOT"
    * 
    * @param requiredKeyword
    */
@@ -727,7 +715,8 @@ class NBORun {
       // from another module
       tfJobName.setText(dialog.inputFileHandler.jobStem);
     }
-    String jobName = dialog.inputFileHandler.fixJobName(tfJobName == null ? null : tfJobName.getText().trim());
+    String jobName = dialog.inputFileHandler
+        .fixJobName(tfJobName == null ? null : tfJobName.getText().trim());
 
     // BH Q: Would it be reasonable if the NO option is chosen to put that other job name in to the jobStem field, and also copy the .47 file to that? Or use that?
     // Or, would it be better to ask this question immediately upon file loading so that it doesn't come up, and make it so that
@@ -745,22 +734,22 @@ class NBORun {
 
     jobName = (jobName.equals("") ? dialog.inputFileHandler.jobStem : jobName);
 
-    String[] fileData = dialog.inputFileHandler.update47File(jobName,
+    NBOFileData47 fileData = dialog.inputFileHandler.update47File(jobName,
         newKeywords, true);
     if (fileData == null)
       return;
     SB sb = new SB();
-    String path = dialog.inputFileHandler.inputFile.getParent();
+    String path = dialog.inputFileHandler.file47.getParent();
     String jobStem = dialog.inputFileHandler.jobStem;
     dialog.inputFileHandler.deletePlotFiles(path);
     NBOUtil.postAddGlobalC(sb, "PATH", path);
     NBOUtil.postAddGlobalC(sb, "JOBSTEM", jobStem);
     NBOUtil.postAddGlobalC(sb, "ESS", "gennbo");
     NBOUtil.postAddGlobalC(sb, "LABEL_1", "FILE=" + jobName);
-    dialog.clearOutput();
+    //dialog.clearOutput();
     dialog.logCmd("RUN GenNBO FILE=" + jobName + " "
-        + cleanNBOKeylist(fileData[1], false));
-    
+        + cleanNBOKeylist(fileData.noFileKeywords, false));
+
     postNBO(sb, "Running GenNBO...");
   }
 
@@ -788,8 +777,8 @@ class NBORun {
    * @param req
    */
   protected void processNBO(NBORequest req) {
-    dialog.inputFileHandler.setInputFile(dialog.inputFileHandler.inputFile);
-    dialog.clearOutput();
+    dialog.inputFileHandler.setFile47(dialog.inputFileHandler.file47);
+    //dialog.clearOutput();
     if (!dialog.inputFileHandler.checkNBOComplete(true)) {
       dialog.logError("NBO file was corrupted or not created");
       dialog.nboService.clearQueue();

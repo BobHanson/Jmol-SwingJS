@@ -506,7 +506,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
      * @j2sNative
      * 
      * if (e.getMessage)
-     *  s = e.getMessage();
+     *  s = e.getMessage()
      * else
      *  s = e.toString();
      */
@@ -1409,24 +1409,29 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    *          an array either null or indicating exactly which atoms get the
    *          frequencies (used by CrystalReader)
    * @param minLineLen TODO
+   * @param data TODO
    * @throws Exception
    */
   protected void fillFrequencyData(int iAtom0, int ac,
                                    int modelAtomCount, boolean[] ignore,
                                    boolean isWide, int col0, int colWidth,
-                                   int[] atomIndexes, int minLineLen) throws Exception {
-    boolean withSymmetry = (modelAtomCount != ac);
-    if (atomIndexes != null)
+                                   int[] atomIndexes, int minLineLen, String[][] data) throws Exception {
+    boolean withSymmetry = (modelAtomCount != ac && data == null);
+    if (ac == 0 && atomIndexes != null)
       ac = atomIndexes.length;
     int nLines = (isWide ? ac : ac * 3);
     int nFreq = ignore.length;
-    String[][] data = new String[nLines][];
-    fillDataBlockFixed(data, col0, colWidth, minLineLen);
+    if (data == null) {
+      data = new String[nLines][];
+      fillDataBlockFixed(data, col0, colWidth, minLineLen);
+    }
     for (int i = 0, atomPt = 0; i < nLines; i++, atomPt++) {
       String[] values = data[i];
       String[] valuesY = (isWide ? null : data[++i]);
       String[] valuesZ = (isWide ? null : data[++i]);
       int dataPt = values.length - (isWide ? nFreq * 3 : nFreq) - 1;
+      if (dataPt <0)
+        System.out.println("???");
       for (int j = 0, jj = 0; jj < nFreq; jj++) {
         ++dataPt;
         String x = values[dataPt];

@@ -431,7 +431,7 @@ public class JaguarReader extends MOReader {
               intensities[i + 1] + " km/mol");
       }
       haveLine = true;
-      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0, null);
       rd();
       rd();
     }

@@ -65,11 +65,6 @@ class NBOConfig  {
   		"set bondpicking true;set multipleBondSpacing -0.2; set multipleBondRadiusFactor 0.6;" +
   		"set zoomlarge false;select none;";
 
-  protected static final String INPUT_FILE_EXTENSIONS = "adf;cfi;com;g09;gau;gms;jag;log;mm2;mnd;mol;mp;nw;orc;pqs;qc;vfi;xyz;47";
-  protected static final String OUTPUT_FILE_EXTENSIONS = "adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;mol;xyz;vfi;g09;com";
-  protected static final String JMOL_EXTENSIONS = "xyz;mol";
-  //  protected static final String RUN_EXTENSIONS = "47;gau;gms";
-
   protected final static String JMOL_FONT_SCRIPT = ";set fontscaling true;select _H; font label 10 arial plain 0.025;select !_H;font label 10 arial bold 0.025;select none;";
 
   /**
@@ -457,7 +452,7 @@ class NBOConfig  {
         + type
         + " "
         + orbitalNumber
-        + (isBeta && !type.equals("MO") ? " beta" : "") // AO?
+        + (isBeta ? " beta" : "") 
         + " frontonly "
         + (useWireMesh ? " mesh nofill" : " nomesh fill translucent "
             + (1 - opacityOp)) + ";select none;";

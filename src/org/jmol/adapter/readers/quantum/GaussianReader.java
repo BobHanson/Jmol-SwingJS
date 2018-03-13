@@ -80,7 +80,6 @@ public class GaussianReader extends MOReader {
   private boolean haveHighPrecision;
   private boolean allowHighPrecision;
 
-
   @Override 
   protected void initializeReader() throws Exception {
     allowHighPrecision = !checkAndRemoveFilterKey("NOHP");
@@ -672,7 +671,11 @@ public class GaussianReader extends MOReader {
     discardLinesUntilContains2(key, ":");
     if (line == null && mustHave)
       throw (new Exception("No frequencies encountered"));
-    while ((line= rd()) != null && line.length() > 15) {
+    line = rd();
+    int ac = asc.getLastAtomSetAtomCount();
+    String[][] data = new String[ac][], temp = new String[1][];
+    int[] atomIndices = new int[ac];
+    while (line.length() > 20) {
       // we now have the line with the vibration numbers in them, but don't need it
       String[] symmetries = PT.getTokens(rd());
       discardLinesUntilContains(" Frequencies");
@@ -693,7 +696,6 @@ public class GaussianReader extends MOReader {
       String[] intensities = PT.getTokensAt(
           discardLinesUntilContains(isHighPrecision ? "IR Intensities" : "IR Inten"), width);
       int iAtom0 = asc.ac;
-      int ac = asc.getLastAtomSetAtomCount();
       int frequencyCount = frequencies.length;
       boolean[] ignore = new boolean[frequencyCount];
       for (int i = 0; i < frequencyCount; ++i) {
@@ -713,10 +715,18 @@ public class GaussianReader extends MOReader {
             intensities[i]+" KM/Mole");
       }
       discardLinesUntilContains(" Atom ");
+      int nLines = 0;
+      while (true) {
+        fillDataBlockFixed(temp, (isHighPrecision ? 23 : 0), (isHighPrecision ? 10 : 0), 0);
+        if (temp[0].length < 10)
+          break;
+        atomIndices[nLines] = Integer.valueOf(temp[0][0]).intValue() - 1; 
+        data[nLines++] = temp[0];
+      }
       if (isHighPrecision)
-        fillFrequencyData(iAtom0, ac, ac, ignore, false, 23, 10, null, 0);
+        fillFrequencyData(iAtom0, nLines, ac, ignore, false, 0, 0, atomIndices, 0, data);
       else
-        fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
+        fillFrequencyData(iAtom0, nLines, ac, ignore, true, 0, 0, atomIndices, 0, data);
     }
   }
   

@@ -201,7 +201,7 @@ abstract public class GamessReader extends MOReader {
 
       }
       discardLinesUntilBlank();
-      fillFrequencyData(iAtom0, ac, ac, ignore, false, 20, 12, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, false, 20, 12, null, 0, null);
       readLines(13);
     }
   }
