@@ -1,0 +1,203 @@
+<project name="Jmol" default="main" basedir=".">
+  <!--
+      DocumentId  $Id: build.xml 21793 2018-01-02 16:58:31Z hansonr $
+  -->
+<!--
+
+see build.README.txt
+
+build-app-min just builds Jmol.jar with no internationalization, just for quick testing. 
+
+  -->
+	
+  <!-- Contributions -->
+  <!-- <for list ...> construct needs ant-contrib.jar -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="tools/ant-contrib.jar" />
+    </classpath>
+  </taskdef>
+
+  <!-- pull developer-specific settings from their home directory -->
+  <property file="${user.home}/.jmol.build.properties" />
+  <!-- compile options -->
+  <property name="build.sysclasspath" value="ignore" />
+  <property name="build.compiler" value="javac1.6" />
+  <!-- for some reason, I can't get ant to use this ${java.version}
+       property as the value of the source parameter -->
+  <property name="java.version" value="1.6" />
+  <property name="debug" value="on" />
+  <property name="deprecation" value="off" />
+  <property name="optimization" value="off" />
+	<copy todir="" >
+	  <fileset dir="src/org/jmol/viewer/">
+	    <include name="Jmol.properties" />
+	  </fileset>
+	  <filterchain>
+	    <striplinecomments>
+	      <comment value="#" />
+	    </striplinecomments>
+	    <linecontains>
+	      <contains value="Jmol.___" />
+	    </linecontains>
+	  </filterchain>
+	</copy>
+  <property file="Jmol.properties" prefix="Jmol.properties" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
+  <propertyregex property="version"
+  			  override = "true"
+	          input="${version}"
+  			  regexp='(")([^"]+)(")'
+	          select="\2"
+  		      global="true"
+	          />
+  <echo message="version=${version}" />
+  <property name="jvxl_version" value="0.1" />
+
+  <property name="tests.source.dir" value="source-tests" />
+  <property name="lib.dir" value="jars" />
+  <property name="plugin.dir" value="plugin-jars" />
+  <property name="appjars.dir" value="build/appjars" />
+  <property name="classes.dir" value="build/classes" />
+  <property name="test-classes.dir" value="build/test-classes" />
+  <property name="applet.classes.dir" value="build/applet-classes" />
+  <property name="apisio.classes.dir" value="build/apisio-classes" />
+  <property name="tests.dir" value="build/unit.tests" />
+  <property name="javadoc.dir" value="build/javadoc" />
+  <property name="jmol.applet.web.dir" value="appletweb" />
+  <property name="docbook-xsl" value="docbook-xsl-1.76.1" />
+  <property name="docbook-xml" value="docbook-xml-4.4" />
+  <property name="naga.jar" value="naga-3_0.jar" />
+  <property name="commons-cli.jar" value="commons-cli-1.2.jar" />
+	
+	  <path id="project.class.path">
+	    <fileset dir="${lib.dir}">
+	      <include name="*.jar" />
+	    </fileset>
+	  </path>
+	  
+
+  <target name="main" id="main" depends="init,jar"/>
+  
+  <target name="init" id="init">
+    <tstamp/>
+  </target>
+
+
+  <target id="classes" name="classes" depends="init">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="src" destdir="${classes.dir}" encoding="UTF8"
+           debug="${debug}" deprecation="${deprecation}"
+           optimize="${optimization}" source="1.6" target="1.6">
+      <classpath refid="project.class.path" />
+      <exclude name="astex/**/*.java"/>
+      <exclude name="java_cup/**/*.java"/>
+    </javac>
+    <copy todir="${classes.dir}" >
+      <fileset dir="src">
+        <include name="**/license.txt" />
+        <include name="**/*.jpg" />
+        <include name="**/*.gif" />
+      	<include name="**/*.png" />
+        <include name="**/*.html" />
+        <include name="**/*.js" />
+        <include name="**/*.dtd" />
+        <include name="**/*.properties" />
+        <include name="**/Properties/*" />
+        <!-- for testing internationalisation only:
+             comment out the 2 lines above and uncomment the following 3 lines -->
+        <!--
+        <include name="**/JmolPop*.properties" />
+        <include name="**/Properties/Jmol.properties" />
+        <include name="**/Properties/Jmol-resources.properties" />
+        -->
+        <include name="**/Data/*" />
+        <include name="**/*.txt" />
+      </fileset>
+    </copy>
+    <copy file="Jmol.properties" tofile="${classes.dir}/org/jmol/viewer/Jmol.properties" />
+  </target>
+  
+  <target name="check.libjars" id="check.libjars">
+    <condition property="libjars.uptodate">
+      <and>
+        <uptodate targetfile="${appjars.dir}">
+          <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
+          <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
+          <srcfiles dir="${lib.dir}" includes="JSpecView.jar"/>
+        </uptodate>
+        <uptodate targetfile="build/libjars.timestamp"
+                  srcfile="${appjars.dir}"/>
+      </and>
+    </condition>
+  </target>
+
+
+  <target name="libjars" id="libjars" depends="check.libjars" unless="libjars.uptodate">
+    <delete file="build/libjars.timestamp"/>
+    <mkdir dir="${appjars.dir}"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/${naga.jar}"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/${commons-cli.jar}"/>
+  	<delete dir="${appjars.dir}/javajs" />
+  	<delete dir="${appjars.dir}/org/jmol" />
+  	<delete dir="${appjars.dir}/org/apache/tools" />
+  	<delete dir="${appjars.dir}/META-INF" />
+    <touch file="build/libjars.timestamp"/>
+  </target>
+
+  <target name="jar" id="jar"
+          depends="init,classes,libjars">
+     <jar destfile="build/Jmol.jar"
+         manifest="manifest/application.txt">
+      <fileset dir="${classes.dir}" >
+        <exclude name="**/.*" />
+        <exclude name="**/*.dx" />
+        <exclude name="ant/**" />
+        <include name="com/**" />
+        <include name="javajs/api/**" />
+        <include name="javajs/awt/**" />
+        <include name="javajs/export/**" />
+        <include name="javajs/img/**" />
+        <include name="javajs/util/**" />
+        <include name="**/org/gennbo/**" />
+        <include name="**/org/apache/**" />
+        <include name="**/org/qcschema/**" />
+        <include name="**/jmol/**" />
+        <exclude name="**/Test*.class" />
+        <exclude name="**/jmol/jcamp/**" />
+        <exclude name="**/jmol/applet/*" />
+        <exclude name="**/app/JmolData.class" />
+      </fileset>
+      <fileset dir="${appjars.dir}" includes="**/*"/>
+      <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
+      <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
+    </jar>
+  	<echo>build/Jmol.jar created (unsigned)</echo>
+  </target>
+
+  <target name="clean" id="clean">
+    <delete dir="${classes.dir}"/>
+    <delete dir="${applet.classes.dir}"/>
+    <delete dir="${apisio.classes.dir}"/>
+    <delete dir="${test-classes.dir}"/>
+    <delete dir="${appjars.dir}"/>
+    <delete dir="build/dist"/>
+    <delete>
+      <fileset dir="build">
+        <include name="*.jar" />
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="spotless" id="spotless" depends="clean">
+    <delete dir="build"/>
+    <delete dir="${javadoc.dir}"/>
+    <delete dir="packaging/rpm/dist"/>
+  </target>
+  
+  <target name="run" id="run" depends="main">
+    <java fork="true" jar="build/Jmol.jar" />
+  </target>
+
+  	
+</project>
