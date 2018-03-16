@@ -1,7 +1,6 @@
 Jmol-SwingJS building notes
 
 3/16/2018 - Warning in build-app-only.xml
-
 "bootstrap class path not set in conjunction with -source 1.6"
 
 ---------------------------------------------------------------------------------------------------------------------
