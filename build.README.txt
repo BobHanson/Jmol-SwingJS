@@ -1,5 +1,11 @@
 Jmol-SwingJS building notes
 
+3/16/2018 - Warning in build-app-only.xml
+
+"bootstrap class path not set in conjunction with -source 1.6"
+
+---------------------------------------------------------------------------------------------------------------------
+
 3/15/2018 - the details of describing the building Jmol-SwingJS are still being worked out. This is a first attempt:
 
 The Jmol-SwingJS Eclipse/j2s project requires Eclipse Neon or later as well as two 
