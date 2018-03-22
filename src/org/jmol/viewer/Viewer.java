@@ -4023,7 +4023,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         try {
           int pt = id.indexOf("/");
           String database = id.substring(0, pt);
-          id = g.resolveDataBase(database, id.substring(pt + 1), null);
+          id = JC.resolveDataBase(database, id.substring(pt + 1), null);
           if (id != null && id.startsWith("'"))
             id = evaluateExpression(id).toString();
           return (id == null || id.length() == 0 ? name : id);
@@ -4033,7 +4033,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       } else {
         if (id.endsWith(".mmtf")) {
           id = id.substring(0, id.indexOf(".mmtf"));
-          return g.resolveDataBase("mmtf", id.toUpperCase(), null);
+          return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
         }
         format = (
         // following is temporary, until issues are resolved for AJAX asych
@@ -4047,7 +4047,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       if (id.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat)) {
           format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
       }
-      return g.resolveDataBase(null, id, format);
+      return JC.resolveDataBase(null, id, format);
     case '*':
       // European Bioinformatics Institute
       int pt = name.lastIndexOf("/");
@@ -4055,27 +4055,27 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         //  *dom/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
-        return PT.rep(g.resolveDataBase("map", id, null), "%TYPE", format);
+        return PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*val/")) {
         //  *val/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
-        return PT.rep(g.resolveDataBase("map", id, null), "%TYPE", format);
+        return PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*rna3d/")) {
         //  *rna3d/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 6 ? name.substring(6) : "loops");
-        return PT.rep(g.resolveDataBase("rna3d", id, null), "%TYPE", format);
+        return PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
       } else if (name.startsWith("*dssr--")) {
         id = name.substring(pt + 1);
-        id = g.resolveDataBase("dssr", id, null);
+        id = JC.resolveDataBase("dssr", id, null);
         return id +"%20" + PT.rep(name.substring(5, pt), " ", "%20");
       } else if (name.startsWith("*dssr/")) {
         id = name.substring(pt + 1);
-        return g.resolveDataBase("dssr", id, null);
+        return JC.resolveDataBase("dssr", id, null);
       } else if (name.startsWith("*dssr1/")) {
         id = name.substring(pt + 1);
-        return g.resolveDataBase("dssr1", id, null);
+        return JC.resolveDataBase("dssr1", id, null);
       }
       // these are processed in SmarterJmolAdapter
       String pdbe = "pdbe";
@@ -4083,7 +4083,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         pdbe = "pdbe2";
         id = id.substring(0, 4);
       }
-      return g.resolveDataBase(pdbe, id, null);
+      return JC.resolveDataBase(pdbe, id, null);
     case ':': // PubChem
       format = g.pubChemFormat;
       if (id.equals("")) {
@@ -4181,7 +4181,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         ciftype = id.substring(pt + 1);
         id = id.substring(0, pt);
       }
-      id = g.resolveDataBase((isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""), id,
+      id = JC.resolveDataBase((isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""), id,
           null);
       if ("cif".equals(ciftype)) {
         id = id.replace("bcif", "cif");
