@@ -83,7 +83,8 @@ public class Tensor {
     ";efg........" +
     ";isc........" +
     ";charge....." +
-    ";quadrupole.";
+    ";quadrupole." +
+    ";raman......";
   private static int getType(String type) {
     int pt = type.indexOf("_");
     if (pt >= 0)
@@ -105,6 +106,7 @@ public class Tensor {
   public static final int TYPE_ISC        = 6;
   public static final int TYPE_CHARGE     = 7;
   public static final int TYPE_QUADRUPOLE = 8;
+  public static final int TYPE_RAMAN      = 9;
 
   public double[][] asymMatrix;
   public double[][] symMatrix;    
