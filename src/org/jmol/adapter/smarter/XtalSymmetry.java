@@ -835,8 +835,9 @@ public class XtalSymmetry {
     int j00 = (bsAtoms == null ? firstSymmetryAtom : bsAtoms.nextSetBit(0));
     out: for (int iSym = 0; iSym < nOperations; iSym++) {
 
-      if (isBaseCell && iSym == 0 || latticeOnly && iSym > 0
-          && iSym != latticeOp || excludedOps != null && excludedOps.get(iSym))
+      if (isBaseCell && iSym == 0 
+          || latticeOnly && iSym > 0 && (iSym % latticeOp) != 0 
+          || excludedOps != null && excludedOps.get(iSym))
         continue;
 
       /* pt0 sets the range of points cross-checked. 

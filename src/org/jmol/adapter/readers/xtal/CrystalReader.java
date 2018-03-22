@@ -45,6 +45,8 @@ import javajs.util.Lst;
 import javajs.util.SB;
 
 import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
 
 
 
@@ -148,8 +150,9 @@ public class CrystalReader extends AtomSetCollectionReader {
         if (setPrimitiveMapping())
           return true; // just for properties
         // no input coordinates -- continue;
+      } else {
+        readLatticeParams(true);
       }
-      readLatticeParams(true);
       if (!isPrimitive) {
         discardLinesUntilContains(" TRANSFORMATION");
         readTransformationMatrix();
@@ -306,6 +309,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     createAtomsFromCoordLines();
     if (energy != null)
       setEnergy();
+    isFinalizing = true;
     finalizeReaderASCR();
   }
 
@@ -547,6 +551,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 
 
   private Lst<String> vPrimitiveMapping;
+  private boolean isSymmetryApplied, isFinalizing;
   private void readPrimitiveMapping() throws Exception {
     if (havePrimitiveMapping)
       return;
@@ -917,6 +922,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   private boolean readFrequencies() throws Exception {
     energy = null; // don't set energy for these models
+    
     discardLinesUntilContains("MODES");
     // This line is always there
     boolean haveIntensities = (line.indexOf("INTENS") >= 0);
@@ -938,11 +944,19 @@ public class CrystalReader extends AtomSetCollectionReader {
       for (int i = i0; i <= i1; i++)
         vData.addLast(data);
     }
-    discardLinesUntilContains(isLongMode ? "LO MODES FOR IRREP"
+    
+    String test = (isLongMode ? "LO MODES FOR IRREP"
         : isVersion3 ? "THE CORRESPONDING MODES"
             : "NORMAL MODES NORMALIZED TO CLASSICAL AMPLITUDES");
+    
     rd();
-    int lastAtomCount = -1;
+    Lst<String> ramanData = null;
+    if (line.indexOf("<RAMAN>") >= 0)
+      ramanData = readRaman(null);
+    if (!line.contains(test))
+      discardLinesUntilContains(test);
+    rd();
+    int modelAtomCount = -1;
     while (rd() != null && line.startsWith(" FREQ(CM**-1)")) {
       String[] tokens = PT.getTokens(line.substring(15));
       float[] frequencies = new float[tokens.length];
@@ -955,28 +969,36 @@ public class CrystalReader extends AtomSetCollectionReader {
       boolean[] ignore = new boolean[frequencyCount];
       int iAtom0 = 0;
       int nData = vData.size();
+      boolean isFirst = true;
       for (int i = 0; i < frequencyCount; i++) {
         tokens = vData.get(vibrationNumber % nData);
         ignore[i] = (!doGetVibration(++vibrationNumber) || tokens == null);
         if (ignore[i])
           continue;
+        // this needs to be JUST the most recent atom set
         applySymmetryAndSetTrajectory();
-        lastAtomCount = cloneLastAtomSet(ac, null);
-        if (i == 0)
+        if (isFirst)
+          modelAtomCount = asc.getLastAtomSetAtomCount();
+        int nAtoms = cloneLastAtomSet(ac, null);
+        if (isFirst) {
           iAtom0 = asc.getLastAtomSetAtomIndex();
+          isFirst = false;
+        }
         setFreqValue(frequencies[i], tokens);
       }
       rd();
-      fillFrequencyData(iAtom0, 0, lastAtomCount, ignore, false,
+      fillFrequencyData(iAtom0, freqAtomCount, modelAtomCount, ignore, false,
           14, 10, atomFrag, 0, null);
       rd();
     }
+    if (ramanData != null)
+      readRaman(ramanData);
     return true;
   }
 
   private void setFreqValue(float freq, String[] data) {
     String activity = "IR: " + data[2] + ", Ram.: " + data[3];
-    asc.setAtomSetFrequency(null, activity, "" + freq, null);
+    asc.setAtomSetFrequency(vibrationNumber, null, activity, "" + freq, null);
     asc.setAtomSetModelProperty("IRintensity", data[1] + " km/Mole");
     asc.setAtomSetModelProperty("vibrationalSymmetry", data[0]);
     asc.setAtomSetModelProperty("IRactivity", data[2]);
@@ -985,6 +1007,102 @@ public class CrystalReader extends AtomSetCollectionReader {
         + DF.formatDecimal(freq, 2) + " cm-1 ("
         + DF.formatDecimal(Float.parseFloat(data[1]), 0)
         + " km/Mole), " + activity);
+  }
+
+//  POLYCRYSTALLINE ISOTROPIC INTENSITIES (ARBITRARY UNITS)
+
+//    MODES    FREQUENCIES           I_tot     I_par    I_perp
+//  ----------------------------------------------------------------
+//    4-   5      396.8552 (E  )      0.03      0.01      0.01
+//    6-   7      489.6887 (E  )      0.07      0.04      0.03
+//0         1         2         3         4         5
+//012345678901234567890123456789012345678901234567890123456789
+
+//  SINGLE CRYSTAL DIRECTIONAL INTENSITIES (ARBITRARY UNITS)
+//
+//    MODES    FREQUENCIES          I_xx    I_xy    I_xz    I_yy    I_yz    I_zz
+//  ----------------------------------------------------------------------------
+//    4-   5      396.8552 (E  )    0.00    0.02    0.02    0.00    0.00    0.00
+//    6-   7      489.6887 (E  )    0.00    0.05    0.05    0.00    0.00    0.00
+//0         1         2         3         4         5         6         7     
+//012345678901234567890123456789012345678901234567890123456789012345678901234567
+
+  @SuppressWarnings("unchecked")
+  private Lst<String> readRaman(Lst<String> ramanData) throws Exception {
+    if (ramanData == null) {
+      ramanData = new Lst<String>();
+      rd();
+      while (rd() != null && !line.contains("<RAMAN>"))
+        ramanData.addLast(line);
+      return ramanData;
+    }
+    Map<String, Object> info;
+    int i = 0;
+    int  n = ramanData.size();
+    for (; i < n; i++) {
+      line = ramanData.get(i);
+      if (line.contains("---"))
+        break;
+    }
+    for (++i; i < n; i++) {
+     line = ramanData.get(i);
+     if (line.length() == 0)
+       break;
+      int mode1 = parseIntRange(line, 1, 5);
+      int mode2 = parseIntRange(line, 6, 10);
+      float i_tot = parseFloatRange(line, 30, 40);
+      float i_par = parseFloatRange(line, 40, 50);
+      float i_perp = parseFloatRange(line, 50, 60);
+      for (int i0 = 0, mode = mode1; mode <= mode2; mode++) {
+        int imodel = getModelForMode(i0, mode);
+        if (imodel < 0)
+          continue;
+        i0 = imodel + 1;
+        info = (Map<String, Object>) asc.getAtomSetAuxiliaryInfoValue(imodel, "ramanInfo");
+        if (info == null)
+          asc.setModelInfoForSet("ramanInfo", info = new Hashtable<String, Object>(), imodel);
+        info.put("isotropicIntensities", new float[] {i_tot, i_par, i_perp});
+      }
+    }
+    for (; i < n; i++) {
+      line = ramanData.get(i);
+      if (line.contains("---"))
+        break;
+    }
+    for (++i; i < n; i++) {
+      line = ramanData.get(i);
+      if (line.length() == 0)
+        break;
+      int mode1 = parseIntRange(line, 1, 5);
+      int mode2 = parseIntRange(line, 6, 10);
+      //I_xx    I_xy    I_xz    I_yy    I_yz    I_zz
+      float i_xx = parseFloatRange(line, 30, 38);
+      float i_xy = parseFloatRange(line, 38, 46);
+      float i_xz = parseFloatRange(line, 46, 54);
+      float i_yy = parseFloatRange(line, 54, 62);
+      float i_yz = parseFloatRange(line, 62, 70);
+      float i_zz = parseFloatRange(line, 70, 78);
+      for (int i0 = 0, mode = mode1; mode <= mode2; mode++) {
+        int imodel = getModelForMode(i0, mode);
+        if (imodel < 0)
+          continue;
+        i0 = imodel + 1;
+        double[][] a = new double[][]{{i_xx, i_xy, i_xz}, {i_xy, i_yy, i_yz}, {i_xz, i_yz, i_zz}};
+        asc.atoms[asc.getAtomSetAtomIndex(imodel)].addTensor(new Tensor().setFromAsymmetricTensor(a, "raman", "mode" + mode), "raman", false);
+      }
+    }
+    return null;
+  }
+
+  private int getModelForMode(int i0, int mode) {
+    int n = asc.atomSetCount;
+    for (int i = i0; i < n; i++) {
+      Integer imode = (Integer) asc.getAtomSetAuxiliaryInfoValue(i, "vibrationalMode");
+      int m = (imode == null ? 0 : imode.intValue());
+      if (m == mode)
+        return i;
+    }
+    return -1;
   }
 
   // MAX GRADIENT      0.000967  THRESHOLD             
@@ -1134,4 +1252,14 @@ public class CrystalReader extends AtomSetCollectionReader {
     appendLoadNote("Ellipsoids set \"charge\": Born charge tensors");
     return false;
   }
+
+  
+  @Override
+  public void applySymmetryAndSetTrajectory() throws Exception {
+    // overridden in many readers
+    if (!isSymmetryApplied || !isFinalizing)
+      applySymTrajASCR();
+  }
+  
+
 }

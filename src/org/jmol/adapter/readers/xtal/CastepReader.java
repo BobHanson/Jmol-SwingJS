@@ -817,7 +817,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       }
       if (isTrajectory)
         asc.setTrajectory();
-      asc.setAtomSetFrequency(null, null, "" + freq, null);
+      asc.setAtomSetFrequency(vibrationNumber, null, null, "" + freq, null);
       asc.setAtomSetName(DF.formatDecimal(freq, 2)
           + " cm-1 " + qname);
     }

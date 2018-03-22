@@ -344,9 +344,9 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
       cloneLastAtomSet(ac, null);
       if (!ignore[0]) {
         asc.iSet = ++pt;
-        asc.setAtomSetFrequency(null, null,
-            line.substring(line.indexOf("2PiTHz") + 6, line.indexOf("c") - 1)
-                .trim(), null);
+        asc.setAtomSetFrequency(vibrationNumber, null,
+            null, line.substring(line.indexOf("2PiTHz") + 6, line.indexOf("c") - 1)
+                    .trim(), null);
       }
       rd();
       fillFrequencyData(iAtom0, ac, ac, ignore, true, 35, 12,

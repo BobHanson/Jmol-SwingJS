@@ -64,7 +64,7 @@ public class MoldenReader extends MopacSlaterReader {
     Logger.info(line);
     if (line.indexOf("[ATOMS]") == 0) {
       readAtoms();
-      modelAtomCount = asc.atomSetAtomCounts[0];
+      modelAtomCount = asc.getAtomSetAtomCount(0);
       if (asc.atomSetCount == 1 && moData != null)
         finalizeMOData(moData);
       return false;
@@ -475,7 +475,7 @@ public class MoldenReader extends MopacSlaterReader {
       if (haveVib)
         asc.cloneLastAtomSet();
       haveVib = true;
-      asc.setAtomSetFrequency(null, null, "" + Double.valueOf(frequencies.get(nFreq)), null);
+      asc.setAtomSetFrequency(vibrationNumber, null, null, "" + Double.valueOf(frequencies.get(nFreq)), null);
       int i0 = asc.getLastAtomSetAtomIndex();
       for (int i = 0; i < modelAtomCount; i++) {
         tokens = PT.getTokens(rd());

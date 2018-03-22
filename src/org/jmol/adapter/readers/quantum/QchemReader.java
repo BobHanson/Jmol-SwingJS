@@ -205,8 +205,8 @@ public class QchemReader extends MOReader {
         if (ignore[i])
           continue;
         asc.cloneLastAtomSet();
-        asc.setAtomSetFrequency("Job " + calculationNumber, 
-            null, frequencies[i + 1], null);
+        asc.setAtomSetFrequency(vibrationNumber, 
+            "Job " + calculationNumber, null, frequencies[i + 1], null);
       }
 
       // position to start reading the displacement vectors

@@ -93,7 +93,7 @@ public class XmlMolproReader extends XmlMOReader {
             if (units.startsWith("inverseCent"))
               units = "cm^-1";
           }
-          asc.setAtomSetFrequency(null, null, wavenumber, units);
+          asc.setAtomSetFrequency(vibrationNumber, null, null, wavenumber, units);
           setKeepChars(true);
         }
         return;

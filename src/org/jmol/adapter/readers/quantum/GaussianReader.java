@@ -704,7 +704,7 @@ public class GaussianReader extends MOReader {
           continue;  
         asc.cloneAtomSetWithBonds(true);
         // set the properties
-        String name = asc.setAtomSetFrequency("Calculation " + calculationNumber, symmetries[i], frequencies[i], null);
+        String name = asc.setAtomSetFrequency(vibrationNumber, "Calculation " + calculationNumber, symmetries[i], frequencies[i], null);
         appendLoadNote("model " + asc.atomSetCount + ": " + name);
         namedSets.set(asc.iSet);
         asc.setAtomSetModelProperty("ReducedMass",

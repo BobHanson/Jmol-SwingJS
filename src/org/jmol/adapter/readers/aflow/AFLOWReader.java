@@ -185,30 +185,7 @@ public class AFLOWReader extends VaspPoscarReader {
   }
 
   private void finalizeModel() throws Exception {
-    int n = asc.ac;
-    int nremoved = 0;
-    int i0 = asc.getLastAtomSetAtomIndex();
-    int nnow = 0;
-    for (int i = i0; i < n; i++) { 
-      if (!asc.bsAtoms.get(i)) {
-        nremoved++;
-        asc.ac--;
-        asc.atoms[i] = null;
-        continue;
-      } 
-      if (nremoved > 0) {
-        asc.atoms[asc.atoms[i].index = i - nremoved] = asc.atoms[i];
-        asc.atoms[i] = null;
-      }
-      nnow++;
-    }
-    asc.atomSetAtomCounts[asc.iSet] = nnow;
-    if (nnow == 0) {
-      asc.iSet--;
-      asc.atomSetCount--;
-    } else {
-      asc.bsAtoms.setBits(i0, i0 + nnow);
-    }
+    asc.removeLastUnselectedAtoms();
   }
 
   /**

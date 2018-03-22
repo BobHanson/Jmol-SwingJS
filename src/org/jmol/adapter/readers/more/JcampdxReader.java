@@ -357,7 +357,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       String id = (String) asc.getAtomSetAuxiliaryInfoValue(i,
           "modelID");
       if (havePeaks && !bsModels.get(i) && id.indexOf(".") >= 0) {
-        removeAtomSet(i);
+        asc.removeAtomSet(i);
         n--;
       }
     }
@@ -369,7 +369,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
         selectedModel = n - 1;
       for (int i = asc.atomSetCount; --i >= 0;)
         if (i + 1 != selectedModel)
-          removeAtomSet(i);
+          asc.removeAtomSet(i);
       if (n > 0)
         appendLoadNote((String) asc.getAtomSetAuxiliaryInfoValue(
             0, "name"));
@@ -443,48 +443,5 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
   public void setSpectrumPeaks(int nH, String piUnitsX, String piUnitsY) {
     // JSpecView only    
   }
-
-  /**
-   * note that sets must be iterated from LAST to FIRST
-   * not a general method -- would mess up if we had unit cells
-   * 
-   * @param imodel
-   */
-  private void removeAtomSet(int imodel) {
-    if (asc.bsAtoms == null)
-      asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-    int i0 = asc.atomSetAtomIndexes[imodel];
-    int nAtoms = asc.atomSetAtomCounts[imodel];
-    int i1 = i0 + nAtoms;
-    asc.bsAtoms.clearBits(i0, i1);
-    for (int i = i1; i < asc.ac; i++)
-      asc.atoms[i].atomSetIndex--;
-    for (int i = imodel + 1; i < asc.atomSetCount; i++) {
-      asc.atomSetAuxiliaryInfo[i - 1] = asc.atomSetAuxiliaryInfo[i];
-      asc.atomSetAtomIndexes[i - 1] = asc.atomSetAtomIndexes[i];
-      asc.atomSetBondCounts[i - 1] = asc.atomSetBondCounts[i];
-      asc.atomSetAtomCounts[i - 1] = asc.atomSetAtomCounts[i];
-      asc.atomSetNumbers[i - 1] = asc.atomSetNumbers[i];
-    }
-    for (int i = 0; i < asc.bondCount; i++)
-      asc.bonds[i].atomSetIndex = asc.atoms[asc.bonds[i].atomIndex1].atomSetIndex;
-    asc.atomSetAuxiliaryInfo[--asc.atomSetCount] = null;
-    int n = 0;
-    for (int i = 0; i < asc.structureCount; i++) {
-      Structure s = asc.structures[i];
-      if (s.modelStartEnd[0] == imodel && s.modelStartEnd[1] == imodel) {
-        asc.structures[i] = null;
-        n++;
-      }
-    }
-    if (n > 0) {
-      Structure[] ss = new Structure[asc.structureCount - n];
-      for (int i = 0, pt = 0; i < asc.structureCount; i++)
-        if (asc.structures[i] != null)
-          ss[pt++] = asc.structures[i];
-      asc.structures = ss;
-    }
-  }
-
 
 }

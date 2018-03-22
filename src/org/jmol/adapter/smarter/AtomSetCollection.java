@@ -37,6 +37,8 @@ import javajs.util.V3;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import javajs.util.BS;
+
+import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 
 @SuppressWarnings("unchecked")
@@ -93,11 +95,11 @@ public class AtomSetCollection {
   public int iSet = -1;
 
 
-  public int[] atomSetNumbers = new int[16];
-  public int[] atomSetAtomIndexes = new int[16];
-  public int[] atomSetAtomCounts = new int[16];
-  public int[] atomSetBondCounts = new int[16];
-  public Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
+  private int[] atomSetNumbers = new int[16];
+  private int[] atomSetAtomIndexes = new int[16];
+  private int[] atomSetAtomCounts = new int[16];
+  private int[] atomSetBondCounts = new int[16];
+  private Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
 
   public String errorMessage;
 
@@ -1054,13 +1056,15 @@ public class AtomSetCollection {
     setAtomSetModelProperty("Energy", "" + value);
   }
 
-  public String setAtomSetFrequency(String pathKey, String label, String freq,
-                                    String units) {
+  public String setAtomSetFrequency(int mode, String pathKey, String label,
+                                    String freq, String units) {
     setAtomSetModelProperty("FreqValue", freq);
     freq += " " + (units == null ? "cm^-1" : units);
     String name = (label == null ? "" : label + " ") + freq;
     setAtomSetName(name);
     setAtomSetModelProperty("Frequency", freq);
+    setAtomSetModelProperty("Mode", "" + mode);
+    setModelInfoForSet("vibrationalMode", Integer.valueOf(mode), iSet);
     if (label != null)
       setAtomSetModelProperty("FrequencyLabel", label);
     setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, (pathKey == null ? ""
@@ -1100,5 +1104,76 @@ public class AtomSetCollection {
     setInfo("trajectorySteps", trajectorySteps);
     setInfo("ignoreUnitCell", a.atomSetInfo.get("ignoreUnitCell"));
   }
+
+  /**
+   * note that sets must be iterated from LAST to FIRST
+   * not a general method -- would mess up if we had unit cells
+   * 
+   * @param imodel
+   */
+  public void removeAtomSet(int imodel) {
+    if (bsAtoms == null)
+      bsAtoms = BSUtil.newBitSet2(0, ac);
+    int i0 = atomSetAtomIndexes[imodel];
+    int nAtoms = atomSetAtomCounts[imodel];
+    int i1 = i0 + nAtoms;
+    bsAtoms.clearBits(i0, i1);
+    for (int i = i1; i < ac; i++)
+      atoms[i].atomSetIndex--;
+    for (int i = imodel + 1; i < atomSetCount; i++) {
+      atomSetAuxiliaryInfo[i - 1] = atomSetAuxiliaryInfo[i];
+      atomSetAtomIndexes[i - 1] = atomSetAtomIndexes[i];
+      atomSetBondCounts[i - 1] = atomSetBondCounts[i];
+      atomSetAtomCounts[i - 1] = atomSetAtomCounts[i];
+      atomSetNumbers[i - 1] = atomSetNumbers[i];
+    }
+    for (int i = 0; i < bondCount; i++)
+      bonds[i].atomSetIndex = atoms[bonds[i].atomIndex1].atomSetIndex;
+    atomSetAuxiliaryInfo[--atomSetCount] = null;
+    int n = 0;
+    for (int i = 0; i < structureCount; i++) {
+      Structure s = structures[i];
+      if (s.modelStartEnd[0] == imodel && s.modelStartEnd[1] == imodel) {
+        structures[i] = null;
+        n++;
+      }
+    }
+    if (n > 0) {
+      Structure[] ss = new Structure[structureCount - n];
+      for (int i = 0, pt = 0; i < structureCount; i++)
+        if (structures[i] != null)
+          ss[pt++] = structures[i];
+      structures = ss;
+    }
+  }
+
+  public void removeLastUnselectedAtoms() {
+    int n = ac;
+    int nremoved = 0;
+    int i0 = getLastAtomSetAtomIndex();
+    int nnow = 0;
+    for (int i = i0; i < n; i++) { 
+      if (!bsAtoms.get(i)) {
+        nremoved++;
+        ac--;
+        atoms[i] = null;
+        continue;
+      } 
+      if (nremoved > 0) {
+        atoms[atoms[i].index = i - nremoved] = atoms[i];
+        atoms[i] = null;
+      }
+      nnow++;
+    }
+    atomSetAtomCounts[iSet] = nnow;
+    if (nnow == 0) {
+      iSet--;
+      atomSetCount--;
+    } else {
+      bsAtoms.setBits(i0, i0 + nnow);
+    }
+  }
+
+
 
 }

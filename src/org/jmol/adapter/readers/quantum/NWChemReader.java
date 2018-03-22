@@ -529,7 +529,7 @@ public class NWChemReader extends MOReader {
         if (!firstTime)
           asc.cloneLastAtomSet();
         firstTime = false;
-        asc.setAtomSetFrequency(path, null, tokens[i], null);
+        asc.setAtomSetFrequency(vibrationNumber, path, null, tokens[i], null);
       }
       readLines(1);
       fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0, null);

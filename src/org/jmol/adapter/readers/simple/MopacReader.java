@@ -278,7 +278,7 @@ void processAtomicCharges() throws Exception {
       if (!bsOK.get(i))
         continue;
       asc.iSet = n++;
-      asc.setAtomSetFrequency(null, info[i][2], info[i][0], null);
+      asc.setAtomSetFrequency(vibrationNumber, null, info[i][2], info[i][0], null);
     }
   }
 }

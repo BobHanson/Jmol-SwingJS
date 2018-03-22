@@ -181,7 +181,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean isMolecular; // only for CIF so that it can read multiple unit cells
   protected int templateAtomCount;
   public int modelNumber;
-  protected int vibrationNumber;
+  public int vibrationNumber;
   public int desiredVibrationNumber = Integer.MIN_VALUE;
   protected BS bsModels;
   protected boolean useFileModelNumbers; // PDB, MMCIF only
@@ -1430,8 +1430,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       String[] valuesY = (isWide ? null : data[++i]);
       String[] valuesZ = (isWide ? null : data[++i]);
       int dataPt = values.length - (isWide ? nFreq * 3 : nFreq) - 1;
-      if (dataPt <0)
-        System.out.println("???");
       for (int j = 0, jj = 0; jj < nFreq; jj++) {
         ++dataPt;
         String x = values[dataPt];
