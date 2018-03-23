@@ -2,7 +2,7 @@ package jspecview.js2d;
 
 
 import javajs.api.GenericColor;
-import org.jmol.awtjs.Color;
+import javajs.awt.Color;
 import jspecview.common.ColorParameters;
 
 public class JsParameters extends ColorParameters {

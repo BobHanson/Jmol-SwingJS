@@ -15,7 +15,8 @@ import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.script.ScriptContext;
 import org.jmol.viewer.Viewer;
 
-import org.jmol.awtjs.Font;
+import javajs.awt.Font;
+
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;
 import javajs.util.Rdr;

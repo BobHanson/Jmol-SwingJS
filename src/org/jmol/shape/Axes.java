@@ -25,11 +25,12 @@ package org.jmol.shape;
 
 
 
-import org.jmol.awtjs.Font;
 import javajs.util.P3;
 import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
+
+import javajs.awt.Font;
 import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.viewer.JC;

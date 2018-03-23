@@ -43,7 +43,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.jmol.api.GenericMenuInterface;
 
-import org.jmol.awtjs.SC;
+import javajs.awt.SC;
 
 /**
  * all popup-related awt/swing class references are in this file.

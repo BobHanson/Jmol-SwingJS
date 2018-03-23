@@ -1,4 +1,6 @@
-package org.jmol.awtjs;
+package javajs.awt;
+
+import javajs.awt.event.HTMLWindowEvent;
 
 /**
  * SwingController is an interface that org.jmol.awtjs.swing classes will need.

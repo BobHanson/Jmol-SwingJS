@@ -6,8 +6,7 @@ import java.util.Map;
 import javax.swing.SwingConstants;
 
 import jspecview.api.PlatformDialog;
-import org.jmol.awtjs.Dimension;
-import org.jmol.awtjs.Color;
+
 import org.jmol.awtjs.swing.FlowLayout;
 import org.jmol.awtjs.swing.GridBagConstraints;
 import org.jmol.awtjs.swing.GridBagLayout;
@@ -24,6 +23,9 @@ import org.jmol.awtjs.swing.JSplitPane;
 import org.jmol.awtjs.swing.JTable;
 import org.jmol.awtjs.swing.JTextField;
 import org.jmol.awtjs.swing.ListSelectionModel;
+
+import javajs.awt.Color;
+import javajs.awt.Dimension;
 import jspecview.common.Annotation.AType;
 import jspecview.dialog.DialogManager;
 import jspecview.dialog.JSVDialog;

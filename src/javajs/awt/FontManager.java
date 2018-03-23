@@ -1,4 +1,4 @@
-package org.jmol.awtjs;
+package javajs.awt;
 
 /**
  * A generic interface for font queries.

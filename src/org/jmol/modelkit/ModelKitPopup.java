@@ -39,7 +39,7 @@ import org.jmol.popup.PopupResource;
 import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
 
-import org.jmol.awtjs.SC;
+import javajs.awt.SC;
 
 public class ModelKitPopup extends JmolGenericPopup {
 

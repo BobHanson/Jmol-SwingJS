@@ -33,7 +33,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import org.jmol.awtjs.event.Event;
+import javajs.awt.event.Event;
 import javajs.util.PT;
 
 import org.jmol.api.EventManager;

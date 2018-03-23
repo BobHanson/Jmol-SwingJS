@@ -37,8 +37,9 @@ import java.util.Properties;
 
 import javajs.api.GenericCifDataParser;
 import javajs.api.GenericZipTools;
-import org.jmol.awtjs.Dimension;
-import org.jmol.awtjs.Font;
+import javajs.awt.Dimension;
+import javajs.awt.Font;
+
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.DF;

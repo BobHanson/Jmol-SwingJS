@@ -30,7 +30,7 @@ import java.util.Map;
 import org.jmol.api.GenericImageDialog;
 import org.jmol.viewer.Viewer;
 
-import org.jmol.awtjs.Font;
+import javajs.awt.Font;
 
 /**
  * methods required by Jmol that access java.awt.Image

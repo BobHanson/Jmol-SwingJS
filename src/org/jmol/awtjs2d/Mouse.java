@@ -32,7 +32,7 @@ import org.jmol.api.GenericMouseInterface;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 
-import org.jmol.awtjs.event.Event;
+import javajs.awt.event.Event;
 import javajs.util.PT;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;

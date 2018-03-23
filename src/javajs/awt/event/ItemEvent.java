@@ -1,4 +1,4 @@
-package org.jmol.awtjs.event;
+package javajs.awt.event;
 
 
 public class ItemEvent extends Event {

@@ -1,6 +1,6 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.Dimension;
+import javajs.awt.Dimension;
 import javajs.util.BS;
 import javajs.util.SB;
 

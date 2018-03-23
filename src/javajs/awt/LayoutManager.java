@@ -1,4 +1,4 @@
-package org.jmol.awtjs;
+package javajs.awt;
 
 public class LayoutManager {
 

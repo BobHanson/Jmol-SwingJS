@@ -25,9 +25,9 @@
 package org.jmol.shape;
 
 
-import org.jmol.awtjs.Font;
-
 import org.jmol.modelset.TickInfo;
+
+import javajs.awt.Font;
 
 public abstract class FontLineShape extends Shape {
 

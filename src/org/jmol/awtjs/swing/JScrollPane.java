@@ -1,7 +1,7 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.Component;
-import org.jmol.awtjs.Dimension;
+import javajs.awt.Component;
+import javajs.awt.Dimension;
 import javajs.util.SB;
 
 public class JScrollPane extends JComponent {

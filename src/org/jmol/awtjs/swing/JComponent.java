@@ -1,6 +1,6 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.Container;
+import javajs.awt.Container;
 
 public abstract class JComponent extends Container {
 

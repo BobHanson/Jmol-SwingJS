@@ -27,8 +27,9 @@ import org.jmol.api.PlatformViewer;
 import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.PopupResource;
 
-import org.jmol.awtjs.Component;
-import org.jmol.awtjs.SC;
+import javajs.awt.Component;
+import javajs.awt.SC;
+
 import org.jmol.awtjs.swing.JPopupMenu;
 
 import jspecview.common.JSViewer;

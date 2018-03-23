@@ -34,7 +34,7 @@ import org.jmol.thread.JmolThread;
 import org.jmol.util.Escape;
 import org.jmol.util.GData;
 
-import org.jmol.awtjs.event.Event;
+import javajs.awt.event.Event;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.P3;

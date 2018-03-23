@@ -44,7 +44,8 @@ import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
 
-import org.jmol.awtjs.event.Event;
+import javajs.awt.event.Event;
+
 import javajs.util.AU;
 import javajs.util.P3;
 import javajs.util.PT;

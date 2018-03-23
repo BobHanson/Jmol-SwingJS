@@ -40,8 +40,8 @@ package jspecview.js2d;
 import org.jmol.api.GenericGraphics;
 
 import javajs.api.GenericColor;
-import org.jmol.awtjs.Color;
-import org.jmol.awtjs.Font;
+import javajs.awt.Color;
+import javajs.awt.Font;
 import javajs.util.CU;
 
 

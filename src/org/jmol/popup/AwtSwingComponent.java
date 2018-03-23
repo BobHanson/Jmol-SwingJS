@@ -14,7 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import org.jmol.awtjs.SC;
+import javajs.awt.SC;
 
 /**
  * A javax.swing implementation of SwingComponent 

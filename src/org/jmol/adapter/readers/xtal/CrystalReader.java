@@ -99,10 +99,10 @@ import java.util.Map;
 public class CrystalReader extends AtomSetCollectionReader {
 
   private boolean isVersion3;
-  private boolean isPrimitive;
+//  private boolean isPrimitive;
   private boolean isPolymer;
   private boolean isSlab;
-  private boolean isMolecular;
+//  private boolean isMolecular;
   private boolean haveCharges;
   //private boolean isFreqCalc;
   private boolean inputOnly;
@@ -309,7 +309,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     createAtomsFromCoordLines();
     if (energy != null)
       setEnergy();
-    isFinalizing = true;
     finalizeReaderASCR();
   }
 
@@ -551,7 +550,6 @@ public class CrystalReader extends AtomSetCollectionReader {
 
 
   private Lst<String> vPrimitiveMapping;
-  private boolean isSymmetryApplied, isFinalizing;
   private void readPrimitiveMapping() throws Exception {
     if (havePrimitiveMapping)
       return;
@@ -979,7 +977,7 @@ public class CrystalReader extends AtomSetCollectionReader {
         applySymmetryAndSetTrajectory();
         if (isFirst)
           modelAtomCount = asc.getLastAtomSetAtomCount();
-        int nAtoms = cloneLastAtomSet(ac, null);
+        cloneLastAtomSet(ac, null);
         if (isFirst) {
           iAtom0 = asc.getLastAtomSetAtomIndex();
           isFirst = false;
@@ -1252,14 +1250,5 @@ public class CrystalReader extends AtomSetCollectionReader {
     appendLoadNote("Ellipsoids set \"charge\": Born charge tensors");
     return false;
   }
-
-  
-  @Override
-  public void applySymmetryAndSetTrajectory() throws Exception {
-    // overridden in many readers
-    if (!isSymmetryApplied || !isFinalizing)
-      applySymTrajASCR();
-  }
-  
 
 }

@@ -35,7 +35,7 @@ import jspecview.common.JSVersion;
 import jspecview.common.PanelNode;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
-import org.jmol.awtjs.SC;
+import javajs.awt.SC;
 import javajs.util.Lst;
 
 abstract public class JSVGenericPopup extends GenericSwingPopup implements

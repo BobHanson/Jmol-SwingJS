@@ -25,15 +25,16 @@ package org.jmol.popup;
 
 
 import org.jmol.api.GenericMenuInterface;
-
-import org.jmol.awtjs.Component;
-import org.jmol.awtjs.SC;
-import org.jmol.awtjs.event.ActionEvent;
-import org.jmol.awtjs.event.ItemEvent;
+import javajs.awt.event.ActionEvent;
+import javajs.awt.event.ItemEvent;
 import org.jmol.awtjs.swing.ButtonGroup;
 import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.awtjs.swing.JCheckBoxMenuItem;
 import org.jmol.awtjs.swing.JRadioButtonMenuItem;
+
+import javajs.awt.Component;
+import javajs.awt.SC;
+
 import org.jmol.awtjs.swing.JMenu;
 import org.jmol.awtjs.swing.JMenuItem;
 

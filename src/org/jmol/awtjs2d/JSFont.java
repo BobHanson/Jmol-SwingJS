@@ -1,6 +1,6 @@
 package org.jmol.awtjs2d;
 
-import org.jmol.awtjs.Font;
+import javajs.awt.Font;
 
 /**
  * methods required by Jmol that access java.awt.Font

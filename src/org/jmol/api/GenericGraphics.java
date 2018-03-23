@@ -1,7 +1,7 @@
 package org.jmol.api;
 
 import javajs.api.GenericColor;
-import org.jmol.awtjs.Font;
+import javajs.awt.Font;
 
 
 

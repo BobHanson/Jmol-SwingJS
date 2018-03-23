@@ -20,8 +20,7 @@ import javajs.util.P3;
 import javajs.util.SB;
 import javajs.api.BytePoster;
 import javajs.api.JSInterface;
-import org.jmol.awtjs.Dimension;
-
+import javajs.awt.Dimension;
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericGraphics;
 import org.jmol.api.GenericPlatform;

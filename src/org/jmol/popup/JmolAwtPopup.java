@@ -33,7 +33,7 @@ import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.viewer.Viewer;
 
-import org.jmol.awtjs.SC;
+import javajs.awt.SC;
 
 public class JmolAwtPopup extends JmolGenericPopup {
 

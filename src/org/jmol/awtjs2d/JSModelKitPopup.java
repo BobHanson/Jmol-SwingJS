@@ -23,8 +23,6 @@
  */
 package org.jmol.awtjs2d;
 
-import org.jmol.awtjs.Component;
-import org.jmol.awtjs.SC;
 import org.jmol.awtjs.swing.JPopupMenu;
 
 import org.jmol.api.PlatformViewer;
@@ -36,6 +34,9 @@ import org.jmol.popup.PopupResource;
 //import org.jmol.util.Elements;
 import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
+
+import javajs.awt.Component;
+import javajs.awt.SC;
 
 public class JSModelKitPopup extends JmolGenericPopup {
 
