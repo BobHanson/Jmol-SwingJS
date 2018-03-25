@@ -1386,8 +1386,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     while (rd().startsWith(" ATOM")) {
       int index = parseIntAt(line, 5) - 1;
       Atom atom = atoms[index];
-      if (atom == null)
-        System.out.println("???");
       readLines(2);
       double[][] a = new double[3][3];
       for (int i = 0; i < 3; i++) {
