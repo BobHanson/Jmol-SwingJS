@@ -3,6 +3,7 @@ package javajs.util;
 import java.awt.Toolkit;
 import java.awt.event.InvocationEvent;
 
+//import javajs.J2SRequireImport;
 import javajs.api.JSFunction;
 
 
@@ -14,15 +15,13 @@ import javajs.api.JSFunction;
  * 
  * There are three states: INIT, LOOP, and DONE.
  * 
- * These states are passed into run1.
- * 
- * For many thread uses, it is easier just to use javax.Timer, which just
- * does a timeout followed by an posting an ActionEvent. 
+ * These states are passed into run1
  * 
  * 
  * @author Bob Hanson
  * 
  */
+//@J2SRequireImport(swingjs.JSToolkit.class)
 public abstract class JSThread extends Thread implements JSFunction {
 
 	public static final int INIT = 0;
@@ -59,10 +58,11 @@ public abstract class JSThread extends Thread implements JSFunction {
 	@Override
 	public synchronized void start() {
 
+		
 		/**
 		 * @j2sNative
 		 * 
-		 *            swingjs.JSToolkit.dispatch(this, 1, 0);
+		 * 			  Clazz.load("swingjs.JSToolkit").dispatch$O$I$I(this, 1, 0);
 		 * 
 		 */
 		{
@@ -174,7 +174,7 @@ public abstract class JSThread extends Thread implements JSFunction {
 
 	/**
 	 * 
-	 * @param r
+	 * @param r2
 	 * @param state
 	 * @return true if we should interrupt (i.e. JavaScript)
 	 * @throws InterruptedException
@@ -200,9 +200,10 @@ public abstract class JSThread extends Thread implements JSFunction {
 		 * @j2sNative
 		 * 
 		 *            setTimeout(
-		 *              function() {java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(new java.awt.event.InvocationEvent(me, r))}, 
-		 *              delay
-		 *             );
+		 *              function() {
+		 *              java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent$java_awt_AWTEvent(
+		 *              Clazz.new_(java.awt.event.InvocationEvent.c$$O$Runnable,[me, r]))}, 
+		 *              delay);
 		 * 
 		 */
 		{

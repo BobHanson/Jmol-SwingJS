@@ -9,27 +9,26 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 
-import java.util.Map;
-
-import javajs.util.CU;
-import javajs.util.OC;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.SB;
-import javajs.api.BytePoster;
-import javajs.api.JSInterface;
-import javajs.awt.Dimension;
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericGraphics;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.util.Logger;
 
+import javajs.api.BytePoster;
+import javajs.awt.Component;
+import javajs.awt.Dimension;
+import javajs.awt.SC;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.OC;
+import javajs.util.P3;
 import javajs.util.PT;
-
-
+import javajs.util.SB;
 import jspecview.api.ExportInterface;
 import jspecview.api.JSVFileHelper;
 import jspecview.api.JSVMainPanel;
@@ -42,10 +41,10 @@ import jspecview.api.ScriptInterface;
 import jspecview.api.VisibleInterface;
 import jspecview.api.js.JSVAppletObject;
 import jspecview.common.Annotation.AType;
-import jspecview.common.Spectrum.IRMode;
 import jspecview.common.PanelData.LinkMode;
-import jspecview.dialog.JSVDialog;
+import jspecview.common.Spectrum.IRMode;
 import jspecview.dialog.DialogManager;
+import jspecview.dialog.JSVDialog;
 import jspecview.exception.JSVException;
 import jspecview.source.JDXReader;
 import jspecview.source.JDXSource;
@@ -1751,6 +1750,10 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 		return html5Applet;
 	}
 
+	/**
+   * @param fileName 
+	 * @param flags  
+   */
 	public void openFileAsyncSpecial(String fileName, int flags) {
 		String ans = (currentSource == null ? "NO" : getDialogManager()
 				.getDialogInput(this,
@@ -2195,6 +2198,14 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 		}
 		System.out.println(s);		
 	}
+
+  public void menuShowPopup(SC popup, boolean isTainted, int x, int y) {
+    try {
+      ((JPopupMenu) popup).show(isTainted ? (Component) getApplet() : null, x, y);
+    } catch (Exception e) {
+      // ignore
+    }
+  }
 
 
 }

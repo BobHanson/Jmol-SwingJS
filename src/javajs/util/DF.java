@@ -3,6 +3,9 @@
  * $Date: 2007-04-26 16:57:51 -0500 (Thu, 26 Apr 2007) $
  * $Revision: 7502 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net

@@ -3,6 +3,9 @@
  * $Date: 2005-11-10 09:52:44 -0600 (Thu, 10 Nov 2005) $
  * $Revision: 4255 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -27,10 +30,11 @@ import javajs.api.EigenInterface;
 
 import javajs.api.Interface;
 
-/**
- * Just some generally useful vector measurements
- * 
- */
+
+
+
+//import org.jmol.script.T;
+
 final public class Measure {
 
   public final static float radiansPerDegree = (float) (2 * Math.PI / 360);

@@ -107,7 +107,7 @@ public class Rdr implements GenericLineReader {
    * Read a UTF-8 byte array fully, converting it to a String.
    * Called by Jmol's XMLReaders
    * 
-   * @param bis
+   * @param bytes
    * @return a UTF-8 string
    */
   public static String bytesToUTF8String(byte[] bytes) {
@@ -154,7 +154,7 @@ public class Rdr implements GenericLineReader {
    * This method is specifically for strings that are marked for UTF 8 or 16.
    * 
    * @param bytes
-   * @return
+   * @return UTF-decoded bytes
    */
 	public static String fixUTF(byte[] bytes) {
 		Encoding encoding = getUTFEncoding(bytes);
@@ -302,7 +302,7 @@ public class Rdr implements GenericLineReader {
   }
 
   public static byte[] getMagic(InputStream is, int n) {
-    byte[] abMagic = new byte[n];    
+    byte[] abMagic = new byte[n];
 //    /**
 //     * @j2sNative
 //     * 
@@ -349,6 +349,14 @@ public class Rdr implements GenericLineReader {
   public static BufferedReader getBR(String string) {
     return new BufferedReader(new StringReader(string));
   }
+
+  
+	public static BufferedInputStream toBIS(Object o) {
+		return (AU.isAB(o) ? getBIS((byte[]) o)
+				: o instanceof SB ? getBIS(Rdr.getBytesFromSB((SB) o))
+						: o instanceof String ? getBIS(((String) o).getBytes()) : null);
+	}
+
 
   /**
    * Drill down into a GZIP stack until no more layers.
