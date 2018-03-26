@@ -1305,32 +1305,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
-   * fills an array with a predefined number of lines of data that is 
-   * arranged in fixed FORTRAN-like column format
-   *   
-   * @param data
-   * @param col0
-   * @param colWidth
-   * @param minLineLen TODO
-   * @throws Exception
-   */
-  protected void fillDataBlockFixed(String[][] data, int col0, int colWidth, int minLineLen)
-      throws Exception {
-    if (colWidth == 0) {
-      fillDataBlock(data, minLineLen);
-      return;
-    }
-    int nLines = data.length;
-    for (int i = 0; i < nLines; i++) {
-      discardLinesUntilNonBlank();
-      int nFields = (line.length() - col0 + 1) / colWidth; // Dmol reader is one short
-      data[i] = new String[nFields];
-      for (int j = 0, start = col0; j < nFields; j++, start += colWidth)
-        data[i][j] = line.substring(start, Math.min(line.length(), start + colWidth));
-    }
-  }
-
-  /**
    * fills an array with a pre-defined number of lines of token data,
    * skipping blank lines in the process
    * 
@@ -1388,34 +1362,37 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * space-separated columns.
    * 
    * @param iAtom0
-   *          the first atom to be assigned a frequency
+   *        the first atom to be assigned a frequency
    * @param ac
-   *          the number of atoms to be assigned
+   *        the number of atoms to be assigned
    * @param modelAtomCount
-   *          the number of atoms in each model
+   *        the number of atoms in each model
    * @param ignore
-   *          the frequencies to ignore because the user has selected only
-   *          certain vibrations to be read or for whatever reason; length
-   *          serves to set the number of frequencies to be read
+   *        the frequencies to ignore because the user has selected only certain
+   *        vibrations to be read or for whatever reason; length serves to set
+   *        the number of frequencies to be read
    * @param isWide
-   *          when TRUE, this is a table that has X Y Z for each mode within the
-   *          same row; when FALSE, this is a table that has X Y Z for each mode
-   *          on a separate line.
+   *        when TRUE, this is a table that has X Y Z for each mode within the
+   *        same row; when FALSE, this is a table that has X Y Z for each mode
+   *        on a separate line.
    * @param col0
-   *          the column in which data starts
+   *        the column in which data starts
    * @param colWidth
-   *          the width of the data columns
+   *        the width of the data columns
    * @param atomIndexes
-   *          an array either null or indicating exactly which atoms get the
-   *          frequencies (used by CrystalReader)
-   * @param minLineLen TODO
-   * @param data TODO
+   *        an array either null or indicating exactly which atoms get the
+   *        frequencies (used by CrystalReader)
+   * @param minLineLen
+   *        TODO
+   * @param data
+   *        TODO
    * @throws Exception
    */
-  protected void fillFrequencyData(int iAtom0, int ac,
-                                   int modelAtomCount, boolean[] ignore,
-                                   boolean isWide, int col0, int colWidth,
-                                   int[] atomIndexes, int minLineLen, String[][] data) throws Exception {
+  protected void fillFrequencyData(int iAtom0, int ac, int modelAtomCount,
+                                   boolean[] ignore, boolean isWide, int col0,
+                                   int colWidth, int[] atomIndexes,
+                                   int minLineLen, String[][] data)
+      throws Exception {
     boolean withSymmetry = (modelAtomCount != ac && data == null);
     if (ac == 0 && atomIndexes != null)
       ac = atomIndexes.length;
@@ -1424,6 +1401,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (data == null) {
       data = new String[nLines][];
       fillDataBlockFixed(data, col0, colWidth, minLineLen);
+    } else if (!isWide) {
+      // Gaussian high precision - get atom index at ptNonblank + 1
+      int ptNonblank = minLineLen;
+      fillDataBlockFixed(data, col0, colWidth, -ptNonblank);
+      if (data[0] == null)
+        return;
+      iAtom0 += parseIntAt(line, ptNonblank - 5) - 1;
     }
     for (int i = 0, atomPt = 0; i < nLines; i++, atomPt++) {
       String[] values = data[i];
@@ -1443,12 +1427,45 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         int iAtom = (atomIndexes == null ? atomPt : atomIndexes[atomPt]);
         if (iAtom < 0)
           continue;
+        iAtom += iAtom0 + modelAtomCount * j++;
         if (debugging)
-          Logger.debug("atom " + iAtom + " vib" + j + ": " + vx + " " + vy + " "
-              + vz);
-        asc.addVibrationVectorWithSymmetry(iAtom0 + modelAtomCount * j++
-            + iAtom, vx, vy, vz, withSymmetry);
+          Logger.debug("atom " + iAtom + " vib" + j + ": " + vx + " " + vy
+              + " " + vz);
+        asc.addVibrationVectorWithSymmetry(iAtom, vx, vy, vz, withSymmetry);
       }
+    }
+  }
+
+  /**
+   * Fills an array with a predefined number of lines of data that is 
+   * arranged in fixed FORTRAN-like column format.
+   * 
+   * Used exclusively for frequency data
+   *   
+   * @param data
+   * @param col0
+   * @param colWidth
+   * @param minLineLen or -ptNonblank
+   * @throws Exception
+   */
+  protected void fillDataBlockFixed(String[][] data, int col0, int colWidth, int minLineLen)
+      throws Exception {
+    if (colWidth == 0) {
+      fillDataBlock(data, minLineLen);
+      return;
+    }
+    int nLines = data.length;
+    for (int i = 0; i < nLines; i++) {
+      discardLinesUntilNonBlank();
+      // neg minLineLen is a nonblank pt
+      if (minLineLen < 0 && line.charAt(-minLineLen) == ' ') {
+        data[0] = null;
+        return;
+      }
+      int nFields = (line.length() - col0 + 1) / colWidth; // Dmol reader is one short
+      data[i] = new String[nFields];
+      for (int j = 0, start = col0; j < nFields; j++, start += colWidth)
+        data[i][j] = line.substring(start, Math.min(line.length(), start + colWidth));
     }
   }
 

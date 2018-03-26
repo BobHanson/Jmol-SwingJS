@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.BS;
 import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.M3;
@@ -1238,6 +1237,7 @@ public class CrystalReader extends AtomSetCollectionReader {
         asc.atoms[asc.getAtomSetAtomIndex(imodel)].addTensor(new Tensor().setFromAsymmetricTensor(a, "raman", "mode" + mode), "raman", false);
       }
     }
+    appendLoadNote("Ellipsoids set \"raman\": Raman tensors");
     return null;
   }
 
@@ -1348,26 +1348,30 @@ public class CrystalReader extends AtomSetCollectionReader {
   // TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT POLI        TELAPSE        0.05 TCPU        0.04
 
   private boolean getQuadrupoleTensors() throws Exception {
-     readLines(6);
-     Atom[] atoms = asc.atoms;
-     while (rd() != null  && line.startsWith(" *** ATOM")) {
-       String[] tokens = getTokens();
-       int index = parseIntStr(tokens[3]) - 1;
-       tokens = PT.getTokens(readLines(3));
-       V3[] vectors = new V3[3];
-       for (int i = 0; i < 3; i++) {
-         vectors[i] = V3.newV(directLatticeVectors[i]);
-         vectors[i].normalize();
-       }
-      atoms[index].addTensor(new Tensor().setFromEigenVectors(vectors, 
-           new float[] {parseFloatStr(tokens[1]), 
-           parseFloatStr(tokens[3]), 
-           parseFloatStr(tokens[5]) }, "quadrupole", atoms[index].atomName, null), null, false);
-       rd();
-     }
-     appendLoadNote("Ellipsoids set \"quadrupole\": Quadrupole tensors");
-     return true;
-   }
+    readLines(6);
+    Atom[] atoms = asc.atoms;
+    V3[] vectors = new V3[3];
+    if (directLatticeVectors == null)
+      vectors = new V3[] { V3.new3(1, 0, 0), V3.new3(0, 1, 0),
+          V3.new3(0, 0, 1) };
+    else
+      for (int i = 0; i < 3; i++) {
+        vectors[i] = V3.newV(directLatticeVectors[i]);
+        vectors[i].normalize();
+      }
+    while (rd() != null && line.startsWith(" *** ATOM")) {
+      String[] tokens = getTokens();
+      int index = parseIntStr(tokens[3]) - 1;
+      tokens = PT.getTokens(readLines(3));
+      atoms[index].addTensor(new Tensor().setFromEigenVectors(vectors,
+          new float[] { parseFloatStr(tokens[1]), parseFloatStr(tokens[3]),
+              parseFloatStr(tokens[5]) }, "quadrupole", atoms[index].atomName,
+          null), null, false);
+      rd();
+    }
+    appendLoadNote("Ellipsoids set \"quadrupole\": Quadrupole tensors");
+    return true;
+  }
 
   // BORN CHARGE TENSOR. (DINAMIC CHARGE = 1/3 * TRACE)
   //

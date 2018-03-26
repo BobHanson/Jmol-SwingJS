@@ -79,10 +79,20 @@ public class GaussianReader extends MOReader {
   private boolean isHighPrecision;
   private boolean haveHighPrecision;
   private boolean allowHighPrecision;
+  private boolean orientationInput;
+
+  private String orientation;
 
   @Override 
   protected void initializeReader() throws Exception {
     allowHighPrecision = !checkAndRemoveFilterKey("NOHP");
+    orientation = (checkFilterKey("ORIENTATION:INPUT") ? "Input" 
+        : checkFilterKey("ORIENTATION:STANDARD") ? "Standard"
+        : null);
+    orientationInput = (orientation == "Input");
+    appendLoadNote("Orientation:" + (orientation == null ? "ALL" : orientation));
+    if (orientation != null)
+      orientation += " orientation:";
     super.initializeReader();
   }
 
@@ -110,7 +120,7 @@ public class GaussianReader extends MOReader {
    * 
    * @return TRUE to read a new line
    * 
-   * @throws Exception 
+   * @throws Exception
    * 
    **/
 
@@ -136,11 +146,10 @@ public class GaussianReader extends MOReader {
         scanPoint++;
       return true;
     }
-    if (line.indexOf("Input orientation:") >= 0
-        || line.indexOf("Z-Matrix orientation:") >= 0
-        || line.indexOf("Standard orientation:") >= 0) {
+    if (orientation == null ? line.indexOf("orientation:") >= 0
+        : line.indexOf(orientation) >= 0
+        || orientationInput && line.indexOf("Z-Matrix orientation:") >= 0) {
       if (!doGetModel(++modelNumber, null)) {
-
         return checkLastModel();
       }
       equivalentAtomSets++;
@@ -161,7 +170,7 @@ public class GaussianReader extends MOReader {
       readSCFDone();
       return true;
     }
-    if (line.startsWith(" Harmonic frequencies")) {
+    if (!orientationInput && line.startsWith(" Harmonic frequencies")) {
       readFrequencies(":", true);
       return true;
     }
@@ -213,6 +222,15 @@ public class GaussianReader extends MOReader {
     return checkNboLine();
   }
   
+  
+  @Override
+  public void finalizeSubclassReader() throws Exception {
+    if (orientation == null) {
+      appendLoadNote("\nUse filter 'orientation:xxx' where 'xxx' is one of: input (includes z-matrix), standard, or ALL");
+    } else {      
+      appendLoadNote("\nfilter: " + filter);
+    }    
+}
 //   Mulliken atomic spin densities:
 //     1
 // 1  O    1.086438
@@ -656,6 +674,7 @@ public class GaussianReader extends MOReader {
    -------------------
    */
   
+  
   /**
    * Interprets the Harmonic frequencies section.
    *
@@ -673,7 +692,7 @@ public class GaussianReader extends MOReader {
       throw (new Exception("No frequencies encountered"));
     line = rd();
     int ac = asc.getLastAtomSetAtomCount();
-    String[][] data = new String[ac][], temp = new String[1][];
+    String[][] data = new String[ac][], temp = null;
     int[] atomIndices = new int[ac];
     while (line.length() > 20) {
       // we now have the line with the vibration numbers in them, but don't need it
@@ -686,6 +705,8 @@ public class GaussianReader extends MOReader {
         appendLoadNote("high precision vibrational modes enabled. Use filter 'NOHP' to disable.");
         haveHighPrecision = true;
       }
+      if (temp == null)
+        temp = new String[isHighPrecision ? 3 : 1][0];
       int width = (isHighPrecision ? 22 : 15);
       String[] frequencies = PT.getTokensAt(
           line, width);
@@ -715,18 +736,26 @@ public class GaussianReader extends MOReader {
             intensities[i]+" KM/Mole");
       }
       discardLinesUntilContains(" Atom ");
-      int nLines = 0;
-      while (true) {
-        fillDataBlockFixed(temp, (isHighPrecision ? 23 : 0), (isHighPrecision ? 10 : 0), 0);
-        if (temp[0].length < 10)
-          break;
-        atomIndices[nLines] = Integer.valueOf(temp[0][0]).intValue() - 1; 
-        data[nLines++] = temp[0];
-      }
-      if (isHighPrecision)
-        fillFrequencyData(iAtom0, nLines, ac, ignore, false, 0, 0, atomIndices, 0, data);
-      else
+      if (isHighPrecision) {
+        while (true) {
+          // one atom at a time.
+          fillFrequencyData(iAtom0, 1, ac, ignore, false, 23, 10, null, 9, temp);
+          // return of null data[0] indicates we have overrun the data.
+          if (temp[0] == null)
+            break;
+        }
+      } else {
+        int nLines = 0;
+        while (true) {
+          // wide format
+          fillDataBlockFixed(temp, 0, 0, 0);
+          if (temp[0].length < 10)
+            break;
+          atomIndices[nLines] = Integer.valueOf(temp[0][0]).intValue() - 1; 
+          data[nLines++] = temp[0];
+        }
         fillFrequencyData(iAtom0, nLines, ac, ignore, true, 0, 0, atomIndices, 0, data);
+      }
     }
   }
   

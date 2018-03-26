@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-11-15 21:59:18 -0600 (Wed, 15 Nov 2017) $
- * $Revision: 21755 $
+ * $Date: 2018-03-22 13:29:36 -0500 (Thu, 22 Mar 2018) $
+ * $Revision: 21872 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
