@@ -146,7 +146,8 @@ public class GaussianReader extends MOReader {
         scanPoint++;
       return true;
     }
-    if (orientation == null ? line.indexOf("orientation:") >= 0
+    if (orientation == null ? line.indexOf("Input orientation:") >= 0
+        ||  line.indexOf("Z-Matrix orientation:") >= 0 || line.indexOf("Standard orientation:") >= 0
         : line.indexOf(orientation) >= 0
         || orientationInput && line.indexOf("Z-Matrix orientation:") >= 0) {
       if (!doGetModel(++modelNumber, null)) {
