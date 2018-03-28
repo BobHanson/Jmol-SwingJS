@@ -61,90 +61,78 @@ public class MSCifParser extends MSRdr {
   private final static int FWV_X = 5;
   private final static int FWV_Y = 6;
   private final static int FWV_Z = 7;
-  private final static int JANA_FWV_Q1_COEF = 8;
-  private final static int JANA_FWV_Q2_COEF = 9;
-  private final static int JANA_FWV_Q3_COEF = 10;
-  
-  private final static int FWV_DISP_LABEL = 11;
-  private final static int FWV_DISP_AXIS = 12;
-  private final static int FWV_DISP_SEQ_ID = 13;
-  private final static int FWV_DISP_COS = 14;
-  private final static int FWV_DISP_SIN = 15;
-  private final static int FWV_DISP_MODULUS = 16;
-  private final static int FWV_DISP_PHASE = 17;
-  
-  private final static int DISP_SPEC_LABEL = 18;
-  private final static int DISP_SAW_AX = 19; 
-  private final static int DISP_SAW_AY = 20;
-  private final static int DISP_SAW_AZ = 21;
-  private final static int DISP_SAW_C = 22;
-  private final static int DISP_SAW_W = 23;
-  
-  private final static int FWV_OCC_LABEL = 24;
-  private final static int FWV_OCC_SEQ_ID = 25;
-  private final static int FWV_OCC_COS = 26;
-  private final static int FWV_OCC_SIN = 27;
-  private final static int FWV_OCC_MODULUS = 28;
-  private final static int FWV_OCC_PHASE = 29;
-  
-  private final static int OCC_SPECIAL_LABEL = 30;
-  private final static int OCC_CRENEL_C = 31;
-  private final static int OCC_CRENEL_W = 32;
+  private final static int FWV_Q_COEF = 8;
+  private final static int JANA_FWV_Q1_COEF = 9;
+  private final static int JANA_FWV_Q2_COEF = 10;
+  private final static int JANA_FWV_Q3_COEF = 11;
+  private final static int FWV_DISP_LABEL = 12;
+  private final static int FWV_DISP_AXIS = 13;
+  private final static int FWV_DISP_SEQ_ID = 14;
+  private final static int FWV_DISP_COS = 15;
+  private final static int FWV_DISP_SIN = 16;
+  private final static int FWV_DISP_MODULUS = 17;
+  private final static int FWV_DISP_PHASE = 18;
+  private final static int DISP_SPEC_LABEL = 19;
+  private final static int DISP_SAW_AX = 20;
+  private final static int DISP_SAW_AY = 21;
+  private final static int DISP_SAW_AZ = 22;
+  private final static int DISP_SAW_C = 23;
+  private final static int DISP_SAW_W = 24;
+  private final static int FWV_OCC_LABEL = 25;
+  private final static int FWV_OCC_SEQ_ID = 26;
+  private final static int FWV_OCC_COS = 27;
+  private final static int FWV_OCC_SIN = 28;
+  private final static int FWV_OCC_MODULUS = 29;
+  private final static int FWV_OCC_PHASE = 30;
+  private final static int OCC_SPECIAL_LABEL = 31;
+  private final static int OCC_CRENEL_C = 32;
+  private final static int OCC_CRENEL_W = 33;
+  private final static int FWV_U_LABEL = 34;
+  private final static int FWV_U_TENS = 35;
+  private final static int FWV_U_SEQ_ID = 36;
+  private final static int FWV_U_COS = 37;
+  private final static int FWV_U_SIN = 38;
+  private final static int FWV_U_MODULUS = 39;
+  private final static int FWV_U_PHASE = 40;
+  private final static int FD_ID = 41;
+  private final static int FO_ID = 42;
+  private final static int FU_ID = 43;
+  private final static int FDP_ID = 44;
+  private final static int FOP_ID = 45;
+  private final static int FUP_ID = 46;
+  private final static int JANA_OCC_ABS_LABEL = 47;
+  private final static int JANA_OCC_ABS_O_0 = 48;
+  private final static int FWV_SPIN_LABEL = 49;
+  private final static int FWV_SPIN_AXIS = 50;
+  private final static int FWV_SPIN_SEQ_ID = 51;
+  private final static int FWV_SPIN_COS = 52;
+  private final static int FWV_SPIN_SIN = 53;
+  private final static int FWV_SPIN_MODULUS = 54;
+  private final static int FWV_SPIN_PHASE = 55;
+  private final static int SPIN_SPEC_LABEL = 56;
+  private final static int SPIN_SAW_AX = 57;
+  private final static int SPIN_SAW_AY = 58;
+  private final static int SPIN_SAW_AZ = 59;
+  private final static int SPIN_SAW_C = 60;
+  private final static int SPIN_SAW_W = 61;
+  private final static int LEG_DISP_LABEL = 62;
+  private final static int LEG_DISP_AXIS = 63;
+  private final static int LEG_DISP_ORDER = 64;
+  private final static int LEG_DISP_COEF = 65;
+  private final static int LEG_U_LABEL = 66;
+  private final static int LEG_U_TENS = 67;
+  private final static int LEG_U_ORDER = 68;
+  private final static int LEG_U_COEF = 69;
+  private final static int LEG_OCC_LABEL = 70;
+  private final static int LEG_OCC_ORDER = 71;
+  private final static int LEG_OCC_COEF = 72;
+  private final static int DEPR_FD_COS = 73;
+  private final static int DEPR_FD_SIN = 74;
+  private final static int DEPR_FO_COS = 75;
+  private final static int DEPR_FO_SIN = 76;
+  private final static int DEPR_FU_COS = 77;
+  private final static int DEPR_FU_SIN = 78;
 
-  private final static int FWV_U_LABEL = 33;
-  private final static int FWV_U_TENS = 34;
-  private final static int FWV_U_SEQ_ID = 35;
-  private final static int FWV_U_COS = 36;
-  private final static int FWV_U_SIN = 37;  
-  private final static int FWV_U_MODULUS = 38;
-  private final static int FWV_U_PHASE = 39;
-
-  private final static int FD_ID = 40;
-  private final static int FO_ID = 41;
-  private final static int FU_ID = 42;
-
-  private final static int FDP_ID = 43;
-  private final static int FOP_ID = 44;
-  private final static int FUP_ID = 45;
-  
-  private final static int JANA_OCC_ABS_LABEL = 46; // _jana
-  private final static int JANA_OCC_ABS_O_0 = 47;   // _jana
-  
-  private final static int FWV_SPIN_LABEL = 48;
-  private final static int FWV_SPIN_AXIS = 49;
-  private final static int FWV_SPIN_SEQ_ID = 50;
-  private final static int FWV_SPIN_COS = 51;
-  private final static int FWV_SPIN_SIN = 52;
-  private final static int FWV_SPIN_MODULUS = 53;
-  private final static int FWV_SPIN_PHASE = 54;
-  
-  private final static int SPIN_SPEC_LABEL = 55;
-  private final static int SPIN_SAW_AX = 56; 
-  private final static int SPIN_SAW_AY = 57;
-  private final static int SPIN_SAW_AZ = 58;
-  private final static int SPIN_SAW_C = 59;
-  private final static int SPIN_SAW_W = 60;
-    
-  private final static int LEG_DISP_LABEL = 61;
-  private final static int LEG_DISP_AXIS = 62;
-  private final static int LEG_DISP_ORDER = 63;
-  private final static int LEG_DISP_COEF = 64;
-
-  private final static int LEG_U_LABEL = 65;
-  private final static int LEG_U_TENS = 66;
-  private final static int LEG_U_ORDER = 67;
-  private final static int LEG_U_COEF = 68;
-
-  private final static int LEG_OCC_LABEL = 69;
-  private final static int LEG_OCC_ORDER = 70;
-  private final static int LEG_OCC_COEF = 71;
-
-  private final static int DEPR_FD_COS = 72;
-  private final static int DEPR_FD_SIN = 73;
-  private final static int DEPR_FO_COS = 74;
-  private final static int DEPR_FO_SIN = 75;
-  private final static int DEPR_FU_COS = 76;
-  private final static int DEPR_FU_SIN = 77;
   // * will be _atom_site
   final private static String[] modulationFields = {
     "*_fourier_wave_vector_seq_id",  // *_ must be first
@@ -155,17 +143,18 @@ public class MSCifParser extends MSRdr {
     "*_fourier_wave_vector_x", // 5
     "*_fourier_wave_vector_y", 
     "*_fourier_wave_vector_z",
+    "*_fourier_wave_vector_q_coeff", //an array
     "*_fourier_wave_vector_q1_coeff", //_jana 
     "*_fourier_wave_vector_q2_coeff", // jana 
     "*_fourier_wave_vector_q3_coeff", // jana
     "*_displace_fourier_atom_site_label", 
     "*_displace_fourier_axis", 
-    "*_displace_fourier_wave_vector_seq_id", // 13 
+    "*_displace_fourier_wave_vector_seq_id", // 14 
     "*_displace_fourier_param_cos",  
-    "*_displace_fourier_param_sin", // 15
+    "*_displace_fourier_param_sin",
     "*_displace_fourier_param_modulus", 
     "*_displace_fourier_param_phase", 
-    "*_displace_special_func_atom_site_label", // 18 
+    "*_displace_special_func_atom_site_label", // 19 
     "*_displace_special_func_sawtooth_ax", 
     "*_displace_special_func_sawtooth_ay", 
     "*_displace_special_func_sawtooth_az", 
@@ -173,66 +162,66 @@ public class MSCifParser extends MSRdr {
     "*_displace_special_func_sawtooth_w", 
     "*_occ_fourier_atom_site_label", 
     "*_occ_fourier_wave_vector_seq_id", 
-    "*_occ_fourier_param_cos", // 26
+    "*_occ_fourier_param_cos", // 27
     "*_occ_fourier_param_sin",
     "*_occ_fourier_param_modulus", 
     "*_occ_fourier_param_phase", 
-    "*_occ_special_func_atom_site_label", // 30
+    "*_occ_special_func_atom_site_label", // 31
     "*_occ_special_func_crenel_c",
     "*_occ_special_func_crenel_w",
 
     "*_u_fourier_atom_site_label",
     "*_u_fourier_tens_elem",
-    "*_u_fourier_wave_vector_seq_id", // 35
+    "*_u_fourier_wave_vector_seq_id", // 36
     "*_u_fourier_param_cos",
     "*_u_fourier_param_sin",
     "*_u_fourier_param_modulus",
     "*_u_fourier_param_phase",
     
-    "*_displace_fourier_id", // 40
+    "*_displace_fourier_id", // 41
     "*_occ_fourier_id",
     "*_u_fourier_id",
 
-    "*_displace_fourier_param_id", // 43
+    "*_displace_fourier_param_id", // 44
     "*_occ_fourier_param_id",
     "*_u_fourier_param_id",
     
-    "*_occ_fourier_absolute_site_label", // 46 // _jana
+    "*_occ_fourier_absolute_site_label", // 47 // _jana
     "*_occ_fourier_absolute",  // _jana
 
-    "*_moment_fourier_atom_site_label", // 48 
+    "*_moment_fourier_atom_site_label", // 49 
     "*_moment_fourier_axis", 
-    "*_moment_fourier_wave_vector_seq_id", // 50 
+    "*_moment_fourier_wave_vector_seq_id", // 51 
     "*_moment_fourier_param_cos",  
     "*_moment_fourier_param_sin", 
     "*_moment_fourier_param_modulus", 
     "*_moment_fourier_param_phase", 
-    "*_moment_special_func_atom_site_label",// 55 
+    "*_moment_special_func_atom_site_label",// 56 
     "*_moment_special_func_sawtooth_ax",  
     "*_moment_special_func_sawtooth_ay", 
     "*_moment_special_func_sawtooth_az", 
     "*_moment_special_func_sawtooth_c", 
-    "*_moment_special_func_sawtooth_w",  // 60
+    "*_moment_special_func_sawtooth_w",  // 61
     
     //_jana:
-    "*_displace_legendre_atom_site_label", // 61 
+    "*_displace_legendre_atom_site_label", // 62 
     "*_displace_legendre_axis", 
     "*_displace_legendre_param_order",  // NOT SUPPORTED
     "*_displace_legendre_param_coeff",  // NOT SUPPORTED
-    "*_u_legendre_atom_site_label", // 65  
+    "*_u_legendre_atom_site_label", // 66  
     "*_u_legendre_tens_elem",
     "*_u_legendre_param_order", 
     "*_u_legendre_param_coeff",
     "*_occ_legendre_atom_site_label", 
     "*_occ_legendre_param_order",
-    "*_occ_legendre_param_coeff", // 71    
+    "*_occ_legendre_param_coeff", // 72    
     // deprecated:
-    "*_displace_fourier_cos", // 72
+    "*_displace_fourier_cos", // 73
     "*_displace_fourier_sin",
     "*_occ_fourier_cos",
     "*_occ_fourier_sin",
     "*_u_fourier_cos",
-    "*_u_fourier_sin" //77
+    "*_u_fourier_sin" // 78
   };
   
   private static final int NONE = -1;
@@ -286,16 +275,17 @@ public class MSCifParser extends MSRdr {
       cr.asc.newAtomSet();
     cr.parseLoopParametersFor(CifReader.FAMILY_ATOM, modulationFields);
     int tok;
-    if (cr.key2col[JANA_FWV_Q1_COEF] != NONE) {
-      // disable x y z for atom_site_fourier if we have coefficients
-      cr.key2col[FWV_X] = cr.key2col[FWV_Y] = cr.key2col[FWV_Z] = NONE;
-    }
+//    if (cr.key2col[JANA_FWV_Q1_COEF] != NONE) {
+//      // disable x y z for atom_site_fourier if we have coefficients
+//      cr.key2col[FWV_X] = cr.key2col[FWV_Y] = cr.key2col[FWV_Z] = NONE;
+//    }
     while (cr.parser.getData()) {
       boolean ignore = false;
       String type_id = null;
       String atomLabel = null;
       String axis = null;
       double[] pt = new double[] { Double.NaN, Double.NaN, Double.NaN };
+      double[] q = null;
       double c = Double.NaN;
       double w = Double.NaN;
       String fid = null;
@@ -396,6 +386,9 @@ public class MSCifParser extends MSRdr {
         case FWV_U_TENS:
           axis = field.toUpperCase();
           break;
+        case FWV_Q_COEF:
+          q = Cif2DataParser.getArrayFromStringList(field, modDim);
+          break;
         default:
           float f = cr.parseFloatStr(field);
           switch (tok) {
@@ -423,9 +416,20 @@ public class MSCifParser extends MSRdr {
             pt[0] = f;
             break;
           case JANA_FWV_Q1_COEF:
-            type_id += "_coefs_";
-            pt = new double[modDim];
-            pt[0] = f;
+            // type_id += _coefs_
+            if (q == null)
+              q = new double[modDim];
+            q[0] = f;
+            break;
+          case JANA_FWV_Q2_COEF:
+            if (q == null)
+              q = new double[modDim];
+            q[1] = f;
+            break;
+          case JANA_FWV_Q3_COEF:
+            if (q == null)
+              q = new double[modDim];
+            q[2] = f;
             break;
           case FWV_DISP_MODULUS:
           case FWV_OCC_MODULUS:
@@ -443,7 +447,6 @@ public class MSCifParser extends MSRdr {
           case LEG_U_ORDER:
           case WV_Y:
           case FWV_Y:
-          case JANA_FWV_Q2_COEF:
           case FWV_DISP_PHASE:
           case FWV_OCC_PHASE:
           case FWV_SPIN_PHASE:
@@ -461,7 +464,6 @@ public class MSCifParser extends MSRdr {
             break;
           case WV_Z:
           case FWV_Z:
-          case JANA_FWV_Q3_COEF:
           case DISP_SAW_AZ:
           case SPIN_SAW_AZ:
             pt[2] = f;
@@ -478,10 +480,20 @@ public class MSCifParser extends MSRdr {
           break;
         }
       }
-      if (ignore || type_id == null || atomLabel != null
-          && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
+      if (ignore || type_id == null && q == null 
+          || atomLabel != null && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
         continue;
       boolean ok = true;
+      
+      if (q != null) {
+        for (int j = 0, nzero = q.length; j < q.length; j++)
+          if (Double.isNaN(q[j]) || q[j] > 1e100 || q[j] == 0 && --nzero == 0) {
+            ok = false;
+          }
+        if (!ok)
+          continue;
+        addMod("F_coefs_", fid, q);          
+      }      
       for (int j = 0, nzero = pt.length; j < pt.length; j++)
         if (Double.isNaN(pt[j]) || pt[j] > 1e100 || pt[j] == 0 && --nzero == 0) {
           ok = false;

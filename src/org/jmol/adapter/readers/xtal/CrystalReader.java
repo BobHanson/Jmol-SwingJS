@@ -258,7 +258,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 
     if (line.startsWith(" CRYSTALLOGRAPHIC CELL")) {
       if (!isPrimitive) {
-        asc.removeAtomSet(asc.iSet);
+//        asc.removeAtomSet(asc.iSet);
         newLattice(true);
       }
       return true;
@@ -408,6 +408,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   }
 
   private void setSymmOps() {
+    if (isPrimitive)
     for (int i = 0, n = symops.size(); i < n; i++)
       setSymmetryOperator(symops.get(i));
   }
@@ -563,13 +564,13 @@ public class CrystalReader extends AtomSetCollectionReader {
           line.substring(line.indexOf(" OR ") + 4).trim());
       return false;
     }
-    spaceGroupName = "P1";
-    if (!isPrimitive) {
-      discardLinesUntilContains2("SPACE GROUP", "****");
-      pt = line.indexOf(":");
-      if (pt >= 0)
-        spaceGroupName = line.substring(pt + 1).trim();
-    }
+    discardLinesUntilContains2("SPACE GROUP", "****");
+    pt = line.indexOf(":");
+    if (pt >= 0 && !isPrimitive)
+      spaceGroupName = line.substring(pt + 1).trim();
+    //if (isPrimitive) {
+      //spaceGroupName += " (primitive)";
+    //}
     doApplySymmetry = isProperties;
     return !isProperties;
   }

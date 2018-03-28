@@ -472,4 +472,24 @@ public class Cif2DataParser extends CifDataParser {
     return str;
   }
 
+  /**
+   * turn "[1,2,3]" into [1.0,2.0,3.0]
+   * 
+   * array will be truncated to n elements, or filled with zeros to pad to n, as necessary.
+   * 
+   * @param s
+   * @param n
+   * @return double[] array
+   */
+  public static double[] getArrayFromStringList(String s, int n) {
+    float[] f = new float[n];
+    PT.parseFloatArrayInfested(PT.getTokens(s.replace(',', ' ').replace('[', ' ')), f);
+    double[] d = new double[n];
+    for (int i = 0; i < n; i++)
+      d[i] = f[i];
+    return d;
+  }
+
+
+
 }
