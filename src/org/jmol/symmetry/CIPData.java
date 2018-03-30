@@ -1,7 +1,12 @@
 package org.jmol.symmetry;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.BS;
+
 import org.jmol.script.T;
+import org.jmol.util.SimpleEdge;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -67,12 +72,16 @@ public class CIPData {
    */
   BS bsCMinus = new BS();
 
-  private BS bsMolecule;
+  BS bsMolecule;
 
   BS[] lstSmallRings;
 
   BS bsKekuleAmbiguous = new BS();
 
+  BS bsEnes = new BS();
+
+  Map<Integer, Object> htKekuleBond = new Hashtable<Integer, Object>();
+  
   public CIPData() {
   }
 
@@ -123,7 +132,7 @@ public class CIPData {
     }
     return this;
   }
-
+  
   private BS[] getList(String smarts) throws Exception {
     return vwr.getSubstructureSetArray(smarts, bsMolecule, JC.SMILES_TYPE_SMARTS);
   }
@@ -132,4 +141,72 @@ public class CIPData {
     return vwr.getSmartsMatch(smarts, bsMolecule);
   }
 
+//  private int[][] map(String smarts) throws Exception {
+//    return vwr.getSmartsMap(smarts, bsMolecule);
+//  }
+
+  /**
+   * Look for conjugated loops of any size that have atoms not already in aromatic rings
+   * 
+   */
+  public void getEneKekule() {
+    if (bsEnes.cardinality() < 8) 
+      return;
+        
+    // check for large ENE loops
+    // need at least five alkenes to trigger this.
+    
+    BS bsAllEnes = (BS) bsEnes.clone();
+    BS bsPath = new BS();
+    bsEnes.andNot(bsKekuleAmbiguous);
+    BS bsEneAtom1 = new BS();
+    for (int i = bsEnes.nextSetBit(0); i >= 0; i = bsEnes.nextSetBit(i + 1)) {
+      bsPath.clearAll();   
+      bsEneAtom1.clearAll();
+      checkEne(bsAllEnes, bsPath, -1, i, 2, bsEneAtom1); 
+    }
+    
+    
+        
+  }
+
+  /**
+   * Look for a path that contains this ene in a fully conjugated pattern
+   * 
+   * @param bsAllEnes all ene carbons
+   * @param bsPath current path to loop into
+   * @param iLast the last atom
+   * @param iAtom this atom
+   * @param order expected next order, alternating 2,1,2,1,...
+   * @param bsEneAtom1 alternating atoms; first of double bond
+   * @return the atom number of the loop or -1 if failed
+   */
+  private int checkEne(BS bsAllEnes, BS bsPath, int iLast, int iAtom, int order, BS bsEneAtom1) {
+    if (bsPath.get(iAtom))
+      return (bsEneAtom1.get(iAtom) == (order == 2) ? iAtom : -1);
+    bsPath.set(iAtom);
+    SimpleNode a = atoms[iAtom];
+    int isLoop = -1;
+    SimpleEdge[] edges = a.getEdges();
+    if (order == 2)
+      bsEneAtom1.set(iAtom);
+    for (int ib = a.getBondCount(); --ib >= 0;) {
+      if (edges[ib].getCovalentOrder() != order)
+        continue;
+      SimpleNode b = edges[ib].getOtherNode(a);
+      int iNext = b.getIndex();
+      if (iNext != iLast && bsAllEnes.get(iNext)
+          && (isLoop = checkEne(bsAllEnes, bsPath, iAtom, iNext, 3 - order, bsEneAtom1)) >= 0) {
+      }
+    }
+    if (isLoop >= 0) {
+      bsKekuleAmbiguous.set(iAtom);
+      bsEnes.clear(iAtom);
+    }
+    return isLoop == iAtom ? -1 : isLoop;
+  }
+
+//  public boolean canBeChiralBond(SimpleEdge bond) {
+//    return !htKekuleBonds.containsKey(Integer.valueOf(bond.hashCode()));
+//  }
 }

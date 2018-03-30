@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-06-04 22:25:50 -0500 (Sun, 04 Jun 2017) $
- * $Revision: 21629 $
+ * $Date: 2018-02-22 12:04:47 -0600 (Thu, 22 Feb 2018) $
+ * $Revision: 21841 $
  *
  * Copyright (C) 2005  The Jmol Development Team
  *
@@ -978,7 +978,7 @@ public class SmilesSearch extends JmolMolecule {
     // The atom has passed both the atom and the bond test.
     // Add this atom to the growing list.
 
-    if (Logger.debugging && !isRingCheck) {//&& !isSilent) {
+    if (Logger.debuggingHigh && !isRingCheck) {//&& !isSilent) {
       for (int i = 0; i <= atomNum; i++)
         Logger.debug("pattern atoms " + patternAtoms[i] + " "
             + patternAtoms[i].matchingComponent);

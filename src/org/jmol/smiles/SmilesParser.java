@@ -710,7 +710,10 @@ public class SmilesParser {
           float[] vals = new float[tokens.length];
           int i = tokens.length;
           for (; --i >= 0;)
-             vals[i] = Float.parseFloat(tokens[i]);
+             if (Float.isNaN(vals[i] = Float.parseFloat(tokens[i])))
+               break;
+          if (i >= 0)
+            break;
           m = new SmilesMeasure(search, index, type, isNot, vals);
           search.measures.addLast(m);
           if (index > 0)

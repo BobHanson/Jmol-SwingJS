@@ -703,11 +703,12 @@ public class CIPChirality {
    */
   private void init() {
     ptIDLogger = 0;
-    //lstKekuleRings.clear();
-    //bsKekuleAmbiguous = null;
+    
   }
 
   CIPData data;
+
+  public int decidingSphere;
   
   /**
    * A more general determination of chirality that involves ultimately all
@@ -747,11 +748,16 @@ public class CIPChirality {
 //    bsKekuleAmbiguous = getKekule(data.atoms);
     bsAzacyclic = getAzacyclic(data.atoms, data.bsAtoms);
 
-    BS bsToDo = BSUtil.copy(data.bsAtoms);
-    boolean haveAlkenes = preFilterAtomList(data.atoms, bsToDo);
+    BS bsToDo = BSUtil.copy(data.bsMolecule);
+    boolean haveAlkenes = preFilterAtomList(data.atoms, bsToDo, data.bsEnes);
+    if (!data.bsEnes.isEmpty()) 
+      data.getEneKekule();
+    System.out.println("bsKekule:" + data.bsKekuleAmbiguous);
 
     // set atom chiralities
 
+    bsToDo = BSUtil.copy(data.bsAtoms);
+    
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
       SimpleNode a = data.atoms[i];
       a.setCIPChirality(0);
@@ -860,16 +866,23 @@ public class CIPChirality {
    * @param bsToDo
    * @return whether we have any alkenes that could be EZ
    */
-  private boolean preFilterAtomList(SimpleNode[] atoms, BS bsToDo) {
+  private boolean preFilterAtomList(SimpleNode[] atoms, BS bsToDo, BS bsEnes) {
     boolean haveAlkenes = false;
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
       if (!couldBeChiralAtom(atoms[i])) {
         bsToDo.clear(i);
         continue;
       }
-      if (!haveAlkenes && couldBeChiralAlkene(atoms[i], null) != UNDETERMINED)
-        // do Rule 3, and check for rings that in the end should force removal of E/Z designations
+      switch (couldBeChiralAlkene(atoms[i], null)) {
+      case UNDETERMINED:
+        break;
+      case STEREO_Z:
+        bsEnes.set(i);
+        //$FALL-THROUGH$
+      case STEREO_M:
         haveAlkenes = true;
+        break;
+      }
     }
     return haveAlkenes;
   }
@@ -1222,7 +1235,7 @@ public class CIPChirality {
         if (!data.bsAtropisomeric.get(index1))
           continue;
         c = setBondChirality(atom, atom1, atom, atom1, true);
-      } else if (bond.getCovalentOrder() == 2) {
+      } else if (bond.getCovalentOrder() == 2) {// && data.canBeChiralBond(bond)) {
         atom1 = getLastCumuleneAtom(bond, atom, null, null);
         index1 = atom1.getIndex();
         if (index1 < index)
@@ -1365,7 +1378,6 @@ public class CIPChirality {
           int nPrioritiesPrev = cipAtom.nPriorities;
           if (rs == NO_CHIRALITY && cipAtom.sortSubstituents(0)) {
             if (Logger.debugging && cipAtom.h1Count < 2) {
-              Logger.info(currentRule + ">>>>" + cipAtom);
               for (int i = 0; i < cipAtom.bondCount; i++) { // Logger
                 if (cipAtom.atoms[i] != null) // Logger
                   Logger.info(cipAtom.atoms[i] + " " + cipAtom.priorities[i]); // Logger
@@ -1455,6 +1467,8 @@ public class CIPChirality {
     SimpleNode[] parents = new SimpleNode[2];
     SimpleNode b = getLastCumuleneAtom(bond, a, nSP2, parents);
     boolean isAxial = nSP2[0] % 2 == 1;
+    if (!isAxial && data.bsKekuleAmbiguous.get(a.getIndex()))
+      return UNDETERMINED;
     return setBondChirality(a, parents[0], parents[1], b, isAxial);
   }
 
@@ -2414,7 +2428,7 @@ public class CIPChirality {
       // (for the next sphere, unless one is a duplicate -- Custer Rule 1b "duplicate > nonduplicate").
 
       if (isTerminal != b.isTerminal)
-        return (isTerminal ? B_WINS : A_WINS)
+        return decidingSphere = (isTerminal ? B_WINS : A_WINS)
             * (sphere + (b.isDuplicate || isDuplicate ? 0 : 1)); // COUNT_LINE
 
       // Do a duplicate check.
@@ -2437,7 +2451,7 @@ public class CIPChirality {
 
       int score = (currentRule > RULE_1a ? TIED : unlikeDuplicates(b));
       if (score != TIED) {
-        return score * (sphere + 1); // COUNT_LINE
+        return decidingSphere = score * (sphere + 1); // COUNT_LINE
       }
 
       // Phase II -- shallow check only
@@ -2455,8 +2469,9 @@ public class CIPChirality {
       // Doing the presort saves considerably on run time.
 
       for (int i = 0; i < nAtoms; i++)
-        if ((score = atoms[i].checkCurrentRule(b.atoms[i])) != TIED)
-          return score * (sphere + 1); // COUNT_LINE
+        if ((score = atoms[i].checkCurrentRule(b.atoms[i])) != TIED) {
+          return decidingSphere = score * (sphere + 1); // COUNT_LINE
+        }
 
       // Time to do a full sort of eash ligand, including breaking ties
 
@@ -2480,7 +2495,7 @@ public class CIPChirality {
           finalScore = score;
         }
       }
-      return finalScore;
+      return decidingSphere = finalScore;
     }
 
     /**
@@ -2674,15 +2689,19 @@ public class CIPChirality {
     }
 
     private BS getBestList() {
-      if (currentRule == RULE_5)
+      if (currentRule == RULE_5) {
+        if (Logger.debugging)
+          Logger.info("getBS4b5 " + this + " " + listRS[0] + " " + myPath);
         return listRS[0];
+      }
       if (listRS == null) {
         listRS = new BS[2];
         rankAndRead(listRS[0] = new BS(), STEREO_R);
         rankAndRead(listRS[1] = new BS(), STEREO_S);
       }
       if (Logger.debugging)
-        Logger.info("getBS4b5 " + this + " " + listRS[0] + listRS[1]);
+        Logger.info("getBS4b5 " + this + " " + listRS[0] + listRS[1] + " " + myPath);
+      
       BS lu = compareLikeUnlike(listRS[0], listRS[1]);
       return (lu == null ? listRS[0] : lu);
     }
@@ -2990,10 +3009,15 @@ public class CIPChirality {
         if (atom1.setNode()) {
           atom1.addReturnPath(null, this);
           int rule = RULE_1a;
+          if (Logger.debugging)
+            Logger.info("checking aux " + this + " = " + myPath);
+          System.out.println(">???");
           for (; rule <= RULE_6; rule++)
             if ((!skipRules4And5 || rule < RULE_4a || rule > RULE_5)
                 && atom1.auxSort(rule))
               break;
+          if (Logger.debugging)
+            Logger.info("checking aux set at rule " + rule + " " + this);
           if (rule > RULE_6) {
             c = '~';
           } else {
@@ -3015,8 +3039,9 @@ public class CIPChirality {
       if (node1 == null)
         bsNeedRule.setBitTo(RULE_4a, nRS > 0);
         //rule4Type = nRS;
-      if (Logger.debugging && c != '~') {
-        Logger.info("creating aux " + c + " for " + this + " = " + myPath);
+      if (c != '~') {
+        Logger.info("creating aux " + c + decidingSphere + " for " + this + " = " + myPath);
+        Logger.info("---???<");
       }
       return (this.isChiralPath = isChiralPath);
     }
@@ -3097,6 +3122,8 @@ public class CIPChirality {
       a.auxEZ = UNDETERMINED;
       a.rule4Type = NO_CHIRALITY;
       a.listRS = null;
+      if (Logger.debuggingHigh)
+        a.myPath = a.toString();
       return a;
     }
 
