@@ -7,6 +7,7 @@ import javajs.util.P3;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.smiles.SmilesAtom;
 import org.jmol.util.Node;
 
 public interface SmilesMatcherInterface {
@@ -55,5 +56,7 @@ public interface SmilesMatcherInterface {
   public abstract String cleanSmiles(String smiles);
 
   public int[][] getMapForJME(String jme, Atom[] at, BS bsAtoms);
+
+  Node[] getAtoms(String target) throws Exception;
 
 }

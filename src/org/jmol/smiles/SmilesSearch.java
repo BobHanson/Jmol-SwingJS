@@ -1717,7 +1717,7 @@ public class SmilesSearch extends JmolMolecule {
       // we co-opt atom.matchingAtom here
       // because this search will never actually be run
       SmilesAtom atom = atoms[ptAtom] = new SmilesAtom().setTopoAtom(sAtom.component, ptAtom,
-          sAtom.symbol, sAtom.getCharge());
+          sAtom.symbol, sAtom.getCharge(), i);
       atom.implicitHydrogenCount = n;
       if (isForMF)
         continue;
@@ -1754,7 +1754,7 @@ public class SmilesSearch extends JmolMolecule {
       atom.setBonds(bonds);
       while (--n >= 0) {
         SmilesAtom atomH = atoms[++ptAtom] = new SmilesAtom().setTopoAtom(atom.component,
-            ptAtom, "H", 0);
+            ptAtom, "H", 0, -1);
         atomH.mapIndex = -i - 1;
         atomH.setBonds(new SmilesBond[1]);
         SmilesBond b = new SmilesBond(atom, atomH, Edge.BOND_COVALENT_SINGLE,

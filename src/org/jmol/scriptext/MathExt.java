@@ -1416,7 +1416,7 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
-            boolean justOne = (!asMap && (!allMappings || !isSMARTS));
+            boolean justOne = (!asMap && (!allMappings || !isSMARTS && !pattern.equals("chirality")));
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
@@ -3463,7 +3463,6 @@ public class MathExt {
         isWithinModelSet, rd));
   }
 
-  @SuppressWarnings("unchecked")
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     switch (args.length) {

@@ -997,8 +997,8 @@ public class SmilesParser {
             break;
           case '@':
             if (search.stereo == null)
-              search.stereo = SmilesStereo.newStereo(null);
-            index = SmilesStereo.checkChirality(pattern, index,
+              search.stereo = SmilesStereo.newStereo(search);
+            index = SmilesStereo.checkChirality(search, pattern, index,
                 search.patternAtoms[newAtom.index]);
             break;
           case ':': //openSmiles application-dependent atom class

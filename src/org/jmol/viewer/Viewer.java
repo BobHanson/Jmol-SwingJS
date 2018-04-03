@@ -123,6 +123,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
+import org.jmol.util.Node;
 import org.jmol.util.Parser;
 import org.jmol.util.Rectangle;
 import org.jmol.util.TempArray;
@@ -389,6 +390,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         bsSelected, JC.SMILES_TYPE_SMARTS);
   }
 
+
+  public BS getSmartsMatchForNodes(String smarts, Node[] atoms) throws Exception {
+    return getSmilesMatcher().getSubstructureSet(smarts, atoms, atoms.length,
+        null, JC.SMILES_TYPE_SMARTS);
+  }
+  
   @SuppressWarnings({ "unchecked", "null", "unused" })
   public void setOptions(Map<String, Object> info) {
     // can be deferred
@@ -9742,6 +9749,21 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getSmilesMatcher().getSubstructureSetArray(pattern, ms.at, ms.ac, bsSelected, null, flags);
   }
 
+  public BS[] getSubstructureSetArrayForNodes(String pattern, Node[] nodes, int flags) throws Exception {
+    return getSmilesMatcher().getSubstructureSetArray(pattern, nodes, nodes.length, null, null, flags);
+  }
+
+  public Node[] getSmilesAtoms(String smiles) throws Exception {
+    return getSmilesMatcher().getAtoms(smiles);
+  }
+
+  public String[] calculateChiralityForSmiles(String smiles) {
+    try {
+      return Interface.getSymmetry(this, "ms").calculateCIPChiralityForSmiles(this, smiles);
+    } catch (Exception e) {
+      return null;
+    }
+  }
   public String getPdbID() {
     return (ms.getInfo(am.cmi, "isPDB") == Boolean.TRUE ? (String) ms.getInfo(am.cmi, "pdbID") : null);
   }

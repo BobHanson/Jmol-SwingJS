@@ -207,6 +207,17 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   @Override
+  public Node[] getAtoms(String target)
+      throws Exception {
+    InvalidSmilesException.clear();
+    target = SmilesParser.cleanPattern(target);
+    SmilesSearch search = SmilesParser.newSearch(target, false, true);
+    search.createTopoMap(new BS());
+    return search.targetAtoms;
+  }
+
+
+  @Override
   public String getRelationship(String smiles1, String smiles2)
       throws Exception {
     if (smiles1 == null || smiles2 == null || smiles1.length() == 0

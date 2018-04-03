@@ -30,14 +30,13 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.Measure;
 import javajs.util.P3;
-import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.V3;
 
-import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
@@ -598,12 +597,6 @@ public class CIPChirality {
   BS bsNeedRule = new BS();
   
   /**
-   * measure of planarity in a trigonal system, in Angstroms
-   * 
-   */
-  static final float TRIGONALITY_MIN = 0.2f;
-
-  /**
    * maximum path to display for debugging only using SET DEBUG in Jmol
    */
   static final int MAX_PATH = 50;  // Logger
@@ -642,12 +635,6 @@ public class CIPChirality {
 //   * 
 //   */
 //  BS bsKekuleAmbiguous;
-
-  /**
-   * used to determine whether N is potentially chiral - could do this here, of
-   * course.... see AY-236.203
-   */
-  BS bsAzacyclic;
 
   // temporary fields
 
@@ -742,12 +729,6 @@ public class CIPChirality {
     // using BSAtoms here because we need the entire graph,
     // including multiple molecular units (AY-236.93
 
-//    BS bs = BSUtil.copy(data.bsAtoms);
-//    while (!bs.isEmpty())
-//      getRings(data.atoms[bs.nextSetBit(0)], bs, data.atoms);
-//    bsKekuleAmbiguous = getKekule(data.atoms);
-    bsAzacyclic = getAzacyclic(data.atoms, data.bsAtoms);
-
     BS bsToDo = BSUtil.copy(data.bsMolecule);
     boolean haveAlkenes = preFilterAtomList(data.atoms, bsToDo, data.bsEnes);
     if (!data.bsEnes.isEmpty()) 
@@ -802,78 +783,22 @@ public class CIPChirality {
   }
 
   /**
-   * Identify bridgehead nitrogens, as these may need to be given chirality
-   * designations. See AY-236.203 P-93.5.4.1
-   * 
-   * @param atoms
-   * 
-   * @param bsAtoms
-   * @return a bit set of bridgehead nitrogens. I just liked the name
-   *         "azacyclic".
-   */
-  private BS getAzacyclic(SimpleNode[] atoms, BS bsAtoms) {
-    BS bsAza = null;
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-      SimpleNode atom = atoms[i];
-      if (atom.getElementNumber() != 7 || atom.getCovalentBondCount() != 3
-          || data.bsKekuleAmbiguous.get(i))
-        continue;
-      // bridgehead N must be in two rings that have at least three atoms in common.
-      Lst<BS> nRings = new Lst<BS>();
-      for (int j = data.lstSmallRings.length; --j >= 0;) {
-        BS bsRing = data.lstSmallRings[j];
-        if (bsRing.get(i))
-          nRings.addLast(bsRing);
-      }
-      int nr = nRings.size();
-      if (nr < 2)
-        continue;
-      BS bsSubs = new BS();
-      SimpleEdge[] bonds = atom.getEdges();
-      for (int b = bonds.length; --b >= 0;)
-        if (bonds[b].isCovalent())
-          bsSubs.set(bonds[b].getOtherNode(atom).getIndex());
-      BS bsBoth = new BS();
-      BS bsAll = new BS();
-      for (int j = 0; j < nr - 1 && bsAll != null; j++) {
-        BS bs1 = nRings.get(j);
-        for (int k = j + 1; k < nr && bsAll != null; k++) {
-          BS bs2 = nRings.get(k);
-          BSUtil.copy2(bs1, bsBoth);
-          bsBoth.and(bs2);
-          if (bsBoth.cardinality() > 2) {
-            BSUtil.copy2(bs1, bsAll);
-            bsAll.or(bs2);
-            bsAll.and(bsSubs);
-            if (bsAll.cardinality() == 3) {
-              if (bsAza == null)
-                bsAza = new BS();
-              bsAza.set(i);
-              bsAll = null;
-            }
-          }
-        }
-      }
-    }
-    return bsAza;
-  }
-
-  /**
    * Remove unnecessary atoms from the list and let us know if we have alkenes
    * to consider.
    * 
    * @param atoms
    * @param bsToDo
+   * @param bsEnes 
    * @return whether we have any alkenes that could be EZ
    */
   private boolean preFilterAtomList(SimpleNode[] atoms, BS bsToDo, BS bsEnes) {
     boolean haveAlkenes = false;
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
-      if (!couldBeChiralAtom(atoms[i])) {
+      if (!data.couldBeChiralAtom(atoms[i])) {
         bsToDo.clear(i);
         continue;
       }
-      switch (couldBeChiralAlkene(atoms[i], null)) {
+      switch (data.couldBeChiralAlkene(atoms[i], null)) {
       case UNDETERMINED:
         break;
       case STEREO_Z:
@@ -888,114 +813,12 @@ public class CIPChirality {
   }
 
   /**
-   * Determine whether an atom is one we need to consider.
-   * 
-   * @param a
-   * @return true for selected atoms and hybridizations
-   * 
-   */
-  private boolean couldBeChiralAtom(SimpleNode a) {
-    boolean mustBePlanar = false;
-    switch (a.getCovalentBondCount()) {
-    default:
-      System.out.println("?? too many bonds! " + a);
-      return false;
-    case 0:
-      return false;
-    case 1:
-      return false;
-    case 2:
-      return a.getElementNumber() == 7; // could be diazine or imine
-    case 3:
-      switch (a.getElementNumber()) {
-      case 7: // N
-        if (bsAzacyclic != null && bsAzacyclic.get(a.getIndex()))
-          break;
-        return false;
-      case 6: // C
-        mustBePlanar = true;
-        break;
-      case 15: // P
-      case 16: // S
-      case 33: // As
-      case 34: // Se
-      case 51: // Sb
-      case 52: // Te
-      case 83: // Bi
-      case 84: // Po
-        break;
-      case 4:
-        break;
-      default:
-        return false;
-      }
-      break;
-    case 4:
-      break;
-    }
-    // check that the atom has at most one 1H atom and whether it must be planar and has a double bond
-    SimpleEdge[] edges = a.getEdges();
-    int nH = 0;
-    boolean haveDouble = false;
-    for (int j = edges.length; --j >= 0;) {
-      if (mustBePlanar && edges[j].getCovalentOrder() == 2)
-        haveDouble = true;
-      if (edges[j].getOtherNode(a).getIsotopeNumber() == 1)
-        nH++;
-    }
-    return (nH < 2 && (haveDouble || mustBePlanar == Math.abs(getTrigonality(a,
-        vNorm)) < TRIGONALITY_MIN));
-  }
-
-  /**
-   * Allow double bonds only if trivalent and first-row atom. (IUPAC
-   * 2013.P-93.2.4) Currently: a) first row b) doubly bonded c) doubly bonded
-   * atom is also first row
-   * 
-   * @param a
-   * @param b
-   *        optional other atom
-   * @return if the atom could be an EZ node
-   */
-  private int couldBeChiralAlkene(SimpleNode a, SimpleNode b) {
-    switch (a.getCovalentBondCount()) {
-    default:
-      return UNDETERMINED;
-    case 2:
-      // imines and diazines
-      if (a.getElementNumber() != 7) // nitrogen
-        return UNDETERMINED;
-      break;
-    case 3:
-      // first-row only (IUPAC 2013.P-93.2.4)
-      if (!isFirstRow(a))
-        return UNDETERMINED;
-      break;
-    }
-    SimpleEdge[] bonds = a.getEdges();
-    int n = 0;
-    for (int i = bonds.length; --i >= 0;)
-      if (bonds[i].getCovalentOrder() == 2) {
-        if (++n > 1)
-          return STEREO_M; //central allenes
-        SimpleNode other = bonds[i].getOtherNode(a);
-        if (!isFirstRow(other))
-          return UNDETERMINED;
-        if (b != null && (other != b || b.getCovalentBondCount() == 1)) {
-          // could be allene central, but I think this is not necessary
-          return UNDETERMINED;
-        }
-      }
-    return STEREO_Z;
-  }
-
-  /**
    * Check if an atom is 1st row.
    * 
    * @param a
    * @return elemno > 2 && elemno <= 10
    */
-  boolean isFirstRow(SimpleNode a) {
+  static boolean isFirstRow(SimpleNode a) {
     int n = a.getElementNumber();
     return (n > 2 && n <= 10);
   }
@@ -1189,29 +1012,6 @@ public class CIPChirality {
   }
 
   /**
-   * Determine the trigonality of an atom in order to determine whether it might
-   * have a lone pair. The global vector vNorm is returned as well, pointing
-   * from the atom to the base plane of its first three substituents.
-   * 
-   * @param a
-   * @param vNorm
-   *        a vector returned with the normal from the atom to the base plane
-   * @return distance from plane of first three covalently bonded nodes to this
-   *         node
-   */
-  float getTrigonality(SimpleNode a, V3 vNorm) {
-    P3[] pts = new P3[4];
-    SimpleEdge[] bonds = a.getEdges();
-    for (int n = bonds.length, i = n, pt = 0; --i >= 0 && pt < 4;)
-      if (bonds[i].isCovalent())
-        pts[pt++] = bonds[i].getOtherNode(a).getXYZ();
-    P4 plane = Measure.getPlaneThroughPoints(pts[0], pts[1], pts[2], vNorm,
-        vTemp, new P4());
-    return Measure.distanceToPlane(plane,
-        (pts[3] == null ? a.getXYZ() : pts[3]));
-  }
-
-  /**
    * Get E/Z characteristics for specific atoms. Also check here for
    * atropisomeric M/P designations
    * 
@@ -1235,7 +1035,7 @@ public class CIPChirality {
         if (!data.bsAtropisomeric.get(index1))
           continue;
         c = setBondChirality(atom, atom1, atom, atom1, true);
-      } else if (bond.getCovalentOrder() == 2) {// && data.canBeChiralBond(bond)) {
+      } else if (data.getBondOrder(bond) == 2) {// && data.canBeChiralBond(bond)) {
         atom1 = getLastCumuleneAtom(bond, atom, null, null);
         index1 = atom1.getIndex();
         if (index1 < index)
@@ -1285,7 +1085,7 @@ public class CIPChirality {
         if (atom3 == atom)
           continue;
         // connected atom must only have one other bond, and it must be double to continue
-        if (bond.getCovalentOrder() != 2)
+        if (data.getBondOrder(bond) != 2)
           return atom2; // was atom3
         if (parents != null) {
           if (ppt == 0) {
@@ -1434,6 +1234,7 @@ public class CIPChirality {
         }
       }
     } catch (Throwable e) {
+      e.printStackTrace();
       System.out.println(e + " in CIPChirality " + currentRule);
       /**
        * @j2sNative alert(e);
@@ -1461,7 +1262,7 @@ public class CIPChirality {
       Logger.info("get Bond Chirality " + bond);
     if (a == null)
       a = bond.getOtherNode(null);
-    if (couldBeChiralAlkene(a, bond.getOtherNode(a)) == UNDETERMINED)
+    if (data.couldBeChiralAlkene(a, bond) == UNDETERMINED)
       return NO_CHIRALITY;
     int[] nSP2 = new int[1];
     SimpleNode[] parents = new SimpleNode[2];
@@ -1563,59 +1364,24 @@ public class CIPChirality {
   /**
    * Determine the stereochemistry of a bond
    * 
-   * @param top1
+   * @param winner1
    * @param end1
    * @param end2
-   * @param top2
+   * @param winner2
    * @param isAxial
    *        if an odd-cumulene
    * @param allowPseudo
    *        if we are working from a high-level bond stereochemistry method
-   * @return STEREO_M, STEREO_P, STEREO_Z, STEREO_E, STEREO_m, STEREO_p or
-   *         NO_CHIRALITY
+   * @return STEREO_M, STEREO_P, STEREO_Z, STEREO_E, or NO_CHIRALITY
    */
-  int getEneChirality(CIPAtom top1, CIPAtom end1, CIPAtom end2, CIPAtom top2,
-                      boolean isAxial, boolean allowPseudo) {
-    return (top1 == null || top2 == null || top1.atom == null
-        || top2.atom == null ? NO_CHIRALITY : isAxial ? (isPos(top1, end1,
-        end2, top2) ? STEREO_P : STEREO_M)
-        : (isCis(top1, end1, end2, top2) ? STEREO_Z : STEREO_E));
+  int getEneChirality(CIPAtom winner1, CIPAtom end1, CIPAtom end2,
+                      CIPAtom winner2, boolean isAxial, boolean allowPseudo) {
+    return (winner1 == null || winner2 == null || winner1.atom == null
+        || winner2.atom == null ? NO_CHIRALITY : isAxial ? data.isPos(winner1,
+        end1, end2, winner2) : data.isCis(winner1, end1, end2, winner2));
   }
 
-  /**
-   * Check cis vs. trans nature of a--b==c--d.
-   * 
-   * @param a
-   * @param b
-   * @param c
-   * @param d
-   * @return true if this is a cis relationship
-   */
-  boolean isCis(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
-    Measure.getNormalThroughPoints(a.atom.getXYZ(), b.atom.getXYZ(),
-        c.atom.getXYZ(), vNorm, vTemp);
-    V3 vNorm2 = new V3();
-    Measure.getNormalThroughPoints(b.atom.getXYZ(), c.atom.getXYZ(),
-        d.atom.getXYZ(), vNorm2, vTemp);
-    return (vNorm.dot(vNorm2) > 0);
-  }
-
-  /**
-   * Checks the torsion angle and returns true if it is positive
-   * 
-   * @param a
-   * @param b
-   * @param c
-   * @param d
-   * @return true if torsion angle is
-   */
-  boolean isPos(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
-    float angle = Measure.computeTorsion(a.atom.getXYZ(), b.atom.getXYZ(),
-        c.atom.getXYZ(), d.atom.getXYZ(), true);
-    return (angle > 0);
-  }
-
-  private class CIPAtom implements Comparable<CIPAtom>, Cloneable {
+  class CIPAtom implements Comparable<CIPAtom>, Cloneable {
 
     /**
      * unique ID for this CIPAtom for debugging only
@@ -1988,7 +1754,7 @@ public class CIPChirality {
           : atom.getElementNumber());
       bondCount = atom.getCovalentBondCount();
       isSP3 = (bondCount == 4 || bondCount == 3 && !isAlkene
-          && (elemNo > 10 || bsAzacyclic != null && bsAzacyclic.get(atomIndex)));
+          && (elemNo > 10 || data.bsAzacyclic != null && data.bsAzacyclic.get(atomIndex)));
       if (parent != null)
         sphere = parent.sphere + 1;
       if (sphere == 1) {
@@ -2153,7 +1919,7 @@ public class CIPChirality {
           continue;
         SimpleNode other = bond.getOtherNode(atom);
         boolean isParentBond = (parent != null && parent.atom == other);
-        int order = bond.getCovalentOrder();
+        int order = data.getBondOrder(bond);
         if (order == 2) {
           if (elemNo > 10 || !isFirstRow(other))
             order = 1;
@@ -2329,7 +2095,7 @@ public class CIPChirality {
         boolean aLoses = a.isDuplicate && currentRule > RULE_1b; 
         for (int j = i + 1; j < 4; j++) {
           CIPAtom b = atoms[loser = j];
-
+          
           // Check:
           
           // (a) if one of the atoms is a phantom atom (P-92.1.4.1); if not, then
@@ -2409,91 +2175,104 @@ public class CIPChirality {
      */
     private int breakTie(CIPAtom b, int sphere) {
 
-      // Phase I: Quick check of this atom itself
-
-      // return TIED if:
-
-      // a) this is a duplicate, and we are done with Rule 1b
-      // b) two duplicates are of the same node (atom and root distance)
-      // c) one or the other can't be set (because it has too many connections), or
-      // d) both are terminal or both are duplicates (no atoms to check)
-
-      if (isDuplicate
-          && (currentRule > RULE_1b || b.isDuplicate && atom == b.atom
-              && rootDistance == b.rootDistance) || !setNode() || !b.setNode()
-          || isTerminal && b.isTerminal || isDuplicate && b.isDuplicate)
-        return TIED;
-
-      // We are done if one of these is terminal 
-      // (for the next sphere, unless one is a duplicate -- Custer Rule 1b "duplicate > nonduplicate").
-
-      if (isTerminal != b.isTerminal)
-        return decidingSphere = (isTerminal ? B_WINS : A_WINS)
-            * (sphere + (b.isDuplicate || isDuplicate ? 0 : 1)); // COUNT_LINE
-
-      // Do a duplicate check.
-
-      // If this is not a TIE, we do not have to go any further.
-
-      // NOTE THAT THIS CHECK IS NOT EXPLICIT IN THE RULES
-      // BECAUSE DUPLICATES LOSE IN THE NEXT SPHERE, NOT THIS ONE.
-      // THE NEED FOR (sphere+1) in AY236.53, 163, 173, 192 SHOWS THAT 
-      // SUBRULE 1a MUST BE COMPLETED EXHAUSTIVELY PRIOR TO SUBRULE 1b.
-      //
-      // Note that this check must return "N+1", because that is where the actual difference is.
-      // This nuance is not clear from the "simplified" digraphs found in Chapter 9. 
-      //
-      // Say we have {O (O) C} and {O O H}
-      //
-      // The rules require that we first only look at just the atoms, so OOC beats OOH in this sphere,
-      // but there are no atoms to check on (O), so we can do the check here to save time, reporting back
-      // to breatTie that we found a difference, but not in this sphere.
-
-      int score = (currentRule > RULE_1a ? TIED : unlikeDuplicates(b));
-      if (score != TIED) {
-        return decidingSphere = score * (sphere + 1); // COUNT_LINE
-      }
-
-      // Phase II -- shallow check only
-      //
-      // Compare only in the current substitutent sphere. 
-      //
-      // Check to see if any of the three connections to a and b are 
-      // different themselves, without any deeper check.
-      //
-      // This requires that both a annd b have their ligands sorted
-      // at least in a preliminary fashion, using Array.sort() and compareTo()
-      // for Rules 1.
-      // allows us to do this before any new sortSubstituent calls.
-      // But if we do not do a presort, then we have to do those first.
-      // Doing the presort saves considerably on run time.
-
-      for (int i = 0; i < nAtoms; i++)
-        if ((score = atoms[i].checkCurrentRule(b.atoms[i])) != TIED) {
-          return decidingSphere = score * (sphere + 1); // COUNT_LINE
-        }
-
-      // Time to do a full sort of eash ligand, including breaking ties
-
-      sortSubstituents(sphere);
-      b.sortSubstituents(sphere);
-
-      // Phase III -- check deeply using re-entrant call to breakTie
-      //
-      // Now iteratively deep-sort each list based on substituents
-      // and then check them one by one to see if the tie can be broken.
-
-      // Note that if not catching duplicates early, we must check for 
-      // nAtoms == 0 and set finalScore in that case to B_WINS * (sphere + 1)
-      // but we are checking for duplicates early in this implementation.
-
       int finalScore = TIED;
-      for (int i = 0, abs, absScore = Integer.MAX_VALUE; i < nAtoms; i++) {
-        if ((score = atoms[i].breakTie(b.atoms[i], sphere + 1)) != TIED
-            && (abs = Math.abs(score)) < absScore) {
-          absScore = abs;
-          finalScore = score;
+
+      while (true) {
+        //System.out.println("breaking tie for " + this + " " + b);
+
+        // Phase I: Quick check of this atom itself
+
+        // return TIED if:
+
+        // a) this is a duplicate, and we are done with Rule 1b
+        // b) two duplicates are of the same node (atom and root distance)
+        // c) one or the other can't be set (because it has too many connections), or
+        // d) both are terminal or both are duplicates (no atoms to check)
+
+        if (isDuplicate
+            && (currentRule > RULE_1b || b.isDuplicate && atom == b.atom
+                && rootDistance == b.rootDistance) || !setNode()
+            || !b.setNode() || isTerminal && b.isTerminal || isDuplicate
+            && b.isDuplicate)
+          break;
+
+        // We are done if one of these is terminal 
+        // (for the next sphere, unless one is a duplicate -- Custer Rule 1b "duplicate > nonduplicate").
+
+        if (isTerminal != b.isTerminal) {
+          finalScore = (isTerminal ? B_WINS : A_WINS)
+              * (sphere + (b.isDuplicate || isDuplicate ? 0 : 1)); // COUNT_LINE
+          break;
         }
+        // Do a duplicate check.
+
+        // If this is not a TIE, we do not have to go any further.
+
+        // NOTE THAT THIS CHECK IS NOT EXPLICIT IN THE RULES
+        // BECAUSE DUPLICATES LOSE IN THE NEXT SPHERE, NOT THIS ONE.
+        // THE NEED FOR (sphere+1) in AY236.53, 163, 173, 192 SHOWS THAT 
+        // SUBRULE 1a MUST BE COMPLETED EXHAUSTIVELY PRIOR TO SUBRULE 1b.
+        //
+        // Note that this check must return "N+1", because that is where the actual difference is.
+        // This nuance is not clear from the "simplified" digraphs found in Chapter 9. 
+        //
+        // Say we have {O (O) C} and {O O H}
+        //
+        // The rules require that we first only look at just the atoms, so OOC beats OOH in this sphere,
+        // but there are no atoms to check on (O), so we can do the check here to save time, reporting back
+        // to breatTie that we found a difference, but not in this sphere.
+
+        int score = (currentRule > RULE_1a ? TIED : unlikeDuplicates(b));
+        if (score != TIED) {
+          finalScore = score * (sphere + 1); // COUNT_LINE
+          break;
+        }
+
+        // Phase II -- shallow check only
+        //
+        // Compare only in the current substitutent sphere. 
+        //
+        // Check to see if any of the three connections to a and b are 
+        // different themselves, without any deeper check.
+        //
+        // This requires that both a annd b have their ligands sorted
+        // at least in a preliminary fashion, using Array.sort() and compareTo()
+        // for Rules 1.
+        // allows us to do this before any new sortSubstituent calls.
+        // But if we do not do a presort, then we have to do those first.
+        // Doing the presort saves considerably on run time.
+
+        for (int i = 0; i < nAtoms; i++)
+          if ((score = atoms[i].checkCurrentRule(b.atoms[i])) != TIED) {
+            finalScore = score * (sphere + 1); // COUNT_LINE
+            break;
+          }
+
+        if (finalScore != TIED) {
+          break;
+        }
+        // Time to do a full sort of eash ligand, including breaking ties
+
+        sortSubstituents(sphere);
+        b.sortSubstituents(sphere);
+
+        // Phase III -- check deeply using re-entrant call to breakTie
+        //
+        // Now iteratively deep-sort each list based on substituents
+        // and then check them one by one to see if the tie can be broken.
+
+        // Note that if not catching duplicates early, we must check for 
+        // nAtoms == 0 and set finalScore in that case to B_WINS * (sphere + 1)
+        // but we are checking for duplicates early in this implementation.
+
+        for (int i = 0, abs, absScore = Integer.MAX_VALUE; i < nAtoms; i++) {
+          if ((score = atoms[i].breakTie(b.atoms[i], sphere + 1)) != TIED
+              && (abs = Math.abs(score)) < absScore) {
+            absScore = abs;
+            finalScore = score;
+          }
+        }
+        break;
       }
       return decidingSphere = finalScore;
     }
@@ -2834,6 +2613,7 @@ public class CIPChirality {
         oldParent = path.get(i);
         newSub = (oldParent == null ? new CIPAtom().create(null, this,
             isAlkene, true, false) : (CIPAtom) oldParent.clone());
+        newSub.nPriorities = 0;
         newSub.sphere = thisAtom.sphere + 1;
         thisAtom.replaceParentSubstituent(oldSub, newParent, newSub);
         if (i > 0 && thisAtom.isAlkene && !thisAtom.isAlkeneAtom2) {
@@ -3011,7 +2791,6 @@ public class CIPChirality {
           int rule = RULE_1a;
           if (Logger.debugging)
             Logger.info("checking aux " + this + " = " + myPath);
-          System.out.println(">???");
           for (; rule <= RULE_6; rule++)
             if ((!skipRules4And5 || rule < RULE_4a || rule > RULE_5)
                 && atom1.auxSort(rule))
@@ -3041,7 +2820,6 @@ public class CIPChirality {
         //rule4Type = nRS;
       if (c != '~') {
         Logger.info("creating aux " + c + decidingSphere + " for " + this + " = " + myPath);
-        Logger.info("---???<");
       }
       return (this.isChiralPath = isChiralPath);
     }
@@ -3056,10 +2834,13 @@ public class CIPChirality {
      * @return 1 for "R", 2 for "S"
      */
     int checkHandedness() {
+      if (!data.setCoord(atom, atoms))
+        return NO_CHIRALITY;
+      P3 p0 = (atoms[3].atom == null ? atom : atoms[3].atom).getXYZ();
       P3 p1 = atoms[0].atom.getXYZ(), p2 = atoms[1].atom.getXYZ(), p3 = atoms[2].atom
           .getXYZ();
       Measure.getNormalThroughPoints(p1, p2, p3, vNorm, vTemp);
-      vTemp.setT((atoms[3].atom == null ? atom : atoms[3].atom).getXYZ());
+      vTemp.setT(p0);
       vTemp.sub(p1);
       return (vTemp.dot(vNorm) > 0 ? STEREO_R : STEREO_S);
     }
