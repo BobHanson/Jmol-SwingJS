@@ -2145,7 +2145,7 @@ public class PropertyManager implements JmolPropertyManager {
     int iModelLast = -1;
     int lastAtomIndex = bs.length() - 1;
     int lastModelIndex = atoms[lastAtomIndex].mi;
-    boolean showModels = (iModel != lastModelIndex);
+    boolean isMultipleModels = (iModel != lastModelIndex);
     BS bsModels = vwr.ms.getModelBS(bs, true);
     int nModels = bsModels.cardinality();
     Lst<String> lines = new Lst<String>();
@@ -2176,7 +2176,7 @@ public class PropertyManager implements JmolPropertyManager {
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       isBiomodel = models[a.mi].isBioModel;
-      if (showModels && a.mi != iModelLast) {
+      if (isMultipleModels && a.mi != iModelLast) {
         if (iModelLast != -1) {
           modelPt = fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
           out.append("ENDMDL\n");
@@ -2222,16 +2222,17 @@ public class PropertyManager implements JmolPropertyManager {
       lines.addLast(XX);
     }
     fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
-    if (showModels)
+    if (isMultipleModels)
       out.append("ENDMDL\n");
 
     // now for CONECT records...
     modelPt = -1;
     iModelLast = -1;
-    isBiomodel = false;
+    String conectKey = "" + (isMultipleModels ? modelPt : 0);
+   isBiomodel = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      if (showModels && a.mi != iModelLast) {
+      if (isMultipleModels && a.mi != iModelLast) {
         iModelLast = a.mi;
         isBiomodel = models[iModelLast].isBioModel;
         modelPt++;
@@ -2259,9 +2260,9 @@ public class PropertyManager implements JmolPropertyManager {
                 continue; // only one entry in this case -- pseudo-PmapDB style
               //$FALL-THROUGH$
             case 1:
-              Integer inew = map.get("" + modelPt + "."
+              Integer inew = map.get(conectKey + "."
                   + Integer.valueOf(iThis));
-              Integer inew2 = map.get("" + modelPt + "."
+              Integer inew2 = map.get(conectKey + "."
                   + Integer.valueOf(iOther));
               if (inew == null || inew2 == null)
                 break;
