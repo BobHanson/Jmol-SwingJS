@@ -9,6 +9,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -568,6 +572,10 @@ class NBOFileHandler extends JPanel {
   }
 
   /**
+   * update47File will only be called by doRunSaveButton() and doRunGenNBOJob() in NBORun.java
+   * If this method is being first called on a given .47 file, we will make a copy of the .47 file,
+   * called <filename>.copy. At the end of the module (when we want to switch to another module), we will
+   * copy our <filename>.copy to <filename>.47.
    * 
    * @param jobName
    * @param keywords
@@ -576,9 +584,91 @@ class NBOFileHandler extends JPanel {
    */
   
   NBOFileData47 update47File(String jobName, String keywords, boolean isRun) {
+    int i;
+    String filePath="";
+    //copyFilePath==full path to <filename.copy>
+    String copyFilePath="";
     if (!useExt.equals("47"))
       return null;
+    //fileName47==full path to <filename.47>
     String fileName47 = file47.getAbsolutePath();
+    
+    //if filename.copy doesn't exist, this is the first time that we are updating filename.47.
+    //we will need to copy filename.47 to filename.copy
+    //Otherwise, just update to filename.47 directly.
+    
+    //change file path from <filename.47> to <filename.copy>
+    //  For windows:
+    String splitBySeparator[]=fileName47.split("\\\\");
+    //  For Linux:
+    //    String splitBySeparator[]=fileName47.split("/");
+    
+    if(splitBySeparator.length>0)
+    {
+      filePath=splitBySeparator[splitBySeparator.length-1];
+    }
+    else
+    {
+      dialog.logInfo("Could not create file copy for " + fileName47, Logger.LEVEL_ERROR);
+      return null;
+    }
+    filePath=filePath.replace(".47",".copy");
+    splitBySeparator[splitBySeparator.length-1]=filePath;
+    for(i=0;i<splitBySeparator.length;i++)
+    {
+      copyFilePath=copyFilePath+splitBySeparator[i]+"\\";
+    }
+    
+    //if <filename.copy> doesn't exist, create the file and copy all the data of .47 file to .copy
+    File file=new File(copyFilePath);
+    FileInputStream source47=null;
+    FileOutputStream destinationCopy=null;
+    if(!file.exists())
+    {
+      //if file doesn't exist, a "better" implementation would be to
+      //1. data=getFileData(fileName47)
+      //2. writeToFile(copyFilePath,data)
+      //*However*, writeToFile goes through too many other classes and can get error in those classes.
+      //We want to ensure that our copying of <filename>.47 to <filename>.out is ALWAYS successful before
+      //we overwrite or modify our <filename>.47
+      
+      try
+      {
+        file.createNewFile();
+        File sourceFile47=new File(fileName47);
+        source47=new FileInputStream(sourceFile47);
+        destinationCopy=new FileOutputStream(file);
+        destinationCopy.getChannel().transferFrom(source47.getChannel(), 0, source47.getChannel().size());
+        File47AndFileCopy file47fileCopyPair=new File47AndFileCopy(fileName47,copyFilePath);
+        dialog.insertNewFileCopy(file47fileCopyPair);
+      }
+      catch(IOException ex)
+      {
+        dialog.logInfo("Could not create " + copyFilePath, Logger.LEVEL_ERROR);
+        return null;
+      }
+      finally
+      {
+        try
+        {
+          if(source47!=null)
+          {
+            source47.close();
+          }
+          if(destinationCopy!=null)
+          {
+            destinationCopy.close();
+          }
+        }
+        catch(IOException ex)
+        {
+          dialog.logInfo("Could not close file " + copyFilePath, Logger.LEVEL_ERROR);
+          return null;
+        }
+        
+      }
+    }
+    
     NBOFileData47 fileData = read47File(true);
     String oldData = (isRun ? getFileData(fileName47) : null);
     String newFileData = 
@@ -588,6 +678,7 @@ class NBOFileHandler extends JPanel {
         + "  $END" 
         + sep 
         + fileData.postKeywordData;
+    
     if (writeToFile(fileName47, newFileData)) {
       if (oldData != null)
         writeToFile(fileName47 + "$", oldData);
@@ -756,5 +847,28 @@ class NBOFileHandler extends JPanel {
       super();
     }
 
+  }
+  
+}
+
+class File47AndFileCopy
+{
+  private String file47;
+  private String filecopy;
+  
+  File47AndFileCopy(String file_47,String file_copy)
+  {
+    this.file47=file_47;
+    this.filecopy=file_copy;
+  }
+  
+  String getFile47()
+  {
+    return this.file47;
+  }
+  
+  String getFilecopy()
+  {
+    return this.filecopy;
   }
 }
