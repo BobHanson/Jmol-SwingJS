@@ -12,7 +12,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -484,9 +483,17 @@ class NBOFileHandler extends JPanel {
       s = PT.trim(tokens[i], "\t\r\n ");
       if (params == preParams && s.indexOf("$NBO") >= 0) {
         String[] prePost = PT.split(s, "$NBO");
-        if (prePost[0].length() > 0)
-          params.append(s).append(sep);
-        allKeywords = PT.trim(prePost[1], "\t\r\n ");
+        if(prePost.length>=1)
+        {
+          if (prePost[0].length() > 0)
+          {
+            params.append(s).append(sep);
+          }
+        }
+        if(prePost.length>=2)
+        {
+          allKeywords = PT.trim(prePost[1], "\t\r\n ");
+        }
         params = postParams;
         if (!doAll)
           break;

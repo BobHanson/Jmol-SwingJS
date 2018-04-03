@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 
 import javax.swing.SwingConstants;
 import javajs.util.PT;
