@@ -455,7 +455,7 @@ public class SmilesAromatic {
           npi += n;
           if (n == 1)
             n1++;
-          if (Logger.debugging)
+          if (Logger.debuggingHigh)
             Logger.info("atom " + atom + " pi=" + n + " npi=" + npi);
           // normal continuance
           continue;

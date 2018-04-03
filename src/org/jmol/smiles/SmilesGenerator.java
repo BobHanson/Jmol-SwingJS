@@ -1111,7 +1111,7 @@ public class SmilesGenerator {
     // for other atoms, we use number of bonds.
     // just checking for tetrahedral CH3)
     if (n == 6 ? nx != 4 : n == 1 || nx > 1)
-      return s;
+      return s + (++chainCheck);
     String sa = ";" + level + "/" + n + "/" + nh + "/" + nx + (level == 0 ? "," : "_");
     if (n == 6) {
       switch (nh) {
@@ -1131,7 +1131,7 @@ public class SmilesGenerator {
           if (bsDone.get(i2) || !edges[j].isCovalent() || a2.getElementNumber() == 1)
             continue;
           bsDone.set(i2);
-          sa2 = addStereoCheck(level + 1, atom.getIndex(), a2, "", bsDone);
+          sa2 = addStereoCheck(level + 1, atom.getIndex(), a2, "", (BS) bsDone.clone());
           if (s2.indexOf(sa2) >= 0)
             nunique--;
           s2 += sa2;

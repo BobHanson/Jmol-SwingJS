@@ -27,6 +27,7 @@ package org.jmol.symmetry;
 import java.awt.Cursor;
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -43,10 +44,8 @@ import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.bspt.Bspt;
 import org.jmol.bspt.CubeIterator;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
-import org.jmol.script.T;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
@@ -800,6 +799,16 @@ public class Symmetry implements SymmetryInterface {
     CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry.CIPData", vwr, "script")).set(vwr, bsAtoms);
     cip.getChiralityForAtoms(data);
     vwr.setCursor(Cursor.DEFAULT_CURSOR);
+  }
+  
+  @Override
+  public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles) throws Exception {
+    vwr.setCursor(Cursor.WAIT_CURSOR);
+    CIPChirality cip = getCIPChirality(vwr);
+    CIPDataSmiles data = ((CIPDataSmiles) Interface.getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script")).setAtomsForSmiles(vwr, smiles);
+    cip.getChiralityForAtoms(data);
+    vwr.setCursor(Cursor.DEFAULT_CURSOR);
+    return data.getSmilesChiralityArray();
   }
   
   CIPChirality cip;

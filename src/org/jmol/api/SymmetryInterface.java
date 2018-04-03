@@ -222,6 +222,9 @@ public interface SymmetryInterface {
 
   void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
 
+  String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+      throws Exception;
+
   public Object getConventionalUnitCell(String latticeType);
 
 }

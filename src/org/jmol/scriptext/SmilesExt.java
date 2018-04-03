@@ -198,6 +198,8 @@ public class SmilesExt {
       try {
         if (smiles == null) {
           b = e.vwr.getSubstructureSetArray(pattern, bsSelected, flags);
+        } else if (pattern.equals("chirality")){
+          return e.vwr.calculateChiralityForSmiles(smiles);
         } else {
           int[][] map = sm.find(pattern, smiles, (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES) 
               | (firstMatchOnly ?  JC.SMILES_FIRST_MATCH_ONLY : 0));

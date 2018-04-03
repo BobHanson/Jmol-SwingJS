@@ -596,7 +596,9 @@ public class Rdr implements GenericLineReader {
 
 	public static BufferedWriter getBufferedWriter(OutputStream os, String charSetName) {
 		OutputStreamWriter osw = (OutputStreamWriter) Interface.getInstanceWithParams("java.io.OutputStreamWriter", 
-				new Class<?>[] { java.io.OutputStream.class, String.class }, new Object[] {os, charSetName});
+				new Class<?>[] { java.io.OutputStream.class, String.class }, 
+				new Object[] { os, charSetName == null ? "UTF-8" : charSetName }
+		);
 		/**
 		 * @j2sNative
 		 * return osw.getBufferedWriter();
