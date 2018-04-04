@@ -480,10 +480,9 @@ class NBOFileHandler extends JPanel {
       s = PT.trim(tokens[i], "\t\r\n ");
       if (params == preParams && s.indexOf("$NBO") >= 0) {
         String[] prePost = PT.split(s, "$NBO");
-        if (prePost[0].length() > 0) {
+        if (prePost[0].length() > 0)
           params.append(s).append(sep);
-          allKeywords = PT.trim(prePost[1], "\t\r\n ");
-        }
+        allKeywords = PT.trim(prePost[1], "\t\r\n ");
         params = postParams;
         if (!doAll)
           break;
