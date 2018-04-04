@@ -43,6 +43,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 import javax.swing.SwingConstants;
 import javajs.util.PT;
@@ -132,7 +137,6 @@ public class NBODialog extends JDialog {
   protected boolean jmolOptionNOSET = false; // do not use NBO settings by default
   protected boolean jmolOptionVIEW = false; // present only the VIEW option
   protected boolean jmolOptionNONBO = false; // do not try to contact NBOServe
-
   
   /**
    * Allowing passage of Jmol options. Currently: NOZAP;NOSET;JMOL;VIEW
@@ -210,7 +214,12 @@ public class NBODialog extends JDialog {
     if (tf)
       log("\n", 'b');
   }
-
+  
+  /**
+   * An array that stores all original 47 file copies that we will need to restore back to our 47 file before
+   * switching modules or exiting Jmol.
+   */
+  private List<File47AndFileCopy> filecopy;
 
   /**
    * Creates a dialog for getting info related to output frames in nbo format.
@@ -241,6 +250,8 @@ public class NBODialog extends JDialog {
     modelPanel = new NBOModel(this);
     runPanel = new NBORun(this);
     viewPanel = searchPanel = new NBOSearch(this);
+    
+    filecopy=new ArrayList<File47AndFileCopy>();
     
     createDialog(jmolFrame);
 
@@ -336,7 +347,7 @@ public class NBODialog extends JDialog {
   }
 
   /**
-   * Rest all variables that might be an issue
+   * Reset all variables that might be an issue
    * 
    */
   private void resetModuleVariables() {
@@ -345,6 +356,7 @@ public class NBODialog extends JDialog {
 
     viewPanel.resetCurrentOrbitalClicked();
     resetVariables_c();
+    restore47filesFromFileCopy();
     
   }
 
@@ -441,9 +453,6 @@ public class NBODialog extends JDialog {
     viewButton = new JButton("View");
     searchButton = new JButton("Search");
     helpBtn = new HelpBtn(null);
-
-
-
 
     JPanel p = new JPanel(new BorderLayout());
     if (!jmolOptionNONBO) {
@@ -811,6 +820,7 @@ public class NBODialog extends JDialog {
   }
 
   public void close() {
+    restore47filesFromFileCopy();
     boolean wasWorking = (nboService.getWorkingMode() == DIALOG_RUN);
     nboService.closeProcess(false);
     if (wasWorking)
@@ -1267,8 +1277,75 @@ public class NBODialog extends JDialog {
 
   }
   
+  void insertNewFileCopy(File47AndFileCopy filePair)
+  {
+    if(filePair!=null)
+    {
+      filecopy.add(filePair);
+    }
+  }
   
-  
+  /*
+   * When switching modules, this method is being called to restore the 47 files to its 
+   * original state using data from file copy.
+   */
+  void restore47filesFromFileCopy()
+  {
+    int i;
+    FileInputStream sourceFilecopy=null;
+    FileOutputStream destinationFile47=null;
+    for(i=0;i<filecopy.size();i++)
+    {
+      File47AndFileCopy filePair=filecopy.get(i);
+      
+      String file47_path=filePair.getFile47();
+      String fileCopy_path=filePair.getFilecopy();
+      
+      File filecopy=new File(fileCopy_path);
+      File file47=new File(file47_path);
+    
+      try
+      {
+        sourceFilecopy=new FileInputStream(filecopy);
+        destinationFile47=new FileOutputStream(file47,false);
+        destinationFile47.getChannel().transferFrom(sourceFilecopy.getChannel(),0,sourceFilecopy.getChannel().size());
+      }
+      catch(IOException ex)
+      {
+        logInfo("Could not restore file " + file47_path+" to its original state.\nThe file47 might now be corrupted.", Logger.LEVEL_ERROR);
+      }
+      finally
+      {
+        try
+        {
+          if(sourceFilecopy!=null)
+          {
+            sourceFilecopy.close();
+          }
+          if(destinationFile47!=null)
+          {
+            destinationFile47.close();
+          }
+          
+        }
+        catch(IOException ex)
+        {
+          logInfo("Could not close file " + file47_path, Logger.LEVEL_ERROR);
+        }
+      }
+      
+    }
+    
+    for(i=0;i<filecopy.size();i++)
+    {
+      String fileCopy_path=filecopy.get(i).getFilecopy();
+      File file=new File(fileCopy_path);
+      file.delete();
+    }
+    
+    filecopy.clear();
+    
+  }
 
   
   protected boolean isOpenShell() {
@@ -1327,6 +1404,7 @@ public class NBODialog extends JDialog {
         return "Jmol_NBOPro6_help.htm";
       }
     }
+         
   }
 
 }
