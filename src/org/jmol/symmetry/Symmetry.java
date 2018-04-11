@@ -46,6 +46,7 @@ import org.jmol.bspt.Bspt;
 import org.jmol.bspt.CubeIterator;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.T;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
@@ -796,7 +797,7 @@ public class Symmetry implements SymmetryInterface {
   public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
     vwr.setCursor(Cursor.WAIT_CURSOR);
     CIPChirality cip = getCIPChirality(vwr);
-    String dataClass = (bsAtoms.cardinality() == 1 ? "CIPDataTracker" : "CIPData");
+    String dataClass = (vwr.getBoolean(T.testflag2) ? "CIPData" : "CIPDataTracker");
     CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr, bsAtoms);
     cip.getChiralityForAtoms(data);
     vwr.setCursor(Cursor.DEFAULT_CURSOR);
