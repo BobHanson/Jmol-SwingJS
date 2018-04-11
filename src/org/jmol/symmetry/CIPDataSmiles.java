@@ -67,7 +67,8 @@ public class CIPDataSmiles extends CIPData {
   int isCis(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
     int stereo1 = getStereoEdge(b.atom, a.atom);
     int stereo2 = getStereoEdge(c.atom, d.atom);
-    return (stereo1 == 0 || stereo2 == 0 ? CIPChirality.NO_CHIRALITY : stereo1 != stereo2 ? CIPChirality.STEREO_E : CIPChirality.STEREO_Z);
+    return (stereo1 == 0 || stereo2 == 0 ? CIPChirality.NO_CHIRALITY
+        : stereo1 != stereo2 ? CIPChirality.STEREO_E : CIPChirality.STEREO_Z);
   }
 
   private int getStereoEdge(SimpleNode atom, SimpleNode winner) {
@@ -80,7 +81,7 @@ public class CIPDataSmiles extends CIPData {
         return (edge.getOtherNode(atom) == winner) == (edge.getAtom1() == atom) ? Edge.BOND_STEREO_FAR
             : order;
       case Edge.BOND_STEREO_FAR:
-        return (edges[i].getOtherNode(atom) == winner) == (edge.getAtom1() == atom)  ? Edge.BOND_STEREO_NEAR
+        return (edges[i].getOtherNode(atom) == winner) == (edge.getAtom1() == atom) ? Edge.BOND_STEREO_NEAR
             : order;
       }
     }
@@ -97,25 +98,26 @@ public class CIPDataSmiles extends CIPData {
    * @return true if torsion angle is
    */
   @Override
-  int isPos(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
+  int isPositiveTorsion(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
     SmilesAtom center = findCumulativeCenter(b, c);
     if (center == null)
       return CIPChirality.NO_CHIRALITY;
+    // get ordered list based on the SMILES string, 
+    // correctly inserting lone pairs where needed
     Node[] jn = center.stereo.getAlleneAtoms(center, (SmilesAtom) b.atom);
     if (jn == null)
       return CIPChirality.NO_CHIRALITY;
-    center.stereo.setTopoCoordinates(center, null, null, jn);    
+    center.stereo.setTopoCoordinates(center, null, null, jn);
     float angle = Measure.computeTorsion(jn[0].getXYZ(), jn[1].getXYZ(),
         jn[2].getXYZ(), jn[3].getXYZ(), true);
-//    System.out.println(a.atomIndex + " " + b.atomIndex + " " + c.atomIndex + " " + d.atomIndex);
-//    System.out.println(jn[0].getIndex() + " " + jn[1].getIndex() + " " + jn[2].getIndex() + " " + jn[3].getIndex());
-//    System.out.println(angle);
+    //    System.out.println(a.atomIndex + " " + b.atomIndex + " " + c.atomIndex + " " + d.atomIndex);
+    //    System.out.println(jn[0].getIndex() + " " + jn[1].getIndex() + " " + jn[2].getIndex() + " " + jn[3].getIndex());
+    //    System.out.println(angle);
     // positive and both on the inside or both on the outside
-    return ((angle > 0) 
-        == ((a.atom.getIndex() == jn[0].getIndex()) && (d.atom.getIndex() == jn[3].getIndex())
-        || (a.atom.getIndex() == jn[1].getIndex()) && (d.atom.getIndex() == jn[2].getIndex())
-            )
-        ? CIPChirality.STEREO_P : CIPChirality.STEREO_M);
+    return ((angle > 0) == ((a.atom.getIndex() == jn[0].getIndex())
+        && (d.atom.getIndex() == jn[3].getIndex()) || (a.atom.getIndex() == jn[1]
+        .getIndex()) && (d.atom.getIndex() == jn[2].getIndex())) ? CIPChirality.STEREO_P
+        : CIPChirality.STEREO_M);
   }
 
   private SmilesAtom findCumulativeCenter(CIPAtom a, CIPAtom a2) {
@@ -123,13 +125,14 @@ public class CIPDataSmiles extends CIPData {
     while (center != null && center != a2.atom) {
       SimpleEdge[] edges = center.getEdges();
       for (int i = edges.length; --i >= 0;) {
-        if (edges[i].getCovalentOrder() == 2 && (c = edges[i].getOtherNode(center)) != b) {
+        if (edges[i].getCovalentOrder() == 2
+            && (c = edges[i].getOtherNode(center)) != b) {
           SmilesAtom sa = (SmilesAtom) c;
           if (sa.stereo != null) {
             return sa;
           }
         }
-      }      
+      }
       b = center;
       center = c;
     }
@@ -152,7 +155,7 @@ public class CIPDataSmiles extends CIPData {
       nodes[i] = (Node) edges[i].getOtherNode(a);
     a.stereo.setTopoCoordinates(a, null, null, nodes);
     return true;
-    
+
   }
 
   public String[] getSmilesChiralityArray() {

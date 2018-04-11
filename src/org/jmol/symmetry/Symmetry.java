@@ -796,7 +796,8 @@ public class Symmetry implements SymmetryInterface {
   public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
     vwr.setCursor(Cursor.WAIT_CURSOR);
     CIPChirality cip = getCIPChirality(vwr);
-    CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry.CIPData", vwr, "script")).set(vwr, bsAtoms);
+    String dataClass = (bsAtoms.cardinality() == 1 ? "CIPDataTracker" : "CIPData");
+    CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr, bsAtoms);
     cip.getChiralityForAtoms(data);
     vwr.setCursor(Cursor.DEFAULT_CURSOR);
   }

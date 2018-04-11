@@ -13,12 +13,14 @@ import javajs.util.V3;
 import org.jmol.script.T;
 import org.jmol.symmetry.CIPChirality.CIPAtom;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Logger;
 import org.jmol.util.SimpleEdge;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class CIPData {
+
 
   
   /**
@@ -30,7 +32,7 @@ public class CIPData {
 
   
   Viewer vwr;
-
+  
   /**
    * also set auxiliary (single-atom only)
    */
@@ -83,12 +85,12 @@ public class CIPData {
    */
   BS bsXAromatic = new BS();
 
+  BS bsMolecule;
+
   /**
    * [c-]
    */
   BS bsCMinus = new BS();
-
-  BS bsMolecule;
 
   BS[] lstSmallRings;
 
@@ -157,11 +159,19 @@ public class CIPData {
   }
   
   protected BS[] getList(String smarts) throws Exception {
-    return vwr.getSubstructureSetArray(smarts, bsMolecule, JC.SMILES_TYPE_SMARTS);
+    int level = Logger.getLogLevel();
+    Logger.setLogLevel(Math.min(level,  Logger.LEVEL_INFO));
+    BS[] list = vwr.getSubstructureSetArray(smarts, bsMolecule, JC.SMILES_TYPE_SMARTS);
+    Logger.setLogLevel(level);
+    return list;
   }
 
   protected BS match(String smarts) throws Exception {
-    return vwr.getSmartsMatch(smarts, bsMolecule);
+    int level = Logger.getLogLevel();
+    Logger.setLogLevel(Math.min(level,  Logger.LEVEL_INFO));
+    BS bs = vwr.getSmartsMatch(smarts, bsMolecule);
+    Logger.setLogLevel(level);
+    return bs;
   }
 
   /**
@@ -184,9 +194,6 @@ public class CIPData {
       bsEneAtom1.clearAll();
       checkEne(bsAllEnes, bsPath, -1, i, 2, bsEneAtom1); 
     }
-    
-    
-        
   }
 
   /**
@@ -276,6 +283,10 @@ public class CIPData {
     }
   }
 
+  boolean isTracker() {
+    return false;
+  }
+  
   boolean isSmiles() {
     return false;
   }
@@ -441,7 +452,7 @@ public class CIPData {
    * @param d
    * @return true if torsion angle is
    */
-  int isPos(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
+  int isPositiveTorsion(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
     float angle = Measure.computeTorsion(a.atom.getXYZ(), b.atom.getXYZ(),
         c.atom.getXYZ(), d.atom.getXYZ(), true);
     return (angle > 0 ? CIPChirality.STEREO_P : CIPChirality.STEREO_M);
@@ -451,10 +462,65 @@ public class CIPData {
     return bond.getCovalentOrder();
   }
 
+  /**
+   * set the coordinate -- SMILES only
+   * 
+   * @param atom1
+   * @param atoms
+   * @return true if coordinate is able to be set
+   */
   boolean setCoord(SimpleNode atom1, CIPAtom[] atoms) {
-    return true;
-    
+    // 
+    return true;    
   }
 
+  /**
+   * Determine the ordered CIP winding of this atom. For this, we just take
+   * the directed normal through the plane containing the top three
+   * substituent atoms and dot that with the vector from any one of them to
+   * the fourth ligand (or the root atom if trigonal pyramidal). If this is
+   * positive, we have R.
+   * 
+   * @param a 
+   * 
+   * @return 1 for "R", 2 for "S"
+   */
+  int checkHandedness(CIPAtom a) {
+    CIPAtom[] atoms = a.atoms; 
+    if (!setCoord(a.atom, atoms))
+      return CIPChirality.NO_CHIRALITY;
+    P3 p0 = (atoms[3].atom == null ? a.atom : atoms[3].atom).getXYZ();
+    P3 p1 = atoms[0].atom.getXYZ(), p2 = atoms[1].atom.getXYZ(), p3 = atoms[2].atom
+        .getXYZ();
+    Measure.getNormalThroughPoints(p1, p2, p3, vNorm, vTemp);
+    vTemp.setT(p0);
+    vTemp.sub(p1);
+    return (vTemp.dot(vNorm) > 0 ? CIPChirality.STEREO_R : CIPChirality.STEREO_S);
+  }
 
+  /**
+   * track this decision - CIPDataTracker only
+   * 
+   * @param cip
+   * @param a
+   * @param b
+   * @param sphere
+   * @param finalScore
+   * @param mode
+   */
+  void track(CIPChirality cip, CIPAtom a, CIPAtom b, int sphere,
+             int finalScore, int mode) {
+    // CIPDataTracker only
+  }
+
+  /**
+   * CIPDataTracker only
+   * 
+   * @param root
+   * @return string expression of decision path
+   */
+  String getRootTrackerResult(CIPAtom root) {    
+    // CIPDataTracker only
+    return null;
+  }
 }
