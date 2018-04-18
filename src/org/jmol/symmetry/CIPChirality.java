@@ -43,20 +43,21 @@ import org.jmol.viewer.JC;
 /**
  * A fully validated relatively efficient implementation of Cahn-Ingold-Prelog
  * rules for assigning R/S, M/P, and E/Z stereochemical descriptors. Based on
- * IUPAC Blue Book rules of 2013.
+ * IUPAC Blue Book rules of 2013 and assorted corrections.
  * https://iupac.org/projects/project-details/?project_nr=2001-043-1-800
+ * http://www.sbcs.qmul.ac.uk/iupac/bibliog/BBerrors.html
  * 
  * Features include:
  * 
  * - deeply validated
  * 
- * - includes revised Rules 1b, and 2.
+ * - includes revised Rules 1b, and 2
  * 
- * - includes a proposed Rule 6.
+ * - includes a proposed Rule 6
  * 
  * - implemented in Java (Jmol) and JavaScript (JSmol)
  * 
- * - only two Java classes; roughly 1000 lines
+ * - only a few Java classes; < 1000 lines
  * 
  * - efficient, one-pass process for each center using a single finite digraph
  * for all auxiliary descriptors
@@ -79,7 +80,7 @@ import org.jmol.viewer.JC;
  * - properly treats neutral-species resonance structures using fractional
  * atomic mass and a modified Rule 1b
  * 
- * - implements CIP spiro rule (BB P-93.5.3.1)
+ * - implements CIP spiro rule (BB P-93.5.3.1) as part of Rule 6
  * 
  * - detects small rings (fewer than 8 members) and removes E/Z specifications
  * for such
@@ -141,26 +142,30 @@ import org.jmol.viewer.JC;
  * 
  * code history:
  * 
- * 4/11/18 Jmol 14.29.13 adds optional CIPDataTracker class
+ * 4/11/18 Jmol 14.29.13 adds optional CIPDataTracker class (822 lines)
  * 
  * 4/2/18 Jmol 14.29.13 adds optional CIPDataSmiles class
  * 
- * 4/2/18 Jmol 14.29.13 adds John's "mancude-like" cyclic conjugated ene Kekule averaging
+ * 4/2/18 Jmol 14.29.13 adds John's "mancude-like" cyclic conjugated ene Kekule
+ * averaging
  * 
  * 12/10/17 Jmol 14.29.9 adds CIPData, mancude Kekule averaging
  * 
- * 11/11/17 Jmol 14.25.1 adds "duplicate over terminal" in Rule 1b; streamlined (777 lines)
+ * 11/11/17 Jmol 14.25.1 adds "duplicate over terminal" in Rule 1b; streamlined
+ * (777 lines)
  * 
- * 11/05/17 Jmol 14.24.1 fixes a problem with seqCis/seqTrans and also with Rule 2 (799 lines)
+ * 11/05/17 Jmol 14.24.1 fixes a problem with seqCis/seqTrans and also with Rule
+ * 2 (799 lines)
  * 
- * 10/17/17 Jmol 14.20.10 adds S4 check in Rule 6 and also fixes bug in aux descriptors 
- * being skipped when two ligands are equivalent for the root (798 lines)
+ * 10/17/17 Jmol 14.20.10 adds S4 check in Rule 6 and also fixes bug in aux
+ * descriptors being skipped when two ligands are equivalent for the root (798
+ * lines)
  * 
  * 9/19/17 CIPChirality code simplification (778 lines)
  * 
- * 9/14/17 Jmol 14.20.6 switching to Mikko's idea for Rule 4b and 5. Abandons "thread" 
- * idea. Uses breadth-first algorithm for generating bitsets for R and S. 
- * Processing time reduced by 50%. Still could be optimized some. (820 lines)
+ * 9/14/17 Jmol 14.20.6 switching to Mikko's idea for Rule 4b and 5. Abandons
+ * "thread" idea. Uses breadth-first algorithm for generating bitsets for R and
+ * S. Processing time reduced by 50%. Still could be optimized some. (820 lines)
  * 
  * 7/25/17 Jmol 14.20.4 consolidates all ene determinations; moves auxiliary
  * descriptor generation to prior to Rule 3 (850 lines) 7/23/17 Jmol 14.20.4
@@ -246,24 +251,22 @@ import org.jmol.viewer.JC;
  * duplicate atoms), solves the problem that F < 19F (though 100% nat.
  * abundance), and is easily programmable.
  * 
- * In Jmol the logic is very simple, actually using the isotope mass number,
- * actually, but doing two checks:
+ * In Jmol the logic is very simple, actually using the isotope mass number, but
+ * doing two checks:
  * 
- * a) if one of five specific isotopes, reverse the test, and b) if on the list
- * of 100% natural isotopes or one of the non-natural elements, use the average
- * atomic mass.
+ * a) if one of four specific isotopes (16O, 52Cr, 96Mo, 175Lu), reverse the test, and
+ * 
+ * b) if on the list of 100% natural isotopes or one of the non-natural
+ * elements, use the element's accepted atomic weight.
  * 
  * See CIPAtom.getMass();
  * 
- * PROPOSED Rule 6:
- * 
- * Rule 6: In the case of a digraph with more than two root-duplicate nodes, any
- * one of the still-indistinguishable ligands is given higher priority than the
- * others.
+ * PROPOSED Rule 6: An undifferentiated reference node has priority over any
+ * other undifferentiated node.
  * 
  * Rationale: This rule is stated in CIP(1966) p. 357.
  * 
- *
+ * 
  * @author Bob Hanson hansonr@stolaf.edu
  */
 public class CIPChirality {
@@ -419,52 +422,45 @@ public class CIPChirality {
    * but that does not matter, as its priority is guaranteed to be set by Rule
    * 1a.
    * 
-   * (c) All auxiliary nodes can be normalized by labeling them one of
-   * {R,S,r,s}; there is no need to consider them to be C/T (seqCis or
-   * seqTrans), M/P, or m/p, other than to immediately equate that to R/S or
-   * r/s. Note that C/T and M/P must be assigned to the sp2 node closest to the
-   * root.
+   * (c) All rule 4b auxiliary nodes can be normalized by labeling them one of R
+   * or S; there is no need to consider them to be C/T (seqCis or seqTrans) or
+   * M/P, other than to immediately equate that to R/S. Note that C/T and M/P
+   * must be assigned to the sp2 node closest to the root.
    * 
-   * (d) Rule 4b can be analyzed using a "thread" metaphor in a five-step
-   * process:
+   * (d) Rule 4b comparisons can be analyzed using a straightforward ranking
+   * process as follows:
    * 
-   * (d1) Generate a set of n threads leading from the root and terminating on
-   * highest-ranking stereogenic centers. All nodes must be included, not just
-   * stereogenic centers.
+   * (d1) Sort both ligands exhaustively first using R and second using S.
    * 
-   * (d2) Determine the reference descriptors.
+   * (d2) After each sort, collect "like/unlike" (1/0) data linearly from
+   * highest priority to lowest. In Jmol the listing takes the form of a bitset.
    * 
-   * (d3) Sort these threads by priority (including that determined by Rule 4a)
-   * and reference descriptors.
+   * (d3) Compare these four lists of data. Sort these lists numerically. The
+   * ligand associated with the highest numerical value is preferred. In Jmol,
+   * this comparison is simply an XOR of pairs of bitsets. The bitset that has
+   * the lowest set bit of the XOR is the winner. Simple as that.
    * 
-   * (d4) Note that the data can be seen as two n x m matrices, where the rows
-   * are the threads. Now "flatten" the data to produce two 1D sequences of
-   * descriptors by simply reading out the data in column order.
+   * The "like/unlike" business can be thought of as a simple diastereomorphic
+   * test. Thus, the lists are tested for the first point at which they become
+   * neither identical nor opposites, and only that point need be checked for
+   * likeness or unlikeness to the reference. I like thinking about it this way
+   * because it focuses on what Rule 4b's role is -- the identification of
+   * diastereomorphism.
    * 
-   * (d5) Prioritize these two sequences, looking for the first diastereotopic
-   * difference.
+   * Rule 4c takes care of diasteriomorphism related to enantiomorphic (r/s,
+   * m/p) sub-paths; Rule 5 finally takes care of any remaining enantiomorphic
+   * issues, including the possibilty that two enantiomorphic pairs are present.
    * 
-   * (e) Rule 5 processing is just a check of Rule 4b results, where the
-   * reference descriptor is now set to "R"
+   * (e) Rule 5 processing is just a comparison of Rule 4b results, where only
+   * the reference descriptor "R" is used.
    * 
-   * (f) Tests for root-only spiro cases must be done along with each rule's
-   * processing prior to continuing to the next rule. This is done by looking
-   * for situations where there are two sets of matched priorities. These will
-   * be broken by the axial nature of spiro connections.
-   * 
-   * (g) A test for root-only double enantiotopic cases (RSR'S') must be done
+   * (f) A test for root-only double enantiotopic cases (RSR'S') must be done
    * after Rule 5, allowing for the possibility for this test to return R/S or
    * M/P, not just r/s and m/p.
    * 
-   * Finally, the "like/unlike" business can be thought of as a simple
-   * diastereotopic test. Thus, the strings are tested for the first point at
-   * which they become neither identical nor opposites, and only that point need
-   * be checked for likeness or unlikeness to the reference. I like thinking
-   * about it this way because it focuses on what Rule 4b's role is -- the
-   * identification of diastereomorphism. Rule 4c takes care of
-   * diasteriomorphism related to enantiomorphic (r/s, m/p) sub-paths; Rule 5
-   * finally takes care of any remaining enantiomorphic issues, including the
-   * possibilty that two enantiomorphic pairs are present.
+   * (g) Rule 6 tests for high-symmetry spiro cases. 
+   * 
+   * 
    */
 
   // The algorithm:
@@ -617,14 +613,6 @@ public class CIPChirality {
   CIPAtom root;
 
   /**
-   * Queue for doing breadth-first scan for RS descriptors in Rule 4b; root only
-   * 
-   */
-
-  Lst<CIPAtom> rootRule4bQueue = new Lst<CIPAtom>();
-
-
-  /**
    * collected bitsets and more specialized SMILES/SMARTS searches and vwr references
    * 
    */
@@ -655,7 +643,6 @@ public class CIPChirality {
   
   public CIPChirality() {
     // for reflection
-    //System.out.println("TESTING Rule 1b option " + rule1bOption);
   }
 
   /**
@@ -696,7 +683,7 @@ public class CIPChirality {
     boolean haveAlkenes = preFilterAtomList(data.atoms, bsToDo, data.bsEnes);
     if (!data.bsEnes.isEmpty()) 
       data.getEneKekule();
-    System.out.println("bsKekule:" + data.bsKekuleAmbiguous);
+    Logger.info("bsKekule:" + data.bsKekuleAmbiguous);
 
     // set atom chiralities
 
@@ -946,6 +933,7 @@ public class CIPChirality {
           case RULE_3:
             // We need to create auxiliary descriptors PRIOR to Rule 3, 
             // as seqcis and seqtrans are auxiliary only
+            //  BH64_037
             isAux = true;
             doTrack = false;
             cipAtom.createAuxiliaryDescriptors(null, null);
@@ -1574,11 +1562,7 @@ public class CIPChirality {
       if (parent == null) {
         // original atom
         bsPath.set(atomIndex);
-//      } else if (multipleBondDuplicate
-//          && (rule1bOption == RULE_1b_TEST_OPTION_D_SELF_KEKULE
-//              && isKekuleAmbiguous || rule1bOption == RULE_1b_TEST_OPTION_B_SELF)) {
-//        // just leaving the rootDistance to be as for other atoms
-      } else if (multipleBondDuplicate //&& rule1bOption == RULE_1b_TEST_OPTION_A_PARENT
+      } else if (multipleBondDuplicate
           ) {
         rootDistance--;
       } else if (bsPath.get(atomIndex)) {
@@ -1591,7 +1575,7 @@ public class CIPChirality {
         bsPath.set(atomIndex);
         htPathPoints.put(Integer.valueOf(atomIndex), Integer.valueOf(rootDistance));
       }
-      if (Logger.debugging) {
+      if (doTrack) {
         if (sphere < MAX_PATH) // Logger
           myPath = (parent != null ? parent.myPath + "-" : "") + this; // Logger
         if (Logger.debuggingHigh)
@@ -2142,12 +2126,12 @@ public class CIPChirality {
         return compareRule3(b); // can be IGNORE
       case RULE_4a:
         return compareRules4ac(b, " sr SR PM");
-      case RULE_RS:
-        return compareRule4bRef(b);
       case RULE_4b:
       case RULE_5:
         // can be terminal when we are checking the two groups on an alkene end
-        return (isTerminal || b.isTerminal ? TIED : compareRule4b5Root(b));    
+        return (isTerminal || b.isTerminal ? TIED : compareRule4b5(b));    
+      case RULE_RS:
+        return compareRule4bRef(b);
       case RULE_4c:
         return compareRules4ac(b, " s r p m");
       case RULE_6:
@@ -2196,8 +2180,6 @@ public class CIPChirality {
     private int compareRule1b(CIPAtom b) {
       return b.isDuplicate != isDuplicate 
           ? TIED
-//          : rule1bOption == RULE_1b_TEST_OPTION_C_NONE
-//              && (parent.isAlkene || b.parent.isAlkene) ? TIED 
           : Integer.compare(rootDistance, b.rootDistance);
     }
 
@@ -2262,12 +2244,15 @@ public class CIPChirality {
           : rule4Type == root.rule4Ref ? A_WINS : B_WINS;
     }
 
-    private int compareRule4b5Root(CIPAtom b) {
-      
-      // this action will be on root atom substituents only
-
-      BS bsA = getBestList();
-      BS bsB = b.getBestList();
+    /**
+     * Compare the better R-ref or S-ref list for A with the same for B.
+     * 
+     * @param b
+     * @return A_WINS, B_WINS, or IGNORE
+     */
+    private int compareRule4b5(CIPAtom b) {
+      BS bsA = getBetter4bList();
+      BS bsB = b.getBetter4bList();
       BS best = compareLikeUnlike(bsA, bsB);
       int score = (best == null ? IGNORE : best == bsA ? A_WINS : B_WINS);
       if (doTrack && best != null) {
@@ -2276,7 +2261,11 @@ public class CIPChirality {
       return score;
     }
 
-    private BS getBestList() {
+    /**
+     * create atom.listRS and return the better of R-ref or S-ref
+     * @return the better 4b list
+     */
+    private BS getBetter4bList() {
       if (currentRule == RULE_5) {
         if (Logger.debuggingHigh)
           Logger.info("getBest R5 " + this + " " + listRS[STEREO_R] + " " + myPath);
@@ -2284,12 +2273,13 @@ public class CIPChirality {
       }
       if (listRS != null)
         return listRS[0];
-      listRS = new BS[] { null, rankAndRead(STEREO_R), rankAndRead(STEREO_S)};
+      BS bs;
+      listRS = new BS[] { null, bs = rank4bAndRead(null), rank4bAndRead(bs)};
       if (Logger.debuggingHigh)
         Logger.info("getBest 4b " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);
       
-      BS lu = compareLikeUnlike(listRS[STEREO_R], listRS[STEREO_S]);
-      return listRS[0] = (lu == null ? listRS[STEREO_R] : lu);
+      bs = compareLikeUnlike(listRS[STEREO_R], listRS[STEREO_S]);
+      return listRS[0] = (bs == null ? listRS[STEREO_R] : bs);
     }
 
     private BS compareLikeUnlike(BS bsA, BS bsB) {
@@ -2305,12 +2295,14 @@ public class CIPChirality {
     /**
      * A queue-based breadth-first implementation
      * 
-     * @param ref
+     * @param bsR null if this is for R or the R-ref list if this is for S
      * @return ranked list
      */
-    private BS rankAndRead(int ref) {
+    private BS rank4bAndRead(BS bsR) {
+      boolean isS = (bsR != null);
+      int ref = (isS ? STEREO_S : STEREO_R);
       BS list = new BS();
-      Lst<CIPAtom> q = rootRule4bQueue;
+      Lst<CIPAtom> q = new Lst<CIPAtom>();
       root.rule4Ref = ref;
       currentRule = RULE_RS;
       sortSubstituents(0);
@@ -2339,10 +2331,19 @@ public class CIPChirality {
             q.addLast(ai);
             if (ai.rule4Type == 0)
               continue;
-            if (ai.rule4Type == ref)
-              list.set(nrs);
-            //            else if (nrs == 0)
-            //              return list;
+            if (ai.rule4Type == ref) {
+              // "l"
+              list.set(nrs); 
+            } else if (nrs == 0 || isS && bsR.get(nrs)) {
+              // "u"
+              // Note that if this is the first descriptor and it does not match the ref,
+              // then we can exit, because that will never win in R or S check.
+              // In addition, if we already have the reference, we are building the S-ref
+              // list, and we just found a "u" that does not match the R list. In that case, 
+              // we exit, since we have just found "the first difference" in like/unlike
+              // descriptors, and, because of that, we know for a fact it has already lost.
+              return list; 
+            }
             nrs++;
           }
       }
@@ -2369,8 +2370,6 @@ public class CIPChirality {
     private int getAuxEneWinnerChirality(CIPAtom end1, CIPAtom end2,
                                          boolean isAxial, int[] retRule2) {
       CIPAtom winner1 = getAuxEneEndWinner(end1, end1.nextSP2, null);
-      if (Logger.debuggingHigh)
-        Logger.info(this + " alkene end winner1 " + winner1);
       CIPAtom winner2 = (winner1 == null || winner1.atom == null ? null
           : getAuxEneEndWinner(end2, end2.nextSP2, retRule2));
       if (Logger.debuggingHigh)
@@ -2574,13 +2573,12 @@ public class CIPChirality {
             } else {
               isChiralPath = true;
               if (rule2 != null && rule2[0] != RULE_5) {
-                // This is the case of a 3b issue
-                //System.out.println(this + "root needs 3b " + root + getRuleName(rule2[0]) + " " + rs);
+                // normal even-ene seqcis/seqtrans
                 auxEZ = alkeneChild.auxEZ = rs;
                 if (Logger.debuggingHigh)
                   Logger.info("alkene type " + this + " " + (auxEZ == STEREO_E ? "E" : "Z"));
               } else if (!isBranch) {
-                // Normalize M/P and E/Z to R/S
+                // Normalize M/P and Z/E to R/S
                 switch (rs) {
                 case STEREO_M:
                 case STEREO_Z:
@@ -2607,12 +2605,10 @@ public class CIPChirality {
         if (atom1.setNode()) {
           atom1.addReturnPath(null, this);
           int rule = RULE_1a;
-//            System.out.println("checking aux " + this + " = " + myPath);
           for (; rule <= RULE_6; rule++)
             if ((!skipRules4And5 || rule < RULE_4a || rule > RULE_5)
                 && atom1.auxSort(rule))
               break;
-//          System.out.println("checking aux set at rule " + rule + " " + this);
           if (rule > RULE_6) {
             c = '~';
           } else {
@@ -2628,12 +2624,8 @@ public class CIPChirality {
         }
         auxChirality = c;
       }
-//      if (setAuxiliary && auxChirality != '~')   // Logger
-//        atom.setCIPChirality(JC.getCIPChiralityCode(auxChirality));   // Logger
-//
       if (node1 == null)
         bsNeedRule.setBitTo(RULE_4a, nRS > 0);
-        //rule4Type = nRS;
       if (c != '~') {
         Logger.info("creating aux " + c + " for " + this + (myPath.length() == 0 ? "" : " = " + myPath));
       }
@@ -2649,37 +2641,6 @@ public class CIPChirality {
     public int sign(int score) {
       return (score < 0 ? -1 : score > 0 ? 1 : 0);
     }
-
-//    /**
-//     * initiate a new CIPAtom for each substituent of atom, and as part of this
-//     * process, check to see if a new ring is being formed.
-//     * 
-//     * @param bsAtoms
-//     */
-//    void addSmallRings(BS bsAtoms, SimpleNode[] nodes) {
-//      if (atom == null || sphere > SMALL_RING_MAX)
-//        return;
-//      if (bsAtoms != null)
-//        bsAtoms.clear(atom.getIndex());
-//      if (isTerminal || isDuplicate || atom.getCovalentBondCount() > 4)
-//        return;
-//      SimpleNode atom2;
-//      int pt = 0;
-//      SimpleEdge[] bonds = atom.getEdges();
-//      for (int i = bonds.length; --i >= 0;) {
-//        SimpleEdge bond = bonds[i];
-//        if (!bond.isCovalent()
-//            || (atom2 = bond.getOtherNode(atom)).getCovalentBondCount() == 1
-//            || parent != null && atom2 == parent.atom)
-//          continue;
-//        CIPAtom r = addAtom(pt++, atom2, false, false, false);
-//        if (r.isDuplicate)
-//          r.updateRingList(nodes);
-//      }
-//      for (int i = 0; i < pt; i++)
-//        if (atoms[i] != null)
-//          atoms[i].addSmallRings(bsAtoms, nodes);
-//    }
 
     @Override
     public Object clone() {
