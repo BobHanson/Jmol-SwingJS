@@ -79,7 +79,6 @@ public class CIPDataTracker extends CIPData {
       return;
     CIPTracker t;
     CIPAtom a1, b1;
-    System.out.println(a + " " + b + " " + sphere);
     if (finalScore > 0) {
       a1 = b;
       b1 = a;

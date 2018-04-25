@@ -89,6 +89,9 @@ import org.jmol.viewer.JC;
  * 
  * - reports atom descriptor along with the rule that ultimately decided it
  * 
+ * - fills _M.CIPInfo with detailed information about how each ligand was decided
+ *   (feature turned off by set testflag2)
+ * 
  * Primary 236-compound Chapter-9 validation set (AY-236) provided by Andrey
  * Yerin, ACD/Labs (Moscow).
  * 
@@ -141,6 +144,10 @@ import org.jmol.viewer.JC;
  * https://iupac.org/projects/project-details/?project_nr=2015-052-1-800
  * 
  * code history:
+ *
+ * 4/25/18 Jmol 14.29.14 fixes spiroallene Rule 6 issue for 
+ * 
+ * 4/23/18 Jmol 14.29.14 fixes Rule 2 for JM_008, involving mass and duplicates (824 lines)
  * 
  * 4/11/18 Jmol 14.29.13 adds optional CIPDataTracker class (822 lines)
  * 
@@ -595,10 +602,10 @@ public class CIPChirality {
    */
   static final int SMALL_RING_MAX = 7;
 
-  public static final int TRACK_ATOM = 1;
-  public static final int TRACK_DUPLICATE = 2;
-  public static final int TRACK_TERMINAL = 3;
-  public static final int TRACK_RS = 4;
+  static final int TRACK_ATOM = 1;
+  static final int TRACK_DUPLICATE = 2;
+  static final int TRACK_TERMINAL = 3;
+  static final int TRACK_RS = 4;
 
   /**
    * the current rule being applied exhaustively
@@ -821,7 +828,7 @@ public class CIPChirality {
         if (!data.bsAtropisomeric.get(index1))
           continue;
         c = setBondChirality(atom, atom1, atom, atom1, true);
-      } else if (data.getBondOrder(bond) == 2) {// && data.canBeChiralBond(bond)) {
+      } else if (data.getBondOrder(bond) == 2) {
         atom1 = getLastCumuleneAtom(bond, atom, null, null);
         index1 = atom1.getIndex();
         if (index1 < index)
@@ -974,10 +981,10 @@ public class CIPChirality {
               }
             }
 
-            // If this is an alkene end check, we just use STERE_S and STEREO_R as markers
+            // If this is an alkene end check, we just use STEREO_S and STEREO_R as markers
 
             if (isAlkeneEndCheck)
-              return (cipAtom.atoms[0].isDuplicate ? 2 : 1);
+              return cipAtom.getEneTop();
 
             rs = data.checkHandedness(cipAtom);
             if (currentRule == RULE_5
@@ -1077,60 +1084,40 @@ public class CIPChirality {
   private int setBondChirality(SimpleNode a, SimpleNode pa, SimpleNode pb,
                                SimpleNode b, boolean isAxial) {
     CIPAtom a1 = new CIPAtom().create(a, null, true, false, false);
+    CIPAtom b2 = new CIPAtom().create(b, null, true, false, false);
     int atop = getAtomChiralityLimited(null, a1, pa) - 1;
     int ruleA = currentRule;
-    CIPAtom b2 = new CIPAtom().create(b, null, true, false, false);
     int btop = getAtomChiralityLimited(null, b2, pb) - 1;
     int ruleB = currentRule;
+    if (isAxial && a1.nRootDuplicates > 3 && atop < 0 && btop < 0) {
+      // No resolution for odd cumulene, but we have multiple root duplicates.
+      // Quick check of Rule 6.
+      ruleA = ruleB = currentRule = RULE_6;
+      b2.rule6refIndex = a1.atoms[atop = a1.getEneTop() - 1].atomIndex;
+      if (b2.sortSubstituents(0))
+        btop = b2.getEneTop() - 1;
+    }
     int c = (atop >= 0 && btop >= 0 ? getEneChirality(b2.atoms[btop], b2, a1,
         a1.atoms[atop], isAxial, true) : NO_CHIRALITY);
-    //System.out.println(a1 + "." + atop + " " + ruleA + "\n" + b2 + " " + btop + " " +ruleB);
     if (c != NO_CHIRALITY
         && (isAxial || !data.bsAtropisomeric.get(a.getIndex())
             && !data.bsAtropisomeric.get(b.getIndex()))) {
-      if (isAxial && ((ruleA >= RULE_5) != (ruleB >= RULE_5))) {
-        // only one of the ends may be enantiomeric to make this m or p 
-        // see AY236.70 and AY236.170
-        //
-        // Now we must check maxRules. If [5,5], then we have
-        // 
-        //    R       R'
-        //     \     /
-        //      C=C=C
-        //     /     \
-        //    S       S'
-        //
-        // planar flip is unchanged, and this is m/p
-        // 
-        // 
-        //    R       R
-        //     \     /
-        //      C=C=C
-        //     /     \
-        //    S       S
-        //
-        // planar flip is unchanged; also m/p
-        // 
-
-        c |= JC.CIP_CHIRALITY_PSEUDO_FLAG;
-      } 
-      // could check here for nonaxial enes, but we do not do that in Jmol 
-      // - if neither or both of the ends are enantiomeric,
-      // this is seqcis or seqtrans, otherwise secCis, seqTrans 
       //
-      // Now we must check maxRules. If [5,5], then we have
+      // We must check maxRules. 
       // 
-      //    R     R'
-      //     \   /
-      //      C=C
-      //     /   \
-      //    S     S'
+      // nonaxial:
       //
       //    a     c
       //     \   /
       //      C=C
       //     /   \
       //    b     d
+      //
+      //    R     R'
+      //     \   /
+      //      C=C
+      //     /   \
+      //    S     S'
       //
       // planar flip is unchanged, and this is seqcis, seqtrans
       // 
@@ -1140,9 +1127,41 @@ public class CIPChirality {
       //     /   \
       //    b     S'
       //
-      // planar flip is unchanged, and this is seqCis, seqTrans
+      // planar flip is changed, and this is seqCis, seqTrans
+      //
+      //
+      // axial is the opposite:
+      //
+      // see AY236.70 and AY236.170
+      //
       // 
-
+      //    a       c
+      //     \     /
+      //      C=C=C
+      //     /     \
+      //    b       d
+      //
+      //    R       R'
+      //     \     /
+      //      C=C=C
+      //     /     \
+      //    S       S'
+      //
+      // planar flip is changed, and this is M, P
+      // 
+      //    a       R
+      //     \     /
+      //      C=C=C
+      //     /     \
+      //    b       S
+      //
+      // planar flip is unchanged, and this is m, p
+        
+      if (isAxial == (ruleA == RULE_5) == (ruleB == RULE_5))
+        c &= ~JC.CIP_CHIRALITY_PSEUDO_FLAG;
+      else
+        c |= JC.CIP_CHIRALITY_PSEUDO_FLAG;
+   
       a.setCIPChirality(c | ((ruleA - 1) << JC.CIP_CHIRALITY_NAME_OFFSET));
       b.setCIPChirality(c | ((ruleB - 1) << JC.CIP_CHIRALITY_NAME_OFFSET));
       if (Logger.debugging)
@@ -1320,7 +1339,7 @@ public class CIPChirality {
      * number of root-duplicate atoms (root atom only
      */
 
-    private int nRootDuplicates;
+    int nRootDuplicates;
 
     /**
      * Rule 1b hash table that maintains distance of the associated
@@ -1436,14 +1455,23 @@ public class CIPChirality {
     /**
      * reference index for Rule 6
      */
-    private int rule6refIndex = -1;
+    int rule6refIndex = -1;
 
     CIPAtom() {
       // had a problem in JavaScript that the constructor of an inner function cannot
       // access this.b$ yet. That assignment is made after construction.
     }
 
-    public int setupRule6(boolean isAux) {
+    /**
+     * Check ene for first nonduplicate.
+     * 
+     * @return 1 or 2
+     */
+    int getEneTop() {
+      return (atoms[0].isDuplicate ? 2 : 1);
+    }
+
+    int setupRule6(boolean isAux) {
       if (nPriorities > 2
           || (isAux ? countDuplicates(atomIndex) : nRootDuplicates) <= 2)
         return NO_CHIRALITY;
@@ -1460,10 +1488,9 @@ public class CIPChirality {
       if (checkS4)
         saveRestorePriorities(false);
       sortSubstituents(Integer.MIN_VALUE);
-      int rs = NO_CHIRALITY;
       if (!sortSubstituents(0))
         return NO_CHIRALITY;
-      rs = data.checkHandedness(this);
+      int rs = data.checkHandedness(this);
       if (rs == NO_CHIRALITY || !checkS4) {
         // update atoms in case this is a chiral auxiliary, which will be tested
         // against another branch
@@ -1598,6 +1625,8 @@ public class CIPChirality {
      * @return mass or mass surrogate
      */
     private float getMass() {
+      if (isDuplicate)
+        return 0;
       if (mass == UNDETERMINED) {
         if (isDuplicate || (mass = atom.getMass()) != (int) mass
             || isType(RULE_2_nXX_EQ_XX))
@@ -1750,7 +1779,7 @@ public class CIPChirality {
       // Do an initial very shallow atom-only Rule 1 sort using a.compareTo(b)
 
       try {
-      Arrays.sort(atoms);
+        Arrays.sort(atoms);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -1974,9 +2003,10 @@ public class CIPChirality {
 
         if (isDuplicate
             && (currentRule > RULE_1b || b.isDuplicate && atom == b.atom
-                && rootDistance == b.rootDistance) || !setNode()
-            || !b.setNode() || isTerminal && b.isTerminal || isDuplicate
-            && b.isDuplicate)
+                && rootDistance == b.rootDistance) 
+                || !setNode() || !b.setNode() 
+                || isTerminal && b.isTerminal 
+                || isDuplicate && b.isDuplicate)
           break;
 
         // We are done if one of these is terminal 
@@ -2006,6 +2036,8 @@ public class CIPChirality {
         // The rules require that we first only look at just the atoms, so OOC beats OOH in this sphere,
         // but there are no atoms to check on (O), so we can do the check here to save time, reporting back
         // to breatTie that we found a difference, but not in this sphere.
+        // This allows C to still beat H in this sphere, but had it been {O (O} C} and {O O C}, then 
+        // we would be done.
 
         int score = (currentRule > RULE_1a ? TIED : unlikeDuplicates(b));
         if (score != TIED) {
@@ -2024,8 +2056,7 @@ public class CIPChirality {
         //
         // This requires that both a annd b have their ligands sorted
         // at least in a preliminary fashion, using Array.sort() and compareTo()
-        // for Rules 1.
-        // allows us to do this before any new sortSubstituent calls.
+        // for Rules 1a, 1b, and 2.
         // But if we do not do a presort, then we have to do those first.
         // Doing the presort saves considerably on run time.
 
@@ -2041,7 +2072,7 @@ public class CIPChirality {
           break;
         }
         // Time to do a full sort of eash ligand, including breaking ties
-
+        
         sortSubstituents(sphere);
         b.sortSubstituents(sphere);
 
@@ -2079,8 +2110,8 @@ public class CIPChirality {
       return (b == null ? A_WINS
           : (atom == null) != (b.atom == null) ? (atom == null ? B_WINS
               : A_WINS) : (score = compareRule1a(b)) != TIED ? score
-              : (score = unlikeDuplicates(b)) != TIED || !isDuplicate ? score
-                    : compareRule1b(b));
+              : (score = unlikeDuplicates(b)) != TIED ? score
+                  : isDuplicate ? compareRule1b(b) : compareRule2(b));
     }
 
     /**
@@ -2369,6 +2400,8 @@ public class CIPChirality {
      */
     private int getAuxEneWinnerChirality(CIPAtom end1, CIPAtom end2,
                                          boolean isAxial, int[] retRule2) {
+      if (isAxial && end1.nextSP2 == end2)
+        return  NO_CHIRALITY; // allene terminating on root
       CIPAtom winner1 = getAuxEneEndWinner(end1, end1.nextSP2, null);
       CIPAtom winner2 = (winner1 == null || winner1.atom == null ? null
           : getAuxEneEndWinner(end2, end2.nextSP2, retRule2));
@@ -2638,7 +2671,7 @@ public class CIPChirality {
      * @param score
      * @return 0, -1, or 1
      */
-    public int sign(int score) {
+    private int sign(int score) {
       return (score < 0 ? -1 : score > 0 ? 1 : 0);
     }
 

@@ -1213,12 +1213,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // fileScaling is used by the PLOT command to 
     // put data into PDB format, preserving name/residue information,
     // and still get any xyz data into the allotted column space.
+    boolean mustFractionalize = (doConvertToFractional && !fileCoordinatesAreFractional && getSymmetry() != null);
     if (fileScaling != null) {
       atom.x = atom.x * fileScaling.x + fileOffset.x;
       atom.y = atom.y * fileScaling.y + fileOffset.y;
       atom.z = atom.z * fileScaling.z + fileOffset.z;
     }
-    if (doConvertToFractional && !fileCoordinatesAreFractional && getSymmetry() != null) {
+    if (mustFractionalize) {
       if (!symmetry.haveUnitCell())
         symmetry.setUnitCell(unitCellParams, false);
       symmetry.toFractional(atom, false);

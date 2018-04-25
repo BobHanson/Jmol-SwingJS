@@ -84,7 +84,7 @@ public class Atom extends Point3fi implements Node {
   private short atomicAndIsotopeNumber;
   public BS atomSymmetry;
 
-  private int formalChargeAndFlags; //  cccc ---- -*RS --hv
+  private int formalChargeAndFlags; //  cccc CIP_ _CIP --hv
   
   private final static int CHARGE_OFFSET = 24;
 
@@ -1420,7 +1420,7 @@ public class Atom extends Point3fi implements Node {
   public String getCIPChiralityRule() {
     String rs = getCIPChirality(true);
     int flags = (rs.length() == 0 ? -1 : (formalChargeAndFlags & CIP_CHIRALITY_RULE_MASK) >> CIP_CHIRALITY_RULE_OFFSET);
-    return (JC.getCIPRuleName(flags + 1));
+    return JC.getCIPRuleName(flags + 1);
   }
 
   /**
