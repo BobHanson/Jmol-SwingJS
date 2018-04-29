@@ -27,6 +27,7 @@
 package org.jmol.symmetry;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -582,6 +583,8 @@ public class CIPChirality {
 
   static final int RULE_RS = 99;
 
+  boolean isRule5RSPermanent = false;
+
   final static String[] ruleNames = { "", "1a", "1b", "2", "3", "4a", "4b",
       "4c", "5", "6" }; // Logger only
 
@@ -606,6 +609,8 @@ public class CIPChirality {
   static final int TRACK_DUPLICATE = 2;
   static final int TRACK_TERMINAL = 3;
   static final int TRACK_RS = 4;
+
+  private static final boolean TESTING_RULE_5_PERMANENCE = false;
 
   /**
    * the current rule being applied exhaustively
@@ -646,6 +651,8 @@ public class CIPChirality {
    * 
    */
   int ptIDLogger;
+
+  boolean havePseudoAuxiliary;
 
   
   public CIPChirality() {
@@ -933,9 +940,10 @@ public class CIPChirality {
       }
       if (cipAtom.setNode()) {
         for (currentRule = RULE_1a; currentRule <= RULE_6; currentRule++) {
-//          if (Logger.debugging)
-//            Logger.info("-Rule " + getRuleName(currentRule)
-//                + " CIPChirality for " + cipAtom + "-----"); // Logger
+          //          if (Logger.debugging)
+          //            Logger.info("-Rule " + getRuleName(currentRule)
+          //                + " CIPChirality for " + cipAtom + "-----"); // Logger
+          int nPrioritiesPrev = cipAtom.nPriorities;
           switch (currentRule) {
           case RULE_3:
             // We need to create auxiliary descriptors PRIOR to Rule 3, 
@@ -943,6 +951,7 @@ public class CIPChirality {
             //  BH64_037
             isAux = true;
             doTrack = false;
+            havePseudoAuxiliary = false;
             cipAtom.createAuxiliaryDescriptors(null, null);
             doTrack = data.isTracker();
             isAux = false;
@@ -958,13 +967,20 @@ public class CIPChirality {
           case RULE_4c:
             // We need to presort with no tie-breaking for Rules 4a, 4b, and 4c.
             cipAtom.sortSubstituents(Integer.MIN_VALUE);
-            //$FALL-THROUGH$
+            bsNeedRule.set(currentRule);
+            break;
           case RULE_5:
+            // We need to presort with no tie-breaking for Rule 5,
+            // clearing the Rule4List is advisable, as Rule 4c may have changed orders.
+            if (havePseudoAuxiliary)
+              cipAtom.clearRule4List();
+            cipAtom.sortSubstituents(Integer.MIN_VALUE);
             bsNeedRule.set(currentRule);
             break;
           case RULE_6:
             // We only need to do Rule 6 under certain conditions.
-            bsNeedRule.setBitTo(RULE_6, ((rs = cipAtom.setupRule6(false)) != NO_CHIRALITY));
+            bsNeedRule.setBitTo(RULE_6,
+                ((rs = cipAtom.setupRule6(false)) != NO_CHIRALITY));
             break;
           }
           if (!bsNeedRule.get(currentRule))
@@ -972,7 +988,6 @@ public class CIPChirality {
 
           // initial call to sortSubstituents does all, recursively
 
-          int nPrioritiesPrev = cipAtom.nPriorities;
           if (rs == NO_CHIRALITY && cipAtom.sortSubstituents(0)) {
             if (Logger.debuggingHigh && cipAtom.h1Count < 2) {
               for (int i = 0; i < cipAtom.bondCount; i++) { // Logger
@@ -1336,6 +1351,19 @@ public class CIPChirality {
     int oldNPriorities, nPriorities;
 
     /**
+     * current priority 0-3; used for Rule 4b and 5 priority sorting
+     * 
+     */
+    int cipPriority;
+    
+    /**
+     * if has been sorted already by the current rule
+     * 
+     */
+    
+    int rule4bRefSorted;
+    
+    /**
      * number of root-duplicate atoms (root atom only
      */
 
@@ -1415,12 +1443,6 @@ public class CIPChirality {
      */
     private CIPAtom nextChiralBranch;
 
-//    /**
-//     * [sphere, nR, nS] -- tracks the number of R and S centers for the lowest
-//     * sphere
-//     */
-//    private Object[] rule4Count;
-
     /**
      * a check for downstream chirality
      * 
@@ -1457,9 +1479,26 @@ public class CIPChirality {
      */
     int rule6refIndex = -1;
 
-    CIPAtom() {
+     CIPAtom() {
       // had a problem in JavaScript that the constructor of an inner function cannot
       // access this.b$ yet. That assignment is made after construction.
+    }
+
+    /**
+     * Clear Rule 4b information if Rule-5 pseudochiral centers have been found,
+     * as that could change the order of descriptors in the Mata list.
+     */
+    public void clearRule4List() {
+      listRS = null;
+      rule4bRefSorted = 0;
+      for (int i = 0; i < 4; i++) {
+        CIPAtom a = atoms[i];
+        if (a != null) {
+          a.rule4bRefSorted = 0;
+          if (a.isChiralPath || a.nextChiralBranch != null)
+            a.clearRule4List();
+        }
+      }
     }
 
     /**
@@ -1480,7 +1519,7 @@ public class CIPChirality {
       // [0 0 0 0] CIP 1982 S4
       // [0 0 2 2] P-93.5.3.2 spiro
       // [0 1 1 1] or [0 0 0 3] CIP Helv. Chim. Acta 1966 #32 -- C3-symmetric
-      boolean checkS4 = (nPriorities == 1 && !isAux);
+      boolean checkS4 = true;//(nPriorities == 1 && !isAux);
       root.rule6refIndex = atoms[priorities[2]].atomIndex;
       // could be priorities[1] as well; just so it is not 0 or 3,
       // as that could be the singlet in the C3-symmetric case.
@@ -1869,9 +1908,10 @@ public class CIPChirality {
         case RULE_4a:
         case RULE_4c:
           for (int i = 0; i < 4; i++)
-            if (atoms[i] != null && atoms[i].isChiralPath)
+            if (atoms[i] != null && (atoms[i].isChiralPath || atoms[i].nextChiralBranch != null)) {
               atoms[i].sortSubstituents(Integer.MIN_VALUE);
-          if (!isSP3)
+            }
+          if (isAlkene) // was isSP3
             return false;
         }
       }
@@ -1939,16 +1979,21 @@ public class CIPChirality {
       for (int i = 0; i < 4; i++) {
         int pt = indices[i];
         CIPAtom a = newAtoms[pt] = atoms[i];
+        int p = newPriorities[i];
         if (a.atom != null)
-          bsTemp.set(newPriorities[i]);
-        if (currentRule == RULE_RS)
-          continue;
-        priorities[pt] = newPriorities[i];
+          bsTemp.set(p);
+        if (currentRule == RULE_RS) {
+          if (!isRule5RSPermanent)
+            continue;
+        } else {
+          a.cipPriority = p;
+        }
+        priorities[pt] = p;
       }
 
       // RULE_RS and RULE_6 both stop short of actually setting atom orders
       // so that their effect is not permanent.
-      if (currentRule == RULE_RS) {
+      if (currentRule == RULE_RS && !isRule5RSPermanent) {
         return false;
       }
       atoms = newAtoms;
@@ -2107,6 +2152,10 @@ public class CIPChirality {
     @Override
     public int compareTo(CIPAtom b) {
       int score;
+      if (currentRule == RULE_RS) {
+         return ((score = compareRule4bRef(b)) != TIED ? score : 
+           (score = breakTie(b, sphere)) < 0 ? A_WINS : score == TIED ? TIED : B_WINS);
+      }
       return (b == null ? A_WINS
           : (atom == null) != (b.atom == null) ? (atom == null ? B_WINS
               : A_WINS) : (score = compareRule1a(b)) != TIED ? score
@@ -2271,6 +2320,7 @@ public class CIPChirality {
      * @return A_WINS, B_WINS, or TIED
      */
     private int compareRule4bRef(CIPAtom b) {
+      rule4bRefSorted = b.rule4bRefSorted = root.rule4Ref;
       return rule4Type == b.rule4Type ? TIED
           : rule4Type == root.rule4Ref ? A_WINS : B_WINS;
     }
@@ -2293,18 +2343,27 @@ public class CIPChirality {
     }
 
     /**
-     * create atom.listRS and return the better of R-ref or S-ref
+     * Just look for match with the Rule 6 reference atom index
+     * 
+     * @param b
+     * @return A_WINS, B_WINS, or TIED
+     */
+    private int compareRule6(CIPAtom b) {
+      return ((atomIndex == root.rule6refIndex) == (b.atomIndex == root.rule6refIndex) ? TIED
+          : atomIndex == root.rule6refIndex ? A_WINS : B_WINS);
+    }
+
+    /**
+     * Create Mata-style linear atom.listRS and return the better of R-ref or S-ref.
+     * Used first in Rule 4b and again in Rule 5. 
      * @return the better 4b list
      */
     private BS getBetter4bList() {
-      if (currentRule == RULE_5) {
-        if (Logger.debuggingHigh)
-          Logger.info("getBest R5 " + this + " " + listRS[STEREO_R] + " " + myPath);
-        return listRS[STEREO_R];
-      }
       if (listRS != null)
-        return listRS[0];
+        return listRS[currentRule == RULE_5 ? STEREO_R : 0];
       BS bs;
+      if (currentRule == RULE_5)
+        return (listRS = new BS[] { bs = rank4bAndRead(null), bs, new BS() })[0];      
       listRS = new BS[] { null, bs = rank4bAndRead(null), rank4bAndRead(bs)};
       if (Logger.debuggingHigh)
         Logger.info("getBest 4b " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);
@@ -2324,66 +2383,120 @@ public class CIPChirality {
     }
 
     /**
-     * A queue-based breadth-first implementation
+     * A queue-based sphere-ordered implementation that 
+     * takes into account that lists cross the boundaries of branches.
      * 
-     * @param bsR null if this is for R or the R-ref list if this is for S
+     * @param bsR
+     *        null if this is for R or the R-ref list if this is for S
      * @return ranked list
      */
     private BS rank4bAndRead(BS bsR) {
       boolean isS = (bsR != null);
+      if (isS && currentRule == RULE_5)
+        return null;
       int ref = (isS ? STEREO_S : STEREO_R);
       BS list = new BS();
-      Lst<CIPAtom> q = new Lst<CIPAtom>();
       root.rule4Ref = ref;
+      int thisRule = currentRule;
+      isRule5RSPermanent = (currentRule == RULE_5 && TESTING_RULE_5_PERMANENCE);
       currentRule = RULE_RS;
-      sortSubstituents(0);
-      currentRule = RULE_4b;
-      if (rule4Type != NO_CHIRALITY) {
-        if (rule4Type == ref) {
+      if (isRule5RSPermanent) {
+        // John's idea
+        sortSubstituents(0);
+        isRule5RSPermanent = false;
+      }
+      if (rule4Type == NO_CHIRALITY || rule4Type == ref) {
+        if (rule4Type == ref)
           list.set(0);
-        } else {
-          return list;
+        String lastPrior = null;
+        int nrs = (rule4Type == NO_CHIRALITY ? 0 : 1);
+        // We construct a temporary queue of all nodes that are equivalent,
+        // rankings after previous rules (4a or 4c), regardless of which branch they come from.
+        Lst<CIPAtom> temp = new Lst<CIPAtom>(); 
+        Lst<CIPAtom> q = new Lst<CIPAtom>();
+        q.addLast(this);
+        while (q.size() != 0) {
+          // Process this list breadth-first, across all atoms sphere by sphere
+          // and ranking by ranking. 
+          CIPAtom next = q.removeItemAt(0);
+          CIPAtom[] atoms = next.newAtoms;
+          if (atoms == null)
+            atoms = next.atoms;
+          if (atoms != null) {
+            for (int i = 0; i < 4; i++) {
+              CIPAtom ai = atoms[i];
+              if (ai == null || ai.atom == null || ai.isTerminal
+                  || ai.isDuplicate)
+                continue;
+              if (ai.rule4Type == 0) {
+                q.addLast(ai);
+                continue;
+              }
+              if (ai.rule4bRefSorted != ref) {
+                ai.sortSubstituents(0);
+              }
+              String prior = ai.getPriorityString();
+              if (temp.isEmpty() || prior.equals(lastPrior)) {
+                temp.addLast(ai);
+              } else {
+                nrs = processTempQueue(temp, q, nrs, list, ref);
+                if (nrs < 0)
+                  break;
+              }
+              lastPrior = prior;
+            }
+            if (!temp.isEmpty())
+              nrs = processTempQueue(temp, q, nrs, list, ref);
+            if (nrs < 0)
+              break;
+          }
         }
       }
-      q.clear();
-      q.addLast(this);
-      int nrs = (rule4Type == NO_CHIRALITY ? 0 : 1);
-      while (q.size() != 0) {
-        CIPAtom next = q.removeItemAt(0);
-        CIPAtom[] atoms = next.newAtoms;
-        if (atoms == null)
-          atoms = next.atoms;
-        if (atoms != null)
-          for (int i = 0; i < 4; i++) {
-            CIPAtom ai = atoms[i];
-            if (ai == null || ai.atom == null || ai.isTerminal
-                || ai.isDuplicate)
-              continue;
-            q.addLast(ai);
-            if (ai.rule4Type == 0)
-              continue;
-            if (ai.rule4Type == ref) {
-              // "l"
-              list.set(nrs); 
-            } else if (nrs == 0 || isS && bsR.get(nrs)) {
-              // "u"
-              // Note that if this is the first descriptor and it does not match the ref,
-              // then we can exit, because that will never win in R or S check.
-              // In addition, if we already have the reference, we are building the S-ref
-              // list, and we just found a "u" that does not match the R list. In that case, 
-              // we exit, since we have just found "the first difference" in like/unlike
-              // descriptors, and, because of that, we know for a fact it has already lost.
-              return list; 
-            }
-            nrs++;
-          }
-      }
+      currentRule = thisRule;
       return list;
     }
 
-    private int compareRule6(CIPAtom b) {
-      return ((atomIndex == root.rule6refIndex) == (b.atomIndex == root.rule6refIndex) ? TIED
-          : atomIndex == root.rule6refIndex ? A_WINS : B_WINS);
+    private int processTempQueue(Lst<CIPAtom> temp, Lst<CIPAtom> q, int nrs,
+                                 BS list, int ref) {
+      int n = temp.size();
+      if (n > 1)
+        Collections.sort(temp);
+      for (int i = 0; i < n; i++) {
+        CIPAtom ai = temp.get(i);
+        q.addLast(ai);
+        if (ai.rule4Type == ref) {
+          // "l"
+          list.set(nrs);
+        } else if (nrs == 0) {// || false && isS && bsR.get(nrs)) { // nicer to have a full listing
+          // "u"
+          // Note that if this is the first descriptor and it does not match the ref,
+          // then we can exit, because that will never win in R or S check.
+          // In addition, if we already have the reference, we are building the S-ref
+          // list, and we just found a "u" that does not match the R list. In that case, 
+          // we exit, since we have just found "the first difference" in like/unlike
+          // descriptors, and, because of that, we know for a fact it has already lost.
+          nrs = -1;
+          break;
+        }
+        nrs++;
+      }
+      temp.clear();
+      return nrs;
+    }
+
+    /**
+     * Produce a simple string that gives the current ranking of the node
+     * as a string of priorities from parents. For example "01" means
+     * highest ranking in the first sphere, 2nd highest in the 2nd sphere.
+     * 
+     * @return the priority string
+     */
+    private String getPriorityString() {
+      String s = "";
+      CIPAtom a = this;
+      while ((a = a.parent) != null)
+        s = a.cipPriority + s;
+      return s;
     }
 
     /**
@@ -2650,6 +2763,8 @@ public class CIPChirality {
             c = (rs == STEREO_R ? 'R' : rs == STEREO_S ? 'S' : '~');
             if (rule == RULE_5) {
               c = (c == 'R' ? 'r' : c == 'S' ? 's' : '~');
+              if (rs != NO_CHIRALITY)
+                havePseudoAuxiliary = true;
             } else {
               rule4Type = rs;
             }
@@ -2712,5 +2827,5 @@ public class CIPChirality {
 
     }
   }
-
+  
 }

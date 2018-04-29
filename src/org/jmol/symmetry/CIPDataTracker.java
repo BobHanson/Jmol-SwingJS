@@ -29,10 +29,8 @@ public class CIPDataTracker extends CIPData {
   class CIPTracker {
 
     CIPAtom a, b;
-    int sphere, score, mode;
-    int rule;
-    public BS bsa;
-    public BS bsb;
+    int sphere, score, mode, rule;
+    public BS bsa, bsb;
 
     CIPTracker(int rule, CIPAtom a, CIPAtom b, int sphere, int score, int mode) {
       this.rule = rule;
@@ -41,25 +39,23 @@ public class CIPDataTracker extends CIPData {
       this.sphere = sphere;
       this.score = score;
       this.mode = mode;
-      bsa = a.listRS == null ? null : a.listRS[0];
-      bsb = b.listRS == null ? null : b.listRS[0];
+      bsa = a.listRS == null ? new BS() : a.listRS[0];
+      bsb = b.listRS == null ? new BS() : b.listRS[0];
     }
 
-    String getTrackerLine(CIPAtom b, BS bsb) {
+    String getTrackerLine(CIPAtom b, BS bsb, int n) {
       return "\t"
           + "\t"
           + b.myPath
           + (mode != CIPChirality.TRACK_TERMINAL ? "" : b.isTerminal ? "-o"
               : "-" + b.atoms[0].atom.getAtomName())
-          + (rule == CIPChirality.RULE_5 || bsb == null ? "" : "\t"
-              + getLikeUnlike(bsb, b.listRS)) + "\n";
+          + (bsb.length() == 0 ? "" : "\t"
+              + getLikeUnlike(bsb, b.listRS, n)) + "\n";
     }
 
-    private String getLikeUnlike(BS bsa, BS[] listRS) {
+    private String getLikeUnlike(BS bsa, BS[] listRS, int n) {
       if (rule > CIPChirality.RULE_5)
         return "";
-      int n = Math.max(listRS[CIPChirality.STEREO_R].length(),
-          listRS[CIPChirality.STEREO_S].length());
       String s = (rule == CIPChirality.RULE_5 ? ""
           : bsa == listRS[CIPChirality.STEREO_R] ? "(R)" : "(S)");
       String l = (rule == CIPChirality.RULE_5 ? "R" : "l");
@@ -107,11 +103,12 @@ public class CIPDataTracker extends CIPData {
           root.atoms[i + 1]));
       if (t == null) {
       } else {
-        s += t.getTrackerLine(t.a, t.bsa);
+        int n = Math.max(t.bsa.length(), t.bsb.length());
+        s += t.getTrackerLine(t.a, t.bsa, n);
         s += "\t" + "   " + JC.getCIPRuleName(t.rule)
         // + "\t" + t.sphere + "\t" + t.score + "\t" + t.mode
             + "\n";
-        s += t.getTrackerLine(t.b, t.bsb);
+        s += t.getTrackerLine(t.b, t.bsb, n);
         //        if (t.mode == TRACK_DUPLICATE)
         //          System.out.println(s);
       }
