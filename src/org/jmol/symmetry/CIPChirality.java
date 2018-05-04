@@ -146,7 +146,8 @@ import org.jmol.viewer.JC;
  * 
  * code history:
  *
- * 4/25/18 Jmol 14.29.14 fixes spiroallene Rule 6 issue for 
+ * 5/1/18  Jmol 14.29.14 fixes enantiomorphic Rule 5 R/S check for BH64_85
+ * 4/25/18 Jmol 14.29.14 fixes spiroallene Rule 6 issue for BH64_84
  * 
  * 4/23/18 Jmol 14.29.14 fixes Rule 2 for JM_008, involving mass and duplicates (824 lines)
  * 
@@ -583,7 +584,7 @@ public class CIPChirality {
 
   static final int RULE_RS = 99;
 
-  boolean isRule5RSPermanent = false;
+//  boolean isRule5RSPermanent = false;
 
   final static String[] ruleNames = { "", "1a", "1b", "2", "3", "4a", "4b",
       "4c", "5", "6" }; // Logger only
@@ -610,7 +611,7 @@ public class CIPChirality {
   static final int TRACK_TERMINAL = 3;
   static final int TRACK_RS = 4;
 
-  private static final boolean TESTING_RULE_5_PERMANENCE = false;
+//  private static final boolean TESTING_RULE_5_PERMANENCE = false;
 
   /**
    * the current rule being applied exhaustively
@@ -1002,12 +1003,13 @@ public class CIPChirality {
               return cipAtom.getEneTop();
 
             rs = data.checkHandedness(cipAtom);
-            if (currentRule == RULE_5
-                && (cipAtom.nPriorities != 4 || nPrioritiesPrev != 2)) {
+            if (currentRule == RULE_5) {
+              if (cipAtom.nPriorities == 4 && nPrioritiesPrev == 2)
+                cipAtom.isRule5Pseudo = !cipAtom.isRule5Pseudo;
+              if (cipAtom.isRule5Pseudo)
+                rs |= JC.CIP_CHIRALITY_PSEUDO_FLAG;
 
-              rs |= JC.CIP_CHIRALITY_PSEUDO_FLAG;
-
-              // Exclude special case:
+              // Exclude special cases:
 
               //  P-92.2.1.1(c) pseudoasymmetric centers must have 
               //                two and only two enantiomorphic ligands
@@ -1036,6 +1038,16 @@ public class CIPChirality {
               //     -
               //     R
               // 
+              // in addition, Rule 4c may not have caught a case where a ligand is self-enantiomorphic. 
+              // 
+              // s'          r'
+              //  \         /
+              //   N---C---N
+              //  /         \
+              // r           s
+              //
+              // Neither ligand changes chirality with 
+              // since there are no descriptors on N, we won't catch this there. 
             }
             if (Logger.debugging)
               Logger.info(atom + " " + JC.getCIPChiralityName(rs) + " by Rule "
@@ -1206,6 +1218,12 @@ public class CIPChirality {
   }
 
   class CIPAtom implements Comparable<CIPAtom>, Cloneable {
+
+    /**
+     * odd/even toggle for comparisons of Rule5 results that would make for R/S, not r/s, if this flag is false.
+     * 
+     */
+    boolean isRule5Pseudo = true;
 
     /**
      * unique ID for this CIPAtom for debugging only
@@ -1942,7 +1960,7 @@ public class CIPChirality {
       for (int i = 0; i < 3; i++) {
         CIPAtom a = atoms[i];
         boolean aLoses = a.isDuplicate && currentRule > RULE_1b; 
-        for (int j = i + 1; j < 4; j++) {
+        for (int j = i + 1; j < 4; j++) {          
           CIPAtom b = atoms[loser = j];
           int score = TIED;
 
@@ -1953,8 +1971,8 @@ public class CIPChirality {
           // (c) if the current rule decides; if not, then
           // (d) if the tie can be broken in the next sphere
           switch (b.atom == null || priorities[i] < priorities[j] ? A_WINS
-                  : aLoses || a.atom == null || priorities[j] < priorities[i] ? B_WINS
-                      : (score = a.checkCurrentRule(b)) != TIED  && score != IGNORE || ignoreTies ? score
+              : aLoses || a.atom == null || priorities[j] < priorities[i] ? B_WINS
+                  : (score = a.checkCurrentRule(b)) != TIED  && score != IGNORE || ignoreTies ? score
                           : sign(a.breakTie(b, sphere + 1))) {
           case B_WINS:
             loser = i;
@@ -1983,17 +2001,18 @@ public class CIPChirality {
         if (a.atom != null)
           bsTemp.set(p);
         if (currentRule == RULE_RS) {
-          if (!isRule5RSPermanent)
+//          if (!isRule5RSPermanent)
             continue;
-        } else {
+        } 
+        //else {
           a.cipPriority = p;
-        }
+        //}
         priorities[pt] = p;
       }
 
       // RULE_RS and RULE_6 both stop short of actually setting atom orders
       // so that their effect is not permanent.
-      if (currentRule == RULE_RS && !isRule5RSPermanent) {
+      if (currentRule == RULE_RS  /*&& !isRule5RSPermanent*/) {
         return false;
       }
       atoms = newAtoms;
@@ -2336,8 +2355,18 @@ public class CIPChirality {
       BS bsB = b.getBetter4bList();
       BS best = compareLikeUnlike(bsA, bsB);
       int score = (best == null ? IGNORE : best == bsA ? A_WINS : B_WINS);
-      if (doTrack && best != null) {
-        data.track(CIPChirality.this, this, b, 1, score, TRACK_RS);
+      if (best != null) {
+        if (currentRule == RULE_5) {
+          // this is our check for self-enantiomorphic ligands
+          // if the two ligands are each self-enatiomorphic (first chiral sphere r,s only, no R,S),
+          // then we need to switch to R/S mode.
+          // This is tested as (A(R) > B(R)) == (A(S) > B(S))
+          if ((compareLikeUnlike(listRS[STEREO_S], b.listRS[STEREO_S]) == listRS[STEREO_S])
+              == (best == bsA))
+          parent.isRule5Pseudo = !parent.isRule5Pseudo;
+        }
+        if (doTrack)
+          data.track(CIPChirality.this, this, b, 1, score, TRACK_RS);
       }
       return score;
     }
@@ -2362,14 +2391,10 @@ public class CIPChirality {
       if (listRS != null)
         return listRS[currentRule == RULE_5 ? STEREO_R : 0];
       BS bs;
-      if (currentRule == RULE_5)
-        return (listRS = new BS[] { bs = rank4bAndRead(null), bs, new BS() })[0];      
       listRS = new BS[] { null, bs = rank4bAndRead(null), rank4bAndRead(bs)};
-      if (Logger.debuggingHigh)
-        Logger.info("getBest 4b " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);
-      
+      Logger.info("getBest " + currentRule + " " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);      
       bs = compareLikeUnlike(listRS[STEREO_R], listRS[STEREO_S]);
-      return listRS[0] = (bs == null ? listRS[STEREO_R] : bs);
+      return listRS[0] = (currentRule == RULE_5 || bs == null ? listRS[STEREO_R] : bs);
     }
 
     private BS compareLikeUnlike(BS bsA, BS bsB) {
@@ -2392,19 +2417,16 @@ public class CIPChirality {
      */
     private BS rank4bAndRead(BS bsR) {
       boolean isS = (bsR != null);
-      if (isS && currentRule == RULE_5)
-        return null;
       int ref = (isS ? STEREO_S : STEREO_R);
       BS list = new BS();
       root.rule4Ref = ref;
-      int thisRule = currentRule;
-      isRule5RSPermanent = (currentRule == RULE_5 && TESTING_RULE_5_PERMANENCE);
+      boolean isRule5 = (currentRule == RULE_5);
       currentRule = RULE_RS;
-      if (isRule5RSPermanent) {
-        // John's idea
-        sortSubstituents(0);
-        isRule5RSPermanent = false;
-      }
+//      isRule5RSPermanent = (!isS && currentRule == RULE_5 && TESTING_RULE_5_PERMANENCE);
+//      if (isRule5RSPermanent) {
+//        sortSubstituents(0);
+//        isRule5RSPermanent = false;
+//      }
       if (rule4Type == NO_CHIRALITY || rule4Type == ref) {
         if (rule4Type == ref)
           list.set(0);
@@ -2432,32 +2454,31 @@ public class CIPChirality {
                 q.addLast(ai);
                 continue;
               }
-              if (ai.rule4bRefSorted != ref) {
+              if (ai.rule4bRefSorted != ref)
                 ai.sortSubstituents(0);
-              }
               String prior = ai.getPriorityString();
               if (temp.isEmpty() || prior.equals(lastPrior)) {
                 temp.addLast(ai);
               } else {
-                nrs = processTempQueue(temp, q, nrs, list, ref);
+                nrs = processTempQueue(temp, q, nrs, list, ref, isRule5);
                 if (nrs < 0)
                   break;
               }
               lastPrior = prior;
             }
             if (!temp.isEmpty())
-              nrs = processTempQueue(temp, q, nrs, list, ref);
+              nrs = processTempQueue(temp, q, nrs, list, ref, isRule5);
             if (nrs < 0)
               break;
           }
         }
       }
-      currentRule = thisRule;
+      currentRule = (isRule5 ? RULE_5 : RULE_4b);
       return list;
     }
 
     private int processTempQueue(Lst<CIPAtom> temp, Lst<CIPAtom> q, int nrs,
-                                 BS list, int ref) {
+                                 BS list, int ref, boolean isRule5) {
       int n = temp.size();
       if (n > 1)
         Collections.sort(temp);
@@ -2467,7 +2488,7 @@ public class CIPChirality {
         if (ai.rule4Type == ref) {
           // "l"
           list.set(nrs);
-        } else if (nrs == 0) {// || false && isS && bsR.get(nrs)) { // nicer to have a full listing
+        } else if (nrs == 0 && !isRule5) {// || false && isS && bsR.get(nrs)) { // nicer to have a full listing
           // "u"
           // Note that if this is the first descriptor and it does not match the ref,
           // then we can exit, because that will never win in R or S check.

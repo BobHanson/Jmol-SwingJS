@@ -43,23 +43,24 @@ public class CIPDataTracker extends CIPData {
       bsb = b.listRS == null ? new BS() : b.listRS[0];
     }
 
-    String getTrackerLine(CIPAtom b, BS bsb, int n) {
+    String getTrackerLine(CIPAtom b, BS bsb, BS bsS, int n) {
       return "\t"
           + "\t"
           + b.myPath
           + (mode != CIPChirality.TRACK_TERMINAL ? "" : b.isTerminal ? "-o"
               : "-" + b.atoms[0].atom.getAtomName())
-          + (bsb.length() == 0 ? "" : "\t"
-              + getLikeUnlike(bsb, b.listRS, n)) + "\n";
+          + (rule != CIPChirality.RULE_5 && bsb.length() == 0 ? "" : "\t"
+              + getLikeUnlike(bsb, b.listRS, n) + (bsS == null ? "" : "  " + getLikeUnlike(bsS, b.listRS, -n))) + "\n";
     }
 
     private String getLikeUnlike(BS bsa, BS[] listRS, int n) {
-      if (rule > CIPChirality.RULE_5)
+      if (rule != CIPChirality.RULE_5 && rule != CIPChirality.RULE_4b)
         return "";
-      String s = (rule == CIPChirality.RULE_5 ? ""
-          : bsa == listRS[CIPChirality.STEREO_R] ? "(R)" : "(S)");
-      String l = (rule == CIPChirality.RULE_5 ? "R" : "l");
-      String u = (rule == CIPChirality.RULE_5 ? "S" : "u");
+      String s = (false && rule == CIPChirality.RULE_5 ? ""
+          : n > 0 && (rule == CIPChirality.RULE_5 || bsa == listRS[CIPChirality.STEREO_R]) ? "(R)" : "(S)");
+      String l = (false && rule == CIPChirality.RULE_5 ? "R" : "l");
+      String u = (false && rule == CIPChirality.RULE_5 ? "S" : "u");
+      n = Math.abs(n);
       for (int i = 0; i < n; i++)
         s += (bsa.get(i) ? l : u);
       return s;
@@ -101,20 +102,19 @@ public class CIPDataTracker extends CIPData {
       s += "\t" + root.atoms[i] + "\t--------------\n";
       CIPTracker t = htTracker.get(getTrackerKey(root, root.atoms[i],
           root.atoms[i + 1]));
-      if (t == null) {
-      } else {
+      if (t != null) {
         int n = Math.max(t.bsa.length(), t.bsb.length());
-        s += t.getTrackerLine(t.a, t.bsa, n);
+        s += t.getTrackerLine(t.a, t.bsa, (t.rule == CIPChirality.RULE_5 ? t.a.listRS[2] : null), n);
         s += "\t" + "   " + JC.getCIPRuleName(t.rule)
         // + "\t" + t.sphere + "\t" + t.score + "\t" + t.mode
             + "\n";
-        s += t.getTrackerLine(t.b, t.bsb, n);
+        s += t.getTrackerLine(t.b, t.bsb, (t.rule == CIPChirality.RULE_5 ? t.b.listRS[2] : null), n);
         //        if (t.mode == TRACK_DUPLICATE)
         //          System.out.println(s);
       }
     }
     s += "\t" + root.atoms[3] + "\t--------------\n";
-    System.out.println(s);
+    System.out.println(root + "\n\n" + s);
     setCIPInfo(s, root.atom.getIndex(), root.atom.getAtomName());
     return s;
   }
