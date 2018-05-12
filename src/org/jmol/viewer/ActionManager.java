@@ -29,6 +29,9 @@ import org.jmol.api.EventManager;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
+
+import javajs.awt.event.Event;
+import javajs.util.AU;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -40,15 +43,13 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
+
+import javajs.util.P3;
+import javajs.util.PT;
+
 import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
-
-import javajs.awt.event.Event;
-
-import javajs.util.AU;
-import javajs.util.P3;
-import javajs.util.PT;
 
 public class ActionManager implements EventManager {
 
@@ -1849,7 +1850,7 @@ public class ActionManager implements EventManager {
     case PICKING_INVERT_STEREO:
       if (bnd(clickAction, ACTION_assignNew)) {
         vwr.invertRingAt(atomIndex, true);
-        vwr.setStatusAtomPicked(atomIndex, "invert stereo for atomIndex=" + atomIndex, null, true);
+        vwr.setStatusAtomPicked(atomIndex, "invert stereo for atomIndex=" + atomIndex, null, false);
       }
       return;
     case PICKING_DELETE_ATOM:

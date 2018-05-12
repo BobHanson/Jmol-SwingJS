@@ -40,6 +40,7 @@ import org.jmol.api.EventManager;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.PlatformViewer;
 import org.jmol.script.T;
+import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -241,8 +242,6 @@ class Mouse implements MouseWheelListener, MouseListener,
       }
       return;
     }
-    if (!vwr.getBooleanProperty("allowKeyStrokes"))
-      return;
     addKeyBuffer(ke.getModifiers() == Event.SHIFT_MASK ? Character.toUpperCase(ch) : ch);
   }
 
@@ -271,6 +270,12 @@ class Mouse implements MouseWheelListener, MouseListener,
   }
 
   private void addKeyBuffer(char ch) {
+    if (!vwr.getBooleanProperty("allowKeyStrokes")) {
+      if (vwr.atomHighlighted >= 0) {
+        checkElementSelected(ch);
+      }
+      return;
+    }
     if (ch == 10) {
       sendKeyBuffer();
       return;
@@ -285,6 +290,21 @@ class Mouse implements MouseWheelListener, MouseListener,
       vwr
           .evalStringQuietSync("!set echo _KEYSTROKES; set echo bottom left;echo "
               + PT.esc("\1" + keyBuffer), true, true);
+  }
+
+  private void checkElementSelected(char ch) {
+    if (PT.isUpperCase(ch)) {
+      keyBuffer = "";
+    }
+    keyBuffer += ch;
+       int elemno =  Elements.elementNumberFromSymbol(keyBuffer, true);
+    if (elemno <= 0)
+      elemno = Elements.elementNumberFromSymbol(keyBuffer.toUpperCase(), true);
+    System.out.println("CHECKELEME " + ch + " " +  keyBuffer + " " + elemno);
+    if (elemno > 0)
+      vwr.assignAtom(-1, Elements.elementSymbolFromNumber(elemno));
+    if (!PT.isUpperCase(ch))
+      keyBuffer = "";
   }
 
   private void sendKeyBuffer() {

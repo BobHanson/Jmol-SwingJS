@@ -1,8 +1,5 @@
 package org.jmol.symmetry;
 
-import java.util.Hashtable;
-import java.util.Map;
-
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.Measure;
@@ -19,92 +16,143 @@ import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+/**
+ * A helper class to handle application-specific analysis and store
+ * information needed by CIPChirality and CIPDataSmiles.
+ * 
+ * Subclassed as CIPDataSmiles to also allow Jmol's
+ * 
+ *   "...SMILES...".find("SMILES","chirality")
+ * 
+ */
 public class CIPData {
-
-
   
   /**
    * measure of planarity in a trigonal system, in Angstroms
    * 
    */
   static final float TRIGONALITY_MIN = 0.2f;
-
-
   
+  /**
+   * Subclass identifier
+   * 
+   * @return true for CIPDataTracker
+   */
+  protected boolean isTracker() {
+    return false;
+  }
+  
+  /**
+   * 
+   * Subclass identifier
+   * 
+   * @return true for CIPDataSmiles
+   */
+  boolean isSmiles() {
+    return false;
+  }
+
+  /**
+   * A flag that, if set, returns rr for bicyclo[2.2.2]octane
+   */
+  public boolean testRule6Full;
+  
+  /**
+   * Jmol's viewer class
+   */
   Viewer vwr;
-  
-  /**
-   * also set auxiliary (single-atom only)
-   */
-  boolean setAuxiliary;
 
   /**
-   * bit set of all biphenyl-like connections
+   * all application atoms referenced by bit sets
    */
-  BS bsAtropisomeric = new BS();
+  SimpleNode[] atoms;
 
   /**
    * bit set of all atoms to process
    */
   BS bsAtoms;
+  
   /**
-   * aromatic atoms at the end of a negative helical turn;
+   * atoms in all molecules containing the atoms of interest
    */
-  BS bsHelixM;
-  /**
-   * aromatic atoms at the end of a positive helical turn;
-   */
-  BS bsHelixP;
-  
-  BS bsAromatic;
-  
-//  /**
-//   * 5-membered rings
-//   */
-//  BS[] lstR5;
-//  
-//  /**
-//   * 5-membered aromatic rings
-//   */
-//  BS[] lstR5a = new BS[0];
-//  
-//  /**
-//   * 6-membered rings
-//   */
-//  BS[] lstR6;
-//  
-//  /**
-//   * 6-membered aromatic rings
-//   */
-//  BS[] lstR6a = new BS[0];
-  
-  SimpleNode[] atoms;
+  BS bsMolecule;
 
   /**
+   * Jmol's definition of aromatic
+   * 
+   */
+  BS bsAromatic;
+    
+  /**
+   * 
+   * excluded aromatics
+   * 
    * [r5d3n+0,r5d2o+0]
    */
   BS bsXAromatic = new BS();
 
-  BS bsMolecule;
+  /**
+   * [a-]
+   */
+  BS bsNegativeAromatic = new BS();
 
   /**
-   * [c-]
+   * all N atoms that are sp3-hybridized and at small ring fusions
    */
-  BS bsCMinus = new BS();
-
-  BS[] lstSmallRings;
-
-  BS bsKekuleAmbiguous = new BS();
-
-  BS bsEnes = new BS();
-
-  Map<Integer, Object> htKekuleBond = new Hashtable<Integer, Object>();
-
   BS bsAzacyclic;
   
+  /**
+   * bit set of all biphenyl-like connections
+   * 
+   * "[!H](.t1:-20,20)a{a(.t2:-20,20)-a}a[!H]"
+   * 
+   */
+  BS bsAtropisomeric = new BS();
+
+  /**
+   * aromatic atoms at the end of a negative helical turn
+   * 
+   * "A{a}(.t:-10,-40)a(.t:-10,-40)aaa"
+   * 
+   */
+  BS bsHelixM;
+  
+  /**
+   * aromatic atoms at the end of a positive helical turn
+   * 
+   * "A{a}(.t:10,40)a(.t:10,40)aaa"
+   * 
+   */
+  BS bsHelixP;
+  
+  /**
+   * all 3- to 7-membered rings; used to exclude E/Z and N-SP3 descriptors
+   *  
+   */
+  BS[] lstSmallRings;
+
+  /**
+   * atoms that need specially-calculated element number in Rule 1a
+   * 
+   */
+  BS bsKekuleAmbiguous = new BS();
+
+  /**
+   * all sp2-hybridized atoms that are not Kekule-ambiguous
+   */
+  BS bsEnes = new BS();
+
   public CIPData() {
+    // for reflection
   }
 
+  /**
+   * Actual constructor.
+   * 
+   * @param vwr  Jmol viewer
+   * @param bsAtoms selected atoms
+   * @return this
+   */
   public CIPData set(Viewer vwr, BS bsAtoms) {
     this.vwr = vwr;
     this.atoms = vwr.ms.at;
@@ -113,9 +161,13 @@ public class CIPData {
     init();
     return this;
   }
-  
+
+  /**
+   * initializer -- called also by CIPDataSmiles
+   *  
+   */
   protected void init() {
-    setAuxiliary = vwr.getBoolean(T.testflag1);
+    testRule6Full = vwr.getBoolean(T.testflag1);
     try {
       // four ortho groups required:      bsAtropisomer = match("[!H](.t3:-20,20)a1(.t3).[!H](.t1:-20,20)a(.t1)a1(.t1)(.t2:-20,20)(.t3)(.t4:-20,20)-{a}2(.t1)(.t2)(.t3)(.t4)a(.t2)[!H](.t2).a2(.t4)[!H](.t4)", bsAtoms);
       // three ortho groups required:     bsAtropisomer = match("[!H](.t3:-20,20)a1(.t3).[!H](.t1:-20,20)a(.t1){a}1(.t1)(.t2:-20,20)(.t3)-{a}(.t1)(.t2)(.t3)a(.t2)[!H](.t2)", bsAtoms);
@@ -132,7 +184,7 @@ public class CIPData {
         bsHelixM = match("A{a}(.t:-10,-40)a(.t:-10,-40)aaa");
         bsHelixP = match("A{a}(.t:10,40)a(.t:10,40)aaa");
         bsXAromatic = match("[r5v3n+0,r5v2o+0]");
-        bsCMinus = match("[a-]");
+        bsNegativeAromatic = match("[a-]");
 
         
         if (!match("[n+1,o+1]").isEmpty() && !bsXAromatic.isEmpty()) {
@@ -140,7 +192,7 @@ public class CIPData {
           bsKekuleAmbiguous.or(match("a1[n+,o+]a[n,o]a1"));
           bsKekuleAmbiguous.or(match("a1[n+,o+][n,o]aa1"));
         }
-        if (!bsCMinus.isEmpty())
+        if (!bsNegativeAromatic.isEmpty())
           bsKekuleAmbiguous.or(match("a1=a[a-]a=a1"));
         
         // pick up five-membered rings with one hetero?
@@ -158,6 +210,13 @@ public class CIPData {
     }
   }
   
+  /**
+   * Retrieve an array of bit sets that match a given SMARTS
+   * 
+   * @param smarts
+   * @return array of matching bit sets
+   * @throws Exception
+   */
   protected BS[] getList(String smarts) throws Exception {
     int level = Logger.getLogLevel();
     Logger.setLogLevel(Math.min(level,  Logger.LEVEL_INFO));
@@ -166,6 +225,12 @@ public class CIPData {
     return list;
   }
 
+  /**
+   * Return a bit set corresponding to a SMARTS 
+   * @param smarts
+   * @return bit set matching this SMARTS
+   * @throws Exception
+   */
   protected BS match(String smarts) throws Exception {
     int level = Logger.getLogLevel();
     Logger.setLogLevel(Math.min(level,  Logger.LEVEL_INFO));
@@ -178,7 +243,7 @@ public class CIPData {
    * Look for conjugated loops of any size that have atoms not already in aromatic rings
    * 
    */
-  public void getEneKekule() {
+  void getEneKekule() {
     if (bsEnes.cardinality() < 8) 
       return;
         
@@ -281,14 +346,6 @@ public class CIPData {
         }
       }
     }
-  }
-
-  boolean isTracker() {
-    return false;
-  }
-  
-  boolean isSmiles() {
-    return false;
   }
 
   /**
@@ -421,6 +478,7 @@ public class CIPData {
 
   protected V3 vNorm = new V3(), vTemp = new V3();
 
+
 //  public boolean canBeChiralBond(SimpleEdge bond) {
 //    return !htKekuleBonds.containsKey(Integer.valueOf(bond.hashCode()));
 //  }
@@ -499,17 +557,17 @@ public class CIPData {
   }
 
   /**
-   * track this decision - CIPDataTracker only
+   * Track this decision - CIPDataTracker only
    * 
    * @param cip
    * @param a
    * @param b
    * @param sphere
    * @param finalScore
-   * @param mode
+   * @param trackTerminal
    */
   void track(CIPChirality cip, CIPAtom a, CIPAtom b, int sphere,
-             int finalScore, int mode) {
+             int finalScore, boolean trackTerminal) {
     // CIPDataTracker only
   }
 

@@ -9,7 +9,8 @@ import org.jmol.symmetry.CIPChirality.CIPAtom;
 import org.jmol.viewer.JC;
 
 /**
- * An optional class to track digraph paths to decisions
+ * An optional class to track digraph paths to decisions.
+ * Used in Jmol to create the auxiliary structure _M.CIPInfo.
  * 
  */
 public class CIPDataTracker extends CIPData {
@@ -22,23 +23,24 @@ public class CIPDataTracker extends CIPData {
   public Map<String, CIPTracker> htTracker = new Hashtable<String, CIPTracker>();
 
   @Override
-  boolean isTracker() {
+  protected boolean isTracker() {
     return true;
   }
 
   class CIPTracker {
 
     CIPAtom a, b;
-    int sphere, score, mode, rule;
+    int sphere, score, rule;
     public BS bsa, bsb;
+    private boolean trackTerminal;
 
-    CIPTracker(int rule, CIPAtom a, CIPAtom b, int sphere, int score, int mode) {
+    CIPTracker(int rule, CIPAtom a, CIPAtom b, int sphere, int score, boolean trackTerminal) {
       this.rule = rule;
       this.a = a;
       this.b = b;
       this.sphere = sphere;
       this.score = score;
-      this.mode = mode;
+      this.trackTerminal = trackTerminal;
       bsa = a.listRS == null ? new BS() : a.listRS[0];
       bsb = b.listRS == null ? new BS() : b.listRS[0];
     }
@@ -47,7 +49,7 @@ public class CIPDataTracker extends CIPData {
       return "\t"
           + "\t"
           + b.myPath
-          + (mode != CIPChirality.TRACK_TERMINAL ? "" : b.isTerminal ? "-o"
+          + (!trackTerminal ? "" : b.isTerminal ? "-o"
               : "-" + b.atoms[0].atom.getAtomName())
           + (rule != CIPChirality.RULE_5 && bsb.length() == 0 ? "" : "\t"
               + getLikeUnlike(bsb, b.listRS, n) + (bsS == null ? "" : "  " + getLikeUnlike(bsS, b.listRS, -n))) + "\n";
@@ -56,13 +58,10 @@ public class CIPDataTracker extends CIPData {
     private String getLikeUnlike(BS bsa, BS[] listRS, int n) {
       if (rule != CIPChirality.RULE_5 && rule != CIPChirality.RULE_4b)
         return "";
-      String s = (false && rule == CIPChirality.RULE_5 ? ""
-          : n > 0 && (rule == CIPChirality.RULE_5 || bsa == listRS[CIPChirality.STEREO_R]) ? "(R)" : "(S)");
-      String l = (false && rule == CIPChirality.RULE_5 ? "R" : "l");
-      String u = (false && rule == CIPChirality.RULE_5 ? "S" : "u");
+      String s = (n > 0 && (rule == CIPChirality.RULE_5 || bsa == listRS[CIPChirality.STEREO_R]) ? "(R)" : "(S)");
       n = Math.abs(n);
       for (int i = 0; i < n; i++)
-        s += (bsa.get(i) ? l : u);
+        s += (bsa.get(i) ? "l" : "u");
       return s;
     }
 
@@ -70,9 +69,9 @@ public class CIPDataTracker extends CIPData {
 
   @Override
   void track(CIPChirality cip, CIPAtom a, CIPAtom b, int sphere,
-             int finalScore, int mode) {
+             int finalScore, boolean trackTerminal) {
     // don't track intra-ligand setting
-    if (a.rootSubstituent == b.rootSubstituent)
+    if (a == null  || b == null || a.rootSubstituent == b.rootSubstituent)
       return;
     CIPTracker t;
     CIPAtom a1, b1;
@@ -83,16 +82,8 @@ public class CIPDataTracker extends CIPData {
       a1 = a;
       b1 = b;
     }
-    t = new CIPTracker(cip.currentRule, a1, b1, sphere, Math.abs(finalScore),
-        mode);
+    t = new CIPTracker(cip.currentRule, a1, b1, sphere, Math.abs(finalScore), trackTerminal);
     htTracker.put(getTrackerKey(cip.root, a1, b1), t);
-    switch (mode) {
-    case CIPChirality.TRACK_RS:
-    case CIPChirality.TRACK_ATOM:
-      break;
-    case CIPChirality.TRACK_DUPLICATE:
-    case CIPChirality.TRACK_TERMINAL:
-    }
   }
 
   @Override

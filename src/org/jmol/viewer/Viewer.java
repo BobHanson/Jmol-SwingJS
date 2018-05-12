@@ -7787,9 +7787,16 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     refresh(REFRESH_SYNC_MASK, "highlightBond");
   }
 
+  public int atomHighlighted = -1;
+  
   public void highlight(BS bs) {
-    if (bs != null)
+    atomHighlighted = (bs != null && bs.cardinality() == 1 ? bs.nextSetBit(0) : -1);
+    if (bs == null) {
+      setCursor(GenericPlatform.CURSOR_DEFAULT);
+    } else {
       shm.loadShape(JC.SHAPE_HALOS);
+      setCursor(GenericPlatform.CURSOR_HAND);
+    }
     setShapeProperty(JC.SHAPE_HALOS, "highlight", bs);
   }
 
@@ -9775,6 +9782,15 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   public Object getModelInfo(String key) {
     return ms.getInfo(am.cmi, key);
+  }
+
+
+  public void assignAtom(int atomIndex, String element) {
+    if (atomIndex < 0)
+      atomIndex = atomHighlighted;
+    if (ms.isAtomAssignable(atomIndex)) {
+      script("assign atom ({" + atomIndex + "}) \"" + element + "\""); 
+    }
   }
 
 }

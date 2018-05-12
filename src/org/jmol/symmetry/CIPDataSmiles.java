@@ -15,6 +15,12 @@ import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+/**
+ * A subclass that allows Jmol processing of SMILES using 
+ * 
+ * "...smiles...".find("SMILES","chirality")
+ * 
+ */
 public class CIPDataSmiles extends CIPData {
 
   String smiles = null;

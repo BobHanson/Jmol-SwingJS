@@ -1,5 +1,6 @@
 package org.jmol.awt;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
@@ -98,6 +99,8 @@ public class Platform implements GenericPlatform {
   @Override
   public void setCursor(int c, Object display) {
     Display.setCursor(c, display);
+    if (c == CURSOR_HAND)
+      ((Component) display).requestFocus();
   }
 
   ////// Mouse
