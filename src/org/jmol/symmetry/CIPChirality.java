@@ -153,7 +153,7 @@ import org.jmol.viewer.JC;
  * 
  * code history:
  *
- * 5/12/18 Jmol 14.29.14 fixes minor Rule 5 bug and adds advanced Rule 6 in/out testflag1 option (855 lines)  
+ * 5/12/18 Jmol 14.29.14 fixes minor Rule 5 bug and adds advanced Rule 6 in/out testflag1 option (857 lines)  
  *  
  * 5/1/18  Jmol 14.29.14 fixes enantiomorphic Rule 5 R/S check for BH64_85 and BH64_86
  * 
@@ -2531,7 +2531,10 @@ public class CIPChirality {
         CIPAtom a = this;
         while (a != null) {
           s = (char)(64 + (a.priority<<2) + (a.rule4Type == 0 ? 0 : a.rule4Type == ref ? 1 : 2)) + s;
-          a = a.parent;
+          if ((a = a.parent) != null && a.chiralPath != null) {
+            s = a.chiralPath + s;
+            break;
+          }
         }
         chiralPath = s;
         chiralAtoms.addLast(this);
