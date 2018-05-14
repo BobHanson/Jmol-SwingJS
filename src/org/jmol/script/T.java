@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-02-02 10:28:34 -0600 (Fri, 02 Feb 2018) $
- * $Revision: 21817 $
+ * $Date: 2018-03-13 12:01:07 -0500 (Tue, 13 Mar 2018) $
+ * $Revision: 21871 $
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -910,13 +910,14 @@ public class T {
   public final static int celshadingpower                = intparam | 9;
   public final static int bondingversion             = intparam | 10;
   public final static int delaymaximumms                 = intparam | 12;
-  public final static int diffusepercent                 = intparam | 14;
-  public final static int dotdensity                     = intparam | 15;
-  public final static int dotscale                       = intparam | 16;
-  public final static int ellipsoiddotcount              = intparam | 17;  
-  public final static int helixstep                      = intparam | 18;
-  public final static int hermitelevel                   = intparam | 19;
-  public final static int historylevel                   = intparam | 20;
+  public final static int diffusepercent                 = intparam | 13;
+  public final static int dotdensity                     = intparam | 14;
+  public final static int dotscale                       = intparam | 15;
+  public final static int ellipsoiddotcount              = intparam | 16;  
+  public final static int helixstep                      = intparam | 17;
+  public final static int hermitelevel                   = intparam | 18;
+  public final static int historylevel                   = intparam | 19;
+  public final static int infofontsize                   = intparam | 20;
   public final static int isosurfacepropertysmoothingpower=intparam | 21;
   public final static int loglevel                       = intparam | 22;
   public final static int meshscale                      = intparam | 23;
@@ -980,8 +981,9 @@ public class T {
   public final static int cartoonladders                 = booleanparam | 42;
   public final static int cartoonribose                  = booleanparam | 43;
   public final static int cartoonrockets                 = booleanparam | 44;
-  public final static int celshading                     = booleanparam | 46;
-  public final static int chaincasesensitive             = booleanparam | 47;
+  public final static int celshading                     = booleanparam | 45;
+  public final static int chaincasesensitive             = booleanparam | 46;
+  public final static int ciprule6full                   = booleanparam | 47;
   public final static int colorrasmol                    = booleanparam | 48;
   public final static int debugscript                    = booleanparam | 49;
   public final static int defaultstructuredssp           = booleanparam | 50;
@@ -1209,9 +1211,8 @@ public class T {
   public final static int inchi          = misc  | 153;
   public final static int inchikey       = misc  | 154;
   public final static int increment      = misc  | 157;
-  public final static int info    = misc  | 158;
-  public final static int infofontsize   = misc  | 159;
-   public final static int inline        = misc  | 160;
+  public final static int info           = misc  | 158;
+  public final static int inline         = misc  | 160;
   public final static int insideout      = misc  | 161;
   public final static int interior       = misc  | 162;
   public final static int internal       = misc  | 164;
@@ -2566,6 +2567,7 @@ public class T {
        "cartoonRockets",
        "cartoonSteps",
        "chainCaseSensitive",
+       "cipRule6Full",
        "colorRasmol",
        "debugScript",
        "defaultStructureDssp",
@@ -3624,6 +3626,7 @@ public class T {
         cartoonrockets,                     //        "cartoonRockets"
         cartoonsteps,                       //        
         chaincasesensitive,                 //        "chainCaseSensitive"
+        ciprule6full,
         colorrasmol,                        //        "colorRasmol"
         debugscript,                        //        "debugScript"
         defaultstructuredssp,               //        "defaultStructureDssp"

@@ -25,6 +25,7 @@ public class GlobalSettings {
   Map<String, Boolean> htBooleanParameterFlags;
   Map<String, Boolean> htPropertyFlagsRemoved;
   Map<String, SV> htUserVariables = new Hashtable<String, SV>();
+  
 
   /*
    *  Mostly these are just saved and restored directly from Viewer.
@@ -74,7 +75,6 @@ public class GlobalSettings {
       testFlag4 = g.testFlag4;
     }
     loadFormat = pdbLoadFormat = JC.databases.get("pdb");
-    pdbLoadFormat0 = JC.databases.get("pdb0");
     pdbLoadLigandFormat = JC.databases.get("ligand");
     nmrUrlFormat = JC.databases.get("nmr");
     nmrPredictFormat = JC.databases.get("nmrdb");
@@ -213,6 +213,7 @@ public class GlobalSettings {
     setB("cartoonLadders", cartoonRibose);
     setB("cartoonRockets", cartoonRockets);
     setB("chainCaseSensitive", chainCaseSensitive);
+    setB("cipRule6Full", cipRule6Full);
     setI("bondingVersion", bondingVersion);
     setO("dataSeparator", dataSeparator);
     setB("debugScript", debugScript);
@@ -448,7 +449,7 @@ public class GlobalSettings {
   boolean forceAutoBond = false;
   boolean fractionalRelative = true;// true: {1/2 1/2 1/2} relative to current (possibly offset) unit cell 
   char inlineNewlineChar = '|'; //pseudo static
-  String loadFormat, pdbLoadFormat, pdbLoadFormat0, pdbLoadLigandFormat,
+  String loadFormat, pdbLoadFormat, pdbLoadLigandFormat,
       nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat,
       pubChemFormat;
 
@@ -552,6 +553,7 @@ public class GlobalSettings {
   boolean cartoonLadders = false;
   boolean cartoonRibose = false;
   boolean chainCaseSensitive = false;
+  boolean cipRule6Full = false;
   int hermiteLevel = 0;
   boolean highResolutionFlag = false;
   public boolean rangeSelected = false;
@@ -900,6 +902,7 @@ public class GlobalSettings {
   }
 
   boolean haveSetStructureList;
+//  private String[] userDatabases;
 
   public int bondingVersion = Elements.RAD_COV_IONIC_OB1_100_1;
 
@@ -932,7 +935,7 @@ public class GlobalSettings {
       + ";antialiasdisplay;antialiasimages;antialiastranslucent;appendnew;axescolor"
       + ";axesposition;axesmolecular;axesorientationrasmol;axesunitcell;axeswindow;axis1color;axis2color"
       + ";axis3color;backgroundcolor;backgroundmodel;bondsymmetryatoms;boundboxcolor;cameradepth"
-      + ";bondingversion;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
+      + ";bondingversion;ciprule6full;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
       + ";exportdrivers;exportscale"
       + ";_filecaching;_filecache;fontcaching;fontscaling;forcefield;language"
       + ";hbondsDistanceMaximum;hbondsangleminimum" // added Jmol 14.24.2

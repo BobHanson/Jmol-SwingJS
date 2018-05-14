@@ -24,7 +24,6 @@
 
 package org.jmol.symmetry;
 
-import java.awt.Cursor;
 import java.util.Map;
 
 import javajs.util.BS;
@@ -40,6 +39,7 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.AtomIndexIterator;
+import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.bspt.Bspt;
@@ -795,21 +795,22 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
-    vwr.setCursor(Cursor.WAIT_CURSOR);
+    vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
-    String dataClass = (vwr.getBoolean(T.testflag4) ? "CIPData" : "CIPDataTracker");
+    String dataClass = (vwr.getBoolean(T.testflag1) ? "CIPData" : "CIPDataTracker");
     CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr, bsAtoms);
+    data.setRule6Full(vwr.getBoolean(T.ciprule6full));
     cip.getChiralityForAtoms(data);
-    vwr.setCursor(Cursor.DEFAULT_CURSOR);
+    vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
   }
   
   @Override
   public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles) throws Exception {
-    vwr.setCursor(Cursor.WAIT_CURSOR);
+    vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
     CIPDataSmiles data = ((CIPDataSmiles) Interface.getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script")).setAtomsForSmiles(vwr, smiles);
     cip.getChiralityForAtoms(data);
-    vwr.setCursor(Cursor.DEFAULT_CURSOR);
+    vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
     return data.getSmilesChiralityArray();
   }
   

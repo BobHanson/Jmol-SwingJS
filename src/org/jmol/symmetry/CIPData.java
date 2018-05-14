@@ -167,7 +167,6 @@ public class CIPData {
    *  
    */
   protected void init() {
-    testRule6Full = vwr.getBoolean(T.testflag1);
     try {
       // four ortho groups required:      bsAtropisomer = match("[!H](.t3:-20,20)a1(.t3).[!H](.t1:-20,20)a(.t1)a1(.t1)(.t2:-20,20)(.t3)(.t4:-20,20)-{a}2(.t1)(.t2)(.t3)(.t4)a(.t2)[!H](.t2).a2(.t4)[!H](.t4)", bsAtoms);
       // three ortho groups required:     bsAtropisomer = match("[!H](.t3:-20,20)a1(.t3).[!H](.t1:-20,20)a(.t1){a}1(.t1)(.t2:-20,20)(.t3)-{a}(.t1)(.t2)(.t3)a(.t2)[!H](.t2)", bsAtoms);
@@ -580,5 +579,9 @@ public class CIPData {
   String getRootTrackerResult(CIPAtom root) {    
     // CIPDataTracker only
     return null;
+  }
+
+  public void setRule6Full(boolean rrrr) {
+    testRule6Full = rrrr;
   }
 }

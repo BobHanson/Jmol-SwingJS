@@ -4043,18 +4043,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
           id = id.substring(0, id.indexOf(".mmtf"));
           return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
         }
-        format = (
-        // following is temporary, until issues are resolved for AJAX asych
-        isJS && g.loadFormat.equals(g.pdbLoadFormat) ? g.pdbLoadFormat0
-            : g.loadFormat);
+        format = g.loadFormat;
       }
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)
         format = g.pdbLoadLigandFormat;
-      if (id.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat)) {
-          format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
-      }
       return JC.resolveDataBase(null, id, format);
     case '*':
       // European Bioinformatics Institute
@@ -5262,6 +5256,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return g.cartoonRockets;
     case T.chaincasesensitive:
       return g.chainCaseSensitive || chainCaseSpecified;
+    case T.ciprule6full:
+      return g.cipRule6Full;
     case T.debugscript:
       return g.debugScript;
     case T.defaultstructuredssp:
@@ -5376,6 +5372,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case T.strutsmultiple:
       return g.strutsMultiple;
     case T.testflag1:
+      // CIPChirality -- turns off tracking (skip creation of _M.CIPInfo for speed tests)
       // no PNGJ caching
       // debug mouse actions
       return g.testFlag1;
@@ -5383,7 +5380,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       // passed to MOCalcuation, but not used
       // nciCalculation special params.testFlag = 2 "absolute" calc.
       // GIF reducedColors
-      // plugin-in use variable
+      // plug-in use variable
       return g.testFlag2;
     case T.testflag3:
       // isosurface numbers
@@ -6193,7 +6190,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
-    case T.autoplaymovie:
+    case T.ciprule6full:
+      // 14.29.14
+      g.cipRule6Full = value;
+      break;
+   case T.autoplaymovie:
       // 14.29.2
       g.autoplayMovie = value;
       break;
