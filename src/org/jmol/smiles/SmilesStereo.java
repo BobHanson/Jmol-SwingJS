@@ -1017,6 +1017,8 @@ public class SmilesStereo {
         order = 2;
         index++;
         break;
+      case '+':
+      case '-':
       case 'H': // @H, @@H
         break;
       case 'P': //PH // Jmol
