@@ -1561,8 +1561,8 @@ public class ScriptMathProcessor {
         bs = BSUtil.copy(bs);
         bs.and(bsRestrict);
       }
-      return (P3) eval.getBitsetProperty(bs, T.xyz, null, null,
-          x.value, null, false, Integer.MAX_VALUE, false);
+      return (P3) eval.getBitsetProperty(bs, null, T.xyz, null,
+          null, x.value, null, false, Integer.MAX_VALUE, false);
     case T.string:
       pt = Escape.uP(SV.sValue(x));
       if (pt instanceof P3)
@@ -1638,7 +1638,7 @@ public class ScriptMathProcessor {
         if (index == Integer.MAX_VALUE)
           tok |= T.minmaxmask;
         ht.put((String) t.value, SV.getVariable(
-            eval.getBitsetProperty(bs, tok, null, null, null, null, false, index, true)));
+            eval.getBitsetProperty(bs, null, tok, null, null, null, null, false, index, true)));
       }
     }
     return addXMap(ht);
@@ -1757,8 +1757,8 @@ public class ScriptMathProcessor {
       BS bs = (BS) x2.value;
       if (isAtoms && bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
         op.intValue |= T.min;
-      Object val = eval.getBitsetProperty(bs, op.intValue, null, null,
-          x2.value, op.value, false, x2.index, true);
+      Object val = eval.getBitsetProperty(bs, null, op.intValue, null,
+          null, x2.value, op.value, false, x2.index, true);
       return (isAtoms ? addXObj(val) : addX(SV.newV(T.bitset, BondSet.newBS(
           (BS) val, vwr.ms.getAtomIndices(bs)))));
     }

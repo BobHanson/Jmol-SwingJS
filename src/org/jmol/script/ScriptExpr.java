@@ -775,7 +775,8 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addXBs(bs);
           break;
         }
-      case T.hash:
+       //$FALL-THROUGH$
+     case T.hash:
         // unit ids
         rpn.addXBs(vwr.ms.getAtoms(T.sequence, ((SV) instruction).asString()));
         break;
@@ -1548,10 +1549,10 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   @SuppressWarnings("unchecked")
-  public Object getBitsetProperty(BS bs, int tok, P3 ptRef, P4 planeRef,
-                                  Object tokenValue, Object opValue,
-                                  boolean useAtomMap, int index,
-                                  boolean asVectorIfAll) throws ScriptException {
+  public Object getBitsetProperty(BS bs, Lst<SV> pts, int tok, P3 ptRef,
+                                  P4 planeRef, Object tokenValue,
+                                  Object opValue, boolean useAtomMap,
+                                  int index, boolean asVectorIfAll) throws ScriptException {
 
     // index is a special argument set in parameterExpression that
     // indicates we are looking at only one atom within a for(...) loop
@@ -1701,7 +1702,10 @@ abstract class ScriptExpr extends ScriptParam {
     if (isAtoms) {
       boolean haveBitSet = (bs != null);
       int i0, i1;
-      if (haveIndex) {
+      if (pts != null) {
+        i0 = 0;
+        i1 = pts.size(); 
+      } else if (haveIndex) {
         i0 = index;
         i1 = index + 1;
       } else if (haveBitSet) {
@@ -1716,7 +1720,7 @@ abstract class ScriptExpr extends ScriptParam {
       for (int i = i0; i >= 0 && i < i1; i = (haveBitSet ? bs.nextSetBit(i + 1)
           : i + 1)) {
         n++;
-        Atom atom = modelSet.at[i];
+        Atom atom = (pts == null ? modelSet.at[i] : null);
         switch (mode) {
         case 0: // float
           float fv = Float.MAX_VALUE;
@@ -1733,7 +1737,7 @@ abstract class ScriptExpr extends ScriptParam {
             if (planeRef != null)
               fv = Measure.distanceToPlane(planeRef, atom);
             else
-              fv = (atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef) : Float.NaN);
+              fv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef) : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef) : Float.NaN);
             break;
           default:
             fv = atom.atomPropertyFloat(vwr, tok, ptTemp);
