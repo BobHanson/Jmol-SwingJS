@@ -2124,7 +2124,7 @@ public class CIPChirality {
         // This allows C to still beat H in this sphere, but had it been {O (O} C} and {O O C}, then 
         // we would be done.
 
-        int score = (currentRule > RULE_1a ? TIED : unlikeDuplicates(b));
+        int score = (currentRule > RULE_1b ? TIED : unlikeDuplicates(b));
         if (score != TIED) {
           finalScore = score * (sphere + 1); // COUNT_LINE
           if (doTrack)
@@ -2283,9 +2283,7 @@ public class CIPChirality {
      */
 
     private int compareRule1b(CIPAtom b) {
-      return b.isDuplicate != isDuplicate 
-          ? TIED
-          : Integer.compare(rootDistance, b.rootDistance);
+      return Integer.compare(rootDistance, b.rootDistance);
     }
 
     /**
