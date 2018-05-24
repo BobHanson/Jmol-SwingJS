@@ -409,8 +409,8 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   private void setSymmOps() {
     if (isPrimitive)
-    for (int i = 0, n = symops.size(); i < n; i++)
-      setSymmetryOperator(symops.get(i));
+      for (int i = 0, n = symops.size(); i < n; i++)
+        setSymmetryOperator(symops.get(i));
   }
   
   @Override
@@ -662,8 +662,6 @@ public class CrystalReader extends AtomSetCollectionReader {
    * Create arrays that map primitive atoms to conventional atoms in a 1:1
    * fashion. Creates int[] primitiveToIndex -- points to model-based atomIndex.
    * Used for frequency fragments and atomic properties only.
-   * 
-   * @return TRUE if coordinates have been created
    * 
    * @throws Exception
    */
@@ -931,7 +929,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   public void applySymmetryAndSetTrajectory() throws Exception {
     setUnitCellOrientation();
     if (!isPrimitive)
-      setSymmOps();
+      setSymmOps();// this does nothing
     applySymTrajASCR();
   }
 
@@ -1125,8 +1123,9 @@ public class CrystalReader extends AtomSetCollectionReader {
           continue;
         // this needs to be JUST the most recent atom set
         applySymmetryAndSetTrajectory();
-        if (isFirst)
+        if (isFirst) {
           modelAtomCount = asc.getLastAtomSetAtomCount();
+        }
         cloneLastAtomSet(ac, null);
         if (isFirst) {
           iAtom0 = asc.getLastAtomSetAtomIndex();

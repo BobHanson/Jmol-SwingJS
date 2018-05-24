@@ -851,7 +851,7 @@ public class XtalSymmetry {
        *    
        */
 
-      int pt0 = (checkSpecial || excludedOps != null ? pt
+      int pt0 = firstAtom + (checkSpecial || excludedOps != null ? pt
           : checkRange111 ? baseCount : 0);
       float spinOp = (iSym >= nOp ? 0 : asc.vibScale == 0 ? symmetry
           .getSpinOp(iSym) : asc.vibScale);
@@ -909,6 +909,8 @@ public class XtalSymmetry {
                   || c.y > rmaxy || c.z > rmaxz))
             continue;
           float minDist2 = Float.MAX_VALUE;
+          // checkAll means we have to check against operations that have
+          // just been done; otherwise we can check only to the base set
           int j0 = (checkAll ? asc.ac : pt0);
           String name = a.atomName;
           char id = (code == null ? a.altLoc : subSystemId);
