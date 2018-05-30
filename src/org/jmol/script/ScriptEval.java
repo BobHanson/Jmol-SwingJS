@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-01-29 21:09:50 -0600 (Mon, 29 Jan 2018) $
- * $Revision: 21816 $
+ * $Date: 2018-03-23 17:28:39 -0500 (Fri, 23 Mar 2018) $
+ * $Revision: 21874 $
  *
  * Copyright (C) 2003-2006  Miguel, Jmol Development, www.jmol.org
  *
@@ -6030,7 +6030,7 @@ public class ScriptEval extends ScriptExpr {
         if (chk)
           continue;
         Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            null, -1);
+            null, -1, false);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();

@@ -174,13 +174,13 @@ public class Symmetry implements SymmetryInterface {
     spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name,
         data);
     if (spaceGroup != null && Logger.debugging)
-      Logger.debug("using generated space group " + spaceGroup.dumpInfo(null));
+      Logger.debug("using generated space group " + spaceGroup.dumpInfo());
     return spaceGroup != null;
   }
 
   @Override
-  public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo) {
-    return SpaceGroup.getInfo(spaceGroup, name, cellInfo);
+  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo, boolean isFull) {
+    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull);
   }
 
   @Override
@@ -675,16 +675,17 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex) {
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull) {
     if (sgName == null) {
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1);
+        null, 0, -1, isFull);
   }
 
+  
   @Override
   public String fcoord(T3 p) {
     return SymmetryOperation.fcoord(p);
@@ -811,7 +812,7 @@ public class Symmetry implements SymmetryInterface {
     CIPDataSmiles data = ((CIPDataSmiles) Interface.getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script")).setAtomsForSmiles(vwr, smiles);
     cip.getChiralityForAtoms(data);
     vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-    return data.getSmilesChiralityArray();
+       return data.getSmilesChiralityArray();
   }
   
   CIPChirality cip;
@@ -830,6 +831,11 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getConventionalUnitCell(String latticeType) {
     return (unitCell == null || latticeType == null ? null : unitCell.getConventionalUnitCell(latticeType));
+  }
+
+  @Override
+  public Map<String, Object> getUnitCellInfoMap() {
+    return (unitCell == null ? null : unitCell.getInfo());
   }
 
 }

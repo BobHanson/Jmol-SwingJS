@@ -134,13 +134,13 @@ public class SymmetryDesc {
   Map<String, Object> getSpaceGroupInfo(Symmetry sym, int modelIndex,
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
-                                        float scaleFactor, int nth) {
+                                        float scaleFactor, int nth, boolean isFull) {
     Map<String, Object> info = null;
     SymmetryInterface cellInfo = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
     boolean isBio = false;
     String sgNote = null;
-    if (sgName == null) {
+    if (sgName == null || sgName.length() == 0) {
       boolean saveModelInfo = (isStandard && symOp == 0);
       if (modelIndex < 0)
         modelIndex = (pt1 instanceof Atom ? ((Atom) pt1).mi
@@ -172,7 +172,6 @@ public class SymmetryDesc {
       String slist = (sgName.indexOf("[--]") >= 0 ? "" : null);
       int opCount = 0;
       if (ops != null) {
-        Object[][] infolist = null;
         if (isBio)
           sym.spaceGroup = SpaceGroup.getNull(false, false, false);
         else
@@ -180,10 +179,11 @@ public class SymmetryDesc {
         // check to make sure that new group has been created magnetic or not
         if (ops[0].timeReversal != 0)
           ((SymmetryOperation) sym.getSpaceGroupOperation(0)).timeReversal = 1;
-        infolist = new Object[ops.length][];
+        Object[][] infolist = new Object[ops.length][];
         String sops = "";
         for (int i = 0, nop = 0; i < ops.length && nop != nth; i++) {
           SymmetryOperation op = ops[i];
+          
           int iop = (sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
               .addBioMoleculeOperation(sg.finalOperations[i], false) : sym
               .addSpaceGroupOperation("=" + op.xyz, i + 1));
@@ -219,11 +219,11 @@ public class SymmetryDesc {
     }
     info.put("spaceGroupName", sgName);
     info.put("spaceGroupNote", sgNote == null ? "" : sgNote);
-    String data;
+    Object data;
     if (isBio) {
       data = sgName;
     } else {
-      data = sym.getSpaceGroupInfoStr(sgName, cellInfo);
+      data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull);
       if (data == null || data.equals("?"))
         data = "could not identify space group from name: " + sgName
             + "\nformat: show spacegroup \"2\" or \"P 2c\" "
@@ -1248,7 +1248,7 @@ public class SymmetryDesc {
     Object[][] infolist;
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth);
+        symOp, pt1, pt2, drawID, scaleFactor, nth, false);
     if (sginfo == null)
       return ret;
     strOperations = (String) sginfo.get("symmetryInfo");

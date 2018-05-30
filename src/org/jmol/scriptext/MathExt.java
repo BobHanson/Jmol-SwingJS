@@ -3159,7 +3159,7 @@ public class MathExt {
       if (bsAtoms.isEmpty())
         return false;
       String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
-          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi)
+          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)

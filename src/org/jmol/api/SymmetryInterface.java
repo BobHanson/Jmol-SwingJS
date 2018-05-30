@@ -72,9 +72,10 @@ public interface SymmetryInterface {
 
   public Object getSpaceGroup();
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull);
 
-  public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo);
+  Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
+                              boolean isFull);
 
   public String getSpaceGroupName();
 
@@ -109,7 +110,9 @@ public interface SymmetryInterface {
   public P3[] getUnitCellVectors();
 
   public P3[] getUnitCellVerticesNoOffset();
-
+  
+  public Map<String, Object> getUnitCellInfoMap();
+  
   public boolean haveUnitCell();
 
   public boolean isBio();

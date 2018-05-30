@@ -25,6 +25,9 @@
 
 package org.jmol.symmetry;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -251,7 +254,17 @@ class UnitCell extends SimpleUnitCell {
     }
   }
 
-  final String dumpInfo(boolean isFull) {
+  Map<String, Object> getInfo() {
+    Map<String, Object> info = new Hashtable<String, Object>();
+    info.put("params", unitCellParams);
+    info.put("vectors", getUnitCellVectors());
+    info.put("volume", Double.valueOf(volume));
+    info.put("matFtoC", matrixFractionalToCartesian);
+    info.put("matCtoF", matrixCartesianToFractional);
+    return info;
+  }
+  
+  String dumpInfo(boolean isFull) {
     return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
        + "\n" + Escape.eAP(getUnitCellVectors())
        + "\nvolume=" + volume

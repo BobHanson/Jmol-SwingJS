@@ -7368,7 +7368,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       jmolpopup = null;
       return menuStructure = (String) paramInfo;
     case 140:
-      return getSymTemp().getSpaceGroupInfo(ms, null, -1);
+      return getSymTemp().getSpaceGroupInfo(ms, null, -1, false);
     case 160:
       g.disablePopupMenu = true; // no false here, because it's a
       // one-time setting

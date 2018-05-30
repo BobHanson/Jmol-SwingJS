@@ -530,7 +530,7 @@ public class CmdExt extends ScriptExt {
       switch (tok) {
       case T.unitcell:
         // load .... FILL UNITCELL [conventional | primitive]
-        String type = paramAsStr(i++).toLowerCase();
+        String type = e.optParameterAsString(i++).toLowerCase();
         if (PT.isOneOf(type, ";conventional;primitive;")) {
           htParams.put("fillRange", type); // "conventional" or "primitive"
           sOptions.append(" FILL UNITCELL \"" + type + "\"");
@@ -4468,14 +4468,14 @@ public class CmdExt extends ScriptExt {
       if ((len = slen) == 2) {
         if (chk)
           break;
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1);
+        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false);
       } else if (tok == T.spacegroup) {
         String sg = paramAsStr(2);
         len = 3;
         if (chk)
           break;
         info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            PT.rep(sg, "''", "\""), -1);
+            PT.rep(sg, "''", "\""), -1, false);
       }
       if (info != null) {
         msg = (tok == T.spacegroup ? "" + info.get("spaceGroupInfo")

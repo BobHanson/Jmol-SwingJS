@@ -257,8 +257,8 @@ class SpaceGroup {
     SymmetryOperation.newPoint(finalOperations[i], atom1, atom2, transX, transY, transZ);
   }
     
-  static String getInfo(SpaceGroup sg, String spaceGroup,
-                        SymmetryInterface cellInfo) {
+  static Object getInfo(SpaceGroup sg, String spaceGroup,
+                        SymmetryInterface cellInfo, boolean asMap) {
     if (cellInfo != null) {
       if (sg == null) {
         if (spaceGroup.indexOf("[") >= 0)
@@ -279,24 +279,53 @@ class SpaceGroup {
       } else {
         SB sb = new SB();
         while (sg != null) {
-          sb.append(sg.dumpInfo(null));
+          sb.append(sg.dumpInfo());
           sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
         }
         return sb.toString();
       }
     }
-    return sg == null ? "?" : sg.dumpInfo(cellInfo);
+    return (asMap? (sg == null ? null : sg.getInfo(cellInfo)): sg == null ? "?" : sg.dumpInfo());
   }
-  
+
+  private Map<String, Object> info;
+
+  private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
+    
+    if (info == null) {
+      if (hmSymbol == null || hmSymbolExt == null) {
+        info = new Hashtable<String, Object>();
+        info.put("HMSymbol", "??");
+      } else {
+        Object seitz = dumpCanonicalSeitzList();
+        info.put("SeitzList", seitz == null ? "" : seitz);
+        info.put("HMSymbol", hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
+        info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
+        info.put("ITSNumberFull",  intlTableNumberFull);
+        info.put("crystalClass", crystalClass);
+        info.put("HallSymbol", hallInfo.hallSymbol.equals("--") ? "" : 
+                hallInfo.hallSymbol);
+      }
+      info.put("operationCount", Integer.valueOf(operationCount));
+      Lst<Map<String, Object>> ops = new Lst<Map<String, Object>>();
+      info.put("operationInfo", ops);
+      for (int i = 0; i < operationCount; i++)
+        ops.addLast(operations[i].getInfo());           
+    }
+    Map<String, Object> ucmap = (cellInfo == null ? null : cellInfo.getUnitCellInfoMap());
+    if (ucmap != null)
+      info.put("unitCell", ucmap);
+    return info;
+  }
+
   /**
    * 
-   * @param cellInfo
    * @return detailed information
    */
-  String dumpInfo(SymmetryInterface cellInfo) {
+  String dumpInfo() {
     Object info = dumpCanonicalSeitzList();
     if (info instanceof SpaceGroup)
-      return ((SpaceGroup) info).dumpInfo(null);
+      return ((SpaceGroup) info).dumpInfo();
     SB sb = new SB().append("\nHermann-Mauguin symbol: ");
     if (hmSymbol == null || hmSymbolExt == null) 
       sb.append("?");
@@ -418,7 +447,7 @@ class SpaceGroup {
    SB sb = new SB();
    getSpaceGroups();
    for (int i = 0; i < SG.length; i++)
-     sb.append("\n----------------------\n" + SG[i].dumpInfo(null));
+     sb.append("\n----------------------\n" + SG[i].dumpInfo());
    return sb.toString();
   }
   
