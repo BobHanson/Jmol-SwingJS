@@ -933,7 +933,7 @@ public class XtalSymmetry {
                 excludedOps.set(iSym);
                 continue out;
               }
-              special = asc.atoms[j];
+              special = asc.atoms[j];              
               if ((special.atomName == null || special.atomName.equals(name))
                   && special.altLoc == id)
                 break;
@@ -961,7 +961,6 @@ public class XtalSymmetry {
             atomMap[atomSite] = asc.ac;
           Atom atom1 = asc.newCloneAtom(a);
           atom1.setT(ptAtom);
-          //System.out.println(atom1 + " " + atom1.index);
           if (asc.bsAtoms != null)
             asc.bsAtoms.set(atom1.index);
           if (spinOp != 0 && atom1.vib != null) {
