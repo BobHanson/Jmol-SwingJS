@@ -314,6 +314,7 @@ public class MSCifParser extends MSRdr {
             break;
           case FWV_ID:
             type_id = "F_";
+            fid = field;
             break;
           case FD_ID:
           case FO_ID:

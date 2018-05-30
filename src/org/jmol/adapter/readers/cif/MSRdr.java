@@ -634,7 +634,7 @@ public class MSRdr implements MSInterface {
       }
       return qlist100;
     }     
-    return getMod("F_" + fn + "_coefs_");
+    return getMod("F_coefs_" + fn );
   }
 
   @Override
