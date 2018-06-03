@@ -313,12 +313,11 @@ public class CmdExt extends ScriptExt {
    ScriptEval eval = e;
    chk = eval.chk;
    slen = eval.slen;
-   P3 lattice = null;
+   T3 lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = getPoint3f(i, false);
-     i = eval.iToken + 1;
-     tok = tokAt(i);
+     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+     tok = tokAt(i = eval.iToken + 1);
    }
 
    // default lattice {555 555 -1} (packed) 
@@ -342,8 +341,7 @@ public class CmdExt extends ScriptExt {
    if (lattice != null) {
      htParams.put("lattice", lattice);
      i = eval.iToken + 1;
-     sOptions.append( " {" + (int) lattice.x + " " + (int) lattice.y + " "
-         + (int) lattice.z + "}");
+     sOptions.append(" " + SimpleUnitCell.escapeMultiplier(lattice));
 
      // {i j k} PACKED, CENTROID -- either or both; either order
 
@@ -5177,7 +5175,7 @@ public class CmdExt extends ScriptExt {
       isOffset = true;
       //$FALL-THROUGH$
     case T.range:
-      pt = (P3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
+      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
       pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
       i = eval.iToken;
       break;
@@ -5198,7 +5196,7 @@ public class CmdExt extends ScriptExt {
         oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
-        pt = (P3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
         i = eval.iToken;
       } else {
         // backup for diameter

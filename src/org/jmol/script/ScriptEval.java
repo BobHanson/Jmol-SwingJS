@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-03-23 17:28:39 -0500 (Fri, 23 Mar 2018) $
- * $Revision: 21874 $
+ * $Date: 2018-05-31 01:39:29 +0200 (Thu, 31 May 2018) $
+ * $Revision: 21913 $
  *
  * Copyright (C) 2003-2006  Miguel, Jmol Development, www.jmol.org
  *
@@ -6997,7 +6997,7 @@ public class ScriptEval extends ScriptExpr {
           pt = new P3();
           int ijk = var.asInt();
           if (ijk >= 100)
-            SimpleUnitCell.ijkToPoint3f(ijk, pt, -1);
+            SimpleUnitCell.ijkToPoint3f(ijk, pt, -1, 0);
         }
         if (!chk)
           vwr.setDefaultLattice(pt);

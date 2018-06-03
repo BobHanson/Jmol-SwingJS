@@ -113,7 +113,7 @@ class Subsystem {
     // 
 
     Logger.info("unit cell parameters: " + symmetry.getUnitCellInfo());
-    symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4>());
+    symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4>(), d);
     int nOps = s0.getSpaceGroupOperationCount();
     for (int iop = 0; iop < nOps; iop++) {
       Matrix rv = s0.getOperationRsVs(iop);

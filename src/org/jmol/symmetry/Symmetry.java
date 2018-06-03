@@ -33,6 +33,7 @@ import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.P4;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
@@ -166,13 +167,14 @@ public class Symmetry implements SymmetryInterface {
    * @param desiredSpaceGroupIndex
    * @param name
    * @param data a Lst<SymmetryOperation> or Lst<M4> 
+   * @param d in [3+d] modulation dimension
    * @return true if a known space group
    */
   @Override
   public boolean createSpaceGroup(int desiredSpaceGroupIndex, String name,
-                                  Object data) {
+                                  Object data, int modDim) {
     spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name,
-        data);
+        data, modDim);
     if (spaceGroup != null && Logger.debugging)
       Logger.debug("using generated space group " + spaceGroup.dumpInfo());
     return spaceGroup != null;
@@ -201,7 +203,7 @@ public class Symmetry implements SymmetryInterface {
         if (filterSymop.contains(" " + (i + 1) + " "))
           lst.addLast(spaceGroup.operations[i]);
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
-          name + " *(" + filterSymop.trim() + ")", lst);
+          name + " *(" + filterSymop.trim() + ")", lst, -1);
     }
     spaceGroup.setFinalOperations(atoms, iAtomFirst, noSymmetryCount,
         doNormalize);
@@ -528,12 +530,12 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public void setOffset(int nnn) {
     P3 pt = new P3();
-    SimpleUnitCell.ijkToPoint3f(nnn, pt, 0);
+    SimpleUnitCell.ijkToPoint3f(nnn, pt, 0, 0);
     unitCell.setOffset(pt);
   }
 
   @Override
-  public P3 getUnitCellMultiplier() {
+  public T3 getUnitCellMultiplier() {
     return unitCell.getUnitCellMultiplier();
   }
 
@@ -560,11 +562,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean isPolymer() {
     return unitCell.isPolymer();
-  }
-
-  @Override
-  public void setMinMaxLatticeParameters(P3i minXYZ, P3i maxXYZ) {
-    unitCell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
   }
 
   @Override
@@ -708,7 +705,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean getState(SB commands) {
-    P3 pt = getFractionalOffset();
+    T3 pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
       commands.append("; set unitcell ").append(Escape.eP(pt));
@@ -716,7 +713,7 @@ public class Symmetry implements SymmetryInterface {
     }
     pt = getUnitCellMultiplier();
     if (pt != null) {
-      commands.append("; set unitcell ").append(Escape.eP(pt));
+      commands.append("; set unitcell ").append(SimpleUnitCell.escapeMultiplier(pt));
       loadUC = true;
     }
     return loadUC;

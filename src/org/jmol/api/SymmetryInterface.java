@@ -36,7 +36,7 @@ public interface SymmetryInterface {
 
   public boolean createSpaceGroup(int desiredSpaceGroupIndex,
                                            String name,
-                                           Object data);
+                                           Object data, int modDim);
 
   public String fcoord(T3 p);
 
@@ -103,7 +103,7 @@ public interface SymmetryInterface {
 
   public float getUnitCellInfoType(int infoType);
 
-  public P3 getUnitCellMultiplier();
+  public T3 getUnitCellMultiplier();
 
   public String getUnitCellState();
   
@@ -144,8 +144,6 @@ public interface SymmetryInterface {
    * 
    */
   public void setLattice(int latt);
-
-  public void setMinMaxLatticeParameters(P3i minXYZ, P3i maxXYZ);
 
   public void setOffset(int nnn);
 

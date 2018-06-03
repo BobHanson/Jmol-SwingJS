@@ -398,7 +398,11 @@ abstract public class ScriptParam extends ScriptError {
                                  int maxDim) throws ScriptException {
     // { x y z } or {a/b c/d e/f} are encoded now as seqcodes and model numbers
     // so we decode them here. It's a bit of a pain, but it isn't too bad.
+    // implicit fractional for unitcell and hkl also allows 1500500500, which is
+    // too large for float P3 to handle. So we use P4, 
     float[] coord = new float[6];
+    int[] code555 = new int[6];
+    boolean useCell555P4 = false;
     int n = 0;
     coordinatesAreFractional = implicitFractional;
     if (tokAt(index) == T.point3f) {
@@ -434,6 +438,9 @@ abstract public class ScriptParam extends ScriptError {
       case T.spec_seqcode:
         if (n == 6)
           invArg();
+        if (implicitFractional && theToken.intValue > 999999999)
+          useCell555P4 = true;
+        code555[n] = theToken.intValue;
         coord[n++] = theToken.intValue * multiplier;
         multiplier = 1;
         break;
@@ -473,6 +480,13 @@ abstract public class ScriptParam extends ScriptError {
     if (n < minDim || n > maxDim)
       invArg();
     if (n == 3) {
+      if (useCell555P4) {
+        // {1500500501 1500500502 1}
+        // --> {1500000 1500500 1 1501502}
+        // because lower digits are lost in Java
+        return P4.new4(coord[0], coord[1], coord[2], 
+            (code555[0]%1000)*1000+(code555[1]%1000)+1000000);
+      }
       P3 pt = P3.new3(coord[0], coord[1], coord[2]);
       if (coordinatesAreFractional && doConvert) {
         fractionalPoint = P3.newP(pt);

@@ -197,7 +197,7 @@ public class XtalSymmetry {
           readerSymmetry = acr.getNewSymmetry();
         doApplySymmetry = readerSymmetry.createSpaceGroup(
             acr.desiredSpaceGroupIndex, (acr.sgName.indexOf("!") >= 0 ? "P1"
-                : acr.sgName), acr.unitCellParams);
+                : acr.sgName), acr.unitCellParams, acr.modDim);
       } else {
         acr.doPreSymmetry();
         readerSymmetry = null;
@@ -244,6 +244,8 @@ public class XtalSymmetry {
     int maxX = latticeCells[0];
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
+    int kcode = latticeCells[3];
+    int dim = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
     firstAtom = asc.getLastAtomSetAtomIndex();
     BS bsAtoms = asc.bsAtoms;
     if (bsAtoms != null)
@@ -327,7 +329,7 @@ public class XtalSymmetry {
         // in terms of the old unit cell
         minXYZ = new P3i();
         maxXYZ = P3i.new3(maxX, maxY, maxZ);
-        symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+        SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
 
         // base origin for new unit cell
         pt0 = P3.newP(oabc[0]);
@@ -395,7 +397,7 @@ public class XtalSymmetry {
     }
     minXYZ = new P3i();
     maxXYZ = P3i.new3(maxX, maxY, maxZ);
-    symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+    SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
     if (oabc == null) {
       applyAllSymmetry(acr.ms, bsAtoms);
       return;
@@ -575,7 +577,7 @@ public class XtalSymmetry {
     if (excludedOps != null)
       asc.checkSpecial = true;
     dtype = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
-    symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+    SimpleUnitCell.setMinMaxLatticeParameters(dtype, minXYZ, maxXYZ, 0);
     latticeOp = symmetry.getLatticeOp();
     latticeOnly = (asc.checkLatticeOnly && latticeOp >= 0); // CrystalReader
     if (doCentroidUnitCell)

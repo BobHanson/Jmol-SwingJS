@@ -40,6 +40,7 @@ import org.jmol.shape.Mesh;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
+import org.jmol.util.SimpleUnitCell;
 
 /**
  * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
@@ -146,7 +147,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
           P3i minXYZ = new P3i();
           P3i maxXYZ = P3i.new3((int) mesh.lattice.x, (int) mesh.lattice.y,
               (int) mesh.lattice.z);
-          unitcell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+          SimpleUnitCell.setMinMaxLatticeParameters((int) unitcell.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS), minXYZ, maxXYZ, 0);
           for (int tx = minXYZ.x; tx < maxXYZ.x; tx++)
             for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
               for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {

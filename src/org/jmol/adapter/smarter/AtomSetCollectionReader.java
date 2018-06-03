@@ -38,6 +38,8 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.T4;
 import javajs.util.V3;
 
 import org.jmol.api.Interface;
@@ -202,6 +204,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public float packingError = 0.02f;
   protected boolean rotateHexCell; // aflow CIF reader only
   protected boolean isPrimitive; // VASP POSCAR reasder
+  public int modDim; // modulation dimension
 
 
   // private state variables
@@ -663,9 +666,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected void initializeSymmetryOptions() {
-    latticeCells = new int[3];
+    latticeCells = new int[4];
     doApplySymmetry = false;
-    P3 pt = (P3) htParams.get("lattice");
+    T3 pt = (T3) htParams.get("lattice");
     if (pt == null || pt.length() == 0) {
       if (!forcePacked && strSupercell == null)
         return;
@@ -674,6 +677,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     latticeCells[0] = (int) pt.x;
     latticeCells[1] = (int) pt.y;
     latticeCells[2] = (int) pt.z;
+    if (pt instanceof T4)
+      latticeCells[3] = (int) ((T4) pt).w;
     doCentroidUnitCell = (htParams.containsKey("centroid"));
     if (doCentroidUnitCell && (latticeCells[2] == -1 || latticeCells[2] == 0))
       latticeCells[2] = 1;

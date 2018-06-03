@@ -758,7 +758,7 @@ public class SmilesStereo {
           pAtom2 = pAtom1;
         continue;
       }
-      if (b.atom1 == pAtom1) {
+      if ((b.atom1 == pAtom1) && (!b.isConnection || pAtom1.index > pAtom.index)) {
         p = 0;
       } else if (jn[1] == null) {
         p = 1;
@@ -778,7 +778,7 @@ public class SmilesStereo {
       if (b.getMatchingBond().getCovalentOrder() == 2) {
         continue;
       }
-      if (b.atom1 == pAtom1) {
+      if ((b.atom1 == pAtom1) && (!b.isConnection || pAtom1.index > pAtom2.index)) {
         p = 2;
       } else if (jn[3] == null) {
         p = 3;

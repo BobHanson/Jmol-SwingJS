@@ -131,7 +131,7 @@ public class JmolDataReader extends PdbReader {
         if (fileScaling.z == 0)
           fileScaling.z = 1;
         setFractionalCoordinates(true);
-        latticeCells = new int[3];
+        latticeCells = new int[4];
         asc.xtalSymmetry = null;
         setUnitCell(plotScale.x * 2 / (maxXYZ.x - minXYZ.x), plotScale.y * 2
             / (maxXYZ.y - minXYZ.y), plotScale.z * 2

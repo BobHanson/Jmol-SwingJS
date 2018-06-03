@@ -142,7 +142,7 @@ class SpaceGroup {
   
   static SpaceGroup createSpaceGroup(int desiredSpaceGroupIndex,
                                                   String name,
-                                                  Object data) {
+                                                  Object data, int modDim) {
     SpaceGroup sg = null;
     if (desiredSpaceGroupIndex >= 0) {
       sg = getSpaceGroups()[desiredSpaceGroupIndex];
@@ -152,7 +152,7 @@ class SpaceGroup {
       else
         sg = determineSpaceGroupNA(name, (float[]) data);
       if (sg == null)
-        sg = createSpaceGroupN(name);
+        sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8));
     }
     if (sg != null)
       sg.generateAllOperators(null);

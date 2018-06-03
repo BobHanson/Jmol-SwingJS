@@ -117,7 +117,6 @@ public class CifReader extends AtomSetCollectionReader {
   protected boolean isCourseGrained;
   boolean haveCellWaveVector;
   private String latticeType = null;
-  private int modDim;
 
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
@@ -510,6 +509,10 @@ public class CifReader extends AtomSetCollectionReader {
     // just for modulated, audit block, and magnetic structures
     SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry()
         .getBaseSymmetry() : null);
+    if (sym != null && sym.getSpaceGroup() == null) {
+      appendLoadNote("Invalid or missing space group operations!");
+      sym = null;
+    }
     if (modDim > 0 && sym != null) {
       addLatticeVectors();
       asc.setTensors();

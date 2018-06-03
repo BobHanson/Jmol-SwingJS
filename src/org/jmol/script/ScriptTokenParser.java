@@ -1039,7 +1039,7 @@ abstract class ScriptTokenParser {
     // 555 = {1 1 1}
     //Token coord = tokenNext(); // 555 == {1 1 1}
     if (theToken.tok == T.integer) {
-      SimpleUnitCell.ijkToPoint3f(theToken.intValue,  cell,  1);
+      SimpleUnitCell.ijkToPoint3f(theToken.intValue,  cell,  1, 0);
       return addTokenToPostfix(tok, cell);
     }
     if (theToken.tok != T.leftbrace || !getNumericalToken())

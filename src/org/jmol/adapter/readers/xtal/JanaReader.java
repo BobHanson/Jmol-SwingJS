@@ -62,7 +62,6 @@ public class JanaReader extends AtomSetCollectionReader {
   private Lst<float[]> lattvecs;
   private int thisSub;
   private String modAxes;
-  private int modDim;
   private boolean haveM40Data;
   
   @Override
