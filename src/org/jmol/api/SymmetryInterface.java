@@ -2,18 +2,17 @@ package org.jmol.api;
 
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.Tensor;
@@ -226,6 +225,6 @@ public interface SymmetryInterface {
   String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
       throws Exception;
 
-  public Object getConventionalUnitCell(String latticeType);
+  public T3[] getConventionalUnitCell(String latticeType);
 
 }

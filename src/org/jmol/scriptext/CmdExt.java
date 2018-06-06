@@ -5072,6 +5072,8 @@ public class CmdExt extends ScriptExt {
       // _M.unitcell_conventional must be set in the reader.
 
       newUC = vwr.getModelInfo("unitcell_conventional");
+      // If the file read was loaded as primitive, 
+      // newUC will be a T3[] indicating the conventional.
       if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
         if (newUC == null && vwr.getModelInfo("isprimitive") != null) {
           showString("Cannot convert unit cell when file data is primitive and have no lattice information");
@@ -5082,13 +5084,14 @@ public class CmdExt extends ScriptExt {
           stype = paramAsStr(++i).toUpperCase();
       }
       if (newUC instanceof T3[]) {
-        // from reader
+        // from reader -- getting us to conventional
         oabc = (T3[]) newUC;
       }
       if (stype == null)
         stype = (String) vwr.getModelInfo("latticeType");
       if (newUC != null)
         eval.setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
+      // now guaranteed to be "conventional"
       if (!ucname.equals("conventional")) {
         s = (String) vwr.getModelInfo("unitcell_" + ucname);
         if (s == null) {
@@ -5114,8 +5117,12 @@ public class CmdExt extends ScriptExt {
             }
             break;
           }
+        } else {
+          ucname = s;
+          if (s.indexOf(",") >= 0)
+            newUC = s;
         }
-        showString(s);
+        showString(ucname);
       }
       break;
     case T.isosurface:

@@ -555,7 +555,7 @@ class PointGroup {
   }
 
   private int getPointIndex(int j) {
-    return atomMap[j] > 0 ? atomMap[j] - 1 : j;
+    return j < atomMap.length && atomMap[j] > 0 ? atomMap[j] - 1 : j;
   }
 
   private boolean isLinear(T3[] atoms) {

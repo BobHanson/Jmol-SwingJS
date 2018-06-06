@@ -493,7 +493,9 @@ public class MSCifParser extends MSRdr {
           }
         if (!ok)
           continue;
-        addMod("F_coefs_", fid, q);          
+        addMod("F_coefs_", fid, q);
+        // we have a Q-coef, so we ignore any x y z also in this block
+        pt[0] = Double.NaN;
       }      
       for (int j = 0, nzero = pt.length; j < pt.length; j++)
         if (Double.isNaN(pt[j]) || pt[j] > 1e100 || pt[j] == 0 && --nzero == 0) {

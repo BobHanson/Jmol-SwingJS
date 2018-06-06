@@ -780,7 +780,7 @@ class UnitCell extends SimpleUnitCell {
    * @param latticeType  "A" "B" "C" "R" etc.
    * @return [origin va vb vc]
    */
-  public Object getConventionalUnitCell(String latticeType) {
+  public T3[] getConventionalUnitCell(String latticeType) {
     T3[] oabc = getUnitCellVectors();
     if (!latticeType.equals("P"))
       toFromPrimitive(false, latticeType.charAt(0), oabc);
