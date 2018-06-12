@@ -308,6 +308,7 @@ public class MathExt {
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args,
                                    boolean isSelector) throws ScriptException {
     // optional last parameter: scale
+    // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
     // unitcell(uc)
     // unitcell(uc, "reciprocal")
     // unitcell(origin, [va, vb, vc])
@@ -343,6 +344,8 @@ public class MathExt {
         for (int i = 0; i < 4; i++)
           ucnew[i] = new P3();
         SimpleUnitCell.setOabc(s, null, ucnew);
+      } else if (s.indexOf(",") >= 0) {
+        return mp.addXObj(vwr.getV0abc(s));
       }
       break;
     }

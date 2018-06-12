@@ -695,7 +695,7 @@ public class GaussianReader extends MOReader {
     int ac = asc.getLastAtomSetAtomCount();
     String[][] data = new String[ac][], temp = null;
     int[] atomIndices = new int[ac];
-    while (line.length() > 20) {
+    while (line != null && line.length() > 20) {
       // we now have the line with the vibration numbers in them, but don't need it
       String[] symmetries = PT.getTokens(rd());
       discardLinesUntilContains(" Frequencies");

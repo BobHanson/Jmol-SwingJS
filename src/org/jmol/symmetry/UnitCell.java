@@ -34,6 +34,7 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.P4;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.T4;
@@ -649,11 +650,16 @@ class UnitCell extends SimpleUnitCell {
     M3 m3 = new M3();
     if (def instanceof String) {
       String sdef = (String) def;
+      String strans = "0,0,0";
       if (sdef.indexOf("a=") == 0)
         return setOabc(sdef, null, pts);
       // a,b,c;0,0,0
-      if (sdef.indexOf(";") < 0)
-        sdef += ";0,0,0";
+      int ptc = sdef.indexOf(";");
+      if (ptc >= 0) {
+        strans = sdef.substring(ptc + 1);
+        sdef = sdef.substring(0, ptc);
+      }
+      sdef += ";0,0,0";
       isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
@@ -664,6 +670,12 @@ class UnitCell extends SimpleUnitCell {
         return null;
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
+      if (strans != null) {
+        float[] ftrans = new float[3];
+        PT.parseFloatArrayInfested(PT.split(strans+"0,0,0",","), ftrans);
+        P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
+        m.setTranslation(ptrans);
+      }
     } else if (def instanceof M3) {
       m = M4.newMV((M3) def, new P3());
     } else if (def instanceof M4) {

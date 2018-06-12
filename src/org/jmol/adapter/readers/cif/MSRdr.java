@@ -461,7 +461,7 @@ public class MSRdr implements MSInterface {
     for (int i = 0; i < modDim; i++) {
       pt = getMod("W_" + (i + 1));
       if (pt == null) {
-        Logger.info("Not enough cell wave vectors for d=" + modDim);
+        cr.appendLoadNote("NOTE!: Not enough cell wave vectors for d=" + modDim);
         return;
       }
       fixDouble(pt);

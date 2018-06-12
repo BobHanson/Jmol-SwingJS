@@ -132,6 +132,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (conf != null)
       configurationPtr = parseIntStr(conf);
     isMolecular = checkFilterKey("MOLECUL") && !checkFilterKey("BIOMOLECULE"); // molecular; molecule
+    isPrimitive = checkFilterKey("PRIMITIVE");
     readIdeal = !checkFilterKey("NOIDEAL");
     filterAssembly = checkFilterKey("$");
     useAuthorChainID = !checkFilterKey("NOAUTHORCHAINS");
@@ -331,8 +332,8 @@ public class CifReader extends AtomSetCollectionReader {
       
     //  related:
         
-    // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'
-    // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'
+    // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'   -- no interest to us
+    // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
 
     
       
