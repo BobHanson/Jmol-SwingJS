@@ -182,14 +182,17 @@ public class SymmetryDesc {
         Object[][] infolist = new Object[ops.length][];
         String sops = "";
         for (int i = 0, nop = 0; i < ops.length && nop != nth; i++) {
-          SymmetryOperation op = ops[i];
           
-          int iop = (sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
+          SymmetryOperation op = ops[i];
+          boolean isNewIncomm = (i == 0 && op.xyz.indexOf("x4") >= 0);
+          int iop = (!isNewIncomm && sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
               .addBioMoleculeOperation(sg.finalOperations[i], false) : sym
               .addSpaceGroupOperation("=" + op.xyz, i + 1));
           if (iop < 0)
             continue;
           op = (SymmetryOperation) sym.getSpaceGroupOperation(i);
+          if (op == null)
+            continue;
           if (op.timeReversal != 0 || op.modDim > 0)
             isStandard = false;
           if (slist != null)
