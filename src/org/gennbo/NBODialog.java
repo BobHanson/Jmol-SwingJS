@@ -882,6 +882,7 @@ public class NBODialog extends JDialog {
     case LOADSTRUCT:
       if (vwr.ms.ac == 0)
         return;
+      isOpenShell = vwr.ms.getModelAuxiliaryInfo(0).containsKey("isOpenShell");
       String f = "" + vwr.getParameter("_modelFile");
       if (!iAmLoading) {
         if (!f.endsWith(".47")) {
@@ -914,7 +915,7 @@ public class NBODialog extends JDialog {
       if (NBOConfig.nboView)
         runScriptQueued("select 1.1;color bonds lightgrey;"
             + "wireframe 0.1;select none"); 
-      isOpenShell = vwr.ms.getModelAuxiliaryInfo(0).containsKey("isOpenShell");
+      
       switch (dialogMode) {
       case DIALOG_MODEL:
         modelPanel.notifyFileLoaded();
