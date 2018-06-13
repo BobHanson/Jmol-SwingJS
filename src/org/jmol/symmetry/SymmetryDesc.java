@@ -134,13 +134,16 @@ public class SymmetryDesc {
   Map<String, Object> getSpaceGroupInfo(Symmetry sym, int modelIndex,
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
-                                        float scaleFactor, int nth, boolean isFull) {
+                                        float scaleFactor, int nth, 
+                                        boolean isFull, boolean isForModel) {
     Map<String, Object> info = null;
     SymmetryInterface cellInfo = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
     boolean isBio = false;
     String sgNote = null;
-    if (sgName == null || sgName.length() == 0) {
+    boolean haveName = (sgName != null && sgName.length() > 0);
+    boolean haveRawName = (haveName && sgName.indexOf("[--]") >= 0);
+    if (isForModel || !haveName) {
       boolean saveModelInfo = (isStandard && symOp == 0);
       if (modelIndex < 0)
         modelIndex = (pt1 instanceof Atom ? ((Atom) pt1).mi
@@ -169,7 +172,7 @@ public class SymmetryDesc {
       SymmetryOperation[] ops = (SymmetryOperation[]) cellInfo
           .getSymmetryOperations();
       SpaceGroup sg = (isBio ? ((Symmetry) cellInfo).spaceGroup : null);
-      String slist = (sgName.indexOf("[--]") >= 0 ? "" : null);
+      String slist = (haveRawName ? "" : null);
       int opCount = 0;
       if (ops != null) {
         if (isBio)
@@ -226,6 +229,8 @@ public class SymmetryDesc {
     if (isBio) {
       data = sgName;
     } else {
+      if (haveName && !haveRawName)
+        sym.setSpaceGroupName(sgName);
       data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull);
       if (data == null || data.equals("?"))
         data = "could not identify space group from name: " + sgName
@@ -1251,7 +1256,7 @@ public class SymmetryDesc {
     Object[][] infolist;
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth, false);
+        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true);
     if (sginfo == null)
       return ret;
     strOperations = (String) sginfo.get("symmetryInfo");

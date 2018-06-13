@@ -315,11 +315,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroupName(String name) {
-    if (spaceGroup != null) {
-      spaceGroup.name = name;
-      if (spaceGroup.name.startsWith("HM:"))
-        spaceGroup.latticeType = spaceGroup.name.substring(3,4);
-    }
+    if (spaceGroup != null) 
+      spaceGroup.setName(name);
   }
 
   @Override
@@ -673,13 +670,14 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull) {
+    boolean isForModel = (sgName == null);
     if (sgName == null) {
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull);
+        null, 0, -1, isFull, isForModel);
   }
 
   
