@@ -77,7 +77,7 @@ public class SymmetryDesc {
       null /*draw*/, "fractionalTranslation", "cartesianTranslation",
       "inversionCenter", null /*point*/, "axisVector", "rotationAngle",
       "matrix", "unitTranslation", "centeringVector", "timeReversal", "plane",
-      "_type" };
+      "_type", "id" };
 
   ////// "public" methods ////////
 
@@ -267,12 +267,34 @@ public class SymmetryDesc {
     return T.full;
   }
 
+  /**
+   * Return information about a symmetry operator by type:
+   * 
+   * array, angle, axis, center, draw, full, info, label, matrix4f, point, time,
+   * plane, translation, unitcell, xyz, all,
+   * 
+   * or a number between 1 and the length of the keys array:
+   * 
+   * { "xyz", "xyzOriginal", "label", null, "fractionalTranslation",
+   * "cartesianTranslation", "inversionCenter", null, "axisVector",
+   * "rotationAngle", "matrix", "unitTranslation", "centeringVector",
+   * "timeReversal", "plane", "_type", "id" }
+   * 
+   * where "all" is the info array itself,
+   * 
+   * @param info
+   * @param type
+   * @return object specified
+   * 
+   */
   private static Object getInfo(Object[] info, int type) {
     if (info == null)
       return "";
     if (type < 0 && type >= -keys.length)
       return info[-1 - type];
     switch (type) {
+    case T.all:
+      return info;
     case T.array:
       Map<String, Object> lst = new Hashtable<String, Object>();
       for (int j = 0, n = info.length; j < n; j++)
@@ -311,6 +333,8 @@ public class SymmetryDesc {
       return info[11];
     case T.xyz:
       return info[0];
+    case T.id:
+      return info[16];
     }
   }
 
@@ -358,6 +382,8 @@ public class SymmetryDesc {
    *         [14] plane
    * 
    *         [15] _type
+   *         
+   *         [16] index
    */
 
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
@@ -1021,7 +1047,7 @@ public class SymmetryDesc {
         plane == null ? approx0(ax1) : null,
         ang1 != 0 ? Integer.valueOf(ang1) : null, m2,
         vtrans.lengthSquared() > 0 ? vtrans : null, op.getCentering(),
-        Integer.valueOf(op.timeReversal), plane, type };
+        Integer.valueOf(op.timeReversal), plane, type, Integer.valueOf(op.index) };
   }
 
   private static void drawLine(SB s, String id, float diameter, P3 pt0, P3 pt1,
@@ -1201,6 +1227,8 @@ public class SymmetryDesc {
           scaleFactor, nth, asString);
       if (asString)
         return ret;
+      if (ret instanceof String)
+        return null; // two atoms are not connected, no such oper
       info = (Object[]) ret;
       if (type == T.atoms) {
         if (!(pt instanceof Atom) && !(pt2 instanceof Atom))
