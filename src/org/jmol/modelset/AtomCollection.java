@@ -2757,7 +2757,7 @@ abstract public class AtomCollection {
    * @param max
    */
   public void scaleVectorsToMax(float max) {
-    if (vibrations == null || max == 0)
+    if (vibrations == null)
       return;
     float m = 0;
     BS bsVib = BS.newN(ac);
@@ -2769,17 +2769,20 @@ abstract public class AtomCollection {
         bsVib.set(i);
       }
     }
-    if (m == 0 || m == max)
+    if (m == max || m == 0)
       return;
     m = max / m;
     boolean ok = false;
     for (int i = bsVib.nextSetBit(0); i >= 0; i = bsVib.nextSetBit(i + 1)) {
       Vibration v = getVibration(i, false);
       JmolModulationSet mod = getModulation(i);
-      if (mod != null)
-        mod.scaleVibration(m);
-      else
+      if (mod == null) {
+        if (m == 0)
+          return; // get out of here!
         v.scale(m);
+      } else {
+        mod.scaleVibration(m);
+      }
       if (!ok) {
         taintAtom(i, TAINT_VIBRATION);
         ok = true;
