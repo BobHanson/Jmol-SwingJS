@@ -382,7 +382,7 @@ public class SymmetryDesc {
    *         [14] plane
    * 
    *         [15] _type
-   *         
+   * 
    *         [16] index
    */
 
@@ -723,19 +723,39 @@ public class SymmetryDesc {
         type = info1 = "translation";
         info1 += ":" + s;
       } else if (isMirrorPlane) {
-        float fx = SymmetryOperation.approxF(ftrans.x);
-        float fy = SymmetryOperation.approxF(ftrans.y);
-        float fz = SymmetryOperation.approxF(ftrans.z);
+        float fx = Math.abs(SymmetryOperation.approxF(ftrans.x));
+        float fy = Math.abs(SymmetryOperation.approxF(ftrans.y));
+        float fz = Math.abs(SymmetryOperation.approxF(ftrans.z));
         s = " " + strCoord(ftrans, op.isBio);
+        // set ITA Table 2.1.2.1
         if (fx != 0 && fy != 0 && fz != 0) {
-          if (Math.abs(fx) == Math.abs(fy) && Math.abs(fy) == Math.abs(fz))
+          if (fx == 1 / 4f && fy == 1 / 4f && fz == 1 / 4f) {
+            // diamond
             info1 = "d-";
-          else
-            info1 = "g-"; // see group 167
+          } else if (fx == 1 / 2f && fy == 1 / 2f && fz == 1 / 2f) {
+            info1 = "n-";
+          } else {
+            info1 = "g-";
+          }
         } else if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0
-            && fx != 0)
-          info1 = "n-";
-        else if (fx != 0)
+            && fx != 0) {
+          // any two
+          if (fx == 1 / 4f && fy == 1 / 4f || fx == 1 / 4f && fz == 1 / 4f
+              || fy == 1 / 4f && fz == 1 / 4f) {
+            info1 = "d-";
+          } else if (fx == 1 / 2f && fy == 1 / 2f || fx == 1 / 2f
+              && fz == 1 / 2f || fy == 1 / 2f && fz == 1 / 2f) {
+            // making sure here that this is truly a diagonal in the plane, not just
+            // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
+            if (fx == 0 && ax1.x == 0|| fy == 0 && ax1.y == 0|| fz == 0 && ax1.z == 0 ) {
+              info1 = "g-";
+            } else {
+              info1 = "n-";
+            }
+          } else {
+            info1 = "g-";
+          }
+        } else if (fx != 0)
           info1 = "a-";
         else if (fy != 0)
           info1 = "b-";
@@ -1047,7 +1067,8 @@ public class SymmetryDesc {
         plane == null ? approx0(ax1) : null,
         ang1 != 0 ? Integer.valueOf(ang1) : null, m2,
         vtrans.lengthSquared() > 0 ? vtrans : null, op.getCentering(),
-        Integer.valueOf(op.timeReversal), plane, type, Integer.valueOf(op.index) };
+        Integer.valueOf(op.timeReversal), plane, type,
+        Integer.valueOf(op.index) };
   }
 
   private static void drawLine(SB s, String id, float diameter, P3 pt0, P3 pt1,

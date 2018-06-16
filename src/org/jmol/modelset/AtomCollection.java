@@ -1049,8 +1049,10 @@ abstract public class AtomCollection {
         String[] tokens = PT.getTokens(PT.parseTrimmed(data.substring(
             lines[i], lines[i + 1])));
         int atomIndex = PT.parseInt(tokens[0]) - 1;
-        float x = PT.parseFloat(tokens[3]);
-        float y = PT.parseFloat(tokens[4]);
+        // JavaScript will not be exact, and we will be checking for the exact value
+        // Modulation setting modScale
+        float x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[3]));
+        float y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[4]));
         float z = PT.parseFloat(tokens[5]);
         if (isVibrationVectors) {
           v.set(x, y, z);

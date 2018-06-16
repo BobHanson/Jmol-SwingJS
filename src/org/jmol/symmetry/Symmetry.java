@@ -26,7 +26,6 @@ package org.jmol.symmetry;
 
 import java.util.Map;
 
-import javajs.awt.GenericPlatform;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
@@ -41,6 +40,7 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.AtomIndexIterator;
+import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.bspt.Bspt;
