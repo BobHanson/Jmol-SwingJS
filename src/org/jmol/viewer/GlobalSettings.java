@@ -963,7 +963,11 @@ public class GlobalSettings {
       + ";modelkitmode;autoplaymovie;allowaudio;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
       //  oops these were in some state scripts but should not have been
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
-      + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4" + ";")
+      + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
+      // removed in Jmol 14.29.18
+      + ";selecthetero;selecthydrogen;"
+      
+      + ";")
       .toLowerCase();
 
   Object getAllVariables() {

@@ -659,15 +659,15 @@ public class Tensor {
    */
   private void sortAndNormalize() {
     // first sorted 3 2 1, then check for iso-sorting
-    Object[][] o = new Object[][] {
+    Object[] o = new Object[] {
         new Object[] { V3.newV(eigenVectors[0]), Float.valueOf(eigenValues[0]) },
         new Object[] { V3.newV(eigenVectors[1]), Float.valueOf(eigenValues[1]) },
         new Object[] { V3.newV(eigenVectors[2]), Float.valueOf(eigenValues[2]) } };
     Arrays.sort(o, getEigenSort());
     for (int i = 0; i < 3; i++) {
       int pt = i;
-      eigenVectors[i] = (V3) o[pt][0];
-      eigenValues[i] = ((Float) o[pt][1]).floatValue();
+      eigenVectors[i] = (V3) ((Object[]) o[pt])[0];
+      eigenValues[i] = ((Float) ((Object[]) o[pt])[1]).floatValue();
     }
     if (sortIso
         && eigenValues[2] - eigenValues[1] < eigenValues[1] - eigenValues[0]) {
@@ -691,7 +691,7 @@ public class Tensor {
         return false;
     return true;
   }
-  private static Comparator<? super Object[]> getEigenSort() {
+  private static Comparator<? super Object> getEigenSort() {
     return (tSort == null ? (tSort = new EigenSort()) : tSort);
   }
 
