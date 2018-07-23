@@ -1580,7 +1580,7 @@ abstract class ScriptExpr extends ScriptParam {
     boolean isInt = false;
     boolean isString = false;
     switch (tok) {
-    case T._:
+    case T.__:
       return ((Map<String, Object>)vwr.getAuxiliaryInfoForAtoms(bs)).get("models");
     case T.xyz:
     case T.vibxyz:

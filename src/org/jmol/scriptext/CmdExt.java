@@ -639,7 +639,7 @@ public class CmdExt extends ScriptExt {
         if (chk)
           return;
         n = vwr.calculateFormalCharges(null);
-        showString(GT.i(GT._("{0} charges modified"), n));
+        showString(GT.i(GT.$("{0} charges modified"), n));
         return;
       case T.aromatic:
         checkLength(2);
@@ -661,7 +661,7 @@ public class CmdExt extends ScriptExt {
           return;
         n = vwr.autoHbond(bs1, bs2, false);
         if (n != Integer.MIN_VALUE)
-          eval.report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
+          eval.report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
         return;
       case T.hydrogen:
         boolean andBond = (tokAt(2) == T.on);
@@ -751,7 +751,7 @@ public class CmdExt extends ScriptExt {
             setShapeProperty(JC.SHAPE_STICKS, "type",
                 Integer.valueOf(Edge.BOND_COVALENT_MASK));
           }
-          showString(GT.i(GT._("{0} struts added"), n));
+          showString(GT.i(GT.$("{0} struts added"), n));
         }
         return;
       case T.surface:
@@ -892,9 +892,9 @@ public class CmdExt extends ScriptExt {
       if (streaming) {
         params.put("streaming", Boolean.TRUE);
         if (!looping)
-          showString(GT.o(GT._("Note: Enable looping using {0}"),
+          showString(GT.o(GT.$("Note: Enable looping using {0}"),
               new Object[] { "ANIMATION MODE LOOP" }));
-        showString(GT.o(GT._("Animation delay based on: {0}"),
+        showString(GT.o(GT.$("Animation delay based on: {0}"),
             new Object[] { "ANIMATION FPS " + fps }));
       }
       params.put("captureFps", Integer.valueOf(fps));
@@ -1922,7 +1922,7 @@ public class CmdExt extends ScriptExt {
     boolean report = eval.doReport(); 
     if (isDelete) {
       if (report)
-        eval.report(GT.i(GT._("{0} connections deleted"), nModified), false);
+        eval.report(GT.i(GT.$("{0} connections deleted"), nModified), false);
       return;
     }
     if (isColorOrRadius) {
@@ -1934,7 +1934,7 @@ public class CmdExt extends ScriptExt {
       vwr.selectBonds(null);
     }
     if (report)
-      eval.report(GT.o(GT._("{0} new bonds; {1} modified"),
+      eval.report(GT.o(GT.$("{0} new bonds; {1} modified"),
           new Object[] { Integer.valueOf(nNew), Integer.valueOf(nModified) }), false);
   }
 
@@ -3823,7 +3823,7 @@ public class CmdExt extends ScriptExt {
         if (chk)
           return "";
         // if (isApplet)
-        // evalError(GT._("The {0} command is not available for the applet.",
+        // evalError(GT.$("The {0} command is not available for the applet.",
         // "WRITE CLIPBOARD"));
       } else if (PT.isOneOf(val.toLowerCase(), JC.IMAGE_TYPES)) {
         if (tokAtArray(pt + 1, args) == T.integer

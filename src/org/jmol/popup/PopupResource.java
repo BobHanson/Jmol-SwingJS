@@ -88,11 +88,11 @@ public abstract class PopupResource {
         if (label != null && label.length() > 0)
           words.setProperty(name, (gt == null ? label : gt.translate(label)));
         /* note that in this case we are using a variable in 
-         * the GT._() method. That's because all standard labels
+         * the GT.$() method. That's because all standard labels
          * have been preprocessed already, so any standard label
          * will be translated. Any other label MIGHT be translated
          * if by chance that word or phrase appears in some other
-         * GT._() call somewhere else in Jmol. Otherwise it will not
+         * GT.$() call somewhere else in Jmol. Otherwise it will not
          * be translated by this call, because it hasn't been 
          * internationalized. 
          */

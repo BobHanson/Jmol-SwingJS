@@ -32,7 +32,7 @@ public class WhatsNewDialog extends HelpDialog {
 
   public WhatsNewDialog(JFrame fr) {
 
-    super(fr, GT._("What's New in Jmol"), true);
+    super(fr, GT.$("What's New in Jmol"), true);
 
     init(null, "WhatsNew.changeLogURL");
   }

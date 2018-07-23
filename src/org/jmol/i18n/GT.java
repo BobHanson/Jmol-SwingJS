@@ -63,7 +63,7 @@ public class GT implements Translator {
   
   @Override
   public String translate(String s) {
-    return _(s);
+    return $(s);
   }
   
   public GT(Viewer vwr, String langCode) {
@@ -202,7 +202,7 @@ public class GT implements Translator {
     return getTextWrapper().doTranslate;
   }
 
-  public static String _(String string) {
+  public static String $(String string) {
     return getTextWrapper().getString(string);
   }
 

@@ -47,7 +47,7 @@ class AboutDialog extends JDialog implements HyperlinkListener {
   private JmolViewer vwr;
     
   AboutDialog(JFrame fr, JmolViewer vwr) throws IOException {
-    super(fr, GT._("About Jmol"), true);
+    super(fr, GT.$("About Jmol"), true);
     this.vwr = vwr;
     JScrollPane scroller = new JScrollPane() {
       @Override

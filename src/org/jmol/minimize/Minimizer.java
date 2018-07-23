@@ -223,13 +223,13 @@ public class Minimizer {
     ForceField pFF0 = pFF;
     getForceField(ff);
     if (pFF == null) {
-      Logger.error(GT.o(GT._("Could not get class for force field {0}"), ff));
+      Logger.error(GT.o(GT.$("Could not get class for force field {0}"), ff));
       return false;
     }
     Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps + " criterion = "
         + crit + ") ...");
     if (bsSelected.nextSetBit(0) < 0) {
-      Logger.error(GT._("No atoms selected -- nothing to do!"));
+      Logger.error(GT.$("No atoms selected -- nothing to do!"));
       return false;
     }
     atoms = vwr.ms.at;
@@ -314,7 +314,7 @@ public class Minimizer {
       minAtoms[pt].sType = atom.getAtomName();
     }
 
-    Logger.info(GT.i(GT._("{0} atoms will be minimized."), ac));
+    Logger.info(GT.i(GT.$("{0} atoms will be minimized."), ac));
     Logger.info("minimize: getting bonds...");
     bonds = vwr.ms.bo;
     rawBondCount = vwr.ms.bondCount;
@@ -329,7 +329,7 @@ public class Minimizer {
   private boolean setModel(BS bsElements) throws JmolAsyncException {
     if (!pFF.setModel(bsElements, elemnoMax)) {
       //pFF.log("could not setup force field " + ff);
-      Logger.error(GT.o(GT._("could not setup force field {0}"), ff));
+      Logger.error(GT.o(GT.$("could not setup force field {0}"), ff));
       if (ff.equals("MMFF")) {
         getForceField("UFF");
         //pFF.log("could not setup force field " + ff);

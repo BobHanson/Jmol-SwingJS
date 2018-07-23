@@ -69,8 +69,8 @@ public class SurfaceTool {
   final static int UNITS_PI = 4;
   private int angleUnits = DEGREES;
   //Note order of following list must match above.
-  private String[] angleUnitsList = { GT._("Degrees"), GT._("Radians"),
-      GT._("Gradians"), GT._("Circle Fraction"), GT._("Units of Pi") };
+  private String[] angleUnitsList = { GT.$("Degrees"), GT.$("Radians"),
+      GT.$("Gradians"), GT.$("Circle Fraction"), GT.$("Units of Pi") };
 
   public SurfaceTool(JmolViewer vwr, HistoryFile hfile, String winName,
       boolean useGUI) {
@@ -311,7 +311,7 @@ public class SurfaceTool {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
-          GT._("Percentage scaling not implemented yet!"), "Warning",
+          GT.$("Percentage scaling not implemented yet!"), "Warning",
           javax.swing.JOptionPane.WARNING_MESSAGE);
     }
     this.angleXY = angleXY;
@@ -365,7 +365,7 @@ public class SurfaceTool {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
-          GT._("Percentage scaling not implemented yet!"), "Warning",
+          GT.$("Percentage scaling not implemented yet!"), "Warning",
           javax.swing.JOptionPane.WARNING_MESSAGE);
     }
     if (position != where) {
@@ -388,7 +388,7 @@ public class SurfaceTool {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
-          GT._("Percentage scaling not implemented yet!"), "Warning",
+          GT.$("Percentage scaling not implemented yet!"), "Warning",
           javax.swing.JOptionPane.WARNING_MESSAGE);
     }
     if (thickness != width) {

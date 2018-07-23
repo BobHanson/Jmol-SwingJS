@@ -3284,7 +3284,7 @@ public class ScriptEval extends ScriptExpr {
       if (slen == 4 && optParameterAsString(2).equals("saved") && slen == 4) {
         vwr.stm.deleteSaved(optParameterAsString(3));
         if (doReport())
-          report(GT.o(GT._("show saved: {0}"), vwr.stm.listSavedStates()), false);
+          report(GT.o(GT.$("show saved: {0}"), vwr.stm.listSavedStates()), false);
         return;
       }
       setObjectProperty();
@@ -3298,7 +3298,7 @@ public class ScriptEval extends ScriptExpr {
       bs = vwr.getAllAtoms();
     int nDeleted = vwr.deleteAtoms(bs, false);
     if (doReport())
-      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
+      report(GT.i(GT.$("{0} atoms deleted"), nDeleted), false);
   }
 
   private void cmdDisplay(boolean isDisplay) throws ScriptException {
@@ -4011,7 +4011,7 @@ public class ScriptEval extends ScriptExpr {
       if (chk)
         return;
       int n = vwr.autoHbond(null, null, false);
-      report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
+      report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
       return;
     }
     if (slen == 2 && getToken(1).tok == T.delete) {
@@ -4662,7 +4662,7 @@ public class ScriptEval extends ScriptExpr {
 
     if (out != null) {
       vwr.fm.setFileInfo(new String[] { localName });
-      Logger.info(GT.o(GT._("file {0} created"), localName));
+      Logger.info(GT.o(GT.$("file {0} created"), localName));
       showString(vwr.fm.getFilePath(localName, false, false) + " created");
       out.closeChannel();
     }
@@ -6562,7 +6562,7 @@ public class ScriptEval extends ScriptExpr {
       isCmdLine_C_Option = saveLoadCheck;
       popContext(false, false);
     } else {
-      Logger.error(GT._("script ERROR: ") + errorMessage);
+      Logger.error(GT.$("script ERROR: ") + errorMessage);
       popContext(false, false);
       if (wasScriptCheck) {
         setErrorMessage(null);
@@ -7814,7 +7814,7 @@ public class ScriptEval extends ScriptExpr {
     if (pt == 2) {
       saveContext(info);
       if (doReport())
-        report(GT.o(GT._("to resume, enter: &{0}"), info), false);
+        report(GT.o(GT.$("to resume, enter: &{0}"), info), false);
       throw new ScriptInterruption(this, info, Integer.MIN_VALUE);
     }
     evalError(info, null);
@@ -8111,7 +8111,7 @@ public class ScriptEval extends ScriptExpr {
     int nDeleted = vwr.deleteAtoms(bs, true);
     boolean isQuiet = !doReport();
     if (!isQuiet)
-      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
+      report(GT.i(GT.$("{0} atoms deleted"), nDeleted), false);
     vwr.select(null, false, 0, isQuiet);
   }
 

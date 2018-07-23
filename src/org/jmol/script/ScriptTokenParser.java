@@ -1488,64 +1488,64 @@ abstract class ScriptTokenParser {
       msg = "Unknown compiler error message number: " + iError;
       break;
     case ERROR_badArgumentCount: // 0;
-      msg = GT._("bad argument count"); // 0
+      msg = GT.$("bad argument count"); // 0
       break;
     case ERROR_badContext: // 1;
-      msg = GT._("invalid context for {0}"); // 1
+      msg = GT.$("invalid context for {0}"); // 1
       break;
     case ERROR_commandExpected: // 2;
-      msg = GT._("command expected"); // 2
+      msg = GT.$("command expected"); // 2
       break;
     case ERROR_coordinateExpected: // 3;
-      msg = GT._("{ number number number } expected"); // 3
+      msg = GT.$("{ number number number } expected"); // 3
       break;
     case ERROR_endOfCommandUnexpected: // 4;
-      msg = GT._("unexpected end of script command"); // 4
+      msg = GT.$("unexpected end of script command"); // 4
       break;
     case ERROR_endOfExpressionExpected: // 5;
-      msg = GT._("end of expression expected"); // 5
+      msg = GT.$("end of expression expected"); // 5
       break;
     case ERROR_identifierOrResidueSpecificationExpected: // 6;
-      msg = GT._("identifier or residue specification expected"); // 6
+      msg = GT.$("identifier or residue specification expected"); // 6
       break;
     case ERROR_invalidAtomSpecification: // 7;
-      msg = GT._("invalid atom specification"); // 7
+      msg = GT.$("invalid atom specification"); // 7
       break;
     case ERROR_invalidChainSpecification: // 8;
-      msg = GT._("invalid chain specification"); // 8
+      msg = GT.$("invalid chain specification"); // 8
       break;
     case ERROR_invalidExpressionToken: // 9;
-      msg = GT._("invalid expression token: {0}"); // 9
+      msg = GT.$("invalid expression token: {0}"); // 9
       break;
     case ERROR_invalidModelSpecification: // 10;
-      msg = GT._("invalid model specification"); // 10
+      msg = GT.$("invalid model specification"); // 10
       break;
     case ERROR_missingEnd: // 11;
-      msg = GT._("missing END for {0}"); // 11
+      msg = GT.$("missing END for {0}"); // 11
       break;
     case ERROR_numberExpected: // 12;
-      msg = GT._("number expected"); // 12
+      msg = GT.$("number expected"); // 12
       break;
     case ERROR_numberOrVariableNameExpected: // 13;
-      msg = GT._("number or variable name expected"); // 13
+      msg = GT.$("number or variable name expected"); // 13
       break;
     case ERROR_residueSpecificationExpected: // 14;
-      msg = GT._("residue specification (ALA, AL?, A*) expected"); // 14
+      msg = GT.$("residue specification (ALA, AL?, A*) expected"); // 14
       break;
     case ERROR_tokenExpected: // 15;
-      msg = GT._("{0} expected"); // 15
+      msg = GT.$("{0} expected"); // 15
       break;
     case ERROR_tokenUnexpected: // 16;
-      msg = GT._("{0} unexpected"); // 16
+      msg = GT.$("{0} unexpected"); // 16
       break;
     case ERROR_unrecognizedExpressionToken: // 17;
-      msg = GT._("unrecognized expression token: {0}"); // 17
+      msg = GT.$("unrecognized expression token: {0}"); // 17
       break;
     case ERROR_unrecognizedParameter: // 18;
-      msg = GT._("unrecognized {0} parameter"); // 18
+      msg = GT.$("unrecognized {0} parameter"); // 18
       break;
     case ERROR_unrecognizedToken: // 19;
-      msg = GT._("unrecognized token: {0}"); // 19
+      msg = GT.$("unrecognized token: {0}"); // 19
       break;
     }
     if (msg.indexOf("{0}") < 0) {

@@ -73,7 +73,7 @@ public class FilePreview extends JPanel implements PropertyChangeListener {
     Box box = Box.createVerticalBox();
 
     // Add a checkbox to activate / deactivate preview
-    active = new JCheckBox(GT._("Preview"), false);
+    active = new JCheckBox(GT.$("Preview"), false);
     active.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -90,9 +90,9 @@ public class FilePreview extends JPanel implements PropertyChangeListener {
 
     if (allowAppend) {
       // Add a checkbox to append data
-      append = new JCheckBox(GT._("Append models"), false);
+      append = new JCheckBox(GT.$("Append models"), false);
       box.add(append);
-      cartoons = new JCheckBox(GT._("PDB cartoons"), pdbCartoonChecked);
+      cartoons = new JCheckBox(GT.$("PDB cartoons"), pdbCartoonChecked);
       cartoons.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {

@@ -32,7 +32,7 @@ public class CreditsDialog extends HelpDialog {
 
   public CreditsDialog(JFrame fr) {
 
-    super(fr, GT._("Credits"), true);
+    super(fr, GT.$("Credits"), true);
 
     init(null, "Credits.creditsURL");
   }

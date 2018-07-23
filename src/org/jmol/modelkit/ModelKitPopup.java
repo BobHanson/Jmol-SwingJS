@@ -69,7 +69,7 @@ public class ModelKitPopup extends JmolGenericPopup {
   @Override
   public String menuSetCheckBoxOption(SC item, String name, String what) {
     // atom type
-    String element = JOptionPane.showInputDialog(GT._("Element?"), "");
+    String element = JOptionPane.showInputDialog(GT.$("Element?"), "");
     if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
       return null;
     menuSetLabel(item, element);

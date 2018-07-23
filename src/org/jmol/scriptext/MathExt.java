@@ -169,7 +169,7 @@ public class MathExt {
     case T.function:
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
-    case T._:
+    case T.__:
     case T.select:
     case T.getproperty:
       return evaluateGetProperty(mp, args, tok, op.tok == T.propselector);
@@ -1696,7 +1696,7 @@ public class MathExt {
                                       int tok0, boolean isAtomProperty)
       throws ScriptException {
     boolean isSelect = (isAtomProperty && tok0 == T.select);
-    boolean isAuxiliary = (tok0 == T._);
+    boolean isAuxiliary = (tok0 == T.__);
     int pt = 0;
     int tok = (args.length == 0 ? T.nada : args[0].tok);
     if (args.length == 2
@@ -3827,7 +3827,7 @@ public class MathExt {
       withinAllModels = (nModels > 1);
       if (warnMultiModel && nModels > 1 && !e.tQuiet)
         e.showString(GT
-            ._("Note: More than one model is involved in this contact!"));
+            .$("Note: More than one model is involved in this contact!"));
     }
     // B always within some possibly extended VDW of A or just A itself
     if (!bsA.equals(bsB)) {

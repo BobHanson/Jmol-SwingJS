@@ -240,7 +240,7 @@ class NBOFileHandler extends JPanel {
         path += "*.*";
       if (!path.equals(""))
         myChooser.setSelectedFile(new File(path));
-      if (myChooser.showDialog(this, GT._("Select")) != JFileChooser.APPROVE_OPTION)
+      if (myChooser.showDialog(this, GT.$("Select")) != JFileChooser.APPROVE_OPTION)
         break;
       newFile = myChooser.getSelectedFile();
       if (newFile.toString().indexOf(".") < 0) {
@@ -314,7 +314,7 @@ class NBOFileHandler extends JPanel {
     default:
       myChooser.setFileFilter(new FileNameExtensionFilter(useExt, useExt));
       myChooser.setSelectedFile(new File(fullFilePath));
-      if (myChooser.showDialog(this, GT._("Select")) != JFileChooser.APPROVE_OPTION)
+      if (myChooser.showDialog(this, GT.$("Select")) != JFileChooser.APPROVE_OPTION)
         break;
       return loadSelectedFile(myChooser.getSelectedFile());
     }

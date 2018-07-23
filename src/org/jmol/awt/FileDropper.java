@@ -121,7 +121,7 @@ public class FileDropper implements DropTargetListener {
     int flags = 1; //
     boolean isScript = FileManager.isScriptType(fname);
     boolean isSurface = FileManager.isSurfaceType(fname);
-    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT._("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
+    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT.$("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
     case JOptionPane.CANCEL_OPTION:
       return;
     case JOptionPane.OK_OPTION:

@@ -49,7 +49,7 @@ class PopInJmol extends WebPanel implements ChangeListener {
       int panelIndex) {
     super(vwr, fc, webPanels, panelIndex);
     panelName = "pop_in";
-    listLabel = GT._("These names will be used as filenames used by JSmol");
+    listLabel = GT.$("These names will be used as filenames used by JSmol");
     // description = "Create a web page with images that convert to live JSmol
     // objects when a user clicks a link";
   }
@@ -75,9 +75,9 @@ class PopInJmol extends WebPanel implements ChangeListener {
 
     // panel to hold spinner and label
     JPanel appletSizeWHPanel = new JPanel();
-    appletSizeWHPanel.add(new JLabel(GT._("JSmol width:")));
+    appletSizeWHPanel.add(new JLabel(GT.$("JSmol width:")));
     appletSizeWHPanel.add(appletSizeSpinnerW);
-    appletSizeWHPanel.add(new JLabel(GT._("height:")));
+    appletSizeWHPanel.add(new JLabel(GT.$("height:")));
     appletSizeWHPanel.add(appletSizeSpinnerH);
     return (appletSizeWHPanel);
   }

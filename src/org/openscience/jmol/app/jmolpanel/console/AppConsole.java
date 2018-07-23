@@ -218,20 +218,20 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
   @Override
   protected void setupLabels0(Map<String, String> labels) {
-    labels.put("Check", GT._("Check"));
-    labels.put("Clear", GT._("Clear"));
-    labels.put("Close", GT._("Close"));
-    labels.put("Halt", GT._("Halt"));
-    labels.put("Help", GT._("Help"));
-    labels.put("Editor", GT._("Editor"));
-    labels.put("History", GT._("History"));
-    labels.put("State", GT._("State"));
-    labels.put("Step", GT._("Step"));
-    labels.put("Top", GT._("Top"));
-    labels.put("Undo", GT._("Undo"));
-    labels.put("Redo", GT._("Redo"));
-    labels.put("Font", GT._("Font"));
-    labels.put("Variables", GT._("Variables"));
+    labels.put("Check", GT.$("Check"));
+    labels.put("Clear", GT.$("Clear"));
+    labels.put("Close", GT.$("Close"));
+    labels.put("Halt", GT.$("Halt"));
+    labels.put("Help", GT.$("Help"));
+    labels.put("Editor", GT.$("Editor"));
+    labels.put("History", GT.$("History"));
+    labels.put("State", GT.$("State"));
+    labels.put("Step", GT.$("Step"));
+    labels.put("Top", GT.$("Top"));
+    labels.put("Undo", GT.$("Undo"));
+    labels.put("Redo", GT.$("Redo"));
+    labels.put("Font", GT.$("Font"));
+    labels.put("Variables", GT.$("Variables"));
   }
 
   @Override
@@ -333,7 +333,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       break;
     case 120: 
       fontButton = setButton("Font");
-      fontButton.setToolTipText(GT._("toggle font size"));
+      fontButton.setToolTipText(GT.$("toggle font size"));
     }
   }
   
