@@ -32,7 +32,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 import javajs.util.A4;
 import javajs.util.M3;
@@ -62,6 +62,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private Lst<float[]> lattvecs;
   private int thisSub;
   private String modAxes;
+  private int modDim;
   private boolean haveM40Data;
   
   @Override

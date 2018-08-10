@@ -37,6 +37,8 @@ public class Sheet extends ProteinStructure {
    * @param monomerIndex
    * @param monomerCount
    * @param subtype
+   * @j2sIgnoreSuperConstructor
+   * @j2sOverride
    * 
    */
   Sheet(AlphaPolymer apolymer, int monomerIndex, int monomerCount, STR subtype) {

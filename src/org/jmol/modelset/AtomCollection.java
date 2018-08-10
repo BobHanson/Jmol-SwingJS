@@ -44,7 +44,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.Bspf;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelsetbio.BioModelSet;
 
 import org.jmol.util.Elements;
@@ -91,8 +91,6 @@ abstract public class AtomCollection {
   public int ac;
 
   public Trajectory trajectory;
-
-  protected SymmetryInterface pointGroup;
 
   ////////////////////
   
@@ -1049,10 +1047,8 @@ abstract public class AtomCollection {
         String[] tokens = PT.getTokens(PT.parseTrimmed(data.substring(
             lines[i], lines[i + 1])));
         int atomIndex = PT.parseInt(tokens[0]) - 1;
-        // JavaScript will not be exact, and we will be checking for the exact value
-        // Modulation setting modScale
-        float x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[3]));
-        float y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[4]));
+        float x = PT.parseFloat(tokens[3]);
+        float y = PT.parseFloat(tokens[4]);
         float z = PT.parseFloat(tokens[5]);
         if (isVibrationVectors) {
           v.set(x, y, z);
@@ -1124,7 +1120,6 @@ abstract public class AtomCollection {
     validateBspfForModel(m.trajectoryBaseIndex, false);
     if (m.isBioModel)
       m.resetDSSR(true);
-    pointGroup = null;
   }
 
   private void untaint(int atomIndex, int type) {
@@ -2759,7 +2754,7 @@ abstract public class AtomCollection {
    * @param max
    */
   public void scaleVectorsToMax(float max) {
-    if (vibrations == null)
+    if (vibrations == null || max == 0)
       return;
     float m = 0;
     BS bsVib = BS.newN(ac);
@@ -2771,20 +2766,17 @@ abstract public class AtomCollection {
         bsVib.set(i);
       }
     }
-    if (m == max || m == 0)
+    if (m == 0 || m == max)
       return;
     m = max / m;
     boolean ok = false;
     for (int i = bsVib.nextSetBit(0); i >= 0; i = bsVib.nextSetBit(i + 1)) {
       Vibration v = getVibration(i, false);
       JmolModulationSet mod = getModulation(i);
-      if (mod == null) {
-        if (m == 0)
-          return; // get out of here!
-        v.scale(m);
-      } else {
+      if (mod != null)
         mod.scaleVibration(m);
-      }
+      else
+        v.scale(m);
       if (!ok) {
         taintAtom(i, TAINT_VIBRATION);
         ok = true;

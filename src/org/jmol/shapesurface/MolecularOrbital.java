@@ -34,7 +34,7 @@ import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.readers.Parameters;
 import org.jmol.quantum.QS;
@@ -389,13 +389,6 @@ public class MolecularOrbital extends Isosurface {
       str.append(JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, null, null,
           "TRAILERONLY", true, 0, null, null));
       return str.toString();
-    }
-    if (propertyName == "moLabel") {
-      String[] labels = (String[]) sg.params.moData
-          .get("nboLabels");
-      if (moNumber > 0 && labels != null)
-        return labels[(moNumber - 1) % labels.length];
-      return "";
     }
     return getPropI(propertyName, index);
   }

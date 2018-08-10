@@ -99,7 +99,41 @@ public class NBOUtil {
   
     return box;
   }
-
+  
+  /**
+   * Creates the title blocks with background color for headers for NBOModel.
+   * Difference of this method in compared to for other models is that the "Help" is being shifted
+   * to stick to the right position x=400 (NBOModel Divider's size is different from other models)
+   * 
+   * @param title
+   *        - title for the section
+   * @param rightSideComponent
+   *        help button, for example
+   * @return Box formatted title box
+   */
+  public static Box createTitleBoxForNBOModel(String title, Component rightSideComponent) {
+    Box box = Box.createVerticalBox();
+    JLabel label = new JLabel(title);
+    label.setAlignmentX(0);
+    label.setBackground(NBOConfig.titleColor);
+    label.setForeground(Color.white);
+    label.setFont(NBOConfig.titleFont);
+    label.setOpaque(true);
+    if (rightSideComponent != null) {
+      JPanel box2 = new JPanel(new BorderLayout());
+      box2.setAlignmentX(0);
+      box2.add(label, BorderLayout.WEST);
+      box2.add(rightSideComponent, BorderLayout.EAST);
+      box2.setMaximumSize(new Dimension(400, 25));
+      box.add(box2);
+    } else
+      box.add(label);
+    box.setAlignmentX(0.0f);
+  
+    return box;
+  }
+  
+  
   /**
    * create a bordered box, either vertical or horizontal
    * 
@@ -263,6 +297,11 @@ public class NBOUtil {
     return new File(pathWithoutExtension(NBOUtil.fixPath(f.toString())) + "." + ext);
   }
 
+  public static String fix47File(String data) {
+    return PT.rep(data, "FORMAT=PRECISE", ""); 
+    
+  }
+
   /**
    * change \ to /
    * 
@@ -300,22 +339,6 @@ public class NBOUtil {
       folder = folder + "/" + (name.equals("") ? "" : name + (ext == null ? "" : "." + ext));
     }
     return folder;
-  }
-
-  /**
-   * remove all _ keywords
-   * @param keywords
-   * @return
-   */
-  static String cleanKeywordsNo_XXX(String keywords) {
-    String[] tokens = PT.getTokens(keywords);
-    String ret = "";
-    for (int i = 0; i < tokens.length; i++) {
-      if (tokens[i].startsWith("_"))
-          continue;
-      ret += tokens[i] + " ";
-    }
-    return ret.trim();
   }
 
   ///**

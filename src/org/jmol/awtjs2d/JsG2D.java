@@ -127,7 +127,6 @@ public class JsG2D implements GenericGraphics {
 
 	@Override
 	public void drawLine(Object g, int x0, int y0, int x1, int y1) {
-	  // g is a canvas context
 		@SuppressWarnings("unused")
 		boolean inPath = this.inPath;
 		/**

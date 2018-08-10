@@ -27,7 +27,7 @@ package org.jmol.adapter.readers.xml;
 import javajs.util.PT;
 
 import org.jmol.adapter.smarter.Atom;
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 /**
  * An XML reader for Materials Studio .xsd files   http://accelrys.com/products/materials-studio/

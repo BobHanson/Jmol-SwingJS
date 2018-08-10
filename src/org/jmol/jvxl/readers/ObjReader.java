@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 import javajs.util.CU;
 import javajs.util.P3;

@@ -43,7 +43,7 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.JmolDataManager;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 
@@ -123,7 +123,7 @@ public class Escape {
     if (AU.isAS(x))
       return eAS((String[]) x, true);
     if (x instanceof M34) 
-      return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
+      return PT.rep(x.toString(), "\t", ",\t");
     if (x instanceof A4) {
       A4 a = (A4) x;
       return "{" + a.x + " " + a.y + " " + a.z + " " + (float) (a.angle * 180d/Math.PI) + "}";  
@@ -628,6 +628,15 @@ public class Escape {
     return v.toArray(new String[v.size()]);
   }
 
+  public static boolean isAV(Object x) {
+    /**
+     * @j2sNative
+     *  return Clazz.instanceOf(x[0], org.jmol.script.SV);
+     */
+    {
+    return x instanceof SV[];
+    }
+  }
 
   /**
    * Jmol-specific post-processing of 

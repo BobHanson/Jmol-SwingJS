@@ -3,9 +3,6 @@
  * $Date$
  * $Revision$
  *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright (C) 2006  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -35,20 +32,9 @@ public class Interface {
       Class<?> x = Class.forName(name);
       return (x == null ? null : x.newInstance());
     } catch (Exception e) {
-      System.out.println("Interface.getInterface Error creating instance for " + name + ": \n" + e);
+      System.out.println("Interface.java Error creating instance for " + name + ": \n" + e);
       return null;
     }
   }
-  
-	public static Object getInstanceWithParams(String name, Class<?>[] classes, Object... params) {
-		try {
-			Class<?> cl = Class.forName(name);
-			return  cl.getConstructor(classes).newInstance(params);
-		} catch (Exception e) {
-      System.out.println("Interface.getInterfaceWithParams Error creating instance for " + name + ": \n" + e);
-			return null;
-		}
-	}
-
 
 }

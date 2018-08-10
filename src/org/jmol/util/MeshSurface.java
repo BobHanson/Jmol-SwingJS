@@ -1,7 +1,7 @@
 package org.jmol.util;
 
 import org.jmol.api.Interface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
@@ -91,6 +91,10 @@ public class MeshSurface {
 
   public boolean dataOnly;
 
+  /**
+   * 
+   * @j2sIgnore
+   */
   public MeshSurface() {
   }
 

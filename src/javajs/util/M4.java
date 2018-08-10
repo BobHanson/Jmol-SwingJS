@@ -64,6 +64,7 @@ public class M4 extends M34 {
 
   /**
    * all zeros
+   * @j2sIgnore
    */
   public M4() {
   }

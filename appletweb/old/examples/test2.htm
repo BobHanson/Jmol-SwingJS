@@ -1,0 +1,166 @@
+<html>
+<title>Jmol/ChemDoodle Demo -- Using JmolData.jar for serving ChemDoodle models</title>
+<head>
+<script type="text/javascript" src="../jQuery.min.js" title="required; replaces ChemDoodleWeb-lib;fixed bug in that version"></script>
+<script type="text/javascript" src="gl-matrix-min.js" title="optional; replaces ChemDoodleWeb-lib;required if using ChemDoodle option"></script>
+<script type="text/javascript" src="mousewheel.js" title="optional; replaces ChemDoodleWeb-lib;required if using ChemDoodle option"></script>
+<script type="text/javascript" src="ChemDoodleWeb-unpacked.js" title="optional; required only if using ChemDoodle option"></script>
+<script type="text/javascript" src="../JmolCore.js"></script>
+<script type="text/javascript" src="../JmolApplet.js"></script>
+<script type="text/javascript" src="../JmolCD.js"></script>
+<script type="text/javascript" src="../JmolApi.js"></script>
+
+<script type="text/javascript">
+
+// note; json2 is necessary for MSIE compatibility
+  
+var jmolApplet0; // set up in HTML table, below
+
+// logic is set as follows:
+//  -- if Java is present and have Jmol.js, use Jmol
+//  -- otherwise, if WebGL is present and have ChemDoodleWeb.js, use ChemDoodle/WebGL
+//  -- otherwise, if ChemDoodleWeb.js is present, use ChemDoodle/2D
+//  -- otherwise, just display the image
+
+// ?USECD or ?USEIMAGE in the URL can force one or the other of these.
+
+// and, of course, a little tweaking of the logic would let you do anything
+
+var useJmolOnly = (document.location.href.indexOf("NOCD") >= 0);
+var useNoApplet = (!useJmolOnly && document.location.href.indexOf("CD") >= 0);
+var useWebGlIfAvailable = (document.location.href.indexOf("NOWEBGL") < 0);
+var useImageOnly = (document.location.href.indexOf("IMAGE") >= 0);
+var useSignedApplet = (document.location.href.indexOf("SIGNED") >= 0);
+  
+jmol_isReady = function(applet) {
+	document.title = (applet._id + " is ready")
+}		
+
+var Info = {
+	width: 300,
+	height: 300,
+	debug: false,
+	addSelectionOptions: true,
+	serverURL: "http://chemapps.stolaf.edu/jmol/jmolcd2.php",
+	useNoApplet: useNoApplet,
+	useJmolOnly: useJmolOnly,
+	useWebGlIfAvailable: useWebGlIfAvailable,
+	useImageOnly: useImageOnly,
+	jarPath: "..",
+	jarFile: (useSignedApplet ? "JmolAppletSigned.jar" : "JmolApplet.jar"),
+	isSigned: useSignedApplet,
+	readyFunction: jmol_isReady,
+	defaultModel: "$morphine",
+	script: "spin on"
+}
+
+</script>
+</head>
+<body>
+<table width=1000 cellpadding=10>
+<tr><td colspan=2>
+This Jmol page should automatically switch to different modes
+depending upon browser capabilities. It can use the signed Jmol applet, the unsigned Jmol applet
+with server-side help, and ChemDoodle with or without WebGL. 
+On the server side, it uses JmolData.jar 
+for delivering cross-domain models into ChemDoodle or the unsigned applet. It is the first page of its kind.
+
+</td></tr>
+<tr><td>
+
+<script>
+
+// note that the variable name MUST match the first parameter in quotes
+
+jmolApplet0 = Jmol.getApplet("jmolApplet0", Info)
+
+// note that now scripts can be sent immediately after the _Applet object is created
+
+Jmol.script(jmolApplet0,"background gray;delay 0.5;background black")
+
+</script>
+
+<br><a href="javascript:Jmol.showInfo(jmolApplet0, true)">show info</a>
+<a href="javascript:Jmol.showInfo(jmolApplet0, false)">hide info</a>
+
+</td><td valign=top>
+For NCI, enter a molecule name, a CAS registry number, an IUPAC name, or some other sort of identifier in the box
+and press [ENTER]. For PubChem, enter a name or CAS number.
+Note that these input controls can be easily hidden for a more standard Jmol look.
+<br /><br /> 
+
+Current status: (4/24/12) using PubChem rest/pub interface for direct xhr2 loading of models;
+all files loading; basic functionality only; Jmol.js no longer necessary for creating applets or scripting
+ 
+  
+<br /><br /> 
+<table cellpadding=5><tr><td valign=top>
+<b>rendering options:</b> 
+	 <br /> 
+  <a href=test2.htm>unsigned Jmol applet</a> 
+ <br /> 
+<a href=test2.htm?SIGNED>signed Jmol applet</a>
+ <br /> 
+ <a href=test2.htm?CD>ChemDoodle only</a> 
+  <br /> 
+<a href=test2.htm?CD-NOWEBGL>not ChemDoodle(no WebGL)</a> 
+ <br /> 
+<a href=test2.htm?NOCD>not ChemDoodle</a> 
+ <br /> 
+ <a href=test2.htm?IMAGE>image only</a>
+ <br />
+ <br />
+	<b>keyword searches</b>
+ <br />
+ <a href="javascript:Jmol.search(jmolApplet0,'=caffeine?')">=caffeine? (RCSB)</a>
+ <br />
+ <a href="javascript:Jmol.search(jmolApplet0,'=1blu?')">=1blu? (RCSB)</a>
+ <br />
+ <a href="javascript:Jmol.search(jmolApplet0,'=1crn?')">=1crn? (RCSB)</a>
+</td><td valign=top>
+	<b>this-domain calls - no server</b> 
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'caffeine.mol')">load caffeine.mol</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'1crn.pdb',';cartoons only;color structure;spin on')">load 1crn.pdb</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'t-butene.xyz')">load t-butene.xyz</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'sebi0105c.ccdc.cif')">load sebi0105c.ccdc.cif</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'sucrose.cif')">load sucrose.cif</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'y1237.cif', '{1 1 1}')">load y1237.cif</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'quartz.cif', '{1 1 1}')">load quartz.cif</a>
+ <br /> 
+ <br /> 
+ <b>scripted image</b> 
+ <br /> 
+ <a href="javascript:Jmol.script(jmolApplet0,'load 2bxa-hbond.png')">2bxa-hbond.png</a>
+ <br /> 
+
+ </td><td valign=top>
+	<b>direct database calls - no server</b> 
+ <br />
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'$caffeine')">load $caffeine (from NCI)</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'=1blu',';cartoons only;color structure')">load =1blu (cartoon, from RCSB)</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,':1983')">load :1983 (PubChem CID)</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,':aspirin')">load :aspirin (PubChem name)</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,':smiles:CC/C=C/CC')">load :smiles:CC/C=C/CC (PubChem SMILES)</a>
+ <br />
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'$CC/C=C/CC')">load $CC/C=C/CC (NCI SMILES)</a>
+ <br />
+ <a href="javascript:Jmol.search(jmolApplet0,':caffeine',';isosurface vdw map mep translucent')">:caffeine (PubChem, with mep)</a>
+ <br /> 
+ <a href="javascript:Jmol.loadFile(jmolApplet0,'==HEM')">load ==HEM (RCSB ligand)</a>
+
+</td></tr></table>
+</td>
+</tr></table>
+</body>
+</html>

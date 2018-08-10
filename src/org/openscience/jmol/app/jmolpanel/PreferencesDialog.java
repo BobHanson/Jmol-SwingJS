@@ -148,7 +148,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     initializeProperties();
 
-    this.setTitle(GT.$("Preferences"));
+    this.setTitle(GT._("Preferences"));
 
     initVariables();
     commands = new Hashtable<String, Action>();
@@ -166,30 +166,30 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     JPanel atoms = buildAtomsPanel();
     JPanel bonds = buildBondPanel();
     //    JPanel vibrate = buildVibratePanel();
-    tabs.addTab(GT.$("Display"), null, disp);
-    tabs.addTab(GT.$("Atoms"), null, atoms);
-    tabs.addTab(GT.$("Bonds"), null, bonds);
+    tabs.addTab(GT._("Display"), null, disp);
+    tabs.addTab(GT._("Atoms"), null, atoms);
+    tabs.addTab(GT._("Bonds"), null, bonds);
 
     JPanel buttonPanel = new JPanel();
     buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-    jmolDefaultsButton = new JButton(GT.$("Jmol Defaults"));
+    jmolDefaultsButton = new JButton(GT._("Jmol Defaults"));
     jmolDefaultsButton.addActionListener(this);
     buttonPanel.add(jmolDefaultsButton);
 
-    rasmolDefaultsButton = new JButton(GT.$("RasMol Defaults"));
+    rasmolDefaultsButton = new JButton(GT._("RasMol Defaults"));
     rasmolDefaultsButton.addActionListener(this);
     buttonPanel.add(rasmolDefaultsButton);
 
-    //cancelButton = new JButton(GT.$("Cancel"));
+    //cancelButton = new JButton(GT._("Cancel"));
     //cancelButton.addActionListener(this);
     //buttonPanel.add(cancelButton);
 
-    applyButton = new JButton(GT.$("Apply"));
+    applyButton = new JButton(GT._("Apply"));
     applyButton.addActionListener(this);
     buttonPanel.add(applyButton);
 
-    okButton = new JButton(GT.$("OK"));
+    okButton = new JButton(GT._("OK"));
     okButton.addActionListener(this);
     buttonPanel.add(okButton);
     getRootPane().setDefaultButton(okButton);
@@ -213,7 +213,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     JPanel showPanel = new JPanel();
     showPanel.setLayout(new GridLayout(1, 3));
-    showPanel.setBorder(new TitledBorder(GT.$("Show All")));
+    showPanel.setBorder(new TitledBorder(GT._("Show All")));
     cH = guimap.newJCheckBox("Prefs.showHydrogens",
                              vwr.getBoolean(T.showhydrogens));
     cH.addItemListener(checkBoxListener);
@@ -317,8 +317,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     JPanel sfPanel = new JPanel();
     sfPanel.setLayout(new BorderLayout());
-    sfPanel.setBorder(new TitledBorder(GT.$("Default atom size")));
-    JLabel sfLabel = new JLabel(GT.$("(percentage of vanDerWaals radius)"),
+    sfPanel.setBorder(new TitledBorder(GT._("Default atom size")));
+    JLabel sfLabel = new JLabel(GT._("(percentage of vanDerWaals radius)"),
                                 SwingConstants.CENTER);
     sfPanel.add(sfLabel, BorderLayout.NORTH);
     vdwPercentSlider =
@@ -373,10 +373,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     // Automatic calculation of bonds upon molecule load
     JPanel autobondPanel = new JPanel();
     autobondPanel.setLayout(new BoxLayout(autobondPanel, BoxLayout.Y_AXIS));
-    autobondPanel.setBorder(new TitledBorder(GT.$("Compute Bonds")));
+    autobondPanel.setBorder(new TitledBorder(GT._("Compute Bonds")));
     ButtonGroup abGroup = new ButtonGroup();
-    abYes = new JRadioButton(GT.$("Automatically"));
-    abNo = new JRadioButton(GT.$("Don't Compute Bonds"));
+    abYes = new JRadioButton(GT._("Automatically"));
+    abNo = new JRadioButton(GT._("Don't Compute Bonds"));
     abGroup.add(abYes);
     abGroup.add(abNo);
     autobondPanel.add(abYes);
@@ -408,8 +408,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     JPanel bwPanel = new JPanel();
     bwPanel.setLayout(new BorderLayout());
-    bwPanel.setBorder(new TitledBorder(GT.$("Default Bond Radius")));
-    JLabel bwLabel = new JLabel(GT.$("(Angstroms)"), SwingConstants.CENTER);
+    bwPanel.setBorder(new TitledBorder(GT._("Default Bond Radius")));
+    JLabel bwLabel = new JLabel(GT._("(Angstroms)"), SwingConstants.CENTER);
     bwPanel.add(bwLabel, BorderLayout.NORTH);
 
     bwSlider = new JSlider(0, 250,vwr.getMadBond()/2);
@@ -444,8 +444,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     JPanel btPanel = new JPanel();
     btPanel.setLayout(new BorderLayout());
     btPanel.setBorder(new TitledBorder(
-      GT.$("Bond Tolerance - sum of two covalent radii + this value")));
-    JLabel btLabel = new JLabel(GT.$("(Angstroms)"), SwingConstants.CENTER);
+      GT._("Bond Tolerance - sum of two covalent radii + this value")));
+    JLabel btLabel = new JLabel(GT._("(Angstroms)"), SwingConstants.CENTER);
     btPanel.add(btLabel, BorderLayout.NORTH);
 
     btSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100,
@@ -486,8 +486,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     // minimum bond distance slider
     JPanel bdPanel = new JPanel();
     bdPanel.setLayout(new BorderLayout());
-    bdPanel.setBorder(new TitledBorder(GT.$("Minimum Bonding Distance")));
-    JLabel bdLabel = new JLabel(GT.$("(Angstroms)"), SwingConstants.CENTER);
+    bdPanel.setBorder(new TitledBorder(GT._("Minimum Bonding Distance")));
+    JLabel bdLabel = new JLabel(GT._("(Angstroms)"), SwingConstants.CENTER);
     bdPanel.add(bdLabel, BorderLayout.NORTH);
 
     bdSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100,
@@ -654,9 +654,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     clearHistory = Boolean.getBoolean("clearHistory");
 
     minBondDistance =
-      Float.parseFloat(currentProperties.getProperty("minBondDistance"));
+      PT.fVal(currentProperties.getProperty("minBondDistance"));
     bondTolerance =
-      Float.parseFloat(currentProperties.getProperty("bondTolerance"));
+      PT.fVal(currentProperties.getProperty("bondTolerance"));
     marBond = Short.parseShort(currentProperties.getProperty("marBond"));
     percentVdwAtom =
       Integer.parseInt(currentProperties.getProperty("percentVdwAtom"));

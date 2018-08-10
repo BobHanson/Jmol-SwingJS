@@ -3,10 +3,11 @@ package jspecview.java;
 import java.awt.Component;
 import java.io.File;
 
+import javajs.api.GenericFileInterface;
+
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import org.jmol.api.GenericFileInterface;
 
 import jspecview.api.JSVFileHelper;
 import jspecview.common.ExportType;

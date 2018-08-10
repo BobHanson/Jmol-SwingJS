@@ -25,7 +25,8 @@
 
 package org.jmol.thread;
 
-import org.jmol.api.GenericPlatform;
+import javajs.api.GenericPlatform;
+
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.MouseState;
 import org.jmol.viewer.Viewer;
@@ -44,6 +45,9 @@ public class HoverWatcherThread extends JmolThread {
    * @param current
    * @param moved
    * @param vwr
+   * 
+   * @j2sIgnoreSuperConstructor
+   * 
    */
   public HoverWatcherThread(ActionManager actionManager, MouseState current, MouseState moved, Viewer vwr) {
     setViewer(vwr, "HoverWatcher");

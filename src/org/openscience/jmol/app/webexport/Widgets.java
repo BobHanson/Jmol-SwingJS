@@ -53,7 +53,7 @@ class Widgets {
      * Each Widget must implement this function and make sure to use
      * the appletID number to specify the target applet i.e. "JmolApplet(appletID)".
      * NOTE anything that must be translated in the web page should be wrapped in both a call to
-     * GT.escapeHTML and GT.$ as in the following: GT.escapeHTML(GT.$("text to translate"))
+     * GT.escapeHTML and GT._ as in the following: GT.escapeHTML(GT._("text to translate"))
      * @param appletID
      * @param instance
      * @return  the JavaScript and html to implement the widget
@@ -83,7 +83,7 @@ class Widgets {
 
   class SpinOnWidget extends Widget {
     SpinOnWidget() {
-      name = GT.$("Spin on/off");
+      name = GT._("Spin on/off");
     }
     @Override
     String[] getSupportFileNames(){
@@ -103,15 +103,15 @@ class Widgets {
           + " onclick=\"Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], "
           + "\'spin \' + (this.checked ? \'on\' : \'off\'));\" "
           
-          + "title=\"" + GT.escapeHTML(GT.$("enable/disable spin")) + "\" />"
+          + "title=\"" + GT.escapeHTML(GT._("enable/disable spin")) + "\" />"
           + "<label for=\"JmolSpinWidget" + appletID + "\">" 
-          + GT.escapeHTML(GT.$("Spin on")) + "</label>";
+          + GT.escapeHTML(GT._("Spin on")) + "</label>";
     }
   }
 
   class BackgroundColorWidget extends Widget {
     BackgroundColorWidget() {
-      name = GT.$("Background Color");
+      name = GT._("Background Color");
     }
 
     @Override
@@ -129,7 +129,7 @@ class Widgets {
     String getJavaScript(int appletID, JmolInstance instance) {
       P3 ptRGB = CU.colorPtFromInt(instance.bgColor, null);
       return "<table><tbody><tr><td>"
-          + GT.escapeHTML(GT.$("background color:"))
+          + GT.escapeHTML(GT._("background color:"))
           + "</td><td style='min-width:70px;'><script type='text/javascript'>"
           + "var scriptStr = 'color background $COLOR$;';"
           + "jmolColorPickerBox(scriptStr, [" 
@@ -142,7 +142,7 @@ class Widgets {
 
   class StereoViewWidget extends Widget {
     StereoViewWidget() {
-      name = GT.$("Stereo Viewing");
+      name = GT._("Stereo Viewing");
     }
 
     @Override
@@ -159,23 +159,23 @@ class Widgets {
     @Override
     String getJavaScript(int appletID, JmolInstance instance) {
       return "<select id=\"StereoMode" + appletID + "\" title=\""
-          + GT.escapeHTML(GT.$("select stereo type")) + "\""
+          + GT.escapeHTML(GT._("select stereo type")) + "\""
           + "onchange=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], "
           + "(this.options[this.selectedIndex]).value));\">"
           + "\n<option selected=\"\" value=\"stereo off\">"
-          + GT.escapeHTML(GT.$("Stereo Off")) + " </option>"
-          + "\n<option value=\"stereo REDBLUE\">" + GT.escapeHTML(GT.$("Red/Blue"))
+          + GT.escapeHTML(GT._("Stereo Off")) + " </option>"
+          + "\n<option value=\"stereo REDBLUE\">" + GT.escapeHTML(GT._("Red/Blue"))
           + "</option>"
-          + "\n<option value=\"stereo REDCYAN\">" + GT.escapeHTML(GT.$("Red/Cyan"))
+          + "\n<option value=\"stereo REDCYAN\">" + GT.escapeHTML(GT._("Red/Cyan"))
           + "</option>"
-          + "\n<option value=\"stereo REDGREEN\">" + GT.escapeHTML(GT.$("Red/Green"))
+          + "\n<option value=\"stereo REDGREEN\">" + GT.escapeHTML(GT._("Red/Green"))
           + "</option>"
           + "\n</select>";
     }
   }
   class AnimationWidget extends Widget {
     AnimationWidget() {
-      name = GT.$("Animation Control");
+      name = GT._("Animation Control");
     }
 
     @Override
@@ -202,37 +202,37 @@ class Widgets {
     @Override
     String getJavaScript(int appletID, JmolInstance instance) {
       String jsString = "<div class=\"AnimBox\">"
-       + "<div style=\"text-align:center\">" + GT.escapeHTML(GT.$("Animation")) + "</div>"
+       + "<div style=\"text-align:center\">" + GT.escapeHTML(GT._("Animation")) + "</div>"
        + "<div>"
-       + "<button title=\"" + GT.escapeHTML(GT.$("First Frame"))
+       + "<button title=\"" + GT.escapeHTML(GT._("First Frame"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame rewind\'));\">"
        + "<img src=\"firstButton.png\"></button>"
-       + "<button title=\"" + GT.escapeHTML(GT.$("Previous Frame"))
+       + "<button title=\"" + GT.escapeHTML(GT._("Previous Frame"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame previous\'));\">"
        + "<img src=\"prevButton.png\"></button>"   
-       + "<button title=\"" + GT.escapeHTML(GT.$("Play"))
+       + "<button title=\"" + GT.escapeHTML(GT._("Play"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame play\'));\">"
        + "<img src=\"playButton.png\"></button>"  
-       + "<button title=\"" + GT.escapeHTML(GT.$("Next Frame"))
+       + "<button title=\"" + GT.escapeHTML(GT._("Next Frame"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame next\'));\">"
        + "<img src=\"nextButton.png\"></button>"
-       + "<button title=\"" + GT.escapeHTML(GT.$("Pause"))
+       + "<button title=\"" + GT.escapeHTML(GT._("Pause"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame pause\'));\">"
        + "<img src=\"pauseButton.png\"></button>"
-       + "<button title=\"" + GT.escapeHTML(GT.$("Last Frame"))
+       + "<button title=\"" + GT.escapeHTML(GT._("Last Frame"))
        + "\" onclick=\"void(Jmol.scriptWait(window[\'jmolApplet" + appletID + "\'], \'frame last\'));\">"
        + "<img src=\"lastButton.png\"></button>"
        + "</div>"
        + "<div>"
-       + "<span>" + GT.escapeHTML(GT.$("Mode:"))+"</span>"
-       + "<span id=\"jmol_loop_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT.$("Loop"))
+       + "<span>" + GT.escapeHTML(GT._("Mode:"))+"</span>"
+       + "<span id=\"jmol_loop_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT._("Loop"))
        + "\" onclick=\"jmol_animationmode(\'loop\'," + appletID + ");\">"
        + "<img src=\"playLoopButton.png\"></button></span>"
-       + "<span id=\"jmol_palindrome_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT.$("Palindrome"))
+       + "<span id=\"jmol_palindrome_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT._("Palindrome"))
        + "\" onclick=\"jmol_animationmode(\'palindrome\', " + appletID + ");\">"
        + "<img src=\"playPalindromeButton.png\"></button></span>"
        + "<span class=\"jmol_playDefault\""
-       + " id=\"jmol_playOnce_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT.$("Play Once"))
+       + " id=\"jmol_playOnce_" + appletID + "\"><button title=\"" + GT.escapeHTML(GT._("Play Once"))
        + "\" onclick=\"jmol_animationmode(\'playOnce\', " + appletID + ");\">"
        + "<img src=\"playOnceButton.png\"></button></span>"
        + "</div>"
@@ -244,7 +244,7 @@ class Widgets {
  
   class ConsoleWidget extends Widget {
     ConsoleWidget() {
-      name = GT.$("Open Console Button");
+      name = GT._("Open Console Button");
     }
 
     @Override
@@ -260,15 +260,15 @@ class Widgets {
 
     @Override
     String getJavaScript(int appletID, JmolInstance instance) {
-      return ("<button title=\"" + GT.escapeHTML(GT.$("launch Jmol console"))
+      return ("<button title=\"" + GT.escapeHTML(GT._("launch Jmol console"))
           + "\" onclick=\"Jmol.script(window[\'jmolApplet" + appletID + "\'], \'console\');\">"
-          + GT.escapeHTML(GT.$("Jmol Console")) + "</button>");
+          + GT.escapeHTML(GT._("Jmol Console")) + "</button>");
     }
   }
   
   class DownLoadWidget extends Widget { //not yet implemented
     DownLoadWidget() {
-      name = GT.$("Download view");
+      name = GT._("Download view");
     }
 
     @Override
@@ -286,7 +286,7 @@ class Widgets {
     @Override
     String getJavaScript(int appletID, JmolInstance instance) {
       // TODO
-      return (GT.$("unimplemented"));
+      return (GT._("unimplemented"));
     }
   }
 

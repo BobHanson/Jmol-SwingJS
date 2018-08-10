@@ -25,7 +25,7 @@ package org.jmol.jvxl.calc;
 
 
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.jvxl.api.VertexDataServer;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.VolumeData;

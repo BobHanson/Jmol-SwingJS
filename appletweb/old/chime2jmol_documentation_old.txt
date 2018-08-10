@@ -1,0 +1,121 @@
+************************
+*  A brief documentation for the use of the chime2jmol.pl Perl script
+*  that allows to convert Chime pages into Jmol pages.
+*  Author: Miguel Howard
+************************
+
+Copied from the jmol-users archive:
+
+Re: [Jmol-users] chime2jmol
+Miguel
+Wed, 19 Nov 2003 02:46:48 -0800
+
+[...] using the chime2jmol.pl script in Jmol v10.
+
+The perl script chime2jmol.pl can be used to automatically convert a
+subdirectory of web pages from chime plug-in format into jmol applet
+format.
+
+The entire source directory tree is walked and copied to the destination.
+Files in the original directory are not modified. File names are preserved
+as they are copied (perhaps with modifications) to the destination
+directory.
+
+Any files which are not .htm* are copied directly. .htm* files are parsed
+in order to find chime plug-in <embed> tags. When an <embed> tag is found,
+the contents are broken-down and reconstructed to generate the
+corresponding Jmol <applet> tag.
+
+The original <embed> tag is embedded in <!-- comment --> brackets in the
+destination for reference/debugging purposes.
+
+Chime plug-in <embed> tags for molecule display are converted into
+JmolApplet applets.
+
+Chime plug-in <embed> tags for buttons are converted into
+JmolAppletControl applets.
+
+*Note* If pages contain additional plug-ins which are not related to Chime
+then the chime2jmol.pl script will almost certainly fail.
+
+It is a command-line script written in perl. You will need to be
+comfortable with the command line, perl, and CPAN.
+
+The script uses several standard perl modules (libraries) to do the html
+page parsing. If they are not installed then the script will die when you
+try to run it. Use CPAN to install these modules.
+
+Parameters are as follows:
+
+ -v Verbose output
+    This will show you what is going on during processing.
+    Always use this until you are comfortable
+ -s Source directory
+    This is the pathname to the directory where your source
+    (original chime .htm*) files are located
+ -d Destination directory
+    This is where you want to send the converted output to.
+    Don't use the same directory as the source ... use a
+    sibling directory
+ -c Clear destination
+    Delete the destination directory tree before beginning.
+    You may want to use this all the time too
+ -a Archive name
+    Allows you to specify an archive name other than JmolApplet.jar
+    In general, don't use this
+ -b codeBase
+    Allows you to specify a codebase subdirectory where
+    JmolApplet.jar will be located.
+
+The -b parameter needs more explanation. It prevents you from having to
+copy the JmolApplet.jar to every subdirectory. This substantially improves
+performance because the one copy of JmolApplet.jar is shared by all the
+pages ... it stays in the browser cache and does not get reloaded each
+time the user goes to a new subdirectory.
+
+However, the -b parameter needs more work. Currently, it does not
+automatically manage relative directory paths as the directory tree is
+descended (by prepending ../ each time the directory level goes down).
+Therefore, it only works with absolute directory references.
+
+Let's go through a simple example. I have a subdirectory called
+chime-pages. I am going to convert them into a subdirectory called
+jmol-pages.
+
+  perl chime2jmol.pl -v -s {somePath}/chime-pages -d {somePath}/jmol-pages
+
+Now, I copy JmolApplet.jar to the jmol-pages directory
+  cp JmolApplet.jar {somePath}/jmol-pages
+
+Now on my web server I create a virtual path called jmolTest to
+{somePath}/jmol-pages. So, to get to my converted pages from a web
+browser, one will go to:
+  http://www.mywebserver.com/jmolTest
+
+I set this up ... and everything works perfectly the first time ... yeah
+right :-)
+
+A little more complicated example. This time I have an entire directory
+tree of chime pages. I want them all to share the same copy of Jmol, so I
+will use the -b parameter to set the codeBase. But since I have to use
+absolute paths I must plan ahead a little. I am going to put one
+JmolApplet.jar in my jmol-pages directory and everyone is going to share
+that. But, from the perspective of my web server, this directory is called
+jmolTest. Therefore, I need to set my codeBase to be /jmolTest
+
+  perl -v -s chime-pages -d jmol-pages -b /jmolTest
+
+
+This will add the attribute
+  codebase="/jmolTest"
+to every applet tag, thereby forcing all applet instances (regardless of
+directory level) to share the same instance of JmolApplet.jar
+
+
+
+
+This code has not had significant testing. So if you have trouble with
+*anything* don't waste time ... let me know.
+
+Miguel
+

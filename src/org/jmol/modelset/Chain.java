@@ -23,7 +23,7 @@
  */
 package org.jmol.modelset;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 /**
  * A Model is a collection of Chains of Groups of Atoms.

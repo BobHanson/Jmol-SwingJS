@@ -1,0 +1,887 @@
+<project name="Jmol" default="main" basedir=".">
+  <!--
+      DocumentId  $Id: build.xml 21168 2016-06-30 13:50:15Z hansonr $
+  -->
+<!--
+
+Developer note from Bob Hanson, 11/2016
+
+This is just a minimal build file with a single target. 
+ 
+ - creates Jmol.jar, JmolData.jar and JmolApplet*.jar only
+ 
+Bob Hanson hansonr@stolaf.edu 11/5/2016
+
+  -->
+	
+	<!--
+
+	Developer note from Bob Hanson, 12/2016
+
+	The Jmol project uses resources from two other projects, JSmol and JSpecView.
+	You can modify Jmol without those projects, but both of these projects share code
+	from Jmol and, though separate projects, provide the files in Jmol for final distribution.
+
+	Required checkouts include:
+
+	svn+ssh://svn.code.sf.net/p/smol/code, Trunk:trunk
+	svn+ssh://svn.code.sf.net/p/jsmol/code, Trunk:trunk
+	svn+ssh://svn.code.sf.net/p/jspecview/svn:dev2/JSpecView
+	svn+ssh://svn.code.sf.net/p/jspecview/svn:dev2/JSpecViewLib
+
+	Relevant files created in this project by build scripts in those projects include:
+
+	  appletweb/jsmol.zip
+	  jars/JSpecView.jar
+	  
+	  appletweb/jsmol.zip is created using:
+
+	   JSmol/build_11_fromjmol.xml
+	   JSmol/build_12_fromjspecview.xml 
+	   JSmol/build_13_tojs.xml
+	   
+	  jars/JSpecView.jar is created using 
+
+	   JSpecviewLib/build.xml
+	   JSpecview/build.xml
+
+	Note that if you modify Jmol source without also running the JSmol build scripts, 
+	then JSmol will not reflect your modifications.
+
+	The overall sequence for full HTML5 code creation
+	when the Jmol or JSpecView code is modified, is as follows:
+
+	1) Do all coding modifications in the Jmol and JSpecView projects. Never modify JSmol/src.
+	2) use jmol/buildmin.xml to create the JAR files.
+	2) Build JSpecViewLib and JSpecView if there are changes there. 
+	   The JSpecView*.jar files will be copied into this project.
+	3) Build JSmol using the build_11.., build_12.., build_13.. 
+	   jsmol.zip will be created and copied to jmol/appletweb/.
+
+	4) for distribution, then 
+
+		a) run jmol/builddist.xml
+		b) run jmol/tools/jmol-release.xml
+
+	  -->
+	
+	
+  <!-- Contributions -->
+  <!-- <for list ...> construct needs ant-contrib.jar -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="tools/ant-contrib.jar" />
+    </classpath>
+  </taskdef>
+
+  <!-- pull developer-specific settings from their home directory -->
+  <property file="${user.home}/.jmol.build.properties" />
+  <!-- compile options -->
+  <property name="build.sysclasspath" value="ignore" />
+  <property name="build.compiler" value="javac1.6" />
+  <property name="java.version" value="1.6" />
+  <property name="debug" value="on" />
+  <property name="deprecation" value="off" />
+  <property name="optimization" value="off" />
+	<copy todir="" >
+	  <fileset dir="src/org/jmol/viewer/">
+	    <include name="Jmol.properties" />
+	  </fileset>
+	  <filterchain>
+	    <striplinecomments>
+	      <comment value="#" />
+	    </striplinecomments>
+	    <linecontains>
+	      <contains value="Jmol.___" />
+	    </linecontains>
+	  </filterchain>
+	</copy>
+  <property file="Jmol.properties" prefix="Jmol.properties" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
+  <propertyregex property="version"
+  			  override = "true"
+	          input="${version}"
+  			  regexp='"'
+	          replace=""
+  		      global="true"
+	          />
+  <echo message="version=${version}" />
+  <property name="jvxl_version" value="0.1" />
+
+  <input message="private property file:" addproperty="Private.propertyFile" defaultValue="none" />
+  <if><available file="${Private.propertyFile}" /><then>
+  	<property file="${Private.propertyFile}" />
+	<echo>using ${Private.keystore} ${Private.storetype}</echo>
+  </then></if>
+	
+	
+  <property name="lib.dir" value="jars" />
+  <property name="appjars.dir" value="build/appjars" />
+  <property name="classes.dir" value="build/classes" />
+  <property name="applet.classes.dir" value="build/applet-classes" />
+  <property name="commons-cli.jar" value="commons-cli-1.2.jar" />
+  <property name="selfsign.store" value="ca-cert/selfSignedCertificate/selfSignedCertificate.store" />
+  <property name="selfsign.storetype" value="jks" />
+  <property name="selfsign.storepass" value="selfSignedCertificate" />
+  <property name="selfsign.alias" value="selfSignedCertificate" />
+  <property name="tsa.url" value="http://timestamp.globalsign.com/scripts/timestamp.dll" />
+	  <!-- property name="tsa.url" value="http://tsa.starfieldtech.com" / -->
+	
+	<!-- http://timestamp.globalsign.com/scripts/timestamp.dll or  http://tsa.starfieldtech.com/, which stopped working 3/27/14 and again on 4/8/14 -->
+
+
+	<!-- you can set this by defining it in ~/.jmol.build.properties -->
+  <property name="keystore.name" value="Must be set by user." />
+
+  <!-- this value is required if you are building the .NET DLL, it must point to the IKVM/bin directory -->
+  <property name="ikvm.home" value="Must be set by user." />
+	
+  <property file="proxy.properties" />
+
+  <import file="tools/build-i18n.xml"/>
+
+  <path id="project.class.path">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+  
+  <path id="applet-project.class.path">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+  
+  <target name="main" id="main" depends="init,jar,applet-jar,signed-applet"/>
+  
+  <target name="init" id="init">
+    <tstamp/>
+  </target>
+
+  <target name="initFailure" id="initFailure">
+    <fail message="Init failed. See messages above." />
+  </target>
+
+  <target id="classes" name="classes" depends="init">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="src" destdir="${classes.dir}" encoding="UTF8"
+           debug="${debug}" deprecation="${deprecation}"
+           optimize="${optimization}" source="1.6" target="1.6">
+      <classpath refid="project.class.path" />
+      <exclude name="astex/**/*.java"/>
+      <exclude name="java_cup/**/*.java"/>
+    </javac>
+    <copy todir="${classes.dir}" >
+      <fileset dir="src">
+        <include name="**/license.txt" />
+        <include name="**/*.jpg" />
+        <include name="**/*.gif" />
+      	<include name="**/*.png" />
+        <include name="**/*.html" />
+        <include name="**/*.js" />
+        <include name="**/*.dtd" />
+        <include name="**/*.properties" />
+        <include name="**/Properties/*" />
+        <include name="**/Data/*" />
+        <include name="**/*.txt" />
+      </fileset>
+    </copy>
+    <copy file="Jmol.properties" tofile="${classes.dir}/org/jmol/viewer/Jmol.properties" />
+  </target>
+  
+  <target name="applet-classes" id="applet-classes" depends="init">
+    <mkdir dir="${applet.classes.dir}"/>
+    <copy todir="${applet.classes.dir}" >
+      <fileset dir="src">
+        <include name="org/jmol/modelkit/images/*" />
+      </fileset>
+    </copy>
+
+    <javac srcdir="src" destdir="${applet.classes.dir}"
+           debug="${debug}" deprecation="${deprecation}"
+           optimize="${optimization}"
+           source="1.6" target="1.6" encoding="UTF8"
+           includesfile="applet.classes"
+           classpathref="applet-project.class.path" />
+
+    <copy todir="${applet.classes.dir}" >
+      <fileset dir="src">
+        <include name="org/jmol/minimize/forcefield/data/*.txt" />
+        <include name="jmol75x29x8.gif" />
+      </fileset>
+    </copy>
+    <copy todir="${applet.classes.dir}" >
+      <fileset dir="src">
+        <include name="org/jmol/quantum/*.txt" />
+      </fileset>
+    </copy>
+    <copy file="Jmol.properties" tofile="${applet.classes.dir}/org/jmol/viewer/Jmol.properties" />
+    <copy todir="${applet.classes.dir}" >
+      <fileset dir="${classes.dir}">
+        <include name="**/JmolApplet/*/*.class" />
+      </fileset>
+      <fileset dir="src">
+        <include name="**/license.txt" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="libjars" id="libjars">
+    <mkdir dir="${appjars.dir}"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/${commons-cli.jar}"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/JSpecView.jar"/>
+  	<delete dir="${appjars.dir}/javajs" />
+  	<delete dir="${appjars.dir}/org/jmol" />
+  	<delete dir="${appjars.dir}/META-INF" />
+  </target>
+
+  <target name="jar" id="jar"
+          depends="init,classes,libjars,main-i18n">
+    <if><equals arg1="${Private.propertyFile}" arg2="none" />
+    	<then><echo>Skipping jar creation</echo></then><else>
+
+    <jar destfile="build/Jmol.jar"
+         manifest="manifest/application.txt">
+      <fileset dir="${classes.dir}" >
+        <exclude name="**/.*" />
+        <exclude name="**/*.dx" />
+        <exclude name="ant/**" />
+        <include name="com/**" />
+        <include name="javajs/api/**" />
+        <include name="javajs/awt/**" />
+        <include name="javajs/export/**" />
+        <include name="javajs/img/**" />
+        <include name="javajs/util/**" />
+        <exclude name="**/Test*.class" />
+        <exclude name="**/jmol/jcamp/**" />
+        <exclude name="**/jmol/applet/*" />
+        <include name="**/jmol/**" />
+        <exclude name="**/app/JmolData.class" />
+      </fileset>
+      <fileset dir="${appjars.dir}" includes="**/*"/>
+      <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
+      <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
+    </jar>
+    <antcall target="sign-jar-file">
+      <param name="sign-jar-file-dir" value="build" />
+      <param name="sign-jar-file-name"  value="Jmol.jar" />
+    </antcall>
+  	
+  </else></if>
+  	
+    <jar destfile="build/JmolData.jar"
+         manifest="manifest/applicationData.txt">
+      <fileset dir="${classes.dir}" >
+        <exclude name="**/.*" />
+        <exclude name="**/*.dx" />
+        <exclude name="**/Test*.class" />
+        <exclude name="ant/**" />
+        <exclude name="com/**" />
+        <include name="javajs/api/**" />
+        <include name="javajs/awt/**" />
+        <include name="javajs/export/**" />
+        <include name="javajs/img/**" />
+        <include name="javajs/util/**" />
+        <include name="**/jmol/**" />
+        <exclude name="**/jmol/_documents/**" />
+        <exclude name="**/jmol/applet/**" />
+        <exclude name="**/jmol/*js/**" />
+        <exclude name="**/jmol/console/**" />
+        <exclude name="**/jmol/popup/**" />
+        <exclude name="org/jmol/util/BitSet32.class" />
+        <exclude name="**/openscience/jmol/Data/**" />
+        <exclude name="**/openscience/jmol/app/Jmol.class" />
+        <exclude name="**/openscience/jmol/app/images/**" />
+        <exclude name="**/openscience/jmol/app/jmolpanel/**" />
+        <exclude name="**/openscience/jmol/app/webexport/**" />
+      </fileset>
+      <fileset dir="${appjars.dir}" includes="**/cli/** **/naga/**" />
+      <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
+      <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
+    </jar>
+    <antcall target="sign-jar-file">
+      <param name="sign-jar-file-dir" value="build" />
+      <param name="sign-jar-file-name"  value="JmolData.jar" />
+    </antcall>
+
+
+  	
+  </target>
+
+
+  <target name="applet-jar" id="applet-jar"
+          depends="applet-classes">
+  <if><equals arg1="${Private.propertyFile}" arg2="none" />
+    	<then><echo>Skipping applet-jar</echo></then><else>
+	
+    <delete dir="build">
+      <include name="JmolApplet*"/>
+    </delete>
+
+    <echo message="Creating JmolApplet.jar" />
+    <jar destfile="build/JmolApplet.jar"
+         manifest="manifest/appletMonolithic.txt" index="true" >
+      <fileset dir="${applet.classes.dir}" >
+        <include name="**/*" />
+        <exclude name="JmolSmiles*" />
+        <exclude name="org/jmol/dialog/**/*" />
+        <exclude name="org/jmol/export/**/*" />
+        <exclude name="org/jmol/multitouch/**/*" />
+        <exclude name="org/openscience/**/*" />
+        <exclude name="com/sparshui/**/*" />
+        <exclude name="com/json/**/*" />
+      </fileset>
+    </jar>
+
+  	
+    <echo message="Creating JmolApplet0*.jar" />
+  	
+    <jar destfile="build/JmolApplet0_Image.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/dialog/**" />
+        <include name="org/jmol/image/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_Minimize.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/minimize/**/**" />
+        <include name="org/jmol/modelkit/images/**" />
+        <include name="org/jmol/modelkit/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_Navigate.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/navigate/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_Console.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+    	<include name="org/jmol/console/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_JSV.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/jsv/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_Popup.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/popup/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersMolXyz.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/molxyz/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersCif.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/cif/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersPdb.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/pdb/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersQuantum.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/quantum/**" />
+        <include name="org/jmol/quantum/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersPyMOL.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/pymol/**" />
+        <include name="org/jmol/rendercgo/**" />
+        <include name="org/jmol/shapecgo/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersMore.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/more/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersSimple.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/simple/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersXtal.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/xtal/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ReadersXml.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/xml/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolApplet0_ScriptExt.jar" manifest="manifest/applet.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/scriptext/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolApplet0_ShapeBio.jar" manifest="manifest/applet.txt" >
+	  <fileset dir="${applet.classes.dir}">
+	    <include name="org/jmol/modelsetbio/**" />
+	    <include name="org/jmol/dssx/**" />
+	    <include name="org/jmol/renderbio/**" />
+	    <include name="org/jmol/shapebio/**" />
+	  </fileset>
+	</jar>
+	  	
+  	<jar destfile="build/JmolApplet0_ShapeSpecial.jar" manifest="manifest/applet.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/renderspecial/**" />
+        <include name="org/jmol/shapespecial/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolApplet0_ShapeSurface.jar" manifest="manifest/applet.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/jvxl/**" />
+        <include name="org/jmol/shapesurface/**" />
+        <include name="org/jmol/rendersurface/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolApplet0_Smiles.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/smiles/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolApplet0_Symmetry.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/symmetry/**" />
+      </fileset>
+    </jar>
+
+
+    <!-- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv -->
+    <!-- changes to this must be replicated below for the signed applet -->
+    <jar destfile="build/JmolApplet0.jar"  manifest="manifest/applet0.txt"
+         index="true" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="JmolApplet*.class" />
+        <include name="jmol75x29x8.gif" />
+        <include name="javajs/api/**" />
+        <include name="javajs/awt/**" />
+        <include name="javajs/img/**" />
+        <include name="javajs/export/**" />
+        <include name="javajs/util/**" />
+        <include name="org/jmol/adapter/smarter/**" />
+        <include name="org/jmol/api/**" />
+        <include name="org/jmol/applet/**" />
+        <include name="org/jmol/atomdata/**" />
+        <include name="org/jmol/awt/**" />   
+        <include name="org/jmol/bspt/**" />
+        <include name="org/jmol/c/**" />
+        <include name="org/jmol/g3d/**" />
+        <include name="org/jmol/geodesic/**" />
+        <include name="org/jmol/i18n/**" />
+        <include name="org/jmol/java/**" />
+        <include name="org/jmol/modelset/**" />
+        <include name="org/jmol/script/**" />
+        <include name="org/jmol/shape/**" />
+        <include name="org/jmol/render/**" />
+        <include name="org/jmol/thread/**" />
+        <include name="org/jmol/util/**" />
+        <include name="org/jmol/io/**" />
+        <exclude name="org/jmol/util/BitSet32.class" />
+        <include name="org/jmol/viewer/**" />
+      </fileset>
+
+      <!-- changes to this must be replicated below for the all-permissions applet -->
+      <indexjars>
+      	<!-- no export or multitouch here - this is the sandboxed applet -->
+        <pathelement path="build/JmolApplet0_Console.jar" />
+        <pathelement path="build/JmolApplet0_Image.jar" />
+      	<pathelement path="build/JmolApplet0_JSV.jar" />
+        <pathelement path="build/JmolApplet0_Minimize.jar" />
+        <pathelement path="build/JmolApplet0_Navigate.jar" />
+        <pathelement path="build/JmolApplet0_Popup.jar" />
+        <pathelement path="build/JmolApplet0_ReadersCif.jar" />
+        <pathelement path="build/JmolApplet0_ReadersPdb.jar" />
+        <pathelement path="build/JmolApplet0_ReadersMolXyz.jar" />
+        <pathelement path="build/JmolApplet0_ReadersMore.jar" />
+        <pathelement path="build/JmolApplet0_ReadersQuantum.jar" />
+        <pathelement path="build/JmolApplet0_ReadersPyMOL.jar" />
+        <pathelement path="build/JmolApplet0_ReadersSimple.jar" />
+        <pathelement path="build/JmolApplet0_ReadersXml.jar" /> 
+        <pathelement path="build/JmolApplet0_ReadersXtal.jar" />
+        <pathelement path="build/JmolApplet0_ScriptExt.jar" />
+        <pathelement path="build/JmolApplet0_ShapeBio.jar" />
+        <pathelement path="build/JmolApplet0_ShapeSpecial.jar" />
+        <pathelement path="build/JmolApplet0_ShapeSurface.jar" />
+        <pathelement path="build/JmolApplet0_Smiles.jar" />
+        <pathelement path="build/JmolApplet0_Symmetry.jar" />
+<!-- <pathelement path="build/JmolApplet0_Spectrum.jar" />
+        <fileset dir="build" includes="JmolApplet0_i18n_*.jar" />   -->
+      </indexjars>
+    </jar>
+	<echo message="creating JmolLib.jar" level="info" />
+    <jar destfile="build/JmolLib.jar"
+         manifest="manifest/jmolLib.txt" index="true" >
+      <fileset dir="${applet.classes.dir}" >
+	        <include name="**/*" />
+        <exclude name="JmolSmiles*" />
+        <exclude name="org/jmol/applet/**/*" />
+        <exclude name="org/jmol/appletjs/**/*" />
+        <exclude name="org/jmol/awt/**/*" />
+        <exclude name="org/jmol/awtjs/**/*" />
+        <exclude name="org/jmol/awtjs2d/**/*" />
+        <exclude name="org/jmol/console/**/*" />
+        <exclude name="org/jmol/consolejs/**/*" />
+        <exclude name="org/jmol/dialog/**/*" />
+        <exclude name="org/jmol/export/**/*" />
+        <exclude name="org/jmol/exportjs/**/*" />
+        <exclude name="org/jmol/modelkit/**/*" />
+        <exclude name="org/jmol/multitouch/jni/*" />
+        <exclude name="org/jmol/multitouch/sparshui/*" />
+        <exclude name="org/jmol/popup/**/*" />
+        <exclude name="org/jmol/translation/**/*" />
+        <exclude name="org/openscience/**/*" />
+      	<!-- just need sparshUI gestureType.class -->
+        <exclude name="com/sparshui/client/*" />
+        <exclude name="com/sparshui/common/**/**/*" />
+        <exclude name="com/sparshui/cpp/*" />
+        <exclude name="com/sparshui/gestures/*" />
+        <exclude name="com/sparshui/inputdevice/*" />
+        <exclude name="com/sparshui/server/*" />
+        <exclude name="com/json/**/*" />
+        <exclude name="JmolApplet*" />
+      </fileset>
+    </jar>
+
+  </else></if>
+  </target>
+
+  <target name="signed-applet" id="signed-applet" depends="applet-jar">
+  <if><equals arg1="${Private.propertyFile}" arg2="none" />
+    	<then><echo>Skipping applet jar signing</echo></then><else>
+
+  	<delete dir="build">
+      <include name="JmolAppletSigned*"/>
+    </delete>
+    <echo message="Creating JmolAppletSigned.jar" />
+    <jar destfile="build/JmolAppletSigned.jar"
+         manifest="manifest/appletMonolithicSigned.txt" index="true" >
+      <fileset dir="${applet.classes.dir}" >
+        <include name="**/*" />
+        <exclude name="JmolSmiles*" />
+        <exclude name="javajs/swing/**" />
+        <exclude name="org/openscience/**/*" />
+      </fileset>
+    </jar>
+
+  	<echo message="Creating JmolAppletsigned0*.jar" />
+  	
+    <jar destfile="build/JmolAppletSigned0_Console.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/console/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_Image.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/dialog/**" />
+        <include name="org/jmol/image/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_JSV.jar" manifest="manifest/applet.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/jsv/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolAppletSigned0_Minimize.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/minimize/**/**" />
+        <include name="org/jmol/modelkit/**" />
+        <include name="org/jmol/modelkit/images/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolAppletSigned0_MultiTouch.jar"
+    	manifest="manifest/appletSigned.txt" index="true" >
+      <fileset dir="${applet.classes.dir}" >
+        <include name="org/jmol/multitouch/**" />
+        <include name="com/sparshui/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolAppletSigned0_Navigate.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/navigate/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_Popup.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/popup/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersMolXyz.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/molxyz/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersCif.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/cif/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersPdb.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/pdb/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersMore.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/more/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersQuantum.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/quantum/**" />
+        <include name="org/jmol/quantum/**" />
+      </fileset>
+    </jar>
+  	
+    <jar destfile="build/JmolAppletSigned0_ReadersPyMOL.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/pymol/**" />
+        <include name="org/jmol/rendercgo/**" />
+        <include name="org/jmol/shapecgo/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersSimple.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/simple/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersXtal.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/xtal/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ReadersXml.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/xml/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolAppletSigned0_ScriptExt.jar" manifest="manifest/appletSigned.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/scriptext/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ShapeBio.jar" manifest="manifest/appletSigned.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/modelsetbio/**" />
+	    <include name="org/jmol/dssx/**" />
+        <include name="org/jmol/shapebio/**" />
+        <include name="org/jmol/renderbio/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_ShapeSpecial.jar" manifest="manifest/appletSigned.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/shapespecial/**" />
+        <include name="org/jmol/renderspecial/**" />
+      </fileset>
+    </jar>
+
+  	<jar destfile="build/JmolAppletSigned0_ShapeSurface.jar" manifest="manifest/appletSigned.txt" >
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/jvxl/**" />
+        <include name="org/jmol/shapesurface/**" />
+        <include name="org/jmol/rendersurface/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0_Smiles.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/smiles/**" />
+      </fileset>
+    </jar>
+  	
+<!--      	
+    <jar destfile="build/JmolAppletSigned0_Spectrum.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/spectrum/**" />
+      </fileset>
+    </jar>
+-->
+  	
+    <jar destfile="build/JmolAppletSigned0_Symmetry.jar" manifest="manifest/appletSigned.txt">
+      <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/symmetry/**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="build/JmolAppletSigned0.jar"
+         manifest="manifest/appletSigned0.txt"
+         index="true">
+      <fileset dir="${applet.classes.dir}">
+        <include name="JmolApplet*.class" />
+        <include name="jmol75x29x8.gif" />
+        <include name="javajs/api/**" />
+        <include name="javajs/awt/**" />
+        <include name="javajs/export/**" />
+        <include name="javajs/img/**" />
+        <include name="javajs/util/**" />
+		<include name="org/jmol/adapter/smarter/**" />
+  		<include name="org/jmol/api/**" />
+  		<include name="org/jmol/applet/**" />
+		<include name="org/jmol/atomdata/**" />
+        <include name="org/jmol/awt/**" />		
+		<include name="org/jmol/bspt/**" />
+        <include name="org/jmol/c/**" />
+   		<include name="org/jmol/export/**" />
+		<include name="org/jmol/g3d/**" />
+		<include name="org/jmol/geodesic/**" />
+		<include name="org/jmol/i18n/**" />
+        <include name="org/jmol/java/**" />
+		<include name="org/jmol/modelset/**" />
+        <include name="org/jmol/render/**" />
+        <include name="org/jmol/script/**" />
+		<include name="org/jmol/shape/**" />
+        <include name="org/jmol/thread/**" />
+		<include name="org/jmol/util/**" />
+        <include name="org/jmol/io/**" />
+ 		<include name="org/jmol/viewer/**" />
+      </fileset>    	
+      <indexjars>
+        <pathelement path="build/JmolAppletSigned0_Console.jar" />
+        <pathelement path="build/JmolAppletSigned0_Image.jar" />
+        <pathelement path="build/JmolAppletSigned0_JSV.jar" />
+        <pathelement path="build/JmolAppletSigned0_Minimize.jar" />
+        <pathelement path="build/JmolAppletSigned0_MultiTouch.jar" />
+        <pathelement path="build/JmolAppletSigned0_Navigate.jar" />
+        <pathelement path="build/JmolAppletSigned0_Popup.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersCif.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersPdb.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersMolXyz.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersMore.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersQuantum.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersPyMOL.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersSimple.jar" />
+        <pathelement path="build/JmolAppletSigned0_ReadersXml.jar" /> 
+        <pathelement path="build/JmolAppletSigned0_ReadersXtal.jar" /> 
+        <pathelement path="build/JmolAppletSigned0_ScriptExt.jar" />
+        <pathelement path="build/JmolAppletSigned0_ShapeBio.jar" />
+        <pathelement path="build/JmolAppletSigned0_ShapeSpecial.jar" />
+        <pathelement path="build/JmolAppletSigned0_ShapeSurface.jar" />
+        <pathelement path="build/JmolAppletSigned0_Smiles.jar" />
+        <pathelement path="build/JmolAppletSigned0_Symmetry.jar" />
+      	<!--      	
+        <pathelement path="build/JmolAppletSigned0_Spectrum.jar" />
+        <fileset dir="build" includes="JmolAppletSigned0_i18n_*.jar" />
+        -->
+      	
+      </indexjars>
+    </jar>
+  	<echo> signing JmolApplet*.jar</echo>
+    <antcall target="sign-jar-file">
+      <param name="sign-jar-file-dir" value="build" />
+      <param name="sign-jar-file-name"  value="JmolApplet*.jar" />
+    </antcall>
+  </else></if>
+  </target>
+
+  <target name="clean" id="clean">
+    <delete dir="${classes.dir}"/>
+    <delete dir="${applet.classes.dir}"/>
+    <delete dir="${appjars.dir}"/>
+    <delete dir="build/dist"/>
+    <delete>
+      <fileset dir="build">
+        <include name="*.jar" />
+      </fileset>
+    </delete>
+  </target>
+	
+  <!-- tools  -->
+  <target name="sign-jar-file" >
+  <if><equals arg1="${Private.propertyFile}" arg2="none" />
+  	<then><echo>Skipping jar signing</echo></then><else>
+    <if><available file="${Private.propertyFile}" /><then>
+      	<echo>using keystore="${Private.keystore}" alias="${Private.alias} tsa=${tsa.url}"</echo> 
+        <signjar keystore="${Private.keystore}"
+                 storetype="${Private.storetype}"
+                 storepass="${Private.storepass}"
+                 keypass="${Private.keypass}"
+                 alias="${Private.alias}"
+		       	 tsaurl="${tsa.url}"
+        	>
+          <fileset dir="${sign-jar-file-dir}" >
+            <include name="${sign-jar-file-name}" />
+          </fileset>
+        </signjar>
+    </then><elseif><available file="ca-cert/certificate/Jmol.p12" /><then>
+      	<echo>using ca-cert/certificate/Jmol.12</echo> 
+        <signjar keystore="ca-cert/certificate/Jmol.p12"
+                 storetype="pkcs12"
+                 storepass="${Jmol.p12.password}"
+	             keypass="${Jmol.p12key.password}"
+                 alias="${Jmol.p12.alias}"
+		       	 tsaurl="${tsa.url}"
+        	>
+            <fileset dir="${sign-jar-file-dir}" >
+              <include name="${sign-jar-file-name}" />
+            </fileset>
+        </signjar>
+    </then></elseif><else>
+      	<echo>using self-signed certificate</echo> 
+	        <signjar keystore="${selfsign.store}"
+       		         storetype="${selfsign.storetype}"
+	                 storepass="${selfsign.storepass}"
+	                 alias="${selfsign.alias}">
+	            <fileset dir="${sign-jar-file-dir}" >
+	              <include name="${sign-jar-file-name}" />
+	            </fileset>
+	        </signjar>    	
+	</else></if>
+    <!-- to verify that a .jar file is signed: jarsigner -verify foo.jar -->
+  </else></if>
+  </target>
+
+  <!-- i18n stuff -->
+  <target name="main-i18n" depends="classes">
+    <ant antfile="tools/build-i18n.xml" target="main-i18n"/>
+  </target>
+  <target name="spotless-i18n">
+    <ant antfile="tools/build-i18n.xml" target="spotless-i18n"/>
+  </target>
+
+  	
+</project>

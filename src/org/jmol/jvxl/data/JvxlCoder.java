@@ -27,6 +27,7 @@ package org.jmol.jvxl.data;
 
 import java.util.Map;
 
+import javajs.J2SIgnoreImport;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -34,7 +35,8 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.XmlUtil;
 
-import javajs.util.BS;
+import org.jmol.api.Interface;
+import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
@@ -42,6 +44,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 
+@J2SIgnoreImport({ javajs.util.XmlUtil.class })
 public class JvxlCoder {
 
   //TODO -- need to escapeXml for text data
@@ -59,6 +62,7 @@ public class JvxlCoder {
   // 2.3 adds discrete colors for vertex-only data (encoding="none")
   
   /**
+   * @j2sIgnore
    * 
    * @param volumeData
    * @param jvxlData
@@ -76,6 +80,8 @@ public class JvxlCoder {
     return jvxlGetFileVwr(null, jvxlData, null, title, null, true, 1, null, null);
   }
 
+  private static boolean haveXMLUtil;
+  
   /**
    * 
    * @param vwr  for JSmol initInterface
@@ -93,6 +99,12 @@ public class JvxlCoder {
                                    MeshData meshData, String[] title,
                                    String msg, boolean includeHeader,
                                    int nSurfaces, String state, String comment) {
+    if (!haveXMLUtil) {
+      // creating an instance prevents pre-loading by JavaScript
+      if (vwr.isJS)
+        Interface.getInterface("javajs.util.XmlUtil", vwr, "show");
+      haveXMLUtil = true;  
+    }
     
     SB data = new SB();
     if ("TRAILERONLY".equals(msg)) {

@@ -39,6 +39,10 @@ public class AnimationThread extends JmolThread {
   private int intThread;
   private boolean isFirst;
   
+  /**
+   * @j2sIgnore
+   * 
+   */
   public AnimationThread() {}
   
   @Override

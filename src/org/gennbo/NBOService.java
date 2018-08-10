@@ -23,13 +23,14 @@
  */
 package org.gennbo;
 
-import java.awt.Cursor;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javajs.util.AU;
 import javajs.util.PT;
@@ -38,11 +39,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 /**
- * A service for interacting with NBOServe.
- * 
- * This class maintains information about the connection to NBOServe. 
- * 
- * 
+ * A service for interacting with NBOServe (experimental)
  * 
  * TODO: figure out how to manage time-consuming asynchronous requests
  * 
@@ -50,10 +47,6 @@ import org.jmol.viewer.Viewer;
  */
 public class NBOService {
 
-  
-  
-  
-  
   /// BH: observations: 
   // 
   // 1) NBOServe creates jmol_infile.txt, jmol_molfile.txt, and jmol_outfile.txt. 
@@ -61,33 +54,41 @@ public class NBOService {
   // 2) Of these three, jmol_outfile is locked for writing during NBOServe sessions 
   //    and stays locked until the program finishes. 
   //    
+  //    
   // 3) When View starts up, a new jmol_outfile is created, and it can be deleted.
   // 
-  
 
   // modes of operation
 
   static final int MODE_ERROR          = -1;
   static final int MODE_RAW            = 0;// leave this 0; it is referred to that in StatusListener
 
-  private Viewer vwr;
-  private Object lock;
+  // these are for postToNBO; n * 10 + module value(s)
+  
+
+  protected Viewer vwr;
+  protected Process nboServer;
+  protected Thread nboListener;
+  protected NBODialog dialog;
+  protected NBORequest currentRequest;
+  protected Object lock;
+  protected Queue<NBORequest> requestQueue;  
+  
+  private PrintWriter nboIn;
+  protected BufferedInputStream nboOut;
+
+  private boolean cantStartServer;  
   private String serverPath;
+
+  private String exeName = "NBOServe";
   private boolean doConnect;
   
-  protected NBODialog dialog;
-  protected String exeName = "NBOServe.exe";
-  private String gennboPath = "gennbo.bat";
-  
-  protected Queue<NBORequest> requestQueue;  
-  protected NBORequest currentRequest;
-  protected boolean cantStartServer;  
-  protected boolean haveLicense;
+  private boolean isReady;
 
-  boolean isReady() {
-    return nboListener != null && nboListener.isReady;
+  protected void setReady(boolean tf) {
+    //System.out.println("isready = " + tf);
+    isReady = tf;
   }
-  
   /**
    * A class to manage communication between Jmol and NBOServe.
    * 
@@ -109,6 +110,18 @@ public class NBOService {
   }
 
   ////////////////////// Initialization //////////////////////////
+  
+
+  
+  /**
+   * Check to see if we have tried and are not able to make contact with NBOServe at the designated location.
+   * 
+   * @return true if we hvae found that we cannot start the server.
+   * 
+   */
+  boolean isOffLine() {
+    return cantStartServer;
+  }
 
   /**
    * Return path to NBOServe directory.
@@ -147,20 +160,23 @@ public class NBOService {
    * @return true if there is a current request
    * 
    */
-  public int getWorkingMode() {
-    return (currentRequest == null ? NBODialog.DIALOG_HOME : currentRequest.dialogMode);
+  public boolean isWorking() {
+    return (currentRequest != null);
   }  
   
   ////////////////////// NBOServe Process //////////////////////////
   
-  private NBOListener nboListener;
-  private boolean allowRequestQueing = true;
+  byte[] buffer = new byte[1024];
+  String cachedReply = "";
+
+  private NBORunnable nboRunnable;
+  private boolean haveLicense;
 
   /**
    * Start the ProcessBuilder for NBOServe and listen to its stdout (Fortran LFN
-   * 6, a Java BufferedInputStream). We simply look for available bytes and
-   * listen for a 10-ms gap, which should be sufficient, since all these are
-   * done via a single flush;
+   * 6, a Java BufferedInputStream). We simply look for available bytes and listen
+   * for a 10-ms gap, which should be sufficient, since all these are done via a 
+   * single flush;
    * 
    * 
    * Expected packets are of one of the following three forms:
@@ -186,57 +202,90 @@ public class NBOService {
    * @return a caught exception message, or null if we are not connected or we
    *         are successful
    */
-  boolean startListener() {
-    cantStartServer = true;
-    if (!doConnect)
-      return false;
-    if (nboListener != null)
-      nboListener.disconnect();
-    nboListener = null;
-    boolean trying = false;
-    for (int i = 0; i < 3; i++) {
-      if (nboListener != null)
-        nboListener.disconnect();
-      nboListener = new NBOListener();
-      boolean connected = nboListener.connect();
-      if (connected) {
-        if (trying)
-          dialog.logError("Connection successful");
-        cantStartServer = false;
-        return true;
-      }
-      trying = true;
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-      }
+  String startProcess() {
+    try {
+      cantStartServer = true;
+      if (!doConnect)
+        return null;
+      nboListener = null;
+      String path = getServerPath(exeName);
+      
+      System.out.println("startProcess: " + path);
+
+      ProcessBuilder builder = new ProcessBuilder(path);
+      
+      builder.directory(new File(new File(path).getParent())); // root folder for executable 
+      builder.redirectErrorStream(true);
+      nboServer = builder.start();
+      
+      // pick up the NBO stdout
+      
+      nboOut = (BufferedInputStream) nboServer.getInputStream();
+      System.out.println("startProcess:" + nboServer);
+
+      // start a listener
+      
+      nboListener = new Thread(nboRunnable = new NBORunnable());
+      nboListener.setName("NBOServiceThread" + System.currentTimeMillis());
+      nboListener.start();
+      
+      // open a channel to NBOServe's stdin.
+      
+      nboIn = new PrintWriter(nboServer.getOutputStream());
+      
+    } catch (IOException e) {
+      String s = e.getMessage();
+      System.out.println(s);
+      if (s.contains("error=1455"))
+         s = "Jmol can't do that - low on memory";
+      dialog.logError(s);
+      return s;
     }
-    dialog.logError("Cannot start NBOServe process");
-    nboListener = null;
-    return false;
+    cantStartServer = false;
+    return null;
   }
-  
 
   /**
    * Close the process and all channels associated with it. 
    * @param andPause 
    */
-  public synchronized void closeProcess(boolean andPause) {
-    if (nboListener != null) {
-      System.out.flush();
-      System.out.println("CLOSING PROCESS " +Thread.currentThread());    
-      nboListener.disconnect();
-      nboListener = null;
-      if (andPause) {
-        try {
-          Thread.sleep(50);
-        } catch (InterruptedException e1) {
-        }
-      }
+  public void closeProcess(boolean andPause) {
+    
+    if (nboRunnable != null) {
+      nboRunnable.destroyed = true;
+      andPause = true;
     }
+    if (andPause) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e1) {
+      }
+      
+
+    }
+    setReady(false);
+    nboOut = null;
+    
+    try {
+      nboIn.close();
+    } catch (Exception e) {
+    }
+    nboIn = null;
+    
+    try {
+      nboListener.interrupt();
+    } catch (Exception e) {
+      System.out.println("can't interrupt");
+    }
+    nboListener = null;
+    
+    try {
+      nboServer.destroy();
+    } catch (Exception e) {
+      // we don't care
+    }
+    nboServer = null;
     currentRequest = null;
-    haveLicense = false;
-    dialog.setLicense("\n\n");
   }
 
   /**
@@ -245,10 +294,9 @@ public class NBOService {
    * @return null or an error message
    * 
    */
-  boolean restart() {
-    closeProcess(false);
-    System.out.println("NBO restart");
-    return startListener();
+  String restart() {
+    closeProcess(true);
+    return startProcess();
   }
 
   /**
@@ -257,7 +305,9 @@ public class NBOService {
    * @return true if successful
    */
   public boolean restartIfNecessary() {
-    return (nboListener != null || startListener());
+    if (nboServer == null)
+      startProcess();
+    return (nboServer != null);
   }
 
   /**
@@ -271,7 +321,7 @@ public class NBOService {
   public boolean haveGenNBO() {
     if (!doConnect)
       return true;
-    File f = new File(getServerPath(gennboPath));
+    File f = new File(getServerPath("gennbo.bat"));
     if (!f.exists()) {
       vwr.alert(f + " not found, make sure gennbo.bat is in same directory as "
           + exeName);
@@ -291,15 +341,12 @@ public class NBOService {
   protected void postToNBO(NBORequest request) {
     synchronized (lock) {
       restartIfNecessary();
-      if (nboListener != null && nboListener.isReady && requestQueue.isEmpty() && currentRequest == null) {
+      if (isReady && requestQueue.isEmpty() && currentRequest == null) {
         currentRequest = request;
         requestQueue.add(currentRequest);
         startRequest(currentRequest);
-      } else if (allowRequestQueing) {
-        requestQueue.add(request);
-        System.out.println("NBOService request queued " + requestQueue.size());
       } else {
-        System.out.println("request denied " + request);
+        requestQueue.add(request);
       }
     }
   }
@@ -316,7 +363,7 @@ public class NBOService {
   //////////////////////////// Send Request to NBOServe ///////////////////////////
 
   /**
-   * Start the current request by writing its meta-commands to disk and sending a
+   * Start the current request by writing its metacommands to disk and sending a
    * command to NBOServe directing it to that file via its stdin.
    * 
    * We allow the Jmol command
@@ -331,24 +378,17 @@ public class NBOService {
    * @param request
    */
   protected void startRequest(NBORequest request) {
-    if (request == null)
-      return;
-    try {
-      Thread.sleep(30);
-    } catch (InterruptedException e) {
-    }
-    if (nboListener == null && !startListener() || nboListener.destroyed)
+    if (request == null || nboRunnable.destroyed)
       return;
 
     System.out.println("starting request for " + request.statusInfo + " " + request);
     if (request.timeStamp != 0) {
       System.out.println("SENDING TWICE?");
-      nboListener.disconnect();
-      nboListener = null;
-      clearQueue();
+      nboRunnable.destroyed = true;
       return;
     }
     request.timeStamp = System.currentTimeMillis();
+
     currentRequest = request;
 
     String cmdFileName = null, data = null;
@@ -365,10 +405,147 @@ public class NBOService {
     String cmd = "<" + cmdFileName + ">";
 
     System.out.println("sending " + cmd);
-    nboListener.submitRequest(cmd);
+
+    if (nboIn == null)
+      restart();
+    nboIn.println(cmd);
+    nboIn.flush();
   }
 
   //////////////////////////// Process NBO's Reply ///////////////////////////
+
+  /**
+   * Process the return from NBOServe.
+   * 
+   * @param s
+   * @return true if we are done
+   */
+  protected boolean processServerReturn(String s) {
+
+    // Check for the worst
+    
+    if (s.indexOf("FORTRAN STOP") >= 0) {
+      System.out.println(s);
+      dialog.alertError("NBOServe has stopped working - restarting");
+      currentRequest = null;
+      clearQueue();
+      restart();
+      return true;
+    }
+    
+    //newly added by professor Frank. NBOServe should restart whenever this message is received and the 
+    //souce of error sent by NBOServe should be printed to session dialog.
+    if(s.indexOf("**NBOServe fatal error**") >=0)
+    {
+      int i;
+      int index=s.indexOf("**NBOServe fatal error**");
+      s=s.substring(index);
+      String errorLines[]=s.split("\n");
+      for(i=0;i<errorLines.length;i++)
+      {
+        logServerLine(errorLines[i],Logger.LEVEL_ERROR);
+      }
+      dialog.alertError("NBOServe has stopped working - restarting");
+      currentRequest = null;
+      clearQueue();
+      restart();
+      return true;
+    }
+    
+    if (isFortranError(s) || s.indexOf("missing or invalid") >= 0) {
+      if (!s.contains("end of file")) {
+        dialog.alertError(s);
+      }
+      currentRequest = null;
+      clearQueue();
+      restart();
+      return true;
+    }
+
+    int pt;
+
+    // We don't always remove the request, because in the case of RUN, 
+    // we are prone to get additional sysout message from other processes,
+    // particularly gennbo.bat. These will come BEFORE the start message.
+
+    boolean removeRequest = true;
+
+    try { // with finally clause to remove request from queue
+
+      if ((pt = s.indexOf("***errmess***")) >= 0) {
+        System.out.println(s);
+        try {
+          s = PT.split(s, "\n")[2];
+          logServerLine(s.substring(s.indexOf("\n") + 1), Logger.LEVEL_ERROR);
+        } catch (Exception e) {
+          // ignore
+        }
+        logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
+        return true;
+      }
+      
+      
+      if ((pt = s.indexOf("**NBOServe warning**")) >= 0) {
+        try {
+          int i;
+          int index=s.indexOf("**NBOServe warning**");
+          s=s.substring(index);
+          String errorLines[]=s.split("\n");
+          for(i=0;i<errorLines.length;i++)
+          {
+            logServerLine(errorLines[i],Logger.LEVEL_ERROR);
+          }
+        } catch (Exception e) {
+          // ignore
+        }
+        logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
+        return true;
+      }
+
+      if ((pt = s.lastIndexOf("*start*")) < 0) {
+
+        // Note that RUN can dump all kinds of things to SYSOUT prior to completion.
+
+        if (currentRequest == null)
+          return (removeRequest = true);
+        logServerLine(s, (currentRequest.isMessy ? Logger.LEVEL_DEBUG
+            : Logger.LEVEL_ERROR));
+        return (removeRequest = !currentRequest.isMessy);
+      }
+      s = s.substring(pt + 8); // includes \n
+      pt = s.indexOf("*end*");
+      if (pt < 0) {
+        System.out.println("...listening...");
+        //System.out.println("bad start/end packet from NBOServe: !!!!!!!>>" + s + "<<!!!!!!!");
+        removeRequest = false;
+        return false;
+      }
+
+      // standard expectation
+      //System.out.println("*start*\n" + s);
+      if (currentRequest == null) {
+        if (haveLicense) {
+          System.out.println("TRANSMISSION ERROR: UNSOLICITED!");
+        } else {
+          haveLicense = true;
+          dialog.setLicense(s);
+        }
+      } else {
+        currentRequest.sendReply(s.substring(0, pt));
+      }
+      
+      if(currentRequest!=null && currentRequest.isVideoCreate)
+        dialog.logValue("Video Create has been completed.");
+      
+      return true;
+    } finally {
+      if (currentRequest != null && removeRequest) {
+        requestQueue.remove();
+        currentRequest = null;
+        dialog.setStatus("");
+      }
+    }
+  }
 
   /**
    * Log a message to NBODialog; probably an error.
@@ -393,49 +570,29 @@ public class NBOService {
         || line.indexOf("Invalid command") >= 0;
   }
 
-  class NBOListener extends Thread {
+  class NBORunnable implements Runnable {
 
-    
-    final public static int NBO_STATUS_UNINITIALIZED = 0;
-    final public static int NBO_STATUS_INITIALIZING = 1;
-    final public static int NBO_STATUS_READY = 2;
-    final public static int NBO_STATUS_LISTENING = 3;
-    final public static int NBO_STATUS_WORKING = 4;
-    final public static int NBO_STATUS_REPLYING = 5;
-    final public static int NBO_STATUS_BAD_REPLY = 6;
-    final public static int NBO_STATUS_DEAD = 7;
-    
-    public int nboStatus = NBO_STATUS_UNINITIALIZED;
-    
-    protected boolean isReady;
     protected boolean destroyed;
-    
-    private byte[] buffer = new byte[1024];
-    private String cachedReply = "";
 
-    private long lastTime;
-    private BufferedInputStream nboOut;
-    private Process nboProcess;
-    private PrintWriter nboIn;
-//    private String thisReply;
-    
     @Override
     public void run() {
-      System.out.println("NBORunnable run()");
+
       String s;
 
       while (!destroyed && !Thread.currentThread().isInterrupted()) {
-    
-        if ((NBOConfig.debugVerbose) && System.currentTimeMillis() - lastTime > 1000) {
-          lastTime = System.currentTimeMillis();
-          dialog.logStatus("NBORunnable looping");
-        }
         try {
-          Thread.sleep(10);
+          if(currentRequest!=null && currentRequest.isVideoCreate)
+          {
+            
+          }
+          else
+          {
+            Thread.sleep(10);
+          }
 
           // Get and process the return, continuing if incomplete or no activity.
 
-          if (nboOut == null || destroyed || (s = getNBOMessage()) == null || !processServerReturn(s))
+          if (destroyed || (s = getNBOMessage()) == null || !processServerReturn(s))
             continue;
 
           // Success!
@@ -446,210 +603,24 @@ public class NBOService {
           // the Queue because that indicates we are still working. 
           // Note that we FIRST check for messages, as NBOServe will have an
           // unsolicited startup message for us providing license information.
-          if (destroyed || !haveLicense)
+          if (destroyed)
             continue;
-            
           currentRequest = requestQueue.peek();
           startRequest(currentRequest);
 
         } catch (Throwable e1) {
           clearQueue();
-          if (("" + e1.getMessage()).indexOf("sleep") < 0)
-            e1.printStackTrace();
+          e1.printStackTrace();
           dialog.setStatus(e1.getMessage());
           continue;
           // includes thread death
         }
 
       }
-      System.out.println("NBORunnable done " + destroyed);
-      if (destroyed) {
+      if (destroyed)
         closeProcess(false);
-      }
-      System.out.println("NBORunnable exiting run()");      
     }
     
-    public void submitRequest(String cmd) {
-      nboStatus = NBO_STATUS_WORKING;
-      nboIn.println(cmd);
-      nboIn.flush();
-    }
-
-    /**
-     * Process the return from NBOServe.
-     * 
-     * @param s
-     * @return true if we are done
-     */
-    protected boolean processServerReturn(String s) {
-
-      // Check for the worst
-
-      if (s.indexOf("FORTRAN STOP") >= 0) {
-        System.out.println(s);
-        dialog.alertError("NBOServe has stopped working - restarting");
-        currentRequest = null;
-        clearQueue();
-        nboStatus = NBO_STATUS_DEAD;
-        return restart();
-      }
-
-      if (isFortranError(s) || s.indexOf("missing or invalid") >= 0) {
-        if (!s.contains("end of file")) {
-          dialog.alertError(s);
-        }
-        boolean wasWorking = (getWorkingMode() == NBODialog.DIALOG_RUN);
-        currentRequest = null;
-        clearQueue();
-        nboStatus = NBO_STATUS_DEAD;
-        if (wasWorking)
-          dialog.inputFileHandler.checkNBOComplete(true);
-        dialog.setStatus("");
-        return restart();
-      }
-
-      int pt;
-
-      // We don't always remove the request, because in the case of RUN, 
-      // we are prone to get additional sysout message from other processes,
-      // particularly gennbo.bat. These will come BEFORE the start message.
-
-      boolean removeRequest = true;
-
-      try { // with finally clause to remove request from queue
-
-        if ((pt = s.lastIndexOf("*start*")) < 0) {
-          //          logServerLine(s, Logger.LEVEL_ERROR);
-          //System.out.println(thisReply);
-          if (!currentRequest.isMessy) {
-            nboStatus = NBO_STATUS_BAD_REPLY;
-          }
-          return (removeRequest = !currentRequest.isMessy);
-        }
-        s = s.substring(pt + 8); // includes \n
-        pt = s.indexOf("*end*");
-        if (pt < 0) {
-          nboStatus = NBO_STATUS_REPLYING;
-          System.out.println("...listening...");
-          //System.out.println("bad start/end packet from NBOServe: !!!!!!!>>" + s + "<<!!!!!!!");
-          removeRequest = false;
-          return false;
-        }
-
-        // standard expectation
-        if (currentRequest == null) {
-          if (haveLicense) {
-            nboStatus = NBO_STATUS_BAD_REPLY;
-            System.out.println("TRANSMISSION ERROR: UNSOLICITED!>>>>" + s
-                + "<<<<<");
-          } else {
-            System.out.println("license found:" + s);
-            haveLicense = true;
-            dialog.setLicense(s);
-            nboStatus = NBO_STATUS_READY;
-          }
-          return true;
-        }
-        
-        if (s.indexOf("***errmess***") >= 0) {
-          try {
-            s = PT.split(s, "\n")[1];
-            logServerLine(s.substring(s.indexOf("\n") + 1), Logger.LEVEL_ERROR);
-          } catch (Exception e) {
-            // ignore
-          }
-          logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
-          return true;
-        }
-
-        nboStatus = NBO_STATUS_LISTENING;
-        currentRequest.sendReply(s.substring(0, pt));
-        return true;
-      } finally {
-        if (currentRequest != null && removeRequest) {
-          try {
-            requestQueue.remove();
-          } catch (Exception e) {
-            System.out.println("NBOService requestQueue empty");
-          }
-          currentRequest = null;
-          dialog.setStatus("");
-        }
-      }
-    }
-
-    protected boolean connect() {
-      try {
-        nboStatus = NBO_STATUS_INITIALIZING;
-        String path = getServerPath(exeName);
-        System.out.flush();
-        System.out.println("startProcess: " + path + " "
-            + Thread.currentThread());
-        ProcessBuilder builder = new ProcessBuilder(path);
-
-        builder.directory(new File(new File(path).getParent())); // root folder for executable 
-        builder.redirectErrorStream(true);
-        // start a listener
-
-        System.out.println("creating new runnable");
-        setName("NBOServiceThread" + System.currentTimeMillis());
-        nboOut = null;
-        System.out.println("creating new nboOut");
-        nboOut = (BufferedInputStream) (nboProcess = builder.start())
-            .getInputStream();
-        System.out.println("creating new nboIn");
-        nboIn = new PrintWriter(nboProcess.getOutputStream());
-        start();
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          System.err.println(e);
-        }
-        System.out.println("checking nboOut");
-        if (nboOut.available() > 0)
-          System.out.println("OK!");
-        System.out.println("startProcess:" + nboProcess + " "
-            + nboOut.available());
-        nboStatus = NBO_STATUS_LISTENING;
-        return true;
-      } catch (IOException e) {
-        String s = e.getMessage();
-        System.out.println(s);
-        if (s.contains("error=1455"))
-          s = "low on memory -- retrying";
-        dialog.logError(s);
-        closeProcess(false);
-        return false;
-      }
-    }
-
-    public void taskKillNBO() {
-      String cmd = "taskKill /im " + exeName + " /t /f  ";
-      try {
-        Runtime.getRuntime().exec(cmd);
-      } catch (IOException e) {
-        System.out.println("NBOService cannot taskKill " + cmd);
-      }
-    }
-    
-    protected void disconnect() {
-      destroyed = true;
-      try {
-        interrupt();
-      } catch (Exception e) {
-
-      }
-      try {
-        nboProcess = null;
-        taskKillNBO();
-        Thread.sleep(100);
-        //        nboProcess.destroy();
-      } catch (Exception e) {
-        System.out.println("??" + e);
-      }
-    }
-
-
     /**
      * Retrieve a message from NBOServe by monitoring its sysout (a
      * BufferedInputStream for us).
@@ -659,7 +630,7 @@ public class NBOService {
      * @throws IOException
      * @throws InterruptedException
      */
-    private synchronized String getNBOMessage() throws IOException, InterruptedException {
+    protected synchronized String getNBOMessage() throws IOException, InterruptedException {
       
       // 1. Check for available bytes.
       
@@ -667,7 +638,7 @@ public class NBOService {
       if (n <= 0) {
         return null;
       }
-      isReady = true;
+      setReady(true);
       while (n > buffer.length) {
         buffer = AU.doubleLengthByte(buffer);
       }
@@ -682,12 +653,33 @@ public class NBOService {
       
       n = nboOut.read(buffer, 0, n);    
       String s = PT.rep(new String(buffer, 0, n), "\r", "");
+      //Added by fzy
+      if(currentRequest!=null && currentRequest.isVideoCreate)
+        displayCreateVideoProgress(s);
       System.out.println(">> " + s + "<<");
-      //thisReply = s;
       return cachedReply = cachedReply + s;
     }
-  }
+    
+    /*
+     * Display the progress for create video in VIEW module
+     */
+    private void displayCreateVideoProgress(String s)
+    {
+      s=s.trim();
+      s=s.replace("\\","/");
+      if(s.equals("*start*")||s.equals("*end*"))
+        return;
+      
+      Pattern pattern=Pattern.compile("(.*/)(\\w+_?\\d*\\.bmp$)");
+      Matcher matcher=pattern.matcher(s);
+      if(matcher.matches())
+      {
+        dialog.setStatus(matcher.group(2)+" has been created.");
+      }
+    }
 
+  }
 }
+
 
 

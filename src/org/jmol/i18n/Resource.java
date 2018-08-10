@@ -5,12 +5,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javajs.J2SIgnoreImport;
 import javajs.util.PT;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
+@J2SIgnoreImport({java.util.ResourceBundle.class,java.util.Locale.class})
 class Resource {
 
   private ResourceBundle resource;

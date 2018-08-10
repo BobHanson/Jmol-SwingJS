@@ -10,9 +10,7 @@ import org.jmol.api.JmolSceneGenerator;
 import org.jmol.api.PymolAtomReader;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
-
-import javajs.awt.Font;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Text;
@@ -22,6 +20,7 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
 
+import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;

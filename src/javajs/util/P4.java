@@ -32,6 +32,10 @@ package javajs.util;
  */
 public class P4 extends T4 {
 
+  /**
+   * 
+   * @j2sIgnore   * 
+   */
   public P4() {
     // skip T4() constructor
   }

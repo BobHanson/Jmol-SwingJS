@@ -1,8 +1,8 @@
 package org.jmol.script;
 
+import javajs.api.GenericPlatform;
 import javajs.util.PT;
 
-import org.jmol.api.GenericPlatform;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
@@ -189,178 +189,178 @@ public abstract class ScriptError implements JmolScriptEvaluator {
       msg = "Unknown error message number: " + iError;
       break;
     case ERROR_axisExpected:
-      msg = GT.$("x y z axis expected");
+      msg = GT._("x y z axis expected");
       break;
     case ERROR_backgroundModelError:
-      msg = GT.$("{0} not allowed with background model displayed");
+      msg = GT._("{0} not allowed with background model displayed");
       break;
     case ERROR_badArgumentCount:
-      msg = GT.$("bad argument count");
+      msg = GT._("bad argument count");
       break;
     case ERROR_badMillerIndices:
-      msg = GT.$("Miller indices cannot all be zero.");
+      msg = GT._("Miller indices cannot all be zero.");
       break;
     case ERROR_badRGBColor:
-      msg = GT.$("bad [R,G,B] color");
+      msg = GT._("bad [R,G,B] color");
       break;
     case ERROR_booleanExpected:
-      msg = GT.$("boolean expected");
+      msg = GT._("boolean expected");
       break;
     case ERROR_booleanOrNumberExpected:
-      msg = GT.$("boolean or number expected");
+      msg = GT._("boolean or number expected");
       break;
     case ERROR_booleanOrWhateverExpected:
-      msg = GT.$("boolean, number, or {0} expected");
+      msg = GT._("boolean, number, or {0} expected");
       break;
     case ERROR_cannotSet:
-      msg = GT.$("cannot set value");
+      msg = GT._("cannot set value");
       break;
     case ERROR_colorExpected:
-      msg = GT.$("color expected");
+      msg = GT._("color expected");
       break;
     case ERROR_colorOrPaletteRequired:
-      msg = GT.$("a color or palette name (Jmol, Rasmol) is required");
+      msg = GT._("a color or palette name (Jmol, Rasmol) is required");
       break;
     case ERROR_commandExpected:
-      msg = GT.$("command expected");
+      msg = GT._("command expected");
       break;
     case ERROR_coordinateOrNameOrExpressionRequired:
-      msg = GT.$("{x y z} or $name or (atom expression) required");
+      msg = GT._("{x y z} or $name or (atom expression) required");
       break;
     case ERROR_drawObjectNotDefined:
-      msg = GT.$("draw object not defined");
+      msg = GT._("draw object not defined");
       break;
     case ERROR_endOfStatementUnexpected:
-      msg = GT.$("unexpected end of script command");
+      msg = GT._("unexpected end of script command");
       break;
     case ERROR_expressionExpected:
-      msg = GT.$("valid (atom expression) expected");
+      msg = GT._("valid (atom expression) expected");
       break;
     case ERROR_expressionOrIntegerExpected:
-      msg = GT.$("(atom expression) or integer expected");
+      msg = GT._("(atom expression) or integer expected");
       break;
     case ERROR_filenameExpected:
-      msg = GT.$("filename expected");
+      msg = GT._("filename expected");
       break;
     case ERROR_fileNotFoundException:
-      msg = GT.$("file not found");
+      msg = GT._("file not found");
       break;
     case ERROR_incompatibleArguments:
-      msg = GT.$("incompatible arguments");
+      msg = GT._("incompatible arguments");
       break;
     case ERROR_insufficientArguments:
-      msg = GT.$("insufficient arguments");
+      msg = GT._("insufficient arguments");
       break;
     case ERROR_integerExpected:
-      msg = GT.$("integer expected");
+      msg = GT._("integer expected");
       break;
     case ERROR_integerOutOfRange:
-      msg = GT.$("integer out of range ({0} - {1})");
+      msg = GT._("integer out of range ({0} - {1})");
       break;
     case ERROR_invalidArgument:
-      msg = GT.$("invalid argument");
+      msg = GT._("invalid argument");
       break;
     case ERROR_invalidParameterOrder:
-      msg = GT.$("invalid parameter order");
+      msg = GT._("invalid parameter order");
       break;
     case ERROR_keywordExpected:
-      msg = GT.$("keyword expected");
+      msg = GT._("keyword expected");
       break;
     case ERROR_moCoefficients:
-      msg = GT.$("no MO coefficient data available");
+      msg = GT._("no MO coefficient data available");
       break;
     case ERROR_moIndex:
-      msg = GT.$("An MO index from 1 to {0} is required");
+      msg = GT._("An MO index from 1 to {0} is required");
       break;
     case ERROR_moModelError:
-      msg = GT.$("no MO basis/coefficient data available for this frame");
+      msg = GT._("no MO basis/coefficient data available for this frame");
       break;
     case ERROR_moOccupancy:
-      msg = GT.$("no MO occupancy data available");
+      msg = GT._("no MO occupancy data available");
       break;
     case ERROR_moOnlyOne:
-      msg = GT.$("Only one molecular orbital is available in this file");
+      msg = GT._("Only one molecular orbital is available in this file");
       break;
     case ERROR_multipleModelsDisplayedNotOK:
-      msg = GT.$("{0} require that only one model be displayed");
+      msg = GT._("{0} require that only one model be displayed");
       break;
     case ERROR_multipleModelsNotOK:
-      msg = GT.$("{0} requires that only one model be loaded");
+      msg = GT._("{0} requires that only one model be loaded");
       break;
     case ERROR_noData:
-      msg = GT.$("No data available");
+      msg = GT._("No data available");
       break;
     case ERROR_noPartialCharges:
       msg = GT
-          .$("No partial charges were read from the file; Jmol needs these to render the MEP data.");
+          ._("No partial charges were read from the file; Jmol needs these to render the MEP data.");
       break;
     case ERROR_noUnitCell:
-      msg = GT.$("No unit cell");
+      msg = GT._("No unit cell");
       break;
     case ERROR_numberExpected:
-      msg = GT.$("number expected");
+      msg = GT._("number expected");
       break;
     case ERROR_numberMustBe:
-      msg = GT.$("number must be ({0} or {1})");
+      msg = GT._("number must be ({0} or {1})");
       break;
     case ERROR_numberOutOfRange:
-      msg = GT.$("decimal number out of range ({0} - {1})");
+      msg = GT._("decimal number out of range ({0} - {1})");
       break;
     case ERROR_objectNameExpected:
-      msg = GT.$("object name expected after '$'");
+      msg = GT._("object name expected after '$'");
       break;
     case ERROR_planeExpected:
       msg = GT
-          .$("plane expected -- either three points or atom expressions or {0} or {1} or {2}");
+          ._("plane expected -- either three points or atom expressions or {0} or {1} or {2}");
       break;
     case ERROR_propertyNameExpected:
-      msg = GT.$("property name expected");
+      msg = GT._("property name expected");
       break;
     case ERROR_spaceGroupNotFound:
-      msg = GT.$("space group {0} was not found.");
+      msg = GT._("space group {0} was not found.");
       break;
     case ERROR_stringExpected:
-      msg = GT.$("quoted string expected");
+      msg = GT._("quoted string expected");
       break;
     case ERROR_stringOrIdentifierExpected:
-      msg = GT.$("quoted string or identifier expected");
+      msg = GT._("quoted string or identifier expected");
       break;
     case ERROR_tooManyPoints:
-      msg = GT.$("too many rotation points were specified");
+      msg = GT._("too many rotation points were specified");
       break;
     case ERROR_tooManyScriptLevels:
-      msg = GT.$("too many script levels");
+      msg = GT._("too many script levels");
       break;
     case ERROR_unrecognizedAtomProperty:
-      msg = GT.$("unrecognized atom property");
+      msg = GT._("unrecognized atom property");
       break;
     case ERROR_unrecognizedBondProperty:
-      msg = GT.$("unrecognized bond property");
+      msg = GT._("unrecognized bond property");
       break;
     case ERROR_unrecognizedCommand:
-      msg = GT.$("unrecognized command");
+      msg = GT._("unrecognized command");
       break;
     case ERROR_unrecognizedExpression:
-      msg = GT.$("runtime unrecognized expression");
+      msg = GT._("runtime unrecognized expression");
       break;
     case ERROR_unrecognizedObject:
-      msg = GT.$("unrecognized object");
+      msg = GT._("unrecognized object");
       break;
     case ERROR_unrecognizedParameter:
-      msg = GT.$("unrecognized {0} parameter");
+      msg = GT._("unrecognized {0} parameter");
       break;
     case ERROR_unrecognizedParameterWarning:
       msg = GT
-          .$("unrecognized {0} parameter in Jmol state script (set anyway)");
+          ._("unrecognized {0} parameter in Jmol state script (set anyway)");
       break;
     case ERROR_unrecognizedShowParameter:
-      msg = GT.$("unrecognized SHOW parameter --  use {0}");
+      msg = GT._("unrecognized SHOW parameter --  use {0}");
       break;
     case ERROR_what:
       msg = "{0}";
       break;
     case ERROR_writeWhat:
-      msg = GT.$("write what? {0} or {1} \"filename\"");
+      msg = GT._("write what? {0} or {1} \"filename\"");
       break;
     }
     if (msg.indexOf("{0}") < 0) {
@@ -409,7 +409,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
     error = true;
     if (errorMessage == null) // there could be a compiler error from a script
       // command
-      errorMessage = GT.$("script ERROR: ");
+      errorMessage = GT._("script ERROR: ");
     errorMessage += err;
   }
 

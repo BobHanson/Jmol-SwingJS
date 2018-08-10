@@ -38,6 +38,7 @@ class Leaf extends Element {
    * @param bspt 
    * @param leaf 
    * @param countToKeep 
+   * @j2sIgnoreSuperConstructor
    * 
    */
   Leaf(Bspt bspt, Leaf leaf, int countToKeep) {
