@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.jmol.api.JmolSceneGenerator;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
@@ -39,11 +39,13 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 
+import javajs.J2SIgnoreImport;
 import javajs.util.SB;
 
 import java.util.Arrays;
 import java.util.Map.Entry;
 
+@J2SIgnoreImport({Runtime.class})
 public class StateManager {
 
   /* steps in adding a global variable:

@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.jmol.atomdata.RadiusData;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;

@@ -3,9 +3,6 @@
  * $Date: 2007-04-05 09:07:28 -0500 (Thu, 05 Apr 2007) $
  * $Revision: 7326 $
  *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -28,19 +25,14 @@ package javajs.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
 import java.util.Map;
-
-import javajs.api.Interface;
 
 
 import javajs.api.GenericCifDataParser;
@@ -101,82 +93,27 @@ public class Rdr implements GenericLineReader {
   
   ///////////
   
-
-  /**
-   * 
-   * Read a UTF-8 byte array fully, converting it to a String.
-   * Called by Jmol's XMLReaders
-   * 
-   * @param bytes
-   * @return a UTF-8 string
-   */
-  public static String bytesToUTF8String(byte[] bytes) {
-  	return streamToUTF8String(new BufferedInputStream(new ByteArrayInputStream(bytes)));
-  }
-
-  /**
-   * 
-   * Read a UTF-8 stream fully, converting it to a String.
-   * Called by Jmol's XMLReaders
-   * 
-   * @param bis
-   * @return a UTF-8 string
-   */
-  public static String streamToUTF8String(BufferedInputStream bis) {
-    String[] data = new String[1];
+  public static String fixUTF(byte[] bytes) {    
+    Encoding encoding = getUTFEncoding(bytes);
+    if (encoding != Encoding.NONE)
     try {
-      readAllAsString(getBufferedReader(bis, "UTF-8"), -1, true, data, 0);
-    } catch (IOException e) {
+      String s = new String(bytes, encoding.name().replace('_', '-'));
+      switch (encoding) {
+      case UTF8:
+      case UTF_16BE:
+      case UTF_16LE:
+        // extra byte at beginning removed
+        s = s.substring(1);
+        break;
+      default:
+        break;        
+      }
+      return s;
+    } catch (UnsupportedEncodingException e) {
+      System.out.println(e);
     }
-    return data[0];
+    return new String(bytes);
   }
-
-  /**
-   * Read an input stream fully, saving a byte array, then
-   * return a buffered reader to those bytes converted to string form.
-   * 
-   * @param bis
-   * @param charSet
-   * @return Reader
-   * @throws IOException
-   */
-  public static BufferedReader getBufferedReader(BufferedInputStream bis, String charSet)
-      throws IOException {
-    // could also just make sure we have a buffered input stream here.
-    if (getUTFEncodingForStream(bis) == Encoding.NONE)
-      return new StreamReader(bis, (charSet == null ? "UTF-8" : charSet));
-    byte[] bytes = getLimitedStreamBytes(bis, -1);
-    bis.close();
-    return getBR(charSet == null ? fixUTF(bytes) : new String(bytes, charSet));
-  }
-
-  /**
-   * This method is specifically for strings that are marked for UTF 8 or 16.
-   * 
-   * @param bytes
-   * @return UTF-decoded bytes
-   */
-	public static String fixUTF(byte[] bytes) {
-		Encoding encoding = getUTFEncoding(bytes);
-		if (encoding != Encoding.NONE)
-			try {
-				String s = new String(bytes, encoding.name().replace('_', '-'));
-				switch (encoding) {
-				case UTF8:
-				case UTF_16BE:
-				case UTF_16LE:
-					// extra byte at beginning removed
-					s = s.substring(1);
-					break;
-				default:
-					break;
-				}
-				return s;
-			} catch (UnsupportedEncodingException e) {
-				System.out.println(e);
-			}
-		return new String(bytes);
-	}
 
   private static Encoding getUTFEncoding(byte[] bytes) {
     if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF)
@@ -199,14 +136,14 @@ public class Rdr implements GenericLineReader {
   
 
   private static Encoding getUTFEncodingForStream(BufferedInputStream is) throws IOException {
-//    /**
-//     * @j2sNative
-//     * 
-//     *  is.resetStream();
-//     * 
-//     */
-//    {
-//    }
+    /**
+     * @j2sNative
+     * 
+     *  is.resetStream();
+     * 
+     */
+    {
+    }
     byte[] abMagic = new byte[4];
     abMagic[3] = 1;
     try{
@@ -303,14 +240,14 @@ public class Rdr implements GenericLineReader {
 
   public static byte[] getMagic(InputStream is, int n) {
     byte[] abMagic = new byte[n];
-//    /**
-//     * @j2sNative
-//     * 
-//     * is.resetStream();
-//     * 
-//     */
-//    {
-//    }
+    /**
+     * @j2sNative
+     * 
+     * is.resetStream();
+     * 
+     */
+    {
+    }
     try {
       is.mark(n + 1);
       is.read(abMagic, 0, n);
@@ -349,14 +286,6 @@ public class Rdr implements GenericLineReader {
   public static BufferedReader getBR(String string) {
     return new BufferedReader(new StringReader(string));
   }
-
-  
-	public static BufferedInputStream toBIS(Object o) {
-		return (AU.isAB(o) ? getBIS((byte[]) o)
-				: o instanceof SB ? getBIS(Rdr.getBytesFromSB((SB) o))
-						: o instanceof String ? getBIS(((String) o).getBytes()) : null);
-	}
-
 
   /**
    * Drill down into a GZIP stack until no more layers.
@@ -425,6 +354,25 @@ public class Rdr implements GenericLineReader {
   }
 
   /**
+   * Read an input stream fully, saving a byte array, then
+   * return a buffered reader to those bytes converted to string form.
+   * 
+   * @param bis
+   * @param charSet
+   * @return Reader
+   * @throws IOException
+   */
+  public static BufferedReader getBufferedReader(BufferedInputStream bis, String charSet)
+      throws IOException {
+    // could also just make sure we have a buffered input stream here.
+    if (getUTFEncodingForStream(bis) == Encoding.NONE)
+      return new Rdr.StreamReader(bis, charSet);
+    byte[] bytes = getLimitedStreamBytes(bis, -1);
+    bis.close();
+    return getBR(charSet == null ? fixUTF(bytes) : new String(bytes, charSet));
+  }
+
+  /**
    * Read a possibly limited number of bytes (when n > 0) from a stream, 
    * leaving the stream open.
    * 
@@ -461,6 +409,23 @@ public class Rdr implements GenericLineReader {
     buf = new byte[totalLen];
     System.arraycopy(bytes, 0, buf, 0, totalLen);
     return buf;
+  }
+
+  /**
+   * 
+   * Read a UTF-8 stream fully, converting it to a String.
+   * Called by Jmol's XMLReaders
+   * 
+   * @param bis
+   * @return a UTF-8 string
+   */
+  public static String StreamToUTF8String(BufferedInputStream bis) {
+    String[] data = new String[1];
+    try {
+      readAllAsString(getBufferedReader(bis, "UTF-8"), -1, true, data, 0);
+    } catch (IOException e) {
+    }
+    return data[0];
   }
 
   /**
@@ -593,21 +558,6 @@ public class Rdr implements GenericLineReader {
     int pt = fileName.indexOf("|");
     return (pt < 0 ? fileName : fileName.substring(0, pt));
   }
-
-	public static BufferedWriter getBufferedWriter(OutputStream os, String charSetName) {
-		OutputStreamWriter osw = (OutputStreamWriter) Interface.getInstanceWithParams("java.io.OutputStreamWriter", 
-				new Class<?>[] { java.io.OutputStream.class, String.class }, 
-				new Object[] { os, charSetName == null ? "UTF-8" : charSetName }
-		);
-		/**
-		 * @j2sNative
-		 * return osw.getBufferedWriter();
-		 * 
-		 */
-		{
-			return new BufferedWriter(osw);
-		}
-	}
 
   
 }

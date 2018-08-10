@@ -217,10 +217,10 @@ OR
         if (ignore[i])
           continue;
         asc.cloneLastAtomSet();
-        asc.setAtomSetFrequency(vibrationNumber, null, null, frequencies[i], null);
+        asc.setAtomSetFrequency(null, null, frequencies[i], null);
       }
       readLines(nXX);
-      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
+      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
     }
   }
   

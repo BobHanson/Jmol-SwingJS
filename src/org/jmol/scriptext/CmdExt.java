@@ -51,7 +51,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -313,11 +313,12 @@ public class CmdExt extends ScriptExt {
    ScriptEval eval = e;
    chk = eval.chk;
    slen = eval.slen;
-   T3 lattice = null;
+   P3 lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
-     tok = tokAt(i = eval.iToken + 1);
+     lattice = getPoint3f(i, false);
+     i = eval.iToken + 1;
+     tok = tokAt(i);
    }
 
    // default lattice {555 555 -1} (packed) 
@@ -341,7 +342,8 @@ public class CmdExt extends ScriptExt {
    if (lattice != null) {
      htParams.put("lattice", lattice);
      i = eval.iToken + 1;
-     sOptions.append(" " + SimpleUnitCell.escapeMultiplier(lattice));
+     sOptions.append( " {" + (int) lattice.x + " " + (int) lattice.y + " "
+         + (int) lattice.z + "}");
 
      // {i j k} PACKED, CENTROID -- either or both; either order
 
@@ -528,7 +530,7 @@ public class CmdExt extends ScriptExt {
       switch (tok) {
       case T.unitcell:
         // load .... FILL UNITCELL [conventional | primitive]
-        String type = e.optParameterAsString(i++).toLowerCase();
+        String type = paramAsStr(i++).toLowerCase();
         if (PT.isOneOf(type, ";conventional;primitive;")) {
           htParams.put("fillRange", type); // "conventional" or "primitive"
           sOptions.append(" FILL UNITCELL \"" + type + "\"");
@@ -639,7 +641,7 @@ public class CmdExt extends ScriptExt {
         if (chk)
           return;
         n = vwr.calculateFormalCharges(null);
-        showString(GT.i(GT.$("{0} charges modified"), n));
+        showString(GT.i(GT._("{0} charges modified"), n));
         return;
       case T.aromatic:
         checkLength(2);
@@ -661,7 +663,7 @@ public class CmdExt extends ScriptExt {
           return;
         n = vwr.autoHbond(bs1, bs2, false);
         if (n != Integer.MIN_VALUE)
-          eval.report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
+          eval.report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
         return;
       case T.hydrogen:
         boolean andBond = (tokAt(2) == T.on);
@@ -751,7 +753,7 @@ public class CmdExt extends ScriptExt {
             setShapeProperty(JC.SHAPE_STICKS, "type",
                 Integer.valueOf(Edge.BOND_COVALENT_MASK));
           }
-          showString(GT.i(GT.$("{0} struts added"), n));
+          showString(GT.i(GT._("{0} struts added"), n));
         }
         return;
       case T.surface:
@@ -892,9 +894,9 @@ public class CmdExt extends ScriptExt {
       if (streaming) {
         params.put("streaming", Boolean.TRUE);
         if (!looping)
-          showString(GT.o(GT.$("Note: Enable looping using {0}"),
+          showString(GT.o(GT._("Note: Enable looping using {0}"),
               new Object[] { "ANIMATION MODE LOOP" }));
-        showString(GT.o(GT.$("Animation delay based on: {0}"),
+        showString(GT.o(GT._("Animation delay based on: {0}"),
             new Object[] { "ANIMATION FPS " + fps }));
       }
       params.put("captureFps", Integer.valueOf(fps));
@@ -969,7 +971,6 @@ public class CmdExt extends ScriptExt {
     // compare {model1} {model2} FRAMES
     // compare {model1} ATOMS {bsAtoms1} [coords]
     // compare {model1} [coords] ATOMS {bsAtoms1} [coords]
-    // compare {model1} [coords] ATOMS {bsAtoms1}
     // compare {model1} {model2} BONDS "....."   /// flexible fit
     // compare {model1} {model2} BONDS SMILES   /// flexible fit
 
@@ -1060,7 +1061,7 @@ public class CmdExt extends ScriptExt {
 
         if (bsAtoms2 == null)
           coordTo = eval.getPointArray(++eval.iToken, -1, false);
-        else if (bsTo != null)
+        else
           bsAtoms2.and(bsTo);
         if (vAtomSets == null)
           vAtomSets = new Lst<Object[]>();
@@ -1125,11 +1126,9 @@ public class CmdExt extends ScriptExt {
         bsAtoms1 = BSUtil.copy(bsFrom);
         bsAtoms2 = BSUtil.copy(bsTo);
         bsAtoms1.and(bsSubset);
+        bsAtoms2.and(bsSubset);
         bsAtoms1.and(bsFrom);
-        if (bsAtoms2 != null) {
-          bsAtoms2.and(bsSubset);
-          bsAtoms2.and(bsTo);
-        }
+        bsAtoms2.and(bsTo);
       }
       vAtomSets = new Lst<Object[]>();
       vAtomSets.addLast(new BS[] { bsAtoms1, bsAtoms2 });
@@ -1922,7 +1921,7 @@ public class CmdExt extends ScriptExt {
     boolean report = eval.doReport(); 
     if (isDelete) {
       if (report)
-        eval.report(GT.i(GT.$("{0} connections deleted"), nModified), false);
+        eval.report(GT.i(GT._("{0} connections deleted"), nModified), false);
       return;
     }
     if (isColorOrRadius) {
@@ -1934,7 +1933,7 @@ public class CmdExt extends ScriptExt {
       vwr.selectBonds(null);
     }
     if (report)
-      eval.report(GT.o(GT.$("{0} new bonds; {1} modified"),
+      eval.report(GT.o(GT._("{0} new bonds; {1} modified"),
           new Object[] { Integer.valueOf(nNew), Integer.valueOf(nModified) }), false);
   }
 
@@ -3823,7 +3822,7 @@ public class CmdExt extends ScriptExt {
         if (chk)
           return "";
         // if (isApplet)
-        // evalError(GT.$("The {0} command is not available for the applet.",
+        // evalError(GT._("The {0} command is not available for the applet.",
         // "WRITE CLIPBOARD"));
       } else if (PT.isOneOf(val.toLowerCase(), JC.IMAGE_TYPES)) {
         if (tokAtArray(pt + 1, args) == T.integer
@@ -4466,14 +4465,14 @@ public class CmdExt extends ScriptExt {
       if ((len = slen) == 2) {
         if (chk)
           break;
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false);
+        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1);
       } else if (tok == T.spacegroup) {
         String sg = paramAsStr(2);
         len = 3;
         if (chk)
           break;
         info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            PT.rep(sg, "''", "\""), -1, false);
+            PT.rep(sg, "''", "\""), -1);
       }
       if (info != null) {
         msg = (tok == T.spacegroup ? "" + info.get("spaceGroupInfo")
@@ -5072,8 +5071,6 @@ public class CmdExt extends ScriptExt {
       // _M.unitcell_conventional must be set in the reader.
 
       newUC = vwr.getModelInfo("unitcell_conventional");
-      // If the file read was loaded as primitive, 
-      // newUC will be a T3[] indicating the conventional.
       if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
         if (newUC == null && vwr.getModelInfo("isprimitive") != null) {
           showString("Cannot convert unit cell when file data is primitive and have no lattice information");
@@ -5084,14 +5081,13 @@ public class CmdExt extends ScriptExt {
           stype = paramAsStr(++i).toUpperCase();
       }
       if (newUC instanceof T3[]) {
-        // from reader -- getting us to conventional
+        // from reader
         oabc = (T3[]) newUC;
       }
       if (stype == null)
         stype = (String) vwr.getModelInfo("latticeType");
       if (newUC != null)
         eval.setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
-      // now guaranteed to be "conventional"
       if (!ucname.equals("conventional")) {
         s = (String) vwr.getModelInfo("unitcell_" + ucname);
         if (s == null) {
@@ -5117,12 +5113,8 @@ public class CmdExt extends ScriptExt {
             }
             break;
           }
-        } else {
-          ucname = s;
-          if (s.indexOf(",") >= 0)
-            newUC = s;
         }
-        showString(ucname);
+        showString(s);
       }
       break;
     case T.isosurface:
@@ -5182,7 +5174,7 @@ public class CmdExt extends ScriptExt {
       isOffset = true;
       //$FALL-THROUGH$
     case T.range:
-      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
+      pt = (P3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
       pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
       i = eval.iToken;
       break;
@@ -5203,7 +5195,7 @@ public class CmdExt extends ScriptExt {
         oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
-        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+        pt = (P3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
         i = eval.iToken;
       } else {
         // backup for diameter
@@ -5482,8 +5474,8 @@ public class CmdExt extends ScriptExt {
       throws ScriptException {
 
     Object odata = (property == null || tok == (T.dssr | T.allfloat) ?
-      e.getBitsetProperty(bs, null, tok, null, null, property,
-          null, false, Integer.MAX_VALUE, false) 
+      e.getBitsetProperty(bs, tok, null, null, property, null,
+          false, Integer.MAX_VALUE, false) 
           : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AF));
     if (odata == null || !AU.isAF(odata))
       return (bs == null ? null  : new float[bs.cardinality()]);

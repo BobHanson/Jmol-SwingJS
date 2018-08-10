@@ -54,6 +54,7 @@ class Node extends Element {
    * @param bspt 
    * @param level 
    * @param leafLeft 
+   * @j2sIgnoreSuperConstructor
    * 
    */
   Node(Bspt bspt, int level, Leaf leafLeft) {

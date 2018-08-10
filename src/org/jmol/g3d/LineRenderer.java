@@ -48,7 +48,7 @@ import java.util.Map;
 import javajs.util.P3;
 import javajs.util.P3i;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.util.GData;
 import org.jmol.util.Shader;
 

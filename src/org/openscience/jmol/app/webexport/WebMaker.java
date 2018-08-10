@@ -60,7 +60,7 @@ public class WebMaker extends JPanel {
     }
     if (System.getProperty("user.home") == null) {
       System.err.println(
-          GT.$("Error starting Jmol: the property 'user.home' is not defined."));
+          GT._("Error starting Jmol: the property 'user.home' is not defined."));
       System.exit(1);
     }
     File ujmoldir = new File(new File(System.getProperty("user.home")),

@@ -41,6 +41,7 @@ public class TimeoutThread extends JmolThread {
    * @param name 
    * @param ms 
    * @param script 
+   * @j2sIgnoreSuperConstructor
    * 
    */
   public TimeoutThread(Viewer vwr, String name, int ms, String script) {

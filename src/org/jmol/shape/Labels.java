@@ -25,7 +25,7 @@
 package org.jmol.shape;
 
 import org.jmol.c.PAL;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Text;

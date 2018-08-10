@@ -27,7 +27,7 @@ package org.jmol.modelset;
 
 
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 import javajs.util.T3;
 

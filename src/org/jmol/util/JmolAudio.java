@@ -25,11 +25,10 @@ package org.jmol.util;
 
 import java.util.Map;
 
+import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 
 import org.jmol.api.JmolAudioPlayer;
-import org.jmol.api.js.JSmolAppletObject;
-import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.viewer.Viewer;
 
 import javax.sound.sampled.AudioInputStream;
@@ -41,7 +40,12 @@ import javax.sound.sampled.LineListener;
 import sun.audio.AudioData;
 import sun.audio.AudioDataStream;
 
-public class JmolAudio implements LineListener, JmolAudioPlayer {
+@J2SIgnoreImport({ javax.sound.sampled.AudioInputStream.class,
+    javax.sound.sampled.AudioSystem.class, javax.sound.sampled.Clip.class,
+    javax.sound.sampled.Line.class, javax.sound.sampled.LineEvent.class,
+    javax.sound.sampled.LineListener.class, sun.audio.AudioData.class,
+    sun.audio.AudioDataStream.class })
+public class JmolAudio implements javax.sound.sampled.LineListener, JmolAudioPlayer {
 
   public JmolAudio() {
   }
@@ -61,7 +65,6 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
    * @param vwr
    * @param htParams
    */
-  @SuppressWarnings({ "null", "unused" })
   public void playAudio(Viewer vwr, Map<String, Object> htParams) {
     try {
       id = (String) htParams.get("id");
@@ -74,17 +77,15 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
       params.put("audioPlayer", this);
       fileName = (String) htParams.get("audioFile");
       vwr.sm.registerAudio(id, htParams);
-      JSmolAppletObject applet = vwr.html5Applet;
-      JmolToJSmolInterface jmol = vwr.jmolObject;
       /**
        * @j2sNative
        * 
+       * 
+       *            Jmol._playAudio(vwr.html5Applet, htParams);
        */
       {
         getClip();
       }
-      if (jmol != null)
-         jmol._playAudio(applet, htParams);
       if (myClip == null)
         return;
       if (htParams.containsKey("action"))
@@ -101,6 +102,8 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
   }
 
   /**
+   * @j2sIgnore
+   * 
    * @throws Exception
    * 
    */
@@ -118,6 +121,9 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
   }
 
   @Override
+  /**
+   * @j2sIgnore
+   */
   public void update(LineEvent le) {
     processUpdate(le.getType().toString());
   }

@@ -24,7 +24,6 @@
 package org.jmol.console;
 
 import org.jmol.api.JmolAbstractButton;
-import org.jmol.api.js.GenericConsoleTextArea;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
@@ -66,7 +65,7 @@ public class AppletConsole extends JmolConsole {
     output = new GenericTextPane();
   }
   
-  private class GenericTextPane extends JTextPane implements GenericConsoleTextArea {
+  private class GenericTextPane extends JTextPane implements GenericTextArea {
     
     private final Document outputDocument;
     
@@ -247,7 +246,7 @@ public class AppletConsole extends JmolConsole {
       ((JTextArea) input).requestFocus();
   }
 
-  class ControlEnterTextArea extends JTextArea implements GenericConsoleTextArea {
+  class ControlEnterTextArea extends JTextArea implements GenericTextArea {
     @SuppressWarnings("deprecation")
     @Override
     public void processComponentKeyEvent(KeyEvent ke) {

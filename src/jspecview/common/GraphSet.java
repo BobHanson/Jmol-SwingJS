@@ -5,6 +5,7 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
+import javajs.J2SRequireImport;
 import javajs.api.GenericColor;
 import javajs.awt.Font;
 import javajs.util.BS;
@@ -25,6 +26,7 @@ import jspecview.dialog.JSVDialog;
 
 // should not be necessary, but "x instanceof JSVDialog" is requiring it.
 
+@J2SRequireImport(jspecview.dialog.JSVDialog.class)
 class GraphSet implements XYScaleConverter {
 
 	private final static int ARROW_RESET = -1;

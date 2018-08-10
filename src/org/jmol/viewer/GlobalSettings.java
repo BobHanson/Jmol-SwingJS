@@ -25,7 +25,7 @@ public class GlobalSettings {
   Map<String, Boolean> htBooleanParameterFlags;
   Map<String, Boolean> htPropertyFlagsRemoved;
   Map<String, SV> htUserVariables = new Hashtable<String, SV>();
-  
+  Map<String, String> databases;
 
   /*
    *  Mostly these are just saved and restored directly from Viewer.
@@ -67,6 +67,7 @@ public class GlobalSettings {
       platformSpeed = g.platformSpeed;
       useScriptQueue = g.useScriptQueue;
       //useArcBall = g.useArcBall;
+      databases = g.databases;
       showTiming = g.showTiming;
       wireframeRotation = g.wireframeRotation;
       testFlag1 = g.testFlag1;
@@ -74,13 +75,19 @@ public class GlobalSettings {
       testFlag3 = g.testFlag3;
       testFlag4 = g.testFlag4;
     }
-    loadFormat = pdbLoadFormat = JC.databases.get("pdb");
-    pdbLoadLigandFormat = JC.databases.get("ligand");
-    nmrUrlFormat = JC.databases.get("nmr");
-    nmrPredictFormat = JC.databases.get("nmrdb");
-    smilesUrlFormat = JC.databases.get("nci") + "/file?format=sdf&get3d=true";
-    nihResolverFormat = JC.databases.get("nci");
-    pubChemFormat = JC.databases.get("pubchem");
+    if (databases == null) {
+      databases = new Hashtable<String, String>();
+      getDataBaseList(JC.databases);
+      getDataBaseList(userDatabases);
+    }
+    loadFormat = pdbLoadFormat = databases.get("pdb");
+    pdbLoadFormat0 = databases.get("pdb0");
+    pdbLoadLigandFormat = databases.get("ligand");
+    nmrUrlFormat = databases.get("nmr");
+    nmrPredictFormat = databases.get("nmrdb");
+    smilesUrlFormat = databases.get("nci") + "/file?format=sdf&get3d=true";
+    nihResolverFormat = databases.get("nci");
+    pubChemFormat = databases.get("pubchem");
 
     // beyond these six, they are just in the form load =xxx/id
 
@@ -213,7 +220,6 @@ public class GlobalSettings {
     setB("cartoonLadders", cartoonRibose);
     setB("cartoonRockets", cartoonRockets);
     setB("chainCaseSensitive", chainCaseSensitive);
-    setB("cipRule6Full", cipRule6Full);
     setI("bondingVersion", bondingVersion);
     setO("dataSeparator", dataSeparator);
     setB("debugScript", debugScript);
@@ -279,7 +285,6 @@ public class GlobalSettings {
     setB("highResolution", highResolutionFlag);
     setF("hoverDelay", hoverDelayMs / 1000f);
     setB("imageState", imageState);
-    setI("infoFontSize", infoFontSize);
     setB("isosurfaceKey", isosurfaceKey);
     setB("isosurfacePropertySmoothing", isosurfacePropertySmoothing);
     setI("isosurfacePropertySmoothingPower", isosurfacePropertySmoothingPower);
@@ -449,7 +454,7 @@ public class GlobalSettings {
   boolean forceAutoBond = false;
   boolean fractionalRelative = true;// true: {1/2 1/2 1/2} relative to current (possibly offset) unit cell 
   char inlineNewlineChar = '|'; //pseudo static
-  String loadFormat, pdbLoadFormat, pdbLoadLigandFormat,
+  String loadFormat, pdbLoadFormat, pdbLoadFormat0, pdbLoadLigandFormat,
       nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat,
       pubChemFormat;
 
@@ -499,7 +504,6 @@ public class GlobalSettings {
 
   //rendering
 
-  int infoFontSize = 20;
   boolean antialiasDisplay = false;
   boolean antialiasImages = true;
   boolean imageState = true;
@@ -553,7 +557,6 @@ public class GlobalSettings {
   boolean cartoonLadders = false;
   boolean cartoonRibose = false;
   boolean chainCaseSensitive = false;
-  boolean cipRule6Full = false;
   int hermiteLevel = 0;
   boolean highResolutionFlag = false;
   public boolean rangeSelected = false;
@@ -902,7 +905,7 @@ public class GlobalSettings {
   }
 
   boolean haveSetStructureList;
-//  private String[] userDatabases;
+  private String[] userDatabases;
 
   public int bondingVersion = Elements.RAD_COV_IONIC_OB1_100_1;
 
@@ -915,9 +918,49 @@ public class GlobalSettings {
     return structureList;
   }
 
+  String resolveDataBase(String database, String id, String format) {
+    if (format == null) {
+      if ((format = databases.get(database.toLowerCase())) == null)
+        return null;
+      int pt = id.indexOf("/");
+      if (pt < 0) {
+        if (database.equals("pubchem"))
+          id = "name/" + id;
+        else if (database.equals("nci"))
+          id += "/file?format=sdf&get3d=true";
+      }
+      if (format.startsWith("'")) {
+        // needs evaluation
+        // xxxx.n means "the nth item"
+        pt = id.indexOf(".");
+        int n = (pt > 0 ? PT.parseInt(id.substring(pt + 1)) : 0);
+        if (pt > 0)
+          id = id.substring(0, pt);
+        format = PT.rep(format, "%n", "" + n);
+      }
+    } else if (id.indexOf(".") >= 0 && format.indexOf("%FILE.") >= 0) {
+      // replace RCSB format extension when a file extension is made explicit 
+      format = format.substring(0, format.indexOf("%FILE"));
+    }
+    if (format.indexOf("%c") >= 0)
+      for (int i = 1, n = id.length(); i <= n; i++)
+        if (format.indexOf("%c" + i) >= 0)
+          format = PT.rep(format, "%c" + i, id.substring(i - 1, i)
+              .toLowerCase());
+    return (format.indexOf("%FILE") >= 0 ? PT.rep(format, "%FILE", id)
+        : format.indexOf("%file") >= 0 ? PT.rep(format, "%file", id.toLowerCase()) : format + id);
+  }
+
   static boolean doReportProperty(String name) {
     return (name.charAt(0) != '_' && unreportedProperties.indexOf(";" + name
         + ";") < 0);
+  }
+
+  private void getDataBaseList(String[] list) {
+    if (list == null)
+      return;
+    for (int i = 0; i < list.length; i += 2)
+      databases.put(list[i].toLowerCase(), list[i + 1]);
   }
 
   final private static String unreportedProperties =
@@ -935,7 +978,7 @@ public class GlobalSettings {
       + ";antialiasdisplay;antialiasimages;antialiastranslucent;appendnew;axescolor"
       + ";axesposition;axesmolecular;axesorientationrasmol;axesunitcell;axeswindow;axis1color;axis2color"
       + ";axis3color;backgroundcolor;backgroundmodel;bondsymmetryatoms;boundboxcolor;cameradepth"
-      + ";bondingversion;ciprule6full;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
+      + ";bondingversion;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
       + ";exportdrivers;exportscale"
       + ";_filecaching;_filecache;fontcaching;fontscaling;forcefield;language"
       + ";hbondsDistanceMaximum;hbondsangleminimum" // added Jmol 14.24.2
@@ -963,11 +1006,7 @@ public class GlobalSettings {
       + ";modelkitmode;autoplaymovie;allowaudio;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
       //  oops these were in some state scripts but should not have been
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
-      + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
-      // removed in Jmol 14.29.18
-      + ";selecthetero;selecthydrogen;"
-      
-      + ";")
+      + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4" + ";")
       .toLowerCase();
 
   Object getAllVariables() {

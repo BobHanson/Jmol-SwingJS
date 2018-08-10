@@ -31,7 +31,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 
@@ -66,6 +66,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   /**
    * @param vwr
+   * @j2sIgnoreSuperConstructor
    * 
    */
   public ScriptCompiler(Viewer vwr) {
@@ -1341,7 +1342,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       return CONTINUE;
     }
     if (lookingAtDecimal()) {
-      value = Float.parseFloat(script.substring(ichToken, ichToken + cchToken));
+      value = PT.fVal(script.substring(ichToken, ichToken + cchToken));
       int intValue = (ScriptParam.getFloatEncodedInt(script.substring(ichToken,
           ichToken + cchToken)));
       addNumber(T.decimal, intValue, Float.valueOf(value));
@@ -2815,7 +2816,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (!isOK)
       return Float.NaN;
     cchToken = ichT - ichToken;
-    return Double.valueOf(script.substring(pt0, ichT)).floatValue();
+    return (float) PT.dVal(script.substring(pt0, ichT));
   }
 
   private boolean lookingAtDecimal() {
@@ -3088,7 +3089,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         + " >>>> " + errorLine.substring(ichToken - ichCurrentCommand)
         : errorLine)
         + " <<<<";
-    errorMessage = GT.$("script compiler ERROR: ")
+    errorMessage = GT._("script compiler ERROR: ")
         + errorMessage
         + ScriptError.getErrorLineMessage(null, filename, lineCurrent,
             iCommand, lineInfo);

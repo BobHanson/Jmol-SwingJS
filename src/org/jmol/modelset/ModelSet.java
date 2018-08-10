@@ -56,7 +56,7 @@ import org.jmol.bspt.CubeIterator;
 import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.ScriptCompiler;
 import org.jmol.script.T;
@@ -185,6 +185,7 @@ public class ModelSet extends BondCollection {
   ////////////////////////////////////////////////////////////////
 
   /**
+   * @j2sIgnoreSuperConstructor
    * 
    * @param vwr
    * @param name
@@ -496,6 +497,8 @@ public class ModelSet extends BondCollection {
     return (String) calculatePointGroupForFirstModel(bsAtoms, true,
         false, type, index, scale, pts, center, id);
   }
+
+  private SymmetryInterface pointGroup;
 
   private BoxInfo defaultBBox;
 
@@ -2844,27 +2847,25 @@ public class ModelSet extends BondCollection {
   private static P3 checkMinAttachedAngle(Atom atom1, float minAngle, V3 v1,
                                           V3 v2, boolean haveHAtoms) {
     Bond[] bonds = atom1.bonds;
-    boolean ignore = true;
+    if (bonds == null || bonds.length == 0)
+      return P3.new3(Float.NaN, 0, 0);
     Atom X = null;
-    if (bonds != null && bonds.length > 0) {
-      float dMin = Float.MAX_VALUE;
-      for (int i = bonds.length; --i >= 0;)
-        if (bonds[i].isCovalent()) {
-          ignore = false;
-          Atom atomA = bonds[i].getOtherAtom(atom1);
-          if (!haveHAtoms && atomA.getElementNumber() == 1)
-            continue;
-          v2.sub2(atom1, atomA);
-          float d = v2.angle(v1);
-          if (d < minAngle)
-            return null;
-          if (d < dMin) {
-            X = atomA;
-            dMin = d;
-          }
+    float dMin = Float.MAX_VALUE;
+    for (int i = bonds.length; --i >= 0;)
+      if (bonds[i].isCovalent()) {
+        Atom atomA = bonds[i].getOtherAtom(atom1);
+        if (!haveHAtoms && atomA.getElementNumber() == 1)
+          continue;
+        v2.sub2(atom1, atomA);
+        float d = v2.angle(v1);
+        if (d < minAngle)
+          return null;
+        if (d < dMin) {
+          X = atomA;
+          dMin = d;
         }
-    }
-    return (ignore ? P3.new3(Float.NaN, 0, 0) : X);
+      }
+    return X;
   }
 
   //////////// state definition ///////////

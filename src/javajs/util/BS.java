@@ -1,7 +1,4 @@
 /*
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright 1995-2007 Sun Microsystems, Inc.  All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -86,21 +83,20 @@ public class BS implements Cloneable, JSONEncodable {
    */
   private final static int ADDRESS_BITS_PER_WORD = 5;
   private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
-  protected final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
 
   /* Used to shift left or right for a partial word mask */
-  protected static final int WORD_MASK = 0xffffffff;
+  private static final int WORD_MASK = 0xffffffff;
 
 
   /**
    * The internal field corresponding to the serialField "bits".
    */
-  protected int[] words;
+  private int[] words;
 
   /**
    * The number of words in the logical size of this BitSet.
    */
-  protected transient int wordsInUse = 0;
+  private transient int wordsInUse = 0;
 
   /**
    * Whether the size of "words" is user-specified. If so, we assume the user
@@ -116,7 +112,7 @@ public class BS implements Cloneable, JSONEncodable {
    * @param bitIndex 
    * @return b
    */
-  protected static int wordIndex(int bitIndex) {
+  private static int wordIndex(int bitIndex) {
     return bitIndex >> ADDRESS_BITS_PER_WORD;
   }
 
@@ -125,7 +121,7 @@ public class BS implements Cloneable, JSONEncodable {
    * WARNING:This method assumes that the number of words actually in use is
    * less than or equal to the current value of wordsInUse!
    */
-  protected void recalculateWordsInUse() {
+  private void recalculateWordsInUse() {
     // Traverse the bitset until a used word is found
     int i;
     for (i = wordsInUse - 1; i >= 0; i--)
@@ -160,7 +156,7 @@ public class BS implements Cloneable, JSONEncodable {
     return bs;
   }
 
-  protected void init(int nbits) {
+  private void init(int nbits) {
     // nbits can't be negative; size 0 is OK
     if (nbits < 0)
       throw new NegativeArraySizeException("nbits < 0: " + nbits);
@@ -195,7 +191,7 @@ public class BS implements Cloneable, JSONEncodable {
    * @param wordIndex
    *          the index to be accommodated.
    */
-  protected void expandTo(int wordIndex) {
+  private void expandTo(int wordIndex) {
     int wordsRequired = wordIndex + 1;
     if (wordsInUse < wordsRequired) {
       ensureCapacity(wordsRequired);
@@ -736,7 +732,7 @@ public class BS implements Cloneable, JSONEncodable {
      * @j2sNative
      *     if (n == this.words.length) return;
      *     if (n == this.wordsInUse) {
-     *      this.words = Clazz.array(-1, this.words, 0, n);
+     *      this.words = Clazz.newArray(-1, this.words, 0, n);
      *      return;
      *     }
      */
@@ -818,7 +814,7 @@ public class BS implements Cloneable, JSONEncodable {
        * 
        * @j2sNative
        * 
-       *   bs.words = Clazz.array(-1, bitsetToCopy.words, 0, bs.wordsInUse = wordCount);
+       *   bs.words = Clazz.newArray(-1, bitsetToCopy.words, 0, bs.wordsInUse = wordCount);
        * 
        */
       {
@@ -907,11 +903,11 @@ public class BS implements Cloneable, JSONEncodable {
       return null;
     len -= 2;
     for (int i = len; --i >= 2;)
-      if (((ch = str.charAt(i)) < 48 || ch > 57) && ch != ' ' && ch != '\t'
+      if (!PT.isDigit(ch = str.charAt(i)) && ch != ' ' && ch != '\t'
           && ch != ':')
         return null;
     int lastN = len;
-    while (48 <= (ch = str.charAt(--lastN)) && ch <= 57) {
+    while (PT.isDigit(str.charAt(--lastN))) {
       // loop
     }
     if (++lastN == len)
@@ -947,7 +943,7 @@ public class BS implements Cloneable, JSONEncodable {
         iThis = -2;
         break;
       default:
-        if (48 <= ch && ch <= 57) {
+        if (PT.isDigit(ch)) {
           if (iThis < 0)
             iThis = 0;
           iThis = (iThis * 10) + (ch - 48);

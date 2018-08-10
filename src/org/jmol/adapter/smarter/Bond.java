@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-03-22 13:29:36 -0500 (Thu, 22 Mar 2018) $
- * $Revision: 21872 $
+ * $Date: 2014-09-07 17:50:21 -0500 (Sun, 07 Sep 2014) $
+ * $Revision: 19982 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -36,6 +36,7 @@ public class Bond extends AtomSetObject {
    * @param atomIndex1 
    * @param atomIndex2 
    * @param order 
+   * @j2sIgnoreSuperConstructor
    */
   public Bond (int atomIndex1, int atomIndex2, int order) {
     this.atomIndex1 = atomIndex1;

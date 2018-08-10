@@ -31,7 +31,7 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;

@@ -24,27 +24,26 @@
 
 package org.jmol.symmetry;
 
+import java.awt.Cursor;
 import java.util.Map;
 
-import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3;
 import javajs.util.P3i;
-import javajs.util.P4;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.AtomIndexIterator;
-import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.bspt.Bspt;
 import org.jmol.bspt.CubeIterator;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
@@ -167,22 +166,21 @@ public class Symmetry implements SymmetryInterface {
    * @param desiredSpaceGroupIndex
    * @param name
    * @param data a Lst<SymmetryOperation> or Lst<M4> 
-   * @param d in [3+d] modulation dimension
    * @return true if a known space group
    */
   @Override
   public boolean createSpaceGroup(int desiredSpaceGroupIndex, String name,
-                                  Object data, int modDim) {
+                                  Object data) {
     spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name,
-        data, modDim);
+        data);
     if (spaceGroup != null && Logger.debugging)
-      Logger.debug("using generated space group " + spaceGroup.dumpInfo());
+      Logger.debug("using generated space group " + spaceGroup.dumpInfo(null));
     return spaceGroup != null;
   }
 
   @Override
-  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo, boolean isFull) {
-    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull);
+  public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo) {
+    return SpaceGroup.getInfo(spaceGroup, name, cellInfo);
   }
 
   @Override
@@ -203,7 +201,7 @@ public class Symmetry implements SymmetryInterface {
         if (filterSymop.contains(" " + (i + 1) + " "))
           lst.addLast(spaceGroup.operations[i]);
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
-          name + " *(" + filterSymop.trim() + ")", lst, -1);
+          name + " *(" + filterSymop.trim() + ")", lst);
     }
     spaceGroup.setFinalOperations(atoms, iAtomFirst, noSymmetryCount,
         doNormalize);
@@ -315,8 +313,11 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroupName(String name) {
-    if (spaceGroup != null) 
-      spaceGroup.setName(name);
+    if (spaceGroup != null) {
+      spaceGroup.name = name;
+      if (spaceGroup.name.startsWith("HM:"))
+        spaceGroup.latticeType = spaceGroup.name.substring(3,4);
+    }
   }
 
   @Override
@@ -527,12 +528,12 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public void setOffset(int nnn) {
     P3 pt = new P3();
-    SimpleUnitCell.ijkToPoint3f(nnn, pt, 0, 0);
+    SimpleUnitCell.ijkToPoint3f(nnn, pt, 0);
     unitCell.setOffset(pt);
   }
 
   @Override
-  public T3 getUnitCellMultiplier() {
+  public P3 getUnitCellMultiplier() {
     return unitCell.getUnitCellMultiplier();
   }
 
@@ -559,6 +560,11 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean isPolymer() {
     return unitCell.isPolymer();
+  }
+
+  @Override
+  public void setMinMaxLatticeParameters(P3i minXYZ, P3i maxXYZ) {
+    unitCell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
   }
 
   @Override
@@ -669,18 +675,16 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull) {
-    boolean isForModel = (sgName == null);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex) {
     if (sgName == null) {
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel);
+        null, 0, -1);
   }
 
-  
   @Override
   public String fcoord(T3 p) {
     return SymmetryOperation.fcoord(p);
@@ -703,7 +707,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean getState(SB commands) {
-    T3 pt = getFractionalOffset();
+    P3 pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
       commands.append("; set unitcell ").append(Escape.eP(pt));
@@ -711,7 +715,7 @@ public class Symmetry implements SymmetryInterface {
     }
     pt = getUnitCellMultiplier();
     if (pt != null) {
-      commands.append("; set unitcell ").append(SimpleUnitCell.escapeMultiplier(pt));
+      commands.append("; set unitcell ").append(Escape.eP(pt));
       loadUC = true;
     }
     return loadUC;
@@ -791,23 +795,11 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
-    vwr.setCursor(GenericPlatform.CURSOR_WAIT);
+    vwr.setCursor(Cursor.WAIT_CURSOR);
     CIPChirality cip = getCIPChirality(vwr);
-    String dataClass = (vwr.getBoolean(T.testflag1) ? "CIPData" : "CIPDataTracker");
-    CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr, bsAtoms);
-    data.setRule6Full(vwr.getBoolean(T.ciprule6full));
+    CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry.CIPData", vwr, "script")).set(vwr, bsAtoms);
     cip.getChiralityForAtoms(data);
-    vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-  }
-  
-  @Override
-  public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles) throws Exception {
-    vwr.setCursor(GenericPlatform.CURSOR_WAIT);
-    CIPChirality cip = getCIPChirality(vwr);
-    CIPDataSmiles data = ((CIPDataSmiles) Interface.getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script")).setAtomsForSmiles(vwr, smiles);
-    cip.getChiralityForAtoms(data);
-    vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-       return data.getSmilesChiralityArray();
+    vwr.setCursor(Cursor.DEFAULT_CURSOR);
   }
   
   CIPChirality cip;
@@ -824,13 +816,8 @@ public class Symmetry implements SymmetryInterface {
    * @return [origin va vb vc]
    */
   @Override
-  public T3[] getConventionalUnitCell(String latticeType) {
+  public Object getConventionalUnitCell(String latticeType) {
     return (unitCell == null || latticeType == null ? null : unitCell.getConventionalUnitCell(latticeType));
-  }
-
-  @Override
-  public Map<String, Object> getUnitCellInfoMap() {
-    return (unitCell == null ? null : unitCell.getInfo());
   }
 
 }

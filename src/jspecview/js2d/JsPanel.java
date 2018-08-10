@@ -40,20 +40,18 @@ package jspecview.js2d;
 import java.io.OutputStream;
 
 import javajs.api.GenericColor;
+import javajs.api.GenericFileInterface;
+import javajs.api.GenericMouseInterface;
+import javajs.api.GenericPlatform;
 import javajs.awt.Font;
-
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.OC;
 
-import org.jmol.api.GenericFileInterface;
-import org.jmol.api.GenericMouseInterface;
-import org.jmol.api.GenericPlatform;
 import org.jmol.util.Logger;
 
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
-import jspecview.api.js.JSVAppletObject;
 import jspecview.common.ExportType;
 import jspecview.common.Spectrum;
 import jspecview.common.JSViewer;
@@ -183,8 +181,14 @@ public class JsPanel implements JSVPanel {
 	@Override
 	public void showMessage(String msg, String title) {
 		Logger.info(msg);
-		if (vwr.html5Applet != null)
-		  vwr.html5Applet._showStatus(msg, title);
+		@SuppressWarnings("unused")
+		Object applet = vwr.html5Applet;
+		/**
+		 * @j2sNative
+		 * applet._showStatus(msg, title);
+		 */
+		{
+		}
 		getFocusNow(true);
 	}
 
@@ -336,8 +340,15 @@ public class JsPanel implements JSVPanel {
 	public void setToolTipText(String s) {
 		int x = pd.mouseX;
 		int y = pd.mouseY;
-		if (vwr.html5Applet != null)
-		    vwr.html5Applet._showTooltip(s, x, y);
+		Object applet = vwr.html5Applet;
+		/**
+		 * @j2sNative
+		 * 
+		 * applet._showTooltip && applet._showTooltip(s, x, y);
+		 * 
+		 */
+		{}
+		
 	}
 
 	@Override

@@ -24,6 +24,7 @@
 package org.jmol.console;
 
 
+import javajs.api.GenericImageDialog;
 import javajs.util.PT;
 
 import javax.swing.JDialog;
@@ -47,7 +48,6 @@ import java.awt.Image;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.api.GenericImageDialog;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.awt.Platform;
 import org.jmol.viewer.Viewer;

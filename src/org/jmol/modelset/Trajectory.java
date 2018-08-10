@@ -30,7 +30,7 @@ import javajs.util.P3;
 import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.viewer.Viewer;
 
 import org.jmol.modelsetbio.BioModel;

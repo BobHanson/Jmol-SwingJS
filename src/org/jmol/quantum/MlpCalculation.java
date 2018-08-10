@@ -24,7 +24,7 @@
 package org.jmol.quantum;
 
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 

@@ -4,19 +4,18 @@ import java.io.BufferedInputStream;
 import java.net.URL;
 import java.util.Map;
 
-import org.jmol.api.GenericFileInterface;
-import org.jmol.api.GenericImageDialog;
-import org.jmol.api.GenericMenuInterface;
-import org.jmol.api.GenericMouseInterface;
-import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
-import org.jmol.api.PlatformViewer;
-import org.jmol.api.js.JmolToJSmolInterface;
+import org.jmol.apijs.JmolToJSmolInterface;
 import org.jmol.script.ScriptContext;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.GenericImageDialog;
+import javajs.api.GenericPlatform;
+import javajs.api.GenericFileInterface;
+import javajs.api.GenericMouseInterface;
+import javajs.api.GenericMenuInterface;
+import javajs.api.PlatformViewer;
 import javajs.awt.Font;
-
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;
 import javajs.util.Rdr;
@@ -54,13 +53,13 @@ public class Platform implements GenericPlatform {
 	   *       canvas.imgdata = this.context.getImageData(0, 0, canvas.width, canvas.height);
 	   *       canvas.buf8 = canvas.imgdata.data;
 	   *     }
+     *     this.canvas = canvas;
 	   */
 	  {
 	    this.vwr = null;
+	    this.canvas = null;
 	    context = null;
-      canvas = null;
 	  }
-    this.canvas = canvas;
 		//
 		try {
 		  URL.setURLStreamHandlerFactory(new AjaxURLStreamHandlerFactory());
@@ -239,8 +238,6 @@ public class Platform implements GenericPlatform {
     // from PNG and GIF and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
     Object context2d = null;
     boolean isWebGL = (canvas == null);
-    
-    //TODO - clean this up with Jmol
     /**
      * 
      * (might be just an object with buf32 defined -- WRITE IMAGE)
@@ -366,7 +363,7 @@ public class Platform implements GenericPlatform {
 	   * 
 	   * @j2sNative
 	   * 
-	   * f = function(canvas, pathOrError) { vwr.loadImageData$O$S$S$O(canvas, pathOrError, echoName, sc) };
+	   * f = function(canvas, pathOrError) { vwr.loadImageData(canvas, pathOrError, echoName, sc) };
 	   * 
 	   * 
 	   */	  

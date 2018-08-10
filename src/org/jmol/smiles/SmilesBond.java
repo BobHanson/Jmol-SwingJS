@@ -99,10 +99,6 @@ public class SmilesBond extends Edge {
   SmilesAtom atom1;
   SmilesAtom atom2;
 
-  public SmilesAtom getAtom1() {
-    return atom1;
-  }
-  
   boolean isNot;
   Edge matchingBond;
 
@@ -312,21 +308,6 @@ public class SmilesBond extends Edge {
       order = BOND_STEREO_NEAR;
       break;
     }
-  }
-
-  public int getRealCovalentOrder() {
-    switch (order) {
-    case TYPE_ATROPISOMER:
-    case TYPE_ATROPISOMER_REV:
-    case BOND_STEREO_NEAR:
-    case BOND_STEREO_FAR:
-      return BOND_COVALENT_SINGLE;
-    }
-    return order;
-  }
-
-  public Edge getMatchingBond() {
-    return matchingBond == null ? this : matchingBond;
   }
 
 }

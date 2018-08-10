@@ -101,7 +101,7 @@ public class FileDropper implements DropTargetListener {
     }      
     if (fname.endsWith(".URL")) {
 //      [InternetShortcut]
-//      URL=http://nbo6.chem.wisc.edu/jmol_nborxiv/allyl.47
+//      URL=http://nbo7.chem.wisc.edu/jmol_nborxiv/allyl.47
 //      IDList=
 //      HotKey=0
 //      IconFile=C:\Users\RM\AppData\Local\Mozilla\Firefox\Profiles\r4gp03t7.default\shortcutCache\x76TB2sbngvxLh95XTl2MA==.ico
@@ -121,7 +121,7 @@ public class FileDropper implements DropTargetListener {
     int flags = 1; //
     boolean isScript = FileManager.isScriptType(fname);
     boolean isSurface = FileManager.isSurfaceType(fname);
-    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT.$("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
+    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT._("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
     case JOptionPane.CANCEL_OPTION:
       return;
     case JOptionPane.OK_OPTION:

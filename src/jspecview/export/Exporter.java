@@ -2,8 +2,7 @@ package jspecview.export;
 
 import java.io.BufferedReader;
 
-import org.jmol.api.GenericFileInterface;
-
+import javajs.api.GenericFileInterface;
 import javajs.util.Base64;
 import javajs.util.OC;
 import javajs.util.Lst;

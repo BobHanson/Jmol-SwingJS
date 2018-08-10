@@ -28,10 +28,13 @@ package org.jmol.util;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.J2SIgnoreImport;
+
 
 /**
  * Logger mechanism.
  */
+@J2SIgnoreImport({Runtime.class})
 public final class Logger {
 
   private Logger(){}

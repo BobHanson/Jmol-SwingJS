@@ -420,10 +420,10 @@ public class CsfReader extends MopacSlaterReader {
       }
     }
     for (int i = 0; i < nVibrations; i++) {
-      if (!doGetVibration(++vibrationNumber))
+      if (!doGetVibration(i + 1))
         continue;
       asc.cloneAtomSetWithBonds(false);
-      asc.setAtomSetFrequency(vibrationNumber, null, null, energies[i], null);
+      asc.setAtomSetFrequency(null, null, energies[i], null);
       int ipt = 0;
       int baseAtom = nAtoms * (i + 1);
       for (int iAtom = 0; iAtom < nAtoms; iAtom++)

@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-05-31 01:39:29 +0200 (Thu, 31 May 2018) $
- * $Revision: 21913 $
+ * $Date: 2018-01-29 21:09:50 -0600 (Mon, 29 Jan 2018) $
+ * $Revision: 21816 $
  *
  * Copyright (C) 2003-2006  Miguel, Jmol Development, www.jmol.org
  *
@@ -55,7 +55,7 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
@@ -337,6 +337,10 @@ public class ScriptEval extends ScriptExpr {
   private boolean forceNoAddHydrogens;
   
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public ScriptEval() {
     // by reflection as well as directly
     currentThread = Thread.currentThread();
@@ -484,9 +488,7 @@ public class ScriptEval extends ScriptExpr {
    */
 
   @Override
-  public void resumeEval(Object sco) {
-    
-    ScriptContext sc = (ScriptContext) sco;
+  public void resumeEval(ScriptContext sc) {
 
     // 
     //
@@ -3284,7 +3286,7 @@ public class ScriptEval extends ScriptExpr {
       if (slen == 4 && optParameterAsString(2).equals("saved") && slen == 4) {
         vwr.stm.deleteSaved(optParameterAsString(3));
         if (doReport())
-          report(GT.o(GT.$("show saved: {0}"), vwr.stm.listSavedStates()), false);
+          report(GT.o(GT._("show saved: {0}"), vwr.stm.listSavedStates()), false);
         return;
       }
       setObjectProperty();
@@ -3298,7 +3300,7 @@ public class ScriptEval extends ScriptExpr {
       bs = vwr.getAllAtoms();
     int nDeleted = vwr.deleteAtoms(bs, false);
     if (doReport())
-      report(GT.i(GT.$("{0} atoms deleted"), nDeleted), false);
+      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
   }
 
   private void cmdDisplay(boolean isDisplay) throws ScriptException {
@@ -4011,7 +4013,7 @@ public class ScriptEval extends ScriptExpr {
       if (chk)
         return;
       int n = vwr.autoHbond(null, null, false);
-      report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
+      report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
       return;
     }
     if (slen == 2 && getToken(1).tok == T.delete) {
@@ -4662,7 +4664,7 @@ public class ScriptEval extends ScriptExpr {
 
     if (out != null) {
       vwr.fm.setFileInfo(new String[] { localName });
-      Logger.info(GT.o(GT.$("file {0} created"), localName));
+      Logger.info(GT.o(GT._("file {0} created"), localName));
       showString(vwr.fm.getFilePath(localName, false, false) + " created");
       out.closeChannel();
     }
@@ -6030,7 +6032,7 @@ public class ScriptEval extends ScriptExpr {
         if (chk)
           continue;
         Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            null, -1, false);
+            null, -1);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();
@@ -6138,8 +6140,7 @@ public class ScriptEval extends ScriptExpr {
                     // -n means number of seconds, not degreesPerSecond
                     -endDegrees / degreesPerSecond
                         : degreesPerSecond);
-    if (q == null && endDegrees < 0 && rate > 0)
-      rate = -rate;
+
     if (dihedralList != null) {
       if (!isSpin) {
         vwr.setDihedrals(dihedralList, null, 1);
@@ -6562,7 +6563,7 @@ public class ScriptEval extends ScriptExpr {
       isCmdLine_C_Option = saveLoadCheck;
       popContext(false, false);
     } else {
-      Logger.error(GT.$("script ERROR: ") + errorMessage);
+      Logger.error(GT._("script ERROR: ") + errorMessage);
       popContext(false, false);
       if (wasScriptCheck) {
         setErrorMessage(null);
@@ -6997,7 +6998,7 @@ public class ScriptEval extends ScriptExpr {
           pt = new P3();
           int ijk = var.asInt();
           if (ijk >= 100)
-            SimpleUnitCell.ijkToPoint3f(ijk, pt, -1, 0);
+            SimpleUnitCell.ijkToPoint3f(ijk, pt, -1);
         }
         if (!chk)
           vwr.setDefaultLattice(pt);
@@ -7814,7 +7815,7 @@ public class ScriptEval extends ScriptExpr {
     if (pt == 2) {
       saveContext(info);
       if (doReport())
-        report(GT.o(GT.$("to resume, enter: &{0}"), info), false);
+        report(GT.o(GT._("to resume, enter: &{0}"), info), false);
       throw new ScriptInterruption(this, info, Integer.MIN_VALUE);
     }
     evalError(info, null);
@@ -8111,7 +8112,7 @@ public class ScriptEval extends ScriptExpr {
     int nDeleted = vwr.deleteAtoms(bs, true);
     boolean isQuiet = !doReport();
     if (!isQuiet)
-      report(GT.i(GT.$("{0} atoms deleted"), nDeleted), false);
+      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
     vwr.select(null, false, 0, isQuiet);
   }
 

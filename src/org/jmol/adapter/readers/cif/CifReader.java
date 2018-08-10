@@ -40,7 +40,7 @@ import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
@@ -117,6 +117,7 @@ public class CifReader extends AtomSetCollectionReader {
   protected boolean isCourseGrained;
   boolean haveCellWaveVector;
   private String latticeType = null;
+  private int modDim;
 
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
@@ -132,7 +133,6 @@ public class CifReader extends AtomSetCollectionReader {
     if (conf != null)
       configurationPtr = parseIntStr(conf);
     isMolecular = checkFilterKey("MOLECUL") && !checkFilterKey("BIOMOLECULE"); // molecular; molecule
-    isPrimitive = checkFilterKey("PRIMITIVE");
     readIdeal = !checkFilterKey("NOIDEAL");
     filterAssembly = checkFilterKey("$");
     useAuthorChainID = !checkFilterKey("NOAUTHORCHAINS");
@@ -332,8 +332,8 @@ public class CifReader extends AtomSetCollectionReader {
       
     //  related:
         
-    // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'   -- no interest to us
-    // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
+    // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'
+    // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'
 
     
       
@@ -510,10 +510,6 @@ public class CifReader extends AtomSetCollectionReader {
     // just for modulated, audit block, and magnetic structures
     SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry()
         .getBaseSymmetry() : null);
-    if (sym != null && sym.getSpaceGroup() == null) {
-      appendLoadNote("Invalid or missing space group operations!");
-      sym = null;
-    }
     if (modDim > 0 && sym != null) {
       addLatticeVectors();
       asc.setTensors();
