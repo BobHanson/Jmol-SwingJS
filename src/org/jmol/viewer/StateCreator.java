@@ -1246,7 +1246,7 @@ public class StateCreator extends JmolStateCreator {
           if ((r = atoms[i].madAtom) < 0)
             BSUtil.setMapBitSet(temp, i, i, "Spacefill on");
           else
-            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + (r / 2000f));
+            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + PT.escF(r / 2000f));
         }
         if (shape.bsColixSet != null && shape.bsColixSet.get(i)) {
           byte pid = atoms[i].paletteID;
