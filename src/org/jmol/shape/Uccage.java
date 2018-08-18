@@ -23,7 +23,7 @@
  */
 package org.jmol.shape;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.viewer.JC;
 
 public class Uccage extends FontLineShape {

@@ -40,7 +40,7 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
@@ -77,7 +77,7 @@ public class SymmetryDesc {
       null /*draw*/, "fractionalTranslation", "cartesianTranslation",
       "inversionCenter", null /*point*/, "axisVector", "rotationAngle",
       "matrix", "unitTranslation", "centeringVector", "timeReversal", "plane",
-      "_type", "id" };
+      "_type" };
 
   ////// "public" methods ////////
 
@@ -134,16 +134,13 @@ public class SymmetryDesc {
   Map<String, Object> getSpaceGroupInfo(Symmetry sym, int modelIndex,
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
-                                        float scaleFactor, int nth, 
-                                        boolean isFull, boolean isForModel) {
+                                        float scaleFactor, int nth) {
     Map<String, Object> info = null;
     SymmetryInterface cellInfo = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
     boolean isBio = false;
     String sgNote = null;
-    boolean haveName = (sgName != null && sgName.length() > 0);
-    boolean haveRawName = (haveName && sgName.indexOf("[--]") >= 0);
-    if (isForModel || !haveName) {
+    if (sgName == null) {
       boolean saveModelInfo = (isStandard && symOp == 0);
       if (modelIndex < 0)
         modelIndex = (pt1 instanceof Atom ? ((Atom) pt1).mi
@@ -172,9 +169,10 @@ public class SymmetryDesc {
       SymmetryOperation[] ops = (SymmetryOperation[]) cellInfo
           .getSymmetryOperations();
       SpaceGroup sg = (isBio ? ((Symmetry) cellInfo).spaceGroup : null);
-      String slist = (haveRawName ? "" : null);
+      String slist = (sgName.indexOf("[--]") >= 0 ? "" : null);
       int opCount = 0;
       if (ops != null) {
+        Object[][] infolist = null;
         if (isBio)
           sym.spaceGroup = SpaceGroup.getNull(false, false, false);
         else
@@ -182,20 +180,16 @@ public class SymmetryDesc {
         // check to make sure that new group has been created magnetic or not
         if (ops[0].timeReversal != 0)
           ((SymmetryOperation) sym.getSpaceGroupOperation(0)).timeReversal = 1;
-        Object[][] infolist = new Object[ops.length][];
+        infolist = new Object[ops.length][];
         String sops = "";
         for (int i = 0, nop = 0; i < ops.length && nop != nth; i++) {
-          
           SymmetryOperation op = ops[i];
-          boolean isNewIncomm = (i == 0 && op.xyz.indexOf("x4") >= 0);
-          int iop = (!isNewIncomm && sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
+          int iop = (sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
               .addBioMoleculeOperation(sg.finalOperations[i], false) : sym
               .addSpaceGroupOperation("=" + op.xyz, i + 1));
           if (iop < 0)
             continue;
           op = (SymmetryOperation) sym.getSpaceGroupOperation(i);
-          if (op == null)
-            continue;
           if (op.timeReversal != 0 || op.modDim > 0)
             isStandard = false;
           if (slist != null)
@@ -225,13 +219,11 @@ public class SymmetryDesc {
     }
     info.put("spaceGroupName", sgName);
     info.put("spaceGroupNote", sgNote == null ? "" : sgNote);
-    Object data;
+    String data;
     if (isBio) {
       data = sgName;
     } else {
-      if (haveName && !haveRawName)
-        sym.setSpaceGroupName(sgName);
-      data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull);
+      data = sym.getSpaceGroupInfoStr(sgName, cellInfo);
       if (data == null || data.equals("?"))
         data = "could not identify space group from name: " + sgName
             + "\nformat: show spacegroup \"2\" or \"P 2c\" "
@@ -267,34 +259,12 @@ public class SymmetryDesc {
     return T.full;
   }
 
-  /**
-   * Return information about a symmetry operator by type:
-   * 
-   * array, angle, axis, center, draw, full, info, label, matrix4f, point, time,
-   * plane, translation, unitcell, xyz, all,
-   * 
-   * or a number between 1 and the length of the keys array:
-   * 
-   * { "xyz", "xyzOriginal", "label", null, "fractionalTranslation",
-   * "cartesianTranslation", "inversionCenter", null, "axisVector",
-   * "rotationAngle", "matrix", "unitTranslation", "centeringVector",
-   * "timeReversal", "plane", "_type", "id" }
-   * 
-   * where "all" is the info array itself,
-   * 
-   * @param info
-   * @param type
-   * @return object specified
-   * 
-   */
   private static Object getInfo(Object[] info, int type) {
     if (info == null)
       return "";
     if (type < 0 && type >= -keys.length)
       return info[-1 - type];
     switch (type) {
-    case T.all:
-      return info;
     case T.array:
       Map<String, Object> lst = new Hashtable<String, Object>();
       for (int j = 0, n = info.length; j < n; j++)
@@ -333,8 +303,6 @@ public class SymmetryDesc {
       return info[11];
     case T.xyz:
       return info[0];
-    case T.id:
-      return info[16];
     }
   }
 
@@ -382,8 +350,6 @@ public class SymmetryDesc {
    *         [14] plane
    * 
    *         [15] _type
-   * 
-   *         [16] index
    */
 
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
@@ -723,39 +689,19 @@ public class SymmetryDesc {
         type = info1 = "translation";
         info1 += ":" + s;
       } else if (isMirrorPlane) {
-        float fx = Math.abs(SymmetryOperation.approxF(ftrans.x));
-        float fy = Math.abs(SymmetryOperation.approxF(ftrans.y));
-        float fz = Math.abs(SymmetryOperation.approxF(ftrans.z));
+        float fx = SymmetryOperation.approxF(ftrans.x);
+        float fy = SymmetryOperation.approxF(ftrans.y);
+        float fz = SymmetryOperation.approxF(ftrans.z);
         s = " " + strCoord(ftrans, op.isBio);
-        // set ITA Table 2.1.2.1
         if (fx != 0 && fy != 0 && fz != 0) {
-          if (fx == 1 / 4f && fy == 1 / 4f && fz == 1 / 4f) {
-            // diamond
+          if (Math.abs(fx) == Math.abs(fy) && Math.abs(fy) == Math.abs(fz))
             info1 = "d-";
-          } else if (fx == 1 / 2f && fy == 1 / 2f && fz == 1 / 2f) {
-            info1 = "n-";
-          } else {
-            info1 = "g-";
-          }
+          else
+            info1 = "g-"; // see group 167
         } else if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0
-            && fx != 0) {
-          // any two
-          if (fx == 1 / 4f && fy == 1 / 4f || fx == 1 / 4f && fz == 1 / 4f
-              || fy == 1 / 4f && fz == 1 / 4f) {
-            info1 = "d-";
-          } else if (fx == 1 / 2f && fy == 1 / 2f || fx == 1 / 2f
-              && fz == 1 / 2f || fy == 1 / 2f && fz == 1 / 2f) {
-            // making sure here that this is truly a diagonal in the plane, not just
-            // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
-            if (fx == 0 && ax1.x == 0|| fy == 0 && ax1.y == 0|| fz == 0 && ax1.z == 0 ) {
-              info1 = "g-";
-            } else {
-              info1 = "n-";
-            }
-          } else {
-            info1 = "g-";
-          }
-        } else if (fx != 0)
+            && fx != 0)
+          info1 = "n-";
+        else if (fx != 0)
           info1 = "a-";
         else if (fy != 0)
           info1 = "b-";
@@ -1067,8 +1013,7 @@ public class SymmetryDesc {
         plane == null ? approx0(ax1) : null,
         ang1 != 0 ? Integer.valueOf(ang1) : null, m2,
         vtrans.lengthSquared() > 0 ? vtrans : null, op.getCentering(),
-        Integer.valueOf(op.timeReversal), plane, type,
-        Integer.valueOf(op.index) };
+        Integer.valueOf(op.timeReversal), plane, type };
   }
 
   private static void drawLine(SB s, String id, float diameter, P3 pt0, P3 pt1,
@@ -1248,8 +1193,6 @@ public class SymmetryDesc {
           scaleFactor, nth, asString);
       if (asString)
         return ret;
-      if (ret instanceof String)
-        return null; // two atoms are not connected, no such oper
       info = (Object[]) ret;
       if (type == T.atoms) {
         if (!(pt instanceof Atom) && !(pt2 instanceof Atom))
@@ -1305,7 +1248,7 @@ public class SymmetryDesc {
     Object[][] infolist;
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true);
+        symOp, pt1, pt2, drawID, scaleFactor, nth);
     if (sginfo == null)
       return ret;
     strOperations = (String) sginfo.get("symmetryInfo");

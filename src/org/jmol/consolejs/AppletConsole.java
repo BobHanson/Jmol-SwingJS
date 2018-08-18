@@ -25,7 +25,6 @@ package org.jmol.consolejs;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolScriptEditorInterface;
-import org.jmol.api.js.JSConsole;
 import org.jmol.console.GenericConsole;
 import org.jmol.viewer.Viewer;
 

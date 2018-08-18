@@ -34,7 +34,7 @@ import javajs.util.V3;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -79,20 +79,11 @@ public class GaussianReader extends MOReader {
   private boolean isHighPrecision;
   private boolean haveHighPrecision;
   private boolean allowHighPrecision;
-  private boolean orientationInput;
 
-  private String orientation;
 
   @Override 
   protected void initializeReader() throws Exception {
     allowHighPrecision = !checkAndRemoveFilterKey("NOHP");
-    orientation = (checkFilterKey("ORIENTATION:INPUT") ? "Input" 
-        : checkFilterKey("ORIENTATION:STANDARD") ? "Standard"
-        : null);
-    orientationInput = (orientation == "Input");
-    appendLoadNote("Orientation:" + (orientation == null ? "ALL" : orientation));
-    if (orientation != null)
-      orientation += " orientation:";
     super.initializeReader();
   }
 
@@ -120,7 +111,7 @@ public class GaussianReader extends MOReader {
    * 
    * @return TRUE to read a new line
    * 
-   * @throws Exception
+   * @throws Exception 
    * 
    **/
 
@@ -146,11 +137,11 @@ public class GaussianReader extends MOReader {
         scanPoint++;
       return true;
     }
-    if (orientation == null ? line.indexOf("Input orientation:") >= 0
-        ||  line.indexOf("Z-Matrix orientation:") >= 0 || line.indexOf("Standard orientation:") >= 0
-        : line.indexOf(orientation) >= 0
-        || orientationInput && line.indexOf("Z-Matrix orientation:") >= 0) {
+    if (line.indexOf("Input orientation:") >= 0
+        || line.indexOf("Z-Matrix orientation:") >= 0
+        || line.indexOf("Standard orientation:") >= 0) {
       if (!doGetModel(++modelNumber, null)) {
+
         return checkLastModel();
       }
       equivalentAtomSets++;
@@ -171,7 +162,7 @@ public class GaussianReader extends MOReader {
       readSCFDone();
       return true;
     }
-    if (!orientationInput && line.startsWith(" Harmonic frequencies")) {
+    if (line.startsWith(" Harmonic frequencies")) {
       readFrequencies(":", true);
       return true;
     }
@@ -223,15 +214,6 @@ public class GaussianReader extends MOReader {
     return checkNboLine();
   }
   
-  
-  @Override
-  public void finalizeSubclassReader() throws Exception {
-    if (orientation == null) {
-      appendLoadNote("\nUse filter 'orientation:xxx' where 'xxx' is one of: input (includes z-matrix), standard, or ALL");
-    } else {      
-      appendLoadNote("\nfilter: " + filter);
-    }    
-}
 //   Mulliken atomic spin densities:
 //     1
 // 1  O    1.086438
@@ -436,14 +418,6 @@ public class GaussianReader extends MOReader {
         .indexOf("5D") > 0));
     boolean doSphericalF = (calculationType != null && (calculationType
         .indexOf("7F") > 0));
-    boolean doSphericalG = (calculationType != null && (calculationType
-        .indexOf("9G") > 0));
-    boolean doSphericalH = (calculationType != null && (calculationType
-        .indexOf("11H") > 0));
-    boolean doSphericalI = (calculationType != null && (calculationType
-        .indexOf("13I") > 0));
-    boolean doSphericalHighL = (doSphericalG ||doSphericalH ||doSphericalI);
-    boolean doSpherical = (doSphericalD ||doSphericalF || doSphericalHighL);
     boolean isGeneral = (line.indexOf("general basis input") >= 0);
     if (isGeneral) {
       while (rd() != null && line.length() > 0) {
@@ -488,19 +462,12 @@ public class GaussianReader extends MOReader {
         lastAtom = tokens[1];
         slater[0] = ac;
         String oType = tokens[4];
-        if (doSpherical && (
-            doSphericalF && oType.indexOf("F") >= 0
-             || doSphericalD && oType.indexOf("D") >= 0
-             || doSphericalHighL && (
-                doSphericalG && oType.indexOf("G") >= 0
-                || doSphericalH && oType.indexOf("H") >= 0
-                || doSphericalI && oType.indexOf("I") >= 0
-                )
-            ))
+        if (doSphericalF && oType.indexOf("F") >= 0 || doSphericalD
+            && oType.indexOf("D") >= 0)
           slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType);
         else
           slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);
-        enableShell(slater[1]); // Gaussian is the reference
+
         int nGaussians = parseIntStr(tokens[5]);
         slater[2] = gaussianCount + 1; // or parseInt(tokens[7])
         slater[3] = nGaussians;
@@ -601,7 +568,7 @@ public class GaussianReader extends MOReader {
         if (tokens.length != nThisLine)
           tokens = getStrings(line, nThisLine, 10);
         for (int i = 0; i < nThisLine; i++) {
-          mos[i].put("energy", Float.valueOf(tokens[i]));
+          mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
           //System.out.println(i + " gaussian energy " + mos[i].get("energy"));
         }
         continue;
@@ -675,7 +642,6 @@ public class GaussianReader extends MOReader {
    -------------------
    */
   
-  
   /**
    * Interprets the Harmonic frequencies section.
    *
@@ -691,11 +657,7 @@ public class GaussianReader extends MOReader {
     discardLinesUntilContains2(key, ":");
     if (line == null && mustHave)
       throw (new Exception("No frequencies encountered"));
-    line = rd();
-    int ac = asc.getLastAtomSetAtomCount();
-    String[][] data = new String[ac][], temp = null;
-    int[] atomIndices = new int[ac];
-    while (line != null && line.length() > 20) {
+    while ((line= rd()) != null && line.length() > 15) {
       // we now have the line with the vibration numbers in them, but don't need it
       String[] symmetries = PT.getTokens(rd());
       discardLinesUntilContains(" Frequencies");
@@ -706,8 +668,6 @@ public class GaussianReader extends MOReader {
         appendLoadNote("high precision vibrational modes enabled. Use filter 'NOHP' to disable.");
         haveHighPrecision = true;
       }
-      if (temp == null)
-        temp = new String[isHighPrecision ? 3 : 1][0];
       int width = (isHighPrecision ? 22 : 15);
       String[] frequencies = PT.getTokensAt(
           line, width);
@@ -718,6 +678,7 @@ public class GaussianReader extends MOReader {
       String[] intensities = PT.getTokensAt(
           discardLinesUntilContains(isHighPrecision ? "IR Intensities" : "IR Inten"), width);
       int iAtom0 = asc.ac;
+      int ac = asc.getLastAtomSetAtomCount();
       int frequencyCount = frequencies.length;
       boolean[] ignore = new boolean[frequencyCount];
       for (int i = 0; i < frequencyCount; ++i) {
@@ -726,7 +687,7 @@ public class GaussianReader extends MOReader {
           continue;  
         asc.cloneAtomSetWithBonds(true);
         // set the properties
-        String name = asc.setAtomSetFrequency(vibrationNumber, "Calculation " + calculationNumber, symmetries[i], frequencies[i], null);
+        String name = asc.setAtomSetFrequency("Calculation " + calculationNumber, symmetries[i], frequencies[i], null);
         appendLoadNote("model " + asc.atomSetCount + ": " + name);
         namedSets.set(asc.iSet);
         asc.setAtomSetModelProperty("ReducedMass",
@@ -737,26 +698,10 @@ public class GaussianReader extends MOReader {
             intensities[i]+" KM/Mole");
       }
       discardLinesUntilContains(" Atom ");
-      if (isHighPrecision) {
-        while (true) {
-          // one atom at a time.
-          fillFrequencyData(iAtom0, 1, ac, ignore, false, 23, 10, null, 9, temp);
-          // return of null data[0] indicates we have overrun the data.
-          if (temp[0] == null)
-            break;
-        }
-      } else {
-        int nLines = 0;
-        while (true) {
-          // wide format
-          fillDataBlockFixed(temp, 0, 0, 0);
-          if (temp[0].length < 10)
-            break;
-          atomIndices[nLines] = Integer.valueOf(temp[0][0]).intValue() - 1; 
-          data[nLines++] = temp[0];
-        }
-        fillFrequencyData(iAtom0, nLines, ac, ignore, true, 0, 0, atomIndices, 0, data);
-      }
+      if (isHighPrecision)
+        fillFrequencyData(iAtom0, ac, ac, ignore, false, 23, 10, null, 0);
+      else
+        fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
     }
   }
   

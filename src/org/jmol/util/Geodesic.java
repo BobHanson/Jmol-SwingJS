@@ -27,6 +27,7 @@ package org.jmol.util;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.J2SRequireImport;
 import javajs.util.AU;
 import javajs.util.V3;
 
@@ -116,6 +117,13 @@ import javajs.util.V3;
    * converting from normal to normix.
    */
  
+/**
+ * 
+ * J2SRequireImport is needed because we use ArrayUtil in a static method
+ * 
+ */
+
+@J2SRequireImport({javajs.util.AU.class})
 public class Geodesic {
   
   private final static float halfRoot5 = (float)(0.5 * Math.sqrt(5));

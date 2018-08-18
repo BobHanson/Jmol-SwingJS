@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 
 import javajs.util.AU;

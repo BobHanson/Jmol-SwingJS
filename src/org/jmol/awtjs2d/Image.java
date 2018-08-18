@@ -27,9 +27,9 @@ package org.jmol.awtjs2d;
 
 import java.util.Map;
 
-import org.jmol.api.GenericImageDialog;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.GenericImageDialog;
 import javajs.awt.Font;
 
 /**
@@ -111,7 +111,6 @@ class Image {
    * @param ascent 
    * @return array
    */
-  @SuppressWarnings("unused")
   public static int[] getTextPixels(String text, Font font3d, Object context, 
                                     int width, int height, int ascent) {
     /**
@@ -122,12 +121,11 @@ class Image {
      * context.fillStyle = "#FFFFFF";
      * context.font = font3d.font;
      * context.fillText(text, 0, ascent);
+     * return this.grabPixels(context, width, height);
      */
     {
-      if (true)
-        return null;
+      return null;
     }
-    return grabPixels(context, width, height);
   }
 
   /**
@@ -151,11 +149,12 @@ class Image {
      * if (canvas == null) 
      *   canvas = {width:windowWidth,height:windowHeight};
      * canvas.buf32 = pBuffer; 
+     * return canvas;
      * 
      */
     {
+      return null;
     }
-    return canvas;
   }
 
   /**

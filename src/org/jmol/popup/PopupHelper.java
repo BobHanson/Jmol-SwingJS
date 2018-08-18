@@ -1,6 +1,6 @@
 package org.jmol.popup;
 
-import javajs.awt.SC;
+import javajs.api.SC;
 
 public interface PopupHelper {
 

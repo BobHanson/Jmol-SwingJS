@@ -2,7 +2,7 @@ package org.jmol.smiles;
 
 import javajs.util.V3;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 class VTemp {
   final V3 vTemp = new V3();

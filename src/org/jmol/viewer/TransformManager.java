@@ -27,7 +27,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolNavigatorInterface;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.c.STER;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.Escape;
@@ -2120,7 +2120,6 @@ public class TransformManager {
   private void setSpin(JmolScriptEvaluator eval, boolean spinOn,
                        float endDegrees, Lst<P3> endPositions,
                        float[] dihedralList, BS bsAtoms, boolean isGesture) {
-    
     if (navOn && spinOn)
       setNavOn(false);
     if (this.spinOn == spinOn)

@@ -46,7 +46,7 @@ import javajs.util.V3;
 import org.jmol.api.AtomIndexIterator;
 //import org.jmol.bspt.Bspf;
 //import org.jmol.bspt.CubeIterator;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.jvxl.data.MeshData;
 
 class IsoSolventReader extends AtomDataReader {
@@ -715,6 +715,8 @@ class IsoSolventReader extends AtomDataReader {
      * @param ia 
      * @param ib 
      * @param d 
+     * @j2sIgnoreSuperConstructor
+     *   @j2sOverride
      */
     
     Edge(IsoSolventReader r, int ia, int ib, float d) {

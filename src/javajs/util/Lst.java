@@ -3,9 +3,6 @@
  * $Date: 2007-04-26 16:57:51 -0500 (Thu, 26 Apr 2007) $
  * $Revision: 7502 $
  *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright (C) 2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -34,23 +31,72 @@ import java.util.ArrayList;
  * 
  * @param <V>
  */
-@SuppressWarnings("serial")
 public class Lst<V> extends ArrayList<V> {
 
   public Lst() {
     super();  
   }
   
+  /**
+   * @j2sIgnore
+   * 
+   */
+  @Override
+  @Deprecated
+  public boolean add(V v) {
+    throw new NullPointerException("use addLast(value), not add(value) in List for JavaScript compatibility");
+  }
+  
   public boolean addLast(V v) {
       return super.add(v);
   }
   
+  /**
+   * @j2sIgnore
+   * 
+   */
+//  @Override
+//  @Deprecated
+  public V remove(int location) {
+    throw new NullPointerException("use Lst.removeItemAt(location), not Lst.remove(location)");
+  }
+  
   public V removeItemAt(int location) {
+    /**
+     * no overloading of remove(location) in JavaScript
+     * 
+     * @j2sNative
+     * 
+     * return this._removeItemAt(location);
+     *  
+     */
+    {
       return super.remove(location);
+    }
   }
 
+  /**
+   * @j2sIgnore
+   * 
+   */
+  @Override
+  @Deprecated
+  public boolean remove(Object v) {
+    throw new NullPointerException("use Lst.removeObj(obj), not Lst.remove(obj)");
+  }
+  
   public boolean removeObj(Object v) {
+    /**
+     * no overloading of remove(Object) in JavaScript
+     * 
+     * @j2sNative
+     * 
+     * return this._removeObject(v);
+     *  
+     */
+    {
       return super.remove(v);
+    }
   }
   
 }

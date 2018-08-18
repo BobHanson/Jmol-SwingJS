@@ -40,7 +40,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.T;
 import org.jmol.util.C;
@@ -84,7 +84,7 @@ public class Atom extends Point3fi implements Node {
   private short atomicAndIsotopeNumber;
   public BS atomSymmetry;
 
-  private int formalChargeAndFlags; //  cccc CIP_ _CIP --hv
+  private int formalChargeAndFlags; //  cccc ---- -*RS --hv
   
   private final static int CHARGE_OFFSET = 24;
 
@@ -117,6 +117,8 @@ public class Atom extends Point3fi implements Node {
   public int shapeVisibilityFlags;
 
   /**
+   * @j2sIgnoreSuperConstructor
+   * @j2sOverride
    * 
    * @param modelIndex
    * @param atomIndex
@@ -1420,7 +1422,7 @@ public class Atom extends Point3fi implements Node {
   public String getCIPChiralityRule() {
     String rs = getCIPChirality(true);
     int flags = (rs.length() == 0 ? -1 : (formalChargeAndFlags & CIP_CHIRALITY_RULE_MASK) >> CIP_CHIRALITY_RULE_OFFSET);
-    return JC.getCIPRuleName(flags + 1);
+    return (JC.getCIPRuleName(flags + 1));
   }
 
   /**

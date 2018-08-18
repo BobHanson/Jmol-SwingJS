@@ -23,8 +23,6 @@
  */
 package org.jmol.rendersurface;
 
-import org.jmol.script.T;
-
 //import java.text.NumberFormat;
 
 
@@ -44,9 +42,8 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
         || !g3d.setC(vwr.cm.colixBackgroundContrast)
         || vwr.gdata.getTextPosition() != 0)
       return;
-    float ht = vwr.getInt(T.infofontsize);
-    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", ht * imageFontScaling));
-    int lineheight = Math.round((ht + 1) * imageFontScaling);
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", 14 * imageFontScaling));
+    int lineheight = Math.round(15 * imageFontScaling);
     int x = Math.round(5 * imageFontScaling);
     int y = lineheight;    
     for (int i = 0; i < mesh.title.length; i++)

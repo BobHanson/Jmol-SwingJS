@@ -33,7 +33,7 @@ import javajs.util.SB;
 
 import org.jmol.c.STR;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;
@@ -276,13 +276,13 @@ public class DSSP {
         if (dsspIgnoreHydrogens)
           sb
               .append(GT.o(GT
-                  .$(
+                  ._(
                       "NOTE: Backbone amide hydrogen positions are present and will be ignored. Their positions will be approximated, as in standard DSSP analysis.\nUse {0} to not use this approximation.\n\n"),
                       "SET dsspCalculateHydrogenAlways FALSE"));
         else
           sb
               .append(GT.o(GT
-                  .$(
+                  ._(
                       "NOTE: Backbone amide hydrogen positions are present and will be used. Results may differ significantly from standard DSSP analysis.\nUse {0} to ignore these hydrogen positions.\n\n"),
                       "SET dsspCalculateHydrogenAlways TRUE"));
         haveWarned = true;

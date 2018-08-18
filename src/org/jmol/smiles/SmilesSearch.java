@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-02-22 12:04:47 -0600 (Thu, 22 Feb 2018) $
- * $Revision: 21841 $
+ * $Date: 2017-06-04 22:25:50 -0500 (Sun, 04 Jun 2017) $
+ * $Revision: 21629 $
  *
  * Copyright (C) 2005  The Jmol Development Team
  *
@@ -34,7 +34,7 @@ import javajs.util.P3;
 import javajs.util.SB;
 import javajs.util.T3;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
@@ -978,7 +978,7 @@ public class SmilesSearch extends JmolMolecule {
     // The atom has passed both the atom and the bond test.
     // Add this atom to the growing list.
 
-    if (Logger.debuggingHigh && !isRingCheck) {//&& !isSilent) {
+    if (Logger.debugging && !isRingCheck) {//&& !isSilent) {
       for (int i = 0; i <= atomNum; i++)
         Logger.debug("pattern atoms " + patternAtoms[i] + " "
             + patternAtoms[i].matchingComponent);
@@ -1717,7 +1717,7 @@ public class SmilesSearch extends JmolMolecule {
       // we co-opt atom.matchingAtom here
       // because this search will never actually be run
       SmilesAtom atom = atoms[ptAtom] = new SmilesAtom().setTopoAtom(sAtom.component, ptAtom,
-          sAtom.symbol, sAtom.getCharge(), i);
+          sAtom.symbol, sAtom.getCharge());
       atom.implicitHydrogenCount = n;
       if (isForMF)
         continue;
@@ -1754,7 +1754,7 @@ public class SmilesSearch extends JmolMolecule {
       atom.setBonds(bonds);
       while (--n >= 0) {
         SmilesAtom atomH = atoms[++ptAtom] = new SmilesAtom().setTopoAtom(atom.component,
-            ptAtom, "H", 0, -1);
+            ptAtom, "H", 0);
         atomH.mapIndex = -i - 1;
         atomH.setBonds(new SmilesBond[1]);
         SmilesBond b = new SmilesBond(atom, atomH, Edge.BOND_COVALENT_SINGLE,

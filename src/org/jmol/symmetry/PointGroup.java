@@ -37,7 +37,7 @@ import javajs.util.V3;
 
 import org.jmol.bspt.Bspt;
 import org.jmol.bspt.CubeIterator;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
@@ -555,7 +555,7 @@ class PointGroup {
   }
 
   private int getPointIndex(int j) {
-    return j < atomMap.length && atomMap[j] > 0 ? atomMap[j] - 1 : j;
+    return atomMap[j] > 0 ? atomMap[j] - 1 : j;
   }
 
   private boolean isLinear(T3[] atoms) {

@@ -49,6 +49,7 @@ import java.awt.image.BufferedImage;
 import javajs.api.GenericColor;
 import javajs.awt.Font;
 
+
 import org.jmol.api.GenericGraphics;
 
 /**

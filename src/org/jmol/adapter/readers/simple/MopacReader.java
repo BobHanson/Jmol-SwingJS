@@ -28,7 +28,7 @@ import javajs.util.PT;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.util.Logger;
 
 /**
@@ -254,7 +254,7 @@ void processAtomicCharges() throws Exception {
           bsOK.set(vibrationNumber - 1);
           asc.cloneLastAtomSet();
         }
-        fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 2, null);
+        fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 2);
       }
     String[][] info = new String[vibrationNumber][];
     if (line.indexOf("DESCRIPTION") < 0)
@@ -278,7 +278,7 @@ void processAtomicCharges() throws Exception {
       if (!bsOK.get(i))
         continue;
       asc.iSet = n++;
-      asc.setAtomSetFrequency(vibrationNumber, null, info[i][2], info[i][0], null);
+      asc.setAtomSetFrequency(null, info[i][2], info[i][0], null);
     }
   }
 }

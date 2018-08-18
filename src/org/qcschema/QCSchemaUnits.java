@@ -266,7 +266,14 @@ public class QCSchemaUnits {
       int count = ((Number) list.get(i)).intValue();
       Object value = list.get(++i);
       for (int j = 0; j < count; j++)
+      /**
+       * j2s avoids overloaded add() for speed
+       * 
+       * @j2sNative list1.addLast(value);
+       */
+      {
         list1.add(value);
+      }
     }
     return list1;
   }

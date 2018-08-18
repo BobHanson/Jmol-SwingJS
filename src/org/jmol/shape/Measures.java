@@ -26,8 +26,7 @@ package org.jmol.shape;
 
 import org.jmol.api.JmolMeasurementClient;
 import org.jmol.atomdata.RadiusData;
-
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.MeasurementData;

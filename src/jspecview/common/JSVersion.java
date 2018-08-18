@@ -22,8 +22,10 @@ import java.io.InputStream;
 import java.util.Properties;
 
 
+import javajs.J2SIgnoreImport;
 import javajs.util.PT;
 
+@J2SIgnoreImport({java.util.Properties.class, java.io.InputStream.class, java.io.BufferedInputStream.class, javajs.util.PT.class})
 public class JSVersion {
 
   public static final String VERSION;

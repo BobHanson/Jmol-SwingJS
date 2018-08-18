@@ -27,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+import javajs.J2SIgnoreImport;
 import javajs.api.GenericBinaryDocument;
 import javajs.util.OC;
 import javajs.util.PT;
@@ -38,6 +39,7 @@ import org.jmol.viewer.Viewer;
 /**
  * PolygonFileReader or VolumeFileReader
  */
+@J2SIgnoreImport({Rdr.StreamReader.class})
 abstract class SurfaceFileReader extends SurfaceReader {
 
   protected BufferedReader br;

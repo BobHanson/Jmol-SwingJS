@@ -26,7 +26,7 @@
 package org.jmol.thread;
 
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.script.T;
 import javajs.util.Lst;
 import javajs.util.M4;
@@ -58,6 +58,10 @@ public class SpinThread extends JmolThread {
   private boolean isDone = false;
   private M4 m4;
   
+  /**
+   * @j2sIgnore
+   * 
+   */
   public SpinThread() {}
   
   @SuppressWarnings("unchecked")

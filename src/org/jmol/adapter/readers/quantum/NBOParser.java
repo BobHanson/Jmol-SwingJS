@@ -6,7 +6,7 @@ import java.util.Map;
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
@@ -65,7 +65,7 @@ public class NBOParser {
 //C 3(ry)   H 4(ry)   H 5(ry)   H 6(ry)   H 7(ry)   H 8(ry)  
 
   /**
-   * Use the .46 file NBO alpha/beta labels to identify bonds, lone pairs, and lone valences.
+   * Use the .46 file NBO alpha/beta labels to identify bonds, lone pairs, lone valences and non valence lone pair. 
    * 
    * @param tokens
    * @param type
@@ -85,12 +85,14 @@ public class NBOParser {
     htData.put("index", Integer.valueOf(0));
     for (int n = tokens.length, i = 0; i < n; i++) {
       String org = tokens[i];
+      //commented out by fzy. NBOParser should recognize and read in (ry), then output it as {num} on the atom ball
       if (org.contains("(ry)"))
         break;
       if (org.contains("*") || org.contains("(cr)"))
         continue;
       // lone pair or lone valence
       boolean isLP = org.endsWith("(lp)");
+      boolean isRY=org.endsWith("(ry)");
       if (isLP || org.endsWith("(lv)")) {
         int ia = getAtomIndex(org.substring(0, org.length() - 4));
         matrix[ia][ia]+= (isLP ? 1 : 10);

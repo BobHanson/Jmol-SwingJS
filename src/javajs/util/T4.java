@@ -38,6 +38,7 @@ public abstract class T4 extends T3 {
   /**
    * Constructs and initializes a Tuple4f to (0,0,0,0).
    * 
+   * @j2sIgnore   * 
    */
   public T4() {
   }

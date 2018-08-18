@@ -161,7 +161,7 @@ public class Jmol extends GenericApplet implements WrappedApplet {
   /*
    * see below public String getAppletInfo() { return appletInfo; }
    * 
-   * static String appletInfo = GT.$("Jmol Applet. Part of the OpenScience
+   * static String appletInfo = GT._("Jmol Applet. Part of the OpenScience
    * project. " + "See http://www.jmol.org for more information");
    */
   @Override

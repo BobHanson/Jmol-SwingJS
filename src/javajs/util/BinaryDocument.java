@@ -1,9 +1,7 @@
 /* $RCSfile$
+ * $Author: egonw $
  * $Date: 2006-03-18 15:59:33 -0600 (Sat, 18 Mar 2006) $
  * $Revision: 4652 $
- *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -47,6 +45,9 @@ import javajs.api.GenericOutputChannel;
 
 public class BinaryDocument extends BC implements GenericBinaryDocument {
 
+  /**
+   * @j2sIgnore
+   */
   public BinaryDocument() {  
   }
 
@@ -262,7 +263,6 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
     return intToFloat(readInt());
   }
 
-  @SuppressWarnings("unused")
   @Override
   public double readDouble() throws IOException {
     /**
@@ -271,17 +271,14 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
      * 
      * @j2sNative
      * 
-     * 
+     * this.readByteArray(this.t8, 0, 8);
+     * return this.bytesToDoubleToFloat(this.t8, 0, this.isBigEndian);
+     *  
      */
     {
       nBytes += 8;
-      if (true)
-        return (isBigEndian ? ioReadDouble()
-            : Double.longBitsToDouble(readLELong()));
+      return (isBigEndian ? ioReadDouble() : Double.longBitsToDouble(readLELong()));  
     }
-    // this is the JavaScript-only part
-    this.readByteArray(this.t8, 0, 8);
-    return bytesToDoubleToFloat(this.t8, 0, this.isBigEndian);
   }
   
   private double ioReadDouble() throws IOException {

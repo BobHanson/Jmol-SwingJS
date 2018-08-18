@@ -9,26 +9,27 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Properties;
 
-import org.jmol.api.GenericFileInterface;
+import java.util.Map;
+
+import javajs.util.CU;
+import javajs.util.OC;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.SB;
+import javajs.api.BytePoster;
+import javajs.api.GenericFileInterface;
+import javajs.api.GenericPlatform;
+import javajs.api.PlatformViewer;
+import javajs.awt.Dimension;
+
 import org.jmol.api.GenericGraphics;
-import org.jmol.api.GenericPlatform;
-import org.jmol.api.PlatformViewer;
-import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.util.Logger;
 
-import javajs.api.BytePoster;
-import javajs.awt.Component;
-import javajs.awt.Dimension;
-import javajs.awt.SC;
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.OC;
-import javajs.util.P3;
 import javajs.util.PT;
-import javajs.util.SB;
+
+
 import jspecview.api.ExportInterface;
 import jspecview.api.JSVFileHelper;
 import jspecview.api.JSVMainPanel;
@@ -39,12 +40,11 @@ import jspecview.api.JSVTree;
 import jspecview.api.JSVTreeNode;
 import jspecview.api.ScriptInterface;
 import jspecview.api.VisibleInterface;
-import jspecview.api.js.JSVAppletObject;
 import jspecview.common.Annotation.AType;
-import jspecview.common.PanelData.LinkMode;
 import jspecview.common.Spectrum.IRMode;
-import jspecview.dialog.DialogManager;
+import jspecview.common.PanelData.LinkMode;
 import jspecview.dialog.JSVDialog;
+import jspecview.dialog.DialogManager;
 import jspecview.exception.JSVException;
 import jspecview.source.JDXReader;
 import jspecview.source.JDXSource;
@@ -116,7 +116,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	public String appletName;
 	public String fullName;
 	public String syncID;
-	public JSVAppletObject html5Applet; // will be an JavaScript object if this is JavaScript
+	public Object html5Applet; // will be an JavaScript object if this is JavaScript
 
 	public Object display;
 	
@@ -1380,22 +1380,18 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	}
 
 	public void execLoad(String value, String script) {
-		JSVAppletObject applet = html5Applet;
-		boolean isID = false;
+		@SuppressWarnings("unused")
+		Object applet = html5Applet;
 		/**
 		 * When part of a view set, route all internal 
 		 * database requests through this.html5Applet._search.  
 		 * 
 		 * @j2sNative
 		 * 
-		 * isID = (applet._viewSet != null && !value.startsWith("ID"));
+		 * if (applet._viewSet != null && !value.startsWith("ID"))
+		 *    return applet._search(value);
 		 *    
 		 */
-		if (isID) {
-		  // note that this was not functional, as it was missing {}
-	     applet._search(value);
-	     return;
-		}
 		// load   (alone) just runs defaultLoadScript
 		// load ID "xx"...
 		Lst<String> tokens = ScriptToken.getTokens(value);
@@ -1746,14 +1742,10 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 			selectedPanel.processTwoPointGesture(touches);
 	}
 
-	public JSVAppletObject getApplet() {
+	public Object getApplet() {
 		return html5Applet;
 	}
 
-	/**
-   * @param fileName 
-	 * @param flags  
-   */
 	public void openFileAsyncSpecial(String fileName, int flags) {
 		String ans = (currentSource == null ? "NO" : getDialogManager()
 				.getDialogInput(this,
@@ -2056,17 +2048,18 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 				case APPLETID:
 					fullName = appletName + "__" 
 				      + (appletName = value) + "__";
-					JSVAppletObject applet = null;
+					Object applet = null;
 					/**
 					 * @j2sNative
 					 * 
-					 *            self.Jmol && (applet = Jmol._applets[value]);
+					 *            if(typeof Jmol != "undefined") applet =
+					 *            Jmol._applets[value];
 					 * 
 					 * 
 					 */
 					{
 					}
-					html5Applet = applet;
+					this.html5Applet = applet;
 					break;
 				case AUTOINTEGRATE:
 					autoIntegrate = Parameters.isTrue(value);
@@ -2198,14 +2191,6 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 		}
 		System.out.println(s);		
 	}
-
-  public void menuShowPopup(SC popup, boolean isTainted, int x, int y) {
-    try {
-      ((JPopupMenu) popup).show(isTainted ? (Component) getApplet() : null, x, y);
-    } catch (Exception e) {
-      // ignore
-    }
-  }
 
 
 }

@@ -129,6 +129,11 @@ public class NucleicMonomer extends PhosphorusMonomer {
     
   };
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * @j2sOverride
+   * 
+   */
   private NucleicMonomer() {}
   
   private boolean isPurine;

@@ -573,7 +573,7 @@ class NBOConfig  {
     JFileChooser myChooser = new JFileChooser();
     myChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     myChooser.setSelectedFile(new File(fname + "/ "));
-    int button = myChooser.showDialog(dialog, GT.$("Select"));
+    int button = myChooser.showDialog(dialog, GT._("Select"));
     if (button == JFileChooser.APPROVE_OPTION) {
       File newFile = myChooser.getSelectedFile();
       tf.setText(PT.rep(newFile.toString(), "\\", "/"));

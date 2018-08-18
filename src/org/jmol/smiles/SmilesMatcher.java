@@ -30,7 +30,7 @@ import javajs.util.P3;
 import javajs.util.PT;
 
 import org.jmol.api.SmilesMatcherInterface;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -205,17 +205,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     }
     return array;
   }
-
-  @Override
-  public Node[] getAtoms(String target)
-      throws Exception {
-    InvalidSmilesException.clear();
-    target = SmilesParser.cleanPattern(target);
-    SmilesSearch search = SmilesParser.newSearch(target, false, true);
-    search.createTopoMap(new BS());
-    return search.targetAtoms;
-  }
-
 
   @Override
   public String getRelationship(String smiles1, String smiles2)

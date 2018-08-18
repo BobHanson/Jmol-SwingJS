@@ -27,7 +27,7 @@
  */
 package org.jmol.api;
 
-import javajs.util.BS;
+import org.jmol.java.BS;
 
 /**
  * listen to atom selections in a Jmol Viewer

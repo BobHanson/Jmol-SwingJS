@@ -44,14 +44,14 @@ import java.awt.image.SinglePixelPackedSampleModel;
 import java.net.URL;
 import java.util.Map;
 
+import javajs.api.GenericImageDialog;
+import javajs.api.PlatformViewer;
 import javajs.img.BMPDecoder;
 import javajs.util.AU;
 
 import javax.swing.JPanel;
 
-import org.jmol.api.GenericImageDialog;
 import org.jmol.api.Interface;
-import org.jmol.api.PlatformViewer;
 import org.jmol.console.ImageDialog;
 import org.jmol.viewer.Viewer;
 

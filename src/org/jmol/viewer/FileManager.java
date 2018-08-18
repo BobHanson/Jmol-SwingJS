@@ -34,7 +34,9 @@ import java.net.URLEncoder;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.J2SIgnoreImport;
 import javajs.api.BytePoster;
+import javajs.api.GenericFileInterface;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
@@ -48,7 +50,6 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 
 import org.jmol.adapter.readers.spartan.SpartanUtil;
-import org.jmol.api.GenericFileInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDomReaderInterface;
 import org.jmol.api.JmolFilesReaderInterface;
@@ -60,6 +61,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
 
+@J2SIgnoreImport({Rdr.StreamReader.class})
 public class FileManager implements BytePoster {
 
   public static String SIMULATION_PROTOCOL = "http://SIMULATION/";
@@ -1451,7 +1453,6 @@ public class FileManager implements BytePoster {
     getCachedPngjBytes(key);
   }
   
-  @SuppressWarnings("null")
   public Object cacheGet(String key, boolean bytesOnly) {
     key = fixDOSName(key);
     // in the case of JavaScript local file reader, 
@@ -1464,15 +1465,16 @@ public class FileManager implements BytePoster {
     /**
      * @j2sNative
      * 
-     * data = Jmol.Cache.get(key);
+     * (data = Jmol.Cache.get(key)) || (data = this.cache.get(key));
      * 
      */
     {
+    //if (Logger.debugging)
+      //Logger.debug
+       data = cache.get(key);
+       if (data != null)
+         Logger.info("cacheGet " + key);
     }    
-    if (data == null)
-      data = cache.get(key);
-     if (data != null)
-       Logger.info("cacheGet " + key);
     return (bytesOnly && (data instanceof String) ? null : data);
   }
 

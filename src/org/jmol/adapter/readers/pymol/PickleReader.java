@@ -123,7 +123,6 @@ class PickleReader {
     while (going) {
       b = binaryDoc.readByte();
       ipt++;
-      //log(b + " "+ binaryDoc.getPosition());
       //if (logging)
       //log(" " + b);
       switch (b) {

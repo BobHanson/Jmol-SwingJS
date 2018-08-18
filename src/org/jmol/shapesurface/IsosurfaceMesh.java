@@ -40,7 +40,6 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
-import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.CU;
 import javajs.util.M4;
@@ -50,7 +49,7 @@ import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.MeshData;
@@ -916,7 +915,7 @@ public class IsosurfaceMesh extends Mesh {
     P3i maxXYZ = P3i.new3((int) lattice.x, (int) lattice.y, (int) lattice.z);
     jvxlData.fixedLattice = lattice;
     lattice = null;
-    SimpleUnitCell.setMinMaxLatticeParameters((int) unitCell.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS), minXYZ, maxXYZ, 0);
+    unitCell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
     int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
         * (maxXYZ.z - minXYZ.z);
     P3 latticeOffset = new P3();

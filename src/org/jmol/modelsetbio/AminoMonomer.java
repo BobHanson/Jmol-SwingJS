@@ -25,7 +25,7 @@ package org.jmol.modelsetbio;
 
 
 import org.jmol.c.STR;
-import javajs.util.BS;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
@@ -62,6 +62,11 @@ public class AminoMonomer extends AlphaMonomer {
 //    ~JmolConstants.ATOMID_SG,               // 6 CYS SG
   };
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * @j2sOverride
+   * 
+   */
   protected AminoMonomer() {
   }
 

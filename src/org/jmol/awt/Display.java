@@ -12,10 +12,10 @@ import java.awt.image.MemoryImageSource;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import javajs.api.PlatformViewer;
 import javajs.util.P3;
 import javajs.util.PT;
 
-import org.jmol.api.PlatformViewer;
 import org.jmol.viewer.Viewer;
 
 /**
