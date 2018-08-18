@@ -43,7 +43,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Map;
 
-import javajs.swing.SwingConstants;
+import javax.swing.SwingConstants;
+
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -78,7 +79,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.gennbo.NBODialog.HelpBtn;
 import org.jmol.awt.AwtColor;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.C;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
@@ -398,7 +399,7 @@ class NBOView {
             folder = folder + "*.*";
           if (!folder.equals(""))
             myChooser.setSelectedFile(new File(folder));
-          int button = myChooser.showDialog(this, GT._("Select"));
+          int button = myChooser.showDialog(this, GT.$("Select"));
           if (button == JFileChooser.APPROVE_OPTION) 
           {
             if (PT.isOneOf(videoInputFileType, NBOConfig.SCRIPT_VIDEO_EXTENSIONS)) 
@@ -454,7 +455,7 @@ class NBOView {
             folder = folder + "*.*";
           if (!folder.equals(""))
             myChooser.setSelectedFile(new File(folder));
-          int button = myChooser.showDialog(this, GT._("Select"));
+          int button = myChooser.showDialog(this, GT.$("Select"));
           if (button == JFileChooser.APPROVE_OPTION) 
           {
             if (PT.isOneOf(useExt, NBOConfig.GIF_VIDEO_EXTENSIONS)) 

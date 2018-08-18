@@ -989,10 +989,11 @@ public class PT {
    */
   public static String escF(float f) {
     String sf = "" + f;
+    // NaN, Infinity
     /**
      * @j2sNative
      * 
-     * if (sf.indexOf(".") < 0 && sf.indexOf("e") < 0)
+     * if (sf.indexOf(".") < 0 && sf.indexOf("e") < 0 && sf.indexOf("N") < 0 && sf.indexOf("n") < 0)
      *   sf += ".0";
      */
     {

@@ -370,8 +370,7 @@ class NBOModel {
           folder = folder + "*.*";
         if (!folder.equals(""))
           myChooser.setSelectedFile(new File(folder));
-        int button = myChooser.showDialog(this, GT._("Select"));
-        
+        int button = myChooser.showDialog(this, GT.$("Select"));        
         if(vibrate!=null)
           vibrate.setEnabled(false);
         

@@ -165,7 +165,7 @@ class NBOFileHandler extends JPanel {
     if (folder.length() > 0)
       fullFilePath = NBOUtil.getWindowsFullNameFor(folder, name.length() == 0 ? " " : name + (useExt.equals("47") ? ".47" : ""), null);
     myChooser.setSelectedFile(new File(fullFilePath));
-    int button = myChooser.showDialog(this, GT._("Select"));
+    int button = myChooser.showDialog(this, GT.$("Select"));
     if (button == JFileChooser.APPROVE_OPTION)
       return loadSelectedFile(myChooser.getSelectedFile());
     return true;
