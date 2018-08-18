@@ -58,12 +58,19 @@ import org.openscience.jmol.app.jmolpanel.GuiMap;
 
 class NBOConfig  {
 
-  protected static final String NBO_WEB_SITE = "http://nbo6.chem.wisc.edu";
+  protected static final String NBO_WEB_SITE = "http://nbo7.chem.wisc.edu";
   protected static final String ARCHIVE_DIR = NBO_WEB_SITE + "/jmol_nborxiv/";
 
   protected static final String DEFAULT_SCRIPT = "zap;set nbocharges false;set antialiasdisplay;set fontscaling;" +
   		"set bondpicking true;set multipleBondSpacing -0.2; set multipleBondRadiusFactor 0.6;" +
   		"set zoomlarge false;select none;";
+
+  protected static final String INPUT_FILE_EXTENSIONS = "adf;cfi;com;g09;gau;gms;jag;log;mm2;mnd;mol;mp;nw;orc;pqs;qc;vfi;xyz;47";
+  protected static final String OUTPUT_FILE_EXTENSIONS = "adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;mol;xyz;vfi;g09;com";
+  protected static final String JMOL_EXTENSIONS = "xyz;mol";
+  protected static final String SCRIPT_VIDEO_EXTENSIONS="script";
+  protected static final String GIF_VIDEO_EXTENSIONS="gif";
+  //  protected static final String RUN_EXTENSIONS = "47;gau;gms";
 
   protected final static String JMOL_FONT_SCRIPT = ";set fontscaling true;select _H; font label 10 arial plain 0.025;select !_H;font label 10 arial bold 0.025;select none;";
 
@@ -151,7 +158,7 @@ class NBOConfig  {
   final static protected Font nboFontLarge = new Font("Arial", Font.BOLD, 26);
 
   /**
-   * "NBOPro6@Jmol title 26-pt arial bold
+   * "NBOPro@Jmol title 26-pt arial bold
    */
   final static protected Font nboProTitleFont = nboFontLarge;
 
@@ -452,7 +459,7 @@ class NBOConfig  {
         + type
         + " "
         + orbitalNumber
-        + (isBeta ? " beta" : "") 
+        + (isBeta && !type.equals("MO") ? " beta" : "") // AO?
         + " frontonly "
         + (useWireMesh ? " mesh nofill" : " nomesh fill translucent "
             + (1 - opacityOp)) + ";select none;";
@@ -465,11 +472,11 @@ class NBOConfig  {
     String path = "";
     switch (mode) {
     case MODE_PATH_SERVICE:
-      title = " NBO Directory ";
+      title = " NBOPro Executables Folder ";
       path = nboService.getServerPath(null);
       break;
     case MODE_PATH_WORKING:
-      title = " Working Directory ";
+      title = " User Work Folder ";
       path = dialog.getWorkingPath();
       break;
     }
@@ -556,7 +563,7 @@ class NBOConfig  {
   }
 
   /**
-   * Show a file selector for choosing NBOServe.exe from config.
+   * Show a file selector for choosing NBOServe from config.
    * 
    * @param tf
    * @param fname

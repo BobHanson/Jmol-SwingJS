@@ -23,7 +23,9 @@
  */
 package org.gennbo;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -34,6 +36,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.util.Stack;
+import java.util.List;
+import java.util.ArrayList;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -42,47 +46,45 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.gennbo.NBOView.OrbitalList;
+import org.jmol.i18n.GT;
 import org.jmol.util.Elements;
+import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
-class NBOModel implements NBOFileAcceptor {
+class NBOModel {
 
-  // The main menu
   protected NBODialog dialog;
-  //
   private Viewer vwr;
-  
-  /*
-   * constructor to initialize the fields needed in NOBModel
-   */
+
   protected NBOModel(NBODialog dialog) {
     this.dialog = dialog;
     this.vwr = dialog.vwr;
   }
 
-  /*
-   * Different instructions users may choose
-   * MODEL_ACTION_ALTER: what does it do and possible problem if it has
-   * MODEL_ACTION_CLIP
-   * MODEL_ACTION_FUSE
-   * MODEL_ACTION_LINK
-   * MODEL_ACTION_MUTATE
-   * MODEL_ACTION_SWITCH
-   * MODEL_ACTION_TWIST
-   * MODEL_ACTION_VALUE
-   * MODEL_ACTION_3CHB
-   */
   private final static int MODEL_ACTION_ALTER  = 0;
   private final static int MODEL_ACTION_CLIP   = 1;
   private final static int MODEL_ACTION_FUSE   = 2;
@@ -95,19 +97,11 @@ class NBOModel implements NBOFileAcceptor {
   
   private static final int MODEL_ACTION_MAX    = 9;
 
-  /*
-   * Functions within Model -> Edit Model panel
-   * MODEL_ACTION_REBOND
-   * MODEL_ACTION_SYMMETRY
-   * MODEL_ACTION_HBOND
-   */
   private static final int MODEL_ACTION_REBOND = 9;
   private static final int MODEL_ACTION_SYMMETRY = 10;
   private final static int MODEL_ACTION_HBOND   = 11;
+  private final static int MODEL_ACTION_VIBRATE = 12;
 
-  /*
-   * Model operations
-   */
   static final int MODE_MODEL_EDIT     = 21;
   static final int MODE_MODEL_NEW      = 31; 
   static final int MODE_MODEL_SAVE     = 41;
@@ -120,7 +114,7 @@ class NBOModel implements NBOFileAcceptor {
   final static String[] MODEL_ACTIONS = { 
       "Alter", "Clip", "Fuse", "Link", "Mutate",
       "Switch", "Twist", "Value", "3chb", "Rebond", 
-      "Symmetry?", "H-Bonds" };
+      "Sym.", "H-Bonds","Vib." };
   
   private static final String[] EDIT_INFO = {
       "Edit nuclear charge, bond length, bond angle, or dihedral angle",
@@ -134,7 +128,8 @@ class NBOModel implements NBOFileAcceptor {
       "Create 3-center linkage between two atoms and a ligand",
       "Change bonding symmetry around transition metal",
       "Display point-group symmetry of current model",
-      "Show NBOPro6-derived hydrogen bonds"
+      "Show NBOPro6-derived hydrogen bonds",
+      "TODO: Add info for Vibrate here"
       };
 
   private final static int BOX_COUNT_4 = 4, BOX_COUNT_2 = 2, BOX_COUNT_1 = 1;
@@ -145,11 +140,17 @@ class NBOModel implements NBOFileAcceptor {
   private NBOFileHandler saveFileHandler;
 
   private Box innerEditBox;
-  private JTextField jtNIHInput, jtLineFormula, txtCurrVal;
+  private JTextField jtNIHInput, jtLineFormula;
+  private JTextField currVal;
   private JComboBox<String> jcSymOps;
-  private JButton btnRebond, jbClear;
+  private JButton rebond, vibrate,jbClear;
   private JLabel atomsLabel;
-  private Box editBox, editHeaderBox, inputBox, inputHeaderBox, saveBox, saveHeaderBox;
+  private Box editComponent;
+  private Box inputHeader;
+  private Box saveHeader;
+  private Component inputComponent;
+  private Box saveComponent;
+  private Box editHeader;  
   private JTextField[] atomNumBoxes;
   private JLabel valueLabel = new JLabel("");
   
@@ -157,7 +158,7 @@ class NBOModel implements NBOFileAcceptor {
   
   protected JTextField editValueTf;
   protected JButton jbApply;
-  protected JComboBox<String> jComboSave, jComboOpen;
+  protected JComboBox<String> jComboSave;
   protected JButton undo, redo;
   protected Stack<String> undoStack, redoStack;
 
@@ -173,7 +174,6 @@ class NBOModel implements NBOFileAcceptor {
   
  /**
    * A model is being loaded into Jmol that NBO does not know about yet
-   * 
    */
   private boolean notFromNBO;
 
@@ -185,81 +185,86 @@ class NBOModel implements NBOFileAcceptor {
   private Box innerLinkOptionBox;
   private JRadioButton radLinkBond;
   
+  
+  /**
+   * inputFileType is the option user chooses from the ComboBox of "Input Model"
+   * inputFileType can be different from the ext input of "Input Model"
+   */
+  private String inputFileType;
+  
+  /**
+   * saveFileType is the option user chooses from the ComboBox of "Save Model"
+   * saveFileType can be different from the ext input of "Save Model"
+   */
+  private String saveFileType;
+   
+  private String vibrateData;
+  
+  private JScrollPane vibrationScroll;
+  
+  private String prevJobStem;
+  
   protected void setModelNotFromNBO() {
     notFromNBO = true;
   }
 
-  /*
-   * set the visability of components in buildModelPanel()
-   */
   private void showComponents(boolean tf) {
-    editHeaderBox.setVisible(tf);
-    editBox.setVisible(tf);
+    editHeader.setVisible(tf);
+    editComponent.setVisible(tf);
     innerLinkOptionBox.setVisible(false);
-    saveHeaderBox.setVisible(tf);
-    saveBox.setVisible(tf);
+    saveHeader.setVisible(tf);
+    saveComponent.setVisible(tf);
   }
-
 
   void modelSetSaveParametersFromInput(NBOFileHandler nboFileHandler,
                                        String dir, String name, String ext) {
+  //changed by fzy from "" to "gau" as gau is the default save file extension
     if (saveFileHandler != null && nboFileHandler != saveFileHandler)
-      saveFileHandler.setTextFields(dir, name,
-          PT.isOneOf(ext, NBOFileHandler.MODEL_SAVE_FILE_EXTENSIONS) ? ext : "");
+      saveFileHandler.setInput(dir, name,
+          PT.isOneOf(ext, NBOConfig.OUTPUT_FILE_EXTENSIONS) ? ext : "gau");  
   }
 
 
-  /*
-   *Save Model Panel at the bottom of the frame 
-   */
   protected JPanel buildModelPanel() {
     resetVariables();
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-    inputHeaderBox = NBOUtil.createTitleBox(" Input Model ", dialog.new HelpBtn(
+    inputHeader = NBOUtil.createTitleBoxForNBOModel(" Input Model ", dialog.new HelpBtn(
         "model_input_intro_help.htm"));
-    panel.add(inputHeaderBox);
-    inputBox = getInputBox();
-    panel.add(inputBox);
+    panel.add(inputHeader);
+    inputComponent = getInputComponent();
+    panel.add(inputComponent);
     
-    editHeaderBox = getEditHeader();
-    panel.add(editHeaderBox).setVisible(false);
-    editBox = getEditComponent();
-    panel.add(editBox).setVisible(false);
+    editHeader = getEditHeader();
+    panel.add(editHeader).setVisible(false);
+    editComponent = getEditComponent();
+    panel.add(editComponent).setVisible(false);
     
-    saveHeaderBox = NBOUtil.createTitleBox(" Save Model ", dialog.new HelpBtn(
+    saveHeader = NBOUtil.createTitleBox(" Save Model ", dialog.new HelpBtn(
         "model_save_intro_help.htm"));
-    panel.add(saveHeaderBox).setVisible(false);
-    saveBox = getSaveBox();
-    saveFileHandler = new NBOFileHandler("", NBOFileHandler.MODE_MODEL_SAVE, dialog, this);
-    saveBox.add(saveFileHandler);
-    panel.add(saveBox).setVisible(false);
+    panel.add(saveHeader).setVisible(false);
+    saveComponent = getSaveComponent();
+    panel.add(saveComponent).setVisible(false);
     panel.add(Box.createGlue());
-    
+   
     if (vwr.ms.ac > 0) {
       loadModelToNBO(null, false);
     }
-    
     return panel;
 
   }
-  
-/*
- * 
- */
+
   private void resetVariables() {
     actionID = 0;
     boxCount = 0;
     notFromNBO = false;
     showSelectedOnFileLoad = false;
     resetOnAtomClick = true;
-//    serverMode = 0;
+    serverMode = 0;
+    saveFileType="";
   }
 
-  /*
-   * Edit Model horizontal box in the middle
-   */
   private Box getEditHeader() {
     Box topBox = Box.createHorizontalBox();
     undo = new JButton("<HTML>&#8592Undo</HTML>");
@@ -279,7 +284,7 @@ class NBOModel implements NBOFileAcceptor {
    * 
    * @return use elements
    */
-  private Box getInputBox() {
+  private Component getInputComponent() {
 
     Box inputBox = NBOUtil.createBorderBox(true);
     inputBox.setMaximumSize(new Dimension(360, 140));
@@ -306,12 +311,18 @@ class NBOModel implements NBOFileAcceptor {
     jtNIHInput.setFont(NBOConfig.userInputFont);
     jtLineFormula.setFont(NBOConfig.userInputFont);
     jtLineFormula.add(new JLabel("line formula"));
-       
-    jComboOpen = new JComboBox<String>(NBOFileHandler.MODEL_OPEN_OPTIONS);
-    jComboOpen.addActionListener(new ActionListener() {
+    String[] useOps = { "<Select File  Type>", "[.47]   NBO Archive",
+        "[.gau]  Gaussian Input", "[.log]  Gaussian Output",
+        "[.gms]  GAMESS Input", "[.adf]  ADF Input", "[.jag]  Jaguar Input",
+        "[.mm2]  MM2-Input", "[.mnd]  Dewar Type Input",
+        "[.mp]   Molpro Input", "[.nw]   NWChem Input", "[.orc]  Orca Input",
+        "[.pqs]  PQS Input", "[.qc]   Q-Chem Input", "[.xyz]  XYZ", "[.mol]  MOL",
+        "[.cfi]  NBO Cartesian", "[.vfi]  NBO Valence" };
+    final JComboBox<String> jComboUse = new JComboBox<String>(useOps);
+    jComboUse.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        doComboUseAction(jComboOpen.getSelectedIndex() > 0 ? jComboOpen.getSelectedItem().toString() : null);
+        doComboUseAction(jComboUse.getSelectedIndex() > 0 ? jComboUse.getSelectedItem().toString() : null);
       }
     });
     p2.add(jrLineIn);
@@ -319,13 +330,86 @@ class NBOModel implements NBOFileAcceptor {
     p2.add(jrJmolIn);
     p2.add(jtNIHInput);
     p2.add(jrFileIn);
-    p2.add(jComboOpen);
-    jComboOpen.setSelectedIndex(1);
-    addFocusListeners(jComboOpen, jrFileIn);
-
+    p2.add(jComboUse);
+    addFocusListeners(jComboUse, jrFileIn);
+    
     inputBox.add(p2);
-    dialog.getNewInputFileHandler(NBOFileHandler.MODE_MODEL_OPEN, this);
-
+    if(dialog.inputFileHandler!=null)
+      if(dialog.inputFileHandler.jobStem!=null)
+        prevJobStem=dialog.inputFileHandler.jobStem;
+      else
+        prevJobStem=null;
+    else
+      prevJobStem=null;
+    
+    dialog.inputFileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_MODEL_USE, NBOConfig.INPUT_FILE_EXTENSIONS, dialog) 
+    {
+    
+      @Override
+      protected boolean doFileBrowsePressed() {
+        String folder = tfDir.getText().trim();
+        String name = tfName.getText();
+        if (name.length() == 0)
+          name = "*";
+        String ext = tfExt.getText();
+        if (ext.length() == 0)
+          ext = "*";
+        folder = NBOUtil.getWindowsFullNameFor(folder, name, ext);
+        JFileChooser myChooser = new JFileChooser();
+        String filter = useExt;
+        if (name.equals("*") && !ext.equals("*"))
+          filter = ext;
+        if (filter.contains(";"))
+          myChooser.setFileFilter(new FileNameExtensionFilter(filter, filter
+              .split(";")));
+        else
+          myChooser.setFileFilter(new FileNameExtensionFilter(filter, filter));
+        
+        myChooser.setFileHidingEnabled(true);
+        if (folder.endsWith("/"))
+          folder = folder + "*.*";
+        if (!folder.equals(""))
+          myChooser.setSelectedFile(new File(folder));
+        int button = myChooser.showDialog(this, GT.$("Select"));
+        
+        if(vibrate!=null)
+          vibrate.setEnabled(false);
+        
+        if (button == JFileChooser.APPROVE_OPTION) 
+        {
+          if (PT.isOneOf(inputFileType, NBOConfig.INPUT_FILE_EXTENSIONS)) 
+          {
+            File newFile = myChooser.getSelectedFile();
+            if (newFile.toString().indexOf(".") < 0) {
+              dialog.logError("File not found");
+              return false;
+            }
+            loadModelFromNBO(newFile.getParent(),
+                (jobStem = NBOUtil.getJobStem(newFile)), NBOUtil.getExt(newFile));
+            dialog.inputFileHandler
+                .setInput(fullFilePath, jobStem, NBOUtil.getExt(newFile));
+            fullFilePath = newFile.getParent();
+            
+            //If this is a Gaussian Output [.log] file, send request to NBOServe to check if this file can vibrate
+            if(inputFileType.equals("log"))
+              postVibrateRequestToNBO(newFile.getParent(),jobStem,NBOUtil.getExt(newFile));
+            
+                      
+            return true;
+          }
+          else
+          {
+            dialog.logError("Invalid input file type defined");
+          }
+        }
+        return false;
+      }
+    };
+    
+    jComboUse.setSelectedIndex(1);
+    if(prevJobStem!=null)
+      dialog.inputFileHandler.tfName.setText(prevJobStem);
+    // BH adding focus for these as well
     addFocusListeners(dialog.inputFileHandler.tfDir, jrFileIn);
     addFocusListeners(dialog.inputFileHandler.tfExt, jrFileIn);
     addFocusListeners(dialog.inputFileHandler.tfName, jrFileIn);
@@ -333,19 +417,19 @@ class NBOModel implements NBOFileAcceptor {
 
     inputBox.add(dialog.inputFileHandler);
     inputBox.add(Box.createGlue());
+    
     return inputBox;
   }
 
   protected void doComboUseAction(String item) {
-    if (dialog.inputFileHandler == null)
-      return;
     if (item == null) {
       dialog.inputFileHandler.tfExt.setText("");
-//      dialog.inputFileHandler.useExt = NBOFileHandler.MODEL_OPEN_FILE_EXTENSIONS;
+      dialog.inputFileHandler.useExt = NBOConfig.INPUT_FILE_EXTENSIONS;
     } else {
       item = item.substring(item.indexOf("[") + 2, item.indexOf("]"));
       dialog.inputFileHandler.tfExt.setText(item);
-//      dialog.inputFileHandler.useExt = item;
+      inputFileType=item;
+      dialog.inputFileHandler.useExt = item;
     }
   }
 
@@ -353,6 +437,7 @@ class NBOModel implements NBOFileAcceptor {
     Box editBox = NBOUtil.createBorderBox(false);
     Box actionBox = Box.createVerticalBox();
     
+
     final JRadioButton[] jrModelActions = new JRadioButton[MODEL_ACTION_MAX];
     ButtonGroup rg = new ButtonGroup();
     for (int i = 0; i < MODEL_ACTION_MAX; i++) {
@@ -383,18 +468,19 @@ class NBOModel implements NBOFileAcceptor {
         doGetSymmetry();
       }
     });
+    
     lowBox.add(sym);
-    btnRebond = new JButton(MODEL_ACTIONS[MODEL_ACTION_REBOND]);
-    btnRebond.setEnabled(false);
-    btnRebond.setToolTipText(EDIT_INFO[MODEL_ACTION_REBOND]);
+    rebond = new JButton(MODEL_ACTIONS[MODEL_ACTION_REBOND]);
+    rebond.setEnabled(false);
+    rebond.setToolTipText(EDIT_INFO[MODEL_ACTION_REBOND]);
 
-    btnRebond.addActionListener(new ActionListener() {
+    rebond.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         doModelAction(MODEL_ACTION_REBOND);
       }
     });
-    lowBox.add(btnRebond);
+    lowBox.add(rebond);
     
     JButton hbond = new JButton(MODEL_ACTIONS[MODEL_ACTION_HBOND]);
     hbond.setToolTipText(EDIT_INFO[MODEL_ACTION_HBOND]);
@@ -405,11 +491,25 @@ class NBOModel implements NBOFileAcceptor {
       }
     });
     lowBox.add(hbond);
-
+    
+    vibrate=new JButton(MODEL_ACTIONS[MODEL_ACTION_VIBRATE]);
+    vibrate.setEnabled(false);
+    vibrate.setToolTipText(EDIT_INFO[MODEL_ACTION_VIBRATE]);
+    
+    vibrate.addActionListener(new ActionListener()
+    {
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        doVibrate();
+      }
+    }
+    );
+    lowBox.add(vibrate);
     
     rightBox.add(lowBox);
     editBox.add(rightBox);
-
+    
     //btns[0].doClick();
     return editBox;
   }
@@ -476,15 +576,15 @@ class NBOModel implements NBOFileAcceptor {
     box.setVisible(false);
     innerEditBox.add(box);
     
-    txtCurrVal = new JTextField("pick atoms...");
-    txtCurrVal.setFont(NBOConfig.titleFont);
-    txtCurrVal.setBackground(new Color(220,220,220));
-    txtCurrVal.setMinimumSize(new Dimension(250, 40));
-    txtCurrVal.setPreferredSize(new Dimension(250, 40));
-    txtCurrVal.setMaximumSize(new Dimension(250, 40));
+    currVal = new JTextField("pick atoms...");
+    currVal.setFont(NBOConfig.titleFont);
+    currVal.setBackground(new Color(220,220,220));
+    currVal.setMinimumSize(new Dimension(250, 40));
+    currVal.setPreferredSize(new Dimension(250, 40));
+    currVal.setMaximumSize(new Dimension(250, 40));
 //    currVal.setEditable(false);
-    txtCurrVal.setHorizontalAlignment(SwingConstants.CENTER);
-    innerEditBox.add(txtCurrVal).setVisible(false);
+    currVal.setHorizontalAlignment(SwingConstants.CENTER);
+    innerEditBox.add(currVal).setVisible(false);
     
     valueLabel = new JLabel();
     valueLabel.setAlignmentX(0.5f);
@@ -596,7 +696,7 @@ class NBOModel implements NBOFileAcceptor {
         script += "measure " + selected + " \" \";";
       switch (cnt) {
       case 0:
-        txtCurrVal.setText("pick atoms...");
+        currVal.setText("pick atoms...");
         break;
       case 1:
         desc = (actionID == MODEL_ACTION_ALTER ? "atomic number or symbol"
@@ -636,7 +736,7 @@ class NBOModel implements NBOFileAcceptor {
           if (symlist != null) {
             for (int i = 0; i < symlist.length; i++)
               jcSymOps.addItem(symlist[i]);
-            if (currentRebondSymOp > 0) 
+            if (currentRebondSymOp > 0)
               jcSymOps.setSelectedIndex(currentRebondSymOp);
             currentRebondSymOp = 0;
           } else {
@@ -671,7 +771,7 @@ class NBOModel implements NBOFileAcceptor {
   };
   
   private static String[] getRebondSymList(int val) {
-    return  (val - 4 < REBOND_LISTS.length? REBOND_LISTS[val - 4]: null); // why minus 4? but correct here
+    return  (val - 4 < REBOND_LISTS.length? REBOND_LISTS[val - 4]: null);
   }
 
   protected String modelEditGetSelected() {
@@ -681,23 +781,124 @@ class NBOModel implements NBOFileAcceptor {
     return PT.rep(s.trim(), "  ", " ").trim();
   }
 
-  private Box getSaveBox() {
+  private Box getSaveComponent() {
     Box sBox = NBOUtil.createBorderBox(true);
-    jComboSave = new JComboBox<String>(NBOFileHandler.MODEL_SAVE_OPTIONS);
+    final String[] SAVE_OPTIONS = { 
+        "<Select File Type>",
+        "Gaussian Input             [.gau]",
+        "Gaussian Input (Cartesian) [.gau]",
+        "Gaussian Input (z-Matrix)  [.gau]",
+        "GAMESS Input               [.gms]",
+        "ADF Input                  [.adf]",
+        "Jaguar Input               [.jag]",
+        "MM2-Input                  [.mm2]",
+        "Dewar Type Input           [.mnd]",
+        "Molpro Input               [.mp]", 
+        "NWChem Input               [.nw]",
+        "Orca Input                 [.orc]",
+        "PQS Input                  [.pqs]", 
+        "Q-Chem Input               [.qc]",
+        "XYZ                        [.xyz]",
+        "MOL                        [.mol]",
+        "NBO Cartesian              [.cfi]",
+        "NBO Valence                [.vfi]"};
+    jComboSave = new JComboBox<String>(SAVE_OPTIONS);
+
     jComboSave.setFont(NBOConfig.monoFont);
+    
     jComboSave.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (jComboSave.getSelectedIndex() > 0)
           doComboSaveAction(jComboSave.getSelectedItem().toString());
+        else if(jComboSave.getSelectedIndex()==0)
+          saveFileType="";
+          
       }
     });
+    
     sBox.add(jComboSave);
+    
+    saveFileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_MODEL_SAVE,
+        NBOConfig.OUTPUT_FILE_EXTENSIONS, dialog) {
+      
+      @Override
+      protected boolean doFileBrowsePressed() {
+        String folder = tfDir.getText().trim();
+        String name = tfName.getText().trim();
+        String ext = tfExt.getText().trim();
+//        if (!ext.equals("") && !folder.equals("") && !name.equals("")) {
+//          if (!PT.isOneOf(ext, NBOConfig.OUTPUT_FILE_EXTENSIONS)) {
+//            dialog.alertError("Invalid output extenstion");
+//            return false;
+//          }
+//          if (name.length() == 0)
+//            name = "new";
+//          File f = new File(NBOUtil.getWindowsFullNameFor(folder, name, ext));
+//          if (f.exists()) {
+//            int i = JOptionPane.showConfirmDialog(null, "File " + f
+//                + " already exists, do you want to overwrite contents?",
+//                "Warning", JOptionPane.YES_NO_OPTION);
+//            if (i == JOptionPane.NO_OPTION)
+//              return false;
+//            dialog.inputFileHandler.setInput(folder, name, ext);
+//
+//          }
+//          saveModel(folder, name, ext);
+//          dialog.saveWorkingPath(fullFilePath);
+//          return true;
+//        }
+        JFileChooser myChooser = new JFileChooser();
+        useExt = (ext.equals("") ? NBOConfig.OUTPUT_FILE_EXTENSIONS : ext);
+        myChooser.setFileFilter(new FileNameExtensionFilter(useExt, useExt
+            .split(",")));
+        myChooser.setFileHidingEnabled(true);
+        String savePath = fullFilePath;
+        folder = NBOUtil.getWindowsFolderFor(folder, fullFilePath);
+        if (name.equals("") && jobStem != null)
+          savePath = tfDir.getText()
+              + "/"
+              + (jobStem.equals("") ? "new.cfi" : jobStem
+                  + (ext.contains(";") ? "" : "." + ext));
+        else
+          savePath = tfDir.getText() + "/" + name + "." + ext;
+        myChooser.setSelectedFile(new File(savePath));
+        int button = myChooser.showSaveDialog(this);
+        if (button == JFileChooser.APPROVE_OPTION) {
+          File newFile = myChooser.getSelectedFile();
+          ext = NBOUtil.getExt(newFile);
+         //user will need to select a valid file type from the combo box (even if they want to customized
+         //their own extension for save file)
+          if (PT.isOneOf(saveFileType, NBOConfig.OUTPUT_FILE_EXTENSIONS)) {
+            if (newFile.exists()) {
+              int i = JOptionPane.showConfirmDialog(null, "File " + newFile
+                  + " already exists, do you want to overwrite contents?",
+                  "Warning", JOptionPane.YES_NO_OPTION);
+              if (i == JOptionPane.NO_OPTION)
+                return false;
+            }
+            dialog.inputFileHandler.setInput(folder, name, ext);
+            fullFilePath = newFile.getParent();
+            saveModel(newFile.getParent(), NBOUtil.getJobStem(newFile), ext);
+            dialog.saveWorkingPath(fullFilePath);
+          } 
+          else
+            dialog.logError("Invalid output file type defined");
+        }
+        return false;
+      }
+
+    };
+    
+    jComboSave.setSelectedIndex(1);
+    
+    sBox.add(saveFileHandler);
     return sBox;
   }
 
   protected void doComboSaveAction(String item) {
       String ext = item.substring(item.indexOf("[") + 2, item.indexOf("]"));
+      saveFileType=ext;
       saveFileHandler.tfExt.setText(ext);
   }
 
@@ -711,9 +912,6 @@ class NBOModel implements NBOFileAcceptor {
     addFocusListeners(field, radio);
   }
 
-  /*
-   * function of this method and where it is being used
-   */
   private void addFocusListeners(final JComponent field,
                                    final JRadioButton radio) {
     field.addFocusListener(new FocusListener() {
@@ -780,12 +978,6 @@ class NBOModel implements NBOFileAcceptor {
     }
   }
 
-  /*
-   * According to the model action number through doModelAction(), set the layout
-   * of edit box
-   * 
-   * @para
-   */
   private void setEditBox(String label) {
     if (label == null)
       label = "Select atom" + (boxCount > 1 ? "s" : "") + "...";
@@ -807,7 +999,7 @@ class NBOModel implements NBOFileAcceptor {
       editValueTf.setVisible(false);
     }
 
-    txtCurrVal.setVisible(boxCount == BOX_COUNT_4);
+    currVal.setVisible(boxCount == BOX_COUNT_4);
     valueLabel.setVisible(true);//actionID == MODEL_ACTION_ALTER);
 
     jbApply.setVisible(actionID != MODEL_ACTION_VALUE);
@@ -846,7 +1038,7 @@ class NBOModel implements NBOFileAcceptor {
   };
   private boolean showSelectedOnFileLoad;
   private int currentRebondSymOp;
-//  private int serverMode;
+  private int serverMode;
   
   /**
    * Clear out the text fields
@@ -858,8 +1050,8 @@ class NBOModel implements NBOFileAcceptor {
       atomNumBoxes[i].setText("");
     }
     
-    if (txtCurrVal != null)
-      txtCurrVal.setText("");
+    if (currVal != null)
+      currVal.setText("");
     if (valueLabel != null)
       valueLabel.setText(" ");
     if (editValueTf != null) {
@@ -929,7 +1121,75 @@ class NBOModel implements NBOFileAcceptor {
     dialog.logCmd(cmd);
     postNBO(NBOUtil.postAddCmd(new SB(), cmd), MODEL_ACTION_HBOND,  "Getting Hydrogen Bonds", null, null);
   }
-
+  
+  
+  protected void doVibrate()
+  {
+    //JDialog 
+    int i,menuLength=0,height;
+    dialog.logCmd("vibrate");
+    
+    String lines[]=vibrateData.split("\\r?\\n");
+    
+    Box box = NBOUtil.createTitleBox(" Harmonic Vibration Modes ", null);
+    JLabel heading=new JLabel("       nu(cm-1) IR inten. sym.");
+    heading.setFont(NBOConfig.listFont);
+    JPanel mainPanel=new JPanel(new GridLayout(1, 0));
+    JPanel vibratePanel=new JPanel(new GridLayout(0,1,0,0));
+    List<JRadioButton> list=new ArrayList<JRadioButton>();
+    ButtonGroup bg=new ButtonGroup();
+    for(String vibrateRow : lines)
+    {
+      if(vibrateRow.trim().length()>0)
+      {
+        JRadioButton radiobutton=new JRadioButton(vibrateRow);
+        radiobutton.setFont(NBOConfig.listFont);
+        radiobutton.setOpaque(true);
+        list.add(radiobutton);
+        bg.add(radiobutton);
+        vibratePanel.add(radiobutton);
+        menuLength++;
+      }
+    }
+   
+    height=menuLength*30;
+    if(height>500)
+      height=500;
+    
+    vibrationScroll=new JScrollPane(vibratePanel);
+    vibrationScroll.setMaximumSize(new Dimension(300, height));
+//    vibrationScroll.getViewport().setMinimumSize(new Dimension(275, height));
+    vibrationScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    mainPanel.add(vibrationScroll);
+    
+    vibrationScroll.getVerticalScrollBar().setUnitIncrement(25);
+    Box box2=Box.createVerticalBox();
+    box2.add(heading);
+    box2.add(mainPanel);
+    box2.setAlignmentX(0.0f);
+    box.add(box2);
+    
+    
+    
+    final JDialog vibrateDialog=new JDialog(dialog,"Vibration Menu");
+  
+    vibrateDialog.setMaximumSize(new Dimension(300,height+30));
+    vibrateDialog.setMinimumSize(new Dimension(300,height+30));
+    vibrateDialog.setPreferredSize(new Dimension(300,height+30));
+    
+    vibrateDialog.setVisible(true);
+    
+    vibrateDialog.add(box);
+    centerDialog(vibrateDialog,150);
+    
+  }
+  
+  private void centerDialog(JDialog d, int h) {
+    int x = (dialog.getX() + dialog.getWidth()) / 2 + 150;
+    int y = (dialog.getY() + dialog.getHeight()) / 2 - h;
+    d.setLocation(x, y);
+  }
+  
   /**
    * clipped in?
    * 
@@ -940,8 +1200,8 @@ class NBOModel implements NBOFileAcceptor {
     if (model.length() == 0)
       return;
     String s = "";
-    dialog.inputFileHandler.setTextFields(null, "", "");
-    saveFileHandler.setTextFields(null, "", "");
+    dialog.inputFileHandler.setInput(null, "", "");
+    saveFileHandler.setInput(null, "", "");
     clearSelected(false);
     if (textBox == jtNIHInput) {
       if (model.startsWith("!")) {
@@ -967,7 +1227,7 @@ class NBOModel implements NBOFileAcceptor {
         }
       }
       jtLineFormula.setText("");
-      saveFileHandler.setTextFields(null, model, "mol");
+      saveFileHandler.setInput(null, model, "gau");
       dialog.logCmd("get " + model);
       dialog.iAmLoading = true;
       if (dialog.loadModelFileNow(model) == null) {
@@ -989,7 +1249,7 @@ class NBOModel implements NBOFileAcceptor {
       SB sb = new SB();
       jtNIHInput.setText("");
       s = "show " + model;
-      saveFileHandler.setTextFields(null, "line", "mol");
+      saveFileHandler.setInput(null, "line", "gau");
       NBOUtil.postAddCmd(sb, s);
       dialog.logCmd(s);
       postNBO(sb, MODE_MODEL_NEW, "model from line input...",
@@ -1031,14 +1291,14 @@ class NBOModel implements NBOFileAcceptor {
    * @param ext
    */
   protected void loadModelFromNBO(String path, String fname, String ext) {
-    if (PT.isOneOf(ext, NBOFileHandler.JMOL_EXTENSIONS)) {
+    if (PT.isOneOf(ext, NBOConfig.JMOL_EXTENSIONS)) {
       notFromNBO = true;
       dialog.runScriptQueued("set refreshing false");
       dialog.loadModelFileQueued(new File(path  + "\\" + fname + "." + ext), false);
       dialog.runScriptQueued("set refreshing true");
       return;
     }
-    String ess = NBOFileHandler.getEss(ext, null);
+    String ess = getEss(inputFileType, true);
     SB sb = new SB();
     if (jtNIHInput != null) {
       jtNIHInput.setText("");
@@ -1064,23 +1324,52 @@ class NBOModel implements NBOFileAcceptor {
    * @param ext
    */
   protected void saveModel(String path, String fname, String ext) {
-    if (PT.isOneOf(ext, NBOFileHandler.JMOL_EXTENSIONS)) {
+    if (PT.isOneOf(ext, NBOConfig.JMOL_EXTENSIONS)) {
       String s = vwr.getModelExtract("1.1", false, false, ext.toUpperCase());
       String ret = vwr.writeTextFile(path + "\\" + fname + "." + ext, s);
       dialog.logValue(ret);
       return;
     }
-    String ess = NBOFileHandler.getEss(ext, (String) jComboSave.getSelectedItem());
+    String ess = getEss(saveFileType, false);
     SB sb = new SB();
     
     NBOUtil.postAddGlobalC(sb, "PATH", path);
     NBOUtil.postAddGlobalC(sb, "ESS", ess);
     NBOUtil.postAddGlobalC(sb, "FNAME", fname);
-    NBOUtil.postAddGlobalC(sb, "OUT_EXT", ext);
+    NBOUtil.postAddGlobalC(sb, "OUT_EXT", ext.toLowerCase());
     NBOUtil.postAddCmd(sb, "save");
     postNBO(sb, MODE_MODEL_SAVE, "Saving model...", null, null);
     dialog.logCmd("save." + ess + " " + fname);
     dialog.logValue("--Model Saved--<br>" + path + "\\" + fname + "." + ext);
+  }
+
+  /**
+   * @param ext
+   *        - extension to convert
+   * @param isLoading
+   *        - true if "use" (loading), false if saving
+   * @return ess code used internally by NBOServie
+   */
+  private String getEss(String ext, boolean isLoading) {
+    ext = ext.toLowerCase();
+    if ((ext.equals("gau") || ext.equals("g09") || ext.equals("com")) && !isLoading) {
+      if (jComboSave.getSelectedItem().toString().contains("(C")) {
+        return ext.charAt(0) + "c";
+      } else if (jComboSave.getSelectedItem().toString().contains("(z")) {
+        return ext.charAt(0) + "z";
+      } else
+        return "g";
+    } else if (ext.equals("cfi") || ext.equals("vfi") || ext.equals("gau")
+        || ext.equals("log") || ext.equals("g09"))
+      return "" + ext.charAt(0);
+    else if (ext.equals("47"))
+      return "a";
+    else if (ext.equals("mm2"))
+      return "mm";
+    else if (ext.equals("com"))
+      return "g";
+    else
+      return ext;
   }
 
   /**
@@ -1139,7 +1428,7 @@ class NBOModel implements NBOFileAcceptor {
   }
 
   private void setCurrentValue(String sval) {
-    txtCurrVal.setText(sval.length() == 0 ? "pick atoms..." : "current value: " + sval);
+    currVal.setText(sval.length() == 0 ? "pick atoms..." : "current value: " + sval);
   }
 
   /**
@@ -1168,7 +1457,7 @@ class NBOModel implements NBOFileAcceptor {
     undo.setEnabled(undoStack.size() > 1);
     redo.setEnabled(!redoStack.isEmpty());
     // "({1})"
-    btnRebond.setEnabled(dialog.evaluateJmolString("{transitionMetal}")
+    rebond.setEnabled(dialog.evaluateJmolString("{transitionMetal}")
         .length() > 4);
     if (actionID == MODEL_ACTION_MUTATE) {
       doModelAction(actionID);
@@ -1198,13 +1487,11 @@ class NBOModel implements NBOFileAcceptor {
    * @param statusMessage
    * @param fileName  optional
    * @param fileData  optional
-   *  postNBO(sb, MODE_MODEL_NEW, "model from line input...",
-          null, null);
    */
   private void postNBO(SB sb, final int mode, String statusMessage, String fileName, String fileData) {
     final NBORequest req = new NBORequest();
-//    serverMode = mode;
-    req.set(NBODialog.DIALOG_MODEL, new Runnable() {
+    serverMode = mode;
+    req.set(new Runnable() {
       @Override
       public void run() {
         processNBO(mode, req);
@@ -1292,6 +1579,13 @@ class NBOModel implements NBOFileAcceptor {
       showSelectedOnFileLoad = true;
       dialog.loadModelDataQueued(s);
       break;
+    case MODEL_ACTION_VIBRATE:
+      if(!s.equals("no data"))
+      {
+        vibrate.setEnabled(true);
+        vibrateData=s;
+      }
+      break;
     }
   }
 
@@ -1318,46 +1612,15 @@ class NBOModel implements NBOFileAcceptor {
   }
   
   private String measures = "";
-
-  /**
-   * NBOFileAcceptor interface for successful FileChooser action
-   * 
-   */
-  @Override
-  public void acceptFile(int mode, String dir, String name, String ext, String labelText) {
-    setOpenSaveExtensionCombo(mode, ext, labelText);
-    switch (mode) {
-    case NBOFileHandler.MODE_MODEL_OPEN:
-      loadModelFromNBO(dir, name, ext);
-      break;
-    case NBOFileHandler.MODE_MODEL_SAVE:
-      saveModel(dir, name, ext);
-      break;      
-    }
+  
+  
+  private void postVibrateRequestToNBO(String path, String fname, String ext)
+  {
+    String vibrateCommand="vibrate="+fname+"."+ext;
+    
+    SB sb = new SB();
+    NBOUtil.postAddCmd(sb, vibrateCommand);
+    postNBO(sb, MODEL_ACTION_VIBRATE, "Checking Vibration", null, null);
   }
-
-  private void setOpenSaveExtensionCombo(int mode, String ext,
-                                         String labelText) {
-    if (labelText == null)
-      labelText =  "[." + ext + "]";
-    JComboBox<String> combo = (mode == NBOFileHandler.MODE_MODEL_OPEN ? jComboOpen
-        : jComboSave);
-    for (int i = 0, n = combo.getModel().getSize(); i < n; i++) {
-      String label = combo.getItemAt(i);
-      if (label.indexOf(labelText) >= 0) {
-        combo.setSelectedIndex(i);
-        return;
-      }
-    }
-  }
-
-  @Override
-  public String getDefaultFilterOption() {
-    String option = (jComboSave.getSelectedIndex() < 1 ? "cfi" : jComboSave.getSelectedItem().toString());
-    int pt = option.indexOf("[");
-    if (pt >= 0)
-      option = option.substring(0, pt).trim();
-    return option;
-  }
-
+  
 }
