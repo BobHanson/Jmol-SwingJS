@@ -25,7 +25,7 @@
 package org.jmol.shape;
 
 import org.jmol.viewer.StateManager;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 

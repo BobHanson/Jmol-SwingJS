@@ -29,7 +29,7 @@ import javajs.util.T3;
 import javajs.util.T4;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public class TransformManager4D extends TransformManager {
 

@@ -9,7 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.AccessControlException;
 
-import javajs.api.GenericFileInterface;
+import org.jmol.api.GenericFileInterface;
 
 
 /**

@@ -25,11 +25,16 @@
 
 package org.jmol.symmetry;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.T4;
@@ -69,7 +74,7 @@ class UnitCell extends SimpleUnitCell {
   private boolean allFractionalRelative;
   
   protected final P3 cartesianOffset = new P3();
-  protected P3 unitCellMultiplier;
+  protected T3 unitCellMultiplier;
   public Lst<String> moreInfo;
   public String name = "";
   
@@ -171,11 +176,14 @@ class UnitCell extends SimpleUnitCell {
     if (pt == null)
       return;
     T4 pt4 = (pt instanceof T4 ? (T4) pt : null);
-    if (pt4 != null ? pt4.w <= 0 : pt.x >= 100 || pt.y >= 100) {
-      // from "unitcell range {aaa bbb scale}"
+    boolean isCell555P4 = (pt4 != null && pt4.w > 999999);
+    if (pt4 != null ? pt4.w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
+      // from "unitcell range {ijk ijk scale}"
+      //   or "unitcell range {1iiijjjkkk 1iiijjjkkk scale}"
+      //     where we have encoded this as a P4: {1iiijjjkkk 1iiijjjkkk scale 1kkkkkk}
       //   or "unitcell reset"
-      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y ? null : P3.newP(pt));
-      if (pt4 == null || pt4.w == 0)
+      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4.newPt((P4) pt4) : P3.newP(pt));
+      if (pt4 == null || pt4.w == 0 || isCell555P4)
         return;
       // from reset, continuing 
     }
@@ -224,34 +232,17 @@ class UnitCell extends SimpleUnitCell {
       fractionalOffset = null;
   }
 
-  void setMinMaxLatticeParameters(P3i minXYZ, P3i maxXYZ) {
-    if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {
-      //alternative format for indicating a range of cells:
-      //{111 666}
-      //555 --> {0 0 0}
-      P3 pt = new P3();
-      ijkToPoint3f(maxXYZ.x, pt, 0);
-      minXYZ.x = (int) pt.x;
-      minXYZ.y = (int) pt.y;
-      minXYZ.z = (int) pt.z;
-      ijkToPoint3f(maxXYZ.y, pt, 1);
-      //555 --> {1 1 1}
-      maxXYZ.x = (int) pt.x;
-      maxXYZ.y = (int) pt.y;
-      maxXYZ.z = (int) pt.z;
-    }
-    switch (dimension) {
-    case 1: // polymer
-      minXYZ.y = 0;
-      maxXYZ.y = 1;
-      //$FALL-THROUGH$
-    case 2: // slab
-      minXYZ.z = 0;
-      maxXYZ.z = 1;
-    }
+  Map<String, Object> getInfo() {
+    Map<String, Object> info = new Hashtable<String, Object>();
+    info.put("params", unitCellParams);
+    info.put("vectors", getUnitCellVectors());
+    info.put("volume", Double.valueOf(volume));
+    info.put("matFtoC", matrixFractionalToCartesian);
+    info.put("matCtoF", matrixCartesianToFractional);
+    return info;
   }
-
-  final String dumpInfo(boolean isFull) {
+  
+  String dumpInfo(boolean isFull) {
     return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
        + "\n" + Escape.eAP(getUnitCellVectors())
        + "\nvolume=" + volume
@@ -429,8 +420,8 @@ class UnitCell extends SimpleUnitCell {
     if (withOffset && unitCellMultiplier != null) {
       cell0 = new P3();
       cell1 = new P3();
-      ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0);
-      ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0);
+      ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0, 0);
+      ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0, 0);
       cell1.sub(cell0);
     }
     for (int i = 0; i < 8; i++) {
@@ -499,7 +490,7 @@ class UnitCell extends SimpleUnitCell {
     return false;
   }
 
-  public P3 getUnitCellMultiplier() {
+  public T3 getUnitCellMultiplier() {
     return unitCellMultiplier;
   }
 
@@ -540,7 +531,7 @@ class UnitCell extends SimpleUnitCell {
       s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
     // unitcell range {444 555 1}
     if (unitCellMultiplier != null)
-      s += "  unitcell range " + Escape.eP(unitCellMultiplier) + ";\n";
+      s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";
     return s;
   }
 
@@ -659,11 +650,16 @@ class UnitCell extends SimpleUnitCell {
     M3 m3 = new M3();
     if (def instanceof String) {
       String sdef = (String) def;
+      String strans = "0,0,0";
       if (sdef.indexOf("a=") == 0)
         return setOabc(sdef, null, pts);
       // a,b,c;0,0,0
-      if (sdef.indexOf(";") < 0)
-        sdef += ";0,0,0";
+      int ptc = sdef.indexOf(";");
+      if (ptc >= 0) {
+        strans = sdef.substring(ptc + 1);
+        sdef = sdef.substring(0, ptc);
+      }
+      sdef += ";0,0,0";
       isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
@@ -674,6 +670,12 @@ class UnitCell extends SimpleUnitCell {
         return null;
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
+      if (strans != null) {
+        float[] ftrans = new float[3];
+        PT.parseFloatArrayInfested(PT.split(strans+"0,0,0",","), ftrans);
+        P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
+        m.setTranslation(ptrans);
+      }
     } else if (def instanceof M3) {
       m = M4.newMV((M3) def, new P3());
     } else if (def instanceof M4) {
@@ -790,11 +792,11 @@ class UnitCell extends SimpleUnitCell {
    * @param latticeType  "A" "B" "C" "R" etc.
    * @return [origin va vb vc]
    */
-  public Object getConventionalUnitCell(String latticeType) {
+  public T3[] getConventionalUnitCell(String latticeType) {
     T3[] oabc = getUnitCellVectors();
     if (!latticeType.equals("P"))
       toFromPrimitive(false, latticeType.charAt(0), oabc);
     return oabc;
   }
-  
+
 }

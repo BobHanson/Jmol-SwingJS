@@ -27,12 +27,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
+import org.jmol.api.EventManager;
+import org.jmol.api.GenericMouseInterface;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 
-import javajs.J2SRequireImport;
-import javajs.api.EventManager;
-import javajs.api.GenericMouseInterface;
 import javajs.awt.event.Event;
 import javajs.util.PT;
 import javajs.util.V3;
@@ -41,11 +40,9 @@ import org.jmol.viewer.Viewer;
 /**
  * JavaScript interface from JmolJSmol.js via handleOldJvm10Event (for now)
  * 
- * J2SRequireImport is needed because we want to allow JavaScript access to java.awt.Event constant names
  * 
  */
 
-@J2SRequireImport({javajs.awt.event.Event.class})
 public class Mouse implements GenericMouseInterface {
 
   private Viewer vwr;

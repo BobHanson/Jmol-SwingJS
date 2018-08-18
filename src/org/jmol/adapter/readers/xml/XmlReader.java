@@ -197,17 +197,22 @@ public class XmlReader extends AtomSetCollectionReader {
       {
       }
       if (o instanceof BufferedInputStream)
-        o = Rdr.StreamToUTF8String(Rdr.getBIS(data));
+        o = Rdr.streamToUTF8String(Rdr.getBIS(data));
+      boolean isjs = false;
       /**
        * 
        * @j2sNative
        * 
-       *            this.domObj[0] = this.createDomNodeJS("xmlReader",o);
-       *            this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
+       * isjs = true;
        * 
        */
       {
         walkDOMTree();
+      }
+      if (isjs) {
+                  this.domObj[0] = this.createDomNodeJS("xmlReader",o);
+                  this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
+        
       }
     } else {
       ((XmlHandler) Interface.getOption("adapter.readers.xml.XmlHandler", vwr,
@@ -216,27 +221,27 @@ public class XmlReader extends AtomSetCollectionReader {
   }
   
   /**
+   * totally untested, probably useless
+   * 
    * @param id  
    * @param data 
+   * @return dom object 
    */
-  void createDomNodeJS(String id, Object data) {
+  Object createDomNodeJS(String id, Object data) {
     // no doubt there is a more efficient way to do this.
     // Firefox, at least, does not recognize "/>" in HTML blocks
     // that are added this way.
     
     @SuppressWarnings("unused")
     Object applet = parent.vwr.html5Applet;
+    Object d = null;
     /**
      * note that there is no need to actually load it into the document
      * 
      * @j2sNative
      * 
-     // id = applet._id + "_" + id;
-     // var d = document.getElementById(id);
-     // if (d)
-     //   document.body.removeChild(d);
       if (!data)
-        return;
+        return null;
       if (data.indexOf("<?") == 0)
         data = data.substring(data.indexOf("<", 1));
       if (data.indexOf("/>") >= 0) {
@@ -257,15 +262,14 @@ public class XmlReader extends AtomSetCollectionReader {
         }
         data = D.join('');
       }
-      var d = document.createElement("_xml");
+      d = document.createElement("_xml");
       d.innerHTML = data;
-      return d;
      * 
      */
     {
       // only called by j2s
     }
-      
+    return d;
   }
   
   @Override
@@ -402,41 +406,54 @@ public class XmlReader extends AtomSetCollectionReader {
     }
   }
 
+  private class NVPair {
+    String name;
+    String value;
+  }
+  
+  @SuppressWarnings("unused")
   private void getDOMAttributesA(Object[] attributes) {
-    
+
     atts.clear();
     if (attributes == null)
       return;
+
+    NVPair[] nodes = null;
 
     /**
      * @j2sNative
      * 
      * 
-     *            var nodes = attributes[0]; for (var i = nodes.length; --i >=
-     *            0;) { var key = this.fixLocal(nodes[i].name);
-     *            this.atts.put(key.toLowerCase(), nodes[i].value); }
-     *            return;
-     * 
-     * 
+     *            nodes = attributes[0];
      * 
      */
     {
-      
+
       // Java only -- no longer loading only specific values
-      
+
       Number N = (Number) jsObjectGetMember(attributes, "length");
-      int n  = (N == null ? 0 : N.intValue());
+      int n = (N == null ? 0 : N.intValue());
       for (int i = n; --i >= 0;) {
         attArgs[0] = Integer.valueOf(i);
         attArgs[0] = jsObjectCall(attributes, "item", attArgs);
         if (attArgs[0] != null) {
           String attValue = (String) jsObjectGetMember(attArgs, "value");
           if (attValue != null)
-            atts.put(((String) jsObjectGetMember(attArgs, "name")).toLowerCase(), attValue);
+            atts.put(
+                ((String) jsObjectGetMember(attArgs, "name")).toLowerCase(),
+                attValue);
         }
       }
+      if (true)
+        return;
     }
+    // JavaScript only
+    for (int i = nodes.length; --i >= 0;)
+      atts.put(fixLocal(nodes[i].name).toLowerCase(), nodes[i].value);
+
   }
+  
+  
 
   /**
    * @j2sIgnore

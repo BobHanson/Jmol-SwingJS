@@ -37,7 +37,7 @@ import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.MeshData;
 import org.jmol.util.BSUtil;
@@ -181,6 +181,8 @@ abstract class AtomDataReader extends VolumeDataReader {
       atomData.bsSelected = null;
     ac = atomData.ac;
     modelIndex = atomData.firstModelIndex;
+    if (modelInvRotation != null)
+      atomData.transformXYZ(modelInvRotation, bsSelected);
     boolean needRadius = false;
     for (int i = 0; i < ac; i++) {
       if ((bsSelected == null || bsSelected.get(i)) && (!bsMyIgnored.get(i))) {
@@ -256,8 +258,6 @@ abstract class AtomDataReader extends VolumeDataReader {
     firstNearbyAtom = myAtomCount;
     if (!isQuiet)
       Logger.info(myAtomCount + " atoms will be used in the surface calculation");
-    if (modelInvRotation != null)
-      atomData.transformXYZ(modelInvRotation, bsSelected);
 
     if (myAtomCount == 0) {
       setBBox(P3.new3(10, 10, 10), 0);

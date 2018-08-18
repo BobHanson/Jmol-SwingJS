@@ -29,7 +29,7 @@ package org.jmol.renderspecial;
 import javajs.util.P3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
 import org.jmol.shapespecial.Dipole;

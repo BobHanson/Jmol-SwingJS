@@ -23,17 +23,18 @@
  */
 package org.jmol.awtjs2d;
 
-import javajs.api.PlatformViewer;
-import javajs.api.SC;
-import javajs.awt.Component;
-import javajs.swing.JPopupMenu;
+import org.jmol.awtjs.swing.JPopupMenu;
 
+import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.MainPopupResourceBundle;
 import org.jmol.popup.PopupResource;
 import org.jmol.viewer.Viewer;
+
+import javajs.awt.Component;
+import javajs.awt.SC;
 
 public class JmolJSPopup extends JmolGenericPopup {
   

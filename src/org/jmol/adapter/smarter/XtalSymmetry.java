@@ -40,7 +40,7 @@ import javajs.util.V3;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.BSUtil;
@@ -197,7 +197,7 @@ public class XtalSymmetry {
           readerSymmetry = acr.getNewSymmetry();
         doApplySymmetry = readerSymmetry.createSpaceGroup(
             acr.desiredSpaceGroupIndex, (acr.sgName.indexOf("!") >= 0 ? "P1"
-                : acr.sgName), acr.unitCellParams);
+                : acr.sgName), acr.unitCellParams, acr.modDim);
       } else {
         acr.doPreSymmetry();
         readerSymmetry = null;
@@ -244,10 +244,12 @@ public class XtalSymmetry {
     int maxX = latticeCells[0];
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
-    firstSymmetryAtom = asc.getLastAtomSetAtomIndex();
+    int kcode = latticeCells[3];
+    int dim = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
+    firstAtom = asc.getLastAtomSetAtomIndex();
     BS bsAtoms = asc.bsAtoms;
     if (bsAtoms != null)
-      firstSymmetryAtom = bsAtoms.nextSetBit(firstSymmetryAtom);
+      firstAtom = bsAtoms.nextSetBit(firstAtom);
     rminx = rminy = rminz = Float.MAX_VALUE;
     rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
     P3 pt0 = null;
@@ -282,7 +284,7 @@ public class XtalSymmetry {
       if (bsAtoms == null)
         asc.bsAtoms = bsAtoms = new BS();
       acr.forcePacked = true;
-      bsAtoms.setBits(firstSymmetryAtom, asc.ac);
+      bsAtoms.setBits(firstAtom, asc.ac);
       doPackUnitCell = false;
       minXYZ = new P3i();
       maxXYZ = P3i.new3(1, 1, 1);
@@ -299,7 +301,7 @@ public class XtalSymmetry {
       applyAllSymmetry(acr.ms, bsAtoms);
       pt0 = new P3();
       Atom[] atoms = asc.atoms;
-      for (int i = asc.ac; --i >= firstSymmetryAtom; ) {
+      for (int i = asc.ac; --i >= firstAtom; ) {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
@@ -327,7 +329,7 @@ public class XtalSymmetry {
         // in terms of the old unit cell
         minXYZ = new P3i();
         maxXYZ = P3i.new3(maxX, maxY, maxZ);
-        symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+        SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
 
         // base origin for new unit cell
         pt0 = P3.newP(oabc[0]);
@@ -395,7 +397,7 @@ public class XtalSymmetry {
     }
     minXYZ = new P3i();
     maxXYZ = P3i.new3(maxX, maxY, maxZ);
-    symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+    SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
     if (oabc == null) {
       applyAllSymmetry(acr.ms, bsAtoms);
       return;
@@ -564,7 +566,7 @@ public class XtalSymmetry {
   private void applyAllSymmetry(MSInterface ms, BS bsAtoms) throws Exception {
     if (asc.ac == 0 || bsAtoms != null && bsAtoms.isEmpty())
       return;
-    int n = noSymmetryCount = asc.baseSymmetryAtomCount > 0 ? n = asc.baseSymmetryAtomCount
+    int n = noSymmetryCount = asc.baseSymmetryAtomCount > 0 ? asc.baseSymmetryAtomCount
         : bsAtoms == null ? asc.getLastAtomSetAtomCount() : asc.ac
             - bsAtoms.nextSetBit(asc.getLastAtomSetAtomIndex());
     asc.setTensors();
@@ -575,7 +577,9 @@ public class XtalSymmetry {
     if (excludedOps != null)
       asc.checkSpecial = true;
     dtype = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
-    symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+    SimpleUnitCell.setMinMaxLatticeParameters(dtype, minXYZ, maxXYZ, 0);
+    latticeOp = symmetry.getLatticeOp();
+    latticeOnly = (asc.checkLatticeOnly && latticeOp >= 0); // CrystalReader
     if (doCentroidUnitCell)
       asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
           maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
@@ -628,15 +632,16 @@ public class XtalSymmetry {
     }
     int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
         * (maxXYZ.z - minXYZ.z);
-    int cartesianCount = (asc.checkSpecial || acr.thisBiomolecule != null ? n
-        * operationCount * nCells : symmetryRange > 0 ? n * operationCount // checking against {1 1 1}
+    int nsym = n *  (latticeOnly ? 4 : operationCount);
+    int cartesianCount = (asc.checkSpecial || acr.thisBiomolecule != null ? 
+        nsym * nCells : symmetryRange > 0 ? nsym  // checking against {1 1 1}
     //        : symmetryRange < 0 ? 1 // checking against symop=1555 set; just a box
         : 1 // not checking
     );
     P3[] cartesians = new P3[cartesianCount];
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < n; i++)
-      atoms[i + firstSymmetryAtom].bsSymmetry = BS.newN(operationCount
+      atoms[firstAtom + i].bsSymmetry = BS.newN(operationCount
           * (nCells + 1));
     int pt = 0;
     int[] unitCells = new int[nCells];
@@ -656,13 +661,11 @@ public class XtalSymmetry {
     // incommensurate symmetry can have lattice centering, resulting in 
     // duplication of operators. There's a bug later on that requires we 
     // only do this with the first atom set for now, at least.
-    SymmetryInterface symmetry = this.symmetry;
-    SymmetryInterface lastSymmetry = symmetry;
-    latticeOp = symmetry.getLatticeOp();
-    checkAll = (asc.atomSetCount == 1 && asc.checkSpecial && latticeOp >= 0);
-    latticeOnly = (asc.checkLatticeOnly && latticeOp >= 0); // CrystalReader
+    SymmetryInterface thisSymmetry = symmetry;
+    SymmetryInterface lastSymmetry = thisSymmetry;
+    checkAll = (latticeOnly || asc.atomSetCount == 1 && asc.checkSpecial && latticeOp >= 0);
     P3 pttemp = null;
-    M4 op = symmetry.getSpaceGroupOperation(0);
+    M4 op = thisSymmetry.getSpaceGroupOperation(0);
     if (doPackUnitCell) {
       pttemp = new P3();
       ptOffset.set(0, 0, 0);
@@ -672,20 +675,20 @@ public class XtalSymmetry {
     Lst<M4> lstNCS = acr.lstNCS;
 
     if (lstNCS != null && lstNCS.get(0).m33 == 0) {
-      int nOp = symmetry.getSpaceGroupOperationCount();
+      int nOp = thisSymmetry.getSpaceGroupOperationCount();
       int nn = lstNCS.size();
       for (int i = nn; --i >= 0;) {
         M4 m = lstNCS.get(i);
         m.m33 = 1;
-        symmetry.toFractionalM(m);
+        thisSymmetry.toFractionalM(m);
       }
       for (int i = 1; i < nOp; i++) {
-        M4 m1 = symmetry.getSpaceGroupOperation(i);
+        M4 m1 = thisSymmetry.getSpaceGroupOperation(i);
         for (int j = 0; j < nn; j++) {
           M4 m = M4.newM4(lstNCS.get(j));
           m.mul2(m1, m);
           if (doNormalize)
-            SymmetryOperation.setOffset(m, atoms, firstSymmetryAtom,
+            SymmetryOperation.setOffset(m, atoms, firstAtom,
                 noSymmetryCount);
           lstNCS.addLast(m);
         }
@@ -703,22 +706,22 @@ public class XtalSymmetry {
           // base cell only
 
           for (pt = 0; pt < n; pt++) {
-            Atom atom = atoms[firstSymmetryAtom + pt];
+            Atom atom = atoms[firstAtom + pt];
             if (ms != null) {
-              symmetry = ms.getAtomSymmetry(atom, this.symmetry);
-              if (symmetry != lastSymmetry) {
-                if (symmetry.getSpaceGroupOperationCount() == 0)
-                  finalizeSymmetry(lastSymmetry = symmetry);
-                op = symmetry.getSpaceGroupOperation(0);
+              thisSymmetry = ms.getAtomSymmetry(atom, this.symmetry);
+              if (thisSymmetry != lastSymmetry) {
+                if (thisSymmetry.getSpaceGroupOperationCount() == 0)
+                  finalizeSymmetry(lastSymmetry = thisSymmetry);
+                op = thisSymmetry.getSpaceGroupOperation(0);
               }
             }
             P3 c = P3.newP(atom);
             op.rotTrans(c);
-            symmetry.toCartesian(c, false);
+            thisSymmetry.toCartesian(c, false);
             if (doPackUnitCell) {
-              symmetry.toUnitCell(c, ptOffset);
+              thisSymmetry.toUnitCell(c, ptOffset);
               pttemp.setT(c);
-              symmetry.toFractional(pttemp, false);
+              thisSymmetry.toFractional(pttemp, false);
               if (acr.fixJavaFloat)
                 PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
@@ -772,14 +775,14 @@ public class XtalSymmetry {
             pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt, iCell
                 * operationCount, cartesians, ms, excludedOps, atomMap);
         }
-    if (iCell * n == asc.ac - firstSymmetryAtom)
+    if (iCell * n == asc.ac - firstAtom)
       duplicateAtomProperties(iCell);
     setSymmetryOps();
     asc.setCurrentModelInfo("presymmetryAtomIndex",
-        Integer.valueOf(firstSymmetryAtom));
+        Integer.valueOf(firstAtom));
     asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
     asc.setCurrentModelInfo("latticeDesignation",
-        symmetry.getLatticeDesignation());
+        thisSymmetry.getLatticeDesignation());
     asc.setCurrentModelInfo("unitCellRange", unitCells);
     asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
     baseUnitCell = unitCellParams;
@@ -827,16 +830,17 @@ public class XtalSymmetry {
     SymmetryInterface symmetry = this.symmetry;
     if (checkRangeNoSymmetry)
       baseCount = noSymmetryCount;
-    int atomMax = firstSymmetryAtom + noSymmetryCount;
+    int atomMax = firstAtom + noSymmetryCount;
     P3 ptAtom = new P3();
     String code = null;
     float d0 = (checkOps ? 0.01f : 0.0001f);
     char subSystemId = '\0';
-    int j00 = (bsAtoms == null ? firstSymmetryAtom : bsAtoms.nextSetBit(0));
+    int j00 = (bsAtoms == null ? firstAtom : bsAtoms.nextSetBit(firstAtom));
     out: for (int iSym = 0; iSym < nOperations; iSym++) {
 
-      if (isBaseCell && iSym == 0 || latticeOnly && iSym > 0
-          && iSym != latticeOp || excludedOps != null && excludedOps.get(iSym))
+      if (isBaseCell && iSym == 0 
+          || latticeOnly && iSym > 0 && (iSym % latticeOp) != 0 
+          || excludedOps != null && excludedOps.get(iSym))
         continue;
 
       /* pt0 sets the range of points cross-checked. 
@@ -849,11 +853,11 @@ public class XtalSymmetry {
        *    
        */
 
-      int pt0 = (checkSpecial || excludedOps != null ? pt
+      int pt0 = firstAtom + (checkSpecial || excludedOps != null ? pt
           : checkRange111 ? baseCount : 0);
       float spinOp = (iSym >= nOp ? 0 : asc.vibScale == 0 ? symmetry
           .getSpinOp(iSym) : asc.vibScale);
-      int i0 = Math.max(firstSymmetryAtom,
+      int i0 = Math.max(firstAtom,
           (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
       boolean checkDistance = checkDistances;
       int spt = (iSym >= nOp ? (iSym - nOp) / nNCS : iSym);
@@ -907,13 +911,15 @@ public class XtalSymmetry {
                   || c.y > rmaxy || c.z > rmaxz))
             continue;
           float minDist2 = Float.MAX_VALUE;
+          // checkAll means we have to check against operations that have
+          // just been done; otherwise we can check only to the base set
           int j0 = (checkAll ? asc.ac : pt0);
           String name = a.atomName;
           char id = (code == null ? a.altLoc : subSystemId);
           for (int j = j00; j < j0; j++) {
             if (bsAtoms != null && !bsAtoms.get(j))
               continue;
-            P3 pc = cartesians[j];
+            P3 pc = cartesians[j - firstAtom];
             if (pc == null)
               continue;
             float d2 = c.distanceSquared(pc);
@@ -929,7 +935,7 @@ public class XtalSymmetry {
                 excludedOps.set(iSym);
                 continue out;
               }
-              special = asc.atoms[firstSymmetryAtom + j];
+              special = asc.atoms[j];              
               if ((special.atomName == null || special.atomName.equals(name))
                   && special.altLoc == id)
                 break;
@@ -956,9 +962,9 @@ public class XtalSymmetry {
           if (addBonds)
             atomMap[atomSite] = asc.ac;
           Atom atom1 = asc.newCloneAtom(a);
+          atom1.setT(ptAtom);
           if (asc.bsAtoms != null)
             asc.bsAtoms.set(atom1.index);
-          atom1.setT(ptAtom);
           if (spinOp != 0 && atom1.vib != null) {
             // spinOp is making the correction for spin being a pseudoVector, not a standard vector
             symmetry.getSpaceGroupOperation(iSym).rotate(atom1.vib);
@@ -1031,7 +1037,7 @@ public class XtalSymmetry {
 
   private void finalizeSymmetry(SymmetryInterface symmetry) {
     String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, "spaceGroup");
-    symmetry.setFinalOperations(name, asc.atoms, firstSymmetryAtom,
+    symmetry.setFinalOperations(name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!"))
       setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
@@ -1065,7 +1071,7 @@ public class XtalSymmetry {
   private int latticeOp;
   private boolean latticeOnly;
   private int noSymmetryCount;
-  private int firstSymmetryAtom;
+  private int firstAtom;
 
   private final static int PARTICLE_NONE = 0;
   private final static int PARTICLE_CHAIN = 1;
@@ -1102,7 +1108,7 @@ public class XtalSymmetry {
     int len = biomts.size();
     this.applySymmetryToBonds = applySymmetryToBonds;
     bondCount0 = asc.bondCount;
-    firstSymmetryAtom = asc.getLastAtomSetAtomIndex();
+    firstAtom = asc.getLastAtomSetAtomIndex();
     int atomMax = asc.ac;
     Map<Integer, BS> ht = new Hashtable<Integer, BS>();
     int nChain = 0;
@@ -1110,7 +1116,7 @@ public class XtalSymmetry {
     boolean addBonds = (bondCount0 > asc.bondIndex0 && applySymmetryToBonds);
     switch (particleMode) {
     case PARTICLE_CHAIN:
-      for (int i = atomMax; --i >= firstSymmetryAtom;) {
+      for (int i = atomMax; --i >= firstAtom;) {
         Integer id = Integer.valueOf(atoms[i].chainID);
         BS bs = ht.get(id);
         if (bs == null) {
@@ -1137,7 +1143,7 @@ public class XtalSymmetry {
         a.atomName = "Pt" + ichain;
         a.chainID = e.getKey().intValue();
       }
-      firstSymmetryAtom = atomMax;
+      firstAtom = atomMax;
       atomMax += nChain;
       addBonds = false;
       break;
@@ -1146,13 +1152,13 @@ public class XtalSymmetry {
       asc.bsAtoms.set(atomMax);
       Atom a = atoms[atomMax] = new Atom();
       a.set(0, 0, 0);
-      for (int i = atomMax; --i >= firstSymmetryAtom;)
+      for (int i = atomMax; --i >= firstAtom;)
         a.add(atoms[i]);
-      a.scale(1f / (atomMax - firstSymmetryAtom));
+      a.scale(1f / (atomMax - firstAtom));
       a.atomName = "Pt";
       a.radius = 16;
       asc.addAtom(a);
-      firstSymmetryAtom = atomMax++;
+      firstAtom = atomMax++;
       addBonds = false;
       break;
     }
@@ -1163,7 +1169,7 @@ public class XtalSymmetry {
           PT.parseInt(filter.substring(filter.indexOf("#<") + 2)) - 1);
       filter = PT.rep(filter, "#<", "_<");
     }
-    for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++)
+    for (int iAtom = firstAtom; iAtom < atomMax; iAtom++)
       atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
     BS bsAtoms = asc.bsAtoms;
     int[] atomMap = (addBonds ? new int[asc.ac] : null);
@@ -1187,7 +1193,7 @@ public class XtalSymmetry {
           bsAtoms.and(asc.bsAtoms);
         chains = null;
       }
-      for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++) {
+      for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
         if (bsAtoms != null
             && !bsAtoms.get(iAtom)
             || chains != null
@@ -1226,12 +1232,12 @@ public class XtalSymmetry {
     if (biomtchains != null) {
       if (asc.bsAtoms == null)
         asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-      asc.bsAtoms.clearBits(firstSymmetryAtom, atomMax);
+      asc.bsAtoms.clearBits(firstAtom, atomMax);
     }
 
-    noSymmetryCount = atomMax - firstSymmetryAtom;
+    noSymmetryCount = atomMax - firstAtom;
     asc.setCurrentModelInfo("presymmetryAtomIndex",
-        Integer.valueOf(firstSymmetryAtom));
+        Integer.valueOf(firstAtom));
     asc.setCurrentModelInfo("presymmetryAtomCount",
         Integer.valueOf(noSymmetryCount));
     asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(len));

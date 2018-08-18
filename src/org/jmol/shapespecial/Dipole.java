@@ -29,7 +29,7 @@ import org.jmol.modelset.Bond;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 import javajs.util.Lst;
 import javajs.util.SB;

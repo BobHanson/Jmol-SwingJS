@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
@@ -54,7 +53,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -87,7 +86,6 @@ import org.jmol.viewer.binding.Binding;
  */
 
 
-@J2SIgnoreImport({ javajs.util.XmlUtil.class })
 public class PropertyManager implements JmolPropertyManager {
 
   public PropertyManager() {
@@ -1903,8 +1901,8 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("atom1", infoA);
     info.put("atom2", infoB);
     info.put("jmol_order", "0x" + Integer.toHexString(bond.order));
-    info.put("order", Float.valueOf(PT.fVal(Edge
-        .getBondOrderNumberFromOrder(bond.order))));
+    info.put("order", Float.valueOf(Edge
+        .getBondOrderNumberFromOrder(bond.order)));
     info.put("type", Edge.getBondOrderNameFromOrder(bond.order));
     info.put("radius", Float.valueOf((float) (bond.mad / 2000.)));
     info.put("length_Ang", Float.valueOf(atom1.distance(atom2)));
@@ -2147,7 +2145,7 @@ public class PropertyManager implements JmolPropertyManager {
     int iModelLast = -1;
     int lastAtomIndex = bs.length() - 1;
     int lastModelIndex = atoms[lastAtomIndex].mi;
-    boolean showModels = (iModel != lastModelIndex);
+    boolean isMultipleModels = (iModel != lastModelIndex);
     BS bsModels = vwr.ms.getModelBS(bs, true);
     int nModels = bsModels.cardinality();
     Lst<String> lines = new Lst<String>();
@@ -2178,7 +2176,7 @@ public class PropertyManager implements JmolPropertyManager {
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       isBiomodel = models[a.mi].isBioModel;
-      if (showModels && a.mi != iModelLast) {
+      if (isMultipleModels && a.mi != iModelLast) {
         if (iModelLast != -1) {
           modelPt = fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
           out.append("ENDMDL\n");
@@ -2224,16 +2222,17 @@ public class PropertyManager implements JmolPropertyManager {
       lines.addLast(XX);
     }
     fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
-    if (showModels)
+    if (isMultipleModels)
       out.append("ENDMDL\n");
 
     // now for CONECT records...
     modelPt = -1;
     iModelLast = -1;
-    isBiomodel = false;
+    String conectKey = "" + (isMultipleModels ? modelPt : 0);
+   isBiomodel = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      if (showModels && a.mi != iModelLast) {
+      if (isMultipleModels && a.mi != iModelLast) {
         iModelLast = a.mi;
         isBiomodel = models[iModelLast].isBioModel;
         modelPt++;
@@ -2261,9 +2260,9 @@ public class PropertyManager implements JmolPropertyManager {
                 continue; // only one entry in this case -- pseudo-PmapDB style
               //$FALL-THROUGH$
             case 1:
-              Integer inew = map.get("" + modelPt + "."
+              Integer inew = map.get(conectKey + "."
                   + Integer.valueOf(iThis));
-              Integer inew2 = map.get("" + modelPt + "."
+              Integer inew2 = map.get(conectKey + "."
                   + Integer.valueOf(iOther));
               if (inew == null || inew2 == null)
                 break;

@@ -86,7 +86,7 @@ public class SpartanReader extends BasisFunctionReader {
   }
 
   private void readFrequencies() throws Exception {
-    int ac = asc.atomSetAtomCounts[0];
+    int ac = asc.getAtomSetAtomCount(0);
     while (true) {
       discardLinesUntilNonBlank();
       int lineBaseFreqCount = vibrationNumber;
@@ -101,7 +101,7 @@ public class SpartanReader extends BasisFunctionReader {
         if (!ignore[lineFreqCount]) {
           if (vibrationNumber > 1)
             asc.cloneFirstAtomSet(0);
-          asc.setAtomSetFrequency(null, null, "" + frequency, null);
+          asc.setAtomSetFrequency(vibrationNumber, null, null, "" + frequency, null);
         }
       }
       if (lineFreqCount == 0)

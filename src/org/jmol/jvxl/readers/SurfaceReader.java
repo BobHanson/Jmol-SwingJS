@@ -24,7 +24,7 @@
 package org.jmol.jvxl.readers;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.api.MeshDataServer;
 import org.jmol.jvxl.api.VertexDataServer;
 import org.jmol.jvxl.calc.MarchingCubes;

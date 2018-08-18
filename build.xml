@@ -4,51 +4,7 @@
   -->
 <!--
 
-Developer note from Bob Hanson, 12/2016
-
-The Jmol project uses resources from two other projects, JSmol and JSpecView.
-You can modify Jmol without those projects, but both of these projects share code
-from Jmol and, though separate projects, provide the files in Jmol for final distribution.
-
-Required checkouts include:
-
-svn+ssh://svn.code.sf.net/p/smol/code, Trunk:trunk
-svn+ssh://svn.code.sf.net/p/jspecview/svn:dev2/JSpecView
-svn+ssh://svn.code.sf.net/p/jspecview/svn:dev2/JSpecViewLib
-
-Relevant files created in this project by build scripts in those projects include:
-
-  appletweb/jsmol.zip
-  jars/JSpecView.jar
-  
-  appletweb/jsmol.zip is created using:
-
-   JSmol/build_11_fromjmol.xml
-   JSmol/build_12_fromjspecview.xml 
-   JSmol/build_13_tojs.xml
-   
-  jars/JSpecView.jar is created using 
-
-   JSpecviewLib/build.xml
-   JSpecview/build.xml
-
-Note that if you modify Jmol source without also running the JSmol build scripts, 
-then JSmol will not reflect your modifications.
-
-The overall sequence for full HTML5 code creation
-when the Jmol or JSpecView code is modified, is as follows:
-
-1) Do all coding modifications in the Jmol and JSpecView projects. Never modify JSmol/src.
-2) use jmol/buildmin.xml to create the JAR files.
-2) Build JSpecViewLib and JSpecView if there are changes there. 
-   The JSpecView*.jar files will be copied into this project.
-3) Build JSmol using the build_11.., build_12.., build_13.. 
-   jsmol.zip will be created and copied to jmol/appletweb/.
-
-4) for distribution, then 
-
-	a) run jmol/builddist.xml
-	b) run jmol/tools/jmol-release.xml
+see build.README.txt
 
   -->
 	
@@ -469,7 +425,7 @@ all support for previous versions removed
     <!-- unjar dest="${appjars.dir}" src="${lib.dir}/${itext.jar}"/ -->
     <unjar dest="${appjars.dir}" src="${lib.dir}/${naga.jar}"/>
     <unjar dest="${appjars.dir}" src="${lib.dir}/${commons-cli.jar}"/>
-    <unjar dest="${appjars.dir}" src="${lib.dir}/JSpecView.jar"/>
+    <!-- unjar dest="${appjars.dir}" src="${lib.dir}/JSpecView.jar"/ -->
   	<delete dir="${appjars.dir}/javajs" />
   	<delete dir="${appjars.dir}/org/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />

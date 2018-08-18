@@ -28,13 +28,14 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
-import javajs.api.SC;
 import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
-import org.jmol.java.BS;
+
+import javajs.awt.SC;
+import javajs.util.BS;
 import org.jmol.modelset.Group;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
@@ -428,7 +429,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       menuSetLabel(menu, "");
       menuEnable(menu, false);
     } else {
-      menuSetLabel(menu, GT.o(GT._(text), modelSetFileName));
+      menuSetLabel(menu, GT.o(GT.$(text), modelSetFileName));
       menuEnable(menu, true);
     }
   }
@@ -549,11 +550,11 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     int nOrb = (mos == null ? 0 : mos.size());
     String text = getMenuText("surfMoComputedMenuText");
     if (nOrb == 0) {
-      menuSetLabel(menu, GT.o(GT._(text), ""));
+      menuSetLabel(menu, GT.o(GT.$(text), ""));
       menuEnable(menu, false);
       return;
     }
-    menuSetLabel(menu, GT.i(GT._(text), nOrb));
+    menuSetLabel(menu, GT.i(GT.$(text), nOrb));
     menuEnable(menu, true);
     SC subMenu = menu;
     int nmod = (nOrb % itemMax);
@@ -751,7 +752,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (infolist == null)
       return;
     String name = (String) info.get("spaceGroupName");
-    menuSetLabel(menu, name == null ? GT._("Space Group") : name);
+    menuSetLabel(menu, name == null ? GT.$("Space Group") : name);
     SC subMenu = menu;
     int nmod = itemMax;
     int pt = (infolist.length > itemMax ? 0 : Integer.MIN_VALUE);
@@ -767,7 +768,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       }
       if (i == 0)
         menuEnable(
-            menuCreateItem(subMenu, GT._("none"), "draw sym_* delete", null),
+            menuCreateItem(subMenu, GT.$("none"), "draw sym_* delete", null),
             true);        
       String sym = (String) infolist[i][1]; // XYZoriginal
       if (sym.indexOf("x1") < 0)
@@ -826,7 +827,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (modelCount < 1)
       return;
     if (modelCount > 1)
-      menuCreateCheckboxItem(menu, GT._("All"), "frame 0 ##", null,
+      menuCreateCheckboxItem(menu, GT.$("All"), "frame 0 ##", null,
           (modelIndex < 0), false);
 
     SC subMenu = menu;
@@ -877,7 +878,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     menuSetLabel(menu, gti("configurationMenuText", nAltLocs));
     menuRemoveAll(menu, 0);
     String script = "hide none ##CONFIG";
-    menuCreateCheckboxItem(menu, GT._("All"), script, null,
+    menuCreateCheckboxItem(menu, GT.$("All"), script, null,
         (updateMode == UPDATE_CONFIG && configurationSelected.equals(script)),
         false);
     for (int i = 0; i < nAltLocs; i++) {
@@ -936,7 +937,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
           gti("polymersText", vwr.ms.getBioPolymerCountInModel(modelIndex)));
       SC submenu = htMenus.get("BiomoleculesMenu");
       if (submenu == null) {
-        submenu = menuNewSubMenu(GT._(getMenuText("biomoleculesMenuText")),
+        submenu = menuNewSubMenu(GT.$(getMenuText("biomoleculesMenuText")),
             menuGetId(menu) + ".biomolecules");
         menuAddSubMenu(menu, submenu);
       }
@@ -969,11 +970,11 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
   }
 
   private String gti(String s, int n) {
-    return GT.i(GT._(getMenuText(s)), n);
+    return GT.i(GT.$(getMenuText(s)), n);
   }
 
   private String gto(String s, Object o) {
-    return GT.o(GT._(getMenuText(s)), o);
+    return GT.o(GT.$(getMenuText(s)), o);
   }
 
   private void updateAboutSubmenu() {
@@ -988,12 +989,12 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       Runtime runtime = Runtime.getRuntime();
       int n = runtime.availableProcessors();
       if (n > 0)
-        setText("JAVAprocessors", GT.i(GT._("{0} processors"), n));
+        setText("JAVAprocessors", GT.i(GT.$("{0} processors"), n));
       setText("JAVAmemTotal",
-          GT.i(GT._("{0} MB total"), convertToMegabytes(runtime.totalMemory())));
-      //     memFree.setText(GT.i(GT._("{0} MB free"), convertToMegabytes(runtime.freeMemory())));
+          GT.i(GT.$("{0} MB total"), convertToMegabytes(runtime.totalMemory())));
+      //     memFree.setText(GT.i(GT.$("{0} MB free"), convertToMegabytes(runtime.freeMemory())));
       setText("JAVAmemMax",
-          GT.i(GT._("{0} MB maximum"), convertToMegabytes(runtime.maxMemory())));
+          GT.i(GT.$("{0} MB maximum"), convertToMegabytes(runtime.maxMemory())));
     }
 
   }
@@ -1013,8 +1014,8 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
         String code = languages[i].code;
         String name = languages[i].language;
         String nativeName = languages[i].nativeLanguage;
-        String menuLabel = code + " - " + GT._(name);
-        if ((nativeName != null) && (!nativeName.equals(GT._(name)))) {
+        String menuLabel = code + " - " + GT.$(name);
+        if ((nativeName != null) && (!nativeName.equals(GT.$(name)))) {
           menuLabel += " - " + nativeName;
         }
         if (p++ > 0 && (p % 4 == 1))
@@ -1047,7 +1048,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     else if (name.indexOf("captureFps") >= 0)
       info = "" + vwr.getInt(T.animationfps);
     else if (name.indexOf("captureMenu") >= 0)
-      info = (vwr.captureParams == null ? GT._("not capturing") : vwr.fm
+      info = (vwr.captureParams == null ? GT.$("not capturing") : vwr.fm
           .getFilePath((String) vwr.captureParams.get("captureFileName"),
               false, true)
           + " " + vwr.captureParams.get("captureCount"));

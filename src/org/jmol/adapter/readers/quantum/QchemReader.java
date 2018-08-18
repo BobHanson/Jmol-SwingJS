@@ -205,13 +205,13 @@ public class QchemReader extends MOReader {
         if (ignore[i])
           continue;
         asc.cloneLastAtomSet();
-        asc.setAtomSetFrequency("Job " + calculationNumber, 
-            null, frequencies[i + 1], null);
+        asc.setAtomSetFrequency(vibrationNumber, 
+            "Job " + calculationNumber, null, frequencies[i + 1], null);
       }
 
       // position to start reading the displacement vectors
       discardLinesUntilStartsWith("               X");
-      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
       discardLinesUntilBlank();
     }
   }
@@ -687,7 +687,7 @@ $end
       // we have all the info we need 
       for (int i = 0; i < nMO; i++) {
         MOInfo moInfo = moInfos[moid[i]];
-        mos[i].put("energy", Float.valueOf(PT.fVal(energy[i])));
+        mos[i].put("energy", Float.valueOf(energy[i]));
         mos[i].put("coefficients", mocoef[i]);
         String label = alphaBeta;
         int ne = moInfo.ne;

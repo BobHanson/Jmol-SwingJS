@@ -34,10 +34,6 @@ import org.jmol.viewer.Viewer;
 
 public class MoveToThread extends JmolThread {
 
-  /**
-   * @j2sIgnoreSuperConstructor
-   * 
-   */
   public MoveToThread() {
     aaStepCenter = new V3();
     aaStepNavCenter = new V3();

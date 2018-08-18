@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
@@ -529,10 +529,10 @@ public class NWChemReader extends MOReader {
         if (!firstTime)
           asc.cloneLastAtomSet();
         firstTime = false;
-        asc.setAtomSetFrequency(path, null, tokens[i], null);
+        asc.setAtomSetFrequency(vibrationNumber, path, null, tokens[i], null);
       }
       readLines(1);
-      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, false, 0, 0, null, 0, null);
       readLines(3);
     }
 
@@ -703,6 +703,7 @@ public class NWChemReader extends MOReader {
   private static String FC_LIST = "XXX   XXY   XXZ   XYY   XYZ   XZZ   YYY   YYZ   YZZ   ZZZ";
 
   private boolean readBasis() throws Exception {
+    // F only; G, H, I not enabled. Just set getDFMap to enable those
     gaussianCount = 0;
     shellCount = 0;
     nBasisFunctions = 0;

@@ -31,7 +31,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.C;

@@ -24,6 +24,9 @@
 
 package org.jmol.symmetry;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
@@ -609,7 +612,7 @@ public class SymmetryOperation extends M4 {
   final static String[] labelsXn = new String[] {"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13"};
   final static String[] labelsXnSub = new String[] {"x", "y", "z", "a",  "b",  "c",  "d",  "e",  "f",  "g",   "h",   "i",   "j"};
 
-  final static String getXYZFromMatrix(M4 mat, boolean is12ths,
+  final public static String getXYZFromMatrix(M4 mat, boolean is12ths,
                                        boolean allPositive, boolean halfOrLess) {
     String str = "";
     SymmetryOperation op = (mat instanceof SymmetryOperation ? (SymmetryOperation) mat
@@ -812,6 +815,30 @@ public class SymmetryOperation extends M4 {
             SymmetryOperation.getXYZFromMatrix(m2, false, false, false), "x",
             "mx"), "y", "my"), "z", "mz") + ")";
     return xyz;
+  }
+
+  private Hashtable<String, Object> info;
+  
+  public Map<String, Object> getInfo() {
+    if (info == null) {
+      info = new Hashtable<String, Object>();
+      info.put("xyz", xyz);
+      if (centering != null)
+        info.put("centering", centering);
+      info.put("index", Integer.valueOf(index));
+      info.put("isCenteringOp", Boolean.valueOf(isCenteringOp));
+      if (linearRotTrans != null)
+        info.put("linearRotTrans", linearRotTrans);
+      info.put("modulationDimension", Integer.valueOf(modDim));
+      info.put("matrix", M4.newM4(this));
+      if (magOp != Float.MAX_VALUE)
+        info.put("magOp", Float.valueOf(magOp));
+      info.put("id", Integer.valueOf(opId));
+      info.put("timeReversal",Integer.valueOf(timeReversal));
+      if (xyzOriginal != null)
+        info.put("xyzOriginal", xyzOriginal);
+    }
+    return info;
   }
   
 }

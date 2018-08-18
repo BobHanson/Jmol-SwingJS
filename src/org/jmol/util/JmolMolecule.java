@@ -28,7 +28,7 @@ package org.jmol.util;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 
 import javajs.util.AU;

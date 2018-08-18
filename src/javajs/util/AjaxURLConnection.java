@@ -1,11 +1,12 @@
 package javajs.util;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import javajs.api.JmolObjectInterface;
+import javajs.api.js.J2SObjectInterface;
 
 /**
  * 
@@ -33,23 +34,26 @@ public class AjaxURLConnection extends URLConnection {
    * the method is "private", but in JavaScript that can still be overloaded.
    * Just set something to org.jmol.awtjs.JmolURLConnection.prototype.doAjax
    * 
+   * 
+   * @param isBinary 
+   * 
    * @return file data as a javajs.util.SB or byte[] depending upon the file
    *         type.
    * 
    * 
    */
   @SuppressWarnings("null")
-  private Object doAjax() {
-    JmolObjectInterface jmol = null;
+  private Object doAjax(boolean isBinary) {
+    J2SObjectInterface j2s = null;
     /**
      * @j2sNative
      * 
-     *            jmol = Jmol;
+     *            j2s = J2S;
      * 
      */
     {
     }
-    return jmol._doAjax(url, postOut, bytesOut);
+    return j2s._doAjax(url, postOut, bytesOut, isBinary);
   }
 
   @Override
@@ -67,23 +71,58 @@ public class AjaxURLConnection extends URLConnection {
     //     type = "application/x-www-form-urlencoded";
   }
 
-  @Override
-  public InputStream getInputStream() {
-    InputStream is = null;
-    Object o = doAjax();
-    if (AU.isAB(o))
-      is = Rdr.getBIS((byte[]) o);
-    else if (o instanceof SB) 
-      is = Rdr.getBIS(Rdr.getBytesFromSB((SB)o));
-    else if (o instanceof String)
-      is = Rdr.getBIS(((String) o).getBytes());
-    return is;
+	@Override
+	public InputStream getInputStream() {
+		BufferedInputStream is = getAttachedStreamData(url, false);
+		return (is == null ? attachStreamData(url, doAjax(true)) : is);
+	}
+
+	/**
+	 * J2S will attach the data (String, SB, or byte[]) to any URL that is 
+	 * retrieved using a ClassLoader. This improves performance by
+	 * not going back to the server every time a second time, since
+	 * the first time in Java is usually just to see if it exists. 
+	 * 
+	 * @param url
+	 * @param andDelete 
+	 * @return String, SB, or byte[]
+	 */
+	@SuppressWarnings("null")
+  public static BufferedInputStream getAttachedStreamData(URL url, boolean andDelete) {
+	
+		Object data = null;
+		/**
+		 * @j2sNative
+		 * 
+		 *       data = url._streamData;
+		 *       if (andDelete) url._streamData = null;
+		 */
+		{
+		}
+		return (data == null ? null : Rdr.toBIS(data));
+	}
+
+  /**
+   * 
+   * @param url
+   * @param o
+   * @return BufferedInputStream
+   */
+  public static BufferedInputStream attachStreamData(URL url, Object o) {
+	   /**
+	    * @j2sNative
+	    * 
+	    *   url._streamData = o;
+	    */
+	   
+	    return (o == null ? null : Rdr.toBIS(o));
   }
+
   /**
    * @return javajs.util.SB or byte[], depending upon the file type
    */
   public Object getContents() {
-    return doAjax();
+    return doAjax(false);
   }
 
 }

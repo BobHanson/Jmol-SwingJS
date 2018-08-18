@@ -43,7 +43,7 @@ import java.awt.image.Raster;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.net.URL;
 
-import javajs.api.PlatformViewer;
+import org.jmol.api.PlatformViewer;
 
 
 

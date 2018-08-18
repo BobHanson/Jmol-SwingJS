@@ -36,10 +36,6 @@ public abstract class T3 implements JSONEncodable, Serializable {
 
   public float x, y, z;
 
-  /**
-   * @j2sIgnore
-   * 
-   */
   public T3() {
   }
 

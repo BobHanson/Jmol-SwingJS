@@ -36,7 +36,7 @@ import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 /**
  * @author Bob Hanson hansonr@stolaf.edu 6/30/2013
@@ -83,7 +83,8 @@ public class Tensor {
     ";efg........" +
     ";isc........" +
     ";charge....." +
-    ";quadrupole.";
+    ";quadrupole." +
+    ";raman......";
   private static int getType(String type) {
     int pt = type.indexOf("_");
     if (pt >= 0)
@@ -105,6 +106,7 @@ public class Tensor {
   public static final int TYPE_ISC        = 6;
   public static final int TYPE_CHARGE     = 7;
   public static final int TYPE_QUADRUPOLE = 8;
+  public static final int TYPE_RAMAN      = 9;
 
   public double[][] asymMatrix;
   public double[][] symMatrix;    
@@ -657,15 +659,15 @@ public class Tensor {
    */
   private void sortAndNormalize() {
     // first sorted 3 2 1, then check for iso-sorting
-    Object[][] o = new Object[][] {
+    Object[] o = new Object[] {
         new Object[] { V3.newV(eigenVectors[0]), Float.valueOf(eigenValues[0]) },
         new Object[] { V3.newV(eigenVectors[1]), Float.valueOf(eigenValues[1]) },
         new Object[] { V3.newV(eigenVectors[2]), Float.valueOf(eigenValues[2]) } };
     Arrays.sort(o, getEigenSort());
     for (int i = 0; i < 3; i++) {
       int pt = i;
-      eigenVectors[i] = (V3) o[pt][0];
-      eigenValues[i] = ((Float) o[pt][1]).floatValue();
+      eigenVectors[i] = (V3) ((Object[]) o[pt])[0];
+      eigenValues[i] = ((Float) ((Object[]) o[pt])[1]).floatValue();
     }
     if (sortIso
         && eigenValues[2] - eigenValues[1] < eigenValues[1] - eigenValues[0]) {
@@ -689,7 +691,7 @@ public class Tensor {
         return false;
     return true;
   }
-  private static Comparator<? super Object[]> getEigenSort() {
+  private static Comparator<? super Object> getEigenSort() {
     return (tSort == null ? (tSort = new EigenSort()) : tSort);
   }
 

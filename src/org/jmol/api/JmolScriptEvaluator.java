@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javajs.util.SB;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptContext;
 import org.jmol.script.ScriptException;
@@ -21,7 +21,7 @@ public interface JmolScriptEvaluator {
 
   void pushContextDown(String why);
 
-  void resumeEval(ScriptContext sc);
+  void resumeEval(Object sc);
 
   boolean getAllowJSThreads();
 

@@ -2,18 +2,17 @@ package org.jmol.api;
 
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.Tensor;
@@ -36,7 +35,7 @@ public interface SymmetryInterface {
 
   public boolean createSpaceGroup(int desiredSpaceGroupIndex,
                                            String name,
-                                           Object data);
+                                           Object data, int modDim);
 
   public String fcoord(T3 p);
 
@@ -72,9 +71,10 @@ public interface SymmetryInterface {
 
   public Object getSpaceGroup();
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull);
 
-  public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo);
+  Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
+                              boolean isFull);
 
   public String getSpaceGroupName();
 
@@ -102,14 +102,16 @@ public interface SymmetryInterface {
 
   public float getUnitCellInfoType(int infoType);
 
-  public P3 getUnitCellMultiplier();
+  public T3 getUnitCellMultiplier();
 
   public String getUnitCellState();
   
   public P3[] getUnitCellVectors();
 
   public P3[] getUnitCellVerticesNoOffset();
-
+  
+  public Map<String, Object> getUnitCellInfoMap();
+  
   public boolean haveUnitCell();
 
   public boolean isBio();
@@ -141,8 +143,6 @@ public interface SymmetryInterface {
    * 
    */
   public void setLattice(int latt);
-
-  public void setMinMaxLatticeParameters(P3i minXYZ, P3i maxXYZ);
 
   public void setOffset(int nnn);
 
@@ -222,6 +222,9 @@ public interface SymmetryInterface {
 
   void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
 
-  public Object getConventionalUnitCell(String latticeType);
+  String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+      throws Exception;
+
+  public T3[] getConventionalUnitCell(String latticeType);
 
 }

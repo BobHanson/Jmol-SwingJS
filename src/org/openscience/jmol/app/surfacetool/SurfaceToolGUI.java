@@ -132,7 +132,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       slicerFrame.setVisible(true);
       slicerFrame.toFront();
     } else {
-      slicerFrame = new JFrame(GT._("SurfaceTool"));
+      slicerFrame = new JFrame(GT.$("SurfaceTool"));
       slicerFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
       String imageName = "org/openscience/jmol/app/images/icon.png";
       URL imageUrl = this.getClass().getClassLoader().getResource(imageName);
@@ -151,11 +151,11 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       whichOrigin = new ButtonGroup();
       originPanel = new JPanel(new GridLayout(0, 1));
       if (slicer.getUseMolecular()) {
-        viewCenterButton = new JRadioButton(GT._("View Center"), false);
-        absoluteButton = new JRadioButton(GT._("Absolute"), true);
+        viewCenterButton = new JRadioButton(GT.$("View Center"), false);
+        absoluteButton = new JRadioButton(GT.$("Absolute"), true);
       } else {
-        viewCenterButton = new JRadioButton(GT._("View Center"), true);
-        absoluteButton = new JRadioButton(GT._("Absolute"), false);
+        viewCenterButton = new JRadioButton(GT.$("View Center"), true);
+        absoluteButton = new JRadioButton(GT.$("Absolute"), false);
       }
       viewCenterButton.addActionListener(this);
       absoluteButton.addActionListener(this);
@@ -163,29 +163,29 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       whichOrigin.add(absoluteButton);
       originPanel.add(viewCenterButton);
       originPanel.add(absoluteButton);
-      originPanel.setBorder(BorderFactory.createTitledBorder(GT._("Origin")));
+      originPanel.setBorder(BorderFactory.createTitledBorder(GT.$("Origin")));
 
       capPlanesPanel = new JPanel(new GridLayout(0, 1));
-      capCheck = new JCheckBox(GT._("Cap"));
+      capCheck = new JCheckBox(GT.$("Cap"));
       capCheck
           .setToolTipText(GT
-              ._("Caps slice with opaque surfaces.\nIgnores MOs and surfaces with interior layers."));
+              .$("Caps slice with opaque surfaces.\nIgnores MOs and surfaces with interior layers."));
       capCheck.setSelected(slicer.getCapOn());
       capCheck.addActionListener(this);
       capPlanesPanel.add(capCheck);
-      boundaryPlaneCheck = new JCheckBox(GT._("Slice Planes"));
+      boundaryPlaneCheck = new JCheckBox(GT.$("Slice Planes"));
       boundaryPlaneCheck.setToolTipText(GT
-          ._("Shows planes at slicing surfaces."));
+          .$("Shows planes at slicing surfaces."));
       boundaryPlaneCheck.setSelected(false);
       slicer.showSliceBoundaryPlanes(false);
       boundaryPlaneCheck.addActionListener(this);
       capPlanesPanel.add(boundaryPlaneCheck);
 
       ghostPanel = new JPanel(new GridLayout(0, 1));
-      ghostCheck = new JCheckBox(GT._("Ghost On"));
+      ghostCheck = new JCheckBox(GT.$("Ghost On"));
       ghostCheck.setSelected(slicer.getGhostOn());
       ghostCheck.addActionListener(this);
-      ghostCheck.setToolTipText(GT._("Shows an unsliced \"ghost\"."));
+      ghostCheck.setToolTipText(GT.$("Shows an unsliced \"ghost\"."));
       ghostPanel.add(ghostCheck);
 
       topPanel.add(originPanel);
@@ -205,7 +205,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       angleUnitsList.addActionListener(this);
       angleUnitsPanel.add(angleUnitsList, BorderLayout.EAST);
       JPanel labelAndUnits = new JPanel(new GridLayout(1, 0));
-      JLabel sliderLabel = new JLabel(GT._("Angle from X-axis in XY plane"),
+      JLabel sliderLabel = new JLabel(GT.$("Angle from X-axis in XY plane"),
           SwingConstants.CENTER);
       sliderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
       labelAndUnits.add(sliderLabel);
@@ -216,7 +216,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       angleXYSlider.setPaintTicks(true);
       angleXYSlider.addChangeListener(this);
       normAnglePanel.add(angleXYSlider);
-      JLabel sliderLabel2 = new JLabel(GT._("Angle from Z-axis"),
+      JLabel sliderLabel2 = new JLabel(GT.$("Angle from Z-axis"),
           SwingConstants.CENTER);
       sliderLabel2.setAlignmentX(Component.CENTER_ALIGNMENT);
       normAnglePanel.add(sliderLabel2);
@@ -227,10 +227,10 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       updateAngleSliders();
       normAnglePanel.add(angleZSlider);
       normAnglePanel.setBorder(BorderFactory.createTitledBorder(GT
-          ._("Direction vector of normal to slice")));
+          .$("Direction vector of normal to slice")));
       sliderPanel.add(normAnglePanel);
       positionThicknessPanel = new JPanel(new GridLayout(0, 1));
-      JLabel sliderLabel3 = new JLabel(GT._("Distance of slice from origin"),
+      JLabel sliderLabel3 = new JLabel(GT.$("Distance of slice from origin"),
           SwingConstants.CENTER);
       sliderLabel3.setAlignmentX(Component.CENTER_ALIGNMENT);
       positionThicknessPanel.add(sliderLabel3);
@@ -242,7 +242,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       positionSlider.addChangeListener(this);
       updatePositionSlider();
       positionThicknessPanel.add(positionSlider);
-      JLabel sliderLabel4 = new JLabel(GT._("Thickness of slice"),
+      JLabel sliderLabel4 = new JLabel(GT.$("Thickness of slice"),
           SwingConstants.CENTER);
       sliderLabel4.setAlignmentX(Component.CENTER_ALIGNMENT);
       positionThicknessPanel.add(sliderLabel4);
@@ -260,7 +260,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
       //objects panel
       objectsPanel = new JPanel();
       objectsPanel.setBorder(BorderFactory.createTitledBorder(GT
-          ._("Select Surface(s)")));
+          .$("Select Surface(s)")));
       surfaceList = new JList<SurfaceStatus>(new DefaultListModel<SurfaceStatus>());
       surfaceList.setCellRenderer(new SurfaceListCellRenderer());
       surfaceList.addListSelectionListener(this);

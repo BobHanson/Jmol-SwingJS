@@ -3,8 +3,8 @@ package jspecview.js2d;
 
 import javajs.api.GenericColor;
 import javajs.util.CU;
-import javajs.swing.AbstractTableModel;
-import javajs.swing.TableColumn;
+import org.jmol.awtjs.swing.AbstractTableModel;
+import org.jmol.awtjs.swing.TableColumn;
 import javajs.util.BS;
 import javajs.util.SB;
 

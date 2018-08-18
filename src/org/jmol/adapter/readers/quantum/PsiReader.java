@@ -407,7 +407,7 @@ Orbital energies (a.u.):
         }
         tokens = getStrings(rd().substring(21), nThisLine, 10);
         for (int i = 0; i < nThisLine; i++) {
-          mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
+          mos[i].put("energy", Float.valueOf(tokens[i]));
         }
         continue;
       }
@@ -437,9 +437,9 @@ Orbital energies (a.u.):
       if (!doGetVibration(++vibrationNumber))
         continue;
       asc.cloneLastAtomSet();
-      asc.setAtomSetFrequency(null, null, tokens[1], null);
+      asc.setAtomSetFrequency(vibrationNumber, null, null, tokens[1], null);
       readLines(2);
-      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
       rd();
     }
   }

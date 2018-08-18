@@ -190,7 +190,7 @@ abstract public class GamessReader extends MOReader {
           haveFreq = true;
           iAtom0 -= ac;
         }
-        asc.setAtomSetFrequency(null, null, "" + frequencies[i], null);
+        asc.setAtomSetFrequency(vibrationNumber, null, null, "" + frequencies[i], null);
         if (red_masses != null)
           asc.setAtomSetModelProperty("ReducedMass",
               red_masses[red_masses.length - frequencyCount + i] + " AMU");
@@ -201,7 +201,7 @@ abstract public class GamessReader extends MOReader {
 
       }
       discardLinesUntilBlank();
-      fillFrequencyData(iAtom0, ac, ac, ignore, false, 20, 12, null, 0);
+      fillFrequencyData(iAtom0, ac, ac, ignore, false, 20, 12, null, 0, null);
       readLines(13);
     }
   }

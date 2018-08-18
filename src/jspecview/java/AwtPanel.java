@@ -52,10 +52,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javajs.api.GenericColor;
-import javajs.api.GenericFileInterface;
-import javajs.api.GenericMouseInterface;
-import javajs.api.GenericPlatform;
 import javajs.awt.Font;
+
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
@@ -72,6 +70,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
+import org.jmol.api.GenericFileInterface;
+import org.jmol.api.GenericMouseInterface;
+import org.jmol.api.GenericPlatform;
 import org.jmol.util.Logger;
 
 import jspecview.api.JSVPanel;

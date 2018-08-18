@@ -25,7 +25,7 @@
 package org.jmol.viewer;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.ModelLoader;
 import org.jmol.modelset.ModelSet;
 

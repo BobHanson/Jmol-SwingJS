@@ -28,11 +28,11 @@ package org.jmol.export;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.java.BS;
+import javajs.awt.Font;
+import javajs.util.BS;
+
 import org.jmol.util.GData;
 
-import javajs.J2SRequireImport;
-import javajs.awt.Font;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.T3;
@@ -52,8 +52,6 @@ import javajs.util.T3;
  * to extend the prototype. extendJSExporter is in JSmolGLmol.js. 
  * 
  */
-@J2SRequireImport({ org.jmol.export.___Exporter.class,
-    org.jmol.export.__CartesianExporter.class, org.jmol.export.Export3D.class })
 public class JSExporter extends __CartesianExporter {
 
   static {

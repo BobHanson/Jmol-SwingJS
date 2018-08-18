@@ -1,9 +1,11 @@
 package jspecview.js2d;
 
-import javajs.api.GenericFileInterface;
+import org.jmol.api.GenericFileInterface;
+
 import javajs.util.PT;
 
 import jspecview.api.JSVFileHelper;
+import jspecview.api.js.JSVAppletObject;
 import jspecview.common.ExportType;
 import jspecview.common.JSViewer;
 
@@ -52,7 +54,8 @@ public class JsFileHelper implements JSVFileHelper {
 	  // userData[0]: isAppend
 	  // userData[1]: script
 		
-		Object applet = vwr.html5Applet;
+		JSVAppletObject applet = vwr.html5Applet;
+		//TODO -- should reference Jmol explicitly
 		/**
 		 * @j2sNative
 		 * 
@@ -60,7 +63,6 @@ public class JsFileHelper implements JSVFileHelper {
 		 * 
 		 */
 		{
-			System.out.println(applet);
 		}
 		return null;
 	}

@@ -65,7 +65,7 @@ public class HelpDialog extends JDialog implements HyperlinkListener {
    * @param url
    */
   public HelpDialog(JFrame fr, URL url) {
-    this(fr, GT._("Jmol Help"), false);
+    this(fr, GT.$("Jmol Help"), false);
     init(url, "Help.helpURL");
   }
 
@@ -78,7 +78,7 @@ public class HelpDialog extends JDialog implements HyperlinkListener {
             .getClass().getClassLoader().getResource(resource));
       }
       html = (myURL == null ? new JEditorPane("text/plain", GT.o(
-          GT._("Unable to find url \"{0}\"."), resource)) : new JEditorPane(
+          GT.$("Unable to find url \"{0}\"."), resource)) : new JEditorPane(
           myURL));
       html.setEditable(false);
       html.addHyperlinkListener(this);
@@ -98,7 +98,7 @@ public class HelpDialog extends JDialog implements HyperlinkListener {
 
     JPanel buttonPanel = new JPanel();
     buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-    JButton ok = new JButton(GT._("OK"));
+    JButton ok = new JButton(GT.$("OK"));
     ok.addActionListener(new ActionListener() {
 
       @Override

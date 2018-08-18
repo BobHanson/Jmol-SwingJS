@@ -35,7 +35,6 @@ public class M3 extends M34 implements Serializable {
 
   /**
    * Constructs and initializes a Matrix3f to all zeros.
-   * @j2sIgnore
    */
   public M3() {
   }

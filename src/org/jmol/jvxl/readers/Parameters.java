@@ -119,7 +119,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.atomdata.RadiusData;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.ContactPair;

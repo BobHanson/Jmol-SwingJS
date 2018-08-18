@@ -32,7 +32,7 @@ import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;

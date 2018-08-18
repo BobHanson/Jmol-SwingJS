@@ -28,8 +28,6 @@ import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 
-import javajs.J2SIgnoreImport;
-import javajs.J2SRequireImport;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -37,11 +35,11 @@ import javajs.util.V3;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 
 
-@J2SIgnoreImport({java.util.Properties.class,java.io.BufferedInputStream.class})
-@J2SRequireImport({javajs.util.SB.class})
 public final class JC {
 
   // requires 8 bits for rule and type:        rrrba*SR
@@ -142,7 +140,7 @@ public final class JC {
 
   // note list of RCSB access points: http://www.rcsb.org/pdb/static.do?p=download/http/index.html
   
-  public static String[] databases = { 
+  private final static String[] databaseArray = { 
     // still http:
     "aflowbin", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
@@ -177,6 +175,46 @@ public final class JC {
     "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1" /// last bit is just mine
   };
 
+  final static Map<String, String> databases = new Hashtable<String, String>();
+
+  static {
+    for (int i = 0; i < databaseArray.length; i += 2)
+      databases.put(databaseArray[i].toLowerCase(), databaseArray[i + 1]);
+  }
+
+  static String resolveDataBase(String database, String id, String format) {
+    if (format == null) {
+      if ((format = databases.get(database.toLowerCase())) == null)
+        return null;
+      int pt = id.indexOf("/");
+      if (pt < 0) {
+        if (database.equals("pubchem"))
+          id = "name/" + id;
+        else if (database.equals("nci"))
+          id += "/file?format=sdf&get3d=true";
+      }
+      if (format.startsWith("'")) {
+        // needs evaluation
+        // xxxx.n means "the nth item"
+        pt = id.indexOf(".");
+        int n = (pt > 0 ? PT.parseInt(id.substring(pt + 1)) : 0);
+        if (pt > 0)
+          id = id.substring(0, pt);
+        format = PT.rep(format, "%n", "" + n);
+      }
+    } else if (id.indexOf(".") >= 0 && format.indexOf("%FILE.") >= 0) {
+      // replace RCSB format extension when a file extension is made explicit 
+      format = format.substring(0, format.indexOf("%FILE"));
+    }
+    if (format.indexOf("%c") >= 0)
+      for (int i = 1, n = id.length(); i <= n; i++)
+        if (format.indexOf("%c" + i) >= 0)
+          format = PT.rep(format, "%c" + i, id.substring(i - 1, i)
+              .toLowerCase());
+    return (format.indexOf("%FILE") >= 0 ? PT.rep(format, "%FILE", id)
+        : format.indexOf("%file") >= 0 ? PT.rep(format, "%file", id.toLowerCase()) : format + id);
+  }
+
   /**
    * Check for databases that have changed from http:// to https:// over time.
    * We substitute https here in case this is from an old reference.
@@ -184,16 +222,20 @@ public final class JC {
    * @param name
    * @return https protocol if necessary
    */
-  public static String fixProtocol(String name) {
-    if (name == null)
-      return name;
-    return (name.indexOf("http://www.rcsb.org/pdb/files/") == 0 
-        && name.indexOf("/ligand/") < 0 ? 
-        "http://files.rcsb.org/view/" + name.substring(30)
-        : (name.indexOf("http://pubchem") == 0 
+  static String fixProtocol(String name) {
+    String newname = (name == null ? null 
+      : name.indexOf("http://www.rcsb.org/pdb/files/") == 0 ?
+          resolveDataBase(name.indexOf("/ligand/") >= 0 ? "ligand" : "pdb", 
+              name.substring(name.lastIndexOf("/") + 1), null)
+      : name.indexOf("http://www.ebi") == 0
+        || name.indexOf("http://pubchem") == 0
         || name.indexOf("http://cactus") == 0
-        || name.indexOf("http://www.materialsproject") == 0)
-        ? "https://" + name.substring(7) : name);
+        || name.indexOf("http://www.materialsproject") == 0 ? 
+            "https://" + name.substring(7) 
+      : name);
+    if (newname != name) 
+      Logger.info("JC.fixProtocol " + name + " --> " + newname);
+    return newname;
   }
 
   public static String[] macros = {

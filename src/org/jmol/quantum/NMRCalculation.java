@@ -34,7 +34,7 @@ import javajs.util.SB;
 import javajs.util.V3;
 
 import org.jmol.api.JmolNMRInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Model;

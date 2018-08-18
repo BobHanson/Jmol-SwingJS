@@ -118,7 +118,7 @@ package org.jmol.atomdata;
 import javajs.util.M4;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 

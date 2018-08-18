@@ -29,8 +29,6 @@ package org.jmol.quantum;
 
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.Lst;
-import java.util.Map;
 
 
 /**
@@ -225,18 +223,5 @@ public class QS {
       map[0] = Integer.MIN_VALUE;
     return isOK;    
   }
-  
-  public void setNboLabels(String[] tokens, int nLabels, Lst<Map<String, Object>> orbitals, int nOrbitals0, String moType) {
-    for (int i = 0; i < tokens.length; i += nLabels + 2) {
-        if (moType.indexOf(tokens[i]) < 0) continue;
-        for (int j = 0; j < nLabels; ++j) {
-            Map mo = (Map)orbitals.get(j + nOrbitals0);
-            String type = tokens[i + j + 2];
-            mo.put("type", moType + " " + type);
-            mo.put("occupancy", Float.valueOf(type.indexOf("*") >= 0 || type.indexOf("(ry)") >= 0 ? 0.0f : 2.0f));
-        }
-        return;
-    }
-}
 
 }

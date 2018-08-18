@@ -24,8 +24,6 @@
 package org.jmol.modelset;
 
 
-import javajs.J2SRequireImport;
-
 import javajs.util.Lst;
 import javajs.util.Quat;
 
@@ -36,7 +34,7 @@ import org.jmol.viewer.JC;
 
 import javajs.util.P3;
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 import java.util.Hashtable;
 
@@ -52,7 +50,6 @@ import java.util.Map;
  * must be carefully used. 
  * 
  */
-@J2SRequireImport({java.lang.Short.class,org.jmol.viewer.JC.class})
 public class Group implements Structure {
 
   public static String standardGroupList; // will be populated by org.jmol.biomodelset.Resolver
@@ -91,9 +88,6 @@ public class Group implements Structure {
   public Map<String, Object> dssrNT;
 
 
-  /**
-   * @j2sIngore
-   */
   public Group() {}
   
   public Group setGroup(Chain chain, String group3, int seqcode,

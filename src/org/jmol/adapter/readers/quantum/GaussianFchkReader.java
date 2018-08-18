@@ -107,7 +107,7 @@ public class GaussianFchkReader extends GaussianReader {
         int iAtom0 = asc.ac;
         asc.cloneAtomSetWithBonds(true);
         // set the properties
-        String name = asc.setAtomSetFrequency("Calculation " + calculationNumber, null, "" + frequencies[i], null);
+        String name = asc.setAtomSetFrequency(vibrationNumber, "Calculation " + calculationNumber, null, "" + frequencies[i], null);
         appendLoadNote("model " + asc.atomSetCount + ": " + name);
         namedSets.set(asc.iSet);
         asc.setAtomSetModelProperty("ReducedMass",

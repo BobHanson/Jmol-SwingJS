@@ -35,7 +35,7 @@ import java.util.StringTokenizer;
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;

@@ -185,11 +185,11 @@ ActionListener, ChangeListener, Runnable {
   
   public AtomSetChooser(Viewer vwr, JFrame frame) {
  //   super(frame,"AtomSetChooser", false);
-    super(GT._("AtomSetChooser"));
+    super(GT.$("AtomSetChooser"));
     this.vwr = vwr;
     
     // initialize the treeModel
-    treeModel = new DefaultTreeModel(new DefaultMutableTreeNode(GT._("No AtomSets")));
+    treeModel = new DefaultTreeModel(new DefaultMutableTreeNode(GT.$("No AtomSets")));
     
     layoutWindow(getContentPane());
     pack();
@@ -218,7 +218,7 @@ ActionListener, ChangeListener, Runnable {
     // the panel for the properties
     JPanel propertiesPanel = new JPanel();
     propertiesPanel.setLayout(new BorderLayout());
-    propertiesPanel.setBorder(new TitledBorder(GT._("Properties")));
+    propertiesPanel.setBorder(new TitledBorder(GT.$("Properties")));
     propertiesTextArea = new JTextArea();
     propertiesTextArea.setEditable(false);
     propertiesPanel.add(new JScrollPane(propertiesTextArea), BorderLayout.CENTER);
@@ -226,7 +226,7 @@ ActionListener, ChangeListener, Runnable {
     // create the split pane with the treePanel and propertiesPanel
     JPanel astPanel = new JPanel();
     astPanel.setLayout(new BorderLayout());
-    astPanel.setBorder(new TitledBorder(GT._("Atom Set Collection")));
+    astPanel.setBorder(new TitledBorder(GT.$("Atom Set Collection")));
     
     JSplitPane splitPane = new JSplitPane(
         JSplitPane.VERTICAL_SPLIT, treePanel, propertiesPanel); 
@@ -247,19 +247,19 @@ ActionListener, ChangeListener, Runnable {
     //////////////////////////////////////////////////////////
     JPanel collectionPanel = new JPanel();
     collectionPanel.setLayout(new BoxLayout(collectionPanel, BoxLayout.Y_AXIS));
-    collectionPanel.setBorder(new TitledBorder(GT._("Collection")));
+    collectionPanel.setBorder(new TitledBorder(GT.$("Collection")));
     controllerPanel.add(collectionPanel);
     // info area
     JPanel infoPanel = new JPanel();
     infoPanel.setLayout(new BorderLayout());
-    infoPanel.setBorder(new TitledBorder(GT._("Info")));
+    infoPanel.setBorder(new TitledBorder(GT.$("Info")));
     infoLabel = new JLabel(" ");
     infoPanel.add(infoLabel, BorderLayout.SOUTH);
     collectionPanel.add(infoPanel);
     // select slider area
     JPanel cpsPanel = new JPanel();
     cpsPanel.setLayout(new BorderLayout());
-    cpsPanel.setBorder(new TitledBorder(GT._("Select")));
+    cpsPanel.setBorder(new TitledBorder(GT.$("Select")));
     selectSlider = new JSlider(0, 0, 0);
     selectSlider.addChangeListener(this);
     selectSlider.setMajorTickSpacing(5);
@@ -274,7 +274,7 @@ ActionListener, ChangeListener, Runnable {
     collectionPanel.add(row);
     row.setLayout(new BoxLayout(row, BoxLayout.X_AXIS));
     // repeat check box to be added to the controller
-    repeatCheckBox = new JCheckBox(GT._("Repeat"), false);
+    repeatCheckBox = new JCheckBox(GT.$("Repeat"), false);
     JPanel vcrpanel = createVCRController(COLLECTION);
     vcrpanel.add(repeatCheckBox); // put the repeat text box in the vcr control
     // VCR-like play controller
@@ -286,7 +286,7 @@ ActionListener, ChangeListener, Runnable {
     if (fps > FPS_MAX)
       fps = FPS_MAX;
     fpsPanel.setLayout(new BorderLayout());
-    fpsPanel.setBorder(new TitledBorder(GT._("FPS")));
+    fpsPanel.setBorder(new TitledBorder(GT.$("FPS")));
     fpsSlider = new JSlider(0, FPS_MAX, fps);
     fpsSlider.setMajorTickSpacing(5);
     fpsSlider.setMinorTickSpacing(1);
@@ -302,14 +302,14 @@ ActionListener, ChangeListener, Runnable {
     controllerPanel.add(vectorPanel);
     // fill out the contents of the vectorPanel
     vectorPanel.setLayout(new BoxLayout(vectorPanel, BoxLayout.Y_AXIS));
-    vectorPanel.setBorder(new TitledBorder(GT._("Vector")));
+    vectorPanel.setBorder(new TitledBorder(GT.$("Vector")));
     // the first row in the vectoPanel: radius and scale of the vector
     JPanel row1 = new JPanel();
     row1.setLayout(new BoxLayout(row1,BoxLayout.X_AXIS));
     // controller for the vector representation
     JPanel radiusPanel = new JPanel();
     radiusPanel.setLayout(new BorderLayout());
-    radiusPanel.setBorder(new TitledBorder(GT._("Radius")));
+    radiusPanel.setBorder(new TitledBorder(GT.$("Radius")));
     radiusSlider = new JSlider(0, RADIUS_MAX, RADIUS_VALUE);
     radiusSlider.setMajorTickSpacing(5);
     radiusSlider.setMinorTickSpacing(1);
@@ -322,7 +322,7 @@ ActionListener, ChangeListener, Runnable {
     // controller for the vector scale
     JPanel scalePanel = new JPanel();
     scalePanel.setLayout(new BorderLayout());
-    scalePanel.setBorder(new TitledBorder(GT._("Scale")));
+    scalePanel.setBorder(new TitledBorder(GT.$("Scale")));
     scaleSlider = new JSlider(0, (int)(SCALE_MAX/SCALE_PRECISION),
         (int) (SCALE_VALUE/SCALE_PRECISION));
     scaleSlider.addChangeListener(this);
@@ -336,7 +336,7 @@ ActionListener, ChangeListener, Runnable {
     // controller for vibrationScale = amplitude
     JPanel amplitudePanel = new JPanel();
     amplitudePanel.setLayout(new BorderLayout());
-    amplitudePanel.setBorder(new TitledBorder(GT._("Amplitude")));
+    amplitudePanel.setBorder(new TitledBorder(GT.$("Amplitude")));
     amplitudeSlider = new JSlider(0, (int) (AMPLITUDE_MAX/AMPLITUDE_PRECISION),
         (int)(AMPLITUDE_VALUE/AMPLITUDE_PRECISION));
     script("vibration scale " + AMPLITUDE_VALUE);
@@ -346,7 +346,7 @@ ActionListener, ChangeListener, Runnable {
     // controller for the vibrationPeriod
     JPanel periodPanel = new JPanel();
     periodPanel.setLayout(new BorderLayout());
-    periodPanel.setBorder(new TitledBorder(GT._("Period")));
+    periodPanel.setBorder(new TitledBorder(GT.$("Period")));
     periodSlider = new JSlider(0,
         (int)(PERIOD_MAX/PERIOD_PRECISION),
         (int)(PERIOD_VALUE/PERIOD_PRECISION));
@@ -375,7 +375,7 @@ ActionListener, ChangeListener, Runnable {
   private JPanel createVCRController(String section) {
     JPanel controlPanel = new JPanel();
     controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.X_AXIS));
-    controlPanel.setBorder(new TitledBorder((section.equals(COLLECTION) ? GT._("Frame") : GT._("Vibration"))));
+    controlPanel.setBorder(new TitledBorder((section.equals(COLLECTION) ? GT.$("Frame") : GT.$("Vibration"))));
     Insets inset = new Insets(1,1,1,1);
 // take out the save functionality until the XYZ file can properly be created
 //    String buttons[] = {REWIND,PREVIOUS,PLAY,PAUSE,NEXT,FF,SAVE};
@@ -383,21 +383,21 @@ ActionListener, ChangeListener, Runnable {
     String tooltips[] = null;
     if (section.equals(COLLECTION)) {
       tooltips = new String[] {
-          GT._("Go to first atom set in the collection"),
-          GT._("Go to previous atom set in the collection"),
-          GT._("Play the whole collection of atom sets"),
-          GT._("Pause playing"),
-          GT._("Go to next atom set in the collection"),
-          GT._("Jump to last atom set in the collection")
+          GT.$("Go to first atom set in the collection"),
+          GT.$("Go to previous atom set in the collection"),
+          GT.$("Play the whole collection of atom sets"),
+          GT.$("Pause playing"),
+          GT.$("Go to next atom set in the collection"),
+          GT.$("Jump to last atom set in the collection")
       };
     } else if (section.equals(VECTOR)) {
       tooltips = new String[] {
-          GT._("Go to first atom set in the collection"),
-          GT._("Go to previous atom set in the collection"),
-          GT._("Vibration ON"),
-          GT._("Vibration OFF"),
-          GT._("Go to next atom set in the collection"),
-          GT._("Jump to last atom set in the collection")
+          GT.$("Go to first atom set in the collection"),
+          GT.$("Go to previous atom set in the collection"),
+          GT.$("Vibration ON"),
+          GT.$("Vibration OFF"),
+          GT.$("Go to next atom set in the collection"),
+          GT.$("Jump to last atom set in the collection")
       };
     }
     for (int i=buttons.length, idx=0; --i>=0; idx++) {

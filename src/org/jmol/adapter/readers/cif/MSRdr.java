@@ -17,7 +17,7 @@ import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
@@ -461,7 +461,7 @@ public class MSRdr implements MSInterface {
     for (int i = 0; i < modDim; i++) {
       pt = getMod("W_" + (i + 1));
       if (pt == null) {
-        Logger.info("Not enough cell wave vectors for d=" + modDim);
+        cr.appendLoadNote("NOTE!: Not enough cell wave vectors for d=" + modDim);
         return;
       }
       fixDouble(pt);
@@ -634,7 +634,7 @@ public class MSRdr implements MSInterface {
       }
       return qlist100;
     }     
-    return getMod("F_" + fn + "_coefs_");
+    return getMod("F_coefs_" + fn );
   }
 
   @Override

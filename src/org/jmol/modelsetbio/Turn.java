@@ -31,8 +31,6 @@ class Turn extends ProteinStructure {
    * @param apolymer
    * @param monomerIndex
    * @param monomerCount
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
    * 
    */
   Turn(AlphaPolymer apolymer, int monomerIndex, int monomerCount) {

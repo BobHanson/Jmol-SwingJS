@@ -155,13 +155,15 @@ public class QCJSONReader extends MoldenReader {
     if (vibrations != null) {
       int n = vibrations.size();
       for (int i = 0; i < n; i++) {
+        if (!doGetVibration(++vibrationNumber))
+          continue;
         @SuppressWarnings("unchecked")
         Map<String, Object> vib = (Map<String, Object>) vibrations.get(i);
         double freq = QCSchemaUnits.getDouble(vib, "frequency", QCSchemaUnits.UNITS_CM_1);
         double[] vectors = QCSchemaUnits.getDoubleArray(vib, "vectors");
         if (i > 0)
           asc.cloneLastAtomSet();
-        asc.setAtomSetFrequency(null, null, "" + freq, QCSchemaUnits.UNITS_CM_1);
+        asc.setAtomSetFrequency(vibrationNumber, null, null, "" + freq, QCSchemaUnits.UNITS_CM_1);
         int i0 = asc.getLastAtomSetAtomIndex();
         for (int j = 0, pt = 0; j < modelAtomCount; j++) {
           asc.addVibrationVector(j + i0, (float) (vectors[pt++] * ANGSTROMS_PER_BOHR),

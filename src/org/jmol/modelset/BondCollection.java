@@ -36,7 +36,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 
 import org.jmol.viewer.JC;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 
 abstract public class BondCollection extends AtomCollection {

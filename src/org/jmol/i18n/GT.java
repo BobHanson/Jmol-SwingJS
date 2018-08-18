@@ -28,7 +28,6 @@ import java.text.MessageFormat;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.J2SRequireImport;
 import javajs.util.PT;
 
 import org.jmol.api.Translator;
@@ -42,7 +41,6 @@ import org.jmol.viewer.Viewer;
  * implementing translations in JavaScript
  */
 
-@J2SRequireImport({java.text.MessageFormat.class, org.jmol.i18n.Resource.class, org.jmol.i18n.Language.class, javajs.util.PT.class})
 public class GT implements Translator {
 
   private static boolean ignoreApplicationBundle = false;
@@ -65,7 +63,7 @@ public class GT implements Translator {
   
   @Override
   public String translate(String s) {
-    return _(s);
+    return $(s);
   }
   
   public GT(Viewer vwr, String langCode) {
@@ -204,7 +202,7 @@ public class GT implements Translator {
     return getTextWrapper().doTranslate;
   }
 
-  public static String _(String string) {
+  public static String $(String string) {
     return getTextWrapper().getString(string);
   }
 

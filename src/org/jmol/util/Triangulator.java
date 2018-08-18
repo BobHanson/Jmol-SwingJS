@@ -6,7 +6,7 @@ import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.T3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public class Triangulator extends TriangleData {
 

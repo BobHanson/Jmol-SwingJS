@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
@@ -276,7 +276,7 @@ public class SV extends T implements JSONEncodable {
       return newV(context, x);
     // rest are specific array types supported
     // DO NOT ADD MORE UNLESS YOU CHANGE isArray(), above
-    if (Escape.isAV(x))
+    if (x instanceof SV[])
       return getVariableAV((SV[]) x);
     if (AU.isAI(x))
       return getVariableAI((int[]) x);
@@ -315,37 +315,69 @@ public class SV extends T implements JSONEncodable {
   @SuppressWarnings("unused")
   private static SV newJSVar(Object x) {
     // JavaScript only
+    int itype;
+    boolean itest;
+    float inum;
+    Object[] array;
+    String[] keys;
     /**
      * @j2sNative
      * 
      *            switch(x.BYTES_PER_ELEMENT ? Array : x.constructor) {
      *            case Boolean:
-     *              return (x ? org.jmol.script.SV.vT : org.jmol.script.SV.vF);
+     *              itype = 0;
+     *              itest = x;
+     *              break;
      *            case Number:
-     *              return (x > Integer.MAX_VALUE || x != Math.floor(x) ? org.jmol.script.SV.newF(x) : org.jmol.script.SV.newI(x));
+     *              itype = 1;
+     *              inum = x;
+     *              break;
      *            case Array:
-     *              var v =  new javajs.util.Lst();
-     *              for (var i = 0, n = x.length; i < n; i++)
-     *                v.addLast(org.jmol.script.SV.newJSVar(x[i]));
-     *              return org.jmol.script.SV.getVariableList(v);
-     *            case Object: 
-     *              var keys = Object.keys(x);
-     *              var v =  new java.util.Hashtable();
-     *              for (var i = keys.length; --i >= 0;)
-     *                v.put(keys[i],org.jmol.script.SV.newJSVar(x[keys[i]]));
-     *              return org.jmol.script.SV.getVariableMap(v);
+     *              itype = 2;
+     *              array = x;
+     *              break;
+     *            case Object:
+     *               itype = 3;
+     *               array = x;
+     *               keys = Object.keys(x);
+     *               break;
      *            }
      *            
      */
     {
-      // for reference only; not included in JavaScript
-      if (false) {
-        getVariableList(new Lst<SV>());
-        getVariableMap(new Hashtable<String, Object>());
-      }
       if (x instanceof Object[])
         return getVariableAO((Object[]) x);
-      
+      if (true)
+        return newS(x.toString());
+    }
+
+    // JavaScript only
+    switch (itype) {
+    case 0:
+      return (itest ? vT : vF);
+    case 1:
+      return (inum > Integer.MAX_VALUE || inum != Math.floor(inum)
+          ? SV.newF(inum) : newI((int) inum));
+    case 2:
+      Lst<SV> v = new javajs.util.Lst<SV>();
+      for (int i = 0, n = array.length; i < n; i++)
+        v.addLast(newJSVar(array[i]));
+      return getVariableList(v);
+    case 3:
+      Map<String, Object> map = new Hashtable<String, Object>();
+      for (int i = keys.length; --i >= 0;) {
+        Object o = null;
+        /**
+         * @j2sNative
+         * 
+         *            o = array[keys[i]];
+         * 
+         */
+        {
+        }
+        map.put(keys[i], newJSVar(o));
+      }
+      return SV.getVariableMap(map);
     }
     return newS(x.toString());    
   }
