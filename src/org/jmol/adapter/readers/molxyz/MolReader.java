@@ -354,8 +354,8 @@ public class MolReader extends AtomSetCollectionReader {
     float[] fdata = null;
     // officially, we need a terminating blank line, and $$$$ could be data,
     // but here we do not allow $$$$ due to Jmol legacy writing of JMOL_PARTIAL_CHARGES
-    while (rd() != null && !line.equals("$$$$") && line.length() > 0)
-      data += line + "\n";
+    while (rd() != null && !line.equals("$$$$") && line.length() > 0)     
+      data += (line.length() == 81 && line.charAt(80) == '+' ? line.substring(0, 80) : line +  "\n");
     data = PT.trim(data, "\n");
     Logger.info(dataName + ":" + PT.esc(data));
     molData.put(dataName, data);

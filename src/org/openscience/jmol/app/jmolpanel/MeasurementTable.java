@@ -63,7 +63,7 @@ public class MeasurementTable extends JDialog {
    */
   public MeasurementTable(Viewer vwr, JFrame parentFrame) {
 
-    super(parentFrame, GT._("Measurements"), false);
+    super(parentFrame, GT.$("Measurements"), false);
     this.vwr = vwr;
 
     JPanel container = new JPanel();
@@ -122,7 +122,7 @@ public class MeasurementTable extends JDialog {
     JPanel measurementButtonPanel = new JPanel();
     measurementButtonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-    deleteButton = new JButton(GT._("Delete"));
+    deleteButton = new JButton(GT.$("Delete"));
     deleteButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -132,7 +132,7 @@ public class MeasurementTable extends JDialog {
       });
     deleteButton.setEnabled(false);
     
-    deleteAllButton = new JButton(GT._("DeleteAll"));
+    deleteAllButton = new JButton(GT.$("DeleteAll"));
     deleteAllButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -151,7 +151,7 @@ public class MeasurementTable extends JDialog {
     JPanel dismissButtonPanel = new JPanel();
     dismissButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-    JButton dismissButton = new JButton(GT._("Dismiss"));
+    JButton dismissButton = new JButton(GT.$("Dismiss"));
     dismissButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -203,7 +203,7 @@ public class MeasurementTable extends JDialog {
   class MeasurementTableModel extends AbstractTableModel {
 
     final String[] measurementHeaders = {
-      GT._("Value"),
+      GT.$("Value"),
       "a", "b", "c", "d", };
 
     @Override

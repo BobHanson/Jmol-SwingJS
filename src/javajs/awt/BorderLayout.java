@@ -1,6 +1,5 @@
 package javajs.awt;
 
-
 public class BorderLayout extends LayoutManager {
 
 	public static final String CENTER = "Center";

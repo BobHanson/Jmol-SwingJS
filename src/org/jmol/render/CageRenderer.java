@@ -27,7 +27,7 @@ package org.jmol.render;
 import javajs.util.Measure;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.shape.Bbcage;
 import org.jmol.shape.FontLineShape;
 import org.jmol.util.BoxInfo;

@@ -235,7 +235,7 @@ public class DisplayPanel extends JPanel
   private Action axesAction         = new CheckBoxMenuItemAction("axesCheck",         "set showAxes");
   private Action boundboxAction     = new CheckBoxMenuItemAction("boundboxCheck",     "set showBoundBox");
   // next three are not implemented
-  private Action deleteAction       = new SetStatusAction("delete", GT._("Delete atoms"));
+  private Action deleteAction       = new SetStatusAction("delete", GT.$("Delete atoms"));
   private Action zoomAction         = new SetStatusAction("zoom",   null);
   private Action xlateAction        = new SetStatusAction("xlate",  null);
   //

@@ -32,10 +32,6 @@ public class VibrationThread extends JmolThread {
 
   private TransformManager transformManager;
 
-  /**
-   * @j2sIgnore
-   * 
-   */
   public VibrationThread() {}
   
   @Override

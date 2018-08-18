@@ -33,7 +33,7 @@ import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.api.SmilesMatcherInterface;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
@@ -457,11 +457,11 @@ public class ForceFieldMMFF extends ForceField {
   }
 
   private float fval(int i, int j) {
-    return PT.fVal(line.substring(i,j).trim());
+    return Float.valueOf(line.substring(i,j).trim()).floatValue();
   }
 
   private double dval(int i, int j) {
-    return PT.dVal(line.substring(i,j).trim());
+    return Double.valueOf(line.substring(i,j).trim()).doubleValue();
   }
 
   private void getAtomTypes() throws JmolAsyncException {

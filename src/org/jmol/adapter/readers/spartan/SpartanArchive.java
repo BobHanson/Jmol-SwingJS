@@ -492,7 +492,7 @@ class SpartanArchive {
     boolean[] ignore = new boolean[frequencyCount];
     for (int i = 0; i < frequencyCount; ++i) {
       int ac0 = r.asc.ac;
-      ignore[i] = !r.doGetVibration(i + 1);
+      ignore[i] = !r.doGetVibration(++r.vibrationNumber);
       if (!ignore[i] && r.desiredVibrationNumber <= 0) {
         r.asc.cloneLastAtomSet();
         addBonds(bondData, ac0);
@@ -506,11 +506,11 @@ class SpartanArchive {
         info.put("label", label);
       freqs.addLast(info);
       if (!ignore[i]) {
-        r.asc.setAtomSetFrequency(null, label, "" + freq, null);
+        r.asc.setAtomSetFrequency(r.vibrationNumber, null, label, "" + freq, null);
       }
     }
     r.asc.setInfo("VibFreqs", freqs);
-    int ac = r.asc.atomSetAtomCounts[0];
+    int ac = r.asc.getAtomSetAtomCount(0);
     Lst<Lst<Float>> vib = new  Lst<Lst<Float>>();
     Lst<Float> vibatom = new  Lst<Float>();
     int ifreq = 0;
@@ -578,7 +578,7 @@ class SpartanArchive {
       r.asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Frequencies");
     }
     r.asc.setInfo("VibFreqs", freqs);
-    int ac = r.asc.atomSetAtomCounts[0];
+    int ac = r.asc.getAtomSetAtomCount(0);
     int iatom = ac; // add vibrations starting at second atomset
     for (int i = 0; i < frequencyCount; i++) {
       if (!r.doGetVibration(i + 1))

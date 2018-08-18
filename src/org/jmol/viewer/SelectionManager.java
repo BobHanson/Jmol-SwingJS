@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2015-12-13 10:03:49 -0600 (Sun, 13 Dec 2015) $
- * $Revision: 20886 $
+ * $Date: 2018-02-22 12:04:47 -0600 (Thu, 22 Feb 2018) $
+ * $Revision: 21841 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development
  *
@@ -31,7 +31,7 @@ import javajs.util.AU;
 
 import org.jmol.api.JmolSelectionListener;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
 
 public class SelectionManager {
@@ -69,6 +69,7 @@ public class SelectionManager {
     BS bs = BSUtil.copy(bsSelection);
     BSUtil.deleteBits(bs, bsAtoms);
     setSelectionSet(bs, 0);
+    selectionChanged(false);
   }
 
 
@@ -111,7 +112,7 @@ public class SelectionManager {
     BSUtil.andNot(bsHidden, bsDeleted);
     modelSet.setBsHidden(bsHidden);
     if (!isQuiet)
-      vwr.reportSelection(GT.i(GT._("{0} atoms hidden"), bsHidden.cardinality()));
+      vwr.reportSelection(GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
   }
 
   void hide(ModelSet modelSet, BS bs, int addRemove, boolean isQuiet) {
@@ -122,13 +123,12 @@ public class SelectionManager {
     if (modelSet != null)
       modelSet.setBsHidden(bsHidden);
     if (!isQuiet)
-      vwr.reportSelection(GT.i(GT._("{0} atoms hidden"), bsHidden.cardinality()));
+      vwr.reportSelection(GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
   }
 
   void setSelectionSet(BS set, int addRemove) {
     setBitSet(bsSelection, set, addRemove);
     empty = UNKNOWN;
-    selectionChanged(false);
   }
 
   private static void setBitSet(BS bsWhat, BS bs, int addRemove) {
@@ -172,10 +172,15 @@ public class SelectionManager {
         excludeSelectionSet(vwr.ms.getAtoms(T.hydrogen, null));
       if (!vwr.getBoolean(T.hetero))
         excludeSelectionSet(vwr.ms.getAtoms(T.hetero, null));
-      selectionChanged(false);
     } else {
       setSelectionSet(bs, addRemove);
+      if (!vwr.getBoolean(T.hydrogen))
+        excludeSelectionSet(vwr.ms.getAtoms(T.hydrogen, null));
+      if (!vwr.getBoolean(T.hetero))
+        excludeSelectionSet(vwr.ms.getAtoms(T.hetero, null));
+
     }
+    selectionChanged(false);
     boolean reportChime = vwr.getBoolean(T.messagestylechime);
     if (!reportChime && isQuiet)
       return;
@@ -183,7 +188,7 @@ public class SelectionManager {
     if (reportChime)
       vwr.getChimeMessenger().reportSelection(n);
     else if (!isQuiet)
-      vwr.reportSelection(GT.i(GT._("{0} atoms selected"), n));
+      vwr.reportSelection(GT.i(GT.$("{0} atoms selected"), n));
   }
 
   void selectAll(boolean isQuiet) {

@@ -1,12 +1,13 @@
 package jspecview.js2d;
 
+import org.jmol.awtjs.swing.JComponent;
+import org.jmol.awtjs.swing.JEditorPane;
+import org.jmol.awtjs.swing.JDialog;
+import org.jmol.awtjs.swing.JLabel;
+import org.jmol.awtjs.swing.JScrollPane;
+import org.jmol.awtjs.swing.JTable;
+
 import javajs.awt.Dimension;
-import javajs.swing.JComponent;
-import javajs.swing.JEditorPane;
-import javajs.swing.JDialog;
-import javajs.swing.JLabel;
-import javajs.swing.JScrollPane;
-import javajs.swing.JTable;
 import javajs.util.PT;
 
 import jspecview.api.JSVPanel;
@@ -69,19 +70,7 @@ public class JsDialogManager extends DialogManager {
 	public int getOptionFromDialog(Object frame, String[] items, JSVPanel jsvp,
 			String dialogName, String labelName) {
     // for export and others
-		int i = -1;
-		@SuppressWarnings("unused")
-		Object applet = this.vwr.html5Applet;
-		/**
-		 * @j2sNative
-		 * 
-		 * i = applet.getOption(items, dialogName, labelName);
-		 * 
-		 * 
-		 */
-		{
-		}
-	  return i;
+	  return vwr.html5Applet.getOption(items, dialogName, labelName);
 	}
 
 	/**

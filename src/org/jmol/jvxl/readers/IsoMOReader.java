@@ -215,6 +215,12 @@ class IsoMOReader extends AtomDataReader {
       line = PT.formatStringS(line, "U",
           energy != null && params.moData.containsKey("energyUnits")
               && ++rep != 0 ? (String) params.moData.get("energyUnits") : "");
+    if (line.indexOf("%L") >= 0) {
+      String[] labels = (String[]) params.moData.get("nboLabels");
+      line = PT.formatStringS(line, "L", (labels != null
+          && params.qm_moNumber > 0 && ++rep != 0 ?
+      labels[(params.qm_moNumber - 1) % labels.length] : ""));
+    }
     if (line.indexOf("%S") >= 0)
       line = PT.formatStringS(
           line,

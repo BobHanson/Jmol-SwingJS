@@ -5,7 +5,7 @@ import javajs.util.V3;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelsetbio.AlphaMonomer;
 import org.jmol.modelsetbio.AminoPolymer;
 import org.jmol.modelsetbio.Helix;

@@ -27,11 +27,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.api.GenericImageDialog;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.T3;
 
+import org.jmol.api.GenericImageDialog;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolAudioPlayer;
@@ -39,7 +39,7 @@ import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDialogInterface;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.c.CBK;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.JmolAudio;

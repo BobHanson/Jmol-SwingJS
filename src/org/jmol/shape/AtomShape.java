@@ -31,7 +31,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;

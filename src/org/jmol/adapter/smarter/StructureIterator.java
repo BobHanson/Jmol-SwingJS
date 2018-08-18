@@ -27,7 +27,7 @@ package org.jmol.adapter.smarter;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterStructureIterator;
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public class StructureIterator extends JmolAdapterStructureIterator {
   private int structureCount;
@@ -38,8 +38,6 @@ public class StructureIterator extends JmolAdapterStructureIterator {
   
   /**
    * @param asc 
-   * @j2sIgnoreSuperConstructor
-   * 
    */
   StructureIterator(AtomSetCollection asc) {
     structureCount = asc.structureCount;

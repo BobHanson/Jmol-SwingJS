@@ -239,7 +239,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
   }
 
   private String rdLine() throws Exception {
-    while (rd() != null && (line.length() == 0 || checkComment())) {
+    while (rd() != null && (line.trim().length() == 0 || checkComment())) {
     }
     return line;
   }

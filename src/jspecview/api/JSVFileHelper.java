@@ -1,6 +1,6 @@
 package jspecview.api;
 
-import javajs.api.GenericFileInterface;
+import org.jmol.api.GenericFileInterface;
 
 import jspecview.common.ExportType;
 import jspecview.common.JSViewer;

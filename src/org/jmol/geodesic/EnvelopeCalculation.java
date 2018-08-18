@@ -40,7 +40,7 @@ import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 /* ***************************************************************
  * 

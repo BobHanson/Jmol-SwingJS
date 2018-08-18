@@ -30,10 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.BoxInfo;
 
-import javajs.api.GenericPlatform;
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;

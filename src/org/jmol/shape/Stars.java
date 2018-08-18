@@ -25,7 +25,7 @@
 
 package org.jmol.shape;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 
 public class Stars extends AtomShape {

@@ -3,7 +3,7 @@ package org.jmol.api;
 import javajs.util.SB;
 
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.viewer.JmolStateCreator;
 import org.jmol.viewer.Viewer;
 

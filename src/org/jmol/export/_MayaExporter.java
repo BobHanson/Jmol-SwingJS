@@ -30,7 +30,7 @@ package org.jmol.export;
 import java.util.Map;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 import javajs.util.Lst;
 import javajs.util.P3;

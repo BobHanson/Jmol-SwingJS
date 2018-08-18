@@ -29,6 +29,8 @@ import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.T3;
+import javajs.util.T4;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
@@ -96,13 +98,13 @@ public class UccageRenderer extends CageRenderer {
     unitcell.toCartesian(offsetT, true);
     offset.sub(offsetT);
     boolean hiddenLines = vwr.getBoolean(T.hiddenlinesdashed);
-    P3 fset = unitcell.getUnitCellMultiplier();
+    T3 fset = unitcell.getUnitCellMultiplier();
     boolean haveMultiple = (fset != null && fset.distanceSquared(fset0) != 0);
     if (!haveMultiple)
       fset = fset0;
-
-    SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0);
-    SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1);
+    int t3w = (fset instanceof T4 ? (int)((T4) fset).w : 0);
+    SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0, t3w);
+    SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1, t3w);
     int firstLine, allow0, allow1;
     if (fset.z < 0) {
       cell0.scale(-1 / fset.z);

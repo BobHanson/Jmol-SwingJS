@@ -28,7 +28,7 @@ import java.util.Hashtable;
 
 import javajs.util.Lst;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Edge;
 
 /**

@@ -53,7 +53,7 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
-import javajs.swing.SwingConstants;
+import javax.swing.SwingConstants;
 import javajs.util.PT;
 
 import javax.swing.BorderFactory;
@@ -77,7 +77,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jmol.c.CBK;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;

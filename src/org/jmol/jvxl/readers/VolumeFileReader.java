@@ -33,7 +33,7 @@ import javajs.util.V3;
 
 import org.jmol.api.Interface;
 import org.jmol.atomdata.AtomData;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.quantum.NciCalculation;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;

@@ -25,7 +25,7 @@
 package org.jmol.api;
 
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public abstract class JmolAdapterStructureIterator {
 	public abstract boolean hasNext();

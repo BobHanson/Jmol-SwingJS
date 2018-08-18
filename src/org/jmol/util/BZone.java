@@ -161,7 +161,7 @@ public class BZone {
         n = 1;      
       if (Float.isNaN(scale))
         scale = 2;
-      id = "";
+      //id = "";
       cmd("unitcell 'reciprocal' " + scale);
       //print "reciprocal: " + show("unitcell/a").trim()
     }

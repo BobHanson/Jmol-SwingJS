@@ -44,7 +44,7 @@ class ScriptButtons extends WebPanel {
       int panelIndex) {
     super(vwr, fc, webPanels, panelIndex);
     panelName = "script_btn";
-    listLabel = GT._("These names will be used for button labels");
+    listLabel = GT.$("These names will be used for button labels");
     //description = "Create a web page containing a text and button pane that scrolls next to a resizable Jmol applet";
   }
 
@@ -57,7 +57,7 @@ class ScriptButtons extends WebPanel {
     appletSizeSpinnerP = new JSpinner(appletSizeModel);
     //panel to hold spinner and label
     JPanel appletSizePPanel = new JPanel();
-    appletSizePPanel.add(new JLabel(GT._("% of window for JSmol width:")));
+    appletSizePPanel.add(new JLabel(GT.$("% of window for JSmol width:")));
     appletSizePPanel.add(appletSizeSpinnerP);
     return (appletSizePPanel);
   }

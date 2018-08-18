@@ -142,7 +142,7 @@ class SpaceGroup {
   
   static SpaceGroup createSpaceGroup(int desiredSpaceGroupIndex,
                                                   String name,
-                                                  Object data) {
+                                                  Object data, int modDim) {
     SpaceGroup sg = null;
     if (desiredSpaceGroupIndex >= 0) {
       sg = getSpaceGroups()[desiredSpaceGroupIndex];
@@ -152,7 +152,7 @@ class SpaceGroup {
       else
         sg = determineSpaceGroupNA(name, (float[]) data);
       if (sg == null)
-        sg = createSpaceGroupN(name);
+        sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8));
     }
     if (sg != null)
       sg.generateAllOperators(null);
@@ -257,8 +257,8 @@ class SpaceGroup {
     SymmetryOperation.newPoint(finalOperations[i], atom1, atom2, transX, transY, transZ);
   }
     
-  static String getInfo(SpaceGroup sg, String spaceGroup,
-                        SymmetryInterface cellInfo) {
+  static Object getInfo(SpaceGroup sg, String spaceGroup,
+                        SymmetryInterface cellInfo, boolean asMap) {
     if (cellInfo != null) {
       if (sg == null) {
         if (spaceGroup.indexOf("[") >= 0)
@@ -279,31 +279,61 @@ class SpaceGroup {
       } else {
         SB sb = new SB();
         while (sg != null) {
-          sb.append(sg.dumpInfo(null));
+          sb.append(sg.dumpInfo());
           sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
         }
         return sb.toString();
       }
     }
-    return sg == null ? "?" : sg.dumpInfo(cellInfo);
+    return (asMap? (sg == null ? null : sg.getInfo(cellInfo)): sg == null ? "?" : sg.dumpInfo());
   }
-  
+
+  private Map<String, Object> info;
+
+  private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
+    
+    if (info == null) {
+      if (hmSymbol == null || hmSymbolExt == null) {
+        info = new Hashtable<String, Object>();
+        info.put("HMSymbol", "??");
+      } else {
+        Object seitz = dumpCanonicalSeitzList();
+        info.put("SeitzList", seitz == null ? "" : seitz);
+        info.put("HMSymbol", hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
+        info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
+        info.put("ITSNumberFull",  intlTableNumberFull);
+        info.put("crystalClass", crystalClass);
+        info.put("HallSymbol", hallInfo.hallSymbol.equals("--") ? "" : 
+                hallInfo.hallSymbol);
+      }
+      info.put("operationCount", Integer.valueOf(operationCount));
+      Lst<Map<String, Object>> ops = new Lst<Map<String, Object>>();
+      info.put("operationInfo", ops);
+      for (int i = 0; i < operationCount; i++)
+        ops.addLast(operations[i].getInfo());           
+    }
+    Map<String, Object> ucmap = (cellInfo == null ? null : cellInfo.getUnitCellInfoMap());
+    if (ucmap != null)
+      info.put("unitCell", ucmap);
+    return info;
+  }
+
   /**
    * 
-   * @param cellInfo
    * @return detailed information
    */
-  String dumpInfo(SymmetryInterface cellInfo) {
+  String dumpInfo() {
     Object info = dumpCanonicalSeitzList();
     if (info instanceof SpaceGroup)
-      return ((SpaceGroup) info).dumpInfo(null);
+      return ((SpaceGroup) info).dumpInfo();
     SB sb = new SB().append("\nHermann-Mauguin symbol: ");
-    if (hmSymbol == null || hmSymbolExt == null) 
+    if (hmSymbol == null || hmSymbolExt == null)
       sb.append("?");
     else
-      sb.append(hmSymbol)
-          .append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "")
-          .append("\ninternational table number: ")
+      sb.append(hmSymbol).append(
+          hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
+    if (intlTableNumber != null) {
+      sb.append("\ninternational table number: ")
           .append(intlTableNumber)
           .append(
               intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
@@ -315,11 +345,12 @@ class SpaceGroup {
               !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
                   + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
           .append(": ");
+    }
     for (int i = 0; i < operationCount; i++) {
       sb.append("\n").append(operations[i].xyz);
     }
     sb.append("\n\n").append(
-        hallInfo == null ? "invalid Hall symbol" : hallInfo.dumpInfo());
+        hallInfo == null ? "Hall symbol unknown" : hallInfo.dumpInfo());
 
     sb.append("\n\ncanonical Seitz: ").append((String) info)
         .append("\n----------------------------------------------------\n");
@@ -418,7 +449,7 @@ class SpaceGroup {
    SB sb = new SB();
    getSpaceGroups();
    for (int i = 0; i < SG.length; i++)
-     sb.append("\n----------------------\n" + SG[i].dumpInfo(null));
+     sb.append("\n----------------------\n" + SG[i].dumpInfo());
    return sb.toString();
   }
   
@@ -718,9 +749,10 @@ class SpaceGroup {
     // Hall symbol
 
     if (nameType != NAME_HM && !haveExtension)
-      for (i = lastIndex; --i >= 0;)
-        if (SG[i].hallSymbol.equals(name))
+      for (i = lastIndex; --i >= 0;) {
+        if (SG[i].hallSymbol.equalsIgnoreCase(name))
           return i;
+      }
 
     if (nameType != NAME_HALL) {
 
@@ -728,7 +760,7 @@ class SpaceGroup {
 
       if (nameType != NAME_HM)
         for (i = lastIndex; --i >= 0;)
-          if (SG[i].intlTableNumberFull.equals(nameExt))
+          if (SG[i].intlTableNumberFull.equalsIgnoreCase(nameExt))
             return i;
 
       // Full H-M symbol, including :xx
@@ -736,26 +768,27 @@ class SpaceGroup {
       // BUT some on the list presume defaults. The way to finesse this is
       // to add ":?" to a space group name to force axis ambiguity check
 
-      for (i = lastIndex; --i >= 0;)
-        if (SG[i].hmSymbolFull.equals(nameExt))
+      for (i = lastIndex; --i >= 0;) {
+        if (SG[i].hmSymbolFull.equalsIgnoreCase(nameExt))
           return i;
+      }
 
       // alternative, but unique H-M symbol, specifically for F m 3 m/F m -3 m type
       for (i = lastIndex; --i >= 0;)
         if ((s = SG[i]).hmSymbolAlternative != null
-            && s.hmSymbolAlternative.equals(nameExt))
+            && s.hmSymbolAlternative.equalsIgnoreCase(nameExt))
           return i;
 
       if (haveExtension) { // P2/m:a      
         // Abbreviated H-M with intl table :xx
         for (i = lastIndex; --i >= 0;)
-          if ((s = SG[i]).hmSymbolAbbr.equals(abbr)
-              && s.intlTableNumberExt.equals(ext))
+          if ((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr)
+              && s.intlTableNumberExt.equalsIgnoreCase(ext))
             return i;
         // shortened -- not including " 1 " terms
         for (i = lastIndex; --i >= 0;)
-          if ((s = SG[i]).hmSymbolAbbrShort.equals(abbr)
-              && s.intlTableNumberExt.equals(ext))
+          if ((s = SG[i]).hmSymbolAbbrShort.equalsIgnoreCase(abbr)
+              && s.intlTableNumberExt.equalsIgnoreCase(ext))
             return i;
       }
       // unique axis, cell and origin options with H-M abbr
@@ -765,8 +798,8 @@ class SpaceGroup {
       if (!haveExtension || ext.charAt(0) == '?')
         // no extension or unknown extension, so we look for unique axis
         for (i = 0; i < lastIndex; i++)
-          if (((s = SG[i]).hmSymbolAbbr.equals(abbr) 
-              || s.hmSymbolAbbrShort.equals(abbr)) 
+          if (((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr) 
+              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)) 
               && (!checkBilbao || s.isBilbao))
             switch (s.ambiguityType) {
             case '\0':
@@ -779,14 +812,14 @@ class SpaceGroup {
               if (ext.length() == 0) {
                 if (s.hmSymbolExt.equals("2"))
                   return i; // defaults to origin:2
-              } else if (s.hmSymbolExt.equals(ext))
+              } else if (s.hmSymbolExt.equalsIgnoreCase(ext))
                 return i;
               break;
             case 't':
               if (ext.length() == 0) {
                 if (s.axisChoice == 'h')
                   return i; //defaults to hexagonal
-              } else if ((s.axisChoice + "").equals(ext))
+              } else if ((s.axisChoice + "").equalsIgnoreCase(ext))
                 return i;
               break;
             }
@@ -885,20 +918,7 @@ class SpaceGroup {
 
     ////  terms[3] -- Hermann-Mauguin ////
 
-    hmSymbolFull = toCap(terms[3], 1);
-    parts = PT.split(hmSymbolFull, ":");
-    latticeType = hmSymbolFull.substring(0, 1);
-    hmSymbol = parts[0];
-    hmSymbolExt = (parts.length == 1 ? "" : parts[1]);
-    int pt = hmSymbol.indexOf(" -3");
-    if (pt >= 1)
-      if ("admn".indexOf(hmSymbol.charAt(pt - 1)) >= 0) {
-        hmSymbolAlternative = (hmSymbol.substring(0, pt) + " 3" + hmSymbol
-            .substring(pt + 3)).toLowerCase();
-      }
-    hmSymbolAbbr = PT.rep(hmSymbol, " ", "");
-    hmSymbolAbbrShort = PT.rep(hmSymbol, " 1", "");
-    hmSymbolAbbrShort = PT.rep(hmSymbolAbbrShort, " ", "");
+    setHMSymbol(terms[3]);
 
     ////  term 4 -- Hall ////
 
@@ -915,6 +935,23 @@ class SpaceGroup {
     //    System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
     //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
     //    + hallSymbol);
+  }
+
+  private void setHMSymbol(String name) {
+    hmSymbolFull = toCap(name, 1);
+    latticeType = hmSymbolFull.substring(0, 1);
+    String[] parts = PT.split(hmSymbolFull, ":");
+    hmSymbol = parts[0];
+    hmSymbolExt = (parts.length == 1 ? "" : parts[1]);
+    int pt = hmSymbol.indexOf(" -3");
+    if (pt >= 1)
+      if ("admn".indexOf(hmSymbol.charAt(pt - 1)) >= 0) {
+        hmSymbolAlternative = (hmSymbol.substring(0, pt) + " 3" + hmSymbol
+            .substring(pt + 3)).toLowerCase();
+      }
+    hmSymbolAbbr = PT.rep(hmSymbol, " ", "");
+    hmSymbolAbbrShort = PT.rep(hmSymbol, " 1", "");
+    hmSymbolAbbrShort = PT.rep(hmSymbolAbbrShort, " ", "");
   }
 
   private static String toCap(String s, int n) {
@@ -1645,8 +1682,9 @@ class SpaceGroup {
 
   public void setName(String name) {
     this.name = name;
-    if (name.startsWith("HM:"))
-      latticeType = name.substring(3, 4);
+    if (name != null && name.startsWith("HM:")) {
+      setHMSymbol(name.substring(3));
+    }
   }
 
 //  private int[] latticeOps;

@@ -24,7 +24,7 @@
 
 package org.jmol.shapespecial;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.shape.Mesh;
 import org.jmol.shapespecial.Draw.EnumDrawType;
 import org.jmol.util.BSUtil;
@@ -37,8 +37,6 @@ import javajs.util.V3;
 public class DrawMesh extends Mesh {
 
   /**
-   * @j2sIgnoreSuperConstructor
-   * 
    * @param vwr 
    * @param thisID
    * @param colix

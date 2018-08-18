@@ -113,7 +113,7 @@ public class PovrayDialog extends JDialog {
    */
   public PovrayDialog(JFrame f, Viewer vwr) {
 
-    super(f, GT._("Render in POV-Ray"), true);
+    super(f, GT.$("Render in POV-Ray"), true);
     this.vwr = vwr;
 
     //
@@ -154,13 +154,13 @@ public class PovrayDialog extends JDialog {
     
     //GUI for save name selection
     Box justSavingBox = Box.createVerticalBox();
-    text = GT._("Conversion from Jmol to POV-Ray");
+    text = GT.$("Conversion from Jmol to POV-Ray");
     justSavingBox.setBorder(new TitledBorder(text));
     
     Box saveBox = Box.createHorizontalBox();
-    text = GT._("File Name:");
+    text = GT.$("File Name:");
     saveBox.setBorder(new TitledBorder(text));
-    text = GT._("'caffeine.pov' -> 'caffeine.pov', 'caffeine.pov.ini', 'caffeine.pov.spt'");
+    text = GT.$("'caffeine.pov' -> 'caffeine.pov', 'caffeine.pov.ini', 'caffeine.pov.spt'");
     saveBox.setToolTipText(text);
     saveField = new JTextField("Jmol.pov", 20);
     saveField.addActionListener(updateActionListener);
@@ -170,15 +170,15 @@ public class PovrayDialog extends JDialog {
 
     //GUI for save path selection
     Box savePathBox = Box.createHorizontalBox();
-    text = GT._("Working Directory");
+    text = GT.$("Working Directory");
     savePathBox.setBorder(new TitledBorder(text));
-    text = GT._("Where the .pov files will be saved");
+    text = GT.$("Where the .pov files will be saved");
     savePathBox.setToolTipText(text);
     savePathLabel = new JTextField("");
     savePathLabel.setEditable(false);
     savePathLabel.setBorder(null);
     savePathBox.add(savePathLabel);
-    text = GT._("Select");
+    text = GT.$("Select");
     JButton savePathButton = new JButton(text);
     savePathButton.addActionListener(new ActionListener() {
 
@@ -193,14 +193,14 @@ public class PovrayDialog extends JDialog {
 
     //GUI for povray options
     Box povOptionsBox = Box.createVerticalBox();
-    text = GT._("POV-Ray Runtime Options");
+    text = GT.$("POV-Ray Runtime Options");
     povOptionsBox.setBorder(new TitledBorder(text));
     
     // Run povray option
     Box runPovBox = Box.createHorizontalBox();
-    text = GT._("Run POV-Ray directly");
+    text = GT.$("Run POV-Ray directly");
     runPovCheck = new JCheckBox(text, true);
-    text = GT._("Launch POV-Ray from within Jmol");
+    text = GT.$("Launch POV-Ray from within Jmol");
     runPovCheck.setToolTipText(text);
     runPovCheck.addItemListener(updateItemListener);
     runPovBox.add(runPovCheck);
@@ -211,9 +211,9 @@ public class PovrayDialog extends JDialog {
  /*
     // Use Ini option
     Box useIniBox = Box.createHorizontalBox();
-    text = GT._("Use .ini file");
+    text = GT.$("Use .ini file");
     useIniCheck = new JCheckBox(text, true);
-    text = GT._("Save options in a .ini file");
+    text = GT.$("Save options in a .ini file");
     useIniCheck.setToolTipText(text);
     useIniCheck.addItemListener(updateItemListener);
     useIniBox.add(useIniCheck);
@@ -222,9 +222,9 @@ public class PovrayDialog extends JDialog {
 
     // Render all frames options
     Box allFramesBox = Box.createHorizontalBox();
-    text = GT._("Render all frames");
+    text = GT.$("Render all frames");
     allFramesCheck = new JCheckBox(text, false);
-    text = GT._("Render each model (not only the currently displayed one)");
+    text = GT.$("Render each model (not only the currently displayed one)");
     allFramesCheck.setToolTipText(text);
     allFramesCheck.addItemListener(updateItemListener);
     allFramesBox.add(allFramesCheck);
@@ -233,9 +233,9 @@ public class PovrayDialog extends JDialog {
     
     // Antialias option
     Box antiAliasBox = Box.createHorizontalBox();
-    text = GT._("Turn on POV-Ray anti-aliasing");
+    text = GT.$("Turn on POV-Ray anti-aliasing");
     antiAliasCheck = new JCheckBox(text, true);
-    text = GT._("Use povray's slower but higher quality anti-aliasing mode");
+    text = GT.$("Use povray's slower but higher quality anti-aliasing mode");
     antiAliasCheck.setToolTipText(text);
     antiAliasCheck.addItemListener(updateItemListener);
     antiAliasBox.add(antiAliasCheck);
@@ -245,9 +245,9 @@ public class PovrayDialog extends JDialog {
 */
     // Display when rendering option
     Box displayBox = Box.createHorizontalBox();
-    text = GT._("Display While Rendering");
+    text = GT.$("Display While Rendering");
     displayWhileRenderingCheck = new JCheckBox(text, true);
-    text = GT._("Should POV-Ray attempt to display while rendering?");
+    text = GT.$("Should POV-Ray attempt to display while rendering?");
     displayWhileRenderingCheck.setToolTipText(text);
     displayWhileRenderingCheck.addItemListener(updateItemListener);
     displayBox.add(displayWhileRenderingCheck);
@@ -256,9 +256,9 @@ public class PovrayDialog extends JDialog {
 
     // Image size option
     Box imageBox = Box.createHorizontalBox();
-    //text = GT._("Image size");
+    //text = GT.$("Image size");
     //imageSizeCheck = new JCheckBox(text, true);
-    //text = GT._("Image size");
+    //text = GT.$("Image size");
     //imageSizeCheck.setToolTipText(text);
     //imageSizeCheck.addItemListener(new ItemListener() {
     //  public void itemStateChanged(ItemEvent e) {
@@ -270,9 +270,9 @@ public class PovrayDialog extends JDialog {
     imageBox.add(Box.createHorizontalStrut(10));
     Box imageSizeDetailBox = Box.createVerticalBox();
     Box imageSizeXYBox = Box.createHorizontalBox();
-    text = GT._("width:")+" ";
+    text = GT.$("width:")+" ";
     imageSizeWidth = new JLabel(text);
-    text = GT._("Image width");
+    text = GT.$("Image width");
     imageSizeWidth.setToolTipText(text);
     imageSizeXYBox.add(imageSizeWidth);
     imageSizeTextWidth = new JFormattedTextField();
@@ -288,9 +288,9 @@ public class PovrayDialog extends JDialog {
     );
     imageSizeXYBox.add(imageSizeTextWidth);
     imageSizeXYBox.add(Box.createHorizontalStrut(10));
-    text = GT._("height:")+" ";
+    text = GT.$("height:")+" ";
     imageSizeHeight = new JLabel(text);
-    text = GT._("Image height");
+    text = GT.$("Image height");
     imageSizeHeight.setToolTipText(text);
     imageSizeXYBox.add(imageSizeHeight);
     imageSizeTextHeight = new JFormattedTextField();
@@ -308,9 +308,9 @@ public class PovrayDialog extends JDialog {
     imageSizeXYBox.add(Box.createGlue());
     imageSizeDetailBox.add(imageSizeXYBox);
     Box imageSizeBox = Box.createHorizontalBox();
-    text = GT._("Fixed ratio : ");
+    text = GT.$("Fixed ratio : ");
     imageSizeRatioBox = new JCheckBox(text, true);
-    text = GT._("Use a fixed ratio for width:height");
+    text = GT.$("Use a fixed ratio for width:height");
     imageSizeRatioBox.setToolTipText(text);
     imageSizeRatioBox.addItemListener(new ItemListener() {
       @Override
@@ -322,9 +322,9 @@ public class PovrayDialog extends JDialog {
     imageSizeBox.add(imageSizeRatioBox);
     imageSizeBox.add(Box.createHorizontalStrut(10));
     imageSizeRatioCombo = new JComboBox<String>();
-    text = GT._("User defined");
+    text = GT.$("User defined");
     imageSizeRatioCombo.addItem(text);
-    text = GT._("Keep ratio of Jmol window");
+    text = GT.$("Keep ratio of Jmol window");
     imageSizeRatioCombo.addItem(text);
     text = "4:3";
     imageSizeRatioCombo.addItem(text);
@@ -350,9 +350,9 @@ public class PovrayDialog extends JDialog {
     // Output format option
     Box outputBox = Box.createHorizontalBox();
 /*    
-    text = GT._("Output format : ");
+    text = GT.$("Output format : ");
     outputFormatCheck = new JCheckBox(text, true);
-    text = GT._("Select the file format of the output file");
+    text = GT.$("Select the file format of the output file");
     outputFormatCheck.setToolTipText(text);
     outputFormatCheck.addItemListener(new ItemListener() {
       public void itemStateChanged(ItemEvent e) {
@@ -365,16 +365,16 @@ public class PovrayDialog extends JDialog {
     outputBox.add(Box.createHorizontalStrut(10));
     outputFormatCombo = new JComboBox<String>();
     //case 0
-    text = GT._("N - PNG");
+    text = GT.$("N - PNG");
     outputFormatCombo.addItem(text);
     //case 1
-    text = GT._("P - PPM");
+    text = GT.$("P - PPM");
     outputFormatCombo.addItem(text);
     //case 2
-    text = GT._("C - Compressed Targa-24");
+    text = GT.$("C - Compressed Targa-24");
     outputFormatCombo.addItem(text);
     //case 3
-    text = GT._("T - Uncompressed Targa-24");
+    text = GT.$("T - Uncompressed Targa-24");
     outputFormatCombo.addItem(text);
     outputFormatCombo.setSelectedIndex(0);
     outputFormatCombo.addActionListener(new ActionListener() {
@@ -391,9 +391,9 @@ public class PovrayDialog extends JDialog {
 
     // Alpha option
     Box alphaBox = Box.createHorizontalBox();
-    text = GT._("Alpha transparency");
+    text = GT.$("Alpha transparency");
     outputAlphaCheck = new JCheckBox(text, false);
-    text = GT._("Output Alpha transparency data");
+    text = GT.$("Output Alpha transparency data");
     outputAlphaCheck.setToolTipText(text);
     outputAlphaCheck.addItemListener(new ItemListener() {
       @Override
@@ -407,9 +407,9 @@ public class PovrayDialog extends JDialog {
     
     // Mosaic preview option
     Box mosaicBox = Box.createHorizontalBox();
-    text = GT._("Mosaic preview");
+    text = GT.$("Mosaic preview");
     mosaicPreviewCheck = new JCheckBox(text, false);
-    text = GT._("Render the image in several passes");
+    text = GT.$("Render the image in several passes");
     mosaicPreviewCheck.setToolTipText(text);
     mosaicPreviewCheck.addItemListener(new ItemListener() {
       @Override
@@ -420,9 +420,9 @@ public class PovrayDialog extends JDialog {
     });
     mosaicBox.add(mosaicPreviewCheck);
     mosaicBox.add(Box.createHorizontalStrut(10));
-    text = GT._("Start size : ");
+    text = GT.$("Start size : ");
     mosaicPreviewStart = new JLabel(text);
-    text = GT._("Initial size of the tiles");
+    text = GT.$("Initial size of the tiles");
     mosaicPreviewStart.setToolTipText(text);
     mosaicBox.add(mosaicPreviewStart);
     mosaicPreviewComboStart = new JComboBox<String>();
@@ -439,9 +439,9 @@ public class PovrayDialog extends JDialog {
     });
     mosaicBox.add(mosaicPreviewComboStart);
     mosaicBox.add(Box.createHorizontalStrut(10));
-    text = GT._("End size : ");
+    text = GT.$("End size : ");
     mosaicPreviewEnd = new JLabel(text);
-    text = GT._("Final size of the tiles");
+    text = GT.$("Final size of the tiles");
     mosaicPreviewEnd.setToolTipText(text);
     mosaicBox.add(mosaicPreviewEnd);
     mosaicPreviewComboEnd = new JComboBox<String>();
@@ -463,15 +463,15 @@ public class PovrayDialog extends JDialog {
   
     //GUI for povray path selection
     Box povrayPathBox = Box.createHorizontalBox();
-    text = GT._("Location of the POV-Ray Executable");
+    text = GT.$("Location of the POV-Ray Executable");
     povrayPathBox.setBorder(new TitledBorder(text));
-    text = GT._("Location of the POV-Ray Executable");
+    text = GT.$("Location of the POV-Ray Executable");
     povrayPathBox.setToolTipText(text);
     povrayPathLabel = new JTextField("");
     povrayPathLabel.setEditable(false);
     povrayPathLabel.setBorder(null);
     povrayPathBox.add(povrayPathLabel);
-    text = GT._("Select");
+    text = GT.$("Select");
     povrayPathButton = new JButton(text);
     povrayPathButton.addActionListener(new ActionListener() {
 
@@ -487,12 +487,12 @@ public class PovrayDialog extends JDialog {
     
     /*
     Box commandLineBox = Box.createVerticalBox();
-    text = GT._("Command Line to Execute");
+    text = GT.$("Command Line to Execute");
     commandLineBox.setBorder(new TitledBorder(text));
-    text = GT._("The actual command which will be executed");
+    text = GT.$("The actual command which will be executed");
     commandLineBox.setToolTipText(text);
     commandLineField = new JTextField(30);
-    text = GT._("The actual command which will be executed");
+    text = GT.$("The actual command which will be executed");
     commandLineField.setToolTipText(text);
     commandLineField.addActionListener(updateActionListener);
     commandLineBox.add(commandLineField);
@@ -503,9 +503,9 @@ public class PovrayDialog extends JDialog {
     //GUI for panel with go, cancel and stop (etc) buttons
     Box buttonBox = Box.createHorizontalBox();
     buttonBox.add(Box.createGlue());
-    text = GT._("Go!");
+    text = GT.$("Go!");
     goButton = new JButton(text);
-    text = GT._("Save file and possibly launch POV-Ray");
+    text = GT.$("Save file and possibly launch POV-Ray");
     goButton.setToolTipText(text);
     goButton.addActionListener(new ActionListener() {
 
@@ -515,9 +515,9 @@ public class PovrayDialog extends JDialog {
       }
     });
     buttonBox.add(goButton);
-    text = GT._("Cancel");
+    text = GT.$("Cancel");
     JButton cancelButton = new JButton(text);
-    text = GT._("Cancel this dialog without saving");
+    text = GT.$("Cancel this dialog without saving");
     cancelButton.setToolTipText(text);
     cancelButton.addActionListener(new ActionListener() {
 
@@ -625,7 +625,7 @@ public class PovrayDialog extends JDialog {
 
     JFileChooser myChooser = new JFileChooser();
     myChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    int button = myChooser.showDialog(this, GT._("Select"));
+    int button = myChooser.showDialog(this, GT.$("Select"));
     if (button == JFileChooser.APPROVE_OPTION) {
       java.io.File newFile = myChooser.getSelectedFile();
       String savePath;
@@ -646,7 +646,7 @@ public class PovrayDialog extends JDialog {
   void showPovrayPathDialog() {
 
     JFileChooser myChooser = new JFileChooser();
-    int button = myChooser.showDialog(this, GT._("Select"));
+    int button = myChooser.showDialog(this, GT.$("Select"));
     if (button == JFileChooser.APPROVE_OPTION) {
       java.io.File newFile = myChooser.getSelectedFile();
       povrayPathLabel.setText(newFile.toString());
@@ -774,9 +774,9 @@ public class PovrayDialog extends JDialog {
   	}
     String text = null;
     if (callPovray) {
-      text = GT._("Go!");
+      text = GT.$("Go!");
     } else {
-      text = GT._("Save");
+      text = GT.$("Save");
     }
     if (goButton != null) {
       goButton.setText(text);
@@ -846,7 +846,7 @@ public class PovrayDialog extends JDialog {
         (povrayPath == null) ||
 	    (basename == null)) {
       //if (commandLineField != null) {
-      //  commandLineField.setText(GT._("null component string"));
+      //  commandLineField.setText(GT.$("null component string"));
       //}
       return "";
     }

@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;

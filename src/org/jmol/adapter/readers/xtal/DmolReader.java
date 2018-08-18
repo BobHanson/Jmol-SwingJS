@@ -171,15 +171,15 @@ public class DmolReader extends AtomSetCollectionReader {
         lastAtomCount = cloneLastAtomSet(ac, null);
         if (i == 0)
           iAtom0 = asc.getLastAtomSetAtomIndex();
-        asc.setAtomSetFrequency(null, null,
-            String.valueOf(frequencies[i]), null);
+        asc.setAtomSetFrequency(vibrationNumber, null,
+            null, String.valueOf(frequencies[i]), null);
         asc.setAtomSetName(DF.formatDecimal(
             frequencies[i], 2) + " cm-1");
 
       }
       rd();
       fillFrequencyData(iAtom0, ac, lastAtomCount, ignore, false, 5, 13,
-          null, 0);
+          null, 0, null);
       readLines(2);
     }
   }

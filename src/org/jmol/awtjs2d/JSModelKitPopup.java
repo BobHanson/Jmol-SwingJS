@@ -23,13 +23,9 @@
  */
 package org.jmol.awtjs2d;
 
-//import java.net.URL;
+import org.jmol.awtjs.swing.JPopupMenu;
 
-import javajs.api.PlatformViewer;
-import javajs.api.SC;
-import javajs.awt.Component;
-import javajs.swing.JPopupMenu;
-
+import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.modelkit.ModelKitPopupResourceBundle;
 import org.jmol.popup.JSSwingPopupHelper;
@@ -38,6 +34,9 @@ import org.jmol.popup.PopupResource;
 //import org.jmol.util.Elements;
 import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
+
+import javajs.awt.Component;
+import javajs.awt.SC;
 
 public class JSModelKitPopup extends JmolGenericPopup {
 
@@ -86,7 +85,7 @@ public class JSModelKitPopup extends JmolGenericPopup {
 
   @Override
   public String menuSetCheckBoxOption(SC item, String name, String what) {
-    String element = GT._("Element?");
+    String element = GT.$("Element?");
     /**
      * @j2sNative
      * 

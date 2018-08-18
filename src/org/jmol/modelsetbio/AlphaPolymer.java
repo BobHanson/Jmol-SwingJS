@@ -24,7 +24,7 @@
 package org.jmol.modelsetbio;
 
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Logger;
 
 import javajs.util.Measure;

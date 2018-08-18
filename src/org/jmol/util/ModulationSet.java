@@ -506,16 +506,25 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       setVib(isReset, scale);
   }
 
-  private void setVib(boolean isReset, float scale) {
-    vib.setT(v0);
-    if (isReset)
+  private void setVib(boolean isReset, float modulationScale) {
+    // vib.modScale will be dynamically set
+    // it can be turned off using VECTOR MAX 0
+    // modulationScale will be -1 on a reset. 
+    // this.scale will then hold the actual scale
+    // otherwise, modulation scale will be the actual scale,
+    // and this.scale will be 1. 
+    if (isReset) {
+      vib.setT(v0);
       return;
+    }
     ptTemp.setT(mxyz);
-    ptTemp.scale(this.scale * scale);
+    // vib.modScale is from VECTOR MAX <n> 
     symmetry.toCartesian(ptTemp, true);
     PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
-    ptTemp.scale(vib.modScale);
-    vib.add(ptTemp);
+    // we must scale v0 with mod to preserve angle
+    ptTemp.add(v0);
+    ptTemp.scale(vib.modScale * modulationScale * this.scale);
+    vib.setT(ptTemp);
   }
 
   @Override
@@ -656,8 +665,13 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public void scaleVibration(float m) {
-    if (vib != null)
-      vib.scale(m);
+    if (vib == null)
+      return;
+    if (m == 0) {
+      // this is a reset
+      m = 1/vib.modScale;
+    }
+    vib.scale(m);
     vib.modScale *= m;
   }
 

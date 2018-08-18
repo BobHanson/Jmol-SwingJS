@@ -38,7 +38,7 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;

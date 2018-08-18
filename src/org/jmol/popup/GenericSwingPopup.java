@@ -4,10 +4,10 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.jmol.api.GenericMenuInterface;
 import org.jmol.util.Logger;
 
-import javajs.api.GenericMenuInterface;
-import javajs.api.SC;
+import javajs.awt.SC;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;

@@ -28,7 +28,7 @@ package org.jmol.bspt;
 import javajs.util.AU;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 /**
  * A Binary Space Partitioning Forest

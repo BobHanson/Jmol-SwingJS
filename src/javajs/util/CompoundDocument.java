@@ -3,6 +3,9 @@
  * $Date: 2006-03-18 15:59:33 -0600 (Sat, 18 Mar 2006) $
  * $Revision: 4652 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
  * Contact: hansonr@stolaf.edu

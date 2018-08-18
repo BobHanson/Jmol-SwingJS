@@ -27,6 +27,8 @@ package org.jmol.util;
 import javajs.util.AU;
 import javajs.util.M4;
 import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -379,23 +381,55 @@ public class SimpleUnitCell {
   /**
    * Expanded cell notation:
    * 
-   *   111 - 1000  --> center 5,5,5; range 0 to 9 or -5 to +4
-   *    
-   *   1000000 - 1999999 --> center 50,50,50; range 0 to 99 or -50 to +49
-   *   1000000000 - 1999999999 --> center 500, 500, 500; range 0 to 999 or -500 to +499
-   *   
+   * 111 - 1000 --> center 5,5,5; range 0 to 9 or -5 to +4
+   * 
+   * 1000000 - 1999999 --> center 50,50,50; range 0 to 99 or -50 to +49
+   * 1000000000 - 1999999999 --> center 500, 500, 500; range 0 to 999 or -500 to
+   * +499
+   * 
    * @param nnn
    * @param cell
-   * @param offset  0 or 1 typically; < 0 means "apply no offset"
+   * @param offset
+   *        0 or 1 typically; < 0 means "apply no offset"
+   * @param kcode
+   *        Generally the multiplier is just {ijk ijk scale}, but when we have
+   *        1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java float
+   *        precision issues so we use P4 {1iiijjjkkk 1iiijjjkkk scale,
+   *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
+   *        renderer, but later -500 or -499 -- tells us which code we are
+   *        looking at, the first one or the second one.
+   * 
    */
-  public static void ijkToPoint3f(int nnn, P3 cell, int offset) {
+  public static void ijkToPoint3f(int nnn, P3 cell, int offset, int kcode) {
     int f = (nnn > 1000000000 ? 1000 : nnn > 1000000 ? 100 : 10);
     int f2 = f * f;
     offset -= (offset >= 0 ? 5 * f / 10 : offset);
     cell.x = ((nnn / f2) % f) + offset;
     cell.y = (nnn % f2) / f + offset;
-    cell.z = (nnn % f) + offset;
+    cell.z = (kcode == 0 ? nnn % f 
+        : (offset == -500 ? kcode / f : kcode) % f) + offset;
   }
+
+  /**
+   * Generally the multiplier is just {ijk ijk scale}, but when we have
+   * 1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java float precision
+   * issues so we use P4 {1iiijjjkkk 1iiijjjkkk scale, 1kkkkkk}
+   * 
+   * @param pt
+   * @return String representation for state
+   */
+  public static String escapeMultiplier(T3 pt) {
+    if (pt instanceof P4) {
+      P4 pt4 = (P4) pt;
+      int x = (int) Math.floor(pt4.x / 1000)*1000 
+                  + (int) Math.floor(pt4.w / 1000) - 1000;
+      int y = (int) Math.floor(pt4.y / 1000)*1000 
+          + (int) Math.floor(pt4.w) % 1000;
+      return "{" + x + " " + y + " " + pt.z + "}"; 
+    }
+    return Escape.eP(pt);
+  }
+  
 
   public final static float SLOP = 0.02f;
   private final static float SLOP1 = 1 - SLOP;
@@ -460,5 +494,34 @@ public class SimpleUnitCell {
       ucnew[3].set(f[6], f[7], f[8]);
     return ucnew;
   }
+
+  public static void setMinMaxLatticeParameters(int dimension, P3i minXYZ, P3i maxXYZ, int kcode) {
+    
+    if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {
+      //alternative format for indicating a range of cells:
+      //{111 666}
+      //555 --> {0 0 0}
+      P3 pt = new P3();
+      ijkToPoint3f(maxXYZ.x, pt, 0, kcode);
+      minXYZ.x = (int) pt.x;
+      minXYZ.y = (int) pt.y;
+      minXYZ.z = (int) pt.z;
+      ijkToPoint3f(maxXYZ.y, pt, 1, kcode);
+      //555 --> {1 1 1}
+      maxXYZ.x = (int) pt.x;
+      maxXYZ.y = (int) pt.y;
+      maxXYZ.z = (int) pt.z;
+    }
+    switch (dimension) {
+    case 1: // polymer
+      minXYZ.y = 0;
+      maxXYZ.y = 1;
+      //$FALL-THROUGH$
+    case 2: // slab
+      minXYZ.z = 0;
+      maxXYZ.z = 1;
+    }
+  }
+
 
 }

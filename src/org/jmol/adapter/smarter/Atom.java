@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2015-09-14 06:56:50 -0500 (Mon, 14 Sep 2015) $
- * $Revision: 20772 $
+ * $Date: 2018-03-22 13:29:36 -0500 (Thu, 22 Mar 2018) $
+ * $Revision: 21872 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -25,7 +25,7 @@
 package org.jmol.adapter.smarter;
 
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -75,11 +75,6 @@ public class Atom extends P3 implements Cloneable {
   
   public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
 
-  /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
-   */
   public Atom() {
    set(Float.NaN, Float.NaN, Float.NaN);
   }

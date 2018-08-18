@@ -24,7 +24,6 @@
 package javajs.awt;
 
 
-import javajs.api.FontManager;
 import javajs.util.AU;
 
 

@@ -24,10 +24,10 @@
 
 package org.jmol.shape;
 
-import javajs.awt.Font;
-
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+
+import javajs.awt.Font;
+import javajs.util.BS;
 
 
 public class Frank extends Shape {
@@ -89,7 +89,7 @@ public class Frank extends Shape {
       x <<= 1;
       y <<= 1;
     }      
-    vwr.hoverOnPt(x, y, GT._("Click for menu..."), null, null);
+    vwr.hoverOnPt(x, y, GT.$("Click for menu..."), null, null);
     return true;
   }
   

@@ -24,8 +24,18 @@
 
 package org.jmol.scriptext;
 
-import java.util.Hashtable;
 import java.util.Map;
+
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 import org.jmol.adapter.readers.quantum.GenNBOReader;
 import org.jmol.api.Interface;
@@ -34,10 +44,9 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.MepCalculation;
-import org.jmol.quantum.QS;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
@@ -50,31 +59,15 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
 import org.jmol.util.Parser;
-import org.jmol.util.Triangulator;
-
-import javajs.J2SIgnoreImport;
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.SB;
-
-import org.jmol.util.Logger;
-
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.TempArray;
+import org.jmol.util.Triangulator;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
 
-@J2SIgnoreImport(org.jmol.quantum.QS.class)
 public class IsoExt extends ScriptExt {
 
   public IsoExt() {
@@ -1057,10 +1050,14 @@ public class IsoExt extends ScriptExt {
       if (propertyList.size() > 0)
         setShapeProperty(iShape, "setProperties", propertyList);
       if (haveMO && !eval.tQuiet) {
-        if (!isNBO) {
+        String moLabel = "";
+        if (isNBO) {
+          moLabel = (String) getShapeProperty(iShape, "moLabel");
+        } else {
           moNumber = ((Integer) getShapeProperty(iShape, "moNumber")).intValue();
+          moLabel = "" + moNumber;
         }
-        showString(T.nameOf(tokAt(0)) + " " + moNumber + " "
+        showString(T.nameOf(tokAt(0)) + " " + moLabel + " "
             + (isBeta ? "beta " : "") + getShapeProperty(iShape, "message"));
       }
 
@@ -1068,9 +1065,9 @@ public class IsoExt extends ScriptExt {
     }
   }
 
-
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("static-access")
   private void setNBOType(Map<String, Object> moData, String type) throws ScriptException {
+
     //         31    32    33    34    35    36    37    38    39    40    41
     int ext = ";AO;  ;PNAO;;NAO; ;PNHO;;NHO; ;PNBO;;NBO; ;PNLMO;NLMO;;MO;  ;NO;"
         .indexOf(";" + type + ";");
@@ -1081,7 +1078,7 @@ public class IsoExt extends ScriptExt {
     if (chk)
       return;
     if (!((GenNBOReader) Interface.getInterface("org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
-        .readNBOCoefficients(moData, type, vwr))
+    		.readNBOCoefficients(moData, type, vwr))
       error(ScriptError.ERROR_moModelError);
   }
 

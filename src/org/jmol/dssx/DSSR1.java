@@ -29,7 +29,7 @@ import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;

@@ -17,7 +17,7 @@ import javajs.util.SB;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
@@ -800,10 +800,10 @@ abstract class OutputManager {
                       + fileName;
                   vwr.captureParams = null;
                   params.put("captureMsg",
-                      GT._("Capture")
+                      GT.$("Capture")
                           + ": "
-                          + (captureMode.equals("cancel") ? GT._("canceled")
-                              : GT.o(GT._("{0} saved"), fileName)));
+                          + (captureMode.equals("cancel") ? GT.$("canceled")
+                              : GT.o(GT.$("{0} saved"), fileName)));
                   if (params.containsKey("captureRootExt"))
                     createImage = false;
                   break;
@@ -869,9 +869,9 @@ abstract class OutputManager {
     if (path == null)
       value = null;
     else
-      Logger.info(GT.o(GT._("Setting log file to {0}"), path));
+      Logger.info(GT.o(GT.$("Setting log file to {0}"), path));
     if (value == null || !vwr.haveAccess(ACCESS.ALL)) {
-      Logger.info(GT._("Cannot set log file path."));
+      Logger.info(GT.$("Cannot set log file path."));
       value = null;
     } else {
       vwr.logFileName = path;

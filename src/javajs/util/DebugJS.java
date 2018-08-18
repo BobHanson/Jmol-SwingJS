@@ -7,23 +7,22 @@ package javajs.util;
 
 public class DebugJS {
 
-	/**
-	 * Insert a JavaScript debug statement
-	 * @param msg 
-	 * 
-	 */
-		 public static void _(String msg) {
-		/**
-		 * @j2sNative
-		 * 
-		 * if (Clazz._debugging) {
-		 * 
-		 * debugger;
-		 * 
-		 * }
-		 * 
-		 */
-		{}
-	}
+//	/**
+//	 * Insert a JavaScript debug statement
+//	 * 
+//	 */
+//		 public static void _(String msg) {
+//		/**
+//		 * @j2sNative
+//		 * 
+//		 * if (Clazz._debugging) {
+//		 * 
+//		 * debugger;
+//		 * 
+//		 * }
+//		 * 
+//		 */
+//		{}
+//	}
 
 }

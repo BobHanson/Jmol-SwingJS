@@ -37,7 +37,7 @@ import org.jmol.adapter.smarter.Structure;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.PymolAtomReader;
 import org.jmol.c.STR;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;

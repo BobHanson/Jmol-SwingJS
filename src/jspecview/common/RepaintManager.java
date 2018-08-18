@@ -1,5 +1,7 @@
 package jspecview.common;
 
+import jspecview.api.js.JSVAppletObject;
+
 public class RepaintManager {
 
 	public RepaintManager(JSViewer viewer) {
@@ -21,7 +23,7 @@ public class RepaintManager {
     //if (vwr.pd() != null) // all closed
     	//vwr.pd().setTaintedAll();
     @SuppressWarnings("unused")
-		Object applet = vwr.html5Applet;
+		JSVAppletObject applet = vwr.html5Applet;
     /**
      * @j2sNative
      * 

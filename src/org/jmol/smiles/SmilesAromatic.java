@@ -31,7 +31,7 @@ import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.V3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
@@ -455,7 +455,7 @@ public class SmilesAromatic {
           npi += n;
           if (n == 1)
             n1++;
-          if (Logger.debugging)
+          if (Logger.debuggingHigh)
             Logger.info("atom " + atom + " pi=" + n + " npi=" + npi);
           // normal continuance
           continue;

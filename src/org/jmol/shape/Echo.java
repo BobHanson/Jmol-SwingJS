@@ -32,7 +32,7 @@ import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.util.C;

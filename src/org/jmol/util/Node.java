@@ -27,7 +27,7 @@ package org.jmol.util;
 import javajs.util.Lst;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 
 public interface Node extends SimpleNode {
   

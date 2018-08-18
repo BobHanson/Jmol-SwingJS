@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-07-09 19:51:36 -0500 (Sun, 09 Jul 2017) $
- * $Revision: 21658 $
+ * $Date: 2018-02-22 12:04:47 -0600 (Thu, 22 Feb 2018) $
+ * $Revision: 21841 $
  *
  * Copyright (C) 2005  The Jmol Development Team
  *
@@ -28,11 +28,12 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
+import org.jmol.viewer.JC;
 
 //import org.jmol.util.Logger;
 
@@ -50,6 +51,8 @@ public class SmilesAtom extends P3 implements Node {
 
   SmilesAtom() {
   }
+
+  int patternIndex = -1;
   
   String pattern;
   int primitiveType;
@@ -110,7 +113,7 @@ public class SmilesAtom extends P3 implements Node {
   private int atomicMass = Integer.MIN_VALUE;
   private int charge = Integer.MIN_VALUE;
   private int matchingIndex = -1;
-  SmilesStereo stereo;
+  public SmilesStereo stereo;
   
   public int getChiralClass() {
     return (stereo == null ? Integer.MIN_VALUE : stereo.getChiralClass(this));
@@ -189,11 +192,13 @@ public class SmilesAtom extends P3 implements Node {
   String symbol;
   private boolean isTopoAtom;
   private int missingHydrogenCount;
+  private int cipChirality;
 
   public SmilesAtom setTopoAtom(int iComponent, int ptAtom, String symbol,
-      int charge) {
+      int charge, int patternIndex) {
     component = iComponent;
     index = ptAtom;
+    this.patternIndex = patternIndex;
     setSymbol(symbol);
     this.charge = charge;
     isTopoAtom = true;
@@ -404,7 +409,7 @@ public class SmilesAtom extends P3 implements Node {
    * @return matching atom
    */
   public Node getMatchingAtom() {
-    return matchingNode;
+    return matchingNode == null ? this : matchingNode;
   }
 
   /**
@@ -859,25 +864,31 @@ public class SmilesAtom extends P3 implements Node {
 
   @Override
   public String getCIPChirality(boolean doCalculate) {
-    // TODO
-    return "";
+    return JC.getCIPChiralityName(cipChirality & ~JC.CIP_CHIRALITY_NAME_MASK);
   }
 
   @Override
   public void setCIPChirality(int c) {
-    // n/a
+    cipChirality = c;
   }
 
   @Override
   public int getCIPChiralityCode() {
-    //n/a
-    return 0; 
+    return cipChirality;
   }
 
 
   @Override
   public P3 getXYZ() {
     return this;
+  }
+
+  public SmilesStereo getStereo() {
+    return stereo;
+  }
+
+  public int getPatternIndex() {
+    return patternIndex;
   }
 
 }

@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-01-13 14:40:33 -0600 (Sat, 13 Jan 2018) $
- * $Revision: 21795 $
+ * $Date: 2018-03-22 13:29:36 -0500 (Thu, 22 Mar 2018) $
+ * $Revision: 21872 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -492,7 +492,7 @@ public class Resolver {
           return false;
         Integer.parseInt(tokens2.nextToken());
         for (int i = 3; --i >= 0;)
-          PT.fVal(tokens2.nextToken());
+          Float.parseFloat(tokens2.nextToken());
         if (n == 5)
           Integer.parseInt(tokens2.nextToken());
       }

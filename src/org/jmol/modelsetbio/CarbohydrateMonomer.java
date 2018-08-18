@@ -29,11 +29,6 @@ import org.jmol.modelset.Chain;
 
 public class CarbohydrateMonomer extends Monomer {
 
-  /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
-   */
   private CarbohydrateMonomer() {
   }
   

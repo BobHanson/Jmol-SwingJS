@@ -43,7 +43,7 @@ public class Splash extends Window implements SplashInterface {
   private int imgWidth, imgHeight;
   private static final int BORDERSIZE = 10;
   private static final Color BORDERCOLOR = Color.blue;
-  private String status = GT._("Loading...");
+  private String status = GT.$("Loading...");
   private int textY;
   private int statusTop;
   private static final int STATUSSIZE = 10;

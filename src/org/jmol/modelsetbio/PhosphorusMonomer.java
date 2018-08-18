@@ -44,11 +44,6 @@ public class PhosphorusMonomer extends Monomer {
   @Override
   public final boolean isNucleic() {return true;}
 
-  /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
-   * 
-   */
   protected PhosphorusMonomer() {}
   
   static Monomer validateAndAllocateP(Chain chain, String group3, int seqcode,

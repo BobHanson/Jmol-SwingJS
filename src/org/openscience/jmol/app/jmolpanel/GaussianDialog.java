@@ -193,16 +193,16 @@ public class GaussianDialog extends JDialog implements ActionListener,
     super(f, false);
     this.vwr = vwr;
 
-    setTitle(GT._("Create Gaussian Input File"));
+    setTitle(GT.$("Create Gaussian Input File"));
 
     container = new JPanel();
     container.setLayout(new BorderLayout());
     //inputTabs = new JTabbedPane();
 
     JPanel basicPanel = buildBasicPanel();
-    //inputTabs.addTab(GT._("Basic"), null, basicPanel);
+    //inputTabs.addTab(GT.$("Basic"), null, basicPanel);
     JPanel advancedPanel = buildAdvancedPanel();
-    //inputTabs.addTab(GT._("Advanced"), null, advancedPanel);
+    //inputTabs.addTab(GT.$("Advanced"), null, advancedPanel);
     
     JPanel filePanel = buildFilePanel();
     JPanel buttonPanel = buildButtonPanel();
@@ -229,20 +229,20 @@ public class GaussianDialog extends JDialog implements ActionListener,
     JPanel linkLabels = new JPanel(new GridLayout(3,1));
     JPanel linkControls = new JPanel(new GridLayout(3,1));
     
-    JLabel checkLabel = new JLabel(GT._("Checkpoint File: "));
+    JLabel checkLabel = new JLabel(GT.$("Checkpoint File: "));
     linkLabels.add(checkLabel);
     checkField = new JTextField(20);
     linkControls.add(checkField);
     checkField.addActionListener(this);
     
-    JLabel memLabel = new JLabel(GT._("Memory:"));
+    JLabel memLabel = new JLabel(GT.$("Memory:"));
     linkLabels.add(memLabel);
     memBox = new JComboBox<String>(MEMORY_LIST);
     linkControls.add(memBox);
     memBox.setSelectedIndex(0);
     memBox.addActionListener(this);
     
-    JLabel procLabel = new JLabel(GT._("Processors:"));
+    JLabel procLabel = new JLabel(GT.$("Processors:"));
     linkLabels.add(procLabel);
     SpinnerModel procModel = new SpinnerNumberModel(1, 1, 16, 1);
     procSpinner = new JSpinner(procModel);
@@ -256,20 +256,20 @@ public class GaussianDialog extends JDialog implements ActionListener,
     showPanel.add(linkPanel, BorderLayout.NORTH);
     
     JPanel routePanel = new JPanel(new BorderLayout());
-    TitledBorder routeTitle = BorderFactory.createTitledBorder(GT._("Route"));
+    TitledBorder routeTitle = BorderFactory.createTitledBorder(GT.$("Route"));
     routePanel.setBorder(routeTitle);
     
     JPanel routeLabels = new JPanel(new GridLayout(4,1));
     JPanel routeControls = new JPanel(new GridLayout(4,1));
     
-    JLabel methLabel = new JLabel(GT._("Method: "));
+    JLabel methLabel = new JLabel(GT.$("Method: "));
     routeLabels.add(methLabel);
     methBox = new JComboBox<String>(METHOD_LIST);
     routeControls.add(methBox);
     methBox.setSelectedIndex(0);
     methBox.addActionListener(this);
     
-    JLabel basisLabel = new JLabel(GT._("Basis Set: "));
+    JLabel basisLabel = new JLabel(GT.$("Basis Set: "));
     routeLabels.add(basisLabel);
     basisBox = new JComboBox<String>(BASIS_LIST);
     routeControls.add(basisBox);
@@ -278,14 +278,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
    
     
     JLabel dfLabel = 
-      new JLabel(GT._("DFT Density Fit: "));
+      new JLabel(GT.$("DFT Density Fit: "));
     routeLabels.add(dfLabel);
     dfBox = new JComboBox<String>(DF_LIST);
     routeControls.add(dfBox);
     dfBox.setSelectedIndex(0);
     dfBox.addActionListener(this);
     
-    JLabel optsLabel = new JLabel(GT._("Job Options: "));
+    JLabel optsLabel = new JLabel(GT.$("Job Options: "));
     routeLabels.add(optsLabel);
     optsField = new JTextField(20);
     routeControls.add(optsField);
@@ -299,13 +299,13 @@ public class GaussianDialog extends JDialog implements ActionListener,
     
     JPanel molPanel = new JPanel(new BorderLayout());
     TitledBorder molTitle =
-      BorderFactory.createTitledBorder(GT._("Molecular Properties"));
+      BorderFactory.createTitledBorder(GT.$("Molecular Properties"));
     molPanel.setBorder(molTitle);
     
     JPanel molLabels = new JPanel(new GridLayout(3,1));
     JPanel molControls = new JPanel(new GridLayout(3,1));
     
-    JLabel chargeLabel = new JLabel(GT._("Total Charge: "));
+    JLabel chargeLabel = new JLabel(GT.$("Total Charge: "));
     molLabels.add(chargeLabel);
     SpinnerModel chargeModel = new SpinnerNumberModel(0, -10, 10, 1);
     chargeSpinner = new JSpinner(chargeModel);
@@ -313,7 +313,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     molControls.add(chargeSpinner);
     chargeSpinner.addChangeListener(this);
     
-    JLabel multLabel = new JLabel(GT._("Multiplicity: "));
+    JLabel multLabel = new JLabel(GT.$("Multiplicity: "));
     molLabels.add(multLabel);
     SpinnerModel multModel = new SpinnerNumberModel(1, 0, 10, 1);
     multSpinner = new JSpinner(multModel);
@@ -353,13 +353,13 @@ public class GaussianDialog extends JDialog implements ActionListener,
 	
     JPanel showPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     TitledBorder fileTitle =
-	  BorderFactory.createTitledBorder(GT._("Gaussian Input File Name"));
+	  BorderFactory.createTitledBorder(GT.$("Gaussian Input File Name"));
     showPanel.setBorder(fileTitle);
     
     fileField = new JTextField(30);
     showPanel.add(fileField);
     fileField.setText(new File("my_input.com").getAbsolutePath());
-    fileButton = new JButton(GT._("File..."));
+    fileButton = new JButton(GT.$("File..."));
     fileButton.addActionListener(this);
     showPanel.add(fileButton);
     
@@ -370,22 +370,22 @@ public class GaussianDialog extends JDialog implements ActionListener,
     JPanel buttonPanel = new JPanel();
     buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-    JLabel selectLabel = new JLabel(GT._("Selection: "));
+    JLabel selectLabel = new JLabel(GT.$("Selection: "));
     buttonPanel.add(selectLabel);
     selectField = new JTextField(20);
     selectField.setText("visible");
     buttonPanel.add(selectField);
     selectField.addActionListener(this);
    
-    refreshButton = new JButton(GT._("Refresh"));
+    refreshButton = new JButton(GT.$("Refresh"));
     refreshButton.addActionListener(this);
     buttonPanel.add(refreshButton);
 
-    saveButton = new JButton(GT._("Save"));
+    saveButton = new JButton(GT.$("Save"));
     saveButton.addActionListener(this);
     buttonPanel.add(saveButton);
     
-    closeButton = new JButton(GT._("Close"));
+    closeButton = new JButton(GT.$("Close"));
     closeButton.addActionListener(this);
     buttonPanel.add(closeButton);
   

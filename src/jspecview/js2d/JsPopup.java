@@ -23,14 +23,11 @@
  */
 package jspecview.js2d;
 
+import org.jmol.api.PlatformViewer;
 import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.PopupResource;
 
-import javajs.api.PlatformViewer;
-import javajs.api.SC;
-import javajs.awt.Component;
-import javajs.swing.JPopupMenu;
-
+import javajs.awt.SC;
 import jspecview.common.JSViewer;
 import jspecview.popup.JSVGenericPopup;
 import jspecview.popup.JSVPopupResourceBundle;
@@ -59,12 +56,7 @@ public class JsPopup extends JSVGenericPopup {
    */
   @Override
   public void menuShowPopup(SC popup, int x, int y) {
-
-    try {
-      ((JPopupMenu) popup).show(isTainted ? (Component) vwr.getApplet() : null, x, y);
-    } catch (Exception e) {
-      // ignore
-    }
+    vwr.menuShowPopup(popup, isTainted, x, y);
   }
 
 	@Override

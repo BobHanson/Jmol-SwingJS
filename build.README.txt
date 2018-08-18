@@ -1,6 +1,30 @@
-Jmol building notes
+Jmol-SwingJS building notes
 
-Building Jmol properly requires three projects:
+3/16/2018 - Warning in build-app-only.xml
+"bootstrap class path not set in conjunction with -source 1.6"
+
+---------------------------------------------------------------------------------------------------------------------
+
+3/15/2018 - the details of describing the building Jmol-SwingJS are still being worked out. This is a first attempt:
+
+The Jmol-SwingJS Eclipse/j2s project requires Eclipse Neon or later as well as two 
+resources from the java2script project - specifically, the j2s Eclipse plug-in and 
+the SwingJS site/ directory "JVM" runtime JavaScript library.
+
+If you are planning to create Jmol.jar yourself, please read the following instructions:
+
+https://github.com/BobHanson/java2script/tree/master/dist
+
+The overall sequence for full HTML5 code creation
+when the Jmol or JSpecView code is modified, is as follows:
+
+1) use jmol/build.xml to create the JAR file.
+
+4) for distribution, then 
+
+	a) run jmol/builddist.xml
+	b) run jmol/tools/jmol-release.xml
+
 
 Jmol
 JSmol

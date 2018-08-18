@@ -14,11 +14,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import javajs.api.SC;
+import javajs.awt.SC;
 
 /**
  * A javax.swing implementation of SwingComponent 
- * that mirrors javajs.swing for compatibility with 
+ * that mirrors org.jmol.awtjs.swing for compatibility with 
  * compilation with java2script.
  * 
  * 

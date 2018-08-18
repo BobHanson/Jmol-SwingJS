@@ -90,7 +90,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
     if (openChooser == null) {
       openChooser = new FileChooser();
       Object temp = UIManager.get("FileChooser.fileNameLabelText");
-      UIManager.put("FileChooser.fileNameLabelText", GT._("File or URL:"));
+      UIManager.put("FileChooser.fileNameLabelText", GT.$("File or URL:"));
       getXPlatformLook(openChooser);
       UIManager.put("FileChooser.fileNameLabelText", temp);
     }
@@ -271,7 +271,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
     imageChooser.addChoosableFileFilter(new TypeFilter(extension));
     JPanel cbPanel = new JPanel();
     cbPanel.setLayout(new FlowLayout());
-    cbPanel.setBorder(new TitledBorder(GT._("Image Type")));
+    cbPanel.setBorder(new TitledBorder(GT.$("Image Type")));
     cb = new JComboBox<String>();
     for (int i = 0; i < choices.length; i++) {
       cb.addItem(choices[i]);
@@ -286,7 +286,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
 
     qPanelJPEG = new JPanel();
     qPanelJPEG.setLayout(new BorderLayout());
-    qPanelJPEG.setBorder(new TitledBorder(GT.i(GT._("JPEG Quality ({0})"),
+    qPanelJPEG.setBorder(new TitledBorder(GT.i(GT.$("JPEG Quality ({0})"),
         qualityJPG)));
     qSliderJPEG = new JSlider(SwingConstants.HORIZONTAL, 50, 100, qualityJPG);
     qSliderJPEG.putClientProperty("JSlider.isFilled", Boolean.TRUE);
@@ -300,7 +300,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
     qPanelPNG = new JPanel();
     qPanelPNG.setLayout(new BorderLayout());
     qPanelPNG
-        .setBorder(new TitledBorder(GT.i(GT._("PNG Compression  ({0})"), qualityPNG)));
+        .setBorder(new TitledBorder(GT.i(GT.$("PNG Compression  ({0})"), qualityPNG)));
     qSliderPNG = new JSlider(SwingConstants.HORIZONTAL, 0, 9, qualityPNG);
     qSliderPNG.putClientProperty("JSlider.isFilled", Boolean.TRUE);
     qSliderPNG.setPaintTicks(true);
@@ -328,10 +328,10 @@ public class Dialog extends JPanel implements JmolDialogInterface {
       if (isJPEG) {
         qualityJPG = value;
         qPanelJPEG
-            .setBorder(new TitledBorder(GT.i(GT._("JPEG Quality ({0})"), value)));
+            .setBorder(new TitledBorder(GT.i(GT.$("JPEG Quality ({0})"), value)));
       } else {
         qualityPNG = value;
-        qPanelPNG.setBorder(new TitledBorder(GT.i(GT._("PNG Quality ({0})"), value)));
+        qPanelPNG.setBorder(new TitledBorder(GT.i(GT.$("PNG Quality ({0})"), value)));
       }
     }
   }
@@ -381,10 +381,10 @@ public class Dialog extends JPanel implements JmolDialogInterface {
   }
 
   private static boolean doOverWrite(JFileChooser chooser, File file) {
-    Object[] options = { GT._("Yes"), GT._("No") };
-    int opt = JOptionPane.showOptionDialog(chooser, GT.o(GT._(
+    Object[] options = { GT.$("Yes"), GT.$("No") };
+    int opt = JOptionPane.showOptionDialog(chooser, GT.o(GT.$(
         "Do you want to overwrite file {0}?"), file.getAbsolutePath()), GT
-        ._("Warning"), JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+        .$("Warning"), JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
         null, options, options[0]);
     return (opt == 0);
   }
@@ -443,58 +443,58 @@ public class Dialog extends JPanel implements JmolDialogInterface {
   public static void setupUIManager() {
 
     // FileChooser strings
-    UIManager.put("FileChooser.acceptAllFileFilterText", GT._("All Files"));
-    UIManager.put("FileChooser.cancelButtonText", GT._("Cancel"));
+    UIManager.put("FileChooser.acceptAllFileFilterText", GT.$("All Files"));
+    UIManager.put("FileChooser.cancelButtonText", GT.$("Cancel"));
     UIManager.put("FileChooser.cancelButtonToolTipText", GT
-        ._("Abort file chooser dialog"));
+        .$("Abort file chooser dialog"));
     UIManager.put("FileChooser.detailsViewButtonAccessibleName", GT
-        ._("Details"));
-    UIManager.put("FileChooser.detailsViewButtonToolTipText", GT._("Details"));
-    UIManager.put("FileChooser.directoryDescriptionText", GT._("Directory"));
-    UIManager.put("FileChooser.directoryOpenButtonText", GT._("Open"));
+        .$("Details"));
+    UIManager.put("FileChooser.detailsViewButtonToolTipText", GT.$("Details"));
+    UIManager.put("FileChooser.directoryDescriptionText", GT.$("Directory"));
+    UIManager.put("FileChooser.directoryOpenButtonText", GT.$("Open"));
     UIManager.put("FileChooser.directoryOpenButtonToolTipText", GT
-        ._("Open selected directory"));
-    UIManager.put("FileChooser.fileAttrHeaderText", GT._("Attributes"));
-    UIManager.put("FileChooser.fileDateHeaderText", GT._("Modified"));
-    UIManager.put("FileChooser.fileDescriptionText", GT._("Generic File"));
-    UIManager.put("FileChooser.fileNameHeaderText", GT._("Name"));
-    UIManager.put("FileChooser.fileNameLabelText", GT._("File Name:"));
-    UIManager.put("FileChooser.fileSizeHeaderText", GT._("Size"));
-    UIManager.put("FileChooser.filesOfTypeLabelText", GT._("Files of Type:"));
-    UIManager.put("FileChooser.fileTypeHeaderText", GT._("Type"));
-    UIManager.put("FileChooser.helpButtonText", GT._("Help"));
+        .$("Open selected directory"));
+    UIManager.put("FileChooser.fileAttrHeaderText", GT.$("Attributes"));
+    UIManager.put("FileChooser.fileDateHeaderText", GT.$("Modified"));
+    UIManager.put("FileChooser.fileDescriptionText", GT.$("Generic File"));
+    UIManager.put("FileChooser.fileNameHeaderText", GT.$("Name"));
+    UIManager.put("FileChooser.fileNameLabelText", GT.$("File Name:"));
+    UIManager.put("FileChooser.fileSizeHeaderText", GT.$("Size"));
+    UIManager.put("FileChooser.filesOfTypeLabelText", GT.$("Files of Type:"));
+    UIManager.put("FileChooser.fileTypeHeaderText", GT.$("Type"));
+    UIManager.put("FileChooser.helpButtonText", GT.$("Help"));
     UIManager
-        .put("FileChooser.helpButtonToolTipText", GT._("FileChooser help"));
-    UIManager.put("FileChooser.homeFolderAccessibleName", GT._("Home"));
-    UIManager.put("FileChooser.homeFolderToolTipText", GT._("Home"));
-    UIManager.put("FileChooser.listViewButtonAccessibleName", GT._("List"));
-    UIManager.put("FileChooser.listViewButtonToolTipText", GT._("List"));
-    UIManager.put("FileChooser.lookInLabelText", GT._("Look In:"));
+        .put("FileChooser.helpButtonToolTipText", GT.$("FileChooser help"));
+    UIManager.put("FileChooser.homeFolderAccessibleName", GT.$("Home"));
+    UIManager.put("FileChooser.homeFolderToolTipText", GT.$("Home"));
+    UIManager.put("FileChooser.listViewButtonAccessibleName", GT.$("List"));
+    UIManager.put("FileChooser.listViewButtonToolTipText", GT.$("List"));
+    UIManager.put("FileChooser.lookInLabelText", GT.$("Look In:"));
     UIManager.put("FileChooser.newFolderErrorText", GT
-        ._("Error creating new folder"));
-    UIManager.put("FileChooser.newFolderAccessibleName", GT._("New Folder"));
+        .$("Error creating new folder"));
+    UIManager.put("FileChooser.newFolderAccessibleName", GT.$("New Folder"));
     UIManager
-        .put("FileChooser.newFolderToolTipText", GT._("Create New Folder"));
-    UIManager.put("FileChooser.openButtonText", GT._("Open"));
+        .put("FileChooser.newFolderToolTipText", GT.$("Create New Folder"));
+    UIManager.put("FileChooser.openButtonText", GT.$("Open"));
     UIManager.put("FileChooser.openButtonToolTipText", GT
-        ._("Open selected file"));
-    UIManager.put("FileChooser.openDialogTitleText", GT._("Open"));
-    UIManager.put("FileChooser.saveButtonText", GT._("Save"));
+        .$("Open selected file"));
+    UIManager.put("FileChooser.openDialogTitleText", GT.$("Open"));
+    UIManager.put("FileChooser.saveButtonText", GT.$("Save"));
     UIManager.put("FileChooser.saveButtonToolTipText", GT
-        ._("Save selected file"));
-    UIManager.put("FileChooser.saveDialogTitleText", GT._("Save"));
-    UIManager.put("FileChooser.saveInLabelText", GT._("Save In:"));
-    UIManager.put("FileChooser.updateButtonText", GT._("Update"));
+        .$("Save selected file"));
+    UIManager.put("FileChooser.saveDialogTitleText", GT.$("Save"));
+    UIManager.put("FileChooser.saveInLabelText", GT.$("Save In:"));
+    UIManager.put("FileChooser.updateButtonText", GT.$("Update"));
     UIManager.put("FileChooser.updateButtonToolTipText", GT
-        ._("Update directory listing"));
-    UIManager.put("FileChooser.upFolderAccessibleName", GT._("Up"));
-    UIManager.put("FileChooser.upFolderToolTipText", GT._("Up One Level"));
+        .$("Update directory listing"));
+    UIManager.put("FileChooser.upFolderAccessibleName", GT.$("Up"));
+    UIManager.put("FileChooser.upFolderToolTipText", GT.$("Up One Level"));
 
     // OptionPane strings
-    UIManager.put("OptionPane.cancelButtonText", GT._("Cancel"));
-    UIManager.put("OptionPane.noButtonText", GT._("No"));
-    UIManager.put("OptionPane.okButtonText", GT._("OK"));
-    UIManager.put("OptionPane.yesButtonText", GT._("Yes"));
+    UIManager.put("OptionPane.cancelButtonText", GT.$("Cancel"));
+    UIManager.put("OptionPane.noButtonText", GT.$("No"));
+    UIManager.put("OptionPane.okButtonText", GT.$("OK"));
+    UIManager.put("OptionPane.yesButtonText", GT.$("Yes"));
   }
   
   private static boolean isMac = System.getProperty("os.name", "").startsWith("Mac");

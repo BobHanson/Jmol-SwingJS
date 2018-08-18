@@ -31,7 +31,7 @@ import org.jmol.api.Interface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;

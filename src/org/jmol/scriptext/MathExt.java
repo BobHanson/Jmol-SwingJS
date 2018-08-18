@@ -58,7 +58,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.PointIterator;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.java.BS;
+import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -169,7 +169,7 @@ public class MathExt {
     case T.function:
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
-    case T._:
+    case T.__:
     case T.select:
     case T.getproperty:
       return evaluateGetProperty(mp, args, tok, op.tok == T.propselector);
@@ -308,6 +308,7 @@ public class MathExt {
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args,
                                    boolean isSelector) throws ScriptException {
     // optional last parameter: scale
+    // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
     // unitcell(uc)
     // unitcell(uc, "reciprocal")
     // unitcell(origin, [va, vb, vc])
@@ -343,6 +344,8 @@ public class MathExt {
         for (int i = 0; i < 4; i++)
           ucnew[i] = new P3();
         SimpleUnitCell.setOabc(s, null, ucnew);
+      } else if (s.indexOf(",") >= 0) {
+        return mp.addXObj(vwr.getV0abc(s));
       }
       break;
     }
@@ -1178,70 +1181,101 @@ public class MathExt {
 
     P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
     P4 plane2 = mp.planeValue(x2);
-    if (isDist) {
-      int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
-      boolean isMinMax = (minMax == T.min || minMax == T.max);
-      boolean isAll = minMax == T.minmaxmask;
-      switch (x1.tok) {
-      case T.bitset:
-        BS bs = (BS) x1.value;
-        BS bs2 = null;
-        boolean returnAtom = (isMinMax && x3 != null && x3.asBoolean());
-        switch (x2.tok) {
-        case T.bitset:
-          bs2 = (x2.tok == T.bitset ? (BS) x2.value : null);
-          //$FALL-THROUGH$
-        case T.point3f:
-          Atom[] atoms = vwr.ms.at;
-          if (returnAtom) {
-            float dMinMax = Float.NaN;
-            int iMinMax = Integer.MAX_VALUE;
-            for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-              float d = (bs2 == null ? atoms[i].distanceSquared(pt2)
-                  : ((Float) e.getBitsetProperty(bs2, op, atoms[i],
-                      plane2, x1.value, null, false, x1.index, false))
-                      .floatValue());
-              if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
-                continue;
-              dMinMax = d;
-              iMinMax = i;
-            }
-            return mp.addXBs(iMinMax == Integer.MAX_VALUE ? new BS() : BSUtil
-                .newAndSetBit(iMinMax));
-          }
-          if (isAll) {
-            if (bs2 == null) {
-              float[] data = new float[bs.cardinality()];
-              for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-                  .nextSetBit(i + 1), p++)
-                data[p] = atoms[i].distance(pt2);
-              return mp.addXAF(data);
-            }
-            float[][] data2 = new float[bs.cardinality()][bs2.cardinality()];
-            for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-                .nextSetBit(i + 1), p++)
-              for (int q = 0, j = bs2.nextSetBit(0); j >= 0; j = bs2
-                  .nextSetBit(j + 1), q++)
-                data2[p][q] = atoms[i].distance(atoms[j]);
-            return mp.addXAFF(data2);
-          }
-          if (isMinMax) {
-            float[] data = new float[bs.cardinality()];
-            for (int i = bs.nextSetBit(0), p = 0; i >= 0; i = bs
-                .nextSetBit(i + 1))
-              data[p++] = ((Float) e.getBitsetProperty(bs2, op, atoms[i],
-                  plane2, x1.value, null, false, x1.index, false)).floatValue();
-            return mp.addXAF(data);
-          }
-          return mp.addXObj(e.getBitsetProperty(bs, op, pt2, plane2,
-              x1.value, null, false, x1.index, false));
-        }
-      }
-    }
-    P3 pt1 = mp.ptValue(x1, null);
-    P4 plane1 = mp.planeValue(x1);
     float f = Float.NaN;
     try {
+      if (isDist) {
+        int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
+        boolean isMinMax = (minMax == T.min || minMax == T.max);
+        boolean isAll = minMax == T.minmaxmask;
+        switch (x1.tok) {
+        case T.varray:
+        case T.bitset:
+          boolean isAtomSet1 = (x1.tok == T.bitset);
+          boolean isAtomSet2 = (x2.tok == T.bitset);
+          boolean isPoint2 = (x2.tok == T.point3f);
+          BS bs1 = (isAtomSet1 ? (BS) x1.value : null);
+          BS bs2 = (isAtomSet2 ? (BS) x2.value : null);
+          Lst<SV> list1 = (isAtomSet1 ? null : x1.getList());
+          Lst<SV> list2 = (isAtomSet2 ? null : x2.getList());
+          boolean returnAtom = (isMinMax && x3 != null && x3.asBoolean());
+          switch (x2.tok) {
+          case T.bitset:
+          case T.varray:
+            //$FALL-THROUGH$
+          case T.point3f:
+            Atom[] atoms = vwr.ms.at;
+            if (returnAtom) {
+              float dMinMax = Float.NaN;
+              int iMinMax = Integer.MAX_VALUE;
+              if (isAtomSet1) {
+                for (int i = bs1.nextSetBit(0); i >= 0; i = bs1
+                    .nextSetBit(i + 1)) {
+                  float d = (isPoint2 ? atoms[i].distanceSquared(pt2)
+                      : ((Float) e.getBitsetProperty(bs2, list2, op, atoms[i],
+                          plane2, x1.value, null, false, x1.index, false))
+                          .floatValue());
+                  if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
+                    continue;
+                  dMinMax = d;
+                  iMinMax = i;
+                }
+                return mp.addXBs(iMinMax == Integer.MAX_VALUE ? new BS()
+                    : BSUtil.newAndSetBit(iMinMax));
+              }
+              // list of points 
+              for (int i = list1.size(); --i >= 0;) {
+                P3 pt = SV.ptValue(list1.get(i));
+                float d = (isPoint2 ? pt.distanceSquared(pt2) : ((Float) e
+                    .getBitsetProperty(bs2, list2, op, pt, plane2, x1.value,
+                        null, false, Integer.MAX_VALUE, false)).floatValue());
+                if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
+                  continue;
+                dMinMax = d;
+                iMinMax = i;
+              }
+              return mp.addXInt(iMinMax);
+            }
+            if (isAll) {
+              if (bs2 == null) {
+                float[] data = new float[bs1.cardinality()];
+                for (int p = 0, i = bs1.nextSetBit(0); i >= 0; i = bs1
+                    .nextSetBit(i + 1), p++)
+                  data[p] = atoms[i].distance(pt2);
+                return mp.addXAF(data);
+              }
+              float[][] data2 = new float[bs1.cardinality()][bs2.cardinality()];
+              for (int p = 0, i = bs1.nextSetBit(0); i >= 0; i = bs1
+                  .nextSetBit(i + 1), p++)
+                for (int q = 0, j = bs2.nextSetBit(0); j >= 0; j = bs2
+                    .nextSetBit(j + 1), q++)
+                  data2[p][q] = atoms[i].distance(atoms[j]);
+              return mp.addXAFF(data2);
+            }
+            if (isMinMax) {
+              float[] data = new float[isAtomSet1 ? bs1.cardinality() : list1
+                  .size()];
+              if (isAtomSet1) {
+                for (int i = bs1.nextSetBit(0), p = 0; i >= 0; i = bs1
+                    .nextSetBit(i + 1))
+                  data[p++] = ((Float) e.getBitsetProperty(bs2, list2, op,
+                      atoms[i], plane2, x1.value, null, false, x1.index, false))
+                      .floatValue();
+                return mp.addXAF(data);
+              }
+              // list of points
+              for (int i = data.length; --i >= 0;)
+                data[i] = ((Float) e.getBitsetProperty(bs2, list2, op,
+                    SV.ptValue(list1.get(i)), plane2, null, null, false,
+                    Integer.MAX_VALUE, false)).floatValue();
+              return mp.addXAF(data);
+            }
+            return mp.addXObj(e.getBitsetProperty(bs1, list1, op, pt2, plane2,
+                x1.value, null, false, x1.index, false));
+          }
+        }
+      }
+      P3 pt1 = mp.ptValue(x1, null);
+      P4 plane1 = mp.planeValue(x1);
       if (isDist) {
         if (plane2 != null && x3 != null)
           f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
@@ -1416,7 +1450,7 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
-            boolean justOne = (!asMap && (!allMappings || !isSMARTS));
+            boolean justOne = (!asMap && (!allMappings || !isSMARTS && !pattern.equals("chirality")));
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
@@ -1491,8 +1525,23 @@ public class MathExt {
                 | (isON && sFind.length() == 0 ? JC.SMILES_GEN_BIO_COV_CROSSLINK
                     | JC.SMILES_GEN_BIO_COMMENT
                     : 0);
-            ret = e.getSmilesExt().getSmilesMatches(sFind, null, bs, bsMatch3D,
-                smilesFlags, !isON, false);
+            if (flags.indexOf("/MOLECULE/") >= 0) {
+              // all molecules 
+              JmolMolecule[] mols = vwr.ms.getMolecules();
+              Lst<BS> molList = new Lst<BS>();
+              for (int i = 0; i < mols.length; i++) {
+                if (mols[i].atomList.intersects(bs)) {
+                  BS bsRet = (BS) e.getSmilesExt().getSmilesMatches(sFind, null, mols[i].atomList, bsMatch3D,
+                      smilesFlags, !isON, false);
+                  if (!bsRet.isEmpty())
+                    molList.addLast(bsRet);
+                }
+              }
+              ret = molList;
+            } else {
+              ret = e.getSmilesExt().getSmilesMatches(sFind, null, bs, bsMatch3D,
+                  smilesFlags, !isON, false);
+            }
           }
           break;
         }
@@ -1647,7 +1696,7 @@ public class MathExt {
                                       int tok0, boolean isAtomProperty)
       throws ScriptException {
     boolean isSelect = (isAtomProperty && tok0 == T.select);
-    boolean isAuxiliary = (tok0 == T._);
+    boolean isAuxiliary = (tok0 == T.__);
     int pt = 0;
     int tok = (args.length == 0 ? T.nada : args[0].tok);
     if (args.length == 2
@@ -3113,7 +3162,7 @@ public class MathExt {
       if (bsAtoms.isEmpty())
         return false;
       String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
-          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi)
+          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)
@@ -3210,8 +3259,8 @@ public class MathExt {
     }
     if (isSelector) {
       return mp
-          .addXObj(e.getBitsetProperty((BS) x1.value, tok, null, null,
-              x1.value, new Object[] { name, params }, false, x1.index, false));
+          .addXObj(e.getBitsetProperty((BS) x1.value, null, tok, null,
+              null, x1.value, new Object[] { name, params }, false, x1.index, false));
     }
     SV var = e.getUserFunctionResult(name, params, null);
     return (var == null ? false : mp.addX(var));
@@ -3463,7 +3512,6 @@ public class MathExt {
         isWithinModelSet, rd));
   }
 
-  @SuppressWarnings("unchecked")
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     switch (args.length) {
@@ -3779,7 +3827,7 @@ public class MathExt {
       withinAllModels = (nModels > 1);
       if (warnMultiModel && nModels > 1 && !e.tQuiet)
         e.showString(GT
-            ._("Note: More than one model is involved in this contact!"));
+            .$("Note: More than one model is involved in this contact!"));
     }
     // B always within some possibly extended VDW of A or just A itself
     if (!bsA.equals(bsB)) {

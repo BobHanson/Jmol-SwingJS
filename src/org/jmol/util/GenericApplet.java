@@ -290,7 +290,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   public String getAppletInfo() {
     return GT
         .o(GT
-            ._("Jmol Applet version {0} {1}.\n\nAn OpenScience project.\n\nSee http://www.jmol.org for more information"),
+            .$("Jmol Applet version {0} {1}.\n\nAn OpenScience project.\n\nSee http://www.jmol.org for more information"),
             new Object[] { JC.version, JC.date })
         + "\nhtmlName = "
         + PT.esc(htmlName)
@@ -350,7 +350,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
   
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 
@@ -384,7 +383,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 
@@ -418,7 +416,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sIgnore
    * @param infoType
    * @return value
    * 
@@ -685,7 +682,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case LOADSTRUCT:
       String errorMsg = (String) data[4];
       if (errorMsg != null) {
-        errorMsg = (errorMsg.indexOf("NOTE:") >= 0 ? "" : GT._("File Error:"))
+        errorMsg = (errorMsg.indexOf("NOTE:") >= 0 ? "" : GT.$("File Error:"))
             + errorMsg;
         doShowStatus(errorMsg);
         notifyCallback(CBK.MESSAGE, new Object[] { "", errorMsg });
