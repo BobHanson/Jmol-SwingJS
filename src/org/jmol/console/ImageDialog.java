@@ -34,7 +34,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
-import java.awt.Canvas;
+import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -60,7 +60,7 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
   protected Image image;
 
   protected Viewer vwr;
-  protected Canvas canvas;
+  protected JPanel canvas;
   private String title;
 
   private Map<String, GenericImageDialog> imageMap;
@@ -172,9 +172,9 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
   }  
   
 
-  class ImageCanvas extends Canvas {
+  class ImageCanvas extends JPanel {
     @Override
-    public void paint(Graphics g) {
+    public void paintComponent(Graphics g) {
       g.drawImage(image, 0, 0, null);
     }
   }
