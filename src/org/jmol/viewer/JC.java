@@ -42,6 +42,30 @@ import java.util.Properties;
 
 public final class JC {
 
+  public static final String     //         31    32    33    34    35    36    37    38    39    40    41
+  NBO_TYPES = ";"
+      + "AO;;;;" // 31
+      + "PNAO;;" // 32
+      + "NAO;;;" // 33
+      + "PNHO;;" // 34
+      + "NHO;;;" // 35
+      + "PNBO;;" // 36
+      + "NBO;;;" // 37
+      + "PNLMO;" // 38
+      + "NLMO;;" // 39
+      + "MO;;;;" // 40
+      + "NO;;;;" // 41
+      + ";;;;;;" // 42
+      + ";;;;;;" // 43
+      + "PRNBO;" // 44
+      + "RNBO;;" // 45
+      + "";
+  
+  public static int getNBOTypeFromName(String nboType) {
+    int pt = NBO_TYPES.indexOf(";" + nboType + ";");
+    return (pt < 0 ? pt : pt / 6 + 31);
+  }
+  
   // requires 8 bits for rule and type:        rrrba*SR
   public final static int CIP_CHIRALITY_UNKNOWN = 0;
   public final static int CIP_CHIRALITY_R_FLAG = 1;
@@ -1316,6 +1340,7 @@ public final class JC {
   
 
 
+  // SYNC types
   
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
@@ -1359,6 +1384,7 @@ public final class JC {
   public final static int UNITID_TRIM = 16;
 
   public static final String DEFAULT_DRAG_DROP_SCRIPT = "zap; load SYNC \"%FILE\";if (%ALLOWCARTOONS && _loadScript == '' && defaultLoadScript == '' && _filetype == 'Pdb') {if ({(protein or nucleic)&*/1.1} && {*/1.1}[1].groupindex != {*/1.1}[0].groupindex){select protein or nucleic;cartoons only;}if ({visible && cartoons > 0}){color structure}else{wireframe -0.1};if (!{visible}){spacefill 23%};select *}";
+
   /**
    * Get a unitID type
    * 

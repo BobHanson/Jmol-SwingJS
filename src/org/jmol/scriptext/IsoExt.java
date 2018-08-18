@@ -1068,9 +1068,7 @@ public class IsoExt extends ScriptExt {
   @SuppressWarnings("static-access")
   private void setNBOType(Map<String, Object> moData, String type) throws ScriptException {
 
-    //         31    32    33    34    35    36    37    38    39    40    41
-    int ext = ";AO;  ;PNAO;;NAO; ;PNHO;;NHO; ;PNBO;;NBO; ;PNLMO;NLMO;;MO;  ;NO;"
-        .indexOf(";" + type + ";");
+    int ext = JC.getNBOTypeFromName(type);
     if (ext < 0)
       invArg();
     if (!moData.containsKey("nboLabels"))
