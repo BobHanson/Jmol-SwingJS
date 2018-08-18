@@ -248,8 +248,10 @@ public class XtalSymmetry {
     int dim = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
     firstAtom = asc.getLastAtomSetAtomIndex();
     BS bsAtoms = asc.bsAtoms;
-    if (bsAtoms != null)
+    if (bsAtoms != null) {
+      updateBSAtoms();
       firstAtom = bsAtoms.nextSetBit(firstAtom);
+    }
     rminx = rminy = rminz = Float.MAX_VALUE;
     rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
     P3 pt0 = null;
@@ -280,11 +282,9 @@ public class XtalSymmetry {
        acr.addJmolScript("unitcell " + type);
     }
     if (acr.fillRange != null) {
-      
-      if (bsAtoms == null)
-        asc.bsAtoms = bsAtoms = new BS();
+
+      bsAtoms = updateBSAtoms();
       acr.forcePacked = true;
-      bsAtoms.setBits(firstAtom, asc.ac);
       doPackUnitCell = false;
       minXYZ = new P3i();
       maxXYZ = P3i.new3(1, 1, 1);
@@ -351,9 +351,7 @@ public class XtalSymmetry {
     } else {
       boolean doPack0 = doPackUnitCell;
       doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
-      if (asc.bsAtoms == null)
-        asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-      bsAtoms = asc.bsAtoms;
+      bsAtoms = updateBSAtoms();
       applyAllSymmetry(acr.ms, null);
       doPackUnitCell = doPack0;
 
@@ -404,10 +402,8 @@ public class XtalSymmetry {
     }
     if (acr.forcePacked || doPackUnitCell) {
       // trim atom set based on original unit cell
-      BS bs = asc.bsAtoms;
       Atom[] atoms = asc.atoms;
-      if (bs == null)
-        bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+      BS bs = updateBSAtoms();
       for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
             maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
@@ -416,6 +412,21 @@ public class XtalSymmetry {
     }
 
     // but we leave matSupercell, because we might need it for vibrations in CASTEP
+  }
+
+  /**
+   * Update asc.bsAtoms to include all atoms, or at least all
+   * atoms that are still viable from the reader.
+   * 
+   * @return updated BS
+   */
+  private BS updateBSAtoms() {
+    BS bs = asc.bsAtoms;
+    if (bs == null)
+      bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+    if (bs.nextSetBit(firstAtom) < 0)
+      bs.setBits(firstAtom, asc.ac);
+    return bs;
   }
 
   private void adjustRangeMinMax(T3[] oabc) {
