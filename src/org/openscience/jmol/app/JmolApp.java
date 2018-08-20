@@ -107,6 +107,10 @@ public class JmolApp implements JmolAppAPI {
           .$("Error starting Jmol: the property 'user.home' is not defined."));
       System.exit(1);
     }
+    /**
+     * @j2sNative
+     */
+    {
     File ujmoldir = new File(new File(System.getProperty("user.home")), ".jmol");
     ujmoldir.mkdirs();
     userPropsFile = new File(ujmoldir, "properties");
@@ -114,7 +118,7 @@ public class JmolApp implements JmolAppAPI {
         "Jmol's persistent values");
     pluginFile = new HistoryFile(new File(ujmoldir, "plugins"),
         "Jmol plugin persistent values");
-
+    }
     
     parseCommandLine(args);
   }

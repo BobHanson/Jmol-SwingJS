@@ -34,6 +34,18 @@ import org.openscience.jmol.app.jmolpanel.Splash;
 
 public class Jmol extends JmolPanel {
 
+  static {
+    /**
+     *  @j2sNative
+     *  
+     *  self.Jmol || (Jmol = self.J2S); 
+     *  Jmol._isSwingJS = true; Jmol._isAWTjs = true;
+     */
+    
+  }
+  
+  static boolean isSwingJS = /**@j2sNative true||*/false;
+  
   public Jmol(JmolApp jmolApp, Splash splash, JFrame frame, Jmol parent, int startupWidth,
       int startupHeight, Map<String, Object> vwrOptions, Point loc) {
     super(jmolApp, splash, frame, parent, startupWidth, startupHeight, vwrOptions, loc);

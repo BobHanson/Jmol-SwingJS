@@ -177,6 +177,18 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   static {
     /**
+     *  @j2sNative
+     *  
+     *  self.Jmol || (Jmol = self.J2S); Jmol._isSwingJS = true;
+     */
+    
+  }
+  
+  static boolean isSwingJS = /**@j2sNative true||*/false;
+  
+
+  static {
+    /**
      * allows customization of Viewer -- not implemented in JSmol.
      * 
      * @j2sNative
@@ -471,7 +483,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
        *              jmol = Jmol;
        *            applet =
        *            Jmol._applets[this.htmlName.split("_object")[0]]; javaver =
-       *            Jmol._version; }
+       *            Jmol._version; 
+       *            
+       *            }
        * 
        * 
        */
