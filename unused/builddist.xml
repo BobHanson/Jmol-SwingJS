@@ -280,8 +280,7 @@
 
   
 
-	<target name="dist" id="dist"
-          depends="main-i18n,doc">
+	<target name="dist" id="dist">
 		
 		  <!-- 
 		  

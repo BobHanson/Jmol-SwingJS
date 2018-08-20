@@ -1,0 +1,62 @@
+<project name="JSmol" default="todist" basedir=".">
+ 
+   <property name="site.path" value="site/" />
+   <property name="dist.path" value="dist/" />
+   <property name="jmolapp.zip" value="${dist.path}/jmol-app.zip" />	  	  	
+
+
+   <target name="todist" id="todist">
+
+   	<echo> Zipping up ${jmolapp.zip} </echo>
+  	<zip destfile="${jmolapp.zip}" basedir="${site.path}" 
+  		includes="swingjs/j2s/org/jmol/**,swingjs/j2s/org/openscience/jmol/**" 
+  	/>
+   	
+   	
+   	<!-- make core files
+   	<echo>creating and compressing core files - warnings are OK; "does not exist" is trouble</echo>
+   	<echo>reading core class list from file coreclasses</echo>   	
+   	<loadresource property="coreclasses">
+       <file file="coreclasses"/>
+    </loadresource>
+ 
+    <antcall target="call-core">
+        <param name="call-core.name" value="${core.name}" />
+        <param name="call-core.list" value="
+			core/coreswingjs.js
+         	${coreclasses}
+        	" />
+    </antcall>
+    <echo>......Now copy an html file in site/ and add   core:"core${core.name}",    to the Info block.</echo> 	
+    
+     -->
+    
+    
+  </target>
+
+
+	  <target name="call-core" id="call-core">
+	   	<echo>......Creating core${call-core.name}.js</echo>
+	   	<concat destfile="${site.path}/js/core/tmp.js">
+	   		<filelist dir="${site.path}/j2s" files="${call-core.list}" />
+	   	</concat> 
+
+	  	<replace dir="${site.path}/js/core" includes="tmp.js" token="Clazz." value="Clazz_"/>
+	  	<replace dir="${site.path}/js/core" includes="tmp.js" token="Clazz__" value="Clazz._"/>
+	   	<echo>......Generating ${site.path}/j2s/core/core${call-core.name}.js</echo> 	
+	   	<concat destfile="${site.path}/j2s/core/core${call-core.name}.js"><filelist dir="${site.path}/js" files="
+	   		core/coretop2.js
+	   		core/tmp.js
+	   		core/corebottom2.js
+	   		" />
+	   	</concat>
+	   	<echo>......Generating ${site.path}/j2s/core/core${call-core.name}.z.js</echo> 	
+	   	<java jar="tools/closure_compiler.jar" fork="true" dir="${site.path}/j2s/core" failonerror="false">
+	   		<arg line="--js core${call-core.name}.js --js_output_file core${call-core.name}.z.js" />
+	    </java>
+	 	<delete quiet="true" file="${site.path}/js/core/tmp.js" />
+	  </target>
+
+		
+	
+</project>
