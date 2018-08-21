@@ -473,33 +473,38 @@ public class Resolver {
     11 ATOMS,    12 BONDS,     0 CHARGES
     */
     int pt;
-    if ((pt = line.indexOf("ATOMS")) >= 0 && line.indexOf("BONDS") > pt)
-      try {
-        int n = Integer.parseInt(line.substring(0, pt).trim());
+    if ((pt = line.indexOf("ATOMS")) >= 0 && line.indexOf("BONDS") > pt) {
+        int n = PT.parseInt(line.substring(0, pt).trim());
         return (n > 0);
-      } catch (NumberFormatException nfe) {
-        // ignore
       }
     return false;
   }
 
+  private static int[] n = new int[1];
+  private static boolean isInt(String s) {
+    n[0] = 0;
+    s = s.trim();
+    return s.length() > 0 && PT.parseIntNext(s, n) != Integer.MIN_VALUE && n[0] == s.length();
+  }
+
+  private static boolean isFloat(String s) {
+    return !Float.isNaN(PT.parseFloat(s));
+  }
+
+
   private static boolean checkCube(String[] lines) {
-    try {
       for (int j = 2; j <= 5; j++) {
         StringTokenizer tokens2 = new StringTokenizer(lines[j]);
         int n = tokens2.countTokens();
-        if (!(n == 4 || j == 2 && n == 5))
+        if (!(n == 4 || j == 2 && n == 5) || !isInt(tokens2.nextToken()))
           return false;
-        Integer.parseInt(tokens2.nextToken());
         for (int i = 3; --i >= 0;)
-          Float.parseFloat(tokens2.nextToken());
-        if (n == 5)
-          Integer.parseInt(tokens2.nextToken());
+          if (!isFloat(tokens2.nextToken()))
+              return false;
+        if (n == 5 && !isInt(tokens2.nextToken()))
+            return false;
       }
       return true;
-    } catch (NumberFormatException nfe) {
-    }
-    return false;
   }
 
   /**
@@ -509,27 +514,14 @@ public class Resolver {
   private static boolean checkFoldingXyz(String[] lines) {
     // Checking first line: <number of atoms> <protein name>
     StringTokenizer tokens = new StringTokenizer(lines[0].trim(), " \t");
-    if (tokens.countTokens() < 2)
+    if (tokens.countTokens() < 2 || !isInt(tokens.nextToken().trim()))
       return false;
-    try {
-      Integer.parseInt(tokens.nextToken().trim());
-    } catch (NumberFormatException nfe) {
-      return false;
-    }
-    
     // Checking second line: <atom number> ...
     String secondLine = lines[1].trim();
     if (secondLine.length() == 0)
         secondLine = lines[2].trim();
     tokens = new StringTokenizer(secondLine, " \t");
-    if (tokens.countTokens() == 0)
-      return false;
-    try {
-      Integer.parseInt(tokens.nextToken().trim());
-    } catch (NumberFormatException nfe) {
-      return false;
-    }
-    return true;
+    return (tokens.countTokens() > 0 && isInt(tokens.nextToken().trim()));
   }
   
   private static boolean checkGenNBO(String[] lines, String leader) {
@@ -549,15 +541,11 @@ public class Resolver {
       return 2000;
     if (line4trimmed.endsWith("V3000"))
       return 3000;
-    try {
-      int n1 = Integer.parseInt(lines[3].substring(0, 3).trim());
-      int n2 = Integer.parseInt(lines[3].substring(3, 6).trim());
-      return (n1 > 0 && n2 >= 0 && lines[0].indexOf("@<TRIPOS>") != 0
-          && lines[1].indexOf("@<TRIPOS>") != 0 
-          && lines[2].indexOf("@<TRIPOS>") != 0 ? 3 : 0);
-    } catch (NumberFormatException nfe) {
-    }
-    return 0;
+    int n1 = PT.parseInt(lines[3].substring(0, 3).trim());
+    int n2 = PT.parseInt(lines[3].substring(3, 6).trim());
+    return (n1 > 0 && n2 >= 0 && lines[0].indexOf("@<TRIPOS>") != 0
+        && lines[1].indexOf("@<TRIPOS>") != 0 
+        && lines[2].indexOf("@<TRIPOS>") != 0 ? 3 : 0);
   }
 
   /**
@@ -578,23 +566,24 @@ public class Resolver {
         || lines[i].charAt(0) != ' ' 
         || (i = i + 2) + 1 >= lines.length)
       return false;
-    try {
       // distinguishing between Spartan input and MOL file
       // MOL files have aaabbb.... on the data line
       // SPIN files have cc s on that line (c = charge; s = spin)
       // so the typical MOL file, with more parameters, will fail getting the spin
-      int spin = Integer.parseInt(lines[i].substring(2).trim());
-      int charge = Integer.parseInt(lines[i].substring(0, 2).trim());
+    String l = lines[i];
+    if (l.length() < 3)
+    	return false;
+      int spin = PT.parseInt(l.substring(2).trim());
+      int charge = PT.parseInt(l.substring(0, 2).trim());
       // and if it does not, then we get the next lines of info
-      int atom1 = Integer.parseInt(lines[++i].substring(0, 2).trim());
-      if (spin < 0 || spin > 5 || atom1 <= 0 || charge > 5)
+      if ((l = lines[i + 1]).length() < 2)
+    	  return false;
+      int atom1 = PT.parseInt(l.substring(0, 2).trim());
+      if (spin < 0 || spin > 5 || atom1 <= 0 || charge == Integer.MIN_VALUE || charge > 5)
         return false;
       // hard to believe we would get here for a MOL file
-      float[] atomline = AtomSetCollectionReader.getTokensFloat(lines[i], null, 5);
+      float[] atomline = AtomSetCollectionReader.getTokensFloat(l, null, 5);
       return !Float.isNaN(atomline[1]) && !Float.isNaN(atomline[2]) && !Float.isNaN(atomline[3]) && Float.isNaN(atomline[4]);
-    } catch (Exception e) {
-    }
-    return false;
   }
   
   private static boolean checkWien2k(String[] lines) {
@@ -605,19 +594,9 @@ public class Resolver {
  
   private static int checkXyz(String[] lines) {
     // first and third lines numerical --> Bilbao format
-    try {
-      Integer.parseInt(lines[0].trim());
-      try {
-        Integer.parseInt(lines[2].trim());
-      } catch (NumberFormatException nfe) {
-        return 1;
-      }
-      return 2;
-    } catch (NumberFormatException nfe) {
-      if (lines[0].indexOf("Bilbao Crys") >= 0)
-        return 2;
-    }
-    return 0;
+    if (isInt(lines[0].trim()))
+      return (isInt(lines[2].trim()) ? 2 : 1);
+    return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : 0);
   }
   
   ////////////////////////////////////////////////////////////////
