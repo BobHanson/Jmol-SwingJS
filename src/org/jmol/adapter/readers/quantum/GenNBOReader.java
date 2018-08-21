@@ -387,9 +387,13 @@ public class GenNBOReader extends MOReader {
       addAtomXYZSymName(tokens, 2, null, null).elementNumber = (short) parseIntStr(tokens[0]);
     }
     
-    if (doReadMolecularOrbitals && !getFile31()) {
-      alphaOnly =  true;
-      betaOnly =  false;
+    //Commented out by fzy
+    //This fixes the issue of NRT (SEARCH module) stuck in "getting list r" operation/ NBOServe dies for open shell molecules.
+    //This also fixes the issue of switching from RUN module(after inputting a .47 file) to MODEL module, which results in NBOServe throwing 
+    //warning. The reason lies in Jmol sending CMD <empty string> to NBOServe. 
+    // if (doReadMolecularOrbitals && !getFile31()) {
+    //   alphaOnly =  true;
+    //   betaOnly =  false;
       
       discardLinesUntilContains("$BASIS");
       appendLoadNote("basis AOs are unnormalized");
@@ -428,7 +432,7 @@ public class GenNBOReader extends MOReader {
       getAlphasAndExponents();
       nboType = "AO";
       readMOs();
-    }
+    // }
     continuing = false;
   }
 
