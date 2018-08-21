@@ -427,7 +427,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     o = info.get("options");
     commandOptions = (o == null ? "" : o.toString());
 
-    if (info.containsKey("debug") || commandOptions.indexOf("-debug") >= 0)
+    if (checkOption2("debug", "-debug"))
       Logger.setLogLevel(Logger.LEVEL_DEBUG);
     if (isApplet && info.containsKey("maximumSize"))
       setMaximumSize(((Integer) info.get("maximumSize")).intValue());
@@ -696,7 +696,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   private boolean checkOption2(String key1, String key2) {
-    return (vwrOptions.containsKey(key1) || commandOptions.indexOf(key2) >= 0);
+    return (vwrOptions.containsKey(key1) && !vwrOptions.get(key1).toString().equals("false") 
+        || commandOptions.indexOf(key2) >= 0);
   }
 
   public boolean isPreviewOnly;
