@@ -21,7 +21,7 @@ import org.jmol.util.Logger;
 
 import javajs.api.BytePoster;
 import javajs.awt.Component;
-import javajs.awt.Dimension;
+import java.awt.Dimension;
 import javajs.awt.SC;
 import javajs.util.CU;
 import javajs.util.Lst;

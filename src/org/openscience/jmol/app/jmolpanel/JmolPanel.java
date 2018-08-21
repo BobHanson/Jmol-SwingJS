@@ -111,7 +111,9 @@ import org.openscience.jmol.app.webexport.WebExport;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
 
-  protected static HistoryFile historyFile, pluginFile;
+  public static HistoryFile historyFile;
+
+  protected static HistoryFile pluginFile;
 
   public Viewer vwr;
 
@@ -211,6 +213,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   //private static final String saveasAction = "saveas";
   //private static final String vibAction = "vibrate";
 
+  @SuppressWarnings({ "null", "unused" })
   public JmolPanel(JmolApp jmolApp, Splash splash, JFrame frame,
       JmolPanel parent, int startupWidth, int startupHeight,
       Map<String, Object> vwrOptions, Point loc) {
@@ -224,9 +227,13 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     numWindows++;
 
     try {
-      say("history file is " + historyFile.getFile().getAbsolutePath());
-      say("user properties file is " + jmolApp.userPropsFile.getAbsolutePath());
-    } catch (Exception e) {
+      if (historyFile != null)
+        say("history file is " + historyFile.getFile().getAbsolutePath());
+      if (jmolApp.userPropsFile != null)
+        say("user properties file is "
+            + jmolApp.userPropsFile.getAbsolutePath());
+    } catch (Throwable e) {
+      // ignore - no historyFile
     }
 
     frame.setTitle("Jmol");
@@ -325,7 +332,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       if (loc != null) {
         frame.setLocation(loc);
       } else if (parent == null) {
-        loc = historyFile.getWindowPosition("Jmol");
+        loc = (historyFile == null ? null : historyFile.getWindowPosition("Jmol"));
         if (loc != null)
           frame.setLocation(loc);
       } else {
@@ -353,7 +360,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
         "getAppConsole", null);
-    if (console != null && console.jcd != null) {
+    if (console != null && console.jcd != null && historyFile != null) {
       historyFile.repositionWindow(SCRIPT_WINDOW_NAME, console.jcd, 200, 100,
           !jmolApp.isKiosk);
     }
@@ -378,7 +385,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     say(GT.$("Initializing Preferences..."));
     preferencesDialog = new PreferencesDialog(this, frame, guimap, vwr);
     say(GT.$("Initializing Recent Files..."));
-    recentFiles = new RecentFilesDialog(frame);
+    recentFiles = (/** @j2sNative 1?null:*/new RecentFilesDialog(frame));
     if (jmolApp.haveDisplay) {
       if (display.measurementTable != null)
         display.measurementTable.dispose();
@@ -1483,16 +1490,21 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
-      recentFiles.setVisible(true);
-      String selection = recentFiles.getFile();
-      if (selection == null || selection.length() == 0)
-        return;
-      if (selection.endsWith(" (*)"))
-        vwr.openFileAsyncSpecial(
-            selection.substring(0, selection.length() - 4), 1 + 8);
-      else
-        vwr.openFileAsyncSpecial(selection, 8);
+      /**
+       * @j2sNative
+       * 
+       */
+      {
+        recentFiles.setVisible(true);
+        String selection = recentFiles.getFile();
+        if (selection == null || selection.length() == 0)
+          return;
+        if (selection.endsWith(" (*)"))
+          vwr.openFileAsyncSpecial(
+              selection.substring(0, selection.length() - 4), 1 + 8);
+        else
+          vwr.openFileAsyncSpecial(selection, 8);
+      }
     }
   }
 
@@ -1693,7 +1705,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       int pt = (fullPathName == null ? -1 : fullPathName.lastIndexOf("|"));
       if (pt > 0)
         fullPathName = fullPathName.substring(0, pt);
-      recentFiles.notifyFileOpen(fullPathName);
+      if (recentFiles != null)
+        recentFiles.notifyFileOpen(fullPathName);
       frame.setTitle(title);
     }
     if (atomSetChooser == null) {
@@ -1922,17 +1935,36 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   public static String getJmolProperty(String key, String defaultValue) {
-    return historyFile.getProperty(key, defaultValue);
+    return (historyFile == null ? defaultValue : historyFile.getProperty(key, defaultValue));
   }
 
   public static void setPluginOption(String pluginName, String key, String value) {
+    if (pluginFile == null)
+      return;
     pluginFile.addProperty(pluginName + "_" + key, value);
     pluginFile.save();
   }
 
   public static String getPluginOption(String pluginName, String key,
                                        String defaultValue) {
-    return pluginFile.getProperty(pluginName + "_" + key, defaultValue);
+    return (pluginFile == null ? defaultValue : pluginFile.getProperty(pluginName + "_" + key, defaultValue));
   }
 
+  public static void addJmolProperties(Properties props) {
+    if (historyFile != null)
+      historyFile.addProperties(props);
+  }
+
+  public static void addJmolProperty(String key, String value) {
+    if (historyFile != null)
+      historyFile.addProperty(key, value);
+  }
+
+  public static void addJmolWindowInfo(String name,
+                                               Component window,
+                                               Point border) {
+    if (historyFile != null)
+      historyFile.addWindowInfo(name, window, border);
+    
+  }
 }

@@ -26,7 +26,10 @@
 package org.openscience.jmol.app.webexport;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
@@ -53,6 +56,7 @@ import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 import org.openscience.jmol.app.HistoryFile;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
+import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 public class WebExport extends JPanel implements WindowListener {
 
@@ -66,26 +70,22 @@ public class WebExport extends JPanel implements WindowListener {
 
   private static int runStatus = IN_JMOL; //assume running inside Jmol
 
-  private static HistoryFile historyFile;
-
   private static WebPanel[] webPanels;
   static WebExport webExport;
   private static JFrame webFrame;
   private static String windowName;
 
-  private WebExport(Viewer vwr, HistoryFile hFile) {
+  private WebExport(Viewer vwr, HistoryFile hxxFile) {
     super(new BorderLayout());
 
-    historyFile = hFile;
-    remoteAppletPath = historyFile.getProperty("webMakerAppletPath", chemappsPath);
-    localAppletPath = historyFile.getProperty("webMakerLocalAppletPath", chemappsPath);
-    pageAuthorName = historyFile.getProperty("webMakerPageAuthorName",
+    remoteAppletPath = JmolPanel.getJmolProperty("webMakerAppletPath", chemappsPath);
+    localAppletPath = JmolPanel.getJmolProperty("webMakerLocalAppletPath", chemappsPath);
+    pageAuthorName = JmolPanel.getJmolProperty("webMakerPageAuthorName",
         GT.$("Jmol Web Page Maker"));
-    popInWidth=PT.parseInt(historyFile.getProperty("webMakerPopInWidth", "300"));
-    popInHeight=PT.parseInt(historyFile.getProperty("webMakerPopInHeight", "300"));
-    scriptButtonPercent = PT.parseInt(historyFile.getProperty(
+    popInWidth=PT.parseInt(JmolPanel.getJmolProperty("webMakerPopInWidth", "300"));
+    popInHeight=PT.parseInt(JmolPanel.getJmolProperty("webMakerPopInHeight", "300"));
+    scriptButtonPercent = PT.parseInt(JmolPanel.getJmolProperty(
         "webMakerScriptButtonPercent", "60"));
-
     //Define the tabbed pane
     JTabbedPane mainTabs = new JTabbedPane();
 
@@ -125,9 +125,9 @@ public class WebExport extends JPanel implements WindowListener {
       webPanels[0] = new PopInJmol(vwr, fc, webPanels, 0);
       webPanels[1] = new ScriptButtons(vwr, fc, webPanels, 1);
 
-      int w = Integer.parseInt(historyFile.getProperty("webMakerInfoWidth",
+      int w = Integer.parseInt(JmolPanel.getJmolProperty("webMakerInfoWidth",
           "300"));
-      int h = Integer.parseInt(historyFile.getProperty("webMakerInfoHeight",
+      int h = Integer.parseInt(JmolPanel.getJmolProperty("webMakerInfoHeight",
           "350"));
 
       mainTabs.addTab(GT.$("Pop-In Jmol"), webPanels[0].getPanel(w, h));
@@ -198,7 +198,8 @@ public class WebExport extends JPanel implements WindowListener {
     ImageIcon jmolIcon = new ImageIcon(imageUrl);
     webFrame.setIconImage(jmolIcon.getImage());
     windowName = wName;
-    historyFile.repositionWindow(windowName, webFrame, 700, 400, true);
+    if (historyFile != null)
+      historyFile.repositionWindow(windowName, webFrame, 700, 400, true);
     if (runStatus == STAND_ALONE) {
       //Make sure we have nice window decorations.
       JFrame.setDefaultLookAndFeelDecorated(true);
@@ -227,15 +228,15 @@ public class WebExport extends JPanel implements WindowListener {
   }
 
   public static void saveHistory() {
-    if (historyFile == null)
+    if (JmolPanel.historyFile == null)
       return;
-    historyFile.addWindowInfo(windowName, webFrame, null);
+    JmolPanel.addJmolWindowInfo(windowName, webFrame, null);
     //    prop.setProperty("webMakerInfoWidth", "" + webPanels[0].getInfoWidth());
     //    prop.setProperty("webMakerInfoHeight", "" + webPanels[0].getInfoHeight());
     prop.setProperty("webMakerAppletPath", remoteAppletPath);
     prop.setProperty("webMakerLocalAppletPath", localAppletPath);
     prop.setProperty("webMakerPageAuthorName", pageAuthorName);
-    historyFile.addProperties(prop);
+    JmolPanel.addJmolProperties(prop);
   }
 
   static String remoteAppletPath, localAppletPath;
@@ -252,11 +253,11 @@ public class WebExport extends JPanel implements WindowListener {
     if (isRemote) {
       remoteAppletPath = path;
       prop.setProperty("webMakerAppletPath", remoteAppletPath);
-      historyFile.addProperties(prop);
+      JmolPanel.addJmolProperties(prop);
     } else {
       localAppletPath = path;
       prop.setProperty("webMakerLocalAppletPath", localAppletPath);
-      historyFile.addProperties(prop);
+      JmolPanel.addJmolProperties(prop);
     }
   }
 
@@ -271,7 +272,7 @@ public class WebExport extends JPanel implements WindowListener {
       pageAuthor = GT.$("Jmol Web Page Maker");
     pageAuthorName = pageAuthor;
     prop.setProperty("webMakerPageAuthorName", pageAuthorName);
-    historyFile.addProperties(prop);
+    JmolPanel.addJmolProperties(prop);
   }
 
   static int popInWidth;
@@ -286,7 +287,7 @@ public class WebExport extends JPanel implements WindowListener {
     popInHeight=appletHeight;
     prop.setProperty("webMakerPopInWidth", ""+appletWidth);
     prop.setProperty("webMakerPopInHeight", ""+appletHeight);
-    historyFile.addProperties(prop);
+    JmolPanel.addJmolProperties(prop);
   }
   
   static int getPopInWidth(){
@@ -304,7 +305,7 @@ public class WebExport extends JPanel implements WindowListener {
       percent = 60;
     scriptButtonPercent = percent;
     prop.setProperty("webMakerScriptButtonPercent", ""+percent);
-    historyFile.addProperties(prop);
+    JmolPanel.addJmolProperties(prop);
   }
   
   static int getScriptButtonPercent(){

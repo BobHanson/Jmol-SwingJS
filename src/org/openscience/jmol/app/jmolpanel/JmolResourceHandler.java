@@ -64,10 +64,10 @@ class JmolResourceHandler {
     }
     Locale locale = new Locale(language, country);
     stringsResourceBundle =
-      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.Properties.Jmol", locale);
+      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale);
 
     try {
-      String t = "/org/openscience/jmol/app/jmolpanel/Properties/Jmol-resources.properties";
+      String t = "/org/openscience/jmol/app/jmolpanel/jmolproperties/Jmol-resources.properties";
       generalResourceBundle =
         new PropertyResourceBundle(getClass().getResourceAsStream(t));
     } catch (IOException ex) {

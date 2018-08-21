@@ -754,8 +754,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       } else if (key.equals("Prefs.clearHistory")) {
         clearHistory = isSelected;
         currentProperties.put("clearHistory", strSelected);
-        if (JmolPanel.historyFile != null)
-          JmolPanel.historyFile.addProperty("clearHistory", strSelected);
+        JmolPanel.addJmolProperty("clearHistory", strSelected);
 //      } else if (key.equals("Prefs.fontScale")) {
 //        setFontScale(strSelected);
       }

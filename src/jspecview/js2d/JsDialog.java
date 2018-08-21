@@ -25,7 +25,7 @@ import org.jmol.awtjs.swing.JTextField;
 import org.jmol.awtjs.swing.ListSelectionModel;
 
 import javajs.awt.Color;
-import javajs.awt.Dimension;
+import java.awt.Dimension;
 import jspecview.common.Annotation.AType;
 import jspecview.dialog.DialogManager;
 import jspecview.dialog.JSVDialog;

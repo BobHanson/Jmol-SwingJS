@@ -66,7 +66,7 @@ public class JmolApp implements JmolAppAPI {
 
   public boolean haveConsole = true;
   public boolean haveDisplay = true;
-  public boolean splashEnabled = true;
+  public boolean splashEnabled = /** @j2sNative false && */true;
   public boolean isDataOnly;
   public boolean isKiosk;
   public boolean isPrintOnly;

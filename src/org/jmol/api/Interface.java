@@ -39,15 +39,16 @@ public class Interface {
   public static Object getInterface(String name, Viewer vwr, String state) {
     try {
       Class<?> x = null;
-      /**
-       * @j2sNative 
-       * 
-       * x = Clazz._4Name (name, vwr && vwr.html5Applet, state);
-       * 
-       */
-      {
+//      if (vwr.isJSApplet) {
+//      /**
+//       * @j2sNative 
+//       * 
+//       * x = Clazz._4Name (name, vwr && vwr.html5Applet, state);
+//       * 
+//       */
+//      } else {
         x = Class.forName(name);
-      }
+//      }
       return (x == null ? null : x.newInstance());
     } catch (Exception e) {
       Logger.error("Interface.java Error creating instance for " + name

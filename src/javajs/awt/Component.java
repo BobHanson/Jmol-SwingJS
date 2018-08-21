@@ -1,5 +1,7 @@
 package javajs.awt;
 
+import java.awt.Dimension;
+
 import javajs.api.GenericColor;
 import javajs.util.CU;
 

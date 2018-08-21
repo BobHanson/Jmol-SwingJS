@@ -1,5 +1,7 @@
 package javajs.awt;
 
+import java.awt.Dimension;
+
 import javajs.awt.event.HTMLWindowEvent;
 
 /**

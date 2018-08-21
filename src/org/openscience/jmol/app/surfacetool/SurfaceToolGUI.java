@@ -65,6 +65,7 @@ import javax.swing.event.ListSelectionListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.openscience.jmol.app.HistoryFile;
+import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 import java.util.List;
 
@@ -76,7 +77,6 @@ import java.util.List;
 class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
     WindowFocusListener, ChangeListener, ActionListener, ListSelectionListener {
 
-  private HistoryFile historyFile;
   private String histWinName;
   private JFrame slicerFrame;
   private SurfaceTool slicer;
@@ -122,10 +122,9 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
    * @param slicer
    *        (SurfaceTool) the surfaceTool that activated this GUI
    */
-  SurfaceToolGUI(JmolViewer vwr, HistoryFile hfile, String winName,
+  SurfaceToolGUI(JmolViewer vwr, HistoryFile hfxile, String winName,
       SurfaceTool slicer) {
     super(new BorderLayout());
-    this.historyFile = hfile;
     this.histWinName = winName;
     this.slicer = slicer;
     if (slicerFrame != null) {
@@ -275,7 +274,8 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
 
       slicerFrame.setContentPane(this);
       slicerFrame.addWindowListener(this);
-      historyFile.repositionWindow(winName, slicerFrame, 200, 300, true);
+      if (JmolPanel.historyFile != null)
+        JmolPanel.historyFile.repositionWindow(winName, slicerFrame, 200, 300, true);
 
       //Display the window.
       slicerFrame.pack();
@@ -512,9 +512,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
   }
 
   void saveHistory() {
-    if (historyFile == null)
-      return;
-    historyFile.addWindowInfo(histWinName, slicerFrame, null);
+    JmolPanel.addJmolWindowInfo(histWinName, slicerFrame, null);
     //TODO
     //    prop.setProperty("webMakerInfoWidth", "" + webPanels[0].getInfoWidth());
     //    prop.setProperty("webMakerInfoHeight", "" + webPanels[0].getInfoHeight());

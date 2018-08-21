@@ -37,7 +37,7 @@ import java.util.Properties;
 
 import javajs.api.GenericCifDataParser;
 import javajs.api.GenericZipTools;
-import javajs.awt.Dimension;
+import java.awt.Dimension;
 import javajs.awt.Font;
 
 import javajs.util.AU;
@@ -175,32 +175,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public boolean testAsync;// = true; // testing only
 
-  static {
-    /**
-     *  @j2sNative
-     *  
-     *  self.Jmol || (Jmol = self.J2S); Jmol._isSwingJS = true;
-     */
-    
-  }
-  
-  static boolean isSwingJS = /**@j2sNative true||*/false;
-  
-
-  static {
-    /**
-     * allows customization of Viewer -- not implemented in JSmol.
-     * 
-     * @j2sNative
-     * 
-     *            self.Jmol && Jmol.extend && Jmol.extend("vwr",
-     *            org.jmol.viewer.Viewer.prototype);
-     * 
-     */
-    {
-    }
-  }
-
   @Override
   protected void finalize() throws Throwable {
     if (Logger.debugging)
@@ -214,7 +188,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public boolean autoExit = false;
   public boolean haveDisplay = false;
 
-  public boolean isJS, isWebGL;
+  public boolean isJS, isWebGL; // note that we now allow (isJS and !isApplet) 
+  public boolean isApplet, isJNLP;
+
   public boolean isSingleThreaded;
   public boolean queueOnHold = false;
 
@@ -233,8 +209,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public Map<String, Object> definedAtomSets;
   public ModelSet ms;
   public FileManager fm;
-
-  public boolean isApplet, isJNLP;
 
   public boolean isSyntaxAndFileCheck = false;
   public boolean isSyntaxCheck = false;
@@ -354,6 +328,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private String errorMessageUntranslated;
   private double privateKey;
   private boolean dataOnly;
+  public boolean isJSApplet;
 
   /**
    * new way...
@@ -410,9 +385,26 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   
   @SuppressWarnings({ "unchecked", "null", "unused" })
   public void setOptions(Map<String, Object> info) {
-    // can be deferred
+
     vwrOptions = info;
-    // could be a Component, or could be a JavaScript class
+
+    display = info.get("display");
+
+    Map<String, Object>j2s_viewerOptions = null;
+    Thread thread = Thread.currentThread();
+    /**
+     * @j2sNative
+     * 
+     * j2s_viewerOptions = thread.group.html5Applet._viewerOptions;
+     * 
+     * 
+     */
+    if (j2s_viewerOptions != null) {
+      if (display != null)
+        j2s_viewerOptions.remove("display");
+      vwrOptions.putAll(j2s_viewerOptions);
+    }
+    
     // use allocateViewer
     if (Logger.debugging) {
       Logger.debug("Viewer constructor " + this);
@@ -469,8 +461,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     if (o instanceof String) {
       platform = (String) o;
+      if (platform == "")
+        platform = "org.jmol.awt.Platform";
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
-      isJS = isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      isJS = isSwingJS || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
       JSmolAppletObject applet = null;
@@ -501,7 +495,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       o = Interface.getInterface(platform, this, "setOptions");
     }
     apiPlatform = (GenericPlatform) o;
-    display = info.get("display");
     isSingleThreaded = apiPlatform.isSingleThreaded();
     noGraphicsAllowed = checkOption2("noDisplay", "-n");
     headless = apiPlatform.isHeadless();
@@ -509,9 +502,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
     headless |= noGraphicsAllowed;
+    isJSApplet = isJS && isApplet;
     if (haveDisplay) {
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
+      if (isJSApplet) {
       /**
        * @j2sNative
        * 
@@ -520,6 +515,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
        */
       {
       }
+      }
     } else {
       display = null;
     }
@@ -527,7 +523,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     o = info.get("graphicsAdapter");
     if (o == null && !isWebGL)
       o = Interface.getOption("g3d.Graphics3D", this, "setOptions");
-    gdata = (o == null && (isWebGL || !isJS) ? new GData() : (GData) o);
+    gdata = (o == null && (isWebGL || isJSApplet || !isJS) ? new GData() : (GData) o);
     // intentionally throw an error here to restart the JavaScript async process
     gdata.initialize(this, apiPlatform);
 
@@ -600,7 +596,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       }
       new GT(this, (String) info.get("language"));
       // deferred here so that language is set
-      if (isJS)
+      if (isJS && haveDisplay)
         acm.createActions();
     } else {
       // not an applet -- used to pass along command line options
@@ -7337,16 +7333,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         appConsole = null;
       } else if (appConsole == null && paramInfo != null
           && ((Boolean) paramInfo).booleanValue()) {
-        if (isJS) {
+        if (isJSApplet) {
           appConsole = (JmolAppConsoleInterface) Interface.getOption(
               "consolejs.AppletConsole", this, "script");
-        }
-        /**
-         * @j2sNative
-         * 
-         * 
-         */
-        {
+        } else {
           for (int i = 0; i < 4 && appConsole == null; i++) {
             appConsole = (isApplet ? (JmolAppConsoleInterface) Interface
                 .getOption("console.AppletConsole", null, null)
@@ -7356,6 +7346,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
             if (appConsole == null)
               try {
                 System.out.println("Viewer can't start appConsole");
+                /**
+                 * @j2sNative break;
+                 */
                 Thread.currentThread().wait(100);
               } catch (InterruptedException e) {
                 //

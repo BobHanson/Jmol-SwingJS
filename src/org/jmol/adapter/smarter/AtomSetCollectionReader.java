@@ -509,7 +509,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
      * @j2sNative
      * 
      * if (e.getMessage)
-     *  s = e.getMessage()
+     *  s = e.getMessage();
      * else
      *  s = e.toString();
      */

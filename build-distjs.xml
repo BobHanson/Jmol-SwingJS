@@ -9,7 +9,7 @@
 
    	<echo> Zipping up ${jmolapp.zip} </echo>
   	<zip destfile="${jmolapp.zip}" basedir="${site.path}" 
-  		includes="swingjs/j2s/org/jmol/**,swingjs/j2s/org/openscience/jmol/**" 
+  		includes="swingjs/j2s/org/jmol/**,swingjs/j2s/org/openscience/jmol/**,swingjs/j2s/javajs/awt/**" 
   	/>
    	
    	

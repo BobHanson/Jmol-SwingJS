@@ -47,6 +47,35 @@ import org.jmol.viewer.Viewer;
 
 abstract public class JmolViewer {
 
+  
+  
+  static {
+    /**
+     *  @j2sNative
+     *  
+     *  self.Jmol || (Jmol = self.J2S); 
+     *  Jmol._isSwingJS = true; Jmol._isAWTjs = true;
+     */
+    
+  }
+  
+  static {
+    /**
+     * allows customization of Viewer -- not implemented in JSmol.
+     * 
+     * @j2sNative
+     * 
+     *            self.Jmol && Jmol.extend && Jmol.extend("vwr",
+     *            org.jmol.viewer.Viewer.prototype);
+     * 
+     */
+    {
+    }
+  }
+
+  static public boolean isSwingJS = /**@j2sNative true||*/false;
+  
+
   //removed in Jmol 14.3.11 streamlining:
   //  most are internal to Jmol communication.
   //  others are accessible via public fields ((Viewer) viewer).foo
@@ -173,6 +202,9 @@ abstract public class JmolViewer {
                                           URL codeBase, String commandOptions,
                                           JmolStatusListener statusListener,
                                           GenericPlatform implementedPlatform) {
+    
+    
+    
     Map<String, Object> info = new Hashtable<String, Object>();
     if (display != null)
       info.put("display", display);
@@ -189,7 +221,8 @@ abstract public class JmolViewer {
     if (documentBase != null)
       info.put("documentbase", documentBase);
     if (codeBase != null)
-      info.put("codebase", codeBase);    
+      info.put("codebase", codeBase); 
+    
     return new Viewer(info);
   }
   
