@@ -85,14 +85,13 @@ public class NBOParser {
     htData.put("index", Integer.valueOf(0));
     for (int n = tokens.length, i = 0; i < n; i++) {
       String org = tokens[i];
-      //commented out by fzy. NBOParser should recognize and read in (ry), then output it as {num} on the atom ball
       if (org.contains("(ry)"))
         break;
       if (org.contains("*") || org.contains("(cr)"))
         continue;
       // lone pair or lone valence
       boolean isLP = org.endsWith("(lp)");
-      boolean isRY=org.endsWith("(ry)");
+      
       if (isLP || org.endsWith("(lv)")) {
         int ia = getAtomIndex(org.substring(0, org.length() - 4));
         matrix[ia][ia]+= (isLP ? 1 : 10);

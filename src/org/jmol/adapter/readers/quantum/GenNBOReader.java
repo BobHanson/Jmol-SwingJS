@@ -108,7 +108,7 @@ public class GenNBOReader extends MOReader {
      * molname.39 NLMO 
      * molname.40 MO 
      * molname.41 AO density matrix 
-     * molname.44 PRNBO
+     * molname.44 RNBO
      * molname.45 PRNBO
      * molname.46 Basis label file
      * molname.47 archive file
@@ -849,8 +849,8 @@ public class GenNBOReader extends MOReader {
     // .40 MO alpha+beta
     // .41 NO alpha+beta
     // .42 (density matrix)
-    // .44 PRNBO alpha+beta
-    // .45 RNBO alpha+beta
+    // .44 RNBO alpha+beta
+    // .45 PRNBO alpha+beta
     // .46 (labels)
     // .47 (coords)
     
