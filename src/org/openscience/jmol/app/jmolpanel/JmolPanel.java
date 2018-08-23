@@ -913,6 +913,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       throw new RuntimeException(ex.toString());
     }
     mb.add(pluginMenu);
+    pluginMenu.setEnabled(pluginMenu.getPopupMenu().getComponentCount() > 0);
   }
   
   
