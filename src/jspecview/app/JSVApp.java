@@ -365,7 +365,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 		@SuppressWarnings("unused")
 		JSVAppletObject applet = (vwr == null ? null : vwr.html5Applet);
     /**
-     * Jmol._repaint(applet,asNewThread)
+     * Jmol.repaint(applet,asNewThread)
      * 
      * should invoke 
      * 
@@ -375,10 +375,11 @@ public class JSVApp implements PanelListener, JSVAppInterface {
      * 
      * @j2sNative
      * 
-     * applet && self.Jmol && Jmol._repaint &&(Jmol._repaint(applet,true));
+     * applet && self.Jmol && Jmol.repaint &&(Jmol.repaint(applet,true));
      * 
      */
 		{
+		  
 			appletFrame.repaint();
 		}
 	}

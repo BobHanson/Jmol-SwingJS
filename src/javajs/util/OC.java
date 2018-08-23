@@ -321,9 +321,9 @@ public class OC extends OutputStream implements GenericOutputChannel {
     if (jmol != null) {
       Object data = (sb == null ? toByteArray() : sb.toString());
       if (_function == null)
-        jmol._doAjax(fileName, null, data, sb == null);
+        jmol.doAjax(fileName, null, data, sb == null);
       else
-        jmol._apply(_function, data);
+        jmol.applyFunc(_function, data);
     }
     return null;
   }

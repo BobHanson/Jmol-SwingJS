@@ -84,7 +84,7 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
         getClip();
       }
       if (jmol != null)
-         jmol._playAudio(applet, htParams);
+         jmol.playAudio(applet, htParams);
       if (myClip == null)
         return;
       if (htParams.containsKey("action"))

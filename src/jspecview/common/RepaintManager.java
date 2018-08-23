@@ -27,8 +27,8 @@ public class RepaintManager {
     /**
      * @j2sNative
      * 
-     *  if (typeof Jmol != "undefined" && Jmol._repaint && applet) 
-     *    Jmol._repaint(applet, false);
+     *  if (typeof Jmol != "undefined" && Jmol.repaint && applet) 
+     *    Jmol.repaint(applet, false);
      *  this.repaintDone();
      */
     {

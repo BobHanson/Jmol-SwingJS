@@ -662,7 +662,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 	J2S._binaryTypes = [".uk/pdbe/densities/",".bcif?",".au?",".mmtf?",".gz?",".jpg?",".jpeg?",".gif?",".png?",".zip?",".jmol?",".bin?",".smol?",".spartan?",".mrc?",".pse?", ".map?", ".omap?", 
   ".dcd?",".ccp4?",".mp3?",".ogg?", ".wav?", ".au?"];
 
-	J2S._isBinaryUrl = function(url) {
+	J2S.isBinaryUrl = function(url) {
     url = url.toLowerCase() + "?";
 		for (var i = J2S._binaryTypes.length; --i >= 0;)
 			if (url.indexOf(J2S._binaryTypes[i]) >= 0) return true;
@@ -672,7 +672,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 	J2S._getFileData = function(fileName, fSuccess, doProcess, isBinary) {
     // swingjs.api.J2SInterface
 		// use host-server PHP relay if not from this host
-		isBinary = (isBinary || J2S._isBinaryUrl(fileName));
+		isBinary = (isBinary || J2S.isBinaryUrl(fileName));
 		var isPDB = (fileName.indexOf("pdb.gz") >= 0 && fileName.indexOf("//www.rcsb.org/pdb/files/") >= 0);
 		var asBase64 = (isBinary && !J2S._canSyncBinary(isPDB));
 		if (asBase64 && isPDB) {
@@ -768,7 +768,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 		return applet && applet._z && ++applet._z[what] || ++J2S._z[what];
 	}
 	
-	J2S._loadFileAsynchronously = function(fileLoadThread, applet, fileName, appData) {
+	J2S.loadFileAsynchronously = function(fileLoadThread, applet, fileName, appData) {
 		if (fileName.indexOf("?") != 0) {
 			// LOAD ASYNC command
 			var fileName0 = fileName;
@@ -910,7 +910,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 		url = url.toString();
 
 		if (dataOut != null) 
-			return J2S._saveFile(url, dataOut);
+			return J2S.saveFile(url, dataOut);
 		if (postOut)
 			url += "?POST?" + postOut;
 		return J2S._getFileData(url, null, true);
@@ -918,7 +918,7 @@ J2S._getDefaultLanguage = function(isAll) { return (isAll ? J2S.featureDetection
 
 	// J2S._localFileSaveFunction --  // do something local here; Maybe try the FileSave interface? return true if successful
 	 
-	J2S._saveFile = function(filename, data, mimetype, encoding) {
+	J2S.saveFile = function(filename, data, mimetype, encoding) {
 		if (J2S._localFileSaveFunction && J2S._localFileSaveFunction(filename, data))
 			return "OK";
 		var filename = filename.substring(filename.lastIndexOf("/") + 1);
@@ -1891,7 +1891,7 @@ J2S.Cache.put = function(filename, data) {
     proto._getWidth = function() { return (this._canvas ? this._canvas.width : 0)}; 
     proto._getHeight = function() { return (this._canvas ? this._canvas.height : 0)};
     proto._getContentLayer = function() { return J2S.$(this, "contentLayer")[0] };
-    proto._repaintNow = function() { J2S._repaint(this, false) }; 
+    proto.repaintNow = function() { J2S.repaint(this, false) }; 
 ////////
 
 
@@ -2061,7 +2061,7 @@ J2S.Cache.put = function(filename, data) {
 		proto._show = function(tf) {
 			J2S.$setVisible(J2S.$(this,"appletdiv"), tf);
 			if (tf && !this._isSwing) // SwingJS applets will handle their own repainting
-				J2S._repaint(this, true);
+				J2S.repaint(this, true);
 		};
 
 		proto._canScript = function(script) {return true};
@@ -2085,19 +2085,19 @@ J2S.Cache.put = function(filename, data) {
 			if (J2S[s])
 				clearTimeout(J2S[s]);
 			var me = this;
-			J2S[s] = setTimeout(function() {J2S._repaint(me, true);J2S[s]=null}, 100);
+			J2S[s] = setTimeout(function() {J2S.repaint(me, true);J2S[s]=null}, 100);
 		}
 
 		return proto;
 	};
 
-	J2S._repaint = function(applet, asNewThread) {
+	J2S.repaint = function(applet, asNewThread) {
     // JmolObjectInterface 
 		// asNewThread: true is from RepaintManager.repaintNow()
 		// false is from Repaintmanager.requestRepaintAndWait()
 		// called from apiPlatform Display.repaint()
 
-		//alert("_repaint " + Clazz._getStackTrace())
+		//alert("repaint " + Clazz._getStackTrace())
 		if (!applet || !applet._appletPanel)return;
 
 		// asNewThread = false;
@@ -2124,25 +2124,25 @@ J2S.Cache.put = function(filename, data) {
 	}
 
   /**
-   * _loadImage is called for asynchronous image loading.   
+   * loadImage is called for asynchronous image loading.   
    * If bytes are not null, they are from a ZIP file. They are processed sychronously
    * here using an image data URI. Can all browsers handle MB of data in data URI?
    *
    */        
-	J2S._loadImage = function(platform, echoName, path, bytes, fOnload, image) {
+	J2S.loadImage = function(platform, echoName, path, bytes, fOnload, image) {
     // JmolObjectInterface  
 		var id = "echo_" + echoName + path + (bytes ? "_" + bytes.length : "");
-		var canvas = J2S._getHiddenCanvas(platform.vwr.html5Applet, id, 0, 0, false, true);
+		var canvas = J2S.getHiddenCanvas(platform.vwr.html5Applet, id, 0, 0, false, true);
 //    System.out.println(["JSmol.js loadImage ",id,path,canvas,image])
     if (canvas == null) { 
   		if (image == null) {
   			image = new Image();
         if (bytes == null) {
-          image.onload = function() {J2S._loadImage(platform, echoName, path, null, fOnload, image)};
+          image.onload = function() {J2S.loadImage(platform, echoName, path, null, fOnload, image)};
     			image.src = path;
           return null;
         } else {
-              System.out.println("Jsmol.js J2S._loadImage using data URI for " + id) 
+              System.out.println("Jsmol.js J2S.loadImage using data URI for " + id) 
         }
         image.src = (typeof bytes == "string" ? bytes : 
           "data:" + Clazz.load("javajs.util.Rdr").guessMimeTypeForBytes$BA(bytes) 
@@ -2155,22 +2155,22 @@ J2S.Cache.put = function(filename, data) {
        width /= 2;
        height /= 2; 
       } 
-		  canvas = J2S._getHiddenCanvas(platform.vwr.html5Applet, id, width, height, true, false);
+		  canvas = J2S.getHiddenCanvas(platform.vwr.html5Applet, id, width, height, true, false);
   		canvas.imageWidth = width;
   		canvas.imageHeight = height;
   		canvas.id = id;
   		canvas.image=image;
-  		J2S._setCanvasImage(canvas, width, height);
+  		J2S.setCanvasImage(canvas, width, height);
 		// return a null canvas and the error in path if there is a problem
     } else {
-      System.out.println("J2S._loadImage reading cached image for " + id) 
+      System.out.println("J2S.loadImage reading cached image for " + id) 
     }
     return (bytes == null? fOnload(canvas,path) : canvas);
 	};
 
   J2S._canvasCache = {};
 
-	J2S._getHiddenCanvas = function(applet, id, width, height, forceNew, checkOnly) {
+	J2S.getHiddenCanvas = function(applet, id, width, height, forceNew, checkOnly) {
 		id = applet._id + "_" + id;
     var d = J2S._canvasCache[id];
     if (checkOnly)
@@ -2188,7 +2188,7 @@ J2S.Cache.put = function(filename, data) {
 		return d;
    	}
 
-	J2S._setCanvasImage = function(canvas, width, height) {
+	J2S.setCanvasImage = function(canvas, width, height) {
     // called from org.J2S.awtjs2d.Platform
 		canvas.buf32 = null;
 		canvas.width = width;

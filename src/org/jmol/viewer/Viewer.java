@@ -918,7 +918,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return;
     tm.navigateKey(keyWhere, modifiers);
     if (!tm.vibrationOn && keyWhere != 0)
-      refresh(REFRESH_REPAINT, "Viewer:navigate()");
+      refresh(REFRESHrepaint, "Viewer:navigate()");
   }
 
   public void move(JmolScriptEvaluator eval, V3 dRot, float dZoom, V3 dTrans,
@@ -1046,7 +1046,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void rotateFront() {
     // deprecated
     tm.resetRotation();
-    refresh(REFRESH_REPAINT, "Viewer:rotateFront()");
+    refresh(REFRESHrepaint, "Viewer:rotateFront()");
   }
 
   public void translate(char xyz, float x, char type, BS bsAtoms) {
@@ -1081,7 +1081,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         break;
       }
     }
-    refresh(REFRESH_REPAINT, "Viewer:translate()");
+    refresh(REFRESHrepaint, "Viewer:translate()");
   }
 
   void slabByPixels(int pixels) {
@@ -1654,7 +1654,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                                           String[] fileNames, Object reader) {
     String ret = loadModelFromFile(fullPathName, fileName, fileNames, reader,
         false, null, null, null, 0, " ");
-    refresh(REFRESH_REPAINT, "loadModelFromFileRepaint");
+    refresh(REFRESHrepaint, "loadModelFromFileRepaint");
     return ret;
   }
 
@@ -1970,7 +1970,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public String openStringInline(String strModel) {
     // JmolSimpleViewer; JmolFileDropper inline string event
     String ret = openStringInlineParamsAppend(strModel, null, false);
-    refresh(REFRESH_REPAINT, "openStringInline");
+    refresh(REFRESHrepaint, "openStringInline");
     return ret;
   }
 
@@ -2008,7 +2008,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private String loadInlineScriptRepaint(String strModel, char newLine,
                                          boolean isAppend) {
     String ret = loadInlineScript(strModel, newLine, isAppend, null);
-    refresh(REFRESH_REPAINT, "loadInlineScript");
+    refresh(REFRESHrepaint, "loadInlineScript");
     return ret;
   }
 
@@ -2035,7 +2035,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (arrayModels == null || arrayModels.length == 0)
       return null;
     String ret = openStringsInlineParamsAppend(arrayModels, new Hashtable<String, Object>(), isAppend);
-    refresh(REFRESH_REPAINT, "loadInline String[]");
+    refresh(REFRESHrepaint, "loadInline String[]");
     return ret;
   }
 
@@ -2063,7 +2063,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         setLoadParameters(null, isAppend), isAppend);
     String ret = createModelSetAndReturnError(atomSetCollection, isAppend,
         null, new Hashtable<String, Object>());
-    refresh(REFRESH_REPAINT, "loadInline");
+    refresh(REFRESHrepaint, "loadInline");
     return ret;
   }
 
@@ -3368,10 +3368,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
   }
 
-  public final static int REFRESH_REPAINT = 1;
+  public final static int REFRESHrepaint = 1;
   public final static int REFRESH_SYNC = 2;
-  public final static int REFRESH_SYNC_MASK = REFRESH_REPAINT | REFRESH_SYNC;
-  public final static int REFRESH_REPAINT_NO_MOTION_ONLY = 6;
+  public final static int REFRESH_SYNC_MASK = REFRESHrepaint | REFRESH_SYNC;
+  public final static int REFRESHrepaint_NO_MOTION_ONLY = 6;
   public final static int REFRESH_SEND_WEBGL_NEW_ORIENTATION = 7;
   
   /**
@@ -3405,13 +3405,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * 
    * @param mode
    * 
-   *        REFRESH_REPAINT: ONLY do a repaint -- no syncing
+   *        REFRESHrepaint: ONLY do a repaint -- no syncing
    * 
    *        REFRESH_SYNC: mouse motion requiring synchronization -- not going
    *        through Eval so we bypass Eval and mainline on the other vwr!
    *        Also called from j2sApplet.js
    * 
-   *        REFRESH_REPAINT_SYNC_MASK: same as REFRESH_REPAINT, but not WebGL
+   *        REFRESHrepaint_SYNC_MASK: same as REFRESHrepaint, but not WebGL
    * 
    *        REFRESH_NO_MOTION_ONLY: refresh only if not in motion
    * 
@@ -3428,12 +3428,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     
     if (rm == null 
         || !refreshing 
-        || mode == REFRESH_REPAINT_NO_MOTION_ONLY && getInMotion(true)
+        || mode == REFRESHrepaint_NO_MOTION_ONLY && getInMotion(true)
         || !isWebGL && mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
       return;
     if (isWebGL) {
       switch (mode) {
-      case REFRESH_REPAINT:
+      case REFRESHrepaint:
       case REFRESH_SYNC:
       case REFRESH_SEND_WEBGL_NEW_ORIENTATION:
         tm.finalizeTransformParameters();
@@ -5889,7 +5889,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       break;
     case T.visualrange:
       tm.visualRangeAngstroms = value;
-      refresh(REFRESH_REPAINT, "set visualRange");
+      refresh(REFRESHrepaint, "set visualRange");
       break;
     case T.navigationdepth:
       setNavigationDepthPercent(value);
@@ -5902,7 +5902,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       break;
     case T.cameradepth:
       tm.setCameraDepthPercent(value, false);
-      refresh(REFRESH_REPAINT, "set cameraDepth");
+      refresh(REFRESHrepaint, "set cameraDepth");
       // transformManager will set global value for us;
       return;
     case T.rotationradius:
@@ -6897,7 +6897,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public void setNavigationDepthPercent(float percent) {
     tm.setNavigationDepthPercent(percent);
-    refresh(REFRESH_REPAINT, "set navigationDepth");
+    refresh(REFRESHrepaint, "set navigationDepth");
   }
 
   public boolean getShowNavigationPoint() {
@@ -7456,7 +7456,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     if (shm.checkObjectDragged(prevX, prevY, x, y, action,
         getVisibleFramesBitSet(), iShape)) {
-      refresh(REFRESH_REPAINT, "checkObjectDragged");
+      refresh(REFRESHrepaint, "checkObjectDragged");
       if (iShape == JC.SHAPE_DRAW)
         scriptEcho((String) getShapeProperty(JC.SHAPE_DRAW, "command"));
       return true;
@@ -7733,7 +7733,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       showSelected = true;
       movableBitSet = setMovableBitSet(null, !asAtoms);
       shm.loadShape(JC.SHAPE_HALOS);
-      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
+      refresh(REFRESHrepaint_NO_MOTION_ONLY, "moveSelected");
       return;
     }
     if (deltaX == Integer.MAX_VALUE) {
@@ -7741,7 +7741,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         return;
       showSelected = false;
       movableBitSet = null;
-      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
+      refresh(REFRESHrepaint_NO_MOTION_ONLY, "moveSelected");
       return;
     }
     if (movingSelected)

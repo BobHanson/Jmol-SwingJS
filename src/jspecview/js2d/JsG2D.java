@@ -81,7 +81,7 @@ public class JsG2D implements GenericGraphics {
 		/**
 		 * @j2sNative
 		 * 
-		 * image = Jmol._newGrayScaleImage(context, image, width, height, grayBuffer);
+		 * image = Jmol.newGrayScaleImage(context, image, width, height, grayBuffer);
 		 */
 		{
 		}

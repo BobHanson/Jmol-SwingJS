@@ -207,7 +207,7 @@ public class JsPlatform implements GenericPlatform {
 	   * @j2sNative
 	   * 
 	   *     if (canvas.image && (width != canvas.width || height != canvas.height))
-     *       Jmol._setCanvasImage(canvas, width, height);
+     *       Jmol.setCanvasImage(canvas, width, height);
 	   *     if (canvas.buf32) return canvas.buf32;
 	   */
 	  {}
@@ -264,8 +264,8 @@ public class JsPlatform implements GenericPlatform {
     /**
      * @j2sNative
      * 
-     *  if (self.Jmol && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "stereoImage", w, h); 
+     *  if (self.Jmol && Jmol.getHiddenCanvas)
+     *    return Jmol.getHiddenCanvas(this.vwr.html5Applet, "stereoImage", w, h); 
      */
     {}
     return null;
@@ -276,8 +276,8 @@ public class JsPlatform implements GenericPlatform {
     /**
      * @j2sNative
      * 
-     *  if (self.Jmol && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "textImage", w, h); 
+     *  if (self.Jmol && Jmol.getHiddenCanvas)
+     *    return Jmol.getHiddenCanvas(this.vwr.html5Applet, "textImage", w, h); 
      */
     {}
     return null;

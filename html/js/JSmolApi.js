@@ -455,5 +455,50 @@
 			break;
 		}
 	}
-		
+
+  Jmol.playAudio = function(applet, paramsOrFilePath) {
+		if (args.length == 1) {
+			paramsOrFilePath = applet;
+			applet = null;
+		}  
+	    var get = (paramsOrFilePath.get$O ? function(key){return paramsOrFilePath.get$O(key)} : null);
+	    var put = (paramsOrFilePath.put$O ? function(key,val){return params.put$O(key,val)} : null);
+	    var filePath = (get ? get("audioFile") : paramsOrFilePath);
+	    var jmolAudio = get && get("audioPlayer");
+	    var audio = document.createElement("audio");
+	    put && put("audioElement", audio);
+	    var callback = null;
+	    if (jmolAudio) {
+	      callback = function(type){jmolAudio.processUpdate(type)};
+	      jmolAudio.myClip = {
+	         open: function() {callback("open")},
+	         start: function() { audio.play(); callback("start")},
+	         loop: function(n) { audio.loop = (n != 0); },
+	         stop: function() { audio.pause(); },
+	         close: function() { callback("close") },
+	         setMicrosecondPosition: function(us) { audio.currentTime = us / 1e6; }
+	      };
+	    }    
+	    audio.controls = "true";
+	    audio.src = filePath;
+	    if (get && get("loop"))
+	      audio.loop = "true";
+	    if (callback) {
+	      audio.addEventListener("pause", function() {
+	          callback("pause");
+	      });
+	      audio.addEventListener("play", function() {
+	          callback("play");
+	      });
+	      audio.addEventListener("playing", function() {
+	          callback("playing");
+	      });
+	      audio.addEventListener("ended", function() {
+	          callback("ended");
+	      });
+	      callback("open")
+	    }
+	  }
+		  
+
 })(Jmol);

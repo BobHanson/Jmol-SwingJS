@@ -5,8 +5,8 @@ package javajs.api.js;
  */
 public interface J2SObjectInterface {
 
-  Object _doAjax(Object url, String postOut, Object bytesOrStringOut, boolean isBinary);
+  Object doAjax(Object url, String postOut, Object bytesOrStringOut, boolean isBinary);
 
-  void _apply(Object func, Object data);
+  void applyFunc(Object func, Object data);
 
 }

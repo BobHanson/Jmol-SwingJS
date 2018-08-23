@@ -80,7 +80,7 @@ class Display {
 //  }
 
 //  static void setCursor(Object vwr, int c) {
-//    Platform.Jmol()._setCursor(((Viewer) vwr).html5Applet, c);
+//    Platform.Jmol().setCursor(((Viewer) vwr).html5Applet, c);
 //  }
 //
   

@@ -77,7 +77,7 @@ class FileLoadThread extends JmolThread {
          */
         {}
         if (jmol != null)
-           jmol._loadFileAsynchronously(this, vwr.html5Applet, fileName, null);
+           jmol.loadFileAsynchronously(this, vwr.html5Applet, fileName, null);
 
         /**
          * @j2sNative

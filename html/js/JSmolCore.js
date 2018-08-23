@@ -33,8 +33,8 @@
 // BH 2/14/2016 12:30:41 PM Info.appletLoadingImage: "j2s/img/JSmol_spinner.gif", 
    // can be set to "none" or some other image; see Jmol._hideLoadingSpinner(applet)
    // implemented only for JSmolApplet, not others
-// BH 2/14/2016 12:27:09 PM Jmol._setCursor 
-// BH 2/14/2016 6:48:33 AM _setCursor() and cursor_wait   http://ajaxload.info/
+// BH 2/14/2016 12:27:09 PM Jmol.setCursor 
+// BH 2/14/2016 6:48:33 AM setCursor() and cursor_wait   http://ajaxload.info/
 // BH 1/15/2016 4:23:14 PM adding Info.makeLiveImage
 // BH 12/30/2015 8:18:42 PM adding AMS call to database list; allowing for ?ALLOWSORIGIN? to override settings here
 // BH 12/17/2015 4:43:05 PM adding Jmol._requestRepaint to allow for MSIE9 not having requestAnimationFrame
@@ -750,51 +750,6 @@ Jmol = (function(document) {
 		return fSuccess;
 	}
 	
-  Jmol.playAudio = function(filePath) {
-    Jmol._playAudio(null, filePath);
-  }
-  
-  Jmol._playAudio = function(applet, params) {
-  
-    var get = (params.get ? function(key){return params.get(key)} : null);
-    var put = (params.put ? function(key,val){return params.put(key,val)} : null);
-    var filePath = (get ? get("audioFile") : params);
-    var jmolAudio = get && get("audioPlayer");
-    var audio = document.createElement("audio");
-    put && put("audioElement", audio);
-    var callback = null;
-    if (jmolAudio) {
-      callback = function(type){jmolAudio.processUpdate(type)};
-      jmolAudio.myClip = {
-         open: function() {callback("open")},
-         start: function() { audio.play(); callback("start")},
-         loop: function(n) { audio.loop = (n != 0); },
-         stop: function() { audio.pause(); },
-         close: function() { callback("close") },
-         setMicrosecondPosition: function(us) { audio.currentTime = us / 1e6; }
-      };
-    }    
-    audio.controls = "true";
-    audio.src = filePath;
-    if (get && get("loop"))
-      audio.loop = "true";
-    if (callback) {
-      audio.addEventListener("pause", function() {
-          callback("pause");
-      });
-      audio.addEventListener("play", function() {
-          callback("play");
-      });
-      audio.addEventListener("playing", function() {
-          callback("playing");
-      });
-      audio.addEventListener("ended", function() {
-          callback("ended");
-      });
-      callback("open")
-    }
-  }
-  
 	Jmol._loadFileData = function(applet, fileName, fSuccess, fError){
 		var isRaw = [];
 		fileName = Jmol._checkFileName(applet, fileName, isRaw);
@@ -974,7 +929,7 @@ Jmol = (function(document) {
 
 	Jmol._binaryTypes = ["mmtf",".gz",".bz2",".jpg",".gif",".png",".zip",".jmol",".bin",".smol",".spartan",".pmb",".mrc",".map",".ccp4",".dn6",".delphi",".omap",".pse",".dcd",".uk/pdbe/densities/"];
 
-	Jmol._isBinaryUrl = function(url) {
+	Jmol.isBinaryUrl = function(url) {
 		for (var i = Jmol._binaryTypes.length; --i >= 0;)
 			if (url.indexOf(Jmol._binaryTypes[i]) >= 0) return true;
 		return false;
@@ -985,7 +940,7 @@ Jmol = (function(document) {
   /*
    = function(fileName, fSuccess, doProcess) {
 		// use host-server PHP relay if not from this host
-		var isBinary = Jmol._isBinaryUrl(fileName);
+		var isBinary = Jmol.isBinaryUrl(fileName);
 		var isPDB = (fileName.indexOf(".gz") >= 0 && fileName.indexOf("rcsb.org") >= 0);
 		if (isPDB) {
 			// avoid unnecessary binary transfer
@@ -1089,14 +1044,14 @@ Jmol = (function(document) {
   Jmol._hideLocalFileReader = function(applet, cursor) {
     applet._localReader && Jmol.$setVisible(applet._localReader, false);
     applet._readingLocal = false;
-    Jmol._setCursor(applet, 0);
+    Jmol.setCursor(applet, 0);
   }
   
   Jmol.loadFileFromDialog = function(applet) {
-    Jmol._loadFileAsynchronously(null, applet, null, null);
+    Jmol.loadFileAsynchronously(null, applet, null, null);
   }
   
-	Jmol._loadFileAsynchronously = function(fileLoadThread, applet, fileName, appData) {
+	Jmol.loadFileAsynchronously = function(fileLoadThread, applet, fileName, appData) {
 		if (fileName && fileName.indexOf("?") != 0) {
 			// LOAD ASYNC command
 			var fileName0 = fileName;
@@ -1166,7 +1121,7 @@ Jmol = (function(document) {
 		url = url.toString();
 
 		if (dataOut != null) 
-			return Jmol._saveFile(url, dataOut);
+			return Jmol.saveFile(url, dataOut);
 		if (postOut)
 			url += "?POST?" + postOut;
 		return Jmol._getFileData(url, null, true);
@@ -1174,7 +1129,7 @@ Jmol = (function(document) {
 
 	// Jmol._localFileSaveFunction --  // do something local here; Maybe try the FileSave interface? return true if successful
 	 
-	Jmol._saveFile = function(filename, data, mimetype, encoding) {
+	Jmol.saveFile = function(filename, data, mimetype, encoding) {
 		if (Jmol._localFileSaveFunction && Jmol._localFileSaveFunction(filename, data))
 			return "OK";
 		var filename = filename.substring(filename.lastIndexOf("/") + 1);
@@ -1652,7 +1607,7 @@ Jmol = (function(document) {
 		return (x == undefined ? null : [Math.round(x), Math.round(y), Jmol._jsGetMouseModifiers(ev)]);
 	}
 
-  Jmol._setCursor = function(applet, c) {
+  Jmol.setCursor = function(applet, c) {
     if (applet._isJava || applet._readingLocal)
       return;
     var curs;

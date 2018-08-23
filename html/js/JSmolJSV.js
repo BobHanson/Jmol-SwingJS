@@ -615,7 +615,7 @@
 		return applet._code;
 	}
 	
-Jmol._newGrayScaleImage = function(context, image, width, height, grayBuffer) {
+Jmol.newGrayScaleImage = function(context, image, width, height, grayBuffer) {
 	var c;
   image || (image = Jmol.$(context.canvas.applet, "image")[0]);
 	if (image == null) {

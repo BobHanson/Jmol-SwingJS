@@ -1453,7 +1453,7 @@ public class ActionManager implements EventManager {
       label = vwr.apiPlatform.prompt("Set label for atomIndex=" + iatom, label, null, false);
       if (label != null) {
         vwr.shm.setAtomLabel(label, iatom);
-        vwr.refresh(Viewer.REFRESH_REPAINT, "label atom");
+        vwr.refresh(Viewer.REFRESHrepaint, "label atom");
       }
     } else {
       setAtomsPicked(BSUtil.newAndSetBit(iatom), "Label picked for atomIndex = " + iatom + ": " + label);

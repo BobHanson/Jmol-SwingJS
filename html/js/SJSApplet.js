@@ -359,7 +359,7 @@ if (typeof(SwingJS) == "undefined") {
 		this._containerWidth = sz[0];
 		this._containerHeight = sz[1];
 		if (this._is2D)
-			J2S._repaint(this, true);
+			J2S.repaint(this, true);
 	}
 
 	proto._cover = function (doCover) {

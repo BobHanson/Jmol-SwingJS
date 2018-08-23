@@ -93,11 +93,11 @@ public class RepaintManager implements JmolRepaintManager {
     /**
      * @j2sNative
      * 
-     *  jmol = (self.Jmol && Jmol._repaint ? Jmol : null); 
+     *  jmol = (self.Jmol && Jmol.repaint ? Jmol : null); 
      */
     {}
     if (jmol != null) {
-      jmol._repaint(vwr.html5Applet,  false);
+      jmol.repaint(vwr.html5Applet,  false);
       repaintDone();
     }
 

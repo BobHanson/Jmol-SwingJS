@@ -531,7 +531,7 @@
 					ctx.clearRect( 0, 0, (canvas.width = svg.width.animVal.value - 5), (canvas.height = svg.height.animVal.value));
 					ctx.drawImage(img, 0, 0);
 					// throw out "data:image/png;base64," because we will reconstruct that if we need to, and we might not
-					Jmol._saveFile(me._id + ".png", canvas.toDataURL("image/png").substring(22), "image/png", "base64");
+					Jmol.saveFile(me._id + ".png", canvas.toDataURL("image/png").substring(22), "image/png", "base64");
 				}
 				img.src = "data:image/svg+xml;base64," + btoa(svg.outerHTML);
 				break;

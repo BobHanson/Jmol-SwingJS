@@ -171,7 +171,7 @@ public class Platform implements GenericPlatform {
     JmolToJSmolInterface jmol = null;
 
     /**
-     * Jmol._repaint(applet,asNewThread)
+     * Jmol.repaint(applet,asNewThread)
      * 
      * should invoke
      * 
@@ -181,13 +181,13 @@ public class Platform implements GenericPlatform {
      * 
      * @j2sNative
      * 
-     *   jmol = (self.Jmol && Jmol._repaint ? Jmol : null);
+     *   jmol = (self.Jmol && Jmol.repaint ? Jmol : null);
      * 
      */
     {
     }
     if (jmol != null)
-      jmol._repaint(((Viewer) vwr).html5Applet, true);
+      jmol.repaint(((Viewer) vwr).html5Applet, true);
 
   }
 
@@ -198,7 +198,7 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public void setCursor(int c, Object canvas) {
-    Jmol()._setCursor(((Viewer) vwr).html5Applet, c);
+    Jmol().setCursor(((Viewer) vwr).html5Applet, c);
 	}
 
 	// //// Image
@@ -248,7 +248,7 @@ public class Platform implements GenericPlatform {
      * @j2sNative
      * 
      *            if(isWebGL) { this.canvas = canvas =
-     *            Jmol._loadImage(this,"webgl",""
+     *            Jmol.loadImage(this,"webgl",""
      *            +System.currentTimeMillis(),this
      *            .vwr.html5Applet._canvas.toDataURL(),null,null); width =
      *            canvas.imageWidth; height = canvas.imageHeight;
@@ -256,14 +256,14 @@ public class Platform implements GenericPlatform {
      * 
      * 
      *            if (canvas.image && (width != canvas.width || height !=
-     *            canvas.height)) Jmol._setCanvasImage(canvas, width, height);
+     *            canvas.height)) Jmol.setCanvasImage(canvas, width, height);
      *            if (canvas.buf32) return canvas.buf32; context2d =
      *            canvas.getContext('2d');
      */
     {
       // placeholder for Eclipse referencing
-      Jmol()._loadImage(this, null, null, null, null);
-      Jmol()._setCanvasImage(canvas, width, height);
+      Jmol().loadImage(this, null, null, null, null);
+      Jmol().setCanvasImage(canvas, width, height);
     }
     int[] buf = Image.grabPixels(context2d, width, height);
     /**
@@ -328,12 +328,12 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public Object newBufferedImage(Object image, int w, int h) {
-    return Jmol()._getHiddenCanvas(((Viewer) vwr).html5Applet, "stereoImage", w, h);
+    return Jmol().getHiddenCanvas(((Viewer) vwr).html5Applet, "stereoImage", w, h);
 	}
 
 	@Override
   public Object newOffScreenImage(int w, int h) {
-    return Jmol()._getHiddenCanvas(((Viewer) vwr).html5Applet, "textImage", w, h);
+    return Jmol().getHiddenCanvas(((Viewer) vwr).html5Applet, "textImage", w, h);
 	}
 
   @Override
@@ -374,7 +374,7 @@ public class Platform implements GenericPlatform {
 	    // this call is never made - it is just here as an Eclipse proxy for the above callback
 	    vwr.loadImageData(bytes, path, echoName, sc);
 	  }
-	  return Jmol()._loadImage(this, echoName, path, bytes, f);
+	  return Jmol().loadImage(this, echoName, path, bytes, f);
   }
 	// /// FONT
 
@@ -527,7 +527,7 @@ public class Platform implements GenericPlatform {
 
   @Override
   public boolean forceAsyncLoad(String filename) {
-    return Jmol()._isBinaryUrl(filename);
+    return Jmol().isBinaryUrl(filename);
   }
 
 
