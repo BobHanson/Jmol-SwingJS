@@ -60,17 +60,17 @@ abstract public class JmolViewer {
   }
   
   static {
-    /**
-     * allows customization of Viewer -- not implemented in JSmol.
-     * 
-     * @j2sNative
-     * 
-     *            self.Jmol && Jmol.extend && Jmol.extend("vwr",
-     *            org.jmol.viewer.Viewer.prototype);
-     * 
-     */
-    {
-    }
+//    /**
+//     * allows customization of Viewer -- not implemented in JSmol.
+//     * 
+//     * @j2sNative
+//     * 
+//     *            self.Jmol && Jmol.extend && Jmol.extend("vwr",
+//     *            org.jmol.viewer.Viewer.prototype);
+//     * 
+//     */
+//    {
+//    }
   }
 
   static public boolean isSwingJS = /**@j2sNative true||*/false;
@@ -222,7 +222,7 @@ abstract public class JmolViewer {
       info.put("documentbase", documentBase);
     if (codeBase != null)
       info.put("codebase", codeBase); 
-    
+    info.put("isApp",Boolean.TRUE);
     return new Viewer(info);
   }
   

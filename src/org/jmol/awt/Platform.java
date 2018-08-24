@@ -245,7 +245,7 @@ public class Platform implements GenericPlatform {
 
   @Override
   public boolean isSingleThreaded() {
-    return false;
+    return  Viewer.isSwingJS;
   }
 
   @Override

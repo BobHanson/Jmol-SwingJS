@@ -354,6 +354,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     actionStatesRedo = new Lst<String>();
     chainMap = new Hashtable<Object, Object>();
     chainList = new Lst<String>();
+    info.put("isJava", Boolean.TRUE);
     setOptions(info);
   }
 
@@ -387,28 +388,20 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void setOptions(Map<String, Object> info) {
 
     vwrOptions = info;
-
-    display = info.get("display");
-
-    Map<String, Object>j2s_viewerOptions = null;
-    Thread thread = Thread.currentThread();
-    /**
-     * @j2sNative
-     * 
-     * j2s_viewerOptions = thread.group.html5Applet._viewerOptions;
-     * 
-     * 
-     */
-    if (j2s_viewerOptions != null) {
-      if (display != null)
-        j2s_viewerOptions.remove("display");
+    boolean isApp = info.containsKey("isApp");
+    ThreadGroup group = Thread.currentThread().getThreadGroup();
+    Map<String, Object> j2s_viewerOptions = (isApp ? null :
+    /** @j2sNative group.html5Applet._viewerOptions || */
+        null);
+    if (j2s_viewerOptions != null)
       vwrOptions.putAll(j2s_viewerOptions);
-    }
-    
+
     // use allocateViewer
     if (Logger.debugging) {
       Logger.debug("Viewer constructor " + this);
     }
+
+    display = info.get("display");
     modelAdapter = (JmolAdapter) info.get("adapter");
     JmolStatusListener statusListener = (JmolStatusListener) info
         .get("statusListener");
@@ -436,8 +429,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (isJNLP)
       Logger.info("setting JNLP mode TRUE");
 
-    isSignedApplet = isJNLP || checkOption2("signedApplet", "-signed");
-    isApplet = isSignedApplet || checkOption2("applet", "-applet");
+    isSignedApplet = !isApp && (isJNLP || checkOption2("signedApplet", "-signed"));
+    isApplet = isSignedApplet || !isApp && checkOption2("applet", "-applet");
     allowScripting = !checkOption2("noscripting", "-noscripting");
     int i = fullName.indexOf("__");
     htmlName = (i < 0 ? fullName : fullName.substring(0, i));
@@ -454,8 +447,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     o = info.get("platform");
     String platform = "unknown";
     if (o == null) {
-      o = (commandOptions.contains("platform=") ? commandOptions
-          .substring(commandOptions.indexOf("platform=") + 9)
+      o = (commandOptions.contains("platform=")
+          ? commandOptions.substring(commandOptions.indexOf("platform=") + 9)
           : "org.jmol.awt.Platform");
       // note that this must be the last option if give in commandOptions
     }
@@ -473,12 +466,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       /**
        * @j2sNative
        * 
-       *            if(self.Jmol) { 
-       *              jmol = Jmol;
-       *            applet =
+       *            if(self.Jmol) { jmol = Jmol; applet =
        *            Jmol._applets[this.htmlName.split("_object")[0]]; javaver =
-       *            Jmol._version; 
-       *            
+       *            Jmol._version;
+       * 
        *            }
        * 
        * 
@@ -498,8 +489,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     isSingleThreaded = apiPlatform.isSingleThreaded();
     noGraphicsAllowed = checkOption2("noDisplay", "-n");
     headless = apiPlatform.isHeadless();
-    haveDisplay = (isWebGL || display != null && !noGraphicsAllowed
-        && !headless && !dataOnly);
+    haveDisplay = (isWebGL
+        || display != null && !noGraphicsAllowed && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
     headless |= noGraphicsAllowed;
     isJSApplet = isJS && isApplet;
@@ -507,14 +498,14 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
       if (isJSApplet) {
-      /**
-       * @j2sNative
-       * 
-       *            if (!this.isWebGL) this.display =
-       *            document.getElementById(this.display);
-       */
-      {
-      }
+        /**
+         * @j2sNative
+         * 
+         *            if (!this.isWebGL) this.display =
+         *            document.getElementById(this.display);
+         */
+        {
+        }
       }
     } else {
       display = null;
@@ -523,7 +514,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     o = info.get("graphicsAdapter");
     if (o == null && !isWebGL)
       o = Interface.getOption("g3d.Graphics3D", this, "setOptions");
-    gdata = (o == null && (isWebGL || isJSApplet || !isJS) ? new GData() : (GData) o);
+    gdata = (o == null && (isWebGL || isJSApplet || !isJS) ? new GData()
+        : (GData) o);
     // intentionally throw an error here to restart the JavaScript async process
     gdata.initialize(this, apiPlatform);
 
@@ -535,8 +527,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     slm = new SelectionManager(this);
     if (haveDisplay) {
       // must have language by now, as ActionManager uses GT.$()
-      acm = (multiTouch ? (ActionManager) Interface.getOption(
-          "multitouch.ActionManagerMT", null, null) : new ActionManager());
+      acm = (multiTouch
+          ? (ActionManager) Interface.getOption("multitouch.ActionManagerMT",
+              null, null)
+          : new ActionManager());
       acm.setViewer(this,
           commandOptions + "-multitouch-" + info.get("multiTouch"));
       mouse = apiPlatform.getMouseManager(privateKey, display);
@@ -564,8 +558,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       // Java only, because Signed applet can't find correct path when local.
       String path = (String) vwrOptions.get("documentLocation");
       if (!isJS && path != null && path.startsWith("file:/")) {
-        path = path.substring(0, path.substring(0, (path + "?").indexOf("?"))
-            .lastIndexOf("/"));
+        path = path.substring(0,
+            path.substring(0, (path + "?").indexOf("?")).lastIndexOf("/"));
         Logger.info("setting current directory to " + path);
         cd(path);
       }
@@ -600,8 +594,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         acm.createActions();
     } else {
       // not an applet -- used to pass along command line options
-      gdata
-          .setBackgroundTransparent(checkOption2("backgroundTransparent", "-b"));
+      gdata.setBackgroundTransparent(
+          checkOption2("backgroundTransparent", "-b"));
       isSilent = checkOption2("silent", "-i");
       if (isSilent)
         Logger.setLogLevel(Logger.LEVEL_WARN); // no info, but warnings and
@@ -630,25 +624,14 @@ public class Viewer extends JmolViewer implements AtomDataServer,
      * jvm12orGreater + "\njvm14orGreater=" + jvm14orGreater);
      */
     if (!isSilent) {
-      Logger.info(JC.copyright
-          + "\nJmol Version: "
-          + getJmolVersion()
-          + "\njava.vendor: "
-          + strJavaVendor
-          + "\njava.version: "
-          + strJavaVersion
-          + "\nos.name: "
-          + strOSName
-          + "\nAccess: "
-          + access
-          + "\nmemory: "
-          + getP("_memory")
-          + "\nprocessors available: "
-          + nProcessors
-          + "\nuseCommandThread: "
-          + useCommandThread
-          + (!isApplet ? "" : "\nappletId:" + htmlName
-              + (isSignedApplet ? " (signed)" : "")));
+      Logger.info(JC.copyright + "\nJmol Version: " + getJmolVersion()
+          + "\njava.vendor: " + strJavaVendor + "\njava.version: "
+          + strJavaVersion + "\nos.name: " + strOSName + "\nAccess: " + access
+          + "\nmemory: " + getP("_memory") + "\nprocessors available: "
+          + nProcessors + "\nuseCommandThread: " + useCommandThread
+          + (!isApplet ? ""
+              : "\nappletId:" + htmlName
+                  + (isSignedApplet ? " (signed)" : "")));
     }
     if (allowScripting)
       getScriptManager();
@@ -658,7 +641,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     stm.setJmolDefaults();
     // this code will be shared between Jmol 14.0 and 14.1
     Elements.covalentVersion = Elements.RAD_COV_BODR_2014_02_22;
-    allowArrayDotNotation = true;    
+    allowArrayDotNotation = true;
   }
 
   public void setDisplay(Object canvas) {
@@ -7337,7 +7320,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         if (isJSApplet) {
           appConsole = (JmolAppConsoleInterface) Interface.getOption(
               "consolejs.AppletConsole", this, "script");
-        } else {
+        } else if (!isSwingJS){
+          // no applet console yet for SwingJS -- need DefaultStyledDocument
           for (int i = 0; i < 4 && appConsole == null; i++) {
             appConsole = (isApplet ? (JmolAppConsoleInterface) Interface
                 .getOption("console.AppletConsole", null, null)
@@ -7355,6 +7339,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                 //
               }
           }
+
         }
         if (appConsole != null)
           appConsole.start(this);
