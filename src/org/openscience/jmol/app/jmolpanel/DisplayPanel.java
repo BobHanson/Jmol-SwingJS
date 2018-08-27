@@ -197,7 +197,7 @@ public class DisplayPanel extends JPanel
     rectClip.x = rectClip.y = 0;
     int screenWidth = rectClip.width = vwr.getScreenWidth();
     int screenHeight = rectClip.height = vwr.getScreenHeight();
-    Object image = vwr.getScreenImageBuffer(null, true);
+    Object image = vwr.getScreenImageBuffer();
     int pageX = (int)pf.getImageableX();
     int pageY = (int)pf.getImageableY();
     int pageWidth = (int)pf.getImageableWidth();

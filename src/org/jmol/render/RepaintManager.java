@@ -89,37 +89,25 @@ public class RepaintManager implements JmolRepaintManager {
   @SuppressWarnings({ "null", "unused" })
   @Override
   synchronized public void requestRepaintAndWait(String why) {
-    JmolToJSmolInterface jmol = null;
-    /**
-     * @j2sNative
-     * 
-     *  jmol = (self.Jmol && Jmol.repaint ? Jmol : null); 
-     */
-    {}
-    if (jmol != null) {
-      jmol.repaint(vwr.html5Applet,  false);
-      repaintDone();
-    }
-
-    /**
-     * @j2sNative
-     *     
-     */
-    {
+    JmolToJSmolInterface jmol = (!vwr.isJS || Viewer.isSwingJS ? null 
+        :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
+    if (jmol == null) {
       //System.out.println("RM requestRepaintAndWait() " + (test++));
       try {
         repaintNow(why);
         //System.out.println("repaintManager requestRepaintAndWait I am waiting for a repaint: thread=" + Thread.currentThread().getName());
-        wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
+        if (!vwr.isJS) wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
         if (repaintPending) {
           Logger.error("repaintManager requestRepaintAndWait timeout");
           repaintDone();
         }
       } catch (InterruptedException e) {
-        //System.out.println("repaintManager requestRepaintAndWait interrupted thread=" + Thread.currentThread().getName());
+        System.out.println("repaintManager requestRepaintAndWait interrupted thread=" + Thread.currentThread().getName());
       }
+    } else {
+      jmol.repaint(vwr.html5Applet,  false);
+      repaintDone();
     }
-    //System.out.println("repaintManager requestRepaintAndWait I am no longer waiting for a repaint: thread=" + Thread.currentThread().getName());
   }
 
   @Override
@@ -230,7 +218,6 @@ public class RepaintManager implements JmolRepaintManager {
       }
       g3d.renderAllStrings(null);
     } catch (Exception e) {
-      if (!vwr.isJS)
         e.printStackTrace();
       if (vwr.async && "Interface".equals(e.getMessage()))
         throw new NullPointerException();
@@ -282,7 +269,6 @@ public class RepaintManager implements JmolRepaintManager {
       exporter3D.renderAllStrings(exporter3D);
       msg = exporter3D.finalizeOutput();
     } catch (Exception e) {
-      if (!vwr.isJS)
         e.printStackTrace();
       Logger.error("rendering error? " + e);
     }

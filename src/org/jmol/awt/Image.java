@@ -217,10 +217,14 @@ class Image {
               false, 
               null);
     */
-    return new BufferedImage(rgbColorModel, Raster.createWritableRaster(
+    return new BufferedImage(rgbColorModel, 
+        Raster.createWritableRaster(
         new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, windowWidth,
-            windowHeight, sampleModelBitMasks), new DataBufferInt(pBuffer,
-            windowSize), null), false, null);
+            windowHeight, sampleModelBitMasks), 
+        new DataBufferInt(pBuffer, windowSize), 
+        null
+        ), 
+        false, null);
   }
 
   /**

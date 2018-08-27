@@ -658,6 +658,11 @@ public class GData implements JmolGraphicsInterface {
     // only in Graphics3D
   }
 
+  public void drawDirect(Object g) {
+    // only in Graphics3D
+  }
+
+
   /**
    * @param tok  
    */
@@ -748,7 +753,6 @@ public class GData implements JmolGraphicsInterface {
   public Font getFont3DCurrent() {
     return currentFont;
   }
-
 
 
 }

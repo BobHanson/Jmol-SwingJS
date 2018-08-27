@@ -272,7 +272,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         finalizeReaderASCR();
     } catch (Throwable e) {
       Logger.info("Reader error: " + e);
-      if (!vwr.isJS)
         e.printStackTrace();
       setError(e);
     }
@@ -521,7 +520,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     else
       asc.errorMessage = "Error reading file at line " + ptLine
           + ":\n" + line + "\n" + s;
-    if (!vwr.isJS)
       e.printStackTrace();
   }
 

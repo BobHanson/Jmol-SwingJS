@@ -121,7 +121,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   protected void initialize(Viewer vwr, PopupResource bundle, String title) {
     this.vwr = vwr;
-    initSwing(title, bundle, vwr.html5Applet, vwr.isJSApplet, 
+    initSwing(title, bundle, vwr.html5Applet, vwr.isJSNoAWT, 
         vwr.getBooleanProperty("_signedApplet"), vwr.isWebGL);
   }
 
@@ -290,7 +290,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     // JavaScript does not have to re-insert the menu
     // because it never gets removed in the first place.
     // first entry is just the main item
-    if (vwr.isJSApplet || nFrankList < 2) // TODO BOBJOB
+    if (vwr.isJSNoAWT || nFrankList < 2) // TODO BOBJOB
       return;
     for (int i = nFrankList; --i > 0;) {
       Object[] f = frankList[i];
@@ -345,7 +345,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
           break;
         SC menu = htMenus.get(id.substring(i, iNew));
         frankList[nFrankList++] = new Object[] { menu.getParent(), menu,
-            Integer.valueOf(vwr.isJSApplet ? 0 : menuGetListPosition(menu)) };
+            Integer.valueOf(vwr.isJSNoAWT ? 0 : menuGetListPosition(menu)) };
         menuAddSubMenu(frankPopup, menu);
         i = iNew + 1;
       }

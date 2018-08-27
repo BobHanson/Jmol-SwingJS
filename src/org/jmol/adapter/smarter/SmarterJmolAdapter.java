@@ -269,7 +269,6 @@ public class SmarterJmolAdapter extends JmolAdapter {
         }
       } catch (Throwable e) {
         Logger.error("" + e);
-        if (!vwr.isJS)
           e.printStackTrace();
         return "" + e;
       }

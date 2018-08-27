@@ -29,7 +29,7 @@
   	<property name="libjs.dir" value="libjs" />
  
   	<!-- non-Java resources to copy to site/ -->
-    <property name="resource.dir" value="resources" />  	
+    <property name="resource.dir" value="assets" />  	
   	
 	<!-- output directories -->
 

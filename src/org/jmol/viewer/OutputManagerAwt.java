@@ -58,7 +58,7 @@ final public class OutputManagerAwt extends OutputManager {
     String msg;
     try {
       if (text == null) {
-        Image image = (Image) vwr.getScreenImageBuffer(null, true);
+        Image image = (Image) vwr.getScreenImageBuffer();
         AwtClipboard.setClipboard(image);
         msg = "OK image to clipboard: "
             + (image.getWidth(null) * image.getHeight(null));

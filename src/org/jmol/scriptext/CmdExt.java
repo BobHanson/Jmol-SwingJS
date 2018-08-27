@@ -239,7 +239,6 @@ public class CmdExt extends ScriptExt {
       e.vwr.setStringProperty("_errormessage", "" + ex);
       if (se.thisContext == null) {
         Logger.error("Error evaluating context " + ex);
-        if (!vwr.isJS)
           ex.printStackTrace();
       }
       return false;

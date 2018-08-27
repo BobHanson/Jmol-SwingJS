@@ -73,8 +73,6 @@ abstract public class JmolViewer {
 //    }
   }
 
-  static public boolean isSwingJS = /**@j2sNative true||*/false;
-  
 
   //removed in Jmol 14.3.11 streamlining:
   //  most are internal to Jmol communication.

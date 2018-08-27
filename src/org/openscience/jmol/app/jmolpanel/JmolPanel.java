@@ -382,6 +382,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   private void getDialogs() {
+    if (Viewer.isSwingJS) {
+      say("JavaScript - not initializing preferences or recent files.");
+      return;
+    }
     say(GT.$("Initializing Preferences..."));
     preferencesDialog = new PreferencesDialog(this, frame, guimap, vwr);
     say(GT.$("Initializing Recent Files..."));
@@ -881,7 +885,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         if (p != null)
           continue;
         String path = bundle.getString(key);
-        if (path == null | path.length() == 0)
+        if (path == null | path.length() == 0 || path.indexOf("disabled") >= 0)
           continue;
         try {
           p = getAndRegisterPlugin(key, path);

@@ -507,8 +507,13 @@ abstract public class ScriptParam extends ScriptError {
 
   public boolean isPoint3f(int i) {
     // first check for simple possibilities:
+    int itok = tokAt(i);
+    if (itok == T.nada)
+      return false;
+    
     boolean isOK;
-    if ((isOK = (tokAt(i) == T.point3f)) || tokAt(i) == T.point4f
+    
+    if ((isOK = (itok == T.point3f)) || itok == T.point4f
         || isFloatParameter(i + 1) && isFloatParameter(i + 2)
         && isFloatParameter(i + 3) && isFloatParameter(i + 4))
       return isOK;
@@ -1018,7 +1023,7 @@ abstract public class ScriptParam extends ScriptError {
 
   public boolean isColorParam(int i) {
     int tok = tokAt(i);
-    return (tok == T.navy || tok == T.spacebeforesquare || tok == T.leftsquare
+    return tok != T.nada && (tok == T.navy || tok == T.spacebeforesquare || tok == T.leftsquare
         || tok == T.varray || tok == T.point3f || isPoint3f(i) || (tok == T.string || T
         .tokAttr(tok, T.identifier))
         && CU.getArgbFromString((String) st[i].value) != 0);

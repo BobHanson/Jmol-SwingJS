@@ -37,6 +37,7 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Resolver;
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 /**
  * A generic XML reader template -- by itself, does nothing.
@@ -139,8 +140,7 @@ public class XmlReader extends AtomSetCollectionReader {
           Logger.debug("Using JAXP/SAX XML parser.");
       } catch (Exception e) {
         if (debugging)
-          Logger.debug("Could not instantiate JAXP/SAX XML reader: "
-            + ((parent == null ? this : parent).vwr.isJS? e : e.getMessage()));
+          Logger.debug("Could not instantiate JAXP/SAX XML reader: " + e.getMessage());
       }
       if (saxReader == null)
         return "No XML reader found";
@@ -160,7 +160,7 @@ public class XmlReader extends AtomSetCollectionReader {
     try {
       thisReader.processXml(this, saxReader);
     } catch (Exception e) {
-      return "Error reading XML: " + ((parent == null ? vwr : parent.vwr).isJS ? e : e.getMessage());
+      return "Error reading XML: " + (e.getMessage());
     }
     return null;
   }
@@ -280,7 +280,6 @@ public class XmlReader extends AtomSetCollectionReader {
       else
         parent.applySymmetryAndSetTrajectory();
     } catch (Exception e) {
-      System.out.println((parent == null ? this : parent).vwr.isJS? e : e.getMessage());
       Logger.error("applySymmetry failed: " + e);
     }
   }

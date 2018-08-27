@@ -30,6 +30,8 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.ResourceBundle.Control;
+
 import javax.swing.ImageIcon;
 
 import org.jmol.i18n.GT;
@@ -63,8 +65,9 @@ class JmolResourceHandler {
       }
     }
     Locale locale = new Locale(language, country);
+    Control control = Control.getControl(Control.FORMAT_PROPERTIES);
     stringsResourceBundle =
-      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale);
+      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale, control);
 
     try {
       String t = "/org/openscience/jmol/app/jmolpanel/jmolproperties/Jmol-resources.properties";

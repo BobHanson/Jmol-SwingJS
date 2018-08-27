@@ -78,14 +78,14 @@ public class JmolUtil {
         if (!AU.isAB(ret))
           return "" + ret;
         // converting bytes to an image in JavaScript is a synchronous process
-        if (vwr.isJSApplet)
+        if (vwr.isJSNoAWT)
           info = new Object[] { echoName, fullPathNameOrBytes, ret };
         else
           image = apiPlatform.createImage(ret);
       } else if (OC.urlTypeIndex(fullPathName) >= 0) {
         // if JavaScript returns an image, than it must have been cached, and 
         // the call was not asynchronous after all.
-        if (vwr.isJSApplet)
+        if (vwr.isJSNoAWT)
           info = new Object[] { echoName, fullPathNameOrBytes, null };
         else
           try {
@@ -97,7 +97,7 @@ public class JmolUtil {
       } else {
         createImage = true;
       }
-    } else if (vwr.isJSApplet) {
+    } else if (vwr.isJSNoAWT) {
       // not sure that this can work. 
       // ensure that apiPlatform.createImage is called
       //

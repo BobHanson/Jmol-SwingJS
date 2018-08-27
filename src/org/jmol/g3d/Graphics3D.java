@@ -523,14 +523,31 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public Object getScreenImage(boolean isImageWrite) {
+
+    Object obj = this.platform.bufferedImage;
     /**
-     * @j2sNative var obj = this.platform.bufferedImage; if (isImageWrite) {
-     *            this.releaseBuffers(); } return obj;
+     * @j2sNative
+     * 
+     * obj._img = null;
+     * if (isImageWrite) releaseBuffers();
+     * else
+     * obj._buf = true;
+     * 
      * 
      */
-    {
-      return platform.bufferedImage;
-    }
+    return obj;
+  }
+  
+  /**
+   * Directly transfer our pbuf to a matching graphics object.
+   * 
+   */
+  @Override
+  public void drawDirect(Object g) {
+    // JSGraphics2D g here
+    /**
+     * @j2sNative  g.drawDirectRGBA$IA(this.pbuf);
+     */
   }
 
   @Override
