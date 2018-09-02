@@ -707,6 +707,12 @@ abstract public class ScriptParam extends ScriptError {
 
   public Lst<Object> listParameter(int i, int nMin, int nMax)
       throws ScriptException {
+    return listParameter4(i, nMin, nMax, false);
+  }
+
+  public Lst<Object> listParameter4(int i, int nMin, int nMax,
+                                    boolean allowString)
+      throws ScriptException {
     Lst<Object> v = new Lst<Object>();
     int tok = tokAt(i);
     if (tok == T.spacebeforesquare)
@@ -718,15 +724,18 @@ abstract public class ScriptParam extends ScriptError {
     int n = 0;
     while (n < nMax) {
       tok = tokAt(i);
-      if (haveBrace && tok == T.rightbrace || haveSquare
-          && tok == T.rightsquare)
+      if (haveBrace && tok == T.rightbrace
+          || haveSquare && tok == T.rightsquare)
         break;
       switch (tok) {
       case T.comma:
       case T.minus: // T.minus (int)-0  -- introduced in ScriptCompiler because we have no -0 in JavaScript and sometimes we want 3-0 as an expression 3 -0  to mean "3 to 0"
       case T.leftbrace:
       case T.rightbrace:
+        break;
       case T.string:
+        if (allowString)
+          v.addLast(stringParameter(i));
         break;
       case T.point4f:
         P4 pt4 = getPoint4f(i);
@@ -751,8 +760,8 @@ abstract public class ScriptParam extends ScriptError {
       }
       i += (n == nMax && haveSquare && tokAt(i + 1) == T.rightbrace ? 2 : 1);
     }
-    if (haveBrace && tokAt(i++) != T.rightbrace || haveSquare
-        && tokAt(i++) != T.rightsquare || n < nMin || n > nMax)
+    if (haveBrace && tokAt(i++) != T.rightbrace
+        || haveSquare && tokAt(i++) != T.rightsquare || n < nMin || n > nMax)
       invArg();
     iToken = i - 1;
     return v;

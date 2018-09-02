@@ -1239,7 +1239,8 @@ public class IsoExt extends ScriptExt {
     boolean isPmesh = (iShape == JC.SHAPE_PMESH);
     boolean isPlot3d = (iShape == JC.SHAPE_PLOT3D);
     boolean isLcaoCartoon = (iShape == JC.SHAPE_LCAOCARTOON);
-    boolean isSilent = (isLcaoCartoon || tokAt(1) == T.delete || eval.isStateScript);
+    boolean isSilent = (isLcaoCartoon || tokAt(1) == T.delete
+        || eval.isStateScript);
     boolean surfaceObjectSeen = false;
     boolean planeSeen = false;
     boolean isMapped = false;
@@ -1285,6 +1286,7 @@ public class IsoExt extends ScriptExt {
     boolean isInline = false;
     boolean isSign = false;
     Object onlyOneModel = null;
+    Object[] filesData = null;
     String translucency = null;
     String colorScheme = null;
     String mepOrMlp = null;
@@ -1317,8 +1319,8 @@ public class IsoExt extends ScriptExt {
       case T.isosurfacepropertysmoothingpower:
         smoothingPower = intParameter(++i);
         continue;
-        // offset, rotate, and scale3d don't need to be saved in sbCommand
-        // because they are display properties
+      // offset, rotate, and scale3d don't need to be saved in sbCommand
+      // because they are display properties
       case T.move: // Jmol 13.0.RC2 -- required for state saving after coordinate-based translate/rotate
         // but this will not work for MO calculations, which have to be
         // generated in their original atom-based frame
@@ -1364,8 +1366,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.rotate:
         propertyName = "rotate";
-        propertyValue = (tokAt(eval.iToken = ++i) == T.none ? null : eval
-            .getPoint4f(i));
+        propertyValue = (tokAt(eval.iToken = ++i) == T.none ? null
+            : eval.getPoint4f(i));
         i = eval.iToken;
         break;
       case T.scale3d:
@@ -1387,8 +1389,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.boundbox:
         if (eval.fullCommand.indexOf("# BBOX=") >= 0) {
-          String[] bbox = PT.split(
-              PT.getQuotedAttribute(eval.fullCommand, "# BBOX"), ",");
+          String[] bbox = PT
+              .split(PT.getQuotedAttribute(eval.fullCommand, "# BBOX"), ",");
           pts = new P3[] { (P3) Escape.uP(bbox[0]), (P3) Escape.uP(bbox[1]) };
         } else if (eval.isCenterParameter(i + 1)) {
           pts = new P3[] { getPoint3f(i + 1, true),
@@ -1432,11 +1434,9 @@ public class IsoExt extends ScriptExt {
           String f = (String) getToken(++i).value;
           sbCommand.append(" function ").append(PT.esc(f));
           if (!chk)
-            addShapeProperty(
-                propertyList,
-                "func",
-                (f.equals("a+b") || f.equals("a-b") ? f : createFunction(
-                    "__iso__", "a,b", f)));
+            addShapeProperty(propertyList, "func",
+                (f.equals("a+b") || f.equals("a-b") ? f
+                    : createFunction("__iso__", "a,b", f)));
         } else {
           haveIntersection = true;
         }
@@ -1505,7 +1505,8 @@ public class IsoExt extends ScriptExt {
           }
           if (ptc == null)
             ptc = (bs == null ? new P3() : vwr.ms.getAtomSetCenter(bs));
-          pts = getWithinDistanceVector(propertyList, distance, ptc, bs, isDisplay);
+          pts = getWithinDistanceVector(propertyList, distance, ptc, bs,
+              isDisplay);
           sbCommand.append(" within ").appendF(distance).append(" ")
               .append(bs == null ? Escape.eP(ptc) : Escape.eBS(bs));
         }
@@ -1535,7 +1536,7 @@ public class IsoExt extends ScriptExt {
             boolean allowSmoothing = T.tokAttr(tokProperty, T.floatproperty);
             smoothing = (allowSmoothing
                 && vwr.getIsosurfacePropertySmoothing(false) == 1 ? Boolean.TRUE
-                : Boolean.FALSE);
+                    : Boolean.FALSE);
           }
           addShapeProperty(propertyList, "propertySmoothing", smoothing);
           sbCommand.append(" isosurfacePropertySmoothing " + smoothing);
@@ -1544,8 +1545,8 @@ public class IsoExt extends ScriptExt {
               smoothingPower = vwr.getIsosurfacePropertySmoothing(true);
             addShapeProperty(propertyList, "propertySmoothingPower",
                 Integer.valueOf(smoothingPower));
-            sbCommand.append(" isosurfacePropertySmoothingPower "
-                + smoothingPower);
+            sbCommand
+                .append(" isosurfacePropertySmoothingPower " + smoothingPower);
           }
           if (vwr.g.rangeSelected)
             addShapeProperty(propertyList, "rangeSelected", Boolean.TRUE);
@@ -1611,8 +1612,8 @@ public class IsoExt extends ScriptExt {
       case T.model:
         if (surfaceObjectSeen)
           invArg();
-        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i) : eval
-            .modelNumberParameter(++i));
+        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i)
+            : eval.modelNumberParameter(++i));
         sbCommand.append(" modelIndex " + modelIndex);
         if (modelIndex < 0) {
           propertyName = "fixed";
@@ -1960,7 +1961,8 @@ public class IsoExt extends ScriptExt {
         //if (surfaceObjectSeen)
         sbCommand.append(" " + propertyName);
         int tok = tokAt(i + 1);
-        boolean isPromolecular = (tok != T.file && tok != T.string && tok != T.mrc);
+        boolean isPromolecular = (tok != T.file && tok != T.string
+            && tok != T.mrc);
         propertyValue = Boolean.valueOf(isPromolecular);
         if (isPromolecular)
           surfaceObjectSeen = true;
@@ -1990,11 +1992,12 @@ public class IsoExt extends ScriptExt {
         }
         if (!chk)
           try {
-            data = (fname == null && isMep ? vwr.getOrCalcPartialCharges(bsSelect, bsIgnore)
+            data = (fname == null && isMep
+                ? vwr.getOrCalcPartialCharges(bsSelect, bsIgnore)
                 : getAtomicPotentials(bsSelect, bsIgnore, fname));
-            } catch (JmolAsyncException e1) {
-              throw new ScriptInterruption(e, "partialcharge", 1);
-            }
+          } catch (JmolAsyncException e1) {
+            throw new ScriptInterruption(e, "partialcharge", 1);
+          }
         if (!chk && data == null)
           error(ScriptError.ERROR_noPartialCharges);
         propertyValue = data;
@@ -2116,8 +2119,8 @@ public class IsoExt extends ScriptExt {
         switch (tokAt(i + 1)) {
         case T.discrete:
           propertyValue = eval.floatParameterSet(i + 2, 1, Integer.MAX_VALUE);
-          sbCommand.append(" discrete ").append(
-              Escape.eAF((float[]) propertyValue));
+          sbCommand.append(" discrete ")
+              .append(Escape.eAF((float[]) propertyValue));
           i = eval.iToken;
           break;
         case T.increment:
@@ -2169,14 +2172,15 @@ public class IsoExt extends ScriptExt {
         propertyName = "eccentricity";
         propertyValue = eval.getPoint4f(++i);
         //if (surfaceObjectSeen)
-        sbCommand.append(" eccentricity ").append(
-            Escape.eP4((P4) propertyValue));
+        sbCommand.append(" eccentricity ")
+            .append(Escape.eP4((P4) propertyValue));
         i = eval.iToken;
         break;
       case T.ed:
         sbCommand.append(" ed");
         // electron density - never documented
-        setMoData(propertyList, -1, null, 0, false, modelIndex, null, null, false);
+        setMoData(propertyList, -1, null, 0, false, modelIndex, null, null,
+            false);
         surfaceObjectSeen = true;
         continue;
       case T.debug:
@@ -2224,8 +2228,8 @@ public class IsoExt extends ScriptExt {
           break;
         }
         // override of function or data name when saved as a state
-        String dName = PT.getQuotedAttribute(eval.fullCommand, "# DATA"
-            + (isFxy ? "2" : ""));
+        String dName = PT.getQuotedAttribute(eval.fullCommand,
+            "# DATA" + (isFxy ? "2" : ""));
         if (dName == null)
           dName = "inline";
         else
@@ -2283,9 +2287,10 @@ public class IsoExt extends ScriptExt {
             if (xyzdata.length != nX || xyzdata[0].length != nY
                 || xyzdata[0][0].length != nZ) {
               eval.iToken = ptX;
-              eval.errorStr(ScriptError.ERROR_what, "xyzdata[" + xyzdata.length
-                  + "][" + xyzdata[0].length + "][" + xyzdata[0][0].length
-                  + "] is not of size [" + nX + "][" + nY + "][" + nZ + "]");
+              eval.errorStr(ScriptError.ERROR_what,
+                  "xyzdata[" + xyzdata.length + "][" + xyzdata[0].length + "]["
+                      + xyzdata[0][0].length + "] is not of size [" + nX + "]["
+                      + nY + "][" + nZ + "]");
             }
             vxy.addLast(xyzdata); // (5) = float[][][] data
             //if (!surfaceObjectSeen)
@@ -2318,14 +2323,14 @@ public class IsoExt extends ScriptExt {
             for (int j = 0; j < nX; j++) {
               if (fdata[j] == null) {
                 eval.iToken = ptY;
-                eval.errorStr(ScriptError.ERROR_what, "fdata[" + j
-                    + "] is null.");
+                eval.errorStr(ScriptError.ERROR_what,
+                    "fdata[" + j + "] is null.");
               }
               if (fdata[j].length != nY) {
                 eval.iToken = ptY;
-                eval.errorStr(ScriptError.ERROR_what, "fdata[" + j
-                    + "] is not the right length: " + fdata[j].length + " "
-                    + nY + ".");
+                eval.errorStr(ScriptError.ERROR_what,
+                    "fdata[" + j + "] is not the right length: "
+                        + fdata[j].length + " " + nY + ".");
               }
             }
             vxy.addLast(fdata); // (5) = float[][] data
@@ -2355,7 +2360,8 @@ public class IsoExt extends ScriptExt {
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").appendO(eval.theToken.value);
         propertyName = "pocket";
-        propertyValue = (eval.theTok == T.pocket ? Boolean.TRUE : Boolean.FALSE);
+        propertyValue = (eval.theTok == T.pocket ? Boolean.TRUE
+            : Boolean.FALSE);
         break;
       case T.lobe:
         // lobe {eccentricity}
@@ -2380,13 +2386,12 @@ public class IsoExt extends ScriptExt {
         if (isMapped || slen == i + 1)
           invArg();
         isMapped = true;
-        if ((isCavity || haveRadius || haveIntersection) && !surfaceObjectSeen) {
+        if ((isCavity || haveRadius || haveIntersection)
+            && !surfaceObjectSeen) {
           surfaceObjectSeen = true;
-          addShapeProperty(
-              propertyList,
-              "bsSolvent",
-              (haveRadius || haveIntersection ? new BS() : eval
-                  .lookupIdentifierValue("solvent")));
+          addShapeProperty(propertyList, "bsSolvent",
+              (haveRadius || haveIntersection ? new BS()
+                  : eval.lookupIdentifierValue("solvent")));
           addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
         }
         if (sbCommand.length() == 0) {
@@ -2405,8 +2410,8 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         sbCommand.append("; isosurface map");
-        addShapeProperty(propertyList, "map", (surfaceObjectSeen ? Boolean.TRUE
-            : Boolean.FALSE));
+        addShapeProperty(propertyList, "map",
+            (surfaceObjectSeen ? Boolean.TRUE : Boolean.FALSE));
         break;
       case T.maxset:
         propertyName = "maxset";
@@ -2446,8 +2451,8 @@ public class IsoExt extends ScriptExt {
               eval.lookupIdentifierValue("solvent"));
           propertyName = (eval.theTok == T.sasurface ? "sasurface" : "solvent");
           sbCommand.append(" ").appendO(eval.theToken.value);
-          radius = (isFloatParameter(i + 1) ? floatParameter(++i) : vwr
-              .getFloat(T.solventproberadius));
+          radius = (isFloatParameter(i + 1) ? floatParameter(++i)
+              : vwr.getFloat(T.solventproberadius));
         }
         sbCommand.append(" ").appendF(radius);
         propertyValue = Float.valueOf(radius);
@@ -2520,7 +2525,8 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" squared");
         break;
       case T.inline:
-        propertyName = (!surfaceObjectSeen && !planeSeen && !isMapped ? "readFile"
+        propertyName = (!surfaceObjectSeen && !planeSeen && !isMapped
+            ? "readFile"
             : "mapColor");
         str = stringParameter(++i);
         if (str == null)
@@ -2535,21 +2541,54 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" INLINE ").append(PT.esc(str));
         surfaceObjectSeen = true;
         break;
+      case T.leftsquare:
+      case T.spacebeforesquare:
+      case T.varray:
+        // [ float, filename, float, filename, ...]
+        if (filesData != null || isWild)
+          invArg();
+        Lst<Object> list = eval.listParameter4(i, 2, Integer.MAX_VALUE, true);
+        i = eval.iToken;
+        int n = list.size() / 2;
+        if (n == 0 || n * 2 != list.size())
+          invArg();
+        String[] files = new String[n];
+        float[] factors = new float[n];
+        sbCommand.append("[");
+        try {
+          for (int j = 0, ptf = 0; j < n; j++) {
+            factors[j] = ((Float) list.get(ptf++)).floatValue();
+            checkFileExists(files[j] = (String) list.get(ptf++), eval);
+            sbCommand.appendF(factors[j]);
+            sbCommand.append(" /*file*/").append(PT.esc(files[j]));
+          }
+          sbCommand.append("]");
+        } catch (Exception e) {
+          invArg();
+        }
+        filesData = new Object[] { files, factors };
+        propertyName = (!surfaceObjectSeen && !planeSeen && !isMapped ? "readFile" : "mapColor");
+        surfaceObjectSeen = true;
+        if (chk)
+          break;
+        addShapeProperty(propertyList, "filesData", filesData);
+        break;
       case T.eds:
-      case T.edsdiff:        
+      case T.edsdiff:
       case T.string:
         boolean firstPass = (!surfaceObjectSeen && !planeSeen);
-        propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
         String filename;
+        propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
         if (eval.theTok == T.string) {
           filename = paramAsStr(i);
         } else {
           String pdbID = vwr.getPdbID();
           if (pdbID == null)
-            eval.errorStr(ScriptError.ERROR_invalidArgument, "no PDBID available");
-          filename = "*"  + (eval.theTok == T.edsdiff ? "*" : "") + pdbID;
+            eval.errorStr(ScriptError.ERROR_invalidArgument,
+                "no PDBID available");
+          filename = "*" + (eval.theTok == T.edsdiff ? "*" : "") + pdbID;
         }
-          
+
         /*
          * A file name, optionally followed by a calculation type and/or an integer file index.
          * Or =xxxx, an EDM from Uppsala Electron Density Server
@@ -2557,16 +2596,19 @@ public class IsoExt extends ScriptExt {
          */
         boolean checkWithin = false;
         boolean isUppsala = false;
-        if (filename.startsWith("http://eds.bmc.uu.se/eds/dfs/cb/") && filename.endsWith(".omap")) {
+        if (filename.startsWith("http://eds.bmc.uu.se/eds/dfs/cb/")
+            && filename.endsWith(".omap")) {
           // decommissoning Uppsala
-          filename = (filename.indexOf("_diff") >= 0 ? "*" : "") + "*" + filename.substring(32, 36);
+          filename = (filename.indexOf("_diff") >= 0 ? "*" : "") + "*"
+              + filename.substring(32, 36);
           //"http://eds.bmc.uu.se/eds/dfs/cb/1cbs/1cbs_diff.omap"
           // 0         1         2         3 xxxx
           // 0123456789012345678901234567890123456789
         }
-        if (filename.startsWith("*") || (isUppsala = filename.startsWith("="))&& filename.length() > 1) {
+        if (filename.startsWith("*") || (isUppsala = filename.startsWith("="))
+            && filename.length() > 1) {
           if (isUppsala) // Uppsala EDS decommissioned
-            filename = filename.replace('=', '*');          
+            filename = filename.replace('=', '*');
           // new PDB ccp4 option
           boolean isFull = (filename.indexOf("/full") >= 0);
           if (filename.indexOf("/diff") >= 0)
@@ -2582,10 +2624,11 @@ public class IsoExt extends ScriptExt {
           }
           if (!Float.isNaN(sigma))
             showString("using cutoff = " + sigma + " sigma");
-          filename = (String) vwr.setLoadFormat(filename, (isFull || pts == null ? '_' : '-'), false);
+          filename = (String) vwr.setLoadFormat(filename,
+              (isFull || pts == null ? '_' : '-'), false);
           // the initial dummy call just asertains that 
           checkWithin = !isFull;
-        } 
+        }
         if (checkWithin) {
           if (pts == null && ptWithin == 0) {
             onlyOneModel = filename;
@@ -2593,14 +2636,16 @@ public class IsoExt extends ScriptExt {
               modelIndex = vwr.am.cmi;
             bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
             if (bs.nextSetBit(0) >= 0) {
-              pts = getWithinDistanceVector(propertyList, 2.0f, null, bs, false);
+              pts = getWithinDistanceVector(propertyList, 2.0f, null, bs,
+                  false);
               sbCommand.append(" within 2.0 ").append(Escape.eBS(bs));
             }
           }
           if (pts != null && filename.indexOf("/0,0,0/0,0,0?") >= 0) {
             filename = filename.replace("0,0,0/0,0,0",
-                pts[0].x + "," + pts[0].y + ","+ pts[0].z + "/"
-                + pts[pts.length - 1].x + "," + pts[pts.length - 1].y + "," + pts[pts.length - 1].z);
+                pts[0].x + "," + pts[0].y + "," + pts[0].z + "/"
+                    + pts[pts.length - 1].x + "," + pts[pts.length - 1].y + ","
+                    + pts[pts.length - 1].z);
           }
           if (firstPass)
             defaultMesh = true;
@@ -2632,8 +2677,8 @@ public class IsoExt extends ScriptExt {
         if (propertyValue == null) {
           if (eval.fullCommand.indexOf("# FILE" + nFiles + "=") >= 0) {
             // old way, abandoned
-            filename = PT.getQuotedAttribute(eval.fullCommand, "# FILE"
-                + nFiles);
+            filename = PT.getQuotedAttribute(eval.fullCommand,
+                "# FILE" + nFiles);
             if (tokAt(i + 1) == T.as)
               i += 2; // skip that
           } else if (tokAt(i + 1) == T.as) {
@@ -2651,13 +2696,8 @@ public class IsoExt extends ScriptExt {
           }
         }
         // just checking here, and getting the full path name
-        if (!filename.startsWith("cache://") && stype == null) {
-          fullPathNameOrError = vwr.getFullPathNameOrError(filename);
-          filename = fullPathNameOrError[0];
-          if (fullPathNameOrError[1] != null)
-            eval.errorStr(ScriptError.ERROR_fileNotFoundException, filename
-                + ":" + fullPathNameOrError[1]);
-        }
+        if (stype == null)
+          checkFileExists(filename, eval);
         showString("reading isosurface data from " + filename);
 
         if (stype != null) {
@@ -2684,7 +2724,8 @@ public class IsoExt extends ScriptExt {
           propertyValue = new int[] { atomExpressionAt(i).nextSetBit(0) };
           break;
         default:
-          propertyValue = new int[] { (int) eval.floatParameterSet(i, 1, 1)[0] };
+          propertyValue = new int[] {
+              (int) eval.floatParameterSet(i, 1, 1)[0] };
           break;
         }
         i = eval.iToken;
@@ -2765,8 +2806,8 @@ public class IsoExt extends ScriptExt {
     if (!chk) {
       if ((isCavity || haveRadius) && !surfaceObjectSeen) {
         surfaceObjectSeen = true;
-        addShapeProperty(propertyList, "bsSolvent", (haveRadius ? new BS()
-            : eval.lookupIdentifierValue("solvent")));
+        addShapeProperty(propertyList, "bsSolvent",
+            (haveRadius ? new BS() : eval.lookupIdentifierValue("solvent")));
         addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
       }
       if (planeSeen && !surfaceObjectSeen && !isMapped) {
@@ -2875,12 +2916,9 @@ public class IsoExt extends ScriptExt {
         setShapeProperty(iShape, "finalize", sbCommand.toString());
       } else if (surfaceObjectSeen) {
         cmd = sbCommand.toString();
-        setShapeProperty(
-            iShape,
-            "finalize",
-            (cmd.indexOf("; isosurface map") == 0 ? "" : " select "
-                + Escape.eBS(bsSelect) + " ")
-                + cmd);
+        setShapeProperty(iShape, "finalize",
+            (cmd.indexOf("; isosurface map") == 0 ? ""
+                : " select " + Escape.eBS(bsSelect) + " ") + cmd);
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet && !isSilent) {
           cutoff = ((Float) getShapeProperty(iShape, "cutoff")).floatValue();
@@ -2894,9 +2932,10 @@ public class IsoExt extends ScriptExt {
         sarea = (doCalcArea ? "isosurfaceArea = "
             + (area instanceof Float ? "" + area : Escape.eAD((double[]) area))
             : null);
-        svol = (doCalcVolume ? "isosurfaceVolume = "
-            + (volume instanceof Float ? "" + volume : Escape
-                .eAD((double[]) volume)) : null);
+        svol = (doCalcVolume
+            ? "isosurfaceVolume = " + (volume instanceof Float ? "" + volume
+                : Escape.eAD((double[]) volume))
+            : null);
         if (s == null) {
           if (doCalcArea)
             showString(sarea);
@@ -2919,6 +2958,16 @@ public class IsoExt extends ScriptExt {
       setShapeProperty(iShape, "cache", null);
     if (!isSilent && !isDisplay && !haveSlab && eval.theTok != T.delete)
       listIsosurface(iShape);
+  }
+
+  private void checkFileExists(String filename, ScriptEval eval) throws ScriptException {
+    if (e.chk || filename.startsWith("cache://")) 
+       return;
+    String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
+    filename = fullPathNameOrError[0];
+    if (fullPathNameOrError[1] != null)
+      eval.errorStr(ScriptError.ERROR_fileNotFoundException, filename
+          + ":" + fullPathNameOrError[1]);
   }
 
   private void lcaoCartoon() throws ScriptException {

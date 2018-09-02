@@ -880,6 +880,11 @@ public class SurfaceGenerator {
       return true;
     }
 
+    if ("filesData" == propertyName) {
+      params.filesData = (Object[]) value;
+      return true;
+    }
+
     if ("outputChannel" == propertyName) {
       out = (OC) value;
       return true;
@@ -982,8 +987,11 @@ public class SurfaceGenerator {
         surfaceReader = newReader("Iso" + readerData + "Reader");
       }
       break;
-    case Parameters.SURFACE_INTERSECT:
-      surfaceReader = newReader("IsoIntersectReader");
+    case Parameters.SURFACE_INTERSECT_FILE:
+      surfaceReader = newReader("IsoIntersectFileReader");
+      break;
+    case Parameters.SURFACE_INTERSECT_ATOM:
+      surfaceReader = newReader("IsoIntersectAtomReader");
       break;
     case Parameters.SURFACE_SOLVENT:
     case Parameters.SURFACE_MOLECULAR:
@@ -1166,6 +1174,16 @@ public class SurfaceGenerator {
       // this will be OK, because any string will be a simple string, 
       // not a binary file.
       value = Rdr.getBR((String) value);
+    }
+    if (value instanceof Object[]) {
+      // [BufferedFileReader[], float[]] -> [VolumeFileReader[], float[]]
+      Object[] a = (Object[]) ((Object[]) value)[0];
+      VolumeFileReader[] b = new VolumeFileReader[a.length];
+      for (int i = 0; i < a.length; i++)
+        b[i] = (VolumeFileReader) setFileData(vwr, a[i]);
+      ((Object[]) value)[0] = b;
+      readerData = value;
+      return newReader("IsoIntersectGridReader");
     }
     BufferedReader br = (BufferedReader) value;
     if (fileType == null)

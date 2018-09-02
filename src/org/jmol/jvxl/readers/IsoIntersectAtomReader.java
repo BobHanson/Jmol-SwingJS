@@ -30,7 +30,7 @@ import javajs.util.BS;
 
 import javajs.util.T3;
 
-class IsoIntersectReader extends AtomDataReader {
+class IsoIntersectAtomReader extends AtomDataReader {
 
   private static final int TYPE_FUNCTION = 0;
   private static final int TYPE_SUM = 1;
@@ -38,7 +38,7 @@ class IsoIntersectReader extends AtomDataReader {
   private static final int TYPE_MAX = 3;
   private static final int TYPE_DIFF_PAIR = 4;
 
-  IsoIntersectReader(){}
+  IsoIntersectAtomReader(){}
   
   @Override
   void init(SurfaceGenerator sg) {
