@@ -148,7 +148,6 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   @Override
   protected boolean checkLine() throws Exception {
-
     if (firstLine != null) {
       // usedf to re-run the input from external file state test
       line = firstLine;
@@ -601,11 +600,16 @@ public class CrystalReader extends AtomSetCollectionReader {
    */
   private void readLatticeParams(boolean isNewSet) throws Exception {
     float f = (line.indexOf("(BOHR") >= 0 ? ANGSTROMS_PER_BOHR : 1);
+    
+    // version change:
+    //  LATTICE PARAMETERS (ANGSTROMS AND DEGREES) - BOHR = 0.5291772083 ANGSTROM
+    //  PRIMITIVE CELL
+
     if (isNewSet)
       newAtomSet();
     primitiveVolume = 0;
     primitiveDensity = 0;
-    if (isPolymer && !isPrimitive) {
+    if (isPolymer && !isPrimitive && line.indexOf("BOHR =") < 0) {
       setUnitCell(parseFloatStr(line.substring(line.indexOf("CELL") + 4)) * f, -1, -1, 90, 90, 90);
     } else {
       while (rd().indexOf("GAMMA") < 0)
