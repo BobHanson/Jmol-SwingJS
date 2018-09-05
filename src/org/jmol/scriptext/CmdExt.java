@@ -3501,7 +3501,7 @@ public class CmdExt extends ScriptExt {
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
         i = eval.iToken;
         continue;
-        //      case T.flat: // removed in Jmol 14.4 -- never documented
+      case T.flat: // removed in Jmol 14.4 -- never documented
       case T.collapsed:
         // COLLAPSED
         // COLLAPSED [faceCenterOffset]
@@ -3511,7 +3511,7 @@ public class CmdExt extends ScriptExt {
         if (isFloatParameter(i + 1))
           setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
               Float.valueOf(floatParameter(++i)));
-        propertyName = "collapsed";
+        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
         break;
       case T.noedges:
       case T.edges:
