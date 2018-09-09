@@ -3501,7 +3501,7 @@ public class CmdExt extends ScriptExt {
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
         i = eval.iToken;
         continue;
-      case T.flat: // removed in Jmol 14.4 -- never documented
+      case T.flat: // removed in Jmol 14.4 -- never documented; restored in Jmol 14.29.21
       case T.collapsed:
         // COLLAPSED
         // COLLAPSED [faceCenterOffset]

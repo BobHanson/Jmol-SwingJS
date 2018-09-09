@@ -6882,7 +6882,7 @@ public class ScriptEval extends ScriptExpr {
         vwr.shm.loadShape(JC.SHAPE_MEASURES);
         int mad10 = getSetAxesTypeMad10(2);
         if (mad10 != Integer.MAX_VALUE)
-          setShapeSizeBs(JC.SHAPE_MEASURES, mad10 / 10, null);
+          setShapeSizeBs(JC.SHAPE_MEASURES, tok == T.decimal ? mad10 / 10 : mad10, null);
         return;
       }
       setUnits(paramAsStr(2), T.measurementunits);
