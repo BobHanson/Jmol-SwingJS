@@ -935,7 +935,7 @@ abstract class OutputManager {
     Lst<String> newFileNames = new Lst<String>();
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name = fileNames.get(iFile);
-      boolean isLocal = !vwr.isJS && OC.isLocal(name);
+      boolean isLocal = !Viewer.isJS && OC.isLocal(name);
       String newName = name;
       // also check that somehow we don't have a local file with the same name as
       // a fixed remote file name (because someone extracted the files and then used them)

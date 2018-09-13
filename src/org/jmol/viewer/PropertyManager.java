@@ -2000,7 +2000,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("date", JC.date);
     info.put("javaVendor", Viewer.strJavaVendor);
     info.put("javaVersion", Viewer.strJavaVersion
-        + (!vwr.isJS ? "" : vwr.isWebGL ? "(WebGL)" : "(HTML5)"));
+        + (!Viewer.isJS ? "" : Viewer.isWebGL ? "(WebGL)" : "(HTML5)"));
     info.put("operatingSystem", Viewer.strOSName);
     return info;
   }
@@ -2549,7 +2549,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (nAtoms == 0)
       return "";
     // creating an instance prevents pre-loading by JavaScript
-    if (vwr.isJS)
+    if (Viewer.isJS)
       Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
     XmlUtil.openTag(sb, "molecule");
     XmlUtil.openTag(sb, "atomArray");

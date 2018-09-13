@@ -267,12 +267,13 @@ abstract public class ScriptParam extends ScriptError {
     V3 vTemp = new V3();
     V3 vTemp2 = new V3();
     P4 plane = null;
+    V3 norm = null;
     if (tokAt(i) == T.plane)
       i++;
     boolean isNegated = (tokAt(i) == T.minus);
     if (isNegated)
       i++;
-    if (i < slen)
+    if (i < slen) {
       switch (getToken(i).tok) {
       case T.point4f:
         plane = P4.newPt((P4) theToken.value);
@@ -317,10 +318,10 @@ abstract public class ScriptParam extends ScriptError {
         //$FALL-THROUGH$
       case T.bitset:
       case T.expressionBegin:
-        P3 pt1 = atomCenterOrCoordinateParameter(i, null);
+        pt1 = atomCenterOrCoordinateParameter(i, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
-        P3 pt2 = atomCenterOrCoordinateParameter(iToken, null);
+        pt2 = atomCenterOrCoordinateParameter(iToken, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
         if (isFloatParameter(iToken)) {
@@ -330,17 +331,31 @@ abstract public class ScriptParam extends ScriptError {
           vTemp.scale(frac * 2);
           Measure.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
         } else {
-          P3 pt3 = atomCenterOrCoordinateParameter(iToken, null);
+          pt3 = atomCenterOrCoordinateParameter(iToken, null);
           i = iToken;
-          V3 norm = new V3();
-          float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
-          plane = new P4();
-          plane.set4(norm.x, norm.y, norm.z, w);
+          norm = new V3();
         }
-        if (!chk && Logger.debugging)
-          Logger.debug(" defined plane: " + plane);
         break;
+      default:
+        if (isArrayParameter(i)) {
+          Lst<P3> list = getPointOrCenterVector(getToken(i));
+          if (list.size() != 3)
+            invArg();
+          pt1 = list.get(0);
+          pt2 = list.get(1);
+          pt3 = list.get(2);
+          norm = new V3();
+        }
       }
+      if (norm != null) {
+        float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
+        plane = new P4();
+        plane.set4(norm.x, norm.y, norm.z, w);
+      }
+      if (!chk && Logger.debugging)
+        Logger.debug(" defined plane: " + plane);
+
+    }
     if (plane == null)
       errorMore(ERROR_planeExpected, "{a b c d}",
           "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\"", "$xxxxx");
@@ -348,6 +363,26 @@ abstract public class ScriptParam extends ScriptError {
       plane.scale4(-1);
     }
     return plane;
+  }
+
+  public Lst<P3> getPointOrCenterVector(T t) throws ScriptException {
+    Lst<P3> data = new Lst<P3>();
+    P3 pt;
+    BS bs;
+    Lst<SV> pts = ((SV) t).getList();
+    if (pts == null)
+      invArg();
+    for (int j = 0; j < pts.size(); j++) {
+      if ((pt = SV.ptValue(pts.get(j))) != null) {
+        data.addLast(pt);
+      } else if ((bs = SV.getBitSet(pts.get(j), true)) != null) {
+        data.addLast(bs.cardinality() == 1 ? P3.newP(vwr.ms.at[bs.nextSetBit(0)]) 
+            : vwr.ms.getAtomSetCenter(bs));
+      } else {
+        invArg();
+      }
+    }
+    return data;
   }
 
   public P4 hklParameter(int i) throws ScriptException {
@@ -362,10 +397,11 @@ abstract public class ScriptParam extends ScriptError {
     return p;
   }
 
+  public P3 pt1, pt2, pt3;
   public P4 getHklPlane(P3 pt) {
-    P3 pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
-    P3 pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
-    P3 pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
+    pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
+    pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
+    pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
     // trick for 001 010 100 is to define the other points on other edges
     if (pt.x == 0 && pt.y == 0 && pt.z == 0) {
       return null;

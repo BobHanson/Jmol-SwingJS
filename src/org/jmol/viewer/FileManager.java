@@ -889,9 +889,9 @@ public class FileManager implements BytePoster {
       nameOrError = (String) image;
       image = null;
     }
-    if (!vwr.isJS && image != null && bytes != null)
+    if (!Viewer.isJS && image != null && bytes != null)
       nameOrError = ";base64," + Base64.getBase64(bytes).toString();
-    if (!vwr.isJS || isPopupImage && nameOrError == null
+    if (!Viewer.isJS || isPopupImage && nameOrError == null
         || !isPopupImage && image != null)
       return vwr.loadImageData(image, nameOrError, echoName, null);
     return isAsynchronous;
@@ -912,7 +912,7 @@ public class FileManager implements BytePoster {
       return new String[] { null };
     boolean doSetPathForAllFiles = (pathForAllFiles.length() > 0);
     if (name.startsWith("?") || name.startsWith("http://?")) {
-      if (!vwr.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
+      if (!Viewer.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
         return new String[] { isFullLoad ? "#CANCELED#" : null };
       doSetPathForAllFiles = false;
     }

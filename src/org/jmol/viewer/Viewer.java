@@ -193,7 +193,7 @@ public class Viewer extends JmolViewer
   public boolean autoExit = false;
   public boolean haveDisplay = false;
 
-  public boolean isJS, isWebGL; // note that we now allow (isJS and !isApplet) 
+  static public boolean isJS, isWebGL; // note that we now allow (isJS and !isApplet) 
   public boolean isApplet, isJNLP;
 
   public boolean isSingleThreaded;

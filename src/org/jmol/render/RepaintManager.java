@@ -89,14 +89,14 @@ public class RepaintManager implements JmolRepaintManager {
   @SuppressWarnings({ "null", "unused" })
   @Override
   synchronized public void requestRepaintAndWait(String why) {
-    JmolToJSmolInterface jmol = (!vwr.isJS || Viewer.isSwingJS ? null 
+    JmolToJSmolInterface jmol = (!Viewer.isJS || Viewer.isSwingJS ? null 
         :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
     if (jmol == null) {
       //System.out.println("RM requestRepaintAndWait() " + (test++));
       try {
         repaintNow(why);
         //System.out.println("repaintManager requestRepaintAndWait I am waiting for a repaint: thread=" + Thread.currentThread().getName());
-        if (!vwr.isJS) wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
+        if (!Viewer.isJS) wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
         if (repaintPending) {
           Logger.error("repaintManager requestRepaintAndWait timeout");
           repaintDone();

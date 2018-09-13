@@ -2176,7 +2176,7 @@ public class MathExt {
     if (asBytes)
       return mp.addXMap(vwr.fm.getFileAsMap(file, null));
     boolean isQues = file.startsWith("?");
-    if (vwr.isJS && (isQues || async)) {
+    if (Viewer.isJS && (isQues || async)) {
       if (isFile && isQues)
         return mp.addXStr("");
       file = e.loadFileAsync("load()_", file, mp.oPt, true);

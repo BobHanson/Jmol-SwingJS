@@ -25,6 +25,7 @@ package org.jmol.render;
 import org.jmol.script.T;
 import org.jmol.shape.Frank;
 import org.jmol.util.C;
+import org.jmol.viewer.Viewer;
 
 public class FrankRenderer extends ShapeRenderer {
 
@@ -39,7 +40,7 @@ public class FrankRenderer extends ShapeRenderer {
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
     colix = (modelKitMode ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
-        || vwr.isJS && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
+        || Viewer.isJS && !Viewer.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
         : C.GRAY);
     if (isExport
         || !vwr.getShowFrank()

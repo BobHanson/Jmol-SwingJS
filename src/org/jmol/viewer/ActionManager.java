@@ -74,7 +74,7 @@ public class ActionManager implements EventManager {
    */
   public void setViewer(Viewer vwr, String commandOptions) {
     this.vwr = vwr;
-    if (!vwr.isJS)
+    if (!Viewer.isJS)
       createActions();
     setBinding(jmolBinding = new JmolBinding());
     LEFT_CLICKED = Binding.getMouseAction(1, Binding.LEFT, Event.CLICKED);

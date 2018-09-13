@@ -612,9 +612,21 @@ public class IsoExt extends ScriptExt {
         break;
       case T.hkl:
       case T.plane:
-        if (!havePoints && !isIntersect && tokIntersect == 0
-            && eval.theTok != T.hkl) {
-          propertyName = "plane";
+        if (!havePoints && !isIntersect && tokIntersect == 0) {
+          if (eval.theTok == T.hkl) {
+            havePoints = true;
+            setShapeProperty(JC.SHAPE_DRAW, "plane", null);
+            plane = eval.hklParameter(++i);
+            propertyName = "coords";
+            Lst<P3> list = new Lst<P3>();
+            list.addLast(P3.newP(eval.pt1));
+            list.addLast(P3.newP(eval.pt2));
+            list.addLast(P3.newP(eval.pt3));
+            propertyValue = list;
+          } else {
+            propertyName = "plane";
+            iArray = i + 1; 
+          }
           break;
         }
         if (eval.theTok == T.plane) {
@@ -2558,7 +2570,7 @@ public class IsoExt extends ScriptExt {
         try {
           for (int j = 0, ptf = 0; j < n; j++) {
             factors[j] = ((Float) list.get(ptf++)).floatValue();
-            checkFileExists(files[j] = (String) list.get(ptf++), eval);
+            files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false, (String) list.get(ptf++), i, false);
             sbCommand.appendF(factors[j]);
             sbCommand.append(" /*file*/").append(PT.esc(files[j]));
           }
@@ -2696,8 +2708,9 @@ public class IsoExt extends ScriptExt {
           }
         }
         // just checking here, and getting the full path name
-        if (stype == null)
-          checkFileExists(filename, eval);
+        if (stype == null) {
+          filename = e.checkFileExists("ISOSURFACE_" + (isMapped ? "MAP_" : ""), false, filename, i, false);
+        }
         showString("reading isosurface data from " + filename);
 
         if (stype != null) {
@@ -2958,16 +2971,6 @@ public class IsoExt extends ScriptExt {
       setShapeProperty(iShape, "cache", null);
     if (!isSilent && !isDisplay && !haveSlab && eval.theTok != T.delete)
       listIsosurface(iShape);
-  }
-
-  private void checkFileExists(String filename, ScriptEval eval) throws ScriptException {
-    if (e.chk || filename.startsWith("cache://")) 
-       return;
-    String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
-    filename = fullPathNameOrError[0];
-    if (fullPathNameOrError[1] != null)
-      eval.errorStr(ScriptError.ERROR_fileNotFoundException, filename
-          + ":" + fullPathNameOrError[1]);
   }
 
   private void lcaoCartoon() throws ScriptException {
