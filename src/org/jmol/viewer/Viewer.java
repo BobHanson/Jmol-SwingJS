@@ -394,12 +394,16 @@ public class Viewer extends JmolViewer
 
     vwrOptions = info;
     boolean isApp = info.containsKey("isApp");
+    boolean isJava = info.containsKey("isJava");
     ThreadGroup group = Thread.currentThread().getThreadGroup();
     Map<String, Object> j2s_viewerOptions = (isApp ? null :
     /** @j2sNative group.html5Applet._viewerOptions || */
         null);
-    if (j2s_viewerOptions != null)
+    if (j2s_viewerOptions != null) {
+      if (isJava)
+        j2s_viewerOptions.remove("display");
       vwrOptions.putAll(j2s_viewerOptions);
+    }
     isApp |= info.containsKey("main");
     // use allocateViewer
     if (Logger.debugging) {
@@ -498,7 +502,7 @@ public class Viewer extends JmolViewer
         || display != null && !noGraphicsAllowed && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
     headless |= noGraphicsAllowed;
-    isJSNoAWT = isJS && isApplet;
+    isJSNoAWT = isJS && isApplet && !isJava;
     if (haveDisplay) {
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
@@ -638,8 +642,6 @@ public class Viewer extends JmolViewer
               : "\nappletId:" + htmlName
                   + (isSignedApplet ? " (signed)" : "")));
     }
-    if (allowScripting)
-      getScriptManager();
     zap(false, true, false); // here to allow echos
     g.setO("language", GT.getLanguage());
     g.setO("_hoverLabel", hoverLabel);
@@ -647,6 +649,8 @@ public class Viewer extends JmolViewer
     // this code will be shared between Jmol 14.0 and 14.1
     Elements.covalentVersion = Elements.RAD_COV_BODR_2014_02_22;
     allowArrayDotNotation = true;
+    if (allowScripting)
+      getScriptManager();
   }
 
   public void setDisplay(Object canvas) {
@@ -3675,8 +3679,10 @@ public class Viewer extends JmolViewer
       if (!checkStereoSlave || gRight == null) {
         drawImage(gLeft);
       } else {
-        drawImage(gRight, getImage(true, false, false), 0, 0, tm.stereoDoubleDTI);
-        drawImage(gLeft, getImage(false, false, false), 0, 0, tm.stereoDoubleDTI);
+        drawImage(gRight, getImage(true, false, false), 0, 0,
+            tm.stereoDoubleDTI);
+        drawImage(gLeft, getImage(false, false, false), 0, 0,
+            tm.stereoDoubleDTI);
       }
     }
     if (captureParams != null
@@ -3760,7 +3766,8 @@ public class Viewer extends JmolViewer
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
-  private Object getImage(boolean isDouble, boolean isImageWrite, boolean andReturnImage) {
+  private Object getImage(boolean isDouble, boolean isImageWrite,
+                          boolean andReturnImage) {
     Object image = null;
     try {
       beginRendering(isDouble, isImageWrite);
@@ -3845,7 +3852,8 @@ public class Viewer extends JmolViewer
     boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
     boolean isBiColor = tm.stereoMode.isBiColor();
     boolean mergeImages = (g == null && isDouble);
-    boolean isQuickDraw = (isSwingJS && g != null && !isDouble && isMyDisplay(g));
+    boolean isQuickDraw = (isSwingJS && g != null && !isDouble
+        && isMyDisplay(g));
     Object imageBuffer = null;
     if (isBiColor) {
       beginRendering(true, isImageWrite);
@@ -3896,8 +3904,7 @@ public class Viewer extends JmolViewer
     /**
      * @j2sNative
      * 
-     * canvasWidth = g.width || 0;
-     * canvasHeight = g.height || 0;
+     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
      * 
      */
     return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();

@@ -24,19 +24,19 @@
 
 package org.jmol.applet;
 
-import java.applet.Applet;
+import javax.swing.JApplet;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 
 class WrappedAppletLoader extends Thread {
 
-  private Applet applet;
+  private JApplet applet;
   private boolean isSigned;
 
   //private final static int minimumLoadSeconds = 0;
 
-  WrappedAppletLoader(Applet applet, boolean isSigned) {
+  WrappedAppletLoader(JApplet applet, boolean isSigned) {
     this.applet = applet;
     this.isSigned = isSigned;
   }
@@ -68,7 +68,7 @@ class TickerThread extends Thread {
   Object applet;
   boolean keepRunning = true;
 
-  TickerThread(Applet applet) {
+  TickerThread(JApplet applet) {
     this.applet = applet;
     this.setName("AppletLoaderTickerThread");
   }
