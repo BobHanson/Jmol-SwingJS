@@ -524,17 +524,20 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public Object getScreenImage(boolean isImageWrite) {
 
-    Object obj = this.platform.bufferedImage;
+    Object obj = platform.bufferedImage;
+    boolean dorelease = false;
     /**
      * @j2sNative
      * 
      * obj._img = null;
-     * if (isImageWrite) releaseBuffers();
+     * if (isImageWrite) dorelease = true;
      * else
      * obj._buf = true;
      * 
      * 
-     */
+     */    
+    if (dorelease)
+      releaseBuffers();
     return obj;
   }
   
