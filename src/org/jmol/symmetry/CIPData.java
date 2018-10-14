@@ -303,17 +303,32 @@ public class CIPData {
    * Sets a bit set of bridgehead nitrogens
    */
   private void getAzacyclic() {
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+    out: for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       SimpleNode atom = atoms[i];
       if (atom.getElementNumber() != 7 || atom.getCovalentBondCount() != 3
           || bsKekuleAmbiguous.get(i))
         continue;
       // bridgehead N must be in two rings that have at least three atoms in common.
+      // or in a three-membered ring? 
+      
+      // don't include N with H attached. Barrier is too low.
+      // added 9/29/2018 BH
+      
+      SimpleEdge[] edges = atom.getEdges();
+      for (int k = edges.length; --k >= 0;)
+        if (edges[k].getOtherNode(atom).getElementNumber() == 1)
+          continue out;
+
       Lst<BS> nRings = new Lst<BS>();
       for (int j = lstSmallRings.length; --j >= 0;) {
         BS bsRing = lstSmallRings[j];
-        if (bsRing.get(i))
-          nRings.addLast(bsRing);
+        if (!bsRing.get(i)) 
+          continue;
+        nRings.addLast(bsRing);
+        if (j == 0) {
+          addAzacyclicN(i);
+          continue out;
+        }
       }
       int nr = nRings.size();
       if (nr < 2)
@@ -325,9 +340,9 @@ public class CIPData {
           bsSubs.set(bonds[b].getOtherNode(atom).getIndex());
       BS bsBoth = new BS();
       BS bsAll = new BS();
-      for (int j = 0; j < nr - 1 && bsAll != null; j++) {
+      for (int j = 0; j < nr - 1; j++) {
         BS bs1 = nRings.get(j);
-        for (int k = j + 1; k < nr && bsAll != null; k++) {
+        for (int k = j + 1; k < nr; k++) {
           BS bs2 = nRings.get(k);
           BSUtil.copy2(bs1, bsBoth);
           bsBoth.and(bs2);
@@ -336,15 +351,19 @@ public class CIPData {
             bsAll.or(bs2);
             bsAll.and(bsSubs);
             if (bsAll.cardinality() == 3) {
-              if (bsAzacyclic == null)
-                bsAzacyclic = new BS();
-              bsAzacyclic.set(i);
-              bsAll = null;
+              addAzacyclicN(i);
+              continue out;
             }
           }
         }
       }
     }
+  }
+
+  private void addAzacyclicN(int i) {
+    if (bsAzacyclic == null)
+      bsAzacyclic = new BS();
+    bsAzacyclic.set(i);
   }
 
   /**

@@ -140,6 +140,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean debugging;
   protected boolean requiresBSFilter;
 
+  public M3 primitiveToCrystal;
+
   public AtomSetCollection asc;
   protected BufferedReader reader;
   protected GenericBinaryDocument binaryDoc;

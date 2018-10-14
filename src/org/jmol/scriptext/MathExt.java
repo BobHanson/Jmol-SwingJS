@@ -417,10 +417,12 @@ public class MathExt {
       else if (stype.length() == 0)
         stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
             null, 0, null, null, null, T.lattice, 0, -1);
-      if (stype == null
-          || stype.length() == 0
-          || !(u == null ? vwr.getSymTemp() : u).toFromPrimitive(toPrimitive,
-              stype.charAt(0), ucnew))
+      if (stype == null || stype.length() == 0)
+        return false;
+      if (u == null)
+         u= vwr.getSymTemp();
+      M3 m3 = (M3) vwr.getModelForAtomIndex(iatom).auxiliaryInfo.get("primitiveToCrystal");
+      if (!u.toFromPrimitive(toPrimitive, stype.charAt(0), ucnew, m3))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);

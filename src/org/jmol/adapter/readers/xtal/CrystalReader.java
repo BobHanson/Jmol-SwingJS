@@ -65,6 +65,32 @@ import org.jmol.util.Tensor;
  * @version 1.4
  * 
  * 
+ * special model auxiliaryInfo include:
+ * 
+ *  primitiveToCrystal  M3 transforming primitive lattice to conventional lattice
+ *  
+ *  mat4PrimitiveToCrystal  M4 for use in transforming symmetry operations
+ *  
+ *  mat4CrystalToPrimitive  M4 convenience inverse of mat4PrimitiveToCrystal
+ *  
+ *  fileSymmetryOperations  List<String> symmetry operators (primitive)
+ *  
+ *  Drawing primitive unitcell operations:
+ *  
+ *  ops = _M.fileSystemOperations
+ *  
+ *    DRAW SYMOP @{ops[2]}
+ *  
+ *  If using the conventional cell, you can use its operators, or you can
+ *  limit yourself this primitive subset using:
+ *  
+ *    mp2c = _M.mat4PrimitiveToCrystal
+ *  
+ *    mc2p = _M.mat4CrystalToPrimitive
+ *  
+ *    DRAW SYMOP @{mc2p * ops[2] * mp2c}
+ *
+ *          
  *          for a specific model in the set, use
  * 
  *          load "xxx.out" n
@@ -92,9 +118,7 @@ import org.jmol.util.Tensor;
  *          now allows reading of frequencies and atomic values with
  *          conventional as long as this is not an optimization.
  * 
- * 
- * 
- * 
+ *  
  */
 
 public class CrystalReader extends AtomSetCollectionReader {
@@ -130,7 +154,6 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   private Double energy;
   private P3 ptOriginShift = new P3();
-  private M3 primitiveToCryst;
   private V3[] directLatticeVectors;
   private String spaceGroupName;
   private boolean checkModelTrigger;
@@ -143,7 +166,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     addVibrations &= (!inputOnly && desiredModelNumber < 0); 
     getLastConventional = (!isPrimitive && desiredModelNumber == 0);
     setFractionalCoordinates(readHeader());
-    asc.checkLatticeOnly = true;
+    asc.checkLatticeOnly =  !inputOnly;
   }
 
   @Override
@@ -193,9 +216,8 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (line.startsWith(" INPUT COORDINATES")) {
       state = STATE_INPUT;
       if (inputOnly) {
+        newAtomSet();
         readCoordLines(); 
-        // note, these may not be the full set of atoms
-        processCoordLines();
         continuing = false;
       }
       return true;
@@ -238,7 +260,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (line.startsWith(" COORDINATES OF THE EQUIVALENT ATOMS")
         || line.startsWith(" INPUT LIST - ATOM N.")) {
       // IGNORED
-      readPrimitiveMapping();
+//      readPrimitiveMapping();
       return true;
     }
 
@@ -292,20 +314,15 @@ public class CrystalReader extends AtomSetCollectionReader {
     }
 
     if (line.startsWith(" ATOMS IN THE ASYMMETRIC UNIT")) {
-      if (isMolecular) {
-        if (!doGetModel(++modelNumber, null))
-          return checkLastModel();
-        return readAtoms();
-      }
+      if (isMolecular)
+        return (doGetModel(++modelNumber, null) ? readAtoms() : checkLastModel());
       // isPrimitive or conventional
       readCoordLines();
       checkModelTrigger = true;
     }
 
     if (isProperties && line.startsWith("   ATOM N.AT.")) {
-      if (!doGetModel(++modelNumber, null))
-        return checkLastModel();
-      return readAtoms();
+      if (doGetModel(++modelNumber, null) ? readAtoms() : checkLastModel());
     }
 
     if (!doProcessLines)
@@ -365,7 +382,8 @@ public class CrystalReader extends AtomSetCollectionReader {
     lstCoords = null;
     readLatticeParams(!isConv);
     symops.clear();
-    primitiveToCryst = null;
+    if (!isConv)
+      primitiveToCrystal = null;
     directLatticeVectors = null;
   }
 
@@ -407,7 +425,6 @@ public class CrystalReader extends AtomSetCollectionReader {
   }
 
   private void setSymmOps() {
-    if (isPrimitive)
       for (int i = 0, n = symops.size(); i < n; i++)
         setSymmetryOperator(symops.get(i));
   }
@@ -418,6 +435,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (energy != null)
       setEnergy();
     finalizeReaderASCR();
+    asc.checkNoEmptyModel();
   }
 
   // DIRECT LATTICE VECTORS CARTESIAN COMPONENTS (ANGSTROM)
@@ -446,13 +464,13 @@ public class CrystalReader extends AtomSetCollectionReader {
       a = directLatticeVectors[0];
       b = directLatticeVectors[1];
     } else {
-      if (primitiveToCryst == null)
+      if (primitiveToCrystal == null)
         return;
       M3 mp = new M3();
       mp.setColumnV(0, directLatticeVectors[0]);
       mp.setColumnV(1, directLatticeVectors[1]);
       mp.setColumnV(2, directLatticeVectors[2]);
-      mp.mul(primitiveToCryst);
+      mp.mul(primitiveToCrystal);
       a = new V3();
       b = new V3();
       mp.getColumnV(0, a);
@@ -473,7 +491,8 @@ public class CrystalReader extends AtomSetCollectionReader {
    *  
    */
   private void readPrimitiveLatticeVectors() throws Exception {
-    primitiveToCryst = M3.newA9(fillFloatArray(null, 0, new float[9]));
+    primitiveToCrystal = M3.newA9(fillFloatArray(null, 0, new float[9]));
+ //   System.out.println("Prim-to-Cryst=" + primitiveToCryst);
   }
 
   // SHIFT OF THE ORIGIN                  :    3/4    1/4      0
@@ -647,76 +666,76 @@ public class CrystalReader extends AtomSetCollectionReader {
   // 
 
 
-  private Lst<String> vPrimitiveMapping;
+//  private Lst<String> vPrimitiveMapping;
   
-  /**
-   * Just collect all the lines of the mapping.
-   * 
-   * @throws Exception
-   */
-  private void readPrimitiveMapping() throws Exception {
-    if (havePrimitiveMapping)
-      return;
-    vPrimitiveMapping = new Lst<String>();    
-    while (rd() != null && line.indexOf("NUMBER") < 0)
-      vPrimitiveMapping.addLast(line);
-  }
+//  /**
+//   * Just collect all the lines of the mapping.
+//   * 
+//   * @throws Exception
+//   */
+//  private void readPrimitiveMapping() throws Exception {
+//    if (havePrimitiveMapping)
+//      return;
+//    vPrimitiveMapping = new Lst<String>();    
+//    while (rd() != null && line.indexOf("NUMBER") < 0)
+//      vPrimitiveMapping.addLast(line);
+//  }
   
-  /**
-   * Create arrays that map primitive atoms to conventional atoms in a 1:1
-   * fashion. Creates int[] primitiveToIndex -- points to model-based atomIndex.
-   * Used for frequency fragments and atomic properties only.
-   * 
-   * @throws Exception
-   */
-  private void setPrimitiveMapping() throws Exception {
-    // always returns here
-    if (havePrimitiveMapping || lstCoords == null || vPrimitiveMapping == null)
-      return;
-    
-    // no longer necessary ? BH 3/18
-    
-//    havePrimitiveMapping = true;
-//    BS bsInputAtomsIgnore = new BS();
-//    int n = lstCoords.size();
-//    int[] indexToPrimitive = new int[n];
-//    for (int i = 0; i < n; i++)
-//      indexToPrimitive[i] = -1;
-//    int nPrim = 0;
-//    for (int iLine = 0; iLine < vPrimitiveMapping.size(); iLine++) {
-//      line = vPrimitiveMapping.get(iLine);
-//      if (line.indexOf(" NOT IRREDUCIBLE") >= 0) {
-//        // example HA_BULK_PBE_FREQ.OUT
-//        // we remove unnecessary atoms. This is important, because
-//        // these won't get properties, and we don't know exactly which
-//        // other atom to associate with them.
-//        bsInputAtomsIgnore.set(parseIntRange(line, 21, 25) - 1);
-//        continue;
-//      }
-//      if (line.length() < 2 || line.indexOf("ATOM") >= 0)
-//        continue;
-//      int iAtom = parseIntRange(line, 4, 8) - 1;
-//      if (indexToPrimitive[iAtom] < 0) {
-//        // no other primitive atom is mapped to a given conventional atom.
-//        indexToPrimitive[iAtom] = nPrim++;
-//      }
-//    }
-//    if (bsInputAtomsIgnore.nextSetBit(0) >= 0)
-//      for (int i = n; --i >= 0;)
-//        if (bsInputAtomsIgnore.get(i))
-//          lstCoords.removeItemAt(i);
-//    ac = lstCoords.size();
-//    Logger.info(nPrim + " primitive atoms and " + ac + " conventionalAtoms");
-//    primitiveToIndex = new int[nPrim];
-//    for (int i = 0; i < nPrim; i++)
-//      primitiveToIndex[i] = -1;
-//    for (int i = ac; --i >= 0;) {
-//      int iPrim = indexToPrimitive[parseIntStr(lstCoords.get(i).substring(0, 4)) - 1];
-//      if (iPrim >= 0)
-//        primitiveToIndex[iPrim] = i;
-//    }
-//    vPrimitiveMapping = null;
-  }
+//  /**
+//   * Create arrays that map primitive atoms to conventional atoms in a 1:1
+//   * fashion. Creates int[] primitiveToIndex -- points to model-based atomIndex.
+//   * Used for frequency fragments and atomic properties only.
+//   * 
+//   * @throws Exception
+//   */
+//  private void setPrimitiveMapping() throws Exception {
+//    // always returns here
+////    if (havePrimitiveMapping || lstCoords == null || vPrimitiveMapping == null)
+////      return;
+//    
+//    // no longer necessary ? BH 3/18
+//    
+////    havePrimitiveMapping = true;
+////    BS bsInputAtomsIgnore = new BS();
+////    int n = lstCoords.size();
+////    int[] indexToPrimitive = new int[n];
+////    for (int i = 0; i < n; i++)
+////      indexToPrimitive[i] = -1;
+////    int nPrim = 0;
+////    for (int iLine = 0; iLine < vPrimitiveMapping.size(); iLine++) {
+////      line = vPrimitiveMapping.get(iLine);
+////      if (line.indexOf(" NOT IRREDUCIBLE") >= 0) {
+////        // example HA_BULK_PBE_FREQ.OUT
+////        // we remove unnecessary atoms. This is important, because
+////        // these won't get properties, and we don't know exactly which
+////        // other atom to associate with them.
+////        bsInputAtomsIgnore.set(parseIntRange(line, 21, 25) - 1);
+////        continue;
+////      }
+////      if (line.length() < 2 || line.indexOf("ATOM") >= 0)
+////        continue;
+////      int iAtom = parseIntRange(line, 4, 8) - 1;
+////      if (indexToPrimitive[iAtom] < 0) {
+////        // no other primitive atom is mapped to a given conventional atom.
+////        indexToPrimitive[iAtom] = nPrim++;
+////      }
+////    }
+////    if (bsInputAtomsIgnore.nextSetBit(0) >= 0)
+////      for (int i = n; --i >= 0;)
+////        if (bsInputAtomsIgnore.get(i))
+////          lstCoords.removeItemAt(i);
+////    ac = lstCoords.size();
+////    Logger.info(nPrim + " primitive atoms and " + ac + " conventionalAtoms");
+////    primitiveToIndex = new int[nPrim];
+////    for (int i = 0; i < nPrim; i++)
+////      primitiveToIndex[i] = -1;
+////    for (int i = ac; --i >= 0;) {
+////      int iPrim = indexToPrimitive[parseIntStr(lstCoords.get(i).substring(0, 4)) - 1];
+////      if (iPrim >= 0)
+////        primitiveToIndex[iPrim] = i;
+////    }
+////    vPrimitiveMapping = null;
+//  }
 
   /**
    * Get the atom index from a primitive index. Used for atomic properties and
@@ -849,13 +868,14 @@ public class CrystalReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void readCoordLines() throws Exception {
-    if (line.indexOf("  ATOM") < 0)
-      discardLinesUntilContains("  ATOM");
+    String atom = (inputOnly ? " ATOM" : "  ATOM");
+    if (line.indexOf(atom) < 0)
+      discardLinesUntilContains(atom);
     lstCoords = new  Lst<String>();
     while (rd() != null && line.length() > 0)
       if (line.indexOf("****") < 0)
         lstCoords.addLast(line);
-    setPrimitiveMapping();    
+//    setPrimitiveMapping();    
   }
 
   /**
@@ -932,8 +952,31 @@ public class CrystalReader extends AtomSetCollectionReader {
   @Override
   public void applySymmetryAndSetTrajectory() throws Exception {
     setUnitCellOrientation();
-    if (!isPrimitive)
-      setSymmOps();// this does nothing
+    M4 m4p2c, m4c2p;
+    if (primitiveToCrystal != null) {
+      asc.setModelInfoForSet("primitiveToCrystal", primitiveToCrystal, asc.iSet);
+      m4p2c = new M4();
+      m4p2c.setRotationScale(primitiveToCrystal);
+      m4p2c.m33 = 1;
+      asc.setModelInfoForSet("mat4PrimitiveToCrystal", m4p2c, asc.iSet);
+      m4c2p = M4.newM4(m4p2c);
+      m4c2p.invert();
+      asc.setModelInfoForSet("mat4CrystalToPrimitive", m4c2p, asc.iSet);
+      if (symops.size() > 0) {
+//        M4[] ops = new M4[symops.size()];
+//        for (int i = ops.length; --i >= 0;) {
+//          ops[i] = SymmetryOperation.getMatrixFromXYZ(symops.get(i));
+//          if (false && isPrimitive) {
+//            ops[i].mul2(m4c2p, ops[i]);
+//            ops[i].mul2(ops[i], m4p2c);
+//          }
+//        }
+//        
+        asc.setModelInfoForSet("fileSymmetryOperations", symops.clone(), asc.iSet);
+        // we do not actually apply these symmetry operators
+      }
+    }
+    iHaveSymmetryOperators = false;
     applySymTrajASCR();
   }
 

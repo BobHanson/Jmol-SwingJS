@@ -315,7 +315,7 @@ public class CmdExt extends ScriptExt {
    T3 lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
      tok = tokAt(i = eval.iToken + 1);
    }
 
@@ -2625,7 +2625,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.leftbrace:
     case T.point3f:
-      qtOffset = eval.getPoint3f(1, false);
+      qtOffset = eval.getPoint3f(1, false, true);
       isQ = (tokAt(eval.iToken + 1) == T.on);
       break;
     default:
@@ -2649,7 +2649,7 @@ public class CmdExt extends ScriptExt {
           float t1 = floatParameter(i);
           qtOffset = P3.new3(t1, t1, t1);
         } else {
-          qtOffset = eval.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false, true);
         }
         break;
       case T.integer:
@@ -2657,7 +2657,7 @@ public class CmdExt extends ScriptExt {
           int t = intParameter(i);
           qtOffset = P3.new3(t, t, t);
         } else {
-          qtOffset = eval.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false, true);
         }
         isQ = true;
         break;
@@ -5110,7 +5110,7 @@ public class CmdExt extends ScriptExt {
             if (u == null)
               u = vwr.getSymTemp();
             u.toFromPrimitive(true,
-                stype.length() == 0 ? 'P' : stype.charAt(0), oabc);
+                stype.length() == 0 ? 'P' : stype.charAt(0), oabc, (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
               SimpleUnitCell.getReciprocal(oabc, oabc, scale);
             }
@@ -5181,7 +5181,7 @@ public class CmdExt extends ScriptExt {
       isOffset = true;
       //$FALL-THROUGH$
     case T.range:
-      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
+      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3, true);
       pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
       i = eval.iToken;
       break;
@@ -5202,7 +5202,7 @@ public class CmdExt extends ScriptExt {
         oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
-        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
         i = eval.iToken;
       } else {
         // backup for diameter

@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-03-22 13:29:36 -0500 (Thu, 22 Mar 2018) $
- * $Revision: 21872 $
+ * $Date: 2018-08-16 16:01:22 -0500 (Thu, 16 Aug 2018) $
+ * $Revision: 21924 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -1172,6 +1172,11 @@ public class AtomSetCollection {
     } else {
       bsAtoms.setBits(i0, i0 + nnow);
     }
+  }
+
+  public void checkNoEmptyModel() {
+    while (atomSetCount > 0 && atomSetAtomCounts[atomSetCount - 1] == 0)
+      atomSetCount--;
   }
 
 

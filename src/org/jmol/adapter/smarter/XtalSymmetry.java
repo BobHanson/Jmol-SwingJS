@@ -245,7 +245,8 @@ public class XtalSymmetry {
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
     int kcode = latticeCells[3];
-    int dim = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
+    int dim = (int) symmetry
+        .getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
     firstAtom = asc.getLastAtomSetAtomIndex();
     BS bsAtoms = asc.bsAtoms;
     if (bsAtoms != null) {
@@ -259,27 +260,29 @@ public class XtalSymmetry {
       acr.latticeType = symmetry.getLatticeType();
     if (acr.isPrimitive) {
       asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
-      if (!"P".equals(acr.latticeType)) {
-        asc.setCurrentModelInfo("unitcell_conventional", symmetry.getConventionalUnitCell(acr.latticeType));
+      if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {
+        asc.setCurrentModelInfo("unitcell_conventional", symmetry
+            .getConventionalUnitCell(acr.latticeType, acr.primitiveToCrystal));
       }
     }
-    if (acr.latticeType != null)
+    if (acr.latticeType != null) {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);
+      if (acr.fillRange instanceof String) {
 
-
-    if (acr.fillRange instanceof String && acr.latticeType != null) {
-      
-     String type = (String) acr.fillRange; // conventional or primitive
-     if (type.equals("conventional")) {
-       acr.fillRange = symmetry.getConventionalUnitCell(acr.latticeType);
-     } else if (type.equals("primitive")) {
-       acr.fillRange = symmetry.getUnitCellVectors();
-       symmetry.toFromPrimitive(true, acr.latticeType.charAt(0), (T3[]) acr.fillRange);
-     } else {
-       acr.fillRange = null;
-     }
-     if (acr.fillRange != null)
-       acr.addJmolScript("unitcell " + type);
+        String type = (String) acr.fillRange; // conventional or primitive
+        if (type.equals("conventional")) {
+          acr.fillRange = symmetry.getConventionalUnitCell(acr.latticeType,
+              acr.primitiveToCrystal);
+        } else if (type.equals("primitive")) {
+          acr.fillRange = symmetry.getUnitCellVectors();
+          symmetry.toFromPrimitive(true, acr.latticeType.charAt(0),
+              (T3[]) acr.fillRange, acr.primitiveToCrystal);
+        } else {
+          acr.fillRange = null;
+        }
+        if (acr.fillRange != null)
+          acr.addJmolScript("unitcell " + type);
+      }
     }
     if (acr.fillRange != null) {
 
@@ -293,7 +296,7 @@ public class XtalSymmetry {
         oabc[i] = P3.newP(((T3[]) acr.fillRange)[i]);
       adjustRangeMinMax(oabc);
       //Logger.info("setting min/max for original lattice to " + minXYZ + " and "
-        //  + maxXYZ);
+      //  + maxXYZ);
       if (sym2 == null) {
         sym2 = new Symmetry();
         sym2.getUnitCell((T3[]) acr.fillRange, false, null);
@@ -301,7 +304,7 @@ public class XtalSymmetry {
       applyAllSymmetry(acr.ms, bsAtoms);
       pt0 = new P3();
       Atom[] atoms = asc.atoms;
-      for (int i = asc.ac; --i >= firstAtom; ) {
+      for (int i = asc.ac; --i >= firstAtom;) {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
@@ -309,7 +312,7 @@ public class XtalSymmetry {
           PT.fixPtFloats(pt0, PT.FRACTIONAL_PRECISION);
         if (!isWithinCell(dtype, pt0, 0, 1, 0, 1, 0, 1, packingError))
           bsAtoms.clear(i);
-          
+
       }
       return;
     }
@@ -370,8 +373,8 @@ public class XtalSymmetry {
       symmetry = getSymmetry();
       setUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y,
           vb.z, vc.x, vc.y, vc.z }, null, offset);
-      setAtomSetSpaceGroupName(oabc == null || supercell == null ? "P1"
-          : "cell=" + supercell);
+      setAtomSetSpaceGroupName(
+          oabc == null || supercell == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
       symmetry.addSpaceGroupOperation("x,y,z", 0);
 
@@ -404,7 +407,8 @@ public class XtalSymmetry {
       // trim atom set based on original unit cell
       Atom[] atoms = asc.atoms;
       BS bs = updateBSAtoms();
-      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs.nextSetBit(i + 1)) {
+      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
+          .nextSetBit(i + 1)) {
         if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
             maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
           bs.clear(i);

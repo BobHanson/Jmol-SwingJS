@@ -725,10 +725,10 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc) {
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc, M3 primitiveToCrystal) {
     if (unitCell == null)
       unitCell = UnitCell.fromOABC(oabc, false);
-    return unitCell.toFromPrimitive(toPrimitive, type, oabc);
+    return unitCell.toFromPrimitive(toPrimitive, type, oabc, primitiveToCrystal);
   }
 
   @Override
@@ -820,12 +820,15 @@ public class Symmetry implements SymmetryInterface {
   /**
    * return a conventional lattice from a primitive
    * 
-   * @param latticeType  "A" "B" "C" "R" etc.
+   * @param latticeType
+   *        "A" "B" "C" "R" etc.
    * @return [origin va vb vc]
    */
   @Override
-  public T3[] getConventionalUnitCell(String latticeType) {
-    return (unitCell == null || latticeType == null ? null : unitCell.getConventionalUnitCell(latticeType));
+  public T3[] getConventionalUnitCell(String latticeType,
+                                      M3 primitiveToCrystal) {
+    return (unitCell == null || latticeType == null ? null
+        : unitCell.getConventionalUnitCell(latticeType, primitiveToCrystal));
   }
 
   @Override

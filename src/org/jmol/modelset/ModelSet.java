@@ -171,6 +171,8 @@ public class ModelSet extends BondCollection {
 
   private static float hbondMinRasmol = 2.5f;
   private static float hbondMaxReal = 3.5f;
+  private static float hbondHCMaxReal = 2.2f; // BH added 2018.10.13 Jmol 14.29.27
+
   public boolean proteinStructureTainted;
 
   public Hashtable<String, BS> htPeaks;
@@ -2814,18 +2816,11 @@ public class ModelSet extends BondCollection {
         float energy = 0;
         short bo;
         if (isH && !Float.isNaN(C.x) && !Float.isNaN(D.x)) {
-          /*
-           * A crude calculation based on simple distances. In the NH -- O=C
-           * case this reads DH -- A=C
-           * 
-           * (+) H .......... A (-) | | | | (-) D C (+)
-           * 
-           * 
-           * E = Q/rAH - Q/rAD + Q/rCD - Q/rCH
-           */
-
+          float ca = C.distance(atom);
+          if (ca > hbondHCMaxReal) // 2.2 Angstroms -- quite long for a hydrogen bond
+            continue;
           bo = Edge.BOND_H_CALC;
-          energy = HBond.getEnergy((float) Math.sqrt(d2), C.distance(atom),
+          energy = HBond.getEnergy((float) Math.sqrt(d2), ca,
               C.distance(D), atomNear.distance(D)) / 1000f;
         } else {
           bo = Edge.BOND_H_REGULAR;
@@ -4161,5 +4156,6 @@ public class ModelSet extends BondCollection {
       s += at[i].getCIPChirality(false);
     return s;
   }
+
 }
 

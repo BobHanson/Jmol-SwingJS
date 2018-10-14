@@ -474,11 +474,9 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    T3[] info = Measure.computeHelicalAxis(
-        pta00,
-        pt0,
-        Quat.getQuaternionFrame(pt0, pt1, pt2).div(
-            Quat.getQuaternionFrame(pta00, pta01, pta02)));
+    T3[] info = Measure.computeHelicalAxis(pta00, pt0,
+        Quat.getQuaternionFrame(pt0, pt1, pt2)
+            .div(Quat.getQuaternionFrame(pta00, pta01, pta02)));
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3 pa1 = (P3) info[0];
     V3 ax1 = (V3) info[1];
@@ -687,9 +685,8 @@ public class SymmetryDesc {
       if (ang2 != 0)
         ang1 = ang2;
 
-      if (!haveInversion
-          && pitch1 == 0
-          && (ax1.z < 0 || ax1.z == 0 && (ax1.y < 0 || ax1.y == 0 && ax1.x < 0))) {
+      if (!haveInversion && pitch1 == 0 && (ax1.z < 0
+          || ax1.z == 0 && (ax1.y < 0 || ax1.y == 0 && ax1.x < 0))) {
         ax1.scale(-1);
         ang1 = -ang1;
       }
@@ -737,17 +734,18 @@ public class SymmetryDesc {
           } else {
             info1 = "g-";
           }
-        } else if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0
-            && fx != 0) {
+        } else if (fx != 0 && fy != 0 || fy != 0 && fz != 0
+            || fz != 0 && fx != 0) {
           // any two
           if (fx == 1 / 4f && fy == 1 / 4f || fx == 1 / 4f && fz == 1 / 4f
               || fy == 1 / 4f && fz == 1 / 4f) {
             info1 = "d-";
-          } else if (fx == 1 / 2f && fy == 1 / 2f || fx == 1 / 2f
-              && fz == 1 / 2f || fy == 1 / 2f && fz == 1 / 2f) {
+          } else if (fx == 1 / 2f && fy == 1 / 2f
+              || fx == 1 / 2f && fz == 1 / 2f || fy == 1 / 2f && fz == 1 / 2f) {
             // making sure here that this is truly a diagonal in the plane, not just
             // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
-            if (fx == 0 && ax1.x == 0|| fy == 0 && ax1.y == 0|| fz == 0 && ax1.z == 0 ) {
+            if (fx == 0 && ax1.x == 0 || fy == 0 && ax1.y == 0
+                || fz == 0 && ax1.z == 0) {
               info1 = "g-";
             } else {
               info1 = "n-";
@@ -780,8 +778,8 @@ public class SymmetryDesc {
     }
 
     String cmds = null;
-    String xyzNew = (op.isBio ? op.xyzOriginal : SymmetryOperation
-        .getXYZFromMatrix(op, false, false, false));
+    String xyzNew = (op.isBio ? op.xyzOriginal
+        : SymmetryOperation.getXYZFromMatrix(op, false, false, false));
 
     // check for drawing
 
@@ -871,8 +869,7 @@ public class SymmetryDesc {
           draw1.append(drawid).append("rotRotLine2").append(Escape.eP(ptr))
               .append(Escape.eP(pt0)).append(" color red");
         }
-        draw1
-            .append(drawid)
+        draw1.append(drawid)
             .append(
                 "rotRotArrow arrow width 0.1 scale " + PT.escF(scale) + " arc ")
             .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
@@ -926,19 +923,20 @@ public class SymmetryDesc {
             : 1.05f);
         // returns triangles and lines
         Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(plane,
-            uc.getCanonicalCopy(margin, false), 3);
-        for (int i = v.size(); --i >= 0;) {
-          P3[] pts = (P3[]) v.get(i);
-          draw1.append(drawid).append("planep").appendI(i).append(" ")
-              .append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
-          if (pts.length == 3)
-            draw1.append(Escape.eP(pts[2]));
-          draw1.append(" color translucent ").append(color);
-        }
+            uc.getCanonicalCopy(margin, true), 3);
+        if (v != null)
+          for (int i = v.size(); --i >= 0;) {
+            P3[] pts = (P3[]) v.get(i);
+            draw1.append(drawid).append("planep").appendI(i).append(" ")
+                .append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
+            if (pts.length == 3)
+              draw1.append(Escape.eP(pts[2]));
+            draw1.append(" color translucent ").append(color);
+          }
 
         // and JUST in case that does not work, at least draw a circle
 
-        if (v.size() == 0) {
+        if (v == null || v.size() == 0) {
           ptemp.add2(pa1, ax1);
           draw1.append(drawid).append("planeCircle scale 2.0 circle ")
               .append(Escape.eP(pa1)).append(Escape.eP(ptemp))
@@ -966,14 +964,9 @@ public class SymmetryDesc {
       if (trans != null) {
         if (ptref == null)
           ptref = P3.newP(pta00);
-        drawVector(
-            draw1,
-            drawid,
-            "transVector",
-            "vector",
-            ptref,
-            trans,
-            isTimeReversed && !haveInversion && !isMirrorPlane && !isRotation ? "darkGray"
+        drawVector(draw1, drawid, "transVector", "vector", ptref, trans,
+            isTimeReversed && !haveInversion && !isMirrorPlane && !isRotation
+                ? "darkGray"
                 : "gold");
       }
 
@@ -995,8 +988,8 @@ public class SymmetryDesc {
 
       draw1.append("\nsym_point = " + Escape.eP(pta00));
       draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
-      draw1
-          .append("\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
+      draw1.append(
+          "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
       if (pta00 instanceof Atom)
         draw1.append("\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
       draw1.append("\nsym_target = set2;if (set2) {");
@@ -1058,8 +1051,9 @@ public class SymmetryDesc {
       m2.m23 += vtrans.z;
     }
     // TODO: here we need magnetic
-    xyzNew = (op.isBio ? m2.toString() : op.modDim > 0 ? op.xyzOriginal
-        : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
+    xyzNew = (op.isBio ? m2.toString()
+        : op.modDim > 0 ? op.xyzOriginal
+            : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
     if (op.timeReversal != 0)
       xyzNew = op.fixMagneticXYZ(m2, xyzNew, true);
     return new Object[] { xyzNew, op.xyzOriginal, info1, cmds, approx0(ftrans),

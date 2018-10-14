@@ -1460,6 +1460,10 @@ public class SV extends T implements JSONEncodable {
         return (((P3) x1.value).distance((P3) x2.value) < 0.000001);
       case point4f:
         return (((P4) x1.value).distance4((P4) x2.value) < 0.000001);
+      case matrix3f:
+        return ((M3) x1.value).equals(x2.value);
+      case matrix4f:
+        return ((M4) x1.value).equals(x2.value);
       }
     }
     return (Math.abs(fValue(x1) - fValue(x2)) < 0.000001);

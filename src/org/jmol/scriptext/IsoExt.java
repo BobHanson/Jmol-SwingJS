@@ -617,6 +617,7 @@ public class IsoExt extends ScriptExt {
             havePoints = true;
             setShapeProperty(JC.SHAPE_DRAW, "plane", null);
             plane = eval.hklParameter(++i);
+            i = eval.iToken;
             propertyName = "coords";
             Lst<P3> list = new Lst<P3>();
             list.addLast(P3.newP(eval.pt1));

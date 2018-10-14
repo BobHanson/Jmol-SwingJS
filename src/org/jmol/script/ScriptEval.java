@@ -3020,7 +3020,7 @@ public class ScriptEval extends ScriptExpr {
       if (byCorner || isCenterParameter(index)) {
         // boundbox CORNERS {expressionOrPoint1} {expressionOrPoint2}
         // boundbox {expressionOrPoint1} {vector}
-        P3 pt2 = (byCorner ? centerParameter(index, ret) : getPoint3f(index, true));
+        P3 pt2 = (byCorner ? centerParameter(index, ret) : getPoint3f(index, true, true));
         index = iToken + 1;
         if (!chk)
           vwr.ms.setBoundBox(pt1, pt2, byCorner, scale);
@@ -4313,7 +4313,7 @@ public class ScriptEval extends ScriptExpr {
         if (tok == T.trajectory)
           htParams.put("isTrajectory", Boolean.TRUE);
         if (isPoint3f(i)) {
-          P3 pt = getPoint3f(i, false);
+          P3 pt = getPoint3f(i, false, true);
           i = iToken + 1;
           // first last stride
           htParams.put("firstLastStep", new int[] { (int) pt.x, (int) pt.y,
@@ -4812,7 +4812,7 @@ public class ScriptEval extends ScriptExpr {
           pt = P3.new3(0, -1, 1);
         }
         if (isPoint3f(++i)) {
-          pt = getPoint3f(i, false);
+          pt = getPoint3f(i, false, true);
           i = iToken + 1;
         } else if (tokAt(i) == T.bitset) {
           bs = (BS) getToken(i).value;
@@ -5430,7 +5430,7 @@ public class ScriptEval extends ScriptExpr {
     case T.leftbrace:
       // {X, Y, Z} deg or {x y z deg}
       if (isPoint3f(i)) {
-        axis.setT(getPoint3f(i, true));
+        axis.setT(getPoint3f(i, true, true));
         i = iToken + 1;
         degrees = floatParameter(i++);
       } else {
@@ -6474,19 +6474,20 @@ public class ScriptEval extends ScriptExpr {
         if (filename.equalsIgnoreCase("inline")) {
           theScript = parameterExpressionString(++i, (doStep ? slen - 1 : 0));
           i = iToken;
+        } else {
+          while (filename.equalsIgnoreCase("localPath")
+              || filename.equalsIgnoreCase("remotePath")
+              || filename.equalsIgnoreCase("scriptPath")) {
+            if (filename.equalsIgnoreCase("localPath"))
+              localPath = paramAsStr(++i);
+            else if (filename.equalsIgnoreCase("scriptPath"))
+              scriptPath = paramAsStr(++i);
+            else
+              remotePath = paramAsStr(++i);
+            filename = paramAsStr(++i);
+          }
+          filename = checkFileExists("SCRIPT_", isAsync, filename, i, true);
         }
-        while (filename.equalsIgnoreCase("localPath")
-            || filename.equalsIgnoreCase("remotePath")
-            || filename.equalsIgnoreCase("scriptPath")) {
-          if (filename.equalsIgnoreCase("localPath"))
-            localPath = paramAsStr(++i);
-          else if (filename.equalsIgnoreCase("scriptPath"))
-            scriptPath = paramAsStr(++i);
-          else
-            remotePath = paramAsStr(++i);
-          filename = paramAsStr(++i);
-        }
-        filename = checkFileExists("SCRIPT_", isAsync, filename, i, true);
         if ((tok = tokAt(++i)) == T.check) {
           isCheck = true;
           tok = tokAt(++i);
@@ -6544,8 +6545,9 @@ public class ScriptEval extends ScriptExpr {
       chk = isCmdLine_c_or_C_Option = true;
     pushContext(null, "SCRIPT");
     contextPath += " >> " + filename;
-    if (theScript == null ? compileScriptFileInternal(filename, localPath,
-        remotePath, scriptPath) : compileScript(null, theScript, false)) {
+    if (theScript == null
+        ? compileScriptFileInternal(filename, localPath, remotePath, scriptPath)
+        : compileScript(null, theScript, false)) {
       this.pcEnd = pcEnd;
       this.lineEnd = lineEnd;
       while (pc < lineNumbers.length && lineNumbers[pc] < lineNumber)
@@ -6557,10 +6559,9 @@ public class ScriptEval extends ScriptExpr {
 
       if (contextVariables == null)
         contextVariables = new Hashtable<String, SV>();
-      contextVariables.put(
-          "_arguments",
-          (params == null ? SV.getVariableAI(new int[] {}) : SV
-              .getVariableList(params)));
+      contextVariables.put("_arguments",
+          (params == null ? SV.getVariableAI(new int[] {})
+              : SV.getVariableList(params)));
       contextVariables.put("_argcount",
           SV.newI(params == null ? 0 : params.size()));
 
@@ -7336,7 +7337,7 @@ public class ScriptEval extends ScriptExpr {
       case T.offset:
         propertyName = "offset";
         if (isPoint3f(pt)) {
-          P3 pt3 = getPoint3f(pt, false);
+          P3 pt3 = getPoint3f(pt, false, true);
           // minus 1 here means from Jmol, not from PyMOL
           propertyValue = new float[] { -1, pt3.x, pt3.y, pt3.z, 0, 0, 0 };
           pt = iToken + 1;
@@ -7420,7 +7421,7 @@ public class ScriptEval extends ScriptExpr {
         str = "offset";
         if (isPoint3f(2)) {
           // PyMOL offsets -- {x, y, z} in angstroms
-          P3 pt = getPoint3f(2, false);
+          P3 pt = getPoint3f(2, false, true);
           // minus 1 here means from Jmol, not from PyMOL
           propertyValue = new float[] { -1, pt.x, pt.y, pt.z, 0, 0, 0 };
         } else if (isArrayParameter(2)) {
@@ -7901,7 +7902,7 @@ public class ScriptEval extends ScriptExpr {
       i = 2;
     }
     if (isPoint3f(i)) {
-      P3 pt = getPoint3f(i, true);
+      P3 pt = getPoint3f(i, true, true);
       bs = (iToken + 1 < slen ? atomExpressionAt(++iToken)
           : null);
       checkLast(iToken);

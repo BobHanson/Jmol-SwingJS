@@ -285,7 +285,13 @@ class SpaceGroup {
         return sb.toString();
       }
     }
-    return (asMap? (sg == null ? null : sg.getInfo(cellInfo)): sg == null ? "?" : sg.dumpInfo());
+    Object o;
+    try {
+      o = (asMap? (sg == null ? null : sg.getInfo(cellInfo)): sg == null ? "?" : sg.dumpInfo());
+    } catch(Exception e) {
+      o = null;
+    }
+    return o;
   }
 
   private Map<String, Object> info;

@@ -518,7 +518,7 @@ public class FileManager implements BytePoster {
         System.err.println("Couldn't find file: " + classPath + resourceName);
         throw new IOException();
       }
-      if (!vwr.async)
+      if (vwr == null || !vwr.async)
         return Rdr.getBufferedReader(
             new BufferedInputStream((InputStream) url.getContent()), null);
     }

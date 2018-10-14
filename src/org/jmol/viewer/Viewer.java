@@ -108,6 +108,7 @@ import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.MeasurementPending;
+import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
 import org.jmol.modelset.StateScript;
@@ -2751,6 +2752,10 @@ public class Viewer extends JmolViewer
   @Override
   public Properties getModelProperties(int modelIndex) {
     return ms.am[modelIndex].properties;
+  }
+
+  public Model getModelForAtomIndex(int iatom) {
+    return ms.am[ms.at[iatom].mi];
   }
 
   @Override

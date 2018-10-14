@@ -671,8 +671,17 @@ class UnitCell extends SimpleUnitCell {
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
       if (strans != null) {
+        String[] atrans = PT.split(strans+"0,0,0",",");
         float[] ftrans = new float[3];
-        PT.parseFloatArrayInfested(PT.split(strans+"0,0,0",","), ftrans);
+        for (int j = 0; j < 3; j++) {
+          String s = atrans[j];
+          int sfpt = s.indexOf("/"); 
+          if (sfpt >= 0) {
+            ftrans[j] = PT.parseFloat(s.substring(0, sfpt)) / PT.parseFloat(s.substring(sfpt + 1));
+          } else {
+            ftrans[j] = PT.parseFloat(s);
+          }
+        }
         P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
         m.setTranslation(ptrans);
       }
@@ -720,63 +729,65 @@ class UnitCell extends SimpleUnitCell {
     return pts;
   }
 
+  
   /**
    * 
-   * @param toPrimitive  or assumed conventional
-   * @param type P, R, A, B, C, I(BCC), or F(FCC)
-   * @param uc either [origin, va, vb, vc] or just [va, vb, vc]
+   * @param toPrimitive
+   *        or assumed conventional
+   * @param type
+   *        P, R, A, B, C, I(BCC), or F(FCC)
+   * @param uc
+   *        either [origin, va, vb, vc] or just [va, vb, vc]
+   * @param primitiveToCrystal
    * @return true if successful
    */
-  public boolean toFromPrimitive(boolean toPrimitive, char type,
-                                       T3[] uc) {
-    
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] uc,
+                                 M3 primitiveToCrystal) {
+
     // columns are definitions of new coordinates in terms of old
-    
+
     int offset = uc.length - 3;
-    M3 mf;
-    switch (type) {
-    default:
-      return false;
-    case 'r': // reciprocal
-      getReciprocal(uc, uc, 1);
-      return true;
-    case 'P':
-      mf = M3.newA9(new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
-      toPrimitive = true;
-      break;
-    case 'A':
-      mf = M3.newA9(new float[] { 1,  0,     0, 
-                                  0,  0.5f,  0.5f, 
-                                  0, -0.5f,  0.5f});
-      break;
-    case 'B':
-      mf = M3.newA9(new float[] { 0.5f, 0,  0.5f, 
-                                  0,    1,  0, 
-                                 -0.5f, 0,  0.5f});
-      break;
-    case 'C':
-      mf = M3.newA9 (new float[] { 0.5f, 0.5f, 0, 
-                                  -0.5f, 0.5f, 0, 
-                                   0,    0,    1});
-      break;
-    case 'R':
-        mf = M3.newA9(new float[] { 2/3f, -1/3f, -1/3f, 
-                                    1/3f,  1/3f, -2/3f, 
-                                     1/3f,  1/3f,  1/3f});
-      break;
-    case 'I':
-      mf = M3.newA9(new float[] { -.5f,  .5f,  .5f,   
-                                   .5f, -.5f,  .5f,
-                                   .5f,  .5f, -.5f });
-      break;
-    case 'F':
-      mf = M3.newA9(new float[] { 0,    0.5f, 0.5f, 
-                                  0.5f, 0,    0.5f, 
-                                  0.5f, 0.5f, 0 });
-      break;
+    M3 mf = null;
+    if (type == 'r' || primitiveToCrystal == null) {
+      switch (type) {
+      default:
+        return false;
+      case 'r': // reciprocal
+        getReciprocal(uc, uc, 1);
+        return true;
+      case 'P':
+        toPrimitive = true;
+        mf = M3.newA9(new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
+        break;
+      case 'A':
+        mf = M3.newA9(new float[] { 1, 0, 0, 0, 0.5f, 0.5f, 0, -0.5f, 0.5f });
+        break;
+      case 'B':
+        mf = M3.newA9(new float[] { 0.5f, 0, 0.5f, 0, 1, 0, -0.5f, 0, 0.5f });
+        break;
+      case 'C':
+        mf = M3.newA9(new float[] { 0.5f, 0.5f, 0, -0.5f, 0.5f, 0, 0, 0, 1 });
+        break;
+      case 'R':
+        mf = M3.newA9(new float[] { 2 / 3f, -1 / 3f, -1 / 3f, 1 / 3f, 1 / 3f,
+            -2 / 3f, 1 / 3f, 1 / 3f, 1 / 3f });
+        break;
+      case 'I':
+        mf = M3.newA9(
+            new float[] { -.5f, .5f, .5f, .5f, -.5f, .5f, .5f, .5f, -.5f });
+        break;
+      case 'F':
+        mf = M3
+            .newA9(new float[] { 0, 0.5f, 0.5f, 0.5f, 0, 0.5f, 0.5f, 0.5f, 0 });
+        break;
+      }
+      if (!toPrimitive)
+        mf.invert();
+    } else {
+      mf = M3.newM3(primitiveToCrystal);
+      if (toPrimitive)
+        mf.invert();
     }
-    if (!toPrimitive)
-      mf.invert();
     for (int i = uc.length; --i >= offset;) {
       T3 p = uc[i];
       toFractional(p, false);
@@ -792,10 +803,10 @@ class UnitCell extends SimpleUnitCell {
    * @param latticeType  "A" "B" "C" "R" etc.
    * @return [origin va vb vc]
    */
-  public T3[] getConventionalUnitCell(String latticeType) {
+  public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCrystal) {
     T3[] oabc = getUnitCellVectors();
-    if (!latticeType.equals("P"))
-      toFromPrimitive(false, latticeType.charAt(0), oabc);
+    if (!latticeType.equals("P") || primitiveToCrystal != null)
+      toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
     return oabc;
   }
 

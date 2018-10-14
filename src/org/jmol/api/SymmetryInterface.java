@@ -208,7 +208,8 @@ public interface SymmetryInterface {
 
   public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
 
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc);
+  boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
+                          M3 primitiveToCrystal);
 
   public String getLatticeType();
 
@@ -225,6 +226,7 @@ public interface SymmetryInterface {
   String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
       throws Exception;
 
-  public T3[] getConventionalUnitCell(String latticeType);
+  public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
+
 
 }
