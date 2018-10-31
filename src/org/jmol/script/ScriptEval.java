@@ -4535,7 +4535,7 @@ public class ScriptEval extends ScriptExpr {
             .append(filename.substring(1)).append(" = ")
             .append(PT.esc((String) o)).append(";\n    ").appendSB(loadScript);
         htParams.put("fileData", o);
-      } else {
+      } else if (!isData) {
         filename = checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), 
             isAsync, filename, filePt, !isAppend && pc != pcResume);
         if (filename.startsWith("cache://")) 

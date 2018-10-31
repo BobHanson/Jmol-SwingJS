@@ -5237,11 +5237,19 @@ public class CmdExt extends ScriptExt {
   
   private void assign() throws ScriptException {
     int atomsOrBonds = tokAt(1);
-    int index = atomExpressionAt(2).nextSetBit(0);
-    int index2 = -1;
+    int index = -1, index2 = -1;
+    if (atomsOrBonds == T.atoms && tokAt(2) == T.string) {
+      // new Jmol 14.29.28
+      // assign "C" {0 0 0}
+      e.iToken++;
+      
+    } else {
+      index = atomExpressionAt(2).nextSetBit(0);
+      if (index < 0) {
+        return;
+      }
+    }
     String type = null;
-    if (index < 0)
-      return;
     if (atomsOrBonds == T.connect) {
       index2 = atomExpressionAt(++e.iToken).nextSetBit(0);
     } else {
@@ -5263,19 +5271,20 @@ public class CmdExt extends ScriptExt {
       assignConnect(index, index2);
     }
   }
-
   private void assignAtom(int atomIndex, P3 pt, String type) {
     if (type.equals("X"))
       vwr.setRotateBondIndex(-1);
-    if (vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
+    if (atomIndex >= 0 && vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
       return;
     vwr.clearModelDependentObjects();
     int ac = vwr.ms.ac;
     if (pt == null) {
+      if (atomIndex < 0)
+        return;
       vwr.sm.modifySend(atomIndex,
           vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
       // After this next command, vwr.modelSet will be a different instance
-      vwr.ms.assignAtom(atomIndex, type, true);
+      vwr.ms.assignAtom(atomIndex, type, true, true);
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
       vwr.sm.modifySend(atomIndex,
@@ -5283,18 +5292,22 @@ public class CmdExt extends ScriptExt {
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
       return;
     }
-    Atom atom = vwr.ms.at[atomIndex];
-    BS bs = BSUtil.newAndSetBit(atomIndex);
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+    BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
     P3[] pts = new P3[] { pt };
     Lst<Atom> vConnections = new Lst<Atom>();
-    vConnections.addLast(atom);
-    int modelIndex = atom.mi;
-    vwr.sm.modifySend(atomIndex, modelIndex, 3, e.fullCommand);
+    int modelIndex = -1;
+    if (atom != null) {
+      vConnections.addLast(atom);
+      modelIndex = atom.mi;
+      vwr.sm.modifySend(atomIndex, modelIndex, 3, e.fullCommand);
+    }
     try {
       bs = vwr.addHydrogensInline(bs, vConnections, pts);
       // new ModelSet here
-      atomIndex = bs.nextSetBit(0);
-      vwr.ms.assignAtom(atomIndex, type, false);
+      int atomIndex2 = bs.nextSetBit(0);
+        vwr.ms.assignAtom(atomIndex2, type, false, (atomIndex >= 0));
+      atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
     }
@@ -5328,8 +5341,8 @@ public class CmdExt extends ScriptExt {
     vwr.sm.modifySend(index, modelIndex, 2, e.fullCommand);
     vwr.ms.connect(connections);
     // note that vwr.ms changes during the assignAtom command 
-    vwr.ms.assignAtom(index, ".", true);
-    vwr.ms.assignAtom(index2, ".", true);
+    vwr.ms.assignAtom(index, ".", true, true);
+    vwr.ms.assignAtom(index2, ".", true, true);
     vwr.sm.modifySend(index, modelIndex, -2, "OK");
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }

@@ -661,7 +661,8 @@ public class ScriptManager implements JmolScriptManager {
   @Override
   public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts)
       throws Exception {
-    int modelIndex = vwr.ms.at[bsAtoms.nextSetBit(0)].mi;
+    int iatom = bsAtoms.nextSetBit(0);
+    int modelIndex = (iatom < 0 ? vwr.ms.mc - 1 : vwr.ms.at[iatom].mi);
     if (modelIndex != vwr.ms.mc - 1)
       return new BS();
 

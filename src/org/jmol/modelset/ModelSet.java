@@ -2961,7 +2961,7 @@ public class ModelSet extends BondCollection {
     mc = newModelCount;
   }
 
-  public void assignAtom(int atomIndex, String type, boolean autoBond) {
+  public void assignAtom(int atomIndex, String type, boolean autoBond, boolean addHsAndBond) {
     clearDB(atomIndex);
     if (type == null)
       type = "C";
@@ -2979,10 +2979,10 @@ public class ModelSet extends BondCollection {
 
     boolean isDelete = false;
     if (atomicNumber > 0) {
-      setElement(atom, atomicNumber, false);
+      setElement(atom, atomicNumber, !addHsAndBond);
       vwr.shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, vwr.rd,
           BSUtil.newAndSetBit(atomIndex));
-      setAtomName(atomIndex, type + atom.getAtomNumber(), false);
+      setAtomName(atomIndex, type + atom.getAtomNumber(), !addHsAndBond);
       if (vwr.getBoolean(T.modelkitmode))
         am[atom.mi].isModelKit = true;
       if (!am[atom.mi].isModelKit)
@@ -2997,6 +2997,9 @@ public class ModelSet extends BondCollection {
       return; // uninterpretable
     }
 
+    if (!addHsAndBond)
+      return;
+    
     // 2) delete noncovalent bonds and attached hydrogens for that atom.
 
     removeUnnecessaryBonds(atom, isDelete);
