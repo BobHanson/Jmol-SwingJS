@@ -392,7 +392,6 @@ all support for previous versions removed
         <uptodate targetfile="${appjars.dir}">
           <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
           <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
-          <srcfiles dir="${lib.dir}" includes="JSpecView.jar"/>
         </uptodate>
         <uptodate targetfile="build/libjars.timestamp"
                   srcfile="${appjars.dir}"/>
@@ -1199,8 +1198,6 @@ all support for previous versions removed
         <include name="Jmol.jar" />
         <include name="JmolData.jar" />
         <include name="JmolLib.jar" />
-      </fileset>
-      <fileset dir="jars">
         <include name="JSpecView.jar" />
       </fileset>
       <fileset dir=".">

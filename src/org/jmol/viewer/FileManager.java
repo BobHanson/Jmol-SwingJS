@@ -984,7 +984,7 @@ public class FileManager implements BytePoster {
   ///// DIRECTORY BUSINESS
   
   private static String addDirectory(String defaultDirectory, String name) {
-    if (defaultDirectory.length() == 0)
+    if (defaultDirectory.length() == 0 || defaultDirectory.equals("."))
       return name;
     char ch = (name.length() > 0 ? name.charAt(0) : ' ');
     String s = defaultDirectory.toLowerCase();
@@ -1465,6 +1465,10 @@ public class FileManager implements BytePoster {
      * @j2sNative
      * 
      * data = Jmol.Cache.get(key);
+     * 
+     * if (data == null && Jmol.getCachedJavaFile)
+     *   data = Jmol.getCachedJavaFile(key);
+     * 
      * 
      */
     {

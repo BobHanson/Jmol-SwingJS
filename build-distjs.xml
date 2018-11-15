@@ -2,7 +2,7 @@
  
    <property name="site.path" value="site/" />
    <property name="dist.path" value="dist/" />
-   <property name="jmolapp.zip" value="${dist.path}/jmol-app.zip" />	  	  	
+   <property name="jmolapp.zip" value="${dist.path}jmol-app.zip" />	  	  	
 
 
    <target name="todist" id="todist">
