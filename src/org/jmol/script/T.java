@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-03-13 12:01:07 -0500 (Tue, 13 Mar 2018) $
- * $Revision: 21871 $
+ * $Date: 2018-09-09 13:50:29 -0500 (Sun, 09 Sep 2018) $
+ * $Revision: 21934 $
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -704,11 +704,12 @@ public class T {
   public final static int unitcell         = 30 | 0 << 9 | mathfunc | mathproperty | shapeCommand | deprecatedparam | predefinedset | defaultON;
   public final static int within           = 31 | 0 << 9 | mathfunc;
   public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int __                = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
+  public final static int __               = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
   public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
+  public final static int intersection     = 35 | 0 << 9 | mathfunc;
 
 
-  // xxx(a)
+    // xxx(a)
   
   public final static int acos         = 2 | 1 << 9 | mathfunc;
   public final static int bondcount    = 3 | 1 << 9 | mathfunc | intproperty;
@@ -766,7 +767,6 @@ public class T {
   // xxx(a,b,c)
   
   public final static int hkl          = 1 | 3 << 9 | mathfunc;
-  public final static int intersection = 2 | 3 << 9 | mathfunc;
   public final static int prompt       = 3 | 3 << 9 | mathfunc | mathExpressionCommand;
   public final static int random       = 4 | 3 << 9 | mathfunc;
   public final static int select       = 5 | 3 << 9 | mathfunc | mathproperty | atomExpressionCommand;
