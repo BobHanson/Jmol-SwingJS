@@ -617,14 +617,14 @@ public class CrystalReader extends AtomSetCollectionReader {
    * @param isNewSet
    * @throws Exception
    */
-  private void readLatticeParams(boolean isNewSet) throws Exception {
+  private void readLatticeParams(boolean isPrimitive) throws Exception {
     float f = (line.indexOf("(BOHR") >= 0 ? ANGSTROMS_PER_BOHR : 1);
     
     // version change:
     //  LATTICE PARAMETERS (ANGSTROMS AND DEGREES) - BOHR = 0.5291772083 ANGSTROM
     //  PRIMITIVE CELL
 
-    if (isNewSet)
+    if (isPrimitive)
       newAtomSet();
     primitiveVolume = 0;
     primitiveDensity = 0;
@@ -638,7 +638,7 @@ public class CrystalReader extends AtomSetCollectionReader {
         }
       String[] tokens = PT.getTokens(rd());
       if (isSlab) {
-        if (isPrimitive)
+        if (isPrimitive) // primitive
           setUnitCell(parseFloatStr(tokens[0]) * f, parseFloatStr(tokens[1]) * f, -1,
               parseFloatStr(tokens[3]), parseFloatStr(tokens[4]),
               parseFloatStr(tokens[5]));
@@ -1121,7 +1121,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     boolean haveIntensities = (line.indexOf("INTENS") >= 0);
     rd();
     Lst<String[]> vData = new  Lst<String[]>();
-    int freqAtomCount = ac;
+    int freqAtomCount = (atomFrag == null ? ac : 0);
     while (rd() != null && line.length() > 0) {
       int i0 = parseIntRange(line, 1, 5);
       int i1 = parseIntRange(line, 6, 10);

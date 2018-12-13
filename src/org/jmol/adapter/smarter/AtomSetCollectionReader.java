@@ -1399,7 +1399,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
                                    int colWidth, int[] atomIndexes,
                                    int minLineLen, String[][] data)
       throws Exception {
-    boolean withSymmetry = (modelAtomCount != ac && data == null);
+    boolean withSymmetry = (ac != 0 && modelAtomCount != ac && data == null);
     if (ac == 0 && atomIndexes != null)
       ac = atomIndexes.length;
     int nLines = (isWide ? ac : ac * 3);
