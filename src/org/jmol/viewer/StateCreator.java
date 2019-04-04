@@ -1008,7 +1008,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append(";\n");
     }
     if (shape.mad >= 0)
-      commands.append(" set measurements " + (shape.mad / 2000f)).append(";\n");
+      commands.append(" set measurements ").appendF(shape.mad / 2000f).append(";\n");
     String s = getCommands(temp, null, "select measures");
     if (s != null && s.length() != 0) {
       commands.append(s);
@@ -1062,7 +1062,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : shape.bsSizeSet
           .nextSetBit(i + 1)))
         BSUtil.setMapBitSet(temp, i, i, "wireframe "
-            + ((r = bonds[i].mad) == 1 ? "on" : "" + (r / 2000f)));
+            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escF(r / 2000f)));
     }
     if (reportAll || bsOrderSet != null) {
       int i0 = (reportAll ? bondCount - 1 : bsOrderSet.nextSetBit(0));

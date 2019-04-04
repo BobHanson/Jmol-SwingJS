@@ -145,7 +145,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
     if (offsets == null)
       return null;
     
-    // Actually, O5T is never tested; it MUST have 05P. 
+    // Actually, O5T is never tested; it MUST have O5P. 
     // O5P is part of the mask that got us here.
     if (!checkOptional(offsets, O5P, firstAtomIndex, 
         specialAtomIndexes[JC.ATOMID_O5T_TERMINUS]))

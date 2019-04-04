@@ -170,8 +170,7 @@ public class ModelSet extends BondCollection {
   public ShapeManager sm;
 
   private static float hbondMinRasmol = 2.5f;
-  private static float hbondMaxReal = 3.5f;
-  private static float hbondHCMaxReal = 2.2f; // BH added 2018.10.13 Jmol 14.29.27
+  private static float hbondMaxReal = 2.5f;
 
   public boolean proteinStructureTainted;
 
@@ -2703,8 +2702,8 @@ public class ModelSet extends BondCollection {
   public int autoHbond(BS bsA, BS bsB, boolean onlyIfHaveCalculated) {
     if (onlyIfHaveCalculated) {
       BS bsModels = getModelBS(bsA, false);
-      for (int i = bsModels.nextSetBit(0); i >= 0 && onlyIfHaveCalculated; i = bsModels
-          .nextSetBit(i + 1))
+      for (int i = bsModels.nextSetBit(0); i >= 0
+          && onlyIfHaveCalculated; i = bsModels.nextSetBit(i + 1))
         onlyIfHaveCalculated = !am[i].hasRasmolHBonds;
       if (onlyIfHaveCalculated)
         return 0;
@@ -2743,14 +2742,20 @@ public class ModelSet extends BondCollection {
         }
       }
     }
-    float maxXYDistance = vwr.getFloat(T.hbondsdistancemaximum);
+    float dmax = vwr.getFloat(T.hbondsdistancemaximum);
+    float min2;
+    if (haveHAtoms) {
+      // ...set the max to be no greater than 2.5 Angstroms
+      if (dmax > hbondMaxReal)
+        dmax = hbondMaxReal;
+      min2 = 1f;
+    } else {
+      // default 3.25 for pseudo; user can make longer or shorter
+      min2 = hbondMinRasmol * hbondMinRasmol;
+    }
+    float max2 = dmax * dmax; // hxbondMax * hxbondMax
     float minAttachedAngle = (float) (vwr.getFloat(T.hbondsangleminimum)
         * Math.PI / 180);
-    float hbondMax2 = maxXYDistance * maxXYDistance;
-    float hbondMin2 = hbondMinRasmol * hbondMinRasmol;
-    float hxbondMin2 = 1;
-    float hxbondMax2 = (maxXYDistance > hbondMaxReal ? hbondMaxReal * hbondMaxReal : hbondMax2);
-    float hxbondMax = (maxXYDistance > hbondMaxReal ? hbondMaxReal : maxXYDistance);
     int nNew = 0;
     float d2 = 0;
     V3 v1 = new V3();
@@ -2761,46 +2766,44 @@ public class ModelSet extends BondCollection {
     P3 D = null;
     AtomIndexIterator iter = getSelectedAtomIterator(bsB, false, false, false,
         false);
-
     for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
       Atom atom = at[i];
       int elementNumber = atom.getElementNumber();
       boolean isH = (elementNumber == 1);
-      if (!isH && (haveHAtoms || elementNumber != 7 && elementNumber != 8)
-          || isH && !haveHAtoms)
+      // If this is an H atom, then skip if we don't have H atoms in set A
+      // If this is NOT an H atom, then skip if we have hydrogen atoms or this is not N or O
+      if (isH ? !haveHAtoms
+          : haveHAtoms || elementNumber != 7 && elementNumber != 8)
         continue;
-      float min2, max2, dmax;
+
       boolean firstIsCO;
       if (isH) {
+        firstIsCO = false;
         Bond[] b = atom.bonds;
         if (b == null)
           continue;
+        // must have OH or NH
         boolean isOK = false;
-        for (int j = 0; j < b.length && !isOK; j++) {
+        for (int j = 0; !isOK && j < b.length; j++) {
           Atom a2 = b[j].getOtherAtom(atom);
           int element = a2.getElementNumber();
           isOK = (element == 7 || element == 8);
         }
         if (!isOK)
           continue;
-        dmax = hxbondMax;
-        min2 = hxbondMin2;
-        max2 = hxbondMax2;
-        firstIsCO = false;
       } else {
-        dmax = maxXYDistance;
-        min2 = hbondMin2;
-        max2 = hbondMax2;
+        // check if the first atom is C=O
         firstIsCO = bsCO.get(i);
       }
       setIteratorForAtom(iter, -1, atom.i, dmax, null);
       while (iter.hasNext()) {
         Atom atomNear = at[iter.next()];
         int elementNumberNear = atomNear.getElementNumber();
-        if (atomNear == atom || !isH && elementNumberNear != 7
-            && elementNumberNear != 8 || isH && elementNumberNear == 1
-            || (d2 = iter.foundDistance2()) < min2 || d2 > max2 || firstIsCO
-            && bsCO.get(atomNear.i) || atom.isBonded(atomNear)) {
+        if (atomNear == atom
+            || (isH ? elementNumberNear == 1 : elementNumberNear != 7 && elementNumberNear != 8)
+            || (d2 = iter.foundDistance2()) < min2 || d2 > max2
+            || firstIsCO && bsCO.get(atomNear.i) 
+            || atom.isBonded(atomNear)) {
           continue;
         }
         if (minAttachedAngle > 0) {
@@ -2816,11 +2819,8 @@ public class ModelSet extends BondCollection {
         float energy = 0;
         short bo;
         if (isH && !Float.isNaN(C.x) && !Float.isNaN(D.x)) {
-          float ca = C.distance(atom);
-          if (ca > hbondHCMaxReal) // 2.2 Angstroms -- quite long for a hydrogen bond
-            continue;
           bo = Edge.BOND_H_CALC;
-          energy = HBond.getEnergy((float) Math.sqrt(d2), ca,
+          energy = HBond.getEnergy((float) Math.sqrt(d2), C.distance(atom),
               C.distance(D), atomNear.distance(D)) / 1000f;
         } else {
           bo = Edge.BOND_H_REGULAR;

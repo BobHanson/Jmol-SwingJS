@@ -632,8 +632,8 @@ class UnitCell extends SimpleUnitCell {
    * @param def
    *        String "abc;offset" or M3 or M4 to origin; if String, can be
    *        preceded by ! for "reverse of". For example,
-   *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional,
-   *        and can be a definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
+   *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
+   *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
    * 
    * @return [origin va vb vc]
    */
@@ -671,17 +671,19 @@ class UnitCell extends SimpleUnitCell {
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
       if (strans != null) {
-        String[] atrans = PT.split(strans+"0,0,0",",");
+        String[] atrans = PT.split(strans, ",");
         float[] ftrans = new float[3];
-        for (int j = 0; j < 3; j++) {
-          String s = atrans[j];
-          int sfpt = s.indexOf("/"); 
-          if (sfpt >= 0) {
-            ftrans[j] = PT.parseFloat(s.substring(0, sfpt)) / PT.parseFloat(s.substring(sfpt + 1));
-          } else {
-            ftrans[j] = PT.parseFloat(s);
+        if (atrans.length == 3)
+          for (int j = 0; j < 3; j++) {
+            String s = atrans[j];
+            int sfpt = s.indexOf("/");
+            if (sfpt >= 0) {
+              ftrans[j] = PT.parseFloat(s.substring(0, sfpt))
+                  / PT.parseFloat(s.substring(sfpt + 1));
+            } else {
+              ftrans[j] = PT.parseFloat(s);
+            }
           }
-        }
         P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
         m.setTranslation(ptrans);
       }
@@ -700,8 +702,8 @@ class UnitCell extends SimpleUnitCell {
         m3.rotate(pts[i]);
       }
       return pts;
-    }   
-    
+    }
+
     // We have an operator that may need reversing.
     // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
 
