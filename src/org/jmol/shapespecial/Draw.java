@@ -1276,6 +1276,11 @@ private void initDraw() {
       x <<= 1;
       y <<= 1;
     }
+    
+    int action = moveAll ? ActionManager.ACTION_dragDrawObject : ActionManager.ACTION_dragDrawPoint;
+    if (vwr.acm.userActionEnabled(action) 
+    		&& !vwr.acm.userAction(action, new Object[] { "draw", mesh.thisID, new int[] {x, y, iVertex} } ))
+    	return;
     P3 pt = new P3();
     int ptVertex = vertexes[iVertex];
     P3 coord = P3.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3) mesh.altVertices[ptVertex]);
