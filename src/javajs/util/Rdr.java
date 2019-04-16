@@ -45,7 +45,6 @@ import javajs.api.Interface;
 
 import javajs.api.GenericCifDataParser;
 import javajs.api.GenericLineReader;
-import javajs.api.GenericZipTools;
 
 /**
  * A general helper class for a variety of stream and reader functionality
@@ -357,30 +356,6 @@ public class Rdr implements GenericLineReader {
 						: o instanceof String ? getBIS(((String) o).getBytes()) : null);
 	}
 
-
-  /**
-   * Drill down into a GZIP stack until no more layers.
-   * @param jzt 
-   * 
-   * @param bis
-   * @return non-gzipped buffered input stream.
-   * 
-   * @throws IOException
-   */
-  public static BufferedInputStream getUnzippedInputStream(GenericZipTools jzt, BufferedInputStream bis) throws IOException {
-    while (isGzipS(bis))
-      bis = new BufferedInputStream(jzt.newGZIPInputStream(bis));
-    return bis;
-  }
-
-  public static BufferedInputStream getUnzippedInputStreamBZip2(GenericZipTools jzt,
-                                                                BufferedInputStream bis) throws IOException  {
-    while (isBZip2S(bis))
-      bis = new BufferedInputStream(jzt.newBZip2InputStream(bis));
-    return bis;
-  }
-
-
   /**
    * Allow for base64-encoding check.
    * 
@@ -519,67 +494,6 @@ public class Rdr implements GenericLineReader {
    * @return same stream or byte stream
    */
 
-  /**
-   * Retrieve the two numbers in a PNG iTXt tag indicating the 
-   * file pointer for the start of the ZIP data as well as its length.
-   * 
-   * @param bis
-   * @param pt_count
-   */
-  static void getPngZipPointAndCount(BufferedInputStream bis, int[] pt_count) {
-    bis.mark(75);
-    try {
-      byte[] data = getLimitedStreamBytes(bis, 74);
-      bis.reset();
-      int pt = 0;
-      for (int i = 64, f = 1; --i > 54; f *= 10)
-        pt += (data[i] - '0') * f;
-      int n = 0;
-      for (int i = 74, f = 1; --i > 64; f *= 10)
-        n += (data[i] - '0') * f;
-      pt_count[0] = pt;
-      pt_count[1] = n;
-    } catch (Throwable e) {
-      pt_count[1] = 0;
-    }
-  }
-
-  /**
-   * Either advance a PNGJ stream to its zip file data or pull out the ZIP data
-   * bytes and create a new stream for them from which a ZIP utility can start
-   * extracting files.
-   * 
-   * @param bis
-   * @param asNewStream  
-   * @return new buffered ByteArrayInputStream, possibly with no data if there is an error
-   */
-  public static BufferedInputStream getPngZipStream(BufferedInputStream bis, boolean asNewStream) {
-    if (!isPngZipStream(bis))
-      return bis;
-    byte[] data = new byte[0];
-    bis.mark(75);
-    try {
-      int pt_count[] = new int[2];
-      getPngZipPointAndCount(bis, pt_count);
-      if (pt_count[1] != 0) {
-        int pt = pt_count[0];
-        while (pt > 0)
-          pt -= bis.skip(pt);
-        if (!asNewStream)
-          return bis;
-        data = getLimitedStreamBytes(bis, pt_count[1]);
-      }
-    } catch (Throwable e) {
-    } finally {
-      try {
-        if (asNewStream)
-          bis.close();
-      } catch (Exception e) {
-        // ignore
-      }
-    }
-    return getBIS(data);
-  }
 
   /** We define a request for zip file extraction by vertical bar:
    *  zipName|interiorFileName. These may be nested if there is a

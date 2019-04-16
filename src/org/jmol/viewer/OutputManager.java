@@ -14,6 +14,7 @@ import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
@@ -1009,7 +1010,7 @@ abstract class OutputManager {
                                  Hashtable<Object, String> crcMap,
                                  boolean isSparDir, String newName, int ptSlash,
                                  Lst<Object> v) {
-     Integer crcValue = Integer.valueOf(vwr.getJzt().getCrcValue(ret));
+     Integer crcValue = Integer.valueOf(ZipTools.getCrcValue(ret));
      // only add to the data list v when the data in the file is new
      if (crcMap.containsKey(crcValue)) {
        // let newName point to the already added data
@@ -1074,7 +1075,7 @@ abstract class OutputManager {
         bos = new BufferedOutputStream(out);
       }
       FileManager fm = vwr.fm;
-      OutputStream zos = (OutputStream) vwr.getJzt().getZipOutputStream(bos);
+      OutputStream zos = (OutputStream) ZipTools.getZipOutputStream(bos);
       for (int i = 0; i < fileNamesAndByteArrays.size(); i += 3) {
         String fname = (String) fileNamesAndByteArrays.get(i);
         byte[] bytes = null;
@@ -1101,7 +1102,7 @@ abstract class OutputManager {
           continue;
         }
         fileList += key;
-        vwr.getJzt().addZipEntry(zos, fnameShort);
+        ZipTools.addZipEntry(zos, fnameShort);
         int nOut = 0;
         if (bytes == null) {
           // get data from disk
@@ -1120,7 +1121,7 @@ abstract class OutputManager {
           nOut += bytes.length;
         }
         nBytesOut += nOut;
-        vwr.getJzt().closeZipEntry(zos);
+        ZipTools.closeZipEntry(zos);
         Logger.info("...added " + fname + " (" + nOut + " bytes)");
       }
       zos.flush();

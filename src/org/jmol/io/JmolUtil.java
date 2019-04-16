@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javajs.api.GenericZipTools;
 import javajs.util.AU;
 import javajs.util.CompoundDocument;
 import javajs.util.Lst;
@@ -42,6 +41,7 @@ import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.api.GenericPlatform;
@@ -210,7 +210,6 @@ public class JmolUtil {
     try {
       SB spartanData = (isSpartanZip(zipDirectory) ? vwr.fm.spartanUtil()
           .getData(is, zipDirectory) : null);
-      GenericZipTools zpt = vwr.getJzt();
       Object ret;
       if (spartanData != null) {
         BufferedReader reader = Rdr.getBR(spartanData.toString());
@@ -233,9 +232,9 @@ public class JmolUtil {
           return null;
         return "unknown reader error";
       }
-      if (is instanceof BufferedInputStream)
-        is = Rdr.getPngZipStream((BufferedInputStream) is, true);
-      ZipInputStream zis = (ZipInputStream) zpt.newZipInputStream(is);
+      if (is instanceof BufferedInputStream && Rdr.isPngZipStream(is))
+        is = ZipTools.getPngZipStream((BufferedInputStream) is, true);
+      ZipInputStream zis = (ZipInputStream) ZipTools.newZipInputStream(is);
       ZipEntry ze;
       if (haveManifest)
         manifest = '|' + manifest.replace('\r', '|').replace('\n', '|') + '|';
@@ -255,11 +254,11 @@ public class JmolUtil {
         //        String s = new String(bytes);
         //        System.out.println("ziputil " + s.substring(0, 100));
         if (Rdr.isGzipB(bytes))
-          bytes = Rdr.getLimitedStreamBytes(zpt.getUnGzippedInputStream(bytes),
+          bytes = Rdr.getLimitedStreamBytes(ZipTools.getUnGzippedInputStream(bytes),
               -1);
         if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes)) {
           BufferedInputStream bis = Rdr.getBIS(bytes);
-          String[] zipDir2 = zpt.getZipDirectoryAndClose(bis, "JmolManifest");
+          String[] zipDir2 = ZipTools.getZipDirectoryAndClose(bis, "JmolManifest");
           bis = Rdr.getBIS(bytes);
           Object atomSetCollections = getAtomSetCollectionOrBufferedReaderFromZip(
               vwr, bis, fileName + "|" + thisEntry, zipDir2, htParams,
@@ -295,7 +294,7 @@ public class JmolUtil {
           if (Rdr.isCompoundDocumentB(bytes)) {
             CompoundDocument jd = (CompoundDocument) Interface
                 .getInterface("javajs.util.CompoundDocument", vwr, "file");
-            jd.setDocStream(zpt, Rdr.getBIS(bytes));
+            jd.setDocStream(Rdr.getBIS(bytes));
             sData = jd.getAllDataFiles("Molecule", "Input").toString();
           } else {
             // could be a PNGJ file with an internal pdb.gz entry, for instance
@@ -417,8 +416,8 @@ public class JmolUtil {
     String shortName = shortSceneFilename(data[0]);
     Map<String, Object> cache = fm.pngjCache;
     try {
-      data[1] = fm.vwr.getJzt().cacheZipContents(
-          Rdr.getPngZipStream((BufferedInputStream) fm
+      data[1] = ZipTools.cacheZipContents(
+          ZipTools.getPngZipStream((BufferedInputStream) fm
               .getBufferedInputStreamOrErrorMessageFromName(data[0], null,
                   false, false, null, false, true), true), shortName, cache,
           false);

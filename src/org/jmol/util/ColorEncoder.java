@@ -107,7 +107,7 @@ import javajs.util.P3;
 
   private final static String[] colorSchemes = {
     "roygb", "bgyor", 
-    BYELEMENT_JMOL, BYELEMENT_RASMOL, BYRESIDUE_SHAPELY, 
+    BYELEMENT_JMOL, BYELEMENT_RASMOL, BYRESIDUE_SHAPELY,
     BYRESIDUE_AMINO, 
     "rwb", "bwr", "low", "high", "bw", "wb", "friendly",
     // custom

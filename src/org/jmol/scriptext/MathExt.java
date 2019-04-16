@@ -47,6 +47,7 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
@@ -1769,7 +1770,7 @@ public class MathExt {
         propertyName = "atomInfo." + propertyName;
     }
     Object propertyValue = "";
-    if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
+    if (propertyName.equalsIgnoreCase("fileContents") && args.length >= 2) {
       String s = SV.sValue(args[1]);
       for (int i = 2; i < args.length; i++)
         s += "|" + SV.sValue(args[i]);
@@ -3531,7 +3532,7 @@ public class MathExt {
         vwr.createZip(null, type, params);
         BufferedInputStream bis = Rdr.getBIS(oc.toByteArray());
         params = new Hashtable<String, Object>();
-        vwr.getJzt().readFileAsMap(bis, params, null);
+        ZipTools.readFileAsMap(bis, params, null);
         return mp.addXMap(params);
       }
       break;

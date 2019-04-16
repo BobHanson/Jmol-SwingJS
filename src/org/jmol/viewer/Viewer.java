@@ -36,7 +36,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import javajs.api.GenericCifDataParser;
-import javajs.api.GenericZipTools;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 
@@ -9764,15 +9763,15 @@ public class Viewer extends JmolViewer
     return getAnnotationParser(false).getAtomValidation(this, type, atom);
   }
 
-  private GenericZipTools jzt;
-
-  public GenericZipTools getJzt() {
-    return (jzt == null
-        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
-            this, "zip")
-        : jzt);
-  }
-
+//  private GenericZipTools jzt;
+//
+//  public GenericZipTools getJzt() {
+//    return (jzt == null
+//        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
+//            this, "zip")
+//        : jzt);
+//  }
+//
   void dragMinimizeAtom(int iAtom) {
     stopMinimization();
     BS bs = (getMotionFixedAtoms().isEmpty()

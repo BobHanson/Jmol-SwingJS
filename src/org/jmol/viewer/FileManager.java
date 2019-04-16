@@ -46,6 +46,7 @@ import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.adapter.readers.spartan.SpartanUtil;
 import org.jmol.api.GenericFileInterface;
@@ -666,29 +667,29 @@ public class FileManager implements BytePoster {
         return t;
       BufferedInputStream bis = (BufferedInputStream) t;
       if (Rdr.isGzipS(bis))
-        bis = Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
+        bis = ZipTools.getUnzippedInputStream(bis);
       // if we have a subFileList, we don't want to return the stream for the zip file itself
       else if (Rdr.isBZip2S(bis))
-        bis = Rdr.getUnzippedInputStreamBZip2(vwr.getJzt(), bis);
+        bis = ZipTools.getUnzippedInputStreamBZip2(bis);
       // if we have a subFileList, we don't want to return the stream for the zip file itself
       if (forceInputStream && subFileList == null)
         return bis;
       if (Rdr.isCompoundDocumentS(bis)) {
         // very specialized reader; assuming we have a Spartan document here
-        CompoundDocument doc = (CompoundDocument) Interface.getInterface(
-            "javajs.util.CompoundDocument", vwr, "file");
-        doc.setDocStream(vwr.getJzt(), bis);
+        CompoundDocument doc = new CompoundDocument();
+        doc.setDocStream(bis);
         String s = doc.getAllDataFiles("Molecule", "Input").toString();
         return (forceInputStream ? Rdr.getBIS(s.getBytes()) : Rdr.getBR(s));
       }
       // check for PyMOL or MMTF
       if (Rdr.isMessagePackS(bis) || Rdr.isPickleS(bis))
         return bis;
-      bis = Rdr.getPngZipStream(bis, true);
+      if (Rdr.isPngZipStream(bis))
+        bis = ZipTools.getPngZipStream(bis, true);
       if (Rdr.isZipS(bis)) {
         if (allowZipStream)
-          return vwr.getJzt().newZipInputStream(bis);
-        Object o = vwr.getJzt().getZipFileDirectory(bis, subFileList, 1,
+          return ZipTools.newZipInputStream(bis);
+        Object o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
             forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
@@ -709,7 +710,7 @@ public class FileManager implements BytePoster {
   public String[] getZipDirectory(String fileName, boolean addManifest, boolean allowCached) {
     Object t = getBufferedInputStreamOrErrorMessageFromName(fileName, fileName,
         false, false, null, false, allowCached);
-    return vwr.getJzt().getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
+    return ZipTools.getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
   public Object getFileAsBytes(String name, OC out) {
@@ -738,8 +739,7 @@ public class FileManager implements BytePoster {
         BufferedInputStream bis = (BufferedInputStream) t;
         bytes = (out != null || subFileList == null || subFileList.length <= 1
             || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) ? Rdr
-            .getStreamAsBytes(bis, out) : vwr.getJzt()
-            .getZipFileContentsAsBytes(bis, subFileList, 1));
+            .getStreamAsBytes(bis, out) : ZipTools.getZipFileContentsAsBytes(bis, subFileList, 1));
         bis.close();
       } catch (Exception ioe) {
         return ioe.toString();
@@ -777,7 +777,7 @@ public class FileManager implements BytePoster {
       }
     }
     try {
-      vwr.getJzt().readFileAsMap((BufferedInputStream) t, bdata, name);
+      ZipTools.readFileAsMap((BufferedInputStream) t, bdata, name);
       
     } catch (Exception e) {
       bdata.clear();
