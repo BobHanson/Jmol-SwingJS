@@ -818,6 +818,22 @@ public class ScriptEval extends ScriptExpr {
     return o;
   }
 
+  public static SV runUserAction(String functionName, Object[] params, Viewer vwr) {
+    ScriptEval ev = (new ScriptEval()).setViewer(vwr);
+    JmolScriptFunction func = vwr.getFunction(functionName.toLowerCase());
+    if (func == null)
+      return null;
+    try {
+      Lst<SV> svparams = SV.getVariableAO(params).getList();
+      ev.restoreFunction(func, svparams, null);
+      ev.dispatchCommands(false, true, false);
+    } catch (ScriptException e) {
+      return null;
+    }
+    SV ret = ev.getContextVariableAsVariable("_retval", false);
+    return (ret == null ? SV.vT : ret);
+  }
+    
   private Object evaluate(Object expr, boolean asVariable, boolean compileOnly) {
     try {
       if (expr instanceof String) {
@@ -3895,6 +3911,10 @@ public class ScriptEval extends ScriptExpr {
     if (chk && !isCmdLine_c_or_C_Option)
       return;
     String name = ((String) getToken(0).value).toLowerCase();
+    if (tokAt(1) == T.opEQ && tokAt(2) == T.none) {
+      vwr.removeFunction(name);
+      return;
+    }
     if (!vwr.isFunction(name))
       error(ERROR_commandExpected);
     Lst<SV> params = (slen == 1 || slen == 3 && tokAt(1) == T.leftparen
