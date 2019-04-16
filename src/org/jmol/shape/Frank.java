@@ -95,7 +95,7 @@ public class Frank extends Shape {
   }
   
   void calcMetrics() {
-    if (Viewer.isJS)
+    if (Viewer.isJS || Viewer.isSwingJS)
       frankString = "JSmol";
     else if (vwr.isSignedApplet)
       frankString = "Jmol_S";
