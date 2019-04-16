@@ -36,6 +36,8 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.MeasurementPending;
+import org.jmol.script.SV;
+import org.jmol.script.ScriptEval;
 import org.jmol.script.T;
 import org.jmol.thread.HoverWatcherThread;
 import org.jmol.util.BSUtil;
@@ -2064,6 +2066,25 @@ public class ActionManager implements EventManager {
   @Override
   public boolean keyTyped(int keyChar, int modifiers) {
     return false;
+  }
+
+  public boolean userActionEnabled(int action) {
+    return vwr.isFunction(getActionName(action));
+  }
+
+  /**
+   * If the user has created a function to handle this action, 
+   * run it and cancel action processing if that function returns an explicit FALSE;
+   * 
+   * @param action
+   * @param params
+   * @return true to continue with the standard action
+   */
+  public boolean userAction(int action, Object[] params) {
+    if (!userActionEnabled(action))
+        return false;
+    SV result = ScriptEval.runUserAction(getActionName(action), params, vwr);
+    return result != SV.vF;
   }
 
 }
