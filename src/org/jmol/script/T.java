@@ -3820,7 +3820,7 @@ public class T {
       return false;
     T t = (T) o;
     if (tok == t.tok)
-      return (t.intValue == intValue && (tok == integer || t.value
+      return (t.intValue == intValue && (tok == integer || tok == on || tok == off || t.value
           .equals(value)));
     switch (tok) {
     case integer:
