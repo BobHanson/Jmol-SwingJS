@@ -1024,7 +1024,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     public synchronized void insertString(int offs, String str, AttributeSet a)
         throws BadLocationException {
       int ichNewline = str.indexOf('\n');
-      if (ichNewline != 0) {
+      // BH fix 2019.04.16 -- only SwingJS
+      if (ichNewline != 0 || str.length() > 0) {
         if (offs < offsetAfterPrompt) {
           offs = getLength();
         }
