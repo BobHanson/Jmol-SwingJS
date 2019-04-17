@@ -2069,7 +2069,7 @@ public class ActionManager implements EventManager {
   }
 
   public boolean userActionEnabled(int action) {
-    return vwr.isFunction(getActionName(action));
+    return vwr.isFunction(getActionName(action).toLowerCase());
   }
 
   /**
@@ -2084,7 +2084,7 @@ public class ActionManager implements EventManager {
     if (!userActionEnabled(action))
         return false;
     SV result = ScriptEval.runUserAction(getActionName(action), params, vwr);
-    return result != SV.vF;
+    return !SV.vF.equals(result);
   }
 
 }
