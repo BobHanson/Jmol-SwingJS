@@ -113,7 +113,7 @@ abstract public class AtomCollection {
   private int nSurfaceAtoms;
   private int surfaceDistanceMax;
 
-  protected P3 averageAtomPoint;
+//  protected P3 averageAtomPoint;
 
   protected boolean haveChirality;
 
@@ -1071,7 +1071,7 @@ abstract public class AtomCollection {
   public void validateBspf(boolean isValid) {
     if (bspf != null)
       bspf.isValid = isValid;
-    averageAtomPoint = null;
+    //averageAtomPoint = null;
   }
 
   void validateBspfForModel(int modelIndex, boolean isValid) {
