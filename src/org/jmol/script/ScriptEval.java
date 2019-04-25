@@ -1918,6 +1918,9 @@ public class ScriptEval extends ScriptExpr {
     if (vwr.autoExit)
       return;
     stopScriptThreads();
+    if (vwr.captureParams != null && millis > 0) {
+      vwr.captureParams.put("captureDelayMS", Integer.valueOf(millis));
+    }
     scriptDelayThread = new ScriptDelayThread(this, vwr, millis);
     scriptDelayThread.run();
   }

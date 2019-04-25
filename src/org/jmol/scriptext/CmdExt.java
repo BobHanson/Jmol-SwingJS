@@ -811,6 +811,7 @@ public class CmdExt extends ScriptExt {
     boolean isTransparent = (tok == T.translucent);
     if (isTransparent)
       tok = tokAt(++i);
+    String s = null;
     switch (tok == T.nada ? (tok = T.end) : tok) {
     case T.string:
       fileName = e.optParameterAsString(i++);
@@ -843,11 +844,13 @@ public class CmdExt extends ScriptExt {
         tok = tokAt(++i);
       }
       switch (tokAt(i)) {
+      case T.script:
+        s = stringParameter(++i);
+        break;
       case T.rock:
         isRock = true;
         //$FALL-THROUGH$
       case T.spin:
-        String s = null;
         String axis = "y";
         looping = true;
         i++;
@@ -871,13 +874,8 @@ public class CmdExt extends ScriptExt {
         vwr.setNavigationMode(false);
         if (axis == "" || "xyz".indexOf(axis) < 0)
           axis = "y";
-        boolean wf = vwr.g.waitForMoveTo;
-        s = "set waitformoveto true;" + PT.rep(s, "Y", axis)
-            + ";set waitformoveto " + wf;
-        s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) + " LOOP;"
-             + s + ";capture end;";
-        e.cmdScript(0, null, s);
-        return;
+        s = PT.rep(s,  "Y", axis);
+        break;
       case T.decimal:
       case T.integer:
         endTime = floatParameter(i++);
@@ -885,13 +883,23 @@ public class CmdExt extends ScriptExt {
       }
       if (chk)
         return;
+      if (s != null) {
+        boolean wf = vwr.g.waitForMoveTo;
+        s = "set waitformoveto true;" + s
+            + ";set waitformoveto " + wf;
+        s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) 
+            + (looping ? " LOOP;": ";")
+             + s + ";capture end;";
+        e.cmdScript(0, null, s);
+        return;
+      }
       mode = T.movie;
       params = new Hashtable<String, Object>();
       int fps = vwr.getInt(T.animationfps);
       if (streaming) {
         params.put("streaming", Boolean.TRUE);
         if (!looping)
-          showString(GT.o(GT.$("Note: Enable looping using {0}"),
+          showString(GT.o(GT.$("Note: Enable looping using the LOOP keyword just after the file name or {0}"),
               new Object[] { "ANIMATION MODE LOOP" }));
         showString(GT.o(GT.$("Animation delay based on: {0}"),
             new Object[] { "ANIMATION FPS " + fps }));
@@ -929,8 +937,7 @@ public class CmdExt extends ScriptExt {
       msg = "canceled";
     Logger.info(msg);
   }
-
-
+  
   private void centerAt() throws ScriptException {
     int tok = getToken(1).tok;
     switch (tok) {

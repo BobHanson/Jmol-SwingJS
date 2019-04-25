@@ -164,8 +164,15 @@ public class GifEncoder extends ImageEncoder {
     case 1: // add 
       addHeader = false;
       addTrailer = false;
-      int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
-      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
+      Integer msDelay = (Integer) params.get("captureDelayMS");
+      if (msDelay == null) {
+        int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
+        delayTime100ths = (fps == 0 ? 0 : 100 / fps);
+      } else {
+        // one-time frame delay
+        delayTime100ths = msDelay.intValue() / 10;
+        params.remove("captureDelayMS");
+      }
       looping = (Boolean.FALSE != params.get("captureLooping"));
       break;
     case 2: // end
