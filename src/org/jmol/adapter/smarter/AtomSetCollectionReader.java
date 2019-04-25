@@ -1329,6 +1329,29 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
+   * fills a double[3][3] 
+   * 
+   * @param tokens or null if to read each line for three values (as last 3 on line)
+   * @param pt initial index; if tokens == null, then negative index is from end of each line
+   * @return double[3][3]
+   * @throws Exception
+   */
+  protected double[][] fill3x3(String[] tokens, int pt) throws Exception {
+    double[][] a = new double[3][3];
+    boolean needTokens = (tokens == null);
+    int pt0 = pt;
+    for (int i = 0; i < 3; i++) {
+      if (needTokens || pt >= tokens.length) {
+        while ((tokens = PT.getTokens(rd())).length < 3){}
+        pt = (pt0 < 0 ? tokens.length + pt0 : pt0);
+      }
+      for (int j = 0; j < 3; j++)
+        a[i][j] = Double.valueOf(tokens[pt++]).doubleValue();
+    }
+    return a;
+  }
+
+  /**
    * fills a float array with string data from a file
    * @param s     string data containing floats
    * @param width column width or 0 to read tokens

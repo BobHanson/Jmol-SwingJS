@@ -180,11 +180,9 @@ class IsoMOReader extends AtomDataReader {
     //    if (line.indexOf("%F") >= 0)
     //    line = PT.formatStringS(line, "F", params.fileName);
     if (line.indexOf("%I") >= 0)
-      line = PT.formatStringS(
-          line,
-          "I",
-          params.qm_moLinearCombination == null ? "" + params.qm_moNumber : QS
-              .getMOString(params.qm_moLinearCombination));
+      line = PT.formatStringS(line, "I",
+          params.qm_moLinearCombination == null ? "" + params.qm_moNumber
+              : QS.getMOString(params.qm_moLinearCombination));
     if (line.indexOf("%N") >= 0)
       line = PT.formatStringS(line, "N", "" + params.qmOrbitalCount);
     Float energy = null;
@@ -207,45 +205,53 @@ class IsoMOReader extends AtomDataReader {
       if (mo.containsKey("energy"))
         energy = (Float) mo.get("energy");
     }
-
-    if (line.indexOf("%E") >= 0)
-      line = PT.formatStringS(line, "E", energy != null && ++rep != 0 ? ""
-          + energy : "");
+    if (line.indexOf("%E") >= 0) {
+      line = PT.formatStringS(line, "E",
+          energy != null && ++rep != 0 ? "" + energy : "");
+    } else if (energy != null) {
+        String s = PT.formatStringF(line, "E", energy.floatValue());
+        if (s != line) {
+          line = s;
+          rep++;
+        }
+    }
     if (line.indexOf("%U") >= 0)
-      line = PT.formatStringS(line, "U",
-          energy != null && params.moData.containsKey("energyUnits")
-              && ++rep != 0 ? (String) params.moData.get("energyUnits") : "");
+      line = PT
+          .formatStringS(line, "U",
+              energy != null && params.moData.containsKey("energyUnits")
+                  && ++rep != 0 ? (String) params.moData.get("energyUnits")
+                      : "");
     if (line.indexOf("%L") >= 0) {
       String[] labels = (String[]) params.moData.get("nboLabels");
-      line = PT.formatStringS(line, "L", (labels != null
-          && params.qm_moNumber > 0 && ++rep != 0 ?
-      labels[(params.qm_moNumber - 1) % labels.length] : ""));
+      line = PT.formatStringS(line, "L",
+          (labels != null && params.qm_moNumber > 0 && ++rep != 0
+              ? labels[(params.qm_moNumber - 1) % labels.length]
+              : ""));
     }
     if (line.indexOf("%S") >= 0)
-      line = PT.formatStringS(
-          line,
-          "S",
-          mo != null && mo.containsKey("symmetry") && ++rep != 0 ? ""
-              + mo.get("symmetry") : "");
+      line = PT.formatStringS(line, "S",
+          mo != null && mo.containsKey("symmetry") && ++rep != 0
+              ? "" + mo.get("symmetry")
+              : "");
     if (line.indexOf("%O") >= 0) {
       Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
       float o = (obj == null ? 0 : obj.floatValue());
-      line = PT.formatStringS(
-          line,
-          "O",
-          obj != null && ++rep != 0 ? (o == (int) o ? "" + (int) o : PT
-              .formatF(o, 0, 4, false, false)) : "");
+      line = PT.formatStringS(line, "O", obj != null && ++rep != 0
+          ? (o == (int) o ? "" + (int) o : PT.formatF(o, 0, 4, false, false))
+          : "");
     }
     if (line.indexOf("%T") >= 0)
-      line = PT.formatStringS(line, "T", mo != null && mo.containsKey("type")
-          && ++rep != 0 ? "" + mo.get("type") : "");
+      line = PT.formatStringS(line, "T",
+          mo != null && mo.containsKey("type") && ++rep != 0
+              ? "" + mo.get("type")
+              : "");
     if (line.equals("string")) {
       params.title[iLine] = "";
       return;
     }
     boolean isOptional = (line.indexOf("?") == 0);
-    params.title[iLine] = (!isOptional ? line : rep > 0
-        && !line.trim().endsWith("=") ? line.substring(1) : "");
+    params.title[iLine] = (!isOptional ? line
+        : rep > 0 && !line.trim().endsWith("=") ? line.substring(1) : "");
   }
 
   private final float[] vDist = new float[3];
@@ -371,7 +377,6 @@ class IsoMOReader extends AtomDataReader {
 
   private boolean qSetupDone;
 
-  @SuppressWarnings("unchecked")
   private boolean setupCalculation() {
     qSetupDone = true;
     switch (params.qmOrbitalType) {

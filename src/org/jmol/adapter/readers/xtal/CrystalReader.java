@@ -322,7 +322,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     }
 
     if (isProperties && line.startsWith("   ATOM N.AT.")) {
-      if (doGetModel(++modelNumber, null) ? readAtoms() : checkLastModel());
+      return (doGetModel(++modelNumber, null) ? readAtoms() : checkLastModel());
     }
 
     if (!doProcessLines)
@@ -614,7 +614,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   /**
    * Read the lattice parameters.
    * 
-   * @param isNewSet
+   * @param isPrimitive
    * @throws Exception
    */
   private void readLatticeParams(boolean isPrimitive) throws Exception {

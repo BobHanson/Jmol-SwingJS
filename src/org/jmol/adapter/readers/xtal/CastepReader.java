@@ -584,14 +584,9 @@ public class CastepReader extends AtomSetCollectionReader {
   }
 
   private void getTensor(Atom atom, String line0) throws Exception {
-    float[] data = new float[9];
-    double[][] a = new double[3][3];
-    fillFloatArray(line0, 0, data);
-    Logger.info("tensor " +  atom.atomName 
-        + "\t" +Escape.eAF(data)); 
-    for (int p = 0, i = 0; i < 3; i++)
-      for (int j = 0; j < 3; j++)
-        a[i][j] = data[p++];
+    line0 += rd() + rd();
+    Logger.info("tensor " +  atom.atomName + " " + line0); 
+    double[][] a = fill3x3(PT.getTokens(line0), 0);
     atom.addTensor((new Tensor()).setFromAsymmetricTensor(a, "charge", atom.atomName + " " + line0), null, false);
     if (!haveCharges)
       appendLoadNote("Ellipsoids set \"charge\": Born Effective Charges");

@@ -299,10 +299,7 @@ public class MagresReader extends AtomSetCollectionReader {
     String id = atomName1;
     if (atomName2 != null)
       id += "//" + atomName2;
-    double[][] a = new double[3][3];
-    for (int i = 0; i < 3; i++)
-      for (int j = 0; j < 3; j++)
-        a[i][j] = Double.valueOf(tokens[pt++]).doubleValue();
+    double[][] a = fill3x3(tokens, pt);
     Atom a1 = asc.getAtomFromName(atomName1);
     if (a1 == null)
       return true;
@@ -319,4 +316,5 @@ public class MagresReader extends AtomSetCollectionReader {
     t.setAtomIndexes(a1.index, (a2 == null ? -1 : a2.index));
     return true;
   }
+
 }
