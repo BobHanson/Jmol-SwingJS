@@ -1025,7 +1025,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
         throws BadLocationException {
       int ichNewline = str.indexOf('\n');
       // BH fix 2019.04.16 -- only SwingJS
-      if (ichNewline != 0 || str.length() > 0) {
+      if (ichNewline != 0 || str != "\n" && str.length() > 0) {
         if (offs < offsetAfterPrompt) {
           offs = getLength();
         }
