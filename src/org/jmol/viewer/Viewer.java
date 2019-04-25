@@ -6526,8 +6526,8 @@ public class Viewer extends JmolViewer
     // break;
     case T.allowkeystrokes:
       // 11.7.24
-      if (g.disablePopupMenu)
-        value = false;
+//      if (g.disablePopupMenu)
+//        value = false;
       g.allowKeyStrokes = value;
       break;
     case T.dragselected:
