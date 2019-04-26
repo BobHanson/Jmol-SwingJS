@@ -469,7 +469,7 @@ public class SmilesGenerator {
           Edge[] bb = ((Node) atomA).getEdges();
           for (int b = 0; b < bb.length; b++) {
             SimpleNode other;
-            if (bb[b].getCovalentOrder() != 1 || (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
+            if (bb[b].getCovalentOrder() != 1 || !explicitH && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
                 && other.getIsotopeNumber() == 0)
               continue;
             edges[j][edgeCount++] = bb[b];
