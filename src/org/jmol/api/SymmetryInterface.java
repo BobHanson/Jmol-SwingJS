@@ -15,6 +15,7 @@ import javajs.util.V3;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Tensor;
 import org.jmol.viewer.Viewer;
 
@@ -227,6 +228,8 @@ public interface SymmetryInterface {
       throws Exception;
 
   public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
+
+  public void setUnitCell(Symmetry uc);
 
 
 }

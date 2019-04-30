@@ -59,7 +59,7 @@ import org.jmol.viewer.Viewer;
  * 
  */
 
-class UnitCell extends SimpleUnitCell {
+class UnitCell extends SimpleUnitCell implements Cloneable {
   
   private P3[] vertices; // eight corners
   private P3 fractionalOffset;
@@ -810,6 +810,15 @@ class UnitCell extends SimpleUnitCell {
     if (!latticeType.equals("P") || primitiveToCrystal != null)
       toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
     return oabc;
+  }
+
+  public static UnitCell cloneUnitCell(UnitCell uc) {
+    UnitCell ucnew = null;
+    try {
+      ucnew = (UnitCell) uc.clone();
+    } catch (CloneNotSupportedException e) {
+    }
+    return ucnew;
   }
 
 }

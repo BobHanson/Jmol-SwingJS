@@ -1202,7 +1202,7 @@ public class SymmetryDesc {
       if (type == T.point || type == T.atoms) {
         if (isBio)
           return ret;
-        symTemp.setUnitCell(uc.getUnitCellParams(), false);
+        symTemp.setUnitCell(uc);
         pt = P3.newP(pt);
         uc.toFractional(pt, false);
         if (Float.isNaN(pt.x))
