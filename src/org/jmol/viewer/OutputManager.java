@@ -379,14 +379,16 @@ abstract class OutputManager {
     if (!vwr.haveAccess(ACCESS.ALL))
       return null;
     boolean isCache = (fileName != null && fileName.startsWith("cache://"));
-    if (fileName != null && !isCache) {
+    boolean isRemote = (fileName != null && 
+        (fileName.startsWith("http://") || fileName.startsWith("https://")));
+    if (fileName != null && !isCache && !isRemote) {
       fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
       if (fileName == null)
         return null;
     }
     if (fullPath != null)
       fullPath[0] = fileName;
-    String localName = (OC.isLocal(fileName) || isCache ? fileName : null);
+    String localName = (isCache || isRemote || OC.isLocal(fileName) ? fileName : null);
     try {
       return openOutputChannel(privateKey, localName, false, false);
     } catch (IOException e) {
@@ -617,7 +619,7 @@ abstract class OutputManager {
     boolean useDialog = fileName.startsWith("?");
     if (useDialog)
     	fileName = fileName.substring(1);
-    useDialog |= vwr.isApplet && (fileName.indexOf("http:") < 0);
+    useDialog |= (vwr.isApplet && fileName.indexOf("http:") != 0 && fileName.indexOf("https:") != 0);
     fileName = FileManager.getLocalPathForWritingFile(vwr, fileName);
     if (useDialog)
       fileName = vwr.dialogAsk(quality == Integer.MIN_VALUE ? "Save"
