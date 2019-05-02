@@ -79,12 +79,12 @@ public class MolReader extends AtomSetCollectionReader {
 
   private boolean optimize2D;
   private boolean haveAtomSerials;
-  protected String dimension;
   protected boolean allow2D = true;
   private int iatom0;
   private V3000Rdr vr;
   private int atomCount;
   private String[] atomData;
+  private boolean is2D;
 
   @Override
   public void initializeReader() throws Exception {
@@ -161,14 +161,12 @@ public class MolReader extends AtomSetCollectionReader {
     if (line == null)
       return;
     header += line + "\n";
-    dimension = (line.length() < 22 ? "3D" : line.substring(20, 22));
-    if (dimension.equals("2D")) {
+    set2D(line.length() >= 22 && line.substring(20, 22).equals("2D"));
+    if (is2D) {
       if (!allow2D)
         throw new Exception("File is 2D, not 3D");
       appendLoadNote("This model is 2D. Its 3D structure has not been generated.");
     }
-    asc.setInfo("dimension", dimension);
-    
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.
     rd();
@@ -188,7 +186,7 @@ public class MolReader extends AtomSetCollectionReader {
     if (rd() == null)
       return;
     if (line.indexOf("V3000") >= 0) {
-      optimize2D = (dimension.equals("2D"));
+      optimize2D = is2D;
       vr = ((V3000Rdr) getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr")).set(this);
       discardLinesUntilContains("COUNTS");
       vr.readAtomsAndBonds(getTokens());
@@ -215,6 +213,13 @@ public class MolReader extends AtomSetCollectionReader {
       x = parseFloatRange(line, 0, 10);
       y = parseFloatRange(line, 10, 20);
       z = parseFloatRange(line, 20, 30);
+      // CTFile doc for V3000:
+      // The “dimensional code” is maintained more explicitly. 
+      // Thus “3D” really means 3D,
+      // although “2D” will be interpreted as 3D if 
+      // any non-zero Z-coordinates are found.
+      if (is2D && z != 0)
+        set2D(false);
       if (len < 34) {
         // deal with older Mol format where nothing after the symbol is used
         elementSymbol = line.substring(31).trim();
@@ -245,7 +250,7 @@ public class MolReader extends AtomSetCollectionReader {
       }
       addMolAtom(iAtom, isotope, elementSymbol, charge, x, y, z);
     }
-
+    asc.setModelInfoForSet("dimension", (is2D ? "2D" : "3D"), asc.iSet);
     rd();
     if (line.startsWith("V  ")) {
       readAtomValues();
@@ -294,6 +299,11 @@ public class MolReader extends AtomSetCollectionReader {
     }
     if (!molData.isEmpty())
       asc.setCurrentModelInfo("molData", molData);
+  }
+
+  private void set2D(boolean b) {
+    is2D = b;
+    asc.setInfo("dimension", (b ? "2D" : "3D"));
   }
 
   /**
