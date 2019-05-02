@@ -541,9 +541,15 @@ public class CrystalReader extends AtomSetCollectionReader {
 
     isVersion3 = (line.indexOf("CRYSTAL03") >= 0);
     discardLinesUntilContains("EEEEEEEEEE");
+    discardLinesUntilContains("EEEEEEEEEE");
+    rd();
+    while (line.startsWith(" INFORMATION") || line.startsWith(" WARNING")) {
+      rd();
+    }
     String name;
-    if (rd().length() == 0) {
-      name = readLines(2).trim();
+    if (line.length() == 0) {
+      discardLinesUntilContains("*********");
+      name = rd().trim();
     } else {
       name = line.trim();
       rd();

@@ -240,6 +240,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
     }
   }
 
+  @Override
   public void write(int b) {
     // required by standard ZipOutputStream -- do not use, as it will break JavaScript methods
     if (os == null)
@@ -251,6 +252,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
     byteCount++;
   }
 
+  @Override
   public void write(byte[] b) {
     // not used in JavaScript due to overloading problem there
     write(b, 0, b.length);
@@ -262,7 +264,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
   }
 
   @Override
-  @SuppressWarnings({ "unused" })
+  @SuppressWarnings({ "unused", "null" })
   public String closeChannel() {
     if (closed)
       return null;
@@ -301,6 +303,13 @@ public class OC extends OutputStream implements GenericOutputChannel {
       return (sb == null ? null : sb.toString());
     }
     closed = true;
+    if (!isLocalFile) {
+      String ret = postByteArray(); // unsigned applet could do this
+      if (ret.startsWith("java.net"))
+        byteCount = -1;
+      return ret;
+    }
+    // local file save
     J2SObjectInterface jmol = null;
     Object _function = null;
     /**
@@ -310,14 +319,6 @@ public class OC extends OutputStream implements GenericOutputChannel {
      *            this.fileName : null);
      * 
      */
-    {
-      if (!isLocalFile) {
-        String ret = postByteArray(); // unsigned applet could do this
-        if (ret.startsWith("java.net"))
-          byteCount = -1;
-        return ret;
-      }
-    }
     if (jmol != null) {
       Object data = (sb == null ? toByteArray() : sb.toString());
       if (_function == null)
@@ -360,8 +361,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
   }
 
   private String postByteArray() {
-    byte[] bytes = (sb == null ? toByteArray() : sb.toString().getBytes());
-    return bytePoster.postByteArray(fileName, bytes);
+    return bytePoster.postByteArray(fileName, (sb == null ? toByteArray() : sb.toString().getBytes()));
   }
 
   public final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:",
