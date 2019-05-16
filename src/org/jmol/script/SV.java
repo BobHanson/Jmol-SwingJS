@@ -637,10 +637,10 @@ public class SV extends T implements JSONEncodable {
     case decimal:
     case varray:
     case string:
-//    case point3f: this makes not sense, and breaks 1/x
-//    case point4f:
-//    case matrix3f:
-//    case matrix4f:
+    case point3f:
+    case point4f:
+    case matrix3f:
+    case matrix4f:
       return (int) fValue(x);
     case bitset:
       return bsSelectToken(x).cardinality();

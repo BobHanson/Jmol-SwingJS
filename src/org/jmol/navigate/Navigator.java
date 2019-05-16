@@ -109,118 +109,9 @@ public final class Navigator extends JmolThread implements
     navigationList = list;
     iList = 0;
     isStep = false;
-    run();
-  }
-
-  private void nextList(int i, P3 ptTemp) {
-    Object[] o = navigationList.get(i);
-    float seconds = ((Float) o[1]).floatValue();
-    int tok = ((Integer) o[0]).intValue();
-    switch (tok) {
-    case T.point:
-      P3 pt = (P3) o[2];
-      if (seconds == 0) {
-        tm.setNavigatePt(pt);
-        vwr.moveUpdate(0);
-        return;
-      }
-      navigateTo(seconds, null, Float.NaN, pt, Float.NaN, Float.NaN, Float.NaN);
-      break;
-    case T.path:
-      P3[] path = (P3[]) o[2];
-      float[] theta = (float[]) o[3];
-      int indexStart = ((int[]) o[4])[0];
-      int indexEnd = ((int[]) o[4])[1];
-      navigate(seconds, null, path, theta, indexStart, indexEnd);
-      break;
-    case T.trace:
-      /*
-       * follows a path guided by orientation and offset vectors (as Point3fs)
-       */
-      P3[][] pathGuide = ((P3[][]) o[2]);
-      navigate(seconds, pathGuide, null, null, 0, Integer.MAX_VALUE);
-      break;
-    case T.rotate:
-      V3 rotAxis = (V3) o[2];
-      float degrees = ((Float) o[3]).floatValue();
-      if (seconds == 0) {
-        navigateAxis(rotAxis, degrees);
-        vwr.moveUpdate(0);
-        return;
-      }
-      navigateTo(seconds, rotAxis, degrees, null, Float.NaN, Float.NaN,
-          Float.NaN);
-      break;
-    case T.translate:
-    case T.percent: 
-      if (tok == T.translate) {
-        tm.transformPt3f((P3) o[2], ptTemp);        
-      } else {
-        ptTemp.x = ((Float) o[2]).floatValue();
-        ptTemp.y = ((Float) o[3]).floatValue();
-        setNavPercent(ptTemp);
-      }
-      if (seconds == 0) {
-        navTranslatePercentOrTo(-1, ptTemp.x, ptTemp.y);
-        vwr.moveUpdate(0);
-        return;
-      }
-      navigateTo(seconds, null, Float.NaN, null, Float.NaN, ptTemp.x, ptTemp.y);
-      break;
-    case T.depth:
-      float percent = ((Float) o[2]).floatValue();
-      navigateTo(seconds, null, Float.NaN, null, percent, Float.NaN, Float.NaN);
-      break;
-    }
-  }
-
-  private void setNavPercent(P3 pt1) {
-    tm.transformPt3f(tm.navigationCenter, tm.navigationOffset);
-    float x = pt1.x;
-    float y = pt1.y;
-    if (!Float.isNaN(x))
-      x = tm.width * x / 100f
-          + (Float.isNaN(y) ? tm.navigationOffset.x : (tm.width / 2f));
-    if (!Float.isNaN(y))
-      y = tm.height * y / 100f
-          + (Float.isNaN(x) ? tm.navigationOffset.y : tm.getNavPtHeight());
-    pt1.x = x;
-    pt1.y = y;
-  }
-
-  @Override
-  public void navigateTo(float seconds, V3 axis, float degrees,
-                         P3 center, float depthPercent, float xTrans,
-                         float yTrans) {
-    /*
-     * Orientation o = vwr.getOrientation(); if (!Float.isNaN(degrees) &&
-     * degrees != 0) navigate(0, axis, degrees); if (center != null) {
-     * navigate(0, center); } if (!Float.isNaN(xTrans) || !Float.isNaN(yTrans))
-     * navTranslatePercent(-1, xTrans, yTrans); if (!Float.isNaN(depthPercent))
-     * setNavigationDepthPercent(depthPercent); Orientation o1 =
-     * vwr.getOrientation(); o.restore(0, true);
-     * o1.restore(floatSecondsTotal, true);
-     */
-
-    floatSecondsTotal = seconds;
-    this.axis = axis;
-    this.degrees = degrees;
-    this.center = center;
-    this.depthPercent = depthPercent;
-    this.xTrans = xTrans;
-    this.yTrans = yTrans;
-    setupNavTo();
-    isStep = true;
-    run();
-  }
-
-  @Override
-  public void navigate(float seconds, P3[][] pathGuide, P3[] path,
-                       float[] theta, int indexStart, int indexEnd) {
-    //this.theta = theta;
-    floatSecondsTotal = seconds;
-    setupNav(seconds, pathGuide, path, indexStart, indexEnd);
-    isStep = true;
+    stopped = false;
+    if (isJS)
+      useTimeout = true;
     run();
   }
 
@@ -239,7 +130,7 @@ public final class Navigator extends JmolThread implements
         mode = CHECK2;
         break;
       case CHECK2:
-        nextList(iList, ptTemp);
+        nextList(navigationList.get(iList), ptTemp);
         return;
       case MAIN:
         if (stopped || iStep >= totalSteps) {
@@ -276,6 +167,125 @@ public final class Navigator extends JmolThread implements
         resumeEval();
         return;
       }
+  }
+
+  /**
+   * 
+   * @param o Object[] {int tok, Float seconds, ...}
+   * @param ptTemp
+   */
+  private void nextList(Object[] o, P3 ptTemp) {
+    int tok = ((Integer) o[0]).intValue();
+    float seconds = ((Float) o[1]).floatValue();
+    switch (tok) {
+    case T.point:
+      // Object[] { T.point, Float seconds, P3 pt }
+      P3 pt = (P3) o[2];
+      if (seconds == 0) {
+        tm.setNavigatePt(pt);
+        vwr.moveUpdate(0);
+        return;
+      }
+      navigateTo(seconds, null, Float.NaN, pt, Float.NaN, Float.NaN, Float.NaN);
+      break;
+    case T.path:
+      // Object[] { T.path, Float seconds, P3[] path, float[] theta, int[] {indexStart, indexEnd} }
+      P3[] path = (P3[]) o[2];
+      float[] theta = (float[]) o[3];
+      int indexStart = ((int[]) o[4])[0];
+      int indexEnd = ((int[]) o[4])[1];
+      navigate(seconds, null, path, theta, indexStart, indexEnd);
+      break;
+    case T.trace:
+      // Object[] { T.trace, Float seconds, P3[][] pathGuide }
+      // follows a path guided by orientation and offset vectors (as Point3fs)
+      P3[][] pathGuide = ((P3[][]) o[2]);
+      navigate(seconds, pathGuide, null, null, 0, Integer.MAX_VALUE);
+      break;
+    case T.rotate:
+      // Object[] { T.rotate, Float seconds, V3 rotAxis, Float degrees }
+      V3 rotAxis = (V3) o[2];
+      float degrees = ((Float) o[3]).floatValue();
+      if (seconds == 0) {
+        navigateAxis(rotAxis, degrees);
+        vwr.moveUpdate(0);
+        return;
+      }
+      navigateTo(seconds, rotAxis, degrees, null, Float.NaN, Float.NaN,
+          Float.NaN);
+      break;
+    case T.translate:
+    case T.percent: 
+      if (tok == T.translate) {
+        // Object[] { T.translate, Float seconds, P3 pt }
+        tm.transformPt3f((P3) o[2], ptTemp);        
+      } else {
+        // Object[] { T.percent, Float seconds, Float x, Float y }
+        ptTemp.x = ((Float) o[2]).floatValue();
+        ptTemp.y = ((Float) o[3]).floatValue();
+        setNavPercent(ptTemp);
+      }
+      if (seconds == 0) {
+        navTranslatePercentOrTo(-1, ptTemp.x, ptTemp.y);
+        vwr.moveUpdate(0);
+        return;
+      }
+      navigateTo(seconds, null, Float.NaN, null, Float.NaN, ptTemp.x, ptTemp.y);
+      break;
+    case T.depth:
+      // Object[] { T.depth, Float percent }
+      float percent = ((Float) o[2]).floatValue();
+      navigateTo(seconds, null, Float.NaN, null, percent, Float.NaN, Float.NaN);
+      break;
+    }
+  }
+
+  private void navigate(float seconds, P3[][] pathGuide, P3[] path,
+                        float[] theta, int indexStart, int indexEnd) {
+     //this.theta = theta;
+     floatSecondsTotal = seconds;
+     setupNav(seconds, pathGuide, path, indexStart, indexEnd);
+     isStep = true;
+     run();
+   }
+
+  private void navigateTo(float seconds, V3 axis, float degrees,
+                          P3 center, float depthPercent, float xTrans,
+                          float yTrans) {
+     /*
+      * Orientation o = vwr.getOrientation(); if (!Float.isNaN(degrees) &&
+      * degrees != 0) navigate(0, axis, degrees); if (center != null) {
+      * navigate(0, center); } if (!Float.isNaN(xTrans) || !Float.isNaN(yTrans))
+      * navTranslatePercent(-1, xTrans, yTrans); if (!Float.isNaN(depthPercent))
+      * setNavigationDepthPercent(depthPercent); Orientation o1 =
+      * vwr.getOrientation(); o.restore(0, true);
+      * o1.restore(floatSecondsTotal, true);
+      */
+
+     floatSecondsTotal = seconds;
+     this.axis = axis;
+     this.degrees = degrees;
+     this.center = center;
+     this.depthPercent = depthPercent;
+     this.xTrans = xTrans;
+     this.yTrans = yTrans;
+     setupNavTo();
+     isStep = true;
+     run();
+   }
+
+  private void setNavPercent(P3 pt1) {
+    tm.transformPt3f(tm.navigationCenter, tm.navigationOffset);
+    float x = pt1.x;
+    float y = pt1.y;
+    if (!Float.isNaN(x))
+      x = tm.width * x / 100f
+          + (Float.isNaN(y) ? tm.navigationOffset.x : (tm.width / 2f));
+    if (!Float.isNaN(y))
+      y = tm.height * y / 100f
+          + (Float.isNaN(x) ? tm.navigationOffset.y : tm.getNavPtHeight());
+    pt1.x = x;
+    pt1.y = y;
   }
 
   private void doNavStep(int iStep) {

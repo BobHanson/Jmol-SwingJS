@@ -233,7 +233,7 @@ public class CmdExt extends ScriptExt {
       // TODO: This will disallow some motion commands
       //       within a TRY/CATCH block in JavaScript, and
       //       the code will block. 
-      se.allowJSThreads = false;
+      se.setAllowJSThreads(false);
       se.dispatchCommands(false, false, false);
     } catch (Exception ex) {
       e.vwr.setStringProperty("_errormessage", "" + ex);

@@ -231,14 +231,19 @@ public class ScriptEval extends ScriptExpr {
   
   private JmolThread scriptDelayThread, fileLoadThread;
 
-  public boolean allowJSThreads = true;
-  private boolean isFuncReturn;
+  private boolean allowJSThreads = true;
 
   @Override
   public boolean getAllowJSThreads() {
     return allowJSThreads;
   }
   
+  public void setAllowJSThreads(boolean b) {
+    allowJSThreads = b;
+  }
+
+  private boolean isFuncReturn;
+
   // execution options:
   
   public boolean historyDisabled; // set by ScriptExt.evaluateParallel
@@ -335,6 +340,8 @@ public class ScriptEval extends ScriptExpr {
   // for specific commmands:
   
   private boolean forceNoAddHydrogens;
+
+  private boolean isEmbedded;
   
 
   public ScriptEval() {
@@ -388,7 +395,7 @@ public class ScriptEval extends ScriptExpr {
     this.historyDisabled = historyDisabled;
     this.outputBuffer = outputBuffer;
     currentThread = Thread.currentThread();
-    allowJSThreads = allowThreads & !vwr.getBoolean(T.nodelay);
+    setAllowJSThreads(allowThreads & !vwr.getBoolean(T.nodelay));
     this.listCommands = listCommands;
     timeBeginExecution = System.currentTimeMillis();
     executionStopped = executionPaused = false;
@@ -581,7 +588,7 @@ public class ScriptEval extends ScriptExpr {
     pushContext(null, "runScriptBuffer");
     contextPath += " >> script() ";
     this.outputBuffer = outputBuffer;
-    allowJSThreads = false;
+    setAllowJSThreads(false);
     boolean fret = this.isFuncReturn;
     this.isFuncReturn |= isFuncReturn;    
     if (compileScript(null, script + JC.SCRIPT_EDITOR_IGNORE
@@ -643,6 +650,10 @@ public class ScriptEval extends ScriptExpr {
 
   @Override
   public void haltExecution() {
+    if (isEmbedded) {
+      vwr.setBooleanProperty("allowEmbeddedScripts", true);
+      isEmbedded = false;
+    }
     resumePausedExecution();
     executionStopped = true;
   }
@@ -808,7 +819,7 @@ public class ScriptEval extends ScriptExpr {
       e.thisContext = thisContext;
       e.contextVariables = contextVariables;
       e.pushContext(null, "evalExp");
-      e.allowJSThreads = false;
+      e.setAllowJSThreads(false);
     } catch (ScriptException e1) {
       //ignore
     }
@@ -1079,7 +1090,7 @@ public class ScriptEval extends ScriptExpr {
     }
     pushContext(null, "runFunctionAndRet ");
     if (allowJSThreads)
-      allowJSThreads = allowThreads;
+      setAllowJSThreads(allowThreads);
     boolean isTry = (function.getTok() == T.trycmd);
     thisContext.isTryCatch = isTry;
     thisContext.isFunction = !isTry;
@@ -4974,6 +4985,7 @@ public class ScriptEval extends ScriptExpr {
         setStringProperty("_loadScript", script);
         script = "allowEmbeddedScripts = false;try{" + script
             + "} allowEmbeddedScripts = true;";
+        isEmbedded = !isCmdLine_c_or_C_Option;
     } else {
       setStringProperty("_loadScript", "");
     }
