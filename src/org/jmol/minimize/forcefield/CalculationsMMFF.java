@@ -29,6 +29,7 @@ import javajs.util.PT;
 
 import java.util.Map;
 
+import org.jmol.minimize.MMConstraint;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
@@ -56,7 +57,7 @@ class CalculationsMMFF extends Calculations {
   CalculationsMMFF(ForceField ff, Map<Object, Object> ffParams, 
       MinAtom[] minAtoms, MinBond[] minBonds, 
       MinAngle[] minAngles, MinTorsion[] minTorsions, MinPosition[] minPositions,
-      Lst<Object[]> constraints) {
+      Lst<MMConstraint> constraints) {
     super(ff, minAtoms, minBonds, minAngles, minTorsions, minPositions, constraints);
     mmff = (ForceFieldMMFF) ff;
     this.ffParams = ffParams;

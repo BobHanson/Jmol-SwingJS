@@ -27,6 +27,8 @@ package org.jmol.minimize.forcefield;
 import java.util.Map;
 
 import javajs.util.BS;
+
+import org.jmol.minimize.MMConstraint;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
@@ -51,8 +53,8 @@ abstract class Calculations {
 
   final static int CALC_DISTANCE = 0; 
   final static int CALC_ANGLE = 1; 
-  final static int CALC_STRETCH_BEND = 2;
-  final static int CALC_TORSION = 3;  // first 4 are calculated for constraint energies
+  final static int CALC_TORSION = 2; // first 3 are calculated for constraint energies
+  final static int CALC_STRETCH_BEND = 3; 
   final static int CALC_OOP = 4;
   final static int CALC_VDW = 5;
   final static int CALC_ES = 6;
@@ -80,18 +82,17 @@ abstract class Calculations {
   MinBond[] minBonds;
   MinAngle[] minAngles;
   MinTorsion[] minTorsions;
-  MinPosition[] minPositions;
-  Lst<Object[]> constraints;
+  private MinPosition[] minPositions;
+//  private Lst<MMConstraint> constraints;
+  private MMConstraint[][] constraintsByType;
+  private boolean haveConstraints;
+  
   boolean isPreliminary;
-
-  public void setConstraints(Lst<Object[]> constraints) {
-    this.constraints = constraints;
-  }
 
   Calculations(ForceField ff, 
       MinAtom[] minAtoms, MinBond[] minBonds,
       MinAngle[] minAngles, MinTorsion[] minTorsions, MinPosition[] minPositions,
-      Lst<Object[]> constraints) {
+      Lst<MMConstraint> constraints) {
     this.ff = ff;
     this.minAtoms = minAtoms;
     this.minBonds = minBonds;
@@ -102,7 +103,7 @@ abstract class Calculations {
     bondCount = minBonds.length;
     angleCount = minAngles.length;
     torsionCount = minTorsions.length;
-    this.constraints = constraints;
+    setConstraints(constraints);
   }
 
   abstract boolean setupCalculations();
@@ -110,6 +111,27 @@ abstract class Calculations {
   abstract String getUnits();
 
   abstract double compute(int iType, Object[] dataIn);
+
+  public void setConstraints(Lst<MMConstraint> constraints) {
+    if (constraints == null || constraints.isEmpty())
+      return;
+    constraintsByType = new MMConstraint[][] { null, null, null }; 
+    haveConstraints = true;
+    @SuppressWarnings("unchecked")
+    Lst<MMConstraint>[] lists = new Lst[3];
+    
+    for (int i = 0, n = constraints.size(); i < n; i++) {
+      MMConstraint c = constraints.get(i);
+      if (lists[c.type] == null)
+        lists[c.type] = new Lst<MMConstraint>();
+      lists[c.type].addLast(c); 
+    }
+    for (int type = CALC_DISTANCE; type <= CALC_TORSION; type++) {
+      Lst<MMConstraint> list = lists[type];
+      if (list != null)
+        constraintsByType[type] = list.toArray(new MMConstraint[list.size()]);
+    }
+  }
 
   void addForce(V3d v, int i, double dE) {
     minAtoms[i].force[0] += v.x * dE;
@@ -160,7 +182,7 @@ abstract class Calculations {
     }
   }
 
-  private double calc(int iType, boolean gradients) {
+  private double calc(int iType, boolean gradients, boolean canConstrain) {
     logging = loggingEnabled && !silent;
     this.gradients = gradients;
     Lst<Object[]> calcs = calculations[iType];
@@ -174,7 +196,7 @@ abstract class Calculations {
       energy += compute(iType, calculations[iType].get(ii));
     if (logging)
       appendLogData(getDebugFooter(iType, energy));
-    if (constraints != null && iType <= CALC_TORSION)
+    if (canConstrain && haveConstraints && constraintsByType[iType] != null)
       energy += constraintEnergy(iType);
     return energy;
   }
@@ -184,23 +206,23 @@ abstract class Calculations {
   }
 
   double energyBond(boolean gradients) {
-    return calc(CALC_DISTANCE, gradients);
+    return calc(CALC_DISTANCE, gradients, true);
   }
 
   double energyAngle(boolean gradients) {
-    return calc(CALC_ANGLE, gradients);
+    return calc(CALC_ANGLE, gradients, true);
   }
 
   double energyTorsion(boolean gradients) {
-    return calc(CALC_TORSION, gradients);
+    return calc(CALC_TORSION, gradients, true);
   }
 
   double energyStretchBend(boolean gradients) {
-    return calc(CALC_STRETCH_BEND, gradients);
+    return calc(CALC_STRETCH_BEND, gradients, false);
   }
 
   double energyOOP(boolean gradients) {
-    return calc(CALC_OOP, gradients);
+    return calc(CALC_OOP, gradients, false);
   }
 
 //  double energyPos(boolean gradients) {
@@ -208,11 +230,11 @@ abstract class Calculations {
 //  }
 
   double energyVDW(boolean gradients) {
-    return calc(CALC_VDW, gradients);
+    return calc(CALC_VDW, gradients, false);
   }
 
   double energyES(boolean gradients) {
-    return calc(CALC_ES, gradients);
+    return calc(CALC_ES, gradients, false);
   }
 
   final V3d da = new V3d();
@@ -230,18 +252,14 @@ abstract class Calculations {
 
   private double constraintEnergy(int iType) {
 
+    MMConstraint[] constraints = constraintsByType[iType];
     double value = 0;
     double k = 0;
     double energy = 0;
-
-    for (int i = constraints.size(); --i >= 0;) {
-      Object[] c = constraints.get(i);
-      int nAtoms = ((int[]) c[0])[0];
-      if (nAtoms != iType + 2)
-        continue;
-      int[] minList = (int[]) c[1];
-      double targetValue = ((Float) c[2]).doubleValue();
-
+    for (int i = constraints.length; --i >= 0;) {
+      MMConstraint c = constraints[i];
+      int[] minList = c.minList;
+      double targetValue = c.value;
       switch (iType) {
       case CALC_TORSION:
         id = minList[3];
@@ -260,6 +278,7 @@ abstract class Calculations {
           db.setA(minAtoms[ib].coord);
           da.setA(minAtoms[ia].coord);
         }
+        break;
       }
 
       k = 10000.0;
@@ -317,62 +336,64 @@ abstract class Calculations {
   }
 
   void getConstraintList() {
-    if (constraints == null || constraints.size() == 0)
+    if (constraintsByType == null)
       return;
     appendLogData("C O N S T R A I N T S\n---------------------");
-    for (int i = constraints.size(); --i >= 0;) {
-      Object[] c = constraints.get(i);
-      int[] indexes = (int[]) c[0];
-      int[] minList = (int[]) c[1];
-      double targetValue = ((Float) c[2]).doubleValue();
-      int iType = indexes[0] - 2;
-      switch (iType) {
-      case CALC_TORSION:
-        id = minList[3];
-        //$FALL-THROUGH$
-      case CALC_ANGLE:
-        ic = minList[2];
-        //$FALL-THROUGH$
-      case CALC_DISTANCE:
-        ib = minList[1];
-        ia = minList[0];
-      }
-      switch (iType) {
-      case CALC_DISTANCE:
-        appendLogData(PT.sprintf("%3d %3d  %-5s %-5s  %12.6f",
-            "ssFI", new Object[] {
-                minAtoms[ia].atom.getAtomName(),
-                minAtoms[ib].atom.getAtomName(),
-                new float[] { (float) targetValue },
-                new int[] { minAtoms[ia].atom.getAtomNumber(),
-                    minAtoms[ib].atom.getAtomNumber(), } }));
-        break;
-      case CALC_ANGLE:
-        appendLogData(PT.sprintf("%3d %3d %3d  %-5s %-5s %-5s  %12.6f",
-            "sssFI", new Object[] { 
-                minAtoms[ia].atom.getAtomName(),
-                minAtoms[ib].atom.getAtomName(),
-                minAtoms[ic].atom.getAtomName(),
-                new float[] { (float) targetValue },
-                new int[] { minAtoms[ia].atom.getAtomNumber(),
-                    minAtoms[ib].atom.getAtomNumber(),
-                    minAtoms[ic].atom.getAtomNumber(), } }));
-        break;
-      case CALC_TORSION:
-        appendLogData(PT
-            .sprintf(
-                "%3d %3d %3d %3d  %-5s %-5s %-5s %-5s  %3d %8.3f     %8.3f     %8.3f     %8.3f",
-                "ssssFI", new Object[] { 
-                    minAtoms[ia].atom.getAtomName(),
-                    minAtoms[ib].atom.getAtomName(),
-                    minAtoms[ic].atom.getAtomName(),
-                    minAtoms[id].atom.getAtomName(),
-                    new float[] { (float) targetValue },
-                    new int[] { minAtoms[ia].atom.getAtomNumber(),
-                        minAtoms[ib].atom.getAtomNumber(),
-                        minAtoms[ic].atom.getAtomNumber(),
-                        minAtoms[id].atom.getAtomNumber() } }));
-        break;
+    for (int type = CALC_DISTANCE; type <= CALC_TORSION; type++) {
+      MMConstraint[] constraints = constraintsByType[type];
+      if (constraints == null)
+        continue;
+      for (int i = 0, n = constraints.length; i < n; i++) {
+        MMConstraint c = constraints[i];
+        //int[] indexes = c.indexes;
+        int[] minList = c.minList;
+        double targetValue = c.value;
+        switch (c.type) {
+        case CALC_TORSION:
+          id = minList[3];
+          //$FALL-THROUGH$
+        case CALC_ANGLE:
+          ic = minList[2];
+          //$FALL-THROUGH$
+        case CALC_DISTANCE:
+          ib = minList[1];
+          ia = minList[0];
+        }
+        switch (c.type) {
+        case CALC_DISTANCE:
+          appendLogData(PT.sprintf("%3d %3d  %-5s %-5s  %12.6f", "ssFI",
+              new Object[] { minAtoms[ia].atom.getAtomName(),
+                  minAtoms[ib].atom.getAtomName(),
+                  new float[] { (float) targetValue },
+                  new int[] { minAtoms[ia].atom.getAtomNumber(),
+                      minAtoms[ib].atom.getAtomNumber(), } }));
+          break;
+        case CALC_ANGLE:
+          appendLogData(
+              PT.sprintf("%3d %3d %3d  %-5s %-5s %-5s  %12.6f", "sssFI",
+                  new Object[] { minAtoms[ia].atom.getAtomName(),
+                      minAtoms[ib].atom.getAtomName(),
+                      minAtoms[ic].atom.getAtomName(),
+                      new float[] { (float) targetValue },
+                      new int[] { minAtoms[ia].atom.getAtomNumber(),
+                          minAtoms[ib].atom.getAtomNumber(),
+                          minAtoms[ic].atom.getAtomNumber(), } }));
+          break;
+        case CALC_TORSION:
+          appendLogData(PT.sprintf(
+              "%3d %3d %3d %3d  %-5s %-5s %-5s %-5s  %3d %8.3f     %8.3f     %8.3f     %8.3f",
+              "ssssFI",
+              new Object[] { minAtoms[ia].atom.getAtomName(),
+                  minAtoms[ib].atom.getAtomName(),
+                  minAtoms[ic].atom.getAtomName(),
+                  minAtoms[id].atom.getAtomName(),
+                  new float[] { (float) targetValue },
+                  new int[] { minAtoms[ia].atom.getAtomNumber(),
+                      minAtoms[ib].atom.getAtomNumber(),
+                      minAtoms[ic].atom.getAtomNumber(),
+                      minAtoms[id].atom.getAtomNumber() } }));
+          break;
+        }
       }
     }
     appendLogData("---------------------\n");
