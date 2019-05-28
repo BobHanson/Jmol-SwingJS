@@ -61,7 +61,7 @@ public class AwtSwingComponent implements SC {
   static SC getRadio(String name, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();
     c.jc = c.ab = c.jmi = new JRadioButtonMenuItem(name);
-    htSources.put(c.jc, c);    
+    htSources.put(c.jc, c);
     return c;
   }
 
@@ -116,7 +116,7 @@ public class AwtSwingComponent implements SC {
 
   @Override
   public Object getComponent(int i) {
-    return (jm == null ? jc.getComponent(i) : jm.getItem(i));
+    return (i < 0 ? jc : jm == null ? jc.getComponent(i) : jm.getItem(i));
   }
 
   @Override

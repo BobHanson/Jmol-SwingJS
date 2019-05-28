@@ -295,8 +295,9 @@ public class IsoExt extends ScriptExt {
         // draw pointgroup [array  of points] CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
-        P3[] pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1,
-            false) : null);
+        P3[] pts = (eval.isArrayParameter(++i)
+            ? eval.getPointArray(i, -1, false)
+            : null);
         if (pts != null) {
           i = eval.iToken + 1;
           if (tokAt(i) == T.center) {
@@ -361,21 +362,25 @@ public class IsoExt extends ScriptExt {
           break;
         if (tok == T.boundbox && tokAt(i + 1) == T.best) {
           tok = T.unitcell;
-        } if (tok == T.unitcell) {
+        }
+        if (tok == T.unitcell) {
           if (eval.isArrayParameter(i + 1)) {
             P3[] oabc = eval.getPointArray(i + 1, -1, false);
             uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
             i = eval.iToken;
-          } else if (tokAt(i + 1) == T.best){
+          } else if (tokAt(i + 1) == T.best) {
             i++;
-            uc = vwr.getSymTemp().getUnitCell((P3[]) vwr.getOrientationText(T.unitcell, "array", null), false, null);
+            uc = vwr.getSymTemp().getUnitCell(
+                (P3[]) vwr.getOrientationText(T.unitcell, "array", null), false,
+                null);
           } else {
             uc = vwr.getCurrentUnitCell();
           }
           if (uc == null)
             invArg();
         }
-        Lst<Object> vp = getPlaneIntersection(tok, null, uc, intScale / 100f, 0);
+        Lst<Object> vp = getPlaneIntersection(tok, null, uc, intScale / 100f,
+            0);
         intScale = 0;
         propertyName = "polygon";
         propertyValue = vp;
@@ -399,8 +404,9 @@ public class IsoExt extends ScriptExt {
         }
         connections[iConnect++] = atomExpressionAt(++i).nextSetBit(0);
         i = eval.iToken;
-        connections[iConnect++] = (eval.theTok == T.bonds ? atomExpressionAt(
-            ++i).nextSetBit(0) : -1);
+        connections[iConnect++] = (eval.theTok == T.bonds
+            ? atomExpressionAt(++i).nextSetBit(0)
+            : -1);
         i = eval.iToken;
         havePoints = true;
         break;
@@ -417,7 +423,7 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.intersection:
-        switch (getToken(i+1).tok) {
+        switch (getToken(i + 1).tok) {
         case T.unitcell:
         case T.boundbox:
           tokIntersect = eval.theTok;
@@ -456,28 +462,28 @@ public class IsoExt extends ScriptExt {
               faces = getIntArray2(i);
             } else {
               faces = AU.newInt2(1);
-              faces[0] = eval.expandFloatArray(eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1);
+              faces[0] = eval.expandFloatArray(
+                  eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1);
             }
             points = getAllPoints(e.iToken + 1);
             try {
-            polygons = ((MeshCapper) Interface.getInterface(
-                "org.jmol.util.MeshCapper", vwr, "script")).set(null)
-                .triangulateFaces(faces, points, null);
+              polygons = ((MeshCapper) Interface
+                  .getInterface("org.jmol.util.MeshCapper", vwr, "script"))
+                      .set(null).triangulateFaces(faces, points, null);
             } catch (Throwable e) {
               invArg();
             }
           }
           nVertices = points.length;
-        } 
+        }
 
         if (tok == T.polyhedra) {
           // draw POLYHEDRA @x @y 
           //  where x is [[0,3,4][4,5,6] ...] where numbers are atom indices
           //  and optional y is an atom bitset or a list of points
           nVertices = points.length;
-        } 
-        
-        
+        }
+
         if (points == null) {
           // draw POLYGON nPoints pt1 pt2 pt3...
           nVertices = Math.max(0, intParameter(i));
@@ -507,16 +513,17 @@ public class IsoExt extends ScriptExt {
         default:
           // get triangles from a list of points
           if (polygons == null && !isPoints && !chk)
-            polygons = ((MeshCapper) Interface.getInterface(
-                "org.jmol.util.MeshCapper", vwr, "script")).set(null)
-                .triangulatePolygon(points, -1);
+            polygons = ((MeshCapper) Interface
+                .getInterface("org.jmol.util.MeshCapper", vwr, "script"))
+                    .set(null).triangulatePolygon(points, -1);
         }
         if (polygons == null && !isPoints) {
           // read array of arrays of triangle vertex pointers
           polygons = AU.newInt2(nTriangles);
           for (int j = 0; j < nTriangles; j++) {
-            float[] f = (vpolygons == null ? eval.floatParameterSet(
-                ++eval.iToken, 3, 4) : SV.flistValue(vpolygons.get(j), 0));
+            float[] f = (vpolygons == null
+                ? eval.floatParameterSet(++eval.iToken, 3, 4)
+                : SV.flistValue(vpolygons.get(j), 0));
             if (f.length < 3 || f.length > 4)
               invArg();
             polygons[j] = new int[] { (int) f[0], (int) f[1], (int) f[2],
@@ -539,6 +546,7 @@ public class IsoExt extends ScriptExt {
         plane = null;
         P3 target = null;
         BS bsAtoms = null;
+        int options = 0;
         if (tok == T.symop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -569,19 +577,47 @@ public class IsoExt extends ScriptExt {
           bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
           i = eval.iToken;
         }
-        int nth = (target != null && tokAt(i + 1) == T.integer ? eval
-            .getToken(++i).intValue : -1);
+        int nth = (target != null && tokAt(i + 1) == T.integer
+            ? eval.getToken(++i).intValue
+            : -1);
+        if (tokAt(i + 1) == T.unitcell) {
+          target = new P3();
+          options = T.offset;
+          i++;
+          eval.iToken = i;
+        } else if (tokAt(i + 1) == T.offset) {
+          i++;
+          target = getPoint3f(i + 1, false);
+          options = T.offset;
+          i = eval.iToken;
+        }
+
         eval.checkLast(eval.iToken);
         if (!chk) {
           String s = "";
           if (bsAtoms == null && vwr.am.cmi >= 0)
             bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
-          if (bsAtoms != null)
-            s = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-                bsAtoms.nextSetBit(0), xyz, iSym, center, target, thisId,
-                T.draw, intScale / 100f, nth);
-          eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId
-              + "*\" delete");
+          if (bsAtoms != null) {
+            s = null;
+            int iatom = bsAtoms.nextSetBit(0);
+            if (options != 0) {
+              Object o = vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
+                  xyz, iSym, center, target, thisId, T.point, intScale / 100f,
+                  nth, options);
+              if (o instanceof P3)
+                target = (P3) o;
+              else
+                s = "";
+            }
+            if (thisId == null)
+              thisId = "sym";
+            if (s == null)
+              s = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
+                  xyz, iSym, center, target, thisId, T.draw, intScale / 100f,
+                  nth, options);
+          }
+          eval.runScript(
+              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete");
         }
         return;
       case T.frame:
@@ -626,7 +662,7 @@ public class IsoExt extends ScriptExt {
             propertyValue = list;
           } else {
             propertyName = "plane";
-            iArray = i + 1; 
+            iArray = i + 1;
           }
           break;
         }
@@ -724,8 +760,8 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.scale:
-        intScale = Math.round(floatParameter(++i)
-            * (getToken(i).tok == T.integer ? 1 : 100));
+        intScale = Math.round(
+            floatParameter(++i) * (getToken(i).tok == T.integer ? 1 : 100));
         continue;
       case T.id:
         thisId = setShapeId(JC.SHAPE_DRAW, ++i, idSeen);
@@ -2041,7 +2077,7 @@ public class IsoExt extends ScriptExt {
       case T.addhydrogens:
         propertyName = "addHydrogens";
         propertyValue = Boolean.TRUE;
-        sbCommand.append(" mp.addHydrogens");
+        sbCommand.append(" addHydrogens");
         break;
       case T.angstroms:
         propertyName = "angstroms";

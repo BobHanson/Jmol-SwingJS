@@ -28,22 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.awt.Font;
-import javajs.util.AU;
-import javajs.util.BArray;
-import javajs.util.Base64;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
+import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
@@ -51,7 +36,6 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -90,6 +74,23 @@ import org.jmol.viewer.StateManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.viewer.Viewer.ACCESS;
+
+import javajs.awt.Font;
+import javajs.util.AU;
+import javajs.util.BArray;
+import javajs.util.BS;
+import javajs.util.Base64;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class CmdExt extends ScriptExt {
 
@@ -156,6 +157,9 @@ public class CmdExt extends ScriptExt {
     case T.minimize:
       minimize();
       break;
+    case T.modelkitmode:
+      modelkit();
+      break;
     case T.modulation:
       modulation();
       break;
@@ -197,6 +201,27 @@ public class CmdExt extends ScriptExt {
     return null;
   }
 
+
+  /**
+   * new 14.29.45
+   * @throws ScriptException 
+   */
+  private void modelkit() throws ScriptException {
+    boolean isON = (tokAt(1) == T.on);
+    if (isON || tokAt(1) == T.off) {
+      if (!chk)
+        vwr.setBooleanProperty("modelkitmode", isON);
+      return;
+    }
+    GenericMenuInterface m = vwr.getModelkit(false);      
+    String key = paramAsStr(1).toLowerCase();
+    if (PT.isOneOf(key, ";addhydrogen;addhydrogens;")) {
+      if (!chk)
+        m.jpiSetProperty(key, Boolean.valueOf(tokAt(2) == T.on));
+      return;
+    }
+    invArg();
+  }
 
   private void macro() throws ScriptException {
     String key = e.optParameterAsString(1);
@@ -2541,7 +2566,7 @@ public class CmdExt extends ScriptExt {
         }
         if (!chk)
           vwr.getMinimizer(true).setProperty("constraint",
-              new Object[] { aList, new int[n], Float.valueOf(targetValue) });
+              new Object[] { aList, Float.valueOf(targetValue) });
         return;
       case T.criterion:
         crit = floatParameter(++i);
@@ -3110,7 +3135,7 @@ public class CmdExt extends ScriptExt {
       break;
     }
     st = statementSave;
-    if (chk) // just in case we later mp.add parameter options to this
+    if (chk) // just in case we later add parameter options to this
       return "";
 
     // if not just drawing check to see if there is already a plot of this type
@@ -3882,13 +3907,14 @@ public class CmdExt extends ScriptExt {
       // type may be defined already, but that could be from a file name extension
       // here we override that
       // write PDB "xxx.pdb"
-      String s = SV.sValue(tokenAt(++pt, args));
-      if (s.length() > 0 && s.charAt(0) != '.') {
-        if (val == null) {
-          System.out.println("??");
-          type = val.toUpperCase();
-        }
-      }
+      SV.sValue(tokenAt(++pt, args));
+//    System.out.println(val);
+//    if (s.length() > 0 && s.charAt(0) != '.') {
+//      if (val == null) {
+//        System.out.println("??");
+//        type = val.toUpperCase();
+//      }
+//    }
     }
 
     // set the file name
@@ -4530,7 +4556,7 @@ public class CmdExt extends ScriptExt {
       if (!chk) {
         Object o = vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
             vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, type, 0, 0,
-            nth);
+            nth, 0);
         msg = (o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
@@ -5123,7 +5149,7 @@ public class CmdExt extends ScriptExt {
             if (stype == null)
               stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
                   vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, 0, -1);
+                  T.lattice, 0, -1, 0);
             if (u == null)
               u = vwr.getSymTemp();
             u.toFromPrimitive(true,
@@ -5288,6 +5314,7 @@ public class CmdExt extends ScriptExt {
       assignConnect(index, index2);
     }
   }
+
   private void assignAtom(int atomIndex, P3 pt, String type) {
     if (type.equals("X"))
       vwr.setRotateBondIndex(-1);
@@ -5298,14 +5325,12 @@ public class CmdExt extends ScriptExt {
     if (pt == null) {
       if (atomIndex < 0)
         return;
-      vwr.sm.modifySend(atomIndex,
-          vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
       // After this next command, vwr.modelSet will be a different instance
-      vwr.ms.assignAtom(atomIndex, type, true, true);
+      vwr.getModelkit(false).jpiSetProperty("assignAtom", new Object[] { type, new int[] { atomIndex, 1, 1 }});
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
-      vwr.sm.modifySend(atomIndex,
-          vwr.ms.at[atomIndex].mi, -1, "OK");
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
       return;
     }
@@ -5321,9 +5346,8 @@ public class CmdExt extends ScriptExt {
     }
     try {
       bs = vwr.addHydrogensInline(bs, vConnections, pts);
-      // new ModelSet here
       int atomIndex2 = bs.nextSetBit(0);
-        vwr.ms.assignAtom(atomIndex2, type, false, (atomIndex >= 0));
+      vwr.getModelkit(false).jpiSetProperty("assignAtom", new Object[] { type, new int[] { atomIndex2, -1, atomIndex}});
       atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
@@ -5338,11 +5362,9 @@ public class CmdExt extends ScriptExt {
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
-      BS bsAtoms = vwr.ms.assignBond(bondIndex, type);
+      BS bsAtoms = (BS) vwr.getModelkit(false).jpiSetProperty("assignBond",  new int[] { bondIndex, type });
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");
-      else
-        vwr.addHydrogens(bsAtoms, false, true);
       vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
@@ -5358,8 +5380,8 @@ public class CmdExt extends ScriptExt {
     vwr.sm.modifySend(index, modelIndex, 2, e.fullCommand);
     vwr.ms.connect(connections);
     // note that vwr.ms changes during the assignAtom command 
-    vwr.ms.assignAtom(index, ".", true, true);
-    vwr.ms.assignAtom(index2, ".", true, true);
+    vwr.getModelkit(false).jpiSetProperty("assignAtom",  new Object[] { ".", new int[] {index, 1, 1} });
+    vwr.getModelkit(false).jpiSetProperty("assignAtom",  new Object[] { ".", new int[] {index2, 1, 1} });
     vwr.sm.modifySend(index, modelIndex, -2, "OK");
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }

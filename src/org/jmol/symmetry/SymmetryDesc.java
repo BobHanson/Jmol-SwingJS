@@ -95,7 +95,7 @@ public class SymmetryDesc {
    * @return "" or
    */
   Object getSymopInfo(int iAtom, String xyz, int op, P3 pt, P3 pt2, String id,
-                      int type, float scaleFactor, int nth) {
+                      int type, float scaleFactor, int nth, int options) {
     if (type == 0)
       type = getType(id);
     Object ret = (type == T.atoms ? new BS() : "");
@@ -111,9 +111,10 @@ public class SymmetryDesc {
 
     // generally get the result from getSymmetryInfo
     
-    if (type != T.draw || op != Integer.MAX_VALUE)
+    if (type != T.draw || op != Integer.MAX_VALUE) {
       return getSymmetryInfo((Symmetry) uc, iModel, iAtom, (Symmetry) uc, xyz,
-          op, pt, pt2, id, type, scaleFactor, nth);
+          op, pt, pt2, id, type, scaleFactor, nth, options);
+    }
     
     // draw SPACEGROUP
     
@@ -125,7 +126,7 @@ public class SymmetryDesc {
       int n = ops.length;
       for (op = 0; op < n; op++)
         s += (String) getSymmetryInfo((Symmetry) uc, iModel, iAtom,
-            (Symmetry) uc, xyz, op, pt, pt2, id + op, T.draw, scaleFactor, nth);
+            (Symmetry) uc, xyz, op, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
     }
     return s;
   }
@@ -135,7 +136,7 @@ public class SymmetryDesc {
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
                                         float scaleFactor, int nth, 
-                                        boolean isFull, boolean isForModel) {
+                                        boolean isFull, boolean isForModel, int options) {
     Map<String, Object> info = null;
     SymmetryInterface cellInfo = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
@@ -201,7 +202,7 @@ public class SymmetryDesc {
           if (slist != null)
             slist += ";" + op.xyz;
           Object[] ret = (symOp > 0 && symOp - 1 != iop ? null
-              : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor));
+              : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor, options));
           if (ret != null) {
             if (nth > 0 && ++nop != nth)
               continue;
@@ -388,7 +389,7 @@ public class SymmetryDesc {
 
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
                                    P3 pta00, P3 ptTarget, String id,
-                                   float scaleFactor) {
+                                   float scaleFactor, int options) {
     if (!op.isFinalized)
       op.doFinalize();
     boolean isTimeReversed = (op.timeReversal == -1);
@@ -951,7 +952,7 @@ public class SymmetryDesc {
         ptemp.sub2(ptinv, pta00);
         drawVector(draw1, drawid, "invArrow", "vector", pta00, ptemp,
             isTimeReversed ? "gray" : "cyan");
-        if (!isInversionOnly) {
+        if (!isInversionOnly && options != T.offset) {
           // n-bar: draw a faint frame showing the inversion
           drawFrameLine("X", ptinv, vt1, 0.15f, ptemp, draw1, opType, "red");
           drawFrameLine("Y", ptinv, vt2, 0.15f, ptemp, draw1, opType, "green");
@@ -996,15 +997,17 @@ public class SymmetryDesc {
       //      if (haveCentering)
       //      draw1.append(drawid).append(
       //        "cellOffsetVector arrow @p0 @set2 color grey");
-      draw1.append(drawid)
-          .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-          .append(Escape.eP(vt1)).append("*0.9} color red");
-      draw1.append(drawid)
-          .append("offsetFrameY diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-          .append(Escape.eP(vt2)).append("*0.9} color green");
-      draw1.append(drawid)
-          .append("offsetFrameZ diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-          .append(Escape.eP(vt3)).append("*0.9} color purple");
+      if (options != T.offset) {
+        draw1.append(drawid)
+            .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            .append(Escape.eP(vt1)).append("*0.9} color red");
+        draw1.append(drawid)
+            .append("offsetFrameY diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            .append(Escape.eP(vt2)).append("*0.9} color green");
+        draw1.append(drawid)
+            .append("offsetFrameZ diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            .append(Escape.eP(vt3)).append("*0.9} color purple");
+      }
       draw1.append("\n}\n");
       cmds = draw1.toString();
       if (Logger.debugging)
@@ -1155,23 +1158,27 @@ public class SymmetryDesc {
    * @param xyz
    * @param op
    * @param pt
-   * @param pt2
+   * @param pt2 second point or offset
    * @param id
    * @param type
    * @param scaleFactor
    * @param nth
+   * @param options 0 or T.offset or T.unitxyz
    * @return a string or an Object[] containing information
    */
   private Object getSymmetryInfo(Symmetry sym, int iModel, int iatom,
                                  Symmetry uc, String xyz, int op, P3 pt,
                                  P3 pt2, String id, int type,
-                                 float scaleFactor, int nth) {
+                                 float scaleFactor, int nth, int options) {
     if (type == T.lattice)
       return uc.getLatticeType();
     Object ret = (type == T.draw ? "draw ID sym_* delete"
         : type == T.atoms ? new BS() : "");
     int iop = op;
     Object[] info = null;
+    P3 offset = (options == T.offset  && (type == T.atoms || type == T.point)? pt2 : null);
+    if (offset != null)
+      pt2 = null;
     if (pt2 == null) {
       if (xyz == null) {
         SymmetryOperation[] ops = (SymmetryOperation[]) uc
@@ -1209,11 +1216,17 @@ public class SymmetryDesc {
           return ret;
         P3 sympt = new P3();
         symTemp.newSpaceGroupPoint(i, pt, sympt, 0, 0, 0, null);
+        
+        if (options == T.offset) {
+          uc.unitize(sympt);//uc.unitize01(sympt);
+          if (options == T.offset)
+            sympt.add(offset);
+        }
         symTemp.toCartesian(sympt, false);
         return (type == T.atoms ? getAtom(uc, iModel, iatom, sympt) : sympt);
       }
-      info = createInfoArray(opTemp, uc, pt, pt2, (id == null ? "sym" : id),
-          scaleFactor);
+      info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
+          scaleFactor, options);
     } else {
       // pt1, pt2
       String stype = "info";
@@ -1239,7 +1252,7 @@ public class SymmetryDesc {
           nth = 1;
       }
       ret = getSymopInfoForPoints(sym, iModel, op, pt, pt2, id, stype,
-          scaleFactor, nth, asString);
+          scaleFactor, nth, asString, options);
       if (asString)
         return ret;
       if (ret instanceof String)
@@ -1294,12 +1307,12 @@ public class SymmetryDesc {
   private Object getSymopInfoForPoints(Symmetry sym, int modelIndex, int symOp,
                                        P3 pt1, P3 pt2, String drawID,
                                        String stype, float scaleFactor, int nth,
-                                       boolean asString) {
+                                       boolean asString, int options) {
     String strOperations = "";
     Object[][] infolist;
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true);
+        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true, options);
     if (sginfo == null)
       return ret;
     strOperations = (String) sginfo.get("symmetryInfo");

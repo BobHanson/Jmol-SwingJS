@@ -941,7 +941,8 @@ public class GlobalSettings {
       + ";hbondsDistanceMaximum;hbondsangleminimum" // added Jmol 14.24.2
       + ";jmolinjspecview;legacyautobonding;legacyhaddition;legacyjavafloat"
       + ";loglevel;logfile;loggestures;logcommands;measurestylechime"
-      + ";loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
+      + ";loadformat;loadligandformat;mkaddhydrogens"
+      + ";smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
       + ";nodelay;pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed"
       + ";preservestate;refreshing;repaintwaitms;rotationradius;selectallmodels"
       + ";showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell"

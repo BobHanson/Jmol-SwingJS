@@ -16,7 +16,7 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
 
   abstract protected Object getImageIcon(String fileName);
   abstract protected void menuShowPopup(SC popup, int x, int y);
-  abstract protected String menuSetCheckBoxOption(SC item, String name, String what);
+  abstract protected String menuSetCheckBoxOption(SC item, String name, String what, boolean TF);
 
   abstract protected void appCheckItem(String item, SC newMenu);
   abstract protected void appCheckSpecialMenu(String item, SC subMenu, String word);
@@ -50,6 +50,14 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
   protected String currentMenuItemId;
   protected Map<String, SC> htMenus = new Hashtable<String, SC>();
   private Lst<SC> SignedOnly = new Lst<SC>();
+  
+  /**
+   * @param name  
+   * @param value 
+   */
+  public void setProperty(String name, Object value) {
+    // see JmolgenericPopup
+  }
 
   protected void initSwing(String title, PopupResource bundle, Object applet,
                            boolean isJS, boolean isSigned, boolean isWebGL) {
@@ -100,6 +108,7 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
           continue;
         if ("-".equals(item)) {
           menuAddSeparator(menu);
+          helper.menuAddButtonGroup(null);
           continue;
         }
         String label = popupResourceBundle.getWord(item);
@@ -123,6 +132,8 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
         } else if (item.endsWith("Checkbox")
             || (isCB = (item.endsWith("CB") || item.endsWith("RD")))) {
           // could be "PRD" -- set picking checkbox
+          // note that RD is not actually implemented, because we can't make 
+          // radio button groups of AwtSwingComponents
           script = popupResourceBundle.getStructure(item);
           String basename = item.substring(0, item.length() - (!isCB ? 8 : 2));
           boolean isRadio = (isCB && item.endsWith("RD"));

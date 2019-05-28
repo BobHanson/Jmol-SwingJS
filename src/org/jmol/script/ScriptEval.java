@@ -2568,6 +2568,7 @@ public class ScriptEval extends ScriptExpr {
     case T.macro:
     case T.mapproperty:
     case T.minimize:
+    case T.modelkitmode:
     case T.modulation:
     case T.mutate:
     case T.data:
@@ -6776,10 +6777,9 @@ public class ScriptEval extends ScriptExpr {
     boolean b;
     P3 pt;
 
-    boolean showing = (!chk && doReport() && !((String) st[0].value)
-        .equals("var"));
+    boolean showing = (!chk && doReport()
+        && !((String) st[0].value).equals("var"));
 
-    
     // THESE FIRST ARE DEPRECATED AND HAVE THEIR OWN COMMAND
     // anything in this block MUST RETURN
 
@@ -6820,8 +6820,8 @@ public class ScriptEval extends ScriptExpr {
       return;
     case T.highlight:
       sm.loadShape(JC.SHAPE_HALOS);
-      setShapeProperty(JC.SHAPE_HALOS, "highlight", (tokAt(2) == T.off ? null
-          : atomExpressionAt(2)));
+      setShapeProperty(JC.SHAPE_HALOS, "highlight",
+          (tokAt(2) == T.off ? null : atomExpressionAt(2)));
       return;
     case T.display:// deprecated
     case T.selectionhalos:
@@ -6836,14 +6836,16 @@ public class ScriptEval extends ScriptExpr {
     // and are thus "setparam" only
     // anything in this block MUST RETURN
     case T.window:
-      Object o = (isArrayParameter(2) ? floatParameterSet(2, 2, 2) : tokAt(2) == T.integer ?new float[] { intParameter(2), intParameter(3) }
-      : stringParameter(2));
+      Object o = (isArrayParameter(2) ? floatParameterSet(2, 2, 2)
+          : tokAt(2) == T.integer
+              ? new float[] { intParameter(2), intParameter(3) }
+              : stringParameter(2));
       checkLast(iToken);
       if (chk)
         return;
       if (o instanceof String) {
         if (vwr.fm.loadImage(o, "\0windowImage", !useThreads()))
-          throw new ScriptInterruption(this,"windowImage", 1);
+          throw new ScriptInterruption(this, "windowImage", 1);
       } else {
         vwr.setWindowDimensions((float[]) o);
       }
@@ -6880,8 +6882,9 @@ public class ScriptEval extends ScriptExpr {
     case T.debughigh:
       if (chk)
         return;
-      int iLevel = (tokAt(2) == T.off || tokAt(2) == T.integer
-          && intParameter(2) == 0 ? 4 : (tok == T.debughigh ? 6 : 5));
+      int iLevel = (tokAt(2) == T.off
+          || tokAt(2) == T.integer && intParameter(2) == 0 ? 4
+              : (tok == T.debughigh ? 6 : 5));
       Logger.setLogLevel(iLevel);
       setIntProperty("logLevel", iLevel);
       if (iLevel == 4) {
@@ -6933,7 +6936,8 @@ public class ScriptEval extends ScriptExpr {
         vwr.shm.loadShape(JC.SHAPE_MEASURES);
         int mad10 = getSetAxesTypeMad10(2);
         if (mad10 != Integer.MAX_VALUE)
-          setShapeSizeBs(JC.SHAPE_MEASURES, tok == T.decimal ? mad10 / 10 : mad10, null);
+          setShapeSizeBs(JC.SHAPE_MEASURES,
+              tok == T.decimal ? mad10 / 10 : mad10, null);
         return;
       }
       setUnits(paramAsStr(2), T.measurementunits);
@@ -7007,8 +7011,8 @@ public class ScriptEval extends ScriptExpr {
         }
         if (chk)
           return;
-        int modelIndex = vwr.ms.getModelNumberIndex(modelNumber,
-            useModelNumber, true);
+        int modelIndex = vwr.ms.getModelNumberIndex(modelNumber, useModelNumber,
+            true);
         vwr.setBackgroundModelIndex(modelIndex);
         return;
       }
@@ -7016,8 +7020,8 @@ public class ScriptEval extends ScriptExpr {
     case T.vanderwaals:
       if (chk)
         return;
-      vwr.setAtomProperty(vwr.getAllAtoms(), T.vanderwaals, -1,
-          Float.NaN, null, null, null);
+      vwr.setAtomProperty(vwr.getAllAtoms(), T.vanderwaals, -1, Float.NaN, null,
+          null, null);
       if (slen > 2 && "probe".equalsIgnoreCase(getSettingStr(2, false))) {
         runScript(Elements.VdwPROBE);
         return;
@@ -7028,7 +7032,7 @@ public class ScriptEval extends ScriptExpr {
       // allows unquoted string for known vdw type
       if (slen > 2) {
         sval = paramAsStr(2);
-        if (slen == 3 && VDW.getVdwType(sval) == null 
+        if (slen == 3 && VDW.getVdwType(sval) == null
             && VDW.getVdwType(sval = getSettingStr(2, false)) == null)
           invArg();
         setStringProperty(key, sval);
@@ -7125,7 +7129,8 @@ public class ScriptEval extends ScriptExpr {
 
     // var xxxx = xxx can supercede set xxxx
 
-    boolean isContextVariable = (!justShow && !isJmolSet && getContextVariableAsVariable(key, false) != null);
+    boolean isContextVariable = (!justShow && !isJmolSet
+        && getContextVariableAsVariable(key, false) != null);
 
     if (!justShow && !isContextVariable) {
 
@@ -7193,10 +7198,8 @@ public class ScriptEval extends ScriptExpr {
       // these next are not reported and do not allow calculation xxxx = a + b
 
       String lckey = key.toLowerCase();
-      if (lckey.indexOf("label") == 0
-          && PT
-              .isOneOf(lckey.substring(5),
-                  ";front;group;atom;offset;offsetexact;offsetabsolute;pointer;alignment;toggle;scalereference;for;")) {
+      if (lckey.indexOf("label") == 0 && PT.isOneOf(lckey.substring(5),
+          ";front;group;atom;offset;offsetexact;offsetabsolute;pointer;alignment;toggle;scalereference;for;")) {
         if (cmdSetLabel(lckey.substring(5)))
           return;
       }
@@ -7204,8 +7207,8 @@ public class ScriptEval extends ScriptExpr {
         float f = floatParameter(2);
         checkLength(3);
         if (!chk)
-          vwr.getNMRCalculation().setChemicalShiftReference(
-              lckey.substring(6), f);
+          vwr.getNMRCalculation().setChemicalShiftReference(lckey.substring(6),
+              f);
         return;
       }
       if (lckey.endsWith("callback"))

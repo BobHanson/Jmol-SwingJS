@@ -417,7 +417,7 @@ public class MathExt {
         stype = "I";
       else if (stype.length() == 0)
         stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
-            null, 0, null, null, null, T.lattice, 0, -1);
+            null, 0, null, null, null, T.lattice, 0, -1, 0);
       if (stype == null || stype.length() == 0)
         return false;
       if (u == null)
@@ -3212,7 +3212,7 @@ public class MathExt {
 
     return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length && mp
         .addXObj(vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-            bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, desc, 0, 0, nth)));
+            bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, desc, 0, 0, nth, 0)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

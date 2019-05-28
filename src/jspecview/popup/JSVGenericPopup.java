@@ -52,7 +52,13 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	// System.out.println("JmolPopup " + this + " finalize");
 	// }
 
-	protected JSViewer vwr;
+  @Override
+  public Object jpiSetProperty(String name, Object value) {
+    // n/a
+    return null;
+  }
+
+  protected JSViewer vwr;
 	protected int updateMode;
 	
 
@@ -331,7 +337,7 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	}
 
 	@Override
-	protected String menuSetCheckBoxOption(SC item, String name, String what) {
+	protected String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
 		// not used in JSV
 		return null;
 	}

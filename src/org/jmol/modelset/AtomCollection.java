@@ -847,7 +847,7 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_ATOMNO);
   }
   
-  protected void setElement(Atom atom, int atomicNumber, boolean doTaint) {
+  public void setElement(Atom atom, int atomicNumber, boolean doTaint) {
     if (doTaint && atom.getElementNumber() == atomicNumber)
       return;
     atom.setAtomicAndIsotopeNumber(atomicNumber);
@@ -1107,7 +1107,7 @@ abstract public class AtomCollection {
       taintAtom(i, type);
   }
 
-  protected void taintAtom(int atomIndex, int type) {
+  public void taintAtom(int atomIndex, int type) {
     if (preserveState) {
       if (tainted == null)
         tainted = new BS[TAINT_MAX];

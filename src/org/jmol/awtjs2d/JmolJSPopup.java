@@ -68,7 +68,7 @@ public class JmolJSPopup extends JmolGenericPopup {
 
   @Override
   protected String menuSetCheckBoxOption(SC item, String name,
-                                         String what) {
+                                         String what, boolean TF) {
     // ModelKit popup only
     return null;
   }

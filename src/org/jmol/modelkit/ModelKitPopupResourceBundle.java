@@ -51,7 +51,7 @@ public class ModelKitPopupResourceBundle extends PopupResource {
   }
   
   private static String[][] menuContents = {
-    { MENU_NAME, "atomMenu bondMenu optionsMenu" },
+    { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
     { "optionsMenu", "new center addh minimize hmin " +
     		" - undo redo - SIGNEDsaveFile SIGNEDsaveState exit" },
     { "atomMenu" , "assignAtom_XP!CB assignAtom_XxP!CB dragAtomP!CB dragMinimizeP!CB dragMoleculeP!CB dragMinimizeMoleculeP!CB " +
@@ -60,10 +60,16 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     		"moreAtomMenu - assignAtom_PlP!CB assignAtom_MiP!CB" },
     { "moreAtomMenu", "clearQ - _??P!CB _??P!CB _??P!CB _??P!CB _??P!CB _??P!CB " },
     { "bondMenu", "assignBond_0P!CB assignBond_1P!CB assignBond_2P!CB assignBond_3P!CB - assignBond_pP!CB assignBond_mP!CB - rotateBondP!CB" },
+    { "xtalMenu", "xtalSymmetryMenu xtalPackingMenu xtalOptionsMenu" },
+    { "xtalViewEditMenu", "mknoViewEdit??P!RD mkview??P!RD mkedit??P!RD" },
+    { "xtalSymmetryMenu", "mknoSymmetry??P!RD mkretainLocal??P!RD mkapplyLocal??P!RD mkapplyFull??P!RD" },
+    { "xtalPackingMenu", "mkextendCell??P!RD mkpackCell??P!RD" },
+    { "xtalOptionsMenu", "mkallAtoms??P!RD mkasymmetricUnit??P!RD mkallowElementReplacement??P!CB" }
+
   };
   
   private static String[][] structureContents = {
-    { "new" , "zap" },
+      { "new" , "zap" },
     { "center" , "zoomto 0 {visible} 0/1.5" },
     { "addh" , "calculate hydrogens {model=_lastframe}" },
     { "minimize" , "minimize" },
@@ -85,6 +91,22 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "moreAtomMenu", "<dotdotdot.png>",//GT.$("more..."),
         "bondMenu", "<bonds.png>",//GT.$("bonds"),
         "optionsMenu", "<dotdotdot.png>",//GT.$("atoms"),
+        "xtalMenu", "<xtal.png>",
+        "xtalSymmetryMenu", "symmetry",
+        "xtalOptionsmenu", "options",
+        "xtalPackingMenu", "packing",
+        "mknoViewEdit??P!RD", GT.$("No View/Edit"),
+        "mkView??P!RD", GT.$("View"),
+        "mkEdit??P!RD", GT.$("Edit"),
+        "mknoSymmetry??P!RD", GT.$("none"),
+        "mkretainLocal??P!RD", GT.$("retain local"),
+        "mkapplyLocal??P!RD", GT.$("apply local"),
+        "mkapplyFull??P!RD", GT.$("apply full"),
+        "mkextendCell??P!RD", GT.$("extend cell"),
+        "mkpackCell??P!RD", GT.$("pack cell"),
+        "mkasymmetricUnit??P!RD", GT.$("asymmetric unit"),
+        "mkallAtoms??P!RD", GT.$("all atoms"),
+        "new" , "zap",
         "new", GT.$("new"),
         "undo", GT.$("undo (CTRL-Z)"),
         "redo", GT.$("redo (CTRL-Y)"),

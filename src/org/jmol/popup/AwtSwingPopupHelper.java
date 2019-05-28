@@ -97,7 +97,7 @@ public class AwtSwingPopupHelper implements
     }
     if (buttonGroup == null)
       buttonGroup = new ButtonGroup();
-    buttonGroup.add((AbstractButton) item);
+    buttonGroup.add(((AwtSwingComponent) item).ab);
   }
 
   @Override

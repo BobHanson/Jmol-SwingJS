@@ -69,7 +69,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
   //}
 
   protected Viewer vwr;
-  protected int updateMode;
+  protected int updateMode = UPDATE_ALL;
   protected Properties menuText = new Properties();
 
   private SC frankPopup;
@@ -127,6 +127,12 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   ////// JmolPopupInterface methods //////
 
+  @Override
+  public Object jpiSetProperty(String name, Object value) {
+    // TODO
+    return null;
+  }
+
   private final static int MENUITEM_HEIGHT = 20;
 
   @Override
@@ -162,8 +168,8 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     menuShowPopup(popupMenu, thisx, thisy);
   }
 
-  @Override
   @SuppressWarnings("unchecked")
+  @Override
   public void jpiUpdateComputedMenus() {
     if (updateMode == UPDATE_NEVER)
       return;
@@ -274,13 +280,14 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (!basename.endsWith("P!"))
       return false;
     if (basename.indexOf("??") >= 0) {
-      what = menuSetCheckBoxOption(item, basename, what);
+      what = menuSetCheckBoxOption(item, basename, what, TF);
     } else {
       if (!TF)
         return true;
       what = "set picking " + basename.substring(0, basename.length() - 2);
     }
-    appRunScript(what);
+    if (what != null)
+      appRunScript(what);
     return true;
   }
 

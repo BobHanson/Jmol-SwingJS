@@ -71,7 +71,7 @@ public class AwtPopup extends JSVGenericPopup  {
 	}
   
   @Override
-  protected String menuSetCheckBoxOption(SC item, String name, String what) {
+  protected String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
     // ModelKit only
     return null;
   }

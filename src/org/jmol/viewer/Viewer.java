@@ -745,8 +745,8 @@ public class Viewer extends JmolViewer
     gdata.destroy();
     if (jmolpopup != null)
       jmolpopup.jpiDispose();
-    if (modelkitPopup != null)
-      modelkitPopup.jpiDispose();
+    if (modelkit != null)
+      modelkit.jpiDispose();
     try {
       if (appConsole != null) {
         appConsole.dispose();
@@ -4576,15 +4576,25 @@ public class Viewer extends JmolViewer
     case 'a':
     case 'b':
     case 'm':
-      // atom, bond, or main -- ignored      
-      if (modelkitPopup == null
-          && (modelkitPopup = apiPlatform.getMenuPopup(null, type)) == null)
-        return;
-      modelkitPopup.jpiShow(x, y);
+      // atom, bond, or main -- ignored
+      if (getModelkit(true) == null) {
+          return;
+      }
+      modelkit.jpiShow(x, y);
       break;
     }
   }
 
+  public GenericMenuInterface getModelkit(boolean andShow) {
+    if (modelkit == null) {
+      modelkit = apiPlatform.getMenuPopup(null, 'm');
+    } else if (andShow) { 
+      modelkit.jpiUpdateComputedMenus();
+    }
+    return modelkit;
+  }
+    
+    
   public String getMenu(String type) {
     getPopupMenu();
     if (type.equals("\0")) {
@@ -5736,7 +5746,7 @@ public class Viewer extends JmolViewer
       // also serves to change language for callbacks and menu
       new GT(this, value);
       String language = GT.getLanguage();
-      modelkitPopup = null;
+      modelkit = null;
       if (jmolpopup != null) {
         jmolpopup.jpiDispose();
         jmolpopup = null;
@@ -6923,9 +6933,7 @@ public class Viewer extends JmolViewer
       if (ms.ac == 0)
         zap(false, true, true);
     } else {
-      acm.setPickingMode(-1);
-      setStringProperty("pickingStyle", "toggle");
-      setBooleanProperty("bondPicking", false);
+      acm.setPickingMode(ActionManager.PICKING_MK_RESET);
       if (isChange)
         sm.setCallbackFunction("modelkit", "OFF");
     }
@@ -7373,7 +7381,7 @@ public class Viewer extends JmolViewer
   public JmolAppConsoleInterface appConsole;
   JmolScriptEditorInterface scriptEditor;
   GenericMenuInterface jmolpopup;
-  private GenericMenuInterface modelkitPopup;
+  private GenericMenuInterface modelkit;
   private Map<String, Object> headlessImageParams;
 
   public String getChimeInfo(int tok) {
@@ -9968,6 +9976,13 @@ public class Viewer extends JmolViewer
     if (ms.isAtomAssignable(atomIndex)) {
       script("assign atom ({" + atomIndex + "}) \"" + element + "\"");
     }
+  }
+
+  public String getSymop(int atomIndex, String symop, Object option) {
+    SymmetryInterface uc = ms.getUnitCellForAtom(atomIndex);
+    P3 offset = (option instanceof P3 ? (P3) option : null);
+    int options = (offset != null ? T.offset : "unit".equals(option) ? T.unitxyz : 0);
+    return (String) (uc == null ? null : uc.getSymmetryInfoAtom(ms, atomIndex, symop, -1, offset, null, "sym", T.draw, 0, 0, options));
   }
 
 }

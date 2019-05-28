@@ -331,6 +331,8 @@ public class T {
   public final static int macro        = scriptCommand | 28;
   public final static int mapproperty  = scriptCommand | 29;
   public final static int minimize     = scriptCommand | 30;
+  public final static int modelkitmode = scriptCommand | booleanparam | 31;  // 12.0.RC15
+
 //public final static int model  see mathfunc
 //public final static int measure   see mathfunc
   public final static int move         = scriptCommand | 32;
@@ -1024,19 +1026,18 @@ public class T {
   public final static int isosurfacekey                  = booleanparam | 91;
   public final static int isosurfacepropertysmoothing    = booleanparam | 92;
   public final static int jmolinjspecview                = booleanparam | 93; // 14.13.1
-  public final static int justifymeasurements            = booleanparam | 95;
-  public final static int languagetranslation            = booleanparam | 96;
-  public final static int legacyautobonding              = booleanparam | 97;
-  public final static int legacyhaddition                = booleanparam | 98;
-  public final static int legacyjavafloat                = booleanparam | 99;
-  public final static int logcommands                    = booleanparam | 100;
-  public final static int loggestures                    = booleanparam | 101;
-  public final static int measureallmodels               = booleanparam | 102;
-  public final static int measurementlabels              = booleanparam | 103;
-  public final static int messagestylechime              = booleanparam | 104;
-  public final static int minimizationrefresh            = booleanparam | 105;
-  public final static int minimizationsilent             = booleanparam | 106;
-  public final static int modelkitmode                   = booleanparam | 107;  // 12.0.RC15
+  public final static int justifymeasurements            = booleanparam | 94;
+  public final static int languagetranslation            = booleanparam | 95;
+  public final static int legacyautobonding              = booleanparam | 96;
+  public final static int legacyhaddition                = booleanparam | 97;
+  public final static int legacyjavafloat                = booleanparam | 98;
+  public final static int logcommands                    = booleanparam | 99;
+  public final static int loggestures                    = booleanparam | 100;
+  public final static int measureallmodels               = booleanparam | 101;
+  public final static int measurementlabels              = booleanparam | 102;
+  public final static int messagestylechime              = booleanparam | 103;
+  public final static int minimizationrefresh            = booleanparam | 104;
+  public final static int minimizationsilent             = booleanparam | 105;
   public final static int modulateoccupancy              = booleanparam | 108;  // 14.3.13
   public final static int monitorenergy                  = booleanparam | 109;
   public final static int multiplebondbananas            = booleanparam | 110;
@@ -1432,6 +1433,7 @@ public class T {
   public final static T tokenSwitch          = o(switchcmd, "switch");
     
   private static Map<String, T> tokenMap = new Hashtable<String, T>();
+
   public static void addToken(String ident, T token) {
     tokenMap.put(ident, token);
   }
@@ -2625,6 +2627,7 @@ public class T {
        "minimizationRefresh",
        "minimizationSilent",
        "modelkitMode",
+       "modelkit",
        "modulateOccupancy",
        "monitorEnergy",
        "multiplebondbananas",
@@ -3684,6 +3687,7 @@ public class T {
         minimizationrefresh,                //        "minimizationRefresh"
         minimizationsilent,                 //        "minimizationSilent"
         modelkitmode,                       //        "modelkitMode"
+        -1,
         modulateoccupancy,
         monitorenergy,                      //        "monitorEnergy"
         multiplebondbananas,

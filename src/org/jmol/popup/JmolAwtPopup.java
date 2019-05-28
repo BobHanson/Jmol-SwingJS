@@ -60,7 +60,7 @@ public class JmolAwtPopup extends JmolGenericPopup {
   }
   
   @Override
-  public String menuSetCheckBoxOption(SC item, String name, String what) {
+  public String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
     // n/a
     return null;
   }

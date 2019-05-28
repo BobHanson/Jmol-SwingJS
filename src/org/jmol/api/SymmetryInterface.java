@@ -169,15 +169,16 @@ public interface SymmetryInterface {
    * @param xyz
    * @param op
    * @param pt
-   * @param pt2
+   * @param pt2 a second point or an offset
    * @param id
    * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axis, T.plane, T.angle, T.center
    * @param scaleFactor
    * @param nth TODO
+   * @param options could be T.offset
    * @return a variety of object types
    */
   public Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
-                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth);
+                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
 
   public void setTimeReversal(int op, int val);
 
@@ -230,6 +231,8 @@ public interface SymmetryInterface {
   public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
 
   public void setUnitCell(Symmetry uc);
+
+//  void unitize01(T3 ptFrac);
 
 
 }

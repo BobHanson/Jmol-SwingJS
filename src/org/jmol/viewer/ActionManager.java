@@ -396,6 +396,7 @@ public class ActionManager implements EventManager {
   private int apm = PICKING_IDENTIFY;
   private int bondPickingMode;
 
+  public final static int PICKING_MK_RESET = -1;
   public final static int PICKING_OFF = 0;
   public final static int PICKING_IDENTIFY = 1;
   public final static int PICKING_LABEL = 2;
@@ -487,10 +488,13 @@ public class ActionManager implements EventManager {
   void setPickingMode(int pickingMode) {
     boolean isNew = false;
     switch (pickingMode) {
-    case -1: // from  set modelkit OFF
+    case PICKING_MK_RESET: 
+      // from  set modelkit OFF only
       isNew = true;
       bondPickingMode = PICKING_IDENTIFY_BOND;
       pickingMode = PICKING_IDENTIFY;
+      vwr.setStringProperty("pickingStyle", "toggle");
+      vwr.setBooleanProperty("bondPicking", false);
       break;
     case PICKING_IDENTIFY_BOND:
     case PICKING_ROTATE_BOND:
@@ -511,6 +515,10 @@ public class ActionManager implements EventManager {
     if (isNew)
       resetMeasurement();
   }
+
+  private String pickAtomAssignType = "C";
+  private char pickBondAssignType = 'p';
+  private boolean isPickAtomAssignCharge;
 
   void setAtomPickingOption(String option) {
     switch (apm) {
@@ -534,10 +542,8 @@ public class ActionManager implements EventManager {
   private int pickingStyleSelect = PICKINGSTYLE_SELECT_JMOL;
   private int pickingStyleMeasure = PICKINGSTYLE_MEASURE_OFF;
   private int rootPickingStyle = PICKINGSTYLE_SELECT_JMOL;
-  private String pickAtomAssignType = "C";
-  private char pickBondAssignType = 'p';
-  private boolean isPickAtomAssignCharge;
-
+  
+  
   public String getPickingState() {
     // the pickingMode is not reported in the state. But when we do an UNDO,
     // we want to restore this.

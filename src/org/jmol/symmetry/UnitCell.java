@@ -154,6 +154,11 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
   }
   
+  /**
+   * returns [0,1)
+   * 
+   * @param pt
+   */
   public void unitize(T3 pt) {
     switch (dimension) {
     case 3:
@@ -166,6 +171,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       pt.x = toFractionalX(pt.x);
     }
   }
+
 
   public void reset() {
     unitCellMultiplier = null;
@@ -449,6 +455,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       x = 0;
     return x;
   }
+  
   
   private void initUnitcellVertices() {
     if (matrixFractionalToCartesian == null)

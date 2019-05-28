@@ -663,9 +663,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
-                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth) {
+                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options) {
     return getDesc(modelSet).getSymopInfo(iatom, xyz, op, pt, pt2,
-        id, type, scaleFactor, nth);
+        id, type, scaleFactor, nth, options);
   }
 
   @Override
@@ -677,7 +677,7 @@ public class Symmetry implements SymmetryInterface {
         sgName = (String) info.get("spaceGroup");
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel);
+        null, 0, -1, isFull, isForModel, 0);
   }
 
   
