@@ -4406,7 +4406,11 @@ public class CmdExt extends ScriptExt {
     String str = paramAsStr(1);
     String filter = null;
     int filterLen = 0;
-    if (slen > 2 && tokAt(slen - 2) == T.divide) {
+    if (slen > 3 && tokAt(slen - 3) == T.divide  && tokAt(slen - 2) == T.opNot) {
+      filter = "!/" + paramAsStr(slen - 1);
+      slen -= 3;
+      filterLen = 3;
+    } else if (slen > 2 && tokAt(slen - 2) == T.divide) {
       filter = "/" + paramAsStr(slen - 1);
       slen -= 2;
       filterLen = 2;
@@ -5082,11 +5086,12 @@ public class CmdExt extends ScriptExt {
   private String filterShow(String msg, String name) {
     if (name == null)
       return msg;
-    name = name.substring(1).toLowerCase();
+    boolean isNot = name.startsWith("!/");
+    name = name.substring(isNot ? 2 : 1).toLowerCase();
     String[] info = PT.split(msg, "\n");
     SB sb = new SB();
     for (int i = 0; i < info.length; i++)
-      if (info[i].toLowerCase().indexOf(name) >= 0)
+      if ((info[i].toLowerCase().indexOf(name) < 0) == isNot)
         sb.append(info[i]).appendC('\n');
     return sb.toString();
   }
@@ -5363,7 +5368,7 @@ public class CmdExt extends ScriptExt {
 
   
   private void assign(int i) throws ScriptException {
-    int atomsOrBonds = tokAt(++i);
+    int atomsOrBonds = tokAt(i++);
     int index = -1, index2 = -1;
     if (atomsOrBonds == T.atoms && tokAt(i) == T.string) {
       // new Jmol 14.29.28
