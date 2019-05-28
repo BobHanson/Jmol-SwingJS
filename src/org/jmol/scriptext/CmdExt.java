@@ -269,7 +269,8 @@ public class CmdExt extends ScriptExt {
         break;
       case T.symmetry:
         value = paramAsStr(++i).toLowerCase();
-        if (PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
+        if (!PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
+          invArg();
         break;
       case T.offset:
         value = paramAsStr(i + 1);
