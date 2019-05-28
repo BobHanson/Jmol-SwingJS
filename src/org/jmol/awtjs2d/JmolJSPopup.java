@@ -24,14 +24,8 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-
-import org.jmol.api.PlatformViewer;
-import org.jmol.i18n.GT;
 import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.JmolGenericPopup;
-import org.jmol.popup.MainPopupResourceBundle;
-import org.jmol.popup.PopupResource;
-import org.jmol.viewer.Viewer;
 
 import javajs.awt.Component;
 import javajs.awt.SC;
@@ -45,15 +39,6 @@ public class JmolJSPopup extends JmolGenericPopup {
    */
   public JmolJSPopup() {
     helper = new JSSwingPopupHelper(this);
-  }
-
-  @Override
-  public void jpiInitialize(PlatformViewer vwr, String menu) {
-    boolean doTranslate = GT.setDoTranslate(true);
-    PopupResource bundle = new MainPopupResourceBundle(strMenuStructure = menu,
-        menuText);
-    initialize((Viewer) vwr, bundle, bundle.getMenuName());
-    GT.setDoTranslate(doTranslate);
   }
 
   @Override

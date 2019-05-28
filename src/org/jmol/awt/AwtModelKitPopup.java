@@ -27,9 +27,14 @@ import java.awt.Component;
 
 import javax.swing.JPopupMenu;
 
+import org.jmol.api.PlatformViewer;
+import org.jmol.i18n.GT;
 import org.jmol.modelkit.ModelKitPopup;
+import org.jmol.modelkit.ModelKitPopupResourceBundle;
 import org.jmol.popup.AwtSwingComponent;
 import org.jmol.popup.AwtSwingPopupHelper;
+import org.jmol.popup.PopupResource;
+import org.jmol.viewer.Viewer;
 
 import javajs.awt.SC;
 
@@ -47,6 +52,5 @@ public class AwtModelKitPopup extends ModelKitPopup {
       // ignore
     }
   }
-  
 
 }

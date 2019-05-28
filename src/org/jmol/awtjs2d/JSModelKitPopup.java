@@ -24,17 +24,10 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-
-import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.modelkit.ModelKitPopup;
-import org.jmol.modelkit.ModelKitPopupResourceBundle;
 import org.jmol.popup.JSSwingPopupHelper;
-import org.jmol.popup.JmolGenericPopup;
-import org.jmol.popup.PopupResource;
-//import org.jmol.util.Elements;
 import org.jmol.util.Elements;
-import org.jmol.viewer.Viewer;
 
 import javajs.awt.Component;
 import javajs.awt.SC;
@@ -77,9 +70,4 @@ public class JSModelKitPopup extends ModelKitPopup {
     return "org/jmol/modelkit/images/" + fileName;
   }
 
-  @Override
-  public void menuFocusCallback(String name, String actionCommand, boolean b) {
-    // TODO
-    
-  }
 }

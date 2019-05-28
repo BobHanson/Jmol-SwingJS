@@ -24,6 +24,7 @@
 package org.jmol.modelkit;
 
 import java.net.URL;
+import java.util.Map.Entry;
 
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -35,8 +36,11 @@ import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.popup.AwtSwingComponent;
+import org.jmol.popup.GenericSwingPopup;
 import org.jmol.popup.JmolGenericPopup;
+import org.jmol.popup.JmolSwingPopup;
 import org.jmol.popup.PopupResource;
+import org.jmol.script.ScriptException;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -50,30 +54,39 @@ import javajs.util.BS;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.V3;
 
-abstract public class ModelKitPopup extends JmolGenericPopup {
+abstract public class ModelKitPopup extends JmolSwingPopup {
 
-  private boolean hasUnitCell;
-
+  protected boolean hasUnitCell;
+ 
   public ModelKitPopup() {
     System.out.println("hmm");
   }
   
+ 
   @Override
-  public void jpiInitialize(PlatformViewer vwr, String menu) {
-    updateMode = UPDATE_NEVER;
-    boolean doTranslate = GT.setDoTranslate(true);
-    PopupResource bundle = new ModelKitPopupResourceBundle(null, null);
-    initialize((Viewer) vwr, bundle, bundle.getMenuName());
-    GT.setDoTranslate(doTranslate);
+  protected PopupResource getBundle(String menu) {
+    return new ModelKitPopupResourceBundle(null, null);
+  }
+ 
+  public void initializeForModel() {
+    initializeBondRotation();
+    ms = null;
+    allOperators = null;
+    modelIndex = -999;
   }
 
+  private ModelSet ms;
+  String[] allOperators;
+  private int modelIndex = -1;
+  
   @Override
   public void jpiUpdateComputedMenus() {
     hasUnitCell = vwr.getCurrentUnitCell() != null;
-    SC menu = htMenus.get("xtalMenu");
-    menu.setEnabled(hasUnitCell);
+    if (!checkUpdateSymmetryInfo())
+      updateAllXtalMenus();
   }
 
   @Override
@@ -113,7 +126,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         item.setActionCommand("_??P!:");
         item.setSelected(false);
       }
-      vwr.evalStringQuiet("set picking assignAtom_C");
+      appRunScript("set picking assignAtom_C");
       return;
     }
     processClickCallback(source, script);
@@ -124,11 +137,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String imageName = "org/jmol/modelkit/images/" + fileName;
     URL imageUrl = this.getClass().getClassLoader().getResource(imageName);
     return (imageUrl == null ? null : new ImageIcon(imageUrl));
-  }
-
-  @Override
-  public void menuFocusCallback(String name, String actionCommand, boolean b) {
-    // n/a
   }
 
   // xtal model kit only
@@ -156,6 +164,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   public static final String UNITCELL_OPTIONS = ";packed;extend;";
   public static final String BOOLEAN_OPTIONS  = ";allowelementchange;addhydrogen;addhydrogens;";
   public static final String SET_OPTIONS     = ";element;";
+  private static final int MAX_LABEL = 32;
 
   private int state = STATE_MOLECULAR & STATE_SYM_NOOFFSET & STATE_SYM_APPLYFULL & STATE_UNITCELL_EXTEND; // 0x00
 
@@ -369,11 +378,11 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
           + (viewOffset == null ? "" : " offset " + viewOffset);
     }
     System.out.println("ModelKitPopup script=" + script);
-    vwr.evalStringQuiet(script);
+    appRunScript(script);
   }
 
   
-  /////////////// atom and bond picking methods //////////////
+  /////////////// action methods //////////////
   
   
   private String pickAtomAssignType = "C";
@@ -616,5 +625,88 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     bsRotateBranch = null;
     rotatePrev1 = rotateBondIndex = -1;
   }
+  
+  /////////// building xtal menu //////////////////
+  
+  private boolean checkUpdateSymmetryInfo() {
+    htMenus.get("xtalMenu").setEnabled(hasUnitCell);
+    if (!hasUnitCell) {
+      ms = null;
+      allOperators = null;
+      modelIndex = -1;
+      return true;
+    }
+    boolean isOK = true;
+    if (vwr.ms != ms) {
+      ms = vwr.ms;
+      isOK = false;      
+    } else if (modelIndex == -1 || modelIndex != vwr.am.cmi){
+      isOK = false;      
+      modelIndex = vwr.am.cmi;
+    }
+    if (!isOK) {
+      allOperators = null;
+    }
+    return isOK;
+  }
+
+  private void updateAllXtalMenus() {
+    updateOperatorMenu();
+    updateAllXtalMenuOptions();    
+  }
+
+  private void updateOperatorMenu() {
+    if (allOperators != null)
+      return;
+    SB sb = new SB();
+    try {
+      vwr.eval.runScriptBuffer("show symop", sb, true);
+    } catch (ScriptException e) {
+      // ignore
+    }
+    allOperators = PT.split(sb.toString().trim(), "\n");
+    addAllCheckboxItems(htMenus.get("xtalOpMenu"), allOperators);
+  }
+
+  private void addAllCheckboxItems(SC menu, String[] labels) {
+    menuRemoveAll(menu, 0);
+    if (labels.length <= MAX_LABEL) {
+      for (int i = 0; i < allOperators.length; i++) {
+        String id = "mkop" + i;
+        String basename = id;
+        String entry = allOperators[i];
+        menuCreateCheckboxItem(menu, entry, basename, id, false, false);
+      }
+    } else {
+
+    }
+
+  }
+
+  private void updateAllXtalMenuOptions() {
+    for(Entry<String, SC> entry: htMenus.entrySet()) {
+      String key = entry.getKey();
+      
+      if (key.startsWith("mk")) {
+        
+        
+        
+        
+      }
+      
+    }
+  }
+
+  @Override
+  protected void appUpdateForShow() {
+    // n/a
+  }
+
+  @Override
+  protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
+                                               boolean selected) {
+    // n/a?
+  }
+
 
 }

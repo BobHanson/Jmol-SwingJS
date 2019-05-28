@@ -2635,7 +2635,7 @@ public class Viewer extends JmolViewer
     reset(true);
     selectAll();
     if (modelkit != null)
-      modelkit.initializeBondRotation();
+      modelkit.initializeForModel();
     movingSelected = false;
     slm.noneSelected = Boolean.FALSE;
     setHoverEnabled(true);

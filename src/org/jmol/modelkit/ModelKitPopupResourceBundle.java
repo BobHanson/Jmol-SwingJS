@@ -60,11 +60,13 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     		"moreAtomMenu - assignAtom_plP!CB assignAtom_miP!CB" },
     { "moreAtomMenu", "clearQ - _??P!CB _??P!CB _??P!CB _??P!CB _??P!CB _??P!CB " },
     { "bondMenu", "assignBond_0P!CB assignBond_1P!CB assignBond_2P!CB assignBond_3P!CB - assignBond_pP!CB assignBond_mP!CB - rotateBondP!CB" },
-    { "xtalMenu", "xtalSymmetryMenu xtalPackingMenu xtalOptionsMenu" },
-    { "xtalViewEditMenu", "mkmode_molecular??P!RD mkmode_view??P!RD mkmode_edit??P!RD" },
+    { "xtalMenu", "xtalModeMenu xtalSelMenu xtalSelOpMenu xtalSymmetryMenu xtalPackingMenu xtalOptionsMenu" },
+    { "xtalModeMenu", "mkmode_molecular??P!RD mkmode_view??P!RD mkmode_edit??P!RD" }, 
+    { "xtalSelMenu", "mksel_atom??P!RD mksel_position??P!RD" },
+    { "xtalSelOpMenu", "mkselop_byop??P!RD xtalOpMenu mkselop_addOffset??P!RD mkselop_atom2??P!RD" },
     { "xtalSymmetryMenu", "mksymmetry_none??P!RD mksymmetry_retainLocal??P!RD mksymmetry_applyLocal??P!RD mksymmetry_applyFull??P!RD" },
     { "xtalPackingMenu", "mkunitcell_extend??P!RD mkunitcell_packed??P!RD" },
-    { "xtalOptionsMenu", "mkallAtoms??P!RD mkasymmetricUnit??P!RD mkallowElementReplacement??P!CB" }
+    { "xtalOptionsMenu", "mkaddHydrogens??P!CB mkclicktosetelement??P!CB" }
 
   };
   
@@ -92,9 +94,20 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "bondMenu", "<bonds.png>",//GT.$("bonds"),
         "optionsMenu", "<dotdotdot.png>",//GT.$("atoms"),
         "xtalMenu", "<xtal.png>",
+        "xtalModeMenu","mode",
+        "xtalSelMenu","select atom or position",
+        "xtalSelOpMenu","select operator", 
+        "xtalOpMenu","operators:", 
         "xtalSymmetryMenu", "symmetry",
         "xtalOptionsmenu", "options",
         "xtalPackingMenu", "packing",
+        "mkaddHydrogens??P!CB", "add hydrogens on new atoms",
+        "mkclicktosetelement??P!CB", "allow clicking to set atom element",
+        "mkselop_byop??P!RD", "from list",
+        "mkselop_addOffset??P!RD", "add lattice offset",
+        "mkselop_atom2??P!RD", "to second atom",
+        "mksel_atom??P!RD", "select atom", 
+        "mksel_position??P!RD", "select position",
         "mkmode_molecular??P!RD", GT.$("No View/Edit"),
         "mkmode_view??P!RD", GT.$("View"),
         "mkmode_edit??P!RD", GT.$("Edit"),

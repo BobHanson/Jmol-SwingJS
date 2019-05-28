@@ -42,15 +42,6 @@ public class JmolAwtPopup extends JmolGenericPopup {
   }
 
   @Override
-  public void jpiInitialize(PlatformViewer vwr, String menu) {
-    boolean doTranslate = GT.setDoTranslate(true);
-    PopupResource bundle = new MainPopupResourceBundle(strMenuStructure = menu,
-        menuText);
-    initialize((Viewer) vwr, bundle, bundle.getMenuName());
-    GT.setDoTranslate(doTranslate);
-  }
-  
-  @Override
   protected void menuShowPopup(SC popup, int x, int y) {
     try {
       ((JPopupMenu)((AwtSwingComponent)popup).jc).show((Component) vwr.display, x, y);

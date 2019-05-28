@@ -40,6 +40,7 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
   protected boolean allowSignedFeatures;
   protected boolean isJS, isApplet, isSigned, isWebGL;
   protected int thisx, thisy;
+  
   protected boolean isTainted = true;
 
   protected String menuName;
