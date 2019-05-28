@@ -51,14 +51,6 @@ public abstract class GenericSwingPopup implements GenericMenuInterface {
   protected Map<String, SC> htMenus = new Hashtable<String, SC>();
   private Lst<SC> SignedOnly = new Lst<SC>();
   
-  /**
-   * @param name  
-   * @param value 
-   */
-  public void setProperty(String name, Object value) {
-    // see JmolgenericPopup
-  }
-
   protected void initSwing(String title, PopupResource bundle, Object applet,
                            boolean isJS, boolean isSigned, boolean isWebGL) {
       this.isJS = isJS;

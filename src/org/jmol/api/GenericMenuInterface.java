@@ -15,7 +15,4 @@ public interface GenericMenuInterface {
   public void menuFocusCallback(String name, String actionCommand, boolean b);
   public void menuCheckBoxCallback(SC source);
   
-  public Object jpiSetProperty(String name, Object value);
-
- 
 }

@@ -52,12 +52,6 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	// System.out.println("JmolPopup " + this + " finalize");
 	// }
 
-  @Override
-  public Object jpiSetProperty(String name, Object value) {
-    // n/a
-    return null;
-  }
-
   protected JSViewer vwr;
 	protected int updateMode;
 	

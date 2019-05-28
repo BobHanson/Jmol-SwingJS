@@ -100,6 +100,7 @@ import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
+import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -907,7 +908,7 @@ public class Viewer extends JmolViewer
       return;
     tm.navigateKey(keyWhere, modifiers);
     if (!tm.vibrationOn && keyWhere != 0)
-      refresh(REFRESHrepaint, "Viewer:navigate()");
+      refresh(REFRESH_REPAINT, "Viewer:navigate()");
   }
 
   public void move(JmolScriptEvaluator eval, V3 dRot, float dZoom, V3 dTrans,
@@ -1044,7 +1045,7 @@ public class Viewer extends JmolViewer
   public void rotateFront() {
     // deprecated
     tm.resetRotation();
-    refresh(REFRESHrepaint, "Viewer:rotateFront()");
+    refresh(REFRESH_REPAINT, "Viewer:rotateFront()");
   }
 
   public void translate(char xyz, float x, char type, BS bsAtoms) {
@@ -1080,7 +1081,7 @@ public class Viewer extends JmolViewer
         break;
       }
     }
-    refresh(REFRESHrepaint, "Viewer:translate()");
+    refresh(REFRESH_REPAINT, "Viewer:translate()");
   }
 
   void slabByPixels(int pixels) {
@@ -1661,7 +1662,7 @@ public class Viewer extends JmolViewer
                                           String[] fileNames, Object reader) {
     String ret = loadModelFromFile(fullPathName, fileName, fileNames, reader,
         false, null, null, null, 0, " ");
-    refresh(REFRESHrepaint, "loadModelFromFileRepaint");
+    refresh(REFRESH_REPAINT, "loadModelFromFileRepaint");
     return ret;
   }
 
@@ -1978,7 +1979,7 @@ public class Viewer extends JmolViewer
   public String openStringInline(String strModel) {
     // JmolSimpleViewer; JmolFileDropper inline string event
     String ret = openStringInlineParamsAppend(strModel, null, false);
-    refresh(REFRESHrepaint, "openStringInline");
+    refresh(REFRESH_REPAINT, "openStringInline");
     return ret;
   }
 
@@ -2016,7 +2017,7 @@ public class Viewer extends JmolViewer
   private String loadInlineScriptRepaint(String strModel, char newLine,
                                          boolean isAppend) {
     String ret = loadInlineScript(strModel, newLine, isAppend, null);
-    refresh(REFRESHrepaint, "loadInlineScript");
+    refresh(REFRESH_REPAINT, "loadInlineScript");
     return ret;
   }
 
@@ -2044,7 +2045,7 @@ public class Viewer extends JmolViewer
       return null;
     String ret = openStringsInlineParamsAppend(arrayModels,
         new Hashtable<String, Object>(), isAppend);
-    refresh(REFRESHrepaint, "loadInline String[]");
+    refresh(REFRESH_REPAINT, "loadInline String[]");
     return ret;
   }
 
@@ -2072,7 +2073,7 @@ public class Viewer extends JmolViewer
         setLoadParameters(null, isAppend), isAppend);
     String ret = createModelSetAndReturnError(atomSetCollection, isAppend, null,
         new Hashtable<String, Object>());
-    refresh(REFRESHrepaint, "loadInline");
+    refresh(REFRESH_REPAINT, "loadInline");
     return ret;
   }
 
@@ -2633,7 +2634,8 @@ public class Viewer extends JmolViewer
     }
     reset(true);
     selectAll();
-    rotatePrev1 = rotateBondIndex = -1;
+    if (modelkit != null)
+      modelkit.initializeBondRotation();
     movingSelected = false;
     slm.noneSelected = Boolean.FALSE;
     setHoverEnabled(true);
@@ -3410,9 +3412,9 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public final static int REFRESHrepaint = 1;
+  public final static int REFRESH_REPAINT = 1;
   public final static int REFRESH_SYNC = 2;
-  public final static int REFRESH_SYNC_MASK = REFRESHrepaint | REFRESH_SYNC;
+  public final static int REFRESH_SYNC_MASK = REFRESH_REPAINT | REFRESH_SYNC;
   public final static int REFRESHrepaint_NO_MOTION_ONLY = 6;
   public final static int REFRESH_SEND_WEBGL_NEW_ORIENTATION = 7;
 
@@ -3474,7 +3476,7 @@ public class Viewer extends JmolViewer
       return;
     if (isWebGL) {
       switch (mode) {
-      case REFRESHrepaint:
+      case REFRESH_REPAINT:
       case REFRESH_SYNC:
       case REFRESH_SEND_WEBGL_NEW_ORIENTATION:
         tm.finalizeTransformParameters();
@@ -4481,10 +4483,10 @@ public class Viewer extends JmolViewer
         + (option.length() == 1 ? "" : option.substring(1, 2));
     switch (pickingMode) {
     case ActionManager.PICKING_ASSIGN_ATOM:
-      setAtomPickingOption(option);
+      getModelkit(false).setAtomPickingOption(option);
       break;
     case ActionManager.PICKING_ASSIGN_BOND:
-      setBondPickingOption(option);
+      getModelkit(false).setBondPickingOption(option);
       break;
     default:
       Logger.error("Bad picking mode: " + strMode + "_" + option);
@@ -4585,15 +4587,19 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public GenericMenuInterface getModelkit(boolean andShow) {
+  public ModelKitPopup getModelkit(boolean andShow) {
     if (modelkit == null) {
-      modelkit = apiPlatform.getMenuPopup(null, 'm');
+      modelkit = (ModelKitPopup) apiPlatform.getMenuPopup(null, 'm');
     } else if (andShow) { 
       modelkit.jpiUpdateComputedMenus();
     }
     return modelkit;
   }
     
+  public void setRotateBondIndex(int i) {
+    if (modelkit != null)
+      modelkit.setRotateBondIndex(i);
+  }
     
   public String getMenu(String type) {
     getPopupMenu();
@@ -5997,7 +6003,7 @@ public class Viewer extends JmolViewer
       break;
     case T.visualrange:
       tm.visualRangeAngstroms = value;
-      refresh(REFRESHrepaint, "set visualRange");
+      refresh(REFRESH_REPAINT, "set visualRange");
       break;
     case T.navigationdepth:
       setNavigationDepthPercent(value);
@@ -6010,7 +6016,7 @@ public class Viewer extends JmolViewer
       break;
     case T.cameradepth:
       tm.setCameraDepthPercent(value, false);
-      refresh(REFRESHrepaint, "set cameraDepth");
+      refresh(REFRESH_REPAINT, "set cameraDepth");
       // transformManager will set global value for us;
       return;
     case T.rotationradius:
@@ -6923,8 +6929,8 @@ public class Viewer extends JmolViewer
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
-      setAtomPickingOption("C");
-      setBondPickingOption("p");
+      getModelkit(false).setAtomPickingOption("C");
+      getModelkit(false).setBondPickingOption("p");
       if (!isApplet)
         popupMenu(0, 0, 'm');
       if (isChange)
@@ -7004,7 +7010,7 @@ public class Viewer extends JmolViewer
 
   public void setNavigationDepthPercent(float percent) {
     tm.setNavigationDepthPercent(percent);
-    refresh(REFRESHrepaint, "set navigationDepth");
+    refresh(REFRESH_REPAINT, "set navigationDepth");
   }
 
   public boolean getShowNavigationPoint() {
@@ -7381,7 +7387,7 @@ public class Viewer extends JmolViewer
   public JmolAppConsoleInterface appConsole;
   JmolScriptEditorInterface scriptEditor;
   GenericMenuInterface jmolpopup;
-  private GenericMenuInterface modelkit;
+  ModelKitPopup modelkit;
   private Map<String, Object> headlessImageParams;
 
   public String getChimeInfo(int tok) {
@@ -7569,7 +7575,7 @@ public class Viewer extends JmolViewer
     }
     if (shm.checkObjectDragged(prevX, prevY, x, y, action,
         getVisibleFramesBitSet(), iShape)) {
-      refresh(REFRESHrepaint, "checkObjectDragged");
+      refresh(REFRESH_REPAINT, "checkObjectDragged");
       if (iShape == JC.SHAPE_DRAW)
         scriptEcho((String) getShapeProperty(JC.SHAPE_DRAW, "command"));
       return true;
@@ -7603,6 +7609,8 @@ public class Viewer extends JmolViewer
       isSpin = false;
     }
 
+    if (eval == null)
+      eval = this.eval;
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
         translation, finalPoints, dihedralList, m4);
@@ -7850,8 +7858,8 @@ public class Viewer extends JmolViewer
     // cannot synchronize this -- it's from the mouse and the event queue
     if (deltaZ == 0)
       return;
-    if (x == Integer.MIN_VALUE)
-      rotateBondIndex = -1;
+    if (x == Integer.MIN_VALUE && modelkit != null)
+        modelkit.initializeBondRotation();
     if (isJmolDataFrame())
       return;
     if (deltaX == Integer.MIN_VALUE) {
@@ -7874,8 +7882,8 @@ public class Viewer extends JmolViewer
     movingSelected = true;
     stopMinimization();
     // note this does not sync with applets
-    if (rotateBondIndex >= 0 && x != Integer.MIN_VALUE) {
-      actionRotateBond(deltaX, deltaY, x, y);
+    if (x != Integer.MIN_VALUE && modelkit != null && modelkit.getRotateBondIndex() >= 0) {
+      modelkit.actionRotateBond(deltaX, deltaY, x, y);
     } else {
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
       if (!bsSelected.isEmpty()) {
@@ -7933,82 +7941,6 @@ public class Viewer extends JmolViewer
       setCursor(GenericPlatform.CURSOR_HAND);
     }
     setShapeProperty(JC.SHAPE_HALOS, "highlight", bs);
-  }
-
-  private int rotateBondIndex = -1;
-
-  public void setRotateBondIndex(int index) {
-    boolean haveBond = (rotateBondIndex >= 0);
-    if (!haveBond && index < 0)
-      return;
-    rotatePrev1 = -1;
-    bsRotateBranch = null;
-    if (index == Integer.MIN_VALUE)
-      return;
-    rotateBondIndex = index;
-    highlightBond(index, false);
-
-  }
-
-  int getRotateBondIndex() {
-    return rotateBondIndex;
-  }
-
-  private int rotatePrev1 = -1;
-  private int rotatePrev2 = -1;
-  private BS bsRotateBranch;
-
-  void actionRotateBond(int deltaX, int deltaY, int x, int y) {
-    // called by actionManager
-    if (rotateBondIndex < 0)
-      return;
-    BS bsBranch = bsRotateBranch;
-    Atom atom1, atom2;
-    if (bsBranch == null) {
-      Bond b = ms.bo[rotateBondIndex];
-      atom1 = b.atom1;
-      atom2 = b.atom2;
-      undoMoveActionClear(atom1.i, AtomCollection.TAINT_COORD, true);
-      P3 pt = P3.new3(x, y, (atom1.sZ + atom2.sZ) / 2);
-      tm.unTransformPoint(pt, pt);
-      if (atom2.getCovalentBondCount() == 1
-          || pt.distance(atom1) < pt.distance(atom2)
-              && atom1.getCovalentBondCount() != 1) {
-        Atom a = atom1;
-        atom1 = atom2;
-        atom2 = a;
-      }
-      if (Measure.computeAngleABC(pt, atom1, atom2, true) > 90
-          || Measure.computeAngleABC(pt, atom2, atom1, true) > 90) {
-        bsBranch = getBranchBitSet(atom2.i, atom1.i, true);
-      }
-      if (bsBranch != null)
-        for (int n = 0, i = atom1.bonds.length; --i >= 0;) {
-          if (bsBranch.get(atom1.getBondedAtomIndex(i)) && ++n == 2) {
-            bsBranch = null;
-            break;
-          }
-        }
-      if (bsBranch == null) {
-        bsBranch = ms.getMoleculeBitSetForAtom(atom1.i);
-      }
-      bsRotateBranch = bsBranch;
-      rotatePrev1 = atom1.i;
-      rotatePrev2 = atom2.i;
-    } else {
-      atom1 = ms.at[rotatePrev1];
-      atom2 = ms.at[rotatePrev2];
-    }
-    V3 v1 = V3.new3(atom2.sX - atom1.sX, atom2.sY - atom1.sY, 0);
-    V3 v2 = V3.new3(deltaX, deltaY, 0);
-    v1.cross(v1, v2);
-    float degrees = (v1.z > 0 ? 1 : -1) * v2.length();
-
-    BS bs = BSUtil.copy(bsBranch);
-    bs.andNot(slm.getMotionFixedAtoms());
-
-    rotateAboutPointsInternal(eval, atom1, atom2, 0, degrees, false, bs, null,
-        null, null, null);
   }
 
   public void refreshMeasures(boolean andStopMinimization) {
@@ -9006,16 +8938,6 @@ public class Viewer extends JmolViewer
     return g.multiProcessor && isParallel;
   }
 
-  private void setAtomPickingOption(String option) {
-    if (haveDisplay)
-      acm.setAtomPickingOption(option);
-  }
-
-  private void setBondPickingOption(String option) {
-    if (haveDisplay)
-      acm.setBondPickingOption(option);
-  }
-
   void undoClear() {
     actionStates.clear();
     actionStatesRedo.clear();
@@ -9034,7 +8956,7 @@ public class Viewer extends JmolViewer
     getStateCreator().undoMoveAction(action, n);
   }
 
-  void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo) {
+  public void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo) {
     // called by actionManager
     if (g.preserveState)
       getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
@@ -9976,13 +9898,6 @@ public class Viewer extends JmolViewer
     if (ms.isAtomAssignable(atomIndex)) {
       script("assign atom ({" + atomIndex + "}) \"" + element + "\"");
     }
-  }
-
-  public String getSymop(int atomIndex, String symop, Object option) {
-    SymmetryInterface uc = ms.getUnitCellForAtom(atomIndex);
-    P3 offset = (option instanceof P3 ? (P3) option : null);
-    int options = (offset != null ? T.offset : "unit".equals(option) ? T.unitxyz : 0);
-    return (String) (uc == null ? null : uc.getSymmetryInfoAtom(ms, atomIndex, symop, -1, offset, null, "sym", T.draw, 0, 0, options));
   }
 
 }

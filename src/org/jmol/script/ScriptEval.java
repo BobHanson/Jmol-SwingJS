@@ -5793,7 +5793,7 @@ public class ScriptEval extends ScriptExpr {
     cmdGoto(false);
   }
 
-  private void cmdRotate(boolean isSpin, boolean isSelected)
+  public void cmdRotate(boolean isSpin, boolean isSelected)
       throws ScriptException {
 
     // rotate is a full replacement for spin
@@ -5893,6 +5893,9 @@ public class ScriptEval extends ScriptExpr {
     boolean axesOrientationRasmol = vwr.getBoolean(T.axesorientationrasmol);
     for (int i = 1; i < slen; ++i) {
       switch (tok = getToken(i).tok) {
+      case T.rotate:
+        // from MODELKIT - ignore
+        continue;
       case T.define:
       case T.bitset:
       case T.expressionBegin:

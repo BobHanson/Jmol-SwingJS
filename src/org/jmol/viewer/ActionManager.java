@@ -516,28 +516,6 @@ public class ActionManager implements EventManager {
       resetMeasurement();
   }
 
-  private String pickAtomAssignType = "C";
-  private char pickBondAssignType = 'p';
-  private boolean isPickAtomAssignCharge;
-
-  void setAtomPickingOption(String option) {
-    switch (apm) {
-    case PICKING_ASSIGN_ATOM:
-      pickAtomAssignType = option;
-      isPickAtomAssignCharge = (pickAtomAssignType.equals("Pl") || pickAtomAssignType
-          .equals("Mi"));
-      break;
-    }
-  }
-
-  void setBondPickingOption(String option) {
-    switch (bondPickingMode) {
-    case PICKING_ASSIGN_BOND:
-      pickBondAssignType = Character.toLowerCase(option.charAt(0));
-      break;
-    }
-  }
-
   private int pickingStyle;
   private int pickingStyleSelect = PICKINGSTYLE_SELECT_JMOL;
   private int pickingStyleMeasure = PICKINGSTYLE_MEASURE_OFF;
@@ -550,12 +528,12 @@ public class ActionManager implements EventManager {
     String script = ";set modelkitMode " + vwr.getBoolean(T.modelkitmode)
         + ";set picking " + getPickingModeName(apm);
     if (apm == PICKING_ASSIGN_ATOM)
-      script += "_" + pickAtomAssignType;
+      script += "_" + vwr.getModelkit(false).getAtomPickingType();
     script += ";";
     if (bondPickingMode != PICKING_OFF)
       script += "set picking " + getPickingModeName(bondPickingMode);
     if (bondPickingMode == PICKING_ASSIGN_BOND)
-      script += "_" + pickBondAssignType;
+      script += "_" + vwr.getModelkit(false).getBondPickingType();
     script += ";";
     return script;
   }
@@ -665,7 +643,7 @@ public class ActionManager implements EventManager {
       default:
         return;
       case PICKING_ASSIGN_ATOM:
-        measuresEnabled = !isPickAtomAssignCharge;
+        measuresEnabled = !vwr.getModelkit(false).isPickAtomAssignCharge();
         return;
       case PICKING_DRAW:
         drawMode = true;
@@ -1078,7 +1056,7 @@ public class ActionManager implements EventManager {
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
 
-    if (vwr.getRotateBondIndex() >= 0) {
+    if (vwr.getModelkit(false).getRotateBondIndex() >= 0) {
       if (bnd(dragWheelAction, ACTION_rotateBranch)) {
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
             false);
@@ -1463,7 +1441,7 @@ public class ActionManager implements EventManager {
       label = vwr.apiPlatform.prompt("Set label for atomIndex=" + iatom, label, null, false);
       if (label != null) {
         vwr.shm.setAtomLabel(label, iatom);
-        vwr.refresh(Viewer.REFRESHrepaint, "label atom");
+        vwr.refresh(Viewer.REFRESH_REPAINT, "label atom");
       }
     } else {
       setAtomsPicked(BSUtil.newAndSetBit(iatom), "Label picked for atomIndex = " + iatom + ": " + label);
@@ -1912,17 +1890,19 @@ public class ActionManager implements EventManager {
   private void assignNew(int x, int y) {
     // H C + -, etc.
     // also check valence and add/remove H atoms as necessary?
+    boolean isCharge = vwr.getModelkit(false).isPickAtomAssignCharge();
+    String atomType = vwr.getModelkit(false).getAtomPickingType();
     if (mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
       runScript("assign connect "
           + mp.getMeasurementScript(" ", false));
-    } else if (pickAtomAssignType.equals("Xx")) {
+    } else if (atomType.equals("Xx")) {
       exitMeasurementMode("bond dropped");
     } else {
       if (pressed.inRange(xyRange, dragged.x, dragged.y)) {
         String s = "assign atom ({" + dragAtomIndex + "}) \""
-            + pickAtomAssignType + "\"";
-        if (isPickAtomAssignCharge) {
+            + atomType + "\"";
+        if (isCharge) {
           s += ";{atomindex=" + dragAtomIndex + "}.label='%C'; ";
           vwr.undoMoveActionClear(dragAtomIndex,
               AtomCollection.TAINT_FORMALCHARGE, true);
@@ -1930,7 +1910,7 @@ public class ActionManager implements EventManager {
           vwr.undoMoveActionClear(-1, T.save, true);
         }
         runScript(s);
-      } else if (!isPickAtomAssignCharge) {
+      } else if (!isCharge) {
         vwr.undoMoveActionClear(-1, T.save, true);
         Atom a = vwr.ms.at[dragAtomIndex];
         if (a.getElementNumber() == 1) {
@@ -1939,7 +1919,7 @@ public class ActionManager implements EventManager {
           P3 ptNew = P3.new3(x, y, a.sZ);
           vwr.tm.unTransformPoint(ptNew, ptNew);
           runScript("assign atom ({" + dragAtomIndex + "}) \""
-              + pickAtomAssignType + "\" " + Escape.eP(ptNew));
+              + atomType + "\" " + Escape.eP(ptNew));
         }
       }
     }
@@ -1952,11 +1932,11 @@ public class ActionManager implements EventManager {
     
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
-      runScript("assign bond [{" + index + "}] \"" + pickBondAssignType
+      runScript("assign bond [{" + index + "}] \"" + vwr.getModelkit(false).getBondPickingType()
           + "\"");
       break;
     case PICKING_ROTATE_BOND:
-      vwr.setRotateBondIndex(index);
+        vwr.setRotateBondIndex(index);
       break;
     case PICKING_DELETE_BOND:
       vwr.deleteBonds(BSUtil.newAndSetBit(index));

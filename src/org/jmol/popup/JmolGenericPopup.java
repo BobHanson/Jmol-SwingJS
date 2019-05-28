@@ -127,12 +127,6 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   ////// JmolPopupInterface methods //////
 
-  @Override
-  public Object jpiSetProperty(String name, Object value) {
-    // TODO
-    return null;
-  }
-
   private final static int MENUITEM_HEIGHT = 20;
 
   @Override

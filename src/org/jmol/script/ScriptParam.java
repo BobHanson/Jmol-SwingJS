@@ -185,7 +185,7 @@ abstract public class ScriptParam extends ScriptError {
    * 
    * @throws ScriptException
    */
-  protected P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
+  public P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
       throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
