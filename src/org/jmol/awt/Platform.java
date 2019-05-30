@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.P3;
 import javajs.util.Rdr;
@@ -52,7 +52,7 @@ public class Platform implements GenericPlatform {
   @Override
   public GenericMenuInterface getMenuPopup(String menuStructure, char type) {
     GenericMenuInterface jmolpopup = (GenericMenuInterface) Interface.getOption(
-        type == 'j' ? "popup.JmolAwtPopup" : "awt.AwtModelKitPopup", null, null);
+        type == 'j' ? "awt.AwtJmolPopup" : "awt.AwtModelKitPopup", null, null);
     if (jmolpopup != null)
       jmolpopup.jpiInitialize(vwr, menuStructure);
     return jmolpopup;

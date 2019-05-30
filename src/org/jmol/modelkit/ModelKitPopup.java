@@ -23,22 +23,13 @@
  */
 package org.jmol.modelkit;
 
-import java.net.URL;
-import java.util.Map.Entry;
-
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import org.jmol.api.PlatformViewer;
+import org.jmol.awtjs.swing.SC;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
-import org.jmol.popup.AwtSwingComponent;
-import org.jmol.popup.GenericSwingPopup;
 import org.jmol.popup.JmolGenericPopup;
-import org.jmol.popup.JmolSwingPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.script.ScriptException;
 import org.jmol.script.T;
@@ -49,7 +40,6 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.awt.SC;
 import javajs.util.BS;
 import javajs.util.Measure;
 import javajs.util.P3;
@@ -57,12 +47,32 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
-abstract public class ModelKitPopup extends JmolSwingPopup {
+/**
+ * An abstract popup class that is 
+ * instantiated for a given platform and
+ * context as one of:
+ * 
+ * <pre>
+ *   -- abstract ModelKitPopup
+ *      -- AwtModelKitPopup
+ *      -- JSModelKitPopup
+ * </pre>
+ * 
+ */
 
-  protected boolean hasUnitCell;
+abstract public class ModelKitPopup extends JmolGenericPopup {
+
+  private boolean hasUnitCell;
+  private String[] allOperators;
+  private int modelIndex = -1;
+  private String atomHoverLabel;
+  private String bondHoverLabel;
+  
+  abstract protected String getUnknownElement(SC item, String msg);
+
  
   public ModelKitPopup() {
-    System.out.println("hmm");
+    System.err.println("ModelKitPopup constructor");
   }
   
  
@@ -70,27 +80,30 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   protected PopupResource getBundle(String menu) {
     return new ModelKitPopupResourceBundle(null, null);
   }
+  
+//  @Override
+//  public void jpiDispose() {
+//    super.jpiDispose();
+//  }
+
  
   public void initializeForModel() {
     initializeBondRotation();
-    ms = null;
     allOperators = null;
     modelIndex = -999;
+    atomHoverLabel = bondHoverLabel = null;
   }
 
-  private ModelSet ms;
-  String[] allOperators;
-  private int modelIndex = -1;
-  
   @Override
   public void jpiUpdateComputedMenus() {
-    hasUnitCell = vwr.getCurrentUnitCell() != null;
+    hasUnitCell = (vwr.getCurrentUnitCell() != null);
     if (!checkUpdateSymmetryInfo())
       updateAllXtalMenus();
   }
 
   @Override
-  public String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
+  public String getUnknownCheckBoxScriptToRun(SC item, String name, String what,
+                                              boolean TF) {
     if (name.startsWith("mk")) {
       int pt = name.indexOf("??");
       name = name.substring(2, pt);
@@ -102,23 +115,18 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
       }
       return null;
     }
-    
-    // atom type
-    String element = JOptionPane.showInputDialog(GT.$("Element?"), "");
-    if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
-      return null;
-    menuSetLabel(item, element);
-    
-    ((AwtSwingComponent) item).setActionCommand("assignAtom_" + element + "P!:??");
-    return "set picking assignAtom_" + element;
+    String element = getUnknownElement(item, GT.$("Element?"));
+    return (element == null ? null : "set picking assignAtom_" + element);
   }
   
+
+
   /**
    * @j2sOverride
    */
   @Override
   public void menuClickCallback(SC source, String script) {
-    if (script.equals("clearQ")) {
+    if (script.equals("clearQPersists")) {
       for (SC item : htCheckbox.values()) {
         if (item.getActionCommand().indexOf(":??") < 0)
           continue;        
@@ -129,14 +137,11 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
       appRunScript("set picking assignAtom_C");
       return;
     }
-    processClickCallback(source, script);
-  }
-
-  @Override
-  protected Object getImageIcon(String fileName) {
-    String imageName = "org/jmol/modelkit/images/" + fileName;
-    URL imageUrl = this.getClass().getClassLoader().getResource(imageName);
-    return (imageUrl == null ? null : new ImageIcon(imageUrl));
+    if (script.startsWith("mk")) {
+      processXtalClick(script);
+      return;
+    }
+    super.menuClickCallback(source, script);
   }
 
   // xtal model kit only
@@ -147,8 +152,8 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   public final static int STATE_XTALEDIT        /* 0b00000000010*/ = 0x02;
   
   public final static int STATE_BITS_SYM_VIEW   /* 0b00000011100*/ = 0x1c;
-  public final static int STATE_SYM_NOOFFSET    /* 0b00000000000*/ = 0x00;
-  public final static int STATE_SYM_OFFSET      /* 0b00000001000*/ = 0x08;
+  public final static int STATE_SYM_NONE        /* 0b00000000100*/ = 0x04;
+  public final static int STATE_SYM_SHOW        /* 0b00000001000*/ = 0x08;
 
   public final static int STATE_BITS_SYM_EDIT   /* 0b00011100000*/ = 0xe0;
   public final static int STATE_SYM_APPLYFULL   /* 0b00000000000*/ = 0x00;
@@ -159,16 +164,28 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   public final static int STATE_UNITCELL_EXTEND  /* 0b00000000000*/ = 0x000;
   public final static int STATE_UNITCELL_PACKED  /* 0b00100000000*/ = 0x100;
 
+//  { "xtalModeMenu", "mkmode_molecular??P!RD mkmode_view??P!RD mkmode_edit??P!RD" }, 
   public static final String MODE_OPTIONS     = ";view;edit;molecular;";
+//  { "xtalSymmetryMenu", "mksymmetry_none??P!RD mksymmetry_retainLocal??P!RD mksymmetry_applyLocal??P!RD mksymmetry_applyFull??P!RD" },
   public static final String SYMMETRY_OPTIONS = ";none;applylocal;retainlocal;applyfull;";
+  //{ "xtalPackingMenu", "mkunitcell_extend??P!RD mkunitcell_packed??P!RD" },
   public static final String UNITCELL_OPTIONS = ";packed;extend;";
+  
+//  { "xtalOptionsMenu", "mkaddHydrogens??P!CB mkclicktosetelement??P!CB" }
+
   public static final String BOOLEAN_OPTIONS  = ";allowelementchange;addhydrogen;addhydrogens;";
   public static final String SET_OPTIONS     = ";element;";
   private static final int MAX_LABEL = 32;
 
-  private int state = STATE_MOLECULAR & STATE_SYM_NOOFFSET & STATE_SYM_APPLYFULL & STATE_UNITCELL_EXTEND; // 0x00
+//  { "xtalSelMenu", "mksel_atom??P!RD mksel_position??P!RD" },
+//  { "xtalSelOpMenu", "mkselop_byop??P!RD xtalOpMenu mkselop_addOffset??P!CB mkselop_atom2??P!RD" },
 
-  public P3 centerAtom, sphereAtom, viewOffset;
+  
+  
+  
+  private int state = STATE_MOLECULAR & STATE_SYM_NONE & STATE_SYM_APPLYFULL & STATE_UNITCELL_EXTEND; // 0x00
+
+  public P3 centerAtom, atom2, spherePoint, viewOffset;
   
   public double centerDistance;
   
@@ -266,6 +283,7 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
     }
 
     if (name == "center") {
+      setDefaultState(STATE_XTALVIEW);
       centerAtom = (P3) value;
       centerAtomIndex = (centerAtom instanceof Atom ? ((Atom) centerAtom).i
           : -1);
@@ -276,7 +294,7 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
 
     if (name == "offset") {
       viewOffset = (value instanceof P3 ? (P3) value : null);
-      setSymView(viewOffset == null ? STATE_SYM_NOOFFSET : STATE_SYM_OFFSET);
+      setSymView(viewOffset == null ? STATE_SYM_NONE : STATE_SYM_SHOW);
       showXtalSymmetry();
       return null;
     }
@@ -289,8 +307,8 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
 
     if (name == "point") {
       setDefaultState(STATE_XTALEDIT);
-      sphereAtom = (P3) value;
-      atomIndexSphere = (sphereAtom instanceof Atom ? ((Atom) sphereAtom).i
+      spherePoint = (P3) value;
+      atomIndexSphere = (spherePoint instanceof Atom ? ((Atom) spherePoint).i
           : -1);
       return null;
     }
@@ -330,8 +348,13 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   }
 
   private void setDefaultState(int mode) {
-    if (!isXtalState())
+    if (!isXtalState()) {
       setXtalState(mode);
+      if (mode == STATE_XTALVIEW) {
+        if (getSymViewState() == STATE_SYM_NONE)
+           setSymView(STATE_SYM_SHOW);
+      }
+    }
   }
 
   /**
@@ -358,24 +381,21 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
 
   private void showXtalSymmetry() {
     String script = null;
-
     if (centerAtomIndex < 0)
-      return;
+      centerAtomIndex = 0;
     switch (getSymViewState()) {
-    case 0:
+    case STATE_SYM_NONE:
       script = "draw * delete";
       break;
-    case STATE_SYM_OFFSET:
-      break;
+    case STATE_SYM_SHOW:
     default:
-      break;
-    }
-    if (script == null) {
       script = "draw ID sym symop " 
-          + (symop instanceof String ? "'" + symop + "'"
+          + (symop == null ? "1" 
+              : symop instanceof String ? "'" + symop + "'"
               : PT.toJSON(null, symop)) 
           + " {atomindex=" + centerAtomIndex + "}"
           + (viewOffset == null ? "" : " offset " + viewOffset);
+      break;
     }
     System.out.println("ModelKitPopup script=" + script);
     appRunScript(script);
@@ -556,7 +576,8 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
     if (index == Integer.MIN_VALUE)
       return;
     rotateBondIndex = index;
-    vwr.highlightBond(index, false);
+    String msg = "rotateBond";
+    vwr.highlightBond(index, msg);
 
   }
 
@@ -567,6 +588,7 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   private int rotatePrev1 = -1;
   private int rotatePrev2 = -1;
   private BS bsRotateBranch;
+  private String activeMenu;
 
   public void actionRotateBond(int deltaX, int deltaY, int x, int y) {
     // called by actionManager
@@ -628,17 +650,19 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
   
   /////////// building xtal menu //////////////////
   
+  private ModelSet lastModelSet;
+
   private boolean checkUpdateSymmetryInfo() {
     htMenus.get("xtalMenu").setEnabled(hasUnitCell);
     if (!hasUnitCell) {
-      ms = null;
+      lastModelSet = null;
       allOperators = null;
       modelIndex = -1;
       return true;
     }
     boolean isOK = true;
-    if (vwr.ms != ms) {
-      ms = vwr.ms;
+    if (vwr.ms != lastModelSet) {
+      lastModelSet = vwr.ms;
       isOK = false;      
     } else if (modelIndex == -1 || modelIndex != vwr.am.cmi){
       isOK = false;      
@@ -664,48 +688,203 @@ abstract public class ModelKitPopup extends JmolSwingPopup {
     } catch (ScriptException e) {
       // ignore
     }
-    allOperators = PT.split(sb.toString().trim(), "\n");
-    addAllCheckboxItems(htMenus.get("xtalOpMenu"), allOperators);
+    allOperators = PT.split(sb.toString().trim().replace('\t', ' '), "\n");
+    addAllCheckboxItems(htMenus.get("xtalOpPersistsMenu"), allOperators);
   }
 
   private void addAllCheckboxItems(SC menu, String[] labels) {
     menuRemoveAll(menu, 0);
-    if (labels.length <= MAX_LABEL) {
-      for (int i = 0; i < allOperators.length; i++) {
-        String id = "mkop" + i;
-        String basename = id;
-        String entry = allOperators[i];
-        menuCreateCheckboxItem(menu, entry, basename, id, false, false);
+    SC subMenu = menu;
+    int pt = (labels.length > MAX_LABEL ? 0 : Integer.MIN_VALUE);
+    for (int i = 0; i < labels.length; i++) {
+      if (pt >= 0 && (pt++ % MAX_LABEL) == 0) {
+        String id = "mtsymop" + pt + "Menu";
+        subMenu = menuNewSubMenu(
+            (i + 1) + "..." + Math.min(i + MAX_LABEL, labels.length),
+            menuGetId(menu) + "." + id);
+        menuAddSubMenu(menu, subMenu);
+        htMenus.put(id, subMenu);
+        pt = 1;
       }
-    } else {
-
+      if (i == 0)
+        menuEnable(
+            menuCreateItem(subMenu, GT.$("none"), "draw sym_* delete", null),
+            true);
+      String sym = labels[i]; // XYZoriginal
+      menuEnable(menuCreateItem(subMenu, sym, sym,
+          subMenu.getName() + "." + "mkop_" + (i + 1)), true);
     }
 
   }
 
   private void updateAllXtalMenuOptions() {
-    for(Entry<String, SC> entry: htMenus.entrySet()) {
-      String key = entry.getKey();
+
+    
+//    "mkaddHydrogens??P!CB", "add hydrogens on new atoms",
+//    "mkclicktosetelement??P!CB", "allow clicking to set atom element",
+//    "mksel_atom??P!RD", "select atom", 
+//    "mksel_position??P!RD", "select position",
+//    "mkmode_molecular??P!RD", GT.$("No View/Edit"),
+//    "mksymmetry_none??P!RD", GT.$("do not apply"),
+//    "mksymmetry_retainLocal??P!RD", GT.$("retain local"),
+//    "mksymmetry_applyLocal??P!RD", GT.$("apply local"),
+//    "mksymmetry_applyFull??P!RD", GT.$("apply full"),
+//    "mkunitcell_extend??P!RD", GT.$("extend cell"),
+//    "mkunitcell_packed??P!RD", GT.$("pack cell"),
+//    "mkasymmetricUnit??P!RD", GT.$("asymmetric unit"),
+//    "mkallAtoms??P!RD", GT.$("all atoms"),
+
+    String text = "";
+    switch (getXtalState()) {
+    case STATE_MOLECULAR:
+      text = " (not enabled)";
+      break;
+    case STATE_XTALVIEW:
+      text = " (view)";
+      break;
+    case STATE_XTALEDIT:
+      text = " (edit)";
+      break;
+    }
+    setLabel("xtalModePersistsMenu", "mode " + text);
+
+    text = "operator: ";
+    
+//    setItem("mkselop_addOffset", "CB", (viewOffset != null));
+//    
+//    setLabel("xtalSelOpMenu", null, "operator: " + text);
       
-      if (key.startsWith("mk")) {
-        
-        
-        
-        
+    
+//  "mkselop_byop??P!RD", "from list",
+//  "mkselop_addOffset??P!RD", "add lattice offset",
+//  "mkselop_atom2??P!RD", "to second atom",
+
+ }
+    
+  private void setLabel(String key, String label) {
+    menuSetLabel(htMenus.get(key), label);    
+  }
+
+
+//    public final static int STATE_BITS_SYM_VIEW   /* 0b00000011100*/ = 0x1c;
+//    public final static int STATE_SYM_NOOFFSET    /* 0b00000000000*/ = 0x00;
+//    public final static int STATE_SYM_OFFSET      /* 0b00000001000*/ = 0x08;
+//
+//    public final static int STATE_BITS_SYM_EDIT   /* 0b00011100000*/ = 0xe0;
+//    public final static int STATE_SYM_APPLYFULL   /* 0b00000000000*/ = 0x00;
+//    public final static int STATE_SYM_APPLYLOCAL  /* 0b00000100000*/ = 0x20;
+//    public final static int STATE_SYM_RETAINLOCAL /* 0b00001000000*/ = 0x40;
+//
+//    public final static int STATE_BITS_UNITCELL    /* 0b11100000000*/ = 0x700; 
+//    public final static int STATE_UNITCELL_EXTEND  /* 0b00000000000*/ = 0x000;
+//    public final static int STATE_UNITCELL_PACKED  /* 0b00100000000*/ = 0x100;
+//
+//    public static final String MODE_OPTIONS     = ";view;edit;molecular;";
+//    public static final String SYMMETRY_OPTIONS = ";none;applylocal;retainlocal;applyfull;";
+//    public static final String UNITCELL_OPTIONS = ";packed;extend;";
+//    public static final String BOOLEAN_OPTIONS  = ";allowelementchange;addhydrogen;addhydrogens;";
+//    public static final String SET_OPTIONS     = ";element;";
+//    private static final int MAX_LABEL = 32;
+    
+
+  @Override
+  protected void appUpdateForShow() {
+    updateAllXtalMenuOptions();
+  }
+
+  public String getActiveMenu() {
+    return activeMenu;
+  }
+  
+  public void setActiveMenu(String name) {
+    activeMenu = name;
+    vwr.refresh(Viewer.REFRESH_REPAINT, "modelkit");
+  }
+
+  
+  @Override
+  protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
+                                               boolean selected) {
+    System.out.println("MK appUpdateSpecial " + source.getName() + " "+ actionCommand + " " + selected);    
+    
+  }
+
+  @Override
+  protected String appGetMenuAsString(String title) {
+    // main menu only
+    return null;
+  }
+
+
+  @Override
+  public void menuFocusCallback(String name, String actionCommand, boolean gained) {
+    if (gained) {
+      if (name.indexOf(".mkop_") >= 0) {
+        processXtalClick(name);
+      } else {
+        String active = null;
+        if (name.indexOf("xtalMenu") >= 0)
+          active = "xtalMenu";
+        else if (name.indexOf("atomMenu") >= 0)
+          active = "atomMenu";
+        else if (name.indexOf("bondMenu") >= 0)
+          active = "bondMenu";
+        if (active != null)
+          setActiveMenu(active);
       }
-      
     }
   }
 
   @Override
-  protected void appUpdateForShow() {
-    // n/a
+  protected String getScriptForCallback(String id, String script) {
+    System.out.println("ModelKit script is " + script);
+    return script;
   }
 
-  @Override
-  protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
-                                               boolean selected) {
-    // n/a?
+  private void processXtalClick(String id) {
+    id = id.intern();
+    int pt = id.indexOf(".mkop_");
+    if (pt >= 0) {
+      symop = Integer.valueOf(id.substring(pt + 6));
+      showXtalSymmetry();
+    } else
+    if (id == "mkmode_edit") {
+      setXtalState(STATE_XTALEDIT);
+    } else if (id == "mkmode_view") {
+      setXtalState(STATE_XTALVIEW);
+    } else if (id == "mkmode_molecular") {
+      setXtalState(STATE_MOLECULAR);
+    } 
+    
+    // TODO more settings 
+    
+    
+    
+    
+    updateAllXtalMenuOptions();
+  }
+
+
+  public String getHoverLabel(int atomIndex) {
+    int state = getXtalState();
+    if (state != STATE_XTALVIEW && !vwr.ms.isAtomInLastModel(atomIndex)) {
+      return "Only atoms in the last model may be edited.";
+    }
+    if (activeMenu == "bondMenu")
+      setActiveMenu("atomMenu");
+    String msg = atomHoverLabel + " (atomHoverLabel)";
+    switch (state) {
+    case STATE_XTALVIEW:
+      msg = "Click to view symop for " + vwr.getAtomInfo(atomIndex);
+      break;
+    case STATE_XTALEDIT:
+      msg = "Click to start editing for " + vwr.getAtomInfo(atomIndex);
+      break;
+    case STATE_MOLECULAR:
+      vwr.highlight(BSUtil.newAndSetBit(atomIndex));
+      break;
+    }    
+    return msg;
   }
 
 

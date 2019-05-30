@@ -11,7 +11,7 @@ import org.jmol.api.PymolAtomReader;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementData;

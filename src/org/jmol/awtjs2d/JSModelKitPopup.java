@@ -24,18 +24,15 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-import org.jmol.i18n.GT;
 import org.jmol.modelkit.ModelKitPopup;
-import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.util.Elements;
-
-import javajs.awt.Component;
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.SC;
 
 public class JSModelKitPopup extends ModelKitPopup {
 
   public JSModelKitPopup() {
-    helper = new JSSwingPopupHelper(this);
+    helper = new JSPopupHelper(this);
   }
 
   @Override
@@ -49,20 +46,23 @@ public class JSModelKitPopup extends ModelKitPopup {
     isTainted = false;
   }
   
+  @SuppressWarnings({ "null", "unused" })
   @Override
-  public String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
-    String element = GT.$("Element?");
+  public String getUnknownElement(SC item, String msg) {
+    String element = null;
     /**
      * @j2sNative
      * 
-     * element = prompt(element, "");
+     * element = prompt(msg, "");
      * 
      */
-    {}
+    {
+      // This block is important for non-SwingJS Jmol
+    }
     if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
       return null;
     updateButton(item, element, "assignAtom_" + element + "P!:??");
-    return "set picking assignAtom_" + element;
+    return element;
   }
 
   @Override

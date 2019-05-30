@@ -27,7 +27,7 @@ import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 
 import org.jmol.shape.Shape;

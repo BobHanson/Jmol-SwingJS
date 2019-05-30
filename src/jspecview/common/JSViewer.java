@@ -20,9 +20,9 @@ import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.util.Logger;
 
 import javajs.api.BytePoster;
-import javajs.awt.Component;
-import java.awt.Dimension;
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.Dimension;
+import org.jmol.awtjs.swing.SC;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.OC;

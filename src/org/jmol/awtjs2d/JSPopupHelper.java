@@ -21,22 +21,24 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.jmol.popup;
+package org.jmol.awtjs2d;
 
 
-import org.jmol.api.GenericMenuInterface;
-import javajs.awt.event.ActionEvent;
-import javajs.awt.event.ItemEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.MouseEvent;
+
 import org.jmol.awtjs.swing.ButtonGroup;
-import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.awtjs.swing.JCheckBoxMenuItem;
-import org.jmol.awtjs.swing.JRadioButtonMenuItem;
-
-import javajs.awt.Component;
-import javajs.awt.SC;
-
 import org.jmol.awtjs.swing.JMenu;
 import org.jmol.awtjs.swing.JMenuItem;
+import org.jmol.awtjs.swing.JPopupMenu;
+import org.jmol.awtjs.swing.JRadioButtonMenuItem;
+
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.SC;
+import org.jmol.popup.GenericPopup;
+import org.jmol.popup.PopupHelper;
 
 /**
  * For menus, popup-related awt/swing class references are in this file.
@@ -46,7 +48,7 @@ import org.jmol.awtjs.swing.JMenuItem;
  * 
  * 
  */
-  public class JSSwingPopupHelper implements PopupHelper {
+  public class JSPopupHelper implements PopupHelper {
 
   //  (on mouse up)       checkMenuClick(e.getSource(), e.getSource().getActionCommand());
   //  (on entry)          checkMenuFocus(item.getName(), item.getActionCommand(), true);
@@ -57,11 +59,11 @@ import org.jmol.awtjs.swing.JMenuItem;
    * used here and by SwingController to refer to the Java 
    * class being handled by this helper.
    */
-  GenericMenuInterface popup;
+  GenericPopup popup;
   
   private ButtonGroup buttonGroup;
 
-  public JSSwingPopupHelper(GenericMenuInterface popup) {
+  public JSPopupHelper(GenericPopup popup) {
     this.popup = popup;
   }
 
@@ -74,12 +76,14 @@ import org.jmol.awtjs.swing.JMenuItem;
 
   @Override
   public SC getMenu(String name) {
-    return new JMenu();
+    JMenu jm = new JMenu();
+    jm.setName(name);
+    return jm;
   }
 
   @Override
-  public SC getMenuItem(String name) {
-    return new JMenuItem(name);
+  public SC getMenuItem(String text) {
+    return new JMenuItem(text);
   }
 
   @Override
@@ -103,6 +107,7 @@ import org.jmol.awtjs.swing.JMenuItem;
     buttonGroup.add(item);
   }
 
+  
   @Override
   public int getItemType(SC m) {
     return ((JMenuItem) m).btnType;
@@ -136,6 +141,24 @@ import org.jmol.awtjs.swing.JMenuItem;
   @Override
   public Object getButtonGroup() {
     return buttonGroup;
+  }
+
+  public void handleEvent(MouseEvent e) {
+    String type = "" + e.getID(); 
+    if (type == "mouseenter")
+      mouseEntered(e);
+    else if (type == "mouseleave")
+      mouseExited(e);
+  }
+  
+  public void mouseEntered(MouseEvent e) {
+    SC jmi = (SC) e.getSource();
+    popup.menuFocusCallback(jmi.getName(), jmi.getActionCommand(), true);
+  }
+
+  public void mouseExited(MouseEvent e) {
+    SC jmi = (SC) e.getSource();
+    popup.menuFocusCallback(jmi.getName(), jmi.getActionCommand(), false);
   }
 
   

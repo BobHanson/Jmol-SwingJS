@@ -33,12 +33,12 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import javajs.awt.event.Event;
 import javajs.util.PT;
 
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.PlatformViewer;
+import org.jmol.awtjs.Event;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;

@@ -21,7 +21,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.jmol.popup;
+package org.jmol.awt;
 
 import java.awt.Component;
 
@@ -30,15 +30,16 @@ import javax.swing.JPopupMenu;
 import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.popup.JmolGenericPopup;
+import org.jmol.popup.JmolPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.viewer.Viewer;
 
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.SC;
 
-public class JmolAwtPopup extends JmolGenericPopup {
+public class AwtJmolPopup extends JmolPopup {
 
-  public JmolAwtPopup() {
-    helper = new AwtSwingPopupHelper(this);
+  public AwtJmolPopup() {
+    helper = new AwtPopupHelper(this);
   }
 
   @Override
@@ -51,7 +52,7 @@ public class JmolAwtPopup extends JmolGenericPopup {
   }
   
   @Override
-  public String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
+  public String getUnknownCheckBoxScriptToRun(SC item, String name, String what, boolean TF) {
     // n/a
     return null;
   }

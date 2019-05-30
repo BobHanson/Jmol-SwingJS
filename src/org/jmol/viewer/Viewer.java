@@ -39,7 +39,7 @@ import javajs.api.GenericCifDataParser;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AU;
 import javajs.util.CU;
@@ -3415,7 +3415,7 @@ public class Viewer extends JmolViewer
   public final static int REFRESH_REPAINT = 1;
   public final static int REFRESH_SYNC = 2;
   public final static int REFRESH_SYNC_MASK = REFRESH_REPAINT | REFRESH_SYNC;
-  public final static int REFRESHrepaint_NO_MOTION_ONLY = 6;
+  public final static int REFRESH_REPAINT_NO_MOTION_ONLY = 6;
   public final static int REFRESH_SEND_WEBGL_NEW_ORIENTATION = 7;
 
   /**
@@ -3471,7 +3471,7 @@ public class Viewer extends JmolViewer
   public void refresh(int mode, String strWhy) {
 
     if (rm == null || !refreshing
-        || mode == REFRESHrepaint_NO_MOTION_ONLY && getInMotion(true)
+        || mode == REFRESH_REPAINT_NO_MOTION_ONLY && getInMotion(true)
         || !isWebGL && mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
       return;
     if (isWebGL) {
@@ -4367,28 +4367,20 @@ public class Viewer extends JmolViewer
         SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
     if (sm.haveHoverCallback())
       sm.setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, false));
-    if (!hoverEnabled)
+    if (!hoverEnabled || eval != null && isScriptExecuting()
+        || atomIndex == hoverAtomIndex || g.hoverDelayMs == 0
+        || !slm.isInSelectionSubset(atomIndex))
       return;
-    if (g.modelKitMode) {
-      if (ms.isAtomAssignable(atomIndex))
-        highlight(BSUtil.newAndSetBit(atomIndex));
-      refresh(REFRESH_SYNC_MASK, "hover on atom");
-      return;
-    }
-    if (eval != null && isScriptExecuting() || atomIndex == hoverAtomIndex
-        || g.hoverDelayMs == 0)
-      return;
-    if (!slm.isInSelectionSubset(atomIndex))
-      return;
+    String label = (isLabel ? GT.$("Drag to move label")
+        : g.modelKitMode ? modelkit.getHoverLabel(atomIndex) : null);
+
     shm.loadShape(JC.SHAPE_HOVER);
-    if (isLabel && ms.at[atomIndex].isVisible(JC.VIS_LABEL_FLAG)) {
-      setShapeProperty(JC.SHAPE_HOVER, "specialLabel",
-          GT.$("Drag to move label"));
+    if (label != null
+        && (!isLabel || ms.at[atomIndex].isVisible(JC.VIS_LABEL_FLAG))) {
+      setShapeProperty(JC.SHAPE_HOVER, "specialLabel", label);
     }
-    setShapeProperty(JC.SHAPE_HOVER, "text", null);
-    setShapeProperty(JC.SHAPE_HOVER, "target", Integer.valueOf(atomIndex));
-    hoverText = null;
-    hoverAtomIndex = atomIndex;
+    setShapeProperty(JC.SHAPE_HOVER, "text", hoverText = null);
+    setShapeProperty(JC.SHAPE_HOVER, "target", Integer.valueOf(hoverAtomIndex = atomIndex));
     refresh(REFRESH_SYNC_MASK, "hover on atom");
   }
 
@@ -6932,7 +6924,7 @@ public class Viewer extends JmolViewer
       getModelkit(false).setAtomPickingOption("C");
       getModelkit(false).setBondPickingOption("p");
       if (!isApplet)
-        popupMenu(0, 0, 'm');
+        popupMenu(10, 0, 'm');
       if (isChange)
         sm.setCallbackFunction("modelkit", "ON");
       g.modelKitMode = true;
@@ -7866,7 +7858,7 @@ public class Viewer extends JmolViewer
       showSelected = true;
       movableBitSet = setMovableBitSet(null, !asAtoms);
       shm.loadShape(JC.SHAPE_HALOS);
-      refresh(REFRESHrepaint_NO_MOTION_ONLY, "moveSelected");
+      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
       return;
     }
     if (deltaX == Integer.MAX_VALUE) {
@@ -7874,7 +7866,7 @@ public class Viewer extends JmolViewer
         return;
       showSelected = false;
       movableBitSet = null;
-      refresh(REFRESHrepaint_NO_MOTION_ONLY, "moveSelected");
+      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
       return;
     }
     if (movingSelected)
@@ -7913,18 +7905,20 @@ public class Viewer extends JmolViewer
     movingSelected = false;
   }
 
-  public void highlightBond(int index, boolean isHover) {
-    if (isHover && !hoverEnabled)
+  public void highlightBond(int index, String msg) {
+    if (msg == null && !hoverEnabled)
       return;
     BS bs = null;
     if (index >= 0) {
       Bond b = ms.bo[index];
       int i = b.atom2.i;
-      if (!ms.isAtomAssignable(i))
+      if (!ms.isAtomInLastModel(i))
         return;
       bs = BSUtil.newAndSetBit(i);
       bs.set(b.atom1.i);
     }
+    if (modelkit != null)
+      modelkit.setActiveMenu("bondMenu");
     highlight(bs);
     refresh(REFRESH_SYNC_MASK, "highlightBond");
   }
@@ -9197,8 +9191,8 @@ public class Viewer extends JmolViewer
    */
   @Override
   public String runScript(String script) {
-    return "" + evaluateExpression(new T[][] { new T[] { T.t(T.script),
-        T.t(T.leftparen), SV.newS(script), T.t(T.rightparen) } });
+    return "" + evaluateExpression(new T[][] { new T[] { T.tokenScript,
+        T.tokenLeftParen, SV.newS(script), T.tokenRightParen } });
   }
 
   /**
@@ -9895,7 +9889,7 @@ public class Viewer extends JmolViewer
   public void assignAtom(int atomIndex, String element) {
     if (atomIndex < 0)
       atomIndex = atomHighlighted;
-    if (ms.isAtomAssignable(atomIndex)) {
+    if (ms.isAtomInLastModel(atomIndex)) {
       script("assign atom ({" + atomIndex + "}) \"" + element + "\"");
     }
   }

@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import javajs.util.DF;
 import javajs.util.Lst;

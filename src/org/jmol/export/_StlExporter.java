@@ -28,7 +28,7 @@ package org.jmol.export;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.A4;
 import javajs.util.Lst;
 import javajs.util.M4;

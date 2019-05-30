@@ -25,7 +25,7 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;

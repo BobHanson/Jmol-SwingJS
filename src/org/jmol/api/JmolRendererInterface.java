@@ -7,7 +7,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;

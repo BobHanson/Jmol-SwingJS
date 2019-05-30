@@ -24,10 +24,10 @@
 package jspecview.js2d;
 
 import org.jmol.api.PlatformViewer;
-import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.PopupResource;
+import org.jmol.awtjs.swing.SC;
+import org.jmol.awtjs2d.JSPopupHelper;
 
-import javajs.awt.SC;
 import jspecview.common.JSViewer;
 import jspecview.popup.JSVGenericPopup;
 import jspecview.popup.JSVPopupResourceBundle;
@@ -40,7 +40,7 @@ public class JsPopup extends JSVGenericPopup {
   //  (on checkbox click) checkBoxStateChanged(e.getSource());   
 
   public JsPopup() {
-  	helper = new JSSwingPopupHelper(this);
+  	helper = new JSPopupHelper(this);
     // required by reflection
   }
 

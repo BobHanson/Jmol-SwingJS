@@ -28,7 +28,7 @@ import javajs.util.BS;
 
 import org.jmol.modelset.Text;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.P3i;
 

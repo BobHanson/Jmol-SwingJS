@@ -43,7 +43,7 @@ public class T {
   public int tok;
   public Object value;
   public int intValue = Integer.MAX_VALUE;
-
+  
   public final static T t(int tok) {
     T token = new T();
     token.tok = tok;

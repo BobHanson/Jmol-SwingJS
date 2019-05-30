@@ -1,7 +1,7 @@
 package org.jmol.awtjs.swing;
 
-import javajs.awt.Component;
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.SC;
 
 public class ButtonGroup {
   

@@ -32,7 +32,7 @@ import javajs.util.P3;
 import javajs.util.PT;
 
 import org.jmol.api.GenericPlatform;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.BS;
 

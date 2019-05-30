@@ -28,7 +28,7 @@ package org.jmol.export;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.Quat;

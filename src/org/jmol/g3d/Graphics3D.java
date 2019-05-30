@@ -38,7 +38,7 @@ import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AU;
 import javajs.util.M3;

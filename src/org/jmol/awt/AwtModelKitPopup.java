@@ -24,24 +24,21 @@
 package org.jmol.awt;
 
 import java.awt.Component;
+import java.net.URL;
 
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-import org.jmol.api.PlatformViewer;
-import org.jmol.i18n.GT;
 import org.jmol.modelkit.ModelKitPopup;
-import org.jmol.modelkit.ModelKitPopupResourceBundle;
-import org.jmol.popup.AwtSwingComponent;
-import org.jmol.popup.AwtSwingPopupHelper;
-import org.jmol.popup.PopupResource;
-import org.jmol.viewer.Viewer;
+import org.jmol.util.Elements;
 
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.SC;
 
 public class AwtModelKitPopup extends ModelKitPopup {
 
   public AwtModelKitPopup() {
-    helper = new AwtSwingPopupHelper(this);
+    helper = new AwtPopupHelper(this);
   }
   
   @Override
@@ -52,5 +49,24 @@ public class AwtModelKitPopup extends ModelKitPopup {
       // ignore
     }
   }
+
+  @Override
+  protected Object getImageIcon(String fileName) {
+    String imageName = "org/jmol/modelkit/images/" + fileName;
+    URL imageUrl = this.getClass().getClassLoader().getResource(imageName);
+    return (imageUrl == null ? null : new ImageIcon(imageUrl));
+  }
+
+  @Override
+  public String getUnknownElement(SC item, String msg) {
+    // atom type
+    String element = JOptionPane.showInputDialog(msg, "");
+    if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
+      return null;
+    menuSetLabel(item, element);
+    ((AwtSwingComponent) item).setActionCommand("assignAtom_" + element + "P!:??");
+    return element;
+  }
+  
 
 }

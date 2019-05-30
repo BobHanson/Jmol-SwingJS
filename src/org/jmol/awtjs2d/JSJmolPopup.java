@@ -24,21 +24,20 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-import org.jmol.popup.JSSwingPopupHelper;
 import org.jmol.popup.JmolGenericPopup;
+import org.jmol.popup.JmolPopup;
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.SC;
 
-import javajs.awt.Component;
-import javajs.awt.SC;
-
-public class JmolJSPopup extends JmolGenericPopup {
+public class JSJmolPopup extends JmolPopup {
   
 
   /**
    * The main popup window for the applet -- as JavaScript
    * 
    */
-  public JmolJSPopup() {
-    helper = new JSSwingPopupHelper(this);
+  public JSJmolPopup() {
+    helper = new JSPopupHelper(this);
   }
 
   @Override
@@ -52,7 +51,7 @@ public class JmolJSPopup extends JmolGenericPopup {
   }
 
   @Override
-  protected String menuSetCheckBoxOption(SC item, String name,
+  protected String getUnknownCheckBoxScriptToRun(SC item, String name,
                                          String what, boolean TF) {
     // ModelKit popup only
     return null;

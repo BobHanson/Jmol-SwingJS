@@ -1,6 +1,7 @@
 package org.jmol.viewer.binding;
 
-import javajs.awt.event.Event;
+import java.awt.event.InputEvent;
+
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -13,6 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.jmol.api.Interface;
+import org.jmol.awtjs.Event;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;

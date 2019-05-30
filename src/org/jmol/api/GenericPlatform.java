@@ -4,8 +4,8 @@ package org.jmol.api;
 import java.net.URL;
 import java.util.Map;
 
-import javajs.awt.Font;
-import javajs.awt.FontManager;
+import org.jmol.awtjs.swing.Font;
+import org.jmol.awtjs.swing.FontManager;
 import javajs.util.P3;
 
 public interface GenericPlatform extends FontManager {

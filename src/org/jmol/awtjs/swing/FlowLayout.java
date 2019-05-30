@@ -1,6 +1,6 @@
 package org.jmol.awtjs.swing;
 
-import javajs.awt.LayoutManager;
+import org.jmol.awtjs.swing.LayoutManager;
 
 public class FlowLayout extends LayoutManager {
 

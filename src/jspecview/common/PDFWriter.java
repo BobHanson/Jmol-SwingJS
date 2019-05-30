@@ -30,7 +30,7 @@ import java.util.Map;
 import org.jmol.api.GenericGraphics;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.export.PDFCreator;
 import javajs.util.CU;
 

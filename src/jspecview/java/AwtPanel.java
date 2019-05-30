@@ -52,7 +52,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.Lst;
 import javajs.util.OC;

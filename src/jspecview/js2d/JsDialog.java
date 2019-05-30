@@ -24,8 +24,8 @@ import org.jmol.awtjs.swing.JTable;
 import org.jmol.awtjs.swing.JTextField;
 import org.jmol.awtjs.swing.ListSelectionModel;
 
-import javajs.awt.Color;
-import java.awt.Dimension;
+import org.jmol.awtjs.swing.Color;
+import org.jmol.awtjs.swing.Dimension;
 import jspecview.common.Annotation.AType;
 import jspecview.dialog.DialogManager;
 import jspecview.dialog.JSVDialog;

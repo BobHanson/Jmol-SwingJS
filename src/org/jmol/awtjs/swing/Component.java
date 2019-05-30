@@ -1,6 +1,4 @@
-package javajs.awt;
-
-import java.awt.Dimension;
+package org.jmol.awtjs.swing;
 
 import javajs.api.GenericColor;
 import javajs.util.CU;

@@ -1,12 +1,6 @@
-package org.jmol.awtjs.swing.event;
+package org.jmol.awtjs;
 
 public class Event {
-
-  private Object source;
-
-  public Object getSource() {
-    return source;
-  }
 
   public static final int MOUSE_LEFT   =  16;
   public static final int MOUSE_MIDDLE =   8; //Event.ALT_MASK;

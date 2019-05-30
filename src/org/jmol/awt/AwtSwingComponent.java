@@ -1,4 +1,4 @@
-package org.jmol.popup;
+package org.jmol.awt;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
@@ -13,8 +13,10 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.MenuElement;
+import javax.swing.MenuSelectionManager;
 
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.SC;
 
 /**
  * A javax.swing implementation of SwingComponent 
@@ -47,27 +49,81 @@ public class AwtSwingComponent implements SC {
   static SC getMenu(String name, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();
     c.jc = c.ab = c.jmi = c.jm = new JMenu(name);
+    c.jc.setName(name);
     htSources.put(c.jc, c);    
     return c;
   }
 
-  static SC getMenuItem(String name, Map<Object, SC> htSources) {
+  static SC getMenuItem(final AwtPopupHelper helper, String name, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();
-    c.jc = c.ab = c.jmi = new JMenuItem(name);
+    c.jc = c.ab = c.jmi = new JMenuItem(name) {
+      private MenuElement[] path;
+      
+      @Override
+      public void setArmed(boolean b) {
+        super.setArmed(b);
+        if (b)
+          path = MenuSelectionManager.defaultManager().getSelectedPath();
+      }
+
+      @Override
+      public void doClick(int n) {
+        super.doClick(n);
+          helper.reinstateMenu(this, path);
+      }
+
+
+    };
     htSources.put(c.jc, c);    
     return c;
   }
   
-  static SC getRadio(String name, Map<Object, SC> htSources) {
+  static SC getRadio(final AwtPopupHelper helper, String name, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();
-    c.jc = c.ab = c.jmi = new JRadioButtonMenuItem(name);
+    c.jc = c.ab = c.jmi = new JRadioButtonMenuItem(name) {
+      private MenuElement[] path;
+      
+      @Override
+      public void setArmed(boolean b) {
+        super.setArmed(b);
+        if (b)
+          path = MenuSelectionManager.defaultManager().getSelectedPath();
+      }
+
+      @Override
+      public void doClick(int n) {
+        super.doClick(n);
+          helper.reinstateMenu(this, path);
+      }
+
+
+    };
+
     htSources.put(c.jc, c);
     return c;
   }
 
-  static SC getCheckBox(String name, Map<Object, SC> htSources) {
+  static SC getCheckBox(final AwtPopupHelper helper, String name, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();
-    c.jc = c.ab = c.jmi = new JCheckBoxMenuItem(name);
+    c.jc = c.ab = c.jmi = new JCheckBoxMenuItem(name) {
+      private MenuElement[] path;
+      
+      @Override
+      public void setArmed(boolean b) {
+        super.setArmed(b);
+        if (b)
+          path = MenuSelectionManager.defaultManager().getSelectedPath();
+      }
+
+      @Override
+      public void doClick(int n) {
+        super.doClick(n);
+          helper.reinstateMenu(this, path);
+      }
+
+
+    };
+
     htSources.put(c.jc, c);    
     return c;
   }

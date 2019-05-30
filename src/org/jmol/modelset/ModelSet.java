@@ -3140,7 +3140,14 @@ public class ModelSet extends BondCollection {
     return i >= 0 && am[at[i].mi].isBioModel;
   }
 
-  public boolean isAtomAssignable(int i) {
+  /**
+   * Ensure the atom index is >= 0 and that the
+   * atom's model is the last model.
+   * 
+   * @param i
+   * @return true if that is the case
+   */
+  public boolean isAtomInLastModel(int i) {
     return i >= 0 && at[i].mi == mc - 1;
   }
 

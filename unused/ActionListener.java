@@ -1,4 +1,4 @@
-package javajs.awt.event;
+package org.jmol.awtjs.swing.event;
 
 
 public interface ActionListener {

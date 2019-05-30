@@ -13,11 +13,10 @@ import org.jmol.viewer.Viewer;
  * 
  * A class that mimics java.io.File
  * 
- * We allow access to 
  * 
  */
 
-public class JSFile implements GenericFileInterface {
+class JSFile implements GenericFileInterface {
 
   private String name;
 	private String fullName;

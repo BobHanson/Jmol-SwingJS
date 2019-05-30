@@ -1,6 +1,6 @@
 package org.jmol.awtjs.swing;
 
-import javajs.awt.Component;
+import org.jmol.awtjs.swing.Component;
 
 public class JMenu extends JMenuItem {
 

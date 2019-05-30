@@ -72,6 +72,8 @@ public class DrawRenderer extends MeshRenderer {
     //isPrecision = true;//vwr.tm.perspectiveDepth;
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
+      if (mesh == null)
+        System.out.println("DrawRenderer????");
       if (mesh.connectedAtoms != null) {
         if (mesh.connectedAtoms[0] < 0)
           continue;

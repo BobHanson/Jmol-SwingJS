@@ -75,7 +75,7 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.viewer.Viewer.ACCESS;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;

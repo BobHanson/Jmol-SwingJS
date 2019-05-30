@@ -28,9 +28,9 @@ import java.util.Map;
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
+import org.jmol.awtjs.Event;
 import org.jmol.i18n.GT;
 
-import javajs.awt.event.Event;
 import javajs.util.AU;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -1006,7 +1006,7 @@ public class ActionManager implements EventManager {
       dragAtomIndex = vwr.findNearestAtomIndexMovable(x, y, true);
       if (dragAtomIndex >= 0
           && (apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)
-          && vwr.ms.isAtomAssignable(dragAtomIndex)) {
+          && vwr.ms.isAtomInLastModel(dragAtomIndex)) {
         enterMeasurementMode(dragAtomIndex);
         mp.addPoint(dragAtomIndex, null, false);
       }
@@ -1056,7 +1056,7 @@ public class ActionManager implements EventManager {
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
 
-    if (vwr.getModelkit(false).getRotateBondIndex() >= 0) {
+    if (vwr.g.modelKitMode && vwr.modelkit.getRotateBondIndex() >= 0) {
       if (bnd(dragWheelAction, ACTION_rotateBranch)) {
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
             false);
@@ -1334,7 +1334,7 @@ public class ActionManager implements EventManager {
         return;
       }
       if (vwr.frankClickedModelKit(x, y)) {
-        vwr.popupMenu(0, 0, 'm');
+        vwr.popupMenu(10, 0, 'm');
         return;
       }
     }

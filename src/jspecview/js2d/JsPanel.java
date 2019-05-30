@@ -40,7 +40,7 @@ package jspecview.js2d;
 import java.io.OutputStream;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.Base64;
 import javajs.util.Lst;

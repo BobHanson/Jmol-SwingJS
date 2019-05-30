@@ -43,9 +43,10 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
 
-import javajs.awt.event.Event;
+import org.jmol.awtjs.Event;
+import org.jmol.awtjs.swing.Font;
+
 import javajs.util.CU;
 import javajs.util.Lst;
 

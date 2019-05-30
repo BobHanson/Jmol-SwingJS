@@ -1,7 +1,7 @@
 package org.jmol.util;
 
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AU;
 import javajs.util.M3;

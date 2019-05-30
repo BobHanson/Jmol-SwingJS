@@ -41,7 +41,7 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;

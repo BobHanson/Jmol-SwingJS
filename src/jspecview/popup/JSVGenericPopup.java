@@ -23,7 +23,7 @@
  */
 package jspecview.popup;
 
-import org.jmol.popup.GenericSwingPopup;
+import org.jmol.popup.GenericPopup;
 import org.jmol.popup.PopupResource;
 
 import javajs.util.PT;
@@ -35,10 +35,10 @@ import jspecview.common.JSVersion;
 import jspecview.common.PanelNode;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.SC;
 import javajs.util.Lst;
 
-abstract public class JSVGenericPopup extends GenericSwingPopup implements
+abstract public class JSVGenericPopup extends GenericPopup implements
 		JSVPopupMenu {
 
 	// list is saved in http://www.stolaf.edu/academics/chemapps/jmol/docs/misc
@@ -118,11 +118,6 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	}
 
 	@Override
-	protected void appCheckSpecialMenu(String item, SC subMenu, String word) {
-		// no special menus
-	}
-
-	@Override
 	protected String appFixLabel(String label) {
 		if (label.startsWith("_"))
 			label = label.substring(label.indexOf("_", 2) + 1);
@@ -136,7 +131,7 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	}
 
 	@Override
-	protected String appFixScript(String id, String script) {
+	protected String getScriptForCallback(String id, String script) {
 		return script;
 	}
 
@@ -151,7 +146,7 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	}
 
 	@Override
-	protected boolean appIsSpecialCheckBox(SC item, String basename, String what,
+	protected boolean appRunSpecialCheckBox(SC item, String basename, String what,
 			boolean TF) {
 		// n/a
 		return false;
@@ -331,7 +326,7 @@ abstract public class JSVGenericPopup extends GenericSwingPopup implements
 	}
 
 	@Override
-	protected String menuSetCheckBoxOption(SC item, String name, String what, boolean TF) {
+	protected String getUnknownCheckBoxScriptToRun(SC item, String name, String what, boolean TF) {
 		// not used in JSV
 		return null;
 	}

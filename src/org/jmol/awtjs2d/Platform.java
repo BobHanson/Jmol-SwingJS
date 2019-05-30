@@ -15,7 +15,7 @@ import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.script.ScriptContext;
 import org.jmol.viewer.Viewer;
 
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;
@@ -115,7 +115,7 @@ public class Platform implements GenericPlatform {
   @Override
   public GenericMenuInterface getMenuPopup(String menuStructure,
                                          char type) {
-    String c = (type == 'j' ? "awtjs2d.JmolJSPopup" : "awtjs2d.JSModelKitPopup");
+    String c = (type == 'j' ? "awtjs2d.JSJmolPopup" : "awtjs2d.JSModelKitPopup");
     GenericMenuInterface jmolpopup = (GenericMenuInterface) Interface
         .getOption(c, (Viewer) vwr, "popup");
     try {

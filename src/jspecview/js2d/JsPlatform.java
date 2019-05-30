@@ -12,7 +12,7 @@ import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
 
 import javajs.util.P3;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.Rdr;

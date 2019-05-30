@@ -21,7 +21,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.jmol.popup;
+package org.jmol.awt;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -40,20 +40,22 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.MenuElement;
+import javax.swing.MenuSelectionManager;
 
-import org.jmol.api.GenericMenuInterface;
-
-import javajs.awt.SC;
+import org.jmol.awtjs.swing.SC;
+import org.jmol.popup.GenericPopup;
+import org.jmol.popup.PopupHelper;
 
 /**
  * all popup-related awt/swing class references are in this file.
  */
-public class AwtSwingPopupHelper implements
+public class AwtPopupHelper implements
     ActionListener, ItemListener, MouseListener, PopupHelper {
 
-  private GenericMenuInterface popup;
+  private GenericPopup popup;
 
-  public AwtSwingPopupHelper(GenericMenuInterface popup) {
+  public AwtPopupHelper(GenericPopup popup) {
     this.popup = popup;
   }
   //  @Override
@@ -71,12 +73,12 @@ public class AwtSwingPopupHelper implements
 
   @Override
   public SC getRadio(String name) {
-    return AwtSwingComponent.getRadio(name, htSources);
+    return AwtSwingComponent.getRadio(this, name, htSources);
   }
 
   @Override
   public SC getCheckBox(String name) {
-    return AwtSwingComponent.getCheckBox(name, htSources);
+    return AwtSwingComponent.getCheckBox(this, name, htSources);
   }
 
   @Override
@@ -86,7 +88,7 @@ public class AwtSwingPopupHelper implements
 
   @Override
   public SC getMenuItem(String name) {
-    return AwtSwingComponent.getMenuItem(name, htSources);
+    return AwtSwingComponent.getMenuItem(this, name, htSources);
   }
 
   @Override
@@ -202,6 +204,24 @@ public class AwtSwingPopupHelper implements
    */
   private SC getSource(EventObject e) {
     return getSwingComponent(e.getSource());
+  }
+
+  /**
+   * Cause the menu to persist in its open state. Path is set in the setArmed()
+   * method of the item, and it is checked in the doClick() method.
+   * 
+   * Persist only if (a) somewhere in the path of names there is "Persist", and
+   * nowhere in that path is "!Persist".
+   * 
+   * @param item
+   * @param path
+   */
+  public void reinstateMenu(JMenuItem item, MenuElement[] path) {
+    String name = "" + item.getName();
+    if (name.indexOf("Persist") >= 0 && name.indexOf("!Persist") < 0) {
+      popup.jpiShow(popup.thisx, popup.thisy);
+      MenuSelectionManager.defaultManager().setSelectedPath(path);
+    }
   }
 
 }

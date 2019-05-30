@@ -29,10 +29,10 @@ import java.awt.event.MouseWheelEvent;
 
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericMouseInterface;
+import org.jmol.awtjs.Event;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 
-import javajs.awt.event.Event;
 import javajs.util.PT;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
