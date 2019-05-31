@@ -73,7 +73,7 @@ public class DrawRenderer extends MeshRenderer {
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
       if (mesh == null) {
-        System.out.println("DrawRenderer????");
+        System.out.println("DrawRenderer mesh is null?");
         return false;
       }
       if (mesh.connectedAtoms != null) {

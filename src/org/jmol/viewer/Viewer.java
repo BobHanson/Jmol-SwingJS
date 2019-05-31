@@ -4372,7 +4372,7 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : g.modelKitMode ? modelkit.getHoverLabel(atomIndex) : null);
+        : g.modelKitMode && modelkit != null ? (String) modelkit.setProperty("hoverLabel", Integer.valueOf(atomIndex)) : null);
 
     shm.loadShape(JC.SHAPE_HOVER);
     if (label != null
@@ -4475,10 +4475,10 @@ public class Viewer extends JmolViewer
         + (option.length() == 1 ? "" : option.substring(1, 2));
     switch (pickingMode) {
     case ActionManager.PICKING_ASSIGN_ATOM:
-      getModelkit(false).setAtomPickingOption(option);
+      getModelkit(false).setProperty("atomType", option);
       break;
     case ActionManager.PICKING_ASSIGN_BOND:
-      getModelkit(false).setBondPickingOption(option);
+      getModelkit(false).setProperty("bondType", option);
       break;
     default:
       Logger.error("Bad picking mode: " + strMode + "_" + option);
@@ -4590,7 +4590,7 @@ public class Viewer extends JmolViewer
     
   public void setRotateBondIndex(int i) {
     if (modelkit != null)
-      modelkit.setRotateBondIndex(i);
+      modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
   }
     
   public String getMenu(String type) {
@@ -6921,8 +6921,8 @@ public class Viewer extends JmolViewer
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
-      getModelkit(false).setAtomPickingOption("C");
-      getModelkit(false).setBondPickingOption("p");
+      setModelkitProperty("atomType", "C");
+      setModelkitProperty("bondType", "p");
       if (!isApplet)
         popupMenu(10, 0, 'm');
       if (isChange)
@@ -7377,9 +7377,9 @@ public class Viewer extends JmolViewer
   public boolean scriptEditorVisible;
 
   public JmolAppConsoleInterface appConsole;
-  JmolScriptEditorInterface scriptEditor;
-  GenericMenuInterface jmolpopup;
-  ModelKitPopup modelkit;
+  private JmolScriptEditorInterface scriptEditor;
+  private GenericMenuInterface jmolpopup;
+  private ModelKitPopup modelkit;
   private Map<String, Object> headlessImageParams;
 
   public String getChimeInfo(int tok) {
@@ -7851,7 +7851,7 @@ public class Viewer extends JmolViewer
     if (deltaZ == 0)
       return;
     if (x == Integer.MIN_VALUE && modelkit != null)
-        modelkit.initializeBondRotation();
+        modelkit.setProperty("rotateBondIndex", Integer.valueOf(x));
     if (isJmolDataFrame())
       return;
     if (deltaX == Integer.MIN_VALUE) {
@@ -7874,7 +7874,7 @@ public class Viewer extends JmolViewer
     movingSelected = true;
     stopMinimization();
     // note this does not sync with applets
-    if (x != Integer.MIN_VALUE && modelkit != null && modelkit.getRotateBondIndex() >= 0) {
+    if (x != Integer.MIN_VALUE && modelkit != null && modelkit.getProperty("rotateBondIndex") != null) {
       modelkit.actionRotateBond(deltaX, deltaY, x, y);
     } else {
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
@@ -9892,6 +9892,25 @@ public class Viewer extends JmolViewer
     if (ms.isAtomInLastModel(atomIndex)) {
       script("assign atom ({" + atomIndex + "}) \"" + element + "\" " + (ptNew == null ? "" : Escape.eP(ptNew)));      
     }
+  }
+
+  public void notifyScriptEditor(int msWalltime, Object[] data) {
+    if (scriptEditor != null) {
+      scriptEditor.notify(msWalltime, data);
+    }
+  }
+
+  public void sendConsoleMessage(String msg) {
+    if (appConsole != null) 
+      appConsole.sendConsoleMessage(msg);
+  }
+
+  public Object getModelkitProperty(String name) {
+    return setModelkitProperty(name, null);
+  }
+
+  public Object setModelkitProperty(String key, Object value) {
+    return (modelkit == null ? null : modelkit.setProperty(key, value));
   }
 
 }

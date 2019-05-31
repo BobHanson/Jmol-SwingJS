@@ -53,20 +53,20 @@ public class ModelKitPopupResourceBundle extends PopupResource {
   private static String[][] menuContents = {
     { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
     { "optionsMenu", "new center addh minimize hmin " +
-    		" - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!" },
+    		" - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
     { "atomMenu" , "assignAtom_XP!RD assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
     		"invertStereoP!RD - assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
     		"_??P!RD _??P!RD _??P!RD " +
     		"moreAtomMenu - assignAtom_plP!RD assignAtom_miP!RD" },
     { "moreAtomMenu", "clearQPersist - _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
     { "bondMenu", "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD - assignBond_pP!RD assignBond_mP!RD - rotateBondP!CB" },
-    { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu xtalSymmetryPersistMenu xtalPackingPersistMenu xtalOptionsPersistMenu" },
+    { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalSymmetryPersistMenu xtalPackingPersistMenu xtalOptionsPersistMenu" },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
     { "xtalSelPersistMenu", "mksel_atom mksel_position" },
-    { "xtalSelOpPersistMenu", "xtalOpPersistMenu mkselop_addOffset mkselop_atom2" },
+    { "xtalSelOpPersistMenu", "xtalOp!PersistMenu mkselop_addOffset mkselop_atom2" },
     { "xtalSymmetryPersistMenu", "mksymmetry_none mksymmetry_retainLocal mksymmetry_applyLocal mksymmetry_applyFull" },
-    { "xtalPackingPersistMenu", "mkunitcell_extend mkunitcell_packed" },
-    { "xtalOptionsPersistMenu", "mkaddHydrogens!CB mkclicktosetelement!CB" }
+    { "xtalPackingPersistMenu", "mkunitcell_packed mkunitcell_extend" },
+    { "xtalOptionsPersistMenu", "mkshowSymopInfoCB mkclicktosetelementCB mkaddHydrogensCB" }
 
   };
   
@@ -81,7 +81,8 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     { "clearQ", "clearQ" },
     { "undo" , "!UNDO" },
     { "redo" , "!REDO" },
-    { "exit", "set modelkitMode false" },
+    { "operator", "" },
+    { "exit!Persist", "set modelkitMode false" }
   };
   
   @Override
@@ -93,16 +94,18 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "moreAtomMenu", "<dotdotdot.png>",//GT.$("more..."),
         "bondMenu", "<bonds.png>",//GT.$("bonds"),
         "optionsMenu", "<dotdotdot.png>",//GT.$("atoms"),
+        "operator", "(no operator selected)",
         "xtalMenu", "<xtal.png>",
         "xtalModePersistMenu","mode",
         "xtalSelPersistMenu","select atom or position",
         "xtalSelOpPersistMenu","select operator", 
-        "xtalOpPersistMenu","from list...", 
+        "xtalOp!PersistMenu","from list...", 
         "xtalSymmetryPersistMenu", "symmetry",
         "xtalOptionsPersistMenu", "more options...",
         "xtalPackingPersistMenu", "packing",
-        "mkaddHydrogens!CB", "add hydrogens on new atoms",
-        "mkclicktosetelement!CB", "allow clicking to set atom element",
+        "mkshowSymopInfoCB", "show symmetry operator info",
+        "mkaddHydrogensCB", "add hydrogens on new atoms",
+        "mkclicktosetelementCB", "allow clicking to set atom element",
         "mkselop_byop", "from list",
         "mkselop_addOffset", "add/remove lattice offset",
         "mkselop_atom2", "to second atom",

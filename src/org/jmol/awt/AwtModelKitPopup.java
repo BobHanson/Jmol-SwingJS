@@ -57,10 +57,4 @@ public class AwtModelKitPopup extends ModelKitPopup {
     return (imageUrl == null ? null : new ImageIcon(imageUrl));
   }
 
-  @Override
-  protected String promptUser(String msg, String def) {
-    return JOptionPane.showInputDialog(msg, def);
-  }
-  
-
 }

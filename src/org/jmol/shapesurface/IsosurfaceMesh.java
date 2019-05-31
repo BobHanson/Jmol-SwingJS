@@ -77,7 +77,7 @@ public class IsosurfaceMesh extends Mesh {
 
   /**
    * @param vwr 
-   * @j2sIgnoreSuperConstructor
+   * @XXXXj2sIgnoreSuperConstructor
    * 
    * @param thisID
    * @param colix

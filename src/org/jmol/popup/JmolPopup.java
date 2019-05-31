@@ -265,7 +265,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
    */
   @Override
   protected void appUpdateSpecialCheckBoxValue(SC item, String what, boolean TF) {
-    if (what.indexOf("#CONFIG") >= 0) {
+    if (!updatingForShow && what.indexOf("#CONFIG") >= 0) {
       configurationSelected = what;
       updateConfigurationComputedMenu();
       updateModelSetComputedMenu();

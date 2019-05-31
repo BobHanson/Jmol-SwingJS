@@ -24,4 +24,6 @@ public interface JmolScriptEditorInterface extends JmolDropEditor {
 
   void show(String[] fileText);
 
+  void notify(int msWalltime, Object[] data);
+
 }

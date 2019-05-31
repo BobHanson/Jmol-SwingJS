@@ -44,7 +44,7 @@ class PixelatorT extends Pixelator {
   }
   
   /**
-  *   @j2sOverride
+  *   @@XXXj2sOverride
   */
   @Override
   void addPixel(int offset, int z, int p) {
