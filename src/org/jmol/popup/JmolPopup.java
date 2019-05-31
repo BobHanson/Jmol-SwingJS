@@ -208,7 +208,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
   }
 
   @Override
-  protected String getScriptForCallback(String id, String script) {
+  protected String getScriptForCallback(SC source, String id, String script) {
     int pt;
     if (script == "" || id.endsWith("Checkbox"))
       return script;

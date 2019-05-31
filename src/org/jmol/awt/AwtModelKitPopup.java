@@ -58,14 +58,8 @@ public class AwtModelKitPopup extends ModelKitPopup {
   }
 
   @Override
-  public String getUnknownElement(SC item, String msg) {
-    // atom type
-    String element = JOptionPane.showInputDialog(msg, "");
-    if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
-      return null;
-    menuSetLabel(item, element);
-    ((AwtSwingComponent) item).setActionCommand("assignAtom_" + element + "P!:??");
-    return element;
+  protected String promptUser(String msg, String def) {
+    return JOptionPane.showInputDialog(msg, def);
   }
   
 

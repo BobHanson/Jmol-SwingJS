@@ -131,7 +131,7 @@ abstract public class JSVGenericPopup extends GenericPopup implements
 	}
 
 	@Override
-	protected String getScriptForCallback(String id, String script) {
+	protected String getScriptForCallback(SC source, String id, String script) {
 		return script;
 	}
 

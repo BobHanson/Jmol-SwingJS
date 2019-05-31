@@ -46,28 +46,38 @@ public class JSModelKitPopup extends ModelKitPopup {
     isTainted = false;
   }
   
-  @SuppressWarnings({ "null", "unused" })
-  @Override
-  public String getUnknownElement(SC item, String msg) {
-    String element = null;
-    /**
-     * @j2sNative
-     * 
-     * element = prompt(msg, "");
-     * 
-     */
-    {
-      // This block is important for non-SwingJS Jmol
-    }
-    if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
-      return null;
-    updateButton(item, element, "assignAtom_" + element + "P!:??");
-    return element;
-  }
-
   @Override
   protected Object getImageIcon(String fileName) {
     return "org/jmol/modelkit/images/" + fileName;
   }
+
+  
+  @Override
+  public void menuClickCallback(SC source, String script) {
+    /** @j2sNatve */{}
+    // Hack for old transpiler, which can skip an empty call to super
+    super.menuClickCallback(source, script);
+  }
+
+  @Override
+  public void menuCheckBoxCallback(SC source) {
+    /** @j2sNatve */{}
+    // Hack for old transpiler, which can skip an empty call to super
+    super.menuCheckBoxCallback(source);
+  }
+
+  @Override
+  protected String promptUser(String msg, String def) {
+    /**
+     * @j2sNative
+     * 
+     * return prompt(msg, def);
+     * 
+     */
+    {
+      return null;
+    }
+  }
+
 
 }

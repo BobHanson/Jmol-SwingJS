@@ -9886,11 +9886,11 @@ public class Viewer extends JmolViewer
     return ms.getInfo(am.cmi, key);
   }
 
-  public void assignAtom(int atomIndex, String element) {
+  public void assignAtom(int atomIndex, String element, P3 ptNew) {
     if (atomIndex < 0)
       atomIndex = atomHighlighted;
     if (ms.isAtomInLastModel(atomIndex)) {
-      script("assign atom ({" + atomIndex + "}) \"" + element + "\"");
+      script("assign atom ({" + atomIndex + "}) \"" + element + "\" " + (ptNew == null ? "" : Escape.eP(ptNew)));      
     }
   }
 

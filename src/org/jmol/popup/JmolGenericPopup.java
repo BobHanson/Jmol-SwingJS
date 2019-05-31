@@ -89,21 +89,21 @@ public abstract class JmolGenericPopup extends GenericPopup {
 
 
   @Override
-  protected boolean appRunSpecialCheckBox(SC item, String basename, String what,
+  protected boolean appRunSpecialCheckBox(SC item, String basename, String script,
                                          boolean TF) {
     if (appGetBooleanProperty(basename) == TF)
       return true;
     if (!basename.endsWith("P!"))
       return false;
-    if (basename.indexOf("??") >= 0) {
-      what = getUnknownCheckBoxScriptToRun(item, basename, what, TF);
+    if (basename.indexOf("mk") >= 0 || basename.indexOf("??") >= 0) {
+      script = getUnknownCheckBoxScriptToRun(item, basename, script, TF);
     } else {
       if (!TF)
         return true;
-      what = "set picking " + basename.substring(0, basename.length() - 2);
+      script = "set picking " + basename.substring(0, basename.length() - 2);
     }
-    if (what != null)
-      appRunScript(what);
+    if (script != null)
+      appRunScript(script);
     return true;
   }
 

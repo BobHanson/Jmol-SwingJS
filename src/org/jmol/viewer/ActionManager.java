@@ -1890,6 +1890,13 @@ public class ActionManager implements EventManager {
   private void assignNew(int x, int y) {
     // H C + -, etc.
     // also check valence and add/remove H atoms as necessary?
+    boolean inRange = pressed.inRange(xyRange, dragged.x, dragged.y);
+    if (inRange) {
+      dragged.x = pressed.x;
+      dragged.y = pressed.y;
+    }
+    if (vwr.getModelkit(false).handleDragDrop(pressed, dragged, dragAtomIndex, mp.count))
+      return;
     boolean isCharge = vwr.getModelkit(false).isPickAtomAssignCharge();
     String atomType = vwr.getModelkit(false).getAtomPickingType();
     if (mp.count == 2) {
@@ -1899,7 +1906,7 @@ public class ActionManager implements EventManager {
     } else if (atomType.equals("Xx")) {
       exitMeasurementMode("bond dropped");
     } else {
-      if (pressed.inRange(xyRange, dragged.x, dragged.y)) {
+      if (inRange) {
         String s = "assign atom ({" + dragAtomIndex + "}) \""
             + atomType + "\"";
         if (isCharge) {
@@ -1914,12 +1921,14 @@ public class ActionManager implements EventManager {
         vwr.undoMoveActionClear(-1, T.save, true);
         Atom a = vwr.ms.at[dragAtomIndex];
         if (a.getElementNumber() == 1) {
-          runScript("assign atom ({" + dragAtomIndex + "}) \"X\"");
+          vwr.assignAtom(dragAtomIndex, "X", null);
+//          runScript("assign atom ({" + dragAtomIndex + "}) \"X\"");
         } else {
           P3 ptNew = P3.new3(x, y, a.sZ);
           vwr.tm.unTransformPoint(ptNew, ptNew);
-          runScript("assign atom ({" + dragAtomIndex + "}) \""
-              + atomType + "\" " + Escape.eP(ptNew));
+          vwr.assignAtom(dragAtomIndex, atomType, ptNew);
+//          runScript("assign atom ({" + dragAtomIndex + "}) \""
+//              + atomType + "\" " + Escape.eP(ptNew));
         }
       }
     }

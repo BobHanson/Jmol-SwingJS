@@ -68,11 +68,9 @@ public abstract class GenericPopup implements GenericMenuInterface {
 
   abstract protected String appFixLabel(String label);
 
-  abstract protected String getScriptForCallback(String name, String script);
+  abstract protected String getScriptForCallback(SC source, String name, String script);
 
   abstract protected boolean appGetBooleanProperty(String name);
-
-  abstract protected String appGetMenuAsString(String title);
 
   abstract protected boolean appRunSpecialCheckBox(SC item, String basename,
                                                   String what, boolean TF);
@@ -267,7 +265,7 @@ public abstract class GenericPopup implements GenericMenuInterface {
     }
     String id = menuGetId(source);
     if (id != null) {
-      script = getScriptForCallback(id, script);
+      script = getScriptForCallback(source, id, script);
       currentMenuItemId = id;
     }
     if (script != null)
@@ -433,6 +431,11 @@ public abstract class GenericPopup implements GenericMenuInterface {
     return appGetMenuAsString(title);
   }
 
+  protected String appGetMenuAsString(String title) {
+    // main Jmol menu and JSpecView menu only
+    return null;
+  }
+
   private void menuGetAsText(SB sb, int level, SC menu, String menuName) {
     String name = menuName;
     Object[] subMenus = menu.getComponents();
@@ -441,14 +444,14 @@ public abstract class GenericPopup implements GenericMenuInterface {
     String text = null;
     char key = 'S';
     for (int i = 0; i < subMenus.length; i++) {
-      SC m = helper.getSwingComponent(subMenus[i]);
-      int type = helper.getItemType(m);
+      SC source = helper.getSwingComponent(subMenus[i]);
+      int type = helper.getItemType(source);
       switch (type) {
       case 4:
         key = 'M';
-        name = m.getName();
-        flags = "enabled:" + m.isEnabled();
-        text = m.getText();
+        name = source.getName();
+        flags = "enabled:" + source.isEnabled();
+        text = source.getText();
         script = null;
         break;
       case 0:
@@ -457,17 +460,17 @@ public abstract class GenericPopup implements GenericMenuInterface {
         break;
       default:
         key = 'I';
-        flags = "enabled:" + m.isEnabled();
+        flags = "enabled:" + source.isEnabled();
         if (type == 2 || type == 3)
-          flags += ";checked:" + m.isSelected();
-        script = getScriptForCallback(m.getName(), m.getActionCommand());
-        name = m.getName();
-        text = m.getText();
+          flags += ";checked:" + source.isSelected();
+        script = getScriptForCallback(source, source.getName(), source.getActionCommand());
+        name = source.getName();
+        text = source.getText();
         break;
       }
       addItemText(sb, key, level, name, text, script, flags);
       if (type == 2)
-        menuGetAsText(sb, level + 1, helper.getSwingComponent(m.getPopupMenu()),
+        menuGetAsText(sb, level + 1, helper.getSwingComponent(source.getPopupMenu()),
             name);
     }
   }
