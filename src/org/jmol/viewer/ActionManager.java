@@ -528,12 +528,12 @@ public class ActionManager implements EventManager {
     String script = ";set modelkitMode " + vwr.getBoolean(T.modelkitmode)
         + ";set picking " + getPickingModeName(apm);
     if (apm == PICKING_ASSIGN_ATOM)
-      script += "_" + vwr.getModelkit(false).getAtomPickingType();
+      script += "_" + vwr.getModelkitProperty("atomType");
     script += ";";
     if (bondPickingMode != PICKING_OFF)
       script += "set picking " + getPickingModeName(bondPickingMode);
     if (bondPickingMode == PICKING_ASSIGN_BOND)
-      script += "_" + vwr.getModelkit(false).getBondPickingType();
+      script += "_" + vwr.getModelkitProperty("bondType");
     script += ";";
     return script;
   }
@@ -1056,7 +1056,7 @@ public class ActionManager implements EventManager {
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
 
-    if (vwr.g.modelKitMode && vwr.modelkit.getRotateBondIndex() >= 0) {
+    if (vwr.g.modelKitMode && vwr.getModelkit(false).getRotateBondIndex() >= 0) {
       if (bnd(dragWheelAction, ACTION_rotateBranch)) {
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
             false);
@@ -1895,10 +1895,10 @@ public class ActionManager implements EventManager {
       dragged.x = pressed.x;
       dragged.y = pressed.y;
     }
-    if (vwr.getModelkit(false).handleDragDrop(pressed, dragged, dragAtomIndex, mp.count))
+    if (vwr.getModelkit(false).handleDragAtom(pressed, dragged, mp.countPlusIndices))
       return;
     boolean isCharge = vwr.getModelkit(false).isPickAtomAssignCharge();
-    String atomType = vwr.getModelkit(false).getAtomPickingType();
+    String atomType = (String) vwr.getModelkitProperty("atomType");
     if (mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
       runScript("assign connect "
@@ -1941,7 +1941,7 @@ public class ActionManager implements EventManager {
     
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
-      runScript("assign bond [{" + index + "}] \"" + vwr.getModelkit(false).getBondPickingType()
+      runScript("assign bond [{" + index + "}] \"" + vwr.getModelkitProperty("bondType")
           + "\"");
       break;
     case PICKING_ROTATE_BOND:

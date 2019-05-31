@@ -104,6 +104,8 @@ public abstract class GenericPopup implements GenericMenuInterface {
   protected Map<String, SC> htMenus = new Hashtable<String, SC>();
   private Lst<SC> SignedOnly = new Lst<SC>();
 
+  protected boolean updatingForShow;
+
   protected void initSwing(String title, PopupResource bundle, Object applet,
                            boolean isJS, boolean isSigned, boolean isWebGL) {
     this.isJS = isJS;
@@ -175,9 +177,7 @@ public abstract class GenericPopup implements GenericMenuInterface {
         newItem = subMenu;
       } else if (item.endsWith("Checkbox")
           || (isCB = (item.endsWith("CB") || item.endsWith("RD")))) {
-        // could be "PRD" -- set picking checkbox
-        // note that RD is not actually implemented, because we can't make 
-        // radio button groups of AwtSwingComponents
+        // could be "PRD" -- set picking radio
         script = popupResourceBundle.getStructure(item);
         String basename = item.substring(0, item.length() - (!isCB ? 8 : 2));
         boolean isRadio = (isCB && item.endsWith("RD"));
@@ -286,7 +286,7 @@ public abstract class GenericPopup implements GenericMenuInterface {
   }
 
   private void runCheckBoxScript(SC item, String what, boolean TF) {
-    if (!item.isEnabled() || what.startsWith("mk"))
+    if (!item.isEnabled())
       return;
     if (what.indexOf("##") < 0) {
       int pt = what.indexOf(":");
@@ -407,10 +407,12 @@ public abstract class GenericPopup implements GenericMenuInterface {
       SC item = entry.getValue();
       String basename = key.substring(0, key.indexOf(":"));
       boolean b = appGetBooleanProperty(basename);
+      updatingForShow = true;
       if (item.isSelected() != b) {
         item.setSelected(b);
         isTainted = true;
       }
+      updatingForShow = false;
     }
   }
 

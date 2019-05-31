@@ -240,6 +240,10 @@ public class CmdExt extends ScriptExt {
       String key = paramAsStr(i).toLowerCase();
       Object value = null;
       switch (tok) {
+      case T.set:
+        key = paramAsStr(++i);
+        value = paramAsStr(++i);
+        break;
       case T.mode:
         value = paramAsStr(++i).toLowerCase();
         if (!PT.isOneOf((String) value, ModelKitPopup.MODE_OPTIONS))
@@ -5417,7 +5421,7 @@ public class CmdExt extends ScriptExt {
         return;
       vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
       // After this next command, vwr.modelSet will be a different instance
-      vwr.getModelkit(false).setProperty("assignAtom", new Object[] { type, new int[] { atomIndex, 1, 1 }});
+      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex, 1, 1 }});
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
       vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
@@ -5437,7 +5441,7 @@ public class CmdExt extends ScriptExt {
     try {
       bs = vwr.addHydrogensInline(bs, vConnections, pts);
       int atomIndex2 = bs.nextSetBit(0);
-      vwr.getModelkit(false).setProperty("assignAtom", new Object[] { type, new int[] { atomIndex2, -1, atomIndex}});
+      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex2, -1, atomIndex}});
       atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
@@ -5452,7 +5456,7 @@ public class CmdExt extends ScriptExt {
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
-      BS bsAtoms = (BS) vwr.getModelkit(false).setProperty("assignBond",  new int[] { bondIndex, type });
+      BS bsAtoms = (BS) vwr.setModelkitProperty("assignBond",  new int[] { bondIndex, type });
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");
       vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
@@ -5470,8 +5474,8 @@ public class CmdExt extends ScriptExt {
     vwr.sm.modifySend(index, modelIndex, 2, e.fullCommand);
     vwr.ms.connect(connections);
     // note that vwr.ms changes during the assignAtom command 
-    vwr.getModelkit(false).setProperty("assignAtom",  new Object[] { ".", new int[] {index, 1, 1} });
-    vwr.getModelkit(false).setProperty("assignAtom",  new Object[] { ".", new int[] {index2, 1, 1} });
+    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index, 1, 1} });
+    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index2, 1, 1} });
     vwr.sm.modifySend(index, modelIndex, -2, "OK");
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }

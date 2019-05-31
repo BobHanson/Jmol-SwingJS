@@ -93,7 +93,7 @@ public abstract class JmolGenericPopup extends GenericPopup {
                                          boolean TF) {
     if (appGetBooleanProperty(basename) == TF)
       return true;
-    if (!basename.endsWith("P!"))
+    if (basename.indexOf("mk") < 0 && !basename.endsWith("P!"))
       return false;
     if (basename.indexOf("mk") >= 0 || basename.indexOf("??") >= 0) {
       script = getUnknownCheckBoxScriptToRun(item, basename, script, TF);

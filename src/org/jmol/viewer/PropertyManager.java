@@ -177,6 +177,7 @@ public class PropertyManager implements JmolPropertyManager {
     "validationInfo"  , atomExpression, "{visible}",
     "service"    , "<hashTable>", "",
     "CIFInfo"        , "<filename>", "",
+    "modelkitInfo", "<key>","data",
 
   };
 
@@ -232,7 +233,8 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_VAL_INFO = 43;
   private final static int PROP_SERVICE = 44;
   private final static int PROP_CIF_INFO = 45;
-  private final static int PROP_COUNT = 46;
+  private final static int PROP_MODELKIT_INFO = 46;
+  private final static int PROP_COUNT = 47;
 
   //// static methods used by Eval and Viewer ////
 
@@ -744,6 +746,8 @@ public class PropertyManager implements JmolPropertyManager {
     Object myParam = (iHaveParameter ? paramInfo : getDefaultPropertyParam(id));
     //myParam may now be a bitset
     switch (id) {
+    case PROP_MODELKIT_INFO:
+      return vwr.getModelkitProperty(myParam.toString());
     case PROP_APPLET_INFO:
       return getAppletInfo();
     case PROP_ANIMATION_INFO:
