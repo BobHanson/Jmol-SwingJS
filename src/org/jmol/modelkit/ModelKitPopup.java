@@ -85,12 +85,17 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private String drawScript;
 
   public ModelKitPopup() {
-    // for reflection
   }
 
   //////////////// menu creation and update ///////////////
     
   private static final int MAX_LABEL = 32;
+
+  @Override
+  protected void initialize(Viewer vwr, PopupResource bundle, String title) {
+   super.initialize(vwr, bundle, title); 
+   initializeForModel();
+  }
 
   @Override
   protected PopupResource getBundle(String menu) {
@@ -111,7 +116,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     atomHoverLabel = bondHoverLabel = xtalHoverLabel = null;
     hasUnitCell = (vwr.getCurrentUnitCell() != null);
     symop = null;
-    setDefaultState(STATE_XTALVIEW);
+    setDefaultState(hasUnitCell ? STATE_XTALVIEW : STATE_MOLECULAR);
     setProperty("clicktosetelement",Boolean.valueOf(!hasUnitCell));
     setProperty("addhydrogen",Boolean.valueOf(!hasUnitCell));
   }
@@ -1012,23 +1017,27 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   @Override
   public void menuClickCallback(SC source, String script) {
-    //action performed
-    if (processSymop(source.getName(), false))
-      return;
-    if (script.equals("clearQPersist")) {
-      for (SC item : htCheckbox.values()) {
-        if (item.getActionCommand().indexOf(":??") < 0)
-          continue;
-        menuSetLabel(item, "??");
-        item.setActionCommand("_??P!:");
-        item.setSelected(false);
-      }
-      appRunScript("set picking assignAtom_C");
-      return;
-    }
-    // may come back to getScriptForCallback
-    super.menuClickCallback(source, script);
+    doMenuClickCallbackMK(source, script);
   }
+    
+    public void doMenuClickCallbackMK(SC source, String script) {
+      //action performed
+      if (processSymop(source.getName(), false))
+        return;
+      if (script.equals("clearQPersist")) {
+        for (SC item : htCheckbox.values()) {
+          if (item.getActionCommand().indexOf(":??") < 0)
+            continue;
+          menuSetLabel(item, "??");
+          item.setActionCommand("_??P!:");
+          item.setSelected(false);
+        }
+        appRunScript("set picking assignAtom_C");
+        return;
+      }
+      // may come back to getScriptForCallback
+     doMenuClickCallback(source, script);
+    }
 
   /**
    * Secondary processing of menu item click

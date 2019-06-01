@@ -1127,6 +1127,11 @@ public class ActionManager implements EventManager {
       }
       if (mp == null)
         return;
+      if (vwr.antialiased) {
+        x <<= 1;
+        y <<= 1;
+      }
+
       mp.traceX = x;
       mp.traceY = y;
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignNew");
@@ -1888,6 +1893,12 @@ public class ActionManager implements EventManager {
   }
 
   private void assignNew(int x, int y) {
+    
+    if (vwr.antialiased) {
+      x <<= 1;
+      y <<= 1;
+    }
+
     // H C + -, etc.
     // also check valence and add/remove H atoms as necessary?
     boolean inRange = pressed.inRange(xyRange, dragged.x, dragged.y);

@@ -373,6 +373,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       vwr.tm.scaleToScreen((z1 + z2) / 2, mad) : mad);
     if (dotsOrDashes && (dashDots == null || dashDots == ndots))
       width = diameter;
+    System.out.println("measuresrend " + x1 + " " + y1 + " " + x2 + " " + y2);
     return drawLine2(x1, y1, z1, x2, y2, z2, diameter);
   }
 }

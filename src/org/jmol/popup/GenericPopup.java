@@ -256,6 +256,10 @@ public abstract class GenericPopup implements GenericMenuInterface {
   abstract public void menuFocusCallback(String name, String actionCommand, boolean gained);
 
   public void menuClickCallback(SC source, String script) {
+    doMenuClickCallback(source, script);
+  }
+
+  protected void doMenuClickCallback(SC source, String script) {
     appRestorePopupMenu();
     if (script == null || script.length() == 0)
       return;
@@ -273,6 +277,10 @@ public abstract class GenericPopup implements GenericMenuInterface {
   }
 
   public void menuCheckBoxCallback(SC source) {
+    doMenuCheckBoxCallback(source);
+  }
+
+  protected void doMenuCheckBoxCallback(SC source) {
     appRestorePopupMenu();
     boolean isSelected = source.isSelected();
     String what = source.getActionCommand();
