@@ -54,25 +54,12 @@ public class JSModelKitPopup extends ModelKitPopup {
   
   @Override
   public void menuClickCallback(SC source, String script) {
-<<<<<<< HEAD
     doMenuClickCallbackMK(source, script);
-=======
-    /** @j2sNatve */{}
-    // Hack for old transpiler, which can skip an empty call to super
-    // but then if THAT method also calls super, we get the wrong object ref.
-    super.menuClickCallback(source, script);
->>>>>>> branch 'jmol-app' of https://github.com/BobHanson/Jmol-SwingJS.git
   }
 
   @Override
   public void menuCheckBoxCallback(SC source) {
-<<<<<<< HEAD
     doMenuCheckBoxCallback(source);
-=======
-    /** @j2sNatve */{}
-    // Hack for old transpiler
-    super.menuCheckBoxCallback(source);
->>>>>>> branch 'jmol-app' of https://github.com/BobHanson/Jmol-SwingJS.git
   }
 
 }
