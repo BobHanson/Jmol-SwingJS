@@ -85,17 +85,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private String drawScript;
 
   public ModelKitPopup() {
+    initializeForModel();
   }
 
   //////////////// menu creation and update ///////////////
     
   private static final int MAX_LABEL = 32;
-
-  @Override
-  protected void initialize(Viewer vwr, PopupResource bundle, String title) {
-   super.initialize(vwr, bundle, title); 
-   initializeForModel();
-  }
 
   @Override
   protected PopupResource getBundle(String menu) {
