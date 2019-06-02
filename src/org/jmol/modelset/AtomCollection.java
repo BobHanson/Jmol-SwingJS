@@ -88,6 +88,11 @@ abstract public class AtomCollection {
   public BioModelSet bioModelset;
 
   public Atom[] at;
+  
+  public Atom getAtom(int iatom) {
+    return (iatom >= 0 && iatom < at.length ? at[iatom] : null);
+  }
+
   public int ac;
 
   public Trajectory trajectory;

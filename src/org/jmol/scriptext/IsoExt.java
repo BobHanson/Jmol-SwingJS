@@ -601,8 +601,9 @@ public class IsoExt extends ScriptExt {
             s = null;
             int iatom = bsAtoms.nextSetBit(0);
             if (options != 0) {
-              Object o = vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
-                  xyz, iSym, center, target, thisId, T.point, intScale / 100f,
+              // options is T.offset, and target is an {i j k} offset from cell 555
+              Object o = vwr.getSymmetryInfo(iatom,
+                  xyz, iSym, center, target, T.point, null, intScale / 100f,
                   nth, options);
               if (o instanceof P3)
                 target = (P3) o;
@@ -612,8 +613,8 @@ public class IsoExt extends ScriptExt {
             if (thisId == null)
               thisId = "sym";
             if (s == null)
-              s = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
-                  xyz, iSym, center, target, thisId, T.draw, intScale / 100f,
+              s = (String) vwr.getSymmetryInfo(iatom,
+                  xyz, iSym, center, target, T.draw, thisId, intScale / 100f,
                   nth, options);
           }
           eval.runScript(

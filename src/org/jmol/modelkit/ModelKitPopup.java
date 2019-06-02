@@ -74,8 +74,18 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private ModelSet lastModelSet;
 
   private boolean showSymopInfo = true;
+  
+  /**
+   * when TRUE, add H atoms to C when added to the modelSet. 
+   */
   private boolean addXtalHydrogens = false;
-  private boolean clickToSetElement = false;
+  
+  /**
+   * Except for H atoms, do not allow changes to elements just by clicking them. 
+   * This protects against doing that inadvertently when editing.
+   * 
+   */
+  private boolean clickToSetElement = false; 
   
   private P3 centerPoint, spherePoint, viewOffset;
   private float centerDistance;
@@ -85,7 +95,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private String drawScript;
 
   public ModelKitPopup() {
-    initializeForModel();
+  }
+
+  @Override
+  protected void initialize(Viewer vwr, PopupResource bundle, String title) {
+   super.initialize(vwr, bundle, title); 
+   initializeForModel();
   }
 
   //////////////// menu creation and update ///////////////
@@ -391,11 +406,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   /** Get a property of the modelkit.
    * 
-   * @param name
+   * @param data a name or an array with [name, value]
    * @return value
    */
-  public Object getProperty(String name) {
-    return setProperty(name, null);
+  public Object getProperty(Object data) {
+    String key = (data instanceof String ? data : ((Object[]) data)[0]).toString();
+    Object value = (data instanceof String ? null : ((Object[]) data)[1]);
+    return setProperty(key, value); 
   }
   
   /**
@@ -412,67 +429,40 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (value != null)
       System.out.println("ModelKitPopup.setProperty " + name + "=" + value);
 
+    // getting only:
+    if (name == "hoverlabel") {
+      // no setting of this, only getting
+      return getHoverLabel(((Integer) value).intValue());
+    }
+
+    if (name == "alloperators") {
+      return allOperators;
+    }
+    
+    if (name == "data") {
+      return getData(value == null ? null : value.toString());
+    }
+
+    if (name == "invariant") {
+      int iatom = (value instanceof BS ? ((BS)value).nextSetBit(0) : -1);
+      P3 atom = vwr.ms.getAtom(iatom);
+      if (atom == null)
+        return null;      
+      return vwr.getSymmetryInfo(iatom, null, -1, atom, atom, T.array, null, 0, 0, 0);
+    }
+
+    // set only (always returning null):
+    
     if (name == "assignatom") {
       // standard entry point for an atom click in the ModelKit
       Object[] o = ((Object[]) value);
       String type = (String) o[0];
       int[] data = (int[]) o[1];
       int atomIndex = data[0];
-      if (!processAtomClick(data[0])
-          && (clickToSetElement || atomIndex != centerAtomIndex))
+      if (!processAtomClick(data[0]) && 
+          (clickToSetElement || vwr.ms.getAtom(atomIndex).getElementNumber() != 1))
         assignAtom(atomIndex, type, data[1] >= 0, data[2] >= 0);
       return null;
-    }
-
-    if (name == "assignbond") {
-      int[] data = (int[]) value;
-      return assignBond(data[0], data[1]);
-    }
-
-    if (name == "atomtype") {
-      if (value != null) {
-        pickAtomAssignType = (String) value;
-        isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
-            || pickAtomAssignType.equals("mi"));
-      }
-      return pickAtomAssignType;
-    }
-
-    if (name == "bondtype") {
-      if (value != null) {
-        pickBondAssignType = ((String) value).substring(0, 1).toLowerCase();
-      }
-      return pickBondAssignType;
-    }
-
-    if (name == "hoverlabel") {
-      // no setting of this, only getting
-      return getHoverLabel(((Integer) value).intValue());
-    }
-
-    if (name == "rotatebondindex") {
-      if (value != null) {
-        setRotateBondIndex(((Integer) value).intValue());
-      }
-      return (rotateBondIndex < 0 ? null : Integer.valueOf(rotateBondIndex));
-    }
-
-    if (name == "addhydrogen" || name == "addhydrogens") {
-      if (value != null)
-        addXtalHydrogens = (value == Boolean.TRUE);
-      return Boolean.valueOf(addXtalHydrogens);
-    }
-
-    if (name == "clicktosetelement") {
-      if (value != null)
-        clickToSetElement = (value == Boolean.TRUE);
-      return Boolean.valueOf(clickToSetElement);
-    }
-
-    if (name == "showsymopinfo") {
-      if (value != null)
-        showSymopInfo = (value == Boolean.TRUE);
-      return Boolean.valueOf(showSymopInfo);
     }
 
     if (name == "mode") { // view, edit, or molecular
@@ -517,6 +507,54 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       atomIndexSphere = -1;
       processAtomClick(centerAtomIndex);
       return null;
+    }
+
+    // set and get:
+    
+    if (name == "assignbond") {
+      int[] data = (int[]) value;
+      return assignBond(data[0], data[1]);
+    }
+
+    if (name == "atomtype") {
+      if (value != null) {
+        pickAtomAssignType = (String) value;
+        isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
+            || pickAtomAssignType.equals("mi"));
+      }
+      return pickAtomAssignType;
+    }
+
+    if (name == "bondtype") {
+      if (value != null) {
+        pickBondAssignType = ((String) value).substring(0, 1).toLowerCase();
+      }
+      return pickBondAssignType;
+    }
+
+    if (name == "rotatebondindex") {
+      if (value != null) {
+        setRotateBondIndex(((Integer) value).intValue());
+      }
+      return (rotateBondIndex < 0 ? null : Integer.valueOf(rotateBondIndex));
+    }
+
+    if (name == "addhydrogen" || name == "addhydrogens") {
+      if (value != null)
+        addXtalHydrogens = isTrue(value);
+      return Boolean.valueOf(addXtalHydrogens);
+    }
+
+    if (name == "clicktosetelement") {
+      if (value != null)
+        clickToSetElement = isTrue(value);
+      return Boolean.valueOf(clickToSetElement);
+    }
+
+    if (name == "showsymopinfo") {
+      if (value != null)
+        showSymopInfo = isTrue(value);
+      return Boolean.valueOf(showSymopInfo);
     }
 
     if (name == "offset") {
@@ -567,17 +605,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       notImplemented("setProperty: removeAllConstraints");
     }
     
-    if (name == "alloperators") {
-      return allOperators;
-    }
-    
-    if (name == "data") {
-      return getData(value == null ? null : value.toString());
-    }
-        
     System.err.println("ModelKitPopup.setProperty? " + name + " " + value);
 
     return null;
+  }
+
+  private static boolean isTrue(Object value) {
+    return (Boolean.valueOf(value.toString()) == Boolean.TRUE);
   }
 
   private Object getData(String key) {
@@ -733,7 +767,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         offset = this.viewOffset;
         if (symop == null)
           symop = Integer.valueOf(1);
-        int iop = PT.parseInt(symop.toString());
         script = "draw ID sym symop "
             + (symop == null ? "1"
                 : symop instanceof String ? "'" + symop + "'"
@@ -744,7 +777,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       }
       drawData = runScriptBuffered(script);
       drawScript = script;
-      drawData = drawData.substring(0,  drawData.indexOf("\n") + 1);
+      drawData = (showSymopInfo ? drawData.substring(0,  drawData.indexOf("\n") + 1) : "");
       appRunScript(script + ";set echo top right;echo " + drawData.replace('\t', ' '));
       break;
     }

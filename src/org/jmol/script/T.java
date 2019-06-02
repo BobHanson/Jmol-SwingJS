@@ -531,7 +531,6 @@ public class T {
   public final static int modxyz    =16 | mathproperty | atomproperty;
   public final static int w         =17 | mathproperty;
   public final static int keys      =18 | mathproperty; 
-  public final static int pivot     =19 | mathproperty;
   
   // occupancy, radius, and structure are odd, because they takes different meanings when compared
   
@@ -695,6 +694,7 @@ public class T {
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
   public final static int now              = 21 | 0 << 9 | mathfunc;
+  public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
   public final static int polyhedra        = 24 | 0 << 9 | mathfunc | mathproperty | shapeCommand;
@@ -724,6 +724,7 @@ public class T {
   public final static int abs          = 10 | 1 << 9 | mathfunc;
   public final static int javascript   = 12 /* must be even */| 1 << 9 | mathfunc | implicitStringCommand;
   public final static int show         = 14 | 1 << 9 | mathfunc | scriptCommand;
+
   
   // ___.xxx(a)
   

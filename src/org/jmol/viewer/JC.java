@@ -42,8 +42,7 @@ import java.util.Properties;
 
 public final class JC {
 
-  public static final String     //         31    32    33    34    35    36    37    38    39    40    41
-  NBO_TYPES = ";"
+  public static final String   NBO_TYPES = ";"
       + "AO;;;;" // 31
       + "PNAO;;" // 32
       + "NAO;;;" // 33

@@ -740,14 +740,19 @@ public class PropertyManager implements JmolPropertyManager {
     if (infoType.equals("tokenList")) {
       return T.getTokensLike((String) paramInfo);
     }
+    Object myParam = null;
+    int pt = infoType.indexOf("#");
+    if (pt > 0) {
+      myParam = new Object[] { infoType.substring(pt + 1), paramInfo };
+      infoType = infoType.substring(0, pt);      
+    }
     int id = getPropertyNumber(infoType);
-    boolean iHaveParameter = (paramInfo != null && paramInfo.toString()
-        .length() > 0);
-    Object myParam = (iHaveParameter ? paramInfo : getDefaultPropertyParam(id));
-    //myParam may now be a bitset
+    boolean iHaveParameter = (myParam != null || paramInfo != null && paramInfo != "");
+    if (myParam == null)
+      myParam = (iHaveParameter ? paramInfo: getDefaultPropertyParam(id));
     switch (id) {
     case PROP_MODELKIT_INFO:
-      return vwr.getModelkitProperty(myParam.toString());
+      return vwr.getModelkitProperty(myParam);
     case PROP_APPLET_INFO:
       return getAppletInfo();
     case PROP_ANIMATION_INFO:

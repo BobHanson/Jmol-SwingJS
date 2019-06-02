@@ -4647,9 +4647,7 @@ public class CmdExt extends ScriptExt {
           : null);
       checkLength((len = ++eval.iToken) + filterLen);
       if (!chk) {
-        Object o = vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-            vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, type, 0, 0,
-            nth, 0);
+        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, 0, type, 0, nth, 0);
         msg = (o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
@@ -5212,7 +5210,8 @@ public class CmdExt extends ScriptExt {
       // newUC will be a T3[] indicating the conventional.
       if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
         if (newUC == null && vwr.getModelInfo("isprimitive") != null) {
-          showString("Cannot convert unit cell when file data is primitive and have no lattice information");
+          showString(
+              "Cannot convert unit cell when file data is primitive and have no lattice information");
           return;
         }
         // unitcell primitive "C"
@@ -5234,20 +5233,24 @@ public class CmdExt extends ScriptExt {
           boolean isPrimitive = ucname.equals("primitive");
           if (isPrimitive || ucname.equals("reciprocal")) {
             float scale = (slen == i + 1 ? 1
-                : tokAt(i + 1) == T.integer ? intParameter(++i)
-                    * (float) Math.PI : floatParameter(++i));
+                : tokAt(i + 1) == T.integer
+                    ? intParameter(++i) * (float) Math.PI
+                    : floatParameter(++i));
             SymmetryInterface u = vwr.getCurrentUnitCell();
             ucname = (u == null ? "" : u.getSpaceGroupName() + " ") + ucname;
-            oabc = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
-                P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
+            oabc = (u == null
+                ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
+                    P3.new3(0, 1, 0), P3.new3(0, 0, 1) }
+                : u.getUnitCellVectors());
             if (stype == null)
-              stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, 0, -1, 0);
+              stype = (String) vwr.getSymmetryInfo(
+                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null,
+                  T.lattice, null, 0, -1, 0);
             if (u == null)
               u = vwr.getSymTemp();
-            u.toFromPrimitive(true,
-                stype.length() == 0 ? 'P' : stype.charAt(0), oabc, (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
+            u.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
+                oabc,
+                (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
               SimpleUnitCell.getReciprocal(oabc, oabc, scale);
             }

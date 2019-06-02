@@ -9905,12 +9905,64 @@ public class Viewer extends JmolViewer
       appConsole.sendConsoleMessage(msg);
   }
 
-  public Object getModelkitProperty(String name) {
-    return setModelkitProperty(name, null);
+  /**
+   * 
+   * @param nameOrData could be name or [name,value]
+   * @return value
+   */
+  public Object getModelkitProperty(Object nameOrData) {
+    return (modelkit == null ? null : modelkit.getProperty(nameOrData));
   }
 
   public Object setModelkitProperty(String key, Object value) {
     return (modelkit == null ? null : modelkit.setProperty(key, value));
+  }
+
+  /**
+   * A general method for retrieving symmetry information with full capability
+   * of the symop() scripting function.
+   * 
+   * @param iatom
+   *        atom index specifying the model set and used for pt1 if that is null
+   *        and also for matching element type.
+   * @param xyz
+   *        the desired Jones-Faithful representation of the symmetry operation
+   *        or null
+   * @param iOp
+   *        the desired symmetry operation [1-n] or 0
+   * @param pt1
+   *        the starting point, or null if to use iatom or otherwise unnecessary
+   * @param pt2
+   *        the target point, if this is a point-to-point determination, or the
+   *        offset if not and options is nonzero
+   * @param type
+   *        a token type such as T.list or T.array
+   * @param desc
+   *        if type == T.nada (0), a name evaluating to a type, or one of the
+   *        special names: "info", "description", "matrix", "axispoint", or
+   *        "time" (as in time-reversal); otherwise, if type == T.draw, the root
+   *        id given to a returned DRAW command set
+   * @param scaleFactor
+   *        if nonzero and type == T.draw, a scaling factor to be applied to the
+   *        rotational vector
+   * @param nth
+   *        in the case of a point-to-point determination, the nth matching
+   *        operator, or 0 for "all"
+   * @param options
+   *        if nonzero, a option, currently just T.offset, indicating that pt1
+   *        is an {i j k} offset from cell 555
+   * @return string, Object[], or Lst<Object[]>
+   */
+  public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3 pt1, P3 pt2,
+                                int type, String desc, float scaleFactor,
+                                int nth, int options) {
+    try {
+      return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, pt1, pt2,
+          desc, type, scaleFactor, nth, options);
+    } catch (Exception e) {
+      System.out.println("Exception in Viewer.getSymmetryInfo: " + e);
+      return null;
+    }
   }
 
 }
