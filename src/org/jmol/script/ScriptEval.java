@@ -809,6 +809,7 @@ public class ScriptEval extends ScriptExpr {
    *         String, Point3f, BitSet
    */
 
+ 
   @Override
   public Object evaluateExpression(Object expr, boolean asVariable, boolean compileOnly) {
     // Text.formatText for MESSAGE and ECHO
@@ -829,6 +830,25 @@ public class ScriptEval extends ScriptExpr {
     return o;
   }
 
+  
+  
+  public void runBufferedSafely(String script, SB outputBuffer) {
+    if (outputBuffer == null)
+      outputBuffer = this.outputBuffer;
+    ScriptEval e = (new ScriptEval()).setViewer(vwr);
+    boolean exec0 = executing;
+    try {
+      e.runScriptBuffer(script, outputBuffer, false);
+    } catch (ScriptException e1) {
+      e1.printStackTrace();
+      //ignore
+    }
+    executing = exec0;
+  }
+
+  
+  
+  
   public static SV runUserAction(String functionName, Object[] params, Viewer vwr) {
     ScriptEval ev = (new ScriptEval()).setViewer(vwr);
     JmolScriptFunction func = vwr.getFunction(functionName.toLowerCase());

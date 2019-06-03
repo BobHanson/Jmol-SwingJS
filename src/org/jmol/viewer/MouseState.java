@@ -29,8 +29,8 @@ public class MouseState {
   /**
    * 
    */
-  int x = -1000;
-  int y = -1000;
+  public int x = -1000;
+  public int y = -1000;
   int modifiers = 0;
   public long time = -1;
   

@@ -82,7 +82,6 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
       adapter.setMultiTouchClient(vwr, this, false);
     }
     setBinding(b);
-    xyRange = 10; // allow for more slop in double-clicks and press/releases
   }
 
   private void startSparshUIService(boolean isSimulated) {

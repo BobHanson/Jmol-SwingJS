@@ -53,13 +53,13 @@ public class ModelKitPopupResourceBundle extends PopupResource {
   private static String[][] menuContents = {
     { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
     { "optionsMenu", "new center addh minimize hmin " +
-    		" - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
+        " - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
     { "atomMenu" , "assignAtom_XP!RD assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
-    		"invertStereoP!RD - assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
-    		"_??P!RD _??P!RD _??P!RD " +
-    		"moreAtomMenu - assignAtom_plP!RD assignAtom_miP!RD" },
+        "invertStereoP!RD - assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
+        "_??P!RD _??P!RD _??P!RD " +
+        "moreAtomMenu - assignAtom_plP!RD assignAtom_miP!RD" },
     { "moreAtomMenu", "clearQPersist - _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
-    { "bondMenu", "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD - assignBond_pP!RD assignBond_mP!RD - rotateBondP!CB" },
+    { "bondMenu", "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
     { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalSymmetryPersistMenu xtalPackingPersistMenu xtalOptionsPersistMenu" },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
     { "xtalSelPersistMenu", "mksel_atom mksel_position" },
@@ -155,7 +155,7 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "assignBond_3P!RD", GT.$("triple"),
         "assignBond_pP!RD", GT.$("increase order"),
         "assignBond_mP!RD", GT.$("decrease order"),
-        "rotateBondP!CB", GT.$("rotate bond (SHIFT-DRAG)"),
+        "rotateBondP!RD", GT.$("rotate bond"),
         "exit!Persist", GT.$("exit modelkit mode"),
     };
  

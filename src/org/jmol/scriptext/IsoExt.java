@@ -617,8 +617,8 @@ public class IsoExt extends ScriptExt {
                   xyz, iSym, center, target, T.draw, thisId, intScale / 100f,
                   nth, options);
           }
-          eval.runScript(
-              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete");
+          eval.runBufferedSafely(
+              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete", eval.outputBuffer);
         }
         return;
       case T.frame:

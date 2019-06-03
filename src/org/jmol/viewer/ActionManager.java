@@ -396,6 +396,10 @@ public class ActionManager implements EventManager {
   private int apm = PICKING_IDENTIFY;
   private int bondPickingMode;
 
+  public int getBondPickingMode() {
+    return bondPickingMode;
+  }
+  
   public final static int PICKING_MK_RESET = -1;
   public final static int PICKING_OFF = 0;
   public final static int PICKING_IDENTIFY = 1;
@@ -499,15 +503,18 @@ public class ActionManager implements EventManager {
     case PICKING_IDENTIFY_BOND:
     case PICKING_ROTATE_BOND:
     case PICKING_ASSIGN_BOND:
+    case PICKING_DELETE_BOND:
       vwr.setBooleanProperty("bondPicking", true);
       bondPickingMode = pickingMode;
+//      return;
+//    case PICKING_DELETE_BOND:
+//      bondPickingMode = pickingMode;
+//      if (vwr.getBondsPickable())
+//        return;
+      resetMeasurement();
       return;
-    case PICKING_DELETE_BOND:
-      bondPickingMode = pickingMode;
-      if (vwr.getBondPicking())
-        return;
-      isNew = true;
-      break;
+//      isNew = true;
+//      break;
     // if we have bondPicking mode, then we don't set atomPickingMode to this
     }
     isNew |= (apm != pickingMode);
@@ -588,7 +595,7 @@ public class ActionManager implements EventManager {
   public final static float DEFAULT_GESTURE_SWIPE_FACTOR = 1f;
 
 
-  protected int xyRange = 10; // BH 2019.04.21 was 0
+  public final static int XY_RANGE = 10; // BH 2019.04.21 was 0
 
   private float gestureSwipeFactor = DEFAULT_GESTURE_SWIPE_FACTOR;
   protected float mouseDragFactor = DEFAULT_MOUSE_DRAG_FACTOR;
@@ -612,6 +619,9 @@ public class ActionManager implements EventManager {
   private final MouseState pressed = new MouseState("pressed");
   private final MouseState dragged = new MouseState("dragged");
 
+  boolean isDraggedIsShiftDown() {
+    return (dragged.modifiers & Binding.SHIFT) != 0;
+  }
   protected void setCurrent(long time, int x, int y, int mods) {
     vwr.hoverOff();
     current.set(time, x, y, mods);
@@ -679,7 +689,16 @@ public class ActionManager implements EventManager {
   private boolean hoverActive = false;
 
   private MeasurementPending mp;
+  
   private int dragAtomIndex = -1;
+  
+  /**
+   * set to true in checkPressedAction if the screen coordinates of the press 
+   * are relatively close to the coordinates of the hover that highlighted the bond,
+   * indicating that we can alias a left-click to a shift-left-click
+   * 
+   */
+  private boolean mkBondPressed;
   
   public void setDragAtomIndex(int iatom) {
     // from label 
@@ -763,13 +782,12 @@ public class ActionManager implements EventManager {
   public boolean keyPressed(int key, int modifiers) {
     if (keyProcessing)
       return false;
-    vwr.hoverOff();
     keyProcessing = true;
     switch (key) {
     case Event.VK_ALT:
       if (dragSelectedMode && isAltKeyReleased)
         vwr.moveSelected(Integer.MIN_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, modifiers);
       isAltKeyReleased = false;
       moved.modifiers |= Binding.ALT;
       break;
@@ -781,7 +799,11 @@ public class ActionManager implements EventManager {
       moved.modifiers |= Binding.CTRL;
       break;
     case Event.VK_ESCAPE:
+      vwr.hoverOff();
       exitMeasurementMode("escape");
+      break;
+    default:
+      vwr.hoverOff();
       break;
     }
     int action = Binding.LEFT | Binding.SINGLE | Binding.DRAG | moved.modifiers;
@@ -808,14 +830,19 @@ public class ActionManager implements EventManager {
   }
 
   @Override
+  public boolean keyTyped(int keyChar, int modifiers) {
+    return false;
+  }
+
+  @Override
   public void keyReleased(int key) {
     switch (key) {
     case Event.VK_ALT:
+      moved.modifiers &= ~Binding.ALT;
       if (dragSelectedMode)
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, moved.modifiers);
       isAltKeyReleased = true;
-      moved.modifiers &= ~Binding.ALT;
       break;
     case Event.VK_SHIFT:
       moved.modifiers &= ~Binding.SHIFT;
@@ -931,7 +958,7 @@ public class ActionManager implements EventManager {
       setMouseActions(pressedCount, buttonMods, true);
       setCurrent(time, x, y, buttonMods);
       vwr.spinXYBy(0, 0, 0);
-      boolean dragRelease = !pressed.check(xyRange, x, y, buttonMods, time,
+      boolean dragRelease = !pressed.check(XY_RANGE, x, y, buttonMods, time,
           Long.MAX_VALUE);
       checkReleaseAction(x, y, time, dragRelease);
       return;
@@ -945,7 +972,7 @@ public class ActionManager implements EventManager {
     case Event.CLICKED:
       setMouseMode();
       // xyRange was 0 BH 2019.04.21
-      clickedCount = (count > 1 ? count : clicked.check(xyRange, 0, 0, buttonMods,
+      clickedCount = (count > 1 ? count : clicked.check(XY_RANGE, 0, 0, buttonMods,
           time, MAX_DOUBLE_CLICK_MILLIS) ? clickedCount + 1 : 1);
       if (clickedCount == 1) {
         setCurrent(time, x, y, buttonMods);
@@ -983,6 +1010,7 @@ public class ActionManager implements EventManager {
       return;
     checkUserAction(pressAction, x, y, 0, 0, time, Event.PRESSED);
     boolean isBound = false;
+
     switch (apm) {
     case PICKING_ASSIGN_ATOM:
       isBound = bnd(clickAction, ACTION_assignNew);
@@ -1007,17 +1035,25 @@ public class ActionManager implements EventManager {
       if (dragAtomIndex >= 0
           && (apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)
           && vwr.ms.isAtomInLastModel(dragAtomIndex)) {
+        if (bondPickingMode == PICKING_ROTATE_BOND) {          
+          vwr.setModelkitProperty("bondAtomIndex", Integer.valueOf(dragAtomIndex));
+        }
         enterMeasurementMode(dragAtomIndex);
         mp.addPoint(dragAtomIndex, null, false);
       }
+      int[] xy = (int[]) vwr.getModelkitProperty("screenXY");
+        mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));
+        
       return;
     }
     if (bnd(pressAction, ACTION_popupMenu)) {
       char type = 'j';
       if (vwr.getBoolean(T.modelkitmode)) {
         Map<String, Object> t = vwr.checkObjectClicked(x, y, LEFT_CLICKED);
-        type = (t != null && "bond".equals(t.get("type")) ? 'b' : vwr
-            .findNearestAtomIndex(x, y) >= 0 ? 'a' : 'm');
+        type = (
+//            t != null && "bond".equals(t.get("type")) ? 'b' : vwr
+//            .findNearestAtomIndex(x, y) >= 0 ? 'a' : 
+              'm');
       }
       vwr.popupMenu(x, y, type);
       return;
@@ -1027,7 +1063,7 @@ public class ActionManager implements EventManager {
           .findNearestAtomIndexMovable(x, y, true) >= 0);
       if (haveSelection && bnd(dragAction, ACTION_dragSelected, ACTION_dragZ))
         vwr.moveSelected(Integer.MIN_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, buttonMods);
       return;
     }
     //   if (vwr.g.useArcBall)
@@ -1057,13 +1093,12 @@ public class ActionManager implements EventManager {
       return;
 
     if (vwr.g.modelKitMode && vwr.getModelkit(false).getRotateBondIndex() >= 0) {
-      if (bnd(dragWheelAction, ACTION_rotateBranch)) {
+      if (dragAtomIndex >= 0 || mkBondPressed
+          || bnd(dragWheelAction, ACTION_rotateBranch)) {
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
-            false);
+            false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
         return;
       }
-      if (!bnd(dragWheelAction, ACTION_rotate))
-        vwr.setRotateBondIndex(-1);
     }
     
     BS bs = null;
@@ -1153,7 +1188,7 @@ public class ActionManager implements EventManager {
         vwr.undoMoveActionClear(iatom, AtomCollection.TAINT_COORD, true);
       else
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, buttonmods);
       dragSelected(dragWheelAction, deltaX, deltaY, false);
       return;
     }
@@ -1259,7 +1294,7 @@ public class ActionManager implements EventManager {
           deltaX,
           deltaY,
           (isPickingDrag && bnd(a, ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE),
-          Integer.MIN_VALUE, Integer.MIN_VALUE, null, true, false);
+          Integer.MIN_VALUE, Integer.MIN_VALUE, null, true, false, dragged.modifiers);
   }
 
 
@@ -1270,8 +1305,9 @@ public class ActionManager implements EventManager {
     vwr.setInMotion(false);
     vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
     dragGesture.add(dragAction, x, y, time);
-    if (dragRelease)
-      vwr.setRotateBondIndex(Integer.MIN_VALUE);
+    // necessary for reactivating
+//    if (dragRelease)
+//      vwr.setModelKitRotateBondIndex(Integer.MIN_VALUE);
     if (dragAtomIndex >= 0) {
       if (apm == PICKING_DRAG_MINIMIZE
           || apm == PICKING_DRAG_MINIMIZE_MOLECULE)
@@ -1279,12 +1315,19 @@ public class ActionManager implements EventManager {
     }
     if (apm == PICKING_ASSIGN_ATOM
         && bnd(clickAction, ACTION_assignNew)) {
-      if (mp == null || dragAtomIndex < 0)
+      if (mp == null || dragAtomIndex < 0) {
+        exitMeasurementMode(null);
         return;
+      } else if (bondPickingMode == PICKING_ROTATE_BOND) {
+        vwr.setModelkitProperty("bondAtomIndex", Integer.valueOf(dragAtomIndex));
+        exitMeasurementMode(null);
+        return;
+      }
       assignNew(x, y);
       return;
     }
     dragAtomIndex = -1;
+    mkBondPressed = false;
     boolean isRbAction = isRubberBandSelect(dragAction);
     if (isRbAction)
       selectRb(clickAction);
@@ -1300,7 +1343,7 @@ public class ActionManager implements EventManager {
     }
     if (haveSelection && dragSelectedMode && bnd(dragAction, ACTION_dragSelected))
       vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-          Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
+          Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, dragged.modifiers);
 
     if (dragRelease
         && checkUserAction(pressAction, x, y, 0, 0, time, Event.RELEASED))
@@ -1681,8 +1724,10 @@ public class ActionManager implements EventManager {
 
   private void minimize(boolean dragDone) {
     int iAtom = dragAtomIndex;
-    if (dragDone)
+    if (dragDone) {
       dragAtomIndex = -1;
+      mkBondPressed = false;
+    }
     vwr.dragMinimizeAtom(iAtom);
   }
 
@@ -1893,70 +1938,23 @@ public class ActionManager implements EventManager {
   }
 
   private void assignNew(int x, int y) {
-    
-    if (vwr.antialiased) {
-      x <<= 1;
-      y <<= 1;
-    }
-
-    // H C + -, etc.
-    // also check valence and add/remove H atoms as necessary?
-    boolean inRange = pressed.inRange(xyRange, dragged.x, dragged.y);
-    if (inRange) {
-      dragged.x = pressed.x;
-      dragged.y = pressed.y;
-    }
-    if (vwr.getModelkit(false).handleDragAtom(pressed, dragged, mp.countPlusIndices))
-      return;
-    boolean isCharge = vwr.getModelkit(false).isPickAtomAssignCharge();
-    String atomType = (String) vwr.getModelkitProperty("atomType");
-    if (mp.count == 2) {
-      vwr.undoMoveActionClear(-1, T.save, true);
-      runScript("assign connect "
-          + mp.getMeasurementScript(" ", false));
-    } else if (atomType.equals("Xx")) {
-      exitMeasurementMode("bond dropped");
-    } else {
-      if (inRange) {
-        String s = "assign atom ({" + dragAtomIndex + "}) \""
-            + atomType + "\"";
-        if (isCharge) {
-          s += ";{atomindex=" + dragAtomIndex + "}.label='%C'; ";
-          vwr.undoMoveActionClear(dragAtomIndex,
-              AtomCollection.TAINT_FORMALCHARGE, true);
-        } else {
-          vwr.undoMoveActionClear(-1, T.save, true);
-        }
-        runScript(s);
-      } else if (!isCharge) {
-        vwr.undoMoveActionClear(-1, T.save, true);
-        Atom a = vwr.ms.at[dragAtomIndex];
-        if (a.getElementNumber() == 1) {
-          vwr.assignAtom(dragAtomIndex, "X", null);
-//          runScript("assign atom ({" + dragAtomIndex + "}) \"X\"");
-        } else {
-          P3 ptNew = P3.new3(x, y, a.sZ);
-          vwr.tm.unTransformPoint(ptNew, ptNew);
-          vwr.assignAtom(dragAtomIndex, atomType, ptNew);
-//          runScript("assign atom ({" + dragAtomIndex + "}) \""
-//              + atomType + "\" " + Escape.eP(ptNew));
-        }
-      }
+    if (!vwr.getModelkit(false).handleAssignNew(pressed, dragged, mp, dragAtomIndex)) {
+      exitMeasurementMode("bond dropped");      
     }
     exitMeasurementMode(null);
   }
 
   private void bondPicked(int index) {    
-    if (bondPickingMode == PICKING_ASSIGN_BOND)
+    if (bondPickingMode == PICKING_ASSIGN_BOND) {
       vwr.undoMoveActionClear(-1, T.save, true);
+    }
     
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
-      runScript("assign bond [{" + index + "}] \"" + vwr.getModelkitProperty("bondType")
-          + "\"");
+      vwr.setModelkitProperty("scriptAssignBond", Integer.valueOf(index));
       break;
     case PICKING_ROTATE_BOND:
-        vwr.setRotateBondIndex(index);
+      // done separately
       break;
     case PICKING_DELETE_BOND:
       vwr.deleteBonds(BSUtil.newAndSetBit(index));
@@ -2069,11 +2067,6 @@ public class ActionManager implements EventManager {
   private void zoomTo(int atomIndex) {
     runScript("zoomTo (atomindex=" + atomIndex + ")");
     vwr.setStatusAtomPicked(atomIndex, null, null, false);
-  }
-
-  @Override
-  public boolean keyTyped(int keyChar, int modifiers) {
-    return false;
   }
 
   public boolean userActionEnabled(int action) {

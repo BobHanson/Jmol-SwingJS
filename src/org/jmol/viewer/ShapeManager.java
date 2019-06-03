@@ -229,7 +229,7 @@ public class ShapeManager {
           bsVisible, false);
     }
     if (modifiers != 0
-        && vwr.getBondPicking()
+        && vwr.getBondsPickable()
         && (map = shapes[JC.SHAPE_STICKS].checkObjectClicked(x, y, modifiers,
             bsVisible, false)) != null)
       return map;

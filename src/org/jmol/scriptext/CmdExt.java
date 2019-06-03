@@ -5414,7 +5414,7 @@ public class CmdExt extends ScriptExt {
 
   private void assignAtom(int atomIndex, P3 pt, String type) {
     if (type.equals("X"))
-      vwr.setRotateBondIndex(-1);
+      vwr.setModelKitRotateBondIndex(-1);
     if (atomIndex >= 0 && vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
       return;
     vwr.clearModelDependentObjects();

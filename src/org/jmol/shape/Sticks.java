@@ -202,14 +202,16 @@ public class Sticks extends Shape {
     // not implemented -- see org.jmol.viewer.StateCreator
     return null;
   }
-  
+
+  private int[] closestAtom = new int[1];
+
   @Override
   public boolean checkObjectHovered(int x, int y, BS bsVisible) {
     P3 pt = new P3();
-    Bond bond = findPickedBond(x, y, bsVisible, pt);
+    Bond bond = findPickedBond(x, y, bsVisible, pt, closestAtom);
     if (bond == null)
       return false;
-    vwr.highlightBond(bond.index, null);
+    vwr.highlightBond(bond.index, closestAtom[0], x, y);
     return true;
   }
   
@@ -218,7 +220,7 @@ public class Sticks extends Shape {
   public Map<String, Object> checkObjectClicked(int x, int y, int modifiers,
                                     BS bsVisible, boolean drawPicking) {
     P3 pt = new P3();
-    Bond bond = findPickedBond(x, y, bsVisible, pt);
+    Bond bond = findPickedBond(x, y, bsVisible, pt, closestAtom);
     if (bond == null)
       return null;
     int modelIndex = bond.atom1.mi;
@@ -236,6 +238,7 @@ public class Sticks extends Shape {
 
   private final static int MAX_BOND_CLICK_DISTANCE_SQUARED = 10 * 10;
   private final P3i ptXY = new P3i();
+  private final static int XY_THREASHOLD = 40;
 
   /**
    * 
@@ -245,7 +248,7 @@ public class Sticks extends Shape {
    * @param pt
    * @return picked bond or null
    */
-  private Bond findPickedBond(int x, int y, BS bsVisible, P3 pt) {
+  private Bond findPickedBond(int x, int y, BS bsVisible, P3 pt, int[] closestAtom) {
     int dmin2 = MAX_BOND_CLICK_DISTANCE_SQUARED;
     if (vwr.gdata.isAntialiased()) {
       x <<= 1;
@@ -265,12 +268,14 @@ public class Sticks extends Shape {
         continue;
       v.ave(atom1, atom2);
       int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
-      if (d2 >= 0) {
+      if (d2 >= 0 && Math.abs(atom1.sY - atom2.sY) + Math.abs(atom1.sX - atom2.sX)> XY_THREASHOLD  ) {
         float f = 1f * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
         if (f < 0.4f || f > 0.6f)
           continue;
         dmin2 = d2;
         pickedBond = bond;
+        if (closestAtom != null)
+          closestAtom[0] = (f < 0.5f ? atom1.i : atom2.i);
         pt.setT(v);
       }
     }

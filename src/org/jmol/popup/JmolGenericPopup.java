@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
+import org.jmol.script.ScriptEval;
 import org.jmol.viewer.Viewer;
 
 import org.jmol.awtjs.swing.SC;
@@ -115,6 +116,11 @@ public abstract class JmolGenericPopup extends GenericPopup {
   @Override
   protected void appRunScript(String script) {
     vwr.evalStringQuiet(script);
+//    System.out.println("eval 1 " + vwr.eval.isExecuting());
+//    System.out.println(script);
+//    ((ScriptEval) vwr.eval).runBufferedSafely(script, null);
+//    System.out.println("eval 2 " + vwr.eval.isExecuting());
+
   }
 
 
