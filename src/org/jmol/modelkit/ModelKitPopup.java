@@ -544,8 +544,11 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
     if (name == "symop") {
       setDefaultState(STATE_XTALVIEW);
-      showSymop(symop);
-      return null;
+      if (value != null) {
+        symop = value;
+        showSymop(symop);
+      }
+      return symop;
     }
 
     if (name == "center") {
@@ -555,6 +558,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       centerAtomIndex = (centerAtom instanceof Atom ? ((Atom) centerAtom).i
           : -1);
       atomIndexSphere = -1;
+      secondAtomIndex = -1;
       processAtomClick(centerAtomIndex);
       return null;
     }

@@ -1299,7 +1299,7 @@ public class SymmetryDesc {
     }
     if (info == null)
       return nullRet;
-    if (type == T.array && nth < 0) {
+    if (type == T.array && nth < 0 && op < 0) {
       Lst<Object> lst = new Lst<Object>();
       for (int i = 0; i < info.length; i++)
         lst.add(getInfo((Object[])info[i], T.array));
