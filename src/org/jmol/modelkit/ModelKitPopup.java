@@ -917,7 +917,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     Atom atom = vwr.ms.at[atomIndex];
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = Elements.elementNumberFromSymbol(type, true);
+    int atomicNumber = (PT.isUpperCase(type.charAt(0)) ? Elements.elementNumberFromSymbol(type, true) : -1);
 
     // 1) change the element type or charge
 
@@ -931,9 +931,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         vwr.ms.am[atom.mi].isModelKit = true;
       if (!vwr.ms.am[atom.mi].isModelKit)
         vwr.ms.taintAtom(atomIndex, AtomCollection.TAINT_ATOMNAME);
-    } else if (type.equals("Pl")) {
+    } else if (type.toLowerCase().equals("pl")) {
       atom.setFormalCharge(atom.getFormalCharge() + 1);
-    } else if (type.equals("Mi")) {
+    } else if (type.toLowerCase().equals("mi")) {
       atom.setFormalCharge(atom.getFormalCharge() - 1);
     } else if (type.equals("X")) {
       isDelete = true;

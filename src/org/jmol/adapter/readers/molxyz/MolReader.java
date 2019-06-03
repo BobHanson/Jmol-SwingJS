@@ -27,7 +27,9 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.Lst;
 import javajs.util.PT;
+import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -281,10 +283,11 @@ public class MolReader extends AtomSetCollectionReader {
     // read V2000 user data
 
     Map<String, Object> molData = new Hashtable<String, Object>();
+    Lst<String> _keyList = new Lst<String>();
     rd();
     while (line != null && line.indexOf("$$$$") != 0) {
       if (line.indexOf(">") == 0) {
-        readMolData(molData);
+        readMolData(molData, _keyList);
         continue;
       }
       if (line.startsWith("M  ISO")) {
@@ -297,8 +300,10 @@ public class MolReader extends AtomSetCollectionReader {
       Object atomValueName = molData.get("atom_value_name");
       molData.put(atomValueName == null ? "atom_values" : atomValueName.toString(), atomData);
     }
-    if (!molData.isEmpty())
+    if (!molData.isEmpty()) {
+      asc.setCurrentModelInfo("molDataKeys", _keyList);
       asc.setCurrentModelInfo("molData", molData);
+    }
   }
 
   private void set2D(boolean b) {
@@ -353,9 +358,10 @@ public class MolReader extends AtomSetCollectionReader {
    * Read the SDF data with name in lower case
    * 
    * @param molData
+   * @param _keyList 
    * @throws Exception
    */
-  private void readMolData(Map<String, Object> molData) throws Exception {
+  private void readMolData(Map<String, Object> molData, Lst<String> _keyList) throws Exception {
     Atom[] atoms = asc.atoms;
     // "> <xxx>" becomes "xxx"
     // "> yyy <xxx> zzz" becomes "yyy <xxx> zzz"
@@ -369,6 +375,8 @@ public class MolReader extends AtomSetCollectionReader {
     data = PT.trim(data, "\n");
     Logger.info(dataName + ":" + PT.esc(data));
     molData.put(dataName, data);
+    _keyList.addLast(dataName);
+
     int ndata = 0;
     if (dataName.toUpperCase().contains("_PARTIAL_CHARGES")) {
       try {

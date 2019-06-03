@@ -1024,7 +1024,7 @@ public class SymmetryDesc {
       //      if (haveCentering)
       //      draw1.append(drawid).append(
       //        "cellOffsetVector arrow @p0 @set2 color grey");
-      if (options != T.offset) {
+      if (options != T.offset && ptTarget == null) {
         draw1.append(drawid)
             .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
             .append(Escape.eP(vt1)).append("*0.9} color red");
@@ -1299,7 +1299,7 @@ public class SymmetryDesc {
     }
     if (info == null)
       return nullRet;
-    if (type == T.array && nth < 0 && op < 0) {
+    if (type == T.array && nth < 0 && op <= 0) {
       Lst<Object> lst = new Lst<Object>();
       for (int i = 0; i < info.length; i++)
         lst.add(getInfo((Object[])info[i], T.array));

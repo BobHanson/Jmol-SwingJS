@@ -1,4 +1,4 @@
-package org.jmol.adapter.readers.aflow;
+package org.jmol.adapter.readers.more;
 
 import java.util.Arrays;
 import java.util.Hashtable;

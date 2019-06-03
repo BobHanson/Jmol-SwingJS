@@ -203,7 +203,8 @@ public class CmdExt extends ScriptExt {
 
 
   /**
-   * Configure the ModelKitPopup for Crystallographic symmetry viewing and structure editing
+   * Configure the ModelKitPopup for Crystallographic symmetry viewing and
+   * structure editing
    * 
    * new 14.29.45
    * 
@@ -267,9 +268,15 @@ public class CmdExt extends ScriptExt {
           value = Integer.valueOf(getToken(i).intValue);
           break;
         default:
-          invArg();
+          if (e.isCenterParameter(i)) {
+            key = "center";
+            value = e.centerParameter(i, null);
+            i = e.iToken;
+          } else {
+            invArg();
+          }
+          break;
         }
-        i = e.iToken;
         break;
       case T.symmetry:
         value = paramAsStr(++i).toLowerCase();

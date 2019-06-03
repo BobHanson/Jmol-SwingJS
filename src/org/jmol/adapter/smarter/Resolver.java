@@ -46,10 +46,9 @@ public class Resolver {
 
   private final static String classBase = "org.jmol.adapter.readers.";
   private final static String[] readerSets = new String[] {
-    "aflow.", ";AFLOW;",
     "cif.", ";Cif;Cif2;MMCif;MMTF;MagCif",
     "molxyz.", ";Mol3D;Mol;Xyz;",
-    "more.", ";BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
+    "more.", ";AFLOW;BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Psi;Qchem;QCJSON;" +
                  "WebMO;MO;", // MO is for XmlMolpro 

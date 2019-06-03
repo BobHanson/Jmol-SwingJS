@@ -669,6 +669,7 @@ all support for previous versions removed
 
     <jar destfile="build/JmolApplet0_ReadersMolXyz.jar" manifest="manifest/applet.txt">
       <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/spartan/**" />
         <include name="org/jmol/adapter/readers/molxyz/**" />
       </fileset>
     </jar>
@@ -955,6 +956,7 @@ all support for previous versions removed
 
     <jar destfile="build/JmolAppletSigned0_ReadersMolXyz.jar" manifest="manifest/appletSigned.txt">
       <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/spartan/**" />
         <include name="org/jmol/adapter/readers/molxyz/**" />
       </fileset>
     </jar>
