@@ -235,7 +235,7 @@ public class Viewer extends JmolViewer
 
   public GData gdata;
   public JSmolAppletObject html5Applet; // j2s only - TODO: More explicit references of this 
-  public JmolToJSmolInterface jmolObject;
+  public static JmolToJSmolInterface jmolObject;
 
   public ActionManager acm;
   public AnimationManager am;
@@ -337,6 +337,7 @@ public class Viewer extends JmolViewer
   private boolean dataOnly;
   public boolean isJSNoAWT;
 
+  
   /**
    * new way...
    * 
@@ -472,8 +473,9 @@ public class Viewer extends JmolViewer
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
       JSmolAppletObject applet = null;
-      JmolToJSmolInterface jmol = null;
       String javaver = "?";
+      
+      JmolToJSmolInterface jmol = null;
       /**
        * @j2sNative
        * 
@@ -3492,17 +3494,9 @@ public class Viewer extends JmolViewer
       case REFRESH_SEND_WEBGL_NEW_ORIENTATION:
         tm.finalizeTransformParameters();
 
-        boolean refreshHTML5 = false;
-      /**
-       * @j2sNative
-       * 
-       *            if (!this.html5Applet) return; refreshHTML5 = true;
-       */
-      {
-      }
-        if (refreshHTML5)
-          html5Applet._refresh();
-
+        if (html5Applet == null)
+          return;
+        html5Applet._refresh();
         if (mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
           return;
         break;
@@ -3746,9 +3740,9 @@ public class Viewer extends JmolViewer
    * 
    */
   private void updateJSView(int imodel, int iatom) {
-    boolean doViewPick = true;
     if (this.html5Applet == null)
       return;
+    boolean doViewPick = true;
     /**
      * @j2sNative
      * 
@@ -4039,9 +4033,9 @@ public class Viewer extends JmolViewer
 
     if (isJS) {
       if (strScript.indexOf("JSCONSOLE") == 0) {
-        this.html5Applet._showInfo(strScript.indexOf("CLOSE") < 0);
+        jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
         if (strScript.indexOf("CLEAR") >= 0)
-          this.html5Applet._clearConsole();
+          jmolObject.clearConsole(html5Applet);
         return null;
       }
 

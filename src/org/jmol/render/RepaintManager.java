@@ -89,8 +89,16 @@ public class RepaintManager implements JmolRepaintManager {
   @SuppressWarnings({ "null", "unused" })
   @Override
   synchronized public void requestRepaintAndWait(String why) {
-    JmolToJSmolInterface jmol = (!Viewer.isJS || Viewer.isSwingJS ? null 
-        :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
+    JmolToJSmolInterface jmol = null;
+    if (Viewer.isJS && !Viewer.isSwingJS) {
+      /**
+       *  @j2sNative jmol = (self.Jmol && Jmol.repaint ? Jmol : null) 
+       */
+      {}
+    }    
+// don't inline, as the old transpiler cannot handle that.    
+//    JmolToJSmolInterface jmol = (!Viewer.isJS || Viewer.isSwingJS ? null 
+//        :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
     if (jmol == null) {
       //System.out.println("RM requestRepaintAndWait() " + (test++));
       try {

@@ -75,15 +75,10 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
       fileName = (String) htParams.get("audioFile");
       vwr.sm.registerAudio(id, htParams);
       JSmolAppletObject applet = vwr.html5Applet;
-      JmolToJSmolInterface jmol = vwr.jmolObject;
-      /**
-       * @j2sNative
-       * 
-       */
-      {
-        getClip();
-      }
-      if (jmol != null)
+      JmolToJSmolInterface jmol = Viewer.jmolObject;
+      if (jmol == null)
+          getClip();
+      else
          jmol.playAudio(applet, htParams);
       if (myClip == null)
         return;

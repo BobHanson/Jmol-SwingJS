@@ -55,7 +55,6 @@ class FileLoadThread extends JmolThread {
     sc.pc--; // re-start this load command.
   }
   
-  @SuppressWarnings({ "null", "unused" })
   @Override
   protected void run1(int mode) throws InterruptedException {
     while (true)
@@ -68,22 +67,15 @@ class FileLoadThread extends JmolThread {
           mode = FINISH;
           break;
         }
-        JmolToJSmolInterface jmol = null;
-        /**
-         * @j2sNative
-         * 
-         * jmol = self.Jmol;
-         * 
-         */
-        {}
-        if (jmol != null)
-           jmol.loadFileAsynchronously(this, vwr.html5Applet, fileName, null);
+        if (Viewer.jmolObject != null)
+           Viewer.jmolObject.loadFileAsynchronously(this, vwr.html5Applet, fileName, null);
 
         /**
          * @j2sNative
          * 
          */        
         {
+          // Java only
           if (vwr.testAsync) {
             if (!runSleep(sleepTime, CHECK1))
               return;

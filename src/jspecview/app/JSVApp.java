@@ -605,9 +605,9 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 			return;
 		}
 
-		if (vwr.jsvpPopupMenu != null)
-			vwr.jsvpPopupMenu
-					.setCompoundMenu(vwr.panelNodes, vwr.allowCompoundMenu);
+//		if (vwr.jsvpPopupMenu != null)
+//			vwr.jsvpPopupMenu
+//					.setCompoundMenu(vwr.panelNodes, vwr.allowCompoundMenu);
 
 		Logger.info(appletFrame.getAppletInfo() + " File "
 				+ vwr.currentSource.getFilePath() + " Loaded Successfully");

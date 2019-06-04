@@ -26,6 +26,9 @@ package jspecview.js2d;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.SC;
 import org.jmol.popup.PopupResource;
+
+import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.awtjs2d.JSPopupHelper;
 
 import jspecview.common.JSViewer;
@@ -56,9 +59,13 @@ public class JsPopup extends JSVGenericPopup {
    */
   @Override
   public void menuShowPopup(SC popup, int x, int y) {
-    vwr.menuShowPopup(popup, isTainted, x, y);
+    try {
+      ((JPopupMenu) popup).show(isTainted ? (Component) vwr.getApplet() : null, x, y);
+    } catch (Exception e) {
+      // ignore
+    }
   }
-
+  
 	@Override
 	protected Object getImageIcon(String fileName) {
 		// not used in JSV
