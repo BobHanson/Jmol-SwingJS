@@ -30,10 +30,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import org.jmol.api.SC;
 import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.util.Elements;
-
-import org.jmol.awtjs.swing.SC;
 
 public class AwtModelKitPopup extends ModelKitPopup {
 

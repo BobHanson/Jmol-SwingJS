@@ -28,13 +28,12 @@ import java.awt.Component;
 import javax.swing.JPopupMenu;
 
 import org.jmol.api.PlatformViewer;
+import org.jmol.api.SC;
 import org.jmol.i18n.GT;
 import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.JmolPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.viewer.Viewer;
-
-import org.jmol.awtjs.swing.SC;
 
 public class AwtJmolPopup extends JmolPopup {
 

@@ -23,6 +23,7 @@
  */
 package jspecview.popup;
 
+import org.jmol.api.SC;
 import org.jmol.popup.GenericPopup;
 import org.jmol.popup.PopupResource;
 
@@ -35,7 +36,6 @@ import jspecview.common.JSVersion;
 import jspecview.common.PanelNode;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
-import org.jmol.awtjs.swing.SC;
 import javajs.util.Lst;
 
 abstract public class JSVGenericPopup extends GenericPopup implements

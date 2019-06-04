@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.jmol.api.GenericMenuInterface;
+import org.jmol.api.SC;
 import org.jmol.util.Logger;
 
-import org.jmol.awtjs.swing.SC;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;

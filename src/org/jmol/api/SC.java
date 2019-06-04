@@ -1,4 +1,4 @@
-package org.jmol.awtjs.swing;
+package org.jmol.api;
 
 /**
  * SwingComponent interface common to javax.swing and org.jmol.awtjs.swing

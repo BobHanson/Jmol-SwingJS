@@ -28,10 +28,8 @@ import java.awt.Container;
 import javax.swing.JPopupMenu;
 
 import org.jmol.popup.PopupResource;
-
-import org.jmol.awtjs.swing.SC;
-
 import org.jmol.api.PlatformViewer;
+import org.jmol.api.SC;
 import org.jmol.awt.AwtSwingComponent;
 import org.jmol.awt.AwtPopupHelper;
 

@@ -16,13 +16,14 @@ import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericGraphics;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.api.SC;
 import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.util.Logger;
 
 import javajs.api.BytePoster;
 import org.jmol.awtjs.swing.Component;
 import org.jmol.awtjs.swing.Dimension;
-import org.jmol.awtjs.swing.SC;
+
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.OC;

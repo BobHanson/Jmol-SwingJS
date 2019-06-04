@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseEvent;
 
+import org.jmol.api.SC;
 import org.jmol.awtjs.swing.ButtonGroup;
 import org.jmol.awtjs.swing.JCheckBoxMenuItem;
 import org.jmol.awtjs.swing.JMenu;
@@ -36,7 +37,6 @@ import org.jmol.awtjs.swing.JPopupMenu;
 import org.jmol.awtjs.swing.JRadioButtonMenuItem;
 
 import org.jmol.awtjs.swing.Component;
-import org.jmol.awtjs.swing.SC;
 import org.jmol.popup.GenericPopup;
 import org.jmol.popup.PopupHelper;
 

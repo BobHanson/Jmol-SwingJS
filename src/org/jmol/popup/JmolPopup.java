@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.SC;
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
 import org.jmol.modelset.Group;
@@ -34,7 +35,6 @@ import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.viewer.JC;
 
-import org.jmol.awtjs.swing.SC;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;

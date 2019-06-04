@@ -43,7 +43,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.MenuElement;
 import javax.swing.MenuSelectionManager;
 
-import org.jmol.awtjs.swing.SC;
+import org.jmol.api.SC;
 import org.jmol.popup.GenericPopup;
 import org.jmol.popup.PopupHelper;
 

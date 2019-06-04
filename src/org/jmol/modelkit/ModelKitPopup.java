@@ -26,7 +26,7 @@ package org.jmol.modelkit;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.awtjs.swing.SC;
+import org.jmol.api.SC;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;

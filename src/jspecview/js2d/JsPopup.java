@@ -24,8 +24,8 @@
 package jspecview.js2d;
 
 import org.jmol.api.PlatformViewer;
+import org.jmol.api.SC;
 import org.jmol.popup.PopupResource;
-import org.jmol.awtjs.swing.SC;
 import org.jmol.awtjs2d.JSPopupHelper;
 
 import jspecview.common.JSViewer;
