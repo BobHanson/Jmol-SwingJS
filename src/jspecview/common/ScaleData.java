@@ -207,22 +207,19 @@ public class ScaleData {
     int index = 0;
     int ptCount = 0;
     for (index = iStart; index <= iEnd; index++) {
-      double x = xyCoords[index].getXVal();
-      if (x >= initX) {
+      if (xyCoords[index].getXVal() >= initX) {
         startIndices[i] = index;
+        ptCount = 1;
         break;
       }
     }
 
     // determine endDataPointIndex
-    for (; index <= iEnd; index++) {
-      double x = xyCoords[index].getXVal();
-      ptCount++;
-      if (x >= finalX) {
-        break;
-      }
+    // BH --- this was reproducibly off by one
+    while (++index <= iEnd && xyCoords[index].getXVal() <= finalX) {
+        ptCount++;
     }
-    endIndices[i] = index - 1;
+    endIndices[i] = startIndices[i] + ptCount - 1;
     return ptCount;
   }
 

@@ -1267,7 +1267,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 		si.setCursor(GenericPlatform.CURSOR_WAIT);
 		try {
 			si.siSetCurrentSource(isView ? JDXSource.createView(specs) : JDXReader
-					.createJDXSource(JSVFileManager.getBufferedReaderForData(data),
+					.createJDXSource(data,
 							filePath, obscureTitleFromUser == Boolean.TRUE, loadImaginary,
 							firstSpec, lastSpec, nmrMaxY));
 		} catch (Exception e) {
@@ -1824,7 +1824,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 							"Select Spectrum", DialogManager.ERROR_MESSAGE);
 				return;
 			}
-			dialogManager.showSource(this, pd().getSpectrum().getFilePath());
+			dialogManager.showSource(this, pd().getSpectrum());
 		} else if (what.startsWith("solutioncolorfill")) {
 			if (what.indexOf("all") >= 0) {
 				for (int i = panelNodes.size(); --i >= 0;)

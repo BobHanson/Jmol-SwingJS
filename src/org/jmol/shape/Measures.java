@@ -35,12 +35,12 @@ import org.jmol.modelset.MeasurementPending;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.Point3fi;
 import org.jmol.modelset.TickInfo;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;

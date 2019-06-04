@@ -1,6 +1,6 @@
 package jspecview.js2d;
 
-import org.jmol.awtjs.swing.Font;
+import org.jmol.util.Font;
 
 /**
  * methods required by Jmol that access java.awt.Font

@@ -11,8 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
-import org.jmol.awtjs.swing.Font;
-
 import javajs.util.P3;
 import javajs.util.Rdr;
 
@@ -24,6 +22,7 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.util.Font;
 
 import jspecview.api.JSVPanel;
 

@@ -42,29 +42,26 @@ package jspecview.app;
 import java.net.URL;
 import java.util.Map;
 
-import javajs.api.JSInterface;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import org.jmol.util.Logger;
 
+import javajs.util.Lst;
+import javajs.util.PT;
 import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppInterface;
 import jspecview.api.JSVPanel;
 import jspecview.api.PanelListener;
 import jspecview.api.js.JSVAppletObject;
-import jspecview.common.JSVersion;
-import jspecview.common.Spectrum;
+import jspecview.common.Coordinate;
 import jspecview.common.JSVFileManager;
+import jspecview.common.JSVersion;
+import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
 import jspecview.common.PanelNode;
-import jspecview.common.JSViewer;
 import jspecview.common.PeakPickEvent;
 import jspecview.common.ScriptToken;
-import jspecview.common.Coordinate;
+import jspecview.common.Spectrum;
 import jspecview.common.SubSpecChangeEvent;
 import jspecview.common.ZoomEvent;
-
 import jspecview.source.JDXSource;
 
 /**
@@ -186,7 +183,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	@Override
 	public void loadInline(String data) {
 		// newAppletPanel();
-		siOpenDataOrFile(data, null, null, null, -1, -1, true, null, null);
+		siOpenDataOrFile(data, "[inline]", null, null, -1, -1, true, null, null);
 		appletFrame.validateContent(3);
 	}
 
@@ -245,6 +242,15 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	public void toggleCoordinate() {
 		toggle(ScriptToken.COORDINATESON);
 	}
+
+  /**
+   * Method that can be called from another applet or from javascript that
+   * toggles the coordinate on a <code>JSVPanel</code>
+   */
+  @Override
+  public void togglePointsOnly() {
+    toggle(ScriptToken.POINTSONLY);
+  }
 
 	/**
 	 * Method that can be called from another applet or from javascript that
@@ -760,7 +766,8 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 		return vwr.print(fileName);
 	}
 
-	public String checkScript(String script) {
+	@Override
+  public String checkScript(String script) {
 		return vwr.checkScript(script);
 	}
 

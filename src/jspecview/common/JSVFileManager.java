@@ -95,10 +95,10 @@ public class JSVFileManager {
 		}
 	}
 
-	public static BufferedReader getBufferedReaderForData(Object data) {
-		return (data == null ? null : new BufferedReader(new StringReader(
-				data instanceof String ? (String) data : new String((byte[]) data))));
-	}
+  public static BufferedReader getBufferedReaderForStringOrBytes(Object stringOrBytes) {
+    return (stringOrBytes == null ? null : new BufferedReader(new StringReader(
+        stringOrBytes instanceof String ? (String) stringOrBytes : new String((byte[]) stringOrBytes))));
+  }
 
 	public static BufferedReader getBufferedReaderFromName(String name,
 			String startCode) throws JSVException {
@@ -186,7 +186,7 @@ public class JSVFileManager {
 			Object ret = getInputStream(name, true, null);
 			if (ret instanceof SB || ret instanceof String)
 				return new BufferedReader(new StringReader(ret.toString()));			
-			if (ret instanceof byte[])
+			if (isAB(ret))
 				return new BufferedReader(new StringReader(new String((byte[]) ret)));
 			BufferedInputStream bis = new BufferedInputStream((InputStream) ret);
 			InputStream in = bis;
@@ -255,7 +255,16 @@ public class JSVFileManager {
 		String data = cacheGet(name);
 		if (data == null)
 			cachePut(name, data = getNMRSimulationJCampDX(name.substring(SIMULATION_PROTOCOL.length())));
-		return getBufferedReaderForData(data);
+		return getBufferedReaderForStringOrBytes(data);
+	}
+
+	public static boolean isAB(Object x) {
+		/**
+		 * @j2sNative return Clazz.isAI(x);
+		 */
+		{
+			return x instanceof byte[];
+		}
 	}
 
 	public static boolean isZipFile(InputStream is) throws JSVException {

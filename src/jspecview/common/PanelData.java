@@ -45,7 +45,6 @@ import java.util.Map.Entry;
 import javajs.api.GenericColor;
 
 import org.jmol.awtjs.Event;
-import org.jmol.awtjs.swing.Font;
 
 import javajs.util.CU;
 import javajs.util.Lst;
@@ -60,6 +59,7 @@ import jspecview.dialog.JSVDialog;
 
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericGraphics;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 
 /**
@@ -450,26 +450,24 @@ public class PanelData implements EventManager {
 			peakTabsOn = getBoolean(ScriptToken.PEAKTABSON);
 			
 		}
+		boolean pointsOnly = getBoolean(ScriptToken.POINTSONLY);
 		doReset = false;
 		titleDrawn = false;
 		thisWidth = width;
 		thisHeight = height;
 		for (int i = graphSets.size(); --i >= 0;)
 			graphSets.get(i).drawGraphSet(gMain, gFront, gRear, width, height, left,
-					right, top, bottom, isResized, taintedAll);
+					right, top, bottom, isResized, taintedAll, pointsOnly);
 		if (titleOn && !titleDrawn && taintedAll)
 			drawTitle(gMain, height * scalingFactor, width * scalingFactor,
 					getDrawTitle(isPrinting));
 		if (withCoords && coordStr != null)
 			drawCoordinates(gFront, top, thisWidth - right, top - 20);
-		if (addFilePath && taintedAll) {
-			String s = (commonFilePath != null ? commonFilePath
-					: graphSets.size() == 1 && currentGraphSet.getTitle(true) != null ? getSpectrum()
-							.getFilePath() : null);
-			if (s != null) {
-				printFilePath(gMain, left, height, s);
-			}
-		}
+    if (addFilePath && taintedAll) {
+      printFilePath(gMain, left, height, commonFilePath != null ? commonFilePath
+          : graphSets.size() == 1 && currentGraphSet.getTitle(true) != null ? getSpectrum()
+              .getFilePath() : null);
+    }
 		if (isPrinting) {
 			printVersion(gMain, height);
 		}
@@ -498,6 +496,8 @@ public class PanelData implements EventManager {
 	}
 
 	public void printFilePath(Object g, int x, int y, String s) {
+		if (s == null)
+			return;
 		x *= scalingFactor;
 		y *= scalingFactor;
 		if (s.indexOf("?") > 0)
@@ -1305,7 +1305,7 @@ public class PanelData implements EventManager {
 		Object[][] data = new Object[numSpectra][];
 		String f1 = getSpectrumAt(0).getFilePath();
 		String f2 = getSpectrumAt(numSpectra - 1).getFilePath();
-		boolean useFileName = !f1.equals(f2);
+	    boolean useFileName = f1 != null && f2 != null && !f1.equals(f2);
 
 		for (int index = 0; index < numSpectra; index++) {
 			Object[] cols = new Object[3];

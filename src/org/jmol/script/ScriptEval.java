@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.BArray;
@@ -68,6 +67,7 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;

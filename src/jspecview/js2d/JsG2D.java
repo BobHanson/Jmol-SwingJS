@@ -41,7 +41,8 @@ import org.jmol.api.GenericGraphics;
 
 import javajs.api.GenericColor;
 import org.jmol.awtjs.swing.Color;
-import org.jmol.awtjs.swing.Font;
+import org.jmol.util.Font;
+
 import javajs.util.CU;
 
 

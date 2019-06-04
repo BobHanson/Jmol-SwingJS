@@ -72,6 +72,7 @@ public class Exporter implements ExportInterface {
 			    boolean isOK = msg.startsWith("OK");
 			    if (isOK)
 			    	viewer.si.siUpdateRecentMenus(file.getFullPath());
+			    out.closeChannel();
 			    return msg;
 				}
 			case 2:
@@ -171,7 +172,14 @@ public class Exporter implements ExportInterface {
 		case SOURCE:
 			if (jsvp == null)
 				return null;
-			return fileCopy(jsvp.getPanelData().getSpectrum().getFilePath(), out);
+		  String data = jsvp.getPanelData().getSpectrum().getInlineData();
+		  if (data != null) {
+			  out.append(data);
+			  out.closeChannel();
+  	    return "OK " + out.getByteCount() + " bytes";
+		  }
+			String path = jsvp.getPanelData().getSpectrum().getFilePath();
+			return fileCopy(path, out);
 		case UNK:
 			return null;
 		}

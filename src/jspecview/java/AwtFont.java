@@ -29,7 +29,7 @@ class AwtFont {
     return new java.awt.Font(fontMap);
   }
 
-  static Object getFontMetrics(org.jmol.awtjs.swing.Font font, Object graphics) {
+  static Object getFontMetrics(org.jmol.util.Font font, Object graphics) {
     return ((Graphics) graphics).getFontMetrics((java.awt.Font) font.font);
   }
 

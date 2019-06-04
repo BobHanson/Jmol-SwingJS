@@ -106,6 +106,7 @@ public class ApplicationMenu extends JMenuBar {
 
   private JCheckBoxMenuItem gridCheckBoxMenuItem = new JCheckBoxMenuItem();
   private JCheckBoxMenuItem coordsCheckBoxMenuItem = new JCheckBoxMenuItem();
+  private JCheckBoxMenuItem pointsOnlyCheckBoxMenuItem = new JCheckBoxMenuItem();
   private JCheckBoxMenuItem revPlotCheckBoxMenuItem = new JCheckBoxMenuItem();
   private JCheckBoxMenuItem scaleXCheckBoxMenuItem = new JCheckBoxMenuItem();
   private JCheckBoxMenuItem scaleYCheckBoxMenuItem = new JCheckBoxMenuItem();
@@ -199,6 +200,13 @@ public class ApplicationMenu extends JMenuBar {
           @Override
 					public void itemStateChanged(ItemEvent e) {
             setBoolean(ScriptToken.COORDINATESON, e);
+          }
+        });
+    setMenuItem(pointsOnlyCheckBoxMenuItem, 'P', "Points Only",
+        80, InputEvent.CTRL_MASK, new ItemListener() {
+          @Override
+          public void itemStateChanged(ItemEvent e) {
+            setBoolean(ScriptToken.POINTSONLY, e);
           }
         });
     setMenuItem(revPlotCheckBoxMenuItem, 'R', "Reverse Plot",
@@ -442,6 +450,7 @@ public class ApplicationMenu extends JMenuBar {
     displayMenu.add(scaleXCheckBoxMenuItem);
     displayMenu.add(scaleYCheckBoxMenuItem);
     displayMenu.add(revPlotCheckBoxMenuItem);
+    displayMenu.add(pointsOnlyCheckBoxMenuItem);
     displayMenu.addSeparator();
     displayMenu.add(zoomMenu);
     displayMenu.addSeparator();
@@ -484,6 +493,7 @@ public class ApplicationMenu extends JMenuBar {
 		PanelData pd = mainFrame.vwr.pd();
     gridCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.GRIDON));
     coordsCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.COORDINATESON));
+    pointsOnlyCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.POINTSONLY));
     revPlotCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.REVERSEPLOT));
 	}
 

@@ -28,11 +28,11 @@ import javajs.util.BS;
 
 import org.jmol.modelset.Text;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.P3i;
 
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.viewer.JC;
 
 public class Hover extends TextShape {

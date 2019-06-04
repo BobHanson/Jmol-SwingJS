@@ -41,7 +41,6 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -72,6 +71,7 @@ import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;

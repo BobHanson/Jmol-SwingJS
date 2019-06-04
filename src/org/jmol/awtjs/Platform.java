@@ -1,6 +1,6 @@
 package org.jmol.awtjs;
 
-import org.jmol.awtjs.swing.Font;
+import org.jmol.util.Font;
 
 /**
  * 

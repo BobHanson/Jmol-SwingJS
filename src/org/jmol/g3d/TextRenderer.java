@@ -28,8 +28,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.JmolRendererInterface;
+import org.jmol.util.Font;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.CU;
 
 

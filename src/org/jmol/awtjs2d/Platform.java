@@ -13,9 +13,8 @@ import org.jmol.api.Interface;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.script.ScriptContext;
+import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
-
-import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;

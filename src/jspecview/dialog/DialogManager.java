@@ -103,11 +103,16 @@ abstract public class DialogManager {
 					"Error Log", INFORMATION_MESSAGE);
 	}
 
-	public void showSource(Object frame, String filePath) {
+	public void showSource(Object frame, Spectrum spec) {
+	  String filePath = spec.getFilePath();
 		if (filePath == null) {
 			showMessageDialog(frame, "Please Select a Spectrum", "Select Spectrum",
 					WARNING_MESSAGE);
 			return;
+		}
+		if (filePath == "[inline]") {
+		  showMessage(null, spec.getInlineData(), "Inline data");
+      return;
 		}
 		try {
 			String s = JSVFileManager.getFileAsString(filePath);

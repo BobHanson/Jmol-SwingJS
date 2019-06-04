@@ -26,9 +26,9 @@ package org.jmol.render;
 
 import org.jmol.modelset.TickInfo;
 import org.jmol.script.T;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.PT;

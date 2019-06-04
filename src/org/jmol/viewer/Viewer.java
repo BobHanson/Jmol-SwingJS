@@ -40,7 +40,6 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 
 import org.jmol.awtjs.Event;
-import org.jmol.awtjs.swing.Font;
 
 import javajs.util.AU;
 import javajs.util.CU;
@@ -124,6 +123,7 @@ import org.jmol.util.C;
 import org.jmol.util.CommandHistory;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;

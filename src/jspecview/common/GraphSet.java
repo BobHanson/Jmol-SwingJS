@@ -6,12 +6,12 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericColor;
-import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import javajs.util.DF;
 import javajs.util.Lst;
 
 import org.jmol.api.GenericGraphics;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import javajs.util.PT;
 
@@ -1306,16 +1306,15 @@ class GraphSet implements XYScaleConverter {
 		boolean dontUseSubspecs = (subspecs == null || subspecs.size() == 2);
 		// NMR real/imaginary
 		boolean is2D = !getSpectrumAt(0).is1D();
-		if (!is2D && !dontUseSubspecs) {
-			graphsTemp.addLast(getSpectrum());
-			if (!ScaleData.setDataPointIndices(graphsTemp, initX, finalX,
-					minNumOfPointsForZoom, startIndices, endIndices))
-				return;
+		Lst<Spectrum> graphs;
+		if (is2D || dontUseSubspecs) {
+      graphs = spectra;
 		} else {
-			if (!ScaleData.setDataPointIndices(spectra, initX, finalX,
-					minNumOfPointsForZoom, startIndices, endIndices))
-				return;
+      (graphs = graphsTemp).addLast(getSpectrum());
 		}
+    if (!ScaleData.setDataPointIndices(graphs, initX, finalX,
+        minNumOfPointsForZoom, startIndices, endIndices))
+      return;
 		double y1 = initY;
 		double y2 = finalY;
 		boolean isXOnly = (y1 == y2);
@@ -1407,7 +1406,7 @@ class GraphSet implements XYScaleConverter {
 	 * @param doAll
 	 */
 	private void drawAll(Object gMain, Object gFront, Object gBack, int iSplit,
-			boolean needNewPins, boolean doAll) {
+			boolean needNewPins, boolean doAll, boolean pointsOnly) {
 		g2d = pd.g2d; // may change when printing and testing JsPdfCreator
 		this.gMain = gMain;
 		Spectrum spec0 = getSpectrumAt(0);
@@ -1526,10 +1525,10 @@ class GraphSet implements XYScaleConverter {
 				boolean isContinuous = spec.isContinuous();
 				boolean onSpectrum = ((nSplit > 1 ? i == iSpectrumMovedTo : isLinked
 						|| i == iSpectrumForScale)
-						&& !pd.isPrinting && spec.isContinuous());
+						&& !pd.isPrinting && isContinuous);
 				boolean hasPendingIntegral = (!isGrey && pendingIntegral != null && spec == pendingIntegral.spec);
 				if (doAll || hasPendingIntegral) {
-					drawPlot(hasPendingIntegral && !doAll ? gFront : gMain, i, spec, isContinuous, offset, isGrey, null, onSpectrum, hasPendingIntegral);
+					drawPlot(hasPendingIntegral && !doAll ? gFront : gMain, i, spec, isContinuous, offset, isGrey, null, onSpectrum, hasPendingIntegral, pointsOnly);
 				}
 				drawIntegration(gFront, i, offset, isGrey, ig, isContinuous, onSpectrum);
 				drawMeasurements(gFront, i);
@@ -1824,7 +1823,7 @@ class GraphSet implements XYScaleConverter {
 		double r = xMax + xMin;
 		double d = Math.abs(xMax - xMin);
 		double range = Math.abs(toX(xPixel1) - toX(xPixel0));
-		if (tickSize > 0 && d > range / 20) {
+		if (false && tickSize > 0 && d > range / 20) {
 			d = range / 20;
 			xMin = r / 2 - d;
 			xMax = r / 2 + d;
@@ -1876,7 +1875,7 @@ class GraphSet implements XYScaleConverter {
 		// Check if specInfo in null or xyCoords is null
 		if (iData != null) {
 			if (haveIntegralDisplayed(index))
-				drawPlot(gFront, index, spectra.get(index), true, yOffset, false, iData, true, false);
+				drawPlot(gFront, index, spectra.get(index), true, yOffset, false, iData, true, false, false);
 			drawIntegralValues(gFront, index, yOffset);
 		}
 		Lst<Annotation> ratios = getIntegrationRatios(index);
@@ -1892,7 +1891,7 @@ class GraphSet implements XYScaleConverter {
 
 	private void drawPlot(Object g, int index, Spectrum spec,
 			boolean isContinuous, int yOffset, boolean isGrey, IntegralData ig,
-			boolean isSelected, boolean hasPendingIntegral) {
+			boolean isSelected, boolean hasPendingIntegral, boolean pointsOnly) {
 		Coordinate[] xyCoords = (ig == null ? spec.getXYCoords()
 				: getIntegrationGraph(index).getXYCoords());
 		boolean isIntegral = (ig != null);
@@ -1913,7 +1912,7 @@ class GraphSet implements XYScaleConverter {
 				: spec.fillColor);
 		int iFirst = viewData.getStartingPointIndex(index);
 		int iLast = viewData.getEndingPointIndex(index);
-		if (isContinuous) {
+		if (isContinuous && !pointsOnly) {
 			iLast--;
 			// all graphics can do line to for now
 			boolean doLineTo = (isIntegral || pendingIntegral != null)
@@ -2004,9 +2003,12 @@ class GraphSet implements XYScaleConverter {
 				y2 = fixY(yOffset + y2);
 				if (y1 == y2 && (y1 == yPixel0 || y1 == yPixel1))
 					continue;
-				g2d.drawLine(g, x1, y1, x1, y2);
+				if (pointsOnly)
+          g2d.fillRect(g, x1-1, y2-1, 3, 3);
+				else
+				  g2d.drawLine(g, x1, y1, x1, y2);
 			}
-			if (getScale().isYZeroOnScale()) {
+			if (!pointsOnly && getScale().isYZeroOnScale()) {
 				int y = yOffset + toPixelY(getScale().spectrumYRef);
 				if (y == fixY(y))
 					g2d.drawLine(g, xPixel1, y, xPixel0, y);
@@ -3278,10 +3280,11 @@ class GraphSet implements XYScaleConverter {
 	 * @param bottom
 	 * @param isResized
 	 * @param taintedAll
+	 * @param pointsOnly 
 	 */
 	synchronized void drawGraphSet(Object gMain, Object gFront, Object gBack,
 			int width, int height, int left, int right, int top, int bottom,
-			boolean isResized, boolean taintedAll) {
+			boolean isResized, boolean taintedAll, boolean pointsOnly) {
 
 		zoomEnabled = pd.getBoolean(ScriptToken.ENABLEZOOM);
 		this.height = height * pd.scalingFactor;
@@ -3301,7 +3304,7 @@ class GraphSet implements XYScaleConverter {
 		for (int iSplit = 0; iSplit < nSplit; iSplit++) {
 			// for now, at least, we only allow one 2D image
 			setPositionForFrame(iSplit);
-			drawAll(gMain, gFront, gBack, iSplit, isResized || nSplit > 1, taintedAll);
+			drawAll(gMain, gFront, gBack, iSplit, isResized || nSplit > 1, taintedAll, pointsOnly);
 		}
 		setPositionForFrame(nSplit > 1 ? pd.currentSplitPoint : 0);
 		if (pd.isPrinting)

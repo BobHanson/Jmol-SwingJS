@@ -73,6 +73,12 @@ public interface JSVAppletInterface {
 
   /**
    * Method that can be called from another applet or from javascript that
+   * toggles the flag for points only on a <code>JSVPanel</code>
+   */
+  public abstract void togglePointsOnly();
+
+  /**
+   * Method that can be called from another applet or from javascript that
    * toggles the integration graph of a <code>JSVPanel</code>.
    */
   public abstract void toggleIntegration();

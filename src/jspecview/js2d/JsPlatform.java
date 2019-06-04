@@ -10,10 +10,9 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.util.Font;
 
 import javajs.util.P3;
-import org.jmol.awtjs.swing.Font;
-
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.Rdr;
 import javajs.util.SB;

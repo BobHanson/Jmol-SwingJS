@@ -26,6 +26,7 @@
 package org.jmol.shape;
 
 import org.jmol.util.C;
+import org.jmol.util.Font;
 
 import javajs.util.Lst;
 import javajs.util.SB;
@@ -39,7 +40,6 @@ import org.jmol.viewer.Viewer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.PAL;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;

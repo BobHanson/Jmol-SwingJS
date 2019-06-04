@@ -28,7 +28,6 @@ package org.jmol.export;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.awtjs.swing.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.Quat;
@@ -46,6 +45,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;

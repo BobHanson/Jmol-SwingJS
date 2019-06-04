@@ -43,6 +43,9 @@ import jspecview.source.JDXSourceStreamTokenizer;
  */
 public class Spectrum extends JDXDataObject {
 
+  private int currentSubSpectrumIndex;
+  private boolean isForcedSubset;
+  
   public enum IRMode {
     NO_CONVERT, TO_TRANS, TO_ABS, TOGGLE;
     public static IRMode getMode(String value) {
@@ -89,9 +92,6 @@ public class Spectrum extends JDXDataObject {
 //    selectedPeak = null;
   }
 
-  private int currentSubSpectrumIndex;
-  private boolean isForcedSubset;
-  
   public boolean isForcedSubset() {
     return isForcedSubset;
   }
@@ -706,8 +706,5 @@ public class Spectrum extends JDXDataObject {
 		if (convertedSpectrum != null)
 			convertedSpectrum.fillColor = color;
 	}
-
-  ImageView imageView; // 2D image view
-	
 
 }

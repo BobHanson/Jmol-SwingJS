@@ -47,9 +47,9 @@ import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 
 import javajs.api.GenericColor;
-import org.jmol.awtjs.swing.Font;
 
 import org.jmol.api.GenericGraphics;
+import org.jmol.util.Font;
 
 /**
  * generic 2D drawing methods -- AWT version
@@ -101,7 +101,7 @@ public class AwtG2D implements GenericGraphics {
 	}
 
 	@Override
-	public Font setFont(Object g, org.jmol.awtjs.swing.Font font) {
+	public Font setFont(Object g, org.jmol.util.Font font) {
 		//System.out.println("AwtG2D.setGraphicsFont " + font.getInfo());
 		((Graphics) g).setFont((java.awt.Font) font.font);
 		return font;

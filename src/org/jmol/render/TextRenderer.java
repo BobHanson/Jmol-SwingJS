@@ -27,9 +27,8 @@ package org.jmol.render;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.modelset.Text;
+import org.jmol.util.Font;
 import org.jmol.viewer.JC;
-
-import org.jmol.awtjs.swing.Font;
 
 class TextRenderer {
   
