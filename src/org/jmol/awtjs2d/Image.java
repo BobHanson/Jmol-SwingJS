@@ -166,6 +166,6 @@ class Image {
   public static GenericImageDialog getImageDialog(Viewer vwr,
                                                String title,
                                                Map<String, GenericImageDialog> imageMap) {
-    return Platform.Jmol()._consoleGetImageDialog(vwr, title, imageMap);
+    return Platform.Jmol().consoleGetImageDialog(vwr, title, imageMap);
   }
 }

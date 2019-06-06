@@ -5,6 +5,7 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
+//import javajs.J2SRequireImport;
 import javajs.api.GenericColor;
 import javajs.util.BS;
 import javajs.util.DF;
@@ -25,6 +26,7 @@ import jspecview.dialog.JSVDialog;
 
 // should not be necessary, but "x instanceof JSVDialog" is requiring it.
 
+//@J2SRequireImport(jspecview.dialog.JSVDialog.class)
 class GraphSet implements XYScaleConverter {
 
 	private final static int ARROW_RESET = -1;
@@ -170,7 +172,6 @@ class GraphSet implements XYScaleConverter {
 		boolean isNew = (i != iSpectrumSelected);
 		iSpectrumSelected = i;
 		if (isNew) {
-			//hideAllDialogsExceptCurrent();
 			getCurrentView();
 		}
 		return iSpectrumSelected;
@@ -210,8 +211,6 @@ class GraphSet implements XYScaleConverter {
 	}
 
 	void dispose() {
-//		for (int i = 0; i < spectra.size(); i++)
-//			spectra.get(i).dispose();
 		spectra = null;
 		viewData = null;
 		viewList = null;
@@ -392,8 +391,6 @@ class GraphSet implements XYScaleConverter {
 
 	private boolean isSplitWidget(int xPixel, int yPixel) {
 		return isFrameBox(xPixel,  yPixel, splitterX, splitterY);
-	//	return (isSplittable && xPixel >= xPixel11 - 20 && yPixel >= yPixel00 + 1
-				////&& xPixel <= xPixel11 - 10 && yPixel <= yPixel00 + 11);
 	}
 
 	private boolean isCloserWidget(int xPixel, int yPixel) {
@@ -422,7 +419,6 @@ class GraphSet implements XYScaleConverter {
 		if (endIndex <= 0)
 			endIndex = Integer.MAX_VALUE;
 		isSplittable = (nSpectra > 1);// for now, could be:
-		// getSpectrumAt(0).isSplitable();
 		allowStacking = (spectra.get(0).isStackable());
 		showAllStacked = allowStacking && (nSpectra > 1);
 		for (int i = 0; i < nSpectra; i++) {
@@ -627,12 +623,6 @@ class GraphSet implements XYScaleConverter {
 	private double lastXMax = Double.NaN;
 	private int lastSpecClicked = -1;
 
-//	private double getPeakCenter() {
-//		if (nSpectra > 1 && iSpectrumClicked < 0 || Double.isNaN(lastClickX))
-//			return Double.NaN;
-//		return getSpectrum().findXForPeakNearest(lastClickX);
-//	}
-
 	private boolean findNearestMaxMin() {
 		if (nSpectra > 1 && iSpectrumClicked < 0)
 			return false;
@@ -752,7 +742,6 @@ class GraphSet implements XYScaleConverter {
 					pendingMeasurement = null;
 					lastXMax = Double.NaN;
 				}
-				// pd.repaint();
 			} else {
 				lastXMax = Double.NaN;
 			}
@@ -1003,12 +992,10 @@ class GraphSet implements XYScaleConverter {
 							false, true, true);
 				} else if (pw == cur2Dy) {
 					setCurrentSubSpectrum((int) val);
-					// pd.repaint();
 				} else if (pw == pin2Dy0 || pw == pin2Dy1) {
 					int val2 = (pw == pin2Dy0 ? pin2Dy1.yPixel0 : pin2Dy0.yPixel0);
 					imageView.setView0(pin2Dx0.xPixel0, imageView.subIndexToPixelY((int) val),
 							pin2Dx1.xPixel0, val2);
-					// pd.repaint();
 				} else {
 					// 1D y-zoom
 					double val2 = (pw == pin1Dy0 ? pin1Dy1.getYVal() : pin1Dy0.getYVal());
@@ -1194,7 +1181,6 @@ class GraphSet implements XYScaleConverter {
 	 * @param subIndex
 	 */
 	private void setDerivedPins(int subIndex) {
-		triggered = true;
 		if (gs2dLinkedX != null)
 			cur1D2x1.setX(cur1D2x1.getXVal(), toPixelX(cur1D2x1.getXVal()));
 		if (gs2dLinkedY != null)
@@ -1306,15 +1292,16 @@ class GraphSet implements XYScaleConverter {
 		boolean dontUseSubspecs = (subspecs == null || subspecs.size() == 2);
 		// NMR real/imaginary
 		boolean is2D = !getSpectrumAt(0).is1D();
-		Lst<Spectrum> graphs;
-		if (is2D || dontUseSubspecs) {
-      graphs = spectra;
+		if (!is2D && !dontUseSubspecs) {
+			graphsTemp.addLast(getSpectrum());
+			if (!ScaleData.setDataPointIndices(graphsTemp, initX, finalX,
+					minNumOfPointsForZoom, startIndices, endIndices))
+				return;
 		} else {
-      (graphs = graphsTemp).addLast(getSpectrum());
-		}
-    if (!ScaleData.setDataPointIndices(graphs, initX, finalX,
+			if (!ScaleData.setDataPointIndices(spectra, initX, finalX,
         minNumOfPointsForZoom, startIndices, endIndices))
       return;
+		}
 		double y1 = initY;
 		double y2 = finalY;
 		boolean isXOnly = (y1 == y2);
@@ -1379,7 +1366,6 @@ class GraphSet implements XYScaleConverter {
 		currentZoomIndex = i;
 		viewData = viewList.get(i);
 		resetPinsFromView();
-		//pd.refresh();
 	}
 
 	/**
@@ -1404,6 +1390,7 @@ class GraphSet implements XYScaleConverter {
 	 * @param iSplit
 	 * @param needNewPins
 	 * @param doAll
+	 * @param pointsOnly 
 	 */
 	private void drawAll(Object gMain, Object gFront, Object gBack, int iSplit,
 			boolean needNewPins, boolean doAll, boolean pointsOnly) {
@@ -1489,6 +1476,7 @@ class GraphSet implements XYScaleConverter {
 						&& (nSplit == 1 || showAllStacked || iSpectrumSelected == iSplit);
 				boolean doDraw1DY = (doDrawWidgets && haveSelectedSpectrum && i == iSpectrumForScale);
 				if (doDrawWidgets) {
+			    widgetsAreSet = true;
 					resetPinsFromView();
 					drawWidgets(gFront, g2, subIndex, needNewPins, doDraw1DObjects,
 							doDraw1DY, false);
@@ -1797,6 +1785,8 @@ class GraphSet implements XYScaleConverter {
 				if (pw.isPin)
 					drawHandle(gFront, pw.xPixel0, pw.yPixel0, 2, !pw.isEnabled);
 			} else if (pw.xPixel1 != pw.xPixel0) {
+			  
+			  
 				fillBox(gBack, pw.xPixel0, pw.yPixel0, pw.xPixel1, pw.yPixel1, 
 						pw == zoomBox1D && pd.shiftPressed ? ScriptToken.ZOOMBOXCOLOR2 : ScriptToken.ZOOMBOXCOLOR);
 			}
@@ -1825,8 +1815,8 @@ class GraphSet implements XYScaleConverter {
 		double range = Math.abs(toX(xPixel1) - toX(xPixel0));
 		if (false && tickSize > 0 && d > range / 20) {
 			d = range / 20;
-			xMin = r / 2 - d;
-			xMax = r / 2 + d;
+			xMin = r / 2 - d/2;
+			xMax = r / 2 + d/2;
 		}
 
 		int x1 = toPixelX(xMin);
@@ -2527,7 +2517,6 @@ class GraphSet implements XYScaleConverter {
 
 
 		selectedSpectrumIntegrals = null;
-		////System.out.println("checkINtegral isFinal" + x1 + " " + x2 + " " + isFinal + " " + pendingIntegral);
 		return true;
 	}
 
@@ -2641,8 +2630,6 @@ class GraphSet implements XYScaleConverter {
 				+ (haveSingleYScale || iSpectrumSelected >= 0 ? ", "
 						+ DF.formatDecimalDbl(yPt, getScale().precision[1]) : "") + ")";
 	
-		//pd.coordStr = pd.mouseX + " " + pd.mouseY;
-		
 		return xx;
 	}
 
@@ -2978,7 +2965,6 @@ class GraphSet implements XYScaleConverter {
 			if (getScale().isInRangeX(x1)
 					|| getScale().isInRangeX(x2) || x1 < getScale().minX
 					&& getScale().maxX < x2) {
-				// pd.repaint();
 			} else {
 				setZoomTo(0);
 			}
@@ -3010,8 +2996,6 @@ class GraphSet implements XYScaleConverter {
 			pd.integralShiftMode = (isOnIntegral ? getShiftMode(xPixel, yPixel) : 0);
 			pd.isIntegralDrag = (pd.integralShiftMode == 0 && (isOnIntegral || haveIntegralDisplayed(-1)
 					&& findMeasurement(getIntegrationGraph(-1), xPixel, yPixel, Measurement.PT_ON_LINE) != null));
-			//System.out.println("pd.isIntegralDrag=" + pd.isIntegralDrag);
-			
 
 			if (pd.integralShiftMode != 0)
 				return false;
@@ -3051,14 +3035,14 @@ class GraphSet implements XYScaleConverter {
 		return (isEnd ? xPixelPlot1 - xPixel < 20 : xPixel - xPixelPlot0 < 20);
 	}
 
-	private boolean triggered = true;
+	private boolean widgetsAreSet = true;
 	private int lastIntDragX;
 	private int nextClickMode;
 
 	synchronized boolean checkWidgetEvent(int xPixel, int yPixel, boolean isPress) {
-		if (!triggered)
+		if (!widgetsAreSet)
 			return false;
-		triggered = false;
+		widgetsAreSet = false;
 		PlotWidget widget;
 		if (isPress) {
 			if (pd.clickCount == 2 && lastIntDragX != xPixel && !is2dClick(xPixel, yPixel)) {
@@ -3078,7 +3062,6 @@ class GraphSet implements XYScaleConverter {
 				if (lastIntDragX == xPixel) {
 					// restart
 					pd.isIntegralDrag = true;
-					////System.out.println("checkWidgetEvent STARTING INTEGRAL");
 					if (!checkIntegral(toX(xPixel), toX(xPixel), false))
 						return false;
 				} 
@@ -3123,7 +3106,6 @@ class GraphSet implements XYScaleConverter {
 					zoomBox1D.setXVal(toX(zoomBox1D.xPixel0));
 				}
 				lastIntDragX = xPixel;
-				////System.out.println("checkingEvent2 - final");
 				checkIntegral(zoomBox1D.getXVal(), toX(zoomBox1D.xPixel1), false);
 			}
 			return false;
@@ -3239,7 +3221,6 @@ class GraphSet implements XYScaleConverter {
 
 	void clearIntegrals() {
 		checkIntegral(Double.NaN, 0, false);
-		// pd.repaint();
 	}
 
 	void clearMeasurements() {
@@ -3385,14 +3366,10 @@ class GraphSet implements XYScaleConverter {
 
 	synchronized void mouseClickedEvent(int xPixel, int yPixel, int clickCount,
 			boolean isControlDown) {
-		
-		////System.out.println("now pd.isIntegralClick1 = " + pd.isIntegralDrag);
-		
 		selectedMeasurement = null;
 		selectedIntegral = null;
 		Double isNextClick = nextClickForSetPeak;
 		nextClickForSetPeak = null;
-		////System.out.println("mouseclick" + clickCount);
 		if (checkArrowUpDownClick(xPixel, yPixel)
 				|| checkArrowLeftRightClick(xPixel, yPixel))
 			return;
@@ -3428,18 +3405,14 @@ class GraphSet implements XYScaleConverter {
 		lastXMax = Double.NaN; // TODO: was for "is2D || !isControlDown
 		if (clickCount == 2) {
 			if (is2D) {
-				//System.out.println("GS sticky2d " + sticky2Dcursor);
 				if (sticky2Dcursor) {
 					addAnnotation(
 							getAnnotation(imageView.toX(xPixel),
 									imageView.toSubspectrumIndex(yPixel), pd.coordStr, false,
 									true, 5, 5), true);
 				}
-				
-				//System.out.println("Setting true");
 					sticky2Dcursor = true;//!sticky2Dcursor;
 					set2DCrossHairs(xPixel, yPixel);
-				// pd.repaint();
 				return;
 			}
 
@@ -3468,25 +3441,20 @@ class GraphSet implements XYScaleConverter {
 		// single click
 
 		if (is2D) {
-			//System.out.println("mouseclick " + clickCount + " " + sticky2Dcursor);
 			if (annotations != null) {
 				Coordinate xy = new Coordinate().set(imageView.toX(xPixel),
 						imageView.toSubspectrumIndex(yPixel));
 				Annotation a = findAnnotation2D(xy);
 				if (a != null && setAnnotationText(a)) {
-					// pd.repaint();
 					return;
 				}
 			}
 			if (clickCount == 1)
 				sticky2Dcursor = false;
 			set2DCrossHairs(xPixel, yPixel);
-			// pd.repaint();
 			return;
 		}
 		
-		////System.out.println("now pd.isIntegralClick1 = " + pd.isIntegralDrag);
-
 		// 1D single click
 
 		if (isInPlotRegion(xPixel, yPixel)) {
@@ -3513,7 +3481,6 @@ class GraphSet implements XYScaleConverter {
 		}
 		pd.notifyPeakPickedListeners(null);
 		
-		////System.out.println("now pd.isIntegralClick2 = " + pd.isIntegralDrag);
 	}
 
 	private boolean is2dClick(int xPixel, int yPixel) {
@@ -3535,13 +3502,7 @@ class GraphSet implements XYScaleConverter {
 
 
   public void mousePressedEvent(int xPixel, int yPixel, int clickCount) {
-		
-		////System.out.println("now pd.isIntegralDragPress1 = " + pd.isIntegralDrag);
-		
-    checkWidgetEvent(xPixel, yPixel, true);
-    
-
-		////System.out.println("now pd.isIntegralPress2 = " + pd.isIntegralDrag);
+    checkWidgetEvent(xPixel, yPixel, true);    
   }
   
   /**
@@ -3549,10 +3510,6 @@ class GraphSet implements XYScaleConverter {
 	 * @param yPixel 
 	 */
 	synchronized void mouseReleasedEvent(int xPixel, int yPixel) {
-		
-
-		////System.out.println("now pd.isIntegralDragRel1 = " + pd.isIntegralDrag);
-		
 		if (pendingMeasurement != null) {
 			if (Math.abs(toPixelX(pendingMeasurement.getXVal()) - xPixel) < 2)
 				pendingMeasurement = null;
@@ -3563,7 +3520,6 @@ class GraphSet implements XYScaleConverter {
 		if (pd.integralShiftMode != 0) {
 			pd.integralShiftMode = 0;
 			zoomBox1D.xPixel1 = zoomBox1D.xPixel0;
-			// pd.repaint();
 			return;
 		}
 		if (iSpectrumMovedTo >= 0)
@@ -3576,7 +3532,6 @@ class GraphSet implements XYScaleConverter {
 			zoomBox1D.xPixel1 = zoomBox1D.xPixel0 = 0;
 			pendingIntegral = null;
 			pd.isIntegralDrag = false;
-			// pd.repaint();
 		} else if (thisWidget == zoomBox2D) {
 			if (!isGoodEvent(zoomBox2D, null, true))
 				return;
@@ -3588,9 +3543,7 @@ class GraphSet implements XYScaleConverter {
 					.toX(imageView.xPixel0 + imageView.xPixels - 1), getScale().maxY, false,
 					false, false, true, true);
 		} else if (thisWidget == zoomBox1D) {
-
-			////System.out.println("now pd.isIntegralDrag3 zoombox");
-			if (!isGoodEvent(zoomBox1D, null, true))
+		  if (!isGoodEvent(zoomBox1D, null, true))
 				return;
 			int x1 = zoomBox1D.xPixel1;
 			// 1D x zoom by zoomBox
@@ -3605,16 +3558,9 @@ class GraphSet implements XYScaleConverter {
 				|| thisWidget == cur2Dx0 || thisWidget == cur2Dx1) {
 			addCurrentZoom();
 		}
-		
-
-		////System.out.println("now pd.isIntegralDragrel2 = " + pd.isIntegralDrag);
 	}
 
 	synchronized void mouseMovedEvent(int xPixel, int yPixel) {
-		
-
-//System.out.println("sticky  " + sticky2Dcursor);
-		
 		if (nSpectra > 1) {
 
 			int iFrame = getSplitPoint(yPixel);
@@ -3629,7 +3575,6 @@ class GraphSet implements XYScaleConverter {
 			xValueMovedTo = toX(xPixelMovedTo);
 			yValueMovedTo = getSpectrum().getYValueAt(xValueMovedTo);
 		}
-		//System.out.println("p1");
 		if (pd.integralShiftMode != 0) {
 			AnnotationData ad = getDialog(AType.Integration, -1);
 			Coordinate[] xy = ((IntegralData) ad.getData()).getXYCoords();
@@ -3639,13 +3584,10 @@ class GraphSet implements XYScaleConverter {
 					- (pd.integralShiftMode > 0 ? yPixelPlot1 : yPixelPlot0), yPixel0,
 					yPixels);
 		} else if (pd.isIntegralDrag) {
-			//System.out.println("p3");
 		} else if (pendingMeasurement != null) {
-			//System.out.println("p4");
 			processPendingMeasurement(xPixel, yPixel, 0);
 			setToolTipForPixels(xPixel, yPixel);
 		} else {
-			//System.out.println("p2");
 			selectedMeasurement = (inPlotMove && selectedSpectrumMeasurements != null ? findMeasurement(
 					selectedSpectrumMeasurements, xPixel, yPixel,Measurement.PT_ON_LINE)
 					: null);
@@ -3660,7 +3602,6 @@ class GraphSet implements XYScaleConverter {
 			}
 			setToolTipForPixels(xPixel, yPixel);
 			if (imageView == null) {
-				//System.out.println("no imageview");
 				piMouseOver = null;
 				int iSpec = (nSplit > 1 ? iSpectrumMovedTo : iSpectrumClicked);
 				if (!isDrawNoSpectra() && iSpec >= 0) {
@@ -3673,7 +3614,6 @@ class GraphSet implements XYScaleConverter {
 				}
 			} else {
 				if (!pd.display1D && sticky2Dcursor) {
-					//System.out.println("settingxhair " + xPixel + " " + yPixel);
 					set2DCrossHairs(xPixel, yPixel);
 				}
 			}

@@ -260,7 +260,7 @@ public class JSVFileManager {
 
 	public static boolean isAB(Object x) {
 		/**
-		 * @j2sNative return Clazz.isAI(x);
+		 * @j2sNative return Clazz.isAB(x);
 		 */
 		{
 			return x instanceof byte[];

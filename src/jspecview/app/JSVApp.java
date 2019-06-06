@@ -363,32 +363,19 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 
 	private JSVPanel prevPanel;
 
-	// //////////// JSVAppletPopupMenu calls
+  // //////////// JSVAppletPopupMenu calls
 
-	@Override
-	public void repaint() {
-		
-		@SuppressWarnings("unused")
-		JSVAppletObject applet = (vwr == null ? null : vwr.html5Applet);
-    /**
-     * Jmol.repaint(applet,asNewThread)
-     * 
-     * should invoke 
-     * 
-     *   setTimeout(applet._applet.updateJS(applet._canvas)) // may be 0,0
-     *   
-     * when it is ready to do so.
-     * 
-     * @j2sNative
-     * 
-     * applet && self.Jmol && Jmol.repaint &&(Jmol.repaint(applet,true));
-     * 
-     */
-		{
-		  
-			appletFrame.repaint();
-		}
-	}
+  @Override
+  public void repaint() {
+
+    @SuppressWarnings("unused")
+    JSVAppletObject applet = (vwr == null ? null : vwr.html5Applet);
+    if (JSViewer.jmolObject == null) {
+      appletFrame.repaint();
+    } else if (applet != null) {
+      JSViewer.jmolObject.repaint(applet, true);
+    }
+  }
 	
 	/**
 	 * 

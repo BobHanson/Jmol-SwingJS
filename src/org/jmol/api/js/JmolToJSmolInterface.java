@@ -19,7 +19,7 @@ public interface JmolToJSmolInterface extends J2SObjectInterface {
                    byte[] bytes, Object f);
 
   // JSmolConsole.js 
-  GenericImageDialog _consoleGetImageDialog(Viewer vwr,
+  GenericImageDialog consoleGetImageDialog(Viewer vwr,
                                             String title,
                                             Map<String, GenericImageDialog>imageMap);
   
