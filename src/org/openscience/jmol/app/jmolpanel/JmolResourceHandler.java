@@ -66,9 +66,7 @@ class JmolResourceHandler {
     }
     Locale locale = new Locale(language, country);
     Control control = Control.getControl(Control.FORMAT_PROPERTIES);
-    stringsResourceBundle =
       ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale, control);
-
     try {
       String t = "/org/openscience/jmol/app/jmolpanel/jmolproperties/Jmol-resources.properties";
       generalResourceBundle =
@@ -124,12 +122,15 @@ class JmolResourceHandler {
 
   private synchronized String getString(String key) {
 
+    // BH 2019.07.10 avoid all trapped Exceptions
     String result = null;
+    if (stringsResourceBundle != null && stringsResourceBundle.containsKey(key))
     try {
       result = stringsResourceBundle.getString(key);
     } catch (MissingResourceException e) {
     }
     if (result == null) {
+      if (generalResourceBundle.containsKey(key))
       try {
         result = generalResourceBundle.getString(key);
       } catch (MissingResourceException e) {

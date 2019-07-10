@@ -115,6 +115,13 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   protected static HistoryFile pluginFile;
 
+  private static final boolean addPreferencesDialog = !Viewer.isSwingJS;
+  private static final boolean addMacrosMenu        = !Viewer.isSwingJS;
+  private static final boolean allowRecentFiles     = !Viewer.isSwingJS;
+  private static final boolean addAtomChooser       = !Viewer.isSwingJS;
+  private static final boolean allowPreferences     = !Viewer.isSwingJS;
+  
+
   public Viewer vwr;
 
   JmolAdapter modelAdapter;
@@ -128,8 +135,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected String appletContext;
   protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
   protected DisplayPanel display;
-  protected GaussianDialog gaussianDialog;
-  protected RecentFilesDialog recentFiles;
+  protected GaussianDialog gaussianDialog; // not in SwingJS
+  protected RecentFilesDialog recentFiles; // not in SwingJS
   protected AtomSetChooser atomSetChooser;
   public JFrame frame;
   protected SplashInterface splash;
@@ -209,6 +216,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final String gaussianAction = "gauss";
 //  private static final String nboAction = "nbo";
   private static final String resizeAction = "resize";
+
 
   //private static final String saveasAction = "saveas";
   //private static final String vibAction = "vibrate";
@@ -298,6 +306,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       List<Action> actions = getActions();
       for (int i = 0; i < actions.size(); i++) {
         Action a = actions.get(i);
+        if (a != null) // SwingJS
         commands.put(a.getValue(Action.NAME).toString(), a);
       }
     }
@@ -376,20 +385,23 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     // otherwise, loading a new model in a script that sets the vibration or vector parameters
     // can appear to skip those -- they aren't skipped, but creating the atomSetChooser
     // will run scripts as it loads.
-    atomSetChooser = new AtomSetChooser(vwr, frame);
-    pcs.addPropertyChangeListener(chemFileProperty, atomSetChooser);
+    if (addAtomChooser) {
+      atomSetChooser = new AtomSetChooser(vwr, frame);
+      pcs.addPropertyChangeListener(chemFileProperty, atomSetChooser);
+    }
     say(GT.$("Launching main frame..."));
   }
 
   private void getDialogs() {
-    if (Viewer.isSwingJS) {
-      say("JavaScript - not initializing preferences or recent files.");
-      return;
+    if (allowPreferences) {
+      say(GT.$("Initializing Preferences..."));
+      preferencesDialog = new PreferencesDialog(this, frame, guimap, vwr);
+
     }
-    say(GT.$("Initializing Preferences..."));
-    preferencesDialog = new PreferencesDialog(this, frame, guimap, vwr);
-    say(GT.$("Initializing Recent Files..."));
-    recentFiles = (/** @j2sNative 1?null:*/new RecentFilesDialog(frame));
+    if (allowRecentFiles) {
+      say(GT.$("Initializing Recent Files..."));
+      recentFiles = new RecentFilesDialog(frame);
+    }
     if (jmolApp.haveDisplay) {
       if (display.measurementTable != null)
         display.measurementTable.dispose();
@@ -544,8 +556,14 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     Jmol window = new Jmol(jmolApp, splash, frame, null, jmolApp.startupWidth,
         jmolApp.startupHeight, jmolApp.info, null);
+    
+    
+    
     if (jmolApp.haveDisplay)
       frame.setVisible(true);
+    
+    
+    
     return window;
   }
 
@@ -577,7 +595,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     List<Action> actions = new ArrayList<Action>();
     actions.addAll(Arrays.asList(defaultActions));
     actions.addAll(Arrays.asList(display.getActions()));
-    actions.addAll(Arrays.asList(preferencesDialog.getActions()));
+    if (addPreferencesDialog)
+      actions.addAll(Arrays.asList(preferencesDialog.getActions()));
     return actions;
   }
 
@@ -605,6 +624,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   Map<String, JmolPlugin> plugins = new Hashtable<String, JmolPlugin>();
+
 
   void dispose(JFrame f, boolean saveSize) {
     // Save window positions and status in the history
@@ -860,7 +880,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     JMenuBar mb = new JMenuBar();
     addNormalMenuBar(mb);
     addPluginMenu(mb);
-    addMacrosMenu(mb);
+    if (addMacrosMenu)
+      addMacrosMenu(mb);
     // The Plugin Menu
     // if (pluginManager != null) {
     //     mb.add(pluginManager.getMenu());
@@ -1085,9 +1106,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       new ExitAction(), copyImageAction, copyScriptAction,
       pasteClipboardAction, new AboutAction(), new WhatsNewAction(),
       new CreditsAction(), new UguideAction(), new ConsoleAction(),
-      new RecentFilesAction(), povrayAction, writeAction, toWebAction,
+      (allowRecentFiles ? new RecentFilesAction() : null), povrayAction, writeAction, toWebAction,
       new ScriptWindowAction(), new ScriptEditorAction(),
-      new AtomSetChooserAction(), viewMeasurementTableAction,
+      (addAtomChooser ? new AtomSetChooserAction() : null), viewMeasurementTableAction,
       new GaussianAction(), /*new NBOAction(),*/ new ResizeAction(),
       surfaceToolAction };
 
@@ -1714,7 +1735,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         recentFiles.notifyFileOpen(fullPathName);
       frame.setTitle(title);
     }
-    if (atomSetChooser == null) {
+    if (atomSetChooser == null && !addAtomChooser) {
       atomSetChooser = new AtomSetChooser(vwr, frame);
       pcs.addPropertyChangeListener(chemFileProperty, atomSetChooser);
     }
@@ -1936,7 +1957,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   public Object getPreference(String key) {
-    return preferencesDialog.currentProperties.get(key);
+    return (preferencesDialog == null ? null : preferencesDialog.currentProperties.get(key));
   }
 
   public static String getJmolProperty(String key, String defaultValue) {

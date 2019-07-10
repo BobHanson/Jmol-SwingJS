@@ -346,6 +346,7 @@ public final class JC {
     date = (tmpDate != null ? tmpDate : "(Unknown_date)");
     // 11.9.999 --> 1109999
     int v = -1;
+    if (tmpVersion != null)
     try {
       String s = version;
       String major = "";

@@ -129,7 +129,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 //    boolean isMacOs = (/** @j2sNative false && */System.getProperty("os.name").toLowerCase()
 //        .contains("mac"));
     System.out.println("appConsole " + System.getProperty("os.name"));
-    if (Viewer.isJS) {// || isMacOs) {
+    if (!Viewer.isJS) {// || isMacOs) {
       // See http://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
       InputMap im = (InputMap) UIManager.get("TextPane.focusInputMap");
       im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.META_DOWN_MASK),
@@ -364,13 +364,13 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
       try {
 
-        while (console.checking) {
-          try {
-            Thread.sleep(100); //wait for command checker
-          } catch (Exception e) {
-            break; //-- interrupt? 
-          }
-        }
+//        while (console.checking) {
+//          try {
+//            Thread.sleep(100); //wait for command checker
+//          } catch (Exception e) {
+//            break; //-- interrupt? 
+//          }
+//        }
 
         executeCommand(strCommand);
       } catch (Exception ie) {

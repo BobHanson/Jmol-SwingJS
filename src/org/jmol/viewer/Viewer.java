@@ -400,7 +400,7 @@ public class Viewer extends JmolViewer
     boolean isJava = info.containsKey("isJava");
     ThreadGroup group = Thread.currentThread().getThreadGroup();
     Map<String, Object> j2s_viewerOptions = (isApp ? null :
-    /** @j2sNative group.html5Applet._viewerOptions || */
+    /** @j2sNative group.秘html5Applet._viewerOptions || */
         null);
     if (j2s_viewerOptions != null) {
       if (isJava)
@@ -7452,10 +7452,11 @@ public class Viewer extends JmolViewer
         if (isJSNoAWT) {
           appConsole = (JmolAppConsoleInterface) Interface
               .getOption("consolejs.AppletConsole", this, "script");
-        } else if (isSwingJS) {
+        } else// if (isSwingJS) {
           // no applet console yet for SwingJS -- need DefaultStyledDocument
-        } else {
-          for (int i = 0; i < 4 && appConsole == null; i++) {
+        //} else 
+        {
+          for (int i = 0, n = isSwingJS ? 1 : 4; i < n && appConsole == null; i++) {
             appConsole = (isApplet
                 ? (JmolAppConsoleInterface) Interface
                     .getOption("console.AppletConsole", null, null)

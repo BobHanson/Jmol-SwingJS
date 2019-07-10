@@ -623,6 +623,7 @@ public final class ModelLoader {
     Atom[] atoms = ms.at;
     // this next sets the bitset length to avoid 
     // unnecessary calls to System.arrayCopy
+    try {
     models[modelIndex].bsAtoms.set(atoms.length + 1);
     models[modelIndex].bsAtoms.clear(atoms.length + 1);
     String codes = (String) ms.getInfo(modelIndex, "altLocs");
@@ -640,6 +641,11 @@ public final class ModelLoader {
         || modelName.startsWith("Jmol Model Kit") || "Jme".equals(ms.getInfo(
         modelIndex, "fileType")));
     models[modelIndex].isModelKit = isModelKit;
+    } catch (Throwable t) {
+      System.gc();
+      System.out.println(atoms.length);
+      System.out.println(t);
+    }
   }
 
   /**
