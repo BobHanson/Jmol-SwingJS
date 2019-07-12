@@ -115,7 +115,7 @@ class Display {
    */
   static void drawImage(Object g, Object img, int x, int y, int width,
                         int height) {
-    ((Graphics) g).drawImage((java.awt.Image) img, x, y, width, height, null);
+    ((Graphics) g).drawImage((java.awt.Image) img, x, y, null);
   }
 
   /**

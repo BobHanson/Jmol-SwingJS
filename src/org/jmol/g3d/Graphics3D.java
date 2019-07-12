@@ -38,6 +38,9 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
+import org.jmol.util.Rgb16;
+import org.jmol.util.Shader;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.M3;
@@ -45,11 +48,7 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
-
-import org.jmol.util.Rgb16;
-import org.jmol.util.Shader;
 import javajs.util.V3;
-import org.jmol.viewer.Viewer;
 
 /**
  * Provides high-level graphics primitives for 3D visualization for the software
@@ -268,7 +267,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private PixelatorShaded pixelShaded;
 
   protected int zMargin;
-  private int[] aobuf;
+//  private int[] aobuf;
 
   void setZMargin(int dz) {
     zMargin = dz;
@@ -377,7 +376,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           isImageWrite);
       pbuf = platform.pBuffer;
       zbuf = platform.zBuffer;
-      aobuf = null;
+      //aobuf = null;
       pixel0.setBuf();
       if (pixelT0 != null)
         pixelT0.setBuf();
@@ -405,7 +404,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     zbuf = null;
     pbufT = null;
     zbufT = null;
-    aobuf = null;
+    //aobuf = null;
     platform.releaseBuffers();
     line3d.clearLineCache();
   }
@@ -538,18 +537,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     return obj;
   }
   
-  /**
-   * Directly transfer our pbuf to a matching graphics object.
-   * 
-   */
-  @Override
-  public void drawDirect(Object g) {
-    // JSGraphics2D g here
-    /**
-     * @j2sNative  g.drawDirectRGBA$IA(this.pbuf);
-     */
-  }
-
   @Override
   public void applyAnaglygh(STER stereoMode, int[] stereoColors) {
     switch (stereoMode) {

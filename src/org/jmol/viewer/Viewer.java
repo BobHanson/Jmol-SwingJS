@@ -23,6 +23,9 @@
  */
 package org.jmol.viewer;
 
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,31 +37,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-
-import javajs.api.GenericCifDataParser;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-
-import org.jmol.awtjs.Event;
-
-import javajs.util.AU;
-import javajs.util.CU;
-import javajs.util.DF;
-import javajs.util.JSJSONParser;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.OC;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.Rdr;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
 
 import org.jmol.adapter.readers.quantum.NBOParser;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
@@ -93,12 +71,12 @@ import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
+import org.jmol.awtjs.Event;
 import org.jmol.c.FIL;
 import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.modelset.Atom;
@@ -173,6 +151,26 @@ import org.jmol.viewer.binding.Binding;
  * 
  * ****************************************************************
  */
+
+import javajs.api.GenericCifDataParser;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.DF;
+import javajs.util.JSJSONParser;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.Rdr;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class Viewer extends JmolViewer
     implements AtomDataServer, PlatformViewer {
@@ -3688,7 +3686,7 @@ public class Viewer extends JmolViewer
 
     if (updateWindow(width, height)) {
       if (!checkStereoSlave || gRight == null) {
-        drawImage(gLeft);
+        getScreenImageBuffer(gLeft, false);
       } else {
         drawImage(gRight, getImage(true, false, false), 0, 0,
             tm.stereoDoubleDTI);
@@ -3773,7 +3771,7 @@ public class Viewer extends JmolViewer
    * 
    * @param isDouble
    * @param isImageWrite
-   *        TODO
+   * @param andReturnImage 
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
@@ -3835,19 +3833,13 @@ public class Viewer extends JmolViewer
    */
   private void drawImage(Object graphic, Object img, int x, int y,
                          boolean isDTI) {
-    if (graphic != null && img != null) {
-      apiPlatform.drawImage(graphic, img, x, y, dimScreen.width,
-          dimScreen.height, isDTI);
-    }
+    apiPlatform.drawImage(graphic, img, x, y, dimScreen.width, dimScreen.height,
+        isDTI);
     gdata.releaseScreenImage();
   }
 
   public Object getScreenImageBuffer() {
     return getScreenImageBuffer(null, true);
-  }
-
-  private void drawImage(Object g) {
-    getScreenImageBuffer(g, false);
   }
 
   /**
@@ -3863,8 +3855,6 @@ public class Viewer extends JmolViewer
     boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
     boolean isBiColor = tm.stereoMode.isBiColor();
     boolean mergeImages = (g == null && isDouble);
-    boolean isQuickDraw = (isSwingJS && g != null && !isDouble
-        && isMyDisplay(g));
     Object imageBuffer = null;
     if (isBiColor) {
       beginRendering(true, isImageWrite);
@@ -3875,14 +3865,9 @@ public class Viewer extends JmolViewer
       render();
       gdata.endRendering();
       gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
-      if (!isQuickDraw)
-        imageBuffer = gdata.getScreenImage(isImageWrite);
+      imageBuffer = gdata.getScreenImage(isImageWrite);
     } else {
-      imageBuffer = getImage(isDouble, isImageWrite, isQuickDraw);
-    }
-    if (isQuickDraw) {
-      gdata.drawDirect(g);
-      return null;
+      imageBuffer = getImage(isDouble, isImageWrite, false);
     }
     Object imageBuffer2 = null;
     if (mergeImages) {
@@ -3891,7 +3876,8 @@ public class Viewer extends JmolViewer
           dimScreen.height);
       g = apiPlatform.getGraphics(imageBuffer2);
     }
-    if (g != null) {
+    if (g == null)
+      return imageBuffer;
       if (isDouble) {
         if (tm.stereoMode == STER.DTI) {
           drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
@@ -3905,12 +3891,20 @@ public class Viewer extends JmolViewer
       }
       if (g != null)
         drawImage(g, imageBuffer, 0, 0, false);
-    }
-    return (mergeImages ? imageBuffer2 : imageBuffer);
+    if (mergeImages)
+      imageBuffer = imageBuffer2;
+    return imageBuffer;
   }
 
-  private boolean isMyDisplay(Object graphics) {
+  /**
+   * will be true only if this is in an undecorated window such as an applet
+   * 
+   * @param graphics
+   * @return
+   */
+  private boolean isUndecorated(Object graphics) {
     Graphics2D g = (Graphics2D) graphics;
+    
     int canvasWidth = -1, canvasHeight = -1;
     /**
      * @j2sNative
