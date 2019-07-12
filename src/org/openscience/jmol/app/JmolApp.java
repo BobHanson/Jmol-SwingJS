@@ -58,7 +58,7 @@ public class JmolApp implements JmolAppAPI {
 
   public int port;
   public int startupWidth, startupHeight;
-  public Point border;
+//  public Point border;
   public boolean haveBorder;
 
   public File userPropsFile;
@@ -253,8 +253,8 @@ public class JmolApp implements JmolAppAPI {
       System.out
           .println("Jmol -ions myscript.spt -w JPEG:myfile.jpg > output.txt");
       System.out.println();
-      System.out.println(GT
-          .$("The -D options are as follows (defaults in parenthesis) and must be called preceding '-jar Jmol.jar':"));
+      System.out.println(GT.$(
+          "The -D options are as follows (defaults in parenthesis) and must be called preceding '-jar Jmol.jar':"));
       System.out.println();
       System.out.println("  cdk.debugging=[true|false] (false)");
       System.out.println("  cdk.debug.stdout=[true|false] (false)");
@@ -267,19 +267,19 @@ public class JmolApp implements JmolAppAPI {
       System.out.println("  logger.logLevel=[true|false] (false)");
       System.out.println("  logger.warn=[true|false] (true)");
       System.out.println("  plugin.dir (unset)");
-      System.out.println("  user.language=[ca|cs|de|en_GB|en_US|es|fr|hu|it|ko|nl|pt_BR|tr|zh_TW] (en_US)");
+      System.out.println(
+          "  user.language=[ca|cs|de|en_GB|en_US|es|fr|hu|it|ko|nl|pt_BR|tr|zh_TW] (en_US)");
 
       System.exit(0);
     }
 
     if (line.hasOption("a")) {
-      autoAnimationDelay =  PT.parseFloat(line.getOptionValue("a"));
+      autoAnimationDelay = PT.parseFloat(line.getOptionValue("a"));
       if (autoAnimationDelay > 10)
         autoAnimationDelay /= 1000;
-      Logger.info("setting autoAnimationDelay to " + autoAnimationDelay + " seconds");
+      Logger.info(
+          "setting autoAnimationDelay to " + autoAnimationDelay + " seconds");
     }
-
-
 
     // Process more command line arguments
     // these are also passed to vwr
@@ -292,21 +292,20 @@ public class JmolApp implements JmolAppAPI {
     // note that this is set up so that if JmolApp is 
     // invoked with just new JmolApp(), we can 
     // set options ourselves. 
-    
+
     info.put(isDataOnly ? "JmolData" : "Jmol", Boolean.TRUE);
 
     // kiosk mode -- no frame
-    
+
     if (line.hasOption("k"))
       info.put("isKiosk", Boolean.valueOf(isKiosk = true));
 
     // port for JSON mode communication
-    
+
     if (line.hasOption("P"))
-      port =  PT.parseInt(line.getOptionValue("P"));
+      port = PT.parseInt(line.getOptionValue("P"));
     if (port > 0)
       info.put("port", Integer.valueOf(port));
-
 
     // print command output only (implies silent)
 
@@ -336,11 +335,11 @@ public class JmolApp implements JmolAppAPI {
     // restricted file access
     if (line.hasOption("R"))
       info.put("access:NONE", Boolean.TRUE);
-    
+
     // restricted file access (allow reading of SPT files)
     if (line.hasOption("r"))
       info.put("access:READSPT", Boolean.TRUE);
-    
+
     // independent command thread
     if (line.hasOption("t"))
       info.put("useCommandThread", Boolean.TRUE);
@@ -351,7 +350,7 @@ public class JmolApp implements JmolAppAPI {
 
     // no splash screen
     if (line.hasOption("L"))
-      splashEnabled  = false;
+      splashEnabled = false;
 
     // check script only -- don't open files
     if (line.hasOption("c"))
@@ -362,7 +361,7 @@ public class JmolApp implements JmolAppAPI {
     // menu file
     if (line.hasOption("m"))
       menuFile = line.getOptionValue("m");
-    
+
     // run pre Jmol script
     if (line.hasOption("J"))
       script1 = line.getOptionValue("J");
@@ -386,8 +385,8 @@ public class JmolApp implements JmolAppAPI {
     }
 
     //Point b = null;    
+    Dimension size = null;
     if (haveDisplay && historyFile != null) {
-      Dimension size;
       String vers = System.getProperty("java.version");
       if (vers.compareTo("1.1.2") < 0) {
         System.out.println("!!!WARNING: Swing components require a "
@@ -395,21 +394,21 @@ public class JmolApp implements JmolAppAPI {
       }
 
       if (!isKiosk) {
-        size = historyFile.getWindowSize("Jmol");
-      if (size != null) {
-        startupWidth = size.width;
-        startupHeight = size.height;
-      }
-      historyFile.getWindowBorder("Jmol");
-      // first one is just approximate, but this is set in doClose()
-      // so it will reset properly -- still, not perfect
-      // since it is always one step behind.
-      //if (b == null || b.x > 50)
-        border = new Point(12, 116);
-      //else
-        //border = new Point(b.x, b.y);
-        // note -- the first time this is run after changes it will not work
-      // because there is a bootstrap problem.
+        size = historyFile.getWindowInnerDimension("Jmol");
+        if (size != null) {
+          startupWidth = size.width;
+          startupHeight = size.height;
+        }
+        //      historyFile.getWindowBorder("Jmol");
+        //      // first one is just approximate, but this is set in doClose()
+        //      // so it will reset properly -- still, not perfect
+        //      // since it is always one step behind.
+        //      //if (b == null || b.x > 50)
+        //        border = new Point(12, 116);
+        //      //else
+        //        //border = new Point(b.x, b.y);
+        //        // note -- the first time this is run after changes it will not work
+        //      // because there is a bootstrap problem.
       }
     }
     // INNER frame dimensions
@@ -429,13 +428,13 @@ public class JmolApp implements JmolAppAPI {
     }
 
     if (startupWidth <= 0 || startupHeight <= 0) {
-      if (haveDisplay && !isKiosk && border != null) {
-        startupWidth = width + border.x;
-        startupHeight = height + border.y;
-      } else {
+//      if (haveDisplay && !isKiosk && border != null) {
+//        startupWidth = width + border.x;
+//        startupHeight = height + border.y;
+//      } else {
         startupWidth = width;
         startupHeight = height;
-      }
+//      }
     }
 
     // write image to clipboard or image file
@@ -464,27 +463,30 @@ public class JmolApp implements JmolAppAPI {
           data.put("width", Integer.valueOf(width));
           data.put("height", Integer.valueOf(height));
           info.put("headlessImage", data);
-        }
-        else
-          script2 += ";write image " + (width > 0 && height > 0 ? width + " " + height : "") + " " + type + " " + quality + " " + PT.esc(type_name);
+        } else
+          script2 += ";write image "
+              + (width > 0 && height > 0 ? width + " " + height : "") + " "
+              + type + " " + quality + " " + PT.esc(type_name);
       }
     }
     if (GraphicsEnvironment.isHeadless())
-        info.put("headlistMaxTimeMs", Integer.valueOf(1000 * (line.hasOption("T") ? PT.parseInt(line.getOptionValue("T")) : 60)));
+      info.put("headlistMaxTimeMs",
+          Integer.valueOf(1000
+              * (line.hasOption("T") ? PT.parseInt(line.getOptionValue("T"))
+                  : 60)));
 
     // the next three are coupled -- if the -n command line option is 
     // given, but -I is not, then the -x is added, but not vice-versa. 
     // however, if this is an application-embedded object, then
     // it is ok to have no display and no exit.
-    
+
     // scanner input
     if (line.hasOption("I"))
       scanInput = true;
-    
 
     boolean exitUponCompletion = false;
     if (line.hasOption("n")) {
-       // no display (and exit)
+      // no display (and exit)
       haveDisplay = false;
       exitUponCompletion = !scanInput;
     }
@@ -498,7 +500,7 @@ public class JmolApp implements JmolAppAPI {
       info.put("exit", Boolean.TRUE);
       script2 += ";exitJmol;";
     }
-    
+
   }
 
   public void startViewer(JmolViewer vwr, SplashInterface splash, boolean isJmolData) {
@@ -587,6 +589,11 @@ public class JmolApp implements JmolAppAPI {
   @Override
   public void addHistoryWindowInfo(String name, Component window, Point border) {
     historyFile.addWindowInfo(name, window, border);
+  }
+
+  @Override
+  public void addHistoryWindowDimInfo(String name, Component window, Dimension inner) {
+    historyFile.addWindowInnerInfo(name, window, inner);
   }
 
   @Override

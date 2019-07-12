@@ -148,7 +148,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         String menuName = (String) data[2];
         if (menuName.equals("0.0: "))
           menuName = "";
-        display.status.setStatus(1, menuName);
+        display.status.setStatus(StatusBar.STATUS_COORD, menuName);
         if (jmol.frame != null) {
           //Font f = jmol.frame.getFont();
           //if (f != null) {
@@ -167,7 +167,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       int msWalltime = ((Integer) data[3]).intValue();
       if (msWalltime == 0) {
         if (data[2] != null && display.haveDisplay)
-          display.status.setStatus(1, (String) data[2]);
+          display.status.setStatus(StatusBar.STATUS_COORD, (String) data[2]);
       }
       return;
     case ECHO:
@@ -335,7 +335,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
 
   private void notifyAtomPicked(String info) {
     if (display.haveDisplay)
-      display.status.setStatus(1, info);
+      display.status.setStatus(StatusBar.STATUS_COORD, info);
   }
 
   private void notifyFileLoaded(String fullPathName, String fileName,

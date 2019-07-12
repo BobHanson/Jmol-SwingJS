@@ -120,7 +120,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final boolean allowRecentFiles     = !Viewer.isSwingJS;
   private static final boolean addAtomChooser       = !Viewer.isSwingJS;
   private static final boolean allowPreferences     = !Viewer.isSwingJS;
-  
+  private static final boolean allowJavaConsole     = !Viewer.isSwingJS;
 
   public Viewer vwr;
 
@@ -216,7 +216,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final String gaussianAction = "gauss";
 //  private static final String nboAction = "nbo";
   private static final String resizeAction = "resize";
-
 
   //private static final String saveasAction = "saveas";
   //private static final String vibAction = "vibrate";
@@ -356,12 +355,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       }
     }
     frame.getContentPane().add("Center", this);
-    frame.addWindowListener(new AppCloser());
+    // frame minimum width will be based on toolbar
     frame.pack();
-    frame.setSize(startupWidth, startupHeight);
     ImageIcon jmolIcon = JmolResourceHandler.getIconX("icon");
     Image iconImage = jmolIcon.getImage();
     frame.setIconImage(iconImage);
+    frame.addWindowListener(new AppCloser());
 
     // Repositioning windows
 
@@ -445,7 +444,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       t.printStackTrace();
     }
 
-    if (jmolApp.haveConsole)
+    if (jmolApp.haveConsole && allowJavaConsole)
       getJavaConsole(jmol);
 
     if (jmolApp.isKiosk) {
@@ -671,9 +670,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     if (historyFile == null)
       return;
     if (frame != null) {
-      jmolApp.border.x = frame.getWidth() - display.dimSize.width;
-      jmolApp.border.y = frame.getHeight() - display.dimSize.height;
-      historyFile.addWindowInfo("Jmol", frame, jmolApp.border);
+//      jmolApp.border.x = frame.getWidth() - display.dimSize.width;
+//      jmolApp.border.y = frame.getHeight() - display.dimSize.height;
+      historyFile.addWindowInfo("Jmol", frame, null, display.dimSize);
     }
     //historyFile.addWindowInfo(CONSOLE_WINDOW_NAME, consoleframe);
     AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
@@ -775,6 +774,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private JToolBar createToolbar() {
 
     toolbar = new JToolBar();
+    toolbar.setPreferredSize(new Dimension(display.getPreferredSize().width, 25));
     String[] tool1Keys = PT
         .getTokens(JmolResourceHandler.getStringX("toolbar"));
     for (int i = 0; i < tool1Keys.length; i++) {
@@ -1627,8 +1627,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       return null; // "Jmol, you do it."
     String msg = fileName;
     if (msg != null && !msg.startsWith("OK") && status != null) {
-      status.setStatus(1, GT.$("IO Exception:"));
-      status.setStatus(2, msg);
+      status.setStatus(StatusBar.STATUS_COORD, GT.$("IO Exception:"));
+      status.setStatus(StatusBar.STATUS_TEXT, msg);
     }
     return msg;
   }
@@ -1735,7 +1735,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         recentFiles.notifyFileOpen(fullPathName);
       frame.setTitle(title);
     }
-    if (atomSetChooser == null && !addAtomChooser) {
+    if (atomSetChooser == null && addAtomChooser) {
       atomSetChooser = new AtomSetChooser(vwr, frame);
       pcs.addPropertyChangeListener(chemFileProperty, atomSetChooser);
     }
@@ -1786,7 +1786,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     if (info == null)
       return new int[] { width, height };
     float[] dims = new float[2];
-    int n = Parser.parseStringInfestedFloatArray(info, null, dims);
+    int n = Parser.parseStringInfestedFloatArray(info.replace(',',' '), null, dims);
     if (n < 2)
       return new int[] { width, height };
     resizeDisplay((int) dims[0], (int) dims[1]);
