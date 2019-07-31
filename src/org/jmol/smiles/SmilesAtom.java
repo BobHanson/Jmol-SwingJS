@@ -891,4 +891,9 @@ public class SmilesAtom extends P3 implements Node {
     return patternIndex;
   }
 
+  @Override
+  public boolean modelIsRawPDB() {
+    return false;
+  }
+
 }

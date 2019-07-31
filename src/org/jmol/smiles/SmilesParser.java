@@ -133,8 +133,8 @@ public class SmilesParser {
     int[] ret = new int[1];
     pattern = extractFlags(pattern, ret);
     flags = ret[0];
-    ignoreStereochemistry = ((flags & JC.SMILES_IGNORE_STEREOCHEMISTRY) == JC.SMILES_IGNORE_STEREOCHEMISTRY);
     search.setFlags(flags);
+
     if (pattern.indexOf("$") >= 0)
       pattern = parseVariables(pattern);
     if (isSmarts && pattern.indexOf("[$") >= 0)

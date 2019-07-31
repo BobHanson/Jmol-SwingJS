@@ -1506,7 +1506,7 @@ public class Atom extends Point3fi implements Node {
   }
 
   public String getUnitID(int flags) {
-    Model m = group.getModel();
+    Model m = group.chain.model;
     return (m.isBioModel ? ((BioModel) m).getUnitID(this, flags) : "");
   }
 
@@ -1522,6 +1522,12 @@ public class Atom extends Point3fi implements Node {
       }
     }
     return f;
+  }
+
+  @Override
+  public boolean modelIsRawPDB() {
+    Model m = group.chain.model;
+    return (m.isBioModel && !m.isPdbWithMultipleBonds && m.hydrogenCount == 0);
   }
 
 }

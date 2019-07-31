@@ -74,6 +74,9 @@ public class SmilesSearch extends JmolMolecule {
   boolean aromaticStrict;
   boolean aromaticPlanar;
   boolean aromaticDouble;
+  boolean aromaticMMFF94;
+  boolean aromaticDefined;
+  boolean aromaticUnknown;
   boolean noAromatic;
   boolean ignoreAtomClass;
   boolean ignoreStereochemistry;
@@ -234,9 +237,21 @@ public class SmilesSearch extends JmolMolecule {
 
     aromaticPlanar = ((flags & JC.SMILES_AROMATIC_PLANAR) == JC.SMILES_AROMATIC_PLANAR);
 
-    groupByModel = ((flags & JC.SMILES_GROUP_BY_MODEL) == JC.SMILES_GROUP_BY_MODEL);
+    aromaticMMFF94 = ((flags & JC.SMILES_AROMATIC_MMFF94) == JC.SMILES_AROMATIC_MMFF94);
+    
+    aromaticDefined = ((flags & JC.SMILES_AROMATIC_DEFINED) == JC.SMILES_AROMATIC_DEFINED); 
 
     noAromatic = ((flags & JC.SMILES_NO_AROMATIC) == JC.SMILES_NO_AROMATIC);
+
+    aromaticUnknown = !noAromatic 
+        && !aromaticOpen 
+        && !aromaticDouble 
+        && !aromaticStrict 
+        && !aromaticPlanar 
+        && !aromaticMMFF94 
+        && !aromaticDefined;    
+
+    groupByModel = ((flags & JC.SMILES_GROUP_BY_MODEL) == JC.SMILES_GROUP_BY_MODEL);
 
     ignoreAtomClass = ((flags & JC.SMILES_IGNORE_ATOM_CLASS) == JC.SMILES_IGNORE_ATOM_CLASS);
 
@@ -363,7 +378,6 @@ public class SmilesSearch extends JmolMolecule {
       needAromatic = false;
     if (needAromatic)
       needRingData = true;
-    boolean noAromatic = ((flags & JC.SMILES_NO_AROMATIC) == JC.SMILES_NO_AROMATIC);
     needAromatic &= (bsA == null) & !noAromatic;
     // when using "xxx".find("search","....")
     // or $(...), the aromatic set has already been determined
@@ -380,45 +394,48 @@ public class SmilesSearch extends JmolMolecule {
   @SuppressWarnings("unchecked")
   void getRingData(Lst<BS>[] vRings, boolean needRingData,
                    boolean doTestAromatic) throws InvalidSmilesException {
-    boolean isStrict = aromaticStrict || !aromaticOpen && !aromaticPlanar;
-    boolean isOpenNotStrict = aromaticOpen && !aromaticStrict;
-    int strictness = (!isStrict ? 0
-        : (flags & JC.SMILES_AROMATIC_MMFF94) == JC.SMILES_AROMATIC_MMFF94 ? 2 : 1);
-    boolean checkExplicit = (strictness == 0);
-    boolean isDefined = ((flags & JC.SMILES_AROMATIC_DEFINED) == JC.SMILES_AROMATIC_DEFINED);
+    // isUnknown should be handled as STRICT except for biomodels.
+    boolean isStrict = (needAromatic && (aromaticStrict || !aromaticOpen && !aromaticPlanar));
+    if (isStrict && aromaticUnknown) {
+      if (targetAtomCount > 0 && targetAtoms[bsSelected.nextSetBit(0)].modelIsRawPDB())
+        isStrict = false;
+    }
+    boolean isOpenNotStrict = (needAromatic && aromaticOpen && !aromaticStrict);
+    boolean checkExplicit = (needAromatic && !isStrict);
     boolean doFinalize = (needAromatic && doTestAromatic && (isStrict || isOpenNotStrict));
+    boolean setAromatic = (needAromatic && !aromaticDefined);
     int aromaticMax = 7;
     Lst<BS> lstAromatic = (vRings == null ? new Lst<BS>()
         : (vRings[3] = new Lst<BS>()));
     Lst<SmilesRing> lstSP2 = (doFinalize ? new Lst<SmilesRing>() : null);
-    int[] eCounts = (doFinalize ? new int[targetAtomCount] : null);
-
-    if (isDefined && needAromatic) {
+    int strictness = (!isStrict ? 0 : aromaticMMFF94 ? 2 : 1);
+    if (needAromatic && aromaticDefined) {
       // predefined aromatic bonds
       SmilesAromatic.checkAromaticDefined(targetAtoms, bsSelected, bsAromatic);
       strictness = 0;
     }
-    int nAtoms = targetAtomCount;
-    boolean justCheckBonding = (nAtoms == 0 || (targetAtoms[0] instanceof SmilesAtom));
-
+    
     if (ringDataMax < 0)
       ringDataMax = 8;
     if (strictness > 0 && ringDataMax < 6)
       ringDataMax = 6;
     if (needRingData) {
-      ringCounts = new int[nAtoms];
+      ringCounts = new int[targetAtomCount];
       ringConnections = new int[targetAtomCount];
       ringData = new BS[ringDataMax + 1];
     }
-
     ringSets = new Lst<BS>();
+    if (targetAtomCount < 3)
+      return;  
     String s = "****";
     int max = ringDataMax;
     while (s.length() < max)
       s += s;
+    int[] eCounts = (doFinalize && setAromatic ? new int[targetAtomCount] : null);
+    boolean justCheckBonding = (setAromatic && targetAtoms[0] instanceof SmilesAtom);
     for (int i = 3; i <= max; i++) {
-      if (i > nAtoms)
-        continue;
+      if (i > targetAtomCount)
+        break;
       String smarts = "*1" + s.substring(0, i - 2) + "*1";
       SmilesSearch search = SmilesParser.newSearch(smarts, true, true);
       Lst<Object> vR = (Lst<Object>) subsearch(search, SUBMODE_RINGCHECK);
@@ -430,10 +447,11 @@ public class SmilesSearch extends JmolMolecule {
       }
       if (vR.size() == 0)
         continue;
-      if (needAromatic && !isDefined && i >= 4 && i <= aromaticMax)
+      if (setAromatic && i >= 4 && i <= aromaticMax) {
         SmilesAromatic.setAromatic(i, targetAtoms, bsSelected, vR, bsAromatic,
             strictness, isOpenNotStrict, justCheckBonding, checkExplicit, v, lstAromatic, lstSP2,
             eCounts, doTestAromatic);
+      }
       if (needRingData) {
         ringData[i] = new BS();
         for (int k = vR.size(); --k >= 0;) {
