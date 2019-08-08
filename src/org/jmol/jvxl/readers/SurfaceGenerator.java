@@ -324,7 +324,7 @@ public class SurfaceGenerator {
       // not all readers will take this, so we assign
       // cutoff to the value as well.
       params.cutoff = params.sigma = ((Float) value).floatValue();
-      params.isPositiveOnly = false;
+      //params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
     }
@@ -346,6 +346,7 @@ public class SurfaceGenerator {
     if ("cutoffPositive" == propertyName) {
       params.cutoff = ((Float) value).floatValue();
       params.isPositiveOnly = true;
+      params.isCutoffAbsolute = false;
       return true;
     }
 
@@ -428,7 +429,7 @@ public class SurfaceGenerator {
     }
 
     if ("sign" == propertyName) {
-      params.isCutoffAbsolute = true;
+        params.isCutoffAbsolute = !params.isPositiveOnly;
       params.colorBySign = true;
       colorPtr = 0;
       return true;
