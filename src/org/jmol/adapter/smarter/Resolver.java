@@ -793,7 +793,7 @@ public class Resolver {
   { "Espresso", "Program PWSCF", "Program PHONON" }; 
 
   private final static String[] siestaContainsRecords =
-  { "Siesta", "MD.TypeOfRun", "SolutionMethod", "MeshCutoff", 
+  { "Siesta", "MD.TypeOfRun", "SolutionMethod", "MeshCutoff", "%block", 
     "WELCOME TO SIESTA" };
   
   private final static String[] xcrysDenContainsRecords = 
