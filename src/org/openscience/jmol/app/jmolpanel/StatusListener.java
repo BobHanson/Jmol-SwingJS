@@ -371,7 +371,15 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
 
   @Override
   public void showUrl(String url) {
+    /**
+     * @j2sNative
+     * 
+     * open(url);
+     * 
+     */
+    {
     try {
+      
       Class<?> c = Class.forName("java.awt.Desktop");
       Method getDesktop = c.getMethod("getDesktop", new Class[] {});
       Object deskTop = getDesktop.invoke(null, new Object[] {});
@@ -391,6 +399,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
             .error("Java 6 Desktop.browse() capability unavailable. Could not open "
                 + url);
       }
+    }
     }
   }
 
