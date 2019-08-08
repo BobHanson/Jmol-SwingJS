@@ -49,7 +49,7 @@ public class ConsoleTextArea extends JTextArea {
 
     String redirect = (doRedirect ? System.getProperty("JmolConsole") : "false");
     
-    if (false)
+    if (!Viewer.isSwingJS)
     if (redirect == null || redirect.equals("true")) {
         // Redirect System.out & System.err.        
         PrintStream ps = new PrintStream(ls.getOutputStream());
@@ -57,10 +57,9 @@ public class ConsoleTextArea extends JTextArea {
         System.setErr(ps);
     }
    
-    if (false)
     if (!Viewer.isSwingJS)     
       startConsoleReaderThread(ls.getInputStream());
-  }    // ConsoleTextArea()
+  } 
 
 
   private void startConsoleReaderThread(InputStream inStream) {
