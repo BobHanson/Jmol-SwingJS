@@ -224,8 +224,9 @@ public class MeasuresRenderer extends LabelsRenderer {
     int y = (a.sY + b.sY) / 2;
     if (m.text == null) {
       g3d.setC(labelColix);
+      // Correction to center measurement vertically false,true not false,false BH 2019.08.18
       drawString(x, y, z, radius, doJustify
-          && (x - a.sX) * (y - a.sY) > 0, false, false,
+          && (x - a.sX) * (y - a.sY) > 0, false, true,
           (doJustify ? 0 : Integer.MAX_VALUE), s);
     } else {
       atomPt.ave(a, b);

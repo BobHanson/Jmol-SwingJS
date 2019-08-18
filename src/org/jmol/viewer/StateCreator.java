@@ -1338,7 +1338,7 @@ public class StateCreator extends JmolStateCreator {
   private String getTextState(Text t) {
     SB s = new SB();
     String text = t.text;
-    if (text == null || t.isLabelOrHover || t.target.equals("error"))
+    if (text == null || !t.isEcho || t.target.equals("error"))
       return "";
     //set echo top left
     //set echo myecho x y

@@ -208,25 +208,28 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         setIndices();
         return;
       }
-      Measurement pt = setSingleItem(md.points);
+      Measurement m = setSingleItem(md.points);
       if (md.thisID != null) {
-        pt.thisID = md.thisID;
-        pt.mad = md.mad;
+        m.thisID = md.thisID;
+        m.mad = md.mad;
         if (md.colix != 0)
-          pt.colix = md.colix;
-        pt.strFormat = md.strFormat;
-        pt.text = md.text;
+          m.colix = md.colix;
+        m.strFormat = md.strFormat;
+        m.text = md.text;
       }
       switch (md.tokAction) {
+      case T.refresh:
+        doAction(md, md.thisID, T.refresh);
+        break;
       case T.delete:
-        defineAll(Integer.MIN_VALUE, pt, true, false, false);
+        defineAll(Integer.MIN_VALUE, m, true, false, false);
         setIndices();
         break;
       case T.on:
-        showHideM(pt, false);
+        showHideM(m, false);
         break;
       case T.off:
-        showHideM(pt, true);
+        showHideM(m, true);
         break;
       case T.radius:
         if (md.thisID != null)
@@ -234,14 +237,14 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         break;
       case T.define:
         if (md.thisID == null) {
-          deleteM(pt);
+          deleteM(m);
         } else {
           deleteO(md.thisID);
         }
-        toggle(pt);
+        toggle(m);
         break;
       case T.opToggle:
-        toggle(pt);
+        toggle(m);
       }
       return;
     }
@@ -297,6 +300,10 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return;
     }
 
+    if ("refresh" == propertyName) {
+      doAction((MeasurementData) value, null, T.refresh);
+      return;
+    }
     if ("show" == propertyName) {
       if (value instanceof String) {
         doAction(null, (String) value, T.show);
@@ -569,15 +576,38 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     vwr.setStatusMeasuring("measureDeleted", i, msg, 0);
   }
 
-  private void doAction(MeasurementData md, String s, int tok) {
-    s = s.toUpperCase().replace('?','*');
-    boolean isWild = PT.isWild(s);
+  private void doAction(MeasurementData md, String id, int tok) {
+    id = id.toUpperCase().replace('?', '*');
+    boolean isWild = PT.isWild(id);
     for (int i = measurements.size(); --i >= 0;) {
       Measurement m = measurements.get(i);
-      if (m.thisID != null
-          && (m.thisID.equalsIgnoreCase(s) || isWild
-              && PT.isMatch(m.thisID.toUpperCase(), s, true, true)))
+      if (m.thisID != null && (m.thisID.equalsIgnoreCase(id)
+          || isWild && PT.isMatch(m.thisID.toUpperCase(), id, true, true)))
         switch (tok) {
+        case T.refresh:
+          if (md.colix != 0)
+            m.colix = md.colix;
+          if (md.mad != 0)
+            m.mad = md.mad;
+          if (md.strFormat != null) {
+            m.strFormat = m.strFormat.substring(0, 2)
+                + md.strFormat.substring(2);
+          }
+          if (md.text != null) {
+            if (m.text == null) {
+              m.text = md.text;
+            } else {
+              if (md.text.font != null)
+                m.text.font = md.text.font;
+              m.text.text = null;
+              if (md.text.align != 0)
+                m.text.align = md.text.align;
+              if (md.colix != 0)
+                m.labelColix = m.text.colix = md.text.colix;
+            }
+          }
+          m.formatMeasurement(null);
+          break;
         case T.radius:
           m.mad = md.mad;
           break;
@@ -633,7 +663,10 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         : "dihedral"));
     info.put("strMeasurement", m.getString());
     info.put("count", Integer.valueOf(count));
+    info.put("id",  "" + m.thisID);
     info.put("value", Float.valueOf(m.value));
+    info.put("hidden", Boolean.valueOf(m.isHidden));
+    info.put("visible", Boolean.valueOf(m.isVisible));
     TickInfo tickInfo = m.tickInfo;
     if (tickInfo != null) {
       info.put("ticks", tickInfo.ticks);

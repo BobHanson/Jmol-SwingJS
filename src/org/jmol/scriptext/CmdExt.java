@@ -1494,8 +1494,8 @@ public class CmdExt extends ScriptExt {
       int ac = vwr.ms.ac;
       int[][] maps = null;
       try {
-        maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms,
-            ac, vwr.bsA(), JC.SMILES_TYPE_SMARTS);
+        maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms, ac,
+            vwr.bsA(), JC.SMILES_TYPE_SMARTS);
       } catch (Exception ex) {
         eval.evalError(ex.getMessage(), null);
       }
@@ -1557,7 +1557,7 @@ public class CmdExt extends ScriptExt {
 
     Lst<Object> points = new Lst<Object>();
     BS bs = new BS();
-    Object value = null;
+    Object target = null;
     TickInfo tickInfo = null;
     int nBitSets = 0;
     int mad = 0;
@@ -1583,7 +1583,7 @@ public class CmdExt extends ScriptExt {
         isNotConnected = true;
         break;
       case T.align:
-        alignment =  paramAsStr(++i).toLowerCase();
+        alignment = paramAsStr(++i).toLowerCase();
         break;
       case T.connected:
       case T.allconnected:
@@ -1610,7 +1610,8 @@ public class CmdExt extends ScriptExt {
         break;
       case T.radius:
       case T.diameter:
-        mad = (int) ((eval.theTok == T.radius ? 2000 : 1000) * floatParameter(++i));
+        mad = (int) ((eval.theTok == T.radius ? 2000 : 1000)
+            * floatParameter(++i));
         if (id != null && mad <= 0)
           mad = -1;
         break;
@@ -1641,10 +1642,11 @@ public class CmdExt extends ScriptExt {
           ptFloat = (ptFloat + 1) % 2;
           rangeMinMax[ptFloat] = iParam;
         } else {
-          atomIndex = vwr.ms.getFirstAtomIndexFromAtomNumber(iParam, vwr.getVisibleFramesBitSet());
+          atomIndex = vwr.ms.getFirstAtomIndexFromAtomNumber(iParam,
+              vwr.getVisibleFramesBitSet());
           if (!chk && atomIndex < 0)
             return;
-          if (value != null)
+          if (target != null)
             invArg();
           if ((countPlusIndexes[0] = ++nAtoms) > 4)
             eval.bad();
@@ -1706,22 +1708,22 @@ public class CmdExt extends ScriptExt {
         if (atomIndex >= 0)
           invArg();
         Object[] ret = new Object[1];
-        value = eval.centerParameter(i, ret);
+        target = eval.centerParameter(i, ret);
         if (ret[0] instanceof BS) {
-          value = bs = (BS) ret[0];
+          target = bs = (BS) ret[0];
           if (!chk && bs.length() == 0)
             return;
         }
-        if (value instanceof P3) {
+        if (target instanceof P3) {
           Point3fi v = new Point3fi();
-          v.setT((P3) value);
+          v.setT((P3) target);
           v.mi = (short) modelIndex;
-          value = v;
+          target = v;
         }
         if ((nAtoms = ++expressionCount) > 4)
           eval.bad();
         i = eval.iToken;
-        points.addLast(value);
+        points.addLast(target);
         break;
       case T.string:
         // measures "%a1 %a2 %v %u"
@@ -1734,8 +1736,8 @@ public class CmdExt extends ScriptExt {
         break;
       }
     }
-    if (rd != null && (ptFloat >= 0 || nAtoms != 2) || nAtoms < 2 && id == null
-        && (tickInfo == null || nAtoms == 1))
+    if (rd != null && (ptFloat >= 0 || nAtoms != 2)
+        || nAtoms < 2 && id == null && (tickInfo == null || nAtoms == 1))
       eval.bad();
     if (strFormat != null && strFormat.indexOf(nAtoms + ":") != 0)
       strFormat = nAtoms + ":" + strFormat;
@@ -1748,24 +1750,30 @@ public class CmdExt extends ScriptExt {
     }
     if (chk)
       return;
-    if (value != null || tickInfo != null) {
+
+    boolean isRefreshID = (id != null && target == null
+        && tokAction == T.opToggle);
+    if (target != null || tickInfo != null || isRefreshID) {
       if (rd == null)
         rd = new RadiusData(rangeMinMax, 0, null, null);
-      if (value == null)
+      if (tickInfo != null)
         tickInfo.id = "default";
-      if (value != null && strFormat != null && tokAction == T.opToggle)
+      if (isRefreshID) {
+        tokAction = T.refresh;
+      } else if (target != null && strFormat != null
+          && tokAction == T.opToggle) {
         tokAction = T.define;
+      }
       Text text = null;
-      if (font != null || alignment != null || strFormat != null && strFormat.indexOf('\n') >= 0)
-        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr, "script")).newLabel(
-            vwr, font, "", colix, (short) 0, 0, 0);
+      if (font != null || alignment != null || colix != 0
+          || strFormat != null && (isRefreshID || strFormat.indexOf('\n') >= 0))
+        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr,
+            "script")).newMeasure(vwr, font, colix);
       if (text != null) {
         text.pymolOffset = offset;
         text.setAlignmentLCR(alignment);
-      } 
-      setShapeProperty(
-          JC.SHAPE_MEASURES,
-          "measure",
+      }
+      setShapeProperty(JC.SHAPE_MEASURES, "measure",
           vwr.newMeasurementData(id, points).set(tokAction, null, rd, strFormat,
               null, tickInfo, isAllConnected, isNotConnected, intramolecular,
               isAll, mad, colix, text));
@@ -1783,8 +1791,8 @@ public class CmdExt extends ScriptExt {
       setShapeProperty(JC.SHAPE_MEASURES, "hide", propertyValue);
       break;
     default:
-      setShapeProperty(JC.SHAPE_MEASURES, (strFormat == null ? "toggle"
-          : "toggleOn"), propertyValue);
+      setShapeProperty(JC.SHAPE_MEASURES,
+          (strFormat == null ? "toggle" : "toggleOn"), propertyValue);
       if (strFormat != null)
         setShapeProperty(JC.SHAPE_MEASURES, "setFormats", strFormat);
     }

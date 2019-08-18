@@ -199,7 +199,7 @@ public class Measurement {
     formatMeasurement(units);
   }
 
-  protected void formatMeasurement(String units) {
+  public void formatMeasurement(String units) {
     tainted = true;
     switch (Float.isNaN(value) ? 0 : count) {
     default:
