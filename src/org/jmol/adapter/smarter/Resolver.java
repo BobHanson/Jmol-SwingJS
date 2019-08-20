@@ -793,7 +793,7 @@ public class Resolver {
   { "Espresso", "Program PWSCF", "Program PHONON" }; 
 
   private final static String[] siestaContainsRecords =
-  { "Siesta", "MD.TypeOfRun", "SolutionMethod", "MeshCutoff", "%block", 
+  { "Siesta", "MD.TypeOfRun", "SolutionMethod", "MeshCutoff", 
     "WELCOME TO SIESTA" };
   
   private final static String[] xcrysDenContainsRecords = 
@@ -851,7 +851,7 @@ public class Resolver {
       return "Gromacs";
     if (checkCrystal(lines))
       return "Crystal";
-    String s = checkCastepVasp(lines);
+    String s = checkCastepVaspSiesta(lines);
     if (s != null)
       return s;
     return null;
@@ -888,7 +888,7 @@ public class Resolver {
     return true;
   }
 
-  private static String checkCastepVasp(String[] lines) {
+  private static String checkCastepVaspSiesta(String[] lines) {
     for ( int i = 0; i<lines.length; i++ ) {
       String line = lines[i].toUpperCase();
       if (line.indexOf("FREQUENCIES IN         CM-1") == 1
@@ -898,6 +898,8 @@ public class Resolver {
           || line.startsWith("%BLOCK POSITIONS_FRAC")
           || line.startsWith("%BLOCK POSITIONS_ABS") 
           || line.contains("<-- E")) return "Castep";
+      if (line.contains("%BLOCK"))
+        return "Siesta";
       if (i >= 6 && i < 10 && (line.startsWith("DIRECT") || line.startsWith("CARTESIAN")))
         return "VaspPoscar";        
     }
