@@ -232,7 +232,7 @@ public class Text {
         // [1,2,3] are in Angstroms, not screen pixels
         float pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         float pz = pymolOffset[3];
-        float dz = (pz < 0 ? -1 : 1) * Math.max(0, Math.abs(pz) - 1)
+        float dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5f : 0, Math.abs(pz) - 1)
             * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);

@@ -712,7 +712,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     Lst<Object> objectHeader = listAt(pymolObject, 0);
     String parentGroupName = (execObject.size() < 8 ? null : stringAt(
         execObject, 6));
-    if (" ".equals(parentGroupName))
+    if ("".equals(parentGroupName.trim()))
       parentGroupName = null;
     pymolScene.setReaderObjectInfo(objectName, type, parentGroupName, isHidden, listAt(objectHeader, 8), stateSettings, (moleculeOnly ? "_" + (iState + 1) : ""));
     BS bsAtoms = null;
@@ -1200,13 +1200,18 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       Lst<Object> a = listAt(pymolAtoms, apt);
       seqNo = intAt(a, 0); // may be negative
       chainID = stringAt(a, 1); // may be more than one char.
+      if (chainID.length() == 0)
+        chainID = " ";
       altLoc = stringAt(a, 2);
       resi = stringAt(a, 3);
       group3 = stringAt(a, 5);
       name = stringAt(a, 6);
       sym = stringAt(a, 7);
       label = stringAt(a, 9);
-      ssType = stringAt(a, 10).substring(0, 1);
+      ssType = stringAt(a, 10);
+      if (ssType.length() == 0)
+        ssType = " ";
+      ssType = ssType.substring(0, 1);
       bfactor = floatAt(a, 14);
       occupancy = floatAt(a, 15);
       radius = floatAt(a, 16);
@@ -1237,7 +1242,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     if (sym.equals("A"))
       sym = "C";
     int ichain = vwr.getChainID(chainID, true);
-    Atom atom = processAtom(new Atom(), name, altLoc.charAt(0), group3, 
+    Atom atom = processAtom(new Atom(), name, (altLoc.length() == 0 ? ' ' : altLoc.charAt(0)), group3, 
         ichain, seqNo, insCode.charAt(0), isHetero, sym);
     if (!filterPDBAtom(atom, fileAtomIndex++))
       return null;
@@ -1298,9 +1303,17 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         Lst<Object> labelOffset = listAt(labelPositions, apt);
         if (labelOffset != null) {
           for (int i = 0; i < 7; i++)
-          labelPos[i] = floatAt(labelOffset, i);
+            labelPos[i] = floatAt(labelOffset, i);
         }
       }
+      boolean isAllZero = true;
+      for (int i = 0; i < 7; i++) {
+        if (labelPos[i] != 0)
+          isAllZero = false;
+      }
+      if (isAllZero)
+        labelPos[0] = 1; // probably means ignore
+
       pymolScene.addLabel(ac, uniqueID, atomColor, labelPos, label);
     }
     if (isHidden)
@@ -1608,11 +1621,14 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   }
 
   static String stringAt(Lst<Object> list, int i) {
+    Object o = list.get(i);
+    if (o instanceof String)
+      return (String) o;
     byte[] a = (byte[]) list.get(i);
     return (a.length == 0 ? " " : bytesToString(a));
   }
 
-  static String bytesToString(Object object) {
+  private static String bytesToString(Object object) {
     try {
       return new String((byte[]) object, "UTF-8");
     } catch (Exception e) {

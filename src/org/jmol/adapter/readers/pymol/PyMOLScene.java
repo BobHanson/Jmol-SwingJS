@@ -289,8 +289,6 @@ class PyMOLScene implements JmolSceneGenerator {
   private void listToSettings(Lst<Object> list,
                               Map<Integer, Lst<Object>> objectSettings) {
     if (list != null && list.size() != 0) {
-//      if (debugging)
-//        Logger.info(objectName + " local settings: " + list.toString());
       for (int i = list.size(); --i >= 0;) {
         Lst<Object> setting = (Lst<Object>) list.get(i);
         objectSettings.put((Integer) setting.get(0), setting);
@@ -510,7 +508,7 @@ class PyMOLScene implements JmolSceneGenerator {
    * @param selection
    */
   void processSelection(Lst<Object> selection) {
-    String id = selection.get(0).toString();
+    String id = PyMOLReader.stringAt(selection, 0);
     id = "_" + (id.equals("sele") ? id : "sele_" + id); 
     PyMOLGroup g = getGroup(id);
     getSelectionAtoms(PyMOLReader.listAt(selection, 5), 0, g.bsAtoms);
@@ -971,7 +969,7 @@ class PyMOLScene implements JmolSceneGenerator {
   String stringSetting(int i) {
       Lst<Object> setting = getSetting(i);
       if (setting != null && setting.size() == 3)
-        return setting.get(2).toString();
+        return PyMOLReader.stringAt(setting, 2);
       return PyMOL.getDefaultSettingS(i, pymolVersion);
   }
 
