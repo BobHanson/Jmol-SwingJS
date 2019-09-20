@@ -799,7 +799,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       if ((kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN)
           && ke.isControlDown() && consoleDoc.isAtEnd()) {
         if (kid == KeyEvent.KEY_PRESSED) {
-          System.out.println(pageUpBuffer);
+          //System.out.println(pageUpBuffer);
           recallCommand(kcode == KeyEvent.VK_UP, true);
         }
         ke.consume();
@@ -881,14 +881,14 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
     synchronized void checkCommand() {
       String strCommand = consoleDoc.getCommandString();
-      System.out.println("checkCommand " + strCommand);
+      //System.out.println("checkCommand " + strCommand);
       if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
           || vwr.isScriptExecuting()
           || vwr.getBooleanProperty("executionPaused"))
         return;
       checking = true;
       Object res = vwr.scriptCheck(strCommand);
-      System.out.println( res);
+      //System.out.println( res);
       consoleDoc
           .colorCommand(res instanceof String ? consoleDoc.attError
               : consoleDoc.attUserInput);
@@ -1138,7 +1138,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     void colorCommand(SimpleAttributeSet att) {
       if (positionAfterPrompt == positionBeforePrompt)
         return;
-      System.out.println(offsetAfterPrompt + "  " + getLength() + " att is " + att);
+      //System.out.println(offsetAfterPrompt + "  " + getLength() + " att is " + att);
       setCharacterAttributes(offsetAfterPrompt,
           getLength() - offsetAfterPrompt, att, true);
     }

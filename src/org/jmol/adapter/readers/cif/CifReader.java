@@ -27,23 +27,23 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.script.T;
+import org.jmol.util.Logger;
+import org.jmol.util.Vibration;
+
 import javajs.api.GenericCifDataParser;
+import javajs.util.BS;
 import javajs.util.CifDataParser;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.V3;
-
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.script.T;
-import org.jmol.util.Logger;
-import org.jmol.util.Vibration;
 
 /**
  * A true line-free CIF file reader for CIF files.
