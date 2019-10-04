@@ -381,138 +381,324 @@ public class CrystalReader extends AtomSetCollectionReader {
       return true;
     }
 
-    if (line.startsWith(" NUMBER OF UNIQUE CRI. POINT FOUND:")) {
-      processCriticalPoints(false);
+    if (line.indexOf(" CP TYPE ") >= 0) {
+      processNextCriticalPoint();
       return true;
     }
 
-    if (line.startsWith("      ********** C R I T I C A L  P O I N T S")) {
-      processCriticalPoints(true);
-      return true;
-    }
+//    if (line.startsWith(" NUMBER OF UNIQUE CRI. POINT FOUND:")) {
+//      processCriticalPoints(false);
+//      return true;
+//    }
+//
+//    if (line.startsWith("      ********** C R I T I C A L  P O I N T S")) {
+//      processCriticalPoints(true);
+//      return true;
+//    }
 
     return true;
 
   }
 
   private Map<String, Lst<Object>> htCriticalPoints;
+  /**
+   * CRYSTAL 17 moves directLatticeVectors before LATTICE PARAMETERS
+   */
+  private boolean directLatticeVectorsFirst;
 
-  private void processCriticalPoints(boolean isTLAP) throws Exception {
+//  private void processCriticalPoints(boolean isTLAP) throws Exception {
+//
+//    // see http://www.theochem.unito.it/crystal_tuto/mssc2013_cd/tutorials/topond_2013/topond.html#sum
+//
+//    // 0123456789012345678901234567890123456789
+//    //  NUMBER OF UNIQUE CRI. POINT FOUND:    18
+//
+//    // nuclei:
+//    // wireframe only
+//    // x= _M.criticalPoints.nuclei.select("(point)")
+//    // draw points @x
+//    
+//    int n = (isTLAP ? Integer.MAX_VALUE : parseIntAt(line, 35));
+//    if (n <= 0)
+//      return;
+//    if (htCriticalPoints == null) {
+//      htCriticalPoints = new Hashtable<String, Lst<Object>>();
+//      asc.setModelInfoForSet("criticalPoints", htCriticalPoints, 0);
+//    }
+//    discardLinesUntilContains("X(");
+//    float f = (line.indexOf("!!ANG") >= 0 ? 1 : ANGSTROMS_PER_BOHR);
+//    int offset = (line.indexOf("CP N.") >= 0 ? 6 : 0);
+//    discardLinesUntilContains("**");
+//    for (int i = 1; i <= n; i++) {
+//      if (isTLAP) {
+//
+////        X(AU)   Y(AU)   Z(AU)    TYPE     -LAP      RHO    L1(V1)   L2(V2)   L3(V3)
+////
+////      *******************************************************************************
+////
+////        1.048   5.052   3.192  (3,-1)   -0.120    0.131    -3.596   -0.410    1.701
+//        if (rd().indexOf("***") >= 0)
+//          break;
+//      }
+//      discardLinesUntilContains(",");
+//      //  CP N.  X(ANG)  Y(ANG)  Z(ANG)  TYPE      RHO    LAPL    L1(V1)  L2(V2)  L3(V3) ELLIP
+//      // 0         1         2         3         4         5         6         7         
+//      // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+//      //     1) -0.000  -2.783   1.527  (3,-3)  117.954-999.999-999.999-999.999-999.999
+//      // tokens    0        1      2      3        4      5         6       7      8
+//      String[] tokens = PT.getTokens(PT.rep(PT.rep(line.substring(offset) , "-", " -"), ", -",",-"));
+//      P3 pt = P3.new3(f * parseFloatStr(tokens[0]), 
+//          f * parseFloatStr(tokens[1]), 
+//          f * parseFloatStr(tokens[2]));
+//      String type = null;
+//      System.out.println(tokens[3] + " " + line);
+//      switch ("-3,-1,+1,+3".indexOf(tokens[3].substring(3,5))) {
+//      /////////0..3..6..9
+//      case 0:
+//        type = "nuclei";
+//        break;
+//      case 3:
+//        type = "bonds";
+//        break;
+//      case 6:
+//        type = "rings";
+//        break;
+//      case 9:
+//        type = "cages";
+//        break;
+//      default:
+//        type= "unknown";
+//        break;
+//      }
+//      float rho = parseFloatStr(tokens[4]);
+//      float lap = parseFloatStr(tokens[5]);
+//      float[] evalues = new float[] {parseFloatStr(tokens[6]), parseFloatStr(tokens[7]), parseFloatStr(tokens[8])};
+//
+//      Lst<Object> entry = htCriticalPoints.get(type);      
+//      if (entry == null) {
+//        htCriticalPoints.put(type,  entry = new Lst<Object>());
+//      }
+//      
+////TLAP molecule:
+////   1.435   0.000  -0.082  (3,+3)   -0.150    0.061     0.078    0.100    0.516
+////
+//// ( C   1   1.437 AU )                                 -0.216    0.000    0.976
+////                                                      -0.000   -1.000   -0.000
+////                                                      -0.976    0.000   -0.216
+//
+////TLAP crystal:
+////   1.048   5.052   3.192  (3,-1)   -0.120    0.131    -3.596   -0.410    1.701
+////
+//// ( C   1   0  0  0   1.111 AU )                       -0.945   -0.021    0.326
+////                                                       0.079    0.953    0.291
+////                                                      -0.317    0.301   -0.900
+//
+//      
+//      
+//      while(rd().length() == 0) {}
+//      Lst<Object> list = new Lst<Object>();
+//      
+//      String line1 = line, line2 = rd(), line3 = rd();
+//      String eigenInfo =  getCPAtomInfo(line1, list)  
+//          + getCPAtomInfo(line2, list)
+//          + getCPAtomInfo(line3, list);
+//      tokens = PT.getTokens(eigenInfo);
+//      double[][] ev = fill3x3(tokens, 0);
+//      //      Tensor t = new Tensor().setFromAsymmetricTensor(l, "cp", "cp_" + i);
+//      P3[] evpts = new P3[3];
+//      evpts[0] = P3.new3((float) ev[0][0], (float) ev[0][1], (float) ev[0][2]);
+//      evpts[1] = P3.new3((float) ev[1][0], (float) ev[1][1], (float) ev[1][2]);
+//      evpts[2] = P3.new3((float) ev[2][0], (float) ev[2][1], (float) ev[2][2]);
+//      Map<String, Object> m = new Hashtable<String, Object>();
+//      m.put("id", "cp_" + i);
+//      m.put("point", pt);
+//      m.put("rho",  Float.valueOf(rho));
+//      m.put("lap",  Float.valueOf(lap));
+//      m.put("eigenvalues",  evalues);
+//      m.put("eigenvectors", evpts);
+//      m.put("atominfo", list);
+//      entry.addLast(m);
+//      Logger.info("CRYSTAL TOPOND critical point " + type + " " + pt);
+//    }
+//
+//  }
+//
+//  
+  
+  private final static String[] crtypes = {"??", "nuclei", "bonds", "rings", "cages"};
+
+  private void processNextCriticalPoint() throws Exception {
 
     // see http://www.theochem.unito.it/crystal_tuto/mssc2013_cd/tutorials/topond_2013/topond.html#sum
 
-    // 0123456789012345678901234567890123456789
-    //  NUMBER OF UNIQUE CRI. POINT FOUND:    18
+    // TLAP: terminated by two blank lines
+    //    CP TYPE                        :  (3,+1)
+    //    COORD(AU)  (X  Y  Z)           :  1.1964E+00 -1.1054E-16 -1.3759E-01
+    //    PROPERTIES (-LAP,GLAP,RHO)     : -1.4398E-01  6.7172E-16  9.2662E-02
+    //
+    //    SPECTRAL DECOMP. OF THE HESSIAN OF -LAP(RHO)
+    //
+    //    EIGENVALUES (L1 L2 L3)         : -1.0163E+00  3.6605E-01  4.6020E-01
+    //    EIGENVECTORS                   : -9.9780E-01  6.6309E-02  0.0000E+00
+    //                                      3.7470E-16  5.7732E-15 -1.0000E+00
+    //                                      6.6309E-02  9.9780E-01  5.8842E-15
+    //
+    //    CP TYPE                        :  (3,-1)
+    //    COORD(AU)  (X  Y  Z)           :  9.0259E-01  5.9485E-01  2.0392E-01
+    //    PROPERTIES (-LAP,GLAP,RHO)     : -9.6508E-02  1.5975E-15  1.3430E-01
+    //
+    //    SPECTRAL DECOMP. OF THE HESSIAN OF -LAP(RHO)
+    //
+    //    EIGENVALUES (L1 L2 L3)         : -4.0179E+00 -4.8083E-01  1.6427E+00
+    //    EIGENVECTORS                   :  7.5151E-01  6.5456E-01  8.2331E-02
+    //                                      6.1842E-01 -6.5550E-01 -4.3345E-01
+    //                                      2.2975E-01 -3.7666E-01  8.9741E-01
+    //
+    //    ATTRACTOR CP TYPE              :  (3,-3)
+    //    COORD(AU)  (X  Y  Z)           : -1.4548E-18  1.6226E-19  1.4949E+00
+    //    PROPERTIES (-LAP,GLAP,RHO)     :  1.6696E+00  6.4117E-15  5.7400E-01
+    //    TRAJECTORY LENGTH(ANG)         :  1.0171E+00
+    //    INTEGRATION STEPS              :      36
 
-    // nuclei:
-    // wireframe only
-    // x= _M.criticalPoints.nuclei.select("(point)")
-    // draw points @x
-    
-    int n = (isTLAP ? Integer.MAX_VALUE : parseIntAt(line, 35));
-    if (n <= 0)
-      return;
+    //    CP TYPE                        :  (3,+3)
+    //    COORD(AU)  (X  Y  Z)           :  1.4352E+00  1.1452E-13 -8.1526E-02
+    //    PROPERTIES (-LAP,GLAP,RHO)     : -1.5011E-01  3.0123E-14  6.1216E-02
+    //
+    //    SPECTRAL DECOMP. OF THE HESSIAN OF -LAP(RHO)
+    //
+    //    EIGENVALUES (L1 L2 L3)         :  7.7906E-02  9.9847E-02  5.1588E-01
+    //    EIGENVECTORS                   : -2.1575E-01  0.0000E+00  9.7645E-01
+    //                                     -5.8420E-13 -1.0000E+00 -1.2909E-13
+    //                                     -9.7645E-01  5.9808E-13 -2.1575E-01
+
+    // TRHO -- no eigenvalues; terminated by ELF
+
+    //    CP TYPE                        :  (3,-3)
+    //    COORD(AU)  (X  Y  Z)           :  3.0907E+00  4.0903E+01  1.7859E+00
+    //    COORD FRACT. CONV. CELL        : -5.0000E-01
+    //    PROPERTIES (RHO,GRHO,LAP)      :  1.7947E+04  1.4944E-06 -3.9498E+09
+    //    KINETIC ENERGY DENSITIES (G,K) :  3.5310E+05  9.8780E+08
+    //    VIRIAL DENSITY                 : -9.8815E+08
+    //    ELF(PAA)                       :  9.9990E-01
+
+    //    CP TYPE                        :  (3,-1)
+    //    COORD(AU)  (X  Y  Z)           :  3.0907E+00  4.0903E+01  4.8589E-02
+    //    COORD FRACT. CONV. CELL        :  5.0000E-01
+    //    PROPERTIES (RHO,GRHO,LAP)      :  9.9365E-02  1.1797E-16  5.8728E-01
+    //    KINETIC ENERGY DENSITIES (G,K) :  1.5621E-01  9.3868E-03
+    //    VIRIAL DENSITY                 : -1.6559E-01
+    //    ELF(PAA)                       :  1.3309E-01
+
+    //    CP TYPE                        :  (3,+1)
+    //    COORD(AU)  (X  Y  Z)           : -2.5907E-14  4.0864E+01 -1.0504E-03
+    //    COORD FRACT. CONV. CELL        : -4.1911E-15
+    //    PROPERTIES (RHO,GRHO,LAP)      :  5.5632E-03  7.2555E-18  2.0331E-02
+    //    KINETIC ENERGY DENSITIES (G,K) :  4.0376E-03 -1.0451E-03
+    //    VIRIAL DENSITY                 : -2.9925E-03
+    //    ELF(PAA)                       :  1.5193E-02
+
+    //    CP TYPE                        :  (3,+3)
+    //    COORD(AU)  (X  Y  Z)           :  5.2582E+00 -5.2582E+00  4.4257E+00
+    //    COORD FRACT. CONV. CELL        : -5.0000E-01 -5.0000E-01  5.0000E-01
+    //    PROPERTIES (RHO,GRHO,LAP)      :  4.1313E-05  1.0430E-13  4.2340E-04
+    //    KINETIC ENERGY DENSITIES (G,K) :  6.3084E-05 -4.2765E-05
+    //    VIRIAL DENSITY                 : -2.0319E-05
+    //    ELF(PAA)                       :  5.0494E-06
+
     if (htCriticalPoints == null) {
       htCriticalPoints = new Hashtable<String, Lst<Object>>();
       asc.setModelInfoForSet("criticalPoints", htCriticalPoints, 0);
     }
-    discardLinesUntilContains("X(");
-    float f = 1;//(line.indexOf("AU") >= 0 ? ANGSTROMS_PER_BOHR : 1);
-    int offset = (line.indexOf("CP N.") >= 0 ? 6 : 0);
-    discardLinesUntilContains("**");
-    for (int i = 1; i <= n; i++) {
-      if (isTLAP) {
 
-//        X(AU)   Y(AU)   Z(AU)    TYPE     -LAP      RHO    L1(V1)   L2(V2)   L3(V3)
-//
-//      *******************************************************************************
-//
-//        1.048   5.052   3.192  (3,-1)   -0.120    0.131    -3.596   -0.410    1.701
-        if (rd().indexOf("***") >= 0)
-          break;
-      }
-      discardLinesUntilContains(",");
-      //  CP N.  X(ANG)  Y(ANG)  Z(ANG)  TYPE      RHO    LAPL    L1(V1)  L2(V2)  L3(V3) ELLIP
-      // 0         1         2         3         4         5         6         7         
-      // 01234567890123456789012345678901234567890123456789012345678901234567890123456789
-      //     1) -0.000  -2.783   1.527  (3,-3)  117.954-999.999-999.999-999.999-999.999
-      // tokens    0        1      2      3        4      5         6       7      8
-      String[] tokens = PT.getTokens(PT.rep(PT.rep(line.substring(offset) , "-", " -"), ", -",",-"));
-      P3 pt = P3.new3(f * parseFloatStr(tokens[0]), 
-          f * parseFloatStr(tokens[1]), 
-          f * parseFloatStr(tokens[2]));
-      String type = null;
-      System.out.println(tokens[3] + " " + line);
-      switch ("-3,-1,+1,+3".indexOf(tokens[3].substring(3,5))) {
-      /////////0..3..6..9
-      case 0:
-        type = "nuclei";
-        break;
-      case 3:
-        type = "bonds";
-        break;
-      case 6:
-        type = "rings";
-        break;
-      case 9:
-        type = "cages";
-        break;
-      default:
-        type= "unknown";
+    int nblank = 0;
+    String id = null;
+    Lst<Object> entry = null;
+    float f = ANGSTROMS_PER_BOHR;
+    Map<String, Object> m = null;
+    int i = 0;
+    float v = Float.NaN;
+    float g = Float.NaN;
+    float[] evalues = null;
+    String type = null;
+    while (line != null || rd().length() > 0 || ++nblank < 2) {
+      if (line.indexOf("ELF") >= 0) {
         break;
       }
-      float rho = parseFloatStr(tokens[4]);
-      float lap = parseFloatStr(tokens[5]);
-      float[] evalues = new float[] {parseFloatStr(tokens[6]), parseFloatStr(tokens[7]), parseFloatStr(tokens[8])};
-
-      Lst<Object> entry = htCriticalPoints.get(type);      
-      if (entry == null) {
-        htCriticalPoints.put(type,  entry = new Lst<Object>());
+      if (line.length() > 0)
+        nblank = 0;
+      int pt = line.indexOf(":");
+      if (pt > 0) {
+        String key = line.substring(0, pt).trim();
+        String value = line.substring(pt + 1);
+        if (key.indexOf("TYPE") >= 0) {
+          id = "cp_" + ++i;
+          //:  (3,+3)
+          type = crtypes["??,-3,-1,+1,+3".indexOf(value.substring(5, 7)) / 3];
+          entry = htCriticalPoints.get(type);
+          if (entry == null) {
+            htCriticalPoints.put(type, entry = new Lst<Object>());
+          }
+          m = new Hashtable<String, Object>();
+          m.put("id", id);
+          m.put("type", type);
+          entry.addLast(m);
+        } else if (key.equals("COORD(AU)  (X  Y  Z)")) {
+          //      COORD(AU)  (X  Y  Z)           : -1.4548E-18  1.6226E-19  1.4949E+00
+          //                                      0         1         2         3          
+          //                                      0123456789012345678901234567890123456        
+          P3 xyz = P3.new3(f * parseFloatStr(value.substring(0, 12)),
+              f * parseFloatStr(value.substring(12, 24)),
+              f * parseFloatStr(value.substring(24, 36)));
+          m.put("point", xyz);
+          Logger.info("CRYSTAL TOPOND critical point " + type + " " + xyz);
+        } else if (key.equals("PROPERTIES (RHO,GRHO,LAP)")) {
+          //      PROPERTIES (RHO,GRHO,LAP)      :  4.1313E-05  1.0430E-13  4.2340E-04
+          //                                      0         1         2         3          
+          //                                      0123456789012345678901234567890123456        
+          m.put("rho", Float.valueOf(parseFloatStr(value.substring(0, 12))));
+          m.put("lap", Float.valueOf(parseFloatStr(value.substring(24, 36))));
+        } else if (key.equals("PROPERTIES (-LAP,GLAP,RHO)")) {
+          m.put("lap", Float.valueOf(-parseFloatStr(value.substring(0, 12))));
+          m.put("rho", Float.valueOf(parseFloatStr(value.substring(24, 36))));
+        } else if (key.equals("KINETIC ENERGY DENSITIES (G,K)")) {
+          g = parseFloatStr(value.substring(0, 12));
+        } else if (key.equals("VIRIAL DENSITY")) {
+          v = parseFloatStr(value.substring(12, 24));
+        } else if (key.equals("EIGENVALUES (L1 L2 L3)")) {
+          float e1 = parseFloatStr(value.substring(0, 12));
+          float e2 = parseFloatStr(value.substring(12, 24));
+          float e3 = parseFloatStr(value.substring(24, 36));
+          evalues = new float[] { e1, e2, e3 };
+          m.put("eigenvalues", evalues);
+          m.put("ellipticity", Float.valueOf(e1 / e2 - 1));
+          m.put("anisotropy", Float.valueOf(e3 - Math.abs(e1 + e2) / 2));
+        } else if (key.equals("EIGENVECTORS")) {
+          value = value + rd().substring(33) + rd().substring(33);
+          double[][] ev = new double[3][3];
+          for (int ei = 0, p = 0; ei < 3; ei++) {
+            for (int ej = 0; ej < 3; ej++, p += 12) {
+              ev[ej][ei] = parseFloatStr(value.substring(p, p + 12));
+            }
+          }
+          P3[] evectors = new P3[3];
+          evectors[0] = P3.new3((float) ev[0][0], (float) ev[0][1],
+              (float) ev[0][2]);
+          evectors[1] = P3.new3((float) ev[1][0], (float) ev[1][1],
+              (float) ev[1][2]);
+          evectors[2] = P3.new3((float) ev[2][0], (float) ev[2][1],
+              (float) ev[2][2]);
+          System.out
+              .println("evpts " + evectors[0] + " " + evectors[1] + " " + evectors[2]);
+          m.put("eigenvectors", evectors);
+          //Tensor t = new Tensor().setFromEigenVectors(evectors, evalues, "cp", id, null);
+          //m.put("tensor",  t);
+        }
       }
-      
-//TLAP molecule:
-//   1.435   0.000  -0.082  (3,+3)   -0.150    0.061     0.078    0.100    0.516
-//
-// ( C   1   1.437 AU )                                 -0.216    0.000    0.976
-//                                                      -0.000   -1.000   -0.000
-//                                                      -0.976    0.000   -0.216
-
-//TLAP crystal:
-//   1.048   5.052   3.192  (3,-1)   -0.120    0.131    -3.596   -0.410    1.701
-//
-// ( C   1   0  0  0   1.111 AU )                       -0.945   -0.021    0.326
-//                                                       0.079    0.953    0.291
-//                                                      -0.317    0.301   -0.900
-
-      
-      
-      while(rd().length() == 0) {}
-      Lst<Object> list = new Lst<Object>();
-      
-      String line1 = line, line2 = rd(), line3 = rd();
-      String eigenInfo =  getCPAtomInfo(line1, list)  
-          + getCPAtomInfo(line2, list)
-          + getCPAtomInfo(line3, list);
-      tokens = PT.getTokens(eigenInfo);
-      double[][] ev = fill3x3(tokens, 0);
-      //      Tensor t = new Tensor().setFromAsymmetricTensor(l, "cp", "cp_" + i);
-      P3[] evpts = new P3[3];
-      evpts[0] = P3.new3((float) ev[0][0], (float) ev[0][1], (float) ev[0][2]);
-      evpts[1] = P3.new3((float) ev[1][0], (float) ev[1][1], (float) ev[1][2]);
-      evpts[2] = P3.new3((float) ev[2][0], (float) ev[2][1], (float) ev[2][2]);
-      Map<String, Object> m = new Hashtable<String, Object>();
-      m.put("id", "cp_" + i);
-      m.put("point", pt);
-      m.put("rho",  Float.valueOf(rho));
-      m.put("lap",  Float.valueOf(lap));
-      m.put("eigenvalues",  evalues);
-      m.put("eigenvectors", evpts);
-      m.put("atominfo", list);
-      entry.addLast(m);
-      Logger.info("CRYSTAL TOPOND critical point " + type + " " + pt);
+      line = null;
     }
 
   }
+
 
   /**
    * Process a CP data line
@@ -557,7 +743,8 @@ public class CrystalReader extends AtomSetCollectionReader {
     symops.clear();
     if (!isConv)
       primitiveToCrystal = null;
-    directLatticeVectors = null;
+    if (!directLatticeVectorsFirst)
+      directLatticeVectors = null;
   }
 
   private boolean addModel() throws Exception {
@@ -628,6 +815,8 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   private void getDirect() throws Exception {
     directLatticeVectors = read3Vectors(line.indexOf("(BOHR") >= 0);
+    if (!iHaveUnitCell)
+      directLatticeVectorsFirst = true;
   }
 
   private void setUnitCellOrientation() {
@@ -975,6 +1164,13 @@ public class CrystalReader extends AtomSetCollectionReader {
     boolean doNormalizePrimitive = false;// && isPrimitive && !isMolecular && !isPolymer && !isSlab && (!doApplySymmetry || latticeCells[2] != 0);
     atomIndexLast = asc.ac;
 
+    boolean isFractional = iHaveFractionalCoordinates;
+    if (!isFractional) {
+      setUnitCellOrientation();
+      if (matUnitCellOrientation != null)
+        getSymmetry().initializeOrientation(matUnitCellOrientation);
+
+    }
     while (rd() != null && line.length() > 0
         && line.indexOf(isPrimitive ? "*" : "=") < 0) {
       Atom atom = asc.addNewAtom();
@@ -989,7 +1185,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       float z = parseFloatStr(tokens[pt]);
       if (haveCharges)
         atom.partialCharge = asc.atoms[i++].partialCharge;
-      if (iHaveFractionalCoordinates && !isProperties) {
+      if (isFractional && !isProperties) {
         // note: this normalization is unique to this reader -- all other
         //       readers operate through symmetry application
         if (x < 0 && (isPolymer || isSlab || doNormalizePrimitive))
@@ -999,6 +1195,7 @@ public class CrystalReader extends AtomSetCollectionReader {
         if (z < 0 && doNormalizePrimitive)
           z += 1;
       }
+      // note: this will set iHaveFractionalCoordinates but not isFractional
       setAtomCoordXYZ(atom, x, y, z);
     }
     ac = asc.ac - atomIndexLast;
