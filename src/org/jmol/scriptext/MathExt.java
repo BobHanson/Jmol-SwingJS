@@ -79,6 +79,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -3278,17 +3279,23 @@ public class MathExt {
     // {*}.tensor("isc")            // only within this atom set
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
-    SV x = mp.getX();
-    if (args.length > 2 || x.tok != T.bitset)
+    //     tensor(t,what)
+    System.out.println(args[1].tok + " " + T.tensor);
+    boolean isTensor = (args.length == 2 && args[1].tok == T.tensor); 
+    SV x = (isTensor ? null : mp.getX());
+    if (args.length > 2 || !isTensor && x.tok != T.bitset)
       return false;
     BS bs = (BS) x.value;
-    String tensorType = (args.length == 0 ? null : SV.sValue(args[0])
+    String tensorType = (isTensor || args.length == 0 ? null : SV.sValue(args[0])
         .toLowerCase());
     JmolNMRInterface calc = vwr.getNMRCalculation();
     if ("unique".equals(tensorType))
       return mp.addXBs(calc.getUniqueTensorSet(bs));
     String infoType = (args.length < 2 ? null : SV.sValue(args[1])
         .toLowerCase());
+    if (isTensor) {
+      return mp.addXObj(((Tensor) args[0].value).getInfo(infoType));
+    }
     return mp.addXList(calc.getTensorInfo(tensorType, infoType, bs));
   }
 

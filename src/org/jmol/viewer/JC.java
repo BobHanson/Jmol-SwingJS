@@ -264,7 +264,8 @@ public final class JC {
   public static String[] macros = {
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt", "AFLOW macros",
     "bz", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/bz.spt", "Brillouin Zone/Wigner-Seitz macros",
-//    "crystaltest", "https://chemapps.stolaf.edu/jmol/crystal/macros.spt", "CRYSTAL program macros (test)",
+    "topology", "https://chemapps.stolaf.edu/jmol/topology/macros.spt", "Topology CIF macros",
+    "crystaltest", "https://chemapps.stolaf.edu/jmol/crystal/macros.spt", "CRYSTAL program macros (test)",
     "crystal", "https://chemapps.stolaf.edu/jmol/crystal/macros.spt", "CRYSTAL program macros"
  };
 

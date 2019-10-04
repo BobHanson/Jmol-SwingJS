@@ -381,7 +381,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       return true;
     }
 
-    if (line.indexOf(" CP TYPE ") >= 0) {
+    if (line.startsWith(" CP TYPE ")) {
       processNextCriticalPoint();
       return true;
     }
@@ -618,10 +618,11 @@ public class CrystalReader extends AtomSetCollectionReader {
     int i = 0;
     float v = Float.NaN;
     float g = Float.NaN;
+    float rho = Float.NaN;
     float[] evalues = null;
     String type = null;
     while (line != null || rd().length() > 0 || ++nblank < 2) {
-      if (line.indexOf("ELF") >= 0) {
+      if (line.indexOf("CLUSTER") >= 0) {
         break;
       }
       if (line.length() > 0)
@@ -630,7 +631,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       if (pt > 0) {
         String key = line.substring(0, pt).trim();
         String value = line.substring(pt + 1);
-        if (key.indexOf("TYPE") >= 0) {
+        if (key.equals("CP TYPE")) {
           id = "cp_" + ++i;
           //:  (3,+3)
           type = crtypes["??,-3,-1,+1,+3".indexOf(value.substring(5, 7)) / 3];
@@ -646,8 +647,8 @@ public class CrystalReader extends AtomSetCollectionReader {
           //      COORD(AU)  (X  Y  Z)           : -1.4548E-18  1.6226E-19  1.4949E+00
           //                                      0         1         2         3          
           //                                      0123456789012345678901234567890123456        
-          P3 xyz = P3.new3(f * parseFloatStr(value.substring(0, 12)),
-              f * parseFloatStr(value.substring(12, 24)),
+          P3 xyz = P3.new3(f * parseFloatStr(value.substring(0, 12)), f
+              * parseFloatStr(value.substring(12, 24)),
               f * parseFloatStr(value.substring(24, 36)));
           m.put("point", xyz);
           Logger.info("CRYSTAL TOPOND critical point " + type + " " + xyz);
@@ -655,15 +656,22 @@ public class CrystalReader extends AtomSetCollectionReader {
           //      PROPERTIES (RHO,GRHO,LAP)      :  4.1313E-05  1.0430E-13  4.2340E-04
           //                                      0         1         2         3          
           //                                      0123456789012345678901234567890123456        
-          m.put("rho", Float.valueOf(parseFloatStr(value.substring(0, 12))));
+          rho = parseFloatStr(value.substring(0, 12));
+          m.put("rho", Float.valueOf(rho));
           m.put("lap", Float.valueOf(parseFloatStr(value.substring(24, 36))));
         } else if (key.equals("PROPERTIES (-LAP,GLAP,RHO)")) {
           m.put("lap", Float.valueOf(-parseFloatStr(value.substring(0, 12))));
-          m.put("rho", Float.valueOf(parseFloatStr(value.substring(24, 36))));
+          rho = parseFloatStr(value.substring(24, 36));
+          m.put("rho", Float.valueOf(rho));
         } else if (key.equals("KINETIC ENERGY DENSITIES (G,K)")) {
           g = parseFloatStr(value.substring(0, 12));
+          m.put("kineticEnergyG", Float.valueOf(g));
         } else if (key.equals("VIRIAL DENSITY")) {
-          v = parseFloatStr(value.substring(12, 24));
+          v = parseFloatStr(value.substring(0, 12));
+          m.put("virialDensityV", Float.valueOf(v));
+          m.put("ratioVG", Float.valueOf(Math.abs(v) / g));
+          m.put("energyDensityH", Float.valueOf(g + v));
+          m.put("ratioHRho", Float.valueOf((g + v) / rho));
         } else if (key.equals("EIGENVALUES (L1 L2 L3)")) {
           float e1 = parseFloatStr(value.substring(0, 12));
           float e2 = parseFloatStr(value.substring(12, 24));
@@ -687,11 +695,12 @@ public class CrystalReader extends AtomSetCollectionReader {
               (float) ev[1][2]);
           evectors[2] = P3.new3((float) ev[2][0], (float) ev[2][1],
               (float) ev[2][2]);
-          System.out
-              .println("evpts " + evectors[0] + " " + evectors[1] + " " + evectors[2]);
+          System.out.println("evpts " + evectors[0] + " " + evectors[1] + " "
+              + evectors[2]);
           m.put("eigenvectors", evectors);
-          //Tensor t = new Tensor().setFromEigenVectors(evectors, evalues, "cp", id, null);
-          //m.put("tensor",  t);
+          Tensor t = new Tensor().setFromEigenVectors(evectors, evalues, "cp",
+              id, null);
+          m.put("tensor", t);
         }
       }
       line = null;

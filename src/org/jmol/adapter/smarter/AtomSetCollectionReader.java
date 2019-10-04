@@ -809,7 +809,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public void setUnitCellItem(int i, float x) {
     if (ignoreFileUnitCell)
       return;
-    if (i == 0 && x == 1 || i == 3 && x == 0)
+    if (i == 0 && x == 1 && !checkFilterKey("TOPOS") || i == 3 && x == 0)
       return;
     if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
       initializeCartesianToFractional();

@@ -34,6 +34,7 @@ import javajs.util.M3;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
+import javajs.util.T3;
 import javajs.util.V3;
 
 import javajs.util.BS;
@@ -467,7 +468,7 @@ public class Tensor {
    * @param t 
    * @return this
    */
-  public Tensor setFromEigenVectors(V3[] eigenVectors,
+  public Tensor setFromEigenVectors(T3[] eigenVectors,
                                             float[] eigenValues, String type, String id, Tensor t) {
     float[] values = new float[3];
     V3[] vectors = new V3[3];
