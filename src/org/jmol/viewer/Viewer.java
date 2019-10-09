@@ -2988,7 +2988,7 @@ public class Viewer extends JmolViewer
         ? (BufferedReader) rdrOrStringData
         : Rdr.getBR((String) rdrOrStringData));
     return Rdr.readCifData((GenericCifDataParser) Interface.getInterface(
-        ("CIF2".equals(type) ? "org.jmol.adapter.readers.cif.Cif2DataParser"
+        ("Cif2".equals(type) ? "org.jmol.adapter.readers.cif.Cif2DataParser"
             : "javajs.util.CifDataParser"),
         this, "script"), rdr);
   }
