@@ -320,14 +320,16 @@ public class CmdExt extends ScriptExt {
 
   
   private void macro() throws ScriptException {
-    String key = e.optParameterAsString(1);
-    if (key.length() == 0)
-      return;
     if (chk)
       return;
-    String macro = JC.getMacro(key);
+    String key = e.optParameterAsString(1);
+    if (key.length() == 0) {
+      showString(vwr.getMacro(null));
+      return;
+    }
+    String macro = vwr.getMacro(key);
     if (macro == null) {
-      showString("macro " + key  + " could not be found. Current macros include:\n" + JC.getMacroList());
+      showString("macro " + key  + " could not be found. Current macros include:\n" + vwr.getMacro(null));
       return;
     }
     showString("running " + macro);
@@ -3881,6 +3883,7 @@ public class CmdExt extends ScriptExt {
     int argCount = (isCommand ? slen : args.length);
     String type2 = "";
     String val = null;
+    boolean is2D = false;
     SV tVar = null;
     int nVibes = 0;
     String sceneType = null;
@@ -3924,7 +3927,7 @@ public class CmdExt extends ScriptExt {
         pt++;
       break;
     case T.coord:
-      pt++;
+      pt++; 
       isCoord = true;
       break;
     case T.state:
@@ -3958,6 +3961,7 @@ public class CmdExt extends ScriptExt {
       type = "VAR";
       pt += 2;
       break;
+    case T.drawing:
     case T.frame:
     case T.image:
     case T.scene:
@@ -3977,6 +3981,10 @@ public class CmdExt extends ScriptExt {
         if (!chk)
           bsFrames = vwr.ms.getModelBS(bsAtoms, true);
         break;
+      case T.drawing:
+        tok = T.image;
+        is2D = true;
+        //$FALL-THROUGH$
       case T.image:
         type = "IMAGE";
         pt++;
@@ -4040,7 +4048,7 @@ public class CmdExt extends ScriptExt {
       break;
     }
 
-    if (pt0 < argCount) {
+     if (pt0 < argCount) {
       // get type
       val = SV.sValue(tokenAt(pt, args));
       if (val.equalsIgnoreCase("clipboard")) {
@@ -4415,15 +4423,35 @@ public class CmdExt extends ScriptExt {
     if (isImage) {
       eval.refresh(false);
       if (width < 0)
-        width = vwr.getScreenWidth();
+        width = (is2D ? 250 : vwr.getScreenWidth());
       if (height < 0)
-        height = vwr.getScreenHeight();
+        height = (is2D ? 250 : vwr.getScreenHeight());
     }
     params = new Hashtable<String, Object>();
     if (fileName != null)
       params.put("fileName", fileName);
     params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("type", type);
+    if (is2D) {
+      params.put("is2D", Boolean.TRUE);
+      String smiles;
+      Object ret = "smiles could not be generated";
+      try {
+        smiles = vwr.getOpenSmiles(null);
+        if (smiles.length() > 0) {
+        String fname = (String) vwr.setLoadFormat("_" + smiles, '2', false);
+        fname += "?width=" + width + "&height=" + height + "&format=" + type.toLowerCase();
+        showString(fname);
+        ret = vwr.fm.getFileAsBytes(fname, null);
+        }
+      } catch (Exception e1) {
+      }
+      if (ret instanceof String) {
+        showString((String) ret);
+        return null;
+      }
+      bytes = (byte[]) ret;
+    }
     if (bytes instanceof String && quality == Integer.MIN_VALUE)
       params.put("text", bytes);
     else if (bytes instanceof byte[])
@@ -4695,14 +4723,14 @@ public class CmdExt extends ScriptExt {
       if ((len = slen) == 2) {
         if (chk)
           break;
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false);
+        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false, null);
       } else if (tok == T.spacegroup) {
         String sg = paramAsStr(2);
         len = 3;
         if (chk)
           break;
         info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            PT.rep(sg, "''", "\""), -1, false);
+            PT.rep(sg, "''", "\""), -1, false, null);
       }
       if (info != null) {
         msg = (tok == T.spacegroup ? "" + info.get("spaceGroupInfo")

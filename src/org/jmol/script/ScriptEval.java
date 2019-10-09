@@ -6117,7 +6117,7 @@ public class ScriptEval extends ScriptExpr {
         if (chk)
           continue;
         Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            null, -1, false);
+            null, -1, false, null);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();

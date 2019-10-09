@@ -669,15 +669,20 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull) {
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull, float[] cellParams) {
     boolean isForModel = (sgName == null);
     if (sgName == null) {
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
+    SymmetryInterface cellInfo = null;
+    if (cellParams != null) {
+      cellInfo = new Symmetry();
+      cellInfo.setUnitCell(cellParams, false);
+    }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel, 0);
+        null, 0, -1, isFull, isForModel, 0, cellInfo);
   }
 
   

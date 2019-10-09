@@ -140,9 +140,8 @@ public class SymmetryDesc {
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
                                         float scaleFactor, int nth, 
-                                        boolean isFull, boolean isForModel, int options) {
+                                        boolean isFull, boolean isForModel, int options, SymmetryInterface cellInfo) {
     Map<String, Object> info = null;
-    SymmetryInterface cellInfo = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
     boolean isBio = false;
     String sgNote = null;
@@ -155,7 +154,7 @@ public class SymmetryDesc {
             : modelSet.vwr.am.cmi);
       if (modelIndex < 0)
         sgNote = "no single current model";
-      else if (!(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
+      else if (cellInfo == null && !(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
           && (cellInfo = modelSet.getUnitCell(modelIndex)) == null)
         sgNote = "not applicable";
       if (sgNote != null) {
@@ -214,8 +213,8 @@ public class SymmetryDesc {
             sops += "\n" + (i + 1) + "\t" + ret[0] + "\t" + ret[2];
             opCount++;
           }
-          info.put("operations", infolist);
         }
+        info.put("operations", infolist);
         info.put("symmetryInfo", (sops.length() == 0 ? "" : sops.substring(1)));
       }
       sgNote = (opCount == 0 ? "\n no symmetry operations"
@@ -1354,7 +1353,7 @@ public class SymmetryDesc {
                                        boolean asString, int options) {
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true, options);
+        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true, options, null);
     if (sginfo == null)
       return ret;
     Object[][] infolist = (Object[][]) sginfo.get("operations");

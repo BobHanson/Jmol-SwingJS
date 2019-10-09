@@ -279,37 +279,34 @@ class SpaceGroup {
       return SpaceGroup.dumpAllSeitz();
     } else {
       sg = SpaceGroup.determineSpaceGroupN(spaceGroup);
-      if (sg == null) {
-        sg = SpaceGroup.createSpaceGroupN(spaceGroup);
-        SpaceGroup sgFound = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
-        if (sgFound != null)
-          sg = sgFound;
-      } else {
-        if (asMap) {
-          return sg.dumpInfoObj();
-//          Lst<Object> l = new Lst<Object>();
-//          while (sg != null) {
-//            l.addLast(sg.dumpInfoObj());
-////            sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
-//          }
-//          return l;
-        }
-        SB sb = new SB();
-        while (sg != null) {
-          sb.append(sg.dumpInfo());
-          sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
-        }
-        return sb.toString();
+    }
+    if (sg == null) {
+      SpaceGroup sgFound = SpaceGroup.createSpaceGroupN(spaceGroup);
+      sgFound = findSpaceGroup(sgFound.operationCount, sgFound.getCanonicalSeitzList());
+      if (sgFound != null)
+        sg = sgFound;
+    } 
+    if (sg != null) {
+       if (asMap) {
+        return sg.dumpInfoObj();
       }
+      SB sb = new SB();
+      while (sg != null) {
+        // I don't know why there would be multiples here
+        sb.append(sg.dumpInfo());
+        sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
+      }
+      return sb.toString();
     }
-    Object o;
-    try {
-      o = (asMap ? (sg == null ? null : sg.getInfo(cellInfo))
-          : sg == null ? "?" : sg.dumpInfo());
-    } catch (Exception e) {
-      o = null;
-    }
-    return o;
+    return asMap ? null : "?";
+//    Object o;
+//    try {
+//      o = (asMap ? (sg == null ? null : sg.getInfo(cellInfo))
+//          : sg == null ? "?" : sg.dumpInfo());
+//    } catch (Exception e) {
+//      o = null;
+//    }
+//    return o;
   }
 
   private Map<String, Object> info;

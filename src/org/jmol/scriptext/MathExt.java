@@ -232,13 +232,21 @@ public class MathExt {
     // spacegroup();
     // spacegroup(3);
     // spacegroup("x,y,z,-x,-y,-z");
+    // spacegroup("x,y,z,-x,-y,-z", [unitcellParams]);
+
+    float[] unitCell = null;
     switch (args.length) {
     case 0:
       return mp.addXObj(
-          vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, vwr.am.cmi, true));
+          vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, vwr.am.cmi, true, null));
+    case 2:
+      unitCell = SV.flistValue(args[1], 0);
+      if (unitCell.length < 6)
+        unitCell = null;
+      //$FALL-THROUGH$
     case 1:
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-          "" + args[0].asString(), Integer.MIN_VALUE, true));
+          "" + args[0].asString(), Integer.MIN_VALUE, true, unitCell));
     default:
       return false;
     }
@@ -3242,7 +3250,7 @@ public class MathExt {
       if (bsAtoms.isEmpty())
         return false;
       String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
-          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false)
+          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)

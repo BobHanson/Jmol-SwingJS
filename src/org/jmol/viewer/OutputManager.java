@@ -660,10 +660,11 @@ abstract class OutputManager {
     int saveWidth = 0, saveHeight = 0;
     int quality = getInt(params, "quality", Integer.MIN_VALUE);
     String captureMode = (String) params.get("captureMode");
+    boolean is2D = params.get("is2D") == Boolean.TRUE;
     String localName = null;
     if (captureMode != null && !vwr.allowCapture())
       return "ERROR: Cannot capture on this platform.";
-    boolean mustRender = (quality != Integer.MIN_VALUE);
+    boolean mustRender = (!is2D && quality != Integer.MIN_VALUE);
     // localName will be fileName only if we are able to write to disk.
     if (captureMode != null) {
       doCheck = false; // will be checked later
@@ -678,7 +679,6 @@ abstract class OutputManager {
       if (fileName == null)
         return null;
       params.put("fileName", fileName);
-
       // JSmol/HTML5 WILL produce a localName now
       if (OC.isLocal(fileName))
         localName = fileName;
@@ -715,8 +715,8 @@ abstract class OutputManager {
           if (captureMode != null) {
             out = null;
             Map<String, Object> cparams = vwr.captureParams;
-            int imode = "ad on of en ca mo ".indexOf(captureMode
-                .substring(0, 2));
+            int imode = "ad on of en ca mo "
+                .indexOf(captureMode.substring(0, 2));
             //           0  3  6  9  12 15
             String[] rootExt;
             if (imode == 15) {// movie -- start up
@@ -768,7 +768,8 @@ abstract class OutputManager {
                   } else {
                     int count = getInt(params, "captureCount", 0);
                     params.put("captureCount", Integer.valueOf(++count));
-                    if ((rootExt = (String[]) params.get("captureRootExt")) != null) {
+                    if ((rootExt = (String[]) params
+                        .get("captureRootExt")) != null) {
                       localName = (String) getRootExt(null, rootExt, count);
                       captureMsg = null;
                       createImage = true;
@@ -785,10 +786,9 @@ abstract class OutputManager {
                 case 3: //on:
                 case 6: //off:
                   params = cparams;
-                  params
-                      .put("captureEnabled",
-                          (captureMode.equals("on") ? Boolean.TRUE
-                              : Boolean.FALSE));
+                  params.put("captureEnabled",
+                      (captureMode.equals("on") ? Boolean.TRUE
+                          : Boolean.FALSE));
                   sret = type + "_STREAM_"
                       + (captureMode.equals("on") ? "ON" : "OFF");
                   params.put("captureMode", "add");
@@ -803,8 +803,7 @@ abstract class OutputManager {
                       + fileName;
                   vwr.captureParams = null;
                   params.put("captureMsg",
-                      GT.$("Capture")
-                          + ": "
+                      GT.$("Capture") + ": "
                           + (captureMode.equals("cancel") ? GT.$("canceled")
                               : GT.o(GT.$("{0} saved"), fileName)));
                   if (params.containsKey("captureRootExt"))
@@ -821,26 +820,29 @@ abstract class OutputManager {
               params.put("fileName", localName);
             if (sret == null)
               sret = writeToOutputChannel(params);
-            vwr.sm.createImage(sret, type, null, null, quality);
-            if (captureMode != null) {
-              if (captureMsg == null)
-                captureMsg = sret;
-              else
-                captureMsg += " ("
-                    + params
-                        .get(params.containsKey("captureByteCount") ? "captureByteCount"
-                            : "byteCount") + " bytes)";
+            if (!is2D) {
+              vwr.sm.createImage(sret, type, null, null, quality);
+              if (captureMode != null) {
+                if (captureMsg == null)
+                  captureMsg = sret;
+                else
+                  captureMsg += " ("
+                      + params.get(params.containsKey("captureByteCount")
+                          ? "captureByteCount"
+                          : "byteCount")
+                      + " bytes)";
+              }
+            if (captureMsg != null) {
+              vwr.showString(captureMsg, false);
             }
-          }
-          if (captureMsg != null) {
-            vwr.showString(captureMsg, false);
+            }
           }
         }
       }
     } catch (Throwable er) {
       er.printStackTrace();
-      Logger.error(vwr.setErrorMessage(sret = "ERROR creating image??: " + er,
-          null));
+      Logger.error(
+          vwr.setErrorMessage(sret = "ERROR creating image??: " + er, null));
     } finally {
       vwr.creatingImage = false;
       if (quality != Integer.MIN_VALUE && saveWidth > 0)

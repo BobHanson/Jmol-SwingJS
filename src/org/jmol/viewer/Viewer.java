@@ -25,7 +25,6 @@ package org.jmol.viewer;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -5640,6 +5639,11 @@ public class Viewer extends JmolViewer
 
   private void setStringPropertyTok(String key, int tok, String value) {
     switch (tok) {
+    // 14.29.54 new
+    case T.macrodirectory:
+      g.macroDirectory = value = (value == null || value.length() == 0 ? JC.defaultMacroDirectory : value);
+      macros = null;
+      break;
     // 14.4.10 new
     case T.nihresolverformat:
       g.nihResolverFormat = value;
@@ -7490,7 +7494,7 @@ public class Viewer extends JmolViewer
       jmolpopup = null;
       return menuStructure = (String) paramInfo;
     case 140:
-      return getSymTemp().getSpaceGroupInfo(ms, null, -1, false);
+      return getSymTemp().getSpaceGroupInfo(ms, null, -1, false, null);
     case 160:
       g.disablePopupMenu = true; // no false here, because it's a
       // one-time setting
@@ -9990,5 +9994,42 @@ public class Viewer extends JmolViewer
         modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
     }
   }
-    
+
+  private Map<String, Object> macros;
+
+  /**
+   * retrieve macros.json from the directory
+   * @param key
+   * @return the macro path
+   */
+  @SuppressWarnings("unchecked")
+  public String getMacro(String key) {
+    if (macros == null || macros.isEmpty()) {
+      try {
+        String s = getAsciiFileOrNull(g.macroDirectory + "/macros.json");
+        macros = (Map<String, Object>) parseJSON(s);
+      } catch (Exception e) {
+        macros = new Hashtable<String, Object>();
+      }
+      //    {
+      //        aflow:{path:"https://chemapps.stolaf.edu/jmol/macros/AFLOW.spt", title:"AFLOW macros"},
+      //        bz:{path:"https://chemapps.stolaf.edu/jmol/macros/bz.spt", title: "Brillouin Zone/Wigner-Seitz macros"},
+      //        topology:{path:"https://chemapps.stolaf.edu/jmol/macros/topology.spt", title: "Topology CIF macros"},
+      //        topond:{path:"https://chemapps.stolaf.edu/jmol/macros/topond.spt", title: "CRYSTAL/TOPOND macros"},
+      //        crystal:{path:"https://chemapps.stolaf.edu/jmol/macros/crystal.spt", title: "CRYSTAL macros"}
+      //     }; 
+    }
+    if (key == null) {
+      SB s = new SB();
+      for (String k : macros.keySet()) {
+        Object a = macros.get(k);
+        s.append(k).append("\t").appendO(a).append("\n");
+      }
+      return s.toString();
+    }
+    key = key.toLowerCase();
+    return macros.containsKey(key) ? ((Map<String, Object>)macros.get(key)).get("path").toString()
+        : null;
+  }
+
 }
