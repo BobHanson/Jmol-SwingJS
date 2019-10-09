@@ -163,6 +163,8 @@ public final class JC {
 
   // note list of RCSB access points: http://www.rcsb.org/pdb/static.do?p=download/http/index.html
   
+  public static final String defaultMacroDirectory = "https://chemapps.stolaf.edu/jmol/macros";
+
   private final static String[] databaseArray = { 
     // still http:
     "aflowbin", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
@@ -261,29 +263,6 @@ public final class JC {
     return newname;
   }
 
-  public static String[] macros = {
-      "aflow",       "https://chemapps.stolaf.edu/jmol/macros/AFLOW.spt", "AFLOW macros",
-      "bz",          "https://chemapps.stolaf.edu/jmol/macros/bz.spt", "Brillouin Zone/Wigner-Seitz macros",
-      "topology",    "https://chemapps.stolaf.edu/jmol/macros/topology.spt", "Topology CIF macros",
-      "topond",      "https://chemapps.stolaf.edu/jmol/macros/topond.spt", "CRYSTAL/TOPOND macros",
-      "crystal",     "https://chemapps.stolaf.edu/jmol/macros/crystal.spt", "CRYSTAL macros"
-   };
-
-  public static String getMacroList() {
-    SB s = new SB();
-    for (int i = 0; i < macros.length; i += 3)
-      s.append(macros[i]).append("\t").append(macros[i + 1]).append("\t").append(macros[i + 1]).append("\n");
-    return s.toString();
-  }
-
-
-  public static String getMacro(String key) {
-    for (int i = 0; i < macros.length; i += 3)
-      if (macros[i].equals(key))
-        return macros[i + 1];
-    return null;
-  }
-  
   public final static String copyright = "(C) 2015 Jmol Development";
   
   public final static String version;

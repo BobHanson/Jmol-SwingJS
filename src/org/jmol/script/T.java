@@ -833,15 +833,16 @@ public class T {
 //  public final static int edsurlcutoff                   = strparam | 36;
 //  public final static int edsurlformat                   = strparam | 37;
 //  public final static int edsurlformatdiff               = strparam | 38;
-  public final static int energyunits                    = strparam | 39; 
-  public final static int filecachedirectory             = strparam | 40;
-  public final static int forcefield                     = strparam | 41;
-  public final static int helppath                       = strparam | 42;
-  public final static int hoverlabel                     = strparam | 43;
-  public final static int language                       = strparam | 44;
-  public final static int loadformat                     = strparam | 45;
-  public final static int loadligandformat               = strparam | 46;
-  public final static int logfile                        = strparam | 47;
+  public final static int energyunits                    = strparam | 38; 
+  public final static int filecachedirectory             = strparam | 39;
+  public final static int forcefield                     = strparam | 40;
+  public final static int helppath                       = strparam | 41;
+  public final static int hoverlabel                     = strparam | 42;
+  public final static int language                       = strparam | 43;
+  public final static int loadformat                     = strparam | 44;
+  public final static int loadligandformat               = strparam | 45;
+  public final static int logfile                        = strparam | 46;
+  public final static int macrodirectory                 = strparam | 47;
   public final static int measurementunits               = strparam | 48; 
   public final static int nmrpredictformat               = strparam | 49;
   public final static int nihresolverformat              = strparam | 50;
@@ -2621,6 +2622,7 @@ public class T {
        "legacyJavaFloat",
        "logCommands",
        "logGestures",
+       "macroDirectory",
        "measureAllModels",
        "measurementLabels",
        "measurementNumbers",
@@ -3681,6 +3683,7 @@ public class T {
         legacyjavafloat,                   //        "legacyRangeCheck"
         logcommands,                        //        "logCommands"
         loggestures,                        //        "logGestures"
+        macrodirectory,
         measureallmodels,                   //        "measureAllModels"
         measurementlabels,                  //        "measurementLabels"
         measurementnumbers,                 //        "measurementNumbers"
