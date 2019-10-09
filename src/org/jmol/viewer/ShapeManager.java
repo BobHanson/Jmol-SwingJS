@@ -212,10 +212,11 @@ public class ShapeManager {
 
   private final static int[] hoverable = {
     JC.SHAPE_ECHO, 
+    JC.SHAPE_ELLIPSOIDS,
     JC.SHAPE_CONTACT,
     JC.SHAPE_ISOSURFACE,
     JC.SHAPE_DRAW,
-    JC.SHAPE_FRANK,
+    JC.SHAPE_FRANK
   };
   
   private static int clickableMax = hoverable.length - 1;

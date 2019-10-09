@@ -2336,13 +2336,84 @@ public class CmdExt extends ScriptExt {
           eval.getShapePropertyData(JC.SHAPE_ISOSURFACE, "getVertices", data);
           value = data;
           break;
+        case T.label:
+          value = e.optParameterAsString(++i);
+          if (((String) value).length() == 0)
+            continue;
+          break;
         case T.axes:
           V3[] axes = new V3[3];
-          for (int j = 0; j < 3; j++) {
-            axes[j] = new V3();
-            axes[j].setT(centerParameter(++i));
-            i = eval.iToken;
+          Lst<SV> l = null;
+          switch (getToken(i + 1).tok) {
+          case T.matrix3f:
+            i++;
+            M3 m = (M3) eval.theToken.value;
+            for (int im = 3; --im >= 0;)
+              m.getColumnV(im, axes[im] = new V3());
+            break;
+          case T.spacebeforesquare:
+            i += 2;
+            //$FALL-THROUGH$
+          case T.leftsquare:
+            l = new Lst<SV>();
+            for (int i1 = 3; --i1 >= 0;) {
+              switch (tokAt(++i)) {
+              case T.leftsquare:
+                break;
+              default:
+                if (eval.isCenterParameter(i)) {
+                  l.addLast(SV.newV(T.point3f, centerParameter(i)));
+                } else if (tokAt(i) == T.leftsquare) {
+                 // TODO
+                } else {
+                  l.addLast((SV) getToken(i));
+                }
+              }
+              i = eval.iToken;
+            }
+            if (getToken(++i).tok != T.rightsquare)
+              invArg();
+            break;
+          case T.list:
+            l = ((SV) eval.theToken).getList();
+            switch (l.size()) {
+            case 1:
+              Lst<SV> l1 = new Lst<SV>();
+              for (int il = 3; --il >= 0;)
+                l1.addLast((SV) getToken(++i));
+              l = l1;
+              break;
+            case 3:
+              break;
+            default:
+              invArg();
+              break;
+            }
+            break;
+          default:
+            for (int j = 0; j < 3; j++) {
+              axes[j] = new V3();
+              axes[j].setT(centerParameter(++i));
+              i = eval.iToken;
+            }
+            break;
           }
+          if (l != null) {
+            for (int k = 3; --k >= 0;) {
+              SV v = l.get(k);
+              switch (v.tok) {
+              case T.list:
+                axes[k] = V3.new3(SV.fValue(v.getList().get(0)),
+                    SV.fValue(v.getList().get(1)),
+                    SV.fValue(v.getList().get(2)));
+                break;
+              case T.point3f:
+                axes[k] = V3.newV((T3) v.value);
+                break;
+              }
+            }
+          }
+          i = eval.iToken;
           value = axes;
           break;
         case T.center:
@@ -2369,7 +2440,15 @@ public class CmdExt extends ScriptExt {
           value = Boolean.FALSE;
           break;
         case T.scale:
-          value = Float.valueOf(floatParameter(++i));
+          if (isFloatParameter(i + 1)) {
+            value = Float.valueOf(floatParameter(++i));
+          } else if (eval.isCenterParameter(i)){
+            P3 p = centerParameter(i);
+            value = new float[] {p.x, p.y, p.z};
+          } else {
+            value = eval.floatParameterSet(++i, 3, 3);
+          }
+          i = eval.iToken;
           break;
         case T.define:
         case T.bitset:
