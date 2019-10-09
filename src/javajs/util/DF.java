@@ -146,7 +146,7 @@ public class DF {
     String s0 = s1.substring(0, (decimalDigits == 0 ? pt
         : ++pt));
     SB sb = SB.newS(s0);
-    if (isNeg && s0.equals("0.") && decimalDigits < len && s1.substring(2, 2 + decimalDigits).equals(zeros.substring(0, decimalDigits)))
+    if (isNeg && s0.equals("0.") && decimalDigits + 2 <= len && s1.substring(2, 2 + decimalDigits).equals(zeros.substring(0, decimalDigits)))
       isNeg = false;
     for (int i = 0; i < decimalDigits; i++, pt++) {
       if (pt < len)
