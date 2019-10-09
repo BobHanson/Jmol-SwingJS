@@ -262,12 +262,12 @@ public final class JC {
   }
 
   public static String[] macros = {
-    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt", "AFLOW macros",
-    "bz", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/bz.spt", "Brillouin Zone/Wigner-Seitz macros",
-    "topology", "https://chemapps.stolaf.edu/jmol/topology/macros.spt", "Topology CIF macros",
-    "crystaltest", "https://chemapps.stolaf.edu/jmol/crystal/macros.spt", "CRYSTAL program macros (test)",
-    "crystal", "https://chemapps.stolaf.edu/jmol/crystal/macros.spt", "CRYSTAL program macros"
- };
+      "aflow",       "https://chemapps.stolaf.edu/jmol/macros/AFLOW.spt", "AFLOW macros",
+      "bz",          "https://chemapps.stolaf.edu/jmol/macros/bz.spt", "Brillouin Zone/Wigner-Seitz macros",
+      "topology",    "https://chemapps.stolaf.edu/jmol/macros/topology.spt", "Topology CIF macros",
+      "topond",      "https://chemapps.stolaf.edu/jmol/macros/topond.spt", "CRYSTAL/TOPOND macros",
+      "crystal",     "https://chemapps.stolaf.edu/jmol/macros/crystal.spt", "CRYSTAL macros"
+   };
 
   public static String getMacroList() {
     SB s = new SB();
