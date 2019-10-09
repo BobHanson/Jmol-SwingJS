@@ -381,6 +381,11 @@ public class CrystalReader extends AtomSetCollectionReader {
       return true;
     }
 
+    if (line.startsWith(" CP N. ")) {
+      cpno = parseIntAt(line, 6);
+      return true;
+    }
+
     if (line.startsWith(" CP TYPE ")) {
       processNextCriticalPoint();
       return true;
@@ -524,6 +529,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 //  }
 //
 //  
+  private int cpno = -1;
   
   private final static String[] crtypes = {"??", "nuclei", "bonds", "rings", "cages"};
 
@@ -615,7 +621,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     Lst<Object> entry = null;
     float f = ANGSTROMS_PER_BOHR;
     Map<String, Object> m = null;
-    int i = 0;
     float v = Float.NaN;
     float g = Float.NaN;
     float rho = Float.NaN;
@@ -632,7 +637,6 @@ public class CrystalReader extends AtomSetCollectionReader {
         String key = line.substring(0, pt).trim();
         String value = line.substring(pt + 1);
         if (key.equals("CP TYPE")) {
-          id = "cp_" + ++i;
           //:  (3,+3)
           type = crtypes["??,-3,-1,+1,+3".indexOf(value.substring(5, 7)) / 3];
           entry = htCriticalPoints.get(type);
@@ -640,9 +644,13 @@ public class CrystalReader extends AtomSetCollectionReader {
             htCriticalPoints.put(type, entry = new Lst<Object>());
           }
           m = new Hashtable<String, Object>();
+          entry.addLast(m);
+          int i = entry.size();
+          id = "cp_" + i;
+          m.put("cpno", Integer.valueOf(cpno));
           m.put("id", id);
           m.put("type", type);
-          entry.addLast(m);
+          m.put("index", Integer.valueOf(i));
         } else if (key.equals("COORD(AU)  (X  Y  Z)")) {
           //      COORD(AU)  (X  Y  Z)           : -1.4548E-18  1.6226E-19  1.4949E+00
           //                                      0         1         2         3          
@@ -807,6 +815,28 @@ public class CrystalReader extends AtomSetCollectionReader {
       setEnergy();
     finalizeReaderASCR();
     asc.checkNoEmptyModel();
+    
+    if (htCriticalPoints != null) {
+      String note = "";
+      Lst<Object> list;
+      list = htCriticalPoints.get("nuclei");
+      if (list != null)
+        note += "\n _M.criticalPoints.nuclei.length = " + list.size();
+      list = htCriticalPoints.get("bonds");
+      if (list != null)
+        note += "\n _M.criticalPoints.bonds.length = " + list.size();
+      list = htCriticalPoints.get("rings");
+      if (list != null)
+        note += "\n _M.criticalPoints.rings.length = " + list.size();
+      list = htCriticalPoints.get("cages");
+      if (list != null)
+        note += "\n _M.criticalPoints.cages.length = " + list.size();
+      note += "\n Use MACRO crystal for TOPOND functions.";
+      addJmolScript("set drawHover");
+      appendLoadNote(note);
+      setLoadNote();
+    }
+    
   }
 
   // DIRECT LATTICE VECTORS CARTESIAN COMPONENTS (ANGSTROM)
