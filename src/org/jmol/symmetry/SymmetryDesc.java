@@ -237,10 +237,12 @@ public class SymmetryDesc {
       if (haveName && !haveRawName)
         sym.setSpaceGroupName(sgName);
       data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull);
-      if (data == null || data.equals("?"))
-        data = "could not identify space group from name: " + sgName
+      if (data == null || data.equals("?")) {
+        data = "?";
+        info.put("spaceGroupNote", "could not identify space group from name: " + sgName
             + "\nformat: show spacegroup \"2\" or \"P 2c\" "
-            + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"";
+            + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"");
+      }
     }
     info.put("spaceGroupInfo", data);
     return info;

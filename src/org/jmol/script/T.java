@@ -709,6 +709,7 @@ public class T {
   public final static int __               = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
   public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
   public final static int intersection     = 35 | 0 << 9 | mathfunc;
+  public final static int spacegroup       = 36 | 0 << 9 | mathfunc;
 
 
     // xxx(a)
@@ -1327,7 +1328,6 @@ public class T {
   public final static int sign           = misc  | 323;
   public final static int silent         = misc  | 324;
   public final static int solid          = misc  | 326;
-  public final static int spacegroup     = misc  | 328;
   public final static int sphere         = misc  | 330;
   public final static int squared        = misc  | 332;
   public final static int state          = misc  | 334;

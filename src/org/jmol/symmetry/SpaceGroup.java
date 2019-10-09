@@ -259,6 +259,11 @@ class SpaceGroup {
     
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         SymmetryInterface cellInfo, boolean asMap) {
+    if (sg != null && sg.index >= SG.length) {
+      SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+      if (sgDerived != null)
+        sg = sgDerived;
+    }
     if (cellInfo != null) {
       if (sg == null) {
         if (spaceGroup.indexOf("[") >= 0)
@@ -276,7 +281,19 @@ class SpaceGroup {
       sg = SpaceGroup.determineSpaceGroupN(spaceGroup);
       if (sg == null) {
         sg = SpaceGroup.createSpaceGroupN(spaceGroup);
+        SpaceGroup sgFound = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+        if (sgFound != null)
+          sg = sgFound;
       } else {
+        if (asMap) {
+          return sg.dumpInfoObj();
+//          Lst<Object> l = new Lst<Object>();
+//          while (sg != null) {
+//            l.addLast(sg.dumpInfoObj());
+////            sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
+//          }
+//          return l;
+        }
         SB sb = new SB();
         while (sg != null) {
           sb.append(sg.dumpInfo());
@@ -287,8 +304,9 @@ class SpaceGroup {
     }
     Object o;
     try {
-      o = (asMap? (sg == null ? null : sg.getInfo(cellInfo)): sg == null ? "?" : sg.dumpInfo());
-    } catch(Exception e) {
+      o = (asMap ? (sg == null ? null : sg.getInfo(cellInfo))
+          : sg == null ? "?" : sg.dumpInfo());
+    } catch (Exception e) {
       o = null;
     }
     return o;
@@ -299,13 +317,13 @@ class SpaceGroup {
   private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
     
     if (info == null) {
+      info = new Hashtable<String, Object>();
       if (hmSymbol == null || hmSymbolExt == null) {
-        info = new Hashtable<String, Object>();
         info.put("HMSymbol", "??");
       } else {
         Object seitz = dumpCanonicalSeitzList();
         info.put("SeitzList", seitz == null ? "" : seitz);
-        info.put("HMSymbol", hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
+        info.put("HMSymbol", hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
         info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
         info.put("ITSNumberFull",  intlTableNumberFull);
         info.put("crystalClass", crystalClass);
@@ -363,6 +381,32 @@ class SpaceGroup {
     return sb.toString();
   }
 
+  /**
+   * 
+   * @return detailed information
+   */
+  Object dumpInfoObj() {
+    Object info = dumpCanonicalSeitzList();
+    if (info instanceof SpaceGroup)
+      return ((SpaceGroup) info).dumpInfoObj();
+    Map<String, Object> map = new Hashtable<String, Object>();
+    String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
+    map.put("HermannMauguinSymbol", s);
+    if (intlTableNumber != null) {
+      map.put("ita", Integer.valueOf(intlTableNumber));
+      map.put("itaFull", intlTableNumberFull);
+      map.put("crystalClass", crystalClass);
+      map.put("operationCount", Integer.valueOf(operationCount));
+    }
+    Lst<Object> lst = new Lst<Object>();
+    for (int i = 0; i < operationCount; i++) {
+      lst.addLast(operations[i].xyz);
+    }
+    map.put("operationsXYZ", lst);
+    map.put("HallSymbol",  (hallInfo == null ? "?" : hallInfo.hallSymbol));
+    return map;
+  }
+
   String getName() {
     return name;  
   }
@@ -406,7 +450,7 @@ class SpaceGroup {
     if (index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(operationCount, s);
       if (sgDerived != null)
-        return sgDerived;
+        return sgDerived.getCanonicalSeitzList();
     }
     return (index >= 0 && index < SG.length ? hallSymbol + " = " : "") + s;
   }
@@ -1710,9 +1754,9 @@ class SpaceGroup {
 //    return latticeOps;
 //  }
 
-
+// 826 settings for 230 space groups
   /*  see http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
-
+ 
 intl#     H-M full       HM-abbr   HM-short  Hall
 1         P 1            P1        P         P 1       
 2         P -1           P-1       P-1       -P 1      
