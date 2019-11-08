@@ -313,7 +313,18 @@ public class PT {
   }
 
   public static int parseIntRadix(String s, int i) throws NumberFormatException {
+//    /**
+//     * 
+//     * JavaScript uses parseIntRadix
+//     * 
+//     * @j2sNative
+//     * 
+//     *    return Integer.parseIntRadix(s, i);
+//     *    
+//     */
+//    {
       return Integer.parseInt(s, i);
+//    }
   }
 
   public static String[] getTokens(String line) {
@@ -1556,6 +1567,4 @@ public class PT {
 //
 //    System.out.println("PT test");
 //  }
-  
-  
 }

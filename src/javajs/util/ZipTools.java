@@ -298,6 +298,19 @@ public class ZipTools {//implements GenericZipTools {
     }
   }
 
+  public static String getGzippedBytesAsString(byte[] bytes) {
+	String s;
+    try {
+      BufferedInputStream bis = getUnGzippedInputStream(bytes);
+      s = getStreamAsString(bis);
+      bis.close();
+    } catch (Exception e) {
+      s = "";
+    }
+    return s;
+  }
+
+ 
   /**
    * Drill down into a GZIP stack until no more layers.
    * @param bis
@@ -536,7 +549,5 @@ public class ZipTools {//implements GenericZipTools {
       bytes[51] = 32;
     return bytes;
   }
-
-
 
 }

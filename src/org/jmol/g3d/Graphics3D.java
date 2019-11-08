@@ -1281,10 +1281,24 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void drawDashedLineBits(int run, int rise, P3 pointA, P3 pointB) {
-    // measures only
+    if (isAntialiased()) {
+      run += run;
+      rise += rise;
+    }
     setScreeni(pointA, sA);
     setScreeni(pointB, sB);
     line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+    if (isAntialiased()) {
+      if (Math.abs(pointA.x - pointB.x) < Math.abs(pointA.y - pointB.y)) {
+        sA.x += 1;
+        sB.x += 1;
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);        
+      } else {
+        sA.y += 1;
+        sB.y += 1;
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+      }
+    }
   }
 
   private void setScreeni(P3 pt, P3i p) {

@@ -44,11 +44,15 @@ class WrappedAppletLoader extends Thread {
   @Override
   public void run() {
     long startTime = System.currentTimeMillis();
+    TickerThread tickerThread;
     if (Logger.debugging) {
       Logger.debug("WrappedAppletLoader.run(org.jmol.applet.Jmol)");
     }
-    TickerThread tickerThread = new TickerThread(applet);
+    /** @j2sIgnore */
+    {
+    tickerThread = new TickerThread(applet);
     tickerThread.start();
+    }
     try {
       WrappedApplet jmol = ((AppletWrapper) applet).wrappedApplet = (WrappedApplet) Interface.getOption("applet.Jmol", null, null);
       jmol.setApplet(applet, isSigned);
@@ -58,8 +62,11 @@ class WrappedAppletLoader extends Thread {
     long loadTimeSeconds = (System.currentTimeMillis() - startTime + 500) / 1000;
     if (Logger.debugging)
       Logger.debug("applet load time = " + loadTimeSeconds + " seconds");
+    /** @j2sIgnore */
+    {
     tickerThread.keepRunning = false;
     tickerThread.interrupt();
+    }
     applet.repaint();
   }
 }

@@ -831,7 +831,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       list = htCriticalPoints.get("cages");
       if (list != null)
         note += "\n _M.criticalPoints.cages.length = " + list.size();
-      note += "\n Use MACRO crystal for TOPOND functions.";
+      note += "\n Use MACRO TOPOND for TOPOND functions.";
       addJmolScript("set drawHover");
       appendLoadNote(note);
       setLoadNote();

@@ -340,6 +340,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
                                                boolean selected) {
     String name = source.getName();
+    System.out.println("MKP name=" + name);
     if (!updatingForShow && setActiveMenu(name) != null) {
       String text = source.getText();
       if (name.indexOf("Bond") >= 0) {
@@ -576,6 +577,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     }
 
     if (name == "atomtype") {
+      System.out.println("MKP atomtype=" + value);
       if (value != null) {
         pickAtomAssignType = (String) value;
         isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")

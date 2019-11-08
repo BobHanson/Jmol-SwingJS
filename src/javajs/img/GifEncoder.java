@@ -3,6 +3,9 @@
  * $Date: 2007-06-02 12:14:13 -0500 (Sat, 02 Jun 2007) $
  * $Revision: 7831 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2000-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -164,15 +167,8 @@ public class GifEncoder extends ImageEncoder {
     case 1: // add 
       addHeader = false;
       addTrailer = false;
-      Integer msDelay = (Integer) params.get("captureDelayMS");
-      if (msDelay == null) {
-        int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
-        delayTime100ths = (fps == 0 ? 0 : 100 / fps);
-      } else {
-        // one-time frame delay
-        delayTime100ths = msDelay.intValue() / 10;
-        params.remove("captureDelayMS");
-      }
+      int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
+      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
       looping = (Boolean.FALSE != params.get("captureLooping"));
       break;
     case 2: // end
@@ -219,7 +215,10 @@ public class GifEncoder extends ImageEncoder {
    * is the background color
    */
   private class ColorItem extends P3 {
-    protected boolean isBackground;
+    /**
+	 * 
+	 */
+	protected boolean isBackground;
 
     ColorItem(int rgb, boolean isBackground) {
       this.isBackground = isBackground;
@@ -233,7 +232,11 @@ public class GifEncoder extends ImageEncoder {
    */
   private class ColorCell extends Lst<P3> {
 
-    protected int index;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	protected int index;
     protected P3 center;
 
     private float volume;

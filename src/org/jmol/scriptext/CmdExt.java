@@ -2376,7 +2376,7 @@ public class CmdExt extends ScriptExt {
             if (getToken(++i).tok != T.rightsquare)
               invArg();
             break;
-          case T.list:
+          case T.varray:
             l = ((SV) eval.theToken).getList();
             switch (l.size()) {
             case 1:
@@ -2404,7 +2404,7 @@ public class CmdExt extends ScriptExt {
             for (int k = 3; --k >= 0;) {
               SV v = l.get(k);
               switch (v.tok) {
-              case T.list:
+              case T.varray:
                 axes[k] = V3.new3(SV.fValue(v.getList().get(0)),
                     SV.fValue(v.getList().get(1)),
                     SV.fValue(v.getList().get(2)));

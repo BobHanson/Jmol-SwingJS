@@ -56,8 +56,6 @@ public class CompoundDocument extends BinaryDocument{
   Lst<CompoundDocDirEntry> directory = new  Lst<CompoundDocDirEntry>();
   CompoundDocDirEntry rootEntry;
 
-//  protected GenericZipTools jzt;
-
   int[] SAT;
   int[] SSAT;
   int sectorSize;
@@ -311,6 +309,7 @@ public class CompoundDocument extends BinaryDocument{
             thisEntry.SIDfirstSector, thisEntry.lenStream, asBinaryString)
             : getShortStringData(thisEntry.SIDfirstSector, thisEntry.lenStream, asBinaryString));
   }
+  
   private SB getStandardStringData(int thisSID, int nBytes,
                                              boolean asBinaryString) {
     SB data = new SB();
