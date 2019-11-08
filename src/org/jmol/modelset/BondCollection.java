@@ -36,6 +36,8 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.BS;
 import org.jmol.script.T;
 
@@ -286,7 +288,7 @@ abstract public class BondCollection extends AtomCollection {
       }
     }
     if (nDeleted > 0)
-      dBm(bsDelete, false);
+      ((ModelSet) this).deleteBonds(bsDelete, false);
     return new int[] { 0, nDeleted };
   }
   
@@ -305,17 +307,6 @@ abstract public class BondCollection extends AtomCollection {
           && (maxfrac ? dAB <= dABcalc * maxD : d2 <= maxD));
     } 
     return (d2 >= minD && d2 <= maxD);
-  }
-
-  /**
-   * send request up to ModelCollection level.
-   * Done this way to avoid JavaScript super call
-   * 
-   * @param bsBonds
-   * @param isFullModel
-   */
-  protected void dBm(BS bsBonds, boolean isFullModel) {
-    ((ModelSet) this).deleteBonds(bsBonds, isFullModel);
   }
 
   protected void dBb(BS bsBond, boolean isFullModel) {
@@ -741,53 +732,7 @@ abstract public class BondCollection extends AtomCollection {
     }
   }
  
-  public BS assignBond(int bondIndex, char type) {
-    int bondOrder = type - '0';
-    Bond bond = bo[bondIndex];
-    ((ModelSet) this).clearDB(bond.atom1.i);
-    switch (type) {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-      break;
-    case 'p':
-    case 'm':
-      bondOrder = Edge.getBondOrderNumberFromOrder(bond.getCovalentOrder())
-          .charAt(0) - '0' + (type == 'p' ? 1 : -1);
-      if (bondOrder > 3)
-        bondOrder = 1;
-      else if (bondOrder < 0)
-        bondOrder = 3;
-      break;
-    default:
-      return null;
-    }
-    BS bsAtoms = new BS();
-    try {
-      if (bondOrder == 0) {
-        BS bs = new BS();
-        bs.set(bond.index);
-        bsAtoms.set(bond.atom1.i);
-        bsAtoms.set(bond.atom2.i);
-        dBm(bs, false);
-        return bsAtoms;
-      }
-      bond.setOrder(bondOrder | Edge.BOND_NEW);
-      if (bond.atom1.getElementNumber() != 1
-          && bond.atom2.getElementNumber() != 1) {
-        removeUnnecessaryBonds(bond.atom1, false);
-        removeUnnecessaryBonds(bond.atom2, false);
-      }
-      bsAtoms.set(bond.atom1.i);
-      bsAtoms.set(bond.atom2.i);
-    } catch (Exception e) {
-      Logger.error("Exception in seBondOrder: " + e.toString());
-    }
-    return bsAtoms;
-  }
-
-  protected void removeUnnecessaryBonds(Atom atom, boolean deleteAtom) {
+  public void removeUnnecessaryBonds(Atom atom, boolean deleteAtom) {
     BS bs = new BS();
     BS bsBonds = new BS();
     Bond[] bonds = atom.bonds;
@@ -802,7 +747,7 @@ abstract public class BondCollection extends AtomCollection {
         bsBonds.set(bonds[i].index);
       }
     if (bsBonds.nextSetBit(0) >= 0)
-      dBm(bsBonds, false);
+      ((ModelSet) this).deleteBonds(bsBonds, false);
     if (deleteAtom)
       bs.set(atom.i);
     if (bs.nextSetBit(0) >= 0)

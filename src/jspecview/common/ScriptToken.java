@@ -96,6 +96,7 @@ public enum ScriptToken {
   PLOTAREACOLOR("C", "sets the color of the plot background"), 
   PLOTCOLOR("C", "sets the color of the graph line"), 
   PLOTCOLORS("color,color,color,...", "sets the colors of multiple plots"), 
+  POINTSONLY("TF", "show points only for all data"),
   PRINT("", "prints the current spectrum"),
   REVERSEPLOT("T", "reverses the x-axis of a spectrum"), 
   SCALEBY("factor", "multiplies the y-scale of the spectrum by a factor"),
@@ -161,31 +162,35 @@ public enum ScriptToken {
     this.description = "-- " + description;
   }
 
-  public static Map<String, ScriptToken> htParams;
+  private static Map<String, ScriptToken> htParams;
 
-  public static ScriptToken getScriptToken(String name) {
+  private static Map<String, ScriptToken> getParams() {
     if (htParams == null) {
       htParams = new Hashtable<String, ScriptToken>();
       for (ScriptToken item : values())
         htParams.put(item.name(), item);
     }
-    ScriptToken st = htParams.get(name.toUpperCase());
+    return htParams;
+  }
+  
+  public static ScriptToken getScriptToken(String name) {
+    ScriptToken st = getParams().get(name.toUpperCase());
     return (st == null ? UNKNOWN : st);
   }
 
   public static Lst<ScriptToken> getScriptTokenList(String name,
                                                      boolean isExact) {
     if (name != null)
-    	name = name.toUpperCase();
+      name = name.toUpperCase();
     Lst<ScriptToken> list = new Lst<ScriptToken>();
     if (isExact) {
       ScriptToken st = getScriptToken(name);
       if (st != null)
         list.addLast(st);
     } else {
-      for (Entry<String, ScriptToken> entry : htParams.entrySet())
+      for (Entry<String, ScriptToken> entry : getParams().entrySet())
         if ((name == null || entry.getKey().startsWith(name)) 
-        		&& entry.getValue().tip != null)
+            && entry.getValue().tip != null)
           list.addLast(entry.getValue());
     }
     return list;

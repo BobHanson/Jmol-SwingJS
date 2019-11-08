@@ -30,6 +30,8 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.ResourceBundle.Control;
+
 import javax.swing.ImageIcon;
 
 import org.jmol.i18n.GT;
@@ -63,11 +65,10 @@ class JmolResourceHandler {
       }
     }
     Locale locale = new Locale(language, country);
-    stringsResourceBundle =
-      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.Properties.Jmol", locale);
-
+    Control control = Control.getControl(Control.FORMAT_PROPERTIES);
+      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale, control);
     try {
-      String t = "/org/openscience/jmol/app/jmolpanel/Properties/Jmol-resources.properties";
+      String t = "/org/openscience/jmol/app/jmolpanel/jmolproperties/Jmol-resources.properties";
       generalResourceBundle =
         new PropertyResourceBundle(getClass().getResourceAsStream(t));
     } catch (IOException ex) {
@@ -121,12 +122,15 @@ class JmolResourceHandler {
 
   private synchronized String getString(String key) {
 
+    // BH 2019.07.10 avoid all trapped Exceptions
     String result = null;
+    if (stringsResourceBundle != null && stringsResourceBundle.containsKey(key))
     try {
       result = stringsResourceBundle.getString(key);
     } catch (MissingResourceException e) {
     }
     if (result == null) {
+      if (generalResourceBundle.containsKey(key))
       try {
         result = generalResourceBundle.getString(key);
       } catch (MissingResourceException e) {

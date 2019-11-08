@@ -14,6 +14,7 @@ import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
@@ -135,7 +136,7 @@ abstract class OutputManager {
     boolean releaseImage = (objImage == null);
     Object image = (type.equals("BINARY") || type.equals("ZIPDATA") ? ""
         : rgbbuf != null ? rgbbuf : objImage != null ? objImage : vwr
-            .getScreenImageBuffer(null, true));
+            .getScreenImageBuffer());
     boolean isOK = false;
     try {
       if (image == null)
@@ -378,14 +379,16 @@ abstract class OutputManager {
     if (!vwr.haveAccess(ACCESS.ALL))
       return null;
     boolean isCache = (fileName != null && fileName.startsWith("cache://"));
-    if (fileName != null && !isCache) {
+    boolean isRemote = (fileName != null && 
+        (fileName.startsWith("http://") || fileName.startsWith("https://")));
+    if (fileName != null && !isCache && !isRemote) {
       fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
       if (fileName == null)
         return null;
     }
     if (fullPath != null)
       fullPath[0] = fileName;
-    String localName = (OC.isLocal(fileName) || isCache ? fileName : null);
+    String localName = (isCache || isRemote || OC.isLocal(fileName) ? fileName : null);
     try {
       return openOutputChannel(privateKey, localName, false, false);
     } catch (IOException e) {
@@ -616,7 +619,7 @@ abstract class OutputManager {
     boolean useDialog = fileName.startsWith("?");
     if (useDialog)
     	fileName = fileName.substring(1);
-    useDialog |= vwr.isApplet && (fileName.indexOf("http:") < 0);
+    useDialog |= (vwr.isApplet && fileName.indexOf("http:") != 0 && fileName.indexOf("https:") != 0);
     fileName = FileManager.getLocalPathForWritingFile(vwr, fileName);
     if (useDialog)
       fileName = vwr.dialogAsk(quality == Integer.MIN_VALUE ? "Save"
@@ -657,10 +660,11 @@ abstract class OutputManager {
     int saveWidth = 0, saveHeight = 0;
     int quality = getInt(params, "quality", Integer.MIN_VALUE);
     String captureMode = (String) params.get("captureMode");
+    boolean is2D = params.get("is2D") == Boolean.TRUE;
     String localName = null;
     if (captureMode != null && !vwr.allowCapture())
       return "ERROR: Cannot capture on this platform.";
-    boolean mustRender = (quality != Integer.MIN_VALUE);
+    boolean mustRender = (!is2D && quality != Integer.MIN_VALUE);
     // localName will be fileName only if we are able to write to disk.
     if (captureMode != null) {
       doCheck = false; // will be checked later
@@ -675,7 +679,6 @@ abstract class OutputManager {
       if (fileName == null)
         return null;
       params.put("fileName", fileName);
-
       // JSmol/HTML5 WILL produce a localName now
       if (OC.isLocal(fileName))
         localName = fileName;
@@ -712,8 +715,8 @@ abstract class OutputManager {
           if (captureMode != null) {
             out = null;
             Map<String, Object> cparams = vwr.captureParams;
-            int imode = "ad on of en ca mo ".indexOf(captureMode
-                .substring(0, 2));
+            int imode = "ad on of en ca mo "
+                .indexOf(captureMode.substring(0, 2));
             //           0  3  6  9  12 15
             String[] rootExt;
             if (imode == 15) {// movie -- start up
@@ -765,7 +768,8 @@ abstract class OutputManager {
                   } else {
                     int count = getInt(params, "captureCount", 0);
                     params.put("captureCount", Integer.valueOf(++count));
-                    if ((rootExt = (String[]) params.get("captureRootExt")) != null) {
+                    if ((rootExt = (String[]) params
+                        .get("captureRootExt")) != null) {
                       localName = (String) getRootExt(null, rootExt, count);
                       captureMsg = null;
                       createImage = true;
@@ -782,10 +786,9 @@ abstract class OutputManager {
                 case 3: //on:
                 case 6: //off:
                   params = cparams;
-                  params
-                      .put("captureEnabled",
-                          (captureMode.equals("on") ? Boolean.TRUE
-                              : Boolean.FALSE));
+                  params.put("captureEnabled",
+                      (captureMode.equals("on") ? Boolean.TRUE
+                          : Boolean.FALSE));
                   sret = type + "_STREAM_"
                       + (captureMode.equals("on") ? "ON" : "OFF");
                   params.put("captureMode", "add");
@@ -800,8 +803,7 @@ abstract class OutputManager {
                       + fileName;
                   vwr.captureParams = null;
                   params.put("captureMsg",
-                      GT.$("Capture")
-                          + ": "
+                      GT.$("Capture") + ": "
                           + (captureMode.equals("cancel") ? GT.$("canceled")
                               : GT.o(GT.$("{0} saved"), fileName)));
                   if (params.containsKey("captureRootExt"))
@@ -818,26 +820,29 @@ abstract class OutputManager {
               params.put("fileName", localName);
             if (sret == null)
               sret = writeToOutputChannel(params);
-            vwr.sm.createImage(sret, type, null, null, quality);
-            if (captureMode != null) {
-              if (captureMsg == null)
-                captureMsg = sret;
-              else
-                captureMsg += " ("
-                    + params
-                        .get(params.containsKey("captureByteCount") ? "captureByteCount"
-                            : "byteCount") + " bytes)";
+            if (!is2D) {
+              vwr.sm.createImage(sret, type, null, null, quality);
+              if (captureMode != null) {
+                if (captureMsg == null)
+                  captureMsg = sret;
+                else
+                  captureMsg += " ("
+                      + params.get(params.containsKey("captureByteCount")
+                          ? "captureByteCount"
+                          : "byteCount")
+                      + " bytes)";
+              }
+            if (captureMsg != null) {
+              vwr.showString(captureMsg, false);
             }
-          }
-          if (captureMsg != null) {
-            vwr.showString(captureMsg, false);
+            }
           }
         }
       }
     } catch (Throwable er) {
       er.printStackTrace();
-      Logger.error(vwr.setErrorMessage(sret = "ERROR creating image??: " + er,
-          null));
+      Logger.error(
+          vwr.setErrorMessage(sret = "ERROR creating image??: " + er, null));
     } finally {
       vwr.creatingImage = false;
       if (quality != Integer.MIN_VALUE && saveWidth > 0)
@@ -935,7 +940,7 @@ abstract class OutputManager {
     Lst<String> newFileNames = new Lst<String>();
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name = fileNames.get(iFile);
-      boolean isLocal = !vwr.isJS && OC.isLocal(name);
+      boolean isLocal = !Viewer.isJS && OC.isLocal(name);
       String newName = name;
       // also check that somehow we don't have a local file with the same name as
       // a fixed remote file name (because someone extracted the files and then used them)
@@ -1009,7 +1014,7 @@ abstract class OutputManager {
                                  Hashtable<Object, String> crcMap,
                                  boolean isSparDir, String newName, int ptSlash,
                                  Lst<Object> v) {
-     Integer crcValue = Integer.valueOf(vwr.getJzt().getCrcValue(ret));
+     Integer crcValue = Integer.valueOf(ZipTools.getCrcValue(ret));
      // only add to the data list v when the data in the file is new
      if (crcMap.containsKey(crcValue)) {
        // let newName point to the already added data
@@ -1074,7 +1079,7 @@ abstract class OutputManager {
         bos = new BufferedOutputStream(out);
       }
       FileManager fm = vwr.fm;
-      OutputStream zos = (OutputStream) vwr.getJzt().getZipOutputStream(bos);
+      OutputStream zos = (OutputStream) ZipTools.getZipOutputStream(bos);
       for (int i = 0; i < fileNamesAndByteArrays.size(); i += 3) {
         String fname = (String) fileNamesAndByteArrays.get(i);
         byte[] bytes = null;
@@ -1101,7 +1106,7 @@ abstract class OutputManager {
           continue;
         }
         fileList += key;
-        vwr.getJzt().addZipEntry(zos, fnameShort);
+        ZipTools.addZipEntry(zos, fnameShort);
         int nOut = 0;
         if (bytes == null) {
           // get data from disk
@@ -1120,7 +1125,7 @@ abstract class OutputManager {
           nOut += bytes.length;
         }
         nBytesOut += nOut;
-        vwr.getJzt().closeZipEntry(zos);
+        ZipTools.closeZipEntry(zos);
         Logger.info("...added " + fname + " (" + nOut + " bytes)");
       }
       zos.flush();

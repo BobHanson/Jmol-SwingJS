@@ -170,7 +170,8 @@ public class ModelSet extends BondCollection {
   public ShapeManager sm;
 
   private static float hbondMinRasmol = 2.5f;
-  private static float hbondMaxReal = 3.5f;
+  private static float hbondMaxReal = 2.5f;
+
   public boolean proteinStructureTainted;
 
   public Hashtable<String, BS> htPeaks;
@@ -1316,9 +1317,9 @@ public class ModelSet extends BondCollection {
   }
 
   public P3 getAverageAtomPoint() {
-    if (averageAtomPoint == null)
-      averageAtomPoint = getAtomSetCenter(vwr.getAllAtoms());
-    return averageAtomPoint;
+//    if (averageAtomPoint == null)
+//      averageAtomPoint = getAtomSetCenter(vwr.getAllAtoms());
+    return getAtomSetCenter(vwr.bsA());//averageAtomPoint;
   }
 
   protected void setAPm(BS bs, int tok, int iValue, float fValue,
@@ -2701,8 +2702,8 @@ public class ModelSet extends BondCollection {
   public int autoHbond(BS bsA, BS bsB, boolean onlyIfHaveCalculated) {
     if (onlyIfHaveCalculated) {
       BS bsModels = getModelBS(bsA, false);
-      for (int i = bsModels.nextSetBit(0); i >= 0 && onlyIfHaveCalculated; i = bsModels
-          .nextSetBit(i + 1))
+      for (int i = bsModels.nextSetBit(0); i >= 0
+          && onlyIfHaveCalculated; i = bsModels.nextSetBit(i + 1))
         onlyIfHaveCalculated = !am[i].hasRasmolHBonds;
       if (onlyIfHaveCalculated)
         return 0;
@@ -2741,14 +2742,20 @@ public class ModelSet extends BondCollection {
         }
       }
     }
-    float maxXYDistance = vwr.getFloat(T.hbondsdistancemaximum);
+    float dmax = vwr.getFloat(T.hbondsdistancemaximum);
+    float min2;
+    if (haveHAtoms) {
+      // ...set the max to be no greater than 2.5 Angstroms
+      if (dmax > hbondMaxReal)
+        dmax = hbondMaxReal;
+      min2 = 1f;
+    } else {
+      // default 3.25 for pseudo; user can make longer or shorter
+      min2 = hbondMinRasmol * hbondMinRasmol;
+    }
+    float max2 = dmax * dmax; // hxbondMax * hxbondMax
     float minAttachedAngle = (float) (vwr.getFloat(T.hbondsangleminimum)
         * Math.PI / 180);
-    float hbondMax2 = maxXYDistance * maxXYDistance;
-    float hbondMin2 = hbondMinRasmol * hbondMinRasmol;
-    float hxbondMin2 = 1;
-    float hxbondMax2 = (maxXYDistance > hbondMaxReal ? hbondMaxReal * hbondMaxReal : hbondMax2);
-    float hxbondMax = (maxXYDistance > hbondMaxReal ? hbondMaxReal : maxXYDistance);
     int nNew = 0;
     float d2 = 0;
     V3 v1 = new V3();
@@ -2759,46 +2766,44 @@ public class ModelSet extends BondCollection {
     P3 D = null;
     AtomIndexIterator iter = getSelectedAtomIterator(bsB, false, false, false,
         false);
-
     for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
       Atom atom = at[i];
       int elementNumber = atom.getElementNumber();
       boolean isH = (elementNumber == 1);
-      if (!isH && (haveHAtoms || elementNumber != 7 && elementNumber != 8)
-          || isH && !haveHAtoms)
+      // If this is an H atom, then skip if we don't have H atoms in set A
+      // If this is NOT an H atom, then skip if we have hydrogen atoms or this is not N or O
+      if (isH ? !haveHAtoms
+          : haveHAtoms || elementNumber != 7 && elementNumber != 8)
         continue;
-      float min2, max2, dmax;
+
       boolean firstIsCO;
       if (isH) {
+        firstIsCO = false;
         Bond[] b = atom.bonds;
         if (b == null)
           continue;
+        // must have OH or NH
         boolean isOK = false;
-        for (int j = 0; j < b.length && !isOK; j++) {
+        for (int j = 0; !isOK && j < b.length; j++) {
           Atom a2 = b[j].getOtherAtom(atom);
           int element = a2.getElementNumber();
           isOK = (element == 7 || element == 8);
         }
         if (!isOK)
           continue;
-        dmax = hxbondMax;
-        min2 = hxbondMin2;
-        max2 = hxbondMax2;
-        firstIsCO = false;
       } else {
-        dmax = maxXYDistance;
-        min2 = hbondMin2;
-        max2 = hbondMax2;
+        // check if the first atom is C=O
         firstIsCO = bsCO.get(i);
       }
       setIteratorForAtom(iter, -1, atom.i, dmax, null);
       while (iter.hasNext()) {
         Atom atomNear = at[iter.next()];
         int elementNumberNear = atomNear.getElementNumber();
-        if (atomNear == atom || !isH && elementNumberNear != 7
-            && elementNumberNear != 8 || isH && elementNumberNear == 1
-            || (d2 = iter.foundDistance2()) < min2 || d2 > max2 || firstIsCO
-            && bsCO.get(atomNear.i) || atom.isBonded(atomNear)) {
+        if (atomNear == atom
+            || (isH ? elementNumberNear == 1 : elementNumberNear != 7 && elementNumberNear != 8)
+            || (d2 = iter.foundDistance2()) < min2 || d2 > max2
+            || firstIsCO && bsCO.get(atomNear.i) 
+            || atom.isBonded(atomNear)) {
           continue;
         }
         if (minAttachedAngle > 0) {
@@ -2814,16 +2819,6 @@ public class ModelSet extends BondCollection {
         float energy = 0;
         short bo;
         if (isH && !Float.isNaN(C.x) && !Float.isNaN(D.x)) {
-          /*
-           * A crude calculation based on simple distances. In the NH -- O=C
-           * case this reads DH -- A=C
-           * 
-           * (+) H .......... A (-) | | | | (-) D C (+)
-           * 
-           * 
-           * E = Q/rAH - Q/rAD + Q/rCD - Q/rCH
-           */
-
           bo = Edge.BOND_H_CALC;
           energy = HBond.getEnergy((float) Math.sqrt(d2), C.distance(atom),
               C.distance(D), atomNear.distance(D)) / 1000f;
@@ -2966,88 +2961,8 @@ public class ModelSet extends BondCollection {
     mc = newModelCount;
   }
 
-  public void assignAtom(int atomIndex, String type, boolean autoBond) {
-    clearDB(atomIndex);
-    if (type == null)
-      type = "C";
-
-    // not as simple as just defining an atom.
-    // if we click on an H, and C is being defined,
-    // this sprouts an sp3-carbon at that position.
-
-    Atom atom = at[atomIndex];
-    BS bs = new BS();
-    boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = Elements.elementNumberFromSymbol(type, true);
-
-    // 1) change the element type or charge
-
-    boolean isDelete = false;
-    if (atomicNumber > 0) {
-      setElement(atom, atomicNumber, false);
-      vwr.shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, vwr.rd,
-          BSUtil.newAndSetBit(atomIndex));
-      setAtomName(atomIndex, type + atom.getAtomNumber(), false);
-      if (vwr.getBoolean(T.modelkitmode))
-        am[atom.mi].isModelKit = true;
-      if (!am[atom.mi].isModelKit)
-        taintAtom(atomIndex, TAINT_ATOMNAME);
-    } else if (type.equals("Pl")) {
-      atom.setFormalCharge(atom.getFormalCharge() + 1);
-    } else if (type.equals("Mi")) {
-      atom.setFormalCharge(atom.getFormalCharge() - 1);
-    } else if (type.equals("X")) {
-      isDelete = true;
-    } else if (!type.equals(".")) {
-      return; // uninterpretable
-    }
-
-    // 2) delete noncovalent bonds and attached hydrogens for that atom.
-
-    removeUnnecessaryBonds(atom, isDelete);
-
-    // 3) adjust distance from previous atom.
-
-    float dx = 0;
-    if (atom.getCovalentBondCount() == 1)
-      if (wasH) {
-        dx = 1.50f;
-      } else if (!wasH && atomicNumber == 1) {
-        dx = 1.0f;
-      }
-    if (dx != 0) {
-      V3 v = V3.newVsub(atom, at[atom.getBondedAtomIndex(0)]);
-      float d = v.length();
-      v.normalize();
-      v.scale(dx - d);
-      setAtomCoordRelative(atomIndex, v.x, v.y, v.z);
-    }
-
-    BS bsA = BSUtil.newAndSetBit(atomIndex);
-
-    if (atomicNumber != 1 && autoBond) {
-
-      // 4) clear out all atoms within 1.0 angstrom
-      validateBspf(false);
-      bs = getAtomsWithinRadius(1.0f, bsA, false, null);
-      bs.andNot(bsA);
-      if (bs.nextSetBit(0) >= 0)
-        vwr.deleteAtoms(bs, false);
-
-      // 5) attach nearby non-hydrogen atoms (rings)
-
-      bs = vwr.getModelUndeletedAtomsBitSet(atom.mi);
-      bs.andNot(getAtomBitsMDa(T.hydrogen, null, new BS()));
-      makeConnections2(0.1f, 1.8f, 1, T.create, bsA, bs, null, false, false, 0);
-
-      // 6) add hydrogen atoms
-
-    }
-    vwr.addHydrogens(bsA, false, true);
-  }
-
   public void deleteAtoms(BS bs) {
-    averageAtomPoint = null;
+    //averageAtomPoint = null;
     if (bs == null)
       return;
     BS bsBonds = new BS();
@@ -3225,7 +3140,14 @@ public class ModelSet extends BondCollection {
     return i >= 0 && am[at[i].mi].isBioModel;
   }
 
-  public boolean isAtomAssignable(int i) {
+  /**
+   * Ensure the atom index is >= 0 and that the
+   * atom's model is the last model.
+   * 
+   * @param i
+   * @return true if that is the case
+   */
+  public boolean isAtomInLastModel(int i) {
     return i >= 0 && at[i].mi == mc - 1;
   }
 
@@ -3672,7 +3594,7 @@ public class ModelSet extends BondCollection {
         }
       }
     }
-    averageAtomPoint = null;
+    //averageAtomPoint = null;
     /* but we would need to somehow indicate this in the state
     if (ellipsoids != null)
       for (int i = bs.nextSetBit(0); i >= 0 && i < ellipsoids.length; i = bs.nextSetBit(i + 1))
@@ -4161,5 +4083,6 @@ public class ModelSet extends BondCollection {
       s += at[i].getCIPChirality(false);
     return s;
   }
+
 }
 

@@ -3,7 +3,9 @@
 	<classpathentry excluding="org/jmol/jcamp/" kind="src" path="src"/>
 	<classpathentry excluding="CDKIntegration.java|CDKIntegrationPDB.java" kind="src" path="examples/basic"/>
 	<classpathentry kind="src" path="examples/externalAppletControls"/>
-	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="test"/><classpathentry kind="src"
+		path="src2">
+</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="jars/netscape.jar"/>
 	<classpathentry kind="lib" path="jars/junit.jar"/>

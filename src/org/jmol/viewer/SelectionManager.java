@@ -339,7 +339,7 @@ public class SelectionManager {
       bsFixed.or(bs);
   }
 
-  BS getMotionFixedAtoms() {
+  public BS getMotionFixedAtoms() {
     return bsFixed;
   }
 

@@ -47,6 +47,7 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
@@ -78,6 +79,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -170,6 +172,7 @@ public class MathExt {
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
     case T.__:
+    case T.pivot:
     case T.select:
     case T.getproperty:
       return evaluateGetProperty(mp, args, tok, op.tok == T.propselector);
@@ -209,6 +212,8 @@ public class MathExt {
     case T.sort:
     case T.count:
       return evaluateSort(mp, args, tok);
+    case T.spacegroup:
+      return evaluateSpacegroup(mp, args);
     case T.symop:
       return evaluateSymop(mp, args, op.tok == T.propselector);
       //    case Token.volume:
@@ -221,6 +226,30 @@ public class MathExt {
       return evaluateWrite(mp, args);
     }
     return false;
+  }
+
+  private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {
+    // spacegroup();
+    // spacegroup(3);
+    // spacegroup("x,y,z,-x,-y,-z");
+    // spacegroup("x,y,z,-x,-y,-z", [unitcellParams]);
+
+    float[] unitCell = null;
+    switch (args.length) {
+    case 0:
+      return mp.addXObj(
+          vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, vwr.am.cmi, true, null));
+    case 2:
+      unitCell = SV.flistValue(args[1], 0);
+      if (unitCell.length < 6)
+        unitCell = null;
+      //$FALL-THROUGH$
+    case 1:
+      return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
+          "" + args[0].asString(), Integer.MIN_VALUE, true, unitCell));
+    default:
+      return false;
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -306,7 +335,8 @@ public class MathExt {
   }
 
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args,
-                                   boolean isSelector) throws ScriptException {
+                                   boolean isSelector)
+      throws ScriptException {
     // optional last parameter: scale
     // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
     // unitcell(uc)
@@ -357,8 +387,10 @@ public class MathExt {
     if (ucnew == null && !haveUC && tok0 != T.point3f) {
       // unitcell() or {1.1}.unitcell
       u = (iatom < 0 ? null : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
-      ucnew = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
-          P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
+      ucnew = (u == null
+          ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0), P3.new3(0, 1, 0),
+              P3.new3(0, 0, 1) }
+          : u.getUnitCellVectors());
     }
     if (ucnew == null) {
       ucnew = new P3[4];
@@ -410,17 +442,20 @@ public class MathExt {
     String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
     boolean toPrimitive = "primitive".equalsIgnoreCase(op);
     if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
-      String stype = (++ptParam > lastParam ? "" : args[ptParam].asString()
-          .toUpperCase());
+      String stype = (++ptParam > lastParam ? ""
+          : args[ptParam].asString().toUpperCase());
       if (stype.equals("BCC"))
         stype = "I";
       else if (stype.length() == 0)
-        stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom,
-            null, 0, null, null, null, T.lattice, 0, -1);
-      if (stype == null
-          || stype.length() == 0
-          || !(u == null ? vwr.getSymTemp() : u).toFromPrimitive(toPrimitive,
-              stype.charAt(0), ucnew))
+        stype = (String) vwr.getSymmetryInfo(iatom, null, 0, null, null,
+            T.lattice, null, 0, -1, 0);
+      if (stype == null || stype.length() == 0)
+        return false;
+      if (u == null)
+        u = vwr.getSymTemp();
+      M3 m3 = (M3) vwr.getModelForAtomIndex(iatom).auxiliaryInfo
+          .get("primitiveToCrystal");
+      if (!u.toFromPrimitive(toPrimitive, stype.charAt(0), ucnew, m3))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
@@ -1695,23 +1730,26 @@ public class MathExt {
   private boolean evaluateGetProperty(ScriptMathProcessor mp, SV[] args,
                                       int tok0, boolean isAtomProperty)
       throws ScriptException {
+    int nargs = args.length;
     boolean isSelect = (isAtomProperty && tok0 == T.select);
+    boolean isPivot = (isAtomProperty && tok0 == T.pivot && nargs > 0);
     boolean isAuxiliary = (tok0 == T.__);
     int pt = 0;
-    int tok = (args.length == 0 ? T.nada : args[0].tok);
-    if (args.length == 2
-        && (tok == T.varray || tok == T.hash || tok == T.context)) {
-      return mp.addXObj(vwr.extractProperty(args[0].value,
-          args[1].value.toString(), -1));
+    int tok = (nargs == 0 ? T.nada : args[0].tok);
+    if (nargs == 2 && (tok == T.varray || tok == T.hash || tok == T.context)) {
+      return mp.addXObj(
+          vwr.extractProperty(args[0].value, args[1].value.toString(), -1));
     }
-    BS bsSelect = (isAtomProperty && args.length == 1 && args[0].tok == T.bitset ? (BS) args[0].value : null);
-    String pname = (bsSelect == null && args.length > 0 ? SV.sValue(args[pt++]) : "");
+    BS bsSelect = (isAtomProperty && nargs == 1 && args[0].tok == T.bitset
+        ? (BS) args[0].value
+        : null);
+    String pname = (bsSelect == null && nargs > 0 ? SV.sValue(args[pt++]) : "");
     String propertyName = pname;
     String lc = propertyName.toLowerCase();
     if (!isSelect && lc.indexOf("[select ") < 0)
       propertyName = lc;
     boolean isJSON = false;
-    if (propertyName.equals("json") && args.length > pt) {
+    if (propertyName.equals("json") && nargs > pt) {
       isJSON = true;
       propertyName = SV.sValue(args[pt++]);
     }
@@ -1734,8 +1772,8 @@ public class MathExt {
             vwr.shm.getShapePropertyData(shapeID, "index", data);
             if (data[1] != null && !pname.equals("index")) {
               int index = ((Integer) data[1]).intValue();
-                data[1] = vwr.shm.getShapePropertyIndex(shapeID,
-                    pname.intern(), index);
+              data[1] = vwr.shm.getShapePropertyIndex(shapeID, pname.intern(),
+                  index);
             }
           }
         } else {
@@ -1749,10 +1787,38 @@ public class MathExt {
         }
         return (data[1] == null ? mp.addXStr("") : mp.addXObj(data[1]));
       case T.varray:
+        if (isPivot) {
+          Lst<SV> lstx = x.getList();
+          // array of hash pivot("key")
+          Map<String, SV> map = new Hashtable<String, SV>();
+          String sep = (nargs > 1 ? SV.sValue(args[nargs - 1]) : null);
+          if (sep != null)
+            nargs--;
+          String[] keys = new String[nargs];
+          for (int i = 0; i < nargs; i++)
+            keys[i] = SV.sValue(args[i]);
+          for (int i = 0, n = lstx.size(); i < n; i++) {
+            SV sv = lstx.get(i);
+            if (sv.tok != T.hash)
+              continue;
+            Map<String, SV> mapi = sv.getMap();
+            String key = "";
+            for (int j = 0; j < nargs; j++) {
+              SV obj = mapi.get(keys[j]);
+              key += (j == 0 ? "" : sep) + SV.sValue(obj);
+            }
+            SV vlist = map.get(key);
+            if (vlist == null)
+              map.put(key, vlist = SV.newV(T.varray, new Lst<SV>()));
+            vlist.getList().addLast(sv);
+          }
+          return mp.addXMap(map);
+        }
         if (bsSelect != null) {
           Lst<SV> l0 = x.getList();
           Lst<SV> lst = new Lst<SV>();
-          for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect.nextSetBit(i + 1))
+          for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect
+              .nextSetBit(i + 1))
             lst.addLast(l0.get(i));
           return mp.addXList(lst);
         }
@@ -1762,25 +1828,24 @@ public class MathExt {
           propertyName = "[SELECT " + propertyName + "]";
         return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
       }
-      if (!lc.startsWith("bondinfo")
-          && !lc.startsWith("atominfo"))
+      if (!lc.startsWith("bondinfo") && !lc.startsWith("atominfo")
+          && !lc.startsWith("modelkitinfo"))
         propertyName = "atomInfo." + propertyName;
     }
     Object propertyValue = "";
-    if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
+    if (propertyName.equalsIgnoreCase("fileContents") && nargs >= 2) {
       String s = SV.sValue(args[1]);
-      for (int i = 2; i < args.length; i++)
+      for (int i = 2; i < nargs; i++)
         s += "|" + SV.sValue(args[i]);
       propertyValue = s;
-      pt = args.length;
-    } else if (args.length > pt) {
+      pt = nargs;
+    } else if (nargs > pt) {
       switch (args[pt].tok) {
       case T.bitset:
         propertyValue = args[pt++].value;
-        if (propertyName.equalsIgnoreCase("bondInfo") && args.length > pt
+        if (propertyName.equalsIgnoreCase("bondInfo") && nargs > pt
             && args[pt].tok == T.bitset)
-          propertyValue = new BS[] { (BS) propertyValue,
-              (BS) args[pt].value };
+          propertyValue = new BS[] { (BS) propertyValue, (BS) args[pt].value };
         break;
       case T.hash:
       case T.string:
@@ -1800,11 +1865,11 @@ public class MathExt {
       propertyName = "auxiliaryInfo.models." + propertyName;
     propertyName = PT.rep(propertyName, ".[", "[");
     Object property = vwr.getProperty(null, propertyName, propertyValue);
-    if (pt < args.length)
+    if (pt < nargs)
       property = vwr.extractProperty(property, args, pt);
-    return mp.addXObj(isJSON ? SV.safeJSON("value", property) : SV
-        .isVariableType(property) ? property : Escape.toReadable(propertyName,
-        property));
+    return mp.addXObj(isJSON ? SV.safeJSON("value", property)
+        : SV.isVariableType(property) ? property
+            : Escape.toReadable(propertyName, property));
   }
 
   private boolean evaluateFormat(ScriptMathProcessor mp, int intValue,
@@ -2176,7 +2241,7 @@ public class MathExt {
     if (asBytes)
       return mp.addXMap(vwr.fm.getFileAsMap(file, null));
     boolean isQues = file.startsWith("?");
-    if (vwr.isJS && (isQues || async)) {
+    if (Viewer.isJS && (isQues || async)) {
       if (isFile && isQues)
         return mp.addXStr("");
       file = e.loadFileAsync("load()_", file, mp.oPt, true);
@@ -2388,7 +2453,7 @@ public class MathExt {
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
     if (tok == T.hkl && args.length != 3 || tok == T.intersection
-        && args.length != 2 && args.length != 3 || args.length == 0
+        && args.length != 2 && args.length != 3 && args.length != 4 || args.length == 0
         || args.length > 4)
       return false;
     P3 pt1, pt2, pt3;
@@ -2462,11 +2527,34 @@ public class MathExt {
         pt3 = mp.ptValue(args[2], null);
         if (pt3 == null)
           return mp.addXStr("");
+        // intersection(ptLine, vLine, ptCenter, radius)
         // intersection(ptLine, vLine, pt2); 
         // IE intersection of plane perp to line through pt2
         V3 v = new V3();
+        pt3 = P3.newP(pt3);
+        if (args.length == 3) {
+          // intersection(ptLine, vLine, pt2); 
+          // IE intersection of plane perp to line through pt2
         Measure.projectOntoAxis(pt3, pt1, vLine, v);
         return mp.addXPt(pt3);
+      }
+        // intersection(ptLine, vLine, ptCenter, radius)
+        // IE intersection of a line with a sphere -- return list of 0, 1, or 2 points
+        float r = SV.fValue(args[3]);
+        P3 ptCenter = P3.newP(pt3);
+        Measure.projectOntoAxis(pt3, pt1, vLine, v);
+        float d = ptCenter.distance(pt3);
+        Lst<P3> l = new Lst<P3>();
+        if (d == r) {
+          l.addLast(pt3);
+        } else if (d < r) {
+          d = (float) Math.sqrt(r * r - d * d);
+          v.scaleAdd2(d, vLine, pt3);
+          l.addLast(P3.newP(v));
+          v.scaleAdd2(-d, vLine, pt3);
+          l.addLast(P3.newP(v));
+        }
+        return mp.addXList(l);
       }
       switch (args[0].tok) {
       case T.integer:
@@ -3162,7 +3250,7 @@ public class MathExt {
       if (bsAtoms.isEmpty())
         return false;
       String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
-          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false)
+          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)
@@ -3199,8 +3287,8 @@ public class MathExt {
     if ((pt2 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
     int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
-        && args[apt].tok == T.integer ? args[apt].intValue : 0);
-    if (nth > 0)
+        && args[apt].tok == T.integer ? args[apt].intValue : -1);
+    if (nth >= 0) // 0 here means "give me all of them"
       apt++;
     if (iOp == Integer.MIN_VALUE)
       iOp = 0;
@@ -3208,8 +3296,7 @@ public class MathExt {
         : "matrix") : SV.sValue(args[apt++]).toLowerCase());
 
     return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length && mp
-        .addXObj(vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-            bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, desc, 0, 0, nth)));
+        .addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, 0, desc, 0, nth, 0)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)
@@ -3218,17 +3305,23 @@ public class MathExt {
     // {*}.tensor("isc")            // only within this atom set
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
-    SV x = mp.getX();
-    if (args.length > 2 || x.tok != T.bitset)
+    //     tensor(t,what)
+    System.out.println(args[1].tok + " " + T.tensor);
+    boolean isTensor = (args.length == 2 && args[1].tok == T.tensor); 
+    SV x = (isTensor ? null : mp.getX());
+    if (args.length > 2 || !isTensor && x.tok != T.bitset)
       return false;
     BS bs = (BS) x.value;
-    String tensorType = (args.length == 0 ? null : SV.sValue(args[0])
+    String tensorType = (isTensor || args.length == 0 ? null : SV.sValue(args[0])
         .toLowerCase());
     JmolNMRInterface calc = vwr.getNMRCalculation();
     if ("unique".equals(tensorType))
       return mp.addXBs(calc.getUniqueTensorSet(bs));
     String infoType = (args.length < 2 ? null : SV.sValue(args[1])
         .toLowerCase());
+    if (isTensor) {
+      return mp.addXObj(((Tensor) args[0].value).getInfo(infoType));
+    }
     return mp.addXList(calc.getTensorInfo(tensorType, infoType, bs));
   }
 
@@ -3529,7 +3622,7 @@ public class MathExt {
         vwr.createZip(null, type, params);
         BufferedInputStream bis = Rdr.getBIS(oc.toByteArray());
         params = new Hashtable<String, Object>();
-        vwr.getJzt().readFileAsMap(bis, params, null);
+        ZipTools.readFileAsMap(bis, params, null);
         return mp.addXMap(params);
       }
       break;

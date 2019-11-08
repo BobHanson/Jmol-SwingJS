@@ -33,8 +33,8 @@ import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 
-import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;

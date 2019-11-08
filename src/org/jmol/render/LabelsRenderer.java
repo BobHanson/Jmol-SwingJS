@@ -166,6 +166,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         text.getPymolScreenOffset(atomPt, screen, zSlab, pTemp, sppm);
       }
     } else {
+      // Labels only, not measurements
       boolean isLeft = (textAlign == JC.TEXT_ALIGN_LEFT || textAlign == JC.TEXT_ALIGN_NONE);
       if (fid != fidPrevious || ascent == 0) {
         vwr.gdata.setFontFid(fid);

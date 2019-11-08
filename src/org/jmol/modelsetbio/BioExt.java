@@ -1037,7 +1037,6 @@ public class BioExt {
         vwr.eval.runScript(script);
       } catch (Exception e) {
         // serious Jmol bug here!
-        if (!vwr.isJS)
           e.printStackTrace();
         System.out.println(e);
       }

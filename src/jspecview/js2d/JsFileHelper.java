@@ -59,7 +59,7 @@ public class JsFileHelper implements JSVFileHelper {
 		/**
 		 * @j2sNative
 		 * 
-		 * 	Jmol._loadFileAsynchronously(this, applet, "?", userData);
+		 * 	Jmol.loadFileAsynchronously(this, applet, "?", userData);
 		 * 
 		 */
 		{

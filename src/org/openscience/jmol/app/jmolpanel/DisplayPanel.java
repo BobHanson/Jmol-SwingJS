@@ -27,7 +27,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
@@ -44,10 +43,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.jmol.viewer.Viewer;
 import org.jmol.awt.JmolFrame;
 import org.jmol.i18n.GT;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
+import org.jmol.viewer.Viewer;
 
 public class DisplayPanel extends JPanel
   implements JmolFrame, ComponentListener, Printable {
@@ -57,9 +55,9 @@ public class DisplayPanel extends JPanel
     
   private String displaySpeed;
 
-  private Dimension startupDimension;
+  private Dimension startupDim;
   boolean haveDisplay;
-  Point border;
+  //Point border;
   boolean haveBorder;
   MeasurementTable measurementTable;
   JmolPanel jmolPanel;
@@ -75,9 +73,14 @@ public class DisplayPanel extends JPanel
     jmolPanel = jmol;
     frame = jmol.frame;
     status = jmol.status;
-    border = jmol.jmolApp.border;
+//    border = jmol.jmolApp.border;
     haveDisplay = jmol.jmolApp.haveDisplay;
-    startupDimension = new Dimension(jmol.startupWidth, jmol.startupHeight);
+    startupDim = new Dimension(jmol.startupWidth, jmol.startupHeight);
+    status.setPreferredSize(new Dimension(jmol.startupWidth, 30));
+
+    setMinimumSize(startupDim);
+    setPreferredSize(startupDim);
+    setMaximumSize(startupDim);
     setFocusable(true);
     if (System.getProperty("painttime", "false").equals("true"))
       showPaintTime = true;
@@ -139,7 +142,6 @@ public class DisplayPanel extends JPanel
 
   @Override
   public void componentResized(java.awt.event.ComponentEvent e) {
-    //System.out.println("DisplayPanel.componentResized");
     updateSize(true);
   }
 
@@ -152,20 +154,23 @@ public class DisplayPanel extends JPanel
   private void updateSize(boolean doAll) {
     if (haveDisplay) {
       getSize(dimSize);
+      if (dimSize.width == 0)
+        return;
       vwr.setScreenDimension(dimSize.width, dimSize.height);
     } else {
-      vwr.setScreenDimension(startupDimension.width, startupDimension.height);
+      vwr.setScreenDimension(startupDim.width, startupDim.height);
     }
     if (!doAll)
       return;
     setRotateMode();
     if (haveDisplay)
-      status.setStatus(2, dimSize.width + " x " + dimSize.height);
-    vwr.refresh(Viewer.REFRESH_SYNC_MASK, "updateSize");
+      status.setStatus(StatusBar.STATUS_TEXT, dimSize.width + " x " + dimSize.height);
+ // no need for this -- Swing will handle it (and probably already has!)   vwr.refresh(Viewer.REFRESH_SYNC_MASK, "updateSize");
   }
 
   @Override
   public void paint(Graphics g) {
+    updateSize(false); // important for JavaScript, as the update comes too late. 
     if (showPaintTime)
       startPaintClock();
     if (dimSize.width == 0)
@@ -173,21 +178,21 @@ public class DisplayPanel extends JPanel
     //System.out.println("DisplayPanel:paint");System.out.flush();
 
     vwr.renderScreenImage(g, dimSize.width, dimSize.height);
-    if (border == null)
-      border = new Point();
-    if (!haveBorder)
-      setBorder();
+//    if (border == null)
+//      border = new Point();
+//    if (!haveBorder)
+//      setBorder();
     if (showPaintTime)
       stopPaintClock();
   }
    
-  void setBorder() {
-    if (dimSize.width < 50)
-      return;
-    border.x = startupDimension.width - dimSize.width;
-    border.y = startupDimension.height - dimSize.height;
-    haveBorder = true;    
-  }
+//  void setBorder() {
+//    if (dimSize.width < 50)
+//      return;
+//    border.x = startupDimension.width - dimSize.width;
+//    border.y = startupDimension.height - dimSize.height;
+//    haveBorder = true;    
+//  }
   
   @Override
   public int print(Graphics g, PageFormat pf, int pageIndex) {
@@ -197,7 +202,7 @@ public class DisplayPanel extends JPanel
     rectClip.x = rectClip.y = 0;
     int screenWidth = rectClip.width = vwr.getScreenWidth();
     int screenHeight = rectClip.height = vwr.getScreenHeight();
-    Object image = vwr.getScreenImageBuffer(null, true);
+    Object image = vwr.getScreenImageBuffer();
     int pageX = (int)pf.getImageableX();
     int pageY = (int)pf.getImageableY();
     int pageWidth = (int)pf.getImageableWidth();
@@ -258,11 +263,7 @@ public class DisplayPanel extends JPanel
     @Override
     public void actionPerformed(ActionEvent e) {
       vwr.setSelectionHalosEnabled(false);
-      if (statusText != null) {
-        status.setStatus(1, statusText);
-      } else {
-        status.setStatus(1, ((JComponent) e.getSource()).getToolTipText());
-      }
+      status.setStatus(StatusBar.STATUS_COORD, statusText == null ? ((JComponent) e.getSource()).getToolTipText() : statusText);
     }
   }
 
@@ -401,9 +402,9 @@ public class DisplayPanel extends JPanel
       ? -1
       : (timeTotal + timeCount/2) / timeCount; // round, don't truncate
     if (displaySpeed.equalsIgnoreCase("fps")) {
-        status.setStatus(3, fmt(1000/timeLast) + "FPS : " + fmt(1000/timeAverage) + "FPS");
+        status.setStatus(StatusBar.STATUS_TIME, fmt(1000/timeLast) + "FPS : " + fmt(1000/timeAverage) + "FPS");
     } else {
-      status.setStatus(3, vwr.getP("_memory")+" Mb; " + fmt(timeLast) + "/" + timeAverage + " ms");
+      status.setStatus(StatusBar.STATUS_TIME, vwr.getP("_memory")+" Mb; " + fmt(timeLast) + "/" + timeAverage + " ms");
     }
   }
 

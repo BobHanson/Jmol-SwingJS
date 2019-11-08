@@ -53,21 +53,19 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.util.Logger;
+
 import javajs.api.JSInterface;
 import javajs.util.Lst;
 import javajs.util.PT;
-
-import org.jmol.util.Logger;
-
 import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppletInterface;
 import jspecview.api.JSVPanel;
 import jspecview.app.JSVApp;
-import jspecview.common.Spectrum;
-import jspecview.common.JSVersion;
 import jspecview.common.JSViewer;
-import jspecview.js2d.JsPanel;
+import jspecview.common.Spectrum;
 import jspecview.js2d.JsMainPanel;
+import jspecview.js2d.JsPanel;
 /**
  * 
  * Entry point for the web.
@@ -313,6 +311,11 @@ public class JSVApplet implements JSVAppletInterface,
 	public void toggleCoordinate() {
 		app.toggleCoordinate();
 	}
+
+	 @Override
+	  public void togglePointsOnly() {
+	    app.togglePointsOnly();
+	  }
 
 	/*
 	 * (non-Javadoc)

@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -129,26 +130,40 @@ public class JDXReader implements JmolJDXMOLReader {
    */
   public static JDXSource createJDXSourceFromStream(InputStream in, boolean obscure, boolean loadImaginary, float nmrMaxY)
       throws Exception {
-    return createJDXSource(JSVFileManager.getBufferedReaderForInputStream(in),
+    return createJDXSource(in,
         "stream", obscure, loadImaginary, -1, -1, nmrMaxY);
   }
 
-	/**
-	 * general entrance method
-	 * 
-	 * @param br
-	 * @param filePath
-	 * @param obscure
-	 * @param loadImaginary
-	 * @param iSpecFirst
-	 * @param iSpecLast
-	 * @param nmrMaxY 
-	 * @return source
-	 * @throws Exception
-	 */
-	public static JDXSource createJDXSource(BufferedReader br, String filePath,
+  /**
+   * general entrance method
+   * 
+   * @param in
+   *        one of: BufferedReader, InputStream, String, byte[]
+   * @param filePath
+   * @param obscure
+   * @param loadImaginary
+   * @param iSpecFirst
+   * @param iSpecLast
+   * @param nmrMaxY
+   * @return source
+   * @throws Exception
+   */
+	public static JDXSource createJDXSource(Object in, String filePath,
 			boolean obscure, boolean loadImaginary,
 			int iSpecFirst, int iSpecLast, float nmrMaxY) throws Exception {
+	  
+    String data = null;
+	  BufferedReader br;
+	  if (in instanceof String || AU.isAB(in)) {
+	    if (in instanceof String)
+	      data = (String) in;
+	    br = JSVFileManager.getBufferedReaderForStringOrBytes(in);
+	  } else if (in instanceof InputStream) {
+	    br = JSVFileManager.getBufferedReaderForInputStream((InputStream)in);
+	  } else {
+	    br = (BufferedReader) in;
+	  }
+	  
 		String header = null;
 		try {
 			if (br == null)
@@ -158,6 +173,7 @@ public class JDXReader implements JmolJDXMOLReader {
 			br.read(chs, 0, 400);
 			br.reset();
 			header = new String(chs);
+      JDXSource source = null;
 			int pt1 = header.indexOf('#');
 			int pt2 = header.indexOf('<');
 			if (pt1 < 0 || pt2 >= 0 && pt2 < pt1) {
@@ -165,20 +181,22 @@ public class JDXReader implements JmolJDXMOLReader {
 				xmlType = (xmlType.contains("<animl")
 						|| xmlType.contains("<!doctype technique") ? "AnIML" : xmlType
 						.contains("xml-cml") ? "CML" : null);
-				JDXSource xmlSource = null;
 				if (xmlType != null)
-					xmlSource = ((SourceReader) JSViewer
+					source = ((SourceReader) JSViewer
 						.getInterface("jspecview.source." + xmlType + "Reader")).getSource(
 						filePath, br);
 				br.close();
-				if (xmlSource == null) {
+				if (source == null) {
 					Logger.error(header + "...");
 					throw new JSVException("File type not recognized");
 				}
-				return xmlSource;
-			}
-			return (new JDXReader(filePath, obscure, loadImaginary, iSpecFirst,
+			} else {
+			 source = (new JDXReader(filePath, obscure, loadImaginary, iSpecFirst,
 					iSpecLast, nmrMaxY)).getJDXSource(br);
+			}			
+			if (data != null)
+			  source.setInlineData(data);
+      return source;			
 		} catch (Exception e) {
 			if (br != null)
 				br.close();

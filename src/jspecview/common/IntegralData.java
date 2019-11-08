@@ -242,7 +242,7 @@ public class IntegralData extends MeasurementData {
 	    Coordinate[] specXyCoords = spec.getXYCoords();
 	    xyCoords = new Coordinate[specXyCoords.length];
 
-	    //double maxY = Coordinate.getMaxY(xyCoords, 0, xyCoords.length);
+	    //double maxY = Coordinate.getMaxY(xyCoords, 0, xyCoords.length - 1);
 	    
 	    // this was setting a minimum point, not allowing the integral to 
 	    // register negative values

@@ -545,20 +545,21 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         // "fileName" property. We retrieve that from the surfaceGenerator
         // and open a BufferedReader for it. Or not. But that would be
         // unlikely since we have just checked it in ScriptEvaluator
-        value = vwr.fm.getBufferedReaderOrErrorMessageFromName(
-            sg.params.fileName, null, true, true);
-        if (value instanceof String) {
-          Logger.error("Isosurface: could not open file " + sg.params.fileName
-              + " -- " + value);
-          return;
+        
+        if (sg.params.filesData == null) {
+          value = getFileReader(sg.params.fileName);
+        } else {
+          value = sg.params.filesData;
+          String[] a = (String[]) sg.params.filesData[0];
+          Object[] b = new Object[a.length];
+          for (int i = b.length; --i >= 0 && value != null;)
+            if ((b[i] = getFileReader(a[i])) == null)
+              value = null;
+          if (value != null)
+            sg.params.filesData[0] = b;
         }
-        if (!(value instanceof BufferedReader))
-          try {
-            value = Rdr.getBufferedReader((BufferedInputStream) value,
-                "ISO-8859-1");
-          } catch (IOException e) {
-            // ignore
-          }
+        if (value == null)
+          return;
       }
     } else if ("atomIndex" == propertyName) {
       atomIndex = ((Integer) value).intValue();
@@ -722,6 +723,24 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     // processing by meshCollection:
     setPropertySuper(propertyName, value, bs);
+  }
+
+  private Object getFileReader(String fileName) {
+    Object value = vwr.fm.getBufferedReaderOrErrorMessageFromName(
+        fileName, null, true, true);
+    if (value instanceof String) {
+      Logger.error("Isosurface: could not open file " + fileName
+          + " -- " + value);
+      return null;
+    }
+    if (!(value instanceof BufferedReader))
+      try {
+        value = Rdr.getBufferedReader((BufferedInputStream) value,
+            "ISO-8859-1");
+      } catch (IOException e) {
+        // ignore
+      }
+    return value;
   }
 
   private void setIsoMeshColor(IsosurfaceMesh m, String color) {
@@ -940,7 +959,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       SB sb = new SB();
       getMeshCommand(sb, thisMesh.index);
       thisMesh.setJvxlColorMap(true);
-      return JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, meshData, title, "", true, 1, sb.toString(), null);
+      return JvxlCoder.jvxlGetFile(jvxlData, meshData, title, "", true, 1, sb.toString(), null);
     }
     if (property == "jvxlFileInfo") {
       return JvxlCoder.jvxlGetInfo(jvxlData);

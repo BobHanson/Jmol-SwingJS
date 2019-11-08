@@ -33,6 +33,10 @@ package org.jmol.symmetry;
  * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Ispace_group_symop_operation_xyz.html
  * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Isymmetry_equiv_pos_as_xyz.html
  *
+ * "Space-group notation with an explicit origin", S. R. Hall, 
+ * Acta Cryst. (1981). A37, 517-525 
+ * https://doi.org/10.1107/S0567739481001228
+ *
  * LATT : http://macxray.chem.upenn.edu/LATT.pdf thank you, Patrick Carroll
  * 
  * Hall symbols:

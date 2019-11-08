@@ -65,7 +65,7 @@ public abstract class ScriptExt {
   }
 
   protected P3 getPoint3f(int i, boolean allowFractional) throws ScriptException {
-    return e.getPoint3f(i, allowFractional);
+    return e.getPoint3f(i, allowFractional, true);
   }
 
   protected int intParameter(int index) throws ScriptException {

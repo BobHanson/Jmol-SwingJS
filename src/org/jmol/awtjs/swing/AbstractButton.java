@@ -1,7 +1,7 @@
 package org.jmol.awtjs.swing;
 
-import javajs.awt.Component;
-import javajs.awt.SC;
+import org.jmol.api.SC;
+import org.jmol.awtjs.swing.Component;
 
 public abstract class AbstractButton extends JComponent implements SC {
 

@@ -31,6 +31,7 @@ import java.io.PrintStream;
 
 import javax.swing.JTextArea;
 
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.LoopedStreams;
 
 public class ConsoleTextArea extends JTextArea {
@@ -47,14 +48,18 @@ public class ConsoleTextArea extends JTextArea {
     final LoopedStreams ls = new LoopedStreams();
 
     String redirect = (doRedirect ? System.getProperty("JmolConsole") : "false");
+    
+    if (!Viewer.isSwingJS)
     if (redirect == null || redirect.equals("true")) {
         // Redirect System.out & System.err.        
         PrintStream ps = new PrintStream(ls.getOutputStream());
         System.setOut(ps);
         System.setErr(ps);
     }
-    startConsoleReaderThread(ls.getInputStream());
-  }    // ConsoleTextArea()
+   
+    if (!Viewer.isSwingJS)     
+      startConsoleReaderThread(ls.getInputStream());
+  } 
 
 
   private void startConsoleReaderThread(InputStream inStream) {

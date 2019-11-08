@@ -360,7 +360,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sOverride
+   * @@XXXj2sOverride
    * 
    * @param infoType
    * @param paramInfo
@@ -393,7 +393,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sOverride
+   * @@XXXj2sOverride
    * 
    * @param infoType
    * @param paramInfo
@@ -426,7 +426,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   /**
-   * @j2sOverride
+   * @@XXXj2sOverride
    * 
    * @param infoType
    * @param paramInfo

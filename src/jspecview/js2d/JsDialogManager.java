@@ -7,7 +7,7 @@ import org.jmol.awtjs.swing.JLabel;
 import org.jmol.awtjs.swing.JScrollPane;
 import org.jmol.awtjs.swing.JTable;
 
-import javajs.awt.Dimension;
+import org.jmol.awtjs.swing.Dimension;
 import javajs.util.PT;
 
 import jspecview.api.JSVPanel;

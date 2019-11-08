@@ -220,7 +220,7 @@ public class JpgEncoder extends ImageEncoder {
 
     // Comment Header
     String comment = null;
-    if (jpegObj.comment.length() > 0)
+    if (jpegObj.comment != null && jpegObj.comment.length() > 0)
       writeString(jpegObj.comment, (byte) 0xE1); // App data 1
     writeString(
         "JPEG Encoder Copyright 1998, James R. Weeks and BioElectroMech.\n\n",

@@ -43,6 +43,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.awt.Image;
 import java.util.Hashtable;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
   protected Image image;
 
   protected Viewer vwr;
-  protected JPanel canvas;
+  protected ImageCanvas canvas;
   private String title;
 
   private Map<String, GenericImageDialog> imageMap;
@@ -161,20 +162,30 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
       closeMe();
       return;
     }
-    this.image = (Image) oimage;
-    int w = image.getWidth(null);
-    int h = image.getHeight(null);
+    int w = ((Image) oimage).getWidth(null);
+    int h = ((Image) oimage).getHeight(null);
+    this.image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+    Graphics g = image.getGraphics();
+    g.setColor(Color.white);
+    g.fillRect(0,  0 , w,  h);
+    g.drawImage((Image) oimage, 0, 0, null);
+    g.dispose();
     setTitle(title + " [" + w + " x " + h + "]");
     Dimension d = new Dimension(w, h);
-    canvas.setSize(d);
+    canvas.setPreferredSize(d);
+    setBackground(Color.WHITE);
+    getContentPane().setBackground(Color.WHITE);
     pack();
-    repaint();
   }  
   
 
   class ImageCanvas extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
+      System.out.println(image.getClass().getName());
+//      System.out.println(((BufferedImage)image).getRGB(0,  0));
+      g.setColor(Color.white);
+      g.fillRect(0,  0,  image.getWidth(null), image.getHeight(null));
       g.drawImage(image, 0, 0, null);
     }
   }

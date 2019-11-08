@@ -24,19 +24,19 @@
 
 package org.jmol.applet;
 
-import java.applet.Applet;
+import javax.swing.JApplet;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 
 class WrappedAppletLoader extends Thread {
 
-  private Applet applet;
+  private JApplet applet;
   private boolean isSigned;
 
   //private final static int minimumLoadSeconds = 0;
 
-  WrappedAppletLoader(Applet applet, boolean isSigned) {
+  WrappedAppletLoader(JApplet applet, boolean isSigned) {
     this.applet = applet;
     this.isSigned = isSigned;
   }
@@ -44,11 +44,15 @@ class WrappedAppletLoader extends Thread {
   @Override
   public void run() {
     long startTime = System.currentTimeMillis();
+    TickerThread tickerThread;
     if (Logger.debugging) {
       Logger.debug("WrappedAppletLoader.run(org.jmol.applet.Jmol)");
     }
-    TickerThread tickerThread = new TickerThread(applet);
+    /** @j2sIgnore */
+    {
+    tickerThread = new TickerThread(applet);
     tickerThread.start();
+    }
     try {
       WrappedApplet jmol = ((AppletWrapper) applet).wrappedApplet = (WrappedApplet) Interface.getOption("applet.Jmol", null, null);
       jmol.setApplet(applet, isSigned);
@@ -58,8 +62,11 @@ class WrappedAppletLoader extends Thread {
     long loadTimeSeconds = (System.currentTimeMillis() - startTime + 500) / 1000;
     if (Logger.debugging)
       Logger.debug("applet load time = " + loadTimeSeconds + " seconds");
+    /** @j2sIgnore */
+    {
     tickerThread.keepRunning = false;
     tickerThread.interrupt();
+    }
     applet.repaint();
   }
 }
@@ -68,7 +75,7 @@ class TickerThread extends Thread {
   Object applet;
   boolean keepRunning = true;
 
-  TickerThread(Applet applet) {
+  TickerThread(JApplet applet) {
     this.applet = applet;
     this.setName("AppletLoaderTickerThread");
   }

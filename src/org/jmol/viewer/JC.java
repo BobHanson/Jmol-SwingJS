@@ -42,8 +42,7 @@ import java.util.Properties;
 
 public final class JC {
 
-  public static final String     //         31    32    33    34    35    36    37    38    39    40    41
-  NBO_TYPES = ";"
+  public static final String   NBO_TYPES = ";"
       + "AO;;;;" // 31
       + "PNAO;;" // 32
       + "NAO;;;" // 33
@@ -164,6 +163,8 @@ public final class JC {
 
   // note list of RCSB access points: http://www.rcsb.org/pdb/static.do?p=download/http/index.html
   
+  public static final String defaultMacroDirectory = "https://chemapps.stolaf.edu/jmol/macros";
+
   private final static String[] databaseArray = { 
     // still http:
     "aflowbin", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
@@ -262,26 +263,6 @@ public final class JC {
     return newname;
   }
 
-  public static String[] macros = {
-    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt", "AFLOW macros",
-    "bz", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/bz.spt", "Brillouin Zone/Wigner-Seitz macros"
-  };
-
-  public static String getMacroList() {
-    SB s = new SB();
-    for (int i = 0; i < macros.length; i += 3)
-      s.append(macros[i]).append("\t").append(macros[i + 1]).append("\t").append(macros[i + 1]).append("\n");
-    return s.toString();
-  }
-
-
-  public static String getMacro(String key) {
-    for (int i = 0; i < macros.length; i += 3)
-      if (macros[i].equals(key))
-        return macros[i + 1];
-    return null;
-  }
-  
   public final static String copyright = "(C) 2015 Jmol Development";
   
   public final static String version;
@@ -347,6 +328,7 @@ public final class JC {
     date = (tmpDate != null ? tmpDate : "(Unknown_date)");
     // 11.9.999 --> 1109999
     int v = -1;
+    if (tmpVersion != null)
     try {
       String s = version;
       String major = "";

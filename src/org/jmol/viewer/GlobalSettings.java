@@ -81,6 +81,7 @@ public class GlobalSettings {
     smilesUrlFormat = JC.databases.get("nci") + "/file?format=sdf&get3d=true";
     nihResolverFormat = JC.databases.get("nci");
     pubChemFormat = JC.databases.get("pubchem");
+    macroDirectory = JC.defaultMacroDirectory;
 
     // beyond these six, they are just in the form load =xxx/id
 
@@ -357,6 +358,7 @@ public class GlobalSettings {
     setB("smartAromatic", smartAromatic);
     setI("smallMoleculeMaxAtoms", smallMoleculeMaxAtoms);
     setO("smilesUrlFormat", smilesUrlFormat);
+    setO("macroDirectory", macroDirectory);
     setO("nihResolverFormat", nihResolverFormat);
     setO("pubChemFormat", pubChemFormat);
     setB("showUnitCellDetails", showUnitCellDetails);
@@ -451,7 +453,7 @@ public class GlobalSettings {
   char inlineNewlineChar = '|'; //pseudo static
   String loadFormat, pdbLoadFormat, pdbLoadLigandFormat,
       nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat,
-      pubChemFormat;
+      pubChemFormat, macroDirectory;
 
 //  String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file.omap";
 //  String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file_diff.omap";
@@ -941,7 +943,8 @@ public class GlobalSettings {
       + ";hbondsDistanceMaximum;hbondsangleminimum" // added Jmol 14.24.2
       + ";jmolinjspecview;legacyautobonding;legacyhaddition;legacyjavafloat"
       + ";loglevel;logfile;loggestures;logcommands;measurestylechime"
-      + ";loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
+      + ";loadformat;loadligandformat;macrodirectory;mkaddhydrogens"
+      + ";smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
       + ";nodelay;pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed"
       + ";preservestate;refreshing;repaintwaitms;rotationradius;selectallmodels"
       + ";showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell"

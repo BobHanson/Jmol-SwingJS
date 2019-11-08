@@ -35,7 +35,7 @@ abstract public class JmolThread extends Thread {
   protected boolean stopped = false;
   protected boolean isReset;
 
-  private boolean useTimeout = true;
+  protected boolean useTimeout = true;
 
   /**
    * @param manager  
@@ -113,7 +113,6 @@ abstract public class JmolThread extends Thread {
   
   protected void oops(Exception e) {
     Logger.debug(name + " exception " + e);
-    if (!vwr.isJS)
       e.printStackTrace();
     vwr.queueOnHold = false;
   }

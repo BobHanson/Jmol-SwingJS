@@ -25,8 +25,9 @@
 package org.jmol.shape;
 
 import org.jmol.i18n.GT;
+import org.jmol.util.Font;
+import org.jmol.viewer.Viewer;
 
-import javajs.awt.Font;
 import javajs.util.BS;
 
 
@@ -94,7 +95,7 @@ public class Frank extends Shape {
   }
   
   void calcMetrics() {
-    if (vwr.isJS)
+    if (Viewer.isJS || Viewer.isSwingJS)
       frankString = "JSmol";
     else if (vwr.isSignedApplet)
       frankString = "Jmol_S";

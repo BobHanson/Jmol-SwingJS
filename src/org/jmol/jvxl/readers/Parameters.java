@@ -187,12 +187,13 @@ public class Parameters {
   final static int SURFACE_MLP = 17 | NO_ANISOTROPY | HAS_MAXGRID | IS_SLABBABLE;
   final static int SURFACE_MOLECULAR = 19 | IS_SOLVENTTYPE | NO_ANISOTROPY | IS_SLABBABLE;
   final static int SURFACE_NCI = 20 | NO_ANISOTROPY | HAS_MAXGRID | IS_POINTMAPPABLE | IS_SLABBABLE;
-  final static int SURFACE_INTERSECT = 21 | NO_ANISOTROPY | HAS_MAXGRID | IS_SLABBABLE;
+  final static int SURFACE_INTERSECT_ATOM = 21 | NO_ANISOTROPY | HAS_MAXGRID | IS_SLABBABLE;
+  final static int SURFACE_INTERSECT_FILE = 22 | NO_ANISOTROPY | HAS_MAXGRID | IS_SLABBABLE;
 
   // mapColor only:
 
-  final static int SURFACE_NOMAP = 21 | IS_SOLVENTTYPE | NO_ANISOTROPY | IS_SLABBABLE;
-  final static int SURFACE_PROPERTY = 22 | IS_SOLVENTTYPE | NO_ANISOTROPY | IS_SLABBABLE;
+  final static int SURFACE_NOMAP = 23 | IS_SOLVENTTYPE | NO_ANISOTROPY | IS_SLABBABLE;
+  final static int SURFACE_PROPERTY = 24 | IS_SOLVENTTYPE | NO_ANISOTROPY | IS_SLABBABLE;
 
   void initialize() {
     addHydrogens = false;
@@ -231,6 +232,7 @@ public class Parameters {
     fileIndex = 1;
     readAllData = true;
     fileName = "";
+    filesData = null;
     fullyLit = false;
     functionInfo = null;
     iAddGridPoints = false;
@@ -538,7 +540,7 @@ public class Parameters {
     isEccentric = isAnisotropic = false;
     //anisotropy[0] = anisotropy[1] = anisotropy[2] = 1f;
     solventRadius = Math.abs(radius);
-    dataType = (intersection != null ? SURFACE_INTERSECT
+    dataType = (intersection != null ? SURFACE_INTERSECT_ATOM
         : "nomap" == propertyName ? SURFACE_NOMAP
             : "molecular" == propertyName ? SURFACE_MOLECULAR
                 : "sasurface" == propertyName || solventRadius == 0f ? SURFACE_SASURFACE
@@ -550,7 +552,7 @@ public class Parameters {
       cutoff = 0.0f;
 
     switch (dataType) {
-    case Parameters.SURFACE_INTERSECT:
+    case Parameters.SURFACE_INTERSECT_ATOM:
       calculationType = "VDW intersection";
       break;
     case Parameters.SURFACE_NOMAP:
@@ -852,6 +854,7 @@ public class Parameters {
   public float pointSize;
   public boolean isModelConnected;
   public BS surfaceAtoms;
+  public Object[] filesData; // originally [ String[] names, float[] factors ]
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
     if (!colorDensity)

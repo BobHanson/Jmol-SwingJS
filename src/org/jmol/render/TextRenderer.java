@@ -27,9 +27,8 @@ package org.jmol.render;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.modelset.Text;
+import org.jmol.util.Font;
 import org.jmol.viewer.JC;
-
-import javajs.awt.Font;
 
 class TextRenderer {
   
@@ -49,7 +48,7 @@ class TextRenderer {
       if (g3d.setC(text.bgcolix))
         showBox(g3d, text.colix, (int) text.boxX, (int) text.boxY
             + text.boxYoff2 * 2, text.z + 2, text.zSlab, (int) text.boxWidth,
-            (int) text.boxHeight, text.fontScale, text.isLabelOrHover);
+            (int) text.boxHeight, text.fontScale, !text.isEcho);
       if (!showText)
         return false;
     }

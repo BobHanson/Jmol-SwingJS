@@ -28,22 +28,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.awt.Font;
-import javajs.util.AU;
-import javajs.util.BArray;
-import javajs.util.Base64;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
@@ -51,8 +35,8 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.minimize.Minimizer;
+import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -79,6 +63,7 @@ import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
@@ -90,6 +75,22 @@ import org.jmol.viewer.StateManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.viewer.Viewer.ACCESS;
+
+import javajs.util.AU;
+import javajs.util.BArray;
+import javajs.util.BS;
+import javajs.util.Base64;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class CmdExt extends ScriptExt {
 
@@ -109,7 +110,7 @@ public class CmdExt extends ScriptExt {
       st[0].value = prepareBinaryOutput((SV) st[0]);
       return null;
     case T.assign:
-      assign();
+      assign(1);
       break;
     case T.cache:
       cache();
@@ -156,6 +157,9 @@ public class CmdExt extends ScriptExt {
     case T.minimize:
       minimize();
       break;
+    case T.modelkitmode:
+      modelkit();
+      break;
     case T.modulation:
       modulation();
       break;
@@ -198,15 +202,134 @@ public class CmdExt extends ScriptExt {
   }
 
 
-  private void macro() throws ScriptException {
-    String key = e.optParameterAsString(1);
-    if (key.length() == 0)
+  /**
+   * Configure the ModelKitPopup for Crystallographic symmetry viewing and
+   * structure editing
+   * 
+   * new 14.29.45
+   * 
+   * see modelkit.ModelKitPopup.java
+   *
+   * 
+   * @throws ScriptException
+   */
+  private void modelkit() throws ScriptException {
+    boolean isOn = true;
+    int i = 0;
+    switch (tokAt(1)) {
+    case T.off:
+      isOn = false;
+      //$FALL-THROUGH$
+    case T.nada:
+    case T.on:
+      if (!chk)
+        vwr.setBooleanProperty("modelkitmode", isOn);
       return;
+    case T.rotate:
+      e.cmdRotate(false, false);
+      return;
+    case T.rotateSelected:
+      e.cmdRotate(false, true);
+      return;
+    case T.assign:
+      assign(2);
+      return;
+    }
+    ModelKitPopup kit = vwr.getModelkit(false);
+    int tok = 0;
+    while ((tok = tokAt(++i)) != T.nada) {
+      String key = paramAsStr(i).toLowerCase();
+      Object value = null;
+      switch (tok) {
+      case T.set:
+        key = paramAsStr(++i);
+        value = paramAsStr(++i);
+        break;
+      case T.mode:
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.MODE_OPTIONS))
+          invArg();
+        break;
+      case T.unitcell:
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.UNITCELL_OPTIONS))
+          invArg();
+        break;
+      case T.symop:
+        switch (tokAt(++i)) {
+        case T.string:
+        case T.none:
+          value = paramAsStr(i);
+          break;
+        case T.matrix4f:
+          value = getToken(i).value;
+          break;
+        case T.integer:
+          value = Integer.valueOf(getToken(i).intValue);
+          break;
+        default:
+          if (e.isCenterParameter(i)) {
+            key = "center";
+            value = e.centerParameter(i, null);
+            i = e.iToken;
+          } else {
+            invArg();
+          }
+          break;
+        }
+        break;
+      case T.symmetry:
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
+          invArg();
+        break;
+      case T.offset:
+        value = paramAsStr(i + 1);
+        if (value.equals("none")) {
+          ++i;
+          break;
+        }
+        //$FALL-THROUGH$
+      case T.center:
+      case T.point:
+        value = e.atomCenterOrCoordinateParameter(++i, null);
+        i = e.iToken;
+        break;
+      default:
+        if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
+          isOn = (tok == T.nada || tokAt(++i) == T.on);
+          value = Boolean.valueOf(isOn);
+          break;
+        }
+        if (PT.isOneOf(key, ModelKitPopup.MODE_OPTIONS)) {
+          value = key;
+          key = "mode";
+          break;
+        }
+        if (PT.isOneOf(key, ModelKitPopup.UNITCELL_OPTIONS)) {
+          value = key;
+          key = "unitcell";
+          break;
+        }
+        invArg();
+      }
+      if (value != null && !chk)
+        kit.setProperty(key, value);
+    }
+  }
+
+  
+  private void macro() throws ScriptException {
     if (chk)
       return;
-    String macro = JC.getMacro(key);
+    String key = e.optParameterAsString(1);
+    if (key.length() == 0) {
+      showString(vwr.getMacro(null));
+      return;
+    }
+    String macro = vwr.getMacro(key);
     if (macro == null) {
-      showString("macro " + key  + " could not be found. Current macros include:\n" + JC.getMacroList());
+      showString("macro " + key  + " could not be found. Current macros include:\n" + vwr.getMacro(null));
       return;
     }
     showString("running " + macro);
@@ -233,13 +356,12 @@ public class CmdExt extends ScriptExt {
       // TODO: This will disallow some motion commands
       //       within a TRY/CATCH block in JavaScript, and
       //       the code will block. 
-      se.allowJSThreads = false;
+      se.setAllowJSThreads(false);
       se.dispatchCommands(false, false, false);
     } catch (Exception ex) {
       e.vwr.setStringProperty("_errormessage", "" + ex);
       if (se.thisContext == null) {
         Logger.error("Error evaluating context " + ex);
-        if (!vwr.isJS)
           ex.printStackTrace();
       }
       return false;
@@ -316,7 +438,7 @@ public class CmdExt extends ScriptExt {
    T3 lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
      tok = tokAt(i = eval.iToken + 1);
    }
 
@@ -812,6 +934,7 @@ public class CmdExt extends ScriptExt {
     boolean isTransparent = (tok == T.translucent);
     if (isTransparent)
       tok = tokAt(++i);
+    String s = null;
     switch (tok == T.nada ? (tok = T.end) : tok) {
     case T.string:
       fileName = e.optParameterAsString(i++);
@@ -844,11 +967,13 @@ public class CmdExt extends ScriptExt {
         tok = tokAt(++i);
       }
       switch (tokAt(i)) {
+      case T.script:
+        s = stringParameter(++i);
+        break;
       case T.rock:
         isRock = true;
         //$FALL-THROUGH$
       case T.spin:
-        String s = null;
         String axis = "y";
         looping = true;
         i++;
@@ -872,13 +997,8 @@ public class CmdExt extends ScriptExt {
         vwr.setNavigationMode(false);
         if (axis == "" || "xyz".indexOf(axis) < 0)
           axis = "y";
-        boolean wf = vwr.g.waitForMoveTo;
-        s = "set waitformoveto true;" + PT.rep(s, "Y", axis)
-            + ";set waitformoveto " + wf;
-        s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) + " LOOP;"
-             + s + ";capture end;";
-        e.cmdScript(0, null, s);
-        return;
+        s = PT.rep(s,  "Y", axis);
+        break;
       case T.decimal:
       case T.integer:
         endTime = floatParameter(i++);
@@ -886,13 +1006,23 @@ public class CmdExt extends ScriptExt {
       }
       if (chk)
         return;
+      if (s != null) {
+        boolean wf = vwr.g.waitForMoveTo;
+        s = "set waitformoveto true;" + s
+            + ";set waitformoveto " + wf;
+        s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) 
+            + (looping ? " LOOP;": ";")
+             + s + ";capture end;";
+        e.cmdScript(0, null, s);
+        return;
+      }
       mode = T.movie;
       params = new Hashtable<String, Object>();
       int fps = vwr.getInt(T.animationfps);
       if (streaming) {
         params.put("streaming", Boolean.TRUE);
         if (!looping)
-          showString(GT.o(GT.$("Note: Enable looping using {0}"),
+          showString(GT.o(GT.$("Note: Enable looping using the LOOP keyword just after the file name or {0}"),
               new Object[] { "ANIMATION MODE LOOP" }));
         showString(GT.o(GT.$("Animation delay based on: {0}"),
             new Object[] { "ANIMATION FPS " + fps }));
@@ -930,9 +1060,18 @@ public class CmdExt extends ScriptExt {
       msg = "canceled";
     Logger.info(msg);
   }
-
-
+  
   private void centerAt() throws ScriptException {
+
+    //center {*}   # mean coordinate
+    //select *; centerAt AVERAGE  # same
+    //
+    //center        # boundbox, not mean
+    //boundbox *;centerAt BOUNDBOX #same
+    //
+    //center {2 2 2}   # center at a given point
+    //centerAt ABSOLUTE {2 2 2}  #same
+
     int tok = getToken(1).tok;
     switch (tok) {
     case T.absolute:
@@ -1357,8 +1496,8 @@ public class CmdExt extends ScriptExt {
       int ac = vwr.ms.ac;
       int[][] maps = null;
       try {
-        maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms,
-            ac, vwr.bsA(), JC.SMILES_TYPE_SMARTS);
+        maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms, ac,
+            vwr.bsA(), JC.SMILES_TYPE_SMARTS);
       } catch (Exception ex) {
         eval.evalError(ex.getMessage(), null);
       }
@@ -1420,7 +1559,7 @@ public class CmdExt extends ScriptExt {
 
     Lst<Object> points = new Lst<Object>();
     BS bs = new BS();
-    Object value = null;
+    Object target = null;
     TickInfo tickInfo = null;
     int nBitSets = 0;
     int mad = 0;
@@ -1446,7 +1585,7 @@ public class CmdExt extends ScriptExt {
         isNotConnected = true;
         break;
       case T.align:
-        alignment =  paramAsStr(++i).toLowerCase();
+        alignment = paramAsStr(++i).toLowerCase();
         break;
       case T.connected:
       case T.allconnected:
@@ -1473,7 +1612,8 @@ public class CmdExt extends ScriptExt {
         break;
       case T.radius:
       case T.diameter:
-        mad = (int) ((eval.theTok == T.radius ? 2000 : 1000) * floatParameter(++i));
+        mad = (int) ((eval.theTok == T.radius ? 2000 : 1000)
+            * floatParameter(++i));
         if (id != null && mad <= 0)
           mad = -1;
         break;
@@ -1504,10 +1644,11 @@ public class CmdExt extends ScriptExt {
           ptFloat = (ptFloat + 1) % 2;
           rangeMinMax[ptFloat] = iParam;
         } else {
-          atomIndex = vwr.ms.getFirstAtomIndexFromAtomNumber(iParam, vwr.getVisibleFramesBitSet());
+          atomIndex = vwr.ms.getFirstAtomIndexFromAtomNumber(iParam,
+              vwr.getVisibleFramesBitSet());
           if (!chk && atomIndex < 0)
             return;
-          if (value != null)
+          if (target != null)
             invArg();
           if ((countPlusIndexes[0] = ++nAtoms) > 4)
             eval.bad();
@@ -1569,22 +1710,22 @@ public class CmdExt extends ScriptExt {
         if (atomIndex >= 0)
           invArg();
         Object[] ret = new Object[1];
-        value = eval.centerParameter(i, ret);
+        target = eval.centerParameter(i, ret);
         if (ret[0] instanceof BS) {
-          value = bs = (BS) ret[0];
+          target = bs = (BS) ret[0];
           if (!chk && bs.length() == 0)
             return;
         }
-        if (value instanceof P3) {
+        if (target instanceof P3) {
           Point3fi v = new Point3fi();
-          v.setT((P3) value);
+          v.setT((P3) target);
           v.mi = (short) modelIndex;
-          value = v;
+          target = v;
         }
         if ((nAtoms = ++expressionCount) > 4)
           eval.bad();
         i = eval.iToken;
-        points.addLast(value);
+        points.addLast(target);
         break;
       case T.string:
         // measures "%a1 %a2 %v %u"
@@ -1597,8 +1738,8 @@ public class CmdExt extends ScriptExt {
         break;
       }
     }
-    if (rd != null && (ptFloat >= 0 || nAtoms != 2) || nAtoms < 2 && id == null
-        && (tickInfo == null || nAtoms == 1))
+    if (rd != null && (ptFloat >= 0 || nAtoms != 2)
+        || nAtoms < 2 && id == null && (tickInfo == null || nAtoms == 1))
       eval.bad();
     if (strFormat != null && strFormat.indexOf(nAtoms + ":") != 0)
       strFormat = nAtoms + ":" + strFormat;
@@ -1611,24 +1752,30 @@ public class CmdExt extends ScriptExt {
     }
     if (chk)
       return;
-    if (value != null || tickInfo != null) {
+
+    boolean isRefreshID = (id != null && target == null
+        && tokAction == T.opToggle);
+    if (target != null || tickInfo != null || isRefreshID) {
       if (rd == null)
         rd = new RadiusData(rangeMinMax, 0, null, null);
-      if (value == null)
+      if (tickInfo != null)
         tickInfo.id = "default";
-      if (value != null && strFormat != null && tokAction == T.opToggle)
+      if (isRefreshID) {
+        tokAction = T.refresh;
+      } else if (target != null && strFormat != null
+          && tokAction == T.opToggle) {
         tokAction = T.define;
+      }
       Text text = null;
-      if (font != null || alignment != null || strFormat != null && strFormat.indexOf('\n') >= 0)
-        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr, "script")).newLabel(
-            vwr, font, "", colix, (short) 0, 0, 0);
+      if (font != null || alignment != null || colix != 0
+          || strFormat != null && (isRefreshID || strFormat.indexOf('\n') >= 0))
+        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr,
+            "script")).newMeasure(vwr, font, colix);
       if (text != null) {
         text.pymolOffset = offset;
         text.setAlignmentLCR(alignment);
-      } 
-      setShapeProperty(
-          JC.SHAPE_MEASURES,
-          "measure",
+      }
+      setShapeProperty(JC.SHAPE_MEASURES, "measure",
           vwr.newMeasurementData(id, points).set(tokAction, null, rd, strFormat,
               null, tickInfo, isAllConnected, isNotConnected, intramolecular,
               isAll, mad, colix, text));
@@ -1646,8 +1793,8 @@ public class CmdExt extends ScriptExt {
       setShapeProperty(JC.SHAPE_MEASURES, "hide", propertyValue);
       break;
     default:
-      setShapeProperty(JC.SHAPE_MEASURES, (strFormat == null ? "toggle"
-          : "toggleOn"), propertyValue);
+      setShapeProperty(JC.SHAPE_MEASURES,
+          (strFormat == null ? "toggle" : "toggleOn"), propertyValue);
       if (strFormat != null)
         setShapeProperty(JC.SHAPE_MEASURES, "setFormats", strFormat);
     }
@@ -2191,13 +2338,84 @@ public class CmdExt extends ScriptExt {
           eval.getShapePropertyData(JC.SHAPE_ISOSURFACE, "getVertices", data);
           value = data;
           break;
+        case T.label:
+          value = e.optParameterAsString(++i);
+          if (((String) value).length() == 0)
+            continue;
+          break;
         case T.axes:
           V3[] axes = new V3[3];
-          for (int j = 0; j < 3; j++) {
-            axes[j] = new V3();
-            axes[j].setT(centerParameter(++i));
-            i = eval.iToken;
+          Lst<SV> l = null;
+          switch (getToken(i + 1).tok) {
+          case T.matrix3f:
+            i++;
+            M3 m = (M3) eval.theToken.value;
+            for (int im = 3; --im >= 0;)
+              m.getColumnV(im, axes[im] = new V3());
+            break;
+          case T.spacebeforesquare:
+            i += 2;
+            //$FALL-THROUGH$
+          case T.leftsquare:
+            l = new Lst<SV>();
+            for (int i1 = 3; --i1 >= 0;) {
+              switch (tokAt(++i)) {
+              case T.leftsquare:
+                break;
+              default:
+                if (eval.isCenterParameter(i)) {
+                  l.addLast(SV.newV(T.point3f, centerParameter(i)));
+                } else if (tokAt(i) == T.leftsquare) {
+                 // TODO
+                } else {
+                  l.addLast((SV) getToken(i));
+                }
+              }
+              i = eval.iToken;
+            }
+            if (getToken(++i).tok != T.rightsquare)
+              invArg();
+            break;
+          case T.varray:
+            l = ((SV) eval.theToken).getList();
+            switch (l.size()) {
+            case 1:
+              Lst<SV> l1 = new Lst<SV>();
+              for (int il = 3; --il >= 0;)
+                l1.addLast((SV) getToken(++i));
+              l = l1;
+              break;
+            case 3:
+              break;
+            default:
+              invArg();
+              break;
+            }
+            break;
+          default:
+            for (int j = 0; j < 3; j++) {
+              axes[j] = new V3();
+              axes[j].setT(centerParameter(++i));
+              i = eval.iToken;
+            }
+            break;
           }
+          if (l != null) {
+            for (int k = 3; --k >= 0;) {
+              SV v = l.get(k);
+              switch (v.tok) {
+              case T.varray:
+                axes[k] = V3.new3(SV.fValue(v.getList().get(0)),
+                    SV.fValue(v.getList().get(1)),
+                    SV.fValue(v.getList().get(2)));
+                break;
+              case T.point3f:
+                axes[k] = V3.newV((T3) v.value);
+                break;
+              }
+            }
+          }
+          i = eval.iToken;
           value = axes;
           break;
         case T.center:
@@ -2224,7 +2442,15 @@ public class CmdExt extends ScriptExt {
           value = Boolean.FALSE;
           break;
         case T.scale:
-          value = Float.valueOf(floatParameter(++i));
+          if (isFloatParameter(i + 1)) {
+            value = Float.valueOf(floatParameter(++i));
+          } else if (eval.isCenterParameter(i)){
+            P3 p = centerParameter(i);
+            value = new float[] {p.x, p.y, p.z};
+          } else {
+            value = eval.floatParameterSet(++i, 3, 3);
+          }
+          i = eval.iToken;
           break;
         case T.define:
         case T.bitset:
@@ -2525,7 +2751,7 @@ public class CmdExt extends ScriptExt {
         }
         if (!chk)
           vwr.getMinimizer(true).setProperty("constraint",
-              new Object[] { aList, new int[n], Float.valueOf(targetValue) });
+              new Object[] { aList, Float.valueOf(targetValue) });
         return;
       case T.criterion:
         crit = floatParameter(++i);
@@ -2626,7 +2852,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.leftbrace:
     case T.point3f:
-      qtOffset = eval.getPoint3f(1, false);
+      qtOffset = eval.getPoint3f(1, false, true);
       isQ = (tokAt(eval.iToken + 1) == T.on);
       break;
     default:
@@ -2650,7 +2876,7 @@ public class CmdExt extends ScriptExt {
           float t1 = floatParameter(i);
           qtOffset = P3.new3(t1, t1, t1);
         } else {
-          qtOffset = eval.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false, true);
         }
         break;
       case T.integer:
@@ -2658,7 +2884,7 @@ public class CmdExt extends ScriptExt {
           int t = intParameter(i);
           qtOffset = P3.new3(t, t, t);
         } else {
-          qtOffset = eval.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false, true);
         }
         isQ = true;
         break;
@@ -3094,7 +3320,7 @@ public class CmdExt extends ScriptExt {
       break;
     }
     st = statementSave;
-    if (chk) // just in case we later mp.add parameter options to this
+    if (chk) // just in case we later add parameter options to this
       return "";
 
     // if not just drawing check to see if there is already a plot of this type
@@ -3502,7 +3728,7 @@ public class CmdExt extends ScriptExt {
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
         i = eval.iToken;
         continue;
-        //      case T.flat: // removed in Jmol 14.4 -- never documented
+      case T.flat: // removed in Jmol 14.4 -- never documented; restored in Jmol 14.29.21
       case T.collapsed:
         // COLLAPSED
         // COLLAPSED [faceCenterOffset]
@@ -3512,7 +3738,7 @@ public class CmdExt extends ScriptExt {
         if (isFloatParameter(i + 1))
           setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
               Float.valueOf(floatParameter(++i)));
-        propertyName = "collapsed";
+        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
         break;
       case T.noedges:
       case T.edges:
@@ -3657,6 +3883,7 @@ public class CmdExt extends ScriptExt {
     int argCount = (isCommand ? slen : args.length);
     String type2 = "";
     String val = null;
+    boolean is2D = false;
     SV tVar = null;
     int nVibes = 0;
     String sceneType = null;
@@ -3700,7 +3927,7 @@ public class CmdExt extends ScriptExt {
         pt++;
       break;
     case T.coord:
-      pt++;
+      pt++; 
       isCoord = true;
       break;
     case T.state:
@@ -3734,6 +3961,7 @@ public class CmdExt extends ScriptExt {
       type = "VAR";
       pt += 2;
       break;
+    case T.drawing:
     case T.frame:
     case T.image:
     case T.scene:
@@ -3753,6 +3981,10 @@ public class CmdExt extends ScriptExt {
         if (!chk)
           bsFrames = vwr.ms.getModelBS(bsAtoms, true);
         break;
+      case T.drawing:
+        tok = T.image;
+        is2D = true;
+        //$FALL-THROUGH$
       case T.image:
         type = "IMAGE";
         pt++;
@@ -3816,7 +4048,7 @@ public class CmdExt extends ScriptExt {
       break;
     }
 
-    if (pt0 < argCount) {
+     if (pt0 < argCount) {
       // get type
       val = SV.sValue(tokenAt(pt, args));
       if (val.equalsIgnoreCase("clipboard")) {
@@ -3866,13 +4098,14 @@ public class CmdExt extends ScriptExt {
       // type may be defined already, but that could be from a file name extension
       // here we override that
       // write PDB "xxx.pdb"
-      String s = SV.sValue(tokenAt(++pt, args));
-      if (s.length() > 0 && s.charAt(0) != '.') {
-        if (val == null) {
-          System.out.println("??");
-          type = val.toUpperCase();
-        }
-      }
+      SV.sValue(tokenAt(++pt, args));
+//    System.out.println(val);
+//    if (s.length() > 0 && s.charAt(0) != '.') {
+//      if (val == null) {
+//        System.out.println("??");
+//        type = val.toUpperCase();
+//      }
+//    }
     }
 
     // set the file name
@@ -4190,15 +4423,35 @@ public class CmdExt extends ScriptExt {
     if (isImage) {
       eval.refresh(false);
       if (width < 0)
-        width = vwr.getScreenWidth();
+        width = (is2D ? 250 : vwr.getScreenWidth());
       if (height < 0)
-        height = vwr.getScreenHeight();
+        height = (is2D ? 250 : vwr.getScreenHeight());
     }
     params = new Hashtable<String, Object>();
     if (fileName != null)
       params.put("fileName", fileName);
     params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("type", type);
+    if (is2D) {
+      params.put("is2D", Boolean.TRUE);
+      String smiles;
+      Object ret = "smiles could not be generated";
+      try {
+        smiles = vwr.getOpenSmiles(null);
+        if (smiles.length() > 0) {
+        String fname = (String) vwr.setLoadFormat("_" + smiles, '2', false);
+        fname += "?width=" + width + "&height=" + height + "&format=" + type.toLowerCase();
+        showString(fname);
+        ret = vwr.fm.getFileAsBytes(fname, null);
+        }
+      } catch (Exception e1) {
+      }
+      if (ret instanceof String) {
+        showString((String) ret);
+        return null;
+      }
+      bytes = (byte[]) ret;
+    }
     if (bytes instanceof String && quality == Integer.MIN_VALUE)
       params.put("text", bytes);
     else if (bytes instanceof byte[])
@@ -4280,7 +4533,11 @@ public class CmdExt extends ScriptExt {
     String str = paramAsStr(1);
     String filter = null;
     int filterLen = 0;
-    if (slen > 2 && tokAt(slen - 2) == T.divide) {
+    if (slen > 3 && tokAt(slen - 3) == T.divide  && tokAt(slen - 2) == T.opNot) {
+      filter = "!/" + paramAsStr(slen - 1);
+      slen -= 3;
+      filterLen = 3;
+    } else if (slen > 2 && tokAt(slen - 2) == T.divide) {
       filter = "/" + paramAsStr(slen - 1);
       slen -= 2;
       filterLen = 2;
@@ -4466,14 +4723,14 @@ public class CmdExt extends ScriptExt {
       if ((len = slen) == 2) {
         if (chk)
           break;
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false);
+        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false, null);
       } else if (tok == T.spacegroup) {
         String sg = paramAsStr(2);
         len = 3;
         if (chk)
           break;
         info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            PT.rep(sg, "''", "\""), -1, false);
+            PT.rep(sg, "''", "\""), -1, false, null);
       }
       if (info != null) {
         msg = (tok == T.spacegroup ? "" + info.get("spaceGroupInfo")
@@ -4512,9 +4769,7 @@ public class CmdExt extends ScriptExt {
           : null);
       checkLength((len = ++eval.iToken) + filterLen);
       if (!chk) {
-        Object o = vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-            vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, type, 0, 0,
-            nth);
+        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, 0, type, 0, nth, 0);
         msg = (o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
@@ -4956,11 +5211,12 @@ public class CmdExt extends ScriptExt {
   private String filterShow(String msg, String name) {
     if (name == null)
       return msg;
-    name = name.substring(1).toLowerCase();
+    boolean isNot = name.startsWith("!/");
+    name = name.substring(isNot ? 2 : 1).toLowerCase();
     String[] info = PT.split(msg, "\n");
     SB sb = new SB();
     for (int i = 0; i < info.length; i++)
-      if (info[i].toLowerCase().indexOf(name) >= 0)
+      if ((info[i].toLowerCase().indexOf(name) < 0) == isNot)
         sb.append(info[i]).appendC('\n');
     return sb.toString();
   }
@@ -5076,7 +5332,8 @@ public class CmdExt extends ScriptExt {
       // newUC will be a T3[] indicating the conventional.
       if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
         if (newUC == null && vwr.getModelInfo("isprimitive") != null) {
-          showString("Cannot convert unit cell when file data is primitive and have no lattice information");
+          showString(
+              "Cannot convert unit cell when file data is primitive and have no lattice information");
           return;
         }
         // unitcell primitive "C"
@@ -5098,20 +5355,24 @@ public class CmdExt extends ScriptExt {
           boolean isPrimitive = ucname.equals("primitive");
           if (isPrimitive || ucname.equals("reciprocal")) {
             float scale = (slen == i + 1 ? 1
-                : tokAt(i + 1) == T.integer ? intParameter(++i)
-                    * (float) Math.PI : floatParameter(++i));
+                : tokAt(i + 1) == T.integer
+                    ? intParameter(++i) * (float) Math.PI
+                    : floatParameter(++i));
             SymmetryInterface u = vwr.getCurrentUnitCell();
             ucname = (u == null ? "" : u.getSpaceGroupName() + " ") + ucname;
-            oabc = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
-                P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
+            oabc = (u == null
+                ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
+                    P3.new3(0, 1, 0), P3.new3(0, 0, 1) }
+                : u.getUnitCellVectors());
             if (stype == null)
-              stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
-                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, 0, -1);
+              stype = (String) vwr.getSymmetryInfo(
+                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null,
+                  T.lattice, null, 0, -1, 0);
             if (u == null)
               u = vwr.getSymTemp();
-            u.toFromPrimitive(true,
-                stype.length() == 0 ? 'P' : stype.charAt(0), oabc);
+            u.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
+                oabc,
+                (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
               SimpleUnitCell.getReciprocal(oabc, oabc, scale);
             }
@@ -5182,7 +5443,7 @@ public class CmdExt extends ScriptExt {
       isOffset = true;
       //$FALL-THROUGH$
     case T.range:
-      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3);
+      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3, true);
       pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
       i = eval.iToken;
       break;
@@ -5203,7 +5464,7 @@ public class CmdExt extends ScriptExt {
         oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
-        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3);
+        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
         i = eval.iToken;
       } else {
         // backup for diameter
@@ -5236,13 +5497,21 @@ public class CmdExt extends ScriptExt {
   ///////// private methods used by commands ///////////
 
   
-  private void assign() throws ScriptException {
-    int atomsOrBonds = tokAt(1);
-    int index = atomExpressionAt(2).nextSetBit(0);
-    int index2 = -1;
+  private void assign(int i) throws ScriptException {
+    int atomsOrBonds = tokAt(i++);
+    int index = -1, index2 = -1;
+    if (atomsOrBonds == T.atoms && tokAt(i) == T.string) {
+      // new Jmol 14.29.28
+      // assign "C" {0 0 0}
+      e.iToken++;
+      
+    } else {
+      index = atomExpressionAt(i).nextSetBit(0);
+      if (index < 0) {
+        return;
+      }
+    }
     String type = null;
-    if (index < 0)
-      return;
     if (atomsOrBonds == T.connect) {
       index2 = atomExpressionAt(++e.iToken).nextSetBit(0);
     } else {
@@ -5267,35 +5536,38 @@ public class CmdExt extends ScriptExt {
 
   private void assignAtom(int atomIndex, P3 pt, String type) {
     if (type.equals("X"))
-      vwr.setRotateBondIndex(-1);
-    if (vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
+      vwr.setModelKitRotateBondIndex(-1);
+    if (atomIndex >= 0 && vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
       return;
     vwr.clearModelDependentObjects();
     int ac = vwr.ms.ac;
     if (pt == null) {
-      vwr.sm.modifySend(atomIndex,
-          vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
+      if (atomIndex < 0)
+        return;
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
       // After this next command, vwr.modelSet will be a different instance
-      vwr.ms.assignAtom(atomIndex, type, true);
+      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex, 1, 1 }});
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
-      vwr.sm.modifySend(atomIndex,
-          vwr.ms.at[atomIndex].mi, -1, "OK");
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
       return;
     }
-    Atom atom = vwr.ms.at[atomIndex];
-    BS bs = BSUtil.newAndSetBit(atomIndex);
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+    BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
     P3[] pts = new P3[] { pt };
     Lst<Atom> vConnections = new Lst<Atom>();
-    vConnections.addLast(atom);
-    int modelIndex = atom.mi;
-    vwr.sm.modifySend(atomIndex, modelIndex, 3, e.fullCommand);
+    int modelIndex = -1;
+    if (atom != null) {
+      vConnections.addLast(atom);
+      modelIndex = atom.mi;
+      vwr.sm.modifySend(atomIndex, modelIndex, 3, e.fullCommand);
+    }
     try {
       bs = vwr.addHydrogensInline(bs, vConnections, pts);
-      // new ModelSet here
-      atomIndex = bs.nextSetBit(0);
-      vwr.ms.assignAtom(atomIndex, type, false);
+      int atomIndex2 = bs.nextSetBit(0);
+      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex2, -1, atomIndex}});
+      atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
     }
@@ -5309,11 +5581,9 @@ public class CmdExt extends ScriptExt {
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
-      BS bsAtoms = vwr.ms.assignBond(bondIndex, type);
+      BS bsAtoms = (BS) vwr.setModelkitProperty("assignBond",  new int[] { bondIndex, type });
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");
-      else
-        vwr.addHydrogens(bsAtoms, false, true);
       vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
@@ -5329,8 +5599,8 @@ public class CmdExt extends ScriptExt {
     vwr.sm.modifySend(index, modelIndex, 2, e.fullCommand);
     vwr.ms.connect(connections);
     // note that vwr.ms changes during the assignAtom command 
-    vwr.ms.assignAtom(index, ".", true);
-    vwr.ms.assignAtom(index2, ".", true);
+    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index, 1, 1} });
+    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index2, 1, 1} });
     vwr.sm.modifySend(index, modelIndex, -2, "OK");
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }

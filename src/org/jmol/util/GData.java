@@ -1,8 +1,6 @@
 package org.jmol.util;
 
 
-import javajs.awt.Font;
-
 import javajs.util.AU;
 import javajs.util.M3;
 import javajs.util.P3;
@@ -748,7 +746,5 @@ public class GData implements JmolGraphicsInterface {
   public Font getFont3DCurrent() {
     return currentFont;
   }
-
-
 
 }

@@ -1,15 +1,16 @@
 package org.jmol.adapter.readers.pymol;
 
 import java.io.UnsupportedEncodingException;
+//import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Map;
+
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
 import javajs.util.Lst;
-
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 
 /**
  * generic Python Pickle file reader
@@ -58,7 +59,7 @@ class PickleReader {
   private final static byte BININT2 = 77; /* M */
   private final static byte BINPUT = 113; /* q */
   private final static byte BINSTRING = 84; /* T */
-  private final static byte BINUNICODE = 87; /* X */
+  private final static byte BINUNICODE = 88; /* X */
   private final static byte BUILD = 98; /* b */
   private final static byte EMPTY_DICT = 125; /* } */
   private final static byte EMPTY_LIST = 93; /* ] */
@@ -80,17 +81,17 @@ class PickleReader {
 //  private final static byte BINPERSID = 81; /* Q */
 //  private final static byte DICT = 100; /* d */
 //  private final static byte DUP = 50; /* 2 */
-//  private final static byte EMPTY_TUPLE = 41; /* ) */
+  private final static byte EMPTY_TUPLE = 41; /* ) */
 //  private final static byte FLOAT = 70; /* F */
 //  private final static byte GET = 103; /* g */
 //  private final static byte INST = 105; /* i */
 //  private final static byte LIST = 108; /* l */
-//  private final static byte LONG = 76; /* L */
+private final static byte LONG = 76; /* L */
 //  private final static byte PERSID = 80; /* P */
 //  private final static byte POP = 48; /* 0 */
 //  private final static byte POP_MARK = 49; /* 1 */
 //  private final static byte PUT = 112; /* p */
-//  private final static byte REDUCE = 82; /* R */
+  private final static byte REDUCE = 82; /* R */
 //  private final static byte STRING = 83; /* S */
 //  private final static byte UNICODE = 86; /* V */
 
@@ -106,6 +107,11 @@ class PickleReader {
   
   private int ipt = 0;
   
+  /**
+   * @param logging
+   * @return
+   * @throws Exception
+   */
   @SuppressWarnings("unchecked")
   Map<String, Object> getMap(boolean logging)
       throws Exception {
@@ -124,14 +130,15 @@ class PickleReader {
       b = binaryDoc.readByte();
       ipt++;
       //log(b + " "+ binaryDoc.getPosition());
-      //if (logging)
-      //log(" " + b);
       switch (b) {
       case EMPTY_DICT: //}
         push(new Hashtable<String, Object>());
         break;
       case APPEND:
         o = pop();
+//        if (o instanceof byte[])
+//          System.out.println("APPEND " + o);
+//
         ((Lst<Object>) peek()).addLast(o);
         break;
       case APPENDS:
@@ -195,14 +202,16 @@ class PickleReader {
         i = binaryDoc.readIntLE();
         a = new byte[i];
         binaryDoc.readByteArray(a, 0, i);
+        //System.out.println("binstring " + a);
         //System.out.println(bytesToString(a));
-        push(a);
+        push(a);//new String(a, "utf-8"));
         break;
       case BINUNICODE:
         i = binaryDoc.readIntLE();
         a = new byte[i];
         binaryDoc.readByteArray(a, 0, i);
-        push(a);
+        //System.out.println("binstring " + a);
+        push(a);//new String(a, "utf-8"));
         break;
       case EMPTY_LIST:
         emptyListPt = (int) binaryDoc.getPosition() - 1;
@@ -238,13 +247,19 @@ class PickleReader {
         l = getObjects(mark);
         o = peek();
         if (o instanceof Lst) {
-          for (i = 0; i < l.size(); i++)
-            ((Lst<Object>) o).addLast(l.get(i));
+          for (i = 0; i < l.size(); i++) {
+            Object oo = l.get(i);
+//            if (oo instanceof byte[])
+//              System.out.println("SETITEMS " + oo);
+            ((Lst<Object>) o).addLast(oo);
+          }
         } else {
           map = (Map<String, Object>) o;
           for (i = l.size(); --i >= 0;) {
             o = l.get(i);
-            map.put(bytesToString(l.get(--i)), o);
+            String key = bytesToString(l.get(--i));
+            //System.out.println("map " + key + " " + o);
+            map.put(key, o);
           }
         }
         break;
@@ -255,6 +270,24 @@ class PickleReader {
         // used for view_dict
         push(getObjects(getMark()));
         break;
+      case LONG:
+        String val = new String(readStringAsBytes());
+        if (val != null && val.endsWith("L")) {
+          val = val.substring(0, val.length() - 1);
+        }
+//        BigInteger bi = new BigInteger(val);
+        //System.out.println("biginteger " + bi + " " +( bi.longValue() - Integer.MAX_VALUE));
+        push(Long.valueOf(val));
+        break;
+        case REDUCE:
+          pop();
+          // extraneous list; already packaged "global"
+          //Lst lred = (Lst) pop();          
+//          System.out.println(new String((byte[])args[1]) + " " + new String((byte[])args[2]));
+//            Object c = (pop());
+            //System.out.println("REDUCE " + c);
+//          push(pop());//constructor.construct(args));
+          break;
       case INT:
         /// "0x88000000" for instance
         s = bytesToString(readStringAsBytes());
@@ -267,6 +300,9 @@ class PickleReader {
           //push(Integer.valueOf(Integer.MAX_VALUE));
         }
         break;
+        case EMPTY_TUPLE:
+          push(new Lst());
+          break;
       default:
 
         // not used?
@@ -291,9 +327,6 @@ class PickleReader {
         //        case DUP:
         //          push(peek());
         //          break;
-        //        case EMPTY_TUPLE:
-        //          push(new Point3f());
-        //          break;
         //        case FLOAT:
         //          s = readString();
         //          push(Double.valueOf(s));
@@ -312,10 +345,6 @@ class PickleReader {
         //        case LIST:
         //          push(getObjects(getMark()));
         //          break;
-        //        case LONG:
-        //          i = (int) binaryDoc.readLong();
-        //          push(Long.valueOf(i));
-        //          break;
         //        case PERSID:
         //          s = readString();
         //          push(new Object[] { "persid", s });
@@ -329,9 +358,6 @@ class PickleReader {
         //        case PUT:
         //          s = readString();
         //          temp.put(s, peek());
-        //          break;
-        //        case REDUCE:
-        //          push(new Object[] { "reduce", pop(), pop() });
         //          break;
         //        case STRING:
         //          s = readString();
@@ -361,6 +387,31 @@ class PickleReader {
     return map;
   }
   
+//  public Number optimizeBigint(BigInteger bigint) {
+//    // final BigInteger MAXINT=BigInteger.valueOf(Integer.MAX_VALUE);
+//    // final BigInteger MININT=BigInteger.valueOf(Integer.MIN_VALUE);
+//    final BigInteger MAXLONG = BigInteger.valueOf(Long.MAX_VALUE);
+//    final BigInteger MINLONG = BigInteger.valueOf(Long.MIN_VALUE);
+//    long l = 0;
+//    switch (bigint.signum()) {
+//    case 0:
+//      break;
+//    case 1: // >0
+//      // if(bigint.compareTo(MAXINT)<=0) return bigint.intValue();
+//      if (bigint.compareTo(MAXLONG) > 0)
+//        return bigint;
+//      l = bigint.longValue();
+//      break;
+//    case -1: // <0
+//      // if(bigint.compareTo(MININT)>=0) return bigint.intValue();
+//      if (bigint.compareTo(MINLONG) < 0)
+//        return bigint;
+//      l = bigint.longValue();
+//      break;
+//    }
+//    return Long.valueOf(l);
+//  }
+
   private String bytesToString(Object o) {
     try {
       return (AU.isAB(o) ? new String((byte[]) o, "UTF-8") : o.toString());
@@ -374,8 +425,9 @@ class PickleReader {
     if (AU.isAB(o))
       o = bytesToString((byte[]) o);
     if (o instanceof String) {
-      if (doCheck && markCount >= 6 || markCount == 3 && inMovie)
-        return;
+// BH 2019.09.20 we need all the memos for PyMOL 2.3.0; don't know about inMovie
+//      if (doCheck && markCount >= 6 || markCount == 3 && inMovie)
+//        return;
       memo.put(Integer.valueOf(i), o);
 //      if (((String) o).indexOf('\0') >= 0)
 //        System.out.println("caching byte[" + ((String) o).length() + "] at "
@@ -399,8 +451,12 @@ class PickleReader {
     int n = stack.size() - mark;
     Lst<Object> args = new  Lst<Object>();
     args.ensureCapacity(n);
-    for (int i = mark; i < stack.size(); ++i)
-      args.addLast(stack.get(i));
+    for (int i = mark; i < stack.size(); ++i) {
+      Object oo = stack.get(i);
+//      if (oo instanceof byte[])
+//        System.out.println("getObjects " + oo);
+      args.addLast(oo);
+    }
     for (int i = stack.size(); --i >= mark;)
       stack.removeItemAt(i);
     return args;

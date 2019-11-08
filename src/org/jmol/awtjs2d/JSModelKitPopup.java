@@ -24,33 +24,15 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-
-import org.jmol.api.PlatformViewer;
-import org.jmol.i18n.GT;
-import org.jmol.modelkit.ModelKitPopupResourceBundle;
-import org.jmol.popup.JSSwingPopupHelper;
-import org.jmol.popup.JmolGenericPopup;
-import org.jmol.popup.PopupResource;
-//import org.jmol.util.Elements;
+import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.util.Elements;
-import org.jmol.viewer.Viewer;
+import org.jmol.api.SC;
+import org.jmol.awtjs.swing.Component;
 
-import javajs.awt.Component;
-import javajs.awt.SC;
-
-public class JSModelKitPopup extends JmolGenericPopup {
+public class JSModelKitPopup extends ModelKitPopup {
 
   public JSModelKitPopup() {
-    helper = new JSSwingPopupHelper(this);
-  }
-  
-  @Override
-  public void jpiInitialize(PlatformViewer vwr, String menu) {
-    updateMode = UPDATE_NEVER;
-    boolean doTranslate = GT.setDoTranslate(true);
-    PopupResource bundle = new ModelKitPopupResourceBundle(null, null);
-    initialize((Viewer) vwr, bundle, bundle.getMenuName());
-    GT.setDoTranslate(doTranslate);
+    helper = new JSPopupHelper(this);
   }
 
   @Override
@@ -64,49 +46,20 @@ public class JSModelKitPopup extends JmolGenericPopup {
     isTainted = false;
   }
   
-  /**
-   * @j2sOverride
-   */
-  @Override
-  public void menuClickCallback(SC source, String script) {
-    if (script.equals("clearQ")) {
-      for (SC item : htCheckbox.values()) {
-        if (item.getActionCommand().indexOf(":??") < 0)
-          continue;        
-        menuSetLabel(item, "??");
-        item.setActionCommand("_??P!:");
-        item.setSelected(false);
-      }
-      vwr.evalStringQuiet("set picking assignAtom_C");
-      return;
-    }
-    processClickCallback(source, script);
-  }
-
-  @Override
-  public String menuSetCheckBoxOption(SC item, String name, String what) {
-    String element = GT.$("Element?");
-    /**
-     * @j2sNative
-     * 
-     * element = prompt(element, "");
-     * 
-     */
-    {}
-    if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
-      return null;
-    updateButton(item, element, "assignAtom_" + element + "P!:??");
-    return "set picking assignAtom_" + element;
-  }
-
   @Override
   protected Object getImageIcon(String fileName) {
     return "org/jmol/modelkit/images/" + fileName;
   }
 
+  
   @Override
-  public void menuFocusCallback(String name, String actionCommand, boolean b) {
-    // TODO
-    
+  public void menuClickCallback(SC source, String script) {
+    doMenuClickCallbackMK(source, script);
   }
+
+  @Override
+  public void menuCheckBoxCallback(SC source) {
+    doMenuCheckBoxCallback(source);
+  }
+
 }

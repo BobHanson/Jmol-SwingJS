@@ -27,23 +27,23 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.script.T;
+import org.jmol.util.Logger;
+import org.jmol.util.Vibration;
+
 import javajs.api.GenericCifDataParser;
+import javajs.util.BS;
 import javajs.util.CifDataParser;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.V3;
-
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.script.T;
-import org.jmol.util.Logger;
-import org.jmol.util.Vibration;
 
 /**
  * A true line-free CIF file reader for CIF files.
@@ -171,7 +171,7 @@ public class CifReader extends AtomSetCollectionReader {
      */
     parser = getCifDataParser();
     line = "";
-    while ((key = (String) parser.peekToken()) != null)
+    while (continueWith(key = (String) parser.peekToken()))
       if (!readAllData())
         break;
     if (appendedData != null) {
@@ -182,6 +182,13 @@ public class CifReader extends AtomSetCollectionReader {
           break;
     }
   }
+
+  private boolean continueWith(String key) {
+    boolean ret = (key != null && !key.equals("_shelx_hkl_file"));
+    return ret;
+  }
+
+
 
   protected GenericCifDataParser getCifDataParser() {
     // overridden in Cif2Reader
@@ -757,6 +764,8 @@ public class CifReader extends AtomSetCollectionReader {
    */
   private boolean getData() throws Exception {
     key = (String) parser.getTokenPeeked();
+    if (!continueWith(key))
+      return false;
     data = parser.getNextToken();
     if (debugging && data != null && data.length() > 0 && data.charAt(0) != '\0')
       Logger.debug(">> " + key  + " " + data);

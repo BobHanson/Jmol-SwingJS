@@ -25,13 +25,12 @@ package org.jmol.multitouch;
 
 import org.jmol.script.T;
 
-import javajs.awt.event.Event;
-
 import javajs.util.Lst;
 
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolTouchSimulatorInterface;
+import org.jmol.awtjs.Event;
 import org.jmol.util.Logger;
 import javajs.util.P3;
 import org.jmol.viewer.ActionManager;
@@ -83,7 +82,6 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
       adapter.setMultiTouchClient(vwr, this, false);
     }
     setBinding(b);
-    xyRange = 10; // allow for more slop in double-clicks and press/releases
   }
 
   private void startSparshUIService(boolean isSimulated) {

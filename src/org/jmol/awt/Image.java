@@ -157,7 +157,7 @@ class Image {
     return grabPixels(imageOffscreen, width, height, null, 0, 0);
   }
 
-  public static int[] getTextPixels(String text, javajs.awt.Font font3d, Object gObj,
+  public static int[] getTextPixels(String text, org.jmol.util.Font font3d, Object gObj,
                                     Object image, int width, int height,
                                     int ascent) {
     Graphics g = (Graphics) gObj;
@@ -217,10 +217,14 @@ class Image {
               false, 
               null);
     */
-    return new BufferedImage(rgbColorModel, Raster.createWritableRaster(
+    return new BufferedImage(rgbColorModel, 
+        Raster.createWritableRaster(
         new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, windowWidth,
-            windowHeight, sampleModelBitMasks), new DataBufferInt(pBuffer,
-            windowSize), null), false, null);
+            windowHeight, sampleModelBitMasks), 
+        new DataBufferInt(pBuffer, windowSize), 
+        null
+        ), 
+        false, null);
   }
 
   /**

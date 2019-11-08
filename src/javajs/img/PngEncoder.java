@@ -3,6 +3,9 @@
  * $Date: 2007-03-30 12:26:16 -0500 (Fri, 30 Mar 2007) $
  * $Revision: 7275 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -23,11 +26,11 @@
  */
 package javajs.img;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 
 
@@ -48,7 +51,7 @@ import java.io.IOException;
  * 
  * // IHDR chunk 
  * 
- * // tEXt chunk "Jmol type - <PNG0|PNGJ><0000000pt>+<000000len>" 
+ * // tEXt chunk "Jmol type - <PNG0|PNGJ|PNGT><0000000pt>+<000000len>" 
  * 
  * // tEXt chunk "Software - Jmol <version>"
  * 
@@ -167,7 +170,7 @@ public class PngEncoder extends CRCEncoder {
     writeHeader();
     writeText(getApplicationText(appPrefix, type, 0, 0));
 
-    writeText("Software\0Jmol " + comment);
+    writeText("Software\0" + comment);
     writeText("Creation Time\0" + date);
 
     if (!encodeAlpha && transparentColor != null)
@@ -207,14 +210,38 @@ public class PngEncoder extends CRCEncoder {
     encoder.writeCRC();
   }
 
-  private static String getApplicationText(String prefix, String type, int nPNG, int nState) {
-    String sPNG = "000000000" + nPNG;
-    sPNG = sPNG.substring(sPNG.length() - 9);
-    String sState = "000000000" + nState;
-    sState = sState.substring(sState.length() - 9);
-    return prefix + "\0" + type + (type.equals("PNG") ? "0" : "") + sPNG + "+"
-        + sState;
-  }
+  /**
+   * Generate the PNGJ directory identifier:
+   * 
+   *    xxxxxxxxx\0ttttiiiiiiiii+ddddddddd
+   *    
+   * where 
+   * 
+   * xxxxxxxxx is a unique 9-character software identifier
+   * tttt is a four-byte software-specific type indicator (PNG0, PNGJ, PNGT, etc.)
+   * iiiiiiiii is the file pointer to the start of app data
+   * ddddddddd is the length of the app data
+   * 
+   * @param prefix up to 9 characters to allow software to recognize itself 
+   * @param type PNGx, where x is J or T for Jmol; original type "PNG" is now "PNG0" 
+   * @param nPNG
+   * @param nData
+   * @return
+   */
+	private static String getApplicationText(String prefix, String type,
+			int nPNG, int nData) {
+		String sPNG = "000000000" + nPNG;
+		sPNG = sPNG.substring(sPNG.length() - 9);
+		String sData = "000000000" + nData;
+		sData = sData.substring(sData.length() - 9);
+		if (prefix == null)
+			prefix = "#SwingJS.";			
+		if (prefix.length() < 9)
+			prefix = (prefix + ".........");
+		if (prefix.length() > 9)
+			prefix = prefix.substring(0, 9);
+		return prefix + "\0" + type + sPNG + "+" + sData;
+	}
 
   //  /**
   //   * Set the filter to use

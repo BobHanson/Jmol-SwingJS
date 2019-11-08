@@ -403,7 +403,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           v = getAssocArray(i);
         } else {
-          v = getPointOrPlane(i, false, true, true, false, 3, 4);
+          v = getPointOrPlane(i, false, true, true, false, 3, 4, true);
         }
         i = iToken;
         break;
@@ -746,7 +746,7 @@ abstract class ScriptExpr extends ScriptParam {
         break expression_loop;
       case T.leftbrace:
         if (isPoint3f(pc)) {
-          P3 pt = getPoint3f(pc, true);
+          P3 pt = getPoint3f(pc, true, true);
           if (pt != null) {
             rpn.addXPt(pt);
             pc = iToken;
@@ -792,7 +792,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.coord:
         rpn.addX(SV.newT(instruction));
-        rpn.addXPt(getPoint3f(pc + 2, true));
+        rpn.addXPt(getPoint3f(pc + 2, true, true));
         pc = iToken;
         break;
       case T.string:

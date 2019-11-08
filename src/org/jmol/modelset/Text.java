@@ -27,22 +27,20 @@ import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.awt.Font;
 import javajs.util.BS;
 
 import org.jmol.shape.Shape;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class Text {
-
-  private boolean isEcho;
+ 
+  private Viewer vwr;
 
   public boolean doFormatText;
-
-  public String[] lines;
 
   public Font font;
   private byte fid;
@@ -52,27 +50,23 @@ public class Text {
 
   protected int offsetX; // Labels only
   protected int offsetY; // Labels only
+  public  int boxYoff2;
+
+  private int[] widths;
 
   private int textWidth;
   private int textHeight;
   public String text;
   public String textUnformatted;
+  public String[] lines;
   
-  
-  public void setOffset(int offset) {
-    //Labels only
-    offsetX = JC.getXOffset(offset);
-    offsetY = JC.getYOffset(offset);
-    pymolOffset = null;
-    valign = JC.ECHO_XY;
-  }
+  public Object image;
+  public float imageScale = 1;
 
-  private int[] widths;
 
-  private Viewer vwr;
 
   public Text() {
-    // for reflection
+    // public for reflection
     // requires .newLabel or .newEcho
     boxXY =  new float[5];
   }
@@ -82,9 +76,18 @@ public class Text {
     // for labels and hover
     Text t = new Text();
     t.vwr = vwr;
-    t.set(font, colix, align, true, scalePixelsPerMicron);
+    t.set(font, colix, align, scalePixelsPerMicron);
     t.setText(text);
     t.bgcolix = bgcolix;
+    return t;
+  }
+  
+  static public Text newMeasure(Viewer vwr, Font font,
+                              short colix) {
+    Text t = new Text();
+    t.vwr = vwr;
+    t.set(font, colix, 0, 0);
+    t.isMeasure = true;
     return t;
   }
   
@@ -92,9 +95,9 @@ public class Text {
                       short colix, int valign, int align,
                       float scalePixelsPerMicron) {
     Text t = new Text();
-    t.vwr = vwr;
     t.isEcho = true;
-    t.set(font, colix, align, false, scalePixelsPerMicron);
+    t.vwr = vwr;
+    t.set(font, colix, align, scalePixelsPerMicron);
     t.target = target;
     t.valign = valign;
     t.z = 2;
@@ -102,13 +105,21 @@ public class Text {
     return t;
   }
 
-  private void set(Font font, short colix, int align, boolean isLabelOrHover,
+  private void set(Font font, short colix, int align,
                    float scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
-    this.isLabelOrHover = isLabelOrHover;
+    this.isEcho = isEcho;
     this.colix = colix;
     this.align = align;
-    this.setFont(font, isLabelOrHover);
+    this.setFont(font, !isEcho);
+  }
+  
+  public void setOffset(int offset) {
+    //Labels only
+    offsetX = JC.getXOffset(offset);
+    offsetY = JC.getYOffset(offset);
+    pymolOffset = null;
+    valign = JC.ECHO_XY;
   }
 
   private void getFontMetrics() {
@@ -138,12 +149,6 @@ public class Text {
     if (!doFormatText)
       recalc();
   }
-
-  public Object image;
-  public float imageScale = 1;
-
-  public  int boxYoff2;
-  
   
   public void setImage(Object image) {
     this.image = image;
@@ -220,14 +225,14 @@ public class Text {
     float dy = offsetY * imageFontScaling;
     xAdj = (fontScale >= 2 ? 8 : 4);
     yAdj = ascent - lineHeight + xAdj;
-    if (isLabelOrHover || pymolOffset != null) {
+    if (!isEcho || pymolOffset != null) {
       boxXY[0] = movableX;
       boxXY[1] = movableY;
       if (pymolOffset != null && pymolOffset[0] != 2 && pymolOffset[0] != 3) {
         // [1,2,3] are in Angstroms, not screen pixels
         float pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         float pz = pymolOffset[3];
-        float dz = (pz < 0 ? -1 : 1) * Math.max(0, Math.abs(pz) - 1)
+        float dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5f : 0, Math.abs(pz) - 1)
             * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
@@ -298,9 +303,11 @@ public class Text {
 
     if (adjustForWindow)
       setBoxOffsetsInWindow(/*image == null ? fontScale * 5 :*/0,
-          isLabelOrHover ? 16 * fontScale + lineHeight : 0, boxY - textHeight);
+          isEcho ? 0 : 16 * fontScale + lineHeight, boxY - textHeight);
     //if (!isAbsolute)
     y0 = boxY + yAdj;
+    if (isMeasure && align != JC.TEXT_ALIGN_CENTER)
+      y0 += ascent + (lines.length - 1)/2f * lineHeight;
   }
 
   private float getPymolXYOffset(float off, int width, float ppa) {
@@ -476,9 +483,8 @@ public class Text {
       s.append(" " + (10000f / scalePixelsPerMicron)); // Angstroms per pixel
   }
 
-  // Echo, Label
-
-  public boolean isLabelOrHover;
+  public boolean isMeasure;
+  public boolean isEcho;
   public P3 xyz;
   public String target;
   public String script;

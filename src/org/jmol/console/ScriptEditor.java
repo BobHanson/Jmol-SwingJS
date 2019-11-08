@@ -732,4 +732,18 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     }
     vwr.openFileAsyncSpecial(fileName, 11);
   }
+
+  @Override
+  public void notify(int msWalltime, Object[] data) {
+    if (msWalltime > 0) {
+      // termination -- button legacy
+      notifyScriptTermination();
+    } else if (msWalltime < 0) {
+      if (msWalltime == -2)
+        notifyScriptStart();
+    } else if (isVisible()
+        && ((String) data[2]).length() > 0) {
+      notifyContext(vwr.getScriptContext("SE notify"), data);
+    }
+  }
 }

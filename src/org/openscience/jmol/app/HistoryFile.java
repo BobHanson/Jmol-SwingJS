@@ -58,8 +58,10 @@ public class HistoryFile {
   /**
    * Creates a history file.
    *
-   * @param file the location of the file.
-   * @param header information written to the header of the file.
+   * @param file
+   *        the location of the file.
+   * @param header
+   *        information written to the header of the file.
    */
   public HistoryFile(File file, String header) {
     this.file = file;
@@ -71,7 +73,8 @@ public class HistoryFile {
    * Adds the given properties to the history. If a property existed previously,
    * it will be replaced.
    *
-   * @param properties the properties to add.
+   * @param properties
+   *        the properties to add.
    */
   public void addProperties(Properties properties) {
     Enumeration<Object> keys = properties.keys();
@@ -93,8 +96,10 @@ public class HistoryFile {
   /**
    * Get the value of a property
    * 
-   * @param key Key of the property to find
-   * @param defaultValue Default value to use if the property is not found
+   * @param key
+   *        Key of the property to find
+   * @param defaultValue
+   *        Default value to use if the property is not found
    * @return The value of the property
    */
   public String getProperty(String key, String defaultValue) {
@@ -102,28 +107,30 @@ public class HistoryFile {
   }
 
   /**
-   * Adds the given property to the history. If it existed previously,
-   * it will be replaced.
+   * Adds the given property to the history. If it existed previously, it will
+   * be replaced.
    * 
-   * @param key Key of the property to add
-   * @param value Value of the property
+   * @param key
+   *        Key of the property to add
+   * @param value
+   *        Value of the property
    * @return true if the property is modified
    */
   public boolean addProperty(String key, String value) {
     boolean modified = false;
     Object oldValue = properties.setProperty(key, value);
     if (!value.equals(oldValue)) {
-        modified = true;
+      modified = true;
     }
     return modified;
   }
 
   /**
-   * @param name Window name
+   * @param name
+   *        Window name
    * @return Position of the window stored in the history file
    */
   public Point getWindowPosition(String name) {
-    Point result = null;
     if (name != null) {
       try {
         String x = getProperty("Jmol.window." + name + ".x", null);
@@ -131,37 +138,60 @@ public class HistoryFile {
         if ((x != null) && (y != null)) {
           int posX = Integer.parseInt(x);
           int posY = Integer.parseInt(y);
-          result = new Point(posX, posY);
+          return new Point(posX, posY);
         }
       } catch (Exception e) {
         //Just return a null result
       }
     }
-    return result;
+    return null;
   }
 
   /**
-   * @param name window name
+   * @param name
+   *        Window name
+   * @return Inner dimension of the window stored in the history file
+   */
+  public Dimension getWindowInnerDimension(String name) {
+    if (name != null) {
+      try {
+        String w = getProperty("Jmol.window." + name + ".innerWidth", null);
+        String h = getProperty("Jmol.window." + name + ".innerHeight", null);
+        if ((w != null) && (h != null)) {
+          int iw = Integer.parseInt(w);
+          int ih = Integer.parseInt(h);
+          return new Dimension(iw, ih);
+        }
+      } catch (Exception e) {
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @param name
+   *        window name
    * @return window border stored in the history file
    */
   public Point getWindowBorder(String name) {
     Point result = null;
-      try {
-        String x = getProperty("Jmol.windowBorder."+name+".x", null);
-        String y = getProperty("Jmol.windowBorder."+name+".y", null);
-        if ((x != null) && (y != null)) {
-          int X = Integer.parseInt(x);
-          int Y = Integer.parseInt(y);
-          result = new Point(X, Y);
-        }
-      } catch (Exception e) {
-        //ust return a null result
+    try {
+      String x = getProperty("Jmol.windowBorder." + name + ".x", null);
+      String y = getProperty("Jmol.windowBorder." + name + ".y", null);
+      if ((x != null) && (y != null)) {
+        int X = Integer.parseInt(x);
+        int Y = Integer.parseInt(y);
+        result = new Point(X, Y);
       }
+    } catch (Exception e) {
+      //ust return a null result
+    }
     return result;
   }
 
   /**
-   * @param name Window name
+   * @param name
+   *        Window name
    * @return Size of the window stored in the history file
    */
   public Dimension getWindowSize(String name) {
@@ -183,7 +213,8 @@ public class HistoryFile {
   }
 
   /**
-   * @param name Window name
+   * @param name
+   *        Window name
    * @return Visibility of the window stored in the history file
    */
   private Boolean getWindowVisibility(String name) {
@@ -202,11 +233,13 @@ public class HistoryFile {
   }
 
   /**
-   * Adds the window position to the history.
-   * If it existed previously, it will be replaced.
+   * Adds the window position to the history. If it existed previously, it will
+   * be replaced.
    * 
-   * @param name Window name
-   * @param position Window position
+   * @param name
+   *        Window name
+   * @param position
+   *        Window position
    * @return Tells if the properties are modified
    */
   private boolean addWindowPosition(String name, Point position) {
@@ -220,30 +253,46 @@ public class HistoryFile {
     return modified;
   }
 
-
   /**
-   * Adds the window border to the history.
-   * If it existed previously, it will be replaced.
+   * Adds the window border to the history. If it existed previously, it will be
+   * replaced.
    * 
-   * @param name window name
-   * @param border Window border
+   * @param name
+   *        window name
+   * @param border
+   *        Window border
    * @return Tells if the properties are modified
    */
   private boolean addWindowBorder(String name, Point border) {
     boolean modified = false;
     if (name != null && border != null) {
-      modified |= addProperty("Jmol.windowBorder." + name + ".x", "" + border.x);
-      modified |= addProperty("Jmol.windowBorder." + name + ".y", "" + border.y);
+      modified |= addProperty("Jmol.windowBorder." + name + ".x",
+          "" + border.x);
+      modified |= addProperty("Jmol.windowBorder." + name + ".y",
+          "" + border.y);
+    }
+    return modified;
+  }
+
+  private boolean addWindowDim(String name, Dimension d) {
+    boolean modified = false;
+    if (name != null && d != null) {
+      modified |= addProperty("Jmol.window." + name + ".innerWidth",
+          "" + d.width);
+      modified |= addProperty("Jmol.window." + name + ".innerHeight",
+          "" + d.height);
     }
     return modified;
   }
 
   /**
-   * Adds the window size to the history.
-   * If it existed previously, it will be replaced.
+   * Adds the window size to the history. If it existed previously, it will be
+   * replaced.
    * 
-   * @param name Window name
-   * @param size Window size
+   * @param name
+   *        Window name
+   * @param size
+   *        Window size
    * @return Tells if the properties are modified
    */
   private boolean addWindowSize(String name, Dimension size) {
@@ -258,11 +307,13 @@ public class HistoryFile {
   }
 
   /**
-   * Adds the window visibility to the history.
-   * If it existed previously, it will be replaced.
+   * Adds the window visibility to the history. If it existed previously, it
+   * will be replaced.
    * 
-   * @param name Window name
-   * @param visible Window visibilite
+   * @param name
+   *        Window name
+   * @param visible
+   *        Window visibilite
    * @return Tells if the properties are modified
    */
   private boolean addWindowVisibility(String name, boolean visible) {
@@ -274,37 +325,55 @@ public class HistoryFile {
   }
 
   /**
-   * Adds the window informations to the history.
-   * If it existed previously, it will be replaced.
+   * Adds the window informations to the history. If it existed previously, it
+   * will be replaced.
    * 
-   * @param name Window name
-   * @param window Window
-   * @param border Point border
+   * @param name
+   *        Window name
+   * @param window
+   *        Window
+   * @param border
+   *        Point border
    */
   public void addWindowInfo(String name, Component window, Point border) {
+    addWindowInfo(name, window, border, null);
+  }
+
+  public void addWindowInfo(String name, Component window, Point border,
+                            Dimension d) {
     if (window != null) {
       boolean modified = false;
       modified |= addWindowPosition(name, window.getLocation());
       modified |= addWindowSize(name, window.getSize());
       modified |= addWindowBorder(name, border);
       modified |= addWindowVisibility(name, window.isVisible());
+      modified |= addWindowDim(name, d);
+
       if (modified) {
         save();
       }
     }
   }
 
+  public void addWindowInnerInfo(String name, Component window,
+                                 Dimension inner) {
+    addWindowInfo(name, window, null, inner);
+  }
+
   /**
    * Uses the informations in the history to reposition the window.
    * 
-   * @param name Window name
-   * @param window Window
+   * @param name
+   *        Window name
+   * @param window
+   *        Window
    * @param minWidth
    * @param minHeight
-   * @param allowVisible TODO
+   * @param allowVisible
+   *        TODO
    */
-  public void repositionWindow(String name, Component window, 
-                        int minWidth, int minHeight, boolean allowVisible) {
+  public void repositionWindow(String name, Component window, int minWidth,
+                               int minHeight, boolean allowVisible) {
     if (window != null) {
       Point position = getWindowPosition(name);
       Dimension size = getWindowSize(name);
@@ -326,8 +395,10 @@ public class HistoryFile {
   /**
    * Uses the informations in the history to reposition the window.
    * 
-   * @param name Window name
-   * @param window Window
+   * @param name
+   *        Window name
+   * @param window
+   *        Window
    */
   public void repositionWindow(String name, Component window) {
     repositionWindow(name, window, 10, 10, true);
@@ -336,7 +407,7 @@ public class HistoryFile {
   public File getFile() {
     return file;
   }
-  
+
   /**
    * Loads properties from the history file.
    */
@@ -367,7 +438,7 @@ public class HistoryFile {
       System.err.println("Error saving history: " + ex);
     }
   }
-  
+
   public void clear() {
     if (file == null)
       return;

@@ -41,7 +41,6 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 
-import javajs.awt.Font;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -72,6 +71,7 @@ import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
@@ -1008,7 +1008,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append(";\n");
     }
     if (shape.mad >= 0)
-      commands.append(" set measurements " + (shape.mad / 2000f)).append(";\n");
+      commands.append(" set measurements ").appendF(shape.mad / 2000f).append(";\n");
     String s = getCommands(temp, null, "select measures");
     if (s != null && s.length() != 0) {
       commands.append(s);
@@ -1062,7 +1062,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : shape.bsSizeSet
           .nextSetBit(i + 1)))
         BSUtil.setMapBitSet(temp, i, i, "wireframe "
-            + ((r = bonds[i].mad) == 1 ? "on" : "" + (r / 2000f)));
+            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escF(r / 2000f)));
     }
     if (reportAll || bsOrderSet != null) {
       int i0 = (reportAll ? bondCount - 1 : bsOrderSet.nextSetBit(0));
@@ -1338,7 +1338,7 @@ public class StateCreator extends JmolStateCreator {
   private String getTextState(Text t) {
     SB s = new SB();
     String text = t.text;
-    if (text == null || t.isLabelOrHover || t.target.equals("error"))
+    if (text == null || !t.isEcho || t.target.equals("error"))
       return "";
     //set echo top left
     //set echo myecho x y

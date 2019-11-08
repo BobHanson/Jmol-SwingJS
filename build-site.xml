@@ -31,10 +31,14 @@
   	<!-- non-Java resources to copy to site/ -->
     <property name="resource.dir" value="resources" />  	
   	
+  	<!-- site/swingjs resources to copy to site/ -->
+    <property name="site.swingjs.dir" value="assets" />  	
+  	
 	<!-- output directories -->
 
   	<property name="site.dir" value="site" />
-  	<property name="j2s.dir" value="${site.dir}/swingjs/j2s" />
+  	<property name="swingjs.dir" value="${site.dir}/swingjs" />
+  	<property name="j2s.dir" value="${swingjs.dir}/j2s" />
   	 
     <!-- <for  ...> construct needs ant-contrib.jar -->
     <taskdef resource="net/sf/antcontrib/antlib.xml">
@@ -74,7 +78,14 @@
       	<include name="**"/>
   	</fileset>
     </copy>
-      		
+
+  	<echo> Copying ${site.swingjs.dir} files into ${swingjs.dir} </echo>
+  	<copy todir="${swingjs.dir}">
+      <fileset dir="${site.swingjs.dir}">
+      	<include name="**"/>
+  	</fileset>
+    </copy>
+
 </target>
 	
 

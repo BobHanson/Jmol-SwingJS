@@ -33,17 +33,16 @@ import java.awt.Font;
 import java.awt.Window;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import javajs.util.PT;
-
 import javax.swing.InputMap;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -53,6 +52,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -76,7 +76,8 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.HelpDialog;
 import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
-//import javax.swing.SwingUtilities;
+
+import javajs.util.PT;
 
 public class AppConsole extends JmolConsole implements EnterListener, JmolDropEditor {
 
@@ -94,22 +95,6 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
    public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
 
-  static {
-    boolean isMacOs = (System.getProperty("os.name").toLowerCase()
-        .contains("mac"));
-    System.out.println("appConsole " + System.getProperty("os.name"));
-    if (true || isMacOs) {
-      // See http://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
-      InputMap im = (InputMap) UIManager.get("TextPane.focusInputMap");
-      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.META_DOWN_MASK),
-          DefaultEditorKit.selectAllAction);
-      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.META_DOWN_MASK),
-          DefaultEditorKit.copyAction);
-      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.META_DOWN_MASK),
-          DefaultEditorKit.pasteAction);
-      //    im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
-    }
-  }
   private int fontSize;
 
   // note:  "Check" "Top" "Step" not included in 12.1
@@ -141,6 +126,23 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
   private void setup(Viewer vwr, Container externalContainer,
                      String enabledButtons) {
+    
+//    boolean isMacOs = (/** @j2sNative false && */System.getProperty("os.name").toLowerCase()
+//        .contains("mac"));
+    System.out.println("appConsole " + System.getProperty("os.name"));
+    if (!Viewer.isJS) {// || isMacOs) {
+      // See http://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
+      InputMap im = (InputMap) UIManager.get("TextPane.focusInputMap");
+      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.META_DOWN_MASK),
+          DefaultEditorKit.selectAllAction);
+      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.META_DOWN_MASK),
+          DefaultEditorKit.copyAction);
+      im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.META_DOWN_MASK),
+          DefaultEditorKit.pasteAction);
+      //    im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
+    }
+
+    
     setViewer(vwr);
     Window w = Platform.getWindow((Container) vwr.display);
     vwrFrame = (w instanceof JFrame ? (JFrame) w : null);
@@ -363,13 +365,13 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
       try {
 
-        while (console.checking) {
-          try {
-            Thread.sleep(100); //wait for command checker
-          } catch (Exception e) {
-            break; //-- interrupt? 
-          }
-        }
+//        while (console.checking) {
+//          try {
+//            Thread.sleep(100); //wait for command checker
+//          } catch (Exception e) {
+//            break; //-- interrupt? 
+//          }
+//        }
 
         executeCommand(strCommand);
       } catch (Exception ie) {
@@ -644,23 +646,27 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       return;
     }
     if (source == helpButton) {
-      URL url = this.getClass().getClassLoader().getResource(
-          "org/openscience/jmol/Data/guide/ch04.html");
-      if (url == null)
+//        
+//      
+//      URL url = this.getClass().getClassLoader().getResource(
+//          "org/openscience/jmol/Data/guide/ch04.html");
+//      if (url == null)
         vwr.script("help");
-      else
-        (new HelpDialog(null, url)).setVisible(true);
+//      else
+//        (new HelpDialog(null, url)).setVisible(true);
     }
     super.actionPerformed(e);
   }
 
-  class ConsoleTextPane extends JTextPane {
+  class ConsoleTextPane extends JTextPane implements KeyListener {
 
     private ConsoleDocument consoleDoc;
     private EnterListener enterListener;
 
     boolean checking = false;
     private String pageUpBuffer;
+    boolean checkingCommand;
+    private Timer checkTimer;
     
     ConsoleTextPane(AppConsole appConsole) {
       super(new ConsoleDocument());
@@ -668,6 +674,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       consoleDoc = (ConsoleDocument) getDocument();
       consoleDoc.setConsoleTextPane(this);
       this.enterListener = appConsole;
+      addKeyListener(this);
     }
 
     public String getCommandString() {
@@ -711,12 +718,12 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       setPrompt();
     }
 
-    /*
-    * (non-Javadoc)
-    * 
-    * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
-    */
-
+//    /*
+//    * (non-Javadoc)
+//    * 
+//    * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
+//    */
+//
     /**
      * Custom key event processing for command 0 implementation.
      * 
@@ -726,14 +733,32 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
      * 
      * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
      */
+
+    
     @Override
-    protected void processKeyEvent(KeyEvent ke) {
+    public void keyTyped(KeyEvent e) {
+      processKey(e);
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+      processKey(e);
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+      processKey(e);
+    }
+
+    protected void processKey(KeyEvent ke) {
+
+      // ps: Wow - was direct overriding of processkeyEvent instead of using a listener! BH 2019
+
       // Id Control key is down, captures events does command
       // history recall and inhibits caret vertical shift.
 
       //System.out.println("AppConsole: " + ke);
-      
-      
+
       int kcode = ke.getKeyCode();
       int kid = ke.getID();
       if (kid == KeyEvent.KEY_PRESSED) {
@@ -771,41 +796,47 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
         }
         nTab = 0;
       }
-      if ((kcode == KeyEvent.VK_PAGE_UP || kcode == KeyEvent.VK_PAGE_DOWN)
-          && ke.isControlDown()) {
-        if (kid == KeyEvent.KEY_PRESSED)
-          recallCommand(kcode == KeyEvent.VK_PAGE_UP, true);
+      if ((kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN)
+          && ke.isControlDown() && consoleDoc.isAtEnd()) {
+        if (kid == KeyEvent.KEY_PRESSED) {
+          //System.out.println(pageUpBuffer);
+          recallCommand(kcode == KeyEvent.VK_UP, true);
+        }
+        ke.consume();
         return;
       }
       pageUpBuffer = null;
       if (kcode == KeyEvent.VK_UP && kid == KeyEvent.KEY_PRESSED
-          && !ke.isControlDown()) {
+          && consoleDoc.isAtEnd()) {
         recallCommand(true, false);
+        ke.consume();
       } else if (kcode == KeyEvent.VK_DOWN && kid == KeyEvent.KEY_PRESSED
-          && !ke.isControlDown()) {
+          && consoleDoc.isAtEnd()) {
         recallCommand(false, false);
-      } else if ((kcode == KeyEvent.VK_DOWN || kcode == KeyEvent.VK_UP)
-          && kid == KeyEvent.KEY_PRESSED && ke.isControlDown()) {
-        // If Control key is down, redefines the event as if it
-        // where a key up or key down stroke without modifiers.
-        // This allows to move the caret up and down
-        // with no command history recall.
-        super.processKeyEvent(new KeyEvent((Component) ke.getSource(), kid, ke
-            .getWhen(), 0, // No modifiers
-            kcode, ke.getKeyChar(), ke.getKeyLocation()));
+        ke.consume();
       } else {
-        // Standard processing for other events.
-        super.processKeyEvent(ke);
-        // check command for compiler-identifiable syntax issues
-        // this may have to be taken out if people start complaining
-        // that only some of the commands are being checked
-        // that is -- that the script itself is not being fully checked
-
         // not perfect -- help here?
-        if (kid == KeyEvent.KEY_RELEASED
+        if (!checkingCommand && kid == KeyEvent.KEY_RELEASED
             && ke.getModifiers() < 2
-            && (kcode == 32 || kcode > KeyEvent.VK_DOWN && kcode < 400 || kcode == KeyEvent.VK_BACK_SPACE))
-          checkCommand();
+            && (kcode == 32 || kcode > KeyEvent.VK_DOWN && kcode < 400
+                || kcode == KeyEvent.VK_BACK_SPACE)) {
+          checkingCommand = true;
+          if (checkTimer == null) {
+            checkTimer = new Timer(100, new ActionListener() {
+
+              @Override
+              public void actionPerformed(ActionEvent e) {
+                checkingCommand = false;
+                checkCommand();
+              }
+
+            });
+            checkTimer.setRepeats(false);
+            checkTimer.start();
+          } else {
+            checkTimer.restart();
+          }
+        }
       }
     }
 
@@ -818,8 +849,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
      *        TODO
      */
     void recallCommand(boolean up, boolean pageup) {
-      String cmd = (pageup ? vwr
-          .historyFind(pageUpBuffer == null ? (pageUpBuffer = consoleDoc
+      String cmd = (pageup ? vwr.historyFind(pageUpBuffer == null ? (pageUpBuffer = consoleDoc
               .getCommandString()) : pageUpBuffer, up ? -1
                   : 1) : vwr.getSetHistory(up ? -1
           : 1));
@@ -851,16 +881,20 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
     synchronized void checkCommand() {
       String strCommand = consoleDoc.getCommandString();
+      //System.out.println("checkCommand " + strCommand);
       if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
           || vwr.isScriptExecuting()
           || vwr.getBooleanProperty("executionPaused"))
         return;
       checking = true;
+      Object res = vwr.scriptCheck(strCommand);
+      //System.out.println( res);
       consoleDoc
-          .colorCommand(vwr.scriptCheck(strCommand) instanceof String ? consoleDoc.attError
+          .colorCommand(res instanceof String ? consoleDoc.attError
               : consoleDoc.attUserInput);
       checking = false;
     }
+
   }
 
   @Override
@@ -924,9 +958,15 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
     void setPrompt() {
       try {
+        //System.out.println("AppConsole setting $ ");
         super.insertString(getLength(), "$ ", attPrompt);
         setOffsetPositions();
+        //System.out.println("AppConsole caretPosition to  " + offsetAfterPrompt);
+
         consoleTextPane.setCaretPosition(offsetAfterPrompt);
+        
+        //System.out.println("AppConsole caretPosition done ");
+
       } catch (BadLocationException e) {
         e.printStackTrace();
       }
@@ -939,6 +979,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
         // after prompt should be immediately after $ otherwise tracks the end
         // of the line (and no command will be found) at least on Mac OS X it did.
         positionAfterPrompt = createPosition(offsetAfterPrompt - 1);
+        
+        //System.out.println("appconsole " + offsetAfterPrompt + " " + positionBeforePrompt + " " + positionAfterPrompt + "\n>>" + this.getText(0,  getLength()) + "<<");
       } catch (BadLocationException e) {
         e.printStackTrace();
       }
@@ -1023,7 +1065,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     public synchronized void insertString(int offs, String str, AttributeSet a)
         throws BadLocationException {
       int ichNewline = str.indexOf('\n');
-      if (ichNewline != 0) {
+      // BH fix 2019.04.16 -- only SwingJS
+      if (ichNewline != 0 || str != "\n" && str.length() > 0) {
         if (offs < offsetAfterPrompt) {
           offs = getLength();
         }
@@ -1095,6 +1138,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     void colorCommand(SimpleAttributeSet att) {
       if (positionAfterPrompt == positionBeforePrompt)
         return;
+      //System.out.println(offsetAfterPrompt + "  " + getLength() + " att is " + att);
       setCharacterAttributes(offsetAfterPrompt,
           getLength() - offsetAfterPrompt, att, true);
     }

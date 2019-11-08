@@ -167,8 +167,8 @@ public class Coordinate {
    */
   public static boolean isYInRange(Coordinate[] xyCoords, double min,
                                     double max) {
-    return (getMinY(xyCoords, 0, xyCoords.length) >= min 
-        && getMaxY(xyCoords, 0, xyCoords.length) >= max);
+    return (getMinY(xyCoords, 0, xyCoords.length - 1) >= min 
+        && getMaxY(xyCoords, 0, xyCoords.length - 1) >= max);
   }
 
   /**
@@ -182,8 +182,8 @@ public class Coordinate {
   public static Coordinate[] normalise(Coordinate[] xyCoords, double min,
                                         double max) {
     Coordinate[] newXYCoords = new Coordinate[xyCoords.length];
-    double minY = getMinY(xyCoords, 0, xyCoords.length);
-    double maxY = getMaxY(xyCoords, 0, xyCoords.length);
+    double minY = getMinY(xyCoords, 0, xyCoords.length - 1);
+    double maxY = getMaxY(xyCoords, 0, xyCoords.length - 1);
     double factor = (maxY - minY) / (max - min); // range = 0-5
     for (int i = 0; i < xyCoords.length; i++)
       newXYCoords[i] = new Coordinate().set(xyCoords[i].getXVal(), 
@@ -356,7 +356,7 @@ public class Coordinate {
    */
   public static double getMinX(Coordinate[] coords, int start, int end) {   
     double min = Double.MAX_VALUE;
-    for (int index = start; index < end; index++) {
+    for (int index = start; index <= end; index++) {
       double tmp = coords[index].getXVal();
       if (tmp < min)
       min = tmp;
@@ -376,7 +376,7 @@ public class Coordinate {
   public static double getMinX(Lst<Spectrum> spectra, ViewData vd) {
     double min = Double.MAX_VALUE;
     for (int i = 0; i < spectra.size(); i++) {
-    	Coordinate[] xyCoords = spectra.get(i).getXYCoords();
+      Coordinate[] xyCoords = spectra.get(i).getXYCoords();
       double tmp = getMinX(xyCoords, vd.getStartingPointIndex(i), vd.getEndingPointIndex(i));
       if (tmp < min)
         min = tmp;
@@ -397,7 +397,7 @@ public class Coordinate {
    */
   public static double getMaxX(Coordinate[] coords, int start, int end) {
     double max = -Double.MAX_VALUE;
-    for (int index = start; index < end; index++) {
+    for (int index = start; index <= end; index++) {
       double tmp = coords[index].getXVal();
       if (tmp > max)
         max = tmp;
@@ -416,7 +416,7 @@ public class Coordinate {
   public static double getMaxX(Lst<Spectrum> spectra, ViewData vd) {
     double max = -Double.MAX_VALUE;
     for (int i = 0; i < spectra.size(); i++) {
-    	Coordinate[] xyCoords = spectra.get(i).getXYCoords();
+      Coordinate[] xyCoords = spectra.get(i).getXYCoords();
       double tmp = getMaxX(xyCoords, vd.getStartingPointIndex(i), vd.getEndingPointIndex(i));
       if (tmp > max)
         max = tmp;
@@ -437,7 +437,7 @@ public class Coordinate {
    */
   public static double getMinY(Coordinate[] coords, int start, int end) {
     double min = Double.MAX_VALUE;
-    for (int index = start; index < end; index++) {
+    for (int index = start; index <= end; index++) {
       double tmp = coords[index].getYVal();
       if (tmp < min)
       min = tmp;
@@ -459,7 +459,7 @@ public class Coordinate {
     for (int i = 0; i < spectra.size(); i++) {
       double u = spectra.get(i).getUserYFactor();
       double yref = spectra.get(i).getYRef();
-    	Coordinate[] xyCoords = spectra.get(i).getXYCoords();
+      Coordinate[] xyCoords = spectra.get(i).getXYCoords();
       double tmp = (getMinY(xyCoords, vd.getStartingPointIndex(i), vd.getEndingPointIndex(i)) - yref) * u + yref;
       if (tmp < min)
         min = tmp;
@@ -480,7 +480,7 @@ public class Coordinate {
    */
   public static double getMaxY(Coordinate[] coords, int start, int end) {
     double max = -Double.MAX_VALUE;
-    for (int index = start; index < end; index++) {
+    for (int index = start; index <= end; index++) {
       double tmp = coords[index].getYVal();
       if (tmp > max)
         max = tmp;
@@ -501,7 +501,7 @@ public class Coordinate {
     for (int i = 0; i < spectra.size(); i++) {
       double u = spectra.get(i).getUserYFactor();
       double yref = spectra.get(i).getYRef();
-    	Coordinate[] xyCoords = spectra.get(i).getXYCoords();
+      Coordinate[] xyCoords = spectra.get(i).getXYCoords();
       double tmp = (getMaxY(xyCoords, vd.getStartingPointIndex(i), vd.getEndingPointIndex(i)) - yref) * u + yref;
       if (tmp > max)
         max = tmp;
@@ -512,7 +512,7 @@ public class Coordinate {
   private final static Comparator<Coordinate> c = new CoordComparator();
   
   public static double getYValueAt(Coordinate[] xyCoords, double xPt) {
-  	int i = getNearestIndexForX(xyCoords, xPt);
+    int i = getNearestIndexForX(xyCoords, xPt);
     if (i == 0 || i == xyCoords.length)
       return Double.NaN;
     double x1 = xyCoords[i].getXVal();
@@ -533,85 +533,85 @@ public class Coordinate {
     int i = Arrays.binarySearch(xyCoords, x, c);
     if (i < 0) i = -1 - i;
     if (i < 0)
-    	return 0;
+      return 0;
     if (i > xyCoords.length - 1)
-    	return xyCoords.length - 1;
+      return xyCoords.length - 1;
     return i;
   }
   
   public static double findXForPeakNearest(Coordinate[] xyCoords, double x, 
-  		boolean isMin) {
-  	int pt = getNearestIndexForX(xyCoords, x);
-  	double f = (isMin ? -1 : 1);
-  	while (pt < xyCoords.length - 1 && f * (xyCoords[pt + 1].yVal - xyCoords[pt].yVal) > 0)
-  			pt++;
-  	while (pt >= 1 && f * (xyCoords[pt - 1].yVal - xyCoords[pt].yVal) > 0)
-			pt--;
-  	// now at local max
-  	// could leave it there? 
-  	// see https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html
-  	if (pt == 0 || pt == xyCoords.length - 1)
-  		return xyCoords[pt].xVal;
-  	return parabolicInterpolation(xyCoords, pt);
+      boolean isMin) {
+    int pt = getNearestIndexForX(xyCoords, x);
+    double f = (isMin ? -1 : 1);
+    while (pt < xyCoords.length - 1 && f * (xyCoords[pt + 1].yVal - xyCoords[pt].yVal) > 0)
+        pt++;
+    while (pt >= 1 && f * (xyCoords[pt - 1].yVal - xyCoords[pt].yVal) > 0)
+      pt--;
+    // now at local max
+    // could leave it there? 
+    // see https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html
+    if (pt == 0 || pt == xyCoords.length - 1)
+      return xyCoords[pt].xVal;
+    return parabolicInterpolation(xyCoords, pt);
   }
 
   /**
-   * 		see https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html
+   *    see https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html
    *
    * @param xyCoords
    * @param pt
    * @return center
    */
-	public static double parabolicInterpolation(Coordinate[] xyCoords, int pt) {
-  	double alpha = xyCoords[pt - 1].yVal;
-  	double beta = xyCoords[pt].yVal;
-  	double gamma = xyCoords[pt + 1].yVal;
-  	double p = (alpha - gamma) / 2 / (alpha - 2 * beta + gamma);
-  	return xyCoords[pt].xVal + p * (xyCoords[pt + 1].xVal - xyCoords[pt].xVal);
-	}
+  public static double parabolicInterpolation(Coordinate[] xyCoords, int pt) {
+    double alpha = xyCoords[pt - 1].yVal;
+    double beta = xyCoords[pt].yVal;
+    double gamma = xyCoords[pt + 1].yVal;
+    double p = (alpha - gamma) / 2 / (alpha - 2 * beta + gamma);
+    return xyCoords[pt].xVal + p * (xyCoords[pt + 1].xVal - xyCoords[pt].xVal);
+  }
 
-	static boolean getPickedCoordinates(Coordinate[] coordsClicked,
-			Coordinate coordClicked, Coordinate coord, Coordinate actualCoord) {
-		if (coordClicked == null)
-			return false;
-		double x = coordClicked.getXVal();
-		coord.setXVal(x);
-		coord.setYVal(coordClicked.getYVal());
-		if (actualCoord == null)
-			return true;
-		int pt = getNearestIndexForX(coordsClicked, x);
-		actualCoord.setXVal(coordsClicked[pt].getXVal());
-		actualCoord.setYVal(coordsClicked[pt].getYVal());
-		return true;
-	}
+  static boolean getPickedCoordinates(Coordinate[] coordsClicked,
+      Coordinate coordClicked, Coordinate coord, Coordinate actualCoord) {
+    if (coordClicked == null)
+      return false;
+    double x = coordClicked.getXVal();
+    coord.setXVal(x);
+    coord.setYVal(coordClicked.getYVal());
+    if (actualCoord == null)
+      return true;
+    int pt = getNearestIndexForX(coordsClicked, x);
+    actualCoord.setXVal(coordsClicked[pt].getXVal());
+    actualCoord.setYVal(coordsClicked[pt].getYVal());
+    return true;
+  }
 
-	public static void shiftX(Coordinate[] xyCoords, double dx) {
-  	for (int i = xyCoords.length; --i >= 0;)
-  		xyCoords[i].xVal += dx;
-	}
+  public static void shiftX(Coordinate[] xyCoords, double dx) {
+    for (int i = xyCoords.length; --i >= 0;)
+      xyCoords[i].xVal += dx;
+  }
 
-	/**
-	 * discovers nearest peak left or right of x that is above threshold y
-	 *  
-	 * @param xyCoords
-	 * @param x
-	 * @param y
-	 * @param inverted
-	 * @param andGreaterThanX
-	 * @return   interpolated x value or NaN
-	 */
-	public static double getNearestXWithYAbove(Coordinate[] xyCoords, double x,
-			double y, boolean inverted, boolean andGreaterThanX) {
-		int pt = getNearestIndexForX(xyCoords, x);
-		double f = (inverted ? -1 : 1);
-		if (andGreaterThanX)
-			while (pt < xyCoords.length && f * (xyCoords[pt].yVal - y) < 0)
-				pt++;
-		else
-			while (pt >= 0 && f * (xyCoords[pt].yVal - y) < 0)
-				pt--;
-  	if (pt == -1 || pt == xyCoords.length)
-			return Double.NaN;
-  	return findXForPeakNearest(xyCoords, xyCoords[pt].getXVal(), inverted);
-	}
+  /**
+   * discovers nearest peak left or right of x that is above threshold y
+   *  
+   * @param xyCoords
+   * @param x
+   * @param y
+   * @param inverted
+   * @param andGreaterThanX
+   * @return   interpolated x value or NaN
+   */
+  public static double getNearestXWithYAbove(Coordinate[] xyCoords, double x,
+      double y, boolean inverted, boolean andGreaterThanX) {
+    int pt = getNearestIndexForX(xyCoords, x);
+    double f = (inverted ? -1 : 1);
+    if (andGreaterThanX)
+      while (pt < xyCoords.length && f * (xyCoords[pt].yVal - y) < 0)
+        pt++;
+    else
+      while (pt >= 0 && f * (xyCoords[pt].yVal - y) < 0)
+        pt--;
+    if (pt == -1 || pt == xyCoords.length)
+      return Double.NaN;
+    return findXForPeakNearest(xyCoords, xyCoords[pt].getXVal(), inverted);
+  }
 }

@@ -46,6 +46,7 @@ import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.adapter.readers.spartan.SpartanUtil;
 import org.jmol.api.GenericFileInterface;
@@ -518,7 +519,7 @@ public class FileManager implements BytePoster {
         System.err.println("Couldn't find file: " + classPath + resourceName);
         throw new IOException();
       }
-      if (!vwr.async)
+      if (vwr == null || !vwr.async)
         return Rdr.getBufferedReader(
             new BufferedInputStream((InputStream) url.getContent()), null);
     }
@@ -666,29 +667,29 @@ public class FileManager implements BytePoster {
         return t;
       BufferedInputStream bis = (BufferedInputStream) t;
       if (Rdr.isGzipS(bis))
-        bis = Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
+        bis = ZipTools.getUnzippedInputStream(bis);
       // if we have a subFileList, we don't want to return the stream for the zip file itself
       else if (Rdr.isBZip2S(bis))
-        bis = Rdr.getUnzippedInputStreamBZip2(vwr.getJzt(), bis);
+        bis = ZipTools.getUnzippedInputStreamBZip2(bis);
       // if we have a subFileList, we don't want to return the stream for the zip file itself
       if (forceInputStream && subFileList == null)
         return bis;
       if (Rdr.isCompoundDocumentS(bis)) {
         // very specialized reader; assuming we have a Spartan document here
-        CompoundDocument doc = (CompoundDocument) Interface.getInterface(
-            "javajs.util.CompoundDocument", vwr, "file");
-        doc.setDocStream(vwr.getJzt(), bis);
+        CompoundDocument doc = new CompoundDocument();
+        doc.setDocStream(bis);
         String s = doc.getAllDataFiles("Molecule", "Input").toString();
         return (forceInputStream ? Rdr.getBIS(s.getBytes()) : Rdr.getBR(s));
       }
       // check for PyMOL or MMTF
       if (Rdr.isMessagePackS(bis) || Rdr.isPickleS(bis))
         return bis;
-      bis = Rdr.getPngZipStream(bis, true);
+      if (Rdr.isPngZipStream(bis))
+        bis = ZipTools.getPngZipStream(bis, true);
       if (Rdr.isZipS(bis)) {
         if (allowZipStream)
-          return vwr.getJzt().newZipInputStream(bis);
-        Object o = vwr.getJzt().getZipFileDirectory(bis, subFileList, 1,
+          return ZipTools.newZipInputStream(bis);
+        Object o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
             forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
@@ -709,7 +710,7 @@ public class FileManager implements BytePoster {
   public String[] getZipDirectory(String fileName, boolean addManifest, boolean allowCached) {
     Object t = getBufferedInputStreamOrErrorMessageFromName(fileName, fileName,
         false, false, null, false, allowCached);
-    return vwr.getJzt().getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
+    return ZipTools.getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
   public Object getFileAsBytes(String name, OC out) {
@@ -738,8 +739,7 @@ public class FileManager implements BytePoster {
         BufferedInputStream bis = (BufferedInputStream) t;
         bytes = (out != null || subFileList == null || subFileList.length <= 1
             || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) ? Rdr
-            .getStreamAsBytes(bis, out) : vwr.getJzt()
-            .getZipFileContentsAsBytes(bis, subFileList, 1));
+            .getStreamAsBytes(bis, out) : ZipTools.getZipFileContentsAsBytes(bis, subFileList, 1));
         bis.close();
       } catch (Exception ioe) {
         return ioe.toString();
@@ -777,7 +777,7 @@ public class FileManager implements BytePoster {
       }
     }
     try {
-      vwr.getJzt().readFileAsMap((BufferedInputStream) t, bdata, name);
+      ZipTools.readFileAsMap((BufferedInputStream) t, bdata, name);
       
     } catch (Exception e) {
       bdata.clear();
@@ -889,9 +889,9 @@ public class FileManager implements BytePoster {
       nameOrError = (String) image;
       image = null;
     }
-    if (!vwr.isJS && image != null && bytes != null)
+    if (!Viewer.isJS && image != null && bytes != null)
       nameOrError = ";base64," + Base64.getBase64(bytes).toString();
-    if (!vwr.isJS || isPopupImage && nameOrError == null
+    if (!Viewer.isJS || isPopupImage && nameOrError == null
         || !isPopupImage && image != null)
       return vwr.loadImageData(image, nameOrError, echoName, null);
     return isAsynchronous;
@@ -911,8 +911,8 @@ public class FileManager implements BytePoster {
     if (name == null)
       return new String[] { null };
     boolean doSetPathForAllFiles = (pathForAllFiles.length() > 0);
-    if (name.startsWith("?") || name.startsWith("http://?")) {
-      if (!vwr.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
+    if (name.startsWith("?") || name.startsWith("http://?") || name.startsWith("https://?")) {
+      if (!Viewer.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
         return new String[] { isFullLoad ? "#CANCELED#" : null };
       doSetPathForAllFiles = false;
     }
@@ -984,7 +984,7 @@ public class FileManager implements BytePoster {
   ///// DIRECTORY BUSINESS
   
   private static String addDirectory(String defaultDirectory, String name) {
-    if (defaultDirectory.length() == 0)
+    if (defaultDirectory.length() == 0 || defaultDirectory.equals("."))
       return name;
     char ch = (name.length() > 0 ? name.charAt(0) : ' ');
     String s = defaultDirectory.toLowerCase();
@@ -1088,7 +1088,7 @@ public class FileManager implements BytePoster {
   }
 
   public static String getLocalPathForWritingFile(Viewer vwr, String file) {
-    if (file.startsWith("http://"))
+    if (file.startsWith("http://") || file.startsWith("https://"))
       return file;
     file = PT.rep(file, "?", "");
     if (file.indexOf("file:/") == 0)
@@ -1465,6 +1465,10 @@ public class FileManager implements BytePoster {
      * @j2sNative
      * 
      * data = Jmol.Cache.get(key);
+     * 
+     * if (data == null && Jmol.getCachedJavaFile)
+     *   data = Jmol.getCachedJavaFile(key);
+     * 
      * 
      */
     {

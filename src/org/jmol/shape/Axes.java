@@ -30,9 +30,9 @@ import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
 
-import javajs.awt.Font;
 import javajs.util.BS;
 import org.jmol.script.T;
+import org.jmol.util.Font;
 import org.jmol.viewer.JC;
 
 public class Axes extends FontLineShape {

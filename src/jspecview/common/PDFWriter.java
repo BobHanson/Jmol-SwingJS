@@ -28,9 +28,9 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.GenericGraphics;
+import org.jmol.util.Font;
 
 import javajs.api.GenericColor;
-import javajs.awt.Font;
 import javajs.export.PDFCreator;
 import javajs.util.CU;
 

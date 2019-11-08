@@ -30,25 +30,104 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.V3;
-
 import org.jmol.api.Interface;
 import org.jmol.c.PAL;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.shape.AtomShape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.ActionManager;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.V3;
 
 public class Ellipsoids extends AtomShape {
 
-  private static final String PROPERTY_MODES = "ax ce co de eq mo on op sc tr";
+  @Override
+  public boolean checkObjectHovered(int x, int y, BS bsModels) {
+    if (!vwr.getDrawHover() || simpleEllipsoids == null || simpleEllipsoids.isEmpty())
+      return false;
+    Ellipsoid e = findPickedObject(x, y, false, bsModels);
+    if (e == null)
+      return false;
+    if (vwr.gdata.antialiasEnabled) {
+      //because hover rendering is done in FIRST pass only
+      x <<= 1;
+      y <<= 1;
+    }      
+    vwr.hoverOnPt(x, y, e.label, e.id, e.center);
+    return true;
+  }
+
+  private final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
+
+  private final P3i ptXY = new P3i();
+  
+  @Override
+  public Map<String, Object> checkObjectClicked(int x, int y, int action,
+                                                BS bsModels,
+                                                boolean drawPicking) {
+    if (action == 0 || !drawPicking || simpleEllipsoids == null
+        || simpleEllipsoids.isEmpty())
+      return null;
+    Ellipsoid e = findPickedObject(x, y, false, bsModels);
+    if (e == null)
+      return null;
+    Map<String, Object> map = null;
+    map = new Hashtable<String, Object>();
+    map.put("id", e.id);
+    if (e.label != null)
+      map.put("label", e.label);
+    map.put("pt", e.center);
+    map.put("modelIndex", Integer.valueOf(e.modelIndex));
+    map.put("model", vwr.getModelNumberDotted(e.modelIndex));
+    map.put("type", "ellipsoid");
+    if (action != 0) // not mouseMove
+      vwr.setStatusAtomPicked(-2, "[\"ellipsoid\"," + PT.esc(e.id) + "," +
+          + e.modelIndex + ",1," + e.center.x + "," + e.center.y + "," + e.center.z + "," 
+          + (e.label == null ? "\"\"" 
+                 : PT.esc(e.label))+"]", map, false);
+    return map;
+  }
+  /**
+   * 
+   * @param x
+   * @param y
+   * @param isPicking
+   *        IGNORED
+   * @param bsModels
+   * @return true if found
+   */
+  private Ellipsoid findPickedObject(int x, int y, boolean isPicking,
+                                     BS bsModels) {
+    int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
+    if (vwr.gdata.isAntialiased()) {
+      x <<= 1;
+      y <<= 1;
+      dmin2 <<= 1;
+    }
+    Ellipsoid picked = null;
+    for (String id: simpleEllipsoids.keySet()) {
+      Ellipsoid e = simpleEllipsoids.get(id);
+      if (!e.visible || !bsModels.get(e.modelIndex))
+        continue;
+      int d2 = coordinateInRange(x, y, e.center, dmin2, ptXY);
+      if (d2 >= 0) {
+        dmin2 = d2;
+        picked = e;
+      }
+    }
+    return picked;
+  }
+
+  private static final String PROPERTY_MODES = "ax ce co de eq mo on op sc tr la";
 
   public Map<String, Ellipsoid> simpleEllipsoids = new Hashtable<String, Ellipsoid>();
   public Map<Tensor, Ellipsoid> atomEllipsoids = new Hashtable<Tensor, Ellipsoid>();
@@ -306,42 +385,52 @@ public class Ellipsoids extends AtomShape {
   //  }
 
   private void setProp(Ellipsoid e, int mode, Object value) {
-    // "ax ce co de eq mo on op sc tr"
-    //  0  1  2  3  4  5  6  7  8  9
+    // "ax ce co de eq mo on op sc tr la"
+    //  0  1  2  3  4  5  6  7  8  9  10
     switch (mode) {
     case 0: // axes
       e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script"))
           .setFromAxes((V3[]) value));
-      return;
+      break;
     case 1: // center
       e.setCenter((P3) value);
-      return;
+      break;
     case 2: // color
       e.colix = C.getColixO(value);
-      return;
+      break;
     case 3: // delete
       simpleEllipsoids.remove(e.id);
-      return;
+      break;
     case 4: // equation
       e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script"))
           .setFromThermalEquation((double[]) value, null));
-      return;
+      e.tensor.modelIndex = e.modelIndex;
+      break;
     case 5: // modelindex
-      e.tensor.modelIndex = ((Integer) value).intValue();
-      return;
+      e.modelIndex = ((Integer) value).intValue();
+      if (e.tensor != null)
+        e.tensor.modelIndex = e.modelIndex;
+      break;
     case 6: // on
       e.isOn = ((Boolean) value).booleanValue();
-      return;
+      break;
     case 7: // options
       e.options = ((String) value).toLowerCase();
-      return;
+      break;
     case 8: // scale
-      e.setScale(((Float) value).floatValue(), false);
-      return;
+      if (value instanceof Float) {
+        e.setScale(((Float) value).floatValue(), false);
+      } else {
+        e.scaleAxes((float[]) value);
+      }
+      break;
     case 9: // translucency
       e.colix = C.getColixTranslucent3(e.colix, value.equals("translucent"),
           translucentLevel);
-      return;
+      break;
+    case 10:
+      e.label = (String) value;
+      break;
     }
     return;
   }
@@ -375,6 +464,8 @@ public class Ellipsoids extends AtomShape {
       }
       sb.append(" "
           + getColorCommandUnk("", ellipsoid.colix, translucentAllowed));
+      if (ellipsoid.label != null)
+        sb.append(" label " + PT.esc(ellipsoid.label));
       if (ellipsoid.options != null)
         sb.append(" options ").append(PT.esc(ellipsoid.options));
       if (!ellipsoid.isOn)

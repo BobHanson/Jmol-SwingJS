@@ -58,6 +58,8 @@ public class JDXSource extends JDXHeader {
 
 	public boolean isView;
 
+  private String inlineData;
+
   public JDXSource(int type, String filePath) {
     this.type = type;
     setFilePath(filePath);
@@ -89,6 +91,8 @@ public class JDXSource extends JDXHeader {
     if (filePath == null)
       filePath = this.filePath;
     spectrum.setFilePath(filePath);
+    if (inlineData != null)
+      spectrum.setInlineData(inlineData);
     int n = jdxSpectra.size();
     if (n == 0 || !jdxSpectra.get(n - 1).addSubSpectrum(spectrum, forceSub))
       jdxSpectra.addLast(spectrum);
@@ -175,4 +179,11 @@ public class JDXSource extends JDXHeader {
 				|| this.filePath.replace('\\', '/').equals(filePath);
 	}
 
+  public void setInlineData(String data) {
+    inlineData = data;
+    if (jdxSpectra != null)
+      for (int i = jdxSpectra.size(); --i >= 0;)
+        jdxSpectra.get(i).setInlineData(data);
+  }
+  
 }

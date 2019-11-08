@@ -38,8 +38,9 @@
 package org.jmol.awtjs2d;
 
 import javajs.api.GenericColor;
-import javajs.awt.Color;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Color;
+import org.jmol.util.Font;
+
 import javajs.util.CU;
 
 
@@ -76,7 +77,7 @@ public class JsG2D implements GenericGraphics {
 
 	@Override
 	public Object newGrayScaleImage(Object context, Object image, int width, int height, int[] grayBuffer) {
-		return Platform.Jmol()._newGrayScaleImage(context, image, width, height, grayBuffer);
+		return Platform.Jmol().newGrayScaleImage(context, image, width, height, grayBuffer);
 	}
 
 	@Override

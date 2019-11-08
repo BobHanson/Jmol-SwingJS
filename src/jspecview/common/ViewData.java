@@ -123,7 +123,7 @@ public class ViewData {
         break;
       }
     }
-    scaleData[i % scaleData.length].endDataPointIndex = index - 1;
+    scaleData[i % scaleData.length].endDataPointIndex = index;// BH was -1
     return ptCount;
   }
 

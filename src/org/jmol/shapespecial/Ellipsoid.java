@@ -25,6 +25,8 @@
 
 package org.jmol.shapespecial;
 
+import java.util.Map;
+
 import org.jmol.modelset.Atom;
 import org.jmol.util.C;
 
@@ -51,6 +53,9 @@ public class Ellipsoid {
   float[] lengths;
   float scale = 1;
   int percent;
+  private float[] scaleXYZ;
+  public Map<String, Object> info;
+  public String label;
 
   private Ellipsoid() {
   }
@@ -83,13 +88,17 @@ public class Ellipsoid {
     return (lengths == null ? Float.NaN : lengths[i]);
   }
 
+  public void scaleAxes(float[] value) {
+    scaleXYZ = value;
+    setLengths();
+  }
   public void setLengths() {
     if (tensor == null)
       return;
     if (lengths == null)
       lengths = new float[3];
     for (int i = 0; i < lengths.length; i++)
-      lengths[i] = tensor.getFactoredValue(i) * scale;
+      lengths[i] = tensor.getFactoredValue(i) * scale * (scaleXYZ == null ? 1 : Math.abs(scaleXYZ[i]));
   }
 
   public void setScale(float scale, boolean isPercent) {

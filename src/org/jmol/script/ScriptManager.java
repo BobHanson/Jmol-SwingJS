@@ -33,7 +33,7 @@ import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
-
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolScriptEvaluator;
@@ -623,7 +623,7 @@ public class ScriptManager implements JmolScriptManager {
   private String getZipDirectoryAsString(String fileName) {
     Object t = vwr.fm.getBufferedInputStreamOrErrorMessageFromName(
         fileName, fileName, false, false, null, false, true);
-    return vwr.getJzt().getZipDirectoryAsStringAndClose((BufferedInputStream) t);
+    return ZipTools.getZipDirectoryAsStringAndClose((BufferedInputStream) t);
   }
 
   private static int prevCovalentVersion = 1;
@@ -661,7 +661,8 @@ public class ScriptManager implements JmolScriptManager {
   @Override
   public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts)
       throws Exception {
-    int modelIndex = vwr.ms.at[bsAtoms.nextSetBit(0)].mi;
+    int iatom = bsAtoms.nextSetBit(0);
+    int modelIndex = (iatom < 0 ? vwr.ms.mc - 1 : vwr.ms.at[iatom].mi);
     if (modelIndex != vwr.ms.mc - 1)
       return new BS();
 

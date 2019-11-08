@@ -3,6 +3,9 @@
  * $Date: 2009-06-30 18:58:33 -0500 (Tue, 30 Jun 2009) $
  * $Revision: 11158 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -331,7 +334,7 @@ public class PDFCreator {
       cos = -1;
       break;
     default:
-      float a = (float) (angle / 180.0 * Math.PI);
+      float a = (float) (angle * (Math.PI / 180));
       cos = (float) Math.cos(a);
       sin = (float) Math.sin(a);
       if (Math.abs(cos) < 0.0001)

@@ -416,59 +416,28 @@ public void initShape() {
     setPropertySuper(propertyName, value, bs);
   }
 
-  private void addPoints(int type, Object value) {
-    @SuppressWarnings("unchecked")
-    Lst<SV> pts = (Lst<SV>) value;
-    Integer key = Integer.valueOf(type);
-    boolean isModelPoints = (type == PT_MODEL_BASED_POINTS);
-    if (isModelPoints)
-      vData.addLast(new Object[] { key, pts });
-    for (int i = 0, n = pts.size(); i < n; i++) {
-      SV v = pts.get(i);
-      P3 pt;
-      switch (v.tok) {
-      case T.bitset:
-        if (!isModelPoints && ((BS) v.value).isEmpty())
+  private void deleteModels(int modelIndex) {
+    //int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
+    //int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
+    for (int i = meshCount; --i >= 0;) {
+      DrawMesh m = dmeshes[i];
+      if (m == null)
+        continue;
+      boolean deleteMesh = (m.modelIndex == modelIndex);
+      if (m.modelFlags != null) {
+        m.deleteAtoms(modelIndex);
+        deleteMesh = (m.modelFlags.length() == 0);
+        if (!deleteMesh)
           continue;
-        pt = vwr.ms.getAtomSetCenter((BS) v.value);
-        break;
-      case T.point3f:
-        if (isModelPoints)
-          continue;
-        //$FALL-THROUGH$
-      default:
-        pt = SV.ptValue(v);
       }
-      if (isModelPoints) {
-        pts.set(i, SV.getVariable(pt));
-      } else {       
-        vData.addLast(new Object[] { key, pt });
+      if (deleteMesh) {
+        meshCount--;
+        deleteMeshElement(i);
+      } else if (meshes[i].modelIndex > modelIndex) {
+        meshes[i].modelIndex--;
       }
     }
-  }
-
-private void deleteModels(int modelIndex) {
-   //int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
-   //int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
-   for (int i = meshCount; --i >= 0;) {
-     DrawMesh m = dmeshes[i];
-     if (m == null)
-       continue;
-     boolean deleteMesh = (m.modelIndex == modelIndex);
-     if (m.modelFlags != null) {
-       m.deleteAtoms(modelIndex);
-       deleteMesh = (m.modelFlags.length() == 0);
-       if (!deleteMesh)
-         continue;
-     } 
-     if (deleteMesh) {
-       meshCount--;
-       deleteMeshElement(i);
-     } else if (meshes[i].modelIndex > modelIndex) {
-       meshes[i].modelIndex--;
-     }
-   }
-   resetObjects();
+    resetObjects();
   }
 
  private void deleteMeshElement(int i) {
@@ -718,6 +687,43 @@ private void initDraw() {
 
   MeshSurface slabData;
   
+  private void addPoints(int type, Object value) {
+    @SuppressWarnings("unchecked")
+    Lst<SV> pts = (Lst<SV>) value;
+    Integer key = Integer.valueOf(type);
+    boolean isModelPoints = (type == PT_MODEL_BASED_POINTS);
+    if (isModelPoints)
+      vData.addLast(new Object[] { key, pts });
+    for (int i = 0, n = pts.size(); i < n; i++) {
+      Object o = pts.get(i);
+      P3 pt;
+      if (o instanceof P3) {
+        // from Draw HKL
+        pt = (P3) o;
+      } else {
+        SV v = (SV) o;
+        switch (v.tok) {
+        case T.bitset:
+          if (!isModelPoints && ((BS) v.value).isEmpty())
+            continue;
+          pt = vwr.ms.getAtomSetCenter((BS) v.value);
+          break;
+        case T.point3f:
+          if (isModelPoints)
+            continue;
+          //$FALL-THROUGH$
+        default:
+          pt = SV.ptValue(v);
+        }
+      }
+      if (isModelPoints) {
+        pts.set(i, SV.getVariable(pt));
+      } else {
+        vData.addLast(new Object[] { key, pt });
+      }
+    }
+  }
+
   private void addPoint(T3 newPt, int iModel) {
     if (makePoints) {
       if (newPt == null || iModel >= 0 && !bsAllModels.get(iModel))
@@ -1270,6 +1276,11 @@ private void initDraw() {
       x <<= 1;
       y <<= 1;
     }
+    
+    int action = moveAll ? ActionManager.ACTION_dragDrawObject : ActionManager.ACTION_dragDrawPoint;
+    if (vwr.acm.userActionEnabled(action) 
+    		&& !vwr.acm.userAction(action, new Object[] { mesh.thisID, new int[] {x, y, iVertex} } ))
+    	return;
     P3 pt = new P3();
     int ptVertex = vertexes[iVertex];
     P3 coord = P3.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3) mesh.altVertices[ptVertex]);

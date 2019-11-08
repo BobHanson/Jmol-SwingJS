@@ -27,7 +27,9 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.Lst;
 import javajs.util.PT;
+import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -79,12 +81,12 @@ public class MolReader extends AtomSetCollectionReader {
 
   private boolean optimize2D;
   private boolean haveAtomSerials;
-  protected String dimension;
   protected boolean allow2D = true;
   private int iatom0;
   private V3000Rdr vr;
   private int atomCount;
   private String[] atomData;
+  private boolean is2D;
 
   @Override
   public void initializeReader() throws Exception {
@@ -161,14 +163,12 @@ public class MolReader extends AtomSetCollectionReader {
     if (line == null)
       return;
     header += line + "\n";
-    dimension = (line.length() < 22 ? "3D" : line.substring(20, 22));
-    if (dimension.equals("2D")) {
+    set2D(line.length() >= 22 && line.substring(20, 22).equals("2D"));
+    if (is2D) {
       if (!allow2D)
         throw new Exception("File is 2D, not 3D");
       appendLoadNote("This model is 2D. Its 3D structure has not been generated.");
     }
-    asc.setInfo("dimension", dimension);
-    
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.
     rd();
@@ -188,7 +188,7 @@ public class MolReader extends AtomSetCollectionReader {
     if (rd() == null)
       return;
     if (line.indexOf("V3000") >= 0) {
-      optimize2D = (dimension.equals("2D"));
+      optimize2D = is2D;
       vr = ((V3000Rdr) getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr")).set(this);
       discardLinesUntilContains("COUNTS");
       vr.readAtomsAndBonds(getTokens());
@@ -215,6 +215,13 @@ public class MolReader extends AtomSetCollectionReader {
       x = parseFloatRange(line, 0, 10);
       y = parseFloatRange(line, 10, 20);
       z = parseFloatRange(line, 20, 30);
+      // CTFile doc for V3000:
+      // The “dimensional code” is maintained more explicitly. 
+      // Thus “3D” really means 3D,
+      // although “2D” will be interpreted as 3D if 
+      // any non-zero Z-coordinates are found.
+      if (is2D && z != 0)
+        set2D(false);
       if (len < 34) {
         // deal with older Mol format where nothing after the symbol is used
         elementSymbol = line.substring(31).trim();
@@ -245,7 +252,7 @@ public class MolReader extends AtomSetCollectionReader {
       }
       addMolAtom(iAtom, isotope, elementSymbol, charge, x, y, z);
     }
-
+    asc.setModelInfoForSet("dimension", (is2D ? "2D" : "3D"), asc.iSet);
     rd();
     if (line.startsWith("V  ")) {
       readAtomValues();
@@ -276,10 +283,11 @@ public class MolReader extends AtomSetCollectionReader {
     // read V2000 user data
 
     Map<String, Object> molData = new Hashtable<String, Object>();
+    Lst<String> _keyList = new Lst<String>();
     rd();
     while (line != null && line.indexOf("$$$$") != 0) {
       if (line.indexOf(">") == 0) {
-        readMolData(molData);
+        readMolData(molData, _keyList);
         continue;
       }
       if (line.startsWith("M  ISO")) {
@@ -292,8 +300,15 @@ public class MolReader extends AtomSetCollectionReader {
       Object atomValueName = molData.get("atom_value_name");
       molData.put(atomValueName == null ? "atom_values" : atomValueName.toString(), atomData);
     }
-    if (!molData.isEmpty())
+    if (!molData.isEmpty()) {
+      asc.setCurrentModelInfo("molDataKeys", _keyList);
       asc.setCurrentModelInfo("molData", molData);
+    }
+  }
+
+  private void set2D(boolean b) {
+    is2D = b;
+    asc.setInfo("dimension", (b ? "2D" : "3D"));
   }
 
   /**
@@ -343,9 +358,10 @@ public class MolReader extends AtomSetCollectionReader {
    * Read the SDF data with name in lower case
    * 
    * @param molData
+   * @param _keyList 
    * @throws Exception
    */
-  private void readMolData(Map<String, Object> molData) throws Exception {
+  private void readMolData(Map<String, Object> molData, Lst<String> _keyList) throws Exception {
     Atom[] atoms = asc.atoms;
     // "> <xxx>" becomes "xxx"
     // "> yyy <xxx> zzz" becomes "yyy <xxx> zzz"
@@ -359,6 +375,8 @@ public class MolReader extends AtomSetCollectionReader {
     data = PT.trim(data, "\n");
     Logger.info(dataName + ":" + PT.esc(data));
     molData.put(dataName, data);
+    _keyList.addLast(dataName);
+
     int ndata = 0;
     if (dataName.toUpperCase().contains("_PARTIAL_CHARGES")) {
       try {

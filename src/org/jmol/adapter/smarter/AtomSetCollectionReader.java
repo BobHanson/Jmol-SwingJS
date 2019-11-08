@@ -140,6 +140,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean debugging;
   protected boolean requiresBSFilter;
 
+  public M3 primitiveToCrystal;
+
   public AtomSetCollection asc;
   protected BufferedReader reader;
   protected GenericBinaryDocument binaryDoc;
@@ -272,7 +274,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         finalizeReaderASCR();
     } catch (Throwable e) {
       Logger.info("Reader error: " + e);
-      if (!vwr.isJS)
         e.printStackTrace();
       setError(e);
     }
@@ -509,7 +510,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
      * @j2sNative
      * 
      * if (e.getMessage)
-     *  s = e.getMessage()
+     *  s = e.getMessage();
      * else
      *  s = e.toString();
      */
@@ -521,7 +522,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     else
       asc.errorMessage = "Error reading file at line " + ptLine
           + ":\n" + line + "\n" + s;
-    if (!vwr.isJS)
       e.printStackTrace();
   }
 
@@ -809,7 +809,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public void setUnitCellItem(int i, float x) {
     if (ignoreFileUnitCell)
       return;
-    if (i == 0 && x == 1 || i == 3 && x == 0)
+    if (i == 0 && x == 1 && !checkFilterKey("TOPOS") || i == 3 && x == 0)
       return;
     if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
       initializeCartesianToFractional();
@@ -1329,6 +1329,29 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
+   * fills a double[3][3] 
+   * 
+   * @param tokens or null if to read each line for three values (as last 3 on line)
+   * @param pt initial index; if tokens == null, then negative index is from end of each line
+   * @return double[3][3]
+   * @throws Exception
+   */
+  protected double[][] fill3x3(String[] tokens, int pt) throws Exception {
+    double[][] a = new double[3][3];
+    boolean needTokens = (tokens == null);
+    int pt0 = pt;
+    for (int i = 0; i < 3; i++) {
+      if (needTokens || pt >= tokens.length) {
+        while ((tokens = PT.getTokens(rd())).length < 3){}
+        pt = (pt0 < 0 ? tokens.length + pt0 : pt0);
+      }
+      for (int j = 0; j < 3; j++)
+        a[i][j] = Double.valueOf(tokens[pt++]).doubleValue();
+    }
+    return a;
+  }
+
+  /**
    * fills a float array with string data from a file
    * @param s     string data containing floats
    * @param width column width or 0 to read tokens
@@ -1399,7 +1422,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
                                    int colWidth, int[] atomIndexes,
                                    int minLineLen, String[][] data)
       throws Exception {
-    boolean withSymmetry = (modelAtomCount != ac && data == null);
+    boolean withSymmetry = (ac != 0 && modelAtomCount != ac && data == null);
     if (ac == 0 && atomIndexes != null)
       ac = atomIndexes.length;
     int nLines = (isWide ? ac : ac * 3);

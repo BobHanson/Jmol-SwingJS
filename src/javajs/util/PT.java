@@ -313,18 +313,18 @@ public class PT {
   }
 
   public static int parseIntRadix(String s, int i) throws NumberFormatException {
-    /**
-     * 
-     * JavaScript uses parseIntRadix
-     * 
-     * @j2sNative
-     * 
-     *    return Integer.parseIntRadix(s, i);
-     *    
-     */
-    {
+//    /**
+//     * 
+//     * JavaScript uses parseIntRadix
+//     * 
+//     * @j2sNative
+//     * 
+//     *    return Integer.parseIntRadix(s, i);
+//     *    
+//     */
+//    {
       return Integer.parseInt(s, i);
-    }
+//    }
   }
 
   public static String[] getTokens(String line) {
@@ -816,13 +816,12 @@ public class PT {
     while (true) {
       if (info instanceof String) {
         s = (String) info;
-        /**
-         * @j2sNative
-         * 
-         * if (typeof s == "undefined") s = "null"
-         * 
-         */
-        {}
+//        /**
+//         * @j2sNative
+//         * 
+//         * if (typeof s == "undefined") s = "null"
+//         * 
+//         */
         
         if (s.indexOf("{\"") != 0) {
           //don't doubly fix JSON strings when retrieving status

@@ -36,6 +36,7 @@ import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import javajs.util.ZipTools;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Escape;
@@ -146,7 +147,7 @@ public class SpartanUtil {
     data.append("Zip File Directory: ").append("\n")
         .append(Escape.eAS(zipDirectory, true)).append("\n");
     Map<String, String> fileData = new Hashtable<String, String>();
-    fm.vwr.getJzt().getAllZipData(is, new String[] {}, "", "Molecule", "__MACOSX", fileData);
+    ZipTools.getAllZipData(is, new String[] {}, "", "Molecule", "__MACOSX", fileData);
     String prefix = "|";
     String outputData = fileData.get(prefix + "output");
     if (outputData == null)
@@ -349,10 +350,10 @@ public class SpartanUtil {
         // very specialized reader; assuming we have a Spartan document here
         CompoundDocument doc = (CompoundDocument) Interface
             .getInterface("javajs.util.CompoundDocument", fm.vwr, "file");
-        doc.setDocStream(fm.vwr.getJzt(), bis);
+        doc.setDocStream(bis);
         doc.getAllDataMapped(name, "Molecule", fileData);
       } else if (Rdr.isZipS(bis)) {
-        fm.vwr.getJzt().getAllZipData(bis, subFileList, name, "Molecule",
+        ZipTools.getAllZipData(bis, subFileList, name, "Molecule",
             "__MACOSX", fileData);
       } else if (asBinaryString) {
         // used for Spartan binary file reading
@@ -374,7 +375,7 @@ public class SpartanUtil {
         fileData.put(path, sb.toString());
       } else {
         BufferedReader br = Rdr.getBufferedReader(
-            Rdr.isGzipS(bis) ? new BufferedInputStream(fm.vwr.getJzt().newGZIPInputStream(bis)) : bis, null);
+            Rdr.isGzipS(bis) ? new BufferedInputStream(ZipTools.newGZIPInputStream(bis)) : bis, null);
         String line;
         sb = new SB();
         if (header != null)

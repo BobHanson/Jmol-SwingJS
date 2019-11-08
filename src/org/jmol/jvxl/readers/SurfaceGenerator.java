@@ -324,7 +324,7 @@ public class SurfaceGenerator {
       // not all readers will take this, so we assign
       // cutoff to the value as well.
       params.cutoff = params.sigma = ((Float) value).floatValue();
-      params.isPositiveOnly = false;
+      //params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
     }
@@ -346,6 +346,7 @@ public class SurfaceGenerator {
     if ("cutoffPositive" == propertyName) {
       params.cutoff = ((Float) value).floatValue();
       params.isPositiveOnly = true;
+      params.isCutoffAbsolute = false;
       return true;
     }
 
@@ -428,7 +429,7 @@ public class SurfaceGenerator {
     }
 
     if ("sign" == propertyName) {
-      params.isCutoffAbsolute = true;
+        params.isCutoffAbsolute = !params.isPositiveOnly;
       params.colorBySign = true;
       colorPtr = 0;
       return true;
@@ -880,6 +881,11 @@ public class SurfaceGenerator {
       return true;
     }
 
+    if ("filesData" == propertyName) {
+      params.filesData = (Object[]) value;
+      return true;
+    }
+
     if ("outputChannel" == propertyName) {
       out = (OC) value;
       return true;
@@ -982,8 +988,11 @@ public class SurfaceGenerator {
         surfaceReader = newReader("Iso" + readerData + "Reader");
       }
       break;
-    case Parameters.SURFACE_INTERSECT:
-      surfaceReader = newReader("IsoIntersectReader");
+    case Parameters.SURFACE_INTERSECT_FILE:
+      surfaceReader = newReader("IsoIntersectFileReader");
+      break;
+    case Parameters.SURFACE_INTERSECT_ATOM:
+      surfaceReader = newReader("IsoIntersectAtomReader");
       break;
     case Parameters.SURFACE_SOLVENT:
     case Parameters.SURFACE_MOLECULAR:
@@ -1129,8 +1138,8 @@ public class SurfaceGenerator {
    */
   public Object getProperty(String property, int index) {
     if (property == "jvxlFileData")
-      return JvxlCoder.jvxlGetFileVwr(null, jvxlData, null, params.title, "",
-          true, index, null, null); // for Jvxl.java
+      return JvxlCoder.jvxlGetFile(jvxlData, null, params.title, "", true,
+          index, null, null); // for Jvxl.java
     if (property == "jvxlFileInfo")
       return JvxlCoder.jvxlGetInfo(jvxlData); // for Jvxl.java
     return null;
@@ -1166,6 +1175,16 @@ public class SurfaceGenerator {
       // this will be OK, because any string will be a simple string, 
       // not a binary file.
       value = Rdr.getBR((String) value);
+    }
+    if (value instanceof Object[]) {
+      // [BufferedFileReader[], float[]] -> [VolumeFileReader[], float[]]
+      Object[] a = (Object[]) ((Object[]) value)[0];
+      VolumeFileReader[] b = new VolumeFileReader[a.length];
+      for (int i = 0; i < a.length; i++)
+        b[i] = (VolumeFileReader) setFileData(vwr, a[i]);
+      ((Object[]) value)[0] = b;
+      readerData = value;
+      return newReader("IsoIntersectGridReader");
     }
     BufferedReader br = (BufferedReader) value;
     if (fileType == null)

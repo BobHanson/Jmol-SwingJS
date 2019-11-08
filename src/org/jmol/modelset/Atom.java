@@ -899,7 +899,11 @@ public class Atom extends Point3fi implements Node {
 
   public String getIdentityXYZ(boolean allInfo, P3 pt) {
     pt = (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
-    return getIdentity(allInfo) + " " + pt.x + " " + pt.y + " " + pt.z;  
+    return getIdentity(allInfo) 
+        + " " + PT.formatF(pt.x, 0, 3, true, true) 
+        + " " + PT.formatF(pt.y, 0, 3, true, true) 
+        + " " + PT.formatF(pt.z, 0, 3, true, true) 
+        ;  
   }
   
   String getIdentity(boolean allInfo) {
@@ -1502,7 +1506,7 @@ public class Atom extends Point3fi implements Node {
   }
 
   public String getUnitID(int flags) {
-    Model m = group.getModel();
+    Model m = group.chain.model;
     return (m.isBioModel ? ((BioModel) m).getUnitID(this, flags) : "");
   }
 
@@ -1518,6 +1522,12 @@ public class Atom extends Point3fi implements Node {
       }
     }
     return f;
+  }
+
+  @Override
+  public boolean modelIsRawPDB() {
+    Model m = group.chain.model;
+    return (m.isBioModel && !m.isPdbWithMultipleBonds && m.hydrogenCount == 0);
   }
 
 }

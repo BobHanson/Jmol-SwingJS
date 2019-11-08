@@ -45,6 +45,7 @@ public interface Node extends SimpleNode {
   public Edge[] getEdges();
   @Override
   public int getElementNumber();
+  @Override
   public int getFormalCharge();
   @Override
   public int getIndex();
@@ -85,6 +86,15 @@ public interface Node extends SimpleNode {
   int getTotalHydrogenCount();
   public int getTotalValence();
 
+  String getCIPChirality(boolean doCalculate);
+  int getCIPChiralityCode();
+  @Override
+  void setCIPChirality(int c);
+  @Override
+  public P3 getXYZ();
+  public boolean modelIsRawPDB();
+
+
   // BIOSMILES/BIOSMARTS
   
   public String getBioStructureTypeName();
@@ -103,11 +113,4 @@ public interface Node extends SimpleNode {
   public boolean isPyrimidine();
   public boolean isDeleted();
   char getBioSmilesType();
-  String getCIPChirality(boolean doCalculate);
-  int getCIPChiralityCode();
-  @Override
-  void setCIPChirality(int c);
-  @Override
-  public P3 getXYZ();
-
 }

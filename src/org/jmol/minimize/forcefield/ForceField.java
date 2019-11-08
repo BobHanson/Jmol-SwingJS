@@ -207,6 +207,15 @@ abstract public class ForceField {
     return true; // continue
   }
 
+  /**
+   * Get the energy of a given type or types.
+   * 
+   * Note: gradients is always false
+   * 
+   * @param terms
+   * @param gradients ignored (false)
+   * @return energy
+   */
   private double getEnergies(int terms, boolean gradients) {
     if ((terms & ENERGY) != 0)
       return energyFull(gradients, true);

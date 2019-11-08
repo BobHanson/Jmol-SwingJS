@@ -374,20 +374,20 @@ public class MolecularOrbital extends Isosurface {
           jvxlData.moleculeXml = vwr.getModelCml(
               vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true, false);
           if (!haveHeader) {
-            str.append(JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, null,
-                null, "HEADERONLY", true, nTotal, null, null));
+            str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null,
+                "HEADERONLY", true, nTotal, null, null));
             haveHeader = true;
           }
-          str.append(JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, null,
-              jvxlData.title, null, false, 1,
-              thisMesh.getState(myType), (thisMesh.scriptCommand == null ? "" : thisMesh.scriptCommand)));
+          str.append(JvxlCoder.jvxlGetFile(jvxlData, null, jvxlData.title,
+              null, false, 1, thisMesh.getState(myType),
+              (thisMesh.scriptCommand == null ? "" : thisMesh.scriptCommand)));
           if (!doOneMo)
             setPropI("delete", "mo_show", null);
           if (nTotal == 1)
             break;
         }
-      str.append(JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, null, null,
-          "TRAILERONLY", true, 0, null, null));
+      str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null, "TRAILERONLY",
+          true, 0, null, null));
       return str.toString();
     }
     if (propertyName == "moLabel") {

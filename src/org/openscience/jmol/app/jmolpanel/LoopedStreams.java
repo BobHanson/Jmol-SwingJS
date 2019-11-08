@@ -24,7 +24,12 @@
 package org.openscience.jmol.app.jmolpanel;
 
 import java.io.PipedOutputStream;
+
+import javax.swing.Timer;
+
 import java.io.InputStream;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.PipedInputStream;
 import java.io.OutputStream;
@@ -84,44 +89,64 @@ public class LoopedStreams {
 
   private void startByteArrayReaderThread() {
 
-    new Thread(new Runnable() {
+    Timer t = new Timer(1000, new ActionListener() {
 
       @Override
-      public void run() {
-
-        while (keepRunning) {
-
-          // Check for bytes in the stream.
-          if (byteArrayOS.size() > 0) {
-            byte[] buffer = null;
-            synchronized (byteArrayOS) {
-              buffer = byteArrayOS.toByteArray();
-              byteArrayOS.reset();    // Clear the buffer.
-            }
-            try {
-
-              // Send the extracted data to
-              // the PipedOutputStream.
-              pipedOS.write(buffer, 0, buffer.length);
-            } catch (IOException e) {
-
-              // Do something to log the error -- perhaps 
-              // invoke a Runnable. For now we simply exit.
-              System.exit(1);
-            }
-          } else {                    // No data available, go to sleep.
-            try {
-
-              // Check the ByteArrayOutputStream every
-              // 1 second for new data.
-              Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-          }
-        }
+      public void actionPerformed(ActionEvent e) {
+        sendBytes();      
       }
-    }).start();
+      
+    });
+    t.setRepeats(false);
+    t.start();
+    
+//    new Thread(new Runnable() {
+//
+//      @Override
+//      public void run() {
+//
+//       while (keepRunning) {
+//          
+//          sendBytes();
+//       }
+//      }
+//    }).start();
   }    // startByteArrayReaderThread()
+
+  protected void sendBytes() {
+
+    if (!keepRunning)
+      return;
+    // Check for bytes in the stream.
+    if (byteArrayOS.size() > 0) {
+      byte[] buffer = null;
+      synchronized (byteArrayOS) {
+        buffer = byteArrayOS.toByteArray();
+        byteArrayOS.reset();    // Clear the buffer.
+      }
+      try {
+
+        // Send the extracted data to
+        // the PipedOutputStream.
+        pipedOS.write(buffer, 0, buffer.length);
+      } catch (IOException e) {
+
+        
+//        // Do something to log the error -- perhaps 
+//        // invoke a Runnable. For now we simply exit.
+//        System.exit(1);
+      }
+    } else {                    // No data available, go to sleep.
+//      try {
+//
+//        // Check the ByteArrayOutputStream every
+//        // 1 second for new data.
+//        Thread.sleep(1000);
+//      } catch (InterruptedException e) {
+//      }
+    }
+    startByteArrayReaderThread();    
+  }
 }      // LoopedStreams
 
 

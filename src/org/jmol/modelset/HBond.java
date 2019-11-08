@@ -78,6 +78,14 @@ public class HBond extends Bond {
   public final static int getEnergy(double distAH, double distCH, double distCD,
                               double distAD) {
     
+    // A crude calculation based on simple distances. In the NH -- O=C
+    // case this reads DH -- A=C
+    // 
+    // (+) H .......... A (-) | | | | (-) D C (+)
+    // 
+    // 
+    // E = Q/rAH - Q/rAD + Q/rCD - Q/rCH
+        
     int energy = (int) Math.round(QConst / distAH - QConst / distAD + QConst / distCD - QConst
         / distCH);   
     //Logger.info("HBond: distAH=" + distAH + " distAD=" + distAD + " distCD=" + distCD

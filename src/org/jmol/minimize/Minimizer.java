@@ -81,7 +81,7 @@ public class Minimizer {
   private BS bsFixedDefault;
   private BS bsFixed;
   
-  public Lst<Object[]> constraints;
+  public Lst<MMConstraint> constraints;
   
   private boolean isSilent;
   
@@ -137,30 +137,38 @@ public class Minimizer {
     return null;
   }
   
-  private Map<String, Object[]> constraintMap;
+  private Map<String, MMConstraint> constraintMap;
   private int elemnoMax;
-  private void addConstraint(Object[] c) {
-    if (c == null)
+
+  /**
+   * 
+   * @param o [ [natoms a1 a2 a3...] value ]
+   */
+  private void addConstraint(Object[] o) {
+    if (o == null)
       return;
-    int[] atoms = (int[]) c[0];
-    int nAtoms = atoms[0];
+    int[] indexes = (int[]) o[0];
+    int nAtoms = indexes[0];
     if (nAtoms == 0) {
       constraints = null;
       return;
     }
+    double value = ((Float) o[1]).doubleValue();
     if (constraints == null) {
-      constraints = new  Lst<Object[]>();
-      constraintMap = new Hashtable<String, Object[]>();
+      constraints = new  Lst<MMConstraint>();
+      constraintMap = new Hashtable<String, MMConstraint>();
     }
-    if (atoms[1] > atoms[nAtoms]) {
-        AU.swapInt(atoms, 1, nAtoms);
+    if (indexes[1] > indexes[nAtoms]) {
+        AU.swapInt(indexes, 1, nAtoms);
         if (nAtoms == 4)
-          AU.swapInt(atoms, 2, 3);
+          AU.swapInt(indexes, 2, 3);
     }
-    String id = Escape.eAI(atoms);
-    Object[] c1 = constraintMap.get(id);
-    if (c1 != null) {
-      c1[2] = c[2]; // just set target value
+    String id = Escape.eAI(indexes);
+    MMConstraint c = constraintMap.get(id);
+    if (c == null) {
+      c = new MMConstraint(indexes, value);
+    } else {
+      c.value = value; // just set target value
       return;
     }
     constraintMap.put(id, c);
@@ -261,21 +269,9 @@ public class Minimizer {
       this.bsFixed = bsFixed;
     setAtomPositions();
 
-    if (constraints != null) {
-      for (int i = constraints.size(); --i >= 0;) {
-        Object[] constraint = constraints.get(i);
-        int[] aList = (int[]) constraint[0];
-        int[] minList = (int[]) constraint[1];
-        int nAtoms = aList[0] = Math.abs(aList[0]);
-        for (int j = 1; j <= nAtoms; j++) {
-          if (steps <= 0 || !bsAtoms.get(aList[j])) {
-            aList[0] = -nAtoms; // disable
-            break;
-          }
-          minList[j - 1] = atomMap[aList[j]];
-        }
-      }
-    }
+    if (constraints != null)
+      for (int i = constraints.size(); --i >= 0;)
+        constraints.get(i).set(steps, bsAtoms, atomMap);
 
     pFF.setConstraints(this);
 

@@ -58,26 +58,23 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Map;
 
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 
-import netscape.javascript.JSObject;
-
 import org.jmol.util.Logger;
 
+import javajs.util.Lst;
+import javajs.util.PT;
 import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppletInterface;
 import jspecview.api.JSVFileDropper;
 import jspecview.api.JSVPanel;
 import jspecview.app.JSVApp;
-import jspecview.common.Spectrum;
-import jspecview.common.JSVersion;
 import jspecview.common.JSViewer;
-import jspecview.java.AwtPanel;
+import jspecview.common.Spectrum;
 import jspecview.java.AwtMainPanel;
+import jspecview.java.AwtPanel;
+import netscape.javascript.JSObject;
 
 /**
  * 
@@ -289,7 +286,12 @@ public class JSVApplet extends JApplet implements JSVAppletInterface,
 		app.toggleCoordinate();
 	}
 
-	/*
+  @Override
+  public void togglePointsOnly() {
+    app.togglePointsOnly();
+  }
+
+  /*
 	 * (non-Javadoc)
 	 * 
 	 * @see jspecview.applet.JSVAppletInterface#toggleIntegration()
@@ -579,6 +581,10 @@ public class JSVApplet extends JApplet implements JSVAppletInterface,
 		
 	}
 	
+	/**
+   * @param keyCode 
+	 * @param keyChar  
+   */
 	protected void keyPressedEvent(int keyCode, char keyChar) {	
 //		String ret = vwr.checkCommandLineForTip(keyChar, commandInput.getText(), true);
 //		if (ret != null)

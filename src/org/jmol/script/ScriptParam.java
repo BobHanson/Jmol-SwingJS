@@ -185,7 +185,7 @@ abstract public class ScriptParam extends ScriptError {
    * 
    * @throws ScriptException
    */
-  protected P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
+  public P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
       throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
@@ -207,7 +207,7 @@ abstract public class ScriptParam extends ScriptError {
           .getAtomSetCenter(bs));
     case T.leftbrace:
     case T.point3f:
-      return getPoint3f(i, true);
+      return getPoint3f(i, true, true);
     }
     invArg();
     // impossible return
@@ -267,12 +267,13 @@ abstract public class ScriptParam extends ScriptError {
     V3 vTemp = new V3();
     V3 vTemp2 = new V3();
     P4 plane = null;
+    V3 norm = null;
     if (tokAt(i) == T.plane)
       i++;
     boolean isNegated = (tokAt(i) == T.minus);
     if (isNegated)
       i++;
-    if (i < slen)
+    if (i < slen) {
       switch (getToken(i).tok) {
       case T.point4f:
         plane = P4.newPt((P4) theToken.value);
@@ -317,10 +318,10 @@ abstract public class ScriptParam extends ScriptError {
         //$FALL-THROUGH$
       case T.bitset:
       case T.expressionBegin:
-        P3 pt1 = atomCenterOrCoordinateParameter(i, null);
+        pt1 = atomCenterOrCoordinateParameter(i, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
-        P3 pt2 = atomCenterOrCoordinateParameter(iToken, null);
+        pt2 = atomCenterOrCoordinateParameter(iToken, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
         if (isFloatParameter(iToken)) {
@@ -330,17 +331,31 @@ abstract public class ScriptParam extends ScriptError {
           vTemp.scale(frac * 2);
           Measure.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
         } else {
-          P3 pt3 = atomCenterOrCoordinateParameter(iToken, null);
+          pt3 = atomCenterOrCoordinateParameter(iToken, null);
           i = iToken;
-          V3 norm = new V3();
-          float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
-          plane = new P4();
-          plane.set4(norm.x, norm.y, norm.z, w);
+          norm = new V3();
         }
-        if (!chk && Logger.debugging)
-          Logger.debug(" defined plane: " + plane);
         break;
+      default:
+        if (isArrayParameter(i)) {
+          Lst<P3> list = getPointOrCenterVector(getToken(i));
+          if (list.size() != 3)
+            invArg();
+          pt1 = list.get(0);
+          pt2 = list.get(1);
+          pt3 = list.get(2);
+          norm = new V3();
+        }
       }
+      if (norm != null) {
+        float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
+        plane = new P4();
+        plane.set4(norm.x, norm.y, norm.z, w);
+      }
+      if (!chk && Logger.debugging)
+        Logger.debug(" defined plane: " + plane);
+
+    }
     if (plane == null)
       errorMore(ERROR_planeExpected, "{a b c d}",
           "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\"", "$xxxxx");
@@ -350,10 +365,30 @@ abstract public class ScriptParam extends ScriptError {
     return plane;
   }
 
+  public Lst<P3> getPointOrCenterVector(T t) throws ScriptException {
+    Lst<P3> data = new Lst<P3>();
+    P3 pt;
+    BS bs;
+    Lst<SV> pts = ((SV) t).getList();
+    if (pts == null)
+      invArg();
+    for (int j = 0; j < pts.size(); j++) {
+      if ((pt = SV.ptValue(pts.get(j))) != null) {
+        data.addLast(pt);
+      } else if ((bs = SV.getBitSet(pts.get(j), true)) != null) {
+        data.addLast(bs.cardinality() == 1 ? P3.newP(vwr.ms.at[bs.nextSetBit(0)]) 
+            : vwr.ms.getAtomSetCenter(bs));
+      } else {
+        invArg();
+      }
+    }
+    return data;
+  }
+
   public P4 hklParameter(int i) throws ScriptException {
     if (!chk && vwr.getCurrentUnitCell() == null)
       error(ERROR_noUnitCell);
-    P3 pt = (P3) getPointOrPlane(i, false, true, false, true, 3, 3);
+    P3 pt = (P3) getPointOrPlane(i, false, true, false, true, 3, 3, true);
     P4 p = getHklPlane(pt);
     if (p == null)
       error(ERROR_badMillerIndices);
@@ -362,10 +397,11 @@ abstract public class ScriptParam extends ScriptError {
     return p;
   }
 
+  public P3 pt1, pt2, pt3;
   public P4 getHklPlane(P3 pt) {
-    P3 pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
-    P3 pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
-    P3 pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
+    pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
+    pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
+    pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
     // trick for 001 010 100 is to define the other points on other edges
     if (pt.x == 0 && pt.y == 0 && pt.z == 0) {
       return null;
@@ -395,7 +431,7 @@ abstract public class ScriptParam extends ScriptError {
   public Object getPointOrPlane(int index, boolean integerOnly,
                                  boolean allowFractional, boolean doConvert,
                                  boolean implicitFractional, int minDim,
-                                 int maxDim) throws ScriptException {
+                                 int maxDim, boolean throwE) throws ScriptException {
     // { x y z } or {a/b c/d e/f} are encoded now as seqcodes and model numbers
     // so we decode them here. It's a bit of a pain, but it isn't too bad.
     // implicit fractional for unitcell and hkl also allows 1500500500, which is
@@ -404,111 +440,140 @@ abstract public class ScriptParam extends ScriptError {
     int[] code555 = new int[6];
     boolean useCell555P4 = false;
     int n = 0;
-    coordinatesAreFractional = implicitFractional;
-    if (tokAt(index) == T.point3f) {
-      if (minDim <= 3 && maxDim >= 3)
-        return /*Point3f*/getToken(index).value;
-      invArg();
-    }
-    if (tokAt(index) == T.point4f) {
-      if (minDim <= 4 && maxDim >= 4)
-        return /*Point4f*/getToken(index).value;
-      invArg();
-    }
-    int multiplier = 1;
-    out: for (int i = index; i < st.length; i++) {
-      switch (getToken(i).tok) {
-      case T.leftbrace:
-      case T.comma:
-      case T.opAnd:
-      case T.opAND:
-        break;
-      case T.rightbrace:
-        break out;
-      case T.minus:
-        multiplier = -1;
-        break;
-      case T.spec_seqcode_range:
-        if (n == 6)
-          invArg();
-        coord[n++] = theToken.intValue;
-        multiplier = -1;
-        break;
-      case T.integer:
-      case T.spec_seqcode:
-        if (n == 6)
-          invArg();
-        if (implicitFractional && theToken.intValue > 999999999)
-          useCell555P4 = true;
-        code555[n] = theToken.intValue;
-        coord[n++] = theToken.intValue * multiplier;
-        multiplier = 1;
-        break;
-      case T.divide:
-      case T.spec_model: // after a slash
-        if (!allowFractional)
-          invArg();
-        if (theTok == T.divide)
-          getToken(++i);
-        n--;
-        if (n < 0 || integerOnly)
-          invArg();
-        if (theToken.value instanceof Integer || theTok == T.integer) {
-          coord[n++] /= (theToken.intValue == Integer.MAX_VALUE ? ((Integer) theToken.value)
-              .intValue() : theToken.intValue);
-        } else if (theToken.value instanceof Float) {
-          coord[n++] /= ((Float) theToken.value).floatValue();
+    boolean isOK = true;
+    try {
+      coordinatesAreFractional = implicitFractional;
+      if (tokAt(index) == T.point3f) {
+        if (minDim <= 3 && maxDim >= 3)
+          return /*Point3f*/getToken(index).value;
+        isOK = false;
+        return null;
+      }
+      if (tokAt(index) == T.point4f) {
+        if (minDim <= 4 && maxDim >= 4)
+          return /*Point4f*/getToken(index).value;
+        isOK = false;
+        return null;
+      }
+      int multiplier = 1;
+      out: for (int i = index; i < st.length; i++) {
+        switch (getToken(i).tok) {
+        case T.leftbrace:
+        case T.comma:
+        case T.opAnd:
+        case T.opAND:
+          break;
+        case T.rightbrace:
+          break out;
+        case T.minus:
+          multiplier = -1;
+          break;
+        case T.spec_seqcode_range:
+          if (n == 6) {
+            isOK = false;
+            return null;
+          }
+          coord[n++] = theToken.intValue;
+          multiplier = -1;
+          break;
+        case T.integer:
+        case T.spec_seqcode:
+          if (n == 6)
+            invArg();
+          if (implicitFractional && theToken.intValue > 999999999)
+            useCell555P4 = true;
+          code555[n] = theToken.intValue;
+          coord[n++] = theToken.intValue * multiplier;
+          multiplier = 1;
+          break;
+        case T.divide:
+        case T.spec_model: // after a slash
+          if (!allowFractional) {
+            isOK = false;
+            return null;
+          }
+          if (theTok == T.divide)
+            getToken(++i);
+          n--;
+          if (n < 0 || integerOnly) {
+            isOK = false;
+            return null;
+          }
+          if (theToken.value instanceof Integer || theTok == T.integer) {
+            coord[n++] /= (theToken.intValue == Integer.MAX_VALUE ? ((Integer) theToken.value)
+                .intValue() : theToken.intValue);
+          } else if (theToken.value instanceof Float) {
+            coord[n++] /= ((Float) theToken.value).floatValue();
+          }
+          coordinatesAreFractional = true;
+          break;
+        case T.spec_chain: //? 
+        case T.misc: // NaN
+          coord[n++] = Float.NaN;
+          break;
+        case T.decimal:
+        case T.spec_model2:
+          if (integerOnly) {
+            isOK = false;
+            return null;
+          }
+          if (n == 6) {
+            isOK = false;
+            return null;
+          }
+          coord[n++] = ((Float) theToken.value).floatValue();
+          break;
+        default:
+          isOK = false;
+          return null;
         }
-        coordinatesAreFractional = true;
-        break;
-      case T.spec_chain: //? 
-      case T.misc: // NaN
-        coord[n++] = Float.NaN;
-        break;
-      case T.decimal:
-      case T.spec_model2:
-        if (integerOnly)
-          invArg();
-        if (n == 6)
-          invArg();
-        coord[n++] = ((Float) theToken.value).floatValue();
-        break;
-      default:
+      }
+      if (n < minDim || n > maxDim) {
+        isOK = false;
+        return null;
+      }
+      if (n == 3) {
+        if (useCell555P4) {
+          // {1500500501 1500500502 1}
+          // --> {1500000 1500500 1 1501502}
+          // because lower digits are lost in Java
+          return P4.new4(coord[0], coord[1], coord[2], 
+              (code555[0]%1000)*1000+(code555[1]%1000)+1000000);
+        }
+        P3 pt = P3.new3(coord[0], coord[1], coord[2]);
+        if (coordinatesAreFractional && doConvert) {
+          fractionalPoint = P3.newP(pt);
+          if (!chk)
+            vwr.toCartesian(pt, false);//!vwr.getBoolean(T.fractionalrelative));
+        }
+        return pt;
+      }
+      if (n == 4) {
+        if (coordinatesAreFractional) {
+          // no fractional coordinates for planes (how
+          // to convert?)
+          isOK = false;
+          return null;
+        }
+        P4 plane = P4.new4(coord[0], coord[1], coord[2], coord[3]);
+        return plane;
+      }
+      return coord;
+    } finally {
+      if (!isOK && throwE)
         invArg();
-      }
     }
-    if (n < minDim || n > maxDim)
-      invArg();
-    if (n == 3) {
-      if (useCell555P4) {
-        // {1500500501 1500500502 1}
-        // --> {1500000 1500500 1 1501502}
-        // because lower digits are lost in Java
-        return P4.new4(coord[0], coord[1], coord[2], 
-            (code555[0]%1000)*1000+(code555[1]%1000)+1000000);
-      }
-      P3 pt = P3.new3(coord[0], coord[1], coord[2]);
-      if (coordinatesAreFractional && doConvert) {
-        fractionalPoint = P3.newP(pt);
-        if (!chk)
-          vwr.toCartesian(pt, false);//!vwr.getBoolean(T.fractionalrelative));
-      }
-      return pt;
-    }
-    if (n == 4) {
-      if (coordinatesAreFractional) // no fractional coordinates for planes (how
-        // to convert?)
-        invArg();
-      P4 plane = P4.new4(coord[0], coord[1], coord[2], coord[3]);
-      return plane;
-    }
-    return coord;
   }
 
   public boolean isPoint3f(int i) {
     // first check for simple possibilities:
+    int itok = tokAt(i);
+    if (itok == T.nada)
+      return false;
+    
     boolean isOK;
-    if ((isOK = (tokAt(i) == T.point3f)) || tokAt(i) == T.point4f
+    
+    if ((isOK = (itok == T.point3f)) || itok == T.point4f
         || isFloatParameter(i + 1) && isFloatParameter(i + 2)
         && isFloatParameter(i + 3) && isFloatParameter(i + 4))
       return isOK;
@@ -516,7 +581,8 @@ abstract public class ScriptParam extends ScriptError {
     int t = iToken;
     isOK = true;
     try {
-      getPoint3f(i, true);
+      if (getPoint3f(i, true, false) == null)
+        isOK = false;
     } catch (Exception e) {
       isOK = false;
     }
@@ -525,12 +591,12 @@ abstract public class ScriptParam extends ScriptError {
     return isOK;
   }
 
-  public P3 getPoint3f(int i, boolean allowFractional) throws ScriptException {
-    return (P3) getPointOrPlane(i, false, allowFractional, true, false, 3, 3);
+  public P3 getPoint3f(int i, boolean allowFractional, boolean throwE) throws ScriptException {
+    return (P3) getPointOrPlane(i, false, allowFractional, true, false, 3, 3, throwE);
   }
 
   public P4 getPoint4f(int i) throws ScriptException {
-    return (P4) getPointOrPlane(i, false, false, false, false, 4, 4);
+    return (P4) getPointOrPlane(i, false, false, false, false, 4, 4, true);
   }
 
   public P3 xypParameter(int index) throws ScriptException {
@@ -702,6 +768,12 @@ abstract public class ScriptParam extends ScriptError {
 
   public Lst<Object> listParameter(int i, int nMin, int nMax)
       throws ScriptException {
+    return listParameter4(i, nMin, nMax, false);
+  }
+
+  public Lst<Object> listParameter4(int i, int nMin, int nMax,
+                                    boolean allowString)
+      throws ScriptException {
     Lst<Object> v = new Lst<Object>();
     int tok = tokAt(i);
     if (tok == T.spacebeforesquare)
@@ -713,15 +785,18 @@ abstract public class ScriptParam extends ScriptError {
     int n = 0;
     while (n < nMax) {
       tok = tokAt(i);
-      if (haveBrace && tok == T.rightbrace || haveSquare
-          && tok == T.rightsquare)
+      if (haveBrace && tok == T.rightbrace
+          || haveSquare && tok == T.rightsquare)
         break;
       switch (tok) {
       case T.comma:
       case T.minus: // T.minus (int)-0  -- introduced in ScriptCompiler because we have no -0 in JavaScript and sometimes we want 3-0 as an expression 3 -0  to mean "3 to 0"
       case T.leftbrace:
       case T.rightbrace:
+        break;
       case T.string:
+        if (allowString)
+          v.addLast(stringParameter(i));
         break;
       case T.point4f:
         P4 pt4 = getPoint4f(i);
@@ -746,8 +821,8 @@ abstract public class ScriptParam extends ScriptError {
       }
       i += (n == nMax && haveSquare && tokAt(i + 1) == T.rightbrace ? 2 : 1);
     }
-    if (haveBrace && tokAt(i++) != T.rightbrace || haveSquare
-        && tokAt(i++) != T.rightsquare || n < nMin || n > nMax)
+    if (haveBrace && tokAt(i++) != T.rightbrace
+        || haveSquare && tokAt(i++) != T.rightsquare || n < nMin || n > nMax)
       invArg();
     iToken = i - 1;
     return v;
@@ -1018,7 +1093,7 @@ abstract public class ScriptParam extends ScriptError {
 
   public boolean isColorParam(int i) {
     int tok = tokAt(i);
-    return (tok == T.navy || tok == T.spacebeforesquare || tok == T.leftsquare
+    return tok != T.nada && (tok == T.navy || tok == T.spacebeforesquare || tok == T.leftsquare
         || tok == T.varray || tok == T.point3f || isPoint3f(i) || (tok == T.string || T
         .tokAttr(tok, T.identifier))
         && CU.getArgbFromString((String) st[i].value) != 0);
@@ -1060,7 +1135,7 @@ abstract public class ScriptParam extends ScriptError {
         pt = (P3) theToken.value;
         break;
       case T.leftbrace:
-        pt = getPoint3f(index, false);
+        pt = getPoint3f(index, false, true);
         break;
       case T.none:
         if (allowNone)
@@ -1172,7 +1247,7 @@ abstract public class ScriptParam extends ScriptError {
       return tickInfo;
     }
     tickInfo = new TickInfo((P3) getPointOrPlane(index, false, true, false,
-        false, 3, 3));
+        false, 3, 3, true));
     if (coordinatesAreFractional || tokAt(iToken + 1) == T.unitcell) {
       tickInfo.scale = P3.new3(Float.NaN, Float.NaN, Float.NaN);
       allowScale = false;
@@ -1189,7 +1264,7 @@ abstract public class ScriptParam extends ScriptError {
         float f = floatParameter(iToken + 2);
         tickInfo.scale = P3.new3(f, f, f);
       } else {
-        tickInfo.scale = getPoint3f(iToken + 2, true);
+        tickInfo.scale = getPoint3f(iToken + 2, true, true);
       }
     }
     if (allowFirst)

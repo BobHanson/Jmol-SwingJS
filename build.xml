@@ -392,7 +392,6 @@ all support for previous versions removed
         <uptodate targetfile="${appjars.dir}">
           <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
           <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
-          <srcfiles dir="${lib.dir}" includes="JSpecView.jar"/>
         </uptodate>
         <uptodate targetfile="build/libjars.timestamp"
                   srcfile="${appjars.dir}"/>
@@ -466,6 +465,7 @@ all support for previous versions removed
         <include name="javajs/export/**" />
         <include name="javajs/img/**" />
         <include name="javajs/util/**" />
+        <include name="**/jspecview/**" />
         <include name="**/org/gennbo/**" />
         <include name="**/org/apache/**" />
         <include name="**/org/qcschema/**" />
@@ -669,6 +669,7 @@ all support for previous versions removed
 
     <jar destfile="build/JmolApplet0_ReadersMolXyz.jar" manifest="manifest/applet.txt">
       <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/spartan/**" />
         <include name="org/jmol/adapter/readers/molxyz/**" />
       </fileset>
     </jar>
@@ -955,6 +956,7 @@ all support for previous versions removed
 
     <jar destfile="build/JmolAppletSigned0_ReadersMolXyz.jar" manifest="manifest/appletSigned.txt">
       <fileset dir="${applet.classes.dir}">
+        <include name="org/jmol/adapter/readers/spartan/**" />
         <include name="org/jmol/adapter/readers/molxyz/**" />
       </fileset>
     </jar>
@@ -1199,8 +1201,6 @@ all support for previous versions removed
         <include name="Jmol.jar" />
         <include name="JmolData.jar" />
         <include name="JmolLib.jar" />
-      </fileset>
-      <fileset dir="jars">
         <include name="JSpecView.jar" />
       </fileset>
       <fileset dir=".">

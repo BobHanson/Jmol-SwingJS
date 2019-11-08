@@ -663,21 +663,26 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
-                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth) {
+                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options) {
     return getDesc(modelSet).getSymopInfo(iatom, xyz, op, pt, pt2,
-        id, type, scaleFactor, nth);
+        id, type, scaleFactor, nth, options);
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull) {
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull, float[] cellParams) {
     boolean isForModel = (sgName == null);
     if (sgName == null) {
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
+    SymmetryInterface cellInfo = null;
+    if (cellParams != null) {
+      cellInfo = new Symmetry();
+      cellInfo.setUnitCell(cellParams, false);
+    }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel);
+        null, 0, -1, isFull, isForModel, 0, cellInfo);
   }
 
   
@@ -725,10 +730,10 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc) {
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc, M3 primitiveToCrystal) {
     if (unitCell == null)
       unitCell = UnitCell.fromOABC(oabc, false);
-    return unitCell.toFromPrimitive(toPrimitive, type, oabc);
+    return unitCell.toFromPrimitive(toPrimitive, type, oabc, primitiveToCrystal);
   }
 
   @Override
@@ -820,17 +825,25 @@ public class Symmetry implements SymmetryInterface {
   /**
    * return a conventional lattice from a primitive
    * 
-   * @param latticeType  "A" "B" "C" "R" etc.
+   * @param latticeType
+   *        "A" "B" "C" "R" etc.
    * @return [origin va vb vc]
    */
   @Override
-  public T3[] getConventionalUnitCell(String latticeType) {
-    return (unitCell == null || latticeType == null ? null : unitCell.getConventionalUnitCell(latticeType));
+  public T3[] getConventionalUnitCell(String latticeType,
+                                      M3 primitiveToCrystal) {
+    return (unitCell == null || latticeType == null ? null
+        : unitCell.getConventionalUnitCell(latticeType, primitiveToCrystal));
   }
 
   @Override
   public Map<String, Object> getUnitCellInfoMap() {
     return (unitCell == null ? null : unitCell.getInfo());
+  }
+
+  @Override
+  public void setUnitCell(Symmetry uc) {
+    unitCell = UnitCell.cloneUnitCell(uc.unitCell);   
   }
 
 }

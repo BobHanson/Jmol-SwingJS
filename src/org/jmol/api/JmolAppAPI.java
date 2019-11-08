@@ -12,4 +12,6 @@ public interface JmolAppAPI {
 
   void addHistoryWindowInfo(String name, Component window, Point border);
 
+  void addHistoryWindowDimInfo(String name, Component window, Dimension inner);
+
 }

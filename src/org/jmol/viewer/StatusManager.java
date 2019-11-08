@@ -256,7 +256,7 @@ public class StatusManager {
                                         String callbackFunction) {
     // menu and language setting also use this route
     CBK callback = CBK.getCallback(callbackType);
-    System.out.println("callback set for " + callbackType + " " + callbackFunction + " " + callback);
+    System.out.println("StatusManager callback set for " + callbackType + " f=" + callbackFunction + " cb=" + callback);
     if (callback != null) {
       int pt = (callbackFunction == null ? 0
           : callbackFunction.length() > 7
@@ -534,26 +534,9 @@ public class StatusManager {
     // "script started"/"pending"/"script terminated"/"script completed"
     // do not get sent to console
     
-    if (vwr.scriptEditor != null) {
-      if (msWalltime > 0) {
-        // termination -- button legacy
-        vwr.scriptEditor.notifyScriptTermination();
-      } else if (msWalltime < 0) {
-        if (msWalltime == -2)
-          vwr.scriptEditor.notifyScriptStart();
-      } else if (vwr.scriptEditor.isVisible()
-          && ((String) data[2]).length() > 0) {
-        vwr.scriptEditor.notifyContext(vwr.getScriptContext("SE notify"), data);
-      }
-    }
-
-    if (vwr.appConsole != null) {
-      if (msWalltime == 0) {
-        String strInfo = (data[1] == null ? null : data[1]
-            .toString());
-        vwr.appConsole.sendConsoleMessage(strInfo);
-      }
-    }
+    vwr.notifyScriptEditor(msWalltime, data);
+    if (msWalltime == 0)
+      vwr.sendConsoleMessage(data[1] == null ? null : data[1].toString());
   }
   
   private int minSyncRepeatMs = 100;
@@ -678,9 +661,7 @@ public class StatusManager {
   }
 
   public synchronized void clearConsole() {
-    if (vwr.appConsole != null) {
-      vwr.appConsole.sendConsoleMessage(null);
-    }
+    vwr.sendConsoleMessage(null);
     if (jsl != null)
       cbl.notifyCallback(CBK.MESSAGE, null);
   }

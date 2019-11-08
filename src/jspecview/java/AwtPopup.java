@@ -27,13 +27,11 @@ import java.awt.Container;
 
 import javax.swing.JPopupMenu;
 
-import org.jmol.popup.AwtSwingPopupHelper;
 import org.jmol.popup.PopupResource;
-
-import javajs.awt.SC;
-
 import org.jmol.api.PlatformViewer;
-import org.jmol.popup.AwtSwingComponent;
+import org.jmol.api.SC;
+import org.jmol.awt.AwtSwingComponent;
+import org.jmol.awt.AwtPopupHelper;
 
 import jspecview.common.JSViewer;
 import jspecview.popup.JSVPopupResourceBundle;
@@ -42,7 +40,7 @@ import jspecview.popup.JSVGenericPopup;
 public class AwtPopup extends JSVGenericPopup  {
 
 	public AwtPopup() {
-		helper = new AwtSwingPopupHelper(this);		
+		helper = new AwtPopupHelper(this);		
 	}
 	
 	// @Override
@@ -71,7 +69,7 @@ public class AwtPopup extends JSVGenericPopup  {
 	}
   
   @Override
-  protected String menuSetCheckBoxOption(SC item, String name, String what) {
+  protected String getUnknownCheckBoxScriptToRun(SC item, String name, String what, boolean TF) {
     // ModelKit only
     return null;
   }

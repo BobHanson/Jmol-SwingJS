@@ -1,6 +1,8 @@
 package jspecview.api.js;
 
-public interface JSVAppletObject {
+import javajs.api.js.JSAppletObject;
+
+public interface JSVAppletObject extends JSAppletObject {
 
   void _search(String value);
 

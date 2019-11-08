@@ -28,9 +28,8 @@ package org.jmol.awtjs2d;
 import java.util.Map;
 
 import org.jmol.api.GenericImageDialog;
+import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
-
-import javajs.awt.Font;
 
 /**
  * methods required by Jmol that access java.awt.Image
@@ -167,6 +166,6 @@ class Image {
   public static GenericImageDialog getImageDialog(Viewer vwr,
                                                String title,
                                                Map<String, GenericImageDialog> imageMap) {
-    return Platform.Jmol()._consoleGetImageDialog(vwr, title, imageMap);
+    return Platform.Jmol().consoleGetImageDialog(vwr, title, imageMap);
   }
 }

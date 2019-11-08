@@ -40,8 +40,9 @@ package jspecview.js2d;
 import org.jmol.api.GenericGraphics;
 
 import javajs.api.GenericColor;
-import javajs.awt.Color;
-import javajs.awt.Font;
+import org.jmol.awtjs.swing.Color;
+import org.jmol.util.Font;
+
 import javajs.util.CU;
 
 
@@ -81,7 +82,7 @@ public class JsG2D implements GenericGraphics {
 		/**
 		 * @j2sNative
 		 * 
-		 * image = Jmol._newGrayScaleImage(context, image, width, height, grayBuffer);
+		 * image = Jmol.newGrayScaleImage(context, image, width, height, grayBuffer);
 		 */
 		{
 		}

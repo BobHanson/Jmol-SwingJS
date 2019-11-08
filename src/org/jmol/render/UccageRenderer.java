@@ -175,7 +175,7 @@ public class UccageRenderer extends CageRenderer {
         || vwr.gdata.getTextPosition() != 0) // molecularOrbital has displayed
       return;
     vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 14 * imageFontScaling));
-    xpos = (int) Math.floor(5 * imageFontScaling);
+    xpos = (int) Math.floor(10 * imageFontScaling);
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
     String sgName = (isPolymer ? "polymer" : isSlab ? "slab" : unitcell

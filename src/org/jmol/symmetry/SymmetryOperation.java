@@ -94,8 +94,6 @@ public class SymmetryOperation extends M4 {
   }
 
   /**
-   * @j2sIgnoreSuperConstructor
-   * @j2sOverride
    * 
    * @param op
    * @param atoms
@@ -179,9 +177,7 @@ public class SymmetryOperation extends M4 {
   }
 
   void doFinalize() {
-    m03 /= 12;
-    m13 /= 12;
-    m23 /= 12;
+    div12(this);
     if (modDim > 0) {
       double[][] a = rsvs.getArray();
       for (int i = a.length - 1; --i >= 0;)
@@ -190,6 +186,13 @@ public class SymmetryOperation extends M4 {
     isFinalized = true;
   }
   
+  private static M4 div12(M4 op) {
+    op.m03 /= 12;
+    op.m13 /= 12;
+    op.m23 /= 12;
+    return op;
+  }
+
   String getXyz(boolean normalized) {
     return (normalized && modDim == 0 || xyzOriginal == null ? xyz : xyzOriginal);
   }
@@ -360,6 +363,12 @@ public class SymmetryOperation extends M4 {
     return true;
   }
 
+  public static M4 getMatrixFromXYZ(String xyz) {
+    float[] linearRotTrans = new float[16];
+    xyz = getMatrixFromString(null, xyz, linearRotTrans, false);
+    return (xyz == null ? null : div12(M4.newA16(linearRotTrans)));  
+  }
+
   /**
    * Convert the Jones-Faithful notation 
    *   "x, -z+1/2, y"  or "x1, x3-1/2, x2, x5+1/2, -x6+1/2, x7..."
@@ -405,6 +414,7 @@ public class SymmetryOperation extends M4 {
     int rowPt = 0;
     char ch;
     float iValue = 0;
+    int tensDenom = 0;
     float decimalMultiplier = 1f;
     String strT = "";
     String strOut = "";
@@ -425,6 +435,7 @@ public class SymmetryOperation extends M4 {
         isNegative = false;
         continue;
       case '/':
+        tensDenom = 0;
         isDenominator = true;
         continue;
       case 'x':
@@ -459,15 +470,17 @@ public class SymmetryOperation extends M4 {
             i = transPt - 1;
             transPt = -i;
             iValue = 0;
+            tensDenom = 0;
             continue;
           }
           transPt = i + 1;
           i = rotPt;
         }
         // add translation in 12ths
-        iValue = normalizeTwelfths(iValue, doNormalize);
+        iValue = normalizeTwelfths(iValue, doNormalize);//normalizeTwelfths(iValue, doNormalize);
         linearRotTrans[tpt0 + nRows - 1] = iValue;
-        strT += xyzFraction(iValue, false, true);
+        strT += xyzFraction12(iValue, false, true);
+       // strT += xyzFraction48(iValue, false, true);
         strOut += (strOut == "" ? "" : ",") + strT;
         if (rowPt == nRows - 2)
           return strOut;
@@ -489,15 +502,22 @@ public class SymmetryOperation extends M4 {
       default:
         //Logger.debug(isDecimal + " " + ch + " " + iValue);
         int ich = ch - '0';
-        if (isDecimal && ich >= 0 && ich <= 9) {
-          decimalMultiplier /= 10f;
-          if (iValue < 0)
-            isNegative = true;
-          iValue += decimalMultiplier * ich * (isNegative ? -1 : 1);
-          continue;
-        }
         if (ich >= 0 && ich <= 9) {
+          if (isDecimal) {
+            decimalMultiplier /= 10f;
+            if (iValue < 0)
+              isNegative = true;
+            iValue += decimalMultiplier * ich * (isNegative ? -1 : 1);
+            continue;
+          }
           if (isDenominator) {
+            if (ich == 1) {
+              tensDenom = 1;
+              continue;
+            }
+            if (tensDenom == 1) {
+              ich += tensDenom * 10; // 12, 16
+            }
             if (iValue == 0) {
               // a/2,....
               linearRotTrans[xpt] /= ich;
@@ -523,7 +543,7 @@ public class SymmetryOperation extends M4 {
     return xyz;
   }
 
-  private final static String xyzFraction(float n12ths, boolean allPositive, boolean halfOrLess) {
+  private final static String xyzFraction12(float n12ths, boolean allPositive, boolean halfOrLess) {
     float n = n12ths;
     if (allPositive) {
       while (n < 0)
@@ -535,6 +555,21 @@ public class SymmetryOperation extends M4 {
         n += 12f;
     }
     String s = twelfthsOf(n);
+    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
+  }
+
+  private final static String xyzFraction48ths(float n48ths, boolean allPositive, boolean halfOrLess) {
+    float n = n48ths;
+    if (allPositive) {
+      while (n < 0)
+        n += 48f;
+    } else if (halfOrLess) {
+      while (n > 24f)
+        n -= 48f;
+      while (n < -24f)
+        n += 48f;
+    }
+    String s = fortyEighthsOf(n);
     return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
@@ -551,7 +586,7 @@ public class SymmetryOperation extends M4 {
       // Juan Manuel suggests 10 is large enough here 
       float f = n12ths / 12;
       int max = 20;
-      for (m = 5; m < max; m++) {
+      for (m = 3; m < max; m++) {
         float fm = f * m;
         n = Math.round(fm);
         if (Math.abs(n - fm) < 0.01f)
@@ -590,8 +625,75 @@ public class SymmetryOperation extends M4 {
     return str + n + "/" + m;
   }
 
+  final static String fortyEighthsOf(float n48ths) {
+    String str = "";
+    if (n48ths < 0) {
+      n48ths = -n48ths;
+      str = "-";
+    }
+    int m = 12;
+    int n = Math.round(n48ths);
+    if (Math.abs(n - n48ths) > 0.01f) {
+      // fifths? sevenths? eigths? ninths? sixteenths?
+      // Juan Manuel suggests 10 is large enough here 
+      float f = n48ths / 48;
+      int max = 20;
+      for (m = 5; m < max; m++) {
+        float fm = f * m;
+        n = Math.round(fm);
+        if (Math.abs(n - fm) < 0.01f)
+          break;
+      }
+      if (m == max)
+        return str + f;
+    } else {
+      if (n == 48)
+        return str + "1";
+      if (n < 48)
+        return str + twelfths[n % 48];
+      switch (n % 48) {
+      case 0:
+        return "" + n / 48;
+      case 2:
+      case 10:
+        m = 6;
+        break;
+      case 3:
+      case 9:
+        m = 4;
+        break;
+      case 4:
+      case 8:
+        m = 3;
+        break;
+      case 6:
+        m = 2;
+        break;
+      default:
+        break;
+      }
+      n = (n * m / 12);
+    }
+    return str + n + "/" + m;
+  }
+
   private final static String[] twelfths = { "0", "1/12", "1/6", "1/4", "1/3",
   "5/12", "1/2", "7/12", "2/3", "3/4", "5/6", "11/12" };
+
+  private final static String[] fortyeigths = { "0", 
+    "1/48", "1/24", "1/16", "1/12",
+    "5/48", "1/8", "7/48", "1/6", 
+    "3/16", "5/24", "11/48", "1/4",
+    "13/48", "7/24", "5/16", "1/3",
+    "17/48", "3/8", "19/48", "5/12",
+    "7/16", "11/24", "23/48", "1/2",
+    "25/48", "13/24", "9/16", "7/12",
+    "29/48", "15/24", "31/48", "2/3",
+    "11/12", "17/16", "35/48", "3/4",
+    "37/48", "19/24", "13/16", "5/6",
+    "41/48", "7/8", "43/48", "11/12",
+    "15/16", "23/24", "47/48"
+  };
 
   private static String plusMinus(String strT, float x, String sx) {
     return (x == 0 ? "" : (x < 0 ? "-" : strT.length() == 0 ? "" : "+") + (x == 1 || x == -1 ? "" : "" + (int) Math.abs(x)) + sx);
@@ -604,6 +706,17 @@ public class SymmetryOperation extends M4 {
         iValue -= 12;
       while (iValue <= -6)
         iValue += 12;
+    }
+    return iValue;
+  }
+
+  private static float normalize48ths(float iValue, boolean doNormalize) {
+    iValue *= 48f;
+    if (doNormalize) {
+      while (iValue > 24)
+        iValue -= 48;
+      while (iValue <= -24)
+        iValue += 48;
     }
     return iValue;
   }
@@ -627,7 +740,7 @@ public class SymmetryOperation extends M4 {
       for (int j = 0; j < 3; j++)
         if (row[j] != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction((is12ths ? row[3] : row[3] * 12), allPositive,
+      term += xyzFraction12((is12ths ? row[3] : row[3] * 12), allPositive,
           halfOrLess);
       str += "," + term;
     }
@@ -722,7 +835,7 @@ public class SymmetryOperation extends M4 {
           s += (r < 0 ? "-" : s.endsWith(",") ? "" : "+") + (Math.abs(r) == 1 ? "" : "" + (int) Math.abs(r)) + "x" + (j + 1);
         }
       }
-      s += xyzFraction((int) (va[i][0] * (is12ths ? 1 : 12)), false, true);
+      s += xyzFraction12((int) (va[i][0] * (is12ths ? 1 : 12)), false, true);
     }
     return PT.rep(s.substring(1), ",+", ",");
   }

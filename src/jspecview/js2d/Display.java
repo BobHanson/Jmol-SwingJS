@@ -32,24 +32,24 @@ class Display {
   }
   
   static boolean hasFocus(Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println(canvas);
-    }
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println(canvas);
+//    }
     return true;
   }
 
   static void requestFocusInWindow(Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println(canvas);
-    }
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println(canvas);
+//    }
   }
 
   /**
@@ -77,23 +77,23 @@ class Display {
   }
 
   static void setTransparentCursor(Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println(canvas);
-    }
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println(canvas);
+//    }
   }
 
   static void setCursor(int c, Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println("" + c + canvas);
-    }
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println("" + c + canvas);
+//    }
   }
 
   /**
@@ -117,13 +117,13 @@ class Display {
   }
 
   public static void convertPointFromScreen(Object canvas, P3 ptTemp) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println("" + canvas + ptTemp);
-    }
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println("" + canvas + ptTemp);
+//    }
   }
 
 

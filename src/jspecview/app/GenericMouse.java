@@ -6,9 +6,9 @@ import java.awt.event.MouseWheelEvent;
 
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericMouseInterface;
+import org.jmol.awtjs.Event;
 import org.jmol.util.Logger;
 
-import javajs.awt.event.Event;
 import jspecview.api.JSVPanel;
 
 public class GenericMouse implements GenericMouseInterface {

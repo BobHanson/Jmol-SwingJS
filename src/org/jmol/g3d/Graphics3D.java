@@ -34,11 +34,13 @@ import org.jmol.c.STER;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
-
-import javajs.awt.Font;
+import org.jmol.util.Rgb16;
+import org.jmol.util.Shader;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.M3;
@@ -46,11 +48,7 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
-
-import org.jmol.util.Rgb16;
-import org.jmol.util.Shader;
 import javajs.util.V3;
-import org.jmol.viewer.Viewer;
 
 /**
  * Provides high-level graphics primitives for 3D visualization for the software
@@ -269,7 +267,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private PixelatorShaded pixelShaded;
 
   protected int zMargin;
-  private int[] aobuf;
+//  private int[] aobuf;
 
   void setZMargin(int dz) {
     zMargin = dz;
@@ -378,7 +376,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           isImageWrite);
       pbuf = platform.pBuffer;
       zbuf = platform.zBuffer;
-      aobuf = null;
+      //aobuf = null;
       pixel0.setBuf();
       if (pixelT0 != null)
         pixelT0.setBuf();
@@ -406,7 +404,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     zbuf = null;
     pbufT = null;
     zbufT = null;
-    aobuf = null;
+    //aobuf = null;
     platform.releaseBuffers();
     line3d.clearLineCache();
   }
@@ -523,16 +521,22 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public Object getScreenImage(boolean isImageWrite) {
-    /**
-     * @j2sNative var obj = this.platform.bufferedImage; if (isImageWrite) {
-     *            this.releaseBuffers(); } return obj;
-     * 
-     */
-    {
-      return platform.bufferedImage;
-    }
-  }
 
+    Object obj = platform.bufferedImage;
+    boolean dorelease = /** @j2sNative isImageWrite || */ false;
+    /**
+     * @j2sNative
+     * 
+     * obj._img = null;
+     * if (!dorelease) obj._buf = true;
+     * 
+     * 
+     */    
+    if (dorelease)
+      releaseBuffers();
+    return obj;
+  }
+  
   @Override
   public void applyAnaglygh(STER stereoMode, int[] stereoColors) {
     switch (stereoMode) {
@@ -1277,10 +1281,24 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void drawDashedLineBits(int run, int rise, P3 pointA, P3 pointB) {
-    // measures only
+    if (isAntialiased()) {
+      run += run;
+      rise += rise;
+    }
     setScreeni(pointA, sA);
     setScreeni(pointB, sB);
     line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+    if (isAntialiased()) {
+      if (Math.abs(pointA.x - pointB.x) < Math.abs(pointA.y - pointB.y)) {
+        sA.x += 1;
+        sB.x += 1;
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);        
+      } else {
+        sA.y += 1;
+        sB.y += 1;
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+      }
+    }
   }
 
   private void setScreeni(P3 pt, P3i p) {

@@ -88,6 +88,11 @@ abstract public class AtomCollection {
   public BioModelSet bioModelset;
 
   public Atom[] at;
+  
+  public Atom getAtom(int iatom) {
+    return (iatom >= 0 && iatom < at.length ? at[iatom] : null);
+  }
+
   public int ac;
 
   public Trajectory trajectory;
@@ -113,7 +118,7 @@ abstract public class AtomCollection {
   private int nSurfaceAtoms;
   private int surfaceDistanceMax;
 
-  protected P3 averageAtomPoint;
+//  protected P3 averageAtomPoint;
 
   protected boolean haveChirality;
 
@@ -847,7 +852,7 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_ATOMNO);
   }
   
-  protected void setElement(Atom atom, int atomicNumber, boolean doTaint) {
+  public void setElement(Atom atom, int atomicNumber, boolean doTaint) {
     if (doTaint && atom.getElementNumber() == atomicNumber)
       return;
     atom.setAtomicAndIsotopeNumber(atomicNumber);
@@ -1071,7 +1076,7 @@ abstract public class AtomCollection {
   public void validateBspf(boolean isValid) {
     if (bspf != null)
       bspf.isValid = isValid;
-    averageAtomPoint = null;
+    //averageAtomPoint = null;
   }
 
   void validateBspfForModel(int modelIndex, boolean isValid) {
@@ -1107,7 +1112,7 @@ abstract public class AtomCollection {
       taintAtom(i, type);
   }
 
-  protected void taintAtom(int atomIndex, int type) {
+  public void taintAtom(int atomIndex, int type) {
     if (preserveState) {
       if (tainted == null)
         tainted = new BS[TAINT_MAX];

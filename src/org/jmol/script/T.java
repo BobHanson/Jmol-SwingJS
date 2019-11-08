@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-03-13 12:01:07 -0500 (Tue, 13 Mar 2018) $
- * $Revision: 21871 $
+ * $Date: 2018-09-09 13:50:29 -0500 (Sun, 09 Sep 2018) $
+ * $Revision: 21934 $
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -43,7 +43,7 @@ public class T {
   public int tok;
   public Object value;
   public int intValue = Integer.MAX_VALUE;
-
+  
   public final static T t(int tok) {
     T token = new T();
     token.tok = tok;
@@ -331,6 +331,8 @@ public class T {
   public final static int macro        = scriptCommand | 28;
   public final static int mapproperty  = scriptCommand | 29;
   public final static int minimize     = scriptCommand | 30;
+  public final static int modelkitmode = scriptCommand | booleanparam | 31;  // 12.0.RC15
+
 //public final static int model  see mathfunc
 //public final static int measure   see mathfunc
   public final static int move         = scriptCommand | 32;
@@ -529,7 +531,6 @@ public class T {
   public final static int modxyz    =16 | mathproperty | atomproperty;
   public final static int w         =17 | mathproperty;
   public final static int keys      =18 | mathproperty; 
-  public final static int pivot     =19 | mathproperty;
   
   // occupancy, radius, and structure are odd, because they takes different meanings when compared
   
@@ -693,6 +694,7 @@ public class T {
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
   public final static int now              = 21 | 0 << 9 | mathfunc;
+  public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
   public final static int polyhedra        = 24 | 0 << 9 | mathfunc | mathproperty | shapeCommand;
@@ -704,11 +706,13 @@ public class T {
   public final static int unitcell         = 30 | 0 << 9 | mathfunc | mathproperty | shapeCommand | deprecatedparam | predefinedset | defaultON;
   public final static int within           = 31 | 0 << 9 | mathfunc;
   public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int __                = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
+  public final static int __               = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
   public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
+  public final static int intersection     = 35 | 0 << 9 | mathfunc;
+  public final static int spacegroup       = 36 | 0 << 9 | mathfunc;
 
 
-  // xxx(a)
+    // xxx(a)
   
   public final static int acos         = 2 | 1 << 9 | mathfunc;
   public final static int bondcount    = 3 | 1 << 9 | mathfunc | intproperty;
@@ -721,6 +725,7 @@ public class T {
   public final static int abs          = 10 | 1 << 9 | mathfunc;
   public final static int javascript   = 12 /* must be even */| 1 << 9 | mathfunc | implicitStringCommand;
   public final static int show         = 14 | 1 << 9 | mathfunc | scriptCommand;
+
   
   // ___.xxx(a)
   
@@ -766,7 +771,6 @@ public class T {
   // xxx(a,b,c)
   
   public final static int hkl          = 1 | 3 << 9 | mathfunc;
-  public final static int intersection = 2 | 3 << 9 | mathfunc;
   public final static int prompt       = 3 | 3 << 9 | mathfunc | mathExpressionCommand;
   public final static int random       = 4 | 3 << 9 | mathfunc;
   public final static int select       = 5 | 3 << 9 | mathfunc | mathproperty | atomExpressionCommand;
@@ -829,15 +833,16 @@ public class T {
 //  public final static int edsurlcutoff                   = strparam | 36;
 //  public final static int edsurlformat                   = strparam | 37;
 //  public final static int edsurlformatdiff               = strparam | 38;
-  public final static int energyunits                    = strparam | 39; 
-  public final static int filecachedirectory             = strparam | 40;
-  public final static int forcefield                     = strparam | 41;
-  public final static int helppath                       = strparam | 42;
-  public final static int hoverlabel                     = strparam | 43;
-  public final static int language                       = strparam | 44;
-  public final static int loadformat                     = strparam | 45;
-  public final static int loadligandformat               = strparam | 46;
-  public final static int logfile                        = strparam | 47;
+  public final static int energyunits                    = strparam | 38; 
+  public final static int filecachedirectory             = strparam | 39;
+  public final static int forcefield                     = strparam | 40;
+  public final static int helppath                       = strparam | 41;
+  public final static int hoverlabel                     = strparam | 42;
+  public final static int language                       = strparam | 43;
+  public final static int loadformat                     = strparam | 44;
+  public final static int loadligandformat               = strparam | 45;
+  public final static int logfile                        = strparam | 46;
+  public final static int macrodirectory                 = strparam | 47;
   public final static int measurementunits               = strparam | 48; 
   public final static int nmrpredictformat               = strparam | 49;
   public final static int nihresolverformat              = strparam | 50;
@@ -1024,19 +1029,18 @@ public class T {
   public final static int isosurfacekey                  = booleanparam | 91;
   public final static int isosurfacepropertysmoothing    = booleanparam | 92;
   public final static int jmolinjspecview                = booleanparam | 93; // 14.13.1
-  public final static int justifymeasurements            = booleanparam | 95;
-  public final static int languagetranslation            = booleanparam | 96;
-  public final static int legacyautobonding              = booleanparam | 97;
-  public final static int legacyhaddition                = booleanparam | 98;
-  public final static int legacyjavafloat                = booleanparam | 99;
-  public final static int logcommands                    = booleanparam | 100;
-  public final static int loggestures                    = booleanparam | 101;
-  public final static int measureallmodels               = booleanparam | 102;
-  public final static int measurementlabels              = booleanparam | 103;
-  public final static int messagestylechime              = booleanparam | 104;
-  public final static int minimizationrefresh            = booleanparam | 105;
-  public final static int minimizationsilent             = booleanparam | 106;
-  public final static int modelkitmode                   = booleanparam | 107;  // 12.0.RC15
+  public final static int justifymeasurements            = booleanparam | 94;
+  public final static int languagetranslation            = booleanparam | 95;
+  public final static int legacyautobonding              = booleanparam | 96;
+  public final static int legacyhaddition                = booleanparam | 97;
+  public final static int legacyjavafloat                = booleanparam | 98;
+  public final static int logcommands                    = booleanparam | 99;
+  public final static int loggestures                    = booleanparam | 100;
+  public final static int measureallmodels               = booleanparam | 101;
+  public final static int measurementlabels              = booleanparam | 102;
+  public final static int messagestylechime              = booleanparam | 103;
+  public final static int minimizationrefresh            = booleanparam | 104;
+  public final static int minimizationsilent             = booleanparam | 105;
   public final static int modulateoccupancy              = booleanparam | 108;  // 14.3.13
   public final static int monitorenergy                  = booleanparam | 109;
   public final static int multiplebondbananas            = booleanparam | 110;
@@ -1192,7 +1196,7 @@ public class T {
   public final static int filter         = misc  | 116;
   public final static int first   = misc  | 118;
   public final static int fixedtemp      = misc  | 122;
-//  public final static int flat           = misc  | 124; was only in Polyhedra; never documented
+  public final static int flat           = misc  | 124;
   public final static int fps            = misc  | 126;
   public final static int from           = misc  | 128;
   public final static int front   = misc  | 130;
@@ -1325,7 +1329,6 @@ public class T {
   public final static int sign           = misc  | 323;
   public final static int silent         = misc  | 324;
   public final static int solid          = misc  | 326;
-  public final static int spacegroup     = misc  | 328;
   public final static int sphere         = misc  | 330;
   public final static int squared        = misc  | 332;
   public final static int state          = misc  | 334;
@@ -1432,6 +1435,7 @@ public class T {
   public final static T tokenSwitch          = o(switchcmd, "switch");
     
   private static Map<String, T> tokenMap = new Hashtable<String, T>();
+
   public static void addToken(String ident, T token) {
     tokenMap.put(ident, token);
   }
@@ -2254,7 +2258,7 @@ public class T {
        "first",
        "fixed",
        "fix",
-//       "flat",
+       "flat",
        "fps",
        "from",
        "frontEdges",
@@ -2618,6 +2622,7 @@ public class T {
        "legacyJavaFloat",
        "logCommands",
        "logGestures",
+       "macroDirectory",
        "measureAllModels",
        "measurementLabels",
        "measurementNumbers",
@@ -2625,6 +2630,7 @@ public class T {
        "minimizationRefresh",
        "minimizationSilent",
        "modelkitMode",
+       "modelkit",
        "modulateOccupancy",
        "monitorEnergy",
        "multiplebondbananas",
@@ -3313,7 +3319,7 @@ public class T {
         first,                              //        "first"
         fixed,                              //        "fixed"
         -1,                                 //        "fix"
-//        flat,                               //        "flat"
+        flat,                               //        "flat"
         fps,                                //        "fps"
         from,                               //        "from"
         frontedges,                         //        "frontEdges"
@@ -3677,6 +3683,7 @@ public class T {
         legacyjavafloat,                   //        "legacyRangeCheck"
         logcommands,                        //        "logCommands"
         loggestures,                        //        "logGestures"
+        macrodirectory,
         measureallmodels,                   //        "measureAllModels"
         measurementlabels,                  //        "measurementLabels"
         measurementnumbers,                 //        "measurementNumbers"
@@ -3684,6 +3691,7 @@ public class T {
         minimizationrefresh,                //        "minimizationRefresh"
         minimizationsilent,                 //        "minimizationSilent"
         modelkitmode,                       //        "modelkitMode"
+        -1,
         modulateoccupancy,
         monitorenergy,                      //        "monitorEnergy"
         multiplebondbananas,
@@ -3820,7 +3828,7 @@ public class T {
       return false;
     T t = (T) o;
     if (tok == t.tok)
-      return (t.intValue == intValue && (tok == integer || t.value
+      return (t.intValue == intValue && (tok == integer || tok == on || tok == off || t.value
           .equals(value)));
     switch (tok) {
     case integer:

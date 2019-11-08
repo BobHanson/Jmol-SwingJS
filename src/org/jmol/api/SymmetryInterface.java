@@ -15,6 +15,7 @@ import javajs.util.V3;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Tensor;
 import org.jmol.viewer.Viewer;
 
@@ -71,7 +72,7 @@ public interface SymmetryInterface {
 
   public Object getSpaceGroup();
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, float[] cellParams);
 
   Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
                               boolean isFull);
@@ -168,15 +169,16 @@ public interface SymmetryInterface {
    * @param xyz
    * @param op
    * @param pt
-   * @param pt2
+   * @param pt2 a second point or an offset
    * @param id
    * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axis, T.plane, T.angle, T.center
    * @param scaleFactor
    * @param nth TODO
+   * @param options could be T.offset
    * @return a variety of object types
    */
   public Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
-                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth);
+                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
 
   public void setTimeReversal(int op, int val);
 
@@ -208,7 +210,8 @@ public interface SymmetryInterface {
 
   public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
 
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc);
+  boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
+                          M3 primitiveToCrystal);
 
   public String getLatticeType();
 
@@ -225,6 +228,11 @@ public interface SymmetryInterface {
   String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
       throws Exception;
 
-  public T3[] getConventionalUnitCell(String latticeType);
+  public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
+
+  public void setUnitCell(Symmetry uc);
+
+//  void unitize01(T3 ptFrac);
+
 
 }

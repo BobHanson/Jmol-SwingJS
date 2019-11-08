@@ -818,6 +818,11 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		advancedApplet.toggleCoordinate();
 	}
 
+  @Override
+  public void togglePointsOnly() {
+    advancedApplet.togglePointsOnly();
+  }
+
 	@Override
 	public void toggleGrid() {
 		advancedApplet.toggleGrid();
@@ -1085,4 +1090,5 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 			System.out.println(s);
 		return s;
 	}
+
 }

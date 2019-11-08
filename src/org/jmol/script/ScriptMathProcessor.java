@@ -48,17 +48,19 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
+/**
+ * Reverse Polish Notation Engine for IF, SET, and @{...}
+ * 
+ * Just a (not so simple?) RPN processor that can handle boolean, int, float,
+ * String, Point3f, BitSet, Array, Hashtable, Matrix3f, Matrix4f
+ * 
+ * -- Bob Hanson 2/16/2007
+ * 
+ * @author hansonr
+ * 
+ */
 public class ScriptMathProcessor {
-  /**
-   * Reverse Polish Notation Engine for IF, SET, and @{...} -- Bob Hanson
-   * 2/16/2007 Just a (not so simple?) RPN processor that can handle boolean,
-   * int, float, String, Point3f, BitSet, Array, Hashtable, Matrix3f, Matrix4f
-   * 
-   * hansonr@stolaf.edu
-   * 
-   */
 
-  // required by ScriptExt
   public boolean wasX;
   public boolean asBitSet;
   public int oPt = -1; // used in asynchronous load to mark which file is being loaded
@@ -1719,7 +1721,7 @@ public class ScriptMathProcessor {
       case T.fuz:
       case T.fuxyz:
         P3 ptfu = P3.newP((P3) x2.value);
-        vwr.toFractional(ptfu, false);
+        vwr.toFractional(ptfu, true);
         return (op.intValue == T.fuxyz ? addXPt(ptfu)
             : addXFloat(op.intValue == T.fux ? ptfu.x
                 : op.intValue == T.fuy ? ptfu.y : ptfu.z));
