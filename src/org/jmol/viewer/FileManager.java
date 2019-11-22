@@ -363,7 +363,7 @@ public class FileManager implements BytePoster {
 
   Object createAtomSetCollectionFromDOM(Object DOMNode,
                                         Map<String, Object> htParams) {
-    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReadaer", vwr, "file");
+    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReader", vwr, "file");
     aDOMReader.set(this, vwr, DOMNode, htParams);
     aDOMReader.run();
     return aDOMReader.getAtomSetCollection();
