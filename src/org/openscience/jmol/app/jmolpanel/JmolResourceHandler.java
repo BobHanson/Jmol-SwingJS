@@ -42,7 +42,7 @@ import org.jmol.i18n.GT;
  *
  * @author Bradley A. Smith (bradley@baysmith.com)
  */
-class JmolResourceHandler {
+public class JmolResourceHandler {
 
   private static JmolResourceHandler instance;
   private ResourceBundle stringsResourceBundle;
@@ -66,9 +66,12 @@ class JmolResourceHandler {
     }
     Locale locale = new Locale(language, country);
     Control control = Control.getControl(Control.FORMAT_PROPERTIES);
-      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.jmolproperties.Jmol", locale, control);
+
+    stringsResourceBundle =
+      ResourceBundle.getBundle("org.openscience.jmol.app.jmolpanel.Properties.Jmol", locale, control);
+
     try {
-      String t = "/org/openscience/jmol/app/jmolpanel/jmolproperties/Jmol-resources.properties";
+      String t = "/org/openscience/jmol/app/jmolpanel/Properties/Jmol-resources.properties";
       generalResourceBundle =
         new PropertyResourceBundle(getClass().getResourceAsStream(t));
     } catch (IOException ex) {
@@ -87,11 +90,11 @@ class JmolResourceHandler {
     return instance;
   }
 
-  static String getStringX(String key) {
+  public static String getStringX(String key) {
     return getInstance().getString(key);
   }
 
-  static ImageIcon getIconX(String key){ 
+  public static ImageIcon getIconX(String key){ 
     return getInstance().getIcon(key);
   }
 

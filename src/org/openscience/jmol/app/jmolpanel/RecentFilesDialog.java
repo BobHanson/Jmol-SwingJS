@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2013-11-24 15:00:42 -0600 (Sun, 24 Nov 2013) $
- * $Revision: 19010 $
+ * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
+ * $Revision: 21922 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -106,8 +106,7 @@ class RecentFilesDialog extends JDialog implements ActionListener,
 
   private void getFiles() {
 
-    if (JmolPanel.historyFile != null)
-      props = JmolPanel.historyFile.getProperties();
+    props = JmolPanel.historyFile.getProperties();
     for (int i = 0; i < MAX_FILES; i++) {
       files[i] = props.getProperty("recentFilesFile" + i);
     }
@@ -158,7 +157,7 @@ class RecentFilesDialog extends JDialog implements ActionListener,
     for (int i = 0; i < MAX_FILES; i++)
       if (files[i] != null)
         props.setProperty("recentFilesFile" + i, files[i]);
-    JmolPanel.addJmolProperties(props);
+    JmolPanel.historyFile.addProperties(props);
   }
 
   /**
@@ -184,7 +183,7 @@ class RecentFilesDialog extends JDialog implements ActionListener,
        for (int i = 0; i < MAX_FILES; i++) {
         props.setProperty("recentFilesFile" + i, "");
     }
-    JmolPanel.addJmolProperties(props);
+    JmolPanel.historyFile.addProperties(props);
     cancel();
   }
   

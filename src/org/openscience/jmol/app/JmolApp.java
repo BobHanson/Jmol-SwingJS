@@ -58,7 +58,7 @@ public class JmolApp implements JmolAppAPI {
 
   public int port;
   public int startupWidth, startupHeight;
-//  public Point border;
+  //  public Point border;
   public boolean haveBorder;
 
   public File userPropsFile;
@@ -66,15 +66,16 @@ public class JmolApp implements JmolAppAPI {
 
   public boolean haveConsole = true;
   public boolean haveDisplay = true;
-  public boolean splashEnabled = /** @j2sNative false && */true;
+  public boolean splashEnabled = /** @j2sNative false && */
+      true;
   public boolean isDataOnly;
   public boolean isKiosk;
   public boolean isPrintOnly;
   public boolean isSilent;
-  public Map<String, Object>info = new Hashtable<String, Object>();
+  public Map<String, Object> info = new Hashtable<String, Object>();
   public Point jmolPosition;
   public float autoAnimationDelay = 0.2f; // sec
-  
+
   private String modelFilename;
   private String scriptFilename;
   private String script1 = "";
@@ -82,20 +83,20 @@ public class JmolApp implements JmolAppAPI {
   private boolean scanInput;
   private String menuFile;
 
-  
   //private JmolViewer vwr;
   //private JmolAdapter modelAdapter;
 
   public JmolApp() {
     // defer parsing until we can set a few options ourselves
   }
-  
+
   /**
    * standard Jmol application entry point
+   * 
    * @param args
    */
   public JmolApp(String[] args) {
-    
+
     if (System.getProperty("javawebstart.version") != null) {
 
       // If the property is found, Jmol is running with Java Web Start. To fix
@@ -111,15 +112,16 @@ public class JmolApp implements JmolAppAPI {
      * @j2sNative
      */
     {
-    File ujmoldir = new File(new File(System.getProperty("user.home")), ".jmol");
-    ujmoldir.mkdirs();
-    userPropsFile = new File(ujmoldir, "properties");
-    historyFile = new HistoryFile(new File(ujmoldir, "history"),
-        "Jmol's persistent values");
-    pluginFile = new HistoryFile(new File(ujmoldir, "plugins"),
-        "Jmol plugin persistent values");
+      File ujmoldir = new File(new File(System.getProperty("user.home")),
+          ".jmol");
+      ujmoldir.mkdirs();
+      userPropsFile = new File(ujmoldir, "properties");
+      historyFile = new HistoryFile(new File(ujmoldir, "history"),
+          "Jmol's persistent values");
+      pluginFile = new HistoryFile(new File(ujmoldir, "plugins"),
+          "Jmol plugin persistent values");
     }
-    
+
     parseCommandLine(args);
   }
 
@@ -134,10 +136,10 @@ public class JmolApp implements JmolAppAPI {
     } catch (ParseException exception) {
       System.err.println("Unexpected exception: " + exception.toString());
     }
-    
+
     args = line.getArgs();
     if (args.length > 0) {
-        modelFilename = args[0];
+      modelFilename = args[0];
     }
     checkOptions(line, options);
 
@@ -146,8 +148,8 @@ public class JmolApp implements JmolAppAPI {
   private Options getOptions() {
     Options options = new Options();
 
-    options.addOption("a","autoanimationdelay", true, GT
-            .$("delay time in seconds for press-and-hold operation of toolbar animation buttons (default 0.2; numbers > 10 assumed to be milliseconds; set to 0 to disable)"));
+    options.addOption("a", "autoanimationdelay", true, GT.$(
+        "delay time in seconds for press-and-hold operation of toolbar animation buttons (default 0.2; numbers > 10 assumed to be milliseconds; set to 0 to disable)"));
 
     options.addOption("b", "backgroundtransparent", false,
         GT.$("transparent background"));
@@ -174,8 +176,8 @@ public class JmolApp implements JmolAppAPI {
     options.addOption("J", "jmolscript1", true,
         GT.$("Jmol script to execute BEFORE -s option"));
 
-    options.addOption("j","jmolscript2", true, GT
-        .$("Jmol script to execute AFTER -s option"));
+    options.addOption("j", "jmolscript2", true,
+        GT.$("Jmol script to execute AFTER -s option"));
 
     options.addOption("k", "kiosk", false, GT.$("kiosk mode -- no frame"));
 
@@ -184,10 +186,10 @@ public class JmolApp implements JmolAppAPI {
     options.addOption("l", "list", false,
         GT.$("list commands during script execution"));
 
-    options.addOption("M","multitouch", true, GT
-        .$("use multitouch interface (requires \"sparshui\" parameter"));
+    options.addOption("M", "multitouch", true,
+        GT.$("use multitouch interface (requires \"sparshui\" parameter"));
 
-    options.addOption("m","menu", true, GT.$("menu file to use"));
+    options.addOption("m", "menu", true, GT.$("menu file to use"));
 
     options.addOption("n", "nodisplay", false,
         GT.$("no display (and also exit when done)"));
@@ -195,31 +197,32 @@ public class JmolApp implements JmolAppAPI {
     options.addOption("o", "noconsole", false,
         GT.$("no console -- all output to sysout"));
 
-    options.addOption("P","port", true,GT
-        .$("port for JSON/MolecularPlayground-style communication"));
+    options.addOption("P", "port", true,
+        GT.$("port for JSON/MolecularPlayground-style communication"));
 
     options.addOption("p", "printOnly", false,
         GT.$("send only output from print messages to console (implies -i)"));
 
-    options.addOption("q","quality", true, GT
-            .$("JPG image quality (1-100; default 75) or PNG image compression (0-9; default 2, maximum compression 9)"));
+    options.addOption("q", "quality", true, GT.$(
+        "JPG image quality (1-100; default 75) or PNG image compression (0-9; default 2, maximum compression 9)"));
 
     options.addOption("R", "restricted", false,
         GT.$("restrict local file access"));
     options.addOption("r", "restrictSpt", false,
         GT.$("restrict local file access (allow reading of SPT files)"));
 
-    options.addOption("s","script", true, GT
-        .$("script file to execute or '-' for System.in"));
+    options.addOption("s", "script", true,
+        GT.$("script file to execute or '-' for System.in"));
 
-    options.addOption("T","headlessmaxtime", true, GT.$("headless max time (sec)"));
+    options.addOption("T", "headlessmaxtime", true,
+        GT.$("headless max time (sec)"));
 
     options.addOption("t", "threaded", false,
         GT.$("independent command thread"));
 
     options.addOption("U", "plugin", true, GT.$("plugin to start initially"));
 
-    options.addOption("w","write", true,GT.o(GT.$("{0} or {1}:filename"),
+    options.addOption("w", "write", true, GT.o(GT.$("{0} or {1}:filename"),
         new Object[] { "CLIP", "GIF|JPG|JPG64|PNG|PPM" }));
 
     options.addOption("x", "exit", false,
@@ -227,7 +230,7 @@ public class JmolApp implements JmolAppAPI {
 
     return options;
   }
-  
+
   class OptSort implements Comparator<Option> {
 
     @Override
@@ -239,7 +242,7 @@ public class JmolApp implements JmolAppAPI {
       return (uc1 == uc2 ? (c1 < c2 ? -1 : 1) : Character.compare(uc1, uc2));
     }
   }
-  
+
   private void checkOptions(CommandLine line, Options options) {
     if (line.hasOption("h")) {
       HelpFormatter formatter = new HelpFormatter();
@@ -256,8 +259,6 @@ public class JmolApp implements JmolAppAPI {
       System.out.println(GT.$(
           "The -D options are as follows (defaults in parenthesis) and must be called preceding '-jar Jmol.jar':"));
       System.out.println();
-      System.out.println("  cdk.debugging=[true|false] (false)");
-      System.out.println("  cdk.debug.stdout=[true|false] (false)");
       System.out.println("  display.speed=[fps|ms] (ms)");
       //System.out.println("  JmolConsole=[true|false] (true)");
       System.out.println("  logger.debug=[true|false] (false)");
@@ -428,13 +429,13 @@ public class JmolApp implements JmolAppAPI {
     }
 
     if (startupWidth <= 0 || startupHeight <= 0) {
-//      if (haveDisplay && !isKiosk && border != null) {
-//        startupWidth = width + border.x;
-//        startupHeight = height + border.y;
-//      } else {
-        startupWidth = width;
-        startupHeight = height;
-//      }
+      //      if (haveDisplay && !isKiosk && border != null) {
+      //        startupWidth = width + border.x;
+      //        startupHeight = height + border.y;
+      //      } else {
+      startupWidth = width;
+      startupHeight = height;
+      //      }
     }
 
     // write image to clipboard or image file
@@ -503,23 +504,23 @@ public class JmolApp implements JmolAppAPI {
 
   }
 
-  public void startViewer(JmolViewer vwr, SplashInterface splash, boolean isJmolData) {
+  public void startViewer(JmolViewer vwr, SplashInterface splash,
+                          boolean isJmolData) {
     try {
     } catch (Throwable t) {
       System.out.println("uncaught exception: " + t);
       t.printStackTrace();
     }
-    
+
     if (menuFile != null)
       vwr.setMenu(menuFile, true);
-
 
     // Open a file if one is given as an argument -- note, this CAN be a
     // script file
     if (modelFilename != null) {
       if (script1 == null)
         script1 = "";
-      script1 = (modelFilename.endsWith(".spt") ? "script " : "load ") 
+      script1 = (modelFilename.endsWith(".spt") ? "script " : "load ")
           + PT.esc(modelFilename) + ";" + script1;
     }
 
@@ -565,9 +566,9 @@ public class JmolApp implements JmolAppAPI {
         splash.showStatus(GT.$("Executing script 2..."));
       runScript(script2, isJmolData, vwr);
     }
-    
+
     // finally plugin
-    
+
     // -U flag
     String plugin = (String) info.get("plugin");
     if (plugin != null)
@@ -585,14 +586,16 @@ public class JmolApp implements JmolAppAPI {
     else
       vwr.script(script);
   }
-  
+
   @Override
-  public void addHistoryWindowInfo(String name, Component window, Point border) {
+  public void addHistoryWindowInfo(String name, Component window,
+                                   Point border) {
     historyFile.addWindowInfo(name, window, border);
   }
 
   @Override
-  public void addHistoryWindowDimInfo(String name, Component window, Dimension inner) {
+  public void addHistoryWindowDimInfo(String name, Component window,
+                                      Dimension inner) {
     historyFile.addWindowInnerInfo(name, window, inner);
   }
 
@@ -605,6 +608,5 @@ public class JmolApp implements JmolAppAPI {
   public Dimension getHistoryWindowSize(String name) {
     return historyFile.getWindowSize(name);
   }
-  
-  
+
 }

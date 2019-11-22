@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-01-29 08:25:59 -0600 (Mon, 29 Jan 2018) $
- * $Revision: 21815 $
+ * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
+ * $Revision: 21922 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -58,7 +58,7 @@ public class GuiMap {
 
   Map<String, Object> map = new Hashtable<String, Object>();
   
-  Map<String, String> labels;
+  protected Map<String, String> labels;
   
   // keys here refer to keys listed in org.openscience.jmol.Properties.Jmol-resources.properties
   // actions are either defined there, as xxxScript=, or by 
@@ -192,9 +192,11 @@ public class GuiMap {
     labels.put("distancePicometersScript", GT.$("&Picometers 1E-12"));
     labels.put("animateMenu", GT.$("&Animate..."));
     labels.put("vibrateMenu", GT.$("&Vibrate..."));
+    // these three are not implemented:
     labels.put("graph", GT.$("&Graph..."));
     labels.put("chemicalShifts", GT.$("Calculate chemical &shifts..."));
     labels.put("crystprop", GT.$("&Crystal Properties"));
+    //
     labels.put("animateOnceScript", GT.$("&Once"));
     labels.put("animateLoopScript", GT.$("&Loop"));
     labels.put("animatePalindromeScript", GT.$("P&alindrome"));
@@ -247,48 +249,64 @@ public class GuiMap {
         .$("click an atom to toggle label;DOUBLE-Click a label to set; drag to move"));
     labels.put("homeTip", GT.$("Return molecule to home position."));
     labels.put("modelkitScriptTip", GT.$("Open the model kit."));
-    labels.put("JavaConsole.clear", GT.$("Clear"));
+    labels.put("JavaConsole.Clear", GT.$("Clear"));
     labels.put("plugins", GT.$("&Plugins"));
+    
+    moreLabels(labels);
+    
   }
 
-  String getLabel(String key) {
+  /**
+   * Add more labels if desired
+   * 
+   * @param labels
+   */
+  protected void moreLabels(Map<String, String> labels) {
+    //labels.put("plugins", GT.$("&Plugins"));
+  }
+
+  public String getLabel(String key) {
     if (labels == null)
       setupLabels();
-    String label = labels.get(key);
-    return label;
+    String s = labels.get(key);
+    if (s == null || s.length() == 0) {
+      System.err.println("GUI key? " + key);
+      return key;
+    }
+    return s;
   }
 
-  JMenu newJMenu(String key) {
+  public JMenu newJMenu(String key) {
     return new KeyJMenu(key, getLabel(key), map);
   }
   
-  JMenuItem newJMenuItem(String key) {
+  public JMenuItem newJMenuItem(String key) {
     return new KeyJMenuItem(key, getLabel(key), map);
   }
-  JCheckBoxMenuItem newJCheckBoxMenuItem(String key, boolean isChecked) {
+  public JCheckBoxMenuItem newJCheckBoxMenuItem(String key, boolean isChecked) {
     return new KeyJCheckBoxMenuItem(key, getLabel(key), map, isChecked);
   }
-  JRadioButtonMenuItem newJRadioButtonMenuItem(String key) {
+  public JRadioButtonMenuItem newJRadioButtonMenuItem(String key) {
     return new KeyJRadioButtonMenuItem(key, getLabel(key), map);
   }
-  JCheckBox newJCheckBox(String key, boolean isChecked) {
+  public JCheckBox newJCheckBox(String key, boolean isChecked) {
     return new KeyJCheckBox(key, getLabel(key), map, isChecked);
   }
-  JButton newJButton(String key) {
+  public JButton newJButton(String key) {
     JButton jb = new JmolButton(getLabel(key));
     map.put(key, jb);
     return jb;
   }
 
-  Object get(String key) {
+  public Object get(String key) {
     return map.get(key);
   }
 
-  void setSelected(String key, boolean b) {
+  public void setSelected(String key, boolean b) {
     ((AbstractButton)get(key)).setSelected(b);
   }
 
-  void setEnabled(String key, boolean b) {
+  public void setEnabled(String key, boolean b) {
     ((AbstractButton)get(key)).setEnabled(b);
   }
 

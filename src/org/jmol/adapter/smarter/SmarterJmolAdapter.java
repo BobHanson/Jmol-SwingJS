@@ -46,6 +46,10 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 public class SmarterJmolAdapter extends JmolAdapter {
+  
+  public SmarterJmolAdapter() {
+    
+  }
 
   /**************************************************************
    * 

@@ -3837,7 +3837,7 @@ public class Viewer extends JmolViewer
     gdata.releaseScreenImage();
   }
 
-  public Object getScreenImageBuffer() {
+  public Object getScreenImage() {
     return getScreenImageBuffer(null, true);
   }
 

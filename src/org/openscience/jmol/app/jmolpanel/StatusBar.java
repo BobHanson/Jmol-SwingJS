@@ -30,16 +30,16 @@ import javax.swing.JLabel;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
-class StatusBar extends JPanel {
+public class StatusBar extends JPanel {
+
+  protected JLabel[] status;
 
   public static final int STATUS_COORD  = 1;
   public static final int STATUS_TEXT   = 2;
   public static final int STATUS_TIME   = 3;
 
-  JLabel[] status;
-
-  public StatusBar() {
-
+  public StatusBar(int startupWidth) {
+    setPreferredSize(new Dimension(startupWidth, 30));
     status = new JLabel[3];
     setLayout(new GridLayout(1, 3));
     status[0] = new JLabel();
@@ -63,7 +63,7 @@ class StatusBar extends JPanel {
     add(status[2]);
   }
 
-  public void setStatus(int label, String text) {
-    status[label - 1].setText(text);
+  public void setStatus(int pos, String text) {
+    status[pos - 1].setText(text);
   }
 }

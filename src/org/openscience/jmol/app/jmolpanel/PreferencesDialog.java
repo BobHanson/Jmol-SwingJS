@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-10-07 09:28:54 -0500 (Sat, 07 Oct 2017) $
- * $Revision: 21710 $
+ * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
+ * $Revision: 21922 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -43,7 +43,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Hashtable;
@@ -138,6 +140,12 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   Viewer vwr;
   GuiMap guimap;
 
+  List<Action> actions = new ArrayList<Action>();
+
+  {
+    addActions(actions);
+  }
+
   public PreferencesDialog(JmolPanel jmol, JFrame f, GuiMap guimap,
                            Viewer vwr) {
 
@@ -152,9 +160,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     initVariables();
     commands = new Hashtable<String, Action>();
-    Action[] actions = getActions();
-    for (int i = 0; i < actions.length; i++) {
-      Action a = actions[i];
+    
+    for (int i = 0; i < actions.size(); i++) {
+      Action a = actions.get(i);
       Object name = a.getValue(Action.NAME);
       commands.put((name != null) ? name.toString() : null, a);
     }
@@ -181,7 +189,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     rasmolDefaultsButton.addActionListener(this);
     buttonPanel.add(rasmolDefaultsButton);
 
-    //cancelButton = new JButton(GT.$("Cancel"));
+    //cancelButton = new JButton(GT._("Cancel"));
     //cancelButton.addActionListener(this);
     //buttonPanel.add(cancelButton);
 
@@ -699,11 +707,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     }
   }
 
-  public Action[] getActions() {
-    Action[] defaultActions = {
-      prefsAction
-    };
-    return defaultActions;
+  public void addActions(List<Action> list) {
+    list.add(prefsAction);
   }
 
   protected Action getAction(String cmd) {
@@ -754,7 +759,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       } else if (key.equals("Prefs.clearHistory")) {
         clearHistory = isSelected;
         currentProperties.put("clearHistory", strSelected);
-        JmolPanel.addJmolProperty("clearHistory", strSelected);
+        if (JmolPanel.historyFile != null)
+          JmolPanel.historyFile.addProperty("clearHistory", strSelected);
 //      } else if (key.equals("Prefs.fontScale")) {
 //        setFontScale(strSelected);
       }

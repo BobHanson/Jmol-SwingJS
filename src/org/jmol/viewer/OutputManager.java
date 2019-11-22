@@ -136,7 +136,7 @@ abstract class OutputManager {
     boolean releaseImage = (objImage == null);
     Object image = (type.equals("BINARY") || type.equals("ZIPDATA") ? ""
         : rgbbuf != null ? rgbbuf : objImage != null ? objImage : vwr
-            .getScreenImageBuffer());
+            .getScreenImage());
     boolean isOK = false;
     try {
       if (image == null)
