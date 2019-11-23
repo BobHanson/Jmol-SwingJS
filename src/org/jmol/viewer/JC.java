@@ -419,7 +419,6 @@ public final class JC {
   public final static float DEFAULT_MIN_BOND_DISTANCE = 0.4f;
   public final static float DEFAULT_MAX_CONNECT_DISTANCE = 100000000f;
   public final static float DEFAULT_MIN_CONNECT_DISTANCE = 0.1f;
-  public final static int MINIMIZATION_ATOM_MAX = 200;
   public final static float MINIMIZE_FIXED_RANGE = 5.0f;
 
   public final static float ENC_CALC_MAX_DIST = 3f;

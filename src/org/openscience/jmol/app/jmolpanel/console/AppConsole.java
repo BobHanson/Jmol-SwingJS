@@ -25,7 +25,6 @@ package org.openscience.jmol.app.jmolpanel.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -37,7 +36,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +49,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.text.AttributeSet;
@@ -74,7 +71,6 @@ import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.HelpDialog;
 import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
 
 import javajs.util.PT;

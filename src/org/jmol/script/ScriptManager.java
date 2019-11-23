@@ -404,7 +404,7 @@ public class ScriptManager implements JmolScriptManager {
 
   private boolean checkResume(String str) {
     if (str.equalsIgnoreCase("resume")) {
-      vwr.setScriptStatus("", "execution resumed", 0, null);
+      vwr.scriptStatusMsg("", "execution resumed");
       eval.resumePausedExecution();
       return true;
     }

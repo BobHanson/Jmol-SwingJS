@@ -69,7 +69,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   TickInfo tickInfo;
   public TickInfo defaultTickInfo;
-  public Font font3d;
+  public static Font font3d;
   private Map<String, Integer> htMin;
   
   @Override
@@ -84,7 +84,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   @Override
   public void initShape() {
-    font3d = vwr.gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
+    if (font3d == null)
+      font3d = vwr.gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
   }
 
   @Override

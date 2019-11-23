@@ -1899,8 +1899,8 @@ public class ScriptEval extends ScriptExpr {
     if (executionStopped)
       return false;
     if (executionStepping && isCommandDisplayable(pc)) {
-      vwr.setScriptStatus("Next: " + getNextStatement(),
-          "stepping -- type RESUME to continue", 0, null);
+      vwr.scriptStatusMsg("Next: " + getNextStatement(),
+          "stepping -- type RESUME to continue");
       executionPaused = true;
     } else if (!executionPaused) {
       return true;
