@@ -28,14 +28,15 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
 import org.jmol.api.JmolNMRInterface;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Model;
 import org.jmol.util.Escape;
@@ -89,7 +90,7 @@ public class NMRCalculation implements JmolNMRInterface {
 
   /**
    * Returns a list of tensors that are of the specified type and have both
-   * atomIndex1 and atomIndex2 in bsA. If there is just one atom specified, then 
+   * atomIndex1 and atomIndex2 in bsA. If there is just one atom specified, then
    * the list is "all tensors involving this atom".
    * 
    * We have to use atom sites, because interaction tensors are not duplicated.
@@ -107,14 +108,14 @@ public class NMRCalculation implements JmolNMRInterface {
     int iAtom = (bs1.cardinality() == 1 ? bs1.nextSetBit(0) : -1);
     Lst<Tensor> list = new Lst<Tensor>();
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
-      Lst<Tensor> tensors = (Lst<Tensor>) vwr
-          .ms.getInfo(i, "interactionTensors");
+      Lst<Tensor> tensors = (Lst<Tensor>) vwr.ms.getInfo(i,
+          "interactionTensors");
       if (tensors == null)
         continue;
       int n = tensors.size();
       for (int j = 0; j < n; j++) {
         Tensor t = tensors.get(j);
-        if (type == null  || t.type.equals(type) && t.isSelected(bs1, iAtom))
+        if (type == null || t.type.equals(type) && t.isSelected(bs1, iAtom))
           list.addLast(t);
       }
     }
@@ -122,8 +123,10 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   /**
-   * Interaction tensors are not repeated for every possible combination. They are just for the
-   * base atom set. These are identified as a.atomIndex == models[b.modelIndex].firstAtomIndex + b.atomSite - 1  
+   * Interaction tensors are not repeated for every possible combination. They
+   * are just for the base atom set. These are identified as a.atomIndex ==
+   * models[b.modelIndex].firstAtomIndex + b.atomSite - 1
+   * 
    * @param bsA
    * @return new bs in terms of atom sites
    */
@@ -133,7 +136,7 @@ public class NMRCalculation implements JmolNMRInterface {
     BS bs = new BS();
     Atom[] atoms = vwr.ms.at;
     Model[] models = vwr.ms.am;
-    
+
     for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
       if (!bsA.get(i))
         continue;
@@ -143,10 +146,10 @@ public class NMRCalculation implements JmolNMRInterface {
     return bs;
   }
 
-//  private int getOtherAtom(Tensor t, int iAtom) {
-//      return (t.atomIndex1 == iAtom ? t.atomIndex2 : t.atomIndex1);
-//  }
-  
+  //  private int getOtherAtom(Tensor t, int iAtom) {
+  //      return (t.atomIndex1 == iAtom ? t.atomIndex2 : t.atomIndex1);
+  //  }
+
   @Override
   public BS getUniqueTensorSet(BS bsAtoms) {
     BS bs = new BS();
@@ -199,13 +202,14 @@ public class NMRCalculation implements JmolNMRInterface {
   public float getJCouplingHz(Atom a1, Atom a2, String type, Tensor isc) {
     return getIsoOrAnisoHz(true, a1, a2, type, isc);
   }
-  
+
   @Override
-  public float getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String type, Tensor isc) {
+  public float getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String units,
+                               Tensor isc) {
     if (isc == null) {
-      type = getISCtype(a1, type);
+      String type = getISCtype(a1, units);
       if (type == null || a1.mi != a2.mi)
-        return 0;
+        return (units.equals("hz") ? (float)calc3J(a1, a2)[1] : 0);
       BS bs = new BS();
       bs.set(a1.i);
       bs.set(a2.i);
@@ -218,12 +222,14 @@ public class NMRCalculation implements JmolNMRInterface {
       a2 = vwr.ms.at[isc.atomIndex2];
     }
     return (float) (getIsotopeData(a1, MAGNETOGYRIC_RATIO)
-        * getIsotopeData(a2, MAGNETOGYRIC_RATIO) * (isIso ? isc.isotropy() : isc.anisotropy()) * J_FACTOR);
+        * getIsotopeData(a2, MAGNETOGYRIC_RATIO)
+        * (isIso ? isc.isotropy() : isc.anisotropy()) * J_FACTOR);
   }
 
   @SuppressWarnings("unchecked")
   private String getISCtype(Atom a1, String type) {
-    Lst<Tensor> tensors = (Lst<Tensor>) vwr.ms.getInfo(a1.mi, "interactionTensors");
+    Lst<Tensor> tensors = (Lst<Tensor>) vwr.ms.getInfo(a1.mi,
+        "interactionTensors");
     if (tensors == null)
       return null;
     type = (type == null ? "" : type.toLowerCase());
@@ -234,12 +240,13 @@ public class NMRCalculation implements JmolNMRInterface {
     if (type.length() == 0)
       type = "isc";
     return type;
- }
+  }
 
   @Override
   public float getDipolarConstantHz(Atom a1, Atom a2) {
     if (Logger.debugging)
-      Logger.debug(a1 + " g=" + getIsotopeData(a1, MAGNETOGYRIC_RATIO) + "; " + a2 + " g=" + getIsotopeData(a2, MAGNETOGYRIC_RATIO));
+      Logger.debug(a1 + " g=" + getIsotopeData(a1, MAGNETOGYRIC_RATIO) + "; "
+          + a2 + " g=" + getIsotopeData(a2, MAGNETOGYRIC_RATIO));
     float v = (float) (-getIsotopeData(a1, MAGNETOGYRIC_RATIO)
         * getIsotopeData(a2, MAGNETOGYRIC_RATIO) / Math.pow(a1.distance(a2), 3) * DIPOLAR_FACTOR);
     return (v == 0 || a1 == a2 ? Float.NaN : v);
@@ -296,8 +303,8 @@ public class NMRCalculation implements JmolNMRInterface {
     BufferedReader br = null;
     try {
       boolean debugging = Logger.debugging;
-      br = FileManager.getBufferedReaderForResource(vwr, this, "org/jmol/quantum/",
-          resource);
+      br = FileManager.getBufferedReaderForResource(vwr, this,
+          "org/jmol/quantum/", resource);
       // #extracted by Simone Sturniolo from ROBIN K. HARRIS, EDWIN D. BECKER, SONIA M. CABRAL DE MENEZES, ROBIN GOODFELLOW, AND PIERRE GRANGER, Pure Appl. Chem., Vol. 73, No. 11, pp. 1795–1818, 2001. NMR NOMENCLATURE. NUCLEAR SPIN PROPERTIES AND CONVENTIONS FOR CHEMICAL SHIFTS (IUPAC Recommendations 2001)
       // #element atomNo  isotopeDef  isotope1  G1  Q1  isotope2  G2  Q2  isotope3  G3  Q3
       // H 1 1 1 26.7522128  0 2 4.10662791  0.00286 3 28.5349779  0
@@ -354,7 +361,7 @@ public class NMRCalculation implements JmolNMRInterface {
     if (PT.isDigit(what.charAt(0)))
       return isotopeData.get(what);
     Lst<Object> info = new Lst<Object>();
-    for (Entry<String, double[]> e: isotopeData.entrySet()) {
+    for (Entry<String, double[]> e : isotopeData.entrySet()) {
       String key = e.getKey();
       if (PT.isDigit(key.charAt(0)) && key.endsWith(what))
         info.addLast(e.getValue());
@@ -378,22 +385,23 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   private Map<String, Float> shiftRefsPPM = new Hashtable<String, Float>();
-  
+
   @Override
   public boolean getState(SB sb) {
     if (shiftRefsPPM.isEmpty())
       return false;
     for (Entry<String, Float> nuc : shiftRefsPPM.entrySet())
-      sb.append("  set shift_").append(nuc.getKey()).append(" ").appendO(nuc.getValue()).append("\n");
+      sb.append("  set shift_").append(nuc.getKey()).append(" ")
+          .appendO(nuc.getValue()).append("\n");
     return true;
   }
-  
+
   @Override
   public boolean setChemicalShiftReference(String element, float value) {
     if (element == null) {
       shiftRefsPPM.clear();
       return false;
-    }      
+    }
     element = element.substring(0, 1).toUpperCase() + element.substring(1);
     shiftRefsPPM.put(element, Float.valueOf(value));
     return true;
@@ -459,11 +467,11 @@ public class NMRCalculation implements JmolNMRInterface {
   @Override
   public Map<String, Integer> getMinDistances(MeasurementData md) {
     BS bsPoints1 = (BS) md.points.get(0);
-    int n1 = bsPoints1.cardinality(); 
+    int n1 = bsPoints1.cardinality();
     if (n1 == 0 || !(md.points.get(1) instanceof BS))
       return null;
     BS bsPoints2 = (BS) md.points.get(1);
-    int n2 = bsPoints2.cardinality(); 
+    int n2 = bsPoints2.cardinality();
     if (n1 < 2 && n2 < 2)
       return null;
     Map<String, Integer> htMin = new Hashtable<String, Integer>();
@@ -491,6 +499,306 @@ public class NMRCalculation implements JmolNMRInterface {
       }
     }
     return htMin;
+  }
+
+  //// non-quantum calcs
+
+  /**
+   * Calculate an H-X-X-H or C-X-X-H coupling constant.
+   * 
+   * Use Altoona equation (Tetrahedron 36, 2783-2792)
+   * 
+   * If there are fewer than three substituents on each central atom, or if
+   * either central atom is not carbon, defaults to general Karplus equation.
+   * 
+   * 
+   * 
+   * @param elements
+   * @param subElements
+   * @param subVectors
+   * @param v21
+   * @param v34
+   * @param v23
+   * @param theta
+   * @param CHequation
+   * @return estimated hA-xA-xB-hB or cA-xA-xB-hB or hA-xA-xB-cB coupling
+   *         constant
+   */
+  public static double calcJ3(String[] elements, String[][] subElements,
+                              V3[][] subVectors, V3 v21, V3 v34,
+                              V3 v23, double theta, String CHequation) {
+    if (subElements[0][2] != null && subElements[1][2] != null) {
+      if (elements[0].equals("H") && elements[3].equals("H")) {
+        if (elements[1].equals("C") && elements[2].equals("C"))
+          return calc3JHH(subElements, subVectors, v21, v34, v23,
+              theta);
+      } else if ((elements[0].equals("C") && elements[3].equals("H"))
+          || (elements[0].equals("H") && elements[3].equals("C"))) {
+        return calc3JCH(CHequation, theta);
+      }
+    }
+    return calcJKarplus(theta);
+  }
+
+  static Hashtable<String, Double> deltaElectro = new Hashtable<String, Double>();
+
+  static {
+    // Values taken from www.spectroscopynow.com/Spy/tools/proton-proton.html website. Need to find original source
+    // 2.20 is eneg of H
+    double enegH = 2.20;
+    deltaElectro.put("C", new Double(2.60 - enegH));
+    deltaElectro.put("O", new Double(3.50 - enegH));
+    deltaElectro.put("N", new Double(3.05 - enegH));
+    deltaElectro.put("F", new Double(3.90 - enegH));
+    deltaElectro.put("Cl", new Double(3.15 - enegH));
+    deltaElectro.put("Br", new Double(2.95 - enegH));
+    deltaElectro.put("I", new Double(2.65 - enegH));
+    deltaElectro.put("S", new Double(2.58 - enegH));// Pauling
+    deltaElectro.put("Si", new Double(1.90 - enegH));// Pauling
+  }
+
+  static double[][] pAltoona = new double[5][8];
+  static {
+    for (int nNonH = 0; nNonH < 5; nNonH++) {
+      double[] p = pAltoona[nNonH];
+      switch (nNonH) {
+      case 0:
+      case 1:
+      case 2:
+        p[1] = 13.89;
+        p[2] = -0.98;
+        p[3] = 0;
+        p[4] = 1.02;
+        p[5] = -3.40;
+        p[6] = 14.9;
+        p[7] = 0.24;
+        break;
+      case 3:
+        p[1] = 13.22;
+        p[2] = -0.99;
+        p[3] = 0;
+        p[4] = 0.87;
+        p[5] = -2.46;
+        p[6] = 19.9;
+        p[7] = 0;
+        break;
+      case 4:
+        p[1] = 13.24;
+        p[2] = -0.91;
+        p[3] = 0;
+        p[4] = 0.53;
+        p[5] = -2.41;
+        p[6] = 15.5;
+        p[7] = 0.19;
+        break;
+      }
+      p[6] = p[6] * Math.PI / 180.0;
+
+    }
+  }
+
+  public static double calcTheta(V3 v21, V3 v34, V3 v23) {
+    V3 n1 = new V3();
+    V3 n2 = new V3();
+    n1.cross(v21, v23);
+    n2.cross(v34, v23);
+    double angle = n1.angle(n2);
+    return n1.dot(v34) > 0 ? -angle : angle;
+  }
+
+  public static double calcJKarplus(double theta) {
+    // Simple Karplus equation for 3JHH, ignoring differences in C-substituents
+    final double j0 = 8.5;
+    final double j180 = 9.5;
+    final double jconst = 0.28;
+
+    double jab = 0;
+    if (theta >= -90.0 && theta < 90.0) {
+      jab = j0 * Math.pow((Math.cos(theta)), 2) - jconst;
+    } else {
+      jab = j180 * Math.pow((Math.cos(theta)), 2) - jconst;
+    }
+
+    return jab;
+  }
+
+  /**
+   * 
+   * 
+   * @param subElements  int[2][3] with element names
+   * @param subVectors   V3[2][4] with vectors TO these substituents from their respective centers 
+   * @param v21  vector from cA to hA
+   * @param v34  vector from cB to hB
+   * @param v23  vector from cA to cB
+   * @param theta  dihedral angle  hA-cA-cB-hB
+   * @return estimated coupling constant
+   */
+  private static double calc3JHH(String[][] subElements, V3[][] subVectors, V3 v21, V3 v34, V3 v23, double theta) {
+    // Substituents on atoms A and B
+    // Check number of substituents
+
+    int nNonH = 0;
+
+    // Count substituents of carbons A and B  
+    for (int i = 0; i < 3; i++) {
+      if (!subElements[0][i].equals("H")) {
+        nNonH++;
+      }
+      if (!subElements[1][i].equals("H")) {
+        nNonH++;
+      }
+    }
+
+    double jvalue = getInitialJValue(nNonH, theta);
+    
+    for (int i = 0; i < 3; i++) {
+      String element = subElements[0][i];
+      if (!element.equals("H")) {
+        jvalue += getIncrementalJValue(nNonH, element, subVectors[0][i],
+            v21, v23, theta);
+      }
+      element = subElements[1][i];
+      if (!element.equals("H")) {
+        jvalue += getIncrementalJValue(nNonH, element, subVectors[1][i],
+            v34, v23, theta);
+      }
+    }
+    return jvalue;
+  }
+
+
+  private static double getIncrementalJValue(int nNonH, String element, V3 sA_cA,
+                                            V3 v21, V3 v23, double theta) {
+    if (nNonH < 0 || nNonH > 5)
+      return 0;
+    Double de = deltaElectro.get(element);
+    if (de == null)
+      return 0;
+    double e = de.doubleValue();
+    int sign = getSubSign(sA_cA, v21, v23);
+    double[] p = pAltoona[nNonH];
+    return e
+        * (p[4] + p[5] * Math.cos(sign * theta + p[6] * Math.abs(e))
+            * Math.cos(sign * theta + p[6] * Math.abs(e)));
+  }
+
+  private static double getInitialJValue(int nNonH, double theta) {
+    double[] p = pAltoona[nNonH];
+    return p[1] * Math.cos(theta) * Math.cos(theta) + p[2]
+        * Math.cos(theta);
+  }
+
+  
+//  static {
+//    for (int n = 0; n < 360; n+= 10)
+//    System.out.println(n + "\t" + getInitialJValue(2, n*Math.PI/180));
+//    System.out.println("NMRCalc???");
+//  }
+  final public static String JCH3_WASYLISHEN_SCHAEFER = "was";
+  final public static String JCH3_TVAROSKA_TARAVEL = "tva";
+  final public static String JCH3_AYDIN_GUETHER = "ayd";
+
+  /**
+   * 
+   * @param CHequation
+   * 
+   *        'was' Simple equation for 3JCH, from Wasylishen and Schaefer Can J
+   *        Chem (1973) 51 961 used in Kozerski et al. J Chem Soc Perkin 2,
+   *        (1997) 1811
+   * 
+   *        'tva' Tvaroska and Taravel Adv. Carbohydrate Chem. Biochem. (1995)
+   *        51, 15-61
+   * 
+   *        'ayd' Aydin and Guether Mag. Res. Chem. (1990) 28, 448-457
+   * 
+   * @param theta
+   *        dihedral
+   * 
+   * @return 3JCH prediction
+   */
+  public static double calc3JCH(String CHequation, double theta) {
+
+    if (CHequation == null)
+      CHequation = "was";
+    if (!PT.isOneOf(CHequation, ";was;tva;ayd;"))
+      throw new IllegalArgumentException(
+          "Equation must be one of was, tva, or ayd");
+
+    if (CHequation.equals("was")) {
+
+      final double A = 3.56;
+      final double C = 4.26;
+
+      double j = A * Math.cos(2 * theta) - Math.cos(theta) + C;
+      return j;
+
+    } else if (CHequation.equals("tva")) {
+      double j = 4.5 - 0.87 * Math.cos(theta) + Math.cos(2.0 * theta);
+      return j;
+    } else if (CHequation.equals("ayd")) {
+      double j = 5.8 * Math.pow(Math.cos(theta), 2) - 1.6 * Math.cos(theta)
+          + 0.28 * Math.sin(2.0 * theta) - 0.02 * Math.sin(theta) + 0.52;
+      return j;
+    } else {
+      return 0.0;
+    }
+  }
+
+  private static int getSubSign(V3 sA_cA, V3 v21, V3 v23) {
+
+    // Look for sign of (v23 x v21).(sA_cA)
+    V3 cross = new V3();
+    cross.cross(v23, v21);
+    int sign;
+    if (cross.dot(sA_cA) > 0) {
+      sign = 1;
+    } else {
+      sign = -1;
+    }
+    return sign;
+  }
+
+  public static double[] calc3J(Atom atom1, Atom atom4) {
+    Atom atom2 = atom1.bonds[0].getOtherAtom(atom1);
+    Atom atom3 = atom4.bonds[0].getOtherAtom(atom4);
+    if (!atom2.isCovalentlyBonded(atom3))
+      return new double[2];
+
+    String[] elements = new String[] { atom1.getElementSymbol(),
+        atom2.getElementSymbol(), atom3.getElementSymbol(),
+        atom4.getElementSymbol() };
+    String[][] subElements = new String[2][3];
+    V3[][] subVectors = new V3[2][3];
+
+    V3 v23 = V3.newVsub(atom3, atom2);
+    V3 v21 = V3.newVsub(atom1, atom2);
+    V3 v34 = V3.newVsub(atom4, atom3);
+
+    Lst<Atom> subs = new Lst<Atom>();
+    
+    Bond[] bonds = atom2.bonds;
+    for (int pt = 0, i = Math.min(bonds.length, 4); --i >= 0;) {
+      Atom sub = bonds[i].getOtherAtom(atom2);
+      if (sub == atom3)
+        continue;
+      subElements[0][pt] = sub.getElementSymbol();
+      subVectors[0][pt] = V3.newVsub(sub, atom2);
+      pt++;
+    }
+    subs.clear();
+    bonds = atom3.bonds;
+    for (int pt = 0, i = Math.min(bonds.length, 4); --i >= 0;) {
+      Atom sub = bonds[i].getOtherAtom(atom3);
+      if (sub == atom2)
+        continue;
+      subElements[1][pt] = sub.getElementSymbol();
+      subVectors[1][pt] = V3.newVsub(sub, atom3);
+      pt++;
+    }
+
+    double theta = NMRCalculation.calcTheta(v21, v34, v23);
+    double jvalue = NMRCalculation.calcJ3(elements, subElements, subVectors, v21, v34, v23, theta, null);
+    return new double[] { theta, jvalue };
   }
 
 }

@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2015-08-26 09:39:24 -0500 (Wed, 26 Aug 2015) $
- * $Revision: 20738 $
+ * $Date: 2019-08-18 15:32:43 -0500 (Sun, 18 Aug 2019) $
+ * $Revision: 21995 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -284,6 +284,8 @@ public class Measurement {
             units = "pm";
         }
       }
+      if (units.equals("hz"))
+        return (andRound ? Math.round(dist * 10) / 10f : dist);
       if (units.equals("nm"))
         return (andRound ? Math.round(dist * 100) / 1000f : dist / 10);
       if (units.equals("pm"))

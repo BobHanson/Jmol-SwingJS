@@ -9350,7 +9350,7 @@ public class ScriptEval extends ScriptExpr {
 
   private boolean setUnits(String units, int tok) throws ScriptException {
     if (tok == T.measurementunits
-        && (units.endsWith("hz") || PT.isOneOf(units.toLowerCase(),
+        && (units.toLowerCase().endsWith("hz") || PT.isOneOf(units.toLowerCase(),
             ";angstroms;au;bohr;nanometers;nm;picometers;pm;vanderwaals;vdw;"))) {
       if (!chk)
         vwr.setUnits(units, true);

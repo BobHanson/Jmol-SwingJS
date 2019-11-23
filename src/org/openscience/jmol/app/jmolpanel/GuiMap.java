@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
- * $Revision: 21922 $
+ * $Date: 2019-11-17 22:49:25 -0600 (Sun, 17 Nov 2019) $
+ * $Revision: 22002 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -57,13 +57,13 @@ public class GuiMap {
   private static Object language;
 
   Map<String, Object> map = new Hashtable<String, Object>();
-  
+
   protected Map<String, String> labels;
-  
+
   // keys here refer to keys listed in org.openscience.jmol.Properties.Jmol-resources.properties
   // actions are either defined there, as xxxScript=, or by 
   // Actions created in DisplayPanel.java
-  
+
   private void setupLabels() {
     labels = new Hashtable<String, String>();
     labels.put("macros", GT.$("&Macros"));
@@ -76,14 +76,14 @@ public class GuiMap {
     labels.put("openpdb", GT.$("&Get PDB"));
     labels.put("openmol", GT.$("Get &MOL"));
     labels.put("reloadScript", GT.$("&Reload"));
-    
+
     labels.put("spectrumMenu", "&Spectra");
-    
+
     labels.put("openJSpecViewScript", "JSpecView");
     labels.put("simulate1HSpectrumScript", "Simulated 1H Spectrum");
     labels.put("simulate13CSpectrumScript", "Simulated 13C Spectrum");
-    
-    labels.put("editor", GT.$("Scrip&t Editor..."));  // new %t 11.7.45
+
+    labels.put("editor", GT.$("Scrip&t Editor...")); // new %t 11.7.45
     labels.put("console", GT.$("Conso&le..."));
     labels.put("jconsole", GT.$("Jmol Java &Console"));
     labels.put("atomsetchooser", GT.$("AtomSet&Chooser..."));
@@ -190,6 +190,7 @@ public class GuiMap {
     labels.put("distanceNanometersScript", GT.$("&Nanometers 1E-9"));
     labels.put("distanceAngstromsScript", GT.$("&Angstroms 1E-10"));
     labels.put("distancePicometersScript", GT.$("&Picometers 1E-12"));
+    labels.put("distanceHzScript", GT.$("&Hz (NMR J-coupling)"));
     labels.put("animateMenu", GT.$("&Animate..."));
     labels.put("vibrateMenu", GT.$("&Vibrate..."));
     // these three are not implemented:
@@ -228,32 +229,32 @@ public class GuiMap {
     labels.put("Prefs.perspectiveDepth", GT.$("Perspective Depth"));
     labels.put("Prefs.showAxes", GT.$("Axes"));
     labels.put("Prefs.showBoundingBox", GT.$("Bounding Box"));
-    labels.put("Prefs.axesOrientationRasmol", GT
-        .$("RasMol/Chime compatible axes orientation/rotations"));
-    labels.put("Prefs.openFilePreview", GT
-        .$("File Preview (requires restarting Jmol)"));
-    labels.put("Prefs.clearHistory", GT
-        .$("Clear history (requires restarting Jmol)"));
-    labels.put("Prefs.largeFont", GT
-        .$("Large Console Font"));
+    labels.put("Prefs.axesOrientationRasmol",
+        GT.$("RasMol/Chime compatible axes orientation/rotations"));
+    labels.put("Prefs.openFilePreview",
+        GT.$("File Preview (requires restarting Jmol)"));
+    labels.put("Prefs.clearHistory",
+        GT.$("Clear history (requires restarting Jmol)"));
+    labels.put("Prefs.largeFont", GT.$("Large Console Font"));
     labels.put("Prefs.isLabelAtomColor", GT.$("Use Atom Color"));
     labels.put("Prefs.isBondAtomColor", GT.$("Use Atom Color"));
     labels.put("rotateScriptTip", GT.$("Rotate molecule."));
-    labels.put("pickScriptTip", GT
-        .$("Select a set of atoms using SHIFT-LEFT-DRAG."));
-    labels.put("pickMeasureScriptTip", GT
-        .$("Click atoms to measure distances"));
-    labels.put("pickCenterScriptTip", GT
-        .$("Click an atom to center on it"));
-    labels.put("pickLabelScriptTip", GT
-        .$("click an atom to toggle label;DOUBLE-Click a label to set; drag to move"));
+    labels.put("pickScriptTip",
+        GT.$("Select a set of atoms using SHIFT-LEFT-DRAG."));
+    labels
+        .put("pickMeasureScriptTip", GT.$("Click atoms to measure distances"));
+    labels.put("pickCenterScriptTip", GT.$("Click an atom to center on it"));
+    labels
+        .put(
+            "pickLabelScriptTip",
+            GT.$("click an atom to toggle label;DOUBLE-Click a label to set; drag to move"));
     labels.put("homeTip", GT.$("Return molecule to home position."));
     labels.put("modelkitScriptTip", GT.$("Open the model kit."));
     labels.put("JavaConsole.Clear", GT.$("Clear"));
     labels.put("plugins", GT.$("&Plugins"));
-    
+
     moreLabels(labels);
-    
+
   }
 
   /**
@@ -279,19 +280,23 @@ public class GuiMap {
   public JMenu newJMenu(String key) {
     return new KeyJMenu(key, getLabel(key), map);
   }
-  
+
   public JMenuItem newJMenuItem(String key) {
     return new KeyJMenuItem(key, getLabel(key), map);
   }
+
   public JCheckBoxMenuItem newJCheckBoxMenuItem(String key, boolean isChecked) {
     return new KeyJCheckBoxMenuItem(key, getLabel(key), map, isChecked);
   }
+
   public JRadioButtonMenuItem newJRadioButtonMenuItem(String key) {
     return new KeyJRadioButtonMenuItem(key, getLabel(key), map);
   }
+
   public JCheckBox newJCheckBox(String key, boolean isChecked) {
     return new KeyJCheckBox(key, getLabel(key), map, isChecked);
   }
+
   public JButton newJButton(String key) {
     JButton jb = new JmolButton(getLabel(key));
     map.put(key, jb);
@@ -303,11 +308,11 @@ public class GuiMap {
   }
 
   public void setSelected(String key, boolean b) {
-    ((AbstractButton)get(key)).setSelected(b);
+    ((AbstractButton) get(key)).setSelected(b);
   }
 
   public void setEnabled(String key, boolean b) {
-    ((AbstractButton)get(key)).setEnabled(b);
+    ((AbstractButton) get(key)).setEnabled(b);
   }
 
   public void updateLabels() {
@@ -333,7 +338,7 @@ public class GuiMap {
     return str;
   }
 
-  public static URL getResource(Object object, String fileName) { 
+  public static URL getResource(Object object, String fileName) {
     return getResource(object, fileName, true);
   }
 
@@ -353,16 +358,19 @@ public class GuiMap {
   }
 
   /**
-   * @param object   UNUSED
-   * @param fileName 
-   * @param flagError 
-   * @return URL 
+   * @param object
+   *        UNUSED
+   * @param fileName
+   * @param flagError
+   * @return URL
    */
-  public static URL getResource(Object object, String fileName, boolean flagError) {
+  public static URL getResource(Object object, String fileName,
+                                boolean flagError) {
     URL url = null;
     if (fileName.indexOf("/org/") > 0)
       fileName = fileName.substring(fileName.indexOf("/org/") + 1);
-    if (!fileName.contains("/"))fileName="org/openscience/jmol/app/webexport/html/"+fileName;
+    if (!fileName.contains("/"))
+      fileName = "org/openscience/jmol/app/webexport/html/" + fileName;
     try {
       if ((url = ClassLoader.getSystemResource(fileName)) == null && flagError)
         System.err.println("Couldn't find file: " + fileName);
@@ -375,7 +383,8 @@ public class GuiMap {
 
   public static String getResourceString(Object object, String name)
       throws IOException {
-    URL url = (name.indexOf(".") >= 0 ? getResource(object, name) : getHtmlResource(object, name));
+    URL url = (name.indexOf(".") >= 0 ? getResource(object, name)
+        : getHtmlResource(object, name));
     if (url == null) {
       throw new FileNotFoundException("Error loading resource " + name);
     }
@@ -396,7 +405,7 @@ public class GuiMap {
     }
     return translate(sb.toString());
   }
-  
+
   private static String[] translations;
 
   /**
@@ -445,13 +454,11 @@ public class GuiMap {
             "@NAME@")),
         "GT_script_btn_template2.html_MORE",
         GT.escapeHTML(GT.o(GT.$("Insert more information for {0} here."),
-            "@NAME@")),
-        "About.html#version", "<p><b>Jmol " + JC.version + " (" + JC.date + ")</b></p>",
+            "@NAME@")), "About.html#version",
+        "<p><b>Jmol " + JC.version + " (" + JC.date + ")</b></p>",
         "About.html#splash", "see Jmol-resources.properties",
         "About.html#weblinks", "see Jmol-resources.properties",
-        "About.html#libraries", "see Jmol-resources.properties"
-        };
+        "About.html#libraries", "see Jmol-resources.properties" };
   }
-  
-}
 
+}
