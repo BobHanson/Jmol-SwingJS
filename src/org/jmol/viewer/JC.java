@@ -842,8 +842,8 @@ public final class JC {
   public final static String DEFAULT_FONTFACE = "SansSerif";
   public final static String DEFAULT_FONTSTYLE = "Plain";
 
-  public final static int MEASURE_DEFAULT_FONTSIZE = 15;
-  public final static int AXES_DEFAULT_FONTSIZE = 14;
+  public final static int MEASURE_DEFAULT_FONTSIZE = 18;
+  public final static int AXES_DEFAULT_FONTSIZE = 16;
 
   ////////////////////////////////////////////////////////////////
   // do not rearrange/modify these shapes without
