@@ -5300,6 +5300,8 @@ public class Viewer extends JmolViewer
       return g.ribbonAspectRatio;
     case T.showscript:
       return g.scriptDelay;
+    case T.minimizationmaxatoms:
+      return g.minimizationMaxAtoms;
     case T.smallmoleculemaxatoms:
       return g.smallMoleculeMaxAtoms;
     case T.strutspacing:
@@ -6095,6 +6097,10 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.minimizationmaxatoms:
+      // 14.30.0
+      g.minimizationMaxAtoms = value;
+      break;
     case T.infofontsize:
       g.infoFontSize = Math.max(0, value);
       break;
@@ -8821,9 +8827,11 @@ public class Viewer extends JmolViewer
     if (addHydrogen)
       bsSelected.or(addHydrogens(bsSelected, isLoad2D, isSilent));
 
-    if (bsSelected.cardinality() > JC.MINIMIZATION_ATOM_MAX) {
-      Logger.error("Too many atoms for minimization (>"
-          + JC.MINIMIZATION_ATOM_MAX + ")");
+    int n = bsSelected.cardinality();
+    if (ff.equals("MMFF") && n > g.minimizationMaxAtoms) {
+      scriptStatusMsg("Too many atoms for minimization (" + n + ">"
+          + g.minimizationMaxAtoms
+          + "); use 'set minimizationMaxAtoms' to increase this limit", "minimization: too many atoms");
       return;
     }
     try {
