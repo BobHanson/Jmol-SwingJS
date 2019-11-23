@@ -389,6 +389,29 @@ public class Viewer extends JmolViewer
         null, JC.SMILES_TYPE_SMARTS);
   }
 
+  /**
+   * 
+   * 
+   * @param smilesOrSmarts
+   * @param bsSelected
+   * @param flags
+   *        can be bitwise OR of JC.SMILES_* options, in particular,
+   * 
+   *        JC.SMILES_TYPE_SMARTS, JC.SMILES_TYPE_SMILES, and
+   *        JC.SMILES_MAP_UNIQUE
+   * 
+   * @return map
+   * @throws Exception
+   */
+  public int[][] getSmartsMap(String smilesOrSmarts, BS bsSelected, int flags) throws Exception {
+    if (bsSelected == null)
+      bsSelected = bsA();
+    if (flags == 0) 
+      flags = JC.SMILES_TYPE_SMARTS;
+    return getSmilesMatcher().getCorrelationMaps(smilesOrSmarts, ms.at, ms.ac,
+        bsSelected, flags);
+  }
+
   @SuppressWarnings({ "unchecked", "null", "unused" })
   public void setOptions(Map<String, Object> info) {
 
