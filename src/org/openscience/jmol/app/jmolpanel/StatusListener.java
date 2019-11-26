@@ -77,7 +77,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
   private Viewer vwr;
   private MainFrame jSpecViewFrame;
   private boolean jSpecViewForceNew;
-  void setViewer(Viewer vwr) {
+  public void setViewer(Viewer vwr) {
     this.vwr = vwr;
   }
   
@@ -286,10 +286,13 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
   @Override
   public void setCallbackFunction(String callbackType, String callbackFunction) {
     if (callbackType.equals("modelkit")) {
-      if (callbackFunction.equals("ON"))
+      if (callbackFunction.equals("ON")) {
+        if (display.buttonModelkit != null)
         display.buttonModelkit.setSelected(true);
-      else
+      }else {
+        if (display.buttonRotate != null)
         display.buttonRotate.setSelected(true);
+      }
       return;
     }
     //if (callbackType.equalsIgnoreCase("menu")) {

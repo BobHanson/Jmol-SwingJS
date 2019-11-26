@@ -29,20 +29,20 @@ import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
 
 import javajs.util.A4;
+import javajs.util.Lst;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.SB;
 
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
-import org.jmol.modelset.TickInfo;
-
+import org.jmol.quantum.NMRCalculation;
+import org.jmol.util.Escape;
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-
-import javajs.util.Lst;
-import javajs.util.SB;
 
 public class Measurement {
 
@@ -81,6 +81,7 @@ public class Measurement {
   private boolean tainted;
   public A4 renderAxis;
   public P3 renderArc;
+  private String newUnits;
   
   public boolean isTainted() {
     return (tainted && !(tainted = false));
@@ -243,7 +244,7 @@ public class Measurement {
         label = "%VALUE";
     }
     float f = fixValue(units, (label.indexOf("%V") >= 0));
-    return formatString(f, units, label);
+    return formatString(f, newUnits, label);
   }
 
   private static String fixUnits(String units) {
@@ -259,6 +260,7 @@ public class Measurement {
   }
 
   public float fixValue(String units, boolean andRound) {
+    newUnits = units;
     if (count != 2)
       return value;
     float dist = value;
@@ -270,15 +272,26 @@ public class Measurement {
         if (i1 >= 0 && i2 >= 0) {
           Atom a1 = (Atom) getAtom(1);
           Atom a2 = (Atom) getAtom(2);
-          boolean isDC = (!isPercent && nmrType(units) == NMR_DC);
+          int itype = nmrType(units);
+          boolean isDC = (!isPercent && itype == NMR_DC);
           type = (isPercent ? "percent" : isDC ? "dipoleCouplingConstant"
-              : "J-CouplingConstant");
-          dist = (isPercent ? dist
-              / (a1.getVanderwaalsRadiusFloat(vwr, VDW.AUTO)
-              + a2.getVanderwaalsRadiusFloat(vwr, VDW.AUTO))
-              : isDC ? vwr.getNMRCalculation().getDipolarConstantHz(a1, a2)
-                  : vwr.getNMRCalculation().getIsoOrAnisoHz(true, a1, a2, units,
-                      null));
+              : itype == NMR_NOE_OR_J ? "NOE or 3JHH" : "J-CouplingConstant");
+          if (itype == NMR_NOE_OR_J) {
+            double[] result = vwr.getNMRCalculation().getNOEorJHH(new Atom[] { a1, null, null, a2}, NMRCalculation.MODE_CALC_NOE | NMRCalculation.MODE_CALC_JHH);
+            if (result == null) {
+              dist = Float.NaN;
+              newUnits = units = "";
+            } else {
+              dist = (float) result[1];
+              units = newUnits = (result.length == 2 ? "noe" :"hz");
+            }
+          } else {
+            dist = (isPercent ? dist
+                / (a1.getVanderwaalsRadiusFloat(vwr, VDW.AUTO) + a2
+                    .getVanderwaalsRadiusFloat(vwr, VDW.AUTO)) : isDC ? vwr
+                .getNMRCalculation().getDipolarConstantHz(a1, a2) : vwr
+                .getNMRCalculation().getIsoOrAnisoHz(true, a1, a2, units, null));
+          }
           isValid = !Float.isNaN(dist);
           if (isPercent)
             units = "pm";
@@ -286,6 +299,8 @@ public class Measurement {
       }
       if (units.equals("hz"))
         return (andRound ? Math.round(dist * 10) / 10f : dist);
+      if (units.equals("noe"))
+        return (andRound ? Math.round(dist * 100) / 100f : dist);
       if (units.equals("nm"))
         return (andRound ? Math.round(dist * 100) / 1000f : dist / 10);
       if (units.equals("pm"))
@@ -302,9 +317,10 @@ public class Measurement {
   public final static int NMR_NOT = 0;
   public final static int NMR_DC = 1;
   public final static int NMR_JC = 2;
+  public final static int NMR_NOE_OR_J = 3;
   
   public static int nmrType(String units) {
-    return (units.indexOf("hz") < 0 ? NMR_NOT : units.startsWith("dc_") || units.equals("khz") ? NMR_DC : NMR_JC);
+    return (units.indexOf("hz") < 0 ? NMR_NOT : units.equals("noe_hz") ? NMR_NOE_OR_J : units.startsWith("dc_") || units.equals("khz") ? NMR_DC : NMR_JC);
   }
 
   private String formatAngle(float angle) {
