@@ -159,6 +159,20 @@ public class CrystalReader extends AtomSetCollectionReader {
   private boolean checkModelTrigger;
   private boolean fullSymmetry;
 
+  /**
+   * filter out unnecessary lines
+   */
+  @Override
+  public String rd() throws Exception {
+    while (super.rd() != null && (
+           line.startsWith(" PROCESS")
+        || line.startsWith(" INFORMATION") 
+        || line.startsWith(" WARNING"))) {
+      //skip this line
+    }
+    return line;
+  }
+  
   @Override
   protected void initializeReader() throws Exception {
     doProcessLines = false;
@@ -309,7 +323,8 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (checkModelTrigger) {
       if (line.indexOf("CARTESIAN COORDINATES") >= 0
           || line.indexOf("TOTAL ENERGY") >= 0
-          || line.indexOf("REFERENCE GEOMETRY DEFINED") >= 0) {
+          || line.indexOf("REFERENCE GEOMETRY DEFINED") >= 0
+          || line.indexOf("FUNCTIONS") >= 0) {
         checkModelTrigger = false;
         if (!addModel())
           return true;
@@ -793,20 +808,32 @@ public class CrystalReader extends AtomSetCollectionReader {
     rd();
     f16[15] = 1;
     while (rd() != null && line.length() > 0 && line.indexOf("END") < 0) {
+      if (line.indexOf("V INV") >= 0)
+        continue;
       fillFloatArray(line, 0, f14);
+      if (Float.isNaN(f14[0]))
+        break;
       for (int i = 0; i < 12; i++)
         f16[i] = f14[smap[i]];
-      String xyz = SymmetryOperation.getXYZFromMatrix(M4.newA16(f16), false,
+      
+      // This will not work for nanotube symmetry specifications.
+      
+      M4 m4 = M4.newA16(f16);
+      String xyz = SymmetryOperation.getXYZFromMatrix(m4, false,
           false, false);
-      symops.addLast(xyz);
-      Logger.info("state:" + state + " Symmop " + symops.size() + ": " + xyz);
+      if (xyz.indexOf("0y") >= 0 || xyz.indexOf("0z") >= 0) {
+        Logger.error("Symmetry operator could not be created for " + line);
+      } else {
+        symops.addLast(xyz);
+        Logger.info("state:" + state + " Symmop " + symops.size() + ": " + xyz);
+      }
     }
   }
 
-  private void setSymmOps() {
-    for (int i = 0, n = symops.size(); i < n; i++)
-      setSymmetryOperator(symops.get(i));
-  }
+//  private void setSymmOps() {
+//    for (int i = 0, n = symops.size(); i < n; i++)
+//      setSymmetryOperator(symops.get(i));
+//  }
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
@@ -947,9 +974,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     discardLinesUntilContains("EEEEEEEEEE");
     rd();
     String name;
-    while (line.startsWith(" INFORMATION") || line.startsWith(" WARNING")) {
-      rd();
-    }
     if (line.length() == 0) {
       discardLinesUntilContains("*********");
       name = rd().trim();
@@ -1459,12 +1483,12 @@ public class CrystalReader extends AtomSetCollectionReader {
       data.append(line);
     String[] tokens = PT.getTokens(data.toString());
     float[] charges = new float[tokens.length];
-    if (nuclearCharges == null)
+    if (nuclearCharges == null || nuclearCharges.length != charges.length)
       nuclearCharges = charges;
     if (asc.ac == 0)
       return true;
     Atom[] atoms = asc.atoms;
-    int i0 = asc.getLastAtomSetAtomIndex();
+    int i0 = asc.getLastAtomSetAtomIndex(); 
     for (int i = 0; i < charges.length; i++) {
       int iConv = getAtomIndexFromPrimitiveIndex(i);
       if (iConv >= 0) {
