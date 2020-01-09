@@ -7616,6 +7616,8 @@ public class ScriptEval extends ScriptExpr {
     // set picking off
     // set picking select
     // set picking bonds
+    // set picking dragmolecule
+    // set picking dragmodel
     // set picking dragselected
 
     String str = paramAsStr(i);
