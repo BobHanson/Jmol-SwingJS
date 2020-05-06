@@ -327,7 +327,7 @@ public class JmolApp implements JmolAppAPI {
       info.put("silent", Boolean.TRUE);
 
     // output to sysout
-    if (line.hasOption("o"))
+    if (/** @j2sNative true || */line.hasOption("o"))
       haveConsole = false;
     if (!haveConsole) // might also be set in JmolData
       info.put("noConsole", Boolean.TRUE);

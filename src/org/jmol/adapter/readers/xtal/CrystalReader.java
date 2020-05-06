@@ -361,7 +361,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       if (line.startsWith(" ********"))
         discardLinesUntilContains("SYMMETRY ALLOWED");
       else if (line.startsWith(" TTTTTTTT"))
-        discardLinesUntilContains2("PREDICTED ENERGY CHANGE", "HHHHHHH");
+        discardLinesUntilContains(" *******");
       return true;
     }
 

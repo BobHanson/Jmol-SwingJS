@@ -841,7 +841,8 @@ public class NMR_JmolPanel extends JmolPanel {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      atomSetChooser.setVisible(true);
+      if (atomSetChooser != null) 
+        atomSetChooser.setVisible(true);
     }
   }
 

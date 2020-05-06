@@ -103,6 +103,8 @@ public class JmolResourceHandler {
     String resourceName = null;
     try {
       resourceName = getString(key);
+      if (resourceName == key)
+        return null;
     } catch (MissingResourceException e) {
     }
 

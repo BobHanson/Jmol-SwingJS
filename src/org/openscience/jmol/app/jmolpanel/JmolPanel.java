@@ -440,7 +440,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           loc.y += 40;
           if (loc.x > maxX || loc.y > maxY)
             loc.setLocation(0, 0);
-        } else if ((loc = historyFile.getWindowPosition(windowName)) == null) {
+        } else if (historyFile == null || (loc = historyFile.getWindowPosition(windowName)) == null) {
           return;
         }
       }
@@ -468,7 +468,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
         "getAppConsole", null);
     if (console != null) {
-      if (console.jcd != null) {
+      if (console.jcd != null && historyFile != null) {
         historyFile.repositionWindow(SCRIPT_WINDOW_NAME, console.jcd, 200, 100,
             !jmolApp.isKiosk);
       }
@@ -491,8 +491,14 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     // otherwise, loading a new model in a script that sets the vibration or vector parameters
     // can appear to skip those -- they aren't skipped, but creating the atomSetChooser
     // will run scripts as it loads.
+    /**
+     * sorry - no JTree yet
+     * @j2sNative
+     */
+    {
     atomSetChooser = new AtomSetChooser(vwr, frame);
     pcs.addPropertyChangeListener(chemFileProperty, atomSetChooser);
+    }
   }
 
   protected void launchMainFrame() {
