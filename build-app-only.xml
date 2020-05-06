@@ -88,7 +88,7 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
     <mkdir dir="${classes.dir}"/>
     <javac srcdir="src" destdir="${classes.dir}" encoding="UTF8"
            debug="${debug}" deprecation="${deprecation}"
-           optimize="${optimization}" source="1.6" target="1.6">
+           optimize="${optimization}" source="1.8" target="1.8">
       <classpath refid="project.class.path" />
       <exclude name="astex/**/*.java"/>
       <exclude name="java_cup/**/*.java"/>
