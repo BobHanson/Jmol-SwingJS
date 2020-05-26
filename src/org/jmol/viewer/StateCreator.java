@@ -979,11 +979,11 @@ public class StateCreator extends JmolStateCreator {
       for (int j = 1; j <= count; j++)
         sb.append(" ").append(m.getLabel(j, true, true));
       if (isProperty)
-        sb.append(" " + m.property + " value " + (Float.isNaN(m.value) ? 0f : m.value));
-      sb.append("; # " + shape.getInfoAsString(i));
+        sb.append(" " + m.property + " value " + (Float.isNaN(m.value) ? 0f : m.value))
+        .append(" " + PT.esc(m.getString()));
+      //sb.append("; # " + shape.getInfoAsString(i));
       app(commands, sb.toString());
     }
-    app(commands, "select *; set measures " + vwr.g.measureDistanceUnits);
     app(commands, Shape.getFontCommand("measures", font3d));
     int nHidden = 0;
     Map<String, BS> temp = new Hashtable<String, BS>();
@@ -997,9 +997,6 @@ public class StateCreator extends JmolStateCreator {
       if (shape.bsColixSet != null && shape.bsColixSet.get(i))
         BSUtil.setMapBitSet(temp, i, i, Shape.getColorCommandUnk("measure",
             m.colix, shape.translucentAllowed));
-      if (m.strFormat != null || m.units != null) {
-        BSUtil.setMapBitSet(temp, i, i, "measure " + PT.esc(m.units == null ? m.strFormat : m.strFormat == null ? m.units : m.strFormat + "//" + m.units));
-      }
         
     }
     if (nHidden > 0)

@@ -807,7 +807,7 @@ public class NMRCalculation implements JmolNMRInterface {
                                         int mode) {
 
     if (CHEquation == null || CHEquation.equals("none"))
-      mode ^= MODE_CALC_3JCH;
+      mode &= ~MODE_CALC_3JCH;
     String[] elements = new String[4];
     mode = getCalcType(atoms, elements, mode);
     switch (mode) {

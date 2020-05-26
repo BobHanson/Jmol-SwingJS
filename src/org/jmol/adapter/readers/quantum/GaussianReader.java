@@ -828,12 +828,12 @@ public class GaussianReader extends MOReader {
   private void readCSATensors() throws Exception {
     rd();
     while (rd() != null && line.indexOf("Isotropic") >= 0) {
-      System.out.println("GIAO tensor " + line);
       int iatom = parseIntAt(line,  0);
       String[] data = (rd() + rd() + rd()).split("=");
-      System.out.println(rd());
       addTensor(iatom, data);
     }
+    appendLoadNote("NMR shift tensors are available for model=" + (asc.iSet + 1) + "\n using \"ellipsoids set 'csa'.");
+
   }
 
   private void addTensor(int iatom, String[] data) {
@@ -846,7 +846,7 @@ public class GaussianReader extends MOReader {
     }
     Tensor t = new Tensor().setFromAsymmetricTensor(a, "csa", "csa" + iatom);
     asc.atoms[i0 + iatom - 1].addTensor(t,  "csa",  false);
-    System.out.println("calc Tensor CSA " + t 
+    System.out.println("calc Tensor " + t 
         + "calc isotropy=" + t.getInfo("isotropy") 
         + " anisotropy=" + t.getInfo("anisotropy") + "\n");
    
@@ -906,7 +906,12 @@ public class GaussianReader extends MOReader {
         break;
     }
     System.out.println(data);
-    asc.setModelInfoForSet("NMR_" + type + "_couplings", data, asc.atomSetCount - 1);
+    asc.setModelInfoForSet("NMR_" + type + "_couplings", data, asc.iSet);
+    if (type == "J") {
+      asc.setAtomProperties("J", data, asc.iSet, false);
+      appendLoadNote(
+          "NMR J Couplings saved for model=" + (asc.iSet + 1) + " as property_J;\n use set measurementUnits \"+hz\" to measure them.");
+    }
   }
   
 }

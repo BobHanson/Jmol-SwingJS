@@ -1661,12 +1661,13 @@ public class SV extends T implements JSONEncodable {
     return n;
   }
   public static float[][] fflistValue(T x, int nMin) {
-    if (x.tok != varray)
+    if (x.tok != varray) {
       return new float[][] { new float[] {fValue(x)} };
+    }
     Lst<SV> sv = ((SV) x).getList();
     int svlen = sv.size();
     float[][] list;
-    list = new float[Math.max(nMin, svlen)][];
+    list = AU.newFloat2(svlen);
     if (nMin == 0)
       nMin = list.length;
     for (int i = list.length; --i >= 0;)

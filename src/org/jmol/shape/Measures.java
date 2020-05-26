@@ -567,6 +567,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         sb.append(", ");
       sb.append(m.getLabel(i, asBitSet, false));
     }
+    sb.append(", ");
+    sb.append(m.getString());
     sb.append("]");
     return sb.toString();
   }

@@ -170,7 +170,7 @@ public class DataManager implements JmolDataManager {
               strData == null ? PT.getTokens(stringData) : strData, bs, f);
         } else if (ffData != null) {
           int n = ffData.length;
-          ff = (oldData == null || createNew ? new float[actualAtomCount][]
+          ff = (oldData == null || createNew ? AU.newFloat2(actualAtomCount)
               : (float[][]) AU.ensureLength(oldData[JmolDataManager.DATA_VALUE],
                   actualAtomCount));
           if (n == bs.cardinality()) {
