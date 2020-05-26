@@ -38,7 +38,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Tensor;
-import org.jmol.viewer.ActionManager;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -139,6 +138,8 @@ public class Ellipsoids extends AtomShape {
   private String typeSelected = "1";
   private BS selectedAtoms;
   private Lst<Ellipsoid> ellipsoidSet;
+  
+  private float scale;
 
   @Override
   public int getIndexFromName(String thisID) {
@@ -234,6 +235,7 @@ public class Ellipsoids extends AtomShape {
   public void setProperty(String propertyName, Object value, BS bs) {
     //System.out.println(propertyName + " " + value + " " + bs);
     if (propertyName == "thisID") {
+      scale = Float.NaN;
       if (initEllipsoids(value) && ellipsoidSet.size() == 0) {
         String id = (String) value;
         Ellipsoid e = Ellipsoid.getEmptyEllipsoid(id, vwr.am.cmi);
@@ -290,8 +292,9 @@ public class Ellipsoids extends AtomShape {
       boolean isOn = ((Boolean) value).booleanValue();
       if (selectedAtoms != null)
         bs = selectedAtoms;
-      if (isOn)
-        setSize(Integer.MAX_VALUE, bs);
+      if (isOn) {
+        setSize(Float.isNaN(scale) ? Integer.MAX_VALUE : (int) (scale * 100), bs);
+      }
       for (Ellipsoid e : atomEllipsoids.values()) {
         Tensor t = e.tensor;
         if ((t.type.equals(typeSelected) || typeSelected.equals(t.altType))
@@ -332,7 +335,8 @@ public class Ellipsoids extends AtomShape {
     }
 
     if ("scale" == propertyName) {
-      setSize((int) (((Float) value).floatValue() * 100), bs);
+      scale = ((Float) value).floatValue();
+      setSize((int) (scale * 100), bs);
       return;
     }
 

@@ -42,6 +42,7 @@ import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.LabelToken;
+import org.jmol.modelset.Measurement;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.StateScript;
 import org.jmol.modelset.Text;
@@ -1555,6 +1556,8 @@ public class CmdExt extends ScriptExt {
     Boolean intramolecular = null;
     int tokAction = T.opToggle;
     String strFormat = null;
+    String property = null;
+    String units = null;
     Font font = null;
 
     Lst<Object> points = new Lst<Object>();
@@ -1563,6 +1566,7 @@ public class CmdExt extends ScriptExt {
     TickInfo tickInfo = null;
     int nBitSets = 0;
     int mad = 0;
+    float value = Float.NaN;
     String alignment = null;
     for (int i = 1; i < slen; ++i) {
       switch (getToken(i).tok) {
@@ -1727,9 +1731,20 @@ public class CmdExt extends ScriptExt {
         i = eval.iToken;
         points.addLast(target);
         break;
+      case T.property:
+        property = paramAsStr(i);
+        break;
+      case T.val:
+          value = floatParameter(++i);
+          break;
       case T.string:
         // measures "%a1 %a2 %v %u"
-        strFormat = stringParameter(i);
+        String s = stringParameter(i);
+        if (Measurement.isUnits(s)) {
+          units = s;
+        } else {
+          strFormat = s;
+        }
         break;
       case T.ticks:
         tickInfo = eval.tickParamAsStr(i, false, true, true);
@@ -1762,7 +1777,7 @@ public class CmdExt extends ScriptExt {
         tickInfo.id = "default";
       if (isRefreshID) {
         tokAction = T.refresh;
-      } else if (target != null && strFormat != null
+      } else if (target != null && (property != null || strFormat != null)
           && tokAction == T.opToggle) {
         tokAction = T.define;
       }
@@ -1776,9 +1791,9 @@ public class CmdExt extends ScriptExt {
         text.setAlignmentLCR(alignment);
       }
       setShapeProperty(JC.SHAPE_MEASURES, "measure",
-          vwr.newMeasurementData(id, points).set(tokAction, null, rd, strFormat,
-              null, tickInfo, isAllConnected, isNotConnected, intramolecular,
-              isAll, mad, colix, text));
+          vwr.newMeasurementData(id, points).set(tokAction, null, rd, property, strFormat,
+              units, tickInfo, isAllConnected, isNotConnected, intramolecular,
+              isAll, mad, colix, text, value));
       return;
     }
     Object propertyValue = (id == null ? countPlusIndexes : id);

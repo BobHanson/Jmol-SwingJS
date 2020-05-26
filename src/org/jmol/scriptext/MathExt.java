@@ -63,6 +63,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
+import org.jmol.modelset.Measurement;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
@@ -2304,12 +2305,12 @@ public class MathExt {
     case T.measure:
       // note: min/max are always in Angstroms
       // note: order is not important (other than min/max)
-      // measure({a},{b},{c},{d}, min, max, format, units)
-      // measure({a},{b},{c}, min, max, format, units)
-      // measure({a},{b}, min, max, format, units)
-      // measure({a},{b},{c},{d}, min, max, format, units)
+      // measure({a},{b},{c},{d}, min, max, property, format, units)
+      // measure({a},{b},{c}, min, max, property, format, units)
+      // measure({a},{b}, min, max, property, format, units)
+      // measure({a},{b},{c},{d}, min, max, property, format, units)
       // measure({a} {b} "minArray") -- returns array of minimum distance values
-
+      String property = null;
       Lst<Object> points = new Lst<Object>();
       float[] rangeMinMax = new float[] { Float.MAX_VALUE, Float.MAX_VALUE };
       String strFormat = null;
@@ -2322,7 +2323,7 @@ public class MathExt {
       int nBitSets = 0;
       float vdw = Float.MAX_VALUE;
       boolean asMinArray = false;
-      boolean asArray = false;
+      boolean asFloatArray = false;
       for (int i = 0; i < args.length; i++) {
         switch (args[i].tok) {
         case T.bitset:
@@ -2346,6 +2347,10 @@ public class MathExt {
 
         case T.string:
           String s = SV.sValue(args[i]);
+          if (s.startsWith("property_")) {
+            property = s;
+            break;
+          }
           if (s.equalsIgnoreCase("vdw") || s.equalsIgnoreCase("vanderwaals"))
             vdw = (i + 1 < args.length && args[i + 1].tok == T.integer ? args[++i]
                 .asInt() : 100) / 100f;
@@ -2355,11 +2360,9 @@ public class MathExt {
             isAllConnected = true;
           else if (s.equalsIgnoreCase("minArray"))
             asMinArray = (nBitSets >= 1);
-          else if (s.equalsIgnoreCase("asArray"))
-            asArray = (nBitSets >= 1);
-          else if (PT.isOneOf(s.toLowerCase(),
-              ";nm;nanometers;pm;picometers;angstroms;ang;au;")
-              || s.endsWith("hz"))
+          else if (s.equalsIgnoreCase("asArray") || s.length() == 0)
+            asFloatArray = (nBitSets >= 1);
+          else if (Measurement.isUnits(s))
             units = s.toLowerCase();
           else
             strFormat = nPoints + ":" + s;
@@ -2377,9 +2380,10 @@ public class MathExt {
         return mp.addXStr("");
       rd = (vdw == Float.MAX_VALUE ? new RadiusData(rangeMinMax, 0, null, null)
           : new RadiusData(null, vdw, EnumType.FACTOR, VDW.AUTO));
-      return mp.addXObj((vwr.newMeasurementData(null, points)).set(0, null, rd,
-          strFormat, units, null, isAllConnected, isNotConnected, null, true,
-          0, (short) 0, null).getMeasurements(asArray, asMinArray));
+      Object obj = (vwr.newMeasurementData(null, points)).set(0, null, rd,
+          property, strFormat, units, null, isAllConnected, isNotConnected, null, true,
+          0, (short) 0, null, Float.NaN).getMeasurements(asFloatArray, asMinArray);
+      return mp.addXObj(obj);
     case T.angle:
       if ((nPoints = args.length) != 3 && nPoints != 4)
         return false;
@@ -3306,7 +3310,6 @@ public class MathExt {
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
     //     tensor(t,what)
-    System.out.println(args[1].tok + " " + T.tensor);
     boolean isTensor = (args.length == 2 && args[1].tok == T.tensor); 
     SV x = (isTensor ? null : mp.getX());
     if (args.length > 2 || !isTensor && x.tok != T.bitset)

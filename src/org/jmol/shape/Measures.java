@@ -218,6 +218,9 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         m.strFormat = md.strFormat;
         m.text = md.text;
       }
+      m.units = md.units;
+      m.property = md.property;
+      m.fixedValue = md.fixedValue;
       switch (md.tokAction) {
       case T.refresh:
         doAction(md, md.thisID, T.refresh);
@@ -492,8 +495,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           Integer.valueOf(atoms[atomIndex].getAtomNumber())) : (Object) m
           .getAtom(i));
     }
-    define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, strFormat, null, tickInfo,
-        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null),
+    define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, m.property, strFormat, null, tickInfo,
+        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Float.NaN),
         (isDelete ? T.delete : T.define));
   }
 
