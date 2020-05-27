@@ -21,8 +21,11 @@ package org.molecularplayground;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
-
-import javajs.util.PT;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JPanel;
 
@@ -30,6 +33,7 @@ import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.c.CBK;
+import org.jmol.script.SV;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
@@ -39,13 +43,15 @@ import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
 import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
+import javajs.util.PT;
+
 /*
  * Jmol 12 implementation of the Molecular Playground
  * 
  * includes message "banner:xxxxx" intercept to 
  * display xxxxx on the banner, thus allowing that to 
  * be modified by a running script. (in JsonNioService.java)
-
+<code>
 version=12.3.3_dev
 
 # new feature: MolecularPlayground now accepts messages to the banner:
@@ -108,16 +114,103 @@ version=12.3.3_dev
 #   -- Note that MPJmolApp has a full console and menu that are available
 #      on the operator's screen, (which is just mirrored to the projector).
 #      This allows for parameter setting and adjustments on the fly.
-#
+#</code>
 
  * 
  */
+
+/**
+ * 
+ * @see JsonNioService
+ * 
+ *      Listens over a port on the local host for instructions on what to
+ *      display. Instructions come in over the port as JSON strings.
+ * 
+ *      This class uses the Naga asynchronous socket network I/O package (NIO),
+ *      the JSON.org JSON package and Jmol.
+ * 
+ *      http://code.google.com/p/naga/
+ * 
+ *      Initial versions of this code, including the JSON-base protocol were
+ *      created by Adam Williams, U-Mass Amherst see
+ *      http://MolecularPlayground.org and
+ *      org.openscience.jmol.molecularplayground.MPJmolApp.java
+ * 
+ *      Sent from Jmol (via outSocket):
+ * 
+ *      version 1: {"magic" : "JmolApp", "role" : "out"} (socket initialization
+ *      for messages TO jmol) {"magic" : "JmolApp", "role" : "in"} (socket
+ *      initialization for messages FROM jmol)
+ * 
+ * 
+ *      version 2 (not implemented?: {"type" : "login", "source" : "Jmol"}
+ *      (socket initialization for messages TO/FROM jmol) both versions: {"type"
+ *      : "script", "event" : "done"} (script completed)
+ * 
+ *      Sent to Jmol (via inSocket):
+ * 
+ *      {"type" : "banner", "mode" : "ON" or "OFF" } (set banner for kiosk)
+ *      {"type" : "banner", "text" : bannerText } (set banner for kiosk) {"type"
+ *      : "command", "command" : command, "var": vname, "data":vdata} (script
+ *      command request, with optional definition of a Jmol user variable prior
+ *      to execution) {"type" : "content", "id" : id } (load content request)
+ *      {"type" : "move", "style" : (see below) } (mouse command request)
+ *      {"type" : "quit" } (shut down request) {"type" : "sync", "sync" : (see
+ *      below) } (sync command request) {"type" : "touch", (a raw touch event)
+ *      "eventType" : eventType, "touchID" : touchID, "iData" : idata, "time" :
+ *      time, "x" : x, "y" : y, "z" : z }
+ * 
+ *      For details on the "touch" type, see
+ *      org.jmol.viewer.ActionManagerMT::processEvent Content is assumed to be
+ *      in a location determined by the Jmol variable nioContentPath, with %ID%
+ *      being replaced by some sort of ID number of tag provided by the other
+ *      half of the system. That file contains more JSON code:
+ * 
+ *      {"startup_script" : scriptFileName, "banner_text" : text }
+ * 
+ *      An additional option "banner" : "off" turns off the title banner. The
+ *      startup script must be in the same directory as the .json file,
+ *      typically as a .spt file
+ * 
+ *      Move commands include:
+ * 
+ *      {"type" : "move", "style" : "rotate", "x" : deltaX, "y", deltaY }
+ *      {"type" : "move", "style" : "translate", "x" : deltaX, "y", deltaY }
+ *      {"type" : "move", "style" : "zoom", "scale" : scale } (1.0 = 100%)
+ *      {"type" : "sync", "sync" : syncText }
+ * 
+ *      Note that all these moves utilize the Jmol sync functionality originally
+ *      intended for applets. So any valid sync command may be used with the
+ *      "sync" style. These include essentially all the actions that a user can
+ *      make with a mouse, including the following, where the notation <....>
+ *      represents a number of a given type. These events interrupt any
+ *      currently running script, just as with typical mouse actions.
+ * 
+ *      "centerAt <int:x> <int:y> <float:ptx> <float:pty> <float:ptz>" -- set
+ *      {ptx,pty,ptz} at screen (x,y)
+ *      "rotateMolecule <float:deltaX> <float:deltaY>"
+ *      "rotateXYBy <float:deltaX> <float:deltaY>" "rotateZBy <int:degrees>"
+ *      "rotateZBy <int:degrees> <int:x> <int:y>" (with center reset)
+ *      "rotateArcBall <int:x> <int:y> <float:factor>"
+ *      "spinXYBy <int:x> <int:y> <float:speed>" -- a "flick" gesture
+ *      "translateXYBy <float:deltaX, float:deltaY>" "zoomBy <int:pixels>"
+ *      "zoomByFactor <float:factor>"
+ *      "zoomByFactor <float:factor> <int:x> <int:y>" (with center reset)
+ * 
+ * 
+ */
+
 public class MPJmolApp implements JsonNioClient {
 
-  protected Viewer viewer;
+  protected Viewer vwr;
 
   private static int MP_VERSION = 1; // SET TO 2 if using Version 2 (AW 12/2011) 
-  
+
+  TouchHandler touchHandler = new JsonNioClient.TouchHandler();
+
+  public boolean motionDisabled;
+  public boolean contentDisabled;
+
   public static void main(String args[]) {
     new MPJmolApp(args.length > 0 ? Integer.parseInt(args[0]) : 31416);
   }
@@ -125,7 +218,7 @@ public class MPJmolApp implements JsonNioClient {
   public MPJmolApp() {
     this(31416);
   }
-  
+
   public MPJmolApp(int port) {
     startJsonNioKiosk(port);
   }
@@ -133,8 +226,9 @@ public class MPJmolApp implements JsonNioClient {
   protected JsonNioServer service;
   private BannerFrame bannerFrame;
   private KioskFrame kioskFrame;
-  private boolean contentDisabled;
-  
+
+  private String name;
+
   private void startJsonNioKiosk(int port) {
     KioskPanel kioskPanel = new KioskPanel();
     bannerFrame = new BannerFrame(1024, 75);
@@ -142,8 +236,9 @@ public class MPJmolApp implements JsonNioClient {
     try {
       setBannerLabel("click below and type exitJmol[enter] to quit");
       String defaultScript = "set allowgestures;set allowKeyStrokes;set zoomLarge false;set frank off;set antialiasdisplay off;";
-      
-      String script = "cd \"\"; " + viewer.getFileAsString3("MPJmolAppConfig.spt", false, null) + ";";
+
+      String script = "cd \"\"; "
+          + vwr.getFileAsString3("MPJmolAppConfig.spt", false, null) + ";";
       Logger.info("startJsonNioKiosk on port " + port);
       Logger.info(script);
       if (script.indexOf("java.io") >= 0)
@@ -151,7 +246,7 @@ public class MPJmolApp implements JsonNioClient {
       String s = PT.rep(script.toLowerCase(), " ", "");
       if (s.indexOf("niocontentpath=") < 0) {
         String path = System.getProperty("user.dir").replace('\\', '/')
-        + "/Content-Cache/%ID%/%ID%.json";
+            + "/Content-Cache/%ID%/%ID%.json";
         script += "NIOcontentPath=\"" + path + "\";";
       }
       if (s.indexOf("nioterminatormessage=") < 0) {
@@ -172,19 +267,43 @@ public class MPJmolApp implements JsonNioClient {
         script += "NIOmotionDisabled=false;";
       }
       Logger.info("startJsonNioKiosk: " + defaultScript + script);
-      viewer.scriptWait(defaultScript + script);
-      contentDisabled = JsonNioService.getJmolValueAsString(viewer, "NIOcontentDisabled").equals("true");
+      vwr.scriptWait(defaultScript + script);
+      contentDisabled = getJmolValueAsString(vwr, "NIOcontentDisabled")
+          .equals("true");
       Logger.info("startJsonNioKiosk: contentDisabled=" + contentDisabled);
-      
+
       service = JmolPanel.getJsonNioServer();
       if (service == null) {
         Logger.info("Cannot start JsonNioServer");
         System.exit(1);
       }
-      service.startService(port, this, viewer, "-MP", MP_VERSION);
+      if (name != null) {
+        s = getJmolValueAsString(vwr, "NIOcontentPath");
+        if (s != "")
+          contentPath = s;
+        s = getJmolValueAsString(vwr, "NIOterminatorMessage");
+        if (s != "")
+          terminatorMessage = s;
+        s = getJmolValueAsString(vwr, "NIOresetMessage");
+        if (s != "")
+          resetMessage = s;
+        Logger.info("NIOcontentPath=" + contentPath);
+        Logger.info("NIOterminatorMessage=" + terminatorMessage);
+        Logger.info("NIOresetMessage=" + resetMessage);
+        Logger.info("NIOcontentDisabled=" + contentDisabled);
+        Logger.info("NIOmotionDisabled=" + motionDisabled);
+      }
+
+      name = "-MP";
+      service.startService(port, this, vwr, name, MP_VERSION);
+
+      if (port == 0 && contentDisabled)
+        nioRunContent(true);
+
+      setEnabled();
 
       // Bob's demo model -- verifies that system is working and networked properly
-      viewer.script("load $caffeine");
+      vwr.script("load $caffeine");
 
     } catch (Throwable e) {
       e.printStackTrace();
@@ -198,20 +317,24 @@ public class MPJmolApp implements JsonNioClient {
   /// JsonNiosClient ///
 
   private boolean haveStarted = false;
-  @Override
-  public synchronized void nioRunContent(JsonNioServer jns) {
-    if (contentDisabled && (jns == null || !haveStarted)) {
+
+  private synchronized void nioRunContent(boolean hasServer) {
+    if (contentDisabled && (service == null || !haveStarted)) {
       // needs to be run from the NIO thread, just once.
-      String script = (jns == null ? "; message testing nioRun2; cd \"\"; script \"" + JsonNioService.getJmolValueAsString(viewer, "NIOcontentScript") + "\"" : "");
+      String script = (!hasServer
+          ? "; message testing nioRun2; cd \"\"; script \""
+              + getJmolValueAsString(vwr, "NIOcontentScript") + "\""
+          : "");
       haveStarted = true;
-      script += ";cd \"\";cd;script \"" + JsonNioService.getJmolValueAsString(viewer, "NIOcontentScript") + "\"";
-      System.out.println("nioRunContent " + Thread.currentThread() + " " + script);
-      viewer.script(script);
+      script += ";cd \"\";cd;script \""
+          + getJmolValueAsString(vwr, "NIOcontentScript") + "\"";
+      System.out
+          .println("nioRunContent " + Thread.currentThread() + " " + script);
+      vwr.script(script);
       System.out.println("nioRunContent done");
     }
   }
-  
-  @Override
+
   public void setBannerLabel(String label) {
     bannerFrame.setLabel(label);
   }
@@ -219,7 +342,7 @@ public class MPJmolApp implements JsonNioClient {
   @Override
   public void nioClosed(JsonNioServer jns) {
     try {
-      viewer.dispose();
+      vwr.dispose();
       bannerFrame.dispose();
       kioskFrame.dispose();
     } catch (Throwable e) {
@@ -228,7 +351,6 @@ public class MPJmolApp implements JsonNioClient {
     System.exit(0);
   }
 
-
   ////////////////////////
 
   class KioskPanel extends JPanel implements JmolCallbackListener {
@@ -236,17 +358,17 @@ public class MPJmolApp implements JsonNioClient {
     private final Dimension currentSize = new Dimension();
 
     KioskPanel() {
-      viewer = (Viewer) JmolViewer.allocateViewer(this, new SmarterJmolAdapter(),
+      vwr = (Viewer) JmolViewer.allocateViewer(this, new SmarterJmolAdapter(),
           null, null, null, ""/*-multitouch-mp"*/, null);
-      viewer.setJmolCallbackListener(this);
+      vwr.setJmolCallbackListener(this);
       // turn off all file-writing capabilities
-      viewer.setBooleanProperty("isKiosk", true);
+      vwr.setBooleanProperty("isKiosk", true);
     }
 
     @Override
     public void paint(Graphics g) {
       getSize(currentSize);
-      viewer.renderScreenImage(g, currentSize.width, currentSize.height);
+      vwr.renderScreenImage(g, currentSize.width, currentSize.height);
     }
 
     // / JmolCallbackListener interface ///
@@ -264,17 +386,17 @@ public class MPJmolApp implements JsonNioClient {
 
     @Override
     public void notifyCallback(CBK type, Object[] data) {
-      if (service == null || viewer == null)
+      if (service == null || vwr == null)
         return;
-      String strInfo = (data == null || data[1] == null ? null : data[1]
-          .toString());
+      String strInfo = (data == null || data[1] == null ? null
+          : data[1].toString());
       switch (type) {
       case SCRIPT:
       case MESSAGE:
       case ECHO:
         // could be terminator or message banner:...
-        service.scriptCallback(strInfo);
-        JmolCallbackListener appConsole = (JmolCallbackListener) viewer
+        scriptCallback(strInfo);
+        JmolCallbackListener appConsole = (JmolCallbackListener) vwr
             .getProperty("DATA_API", "getAppConsole", null);
         if (appConsole != null)
           appConsole.notifyCallback(type, data);
@@ -285,10 +407,175 @@ public class MPJmolApp implements JsonNioClient {
     }
 
     @Override
-    public void setCallbackFunction(String callbackType, String callbackFunction) {
+    public void setCallbackFunction(String callbackType,
+                                    String callbackFunction) {
       // ignore
     }
 
+  }
+
+  private void sendScript(String script) {
+    Logger.info("JsonNiosService sendScript " + script);
+    vwr.evalString(script);
+  }
+
+  private void setBanner(String bannerText, boolean andCenter) {
+    if (bannerText == null) {
+      setBannerLabel(null);
+    } else {
+      if (andCenter)
+        bannerText = "<center>" + bannerText + "</center>";
+      setBannerLabel("<html>" + bannerText + "</html>");
+    }
+  }
+
+  private String contentPath = "./%ID%.json";
+  private String terminatorMessage = "NEXT_SCRIPT";
+  private String resetMessage = "RESET_SCRIPT";
+
+  @Override
+  public void processNioMessage(byte[] packet) throws Exception {
+    setEnabled();
+    Map<String, Object> json = JsonNioService.toMap(packet);
+    switch (JsonNioService.getString(json, "type")) {
+    case "reply":
+      break;
+    case "command":
+      if (contentDisabled)
+        break;
+      if (json.containsKey("var") && json.containsKey("data"))
+        vwr.g.setUserVariable(json.get("var").toString(),
+            SV.getVariable(json.get("data")));
+      sendScript(json.get("command").toString());
+      break;
+    case "banner":
+      if (contentDisabled)
+        break;
+      setBanner((json.containsKey("text") ? (String) json.get("text")
+          : "off".equalsIgnoreCase((String) json.get("visibility")) ? null
+              : ""),
+          false);
+      break;
+    case "content":
+      if (contentDisabled) {
+        nioRunContent(true);
+        break;
+      }
+      String id = (String) json.get("id");
+      String path = PT.rep(contentPath, "%ID%", id).replace('\\', '/');
+      File f = new File(path);
+      Logger.info("JsonNiosService Setting path to " + f.getAbsolutePath());
+      int pt = path.lastIndexOf('/');
+      if (pt >= 0)
+        path = path.substring(0, pt);
+      else
+        path = ".";
+      Map<String, Object> contentJSON = null;
+      try {
+        byte[] bytes = Files.readAllBytes(f.toPath());
+        contentJSON = JsonNioService.toMap(bytes);
+      } catch (UnsupportedEncodingException e) {
+        // should not be possible
+      }
+      String script = null;
+      if (contentJSON.containsKey("scripts")) {
+        //TODO -- this is not implemented, because JSONObject.getJSONArray is not implemented
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> scripts = (List<Map<String, Object>>) contentJSON
+            .get("scripts");
+        for (int i = scripts.size(); --i >= 0;) {
+          Map<String, Object> scriptInfo = scripts.get(i);
+          if ("yes".equals(scriptInfo.get("startup"))) {
+            script = (String) scriptInfo.get("filename");
+            break;
+          }
+        }
+        if (script == null)
+          throw new Exception("scripts startup:yes not found");
+      } else {
+        script = (String) contentJSON.get("startup_script");
+      }
+      Logger.info("JsonNiosService startup_script=" + script);
+      setBanner("", false);
+      sendScript("exit");
+      sendScript("zap;cd \"" + path + "\";script " + script);
+      setBanner(getString(contentJSON, "banner").equals("off") ? null
+          : getString(contentJSON, "banner_text"), true);
+      break;
+    case "move":
+    case "sync":
+    case "touch":
+      if (motionDisabled)
+        break;
+      ((JmolPanel) vwr.display).nioSync(json, touchHandler);
+      break;
+    }
+  }
+
+  private String getString(Map<String, Object> map, String key) {
+    return JsonNioService.getString(map, key);
+  }
+
+  private void setEnabled() {
+    contentDisabled = (getJmolValueAsString(vwr, "NIOcontentDisabled")
+        .equals("true"));
+    motionDisabled = (getJmolValueAsString(vwr, "NIOmotionDisabled")
+        .equals("true"));
+  }
+
+  public static String getJmolValueAsString(Viewer vwr, String var) {
+    return (vwr == null ? "" : "" + vwr.getP(var));
+  }
+
+  public void scriptCallback(String msg) {
+    if (msg == null)
+      return;
+    if (msg.startsWith("banner:")) {
+      setBanner(msg.substring(7).trim(), false);
+    } else if (msg.equals(terminatorMessage)) {
+      service.reply(JsonNioServer.OUTSOCKET,
+          "{\"type\": \"script\", \"event\": \"done\"}");
+    } else if (contentDisabled && msg.equals(resetMessage)) {
+      nioRunContent(true);
+    } else {
+      service.reply(JsonNioServer.OUTSOCKET, msg);
+    }
+  }
+
+  @Override
+  public void serverCycle() {
+    if (touchHandler == null)
+      return;
+    touchHandler.checkPaused(vwr);
+  }
+
+  //  @SuppressWarnings("unchecked")
+  //  public List<JSONObjecta> getJSONArray(String key) throws Exception {
+  //    if (!map.containsKey(key))
+  //      throw new Exception("JSON key not found:" + key);
+  //    List<JSONObjecta> list = new ArrayList<JSONObjecta>();
+  //    List<SV> svlist = ((SV) get(key)).getList();
+  //    for (int i = 0; i < svlist.size(); i++)
+  //      list.add(new JSONObjecta((Map<String, Object>) (svlist.get(i).value)));
+  //    return list;
+  //  }
+  //
+  //  public Object get(String key) {
+  //    Object o = super.get(key);
+  //    return (o instanceof SV ? SV.oValue(o) : o);
+  //  }
+
+  public long getLong(Map<String, Object> map, String key) throws Exception {
+    return JsonNioService.getLong(map, key);
+  }
+
+  public int getInt(Map<String, Object> map, String key) throws Exception {
+    return JsonNioService.getInt(map, key);
+  }
+
+  public double getDouble(Map<String, Object> map, String key)
+      throws Exception {
+    return JsonNioService.getDouble(map, key);
   }
 
 }

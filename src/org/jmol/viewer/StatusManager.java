@@ -243,32 +243,50 @@ public class StatusManager {
     return list;
   }
 
-  private Map<CBK, String> jmolScriptCallbacks = new Hashtable<CBK, String>();
+  private Map<String, String> jmolScriptCallbacks = new Hashtable<>();
 
   private String jmolScriptCallback(CBK callback) {
-    String s = jmolScriptCallbacks.get(callback);
+    String s = jmolScriptCallbacks.get(callback.name());
     if (s != null)
       vwr.evalStringQuietSync(s, true, false);
+    if (jmolScriptCallbacks.containsKey("SYNC:" + callback.name())) 
+      s = "SYNC";
     return s;
   }
   
   synchronized void setCallbackFunction(String callbackType,
                                         String callbackFunction) {
     // menu and language setting also use this route
-    CBK callback = CBK.getCallback(callbackType);
-    System.out.println("StatusManager callback set for " + callbackType + " f=" + callbackFunction + " cb=" + callback);
-    if (callback != null) {
-      int pt = (callbackFunction == null ? 0
-          : callbackFunction.length() > 7
-              && callbackFunction.toLowerCase().indexOf("script:") == 0 ? 7
-              : callbackFunction.length() > 11
-                  && callbackFunction.toLowerCase().indexOf("jmolscript:") == 0 ? 11
-                  : 0);
-      if (pt == 0)
-        jmolScriptCallbacks.remove(callback);
-      else
-        jmolScriptCallbacks.put(callback, callbackFunction.substring(pt).trim());
+    CBK cbk = CBK.getCallback(callbackType);
+    if (cbk != null) {
+      String callback = CBK.getCallback(callbackType).name();
+      Logger.info("StatusManager callback set for " + callbackType + " f="
+          + callbackFunction + " cb=" + callback);
+      boolean isSync = (callbackFunction != null
+          && callbackFunction.startsWith("SYNC:"));
+      if (isSync) {
+        if (callbackFunction.toLowerCase().trim().equals("sync:off")) {
+          jmolScriptCallbacks.remove("SYNC:" + callback);
+          Logger.info("SYNC callback for " + callback + " deactivated");
+        } else {
+          jmolScriptCallbacks.put("SYNC:" + callback, "_");
+          Logger.info("SYNC callback for " + callback + " activated");
+          return;
+        }
+      } else {
+        String lc = "";
+        int pt = (callbackFunction == null ? 0
+            : (lc = callbackFunction.toLowerCase()).startsWith("script:") ? 7
+                : lc.startsWith("jmolscript:") ? 11 : 0);
+        if (pt == 0) {
+          jmolScriptCallbacks.remove(callback);
+        } else {
+          jmolScriptCallbacks.put(callback,
+              callbackFunction.substring(pt).trim());
+        }
+      }
     }
+    // allow for specialized callbacks
     if (cbl != null)
       cbl.setCallbackFunction(callbackType, callbackFunction);
   }
@@ -855,6 +873,163 @@ public class StatusManager {
       cbl.notifyCallback(CBK.AUDIO,
           new Object[] { sJmol, htParams });
   }
+  
+  
+ void syncScript(String script, String applet, int port) {
+    if (Viewer.SYNC_GRAPHICS_MESSAGE.equalsIgnoreCase(script)) {
+      setSyncDriver(StatusManager.SYNC_STEREO);
+      syncSend(script, applet, 0);
+      vwr.setBooleanProperty("_syncMouse", false);
+      vwr.setBooleanProperty("_syncScript", false);
+      return;
+    }
+    // * : all applets
+    // > : all OTHER applets
+    // . : just me
+    // ~ : disable send (just me)
+    // = : disable send (just me) and force slave
+    if ("=".equals(applet)) {
+      applet = "~";
+      setSyncDriver(StatusManager.SYNC_SLAVE);
+    }
+    boolean disableSend = "~".equals(applet);
+    // null same as ">" -- "all others"
+    if (port > 0 || !disableSend && !".".equals(applet)) {
+      syncSend(script, applet, port);
+      if (!"*".equals(applet) || script.startsWith("{"))
+        return;
+    }
+    if (script.equalsIgnoreCase("on") || script.equalsIgnoreCase("true")) {
+      setSyncDriver(StatusManager.SYNC_DRIVER);
+      return;
+    }
+    if (script.equalsIgnoreCase("off") || script.equalsIgnoreCase("false")) {
+      setSyncDriver(StatusManager.SYNC_OFF);
+      return;
+    }
+    if (script.equalsIgnoreCase("slave")) {
+      setSyncDriver(StatusManager.SYNC_SLAVE);
+      return;
+    }
+    int syncMode = getSyncMode();
+    if (syncMode == StatusManager.SYNC_OFF)
+      return;
+    if (syncMode != StatusManager.SYNC_DRIVER)
+      disableSend = false;
+    if (Logger.debugging)
+      Logger.debug(vwr.htmlName + " syncing with script: " + script);
+    // driver is being positioned by another driver -- don't pass on the change
+    // driver is being positioned by a mouse movement
+    // format is from above refresh(Viewer.REFRESH_SYNC, xxx) calls
+    // Mouse: [CommandName] [value1] [value2]
+    if (disableSend)
+      setSyncDriver(StatusManager.SYNC_DISABLE);
+    if (script.indexOf("Mouse: ") != 0) {
+      int serviceMode = JC.getServiceCommand(script);
+      switch (serviceMode) {
+      case JC.NBO_CONFIG:
+      case JC.NBO_MODEL:
+      case JC.NBO_RUN:
+      case JC.NBO_VIEW:
+      case JC.NBO_SEARCH:
+        syncSend(script, ".", port);
+        return;        
+      case JC.JSV_NOT:
+        break;
+      case JC.JSV_SEND_JDXMOL:
+      case JC.JSV_CLOSE:
+      case JC.JSV_SEND_H1SIMULATE:
+      case JC.JSV_SEND_C13SIMULATE:
+        if (disableSend)
+          return;
+        //$FALL-THROUGH$
+      case JC.JSV_STRUCTURE:
+      case JC.JSV_SETPEAKS:
+      case JC.JSV_SELECT:
+        // from JSpecView...
+        if ((script = vwr.getJSV().processSync(script, serviceMode)) == null)
+          return;
+      }
+      //System.out.println("Jmol executing script for JSpecView: " + script);
+      vwr.evalStringQuietSync(script, true, false);
+      return;
+    }
+    mouseScript(script);
+    if (disableSend)
+      vwr.setSyncDriver(StatusManager.SYNC_ENABLE);
+  }
+
+  void mouseScript(String script) {
+    String[] tokens = PT.getTokens(script);
+    String key = tokens[1];
+    try {
+      key = (key.toLowerCase() + "...............").substring(0, 15);
+      switch ((
+          "zoombyfactor..." + 
+          "zoomby........." + 
+          "rotatezby......" + 
+          "rotatexyby....." + 
+          "translatexyby.." + 
+          "rotatemolecule." + 
+          "spinxyby......." + 
+          "rotatearcball..").indexOf(key)) {
+      case 0: //zoombyfactor
+        switch (tokens.length) {
+        case 3:
+          vwr.zoomByFactor(PT.parseFloat(tokens[2]),
+              Integer.MAX_VALUE, Integer.MAX_VALUE);
+          return;
+        case 5:
+          vwr.zoomByFactor(PT.parseFloat(tokens[2]), javajs.util.PT
+              .parseInt(tokens[3]), PT.parseInt(tokens[4]));
+          return;
+        }
+        break;
+      case 15: //zoomby
+        switch (tokens.length) {
+        case 3:
+          vwr.zoomBy(PT.parseInt(tokens[2]));
+          return;
+        }
+        break;
+      case 30: // rotatezby
+        switch (tokens.length) {
+        case 3:
+          vwr.rotateZBy(PT.parseInt(tokens[2]), Integer.MAX_VALUE,
+              Integer.MAX_VALUE);
+          return;
+        case 5:
+          vwr.rotateZBy(PT.parseInt(tokens[2]), javajs.util.PT
+              .parseInt(tokens[3]), PT.parseInt(tokens[4]));
+        }
+        break;
+      case 45: // rotatexyby
+        vwr.rotateXYBy(PT.parseFloat(tokens[2]), PT
+            .parseFloat(tokens[3]));
+        return;
+      case 60: // translatexyby
+        vwr.translateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
+            .parseInt(tokens[3]));
+        return;
+      case 75: // rotatemolecule
+        vwr.rotateSelected(PT.parseFloat(tokens[2]), PT
+            .parseFloat(tokens[3]), null);
+        return;
+      case 90:// spinxyby
+        vwr.spinXYBy(PT.parseInt(tokens[2]), PT.parseInt(tokens[3]),
+            PT.parseFloat(tokens[4]));
+        return;
+      case 105: // rotatearcball
+        vwr.rotateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
+            .parseInt(tokens[3]));//, PT.parseFloat(tokens[4]));
+        return;
+      }
+    } catch (Exception e) {
+      //
+    }
+    vwr.showString("error reading SYNC command: " + script, false);
+  }
+
 
 
 }

@@ -112,7 +112,11 @@ public class NmrPlugin implements JmolPlugin {
 
   @Override
   public void destroy() {
+    try {
     nmrApp.nmrPanel.frame.dispose();
+    } catch (Throwable t) {
+      
+    }
     started = false;
   }
 

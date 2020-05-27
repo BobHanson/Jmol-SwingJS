@@ -24,16 +24,61 @@
 
 package org.openscience.jmol.app.jsonkiosk;
 
+import java.util.Map;
+
+import org.jmol.viewer.Viewer;
+
+import javajs.util.JSJSONParser;
 
 /**
- * a client of a JsonNioService -- just needs notices of the service shutting down 
- * or indicating that a banner needs to be changed.
+ * a client of a JsonNioService -- just needs notices of the service shutting
+ * down or indicating that a banner needs to be changed.
  * 
  */
 public interface JsonNioClient {
 
-  void nioRunContent(JsonNioServer jsonNioService);
-  void setBannerLabel(String label);
+  static class TouchHandler {
+    public final static float swipeCutoff = 100;
+    public final static int swipeCount = 2;
+    public final static float swipeDelayMs = 3000;
+    public final static float swipeFactor = 30;
+
+    public int nFast;
+    public long previousMoveTime;
+    public long swipeStartTime;
+    public long latestMoveTime;
+    public boolean wasSpinOn;
+    public boolean isPaused;
+
+    public void pauseScript(Viewer vwr, boolean isPause) {
+      String script;
+      if (isPause) {
+        // Pause the script and save the state when interaction starts
+        wasSpinOn = vwr.getBooleanProperty("spinOn");
+        script = "pause; save orientation 'JsonNios-save'; spin off";
+        isPaused = true;
+      } else {
+        script = "restore orientation 'JsonNios-save' 1; resume; spin "
+            + wasSpinOn;
+        wasSpinOn = false;
+      }
+      isPaused = isPause;
+      vwr.evalString(script);
+    }
+
+    public void checkPaused(Viewer vwr) {
+      long now = System.currentTimeMillis();
+      // No commands for 5 seconds = unpause/restore Jmol
+      if (isPaused && now - latestMoveTime > 5000)
+        pauseScript(vwr, false);
+    }
+
+  }
+
   void nioClosed(JsonNioServer jsonNioService);
- 
+
+  void processNioMessage(byte[] packet) throws Exception;
+
+  void serverCycle();
+
 }

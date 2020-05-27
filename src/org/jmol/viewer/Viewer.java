@@ -36,10 +36,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.swing.SwingUtilities;
-
-import java.util.Properties;
 
 import org.jmol.adapter.readers.quantum.NBOParser;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
@@ -8380,7 +8379,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public void syncScript(String script, String applet, int port) {
-    getStateCreator().syncScript(script, applet, port);
+   sm.syncScript(script, applet, port);
   }
 
   @Override

@@ -28,11 +28,6 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.JmolScriptFunction;
@@ -40,8 +35,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
-
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -75,6 +68,12 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * StateCreator handles all aspects of working with the "state" as
@@ -947,7 +946,7 @@ public class StateCreator extends JmolStateCreator {
 
     Lst<Measurement> mList = shape.measurements;
     int measurementCount = shape.measurementCount;
-    Font font3d = shape.font3d;
+    Font font3d = Measures.font3d;
     TickInfo ti = shape.defaultTickInfo;
     SB commands = new SB();
     app(commands, "measures delete");
@@ -1773,165 +1772,5 @@ public class StateCreator extends JmolStateCreator {
   private boolean undoWorking = false;
   private final static int MAX_ACTION_UNDO = 100;
   
-
-  /////////////////////// SYNC directives ////////////////////////////////////////
-
-  @Override
-  void syncScript(String script, String applet, int port) {
-    StatusManager sm = vwr.sm;
-    if (Viewer.SYNC_GRAPHICS_MESSAGE.equalsIgnoreCase(script)) {
-      sm.setSyncDriver(StatusManager.SYNC_STEREO);
-      sm.syncSend(script, applet, 0);
-      vwr.setBooleanProperty("_syncMouse", false);
-      vwr.setBooleanProperty("_syncScript", false);
-      return;
-    }
-    // * : all applets
-    // > : all OTHER applets
-    // . : just me
-    // ~ : disable send (just me)
-    // = : disable send (just me) and force slave
-    if ("=".equals(applet)) {
-      applet = "~";
-      sm.setSyncDriver(StatusManager.SYNC_SLAVE);
-    }
-    boolean disableSend = "~".equals(applet);
-    // null same as ">" -- "all others"
-    if (port > 0 || !disableSend && !".".equals(applet)) {
-      sm.syncSend(script, applet, port);
-      if (!"*".equals(applet) || script.startsWith("{"))
-        return;
-    }
-    if (script.equalsIgnoreCase("on") || script.equalsIgnoreCase("true")) {
-      sm.setSyncDriver(StatusManager.SYNC_DRIVER);
-      return;
-    }
-    if (script.equalsIgnoreCase("off") || script.equalsIgnoreCase("false")) {
-      sm.setSyncDriver(StatusManager.SYNC_OFF);
-      return;
-    }
-    if (script.equalsIgnoreCase("slave")) {
-      sm.setSyncDriver(StatusManager.SYNC_SLAVE);
-      return;
-    }
-    int syncMode = sm.getSyncMode();
-    if (syncMode == StatusManager.SYNC_OFF)
-      return;
-    if (syncMode != StatusManager.SYNC_DRIVER)
-      disableSend = false;
-    if (Logger.debugging)
-      Logger.debug(vwr.htmlName + " syncing with script: " + script);
-    // driver is being positioned by another driver -- don't pass on the change
-    // driver is being positioned by a mouse movement
-    // format is from above refresh(Viewer.REFRESH_SYNC, xxx) calls
-    // Mouse: [CommandName] [value1] [value2]
-    if (disableSend)
-      sm.setSyncDriver(StatusManager.SYNC_DISABLE);
-    if (script.indexOf("Mouse: ") != 0) {
-      int serviceMode = JC.getServiceCommand(script);
-      switch (serviceMode) {
-      case JC.NBO_CONFIG:
-      case JC.NBO_MODEL:
-      case JC.NBO_RUN:
-      case JC.NBO_VIEW:
-      case JC.NBO_SEARCH:
-        sm.syncSend(script, ".", port);
-        return;        
-      case JC.JSV_NOT:
-        break;
-      case JC.JSV_SEND_JDXMOL:
-      case JC.JSV_CLOSE:
-      case JC.JSV_SEND_H1SIMULATE:
-      case JC.JSV_SEND_C13SIMULATE:
-        if (disableSend)
-          return;
-        //$FALL-THROUGH$
-      case JC.JSV_STRUCTURE:
-      case JC.JSV_SETPEAKS:
-      case JC.JSV_SELECT:
-        // from JSpecView...
-        if ((script = vwr.getJSV().processSync(script, serviceMode)) == null)
-          return;
-      }
-      //System.out.println("Jmol executing script for JSpecView: " + script);
-      vwr.evalStringQuietSync(script, true, false);
-      return;
-    }
-    mouseScript(script);
-    if (disableSend)
-      vwr.setSyncDriver(StatusManager.SYNC_ENABLE);
-  }
-
-  @Override
-  void mouseScript(String script) {
-    String[] tokens = PT.getTokens(script);
-    String key = tokens[1];
-    try {
-      key = (key.toLowerCase() + "...............").substring(0, 15);
-      switch ((
-          "zoombyfactor..." + 
-          "zoomby........." + 
-          "rotatezby......" + 
-          "rotatexyby....." + 
-          "translatexyby.." + 
-          "rotatemolecule." + 
-          "spinxyby......." + 
-          "rotatearcball..").indexOf(key)) {
-      case 0: //zoombyfactor
-        switch (tokens.length) {
-        case 3:
-          vwr.zoomByFactor(PT.parseFloat(tokens[2]),
-              Integer.MAX_VALUE, Integer.MAX_VALUE);
-          return;
-        case 5:
-          vwr.zoomByFactor(PT.parseFloat(tokens[2]), javajs.util.PT
-              .parseInt(tokens[3]), PT.parseInt(tokens[4]));
-          return;
-        }
-        break;
-      case 15: //zoomby
-        switch (tokens.length) {
-        case 3:
-          vwr.zoomBy(PT.parseInt(tokens[2]));
-          return;
-        }
-        break;
-      case 30: // rotatezby
-        switch (tokens.length) {
-        case 3:
-          vwr.rotateZBy(PT.parseInt(tokens[2]), Integer.MAX_VALUE,
-              Integer.MAX_VALUE);
-          return;
-        case 5:
-          vwr.rotateZBy(PT.parseInt(tokens[2]), javajs.util.PT
-              .parseInt(tokens[3]), PT.parseInt(tokens[4]));
-        }
-        break;
-      case 45: // rotatexyby
-        vwr.rotateXYBy(PT.parseFloat(tokens[2]), PT
-            .parseFloat(tokens[3]));
-        return;
-      case 60: // translatexyby
-        vwr.translateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
-            .parseInt(tokens[3]));
-        return;
-      case 75: // rotatemolecule
-        vwr.rotateSelected(PT.parseFloat(tokens[2]), PT
-            .parseFloat(tokens[3]), null);
-        return;
-      case 90:// spinxyby
-        vwr.spinXYBy(PT.parseInt(tokens[2]), PT.parseInt(tokens[3]),
-            PT.parseFloat(tokens[4]));
-        return;
-      case 105: // rotatearcball
-        vwr.rotateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
-            .parseInt(tokens[3]));//, PT.parseFloat(tokens[4]));
-        return;
-      }
-    } catch (Exception e) {
-      //
-    }
-    vwr.showString("error reading SYNC command: " + script, false);
-  }
 
 }

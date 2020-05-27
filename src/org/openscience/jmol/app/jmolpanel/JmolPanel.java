@@ -56,8 +56,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
-import javajs.util.PT;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
@@ -88,6 +86,7 @@ import org.jmol.console.JmolButton;
 import org.jmol.console.JmolToggleButton;
 import org.jmol.dialog.Dialog;
 import org.jmol.i18n.GT;
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
@@ -102,9 +101,14 @@ import org.openscience.jmol.app.jmolpanel.console.ConsoleTextArea;
 import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
+import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 import org.openscience.jmol.app.surfacetool.SurfaceTool;
 import org.openscience.jmol.app.webexport.WebExport;
+
+import javajs.util.JSJSONParser;
+import javajs.util.P3;
+import javajs.util.PT;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
 
@@ -123,7 +127,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   public JmolApp jmolApp;
   protected StatusBar status;
   protected int startupWidth, startupHeight;
-  protected JsonNioServer serverService;
+  private JsonNioServer serverService;
 
   // Called by NBODialog
 
@@ -136,7 +140,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   public JFrame frame;
   public SplashInterface splash;
   protected JFrame consoleframe;
-  protected JsonNioServer service;
+  protected JsonNioServer clientService;
   protected int qualityJPG = -1;
   protected int qualityPNG = -1;
   protected String imageType;
@@ -623,9 +627,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       WebExport.cleanUp();
     if (saveSize)
       saveWindowSizes();
-    if (service != null) {
-      service.close();
-      service = null;
+    if (clientService != null) {
+      clientService.close();
+      clientService = null;
     }
     if (serverService != null) {
       serverService.close();
@@ -1572,6 +1576,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   WebExport webExport;
 
+  private TouchHandler touchHandler;
+
   void createWebExport() {
     webExport = WebExport.createAndShowGUI(vwr, historyFile,
         WEB_MAKER_WINDOW_NAME);
@@ -1765,11 +1771,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   ////////// JSON/NIO SERVICE //////////
 
   @Override
-  public void nioRunContent(JsonNioServer jns) {
-    // ignore
-  }
-
-  @Override
   public void nioClosed(JsonNioServer jns) {
     if (bannerFrame != null) {
       vwr.scriptWait("delay 2");
@@ -1778,58 +1779,65 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       // would not nec. have to close this....
       System.exit(0);
     }
-    if (jns.equals(service))
-      service = null;
+    if (jns.equals(clientService))
+      clientService = null;
     else if (jns.equals(serverService))
       serverService = null;
 
   }
+  
+  public final static int OUTSOCKET = JsonNioServer.OUTSOCKET;
 
-  @Override
-  public void setBannerLabel(String label) {
-    if (bannerFrame != null)
-      bannerFrame.setLabel(label);
-  }
-
-  void sendNioMessage(int port, String strInfo) {
+  void sendNioSyncRequest(Object data, int port, String strInfo) {
+    if (serverService == null && port == OUTSOCKET)
+      return;
     try {
       if (port < 0) {
+        // initialize server and possibly a client, if a test command is also given
         if (serverService != null && "STOP".equalsIgnoreCase(strInfo)) {
           serverService.close();
         } else if (serverService == null) {
           serverService = getJsonNioServer();
           if (serverService != null)
-            serverService.startService(port, this, vwr, "-1", 1);
+            serverService.startService(port, this, vwr, "-JmolNioServer", JsonNioService.VERSION);
         }
         if (serverService != null && serverService.getPort() == -port
             && strInfo != null) {
-          if (service == null) {
-            service = getJsonNioServer();
-            if (service != null)
-              service.startService(-port, this, vwr, null, 1);
+          if (clientService == null) {
+            clientService = getJsonNioServer();
+            if (clientService != null)
+              clientService.startService(-port, this, vwr, "-JmolNioClient(self)",  JsonNioService.VERSION);
           }
-          if (service != null)
-            service.send(-port, strInfo);
-          return;
+          if (clientService != null)
+            clientService.sendToJmol(-port, strInfo);
+        }
+        return;
+      }        
+      if ("STOP".equalsIgnoreCase(strInfo))
+        strInfo = "{\"type\":\"quit\"}";
+      if (clientService == null && serverService != null) {
+        // just an internal test, before any client is started
+        if (data != null) {
+          serverService.reply(port, data);
+        } else if (port == OUTSOCKET) {
+           serverService.reply(port, strInfo);
+        } else if (serverService.getPort() == port) {
+          serverService.sendToJmol(port, strInfo);
         }
         return;
       }
-      if (strInfo == null)
-        return;
-      if (strInfo.equalsIgnoreCase("STOP"))
-        strInfo = "{\"type\":\"quit\"}";
-      if (service == null && serverService != null
-          && serverService.getPort() == port) {
-        serverService.send(port, strInfo);
-        return;
+      // sync 30000 ..... 
+      if (clientService == null) {
+        clientService = getJsonNioServer();
+        if (clientService != null)
+          clientService.startService(port, this, vwr, "-JmolNioClient",  JsonNioService.VERSION);
       }
-      if (service == null) {
-        service = getJsonNioServer();
-        if (service != null)
-          service.startService(port, this, vwr, null, 1);
+      if (clientService != null) {
+        if (data == null)
+          clientService.sendToJmol(port, strInfo);
+        else
+          clientService.reply(port, data);
       }
-      if (service != null)
-        service.send(port, strInfo);
     } catch (IOException e) {
       // TODO
     }
@@ -1957,4 +1965,125 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   }
 
+  @Override
+  public synchronized void processNioMessage(byte[] packet) throws Exception {
+    String msg = new String(packet);
+    if (Logger.debugging)
+      Logger.debug(msg);
+    Map<String, Object> json = new JSJSONParser().parseMap(msg, false);
+    switch ("" + json.get("type")) {
+    case "reply":
+      break;
+    case "quit":
+      vwr.evalString("exitjmol");
+      break;
+    case "command":
+      vwr.evalString((String) json.get("command"));
+      break;
+    case "move":
+      switch (JsonNioService.getString(json, "style")) {
+      case "rotate":
+        break;
+      case "translate":
+      case "zoom":
+        //        if (!params.isPaused)
+        //          pauseScript(true);
+        break;
+      }
+      //$FALL-THROUGH$
+    case "sync":
+    case "touch":
+      if (touchHandler == null)
+        touchHandler = new TouchHandler();
+      nioSync(json, touchHandler);
+      break;
+    }
+  }
+
+  @Override
+  public void serverCycle() {
+    if (touchHandler == null)
+      return;
+    touchHandler.checkPaused(vwr);
+  }
+
+  public boolean isServer() {
+    return serverService != null;
+  }
+
+  /**
+   * process touch or gesture commands driven by hardware. From MolecularPlayground.
+   * 
+   * @param json
+   * @param handler
+   * @throws Exception
+   */
+  public void nioSync(Map<String, Object> json, TouchHandler handler) throws Exception {    
+  switch (JsonNioService.getString(json, "type")) {
+  case "move":
+    long now = handler.latestMoveTime = System.currentTimeMillis();
+    switch (JsonNioService.getString(json, "style")) {
+    case "rotate":
+      float dx = (float) JsonNioService.getDouble(json, "x");
+      float dy = (float) JsonNioService.getDouble(json, "y");
+      float dxdy = dx * dx + dy * dy;
+      boolean isFast = (dxdy > TouchHandler.swipeCutoff);
+      boolean disallowSpinGesture = vwr.getBooleanProperty("isNavigating")
+          || !vwr.getBooleanProperty("allowGestures");
+      if (disallowSpinGesture || isFast
+          || now - handler.swipeStartTime > TouchHandler.swipeDelayMs) {
+        // it's been a while since the last swipe....
+        // ... send rotation in all cases
+        String msg = null;
+        if (disallowSpinGesture) {
+          // just rotate
+        } else if (isFast) {
+          if (++handler.nFast > TouchHandler.swipeCount) {
+            // critical number of fast motions reached
+            // start spinning
+            handler.swipeStartTime = now;
+            msg = "Mouse: spinXYBy " + (int) dx + " " + (int) dy + " "
+                + (Math.sqrt(dxdy) * TouchHandler.swipeFactor / (now - handler.previousMoveTime));
+          }
+        } else if (handler.nFast > 0) {
+          // slow movement detected -- turn off spinning
+          // and reset the number of fast actions
+          handler.nFast = 0;
+          msg = "Mouse: spinXYBy 0 0 0";
+        }
+        if (msg == null)
+          msg = "Mouse: rotateXYBy " + dx + " " + dy;
+        syncScript(msg);
+      }
+      handler.previousMoveTime = now;
+      break;
+    case "translate":
+      if (!handler.isPaused)
+        handler.pauseScript(vwr, true);
+      syncScript("Mouse: translateXYBy " + JsonNioService.getString(json, "x") + " "
+          + JsonNioService.getString(json, "y"));
+      break;
+    case "zoom":
+      if (!handler.isPaused)
+        handler.pauseScript(vwr, true);
+      float zoomFactor = (float) (JsonNioService.getDouble(json, "scale")
+          / (vwr.tm.zmPct / 100.0f));
+      syncScript("Mouse: zoomByFactor " + zoomFactor);
+      break;
+    }
+    break;
+  case "sync":
+    //sync -3000;sync slave;sync 3000 '{"type":"sync","sync":"rotateZBy 30"}'
+    syncScript("Mouse: " + JsonNioService.getString(json, "sync"));
+    break;
+  case "touch":
+    // raw touch event
+    vwr.acm.processMultitouchEvent(
+        0, JsonNioService.getInt(json, "eventType"), JsonNioService.getInt(json, "touchID"),
+        JsonNioService.getInt(json, "iData"), P3.new3((float) JsonNioService.getDouble(json, "x"),
+            (float) JsonNioService.getDouble(json, "y"), (float) JsonNioService.getDouble(json, "z")),
+        JsonNioService.getLong(json, "time"));
+    break;
+  }
+}
 }

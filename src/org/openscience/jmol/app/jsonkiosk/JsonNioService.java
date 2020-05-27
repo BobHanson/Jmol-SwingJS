@@ -24,45 +24,33 @@
 
 package org.openscience.jmol.app.jsonkiosk;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Hashtable;
-
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import org.jmol.script.SV;
-import org.jmol.util.Escape;
+import javax.swing.SwingUtilities;
+
+import org.jmol.util.JSONWriter;
 import org.jmol.util.Logger;
-
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.P3;
 import org.jmol.viewer.Viewer;
 
-//import com.json.JSONArray;
-//import com.json.JSONException;
-//import com.json.JSONObject;
-//import com.json.JSONTokener;
-
+import javajs.util.JSJSONParser;
 import naga.ConnectionAcceptor;
 import naga.NIOServerSocket;
 import naga.NIOService;
 import naga.NIOSocket;
-import naga.SocketObserverAdapter;
 import naga.ServerSocketObserverAdapter;
 import naga.SocketObserver;
+import naga.SocketObserverAdapter;
 import naga.packetreader.AsciiLinePacketReader;
 import naga.packetwriter.RawPacketWriter;
 
-/*
+/**
+ * A class for interacting with Jmol over local sockets.
+ * 
  * See also org.molecularplayground.MPJmolApp.java for how this works.
  * Note that this service does not require MPJmolApp -- it is a package
  * in the standard Jmol app. 
@@ -79,52 +67,179 @@ import naga.packetwriter.RawPacketWriter;
  * by Adam Williams, U-Mass Amherst see http://MolecularPlayground.org and
  * org.openscience.jmol.molecularplayground.MPJmolApp.java
  * 
- * Sent from Jmol (via outSocket): 
+ * <code>
  * 
- * version 1:
- *   {"magic" : "JmolApp", "role" : "out"}  (socket initialization for messages TO jmol)
- *   {"magic" : "JmolApp", "role" : "in"}   (socket initialization for messages FROM jmol)
- * version 2:
- *   {"type" : "login", "source" : "Jmol"}  (socket initialization for messages TO/FROM jmol)
- * both versions:
- *   {"type" : "script", "event" : "done"}  (script completed)
- *   
- * Sent to Jmol (via inSocket):
+ * Sequence of events:
  * 
- *   {"type" : "banner", "mode" : "ON" or "OFF" }   (set banner for kiosk)
- *   {"type" : "banner", "text" : bannerText }      (set banner for kiosk)
- *   {"type" : "command", "command" : command, "var": vname, "data":vdata}
- *       (script command request, with optional definition of a Jmol user variable prior to execution)
- *   {"type" : "content", "id" : id }            (load content request)
- *   {"type" : "move", "style" : (see below) }   (mouse command request)
- *   {"type" : "quit" }                          (shut down request)
- *   {"type" : "sync", "sync" : (see below) }    (sync command request)
- *   {"type" : "touch",                          (a raw touch event)
- *        "eventType" : eventType,
- *        "touchID"   : touchID,
- *        "iData"     : idata,
- *        "time"      : time,
- *        "x" : x, "y" : y, "z" : z }
+ * 1) Jmol initiates server listening on a port using the JmolScript 
+ *    command with an arbitrary negative port number.
+ *    (-30000 used here just for an example):
+ * 
+ *    sync -30000
+ * 
+ * This can be done also through the command line using
+ * 
+ *    jmol -P -30000
+ * 
+ * or 
+ * 
+ *    jmol --port -30000
+ * 
+ * Jmol will respond to System.out:
+ * 
+ *    JsonNioServerThread-JmolNioServer JsonNioServerSocket on 30000
  *    
- *   For details on the "touch" type, see org.jmol.viewer.ActionManagerMT::processEvent
- *   Content is assumed to be in a location determined by the Jmol variable
- *   nioContentPath, with %ID% being replaced by some sort of ID number of tag provided by
- *   the other half of the system. That file contains more JSON code:
+ * 
+ * 2) Client sends handshake to port 30000. As with all communications to this service, 
+ *    there must be no new-line characters (\n) ANYWHERE in the JSON being sent EXCEPT 
+ *    for a single message terminator:
+ * 
+ * 
+ *   {"magic": "JmolApp", "role": "out"}\n
+ * 
+ * where "out" here indicates that this socket is for Jmol (reply) output.
  *   
- *   {"startup_script" : scriptFileName, "banner_text" : text } 
+ * Jmol will reply with the 30-byte response: 
  *   
- *   An additional option "banner" : "off" turns off the title banner.
- *   The startup script must be in the same directory as the .json file, typically as a .spt file
+ *   {"type":"reply","reply":"OK"}\n
  *   
- *   Move commands include:
+ * (The client may see only 29 bytes, as it may or may not strip the final \n.)
+ *
+ * Optionally, the client may also indicate a specified port for Jmol input. 
+ * But typically this is just the currently active port. 
+ *   
+ *   {"magic": "JmolApp", "role": "in"}\n 
+ *   
+ *   Jmol will reply with 
+ *   
+ *   {"type": "reply", "reply": "OK"}\n;
+ *
+ *  
+ * 3) Client sequentially sends Jmol script commands over the "in" socket:
+ * 
+ *   {"type": "command", "command": command}
+ * 
+ * where required command is some JSON-escaped string such as "rotate x 30" or "load $caffeine". 
+ * For example:
+ * 
+ *   {"type": "command", "command": "var atoms = {_C or _H};select atoms"}\n
+ *  
+ * 
+ * For the rest of this discussion, we will use the Jmol command that communicates with another Jmol instance
+ * rather than this JSON context:
+ * 
+ *   SYNC 30000 "var atoms = {_C or _H};select atoms"
+ *   
+ * in this case.
+ * 
+ * 
+ * 4) Jmol throughout this process is sending replies that come 
+ *    from the Jmol Statuslistener class. For example:
+ *    
+ *  {"type":"reply","reply":"SCRIPT:script 8 started"}
+ *  {"type":"reply","reply":"SCRIPT:Script completed"}
+ *  {"type":"reply","reply":"SCRIPT:Jmol script terminated"}
+ * 
+ * Note that your client will be subscribed to many of the Jmol status callbacks 
+ * (see org.openscience.jmol.app.jmolpanel.StatusListener), including:
+ * 
+ *    LOADSTRUCT
+ *    ANIMFRAME
+ *    SCRIPT
+ *    ECHO
+ *    PICK
+ *    CLICK
+ *    RESIZE
+ *    ERROR
+ *    MINIMIZATION
+ *    STRUCTUREMODIFIED
+ * 
+ * All scripts and callback messages run in order but asynchronously in Jmol. You do not need
+ * to wait for one script to be finished before issuing another; there is a queue that handles that.
+ * If you want to be sure that a particular script has been run, simply add a MESSAGE command 
+ * as its last part:
+ *    
+ *    sync 30000 "background blue;message The background is blue now"
+ *  
+ *  and it will appear as a SCRIPT callback:
+ *  
+ *     {"type":"reply","reply":"SCRIPT:The background is blue now"}
+ *  
+ *  after which you can handle that event appropriately.
+ *  
+ *  The SCRIPT callback can be particularly useful to monitor:
+ *
+ *   sync 30000 "backgrund blue"
+ *   
+ *  {"type":"reply","reply":"SCRIPT:script compiler ERROR: command expected\n----\n          >>>> backgrund blue <<<<"}
+ *
+ *  Note that the ERROR callback does not fire for compile errors, 
+ *  only for errors found while running a parsed script:
+ *  
+ *  {"type":"reply","reply":"ERROR:ScriptException"}
+ *   
+ *  Note that all of these messages are "thumbnails" in the sense that they are just a message string. 
+ *  You can subscribe to a full report for any of these callbacks using 'SYNC:ON' for the 
+ *  callback function:
+ *  
+ *     set XxxxxCallback SYNC:ON
+ *     
+ *  For example, issuing
+ *  
+ *     sync 30000 "load $caffeine"
+ *     
+ *  gives the simple reply:
+ *  
+ *     {"type":"reply","reply":"LOADSTRUCT:https://cactus.nci.nih.gov/chemical/structure/caffeine/file?format=sdf&get3d=true"}
+ *
+ *  but after
+ *  
+ *     sync 30000 "set LoadStructCallback 'SYNC:ON'
+ *  
+ *  we get additional details, and array of data with nine elements:
+ *  
+ *  {"type":"reply","reply":["LOADSTRUCT",
+ *                           "https://cactus.nci.nih.gov/chemical/structure/caffeine/file?format=sdf&get3d=true",
+ *                           "file?format=sdf&get3d=true",
+ *                           "C8H10N4O2", null, 3, "1.1", "1.1", null]}
+ *  
+ *  Exact specifications for these callbacks are not well documented. 
+ *  See org.jmol.viewer.StatusManager code for details.
+ *  
+ *  Remove the callback listener using
+ *  
+ *     set XxxxxCallback SYNC:OFF
+ *  
+ *  Note that unlike Java, you get only one SYNC callback; this is not an array of listeners.
+ *  
+ *  
+ * 5) Shutdown can be requested by sending
+ *   
+ *   {"type": "quit"}\n
+ *  
+ *  or by issuing the command
+ *  
+ *    sync 30000 "exitjmol"
+ *    
+ *   
+ * Note that the Molecular Playgournd implemented an extensive set of gesture-handling methods 
+ * that are also available via this interface. Many of these methods utilize the JmolViewer.syncScript() 
+ * method, which directly manipulates the display as though someone were using a mouse.
  *   
  *   {"type" : "move", "style" : "rotate", "x" : deltaX, "y", deltaY }
  *   {"type" : "move", "style" : "translate", "x" : deltaX, "y", deltaY }
  *   {"type" : "move", "style" : "zoom", "scale" : scale }  (1.0 = 100%)
  *   {"type" : "sync", "sync" : syncText }
+ *   {"type" : "touch", 
+ *        "eventType" : eventType,
+ *        "touchID"   : touchID,
+ *        "iData"     : idata,
+ *        "time"      : time, "x" : x, "y" : y, "z" : z }
+ *    
+ *   For details on the "touch" type, see org.jmol.viewer.ActionManagerMT::processEvent
  *   
- *   Note that all these moves utilize the Jmol sync functionality originally intended for
- *   applets. So any valid sync command may be used with the "sync" style. These include 
+ *   Note that all of the move and sync commands utilize the Jmol sync functionality originally 
+ *   intended for applets. So any valid sync command may be used with the "sync" style. These include 
  *   essentially all the actions that a user can make with a mouse, including the
  *   following, where the notation <....> represents a number of a given type. These
  *   events interrupt any currently running script, just as with typical mouse actions.
@@ -144,30 +259,24 @@ import naga.packetwriter.RawPacketWriter;
  *   "zoomByFactor <float:factor> <int:x> <int:y>" (with center reset)
  * 
  * 
+ * </code>
  */
-
 public class JsonNioService extends NIOService implements JsonNioServer {
+
+  public static final int VERSION = 1;
 
   protected String myName;
   protected boolean halt;
-  protected boolean isPaused;
-  protected long latestMoveTime;
   protected int port;
 
-  private Thread thread;
+  private Thread clientThread;
   private Thread serverThread;
 
   private NIOSocket inSocket;
   protected NIOSocket outSocket;
   private NIOServerSocket serverSocket;
   Viewer vwr;
-  private JsonNioClient client;
-
-  private boolean wasSpinOn;
-  private String contentPath = "./%ID%.json";
-  private String terminatorMessage = "NEXT_SCRIPT";
-  private String resetMessage = "RESET_SCRIPT";
-
+  protected JsonNioClient client;
 
   /*
    * When Jmol gets the terminator message, we tell the Hub that we're done
@@ -181,65 +290,16 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     super();
   }
 
-  /* (non-Javadoc)
-   * @see org.openscience.jmol.app.jsonkiosk.JsonNioServer#scriptCallback(java.lang.String)
-   */
-  @Override
-  public void scriptCallback(String msg) {
-    if (msg == null)
-      return;
-    if (msg.startsWith("banner:")) {
-      setBanner(msg.substring(7).trim(), false);
-    } else if (msg.equals(terminatorMessage)) {
-      sendMessage(null, "!script_terminated!", null);
-    } else if (contentDisabled && msg.equals(resetMessage)) {
-      client.nioRunContent(null);
-    }
-  }
-
-  /* (non-Javadoc)
-   * @see org.openscience.jmol.app.jsonkiosk.JsonNioServer#getPort()
-   */
   @Override
   public int getPort() {
     return port;
   }
-  
-  /* (non-Javadoc)
-   * @see org.openscience.jmol.app.jsonkiosk.JsonNioServer#send(int, java.lang.String)
-   */
-  @Override
-  public void send(int port, String msg) {
-    try {
-      if (port != this.port) {
-        if (inSocket != null) {
-          inSocket.close();
-          if (outSocket != null)
-            outSocket.close();
-        }
-        if (thread != null) {
-          thread.interrupt();
-          thread = null;
-        }
-        startService(port, client, vwr, myName, 1);
-      }
-      if (msg.startsWith("Mouse:"))
-        msg = "{\"type\":\"sync\", \"sync\":\""
-            + msg.substring(6) + "\"}";
-      sendMessage(null, msg, null);
-    } catch (IOException e) {
-      // ignore
-    }
-  }
 
-  protected int version = 1;
-  
-  /* (non-Javadoc)
-   * @see org.openscience.jmol.app.jsonkiosk.JsonNioServer#startService(int, org.openscience.jmol.app.jsonkiosk.JsonNioClient, org.jmol.api.JmolViewer, java.lang.String)
-   */
+  protected int version = 2;
+
   @Override
-  public void startService(int port, JsonNioClient client,
-                           Viewer jmolViewer, String name, int version)
+  public void startService(int port, JsonNioClient client, Viewer jmolViewer,
+                           String name, int version)
       throws IOException {
     this.version = version;
     this.port = Math.abs(port);
@@ -252,24 +312,6 @@ public class JsonNioService extends NIOService implements JsonNioServer {
       return;
     }
 
-    if (name != null) {
-      String s = getJmolValueAsString(jmolViewer, "NIOcontentPath");
-      if (s != "")
-        contentPath = s;
-      s = getJmolValueAsString(jmolViewer, "NIOterminatorMessage");
-      if (s != "")
-        terminatorMessage = s;
-      s = getJmolValueAsString(jmolViewer, "NIOresetMessage");
-      if (s != "")
-        resetMessage = s;
-      
-      setEnabled();
-      Logger.info("NIOcontentPath=" + contentPath);
-      Logger.info("NIOterminatorMessage=" + terminatorMessage);
-      Logger.info("NIOresetMessage=" + resetMessage);
-      Logger.info("NIOcontentDisabled=" + contentDisabled);
-      Logger.info("NIOmotionDisabled=" + motionDisabled);
-    }
     Logger.info("JsonNioService" + myName + " using port " + port);
 
     // inSocket listens for JSON commands from the NIO server
@@ -288,111 +330,200 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
         @Override
         public void packetReceived(NIOSocket socket, byte[] packet) {
-          processMessage(packet, null);
+          processMessage(packet, socket);
         }
 
         @Override
         public void connectionBroken(NIOSocket nioSocket, Exception exception) {
           halt = true;
-          Logger.info(Thread.currentThread().getName()
-              + " inSocket connectionBroken");
+          Logger.info(
+              Thread.currentThread().getName() + " inSocket connectionBroken");
         }
 
         @Override
         public void packetSent(NIOSocket arg0, Object arg1) {
-          // TODO
-          
         }
       });
 
-      // outSocket is used to send JSON commands to the NIO server
-      // when initialized, it identifies itself to the server as the "in" connection
-      // only for version 1
-
-      if (version == 1) {
-        outSocket = openSocket("127.0.0.1", port);
-        outSocket.setPacketReader(new AsciiLinePacketReader());
-        outSocket.setPacketWriter(RawPacketWriter.INSTANCE);
-        outSocket.listen(new SocketObserver() {
-
-          @Override
-          public void connectionOpened(NIOSocket nioSocket) {
-            initialize("in", nioSocket);
-          }
-
-          @Override
-          public void packetReceived(NIOSocket nioSocket, byte[] packet) {
-            Logger.info("outpacketreceived");
-            // not used
-          }
-
-          @Override
-          public void connectionBroken(NIOSocket nioSocket, Exception exception) {
-            halt = true;
-            Logger.info(Thread.currentThread().getName()
-                + " outSocket connectionBroken");
-          }
-
-          @Override
-          public void packetSent(NIOSocket arg0, Object arg1) {
-            // TODO
-            
-          }
-        });
-      }
-
+      outSocket = inSocket;
     }
     if (port != 0) {
-      thread = new Thread(new JsonNioThread(), "JsonNiosThread" + myName);
-      thread.start();
+      clientThread = new Thread(new JsonNioClientThread(), "JsonNiosThread" + myName);
+      clientThread.start();
     }
-    if (port == 0 && contentDisabled)
-      client.nioRunContent(this);
   }
 
-  private void setEnabled() {
-    contentDisabled = (getJmolValueAsString(vwr, "NIOcontentDisabled").equals("true"));
-    motionDisabled = (getJmolValueAsString(vwr, "NIOmotionDisabled").equals("true"));
-  } 
-
-  public static String getJmolValueAsString(Viewer vwr, String var) {
-    return (vwr == null ? "" : "" + vwr.getP(var));
+  @Override
+  public boolean hasOuputSocket() {
+    return (outSocket != null);
   }
 
-  protected class JsonNioThread implements Runnable {
-
-    @Override
-    public void run() {
-      Logger.info(Thread.currentThread().getName() + " JsonNioSocket on " + port);
-      try {
-        while (!halt) {
-          selectNonBlocking();
-          long now = System.currentTimeMillis();
-          // No commands for 5 seconds = unpause/restore Jmol
-          if (isPaused && now - latestMoveTime > 5000)
-            pauseScript(false);
-          Thread.sleep(50);
-        }
-      } catch (Throwable e) {
-        e.printStackTrace();
-      }
-      close();
-    }
-
-  }
-
-  /* (non-Javadoc)
-   * @see org.openscience.jmol.app.jsonkiosk.JsonNioServer#close()
+  /**
+   * send the message - not for replies.
    */
+  @Override
+  public void sendToJmol(int port, String msg) {
+    try {
+      if (port == OUTSOCKET) {
+        return;
+      }
+
+      if (port != this.port) {
+        if (inSocket != null && inSocket != outSocket) {
+          inSocket.close();
+        }
+        if (outSocket != null)
+          outSocket.close();
+        if (clientThread != null) {
+          clientThread.interrupt();
+          clientThread = null;
+        }
+        startService(port, client, vwr, myName + ".", JsonNioService.VERSION);
+      }
+      sendMessage(null, msg, outSocket);
+    } catch (IOException e) {
+      // ignore
+    }
+  }
+
+  protected void processMessage(byte[] packet, NIOSocket socket) {
+    try {
+      Logger.info("JNIOS received " + packet.length + " bytes from socket "
+          + socket.getPort());
+      if (packet.length < 100) {
+        Map<String, Object> json = toMap(packet);
+        if ("JmolApp".equals(json.get("magic"))) {
+          switch (getString(json, "role")) {
+          case "out":
+            outSocket = socket;
+            if (inSocket == null)
+              inSocket = outSocket;
+            reply(OUTSOCKET, "OK");
+            break;
+          case "in":
+            inSocket = socket;
+            if (outSocket == null)
+              outSocket = inSocket;
+            reply(OUTSOCKET, "OK");
+            break;
+          }
+
+        } else {
+          switch (getString(json, "type")) {
+          case "quit":
+            halt = true;
+            reply(OUTSOCKET, "JsonNioService" + myName + " closing");
+            Logger.info("JsonNiosService quitting");
+            SwingUtilities.invokeLater(new Runnable() {
+
+              @Override
+              public void run() {
+                System.exit(0);
+              }
+            });
+            break;
+          }
+        }
+      }
+      client.processNioMessage(packet);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  protected void sendMessage(Map<String, Object> map, String msg,
+                           NIOSocket socket) {
+    if (socket == null && (socket = outSocket) == null
+        || map == null && msg == null)
+      return;
+    byte[] out;
+    try {
+      if (map != null) {
+        out = toJSONBytes(map);
+      } else if (msg.indexOf("{") != 0) {
+        map = new LinkedHashMap<>();
+        map.put("type", "command");
+        map.put("command", msg);
+        out = toJSONBytes(map);
+      } else {
+        out = clean(msg.getBytes("UTF-8"));
+      }
+      sendBytes(out, socket);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void reply(int port, final Object data) {
+    if (port != OUTSOCKET || outSocket == null)
+      return;
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", "reply");
+        map.put("reply", data);
+        sendMessage(map, null, outSocket);
+      }
+    });
+  }
+
+  private void sendBytes(byte[] bytes, NIOSocket socket) {
+    if (socket == null && (socket = outSocket) == null || bytes == null)
+      return;
+    Logger.info("JsonNioService sending " + bytes.length + " bytes to port "
+        + socket.getPort());
+    if (Logger.debugging)
+      Logger.debug(new String(bytes));
+    try {
+      socket.write(bytes);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * remove all new-line characters, and terminate this message with a single
+   * \n.
+   * 
+   * @param out
+   * @return cleaned bytes
+   */
+  private byte[] clean(byte[] out) {
+    int pt = -1;
+    int n = out.length;
+    for (int i = n; --i >= 0;) {
+      if (out[i] == '\n') {
+        if (pt < 0)
+          pt = i;
+        out[i] = ' ';
+      }
+    }
+    if (out[n - 1] > ' ') {
+      if (pt >= 0) {
+        for (int i = pt; ++i < n;) {
+          out[i - 1] = out[i];
+        }
+      } else {
+        byte[] buf = new byte[n + 1];
+        System.arraycopy(out, 0, buf, 0, n);
+        out = buf;
+      }
+    }
+    out[n - 1] = '\n';
+    return out;
+  }
+  
   @Override
   public void close() {
     Logger.info("JsonNioService" + myName + " close");
     try {
       halt = true;
       super.close();
-      if (thread != null) {
-        thread.interrupt();
-        thread = null;
+      if (clientThread != null) {
+        clientThread.interrupt();
+        clientThread = null;
       }
       if (serverThread != null) {
         serverThread.interrupt();
@@ -411,15 +542,10 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
   protected void initialize(String role, NIOSocket nioSocket) {
     Logger.info("JsonNioService" + myName + " initialize " + role);
-    JSONObject json = new JSONObject();
-    if (version == 1) {
-      json.put("magic", "JmolApp");
-      json.put("role", role);
-    } else {
-      // role will be "out"; socket will be inSocket
-      json.put("source", "Jmol");
-      json.put("type", "login");
-    }
+    Map<String, Object> json = new LinkedHashMap<>();
+    json.put("magic", "JmolApp");
+    json.put("role", role);
+    json.put("from", hashCode() + myName);
     sendMessage(json, null, nioSocket);
   }
 
@@ -449,7 +575,8 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
             @Override
             public void connectionBroken(NIOSocket socket, Exception arg1) {
-              Logger.info("JsonNioService" + myName + " server connection broken");
+              Logger.info(
+                  "JsonNioService" + myName + " server connection broken");
               if (socket == outSocket)
                 outSocket = null;
             }
@@ -467,23 +594,25 @@ public class JsonNioService extends NIOService implements JsonNioServer {
       });
 
     } catch (IOException e) {
-      // TODO
+
     }
 
     if (serverThread != null)
       serverThread.interrupt();
-    serverThread = new Thread(new JsonNioServerThread(), "JsonNioServerThread"
-        + myName);
+    serverThread = new Thread(new JsonNioServerThread(),
+        "JsonNioServerThread" + myName);
     serverThread.start();
   }
 
   protected class JsonNioServerThread implements Runnable {
     @Override
     public void run() {
-      Logger.info(Thread.currentThread().getName() + " JsonNioServerSocket on " + port);
       try {
-        while (!halt)
+        while (!halt) {
           selectBlocking();
+          Logger.info(
+              Thread.currentThread().getName() + " JsonNioServerSocket on " + port);
+        }
       } catch (IOException e) {
         // exit
       }
@@ -491,321 +620,80 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     }
   }
 
-  private int nFast;
-  private float swipeCutoff = 100;
-  private int swipeCount = 2;
-  private float swipeDelayMs = 3000;
-  private long previousMoveTime;
-  private long swipeStartTime;
-  private float swipeFactor = 30;
-  private boolean motionDisabled;
-  private boolean contentDisabled;
-
-  protected void processMessage(byte[] packet, NIOSocket socket) {
-    try {
-      String msg = new String(packet);
-      Logger.info("JNIOS received " + msg);
-      if (vwr == null) {
-        return;
-      }
-      JSONObject json = new JSONObject(msg);
-      if (version == 1) {
-      if (socket != null && json.has("magic")
-          && json.getString("magic").equals("JmolApp")
-          && json.getString("role").equals("out"))
-        outSocket = socket;
-      } else {
-        outSocket = inSocket;
-      }
-      if (!json.has("type"))
-        return;
-      processJSON(json, msg);
-    } catch (Throwable e) {
-      e.printStackTrace();
-    }
-  }
-
-  private void processJSON(JSONObject json, String msg)
-      throws Exception {
-    if (json == null)
-      json = new JSONObject(msg);
-    int pt = ("banner...." + "command..." + "content..." + "move......"
-        + "quit......" + "sync......" + "touch.....").indexOf(json
-        .getString("type"));
-    setEnabled();
-    switch (pt) {
-    case 0: // banner
-      if (contentDisabled)
-        break;
-      setBanner((json.has("text") ? json.getString("text") : json.getString(
-          "visibility").equalsIgnoreCase("off") ? null : ""), false);
-      break;
-    case 10: // command
-      if (contentDisabled)
-        break;
-      if (json.containsKey("var") && json.containsKey("data"))
-        vwr.g.setUserVariable(json.get("var").toString(), SV.getVariable(json.get("data")));
-      sendScript(json.getString("command"));
-      break;
-    case 20: // content
-      if (contentDisabled) {
-        client.nioRunContent(this);
-        break;
-      }
-      String id = json.getString("id");
-      String path = PT.rep(contentPath, "%ID%", id).replace(
-          '\\', '/');
-      File f = new File(path);
-      Logger.info("JsonNiosService Setting path to " + f.getAbsolutePath());
-      pt = path.lastIndexOf('/');
-      if (pt >= 0)
-        path = path.substring(0, pt);
-      else
-        path = ".";
-      JSONObject contentJSON = null;
-      try {
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-        SB sb = SB.newN(8192);
-        String line;
-        while ((line = br.readLine()) != null)
-          sb.append(line).appendC('\n');
-        br.close();
-        contentJSON = new JSONObject(sb.toString());
-      } catch (UnsupportedEncodingException e) {
-        // should not be possible
-      }
-
-      String script = null;
-      if (contentJSON.has("scripts")) {
-        //TODO -- this is not implemented, because JSONObject.getJSONArray is not implemented
-        List<JSONObject> scripts = contentJSON.getJSONArray("scripts");
-        for (int i = scripts.size(); --i >= 0;) {
-          JSONObject scriptInfo = scripts.get(i);
-          if (scriptInfo.getString("startup").equals("yes")) {
-            script = scriptInfo.getString("filename");
-            break;
-          }
-        }
-        if (script == null)
-          throw new Exception("scripts startup:yes not found");
-      } else {
-        script = contentJSON.getString("startup_script");
-      }
-      Logger.info("JsonNiosService startup_script=" + script);
-      setBanner("", false);
-      sendScript("exit");
-      sendScript("zap;cd \"" + path + "\";script " + script);
-      setBanner(contentJSON.getString("banner").equals("off") ? null
-          : contentJSON.getString("banner_text"), true);
-      break;
-    case 30: // move
-      pt = ("rotate...." + "translate." + "zoom......").indexOf(json
-          .getString("style"));
-      if (motionDisabled)
-        break;
-      if (pt != 0 && !isPaused)
-        pauseScript(true);
-      long now = latestMoveTime = System.currentTimeMillis();
-      switch (pt) {
-      case 0: // rotate
-        float dx = (float) json.getDouble("x");
-        float dy = (float) json.getDouble("y");
-        float dxdy = dx * dx + dy * dy;
-        boolean isFast = (dxdy > swipeCutoff);
-        boolean disallowSpinGesture = vwr
-            .getBooleanProperty("isNavigating")
-            || !vwr.getBooleanProperty("allowGestures");
-        if (disallowSpinGesture || isFast
-            || now - swipeStartTime > swipeDelayMs) {
-          // it's been a while since the last swipe....
-          // ... send rotation in all cases
-          msg = null;
-          if (disallowSpinGesture) {
-            // just rotate
-          } else if (isFast) {
-            if (++nFast > swipeCount) {
-              // critical number of fast motions reached
-              // start spinning
-              swipeStartTime = now;
-              msg = "Mouse: spinXYBy " + (int) dx + " " + (int) dy + " "
-                  + (Math.sqrt(dxdy) * swipeFactor / (now - previousMoveTime));
-            }
-          } else if (nFast > 0) {
-            // slow movement detected -- turn off spinning
-            // and reset the number of fast actions
-            nFast = 0;
-            msg = "Mouse: spinXYBy 0 0 0";
-          }
-          if (msg == null)
-            msg = "Mouse: rotateXYBy " + dx + " " + dy;
-          syncScript(msg);
-        }
-        previousMoveTime = now;
-        break;
-      case 10: // translate
-        vwr.syncScript("Mouse: translateXYBy " + json.getString("x")
-            + " " + json.getString("y"), "=", 0);
-        break;
-      case 20: // zoom
-        float zoomFactor = (float) (json.getDouble("scale") / (vwr
-            .tm.zmPct / 100.0f));
-        syncScript("Mouse: zoomByFactor " + zoomFactor);
-        break;
-      }
-      break;
-    case 40: // quit
-      halt = true;
-      Logger.info("JsonNiosService quitting");
-      break;
-    case 50: // sync
-      if (motionDisabled)
-        break;
-      //sync -3000;sync slave;sync 3000 '{"type":"sync","sync":"rotateZBy 30"}'
-      syncScript("Mouse: " + json.getString("sync"));
-      break;
-    case 60: // touch
-      if (motionDisabled)
-        break;
-      // raw touch event
-      vwr.acm.processMultitouchEvent(0, json.getInt("eventType"), json
-          .getInt("touchID"), json.getInt("iData"), P3.new3((float) json
-          .getDouble("x"), (float) json.getDouble("y"), (float) json
-          .getDouble("z")), json.getLong("time"));
-      break;
-    }
-  }
-
-  private void sendScript(String script) {
-    Logger.info("JsonNiosService sendScript " + script);
-    vwr.evalStringQuiet(script);
-  }
-
-  private void syncScript(String script) {
-    Logger.info("JsonNiosService syncScript " + script);
-    vwr.syncScript(script, "=", 0);
-  }
-
-  private void setBanner(String bannerText, boolean andCenter) {
-    if (bannerText == null) {
-      client.setBannerLabel(null);
-    } else {
-      if (andCenter)
-        bannerText = "<center>" + bannerText + "</center>";
-      client.setBannerLabel("<html>" + bannerText
-          + "</html>");
-    }
-  }
-
-  protected void pauseScript(boolean isPause) {
-    String script;
-    if (isPause) {
-      // Pause the script and save the state when interaction starts
-      wasSpinOn = vwr.getBooleanProperty("spinOn");
-      script = "pause; save orientation 'JsonNios-save'; spin off";
-      isPaused = true;
-    } else {
-      script = "restore orientation 'JsonNios-save' 1; resume; spin " + wasSpinOn;
-      wasSpinOn = false;
-    }
-    isPaused = isPause;
-    sendScript(script);
-  }
-
-  private void sendMessage(JSONObject json, String msg, NIOSocket socket) {
-    if (socket == null && (socket = outSocket) == null)
-      return;
-    try {
-      if (json != null) {
-        msg = json.toString();
-      } else if (msg != null && msg.indexOf("{") != 0) {
-        json = new JSONObject();
-        if (msg.equalsIgnoreCase("!script_terminated!")) {
-          json.put("type", "script");
-          json.put("event", "done");
-        } else {
-          json.put("type", "command");
-          json.put("command", msg);
-        }
-        msg = json.toString();
-      }
-      msg += "\r\n";
-      Logger.info(Thread.currentThread().getName() + " sending " + msg + " to " + socket);
-      socket.write(msg.getBytes("UTF-8"));
-    } catch (Throwable e) {
-      e.printStackTrace();
-    }
-  }
-  
-  class JSONObject extends Hashtable<String,Object>{
-
-    public JSONObject() {
-    }
-
-    @SuppressWarnings("unchecked")
-    JSONObject(String msg) throws Exception {
-      SV o = vwr.evaluateExpressionAsVariable(msg);
-      if (!(o.value instanceof Map<?,?>)) 
-        throw new Exception("invalid JSON: " + msg);
-      putAll((Map<String, Object>) o.value);
-    }
-
-    public JSONObject(Map<String, Object> map) {
-      putAll(map);
-    }
-
-    boolean has(String key) {
-      return containsKey(key);
-    }
-
-    String getString(String key) throws Exception {
-      return containsKey(key) ? get(key).toString() : null;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public List<JSONObject> getJSONArray(String key) throws Exception {
-      if (!has(key))
-        throw new Exception("JSON key not found:" + key);
-      List<JSONObject> list = new  ArrayList<JSONObject>();
-      List<SV> svlist = ((SV) get(key)).getList();
-      for (int i = 0; i < svlist.size(); i++)
-        list.add(new JSONObject((Map<String, Object>)(svlist.get(i).value)));
-      return list;
-    }
-
-    public Object get(String key) {
-      Object o = super.get(key);
-      return (o instanceof SV ? SV.oValue(o) : o);
-    }
-    
-    public long getLong(String key) throws Exception {
-      if (!has(key))
-        throw new Exception("JSON key not found:" + key);
-      return Long.parseLong(get(key).toString());
-    }
-
-    public int getInt(String key) throws Exception {
-      if (!has(key))
-        throw new Exception("JSON key not found:" + key);
-      return Integer.parseInt(get(key).toString());
-    }
-
-    public double getDouble(String key) throws Exception {
-      if (!has(key))
-        throw new Exception("JSON key not found:" + key);
-      return Double.parseDouble(get(key).toString());
-    }
+  protected class JsonNioClientThread implements Runnable {
 
     @Override
-    public synchronized String toString() {
-      SB sb = new SB();
-      sb.append("{");
-      String sep = "";
-      for (Entry<String, Object>e : entrySet()) {
-        sb.append(sep).append(PT.esc(e.getKey())).append(":").append(Escape.e(e.getValue()));
-        sep = ",";
-      }      
-      return sb.append("}").toString(); 
+    public void run() {
+      Logger
+          .info(Thread.currentThread().getName() + " JsonNioSocket on " + port);
+      try {
+        while (!halt) {
+          selectNonBlocking();
+          client.serverCycle();
+//          System.out.println("ClientThread active");
+          Thread.sleep(50);
+        }
+      } catch (Throwable e) {
+        e.printStackTrace();
+      }
+      close();
     }
-    
+
   }
+  
+  
+  // server utils
+  
+  /**
+   * Guaranteed to create a clean no-whitespace JSON stream terminated by a
+   * single \n.
+   * 
+   * @param map
+   * @return clean bytes
+   */
+  public static byte[] toJSONBytes(Map<String, Object> map) {
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    JSONWriter writer = new JSONWriter();
+    writer.setWhiteSpace(false);
+    writer.setStream(stream);
+    writer.writeObject(map);
+    writer.closeStream();
+    return stream.toByteArray();
+  }
+
+ // client aids
+  
+  public static Map<String, Object> toMap(byte[] packet) {
+    return new JSJSONParser().parseMap(new String(packet), false);
+  }
+
+  public static String getString(Map<String, Object> map, String key) {
+    Object val = map.get(key);
+    return (val == null ? "" : val.toString());
+  }
+
+  public static long getLong(Map<String, Object> map, String key) throws Exception {
+    if (!map.containsKey(key))
+      throw new Exception("JSON key not found:" + key);
+    return Long.parseLong(map.get(key).toString());
+  }
+
+  public static int getInt(Map<String, Object> map, String key) throws Exception {
+    if (!map.containsKey(key))
+      throw new Exception("JSON key not found:" + key);
+    return Integer.parseInt(map.get(key).toString());
+  }
+
+  public static double getDouble(Map<String, Object> map, String key)
+      throws Exception {
+    if (!map.containsKey(key))
+      throw new Exception("JSON key not found:" + key);
+    return Double.parseDouble(map.get(key).toString());
+  }
+
+
+
+  
+  
+
 }

@@ -38,6 +38,7 @@ import org.jmol.util.Logger;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import org.openscience.jmol.app.jmolpanel.Splash;
+import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
 public class Jmol extends JmolPanel {
@@ -113,8 +114,8 @@ public class Jmol extends JmolPanel {
     }
     if (jmolApp.port > 0) {
       try {
-        jmol.service = getJsonNioServer();
-        jmol.service.startService(jmolApp.port, jmol, jmol.vwr, "-1", 1);
+        jmol.clientService = getJsonNioServer();
+        jmol.clientService.startService(jmolApp.port, jmol, jmol.vwr, "-1", JsonNioService.VERSION);
         //        JsonNioService service2 = new JsonNioService();
         //        service2.startService(jmolApp.port, jmol, null, "-2");
         //        service2.sendMessage(null, "test", null);
@@ -124,8 +125,8 @@ public class Jmol extends JmolPanel {
           bannerFrame.setLabel("could not start NIO service on port "
               + jmolApp.port);
         }
-        if (jmol.service != null)
-          jmol.service.close();
+        if (jmol.clientService != null)
+          jmol.clientService.close();
       }
 
     }
