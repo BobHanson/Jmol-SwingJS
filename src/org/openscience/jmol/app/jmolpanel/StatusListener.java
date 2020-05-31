@@ -103,19 +103,19 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case SYNC:
       // enabled only for SYNC 
     case ECHO:
-    case CLICK:
-    case DRAGDROP:
     case ERROR:
     case MESSAGE:
     case MINIMIZATION:
-    case RESIZE:
       return true;
     case APPLETREADY:
     case ATOMMOVED:
     case AUDIO:
+    case CLICK:
+    case DRAGDROP:
     case EVAL:
     case HOVER:
     case IMAGE:
+    case RESIZE:
       // applet only (but you could change this for your listener)
       break;
     }
@@ -254,15 +254,15 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case EVAL:
     case ATOMMOVED:
     case APPLETREADY:
-      // see above -- not implemented in Jmol.jar
+    case RESIZE:
+    case CLICK:
+    case DRAGDROP:
+      // see above -- not implemented in Jmol.jar; not for SYNC
       return;
       // passed on to listener
-    case DRAGDROP:
     case ERROR:
     case ECHO:
     case MINIMIZATION:
-    case RESIZE:
-    case CLICK:
       break;
     }
     if (jmolPanel.isServer())

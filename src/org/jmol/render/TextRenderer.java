@@ -44,18 +44,17 @@ class TextRenderer {
       return false;
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     // draw the box if necessary; colix has been set
-    if (text.image == null && text.bgcolix != 0) {
-      if (g3d.setC(text.bgcolix))
-        showBox(g3d, text.colix, (int) text.boxX, (int) text.boxY
-            + text.boxYoff2 * 2, text.z + 2, text.zSlab, (int) text.boxWidth,
-            (int) text.boxHeight, text.fontScale, !text.isEcho);
-      if (!showText)
-        return false;
-    }
+    if (text.image == null) {
     // text colix will be opaque, but we need to render it in translucent pass 
     // now set x and y positions for text from (new?) box position
-    if (text.image == null) {
-      // now write properly aligned text
+      if (text.bgcolix != 0) {
+        if (g3d.setC(text.bgcolix))
+          showBox(g3d, text.colix, (int) text.boxX, (int) text.boxY
+              + text.boxYoff2 * 2, text.z + 2, text.zSlab, (int) text.boxWidth,
+              (int) text.boxHeight, text.fontScale, !text.isEcho);
+        if (!showText)
+          return false;
+      }      // now write properly aligned text
       for (int i = 0; i < text.lines.length; i++) {
         text.setXYA(temp, i);
         g3d.drawString(text.lines[i], text.font, (int) temp[0], (int) temp[1],

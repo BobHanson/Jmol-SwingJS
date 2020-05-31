@@ -28,6 +28,7 @@ package org.jmol.awt;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MediaTracker;
@@ -62,6 +63,41 @@ import org.jmol.viewer.Viewer;
  * 
  */
 class Image {
+
+  /*
+  private final static DirectColorModel rgbColorModelT =
+    new DirectColorModel(32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+
+  private final static int[] sampleModelBitMasksT =
+  { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 };
+  */
+
+  private final static DirectColorModel rgbColorModel = new DirectColorModel(
+      24, 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000);
+
+  private final static int[] sampleModelBitMasks = { 0x00FF0000, 0x0000FF00,
+      0x000000FF };
+
+  /**
+   * @param windowWidth
+   * @param windowHeight
+   * @param pBuffer
+   * @param windowSize
+   * @param backgroundTransparent
+   * @return an Image
+   */
+  static Object allocateRgbImage(int windowWidth, int windowHeight,
+                                 int[] pBuffer, int windowSize,
+                                 boolean backgroundTransparent) {
+    return new BufferedImage(rgbColorModel, 
+        Raster.createWritableRaster(
+        new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, windowWidth,
+            windowHeight, sampleModelBitMasks), 
+        new DataBufferInt(pBuffer, windowSize), 
+        null
+        ), 
+        false, null);
+  }
 
   static Object createImage(Object data, PlatformViewer vwr) {
     if (data instanceof URL)
@@ -121,11 +157,11 @@ class Image {
     return ((java.awt.Image) image).getHeight(null);
   }
 
-  static int[] grabPixels(Object imageobj, int width, int height, 
-                          int[] pixels, int startRow, int nRows) {
+  static int[] grabPixels(Object imageobj, int width, int height, int[] pixels) {
+    
     java.awt.Image image = (java.awt.Image) imageobj;
     PixelGrabber pixelGrabber = (pixels == null ? new PixelGrabber(image, 0,
-        0, width, height, true) : new PixelGrabber(image, 0, startRow, width, nRows, pixels, 0,
+        0, width, height, true) : new PixelGrabber(image, 0, 0, width, height, pixels, 0,
             width));
     try {
       pixelGrabber.grabPixels();
@@ -154,7 +190,7 @@ class Image {
       g.clearRect(0, 0, width, height);
       g.drawImage(image, 0, 0, width, height, 0, 0, width0, height0, null);
     }
-    return grabPixels(imageOffscreen, width, height, null, 0, 0);
+    return grabPixels(imageOffscreen, width, height, null);
   }
 
   public static int[] getTextPixels(String text, org.jmol.util.Font font3d, Object gObj,
@@ -166,7 +202,7 @@ class Image {
     g.setColor(Color.white);
     g.setFont((java.awt.Font) font3d.font);
     g.drawString(text, 0, ascent);
-    return grabPixels(image, width, height, null, 0, 0);
+    return grabPixels(image, width, height, null);
   }
 
   static Object newBufferedImage(Object image, int w, int h) {
@@ -177,55 +213,6 @@ class Image {
     return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
   }
 
-  /*
-  private final static DirectColorModel rgbColorModelT =
-    new DirectColorModel(32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-
-  private final static int[] sampleModelBitMasksT =
-  { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 };
-  */
-
-  private final static DirectColorModel rgbColorModel = new DirectColorModel(
-      24, 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000);
-
-  private final static int[] sampleModelBitMasks = { 0x00FF0000, 0x0000FF00,
-      0x000000FF };
-
-  /**
-   * @param windowWidth
-   * @param windowHeight
-   * @param pBuffer
-   * @param windowSize
-   * @param backgroundTransparent
-   * @return an Image
-   */
-  static Object allocateRgbImage(int windowWidth, int windowHeight,
-                                 int[] pBuffer, int windowSize,
-                                 boolean backgroundTransparent) {
-    //backgroundTransparent not working with antialiasDisplay. I have no idea why. BH 9/24/08
-    /* DEAD CODE   if (false && backgroundTransparent)
-          return new BufferedImage(
-              rgbColorModelT,
-              Raster.createWritableRaster(
-                  new SinglePixelPackedSampleModel(
-                      DataBuffer.TYPE_INT,
-                      windowWidth,
-                      windowHeight,
-                      sampleModelBitMasksT), 
-                  new DataBufferInt(pBuffer, windowSize),
-                  null),
-              false, 
-              null);
-    */
-    return new BufferedImage(rgbColorModel, 
-        Raster.createWritableRaster(
-        new SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, windowWidth,
-            windowHeight, sampleModelBitMasks), 
-        new DataBufferInt(pBuffer, windowSize), 
-        null
-        ), 
-        false, null);
-  }
 
   /**
    * @param image
@@ -234,16 +221,7 @@ class Image {
    */
   static Object getStaticGraphics(Object image, boolean backgroundTransparent) {
     Graphics2D g2d = ((BufferedImage) image).createGraphics();
-    //if (backgroundTransparent) {
-    // what here?
-    //}
-    // miguel 20041122
-    // we need to turn off text antialiasing on OSX when
-    // running in a web browser
-    
-    // Despite the above comment, 13.1.8 adds text antialiasing
-    // for all conditions -- Bob Hanson, Oct. 27, 2012
-    
+    if (!Viewer.isJS) {
     g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
         RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     // I don't know if we need these or not, but cannot hurt to have them
@@ -251,6 +229,7 @@ class Image {
         RenderingHints.VALUE_ANTIALIAS_OFF);
     g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
         RenderingHints.VALUE_RENDER_SPEED);
+    }
     return g2d;
   }
 
@@ -271,5 +250,38 @@ class Image {
                                                Map<String, GenericImageDialog> imageMap) {
     return new ImageDialog((Viewer) vwr, title, imageMap);
     }
+
+  /**
+   * 
+   * @param g
+   * @param img
+   * @param x
+   * @param y
+   * @param width
+   *        unused in Jmol proper
+   * @param height
+   *        unused in Jmol proper
+   */
+  static void drawImage(Object g, Object img, int x, int y, int width,
+                        int height) {
+    ((Graphics) g).drawImage((java.awt.Image) img, x, y, null);
+  }
+
+  /**
+   * 
+   * @param g
+   * @param img
+   * @param x
+   * @param y
+   * @param width
+   *        unused in Jmol proper
+   * @param height
+   *        unused in Jmol proper
+   */
+  static void drawImageDTI(Object g, Object img, int x, int y, int width,
+                        int height) {
+    ((Graphics) g).drawImage((java.awt.Image) img, x, y, x == 0 ? width >> 1 : width, height, 0, y, width, height, null);
+  }
+
 
 }

@@ -274,19 +274,20 @@ public final class JC {
     String tmpVersion = null;
     String tmpDate = null;
 
-    /**
-     * definitions are incorporated into j2s/java/core.z.js by buildtojs.xml
-     * 
-     * @j2sNative
-     * 
-     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
-     */
-    {
+//    /**
+//     * definitions are incorporated into j2s/java/core.z.js by buildtojs.xml
+//     * 
+//     * @j2sNative
+//     * 
+//     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
+//     */
+//    {
       BufferedInputStream bis = null;
       InputStream is = null;
       try {
         // Reading version from resource   inside jar
         is = JC.class.getClassLoader().getResourceAsStream(
+            /** @j2sNative "core/Jmol.properties" || */ 
             "org/jmol/viewer/Jmol.properties");
         bis = new BufferedInputStream(is);
         Properties props = new Properties();
@@ -315,7 +316,7 @@ public final class JC {
           }
         }
       }
-    }
+//    }
     if (tmpDate != null) {
       tmpDate = tmpDate.substring(7, 23);
       // NOTE : date is updated in the properties by SVN, and is in the format
@@ -325,7 +326,7 @@ public final class JC {
     }
     version = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
     majorVersion = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
-    date = (tmpDate != null ? tmpDate : "(Unknown_date)");
+    date = (tmpDate != null ? tmpDate : "");
     // 11.9.999 --> 1109999
     int v = -1;
     if (tmpVersion != null)

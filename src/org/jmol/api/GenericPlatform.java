@@ -23,6 +23,8 @@ public interface GenericPlatform extends FontManager {
 
   boolean isHeadless();
   
+  boolean isJS();
+  
   void convertPointFromScreen(Object display, P3 ptTemp);
 
   void getFullScreenDimensions(Object display, int[] widthHeight);
@@ -69,9 +71,9 @@ public interface GenericPlatform extends FontManager {
 
   Object newOffScreenImage(int w, int h);
   
-  @Deprecated
-  void renderScreenImage(Object g, Object currentSize);
-
+//  @Deprecated
+//  void renderScreenImage(Object g, Object currentSize);
+//
   int[] getTextPixels(String text, Font font3d, Object gObj,
                       Object image, int mapWidth, int height,
                       int ascent);
@@ -92,12 +94,9 @@ public interface GenericPlatform extends FontManager {
    * @param width
    * @param height
    * @param pixels 
-   * @param startRow 
-   * @param nRows 
    * @return         pixels
    */
-  int[] grabPixels(Object image, int width, int height, 
-                   int[] pixels, int startRow, int nRows);
+  int[] grabPixels(Object image, int width, int height, int[] pixels);
 
   /**
    * can be ignored (return false) if platform cannot save images

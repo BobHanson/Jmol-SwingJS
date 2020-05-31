@@ -502,27 +502,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
-   * @param e  
+   * @param e
    */
   private void setError(Throwable e) {
-    String s;
-    /**
-     * @j2sNative
-     * 
-     * if (e.getMessage)
-     *  s = e.getMessage();
-     * else
-     *  s = e.toString();
-     */
-    {
-      s = e.getMessage();
-    }
+    String s = e.getMessage();
     if (line == null)
       asc.errorMessage = "Error reading file at end of file \n" + s;
     else
-      asc.errorMessage = "Error reading file at line " + ptLine
-          + ":\n" + line + "\n" + s;
-      e.printStackTrace();
+      asc.errorMessage = "Error reading file at line " + ptLine + ":\n" + line
+          + "\n" + s;
+    e.printStackTrace();
   }
 
   @SuppressWarnings("unchecked")

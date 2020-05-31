@@ -144,7 +144,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     vwrFrame = (w instanceof JFrame ? (JFrame) w : null);
     if (externalContainer == null) {
       jcd = new JDialog(vwrFrame, null, false);
-      jcd.setSize(645, 400);
+      jcd.setSize(700, 400);
       jcd.setLocationRelativeTo(vwrFrame);
       this.externalContainer = jcd;
     } else {

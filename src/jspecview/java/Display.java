@@ -8,14 +8,13 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
 
-import javajs.util.P3;
-import javajs.util.PT;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.jmol.api.GenericPlatform;
-import org.jmol.api.PlatformViewer;
+
+import javajs.util.P3;
+import javajs.util.PT;
 
 
 /**
@@ -50,16 +49,16 @@ class Display {
     ((Component) display).repaint();
   }
 
-  /**
-   * legacy apps will use this
-   * 
-   * @param viewer
-   * @param g
-   * @param size
-   */
-  static void renderScreenImage(PlatformViewer viewer, Object g, Object size) {
-    //((Viewer)viewer).renderScreenImage(g, ((Dimension)size).width, ((Dimension)size).height);
-  }
+//  /**
+//   * legacy apps will use this
+//   * 
+//   * @param viewer
+//   * @param g
+//   * @param size
+//   */
+//  static void renderScreenImage(PlatformViewer viewer, Object g, Object size) {
+//    //((Viewer)viewer).renderScreenImage(g, ((Dimension)size).width, ((Dimension)size).height);
+//  }
 
   static void setTransparentCursor(Object display) {
     int[] pixels = new int[1];

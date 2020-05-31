@@ -326,6 +326,7 @@ public class StatusManager {
   }
 
   synchronized int setStatusClicked(int x, int y, int action, int clickCount, int mode) {
+    // also called on drag movements
     String sJmol = jmolScriptCallback(CBK.CLICK);
     if (!notifyEnabled(CBK.CLICK))
       return action;
@@ -371,7 +372,7 @@ public class StatusManager {
    */
   synchronized void showImage(String title, Object image) {
     String[] a = PT.split(title,  "\1");
-    title = (a.length < 3 || a[2].equals("null") ? a[1].substring(a[1].lastIndexOf("/") + 1) : a[2]);
+    title = (a.length < 2 ? "Jmol" : a.length < 3 || a[2].equals("null") ? a[1].substring(a[1].lastIndexOf("/") + 1) : a[2]);
     String sJmol = jmolScriptCallback(CBK.IMAGE);
     if (notifyEnabled(CBK.IMAGE))
       cbl.notifyCallback(CBK.IMAGE, new Object[] { sJmol, title, image });

@@ -286,7 +286,7 @@ public class Viewer extends JmolViewer
   private static String version_date;
 
   public static String getJmolVersion() {
-    return (version_date == null ? version_date = JC.version + "  " + JC.date
+    return (version_date == null ? version_date = (JC.version + "  " + JC.date).trim()
         : version_date);
   }
 
@@ -490,9 +490,11 @@ public class Viewer extends JmolViewer
     if (o instanceof String) {
       platform = (String) o;
       if (platform == "")
-        platform = "org.jmol.awt.Platform";
+        platform = (
+            // could do this, but so far unnecessary isSwingJS ? "org.jmol.awtsw.Platform" : 
+            "org.jmol.awt.Platform");
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
-      isJS = isSwingJS || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      isJS = isSwingJS  || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
       JSmolAppletObject applet = null;

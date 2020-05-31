@@ -33,224 +33,235 @@ import netscape.javascript.JSObject;
 public class AwtPlatform implements GenericPlatform {
 
   PlatformViewer vwr;
-  
+
   @Override
-	public void setViewer(PlatformViewer viewer, Object display) {
+  public void setViewer(PlatformViewer viewer, Object display) {
     this.vwr = viewer;
   }
-  
+
   ///// Display 
 
   @Override
-	public void convertPointFromScreen(Object display, P3 ptTemp) {
+  public void convertPointFromScreen(Object display, P3 ptTemp) {
     Display.convertPointFromScreen(display, ptTemp);
   }
 
   @Override
-	public void getFullScreenDimensions(Object display, int[] widthHeight) {
-    Display.getFullScreenDimensions(display, widthHeight);        
-  }
-  
-  @Override
-	public GenericMenuInterface getMenuPopup(String menuStructure, char type) {
-  	return null;//
+  public void getFullScreenDimensions(Object display, int[] widthHeight) {
+    Display.getFullScreenDimensions(display, widthHeight);
   }
 
   @Override
-	public boolean hasFocus(Object display) {
+  public GenericMenuInterface getMenuPopup(String menuStructure, char type) {
+    return null;//
+  }
+
+  @Override
+  public boolean hasFocus(Object display) {
     return Display.hasFocus(display);
   }
 
   @Override
-	public String prompt(String label, String data, String[] list,
+  public String prompt(String label, String data, String[] list,
                        boolean asButtons) {
     return Display.prompt(label, data, list, asButtons);
   }
 
-  /**
-   * legacy apps will use this
-   * 
-   * @param g
-   * @param size
-   */
-  @Override
-	public void renderScreenImage(Object g, Object size) {
-    Display.renderScreenImage(vwr, g, size);
-  }
+//  /**
+//   * legacy apps will use this
+//   * 
+//   * @param g
+//   * @param size
+//   */
+//  @Override
+//  public void renderScreenImage(Object g, Object size) {
+//    Display.renderScreenImage(vwr, g, size);
+//  }
 
   @Override
-	public void requestFocusInWindow(Object display) {
+  public void requestFocusInWindow(Object display) {
     Display.requestFocusInWindow(display);
   }
 
   @Override
-	public void repaint(Object display) {
+  public void repaint(Object display) {
     Display.repaint(display);
   }
 
   @Override
-	public void setTransparentCursor(Object display) {
+  public void setTransparentCursor(Object display) {
     Display.setTransparentCursor(display);
   }
 
   @Override
-	public void setCursor(int c, Object display) {
+  public void setCursor(int c, Object display) {
     Display.setCursor(c, display);
   }
 
   ////// Mouse
 
   @Override
-	public GenericMouseInterface getMouseManager(double ignored, Object jsvp) {
+  public GenericMouseInterface getMouseManager(double ignored, Object jsvp) {
     return new Mouse((JSVPanel) jsvp);
   }
 
   ////// Image 
 
   @Override
-	public Object allocateRgbImage(int windowWidth, int windowHeight,
+  public Object allocateRgbImage(int windowWidth, int windowHeight,
                                  int[] pBuffer, int windowSize,
-                                 boolean backgroundTransparent, boolean isImageWrite) {
-    return Image.allocateRgbImage(windowWidth, windowHeight, pBuffer, windowSize, backgroundTransparent);
+                                 boolean backgroundTransparent,
+                                 boolean isImageWrite) {
+    return Image.allocateRgbImage(windowWidth, windowHeight, pBuffer,
+        windowSize, backgroundTransparent);
   }
 
   /**
    * could be byte[] (from ZIP file) or String (local file name) or URL
-   * @param data 
+   * 
+   * @param data
    * @return image object
    * 
    */
   @Override
-	public Object createImage(Object data) {
+  public Object createImage(Object data) {
     return Image.createImage(data);
   }
 
   @Override
-	public void disposeGraphics(Object gOffscreen) {
+  public void disposeGraphics(Object gOffscreen) {
     Image.disposeGraphics(gOffscreen);
   }
 
   @Override
-	public void drawImage(Object g, Object img, int x, int y, int width, int height, boolean isDTI) {
+  public void drawImage(Object g, Object img, int x, int y, int width,
+                        int height, boolean isDTI) {
     Image.drawImage(g, img, x, y, width, height);
   }
 
   @Override
-	public int[] grabPixels(Object imageobj, int width, int height, int[] pixels, int startRow, int nRows) {
-    return Image.grabPixels(imageobj, width, height, pixels, startRow, nRows); 
+  public int[] grabPixels(Object imageobj, int width, int height, int[] pixels) {
+    return Image.grabPixels(imageobj, width, height, pixels);
   }
 
   @Override
-	public int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,
-                                 Object imageobj, int width, int height, int bgcolor) {
-    return Image.drawImageToBuffer(gOffscreen, imageOffscreen, imageobj, width, height, bgcolor);
+  public int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,
+                                 Object imageobj, int width, int height,
+                                 int bgcolor) {
+    return Image.drawImageToBuffer(gOffscreen, imageOffscreen, imageobj, width,
+        height, bgcolor);
   }
 
   @Override
-	public int[] getTextPixels(String text, Font font3d, Object gObj,
+  public int[] getTextPixels(String text, Font font3d, Object gObj,
                              Object image, int width, int height, int ascent) {
-    return Image.getTextPixels(text, font3d, gObj, image, width, height, ascent);
+    return Image.getTextPixels(text, font3d, gObj, image, width, height,
+        ascent);
   }
 
   @Override
-	public void flushImage(Object imagePixelBuffer) {
+  public void flushImage(Object imagePixelBuffer) {
     Image.flush(imagePixelBuffer);
   }
 
   @Override
-	public Object getGraphics(Object image) {
+  public Object getGraphics(Object image) {
     return Image.getGraphics(image);
   }
 
   @Override
-	public int getImageHeight(Object image) {
+  public int getImageHeight(Object image) {
     return (image == null ? -1 : Image.getHeight(image));
   }
 
   @Override
-	public int getImageWidth(Object image) {
+  public int getImageWidth(Object image) {
     return (image == null ? -1 : Image.getWidth(image));
   }
 
   @Override
-	public Object getStaticGraphics(Object image, boolean backgroundTransparent) {
+  public Object getStaticGraphics(Object image, boolean backgroundTransparent) {
     return Image.getStaticGraphics(image, backgroundTransparent);
   }
 
   @Override
-	public Object newBufferedImage(Object image, int w, int h) {
+  public Object newBufferedImage(Object image, int w, int h) {
     return Image.newBufferedImage(image, w, h);
   }
 
   @Override
-	public Object newOffScreenImage(int w, int h) {
+  public Object newOffScreenImage(int w, int h) {
     return Image.newBufferedImage(w, h);
   }
 
   @Override
-	public boolean waitForDisplay(Object ignored, Object image) throws InterruptedException {
+  public boolean waitForDisplay(Object ignored, Object image)
+      throws InterruptedException {
     Image.waitForDisplay(vwr, image);
     return true;
   }
 
-  
   ///// FONT
-  
+
   @Override
-	public int fontStringWidth(Font font, String text) {
+  public int fontStringWidth(Font font, String text) {
     return AwtFont.stringWidth(font.getFontMetrics(), text);
   }
 
   @Override
-	public int getFontAscent(Object fontMetrics) {
+  public int getFontAscent(Object fontMetrics) {
     return AwtFont.getAscent(fontMetrics);
   }
 
   @Override
-	public int getFontDescent(Object fontMetrics) {
+  public int getFontDescent(Object fontMetrics) {
     return AwtFont.getDescent(fontMetrics);
   }
 
   @Override
-	public Object getFontMetrics(Font font, Object graphics) {
+  public Object getFontMetrics(Font font, Object graphics) {
     return AwtFont.getFontMetrics(font, graphics);
   }
 
   @Override
-	public Object newFont(String fontFace, boolean isBold, boolean isItalic, float fontSize) {
+  public Object newFont(String fontFace, boolean isBold, boolean isItalic,
+                        float fontSize) {
     return AwtFont.newFont(fontFace, isBold, isItalic, fontSize);
   }
 
   /// misc
 
   @Override
-	public Object getJsObjectInfo(Object[] jsObject, String method, Object[] args) {
+  public Object getJsObjectInfo(Object[] jsObject, String method,
+                                Object[] args) {
     JSObject DOMNode = (JSObject) jsObject[0];
     if (method == null) {
       String namespaceURI = (String) DOMNode.getMember("namespaceURI");
       String localName = (String) DOMNode.getMember("localName");
-      return "namespaceURI=\"" + namespaceURI + "\" localName=\"" + localName + "\"";
+      return "namespaceURI=\"" + namespaceURI + "\" localName=\"" + localName
+          + "\"";
     }
-    return (args == null ? DOMNode.getMember(method) : DOMNode.call(method, args));
+    return (args == null ? DOMNode.getMember(method)
+        : DOMNode.call(method, args));
   }
 
   @Override
-	public boolean isHeadless() {
+  public boolean isHeadless() {
     return GraphicsEnvironment.isHeadless();
   }
 
   @Override
-	public boolean isSingleThreaded() {
+  public boolean isSingleThreaded() {
     return false;
   }
 
   @Override
-	public void notifyEndOfRendering() {
+  public void notifyEndOfRendering() {
     // N/A
   }
 
   /**
-   * @param p 
+   * @param p
    * @return The hosting frame or JDialog.
    */
   static public Window getWindow(Container p) {
@@ -278,46 +289,52 @@ public class AwtPlatform implements GenericPlatform {
     }
     return new SimpleDateFormat(isoType).format(new Date());
   }
-	
+
   @Override
-	public GenericFileInterface newFile(String name) {
+  public GenericFileInterface newFile(String name) {
     return new AwtFile(name);
   }
 
   @Override
-	public Object getBufferedFileInputStream(String name) {
+  public Object getBufferedFileInputStream(String name) {
     return AwtFile.getBufferedFileInputStream(name);
   }
 
   @Override
   public Object getURLContents(URL url, byte[] outputBytes, String post,
-      boolean asString) {
+                               boolean asString) {
     Object ret = AwtFile.getURLContents(url, outputBytes, post);
     try {
-      return (!asString ? ret : ret instanceof String ? ret : new String(
-          (byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret, null)));
+      return (!asString ? ret
+          : ret instanceof String ? ret
+              : new String((byte[]) Rdr
+                  .getStreamAsBytes((BufferedInputStream) ret, null)));
     } catch (IOException e) {
       return "" + e;
     }
   }
 
-	@Override
-	public String getLocalUrl(String fileName) {
-		// not used in JSpecView
-		return null;
-	}
+  @Override
+  public String getLocalUrl(String fileName) {
+    // not used in JSpecView
+    return null;
+  }
 
-	@Override
-	public GenericImageDialog getImageDialog(String title,
-			Map<String, GenericImageDialog> imageMap) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public GenericImageDialog getImageDialog(String title,
+                                           Map<String, GenericImageDialog> imageMap) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public boolean forceAsyncLoad(String filename) {
-		return false;
-	}
+  @Override
+  public boolean forceAsyncLoad(String filename) {
+    return false;
+  }
 
+  @Override
+  public boolean isJS() {
+    return false;
+  }
 
 }

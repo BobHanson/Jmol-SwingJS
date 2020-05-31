@@ -29,12 +29,19 @@ import org.jmol.viewer.Viewer;
 
 public class Platform implements GenericPlatform {
 
-  PlatformViewer vwr;
+  protected PlatformViewer vwr;
   
   @Override
   public void setViewer(PlatformViewer vwr, Object display) {
     this.vwr = vwr;
   }
+  
+
+  @Override
+  public boolean isSingleThreaded() {
+    return false;
+  }
+
   
   ///// Display 
 
@@ -68,17 +75,17 @@ public class Platform implements GenericPlatform {
     return Display.prompt(label, data, list, asButtons);
   }
 
-  /**
-   * legacy apps will use this
-   * 
-   * @param g
-   * @param size
-   */
-  @SuppressWarnings("deprecation")
-  @Override
-  public void renderScreenImage(Object g, Object size) {
-    Display.renderScreenImage(vwr, g, size);
-  }
+//  /**
+//   * legacy apps will use this
+//   * 
+//   * @param g
+//   * @param size
+//   */
+//  @SuppressWarnings("deprecation")
+//  @Override
+//  public void renderScreenImage(Object g, Object size) {
+//    Image.renderScreenImage(vwr, g, size);
+//  }
 
   @Override
   public void requestFocusInWindow(Object display) {
@@ -137,14 +144,14 @@ public class Platform implements GenericPlatform {
   @Override
   public void drawImage(Object g, Object img, int x, int y, int width, int height, boolean isDTI) {
     if (isDTI)
-      Display.drawImageDTI(g, img, x, y, width, height);
+      Image.drawImageDTI(g, img, x, y, width, height);
     else
-      Display.drawImage(g, img, x, y, width, height);
+      Image.drawImage(g, img, x, y, width, height);
   }
 
   @Override
-  public int[] grabPixels(Object imageobj, int width, int height, int[] pixels, int startRow, int nRows) {
-    return Image.grabPixels(imageobj, width, height, pixels, startRow, nRows); 
+  public int[] grabPixels(Object imageobj, int width, int height, int[] pixels) {
+    return Image.grabPixels(imageobj, width, height, pixels); 
   }
 
   @Override
@@ -243,11 +250,6 @@ public class Platform implements GenericPlatform {
   }
 
   @Override
-  public boolean isSingleThreaded() {
-    return  Viewer.isSwingJS;
-  }
-
-  @Override
   public void notifyEndOfRendering() {
     // N/A
   }
@@ -325,6 +327,11 @@ public class Platform implements GenericPlatform {
 
   @Override
   public boolean forceAsyncLoad(String filename) {
+    return false;
+  }
+
+  @Override
+  public boolean isJS() {
     return false;
   }
 

@@ -339,33 +339,16 @@ abstract class OutputManager {
   /**
    * general image encoder, allows for BufferedImage, int[], or HTML5 2D canvas
    * 
-   * @param width 
-   * @param height 
+   * @param w 
+   * @param h 
    * @param objImage
    * @return linear int[] array of ARGB values
    * @throws Exception
    */
-  private int[] encodeImage(int width, int height, Object objImage)
+  private int[] encodeImage(int w, int h, Object objImage)
       throws Exception {
-    if (width < 0)
-      return null;
-    int[] pixels;
-    if (AU.isAI(objImage)) {
-      pixels = (int[]) objImage;
-    } else {
-      /**
-       * @j2sNative
-       * 
-       *            pixels = null;
-       * 
-       */
-      {
-        pixels = new int[width * height];
-      }
-      pixels = vwr.apiPlatform.grabPixels(objImage, width, height, pixels, 0,
-          height);
-    }
-    return pixels;
+    return (w < 0 ? null : (AU.isAI(objImage) ? (int[]) objImage
+        : vwr.apiPlatform.grabPixels(objImage, w, h, (!Viewer.isJS || Viewer.isSwingJS ? new int[w * h] : null))));
   }
 
 

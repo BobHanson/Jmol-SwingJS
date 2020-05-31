@@ -51,6 +51,7 @@ import org.jmol.console.KeyJCheckBoxMenuItem;
 import org.jmol.console.KeyJRadioButtonMenuItem;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 public class GuiMap {
 
@@ -455,7 +456,7 @@ public class GuiMap {
         "GT_script_btn_template2.html_MORE",
         GT.escapeHTML(GT.o(GT.$("Insert more information for {0} here."),
             "@NAME@")), "About.html#version",
-        "<p><b>Jmol " + JC.version + " (" + JC.date + ")</b></p>",
+        "<p><b>Jmol " + Viewer.getJmolVersion() + "</b></p>",
         "About.html#splash", "see Jmol-resources.properties",
         "About.html#weblinks", "see Jmol-resources.properties",
         "About.html#libraries", "see Jmol-resources.properties" };
