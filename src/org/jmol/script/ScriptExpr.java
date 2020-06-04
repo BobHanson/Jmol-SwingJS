@@ -395,6 +395,8 @@ abstract class ScriptExpr extends ScriptParam {
         }
         break;
       case T.leftbrace:
+        // note that {type:n}, with unquoted "type" is NOT an associative array in JmolScript.
+        // in Jmol we need to use [type:n] for unquoted keys.
         if (tokAt(i + 1) == T.string) {
           if (tokAt(i + 2) == T.rightbrace) {
             v = (chk ? new BS() : getAtomBitSet(stringParameter(i + 1)));

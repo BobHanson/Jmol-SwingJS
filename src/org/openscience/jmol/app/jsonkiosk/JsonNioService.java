@@ -117,7 +117,7 @@ import naga.packetwriter.RawPacketWriter;
  *  
  * 3) Client sequentially sends Jmol script commands over the "in" socket:
  * 
- *   {"type": "command", "command": command}
+ *   {"type": "command", "command": command}\n
  * 
  * where required command is some JSON-escaped string such as "rotate x 30" or "load $caffeine". 
  * For example:
@@ -258,6 +258,24 @@ import naga.packetwriter.RawPacketWriter;
  *   "zoomByFactor <float:factor>"
  *   "zoomByFactor <float:factor> <int:x> <int:y>" (with center reset)
  * 
+ * In addition, a Jmol client send "raw" JSON strings over the socket via the SYNC command:
+ * 
+ *    sync 30000   '{"type": "command", "command": "var atoms = {_C or _H};select atoms"}'
+ * 
+ * and since JmolScript's associative array is equivalent to JSON, this message does not have
+ * to be a string; it can be an associative array:
+ * 
+ *    sync 30000 {"type":"command","command":"background orange"}
+ * 
+ * Even simpler, Jmol's native associative array uses [...] instead of {...} 
+ * and does not require quoting keys (unless they contain spaces):
+ * 
+ *    sync 30000 [type:"command", command:"background orange"]
+ * 
+ * And, finally, the message can be in the form of a JmolScript variable:
+ * 
+ *    x = [type:"command", command:"background orange"]
+ *    sync 30000 x
  * 
  * </code>
  */
@@ -440,13 +458,15 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     try {
       if (map != null) {
         out = toJSONBytes(map);
-      } else if (msg.indexOf("{") != 0) {
+      } else if (msg.indexOf("{") == 0) {
+        if (!msg.endsWith("\n"))
+          msg += "\n";
+        out = clean(msg.getBytes("UTF-8"));
+      } else {
         map = new LinkedHashMap<>();
         map.put("type", "command");
         map.put("command", msg);
         out = toJSONBytes(map);
-      } else {
-        out = clean(msg.getBytes("UTF-8"));
       }
       sendBytes(out, socket);
     } catch (Exception e) {

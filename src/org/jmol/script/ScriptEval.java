@@ -1617,7 +1617,7 @@ public class ScriptEval extends ScriptExpr {
     if (isThrown || thisContext != null || chk
         || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
       return;
-    Logger.error("eval ERROR: " + s + toString());
+    Logger.error("eval ERROR: " + s + "\n" + toString());
     if (vwr.autoExit)
       vwr.exitJmol();
   }
