@@ -78,15 +78,15 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolScriptManager;
 import org.jmol.awt.FileDropper;
 import org.jmol.awt.Platform;
 import org.jmol.console.JmolButton;
 import org.jmol.console.JmolToggleButton;
+import org.jmol.console.KeyJMenu;
 import org.jmol.dialog.Dialog;
 import org.jmol.i18n.GT;
-import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
@@ -106,6 +106,7 @@ import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 import org.openscience.jmol.app.surfacetool.SurfaceTool;
 import org.openscience.jmol.app.webexport.WebExport;
 
+import javajs.async.AsyncFileChooser;
 import javajs.util.JSJSONParser;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -689,7 +690,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    * @return Menu item created
    * @see #getMenuItem
    */
-  protected JMenuItem createMenuItem(String cmd) {
+  public JMenuItem createMenuItem(String cmd) {
 
     JMenuItem mi;
     if (cmd.endsWith("Check")) {
@@ -960,38 +961,41 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    * @param key
    * @return Menu created
    */
-  protected JMenu createMenu(String key) {
+  public JMenu createMenu(String key) {
 
+    System.out.println("JmolPanel creating menu " + key);
     // Get list of items from resource file:
     String[] itemKeys = PT.getTokens(setMenuKeys(key,
         JmolResourceHandler.getStringX(key)));
     // Get label associated with this menu:
     JMenu menu = guimap.newJMenu(key);
-
     ImageIcon f = JmolResourceHandler.getIconX(key + "Image");
     if (f != null) {
       menu.setHorizontalTextPosition(SwingConstants.RIGHT);
       menu.setIcon(f);
     }
-
-    // Loop over the items in this menu:
-    for (int i = 0; i < itemKeys.length; i++) {
-      String item = itemKeys[i];
-      if (item.equals("-")) {
-        menu.addSeparator();
-      } else if (item.endsWith("Menu")) {
-        menu.add(createMenu(item));
-      } else {
-        JMenuItem mi = createMenuItem(item);
-        menu.add(mi);
-      }
-    }
+    KeyJMenu jmenu = (KeyJMenu) menu;
+    jmenu.itemKeys = itemKeys;
     menu.addMenuListener(new MenuListener() {
       @Override
       public void menuSelected(MenuEvent e) {
-        String menuKey = ((JmolAbstractButton) e.getSource()).getKey();
-        if (menuKey.equals("display") || menuKey.equals("tools"))
-          setMenuState();
+        jmenu.createItemKeys(JmolPanel.this);
+        switch (key) {
+        case "display":
+          guimap.setSelected("perspectiveCheck", vwr.tm.perspectiveDepth);
+          guimap.setSelected("hydrogensCheck", vwr.getBoolean(T.showhydrogens));
+          guimap.setSelected("measurementsCheck",
+              vwr.getBoolean(T.showmeasurements));
+          guimap.setSelected("axesCheck", vwr.getShowAxes());
+          guimap.setSelected("boundboxCheck", vwr.getShowBbcage());
+          break;
+        case "spectrumMenu":
+          guimap.setEnabled("openJSpecViewScript", !vwr.getBoolean(T.pdb));
+          guimap.setEnabled("simulate1HSpectrumScript", !vwr.getBoolean(T.pdb));
+          guimap.setEnabled("simulate13CSpectrumScript",
+              !vwr.getBoolean(T.pdb));
+          break;
+        }
       }
 
       @Override
@@ -1014,17 +1018,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    */
   protected String setMenuKeys(String key, String tokens) {
     return tokens;
-  }
-
-  protected void setMenuState() {
-    guimap.setSelected("perspectiveCheck", vwr.tm.perspectiveDepth);
-    guimap.setSelected("hydrogensCheck", vwr.getBoolean(T.showhydrogens));
-    guimap.setSelected("measurementsCheck", vwr.getBoolean(T.showmeasurements));
-    guimap.setSelected("axesCheck", vwr.getShowAxes());
-    guimap.setSelected("boundboxCheck", vwr.getShowBbcage());
-    guimap.setEnabled("openJSpecViewScript", !vwr.getBoolean(T.pdb));
-    guimap.setEnabled("simulate1HSpectrumScript", !vwr.getBoolean(T.pdb));
-    guimap.setEnabled("simulate13CSpectrumScript", !vwr.getBoolean(T.pdb));
   }
 
   protected static class ActionChangedListener implements
@@ -1651,20 +1644,33 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   void openFile() {
-    String fileName = (new Dialog()).getOpenFileNameFromDialog(vwrOptions, vwr,
-        null, jmolApp, FILE_OPEN_WINDOW_NAME, true);
-    if (fileName == null)
-      return;
-    int flags = 1 + 8; // cartoons+fileOpen
-    if (fileName.startsWith("#NOCARTOONS#;")) {
-      flags -= 1;
-      fileName = fileName.substring(13);
+    int flags0 = JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.PDB_CARTOONS; // cartoons+fileOpen
+    if (Viewer.isJS) {
+      AsyncFileChooser chooser = new AsyncFileChooser();
+      chooser.showOpenDialog(frame, new Runnable() {
+
+        @Override
+        public void run() {
+          vwr.openFileAsyncSpecial(chooser.getSelectedFile().toString(), flags0);
+        }
+      }, null);
+      
+    } else {
+      String fileName = (new Dialog()).getOpenFileNameFromDialog(vwrOptions,
+          vwr, null, jmolApp, FILE_OPEN_WINDOW_NAME, true);
+      if (fileName == null)
+        return;
+      int flags = flags0;
+      if (fileName.startsWith("#NOCARTOONS#;")) {
+        flags &= ~JmolScriptManager.PDB_CARTOONS;
+        fileName = fileName.substring(13);
+      }
+      if (fileName.startsWith("#APPEND#;")) {
+        fileName = fileName.substring(9);
+        flags |= JmolScriptManager.IS_APPEND;
+      }
+      vwr.openFileAsyncSpecial(fileName, flags);
     }
-    if (fileName.startsWith("#APPEND#;")) {
-      fileName = fileName.substring(9);
-      flags += 4;
-    }
-    vwr.openFileAsyncSpecial(fileName, flags);
   }
 
   static final String chemFileProperty = "chemFile";

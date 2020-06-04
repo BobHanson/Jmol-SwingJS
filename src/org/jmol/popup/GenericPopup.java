@@ -62,7 +62,7 @@ public abstract class GenericPopup implements GenericMenuInterface {
    * @param subMenu
    * @param word
    */
-  protected void appCheckSpecialMenu(String item, SC subMenu, String word) {
+  public void appCheckSpecialMenu(String item, SC subMenu, String word) {
     // when adding a menu item
   }
 
@@ -118,15 +118,15 @@ public abstract class GenericPopup implements GenericMenuInterface {
     thisPopup = popupMenu;
     htMenus.put(title, popupMenu);
     addMenuItems("", title, popupMenu, bundle);
-    try {
-      jpiUpdateComputedMenus();
-    } catch (NullPointerException e) {
-      // ignore -- the frame just wasn't ready yet;
-      // updateComputedMenus() will be called again when the frame is ready; 
-    }
+//    try {
+//      jpiUpdateComputedMenus();
+//    } catch (NullPointerException e) {
+//      // ignore -- the frame just wasn't ready yet;
+//      // updateComputedMenus() will be called again when the frame is ready; 
+//    }
   }
 
-  protected void addMenuItems(String parentId, String key, SC menu,
+  public void addMenuItems(String parentId, String key, SC menu,
                               PopupResource popupResourceBundle) {
     String id = parentId + "." + key;
     String value = popupResourceBundle.getStructure(key);
@@ -170,10 +170,8 @@ public abstract class GenericPopup implements GenericMenuInterface {
         if (item.indexOf("more") < 0)
           helper.menuAddButtonGroup(null);
         SC subMenu = menuNewSubMenu(label, id + "." + item);
-        menuAddSubMenu(menu, subMenu);
-        if (item.indexOf("Computed") < 0)
-          addMenuItems(id, item, subMenu, popupResourceBundle);
-        appCheckSpecialMenu(item, subMenu, label);
+        menuAddSubMenu(menu, subMenu);        
+        addMenu(id, item, subMenu, label, popupResourceBundle);
         newItem = subMenu;
       } else if (item.endsWith("Checkbox")
           || (isCB = (item.endsWith("CB") || item.endsWith("RD")))) {
@@ -204,6 +202,13 @@ public abstract class GenericPopup implements GenericMenuInterface {
       }
       appCheckItem(item, newItem);
     }
+  }
+
+  protected void addMenu(String id, String item, SC subMenu, String label,
+                       PopupResource popupResourceBundle) {
+    if (item.indexOf("Computed") < 0)
+      addMenuItems(id, item, subMenu, popupResourceBundle);
+    appCheckSpecialMenu(item, subMenu, label);
   }
 
   protected void updateSignedAppletItems() {
@@ -247,6 +252,8 @@ public abstract class GenericPopup implements GenericMenuInterface {
   }
 
   protected void menuSetLabel(SC m, String entry) {
+    if (m == null)
+      return;
     m.setText(entry);
     isTainted = true;
   }
@@ -402,6 +409,11 @@ public abstract class GenericPopup implements GenericMenuInterface {
     return i;
   }
 
+  /**
+   * @param x  
+   * @param y 
+   * @param doPopup 
+   */
   protected void show(int x, int y, boolean doPopup) {
     appUpdateForShow();
     updateCheckBoxesForShow();
@@ -441,6 +453,10 @@ public abstract class GenericPopup implements GenericMenuInterface {
     return appGetMenuAsString(title);
   }
 
+  /**
+   * @param title  
+   * @return null
+   */
   protected String appGetMenuAsString(String title) {
     // main Jmol menu and JSpecView menu only
     return null;

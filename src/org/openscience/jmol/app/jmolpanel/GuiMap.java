@@ -309,11 +309,15 @@ public class GuiMap {
   }
 
   public void setSelected(String key, boolean b) {
-    ((AbstractButton) get(key)).setSelected(b);
+    AbstractButton btn = ((AbstractButton) get(key));
+    if (btn != null)
+      btn.setSelected(b);
   }
 
   public void setEnabled(String key, boolean b) {
-    ((AbstractButton) get(key)).setEnabled(b);
+    AbstractButton btn = ((AbstractButton) get(key));
+    if (btn != null)
+      btn.setEnabled(b);
   }
 
   public void updateLabels() {

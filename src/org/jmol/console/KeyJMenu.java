@@ -27,12 +27,17 @@ package org.jmol.console;
 import java.util.Map;
 
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 import org.jmol.api.JmolAbstractButton;
+import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 public class KeyJMenu extends JMenu implements JmolAbstractButton {
 
   private String key;
+  
+  public String[] itemKeys;
+  
   @Override
   public String getKey() {
     return key;
@@ -45,6 +50,25 @@ public class KeyJMenu extends JMenu implements JmolAbstractButton {
   
   @Override
   public void addConsoleListener(Object console) {
+  }
+
+  public void createItemKeys(JmolPanel jmolPanel) {
+    if (itemKeys == null)
+      return;
+    System.out.println("late binding for " + getActionCommand());
+    // Loop over the items in this menu:
+    for (int i = 0; i < itemKeys.length; i++) {
+      String item = itemKeys[i];
+      if (item.equals("-")) {
+        addSeparator();
+      } else if (item.endsWith("Menu")) {
+        add(jmolPanel.createMenu(item));
+      } else {
+        JMenuItem mi = jmolPanel.createMenuItem(item);
+        add(mi);
+      }
+    }
+    itemKeys = null;
   }
 
 

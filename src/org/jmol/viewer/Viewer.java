@@ -25,7 +25,6 @@ package org.jmol.viewer;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -519,7 +518,7 @@ public class Viewer extends JmolViewer
         jmolObject = jmol;
         html5Applet = applet;
         strJavaVersion = javaver;
-        strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)");
+        strJavaVendor = "Java2Script " + (isWebGL ? "(WebGL)" : "(HTML5)");
       }
       o = Interface.getInterface(platform, this, "setOptions");
     }
@@ -2953,7 +2952,7 @@ public class Viewer extends JmolViewer
    * @param atomIndex
    * @param atomIndexNot
    * @param allowCyclic
-   * @return
+   * @return bitset for this branch
    */
   public BS getBranchBitSet(int atomIndex, int atomIndexNot,
                             boolean allowCyclic) {
@@ -3925,24 +3924,24 @@ public class Viewer extends JmolViewer
     return imageBuffer;
   }
 
-  /**
-   * will be true only if this is in an undecorated window such as an applet
-   * 
-   * @param graphics
-   * @return
-   */
-  private boolean isUndecorated(Object graphics) {
-    Graphics2D g = (Graphics2D) graphics;
-
-    int canvasWidth = -1, canvasHeight = -1;
-    /**
-     * @j2sNative
-     * 
-     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
-     * 
-     */
-    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
-  }
+//  /**
+//   * will be true only if this is in an undecorated window such as an applet
+//   * 
+//   * @param graphics
+//   * @return
+//   */
+//  private boolean isUndecorated(Object graphics) {
+//    Graphics2D g = (Graphics2D) graphics;
+//
+//    int canvasWidth = -1, canvasHeight = -1;
+//    /**
+//     * @j2sNative
+//     * 
+//     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
+//     * 
+//     */
+//    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
+//  }
 
   /**
    * @return byte[] image, or null and an error message
@@ -7976,6 +7975,8 @@ public class Viewer extends JmolViewer
    * 
    * @param index
    * @param closestAtomIndex
+   * @param x 
+   * @param y 
    */
   public void highlightBond(int index, int closestAtomIndex, int x, int y) {//, String msg) {
     if (!hoverEnabled)

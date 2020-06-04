@@ -27,12 +27,13 @@ import java.awt.Component;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import org.jmol.api.SC;
 import org.jmol.modelkit.ModelKitPopup;
-import org.jmol.util.Elements;
+import org.jmol.popup.PopupResource;
 
 public class AwtModelKitPopup extends ModelKitPopup {
 
@@ -40,6 +41,49 @@ public class AwtModelKitPopup extends ModelKitPopup {
     helper = new AwtPopupHelper(this);
   }
   
+  @Override
+  protected void addMenu(String id, String item, SC subMenu, String label,
+                         PopupResource popupResourceBundle) {
+    
+    AwtSwingComponent c = (AwtSwingComponent) subMenu;
+    c.deferred = true;
+    c.jm.addMenuListener(new MenuListener() {
+
+      @Override
+      public void menuSelected(MenuEvent e) {
+        if (c.deferred) {
+          c.deferred = false;
+          if (item.indexOf("Computed") < 0)
+            addMenuItems(id, item, subMenu, popupResourceBundle);
+          updateAwtMenus(item);        
+        }
+      }
+
+      @Override
+      public void menuDeselected(MenuEvent e) {
+      }
+
+      @Override
+      public void menuCanceled(MenuEvent e) {
+      }
+      
+    });
+    }
+
+
+  protected void updateAwtMenus(String item) {
+    System.out.println("Awtmodelkitpopup "  + item);
+    switch (item) {
+    case "xtalOp!PersistMenu":
+      lastModelSet = null;
+      jpiUpdateComputedMenus();
+      break;
+    default:
+      updateOperatorMenu();
+      break;
+    }
+  }
+
   @Override
   protected void menuShowPopup(SC popup, int x, int y) {
     try {
