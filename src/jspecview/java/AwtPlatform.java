@@ -27,7 +27,7 @@ import org.jmol.util.Font;
 import jspecview.api.JSVPanel;
 
 
-import netscape.javascript.JSObject;
+//////import netscape.javascript.JSObject;
 
 
 public class AwtPlatform implements GenericPlatform {
@@ -234,15 +234,16 @@ public class AwtPlatform implements GenericPlatform {
   @Override
   public Object getJsObjectInfo(Object[] jsObject, String method,
                                 Object[] args) {
-    JSObject DOMNode = (JSObject) jsObject[0];
-    if (method == null) {
-      String namespaceURI = (String) DOMNode.getMember("namespaceURI");
-      String localName = (String) DOMNode.getMember("localName");
-      return "namespaceURI=\"" + namespaceURI + "\" localName=\"" + localName
-          + "\"";
-    }
-    return (args == null ? DOMNode.getMember(method)
-        : DOMNode.call(method, args));
+//    JSObject DOMNode = (JSObject) jsObject[0];
+//    if (method == null) {
+//      String namespaceURI = (String) DOMNode.getMember("namespaceURI");
+//      String localName = (String) DOMNode.getMember("localName");
+//      return "namespaceURI=\"" + namespaceURI + "\" localName=\"" + localName
+//          + "\"";
+//    }
+//    return (args == null ? DOMNode.getMember(method)
+//        : DOMNode.call(method, args));
+    return null;
   }
 
   @Override

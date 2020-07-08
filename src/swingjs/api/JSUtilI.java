@@ -85,7 +85,7 @@ public interface JSUtilI {
 	 * Get an attribute applet.foo for the applet found using getApplet(null).
 	 * 
 	 * @param key
-	 * @return
+	 * @return value
 	 */
 	Object getAppletAttribute(String key);
 
@@ -329,4 +329,11 @@ public interface JSUtilI {
 	 */
 	void setUIEnabled(JComponent jc, boolean enabled);
 
+  /**
+   * Play an audio
+   * @param buffer
+   * @param format a javax.sound.sampled.AudioFormat
+   * @throws Exception 
+   */
+  void playAudio(byte[] buffer, Object format) throws Exception;
 }

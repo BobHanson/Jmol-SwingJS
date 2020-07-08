@@ -346,8 +346,7 @@ public class IsoExt extends ScriptExt {
         float scale = 1;
         int index = 0;
         if (type.length() > 0) {
-          ++i;
-          if (isFloatParameter(i + 1))
+          if (isFloatParameter(++i))
             index = intParameter(i++);
         }
         if (tokAt(i) == T.scale)

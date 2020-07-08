@@ -284,6 +284,8 @@ class IsoMOReader extends AtomDataReader {
         f = value;
     if (f < 0.0001f)
       return;
+    if (f > params.cutoff)
+      f = params.cutoff;
     //minMax = new float[] {(params.mappedDataMin  = -f / 2), 
     //(params.mappedDataMax = f / 2)};
     for (int i = 0; i < params.psi_monteCarloCount;) {
@@ -294,6 +296,9 @@ class IsoMOReader extends AtomDataReader {
         if (absValue <= getRnd(f))
           continue;
         addVC(points[j], value, 0, false);
+
+        if (i < 200)
+          System.out.println(points[j] + " " + value);
         if (++i == params.psi_monteCarloCount)
           break;
       }
