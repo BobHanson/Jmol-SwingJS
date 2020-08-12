@@ -1061,6 +1061,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       appendCmd(sb, "frame " + vwr.getModelNumberDotted(imesh.modelIndex));
     cmd = PT.rep(cmd, ";; isosurface map"," map");
     cmd = PT.rep(cmd, "; isosurface map", " map");
+    if (cmd.endsWith(" map")) // isosurface map colorscheme "rwb" bug
+      cmd = cmd.substring(0, cmd.length() - 4);
     cmd = cmd.replace('\t', ' ');
     cmd = PT.rep(cmd, ";#", "; #");
     int pt = cmd.indexOf("; #");
