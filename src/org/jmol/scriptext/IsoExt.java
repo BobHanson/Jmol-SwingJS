@@ -464,7 +464,7 @@ public class IsoExt extends ScriptExt {
               faces[0] = eval.expandFloatArray(
                   eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1);
             }
-            points = getAllPoints(e.iToken + 1);
+            points = getAllPoints(e.iToken + 1, 3);
             try {
               polygons = ((MeshCapper) Interface
                   .getInterface("org.jmol.util.MeshCapper", vwr, "script"))
@@ -2388,6 +2388,14 @@ public class IsoExt extends ScriptExt {
           }
         }
         i = eval.iToken;
+        break;
+      case T.val:
+        boolean isBS = e.isAtomExpression(++i);
+        P3[] probes = getAllPoints(i, 1);
+        sbCommand.append(" value " + (isBS ? e.atomExpressionAt(i).toString() : Escape.eAP(probes)));
+        propertyName = "probes";
+        propertyValue = probes;
+        i = e.iToken;
         break;
       case T.gridpoints:
         propertyName = "gridPoints";

@@ -185,7 +185,7 @@ public abstract class ScriptExt {
     return faces;
   }
 
-  protected P3[] getAllPoints(int index) throws ScriptException {
+  protected P3[] getAllPoints(int index, int nmin) throws ScriptException {
     P3[] points = null;
     BS bs = null;
     try {
@@ -208,7 +208,7 @@ public abstract class ScriptExt {
       }
     } catch (Exception e) {
     }
-    if (points.length < 3)
+    if (points == null || points.length < nmin)
       invArg();
     return points;
 

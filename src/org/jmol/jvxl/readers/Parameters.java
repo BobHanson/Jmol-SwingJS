@@ -259,6 +259,8 @@ public class Parameters {
     nContours = 0;
     pocket = null;
     pointSize = Float.NaN;
+    probes = null;
+    probeValues = null;
     propertyDistanceMax = Integer.MAX_VALUE;
     propertySmoothing = false;
     propertySmoothingPower = 4;
@@ -852,9 +854,11 @@ public class Parameters {
   public boolean isMapped;
   public boolean showTiming;
   public float pointSize;
+  public P3[] probes;
   public boolean isModelConnected;
   public BS surfaceAtoms;
   public Object[] filesData; // originally [ String[] names, float[] factors ]
+  public float[] probeValues;
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
     if (!colorDensity)
