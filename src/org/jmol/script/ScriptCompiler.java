@@ -1722,6 +1722,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         // yes, so re-read this one
         isEndOfCommand = true;
         cchToken = 0;
+        if (theTok == T.leftparen)
+          parenCount--;
         return CONTINUE;
       }
       switch (theTok) {
