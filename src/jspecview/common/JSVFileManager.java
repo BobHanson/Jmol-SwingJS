@@ -416,8 +416,8 @@ public class JSVFileManager {
 	}
 
 	private static String nciResolver = "https://cactus.nci.nih.gov/chemical/structure/%FILE/file?format=sdf&get3d=True";
-	private static String nmrdbServerH1 = "http://www.nmrdb.org/tools/jmol/predict.php?POST?molfile=";
-  private static String nmrdbServerC13 = "http://www.nmrdb.org/service/jsmol13c?POST?molfile=";
+	private static String nmrdbServerH1 = "https://www.nmrdb.org/tools/jmol/predict.php?POST?molfile=";
+    private static String nmrdbServerC13 = "https://www.nmrdb.org/service/jsmol13c?POST?molfile=";
 
 	/**
 	 * Accepts either $chemicalname or MOL=molfiledata Queries NMRDB or NIH+NMRDB
