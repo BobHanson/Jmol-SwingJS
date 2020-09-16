@@ -57,6 +57,8 @@ public class JDXSourceStreamTokenizer {
   String line;
 
   private int lineNo;
+  
+  public String rawLine;
 
   String peakLabel() {
     return nextLabel(false);
@@ -85,6 +87,7 @@ public class JDXSourceStreamTokenizer {
         break;
       line = null;
     }
+    rawLine = line;
     int pt = line.indexOf("=");
     if (pt < 0) {
       if (isGet)

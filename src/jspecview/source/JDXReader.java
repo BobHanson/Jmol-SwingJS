@@ -99,6 +99,11 @@ public class JDXReader implements JmolJDXMOLReader {
 
 	private boolean isSimulation;
 
+  /**
+   * For JEOL, skip ##SHIFTREFERENCE 
+   */
+  private boolean ignoreShiftReference; // BH 2020.09.16
+
   private JDXReader(String filePath, boolean obscure, boolean loadImaginary,
   		int iSpecFirst, int iSpecLast, float nmrNormalization) {
   	filePath = PT.trimQuotes(filePath);
@@ -260,6 +265,9 @@ public class JDXReader implements JmolJDXMOLReader {
           spectrum = null;
           continue;
         }
+        if (label.equals("##JCAMPDX")) {
+          setVenderSpecificValues(t.rawLine);
+        }
         if (spectrum == null)
           spectrum = new Spectrum();
         if (readDataLabel(spectrum, label, value, errorLog, obscure))
@@ -274,6 +282,18 @@ public class JDXReader implements JmolJDXMOLReader {
     source.setErrorLog(errorLog.toString());
     return source;
   }
+
+  /**
+   * Set any vendor-specific values. For example, JEOL implementation must ignore ##SHIFTREFERENCE
+   * @param rawLine
+   */
+  private void setVenderSpecificValues(String rawLine) {
+	  if (rawLine.indexOf("JEOL") >= 0) {
+		  System.out.println("Skipping ##SHIFTREFERENCE for JEOL " + rawLine);
+		  ignoreShiftReference = true;
+	  }
+  }
+
 
   private String getValue(String label) {
   	String value = (isTabularDataLabel(label) ? "" : t.getValue());
@@ -711,7 +731,7 @@ public class JDXReader implements JmolJDXMOLReader {
         }
         if (label.equals("##.SHIFTREFERENCE ")) {
           //TODO: don't save in file??
-          if (!(spectrum.dataType.toUpperCase().contains("SPECTRUM")))
+          if (ignoreShiftReference || !(spectrum.dataType.toUpperCase().contains("SPECTRUM")))
             return true;
           value = PT.replaceAllCharacters(value, ")(", "");
           StringTokenizer srt =   new StringTokenizer(value, ",");
@@ -919,14 +939,17 @@ public class JDXReader implements JmolJDXMOLReader {
     double freq = (Double.isNaN(spec.freq2dX) ? spec.observedFreq
         : spec.freq2dX);
     // apply offset
+    boolean isHz = freq != JDXDataObject.ERROR && spec.getXUnits().toUpperCase().equals("HZ");
     if (spec.offset != JDXDataObject.ERROR && freq != JDXDataObject.ERROR
-        && spec.dataType.toUpperCase().contains("SPECTRUM")) {
+        && spec.dataType.toUpperCase().contains("SPECTRUM")
+        && spec.jcampdx.indexOf("JEOL") < 0 // BH 2020.09.16 J Muzyka Centre College
+    		) {
       Coordinate
           .applyShiftReference(xyCoords, spec.dataPointNum, spec.fileFirstX,
-              spec.fileLastX, spec.offset, freq, spec.shiftRefType);
+              spec.fileLastX, spec.offset, isHz ? freq : 1, spec.shiftRefType);
     }
 
-    if (freq != JDXDataObject.ERROR && spec.getXUnits().toUpperCase().equals("HZ")) {
+    if (isHz) {
       Coordinate.applyScale(xyCoords, (1.0 / freq), 1);
       spec.setXUnits("PPM");
       spec.setHZtoPPM(true);
