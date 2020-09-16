@@ -176,9 +176,9 @@ public final class JC {
     "dssrModel", "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model=", // called in DSSR1.java
     "iucr", "http://scripts.iucr.org/cgi-bin/sendcif_yard?%FILE", // e.g. wf5113sup1
     "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
-    "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
-    "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",
-    "nmrdb13", "http://www.nmrdb.org/service/jsmol13c?POST?molfile=",
+    "nmr", "https://www.nmrdb.org/new_predictor?POST?molfile=",
+    "nmrdb", "https://www.nmrdb.org/service/predictor?POST?molfile=",
+    "nmrdb13", "https://www.nmrdb.org/service/jsmol13c?POST?molfile=",
     //"pdb", "http://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/%c2%c3/pdb%file.ent.gz", // new Jmol 14.5.0 10/28/2015
     "magndata", "http://webbdcrista1.ehu.es/magndata/mcif/%FILE.mcif",
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
