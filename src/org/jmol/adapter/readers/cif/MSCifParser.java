@@ -292,10 +292,16 @@ public class MSCifParser extends MSRdr {
       int n = cr.parser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         switch (tok = fieldProperty(cr, i)) {
+        case FWV_ID:
+          // BH 2020.09.16 This was producing F_11 and F_22
+          // by pulling it out, the field is not added twice.
+          pt[0] = pt[1] = pt[2] = 0;
+          type_id = "F_";
+          fid = field;
+          break;
         case WV_ID:
           cr.haveCellWaveVector = true;
           //$FALL-THROUGH$
-        case FWV_ID:
         case FD_ID:
         case FO_ID:
         case FU_ID:
@@ -311,10 +317,6 @@ public class MSCifParser extends MSRdr {
           switch (tok) {
           case WV_ID:
             type_id = "W_";
-            break;
-          case FWV_ID:
-            type_id = "F_";
-            fid = field;
             break;
           case FD_ID:
           case FO_ID:
