@@ -1700,11 +1700,14 @@ public class TransformManager {
     if (Float.isNaN(degrees))
       return true;
     aaTest1.setVA(axis, (float) (degrees / degreesPerRadian));
-    ptTest1.set(4.321f, 1.23456f, 3.14159f);
+    float r = 1;//Math.max(modelRadius, 1);
+    ptTest1.set(4.321f * r, 1.23456f * r, 3.14159f * r);
     getRotation(matrixTest);
     matrixTest.rotate2(ptTest1, ptTest2);
     matrixTest.setAA(aaTest1).rotate2(ptTest1, ptTest3);
-    return (ptTest3.distance(ptTest2) < 0.1);
+    r = ptTest3.distance(ptTest2);
+    System.out.println("TM r=" + r);
+    return (r < 0.1);
   }
 
   public boolean moveToPyMOL(JmolScriptEvaluator eval, float floatSecondsTotal,
