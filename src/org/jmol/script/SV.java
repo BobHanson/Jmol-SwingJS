@@ -1448,6 +1448,11 @@ public class SV extends T implements JSONEncodable {
       return false;
     if (x1.tok == x2.tok) {
       switch (x1.tok) {
+      case integer:
+        if (x2.tok == integer) {
+          return x1.intValue == x2.intValue;
+        }
+        break;
       case string:
         return ((String)x1.value).equalsIgnoreCase((String) x2.value);
       case bitset:
@@ -1507,6 +1512,8 @@ public class SV extends T implements JSONEncodable {
           return sValue(x).compareTo(sValue(y));
       }
       switch (x.tok) {
+      case integer:
+        return (x.intValue < y.intValue ? -1 : x.intValue > y.intValue ? 1 : 0);
       case string:
         return sValue(x).compareTo(sValue(y));
       case varray:
