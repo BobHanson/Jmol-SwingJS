@@ -5450,7 +5450,8 @@ public class ScriptEval extends ScriptExpr {
     float cameraY = Float.NaN;
     float[] pymolView = null;
     Quat q = null;
-    switch (getToken(i).tok) {
+    int tok = getToken(i).tok;
+    switch (tok) {
     case T.pymol:
       // 18-element standard PyMOL view matrix 
       // [0-8] are 3x3 rotation matrix (inverted)
@@ -5588,7 +5589,7 @@ public class ScriptEval extends ScriptExpr {
       axis.set(0, 0, 0);
     else if (axis.length() == 0 && degrees == 0)
       degrees = Float.NaN;
-    isChange = !vwr.tm.isInPosition(axis, degrees);
+    isChange = (tok == T.quaternion || !vwr.tm.isInPosition(axis, degrees));
     // optional zoom
     if (isFloatParameter(i))
       zoom = floatParameter(i++);
