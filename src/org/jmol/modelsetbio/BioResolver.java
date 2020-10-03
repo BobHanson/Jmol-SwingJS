@@ -109,6 +109,7 @@ public final class BioResolver implements Comparator<String[]> {
       ms = modelLoader.ms;
       vwr = modelLoader.ms.vwr;
       modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
+      haveConnect = (ms.getInfoM("someModelsHaveCONECT") == Boolean.TRUE);
     }
     return this;
   }
@@ -234,6 +235,8 @@ public final class BioResolver implements Comparator<String[]> {
   private String[] hNames;
   private int baseBondIndex = 0;
 
+  private boolean haveConnect;
+
   public void initializeHydrogenAddition() {
     baseBondIndex = ms.bondCount;
     bsAddedHydrogens = new BS();
@@ -246,10 +249,18 @@ public final class BioResolver implements Comparator<String[]> {
     plane = new P4();
   }
   
+  /**
+   * Get bonding info for double bonds and add implicit hydrogen atoms, if needed.
+   * 
+   * @param adapter
+   * @param iGroup this group
+   * @param nH legacy quirk
+   */
   public void addImplicitHydrogenAtoms(JmolAdapter adapter, int iGroup, int nH) {
     String group3 = ml.getGroup3(iGroup);
     int nH1;
-    if (haveHsAlready || group3 == null
+    if (haveHsAlready && haveConnect 
+        || group3 == null
         || (nH1 = getStandardPdbHydrogenCount(group3)) == 0)
       return;
     nH = (nH1 < 0 ? -1 : nH1 + nH);
@@ -268,6 +279,8 @@ public final class BioResolver implements Comparator<String[]> {
     }
     getBondInfo(adapter, group3, model);
     ms.am[ms.at[iFirst].mi].isPdbWithMultipleBonds = true;
+    if (haveHsAlready)
+      return;
     bsAtomsForHs.setBits(iFirst, ac);
     bsAddedHydrogens.setBits(ac, ac + nH);
     boolean isHetero = ms.at[iFirst].isHetero();
