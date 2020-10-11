@@ -3397,10 +3397,11 @@ public class ScriptEval extends ScriptExpr {
     float value = Float.NaN;
     EnumType type = EnumType.ABSOLUTE;
     int ipt = 1;
+    boolean isOnly = false;
     while (true) {
       switch (getToken(ipt).tok) {
       case T.only:
-        restrictSelected(false, false);
+        isOnly = true;
         //$FALL-THROUGH$
       case T.on:
         value = 1;
@@ -3413,6 +3414,9 @@ public class ScriptEval extends ScriptExpr {
         setShapeProperty(iShape, "ignore", atomExpressionAt(ipt + 1));
         ipt = iToken + 1;
         continue;
+      case T.decimal:
+        isOnly = (tokAt(ipt + 1) == T.only || floatParameter(ipt) < 0);
+        break;
       case T.integer:
         int dotsParam = intParameter(ipt);
         if (tokAt(ipt + 1) == T.radius) {
@@ -3434,12 +3438,15 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     }
-    RadiusData rd = (Float.isNaN(value) ? encodeRadiusParameter(ipt, false,
+    RadiusData rd = (Float.isNaN(value) ? encodeRadiusParameter(ipt, isOnly,
         true) : new RadiusData(null, value, type, VDW.AUTO));
     if (rd == null)
       return;
     if (Float.isNaN(rd.value))
       invArg();
+    if (isOnly) {
+      restrictSelected(false, false);
+    }
     setShapeSize(iShape, rd);
   }
 
