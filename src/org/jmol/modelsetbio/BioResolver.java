@@ -109,7 +109,7 @@ public final class BioResolver implements Comparator<String[]> {
       ms = modelLoader.ms;
       vwr = modelLoader.ms.vwr;
       modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
-      haveConnect = (ms.getInfoM("someModelsHaveCONECT") == Boolean.TRUE);
+      hasCONECT = (ms.getInfoM("someModelsHaveCONECT") == Boolean.TRUE);
     }
     return this;
   }
@@ -235,7 +235,7 @@ public final class BioResolver implements Comparator<String[]> {
   private String[] hNames;
   private int baseBondIndex = 0;
 
-  private boolean haveConnect;
+  private boolean hasCONECT;
 
   public void initializeHydrogenAddition() {
     baseBondIndex = ms.bondCount;
@@ -259,7 +259,7 @@ public final class BioResolver implements Comparator<String[]> {
   public void addImplicitHydrogenAtoms(JmolAdapter adapter, int iGroup, int nH) {
     String group3 = ml.getGroup3(iGroup);
     int nH1;
-    if (haveHsAlready && haveConnect 
+    if (haveHsAlready && hasCONECT 
         || group3 == null
         || (nH1 = getStandardPdbHydrogenCount(group3)) == 0)
       return;
