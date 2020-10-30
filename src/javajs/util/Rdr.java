@@ -281,10 +281,14 @@ public class Rdr implements GenericLineReader {
 	}
 
 	public static byte[] getMagic(InputStream is, int n) {
-		byte[] abMagic = new byte[n];
+		byte[] abMagic = (n > 264 ? new byte[n] : b264 == null ? (b264 = new byte[264]) : b264);
 		try {
 			is.mark(n + 1);
-			is.read(abMagic, 0, n);
+			int i = is.read(abMagic, 0, n);
+			if (i < n) {
+	      // ensure 
+	      abMagic[0] = abMagic[257] = 0;
+			}
 		} catch (IOException e) {
 		}
 		try {
@@ -481,5 +485,19 @@ public class Rdr implements GenericLineReader {
 
 		return new BufferedWriter(osw);
 	}
+
+	private static byte[] b264;
+
+	public static boolean isTar(BufferedInputStream bis) {
+      byte[] bytes = getMagic(bis, 264);
+      // check for ustar<00>
+      return (bytes[0] != 0 
+          && (bytes[257] & 0xFF) == 0x75
+          && (bytes[258] & 0xFF) == 0x73
+          && (bytes[259] & 0xFF) == 0x74
+          && (bytes[260] & 0xFF) == 0x61
+          && (bytes[261] & 0xFF) == 0x72
+          );
+  }
 
 }

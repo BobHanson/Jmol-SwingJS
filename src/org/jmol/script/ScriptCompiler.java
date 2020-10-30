@@ -234,6 +234,8 @@ public class ScriptCompiler extends ScriptTokenParser {
    * @return cleaned script
    */
   private String cleanScriptComments(String script) {
+    if (script.indexOf('\u00A0') >= 0)
+      script = script.replace('\u00A0', ' ');
     if (script.indexOf('\u201C') >= 0)
       script = script.replace('\u201C', '"');
     if (script.indexOf('\u201D') >= 0)

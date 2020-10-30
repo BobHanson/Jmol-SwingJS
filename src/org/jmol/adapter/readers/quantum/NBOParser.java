@@ -55,22 +55,23 @@ public class NBOParser {
   
 
   //NBO ALPHA  55
-//C 1(cr)   C 2(cr)   C 3(cr)   C 3(lp)   C 1- C 2  C 1- C 2  C 1- H 4 
-//C 1- H 5  C 2- C 3  C 2- H 6  C 3- H 7  C 3- H 8  C 1- C 2* C 1- C 2*
-//C 1- H 4* C 1- H 5* C 2- C 3* C 2- H 6* C 3- H 7* C 3- H 8* C 1(ry)  
-//C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
-//C 1(ry)   C 1(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)  
-//C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 3(ry)   C 3(ry)  
-//C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)  
-//C 3(ry)   H 4(ry)   H 5(ry)   H 6(ry)   H 7(ry)   H 8(ry)  
+  //C 1(cr)   C 2(cr)   C 3(cr)   C 3(lp)   C 1- C 2  C 1- C 2  C 1- H 4 
+  //C 1- H 5  C 2- C 3  C 2- H 6  C 3- H 7  C 3- H 8  C 1- C 2* C 1- C 2*
+  //C 1- H 4* C 1- H 5* C 2- C 3* C 2- H 6* C 3- H 7* C 3- H 8* C 1(ry)  
+  //C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
+  //C 1(ry)   C 1(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)  
+  //C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 2(ry)   C 3(ry)   C 3(ry)  
+  //C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)   C 3(ry)  
+  //C 3(ry)   H 4(ry)   H 5(ry)   H 6(ry)   H 7(ry)   H 8(ry)  
 
   /**
-   * Use the .46 file NBO alpha/beta labels to identify bonds, lone pairs, and lone valences.
+   * Use the .46 file NBO alpha/beta labels to identify bonds, lone pairs, and
+   * lone valences.
    * 
    * @param tokens
    * @param type
    * @param structures
-   * @param nAtoms 
+   * @param nAtoms
    */
   public static void getStructures46(String[] tokens, String type,
                                      Lst<Object> structures, int nAtoms) {
@@ -86,29 +87,42 @@ public class NBOParser {
     for (int n = tokens.length, i = 0; i < n; i++) {
       String org = tokens[i];
       //commented out by fzy. NBOParser should recognize and read in (ry), then output it as {num} on the atom ball
-      if (org.contains("(ry)"))
+      if (org.contains("(ry)") || org.contains("Ryd") || org.contains("RY"))
         break;
-      if (org.contains("*") || org.contains("(cr)"))
+      if (org.contains("*") || org.contains("(cr)") 
+          || org.startsWith("CR(")
+        || org.contains("Cor("))
         continue;
       // lone pair or lone valence
+      if (org.startsWith("LP(")) {
+        int ia = getAtomIndex(org.substring(org.indexOf(")") + 1));
+        matrix[ia][ia] += 1;
+        continue;
+      }
       boolean isLP = org.endsWith("(lp)");
-      boolean isRY=org.endsWith("(ry)");
       if (isLP || org.endsWith("(lv)")) {
         int ia = getAtomIndex(org.substring(0, org.length() - 4));
-        matrix[ia][ia]+= (isLP ? 1 : 10);
+        matrix[ia][ia] += (isLP ? 1 : 10);
         continue;
       }
       // bond
       String[] names = PT.split(org, "-");
-      if (names.length == 3) {
+      switch (names.length) {
+      case 3:
         // three-center bond -- ignored?
-        System.out.println("NBOParser 3-center bonnd " + org + " ignored for Kekule structure");
+        System.out.println("NBOParser 3-center bonnd " + org
+            + " ignored for Kekule structure");
         continue;
+      case 2:
+        if (names[0].startsWith("BD(")) {
+          names[0] = names[0].substring(names[0].indexOf(")") + 1);
+        }
+        int ia = getAtomIndex(names[0]);
+        int ib = getAtomIndex(names[1]);
+        matrix[ia][ib]++;
+        break;
       }
-      int ia = getAtomIndex(names[0]);
-      int ib = getAtomIndex(names[1]);
-      matrix[ia][ib]++;
-      
+
     }
     dumpMatrix(type, 0, matrix);
   }

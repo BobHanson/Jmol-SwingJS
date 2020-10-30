@@ -147,13 +147,19 @@ public class ZipTools {//implements GenericZipTools {
    * @return directory listing or subfile contents
    */
 //  @Override
-  public static Object getZipFileDirectory(BufferedInputStream bis, String[] list,
+  public static Object getZipFileDirectory(BufferedInputStream bis, 
+                                           String[] list,
                                     int listPtr, boolean asBufferedInputStream) {
     SB ret;
     if (list == null || listPtr >= list.length)
       return getZipDirectoryAsStringAndClose(bis);
-    bis = getPngZipStream(bis, true);
     String fileName = list[listPtr];
+    if (Rdr.isTar(bis))
+      return getTarFileDirectory(bis, fileName, asBufferedInputStream);
+    
+    bis = getPngZipStream(bis, true);
+    
+    
     ZipInputStream zis = new ZipInputStream(bis);
     ZipEntry ze;
     //System.out.println("fname=" + fileName);
@@ -202,7 +208,42 @@ public class ZipTools {//implements GenericZipTools {
     }
   }
 
-//  @Override
+  private static Object getTarFileDirectory(BufferedInputStream bis,
+                                            String fileName,
+                                            boolean asBufferedInputStream) {
+    SB ret;
+    try {
+      boolean isAll = (fileName.equals("."));
+      if (isAll || fileName.lastIndexOf("/") == fileName.length() - 1) {
+        ret = new SB();
+        getTarContents(bis, fileName, ret);
+        String str = ret.toString();
+        return (asBufferedInputStream ? Rdr.getBIS(str.getBytes()) : str);
+      }
+      int pt = fileName.indexOf(":asBinaryString");
+      boolean asBinaryString = (pt > 0);
+      if (asBinaryString)
+        fileName = fileName.substring(0, pt);
+      fileName = fileName.replace('\\', '/');
+      byte[] bytes = getTarContents(bis, fileName, null);
+      bis.close();
+      if (bytes == null)
+        return "";
+      if (asBufferedInputStream)
+        return Rdr.getBIS(bytes);
+      if (asBinaryString) {
+        ret = new SB();
+        for (int i = 0; i < bytes.length; i++)
+          ret.append(Integer.toHexString(bytes[i] & 0xFF)).appendC(' ');
+        return ret.toString();
+      }
+      return Rdr.fixUTF(bytes);
+    } catch (Exception e) {
+      return "";
+    }
+  }
+
+  //  @Override
   public static byte[] getZipFileContentsAsBytes(BufferedInputStream bis,
                                           String[] list, int listPtr) {
     byte[] ret = new byte[0];
@@ -210,6 +251,8 @@ public class ZipTools {//implements GenericZipTools {
     if (fileName.lastIndexOf("/") == fileName.length() - 1)
       return ret;
     try {
+      if (Rdr.isTar(bis))
+        return getTarContents(bis, fileName, null);
       bis = getPngZipStream(bis, true);
       ZipInputStream zis = new ZipInputStream(bis);
       ZipEntry ze;
@@ -225,7 +268,56 @@ public class ZipTools {//implements GenericZipTools {
     return ret;
   }
   
-//  @Override
+  private static byte[] b512;
+  
+  private static byte[] getTarContents(BufferedInputStream zis, String fileName, SB sb)
+      throws IOException {
+    if (b512 == null)
+      b512 = new byte[512];
+    int len = fileName.length();
+    while (zis.read(b512) > 0) {
+      byte[] bytes = getTarFile(zis, fileName, len, sb);
+      if (bytes != null)
+        return bytes;
+    }
+    return null;
+  }
+
+  private static byte[] getTarFile(BufferedInputStream zis, String fileName,
+                                   int len, SB sb)
+      throws IOException {
+    int j = 124;
+    while (b512[j] == 48)
+      j++;
+    boolean isAll = (sb != null && fileName.equals("."));
+    int nbytes = 0;
+    while (j < 135)
+      nbytes = (nbytes << 3) + (b512[j++] - 48);
+    if (nbytes == 0)
+      return null;
+    String fname = new String(b512, 0, 100).trim();
+    String prefix = new String(b512, 345, 155).trim();
+
+    if (sb != null) {
+      String name = prefix + fname;
+      if (isAll || name.startsWith(fileName))
+        sb.append(name).appendC('\n');
+      len = -1;
+    }
+
+    int np;
+    if (len != (np = prefix.length()) + fname.length() || np > 0 && !fname.startsWith(prefix)
+        || !fileName.endsWith(fname)) {
+      int nul = 512 - (nbytes % 512);
+      int nBlocks = (nbytes + (nul == 512 ? 0 : nul)) >> 9;
+      for (int i = nBlocks; --i >= 0;)
+        zis.read(b512);
+      return null;
+    }
+    return Rdr.getLimitedStreamBytes(zis, nbytes);
+  }
+
+  //  @Override
   public static String getZipDirectoryAsStringAndClose(BufferedInputStream bis) {
     SB sb = new SB();
     String[] s = new String[0];

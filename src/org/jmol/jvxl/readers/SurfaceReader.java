@@ -92,6 +92,7 @@ public abstract class SurfaceReader implements VertexDataServer {
    *                    |           |
    *                    |           |______ApbsReader
    *                    |           |______CubeReader
+   *                    |           |______DXReader
    *                    |           |______JaguarReader
    *                    |           |______JvxlXmlReader
    *                    |           |           |______JvxlReader
