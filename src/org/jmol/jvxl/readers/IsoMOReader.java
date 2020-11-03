@@ -236,14 +236,16 @@ class IsoMOReader extends AtomDataReader {
     if (line.indexOf("%O") >= 0) {
       Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
       float o = (obj == null ? 0 : obj.floatValue());
-      line = PT.formatStringS(line, "O", obj != null && ++rep != 0
+      line = PT.formatStringS(line, "O", obj != null 
+          && params.qm_moLinearCombination == null && ++rep != 0
           ? (o == (int) o ? "" + (int) o : PT.formatF(o, 0, 4, false, false))
           : "");
     }
     if (line.indexOf("%T") >= 0)
       line = PT.formatStringS(line, "T",
-          mo != null && mo.containsKey("type") && ++rep != 0
-              ? "" + mo.get("type")
+          mo != null && mo.containsKey("type")
+              ? (params.qm_moLinearCombination == null  && ++rep != 0 ? "" + mo.get("type")
+              : "") + ((params.isSquared || params.isSquaredLinear) && ++rep != 0 ? " ^2" : "")
               : "");
     if (line.equals("string")) {
       params.title[iLine] = "";
