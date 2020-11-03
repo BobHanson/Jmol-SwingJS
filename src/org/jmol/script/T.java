@@ -693,7 +693,6 @@ public class T {
   public final static int label            = 18 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
-  public final static int now              = 21 | 0 << 9 | mathfunc;
   public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
@@ -750,6 +749,7 @@ public class T {
   public final static int smiles       = 5 | 2 << 9 | mathfunc;
   public final static int contact      = 6 | 2 << 9 | mathfunc | shapeCommand;
   public final static int eval         = 7 | 2 << 9 | mathfunc;
+  public final static int now          = 8 | 2 << 9 | mathfunc;
 
 
   // ___.xxx(a,b)

@@ -281,7 +281,11 @@ public class Platform implements GenericPlatform {
     } else if (isoType.contains("8601")) {
       return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
     }
-    return new SimpleDateFormat(isoType).format(new Date());
+    try {
+      return new SimpleDateFormat(isoType).format(new Date());
+    } catch (Exception e) {
+      return "?";
+    }
   }
 //  @Override
 //  public String getDateFormat(boolean isoiec8824) {

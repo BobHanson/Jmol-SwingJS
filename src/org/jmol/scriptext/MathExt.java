@@ -102,17 +102,24 @@ public class MathExt {
 
   ///////////// ScriptMathProcessor extensions ///////////
 
+  private static long t0 = System.currentTimeMillis();
   
   public boolean evaluate(ScriptMathProcessor mp, T op, SV[] args, int tok)
       throws ScriptException {
     switch (tok) {
+    case T.now:
+      return (args.length >= 1 && args[0].tok == T.string
+          ? mp.addXStr((args.length == 1 ? new Date().toString() : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) + "\t" + SV.sValue(args[0]).trim())
+          : mp.addXInt(((int) (System.currentTimeMillis() - t0))
+              - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
+      return (args.length == 1 && args[0].tok == T.integer ?
+          mp.addXInt(Math.abs(args[0].asInt())) : mp.addXFloat(Math.abs(args[0].asFloat())));
     case T.acos:
     case T.cos:
-    case T.now:
     case T.sin:
     case T.sqrt:
-      return evaluateMath(mp, args, tok);
+      return (args.length == 1 && evaluateMath(mp, args, tok));
     case T.add:
     case T.div:
     case T.mul:
@@ -126,7 +133,8 @@ public class MathExt {
         mp.wasX = false;
       //$FALL-THROUGH$
     case T.array:
-      return evaluateArray(mp, args, tok == T.array && op.tok == T.propselector);
+      return evaluateArray(mp, args,
+          tok == T.array && op.tok == T.propselector);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -217,8 +225,8 @@ public class MathExt {
       return evaluateSpacegroup(mp, args);
     case T.symop:
       return evaluateSymop(mp, args, op.tok == T.propselector);
-      //    case Token.volume:
-      //    return evaluateVolume(args);
+    //    case Token.volume:
+    //    return evaluateVolume(args);
     case T.tensor:
       return evaluateTensor(mp, args);
     case T.within:
@@ -2263,31 +2271,22 @@ public class MathExt {
   }
 
   private boolean evaluateMath(ScriptMathProcessor mp, SV[] args, int tok) {
-    if (tok == T.now) {
-      if (args.length == 1 && args[0].tok == T.string)
-        return mp.addXStr((new Date()) + "\t" + SV.sValue(args[0]));
-      return mp.addXInt(((int) System.currentTimeMillis() & 0x7FFFFFFF)
-          - (args.length == 0 ? 0 : args[0].asInt()));
-    }
-    if (args.length != 1)
-      return false;
-    if (tok == T.abs) {
-      if (args[0].tok == T.integer)
-        return mp.addXInt(Math.abs(args[0].asInt()));
-      return mp.addXFloat(Math.abs(args[0].asFloat()));
-    }
     double x = SV.fValue(args[0]);
     switch (tok) {
-    case T.acos:
-      return mp.addXFloat((float) (Math.acos(x) * 180 / Math.PI));
-    case T.cos:
-      return mp.addXFloat((float) Math.cos(x * Math.PI / 180));
-    case T.sin:
-      return mp.addXFloat((float) Math.sin(x * Math.PI / 180));
     case T.sqrt:
-      return mp.addXFloat((float) Math.sqrt(x));
+      x = Math.sqrt(x);
+      break;
+    case T.sin:
+      x = Math.sin(x * Math.PI / 180);
+      break;
+    case T.cos:
+      x = Math.cos(x * Math.PI / 180);
+      break;
+    case T.acos:
+      x = Math.acos(x) * 180 / Math.PI;
+      break;
     }
-    return false;
+    return mp.addXFloat((float) x);
   }
 
   //  private boolean evaluateVolume(ScriptVariable[] args) throws ScriptException {
