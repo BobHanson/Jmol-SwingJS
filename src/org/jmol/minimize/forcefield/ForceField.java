@@ -141,7 +141,7 @@ abstract public class ForceField {
     dE = 0;
     calc.setPreliminary(stepMax > 0);
     e0 = energyFull(false, false);
-    s = PT.sprintf(" Initial " + name + " E = %10.3f " + minimizer.units + " criterion = %8.6f max steps = " + stepMax, 
+    s = PT.sprintf(" Initial " + name + " E = %10.3f " + minimizer.units + "/mol criterion = %8.6f max steps = " + stepMax, 
         "ff", new Object[] {Float.valueOf(toUserUnits(e0)), Float.valueOf(toUserUnits(criterion)) });
     minimizer.report(s, false);
     calc.appendLogData(s);
@@ -175,7 +175,7 @@ abstract public class ForceField {
 
       if (done || currentStep % 10 == 0 || stepMax <= currentStep) {
         String s = PT.sprintf(name + " Step %-4d E = %10.6f    dE = %8.6f ",
-            "Fi", new Object[] {new float[] { (float) e1, (float) (dE), (float) criterion },
+            "Fi", new Object[] {new float[] { toUserUnits(e1), toUserUnits(dE) },
             Integer.valueOf(currentStep) });
         minimizer.report(s, false);
         calc.appendLogData(s);
@@ -186,7 +186,7 @@ abstract public class ForceField {
           calc.appendLogData(calc.getAtomList("F I N A L  G E O M E T R Y"));
         if (done) {
           String s = PT.formatStringF(
-              "\n    " + name + " STEEPEST DESCENT HAS CONVERGED: E = %8.5f " + minimizer.units + " after " + currentStep + " steps", "f",
+              "\n    " + name + " STEEPEST DESCENT HAS CONVERGED: E = %8.5f " + minimizer.units + "/mol after " + currentStep + " steps", "f",
               toUserUnits(e1));
           calc.appendLogData(s);
           minimizer.report(s, true);

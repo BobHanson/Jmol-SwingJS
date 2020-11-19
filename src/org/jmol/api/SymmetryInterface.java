@@ -83,6 +83,8 @@ public interface SymmetryInterface {
 
   public M4 getSpaceGroupOperation(int i);
 
+  public M4 getSpaceGroupOperationRaw(int i);
+
   public String getSpaceGroupOperationCode(int op);
 
   public int getSpaceGroupOperationCount();

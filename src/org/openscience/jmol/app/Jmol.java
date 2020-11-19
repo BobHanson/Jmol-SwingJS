@@ -24,7 +24,6 @@
 package org.openscience.jmol.app;
 
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.Point;
 import java.util.Hashtable;
 import java.util.Map;

@@ -470,7 +470,7 @@ public class MMCifReader extends CifReader {
   private boolean processSequence() throws Exception {
     parseLoopParameters(structRefFields);
     String g1, g3;
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       if (isNull(g1 = getField(STRUCT_REF_G1).toLowerCase())
           || g1.length() != 1 || isNull(g3 = getField(STRUCT_REF_G3)))
         continue;
@@ -483,11 +483,11 @@ public class MMCifReader extends CifReader {
 
   private boolean processAssemblyGenBlock() throws Exception {
     parseLoopParameters(assemblyFields);
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       String[] assem = new String[3];
       int count = 0;
       int p;
-      int n = parser.getColumnCount();
+      int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         switch (p = fieldProperty(i)) {
         case ASSEM_ID:
@@ -586,11 +586,11 @@ public class MMCifReader extends CifReader {
     parseLoopParametersFor((isNCS ? FAMILY_NCS : FAMILY_OPER), isNCS ? ncsoperFields : operFields);
     float[] m = new float[16];
     m[15] = 1;
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       int count = 0;
       String id = null;
       String xyz = null;
-      int n = parser.getColumnCount();
+      int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         int p = fieldProperty(i);
         switch (p) {
@@ -663,7 +663,7 @@ public class MMCifReader extends CifReader {
   private boolean processChemCompLoopBlock() throws Exception {
     parseLoopParameters(chemCompFields);
     String groupName, hetName;
-    while (parser.getData())
+    while (cifParser.getData())
       if (!isNull(groupName = getField(CHEM_COMP_ID))
           && !isNull(hetName = getField(CHEM_COMP_NAME)))
         addHetero(groupName, hetName, true, true);
@@ -750,15 +750,15 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructConfLoopBlock() throws Exception {
     if (ignoreStructure) {
-      parser.skipLoop(false);
+      cifParser.skipLoop(false);
       return false;
     }
     parseLoopParametersFor(FAMILY_STRUCTCONF, structConfFields);
     if (!checkAllFieldsPresent(structConfFields, -1, true)) {
-      parser.skipLoop(true);
+      cifParser.skipLoop(true);
       return false;
     }
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, 0, 0, null);
       
       String type = getField(CONF_TYPE_ID);
@@ -817,15 +817,15 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructSheetRangeLoopBlock() throws Exception {
     if (ignoreStructure) {
-      parser.skipLoop(false);
+      cifParser.skipLoop(false);
       return false;
     }
     parseLoopParametersFor(FAMILY_SHEET, structSheetRangeFields);
     if (!checkAllFieldsPresent(structSheetRangeFields, -1, true)) {
-      parser.skipLoop(true);
+      cifParser.skipLoop(true);
       return false;
     }
-    while (parser.getData())
+    while (cifParser.getData())
       addStructure(new Structure(-1, STR.SHEET, STR.SHEET, getField(SHEET_ID), 
           parseIntStr(getField(STRAND_ID)), 1, null));
     return true;
@@ -882,7 +882,7 @@ public class MMCifReader extends CifReader {
     Map<String, Object> htSite = null;
     htSites = new Hashtable<String, Map<String, Object>>();
     String seqNum, resID;
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       if (isNull(seqNum = getField(SITE_SEQ_ID))
           || isNull(resID = getField(SITE_COMP_ID)))
         continue;
@@ -1078,7 +1078,7 @@ public class MMCifReader extends CifReader {
 
   private boolean processStructConnLoopBlock() throws Exception {
     parseLoopParametersFor(FAMILY_STRUCTCONN, structConnFields);
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       String sym1 = getField(STRUCT_CONN_SYMM1);
       String sym2 = getField(STRUCT_CONN_SYMM2);
       if (!sym1.equals(sym2) || !isNull(sym1) && !sym1.equals("1_555"))
@@ -1128,7 +1128,7 @@ public class MMCifReader extends CifReader {
   private boolean processCompBondLoopBlock() throws Exception {
     doSetBonds = true;
     parseLoopParametersFor(FAMILY_COMPBOND, chemCompBondFields);
-    while (parser.getData()) {
+    while (cifParser.getData()) {
       String comp = getField(CHEM_COMP_BOND_ID);
       String atom1 = getField(CHEM_COMP_BOND_ATOM_ID_1);
       String atom2 = getField(CHEM_COMP_BOND_ATOM_ID_2);
@@ -1226,8 +1226,8 @@ public class MMCifReader extends CifReader {
     }      
     if (iHaveDesiredModel && asc.atomSetCount > 0 && !isAssembly) {
       done = true;
-      if (parser != null) {
-        parser.skipLoop(false);
+      if (cifParser != null) {
+        cifParser.skipLoop(false);
         // but only this atom loop
         skipping = false;
       }

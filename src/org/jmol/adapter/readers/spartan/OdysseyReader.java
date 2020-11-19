@@ -39,6 +39,11 @@ public class OdysseyReader extends SpartanInputReader {
   public void initializeReader() throws Exception {
     String title = readInputRecords();
     asc.setAtomSetName(title == null ? "Odyssey file" : title);
+    while (line != null && line.indexOf("END ") < 0
+        && line.indexOf("MOLSTATE") < 0)
+      rd();
+    if (line != null && line.indexOf("MOLSTATE") >= 0)
+      readTransform();
     continuing = false;
   }
   

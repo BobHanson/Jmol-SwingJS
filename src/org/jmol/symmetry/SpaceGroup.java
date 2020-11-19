@@ -294,6 +294,8 @@ class SpaceGroup {
       while (sg != null) {
         // I don't know why there would be multiples here
         sb.append(sg.dumpInfo());
+        if (sg.index >= SG.length)
+          break;
         sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
       }
       return sb.toString();
@@ -1732,6 +1734,13 @@ class SpaceGroup {
     if (name != null && name.startsWith("HM:")) {
       setHMSymbol(name.substring(3));
     }
+  }
+
+  public M4 getRawOperation(int i) {
+    SymmetryOperation op = new SymmetryOperation(null, null, 0, 0, false);
+    op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
+    op.doFinalize();
+    return op;
   }
 
 //  private int[] latticeOps;
