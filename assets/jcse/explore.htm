@@ -75,7 +75,7 @@ function getModelSelectHtml() {
 		isDefault = false
 		defaultScript = 'set echo top left;echo loading ' + selectedModel + '...;refresh;load ' + xxxx + ';echo "";'
 	} else {
-		selectedModel = "quartz.cif packed"
+		selectedModel = datadir + "/quartz.cif packed"
 		isDefault = false
   }
 	var s = "<select id='modelselect' onchange=getModel() onkeypress=\"setTimeout('getModel()',50)\"><option value=''>select a model</option>"
