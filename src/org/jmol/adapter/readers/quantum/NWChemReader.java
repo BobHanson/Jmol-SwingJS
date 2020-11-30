@@ -1012,6 +1012,12 @@ rate(mb/s): 3.96e+02  2.06e+03  0.00e+00* 2.49e+03*
     RL();
     if (!purging && line != null && line.startsWith("--")) {
       purging = true;
+      if (rd().indexOf("EAF") == 0) {
+        rd();
+        discardLinesUntilStartsWith("--");
+        purging = false;
+        return rd();
+      };
       discardLinesUntilStartsWith("*");
       rd();
       purging = false;

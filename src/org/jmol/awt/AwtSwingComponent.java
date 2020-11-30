@@ -37,7 +37,8 @@ public class AwtSwingComponent implements SC {
   AbstractButton ab;
   JMenuItem jmi;
   JMenu jm;
-  private SC parent; 
+  private SC parent;
+  public boolean deferred; 
 
   static SC getPopup(String title, Map<Object, SC> htSources) {
     AwtSwingComponent c = new AwtSwingComponent();

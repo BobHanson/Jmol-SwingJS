@@ -74,7 +74,8 @@ public class DataManager implements JmolDataManager {
   @Override
   public void setData(String type, Object[] data, int arrayCount,
                       int actualAtomCount, int matchField,
-                      int matchFieldColumnCount, int field, int fieldColumnCount) {
+                      int matchFieldColumnCount, int field,
+                      int fieldColumnCount) {
     //Eval
     /*
      * data[0] -- label
@@ -90,7 +91,7 @@ public class DataManager implements JmolDataManager {
      *   Integer.MIN_VALUE ==> one SINGLE data value should be used for all selected atoms
      */
     if (type == null) {
-      clear(  );
+      clear();
       return;
     }
     type = type.toLowerCase();
@@ -113,20 +114,22 @@ public class DataManager implements JmolDataManager {
     int depth = getType(data);
     Object val = data[JmolDataManager.DATA_VALUE];
     if (depth == JmolDataManager.DATA_TYPE_UNKNOWN)
-      data[JmolDataManager.DATA_TYPE] = Integer
-          .valueOf(depth = (val instanceof String ? JmolDataManager.DATA_TYPE_STRING
+      data[JmolDataManager.DATA_TYPE] = Integer.valueOf(
+          depth = (val instanceof String ? JmolDataManager.DATA_TYPE_STRING
               : AU.isAF(val) ? JmolDataManager.DATA_TYPE_AF
-                  : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF : AU
-                      .isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
-                      : JmolDataManager.DATA_TYPE_UNKNOWN));
+                  : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF
+                      : AU.isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
+                          : JmolDataManager.DATA_TYPE_UNKNOWN));
     if (data[JmolDataManager.DATA_SELECTION] != null && arrayCount > 0) {
-      boolean createNew = (matchField != 0 || field != Integer.MIN_VALUE
-          && field != Integer.MAX_VALUE);
+      boolean createNew = (matchField != 0
+          || field != Integer.MIN_VALUE && field != Integer.MAX_VALUE);
       Object[] oldData = dataValues.get(type);
       BS bs;
       float[] f = (oldData == null || createNew ? new float[actualAtomCount]
-          : AU.ensureLengthA(((float[]) oldData[JmolDataManager.DATA_VALUE]), actualAtomCount));
+          : AU.ensureLengthA(((float[]) oldData[JmolDataManager.DATA_VALUE]),
+              actualAtomCount));
 
+      float[][] ff = null;
       // check to see if the data COULD be interpreted as a string of float values
       // and if so, do that. This pre-fetches the tokens in that case.
 
@@ -134,11 +137,15 @@ public class DataManager implements JmolDataManager {
         Logger.error("Cannot determine data type for " + val);
         return;
       }
-      String stringData = (depth == JmolDataManager.DATA_TYPE_STRING ? (String) val
+      String stringData = (depth == JmolDataManager.DATA_TYPE_STRING
+          ? (String) val
           : null);
       float[] floatData = (depth == JmolDataManager.DATA_TYPE_AF ? (float[]) val
           : null);
       String[] strData = null;
+      float[][] ffData = (depth == JmolDataManager.DATA_TYPE_AFF
+          ? (float[][]) val
+          : null);
       if (field == Integer.MIN_VALUE
           && (strData = PT.getTokens(stringData)).length > 1)
         field = 0;
@@ -152,17 +159,29 @@ public class DataManager implements JmolDataManager {
         if (floatData != null) {
           int n = floatData.length;
           if (n == bs.cardinality()) {
-            for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
-                .nextSetBit(i + 1), pt++)
-              f[i] = floatData[pt];
+            fillSparseArray(floatData, bs, f);
           } else {
-            for (int i = bs.nextSetBit(0); i >= 0 && i < n; i = bs
-                .nextSetBit(i + 1))
+            for (int i = bs.nextSetBit(0); i >= 0
+                && i < n; i = bs.nextSetBit(i + 1))
               f[i] = floatData[i];
           }
-        } else {
+        } else if (stringData != null) {
           Parser.parseFloatArrayBsData(
               strData == null ? PT.getTokens(stringData) : strData, bs, f);
+        } else if (ffData != null) {
+          int n = ffData.length;
+          ff = (oldData == null || createNew ? AU.newFloat2(actualAtomCount)
+              : (float[][]) AU.ensureLength(oldData[JmolDataManager.DATA_VALUE],
+                  actualAtomCount));
+          if (n == bs.cardinality()) {
+            for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
+                .nextSetBit(i + 1), pt++)
+              fillSparseArray(ffData[pt], bs, ff[i] = new float[actualAtomCount]);
+          } else {
+            for (int i = bs.nextSetBit(0); i >= 0
+                && i < n; i = bs.nextSetBit(i + 1))
+              ff[i] = ffData[i];
+          }
         }
       } else if (matchField <= 0) {
         // get the specified field >= 1 for the selected atoms
@@ -184,10 +203,16 @@ public class DataManager implements JmolDataManager {
           && oldData[JmolDataManager.DATA_SELECTION] instanceof BS
           && !createNew)
         bs.or((BS) (oldData[JmolDataManager.DATA_SELECTION]));
-      data[JmolDataManager.DATA_TYPE] = Integer
-          .valueOf(JmolDataManager.DATA_TYPE_AF);
       data[JmolDataManager.DATA_SELECTION] = bs;
-      data[JmolDataManager.DATA_VALUE] = f;
+      if (ff == null) {
+        data[JmolDataManager.DATA_TYPE] = Integer
+            .valueOf(JmolDataManager.DATA_TYPE_AF);
+        data[JmolDataManager.DATA_VALUE] = f;
+      } else {
+        data[JmolDataManager.DATA_TYPE] = Integer
+            .valueOf(JmolDataManager.DATA_TYPE_AFF);
+        data[JmolDataManager.DATA_VALUE] = ff;
+      }
       if (type.indexOf("property_atom.") == 0) {
         int tok = T.getSettableTokFromString(type = type.substring(14));
         if (tok == T.nada) {
@@ -206,6 +231,12 @@ public class DataManager implements JmolDataManager {
     dataValues.put(type, data);
   }
 
+  private void fillSparseArray(float[] floatData, BS bs, float[] f) {
+    for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
+        .nextSetBit(i + 1), pt++)
+      f[i] = floatData[pt];
+  }
+
   private int getType(Object[] data) {
     return ((Integer) data[JmolDataManager.DATA_TYPE]).intValue();
   }
@@ -219,8 +250,8 @@ public class DataManager implements JmolDataManager {
   private static void setSelectedFloats(float f, BS bs, float[] data) {
     boolean isAll = (bs == null);
     int i0 = (isAll ? 0 : bs.nextSetBit(0));
-    for (int i = i0; i >= 0 && i < data.length; i = (isAll ? i + 1 : bs
-        .nextSetBit(i + 1)))
+    for (int i = i0; i >= 0
+        && i < data.length; i = (isAll ? i + 1 : bs.nextSetBit(i + 1)))
       data[i] = f;
   }
 
@@ -247,7 +278,17 @@ public class DataManager implements JmolDataManager {
         return null;
       if (bsSelected == null)
         return data[JmolDataManager.DATA_VALUE];
-      // When bsSelected is not null, this returns a truncated array, which must be of type float[]
+      // When bsSelected is not null, this returns a truncated array, which must be of type float[] or float[][]
+      if (data[JmolDataManager.DATA_TYPE] == Integer
+          .valueOf(JmolDataManager.DATA_TYPE_AFF)) {
+        float[][] ff = (float[][]) data[JmolDataManager.DATA_VALUE];
+        float[][] fnew = new float[bsSelected.cardinality()][];
+        // load array
+        for (int i = 0, n = ff.length, p = bsSelected.nextSetBit(0); p >= 0
+            && i < n; p = bsSelected.nextSetBit(p + 1))
+          fnew[i++] = ff[p];
+        return fnew;
+      }
       float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
       float[] fnew = new float[bsSelected.cardinality()];
       // load array
@@ -258,18 +299,18 @@ public class DataManager implements JmolDataManager {
     }
   }
 
-//  @Override
-//  public float getDataFloatAt(String label, int atomIndex) {
-//    if (dataValues.size() > 0) {
-//      Object[] data = (Object[]) getData(label, null, 0);
-//      if (data != null && getType(data) == JmolDataManager.DATA_TYPE_AF) {
-//        float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
-//        if (atomIndex < f.length)
-//          return f[atomIndex];
-//      }
-//    }
-//    return Float.NaN;
-//  }
+  //  @Override
+  //  public float getDataFloatAt(String label, int atomIndex) {
+  //    if (dataValues.size() > 0) {
+  //      Object[] data = (Object[]) getData(label, null, 0);
+  //      if (data != null && getType(data) == JmolDataManager.DATA_TYPE_AF) {
+  //        float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
+  //        if (atomIndex < f.length)
+  //          return f[atomIndex];
+  //      }
+  //    }
+  //    return Float.NaN;
+  //  }
 
   @Override
   public void deleteModelAtoms(int firstAtomIndex, int nAtoms, BS bsDeleted) {
@@ -292,16 +333,16 @@ public class DataManager implements JmolDataManager {
     boolean isAll = (bs == null);
     int i0 = (isAll ? 1 : bs.nextSetBit(0));
     int i1 = (isAll ? Elements.elementNumberMax : bs.length());
-    for (int i = i0; i < i1 && i >= 0; i = (isAll ? i + 1 : bs
-        .nextSetBit(i + 1)))
-      sb.appendI(i)
-          .appendC('\t')
-          .appendF(
-              type == VDW.USER ? vwr.userVdws[i] : Elements.getVanderwaalsMar(
-                  i, type) / 1000f).appendC('\t')
-          .append(Elements.elementSymbolFromNumber(i)).appendC('\n');
-    return (bs == null ? sb.toString() : "\n  DATA \"element_vdw\"\n"
-        + sb.append("  end \"element_vdw\";\n\n").toString());
+    for (int i = i0; i < i1
+        && i >= 0; i = (isAll ? i + 1 : bs.nextSetBit(i + 1)))
+      sb.appendI(i).appendC('\t')
+          .appendF(type == VDW.USER ? vwr.userVdws[i]
+              : Elements.getVanderwaalsMar(i, type) / 1000f)
+          .appendC('\t').append(Elements.elementSymbolFromNumber(i))
+          .appendC('\n');
+    return (bs == null ? sb.toString()
+        : "\n  DATA \"element_vdw\"\n"
+            + sb.append("  end \"element_vdw\";\n\n").toString());
   }
 
   @Override
@@ -319,16 +360,14 @@ public class DataManager implements JmolDataManager {
           continue;
         haveData = true;
         Object data = obj[DATA_VALUE];
-        if (data != null
-            && getType(obj) == JmolDataManager.DATA_TYPE_AF) {
+        if (data != null && getType(obj) == JmolDataManager.DATA_TYPE_AF) {
           sc.getAtomicPropertyStateBuffer(sb, AtomCollection.TAINT_MAX,
               (BS) obj[DATA_SELECTION], name, (float[]) data);
           sb.append("\n");
         } else {
           // should not be here -- property_xxx is always float[]
-          sb.append("\n").append(
-              Escape.encapsulateData(name, data,
-                  JmolDataManager.DATA_TYPE_UNKNOWN));//j2s issue?
+          sb.append("\n").append(Escape.encapsulateData(name, data,
+              JmolDataManager.DATA_TYPE_UNKNOWN));//j2s issue?
         }
         continue;
       }

@@ -218,6 +218,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
+  public M4 getSpaceGroupOperationRaw(int i) {
+    return spaceGroup.getRawOperation(i);
+  }
+
+  @Override
   public String getSpaceGroupXyz(int i, boolean doNormalize) {
     return spaceGroup.getXyz(i, doNormalize);
   }

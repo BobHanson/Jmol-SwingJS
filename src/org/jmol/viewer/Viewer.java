@@ -23,8 +23,8 @@
  */
 package org.jmol.viewer;
 
+import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+
+import javax.swing.SwingUtilities;
 
 import org.jmol.adapter.readers.quantum.NBOParser;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
@@ -283,7 +285,7 @@ public class Viewer extends JmolViewer
   private static String version_date;
 
   public static String getJmolVersion() {
-    return (version_date == null ? version_date = JC.version + "  " + JC.date
+    return (version_date == null ? version_date = (JC.version + "  " + JC.date).trim()
         : version_date);
   }
 
@@ -334,7 +336,6 @@ public class Viewer extends JmolViewer
   private boolean dataOnly;
   public boolean isJSNoAWT;
 
-  
   /**
    * new way...
    * 
@@ -387,6 +388,30 @@ public class Viewer extends JmolViewer
       throws Exception {
     return getSmilesMatcher().getSubstructureSet(smarts, atoms, atoms.length,
         null, JC.SMILES_TYPE_SMARTS);
+  }
+
+  /**
+   * 
+   * 
+   * @param smilesOrSmarts
+   * @param bsSelected
+   * @param flags
+   *        can be bitwise OR of JC.SMILES_* options, in particular,
+   * 
+   *        JC.SMILES_TYPE_SMARTS, JC.SMILES_TYPE_SMILES, and
+   *        JC.SMILES_MAP_UNIQUE
+   * 
+   * @return map
+   * @throws Exception
+   */
+  public int[][] getSmartsMap(String smilesOrSmarts, BS bsSelected, int flags)
+      throws Exception {
+    if (bsSelected == null)
+      bsSelected = bsA();
+    if (flags == 0)
+      flags = JC.SMILES_TYPE_SMARTS;
+    return getSmilesMatcher().getCorrelationMaps(smilesOrSmarts, ms.at, ms.ac,
+        bsSelected, flags);
   }
 
   @SuppressWarnings({ "unchecked", "null", "unused" })
@@ -464,14 +489,16 @@ public class Viewer extends JmolViewer
     if (o instanceof String) {
       platform = (String) o;
       if (platform == "")
-        platform = "org.jmol.awt.Platform";
+        platform = (
+            // could do this, but so far unnecessary isSwingJS ? "org.jmol.awtsw.Platform" : 
+            "org.jmol.awt.Platform");
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
-      isJS = isSwingJS || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      isJS = isSwingJS  || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
       JSmolAppletObject applet = null;
       String javaver = "?";
-      
+
       JmolToJSmolInterface jmol = null;
       /**
        * @j2sNative
@@ -491,7 +518,7 @@ public class Viewer extends JmolViewer
         jmolObject = jmol;
         html5Applet = applet;
         strJavaVersion = javaver;
-        strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)");
+        strJavaVendor = "Java2Script " + (isWebGL ? "(WebGL)" : "(HTML5)");
       }
       o = Interface.getInterface(platform, this, "setOptions");
     }
@@ -1697,6 +1724,8 @@ public class Viewer extends JmolViewer
       htParams = setLoadParameters(null, isAppend);
     if (filecat != " ")
       htParams.put("concatenate", Boolean.TRUE);
+    if (tokType != T.nada)
+      htParams.put("dataType", T.nameOf(tokType));
     Object atomSetCollection;
     String[] saveInfo = fm.getFileInfo();
 
@@ -2916,14 +2945,14 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * given a set of atoms, a subset of atoms to test, two atoms that start
-   * the branch, and whether or not to allow the branch to cycle back on
+   * given a set of atoms, a subset of atoms to test, two atoms that start the
+   * branch, and whether or not to allow the branch to cycle back on
    * itself,deliver the set of atoms constituting this branch.
    * 
    * @param atomIndex
    * @param atomIndexNot
    * @param allowCyclic
-   * @return
+   * @return bitset for this branch
    */
   public BS getBranchBitSet(int atomIndex, int atomIndexNot,
                             boolean allowCyclic) {
@@ -3770,7 +3799,7 @@ public class Viewer extends JmolViewer
    * 
    * @param isDouble
    * @param isImageWrite
-   * @param andReturnImage 
+   * @param andReturnImage
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
@@ -3837,7 +3866,7 @@ public class Viewer extends JmolViewer
     gdata.releaseScreenImage();
   }
 
-  public Object getScreenImageBuffer() {
+  public Object getScreenImage() {
     return getScreenImageBuffer(null, true);
   }
 
@@ -3877,42 +3906,42 @@ public class Viewer extends JmolViewer
     }
     if (g == null)
       return imageBuffer;
-      if (isDouble) {
-        if (tm.stereoMode == STER.DTI) {
-          drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
-          imageBuffer = getImage(false, false, false);
-          drawImage(g, imageBuffer, 0, 0, true);
-          g = null;
-        } else {
-          drawImage(g, imageBuffer, dimScreen.width, 0, false);
-          imageBuffer = getImage(false, false, false);
-        }
+    if (isDouble) {
+      if (tm.stereoMode == STER.DTI) {
+        drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
+        imageBuffer = getImage(false, false, false);
+        drawImage(g, imageBuffer, 0, 0, true);
+        g = null;
+      } else {
+        drawImage(g, imageBuffer, dimScreen.width, 0, false);
+        imageBuffer = getImage(false, false, false);
       }
-      if (g != null)
-        drawImage(g, imageBuffer, 0, 0, false);
+    }
+    if (g != null)
+      drawImage(g, imageBuffer, 0, 0, false);
     if (mergeImages)
       imageBuffer = imageBuffer2;
     return imageBuffer;
   }
 
-  /**
-   * will be true only if this is in an undecorated window such as an applet
-   * 
-   * @param graphics
-   * @return
-   */
-  private boolean isUndecorated(Object graphics) {
-    Graphics2D g = (Graphics2D) graphics;
-    
-    int canvasWidth = -1, canvasHeight = -1;
-    /**
-     * @j2sNative
-     * 
-     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
-     * 
-     */
-    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
-  }
+//  /**
+//   * will be true only if this is in an undecorated window such as an applet
+//   * 
+//   * @param graphics
+//   * @return
+//   */
+//  private boolean isUndecorated(Object graphics) {
+//    Graphics2D g = (Graphics2D) graphics;
+//
+//    int canvasWidth = -1, canvasHeight = -1;
+//    /**
+//     * @j2sNative
+//     * 
+//     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
+//     * 
+//     */
+//    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
+//  }
 
   /**
    * @return byte[] image, or null and an error message
@@ -4024,7 +4053,7 @@ public class Viewer extends JmolViewer
                                                         boolean isQuiet,
                                                         boolean isQueued) {
 
-    if (isJS) {
+    if (isJS && isApplet) {
       if (strScript.indexOf("JSCONSOLE") == 0) {
         jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
         if (strScript.indexOf("CLEAR") >= 0)
@@ -4063,8 +4092,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public synchronized Object scriptCheck(String strScript) {
-    return (getScriptManager() == null ? null
-        : scriptCheckRet(strScript, false));
+    return scriptCheckRet(strScript, false);
   }
 
   @Override
@@ -4370,7 +4398,10 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : g.modelKitMode && modelkit != null ? (String) modelkit.setProperty("hoverLabel", Integer.valueOf(atomIndex)) : null);
+        : g.modelKitMode && modelkit != null
+            ? (String) modelkit.setProperty("hoverLabel",
+                Integer.valueOf(atomIndex))
+            : null);
 
     shm.loadShape(JC.SHAPE_HOVER);
     if (label != null
@@ -4378,7 +4409,8 @@ public class Viewer extends JmolViewer
       setShapeProperty(JC.SHAPE_HOVER, "specialLabel", label);
     }
     setShapeProperty(JC.SHAPE_HOVER, "text", hoverText = null);
-    setShapeProperty(JC.SHAPE_HOVER, "target", Integer.valueOf(hoverAtomIndex = atomIndex));
+    setShapeProperty(JC.SHAPE_HOVER, "target",
+        Integer.valueOf(hoverAtomIndex = atomIndex));
     refresh(REFRESH_SYNC_MASK, "hover on atom");
   }
 
@@ -4388,8 +4420,10 @@ public class Viewer extends JmolViewer
    * @param x
    * @param y
    * @param text
-   * @param id optional id to set _objecthovered to
-   * @param pt optional pt to set "hovered" to 
+   * @param id
+   *        optional id to set _objecthovered to
+   * @param pt
+   *        optional pt to set "hovered" to
    */
   public void hoverOnPt(int x, int y, String text, String id, T3 pt) {
     // from draw for drawhover on
@@ -4417,7 +4451,8 @@ public class Viewer extends JmolViewer
 
   void hoverOff() {
     try {
-      if (g.modelKitMode && acm.getBondPickingMode() != ActionManager.PICKING_ROTATE_BOND)
+      if (g.modelKitMode
+          && acm.getBondPickingMode() != ActionManager.PICKING_ROTATE_BOND)
         highlight(null);
       if (!hoverEnabled)
         return;
@@ -4565,9 +4600,18 @@ public class Viewer extends JmolViewer
     switch (type) {
     case 'j':
       try {
-        getPopupMenu();
+        setCursor(Cursor.WAIT_CURSOR);
         // can throw error if not present; that's ok
-        jmolpopup.jpiShow(x, y);
+        SwingUtilities.invokeLater(new Runnable() {
+
+          @Override
+          public void run() {
+            getPopupMenu();
+            jmolpopup.jpiShow(x, y);
+            setCursor(Cursor.DEFAULT_CURSOR);
+          }
+
+        });
       } catch (Throwable e) {
         // no Swing -- tough luck!
         Logger.info(e.toString());
@@ -4579,7 +4623,7 @@ public class Viewer extends JmolViewer
     case 'm':
       // atom, bond, or main -- ignored
       if (getModelkit(true) == null) {
-          return;
+        return;
       }
       modelkit.jpiShow(x, y);
       break;
@@ -4589,12 +4633,12 @@ public class Viewer extends JmolViewer
   public ModelKitPopup getModelkit(boolean andShow) {
     if (modelkit == null) {
       modelkit = (ModelKitPopup) apiPlatform.getMenuPopup(null, 'm');
-    } else if (andShow) { 
+    } else if (andShow) {
       modelkit.jpiUpdateComputedMenus();
     }
     return modelkit;
   }
-    
+
   public String getMenu(String type) {
     getPopupMenu();
     if (type.equals("\0")) {
@@ -4606,7 +4650,7 @@ public class Viewer extends JmolViewer
             "Jmol version " + getJmolVersion() + "|_GET_MENU|" + type));
   }
 
-  private Object getPopupMenu() {
+  Object getPopupMenu() {
     if (g.disablePopupMenu)
       return null;
     if (jmolpopup == null) {
@@ -4756,7 +4800,7 @@ public class Viewer extends JmolViewer
         currentMorphModel, entryName);
     if (doHaveJDX())
       getJSV().setModel(modelIndex);
-    if (isJS)
+    if (isJS && isApplet)
       updateJSView(modelIndex, -1);
   }
 
@@ -4920,7 +4964,7 @@ public class Viewer extends JmolViewer
       //       setStatusFrameChanged(false, true); // ensures proper title in JmolFrame but then we miss the file name
       if (doHaveJDX())
         getJSV().setModel(am.cmi);
-      if (isJS)
+      if (isJS && isApplet)
         updateJSView(am.cmi, -2);
     }
 
@@ -5067,7 +5111,7 @@ public class Viewer extends JmolViewer
     int syncMode = sm.getSyncMode();
     if (syncMode == StatusManager.SYNC_DRIVER && doHaveJDX())
       getJSV().atomPicked(atomIndex);
-    if (isJS)
+    if (isJS && isApplet)
       updateJSView(ms.at[atomIndex].mi, atomIndex);
   }
 
@@ -5300,6 +5344,8 @@ public class Viewer extends JmolViewer
       return g.ribbonAspectRatio;
     case T.showscript:
       return g.scriptDelay;
+    case T.minimizationmaxatoms:
+      return g.minimizationMaxAtoms;
     case T.smallmoleculemaxatoms:
       return g.smallMoleculeMaxAtoms;
     case T.strutspacing:
@@ -5541,7 +5587,8 @@ public class Viewer extends JmolViewer
   }
 
   boolean getBondsPickable() {
-    return (g.bondPicking || g.modelKitMode && getModelkitProperty("isMolecular") == Boolean.TRUE);
+    return (g.bondPicking || g.modelKitMode
+        && getModelkitProperty("isMolecular") == Boolean.TRUE);
   }
 
   public boolean useMinimizationThread() {
@@ -5641,7 +5688,9 @@ public class Viewer extends JmolViewer
     switch (tok) {
     // 14.29.54 new
     case T.macrodirectory:
-      g.macroDirectory = value = (value == null || value.length() == 0 ? JC.defaultMacroDirectory : value);
+      g.macroDirectory = value = (value == null || value.length() == 0
+          ? JC.defaultMacroDirectory
+          : value);
       macros = null;
       break;
     // 14.4.10 new
@@ -6095,6 +6144,10 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.minimizationmaxatoms:
+      // 14.30.0
+      g.minimizationMaxAtoms = value;
+      break;
     case T.infofontsize:
       g.infoFontSize = Math.max(0, value);
       break;
@@ -6541,8 +6594,8 @@ public class Viewer extends JmolViewer
     // break;
     case T.allowkeystrokes:
       // 11.7.24
-//      if (g.disablePopupMenu)
-//        value = false;
+      //      if (g.disablePopupMenu)
+      //        value = false;
       g.allowKeyStrokes = value;
       break;
     case T.dragselected:
@@ -7385,7 +7438,7 @@ public class Viewer extends JmolViewer
 
   public JmolAppConsoleInterface appConsole;
   private JmolScriptEditorInterface scriptEditor;
-  private GenericMenuInterface jmolpopup;
+  GenericMenuInterface jmolpopup;
   private ModelKitPopup modelkit;
   private Map<String, Object> headlessImageParams;
 
@@ -7451,10 +7504,11 @@ public class Viewer extends JmolViewer
           appConsole = (JmolAppConsoleInterface) Interface
               .getOption("consolejs.AppletConsole", this, "script");
         } else// if (isSwingJS) {
-          // no applet console yet for SwingJS -- need DefaultStyledDocument
+        // no applet console yet for SwingJS -- need DefaultStyledDocument
         //} else 
         {
-          for (int i = 0, n = isSwingJS ? 1 : 4; i < n && appConsole == null; i++) {
+          for (int i = 0, n = isSwingJS ? 1 : 4; i < n
+              && appConsole == null; i++) {
             appConsole = (isApplet
                 ? (JmolAppConsoleInterface) Interface
                     .getOption("console.AppletConsole", null, null)
@@ -7882,8 +7936,10 @@ public class Viewer extends JmolViewer
     movingSelected = true;
     stopMinimization();
     // note this does not sync with applets
-    if (x != Integer.MIN_VALUE && modelkit != null && modelkit.getProperty("rotateBondIndex") != null) {      
-      modelkit.actionRotateBond(deltaX, deltaY, x, y, (modifiers & Event.VK_SHIFT) != 0);
+    if (x != Integer.MIN_VALUE && modelkit != null
+        && modelkit.getProperty("rotateBondIndex") != null) {
+      modelkit.actionRotateBond(deltaX, deltaY, x, y,
+          (modifiers & Event.VK_SHIFT) != 0);
     } else {
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
       if (!bsSelected.isEmpty()) {
@@ -7918,6 +7974,8 @@ public class Viewer extends JmolViewer
    * 
    * @param index
    * @param closestAtomIndex
+   * @param x 
+   * @param y 
    */
   public void highlightBond(int index, int closestAtomIndex, int x, int y) {//, String msg) {
     if (!hoverEnabled)
@@ -7933,11 +7991,12 @@ public class Viewer extends JmolViewer
     }
     highlight(bs);
     setModelkitProperty("bondIndex", Integer.valueOf(index));
-    setModelkitProperty("screenXY", new int[] {x , y} );
-    String text = (String) setModelkitProperty("hoverLabel", Integer.valueOf(-2 - index));
+    setModelkitProperty("screenXY", new int[] { x, y });
+    String text = (String) setModelkitProperty("hoverLabel",
+        Integer.valueOf(-2 - index));
     if (text != null)
       hoverOnPt(x, y, text, null, null);
-//    hoverOn(closestAtomIndex, false);
+    //    hoverOn(closestAtomIndex, false);
     refresh(REFRESH_SYNC_MASK, "highlightBond");
   }
 
@@ -7946,7 +8005,7 @@ public class Viewer extends JmolViewer
   public void highlight(BS bs) {
     atomHighlighted = (bs != null && bs.cardinality() == 1 ? bs.nextSetBit(0)
         : -1);
-    
+
     if (bs == null) {
       setCursor(GenericPlatform.CURSOR_DEFAULT);
     } else {
@@ -8322,7 +8381,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public void syncScript(String script, String applet, int port) {
-    getStateCreator().syncScript(script, applet, port);
+   sm.syncScript(script, applet, port);
   }
 
   @Override
@@ -8821,9 +8880,12 @@ public class Viewer extends JmolViewer
     if (addHydrogen)
       bsSelected.or(addHydrogens(bsSelected, isLoad2D, isSilent));
 
-    if (bsSelected.cardinality() > JC.MINIMIZATION_ATOM_MAX) {
-      Logger.error("Too many atoms for minimization (>"
-          + JC.MINIMIZATION_ATOM_MAX + ")");
+    int n = bsSelected.cardinality();
+    if (ff.equals("MMFF") && n > g.minimizationMaxAtoms) {
+      scriptStatusMsg(
+          "Too many atoms for minimization (" + n + ">" + g.minimizationMaxAtoms
+              + "); use 'set minimizationMaxAtoms' to increase this limit",
+          "minimization: too many atoms");
       return;
     }
     try {
@@ -8970,7 +9032,8 @@ public class Viewer extends JmolViewer
     getStateCreator().undoMoveAction(action, n);
   }
 
-  public void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo) {
+  public void undoMoveActionClear(int taintedAtom, int type,
+                                  boolean clearRedo) {
     // called by actionManager
     if (g.preserveState)
       getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
@@ -9707,15 +9770,15 @@ public class Viewer extends JmolViewer
     return getAnnotationParser(false).getAtomValidation(this, type, atom);
   }
 
-//  private GenericZipTools jzt;
-//
-//  public GenericZipTools getJzt() {
-//    return (jzt == null
-//        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
-//            this, "zip")
-//        : jzt);
-//  }
-//
+  //  private GenericZipTools jzt;
+  //
+  //  public GenericZipTools getJzt() {
+  //    return (jzt == null
+  //        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
+  //            this, "zip")
+  //        : jzt);
+  //  }
+  //
   void dragMinimizeAtom(int iAtom) {
     stopMinimization();
     BS bs = (getMotionFixedAtoms().isEmpty()
@@ -9910,7 +9973,8 @@ public class Viewer extends JmolViewer
     if (atomIndex < 0)
       atomIndex = atomHighlighted;
     if (ms.isAtomInLastModel(atomIndex)) {
-      script("assign atom ({" + atomIndex + "}) \"" + element + "\" " + (ptNew == null ? "" : Escape.eP(ptNew)));      
+      script("assign atom ({" + atomIndex + "}) \"" + element + "\" "
+          + (ptNew == null ? "" : Escape.eP(ptNew)));
     }
   }
 
@@ -9921,13 +9985,14 @@ public class Viewer extends JmolViewer
   }
 
   public void sendConsoleMessage(String msg) {
-    if (appConsole != null) 
+    if (appConsole != null)
       appConsole.sendConsoleMessage(msg);
   }
 
   /**
    * 
-   * @param nameOrData could be name or [name,value]
+   * @param nameOrData
+   *        could be name or [name,value]
    * @return value
    */
   public Object getModelkitProperty(Object nameOrData) {
@@ -9987,11 +10052,12 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * @param i Integer.MIN_VALUE initializes the bond index
+   * @param i
+   *        Integer.MIN_VALUE initializes the bond index
    */
   public void setModelKitRotateBondIndex(int i) {
     if (modelkit != null) {
-        modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
+      modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
     }
   }
 
@@ -9999,6 +10065,7 @@ public class Viewer extends JmolViewer
 
   /**
    * retrieve macros.json from the directory
+   * 
    * @param key
    * @return the macro path
    */
@@ -10028,8 +10095,13 @@ public class Viewer extends JmolViewer
       return s.toString();
     }
     key = key.toLowerCase();
-    return macros.containsKey(key) ? ((Map<String, Object>)macros.get(key)).get("path").toString()
+    return macros.containsKey(key)
+        ? ((Map<String, Object>) macros.get(key)).get("path").toString()
         : null;
+  }
+
+  public String getInchi(BS atoms, String options) {
+    return this.apiPlatform.getInChI().getInchi(this, atoms, options);
   }
 
 }

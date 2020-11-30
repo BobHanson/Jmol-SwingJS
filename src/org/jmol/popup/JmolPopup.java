@@ -56,9 +56,9 @@ abstract public class JmolPopup extends JmolGenericPopup {
   //list is saved in http://www.stolaf.edu/academics/chemapps/jmol/docs/misc
 
   protected final static int UPDATE_NEVER = -1;
-  private final static int UPDATE_ALL = 0;
-  private final static int UPDATE_CONFIG = 1;
-  private final static int UPDATE_SHOW = 2;
+  protected final static int UPDATE_ALL = 0;
+  protected final static int UPDATE_CONFIG = 1;
+  protected final static int UPDATE_SHOW = 2;
 
   //public void finalize() {
   //  Sygstem.out.println("JmolPopup " + this + " finalize");
@@ -77,7 +77,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
   private Object[][] frankList = new Object[10][]; //enough to cover menu drilling
 
   private Map<String, Object> modelSetInfo;
-  private Map<String, Object> modelInfo;
+  protected Map<String, Object> modelInfo;
 
   private Lst<SC> NotPDB = new Lst<SC>();
   private Lst<SC> PDBOnly = new Lst<SC>();
@@ -87,7 +87,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
   private Lst<SC> SingleModelOnly = new Lst<SC>();
   private Lst<SC> FramesOnly = new Lst<SC>();
   private Lst<SC> VibrationOnly = new Lst<SC>();
-  private Lst<SC> Special = new Lst<SC>();
+  protected Lst<SC> Special = new Lst<SC>();
   private Lst<SC> SymmetryOnly = new Lst<SC>();
   private Lst<SC> ChargesOnly = new Lst<SC>();
   private Lst<SC> TemperatureOnly = new Lst<SC>();
@@ -104,7 +104,9 @@ abstract public class JmolPopup extends JmolGenericPopup {
   private boolean isVibration;
   private boolean isZapped;
 
-  private int modelIndex, modelCount, ac;
+  protected int modelIndex;
+  private int modelCount;
+  private int ac;
 
   private String group3List;
   private int[] group3Counts;
@@ -143,31 +145,43 @@ abstract public class JmolPopup extends JmolGenericPopup {
       return true;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void jpiUpdateComputedMenus() {
     if (updateMode == UPDATE_NEVER)
       return;
     isTainted = true;
+    getViewerData();   
     updateMode = UPDATE_ALL;
-    getViewerData();
-    updateSelectMenu();
-    updateFileMenu();
-    updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
-    updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
-    updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
-    updateFileTypeDependentMenus();
-    updatePDBComputedMenus();
-    updateMode = UPDATE_CONFIG;
-    updateConfigurationComputedMenu();
-    updateSYMMETRYComputedMenus();
-    updateFRAMESbyModelComputedMenu();
-    updateModelSetComputedMenu();
-    updateLanguageSubmenu();
-    updateAboutSubmenu();
+    updateMenus();
   }
 
   ///////// protected methods //////////
+
+  @SuppressWarnings("unchecked")
+  protected void updateMenus() {
+    updateSelectMenu();
+    updateModelSetComputedMenu();
+    updateAboutSubmenu();
+    if (updateMode == UPDATE_ALL) {
+      updateFileMenu();
+      updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
+      updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
+      updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
+      updateFileTypeDependentMenus();
+      updatePDBComputedMenus();
+      updateMode = UPDATE_CONFIG;
+      updateConfigurationComputedMenu();
+      updateSYMMETRYComputedMenus();
+      updateFRAMESbyModelComputedMenu();
+      updateLanguageSubmenu();
+    } else {
+      updateSpectraMenu();
+      updateFRAMESbyModelComputedMenu();
+      updateSceneComputedMenu();
+      for (int i = Special.size(); --i >= 0;)
+        updateSpecialMenuItem(Special.get(i));
+    }
+  }
 
   @Override
   protected void appCheckItem(String item, SC newMenu) {
@@ -340,7 +354,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
   }
 
   @Override
-  protected void appCheckSpecialMenu(String item, SC subMenu, String word) {
+  public void appCheckSpecialMenu(String item, SC subMenu, String word) {
     // these will need tweaking:
     if ("modelSetMenu".equals(item)) {
       nullModelSetName = word;
@@ -355,22 +369,17 @@ abstract public class JmolPopup extends JmolGenericPopup {
     isTainted = true;
     getViewerData();
     updateMode = UPDATE_SHOW;
-    updateSelectMenu();
-    updateSpectraMenu();
-    updateFRAMESbyModelComputedMenu();
-    updateSceneComputedMenu();
-    updateModelSetComputedMenu();
-    updateAboutSubmenu();
-    for (int i = Special.size(); --i >= 0;)
-      updateSpecialMenuItem(Special.get(i));
+    updateMenus();
   }
 
-  private void updateFileMenu() {
+  protected void updateFileMenu() {
     SC menu = htMenus.get("fileMenu");
     if (menu == null)
       return;
     String text = getMenuText("writeFileTextVARIABLE");
     menu = htMenus.get("writeFileTextVARIABLE");
+    if (menu == null)
+      return;
     boolean ignore = (modelSetFileName.equals(JC.ZAP_TITLE) || modelSetFileName
         .equals(""));
     if (ignore) {
@@ -387,7 +396,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     return (str == null ? key : str);
   }
 
-  private void updateSelectMenu() {
+  protected void updateSelectMenu() {
     SC menu = htMenus.get("selectMenuText");
     if (menu == null)
       return;
@@ -395,7 +404,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuSetLabel(menu, gti("selectMenuText", vwr.slm.getSelectionCount()));
   }
 
-  private void updateElementsComputedMenu(BS elementsPresentBitSet) {
+  protected void updateElementsComputedMenu(BS elementsPresentBitSet) {
     SC menu = htMenus.get("elementsComputedMenu");
     if (menu == null)
       return;
@@ -423,16 +432,16 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, true);
   }
 
-  private void updateSpectraMenu() {
-    SC menuh = htMenus.get("hnmrMenu");
-    SC menuc = htMenus.get("cnmrMenu");
-    if (menuh != null)
-      menuRemoveAll(menuh, 0);
-    if (menuc != null)
-      menuRemoveAll(menuc, 0);
+  protected void updateSpectraMenu() {
     SC menu = htMenus.get("spectraMenu");
     if (menu == null)
       return;
+    SC menuh = htMenus.get("hnmrMenu");
+    if (menuh != null)
+      menuRemoveAll(menuh, 0);
+    SC menuc = htMenus.get("cnmrMenu");
+    if (menuc != null)
+      menuRemoveAll(menuc, 0);
     menuRemoveAll(menu, 0);
     // yes binary | not logical || here -- need to try to set both
     boolean isOK = setSpectraMenu(menuh, hnmrPeaks)
@@ -447,12 +456,12 @@ abstract public class JmolPopup extends JmolGenericPopup {
   }
 
   private boolean setSpectraMenu(SC menu, Lst<String> peaks) {
-    if (menu == null)
-      return false;
-    menuEnable(menu, false);
     int n = (peaks == null ? 0 : peaks.size());
     if (n == 0)
       return false;
+    if (menu == null)
+      return false;
+    menuEnable(menu, false);
     for (int i = 0; i < n; i++) {
       String peak = peaks.get(i);
       String title = PT.getQuotedAttribute(peak, "title");
@@ -466,7 +475,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     return true;
   }
 
-  private void updateHeteroComputedMenu(Map<String, String> htHetero) {
+  protected void updateHeteroComputedMenu(Map<String, String> htHetero) {
     SC menu = htMenus.get("PDBheteroComputedMenu");
     if (menu == null)
       return;
@@ -488,7 +497,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
   }
 
   @SuppressWarnings("unchecked")
-  private void updateSurfMoComputedMenu(Map<String, Object> moData) {
+  protected void updateSurfMoComputedMenu(Map<String, Object> moData) {
     SC menu = htMenus.get("surfMoComputedMenuText");
     if (menu == null)
       return;
@@ -535,7 +544,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     }
   }
 
-  private void updateFileTypeDependentMenus() {
+  protected void updateFileTypeDependentMenus() {
     for (int i = NotPDB.size(); --i >= 0;)
       menuEnable(NotPDB.get(i), !isPDB);
     for (int i = PDBOnly.size(); --i >= 0;)
@@ -561,7 +570,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     updateSignedAppletItems();
   }
 
-  private void updateSceneComputedMenu() {
+  protected void updateSceneComputedMenu() {
     SC menu = htMenus.get("sceneComputedMenu");
     if (menu == null)
       return;
@@ -576,54 +585,61 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, true);
   }
 
-  private void updatePDBComputedMenus() {
+  protected void updatePDBComputedMenus() {
 
-    SC menu = htMenus.get("PDBaaResiduesComputedMenu");
-    if (menu == null)
-      return;
-    menuRemoveAll(menu, 0);
-    menuEnable(menu, false);
-
+    SC menu3 = htMenus.get("PDBaaResiduesComputedMenu");
+    if (menu3 != null) {
+      menuRemoveAll(menu3, 0);
+      menuEnable(menu3, false);
+    }
     SC menu1 = htMenus.get("PDBnucleicResiduesComputedMenu");
-    if (menu1 == null)
-      return;
-    menuRemoveAll(menu1, 0);
-    menuEnable(menu1, false);
+    if (menu1 != null) {
+      menuRemoveAll(menu1, 0);
+      menuEnable(menu1, false);
+    }
 
     SC menu2 = htMenus.get("PDBcarboResiduesComputedMenu");
-    if (menu2 == null)
-      return;
-    menuRemoveAll(menu2, 0);
-    menuEnable(menu2, false);
+    if (menu2 != null) {
+      menuRemoveAll(menu2, 0);
+      menuEnable(menu2, false);
+    }
     if (modelSetInfo == null)
       return;
     int n = (modelIndex < 0 ? 0 : modelIndex + 1);
     String[] lists = ((String[]) modelSetInfo.get("group3Lists"));
     group3List = (lists == null ? null : lists[n]);
-    group3Counts = (lists == null ? null : ((int[][]) modelSetInfo
-        .get("group3Counts"))[n]);
+    group3Counts = (lists == null ? null
+        : ((int[][]) modelSetInfo.get("group3Counts"))[n]);
 
     if (group3List == null)
       return;
     //next is correct as "<=" because it includes "UNK"
     int nItems = 0;
     String groupList = Group.standardGroupList;
-    for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)
-      nItems += updateGroup3List(menu, groupList.substring(i * 6 - 4, i * 6 - 1).trim());
-    nItems += augmentGroup3List(menu, "p>", true);
-    menuEnable(menu, (nItems > 0));
-    menuEnable(htMenus.get("PDBproteinMenu"), (nItems > 0));
-
-    nItems = augmentGroup3List(menu1, "n>", false);
-    menuEnable(menu1, nItems > 0);
-    menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
-    @SuppressWarnings("unchecked")
-    Map<String, Object> dssr = (nItems > 0 && modelIndex >= 0 ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, "dssr") : null);
-    if (dssr != null)
-      setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
-    nItems = augmentGroup3List(menu2, "c>", false);
-    menuEnable(menu2, nItems > 0);
-    menuEnable(htMenus.get("PDBcarboMenu"), (nItems > 0));
+    if (menu3 != null) {
+      for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)
+        nItems += updateGroup3List(menu3,
+            groupList.substring(i * 6 - 4, i * 6 - 1).trim());
+      nItems += augmentGroup3List(menu3, "p>", true);
+      menuEnable(menu3, (nItems > 0));
+      menuEnable(htMenus.get("PDBproteinMenu"), (nItems > 0));
+    }
+    if (menu1 != null) {
+      nItems = augmentGroup3List(menu1, "n>", false);
+      menuEnable(menu1, nItems > 0);
+      menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
+      @SuppressWarnings("unchecked")
+      Map<String, Object> dssr = (nItems > 0 && modelIndex >= 0
+          ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, "dssr")
+          : null);
+      if (dssr != null)
+        setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
+    }
+    if (menu2 != null) {
+      nItems = augmentGroup3List(menu2, "c>", false);
+      menuEnable(menu2, nItems > 0);
+      menuEnable(htMenus.get("PDBcarboMenu"), (nItems > 0));
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -678,13 +694,13 @@ abstract public class JmolPopup extends JmolGenericPopup {
     return nItems;
   }
 
-  private void updateSYMMETRYComputedMenus() {
+  protected void updateSYMMETRYComputedMenus() {
     updateSYMMETRYSelectComputedMenu();
     updateSYMMETRYShowComputedMenu();
   }
 
   @SuppressWarnings("unchecked")
-  private void updateSYMMETRYShowComputedMenu() {
+  protected void updateSYMMETRYShowComputedMenu() {
     SC menu = htMenus.get("SYMMETRYShowComputedMenu");
     if (menu == null)
       return;
@@ -728,7 +744,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, true);
   }
 
-  private void updateSYMMETRYSelectComputedMenu() {
+  protected void updateSYMMETRYSelectComputedMenu() {
     SC menu = htMenus.get("SYMMETRYSelectComputedMenu");
     if (menu == null)
       return;
@@ -762,7 +778,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, true);
   }
 
-  private void updateFRAMESbyModelComputedMenu() {
+  protected void updateFRAMESbyModelComputedMenu() {
     //allowing this in case we move it later
     SC menu = htMenus.get("FRAMESbyModelComputedMenu");
     if (menu == null)
@@ -813,7 +829,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     }
   }
 
-  private void updateConfigurationComputedMenu() {
+  protected void updateConfigurationComputedMenu() {
     SC menu = htMenus.get("configurationComputedMenu");
     if (menu == null)
       return;
@@ -846,7 +862,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       "SIGNEDJAVAcaptureMenuSPECIAL" };
 
   @SuppressWarnings("unchecked")
-  private void updateModelSetComputedMenu() {
+  protected void updateModelSetComputedMenu() {
     SC menu = htMenus.get("modelSetMenu");
     if (menu == null)
       return;
@@ -923,7 +939,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     return GT.o(GT.$(getMenuText(s)), o);
   }
 
-  private void updateAboutSubmenu() {
+  protected void updateAboutSubmenu() {
     if (isApplet)
       setText("APPLETid", vwr.appletName);
 
@@ -945,7 +961,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
 
   }
 
-  private void updateLanguageSubmenu() {
+  protected void updateLanguageSubmenu() {
     SC menu = htMenus.get("languageComputedMenu");
     if (menu == null)
       return;
@@ -972,7 +988,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     }
   }
 
-  private void updateSpecialMenuItem(SC m) {
+  protected void updateSpecialMenuItem(SC m) {
     m.setText(getSpecialLabel(m.getName(), m.getText()));
   }
 

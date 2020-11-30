@@ -54,7 +54,7 @@ public class Resolver {
                  "WebMO;MO;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
-    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;",
+    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;",
@@ -837,8 +837,7 @@ public class Resolver {
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     inputContainsRecords, aflowContainsRecords, magCifContainsRecords, 
-    qcJsonContainsRecords
-    
+    qcJsonContainsRecords    
   };
   
   ////////////////////////////////////////////////////////////////
@@ -851,12 +850,20 @@ public class Resolver {
       return "Gromacs";
     if (checkCrystal(lines))
       return "Crystal";
+    if (checkFAH(lines))
+      return "FAH";
     String s = checkCastepVaspSiesta(lines);
     if (s != null)
       return s;
     return null;
   }
   
+  
+  private static boolean checkFAH(String[] lines) {
+    String s = lines[0].trim() + lines[2].trim();
+    return s.equals("{\"atoms\": [");
+  }
+
   private static boolean checkCrystal(String[] lines) {
     String s = lines[1].trim();
     if (s.equals("SLAB") ||s.equals("MOLECULE")

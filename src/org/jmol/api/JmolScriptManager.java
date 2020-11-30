@@ -12,6 +12,11 @@ import org.jmol.viewer.Viewer;
 
 public interface JmolScriptManager {
 
+  public final static int PDB_CARTOONS = 1;
+  public final static int NO_SCRIPT    = 2;
+  public final static int IS_APPEND    = 4;
+  public final static int NO_AUTOPLAY  = 8;
+
   JmolScriptEvaluator setViewer(Viewer vwr);
   
   void startCommandWatcher(boolean isStart);

@@ -1617,7 +1617,7 @@ public class ScriptEval extends ScriptExpr {
     if (isThrown || thisContext != null || chk
         || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
       return;
-    Logger.error("eval ERROR: " + s + toString());
+    Logger.error("eval ERROR: " + s + "\n" + toString());
     if (vwr.autoExit)
       vwr.exitJmol();
   }
@@ -1899,8 +1899,8 @@ public class ScriptEval extends ScriptExpr {
     if (executionStopped)
       return false;
     if (executionStepping && isCommandDisplayable(pc)) {
-      vwr.setScriptStatus("Next: " + getNextStatement(),
-          "stepping -- type RESUME to continue", 0, null);
+      vwr.scriptStatusMsg("Next: " + getNextStatement(),
+          "stepping -- type RESUME to continue");
       executionPaused = true;
     } else if (!executionPaused) {
       return true;
@@ -3120,7 +3120,7 @@ public class ScriptEval extends ScriptExpr {
       invArg();
     if (!chk)
       vwr.setNewRotationCenter(center);
-  }
+    }
 
   private void cmdColor() throws ScriptException {
     int i = 1;
@@ -3397,10 +3397,11 @@ public class ScriptEval extends ScriptExpr {
     float value = Float.NaN;
     EnumType type = EnumType.ABSOLUTE;
     int ipt = 1;
+    boolean isOnly = false;
     while (true) {
       switch (getToken(ipt).tok) {
       case T.only:
-        restrictSelected(false, false);
+        isOnly = true;
         //$FALL-THROUGH$
       case T.on:
         value = 1;
@@ -3413,6 +3414,9 @@ public class ScriptEval extends ScriptExpr {
         setShapeProperty(iShape, "ignore", atomExpressionAt(ipt + 1));
         ipt = iToken + 1;
         continue;
+      case T.decimal:
+        isOnly = (tokAt(ipt + 1) == T.only || floatParameter(ipt) < 0);
+        break;
       case T.integer:
         int dotsParam = intParameter(ipt);
         if (tokAt(ipt + 1) == T.radius) {
@@ -3434,12 +3438,15 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     }
-    RadiusData rd = (Float.isNaN(value) ? encodeRadiusParameter(ipt, false,
+    RadiusData rd = (Float.isNaN(value) ? encodeRadiusParameter(ipt, isOnly,
         true) : new RadiusData(null, value, type, VDW.AUTO));
     if (rd == null)
       return;
     if (Float.isNaN(rd.value))
       invArg();
+    if (isOnly) {
+      restrictSelected(false, false);
+    }
     setShapeSize(iShape, rd);
   }
 
@@ -5450,7 +5457,8 @@ public class ScriptEval extends ScriptExpr {
     float cameraY = Float.NaN;
     float[] pymolView = null;
     Quat q = null;
-    switch (getToken(i).tok) {
+    int tok = getToken(i).tok;
+    switch (tok) {
     case T.pymol:
       // 18-element standard PyMOL view matrix 
       // [0-8] are 3x3 rotation matrix (inverted)
@@ -5588,7 +5596,7 @@ public class ScriptEval extends ScriptExpr {
       axis.set(0, 0, 0);
     else if (axis.length() == 0 && degrees == 0)
       degrees = Float.NaN;
-    isChange = !vwr.tm.isInPosition(axis, degrees);
+    isChange = (tok == T.quaternion || !vwr.tm.isInPosition(axis, degrees));
     // optional zoom
     if (isFloatParameter(i))
       zoom = floatParameter(i++);
@@ -7616,6 +7624,8 @@ public class ScriptEval extends ScriptExpr {
     // set picking off
     // set picking select
     // set picking bonds
+    // set picking dragmolecule
+    // set picking dragmodel
     // set picking dragselected
 
     String str = paramAsStr(i);
@@ -8000,8 +8010,10 @@ public class ScriptEval extends ScriptExpr {
     bs = (isSelected ? vwr.bsA()
         : iToken + 1 < slen ? atomExpressionAt(++iToken) : null);
     checkLast(iToken);
-    if (!chk)
+    if (!chk) {
       vwr.translate(xyz, amount, type, bs);
+      refresh(false);
+    }
   }
 
   private void cmdUnbind() throws ScriptException {
@@ -9350,7 +9362,7 @@ public class ScriptEval extends ScriptExpr {
 
   private boolean setUnits(String units, int tok) throws ScriptException {
     if (tok == T.measurementunits
-        && (units.endsWith("hz") || PT.isOneOf(units.toLowerCase(),
+        && (units.toLowerCase().endsWith("hz") || PT.isOneOf(units.toLowerCase(),
             ";angstroms;au;bohr;nanometers;nm;picometers;pm;vanderwaals;vdw;"))) {
       if (!chk)
         vwr.setUnits(units, true);

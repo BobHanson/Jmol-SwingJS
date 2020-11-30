@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-09-09 13:50:29 -0500 (Sun, 09 Sep 2018) $
- * $Revision: 21934 $
+ * $Date: 2019-10-09 17:42:51 +0200 (Wed, 09 Oct 2019) $
+ * $Revision: 22000 $
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -693,7 +693,6 @@ public class T {
   public final static int label            = 18 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
-  public final static int now              = 21 | 0 << 9 | mathfunc;
   public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
@@ -750,6 +749,7 @@ public class T {
   public final static int smiles       = 5 | 2 << 9 | mathfunc;
   public final static int contact      = 6 | 2 << 9 | mathfunc | shapeCommand;
   public final static int eval         = 7 | 2 << 9 | mathfunc;
+  public final static int now          = 8 | 2 << 9 | mathfunc;
 
 
   // ___.xxx(a,b)
@@ -914,19 +914,20 @@ public class T {
   public final static int bondradiusmilliangstroms       = intparam | 8;
   public final static int celshadingpower                = intparam | 9;
   public final static int bondingversion             = intparam | 10;
-  public final static int delaymaximumms                 = intparam | 12;
-  public final static int diffusepercent                 = intparam | 13;
-  public final static int dotdensity                     = intparam | 14;
-  public final static int dotscale                       = intparam | 15;
-  public final static int ellipsoiddotcount              = intparam | 16;  
-  public final static int helixstep                      = intparam | 17;
-  public final static int hermitelevel                   = intparam | 18;
-  public final static int historylevel                   = intparam | 19;
-  public final static int infofontsize                   = intparam | 20;
-  public final static int isosurfacepropertysmoothingpower=intparam | 21;
-  public final static int loglevel                       = intparam | 22;
-  public final static int meshscale                      = intparam | 23;
-  public final static int minimizationsteps              = intparam | 24;
+  public final static int delaymaximumms                 = intparam | 11;
+  public final static int diffusepercent                 = intparam | 12;
+  public final static int dotdensity                     = intparam | 13;
+  public final static int dotscale                       = intparam | 14;
+  public final static int ellipsoiddotcount              = intparam | 15;  
+  public final static int helixstep                      = intparam | 16;
+  public final static int hermitelevel                   = intparam | 17;
+  public final static int historylevel                   = intparam | 18;
+  public final static int infofontsize                   = intparam | 19;
+  public final static int isosurfacepropertysmoothingpower=intparam | 20;
+  public final static int loglevel                       = intparam | 21;
+  public final static int meshscale                      = intparam | 22;
+  public final static int minimizationsteps              = intparam | 23;
+  public final static int minimizationmaxatoms           = intparam | 24;
   public final static int minpixelselradius              = intparam | 25;
   public final static int percentvdwatom                 = intparam | 26;
   public final static int perspectivemodel               = intparam | 27;
@@ -2449,6 +2450,7 @@ public class T {
        "loadAtomDataTolerance",
        "minBondDistance",
        "minimizationCriterion",
+       "minimizationMaxAtoms",
        "modulationScale",
        "mouseDragFactor",
        "mouseWheelFactor",
@@ -3510,6 +3512,7 @@ public class T {
         loadatomdatatolerance,              //        "loadAtomDataTolerance"
         minbonddistance,                    //        "minBondDistance"
         minimizationcriterion,              //        "minimizationCriterion"
+        minimizationmaxatoms,               //        "minimizationMaxAtom"
         modulationscale,                    //        "modulationScale"
         mousedragfactor,                    //        "mouseDragFactor"
         mousewheelfactor,                   //        "mouseWheelFactor"

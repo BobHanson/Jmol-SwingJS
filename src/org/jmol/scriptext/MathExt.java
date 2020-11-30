@@ -63,6 +63,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
+import org.jmol.modelset.Measurement;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
@@ -101,17 +102,24 @@ public class MathExt {
 
   ///////////// ScriptMathProcessor extensions ///////////
 
+  private static long t0 = System.currentTimeMillis();
   
   public boolean evaluate(ScriptMathProcessor mp, T op, SV[] args, int tok)
       throws ScriptException {
     switch (tok) {
+    case T.now:
+      return (args.length >= 1 && args[0].tok == T.string
+          ? mp.addXStr((args.length == 1 ? new Date().toString() : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) + "\t" + SV.sValue(args[0]).trim())
+          : mp.addXInt(((int) (System.currentTimeMillis() - t0))
+              - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
+      return (args.length == 1 && args[0].tok == T.integer ?
+          mp.addXInt(Math.abs(args[0].asInt())) : mp.addXFloat(Math.abs(args[0].asFloat())));
     case T.acos:
     case T.cos:
-    case T.now:
     case T.sin:
     case T.sqrt:
-      return evaluateMath(mp, args, tok);
+      return (args.length == 1 && evaluateMath(mp, args, tok));
     case T.add:
     case T.div:
     case T.mul:
@@ -125,7 +133,8 @@ public class MathExt {
         mp.wasX = false;
       //$FALL-THROUGH$
     case T.array:
-      return evaluateArray(mp, args, tok == T.array && op.tok == T.propselector);
+      return evaluateArray(mp, args,
+          tok == T.array && op.tok == T.propselector);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -216,8 +225,8 @@ public class MathExt {
       return evaluateSpacegroup(mp, args);
     case T.symop:
       return evaluateSymop(mp, args, op.tok == T.propselector);
-      //    case Token.volume:
-      //    return evaluateVolume(args);
+    //    case Token.volume:
+    //    return evaluateVolume(args);
     case T.tensor:
       return evaluateTensor(mp, args);
     case T.within:
@@ -1394,6 +1403,7 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {*}.find("inchi","inchi-options")
     // {*}.find("crystalClass")
     // {*}.find("CF",true|false)
     // {*}.find("MF")
@@ -1447,7 +1457,13 @@ public class MathExt {
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
     SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
     boolean isON = !isList && (argLast.tok == T.on);
+    boolean isInchi = !isList && sFind.equalsIgnoreCase("INCHI");
     try {
+      if (isInchi) {
+        if (x1.tok != T.bitset)
+          return false;
+        return mp.addXStr(vwr.getInchi((BS) x1.value, flags));
+      }
       if (isChemical) {
         BS bsAtoms = (x1.tok == T.bitset ? (BS) x1.value : null);
         String data = (bsAtoms == null ? SV.sValue(x1) : vwr.getOpenSmiles(bsAtoms));
@@ -1772,8 +1788,8 @@ public class MathExt {
             vwr.shm.getShapePropertyData(shapeID, "index", data);
             if (data[1] != null && !pname.equals("index")) {
               int index = ((Integer) data[1]).intValue();
-              data[1] = vwr.shm.getShapePropertyIndex(shapeID, pname.intern(),
-                  index);
+                data[1] = vwr.shm.getShapePropertyIndex(shapeID, pname.intern(),
+                    index);
             }
           }
         } else {
@@ -2262,31 +2278,22 @@ public class MathExt {
   }
 
   private boolean evaluateMath(ScriptMathProcessor mp, SV[] args, int tok) {
-    if (tok == T.now) {
-      if (args.length == 1 && args[0].tok == T.string)
-        return mp.addXStr((new Date()) + "\t" + SV.sValue(args[0]));
-      return mp.addXInt(((int) System.currentTimeMillis() & 0x7FFFFFFF)
-          - (args.length == 0 ? 0 : args[0].asInt()));
-    }
-    if (args.length != 1)
-      return false;
-    if (tok == T.abs) {
-      if (args[0].tok == T.integer)
-        return mp.addXInt(Math.abs(args[0].asInt()));
-      return mp.addXFloat(Math.abs(args[0].asFloat()));
-    }
     double x = SV.fValue(args[0]);
     switch (tok) {
-    case T.acos:
-      return mp.addXFloat((float) (Math.acos(x) * 180 / Math.PI));
-    case T.cos:
-      return mp.addXFloat((float) Math.cos(x * Math.PI / 180));
-    case T.sin:
-      return mp.addXFloat((float) Math.sin(x * Math.PI / 180));
     case T.sqrt:
-      return mp.addXFloat((float) Math.sqrt(x));
+      x = Math.sqrt(x);
+      break;
+    case T.sin:
+      x = Math.sin(x * Math.PI / 180);
+      break;
+    case T.cos:
+      x = Math.cos(x * Math.PI / 180);
+      break;
+    case T.acos:
+      x = Math.acos(x) * 180 / Math.PI;
+      break;
     }
-    return false;
+    return mp.addXFloat((float) x);
   }
 
   //  private boolean evaluateVolume(ScriptVariable[] args) throws ScriptException {
@@ -2304,12 +2311,12 @@ public class MathExt {
     case T.measure:
       // note: min/max are always in Angstroms
       // note: order is not important (other than min/max)
-      // measure({a},{b},{c},{d}, min, max, format, units)
-      // measure({a},{b},{c}, min, max, format, units)
-      // measure({a},{b}, min, max, format, units)
-      // measure({a},{b},{c},{d}, min, max, format, units)
+      // measure({a},{b},{c},{d}, min, max, property, format, units)
+      // measure({a},{b},{c}, min, max, property, format, units)
+      // measure({a},{b}, min, max, property, format, units)
+      // measure({a},{b},{c},{d}, min, max, property, format, units)
       // measure({a} {b} "minArray") -- returns array of minimum distance values
-
+      String property = null;
       Lst<Object> points = new Lst<Object>();
       float[] rangeMinMax = new float[] { Float.MAX_VALUE, Float.MAX_VALUE };
       String strFormat = null;
@@ -2322,7 +2329,7 @@ public class MathExt {
       int nBitSets = 0;
       float vdw = Float.MAX_VALUE;
       boolean asMinArray = false;
-      boolean asArray = false;
+      boolean asFloatArray = false;
       for (int i = 0; i < args.length; i++) {
         switch (args[i].tok) {
         case T.bitset:
@@ -2346,6 +2353,10 @@ public class MathExt {
 
         case T.string:
           String s = SV.sValue(args[i]);
+          if (s.startsWith("property_")) {
+            property = s;
+            break;
+          }
           if (s.equalsIgnoreCase("vdw") || s.equalsIgnoreCase("vanderwaals"))
             vdw = (i + 1 < args.length && args[i + 1].tok == T.integer ? args[++i]
                 .asInt() : 100) / 100f;
@@ -2355,11 +2366,9 @@ public class MathExt {
             isAllConnected = true;
           else if (s.equalsIgnoreCase("minArray"))
             asMinArray = (nBitSets >= 1);
-          else if (s.equalsIgnoreCase("asArray"))
-            asArray = (nBitSets >= 1);
-          else if (PT.isOneOf(s.toLowerCase(),
-              ";nm;nanometers;pm;picometers;angstroms;ang;au;")
-              || s.endsWith("hz"))
+          else if (s.equalsIgnoreCase("asArray") || s.length() == 0)
+            asFloatArray = (nBitSets >= 1);
+          else if (Measurement.isUnits(s))
             units = s.toLowerCase();
           else
             strFormat = nPoints + ":" + s;
@@ -2377,9 +2386,10 @@ public class MathExt {
         return mp.addXStr("");
       rd = (vdw == Float.MAX_VALUE ? new RadiusData(rangeMinMax, 0, null, null)
           : new RadiusData(null, vdw, EnumType.FACTOR, VDW.AUTO));
-      return mp.addXObj((vwr.newMeasurementData(null, points)).set(0, null, rd,
-          strFormat, units, null, isAllConnected, isNotConnected, null, true,
-          0, (short) 0, null).getMeasurements(asArray, asMinArray));
+      Object obj = (vwr.newMeasurementData(null, points)).set(0, null, rd,
+          property, strFormat, units, null, isAllConnected, isNotConnected, null, true,
+          0, (short) 0, null, Float.NaN).getMeasurements(asFloatArray, asMinArray);
+      return mp.addXObj(obj);
     case T.angle:
       if ((nPoints = args.length) != 3 && nPoints != 4)
         return false;
@@ -2636,16 +2646,42 @@ public class MathExt {
     // point(pt, false) // from screen coord
     // point(x, y, z)
     // point(x, y, z, w)
-    
+    // point(["{1,2,3", "{2,3,4}"])
+
     switch (args.length) {
     default:
       return false;
     case 1:
       if (args[0].tok == T.decimal || args[0].tok == T.integer)
         return mp.addXInt(args[0].asInt());
-      String s = SV.sValue(args[0]);
-      if (args[0].tok == T.varray)
-        s = "{" + s + "}";
+      String s = null;
+      if (args[0].tok == T.varray) {
+        Lst<SV> list = args[0].getList();
+        int len = list.size();
+        if (len == 0) {
+          return false;
+        }
+        switch (list.get(0).tok) {
+        case T.integer:
+        case T.decimal:
+          break;
+        case T.string:
+          s = (String) list.get(0).value;
+          if (!s.startsWith("{")
+              || Escape.uP(s) instanceof String) {
+            s = null;
+            break;
+          }
+          Lst<SV> a = new Lst<SV>();
+          for (int i = 0; i < len; i++) {
+            a.addLast(SV.getVariable(Escape.uP(SV.sValue(list.get(i)))));
+          }
+          return mp.addXList(a);
+        }
+        s = "{" + SV.sValue(args[0]) + "}";
+      }
+      if (s == null)
+        s = SV.sValue(args[0]);
       Object pt = Escape.uP(s);
       return (pt instanceof P3 ? mp.addXPt((P3) pt) : mp.addXStr("" + pt));
     case 2:
@@ -2675,7 +2711,7 @@ public class MathExt {
           if (vwr.antialiased)
             pt3.scale(2f);
           pt3.y = vwr.tm.height - pt3.y;
-          vwr.tm.unTransformPoint(pt3, pt3);          
+          vwr.tm.unTransformPoint(pt3, pt3);
         }
         break;
       case T.point3f:
@@ -2692,10 +2728,10 @@ public class MathExt {
       default:
         return false;
       }
-      return mp.addXPt(pt3);      
+      return mp.addXPt(pt3);
     case 3:
-      return mp.addXPt(P3.new3(args[0].asFloat(), args[1].asFloat(),
-          args[2].asFloat()));
+      return mp.addXPt(
+          P3.new3(args[0].asFloat(), args[1].asFloat(), args[2].asFloat()));
     case 4:
       return mp.addXPt4(P4.new4(args[0].asFloat(), args[1].asFloat(),
           args[2].asFloat(), args[3].asFloat()));
@@ -3306,7 +3342,6 @@ public class MathExt {
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
     //     tensor(t,what)
-    System.out.println(args[1].tok + " " + T.tensor);
     boolean isTensor = (args.length == 2 && args[1].tok == T.tensor); 
     SV x = (isTensor ? null : mp.getX());
     if (args.length > 2 || !isTensor && x.tok != T.bitset)
@@ -3687,16 +3722,18 @@ public class MathExt {
           if (tok != T.pivot)
             break;
         } else {
-          SV sv0 = sv.get(0);
-          if (sv0.tok == T.point3f)
-            return getMinMaxPoint(sv, tok);
-          if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
-            Object pt = SV.ptValue(sv0);
-            if (pt instanceof P3)
+          if (tok != T.pivot) {
+            SV sv0 = sv.get(0);
+            if (sv0.tok == T.point3f)
               return getMinMaxPoint(sv, tok);
-            if (pt instanceof P4)
-              return getMinMaxQuaternion(sv, tok);
-            break;
+            if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
+              Object pt = SV.ptValue(sv0);
+              if (pt instanceof P3)
+                return getMinMaxPoint(sv, tok);
+              if (pt instanceof P4)
+                return getMinMaxQuaternion(sv, tok);
+              break;
+            }
           }
         }
       } else {

@@ -1448,6 +1448,11 @@ public class SV extends T implements JSONEncodable {
       return false;
     if (x1.tok == x2.tok) {
       switch (x1.tok) {
+      case integer:
+        if (x2.tok == integer) {
+          return x1.intValue == x2.intValue;
+        }
+        break;
       case string:
         return ((String)x1.value).equalsIgnoreCase((String) x2.value);
       case bitset:
@@ -1507,6 +1512,8 @@ public class SV extends T implements JSONEncodable {
           return sValue(x).compareTo(sValue(y));
       }
       switch (x.tok) {
+      case integer:
+        return (x.intValue < y.intValue ? -1 : x.intValue > y.intValue ? 1 : 0);
       case string:
         return sValue(x).compareTo(sValue(y));
       case varray:
@@ -1651,8 +1658,32 @@ public class SV extends T implements JSONEncodable {
     return list;
   }
 
+  public static int getArrayDepth(T x) {
+    int n = 0;
+    Lst<SV> sv;
+    while (x.tok == varray && (sv = ((SV) x).getList()).size() > 0) {
+      n++;
+      x = sv.get(0);
+    }
+    return n;
+  }
+  public static float[][] fflistValue(T x, int nMin) {
+    if (x.tok != varray) {
+      return new float[][] { new float[] {fValue(x)} };
+    }
+    Lst<SV> sv = ((SV) x).getList();
+    int svlen = sv.size();
+    float[][] list;
+    list = AU.newFloat2(svlen);
+    if (nMin == 0)
+      nMin = list.length;
+    for (int i = list.length; --i >= 0;)
+      list[i] = flistValue(i >= svlen ? null : sv.get(i), 0);
+    return list;
+  }
+
   public static float[] flistValue(T x, int nMin) {
-    if (x.tok != varray)
+    if (x == null || x.tok != varray)
       return new float[] { fValue(x) };
     Lst<SV> sv = ((SV) x).getList();
     float[] list;

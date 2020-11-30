@@ -29,19 +29,22 @@ import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.jmol.api.Interface;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 
 import javajs.api.GenericBinaryDocument;
+import javajs.api.GenericZipInputStream;
 import javajs.util.CompoundDocument;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.ZipTools;
-
-import org.jmol.api.Interface;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
-import org.jmol.viewer.FileManager;
 
 
 /**
@@ -147,7 +150,7 @@ public class SpartanUtil {
     data.append("Zip File Directory: ").append("\n")
         .append(Escape.eAS(zipDirectory, true)).append("\n");
     Map<String, String> fileData = new Hashtable<String, String>();
-    ZipTools.getAllZipData(is, new String[] {}, "", "Molecule", "__MACOSX", fileData);
+    getAllZipData(is, new String[] {}, "", "Molecule", "__MACOSX", fileData);
     String prefix = "|";
     String outputData = fileData.get(prefix + "output");
     if (outputData == null)
@@ -353,7 +356,7 @@ public class SpartanUtil {
         doc.setDocStream(bis);
         doc.getAllDataMapped(name, "Molecule", fileData);
       } else if (Rdr.isZipS(bis)) {
-        ZipTools.getAllZipData(bis, subFileList, name, "Molecule",
+        getAllZipData(bis, subFileList, name, "Molecule",
             "__MACOSX", fileData);
       } else if (asBinaryString) {
         // used for Spartan binary file reading
@@ -402,6 +405,71 @@ public class SpartanUtil {
       fileData.put(path, "FILE NOT FOUND: " + path + "\n");
     return path;
   }  
+
+  /**
+   * Reads a ZIP file and saves all data in a Hashtable so that the files may be
+   * organized later in a different order. Also adds a #Directory_Listing entry.
+   * For Spartan only.
+   * 
+   * Files are bracketed by BEGIN Directory Entry and END Directory Entry lines,
+   * similar to CompoundDocument.getAllData.
+   * 
+   * @param is
+   * @param subfileList
+   * @param name0
+   *        prefix for entry listing
+   * @param binaryFileList
+   *        |-separated list of files that should be saved as xx xx xx hex byte
+   *        strings. The directory listing is appended with ":asBinaryString"
+   * @param exclude 
+   * @param fileData
+   */
+  private static void getAllZipData(InputStream is, String[] subfileList,
+                                          String name0, String binaryFileList, String exclude,
+                                          Map<String, String> fileData) {
+    ZipInputStream zis = (is instanceof BufferedInputStream ? new GenericZipInputStream(is)
+            : new GenericZipInputStream(new BufferedInputStream(is)));
+    ZipEntry ze;
+    SB listing = new SB();
+    binaryFileList = "|" + binaryFileList + "|";
+    String prefix = PT.join(subfileList, '/', 1);
+    String prefixd = null;
+    if (prefix != null) {
+      prefixd = prefix.substring(0, prefix.indexOf("/") + 1);
+      if (prefixd.length() == 0)
+        prefixd = null;
+    }
+    try {
+      while ((ze = zis.getNextEntry()) != null) {
+        String name = ze.getName();
+        if (prefix != null && prefixd != null
+            && !(name.equals(prefix) || name.startsWith(prefixd))
+            || exclude != null && name.contains(exclude))
+          continue;
+        //System.out.println("ziputil: " + name);
+        listing.append(name).appendC('\n');
+        String sname = "|" + name.substring(name.lastIndexOf("/") + 1) + "|";
+        boolean asBinaryString = (binaryFileList.indexOf(sname) >= 0);
+        byte[] bytes = Rdr.getLimitedStreamBytes(zis, ze.getSize());
+        String str;
+        if (asBinaryString) {
+          SB ret = new SB();
+          for (int i = 0; i < bytes.length; i++)
+            ret.append(Integer.toHexString(bytes[i] & 0xFF)).appendC(' ');
+          str = ret.toString();
+          name += ":asBinaryString";
+        } else {
+          str = Rdr.fixUTF(bytes);
+        }
+        str = "BEGIN Directory Entry " + name + "\n" + str
+            + "\nEND Directory Entry " + name + "\n";
+        String key = name0 + "|" + name;
+        fileData.put(key, str);
+      }
+    } catch (Exception e) {
+    }
+    fileData.put("#Directory_Listing", listing.toString());
+  }
 
 }
 

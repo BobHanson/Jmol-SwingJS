@@ -502,27 +502,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
-   * @param e  
+   * @param e
    */
   private void setError(Throwable e) {
-    String s;
-    /**
-     * @j2sNative
-     * 
-     * if (e.getMessage)
-     *  s = e.getMessage();
-     * else
-     *  s = e.toString();
-     */
-    {
-      s = e.getMessage();
-    }
+    String s = e.getMessage();
     if (line == null)
       asc.errorMessage = "Error reading file at end of file \n" + s;
     else
-      asc.errorMessage = "Error reading file at line " + ptLine
-          + ":\n" + line + "\n" + s;
-      e.printStackTrace();
+      asc.errorMessage = "Error reading file at line " + ptLine + ":\n" + line
+          + "\n" + s;
+    e.printStackTrace();
   }
 
   @SuppressWarnings("unchecked")
@@ -806,11 +795,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     checkUnitCell(6);
   }
 
+  public float[] ucItems;
   public void setUnitCellItem(int i, float x) {
     if (ignoreFileUnitCell)
       return;
-    if (i == 0 && x == 1 && !checkFilterKey("TOPOS") || i == 3 && x == 0)
+    if (i == 0 && x == 1 && !allow_a_len_1  || i == 3 && x == 0) {
+      if (ucItems == null)
+        ucItems = new float[6];
+      ucItems[i] = x;
       return;
+    }
+    if (ucItems != null && i < 6)
+      ucItems[i] = x;
+
     if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
       initializeCartesianToFractional();
     unitCellParams[i] = x;
@@ -968,6 +965,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public String strSupercell;
 
 
+  public boolean allow_a_len_1 = false;
+
   // ALL:  "CENTER" "REVERSEMODELS"
   // ALL:  "SYMOP=n"
   // MANY: "NOVIB" "NOMO"
@@ -1010,6 +1009,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     doReadMolecularOrbitals = !checkFilterKey("NOMO");
     useAltNames = checkFilterKey("ALTNAME");
     reverseModels = checkFilterKey("REVERSEMODELS");
+    allow_a_len_1 =checkFilterKey("TOPOS");
+
     if (filter == null)
       return;
     if (checkFilterKey("HETATM")) {
@@ -1035,7 +1036,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       filter0 = filter = PT.rep(filter, "NAME=", "");
     }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
-    filterElement = checkFilterKey("_");
+    if (filter.startsWith("_") || filter.indexOf(";_") >= 0)
+      filterElement = checkFilterKey("_");
 
     filterGroup3 = checkFilterKey("[");
     filterChain = checkFilterKey(":");
@@ -1043,7 +1045,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     filterEveryNth = checkFilterKey("/=");
     if (filterEveryNth)
       filterN = parseIntAt(filter, filter.indexOf("/=") + 2);
-    else
+    else if (filter.startsWith("=") || filter.indexOf(";=") >= 0)
       filterAtomType = checkFilterKey("=");
     if (filterN == Integer.MIN_VALUE)
       filterEveryNth = false;
@@ -1288,7 +1290,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * @throws Exception 
    */
   protected void finalizeSubclassSymmetry(boolean haveSymmetry) throws Exception {
-    // set modulation, for instance
   }
 
   protected void doPreSymmetry() throws Exception {

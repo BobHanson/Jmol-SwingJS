@@ -38,6 +38,8 @@ public class MoldenReader extends MopacSlaterReader {
   protected String orbitalType = "";
   protected int modelAtomCount;
   
+  private Lst<String> lineBuffer;
+  
   @Override
   protected void initializeReader() {
     vibOnly = checkFilterKey("VIBONLY");
@@ -326,7 +328,10 @@ public class MoldenReader extends MopacSlaterReader {
     while (checkOrbitalType(rd())) {
       //
     }
-
+    if (orbitalType == "") {
+      createLineBuffer();
+    }
+     
     fixOrbitalType();
     // TODO we are assuming Jmol-canonical order for orbital coefficients.
     // see BasisFunctionReader
@@ -360,8 +365,10 @@ public class MoldenReader extends MopacSlaterReader {
           throw new Exception("invalid MO coefficient specification");
         // tokens[0] is the function number, and tokens[1] is the coefficient
         int i = parseIntStr(tokens[0]);
-        if (pt == 0 && i == nCoef + 1 && "beta".equals(alphaBeta))
+        if (pt == 0 && i == nCoef + 1 && "beta".equals(alphaBeta)) {
+          // in case beta starts with ncoef + 1 (CRYSTAL output)
           offset = -nCoef;
+          }
         i += offset;
         while (i > ++pt)
           data.addLast("0");
@@ -409,6 +416,36 @@ public class MoldenReader extends MopacSlaterReader {
     return false;
   }
   
+  private int ptLineBuf, bufLen;
+  @Override
+  public String rd() throws Exception {
+    if (++ptLineBuf < bufLen) {
+      return lineBuffer.get(ptLineBuf);
+    } 
+    if (bufLen > 0) {
+      lineBuffer = null;
+      bufLen = -1;
+      return null;
+    }
+    return super.rd();
+  }
+
+  private void createLineBuffer() throws Exception {
+    if (lineBuffer != null)
+      return;
+    lineBuffer = new Lst<String>();
+    String l0 = line;
+    // read to end of file
+    while (super.rd() != null) {
+      if (!line.contains("[") || !checkOrbitalType(line)) {
+        lineBuffer.addLast(line);
+      } 
+    }
+    bufLen = lineBuffer.size();
+    ptLineBuf = -1;
+    line = l0;
+  }
+
   @SuppressWarnings("unchecked")
   private void sortMOs() {
     Object[] list = orbitals.toArray(new Object[orbitals.size()]);

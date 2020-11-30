@@ -200,9 +200,9 @@ public class GaussianDialog extends JDialog implements ActionListener,
     //inputTabs = new JTabbedPane();
 
     JPanel basicPanel = buildBasicPanel();
-    //inputTabs.addTab(GT.$("Basic"), null, basicPanel);
+    //inputTabs.addTab(GT._("Basic"), null, basicPanel);
     JPanel advancedPanel = buildAdvancedPanel();
-    //inputTabs.addTab(GT.$("Advanced"), null, advancedPanel);
+    //inputTabs.addTab(GT._("Advanced"), null, advancedPanel);
     
     JPanel filePanel = buildFilePanel();
     JPanel buttonPanel = buildButtonPanel();

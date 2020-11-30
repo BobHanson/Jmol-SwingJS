@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2014-12-13 22:43:17 -0600 (Sat, 13 Dec 2014) $
- * $Revision: 20162 $
+ * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
+ * $Revision: 21922 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -211,9 +211,9 @@ public class PovrayDialog extends JDialog {
  /*
     // Use Ini option
     Box useIniBox = Box.createHorizontalBox();
-    text = GT.$("Use .ini file");
+    text = GT._("Use .ini file");
     useIniCheck = new JCheckBox(text, true);
-    text = GT.$("Save options in a .ini file");
+    text = GT._("Save options in a .ini file");
     useIniCheck.setToolTipText(text);
     useIniCheck.addItemListener(updateItemListener);
     useIniBox.add(useIniCheck);
@@ -222,9 +222,9 @@ public class PovrayDialog extends JDialog {
 
     // Render all frames options
     Box allFramesBox = Box.createHorizontalBox();
-    text = GT.$("Render all frames");
+    text = GT._("Render all frames");
     allFramesCheck = new JCheckBox(text, false);
-    text = GT.$("Render each model (not only the currently displayed one)");
+    text = GT._("Render each model (not only the currently displayed one)");
     allFramesCheck.setToolTipText(text);
     allFramesCheck.addItemListener(updateItemListener);
     allFramesBox.add(allFramesCheck);
@@ -233,9 +233,9 @@ public class PovrayDialog extends JDialog {
     
     // Antialias option
     Box antiAliasBox = Box.createHorizontalBox();
-    text = GT.$("Turn on POV-Ray anti-aliasing");
+    text = GT._("Turn on POV-Ray anti-aliasing");
     antiAliasCheck = new JCheckBox(text, true);
-    text = GT.$("Use povray's slower but higher quality anti-aliasing mode");
+    text = GT._("Use povray's slower but higher quality anti-aliasing mode");
     antiAliasCheck.setToolTipText(text);
     antiAliasCheck.addItemListener(updateItemListener);
     antiAliasBox.add(antiAliasCheck);
@@ -256,9 +256,9 @@ public class PovrayDialog extends JDialog {
 
     // Image size option
     Box imageBox = Box.createHorizontalBox();
-    //text = GT.$("Image size");
+    //text = GT._("Image size");
     //imageSizeCheck = new JCheckBox(text, true);
-    //text = GT.$("Image size");
+    //text = GT._("Image size");
     //imageSizeCheck.setToolTipText(text);
     //imageSizeCheck.addItemListener(new ItemListener() {
     //  public void itemStateChanged(ItemEvent e) {
@@ -350,9 +350,9 @@ public class PovrayDialog extends JDialog {
     // Output format option
     Box outputBox = Box.createHorizontalBox();
 /*    
-    text = GT.$("Output format : ");
+    text = GT._("Output format : ");
     outputFormatCheck = new JCheckBox(text, true);
-    text = GT.$("Select the file format of the output file");
+    text = GT._("Select the file format of the output file");
     outputFormatCheck.setToolTipText(text);
     outputFormatCheck.addItemListener(new ItemListener() {
       public void itemStateChanged(ItemEvent e) {
@@ -487,12 +487,12 @@ public class PovrayDialog extends JDialog {
     
     /*
     Box commandLineBox = Box.createVerticalBox();
-    text = GT.$("Command Line to Execute");
+    text = GT._("Command Line to Execute");
     commandLineBox.setBorder(new TitledBorder(text));
-    text = GT.$("The actual command which will be executed");
+    text = GT._("The actual command which will be executed");
     commandLineBox.setToolTipText(text);
     commandLineField = new JTextField(30);
-    text = GT.$("The actual command which will be executed");
+    text = GT._("The actual command which will be executed");
     commandLineField.setToolTipText(text);
     commandLineField.addActionListener(updateActionListener);
     commandLineBox.add(commandLineField);
@@ -846,7 +846,7 @@ public class PovrayDialog extends JDialog {
         (povrayPath == null) ||
 	    (basename == null)) {
       //if (commandLineField != null) {
-      //  commandLineField.setText(GT.$("null component string"));
+      //  commandLineField.setText(GT._("null component string"));
       //}
       return "";
     }
@@ -1068,15 +1068,16 @@ public class PovrayDialog extends JDialog {
    */
   private void getPathHistory() {
 
+    java.util.Properties props = JmolPanel.historyFile.getProperties();
     if (povrayPathLabel != null) {
-      String povrayPath = JmolPanel.getJmolProperty("povrayPath",
+      String povrayPath = props.getProperty("povrayPath",
         System.getProperty("user.home"));
       if (povrayPath != null) {
         povrayPathLabel.setText(povrayPath);
       }
     }
     if (savePathLabel != null) {
-      String savePath = JmolPanel.getJmolProperty("povraySavePath",
+      String savePath = props.getProperty("povraySavePath",
         System.getProperty("user.home"));
       if (savePath != null) {
         savePathLabel.setText(savePath);
@@ -1091,7 +1092,7 @@ public class PovrayDialog extends JDialog {
     java.util.Properties props = new java.util.Properties();
     props.setProperty("povrayPath", povrayPathLabel.getText());
     props.setProperty("povraySavePath", savePathLabel.getText());
-    JmolPanel.addJmolProperties(props);
+    JmolPanel.historyFile.addProperties(props);
   }
 
   String doubleQuoteIfContainsSpace(String str) {

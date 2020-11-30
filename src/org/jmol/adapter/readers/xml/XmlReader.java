@@ -27,9 +27,6 @@ import java.io.BufferedInputStream;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.Rdr;
-import javajs.util.SB;
-
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -37,7 +34,9 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Resolver;
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
+
+import javajs.util.Rdr;
+import javajs.util.SB;
 
 /**
  * A generic XML reader template -- by itself, does nothing.
@@ -370,7 +369,7 @@ public class XmlReader extends AtomSetCollectionReader {
     attribs[0] = jsObjectGetMember(domObj, "attributes");
     getDOMAttributesA(attribs);
     processStartElement(localName, nodeName);
-    boolean haveChildren;
+    boolean haveChildren = false;
     /**
      * @j2sNative
      * 
@@ -378,8 +377,8 @@ public class XmlReader extends AtomSetCollectionReader {
      * 
      */
     {
-      haveChildren = ((Boolean) jsObjectCall(domObj, "hasChildNodes", null))
-          .booleanValue();
+//      haveChildren = ((Boolean) jsObjectCall(domObj, "hasChildNodes", null))
+//          .booleanValue();
     }
     if (haveChildren) {
       Object nextNode = jsObjectGetMember(domObj, "firstChild");
@@ -427,22 +426,22 @@ public class XmlReader extends AtomSetCollectionReader {
      * 
      */
     {
-
-      // Java only -- no longer loading only specific values
-
-      Number N = (Number) jsObjectGetMember(attributes, "length");
-      int n = (N == null ? 0 : N.intValue());
-      for (int i = n; --i >= 0;) {
-        attArgs[0] = Integer.valueOf(i);
-        attArgs[0] = jsObjectCall(attributes, "item", attArgs);
-        if (attArgs[0] != null) {
-          String attValue = (String) jsObjectGetMember(attArgs, "value");
-          if (attValue != null)
-            atts.put(
-                ((String) jsObjectGetMember(attArgs, "name")).toLowerCase(),
-                attValue);
-        }
-      }
+//
+//      // Java only -- no longer loading only specific values
+//
+//      Number N = (Number) jsObjectGetMember(attributes, "length");
+//      int n = (N == null ? 0 : N.intValue());
+//      for (int i = n; --i >= 0;) {
+//        attArgs[0] = Integer.valueOf(i);
+//        attArgs[0] = jsObjectCall(attributes, "item", attArgs);
+//        if (attArgs[0] != null) {
+//          String attValue = (String) jsObjectGetMember(attArgs, "value");
+//          if (attValue != null)
+//            atts.put(
+//                ((String) jsObjectGetMember(attArgs, "name")).toLowerCase(),
+//                attValue);
+//        }
+//      }
       if (true)
         return;
     }
@@ -454,21 +453,21 @@ public class XmlReader extends AtomSetCollectionReader {
   
   
 
-  /**
-   * @j2sIgnore
-   * 
-   * @param jsObject
-   * @param method
-   * @param args
-   * @return object
-   */
-  private Object jsObjectCall(Object[] jsObject, String method, Object[] args) {
-    {
-    return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, method,
-        args == null ? nullObj : args);
-    }
-  }
-
+//  /**
+//   * @j2sIgnore
+//   * 
+//   * @param jsObject
+//   * @param method
+//   * @param args
+//   * @return object
+//   */
+//  private Object jsObjectCall(Object[] jsObject, String method, Object[] args) {
+//    {
+//    return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, method,
+//        args == null ? nullObj : args);
+//    }
+//  }
+//
   private Object jsObjectGetMember(Object[] jsObject, String name) {
     /**
      * @j2sNative
@@ -477,7 +476,7 @@ public class XmlReader extends AtomSetCollectionReader {
      * 
      */
     {
-    return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, name, null);
+    return null;//parent.vwr.apiPlatform.getJsObjectInfo(jsObject, name, null);
     }
   }
 

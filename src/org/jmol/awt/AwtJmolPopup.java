@@ -24,21 +24,101 @@
 package org.jmol.awt;
 
 import java.awt.Component;
+import java.util.Map;
 
 import javax.swing.JPopupMenu;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
-import org.jmol.api.PlatformViewer;
 import org.jmol.api.SC;
-import org.jmol.i18n.GT;
-import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.JmolPopup;
 import org.jmol.popup.PopupResource;
-import org.jmol.viewer.Viewer;
 
 public class AwtJmolPopup extends JmolPopup {
 
   public AwtJmolPopup() {
     helper = new AwtPopupHelper(this);
+  }
+
+  @Override
+  protected void addMenu(String id, String item, SC subMenu, String label,
+                         PopupResource popupResourceBundle) {
+    
+    AwtSwingComponent c = (AwtSwingComponent) subMenu;
+    c.deferred = true;
+    c.jm.addMenuListener(new MenuListener() {
+
+      @Override
+      public void menuSelected(MenuEvent e) {
+        if (c.deferred) {
+          c.deferred = false;
+          if (item.indexOf("Computed") < 0)
+            addMenuItems(id, item, subMenu, popupResourceBundle);
+          appCheckSpecialMenu(item, subMenu, label);
+          updateAwtMenus(item);        
+        }
+      }
+
+      @Override
+      public void menuDeselected(MenuEvent e) {
+      }
+
+      @Override
+      public void menuCanceled(MenuEvent e) {
+      }
+      
+    });
+    }
+
+  @SuppressWarnings("unchecked")
+  protected void updateAwtMenus(String item) {
+    switch (item) {
+    case "fileMenu":
+      updateFileMenu();
+      break;
+    case "elementsComputedMenu":
+      updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
+      break;
+    case "FRAMESbyModelComputedMenu":
+      updateFRAMESbyModelComputedMenu();
+      break;
+    case "PDBheteroComputedMenu":
+      updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
+      break;
+    case "modelSetMenu":
+      updateModelSetComputedMenu();
+      break;
+    case "spectraMenu":
+      updateSpectraMenu();
+      break;
+    case "sceneComputedMenu":
+      updateSceneComputedMenu();
+      break;
+    case "selectMenuText":
+      updatePDBComputedMenus();
+      break;
+    case "languageComputedMenu":
+      updateLanguageSubmenu();
+      break;
+    case "SYMMETRYSelectComputedMenu":
+      updateSYMMETRYSelectComputedMenu();
+      break;
+    case "SYMMETRYShowComputedMenu":
+      updateSYMMETRYShowComputedMenu();
+      break;
+    case "configurationComputedMenu":
+      updateConfigurationComputedMenu();
+      break;
+    case "surfMoComputedMenuText":
+      updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
+      break;
+    case "systemMenu":
+      updateAboutSubmenu();
+      break;
+    }
+    updateFileTypeDependentMenus();
+    for (int i = Special.size(); --i >= 0;)
+      updateSpecialMenuItem(Special.get(i));
   }
 
   @Override

@@ -203,7 +203,7 @@ public class MainPopupResourceBundle extends PopupResource {
       {   "measureMenu",
           "showMeasurementsCB - "
               + "measureOff measureDistance measureAngle measureTorsion PDBmeasureSequence - "
-              + "measureDelete measureList - distanceNanometers distanceAngstroms distancePicometers" },
+              + "measureDelete measureList - distanceNanometers distanceAngstroms distancePicometers distanceHz" },
 
       {   "pickingMenu",
           "pickOff pickCenter pickIdent pickLabel pickAtom "
@@ -364,6 +364,7 @@ public class MainPopupResourceBundle extends PopupResource {
         "distanceAngstroms", GT.$("Distance units Angstroms"),
         "distanceNanometers", GT.$("Distance units nanometers"),
         "distancePicometers", GT.$("Distance units picometers"),
+        "distanceHz", GT.$("Distance units hz (NMR J-coupling)"),
         "ssbondMenu", GT.$("Disulfide Bonds"),
         "[color_ssbonds]Menu", null,
         "DNA", GT.$("DNA"),
@@ -895,6 +896,7 @@ public class MainPopupResourceBundle extends PopupResource {
       { "distanceNanometers", "select *; set measure nanometers" },
       { "distanceAngstroms", "select *; set measure angstroms" },
       { "distancePicometers", "select *; set measure picometers" },
+      { "distanceHz", "select *; set measure hz" },
 
       { "pickOff", "set picking off" },
       { "pickCenter", "set picking center" },

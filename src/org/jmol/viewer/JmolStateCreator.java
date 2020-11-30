@@ -36,10 +36,6 @@ public abstract class JmolStateCreator {
 
   abstract void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo);
 
-  abstract void syncScript(String script, String applet, int port);
-
-  abstract void mouseScript(String script);
-
   abstract void getInlineData(SB loadScript, String strModel, boolean isAppend,
                      String defaultLoadFilter);
 

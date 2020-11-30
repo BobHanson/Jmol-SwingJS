@@ -45,6 +45,8 @@ import java.net.URL;
 
 import org.jmol.api.PlatformViewer;
 
+import jspecview.common.JSViewer;
+
 
 
 /**
@@ -88,10 +90,10 @@ class Image {
   }
 
   static int[] grabPixels(Object imageobj, int width, int height, 
-                          int[] pixels, int startRow, int nRows) {
+                          int[] pixels) {
     java.awt.Image image = (java.awt.Image) imageobj;
     PixelGrabber pixelGrabber = (pixels == null ? new PixelGrabber(image, 0,
-        0, width, height, true) : new PixelGrabber(image, 0, startRow, width, nRows, pixels, 0,
+        0, width, height, true) : new PixelGrabber(image, 0, 0, width, height, pixels, 0,
             width));
     try {
       pixelGrabber.grabPixels();
@@ -120,7 +122,7 @@ class Image {
       g.clearRect(0, 0, width, height);
       g.drawImage(image, 0, 0, width, height, 0, 0, width0, height0, null);
     }
-    return grabPixels(imageOffscreen, width, height, null, 0, 0);
+    return grabPixels(imageOffscreen, width, height, null);
   }
 
   public static int[] getTextPixels(String text, org.jmol.util.Font font3d, Object gObj,
@@ -132,7 +134,7 @@ class Image {
     g.setColor(Color.white);
     g.setFont((java.awt.Font) font3d.font);
     g.drawString(text, 0, ascent);
-    return grabPixels(image, width, height, null, 0, 0);
+    return grabPixels(image, width, height, null);
   }
 
   static Object newBufferedImage(Object image, int w, int h) {
@@ -196,16 +198,7 @@ class Image {
    */
   static Object getStaticGraphics(Object image, boolean backgroundTransparent) {
     Graphics2D g2d = ((BufferedImage) image).createGraphics();
-    //if (backgroundTransparent) {
-    // what here?
-    //}
-    // miguel 20041122
-    // we need to turn off text antialiasing on OSX when
-    // running in a web browser
-    
-    // Despite the above comment, 13.1.8 adds text antialiasing
-    // for all conditions -- Bob Hanson, Oct. 27, 2012
-    
+    if (!JSViewer.isJS) {
     g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
         RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     // I don't know if we need these or not, but cannot hurt to have them
@@ -213,6 +206,7 @@ class Image {
         RenderingHints.VALUE_ANTIALIAS_OFF);
     g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
         RenderingHints.VALUE_RENDER_SPEED);
+    }
     return g2d;
   }
 

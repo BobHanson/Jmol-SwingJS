@@ -86,6 +86,31 @@
   	</fileset>
     </copy>
 
+  	
+	<copy todir="${j2s.dir}/core" >
+	  <fileset dir="src/org/jmol/viewer/">
+	    <include name="Jmol.properties" />
+	  </fileset>
+	  <filterchain>
+	    <striplinecomments>
+	      <comment value="#" />
+	    </striplinecomments>
+	    <linecontains>
+	      <contains value="Jmol.___JmolVersion" />
+	    </linecontains>
+	  </filterchain>
+	</copy>
+  <property file="Jmol.properties" prefix="Jmol.properties" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
+  <propertyregex property="version"
+  			  override = "true"
+	          input="${version}"
+  			  regexp='(")([^"]+)(")'
+	          select="\2"
+  		      global="true"
+	          />
+  <echo message="version=${version}" />
+
 </target>
 	
 

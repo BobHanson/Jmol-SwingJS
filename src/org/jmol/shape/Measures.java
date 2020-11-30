@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-02-03 17:58:18 -0600 (Fri, 03 Feb 2017) $
- * $Revision: 21386 $
+ * $Date: 2019-08-18 15:32:43 -0500 (Sun, 18 Aug 2019) $
+ * $Revision: 21995 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -69,7 +69,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   TickInfo tickInfo;
   public TickInfo defaultTickInfo;
-  public Font font3d;
+  public static Font font3d;
   private Map<String, Integer> htMin;
   
   @Override
@@ -84,7 +84,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   @Override
   public void initShape() {
-    font3d = vwr.gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
+    if (font3d == null)
+      font3d = vwr.gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
   }
 
   @Override
@@ -217,6 +218,9 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         m.strFormat = md.strFormat;
         m.text = md.text;
       }
+      m.units = md.units;
+      m.property = md.property;
+      m.fixedValue = md.fixedValue;
       switch (md.tokAction) {
       case T.refresh:
         doAction(md, md.thisID, T.refresh);
@@ -491,8 +495,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           Integer.valueOf(atoms[atomIndex].getAtomNumber())) : (Object) m
           .getAtom(i));
     }
-    define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, strFormat, null, tickInfo,
-        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null),
+    define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, m.property, strFormat, null, tickInfo,
+        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Float.NaN),
         (isDelete ? T.delete : T.define));
   }
 
@@ -563,6 +567,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         sb.append(", ");
       sb.append(m.getLabel(i, asBitSet, false));
     }
+    sb.append(", ");
+    sb.append(m.getString());
     sb.append("]");
     return sb.toString();
   }

@@ -404,7 +404,7 @@ public class ScriptManager implements JmolScriptManager {
 
   private boolean checkResume(String str) {
     if (str.equalsIgnoreCase("resume")) {
-      vwr.setScriptStatus("", "execution resumed", 0, null);
+      vwr.scriptStatusMsg("", "execution resumed");
       eval.resumePausedExecution();
       return true;
     }
@@ -530,10 +530,10 @@ public class ScriptManager implements JmolScriptManager {
    */
   @Override
   public void openFileAsync(String fileName, int flags) {
-    boolean noScript = ((flags & 2) == 2);
-    boolean isAppend = ((flags & 4) == 4);
-    boolean pdbCartoons = ((flags & 1) == 1 && !isAppend);
-    boolean noAutoPlay = ((flags & 8) == 8);
+    boolean noScript = ((flags & NO_SCRIPT) != 0);
+    boolean isAppend = ((flags & IS_APPEND) != 0);
+    boolean pdbCartoons = ((flags & PDB_CARTOONS) != 0 && !isAppend);
+    boolean noAutoPlay = ((flags & NO_AUTOPLAY) != 0);
     String cmd = null;
     fileName = fileName.trim();
     if (fileName.startsWith("\t")) {

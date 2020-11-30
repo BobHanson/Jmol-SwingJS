@@ -4,6 +4,7 @@ package org.jmol.api;
 import java.net.URL;
 import java.util.Map;
 
+import org.jmol.api.JmolInChI;
 import org.jmol.util.Font;
 
 import javajs.util.P3;
@@ -22,6 +23,8 @@ public interface GenericPlatform extends FontManager {
   /////// Display
 
   boolean isHeadless();
+  
+  boolean isJS();
   
   void convertPointFromScreen(Object display, P3 ptTemp);
 
@@ -69,9 +72,9 @@ public interface GenericPlatform extends FontManager {
 
   Object newOffScreenImage(int w, int h);
   
-  @Deprecated
-  void renderScreenImage(Object g, Object currentSize);
-
+//  @Deprecated
+//  void renderScreenImage(Object g, Object currentSize);
+//
   int[] getTextPixels(String text, Font font3d, Object gObj,
                       Object image, int mapWidth, int height,
                       int ascent);
@@ -92,12 +95,9 @@ public interface GenericPlatform extends FontManager {
    * @param width
    * @param height
    * @param pixels 
-   * @param startRow 
-   * @param nRows 
    * @return         pixels
    */
-  int[] grabPixels(Object image, int width, int height, 
-                   int[] pixels, int startRow, int nRows);
+  int[] grabPixels(Object image, int width, int height, int[] pixels);
 
   /**
    * can be ignored (return false) if platform cannot save images
@@ -139,5 +139,7 @@ public interface GenericPlatform extends FontManager {
                                  Map<String, GenericImageDialog> imageMap);
 
   boolean forceAsyncLoad(String filename);
+
+  JmolInChI getInChI();
 
 }

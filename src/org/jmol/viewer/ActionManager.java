@@ -438,6 +438,7 @@ public class ActionManager implements EventManager {
   public final static int PICKING_ROTATE_BOND = 34;
   public final static int PICKING_IDENTIFY_BOND = 35;
   public final static int PICKING_DRAG_LIGAND = 36;
+  public final static int PICKING_DRAG_MODEL = 37;
 
   /**
    * picking styles
@@ -452,7 +453,7 @@ public class ActionManager implements EventManager {
 
   private final static String[] pickingModeNames;
   static {
-    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand".split(" ");
+    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel".split(" ");
   }
   
   public final static String getPickingModeName(int pickingMode) {
@@ -1020,6 +1021,7 @@ public class ActionManager implements EventManager {
       break;
     case PICKING_DRAG_SELECTED:
     case PICKING_DRAG_LIGAND:
+    case PICKING_DRAG_MODEL:
     case PICKING_DRAG_MOLECULE:
       isBound = bnd(dragAction, ACTION_dragAtom, ACTION_dragZ, ACTION_rotateSelected);
       break;
@@ -1109,9 +1111,10 @@ public class ActionManager implements EventManager {
         dragSelected(dragWheelAction, deltaX, deltaY, true);
         return;
       case PICKING_DRAG_LIGAND:
+      case PICKING_DRAG_MODEL:
       case PICKING_DRAG_MOLECULE:
       case PICKING_DRAG_MINIMIZE_MOLECULE:
-        bs = vwr.ms.getAtoms(T.molecule, BSUtil.newAndSetBit(dragAtomIndex));
+        bs = vwr.ms.getAtoms((apm == PICKING_DRAG_MODEL ? T.model : T.molecule), BSUtil.newAndSetBit(dragAtomIndex));
         if (apm == PICKING_DRAG_LIGAND)
           bs.and(vwr.getAtomBitSet("ligand"));
         //$FALL-THROUGH$
@@ -1127,6 +1130,7 @@ public class ActionManager implements EventManager {
         } else {
           switch (apm) {
           case PICKING_DRAG_LIGAND:
+          case PICKING_DRAG_MODEL:
           case PICKING_DRAG_MOLECULE:
           case PICKING_DRAG_MINIMIZE_MOLECULE:
             vwr.select(bs, false, 0, true);

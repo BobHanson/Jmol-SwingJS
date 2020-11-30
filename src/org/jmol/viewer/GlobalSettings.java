@@ -356,6 +356,7 @@ public class GlobalSettings {
     setB("slabByMolecule", slabByMolecule);
     setB("slabByAtom", slabByAtom);
     setB("smartAromatic", smartAromatic);
+    setI("minimizationMaxAtoms", minimizationMaxAtoms);
     setI("smallMoleculeMaxAtoms", smallMoleculeMaxAtoms);
     setO("smilesUrlFormat", smilesUrlFormat);
     setO("macroDirectory", macroDirectory);
@@ -466,6 +467,7 @@ public class GlobalSettings {
   boolean pdbSequential = false; // true for no bonding check
   int percentVdwAtom = JC.DEFAULT_PERCENT_VDW_ATOM;
   int smallMoleculeMaxAtoms = 40000;
+  int minimizationMaxAtoms = 200;
   boolean smartAromatic = true;
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
@@ -944,7 +946,7 @@ public class GlobalSettings {
       + ";jmolinjspecview;legacyautobonding;legacyhaddition;legacyjavafloat"
       + ";loglevel;logfile;loggestures;logcommands;measurestylechime"
       + ";loadformat;loadligandformat;macrodirectory;mkaddhydrogens"
-      + ";smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
+      + ";minimizationmaxatoms;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
       + ";nodelay;pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed"
       + ";preservestate;refreshing;repaintwaitms;rotationradius;selectallmodels"
       + ";showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell"

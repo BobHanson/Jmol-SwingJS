@@ -256,7 +256,12 @@ public class GenNBOReader extends MOReader {
       pt = fileName.length();
     fileName = fileName.substring(0, pt);
     moData.put("nboRoot", fileName);
-    fileName += ext;
+    if (ext.startsWith(".")) {
+      fileName += ext;
+    } else {
+      pt = fileName.lastIndexOf("/");
+      fileName = fileName.substring(0, pt + 1) + ext;
+    }
     String data = vwr.getFileAsString3(fileName, false, null);
     Logger.info(data.length() + " bytes read from " + fileName);
     boolean isError = (data.indexOf("java.io.") >= 0);
@@ -291,20 +296,60 @@ public class GenNBOReader extends MOReader {
    * 
    * @throws Exception
    */
-  private void getFile46() throws Exception {
-    String data = getFileData(".46");
-    if (data == null)
-      return;
+  private void getFile46() {
+    nNOs = nAOs = nOrbitals;
+    String labelKey = getLabelKey(nboType);
+    Map<String, String[]> map = null;
     BufferedReader readerSave = reader;
-    reader = Rdr.getBR(data);
-    readData46();
+    try {
+      reader = Rdr.getBR(getFileData(".46"));
+      map = readData46(labelKey);
+    } catch (Exception e) {
+      try {
+        map = readOutputProperties(getFileData("output.properties"));
+      } catch (Exception ee) {
+        map = new Hashtable<String, String[]>();
+        setMap(map, "NHO", nNOs, false);
+        setMap(map, "NBO", nNOs, false);
+        setMap(map, "NAO", nNOs, false);
+      }
+    }
+    setMap(map, labelKey, nNOs, true);
     reader = readerSave;
   }
 
+  private Map<String, String[]> readOutputProperties(String data) {
+    Map<String, String[]> map = new Hashtable<String, String[]>();
+    String[] lines = data.split("\n");   
+    for (int i = lines.length; --i >= 0;) {
+      String line = lines[i];
+      if (line.startsWith("Natural Atomic Orbitals=")) {
+        setLabels(map, "NAO", line);
+      } else if (line.startsWith("Natural Hybrid Orbitals=")) {
+        setLabels(map, "NHO", line);
+      } else if (line.startsWith("Natural Bond Orbitals=")) {
+        setLabels(map, "NBO", line);
+      }
+    }
+    return map;
+  }
+
+  private void setLabels(Map<String, String[]> map, String key, String line) {
+    String[] tokens = PT.split(line, ":");
+    for (int i = tokens.length; --i >= 0;) {
+      String s = PT.split(tokens[i], ",")[1];
+      tokens[i] = (s.indexOf("%") >= 0 ? s.substring(0, s.indexOf(" "))
+          : PT.rep(s, " ",""));
+    }
+    map.put(key, tokens);
+  }
+
   private static String P_LIST =  "101   102   103";
+  private static String PS_LIST =  "151   152   153";
   // GenNBO may be 103 101 102 
   
-  private static String SP_LIST = "1     101   102   103";
+  private static String SP_LIST =   "1     101   102   103";
+  private static String SPS_LIST =  "51    151   152   153";
 
   private static String DS_LIST = "255   252   253   254   251"; 
   // GenNBO is 251 252 253 254 255 
@@ -457,12 +502,12 @@ public class GenNBOReader extends MOReader {
       slater[1] = QS.S;
       break;
     case 3:
-      if (!getDFMap("P", line, QS.P, P_LIST, 3))
+      if (!getDFMap("P", line, QS.P, P_LIST, 3) && resetDF() && !getDFMap("P", line, QS.P, PS_LIST, 3))
         return false;
       slater[1] = QS.P;
       break;
     case 4:
-      if (!getDFMap("SP", line, QS.SP, SP_LIST, 1))
+      if (!getDFMap("SP", line, QS.SP, SP_LIST, 1) && resetDF() && !getDFMap("SP", line, QS.SP, SPS_LIST, 2))
         return false;
       slater[1] = QS.SP;
       break;
@@ -528,6 +573,11 @@ public class GenNBOReader extends MOReader {
     slater[2] = pt + 1; // gaussian list pointer
     slater[3] = ng; // number of gaussians
     shells.addLast(slater);
+    return true;
+  }
+
+  private boolean resetDF() {
+    dfCoefMaps[QS.P][0] = 0;
     return true;
   }
 
@@ -636,7 +686,7 @@ public class GenNBOReader extends MOReader {
       for (int j = (n - 1) / 10; --j >= 0;)
         line += rd().substring(1);
       line = line.trim();
-      System.out.println(line);
+      //System.out.println(line);
       if (!fillSlater(slater, n, pt, ng))
         return false;
     }
@@ -647,15 +697,15 @@ public class GenNBOReader extends MOReader {
 
   /**
    * read labels and not proper number of NOs, nNOs, for this nboType
+   * @return 
    * 
    * @throws Exception
    */
-  private void readData46() throws Exception {
+  private Map<String, String[]> readData46(String labelKey) throws Exception {
     Map<String, String[]> map = new Hashtable<String, String[]>();
     String[] tokens = new String[0];
     rd();
-    int nNOs = this.nNOs = nAOs = nOrbitals;
-    String labelKey = getLabelKey(nboType);
+    int nNOs = this.nNOs;
     while (line != null && line.length() > 0) {
       tokens = PT.getTokens(line);
       String type = tokens[0];
@@ -673,13 +723,17 @@ public class GenNBOReader extends MOReader {
       SB sb = new SB();
       while (rd() != null && line.length() > 4 && " NA NB AO NH".indexOf(line.substring(1, 4)) < 0)
         sb.append(line.substring(1));
-      System.out.println(sb.length());
+      //System.out.println(sb.length());
       tokens = new String[sb.length() / 10];
       for (int i = 0, pt = 0; i < tokens.length; i++, pt += 10)
         tokens[i] = PT.rep(sb.substring2(pt, pt + 10), " ","");
       map.put(key, tokens);
     }
-    tokens = map.get((betaOnly ? "beta_" : "") + labelKey);
+    return map;
+  }
+
+  private void setMap(Map<String, String[]> map, String labelKey, int nNOs, boolean doAll) {
+    String[] tokens = map.get((betaOnly ? "beta_" : "") + labelKey);
     moData.put("nboLabelMap", map);
     if (tokens == null) {
       tokens = new String[nNOs];
@@ -689,6 +743,8 @@ public class GenNBOReader extends MOReader {
       if (isOpenShell)
         map.put("beta_" + labelKey, tokens);        
     }
+    if (!doAll)
+      return;
     moData.put("nboLabels", tokens);
     addBetaSet = (isOpenShell && !betaOnly && !is47File); 
     if (addBetaSet) 
@@ -702,8 +758,7 @@ public class GenNBOReader extends MOReader {
     }
     Lst<Object> structures = getStructureList();
     NBOParser.getStructures46(map.get("NBO"), "alpha", structures, asc.ac);
-    NBOParser.getStructures46(map.get("beta_NBO"), "beta", structures, asc.ac);
-    
+    NBOParser.getStructures46(map.get("beta_NBO"), "beta", structures, asc.ac);    
   }
 
   private static String getLabelKey(String labelKey) {

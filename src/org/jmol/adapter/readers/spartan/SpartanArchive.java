@@ -25,23 +25,21 @@
 package org.jmol.adapter.readers.spartan;
 
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.jmol.adapter.readers.quantum.BasisFunctionReader;
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Bond;
-import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
+import org.jmol.util.Logger;
 
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-
-import java.util.Hashtable;
-import java.util.Map;
-
-
-import org.jmol.quantum.QS;
-import org.jmol.util.Logger;
 import javajs.util.V3;
 
 class SpartanArchive {

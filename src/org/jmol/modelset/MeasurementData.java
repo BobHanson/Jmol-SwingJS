@@ -55,6 +55,7 @@ public class MeasurementData implements JmolMeasurementClient {
   public int tokAction = T.define;
   public RadiusData radiusData;
   public String strFormat;
+  public String property;
   public String note;
   public boolean isAll;
   public short colix;
@@ -62,11 +63,14 @@ public class MeasurementData implements JmolMeasurementClient {
   public int mad;
   public String thisID;
   public Text text;
-  
+  public String units;
+  public float fixedValue;
+   
   private Atom[] atoms;
-  private String units;
   private float[] minArray;
   private ModelSet ms;
+  
+  private boolean allowSelf; // for properties
   
   
   
@@ -89,11 +93,11 @@ public class MeasurementData implements JmolMeasurementClient {
    * the general constructor. tokAction is not used here
    */
   public MeasurementData set(int tokAction, Map<String, Integer> htMin, 
-                             RadiusData radiusData, String strFormat, String units,
+                             RadiusData radiusData, String property, String strFormat, String units,
                  TickInfo tickInfo,
                  boolean mustBeConnected, boolean mustNotBeConnected,
                  Boolean intramolecular, boolean isAll, 
-                 int mad, short colix, Text text) {
+                 int mad, short colix, Text text, float value) {
     this.ms = vwr.ms;
     this.tokAction = tokAction;
     if (points.size() >= 2 && points.get(0) instanceof BS && points.get(1) instanceof BS) {
@@ -104,6 +108,7 @@ public class MeasurementData implements JmolMeasurementClient {
     //this.rangeMinMax = rangeMinMax;
     this.htMin = htMin;
     this.radiusData = radiusData;
+    this.property = property;
     this.strFormat = strFormat;
     this.units = units;
     this.tickInfo = tickInfo;
@@ -114,6 +119,7 @@ public class MeasurementData implements JmolMeasurementClient {
     this.mad = mad;
     this.colix = colix;
     this.text = text;
+    this.fixedValue = value;
     return this;
   }
   
@@ -149,12 +155,12 @@ public class MeasurementData implements JmolMeasurementClient {
    * can be called to get the result vector, either as a string
    * or as an array.
    * 
-   * @param asArray 
+   * @param asFloatArray 
    * @param asMinArray array of minimum of a given atom type 
    * @return Vector of formatted Strings or array of minimum-distance values
    * 
    */
-  public Object getMeasurements(boolean asArray, boolean asMinArray) {
+  public Object getMeasurements(boolean asFloatArray, boolean asMinArray) {
     if (asMinArray) {
       minArray = new float[((BS) points.get(0)).cardinality()];
       for (int i = 0; i < minArray.length; i++)
@@ -162,7 +168,8 @@ public class MeasurementData implements JmolMeasurementClient {
       define(null, ms);
       return minArray;      
     }
-    if (asArray) {
+    if (asFloatArray) {
+      allowSelf = true;
       measurements = new Lst<Float>();
       define(null, ms);
       return measurements;
@@ -204,6 +211,10 @@ public class MeasurementData implements JmolMeasurementClient {
     int[] indices = new int[5];
     Measurement m = new Measurement().setPoints(modelSet, indices, pts, null);
     m.setCount(nPoints);
+    m.property = property;
+    m.strFormat = strFormat;
+    m.units = units;
+    m.fixedValue = fixedValue;
     int ptLastAtom = -1;
     for (int i = 0; i < nPoints; i++) {
       Object obj = points.get(i);
@@ -236,7 +247,7 @@ public class MeasurementData implements JmolMeasurementClient {
    */
   private void nextMeasure(int thispt, int ptLastAtom, Measurement m, int thisModel ) {
     if (thispt > ptLastAtom) {
-      if (m.isValid() 
+      if ((allowSelf && !mustBeConnected && !mustNotBeConnected || m.isValid()) 
           && (!mustBeConnected || m.isConnected(atoms, thispt))
           && (!mustNotBeConnected || !m.isConnected(atoms, thispt))
           && (intramolecular == null || m.isIntramolecular(atoms, thispt) == intramolecular.booleanValue())
@@ -253,7 +264,7 @@ public class MeasurementData implements JmolMeasurementClient {
     }
     boolean haveNext = false;
     for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs.nextSetBit(i + 1), pt++) {
-      if (i == thisAtomIndex)
+      if (i == thisAtomIndex && !allowSelf)
         continue;
       int modelIndex = atoms[i].mi;
       if (thisModel >= 0 && justOneModel) {

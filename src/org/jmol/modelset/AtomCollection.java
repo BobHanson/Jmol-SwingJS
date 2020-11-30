@@ -598,6 +598,7 @@ abstract public class AtomCollection {
         sValue = list[n++];
       }
       Atom atom = at[i];
+      float f;
       switch (tok) {
       case T.atomname:
         setAtomName(i, sValue, true);
@@ -657,9 +658,8 @@ abstract public class AtomCollection {
         break;
       case T.occupancy:
         // a legacy thing
-        if (fValue < 2 && fValue > 0.01f)
-          fValue = 100 * fValue;
-        setOccupancy(i, fValue, true);
+        f = (fValue < 2 && fValue >= 0.01f ? 100 * fValue : fValue);
+        setOccupancy(i, f, true);
         break;
       case T.partialcharge:
         setPartialCharge(i, fValue, true);
@@ -679,11 +679,12 @@ abstract public class AtomCollection {
         break;
       case T.radius:
       case T.spacefill:
-        if (fValue < 0)
-          fValue = 0;
-        else if (fValue > Atom.RADIUS_MAX)
-          fValue = Atom.RADIUS_GLOBAL;
-        atom.madAtom = ((short) (fValue * 2000));
+        f = fValue;
+        if (f < 0)
+          f = 0;
+        else if (f > Atom.RADIUS_MAX)
+          f = Atom.RADIUS_GLOBAL;
+        atom.madAtom = ((short) (f * 2000));
         break;
       case T.selected:
         vwr.slm.setSelectedAtom(atom.i, (fValue != 0));

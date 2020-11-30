@@ -346,8 +346,7 @@ public class IsoExt extends ScriptExt {
         float scale = 1;
         int index = 0;
         if (type.length() > 0) {
-          ++i;
-          if (isFloatParameter(i + 1))
+          if (isFloatParameter(++i))
             index = intParameter(i++);
         }
         if (tokAt(i) == T.scale)
@@ -465,7 +464,7 @@ public class IsoExt extends ScriptExt {
               faces[0] = eval.expandFloatArray(
                   eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1);
             }
-            points = getAllPoints(e.iToken + 1);
+            points = getAllPoints(e.iToken + 1, 3);
             try {
               polygons = ((MeshCapper) Interface
                   .getInterface("org.jmol.util.MeshCapper", vwr, "script"))
@@ -945,7 +944,7 @@ public class IsoExt extends ScriptExt {
       String propertyName = null;
       Object propertyValue = null;
       boolean ignoreSquared = false;
-
+      String nboName = null;
       switch (getToken(i).tok) {
       case T.type:
         if (iShape == T.mo) {
@@ -953,6 +952,10 @@ public class IsoExt extends ScriptExt {
           return;
         }
         nboType = paramAsStr(++i).toUpperCase();
+        if (eval.tokAt(i + 1) == T.string) {
+          nboName = paramAsStr(++eval.iToken);
+          // NBO "C1-C2"
+        }
         break;
       case T.cap:
       case T.slab:
@@ -1061,7 +1064,17 @@ public class IsoExt extends ScriptExt {
       case T.identifier:
         invArg();
         break;
+      case T.string:
+        if (isNBO && i == 1) {
+          nboName = eval.stringParameter(i);
+          // NBO "C1-C2"
+          break;
+        }
       default:
+        if (isNBO && eval.tokAt(i) == T.string) {
+            nboName = paramAsStr(i++);
+            // NBO "C1-C2"
+        }
         if (eval.isArrayParameter(i)) {
           linearCombination = eval.floatParameterSet(i, 1, Integer.MAX_VALUE);
           if (tokAt(eval.iToken + 1) == T.squared) {
@@ -1083,10 +1096,13 @@ public class IsoExt extends ScriptExt {
       boolean haveMO = (moNumber != Integer.MAX_VALUE || linearCombination != null);
       if (chk)
         return;
-      if (nboType != null || haveMO) {
-        if (haveMO && tokAt(eval.iToken + 1) == T.string)
-          title = paramAsStr(++eval.iToken);
+      if (nboType != null || nboName != null || haveMO) {
+        if (haveMO && tokAt(eval.iToken + 1) == T.string) {
+            title = paramAsStr(++eval.iToken);
+        }
         eval.setCursorWait(true);
+        if (nboType != null || nboName != null)
+          nboType = nboType + ":" + nboName;
         setMoData(propertyList, moNumber, linearCombination, offset,
             isNegOffset, iModel, title, nboType, isBeta);
         if (haveMO) {
@@ -1116,18 +1132,48 @@ public class IsoExt extends ScriptExt {
   }
 
   @SuppressWarnings("static-access")
-  private void setNBOType(Map<String, Object> moData, String type) throws ScriptException {
+  private int setNBOType(Map<String, Object> moData, String type) throws ScriptException {
 
-    int ext = JC.getNBOTypeFromName(type);
-    if (ext < 0)
+    int nboNumber = -1;
+    String name = null;
+    int pt = type.indexOf(":");
+    if (pt > 0) {
+      name = type.substring(pt + 1);
+      type = type.substring(0, pt);
+      if (type.equals("null"))
+        type = null;
+      if (name.equals("null"))
+        name = null;
+    }
+    if ((type == null ? 0 : JC.getNBOTypeFromName(type)) < 0)
       invArg();
     if (!moData.containsKey("nboLabels"))
       error(ScriptError.ERROR_moModelError);
     if (chk)
-      return;
-    if (!((GenNBOReader) Interface.getInterface("org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
+      return -1;
+    if (type != null && !((GenNBOReader) Interface.getInterface("org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
     		.readNBOCoefficients(moData, type, vwr))
       error(ScriptError.ERROR_moModelError);
+    if (name != null) {
+      pt = name.indexOf(".");
+      if (pt > 0) {
+        int ipt = PT.parseInt(name.substring(pt + 1));
+        name = name.substring(0, pt);
+        pt = ipt;
+      }
+      String[] labels = (String[]) moData.get("nboLabels");
+      for (int i = 0, n = labels.length; i < n; i++) {
+        if (name.equals(labels[i])) {
+          if (pt < 0 || --pt == 0) {
+            nboNumber = i + 1;
+            break;
+          }
+        }
+      }
+      if (nboNumber < 0)
+        error(ScriptError.ERROR_moModelError);        
+    }
+    return nboNumber;
   }
 
   private float[] moCombo(Lst<Object[]> propertyList) {
@@ -1168,8 +1214,10 @@ public class IsoExt extends ScriptExt {
     if (moData == null)
       error(ScriptError.ERROR_moModelError);
     vwr.checkMenuUpdate();
-    if (nboType != null) {
-      setNBOType(moData, nboType);
+    if (nboType != null) {     
+      int nboNumber = setNBOType(moData, nboType);
+      if (nboNumber > 0)
+        moNumber = nboNumber;
       if (lc == null && moNumber == Integer.MAX_VALUE)
         return;
     }
@@ -2390,6 +2438,14 @@ public class IsoExt extends ScriptExt {
         }
         i = eval.iToken;
         break;
+      case T.val:
+        boolean isBS = e.isAtomExpression(++i);
+        P3[] probes = getAllPoints(i, 1);
+        sbCommand.append(" value " + (isBS ? e.atomExpressionAt(i).toString() : Escape.eAP(probes)));
+        propertyName = "probes";
+        propertyValue = probes;
+        i = e.iToken;
+        break;
       case T.gridpoints:
         propertyName = "gridPoints";
         sbCommand.append(" gridPoints");
@@ -2517,6 +2573,11 @@ public class IsoExt extends ScriptExt {
       case T.mrc:
         addShapeProperty(propertyList, "fileType", "Mrc");
         sbCommand.append(" mrc");
+        continue;
+      case T.type:
+        String s = eval.stringParameter(++i);
+        addShapeProperty(propertyList, "fileType", s);
+        sbCommand.append(" type \"" + s + "\"");
         continue;
       case T.object:
       case T.obj:

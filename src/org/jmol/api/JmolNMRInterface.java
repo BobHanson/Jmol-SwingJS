@@ -88,4 +88,6 @@ public interface JmolNMRInterface {
 
   public boolean getState(SB sb);
   
+  public double[] getNOEorJHH(Atom[] atoms, int mode);
+
 }

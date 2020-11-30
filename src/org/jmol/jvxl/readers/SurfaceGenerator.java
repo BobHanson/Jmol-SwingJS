@@ -1035,6 +1035,12 @@ public class SurfaceGenerator {
       return;
     }
     
+    if (params.probes != null) {
+      for (int i = params.probeValues.length; --i >= 0;) {
+        params.probeValues[i] = surfaceReader.getValueAtPoint(params.probes[i], false);
+      }
+    }
+    
     if (params.pocket != null && haveMeshDataServer)
       surfaceReader.selectPocket(!params.pocket.booleanValue());
 

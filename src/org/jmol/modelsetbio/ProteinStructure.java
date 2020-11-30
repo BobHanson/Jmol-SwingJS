@@ -71,8 +71,10 @@ public abstract class ProteinStructure implements Structure {
     addMonomer(monomerIndex + monomerCount - 1);
     if (Logger.debugging)
       Logger.info("Creating ProteinStructure " + strucNo + " "
-          + type.getBioStructureTypeName(false) + " from " + monomerIndexFirst
-          + " through " + monomerIndexLast + " in polymer " + apolymer);
+          + type.getBioStructureTypeName(false) + " from " 
+          + apolymer.monomers[monomerIndexFirst]
+          + " through " 
+          + apolymer.monomers[monomerIndexLast] + " in polymer " + apolymer);
   }
 
   /**

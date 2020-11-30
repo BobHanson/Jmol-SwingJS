@@ -1137,13 +1137,17 @@ public class ScriptMathProcessor {
       return addXBs(BSUtil.toggleInPlace(BSUtil.copy((BS) x1.value),
           (BS) x2.value));
     case T.opLE:
-      return addXBool(x1.asFloat() <= x2.asFloat());
+      return addXBool(x1.tok == T.integer && x2.tok == T.integer ? 
+          x1.intValue <= x2.intValue : x1.asFloat() <= x2.asFloat());
     case T.opGE:
-      return addXBool(x1.asFloat() >= x2.asFloat());
+      return addXBool(x1.tok == T.integer && x2.tok == T.integer ? 
+          x1.intValue >= x2.intValue : x1.asFloat() >= x2.asFloat());
     case T.opGT:
-      return addXBool(x1.asFloat() > x2.asFloat());
+      return addXBool(x1.tok == T.integer && x2.tok == T.integer ? 
+          x1.intValue > x2.intValue : x1.asFloat() > x2.asFloat());
     case T.opLT:
-      return addXBool(x1.asFloat() < x2.asFloat());
+      return addXBool(x1.tok == T.integer && x2.tok == T.integer ? 
+          x1.intValue < x2.intValue : x1.asFloat() < x2.asFloat());
     case T.opEQ:
       return addXBool(SV.areEqual(x1, x2));
     case T.opNE:

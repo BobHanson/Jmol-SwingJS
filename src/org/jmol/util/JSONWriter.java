@@ -26,6 +26,8 @@ public class JSONWriter {
   }
 
   private boolean writeNullAsString = false;
+  private boolean whiteSpace;
+  private String ws = "";
   
   /**
    * Set option to write a null as the string "null" or just null itself.
@@ -42,7 +44,9 @@ public class JSONWriter {
 
   protected OC append(String s) {
     if (s != null)
-      oc.append(SPACES.substring(0, Math.min(indent, SPACES.length()))).append(s);
+      if (whiteSpace)
+        oc.append(SPACES.substring(0, Math.min(indent, SPACES.length())));
+      oc.append(s);
     return oc;
   }
   
@@ -53,6 +57,7 @@ public class JSONWriter {
   }
  
   public boolean closeStream() {
+    oc.append("\n");
     oc.closeChannel();
     return true;
   }
@@ -120,7 +125,7 @@ public class JSONWriter {
             continue;
         oc.append(sep);
         mapAddKeyValue(key, value, null);
-        sep = ",\n";
+        sep = "," + ws;
       }
     }
     mapClose();
@@ -132,13 +137,13 @@ public class JSONWriter {
 
 
   public void mapOpen() {
-    oc.append("{\n");
+    oc.append("{" + ws);
     indent++;
   }
   
   public void mapClose() {
     indent--;
-    oc.append("\n");
+    oc.append(ws);
     append("}");
   }
 
@@ -182,7 +187,7 @@ public class JSONWriter {
           continue;
         oc.append(sep);
         mapAddKeyValue(key1, entry.getValue(), null);
-        sep = ",\n";
+        sep = "," + ws ;
       }
     }
     mapClose();
@@ -226,6 +231,12 @@ public class JSONWriter {
       append("");
     }
     oc.append("]");
+  }
+
+
+  public void setWhiteSpace(boolean b) {
+    whiteSpace = b;
+    ws = (b ? "\n" : "");
   }
 
 }

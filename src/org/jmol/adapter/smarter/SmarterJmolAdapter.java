@@ -46,6 +46,10 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 public class SmarterJmolAdapter extends JmolAdapter {
+  
+  public SmarterJmolAdapter() {
+    
+  }
 
   /**************************************************************
    * 
@@ -348,23 +352,25 @@ public class SmarterJmolAdapter extends JmolAdapter {
    */
   @Override
   public Object getAtomSetCollectionFromDOM(Object DOMNode, Map<String, Object> htParams) {
-    try {
-      Object ret = Resolver.DOMResolve(htParams);
-      if (!(ret instanceof AtomSetCollectionReader))
-        return ret;
-      AtomSetCollectionReader a = (AtomSetCollectionReader) ret;
-      a.setup("DOM node", htParams, null);
-      ret = a.readDataObject(DOMNode);
-      if (!(ret instanceof AtomSetCollection))
-        return ret;
-      AtomSetCollection asc = (AtomSetCollection) ret;
-      if (asc.errorMessage != null)
-        return asc.errorMessage;
-      return asc;
-    } catch (Throwable e) {
-      Logger.error("" + e);
-      return "" + e;
-    }
+// was Java applet only. 
+    //    try {
+      throw new UnsupportedOperationException();
+//      Object ret = Resolver.DOMResolve(htParams);
+//      if (!(ret instanceof AtomSetCollectionReader))
+//        return ret;
+//      AtomSetCollectionReader a = (AtomSetCollectionReader) ret;
+//      a.setup("DOM node", htParams, null);
+//      ret = a.readDataObject(DOMNode);
+//      if (!(ret instanceof AtomSetCollection))
+//        return ret;
+//      AtomSetCollection asc = (AtomSetCollection) ret;
+//      if (asc.errorMessage != null)
+//        return asc.errorMessage;
+//      return asc;
+//    } catch (Throwable e) {
+//      Logger.error("" + e);
+//      return "" + e;
+//    }
   }
   
   @Override

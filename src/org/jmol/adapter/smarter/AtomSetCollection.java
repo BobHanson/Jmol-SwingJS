@@ -166,7 +166,7 @@ public class AtomSetCollection {
       trajectorySteps = new Lst<P3[]>();
     isTrajectory = true;
     int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
-    if (n == 0)
+    if (n <= 1)
       return;
     P3[] trajectoryStep = new P3[n];
     boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Float
@@ -193,6 +193,7 @@ public class AtomSetCollection {
       }
       vibrationSteps.addLast(vibrationStep);
     }
+    
     trajectorySteps.addLast(trajectoryStep);
     trajectoryStepCount++;
   }
@@ -784,7 +785,11 @@ public class AtomSetCollection {
     if (trajectoryStepCount == 0)
       return;
     //reset atom positions to original trajectory
+    
+    
     P3[] trajectory = trajectorySteps.get(0);
+    
+    
     V3[] vibrations = (vibrationSteps == null ? null : vibrationSteps.get(0));
     int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
     if (vibrationSteps != null && vibrations != null && vibrations.length < n
@@ -805,6 +810,8 @@ public class AtomSetCollection {
     setInfo("trajectorySteps", trajectorySteps);
     if (vibrationSteps != null)
       setInfo("vibrationSteps", vibrationSteps);
+    if (ac == 0)
+      ac = trajectory.length;
   }
 
   /**

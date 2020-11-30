@@ -10,13 +10,12 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
 import javajs.util.P3;
-import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.Rdr;
 import javajs.util.SB;
-
 import jspecview.api.JSVPanel;
 import jspecview.app.GenericMouse;
 
@@ -40,6 +39,12 @@ public class JsPlatform implements GenericPlatform {
   PlatformViewer viewer;
   Object context;
   
+
+  @Override
+  public boolean isJS() {
+    return true;
+  }
+
 	@Override
 	public void setViewer(PlatformViewer viewer, Object canvas) {
 		Object context = "";
@@ -57,12 +62,6 @@ public class JsPlatform implements GenericPlatform {
 	  {}
 	  if (context != "")
 	  	this.context = context;
-		//
-		try {
-		  URL.setURLStreamHandlerFactory(new AjaxURLStreamHandlerFactory());
-		} catch (Throwable e) {
-		  // that's fine -- already created	
-		}
 	}
 
   @Override
@@ -125,16 +124,16 @@ public class JsPlatform implements GenericPlatform {
 		return Display.prompt(label, data, list, asButtons);
 	}
 
-	/**
-	 * legacy apps will use this
-	 * 
-	 * @param context
-	 * @param size
-	 */
-	@Override
-	public void renderScreenImage(Object context, Object size) {
-		Display.renderScreenImage(viewer, context, size);
-	}
+//	/**
+//	 * legacy apps will use this
+//	 * 
+//	 * @param context
+//	 * @param size
+//	 */
+//	@Override
+//	public void renderScreenImage(Object context, Object size) {
+//		Display.renderScreenImage(viewer, context, size);
+//	}
 
   @Override
 	public void drawImage(Object context, Object canvas, int x, int y, int width,
@@ -195,8 +194,7 @@ public class JsPlatform implements GenericPlatform {
 	}
 
 	@Override
-	public int[] grabPixels(Object canvas, int width, int height, 
-                          int[] pixels, int startRow, int nRows) {
+	public int[] grabPixels(Object canvas, int width, int height, int[] pixels) {
 	  // from PNG and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
 	  
 	  /**
@@ -224,7 +222,7 @@ public class JsPlatform implements GenericPlatform {
 	@Override
 	public int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,
 			Object canvas, int width, int height, int bgcolor) {
-	  return grabPixels(canvas, width, height, null, 0, 0);
+	  return grabPixels(canvas, width, height, null);
 	}
 
 	@Override
@@ -390,6 +388,12 @@ public class JsPlatform implements GenericPlatform {
   public boolean forceAsyncLoad(String filename) {
     // TODO Auto-generated method stub
     return false;
+  }
+
+  @Override
+  public InChIJNI getInChI() {
+    // TODO
+    return null;
   }
 
 }

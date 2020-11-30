@@ -50,6 +50,7 @@ public class Tensor {
   private static final float ADP_FACTOR = (float) (Math.sqrt(0.5) / Math.PI);
   private static final float MAGNETIC_SUSCEPTIBILITY_FACTOR = 0.01f;
   private static final float INTERACTION_FACTOR = 0.04f;
+  private static final float CHEMICAL_SHIFT_ANISOTROPY_FACTOR = 0.01f;
   
   private static EigenSort tSort; // used for sorting eigenvector/values
 
@@ -74,6 +75,7 @@ public class Tensor {
   // charge   -- Born Effective Charge tensor
   // TLS-U    -- Translation/Libration/Skew tensor (anisotropic)
   // TLS-R    -- Translation/Libration/Skew tensor (residual)
+  // csa      -- Chemical Shift Anisotropy tensor
   
   private static final String KNOWN_TYPES = 
     ";iso........" +
@@ -85,7 +87,8 @@ public class Tensor {
     ";isc........" +
     ";charge....." +
     ";quadrupole." +
-    ";raman......";
+    ";raman......" +
+    ";csa........";
   private static int getType(String type) {
     int pt = type.indexOf("_");
     if (pt >= 0)
@@ -108,6 +111,7 @@ public class Tensor {
   public static final int TYPE_CHARGE     = 7;
   public static final int TYPE_QUADRUPOLE = 8;
   public static final int TYPE_RAMAN      = 9;
+  public static final int TYPE_CSA        = 10;
 
   public double[][] asymMatrix;
   public double[][] symMatrix;    
@@ -621,6 +625,9 @@ public class Tensor {
       typeFactor = ADP_FACTOR;
       altType = "1";
       break;
+    case TYPE_CSA:
+      sortIso = true;
+      typeFactor = CHEMICAL_SHIFT_ANISOTROPY_FACTOR;
     case TYPE_MS:
       sortIso = true;
       typeFactor = MAGNETIC_SUSCEPTIBILITY_FACTOR;
@@ -698,9 +705,10 @@ public class Tensor {
 
   @Override
   public String toString() {
-    return (type + " " + modelIndex + " " + atomIndex1 + " " + atomIndex2 + "\n" + (eigenVectors == null ? ""
-        + eigenValues[0] : eigenVectors[0] + "\t" + eigenValues[0] + "\t"
-        + "\n" + eigenVectors[1] + "\t" + eigenValues[1] + "\t" + "\n"
+    return (type + " " + modelIndex + " " + atomIndex1 + " " + atomIndex2 + "\n"
+  + (eigenVectors == null ? ""  + eigenValues[0]
+      : eigenVectors[0] + "\t" + eigenValues[0] + "\t"  + "\n" 
+      + eigenVectors[1] + "\t" + eigenValues[1] + "\t" + "\n"
         + eigenVectors[2] + "\t" + eigenValues[2] + "\t" + "\n"));
   }
 

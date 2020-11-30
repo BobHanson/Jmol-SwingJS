@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2016-05-24 21:30:49 -0500 (Tue, 24 May 2016) $
- * $Revision: 21129 $
+ * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
+ * $Revision: 21922 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -42,11 +42,11 @@ import javax.swing.event.HyperlinkListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 
-class AboutDialog extends JDialog implements HyperlinkListener {
+public class AboutDialog extends JDialog implements HyperlinkListener {
 
   private JmolViewer vwr;
     
-  AboutDialog(JFrame fr, JmolViewer vwr) throws IOException {
+  public AboutDialog(JFrame fr, JmolViewer vwr) throws IOException {
     super(fr, GT.$("About Jmol"), true);
     this.vwr = vwr;
     JScrollPane scroller = new JScrollPane() {

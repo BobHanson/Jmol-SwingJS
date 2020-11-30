@@ -4,7 +4,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
@@ -14,9 +13,6 @@ import javax.swing.SwingUtilities;
 
 import javajs.util.P3;
 import javajs.util.PT;
-
-import org.jmol.api.PlatformViewer;
-import org.jmol.viewer.Viewer;
 
 /**
  * methods required by Jmol that access java.awt.Component
@@ -48,18 +44,6 @@ class Display {
 
   static void repaint(Object display) {
     ((Component) display).repaint();
-  }
-
-  /**
-   * legacy apps will use this
-   * 
-   * @param vwr
-   * @param g
-   * @param size
-   */
-  @Deprecated
-  static void renderScreenImage(PlatformViewer vwr, Object g, Object size) {
-    ((Viewer)vwr).renderScreenImage(g, ((Dimension)size).width, ((Dimension)size).height);
   }
 
   static void setTransparentCursor(Object display) {
@@ -100,38 +84,6 @@ class Display {
     xyTemp.y = (int) ptTemp.y;
     SwingUtilities.convertPointFromScreen(xyTemp, (Component) display);
     ptTemp.set(xyTemp.x, xyTemp.y, Float.NaN);
-  }
-
-  /**
-   * 
-   * @param g
-   * @param img
-   * @param x
-   * @param y
-   * @param width
-   *        unused in Jmol proper
-   * @param height
-   *        unused in Jmol proper
-   */
-  static void drawImage(Object g, Object img, int x, int y, int width,
-                        int height) {
-    ((Graphics) g).drawImage((java.awt.Image) img, x, y, null);
-  }
-
-  /**
-   * 
-   * @param g
-   * @param img
-   * @param x
-   * @param y
-   * @param width
-   *        unused in Jmol proper
-   * @param height
-   *        unused in Jmol proper
-   */
-  static void drawImageDTI(Object g, Object img, int x, int y, int width,
-                        int height) {
-    ((Graphics) g).drawImage((java.awt.Image) img, x, y, x == 0 ? width >> 1 : width, height, 0, y, width, height, null);
   }
 
 

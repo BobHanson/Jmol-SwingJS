@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-10-07 09:28:54 -0500 (Sat, 07 Oct 2017) $
- * $Revision: 21710 $
+ * $Date: 2018-10-10 10:57:14 -0500 (Wed, 10 Oct 2018) $
+ * $Revision: 21935 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -33,6 +33,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ComponentListener;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -50,34 +52,25 @@ import org.jmol.viewer.Viewer;
 public class DisplayPanel extends JPanel
   implements JmolFrame, ComponentListener, Printable {
   
-  StatusBar status;
-  Viewer vwr;
+  protected Viewer vwr;
     
-  private String displaySpeed;
+  protected String displaySpeed;
 
-  private Dimension startupDim;
-  boolean haveDisplay;
-  //Point border;
-  boolean haveBorder;
-  MeasurementTable measurementTable;
-  JmolPanel jmolPanel;
-
-  private JFrame frame;
+  protected Dimension startupDim;
+  protected boolean haveDisplay;
+  protected JFrame frame;
+  protected JmolPanel jmolPanel;
   
   @Override
   public JFrame getFrame() {
     return frame;
   }
   
-  DisplayPanel(JmolPanel jmol) {
-    jmolPanel = jmol;
-    frame = jmol.frame;
-    status = jmol.status;
-//    border = jmol.jmolApp.border;
-    haveDisplay = jmol.jmolApp.haveDisplay;
-    startupDim = new Dimension(jmol.startupWidth, jmol.startupHeight);
-    status.setPreferredSize(new Dimension(jmol.startupWidth, 30));
-
+  protected DisplayPanel(JmolPanel jmolPanel) {
+    this.jmolPanel = jmolPanel;
+    frame = jmolPanel.frame;
+    haveDisplay = jmolPanel.jmolApp.haveDisplay;
+    startupDim = new Dimension(jmolPanel.startupWidth, jmolPanel.startupHeight);
     setMinimumSize(startupDim);
     setPreferredSize(startupDim);
     setMaximumSize(startupDim);
@@ -91,18 +84,22 @@ public class DisplayPanel extends JPanel
     setDoubleBuffered(false);
   }
 
-  void setViewer(Viewer vwr) {
+  public void say(String msg) {
+    jmolPanel.say(msg);
+  }
+  
+  protected void setViewer(Viewer vwr) {
     this.vwr = vwr;
     updateSize(false);
   }
 
  
   // for now, default to true
-  private boolean showPaintTime = true;
+  protected boolean showPaintTime = true;
 
   // current dimensions of the display screen
-  final Dimension dimSize = new Dimension();
-  private final Rectangle rectClip = new Rectangle();
+  protected final Dimension dimSize = new Dimension();
+  protected final Rectangle rectClip = new Rectangle();
 
   public void start() {
     addComponentListener(this);
@@ -142,6 +139,7 @@ public class DisplayPanel extends JPanel
 
   @Override
   public void componentResized(java.awt.event.ComponentEvent e) {
+    //System.out.println("DisplayPanel.componentResized");
     updateSize(true);
   }
 
@@ -151,7 +149,7 @@ public class DisplayPanel extends JPanel
     updateSize(true);
   }
 
-  private void updateSize(boolean doAll) {
+  protected void updateSize(boolean doAll) {
     if (haveDisplay) {
       getSize(dimSize);
       if (dimSize.width == 0)
@@ -164,36 +162,22 @@ public class DisplayPanel extends JPanel
       return;
     setRotateMode();
     if (haveDisplay)
-      status.setStatus(StatusBar.STATUS_TEXT, dimSize.width + " x " + dimSize.height);
- // no need for this -- Swing will handle it (and probably already has!)   vwr.refresh(Viewer.REFRESH_SYNC_MASK, "updateSize");
+      jmolPanel.setStatus(StatusBar.STATUS_TEXT, dimSize.width + " x " + dimSize.height);
+    //vwr.refresh(Viewer.REFRESH_SYNC_MASK, "updateSize");
   }
 
   @Override
   public void paint(Graphics g) {
     updateSize(false); // important for JavaScript, as the update comes too late. 
-    if (showPaintTime)
-      startPaintClock();
     if (dimSize.width == 0)
       return;
-    //System.out.println("DisplayPanel:paint");System.out.flush();
-
+    if (showPaintTime)
+      startPaintClock();
     vwr.renderScreenImage(g, dimSize.width, dimSize.height);
-//    if (border == null)
-//      border = new Point();
-//    if (!haveBorder)
-//      setBorder();
     if (showPaintTime)
       stopPaintClock();
   }
-   
-//  void setBorder() {
-//    if (dimSize.width < 50)
-//      return;
-//    border.x = startupDimension.width - dimSize.width;
-//    border.y = startupDimension.height - dimSize.height;
-//    haveBorder = true;    
-//  }
-  
+
   @Override
   public int print(Graphics g, PageFormat pf, int pageIndex) {
     Graphics2D g2 = (Graphics2D)g;
@@ -202,7 +186,7 @@ public class DisplayPanel extends JPanel
     rectClip.x = rectClip.y = 0;
     int screenWidth = rectClip.width = vwr.getScreenWidth();
     int screenHeight = rectClip.height = vwr.getScreenHeight();
-    Object image = vwr.getScreenImageBuffer();
+    Object image = vwr.getScreenImage();//was null,true
     int pageX = (int)pf.getImageableX();
     int pageY = (int)pf.getImageableY();
     int pageWidth = (int)pf.getImageableWidth();
@@ -227,22 +211,22 @@ public class DisplayPanel extends JPanel
 
   // The actions:
 
-  private HomeAction homeAction = new HomeAction();
-  private DefineCenterAction defineCenterAction = new DefineCenterAction();
-  private Action frontAction        = new MoveToAction("front",  "moveto 2.0 front");
-  private Action topAction          = new MoveToAction("top",    "moveto 1.0 front;moveto 2.0 top");
-  private Action bottomAction       = new MoveToAction("bottom", "moveto 1.0 front;moveto 2.0 bottom");
-  private Action rightAction        = new MoveToAction("right",  "moveto 1.0 front;moveto 2.0 right");
-  private Action leftAction         = new MoveToAction("left",   "moveto 1.0 front;moveto 2.0 left");
-  private Action hydrogensAction    = new CheckBoxMenuItemAction("hydrogensCheck",    "set showHydrogens");
-  private Action measurementsAction = new CheckBoxMenuItemAction("measurementsCheck", "set showMeasurements");
-  private Action perspectiveAction  = new CheckBoxMenuItemAction("perspectiveCheck",  "set PerspectiveDepth");
-  private Action axesAction         = new CheckBoxMenuItemAction("axesCheck",         "set showAxes");
-  private Action boundboxAction     = new CheckBoxMenuItemAction("boundboxCheck",     "set showBoundBox");
+  protected HomeAction homeAction = new HomeAction();
+  protected DefineCenterAction defineCenterAction = new DefineCenterAction();
+  protected Action frontAction        = new MoveToAction("front",  "moveto 2.0 front");
+  protected Action topAction          = new MoveToAction("top",    "moveto 1.0 front;moveto 2.0 top");
+  protected Action bottomAction       = new MoveToAction("bottom", "moveto 1.0 front;moveto 2.0 bottom");
+  protected Action rightAction        = new MoveToAction("right",  "moveto 1.0 front;moveto 2.0 right");
+  protected Action leftAction         = new MoveToAction("left",   "moveto 1.0 front;moveto 2.0 left");
+  protected Action hydrogensAction    = new CheckBoxMenuItemAction("hydrogensCheck",    "set showHydrogens");
+  protected Action measurementsAction = new CheckBoxMenuItemAction("measurementsCheck", "set showMeasurements");
+  protected Action perspectiveAction  = new CheckBoxMenuItemAction("perspectiveCheck",  "set PerspectiveDepth");
+  protected Action axesAction         = new CheckBoxMenuItemAction("axesCheck",         "set showAxes");
+  protected Action boundboxAction     = new CheckBoxMenuItemAction("boundboxCheck",     "set showBoundBox");
   // next three are not implemented
-  private Action deleteAction       = new SetStatusAction("delete", GT.$("Delete atoms"));
-  private Action zoomAction         = new SetStatusAction("zoom",   null);
-  private Action xlateAction        = new SetStatusAction("xlate",  null);
+  protected Action deleteAction       = new SetStatusAction("delete", GT.$("Delete atoms"));
+  protected Action zoomAction         = new SetStatusAction("zoom",   null);
+  protected Action xlateAction        = new SetStatusAction("xlate",  null);
   //
 
   // script actions are defined in Properties/Jmol-resource.properties
@@ -251,8 +235,8 @@ public class DisplayPanel extends JPanel
   /**
    * Action calling setStatus() 
    */
-  private class SetStatusAction extends AbstractAction {
-    private final String statusText;
+  protected class SetStatusAction extends AbstractAction {
+    protected final String statusText;
 
     public SetStatusAction(String name, String status) {
       super(name);
@@ -263,15 +247,17 @@ public class DisplayPanel extends JPanel
     @Override
     public void actionPerformed(ActionEvent e) {
       vwr.setSelectionHalosEnabled(false);
-      status.setStatus(StatusBar.STATUS_COORD, statusText == null ? ((JComponent) e.getSource()).getToolTipText() : statusText);
+      jmolPanel.setStatus(StatusBar.STATUS_COORD,
+          statusText == null ? ((JComponent) e.getSource()).getToolTipText()
+              : statusText);
     }
   }
 
   /**
    * Action calling moveTo() 
    */
-  private class MoveToAction extends AbstractAction {
-    private final String action;
+  protected class MoveToAction extends AbstractAction {
+    protected final String action;
 
     public MoveToAction(String name, String action) {
       super(name);
@@ -320,8 +306,8 @@ public class DisplayPanel extends JPanel
   /**
    * Action calling evalStringQuiet(&lt;action&gt; + CheckBoxState) 
    */
-  private class CheckBoxMenuItemAction extends AbstractAction {
-    private final String action;
+  protected class CheckBoxMenuItemAction extends AbstractAction {
+    protected final String action;
 
     public CheckBoxMenuItemAction(String name, String action) {
       super(name);
@@ -336,9 +322,8 @@ public class DisplayPanel extends JPanel
     }
   }
 
-  public Action[] getActions() {
-
-    return new Action[] {
+  public void addActions(List<Action> actions) {
+    Action[] a = new Action[] {
       deleteAction, zoomAction, xlateAction,
       frontAction, topAction, bottomAction, rightAction, leftAction,
       defineCenterAction,
@@ -346,21 +331,22 @@ public class DisplayPanel extends JPanel
       homeAction, perspectiveAction,
       axesAction, boundboxAction,
     };
+    actions.addAll(Arrays.asList(a));
   }
 
   // code to record last and average times
   // last and average of all the previous times are shown in the status window
 
-  private static int timeLast = 0;
-  private static int timeCount;
-  private static int timeTotal;
+  protected static int timeLast = 0;
+  protected static int timeCount;
+  protected static int timeTotal;
 
-  private void resetTimes() {
+  protected void resetTimes() {
     timeCount = timeTotal = 0;
     timeLast = -1;
   }
 
-  private void recordTime(int time) {
+  protected void recordTime(int time) {
     if (timeLast != -1) {
       timeTotal += timeLast;
       ++timeCount;
@@ -368,10 +354,10 @@ public class DisplayPanel extends JPanel
     timeLast = time;
   }
 
-  private long timeBegin;
-  private int lastMotionEventNumber;
+  protected long timeBegin;
+  protected int lastMotionEventNumber;
 
-  private void startPaintClock() {
+  protected void startPaintClock() {
     timeBegin = System.currentTimeMillis();
     int motionEventNumber = vwr.getMotionEventNumber();
     if (lastMotionEventNumber != motionEventNumber) {
@@ -380,13 +366,13 @@ public class DisplayPanel extends JPanel
     }
   }
 
-  private void stopPaintClock() {
+  protected void stopPaintClock() {
     int time = (int)(System.currentTimeMillis() - timeBegin);
     recordTime(time);
     showTimes();
   }
 
-  private String fmt(int num) {
+  protected String fmt(int num) {
     if (num < 0)
       return "---";
     if (num < 10)
@@ -396,16 +382,14 @@ public class DisplayPanel extends JPanel
     return "" + num;
   }
 
-  private void showTimes() {
-    int timeAverage =
-      (timeCount == 0)
-      ? -1
-      : (timeTotal + timeCount/2) / timeCount; // round, don't truncate
-    if (displaySpeed.equalsIgnoreCase("fps")) {
-        status.setStatus(StatusBar.STATUS_TIME, fmt(1000/timeLast) + "FPS : " + fmt(1000/timeAverage) + "FPS");
-    } else {
-      status.setStatus(StatusBar.STATUS_TIME, vwr.getP("_memory")+" Mb; " + fmt(timeLast) + "/" + timeAverage + " ms");
-    }
+  protected void showTimes() {
+    // round, don't truncate
+    int timeAverage = (timeCount == 0 ? -1 : 
+      (timeTotal + timeCount / 2) / timeCount); 
+    jmolPanel.setStatus(StatusBar.STATUS_TIME,
+        (displaySpeed.equalsIgnoreCase("fps") ? fmt(1000 / timeLast) + "FPS : "
+            + fmt(1000 / timeAverage) + "FPS" : vwr.getP("_memory") + " Mb; "
+            + fmt(timeLast) + "/" + timeAverage + " ms"));
   }
 
   public void setJmolSize(Dimension d) {

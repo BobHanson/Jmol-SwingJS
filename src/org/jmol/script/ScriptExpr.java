@@ -395,6 +395,8 @@ abstract class ScriptExpr extends ScriptParam {
         }
         break;
       case T.leftbrace:
+        // note that {type:n}, with unquoted "type" is NOT an associative array in JmolScript.
+        // in Jmol we need to use [type:n] for unquoted keys.
         if (tokAt(i + 1) == T.string) {
           if (tokAt(i + 2) == T.rightbrace) {
             v = (chk ? new BS() : getAtomBitSet(stringParameter(i + 1)));
@@ -1620,7 +1622,7 @@ abstract class ScriptExpr extends ScriptParam {
     SV tokenAtom = null;
     P3 ptT = null;
     float[] data = null;
-
+    float[][] ffdata = null;
     switch (tok) {
     case T.atoms:
     case T.bonds:
@@ -1679,6 +1681,12 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     case T.property:
       data = (float[]) vwr.getDataObj((String) opValue, null, JmolDataManager.DATA_TYPE_AF);
+      if (data == null)
+        ffdata = (float[][]) vwr.getDataObj((String) opValue, null, JmolDataManager.DATA_TYPE_AFF);
+      if (ffdata != null) {
+        minmaxtype = T.all;
+        vout = new Lst<Object>();
+      }
       break;
     }
 
@@ -1698,7 +1706,7 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     }
     ModelSet modelSet = vwr.ms;
-    int mode = (isHash ? 4 : isPt ? 3 : isString ? 2 : isInt ? 1 : 0);
+    int mode = (ffdata != null ? 5 : isHash ? 4 : isPt ? 3 : isString ? 2 : isInt ? 1 : 0);
     if (isAtoms) {
       boolean haveBitSet = (bs != null);
       int i0, i1;
@@ -1845,6 +1853,10 @@ abstract class ScriptExpr extends ScriptParam {
             }
             break;
           }
+          break;
+        case 5: // float[][]
+          vout.addLast(ffdata[i]);
+          break;
         }
         if (haveIndex)
           break;
@@ -2081,9 +2093,11 @@ abstract class ScriptExpr extends ScriptParam {
     String propertyName = "";
     boolean settingData = key.startsWith("property_");
     boolean isThrown = key.equals("thrown_value");
-    boolean isExpression = (tokAt(1) == T.expressionBegin || tokAt(1) == T.leftparen);
-    SV t = (settingData ? null : key.length() == 0 ? new SV()
-        : getContextVariableAsVariable(key, false));
+    boolean isExpression = (tokAt(1) == T.expressionBegin
+        || tokAt(1) == T.leftparen);
+    SV t = (settingData ? null
+        : key.length() == 0 ? new SV()
+            : getContextVariableAsVariable(key, false));
     // determine whether this is some sort of 
     // special assignment of a known variable
 
@@ -2197,14 +2211,19 @@ abstract class ScriptExpr extends ScriptParam {
         switch (tok) {
         case T.nada:
           if (propertyName.startsWith("property_")) {
-            Object obj = (tv.tok == T.varray ? SV.flistValue(tv, tv.getList()
-                .size() == nbs ? nbs : nAtoms) : tv.asString());
-            vwr.setData(
-                propertyName,
+            Object obj;
+            if (tv.tok == T.varray) {
+              int nmin = (tv.getList().size() == nbs ? nbs : nAtoms);
+              obj = (SV.getArrayDepth(tv) > 1 ? SV.fflistValue(tv, nmin)
+                  : SV.flistValue(tv, nmin));
+            } else {
+              obj = tv.asString();
+            }
+            vwr.setData(propertyName,
                 new Object[] { propertyName, obj, BSUtil.copy(bs),
                     Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN) },
-                nAtoms, 0, 0, tv.tok == T.varray ? Integer.MAX_VALUE
-                    : Integer.MIN_VALUE, 0);
+                nAtoms, 0, 0,
+                tv.tok == T.varray ? Integer.MAX_VALUE : Integer.MIN_VALUE, 0);
             break;
           }
           iToken = pt;
@@ -2230,10 +2249,10 @@ abstract class ScriptExpr extends ScriptParam {
     // create user variable if needed for list now, so we can do the copying
     // no variable needed if it's a String, integer, float, or boolean.
 
-    boolean needVariable = (!settingData && t == null && (isThrown || !(tv.value instanceof String
-        || tv.tok == T.integer
-        || tv.value instanceof Integer
-        || tv.value instanceof Float || tv.value instanceof Boolean)));
+    boolean needVariable = (!settingData && t == null
+        && (isThrown || !(tv.value instanceof String || tv.tok == T.integer
+            || tv.value instanceof Integer || tv.value instanceof Float
+            || tv.value instanceof Boolean)));
 
     if (needVariable && key != null) {
       if (key.startsWith("_")

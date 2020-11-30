@@ -10,16 +10,19 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
+import org.jmol.api.JmolInChI;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.js.JmolToJSmolInterface;
+import org.jmol.inchi.InChIJNI;
+import org.jmol.inchi.InChIJS;
 import org.jmol.script.ScriptContext;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import swingjs.api.JSUtilI;
 
 /**
  * JavaScript 2D canvas version requires Ajax-based URL stream processing.
@@ -38,6 +41,25 @@ public class Platform implements GenericPlatform {
   Object canvas;
   PlatformViewer vwr;
   Object context;
+
+  @Override
+  public boolean isSingleThreaded() {
+    return true;
+  }
+
+  public static swingjs.api.JSUtilI jsutil;
+
+  static {
+      try
+      {
+        jsutil = ((JSUtilI) Class.forName("swingjs.JSUtil").newInstance());
+      } catch (InstantiationException | IllegalAccessException
+              | ClassNotFoundException e)
+      {
+        e.printStackTrace();
+      }
+  }
+
   
 	@Override
   public void setViewer(PlatformViewer vwr, Object canvas) {
@@ -60,18 +82,7 @@ public class Platform implements GenericPlatform {
       canvas = null;
 	  }
     this.canvas = canvas;
-		//
-		try {
-		  URL.setURLStreamHandlerFactory(new AjaxURLStreamHandlerFactory());
-		} catch (Throwable e) {
-		  // that's fine -- already created	
-		}
 	}
-
-  @Override
-  public boolean isSingleThreaded() {
-    return true;
-  }
 
   @Override
   public Object getJsObjectInfo(Object[] jsObject, String method, Object[] args) {
@@ -139,23 +150,23 @@ public class Platform implements GenericPlatform {
 		return Display.prompt(label, data, list, asButtons);
 	}
 
-	/**
-	 * legacy apps will use this
-	 * 
-	 * @param context
-	 * @param size
-	 */
-	@Override
-  public void renderScreenImage(Object context, Object size) {
-		Display.renderScreenImage(vwr, context, size);
-	}
+//	/**
+//	 * legacy apps will use this
+//	 * 
+//	 * @param context
+//	 * @param size
+//	 */
+//	@Override
+//  public void renderScreenImage(Object context, Object size) {
+//		Image.renderScreenImage(vwr, context, size);
+//	}
 
   @Override
   public void drawImage(Object context, Object canvas, int x, int y, int width,
                         int height, boolean isDTI) {
     
     // from Viewer.drawImage
-    Display.drawImage(context, canvas, x, y, width, height, isDTI);
+    Image.drawImage(context, canvas, x, y, width, height, isDTI);
   }
 
 	@Override
@@ -210,7 +221,7 @@ public class Platform implements GenericPlatform {
   public Object allocateRgbImage(int windowWidth, int windowHeight,
 			int[] pBuffer, int windowSize, boolean backgroundTransparent, boolean isImageWrite) {
 	  if (pBuffer == null) {
-      pBuffer = grabPixels(null, 0, 0, null, 0, 0);
+      pBuffer = grabPixels(null, 0, 0, null);
       /**
        * @j2sNative
        * 
@@ -233,8 +244,7 @@ public class Platform implements GenericPlatform {
 	}
 
   @Override
-  public int[] grabPixels(Object canvas, int width, int height, int[] pixels,
-                          int startRow, int nRows) {
+  public int[] grabPixels(Object canvas, int width, int height, int[] pixels) {
     // from PNG and GIF and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
     Object context2d = null;
     boolean isWebGL = (canvas == null);
@@ -283,7 +293,7 @@ public class Platform implements GenericPlatform {
 	@Override
   public int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,
 			Object canvas, int width, int height, int bgcolor) {
-	  return grabPixels(canvas, width, height, null, 0, 0);
+	  return grabPixels(canvas, width, height, null);
 	}
 
 	@Override
@@ -527,6 +537,21 @@ public class Platform implements GenericPlatform {
   @Override
   public boolean forceAsyncLoad(String filename) {
     return Jmol().isBinaryUrl(filename);
+  }
+
+  @Override
+  public boolean isJS() {
+    return true;
+  }
+
+  private static JmolInChI inchi;
+
+  @Override
+  public JmolInChI getInChI() {
+    return (inchi == null
+        ? (inchi = (JmolInChI) Interface.getInterface("org.jmol.inchi.InChIJS",
+            (Viewer) vwr, "platform"))
+        : inchi);
   }
 
 

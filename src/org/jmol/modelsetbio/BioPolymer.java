@@ -490,4 +490,10 @@ public abstract class BioPolymer implements Structure {
         .isConnectedAfter(monomers[monomerCount - 1])) ? 1 : -1) : cyclicFlag) == 1);
   }
 
+  public String toString() {
+    return "[polymer type " + type + " n=" + monomerCount
+        + (monomerCount == 0 ? ""
+            : " " + monomers[0] + "-" + monomers[monomerCount - 1])
+        + "]";
+  }
 }

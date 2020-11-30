@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2013-10-30 13:47:37 -0500 (Wed, 30 Oct 2013) $
- * $Revision: 18874 $
+ * $Date: 2019-06-03 23:47:48 -0500 (Mon, 03 Jun 2019) $
+ * $Revision: 21982 $
  *
  * Copyright (C) 2003-2005  Miguel, Jmol Development, www.jmol.org
  *
@@ -167,5 +167,12 @@ final public class Font {
   public String getInfo() {
     return  fontSizeNominal + " " + fontFace + " " + fontStyle;
   }
+  
+  @Override
+  public String toString() {
+    return "[" + getInfo() + "]";
+  }
 }
+
+
 

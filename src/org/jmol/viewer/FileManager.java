@@ -363,7 +363,7 @@ public class FileManager implements BytePoster {
 
   Object createAtomSetCollectionFromDOM(Object DOMNode,
                                         Map<String, Object> htParams) {
-    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReadaer", vwr, "file");
+    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReader", vwr, "file");
     aDOMReader.set(this, vwr, DOMNode, htParams);
     aDOMReader.run();
     return aDOMReader.getAtomSetCollection();
@@ -693,6 +693,12 @@ public class FileManager implements BytePoster {
             forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
+      if (Rdr.isTar(bis)) {
+        Object o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
+            forceInputStream);
+        return (o instanceof String ? Rdr.getBR((String) o) : o);
+      }
+      
       return (forceInputStream ? bis : Rdr.getBufferedReader(bis, null));
     } catch (Exception ioe) {
       return ioe.toString();
@@ -738,7 +744,9 @@ public class FileManager implements BytePoster {
       try {
         BufferedInputStream bis = (BufferedInputStream) t;
         bytes = (out != null || subFileList == null || subFileList.length <= 1
-            || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) ? Rdr
+            || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
+             && !Rdr.isTar(bis)
+            ? Rdr
             .getStreamAsBytes(bis, out) : ZipTools.getZipFileContentsAsBytes(bis, subFileList, 1));
         bis.close();
       } catch (Exception ioe) {

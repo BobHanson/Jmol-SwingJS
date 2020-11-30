@@ -38,6 +38,7 @@ import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.Tensor;
 
 /**
  * Reader for Gaussian 94/98/03/09 output files.
@@ -171,6 +172,15 @@ public class GaussianReader extends MOReader {
       readSCFDone();
       return true;
     }
+    if (line.startsWith(" Calculating GIAO")) {
+      readCSATensors();
+      return false;
+    }
+    if (line.startsWith(" Total nuclear spin-spin coupling")) {
+      readCouplings();
+      return false;
+    }
+    
     if (!orientationInput && line.startsWith(" Harmonic frequencies")) {
       readFrequencies(":", true);
       return true;
@@ -224,6 +234,7 @@ public class GaussianReader extends MOReader {
   }
   
   
+
   @Override
   public void finalizeSubclassReader() throws Exception {
     if (orientation == null) {
@@ -804,6 +815,103 @@ public class GaussianReader extends MOReader {
       atoms[i].partialCharge = charge;
     }
     Logger.info("Mulliken charges found for Model " + asc.atomSetCount);
+  }
+
+//  Calculating GIAO nuclear magnetic shielding tensors.
+//  SCF GIAO Magnetic shielding tensor (ppm):
+//   1  H    Isotropic =    28.9213   Anisotropy =     3.2329
+//    XX=    30.8519   YX=     1.2737   ZX=    -0.5281
+//    XY=     0.2369   YY=    28.2130   ZY=    -1.9460
+//    XZ=     1.2249   YZ=     1.5212   ZZ=    27.6990
+//    Eigenvalues:    27.5052    28.1822    31.0766
+  
+  private void readCSATensors() throws Exception {
+    rd();
+    while (rd() != null && line.indexOf("Isotropic") >= 0) {
+      int iatom = parseIntAt(line,  0);
+      String[] data = (rd() + rd() + rd()).split("=");
+      addTensor(iatom, data);
+    }
+    appendLoadNote("NMR shift tensors are available for model=" + (asc.iSet + 1) + "\n using \"ellipsoids set 'csa'.");
+
+  }
+
+  private void addTensor(int iatom, String[] data) {
+    int i0 = asc.getLastAtomSetAtomIndex();
+    double[][] a = new double[3][3];
+    for (int i = 0, p = 1; i < 3; i++) {
+      for (int j = 0; j < 3; j++, p++) {
+        a[i][j] = parseFloatStr(data[p]); // XX YX ZX  XY YY ZY XZ YZ ZZ
+      }
+    }
+    Tensor t = new Tensor().setFromAsymmetricTensor(a, "csa", "csa" + iatom);
+    asc.atoms[i0 + iatom - 1].addTensor(t,  "csa",  false);
+    System.out.println("calc Tensor " + t 
+        + "calc isotropy=" + t.getInfo("isotropy") 
+        + " anisotropy=" + t.getInfo("anisotropy") + "\n");
+   
+  }
+  
+  //    Total nuclear spin-spin coupling K (Hz): 
+  //      1             2             3             4             5
+  //  1  0.000000D+00
+  //  2  0.158415D+02  0.000000D+00
+  //  3 -0.187537D+00  0.169443D+02  0.000000D+00
+  //  4 -0.318756D+00  0.151998D+02 -0.694557D-01  0.000000D+00
+  //  5  0.536278D+00  0.491163D+01  0.463273D+00 -0.369586D+00  0.000000D+00
+  //  6  0.716597D-01  0.955897D-01  0.473142D-01  0.117953D-01  0.198491D+02
+  //  7 -0.833251D-01  0.547105D+00  0.491859D-01 -0.194792D+00  0.257557D+02
+  //  8 -0.267188D+00  0.602187D+01  0.100268D-01  0.927527D-01 -0.348110D+02
+  //  9 -0.468360D+00  0.147669D+02 -0.374664D+00 -0.642673D+00 -0.954001D-01
+  //      6             7             8             9
+  //  6  0.000000D+00
+  //  7  0.154135D+01  0.000000D+00
+  //  8  0.613165D+00 -0.455484D+00  0.000000D+00
+  //  9  0.918779D-01  0.146931D-01 -0.143995D+01  0.000000D+00
+  //  Total nuclear spin-spin coupling J (Hz): 
+  //      1             2             3             4             5
+  //  1  0.000000D+00
+  //  2  0.124307D+03  0.000000D+00
+  //  3 -0.585116D+01  0.132960D+03  0.000000D+00
+  //  4 -0.994517D+01  0.119271D+03 -0.216701D+01  0.000000D+00
+  //  5  0.420812D+01  0.969322D+01  0.363526D+01 -0.290011D+01  0.000000D+00
+  //  6  0.223578D+01  0.750083D+00  0.147620D+01  0.368013D+00  0.155754D+03
+  //  7 -0.259974D+01  0.429308D+01  0.153460D+01 -0.607750D+01  0.202103D+03
+  //  8  0.113055D+01 -0.640836D+01 -0.424260D-01 -0.392462D+00  0.370452D+02
+  //  9 -0.146128D+02  0.115875D+03 -0.116895D+02 -0.200514D+02 -0.748595D+00
+  //      6             7             8             9
+  //  6  0.000000D+00
+  //  7  0.480901D+02  0.000000D+00
+  //  8 -0.259447D+01  0.192728D+01  0.000000D+00
+  //  9  0.286659D+01  0.458424D+00  0.609282D+01  0.000000D+00
+
+  private void readCouplings() throws Exception {
+    String type = (line.indexOf(" K ") >= 0 ? "K" : "J");
+    int i0 = asc.getLastAtomSetAtomIndex();
+    int n = asc.getLastAtomSetAtomCount();
+    float[][] data = new float[n][n];
+    int k0 = 0;
+    while (true) {
+      rd();
+      for (int i = k0; i < n; i++) {
+        rd();
+        String[] tokens = getTokens();
+        for (int j = 1, nj = tokens.length; j < nj; j++) {
+          float v = parseFloatStr(tokens[j]);
+          data[i][k0 + j - 1] = data[k0 + j - 1][i] = v;
+        }
+      }
+      k0 += 5;
+      if (k0 >= n)
+        break;
+    }
+    System.out.println(data);
+    asc.setModelInfoForSet("NMR_" + type + "_couplings", data, asc.iSet);
+    if (type == "J") {
+      asc.setAtomProperties("J", data, asc.iSet, false);
+      appendLoadNote(
+          "NMR J Couplings saved for model=" + (asc.iSet + 1) + " as property_J;\n use set measurementUnits \"+hz\" to measure them.");
+    }
   }
   
 }

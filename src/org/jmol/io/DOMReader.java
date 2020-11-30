@@ -57,7 +57,7 @@ public class DOMReader {
      * 
      */
     {
-      info= vwr.apiPlatform.getJsObjectInfo(aDOMNode, null, null);
+//      info= vwr.apiPlatform.getJsObjectInfo(aDOMNode, null, null);
     }
     // note that this will not work in JSmol because we don't implement the nameSpaceInfo stuff there
     // and we cannot pass [HTMLUnknownObject]

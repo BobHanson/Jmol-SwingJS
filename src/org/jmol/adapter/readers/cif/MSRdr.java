@@ -634,7 +634,12 @@ public class MSRdr implements MSInterface {
       }
       return qlist100;
     }     
-    return getMod("F_coefs_" + fn );
+    // BH 2020.09.16 the addition of 2018.05.30 puts fn just after f_. 
+    // it is not clear that anything puts it after it, but leaving that as an option.
+    double[] p = getMod("F_coefs_" + fn );
+    if (p == null)
+      p = getMod("F_" + fn + "_coefs_");
+    return p;
   }
 
   @Override

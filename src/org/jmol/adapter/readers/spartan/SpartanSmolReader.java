@@ -167,6 +167,9 @@ public class SpartanSmolReader extends SpartanInputReader {
           || lcline.endsWith("propertyarchive")) {
         readProperties();
         return false;
+      } else if (lcline.endsWith("molstate")) {
+          readTransform();
+          return false;
       } else if (lcline.endsWith("archive")) {
         asc.setAtomSetName(readArchive());
         return false;
@@ -233,7 +236,7 @@ public class SpartanSmolReader extends SpartanInputReader {
     titles = new Hashtable<String, String>();
     SB header = new SB();
     int pt;
-    while (rd() != null && !line.startsWith("END ")) {
+    while (rd() != null && !line.startsWith("END ") && !line.startsWith("ENDOUTPUT")) {
       header.append(line).append("\n");
       if ((pt = line.indexOf(")")) > 0)
         titles.put("Title" + parseIntRange(line, 0, pt), (line

@@ -236,14 +236,16 @@ class IsoMOReader extends AtomDataReader {
     if (line.indexOf("%O") >= 0) {
       Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
       float o = (obj == null ? 0 : obj.floatValue());
-      line = PT.formatStringS(line, "O", obj != null && ++rep != 0
+      line = PT.formatStringS(line, "O", obj != null 
+          && params.qm_moLinearCombination == null && ++rep != 0
           ? (o == (int) o ? "" + (int) o : PT.formatF(o, 0, 4, false, false))
           : "");
     }
     if (line.indexOf("%T") >= 0)
       line = PT.formatStringS(line, "T",
-          mo != null && mo.containsKey("type") && ++rep != 0
-              ? "" + mo.get("type")
+          mo != null && mo.containsKey("type")
+              ? (params.qm_moLinearCombination == null  && ++rep != 0 ? "" + mo.get("type")
+              : "") + ((params.isSquared || params.isSquaredLinear) && ++rep != 0 ? " ^2" : "")
               : "");
     if (line.equals("string")) {
       params.title[iLine] = "";
@@ -284,6 +286,8 @@ class IsoMOReader extends AtomDataReader {
         f = value;
     if (f < 0.0001f)
       return;
+    if (f > params.cutoff)
+      f = params.cutoff;
     //minMax = new float[] {(params.mappedDataMin  = -f / 2), 
     //(params.mappedDataMax = f / 2)};
     for (int i = 0; i < params.psi_monteCarloCount;) {
@@ -294,6 +298,9 @@ class IsoMOReader extends AtomDataReader {
         if (absValue <= getRnd(f))
           continue;
         addVC(points[j], value, 0, false);
+
+        if (i < 200)
+          System.out.println(points[j] + " " + value);
         if (++i == params.psi_monteCarloCount)
           break;
       }

@@ -268,7 +268,7 @@ public class MSCifParser extends MSRdr {
         && !key.contains("legendre") && !key.contains("_special_func")) {
       if (key.contains("crenel_ortho"))
         cr.appendLoadNote("WARNING: Orthogonalized non-Legendre functions not supported.\nThe following block has been ignored. Use Legendre functions instead.\n\n" 
-            + cr.parser.skipLoop(true) + "=================================\n");
+            + cr.cifParser.skipLoop(true) + "=================================\n");
       return 0;
     }
     if (cr.asc.iSet < 0)
@@ -279,7 +279,7 @@ public class MSCifParser extends MSRdr {
 //      // disable x y z for atom_site_fourier if we have coefficients
 //      cr.key2col[FWV_X] = cr.key2col[FWV_Y] = cr.key2col[FWV_Z] = NONE;
 //    }
-    while (cr.parser.getData()) {
+    while (cr.cifParser.getData()) {
       boolean ignore = false;
       String type_id = null;
       String atomLabel = null;
@@ -289,13 +289,19 @@ public class MSCifParser extends MSRdr {
       double c = Double.NaN;
       double w = Double.NaN;
       String fid = null;
-      int n = cr.parser.getColumnCount();
+      int n = cr.cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         switch (tok = fieldProperty(cr, i)) {
+        case FWV_ID:
+          // BH 2020.09.16 This was producing F_11 and F_22
+          // by pulling it out, the field is not added twice.
+          pt[0] = pt[1] = pt[2] = 0;
+          type_id = "F_";
+          fid = field;
+          break;
         case WV_ID:
           cr.haveCellWaveVector = true;
           //$FALL-THROUGH$
-        case FWV_ID:
         case FD_ID:
         case FO_ID:
         case FU_ID:
@@ -311,10 +317,6 @@ public class MSCifParser extends MSRdr {
           switch (tok) {
           case WV_ID:
             type_id = "W_";
-            break;
-          case FWV_ID:
-            type_id = "F_";
-            fid = field;
             break;
           case FD_ID:
           case FO_ID:
@@ -574,7 +576,7 @@ public class MSCifParser extends MSRdr {
   private int processSubsystemLoopBlock() throws Exception {
     CifReader cr = (CifReader) this.cr;
     cr.parseLoopParameters(null);
-    while (cr.parser.getData()) {
+    while (cr.cifParser.getData()) {
       fieldProperty(cr, 0);
       String id = field;
       addSubsystem(id, getSparseMatrix(cr, "_w_", 1, 3 + modDim));
@@ -603,10 +605,10 @@ public class MSCifParser extends MSRdr {
     double[][] a = m.getArray();
     String key;
     int p;
-    int n = cr.parser.getColumnCount();
+    int n = cr.cifParser.getColumnCount();
     for (; i < n; ++i) {
       if ((p = fieldProperty(cr, i)) < 0 
-          || !(key = cr.parser.getColumnName(p)).contains(term))
+          || !(key = cr.cifParser.getColumnName(p)).contains(term))
         continue;
       String[] tokens = PT.split(key, "_");
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
@@ -618,7 +620,7 @@ public class MSCifParser extends MSRdr {
   }
 
   private int fieldProperty(CifReader cr, int i) {
-    return ((field = (String) cr.parser.getColumnData(i)).length() > 0 
+    return ((field = (String) cr.cifParser.getColumnData(i)).length() > 0 
         && field.charAt(0) != '\0' ? 
             cr.col2key[i] : NONE);
   }

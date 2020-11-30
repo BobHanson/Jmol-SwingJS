@@ -176,9 +176,9 @@ public final class JC {
     "dssrModel", "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model=", // called in DSSR1.java
     "iucr", "http://scripts.iucr.org/cgi-bin/sendcif_yard?%FILE", // e.g. wf5113sup1
     "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
-    "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
-    "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",
-    "nmrdb13", "http://www.nmrdb.org/service/jsmol13c?POST?molfile=",
+    "nmr", "https://www.nmrdb.org/new_predictor?POST?molfile=",
+    "nmrdb", "https://www.nmrdb.org/service/predictor?POST?molfile=",
+    "nmrdb13", "https://www.nmrdb.org/service/jsmol13c?POST?molfile=",
     //"pdb", "http://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/%c2%c3/pdb%file.ent.gz", // new Jmol 14.5.0 10/28/2015
     "magndata", "http://webbdcrista1.ehu.es/magndata/mcif/%FILE.mcif",
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
@@ -274,19 +274,20 @@ public final class JC {
     String tmpVersion = null;
     String tmpDate = null;
 
-    /**
-     * definitions are incorporated into j2s/java/core.z.js by buildtojs.xml
-     * 
-     * @j2sNative
-     * 
-     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
-     */
-    {
+//    /**
+//     * definitions are incorporated into j2s/java/core.z.js by buildtojs.xml
+//     * 
+//     * @j2sNative
+//     * 
+//     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
+//     */
+//    {
       BufferedInputStream bis = null;
       InputStream is = null;
       try {
         // Reading version from resource   inside jar
         is = JC.class.getClassLoader().getResourceAsStream(
+            /** @j2sNative "core/Jmol.properties" || */ 
             "org/jmol/viewer/Jmol.properties");
         bis = new BufferedInputStream(is);
         Properties props = new Properties();
@@ -315,7 +316,7 @@ public final class JC {
           }
         }
       }
-    }
+//    }
     if (tmpDate != null) {
       tmpDate = tmpDate.substring(7, 23);
       // NOTE : date is updated in the properties by SVN, and is in the format
@@ -325,7 +326,7 @@ public final class JC {
     }
     version = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
     majorVersion = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
-    date = (tmpDate != null ? tmpDate : "(Unknown_date)");
+    date = (tmpDate != null ? tmpDate : "");
     // 11.9.999 --> 1109999
     int v = -1;
     if (tmpVersion != null)
@@ -419,7 +420,6 @@ public final class JC {
   public final static float DEFAULT_MIN_BOND_DISTANCE = 0.4f;
   public final static float DEFAULT_MAX_CONNECT_DISTANCE = 100000000f;
   public final static float DEFAULT_MIN_CONNECT_DISTANCE = 0.1f;
-  public final static int MINIMIZATION_ATOM_MAX = 200;
   public final static float MINIMIZE_FIXED_RANGE = 5.0f;
 
   public final static float ENC_CALC_MAX_DIST = 3f;
@@ -843,8 +843,8 @@ public final class JC {
   public final static String DEFAULT_FONTFACE = "SansSerif";
   public final static String DEFAULT_FONTSTYLE = "Plain";
 
-  public final static int MEASURE_DEFAULT_FONTSIZE = 15;
-  public final static int AXES_DEFAULT_FONTSIZE = 14;
+  public final static int MEASURE_DEFAULT_FONTSIZE = 18;
+  public final static int AXES_DEFAULT_FONTSIZE = 16;
 
   ////////////////////////////////////////////////////////////////
   // do not rearrange/modify these shapes without

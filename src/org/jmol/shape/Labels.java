@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-01-29 21:09:50 -0600 (Mon, 29 Jan 2018) $
- * $Revision: 21816 $
+ * $Date: 2020-09-22 08:42:29 -0500 (Tue, 22 Sep 2020) $
+ * $Revision: 22032 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -244,6 +244,7 @@ public class Labels extends AtomShape {
     if ("offset" == propertyName) {
       if (!(value instanceof Integer)) {
         if (!setDefaults) {
+          checkColixLength((short)-1, ac);
           for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
               .nextSetBit(i + 1))
             setPymolOffset(i, (float[]) value);

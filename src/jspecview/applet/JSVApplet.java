@@ -74,7 +74,7 @@ import jspecview.common.JSViewer;
 import jspecview.common.Spectrum;
 import jspecview.java.AwtMainPanel;
 import jspecview.java.AwtPanel;
-import netscape.javascript.JSObject;
+////import netscape.javascript.JSObject;
 
 /**
  * 
@@ -483,24 +483,24 @@ public class JSVApplet extends JApplet implements JSVAppletInterface,
 	 */
 	@Override
 	public void callToJavaScript(String callback, Object[] params) {
-		try {
-
-			JSObject jso = JSObject.getWindow(this);
-			
-			if (callback.length() > 0) {
-				if (callback.indexOf(".") > 0) {
-					String[] mods = PT.split(callback, ".");
-					for (int i = 0; i < mods.length - 1; i++) {
-						jso = (JSObject) jso.getMember(mods[i]);
-					}
-					callback = mods[mods.length - 1];
-				}
-				Logger.info("JSVApplet calling " + jso + " " + callback);
-				jso.call(callback, params);
-			}
-		} catch (Exception npe) {
-			Logger.warn("EXCEPTION-> " + npe);
-		}
+//		try {
+//
+//			JSObject jso = JSObject.getWindow(this);
+//			
+//			if (callback.length() > 0) {
+//				if (callback.indexOf(".") > 0) {
+//					String[] mods = PT.split(callback, ".");
+//					for (int i = 0; i < mods.length - 1; i++) {
+//						jso = (JSObject) jso.getMember(mods[i]);
+//					}
+//					callback = mods[mods.length - 1];
+//				}
+//				Logger.info("JSVApplet calling " + jso + " " + callback);
+//				jso.call(callback, params);
+//			}
+//		} catch (Exception npe) {
+//			Logger.warn("EXCEPTION-> " + npe);
+//		}
 	}
 
 	@Override

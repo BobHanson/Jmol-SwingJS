@@ -36,7 +36,6 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.script.ScriptEval;
-import org.jmol.script.ScriptException;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -48,7 +47,6 @@ import org.jmol.viewer.MouseState;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
-import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -73,12 +71,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private int currentModelIndex = -1;
   
   private boolean alertedNoEdit;
-
-
   
   private String atomHoverLabel = "C", bondHoverLabel = GT.$("increase order"), xtalHoverLabel;
   private String activeMenu;
-  private ModelSet lastModelSet;
+  protected ModelSet lastModelSet;
 
   private String pickAtomAssignType = "C";
   private String pickBondAssignType = "p"; // increment up
@@ -162,16 +158,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   @Override
   public void jpiUpdateComputedMenus() {
     hasUnitCell = (vwr.getCurrentUnitCell() != null);
-    if (!checkUpdateSymmetryInfo())
-      updateAllXtalMenus();
-  }
-
-  @Override
-  protected void appUpdateForShow() {
-    updateAllXtalMenuOptions();
-  }
-
-  private boolean checkUpdateSymmetryInfo() {
     htMenus.get("xtalMenu").setEnabled(hasUnitCell);
     boolean isOK = true;
     if (vwr.ms != lastModelSet) {
@@ -184,21 +170,24 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     iatom0 = vwr.ms.am[currentModelIndex].firstAtomIndex;
     if (!isOK) {
       allOperators = null;
+      updateOperatorMenu();
     }
-    return isOK;
-  }
-
-  private void updateAllXtalMenus() {
-    updateOperatorMenu();
     updateAllXtalMenuOptions();
+}
+
+  @Override
+  protected void appUpdateForShow() {
+    jpiUpdateComputedMenus();
   }
 
-  private void updateOperatorMenu() {
+  protected void updateOperatorMenu() {
     if (allOperators != null)
       return;
     String data = runScriptBuffered("show symop");
     allOperators = PT.split(data.trim().replace('\t', ' '), "\n");
-    addAllCheckboxItems(htMenus.get("xtalOp!PersistMenu"), allOperators);
+    SC menu = htMenus.get("xtalOp!PersistMenu");
+    if (menu != null)
+      addAllCheckboxItems(menu, allOperators);
   }
 
   private void addAllCheckboxItems(SC menu, String[] labels) {
@@ -226,7 +215,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   }
 
-  private void updateAllXtalMenuOptions() {
+  protected void updateAllXtalMenuOptions() {
 
     //    "mkaddHydrogens??P!CB", "add hydrogens on new atoms",
     //    "mkclicktosetelement??P!CB", "allow clicking to set atom element",
@@ -340,7 +329,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
                                                boolean selected) {
     String name = source.getName();
-    System.out.println("MKP name=" + name);
+   // System.out.println("MKP name=" + name);
     if (!updatingForShow && setActiveMenu(name) != null) {
       String text = source.getText();
       if (name.indexOf("Bond") >= 0) {
@@ -577,7 +566,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     }
 
     if (name == "atomtype") {
-      System.out.println("MKP atomtype=" + value);
+     // System.out.println("MKP atomtype=" + value);
       if (value != null) {
         pickAtomAssignType = (String) value;
         isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
@@ -689,6 +678,11 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     return (Boolean.valueOf(value.toString()) == Boolean.TRUE);
   }
 
+  /**
+   * @param key  
+   * @return 
+   */
+  @SuppressWarnings("javadoc")
   private Object getData(String key) {
     addData("centerPoint" , centerPoint);
     addData("centerAtomIndex", Integer.valueOf(centerAtomIndex));
@@ -1060,6 +1054,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     return (getMKState() == STATE_MOLECULAR && isRotateBond ? bondIndex : -1);
   }
     
+  /**
+   * @param where  
+   */
   private void resetBondFields(String where) {
     bsRotateBranch = null;
     // do not set bondIndex to -1 here
@@ -1105,6 +1102,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    * @param deltaY
    * @param x
    * @param y
+   * @param forceFull 
    */
   public void actionRotateBond(int deltaX, int deltaY, int x, int y, boolean forceFull) {
     
@@ -1309,7 +1307,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    * 
    * @param pressed
    * @param dragged
-   * @param index
    * @param countPlusIndices
    * @return true if handled here
    */
@@ -1358,7 +1355,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private String runScriptBuffered(String script) {
     SB sb = new SB();
     try {
-      System.out.println("MKP\n" + script);
+     // System.out.println("MKP\n" + script);
       ((ScriptEval) vwr.eval).runBufferedSafely(script, sb);
     } catch (Exception e) {
       e.printStackTrace();
