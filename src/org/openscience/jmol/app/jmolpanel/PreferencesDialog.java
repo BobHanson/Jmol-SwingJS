@@ -103,7 +103,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JCheckBox cbOpenFilePreview;
   private JCheckBox cbClearHistory;
 //  private JCheckBox cbLargeFont;
-  private Properties originalSystemProperties;
   private Properties jmolDefaultProperties;
   Properties currentProperties;
 
@@ -601,10 +600,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   }
 
   void initializeProperties() {
-    originalSystemProperties = System.getProperties();
-    jmolDefaultProperties = new Properties(originalSystemProperties);
-    for (int i = jmolDefaults.length; (i -= 2) >= 0; )
+    jmolDefaultProperties = new Properties(System.getProperties());
+    for (int i = jmolDefaults.length; (i -= 2) >= 0; ) {
       jmolDefaultProperties.put(jmolDefaults[i], jmolDefaults[i+1]);
+    }
     currentProperties = new Properties(jmolDefaultProperties);
     try {
       BufferedInputStream bis = new BufferedInputStream(new FileInputStream(jmol.jmolApp.userPropsFile), 1024);
@@ -612,12 +611,12 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       bis.close();
     } catch (Exception e2) {
     }
-    System.setProperties(currentProperties);
+//    System.setProperties(currentProperties);
   }
 
   void resetDefaults(String[] overrides) {
     currentProperties = new Properties(jmolDefaultProperties);
-    System.setProperties(currentProperties);
+    //System.setProperties(currentProperties);
     if (overrides != null) {
       for (int i = overrides.length; (i -= 2) >= 0; )
         currentProperties.put(overrides[i], overrides[i+1]);
@@ -650,29 +649,29 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   
   void initVariables() {
 
-    autoBond = Boolean.getBoolean("autoBond");
-    showHydrogens = Boolean.getBoolean("showHydrogens");
-    //showVectors = Boolean.getBoolean("showVectors");
-    showMeasurements = Boolean.getBoolean("showMeasurements");
-    perspectiveDepth = Boolean.getBoolean("perspectiveDepth");
-    showAxes = Boolean.getBoolean("showAxes");
-    showBoundingBox = Boolean.getBoolean("showBoundingBox");
-    axesOrientationRasmol = Boolean.getBoolean("axesOrientationRasmol");
-    openFilePreview = Boolean.valueOf(System.getProperty("openFilePreview", "true")).booleanValue();
-    clearHistory = Boolean.getBoolean("clearHistory");
+    autoBond = getBoolean("autoBond");
+    showHydrogens = getBoolean("showHydrogens");
+    //showVectors = getBoolean("showVectors");
+    showMeasurements = getBoolean("showMeasurements");
+    perspectiveDepth = getBoolean("perspectiveDepth");
+    showAxes = getBoolean("showAxes");
+    showBoundingBox = getBoolean("showBoundingBox");
+    axesOrientationRasmol = getBoolean("axesOrientationRasmol");
+    openFilePreview = Boolean.parseBoolean(currentProperties.getProperty("openFilePreview", "true"));
+    clearHistory = getBoolean("clearHistory");
 
     minBondDistance =
-      Float.parseFloat(currentProperties.getProperty("minBondDistance"));
+      Float.parseFloat(getProp("minBondDistance"));
     bondTolerance =
-      Float.parseFloat(currentProperties.getProperty("bondTolerance"));
-    marBond = Short.parseShort(currentProperties.getProperty("marBond"));
+      Float.parseFloat(getProp("bondTolerance"));
+    marBond = Short.parseShort(getProp("marBond"));
     percentVdwAtom =
-      Integer.parseInt(currentProperties.getProperty("percentVdwAtom"));
+      Integer.parseInt(getProp("percentVdwAtom"));
     bondingVersion =
-        Integer.parseInt(currentProperties.getProperty("bondingVersion"));
-    fontScale  = Math.max(PT.parseInt("" + currentProperties.getProperty("consoleFontScale")), 0) % 5;
+        Integer.parseInt(getProp("bondingVersion"));
+    fontScale  = Math.max(PT.parseInt("" + getProp("consoleFontScale")), 0) % 5;
 
-    if (Boolean.getBoolean("jmolDefaults"))
+    if (getBoolean("jmolDefaults"))
       vwr.setStringProperty("defaults", "Jmol");
     else
       vwr.setStringProperty("defaults", "RasMol");
@@ -692,6 +691,14 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     
     jmol.updateConsoleFont();
     
+  }
+
+  private String getProp(String key) {
+    return currentProperties.getProperty(key);
+  }
+
+  private boolean getBoolean(String key) {
+    return Boolean.parseBoolean(getProp(key));
   }
 
   class PrefsAction extends AbstractAction {
