@@ -43,7 +43,18 @@ import swingjs.api.JSUtilI;
 		}
 
 	}
+	
  * </code>
+ * 
+ * In the Info object, these would be defined using objects:
+ * 
+ * <code>
+ * assets: [{name:"osp", zipPath:"osp-assets.zip", classPath:"org/opensourcephysics/resources"},
+ * 	        {name:"tracker",zipPath:"tracker-assets.zip",classPath:"org/opensourcephysics/cabrillo/tracker/resources"},
+ *          {name:"physlets", zipPath:"physlet-assets.zip", classPaths: ["opticsimages", "images"]}],
+ * </code>
+ * 
+ * Note the use of "classPaths" not "classPath" when an array is used to indicate multiple paths
  * 
  * It is not clear that Java is well-served by this zip-file loading, but
  * certainly JavaScript is. What could be 100 downloads is just one, and SwingJS
@@ -84,6 +95,12 @@ public class Assets {
 			System.err.println("Assets could not create swinjs.JSUtil instance");
 		}
 	}
+
+	/**
+	 * track not-found resources
+	 * 
+	 */
+	private static HashSet<String> nullResources;
 
 	private Map<String, Map<String, ZipEntry>> htZipContents = new HashMap<>();
 
@@ -152,11 +169,10 @@ public class Assets {
 	 * @param path
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public static URL getAbsoluteURL(String path) {
 		URL url = null;
 		try {
-			url = (path.indexOf(":/") < 0 ? new File(new File(path).getAbsolutePath()).toURL() : new URL(path));
+			url = (path.indexOf("file:") == 0 ? new URL(path) : new File(new File(path).getAbsolutePath()).toURI().toURL());
 			if (path.indexOf("!/")>=0)
 				url = new URL("jar", null, url.toString());
 		} catch (MalformedURLException e) {
@@ -219,8 +235,13 @@ public class Assets {
 	public static boolean hasLoaded(String name) {
 		return loadedAssets.contains(name);
 	}
-	
+
+	/**
+	 * Completely reset the assets data.
+	 * 
+	 */
 	public static void reset() {
+		nullResources = null;
 		getInstance().htZipContents.clear();
 		getInstance().assetsByPath.clear();
 		getInstance().sortedList = new String[0];
@@ -361,7 +382,7 @@ public class Assets {
 		try {
 			URL url = getInstance()._getURLFromPath(path, true);
 			if (url == null && !zipOnly) {
-				url = Assets.class.getResource(path);
+				url = Assets.class.getClassLoader().getResource(path);
 			}
 			if (url != null)
 				return url.openStream();
@@ -395,28 +416,32 @@ public class Assets {
 	private URL _getURLFromPath(String fullPath, boolean zipOnly) {
 		URL url = null;
 		try {
-			if (fullPath.startsWith("/"))
-				fullPath = fullPath.substring(1);
-			for (int i = sortedList.length; --i >= 0;) {
-				if (fullPath.startsWith(sortedList[i])) {
-					url = assetsByPath.get(sortedList[i]).getURL(fullPath);
-					ZipEntry ze = findZipEntry(url);
-					if (ze == null)
-						break;
-					if (isJS) {
-						jsutil.setURLBytes(url, jsutil.getZipBytes(ze));
+			if (!fullPath.startsWith("/TEMP/")) {
+				if (fullPath.startsWith("/"))
+					fullPath = fullPath.substring(1);
+				for (int i = sortedList.length; --i >= 0;) {
+					if (fullPath.startsWith(sortedList[i])) {
+						url = assetsByPath.get(sortedList[i]).getURL(fullPath);
+						ZipEntry ze = findZipEntry(url);
+						if (ze == null)
+							break;
+						if (isJS) {
+							jsutil.setURLBytes(url, jsutil.getZipBytes(ze));
+						}
+						return url;
 					}
-					return url;
 				}
 			}
 			if (!zipOnly)
-				return getAbsoluteURL(fullPath);
+				return getAbsoluteURL((fullPath.startsWith("TEMP/") ? "/" + fullPath : fullPath));
 		} catch (MalformedURLException e) {
 		}
 		return null;
 	}
 
 	public static ZipEntry findZipEntry(URL url) {
+		if (url == null)
+			return null;
 		String[] parts = getJarURLParts(url.toString());
 		if (parts == null || parts[0] == null || parts[1].length() == 0)
 			return null;
@@ -424,7 +449,8 @@ public class Assets {
 	}
 
 	public static ZipEntry findZipEntry(String zipFile, String fileName) {
-		return getZipContents(zipFile).get(fileName);
+		Map<String, ZipEntry> map = getZipContents(zipFile);
+		return (map == null ? null : map.get(fileName));
 	}
 
 	/**
@@ -437,7 +463,20 @@ public class Assets {
 		return getInstance()._getZipContents(zipPath);
 	}
 
+	public static boolean notFound(String zipPath) {
+		return (nullResources != null && nullResources.contains(zipPath));
+	}
+	
+	public static void setNotFound(String zipPath) {
+		if (nullResources == null) {
+			nullResources = new HashSet<>();
+		}		
+		nullResources.add(zipPath);
+	}
+
 	private Map<String, ZipEntry> _getZipContents(String zipPath) {
+		if (notFound(zipPath))
+			return null;
 		URL url = getURLWithCachedBytes(zipPath); // BH carry over bytes if we have them already
 		Map<String, ZipEntry> fileNames = htZipContents.get(url.toString());
 		if (fileNames != null)
@@ -446,7 +485,8 @@ public class Assets {
 			// Scan URL zip stream for files.
 			return readZipContents(url.openStream(), url);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			System.err.println("Assets: " + zipPath + " could not be opened");
+			setNotFound(zipPath);
 			return null;
 		}
 	}

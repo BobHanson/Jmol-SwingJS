@@ -90,7 +90,6 @@ public class ZipTools {//implements GenericZipTools {
       return getTarFileDirectory(bis, fileName, asBufferedInputStream);
     if (justDir)
       return getZipDirectoryAsStringAndClose(bis);
-    
     bis = getPngZipStream(bis, true);
     
     
@@ -163,7 +162,7 @@ public class ZipTools {//implements GenericZipTools {
     }
   }
 
-  //  @Override
+//  @Override
   public static byte[] getZipFileContentsAsBytes(BufferedInputStream bis,
                                           String[] list, int listPtr) {
     byte[] ret = new byte[0];
@@ -247,7 +246,7 @@ public class ZipTools {//implements GenericZipTools {
     return bytes;
   }
 
-  //  @Override
+//  @Override
   public static String getZipDirectoryAsStringAndClose(BufferedInputStream bis) {
     SB sb = new SB();
     String[] s = new String[0];
