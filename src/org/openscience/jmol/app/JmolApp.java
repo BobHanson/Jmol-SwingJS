@@ -33,22 +33,21 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Scanner;
 
-import javajs.util.PT;
-
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+import org.jmol.api.JmolAppAPI;
+import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
-import org.jmol.api.JmolAppAPI;
-import org.jmol.api.JmolViewer;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.PosixParser;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.HelpFormatter;
+import javajs.util.PT;
 
 public class JmolApp implements JmolAppAPI {
 

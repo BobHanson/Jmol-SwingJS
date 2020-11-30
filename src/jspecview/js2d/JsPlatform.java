@@ -10,6 +10,7 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
 import javajs.util.P3;
@@ -387,6 +388,12 @@ public class JsPlatform implements GenericPlatform {
   public boolean forceAsyncLoad(String filename) {
     // TODO Auto-generated method stub
     return false;
+  }
+
+  @Override
+  public InChIJNI getInChI() {
+    // TODO
+    return null;
   }
 
 }

@@ -10101,4 +10101,8 @@ public class Viewer extends JmolViewer
         : null;
   }
 
+  public String getInchi(BS atoms, String options) {
+    return this.apiPlatform.getInChI().getInchi(this, atoms, options);
+  }
+
 }

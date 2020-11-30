@@ -22,6 +22,7 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
 import jspecview.api.JSVPanel;
@@ -336,6 +337,11 @@ public class AwtPlatform implements GenericPlatform {
   @Override
   public boolean isJS() {
     return false;
+  }
+
+  @Override
+  public InChIJNI getInChI() {
+    return null;
   }
 
 }

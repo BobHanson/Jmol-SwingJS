@@ -1403,6 +1403,7 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {*}.find("inchi","inchi-options")
     // {*}.find("crystalClass")
     // {*}.find("CF",true|false)
     // {*}.find("MF")
@@ -1456,7 +1457,13 @@ public class MathExt {
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
     SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
     boolean isON = !isList && (argLast.tok == T.on);
+    boolean isInchi = !isList && sFind.equalsIgnoreCase("INCHI");
     try {
+      if (isInchi) {
+        if (x1.tok != T.bitset)
+          return false;
+        return mp.addXStr(vwr.getInchi((BS) x1.value, flags));
+      }
       if (isChemical) {
         BS bsAtoms = (x1.tok == T.bitset ? (BS) x1.value : null);
         String data = (bsAtoms == null ? SV.sValue(x1) : vwr.getOpenSmiles(bsAtoms));

@@ -10,8 +10,11 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
+import org.jmol.api.JmolInChI;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.js.JmolToJSmolInterface;
+import org.jmol.inchi.InChIJNI;
+import org.jmol.inchi.InChIJS;
 import org.jmol.script.ScriptContext;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
@@ -539,6 +542,16 @@ public class Platform implements GenericPlatform {
   @Override
   public boolean isJS() {
     return true;
+  }
+
+  private static JmolInChI inchi;
+
+  @Override
+  public JmolInChI getInChI() {
+    return (inchi == null
+        ? (inchi = (JmolInChI) Interface.getInterface("org.jmol.inchi.InChIJS",
+            (Viewer) vwr, "platform"))
+        : inchi);
   }
 
 
