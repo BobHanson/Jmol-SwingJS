@@ -100,6 +100,7 @@ public class NBOParser {
         continue;
       }
       boolean isLP = org.endsWith("(lp)");
+
       if (isLP || org.endsWith("(lv)")) {
         int ia = getAtomIndex(org.substring(0, org.length() - 4));
         matrix[ia][ia] += (isLP ? 1 : 10);
