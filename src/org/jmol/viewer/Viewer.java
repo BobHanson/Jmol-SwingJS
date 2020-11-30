@@ -4092,8 +4092,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public synchronized Object scriptCheck(String strScript) {
-    return (getScriptManager() == null ? null
-        : scriptCheckRet(strScript, false));
+    return scriptCheckRet(strScript, false);
   }
 
   @Override

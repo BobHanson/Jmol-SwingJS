@@ -59,6 +59,7 @@ public class InChIJS implements JmolInChI {
        */
       {
       }
+      try {
       if (isSwingJS) {
         /**
          * @j2sNative
@@ -77,11 +78,16 @@ public class InChIJS implements JmolInChI {
         {
         }
       }
+      } catch (Throwable t) {
+        // 
+      }
       
       /**
        * @j2sNative
        *
-       *              InChI.fromMolfile = InChI.cwrap('get_inchi', 'string', ['string']);
+       * 
+       *
+       *              InChI.fromMolfile = (InChI.cwrap && InChI.cwrap('get_inchi', 'string', ['string']));
        * 
        */
       {
@@ -95,6 +101,8 @@ public class InChIJS implements JmolInChI {
 
   @Override
   public String getInchi(Viewer vwr, BS atoms, String options) {
+    if (atoms == null || atoms.cardinality() == 0)
+      return "";
     String s = "";
     try {
       if (options == null)
@@ -114,7 +122,7 @@ public class InChIJS implements JmolInChI {
 
       /**
        * @j2sNative
-       * 
+       *  if (!InChI.fromMolfile)return "";
        *  s = InChI.fromMolfile(molData);
        *  if (haveKey) {
        *   // what here?
