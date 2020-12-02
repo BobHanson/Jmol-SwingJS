@@ -41,6 +41,10 @@ import org.jmol.util.Parser;
  * 
  * @author Bob Hanson hansonr@stolaf.edu, Takanori Nakane, with the assistance  
  *         of Jhou Renjian
+ *         
+ * This version of Jmol predates SwingJS and is not compatible with general 
+ * SwingJS applications. See org.jmol.applet.Jmol for the SwingJS version.
+ * 
  * 
  */
 
@@ -48,11 +52,6 @@ public class Jmol extends GenericApplet implements JSInterface {
 
   private Map<String, Object> htParams;
 
-  /**
-   * cannot ignore super because it involves preparing fields
-   * @param vwrOptions 
-   * 
-   */
   public Jmol(Map<String, Object> vwrOptions) {
     htParams = new Hashtable<String, Object>();
     if (vwrOptions == null)

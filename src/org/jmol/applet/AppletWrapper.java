@@ -24,7 +24,6 @@
 
 package org.jmol.applet;
 
-import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Event;
@@ -38,12 +37,12 @@ import java.net.URL;
 
 import javax.swing.JApplet;
 
+import org.jmol.util.GenericApplet;
+import org.jmol.util.Logger;
+
 //import javax.swing.JApplet;  also works
 
 import javajs.util.PT;
-
-import org.jmol.util.Logger;
-import org.jmol.util.GenericApplet;
 
 /**
  * Using Applet only because originally there was the possibility of non-Swing versions of 
@@ -100,22 +99,24 @@ public class AppletWrapper extends JApplet {
     super.destroy();
   }
 
-  public AppletWrapper(String preloadImageName,
-                       int preloadThreadCount,
-                       String[] preloadClassNames) {
+  public AppletWrapper(String preloadImageName, int preloadThreadCount,
+      String[] preloadClassNames) {
     this.preloadImageName = preloadImageName;
     this.preloadTextMessage = "Loading Jmol applet ...";
     this.preloadThreadCount = preloadThreadCount;
     this.preloadClassNames = preloadClassNames;
     needToCompleteInitialization = true;
     isSigned = false;
-    try {
-      String imagePath = "" + (getClass().getClassLoader().getResource(preloadImageName));
-      isSigned = (imagePath.indexOf("Signed") >= 0);
-      System.out.println("appletwrapper isSigned = " + isSigned);
-    } catch (Exception e) {
-      Logger.error("isSigned false: " + e);
-    }
+    if (/** @j2sNative false && */
+    true)
+      try {
+        String imagePath = ""
+            + (getClass().getClassLoader().getResource(preloadImageName));
+        isSigned = (imagePath.indexOf("Signed") >= 0);
+        System.out.println("appletwrapper isSigned = " + isSigned);
+      } catch (Exception e) {
+        Logger.error("isSigned false: " + e);
+      }
   }
 
   public boolean isSigned() {

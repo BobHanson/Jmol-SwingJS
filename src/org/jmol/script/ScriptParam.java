@@ -1066,7 +1066,7 @@ abstract public class ScriptParam extends ScriptError {
         // not a problem
       }
     i = i * 1000000 + j;
-    return (i < 0 ? Integer.MAX_VALUE : i);
+    return (i < 0 || i > Integer.MAX_VALUE ? Integer.MAX_VALUE : i);
   }
 
   /**

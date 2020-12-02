@@ -75,7 +75,8 @@ import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
 
 import javajs.util.PT;
 
-public class AppConsole extends JmolConsole implements EnterListener, JmolDropEditor {
+public class AppConsole extends JmolConsole
+    implements EnterListener, JmolDropEditor {
 
   @Override
   public void loadContent(String script) {
@@ -86,10 +87,10 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   @Override
   public void loadFile(String fileName) {
     getScriptEditor().setVisible(true);
-    getScriptEditor().loadFile(fileName);    
+    getScriptEditor().loadFile(fileName);
   }
 
-   public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
+  public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
 
   private int fontSize;
 
@@ -107,25 +108,26 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   public void start(Viewer vwr) {
     setup(vwr, null, null);
   }
-  
+
   /**
    * general entry point
    * 
    * @param vwr
-   * @param externalContainer   a JFrame or JPanel or JDialog
+   * @param externalContainer
+   *        a JFrame or JPanel or JDialog
    * @param enabledButtons
    */
-  public AppConsole(JmolViewer vwr,
-      Container externalContainer, String enabledButtons) {
+  public AppConsole(JmolViewer vwr, Container externalContainer,
+      String enabledButtons) {
     setup((Viewer) vwr, externalContainer, enabledButtons);
   }
 
   private void setup(Viewer vwr, Container externalContainer,
                      String enabledButtons) {
-    
-//    boolean isMacOs = (/** @j2sNative false && */System.getProperty("os.name").toLowerCase()
-//        .contains("mac"));
-    System.out.println("appConsole " + System.getProperty("os.name"));
+
+    //    boolean isMacOs = (/** @j2sNative false && */System.getProperty("os.name").toLowerCase()
+    //        .contains("mac"));
+    //system.out.println("appConsole " + System.getProperty("os.name"));
     if (!Viewer.isJS) {// || isMacOs) {
       // See http://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
       InputMap im = (InputMap) UIManager.get("TextPane.focusInputMap");
@@ -138,12 +140,12 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       //    im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
     }
 
-    
     setViewer(vwr);
     Window w = Platform.getWindow((Container) vwr.display);
     vwrFrame = (w instanceof JFrame ? (JFrame) w : null);
     if (externalContainer == null) {
       jcd = new JDialog(vwrFrame, null, false);
+      jcd.setName("JmolConsole");
       jcd.setSize(700, 400);
       jcd.setLocationRelativeTo(vwrFrame);
       this.externalContainer = jcd;
@@ -154,13 +156,15 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     addWindowListener();
     layoutWindow(enabledButtons);
     new FileDropper(statusListener, vwr, this);
-    
+
     //setVisible(true);
   }
 
   @Override
   public void updateFontSize() {
-    int scale = PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference", "consoleFontScale"));
+    int scale = (Viewer.isJS ? vwr.getConsoleFontScale()
+        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference",
+            "consoleFontScale")));
     scale = (scale < 0 ? 1 : scale) % 5;
     fontSize = scale * 4 + 12;
     if (console != null)
@@ -170,8 +174,10 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   public JDialog jcd;
 
   protected ConsoleTextPane console;
-  private JmolAbstractButton varButton, haltButton, closeButton, clearButton, stepButton;
-  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton, topButton, fontButton;
+  private JmolAbstractButton varButton, haltButton, closeButton, clearButton,
+      stepButton;
+  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton,
+      topButton, fontButton;
   private JPanel buttonPanel = new JPanel();
 
   protected JScrollBar vBar, hBar;
@@ -184,7 +190,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
   @Override
   public void sendConsoleEcho(String strEcho) {
-    if (strEcho == null)  // new language
+    if (strEcho == null) // new language
       updateLabels();
     else if (strEcho.equals("\0"))
       sendConsoleMessage(null);
@@ -205,6 +211,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       console.outputStatus(strStatus);
       isError = false;
     }
+    //system.out.println("AppConsole " + console.getText().length());
   }
 
   @Override
@@ -236,7 +243,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   protected void layoutWindow(String enabledButtons) {
     setTitle();
     console = new ConsoleTextPane(this);
-    console.setDropTarget(new DropTarget(console, new FileDropper(null, vwr, this)));
+    console.setDropTarget(
+        new DropTarget(console, new FileDropper(null, vwr, this)));
     console.setPrompt();
     console.setDragEnabled(true);
     if (enabledButtons == null)
@@ -278,69 +286,58 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   }
 
   private void enableButton(String name) {
-    switch((
-        "Check     " +
-    		"Clear     " +
-    		"Close     " +
-    		"Editor    " +
-    		"Halt      " +
-    		"Help      " +
-    		"History   " +
-    		"State     " +
-    		"Step      " +
-    		"Top       " +
-    		"UndoRedo  " +
-    		"Font      " +
-    		"Variables ").indexOf(name)) {
+    switch (("Check     " + "Clear     " + "Close     " + "Editor    "
+        + "Halt      " + "Help      " + "History   " + "State     "
+        + "Step      " + "Top       " + "UndoRedo  " + "Font      "
+        + "Variables ").indexOf(name)) {
     case 0:
-       checkButton = setButton("Check");
+      checkButton = setButton("Check");
       break;
     case 10:
-       clearButton = setButton("Clear");
+      clearButton = setButton("Clear");
       break;
     case 20:
-       closeButton = setButton("Close");
+      closeButton = setButton("Close");
       break;
     case 30:
-       editButton = setButton("Editor");
+      editButton = setButton("Editor");
       break;
     case 40:
-       haltButton = setButton("Halt");
-     break;
+      haltButton = setButton("Halt");
+      break;
     case 50:
-       helpButton = setButton("Help");
+      helpButton = setButton("Help");
       break;
     case 60:
-       historyButton = setButton("History");
+      historyButton = setButton("History");
       break;
     case 70:
-       stateButton = setButton("State");
+      stateButton = setButton("State");
       break;
     case 80:
-       stepButton = setButton("Step");
+      stepButton = setButton("Step");
       break;
     case 90:
-       topButton = setButton("Top");
+      topButton = setButton("Top");
       break;
     case 100:
-       undoButton = setButton("Undo");
-       redoButton = setButton("Redo");
+      undoButton = setButton("Undo");
+      redoButton = setButton("Redo");
       break;
     case 110:
-       varButton = setButton("Variables");
+      varButton = setButton("Variables");
       break;
-    case 120: 
+    case 120:
       fontButton = setButton("Font");
       fontButton.setToolTipText(GT.$("toggle font size"));
     }
   }
-  
+
   boolean isError = false;
 
   private void setError(boolean TF) {
     isError = TF;
   }
-
 
   @Override
   public void enterPressed() {
@@ -361,13 +358,13 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
       try {
 
-//        while (console.checking) {
-//          try {
-//            Thread.sleep(100); //wait for command checker
-//          } catch (Exception e) {
-//            break; //-- interrupt? 
-//          }
-//        }
+        //        while (console.checking) {
+        //          try {
+        //            Thread.sleep(100); //wait for command checker
+        //          } catch (Exception e) {
+        //            break; //-- interrupt? 
+        //          }
+        //        }
 
         executeCommand(strCommand);
       } catch (Exception ie) {
@@ -419,7 +416,6 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     }
   }
 
-  
   private static int MAXUNDO = 10;
   private String[] undoStack = new String[MAXUNDO + 1];
   private int undoPointer = 0;
@@ -434,14 +430,14 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     undoButton.setEnabled(false);
     redoButton.setEnabled(false);
   }
-  
+
   private boolean undoSetEnabled() {
     if (undoButton == null)
       return false;
-    boolean undoAllowed = (vwr.getBooleanProperty("undo") && vwr
-        .getBooleanProperty("preserveState"));
-    undoButton
-        .setEnabled(undoAllowed && undoPointer > 0 && undoStack[undoPointer - 1] != null);
+    boolean undoAllowed = (vwr.getBooleanProperty("undo")
+        && vwr.getBooleanProperty("preserveState"));
+    undoButton.setEnabled(
+        undoAllowed && undoPointer > 0 && undoStack[undoPointer - 1] != null);
     redoButton.setEnabled(undoAllowed && undoPointer < MAXUNDO
         && undoStack[undoPointer + 1] != null);
     return undoAllowed;
@@ -476,7 +472,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
   private boolean dontsave;
 
   private JmolStatusListener statusListener;
-  
+
   private void undoSave(boolean incrementPtr) {
     if (undoButton == null)
       return;
@@ -488,15 +484,15 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       undoStack[i] = null;
     Logger.startTimer("(console");
     try {
-      undoStack[undoPointer] = (String) vwr.getProperty("readable",
-        "stateInfo", null);
-    //shift stack if full
-    if (incrementPtr && undoPointer == MAXUNDO) {
-      for (int i = 1; i <= MAXUNDO; i++)
-        undoStack[i - 1] = undoStack[i];
-      undoStack[MAXUNDO] = null;
-    } else if (incrementPtr)
-      undoPointer++;
+      undoStack[undoPointer] = (String) vwr.getProperty("readable", "stateInfo",
+          null);
+      //shift stack if full
+      if (incrementPtr && undoPointer == MAXUNDO) {
+        for (int i = 1; i <= MAXUNDO; i++)
+          undoStack[i - 1] = undoStack[i];
+        undoStack[MAXUNDO] = null;
+      } else if (incrementPtr)
+        undoPointer++;
     } catch (Error e) {
       dontsave = true;
     }
@@ -510,16 +506,17 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     undoSaved = true;
     //dumpUndo("undoSave DONE");
   }
-/*
+
+  /*
   private void dumpUndo(String string) {
-    System.out.println("\n" + string);
+    //system.out.println("\n" + string);
     for (int i = 0; i < 8 && i <= MAXUNDO; i++)
-      System.out.println((i == undoPointer ? ">" : " ") + i 
+      //system.out.println((i == undoPointer ? ">" : " ") + i 
           + "\t" + (undoStack[i] == null ? null : "OK\t" + undoStack[i].substring(undoStack[i].indexOf(" background "),undoStack[i].indexOf(" background ") + 22 ) ));
      
     return;
   }
-*/
+  */
   @SuppressWarnings("unchecked")
   void executeCommand(String strCommand) {
     boolean doWait;
@@ -542,9 +539,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     doWait = (strCommand.indexOf("WAITTEST ") == 0);
     if (doWait) { //for testing, mainly
       // demonstrates using the statusManager system; probably hangs application.
-      Object o = vwr
-          .scriptWaitStatus(strCommand.substring(5),
-              "+fileLoaded,+scriptStarted,+scriptStatus,+scriptEcho,+scriptTerminated");
+      Object o = vwr.scriptWaitStatus(strCommand.substring(5),
+          "+fileLoaded,+scriptStarted,+scriptStatus,+scriptEcho,+scriptTerminated");
       if (o instanceof List) {
         List<List<List<Object>>> info = (List<List<List<Object>>>) o;
         /*
@@ -571,15 +567,15 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       if (isInterrupt)
         str = str.substring(1);
       if (vwr.checkHalt(str, isInterrupt))
-        strErrorMessage = (isScriptExecuting ? "script execution halted with "
-            + strCommand : "no script was executing - use exitJmol to exit Jmol");
+        strErrorMessage = (isScriptExecuting
+            ? "script execution halted with " + strCommand
+            : "no script was executing - use exitJmol to exit Jmol");
       //the problem is that scriptCheck is synchronized, so these might get backed up. 
       if (strErrorMessage.length() > 0) {
         console.outputError(strErrorMessage);
       } else {
         vwr.script(strCommand
-            + (strCommand.indexOf("\1##") >= 0 ? ""
-                : JC.SCRIPT_EDITOR_IGNORE));
+            + (strCommand.indexOf("\1##") >= 0 ? "" : JC.SCRIPT_EDITOR_IGNORE));
       }
     }
     if (strCommand.indexOf("\1##") < 0)
@@ -636,20 +632,26 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       return;
     }
     if (source == fontButton) {
-      PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API", "getPreference", null);
-      if (d != null)
-        d.setFontScale(-1);
+      if (Viewer.isJS) {
+        vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
+        updateFontSize();
+      } else {
+        PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API",
+            "getPreference", null);
+        if (d != null)
+          d.setFontScale(-1);
+      }
       return;
     }
     if (source == helpButton) {
-//        
-//      
-//      URL url = this.getClass().getClassLoader().getResource(
-//          "org/openscience/jmol/Data/guide/ch04.html");
-//      if (url == null)
-        vwr.script("help");
-//      else
-//        (new HelpDialog(null, url)).setVisible(true);
+      //        
+      //      
+      //      URL url = this.getClass().getClassLoader().getResource(
+      //          "org/openscience/jmol/Data/guide/ch04.html");
+      //      if (url == null)
+      vwr.script("help");
+      //      else
+      //        (new HelpDialog(null, url)).setVisible(true);
     }
     super.actionPerformed(e);
   }
@@ -663,7 +665,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     private String pageUpBuffer;
     boolean checkingCommand;
     private Timer checkTimer;
-    
+
     ConsoleTextPane(AppConsole appConsole) {
       super(new ConsoleDocument());
       updateFontSize();
@@ -714,12 +716,12 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       setPrompt();
     }
 
-//    /*
-//    * (non-Javadoc)
-//    * 
-//    * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
-//    */
-//
+    //    /*
+    //    * (non-Javadoc)
+    //    * 
+    //    * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
+    //    */
+    //
     /**
      * Custom key event processing for command 0 implementation.
      * 
@@ -730,7 +732,6 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
      * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
      */
 
-    
     @Override
     public void keyTyped(KeyEvent e) {
       processKey(e);
@@ -738,6 +739,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
     @Override
     public void keyPressed(KeyEvent e) {
+      // tab
       processKey(e);
     }
 
@@ -753,7 +755,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       // Id Control key is down, captures events does command
       // history recall and inhibits caret vertical shift.
 
-      //System.out.println("AppConsole: " + ke);
+      //system.out.println("AppConsole: " + consoleDoc.isAtEnd() + " " + ke);
 
       int kcode = ke.getKeyCode();
       int kid = ke.getID();
@@ -802,18 +804,21 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
         return;
       }
       pageUpBuffer = null;
-      if (kcode == KeyEvent.VK_UP && kid == KeyEvent.KEY_PRESSED
-          && consoleDoc.isAtEnd()) {
-        recallCommand(true, false);
-        ke.consume();
-      } else if (kcode == KeyEvent.VK_DOWN && kid == KeyEvent.KEY_PRESSED
-          && consoleDoc.isAtEnd()) {
-        recallCommand(false, false);
-        ke.consume();
-      } else {
+      switch (kid) {
+      case KeyEvent.KEY_PRESSED:
+        switch (kcode) {
+        case KeyEvent.VK_UP:
+        case KeyEvent.VK_DOWN:
+          if (consoleDoc.isAtEnd()) {
+            recallCommand(kcode == KeyEvent.VK_UP, false);
+            ke.consume();
+          }
+          break;
+        }
+        break;
+      case KeyEvent.KEY_RELEASED:
         // not perfect -- help here?
-        if (!checkingCommand && kid == KeyEvent.KEY_RELEASED
-            && ke.getModifiers() < 2
+        if (!checkingCommand && ke.getModifiers() < 2
             && (kcode == 32 || kcode > KeyEvent.VK_DOWN && kcode < 400
                 || kcode == KeyEvent.VK_BACK_SPACE)) {
           checkingCommand = true;
@@ -833,63 +838,63 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
             checkTimer.restart();
           }
         }
+        break;
       }
     }
 
-    /**
-     * Recall command history.
-     * 
-     * @param up
-     *        - history up or down
-     * @param pageup
-     *        TODO
-     */
-    void recallCommand(boolean up, boolean pageup) {
-      String cmd = (pageup ? vwr.historyFind(pageUpBuffer == null ? (pageUpBuffer = consoleDoc
-              .getCommandString()) : pageUpBuffer, up ? -1
-                  : 1) : vwr.getSetHistory(up ? -1
-          : 1));
-      if (cmd == null) {
-        EventQueue.invokeLater(new Runnable() {
-          @Override
-          public void run() {
-            try {
-              hBar.setValue(0);
-            } catch (Throwable e) {
-              //
-            }
+  /**
+   * Recall command history.
+   * 
+   * @param up
+   *        - history up or down
+   * @param pageup
+   *        TODO
+   */
+  void recallCommand(boolean up, boolean pageup) {
+    String cmd = (pageup ? vwr.historyFind(
+        pageUpBuffer == null ? (pageUpBuffer = consoleDoc.getCommandString())
+            : pageUpBuffer,
+        up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
+    if (cmd == null) {
+      EventQueue.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            hBar.setValue(0);
+          } catch (Throwable e) {
+            //
           }
-        });
-        return;
-      }
-      boolean isError = false;
-      try {
-        if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
-          isError = true;
-          cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
         }
-        cmd = PT.trim(cmd, ";");
-        consoleDoc.replaceCommand(cmd, isError);
-      } catch (BadLocationException e) {
-        e.printStackTrace();
+      });
+      return;
+    }
+    boolean isError = false;
+    try {
+      if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
+        isError = true;
+        cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
       }
+      cmd = PT.trim(cmd, ";");
+      consoleDoc.replaceCommand(cmd, isError);
+    } catch (BadLocationException e) {
+      e.printStackTrace();
     }
+  }
 
-    synchronized void checkCommand() {
-      String strCommand = consoleDoc.getCommandString();
-      //System.out.println("checkCommand " + strCommand);
-      if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
-          || vwr.isScriptExecuting()
-          || vwr.getBooleanProperty("executionPaused"))
-        return;
-      checking = true;
-      Object res = vwr.scriptCheck(strCommand);
-      //System.out.println( res);
-      consoleDoc
-          .colorCommand(res instanceof String ? consoleDoc.attError
-              : consoleDoc.attUserInput);
-      checking = false;
-    }
+  synchronized void checkCommand() {
+    String strCommand = consoleDoc.getCommandString();
+    //System.out.println("checkCommand " + strCommand);
+    if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
+        || vwr.isScriptExecuting() || vwr.getBooleanProperty("executionPaused"))
+      return;
+    checking = true;
+    Object res = vwr.scriptCheck(strCommand);
+
+    //System.out.println( res);
+    consoleDoc.colorCommand(
+        res instanceof String ? consoleDoc.attError : consoleDoc.attUserInput);
+    checking = false;
+  }
 
   }
 
@@ -938,10 +943,11 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     private int offsetAfterPrompt; // only still needed for the insertString override and replaceCommand
 
     boolean isAtEnd() {
+      //system.out.println("isAtEnd " + consoleTextPane.getCaretPosition() + " " + getLength());
       return consoleTextPane.getCaretPosition() == getLength();
     }
 
-    /** 
+    /**
      * Removes all content of the script window, and add a new prompt.
      */
     void clearContent() {
@@ -954,14 +960,14 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
 
     void setPrompt() {
       try {
-        //System.out.println("AppConsole setting $ ");
+        //system.out.println("AppConsole setting $ ");
         super.insertString(getLength(), "$ ", attPrompt);
         setOffsetPositions();
-        //System.out.println("AppConsole caretPosition to  " + offsetAfterPrompt);
+        //system.out.println("AppConsole caretPosition to  " + offsetAfterPrompt);
 
         consoleTextPane.setCaretPosition(offsetAfterPrompt);
-        
-        //System.out.println("AppConsole caretPosition done ");
+
+        //system.out.println("AppConsole caretPosition done " + consoleTextPane.getCaret());
 
       } catch (BadLocationException e) {
         e.printStackTrace();
@@ -975,7 +981,7 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
         // after prompt should be immediately after $ otherwise tracks the end
         // of the line (and no command will be found) at least on Mac OS X it did.
         positionAfterPrompt = createPosition(offsetAfterPrompt - 1);
-        
+
         //System.out.println("appconsole " + offsetAfterPrompt + " " + positionBeforePrompt + " " + positionAfterPrompt + "\n>>" + this.getText(0,  getLength()) + "<<");
       } catch (BadLocationException e) {
         e.printStackTrace();
@@ -985,7 +991,8 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     void setNoPrompt() {
       try {
         offsetAfterPrompt = getLength();
-        positionAfterPrompt = positionBeforePrompt = createPosition(offsetAfterPrompt);
+        positionAfterPrompt = positionBeforePrompt = createPosition(
+            offsetAfterPrompt);
         consoleTextPane.setCaretPosition(offsetAfterPrompt);
       } catch (BadLocationException e) {
         e.printStackTrace();
@@ -1116,13 +1123,15 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
     }
 
     /**
-    * Replaces current command on script.
-    * 
-    * @param newCommand new command value
-    * @param isError    true to set error color  ends with #??
-    * 
-    * @throws BadLocationException
-    */
+     * Replaces current command on script.
+     * 
+     * @param newCommand
+     *        new command value
+     * @param isError
+     *        true to set error color ends with #??
+     * 
+     * @throws BadLocationException
+     */
     void replaceCommand(String newCommand, boolean isError)
         throws BadLocationException {
       if (positionAfterPrompt == positionBeforePrompt)
@@ -1135,19 +1144,17 @@ public class AppConsole extends JmolConsole implements EnterListener, JmolDropEd
       if (positionAfterPrompt == positionBeforePrompt)
         return;
       //System.out.println(offsetAfterPrompt + "  " + getLength() + " att is " + att);
-      setCharacterAttributes(offsetAfterPrompt,
-          getLength() - offsetAfterPrompt, att, true);
+      setCharacterAttributes(offsetAfterPrompt, getLength() - offsetAfterPrompt,
+          att, true);
     }
   }
 
   public void setStatusListener(JmolStatusListener myStatusListener) {
     this.statusListener = myStatusListener;
   }
-  
-  
+
 }
 
 interface EnterListener {
   public void enterPressed();
 }
-

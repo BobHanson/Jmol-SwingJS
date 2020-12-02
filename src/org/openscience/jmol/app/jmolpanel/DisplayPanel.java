@@ -388,7 +388,7 @@ public class DisplayPanel extends JPanel
       (timeTotal + timeCount / 2) / timeCount); 
     jmolPanel.setStatus(StatusBar.STATUS_TIME,
         (displaySpeed.equalsIgnoreCase("fps") ? fmt(1000 / timeLast) + "FPS : "
-            + fmt(1000 / timeAverage) + "FPS" : vwr.getP("_memory") + " Mb; "
+            + fmt(1000 / timeAverage) + "FPS" : (Viewer.isJS ? " " : vwr.getP("_memory") + " Mb; ")
             + fmt(timeLast) + "/" + timeAverage + " ms"));
   }
 

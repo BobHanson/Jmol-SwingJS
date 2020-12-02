@@ -506,7 +506,7 @@ public class Viewer extends JmolViewer
        *            if(self.Jmol) { jmol = Jmol; applet =
        *            Jmol._applets[this.htmlName.split("_object")[0]]; javaver =
        *            Jmol._version;
-       * 
+       *            applet && (applet._viewer = this);
        *            }
        * 
        * 
@@ -3508,7 +3508,7 @@ public class Viewer extends JmolViewer
    */
   @Override
   public void refresh(int mode, String strWhy) {
-
+   //System.out.println("Viewer refresh " + mode + " "+ strWhy);
     if (rm == null || !refreshing
         || mode == REFRESH_REPAINT_NO_MOTION_ONLY && getInMotion(true)
         || !isWebGL && mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
@@ -7509,10 +7509,12 @@ public class Viewer extends JmolViewer
         {
           for (int i = 0, n = isSwingJS ? 1 : 4; i < n
               && appConsole == null; i++) {
-            appConsole = (isApplet
-                ? (JmolAppConsoleInterface) Interface
-                    .getOption("console.AppletConsole", null, null)
-                : (JmolAppConsoleInterface) Interface.getInterface(
+            appConsole = (
+              //  isApplet
+              //  ? (JmolAppConsoleInterface) Interface
+              //      .getOption("console.AppletConsole", null, null)
+              //  : 
+                  (JmolAppConsoleInterface) Interface.getInterface(
                     "org.openscience.jmol.app.jmolpanel.console.AppConsole",
                     null, null));
             if (appConsole == null)
@@ -8347,7 +8349,7 @@ public class Viewer extends JmolViewer
     if (outputManager != null)
       return outputManager;
     return (outputManager = (OutputManager) Interface.getInterface(
-        "org.jmol.viewer.OutputManager" + (isJS ? "JS" : "Awt"), this, "file"))
+        "org.jmol.viewer.OutputManager" + (isJSNoAWT ? "JS" : "Awt"), this, "file"))
             .setViewer(this, privateKey);
   }
 
@@ -10102,6 +10104,17 @@ public class Viewer extends JmolViewer
 
   public String getInchi(BS atoms, String options) {
     return this.apiPlatform.getInChI().getInchi(this, atoms, options);
+  }
+
+
+  private int consoleFontScale = 1;
+  
+  public int getConsoleFontScale() {
+    return consoleFontScale;
+  }
+
+  public void setConsoleFontScale(int scale) {
+    consoleFontScale = scale;
   }
 
 }
