@@ -88,7 +88,7 @@ class ScriptDelayThread extends JmolThread {
         break;
       case FINISH:
         if (doPopPush)
-          vwr.pushHoldRepaintWhy("delay FINISH");
+          vwr.pushHoldRepaintWhy("scriptdelaythread FINISH");
         if (isPauseDelay)
           eval.notifyResumeStatus();
         resumeEval();

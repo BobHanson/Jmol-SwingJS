@@ -399,6 +399,7 @@ public class ScriptManager implements JmolScriptManager {
       return "script processing stepped";
     if (checkHalt(str, isInsert))
       return "script execution halted";
+    wasmHack(strScript);
     return null;
   }
 
@@ -514,9 +515,18 @@ public class ScriptManager implements JmolScriptManager {
     if (strScript.indexOf(")") == 0 || strScript.indexOf("!") == 0) // history
       // disabled
       strScript = strScript.substring(1);
+    strScript = wasmHack(strScript);
     ScriptContext sc = newScriptEvaluator().checkScriptSilent(strScript);
     return (returnContext || sc.errorMessage == null ? sc : sc.errorMessage);
   }
+  
+  public String wasmHack(String cmd) {
+    if (Viewer.isJS && (cmd.indexOf("find('inchi')") >= 0 || cmd.indexOf("find(\"inchi\")") >= 0)) {
+      vwr.getInchi(null, null);
+    }
+    return cmd;
+  }
+
 
   //////////////////////// open file async ///////////////////////
 
