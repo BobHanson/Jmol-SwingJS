@@ -242,6 +242,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     this.splash = splash;
     this.jmolApp = jmolApp;
     this.frame = frame;
+    if (frame != null && frame.getName() == null)
+      frame.setName("JmolApp");
     this.startupWidth = startupWidth;
     this.startupHeight = startupHeight;
     historyFile = jmolApp.historyFile;

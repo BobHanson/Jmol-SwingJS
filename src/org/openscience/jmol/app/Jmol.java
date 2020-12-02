@@ -41,6 +41,11 @@ import org.openscience.jmol.app.jmolpanel.Splash;
 import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
+/**
+ * This application is produced in both Java and JavaScript using 
+ * java2script/SwingJS.
+
+ */
 public class Jmol extends JmolPanel {
 
   static {
@@ -53,10 +58,6 @@ public class Jmol extends JmolPanel {
     
   }
   
-  static boolean isSwingJS = /**@j2sNative true||*/false;
-
-  
-
   public Jmol(JmolApp jmolApp, Splash splash, JFrame frame, Jmol parent, int startupWidth,
       int startupHeight, Map<String, Object> vwrOptions, Point loc) {
     super(jmolApp, splash, frame, parent, startupWidth, startupHeight, vwrOptions, loc);

@@ -24,11 +24,8 @@
 
 package org.jmol.console;
 
-import java.awt.event.KeyEvent;
 import java.util.Hashtable;
 import java.util.Map;
-
-import javajs.util.PT;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolAppConsoleInterface;
@@ -40,6 +37,8 @@ import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.PT;
 
 public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCallbackListener {
   
@@ -419,54 +418,6 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     String cmd = vwr.getSetHistory(up ? -1 : 1);
     if (cmd != null)
       input.setText(PT.escUnicode(cmd));
-  }
-  
-  /**
-   * 
-   * @param kcode
-   * @param kid
-   * @param isControlDown
-   * @return  1 = consume; 2 = super.process; 3 = both
-   */
-  protected int processKey(int kcode, int kid, boolean isControlDown) {
-    int mode = 0;
-    switch (kid) {
-    case KeyEvent.KEY_PRESSED:
-      switch (kcode) {
-      case KeyEvent.VK_TAB:
-        String s = input.getText();
-        if (s.endsWith("\n") || s.endsWith("\t"))
-          return 0;
-        mode = 1;
-        if (input.getCaretPosition() == s.length()) {
-          String cmd = completeCommand(s);
-          if (cmd != null)
-            input.setText(PT.escUnicode(cmd).replace('\t',' '));
-          nTab++;
-          return mode;
-        }
-        break;
-      case KeyEvent.VK_ESCAPE:
-        mode = 1;
-        input.setText("");
-        break;
-      }
-      nTab = 0;
-      if (kcode == KeyEvent.VK_ENTER && !isControlDown) {
-        execute(null);
-        return mode;
-      }
-      if (kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN) {
-        recallCommand(kcode == KeyEvent.VK_UP);
-        return mode;
-      }
-      break;
-    case KeyEvent.KEY_RELEASED:
-      if (kcode == KeyEvent.VK_ENTER && !isControlDown)
-        return mode;
-      break;
-    }
-    return mode | 2;
   }
   
   /**

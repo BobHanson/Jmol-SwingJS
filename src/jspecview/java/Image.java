@@ -231,7 +231,8 @@ class Image {
   }
 
   static void flush(Object image) {
-    ((java.awt.Image) image).flush();
+    if (!JSViewer.isJS)
+      ((java.awt.Image) image).flush();
   }
 
   static void disposeGraphics(Object graphicForText) {

@@ -135,7 +135,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       data[0] = type.toString();
       jmolPanel.sendNioSyncRequest(data, JmolPanel.OUTSOCKET, null);
     }
-    if (jmolPanel.plugins.isEmpty())
+    if (!jmolPanel.plugins.isEmpty())
       for (JmolPlugin p : jmolPanel.plugins.values())
         p.notifyCallback(type, data);
     String strInfo = (data == null || data[1] == null ? null : data[1]

@@ -42,7 +42,7 @@ public class Platform implements GenericPlatform {
 
   @Override
   public boolean isSingleThreaded() {
-    return false;
+    return Viewer.isJS;
   }
 
   
@@ -171,7 +171,8 @@ public class Platform implements GenericPlatform {
 
   @Override
   public void flushImage(Object imagePixelBuffer) {
-    Image.flush(imagePixelBuffer);
+    if (!Viewer.isJS)
+      Image.flush(imagePixelBuffer);
   }
 
   @Override
