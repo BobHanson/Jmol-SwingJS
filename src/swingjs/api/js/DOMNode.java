@@ -13,6 +13,11 @@ import java.awt.Rectangle;
  */
 public interface DOMNode {
 
+	public interface Promise {
+		public void then(JSFunction success, JSFunction fail);
+	}
+
+
 	public static JQuery jQuery = /** @j2sNative jQuery.$ || (jQuery.$ = jQuery) || */null;
 
 	// "abstract" in the sense that these are the exact calls to JavaScript
@@ -85,7 +90,7 @@ public interface DOMNode {
 	}
 
 	public static DOMNode setZ(DOMNode node, int z) {
-		return setStyles(node, "z-index", "" + z);
+		return setStyle(node, "z-index", "" + z);
 	}
 
 	public static Object getAttr(Object node, String attr) {
@@ -161,12 +166,22 @@ public interface DOMNode {
 		return node;
 	}
 
-	public static DOMNode setStyles(DOMNode node, String... attr) {
+	public static DOMNode setStyle(DOMNode node, String attr, String val) {
 		/**
 		 * @j2sNative
 		 * 
-		 *            if (node) for (var i = 0; i < attr.length;) {
-		 *             node.style[attr[i++]] = attr[i++];
+		 *            node && (node.style[attr] = val);
+		 * 
+		 */
+		return node;
+	}
+
+	public static DOMNode setStyles(DOMNode node, String... av) {
+		/**
+		 * @j2sNative
+		 * 
+		 *            if (node) for (var i = 0; i < av.length;) {
+		 *             node.style[av[i++]] = av[i++];
 		 *             }
 		 * 
 		 */
@@ -178,17 +193,15 @@ public interface DOMNode {
 	}
 
 	public static DOMNode setPositionAbsolute(DOMNode node) {
-		return DOMNode.setStyles(node, "position", "absolute");
+		return DOMNode.setStyle(node, "position", "absolute");
 	}
 
 	public static void setVisible(DOMNode node, boolean visible) {
-		setStyles(node, "display", visible ? "block" : "none");
+		setStyle(node, "display", visible ? "block" : "none");
 	}
 
 	public static DOMNode setTopLeftAbsolute(DOMNode node, int top, int left) {
-		DOMNode.setStyles(node, "top", top + "px");
-		DOMNode.setStyles(node, "left", left + "px");
-		return DOMNode.setStyles(node, "position", "absolute");
+		return DOMNode.setStyles(node, "top", top + "px", "left", left + "px", "position", "absolute");
 	}
 
 	public static void addHorizontalGap(DOMNode domNode, int gap) {

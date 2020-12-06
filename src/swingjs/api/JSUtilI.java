@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -85,16 +87,16 @@ public interface JSUtilI {
 	 * Get an attribute applet.foo for the applet found using getApplet(null).
 	 * 
 	 * @param key
-	 * @return value
+	 * @return
 	 */
 	Object getAppletAttribute(String key);
 
 
 	/**
-	 * Get an attribute of applet's Info map for the applet found using
-	 * getApplet(null). That is, applet.__Info[InfoKey].
+	 * Get the applet's __Info map or an attribute of that map for the applet found using
+	 * getApplet(null). That is, applet.__Info or applet.__Info[InfoKey].
 	 * 
-	 * @param infoKey
+	 * @param infoKey if null, return the full __Info map
 	 */
 	Object getAppletInfo(String infoKey);
 
@@ -120,7 +122,7 @@ public interface JSUtilI {
 	 * i.e. with id frame.getName() + "-div".
 	 * 
 	 * @param frame
-	 * @param type  "node" or "dim"
+	 * @param type "name", "node", "init", "dim", or any DOM attribute, such as "id"
 	 * @return
 	 */
 	Object getEmbeddedAttribute(Component frame, String type);
@@ -329,11 +331,39 @@ public interface JSUtilI {
 	 */
 	void setUIEnabled(JComponent jc, boolean enabled);
 
-  /**
-   * Play an audio
-   * @param buffer
-   * @param format a javax.sound.sampled.AudioFormat
-   * @throws Exception 
-   */
-  void playAudio(byte[] buffer, Object format) throws Exception;
+
+	/**
+	 * Play an audio
+	 * @param buffer
+	 * @param format a javax.sound.sampled.AudioFormat
+	 * @throws Exception 
+	 */
+	void playAudio(byte[] buffer, Object format) throws Exception;
+
+	/**
+	 * For either an applet or an application, get the ORIGINAL __Info as a Map that
+	 * has a full set up lower-case keys along with whatever non-all-lower-case keys
+	 * provided at start-up.
+	 * 
+	 * @return
+	 */
+	Map<String, Object> getAppletInfoAsMap();
+
+	
+	/**
+	 * Set the HTML5 applet.getApp() method to this object, for example, This will
+	 * be the method that page developers use that is similar to the original Java
+	 * applet object that was accessed via LiveConnect.
+	 * 
+	 * @param app
+	 */
+	void setAppClass(Object app);
+
+	/** As of v. 73, not available in Firefox -- will alert the user and return null
+	 * 
+	 * @param whenDone  method to capture return asynchronously, returning null only if the 
+	 * browser does not allow reading the clipboard.
+	 */
+	void getClipboardText(Consumer<String> whenDone);
+
 }

@@ -33,16 +33,18 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.PT;
+import swingjs.api.JSUtilI;
 
 import javax.swing.UIManager;
 
-import netscape.javascript.JSObject;
+import netscape.javascript.JSObject; // Java applet only
 
 import org.jmol.awt.FileDropper;
 import org.jmol.c.CBK;
 import org.jmol.util.GenericApplet;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
+import org.jmol.viewer.Viewer;
 
 /*
  * This applet is produced in both Java and JavaScript using 
@@ -159,11 +161,26 @@ public class Jmol extends GenericApplet implements WrappedApplet {
     /**
      *  @j2sNative
      *  
+     *  
      *  self.Jmol || (Jmol = self.J2S); 
      *  Jmol._isSwingJS = true; Jmol._isAWTjs = true;
      */
     
   }
+
+  public static JSUtilI jsutil;
+
+  static {
+    try {
+      if (isJS) {
+        jsutil = ((JSUtilI) Class.forName("swingjs.JSUtil").newInstance());
+      }
+
+    } catch (Exception e) {
+      System.err.println("Assets could not create swinjs.JSUtil instance");
+    }
+  }
+
 
   public Jmol() {
     //
@@ -234,81 +251,90 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   @Override
   protected void initOptions() {
-    String ms = getJmolParameter("mayscript");
-    mayScript = (ms != null) && (!ms.equalsIgnoreCase("false"));
-    // using JApplet calls for older installations
-    URL base = applet.getDocumentBase();
-    documentBase = (base == null ? getValue("documentBase", null) : base
-        .toString());
-    base = applet.getCodeBase();
-    codeBase = (base == null ? getValue("codePath", getValue("codeBase", null))
-        : base.toString());
-    if (codeBase != null && !codeBase.endsWith("/"))
-      codeBase += "/";
-    vwrOptions = new Hashtable<String, Object>();
-    isSigned |= isJNLP || getBooleanValue("signed", false);
-    if (isSigned)
-      addValue(vwrOptions, null, "signedApplet", Boolean.TRUE);
-    if (getBooleanValue("useCommandThread", isSigned))
-      addValue(vwrOptions, null, "useCommandThread", Boolean.TRUE);
-    String options = "";
-    if (isSigned && getBooleanValue("multiTouchSparshUI-simulated", false))
-      options += "-multitouch-sparshui-simulated";
-    else if (isSigned && getBooleanValue("multiTouchSparshUI", false)) // true for testing JmolAppletSignedMT.jar
-      options += "-multitouch-sparshui";
-    addValue(vwrOptions, null, "options", options);
-    addValue(vwrOptions, null, "display", applet);
-    addValue(vwrOptions, null, "fullName", fullName);
-    addValue(vwrOptions, null, "documentBase", documentBase);
-    addValue(vwrOptions, null, "codePath", codeBase);
-    if (getBooleanValue("noScripting", false))
-      addValue(vwrOptions, null, "noScripting", Boolean.TRUE);
-    if (isJNLP)
-      addValue(vwrOptions, null, "isJNLP", Boolean.TRUE);
-    addValue(vwrOptions, "MaximumSize", "maximumSize", null);
-    addValue(vwrOptions, "JmolAppletProxy", "appletProxy", null);
-    addValue(vwrOptions, "documentLocation", null, null);
-    try {
-      UIManager
-          .setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-    } catch (Throwable exc) {
-      System.err.println("Error loading L&F: " + exc);
-    }
-    if (Logger.debugging) {
-      Logger.debug("checking for jsoWindow mayScript=" + mayScript);
-    }
-    if (mayScript) {
-      mayScript = haveDocumentAccess = false;
-      JSObject jsoWindow = null;
-      JSObject jsoDocument = null;
+//    if (isJS) {
+//      super.initOptions();
+//      return;
+//    }
+//    /** @j2sIgnore */
+    {
+
+      String ms = getJmolParameter("mayscript");
+      mayScript = (ms != null) && (!ms.equalsIgnoreCase("false"));
+      // using JApplet calls for older installations
+      URL base = applet.getDocumentBase();
+      documentBase = (base == null ? getValue("documentBase", null)
+          : base.toString());
+      base = applet.getCodeBase();
+      codeBase = (base == null
+          ? getValue("codePath", getValue("codeBase", null))
+          : base.toString());
+      if (codeBase != null && !codeBase.endsWith("/"))
+        codeBase += "/";
+      vwrOptions = new Hashtable<String, Object>();
+      isSigned |= isJNLP || getBooleanValue("signed", false);
+      if (isSigned)
+        addValue(vwrOptions, null, "signedApplet", Boolean.TRUE);
+      if (getBooleanValue("useCommandThread", isSigned))
+        addValue(vwrOptions, null, "useCommandThread", Boolean.TRUE);
+      String options = "";
+      if (isSigned && getBooleanValue("multiTouchSparshUI-simulated", false))
+        options += "-multitouch-sparshui-simulated";
+      else if (isSigned && getBooleanValue("multiTouchSparshUI", false)) // true for testing JmolAppletSignedMT.jar
+        options += "-multitouch-sparshui";
+      addValue(vwrOptions, null, "options", options);
+      addValue(vwrOptions, null, "display", applet);
+      addValue(vwrOptions, null, "fullName", fullName);
+      addValue(vwrOptions, null, "documentBase", documentBase);
+      addValue(vwrOptions, null, "codePath", codeBase);
+      if (getBooleanValue("noScripting", false))
+        addValue(vwrOptions, null, "noScripting", Boolean.TRUE);
+      if (isJNLP)
+        addValue(vwrOptions, null, "isJNLP", Boolean.TRUE);
+      addValue(vwrOptions, "MaximumSize", "maximumSize", null);
+      addValue(vwrOptions, "JmolAppletProxy", "appletProxy", null);
+      addValue(vwrOptions, "documentLocation", null, null);
       try {
-        jsoWindow = JSObject.getWindow(applet);
-        if (Logger.debugging) {
-          Logger.debug("jsoWindow=" + jsoWindow);
-        }
-        if (jsoWindow == null) {
-          Logger
-              .error("jsoWindow returned null ... no JavaScript callbacks :-(");
-        } else {
-          mayScript = true;
-        }
-        jsoDocument = (JSObject) jsoWindow.getMember("document");
-        if (jsoDocument == null) {
-          Logger
-              .error("jsoDocument returned null ... no DOM manipulations :-(");
-        } else {
-          haveDocumentAccess = true;
-        }
-      } catch (Exception e) {
-        // ignore
+        UIManager
+            .setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+      } catch (Throwable exc) {
+        System.err.println("Error loading L&F: " + exc);
       }
       if (Logger.debugging) {
-        Logger.debug("jsoWindow:" + jsoWindow + " jsoDocument:" + jsoDocument
-            + " mayScript:" + mayScript + " haveDocumentAccess:"
-            + haveDocumentAccess);
+        Logger.debug("checking for jsoWindow mayScript=" + mayScript);
+      }
+      if (mayScript) {
+        mayScript = haveDocumentAccess = false;
+        JSObject jsoWindow = null;
+        JSObject jsoDocument = null;
+        try {
+          jsoWindow = JSObject.getWindow(applet);
+          if (Logger.debugging) {
+            Logger.debug("jsoWindow=" + jsoWindow);
+          }
+          if (jsoWindow == null) {
+            Logger.error(
+                "jsoWindow returned null ... no JavaScript callbacks :-(");
+          } else {
+            mayScript = true;
+          }
+          jsoDocument = (JSObject) jsoWindow.getMember("document");
+          if (jsoDocument == null) {
+            Logger.error(
+                "jsoDocument returned null ... no DOM manipulations :-(");
+          } else {
+            haveDocumentAccess = true;
+          }
+        } catch (Exception e) {
+          // ignore
+        }
+        if (Logger.debugging) {
+          Logger.debug("jsoWindow:" + jsoWindow + " jsoDocument:" + jsoDocument
+              + " mayScript:" + mayScript + " haveDocumentAccess:"
+              + haveDocumentAccess);
+        }
+        cleanRegistry();
       }
     }
-    cleanRegistry();
   }
 
   private void addValue(Map<String, Object> info, String key, String putKey,
@@ -347,7 +373,15 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   }
 
+  /**
+   * From back in the good odl days when applets could talk across tabs to each other!
+   * 
+   * @j2sIgnore
+   */
+  @Deprecated
   synchronized private static void cleanRegistry() {
+    if (isJS)
+      return;
     Applet app = null;
     boolean closed = true;
     for (Map.Entry<String, Object> entry : htRegistry.entrySet()) {
@@ -383,9 +417,14 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   @Override
   protected void doSendJsTextStatus(String message) {
+    if (isJS) {
+      super.doSendJsTextStatus(message);
+      return;
+    }
     if (!haveDocumentAccess || statusForm == null || statusText == null)
       return;
     try {
+
       JSObject jsoWindow = JSObject.getWindow(applet);
       JSObject jsoDocument = (JSObject) jsoWindow.getMember("document");
       JSObject jsoForm = (JSObject) jsoDocument.getMember(statusForm);
@@ -401,24 +440,30 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   @Override
   protected void doSendJsTextareaStatus(String message) {
-    if (!haveDocumentAccess || statusForm == null || statusTextarea == null)
+    if (isJS) {
+      super.doSendJsTextareaStatus(message);
       return;
-    try {
-      JSObject jsoWindow = JSObject.getWindow(applet);
-      JSObject jsoDocument = (JSObject) jsoWindow.getMember("document");
-      JSObject jsoForm = (JSObject) jsoDocument.getMember(statusForm);
-      if (statusTextarea != null) {
-        JSObject jsoTextarea = (JSObject) jsoForm.getMember(statusTextarea);
-        if (message == null) {
-          jsoTextarea.setMember("value", "");
-        } else {
-          String info = (String) jsoTextarea.getMember("value");
-          jsoTextarea.setMember("value", info + "\n" + message);
+    } else /** @j2sIgnore */
+    {
+      if (!haveDocumentAccess || statusForm == null || statusTextarea == null)
+        return;
+      try {
+        JSObject jsoWindow = JSObject.getWindow(applet);
+        JSObject jsoDocument = (JSObject) jsoWindow.getMember("document");
+        JSObject jsoForm = (JSObject) jsoDocument.getMember(statusForm);
+        if (statusTextarea != null) {
+          JSObject jsoTextarea = (JSObject) jsoForm.getMember(statusTextarea);
+          if (message == null) {
+            jsoTextarea.setMember("value", "");
+          } else {
+            String info = (String) jsoTextarea.getMember("value");
+            jsoTextarea.setMember("value", info + "\n" + message);
+          }
         }
+      } catch (Exception e) {
+        Logger.error("error indicating status at document." + statusForm + "."
+            + statusTextarea + ":" + e.toString());
       }
-    } catch (Exception e) {
-      Logger.error("error indicating status at document." + statusForm + "."
-          + statusTextarea + ":" + e.toString());
     }
   }
 
@@ -535,40 +580,50 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   @Override
   public int[] resizeInnerPanel(String data) {
+    if (isJS)
+      super.resizeInnerPanel(data);
     return null;
   }
 
   @Override
-  protected String doSendCallback(String callback, Object[] data, String strInfo) {
-    if (callback == null) {
-      // from reading of the DOM by the Java applet only
-      getJsObjectInfo(data);
-      return null;
-    }
-    JSObject jso = JSObject.getWindow(applet);
-    if (callback.equals("alert")) {
-      jso.call(callback, new Object[] { strInfo });
-      return "";
-    }
-    if (callback.length() == 0)
-      return "";
-    //System.out.println(callback);
-    if (callback.indexOf(".") > 0) {
-      String[] mods = PT.split(callback, ".");
-      //System.out.println(Escape.eAS(mods, true));
-      for (int i = 0; i < mods.length - 1; i++) {
-        //System.out.println(jso);
-        jso = (JSObject) jso.getMember(mods[i]);
-        //System.out.println(jso);
+  protected String doSendCallback(String callback, Object[] data,
+                                  String strInfo) {
+    if (isJS) {
+      return super.doSendCallback(callback, data, strInfo);
+    } else /** @j2sIgnore */
+    {
+      if (callback == null) {
+        // from reading of the DOM by the Java applet only
+        getJsObjectInfo(data);
+        return null;
       }
-      callback = mods[mods.length - 1];
+      JSObject jso = JSObject.getWindow(applet);
+      if (callback.equals("alert")) {
+        jso.call(callback, new Object[] { strInfo });
+        return "";
+      }
+      if (callback.length() == 0)
+        return "";
+      //System.out.println(callback);
+      if (callback.indexOf(".") > 0) {
+        String[] mods = PT.split(callback, ".");
+        //System.out.println(Escape.eAS(mods, true));
+        for (int i = 0; i < mods.length - 1; i++) {
+          //System.out.println(jso);
+          jso = (JSObject) jso.getMember(mods[i]);
+          //System.out.println(jso);
+        }
+        callback = mods[mods.length - 1];
+      }
+      //System.out.println("OK -- calling " + jso + " " + callback + " " + data);
+      return "" + jso.call(callback, data);
     }
-    //System.out.println("OK -- calling " + jso + " " + callback + " " + data);
-    return "" + jso.call(callback, data);
   }
   
   /**
    * probably never used -- only by Java applet reading directly from the DOM in an XHTML document.
+   * 
+   * @j2sIgnore
    * 
    * @param data
    */
@@ -600,45 +655,53 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   @Override
   protected String doEval(String strEval) {
-    JSObject jsoWindow = null;
-    if (allowJSEval == null) {
-      try {
-        jsoDocument = (JSObject) JSObject.getWindow(applet).getMember(
-            "document");
+    if (isJS) {
+      return super.doEval(strEval);
+    } else /** @j2sIgnore */
+    {
+      JSObject jsoWindow = null;
+      if (allowJSEval == null) {
         try {
-          if (((Boolean) jsoDocument.eval("!!Jmol._noEval")).booleanValue())
-            allowJSEval = Boolean.FALSE;
-        } catch (Exception e) {
+          jsoDocument = (JSObject) JSObject.getWindow(applet)
+              .getMember("document");
           try {
-            if (((Boolean) jsoDocument.eval("!!_jmol.noEval")).booleanValue())
+            if (((Boolean) jsoDocument.eval("!!Jmol._noEval")).booleanValue())
               allowJSEval = Boolean.FALSE;
-          } catch (Exception e2) {
-            allowJSEval = Boolean.FALSE;
-            Logger.error("# no Jmol or _jmol object in evaluating " + strEval
-                + ":" + e.toString());
+          } catch (Exception e) {
+            try {
+              if (((Boolean) jsoDocument.eval("!!_jmol.noEval")).booleanValue())
+                allowJSEval = Boolean.FALSE;
+            } catch (Exception e2) {
+              allowJSEval = Boolean.FALSE;
+              Logger.error("# no Jmol or _jmol object in evaluating " + strEval
+                  + ":" + e.toString());
+            }
           }
+        } catch (Exception e) {
+          if (Logger.debugging)
+            Logger.debug(" error setting jsoWindow or jsoDocument:" + jsoWindow
+                + ", " + jsoDocument);
+          allowJSEval = Boolean.FALSE;
         }
-      } catch (Exception e) {
-        if (Logger.debugging)
-          Logger.debug(" error setting jsoWindow or jsoDocument:" + jsoWindow
-              + ", " + jsoDocument);
-        allowJSEval = Boolean.FALSE;
       }
-    }
-    if (allowJSEval == Boolean.FALSE) {
-      jsoDocument = null;
-      return "NO EVAL ALLOWED";
-    }
-    try {
-      return "" + jsoDocument.eval(strEval);
-    } catch (Exception e) {
-      Logger.error("# error evaluating " + strEval + ":" + e.toString());
-      return "";
+      if (allowJSEval == Boolean.FALSE) {
+        jsoDocument = null;
+        return "NO EVAL ALLOWED";
+      }
+      try {
+        return "" + jsoDocument.eval(strEval);
+      } catch (Exception e) {
+        Logger.error("# error evaluating " + strEval + ":" + e.toString());
+        return "";
+      }
     }
   }
 
   @Override
   public float[][] doFunctionXY(String functionName, int nX, int nY) {
+    if (isJS) {
+      return super.doFunctionXY(functionName, nX, nY);
+    } else /** @j2sIgnore */{
     /*three options:
      * 
      *  nX > 0  and  nY > 0        return one at a time, with (slow) individual function calls
@@ -685,27 +748,34 @@ public class Jmol extends GenericApplet implements WrappedApplet {
     // for (int j = 0; j < nY; j++)
     //System.out.println("i j fxy " + i + " " + j + " " + fxy[i][j]);
     return fxy;
+    }
   }
 
   @Override
-  public float[][][] doFunctionXYZ(String functionName, int nX, int nY, int nZ) {
-    float[][][] fxyz = new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
-    if (!mayScript || nX == 0 || nY == 0 || nZ == 0)
+  public float[][][] doFunctionXYZ(String functionName, int nX, int nY,
+                                   int nZ) {
+    if (isJS) {
+      return super.doFunctionXYZ(functionName, nX, nY, nZ);
+    } else /** @j2sIgnore */
+    {
+      float[][][] fxyz = new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
+      if (!mayScript || nX == 0 || nY == 0 || nZ == 0)
+        return fxyz;
+      try {
+        JSObject jsoWindow = JSObject.getWindow(applet);
+        jsoWindow.call(functionName,
+            new Object[] { htmlName, Integer.valueOf(nX), Integer.valueOf(nY),
+                Integer.valueOf(nZ), fxyz });
+      } catch (Exception e) {
+        Logger.error("Exception " + e.getMessage() + " for " + functionName
+            + " with nX, nY, nZ: " + nX + " " + nY + " " + nZ);
+      }
+      // for (int i = 0; i < nX; i++)
+      // for (int j = 0; j < nY; j++)
+      // for (int k = 0; k < nZ; k++)
+      //System.out.println("i j k fxyz " + i + " " + j + " " + k + " " + fxyz[i][j][k]);
       return fxyz;
-    try {
-      JSObject jsoWindow = JSObject.getWindow(applet);
-      jsoWindow
-          .call(functionName, new Object[] { htmlName, Integer.valueOf(nX),
-              Integer.valueOf(nY), Integer.valueOf(nZ), fxyz });
-    } catch (Exception e) {
-      Logger.error("Exception " + e.getMessage() + " for " + functionName
-          + " with nX, nY, nZ: " + nX + " " + nY + " " + nZ);
     }
-    // for (int i = 0; i < nX; i++)
-    // for (int j = 0; j < nY; j++)
-    // for (int k = 0; k < nZ; k++)
-    //System.out.println("i j k fxyz " + i + " " + j + " " + k + " " + fxyz[i][j][k]);
-    return fxyz;
   }
 
   @Override

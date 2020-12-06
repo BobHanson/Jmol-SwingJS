@@ -107,8 +107,10 @@ public class AppletWrapper extends JApplet {
     this.preloadClassNames = preloadClassNames;
     needToCompleteInitialization = true;
     isSigned = false;
-    if (/** @j2sNative false && */
-    true)
+    if (/** @j2sNative true || */
+    false) {
+    //  isSigned = true;
+    } else {
       try {
         String imagePath = ""
             + (getClass().getClassLoader().getResource(preloadImageName));
@@ -117,6 +119,7 @@ public class AppletWrapper extends JApplet {
       } catch (Exception e) {
         Logger.error("isSigned false: " + e);
       }
+    }
   }
 
   public boolean isSigned() {

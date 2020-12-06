@@ -3,7 +3,6 @@ package swingjs.api.js;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
-import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -49,10 +48,6 @@ import swingjs.api.JSUtilI;
  *
  */
 public interface HTML5Video extends DOMNode {
-
-	public interface Promise {
-
-	}
 
 	final static String[] eventTypes = new String[] { "audioprocess", // The input buffer of a ScriptProcessorNode is
 																		// ready to be processed.
@@ -128,6 +123,10 @@ public interface HTML5Video extends DOMNode {
 	public static double getCurrentTime(HTML5Video v) {
 		return /** @j2sNative v.currentTime|| */
 		0;
+	}
+
+	public static String getErrorMessage(HTML5Video v) {
+		return /** @j2sNative v.error && v.error.message || */null;
 	}
 
 	public static Dimension getSize(HTML5Video v) {
@@ -214,7 +213,7 @@ public interface HTML5Video extends DOMNode {
 	 * @param listener
 	 * @param events   array of events to listen to or null to listen on all video
 	 *                 element event types
-	 * @return an array of event/listener pairs that can be used for removal.
+	 * @return an array of event/listener pairs that can be used for removal. If null, all events.
 	 */
 	public static Object[] addActionListener(HTML5Video jsvideo, ActionListener listener, String... events) {
 		if (events == null || events.length == 0)
@@ -226,7 +225,7 @@ public interface HTML5Video extends DOMNode {
 			public Void apply(Object jsevent) {
 				String name = (/** @j2sNative jsevent.type || */
 				"?");
-				System.out.println("HTML5Video " + name);
+				System.out.println("HTML5Video " + (/** @j2sNative jsevent.target.id || */null) + " " + name);
 				ActionEvent e = new ActionEvent(new Object[] { jsvideo, jsevent }, 12345, name,
 						System.currentTimeMillis(), 0);
 				listener.actionPerformed(e);
@@ -303,14 +302,16 @@ public interface HTML5Video extends DOMNode {
 	}
 
 	/**
-	 * Create a dialog that includes rudimentary controls. Optional maxWidth allows image downscaling by factors of two.
+	 * Create a dialog that includes rudimentary controls. Optional maxWidth allows
+	 * image downscaling by factors of two.
 	 * 
 	 * @param parent
-	 * @param source 
+	 * @param source
 	 * @param maxWidth
 	 * @return
 	 */
-	public static JDialog createDialog(Frame parent, Object source, int maxWidth, Function<HTML5Video, Void> whenReady) {
+	public static JDialog createDialog(Frame parent, Object source, int maxWidth,
+			Function<HTML5Video, Void> whenReady) {
 		JDialog dialog = new JDialog(parent);
 		Container p = dialog.getContentPane();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -325,7 +326,7 @@ public interface HTML5Video extends DOMNode {
 		dialog.setVisible(true);
 		dialog.setVisible(false);
 		HTML5Video jsvideo = (HTML5Video) label.getClientProperty("jsvideo");
-		HTML5Video.addActionListener(jsvideo, new ActionListener() {
+		Object[] j2sListener = HTML5Video.addActionListener(jsvideo, new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -344,13 +345,15 @@ public interface HTML5Video extends DOMNode {
 //				dialog.setVisible(false);
 				if (whenReady != null)
 					whenReady.apply(jsvideo);
+				HTML5Video.removeActionListener(jsvideo, (Object[]) HTML5Video.getProperty(jsvideo, "j2sListener"));
 			}
-			
+
 		}, "canplaythrough");
-		HTML5Video.setCurrentTime(jsvideo,  0);
+		HTML5Video.setProperty(jsvideo, "j2sListener", j2sListener);
+		HTML5Video.setCurrentTime(jsvideo, 0);
 		return dialog;
 	}
-
+	
 	static JPanel getControls(JLabel label) {
 
 		JPanel controls = new JPanel();

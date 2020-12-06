@@ -29,7 +29,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   protected static Map<String, Object> htRegistry;
 
-  protected boolean isJS;
+  protected static boolean isJS = /** @j2sNative true || */false;
 
   private final static int SCRIPT_CHECK = 0;
   private final static int SCRIPT_WAIT = 1;
@@ -66,30 +66,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   private String syncId;
   private SB outputBuffer;
 
-  // initialization
-  abstract protected void initOptions();
-
-  abstract protected String getJmolParameter(String name);
-
-  // callback implementations
-  abstract protected String doEval(String strEval); // in JavaScript, this will be an Object, Number, String, etc.
-
-  abstract protected float[][] doFunctionXY(String functionName, int nX, int nY);
-
-  abstract protected float[][][] doFunctionXYZ(String functionName, int nX,
-                                               int nY, int nZ);
-
-  abstract protected String doSendCallback(String callback, Object[] data,
-                                           String strInfo);
-
-  abstract protected void doSendJsTextareaStatus(String strInfo);
-
-  abstract protected void doSendJsTextStatus(String message);
-
-  abstract protected void doShowDocument(URL url);
-
-  abstract protected void doShowStatus(String errorMsg);
-  
   protected void init(Object applet) {
     callbacks = new Hashtable<CBK, String>();
     if (htRegistry == null)
@@ -948,4 +924,262 @@ public abstract class GenericApplet implements JmolAppletInterface,
   public void notifyAudioEnded(Object htParams) {
     viewer.sm.notifyAudioStatus((Map<String, Object>) htParams);
   }
+  
+  protected Map<String, Object> htParams;
+
+  protected void setJSOptions(Map<String, Object> vwrOptions) {
+    htParams = new Hashtable<String, Object>();
+    if (vwrOptions == null)
+      vwrOptions = new Hashtable<String, Object>();
+    this.vwrOptions = vwrOptions;
+    for (Map.Entry<String, Object> entry : vwrOptions.entrySet())
+      htParams.put(entry.getKey().toLowerCase(), entry.getValue());
+    documentBase = "" + vwrOptions.get("documentBase");
+    codeBase = "" + vwrOptions.get("codePath");
+  }
+
+  protected void initOptions() {
+    vwrOptions.remove("debug");
+    vwrOptions.put("fullName", fullName);
+    haveDocumentAccess = "true".equalsIgnoreCase(""
+        + getValue("allowjavascript", "true"));
+    mayScript = true;
+  }
+
+  protected String getJmolParameter(String paramName) {
+    Object o = htParams.get(paramName.toLowerCase());
+    return (o == null ? null : "" + o);
+  }
+
+  protected void doSendJsTextStatus(String message) {
+    System.out.println(message);
+    // not implemented
+  }
+
+  protected void doSendJsTextareaStatus(String message) {
+    System.out.println(message);
+    // not implemented
+  }
+
+  protected float[][] doFunctionXY(String functionName, int nX, int nY) {
+    /*three options:
+     * 
+     *  nX > 0  and  nY > 0        return one at a time, with (slow) individual function calls
+     *  nX < 0  and  nY > 0        return a string that can be parsed to give the list of values
+     *  nX < 0  and  nY < 0        fill the supplied float[-nX][-nY] array directly in JavaScript 
+     *  
+     */
+
+    //System.out.println("functionXY" + nX + " " + nY  + " " + functionName);
+    float[][] fxy = new float[Math.abs(nX)][Math.abs(nY)];
+    if (!mayScript || !haveDocumentAccess || nX == 0 || nY == 0)
+      return fxy;
+    try {
+      if (nX > 0 && nY > 0) { // fill with individual function calls (slow)
+        for (int i = 0; i < nX; i++)
+          for (int j = 0; j < nY; j++) {
+            /**
+             * @j2sNative
+             * 
+             *            fxy[i][j] = window.eval(functionName)(this.htmlName, i, j);
+             */
+            {
+            }
+          }
+      } else if (nY > 0) { // fill with parsed values from a string (pretty fast)
+        String data;
+        /**
+         * @j2sNative
+         * 
+         *            data = window.eval(functionName)(this.htmlName, nX, nY);
+         * 
+         */
+        {
+          data = "";
+        }
+        nX = Math.abs(nX);
+        float[] fdata = new float[nX * nY];
+        Parser.parseStringInfestedFloatArray(data, null, fdata);
+        for (int i = 0, ipt = 0; i < nX; i++) {
+          for (int j = 0; j < nY; j++, ipt++) {
+            fxy[i][j] = fdata[ipt];
+          }
+        }
+      } else { // fill float[][] directly using JavaScript
+        /**
+         * @j2sNative
+         * 
+         *            data = window.eval(functionName)(this.htmlName, nX, nY, fxy);
+         * 
+         */
+        {
+          System.out.println(functionName);
+        }
+      }
+    } catch (Exception e) {
+      Logger.error("Exception " + e + " with nX, nY: " + nX + " " + nY);
+    }
+    // for (int i = 0; i < nX; i++)
+    // for (int j = 0; j < nY; j++)
+    //System.out.println("i j fxy " + i + " " + j + " " + fxy[i][j]);
+    return fxy;
+  }
+
+  protected float[][][] doFunctionXYZ(String functionName, int nX, int nY,
+                                      int nZ) {
+    float[][][] fxyz = new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
+    if (!mayScript || !haveDocumentAccess || nX == 0 || nY == 0 || nZ == 0)
+      return fxyz;
+    try {
+      /**
+       * @j2sNative
+       * 
+       *            window.eval(functionName)(this.htmlName, nX, nY, nZ, fxyz);
+       * 
+       */
+      {
+      }
+    } catch (Exception e) {
+      Logger.error("Exception " + e + " for " + functionName
+          + " with nX, nY, nZ: " + nX + " " + nY + " " + nZ);
+    }
+    // for (int i = 0; i < nX; i++)
+    // for (int j = 0; j < nY; j++)
+    // for (int k = 0; k < nZ; k++)
+    //System.out.println("i j k fxyz " + i + " " + j + " " + k + " " + fxyz[i][j][k]);
+    return fxyz;
+  }
+
+  protected void doShowDocument(URL url) {
+    String[] surl = PT.split(url.toString(), "?POST?");
+    if (surl.length == 1) {
+      /**
+       * @j2sNative
+       * 
+       *            window.open(surl[0]);
+       * 
+       */
+    {}
+     return;
+      }
+   
+    String f = "<form id=f method=POST action='" + surl[0] + "'>";
+    f += "<input type='hidden' name='name' value='nmr-1h-prediction' id='name'>";
+    f += "<input type='submit' value='working...'>";
+    String[] fields = surl[1].split("&");
+    for (int i = 0; i < fields.length; i++) {
+      String field = fields[i];
+      int pt = field.indexOf("=");
+      String name = field.substring(0, pt);
+      String value = field.substring(pt);
+      if (value.indexOf("\n") >= 0) {
+        f +="<textarea style='display:none' name=" + name + ">" + value +"</textarea>";
+      } else {
+        f +="<input type=hidden name=" + name + " value=\""+ value +"\">";
+      }
+    }
+    f += "</form>";
+    /**
+     * @j2sNative
+     * var w=window.open("");w.document.write(f);w.document.getElementById("f").submit();
+     * 
+     */
+    {
+      System.out.println(f + url);
+    }
+  }
+
+  protected String doSendCallback(String callback, Object[] data, String strInfo) {
+    if (callback == null || callback.length() == 0) {
+    } else if (callback.equals("alert")) {
+      /**
+       * @j2sNative alert(strInfo); return "";
+       */
+      {
+        System.out.println(strInfo);
+      }
+    } else {
+      String[] tokens = PT.split(callback, ".");
+      /**
+       * @j2sNative
+       * 
+       *            try{ 
+       *            var o = window[tokens[0]]; 
+       *            for (var i = 1; i < tokens.length; i++) 
+       *              o = o[tokens[i]];
+       *            for (var i = 0; i < data.length; i++) 
+       *              data[i] && data[i].booleanValue && (data[i] = data[i].booleanValue());
+       *            return o.apply(null,data)
+       *            } catch (e) { System.out.println(callback + " failed " + e); }
+       */
+      {
+        System.out.println(tokens + " " + data);
+      }
+    }
+    return "";
+  }
+
+  /**
+   * return RAW JAVASCRIPT OBJECT, NOT A STRING 
+   */
+  protected String doEval(String strEval) {
+    try {
+      /**
+       * 
+       * @j2sNative
+       * 
+       *            return window.eval(strEval);
+       */
+      {
+      }
+    } catch (Exception e) {
+      Logger.error("# error evaluating " + strEval + ":" + e.toString());
+    }
+    return "";
+  }
+
+  protected void doShowStatus(String message) {
+    try {
+      System.out.println(message);
+    } catch (Exception e) {
+      //ignore if page is closing
+    }
+  }
+
+  /**
+   * This method is only called by JmolGLmol applet._refresh();
+   * 
+   * @return enough data to update a WebGL view
+   * 
+   */
+  public Object getGLmolView() {
+    return viewer.getGLmolView();
+  }
+
+  /**
+   * possibly called from JSmolApplet.js upon start up
+   *  
+   * @param fileName
+   * @return error or null
+   */
+  
+  public String openFile(String fileName) {
+    return viewer.openFile(fileName);
+  }
+
+  // JSInterface -- methods called from JSmol JavaScript library
+  
+  public int cacheFileByName(String fileName, boolean isAdd) {
+    return viewer.cacheFileByName(fileName, isAdd);
+  }
+
+  public void cachePut(String key, Object data) {
+    viewer.cachePut(key, data);
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+
 }

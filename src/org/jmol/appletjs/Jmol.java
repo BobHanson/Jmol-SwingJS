@@ -50,7 +50,7 @@ import org.jmol.util.Parser;
 
 public class Jmol extends GenericApplet implements JSInterface {
 
-  private Map<String, Object> htParams;
+//  private Map<String, Object> htParams;
 
   public Jmol(Map<String, Object> vwrOptions) {
     htParams = new Hashtable<String, Object>();
