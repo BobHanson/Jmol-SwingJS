@@ -259,6 +259,8 @@ public class Jmol extends GenericApplet implements WrappedApplet {
     {
 
       String ms = getJmolParameter("mayscript");
+      if (ms == null)
+        ms = getJmolParameter("allowjavascript");
       mayScript = (ms != null) && (!ms.equalsIgnoreCase("false"));
       // using JApplet calls for older installations
       URL base = applet.getDocumentBase();
@@ -332,7 +334,8 @@ public class Jmol extends GenericApplet implements WrappedApplet {
               + " mayScript:" + mayScript + " haveDocumentAccess:"
               + haveDocumentAccess);
         }
-        cleanRegistry();
+        if (!isJS)
+           cleanRegistry();
       }
     }
   }

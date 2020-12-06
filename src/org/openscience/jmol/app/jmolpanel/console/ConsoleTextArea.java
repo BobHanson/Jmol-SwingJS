@@ -44,21 +44,18 @@ public class ConsoleTextArea extends JTextArea {
 
 
   public ConsoleTextArea(boolean doRedirect) throws IOException {
-
+    if (Viewer.isJS)
+      return;
     final LoopedStreams ls = new LoopedStreams();
-
     String redirect = (doRedirect ? System.getProperty("JmolConsole")
         : "false");
-
-    if (!Viewer.isSwingJS) {
-      if (redirect == null || redirect.equals("true")) {
-        // Redirect System.out & System.err.        
-        PrintStream ps = new PrintStream(ls.getOutputStream());
-        System.setOut(ps);
-        System.setErr(ps);
-      }
-      startConsoleReaderThread(ls.getInputStream());
+    if (redirect == null || redirect.equals("true")) {
+      // Redirect System.out & System.err.        
+      PrintStream ps = new PrintStream(ls.getOutputStream());
+      System.setOut(ps);
+      System.setErr(ps);
     }
+    startConsoleReaderThread(ls.getInputStream());
   } 
 
 
