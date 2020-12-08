@@ -36,7 +36,7 @@ import net.sf.jniinchi.JniInchiOutputStructure;
 public class InChIWrapper {
 
   
-  public static JniInchiOutput GetINCHI(JniInchiInput input) {
+//  public static JniInchiOutput GetINCHI(JniInchiInput input) {
 //
 //  inchi_input = new inchi_Input();
 //  inchi_Output inchi_output = new inchi_Output();
