@@ -1,1 +1,0 @@
-Jmol test data are at https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/

@@ -26,7 +26,7 @@ import org.jmol.util.Logger;
 
 public class TestSmarterJmolAdapter extends TestSuite {
 
-  private String datafileDirectory = "../Jmol-datafiles";
+  private String datafileDirectory = "../Jmol-datafiles/data";
 
   public TestSmarterJmolAdapter() {
     super();
