@@ -98,9 +98,17 @@ public class GamessUSReader extends GamessReader {
     if (line.indexOf("***************") >= 0)
       Logger.info(rd());
     boolean isBohr;
-    if (line.indexOf("FINAL ENERGY IS") >= 0 || line.indexOf("TOTAL ENERGY = ") >= 0
-        || line.indexOf("FINAL RHF ENERGY IS") >= 0)
+    
+    if (line.indexOf("FINAL ENERGY IS") >= 0 || 
+        line.indexOf("TOTAL ENERGY = ") >= 0 ||
+        line.indexOf("FINAL RHF ENERGY IS") >= 0 ||
+        line.indexOf("E(MP2)=") >= 0 ||
+        line.indexOf("COUPLED-CLUSTER ENERGY E(CCSD) =") >= 0 ||
+        line.indexOf("COUPLED-CLUSTER ENERGY E(   CCSD(T)) =") >= 0)
+    {
       readEnergy();
+    }
+    
     if (line.indexOf("BASIS OPTIONS") >= 0){
       readBasisInfo();
       return true;
