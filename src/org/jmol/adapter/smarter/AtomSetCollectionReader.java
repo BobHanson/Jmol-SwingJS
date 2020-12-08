@@ -1595,7 +1595,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       out.append(line).append("\n");
     ptLine++;
     if (debugging && line != null)
-      Logger.debug(line);
+      Logger.info(line);
     return line;
   }
 
