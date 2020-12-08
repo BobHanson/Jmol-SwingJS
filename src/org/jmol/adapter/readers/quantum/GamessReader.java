@@ -70,6 +70,8 @@ abstract public class GamessReader extends MOReader {
     if (!Float.isNaN(e)) {
       asc.setAtomSetEnergy(strEnergy, e);
       asc.setCurrentModelInfo("EnergyType", energyType);
+      if (!energyType.equals("ENERGY"))
+        appendLoadNote("GamessReader Energy type " + energyType);
     }
   }
 
