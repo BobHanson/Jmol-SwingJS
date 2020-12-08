@@ -42,10 +42,27 @@ abstract public class GamessReader extends MOReader {
  
   protected void readEnergy() {
     //  ... ENERGY IS   or    ... ENERGY = 
-    String[] tokens = PT.getTokens(line.substring(line.indexOf("ENERGY")));
-    if (tokens.length < 3)
+    String searchTerm = "ENERGY";
+    int energyToken = 2;
+    
+    if (line.indexOf("E(MP2)") > 0) {
+      searchTerm = "E(MP2)=";
+      // this one has the equals sign with no space so it's not picked up as a token
+      energyToken = 1;
+    }
+    else if (line.indexOf("E(CCSD)") > 0) {
+      searchTerm = "E(CCSD)";
+      energyToken = 2;
+    }
+    else if (line.indexOf("E(   CCSD(T))") > 0) {
+      // the spaces in E(   CCSD cause an extra token)
+      searchTerm = "E(   CCSD(T))";
+      energyToken = 3;
+    }
+    String[] tokens = PT.getTokens(line.substring(line.indexOf(searchTerm)));
+    if (tokens.length < energyToken + 1)
       return;
-    String strEnergy = tokens[2];
+    String strEnergy = tokens[energyToken];
     float e = parseFloatStr(strEnergy);
     if (!Float.isNaN(e))
       asc.setAtomSetEnergy(strEnergy, e);
