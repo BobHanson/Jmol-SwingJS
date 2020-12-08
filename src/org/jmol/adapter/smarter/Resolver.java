@@ -829,7 +829,7 @@ public class Resolver {
   { sptRecords, bilbaoContainsRecords, xmlContainsRecords, gaussianContainsRecords, 
     ampacContainsRecords, mopacContainsRecords,  
     gamessUKContainsRecords, gamessUSContainsRecords,
-    spartanBinaryContainsRecords, spartanContainsRecords, qchemContainsRecords, 
+    qchemContainsRecords, spartanBinaryContainsRecords, spartanContainsRecords,  
     mol2Records, adfContainsRecords, psiContainsRecords,
     nwchemContainsRecords, uicrcifContainsRecords, 
     dgridContainsRecords, crystalContainsRecords, 
