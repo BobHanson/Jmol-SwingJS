@@ -1,4 +1,4 @@
 j2s.compiler.status=enable
 j2s.compiler.nonqualified.classes=org.jmol.api.js;jspecview.api.js
-j2s.excluded.paths=org/molecularplayground
+j2s.excluded.paths=org/molecularplayground;org/gennbo
 
