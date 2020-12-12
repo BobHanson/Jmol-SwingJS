@@ -22,78 +22,51 @@ import org.jmol.api.JmolInChI;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
+import javajs.util.PT;
+import swingjs.api.JSUtilI;
 
 /**
  * JavaScript path for J2S or Jmol
  * 
- * Allows for (Jmol||J2S)._inchiPath (must include trailing "/")
+ * Allows for (Jmol||J2S)._inchiPath
  */
 public class InChIJS implements JmolInChI {
 
+  static JSUtilI jsutil;
+  static Object app = null;
   static boolean isSwingJS = Viewer.isSwingJS;
   static {
-    boolean j2sloaded = false;
+    @SuppressWarnings("unused")
+    String path = "/org/jmol/inchi";
+    @SuppressWarnings("unused")
+    String fetchPath = "./swingjs/j2s/org/jmol/inchi";
+    @SuppressWarnings("unused")
+    String importPath = "./j2s/org/jmol/inchi";
     /**
-     * @j2sNative
+     * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
+     * but for some reason, the import() path is one directory off from the fetch() path
      * 
-     *           self.InChI || (InChI = {}); j2sloaded = InChI.j2sloaded;
-     *            
-     *            InChI.j2sloaded = true;
-     * 
+     * @j2sNative C$.app = (self.J2S || Jmol); fetchPath = C$.app.inchiPath ||
+     *            ((C$.app._j2sPath || C$.app._applets.master._j2sPath) + path);
+     *            if (fetchPath.indexOf("http") < 0 && fetchPath.indexOf("./") != 0) {
+     *            fetchPath = "./" + fetchPath; }
+     *            C$.app.inchiPath = fetchPath;
+     *            importPath =(fetchPath.indexOf("./swingjs") == 0 ? "../" + fetchPath : fetchPath);
      */
     {
     }
-    if (!j2sloaded) {
-      @SuppressWarnings("unused")
-      String prefix = "";
-      @SuppressWarnings("unused")
-      Object app = null;
-      /**
-       * @j2sNative
-       *            var path = '/org/jmol/inchi/js/';
-       *            app = (self.J2S || Jmol)._inchiPath || (self.J2S ||
-       *            Jmol)._applets.master; prefix = app._j2sPath + path; 
-       *            if (prefix.indexOf("./") == 0) {prefix = prefix.substring(2);}
-       *            InChI.memoryInitializerPrefixURL =
-       *            prefix;
-       */
-      {
-      }
-      try {
-      if (isSwingJS) {
-        /**
-         * @j2sNative
-         * 
-         *            swingjs.JSUtil.loadStaticResource$S(path + "inchi.js");
-         */
-        {
-        }
-      } else {
+    try {
         /**
          * @j2sNative
          *
-         *            eval(Jmol._getFileData(prefix + "inchi.js"));
-         * 
+         *            import(importPath + "/molfile-to-inchi.js");
          */
         {
         }
-      }
-      } catch (Throwable t) {
-        // 
-      }
-      
-      /**
-       * @j2sNative
-       *
-       * 
-       *
-       *              InChI.fromMolfile = (InChI.cwrap && InChI.cwrap('get_inchi', 'string', ['string']));
-       * 
-       */
-      {
-      }
-
+    } catch (Throwable t) {
+      // 
     }
+
   }
   public InChIJS() {
     // for dynamic loading
@@ -101,12 +74,15 @@ public class InChIJS implements JmolInChI {
 
   @Override
   public String getInchi(Viewer vwr, BS atoms, String options) {
+    String ret = "";
     if (atoms == null || atoms.cardinality() == 0)
       return "";
-    String s = "";
     try {
       if (options == null)
         options = "";
+      options = PT.rep(PT.rep(options.replace('-',' '), "  ", " ").trim(), " ", " -");
+      if (options.length() > 0)
+        options = "-" + options;
       @SuppressWarnings("unused")
       String molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
       options = options.toLowerCase();
@@ -122,11 +98,7 @@ public class InChIJS implements JmolInChI {
 
       /**
        * @j2sNative
-       *  if (!InChI.fromMolfile)return "";
-       *  s = InChI.fromMolfile(molData);
-       *  if (haveKey) {
-       *   // what here?
-       *  }
+       *  ret = (Jmol.molfileToInChI ? Jmol.molfileToInChI(molData, options) : "");
        */{}
 //      
 //      JniInchiInput in = new JniInchiInput(options);
@@ -143,7 +115,7 @@ public class InChIJS implements JmolInChI {
       {}
         System.err.println("InChIJS exception: " + e);
     }
-    return s;
+    return ret;
   }
 
 
