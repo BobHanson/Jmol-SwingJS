@@ -21,15 +21,6 @@
  */
 package org.jmol.inchi;
 
-import org.jmol.inchi.InChIC.inchi_Input;
-import org.jmol.inchi.InChIC.inchi_Output;
-
-import net.sf.jniinchi.JniInchiInput;
-import net.sf.jniinchi.JniInchiInputData;
-import net.sf.jniinchi.JniInchiOutput;
-import net.sf.jniinchi.JniInchiOutputKey;
-import net.sf.jniinchi.JniInchiOutputStructure;
-
 /**
  * From JniInchiWrapper.c -- testing only
  */

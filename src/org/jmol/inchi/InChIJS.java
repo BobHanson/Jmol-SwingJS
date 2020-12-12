@@ -23,7 +23,6 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.PT;
-import swingjs.api.JSUtilI;
 
 /**
  * JavaScript path for J2S or Jmol
@@ -32,37 +31,26 @@ import swingjs.api.JSUtilI;
  */
 public class InChIJS implements JmolInChI {
 
-  static JSUtilI jsutil;
-  static Object app = null;
-  static boolean isSwingJS = Viewer.isSwingJS;
   static {
     @SuppressWarnings("unused")
     String path = "/org/jmol/inchi";
-    @SuppressWarnings("unused")
-    String fetchPath = "./swingjs/j2s/org/jmol/inchi";
-    @SuppressWarnings("unused")
-    String importPath = "./j2s/org/jmol/inchi";
-    /**
-     * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
-     * but for some reason, the import() path is one directory off from the fetch() path
-     * 
-     * @j2sNative C$.app = (self.J2S || Jmol); fetchPath = C$.app.inchiPath ||
-     *            ((C$.app._j2sPath || C$.app._applets.master._j2sPath) + path);
-     *            if (fetchPath.indexOf("http") < 0 && fetchPath.indexOf("./") != 0) {
-     *            fetchPath = "./" + fetchPath; }
-     *            C$.app.inchiPath = fetchPath;
-     *            importPath =(fetchPath.indexOf("./swingjs") == 0 ? "../" + fetchPath : fetchPath);
-     */
-    {
-    }
+//    String fetchPath = "./swingjs/j2s/org/jmol/inchi";
+//    String importPath = "./j2s/org/jmol/inchi";
     try {
-        /**
-         * @j2sNative
-         *
-         *            import(importPath + "/molfile-to-inchi.js");
-         */
-        {
-        }
+      /**
+       * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
+       * but for some reason, the import() path is one directory off from the fetch() path
+       * 
+       * @j2sNative 
+       *            var fetchPath = Jmol._applets.master._j2sPath + path;
+       *            if (fetchPath.indexOf("http") < 0 && fetchPath.indexOf("./") != 0) {
+       *            fetchPath = "./" + fetchPath; }
+       *            Jmol.inchiPath = fetchPath;
+       *            var importPath = (fetchPath.indexOf("./") == 0 ? "." + fetchPath : fetchPath);
+       *            import(importPath + "/molfile-to-inchi.js");
+       */
+      {
+      }
     } catch (Throwable t) {
       // 
     }
