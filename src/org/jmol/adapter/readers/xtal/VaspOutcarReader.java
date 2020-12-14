@@ -46,11 +46,13 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 public class VaspOutcarReader extends AtomSetCollectionReader {
 
   private String[] atomNames;
+  private boolean haveIonNames;
   private int ac = 0;
   private boolean inputOnly;
   private boolean mDsimulation = false; //this is for MD simulations
-  private boolean isVersion5 = false;
+  private int vaspVersion;
 
+  
   @Override
   protected void initializeReader() {
     isPrimitive = true;
@@ -63,9 +65,11 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   protected boolean checkLine() throws Exception {
 
     //reads if output is from vasp5
-    if (line.contains(" vasp.5")) {
-      isVersion5 = true;
-    } else if (line.toUpperCase().contains("TITEL")) {
+    if (vaspVersion == 0 && line.contains(" vasp.")) {
+      readVersion();
+      if (vaspVersion > 0)
+        this.appendLoadNote("VASP version " + vaspVersion + " " + line);
+    } else if (line.toUpperCase().startsWith(" POTCAR:")) {
       //reads the kind of atoms namely H, Ca etc
       readElementNames();
     } else if (line.contains("ions per type")) {
@@ -74,7 +78,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
       mDsimulation = true;
     } else if (line.contains("direct lattice vectors")) {
       readUnitCellVectors();
-    } else if (line.contains("position of ions in fractional coordinates")) {
+    } else if (ac > 0 && line.contains("position of ions in fractional coordinates")) {
       readInitialCoordinates();
       if (inputOnly)
         continuing = false;
@@ -93,6 +97,11 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     return true;
   }
 
+  private void readVersion() {
+    String[] tokens = PT.split(line, ".");
+    vaspVersion = PT.parseInt(tokens[1]);
+  }
+
   @Override
   protected void finalizeSubclassReader() throws Exception {
     setSymmetry();
@@ -103,8 +112,17 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   private Lst<String> elementNames = new Lst<String>();
 
   private void readElementNames() throws Exception {
-    //TITEL  = PAW_PBE Al 04Jan2001
-    elementNames.addLast(getTokens()[3]);
+    // was: TITEL  = PAW_PBE Al 04Jan2001
+      
+    // now:  POTCAR:    PAW_PBE O 08Apr2002                   
+    // or:   POTCAR:    Ce: PAW 5s5p 6s5d4f valence           
+    // or:   POTCAR:   PAW_PBE H_h 07Sep2000   
+    
+    line = PT.rep(line, " _ ", "_"); // Version 4   OUTCAR_H6Al2_2.dat  has PAW _ PBE
+    String[] tokens = getTokens();
+    int pt = tokens[1].indexOf(":");
+    String name = (pt >= 0 ? tokens[1].substring(0, pt) : tokens[2]);
+    elementNames.addLast(name);
   }
 
   /*  
@@ -130,7 +148,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     atomNames = new String[ac];
     int nElements = elementNames.size();
     for (int pt = 0, i = 0; i < nElements; i++)
-      for (int j = 0; j < numofElement[i]; j++)
+      for (int j = 0; j < numofElement[i] && pt < ac; j++)
         atomNames[pt++] = elementNames.get(i);
   }
 
@@ -329,7 +347,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     int pt = asc.iSet;
     asc.baseSymmetryAtomCount = ac;
 
-    if (isVersion5) {
+    if (vaspVersion >= 5) {
       readLines(3);
     } else {
       discardLinesUntilContains("Eigenvectors after division by SQRT(mass)");
