@@ -2320,10 +2320,10 @@ public class ScriptEval extends ScriptExpr {
     }
   }
 
-//  public void terminateAfterStep() {
-//    pc = pcEnd;
-//  }
-  
+  //  public void terminateAfterStep() {
+  //    pc = pcEnd;
+  //  }
+
   private void processCommand(int tok) throws ScriptException {
     if (T.tokAttr(theToken.tok, T.shapeCommand)) {
       processShapeCommand(tok);
@@ -2434,8 +2434,27 @@ public class ScriptEval extends ScriptExpr {
       cmdHover();
       break;
     case T.initialize:
-      if (!chk)
-        vwr.initialize(!isStateScript, false);
+      switch (slen) {
+      case 1:
+        if (!chk)
+          vwr.initialize(!isStateScript, false);
+        break;
+      case 2:
+        if (tokAt(1) == T.inchi) {
+          if (chk) {
+            vwr.getInchi(null, null);
+          } else {
+            vwr.showString("InChI module initialized", false);
+            if (Viewer.isJS) {
+              doDelay(1);
+            }
+          }
+          break;
+        }
+        // fall through
+      default:
+        bad();
+      }
       break;
     case T.javascript:
       cmdScript(T.javascript, null, null);
@@ -7867,7 +7886,8 @@ public class ScriptEval extends ScriptExpr {
       case 2:
         // sync (*) text
         applet = paramAsStr(1);
-        if (applet.indexOf("jmolApplet") == 0 || PT.isOneOf(applet, ";*;.;^;")) {
+        if (applet.indexOf("jmolApplet") == 0
+            || PT.isOneOf(applet, ";*;.;^;")) {
           text = "ON";
           if (!chk)
             vwr.syncScript(text, applet, 0);
@@ -7889,7 +7909,7 @@ public class ScriptEval extends ScriptExpr {
       SV v = null;
       if (slen > 2 && (v = setVariable(2, -1, "", false)) == null)
         return;
-      text = (slen == 2 ? null : v.tok == T.hash ?  v.toJSON() : v.asString());
+      text = (slen == 2 ? null : v.tok == T.hash ? v.toJSON() : v.asString());
       applet = null;
     }
     if (chk)

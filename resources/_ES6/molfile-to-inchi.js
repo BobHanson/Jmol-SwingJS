@@ -1,5 +1,4 @@
-import WASI from './wasi.esm.js';
-
+import WASI from '../_WASM/wasi.esm.js';
 /*
  * Creates [J2S|Jmol].molfileToInChI(molFileString) and .showInChIOptions()
  * 
@@ -17,11 +16,10 @@ import WASI from './wasi.esm.js';
  * 
  * 
  */
-
 const app = (self.J2S || self.Jmol || self);
 const wasmPath = app.inchiPath || ".";
 const memory = new WebAssembly.Memory({ initial: 10 });
-
+const molmaxbytes = app.inchiMaxBytes || 0x8000;
 (async () => {
   const response = await fetch(wasmPath + '/molfile_to_inchi.wasm');
   const bytes = await response.arrayBuffer();
@@ -29,9 +27,9 @@ const memory = new WebAssembly.Memory({ initial: 10 });
   const { instance } = await WebAssembly.instantiate(bytes, {
     env: { memory }, wasi_snapshot_preview1: wasi.wasiImport
   });
-  const pMolfile = instance.exports.malloc(1024<<2);
-  const pOptions = instance.exports.malloc(1024);
-  const pOutput = instance.exports.malloc(1024<<4);
+  const pMolfile = instance.exports.malloc(molmaxbytes);
+  const pOptions = instance.exports.malloc(0x100);
+  const pOutput = instance.exports.malloc(0x4000);
 
   app.showInChIOptions = () => {
    var s = "";
@@ -60,8 +58,10 @@ const memory = new WebAssembly.Memory({ initial: 10 });
 
   app.molfileToInChI = (molfile,options) => {
     options || (options = "");
-    self.J2S || (self)
-
+    if (molfile.length + 1 > pOptions - pMolfile) {
+    	alert("Model data is over the maximum of " + (pOptions - pMolfile -1) + " bytes. \nYou can set this as Jmol.inchiMaxBytes.");
+    	return "";
+    } 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 

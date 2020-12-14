@@ -324,7 +324,7 @@ public class T {
   public final static int hbond        = scriptCommand | 22 | deprecatedparam | predefinedset | defaultON;
   public final static int history      = scriptCommand | 23 | deprecatedparam;
   public final static int image        = scriptCommand | 24;
-  public final static int initialize   = scriptCommand | 25 | noArgs;
+  public final static int initialize   = scriptCommand | 25;
   public final static int invertSelected = scriptCommand | 26;
 //public final static int load   see mathfunc
   public final static int loop         = scriptCommand | 27 | defaultON;

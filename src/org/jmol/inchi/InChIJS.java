@@ -23,30 +23,44 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.PT;
+import swingjs.api.JSUtilI;
 
 /**
- * JavaScript path for J2S or Jmol
+ * This class adapts Richard Apodaca's 2020 molfile-to-inchi LLVM-derived Web Assembly 
+ * implementation of IUPAC InChI v. 1.05. 
  * 
- * Allows for (Jmol||J2S)._inchiPath
+ * see https://depth-first.com/articles/2020/03/02/compiling-inchi-to-webassembly-part-2-from-molfile-to-inchi/
+ * 
+ * Note that this initialiation is asynchronous. One has to either use 
+ * 
+ * sync inchi
+ * 
+ * or invoke a call to generate an InChI, such as:
+ * 
+ * x = {none}.find("inchi")
+ * 
+ * 
+ * 
  */
 public class InChIJS implements JmolInChI {
 
   static {
     @SuppressWarnings("unused")
-    String path = "/org/jmol/inchi";
-//    String fetchPath = "./swingjs/j2s/org/jmol/inchi";
-//    String importPath = "./j2s/org/jmol/inchi";
+    String wasmPath = "/_WASM";
+    @SuppressWarnings("unused")
+    String es6Path = "/_ES6";
     try {
       /**
        * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
-       * but for some reason, the import() path is one directory off from the fetch() path
+       * but for some reason, the import() path is one directory off from the fetch() pathin J2S
        * 
        * @j2sNative 
-       *            var fetchPath = Jmol._applets.master._j2sPath + path;
-       *            if (fetchPath.indexOf("http") < 0 && fetchPath.indexOf("./") != 0) {
-       *            fetchPath = "./" + fetchPath; }
-       *            Jmol.inchiPath = fetchPath;
-       *            var importPath = (fetchPath.indexOf("./") == 0 ? "." + fetchPath : fetchPath);
+       *            var j2sPath = Jmol._applets.master._j2sFullPath;
+       *            //
+       *            Jmol.inchiPath = j2sPath + wasmPath;
+       *            //
+       *            var importPath = j2sPath + es6Path;
+       *            //
        *            import(importPath + "/molfile-to-inchi.js");
        */
       {

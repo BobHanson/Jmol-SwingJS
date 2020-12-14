@@ -4878,7 +4878,7 @@ public class Viewer extends JmolViewer
   public void scriptEcho(String strEcho) {
     if (!Logger.isActiveLevel(Logger.LEVEL_INFO))
       return;
-    if (isJS)
+    if (isJS && !isSwingJS)
       System.out.println(strEcho);
     sm.setScriptEcho(strEcho, isScriptQueued());
     if (listCommands && strEcho != null && strEcho.indexOf("$[") == 0)

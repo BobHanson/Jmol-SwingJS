@@ -31,9 +31,9 @@
   	<!-- non-Java resources to copy to site/ -->
     <property name="resource.dir" value="resources" />  	
   	
-  	<!-- site/swingjs resources to copy to site/ -->
+  	<!-- program assets to copy to site/ -->
     <property name="site.swingjs.dir" value="assets" />  	
-  	
+
 	<!-- output directories -->
 
   	<property name="site.dir" value="site" />

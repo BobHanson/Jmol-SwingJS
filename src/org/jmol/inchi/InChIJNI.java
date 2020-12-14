@@ -18,6 +18,9 @@
  */
 package org.jmol.inchi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jmol.api.JmolInChI;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
@@ -41,15 +44,24 @@ public class InChIJNI implements JmolInChI {
     // for dynamic loading
   }
 
+  /**
+   * Get An InChI string or key. 
+   */
   @Override
   public String getInchi(Viewer vwr, BS atoms, String options) {
     try {
-      if (options == null)
+      if (atoms == null || atoms.cardinality() == 0)
+        return "";
+      boolean isStructure = false;
+      if (options == null) {
         options = "";
-      if (options.startsWith("structure/")) {
+      } else if (options.startsWith("structure/")) {
         String inchi = options.substring(10);
-        JniInchiInputInchi in = new JniInchiInputInchi(inchi);
-        return getStructure(JniInchiWrapper.getStructureFromInchi(in));
+        return getStructure(JniInchiWrapper.getStructureFromInchi(new JniInchiInputInchi(inchi)));
+      }
+      else if (options.startsWith("structure")) {
+        options = options.substring(9).trim();
+        isStructure = true;
       }
       options = options.toLowerCase();
       boolean haveKey = (options.indexOf("key") >= 0);
@@ -60,7 +72,9 @@ public class InChIJNI implements JmolInChI {
       JniInchiInput in = new JniInchiInput(options);
       in.setStructure(newJniInchiStructure(vwr, atoms));
       String s = JniInchiWrapper.getInchi(in).getInchi();
-      return (haveKey ? JniInchiWrapper.getInchiKey(s).getKey() : s);
+      return (haveKey ? JniInchiWrapper.getInchiKey(s).getKey() 
+          : isStructure ? getStructure(JniInchiWrapper.getStructureFromInchi(new JniInchiInputInchi(s)))
+              : s);
     } catch (JniInchiException e) {
       if (e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
@@ -124,11 +138,19 @@ public class InChIJNI implements JmolInChI {
     int na = mol.getNumAtoms();
     int nb = mol.getNumBonds();
     String s = "";
+    List<JniInchiAtom> atoms = new ArrayList<JniInchiAtom>();
     for (int i = 0; i < na; i++) {
-      s += mol.getAtom(i).getDebugString() + "\n";
+      JniInchiAtom atom = mol.getAtom(i);
+      atoms.add(atom);
+      s += atom.getElementType() + atoms.size() + " " + atom.getDebugString() + "\n";
     }
     for (int i = 0; i < nb; i++) {
-      s += mol.getBond(i).getDebugString() + "\n";
+      JniInchiBond bond = mol.getBond(i);
+      JniInchiAtom atom1 = bond.getTargetAtom();
+      JniInchiAtom atom2 = bond.getOriginAtom();
+      s += atom1.getElementType() + (atoms.indexOf(atom1) + 1)
+          + " " + atom2.getElementType() + (atoms.indexOf(atom2) + 1)
+          + " " + bond.getBondType().name() + "\n";
     }
     return s;
   }
