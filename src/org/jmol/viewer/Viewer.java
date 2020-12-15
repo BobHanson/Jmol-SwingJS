@@ -652,8 +652,7 @@ public class Viewer extends JmolViewer
         setTimeout("" + Math.random(), ((Integer) o).intValue(), "exitJmol");
       }
     }
-    useCommandThread = !headless
-        && checkOption2("useCommandThread", "-threaded");
+    useCommandThread = !isJS && !headless && checkOption2("useCommandThread", "-threaded");
     setStartupBooleans();
     setIntProperty("_nProcessors", nProcessors);
     /*

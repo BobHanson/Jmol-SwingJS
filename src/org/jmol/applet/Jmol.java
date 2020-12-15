@@ -276,7 +276,7 @@ public class Jmol extends GenericApplet implements WrappedApplet {
       isSigned |= isJNLP || getBooleanValue("signed", false);
       if (isSigned)
         addValue(vwrOptions, null, "signedApplet", Boolean.TRUE);
-      if (getBooleanValue("useCommandThread", isSigned))
+      if (getBooleanValue("useCommandThread", isSigned && !isJS))
         addValue(vwrOptions, null, "useCommandThread", Boolean.TRUE);
       String options = "";
       if (isSigned && getBooleanValue("multiTouchSparshUI-simulated", false))

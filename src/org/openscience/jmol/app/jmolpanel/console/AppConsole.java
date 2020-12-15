@@ -243,6 +243,7 @@ public class AppConsole extends JmolConsole
   protected void layoutWindow(String enabledButtons) {
     setTitle();
     console = new ConsoleTextPane(this);
+    console.setName("JmolConsole");
     console.setDropTarget(
         new DropTarget(console, new FileDropper(null, vwr, this)));
     console.setPrompt();
@@ -266,6 +267,8 @@ public class AppConsole extends JmolConsole
 
     JSplitPane spane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, consolePane,
         buttonPanelWrapper);
+    spane.setName("JmolConsoleSplitPane");
+
     consolePane.setMinimumSize(new Dimension(300, 300));
     consolePane.setPreferredSize(new Dimension(5000, 5000));
     buttonPanelWrapper.setMinimumSize(new Dimension(60, 60));
@@ -903,6 +906,10 @@ public class AppConsole extends JmolConsole
     return console.getText();
   }
 
+  public void setStatusListener(JmolStatusListener myStatusListener) {
+    this.statusListener = myStatusListener;
+  }
+
   class ConsoleDocument extends DefaultStyledDocument {
 
     private ConsoleTextPane consoleTextPane;
@@ -963,9 +970,7 @@ public class AppConsole extends JmolConsole
         //system.out.println("AppConsole setting $ ");
         super.insertString(getLength(), "$ ", attPrompt);
         setOffsetPositions();
-        //system.out.println("AppConsole caretPosition to  " + offsetAfterPrompt);
-
-        consoleTextPane.setCaretPosition(offsetAfterPrompt);
+        setCaretPosition(offsetAfterPrompt);
 
         //system.out.println("AppConsole caretPosition done " + consoleTextPane.getCaret());
 
@@ -993,7 +998,7 @@ public class AppConsole extends JmolConsole
         offsetAfterPrompt = getLength();
         positionAfterPrompt = positionBeforePrompt = createPosition(
             offsetAfterPrompt);
-        consoleTextPane.setCaretPosition(offsetAfterPrompt);
+        setCaretPosition(offsetAfterPrompt);
       } catch (BadLocationException e) {
         e.printStackTrace();
       }
@@ -1014,10 +1019,10 @@ public class AppConsole extends JmolConsole
         positionAfterPrompt = createPosition(offsetAfterPrompt - 1);
 
         pt = caretPosition.getOffset();
-        consoleTextPane.setCaretPosition(pt);
+        setCaretPosition(pt);
       } catch (Exception e) {
         e.printStackTrace();
-        consoleTextPane.setCaretPosition(getLength());
+        setCaretPosition(getLength());
       }
       EventQueue.invokeLater(new Runnable() {
         @Override
@@ -1038,7 +1043,7 @@ public class AppConsole extends JmolConsole
     void outputErrorForeground(String strError) {
       try {
         super.insertString(getLength(), strError + "\n", attError);
-        consoleTextPane.setCaretPosition(getLength());
+        setCaretPosition(getLength());
       } catch (BadLocationException e) {
         e.printStackTrace();
 
@@ -1056,7 +1061,7 @@ public class AppConsole extends JmolConsole
     void appendNewline() {
       try {
         super.insertString(getLength(), "\n", attUserInput);
-        consoleTextPane.setCaretPosition(getLength());
+        setCaretPosition(getLength());
       } catch (BadLocationException e) {
         e.printStackTrace();
       }
@@ -1074,11 +1079,16 @@ public class AppConsole extends JmolConsole
           offs = getLength();
         }
         super.insertString(offs, str, a == attError ? a : attUserInput);
-        consoleTextPane.setCaretPosition(offs + str.length());
+        setCaretPosition(offs + str.length());
       }
       if (ichNewline >= 0) {
         consoleTextPane.enterPressed();
       }
+    }
+
+    private void setCaretPosition(int p) {
+      System.out.println("AppConsole caretPosition to  " + p);
+      consoleTextPane.setCaretPosition(p);
     }
 
     String getCommandString() {
@@ -1149,9 +1159,6 @@ public class AppConsole extends JmolConsole
     }
   }
 
-  public void setStatusListener(JmolStatusListener myStatusListener) {
-    this.statusListener = myStatusListener;
-  }
 
 }
 
