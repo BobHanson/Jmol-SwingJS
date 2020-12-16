@@ -641,6 +641,7 @@ public class SV extends T implements JSONEncodable {
     case point4f:
     case matrix3f:
     case matrix4f:
+    case quaternion:
       return (int) fValue(x);
     case bitset:
       return bsSelectToken(x).cardinality();

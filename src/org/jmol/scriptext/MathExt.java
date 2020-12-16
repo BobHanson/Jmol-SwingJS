@@ -114,7 +114,7 @@ public class MathExt {
               - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
       return (args.length == 1 && args[0].tok == T.integer ?
-          mp.addXInt(Math.abs(args[0].asInt())) : mp.addXFloat(Math.abs(args[0].asFloat())));
+          mp.addXInt(args[0].intValue) : mp.addXFloat(Math.abs(args[0].asFloat())));
     case T.acos:
     case T.cos:
     case T.sin:
