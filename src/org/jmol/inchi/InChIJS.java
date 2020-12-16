@@ -23,7 +23,6 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.PT;
-import swingjs.api.JSUtilI;
 
 /**
  * This class adapts Richard Apodaca's 2020 molfile-to-inchi LLVM-derived Web Assembly 
