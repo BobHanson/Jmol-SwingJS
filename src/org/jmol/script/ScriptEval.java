@@ -2441,11 +2441,11 @@ public class ScriptEval extends ScriptExpr {
         break;
       case 2:
         if (tokAt(1) == T.inchi) {
+          vwr.getInchi(null, null);
           if (chk) {
-            vwr.getInchi(null, null);
           } else {
-            vwr.showString("InChI module initialized", false);
             if (Viewer.isJS) {
+              vwr.showString("InChI module initialized", false);
               doDelay(1);
             }
           }
