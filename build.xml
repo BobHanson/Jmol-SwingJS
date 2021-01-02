@@ -249,6 +249,7 @@ see build.README.txt
         <include name="**/license.txt" />
         <include name="**/*.jpg" />
         <include name="**/*.gif" />
+        <include name="**/*.po" />
       	<include name="**/*.png" />
         <include name="**/*.html" />
         <include name="**/*.js" />
@@ -424,7 +425,6 @@ all support for previous versions removed
     <!-- unjar dest="${appjars.dir}" src="${lib.dir}/${itext.jar}"/ -->
     <unjar dest="${appjars.dir}" src="${lib.dir}/${naga.jar}"/>
     <unjar dest="${appjars.dir}" src="${lib.dir}/${commons-cli.jar}"/>
-    <!-- unjar dest="${appjars.dir}" src="${lib.dir}/JSpecView.jar"/ -->
   	<delete dir="${appjars.dir}/javajs" />
   	<delete dir="${appjars.dir}/org/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />

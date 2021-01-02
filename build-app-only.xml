@@ -125,7 +125,6 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
         <uptodate targetfile="${appjars.dir}">
           <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
           <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
-          <srcfiles dir="${lib.dir}" includes="JSpecView.jar"/>
             <srcfiles dir="${lib.dir}" includes="${inchi.jar}"/>
         </uptodate>
         <uptodate targetfile="build/libjars.timestamp"

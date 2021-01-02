@@ -5053,8 +5053,8 @@ public class ScriptEval extends ScriptExpr {
       script += ";restore orientation preload";
     if (script.length() > 0 && !isCmdLine_c_or_C_Option)
       // NOT checking embedded scripts in some cases
-      runScript(script);
-    //isEmbedded = false;
+    runScript(script);
+    isEmbedded = false;
   }
 
   private void cmdLog() throws ScriptException {

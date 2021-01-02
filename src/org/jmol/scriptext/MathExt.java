@@ -101,7 +101,6 @@ public class MathExt {
   }
 
   ///////////// ScriptMathProcessor extensions ///////////
-
   private static long t0 = System.currentTimeMillis();
   
   public boolean evaluate(ScriptMathProcessor mp, T op, SV[] args, int tok)
@@ -174,6 +173,8 @@ public class MathExt {
       return evaluateLoad(mp, args, tok == T.file);
     case T.find:
       return evaluateFind(mp, args);
+    case T.inchi:
+      return evaluateInChI(mp, args);
     case T.format:
     case T.label:
       return evaluateFormat(mp, op.intValue, args, tok == T.label);
@@ -225,8 +226,8 @@ public class MathExt {
       return evaluateSpacegroup(mp, args);
     case T.symop:
       return evaluateSymop(mp, args, op.tok == T.propselector);
-    //    case Token.volume:
-    //    return evaluateVolume(args);
+      //    case Token.volume:
+      //    return evaluateVolume(args);
     case T.tensor:
       return evaluateTensor(mp, args);
     case T.within:
@@ -1399,11 +1400,26 @@ public class MathExt {
         : vwr.ms.at[iAtom].group.getHelixData(tokType, 
         vwr.getQuaternionFrame(), vwr.getInt(T.helixstep)));
   }
-  
+  private boolean evaluateInChI(ScriptMathProcessor mp, SV[] args)
+      throws ScriptException {
+    // {*}.inchi(options)
+    // InChI.inchi("key")
+    // smiles.inchi(options) // including "key"
+    // molFIleData.inchi(options) // including "key"
+    SV x1 = mp.getX();
+    String flags = (args.length > 0 ? SV.sValue(args[0]) : "");
+    BS atoms = SV.getBitSet(x1, true);
+    String molData = null;
+    if (atoms == null) {
+        molData = SV.sValue(x1);
+    }    
+    return mp.addXStr(vwr.getInchi(atoms, molData, flags));
+  }
+
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
-    // {*}.find("inchi","inchi-options")
+    // {*}.find("inchi",inchi-options)
     // {*}.find("crystalClass")
     // {*}.find("CF",true|false)
     // {*}.find("MF")
@@ -1414,6 +1430,9 @@ public class MathExt {
     // {*}.find("SEQUENCE", true)
     // {*}.find("SEQUENCE", "H")
     // "AVA".find("SEQUENCE")
+    // "a sequence".find("sequence", "i") // case insensitive
+    // "a sequence".find("sequence", true) // case insensitive
+    // "a sequence".find("sequence", false) // case sensitive
     // {*}.find("SMARTS", "CCCC")
     // "CCCC".find("SMARTS", "CC")
     // "CCCC".find("SMILES", "MF")
@@ -1426,12 +1445,18 @@ public class MathExt {
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
+    boolean isAtoms = (x1.tok == T.bitset);
     boolean isEmpty = (args.length == 0);
     String sFind = (isEmpty ? "" : SV.sValue(args[0]));
+    boolean isOff = (args.length > 1 && args[1].tok == T.off);
+    SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
+    boolean isON = !isList && (argLast.tok == T.on);
     String flags = (args.length > 1 && args[1].tok != T.on
-        && args[1].tok != T.off  && args[1].tok != T.bitset ? SV.sValue(args[1]) : "");
-    boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
-    boolean isSeq = !isList && sFind.equalsIgnoreCase("SEQ");
+        && args[1].tok != T.off && args[1].tok != T.bitset ? SV.sValue(args[1])
+            : "");
+    boolean isSequence = !isList && !isOff && !isON
+        && sFind.equalsIgnoreCase("SEQUENCE");
+    boolean isSeq = !isList && !isOff && !isON && sFind.equalsIgnoreCase("SEQ");
     if (sFind.toUpperCase().startsWith("SMILES/")) {
       if (!sFind.endsWith("/"))
         sFind += "/";
@@ -1455,30 +1480,32 @@ public class MathExt {
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
-    SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
-    boolean isON = !isList && (argLast.tok == T.on);
-    boolean isInchi = !isList && sFind.equalsIgnoreCase("INCHI");
+    boolean isInchi = isAtoms && !isList && sFind.equalsIgnoreCase("INCHI");
+    boolean isInchiKey = isAtoms && !isList
+        && sFind.equalsIgnoreCase("INCHIKEY");
     try {
-      if (isInchi) {
-        if (x1.tok != T.bitset)
-          return false;
-        return mp.addXStr(vwr.getInchi((BS) x1.value, flags));
+      if (isInchi || isInchiKey) {
+        if (isInchiKey)
+          flags += " key";
+        return mp.addXStr(vwr.getInchi(SV.getBitSet(x1, true), null, flags));
       }
       if (isChemical) {
-        BS bsAtoms = (x1.tok == T.bitset ? (BS) x1.value : null);
-        String data = (bsAtoms == null ? SV.sValue(x1) : vwr.getOpenSmiles(bsAtoms));
-        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data,
-            flags.toLowerCase(), bsAtoms)).trim();
+        BS bsAtoms = (isAtoms ? (BS) x1.value : null);
+        String data = (bsAtoms == null ? SV.sValue(x1)
+            : vwr.getOpenSmiles(bsAtoms));
+        data = (data.length() == 0 ? ""
+            : vwr.getChemicalInfo(data, flags.toLowerCase(), bsAtoms)).trim();
         if (data.startsWith("InChI"))
           data = PT.rep(PT.rep(data, "InChI=", ""), "InChIKey=", "");
         return mp.addXStr(data);
       }
-      if (isSmiles || isSMARTS || x1.tok == T.bitset) {
+      if (isSmiles || isSMARTS || isAtoms) {
         int iPt = (isSmiles || isSMARTS ? 2 : 1);
-        BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset ? (BS) args[iPt++].value
+        BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset
+            ? (BS) args[iPt++].value
             : null);
-        boolean asBonds = ("bonds".equalsIgnoreCase(SV
-            .sValue(args[args.length - 1])));
+        boolean asBonds = ("bonds"
+            .equalsIgnoreCase(SV.sValue(args[args.length - 1])));
         boolean isAll = (asBonds || isON);
         Object ret = null;
         switch (x1.tok) {
@@ -1501,7 +1528,8 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
-            boolean justOne = (!asMap && (!allMappings || !isSMARTS && !pattern.equals("chirality")));
+            boolean justOne = (!asMap
+                && (!allMappings || !isSMARTS && !pattern.equals("chirality")));
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
@@ -1522,76 +1550,70 @@ public class MathExt {
           if (isMF && flags.length() != 0)
             return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, bs, flags));
           if (isMF || isCF)
-            return mp.addXStr(JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs,
-                 (isMF ? null : vwr.ms.getCellWeights(bs)), isON));
+            return mp.addXStr(JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at,
+                bs, (isMF ? null : vwr.ms.getCellWeights(bs)), isON));
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
             isAll |= isHH;
-            return mp.addXStr(vwr
-                .getSmilesOpt(bs, -1, -1,
-                    (isAll ? JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
-                        | JC.SMILES_GEN_BIO_COV_CROSSLINK
-                        | (isHH ? JC.SMILES_GEN_BIO_HH_CROSSLINK : 0) : 0)
-                        | (isSeq ? JC.SMILES_GEN_BIO_NOCOMMENTS
-                            : JC.SMILES_GEN_BIO), null));
+            return mp.addXStr(vwr.getSmilesOpt(bs, -1, -1, (isAll
+                ? JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
+                    | JC.SMILES_GEN_BIO_COV_CROSSLINK
+                    | (isHH ? JC.SMILES_GEN_BIO_HH_CROSSLINK : 0)
+                : 0)
+                | (isSeq ? JC.SMILES_GEN_BIO_NOCOMMENTS : JC.SMILES_GEN_BIO),
+                null));
           }
           if (isSmiles || isSMARTS)
-            sFind = (args.length > 1 && args[1].tok == T.bitset ? vwr
-                .getSmilesOpt((BS) args[1].value, 0, 0, 0, flags) : flags);
+            sFind = (args.length > 1 && args[1].tok == T.bitset
+                ? vwr.getSmilesOpt((BS) args[1].value, 0, 0, 0, flags)
+                : flags);
           flags = flags.toUpperCase();
           BS bsMatch3D = bs2;
           if (asBonds) {
             // this will return a single match
-            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(
-                sFind,
-                vwr.ms.at,
-                vwr.ms.ac,
-                bs,
+            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                vwr.ms.at, vwr.ms.ac, bs,
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                     | JC.SMILES_FIRST_MATCH_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else if (flags.equalsIgnoreCase("map")) {
-            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(
-                sFind,
-                vwr.ms.at,
-                vwr.ms.ac,
-                bs,
+            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                vwr.ms.at, vwr.ms.ac, bs,
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                     | JC.SMILES_MAP_UNIQUE);
             ret = map;
           } else if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
             // {*}.find("crystalClass", pt)
-            ret = vwr.ms
-                .generateCrystalClass(
-                    bs.nextSetBit(0),
-                    (args.length != 2 ? null : argLast.tok == T.bitset ? vwr.ms
-                        .getAtomSetCenter((BS) argLast.value) : SV
-                        .ptValue(argLast)));
+            ret = vwr.ms.generateCrystalClass(bs.nextSetBit(0),
+                (args.length != 2 ? null
+                    : argLast.tok == T.bitset
+                        ? vwr.ms.getAtomSetCenter((BS) argLast.value)
+                        : SV.ptValue(argLast)));
           } else {
             int smilesFlags = (isSmiles ?
 
-            (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES
-                : JC.SMILES_TYPE_SMILES) : JC.SMILES_TYPE_SMARTS)
+                (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES
+                    : JC.SMILES_TYPE_SMILES)
+                : JC.SMILES_TYPE_SMARTS)
                 | (isON && sFind.length() == 0 ? JC.SMILES_GEN_BIO_COV_CROSSLINK
-                    | JC.SMILES_GEN_BIO_COMMENT
-                    : 0);
+                    | JC.SMILES_GEN_BIO_COMMENT : 0);
             if (flags.indexOf("/MOLECULE/") >= 0) {
               // all molecules 
               JmolMolecule[] mols = vwr.ms.getMolecules();
               Lst<BS> molList = new Lst<BS>();
               for (int i = 0; i < mols.length; i++) {
                 if (mols[i].atomList.intersects(bs)) {
-                  BS bsRet = (BS) e.getSmilesExt().getSmilesMatches(sFind, null, mols[i].atomList, bsMatch3D,
-                      smilesFlags, !isON, false);
+                  BS bsRet = (BS) e.getSmilesExt().getSmilesMatches(sFind, null,
+                      mols[i].atomList, bsMatch3D, smilesFlags, !isON, false);
                   if (!bsRet.isEmpty())
                     molList.addLast(bsRet);
                 }
               }
               ret = molList;
             } else {
-              ret = e.getSmilesExt().getSmilesMatches(sFind, null, bs, bsMatch3D,
-                  smilesFlags, !isON, false);
+              ret = e.getSmilesExt().getSmilesMatches(sFind, null, bs,
+                  bsMatch3D, smilesFlags, !isON, false);
             }
           }
           break;
@@ -1604,7 +1626,7 @@ public class MathExt {
       e.evalError(ex.getMessage(), null);
     }
     boolean isReverse = (flags.indexOf("v") >= 0);
-    boolean isCaseInsensitive = (flags.indexOf("i") >= 0);
+    boolean isCaseInsensitive = (flags.indexOf("i") >= 0) || isOff;
     boolean asMatch = (flags.indexOf("m") >= 0);
     boolean checkEmpty = (sFind.length() == 0);
     boolean isPattern = (!checkEmpty && args.length == 2);
@@ -1656,15 +1678,18 @@ public class MathExt {
           n++;
           bs.set(i);
           if (asMatch)
-            v.addLast(isReverse ? what.substring(0, matcher.start())
-                + what.substring(matcher.end()) : matcher.group());
+            v.addLast(
+                isReverse
+                    ? what.substring(0, matcher.start())
+                        + what.substring(matcher.end())
+                    : matcher.group());
         }
       }
       if (!isList) {
         return (asMatch ? mp.addXStr(v.size() == 1 ? (String) v.get(0) : "")
-            : isReverse ? mp.addXBool(n == 1) : asMatch ? mp
-                .addXStr(n == 0 ? "" : matcher.group()) : mp.addXInt(n == 0 ? 0
-                : matcher.start() + 1));
+            : isReverse ? mp.addXBool(n == 1)
+                : asMatch ? mp.addXStr(n == 0 ? "" : matcher.group())
+                    : mp.addXInt(n == 0 ? 0 : matcher.start() + 1));
       }
       // removed in 14.2/3.14 -- not documented and not expected      if (n == 1)
       //    return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
@@ -2711,7 +2736,7 @@ public class MathExt {
           if (vwr.antialiased)
             pt3.scale(2f);
           pt3.y = vwr.tm.height - pt3.y;
-          vwr.tm.unTransformPoint(pt3, pt3);
+          vwr.tm.unTransformPoint(pt3, pt3);          
         }
         break;
       case T.point3f:
@@ -2728,7 +2753,7 @@ public class MathExt {
       default:
         return false;
       }
-      return mp.addXPt(pt3);
+      return mp.addXPt(pt3);      
     case 3:
       return mp.addXPt(
           P3.new3(args[0].asFloat(), args[1].asFloat(), args[2].asFloat()));

@@ -18,16 +18,27 @@
  */
 package org.jmol.inchi;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolAdapterAtomIterator;
+import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolInChI;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.util.Edge;
+import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
+import javajs.util.P3;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
 import net.sf.jniinchi.JniInchiAtom;
 import net.sf.jniinchi.JniInchiBond;
@@ -44,38 +55,36 @@ public class InChIJNI implements JmolInChI {
     // for dynamic loading
   }
 
-  /**
-   * Get An InChI string or key. 
-   */
   @Override
-  public String getInchi(Viewer vwr, BS atoms, String options) {
+  public String getInchi(Viewer vwr, BS atoms, String molData, String options) {
     try {
-      if (atoms == null || atoms.cardinality() == 0)
+      if (atoms == null ? molData == null : atoms.cardinality() == 0)
         return "";
-      boolean isStructure = false;
-      if (options == null) {
+      if (options == null)
         options = "";
-      } else if (options.startsWith("structure/")) {
+      if (options.startsWith("structure/")) {
         String inchi = options.substring(10);
-        return getStructure(JniInchiWrapper.getStructureFromInchi(new JniInchiInputInchi(inchi)));
+        JniInchiInputInchi in = new JniInchiInputInchi(inchi);
+        return getStructure(JniInchiWrapper.getStructureFromInchi(in));
       }
-      else if (options.startsWith("structure")) {
-        options = options.substring(9).trim();
-        isStructure = true;
+      String inchi = null;
+      boolean haveKey = false;
+      if (molData != null && molData.startsWith("InChI=")) {
+        inchi = molData;
+        haveKey = true;
+      } else {
+        options = options.toLowerCase();
+        haveKey = (options.indexOf("key") >= 0);
+        if (haveKey) {
+          options = options.replace("inchikey", "");
+          options = options.replace("key", "");
+        }
+        JniInchiInput in = new JniInchiInput(options);
+        in.setStructure(newJniInchiStructure(vwr, atoms, molData));
+        inchi = JniInchiWrapper.getInchi(in).getInchi();
       }
-      options = options.toLowerCase();
-      boolean haveKey = (options.indexOf("key") >= 0);
-      if (haveKey) {
-        options = options.replace("inchikey", "");
-        options = options.replace("key", "");
-      }
-      JniInchiInput in = new JniInchiInput(options);
-      in.setStructure(newJniInchiStructure(vwr, atoms));
-      String s = JniInchiWrapper.getInchi(in).getInchi();
-      return (haveKey ? JniInchiWrapper.getInchiKey(s).getKey() 
-          : isStructure ? getStructure(JniInchiWrapper.getStructureFromInchi(new JniInchiInputInchi(s)))
-              : s);
-    } catch (JniInchiException e) {
+      return (haveKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
+    } catch (Exception e) {
       if (e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
             + "\n See https://www.inchi-trust.org/download/104/inchi-faq.pdf for valid options");
@@ -95,10 +104,35 @@ public class InChIJNI implements JmolInChI {
    * 
    * @param vwr
    * @param bsAtoms
+   * @param molData
    * @return a structure for JniInput
    */
-  private static JniInchiStructure newJniInchiStructure(Viewer vwr, BS bsAtoms) {
+  private static JniInchiStructure newJniInchiStructure(Viewer vwr, BS bsAtoms,
+                                                        String molData) {
     JniInchiStructure mol = new JniInchiStructure();
+
+    if (molData != null) {
+      MolReader reader = new MolReader(vwr, molData);
+      JmolAdapterAtomIterator ai = reader.atomIterator;
+      List<JniInchiAtom> atoms = new ArrayList<JniInchiAtom>();
+      while (ai.hasNext()) {
+        P3 p = ai.getXYZ();
+        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
+            Elements.elementSymbolFromNumber(ai.getElementNumber()));
+        mol.addAtom(a);
+        atoms.add(a);
+      }
+      JmolAdapterBondIterator bi = reader.bondIterator;
+      while (bi.hasNext()) {
+        INCHI_BOND_TYPE order = getOrder(bi.getEncodedOrder());
+        if (order != null)
+          mol.addBond(new JniInchiBond(
+              atoms.get(((Integer) bi.getAtomUniqueID1()).intValue()),
+              atoms.get(((Integer) bi.getAtomUniqueID2()).intValue()), order));
+      }
+      return mol;
+    }
+
     JniInchiAtom[] atoms = new JniInchiAtom[bsAtoms.cardinality()];
     int[] map = new int[bsAtoms.length()];
     BS bsBonds = vwr.ms.getBondsForSelectedAtoms(bsAtoms, false);
@@ -112,47 +146,66 @@ public class InChIJNI implements JmolInChI {
     Bond[] bonds = vwr.ms.bo;
     for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
       Bond bond = bonds[i];
-      INCHI_BOND_TYPE order;
-      switch (bond.order) {
-      case Edge.BOND_COVALENT_SINGLE:
-      case Edge.BOND_AROMATIC_SINGLE:
-        order = INCHI_BOND_TYPE.SINGLE;
-        break;
-      case Edge.BOND_AROMATIC_DOUBLE:
-      case Edge.BOND_COVALENT_DOUBLE:
-        order = INCHI_BOND_TYPE.DOUBLE;
-        break;
-      case Edge.BOND_COVALENT_TRIPLE:
-        order = INCHI_BOND_TYPE.TRIPLE;
-        break;
-      default:
-        continue;
-      }
-      mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
-          atoms[map[bond.getAtomIndex2()]], order));
+      INCHI_BOND_TYPE order = getOrder(bond.order);
+      if (order != null)
+        mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
+            atoms[map[bond.getAtomIndex2()]], order));
     }
     return mol;
+  }
+
+  private static INCHI_BOND_TYPE getOrder(int order) {
+    switch (order) {
+    case Edge.BOND_COVALENT_SINGLE:
+    case Edge.BOND_AROMATIC_SINGLE:
+      return INCHI_BOND_TYPE.SINGLE;
+    case Edge.BOND_AROMATIC_DOUBLE:
+    case Edge.BOND_COVALENT_DOUBLE:
+      return INCHI_BOND_TYPE.DOUBLE;
+    case Edge.BOND_COVALENT_TRIPLE:
+      return INCHI_BOND_TYPE.TRIPLE;
+    default:
+      return null;
+    }
   }
 
   private static String toString(JniInchiStructure mol) {
     int na = mol.getNumAtoms();
     int nb = mol.getNumBonds();
     String s = "";
-    List<JniInchiAtom> atoms = new ArrayList<JniInchiAtom>();
     for (int i = 0; i < na; i++) {
-      JniInchiAtom atom = mol.getAtom(i);
-      atoms.add(atom);
-      s += atom.getElementType() + atoms.size() + " " + atom.getDebugString() + "\n";
+      s += mol.getAtom(i).getDebugString() + "\n";
     }
     for (int i = 0; i < nb; i++) {
-      JniInchiBond bond = mol.getBond(i);
-      JniInchiAtom atom1 = bond.getTargetAtom();
-      JniInchiAtom atom2 = bond.getOriginAtom();
-      s += atom1.getElementType() + (atoms.indexOf(atom1) + 1)
-          + " " + atom2.getElementType() + (atoms.indexOf(atom2) + 1)
-          + " " + bond.getBondType().name() + "\n";
+      s += mol.getBond(i).getDebugString() + "\n";
     }
     return s;
   }
 
+  static class MolReader {
+
+    JmolAdapterAtomIterator atomIterator;
+    JmolAdapterBondIterator bondIterator;
+
+    public MolReader(Viewer vwr, String molData) {
+      Map<String, Object> htParams = new Hashtable<String, Object>();
+      BufferedReader r = new BufferedReader(new StringReader(molData));
+      JmolAdapter adapter = vwr.getModelAdapter();
+      Object atomSetReader = adapter.getAtomSetCollectionReader("String", null,
+          r, htParams);
+      if (atomSetReader instanceof String) {
+        System.err.println("InChIJNI could not read molData");
+        return;
+      }
+      Object o = adapter.getAtomSetCollection(atomSetReader);
+      System.out.println("" + o);
+      AtomSetCollection asc = (AtomSetCollection) o;
+      atomIterator = adapter.getAtomIterator(asc);
+      bondIterator = adapter.getBondIterator(asc);
+      try {
+        r.close();
+      } catch (IOException e) {
+      }
+    }
+  }
 }

@@ -37,7 +37,9 @@ import javax.swing.JPanel;
 
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolViewer;
+import org.jmol.script.SV;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 
 /**
@@ -92,12 +94,25 @@ public class Integration {
     // sample start-up script
     
     String strError = jmolPanel.viewer
-        .openFile("http://chemapps.stolaf.edu/jmol/docs/examples-11/data/caffeine.xyz");
+        .openFile("https://chemapps.stolaf.edu/jmol/docs/examples-11/data/caffeine.xyz");
     //viewer.openStringInline(strXyzHOH);
-    if (strError == null)
-      jmolPanel.viewer.evalString(strScript);
+    if (strError == null) 
+      runExampleScript(jmolPanel.viewer);
     else
       Logger.error(strError);
+  }
+
+  private static void runExampleScript(JmolViewer viewer) {
+    viewer.scriptWait(strScript);
+    test(viewer.evaluateExpressionAsVariable("quaternion()"));
+  }
+
+  private static void test(Object x) {
+    if (x instanceof SV) {
+      x = ((SV) x).value;
+    }
+    System.out.println(x + " " + x.getClass().getName());
+    
   }
 
   final static String strXyzHOH = "3\n" 

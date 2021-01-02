@@ -521,8 +521,8 @@ public class ScriptManager implements JmolScriptManager {
   }
   
   public String wasmHack(String cmd) {
-    if (Viewer.isJS && (cmd.indexOf("find('inchi')") >= 0 || cmd.indexOf("find(\"inchi\")") >= 0)) {
-      vwr.getInchi(null, null);
+    if (Viewer.isJS && (cmd.indexOf("find('inchi')") >= 0 || cmd.indexOf("find(\"inchi\")") >= 0)|| cmd.indexOf(".inchi(")>=0) {
+      vwr.getInchi(null, null, null);
     }
     return cmd;
   }

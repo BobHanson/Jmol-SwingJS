@@ -74,38 +74,34 @@ public class InChIJS implements JmolInChI {
   }
 
   @Override
-  public String getInchi(Viewer vwr, BS atoms, String options) {
-    String ret = "";
-    if (atoms == null || atoms.cardinality() == 0)
+  public String getInchi(Viewer vwr, BS atoms, String molData, String options) {
+    if (atoms == null ? molData == null : atoms.cardinality() == 0)
       return "";
+    String ret = "";
     try {
       if (options == null)
         options = "";
-      options = PT.rep(PT.rep(options.replace('-',' '), "  ", " ").trim(), " ", " -");
+      options = PT.rep(PT.rep(options.replace('-',' '), "  ", " ").trim(), " ", " -").toLowerCase();
       if (options.length() > 0)
         options = "-" + options;
-      @SuppressWarnings("unused")
-      String molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
-      options = options.toLowerCase();
-      if (options.length() > 0)
-        System.err.println("JavaScript inchi.js options not implemented");
-      boolean haveKey = (options.indexOf("key") >= 0);
-      if (haveKey) {
-        // NOT IMPLEMENTED
-        options = options.replace("inchikey", "");
-        options = options.replace("key", "");
-        return "";
-      }
+      if (molData == null)
+        molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
+      if (molData.startsWith("InChI=")) {
+        /**
+         * @j2sNative
+         *  ret = (Jmol.inchiToInchiKey ? Jmol.inchiToInchiKey(molData) : "");
+         */{}
 
-      /**
-       * @j2sNative
-       *  ret = (Jmol.molfileToInChI ? Jmol.molfileToInChI(molData, options) : "");
-       */{}
-//      
-//      JniInchiInput in = new JniInchiInput(options);
-//      in.setStructure(newJniInchiStructure(vwr, atoms));
-//      String s = JniInchiWrapper.getInchi(in).getInchi();
-//      return (haveKey ? JniInchiWrapper.getInchiKey(s).getKey() : s);
+      } else {
+        boolean haveKey = (options.indexOf("key") >= 0);
+        if (haveKey) {
+          options = options.replace("inchikey", "key");
+        }
+        /**
+         * @j2sNative
+         *  ret = (Jmol.molfileToInChI ? Jmol.molfileToInChI(molData, options) : "");
+         */{}
+      }
     } catch (Throwable e) {
       // oddly, e will be a string, not an error
       /**

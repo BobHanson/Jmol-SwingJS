@@ -51,6 +51,7 @@ import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDataManager;
+import org.jmol.api.JmolInChI;
 import org.jmol.api.JmolJSpecView;
 import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.JmolPropertyManager;
@@ -3997,6 +3998,8 @@ public class Viewer extends JmolViewer
 
   public String evalStringQuietSync(String strScript, boolean isQuiet,
                                     boolean allowSyncScript) {
+    
+    
     return (getScriptManager() == null ? null
         : scm.evalStringQuietSync(strScript, isQuiet, allowSyncScript));
   }
@@ -10101,8 +10104,24 @@ public class Viewer extends JmolViewer
         : null;
   }
 
-  public String getInchi(BS atoms, String options) {
-    return this.apiPlatform.getInChI().getInchi(this, atoms, options);
+  public String getInchi(BS atoms, String molData, String options) {
+    try {
+      JmolInChI inch = this.apiPlatform.getInChI();
+      if (atoms == null && molData == null)
+        return "";
+      if (molData != null) {
+        if (molData.startsWith("$") || molData.startsWith(":")) {
+          molData = getFileAsString4(molData, -1, false, false, true, "script");
+        } else if (!molData.startsWith("InChI=") && molData.indexOf(" ") < 0) {
+          // assume SMILES
+          molData = getFileAsString4("$" + molData, -1, false, false, true,
+              "script");
+        }
+      }
+      return inch.getInchi(this, atoms, molData, options);
+    } catch (Throwable t) {
+      return "";
+    }
   }
 
 

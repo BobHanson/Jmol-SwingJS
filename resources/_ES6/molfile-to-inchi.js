@@ -19,7 +19,8 @@ import WASI from '../_WASM/wasi.esm.js';
 const app = (self.J2S || self.Jmol || self);
 const wasmPath = app.inchiPath || ".";
 const memory = new WebAssembly.Memory({ initial: 10 });
-const molmaxbytes = app.inchiMaxBytes || 0x8000;
+const inputMaxBytes = app.inchiMaxBytes || 0x8000;
+const outputMaxBytes = 0x4000;
 (async () => {
   const response = await fetch(wasmPath + '/molfile_to_inchi.wasm');
   const bytes = await response.arrayBuffer();
@@ -27,9 +28,9 @@ const molmaxbytes = app.inchiMaxBytes || 0x8000;
   const { instance } = await WebAssembly.instantiate(bytes, {
     env: { memory }, wasi_snapshot_preview1: wasi.wasiImport
   });
-  const pMolfile = instance.exports.malloc(molmaxbytes);
+  const pInput = instance.exports.malloc(inputMaxBytes);
   const pOptions = instance.exports.malloc(0x100);
-  const pOutput = instance.exports.malloc(0x4000);
+  const pOutput = instance.exports.malloc(outputMaxBytes);
 
   app.showInChIOptions = () => {
    var s = "";
@@ -58,30 +59,46 @@ const molmaxbytes = app.inchiMaxBytes || 0x8000;
 
   app.molfileToInChI = (molfile,options) => {
     options || (options = "");
-    if (molfile.length + 1 > pOptions - pMolfile) {
-    	alert("Model data is over the maximum of " + (pOptions - pMolfile -1) + " bytes. \nYou can set this as Jmol.inchiMaxBytes.");
+    if (molfile.length + 1 > inputMaxBytes) {
+    	alert("Model data is over the maximum of " + inputMaxBytes + " bytes. \nYou can set this as Jmol.inchiMaxBytes.");
     	return "";
     } 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
     const inputView = new Uint8Array(memory.buffer);
-    inputView.set(encoder.encode(molfile + "\0"), pMolfile);
+    inputView.set(encoder.encode(molfile + "\0"), pInput);
     molfile = ""; // BH this is just so we can debug easier.
     inputView.set(encoder.encode(options + "\0"), pOptions);
 
-    const result = instance.exports.molfile_to_inchi(pMolfile, pOptions, pOutput);
+    const result = instance.exports.molfile_to_inchi(pInput, pOptions, pOutput);
 
-    const outputView = new Uint8Array(memory.buffer.slice(pOutput));
+    const outputView = new Uint8Array(memory.buffer.slice(pOutput, pOutput + outputMaxBytes));
     const o = outputView.subarray(0, outputView.indexOf(0));
     const output = decoder.decode(o);
 
     if (result < 0 || result > 1) {
         alert("Error code " + result + " " + output.length);
     }
-
-    return output;
+    
+	return (options.toLowerCase().indexOf("key") >= 0 ? toKey(output) : output);
   };
+  
+  app.inchiToInchiKey = (inchi) => {
+    return toKey(inchi);
+  };
+    
+  const toKey = (inchi) => {
+    const inputView = new Uint8Array(memory.buffer);
+    
+    inputView.set(new TextEncoder().encode(inchi + "\0"), pInput);
+    
+    const ret = instance.exports.inchi_to_inchikey(pInput, pOutput);
+    const outputView = new Uint8Array(memory.buffer.slice(pOutput, pOutput + outputMaxBytes));
+    
+    return new TextDecoder().decode(outputView.subarray(0, outputView.indexOf(0)));
+  };
+  
+  window.dispatchEvent(new Event('InChIReady'));
 
-//  window.dispatchEvent(new Event('InChIReady'));
 })();
