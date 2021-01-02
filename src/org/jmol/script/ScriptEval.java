@@ -2441,7 +2441,7 @@ public class ScriptEval extends ScriptExpr {
         break;
       case 2:
         if (tokAt(1) == T.inchi) {
-          vwr.getInchi(null, null);
+          vwr.getInchi(null, null, null);
           if (chk) {
           } else {
             if (Viewer.isJS) {
@@ -5054,6 +5054,7 @@ public class ScriptEval extends ScriptExpr {
     if (script.length() > 0 && !isCmdLine_c_or_C_Option)
       // NOT checking embedded scripts in some cases
       runScript(script);
+    //isEmbedded = false;
   }
 
   private void cmdLog() throws ScriptException {
