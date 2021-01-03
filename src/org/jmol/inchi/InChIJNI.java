@@ -119,6 +119,7 @@ public class InChIJNI implements JmolInChI {
         P3 p = ai.getXYZ();
         JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
             Elements.elementSymbolFromNumber(ai.getElementNumber()));
+        a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
         atoms.add(a);
       }
@@ -141,6 +142,7 @@ public class InChIJNI implements JmolInChI {
       Atom a = vwr.ms.at[i];
       mol.addAtom(
           atoms[pt] = new JniInchiAtom(a.x, a.y, a.z, a.getElementSymbol()));
+          atoms[pt].setCharge(a.getFormalCharge());
       map[i] = pt++;
     }
     Bond[] bonds = vwr.ms.bo;
