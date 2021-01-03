@@ -21,9 +21,7 @@ package org.jmol.inchi;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
@@ -42,10 +40,8 @@ import javajs.util.P3;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
 import net.sf.jniinchi.JniInchiAtom;
 import net.sf.jniinchi.JniInchiBond;
-import net.sf.jniinchi.JniInchiException;
 import net.sf.jniinchi.JniInchiInput;
 import net.sf.jniinchi.JniInchiInputInchi;
-import net.sf.jniinchi.JniInchiOutputStructure;
 import net.sf.jniinchi.JniInchiStructure;
 import net.sf.jniinchi.JniInchiWrapper;
 
@@ -80,7 +76,11 @@ public class InChIJNI implements JmolInChI {
           options = options.replace("key", "");
         }
         JniInchiInput in = new JniInchiInput(options);
-        in.setStructure(newJniInchiStructure(vwr, atoms, molData));
+        if (atoms == null) {
+          in.setStructure(newJniInchiStructure(vwr, molData));
+        } else {
+          in.setStructure(newJniInchiStructure(vwr, atoms));          
+        }
         inchi = JniInchiWrapper.getInchi(in).getInchi();
       }
       return (haveKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
@@ -104,36 +104,10 @@ public class InChIJNI implements JmolInChI {
    * 
    * @param vwr
    * @param bsAtoms
-   * @param molData
    * @return a structure for JniInput
    */
-  private static JniInchiStructure newJniInchiStructure(Viewer vwr, BS bsAtoms,
-                                                        String molData) {
+  private static JniInchiStructure newJniInchiStructure(Viewer vwr, BS bsAtoms) {
     JniInchiStructure mol = new JniInchiStructure();
-
-    if (molData != null) {
-      MolReader reader = new MolReader(vwr, molData);
-      JmolAdapterAtomIterator ai = reader.atomIterator;
-      List<JniInchiAtom> atoms = new ArrayList<JniInchiAtom>();
-      while (ai.hasNext()) {
-        P3 p = ai.getXYZ();
-        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
-            Elements.elementSymbolFromNumber(ai.getElementNumber()));
-        a.setCharge(ai.getFormalCharge());
-        mol.addAtom(a);
-        atoms.add(a);
-      }
-      JmolAdapterBondIterator bi = reader.bondIterator;
-      while (bi.hasNext()) {
-        INCHI_BOND_TYPE order = getOrder(bi.getEncodedOrder());
-        if (order != null)
-          mol.addBond(new JniInchiBond(
-              atoms.get(((Integer) bi.getAtomUniqueID1()).intValue()),
-              atoms.get(((Integer) bi.getAtomUniqueID2()).intValue()), order));
-      }
-      return mol;
-    }
-
     JniInchiAtom[] atoms = new JniInchiAtom[bsAtoms.cardinality()];
     int[] map = new int[bsAtoms.length()];
     BS bsBonds = vwr.ms.getBondsForSelectedAtoms(bsAtoms, false);
@@ -142,7 +116,7 @@ public class InChIJNI implements JmolInChI {
       Atom a = vwr.ms.at[i];
       mol.addAtom(
           atoms[pt] = new JniInchiAtom(a.x, a.y, a.z, a.getElementSymbol()));
-          atoms[pt].setCharge(a.getFormalCharge());
+      atoms[pt].setCharge(a.getFormalCharge());
       map[i] = pt++;
     }
     Bond[] bonds = vwr.ms.bo;
@@ -152,6 +126,57 @@ public class InChIJNI implements JmolInChI {
       if (order != null)
         mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
             atoms[map[bond.getAtomIndex2()]], order));
+    }
+    return mol;
+  }
+
+  /**
+   * Jmol addition to create a JniInchiStructure from MOL data. Currently only
+   * supports single, double, aromatic_single and aromatic_double.
+   * 
+   * @param vwr
+   * @param molData
+   * @return a structure for JniInput
+   */
+  private static JniInchiStructure newJniInchiStructure(Viewer vwr,
+                                                        String molData) {
+    JniInchiStructure mol = new JniInchiStructure();
+    BufferedReader r = new BufferedReader(new StringReader(molData));
+    try {
+      Map<String, Object> htParams = new Hashtable<String, Object>();
+      JmolAdapter adapter = vwr.getModelAdapter();
+      Object atomSetReader = adapter.getAtomSetCollectionReader("String", null,
+          r, htParams);
+      if (atomSetReader instanceof String) {
+        System.err.println("InChIJNI could not read molData");
+        return null;
+      }
+      AtomSetCollection asc = (AtomSetCollection) adapter
+          .getAtomSetCollection(atomSetReader);
+      JmolAdapterAtomIterator ai = adapter.getAtomIterator(asc);
+      JmolAdapterBondIterator bi = adapter.getBondIterator(asc);
+      JniInchiAtom[] atoms = new JniInchiAtom[asc.getAtomSetAtomCount(0)];
+      int n = 0;
+      while (ai.hasNext() && n < atoms.length) {
+        P3 p = ai.getXYZ();
+        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
+            Elements.elementSymbolFromNumber(ai.getElementNumber()));
+        a.setCharge(ai.getFormalCharge());
+        mol.addAtom(a);
+        atoms[n++] = a;
+      }
+      while (bi.hasNext()) {
+        INCHI_BOND_TYPE order = getOrder(bi.getEncodedOrder());
+        if (order != null)
+          mol.addBond(new JniInchiBond(
+              atoms[((Integer) bi.getAtomUniqueID1()).intValue()],
+              atoms[((Integer) bi.getAtomUniqueID2()).intValue()], order));
+      }
+    } finally {
+      try {
+        r.close();
+      } catch (IOException e) {
+      }
     }
     return mol;
   }
@@ -184,30 +209,4 @@ public class InChIJNI implements JmolInChI {
     return s;
   }
 
-  static class MolReader {
-
-    JmolAdapterAtomIterator atomIterator;
-    JmolAdapterBondIterator bondIterator;
-
-    public MolReader(Viewer vwr, String molData) {
-      Map<String, Object> htParams = new Hashtable<String, Object>();
-      BufferedReader r = new BufferedReader(new StringReader(molData));
-      JmolAdapter adapter = vwr.getModelAdapter();
-      Object atomSetReader = adapter.getAtomSetCollectionReader("String", null,
-          r, htParams);
-      if (atomSetReader instanceof String) {
-        System.err.println("InChIJNI could not read molData");
-        return;
-      }
-      Object o = adapter.getAtomSetCollection(atomSetReader);
-      System.out.println("" + o);
-      AtomSetCollection asc = (AtomSetCollection) o;
-      atomIterator = adapter.getAtomIterator(asc);
-      bondIterator = adapter.getBondIterator(asc);
-      try {
-        r.close();
-      } catch (IOException e) {
-      }
-    }
-  }
 }
