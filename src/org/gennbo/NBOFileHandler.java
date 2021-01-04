@@ -174,10 +174,16 @@ class NBOFileHandler extends JPanel {
   protected boolean loadSelectedFile(File selectedFile) {
     dialog.nboService.restartIfNecessary();
     inputFile = selectedFile;
+    
     //if(!useExt.equals("47")&&!useExt.equals("31")&&!useExt.equals("nbo")) 
     //return false;
     if (dialog.dialogMode == NBODialog.DIALOG_MODEL)
       return true;
+    
+    //fzy: Professor Frank initially wanted this feature to be added in, but wanted it abandoned later on
+    //because it can't work on large files, which is a mystery (I'm not given any such large files to debug on error)
+//    dialog.convertUnix2Dos(inputFile.getParent(), NBOUtil.getJobStem(inputFile), NBOUtil.getExt(inputFile));
+    
     if (!useExt.equals("47")) {
       setJobStemAndTextFieldName(NBOUtil.getJobStem(inputFile));
       dialog.modelPanel.loadModelFromNBO(fullFilePath, jobStem, useExt);
@@ -208,6 +214,7 @@ class NBOFileHandler extends JPanel {
     this.inputFile = inputFile;
     if (inputFile.getName().indexOf(".") > 0)
       jobStem = NBOUtil.getJobStem(inputFile);
+    
     if (dialog.modelOrigin == NBODialog.ORIGIN_NBO_ARCHIVE)
       clearInputFile(true);
     setInput(inputFile.getParent(), jobStem, useExt);
@@ -386,108 +393,87 @@ class NBOFileHandler extends JPanel {
   }
 
 
-  public String[] update47File(String jobName, String keywords) {
+  /**
+   * update47File will only be called by doRunSaveButton() and doRunGenNBOJob() in NBORun.java
+   * If this method is being first called on a given .47 file, we will make a copy of the .47 file,
+   * called <filename>.copy. At the end of the module (when we want to switch to another module), we will
+   * copy our <filename>.copy to <filename>.47.
+   * 
+   * @param jobName
+   * @param keywords
+   * @param isRun
+   * @return [
+   */
+  
+  public String[] update47File(String jobName, String keywords, boolean isRun) {
     if (!useExt.equals("47"))
       return null;
     
-    int i;
-    String filePath="";
-    //copyFilePath==full path to <filename.copy>
-    String copyFilePath="";
-    //fileName47==full path to <filename.47>
     String fileName47 = inputFile.getAbsolutePath();
     
-    //if filename.copy doesn't exist, this is the first time that we are updating filename.47.
-    //we will need to copy filename.47 to filename.copy
-    //Otherwise, just update to filename.47 directly.
-    
-    //change file path from <filename.47> to <filename.copy>
-    //  For windows:
-    String splitBySeparator[]=fileName47.split("\\\\");
-    //  For Linux:
-    //    String splitBySeparator[]=fileName47.split("/");
-    
-    if(splitBySeparator.length>0)
+    File copyFile47=new File(fileName47+"$");
+    FileInputStream originalFileReader=null;
+    FileOutputStream copyFileWriter=null;
+    if(isRun && !dialog.backupFileExists(jobName))
     {
-      filePath=splitBySeparator[splitBySeparator.length-1];
-    }
-    else
-    {
-      dialog.logInfo("Could not create file copy for " + fileName47, Logger.LEVEL_ERROR);
-      return null;
-    }
-    filePath=filePath.replace(".47",".copy");
-    splitBySeparator[splitBySeparator.length-1]=filePath;
-    for(i=0;i<splitBySeparator.length;i++)
-    {
-      copyFilePath=copyFilePath+splitBySeparator[i]+"\\";
-    }
-    
-    //if <filename.copy> doesn't exist, create the file and copy all the data of .47 file to .copy
-    File file=new File(copyFilePath);
-    FileInputStream source47=null;
-    FileOutputStream destinationCopy=null;
-    if(!file.exists())
-    {
-      //if file doesn't exist, a "better" implementation would be to
-      //1. data=getFileData(fileName47)
-      //2. writeToFile(copyFilePath,data)
-      //*However*, writeToFile goes through too many other classes and can get error in those classes.
-      //We want to ensure that our copying of <filename>.47 to <filename>.out is ALWAYS successful before
-      //we overwrite or modify our <filename>.47
-      
       try
       {
-        file.createNewFile();
-        File sourceFile47=new File(fileName47);
-        source47=new FileInputStream(sourceFile47);
-        destinationCopy=new FileOutputStream(file);
-        destinationCopy.getChannel().transferFrom(source47.getChannel(), 0, source47.getChannel().size());
-        File47AndFileCopy file47fileCopyPair=new File47AndFileCopy(fileName47,copyFilePath);
-        dialog.insertNewFileCopy(file47fileCopyPair);
+        if(!copyFile47.exists())
+        {
+          copyFile47.createNewFile();
+          copyFileWriter=new FileOutputStream(copyFile47);
+        }
+        else
+        {
+          copyFileWriter=new FileOutputStream(copyFile47,false);
+        }
+        File originalFile47=new File(fileName47);
+        originalFileReader=new FileInputStream(originalFile47);
+        //just a threshold to ensure that the original file 47 that we are going to copy isn't corrupted at the first place
+//        if(originalFileReader.getChannel().size()>50000)
+        copyFileWriter.getChannel().transferFrom(originalFileReader.getChannel(),0,originalFileReader.getChannel().size());
+        File47AndFileCopy pair=new File47AndFileCopy(jobName,fileName47,fileName47+"$");
+        dialog.insertNewFileCopy(pair);
       }
       catch(IOException ex)
       {
-        dialog.logInfo("Could not create file47 copy " + copyFilePath, Logger.LEVEL_ERROR);
+        dialog.logInfo("Could not create copy for file 47. Update to file 47 aborted.", Logger.LEVEL_ERROR);
         return null;
       }
       finally
       {
         try
         {
-          if(source47!=null)
-          {
-            source47.close();
-          }
-          if(destinationCopy!=null)
-          {
-            destinationCopy.close();
-          }
+          if(originalFileReader!=null)
+            originalFileReader.close();
+          if(copyFileWriter!=null)
+            copyFileWriter.close();
         }
         catch(IOException ex)
         {
-          dialog.logInfo("Could not close file " + copyFilePath, Logger.LEVEL_ERROR);
+          dialog.logInfo("Could not close file " + fileName47+"$. Update to file 47 aborted.", Logger.LEVEL_ERROR);
           return null;
         }
-        
       }
     }
     
-    
     String[] fileData = read47File(true);
-    if (writeToFile(fileName47, fileData[0] + "$NBO\n "
+//    String oldData = (isRun ? getFileData(fileName47) : null);
+        
+    if (writeToFile(inputFile.getAbsolutePath(), fileData[0] + "$NBO\n "
         + "FILE=" + jobName + " " + keywords + "  $END" + sep + fileData[2])) {
+//      if (oldData != null)
+//        writeToFile(fileName47 + "$", oldData);
       fileData[1] = keywords;
       fileData[3] = "FILE=" + jobName + " " + keywords; 
       dialog.runPanel.doLogJobName(jobName);
       dialog.runPanel.doLogKeywords(keywords);
       return fileData;
     }
-    dialog.logInfo("Could not create " + inputFile, Logger.LEVEL_ERROR);
+    dialog.logInfo("Could not create " + fileName47, Logger.LEVEL_ERROR);
     return null;
   }
-
-
+  
   /**
    * Check to see if the jobName (from file= or tfJobName) and the jobStem (loaded file stem)
    * are the same, and if not, warn the user and offer them the opportunity to bail now.
@@ -524,13 +510,20 @@ class NBOFileHandler extends JPanel {
 
 class File47AndFileCopy
 {
+  private String jobName;
   private String file47;
   private String filecopy;
   
-  File47AndFileCopy(String file_47,String file_copy)
+  File47AndFileCopy(String jobName,String file47,String fileCopy)
   {
-    this.file47=file_47;
-    this.filecopy=file_copy;
+    this.jobName=jobName;
+    this.file47=file47;
+    this.filecopy=fileCopy;
+  }
+  
+  String getJobname()
+  {
+    return this.jobName;
   }
   
   String getFile47()

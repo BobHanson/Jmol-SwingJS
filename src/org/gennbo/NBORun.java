@@ -332,7 +332,7 @@ class NBORun {
     }
     String name = tfJobName.getText().trim();
     name = dialog.inputFileHandler.fixJobName(name);
-    dialog.inputFileHandler.update47File(name, keywords);
+    dialog.inputFileHandler.update47File(name, keywords,false);
     addNBOKeylist();
     tfJobName.setText(name);
     editBox.repaint();
@@ -732,14 +732,16 @@ class NBORun {
     jobName = (jobName.equals("") ? dialog.inputFileHandler.jobStem : jobName);
 
     String[] fileData = dialog.inputFileHandler.update47File(jobName,
-        newKeywords);
+        newKeywords,true);
     if (fileData == null)
       return;
     SB sb = new SB();
     NBOUtil.postAddGlobalC(sb, "PATH",
         dialog.inputFileHandler.inputFile.getParent());
     NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
-    NBOUtil.postAddGlobalC(sb, "ESS", "gennbo");
+    //fzy: removed on the request of professor frank. Jmol shouldn't force NBOServe to restart gennbo.
+    //gennbo will do it itself.
+//    NBOUtil.postAddGlobalC(sb, "ESS", "gennbo");
     NBOUtil.postAddGlobalC(sb, "LABEL_1", "FILE=" + jobName);
 
     dialog.logCmd("RUN GenNBO FILE=" + jobName + " "

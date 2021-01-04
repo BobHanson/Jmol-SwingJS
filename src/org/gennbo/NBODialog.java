@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
-import javax.swing.SwingConstants;
 import javajs.util.PT;
 
 import javax.swing.BorderFactory;
@@ -72,6 +71,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -92,7 +92,7 @@ public class NBODialog extends JDialog {
 
   protected JLabel licenseInfo;
 
-  private JButton helpBtn;
+  private JButton helpBtn,helpBtn_M,helpBtn_R,helpBtn_V, helpBtn_S, helpBtn_Main;
 
   private JDialog settingsDialog;
   private JPanel topPanel;
@@ -366,7 +366,8 @@ public class NBODialog extends JDialog {
 
     viewPanel.resetCurrentOrbitalClicked();
     resetVariables_c();
-    restore47filesFromFileCopy();
+    //When switching modules, no need to restore 47 files from filecopy
+//    restore47filesFromFileCopy();
     
   }
 
@@ -553,11 +554,26 @@ public class NBODialog extends JDialog {
     icon.setBorder(BorderFactory.createLineBorder(Color.black));
 
     p.add(b);
+    JPanel titleAndHelpBtn=new JPanel();
+    titleAndHelpBtn.setBackground(Color.WHITE);
+    titleAndHelpBtn.setLayout(new BoxLayout(titleAndHelpBtn, BoxLayout.X_AXIS));
     lab = new JLabel(getName());
     lab.setFont(NBOConfig.nboProTitleFont);
     lab.setForeground(Color.red);
-    p.add(lab);
+    
+    helpBtn_Main=new HelpBtn("Jmol_NBOPro6_help.htm");
+    helpBtn_Main.setBackground(Color.RED);
+    helpBtn_Main.setForeground(Color.white);
+    
+    titleAndHelpBtn.add(Box.createRigidArea(new Dimension(195, 5)));
+    titleAndHelpBtn.add(lab);
+    titleAndHelpBtn.add(Box.createRigidArea(new Dimension(166, 5)));
+    titleAndHelpBtn.add(helpBtn_Main);
     lab.setAlignmentX(0.5f);
+    p.add(titleAndHelpBtn);
+    
+    
+    
     lab = new JLabel("Frank Weinhold, Dylan Phillips, Foo Zhi Yuan, Eric Glendening and Robert Hanson");
     lab.setAlignmentX(0.5f);
     p.add(lab);
@@ -566,6 +582,7 @@ public class NBODialog extends JDialog {
     GridBagConstraints c = new GridBagConstraints();
     p2.setBorder(BorderFactory.createLineBorder(Color.black));
     JButton btn = new JButton("Model");
+    helpBtn_M = new HelpBtn("model_help.htm");
 
     btn.setForeground(Color.WHITE);
     btn.setBackground(Color.BLUE);
@@ -587,7 +604,12 @@ public class NBODialog extends JDialog {
     c.gridwidth = 3;
     p2.add(lab = new JLabel("  Create & edit molecular model and input files"),
         c);
-
+    c.gridx = 6;
+    c.gridy = 0;
+    c.gridwidth = 1;
+    c.gridheight = 1; 
+    p2.add(helpBtn_M, c);
+    
     c.gridx = 5;
     c.gridwidth = 1;
     p2.add(Box.createRigidArea(new Dimension(60, 10)), c);
@@ -609,6 +631,7 @@ public class NBODialog extends JDialog {
 
     //RUN/////////////
     btn = new JButton("Run");
+    helpBtn_R = new HelpBtn("run_help.htm");
     btn.setForeground(Color.WHITE);
     btn.setBackground(Color.BLUE);
     btn.setMinimumSize(new Dimension(150, 30));
@@ -628,6 +651,11 @@ public class NBODialog extends JDialog {
     c.gridy = 2;
     c.gridwidth = 3;
     p2.add(lab = new JLabel("  Launch NBO analysis for chosen archive file"), c);
+    c.gridx = 6;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    p2.add(helpBtn_R, c);
     lab.setFont(NBOConfig.homeTextFont);
     tp = new JTextPane();
     tp.setContentType("text/html");
@@ -641,6 +669,7 @@ public class NBODialog extends JDialog {
 
     //VIEW//////////////
     btn = new JButton("View");
+    helpBtn_V = new HelpBtn("view_help.htm");
     btn.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -660,6 +689,12 @@ public class NBODialog extends JDialog {
     c.gridy = 4;
     c.gridwidth = 3;
     p2.add(lab = new JLabel("  Display NBO orbitals in 1D/2D/3D imagery"), c);
+    
+    c.gridx = 6;
+    c.gridy = 4;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    p2.add(helpBtn_V, c);
     lab.setFont(NBOConfig.homeTextFont);
     tp = new JTextPane();
     tp.setMaximumSize(new Dimension(430, 60));
@@ -674,6 +709,7 @@ public class NBODialog extends JDialog {
 
     //SEARCH/////////////
     btn = new JButton("Search");
+    helpBtn_S = new HelpBtn("search_help.htm");
     btn.setForeground(Color.WHITE);
     btn.setBackground(Color.BLUE);
     btn.setMinimumSize(new Dimension(150, 30));
@@ -693,6 +729,11 @@ public class NBODialog extends JDialog {
     c.gridy = 6;
     c.gridwidth = 3;
     p2.add(lab = new JLabel("  Search NBO output interactively"), c);
+    c.gridx = 6;
+    c.gridy = 6;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    p2.add(helpBtn_S, c);
     lab.setFont(NBOConfig.homeTextFont);
     tp = new JTextPane();
     tp.setMaximumSize(new Dimension(430, 60));
@@ -1255,6 +1296,56 @@ public class NBODialog extends JDialog {
 
   }
   
+  /*
+   * Converts Unix formatted input file to Windows formatted file for 47 files. Only 47 files
+   */
+  public void convertUnix2Dos(String workingDirectory, String jobstem, String extension)
+  {
+    if(workingDirectory==null || jobstem==null || extension==null || workingDirectory.equals("") || jobstem.equals("") ||extension.equals(""))
+      return;
+
+    if( !extension.equals("47") && !extension.equals("47$") )
+      return;
+    
+    try
+    {
+      String filename=jobstem+"."+extension;
+      String executablePath=nboService.getServerPath(null);
+      Path filePath=Paths.get(workingDirectory,filename);
+      
+      Path unix2dos=Paths.get(executablePath,"unix2dos");
+      
+      Process process=Runtime.getRuntime().exec(unix2dos.toString()+" "+filePath);
+      process.waitFor();
+    }
+    catch(InterruptedException e)
+    {
+      logError("Sleep Interrupted");
+    }
+    catch(IOException ex)
+    {
+      String s = ex.getMessage();
+      System.out.println(s);
+      if (s.contains("error=1455"))
+         s = "Jmol can't do that - low on memory";
+      logError(s);
+    }
+   
+    
+  }
+  
+  boolean backupFileExists(String jobName)
+  {
+    int i;
+    for(i=0;i<filecopy.size();i++)
+    {
+      File47AndFileCopy pair=filecopy.get(i);
+      if(pair.getJobname().equals(jobName))
+        return true;
+    }
+    return false;
+  }
+  
   void insertNewFileCopy(File47AndFileCopy filePair)
   {
     if(filePair!=null)
@@ -1270,6 +1361,7 @@ public class NBODialog extends JDialog {
   void restore47filesFromFileCopy()
   {
     int i;
+    
     FileInputStream sourceFilecopy=null;
     FileOutputStream destinationFile47=null;
     for(i=0;i<filecopy.size();i++)
@@ -1279,9 +1371,9 @@ public class NBODialog extends JDialog {
       String file47_path=filePair.getFile47();
       String fileCopy_path=filePair.getFilecopy();
       
-      File filecopy=new File(fileCopy_path);
       File file47=new File(file47_path);
-    
+      File filecopy=new File(fileCopy_path);
+      
       try
       {
         sourceFilecopy=new FileInputStream(filecopy);

@@ -32,6 +32,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -53,6 +54,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
 import org.jmol.modelset.Atom;
+import org.jmol.util.Logger;
 
 class NBOSearch extends NBOView {
 
@@ -395,7 +397,7 @@ class NBOSearch extends NBOView {
     optionBox.add(optionBox2);
     panel.add(optionBox);
 
-    comboBasis1 = new JComboBox<String>(NBOView.basSet);
+    comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(NBOView.basSet, 0, 10));
     //comboBasis1.setUI(new StyledComboBoxUI(180, -1));
 
     dialog.inputFileHandler.setBrowseEnabled(true);
@@ -504,6 +506,7 @@ class NBOSearch extends NBOView {
       postListRequest("d'", comboSearchOrb2);
       break;
     case KEYWD_CMO:
+      postListRequest("c", comboSearchOrb2);
       postListRequest("n", comboSearchOrb1);
       if (radioOrbMO.isSelected())
         radioOrbMO.doClick();
@@ -670,7 +673,7 @@ class NBOSearch extends NBOView {
     case KEYWD_OPBAS:
       load(31, true);
       dialog.viewSettingsBox.removeAll();
-      comboBasis1 = new JComboBox<String>(NBOView.basSet);
+      comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(NBOView.basSet, 0, 10));
       //comboBasis1.setUI(new StyledComboBoxUI(180, -1));
       comboBasis1.setEditable(false);
       comboBasisOperation.requestFocus();
@@ -738,44 +741,12 @@ class NBOSearch extends NBOView {
         comboSearchOrb1 = new JComboBox<String>(
             new DefaultComboBoxModel<String>());
         setComboSearchOrbDefaultAction(key);
-        innerListPanel.add(comboSearchOrb1);
-        
-        //fzy
-        //TODO: INCOMPLETE
-        if(items[i]=="d nbo")
-        {
-          ButtonGroup donorButtonGroup=new ButtonGroup();
-          JRadioButton donorPositive = new JRadioButton("+");
-          donorPositive.setSelected(true);
-          donorPositive.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-
-            }
-          });
-          donorPositive.setBackground(null);
-          JRadioButton donorNegative = new JRadioButton("-");
-          donorNegative.setSelected(true);
-          donorNegative.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-
-            }
-          });
-          donorNegative.setBackground(null);
-          
-          donorButtonGroup.add(donorPositive);
-          donorButtonGroup.add(donorNegative);
-        }
+        innerListPanel.add(comboSearchOrb1);       
         postListRequest(key, comboSearchOrb1);
       } else if (PT.isOneOf(items[i], "c;d' nlmo;a nbo;c cmo;o PNAO")) {
         comboSearchOrb2 = new JComboBox<String>(
             new DefaultComboBoxModel<String>());
         postListRequest(key, comboSearchOrb2);
-        if(items[i]=="a nbo")
-        {
-          
-        }
         setComboSearchOrb2DefaultAction(key, items[i]);
         innerListPanel.add(comboSearchOrb2);
       } else if (key.equals("u")) {
@@ -834,7 +805,7 @@ class NBOSearch extends NBOView {
         }
         innerListPanel.add(b);
       } else if (key.equals("b2")) {
-        comboBasis2 = new JComboBox<String>(NBOView.basSet);
+        comboBasis2 = new JComboBox<String>(Arrays.copyOfRange(NBOView.basSet, 0, 10));
         //comboBasis2.setUI(new StyledComboBoxUI(180, -1));
         comboBasis2.setSelectedIndex(1);
         comboBasis2.addActionListener(new ActionListener() {
@@ -1022,7 +993,7 @@ class NBOSearch extends NBOView {
     String labelOrb1 = "ORB_1", labelOrb2 = "ORB_2", labelAtom1 = "ATOM_1", labelAtom2 = "ATOM_2", labelUnit1 = "UNIT_1";
     int offset1 = 0, offset2 = 0;
 
-    final SB sb = getMetaHeader(false);
+    final SB sb = getMetaHeader(false,true);
     NBOUtil.postAddGlobalI(sb, "KEYWORD", keywordID, null);
     boolean isLabelAtom = false;
     boolean isLabelBonds = false;
@@ -1166,6 +1137,46 @@ class NBOSearch extends NBOView {
           break;
       }
     }
+    //fzy
+    //this checking for "ok" doesn't work for DIPOLE, NRT and STERIC atom type operations too.
+    //user don't need to select any orbital to perform atom type operation
+    else if(keywordID==KEYWD_DIPOLE)
+    {
+      switch(optionSelected)
+      {
+        case 0:
+        case 1:
+        case 2:
+          isOK=true;
+          break;
+      }
+    }
+    else if(keywordID==KEYWD_STERIC)
+    {
+      switch(optionSelected)
+      {
+        case 0:
+        case 1:
+          isOK=true;
+      }
+    }
+    else if(keywordID==KEYWD_NRT)
+    {
+      switch(optionSelected)
+      {
+        case 0:
+        case 1:
+        case 2:
+          if(atom1!=null &&(cb = atom1).getSelectedIndex() > 0)
+          {
+              isOK=true;
+          }
+          break;
+      }
+    }
+    
+    
+    
   //fzy
     //This checking for "ok" doesn't work for B1B2. In particular, 
     //B1B2's max/min <AO,PNO> pair for current r needs user to input only r
@@ -1624,7 +1635,7 @@ class NBOSearch extends NBOView {
    */
   private void postListRequest(String cmd_basis, JComboBox<String> cb) {
     int mode = MODE_SEARCH_LIST;
-    SB sb = getMetaHeader(false);
+    SB sb = getMetaHeader(false,true);
     String cmd;
     if (keywordID == KEYWD_OPBAS || keywordID == KEYWD_BAS1BAS2) {
       cmd = "LABEL";
@@ -1640,7 +1651,11 @@ class NBOSearch extends NBOView {
     NBOUtil.postAddCmd(sb, cmd);
     if (keywordID == KEYWD_CMO && cmd_basis.equals("c_cmo"))
       mode = MODE_SEARCH_LIST_MO;
-    postNBO_s(sb, mode, cb, "Getting list " + cmd, false);
+    
+    if(keywordID==KEYWD_NRT && cmd_basis.equals("r"))
+      postNBO_s(sb, mode, cb, "Getting list " + cmd+"...", false);
+    else
+      postNBO_s(sb, mode, cb, "Getting list " + cmd, false);
   }
 
   /**

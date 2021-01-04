@@ -80,7 +80,7 @@ public class NBOService {
   private boolean cantStartServer;  
   private String serverPath;
 
-  private String exeName = "NBOServe";
+  private String exeName = "NBOServe.exe";
   private boolean doConnect;
   
   private boolean isReady;
@@ -486,18 +486,18 @@ public class NBOService {
       
       
       if ((pt = s.indexOf("**NBOServe warning**")) >= 0) {
-        try {
-          int i;
-          int index=s.indexOf("**NBOServe warning**");
-          s=s.substring(index);
-          String errorLines[]=s.split("\n");
-          for(i=0;i<errorLines.length;i++)
-          {
-            logServerLine(errorLines[i],Logger.LEVEL_ERROR);
-          }
-        } catch (Exception e) {
-          // ignore
-        }
+//        try {
+//          int i;
+//          int index=s.indexOf("**NBOServe warning**");
+//          s=s.substring(index);
+//          String errorLines[]=s.split("\n");
+//          for(i=0;i<errorLines.length;i++)
+//          {
+//            logServerLine(errorLines[i],Logger.LEVEL_ERROR);
+//          }
+//        } catch (Exception e) {
+//          // ignore
+//        }
         logServerLine("NBOPro can't do that.", Logger.LEVEL_WARN);
         return true;
       }

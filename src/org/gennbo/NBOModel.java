@@ -34,7 +34,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
@@ -203,6 +207,13 @@ class NBOModel {
   private JScrollPane vibrationScroll;
   
   private String prevJobStem;
+  
+  
+  private File currentLogFile;
+//path to log file if the log file is valid for vibration
+  private String logFilePath;
+  private int previousVibrateFrame;
+  private boolean loadLogFileForVibrate;
   
   protected void setModelNotFromNBO() {
     notFromNBO = true;
@@ -384,15 +395,27 @@ class NBOModel {
               dialog.logError("File not found");
               return false;
             }
-            loadModelFromNBO(newFile.getParent(),
-                (jobStem = NBOUtil.getJobStem(newFile)), NBOUtil.getExt(newFile));
+            fullFilePath = newFile.getParent();
+            jobStem=NBOUtil.getJobStem(newFile);
+            
+          //fzy: Professor Frank initially wanted this feature to be added in, but wanted it abandoned later on
+            //because it can't work on large files, which is a mystery (I'm not given any such large files to debug on error)
+//            dialog.convertUnix2Dos(fullFilePath, jobStem, NBOUtil.getExt(newFile));
+            loadModelFromNBO(newFile.getParent(), jobStem, NBOUtil.getExt(newFile));
             dialog.inputFileHandler
                 .setInput(fullFilePath, jobStem, NBOUtil.getExt(newFile));
-            fullFilePath = newFile.getParent();
+            
             
             //If this is a Gaussian Output [.log] file, send request to NBOServe to check if this file can vibrate
             if(inputFileType.equals("log"))
+            {
+              currentLogFile=newFile;
               postVibrateRequestToNBO(newFile.getParent(),jobStem,NBOUtil.getExt(newFile));
+            }
+            else
+            {
+              currentLogFile=null;
+            }
             
                       
             return true;
@@ -1126,33 +1149,54 @@ class NBOModel {
   protected void doVibrate()
   {
     //JDialog 
-    int i,menuLength=0,height;
+    int i,height;
+    String vibrateRow;
+    
     dialog.logCmd("vibrate");
     
     String lines[]=vibrateData.split("\\r?\\n");
+    ArrayList<String> vibrateMenu=new ArrayList<String>();
+    
+    for(i=0;i<lines.length;i++)
+    {
+      if(lines[i].trim().length()>0)
+        vibrateMenu.add(lines[i]);
+    }
     
     Box box = NBOUtil.createTitleBox(" Harmonic Vibration Modes ", null);
     JLabel heading=new JLabel("       nu(cm-1) IR inten. sym.");
     heading.setFont(NBOConfig.listFont);
     JPanel mainPanel=new JPanel(new GridLayout(1, 0));
     JPanel vibratePanel=new JPanel(new GridLayout(0,1,0,0));
-    List<JRadioButton> list=new ArrayList<JRadioButton>();
+   
+    final JRadioButton[] vibrateButton = new JRadioButton[vibrateMenu.size()];
     ButtonGroup bg=new ButtonGroup();
-    for(String vibrateRow : lines)
+    
+    for(i=0;i<vibrateMenu.size();i++)
     {
-      if(vibrateRow.trim().length()>0)
-      {
-        JRadioButton radiobutton=new JRadioButton(vibrateRow);
-        radiobutton.setFont(NBOConfig.listFont);
-        radiobutton.setOpaque(true);
-        list.add(radiobutton);
-        bg.add(radiobutton);
-        vibratePanel.add(radiobutton);
-        menuLength++;
-      }
+      vibrateRow=vibrateMenu.get(i);
+      
+      vibrateButton[i]=new JRadioButton(vibrateRow);
+      vibrateButton[i].setFont(NBOConfig.listFont);
+      vibrateButton[i].setOpaque(true);
+      
+      bg.add(vibrateButton[i]);
+      vibratePanel.add(vibrateButton[i]);
+      
+      final int op=i;
+ 
+      vibrateButton[i].addActionListener(new ActionListener()
+          {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+              doVibrateAction(op);
+            }
+          }
+          );
     }
    
-    height=menuLength*30;
+    height=vibrateMenu.size()*30;
     if(height>500)
       height=500;
     
@@ -1169,7 +1213,7 @@ class NBOModel {
     box2.setAlignmentX(0.0f);
     box.add(box2);
     
-    
+    previousVibrateFrame=-1;
     
     final JDialog vibrateDialog=new JDialog(dialog,"Vibration Menu");
   
@@ -1182,7 +1226,62 @@ class NBOModel {
     vibrateDialog.add(box);
     centerDialog(vibrateDialog,150);
     
+    vibrateDialog.addWindowListener(
+        new WindowAdapter() 
+        {
+          @Override
+          public void windowClosing(WindowEvent e) 
+          {
+              closeVibrateMenu();
+          }
+        });
+    
   }
+  
+  private void closeVibrateMenu()
+  {
+    dialog.runScriptQueued(";vibration OFF;");
+    loadModelFromNBO(currentLogFile.getParent(),NBOUtil.getJobStem(currentLogFile), NBOUtil.getExt(currentLogFile));
+    previousVibrateFrame=-1;
+  }
+  
+  private void doVibrateAction(int op)
+  {
+    int difference, i;
+    if(previousVibrateFrame==-1)
+    {
+      //1. load file into Jmol
+      dialog.runScriptQueued(";load "+logFilePath+";");
+      loadLogFileForVibrate=true;
+      //2. Animate once
+      dialog.runScriptQueued(";animation MODE ONCE;");
+      //3. Vibrate start
+      dialog.runScriptQueued(";vibration ON;");
+      //4. Vibrate-Next frequency
+      dialog.runScriptQueued(";frame NEXT;");
+      previousVibrateFrame=0;
+    }
+    //increment by 1 since op is 0 index. 
+    op=op+1;
+    
+    difference=op-previousVibrateFrame;
+    if(difference>=0)
+    {
+      for(i=0;i<difference;i++)
+      {
+        dialog.runScriptQueued(";frame NEXT;");
+      }
+    }
+    else
+    {
+      for(i=0;i<Math.abs(difference);i++)
+      {
+        dialog.runScriptQueued(";frame previous;");
+      }
+    }
+    previousVibrateFrame=op;
+  }
+  
   
   private void centerDialog(JDialog d, int h) {
     int x = (dialog.getX() + dialog.getWidth()) / 2 + 150;
@@ -1291,6 +1390,7 @@ class NBOModel {
    * @param ext
    */
   protected void loadModelFromNBO(String path, String fname, String ext) {
+    String ess;
     if (PT.isOneOf(ext, NBOConfig.JMOL_EXTENSIONS)) {
       notFromNBO = true;
       dialog.runScriptQueued("set refreshing false");
@@ -1298,7 +1398,10 @@ class NBOModel {
       dialog.runScriptQueued("set refreshing true");
       return;
     }
-    String ess = getEss(inputFileType, true);
+    if(inputFileType==null)
+      ess=getEss(ext,true);
+    else
+      ess = getEss(inputFileType, true);
     SB sb = new SB();
     if (jtNIHInput != null) {
       jtNIHInput.setText("");
@@ -1436,13 +1539,21 @@ class NBOModel {
    * 
    */
   protected void notifyFileLoaded() {
-
     String fileContents = dialog.getCFIData();
     if (notFromNBO) {
       notFromNBO = false;
-      loadModelToNBO(fileContents, false);
+      
+      if(!loadLogFileForVibrate)
+        loadModelToNBO(fileContents, false);
+      else
+        loadLogFileForVibrate=false;
+      
       return;
     }
+    
+    if(loadLogFileForVibrate)
+      loadLogFileForVibrate=false;
+    
     dialog.runScriptQueued(NBOConfig.JMOL_FONT_SCRIPT);
 //        + ";select 1.1;"); // NOT rotate best, because these may be symmetry designed
     dialog.doSetStructure(null);
@@ -1508,6 +1619,8 @@ class NBOModel {
    */
   protected void processNBO(int mode, NBORequest req) {
     String s = req.getReply();
+    if((s.trim()).equals(""))
+      return;
     boolean doClear = true;
     switch (mode) {
     case MODEL_ACTION_ALTER:
@@ -1580,7 +1693,7 @@ class NBOModel {
       dialog.loadModelDataQueued(s);
       break;
     case MODEL_ACTION_VIBRATE:
-      if(!s.equals("no data"))
+      if(!(s.trim()).equals("no data"))
       {
         vibrate.setEnabled(true);
         vibrateData=s;
@@ -1617,6 +1730,7 @@ class NBOModel {
   private void postVibrateRequestToNBO(String path, String fname, String ext)
   {
     String vibrateCommand="vibrate="+fname+"."+ext;
+    logFilePath=Paths.get(path,fname+"."+ext).toString();
     
     SB sb = new SB();
     NBOUtil.postAddCmd(sb, vibrateCommand);

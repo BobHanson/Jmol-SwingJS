@@ -42,6 +42,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.swing.SwingConstants;
 import javajs.util.PT;
@@ -67,6 +69,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JFormattedTextField;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ScrollPaneConstants;
@@ -94,6 +100,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.net.URL;
+import java.nio.file.Paths;
 
 class NBOView {
 
@@ -119,8 +126,8 @@ class NBOView {
   protected final int BASIS_PNLMO = 7;
   protected final int BASIS_NLMO = 8;
   protected final int BASIS_MO = 9;
-  protected final int BASIS_RNBO = 10;
-  protected final int BASIS_PRNBO = 11;
+  protected final int BASIS_PRNBO = 10;
+  protected final int BASIS_RNBO = 11;
 
   protected final static String[] basSet = 
     { "AO",  // 0   
@@ -128,18 +135,18 @@ class NBOView {
       "PNHO", "NHO",  // 3,4
       "PNBO", "NBO", "PNLMO", "NLMO", // 5-8 
       "MO", // 9
-      "RNBO", "PRNBO"}; // 10,11
+      "PRNBO","RNBO"}; // 10,11
 
   protected final static int[] basisLabelKey = 
-    {//AO   NAO    NHOab     NBOab     MO  RNBO PRNBO
-        0,  1, 1,  2, 2,  3, 3, 3, 3,  4,   3,   3, // alpha
-        0,  1, 1,  5, 5,  6, 6, 6, 6,  4,   6,   6  // beta   
+    {//AO   NAO    NHOab     NBOab     MO  PRNBO RNBO
+        0,  1, 1,  2, 2,  3, 3, 3, 3,  4,    3,  3, // alpha
+        0,  1, 1,  5, 5,  6, 6, 6, 6,  7,    6,  6  // beta   
     };
   
   private String[][] orbitalLabels;
   
   private void clearLabelSet() {
-    orbitalLabels = new String[7][];
+    orbitalLabels = new String[8][];
   }
 
   private String[] getLabelSet(int ibas, boolean isAlpha) {
@@ -212,12 +219,17 @@ class NBOView {
   
   private boolean validScriptFilePath, validGifFilePath;
   
-  private JComboBox<String> dropDownMenu;
+  private JSpinner spinner;
   private int frameRate;
   
   private String scriptVideoPath, gifVideoPath;
   public String savevideo_jobstem;
- 
+  
+  private boolean file43Exists;
+  private boolean file44Exists;
+  //indicates if this module is just being entered. this variable is being used
+  //to not reset camera parameters if user selects new 47 file, as long as user stays in this module
+  private boolean switchModule;
   
   /**
    * reset the arrays of values that will be sent to NBOServe to their default
@@ -280,6 +292,7 @@ class NBOView {
 
     updateViewSettings();
     frameRate=-1;
+    switchModule=true;
     dialog.inputFileHandler.setBrowseEnabled(true);
 
     //    String fileType = dialog.runScriptNow("print _fileType");
@@ -490,31 +503,21 @@ class NBOView {
     return fileHandler;
   }
   
-  private void createDropDownMenuForGIFCreation()
+  private void createIncrementerDecrementerForGIFCreation()
   {
-    String[] frameRate= {"Select frames/sec","20","40","60","80","100"};
-    dropDownMenu=new JComboBox<String>(frameRate);
-    dropDownMenu.setPrototypeDisplayValue("Select frames/sec");
-    dropDownMenu.addActionListener(new ActionListener()
-    {
-      @Override
-      public void actionPerformed(ActionEvent e)
-      {
-        doDropDownMenuAction(dropDownMenu.getSelectedIndex()>0? dropDownMenu.getSelectedItem().toString():"-1");
-      }
-    });
+                                               //initial value  min   max    step
+    SpinnerModel spinnerModel=new SpinnerNumberModel(10,        0,    1000,   1 );
+    spinner=new JSpinner(spinnerModel);
   }
   
-  private void doDropDownMenuAction(String num)
+  private void computeFrameRate(String num)
   {
     int number=Integer.parseInt(num);
+
     if(number==-1)
       frameRate=-1;
     else
-    {
-      frameRate=1/number;
-      frameRate=frameRate*1000;
-    }
+      frameRate=(int)((1.0/number)*1000);
   }
   
   /*
@@ -590,16 +593,30 @@ class NBOView {
     fileHandlerPanel.add(gifVideoFileHandler);
     
     ////////////////////////////////panel for storing radio buttons
-    createDropDownMenuForGIFCreation();
-    JPanel buttonPanel=new JPanel(new GridLayout(4,1,0,0));
-    buttonPanel.setMaximumSize(new Dimension(250, 150));
-    buttonPanel.setPreferredSize(new Dimension(250, 150));
-    buttonPanel.setMinimumSize(new Dimension(250, 150));
-    buttonPanel.setAlignmentX(0);
-    buttonPanel.add(createVideo);
-    buttonPanel.add(saveVideo);
-    buttonPanel.add(dropDownMenu);
-    buttonPanel.add(playVideo);
+    createIncrementerDecrementerForGIFCreation();
+    JPanel buttonPanel_1=new JPanel(new GridLayout(2,1,0,0));
+//    buttonPanel_1.setMaximumSize(new Dimension(250, 150));
+//    buttonPanel_1.setPreferredSize(new Dimension(250, 150));
+//    buttonPanel_1.setMinimumSize(new Dimension(250, 150));
+    buttonPanel_1.setAlignmentX(0);
+    buttonPanel_1.add(createVideo);
+    buttonPanel_1.add(saveVideo);
+    
+    JPanel buttonPanel_2=new JPanel(new GridLayout(1,3,0,0));
+    buttonPanel_2.setMaximumSize(new Dimension(225,40));
+    buttonPanel_2.setMinimumSize(new Dimension(225,40));
+    buttonPanel_2.setPreferredSize(new Dimension(225,40));
+    buttonPanel_2.setAlignmentX(0);
+    JLabel frame_sec=new JLabel(" frames/sec");
+    
+    buttonPanel_2.add(new JLabel("  ")); //add empty jlabel to move jspinner a little bit to the right (not stick right to left)
+    buttonPanel_2.add(spinner);
+    buttonPanel_2.add(frame_sec);
+    
+    
+    JPanel buttonPanel_3=new JPanel(new GridLayout(1,1,0,0));
+    buttonPanel_3.setAlignmentX(0);
+    buttonPanel_3.add(playVideo);
     
     
     JPanel goPanel=new JPanel(new BorderLayout());
@@ -621,7 +638,9 @@ class NBOView {
     Box box2 = Box.createVerticalBox();
     
     box2.add(fileHandlerPanel);
-    box2.add(buttonPanel);
+    box2.add(buttonPanel_1);
+    box2.add(buttonPanel_2);
+    box2.add(buttonPanel_3);
     box.add(box2);
     box2.setAlignmentX(0.0f);
     box.add(goPanel);
@@ -641,7 +660,10 @@ class NBOView {
     if(createVideo.isSelected())
       createVideo();
     else if(saveVideo.isSelected())
+    {
+      computeFrameRate(String.valueOf(spinner.getModel().getValue()));
       saveVideo();
+    }
     else if(playVideo.isSelected())
       playVideo();
     
@@ -660,30 +682,12 @@ class NBOView {
     postNBO_v(sb, MODE_VIEW_VIDEO, -1, null,"Sending video create command..", null, null);
   }
   
-  class BMP_Files implements Comparable<BMP_Files>
-  {
-    public File file;
-    public String filename;
-    
-    public BMP_Files(File file,String filename)
-    {
-      this.file=file;
-      this.filename=filename;
-    }
-    
-    public int compareTo(BMP_Files other)
-    {
-      return this.filename.compareTo(other.filename);
-    }
-    
-  }
   
   
-  
+  /* find and return all the files with the specified filename in the given directory
+   */
   private File[] finder(String directoryName,String jobstem)
-  {
-    int counter=0,i;
-    
+  { 
     savevideo_jobstem=jobstem;
     
     File dir=new File(directoryName);
@@ -693,29 +697,61 @@ class NBOView {
       public boolean accept(File dir, String filename)
       {
         String curr_filename=filename.trim();
-        return curr_filename.startsWith(savevideo_jobstem+"_");
+        if(curr_filename.startsWith(savevideo_jobstem+"_") && curr_filename.endsWith(".bmp"))
+        {
+          try
+          {
+            String splitDot[]=curr_filename.split("\\.");
+            if(splitDot.length!=2)
+              return false;
+                  
+            curr_filename=splitDot[0];
+            int counter=Integer.parseInt(curr_filename.substring(savevideo_jobstem.length()+1));
+            if(counter>0)
+              return true;
+            return false;
+
+          }
+          catch(IndexOutOfBoundsException e1)
+          {
+            return false;
+          }
+          catch(NumberFormatException e2)
+          {
+            return false;
+          }
+        }
+        return false;
       }
     });
     
-    //sort the files according to their filename
-    ArrayList<BMP_Files> files=new ArrayList<BMP_Files>();
-    for(File file:bmpFiles)
-    {
-      files.add(new BMP_Files(file,file.getName()));
-      counter++;
-    }
-    Collections.sort(files);
+    return bmpFiles;
+  }
+  
+  private File[] sortFilenames(File files[])
+  {
+    int i;
     
-    File bmps[]=new File[counter];
-    for(i=0;i<counter;i++)
+    //sort the files according to their filename
+    ArrayList<BMP_File> sortedFiles=new ArrayList<BMP_File>();
+    
+    for(i=0;i<files.length;i++)
     {
-      bmps[i]=files.get(i).file;
+      File currentFile=files[i];
+      BMP_File currentBMPFile=new BMP_File(currentFile,currentFile.getName(),savevideo_jobstem);
+      sortedFiles.add(currentBMPFile);
+    }
+    
+    Collections.sort(sortedFiles);
+    
+    File bmps[]=new File[sortedFiles.size()];
+    for(i=0;i<sortedFiles.size();i++)
+    {
+      bmps[i]=sortedFiles.get(i).getFile();
     }
     
     return bmps;
   }
-  
-  
   
   private void saveVideo()
   { 
@@ -728,20 +764,26 @@ class NBOView {
       dialog.logInfo("Error: Invalid path for gif file", Logger.LEVEL_ERROR);
       return;
     }
-    if(frameRate==-1)
+    else if(frameRate==-1)
     {
       dialog.logInfo("Error: Please select a framerate", Logger.LEVEL_ERROR);
       return;
     }
     
-    
-    File bmpFiles[]=finder(folder,name);
-    int timeBetweenFrameInMS=frameRate;
+    int timeBetweenFrameInSecond=frameRate;
     int i;
     GIFWriter writer=null;
     ImageOutputStream output=null;
     
-
+    File files[]=finder(folder,name);
+    File bmpFiles[]=sortFilenames(files);
+    
+    if(bmpFiles.length==0)
+    {
+      dialog.logInfo("Error: No BMP file with input filename found. Could not create GIF.", Logger.LEVEL_ERROR);
+      return;
+    }
+    
     int strLength=folder.length();
     if(folder.charAt(strLength-1)!='/')
       folder=folder+"/";
@@ -751,7 +793,7 @@ class NBOView {
     {
       BufferedImage firstImage=ImageIO.read(bmpFiles[0]);
       output=new FileImageOutputStream(new File(gifVideoPath));
-      writer=new GIFWriter(output,firstImage.getType(),timeBetweenFrameInMS,true);
+      writer=new GIFWriter(output,firstImage.getType(),timeBetweenFrameInSecond,true);
       writer.writeToSequence(firstImage);
       for(i=1;i<bmpFiles.length;i++)
       {
@@ -926,41 +968,60 @@ class NBOView {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (comboBasis1.isEnabled())
+        {
+          boolean isBeta = dialog.isOpenShell() && !isAlphaSpin();
+          if(comboBasis1.getSelectedIndex()==BASIS_PRNBO)
+          {
+            if(!file43Exists)
+            {
+              dialog.logCmd("select " + comboBasis1.getSelectedItem() + " "
+                  + (isBeta ? "beta" : dialog.isOpenShell() ? "alpha" : ""));
+              dialog.logInfo("NBOPro can't do that. ", Logger.LEVEL_WARN);
+              return;
+            }
+          }
+          else if(comboBasis1.getSelectedIndex()==BASIS_RNBO)
+          {
+            if(!file44Exists)
+            {
+              dialog.logCmd("select " + comboBasis1.getSelectedItem() + " "
+                  + (isBeta ? "beta" : dialog.isOpenShell() ? "alpha" : ""));
+              dialog.logInfo("NBOPro can't do that. ", Logger.LEVEL_WARN);
+              return;
+            }
+          }
           doSetNewBasis(false, true);
+        }
       }
     });
     betaSpin = new JRadioButton("<html>&#x3B2</html>");
     alphaSpin = new JRadioButton("<html>&#x3B1</html>");
     alphaSpin.setSelected(true);
+
+    ActionListener spinListener = new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event) {
+
+        //        if (type != null) {
+//          dialog.doSetStructure(type);
+//        }
+
+        if (NBOConfig.nboView) {
+          dialog.runScriptQueued("select *;color bonds lightgrey");
+        }
+
+        doSetNewBasis(false, true);
+
+        
+        
+//        doSetSpin(event.getSource() == alphaSpin ? "alpha" : "beta");
+      }
+    };
+    alphaSpin.addActionListener(spinListener);
+    betaSpin.addActionListener(spinListener);
     ButtonGroup spinSelection = new ButtonGroup();
     spinSelection.add(alphaSpin);
-    spinSelection.add(betaSpin);
-    betaSpin.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        EventQueue.invokeLater(new Runnable() {
-
-          @Override
-          public void run() {
-            doSetSpin(isAlphaSpin() ? null : "beta");
-          }
-
-        });
-      }
-    });
-    alphaSpin.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        EventQueue.invokeLater(new Runnable() {
-
-          @Override
-          public void run() {
-            doSetSpin(isAlphaSpin() ? "alpha" : null);
-          }
-
-        });
-      }
-    });
+    spinSelection.add(betaSpin);    
     horizBox.add(alphaSpin);
     horizBox.add(betaSpin);
     alphaSpin.setVisible(dialog.isOpenShell());
@@ -1636,13 +1697,12 @@ class NBOView {
     }
     if (dialog.jmolOptionNONBO) 
       return f;
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
        MODE_VIEW_LIST, getIbasKey(ibasis, isBeta), list, "Getting list", null, null);
     return null;
   }
 
   /////////////////////// RAW NBOSERVE API ////////////////////
-
   /**
    * get the standard header for a set of META commands, specifically C_PATH and
    * C_JOBSTEM and I_SPIN; possibly I_BAS_1
@@ -1653,15 +1713,18 @@ class NBOView {
    * @return a new string buffer using javajs.util.SB
    * 
    */
-  protected SB getMetaHeader(boolean addBasis) {
+  protected SB getMetaHeader(boolean addBasis,boolean addPathAndJobStem) {
     SB sb = new SB();
-    NBOUtil.postAddGlobalC(sb, "PATH",
-        dialog.inputFileHandler.inputFile.getParent());
-    NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
+    if (addPathAndJobStem) {
+      NBOUtil.postAddGlobalC(sb, "PATH",
+          dialog.inputFileHandler.inputFile.getParent());
+      NBOUtil.postAddGlobalC(sb, "JOBSTEM", dialog.inputFileHandler.jobStem);
+    }
     if (addBasis)
       NBOUtil.postAddGlobalI(sb, "BAS_1", 1, comboBasis1);
-    NBOUtil.postAddGlobalI(sb, "SPIN",
-        (!dialog.isOpenShell() ? 0 : isAlphaSpin() ? 1 : -1), null);
+    System.out.println("VIEW spin " + dialog.isOpenShell() + " " + isAlphaSpin());
+    NBOUtil.postAddGlobalI(sb, "SPIN", (!dialog.isOpenShell() ? 0
+        : isAlphaSpin() ? 1 : -1), null);
     return sb;
   }
 
@@ -1704,7 +1767,7 @@ class NBOView {
 
     // ? needed ? sendJmolOrientation();
 
-    SB sb = getMetaHeader(true);
+    SB sb = getMetaHeader(true,true);
 
     int ind = orbitals.bsOn.nextSetBit(0);
 
@@ -1754,7 +1817,7 @@ class NBOView {
 
     // I do not understand why a LABEL command has to be given here. A bug? 
 
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
         NBOService.MODE_RAW, -1, null, "", "jview.txt", sb.toString());
 
     postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1, null,
@@ -1768,7 +1831,7 @@ class NBOView {
   
   private void setAtomsView()
   {
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
         NBOService.MODE_RAW, -1, null, "", null,null);
     
     postNBO_v(NBOUtil.postAddCmd(new SB(), "AVIEW"), NBOService.MODE_RAW, -1, null,
@@ -1787,7 +1850,7 @@ class NBOView {
     String profileList = "";
     for (int pt = 0, i = orbitals.bsOn.nextSetBit(0); i >= 0; i = orbitals.bsOn
         .nextSetBit(i + 1)) {
-      sb = getMetaHeader(true);
+      sb = getMetaHeader(true,true);
       appendOrbitalPhaseSign(sb, i);
       NBOUtil.postAddCmd(sb, (oneD ? "PROFILE " : "CONTOUR ") + (i + 1));
       msg += " " + (i + 1);
@@ -1795,7 +1858,7 @@ class NBOView {
       postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending " + msg, null, null);
     }
     dialog.logCmd(msg);
-    sb = getMetaHeader(false);
+    sb = getMetaHeader(false,true);
     appendLineParams(sb);
     NBOUtil.postAddCmd(sb, "DRAW" + profileList);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Drawing...", null, null);
@@ -1804,7 +1867,7 @@ class NBOView {
   protected void createImage3D() {
     if(jmolView)
     {
-      postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true), "LABEL"),
+      postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
           NBOService.MODE_RAW, -1, null, "", null, null);
       
       postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1, null,
@@ -1820,7 +1883,7 @@ class NBOView {
     String list = "";
     BS bs = orbitals.bsOn;
     for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      sb = getMetaHeader(true);
+      sb = getMetaHeader(true,true);
       appendOrbitalPhaseSign(sb, i);
       NBOUtil.postAddCmd(sb, "PROFILE " + (i + 1));
       postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending profile " + (i + 1),
@@ -1832,7 +1895,7 @@ class NBOView {
     String jviewData = sb.toString();
     // BH: It turns out it is CRITICAL that if you send camera parameters, you MUST NOT SEND basis information.
     // (no idea why!)
-    sb = getMetaHeader(false);
+    sb = getMetaHeader(false,true);
     appendCameraParams(sb);
     NBOUtil.postAddCmd(sb, "VIEW" + list);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Raytracing...", null, jviewData);
@@ -1899,8 +1962,8 @@ class NBOView {
       case BASIS_PNBO:
       case BASIS_NBO:
       case BASIS_PNLMO:
-      case BASIS_RNBO:
       case BASIS_PRNBO:
+      case BASIS_RNBO:
       case BASIS_NLMO: {
         String sat1 = vwr.ms.at[at1 - 1].getElementSymbol() + at1;
         String sat2 = vwr.ms.at[at2 - 1].getElementSymbol() + at2;
@@ -2029,8 +2092,15 @@ class NBOView {
         vectorFields[i] = new JTextField(vecVal[i]);
       for (int i = 0; i < lineFields.length; i++)
         lineFields[i] = new JTextField(lineVal[i]);
-      for (int i = 0; i < camFields.length; i++)
-        camFields[i] = new JTextField(camVal[i]);
+      //fzy: Professor Frank doesn't want the parameter of camera to be reset everytime
+      //a new file is being loaded.
+      if(switchModule)
+      {
+        for (int i = 0; i < camFields.length; i++)
+          camFields[i] = new JTextField(camVal[i]);
+        
+        switchModule=false;
+      }
 
       vecBox.removeAll();
       vecBox.add(new JLabel("Axis: "));
@@ -2092,7 +2162,7 @@ class NBOView {
   }
   
   protected boolean isAlphaSpin() {
-   return alphaSpin.isSelected() || !alphaSpin.isVisible();
+   return !(betaSpin.isVisible() && betaSpin.isSelected());
   }
 
 
@@ -2113,7 +2183,8 @@ class NBOView {
 
     protected BS bsOn = new BS();
     protected BS bsNeg = new BS();
-    protected BS bsKnown = new BS();
+    protected BS bsKnownAlpha = new BS();
+    protected BS bsKnownBeta=new BS();
 
     public OrbitalList() {
       super();
@@ -2205,7 +2276,8 @@ class NBOView {
      * @param clearAll
      */
     void clearOrbitals(boolean clearAll) {
-      bsKnown.clearAll();
+      bsKnownAlpha.clearAll();
+      bsKnownBeta.clearAll();
       if (clearAll) {
         bsOn.clearAll();
         bsNeg.clearAll();
@@ -2234,35 +2306,35 @@ class NBOView {
      */
     protected void updateIsosurfacesInJmol(int iClicked) {
       DefaultListModel<String> model = (DefaultListModel<String>) getModel();
-      boolean isBeta = betaSpin.isSelected();
       String type = comboBasis1.getSelectedItem().toString();
       String script = "select 1.1;";
       if (iClicked == Integer.MAX_VALUE)
         script += updateBitSetFromModel();
       else
         updateModelFromBitSet();
-      //System.out.println("update " + bsOn + " " + bsKnown + " " +  iClicked);
+      boolean isBeta = !isAlphaSpin();
       for (int i = 0, n = model.getSize(); i < n; i++) {
         boolean isOn = bsOn.get(i);
-        if (i == iClicked || isOn && !bsKnown.get(i)
+        if (i == iClicked || isOn && !isKnownIsosurface(i)
             || isSelectedIndex(i) != isOn) {
-          String id = "mo" + i;
-          if (!isOn || bsKnown.get(i)) {
+          String id = "mo" + i + (isBeta ? "beta" : "");
+          if (!isOn || isKnownIsosurface(i)) {
             if (isOn && bsNeg.get(i)) {
-              bsKnown.clear(i);
+              setKnownIsosurface(i, false);
               bsNeg.clear(i);
             }
             bsOn.setBitTo(i, isOn = !isOn);
           }
-          boolean isKnown = bsKnown.get(i);
           if (!bsOn.get(i)) {
             // just turn it off
-            script += "isosurface mo" + i + " off;";
-          } else if (isKnown) {
-            // just turn it on
-            script += "isosurface mo" + i + " on;";
+            script += "isosurface " + id + " off;";
+          } else if (isKnownIsosurface(i)) {
+            // just turn it on - no?
+            script += "isosurface " + id + " on;";
+            //script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
+              // isBeta, bsNeg.get(i));
           } else {
-            bsKnown.set(i);
+            setKnownIsosurface(i, true);
             // create the isosurface
             script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
                 isBeta, bsNeg.get(i));
@@ -2274,8 +2346,7 @@ class NBOView {
 //        }
       }
       updateModelFromBitSet();
-      dialog.runScriptQueued(script);
-      //System.out.println("known" + bsKnown + " on" + bsOn + " neg" + bsNeg + " " + script);
+      dialog.runScriptQueued(script);       
     }
 
     private String updateBitSetFromModel() {
@@ -2378,13 +2449,20 @@ class NBOView {
         toggled = true;
         // toggle:
         bsNeg.setBitTo(i, !bsNeg.get(i));
-        bsKnown.clear(i); // to - just switch colors?
-        //        toggleOrbitalNegation(i);
+        setKnownIsosurface(i, false);
         repaint();
       }
 
     }
+    
+    private void setKnownIsosurface(int i, boolean isON) {
+      (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).setBitTo(i,  isON);      
+    }
 
+    private boolean isKnownIsosurface(int i) {
+      return (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).get(i);
+    }
+    
     @Override
     public void mouseClicked(MouseEvent e) {
     }
@@ -2461,6 +2539,19 @@ class NBOView {
     String[] lines = req.getReplyLines();
     switch (mode) {
     case MODE_VIEW_LIST:
+      file43Exists=checkIfCurrentJobStemFileExists(43);
+      file44Exists=checkIfCurrentJobStemFileExists(44);
+//      if(file43Exists && file44Exists)
+//        comboBasis1 = new JComboBox<String>(basSet);
+//      else if(file43Exists)
+//        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 11));
+//      //cannot handle the case of !file43.exists and file44.exists
+//      //in this case, we will just show [AO,PNAO,NAO,PNHO,NHO,PNBO,NBO,PNLMO,NLMO,MO] 
+//      else
+//        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 10));
+//      comboBasis1.revalidate();
+//      comboBasis1.repaint();
+
       addBasisLabel(ikey, lines);
       orbitals.loadList(lines, list);
       break;
@@ -2481,8 +2572,21 @@ class NBOView {
     }
   }
   
+  //check if file <current jobstem.argument extension> exists in user work directory
+  private boolean checkIfCurrentJobStemFileExists(int fileExtension)
+  {
+    Path filePath=null;
+    if(fileExtension==43)
+      filePath=Paths.get(dialog.getWorkingPath(),dialog.inputFileHandler.jobStem+".43");
+    else if(fileExtension==44)
+      filePath=Paths.get(dialog.getWorkingPath(),dialog.inputFileHandler.jobStem+".44");
+    
+    File f=new File(filePath.toString());
+    return f.exists() && !f.isDirectory();
+  }
  
-}
+} 
+///////
 
 
 
@@ -2600,3 +2704,37 @@ class GIFWriter
   
 }
 ////
+
+class BMP_File implements Comparable<BMP_File>
+{
+  private File file;
+  private int fileNum;
+  
+  public BMP_File(File file,String filename,String jobstem)
+  {
+    this.file=file;
+    
+    filename=filename.trim();
+    String splitDot[]=filename.split("\\.");
+    String splittedFilename=splitDot[0];
+    
+  
+    this.fileNum=Integer.parseInt(splittedFilename.substring(jobstem.length()+1));
+  }
+  
+  public File getFile()
+  {
+    return this.file;
+  }
+  public int getFileNum()
+  {
+    return this.fileNum;
+  }
+  
+  @Override
+  public int compareTo(BMP_File other)
+  {
+    return this.getFileNum()-other.getFileNum();
+  }
+  
+}
