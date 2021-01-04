@@ -26,7 +26,7 @@ public class InputScannerThread extends Thread {
   @Override
   public synchronized void start() {
     scanner = new Scanner(System.in);
-    scanner.useDelimiter("\n");
+    scanner.useDelimiter(System.lineSeparator());
     super.start();
   }
 
@@ -77,7 +77,7 @@ public class InputScannerThread extends Thread {
   void scan() {
     while (scanner.hasNext()) {
       String s = scanner.next();
-      s = s.substring(0, s.length() - 1);
+      s = s.substring(0, s.length());
       if (s.toLowerCase().equals("exitjmol"))
         System.exit(0);
       if (vwr.checkHalt(s, false)) {
