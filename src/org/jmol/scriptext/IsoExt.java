@@ -1357,7 +1357,7 @@ public class IsoExt extends ScriptExt {
     String nbotype = null;
     float[] data = null;
     String cmd = null;
-    int thisSetNumber = Integer.MIN_VALUE;
+    int[] thisSet = null;
     int nFiles = 0;
     int nX, nY, nZ, ptX, ptY;
     float sigma = Float.NaN;
@@ -1747,8 +1747,12 @@ public class IsoExt extends ScriptExt {
             modelIndex = vwr.ms.at[bsSelect.nextSetBit(0)].mi;
         }
         break;
+      case T.subset:
+         thisSet = eval.expandFloatArray(eval.floatParameterSet(++i, 1, Integer.MAX_VALUE), 1);
+         i = eval.iToken;
+        break;
       case T.set:
-        thisSetNumber = intParameter(++i);
+         thisSet = new int[] {intParameter(++i)};
         break;
       case T.center:
         propertyName = "center";
@@ -2928,9 +2932,8 @@ public class IsoExt extends ScriptExt {
         addShapeProperty(propertyList, "nomap", Float.valueOf(0));
         surfaceObjectSeen = true;
       }
-      if (thisSetNumber >= -1)
-        addShapeProperty(propertyList, "getSurfaceSets",
-            Integer.valueOf(thisSetNumber - 1));
+      if (thisSet != null)
+        addShapeProperty(propertyList, "getSurfaceSets", thisSet);
       if (discreteColixes != null) {
         addShapeProperty(propertyList, "colorDiscrete", discreteColixes);
       } else if ("sets".equals(colorScheme)) {

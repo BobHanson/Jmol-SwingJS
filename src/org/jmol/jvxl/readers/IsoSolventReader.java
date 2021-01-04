@@ -473,7 +473,7 @@ class IsoSolventReader extends AtomDataReader {
       BS[] bsSurfaces = meshData.getSurfaceSet();
       BS[] bsSources = null;
       double[] volumes = (double[]) (isPocket ? null : MeshData
-          .calculateVolumeOrArea(meshData, Integer.MIN_VALUE, false, false));
+          .calculateVolumeOrArea(meshData, null, false, false));
       float minVolume = (isCavity ? (float) (1.5 * Math.PI * Math.pow(sr, 3)) : 0);
       double maxVolume = 0;
       boolean maxIsNegative = false;

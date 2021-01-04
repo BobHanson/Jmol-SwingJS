@@ -156,8 +156,8 @@ public class PMeshWriter {
     for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
         : imesh.firstRealVertex); i < vertexCount; i += incr) {
       if (vertexValues != null && Float.isNaN(vertexValues[i])
-          || imesh.jvxlData.thisSet >= 0
-          && imesh.vertexSets[i] != imesh.jvxlData.thisSet
+          || imesh.jvxlData.thisSet != null
+          && !imesh.jvxlData.thisSet.get(imesh.vertexSets[i])
           || !imesh.isColorSolid || haveBsDisplay && !imesh.bsDisplay.get(i)
           || slabPoints && !bsPolygons.get(i))
         continue;
@@ -174,8 +174,8 @@ public class PMeshWriter {
       if (polygon == null || selectedPolyOnly && !bsPolygons.get(i))
         continue;
       int iA = polygon[0];
-      if (imesh.jvxlData.thisSet >= 0 && imesh.vertexSets != null
-          && imesh.vertexSets[iA] != imesh.jvxlData.thisSet)
+      if (imesh.jvxlData.thisSet != null && imesh.vertexSets != null
+          && !imesh.jvxlData.thisSet.get(imesh.vertexSets[iA]))
         continue;
       int iB = polygon[1];
       int iC = polygon[2];

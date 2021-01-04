@@ -309,8 +309,9 @@ public class IsosurfaceRenderer extends MeshRenderer {
       for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
           : imesh.firstRealVertex); i < vertexCount; i += incr) {
         if (vertexValues != null && Float.isNaN(vertexValues[i]) || frontOnly
-            && !isVisibleNormix(normixes[i]) || imesh.jvxlData.thisSet >= 0
-            && mesh.vertexSets[i] != imesh.jvxlData.thisSet || !mesh.isColorSolid
+            && !isVisibleNormix(normixes[i]) 
+            || imesh.jvxlData.thisSet != null
+            && !imesh.jvxlData.thisSet.get(mesh.vertexSets[i]) || !mesh.isColorSolid
             && mesh.vcs != null && !setColix(mesh.vcs[i])
             || haveBsDisplay && !mesh.bsDisplay.get(i)
             || slabPoints && !bsPolygons.get(i))
@@ -412,8 +413,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
       int iA = polygon[0];
       int iB = polygon[1];
       int iC = polygon[2];
-      if (imesh.jvxlData.thisSet >= 0 && mesh.vertexSets != null
-          && mesh.vertexSets[iA] != imesh.jvxlData.thisSet)
+      if (imesh.jvxlData.thisSet != null && mesh.vertexSets != null
+          && !imesh.jvxlData.thisSet.get(mesh.vertexSets[iA]))
         continue;
       if (haveBsDisplay
           && (!mesh.bsDisplay.get(iA) || !mesh.bsDisplay.get(iB) || !mesh.bsDisplay

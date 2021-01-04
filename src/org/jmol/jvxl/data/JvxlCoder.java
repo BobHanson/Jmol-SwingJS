@@ -35,6 +35,8 @@ import javajs.util.T3;
 import javajs.util.XmlUtil;
 
 import javajs.util.BS;
+
+import org.jmol.shapesurface.Isosurface;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
@@ -345,8 +347,13 @@ public class JvxlCoder {
       addAttrib(attribs, "\n  colorScheme", jvxlData.colorScheme);
     if (jvxlData.rendering != null)
       addAttrib(attribs, "\n  rendering", jvxlData.rendering);
-    if (jvxlData.thisSet >= 0)
-      addAttrib(attribs, "\n  set", "" + (jvxlData.thisSet + 1));
+    if (jvxlData.thisSet != null) {
+      String s = Isosurface.subsetString(jvxlData.thisSet);
+      if (s.startsWith(" subset "))
+        addAttrib(attribs, "\n  subset", s.substring(8));
+      else
+        addAttrib(attribs, "\n  set", s.substring(6));
+    }
     if (jvxlData.slabValue != Integer.MIN_VALUE)
       addAttrib(attribs, "\n  slabValue", "" + jvxlData.slabValue);
     if (jvxlData.isSlabbable)

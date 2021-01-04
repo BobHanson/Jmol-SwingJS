@@ -1056,7 +1056,7 @@ public class SurfaceGenerator {
     if (haveMeshDataServer && meshDataServer.notifySurfaceGenerationCompleted())
       surfaceReader.hasColorData = false;
     
-    if (jvxlData.thisSet >= 0)
+    if (jvxlData.thisSet != null)
       getSurfaceSets();
     if (jvxlData.jvxlDataIs2dContour) {
       surfaceReader.colorIsosurface();

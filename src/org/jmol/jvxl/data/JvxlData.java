@@ -104,7 +104,7 @@ public class JvxlData {
   public boolean jvxlDataIs2dContour;
   public boolean jvxlDataIsColorDensity;
   public boolean isColorReversed;
-  public int thisSet = Integer.MIN_VALUE;
+  public BS thisSet = null;
   
   public int edgeFractionBase = JvxlCoder.defaultEdgeFractionBase;
   public int edgeFractionRange = JvxlCoder.defaultEdgeFractionRange;
@@ -204,7 +204,7 @@ public class JvxlData {
     fixedLattice = null;
     slabInfo = null;
     slabValue = Integer.MIN_VALUE;
-    thisSet = Integer.MIN_VALUE;
+    thisSet = null;
     rendering = null;
     thisContour = -1;
     translucency = 0;

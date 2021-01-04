@@ -973,9 +973,9 @@ public class IsosurfaceMesh extends Mesh {
   @Override
   public BS getVisibleVertexBitSet() {
     BS bs = getVisibleVBS();
-    if (jvxlData.thisSet >= 0)
+    if (jvxlData.thisSet != null)
       for (int i = 0; i < vc; i++)
-        if (vertexSets[i] != jvxlData.thisSet)
+        if (!jvxlData.thisSet.get(vertexSets[i]))
           bs.clear(i);
    return bs;
   }

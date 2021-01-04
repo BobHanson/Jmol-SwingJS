@@ -331,10 +331,23 @@ public class JvxlXmlReader extends VolumeFileReader {
     jvxlData.colorScheme = XmlReader.getXmlAttrib(data, "colorScheme");
     if (jvxlData.colorScheme.length() == 0)
       jvxlData.colorScheme = (jvxlDataIsColorMapped ? "roygb": null); // allow for legacy default
-    if (jvxlData.thisSet < 0) {
+    if (jvxlData.thisSet == null) {
       int n = parseIntStr(XmlReader.getXmlAttrib(data, "set"));
-      if (n > 0)
-        jvxlData.thisSet = n - 1;
+      if (n > 0) {
+        jvxlData.thisSet = new BS();
+        jvxlData.thisSet.set(n - 1);
+      }
+      String a = XmlReader.getXmlAttrib(data,  "subset");
+      if (a != null && a.length() > 2) {
+        String[] sets = a.replace('[', ' ').replace(']', ' ').trim().split(" ");
+        if (sets.length > 0) {
+          jvxlData.thisSet = new BS();
+          for (int i = sets.length; --i >= 0;) {
+            jvxlData.thisSet.set(PT.parseInt(sets[i]) - 1);
+          }
+
+        }
+      }
     }
     jvxlData.slabValue = parseIntStr(XmlReader.getXmlAttrib(data, "slabValue"));    
     jvxlData.isSlabbable = (XmlReader.getXmlAttrib(data, "slabbable").equalsIgnoreCase("true"));    

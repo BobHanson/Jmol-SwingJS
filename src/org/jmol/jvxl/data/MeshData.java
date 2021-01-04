@@ -315,10 +315,10 @@ public class MeshData extends MeshSurface {
    * @param getSets
    * @return Float or double[]
    */
-  public static Object calculateVolumeOrArea(MeshData m, int thisSet, boolean isArea, boolean getSets) {
+  public static Object calculateVolumeOrArea(MeshData m, BS thisSet, boolean isArea, boolean getSets) {
     if (getSets || m.nSets <= 0)
       m.getSurfaceSet();
-    boolean justOne = (thisSet >= -1);
+    boolean justOne = (thisSet != null && thisSet.cardinality() == 1);
     int n = (justOne || m.nSets <= 0 ? 1 : m.nSets);
     double[] v = new double[n];
     V3 vAB = new V3();
@@ -328,7 +328,7 @@ public class MeshData extends MeshSurface {
       if (m.setABC(i) == null)
         continue;
       int iSet = (m.nSets <= 0 ? 0 : m.vertexSets[m.iA]);
-      if (thisSet >= 0 && iSet != thisSet)
+      if (thisSet != null && !thisSet.get(iSet))
         continue;
       if (isArea) {
         vAB.sub2(m.vs[m.iB], m.vs[m.iA]);
@@ -350,6 +350,13 @@ public class MeshData extends MeshSurface {
     if (justOne)
       return Float.valueOf((float) v[0]);
     //System.out.println("MeshData calcVolume " + Escape.e(v));
+    if (thisSet != null) {
+      double[] v1 = new double[thisSet.cardinality()];
+      for (int pt = 0, i = thisSet.nextSetBit(0); i >= 0; i = thisSet.nextSetBit(i + 1)) {
+        v1[pt++] = v[i];
+      }
+      v = v1;
+    }
     return v;
   }
 
