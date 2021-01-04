@@ -362,7 +362,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     diameterEnd = (int) vwr.tm.scaleToScreen((int) controlPointScreens[iNext].z, madEnd);
     boolean doCap0 = (i == iPrev || !bsVisible.get(iPrev) || thisTypeOnly
         && structureTypes[i] != structureTypes[iPrev]);
-    boolean doCap1 = (iNext == iNext2 || !bsVisible.get(iNext) || thisTypeOnly
+    boolean doCap1 = (iNext == iNext2 || iNext2 == iNext3 || !bsVisible.get(iNext) || thisTypeOnly
         && structureTypes[i] != structureTypes[iNext]);
     return (aspectRatio > 0 && meshRenderer != null && meshRenderer.check(doCap0, doCap1));
   }

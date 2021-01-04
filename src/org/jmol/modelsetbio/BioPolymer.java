@@ -323,11 +323,15 @@ public abstract class BioPolymer implements Structure {
           // perfect for traceAlpha on; reasonably OK for traceAlpha OFF
           vectorA.sub2(leadMidpoints[i], leadPoints[i]);
           vectorB.sub2(leadPoints[i], leadMidpoints[i + 1]);
-          vectorC.cross(vectorA, vectorB);
-          vectorC.normalize();
-          if (previousVectorC != null
-              && previousVectorC.angle(vectorC) > Math.PI / 2)
-            vectorC.scale(-1);
+          if (vectorB.length() == 0) {
+              vectorC = previousVectorC;
+          } else {
+            vectorC.cross(vectorA, vectorB);
+            vectorC.normalize();
+            if (previousVectorC != null
+                && previousVectorC.angle(vectorC) > Math.PI / 2)
+              vectorC.scale(-1);
+          }
           previousVectorC = wingVectors[i] = V3.newV(vectorC);
         }
       }
@@ -490,10 +494,14 @@ public abstract class BioPolymer implements Structure {
         .isConnectedAfter(monomers[monomerCount - 1])) ? 1 : -1) : cyclicFlag) == 1);
   }
 
+  @Override
   public String toString() {
-    return "[polymer type " + type + " n=" + monomerCount
-        + (monomerCount == 0 ? ""
-            : " " + monomers[0] + "-" + monomers[monomerCount - 1])
-        + "]";
+    return "[Polymer type "
+        + type
+        + " n="
+        + monomerCount
+        + " "
+        + (monomerCount > 0 ? monomers[0] + " " + monomers[monomerCount - 1]
+            : "") + "]";
   }
 }
