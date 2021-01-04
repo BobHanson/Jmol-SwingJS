@@ -2202,8 +2202,8 @@ public class IsoExt extends ScriptExt {
             : 10f);
         if (chk)
           continue;
-        if (envelopeRadius > 10f) {
-          eval.integerOutOfRange(0, 10);
+        if (envelopeRadius > 50f) {
+          eval.integerOutOfRange(0, 50);
           return;
         }
         sbCommand.append(" cavity ").appendF(cavityRadius).append(" ")

@@ -144,6 +144,8 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
   	<delete dir="${appjars.dir}/org/apache/tools" />
   	<delete dir="${appjars.dir}/META-INF" />
     <unjar dest="${appjars.dir}" src="${lib.dir}/${inchi.jar}"/>
+  	<move file="${appjars.dir}/META-INF/LICENSE" tofile="${appjars.dir}/META-INF/LICENSE-JNI-INCHI"/>
+  	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
     <touch file="build/libjars.timestamp"/>
   </target>
 
