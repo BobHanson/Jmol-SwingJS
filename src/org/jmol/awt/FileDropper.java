@@ -45,6 +45,7 @@ import javajs.util.SB;
 import javax.swing.JOptionPane;
 
 import org.jmol.api.JmolDropEditor;
+import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
@@ -118,7 +119,7 @@ public class FileDropper implements DropTargetListener {
     if (!vwr.setStatusDragDropped(0, x, y, fname))
       return;
     
-    int flags = 1; //
+    int flags = JmolScriptManager.PDB_CARTOONS;
     boolean isScript = FileManager.isScriptType(fname);
     boolean isSurface = FileManager.isSurfaceType(fname);
     switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT.$("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
@@ -127,7 +128,7 @@ public class FileDropper implements DropTargetListener {
     case JOptionPane.OK_OPTION:
       break;
     default:
-      flags += 4; // append
+      flags += JmolScriptManager.IS_APPEND; // append
       break;
     }
     if (statusListener != null) {

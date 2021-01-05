@@ -970,7 +970,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    */
   public JMenu createMenu(String key) {
 
-    System.out.println("JmolPanel creating menu " + key);
     // Get list of items from resource file:
     String[] itemKeys = PT.getTokens(setMenuKeys(key,
         JmolResourceHandler.getStringX(key)));
@@ -1468,9 +1467,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           return;
         if (selection.endsWith(" (*)"))
           vwr.openFileAsyncSpecial(
-              selection.substring(0, selection.length() - 4), 1 + 8);
+              selection.substring(0, selection.length() - 4), JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.PDB_CARTOONS);
         else
-          vwr.openFileAsyncSpecial(selection, 8);
+          vwr.openFileAsyncSpecial(selection, JmolScriptManager.NO_AUTOPLAY);
       }
     }
   }

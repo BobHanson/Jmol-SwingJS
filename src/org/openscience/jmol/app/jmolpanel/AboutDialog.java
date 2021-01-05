@@ -31,6 +31,7 @@ import java.net.URL;
 
 import javajs.util.PT;
 
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -64,7 +65,7 @@ public class AboutDialog extends JDialog implements HyperlinkListener {
     html.setContentType("text/html");
     html.setText(PT.rep(GuiMap.getResourceString(this, getClass().getClassLoader()
         .getResource(JmolResourceHandler.getStringX("About.aboutURL")).getPath()),
-        "SPLASH", "" + getClass().getResource("about.jpg")));
+        "SPLASH",  JmolResourceHandler.getImageURL("splash").toString()));
     html.setEditable(false);
     html.addHyperlinkListener(this);
     scroller.getViewport().add(html);

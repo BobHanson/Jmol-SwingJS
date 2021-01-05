@@ -634,15 +634,15 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   @Override
   public void show(String[] fileText) {
-    if (fileText == null)
-      fileText = new String[] { null, null };
-    if (fileText[1] == null)
-      fileText[1] = "#no data#";
-    String filename = fileText[0];
-    String msg = fileText[1];
-    if (msg != null) {
-      setFilename(filename);
-      output(FileManager.getEmbeddedScript(msg));
+    if (fileText != null) {
+      if (fileText[1] == null)
+        fileText[1] = "#no data#";
+      String filename = fileText[0];
+      String msg = fileText[1];
+      if (msg != null) {
+        setFilename(filename);
+        output(FileManager.getEmbeddedScript(msg));
+      }
     }
     setVisible(true);
   }
@@ -713,24 +713,27 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
   @Override
   public void loadFile(String fileName) {
     System.out.println(fileName);
-    if (!fileName.endsWith("png") && !fileName.endsWith("pngj")
-        && !fileName.endsWith("jmol") && !fileName.endsWith("zip"))
-      return;
-    try {
-      setSaveEnabled(fileName);
-      output(vwr.fm.getEmbeddedFileState(fileName, false, "movie.spt"));
-    } catch (Throwable e) {
-      // ignore
-    }
+    if (fileName.endsWith("png") || fileName.endsWith("pngj")
+        || fileName.endsWith("jmol") || fileName.endsWith("zip")) {
+      try {
+        setSaveEnabled(fileName);
+        output(vwr.fm.getEmbeddedFileState(fileName, false, "movie.spt"));
+      } catch (Throwable e) {
+        // ignore
+      }
 
-    try {
-      String data = vwr.fm.getEmbeddedFileState(fileName, false, "state.spt");
-      if (data.indexOf("preferredWidthHeight") >= 0)
-        vwr.sm.resizeInnerPanelString(data);
-    } catch (Throwable e) {
-      // ignore
+      try {
+        String data = vwr.fm.getEmbeddedFileState(fileName, false, "state.spt");
+        if (data.indexOf("preferredWidthHeight") >= 0)
+          vwr.sm.resizeInnerPanelString(data);
+        return;
+      } catch (Throwable e) {
+        // ignore
+      }
+    } else if (fileName.endsWith("spt")) {
+      output(vwr.getAsciiFileOrNull(fileName));
+      return;
     }
-    vwr.openFileAsyncSpecial(fileName, 11);
   }
 
   @Override

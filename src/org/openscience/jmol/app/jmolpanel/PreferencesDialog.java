@@ -91,9 +91,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   short marBond;
   int percentVdwAtom;
   int bondingVersion;
-  
+
   JButton bButton, pButton, tButton, eButton, vButton;
-  private JRadioButton /*pYes, pNo, */abYes, abNo;
+  private JRadioButton /*pYes, pNo, */ abYes, abNo;
   private JSlider vdwPercentSlider;
   private JSlider bdSlider, bwSlider, btSlider;
   private JCheckBox cH, cM;
@@ -102,7 +102,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JCheckBox cbAxesOrientationRasmol;
   private JCheckBox cbOpenFilePreview;
   private JCheckBox cbClearHistory;
-//  private JCheckBox cbLargeFont;
+  //  private JCheckBox cbLargeFont;
   private Properties jmolDefaultProperties;
   Properties currentProperties;
 
@@ -111,29 +111,18 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private PrefsAction prefsAction = new PrefsAction();
   private Map<String, Action> commands;
 
-  final static String[] jmolDefaults  = {
-    "jmolDefaults",                   "true",
-    "showHydrogens",                  "true",
-    "showMeasurements",               "true",
-    "perspectiveDepth",               "true",
-    "showAxes",                       "false",
-    "showBoundingBox",                "false",
-    "axesOrientationRasmol",          "false",
-	  "openFilePreview",                "true",
-    "autoBond",                       "true",
-    "percentVdwAtom",                 "" + JC.DEFAULT_PERCENT_VDW_ATOM,
-    "marBond",                        "" + JC.DEFAULT_BOND_MILLIANGSTROM_RADIUS,
-    "minBondDistance",                "" + JC.DEFAULT_MIN_BOND_DISTANCE,
-    "bondTolerance",                  "" + JC.DEFAULT_BOND_TOLERANCE,
-    "bondingVersion",                "" + Elements.RAD_COV_IONIC_OB1_100_1,
-  };
+  final static String[] jmolDefaults = { "jmolDefaults", "true",
+      "showHydrogens", "true", "showMeasurements", "true", "perspectiveDepth",
+      "true", "showAxes", "false", "showBoundingBox", "false",
+      "axesOrientationRasmol", "false", "openFilePreview", "true", "autoBond",
+      "true", "percentVdwAtom", "" + JC.DEFAULT_PERCENT_VDW_ATOM, "marBond",
+      "" + JC.DEFAULT_BOND_MILLIANGSTROM_RADIUS, "minBondDistance",
+      "" + JC.DEFAULT_MIN_BOND_DISTANCE, "bondTolerance",
+      "" + JC.DEFAULT_BOND_TOLERANCE, "bondingVersion",
+      "" + Elements.RAD_COV_IONIC_OB1_100_1, };
 
-  final static String[] rasmolOverrides = {
-    "jmolDefaults",                   "false",
-    "percentVdwAtom",                 "0",
-    "marBond",                        "1",
-    "axesOrientationRasmol",          "true",
-  };
+  final static String[] rasmolOverrides = { "jmolDefaults", "false",
+      "percentVdwAtom", "0", "marBond", "1", "axesOrientationRasmol", "true", };
 
   JmolPanel jmol;
   Viewer vwr;
@@ -146,7 +135,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   }
 
   public PreferencesDialog(JmolPanel jmol, JFrame f, GuiMap guimap,
-                           Viewer vwr) {
+      Viewer vwr) {
 
     super(f, false);
     this.jmol = jmol;
@@ -159,7 +148,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     initVariables();
     commands = new Hashtable<String, Action>();
-    
+
     for (int i = 0; i < actions.size(); i++) {
       Action a = actions.get(i);
       Object name = a.getValue(Action.NAME);
@@ -222,10 +211,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     showPanel.setLayout(new GridLayout(1, 3));
     showPanel.setBorder(new TitledBorder(GT.$("Show All")));
     cH = guimap.newJCheckBox("Prefs.showHydrogens",
-                             vwr.getBoolean(T.showhydrogens));
+        vwr.getBoolean(T.showhydrogens));
     cH.addItemListener(checkBoxListener);
     cM = guimap.newJCheckBox("Prefs.showMeasurements",
-                             vwr.getBoolean(T.showmeasurements));
+        vwr.getBoolean(T.showmeasurements));
     cM.addItemListener(checkBoxListener);
     showPanel.add(cH);
     showPanel.add(cM);
@@ -240,19 +229,17 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     fooPanel.setBorder(new TitledBorder(""));
     fooPanel.setLayout(new GridLayout(2, 1));
 
-    cbPerspectiveDepth =
-      guimap.newJCheckBox("Prefs.perspectiveDepth",
-                          vwr.tm.perspectiveDepth);
+    cbPerspectiveDepth = guimap.newJCheckBox("Prefs.perspectiveDepth",
+        vwr.tm.perspectiveDepth);
     cbPerspectiveDepth.addItemListener(checkBoxListener);
     fooPanel.add(cbPerspectiveDepth);
 
-    cbShowAxes =
-      guimap.newJCheckBox("Prefs.showAxes", vwr.getShowAxes());
+    cbShowAxes = guimap.newJCheckBox("Prefs.showAxes", vwr.getShowAxes());
     cbShowAxes.addItemListener(checkBoxListener);
     fooPanel.add(cbShowAxes);
 
-    cbShowBoundingBox =
-      guimap.newJCheckBox("Prefs.showBoundingBox", vwr.getShowBbcage());
+    cbShowBoundingBox = guimap.newJCheckBox("Prefs.showBoundingBox",
+        vwr.getShowBbcage());
     cbShowBoundingBox.addItemListener(checkBoxListener);
     fooPanel.add(cbShowBoundingBox);
 
@@ -266,9 +253,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     axesPanel.setBorder(new TitledBorder(""));
     axesPanel.setLayout(new GridLayout(1, 1));
 
-    cbAxesOrientationRasmol =
-        guimap.newJCheckBox("Prefs.axesOrientationRasmol",
-                            vwr.getBoolean(T.axesorientationrasmol));
+    cbAxesOrientationRasmol = guimap.newJCheckBox("Prefs.axesOrientationRasmol",
+        vwr.getBoolean(T.axesorientationrasmol));
     cbAxesOrientationRasmol.addItemListener(checkBoxListener);
     axesPanel.add(cbAxesOrientationRasmol);
 
@@ -282,28 +268,25 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     otherPanel.setBorder(new TitledBorder(""));
     otherPanel.setLayout(new GridLayout(2, 1));
 
-    cbOpenFilePreview =
-        guimap.newJCheckBox("Prefs.openFilePreview",
-                            openFilePreview);
+    cbOpenFilePreview = guimap.newJCheckBox("Prefs.openFilePreview",
+        openFilePreview);
     cbOpenFilePreview.addItemListener(checkBoxListener);
     otherPanel.add(cbOpenFilePreview);
-    
-    cbClearHistory =
-        guimap.newJCheckBox("Prefs.clearHistory", clearHistory);
+
+    cbClearHistory = guimap.newJCheckBox("Prefs.clearHistory", clearHistory);
     cbClearHistory.addItemListener(checkBoxListener);
     otherPanel.add(cbClearHistory);
-    
-//    cbLargeFont =
-//        guimap.newJCheckBox("Prefs.largeFont", largeFont);
-//    cbLargeFont.addItemListener(checkBoxListener);
-//    otherPanel.add(cbLargeFont);
+
+    //    cbLargeFont =
+    //        guimap.newJCheckBox("Prefs.largeFont", largeFont);
+    //    cbLargeFont.addItemListener(checkBoxListener);
+    //    otherPanel.add(cbLargeFont);
 
     constraints = new GridBagConstraints();
     constraints.gridwidth = GridBagConstraints.REMAINDER;
     constraints.fill = GridBagConstraints.HORIZONTAL;
     constraints.weightx = 1.0;
     disp.add(otherPanel, constraints);
-
 
     JLabel filler = new JLabel();
     constraints = new GridBagConstraints();
@@ -326,10 +309,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     sfPanel.setLayout(new BorderLayout());
     sfPanel.setBorder(new TitledBorder(GT.$("Default atom size")));
     JLabel sfLabel = new JLabel(GT.$("(percentage of vanDerWaals radius)"),
-                                SwingConstants.CENTER);
+        SwingConstants.CENTER);
     sfPanel.add(sfLabel, BorderLayout.NORTH);
-    vdwPercentSlider =
-      new JSlider(SwingConstants.HORIZONTAL, 0, 100, vwr.getInt(T.percentvdwatom));
+    vdwPercentSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100,
+        vwr.getInt(T.percentvdwatom));
     vdwPercentSlider.putClientProperty("JSlider.isFilled", Boolean.TRUE);
     vdwPercentSlider.setPaintTicks(true);
     vdwPercentSlider.setMajorTickSpacing(20);
@@ -348,7 +331,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     constraints.fill = GridBagConstraints.HORIZONTAL;
     constraints.weightx = 1.0;
     atomPanel.add(sfPanel, constraints);
-
 
     JLabel filler = new JLabel();
     constraints = new GridBagConstraints();
@@ -394,7 +376,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
       @Override
       public void actionPerformed(ActionEvent e) {
-        vwr.setBooleanProperty("autoBond", true);        
+        vwr.setBooleanProperty("autoBond", true);
         currentProperties.put("autoBond", "" + "true");
       }
     });
@@ -405,7 +387,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       @Override
       public void actionPerformed(ActionEvent e) {
         vwr.setBooleanProperty("autoBond", false);
-        currentProperties.put("autoBond", "" + "false");          
+        currentProperties.put("autoBond", "" + "false");
       }
     });
 
@@ -419,7 +401,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     JLabel bwLabel = new JLabel(GT.$("(Angstroms)"), SwingConstants.CENTER);
     bwPanel.add(bwLabel, BorderLayout.NORTH);
 
-    bwSlider = new JSlider(0, 250,vwr.getMadBond()/2);
+    bwSlider = new JSlider(0, 250, vwr.getMadBond() / 2);
     bwSlider.putClientProperty("JSlider.isFilled", Boolean.TRUE);
     bwSlider.setPaintTicks(true);
     bwSlider.setMajorTickSpacing(50);
@@ -451,7 +433,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     JPanel btPanel = new JPanel();
     btPanel.setLayout(new BorderLayout());
     btPanel.setBorder(new TitledBorder(
-      GT.$("Bond Tolerance - sum of two covalent radii + this value")));
+        GT.$("Bond Tolerance - sum of two covalent radii + this value")));
     JLabel btLabel = new JLabel(GT.$("(Angstroms)"), SwingConstants.CENTER);
     btPanel.add(btLabel, BorderLayout.NORTH);
 
@@ -463,17 +445,23 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     btSlider.setMinorTickSpacing(10);
     btSlider.setPaintLabels(true);
     Dictionary<Object, Object> labelTable = getJSliderLabelTable(btSlider);
-    labelTable.put(Integer.valueOf(0), new JLabel("0.0", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(0),
+        new JLabel("0.0", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(20), new JLabel("0.2", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(20),
+        new JLabel("0.2", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(40), new JLabel("0.4", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(40),
+        new JLabel("0.4", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(60), new JLabel("0.6", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(60),
+        new JLabel("0.6", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(80), new JLabel("0.8", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(80),
+        new JLabel("0.8", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(100), new JLabel("1.0", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(100),
+        new JLabel("1.0", SwingConstants.CENTER));
     btSlider.setLabelTable(labelTable);
 
     btSlider.addChangeListener(new ChangeListener() {
@@ -484,7 +472,6 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       }
     });
     btPanel.add(btSlider);
-
 
     c.weightx = 0.0;
     gridbag.setConstraints(btPanel, c);
@@ -505,17 +492,23 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     bdSlider.setMinorTickSpacing(10);
     bdSlider.setPaintLabels(true);
     labelTable = getJSliderLabelTable(bdSlider);
-    labelTable.put(Integer.valueOf(0), new JLabel("0.0", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(0),
+        new JLabel("0.0", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(20), new JLabel("0.2", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(20),
+        new JLabel("0.2", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(40), new JLabel("0.4", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(40),
+        new JLabel("0.4", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(60), new JLabel("0.6", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(60),
+        new JLabel("0.6", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(80), new JLabel("0.8", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(80),
+        new JLabel("0.8", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
-    labelTable.put(Integer.valueOf(100), new JLabel("1.0", SwingConstants.CENTER));
+    labelTable.put(Integer.valueOf(100),
+        new JLabel("1.0", SwingConstants.CENTER));
     bdSlider.setLabelTable(labelTable);
 
     bdSlider.addChangeListener(new ChangeListener() {
@@ -565,8 +558,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cbShowAxes.setSelected(vwr.getShowAxes());
     cbShowBoundingBox.setSelected(vwr.getShowBbcage());
 
-    cbAxesOrientationRasmol.setSelected(vwr.getBoolean(T.axesorientationrasmol));
-    
+    cbAxesOrientationRasmol
+        .setSelected(vwr.getBoolean(T.axesorientationrasmol));
+
     cbOpenFilePreview.setSelected(openFilePreview);
     cbClearHistory.setSelected(clearHistory);
     //cbLargeFont.setSelected(largeFont);
@@ -576,7 +570,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     // Bond panel controls:
     abYes.setSelected(vwr.getBoolean(T.autobond));
-    bwSlider.setValue(vwr.getMadBond()/2);
+    bwSlider.setValue(vwr.getMadBond() / 2);
     bdSlider.setValue((int) (100 * vwr.getFloat(T.minbonddistance)));
     btSlider.setValue((int) (100 * vwr.getFloat(T.bondtolerance)));
 
@@ -590,8 +584,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
   void save() {
     try {
-      FileOutputStream fileOutputStream =
-        new FileOutputStream(jmol.jmolApp.userPropsFile);
+      FileOutputStream fileOutputStream = new FileOutputStream(
+          jmol.jmolApp.userPropsFile);
       currentProperties.store(fileOutputStream, "Jmol");
       fileOutputStream.close();
     } catch (Exception e) {
@@ -601,25 +595,26 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
   void initializeProperties() {
     jmolDefaultProperties = new Properties(System.getProperties());
-    for (int i = jmolDefaults.length; (i -= 2) >= 0; ) {
-      jmolDefaultProperties.put(jmolDefaults[i], jmolDefaults[i+1]);
+    for (int i = jmolDefaults.length; (i -= 2) >= 0;) {
+      jmolDefaultProperties.put(jmolDefaults[i], jmolDefaults[i + 1]);
     }
     currentProperties = new Properties(jmolDefaultProperties);
     try {
-      BufferedInputStream bis = new BufferedInputStream(new FileInputStream(jmol.jmolApp.userPropsFile), 1024);
+      BufferedInputStream bis = new BufferedInputStream(
+          new FileInputStream(jmol.jmolApp.userPropsFile), 1024);
       currentProperties.load(bis);
       bis.close();
     } catch (Exception e2) {
     }
-//    System.setProperties(currentProperties);
+    //    System.setProperties(currentProperties);
   }
 
   void resetDefaults(String[] overrides) {
     currentProperties = new Properties(jmolDefaultProperties);
     //System.setProperties(currentProperties);
     if (overrides != null) {
-      for (int i = overrides.length; (i -= 2) >= 0; )
-        currentProperties.put(overrides[i], overrides[i+1]);
+      for (int i = overrides.length; (i -= 2) >= 0;)
+        currentProperties.put(overrides[i], overrides[i + 1]);
     }
     initVariables();
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "PreferencesDialog:resetDefaults()");
@@ -634,19 +629,19 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     bondTolerance = btSlider.getValue() / 100f;
     vwr.setFloatProperty("bondTolerance", bondTolerance);
     currentProperties.put("bondTolerance", "" + bondTolerance);
-    
+
     minBondDistance = bdSlider.getValue() / 100f;
     vwr.setFloatProperty("minBondDistance", minBondDistance);
     currentProperties.put("minBondDistance", "" + minBondDistance);
-    
-    marBond = (short)bwSlider.getValue();
+
+    marBond = (short) bwSlider.getValue();
     vwr.setIntProperty("bondRadiusMilliAngstroms", marBond);
     currentProperties.put("marBond", "" + marBond);
-    
+
     vwr.rebond();
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "PreferencesDialog:rebond()");
   }
-  
+
   void initVariables() {
 
     autoBond = getBoolean("autoBond");
@@ -657,19 +652,16 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     showAxes = getBoolean("showAxes");
     showBoundingBox = getBoolean("showBoundingBox");
     axesOrientationRasmol = getBoolean("axesOrientationRasmol");
-    openFilePreview = Boolean.parseBoolean(currentProperties.getProperty("openFilePreview", "true"));
+    openFilePreview = Boolean
+        .parseBoolean(currentProperties.getProperty("openFilePreview", "true"));
     clearHistory = getBoolean("clearHistory");
 
-    minBondDistance =
-      Float.parseFloat(getProp("minBondDistance"));
-    bondTolerance =
-      Float.parseFloat(getProp("bondTolerance"));
+    minBondDistance = Float.parseFloat(getProp("minBondDistance"));
+    bondTolerance = Float.parseFloat(getProp("bondTolerance"));
     marBond = Short.parseShort(getProp("marBond"));
-    percentVdwAtom =
-      Integer.parseInt(getProp("percentVdwAtom"));
-    bondingVersion =
-        Integer.parseInt(getProp("bondingVersion"));
-    fontScale  = Math.max(PT.parseInt("" + getProp("consoleFontScale")), 0) % 5;
+    percentVdwAtom = Integer.parseInt(getProp("percentVdwAtom"));
+    bondingVersion = Integer.parseInt(getProp("bondingVersion"));
+    fontScale = Math.max(PT.parseInt("" + getProp("consoleFontScale")), 0) % 5;
 
     if (getBoolean("jmolDefaults"))
       vwr.setStringProperty("defaults", "Jmol");
@@ -688,9 +680,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.setBooleanProperty("showAxes", showAxes);
     vwr.setBooleanProperty("showBoundBox", showBoundingBox);
     vwr.setBooleanProperty("axesOrientationRasmol", axesOrientationRasmol);
-    
+
     jmol.updateConsoleFont();
-    
+
   }
 
   private String getProp(String key) {
@@ -761,15 +753,15 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         vwr.setBooleanProperty("axesOrientationRasmol", isSelected);
         currentProperties.put("axesOrientationRasmol", strSelected);
       } else if (key.equals("Prefs.openFilePreview")) {
-      	openFilePreview = isSelected;
-      	currentProperties.put("openFilePreview", strSelected);
+        openFilePreview = isSelected;
+        currentProperties.put("openFilePreview", strSelected);
       } else if (key.equals("Prefs.clearHistory")) {
         clearHistory = isSelected;
         currentProperties.put("clearHistory", strSelected);
         if (JmolPanel.historyFile != null)
           JmolPanel.historyFile.addProperty("clearHistory", strSelected);
-//      } else if (key.equals("Prefs.fontScale")) {
-//        setFontScale(strSelected);
+        //      } else if (key.equals("Prefs.fontScale")) {
+        //        setFontScale(strSelected);
       }
     }
   };
@@ -779,7 +771,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JButton rasmolDefaultsButton;
   private JButton cancelButton;
   private JButton okButton;
-  
+
   @Override
   public void actionPerformed(ActionEvent event) {
     if (event.getSource() == applyButton) {
@@ -796,7 +788,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   }
 
   public void setFontScale(int scale) {
-    fontScale = (scale == Integer.MIN_VALUE ? fontScale : scale < 0 ? fontScale + 1 : scale) % 5;
+    fontScale = (scale == Integer.MIN_VALUE ? fontScale
+        : scale < 0 ? fontScale + 1 : scale) % 5;
     currentProperties.put("consoleFontScale", "" + fontScale);
     save();
     jmol.updateConsoleFont();

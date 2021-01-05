@@ -25,6 +25,7 @@ package org.openscience.jmol.app.jmolpanel.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -61,11 +62,13 @@ import javax.swing.text.StyleConstants;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolDropEditor;
+import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.awt.FileDropper;
 import org.jmol.awt.Platform;
 import org.jmol.console.JmolConsole;
+import org.jmol.console.ScriptEditor;
 import org.jmol.i18n.GT;
 import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
@@ -86,8 +89,12 @@ public class AppConsole extends JmolConsole
 
   @Override
   public void loadFile(String fileName) {
-    getScriptEditor().setVisible(true);
+    ScriptEditor se = (ScriptEditor) getScriptEditor();
+    boolean isVisible = se.isVisible();
     getScriptEditor().loadFile(fileName);
+    if (!isVisible)
+      se.setVisible(false);    
+    vwr.openFileAsyncSpecial(fileName, JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.NO_SCRIPT | JmolScriptManager.PDB_CARTOONS);
   }
 
   public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
@@ -845,59 +852,60 @@ public class AppConsole extends JmolConsole
       }
     }
 
-  /**
-   * Recall command history.
-   * 
-   * @param up
-   *        - history up or down
-   * @param pageup
-   *        TODO
-   */
-  void recallCommand(boolean up, boolean pageup) {
-    String cmd = (pageup ? vwr.historyFind(
-        pageUpBuffer == null ? (pageUpBuffer = consoleDoc.getCommandString())
-            : pageUpBuffer,
-        up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
-    if (cmd == null) {
-      EventQueue.invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            hBar.setValue(0);
-          } catch (Throwable e) {
-            //
+    /**
+     * Recall command history.
+     * 
+     * @param up
+     *        - history up or down
+     * @param pageup
+     *        TODO
+     */
+    void recallCommand(boolean up, boolean pageup) {
+      String cmd = (pageup ? vwr.historyFind(
+          pageUpBuffer == null ? (pageUpBuffer = consoleDoc.getCommandString())
+              : pageUpBuffer,
+          up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
+      if (cmd == null) {
+        EventQueue.invokeLater(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              hBar.setValue(0);
+            } catch (Throwable e) {
+              //
+            }
           }
-        }
-      });
-      return;
-    }
-    boolean isError = false;
-    try {
-      if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
-        isError = true;
-        cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
+        });
+        return;
       }
-      cmd = PT.trim(cmd, ";");
-      consoleDoc.replaceCommand(cmd, isError);
-    } catch (BadLocationException e) {
-      e.printStackTrace();
+      boolean isError = false;
+      try {
+        if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
+          isError = true;
+          cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
+        }
+        cmd = PT.trim(cmd, ";");
+        consoleDoc.replaceCommand(cmd, isError);
+      } catch (BadLocationException e) {
+        e.printStackTrace();
+      }
     }
-  }
 
-  synchronized void checkCommand() {
-    String strCommand = consoleDoc.getCommandString();
-    //System.out.println("checkCommand " + strCommand);
-    if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
-        || vwr.isScriptExecuting() || vwr.getBooleanProperty("executionPaused"))
-      return;
-    checking = true;
-    Object res = vwr.scriptCheck(strCommand);
+    synchronized void checkCommand() {
+      String strCommand = consoleDoc.getCommandString();
+      //System.out.println("checkCommand " + strCommand);
+      if (strCommand.length() == 0 || strCommand.charAt(0) == '!'
+          || vwr.isScriptExecuting()
+          || vwr.getBooleanProperty("executionPaused"))
+        return;
+      checking = true;
+      Object res = vwr.scriptCheck(strCommand);
 
-    //System.out.println( res);
-    consoleDoc.colorCommand(
-        res instanceof String ? consoleDoc.attError : consoleDoc.attUserInput);
-    checking = false;
-  }
+      //System.out.println( res);
+      consoleDoc.colorCommand(res instanceof String ? consoleDoc.attError
+          : consoleDoc.attUserInput);
+      checking = false;
+    }
 
   }
 
@@ -1087,7 +1095,6 @@ public class AppConsole extends JmolConsole
     }
 
     private void setCaretPosition(int p) {
-      System.out.println("AppConsole caretPosition to  " + p);
       consoleTextPane.setCaretPosition(p);
     }
 
@@ -1158,7 +1165,6 @@ public class AppConsole extends JmolConsole
           att, true);
     }
   }
-
 
 }
 

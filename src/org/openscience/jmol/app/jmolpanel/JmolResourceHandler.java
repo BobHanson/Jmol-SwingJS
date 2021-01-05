@@ -98,7 +98,11 @@ public class JmolResourceHandler {
     return getInstance().getIcon(key);
   }
 
-  private synchronized ImageIcon getIcon(String key) {
+  public static URL getImageURL(String key){ 
+    return getInstance().getImageURLImpl(key);
+  }
+
+  private URL getImageURLImpl(String key) {
 
     String resourceName = null;
     try {
@@ -107,22 +111,21 @@ public class JmolResourceHandler {
         return null;
     } catch (MissingResourceException e) {
     }
-
+    URL url = null;
     if (resourceName != null) {
-      String imageName = "org/openscience/jmol/app/images/" + resourceName;
-      URL imageUrl = this.getClass().getClassLoader().getResource(imageName);
-      if (imageUrl != null) {
-        String s = imageUrl.toString();
-        codePath = s.substring(0, s.indexOf(imageName));
-
-        return new ImageIcon(imageUrl);
+      url = getClass().getClassLoader()
+          .getResource("org/openscience/jmol/app/images/" + resourceName);
+      if (codePath == null) {
+        String s = url.toString();
+        codePath = s.substring(0, s.indexOf("org/openscience"));
       }
-      /*
-      System.err.println("Warning: unable to load " + resourceName
-          + " for icon " + key + ".");
-      */
     }
-    return null;
+    return url;
+  }
+
+  private synchronized ImageIcon getIcon(String key) {
+    URL imageUrl = getImageURLImpl(key);
+    return (imageUrl == null ? null : new ImageIcon(imageUrl));
   }
 
   private synchronized String getString(String key) {
