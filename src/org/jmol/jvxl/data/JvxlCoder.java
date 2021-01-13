@@ -348,11 +348,11 @@ public class JvxlCoder {
     if (jvxlData.rendering != null)
       addAttrib(attribs, "\n  rendering", jvxlData.rendering);
     if (jvxlData.thisSet != null) {
-      String s = Isosurface.subsetString(jvxlData.thisSet);
-      if (s.startsWith(" subset "))
-        addAttrib(attribs, "\n  subset", s.substring(8));
+      String s = subsetString(jvxlData.thisSet);
+      if (s.startsWith("["))
+        addAttrib(attribs, "\n  subset", s);
       else
-        addAttrib(attribs, "\n  set", s.substring(6));
+        addAttrib(attribs, "\n  set", s);
     }
     if (jvxlData.slabValue != Integer.MIN_VALUE)
       addAttrib(attribs, "\n  slabValue", "" + jvxlData.slabValue);
@@ -407,6 +407,17 @@ public class JvxlCoder {
     return info.toString();
   }
   
+  private static String subsetString(BS bs) {
+    int n = bs.cardinality();
+    if (n > 1) {
+      String a = "[ ";
+      for (int ia = bs.nextSetBit(0); ia >= 0; ia = bs.nextSetBit(ia))
+        a += (++ia) + " ";
+      return a + "]";
+    } 
+    return "" + (bs.nextSetBit(0) + 1);
+  }
+
   private static void addAttrib(Lst<String[]> attribs, String name, String value) {
     attribs.addLast(new String[] { name, value });
   }

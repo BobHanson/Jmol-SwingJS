@@ -593,11 +593,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       newSg();
     } else if ("getSurfaceSets" == propertyName) {
       if (thisMesh != null) {
-        BS bsSets = new BS();
-        int[] a = (int[]) value;
-        for (int i = a.length; --i >= 0;) {
-          if (a[i] > 0)
-            bsSets.set(a[i] - 1);
+        BS bsSets; 
+        if (value instanceof BS) {
+          bsSets = ((BS) value);
+        } else {
+          bsSets = new BS();
+          int[] a = (int[]) value;
+          for (int i = a.length; --i >= 0;) {
+            if (a[i] > 0)
+              bsSets.set(a[i] - 1);
+          }
         }
         thisMesh.jvxlData.thisSet = bsSets;
         thisMesh.calculatedVolume = null;
@@ -1097,7 +1102,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     appendCmd(sb, cmd);
     String id = myType + " ID " + PT.esc(imesh.thisID);
     if (imesh.jvxlData.thisSet != null && imesh.jvxlData.thisSet.cardinality() > 0) {
-      appendCmd(sb, id + subsetString(imesh.jvxlData.thisSet));
+      appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " + imesh.jvxlData.thisSet.nextSetBit(0)
+      : " subset " + imesh.jvxlData.thisSet));
     }
     if (imesh.mat4 != null && !imesh.isModelConnected)
       appendCmd(sb, id + " move " + Escape.matrixToScript(imesh.mat4));
@@ -1134,16 +1140,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   
-  public static String subsetString(BS bs) {
-    int n = bs.cardinality();
-    if (n > 1) {
-      String a = "[ ";
-      for (int ia = bs.nextSetBit(0); ia >= 0; ia = bs.nextSetBit(ia))
-        a += (++ia) + " ";
-      return " subset " + a + "]";
-    } 
-    return " set " + (bs.nextSetBit(0) + 1);
-  }
   private String script;
 
   private boolean getScriptBitSets(String script, BS[] bsCmd) {

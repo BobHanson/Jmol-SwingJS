@@ -410,9 +410,10 @@ public class MoldenReader extends MopacSlaterReader {
     }
     if (debugging)
       Logger.debug("read " + orbitals.size() + " MOs");
-    setMOs("eV");
+    setMOs("");// Molden does not specify units.
     if (haveEnergy && doSort)
       sortMOs();
+    
     return false;
   }
   
@@ -420,7 +421,7 @@ public class MoldenReader extends MopacSlaterReader {
   @Override
   public String rd() throws Exception {
     if (++ptLineBuf < bufLen) {
-      return lineBuffer.get(ptLineBuf);
+      return line = lineBuffer.get(ptLineBuf);
     } 
     if (bufLen > 0) {
       lineBuffer = null;

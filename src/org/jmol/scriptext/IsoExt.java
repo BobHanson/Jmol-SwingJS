@@ -461,8 +461,8 @@ public class IsoExt extends ScriptExt {
               faces = getIntArray2(i);
             } else {
               faces = AU.newInt2(1);
-              faces[0] = eval.expandFloatArray(
-                  eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1);
+              faces[0] = (int[]) eval.expandFloatArray(
+                  eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1, false);
             }
             points = getAllPoints(e.iToken + 1, 3);
             try {
@@ -1357,7 +1357,7 @@ public class IsoExt extends ScriptExt {
     String nbotype = null;
     float[] data = null;
     String cmd = null;
-    int[] thisSet = null;
+    BS thisSet = null;
     int nFiles = 0;
     int nX, nY, nZ, ptX, ptY;
     float sigma = Float.NaN;
@@ -1748,11 +1748,17 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.subset:
-         thisSet = eval.expandFloatArray(eval.floatParameterSet(++i, 1, Integer.MAX_VALUE), 1);
+         if (eval.getToken(++i).tok == T.bitset) {
+           thisSet = (BS) eval.theToken.value;
+         } else {
+           thisSet = (BS) eval.expandFloatArray(eval.floatParameterSet(i, 1, Integer.MAX_VALUE), 1, true);
+         }
          i = eval.iToken;
         break;
       case T.set:
-         thisSet = new int[] {intParameter(++i)};
+        int ns = intParameter(++i);
+        if (ns > 0)
+          thisSet = BSUtil.newAndSetBit(ns);
         break;
       case T.center:
         propertyName = "center";

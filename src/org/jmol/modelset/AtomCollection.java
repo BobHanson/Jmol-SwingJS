@@ -469,11 +469,7 @@ abstract public class AtomCollection {
         float dMin = Float.MAX_VALUE;
         Atom atom = at[i];
         for (int j = points.length; --j >= 0;) {
-          float d = Math.abs(points[j].distance(atom) - radiusAdjust);
-          if (d < 0 && Logger.debugging)
-            Logger.debug("draw d" + j + " " + Escape.eP(points[j])
-                + " \"" + d + " ? " + atom.getInfo() + "\"");
-          dMin = Math.min(d, dMin);
+          dMin = Math.min(Math.abs(points[j].distance(atom) - radiusAdjust), dMin);
         }
         int d = surfaceDistance100s[i] = (int) Math.floor(dMin * 100);
         surfaceDistanceMax = Math.max(surfaceDistanceMax, d);

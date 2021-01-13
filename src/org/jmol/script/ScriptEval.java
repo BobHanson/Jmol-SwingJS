@@ -2900,8 +2900,8 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void setFrameSet(int i) throws ScriptException {
-    int[] frames = expandFloatArray(
-        floatParameterSet(i, 0, Integer.MAX_VALUE), 1);
+    int[] frames = (int[]) expandFloatArray(
+        floatParameterSet(i, 0, Integer.MAX_VALUE), 1, false);
     checkLength(iToken + 1);
     if (chk)
       return;
@@ -6718,8 +6718,8 @@ public class ScriptEval extends ScriptExpr {
       } else if (isArrayParameter(4)) {
         bs = new BS();
         // 0-based here, to conform with getProperty measurementInfo.index
-        int[] a = expandFloatArray(floatParameterSet(4, 0,
-            Integer.MAX_VALUE), 0);
+        int[] a = (int[]) expandFloatArray(floatParameterSet(4, 0,
+            Integer.MAX_VALUE), 0, false);
         for (int ii = a.length; --ii >= 0;)
           if (a[ii] >= 0)
             bs.set(a[ii]);
@@ -8761,9 +8761,10 @@ public class ScriptEval extends ScriptExpr {
    * @return int array
    * @throws ScriptException 
    */
-  public int[] expandFloatArray(float[] a, int min) throws ScriptException {
+  public Object expandFloatArray(float[] a, int min, boolean asBS) throws ScriptException {
     int n = a.length;
     boolean haveNeg = false;
+    BS bs = (asBS ? new BS() : null);
     try {
       for (int i = 0; i < a.length; i++)
         if (a[i] < 0) {
@@ -8771,22 +8772,34 @@ public class ScriptEval extends ScriptExpr {
           haveNeg = true;
         }
       if (haveNeg) {
-        float[] b = new float[n];
+        float[] b = (asBS ? null : new float[n]);
         for (int pt = 0, i = 0; i < a.length; i++) {
           n = (int) a[i];
           if (n >= 0) {
             if (n < min)
               invArg();
-            b[pt++] = n;
+            if (asBS)
+              bs.set(n - 1);
+            else
+              b[pt++] = n;            
           } else {
-            int dif = (int) (a[i - 1] + n);
-            int dir = (dif < 0 ? 1 : -1);
-            for (int j = (int) a[i - 1]; j != -a[i]; j += dir, pt++)
-              b[pt] = b[pt - 1] + dir;
+            int j = (int) a[i - 1];
+            int dir = (j <= -n ? 1 : -1);
+            for (int j2 = -n; j != j2; j += dir, pt++)
+              if (!asBS)
+                b[pt] = j + dir;
+              else
+                bs.set(j);
           }
         }
         a = b;
-        n = a.length;
+        if (!asBS)
+          n = a.length;
+      }
+      if (asBS) {
+        for (int i = n; --i >= 0;)
+          bs.set((int) a[i] - 1);
+        return bs;
       }
       int[] ia = new int[n];
       for (int i = n; --i >= 0;)

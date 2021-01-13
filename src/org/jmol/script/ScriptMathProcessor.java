@@ -1764,7 +1764,7 @@ public class ScriptMathProcessor {
       if (isAtoms && bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
         op.intValue |= T.min;
       Object val = eval.getBitsetProperty(bs, null, op.intValue, null,
-          null, x2.value, op.value, false, x2.index, true);
+          null, null, op.value, false, x2.index, true);
       return (isAtoms ? addXObj(val) : addX(SV.newV(T.bitset, BondSet.newBS(
           (BS) val, vwr.ms.getAtomIndices(bs)))));
     }
