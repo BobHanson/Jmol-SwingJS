@@ -596,6 +596,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         BS bsSets; 
         if (value instanceof BS) {
           bsSets = ((BS) value);
+          if (bsSets.cardinality() == 0)
+            bsSets = null;
         } else {
           bsSets = new BS();
           int[] a = (int[]) value;

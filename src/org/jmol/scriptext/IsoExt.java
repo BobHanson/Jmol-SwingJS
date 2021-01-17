@@ -1759,6 +1759,8 @@ public class IsoExt extends ScriptExt {
         int ns = intParameter(++i);
         if (ns > 0)
           thisSet = BSUtil.newAndSetBit(ns);
+        else
+          thisSet = new BS();
         break;
       case T.center:
         propertyName = "center";
