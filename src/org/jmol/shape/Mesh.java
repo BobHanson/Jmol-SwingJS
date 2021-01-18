@@ -521,6 +521,7 @@ public class Mesh extends MeshSurface {
     info.put("vertexCount", Integer.valueOf(vc));
     info.put("haveQuads", Boolean.valueOf(haveQuads));
     info.put("haveValues", Boolean.valueOf(vvs != null));
+    int np = pc; 
     if (isAll) {
       if (vc > 0) {
         info.put("vertices", AU.arrayCopyPt(vs, vc));
@@ -529,16 +530,18 @@ public class Mesh extends MeshSurface {
       }
       if (vvs != null)
         info.put("vertexValues", AU.arrayCopyF(vvs, vc));
-      if (pc > 0) {
-        int[][] ii = nonNull(pis, pc);
+      if (np > 0) {
+        int[][] ii = nonNull(pis, np);
         info.put("polygons", ii);
-        info.put("polygonCount", Integer.valueOf(ii.length));
-        if (bsSlabDisplay != null)
-          info.put("bsPolygons", (ii.length == pc ? BS.copy(bsSlabDisplay) : nonNullBS(bsSlabDisplay, pis, pc)));
+        np = ii.length; 
+        if (bsSlabDisplay != null) {
+          BS bs = (ii.length == pc ? BS.copy(bsSlabDisplay) : nonNullBS(bsSlabDisplay, pis, pc));
+          info.put("bsPolygons", bs);
+          np = bs.cardinality();
+        }
       }
-    } else {
-      info.put("polygonCount", Integer.valueOf(pc));
     }
+    info.put("polygonCount", Integer.valueOf(np));
     return info;
   }
 
