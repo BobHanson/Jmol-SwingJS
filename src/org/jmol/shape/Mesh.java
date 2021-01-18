@@ -519,7 +519,6 @@ public class Mesh extends MeshSurface {
     Hashtable<String, Object> info = new Hashtable<String, Object>();
     info.put("id", thisID);
     info.put("vertexCount", Integer.valueOf(vc));
-    info.put("polygonCount", Integer.valueOf(pc));
     info.put("haveQuads", Boolean.valueOf(haveQuads));
     info.put("haveValues", Boolean.valueOf(vvs != null));
     if (isAll) {
@@ -531,12 +530,42 @@ public class Mesh extends MeshSurface {
       if (vvs != null)
         info.put("vertexValues", AU.arrayCopyF(vvs, vc));
       if (pc > 0) {
-        info.put("polygons", AU.arrayCopyII(pis, pc));
+        int[][] ii = nonNull(pis, pc);
+        info.put("polygons", ii);
+        info.put("polygonCount", Integer.valueOf(ii.length));
         if (bsSlabDisplay != null)
-          info.put("bsPolygons", bsSlabDisplay);
+          info.put("bsPolygons", (ii.length == pc ? BS.copy(bsSlabDisplay) : nonNullBS(bsSlabDisplay, pis, pc)));
       }
+    } else {
+      info.put("polygonCount", Integer.valueOf(pc));
     }
     return info;
+  }
+
+  private static BS nonNullBS(BS bsSlabDisplay, int[][] pis, int pc) {
+    BS bs = new BS();
+    for (int pt = 0, i = 0; i < pc; i++) {
+      if (pis[i] != null) {
+        if (bsSlabDisplay.get(i))
+          bs.set(pt);
+        pt++;
+      }
+    }
+    return bs;
+  }
+
+  private static int[][] nonNull(int[][] pis, int pc) {
+    int n = 0;
+    for (int i = pc; --i >= 0;)
+      if (pis[i] != null) {
+        n++;
+      }
+    int[][] ii = new int[n][];
+    if (n > 0)
+      for (int pt = 0, i = 0; i < pc; i++)
+        if (pis[i] != null)
+          ii[pt++] = pis[i];
+    return ii;
   }
 
   public P3[] getBoundingBox() {
