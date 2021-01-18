@@ -1104,7 +1104,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     appendCmd(sb, cmd);
     String id = myType + " ID " + PT.esc(imesh.thisID);
     if (imesh.jvxlData.thisSet != null && imesh.jvxlData.thisSet.cardinality() > 0) {
-      appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " + imesh.jvxlData.thisSet.nextSetBit(0)
+      appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " 
+    + (imesh.jvxlData.thisSet.nextSetBit(0) + 1)
       : " subset " + imesh.jvxlData.thisSet));
     }
     if (imesh.mat4 != null && !imesh.isModelConnected)
