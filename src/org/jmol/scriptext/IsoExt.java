@@ -1758,7 +1758,7 @@ public class IsoExt extends ScriptExt {
       case T.set:
         int ns = intParameter(++i);
         if (ns > 0)
-          thisSet = BSUtil.newAndSetBit(ns);
+          thisSet = BSUtil.newAndSetBit(ns - 1);
         else
           thisSet = new BS();
         break;
