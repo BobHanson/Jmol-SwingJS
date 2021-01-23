@@ -384,8 +384,8 @@ public class Resolver {
   { "P2n", "REMARK   1 P2N" };
   
   private final static String[] cif2StartRecords = 
-    { "Cif2", "#\\#CIF_2", "\uFEFF#\\#CIF_2"};  
-
+    { "Cif2", "#\\#CIF_2", "\u00EF\u00BB\u00BF#\\#CIF_2"};
+    
   private final static String[] xmlStartRecords = 
   { "Xml", "<?xml" };
 

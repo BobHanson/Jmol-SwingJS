@@ -1032,4 +1032,35 @@ public class IsosurfaceMesh extends Mesh {
             : jvxlData.valueMappedToBlue) });
   }
 
+  @Override
+  public Object getInfo(boolean isAll) {
+    @SuppressWarnings("unchecked")
+    Hashtable<String, Object> info = (Hashtable<String, Object>) super.getInfo(
+        isAll);
+    if (isAll) {
+      BS[] excluded = jvxlData.jvxlExcluded;
+      BS invalid = excluded[1];
+      BS thisSet = jvxlData.thisSet;
+      BS bs = new BS();
+      if (invalid != null)
+        bs.or(invalid);
+      if (thisSet != null) {
+        for (int i = vc; --i >= 0;) {
+          if (!thisSet.get(vertexSets[i]))
+            bs.set(i);
+        }
+      }
+      int n = vc - bs.cardinality();
+      if (n != vc) {
+        T3[] pa = new P3[n];
+        for (int pt = 0, i = bs.nextClearBit(0); i >= 0
+            && pt < n; i = bs.nextClearBit(i + 1)) {
+          pa[pt++] = vs[i];
+        }
+        info.put("allVertices", info.get("vertices"));
+        info.put("vertices", pa);
+      }
+    }
+    return info;
+  }
 }

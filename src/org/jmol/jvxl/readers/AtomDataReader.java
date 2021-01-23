@@ -323,7 +323,6 @@ abstract class AtomDataReader extends VolumeDataReader {
       setRadii();
     
     haveOneProperty = (!Float.isNaN(theProperty));
-    //System.out.println("AtomDataR theProperty=" + theProperty);
   }
 
   /**
@@ -487,7 +486,6 @@ abstract class AtomDataReader extends VolumeDataReader {
       setGridLimitsForAtom(atomXyzTruncated[iAtom], atomRadius[iAtom], pt0, pt1);
       for (int i = pt0.x; i < pt1.x; i++)
         bsAtomMinMax[i].set(iAtom);
-      //System.out.println("for atom " + iAtom + " " + ptA + " " + min + " " + max);
     }
   }
 

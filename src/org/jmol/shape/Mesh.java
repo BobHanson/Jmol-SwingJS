@@ -515,7 +515,7 @@ public class Mesh extends MeshSurface {
     }
   }
   
-  Object getInfo(boolean isAll) {
+  protected Object getInfo(boolean isAll) {
     Hashtable<String, Object> info = new Hashtable<String, Object>();
     info.put("id", thisID);
     info.put("vertexCount", Integer.valueOf(vc));
@@ -528,8 +528,9 @@ public class Mesh extends MeshSurface {
         if (bsSlabDisplay != null)
           info.put("bsVertices", getVisibleVBS());
       }
-      if (vvs != null)
+      if (vvs != null) {
         info.put("vertexValues", AU.arrayCopyF(vvs, vc));
+      }
       if (np > 0) {
         int[][] ii = nonNull(pis, np);
         info.put("polygons", ii);
