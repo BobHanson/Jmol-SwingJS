@@ -343,6 +343,8 @@ public abstract class MeshCollection extends Shape {
       Lst<Mesh> list = getMeshList(key, false);
       for (int i = list.size(); --i >= 0;)
         setMeshTokenProperty(list.get(i), tokProp, bProp, testD);
+      if (list.size() == 1)
+        currentMesh = list.get(0);
     } else {
       setMeshTokenProperty(currentMesh, tokProp, bProp, testD);
       if (linkedMesh != null)
