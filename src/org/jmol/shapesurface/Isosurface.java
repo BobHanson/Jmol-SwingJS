@@ -218,18 +218,19 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         return;
       String id = currentMesh.thisID;
       int imodel = currentMesh.modelIndex;
-      vwr.cachePut("cache://isosurface_" + id, ((String)getPropI("jvxlDataXml", -1)).getBytes());
+      vwr.cachePut("cache://isosurface_" + id,
+          ((String) getPropI("jvxlDataXml", -1)).getBytes());
       deleteMeshI(currentMesh.index);
       setPropI("init", null, null);
       setPropI("thisID", id, null);
       setPropI("modelIndex", Integer.valueOf(imodel), null);
       setPropI("fileName", "cache://isosurface_" + id, null);
       setPropI("readFile", null, null);
-      setPropI(
-          "finalize",
+      setPropI("finalize",
           "isosurface ID " + PT.esc(id)
               + (imodel >= 0 ? " modelIndex " + imodel : "") + " /*file*/"
-              + PT.esc("cache://isosurface_" + id), null);
+              + PT.esc("cache://isosurface_" + id),
+          null);
       setPropI("clear", null, null);
       return;
     }
@@ -318,8 +319,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       Object[] colors = (Object[]) value;
       short colix0 = C.getColix(((Integer) colors[0]).intValue());
       short colix1 = C.getColix(((Integer) colors[1]).intValue());
-      String id = (thisMesh != null ? thisMesh.thisID : PT
-          .isWild(previousMeshID) ? previousMeshID : null);
+      String id = (thisMesh != null ? thisMesh.thisID
+          : PT.isWild(previousMeshID) ? previousMeshID : null);
       Lst<Mesh> list = getMeshList(id, false);
       for (int i = list.size(); --i >= 0;)
         setColorPhase((IsosurfaceMesh) list.get(i), colix0, colix1);
@@ -330,8 +331,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (thisMesh != null) {
         setIsoMeshColor(thisMesh, color);
       } else {
-        Lst<Mesh> list = getMeshList(PT.isWild(previousMeshID) ? previousMeshID
-            : null, false);
+        Lst<Mesh> list = getMeshList(
+            PT.isWild(previousMeshID) ? previousMeshID : null, false);
         for (int i = list.size(); --i >= 0;)
           setIsoMeshColor((IsosurfaceMesh) list.get(i), color);
       }
@@ -394,11 +395,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       }
       // center (info[2]) is set in SurfaceGenerator
       if (!sg.setProp("lcaoCartoonCenter", info[2], null))
-        drawLcaoCartoon(
-            info[0],
-            info[1],
-            info[3],
-            ("lonePair" == propertyName ? 2 : "radical" == propertyName ? 1 : 0));
+        drawLcaoCartoon(info[0], info[1], info[3],
+            ("lonePair" == propertyName ? 2
+                : "radical" == propertyName ? 1 : 0));
       return;
     }
 
@@ -538,7 +537,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       }
       return;
     }
-    
+
     if ("deleteVdw" == propertyName) {
       for (int i = meshCount; --i >= 0;)
         if (isomeshes[i].bsVdw != null
@@ -553,7 +552,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         // "fileName" property. We retrieve that from the surfaceGenerator
         // and open a BufferedReader for it. Or not. But that would be
         // unlikely since we have just checked it in ScriptEvaluator
-        
+
         if (sg.params.filesData == null) {
           value = getFileReader(sg.params.fileName);
         } else {
@@ -593,7 +592,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       newSg();
     } else if ("getSurfaceSets" == propertyName) {
       if (thisMesh != null) {
-        BS bsSets; 
+        BS bsSets;
         if (value instanceof BS) {
           bsSets = ((BS) value);
           if (bsSets.cardinality() == 0)
@@ -626,7 +625,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (!isColorExplicit)
         isPhaseColored = true;
       if (sg == null || !sg.params.isMapped) {
-        M4 mat4 =  ms.am[currentMesh.modelIndex].mat4;
+        M4 mat4 = ms.am[currentMesh.modelIndex].mat4;
         if (mat4 != null) {
           M4 minv = M4.newM4(mat4);
           minv.invert();
@@ -671,7 +670,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (sg.isValid) {
         if ("molecularOrbital" == propertyName) {
           currentMesh.isModelConnected = true;
-          currentMesh.mat4 = ms.am[currentMesh.modelIndex].mat4;          
+          currentMesh.mat4 = ms.am[currentMesh.modelIndex].mat4;
         }
         return;
       }
@@ -1104,8 +1103,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     appendCmd(sb, cmd);
     String id = myType + " ID " + PT.esc(imesh.thisID);
     if (imesh.jvxlData.thisSet != null && imesh.jvxlData.thisSet.cardinality() > 0) {
-      appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " 
-    + (imesh.jvxlData.thisSet.nextSetBit(0) + 1)
+      appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " + (imesh.jvxlData.thisSet.nextSetBit(0)+1)
       : " subset " + imesh.jvxlData.thisSet));
     }
     if (imesh.mat4 != null && !imesh.isModelConnected)
@@ -2096,4 +2094,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     getMeshCommand(sb, index);
     return (sb.toString());
   }
+  
+  @Override
+  protected Object getValues(Mesh mesh) {
+    return (mesh == null ? null : ((IsosurfaceMesh) mesh).getValidValues(null));
+  }
+ 
+  
+  @Override
+  protected Object getVertices(Mesh mesh) {
+    return (mesh == null ? null : ((IsosurfaceMesh) mesh).getValidVertices(null));
+  }
+
 }

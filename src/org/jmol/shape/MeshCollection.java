@@ -518,6 +518,8 @@ public abstract class MeshCollection extends Shape {
       }
       return sb.toString();
     }
+    if (property == "values")
+      return getValues(m);
     if (property == "vertices")
       return getVertices(m);
     if (property == "info")
@@ -528,10 +530,12 @@ public abstract class MeshCollection extends Shape {
     return null;
   }
 
-  private Object getVertices(Mesh mesh) {
-    if (mesh == null)
-      return null;
-    return mesh.vs;
+  protected Object getValues(Mesh mesh) {
+    return (mesh == null ? null : mesh.vvs);
+  }
+ 
+  protected Object getVertices(Mesh mesh) {
+    return (mesh == null ? null : mesh.vs);
   }
  
   protected void clean() {

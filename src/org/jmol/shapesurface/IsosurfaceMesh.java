@@ -1038,29 +1038,59 @@ public class IsosurfaceMesh extends Mesh {
     Hashtable<String, Object> info = (Hashtable<String, Object>) super.getInfo(
         isAll);
     if (isAll) {
-      BS[] excluded = jvxlData.jvxlExcluded;
-      BS invalid = excluded[1];
-      BS thisSet = jvxlData.thisSet;
       BS bs = new BS();
-      if (invalid != null)
-        bs.or(invalid);
-      if (thisSet != null) {
-        for (int i = vc; --i >= 0;) {
-          if (!thisSet.get(vertexSets[i]))
-            bs.set(i);
-        }
-      }
-      int n = vc - bs.cardinality();
-      if (n != vc) {
-        T3[] pa = new P3[n];
-        for (int pt = 0, i = bs.nextClearBit(0); i >= 0
-            && pt < n; i = bs.nextClearBit(i + 1)) {
-          pa[pt++] = vs[i];
-        }
+      T3[] valid = getValidVertices(bs);
+      if (valid != null) {
         info.put("allVertices", info.get("vertices"));
-        info.put("vertices", pa);
+        info.put("vertices", valid);
+        if (vvs != null) {
+          float[] v = getValidValues(bs);
+          info.put("allValues",  info.get("values"));
+          info.put("values", v);
+        }
       }
     }
     return info;
+  }
+
+  public float[] getValidValues(BS bs) {
+    if (bs == null)
+      getInvalidBS(bs = new BS());
+    int n = vc - bs.cardinality();
+    float[] v = new float[n];
+    for (int pt = 0, i = bs.nextClearBit(0); i >= 0 && i < vc; i = bs.nextClearBit(i + 1))
+      v[pt++] = vvs[i];
+    return v;
+  }
+
+  public T3[] getValidVertices(BS bs) {
+    boolean allowNull = (bs != null);
+    if (bs == null)
+      bs = new BS();
+    getInvalidBS(bs);
+    int n = vc - bs.cardinality();
+    if (n == vc && allowNull) {
+      return null;
+    }
+    T3[] pa = new P3[n];
+    for (int pt = 0, i = bs.nextClearBit(0); i >= 0
+        && pt < n; i = bs.nextClearBit(i + 1)) {
+      pa[pt++] = vs[i];
+    }
+    return pa;
+  }
+
+  private void getInvalidBS(BS bs) {
+    BS[] excluded = jvxlData.jvxlExcluded;
+    BS invalid = excluded[1];
+    BS thisSet = jvxlData.thisSet;
+    if (invalid != null)
+      bs.or(invalid);
+    if (thisSet != null) {
+      for (int i = vc; --i >= 0;) {
+        if (!thisSet.get(vertexSets[i]))
+          bs.set(i);
+      }
+    }
   }
 }
