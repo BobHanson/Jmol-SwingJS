@@ -1447,6 +1447,7 @@ public class MathExt {
     boolean isList = (x1.tok == T.varray);
     boolean isAtoms = (x1.tok == T.bitset);
     boolean isEmpty = (args.length == 0);
+    int tok0 = (args.length == 0 ? T.nada : args[0].tok);
     String sFind = (isEmpty ? "" : SV.sValue(args[0]));
     boolean isOff = (args.length > 1 && args[1].tok == T.off);
     SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
@@ -1625,6 +1626,21 @@ public class MathExt {
     } catch (Exception ex) {
       e.evalError(ex.getMessage(), null);
     }
+    BS bs = new BS();
+    Lst<SV> svlist = null;
+    if (isList && tok0 != T.string && tok0 != T.nada) {
+      svlist = x1.getList();
+      SV v = args[0];
+      for (int i = 0, n = svlist.size(); i < n; i++) {
+        if (SV.areEqual(svlist.get(i), v))
+          bs.set(i);
+      }
+      int[] ret = new int[bs.cardinality()];
+      for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+        ret[pt++] = i + 1;
+      return mp.addXAI(ret);
+    }
+    
     boolean isReverse = (flags.indexOf("v") >= 0);
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0) || isOff;
     boolean asMatch = (flags.indexOf("m") >= 0);
@@ -1633,7 +1649,6 @@ public class MathExt {
     if (isList || isPattern) {
       JmolPatternMatcher pm = (isPattern ? getPatternMatcher() : null);
       Pattern pattern = null;
-      Lst<SV> svlist = (isList ? x1.getList() : null);
       if (isPattern) {
         try {
           pattern = pm.compile(sFind, isCaseInsensitive);
@@ -1645,7 +1660,6 @@ public class MathExt {
       int nlist = (checkEmpty ? svlist.size() : list.length);
       if (Logger.debugging)
         Logger.debug("finding " + sFind);
-      BS bs = new BS();
       int n = 0;
       Matcher matcher = null;
       Lst<String> v = (asMatch ? new Lst<String>() : null);
@@ -2477,7 +2491,7 @@ public class MathExt {
   }
 
   /**
-   * plane() or intersection()  
+   * plane() or intersection()
    * 
    * @param mp
    * @param args
@@ -2488,41 +2502,36 @@ public class MathExt {
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
     if (tok == T.hkl && args.length != 3 || tok == T.intersection
-        && args.length != 2 && args.length != 3 && args.length != 4 || args.length == 0
-        || args.length > 4)
+        && args.length != 2 && args.length != 3 && args.length != 4
+        || args.length == 0 || args.length > 4)
       return false;
     P3 pt1, pt2, pt3;
-    P4 plane;
+    P4 plane = mp.planeValue(args[0]);
     V3 norm, vTemp;
-
     switch (args.length) {
     case 1:
       if (args[0].tok == T.bitset) {
         BS bs = (BS) args[0].value;
         if (bs.cardinality() == 3) {
           Lst<P3> pts = vwr.ms.getAtomPointVector(bs);
-          return mp.addXPt4(Measure.getPlaneThroughPoints(pts.get(0), pts.get(1), pts.get(2),
-              new V3(), new V3(), new P4()));
+          return mp.addXPt4(Measure.getPlaneThroughPoints(pts.get(0),
+              pts.get(1), pts.get(2), new V3(), new V3(), new P4()));
         }
       }
-      Object pt = Escape.uP(SV.sValue(args[0]));
-      if (pt instanceof P4)
-        return mp.addXPt4((P4) pt);
-      return mp.addXStr("" + pt);
+      return (plane != null && mp.addXPt4(plane));
     case 2:
       if (tok == T.intersection) {
         // intersection(plane, plane)
         // intersection(point, plane)
-        if (args[1].tok != T.point4f)
+        P4 plane1 = mp.planeValue(args[1]);
+        if (plane1 == null)
           return false;
         pt3 = new P3();
         norm = new V3();
         vTemp = new V3();
 
-        plane = (P4) args[1].value;
-        if (args[0].tok == T.point4f) {
-          Lst<Object> list = Measure.getIntersectionPP((P4) args[0].value,
-              plane);
+        if (plane != null) {
+          Lst<Object> list = Measure.getIntersectionPP(plane, plane1);
           if (list == null)
             return mp.addXStr("");
           return mp.addXList(list);
@@ -2530,8 +2539,8 @@ public class MathExt {
         pt2 = mp.ptValue(args[0], null);
         if (pt2 == null)
           return mp.addXStr("");
-        return mp.addXPt(Measure.getIntersection(pt2, null, plane, pt3, norm,
-            vTemp));
+        return mp.addXPt(
+            Measure.getIntersection(pt2, null, plane1, pt3, norm, vTemp));
       }
       //$FALL-THROUGH$
     case 3:
@@ -2548,13 +2557,13 @@ public class MathExt {
           return mp.addXStr("");
         V3 vLine = V3.newV(pt2);
         vLine.normalize();
-        if (args[2].tok == T.point4f) {
+        P4 plane2 = mp.planeValue(args[2]);
+        if (plane2 != null) {
           // intersection(ptLine, vLine, plane)
           pt3 = new P3();
           norm = new V3();
           vTemp = new V3();
-          pt1 = Measure.getIntersection(pt1, vLine, (P4) args[2].value, pt3,
-              norm, vTemp);
+          pt1 = Measure.getIntersection(pt1, vLine, plane2, pt3, norm, vTemp);
           if (pt1 == null)
             return mp.addXStr("");
           return mp.addXPt(pt1);
@@ -2570,9 +2579,9 @@ public class MathExt {
         if (args.length == 3) {
           // intersection(ptLine, vLine, pt2); 
           // IE intersection of plane perp to line through pt2
-        Measure.projectOntoAxis(pt3, pt1, vLine, v);
-        return mp.addXPt(pt3);
-      }
+          Measure.projectOntoAxis(pt3, pt1, vLine, v);
+          return mp.addXPt(pt3);
+        }
         // intersection(ptLine, vLine, ptCenter, radius)
         // IE intersection of a line with a sphere -- return list of 0, 1, or 2 points
         float r = SV.fValue(args[3]);
@@ -2622,12 +2631,14 @@ public class MathExt {
         if (pt2 == null)
           return false;
         pt3 = (args.length > 2
-            && (args[2].tok == T.bitset || args[2].tok == T.point3f) ? mp
-            .ptValue(args[2], null) : null);
+            && (args[2].tok == T.bitset || args[2].tok == T.point3f)
+                ? mp.ptValue(args[2], null)
+                : null);
         norm = V3.newV(pt2);
         if (pt3 == null) {
           plane = new P4();
-          if (args.length == 2 || args[2].tok != T.integer && args[2].tok != T.decimal && !args[2].asBoolean()) {
+          if (args.length == 2 || args[2].tok != T.integer
+              && args[2].tok != T.decimal && !args[2].asBoolean()) {
             // plane(<point1>,<point2>) or 
             // plane(<point1>,<point2>,false)
             pt3 = P3.newP(pt1);
@@ -2635,7 +2646,7 @@ public class MathExt {
             pt3.scale(0.5f);
             norm.sub(pt1);
             norm.normalize();
-          } else if (args[2].tok == T.on){
+          } else if (args[2].tok == T.on) {
             // plane(<point1>,<vLine>,true)
             pt3 = pt1;
           } else {
@@ -2651,8 +2662,8 @@ public class MathExt {
         // plane(<point1>,<point2>,<point3>,<pointref>)
         V3 vAB = new V3();
         P3 ptref = (args.length == 4 ? mp.ptValue(args[3], null) : null);
-        float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3,
-            ptref, norm, vAB);
+        float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3, ptref,
+            norm, vAB);
         return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));
       }
     }

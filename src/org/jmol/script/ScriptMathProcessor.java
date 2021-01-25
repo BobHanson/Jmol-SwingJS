@@ -1584,18 +1584,38 @@ public class ScriptMathProcessor {
   }
 
   public P4 planeValue(T x) {
+    Object pt;
     switch (x.tok) {
     case T.point4f:
       return (P4) x.value;
     case T.varray:
-    case T.string:
-      Object pt = Escape.uP(SV.sValue(x));
-      return (pt instanceof P4 ? (P4) pt : null);
-    case T.bitset:
-      // ooooh, wouldn't THIS be nice!
       break;
+    case T.string:
+        String s = (String) x.value;
+        boolean isMinus = s.startsWith("-");
+        float f = (isMinus ? -1 : 1);
+        if (isMinus)
+          s = s.substring(1);
+        switch (s.length() < 2 ? "" : s.substring(0, 2)) {
+        case "x=":
+          return P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
+        case "y=":
+          return P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
+        case "z=":
+          return P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
+        case "xy":
+          return P4.new4(1, 1, 0, f);
+        case "yz":
+          return P4.new4(0, 1, 1, f);
+        case "xz":
+          return P4.new4(1, 0, 1, f);
+        }
+        break;
+    default:
+      return null;
     }
-    return null;
+    pt = Escape.uP(SV.sValue(x));
+    return (pt instanceof P4 ? (P4) pt : null);
   }
 
   static private String typeOf(SV x) {
