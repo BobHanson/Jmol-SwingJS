@@ -898,7 +898,7 @@ public class SmilesParser {
           throw new InvalidSmilesException("invalid '!'");
         newAtom.not = isNot = true;
       }
-      int biopt = pattern.indexOf('.');
+      int biopt = (pattern.indexOf("@PH") >= 0 ? -1 : pattern.indexOf('.'));
       if (biopt >= 0) {
         newAtom.isBioResidue = true;
         String resOrName = pattern.substring(index, biopt);
@@ -1365,7 +1365,7 @@ public class SmilesParser {
     if (atom != null)
       atom.pattern = pattern;
     while (pt > 0) {
-      if (",;&!".indexOf(pattern.charAt(pt - 1)) < 0)
+      if (",;&!(".indexOf(pattern.charAt(pt - 1)) < 0)
         pattern = pattern.substring(0, pt) + "&" + pattern.substring(pt);
       pt = pattern.lastIndexOf("!", pt - 1);
     }

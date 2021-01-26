@@ -388,7 +388,7 @@ public class Polyhedron {
               vertices, JC.SMILES_TYPE_SMILES, null);
           polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
               vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_GEN_POLYHEDRAL
-                  | JC.SMILES_GEN_ATOM_COMMENT, details);
+                  | (Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0), details);
         } catch (Exception e) {
         }
       }

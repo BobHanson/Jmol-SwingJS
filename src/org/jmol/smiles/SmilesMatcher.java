@@ -154,8 +154,11 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   @Override
   public int areEqual(String smiles1, String smiles2) throws Exception {
     InvalidSmilesException.clear();
+    boolean isWild = (smiles1.indexOf("*") >= 0);
+    if (!isWild && smiles1.equals(smiles2))
+      return 1;
     BS[] result = (BS[]) findPriv(smiles1, SmilesParser.newSearch(smiles2,
-        false, true), (smiles1.indexOf("*") >= 0 ? JC.SMILES_TYPE_SMARTS
+        false, true), (isWild ? JC.SMILES_TYPE_SMARTS
         : JC.SMILES_TYPE_SMILES) | JC.SMILES_FIRST_MATCH_ONLY, MODE_ARRAY); 
     return (result == null ? -1 : result.length);
   }
@@ -424,7 +427,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         null, flags | JC.SMILES_GEN_EXPLICIT_H | JC.SMILES_NO_AROMATIC
             | JC.SMILES_IGNORE_STEREOCHEMISTRY);
     if ((flags & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL) {
-      s = "//* " + center + " *//\t["
+      s = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == 0 ? "" : "//* " + center + " *//\t")
+          + "["
           + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
           + atomCount + (details == null ? "" : "/" + details + "/") + "]." + s;
     }

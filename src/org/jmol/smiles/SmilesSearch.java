@@ -153,6 +153,11 @@ public class SmilesSearch extends JmolMolecule {
 
   private BS bsAromaticRings;
 
+  /**
+   * indicates that we have [XxPHn] with no connected atoms
+   */
+  public SmilesStereo polyhedronStereo; 
+
   static final int addFlags(int flags, String strFlags) {
     if (strFlags.indexOf("OPEN") >= 0)
       flags |= JC.SMILES_TYPE_OPENSMILES;

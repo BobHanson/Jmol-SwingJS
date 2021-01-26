@@ -113,7 +113,7 @@ public class CIPDataSmiles extends CIPData {
     Node[] jn = center.stereo.getAlleneAtoms(center, (SmilesAtom) b.atom);
     if (jn == null)
       return CIPChirality.NO_CHIRALITY;
-    center.stereo.setTopoCoordinates(center, null, null, jn);
+    center.stereo.setTopoCoordinates(center, null, null, jn, false);
     float angle = Measure.computeTorsion(jn[0].getXYZ(), jn[1].getXYZ(),
         jn[2].getXYZ(), jn[3].getXYZ(), true);
     //    System.out.println(a.atomIndex + " " + b.atomIndex + " " + c.atomIndex + " " + d.atomIndex);
@@ -159,7 +159,7 @@ public class CIPDataSmiles extends CIPData {
     Edge[] edges = a.getEdges();
     for (int i = edges.length; --i >= 0;)
       nodes[i] = (Node) edges[i].getOtherNode(a);
-    a.stereo.setTopoCoordinates(a, null, null, nodes);
+    a.stereo.setTopoCoordinates(a, null, null, nodes, false);
     return true;
 
   }

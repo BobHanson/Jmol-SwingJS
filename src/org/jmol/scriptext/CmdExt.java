@@ -4755,12 +4755,13 @@ public class CmdExt extends ScriptExt {
       }
       // symop only here
       int iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
-      String xyz = (tokAt(2) == T.string ? paramAsStr(2) : null);
+      String xyz = (tokAt(2) == T.string || tokAt(2) == T.matrix4f ? paramAsStr(2) : null);
       P3 pt1 = null,
       pt2 = null;
       int nth = -1;
       if (slen > 3 && tokAt(3) != T.string) {
         // show symop @1 @2 ....
+        // show symop n @1 @2
         // not show symop n "type"
         // not show symop "xxxxx" "type"
         BS[] ret = new BS[] { null, vwr.getFrameAtoms() };
@@ -4770,14 +4771,12 @@ public class CmdExt extends ScriptExt {
           break;
         }
         ret[0] = null;
-        if (iop == 0) {
-          pt2 = eval.centerParameter(++eval.iToken, ret);
-          if (ret[0] != null && ret[0].cardinality() == 0) {
-            len = slen;
-            break;
-          }
+        pt2 = eval.centerParameter(++eval.iToken, ret);
+        if (ret[0] != null && ret[0].cardinality() == 0) {
+          len = slen;
+          break;
         }
-        if (tokAt(eval.iToken + 1) == T.integer)
+        if (iop == 0 && tokAt(eval.iToken + 1) == T.integer)
           nth = eval.getToken(++eval.iToken).intValue;
       }
       String type = (eval.iToken > 1 && tokAt(eval.iToken + 1) == T.string ? stringParameter(++eval.iToken)

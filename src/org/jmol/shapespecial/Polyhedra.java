@@ -580,7 +580,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
             continue;
           }
           p.getSymmetry(vwr, false);
-          String smiles0 = p.polySmiles;
+          String smiles0 = sm.cleanSmiles(p.polySmiles);
           try {
             if (sm.areEqual(smiles, smiles0) > 0)
               bs.set(iatom);

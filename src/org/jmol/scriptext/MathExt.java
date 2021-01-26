@@ -1586,8 +1586,14 @@ public class MathExt {
           } else if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
             // {*}.find("crystalClass", pt)
-            ret = vwr.ms.generateCrystalClass(bs.nextSetBit(0),
-                (args.length != 2 ? null
+            int n = bs.nextSetBit(0);
+            BS bsNew = null;
+            if (args.length != 2) {
+              bsNew = new BS();
+              bsNew.set(n);
+            }
+            ret = vwr.ms.generateCrystalClass(n,
+                (bsNew != null ? vwr.ms.getAtomSetCenter(bsNew)
                     : argLast.tok == T.bitset
                         ? vwr.ms.getAtomSetCenter((BS) argLast.value)
                         : SV.ptValue(argLast)));
@@ -1627,9 +1633,8 @@ public class MathExt {
       e.evalError(ex.getMessage(), null);
     }
     BS bs = new BS();
-    Lst<SV> svlist = null;
+    Lst<SV> svlist = (isList ? x1.getList() : null);
     if (isList && tok0 != T.string && tok0 != T.nada) {
-      svlist = x1.getList();
       SV v = args[0];
       for (int i = 0, n = svlist.size(); i < n; i++) {
         if (SV.areEqual(svlist.get(i), v))
