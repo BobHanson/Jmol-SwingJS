@@ -39,6 +39,8 @@ import javajs.util.V3;
 
 public class Ellipsoid {
 
+  private static int ID = 0;
+
   public short colix = C.GOLD;
   public boolean visible;
   public boolean isValid;
@@ -48,6 +50,9 @@ public class Ellipsoid {
   boolean isOn = true;
 
   String id;
+  
+  int myID = ++ID;
+
   int modelIndex;
   byte pid;
   float[] lengths;

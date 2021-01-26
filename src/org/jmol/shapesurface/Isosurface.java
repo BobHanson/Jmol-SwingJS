@@ -949,8 +949,14 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return Integer.valueOf(moNumber);
     if (property == "moLinearCombination")
       return moLinearCombination;
-    if (property == "nSets")
-      return Integer.valueOf(m == null ? 0 : m.nSets);
+    if (property == "nSets") {
+      int n = (m == null ? Integer.MIN_VALUE : m.nSets);
+      if (n == 0) {
+        calculateVolumeOrArea(m, true);
+        n = m.nSets;
+      }
+      return Integer.valueOf(n == Integer.MIN_VALUE ? 0 : Math.abs(m.nSets));
+    }
     if (property == "area") // could be Float or double[]
       return (m == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(m, true));
     if (property == "volume") // could be Float or double[]

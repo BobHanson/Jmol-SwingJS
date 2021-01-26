@@ -109,6 +109,9 @@ public class ShapeManager {
       for (int i = JC.SHAPE_MIN_SPECIAL; i < JC.SHAPE_MAX_MESH_COLLECTION; ++i)
         if (shapes[i] != null && shapes[i].getIndexFromName(objectName) >= 0)
           return i;
+      if (shapes[JC.SHAPE_MEASURES] != null && shapes[JC.SHAPE_MEASURES].getIndexFromName(objectName) >= 0) {
+          return JC.SHAPE_MEASURES;
+      }
     return -1;
   }
 
