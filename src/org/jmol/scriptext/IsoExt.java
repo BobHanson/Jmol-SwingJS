@@ -1398,16 +1398,11 @@ public class IsoExt extends ScriptExt {
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
-      getToken(i);
-      int tok = eval.theTok;
-      switch (tok) {
-      case T.identifier:
+      int tok = getToken(i).tok;
+      if (tok == T.identifier) {
         str = paramAsStr(i);
-        break;
-      case T.string:
-        if (((String)eval.theToken.value).equalsIgnoreCase("map"))
+        if (str.equalsIgnoreCase("map"))
           tok = T.mapproperty;
-        break;
       }
       switch (tok) {
       // settings only
@@ -1756,12 +1751,13 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.subset:
-         if (eval.getToken(++i).tok == T.bitset) {
-           thisSet = (BS) eval.theToken.value;
-         } else {
-           thisSet = (BS) eval.expandFloatArray(eval.floatParameterSet(i, 1, Integer.MAX_VALUE), 1, true);
-         }
-         i = eval.iToken;
+        if (eval.getToken(++i).tok == T.bitset) {
+          thisSet = (BS) eval.theToken.value;
+        } else {
+          thisSet = (BS) eval.expandFloatArray(
+              eval.floatParameterSet(i, 1, Integer.MAX_VALUE), 1, true);
+        }
+        i = eval.iToken;
         break;
       case T.set:
         int ns = intParameter(++i);
@@ -2461,7 +2457,8 @@ public class IsoExt extends ScriptExt {
       case T.val:
         boolean isBS = e.isAtomExpression(++i);
         P3[] probes = getAllPoints(i, 1);
-        sbCommand.append(" value " + (isBS ? e.atomExpressionAt(i).toString() : Escape.eAP(probes)));
+        sbCommand.append(" value "
+            + (isBS ? e.atomExpressionAt(i).toString() : Escape.eAP(probes)));
         propertyName = "probes";
         propertyValue = probes;
         i = e.iToken;
@@ -2486,8 +2483,7 @@ public class IsoExt extends ScriptExt {
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").appendO(eval.theToken.value);
         propertyName = "pocket";
-        propertyValue = (tok == T.pocket ? Boolean.TRUE
-            : Boolean.FALSE);
+        propertyValue = (tok == T.pocket ? Boolean.TRUE : Boolean.FALSE);
         break;
       case T.lobe:
         // lobe {eccentricity}
@@ -2689,7 +2685,8 @@ public class IsoExt extends ScriptExt {
         try {
           for (int j = 0, ptf = 0; j < n; j++) {
             factors[j] = ((Float) list.get(ptf++)).floatValue();
-            files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false, (String) list.get(ptf++), i, false);
+            files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false,
+                (String) list.get(ptf++), i, false);
             sbCommand.appendF(factors[j]);
             sbCommand.append(" /*file*/").append(PT.esc(files[j]));
           }
@@ -2698,7 +2695,9 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         filesData = new Object[] { files, factors };
-        propertyName = (!surfaceObjectSeen && !planeSeen && !isMapped ? "readFile" : "mapColor");
+        propertyName = (!surfaceObjectSeen && !planeSeen && !isMapped
+            ? "readFile"
+            : "mapColor");
         surfaceObjectSeen = true;
         if (chk)
           break;
@@ -2828,7 +2827,8 @@ public class IsoExt extends ScriptExt {
         }
         // just checking here, and getting the full path name
         if (stype == null) {
-          filename = e.checkFileExists("ISOSURFACE_" + (isMapped ? "MAP_" : ""), false, filename, i, false);
+          filename = e.checkFileExists("ISOSURFACE_" + (isMapped ? "MAP_" : ""),
+              false, filename, i, false);
         }
         showString("reading isosurface data from " + filename);
 
