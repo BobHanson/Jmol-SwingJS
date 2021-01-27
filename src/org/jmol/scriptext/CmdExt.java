@@ -393,8 +393,9 @@ public class CmdExt extends ScriptExt {
     LabelToken labeler = modelSet.getLabeler();
     int[] indices = (isAtoms || !useAtomMap ? null : ((BondSet) tokenValue)
         .associatedAtoms);
-    if (indices == null && label != null && label.indexOf("%D") > 0)
-      indices = vwr.ms.getAtomIndices(bs);
+// BH 2021.01.27 not nec, and > 0 should have been >= 0 anyway
+//    if (indices == null && label != null && label.indexOf("%D") > 0)
+//      indices = vwr.ms.getAtomIndices(bs);
     boolean asIdentity = (label == null || label.length() == 0);
     Map<String, Object> htValues = (isAtoms || asIdentity ? null : LabelToken
         .getBondLabelValues());

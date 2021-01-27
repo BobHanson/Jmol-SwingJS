@@ -2291,7 +2291,6 @@ public class T {
        "macro",
        "manifest",
        "mapProperty",
-       "map",
        "maxSet",
        "menu",
        "minSet",
@@ -3353,7 +3352,6 @@ public class T {
         macro,                              //        "macro"  // added in Jmol 14.3.15
         manifest,                           //        "manifest"
         mapproperty,                        //        "mapProperty"
-        -1,                                 //        "map"
         maxset,                             //        "maxSet"
         menu,                               //        "menu"
         minset,                             //        "minSet"

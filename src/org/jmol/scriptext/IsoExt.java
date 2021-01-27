@@ -1399,9 +1399,17 @@ public class IsoExt extends ScriptExt {
       String propertyName = null;
       Object propertyValue = null;
       getToken(i);
-      if (eval.theTok == T.identifier)
+      int tok = eval.theTok;
+      switch (tok) {
+      case T.identifier:
         str = paramAsStr(i);
-      switch (eval.theTok) {
+        break;
+      case T.string:
+        if (((String)eval.theToken.value).equalsIgnoreCase("map"))
+          tok = T.mapproperty;
+        break;
+      }
+      switch (tok) {
       // settings only
       case T.silent:
         isSilent = true;
@@ -1543,11 +1551,11 @@ public class IsoExt extends ScriptExt {
         break;
       case T.display:
       case T.within:
-        isDisplay = (eval.theTok == T.display);
+        isDisplay = (tok == T.display);
         if (isDisplay) {
           sbCommand.append(" display");
           iptDisplayProperty = i;
-          int tok = tokAt(i + 1);
+          tok = tokAt(i + 1);
           if (tok == T.nada)
             continue;
           i++;
@@ -1620,7 +1628,7 @@ public class IsoExt extends ScriptExt {
       case T.property:
       case T.variable:
         onlyOneModel = eval.theToken.value;
-        boolean isVariable = (eval.theTok == T.variable);
+        boolean isVariable = (tok == T.variable);
         int tokProperty = tokAt(i + 1);
         if (mepOrMlp == null) { // not mlp or mep
           if (!surfaceObjectSeen && !isMapped && !planeSeen) {
@@ -1710,7 +1718,7 @@ public class IsoExt extends ScriptExt {
       case T.model:
         if (surfaceObjectSeen)
           invArg();
-        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i)
+        modelIndex = (tok == T.modelindex ? intParameter(++i)
             : eval.modelNumberParameter(++i));
         sbCommand.append(" modelIndex " + modelIndex);
         if (modelIndex < 0) {
@@ -1771,7 +1779,7 @@ public class IsoExt extends ScriptExt {
       case T.sign:
       case T.color:
         idSeen = true;
-        if (eval.theTok == T.sign) {
+        if (tok == T.sign) {
           isSign = true;
           sbCommand.append(" sign");
           addShapeProperty(propertyList, "sign", Boolean.TRUE);
@@ -2070,7 +2078,7 @@ public class IsoExt extends ScriptExt {
         propertyName = "nci";
         //if (surfaceObjectSeen)
         sbCommand.append(" " + propertyName);
-        int tok = tokAt(i + 1);
+        tok = tokAt(i + 1);
         boolean isPromolecular = (tok != T.file && tok != T.string
             && tok != T.mrc);
         propertyValue = Boolean.valueOf(isPromolecular);
@@ -2079,7 +2087,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.mep:
       case T.mlp:
-        boolean isMep = (eval.theTok == T.mep);
+        boolean isMep = (tok == T.mep);
         propertyName = (isMep ? "mep" : "mlp");
         //if (surfaceObjectSeen)
         sbCommand.append(" " + propertyName);
@@ -2297,7 +2305,7 @@ public class IsoExt extends ScriptExt {
       case T.nodebug:
         sbCommand.append(" ").appendO(eval.theToken.value);
         propertyName = "debug";
-        propertyValue = (eval.theTok == T.debug ? Boolean.TRUE : Boolean.FALSE);
+        propertyValue = (tok == T.debug ? Boolean.TRUE : Boolean.FALSE);
         break;
       case T.fixed:
         sbCommand.append(" fixed");
@@ -2316,7 +2324,7 @@ public class IsoExt extends ScriptExt {
         // {origin} {ni ix iy iz} {nj jx jy jz} {nk kx ky kz}
         // or
         // isosurface origin.. step... count... functionXY[Z] = "x + y + z"
-        boolean isFxyz = (eval.theTok == T.functionxyz);
+        boolean isFxyz = (tok == T.functionxyz);
         propertyName = "" + eval.theToken.value;
         Lst<Object> vxy = new Lst<Object>();
         propertyValue = vxy;
@@ -2478,7 +2486,7 @@ public class IsoExt extends ScriptExt {
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").appendO(eval.theToken.value);
         propertyName = "pocket";
-        propertyValue = (eval.theTok == T.pocket ? Boolean.TRUE
+        propertyValue = (tok == T.pocket ? Boolean.TRUE
             : Boolean.FALSE);
         break;
       case T.lobe:
@@ -2560,14 +2568,14 @@ public class IsoExt extends ScriptExt {
       case T.solvent:
         onlyOneModel = eval.theToken.value;
         float radius;
-        if (eval.theTok == T.molecular) {
+        if (tok == T.molecular) {
           propertyName = "molecular";
           sbCommand.append(" molecular");
           radius = (isFloatParameter(i + 1) ? floatParameter(++i) : 1.4f);
         } else {
           addShapeProperty(propertyList, "bsSolvent",
               eval.lookupIdentifierValue("solvent"));
-          propertyName = (eval.theTok == T.sasurface ? "sasurface" : "solvent");
+          propertyName = (tok == T.sasurface ? "sasurface" : "solvent");
           sbCommand.append(" ").appendO(eval.theToken.value);
           radius = (isFloatParameter(i + 1) ? floatParameter(++i)
               : vwr.getFloat(T.solventproberadius));
@@ -2702,14 +2710,14 @@ public class IsoExt extends ScriptExt {
         boolean firstPass = (!surfaceObjectSeen && !planeSeen);
         String filename;
         propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
-        if (eval.theTok == T.string) {
+        if (tok == T.string) {
           filename = paramAsStr(i);
         } else {
           String pdbID = vwr.getPdbID();
           if (pdbID == null)
             eval.errorStr(ScriptError.ERROR_invalidArgument,
                 "no PDBID available");
-          filename = "*" + (eval.theTok == T.edsdiff ? "*" : "") + pdbID;
+          filename = "*" + (tok == T.edsdiff ? "*" : "") + pdbID;
         }
 
         /*
@@ -2895,7 +2903,7 @@ public class IsoExt extends ScriptExt {
         }
         break;
       default:
-        if (eval.theTok == T.identifier) {
+        if (tok == T.identifier) {
           propertyName = "thisID";
           propertyValue = str;
         }
@@ -2905,8 +2913,8 @@ public class IsoExt extends ScriptExt {
           surfaceObjectSeen = true;
         }
         */
-        if (!eval.setMeshDisplayProperty(iShape, 0, eval.theTok)) {
-          if (T.tokAttr(eval.theTok, T.identifier) && !idSeen) {
+        if (!eval.setMeshDisplayProperty(iShape, 0, tok)) {
+          if (T.tokAttr(tok, T.identifier) && !idSeen) {
             setShapeId(iShape, i, idSeen);
             i = eval.iToken;
             break;
@@ -2918,7 +2926,7 @@ public class IsoExt extends ScriptExt {
         i = slen - 1;
         break;
       }
-      idSeen = (eval.theTok != T.delete);
+      idSeen = (tok != T.delete);
       if (isWild && surfaceObjectSeen)
         invArg();
       if (propertyName != null)

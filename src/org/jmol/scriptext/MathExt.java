@@ -32,23 +32,6 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javajs.util.AU;
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.OC;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.Rdr;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-import javajs.util.ZipTools;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolNMRInterface;
@@ -59,7 +42,6 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.PointIterator;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -85,8 +67,25 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.Rdr;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+
 public class MathExt {
-  
+
   private Viewer vwr;
   private ScriptEval e;
 
@@ -102,18 +101,21 @@ public class MathExt {
 
   ///////////// ScriptMathProcessor extensions ///////////
   private static long t0 = System.currentTimeMillis();
-  
+
   public boolean evaluate(ScriptMathProcessor mp, T op, SV[] args, int tok)
       throws ScriptException {
     switch (tok) {
     case T.now:
       return (args.length >= 1 && args[0].tok == T.string
-          ? mp.addXStr((args.length == 1 ? new Date().toString() : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) + "\t" + SV.sValue(args[0]).trim())
+          ? mp.addXStr((args.length == 1 ? new Date().toString()
+              : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) + "\t"
+              + SV.sValue(args[0]).trim())
           : mp.addXInt(((int) (System.currentTimeMillis() - t0))
               - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
-      return (args.length == 1 && args[0].tok == T.integer ?
-          mp.addXInt(args[0].intValue) : mp.addXFloat(Math.abs(args[0].asFloat())));
+      return (args.length == 1 && args[0].tok == T.integer
+          ? mp.addXInt(args[0].intValue)
+          : mp.addXFloat(Math.abs(args[0].asFloat())));
     case T.acos:
     case T.cos:
     case T.sin:
@@ -226,8 +228,8 @@ public class MathExt {
       return evaluateSpacegroup(mp, args);
     case T.symop:
       return evaluateSymop(mp, args, op.tok == T.propselector);
-      //    case Token.volume:
-      //    return evaluateVolume(args);
+    //    case Token.volume:
+    //    return evaluateVolume(args);
     case T.tensor:
       return evaluateTensor(mp, args);
     case T.within:
@@ -247,8 +249,8 @@ public class MathExt {
     float[] unitCell = null;
     switch (args.length) {
     case 0:
-      return mp.addXObj(
-          vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, vwr.am.cmi, true, null));
+      return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
+          vwr.am.cmi, true, null));
     case 2:
       unitCell = SV.flistValue(args[1], 0);
       if (unitCell.length < 6)
@@ -330,16 +332,14 @@ public class MathExt {
     default:
       return false;
     }
-    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(
-        null,
-        center,
-        pts,
-        null,
-        false,
-        Float.isNaN(distanceTolerance) ? vwr
-            .getFloat(T.pointgroupdistancetolerance) : distanceTolerance,
-        Float.isNaN(linearTolerance) ? vwr
-            .getFloat(T.pointgrouplineartolerance) : linearTolerance, true);
+    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
+        pts, null, false,
+        Float.isNaN(distanceTolerance)
+            ? vwr.getFloat(T.pointgroupdistancetolerance)
+            : distanceTolerance,
+        Float.isNaN(linearTolerance) ? vwr.getFloat(T.pointgrouplineartolerance)
+            : linearTolerance,
+        true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
         true, null, 0, 1));
   }
@@ -478,7 +478,9 @@ public class MathExt {
   }
 
   @SuppressWarnings("unchecked")
-  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args, boolean isSelector) throws ScriptException {
+  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args,
+                                boolean isSelector)
+      throws ScriptException {
     if (isSelector) {
       SV x1 = mp.getX();
       switch (args.length == 1 ? x1.tok : T.nada) {
@@ -506,21 +508,22 @@ public class MathExt {
         String id1 = args[0].asString();
         // values must all be maps
         for (int i = 0, n = lst1.size(); i < n; i++) {
-          Map<String, SV> m0 = lst1.get(i).getMap(); 
+          Map<String, SV> m0 = lst1.get(i).getMap();
           if (m0 == null || m0.get(id1) == null)
             return false;
         }
-        for (int i = 0, n = lst1.size(); i < n; i++){
+        for (int i = 0, n = lst1.size(); i < n; i++) {
           SV m = lst1.get(i);
-          Map<String, SV> m1 = (Map<String, SV>) SV.deepCopy(m.getMap(), true, false);
+          Map<String, SV> m1 = (Map<String, SV>) SV.deepCopy(m.getMap(), true,
+              false);
           SV mid = m1.remove(id1);
           map1.put(mid.asString(), SV.newV(T.hash, m1));
         }
         return mp.addXObj(map1);
       }
-      return  false;
+      return false;
     }
-    SV[] a = new SV[args.length];    
+    SV[] a = new SV[args.length];
     for (int i = a.length; --i >= 0;)
       a[i] = SV.newT(args[i]);
     return mp.addXAV(a);
@@ -538,8 +541,10 @@ public class MathExt {
     float f0 = SV.fValue(args[0]);
     float f1 = SV.fValue(args[1]);
     float df = SV.fValue(args[2]);
-    boolean addBins = (n >= 4 && args[n-1].tok == T.on);
-    String key = ((n == 5 || n == 4 && !addBins) && args[3].tok != T.off ? SV.sValue(args[3]) : null);
+    boolean addBins = (n >= 4 && args[n - 1].tok == T.on);
+    String key = ((n == 5 || n == 4 && !addBins) && args[3].tok != T.off
+        ? SV.sValue(args[3])
+        : null);
     float[] data;
     Map<String, SV>[] maps = null;
     if (isListf) {
@@ -550,9 +555,10 @@ public class MathExt {
       if (key != null)
         maps = AU.createArrayOfHashtable(list.size());
       try {
-      for (int i = list.size(); --i >= 0;)
-        data[i] = SV.fValue(key == null ? list.get(i) : (maps[i] = list.get(i).getMap()).get(key));
-      }catch (Exception e) {
+        for (int i = list.size(); --i >= 0;)
+          data[i] = SV.fValue(key == null ? list.get(i)
+              : (maps[i] = list.get(i).getMap()).get(key));
+      } catch (Exception e) {
         return false;
       }
     }
@@ -563,7 +569,7 @@ public class MathExt {
       float v = data[i];
       int bin = (int) Math.floor((v - f0) / df);
       if (bin < 0 || bin >= nbins)
-        continue;      
+        continue;
       array[bin]++;
       if (key != null) {
         Map<String, SV> map = maps[i];
@@ -573,16 +579,16 @@ public class MathExt {
         float v1 = f0 + df * bin;
         float v2 = v1 + df;
         map.put("_binMin", SV.newF(bin == 0 ? -Float.MAX_VALUE : v1));
-        map.put("_binMax", SV.newF(bin == nbins - 1 ? Float.MAX_VALUE  : v2));        
+        map.put("_binMax", SV.newF(bin == nbins - 1 ? Float.MAX_VALUE : v2));
       }
     }
     if (addBins) {
       Lst<float[]> lst = new Lst<float[]>();
       for (int i = 0; i < nbins; i++)
-        lst.addLast(new float[] { f0 + df * i, array[i]});
+        lst.addLast(new float[] { f0 + df * i, array[i] });
       return mp.addXList(lst);
-   }
-    return mp.addXAI(array);      
+    }
+    return mp.addXAI(array);
   }
 
   private boolean evaluateCache(ScriptMathProcessor mp, SV[] args) {
@@ -605,19 +611,19 @@ public class MathExt {
     String colorScheme = (args.length > 0 ? SV.sValue(args[0]) : "");
     boolean isIsosurface = colorScheme.startsWith("$");
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TOHSL"))
-      return mp.addXPt(CU.rgbToHSL(P3.newP(args[1].tok == T.point3f ? SV
-          .ptValue(args[1])
-          : CU.colorPtFromString(args[1].asString())), true));
+      return mp.addXPt(
+          CU.rgbToHSL(P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+              : CU.colorPtFromString(args[1].asString())), true));
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TORGB")) {
-      P3 pt = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1]) : CU
-          .colorPtFromString(args[1].asString()));
+      P3 pt = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+          : CU.colorPtFromString(args[1].asString()));
       return mp.addXPt(args[1].tok == T.point3f ? CU.hslToRGB(pt) : pt);
     }
     if (args.length == 4 && (args[3].tok == T.on || args[3].tok == T.off)) {
-      P3 pt1 = P3.newP(args[0].tok == T.point3f ? SV.ptValue(args[0]) : CU
-          .colorPtFromString(args[0].asString()));
-      P3 pt2 = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1]) : CU
-          .colorPtFromString(args[1].asString()));
+      P3 pt1 = P3.newP(args[0].tok == T.point3f ? SV.ptValue(args[0])
+          : CU.colorPtFromString(args[0].asString()));
+      P3 pt2 = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+          : CU.colorPtFromString(args[1].asString()));
       boolean usingHSL = (args[3].tok == T.on);
       if (usingHSL) {
         pt1 = CU.rgbToHSL(pt1, false);
@@ -631,22 +637,22 @@ public class MathExt {
         n = 20;
       vd.scale(1f / (n - 1));
       for (int i = 0; i < n; i++) {
-        sb.append(Escape.escapeColor(CU.colorPtToFFRGB(usingHSL ? CU
-            .hslToRGB(pt1) : pt1)));
+        sb.append(Escape
+            .escapeColor(CU.colorPtToFFRGB(usingHSL ? CU.hslToRGB(pt1) : pt1)));
         pt1.add(vd);
       }
       return mp.addXStr(sb.toString());
     }
 
-    ColorEncoder ce = (isIsosurface ? null : vwr
-        .cm.getColorEncoder(colorScheme));
+    ColorEncoder ce = (isIsosurface ? null
+        : vwr.cm.getColorEncoder(colorScheme));
     if (!isIsosurface && ce == null)
       return mp.addXStr("");
     float lo = (args.length > 1 ? SV.fValue(args[1]) : Float.MAX_VALUE);
     float hi = (args.length > 2 ? SV.fValue(args[2]) : Float.MAX_VALUE);
     float value = (args.length > 3 ? SV.fValue(args[3]) : Float.MAX_VALUE);
-    boolean getValue = (value != Float.MAX_VALUE || lo != Float.MAX_VALUE
-        && hi == Float.MAX_VALUE);
+    boolean getValue = (value != Float.MAX_VALUE
+        || lo != Float.MAX_VALUE && hi == Float.MAX_VALUE);
     boolean haveRange = (hi != Float.MAX_VALUE);
     if (!haveRange && colorScheme.length() == 0) {
       value = lo;
@@ -667,8 +673,8 @@ public class MathExt {
     }
     Map<String, Object> key = ce.getColorKey();
     if (getValue)
-      return mp.addXPt(CU.colorPtFromInt(ce.getArgb(hi == Float.MAX_VALUE ? lo
-          : value), null));
+      return mp.addXPt(CU.colorPtFromInt(
+          ce.getArgb(hi == Float.MAX_VALUE ? lo : value), null));
     return mp.addX(SV.getVariableMap(key));
   }
 
@@ -692,7 +698,7 @@ public class MathExt {
     boolean isStdDev = sOpt.equalsIgnoreCase("stddev");
     boolean isIsomer = sOpt.equalsIgnoreCase("ISOMER");
     boolean isBonds = sOpt.equalsIgnoreCase("BONDS");
-    
+
     boolean isSmiles = (!isIsomer && args.length > (isStdDev ? 3 : 2));
     BS bs1 = (args[0].tok == T.bitset ? (BS) args[0].value : null);
     BS bs2 = (args[1].tok == T.bitset ? (BS) args[1].value : null);
@@ -708,7 +714,7 @@ public class MathExt {
       }
       if (isBonds) {
         if (args.length != 4)
-          return false;        
+          return false;
         // A, B, ........................BONDS
         // A, B, SMILES,...................BONDS
         smiles1 = SV.sValue(args[2]);
@@ -726,33 +732,35 @@ public class MathExt {
       if (isIsomer) {
         if (args.length != 3)
           return false;
-        
-        // A, B, ISOMER
 
+        // A, B, ISOMER
 
         if (bs1 == null && bs2 == null)
           return mp.addXStr(vwr.getSmilesMatcher()
               .getRelationship(smiles1, smiles2).toUpperCase());
-        String mf1 = (bs1 == null ? vwr.getSmilesMatcher().getMolecularFormula(
-            smiles1, false) : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs1,
-            null, false));
-        String mf2 = (bs2 == null ? vwr.getSmilesMatcher().getMolecularFormula(
-            smiles2, false) : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs2,
-            null, false));
+        String mf1 = (bs1 == null
+            ? vwr.getSmilesMatcher().getMolecularFormula(smiles1, false)
+            : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs1, null,
+                false));
+        String mf2 = (bs2 == null
+            ? vwr.getSmilesMatcher().getMolecularFormula(smiles2, false)
+            : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs2, null,
+                false));
         if (!mf1.equals(mf2))
           return mp.addXStr("NONE");
         if (bs1 != null)
-          smiles1 = (String) e.getSmilesExt().getSmilesMatches("/strict///", null, bs1,
-              null, JC.SMILES_TYPE_SMILES, true, false);
+          smiles1 = (String) e.getSmilesExt().getSmilesMatches("/strict///",
+              null, bs1, null, JC.SMILES_TYPE_SMILES, true, false);
         boolean check;
         if (bs2 == null) {
           // note: find smiles1 IN smiles2 here
           check = (vwr.getSmilesMatcher().areEqual(smiles2, smiles1) > 0);
         } else {
-          smiles2 = (String) e.getSmilesExt().getSmilesMatches("/strict///", null, bs2,
-              null, JC.SMILES_TYPE_SMILES, true, false);
-          check = (((BS) e.getSmilesExt().getSmilesMatches("/strict///" + smiles1, null, bs2,
-              null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
+          smiles2 = (String) e.getSmilesExt().getSmilesMatches("/strict///",
+              null, bs2, null, JC.SMILES_TYPE_SMILES, true, false);
+          check = (((BS) e.getSmilesExt().getSmilesMatches(
+              "/strict///" + smiles1, null, bs2, null, JC.SMILES_TYPE_SMILES,
+              true, false)).nextSetBit(0) >= 0);
         }
         if (!check) {
           // MF matched, but didn't match SMILES
@@ -764,16 +772,18 @@ public class MathExt {
                 && smiles1.indexOf("@SP") < 0) {
               // reverse chirality centers to see if we have an enantiomer
               // but only if not square planar
-              int pt = smiles1.toLowerCase().indexOf("invertstereo"); 
-              smiles1 = (pt >= 0 ? "/strict/" + smiles1.substring(0, pt) + smiles1.substring(pt + 12) 
+              int pt = smiles1.toLowerCase().indexOf("invertstereo");
+              smiles1 = (pt >= 0
+                  ? "/strict/" + smiles1.substring(0, pt)
+                      + smiles1.substring(pt + 12)
                   : "/invertstereo strict/" + smiles1);//vwr.getSmilesMatcher().reverseChirality(smiles1);
-              
-              
+
               if (bs2 == null) {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
                 check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null,
-                    bs2, null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
+                    bs2, null, JC.SMILES_TYPE_SMILES, true, false))
+                        .nextSetBit(0) >= 0);
               }
               if (check)
                 return mp.addXStr("ENANTIOMERS");
@@ -784,7 +794,8 @@ public class MathExt {
                   smiles1) > 0);
             } else {
               Object ret = e.getSmilesExt().getSmilesMatches(
-                  "/nostereo/" + smiles1, null, bs2, null, JC.SMILES_TYPE_SMILES, true, false);
+                  "/nostereo/" + smiles1, null, bs2, null,
+                  JC.SMILES_TYPE_SMILES, true, false);
               check = (((BS) ret).nextSetBit(0) >= 0);
             }
             if (check)
@@ -816,19 +827,19 @@ public class MathExt {
         boolean isSearch = (isMap || sOpt.equalsIgnoreCase("SMARTS"));
         if (isSmiles || isSearch)
           sOpt = (args.length > (isStdDev ? 4 : 3) ? SV.sValue(args[3]) : null);
-        
+
         // sOpts = "H", "allH", "bestH", "polyhedra", pattern, or null
         boolean hMaps = (("H".equalsIgnoreCase(sOpt)
-            || "allH".equalsIgnoreCase(sOpt) || "bestH".equalsIgnoreCase(sOpt)));
-        
-        
+            || "allH".equalsIgnoreCase(sOpt)
+            || "bestH".equalsIgnoreCase(sOpt)));
+
         boolean isPolyhedron = ("polyhedra".equalsIgnoreCase(sOpt));
         if (isPolyhedron)
           sOpt = (args.length > (isStdDev ? 5 : 4) ? SV.sValue(args[4]) : null);
-        boolean allMaps = (("all".equalsIgnoreCase(sOpt) || "allH"
-            .equalsIgnoreCase(sOpt)));
-        boolean bestMap = (("best".equalsIgnoreCase(sOpt) || "bestH"
-            .equalsIgnoreCase(sOpt)));
+        boolean allMaps = (("all".equalsIgnoreCase(sOpt)
+            || "allH".equalsIgnoreCase(sOpt)));
+        boolean bestMap = (("best".equalsIgnoreCase(sOpt)
+            || "bestH".equalsIgnoreCase(sOpt)));
         if ("stddev".equals(sOpt))
           sOpt = null;
         String pattern = sOpt;
@@ -836,25 +847,14 @@ public class MathExt {
           // with explicitH we set to find only the first match.
           if (!isMap && !isSmiles || hMaps && isPolyhedron)
             return false;
-          pattern = "/noaromatic"
-              + (allMaps || bestMap ? "/" : " nostereo/")
-              + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
-                  bs1, null, JC.SMILES_TYPE_SMILES, true, false);
+          pattern = "/noaromatic" + (allMaps || bestMap ? "/" : " nostereo/")
+              + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null, bs1,
+                  null, JC.SMILES_TYPE_SMILES, true, false);
         } else {
           allMaps = true;
         }
-        stddev = e.getSmilesExt().getSmilesCorrelation(
-            bs1,
-            bs2,
-            pattern,
-            ptsA,
-            ptsB,
-            m,
-            null,
-            isMap,
-            null,
-            null,
-            bestMap,
+        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, pattern, ptsA,
+            ptsB, m, null, isMap, null, null, bestMap,
             (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                 | (!allMaps && !bestMap ? JC.SMILES_FIRST_MATCH_ONLY : 0));
         if (isMap) {
@@ -870,8 +870,8 @@ public class MathExt {
               a[j] = new int[] { ((Atom) ptsA.get(j)).i,
                   ((Atom) ptsB.get(pt)).i };
           }
-          return (allMaps ? mp.addXList(ret) : ret.size() > 0 ? mp.addXAII(ret
-               .get(0)) : mp.addXStr(""));
+          return (allMaps ? mp.addXList(ret)
+              : ret.size() > 0 ? mp.addXAII(ret.get(0)) : mp.addXStr(""));
         }
       } else {
         switch (args.length) {
@@ -893,8 +893,8 @@ public class MathExt {
           stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, null);
         }
       }
-      return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev) : mp
-          .addXM4(m.round(1e-7f)));
+      return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev)
+          : mp.addXM4(m.round(1e-7f)));
     } catch (Exception ex) {
       e.evalError(ex.getMessage() == null ? ex.toString() : ex.getMessage(),
           null);
@@ -903,7 +903,8 @@ public class MathExt {
   }
 
   private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args, int tok,
-                                    int intValue) throws ScriptException {
+                                    int intValue)
+      throws ScriptException {
     /*
      * Several options here:
      * 
@@ -1042,10 +1043,8 @@ public class MathExt {
       BS bsBonds = new BS();
       vwr.makeConnections(fmin, fmax, order, T.identify, atoms1, atoms2,
           bsBonds, isBonds, false, 0);
-      return mp.addX(SV.newV(
-          T.bitset,
-          BondSet.newBS(bsBonds,
-              vwr.ms.getAtomIndices(vwr.ms.getAtoms(T.bonds, bsBonds)))));
+      return mp.addX(SV.newV(T.bitset, BondSet.newBS(bsBonds,
+          vwr.ms.getAtomIndices(vwr.ms.getAtoms(T.bonds, bsBonds)))));
     }
     return mp.addXBs(vwr.ms.getAtomsConnected(min, max, order, atoms1));
   }
@@ -1070,9 +1069,9 @@ public class MathExt {
       return false;
     BS bsA = BSUtil.copy((BS) args[i++].value);
     BS bsB = (i < args.length ? BSUtil.copy((BS) args[i].value) : null);
-    RadiusData rd = new RadiusData(null, (distance > 10 ? distance / 100
-        : distance), (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET),
-        VDW.AUTO);
+    RadiusData rd = new RadiusData(null,
+        (distance > 10 ? distance / 100 : distance),
+        (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET), VDW.AUTO);
     bsB = setContactBitSets(bsA, bsB, true, Float.NaN, rd, false);
     bsB.or(bsA);
     return mp.addXBs(bsB);
@@ -1100,22 +1099,23 @@ public class MathExt {
     case 2:
     case 3:
       if (args[0].tok == T.bitset)
-        return mp.addXStr(vwr.getModelFileData(selected, SV.sValue(args[1]), 
+        return mp.addXStr(vwr.getModelFileData(selected, SV.sValue(args[1]),
             args.length == 3 && SV.bValue(args[2])));
       break;
     case 4:
       int iField = args[1].asInt();
       int nBytes = args[2].asInt();
       int firstLine = args[3].asInt();
-      float[] f = Parser.parseFloatArrayFromMatchAndField(SV.sValue(args[0]), null, 0, 0,
-          null, iField, nBytes, null, firstLine);
+      float[] f = Parser.parseFloatArrayFromMatchAndField(SV.sValue(args[0]),
+          null, 0, 0, null, iField, nBytes, null, firstLine);
       return mp.addXStr(Escape.escapeFloatA(f, false));
     default:
       return false;
     }
     if (selected.indexOf("data2d_") == 0) {
       // tab, newline separated data
-      float[][] f1 = (float[][]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AFF);
+      float[][] f1 = (float[][]) vwr.getDataObj(selected, null,
+          JmolDataManager.DATA_TYPE_AFF);
       if (f1 == null)
         return mp.addXStr("");
       if (args.length == 2 && args[1].tok == T.integer) {
@@ -1132,10 +1132,13 @@ public class MathExt {
     // parallel mp.addition of float property data sets
 
     if (selected.indexOf("property_") == 0) {
-      float[] f1 = (float[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AF);
+      float[] f1 = (float[]) vwr.getDataObj(selected, null,
+          JmolDataManager.DATA_TYPE_AF);
       if (f1 == null)
         return mp.addXStr("");
-      float[] f2 = (type.indexOf("property_") == 0 ? (float[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AF)
+      float[] f2 = (type.indexOf("property_") == 0
+          ? (float[]) vwr.getDataObj(selected, null,
+              JmolDataManager.DATA_TYPE_AF)
           : null);
       if (f2 != null) {
         f1 = AU.arrayCopyF(f1, -1);
@@ -1148,9 +1151,10 @@ public class MathExt {
     // some other data type -- just return it
 
     //if (args.length == 1) {
-      Object[] data = (Object[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_UNKNOWN);
-      return mp.addXStr(data == null ? "" : "" + data[1]);
-   // }
+    Object[] data = (Object[]) vwr.getDataObj(selected, null,
+        JmolDataManager.DATA_TYPE_UNKNOWN);
+    return mp.addXStr(data == null ? "" : "" + data[1]);
+    // }
   }
 
   /**
@@ -1198,7 +1202,8 @@ public class MathExt {
    */
 
   private boolean evaluateDotDist(ScriptMathProcessor mp, SV[] args, int tok,
-                                  int op) throws ScriptException {
+                                  int op)
+      throws ScriptException {
     boolean isDist = (tok == T.distance);
     SV x1, x2, x3 = null;
     switch (args.length) {
@@ -1258,7 +1263,7 @@ public class MathExt {
                   float d = (isPoint2 ? atoms[i].distanceSquared(pt2)
                       : ((Float) e.getBitsetProperty(bs2, list2, op, atoms[i],
                           plane2, x1.value, null, false, x1.index, false))
-                          .floatValue());
+                              .floatValue());
                   if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
                     continue;
                   dMinMax = d;
@@ -1270,9 +1275,10 @@ public class MathExt {
               // list of points 
               for (int i = list1.size(); --i >= 0;) {
                 P3 pt = SV.ptValue(list1.get(i));
-                float d = (isPoint2 ? pt.distanceSquared(pt2) : ((Float) e
-                    .getBitsetProperty(bs2, list2, op, pt, plane2, x1.value,
-                        null, false, Integer.MAX_VALUE, false)).floatValue());
+                float d = (isPoint2 ? pt.distanceSquared(pt2)
+                    : ((Float) e.getBitsetProperty(bs2, list2, op, pt, plane2,
+                        x1.value, null, false, Integer.MAX_VALUE, false))
+                            .floatValue());
                 if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
                   continue;
                 dMinMax = d;
@@ -1297,14 +1303,14 @@ public class MathExt {
               return mp.addXAFF(data2);
             }
             if (isMinMax) {
-              float[] data = new float[isAtomSet1 ? bs1.cardinality() : list1
-                  .size()];
+              float[] data = new float[isAtomSet1 ? bs1.cardinality()
+                  : list1.size()];
               if (isAtomSet1) {
                 for (int i = bs1.nextSetBit(0), p = 0; i >= 0; i = bs1
                     .nextSetBit(i + 1))
                   data[p++] = ((Float) e.getBitsetProperty(bs2, list2, op,
                       atoms[i], plane2, x1.value, null, false, x1.index, false))
-                      .floatValue();
+                          .floatValue();
                 return mp.addXAF(data);
               }
               // list of points
@@ -1325,9 +1331,10 @@ public class MathExt {
         if (plane2 != null && x3 != null)
           f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
         else
-          f = (plane1 == null ? (plane2 == null ? pt2.distance(pt1) : Measure
-              .distanceToPlane(plane2, pt1)) : Measure.distanceToPlane(plane1,
-              pt2));
+          f = (plane1 == null
+              ? (plane2 == null ? pt2.distance(pt1)
+                  : Measure.distanceToPlane(plane2, pt1))
+              : Measure.distanceToPlane(plane1, pt2));
       } else {
         if (plane1 != null && plane2 != null) {
           // q1.dot(q2) assume quaternions
@@ -1365,16 +1372,17 @@ public class MathExt {
       // helix(pt1, pt2, dq ...)
       P3 pta = mp.ptValue(args[0], null);
       P3 ptb = mp.ptValue(args[1], null);
-      if (tok == T.nada || args[2].tok != T.point4f || pta == null || ptb == null)
+      if (tok == T.nada || args[2].tok != T.point4f || pta == null
+          || ptb == null)
         return false;
       Quat dq = Quat.newP4((P4) args[2].value);
       T3[] data = Measure.computeHelicalAxis(pta, ptb, dq);
       //new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn) };
-      return (data == null ? false : mp.addXObj(Escape.escapeHelical(type, tok,
-          pta, ptb, data)));
+      return (data == null ? false
+          : mp.addXObj(Escape.escapeHelical(type, tok, pta, ptb, data)));
     }
-    BS bs = (args[0].value instanceof BS ? (BS) args[0].value : vwr.ms
-        .getAtoms(T.resno, new Integer(args[0].asInt())));
+    BS bs = (args[0].value instanceof BS ? (BS) args[0].value
+        : vwr.ms.getAtoms(T.resno, new Integer(args[0].asInt())));
     switch (tok) {
     case T.point:
     case T.axis:
@@ -1397,9 +1405,10 @@ public class MathExt {
   private Object getHelixData(BS bs, int tokType) {
     int iAtom = bs.nextSetBit(0);
     return (iAtom < 0 ? "null"
-        : vwr.ms.at[iAtom].group.getHelixData(tokType, 
-        vwr.getQuaternionFrame(), vwr.getInt(T.helixstep)));
+        : vwr.ms.at[iAtom].group.getHelixData(tokType, vwr.getQuaternionFrame(),
+            vwr.getInt(T.helixstep)));
   }
+
   private boolean evaluateInChI(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     // {*}.inchi(options)
@@ -1411,14 +1420,15 @@ public class MathExt {
     BS atoms = SV.getBitSet(x1, true);
     String molData = null;
     if (atoms == null) {
-        molData = SV.sValue(x1);
-    }    
+      molData = SV.sValue(x1);
+    }
     return mp.addXStr(vwr.getInchi(atoms, molData, flags));
   }
 
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {1.1}.find("2.1","map")
     // {*}.find("inchi",inchi-options)
     // {*}.find("crystalClass")
     // {*}.find("CF",true|false)
@@ -1450,8 +1460,9 @@ public class MathExt {
     int tok0 = (args.length == 0 ? T.nada : args[0].tok);
     String sFind = (isEmpty ? "" : SV.sValue(args[0]));
     boolean isOff = (args.length > 1 && args[1].tok == T.off);
-    SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
-    boolean isON = !isList && (argLast.tok == T.on);
+    int tokLast = (tok0 == T.nada ? T.nada : args[args.length - 1].tok);
+    SV argLast = (tokLast == T.nada ? SV.vF : args[args.length - 1]);
+    boolean isON = !isList && (tokLast == T.on);
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off && args[1].tok != T.bitset ? SV.sValue(args[1])
             : "");
@@ -1501,12 +1512,13 @@ public class MathExt {
         return mp.addXStr(data);
       }
       if (isSmiles || isSMARTS || isAtoms) {
-        int iPt = (isSmiles || isSMARTS ? 2 : 1);
+        boolean isStructureMap = (!isSmiles && !isSMARTS
+            && flags.toLowerCase().indexOf("map") >= 0);
+        int iPt = (isStructureMap ? 0 : isSmiles || isSMARTS ? 2 : 1);
         BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset
             ? (BS) args[iPt++].value
             : null);
-        boolean asBonds = ("bonds"
-            .equalsIgnoreCase(SV.sValue(args[args.length - 1])));
+        boolean asBonds = ("bonds".equalsIgnoreCase(SV.sValue(argLast)));
         boolean isAll = (asBonds || isON);
         Object ret = null;
         switch (x1.tok) {
@@ -1548,11 +1560,28 @@ public class MathExt {
           break;
         case T.bitset:
           BS bs = (BS) x1.value;
-          if (isMF && flags.length() != 0)
+          if (sFind.equalsIgnoreCase("crystalClass")) {
+            // {*}.find("crystalClass")
+            // {*}.find("crystalClass", pt)
+            int n = bs.nextSetBit(0);
+            BS bsNew = null;
+            if (args.length != 2) {
+              bsNew = new BS();
+              bsNew.set(n);
+            }
+            return mp.addXList(vwr.ms.generateCrystalClass(n,
+                (bsNew != null ? vwr.ms.getAtomSetCenter(bsNew)
+                    : argLast.tok == T.bitset
+                        ? vwr.ms.getAtomSetCenter((BS) argLast.value)
+                        : SV.ptValue(argLast))));
+          }
+          if (isMF && flags.length() != 0) {
             return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, bs, flags));
-          if (isMF || isCF)
+          }
+          if (isMF || isCF) {
             return mp.addXStr(JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at,
                 bs, (isMF ? null : vwr.ms.getCellWeights(bs)), isON));
+          }
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
             isAll |= isHH;
@@ -1564,10 +1593,36 @@ public class MathExt {
                 | (isSeq ? JC.SMILES_GEN_BIO_NOCOMMENTS : JC.SMILES_GEN_BIO),
                 null));
           }
-          if (isSmiles || isSMARTS)
+          if (isStructureMap) {
+            sFind = vwr.getSmilesOpt(bs, 0, 0, 0,
+                (tokLast == T.string ? (String) argLast.value : ""));
+            flags = flags.replace("map", "").trim();
+            if (flags.length() > 0)
+              sFind = "/" + flags + "/" + sFind;
+            int iflags = (JC.SMILES_TYPE_SMARTS | JC.SMILES_MAP_UNIQUE);
+            int[] map1 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                vwr.ms.at, vwr.ms.ac, bs, iflags)[0];
+            int[] map2 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                vwr.ms.at, vwr.ms.ac, bs2, iflags)[0];
+            int[] map = new int[bs.length()];
+            for (int i = map.length; --i >= 0;)
+              map[i] = -1;
+            for (int i = map1.length; --i >= 0;)
+              map[map1[i]] = map2[i];
+            Map<String, Object> m = new Hashtable<String, Object>();
+            m.put("map", map);
+            m.put("map1", map1);
+            m.put("map2", map2);
+            m.put("bs1", bs);
+            m.put("bs2", bs2);
+            m.put("smiles", sFind);
+            return mp.addXMap(m);
+          }
+          if (isSmiles || isSMARTS) {
             sFind = (args.length > 1 && args[1].tok == T.bitset
                 ? vwr.getSmilesOpt((BS) args[1].value, 0, 0, 0, flags)
                 : flags);
+          }
           flags = flags.toUpperCase();
           BS bsMatch3D = bs2;
           if (asBonds) {
@@ -1583,21 +1638,8 @@ public class MathExt {
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                     | JC.SMILES_MAP_UNIQUE);
             ret = map;
-          } else if (sFind.equalsIgnoreCase("crystalClass")) {
-            // {*}.find("crystalClass")
-            // {*}.find("crystalClass", pt)
-            int n = bs.nextSetBit(0);
-            BS bsNew = null;
-            if (args.length != 2) {
-              bsNew = new BS();
-              bsNew.set(n);
-            }
-            ret = vwr.ms.generateCrystalClass(n,
-                (bsNew != null ? vwr.ms.getAtomSetCenter(bsNew)
-                    : argLast.tok == T.bitset
-                        ? vwr.ms.getAtomSetCenter((BS) argLast.value)
-                        : SV.ptValue(argLast)));
           } else {
+            // SMILES or SMARTS only
             int smilesFlags = (isSmiles ?
 
                 (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES
@@ -1645,7 +1687,7 @@ public class MathExt {
         ret[pt++] = i + 1;
       return mp.addXAI(ret);
     }
-    
+
     boolean isReverse = (flags.indexOf("v") >= 0);
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0) || isOff;
     boolean asMatch = (flags.indexOf("m") >= 0);
@@ -1832,8 +1874,8 @@ public class MathExt {
             vwr.shm.getShapePropertyData(shapeID, "index", data);
             if (data[1] != null && !pname.equals("index")) {
               int index = ((Integer) data[1]).intValue();
-                data[1] = vwr.shm.getShapePropertyIndex(shapeID, pname.intern(),
-                    index);
+              data[1] = vwr.shm.getShapePropertyIndex(shapeID, pname.intern(),
+                  index);
             }
           }
         } else {
@@ -1946,19 +1988,21 @@ public class MathExt {
     // format("byteArray", x)
     // format("array", x)
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
-    String format = (args.length == 0 ? "%U" : args[0].tok == T.varray ? null : SV.sValue(args[0]));
-    if (!isLabel && args.length > 0 && x1 != null && x1.tok != T.bitset && format != null) {
+    String format = (args.length == 0 ? "%U"
+        : args[0].tok == T.varray ? null : SV.sValue(args[0]));
+    if (!isLabel && args.length > 0 && x1 != null && x1.tok != T.bitset
+        && format != null) {
       // x1.format(["energy", "pointGroup"]);
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
       // but not x1.format() or {*}.format(....)
       if (args.length == 2) {
         Lst<SV> listIn = x1.getList();
         Lst<SV> formatList = args[1].getList();
-        if (listIn == null  || formatList == null)
+        if (listIn == null || formatList == null)
           return false;
         x1 = SV.getVariableList(getSublist(listIn, formatList));
       }
-      args = new SV[] {args[0], x1};
+      args = new SV[] { args[0], x1 };
       x1 = null;
     }
     if (x1 == null) {
@@ -1966,8 +2010,9 @@ public class MathExt {
       if (pt >= 0 && args.length != 2)
         return false;
       if (pt >= 0 || args.length < 2 || args[1].tok != T.varray) {
-        Object o = SV.format(args, pt); 
-        return (format.equalsIgnoreCase("json") ? mp.addXStr((String)o) : mp.addXObj(o));
+        Object o = SV.format(args, pt);
+        return (format.equalsIgnoreCase("json") ? mp.addXStr((String) o)
+            : mp.addXObj(o));
       }
       // fill an array with applied formats
       Lst<SV> a = args[1].getList();
@@ -1985,13 +2030,14 @@ public class MathExt {
       Lst<SV> listOut = getSublist(listIn, formatList);
       return mp.addXList(listOut);
     }
-    
+
     BS bs = (x1.tok == T.bitset ? (BS) x1.value : null);
     boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
-    return mp.addXObj(format == null ? "" : bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
-        .getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
-            asArray));
-    
+    return mp.addXObj(format == null ? ""
+        : bs == null ? SV.sprintf(PT.formatCheck(format), x1)
+            : e.getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
+                asArray));
+
   }
 
   /**
@@ -2021,7 +2067,8 @@ public class MathExt {
       case T.varray:
         map = new Hashtable<String, SV>();
         list = element.getList();
-        for (int j = 0, n1 = Math.min(list.size(), formatList.size()); j < n1; j++) {
+        for (int j = 0, n1 = Math.min(list.size(),
+            formatList.size()); j < n1; j++) {
           map.put(SV.sValue(formatList.get(j)), list.get(j));
         }
         listOut.addLast(SV.getVariable(map));
@@ -2040,12 +2087,12 @@ public class MathExt {
     // array.div(x) 
     // array.push() 
     // array.pop() 
-    
+
     // array.join()
     // array.join(sep)
     // array.join(sep,true)
     // array.join("",true) (CSV)
-    
+
     // array.split()
     // array.split(sep)
     // array.split("\t",true)
@@ -2057,11 +2104,11 @@ public class MathExt {
     SV x2;
     switch (tok) {
     case T.push:
-      return (len == 2 && mp.addX(x1.pushPop(args[0], args[1])) || len == 1
-          && mp.addX(x1.pushPop(null, args[0])));
+      return (len == 2 && mp.addX(x1.pushPop(args[0], args[1]))
+          || len == 1 && mp.addX(x1.pushPop(null, args[0])));
     case T.pop:
-      return (len == 1 && mp.addX(x1.pushPop(args[0], null)) || len == 0
-          && mp.addX(x1.pushPop(null, null)));
+      return (len == 1 && mp.addX(x1.pushPop(args[0], null))
+          || len == 0 && mp.addX(x1.pushPop(null, null)));
     case T.add:
       if (len != 1 && len != 2)
         return false;
@@ -2081,10 +2128,10 @@ public class MathExt {
       x2 = args[1];
       if (tok == T.add) {
         // [...].add("\t", [...])
-        sList1 = (isArray1 ? SV.strListValue(x1) : PT
-            .split(SV.sValue(x1), "\n"));
-        sList2 = (x2.tok == T.varray ? SV.strListValue(x2) : PT.split(
-            SV.sValue(x2), "\n"));
+        sList1 = (isArray1 ? SV.strListValue(x1)
+            : PT.split(SV.sValue(x1), "\n"));
+        sList2 = (x2.tok == T.varray ? SV.strListValue(x2)
+            : PT.split(SV.sValue(x2), "\n"));
         sList3 = new String[len = Math.max(sList1.length, sList2.length)];
         for (int i = 0; i < len; i++)
           sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
@@ -2111,9 +2158,9 @@ public class MathExt {
               if (j > 0)
                 sb.append(tab);
               SV sv = a.get(j);
-              sb.append(isCSV && sv.tok == T.string ? "\""
-                  + PT.rep((String) sv.value, "\"", "\"\"") + "\"" : ""
-                  + sv.asString());
+              sb.append(isCSV && sv.tok == T.string
+                  ? "\"" + PT.rep((String) sv.value, "\"", "\"\"") + "\""
+                  : "" + sv.asString());
             }
             s2[i] = SV.newS(sb.toString());
           }
@@ -2271,7 +2318,7 @@ public class MathExt {
   }
 
   private Lst<SV> addAllLists(Lst<SV> list, Lst<SV> l) {
-    int n = list.size(); 
+    int n = list.size();
     for (int i = 0; i < n; i++) {
       SV v = list.get(i);
       if (v.tok == T.varray)
@@ -2282,7 +2329,8 @@ public class MathExt {
     return l;
   }
 
-  private boolean evaluateLoad(ScriptMathProcessor mp, SV[] args, boolean isFile)
+  private boolean evaluateLoad(ScriptMathProcessor mp, SV[] args,
+                               boolean isFile)
       throws ScriptException {
     // file("myfile.xyz")
     // load("myfile.png",true)
@@ -2295,9 +2343,13 @@ public class MathExt {
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
     boolean asBytes = (args.length > 1 && args[1].tok == T.on);
-    boolean async = (vwr.async || args.length > 2 && args[args.length - 1].tok == T.on);
-    int nBytesMax = (args.length > 1 && args[1].tok == T.integer ? args[1].asInt() : -1);
-    boolean asJSON = (args.length > 1 && args[1].asString().equalsIgnoreCase("JSON"));
+    boolean async = (vwr.async
+        || args.length > 2 && args[args.length - 1].tok == T.on);
+    int nBytesMax = (args.length > 1 && args[1].tok == T.integer
+        ? args[1].asInt()
+        : -1);
+    boolean asJSON = (args.length > 1
+        && args[1].asString().equalsIgnoreCase("JSON"));
     if (asBytes)
       return mp.addXMap(vwr.fm.getFileAsMap(file, null));
     boolean isQues = file.startsWith("?");
@@ -2312,8 +2364,8 @@ public class MathExt {
       // The evaluation will be repeated up to this point, so for example,
       // x = (i++) + load("?") would increment i twice.
     }
-    String str = isFile ? vwr.fm.getFilePath(file, false, false) : vwr
-        .getFileAsString4(file, nBytesMax, false, false, true, "script");
+    String str = isFile ? vwr.fm.getFilePath(file, false, false)
+        : vwr.getFileAsString4(file, nBytesMax, false, false, true, "script");
     try {
       return (asJSON ? mp.addXObj(vwr.parseJSON(str)) : mp.addXStr(str));
     } catch (Exception e) {
@@ -2402,8 +2454,9 @@ public class MathExt {
             break;
           }
           if (s.equalsIgnoreCase("vdw") || s.equalsIgnoreCase("vanderwaals"))
-            vdw = (i + 1 < args.length && args[i + 1].tok == T.integer ? args[++i]
-                .asInt() : 100) / 100f;
+            vdw = (i + 1 < args.length && args[i + 1].tok == T.integer
+                ? args[++i].asInt()
+                : 100) / 100f;
           else if (s.equalsIgnoreCase("notConnected"))
             isNotConnected = true;
           else if (s.equalsIgnoreCase("connected"))
@@ -2421,8 +2474,8 @@ public class MathExt {
           return false;
         }
       }
-      if (nPoints < 2 || nPoints > 4 || rPt > 2 || isNotConnected
-          && isAllConnected)
+      if (nPoints < 2 || nPoints > 4 || rPt > 2
+          || isNotConnected && isAllConnected)
         return false;
       if (isNull)
         return mp.addXStr("");
@@ -2430,9 +2483,10 @@ public class MathExt {
         return mp.addXStr("");
       rd = (vdw == Float.MAX_VALUE ? new RadiusData(rangeMinMax, 0, null, null)
           : new RadiusData(null, vdw, EnumType.FACTOR, VDW.AUTO));
-      Object obj = (vwr.newMeasurementData(null, points)).set(0, null, rd,
-          property, strFormat, units, null, isAllConnected, isNotConnected, null, true,
-          0, (short) 0, null, Float.NaN).getMeasurements(asFloatArray, asMinArray);
+      Object obj = (vwr.newMeasurementData(null, points))
+          .set(0, null, rd, property, strFormat, units, null, isAllConnected,
+              isNotConnected, null, true, 0, (short) 0, null, Float.NaN)
+          .getMeasurements(asFloatArray, asMinArray);
       return mp.addXObj(obj);
     case T.angle:
       if ((nPoints = args.length) != 3 && nPoints != 4)
@@ -2454,8 +2508,8 @@ public class MathExt {
       return mp
           .addXFloat(Measure.computeAngleABC(pts[0], pts[1], pts[2], true));
     case 4:
-      return mp.addXFloat(Measure.computeTorsion(pts[0], pts[1], pts[2],
-          pts[3], true));
+      return mp.addXFloat(
+          Measure.computeTorsion(pts[0], pts[1], pts[2], pts[3], true));
     }
     return false;
   }
@@ -2708,8 +2762,7 @@ public class MathExt {
           break;
         case T.string:
           s = (String) list.get(0).value;
-          if (!s.startsWith("{")
-              || Escape.uP(s) instanceof String) {
+          if (!s.startsWith("{") || Escape.uP(s) instanceof String) {
             s = null;
             break;
           }
@@ -2752,7 +2805,7 @@ public class MathExt {
           if (vwr.antialiased)
             pt3.scale(2f);
           pt3.y = vwr.tm.height - pt3.y;
-          vwr.tm.unTransformPoint(pt3, pt3);          
+          vwr.tm.unTransformPoint(pt3, pt3);
         }
         break;
       case T.point3f:
@@ -2769,7 +2822,7 @@ public class MathExt {
       default:
         return false;
       }
-      return mp.addXPt(pt3);      
+      return mp.addXPt(pt3);
     case 3:
       return mp.addXPt(
           P3.new3(args[0].asFloat(), args[1].asFloat(), args[2].asFloat()));
@@ -2788,15 +2841,17 @@ public class MathExt {
     if (args.length != 1 && args.length != 2 && args.length != 3)
       return false;
     String label = SV.sValue(args[0]);
-    String[] buttonArray = (args.length > 1 && args[1].tok == T.varray ? SV
-        .strListValue(args[1]) : null);
-    boolean asButtons = (buttonArray != null || args.length == 1 || args.length == 3
-        && args[2].asBoolean());
-    String input = (buttonArray != null ? null : args.length >= 2 ? SV
-        .sValue(args[1]) : "OK");
+    String[] buttonArray = (args.length > 1 && args[1].tok == T.varray
+        ? SV.strListValue(args[1])
+        : null);
+    boolean asButtons = (buttonArray != null || args.length == 1
+        || args.length == 3 && args[2].asBoolean());
+    String input = (buttonArray != null ? null
+        : args.length >= 2 ? SV.sValue(args[1]) : "OK");
     String s = "" + vwr.prompt(label, input, buttonArray, asButtons);
-    return (asButtons && buttonArray != null ? mp
-        .addXInt(Integer.parseInt(s) + 1) : mp.addXStr(s));
+    return (asButtons && buttonArray != null
+        ? mp.addXInt(Integer.parseInt(s) + 1)
+        : mp.addXStr(s));
   }
 
   private boolean evaluateQuaternion(ScriptMathProcessor mp, SV[] args, int tok)
@@ -2852,8 +2907,8 @@ public class MathExt {
             && (args[1].tok == T.integer || args[1].tok == T.bitset))
           break;
       }
-      if ((pt0 = mp.ptValue(args[0], null)) == null || tok != T.quaternion
-          && args[1].tok == T.point3f)
+      if ((pt0 = mp.ptValue(args[0], null)) == null
+          || tok != T.quaternion && args[1].tok == T.point3f)
         return false;
       break;
     case 3:
@@ -2892,8 +2947,9 @@ public class MathExt {
         p4 = (P4) args[0].value;
       } else {
         String s = SV.sValue(args[0]);
-        Object v = Escape.uP(s.equalsIgnoreCase("best") ? vwr
-            .getOrientationText(T.best, "best", null).toString() : s);
+        Object v = Escape.uP(s.equalsIgnoreCase("best")
+            ? vwr.getOrientationText(T.best, "best", null).toString()
+            : s);
         if (!(v instanceof P4))
           return false;
         p4 = (P4) v;
@@ -2933,26 +2989,25 @@ public class MathExt {
       break;
     case 3:
       if (args[0].tok == T.point4f) {
-        P3 pt = (args[2].tok == T.point3f ? (P3) args[2].value : vwr
-            .ms.getAtomSetCenter((BS) args[2].value));
+        P3 pt = (args[2].tok == T.point3f ? (P3) args[2].value
+            : vwr.ms.getAtomSetCenter((BS) args[2].value));
         return mp.addXStr(Escape.drawQuat(Quat.newP4((P4) args[0].value), "q",
             SV.sValue(args[1]), pt, 1f));
       }
       P3[] pts = new P3[3];
       for (int i = 0; i < 3; i++)
-        pts[i] = (args[i].tok == T.point3f ? (P3) args[i].value : vwr
-            .ms.getAtomSetCenter((BS) args[i].value));
+        pts[i] = (args[i].tok == T.point3f ? (P3) args[i].value
+            : vwr.ms.getAtomSetCenter((BS) args[i].value));
       q = Quat.getQuaternionFrame(pts[0], pts[1], pts[2]);
       break;
     case 4:
       if (tok == T.quaternion)
-        p4 = P4.new4(SV.fValue(args[1]), SV.fValue(args[2]),
-            SV.fValue(args[3]), SV.fValue(args[0]));
+        p4 = P4.new4(SV.fValue(args[1]), SV.fValue(args[2]), SV.fValue(args[3]),
+            SV.fValue(args[0]));
       else
-        q = Quat
-            .newVA(
-                P3.new3(SV.fValue(args[0]), SV.fValue(args[1]),
-                    SV.fValue(args[2])), SV.fValue(args[3]));
+        q = Quat.newVA(
+            P3.new3(SV.fValue(args[0]), SV.fValue(args[1]), SV.fValue(args[2])),
+            SV.fValue(args[3]));
       break;
     }
     if (qs != null) {
@@ -3039,7 +3094,7 @@ public class MathExt {
         Lst<SV> l3 = l1.get(i).getList();
         if (l3 == null)
           return mp.addXStr("");
-        l2.addLast(n < l3.size() ? l3.get(n) : SV.newS(""));   
+        l2.addLast(n < l3.size() ? l3.get(n) : SV.newS(""));
       }
       return mp.addXList(l2);
     }
@@ -3066,7 +3121,7 @@ public class MathExt {
     }
     return mp.addXInt(0);
   }
-  
+
   private boolean evaluateReplace(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     boolean isAll = false;
@@ -3091,14 +3146,15 @@ public class MathExt {
       String[] list = SV.strListValue(x);
       String[] l = new String[list.length];
       for (int i = list.length; --i >= 0;)
-        l[i] = (sFind == null ? PT.clean(list[i]) : isAll ? PT
-            .replaceAllCharacters(list[i], sFind, sReplace) : PT.rep(list[i],
-            sFind, sReplace));
+        l[i] = (sFind == null ? PT.clean(list[i])
+            : isAll ? PT.replaceAllCharacters(list[i], sFind, sReplace)
+                : PT.rep(list[i], sFind, sReplace));
       return mp.addXAS(l);
     }
     String s = SV.sValue(x);
-    return mp.addXStr(sFind == null ? PT.clean(s) : isAll ? PT
-        .replaceAllCharacters(s, sFind, sReplace) : PT.rep(s, sFind, sReplace));
+    return mp.addXStr(sFind == null ? PT.clean(s)
+        : isAll ? PT.replaceAllCharacters(s, sFind, sReplace)
+            : PT.rep(s, sFind, sReplace));
   }
 
   private boolean evaluateScript(ScriptMathProcessor mp, SV[] args, int tok)
@@ -3116,9 +3172,10 @@ public class MathExt {
     SB sb = new SB();
     switch (tok) {
     case T.eval:
-      return (args.length == 2 ? s.equalsIgnoreCase("JSON")
-          && mp.addXObj(vwr.parseJSONMap(SV.sValue(args[1]))) : mp.addXObj(vwr
-          .evaluateExpressionAsVariable(s)));
+      return (args.length == 2
+          ? s.equalsIgnoreCase("JSON")
+              && mp.addXObj(vwr.parseJSONMap(SV.sValue(args[1])))
+          : mp.addXObj(vwr.evaluateExpressionAsVariable(s)));
     case T.script:
       String appID = (args.length == 2 ? SV.sValue(args[1]) : ".");
       // options include * > . or an appletID with or without "jmolApplet"
@@ -3135,8 +3192,8 @@ public class MathExt {
     }
     s = sb.toString();
     float f;
-    return (Float.isNaN(f = PT.parseFloatStrict(s)) ? mp.addXStr(s) : s
-        .indexOf(".") >= 0 ? mp.addXFloat(f) : mp.addXInt(PT.parseInt(s)));
+    return (Float.isNaN(f = PT.parseFloatStrict(s)) ? mp.addXStr(s)
+        : s.indexOf(".") >= 0 ? mp.addXFloat(f) : mp.addXInt(PT.parseInt(s)));
   }
 
   /**
@@ -3208,13 +3265,13 @@ public class MathExt {
   private boolean evaluateString(ScriptMathProcessor mp, int tok, SV[] args)
       throws ScriptException {
     SV x = mp.getX();
-    String sArg = (args.length > 0 ? SV.sValue(args[0]) : tok == T.trim ? ""
-        : "\n");
+    String sArg = (args.length > 0 ? SV.sValue(args[0])
+        : tok == T.trim ? "" : "\n");
     switch (args.length) {
     case 0:
       break;
     case 1:
-      if (args[0].tok ==  T.on) {
+      if (args[0].tok == T.on) {
         return mp.addX(SV.getVariable(PT.getTokens(x.asString())));
       }
       break;
@@ -3222,19 +3279,21 @@ public class MathExt {
       if (x.tok == T.varray)
         break;
       if (tok == T.split) {
-        x = SV.getVariable(PT.split(PT.rep((String) x.value, "\n\r", "\n").replace('\r', '\n'), "\n"));
+        x = SV.getVariable(PT.split(
+            PT.rep((String) x.value, "\n\r", "\n").replace('\r', '\n'), "\n"));
         break;
       }
       //$FALL-THROUGH$
     default:
-      return false;      
+      return false;
     }
-      
-    if (x.tok == T.varray && tok != T.trim && (tok != T.split || args.length == 2)) {
+
+    if (x.tok == T.varray && tok != T.trim
+        && (tok != T.split || args.length == 2)) {
       mp.addX(x);
       return evaluateList(mp, tok, args);
     }
-    String s = (tok == T.split && x.tok == T.bitset 
+    String s = (tok == T.split && x.tok == T.bitset
         || tok == T.trim && x.tok == T.varray ? null : SV.sValue(x));
     switch (tok) {
     case T.split:
@@ -3248,7 +3307,7 @@ public class MathExt {
           lst.addLast(SV.getVariable(bs));
         }
         return mp.addXList(lst);
-      }      
+      }
       return mp.addXAS(PT.split(s, sArg));
     case T.join:
       if (s.length() > 0 && s.charAt(s.length() - 1) == '\n')
@@ -3279,7 +3338,8 @@ public class MathExt {
     if (pattern.length() > 0)
       try {
         BS bsSelected = (isSelector ? (BS) mp.getX().value
-            : args.length == 2 && args[1].tok == T.bitset ?  (BS) args[1].value : null);
+            : args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
+                : null);
         bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
             vwr.ms.ac, bsSelected,
             (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
@@ -3290,7 +3350,8 @@ public class MathExt {
   }
 
   private boolean evaluateSymop(ScriptMathProcessor mp, SV[] args,
-                                boolean haveBitSet) throws ScriptException {
+                                boolean haveBitSet)
+      throws ScriptException {
 
     // In the following, "op" can be the operator number in a space group 
     // or a string representation of the operator, such as "x,-y,z"
@@ -3326,8 +3387,9 @@ public class MathExt {
     if (narg == 0) {
       if (bsAtoms.isEmpty())
         return false;
-      String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
-          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
+      String[] ops = PT.split(PT.trim((String) vwr
+          .getSymTemp().getSpaceGroupInfo(vwr.ms, null,
+              vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)
@@ -3369,11 +3431,13 @@ public class MathExt {
       apt++;
     if (iOp == Integer.MIN_VALUE)
       iOp = 0;
-    String desc = (narg == apt ? (pt2 != null ? "all" : pt1 != null ? "point"
-        : "matrix") : SV.sValue(args[apt++]).toLowerCase());
+    String desc = (narg == apt
+        ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
+        : SV.sValue(args[apt++]).toLowerCase());
 
-    return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length && mp
-        .addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, 0, desc, 0, nth, 0)));
+    return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length
+        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, pt1,
+            pt2, 0, desc, 0, nth, 0)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)
@@ -3383,18 +3447,18 @@ public class MathExt {
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
     //     tensor(t,what)
-    boolean isTensor = (args.length == 2 && args[1].tok == T.tensor); 
+    boolean isTensor = (args.length == 2 && args[1].tok == T.tensor);
     SV x = (isTensor ? null : mp.getX());
     if (args.length > 2 || !isTensor && x.tok != T.bitset)
       return false;
     BS bs = (BS) x.value;
-    String tensorType = (isTensor || args.length == 0 ? null : SV.sValue(args[0])
-        .toLowerCase());
+    String tensorType = (isTensor || args.length == 0 ? null
+        : SV.sValue(args[0]).toLowerCase());
     JmolNMRInterface calc = vwr.getNMRCalculation();
     if ("unique".equals(tensorType))
       return mp.addXBs(calc.getUniqueTensorSet(bs));
-    String infoType = (args.length < 2 ? null : SV.sValue(args[1])
-        .toLowerCase());
+    String infoType = (args.length < 2 ? null
+        : SV.sValue(args[1]).toLowerCase());
     if (isTensor) {
       return mp.addXObj(((Tensor) args[0].value).getInfo(infoType));
     }
@@ -3428,8 +3492,8 @@ public class MathExt {
     }
     if (isSelector) {
       return mp
-          .addXObj(e.getBitsetProperty((BS) x1.value, null, tok, null,
-              null, x1.value, new Object[] { name, params }, false, x1.index, false));
+          .addXObj(e.getBitsetProperty((BS) x1.value, null, tok, null, null,
+              x1.value, new Object[] { name, params }, false, x1.index, false));
     }
     SV var = e.getUserFunctionResult(name, params, null);
     return (var == null ? false : mp.addX(var));
@@ -3462,8 +3526,8 @@ public class MathExt {
     case T.decimal:
     case T.integer:
       isDistance = true;
-      if (len < 2 || len == 3 && args[1].tok == T.varray
-          && args[2].tok != T.varray)
+      if (len < 2
+          || len == 3 && args[1].tok == T.varray && args[2].tok != T.varray)
         return false;
       distance = (isVdw ? 100 : SV.fValue(args[0]));
       switch (tok = args[1].tok) {
@@ -3502,9 +3566,9 @@ public class MathExt {
       break;
     case T.branch:
       return (len == 3 && args[1].value instanceof BS
-          && args[2].value instanceof BS && mp.addXBs(vwr.getBranchBitSet(
-          ((BS) args[2].value).nextSetBit(0),
-          ((BS) args[1].value).nextSetBit(0), true)));
+          && args[2].value instanceof BS
+          && mp.addXBs(vwr.getBranchBitSet(((BS) args[2].value).nextSetBit(0),
+              ((BS) args[1].value).nextSetBit(0), true)));
     case T.smiles:
     case T.substructure: // same as "SMILES"
     case T.search:
@@ -3618,8 +3682,8 @@ public class MathExt {
       break;
     case T.varray:
       pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList() : null);
-      pt = (last == 2 ? SV.ptValue(args[1]) : last == 1 ? P3.new3(Float.NaN, 0,
-          0) : null);
+      pt = (last == 2 ? SV.ptValue(args[1])
+          : last == 1 ? P3.new3(Float.NaN, 0, 0) : null);
       break;
     }
     if (plane != null)
@@ -3630,8 +3694,8 @@ public class MathExt {
     // if we have anything, it must have a point or an array or a plane or a bitset from here on out    
     if (tok == T.unitcell) {
       boolean asMap = isWithinModelSet;
-      return ((bs != null || pt != null) && mp.addXObj(vwr.ms
-          .getUnitCellPointsWithin(distance, bs, pt, asMap)));
+      return ((bs != null || pt != null) && mp
+          .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap)));
     }
     if (pt != null || pts1 != null) {
       if (args[last].tok == T.varray) {
@@ -3677,8 +3741,8 @@ public class MathExt {
       if (distance < 0)
         distance = 0; // not used, but this prevents a diversion
     }
-    return mp.addXBs(vwr.ms.getAtomsWithinRadius(distance, bs,
-        isWithinModelSet, rd));
+    return mp.addXBs(
+        vwr.ms.getAtomsWithinRadius(distance, bs, isWithinModelSet, rd));
   }
 
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
@@ -3698,7 +3762,7 @@ public class MathExt {
         vwr.createZip(null, type, params);
         BufferedInputStream bis = Rdr.getBIS(oc.toByteArray());
         params = new Hashtable<String, Object>();
-        ZipTools.readFileAsMap(bis, params, null);
+        vwr.readFileAsMap(bis, params, null);
         return mp.addXMap(params);
       }
       break;
@@ -3707,7 +3771,7 @@ public class MathExt {
   }
 
   ///////// private methods used by evaluateXXXXX ////////
-  
+
   private BS getAtomsNearSurface(float distance, String surfaceId) {
     Object[] data = new Object[] { surfaceId, null, null };
     if (e.getShapePropertyData(JC.SHAPE_ISOSURFACE, "getVertices", data))
@@ -3740,7 +3804,6 @@ public class MathExt {
     }
     return bsResult;
   }
-
 
   @SuppressWarnings("unchecked")
   public Object getMinMax(Object floatOrSVArray, int tok) {
@@ -3958,8 +4021,10 @@ public class MathExt {
   private JmolPatternMatcher pm;
 
   private JmolPatternMatcher getPatternMatcher() {
-    return (pm == null ? pm = (JmolPatternMatcher) Interface
-        .getUtil("PatternMatcher", e.vwr, "script") : pm);
+    return (pm == null
+        ? pm = (JmolPatternMatcher) Interface.getUtil("PatternMatcher", e.vwr,
+            "script")
+        : pm);
   }
 
   private T opTokenFor(int tok) {
@@ -3979,9 +4044,8 @@ public class MathExt {
     return null;
   }
 
-  public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly,
-                               float distance, RadiusData rd,
-                               boolean warnMultiModel) {
+  public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly, float distance,
+                              RadiusData rd, boolean warnMultiModel) {
     boolean withinAllModels;
     BS bs;
     if (bsB == null) {
@@ -3997,8 +4061,8 @@ public class MathExt {
       int nModels = vwr.ms.getModelBS(bs, false).cardinality();
       withinAllModels = (nModels > 1);
       if (warnMultiModel && nModels > 1 && !e.tQuiet)
-        e.showString(GT
-            .$("Note: More than one model is involved in this contact!"));
+        e.showString(
+            GT.$("Note: More than one model is involved in this contact!"));
     }
     // B always within some possibly extended VDW of A or just A itself
     if (!bsA.equals(bsB)) {

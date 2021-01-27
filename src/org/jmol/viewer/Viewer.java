@@ -173,6 +173,7 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+import javajs.util.ZipTools;
 
 public class Viewer extends JmolViewer
     implements AtomDataServer, PlatformViewer {
@@ -10133,6 +10134,11 @@ public class Viewer extends JmolViewer
 
   public void setConsoleFontScale(int scale) {
     consoleFontScale = scale;
+  }
+
+  public void readFileAsMap(BufferedInputStream bis, Map<String, Object> map,
+                            String name) {
+    ZipTools.readFileAsMap(bis, map, name);
   }
 
 }
