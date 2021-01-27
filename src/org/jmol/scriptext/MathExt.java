@@ -1455,9 +1455,9 @@ public class MathExt {
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off && args[1].tok != T.bitset ? SV.sValue(args[1])
             : "");
-    boolean isSequence = !isList && !isOff && !isON
+    boolean isSequence = !isList && !isOff
         && sFind.equalsIgnoreCase("SEQUENCE");
-    boolean isSeq = !isList && !isOff && !isON && sFind.equalsIgnoreCase("SEQ");
+    boolean isSeq = !isList && !isOff && sFind.equalsIgnoreCase("SEQ");
     if (sFind.toUpperCase().startsWith("SMILES/")) {
       if (!sFind.endsWith("/"))
         sFind += "/";
