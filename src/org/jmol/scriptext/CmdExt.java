@@ -370,10 +370,16 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  @SuppressWarnings("static-access")
-  public Object getBitsetIdent(BS bs, String label, Object tokenValue,
+    public Object getBitsetIdent(BS bs, String label, Object tokenValue,
                                boolean useAtomMap, int index,
                                boolean isExplicitlyAll) {
+      return getBitsetIdentFull(bs, label, tokenValue, useAtomMap, index, isExplicitlyAll, null);
+  }
+  
+  @SuppressWarnings("static-access")
+  public Object getBitsetIdentFull(BS bs, String label, Object tokenValue,
+                               boolean useAtomMap, int index,
+                               boolean isExplicitlyAll, String[] sout) {
     boolean isAtoms = !(tokenValue instanceof BondSet);
     if (isAtoms) {
       if (label == null)
@@ -403,7 +409,9 @@ public class CmdExt extends ScriptExt {
         vwr, label, '\0', null) : labeler.compile(vwr, label, '\1',
         htValues));
     int nmax = (haveIndex ? 1 : bs.cardinality());
-    String[] sout = new String[nmax];
+    boolean haveSout = (sout != null);
+    if (!haveSout)
+      sout = new String[nmax];
     P3 ptTemp = new P3();
     for (int j = (haveIndex ? index : bs.nextSetBit(0)); j >= 0; j = bs
         .nextSetBit(j + 1)) {
@@ -423,7 +431,8 @@ public class CmdExt extends ScriptExt {
               .formatLabelBond(vwr, bond, tokens, htValues, indices, ptTemp);
       }
       str = PT.formatStringI(str, "#", (n + 1));
-      sout[n++] = str;
+      sout[haveSout ? j : n] = str;
+      n++;
       if (haveIndex)
         break;
     }
