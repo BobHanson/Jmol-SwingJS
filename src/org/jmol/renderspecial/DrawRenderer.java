@@ -373,7 +373,7 @@ public class DrawRenderer extends MeshRenderer {
       diameter = (int) (diameter * vwr.getScreenDim() / 100f);
     }
     diameter *= f;
-    pt1i.set((int) (pt0.x * f), (int) (vwr.tm.height - pt0.y * f), (int) vwr.tm.cameraDistance);
+    pt1i.set((int) (pt0.x), (int) (vwr.tm.height - pt0.y), (int) vwr.tm.cameraDistance);
     g3d.fillSphereI(diameter, pt1i);
   }
 

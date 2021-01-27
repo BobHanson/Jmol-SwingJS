@@ -1562,7 +1562,8 @@ abstract class ScriptExpr extends ScriptParam {
 
     boolean haveIndex = (index != Integer.MAX_VALUE);
 
-    boolean isAtoms = haveIndex || !(tokenValue instanceof BondSet);
+    boolean isAtoms = haveIndex || !(tokenValue instanceof BondSet)
+        && !(bs instanceof BondSet);
     // check minmax flags:
 
     int minmaxtype = tok & T.minmaxmask;
