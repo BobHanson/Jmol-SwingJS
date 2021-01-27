@@ -26,6 +26,7 @@ package org.jmol.scriptext;
 
 import java.io.BufferedInputStream;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
@@ -1458,7 +1459,7 @@ public class MathExt {
     boolean isAtoms = (x1.tok == T.bitset);
     boolean isEmpty = (args.length == 0);
     int tok0 = (args.length == 0 ? T.nada : args[0].tok);
-    String sFind = (isEmpty ? "" : SV.sValue(args[0]));
+    String sFind = (isEmpty || tok0 != T.string ? "" : SV.sValue(args[0]));
     boolean isOff = (args.length > 1 && args[1].tok == T.off);
     int tokLast = (tok0 == T.nada ? T.nada : args[args.length - 1].tok);
     SV argLast = (tokLast == T.nada ? SV.vF : args[args.length - 1]);
@@ -1495,6 +1496,8 @@ public class MathExt {
     boolean isInchi = isAtoms && !isList && sFind.equalsIgnoreCase("INCHI");
     boolean isInchiKey = isAtoms && !isList
         && sFind.equalsIgnoreCase("INCHIKEY");
+    boolean isStructureMap = (!isSmiles && !isSMARTS
+        && flags.toLowerCase().indexOf("map") >= 0);
     try {
       if (isInchi || isInchiKey) {
         if (isInchiKey)
@@ -1512,8 +1515,6 @@ public class MathExt {
         return mp.addXStr(data);
       }
       if (isSmiles || isSMARTS || isAtoms) {
-        boolean isStructureMap = (!isSmiles && !isSMARTS
-            && flags.toLowerCase().indexOf("map") >= 0);
         int iPt = (isStructureMap ? 0 : isSmiles || isSMARTS ? 2 : 1);
         BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset
             ? (BS) args[iPt++].value
@@ -1594,21 +1595,8 @@ public class MathExt {
                 null));
           }
           if (isStructureMap) {
-            flags = flags.replace("map", "").trim();
-            sFind = vwr.getSmilesOpt(bs, 0, 0, 0, flags);
-            int iflags = (JC.SMILES_TYPE_SMARTS | JC.SMILES_MAP_UNIQUE | JC.SMILES_FIRST_MATCH_ONLY);
-            if (flags.length() > 0)
-              sFind = "/" + flags + "/" + sFind;
-            int[] map1 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.ms.ac, bs, iflags)[0];
-            int[] map2 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.ms.ac, bs2, iflags)[0];
-            int[] map = new int[bs.length()];
-            for (int i = map.length; --i >= 0;)
-              map[i] = -1;
-            for (int i = map1.length; --i >= 0;)
-              map[map1[i]] = map2[i];
-            Object[][] mapNames = new Object[map1.length][2];
+            int[] map = null, map1 = null, map2 = null;
+            Object[][] mapNames = null;
             String key = (args.length == 3 ? SV.sValue(argLast) : null);
             char itype = (key == null || key.equals("%i")
                 || key.equals("number") ? 'i'
@@ -1616,45 +1604,81 @@ public class MathExt {
                         : key.equals("%D") || key.equals("index") ? 'D' : '?');
             if (key == null)
               key = "number";
-            BS bsAll = BS.copy(bs);
-            bsAll.or(bs2);
-            String[] names = (itype == '?' ? new String[bsAll.length()] : null);
-            if (names != null)
-              names = (String[]) e.getCmdExt().getBitsetIdentFull(bsAll, key,
-                  null, false, Integer.MAX_VALUE, false, names);
-            Atom[] at = vwr.ms.at;
-            for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-                .nextSetBit(i + 1)) {
-              int j = map[i];
-              if (j == -1)
-                continue;
-              Object[] a;
-              switch (itype) {
-              case 'a':
-                a = new String[] { at[i].getAtomName(), at[j].getAtomName() };
-                break;
-              case 'i':
-                a = new Integer[] { at[i].getAtomNumber(),
-                    at[j].getAtomNumber() };
-                break;
-              case 'D':
-                a = new Integer[] { i, j };
-                break;
-              default:
-                a = new String[] { names[i], names[j] };
-                break;
+            String err = null;
+            flags = flags.replace("map", "").trim();
+            sFind = vwr.getSmilesOpt(bs, 0, 0, 0, flags);
+            if (bs.cardinality() != bs2.cardinality()) {
+              err = "atom sets are not the same size";
+            } else {
+              try {
+                int iflags = (JC.SMILES_TYPE_SMILES | JC.SMILES_MAP_UNIQUE
+                    | JC.SMILES_FIRST_MATCH_ONLY);
+                if (flags.length() > 0)
+                  sFind = "/" + flags + "/" + sFind;
+                map1 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                    vwr.ms.at, vwr.ms.ac, bs, iflags)[0];
+                int[][] m2 = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
+                    vwr.ms.at, vwr.ms.ac, bs2, iflags);
+                if (m2.length > 0) {
+                  map = new int[bs.length()];
+                  for (int i = map.length; --i >= 0;)
+                    map[i] = -1;
+                  map2 = m2[0];
+                  for (int i = map1.length; --i >= 0;)
+                    map[map1[i]] = map2[i];
+                  mapNames = new Object[map1.length][2];
+                  BS bsAll = BS.copy(bs);
+                  bsAll.or(bs2);
+                  String[] names = (itype == '?' ? new String[bsAll.length()]
+                      : null);
+                  if (names != null)
+                    names = (String[]) e.getCmdExt().getBitsetIdentFull(bsAll,
+                        key, null, false, Integer.MAX_VALUE, false, names);
+                  Atom[] at = vwr.ms.at;
+                  for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs
+                      .nextSetBit(i + 1)) {
+                    int j = map[i];
+                    if (j == -1)
+                      continue;
+                    Object[] a;
+                    switch (itype) {
+                    case 'a':
+                      a = new String[] { at[i].getAtomName(),
+                          at[j].getAtomName() };
+                      break;
+                    case 'i':
+                      a = new Integer[] {
+                          Integer.valueOf(at[i].getAtomNumber()),
+                          Integer.valueOf(at[j].getAtomNumber()) };
+                      break;
+                    case 'D':
+                      a = new Integer[] { Integer.valueOf(i),
+                          Integer.valueOf(j) };
+                      break;
+                    default:
+                      a = new String[] { names[i], names[j] };
+                      break;
+                    }
+                    mapNames[pt++] = a;
+                  }
+                }
+              } catch (Exception ee) {
+                err = ee.getMessage();
               }
-              mapNames[pt++] = a;
             }
-            Map<String, Object> m = new Hashtable<String, Object>();
+            Map<String, Object> m = new HashMap<String, Object>();
             m.put("BS1", bs);
             m.put("BS2", bs2);
             m.put("SMILES", sFind);
-            m.put("SMILEStoBS1", map1);
-            m.put("SMILEStoBS2", map2);
-            m.put("BS1toBS2", map);
-            m.put("MAP1to2", mapNames);
-            m.put("key", key);
+            if (err == null) {
+              m.put("SMILEStoBS1", map1);
+              m.put("SMILEStoBS2", map2);
+              m.put("BS1toBS2", map);
+              m.put("MAP1to2", mapNames);
+              m.put("key", key);
+            } else {
+              m.put("error", err);
+            }
             return mp.addXMap(m);
           }
           if (isSmiles || isSMARTS) {
