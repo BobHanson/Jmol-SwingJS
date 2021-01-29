@@ -1496,7 +1496,7 @@ public class MathExt {
     boolean isInchi = isAtoms && !isList && sFind.equalsIgnoreCase("INCHI");
     boolean isInchiKey = isAtoms && !isList
         && sFind.equalsIgnoreCase("INCHIKEY");
-    boolean isStructureMap = (!isSmiles && !isSMARTS
+    boolean isStructureMap = (!isSmiles && !isSMARTS && tok0 == T.bitset
         && flags.toLowerCase().indexOf("map") >= 0);
     try {
       if (isInchi || isInchiKey) {
@@ -1542,8 +1542,9 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
+            boolean isChirality = pattern.equals("chirality");
             boolean justOne = (!asMap
-                && (!allMappings || !isSMARTS && !pattern.equals("chirality")));
+                && (!allMappings || !isSMARTS && !isChirality));
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
@@ -1553,8 +1554,23 @@ public class MathExt {
               System.out.println(ex.getMessage());
               return mp.addXInt(-1);
             }
+            int len = (isChirality ? 1
+                : AU.isAI(ret) ? ((int[]) ret).length : ((int[][]) ret).length);
+            if (len == 0
+                && vwr.getSmilesMatcher().getLastException() != "MF_FAILED"
+                && smiles.toLowerCase().indexOf("noaromatic") < 0
+                && smiles.toLowerCase().indexOf("strict") < 0) {
+              // problem arising from Jmol interpreting one string as aromatic
+              // and the other not, perhaps because of one using [N] as in NCI caffeine
+              // and one not, as from PubChem. 
+              // There is no loss in doing this search again, except for 
+              ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
+                  null,
+                  JC.SMILES_NO_AROMATIC | (isSMARTS ? JC.SMILES_TYPE_SMARTS
+                      : JC.SMILES_TYPE_SMILES),
+                  !asMap, !allMappings);
+            }
             if (justOne) {
-              int len = ((int[]) ret).length;
               return mp.addXInt(!allMappings && len > 0 ? 1 : len);
             }
           }
@@ -1696,10 +1712,11 @@ public class MathExt {
                     | JC.SMILES_FIRST_MATCH_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else if (flags.equalsIgnoreCase("map")) {
+            // we add NO_AROMATIC because that is not important for structure-SMILES matching
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
                 vwr.ms.at, vwr.ms.ac, bs,
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
-                    | JC.SMILES_MAP_UNIQUE);
+                    | JC.SMILES_MAP_UNIQUE | JC.SMILES_NO_AROMATIC);
             ret = map;
           } else {
             // SMILES or SMARTS only
@@ -3763,6 +3780,7 @@ public class MathExt {
     if (pt != null || pts1 != null) {
       if (args[last].tok == T.varray) {
         // within(dist, pt, [pt1, pt2, pt3...])
+        // within(dist, [pt1, pt2, pt3...])
         Lst<SV> sv = args[last].getList();
         P3[] ap3 = new P3[sv.size()];
         for (int i = ap3.length; --i >= 0;)

@@ -2455,8 +2455,10 @@ public class ModelSet extends BondCollection {
           } else {
             if (notAnyAndNoId) {
               bondAB.setOrder(order);
-              if (isAtrop)
+              if (isAtrop) {
+                haveAtropicBonds = true;
                 bondAB.setAtropisomerOptions(bsA, bsB);
+              }
               bsAromatic.clear(bondAB.index);
             }
             if (anyOrNoId || order == bondAB.order || newOrder == bondAB.order

@@ -1171,5 +1171,9 @@ public class SmilesStereo {
     return;
   }
 
+  public static int getAtropicStereoFlag(Node[] nodes) {
+    return (Measure.computeTorsion((T3) nodes[0], 
+        (T3) nodes[1], (T3)nodes[2], (T3) nodes[3], true) < 0 ? 1 : -1); 
+  }
 }
  

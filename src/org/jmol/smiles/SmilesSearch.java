@@ -24,6 +24,7 @@
 
 package org.jmol.smiles;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -156,7 +157,7 @@ public class SmilesSearch extends JmolMolecule {
   /**
    * indicates that we have [XxPHn] with no connected atoms
    */
-  public SmilesStereo polyhedronStereo; 
+  public SmilesStereo polyhedronStereo;
 
   static final int addFlags(int flags, String strFlags) {
     if (strFlags.indexOf("OPEN") >= 0)
@@ -164,8 +165,10 @@ public class SmilesSearch extends JmolMolecule {
     if (strFlags.indexOf("BIO") >= 0)
       flags |= JC.SMILES_GEN_BIO;
 
-    if (strFlags.indexOf("HYDROGEN") >= 0)
-      flags |= JC.SMILES_GEN_EXPLICIT_H;
+    if (strFlags.indexOf("HYDROGEN2") >= 0)
+        flags |= JC.SMILES_GEN_EXPLICIT_H2_ONLY;
+    else if (strFlags.indexOf("HYDROGEN") >= 0)
+      flags |= JC.SMILES_GEN_EXPLICIT_H_ALL;
 
 //    if (strFlags.indexOf("NONCANONICAL") >= 0) // no longer used
 //      flags |= AROMATIC_JSME_NONCANONICAL; 
@@ -504,6 +507,8 @@ public class SmilesSearch extends JmolMolecule {
   private final static int SUBMODE_NESTED = 1;
   private final static int SUBMODE_RINGCHECK = 2;
   private final static int SUBMODE_OR = 3;
+
+  private static final int ATROPIC_SWITCH = 1;
   
   /**
    * @param search
@@ -696,6 +701,7 @@ public class SmilesSearch extends JmolMolecule {
           if (!bs.get(j) && !bsFound.get(j)) {
 
             jmolAtom = targetAtoms[j];
+            
             if (checkComponents && !isRingCheck) {
               c = (groupByModel ? jmolAtom.getModelIndex() : jmolAtom
                   .getMoleculeNumber(false));
@@ -922,6 +928,11 @@ public class SmilesSearch extends JmolMolecule {
                                        int atomNum, int iAtom,
                                        boolean firstAtomOnly, int c)
       throws InvalidSmilesException {
+
+//      if (!this.isRingCheck) {
+//          System.out.println("testing " + patternAtom + " " + jmolAtom);
+//        }
+
 
     Edge[] jmolBonds;
     // check for requested selection or not-selection
@@ -1570,7 +1581,7 @@ public class SmilesSearch extends JmolMolecule {
         // just looking for d value that is positive (0 to 180)
         // the dihedral, from front to back, will be positive:  0 to 180 range 
         // dir1 is 1 or -1(NOT)
-        d *= dir1 * (bondType == Edge.TYPE_ATROPISOMER ? 1 : -1) * (indexOrder ? 1 : -1);
+        d *= dir1 * (bondType == Edge.TYPE_ATROPISOMER ? 1 : -1) * (indexOrder ? 1 : -1)* ATROPIC_SWITCH * -1;
         if (Logger.debugging)
           Logger.info("atrop dihedral " + d + " " + sAtom1 + " " + sAtom2 + " " +  b);
         if (d < 1.0f) // don't count a fraction of a degree as sufficient
@@ -1589,21 +1600,38 @@ public class SmilesSearch extends JmolMolecule {
       // atoms with the SMILES version
       atropKeys = "";
       for (int i = 0; i < lstAtrop.size(); i++)
-        atropKeys += "," + getAtropIndex((b = lstAtrop.get(i)), true) + getAtropIndex(b, false);
+        atropKeys += "," + getAtropIndex(lstAtrop.get(i));
     }
     return true;
 
   }
 
-  private int getAtropIndex(SmilesBond b, boolean isFirst) {
-    SmilesAtom s1 = (isFirst ? b.atom1 : b.atom2);
-    Node a1 = s1.getMatchingAtom();
-    Node a11 = Edge.getAtropismNode(b.matchingBond.order, a1, isFirst);
-    SmilesBond[] b1 = s1.bonds;
-    for (int i = s1.getBondCount(); --i >= 0;)
-      if (((SmilesAtom) b1[i].getOtherNode(s1)).getMatchingAtom() == a11)
-        return i + 1;
-    return 0;
+  private String getAtropIndex(SmilesBond b) {
+    Node[] nodes = new Node[4];
+    String s = "";
+    nodes[1] = b.atom1.getMatchingAtom();
+    nodes[2] = b.atom2.getMatchingAtom();
+    SmilesBond[] b1 = b.atom1.bonds;
+    SmilesAtom a;
+    for (int i = b.atom1.getBondCount(); --i >= 0;) {
+      if ((a = (SmilesAtom) b1[i].getOtherNode(b.atom1)) != b.atom2) {
+        s += (i + 1);
+        nodes[0] = a.getMatchingAtom();
+        break;
+      }
+    }
+    b1 = b.atom2.bonds;
+    for (int i = 0; i <= b.atom2.getBondCount(); i++) {
+      if ((a = (SmilesAtom) b1[i].getOtherNode(b.atom2)) != b.atom1) {
+        s += (i + 1);
+        nodes[3] = a.getMatchingAtom();
+        break;
+      }
+    }
+    if (s.equals("22"))
+      s = "";
+    s = (SmilesStereo.getAtropicStereoFlag(nodes) == 1 ? "" : "^") + s;
+    return (s + "   ").substring(0, 3);
   }
 
   private void setTopoCoordinates(SmilesAtom dbAtom1, SmilesAtom dbAtom2,
@@ -1618,10 +1646,16 @@ public class SmilesSearch extends JmolMolecule {
       // we will be looking for a + or - dihedral angle
       // so just set that
 
+      // have to reconcile 12,23 choice with atropType for TOPO -- currently NULL!
+      
+      
       SmilesBond bond = dbAtom1.getBondTo(dbAtom2);
-      int dir = (bond.order == Edge.TYPE_ATROPISOMER ? 1 : -1);
+      boolean ok1 = dbAtom1.getBondedAtomIndex(bond.atropType[0]) == dbAtom1a.index;
+      boolean ok2 = dbAtom2.getBondedAtomIndex(bond.atropType[1]) == dbAtom2a.index;
+      int dir = (bond.order == Edge.TYPE_ATROPISOMER ? 1 : -1) * (ok1 == ok2 ? 1 : -1);
       dbAtom1a.set(-1, 1, 0);
-      dbAtom2a.set(1, 1, dir / 2.0f);
+      dbAtom2a.set(1, 1, dir / 2.0f * ATROPIC_SWITCH * -1);
+      //System.out.println(Arrays.toString(bond.atropType) + " " + bond.order + " " + dbAtom1a + " " + dbAtom1 + " " + dbAtom2 + " " + dbAtom2a + " " + dir);
       return;
     }
 
@@ -1820,6 +1854,8 @@ public class SmilesSearch extends JmolMolecule {
           SmilesAtom atom2 = atoms[sBond.atom2.getMatchingAtomIndex()];
           SmilesBond b = new SmilesBond(atom1, atom2, order, false);
           b.isConnection = sBond.isConnection;
+          b.atropType = sBond.atropType;
+          b.isNot = sBond.isNot;
           // do NOT add this bond to the second atom -- we will do that later;
           atom2.bondCount--;
           if (Logger.debugging)

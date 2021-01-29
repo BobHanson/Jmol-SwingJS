@@ -173,14 +173,14 @@ public class Bond extends Edge {
     Bond[] bonds = atom1.bonds;
     for (i1 = 0; i1 < bonds.length; i1++) {
       Atom a = bonds[i1].getOtherAtom(atom1);
-      if (bs1.get(a.i) && a != atom2)
+      if (a != atom2)
         break;
     }
     if (i1 < bonds.length) {
       bonds = atom2.bonds;
       for (i2 = 0; i2 < bonds.length; i2++) {
         Atom a = bonds[i2].getOtherAtom(atom2);
-        if (bs2.get(a.i) && a != atom1)
+        if (a != atom1)
           break;
       }
     }

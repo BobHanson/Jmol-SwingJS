@@ -122,6 +122,7 @@ public class SmilesBond extends Edge {
     nPrimitives = bond.nPrimitives;
     bondsOr = bond.bondsOr;
     nBondsOr = bond.nBondsOr;
+    atropType = bond.atropType;
   }
 
   void setAtropType(int nn) {

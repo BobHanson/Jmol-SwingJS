@@ -799,6 +799,26 @@ abstract public class BondCollection extends AtomCollection {
     return bsResult;
   }
 
+  protected boolean haveAtropicBonds;
+  
+//  public void setAtropicBonds(BS bs) {
+//    if (!haveAtropicBonds)
+//      return;
+//    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+//      Atom a = at[i];
+//      Bond[] bonds = a.bonds;
+//      if (bonds == null)
+//        continue;
+//      for (int j = a.getBondCount(); --j >= 0;) {
+//        Bond b = bonds[j];
+//        if ((b.order & Edge.TYPE_ATROPISOMER) == Edge.TYPE_ATROPISOMER) {
+//          
+//        }
+//      }
+//    }
+//  }
+//
+
 
 }
 

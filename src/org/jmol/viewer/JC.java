@@ -1305,8 +1305,9 @@ public final class JC {
 
   public static final int SMILES_IGNORE_ATOM_CLASS          = 0x800;
 
-  public static final int SMILES_GEN_EXPLICIT_H                = 0x00001000; // SmilesExt -> generator
-  public static final int SMILES_GEN_TOPOLOGY                  = 0x00002000; // SmilesExt -> generator
+  public static final int SMILES_GEN_EXPLICIT_H_ALL            = 0x00001000; // SmilesExt -> generator
+  public static final int SMILES_GEN_EXPLICIT_H2_ONLY          = 0x00002000; // SmilesExt -> generator
+  public static final int SMILES_GEN_TOPOLOGY                  = 0x00004000; // SmilesExt -> generator
   public static final int SMILES_GEN_POLYHEDRAL                = 0x00010000; // polyhedron -> generator
   public static final int SMILES_GEN_ATOM_COMMENT              = 0x00020000; // polyhedron,Viewer -> generator
   

@@ -172,7 +172,7 @@ public class SmilesExt {
                                  boolean firstMatchOnly) throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
-    if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H")
+    if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H") || pattern.equals("H2")
         || pattern.equals("top") || pattern.equalsIgnoreCase("NOAROMATIC")) {
       try {
 
@@ -182,7 +182,8 @@ public class SmilesExt {
                 0,
                 0,
                 flags
-                    | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H : 0)
+                    | (pattern.equals("H2") ? JC.SMILES_GEN_EXPLICIT_H2_ONLY : 0)
+                    | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0)
                     | (pattern.equals("top") ? JC.SMILES_GEN_TOPOLOGY : 0)
                     | (pattern.equalsIgnoreCase("NOAROMATIC") ? JC.SMILES_NO_AROMATIC
                         : 0), (pattern.endsWith("///") ? pattern : null));
@@ -193,6 +194,7 @@ public class SmilesExt {
     BS[] b;
     if (bsMatch3D == null) {
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
+      // not for string.find(string....)
       boolean isSmarts = ((flags & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       boolean isOK = true;
       try {

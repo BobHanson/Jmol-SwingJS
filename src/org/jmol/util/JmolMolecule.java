@@ -170,6 +170,11 @@ public class JmolMolecule {
   
   public String getMolecularFormula(boolean includeMissingHydrogens,
                                     float[] wts, boolean isEmpirical) {
+    return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical, true);
+  }
+  
+  public String getMolecularFormulaImpl(boolean includeMissingHydrogens,
+                                    float[] wts, boolean isEmpirical, boolean includeH) {
     if (mf != null)
       return mf;
     // get element and atom counts

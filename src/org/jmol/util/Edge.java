@@ -211,7 +211,7 @@ public abstract class Edge implements SimpleEdge {
   }
   
   public static int getAtropismOrder(int nn, int mm) {
-    return getAtropismOrder12(((nn + 1) << 2) + mm + 1);
+    return getAtropismOrder12(((nn) << 2) + mm);
   }
 
   public static int getAtropismOrder12(int nnmm) {
@@ -223,7 +223,7 @@ public abstract class Edge implements SimpleEdge {
   }
 
   public static Node getAtropismNode(int order, Node a1, boolean isFirst) {
-    int i1 = (order >> (ATROPISOMER_SHIFT + (isFirst ? 2 : 0))) & 3;
+    int i1 = (order >> (ATROPISOMER_SHIFT + (isFirst ? 0 : 2))) & 3;
     return (Node) a1.getEdges()[i1 - 1].getOtherNode(a1);
   }
 

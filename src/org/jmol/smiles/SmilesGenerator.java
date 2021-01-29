@@ -34,6 +34,8 @@ import javajs.util.P3;
 import javajs.util.SB;
 
 import javajs.util.BS;
+
+import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
@@ -63,7 +65,12 @@ public class SmilesGenerator {
   private BS bsAromatic;
   private int flags;
   
-  private boolean explicitH;
+  /**
+   * 0 H all implicit
+   * 0x1000 CH2 explicit
+   * 0x2000 CH2 and CH3 explicit
+   */
+  private int explicitH;
   
   private Lst<BS> ringSets;
 
@@ -73,7 +80,7 @@ public class SmilesGenerator {
   private int nPairs, nPairsMax;
   private BS bsBondsUp = new BS();
   private BS bsBondsDn = new BS();
-  private BS bsToDo;
+  private BS bsToDo, bsIgnoreH = new BS();
   private SimpleNode prevAtom;
   private SimpleNode[] prevSp2Atoms;
   private SimpleNode[] alleneStereo;
@@ -100,7 +107,8 @@ public class SmilesGenerator {
 
   // generation of SMILES strings
 
-  String getSmiles(SmilesMatcher sm, Node[] atoms, int ac, BS bsSelected, String comment, int flags)
+  String getSmiles(SmilesMatcher sm, Node[] atoms, int ac, BS bsSelected,
+                   String comment, int flags)
       throws InvalidSmilesException {
     int ipt = bsSelected.nextSetBit(0);
     if (ipt < 0)
@@ -109,23 +117,62 @@ public class SmilesGenerator {
     this.flags = flags;
     this.atoms = atoms;
     this.ac = ac;
-    bsSelected = BSUtil.copy(bsSelected);    
+    bsSelected = BSUtil.copy(bsSelected);
 
     // note -- some of these are 2-bit flags, so we need to use (flags & X) == X 
-    
-    this.bsSelected = bsSelected;
-    this.flags = flags = SmilesSearch.addFlags(flags,  comment == null ? "" : comment.toUpperCase());
+
+    this.bsSelected = BS.copy(bsSelected);
+    this.flags = flags = SmilesSearch.addFlags(flags,
+        comment == null ? "" : comment.toUpperCase());
     if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO)
       return getBioSmiles(bsSelected, comment, flags);
-    openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
-    addAtomComment = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
-    aromaticDouble =  ((flags & JC.SMILES_AROMATIC_DOUBLE) == JC.SMILES_AROMATIC_DOUBLE);
+    openSMILES = ((flags
+        & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
+    addAtomComment = ((flags
+        & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
+    aromaticDouble = ((flags
+        & JC.SMILES_AROMATIC_DOUBLE) == JC.SMILES_AROMATIC_DOUBLE);
 
-    explicitH = ((flags & JC.SMILES_GEN_EXPLICIT_H) == JC.SMILES_GEN_EXPLICIT_H);
+    explicitH = ((flags
+        & JC.SMILES_GEN_EXPLICIT_H2_ONLY) == JC.SMILES_GEN_EXPLICIT_H2_ONLY
+            ? JC.SMILES_GEN_EXPLICIT_H2_ONLY
+            : (flags
+                & JC.SMILES_GEN_EXPLICIT_H_ALL) == JC.SMILES_GEN_EXPLICIT_H_ALL
+                    ? JC.SMILES_GEN_EXPLICIT_H_ALL
+                    : 0);
+
+    if (explicitH == JC.SMILES_GEN_EXPLICIT_H2_ONLY) {
+      BS bsHa = new BS();
+      for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
+          .nextSetBit(i + 1)) {
+        Node a = atoms[i];
+        if (a.getCovalentHydrogenCount() == 3 && (a.getCovalentBondCount() == 4)) {
+          boolean doIgnore = true;
+          bsHa.clearAll();
+          for (int j = a.getBondCount(); --j >= 0;) {
+            int aj = a.getBondedAtomIndex(j);
+            if (atoms[aj].getElementNumber() == 1) {
+              doIgnore = (atoms[aj].getElementNumber() == 1);
+              if (doIgnore)
+                bsHa.set(aj);
+              else
+                break;
+            }
+            if (doIgnore) {
+              bsIgnoreH.set(i);
+              bsSelected.andNot(bsHa);
+            }
+          }
+        }
+      }
+    }
+
     topologyOnly = ((flags & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
     getAromatic = !((flags & JC.SMILES_NO_AROMATIC) == JC.SMILES_NO_AROMATIC);
-    noStereo = ((flags & JC.SMILES_IGNORE_STEREOCHEMISTRY) ==  JC.SMILES_IGNORE_STEREOCHEMISTRY);
-    isPolyhedral = ((flags & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
+    noStereo = ((flags
+        & JC.SMILES_IGNORE_STEREOCHEMISTRY) == JC.SMILES_IGNORE_STEREOCHEMISTRY);
+    isPolyhedral = ((flags
+        & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
@@ -291,7 +338,7 @@ public class SmilesGenerator {
                                     boolean forceBrackets)
       throws InvalidSmilesException {
 
-    if (!explicitH && atom.getAtomicAndIsotopeNumber() == 1
+    if (explicitH == 0 && atom.getAtomicAndIsotopeNumber() == 1
         && atom.getEdges().length > 0)
       atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
     
@@ -303,10 +350,8 @@ public class SmilesGenerator {
     for (int i = bsSelected.nextSetBit(0); i >= 0 && iHypervalent < 0; i = bsSelected.nextSetBit(i + 1))
       if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral)
         iHypervalent = i;
-//    if (iHypervalent >= 0)
-  //    explicitH = true;
     bsIncludingH = BSUtil.copy(bsSelected);
-    if (!explicitH)
+    if (explicitH == 0)
       for (int j = bsSelected.nextSetBit(0); j >= 0; j = bsSelected
           .nextSetBit(j + 1)) {
         Node a = atoms[j];
@@ -363,11 +408,11 @@ public class SmilesGenerator {
         int pt = s.indexOf("^-");
         if (pt < 0)
           break;
-        s = s.substring(0, pt + 1) + keys.substring(i, i + 2) + s.substring(pt + 1);
+        s = s.substring(0, pt + 1) + keys.substring(i, i + 3).trim() + s.substring(pt + 1);
         i += 3;
       }
       } catch (Exception e) {
-        System.out.println("???");
+        e.printStackTrace();
         s = s0;
       }
     }
@@ -469,7 +514,7 @@ public class SmilesGenerator {
           Edge[] bb = ((Node) atomA).getEdges();
           for (int b = 0; b < bb.length; b++) {
             SimpleNode other;
-            if (bb[b].getCovalentOrder() != 1 || !explicitH && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
+            if (bb[b].getCovalentOrder() != 1 || explicitH == 0 && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
                 && other.getIsotopeNumber() == 0)
               continue;
             edges[j][edgeCount++] = bb[b];
@@ -558,7 +603,7 @@ public class SmilesGenerator {
       return null;
     ptAtom++;
     bsToDo.clear(atomIndex);
-    boolean includeHs = (atomIndex == iHypervalent || explicitH);
+    boolean includeHs = (atomIndex == iHypervalent || explicitH != 0 && !bsIgnoreH.get(atomIndex));
     boolean isExtension = (!bsSelected.get(atomIndex));
     int prevIndex = (prevAtom == null ? -1 : prevAtom.getIndex());
     boolean isAromatic = bsAromatic.get(atomIndex);
@@ -596,6 +641,7 @@ public class SmilesGenerator {
           bondPrev = bonds[i];
           continue;
         }
+        
         boolean isH = !includeHs
             && (atom1.getElementNumber() == 1 && atom1.getIsotopeNumber() == 0);
         if (!bsIncludingH.get(index1)) {
@@ -1071,7 +1117,7 @@ public class SmilesGenerator {
                                   SimpleNode[] stereo, int stereoFlag) {
     if (stereoFlag < 4)
       return "";
-    if (atomIndex >= 0 && stereoFlag == 4 && (atom.getElementNumber()) == 6) {
+    if (explicitH == 0 && atomIndex >= 0 && stereoFlag == 4 && (atom.getElementNumber()) == 6) {
       // do a quick check for two of the same group for tetrahedral carbon only
       String s = "";
       for (int i = 0; i < 4; i++) {
@@ -1105,7 +1151,7 @@ public class SmilesGenerator {
     //System.out.println("level=" + level + " atomIndex=" + atomIndex + " atom=" + atom + " s=" + s);
     int n = ((Node)atom).getAtomicAndIsotopeNumber();
     int nx = atom.getCovalentBondCount();
-    int nh = (n == 6 && !explicitH ? ((Node) atom).getCovalentHydrogenCount() : 0);
+    int nh = (n == 6 && explicitH != 0 ? ((Node) atom).getCovalentHydrogenCount() : 0);
     // only carbon or singly-connected atoms are checked
     // for C we use nh -- CH3, for example.
     // for other atoms, we use number of bonds.
