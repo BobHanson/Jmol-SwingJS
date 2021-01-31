@@ -1609,13 +1609,18 @@ public class Viewer extends JmolViewer
    * 
    * @param fileName
    * @param flags
-   *        1=pdbCartoons, 2=no scripting, 4=append, 8=fileOpen
+   *        1=pdbCartoons, 2=no scripting, 4=append, 8=fileOpen, 16=fileDropped
    * 
    */
   @Override
   public void openFileAsyncSpecial(String fileName, int flags) {
-    getScriptManager().openFileAsync(fileName, flags);
+    getScriptManager().openFileAsync(fileName, flags, false);
   }
+
+  public void openFileDropped(String fname, boolean checkDims) {
+    getScriptManager().openFileAsync(fname, JmolScriptManager.FILE_DROPPED, checkDims);
+  }
+
 
   /**
    * 

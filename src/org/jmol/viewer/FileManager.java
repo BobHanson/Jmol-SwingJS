@@ -1131,28 +1131,16 @@ public class FileManager implements BytePoster {
   private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0"; //0x14 0 0 0 == "20-byte character string follows"
   public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
   public static final String JPEG_CONTINUE_STRING = " #Jmol...\0";
-  
-
-  
-  public static String determineSurfaceTypeIs(InputStream is) {
-    // drag-drop only
-    BufferedReader br;
-    try {
-      br = Rdr.getBufferedReader(new BufferedInputStream(is), "ISO-8859-1");
-    } catch (IOException e) {
-      return null;
-    }
-    return determineSurfaceFileType(br);
-  }
-  
+    
   public static boolean isScriptType(String fname) {
     return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";pse;spt;png;pngj;jmol;zip;");
   }
 
-  public static boolean isSurfaceType(String fname) {
-    return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";jvxl;kin;o;msms;map;pmesh;mrc;efvet;cube;obj;dssr;bcif;");
-  }
-  
+// was simplistic check from FileDropper
+//  public static boolean isSurfaceType(String fname) {
+//    return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";jvxl;kin;o;msms;map;pmesh;mrc;efvet;cube;obj;dssr;bcif;");
+//  }
+//  
   public static String determineSurfaceFileType(BufferedReader bufferedReader) {
     // drag-drop and isosurface command only
     // JVXL should be on the FIRST line of the file, but it may be 

@@ -39,18 +39,13 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.List;
 
+import org.jmol.api.JmolDropEditor;
+import org.jmol.api.JmolStatusListener;
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.PT;
 import javajs.util.SB;
-
-import javax.swing.JOptionPane;
-
-import org.jmol.api.JmolDropEditor;
-import org.jmol.api.JmolScriptManager;
-import org.jmol.api.JmolStatusListener;
-import org.jmol.i18n.GT;
-import org.jmol.util.Logger;
-import org.jmol.viewer.FileManager;
-import org.jmol.viewer.Viewer;
 
 /**
  * A simple Dropping class to allow files to be dragged onto a target. It
@@ -118,29 +113,7 @@ public class FileDropper implements DropTargetListener {
       fname = (fname.startsWith("/") ? "file://" : "file:///") + fname;
     if (!vwr.setStatusDragDropped(0, x, y, fname))
       return;
-    
-    int flags = JmolScriptManager.PDB_CARTOONS;
-    boolean isScript = FileManager.isScriptType(fname);
-    boolean isSurface = FileManager.isSurfaceType(fname);
-    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT.$("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
-    case JOptionPane.CANCEL_OPTION:
-      return;
-    case JOptionPane.OK_OPTION:
-      break;
-    default:
-      flags += JmolScriptManager.IS_APPEND; // append
-      break;
-    }
-    if (statusListener != null) {
-      try {
-        String data = vwr.fm.getEmbeddedFileState(fname, false, "state.spt");
-        if (data.indexOf("preferredWidthHeight") >= 0)
-          vwr.sm.resizeInnerPanelString(data);
-      } catch (Throwable e) {
-        // ignore
-      }
-    }
-    vwr.openFileAsyncSpecial(fname, flags);
+    vwr.openFileDropped(fname, statusListener != null);
   }
 
   private void loadFiles(List<File> fileList) {
