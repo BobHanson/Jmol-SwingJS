@@ -124,6 +124,18 @@ public class Escape {
       return eAS((String[]) x, true);
     if (x instanceof M34) 
       return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
+    if (AU.isAFF(x)) {
+      // for isosurface functionXY
+      float[][] ff = (float[][])x;
+      SB sb = new SB().append("[");
+      String sep = "";
+      for (int i = 0; i < ff.length; i++) {
+        sb.append(sep).append(eAF(ff[i]));
+        sep = ",";
+      }
+      sb.append("]");
+      return sb.toString();
+    }
     if (x instanceof A4) {
       A4 a = (A4) x;
       return "{" + a.x + " " + a.y + " " + a.z + " " + (float) (a.angle * 180d/Math.PI) + "}";  

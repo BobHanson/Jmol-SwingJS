@@ -1231,7 +1231,7 @@ public class MathExt {
     }
 
     P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
-    P4 plane2 = mp.planeValue(x2);
+    P4 plane2 = ScriptMathProcessor.planeValue(x2);
     float f = Float.NaN;
     try {
       if (isDist) {
@@ -1327,7 +1327,7 @@ public class MathExt {
         }
       }
       P3 pt1 = mp.ptValue(x1, null);
-      P4 plane1 = mp.planeValue(x1);
+      P4 plane1 = ScriptMathProcessor.planeValue(x1);
       if (isDist) {
         if (plane2 != null && x3 != null)
           f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
@@ -2645,7 +2645,7 @@ public class MathExt {
         || args.length == 0 || args.length > 4)
       return false;
     P3 pt1, pt2, pt3;
-    P4 plane = mp.planeValue(args[0]);
+    P4 plane = ScriptMathProcessor.planeValue(args[0]);
     V3 norm, vTemp;
     switch (args.length) {
     case 1:
@@ -2662,7 +2662,7 @@ public class MathExt {
       if (tok == T.intersection) {
         // intersection(plane, plane)
         // intersection(point, plane)
-        P4 plane1 = mp.planeValue(args[1]);
+        P4 plane1 = ScriptMathProcessor.planeValue(args[1]);
         if (plane1 == null)
           return false;
         pt3 = new P3();
@@ -2696,7 +2696,7 @@ public class MathExt {
           return mp.addXStr("");
         V3 vLine = V3.newV(pt2);
         vLine.normalize();
-        P4 plane2 = mp.planeValue(args[2]);
+        P4 plane2 = ScriptMathProcessor.planeValue(args[2]);
         if (plane2 != null) {
           // intersection(ptLine, vLine, plane)
           pt3 = new P3();
@@ -3061,7 +3061,7 @@ public class MathExt {
         }
       }
       P3 pt1 = mp.ptValue(args[1], null);
-      p4 = mp.planeValue(args[0]);
+      p4 = ScriptMathProcessor.planeValue(args[0]);
       if (pt1 != null)
         q = Quat.getQuaternionFrame(P3.new3(0, 0, 0), pt0, pt1);
       else

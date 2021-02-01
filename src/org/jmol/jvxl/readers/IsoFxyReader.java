@@ -45,8 +45,7 @@ class IsoFxyReader extends AtomDataReader {
     precalculateVoxelData = false;
     params.fullyLit = true;
     isPlanarMapping = (params.thePlane != null || params.state == Parameters.STATE_DATA_COLORED);
-    if (params.func != null)
-      volumeData.sr = this;
+    volumeData.sr = (params.func == null ? null : this);
   }
 
   private float[][] data;
@@ -107,10 +106,11 @@ class IsoFxyReader extends AtomDataReader {
   private void setPlane(int x, float[] plane) {
       for (int y = 0, ptyz = 0; y < nPointsY; ++y)
         for (int z = 0; z < nPointsZ; ++z)
-          plane[ptyz++] = getValue(x, y, z);
+          plane[ptyz++] = getValue(x, y, z, 0);
   }
 
-  protected float getValue(int x, int y, int z) {
+  @Override
+  public float getValue(int x, int y, int z, int pxyz) {
     float value;
     if (data == null) {
       value = evaluateValue(x, y, z);

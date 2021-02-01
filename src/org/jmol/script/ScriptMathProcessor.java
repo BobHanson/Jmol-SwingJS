@@ -1583,7 +1583,7 @@ public class ScriptMathProcessor {
     return null;
   }
 
-  public P4 planeValue(T x) {
+  public static P4 planeValue(T x) {
     Object pt;
     switch (x.tok) {
     case T.point4f:
@@ -1596,19 +1596,13 @@ public class ScriptMathProcessor {
         float f = (isMinus ? -1 : 1);
         if (isMinus)
           s = s.substring(1);
-        switch (s.length() < 2 ? "" : s.substring(0, 2)) {
-        case "x=":
-          return P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
-        case "y=":
-          return P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
-        case "z=":
-          return P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
-        case "xy":
-          return P4.new4(1, 1, 0, f);
-        case "yz":
-          return P4.new4(0, 1, 1, f);
-        case "xz":
-          return P4.new4(1, 0, 1, f);
+        switch ("xy yz xz x= y= z=".indexOf(s.substring(0,2))) {
+        case 0:return P4.new4(1, 1, 0, f);
+        case 3:return P4.new4(0, 1, 1, f);
+        case 6:return P4.new4(1, 0, 1, f);
+        case 9:return P4.new4(1, 0, 0, -f * PT.parseFloat(s));
+        case 12:return P4.new4(0, 1, 0, -f * PT.parseFloat(s));
+        case 15:return P4.new4(0, 0, 1, -f * PT.parseFloat(s));
         }
         break;
     default:

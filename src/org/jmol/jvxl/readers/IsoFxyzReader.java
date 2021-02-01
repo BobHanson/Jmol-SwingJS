@@ -37,7 +37,7 @@ class IsoFxyzReader extends IsoFxyReader {
   }
 
   @Override
-  protected float getValue(int x, int y, int z) {
+  public float getValue(int x, int y, int z, int xyz) {
     return (data == null ? evaluateValue(x, y, z) : data[x][y][z]);
   }
 

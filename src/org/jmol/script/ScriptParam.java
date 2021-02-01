@@ -275,9 +275,6 @@ abstract public class ScriptParam extends ScriptError {
       i++;
     if (i < slen) {
       switch (getToken(i).tok) {
-      case T.point4f:
-        plane = P4.newPt((P4) theToken.value);
-        break;
       case T.dollarsign:
         String id = objectNameParameter(++i);
         if (chk)
@@ -301,13 +298,8 @@ abstract public class ScriptParam extends ScriptError {
         break;
       case T.identifier:
       case T.string:
-        String str = paramAsStr(i);
-        if (str.equalsIgnoreCase("xy"))
-          plane = P4.new4(0, 0, isNegated ? -1 : 1, 0);
-        else if (str.equalsIgnoreCase("xz"))
-          plane = P4.new4(0, isNegated ? -1 : 1, 0, 0);
-        else if (str.equalsIgnoreCase("yz"))
-          plane = P4.new4(isNegated ? -1 : 1, 0, 0, 0);
+      case T.point4f:
+        plane = ScriptMathProcessor.planeValue(theToken);
         break;
       case T.leftbrace:
       case T.point3f:
@@ -456,7 +448,7 @@ abstract public class ScriptParam extends ScriptError {
         return null;
       }
       int multiplier = 1;
-      out: for (int i = index; i < st.length; i++) {
+      out: for (int i = index; i < slen; i++) {
         switch (getToken(i).tok) {
         case T.leftbrace:
         case T.comma:
