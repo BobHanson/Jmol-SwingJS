@@ -214,7 +214,7 @@ class IsoSolventReader extends AtomDataReader {
       if (havePlane || !isMapData) {
         // when we have a solvent or molecular calculation, we can have a problem if we go too low in 
         // resolution in any one direction. This avoids the problem. "1.5" was determined empirically using 1u19.
-        float r = Math.max(params.solventExtendedAtomRadius, params.solventRadius);    
+        float r = Math.max(1f, Math.max(params.solventExtendedAtomRadius, params.solventRadius));    
         float minPtsPerAng = (r >= 1 ? 1.5f / r : 0); 
         if (minPtsPerAng > 0)
           System.out.println("IsoSolventReader.minPtsPerAng=" + minPtsPerAng);

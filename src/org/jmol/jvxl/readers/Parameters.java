@@ -562,13 +562,19 @@ public class Parameters {
       break;
     case Parameters.SURFACE_MOLECULAR:
       calculationType = "molecular surface with radius " + solventRadius;
+      if (minSet == 0)
+        minSet = 50;
       break;
     case Parameters.SURFACE_SOLVENT:
       calculationType = "solvent-excluded surface with radius " + solventRadius;
+      if (minSet == 0)
+        minSet = 50;
       break;
     case Parameters.SURFACE_SASURFACE:
       calculationType = "solvent-accessible surface with radius "
           + solventRadius;
+      if (minSet == 0)
+        minSet = 50;
       break;
     }
 

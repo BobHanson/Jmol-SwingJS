@@ -119,6 +119,8 @@ import java.util.Comparator;
 
 
 import javajs.util.BS;
+
+import org.jmol.util.BSUtil;
 //import org.jmol.util.Escape;
 import org.jmol.util.MeshSurface;
 
@@ -351,6 +353,7 @@ public class MeshData extends MeshSurface {
       return Float.valueOf((float) v[0]);
     //System.out.println("MeshData calcVolume " + Escape.e(v));
     if (thisSet != null) {
+      thisSet.and(BSUtil.newBitSet2(0, v.length));
       double[] v1 = new double[thisSet.cardinality()];
       for (int pt = 0, i = thisSet.nextSetBit(0); i >= 0; i = thisSet.nextSetBit(i + 1)) {
         v1[pt++] = v[i];
