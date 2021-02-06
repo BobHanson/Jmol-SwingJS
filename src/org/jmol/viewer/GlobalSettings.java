@@ -363,7 +363,7 @@ public class GlobalSettings {
     setO("nihResolverFormat", nihResolverFormat);
     setO("pubChemFormat", pubChemFormat);
     setB("showUnitCellDetails", showUnitCellDetails);
-    setB("solventProbe", solventOn);
+    setB("solventProbe", dotSolvent);
     setF("solventProbeRadius", solventProbeRadius);
     setB("ssbondsBackbone", ssbondsBackbone);
     setF("starWidth", starWidth);
@@ -482,9 +482,9 @@ public class GlobalSettings {
   boolean allowRotateSelected = false;
   boolean allowMoveAtoms = false;
 
-  //solvent
+  //solvent for DOTS only
 
-  boolean solventOn = false;
+  boolean dotSolvent = false;
 
   //measurements
 

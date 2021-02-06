@@ -80,6 +80,8 @@ public class ScriptContext {
   int theTok;
 
   private int[] pointers;
+
+  public String why;
   
   ScriptContext() {
     id = ++contextCount;

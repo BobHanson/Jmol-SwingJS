@@ -208,7 +208,7 @@ public class Dots extends AtomShape {
       setRadius = rd.value;
       //$FALL-THROUGH$
     default:
-      rd.valueExtended = vwr.getCurrentSolventProbeRadius();
+      rd.valueExtended = (vwr.getBoolean(T.solventprobe) ? vwr.getFloat(T.solventproberadius) : 0);
     }
 
     float maxRadius;

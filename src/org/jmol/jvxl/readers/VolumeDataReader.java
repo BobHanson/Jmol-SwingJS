@@ -176,7 +176,7 @@ class VolumeDataReader extends SurfaceReader {
    * @param max
    * @param ptsPerAngstrom
    * @param gridMax
-   * @param minPointsPerAngstrom -- added, but not necessary
+   * @param minPointsPerAngstrom -- necessary for highly prolate models such a 6ef8
    * @return  number of grid points total
    */
   protected int setVoxelRange(int index, float min, float max,

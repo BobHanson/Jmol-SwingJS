@@ -5538,8 +5538,8 @@ public class Viewer extends JmolViewer
       return g.slabByMolecule;
     case T.smartaromatic:
       return g.smartAromatic;
-    case T.solvent:
-      return g.solventOn;
+    case T.solventprobe:
+      return g.dotSolvent;
     case T.ssbondsbackbone:
       return g.ssbondsBackbone;
     case T.strutsmultiple:
@@ -6719,10 +6719,10 @@ public class Viewer extends JmolViewer
       break;
     case T.solvent:
       key = "solventProbe";
-      g.solventOn = value;
+      g.dotSolvent = value;
       break;
     case T.solventprobe:
-      g.solventOn = value;
+      g.dotSolvent = value;
       break;
     case T.allowrotateselected:
       // 11.1.14
@@ -7078,10 +7078,6 @@ public class Viewer extends JmolViewer
       return false;
     return (tm.isNavigating() && !g.hideNavigationPoint
         || g.showNavigationPointAlways || getInMotion(true));
-  }
-
-  public float getCurrentSolventProbeRadius() {
-    return g.solventOn ? g.solventProbeRadius : 0;
   }
 
   @Override

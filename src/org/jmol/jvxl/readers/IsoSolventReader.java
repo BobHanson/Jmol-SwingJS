@@ -49,6 +49,94 @@ import org.jmol.api.AtomIndexIterator;
 import javajs.util.BS;
 import org.jmol.jvxl.data.MeshData;
 
+/**
+ * Jmol 14.31.32/15.1.32 
+ * 
+ * Eric Martz has noted that for 6ef8, which has boundbox dimensions 36 x 36 x 150 Angstroms,
+ * auto resolution is producing very distorted results. The problem is that 
+ * 
+ * Bob Hanson 2021.02.06
+ * 
+ * 
+ * isosurface SOLVENT 1.4; isosurface MOLECULAR
+ * 
+ * Prior to Jmol 12.1.29, all isosurface SOLVENT/MOLECULAR calculations
+ * only checked for pairs of atoms in calculating troughs. This was
+ * not satisfactory; a full analysis of molecular surfaces
+ * requires that the "ball" rolling around a pair of atoms 
+ * may hit a third atom. If this is the case, then the surface area will
+ * be somewhat less, and the valleys produced will be shallower.
+ * 
+ * Starting with Jmol 12.1.29, we take a new approach -- a modified MSMS
+ * algorithm based loosely on:
+ *    
+ *    Sanner, M.F., Spehner, J.-C., and Olson, A.J. (1996) 
+ *    Reduced surface: an efficient way to compute molecular surfaces. 
+ *    Biopolymers, Vol. 38., (3), 305-320.
+ *    
+ * I have no idea how the MSMS program actually works; all I have is what
+ * is published in the above account. 
+ * 
+ * Similarly to this algorithm, we catalog edges (two-point contacts) and
+ * faces (three-point contacts). However, we never calculate a "reduced surface"
+ * and we never associate specific triangulation vertices with specific atoms.
+ * Instead, we generate a field of values that measure the closest distance to
+ * the surface for a grid of points. 
+ * 
+ * Using a novel nonlinear Marching Cubes algorithm, we use this set of values
+ * to generate exact positions of points on the surface. 
+ * 
+ * A bonus is that we can calculate interior cavities automatically at the same time. 
+ * (They are inside-out and have negative volume. They can be visualized using
+ * the SET option of the ISOSURFACE command.)
+ * 
+ * We can also calculate fragments of isosurfaces as well as external cavities. 
+ * 
+ * The calculation is quite fast. Note that for comparison with MSMS,
+ * you will need to generate a .xyzrn file for MSMS input. This can be
+ * done using the writeXyzrn script found in the drawMsMs.spt script:
+ * 
+ * http://chemapps.stolaf.edu/jmol/docs/examples-12/drawMsMs.spt
+ * 
+ * That script also includes  drawMsMs(fileroot), which draws the resulting
+ * isosurface from MsMs in red (sphere), white (face), and blue (toroidal).
+ * 
+ * Bob Hanson, 11/31/2010
+ *
+ * 
+ * The surface fragment idea:
+ * 
+ * ISOSURFACE solvent|sasurface both work on the SELECTED atoms, thus
+ * allowing for a subset of the molecule to be involved. But in that
+ * case we don't want to be creating a surface that goes right through
+ * another atom. Rather, what we want (probably) is just the portion
+ * of the OVERALL surface that involves these atoms. 
+ * 
+ * The addition of Mesh.voxelValue[] means that we can specify any 
+ * voxel we want to NOT be excluded (NaN). Here we first exclude any 
+ * voxel that would have been INSIDE a nearby atom. This will take care
+ * of any portion of the van der Waals surface that would be there. Then
+ * we exclude any special-case voxel that is between two nearby atoms. 
+ *  
+ *  Bob Hanson 13 Jul 2006
+ *     
+ * Jmol cavity rendering. Tim Driscoll suggested "filling a 
+ * protein with foam. Here you go...
+ * 
+ * 1) Use a dot-surface extended x.xx Angstroms to define the 
+ *    outer envelope of the protein.
+ * 2) Identify all voxel points outside the protein surface (v > 0) 
+ *    but inside the envelope (nearest distance to a dot > x.xx).
+ * 3) First pass -- create the protein surface.
+ * 4) Replace solvent atom set with "foam" ball of the right radius
+ *    at the voxel vertex points.
+ * 5) Run through a second time using these "atoms" to generate 
+ *    the surface around the foam spheres. 
+ *    
+ *    Bob Hanson 3/19/07
+ * 
+ */
+
 class IsoSolventReader extends AtomDataReader {
 
   IsoSolventReader(){}
@@ -59,86 +147,6 @@ class IsoSolventReader extends AtomDataReader {
   }
 
   ///// solvent-accessible, solvent-excluded surface //////
-
-  /*
-   * isosurface SOLVENT 1.4; isosurface MOLECULAR
-   * 
-   * Prior to Jmol 12.1.29, all isosurface SOLVENT/MOLECULAR calculations
-   * only checked for pairs of atoms in calculating troughs. This was
-   * not satisfactory; a full analysis of molecular surfaces
-   * requires that the "ball" rolling around a pair of atoms 
-   * may hit a third atom. If this is the case, then the surface area will
-   * be somewhat less, and the valleys produced will be shallower.
-   * 
-   * Starting with Jmol 12.1.29, we take a new approach -- a modified MSMS
-   * algorithm based loosely on:
-   *    
-   *    Sanner, M.F., Spehner, J.-C., and Olson, A.J. (1996) 
-   *    Reduced surface: an efficient way to compute molecular surfaces. 
-   *    Biopolymers, Vol. 38., (3), 305-320.
-   *    
-   * I have no idea how the MSMS program actually works; all I have is what
-   * is published in the above account. 
-   * 
-   * Similarly to this algorithm, we catalog edges (two-point contacts) and
-   * faces (three-point contacts). However, we never calculate a "reduced surface"
-   * and we never associate specific triangulation vertices with specific atoms.
-   * Instead, we generate a field of values that measure the closest distance to
-   * the surface for a grid of points. 
-   * 
-   * Using a novel nonlinear Marching Cubes algorithm, we use this set of values
-   * to generate exact positions of points on the surface. 
-   * 
-   * A bonus is that we can calculate interior cavities automatically at the same time. 
-   * (They are inside-out and have negative volume. They can be visualized using
-   * the SET option of the ISOSURFACE command.)
-   * 
-   * We can also calculate fragments of isosurfaces as well as external cavities. 
-   * 
-   * The calculation is quite fast. Note that for comparison with MSMS,
-   * you will need to generate a .xyzrn file for MSMS input. This can be
-   * done using the writeXyzrn script found in the drawMsMs.spt script:
-   * 
-   * http://chemapps.stolaf.edu/jmol/docs/examples-12/drawMsMs.spt
-   * 
-   * That script also includes  drawMsMs(fileroot), which draws the resulting
-   * isosurface from MsMs in red (sphere), white (face), and blue (toroidal).
-   * 
-   * Bob Hanson, 11/31/2010
-   *
-   * 
-   * The surface fragment idea:
-   * 
-   * ISOSURFACE solvent|sasurface both work on the SELECTED atoms, thus
-   * allowing for a subset of the molecule to be involved. But in that
-   * case we don't want to be creating a surface that goes right through
-   * another atom. Rather, what we want (probably) is just the portion
-   * of the OVERALL surface that involves these atoms. 
-   * 
-   * The addition of Mesh.voxelValue[] means that we can specify any 
-   * voxel we want to NOT be excluded (NaN). Here we first exclude any 
-   * voxel that would have been INSIDE a nearby atom. This will take care
-   * of any portion of the van der Waals surface that would be there. Then
-   * we exclude any special-case voxel that is between two nearby atoms. 
-   *  
-   *  Bob Hanson 13 Jul 2006
-   *     
-   * Jmol cavity rendering. Tim Driscoll suggested "filling a 
-   * protein with foam. Here you go...
-   * 
-   * 1) Use a dot-surface extended x.xx Angstroms to define the 
-   *    outer envelope of the protein.
-   * 2) Identify all voxel points outside the protein surface (v > 0) 
-   *    but inside the envelope (nearest distance to a dot > x.xx).
-   * 3) First pass -- create the protein surface.
-   * 4) Replace solvent atom set with "foam" ball of the right radius
-   *    at the voxel vertex points.
-   * 5) Run through a second time using these "atoms" to generate 
-   *    the surface around the foam spheres. 
-   *    
-   *    Bob Hanson 3/19/07
-   * 
-   */
 
   private float cavityRadius;
   private float envelopeRadius;
@@ -204,9 +212,12 @@ class IsoSolventReader extends AtomDataReader {
             envelopeRadius);
       setHeader("solvent/molecular surface", params.calculationType);
       if (havePlane || !isMapData) {
-        // when we have molecular or solvent calculation, we can have a problem if we go too low in 
-        // resolution. this avoids the problem. "1.5" was determined empirically using 1u19.
-        float minPtsPerAng = 0;//(doCalculateTroughs && params.solventRadius >= 1 ? 1.5f / solventRadius : 0); 
+        // when we have a solvent or molecular calculation, we can have a problem if we go too low in 
+        // resolution in any one direction. This avoids the problem. "1.5" was determined empirically using 1u19.
+        float r = Math.max(params.solventExtendedAtomRadius, params.solventRadius);    
+        float minPtsPerAng = (r >= 1 ? 1.5f / r : 0); 
+        if (minPtsPerAng > 0)
+          System.out.println("IsoSolventReader.minPtsPerAng=" + minPtsPerAng);
         setRanges(params.solvent_ptsPerAngstrom, params.solvent_gridMax, minPtsPerAng);
         volumeData.getYzCount();
         margin = volumeData.maxGrid * 2.0f;

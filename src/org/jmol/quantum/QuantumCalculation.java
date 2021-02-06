@@ -155,8 +155,8 @@ abstract public class QuantumCalculation {
      // atoms from the rendering of an MO. This could allow for
      // a subset of the MO -- one atom's contribution, for example -- to be rendered.
      // Maybe a first time this has ever been done?
-      
-
+    if (atoms == null)
+      return; // NciCalculation !promolecular
     qmAtoms = new QMAtom[renumber ? bsSelected.cardinality() : xyz.length];
     boolean isAll = (bsSelected == null);
     int i0 = (isAll ? qmAtoms.length - 1 : bsSelected.nextSetBit(0));

@@ -1473,6 +1473,7 @@ public class ScriptEval extends ScriptExpr {
     ScriptContext context = new ScriptContext();
     if (debugHigh)
       Logger.info("creating context " + context.id + " for " + why + " path=" + contextPath);
+    context.why = why;
     context.scriptLevel = scriptLevel;
     context.parentContext = thisContext;
     context.contextPath = contextPath;
@@ -2035,6 +2036,7 @@ public class ScriptEval extends ScriptExpr {
     String key = pc + "_" + i + "_" + filename;
     String cacheName;
     if (thisContext == null) {
+      // add temp context
       pushContext(null, "loadFileAsync");
     }
     if (thisContext.htFileCache == null) {
@@ -2044,6 +2046,10 @@ public class ScriptEval extends ScriptExpr {
     if (cacheName != null && cacheName.length() > 0) {
       // file has been loaded
       fileLoadThread = null;
+      if (thisContext.why == "loadFileAsync") {
+        // remove temp context
+        popContext(false, false);
+      }
       //no, problems with isosurface "?" map "?": popContext(false, false);
       vwr.queueOnHold = false;
       if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))

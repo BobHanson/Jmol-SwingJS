@@ -1591,20 +1591,33 @@ public class ScriptMathProcessor {
     case T.varray:
       break;
     case T.string:
-        String s = (String) x.value;
-        boolean isMinus = s.startsWith("-");
-        float f = (isMinus ? -1 : 1);
-        if (isMinus)
-          s = s.substring(1);
-        switch ("xy yz xz x= y= z=".indexOf(s.substring(0,2))) {
-        case 0:return P4.new4(1, 1, 0, f);
-        case 3:return P4.new4(0, 1, 1, f);
-        case 6:return P4.new4(1, 0, 1, f);
-        case 9:return P4.new4(1, 0, 0, -f * PT.parseFloat(s));
-        case 12:return P4.new4(0, 1, 0, -f * PT.parseFloat(s));
-        case 15:return P4.new4(0, 0, 1, -f * PT.parseFloat(s));
-        }
+      String s = (String) x.value;
+      boolean isMinus = s.startsWith("-");
+      float f = (isMinus ? -1 : 1);
+      if (isMinus)
+        s = s.substring(1);
+      P4 p4 = null;
+      switch (s.length() < 2 ? -1
+          : "xy yz xz x= y= z=".indexOf(s.substring(0, 2))) {
+      case 0:
+        return P4.new4(1, 1, 0, f);
+      case 3:
+        return P4.new4(0, 1, 1, f);
+      case 6:
+        return P4.new4(1, 0, 1, f);
+      case 9:
+        p4 = P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
         break;
+      case 12:
+        p4 = P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
+        break;
+      case 15:
+        p4 = P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
+        break;
+      }
+      if (p4 != null && !Float.isNaN(p4.w))
+        return p4;
+      break;
     default:
       return null;
     }
