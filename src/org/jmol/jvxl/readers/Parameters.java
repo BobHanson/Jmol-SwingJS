@@ -132,6 +132,7 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.V3;
 
 import org.jmol.viewer.JC;
@@ -865,6 +866,7 @@ public class Parameters {
   public BS surfaceAtoms;
   public Object[] filesData; // originally [ String[] names, float[] factors ]
   public float[] probeValues;
+  public SB sbOut;
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
     if (!colorDensity)

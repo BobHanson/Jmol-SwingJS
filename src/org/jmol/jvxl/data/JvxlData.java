@@ -178,6 +178,7 @@ public class JvxlData {
   public P3 fixedLattice;
   public String baseColor;
   public float integration = Float.NaN;
+  public SB sbOut;
 
   public void clear() {
     allowVolumeRender = true;

@@ -3081,7 +3081,11 @@ public class IsoExt extends ScriptExt {
       }
       if (s != null && !isSilent)
         showString(s);
+      s = (String) getShapeProperty(iShape, "output");
+      if (s != null && !isSilent)
+        showString(s);
     }
+    
     if (translucency != null)
       setShapeProperty(iShape, "translucency", translucency);
     setShapeProperty(iShape, "clear", null);

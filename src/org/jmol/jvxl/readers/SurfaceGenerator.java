@@ -141,6 +141,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.Rdr;
+import javajs.util.SB;
 import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.P3;
@@ -1020,7 +1021,10 @@ public class SurfaceGenerator {
   private void generateSurface() {       
     if (++params.state != Parameters.STATE_DATA_READ)
       return;
-    setReader();    
+    setReader();
+    if (params.sbOut == null) 
+      params.sbOut = new SB();
+    jvxlData.sbOut = params.sbOut;
     boolean haveMeshDataServer = (meshDataServer != null);
     if (params.colorBySign)
       params.isBicolorMap = true;

@@ -157,7 +157,7 @@ public class JvxlXmlReader extends VolumeFileReader {
   
   @Override
   protected void readParameters() throws Exception {
-    String s = xr.getXmlData("jvxlFileTitle", null, false, false);
+    String s = xr.getXmlDataLF("jvxlFileTitle", null, false, false, true);
     jvxlFileHeaderBuffer = SB.newS(s == null ? "" : s);
     xr.toTag("jvxlVolumeData");
     String data = tempDataXml = xr.getXmlData("jvxlVolumeData", null, true, false);

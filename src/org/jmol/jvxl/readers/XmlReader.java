@@ -78,6 +78,10 @@ public class XmlReader {
    */
   public String getXmlData(String name, String data, boolean withTag, boolean allowSelfCloseOption)
       throws Exception {
+    return getXmlDataLF(name, data, withTag, allowSelfCloseOption, false);
+  }
+  public String getXmlDataLF(String name, String data, boolean withTag, boolean allowSelfCloseOption, boolean addLF)
+      throws Exception {
     // crude
     String closer = "</" + name + ">";
     String tag = "<" + name;
@@ -93,13 +97,18 @@ public class XmlReader {
         return null;
       }
       sb.append(line);
+      if (addLF)
+        sb.append("\n");
       boolean selfClosed = false;
       int pt = line.indexOf("/>");
       int pt1 = line.indexOf(">");
       if (pt1 < 0 || pt == pt1 - 1)
         selfClosed = allowSelfCloseOption;
-      while (line.indexOf(closer) < 0 && (!selfClosed  || line.indexOf("/>") < 0))
+      while (line.indexOf(closer) < 0 && (!selfClosed  || line.indexOf("/>") < 0)) {
         sb.append(line = br.readLine());
+        if (addLF)
+          sb.append("\n");
+      }
       data = sb.toString();
     }
     return extractTag(data, tag, closer, withTag);

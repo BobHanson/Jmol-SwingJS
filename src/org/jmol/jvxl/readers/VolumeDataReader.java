@@ -219,10 +219,10 @@ class VolumeDataReader extends SurfaceReader {
     }
     d = volumeData.volumetricVectorLengths[index] = 1f / ptsPerAngstrom;
     voxelCounts[index] = nGrid;// + ((dataType & Parameters.IS_SOLVENTTYPE) != 0 ? 3 : 0);
-    if (!isQuiet)
-      Logger.info("isosurface resolution for axis " + (index + 1) + " set to "
+    if (params.sbOut != null)
+      params.sbOut.append("isosurface resolution for axis " + (index + 1) + " set to "
           + ptsPerAngstrom + " points/Angstrom; " + voxelCounts[index]
-          + " voxels");
+          + " voxels\n");
     switch (index) {
     case 0:
       volumetricVectors[0].set(d, 0, 0);
@@ -239,7 +239,8 @@ class VolumeDataReader extends SurfaceReader {
         eccentricityMatrix.rotate(volumetricOrigin);
       if (center != null && !Float.isNaN(center.x))
         volumetricOrigin.add(center);
-      
+      if (params.sbOut != null)
+        params.sbOut.append((voxelCounts[0] * voxelCounts[1] * voxelCounts[2]) + " voxels total\n");
       //System.out.println("/*volumeDatareader*/draw vector " + volumetricOrigin + " {" 
         // +volumetricVectors[0].x * voxelCounts[0] 
         //  + " " + volumetricVectors[1].y *voxelCounts[1] 

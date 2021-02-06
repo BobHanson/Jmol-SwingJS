@@ -963,6 +963,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return (m == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(m, false));
     if (m == null)
       return null;//"no current isosurface";
+    if (property == "output") {
+      return (m.jvxlData.sbOut == null && m.jvxlData.jvxlFileTitle == null ? null : 
+        m.jvxlData.jvxlFileTitle + "\n" + (m.jvxlData.sbOut == null ? "" : m.jvxlData.sbOut.toString()));
+    }
     if (property == "cutoff")
       return Float.valueOf(jvxlData.cutoff);
     if (property == "minMaxInfo")
