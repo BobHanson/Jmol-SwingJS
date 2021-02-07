@@ -190,8 +190,10 @@ class VolumeDataReader extends SurfaceReader {
     }
     float range = max - min;
     float resolution = params.resolution;
-    if (resolution != Float.MAX_VALUE)
+    if (resolution != Float.MAX_VALUE) {
       ptsPerAngstrom = resolution;
+      minPointsPerAngstrom = 0;
+    }
       
     nGrid = (int) Math.floor(range * ptsPerAngstrom) + 1;
     if (nGrid > gridMax) {
