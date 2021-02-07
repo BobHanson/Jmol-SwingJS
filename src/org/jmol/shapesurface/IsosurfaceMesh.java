@@ -1043,10 +1043,11 @@ public class IsosurfaceMesh extends Mesh {
       if (valid != null) {
         info.put("allVertices", info.get("vertices"));
         info.put("vertices", valid);
-        if (vvs != null) {
+        Object values = info.get("vertexValues");
+        if (values != null) {
           float[] v = getValidValues(bs);
-          info.put("allValues",  info.get("values"));
-          info.put("values", v);
+          info.put("allValues",  values);
+          info.put("vertexValues", v);
         }
       }
     }
