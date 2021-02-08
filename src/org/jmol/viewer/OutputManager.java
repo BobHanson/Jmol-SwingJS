@@ -13,6 +13,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
+import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.ZipTools;
 
@@ -199,6 +200,10 @@ abstract class OutputManager {
             : comment);
       String[] errRet = new String[1];
       isOK = createTheImage(image, type, out, params, errRet);
+      if (isOK && errRet[0] == "async") {
+        errRet[0] = "OK: bytes written asynchronously";
+        closeChannel = false;
+      }
       if (closeChannel)
         out.closeChannel();
       if (isOK) {
@@ -269,9 +274,11 @@ abstract class OutputManager {
    * @param params
    * @param errRet
    * @return byte array if needed
+   * @throws Exception
    */
   private boolean createTheImage(Object objImage, String type, OC out,
-                                 Map<String, Object> params, String[] errRet) {
+                                 Map<String, Object> params, String[] errRet)
+      throws Exception {
     type = type.substring(0, 1) + type.substring(1).toLowerCase();
     boolean isZipData = type.equals("Zipdata");
     if (isZipData || type.equals("Binary")) {
@@ -280,18 +287,45 @@ abstract class OutputManager {
       if (v.size() >= 2 && v.get(0).equals("_IMAGE_")) {
         if (isZipData) {
           errRet[0] = writeZipFile(out, v, "OK JMOL", null);
-          return true;          
+          return true;
         }
         objImage = null;
         v.removeItemAt(0);
         v.removeItemAt(0); // also "_IMAGE_"
-        params.put("pngImgData", v.removeItemAt(0));
+        byte[] bytes = (byte[]) v.removeItemAt(0);
         OC oz = getOutputChannel(null, null);
         errRet[0] = writeZipFile(oz, v, "OK JMOL", null);
+        params.put("pngAppData", oz.toByteArray());
         params.put("type", "PNGJ");
         type = "Png";
         params.put("pngAppPrefix", "Jmol Type");
-        params.put("pngAppData", oz.toByteArray());
+
+        if (Rdr.isPngZipB(bytes)) {
+          params.put("pngImgData", bytes);
+        } else {
+          // bytes will not be ready yet in JavaScript
+          Object image = vwr.fm.getImage(bytes, null, true);
+          Runnable r = new Runnable() {
+
+            @Override
+            public void run() {
+              try {
+                getImagePixels(image, params);
+              } catch (Exception e) {
+              }
+              finishImage(errRet, "Png", out, null, params);
+              out.closeChannel();
+            }
+
+          };
+          if (vwr.isJS) {
+            errRet[0] = "async";
+            new Thread(r).start();
+            return true;
+          }
+          r.run();
+          return errRet[0] == null;
+        }
       } else if (v.size() == 1) {
         byte[] b = (byte[]) v.removeItemAt(0);
         out.write(b, 0, b.length);
@@ -301,27 +335,24 @@ abstract class OutputManager {
         return true;
       }
     }
+    finishImage(errRet, type, out, objImage, params);
+    return errRet[0] == null;
+  }
+  
+  private void finishImage(String[] errRet, String type, OC out, Object objImage,
+                           Map<String, Object> params) {
     GenericImageEncoder ie = (GenericImageEncoder) Interface
         .getInterface("javajs.img." + type + "Encoder", vwr, "file");
     if (ie == null) {
       errRet[0] = "Image encoder type " + type + " not available";
-      return false;
+      return;
     }
     boolean doClose = true;
     try {
       if (type.equals("Gif") && vwr.getBoolean(T.testflag2))
         params.put("reducedColors", Boolean.TRUE);
-      int w = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
-          .get("width")).intValue() : vwr.apiPlatform
-          .getImageWidth(objImage);
-      int h = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
-          .get("height")).intValue() : vwr.apiPlatform
-          .getImageHeight(objImage);
-      params.put("imageWidth", Integer.valueOf(w));
-      params.put("imageHeight", Integer.valueOf(h));
-      int[] pixels = encodeImage(w, h, objImage);
-      if (pixels != null)
-        params.put("imagePixels", pixels);
+      if (params.get("imagePixels") == null)
+        getImagePixels(objImage, params);
       params.put("logging", Boolean.valueOf(Logger.debugging));
       // GIF capture may not close output channel
       doClose = ie.createImage(type, out, params);
@@ -333,9 +364,22 @@ abstract class OutputManager {
       if (doClose)
         out.closeChannel();
     }
-    return (errRet[0] == null);
   }
-  
+
+  private void getImagePixels(Object objImage, Map<String, Object> params) throws Exception {
+    int w = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
+        .get("width")).intValue() : vwr.apiPlatform
+        .getImageWidth(objImage);
+    int h = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
+        .get("height")).intValue() : vwr.apiPlatform
+        .getImageHeight(objImage);
+    params.put("imageWidth", Integer.valueOf(w));
+    params.put("imageHeight", Integer.valueOf(h));
+    int[] pixels = encodeImage(w, h, objImage);
+    if (pixels != null)
+      params.put("imagePixels", pixels);
+  }
+
   /**
    * general image encoder, allows for BufferedImage, int[], or HTML5 2D canvas
    * 
