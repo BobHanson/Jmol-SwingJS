@@ -884,13 +884,13 @@ public class FileManager implements BytePoster {
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
           : fixDOSName(names[0]));
       if (names != null)
-        image = getJzu().getImage(vwr, nameOrError, echoName, forceSync);
+        image = getImage(nameOrError, echoName, forceSync);
       isAsynchronous = (image == null);        
     } else {
       image = nameOrBytes;
     }
     if (bytes != null) {
-      image = getJzu().getImage(vwr, bytes, echoName, true);
+      image = getImage(bytes, echoName, true);
       isAsynchronous = false;
     }
     if (image instanceof String) {
@@ -904,6 +904,11 @@ public class FileManager implements BytePoster {
       return vwr.loadImageData(image, nameOrError, echoName, null);
     return isAsynchronous;
     // JSmol will call that from awtjs2d.Platform.java asynchronously
+  }
+
+  public Object getImage(Object nameOrBytes, String echoName,
+                          boolean forceSync) {
+    return getJzu().getImage(vwr, nameOrBytes, echoName, forceSync);
   }
 
   /**
@@ -1052,7 +1057,7 @@ public class FileManager implements BytePoster {
     if (forDialog && localDir.length() == 0)
       localDir = (String) vwr.getP("defaultDirectoryLocal");
     if (localDir.length() == 0)
-      return (vwr.isApplet ? null : vwr.apiPlatform.newFile(System
+      return (vwr.isJS ? null : vwr.apiPlatform.newFile(System
           .getProperty("user.dir", ".")));
     if (vwr.isApplet && localDir.indexOf("file:/") == 0)
       localDir = localDir.substring(6);

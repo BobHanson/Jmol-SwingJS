@@ -1165,7 +1165,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (x + imageWidth <= 0 || x >= width || y + imageHeight <= 0
         || y >= height)
       return;
-    Object g = (Viewer.isJS ? null : platform.getGraphicsForTextOrImage(imageWidth, imageHeight));
+    Object g = (vwr.isJSNoAWT ? null : platform.getGraphicsForTextOrImage(imageWidth, imageHeight));
     int[] buffer = apiPlatform.drawImageToBuffer(g,
         platform.offscreenImage, image, imageWidth, imageHeight,
         isBackground ? bg : 0);
