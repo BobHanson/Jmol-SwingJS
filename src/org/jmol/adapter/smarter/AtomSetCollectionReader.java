@@ -387,8 +387,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
-      if (asc.atomSetCount == 1)
+      if (asc.atomSetCount == 1) {
         asc.setCurrentModelInfo("dbName", htParams.get("dbName"));
+        asc.setCurrentModelInfo("auxFiles", htParams.get("auxFiles"));
+      }
       applySymmetryAndSetTrajectory();
       asc.finalizeStructures();
       if (doCentralize)

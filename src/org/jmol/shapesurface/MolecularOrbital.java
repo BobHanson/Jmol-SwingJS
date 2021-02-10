@@ -339,6 +339,13 @@ public class MolecularOrbital extends Isosurface {
       }
       return getMoInfo(-1) + s;
     }
+    if (propertyName == "moLabel") {
+        String[] labels = (String[]) sg.params.moData
+            .get("nboLabels");
+      if (moNumber > 0 && labels != null && labels.length != 0)
+          return labels[(moNumber - 1) % labels.length];
+        return "";
+      }
     if (propertyName == "moNumber")
       return Integer.valueOf(moNumber);
     if (propertyName == "moLinearCombination")
@@ -389,13 +396,6 @@ public class MolecularOrbital extends Isosurface {
       str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null, "TRAILERONLY",
           true, 0, null, null));
       return str.toString();
-    }
-    if (propertyName == "moLabel") {
-      String[] labels = (String[]) sg.params.moData
-          .get("nboLabels");
-      if (moNumber > 0 && labels != null)
-        return labels[(moNumber - 1) % labels.length];
-      return "";
     }
     return getPropI(propertyName, index);
   }
@@ -462,6 +462,7 @@ public class MolecularOrbital extends Isosurface {
     thisModel = htModels.get(strID);
     if (thisModel == null || thisModel.get("moNumber") == null)
       return false;
+    nboType = (String) thisModel.get("nboType");
     moTranslucency = (String) thisModel.get("moTranslucency");
     moTranslucentLevel = (Float) thisModel.get("moTranslucentLevel");
     moPlane = (P4) thisModel.get("moPlane");
@@ -474,7 +475,6 @@ public class MolecularOrbital extends Isosurface {
     thisModel.put("moCutoff", Float.valueOf(moCutoff.floatValue()));
     moResolution = (Float) thisModel.get("moResolution");
     moScale = (Float) thisModel.get("moScale");
-    nboType = (String) thisModel.get("moType");
     moColorPos = (Integer) thisModel.get("moColorPos");
     moColorNeg = (Integer) thisModel.get("moColorNeg");
     moSquareData = (Boolean) thisModel.get("moSquareData");

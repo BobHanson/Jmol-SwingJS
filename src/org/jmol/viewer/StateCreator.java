@@ -498,6 +498,11 @@ public class StateCreator extends JmolStateCreator {
             i > 0, null);
       } else {
         commands.appendSB(m.loadScript);
+        Lst<String> auxFiles = (Lst<String>) m.auxiliaryInfo.get("auxFiles");
+        if (auxFiles != null) {
+          for (int j = 0; j < auxFiles.size(); j++)
+            commands.append(";#FILE1=" + PT.esc(auxFiles.get(j)) + ";");
+        }
       }
     }
     String s = commands.toString();

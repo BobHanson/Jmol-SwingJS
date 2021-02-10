@@ -611,7 +611,7 @@ public class ScriptManager implements JmolScriptManager {
               flags += JmolScriptManager.IS_APPEND; // append
               break;
             }
-            if (checkDims) {
+            if (checkDims && !type.endsWith("::")) {
               try {
                 String data = vwr.fm.getEmbeddedFileState(fname, false,
                     "state.spt");
@@ -625,6 +625,15 @@ public class ScriptManager implements JmolScriptManager {
           boolean isAppend = ((flags & IS_APPEND) != 0);
           boolean pdbCartoons = ((flags & PDB_CARTOONS) != 0 && !isAppend);
 
+          if (type.endsWith("::")) {
+            int pt = type.indexOf("|"); 
+            if (pt >= 0) {
+              fname += type.substring(pt, type.length() - 2);
+              //type = type.substring(0, pt) + "::";
+              type = "";
+            }
+            fname = type + fname; 
+          }
           cmd = vwr.g.defaultDropScript;
           cmd = PT.rep(cmd, "%FILE", fname);
           cmd = PT.rep(cmd, "%ALLOWCARTOONS", "" + pdbCartoons);
@@ -647,24 +656,34 @@ public class ScriptManager implements JmolScriptManager {
     }
   }
 
+  /**
+   * 
+   * @param fileName
+   * @return "pdb" or "dssr" or "Jmol" or <modelType> + "::"
+   */
   private String getDragDropFileTypeName(String fileName) {
     int pt = fileName.indexOf("::");
     if (pt >= 0)
-      return fileName.substring(0, pt);
+      return fileName.substring(0, pt + 2);
     if (fileName.startsWith("="))
       return "pdb";
     if (fileName.endsWith(".dssr"))
       return "dssr";
     Object br = vwr.fm.getUnzippedReaderOrStreamFromName(fileName, null, true,
         false, true, true, null);
+    String modelType = null;
     if (br instanceof ZInputStream) {
       String zipDirectory = getZipDirectoryAsString(fileName);
       if (zipDirectory.indexOf("JmolManifest") >= 0)
         return "Jmol";
-      return vwr.getModelAdapter().getFileTypeName(Rdr.getBR(zipDirectory));
+      modelType = vwr.getModelAdapter()
+          .getFileTypeName(Rdr.getBR(zipDirectory));
+    } else if (br instanceof BufferedReader
+        || br instanceof BufferedInputStream) {
+      modelType = vwr.getModelAdapter().getFileTypeName(br);
     }
-    if (br instanceof BufferedReader || br instanceof BufferedInputStream)
-      return vwr.getModelAdapter().getFileTypeName(br);
+    if (modelType != null)
+      return modelType + "::";
     if (AU.isAS(br)) {
       return ((String[]) br)[0];
     }

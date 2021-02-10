@@ -255,9 +255,11 @@ public class GenNBOReader extends MOReader {
     if (pt < 0)
       pt = fileName.length();
     fileName = fileName.substring(0, pt);
+    if (fileName.startsWith("GenNBO::"))
+      fileName = fileName.substring(8);
     moData.put("nboRoot", fileName);
     if (ext.startsWith(".")) {
-    fileName += ext;
+      fileName += ext;
     } else {
       pt = fileName.lastIndexOf("/");
       fileName = fileName.substring(0, pt + 1) + ext;
@@ -267,6 +269,8 @@ public class GenNBOReader extends MOReader {
     boolean isError = (data.indexOf("java.io.") >= 0);
     if (data.length() == 0 || isError && nboType != "AO")
       throw new Exception(" supplemental file " + fileName + " was not found");
+    if (!isError)
+      addAuxFile(moData, fileName, htParams);
     return (isError ? null : data);
   }
 
@@ -812,8 +816,10 @@ public class GenNBOReader extends MOReader {
         String data = null;
         if (!isAO) {
           String fileName = moData.get("nboRoot") + "." + ext;
-          if ((data = vwr.getFileAsString3(fileName, true, null)) == null)
+          if ((data = vwr.getFileAsString3(fileName, true, null)) == null
+              || data.indexOf("Exception:") >= 0)
             return false;
+          addAuxFile(moData, fileName, null);
           data = data.substring(data.indexOf("--\n") + 3).toLowerCase();
           if (ext == 33)
             data = data.substring(0, data.indexOf("--\n") + 3);
@@ -877,6 +883,16 @@ public class GenNBOReader extends MOReader {
       return false;
     }
     return true;
+  }
+
+  private static void addAuxFile(Map<String, Object> moData, String fileName, Map<String, Object> htParams) {
+    @SuppressWarnings("unchecked")
+    Lst<String> auxFiles = (Lst<String>) moData.get("auxFiles");
+    if (auxFiles == null)
+      moData.put("auxFiles", auxFiles = new Lst<String>());
+    auxFiles.addLast(fileName);
+    if (htParams != null)
+      htParams.put("auxFiles", auxFiles);
   }
 
   private static void getNBOOccupanciesStatic(Lst<Map<String, Object>> orbitals,

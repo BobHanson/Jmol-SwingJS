@@ -1075,7 +1075,8 @@ abstract class OutputManager {
    * @param fileNamesAndByteArrays
    *        Vector of [filename1, bytes|null, filename2, bytes|null, ...]
    * @param msg
-   * @param pngjName TODO
+   * @param pngjName
+   *        TODO
    * @return msg bytes filename or errorMessage or byte[]
    */
 
@@ -1139,15 +1140,17 @@ abstract class OutputManager {
           // get data from disk
           BufferedInputStream in = vwr.getBufferedInputStream(fname);
           int len;
-          while ((len = in.read(buf, 0, 1024)) > 0) {
-            zos.write(buf, 0, len);
-            nOut += len;
+          if (in != null) {
+            while ((len = in.read(buf, 0, 1024)) > 0) {
+              zos.write(buf, 0, len);
+              nOut += len;
+            }
+            in.close();
           }
-          in.close();
         } else {
           // data are already in byte form
           zos.write(bytes, 0, bytes.length);
-          if (pngjName != null) 
+          if (pngjName != null)
             vwr.fm.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
           nOut += bytes.length;
         }

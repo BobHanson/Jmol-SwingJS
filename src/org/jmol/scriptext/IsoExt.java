@@ -73,10 +73,10 @@ public class IsoExt extends ScriptExt {
   public IsoExt() {
     // used by Reflection
   }
-  
+
   @Override
   public String dispatch(int iTok, boolean b, T[] st) throws ScriptException {
-    chk = e.chk; 
+    chk = e.chk;
     slen = e.slen;
     this.st = st;
 
@@ -204,14 +204,14 @@ public class IsoExt extends ScriptExt {
         break;
       case T.offset:
         if (isFloatParameter(i + 1)) {
-        float v = floatParameter(++i);
-        if (eval.theTok == T.integer) {
-          propertyName = "offsetPercent";
-          propertyValue = Integer.valueOf((int) v);
-        } else {
-          propertyName = "offset";
-          propertyValue = Float.valueOf(v);
-        }
+          float v = floatParameter(++i);
+          if (eval.theTok == T.integer) {
+            propertyName = "offsetPercent";
+            propertyValue = Integer.valueOf((int) v);
+          } else {
+            propertyName = "offset";
+            propertyValue = Float.valueOf(v);
+          }
         } else {
           propertyName = "offsetPt";
           propertyValue = centerParameter(++i);
@@ -601,9 +601,8 @@ public class IsoExt extends ScriptExt {
             int iatom = bsAtoms.nextSetBit(0);
             if (options != 0) {
               // options is T.offset, and target is an {i j k} offset from cell 555
-              Object o = vwr.getSymmetryInfo(iatom,
-                  xyz, iSym, center, target, T.point, null, intScale / 100f,
-                  nth, options);
+              Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, center, target,
+                  T.point, null, intScale / 100f, nth, options);
               if (o instanceof P3)
                 target = (P3) o;
               else
@@ -612,12 +611,12 @@ public class IsoExt extends ScriptExt {
             if (thisId == null)
               thisId = "sym";
             if (s == null)
-              s = (String) vwr.getSymmetryInfo(iatom,
-                  xyz, iSym, center, target, T.draw, thisId, intScale / 100f,
-                  nth, options);
+              s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, center, target,
+                  T.draw, thisId, intScale / 100f, nth, options);
           }
           eval.runBufferedSafely(
-              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete", eval.outputBuffer);
+              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
+              eval.outputBuffer);
         }
         return;
       case T.frame:
@@ -900,13 +899,14 @@ public class IsoExt extends ScriptExt {
     BS bsModels = vwr.getVisibleFramesBitSet();
     Lst<Object[]> propertyList = new Lst<Object[]>();
     boolean isBeta = false;
-    boolean isNBO = (tokAt(0) == T.nbo); 
+    boolean isNBO = (tokAt(0) == T.nbo);
     int i0 = 1;
     if (isNBO) {
       // NBO command by itself starts the NBO Server Interface panel
       // NBO OPTIONS include "NOZAP;VIEW"
       boolean isViewOnly = e.optParameterAsString(1).equals("view");
-      if (e.slen == 1 || isViewOnly ||  e.optParameterAsString(1).equals("options")) {
+      if (e.slen == 1 || isViewOnly
+          || e.optParameterAsString(1).equals("options")) {
         if (!chk) {
           String options = (isViewOnly ? "VIEW" : e.optParameterAsString(2));
           vwr.startNBO(options);
@@ -1014,8 +1014,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.plane:
         propertyName = "plane";
-        propertyValue = (tokAt(e.iToken = ++i) == T.none ? null : eval
-            .planeParameter(i));
+        propertyValue = (tokAt(e.iToken = ++i) == T.none ? null
+            : eval.planeParameter(i));
         break;
       case T.point:
         addShapeProperty(propertyList, "randomSeed",
@@ -1072,8 +1072,8 @@ public class IsoExt extends ScriptExt {
         }
       default:
         if (isNBO && eval.tokAt(i) == T.string) {
-            nboName = paramAsStr(i++);
-            // NBO "C1-C2"
+          nboName = paramAsStr(i++);
+          // NBO "C1-C2"
         }
         if (eval.isArrayParameter(i)) {
           linearCombination = eval.floatParameterSet(i, 1, Integer.MAX_VALUE);
@@ -1093,12 +1093,13 @@ public class IsoExt extends ScriptExt {
       }
       if (propertyName != null)
         addShapeProperty(propertyList, propertyName, propertyValue);
-      boolean haveMO = (moNumber != Integer.MAX_VALUE || linearCombination != null);
+      boolean haveMO = (moNumber != Integer.MAX_VALUE
+          || linearCombination != null);
       if (chk)
         return;
       if (nboType != null || nboName != null || haveMO) {
         if (haveMO && tokAt(eval.iToken + 1) == T.string) {
-            title = paramAsStr(++eval.iToken);
+          title = paramAsStr(++eval.iToken);
         }
         eval.setCursorWait(true);
         if (nboType != null || nboName != null)
@@ -1120,7 +1121,8 @@ public class IsoExt extends ScriptExt {
         if (isNBO) {
           moLabel = (String) getShapeProperty(iShape, "moLabel");
         } else {
-          moNumber = ((Integer) getShapeProperty(iShape, "moNumber")).intValue();
+          moNumber = ((Integer) getShapeProperty(iShape, "moNumber"))
+              .intValue();
           moLabel = "" + moNumber;
         }
         showString(T.nameOf(tokAt(0)) + " " + moLabel + " "
@@ -1132,7 +1134,8 @@ public class IsoExt extends ScriptExt {
   }
 
   @SuppressWarnings("static-access")
-  private int setNBOType(Map<String, Object> moData, String type) throws ScriptException {
+  private int setNBOType(Map<String, Object> moData, String type)
+      throws ScriptException {
 
     int nboNumber = -1;
     String name = null;
@@ -1151,9 +1154,19 @@ public class IsoExt extends ScriptExt {
       error(ScriptError.ERROR_moModelError);
     if (chk)
       return -1;
-    if (type != null && !((GenNBOReader) Interface.getInterface("org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
-    		.readNBOCoefficients(moData, type, vwr))
+    if (type != null && !((GenNBOReader) Interface.getInterface(
+        "org.jmol.adapter.readers.quantum.GenNBOReader", vwr, "script"))
+            .readNBOCoefficients(moData, type, vwr))
       error(ScriptError.ERROR_moModelError);
+
+    Lst<String> auxFiles = (Lst<String>) moData.get("auxFiles");
+    Lst<String> auxFiles0 = (Lst<String>) vwr.getCurrentModelAuxInfo()
+        .get("auxFiles");
+    if (auxFiles0 == null) {
+      vwr.getCurrentModelAuxInfo().put("auxFiles", auxFiles);
+    } else {
+      auxFiles0.addAll(auxFiles);
+    }
     if (name != null) {
       pt = name.indexOf(".");
       if (pt > 0) {
@@ -1171,7 +1184,7 @@ public class IsoExt extends ScriptExt {
         }
       }
       if (nboNumber < 0)
-        error(ScriptError.ERROR_moModelError);        
+        error(ScriptError.ERROR_moModelError);
     }
     return nboNumber;
   }
@@ -1209,12 +1222,12 @@ public class IsoExt extends ScriptExt {
         eval.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
             "MO isosurfaces");
     }
-    Map<String, Object> moData = (Map<String, Object>) vwr.ms.getInfo(
-        modelIndex, "moData");
+    Map<String, Object> moData = (Map<String, Object>) vwr.ms
+        .getInfo(modelIndex, "moData");
     if (moData == null)
       error(ScriptError.ERROR_moModelError);
     vwr.checkMenuUpdate();
-    if (nboType != null) {     
+    if (nboType != null) {
       int nboNumber = setNBOType(moData, nboType);
       if (nboNumber > 0)
         moNumber = nboNumber;
@@ -1230,10 +1243,12 @@ public class IsoExt extends ScriptExt {
         offset = 0;
       else if (isBeta && moData.containsKey("firstBeta"))
         offset = ((Integer) moData.get("firstBeta")).intValue();
-      int lastMoNumber = (moData.containsKey("lastMoNumber") ? ((Integer) moData
-          .get("lastMoNumber")).intValue() : 0);
-      int lastMoCount = (moData.containsKey("lastMoCount") ? ((Integer) moData
-          .get("lastMoCount")).intValue() : 1);
+      int lastMoNumber = (moData.containsKey("lastMoNumber")
+          ? ((Integer) moData.get("lastMoNumber")).intValue()
+          : 0);
+      int lastMoCount = (moData.containsKey("lastMoCount")
+          ? ((Integer) moData.get("lastMoCount")).intValue()
+          : 1);
       if (moNumber == T.prev)
         moNumber = lastMoNumber - 1;
       else if (moNumber == T.next)
@@ -1320,8 +1335,8 @@ public class IsoExt extends ScriptExt {
     addShapeProperty(propertyList, "moData", moData);
     if (title != null)
       addShapeProperty(propertyList, "title", title);
-    addShapeProperty(propertyList, "molecularOrbital", lc != null ? lc
-        : Integer.valueOf(Math.abs(moNumber)));
+    addShapeProperty(propertyList, "molecularOrbital",
+        lc != null ? lc : Integer.valueOf(Math.abs(moNumber)));
     addShapeProperty(propertyList, "clear", null);
   }
 
@@ -3261,7 +3276,8 @@ public class IsoExt extends ScriptExt {
     eval.iToken = 1;
     String thisId = initIsosurface(JC.SHAPE_CONTACT);
     boolean idSeen = (thisId != null);
-    boolean isWild = (idSeen && getShapeProperty(JC.SHAPE_CONTACT, "ID") == null);
+    boolean isWild = (idSeen
+        && getShapeProperty(JC.SHAPE_CONTACT, "ID") == null);
     BS bsA = null;
     BS bsB = null;
     BS bs = null;
@@ -3359,8 +3375,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.model:
       case T.modelindex:
-        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i) : eval
-            .modelNumberParameter(++i));
+        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i)
+            : eval.modelNumberParameter(++i));
         sbCommand.append(" modelIndex " + modelIndex);
         break;
       case T.within:
@@ -3439,13 +3455,15 @@ public class IsoExt extends ScriptExt {
       // bond mode, intramolec set here
       if (contactType == T.vanderwaals && rd == null)
         rd = new RadiusData(null, 0, EnumType.OFFSET, VDW.AUTO);
-      RadiusData rd1 = (rd == null ? new RadiusData(null, 0.26f,
-          EnumType.OFFSET, VDW.AUTO) : rd);
+      RadiusData rd1 = (rd == null
+          ? new RadiusData(null, 0.26f, EnumType.OFFSET, VDW.AUTO)
+          : rd);
       if (displayType == T.nci && bsB == null && intramolecular != null
           && intramolecular.booleanValue())
         bsB = bsA;
       else
-        bsB = eval.getMathExt().setContactBitSets(bsA, bsB, localOnly, distance, rd1, true);
+        bsB = eval.getMathExt().setContactBitSets(bsA, bsB, localOnly, distance,
+            rd1, true);
       switch (displayType) {
       case T.cap:
       case T.sasurface:
@@ -3476,13 +3494,12 @@ public class IsoExt extends ScriptExt {
 
       // now adjust for type -- HBOND or HYDROPHOBIC or MISC
       // these are just "standard shortcuts" they are not necessary at all
-      setShapeProperty(
-          JC.SHAPE_CONTACT,
-          "set",
+      setShapeProperty(JC.SHAPE_CONTACT, "set",
           new Object[] { Integer.valueOf(contactType),
               Integer.valueOf(displayType), Boolean.valueOf(colorDensity),
               Boolean.valueOf(colorByType), bsA, bsB, rd,
-              Float.valueOf(saProbeRadius), params, Integer.valueOf(modelIndex), sbCommand.toString() });
+              Float.valueOf(saProbeRadius), params, Integer.valueOf(modelIndex),
+              sbCommand.toString() });
       if (colorpt > 0)
         eval.setMeshDisplayProperty(JC.SHAPE_CONTACT, colorpt, 0);
     }
@@ -3508,9 +3525,10 @@ public class IsoExt extends ScriptExt {
       if (colorDensity || displayType != T.trim) {
         int nsets = ((Integer) getShapeProperty(JC.SHAPE_CONTACT, "nSets"))
             .intValue(); // will be < 0 if FULL option
-        String s = "Contacts: " + (nsets < 0 ? -nsets/2 : nsets);
+        String s = "Contacts: " + (nsets < 0 ? -nsets / 2 : nsets);
         if (v != 0)
-          s += ", with " + (isFull ? "approx " : "net ") + "volume " + v + " A^3";
+          s += ", with " + (isFull ? "approx " : "net ") + "volume " + v
+              + " A^3";
         showString(s);
       }
     }
@@ -3543,8 +3561,9 @@ public class IsoExt extends ScriptExt {
         if (data != null || isWild)
           invArg();
         data = new Lst<Object>();
-        int[] ai = new int[] {i, slen};
-        if (!eval.getShapePropertyData(JC.SHAPE_CGO, "data", new Object[] { st, ai, data, vwr }))
+        int[] ai = new int[] { i, slen };
+        if (!eval.getShapePropertyData(JC.SHAPE_CGO, "data",
+            new Object[] { st, ai, data, vwr }))
           invArg();
         i = ai[0];
         continue;
@@ -3567,8 +3586,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.modelindex:
       case T.model:
-        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i) : eval
-            .modelNumberParameter(++i));
+        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i)
+            : eval.modelNumberParameter(++i));
         propertyName = "modelIndex";
         propertyValue = Integer.valueOf(modelIndex);
         break;
@@ -3608,8 +3627,8 @@ public class IsoExt extends ScriptExt {
       if (propertyName != null)
         setShapeProperty(JC.SHAPE_CGO, propertyName, propertyValue);
     }
-    finalizeObject(JC.SHAPE_CGO, colorArgb[0], translucentLevel,
-        intScale, data != null, data, iptDisplayProperty, null);
+    finalizeObject(JC.SHAPE_CGO, colorArgb[0], translucentLevel, intScale,
+        data != null, data, iptDisplayProperty, null);
     return true;
   }
 
@@ -3626,12 +3645,13 @@ public class IsoExt extends ScriptExt {
     MepCalculation m = (MepCalculation) Interface
         .getOption("quantum.MlpCalculation", vwr, "script");
     m.set(vwr);
-    String data = (fileName == null ? null : vwr.getFileAsString3(fileName,
-        false, null));
+    String data = (fileName == null ? null
+        : vwr.getFileAsString3(fileName, false, null));
     try {
-      m.assignPotentials(vwr.ms.at, potentials, vwr
-          .getSmartsMatch("a", bsSelected), vwr.getSmartsMatch(
-          "/noAromatic/[$(C=O),$(O=C),$(NC=O)]", bsSelected), bsIgnore, data);
+      m.assignPotentials(vwr.ms.at, potentials,
+          vwr.getSmartsMatch("a", bsSelected),
+          vwr.getSmartsMatch("/noAromatic/[$(C=O),$(O=C),$(NC=O)]", bsSelected),
+          bsIgnore, data);
     } catch (Exception e) {
     }
     return potentials;
@@ -3658,9 +3678,9 @@ public class IsoExt extends ScriptExt {
       float slabTranslucency = (isFloatParameter(++i + 1) ? floatParameter(++i)
           : 0.5f);
       if (eval.isColorParam(i + 1)) {
-        slabColix = Short.valueOf(C.getColixTranslucent3(
-            C.getColix(eval.getArgbParam(i + 1)), slabTranslucency != 0,
-            slabTranslucency));
+        slabColix = Short.valueOf(
+            C.getColixTranslucent3(C.getColix(eval.getArgbParam(i + 1)),
+                slabTranslucency != 0, slabTranslucency));
         i = eval.iToken;
       } else {
         slabColix = Short.valueOf(C.getColixTranslucent3(C.INHERIT_COLOR,
@@ -3797,15 +3817,16 @@ public class IsoExt extends ScriptExt {
       }
       // isosurface SLAB [plane]
       plane = eval.planeParameter(++i);
-      float off = (isFloatParameter(eval.iToken + 1) ? floatParameter(++eval.iToken)
+      float off = (isFloatParameter(eval.iToken + 1)
+          ? floatParameter(++eval.iToken)
           : Float.NaN);
       if (!Float.isNaN(off))
         plane.w -= off;
       data = plane;
       tok = T.plane;
     }
-    Object colorData = (slabMeshType == null ? null : new Object[] {
-        slabMeshType, slabColix });
+    Object colorData = (slabMeshType == null ? null
+        : new Object[] { slabMeshType, slabColix });
     return TempArray.getSlabObjectType(tok, data, !isSlab, colorData);
   }
 
@@ -3861,12 +3882,11 @@ public class IsoExt extends ScriptExt {
   private Object[] createFunction(String fname, String xyz, String ret) {
     ScriptEval e = (new ScriptEval()).setViewer(vwr);
     try {
-      e.compileScript(null, "function " + fname + "(" + xyz + ") { return "
-          + ret + "}", false);
+      e.compileScript(null,
+          "function " + fname + "(" + xyz + ") { return " + ret + "}", false);
       Lst<SV> params = new Lst<SV>();
       for (int i = 0; i < xyz.length(); i += 2)
-        params.addLast(SV.newF(0).setName(
-            xyz.substring(i, i + 1)));
+        params.addLast(SV.newF(0).setName(xyz.substring(i, i + 1)));
       return new Object[] { e.aatoken[0][1].value, params };
     } catch (Exception ex) {
       return null;
@@ -3942,7 +3962,8 @@ public class IsoExt extends ScriptExt {
     return fparams;
   }
 
-  private float[][] floatArraySet(int i, int nX, int nY) throws ScriptException {
+  private float[][] floatArraySet(int i, int nX, int nY)
+      throws ScriptException {
     int tok = tokAt(i++);
     if (tok == T.spacebeforesquare)
       tok = tokAt(i++);
@@ -4004,9 +4025,8 @@ public class IsoExt extends ScriptExt {
       setShapeProperty(iShape, "thisID", MeshCollection.PREVIOUS_MESH_ID);
       if (iShape != JC.SHAPE_DRAW)
         setShapeProperty(iShape, "title", new String[] { eval.thisCommand });
-      if (tok1 != T.id
-          && (tok2 == T.times || tok1 == T.times
-              && eval.setMeshDisplayProperty(iShape, 0, tok2))) {
+      if (tok1 != T.id && (tok2 == T.times
+          || tok1 == T.times && eval.setMeshDisplayProperty(iShape, 0, tok2))) {
         String id = setShapeId(iShape, 1, false);
         eval.iToken++;
         return id;
@@ -4016,8 +4036,8 @@ public class IsoExt extends ScriptExt {
   }
 
   private boolean listIsosurface(int iShape) throws ScriptException {
-    String s = (slen > 3 ? "0" : tokAt(2) == T.nada ? "" : " "
-        + getToken(2).value);
+    String s = (slen > 3 ? "0"
+        : tokAt(2) == T.nada ? "" : " " + getToken(2).value);
     if (!chk)
       showString((String) getShapeProperty(iShape, "list" + s));
     return true;
@@ -4025,7 +4045,8 @@ public class IsoExt extends ScriptExt {
 
   /**
    * 
-   * @param type  unitcell or boundbox
+   * @param type
+   *        unitcell or boundbox
    * @param plane
    *        plane to intersect, or null for just the full box
    * @param scale
@@ -4045,7 +4066,8 @@ public class IsoExt extends ScriptExt {
       pts = uc.getCanonicalCopy(scale, true);
       break;
     case T.boundbox:
-      pts = BoxInfo.getCanonicalCopy(vwr.ms.getBoxInfo().getBoundBoxVertices(), scale);
+      pts = BoxInfo.getCanonicalCopy(vwr.ms.getBoxInfo().getBoundBoxVertices(),
+          scale);
       break;
     }
     Triangulator t = vwr.getTriangulator(); // this instantiation forces reflection to get Triangulator class
@@ -4056,6 +4078,5 @@ public class IsoExt extends ScriptExt {
     v.addLast(Triangulator.fullCubePolygon);
     return v;
   }
-
 
 }

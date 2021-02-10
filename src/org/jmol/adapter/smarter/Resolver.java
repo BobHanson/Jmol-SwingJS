@@ -265,6 +265,8 @@ public class Resolver {
       return "spt"; // presume embedded script --- allows dragging into Jmol
     if (leader.indexOf("\"num_pairs\"") >= 0)
       return "dssr";
+    if (leader.indexOf("output.31\n") >= 0)
+      return "GenNBO|output.31";
 
     // Test 2. check starting 64 bytes of file
 
