@@ -1229,6 +1229,8 @@ public class IsoExt extends ScriptExt {
     vwr.checkMenuUpdate();
     if (nboType != null) {
       int nboNumber = setNBOType(moData, nboType);
+      int nOrbitals = ((String[]) moData.get("nboLabels")).length;
+      eval.showString(nOrbitals + " orbitals of type " + nboType.substring(0, nboType.indexOf(":") + 1) + " modelIndex=" + vwr.getModelNumberDotted(modelIndex));
       if (nboNumber > 0)
         moNumber = nboNumber;
       if (lc == null && moNumber == Integer.MAX_VALUE)
