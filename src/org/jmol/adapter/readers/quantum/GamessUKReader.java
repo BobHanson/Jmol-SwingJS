@@ -33,6 +33,11 @@ import org.jmol.adapter.smarter.Atom;
 
 public class GamessUKReader extends GamessReader {
 
+  @Override
+  protected void initializeReader() throws Exception {
+    super.initializeReader();
+  }
+  
   /**
    * @return true if need to read new line
    * @throws Exception

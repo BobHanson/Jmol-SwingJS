@@ -33,6 +33,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
 
 abstract public class GamessReader extends MopacSlaterReader {
@@ -41,6 +42,12 @@ abstract public class GamessReader extends MopacSlaterReader {
 
   abstract protected void readAtomsInBohrCoordinates() throws Exception;  
  
+  @Override
+  protected void initializeReader() throws Exception {
+    allowMopacDCoef = false;
+    super.initializeReader();
+  }
+
   protected void setAtom(Atom atom, int atomicNumber, String name, String id) {
     atom.elementSymbol = getElementSymbol(atomicNumber);
     atom.elementNumber = (short) atomicNumber;
@@ -290,6 +297,7 @@ $SYSTEM OPTIONS
     String gbasis = calcOptions.get("basis_options_GBASIS");
     if (gbasis != null && MOPAC_TYPES.indexOf(gbasis) >= 0) {
       mopacBasis = getMopacAtomZetaSPD(gbasis);
+      getSlaters();
       calculationType = gbasis;
     } else {
       boolean DFunc = !"0".equals(calcOptions.get("basis_options_NDFUNC"));

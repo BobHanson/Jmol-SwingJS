@@ -41,15 +41,7 @@ abstract class MopacSlaterReader extends SlaterReader {
    * GAMESS may need AM1, PMn, or RM1 zeta/coef data
    */
   protected float[][] mopacBasis;
-
-  final private static int[] sphericalDValues = new int[] {
-      // MOPAC2007 graphf output data order
-      0, -2, 0, //dx2-y2
-      1, 0, 1, //dxz
-      -2, 0, 0, //dz2
-      0, 1, 1, //dyz
-      1, 1, 0, //dxy
-  };
+  protected boolean allowMopacDCoef;
 
   /**
    * overrides method in SlaterReader to allow for MOPAC's treatment of the
@@ -90,7 +82,9 @@ abstract class MopacSlaterReader extends SlaterReader {
   public void setMOData(boolean clearOrbitals) {
     if (!allowNoOrbitals && orbitals.size() == 0)
       return;
-    if (mopacBasis == null) {
+    if (mopacBasis == null || !forceMOPAC && gaussians != null && shells != null) {
+      if (forceMOPAC) 
+        System.out.println("MopacSlaterReader ignoring MOPAC zeta parameters -- using Gaussian contractions");
       super.setMOData(clearOrbitals);
       return;
     }
@@ -101,8 +95,6 @@ abstract class MopacSlaterReader extends SlaterReader {
     finalizeMOData(lastMoData = moData);
     if (clearOrbitals) {
       clearOrbitals();
-      slaterArray = null;
-      slaters.clear();
     }
 
   }
@@ -195,23 +187,32 @@ abstract class MopacSlaterReader extends SlaterReader {
     return (atomicNumber < npqd.length ? npqd[atomicNumber] : 0);
   }
 
+  final private static int[] sphericalDValues = new int[] {
+      // MOPAC2007 graphf output data order
+      0, -2, 0, //dx2-y2
+      1, 0, 1, //dxz
+      -2, 0, 0, //dz2
+      0, 1, 1, //dyz
+      1, 1, 0, //dxy
+  };
+
   /**
    * When slater basis is referred to only by "AM1" "PM6" etc., as in GAMESS
    */
   @Override
   protected void addSlaterBasis() {
-    if (mopacBasis == null || slaters.size() > 0)
+    if (mopacBasis == null ||  slaters != null && slaters.size() > 0)
       return;
     int ac = asc.ac;
     int i0 = asc.getLastAtomSetAtomIndex();
     Atom[] atoms = asc.atoms;
     for (int i = i0; i < ac; ++i) {
       int an = atoms[i].elementNumber;
-      createMopacSlaters(i, an, mopacBasis[an]);
+      createMopacSlaters(i, an, mopacBasis[an], allowMopacDCoef);
     }
   }
 
-  public void createMopacSlaters(int iAtom, int atomicNumber, float[] values) {
+  public void createMopacSlaters(int iAtom, int atomicNumber, float[] values, boolean allowD) {
     double zeta;
     if ((zeta = values[0]) != 0) {
       createSphericalSlaterByType(iAtom, atomicNumber, "S", zeta, 1);
@@ -221,7 +222,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       createSphericalSlaterByType(iAtom, atomicNumber, "Py", zeta, 1);
       createSphericalSlaterByType(iAtom, atomicNumber, "Pz", zeta, 1);
     }
-    if ((zeta = values[2]) != 0) {
+    if ((zeta = values[2]) != 0 && allowD) {
       createSphericalSlaterByType(iAtom, atomicNumber, "Dx2-y2", zeta, 1);
       createSphericalSlaterByType(iAtom, atomicNumber, "Dxz", zeta, 1);
       createSphericalSlaterByType(iAtom, atomicNumber, "Dz2", zeta, 1);
@@ -244,7 +245,7 @@ abstract class MopacSlaterReader extends SlaterReader {
                                              String type, double zeta,
                                              float coef) {
     int pt = "S Px Py Pz  Dx2-y2Dxz Dz2 Dyz Dxy".indexOf(type);
-    // 0 2  5  8   12    18  22  26  30
+    //....... 0 2  5  8   12    18  22  26  30
     switch (pt) {
     case 0: // s
       addSlater(iAtom + 1, 0, 0, 0, getNPQs(atomicNumber) - 1, zeta, coef);

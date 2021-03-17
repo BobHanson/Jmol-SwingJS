@@ -96,6 +96,7 @@ public abstract class MOReader extends BasisFunctionReader {
 
   protected Map<String, Object> lastMoData;
   protected boolean allowNoOrbitals;
+  protected boolean forceMOPAC;
   
   final protected int HEADER_GAMESS_UK_MO = 3;
   final protected int HEADER_GAMESS_OCCUPANCIES = 2;
@@ -109,6 +110,7 @@ public abstract class MOReader extends BasisFunctionReader {
     line = "\nNBOCHARGES";
     getNBOCharges = (filter != null && filterMO());
     checkAndRemoveFilterKey("NBOCHARGES");
+    forceMOPAC = checkAndRemoveFilterKey("MOPAC");
   }
   
   /**

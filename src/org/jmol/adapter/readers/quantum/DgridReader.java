@@ -28,6 +28,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
 
+import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -139,6 +140,7 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
      */
     htFuncMap = new Hashtable<String, Integer>();
     readLines(3);
+    getSlaters();
     while (line != null && line.indexOf(":") != 0) {
       discardLinesUntilContains("sym: ");
       String symmetry = line.substring(4, 10).trim();

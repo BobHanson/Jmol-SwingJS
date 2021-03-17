@@ -25,6 +25,7 @@ package org.jmol.adapter.readers.quantum;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.quantum.QS;
+import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
 
 import javajs.util.Lst;
@@ -44,6 +45,8 @@ import java.util.Map;
 public abstract class BasisFunctionReader extends AtomSetCollectionReader {
 
   public Lst<int[]> shells;
+  protected Lst<SlaterData> slaters;
+  protected SlaterData[] slaterArray;
 
   public Map<String, Object> moData = new Hashtable<String, Object>();
   public Lst<Map<String, Object>> orbitals = new  Lst<Map<String, Object>>();
@@ -217,6 +220,8 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
     orbitals = new  Lst<Map<String, Object>>();
     moData = new Hashtable<String, Object>();
     alphaBeta = "";
+    slaterArray = null;
+    slaters = null;
   }
 
 

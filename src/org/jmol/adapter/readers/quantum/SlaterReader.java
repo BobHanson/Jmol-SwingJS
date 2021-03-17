@@ -46,8 +46,6 @@ abstract class SlaterReader extends MOReader {
    * 
    */
 
-  protected final Lst<SlaterData> slaters = new  Lst<SlaterData>();
-  protected SlaterData[] slaterArray;
   protected boolean scaleSlaters = true;
 
   /**
@@ -75,12 +73,16 @@ abstract class SlaterReader extends MOReader {
   protected final void addSlater(int iAtom, int a, int b, int c, int d, 
                         double zeta, float coef) {
     //System.out.println ("SlaterReader " + slaters.size() + ": " + iAtom + " " + a + " " + b +  " " + c + " " + d + " " + zeta + " " + coef);
-    slaters.addLast(new SlaterData(iAtom, a, b, c, d, zeta, coef));
+    getSlaters().addLast(new SlaterData(iAtom, a, b, c, d, zeta, coef));
   }
 
+  protected Lst<SlaterData> getSlaters() {
+    return (slaters == null ? slaters = new Lst<SlaterData>() : slaters);
+  }
+  
   protected void addSlater(SlaterData sd, int n) {
     sd.index = n;
-    slaters.addLast(sd);    
+    getSlaters().addLast(sd);    
   }
 
   /**
@@ -88,7 +90,7 @@ abstract class SlaterReader extends MOReader {
    * @param doSort TODO
    */
   protected final void setSlaters(boolean doSort) {
-    if (slaters.size() == 0)
+    if (slaters == null || slaters.size() == 0)
       return;
     if (slaterArray == null) {
       int nSlaters = slaters.size();

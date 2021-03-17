@@ -30,6 +30,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.quantum.SlaterData;
 
 /**
  * Reads Mopac 2007 GRAPHF output files
@@ -123,11 +124,12 @@ public class MopacGraphfReader extends MopacSlaterReader {
      * </code>
      */
     nCoefficients = 0;
+    getSlaters();
     float[] values = new float[3];
     for (int iAtom = 0; iAtom < ac; iAtom++) {
       getTokensFloat(rd(), values, 3);
       int atomicNumber = atomicNumbers[iAtom];
-      createMopacSlaters(iAtom, atomicNumber, values);
+      createMopacSlaters(iAtom, atomicNumber, values, true);
     }
     nCoefficients = slaters.size();
     setSlaters(false);
