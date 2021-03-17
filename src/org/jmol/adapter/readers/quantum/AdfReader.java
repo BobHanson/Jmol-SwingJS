@@ -458,7 +458,7 @@ OR
     int iAtom0 = asc.getLastAtomSetAtomIndex();
     for (int i = 0; i < nBF; i++)
       slaterArray[i].atomNo += iAtom0 + 1;
-    setSlaters(true, true);
+    setSlaters(true);
     sortOrbitals();
     setMOs("eV");
   }

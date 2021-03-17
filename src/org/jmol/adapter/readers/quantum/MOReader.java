@@ -24,25 +24,23 @@
 
 package org.jmol.adapter.readers.quantum;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
+
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import java.util.Hashtable;
-
-import java.util.Map;
-
 /**
- * General methods for reading molecular orbital data,
- * including embedded output from the NBO program.
- * In particular, when the AONBO keyword is included.
+ * General methods for reading molecular orbital data, including embedded output
+ * from the NBO program. In particular, when the AONBO keyword is included.
  *
  *
- * requires the following sort of construct:
- * 
+ * requires the following sort of construct: <code> 
   public AtomSetCollection readAtomSetCollection(BufferedReader reader) {
     readAtomSetCollection(reader, "some type");
   }
@@ -58,31 +56,32 @@ import java.util.Map;
     } 
     return checkNboLine();
   }
- *
+ * </code>
  *
  **/
 
-// NBO output analysis is based on
-//  
-// *********************************** NBO 5.G ***********************************
-//             N A T U R A L   A T O M I C   O R B I T A L   A N D
-//          N A T U R A L   B O N D   O R B I T A L   A N A L Y S I S
-// *******************************************************************************
-//  (c) Copyright 1996-2004 Board of Regents of the University of Wisconsin System
-//      on behalf of the Theoretical Chemistry Institute.  All Rights Reserved.
-//
-//          Cite this program as:
-//
-//          NBO 5.G.  E. D. Glendening, J. K. Badenhoop, A. E. Reed,
-//          J. E. Carpenter, J. A. Bohmann, C. M. Morales, and F. Weinhold
-//          (Theoretical Chemistry Institute, University of Wisconsin,
-//          Madison, WI, 2001); http://www.chem.wisc.edu/~nbo5
-//
-//       /AONBO  / : Print the AO to NBO transformation
-//  
-//  
-public class MOReader extends BasisFunctionReader {
+public abstract class MOReader extends BasisFunctionReader {
     
+//NBO output analysis is based on
+//
+//*********************************** NBO 5.G ***********************************
+//           N A T U R A L   A T O M I C   O R B I T A L   A N D
+//        N A T U R A L   B O N D   O R B I T A L   A N A L Y S I S
+//*******************************************************************************
+//(c) Copyright 1996-2004 Board of Regents of the University of Wisconsin System
+//    on behalf of the Theoretical Chemistry Institute.  All Rights Reserved.
+//
+//        Cite this program as:
+//
+//        NBO 5.G.  E. D. Glendening, J. K. Badenhoop, A. E. Reed,
+//        J. E. Carpenter, J. A. Bohmann, C. M. Morales, and F. Weinhold
+//        (Theoretical Chemistry Institute, University of Wisconsin,
+//        Madison, WI, 2001); http://www.chem.wisc.edu/~nbo5
+//
+//     /AONBO  / : Print the AO to NBO transformation
+//
+//
+
   public int shellCount = 0;
   public int gaussianCount = 0;
   public float[][] gaussians;
@@ -95,7 +94,7 @@ public class MOReader extends BasisFunctionReader {
   protected boolean haveNboOrbitals;
   protected boolean orbitalsRead;
 
-  private Map<String, Object> lastMoData;
+  protected Map<String, Object> lastMoData;
   protected boolean allowNoOrbitals;
   
   final protected int HEADER_GAMESS_UK_MO = 3;
@@ -110,25 +109,6 @@ public class MOReader extends BasisFunctionReader {
     line = "\nNBOCHARGES";
     getNBOCharges = (filter != null && filterMO());
     checkAndRemoveFilterKey("NBOCHARGES");
-  }
-  
-  /**
-   * Prior to filterMO all extraneous filter keys must be removed.
-   *
-   * 
-   * @param key
-   * @return true if the key existed; filter is set null if this is the only key
-   * 
-   */
-  
-  public boolean checkAndRemoveFilterKey(String key) {
-    if (!checkFilterKey(key))
-      return false;
-    filter = PT.rep(filter, key, "");
-    // allows for "!" and ";" 
-    if (filter.length() < 3)
-      filter = null;
-    return true;
   }
   
   /**
@@ -305,6 +285,7 @@ public class MOReader extends BasisFunctionReader {
       rd();
       return;
     }
+    addSlaterBasis();
     // reset the coefficient maps
     dfCoefMaps = null;
     // Idea here is to concatenate results from gennbo if desired,
@@ -478,6 +459,13 @@ public class MOReader extends BasisFunctionReader {
     dfCoefMaps = null;
   }
   
+
+  /**
+   * See MopacSlaterReader
+   */
+  protected void addSlaterBasis() {
+  }
+
   public void addCoef(Map<String, Object> mo, float[] coefs, String type, float energy, float occ, int moCount) {
     mo.put("coefficients", coefs);
     if (moTypes != null) {
@@ -550,7 +538,9 @@ public class MOReader extends BasisFunctionReader {
   }
 
   public void setMOData(boolean clearOrbitals) {
-    if (shells != null && gaussians != null && (allowNoOrbitals || orbitals.size() != 0)) {
+    if (!allowNoOrbitals && orbitals.size() == 0)
+      return;
+    if (shells != null && gaussians != null) {
       moData.put("calculationType", calculationType);
       moData.put("energyUnits", energyUnits);
       moData.put("shells", shells);

@@ -293,10 +293,9 @@ public class GamessUSReader extends GamessReader {
       if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
         break;
       Atom atom = asc.addNewAtom();
-      atom.elementSymbol = getElementSymbol(parseIntRange(line, 11, 14));
-      atom.atomName = atom.elementSymbol + (++n);
       setAtomCoordXYZ(atom, x * ANGSTROMS_PER_BOHR, y * ANGSTROMS_PER_BOHR, z * ANGSTROMS_PER_BOHR);
-      atomNames.addLast(atomName);
+      int atomicNumber = parseIntRange(line, 11, 14);
+      setAtom(atom, atomicNumber, atom.elementSymbol + (++n), atomName);
     }
   }
   
@@ -325,9 +324,8 @@ public class GamessUSReader extends GamessReader {
         break;
       Atom atom = asc.addNewAtom();
       setAtomCoordXYZ(atom, x, y, z);
-      atom.elementSymbol = getElementSymbol(parseIntRange(line, 11, 14));
-      atom.atomName = atom.elementSymbol + (++n);
-      atomNames.addLast(atomName);
+      int atomicNumber = parseIntRange(line, 11, 14);
+      setAtom(atom, atomicNumber, atom.elementSymbol + (++n), atomName);
     }
     
     /*

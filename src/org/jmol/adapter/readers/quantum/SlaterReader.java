@@ -37,7 +37,7 @@ import java.util.Map;
  * 
  * @author hansonr <hansonr@stolaf.edu>
  */
-abstract class SlaterReader extends BasisFunctionReader {
+abstract class SlaterReader extends MOReader {
 
   /*
    * -- this abstract superclass is cartesian bases only (s, p, d, f)
@@ -48,7 +48,8 @@ abstract class SlaterReader extends BasisFunctionReader {
 
   protected final Lst<SlaterData> slaters = new  Lst<SlaterData>();
   protected SlaterData[] slaterArray;
-  
+  protected boolean scaleSlaters = true;
+
   /**
    * 
    * We build two data structures for each slater: 
@@ -84,18 +85,18 @@ abstract class SlaterReader extends BasisFunctionReader {
 
   /**
    * after the vectors intinfo and floatinfo are completed, we
-   * 
-   * @param doScale
    * @param doSort TODO
    */
-  protected final void setSlaters(boolean doScale, boolean doSort) {
+  protected final void setSlaters(boolean doSort) {
+    if (slaters.size() == 0)
+      return;
     if (slaterArray == null) {
       int nSlaters = slaters.size();
       slaterArray = new SlaterData[nSlaters];
       for (int i = 0; i < slaterArray.length; i++) 
         slaterArray[i] = slaters.get(i);
     }
-    if (doScale)
+    if (scaleSlaters)
       for (int i = 0; i < slaterArray.length; i++) {
         SlaterData sd = slaterArray[i];
         sd.coef *= scaleSlater(sd.x, sd.y, sd.z, sd.r, sd.zeta);
@@ -176,7 +177,7 @@ abstract class SlaterReader extends BasisFunctionReader {
   
   /**
    * Perform implementation-specific scaling.
-   * This method is subclassed in MopacReader
+   * This method is subclassed in MopacSlaterReader
    * to handle spherical slaters
    * 
    * @param ex

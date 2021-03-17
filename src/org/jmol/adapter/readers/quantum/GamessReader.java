@@ -32,14 +32,22 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
 
-abstract public class GamessReader extends MOReader {
+abstract public class GamessReader extends MopacSlaterReader {
 
   protected Lst<String> atomNames;
 
   abstract protected void readAtomsInBohrCoordinates() throws Exception;  
  
+  protected void setAtom(Atom atom, int atomicNumber, String name, String id) {
+    atom.elementSymbol = getElementSymbol(atomicNumber);
+    atom.elementNumber = (short) atomicNumber;
+    atom.atomName = name;
+    atomNames.addLast(id == null ? name : id);
+  }
+
   protected void readEnergy() {
     //  ... ENERGY IS   or    ... ENERGY = 
     String searchTerm = "ENERGY";
@@ -74,7 +82,7 @@ abstract public class GamessReader extends MOReader {
         appendLoadNote("GamessReader Energy type " + energyType);
     }
   }
-
+  
   protected void readGaussianBasis(String initiator, String terminator) throws Exception {
     Lst<String[]> gdata = new  Lst<String[]>();
     gaussianCount = 0;
@@ -280,111 +288,116 @@ $SYSTEM OPTIONS
     String Runtype = calcOptions.get("contrl_options_RUNTYP");
     String igauss = calcOptions.get("basis_options_IGAUSS");
     String gbasis = calcOptions.get("basis_options_GBASIS");
-    boolean DFunc = !"0".equals(calcOptions.get("basis_options_NDFUNC"));
-    boolean PFunc = !"0".equals(calcOptions.get("basis_options_NPFUNC"));
-    boolean FFunc = !"0".equals(calcOptions.get("basis_options_NFFUNC"));
-    String DFTtype = calcOptions.get("contrl_options_DFTTYP");
-    int perturb = parseIntStr(calcOptions.get("contrl_options_MPLEVL"));
-    String CItype = calcOptions.get("contrl_options_CITYP");
-    String CCtype = calcOptions.get("contrl_options_CCTYP");
+    if (gbasis != null && MOPAC_TYPES.indexOf(gbasis) >= 0) {
+      mopacBasis = getMopacAtomZetaSPD(gbasis);
+      calculationType = gbasis;
+    } else {
+      boolean DFunc = !"0".equals(calcOptions.get("basis_options_NDFUNC"));
+      boolean PFunc = !"0".equals(calcOptions.get("basis_options_NPFUNC"));
+      boolean FFunc = !"0".equals(calcOptions.get("basis_options_NFFUNC"));
+      String DFTtype = calcOptions.get("contrl_options_DFTTYP");
+      int perturb = parseIntStr(calcOptions.get("contrl_options_MPLEVL"));
+      String CItype = calcOptions.get("contrl_options_CITYP");
+      String CCtype = calcOptions.get("contrl_options_CCTYP");
 
-    if (igauss == null && SCFtype == null)
-      return;
+      if (igauss == null && SCFtype == null)
+        return;
 
-    if (calculationType.equals("?"))
-      calculationType = "";
+      if (calculationType.equals("?"))
+        calculationType = "";
 
-    if (igauss != null) {
-      if ("0".equals(igauss)) { // we have a non Pople basis set.
-        // most common translated to standard notation, others in GAMESS
-        // internal format.
-        boolean recognized = false;
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        if (gbasis.startsWith("ACC"))
-          calculationType += "aug-cc-p";
-        if (gbasis.startsWith("CC"))
-          calculationType += "cc-p";
-        if ((gbasis.startsWith("ACC") || gbasis.startsWith("CC"))
-            && gbasis.endsWith("C"))
-          calculationType += "C";
-        if (gbasis.indexOf("CCD") >= 0) {
-          calculationType += "VDZ";
-          recognized = true;
-        }
-        if (gbasis.indexOf("CCT") >= 0) {
-          calculationType += "VTZ";
-          recognized = true;
-        }
-        if (gbasis.indexOf("CCQ") >= 0) {
-          calculationType += "VQZ";
-          recognized = true;
-        }
-        if (gbasis.indexOf("CC5") >= 0) {
-          calculationType += "V5Z";
-          recognized = true;
-        }
-        if (gbasis.indexOf("CC6") >= 0) {
-          calculationType += "V6Z";
-          recognized = true;
-        }
-        if (!recognized)
-          calculationType += gbasis;
-      } else {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += igauss + "-"
-            + PT.rep(gbasis, "N", "");
-        if ("T".equals(calcOptions.get("basis_options_DIFFSP"))) {
-          // check if we have diffuse S on H's too => "++" instead of "+"
-          if ("T".equals(calcOptions.get("basis_options_DIFFS")))
+      if (igauss != null) {
+        if ("0".equals(igauss)) { // we have a non Pople basis set.
+          // most common translated to standard notation, others in GAMESS
+          // internal format.
+          boolean recognized = false;
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          if (gbasis.startsWith("ACC"))
+            calculationType += "aug-cc-p";
+          if (gbasis.startsWith("CC"))
+            calculationType += "cc-p";
+          if ((gbasis.startsWith("ACC") || gbasis.startsWith("CC"))
+              && gbasis.endsWith("C"))
+            calculationType += "C";
+          if (gbasis.indexOf("CCD") >= 0) {
+            calculationType += "VDZ";
+            recognized = true;
+          }
+          if (gbasis.indexOf("CCT") >= 0) {
+            calculationType += "VTZ";
+            recognized = true;
+          }
+          if (gbasis.indexOf("CCQ") >= 0) {
+            calculationType += "VQZ";
+            recognized = true;
+          }
+          if (gbasis.indexOf("CC5") >= 0) {
+            calculationType += "V5Z";
+            recognized = true;
+          }
+          if (gbasis.indexOf("CC6") >= 0) {
+            calculationType += "V6Z";
+            recognized = true;
+          }
+          if (!recognized)
+            calculationType += gbasis;
+        } else {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += igauss + "-" + PT.rep(gbasis, "N", "");
+          if ("T".equals(calcOptions.get("basis_options_DIFFSP"))) {
+            // check if we have diffuse S on H's too => "++" instead of "+"
+            if ("T".equals(calcOptions.get("basis_options_DIFFS")))
+              calculationType += "+";
             calculationType += "+";
-          calculationType += "+";
-        }
-        calculationType += "G";
-        // append (d,p) , (d), (f,d,p), etc. to indicate polarization.
-        // not using * and ** notation as it is inconsistent.
-        if (DFunc || PFunc || FFunc) {
-          calculationType += "(";
-          if (FFunc) {
-            calculationType += "f";
-            if (DFunc || PFunc)
-              calculationType += ",";
           }
-          if (DFunc) {
-            calculationType += "d";
+          calculationType += "G";
+          // append (d,p) , (d), (f,d,p), etc. to indicate polarization.
+          // not using * and ** notation as it is inconsistent.
+          if (DFunc || PFunc || FFunc) {
+            calculationType += "(";
+            if (FFunc) {
+              calculationType += "f";
+              if (DFunc || PFunc)
+                calculationType += ",";
+            }
+            if (DFunc) {
+              calculationType += "d";
+              if (PFunc)
+                calculationType += ",";
+            }
             if (PFunc)
-              calculationType += ",";
+              calculationType += "p";
+            calculationType += ")";
           }
-          if (PFunc)
-            calculationType += "p";
-          calculationType += ")";
         }
-      }
-      if (DFTtype!=null && DFTtype.indexOf("NONE") < 0) {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += DFTtype;
-      }
-      if (CItype !=null && CItype.indexOf("NONE") < 0) {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += CItype;
-      }
-      if (CCtype !=null && CCtype.indexOf("NONE") < 0) {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += CCtype;
-      }
-      if (perturb > 0) {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += "MP" + perturb;
-      }
-      if (SCFtype != null) {
-        if (calculationType.length() > 0)
-          calculationType += " ";
-        calculationType += SCFtype + " " + Runtype;
+        if (DFTtype != null && DFTtype.indexOf("NONE") < 0) {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += DFTtype;
+        }
+        if (CItype != null && CItype.indexOf("NONE") < 0) {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += CItype;
+        }
+        if (CCtype != null && CCtype.indexOf("NONE") < 0) {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += CCtype;
+        }
+        if (perturb > 0) {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += "MP" + perturb;
+        }
+        if (SCFtype != null) {
+          if (calculationType.length() > 0)
+            calculationType += " ";
+          calculationType += SCFtype + " " + Runtype;
+        }
+
       }
     }
   }

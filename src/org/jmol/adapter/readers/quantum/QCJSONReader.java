@@ -296,7 +296,8 @@ public class QCJSONReader extends MoldenReader {
       double[] a = QCSchemaUnits.getDoubleArray(listS.get(i), null);
       addSlater((int) a[0], (int) a[1], (int) a[2], (int) a[3], (int) a[4], (float) a[5], (float) a[6]);
     }
-    setSlaters(false, false);
+    scaleSlaters = false;
+    setSlaters(false);
     return true;
   }
 

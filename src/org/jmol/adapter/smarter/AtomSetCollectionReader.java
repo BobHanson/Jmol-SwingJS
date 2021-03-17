@@ -1092,6 +1092,23 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
+   * @param key
+   * @return true if the key existed; filter is set null if this is the only key
+   * 
+   */
+  
+  public boolean checkAndRemoveFilterKey(String key) {
+    if (!checkFilterKey(key))
+      return false;
+    filter = PT.rep(filter, key, "");
+    // allows for "!" and ";" 
+    if (filter.length() < 3)
+      filter = null;
+    return true;
+  }
+  
+
+  /**
    * @param atom
    * @param iAtom
    * @return        true if we want this atom

@@ -1,0 +1,1394 @@
+* module Parameters_for_AM1_C 
+* ! data for Element 1: Hydrogen
+* data zsam1( 1)/ 1.1880780d0/
+* ! data for Element 2: Helium
+* data zsam1( 2)/ 2.1956103d0/
+* data zpam1( 2)/ 6.9012486d0/
+* ! data for Element 3: Lithium
+* data zsam1( 3)/ 0.7973487d0/
+* data zpam1( 3)/ 0.9045583d0/
+* ! data for Element 4: Beryllium
+* data zsam1( 4)/ 0.7425237d0/
+* data zpam1( 4)/ 0.8080499d0/
+* ! data for Element 6: Carbon
+* data zsam1( 6)/ 1.8086650d0/
+* data zpam1( 6)/ 1.6851160d0/
+* ! data for Element 7: Nitrogen
+* data zsam1( 7)/ 2.3154100d0/
+* data zpam1( 7)/ 2.1579400d0/
+* ! data for Element 8: Oxygen
+* data zsam1( 8)/ 3.1080320d0/
+* data zpam1( 8)/ 2.5240390d0/
+* ! data for Element 9: Fluorine
+* data zsam1( 9)/ 3.7700820d0/
+* data zpam1( 9)/ 2.4946700d0/
+* ! data for Element 10: Neon
+* data zsam1( 10)/ 5.9983770d0/
+* data zpam1( 10)/ 4.1699304d0/
+* ! data for Element 11: Sodium
+* data zsam1( 11)/ 0.7890090d0/
+* data zpam1( 11)/ 1.1399864d0/
+* ! data for Element 12: Magnesium
+* data zsam1( 12)/ 1.0128928d0/
+* data zpam1( 12)/ 1.1798191d0/
+* ! data for Element 13: Aluminium
+* data zsam1( 13)/ 1.5165930d0/
+* data zpam1( 13)/ 1.3063470d0/
+* ! data for Element 14: Silicon
+* data zsam1( 14)/ 1.8306970d0/
+* data zpam1( 14)/ 1.2849530d0/
+* ! data for Element 15: Phosphorus
+* data zsam1( 15)/ 1.9812800d0/
+* data zpam1( 15)/ 1.8751500d0/
+* ! data for Element 16: Sulfur
+* data zsam1( 16)/ 2.3665150d0/
+* data zpam1( 16)/ 1.6672630d0/
+* ! data for Element 17: Chlorine
+* data zsam1( 17)/ 3.6313760d0/
+* data zpam1( 17)/ 2.0767990d0/
+* ! data for Element 18: Argon
+* data zsam1( 18)/ 0.9714216d0/
+* data zpam1( 18)/ 5.9236231d0/
+* ! data for Element 19: Potassium
+* data zsam1( 19)/ 1.2660244d0/
+* data zpam1( 19)/ 0.9555939d0/
+* ! data for Element 20: Calcium
+* data zsam1( 20)/ 1.1767754d0/
+* data zpam1( 20)/ 1.2738520d0/
+* ! data for Element 30: Zinc
+* data zsam1( 30)/ 1.9542990d0/
+* data zpam1( 30)/ 1.3723650d0/
+* ! data for Element 31: Gallium
+* data zsam1( 31)/ 4.0002160d0/
+* data zpam1( 31)/ 1.3540466d0/
+* ! data for Element 32: Germanium
+* data zsam1( 32)/ 1.2196310d0/
+* data zpam1( 32)/ 1.9827940d0/
+* ! data for Element 33: Arsenic
+* data zsam1( 33)/ 2.2576897d0/
+* data zpam1( 33)/ 1.7249710d0/
+* ! data for Element 34: Selenium
+* data zsam1( 34)/ 2.6841570d0/
+* data zpam1( 34)/ 2.0506164d0/
+* ! data for Element 35: Bromine
+* data zsam1( 35)/ 3.0641330d0/
+* data zpam1( 35)/ 2.0383330d0/
+* ! data for Element 36: Krypton
+* data zsam1( 36)/ 3.5931632d0/
+* data zpam1( 36)/ 2.0944633d0/
+* ! data for Element 37: Rubidium
+* data zsam1( 37)/ 4.0000187d0/
+* data zpam1( 37)/ 1.0140619d0/
+* ! data for Element 38: Strontium
+* data zsam1( 38)/ 1.5236848d0/
+* data zpam1( 38)/ 1.5723524d0/
+* ! data for Element 42: Molybdenum
+* data zsam1( 42)/ 1.9450000d0/
+* data zpam1( 42)/ 1.4770000d0/
+* data zdam1( 42)/ 2.4680000d0/
+* data zsnam1( 42)/ 1.4240000d0/
+* data zpnam1( 42)/ 1.2500000d0/
+* data zdnam1( 42)/ 1.9470000d0/
+* ! data for Element 49: Indium
+* data zsam1( 49)/ 1.8281576d0/
+* data zpam1( 49)/ 1.4847500d0/
+* ! data for Element 50: Tin
+* data zsam1( 50)/ 1.6182807d0/
+* data zpam1( 50)/ 1.5084984d0/
+* ! data for Element 51: Antimony
+* data zsam1( 51)/ 2.2548230d0/
+* data zpam1( 51)/ 2.2185920d0/
+* ! data for Element 52: Tellurium
+* data zsam1( 52)/ 2.1321165d0/
+* data zpam1( 52)/ 1.9712680d0/
+* ! data for Element 53: Iodine
+* data zsam1( 53)/ 2.1028580d0/
+* data zpam1( 53)/ 2.1611530d0/
+* ! data for Element 54: Xenon
+* data zsam1( 54)/ 4.9675243d0/
+* data zpam1( 54)/ 3.1432142d0/
+* ! data for Element 55: Cesium
+* data zsam1( 55)/ 5.7873708d0/
+* data zpam1( 55)/ 1.0311693d0/
+* ! data for Element 56: Barium
+* data zsam1( 56)/ 1.9136517d0/
+* data zpam1( 56)/ 1.3948894d0/
+* ! data for Element 80: Mercury
+* data zsam1( 80)/ 2.0364130d0/
+* data zpam1( 80)/ 1.9557660d0/
+* ! data for Element 81: Thallium
+* data zsam1( 81)/ 3.8077333d0/
+* data zpam1( 81)/ 1.5511578d0/
+* ! data for Element 82: Lead
+* data zsam1( 82)/ 2.4432161d0/
+* data zpam1( 82)/ 1.5506706d0/
+* ! data for Element 83: Bismuth
+* data zsam1( 83)/ 4.0007862d0/
+* data zpam1( 83)/ 0.9547714d0/
+* ! data for Element 102: Capped bond
+* data zsam1(102)/ 4.0000000d0/
+* data zpam1(102)/ 0.3000000d0/
+* data zdam1(102)/ 0.3000000d0/
+* ! data for Element 104: + Sparkle
+* ! data for Element 106: - Sparkle
+* module Parameters_for_MNDO_C 
+* ! data for Element 1: Hydrogen
+* data zsm( 1)/ 1.3319670d0/
+* ! data for Element 2: Helium
+* data zsm( 2)/ 1.7710761d0/
+* data zpm( 2)/ 6.9018258d0/
+* ! data for Element 3: Lithium
+* data zsm( 3)/ 0.4296141d0/
+* data zpm( 3)/ 0.7554884d0/
+* ! data for Element 4: Beryllium
+* data zsm( 4)/ 1.0042100d0/
+* data zpm( 4)/ 1.0042100d0/
+* ! data for Element 5: Boron
+* data zsm( 5)/ 1.5068010d0/
+* data zpm( 5)/ 1.5068010d0/
+* ! data for Element 6: Carbon
+* data zsm( 6)/ 1.7875370d0/
+* data zpm( 6)/ 1.7875370d0/
+* ! data for Element 7: Nitrogen
+* data zsm( 7)/ 2.2556140d0/
+* data zpm( 7)/ 2.2556140d0/
+* ! data for Element 8: Oxygen
+* data zsm( 8)/ 2.6999050d0/
+* data zpm( 8)/ 2.6999050d0/
+* ! data for Element 9: Fluorine
+* data zsm( 9)/ 2.8484870d0/
+* data zpm( 9)/ 2.8484870d0/
+* ! data for Element 10: Neon
+* data zsm( 10)/ 5.9998745d0/
+* data zpm( 10)/ 4.1752600d0/
+* ! data for Element 11: Sodium
+* data zsm( 11)/ 0.8213124d0/
+* data zpm( 11)/ 1.0303270d0/
+* ! data for Element 12: Magnesium
+* data zsm( 12)/ 0.9394811d0/
+* data zpm( 12)/ 1.3103428d0/
+* ! data for Element 13: Aluminium
+* data zsm( 13)/ 1.4441610d0/
+* data zpm( 13)/ 1.4441610d0/
+* ! data for Element 14: Silicon
+* data zsm( 14)/ 1.3159860d0/
+* data zpm( 14)/ 1.7099430d0/
+* ! data for Element 15: Phosphorus
+* data zsm( 15)/ 2.1087200d0/
+* data zpm( 15)/ 1.7858100d0/
+* ! data for Element 16: Sulfur
+* data zsm( 16)/ 2.3129620d0/
+* data zpm( 16)/ 2.0091460d0/
+* ! data for Element 17: Chlorine
+* data zsm( 17)/ 3.7846450d0/
+* data zpm( 17)/ 2.0362630d0/
+* ! data for Element 18: Argon
+* data zsm( 18)/ 0.9821697d0/
+* data zpm( 18)/ 5.9997150d0/
+* ! data for Element 19: Potassium
+* data zsm( 19)/ 0.7276039d0/
+* data zpm( 19)/ 0.9871174d0/
+* ! data for Element 20: Calcium
+* data zsm( 20)/ 1.0034161d0/
+* data zpm( 20)/ 1.3102564d0/
+* ! data for Element 21: Scandium
+* data zsm( 21)/ 1.3951231d0/
+* data zpm( 21)/ 5.0160943d0/
+* data zdm( 21)/ 0.9264186d0/
+* data zsnm( 21)/ 0.5018770d0/
+* data zpnm( 21)/ 1.1053051d0/
+* data zdnm( 21)/ 1.6874974d0/
+* ! data for Element 22: Titanium
+* data zsm( 22)/ 0.8961552d0/
+* data zpm( 22)/ 0.9676159d0/
+* data zdm( 22)/ 1.8698884d0/
+* data zsnm( 22)/ 1.7784012d0/
+* data zpnm( 22)/ 1.5647427d0/
+* data zdnm( 22)/ 1.9578396d0/
+* ! data for Element 23: Vanadium
+* data zsm( 23)/ 1.2873544d0/
+* data zpm( 23)/ 1.1744379d0/
+* data zdm( 23)/ 2.0150220d0/
+* data zsnm( 23)/ 1.1517166d0/
+* data zpnm( 23)/ 0.6496939d0/
+* data zdnm( 23)/ 1.7060710d0/
+* ! data for Element 24: Chromium
+* data zsm( 24)/ 2.1495003d0/
+* data zpm( 24)/ 1.3131074d0/
+* data zdm( 24)/ 2.3289346d0/
+* data zsnm( 24)/ 0.9189804d0/
+* data zpnm( 24)/ 0.6655499d0/
+* data zdnm( 24)/ 1.5044456d0/
+* ! data for Element 26: Iron
+* data zsm( 26)/ 1.4536275d0/
+* data zpm( 26)/ 0.8933716d0/
+* data zdm( 26)/ 1.8691105d0/
+* data zsnm( 26)/ 1.2456921d0/
+* data zpnm( 26)/ 1.8214074d0/
+* data zdnm( 26)/ 1.9356440d0/
+* ! data for Element 27: Cobalt
+* data zsm( 27)/ 0.5997500d0/
+* data zpm( 27)/ 0.6073140d0/
+* data zdm( 27)/ 1.8567970d0/
+* data zsnm( 27)/ 0.8172170d0/
+* data zpnm( 27)/ 2.0251460d0/
+* data zdnm( 27)/ 1.6008320d0/
+* ! data for Element 28: Nickel
+* data zsm( 28)/ 0.7735888d0/
+* data zpm( 28)/ 6.0000132d0/
+* data zdm( 28)/ 2.7857108d0/
+* data zsnm( 28)/ 2.0155490d0/
+* data zpnm( 28)/ 4.0000022d0/
+* data zdnm( 28)/ 0.9297882d0/
+* ! data for Element 29: Copper
+* data zsm( 29)/ 3.3957872d0/
+* data zpm( 29)/ 1.7861780d0/
+* data zdm( 29)/ 3.3573266d0/
+* data zsnm( 29)/ 3.9457339d0/
+* data zpnm( 29)/ 1.1050853d0/
+* data zdnm( 29)/ 2.4262504d0/
+* ! data for Element 30: Zinc
+* data zsm( 30)/ 2.0473590d0/
+* data zpm( 30)/ 1.4609460d0/
+* ! data for Element 31: Gallium
+* data zsm( 31)/ 0.6986316d0/
+* data zpm( 31)/ 1.8386933d0/
+* ! data for Element 32: Germanium
+* data zsm( 32)/ 1.2931800d0/
+* data zpm( 32)/ 2.0205640d0/
+* ! data for Element 33: Arsenic
+* data zsm( 33)/ 2.5614338d0/
+* data zpm( 33)/ 1.6117315d0/
+* ! data for Element 34: Selenium
+* data zsm( 34)/ 0.7242956d0/
+* data zpm( 34)/ 1.9267288d0/
+* ! data for Element 35: Bromine
+* data zsm( 35)/ 3.8543019d0/
+* data zpm( 35)/ 2.1992091d0/
+* ! data for Element 36: Krypton
+* data zsm( 36)/ 3.5608622d0/
+* data zpm( 36)/ 1.9832062d0/
+* ! data for Element 37: Rubidium
+* data zsm( 37)/ 4.0001632d0/
+* data zpm( 37)/ 0.9187408d0/
+* ! data for Element 38: Strontium
+* data zsm( 38)/ 1.3729266d0/
+* data zpm( 38)/ 1.1118128d0/
+* ! data for Element 40: Zirconium
+* data zsm( 40)/ 1.5386288d0/
+* data zpm( 40)/ 1.1472515d0/
+* data zdm( 40)/ 1.8744783d0/
+* data zsnm( 40)/ 1.8931992d0/
+* data zpnm( 40)/ 1.4185044d0/
+* data zdnm( 40)/ 2.6877825d0/
+* ! data for Element 42: Molybdenum
+* data zsm( 42)/ 2.0001083d0/
+* data zpm( 42)/ 1.4112837d0/
+* data zdm( 42)/ 2.1944707d0/
+* data zsnm( 42)/ 1.7997044d0/
+* data zpnm( 42)/ 1.7801669d0/
+* data zdnm( 42)/ 1.9231611d0/
+* ! data for Element 46: Palladium
+* data zsm( 46)/ 1.6942397d0/
+* data zpm( 46)/ 6.0000131d0/
+* data zdm( 46)/ 2.2314824d0/
+* data zsnm( 46)/ 2.3416682d0/
+* data zpnm( 46)/ 3.9910252d0/
+* data zdnm( 46)/ 2.2412635d0/
+* ! data for Element 47: Silver
+* data zsm( 47)/ 2.6156672d0/
+* data zpm( 47)/ 1.5209942d0/
+* data zdm( 47)/ 3.1178537d0/
+* data zsnm( 47)/ 1.4880885d0/
+* data zpnm( 47)/ 1.1054787d0/
+* data zdnm( 47)/ 2.4424624d0/
+* ! data for Element 48: Cadmium
+* data zsm( 48)/ 1.4192491d0/
+* data zpm( 48)/ 1.0480637d0/
+* ! data for Element 49: Indium
+* data zsm( 49)/ 1.7625740d0/
+* data zpm( 49)/ 1.8648962d0/
+* ! data for Element 50: Tin
+* data zsm( 50)/ 2.0803800d0/
+* data zpm( 50)/ 1.9371060d0/
+* ! data for Element 51: Antimony
+* data zsm( 51)/ 3.6458835d0/
+* data zpm( 51)/ 1.9733156d0/
+* ! data for Element 52: Tellurium
+* data zsm( 52)/ 2.7461609d0/
+* data zpm( 52)/ 1.6160376d0/
+* ! data for Element 53: Iodine
+* data zsm( 53)/ 2.2729610d0/
+* data zpm( 53)/ 2.1694980d0/
+* ! data for Element 54: Xenon
+* data zsm( 54)/ 4.9900791d0/
+* data zpm( 54)/ 2.6929255d0/
+* ! data for Element 55: Cesium
+* data zsm( 55)/ 6.0004170d0/
+* data zpm( 55)/ 0.8986916d0/
+* ! data for Element 56: Barium
+* data zsm( 56)/ 1.9765973d0/
+* data zpm( 56)/ 1.3157348d0/
+* ! data for Element 78: Platinum
+* data zsm( 78)/ 1.8655763d0/
+* data zpm( 78)/ 1.9475781d0/
+* data zdm( 78)/ 2.8552253d0/
+* data zsnm( 78)/ 1.8965538d0/
+* data zpnm( 78)/ 1.6684682d0/
+* data zdnm( 78)/ 2.7361239d0/
+* ! data for Element 80: Mercury
+* data zsm( 80)/ 2.2181840d0/
+* data zpm( 80)/ 2.0650380d0/
+* ! data for Element 81: Thallium
+* data zsm( 81)/ 4.0000447d0/
+* data zpm( 81)/ 1.8076332d0/
+* ! data for Element 82: Lead
+* data zsm( 82)/ 2.4982860d0/
+* data zpm( 82)/ 2.0820710d0/
+* ! data for Element 83: Bismuth
+* data zsm( 83)/ 2.6772255d0/
+* data zpm( 83)/ 0.6936864d0/
+* ! data for Element 85: Astatine
+* ! data for Element 87: Francium
+* ! data for Element 90: Thorium
+* data zsm( 90)/ 1.4353060d0/
+* data zpm( 90)/ 1.4353060d0/
+* ! data for Element 100: 3+ Sparkle
+* ! data for Element 101: 3- Sparkle
+* ! data for Element 102: Capped bond
+* data zsm(102)/ 4.0000000d0/
+* data zpm(102)/ 0.3000000d0/
+* data zdm(102)/ 0.3000000d0/
+* ! data for Element 103: ++ Sparkle
+* ! data for Element 104: + Sparkle
+* ! data for Element 105: -- Sparkle
+* ! data for Element 106: - Sparkle
+* module Parameters_for_PM3_C 
+* ! data for Element 1: Hydrogen
+* data zspm3( 1)/ 0.9678070d0/
+* ! data for Element 2: Helium
+* data zspm3( 2)/ 1.7710761d0/
+* data zppm3( 2)/ 6.9018258d0/
+* ! data for Element 3: Lithium
+* data zspm3( 3)/ 0.6500000d0/
+* data zppm3( 3)/ 0.7500000d0/
+* ! data for Element 4: Beryllium
+* data zspm3( 4)/ 0.8774390d0/
+* data zppm3( 4)/ 1.5087550d0/
+* ! data for Element 5: Boron
+* data zspm3( 5)/ 1.5312597d0/
+* data zppm3( 5)/ 1.1434597d0/
+* ! data for Element 6: Carbon
+* data zspm3( 6)/ 1.5650850d0/
+* data zppm3( 6)/ 1.8423450d0/
+* ! data for Element 7: Nitrogen
+* data zspm3( 7)/ 2.0280940d0/
+* data zppm3( 7)/ 2.3137280d0/
+* ! data for Element 8: Oxygen
+* data zspm3( 8)/ 3.7965440d0/
+* data zppm3( 8)/ 2.3894020d0/
+* ! data for Element 9: Fluorine
+* data zspm3( 9)/ 4.7085550d0/
+* data zppm3( 9)/ 2.4911780d0/
+* ! data for Element 10: Neon
+* data zspm3( 10)/ 5.9998745d0/
+* data zppm3( 10)/ 4.1752600d0/
+* ! data for Element 11: Sodium
+* data zspm3( 11)/ 2.6618938d0/
+* data zppm3( 11)/ 0.8837425d0/
+* ! data for Element 12: Magnesium
+* data zspm3( 12)/ 0.6985520d0/
+* data zppm3( 12)/ 1.4834530d0/
+* ! data for Element 13: Aluminium
+* data zspm3( 13)/ 1.7028880d0/
+* data zppm3( 13)/ 1.0736290d0/
+* ! data for Element 14: Silicon
+* data zspm3( 14)/ 1.6350750d0/
+* data zppm3( 14)/ 1.3130880d0/
+* ! data for Element 15: Phosphorus
+* data zspm3( 15)/ 2.0175630d0/
+* data zppm3( 15)/ 1.5047320d0/
+* ! data for Element 16: Sulfur
+* data zspm3( 16)/ 1.8911850d0/
+* data zppm3( 16)/ 1.6589720d0/
+* ! data for Element 17: Chlorine
+* data zspm3( 17)/ 2.2462100d0/
+* data zppm3( 17)/ 2.1510100d0/
+* ! data for Element 18: Argon
+* data zspm3( 18)/ 0.9821697d0/
+* data zppm3( 18)/ 5.9997150d0/
+* ! data for Element 19: Potassium
+* data zspm3( 19)/ 0.8101687d0/
+* data zppm3( 19)/ 0.9578342d0/
+* ! data for Element 20: Calcium
+* data zspm3( 20)/ 1.2087415d0/
+* data zppm3( 20)/ 0.9409370d0/
+* ! data for Element 30: Zinc
+* data zspm3( 30)/ 1.8199890d0/
+* data zppm3( 30)/ 1.5069220d0/
+* ! data for Element 31: Gallium
+* data zspm3( 31)/ 1.8470400d0/
+* data zppm3( 31)/ 0.8394110d0/
+* ! data for Element 32: Germanium
+* data zspm3( 32)/ 2.2373526d0/
+* data zppm3( 32)/ 1.5924319d0/
+* ! data for Element 33: Arsenic
+* data zspm3( 33)/ 2.6361770d0/
+* data zppm3( 33)/ 1.7038890d0/
+* ! data for Element 34: Selenium
+* data zspm3( 34)/ 2.8280510d0/
+* data zppm3( 34)/ 1.7325360d0/
+* ! data for Element 35: Bromine
+* data zspm3( 35)/ 5.3484570d0/
+* data zppm3( 35)/ 2.1275900d0/
+* ! data for Element 36: Krypton
+* data zspm3( 36)/ 3.5608622d0/
+* data zppm3( 36)/ 1.9832062d0/
+* ! data for Element 37: Rubidium
+* data zspm3( 37)/ 4.0000415d0/
+* data zppm3( 37)/ 1.0134590d0/
+* ! data for Element 38: Strontium
+* data zspm3( 38)/ 1.2794532d0/
+* data zppm3( 38)/ 1.3912500d0/
+* ! data for Element 48: Cadmium
+* data zspm3( 48)/ 1.6793510d0/
+* data zppm3( 48)/ 2.0664120d0/
+* ! data for Element 49: Indium
+* data zspm3( 49)/ 2.0161160d0/
+* data zppm3( 49)/ 1.4453500d0/
+* ! data for Element 50: Tin
+* data zspm3( 50)/ 2.3733280d0/
+* data zppm3( 50)/ 1.6382330d0/
+* ! data for Element 51: Antimony
+* data zspm3( 51)/ 2.3430390d0/
+* data zppm3( 51)/ 1.8999920d0/
+* ! data for Element 52: Tellurium
+* data zspm3( 52)/ 4.1654920d0/
+* data zppm3( 52)/ 1.6475550d0/
+* ! data for Element 53: Iodine
+* data zspm3( 53)/ 7.0010130d0/
+* data zppm3( 53)/ 2.4543540d0/
+* ! data for Element 54: Xenon
+* data zspm3( 54)/ 4.9900791d0/
+* data zppm3( 54)/ 2.6929255d0/
+* ! data for Element 55: Cesium
+* data zspm3( 55)/ 3.5960298d0/
+* data zppm3( 55)/ 0.9255168d0/
+* ! data for Element 56: Barium
+* data zspm3( 56)/ 1.9258219d0/
+* data zppm3( 56)/ 1.4519912d0/
+* ! data for Element 80: Mercury
+* data zspm3( 80)/ 1.4768850d0/
+* data zppm3( 80)/ 2.4799510d0/
+* ! data for Element 81: Thallium
+* data zspm3( 81)/ 6.8679210d0/
+* data zppm3( 81)/ 1.9694450d0/
+* ! data for Element 82: Lead
+* data zspm3( 82)/ 3.1412890d0/
+* data zppm3( 82)/ 1.8924180d0/
+* ! data for Element 83: Bismuth
+* data zspm3( 83)/ 4.9164510d0/
+* data zppm3( 83)/ 1.9349350d0/
+* ! data for Element 87: Francium
+* ! data for Element 102: Capped bond
+* data zspm3(102)/ 4.0000000d0/
+* data zppm3(102)/ 0.3000000d0/
+* ! data for Element 104: + Sparkle
+* ! data for Element 106: - Sparkle
+* module Parameters_for_PM6_C
+* ! data for Element 1 Hydrogen
+* data zs6( 1)/ 1.268641D0/
+* ! data for Element 2 Helium
+* data zs6( 2)/ 3.313204D0/
+* data zp6( 2)/ 3.657133D0/
+* ! data for Element 3 Lithium
+* data zs6( 3)/ 0.981041D0/
+* data zp6( 3)/ 2.953445D0/
+* ! data for Element 4 Beryllium
+* data zs6( 4)/ 1.212539D0/
+* data zp6( 4)/ 1.276487D0/
+* ! data for Element 5 Boron
+* data zs6( 5)/ 1.634174D0/
+* data zp6( 5)/ 1.479195D0/
+* ! data for Element 6 Carbon
+* data zs6( 6)/ 2.047558D0/
+* data zp6( 6)/ 1.702841D0/
+* ! data for Element 7 Nitrogen
+* data zs6( 7)/ 2.380406D0/
+* data zp6( 7)/ 1.999246D0/
+* ! data for Element 8 Oxygen
+* data zs6( 8)/ 5.421751D0/
+* data zp6( 8)/ 2.270960D0/
+* ! data for Element 9 Fluorine
+* data zs6( 9)/ 6.043849D0/
+* data zp6( 9)/ 2.906722D0/
+* ! data for Element 10 Neon
+* data zs6( 10)/ 6.000148D0/
+* data zp6( 10)/ 3.834528D0/
+* ! data for Element 11 Sodium
+* data zs6( 11)/ 0.686327D0/
+* data zp6( 11)/ 0.950068D0/
+* ! data for Element 12 Magnesium
+* data zs6( 12)/ 1.310830D0/
+* data zp6( 12)/ 1.388897D0/
+* ! data for Element 13 Aluminum
+* data zs6( 13)/ 2.364264D0/
+* data zp6( 13)/ 1.749102D0/
+* data zd6( 13)/ 1.269384D0/
+* data zsn6( 13)/ 4.742341D0/
+* data zpn6( 13)/ 4.669626D0/
+* data zdn6( 13)/ 7.131138D0/
+* ! data for Element 14 Silicon
+* data zs6( 14)/ 1.752741D0/
+* data zp6( 14)/ 1.198413D0/
+* data zd6( 14)/ 2.128593D0/
+* data zsn6( 14)/ 8.388111D0/
+* data zpn6( 14)/ 1.843048D0/
+* data zdn6( 14)/ 0.708600D0/
+* ! data for Element 15 Phosphorus
+* data zs6( 15)/ 2.158033D0/
+* data zp6( 15)/ 1.805343D0/
+* data zd6( 15)/ 1.230358D0/
+* data zsn6( 15)/ 6.042706D0/
+* data zpn6( 15)/ 2.376473D0/
+* data zdn6( 15)/ 7.147750D0/
+* ! data for Element 16 Sulfur
+* data zs6( 16)/ 2.192844D0/
+* data zp6( 16)/ 1.841078D0/
+* data zd6( 16)/ 3.109401D0/
+* data zsn6( 16)/ 0.479722D0/
+* data zpn6( 16)/ 1.015507D0/
+* data zdn6( 16)/ 4.317470D0/
+* ! data for Element 17 Chlorine
+* data zs6( 17)/ 2.637050D0/
+* data zp6( 17)/ 2.118146D0/
+* data zd6( 17)/ 1.324033D0/
+* data zsn6( 17)/ 0.956297D0/
+* data zpn6( 17)/ 2.464067D0/
+* data zdn6( 17)/ 6.410325D0/
+* ! data for Element 18 Argon
+* data zs6( 18)/ 6.000272D0/
+* data zp6( 18)/ 5.949170D0/
+* ! data for Element 19 Potassium
+* data zs6( 19)/ 6.000478D0/
+* data zp6( 19)/ 1.127503D0/
+* ! data for Element 20 Calcium
+* data zs6( 20)/ 1.528258D0/
+* data zp6( 20)/ 2.060094D0/
+* ! data for Element 21 Scandium
+* data zs6( 21)/ 1.402469D0/
+* data zp6( 21)/ 1.345196D0/
+* data zd6( 21)/ 1.859012D0/
+* data zsn6( 21)/ 0.848418D0/
+* data zpn6( 21)/ 2.451729D0/
+* data zdn6( 21)/ 0.789372D0/
+* ! data for Element 22 Titanium
+* data zs6( 22)/ 5.324777D0/
+* data zp6( 22)/ 1.164068D0/
+* data zd6( 22)/ 1.418280D0/
+* data zsn6( 22)/ 1.045904D0/
+* data zpn6( 22)/ 1.076844D0/
+* data zdn6( 22)/ 0.717945D0/
+* ! data for Element 23 Vanadium
+* data zs6( 23)/ 1.974330D0/
+* data zp6( 23)/ 1.063106D0/
+* data zd6( 23)/ 1.394806D0/
+* data zsn6( 23)/ 1.094426D0/
+* data zpn6( 23)/ 0.755378D0/
+* data zdn6( 23)/ 1.099367D0/
+* ! data for Element 24 Chromium
+* data zs6( 24)/ 3.283460D0/
+* data zp6( 24)/ 1.029394D0/
+* data zd6( 24)/ 1.623119D0/
+* data zsn6( 24)/ 1.619853D0/
+* data zpn6( 24)/ 0.848266D0/
+* data zdn6( 24)/ 1.405015D0/
+* ! data for Element 25 Manganese
+* data zs6( 25)/ 2.131680D0/
+* data zp6( 25)/ 1.525880D0/
+* data zd6( 25)/ 2.607800D0/
+* data zsn6( 25)/ 1.132450D0/
+* data zpn6( 25)/ 1.390740D0/
+* data zdn6( 25)/ 0.962550D0/
+* ! data for Element 26 Iron
+* data zs6( 26)/ 1.479150D0/
+* data zp6( 26)/ 6.002246D0/
+* data zd6( 26)/ 1.080747D0/
+* data zsn6( 26)/ 1.459152D0/
+* data zpn6( 26)/ 1.392614D0/
+* data zdn6( 26)/ 2.161909D0/
+* ! data for Element 27 Cobalt
+* data zs6( 27)/ 1.166613D0/
+* data zp6( 27)/ 3.000000D0/
+* data zd6( 27)/ 1.860218D0/
+* data zsn6( 27)/ 0.519518D0/
+* data zpn6( 27)/ 1.000000D0/
+* data zdn6( 27)/ 0.352115D0/
+* ! data for Element 28 Nickel
+* data zs6( 28)/ 1.591828D0/
+* data zp6( 28)/ 2.304739D0/
+* data zd6( 28)/ 2.514761D0/
+* data zsn6( 28)/ 0.746470D0/
+* data zpn6( 28)/ 0.753327D0/
+* data zdn6( 28)/ 1.461345D0/
+* ! data for Element 29 Copper
+* data zs6( 29)/ 1.669096D0/
+* data zp6( 29)/ 3.000000D0/
+* data zd6( 29)/ 2.734990D0/
+* data zsn6( 29)/ 1.899598D0/
+* data zpn6( 29)/ 3.000000D0/
+* data zdn6( 29)/ 1.484317D0/
+* ! data for Element 30 Zinc
+* data zs6( 30)/ 1.512875D0/
+* data zp6( 30)/ 1.789482D0/
+* ! data for Element 31 Gallium
+* data zs6( 31)/ 2.339067D0/
+* data zp6( 31)/ 1.729592D0/
+* ! data for Element 32 Germanium
+* data zs6( 32)/ 2.546073D0/
+* data zp6( 32)/ 1.709130D0/
+* ! data for Element 33 Arsenic
+* data zs6( 33)/ 2.926171D0/
+* data zp6( 33)/ 1.765191D0/
+* data zd6( 33)/ 1.392142D0/
+* data zsn6( 33)/ 2.006543D0/
+* data zpn6( 33)/ 3.316832D0/
+* data zdn6( 33)/ 4.653440D0/
+* ! data for Element 34 Selenium
+* data zs6( 34)/ 2.512366D0/
+* data zp6( 34)/ 2.007576D0/
+* ! data for Element 35 Bromine
+* data zs6( 35)/ 4.670684D0/
+* data zp6( 35)/ 2.035626D0/
+* data zd6( 35)/ 1.521031D0/
+* data zsn6( 35)/ 3.094777D0/
+* data zpn6( 35)/ 3.065764D0/
+* data zdn6( 35)/ 2.820003D0/
+* ! data for Element 36 Krypton
+* data zs6( 36)/ 1.312248D0/
+* data zp6( 36)/ 4.491371D0/
+* ! data for Element 37 Rubidium
+* data zs6( 37)/ 5.510145D0/
+* data zp6( 37)/ 1.335170D0/
+* ! data for Element 38 Strontium
+* data zs6( 38)/ 2.197303D0/
+* data zp6( 38)/ 1.730137D0/
+* ! data for Element 39 Yttrium
+* data zs6( 39)/ 0.593368D0/
+* data zp6( 39)/ 1.490422D0/
+* data zd6( 39)/ 1.650893D0/
+* data zsn6( 39)/ 0.902611D0/
+* data zpn6( 39)/ 1.484400D0/
+* data zdn6( 39)/ 1.384238D0/
+* ! data for Element 40 Zirconium
+* data zs6( 40)/ 1.692590D0/
+* data zp6( 40)/ 1.694916D0/
+* data zd6( 40)/ 1.567392D0/
+* data zsn6( 40)/ 1.189109D0/
+* data zpn6( 40)/ 0.809092D0/
+* data zdn6( 40)/ 1.190249D0/
+* ! data for Element 41 Niobium
+* data zs6( 41)/ 2.355562D0/
+* data zp6( 41)/ 1.386907D0/
+* data zd6( 41)/ 1.977324D0/
+* data zsn6( 41)/ 1.490754D0/
+* data zpn6( 41)/ 0.892760D0/
+* data zdn6( 41)/ 1.443837D0/
+* ! data for Element 42 Molybdenum
+* data zs6( 42)/ 1.060429D0/
+* data zp6( 42)/ 1.350412D0/
+* data zd6( 42)/ 1.827152D0/
+* data zsn6( 42)/ 1.912995D0/
+* data zpn6( 42)/ 1.355055D0/
+* data zdn6( 42)/ 1.876231D0/
+* ! data for Element 43 Technetium
+* data zs6( 43)/ 1.956245D0/
+* data zp6( 43)/ 6.006299D0/
+* data zd6( 43)/ 1.767360D0/
+* data zsn6( 43)/ 1.411033D0/
+* data zpn6( 43)/ 1.141313D0/
+* data zdn6( 43)/ 1.159312D0/
+* ! data for Element 44 Ruthenium
+* data zs6( 44)/ 1.459195D0/
+* data zp6( 44)/ 5.537201D0/
+* data zd6( 44)/ 2.093164D0/
+* data zsn6( 44)/ 0.984449D0/
+* data zpn6( 44)/ 4.586613D0/
+* data zdn6( 44)/ 0.765332D0/
+* ! data for Element 45 Rhodium
+* data zs6( 45)/ 1.324919D0/
+* data zp6( 45)/ 4.306111D0/
+* data zd6( 45)/ 2.901406D0/
+* data zsn6( 45)/ 0.809923D0/
+* data zpn6( 45)/ 6.898259D0/
+* data zdn6( 45)/ 0.643134D0/
+* ! data for Element 46 Palladium
+* data zs6( 46)/ 1.658503D0/
+* data zp6( 46)/ 1.156718D0/
+* data zd6( 46)/ 2.219861D0/
+* data zsn6( 46)/ 1.794085D0/
+* data zpn6( 46)/ 6.158778D0/
+* data zdn6( 46)/ 1.630913D0/
+* ! data for Element 47 Silver
+* data zs6( 47)/ 1.994004D0/
+* data zp6( 47)/ 0.681817D0/
+* data zd6( 47)/ 6.007328D0/
+* data zsn6( 47)/ 0.695514D0/
+* data zpn6( 47)/ 4.729949D0/
+* data zdn6( 47)/ 0.506522D0/
+* ! data for Element 48 Cadmium
+* data zs6( 48)/ 1.384108D0/
+* data zp6( 48)/ 1.957413D0/
+* ! data for Element 49 Indium
+* data zs6( 49)/ 2.023087D0/
+* data zp6( 49)/ 2.106618D0/
+* ! data for Element 50 Tin
+* data zs6( 50)/ 2.383941D0/
+* data zp6( 50)/ 2.057908D0/
+* ! data for Element 51 Antimony
+* data zs6( 51)/ 2.391178D0/
+* data zp6( 51)/ 1.773006D0/
+* data zd6( 51)/ 2.465590D0/
+* data zsn6( 51)/ 5.993591D0/
+* data zpn6( 51)/ 6.145086D0/
+* data zdn6( 51)/ 5.704031D0/
+* ! data for Element 52 Tellurium
+* data zs6( 52)/ 2.769862D0/
+* data zp6( 52)/ 1.731319D0/
+* ! data for Element 53 Iodine
+* data zs6( 53)/ 4.498653D0/
+* data zp6( 53)/ 1.917072D0/
+* data zd6( 53)/ 1.875175D0/
+* data zsn6( 53)/ 9.135244D0/
+* data zpn6( 53)/ 6.888191D0/
+* data zdn6( 53)/ 3.791523D0/
+* ! data for Element 54 Xenon
+* data zs6( 54)/ 2.759787D0/
+* data zp6( 54)/ 1.977446D0/
+* ! data for Element 55 Cesium
+* data zs6( 55)/ 5.956008D0/
+* data zp6( 55)/ 1.619485D0/
+* ! data for Element 56 Barium
+* data zs6( 56)/ 1.395379D0/
+* data zp6( 56)/ 1.430139D0/
+* ! data for Element 57 Lanthanum
+* data zs6( 57)/ 2.673780D0/
+* data zp6( 57)/ 1.248192D0/
+* data zd6( 57)/ 1.688562D0/
+* data zsn6( 57)/ 1.617784D0/
+* data zpn6( 57)/ 4.331620D0/
+* data zdn6( 57)/ 2.285738D0/
+* ! data for Element 71 Lutetium
+* data zs6( 71)/ 5.471741D0/
+* data zp6( 71)/ 1.712296D0/
+* data zd6( 71)/ 2.225892D0/
+* data zsn6( 71)/ 1.632335D0/
+* data zpn6( 71)/ 4.033128D0/
+* data zdn6( 71)/ 0.921999D0/
+* ! data for Element 72 Hafnium
+* data zs6( 72)/ 3.085344D0/
+* data zp6( 72)/ 1.575819D0/
+* data zd6( 72)/ 1.840840D0/
+* data zsn6( 72)/ 0.946927D0/
+* data zpn6( 72)/ 3.538911D0/
+* data zdn6( 72)/ 0.940283D0/
+* ! data for Element 73 Tantalum
+* data zs6( 73)/ 4.578087D0/
+* data zp6( 73)/ 4.841244D0/
+* data zd6( 73)/ 1.838249D0/
+* data zsn6( 73)/ 1.741367D0/
+* data zpn6( 73)/ 3.430157D0/
+* data zdn6( 73)/ 2.311198D0/
+* ! data for Element 74 Tungsten
+* data zs6( 74)/ 2.664560D0/
+* data zp6( 74)/ 1.624010D0/
+* data zd6( 74)/ 1.794400D0/
+* data zsn6( 74)/ 1.498860D0/
+* data zpn6( 74)/ 1.965900D0/
+* data zdn6( 74)/ 1.876450D0/
+* ! data for Element 75 Rhenium
+* data zs6( 75)/ 2.411839D0/
+* data zp6( 75)/ 1.815351D0/
+* data zd6( 75)/ 2.522766D0/
+* data zsn6( 75)/ 1.680823D0/
+* data zpn6( 75)/ 1.331218D0/
+* data zdn6( 75)/ 1.490623D0/
+* ! data for Element 76 Osmium
+* data zs6( 76)/ 3.031000D0/
+* data zp6( 76)/ 1.593960D0/
+* data zd6( 76)/ 1.775570D0/
+* data zsn6( 76)/ 1.844700D0/
+* data zpn6( 76)/ 1.564220D0/
+* data zdn6( 76)/ 1.770010D0/
+* ! data for Element 77 Iridium
+* data zs6( 77)/ 1.500907D0/
+* data zp6( 77)/ 4.106373D0/
+* data zd6( 77)/ 2.676047D0/
+* data zsn6( 77)/ 0.927246D0/
+* data zpn6( 77)/ 3.191892D0/
+* data zdn6( 77)/ 0.662007D0/
+* ! data for Element 78 Platinum
+* data zs6( 78)/ 2.301264D0/
+* data zp6( 78)/ 1.662404D0/
+* data zd6( 78)/ 3.168852D0/
+* data zsn6( 78)/ 2.270699D0/
+* data zpn6( 78)/ 1.949896D0/
+* data zdn6( 78)/ 1.713856D0/
+* ! data for Element 79 Gold
+* data zs6( 79)/ 1.814169D0/
+* data zp6( 79)/ 1.618657D0/
+* data zd6( 79)/ 5.053167D0/
+* data zsn6( 79)/ 2.444680D0/
+* data zpn6( 79)/ 7.014990D0/
+* data zdn6( 79)/ 1.777089D0/
+* ! data for Element 80 Mercury
+* data zs6( 80)/ 2.104896D0/
+* data zp6( 80)/ 1.516293D0/
+* ! data for Element 81 Thallium
+* data zs6( 81)/ 3.335883D0/
+* data zp6( 81)/ 1.766141D0/
+* ! data for Element 82 Lead
+* data zs6( 82)/ 2.368901D0/
+* data zp6( 82)/ 1.685246D0/
+* ! data for Element 83 Bismuth
+* data zs6( 83)/ 3.702377D0/
+* data zp6( 83)/ 1.872327D0/
+* ! data for Element 85 Astatine
+* ! data for Element 87 Francium
+* ! data for Element 90 Thorium
+* data zs6( 90)/ 1.435306D0/
+* data zp6( 90)/ 1.435306D0/
+* ! data for Element 97 Berkelium
+* ! data for Element 98 Mithril
+* data zs6( 98)/ 2.000000D0/
+* ! data for Element 100 3+ Sparkle
+* ! data for Element 101 3- Sparkle
+* ! data for Element 102 Capped bond
+* data zs6(102)/ 4.000000D0/
+* ! data for Element 103 ++ Sparkle
+* ! data for Element 104 + Sparkle
+* ! data for Element 105 -- Sparkle
+* ! data for Element 106 - Sparkle
+* module Parameters_for_PM7_C
+* ! data for Element 1 Hydrogen
+* data zs7( 1)/ 1.260237D0/
+* ! data for Element 2 Helium
+* data zs7( 2)/ 3.313204D0/
+* data zp7( 2)/ 3.657133D0/
+* ! data for Element 3 Lithium
+* data zs7( 3)/ 0.804974D0/
+* data zp7( 3)/ 6.027530D0/
+* ! data for Element 4 Beryllium
+* data zs7( 4)/ 1.036199D0/
+* data zp7( 4)/ 1.764629D0/
+* ! data for Element 5 Boron
+* data zs7( 5)/ 1.560481D0/
+* data zp7( 5)/ 1.449712D0/
+* ! data for Element 6 Carbon
+* data zs7( 6)/ 1.942244D0/
+* data zp7( 6)/ 1.708723D0/
+* ! data for Element 7 Nitrogen
+* data zs7( 7)/ 2.354344D0/
+* data zp7( 7)/ 2.028288D0/
+* ! data for Element 8 Oxygen
+* data zs7( 8)/ 5.972309D0/
+* data zp7( 8)/ 2.349017D0/
+* ! data for Element 9 Fluorine
+* data zs7( 9)/ 6.070030D0/
+* data zp7( 9)/ 2.930631D0/
+* ! data for Element 10 Neon
+* data zs7( 10)/ 6.000148D0/
+* data zp7( 10)/ 3.834528D0/
+* ! data for Element 11 Sodium
+* data zs7( 11)/ 1.666701D0/
+* data zp7( 11)/ 1.397571D0/
+* ! data for Element 12 Magnesium
+* data zs7( 12)/ 1.170297D0/
+* data zp7( 12)/ 1.840439D0/
+* ! data for Element 13 Aluminum
+* data zs7( 13)/ 1.232599D0/
+* data zp7( 13)/ 1.219336D0/
+* data zd7( 13)/ 1.617502D0/
+* data zsn7( 13)/ 2.346908D0/
+* data zpn7( 13)/ 1.529050D0/
+* data zdn7( 13)/ 3.682742D0/
+* ! data for Element 14 Silicon
+* data zs7( 14)/ 1.433994D0/
+* data zp7( 14)/ 1.671776D0/
+* data zd7( 14)/ 1.221915D0/
+* data zsn7( 14)/ 2.002570D0/
+* data zpn7( 14)/ 0.818377D0/
+* data zdn7( 14)/ 2.591238D0/
+* ! data for Element 15 Phosphorus
+* data zs7( 15)/ 2.257933D0/
+* data zp7( 15)/ 1.555172D0/
+* data zd7( 15)/ 1.235995D0/
+* data zsn7( 15)/ 4.925330D0/
+* data zpn7( 15)/ 1.040649D0/
+* data zdn7( 15)/ 12.110811D0/
+* ! data for Element 16 Sulfur
+* data zs7( 16)/ 2.046153D0/
+* data zp7( 16)/ 1.807678D0/
+* data zd7( 16)/ 3.510309D0/
+* data zsn7( 16)/ 1.131343D0/
+* data zpn7( 16)/ 0.823803D0/
+* data zdn7( 16)/ 2.296065D0/
+* ! data for Element 17 Chlorine
+* data zs7( 17)/ 2.223076D0/
+* data zp7( 17)/ 2.264466D0/
+* data zd7( 17)/ 0.949994D0/
+* data zsn7( 17)/ 1.992900D0/
+* data zpn7( 17)/ 1.874460D0/
+* data zdn7( 17)/ 5.469221D0/
+* ! data for Element 18 Argon
+* data zs7( 18)/ 6.000272D0/
+* data zp7( 18)/ 5.949170D0/
+* ! data for Element 19 Potassium
+* data zs7( 19)/ 5.422018D0/
+* data zp7( 19)/ 1.471023D0/
+* ! data for Element 20 Calcium
+* data zs7( 20)/ 1.477988D0/
+* data zp7( 20)/ 2.220194D0/
+* ! data for Element 21 Scandium
+* data zs7( 21)/ 1.794897D0/
+* data zp7( 21)/ 2.174934D0/
+* data zd7( 21)/ 5.992860D0/
+* data zsn7( 21)/ 1.314009D0/
+* data zpn7( 21)/ 1.020629D0/
+* data zdn7( 21)/ 1.437857D0/
+* ! data for Element 22 Titanium
+* data zs7( 22)/ 1.448579D0/
+* data zp7( 22)/ 1.940695D0/
+* data zd7( 22)/ 1.093648D0/
+* data zsn7( 22)/ 1.078295D0/
+* data zpn7( 22)/ 4.663707D0/
+* data zdn7( 22)/ 0.954258D0/
+* ! data for Element 23 Vanadium
+* data zs7( 23)/ 6.051795D0/
+* data zp7( 23)/ 2.249871D0/
+* data zd7( 23)/ 1.087345D0/
+* data zsn7( 23)/ 1.215500D0/
+* data zpn7( 23)/ 0.877260D0/
+* data zdn7( 23)/ 1.512555D0/
+* ! data for Element 24 Chromium
+* data zs7( 24)/ 2.838413D0/
+* data zp7( 24)/ 1.379560D0/
+* data zd7( 24)/ 1.188729D0/
+* data zsn7( 24)/ 2.174521D0/
+* data zpn7( 24)/ 4.770642D0/
+* data zdn7( 24)/ 2.141579D0/
+* ! data for Element 25 Manganese
+* data zs7( 25)/ 1.666440D0/
+* data zp7( 25)/ 2.078735D0/
+* data zd7( 25)/ 2.897070D0/
+* data zsn7( 25)/ 1.299761D0/
+* data zpn7( 25)/ 4.059245D0/
+* data zdn7( 25)/ 1.146085D0/
+* ! data for Element 26 Iron
+* data zs7( 26)/ 1.157576D0/
+* data zp7( 26)/ 2.737621D0/
+* data zd7( 26)/ 1.860792D0/
+* data zsn7( 26)/ 2.223065D0/
+* data zpn7( 26)/ 1.314405D0/
+* data zdn7( 26)/ 1.769722D0/
+* ! data for Element 27 Cobalt
+* data zs7( 27)/ 1.789441D0/
+* data zp7( 27)/ 1.531664D0/
+* data zd7( 27)/ 1.951497D0/
+* data zsn7( 27)/ 1.710796D0/
+* data zpn7( 27)/ 0.928007D0/
+* data zdn7( 27)/ 1.563753D0/
+* ! data for Element 28 Nickel
+* data zs7( 28)/ 1.708340D0/
+* data zp7( 28)/ 2.000099D0/
+* data zd7( 28)/ 5.698724D0/
+* data zsn7( 28)/ 1.177087D0/
+* data zpn7( 28)/ 1.013217D0/
+* data zdn7( 28)/ 1.017987D0/
+* ! data for Element 29 Copper
+* data zs7( 29)/ 1.735325D0/
+* data zp7( 29)/ 3.219976D0/
+* data zd7( 29)/ 6.013523D0/
+* data zsn7( 29)/ 2.419271D0/
+* data zpn7( 29)/ 0.302125D0/
+* data zdn7( 29)/ 1.678203D0/
+* ! data for Element 30 Zinc
+* data zs7( 30)/ 1.560140D0/
+* data zp7( 30)/ 1.915631D0/
+* ! data for Element 31 Gallium
+* data zs7( 31)/ 1.913326D0/
+* data zp7( 31)/ 1.811217D0/
+* ! data for Element 32 Germanium
+* data zs7( 32)/ 2.762845D0/
+* data zp7( 32)/ 1.531131D0/
+* ! data for Element 33 Arsenic
+* data zs7( 33)/ 3.213850D0/
+* data zp7( 33)/ 1.628384D0/
+* data zd7( 33)/ 3.314358D0/
+* data zsn7( 33)/ 0.916221D0/
+* data zpn7( 33)/ 1.115722D0/
+* data zdn7( 33)/ 2.137809D0/
+* ! data for Element 34 Selenium
+* data zs7( 34)/ 2.751130D0/
+* data zp7( 34)/ 1.901764D0/
+* ! data for Element 35 Bromine
+* data zs7( 35)/ 3.725480D0/
+* data zp7( 35)/ 2.242318D0/
+* data zd7( 35)/ 1.591034D0/
+* data zsn7( 35)/ 10.522069D0/
+* data zpn7( 35)/ 9.531017D0/
+* data zdn7( 35)/ 5.776829D0/
+* ! data for Element 36 Krypton
+* data zs7( 36)/ 1.312248D0/
+* data zp7( 36)/ 4.491371D0/
+* ! data for Element 37 Rubidium
+* data zs7( 37)/ 1.314831D0/
+* data zp7( 37)/ 6.015581D0/
+* ! data for Element 38 Strontium
+* data zs7( 38)/ 2.092264D0/
+* data zp7( 38)/ 3.314082D0/
+* ! data for Element 39 Yttrium
+* data zs7( 39)/ 1.605083D0/
+* data zp7( 39)/ 2.131069D0/
+* data zd7( 39)/ 6.021645D0/
+* data zsn7( 39)/ 1.186263D0/
+* data zpn7( 39)/ 2.244351D0/
+* data zdn7( 39)/ 0.911477D0/
+* ! data for Element 40 Zirconium
+* data zs7( 40)/ 1.373517D0/
+* data zp7( 40)/ 1.141705D0/
+* data zd7( 40)/ 1.618769D0/
+* data zsn7( 40)/ 1.082243D0/
+* data zpn7( 40)/ 2.978817D0/
+* data zdn7( 40)/ 1.417227D0/
+* ! data for Element 41 Niobium
+* data zs7( 41)/ 2.761686D0/
+* data zp7( 41)/ 5.999062D0/
+* data zd7( 41)/ 1.611677D0/
+* data zsn7( 41)/ 1.429235D0/
+* data zpn7( 41)/ 2.911794D0/
+* data zdn7( 41)/ 1.950434D0/
+* ! data for Element 42 Molybdenum
+* data zs7( 42)/ 1.595399D0/
+* data zp7( 42)/ 1.426575D0/
+* data zd7( 42)/ 1.787748D0/
+* data zsn7( 42)/ 1.903541D0/
+* data zpn7( 42)/ 1.592195D0/
+* data zdn7( 42)/ 1.889678D0/
+* ! data for Element 43 Technetium
+* data zs7( 43)/ 2.104672D0/
+* data zp7( 43)/ 2.669984D0/
+* data zd7( 43)/ 3.030496D0/
+* data zsn7( 43)/ 2.061082D0/
+* data zpn7( 43)/ 0.888524D0/
+* data zdn7( 43)/ 1.575315D0/
+* ! data for Element 44 Ruthenium
+* data zs7( 44)/ 1.605646D0/
+* data zp7( 44)/ 4.580820D0/
+* data zd7( 44)/ 1.244578D0/
+* data zsn7( 44)/ 1.172546D0/
+* data zpn7( 44)/ 1.373361D0/
+* data zdn7( 44)/ 1.018114D0/
+* ! data for Element 45 Rhodium
+* data zs7( 45)/ 1.591465D0/
+* data zp7( 45)/ 4.546046D0/
+* data zd7( 45)/ 2.685918D0/
+* data zsn7( 45)/ 2.079986D0/
+* data zpn7( 45)/ 9.641003D0/
+* data zdn7( 45)/ 1.787794D0/
+* ! data for Element 46 Palladium
+* data zs7( 46)/ 5.790768D0/
+* data zp7( 46)/ 2.169788D0/
+* data zd7( 46)/ 1.327661D0/
+* data zsn7( 46)/ 1.985663D0/
+* data zpn7( 46)/ 0.621281D0/
+* data zdn7( 46)/ 1.768258D0/
+* ! data for Element 47 Silver
+* data zs7( 47)/ 1.793032D0/
+* data zp7( 47)/ 2.528721D0/
+* data zd7( 47)/ 3.524808D0/
+* data zsn7( 47)/ 1.619764D0/
+* data zpn7( 47)/ 0.439729D0/
+* data zdn7( 47)/ 1.210202D0/
+* ! data for Element 48 Cadmium
+* data zs7( 48)/ 3.670047D0/
+* data zp7( 48)/ 1.857036D0/
+* ! data for Element 49 Indium
+* data zs7( 49)/ 1.902085D0/
+* data zp7( 49)/ 1.940127D0/
+* ! data for Element 50 Tin
+* data zs7( 50)/ 1.959238D0/
+* data zp7( 50)/ 1.976146D0/
+* ! data for Element 51 Antimony
+* data zs7( 51)/ 1.998600D0/
+* data zp7( 51)/ 1.887062D0/
+* data zd7( 51)/ 1.475516D0/
+* data zsn7( 51)/ 2.179206D0/
+* data zpn7( 51)/ 0.862318D0/
+* data zdn7( 51)/ 4.147596D0/
+* ! data for Element 52 Tellurium
+* data zs7( 52)/ 3.024819D0/
+* data zp7( 52)/ 2.598283D0/
+* ! data for Element 53 Iodine
+* data zs7( 53)/ 3.316202D0/
+* data zp7( 53)/ 2.449124D0/
+* data zd7( 53)/ 1.716121D0/
+* data zsn7( 53)/ 4.000764D0/
+* data zpn7( 53)/ 3.993847D0/
+* data zdn7( 53)/ 3.946706D0/
+* ! data for Element 54 Xenon
+* data zs7( 54)/ 3.208788D0/
+* data zp7( 54)/ 2.727979D0/
+* ! data for Element 55 Cesium
+* data zs7( 55)/ 1.776064D0/
+* data zp7( 55)/ 6.025310D0/
+* ! data for Element 56 Barium
+* data zs7( 56)/ 1.750490D0/
+* data zp7( 56)/ 1.968788D0/
+* ! data for Element 57 Lanthanum
+* data zs7( 57)/ 3.398968D0/
+* data zp7( 57)/ 1.811983D0/
+* data zd7( 57)/ 1.894574D0/
+* data zsn7( 57)/ 1.187188D0/
+* data zpn7( 57)/ 2.542482D0/
+* data zdn7( 57)/ 2.306744D0/
+* ! data for Element 71 Lutetium
+* data zs7( 71)/ 2.327039D0/
+* data zp7( 71)/ 6.000335D0/
+* data zd7( 71)/ 1.208414D0/
+* data zsn7( 71)/ 0.449170D0/
+* data zpn7( 71)/ 2.469444D0/
+* data zdn7( 71)/ 2.216418D0/
+* ! data for Element 72 Hafnium
+* data zs7( 72)/ 2.854938D0/
+* data zp7( 72)/ 3.079458D0/
+* data zd7( 72)/ 2.067146D0/
+* data zsn7( 72)/ 3.099683D0/
+* data zpn7( 72)/ 3.333027D0/
+* data zdn7( 72)/ 3.025020D0/
+* ! data for Element 73 Tantalum
+* data zs7( 73)/ 4.116264D0/
+* data zp7( 73)/ 3.380936D0/
+* data zd7( 73)/ 1.755408D0/
+* data zsn7( 73)/ 1.011432D0/
+* data zpn7( 73)/ 2.139168D0/
+* data zdn7( 73)/ 1.685479D0/
+* ! data for Element 74 Tungsten
+* data zs7( 74)/ 3.881177D0/
+* data zp7( 74)/ 2.044717D0/
+* data zd7( 74)/ 1.928901D0/
+* data zsn7( 74)/ 3.461491D0/
+* data zpn7( 74)/ 1.904387D0/
+* data zdn7( 74)/ 2.180340D0/
+* ! data for Element 75 Rhenium
+* data zs7( 75)/ 2.452162D0/
+* data zp7( 75)/ 1.583194D0/
+* data zd7( 75)/ 2.414839D0/
+* data zsn7( 75)/ 2.433415D0/
+* data zpn7( 75)/ 0.838026D0/
+* data zdn7( 75)/ 1.921708D0/
+* ! data for Element 76 Osmium
+* data zs7( 76)/ 3.094808D0/
+* data zp7( 76)/ 2.845232D0/
+* data zd7( 76)/ 1.986395D0/
+* data zsn7( 76)/ 2.613281D0/
+* data zpn7( 76)/ 2.062936D0/
+* data zdn7( 76)/ 2.944917D0/
+* ! data for Element 77 Iridium
+* data zs7( 77)/ 1.924564D0/
+* data zp7( 77)/ 3.510744D0/
+* data zd7( 77)/ 2.437796D0/
+* data zsn7( 77)/ 2.108777D0/
+* data zpn7( 77)/ 0.618406D0/
+* data zdn7( 77)/ 1.826929D0/
+* ! data for Element 78 Platinum
+* data zs7( 78)/ 2.922551D0/
+* data zp7( 78)/ 0.725689D0/
+* data zd7( 78)/ 2.158085D0/
+* data zsn7( 78)/ 3.083320D0/
+* data zpn7( 78)/ 19.427280D0/
+* data zdn7( 78)/ 2.233704D0/
+* ! data for Element 79 Gold
+* data zs7( 79)/ 1.904923D0/
+* data zp7( 79)/ 2.408005D0/
+* data zd7( 79)/ 4.377691D0/
+* data zsn7( 79)/ 2.228930D0/
+* data zpn7( 79)/ 4.555019D0/
+* data zdn7( 79)/ 2.406645D0/
+* ! data for Element 80 Mercury
+* data zs7( 80)/ 2.575831D0/
+* data zp7( 80)/ 1.955505D0/
+* ! data for Element 81 Thallium
+* data zs7( 81)/ 1.903342D0/
+* data zp7( 81)/ 2.838647D0/
+* data zd7( 81)/ 5.015677D0/
+* ! data for Element 82 Lead
+* data zs7( 82)/ 4.706006D0/
+* data zp7( 82)/ 2.591455D0/
+* ! data for Element 83 Bismuth
+* data zs7( 83)/ 5.465413D0/
+* data zp7( 83)/ 2.037481D0/
+* data zd7( 83)/ 2.855400D0/
+* data zsn7( 83)/ 4.275828D0/
+* data zpn7( 83)/ 3.018252D0/
+* data zdn7( 83)/ 4.889868D0/
+* ! data for Element 85 Astatine
+* ! data for Element 87 Francium
+* ! data for Element 90 Thorium
+* data zs7( 90)/ 1.435306D0/
+* data zp7( 90)/ 1.435306D0/
+* ! data for Element 97 Berkelium
+* ! data for Element 98 Mithril
+* data zs7( 98)/ 2.000000D0/
+* ! data for Element 100 3+ Sparkle
+* ! data for Element 101 3- Sparkle
+* ! data for Element 102 Capped bond
+* data zs7(102)/ 4.000000D0/
+* ! data for Element 103 ++ Sparkle
+* ! data for Element 104 + Sparkle
+* ! data for Element 105 -- Sparkle
+* ! data for Element 106 - Sparkle
+* module Parameters_for_RM1_C
+* ! data for Element 1 Hydrogen
+* data zsRM1( 1)/ 1.0826737D0/
+* ! data for Element 6 Carbon
+* data zsRM1( 6)/ 1.8501880D0/
+* data zpRM1( 6)/ 1.7683009D0/
+* ! data for Element 7 Nitrogen
+* data zsRM1( 7)/ 2.3744716D0/
+* data zpRM1( 7)/ 1.9781257D0/
+* ! data for Element 8 Oxygen
+* data zsRM1( 8)/ 3.1793691D0/
+* data zpRM1( 8)/ 2.5536191D0/
+* ! data for Element 9 Fluorine
+* data zsRM1( 9)/ 4.4033791D0/
+* data zpRM1( 9)/ 2.6484156D0/
+* ! data for Element 15 Phosphorus
+* data zsRM1( 15)/ 2.1224012D0/
+* data zpRM1( 15)/ 1.7432795D0/
+* ! data for Element 16 Sulfur
+* data zsRM1( 16)/ 2.1334431D0/
+* data zpRM1( 16)/ 1.8746065D0/
+* ! data for Element 17 Chlorine
+* data zsRM1( 17)/ 3.8649107D0/
+* data zpRM1( 17)/ 1.8959314D0/
+* ! data for Element 35 Bromine
+* data zsRM1( 35)/ 5.7315721D0/
+* data zpRM1( 35)/ 2.0314758D0/
+* ! data for Element 53 Iodine
+* data zsRM1( 53)/ 2.5300375D0/
+* data zpRM1( 53)/ 2.3173868D0/
+* ! data for Element 57 Lanthanum
+* data zsRM1( 57)/ 1.272677D0/
+* data zpRM1( 57)/ 1.423276D0/
+* data zdRM1( 57)/ 1.410369D0/
+* data zsnRM1( 57)/ 0.784530D0/
+* data zpnRM1( 57)/ 1.506612D0/
+* data zdnRM1( 57)/ 1.172062D0/
+* ! data for Element 58 Cerium
+* data zsRM1( 58)/ 1.281028D0/
+* data zpRM1( 58)/ 1.425366D0/
+* data zdRM1( 58)/ 1.412866D0/
+* data zsnRM1( 58)/ 0.819413D0/
+* data zpnRM1( 58)/ 1.430349D0/
+* data zdnRM1( 58)/ 1.193220D0/
+* ! data for Element 59 Praseodymium
+* data zsRM1( 59)/ 1.538039D0/
+* data zpRM1( 59)/ 1.581647D0/
+* data zdRM1( 59)/ 1.374904D0/
+* data zsnRM1( 59)/ 0.781944D0/
+* data zpnRM1( 59)/ 1.292982D0/
+* data zdnRM1( 59)/ 0.989605D0/
+* ! data for Element 60 Neodymium
+* data zsRM1( 60)/ 1.458290D0/
+* data zpRM1( 60)/ 1.570516D0/
+* data zdRM1( 60)/ 1.513561D0/
+* data zsnRM1( 60)/ 0.809460D0/
+* data zpnRM1( 60)/ 1.441356D0/
+* data zdnRM1( 60)/ 0.997255D0/
+* ! data for Element 61 Promethium
+* data zsRM1( 61)/ 1.065536D0/
+* data zpRM1( 61)/ 1.846925D0/
+* data zdRM1( 61)/ 1.424049D0/
+* data zsnRM1( 61)/ 0.746406D0/
+* data zpnRM1( 61)/ 1.467790D0/
+* data zdnRM1( 61)/ 0.769147D0/
+* ! data for Element 62 Samarium
+* data zsRM1( 62)/ 1.293914D0/
+* data zpRM1( 62)/ 1.738656D0/
+* data zdRM1( 62)/ 1.521378D0/
+* data zsnRM1( 62)/ 0.663480D0/
+* data zpnRM1( 62)/ 1.492303D0/
+* data zdnRM1( 62)/ 0.853154D0/
+* ! data for Element 63 Europium
+* data zsRM1( 63)/ 1.350342D0/
+* data zpRM1( 63)/ 1.733714D0/
+* data zdRM1( 63)/ 1.494122D0/
+* data zsnRM1( 63)/ 0.679880D0/
+* data zpnRM1( 63)/ 1.578577D0/
+* data zdnRM1( 63)/ 0.798561D0/
+* ! data for Element 64 Gadolinium
+* data zsRM1( 64)/ 1.272776D0/
+* data zpRM1( 64)/ 1.908122D0/
+* data zdRM1( 64)/ 1.515905D0/
+* data zsnRM1( 64)/ 0.986492D0/
+* data zpnRM1( 64)/ 2.043026D0/
+* data zdnRM1( 64)/ 0.976186D0/
+* ! data for Element 65 Terbium
+* data zsRM1( 65)/ 1.210052D0/
+* data zpRM1( 65)/ 1.921514D0/
+* data zdRM1( 65)/ 1.528123D0/
+* data zsnRM1( 65)/ 1.206260D0/
+* data zpnRM1( 65)/ 2.068824D0/
+* data zdnRM1( 65)/ 0.858750D0/
+* ! data for Element 66 Dysprosium
+* data zsRM1( 66)/ 1.295275D0/
+* data zpRM1( 66)/ 1.912107D0/
+* data zdRM1( 66)/ 1.413397D0/
+* data zsnRM1( 66)/ 1.372366D0/
+* data zpnRM1( 66)/ 1.074073D0/
+* data zdnRM1( 66)/ 0.819144D0/
+* ! data for Element 67 Holmium
+* data zsRM1( 67)/ 1.330550D0/
+* data zpRM1( 67)/ 1.779559D0/
+* data zdRM1( 67)/ 1.536524D0/
+* data zsnRM1( 67)/ 1.498038D0/
+* data zpnRM1( 67)/ 1.967497D0/
+* data zdnRM1( 67)/ 0.663021D0/
+* ! data for Element 68 Erbium
+* data zsRM1( 68)/ 1.347757D0/
+* data zpRM1( 68)/ 1.806481D0/
+* data zdRM1( 68)/ 1.466189D0/
+* data zsnRM1( 68)/ 1.446757D0/
+* data zpnRM1( 68)/ 1.973883D0/
+* data zdnRM1( 68)/ 0.650461D0/
+* ! data for Element 69 Thulium
+* data zsRM1( 69)/ 1.369147D0/
+* data zpRM1( 69)/ 1.674365D0/
+* data zdRM1( 69)/ 1.714394D0/
+* data zsnRM1( 69)/ 1.238387D0/
+* data zpnRM1( 69)/ 1.821235D0/
+* data zdnRM1( 69)/ 0.956205D0/
+* ! data for Element 70 Ytterbium
+* data zsRM1( 70)/ 1.239808D0/
+* data zpRM1( 70)/ 1.849144D0/
+* data zdRM1( 70)/ 1.485378D0/
+* data zsnRM1( 70)/ 1.568094D0/
+* data zpnRM1( 70)/ 1.854817D0/
+* data zdnRM1( 70)/ 0.749402D0/
+* ! data for Element 71 Lutetium
+* data zsRM1( 71)/ 1.425302D0/
+* data zpRM1( 71)/ 1.790353D0/
+* data zdRM1( 71)/ 1.642603D0/
+* data zsnRM1( 71)/ 1.475988D0/
+* data zpnRM1( 71)/ 2.136483D0/
+* data zdnRM1( 71)/ 0.660000D0/
+* ! data for Element102 Capped bond
+* data zsRM1(102)/ 4.0000000D0/
+* data zpRM1(102)/ 0.3000000D0/
+* ! data for Element 100: 3+ Sparkle
+* ! data for Element 101: 3- Sparkle
+* ! data for Element 103: ++ Sparkle
+* ! data for Element 104: + Sparkle
+* ! data for Element 105: -- Sparkle
+* ! data for Element 106: - Sparkle

@@ -24,6 +24,10 @@ import org.jmol.util.Logger;
  * 
  * adding [spacegroup] [operators] [cell] [cellaxes] for Jmol 14.3.7 
  * 
+ * adding [STO] ANGS MOPAC
+ *  -- optional zeta in ANGS
+ *  -- optional mopac scaling
+ * 
  * @author Matthew Zwier <mczwier@gmail.com>
  */
 
@@ -204,18 +208,21 @@ public class MoldenReader extends MopacSlaterReader {
     2    0    0    0    0             1.4738648100        1.0095121222          
     3    0    0    0    0             1.4738648100        1.0095121222          
      */
-    
+    double stoFactor = (line.indexOf("ANGS") >= 0 ? ANGSTROMS_PER_BOHR : 1);
+    scaleSlaters = (line.indexOf("MOPAC") >= 0);
     nCoef = 0;
+    
     while (rd() != null && line.indexOf("[") < 0) {
       String[] tokens = getTokens();
       if (tokens.length < 7)
         continue;
+      double zeta = parseFloatStr(tokens[5]) * stoFactor;
       addSlater(parseIntStr(tokens[0]), parseIntStr(tokens[1]),
           parseIntStr(tokens[2]), parseIntStr(tokens[3]), parseIntStr(tokens[4]),
-          parseFloatStr(tokens[5]), parseFloatStr(tokens[6]));
+          zeta, parseFloatStr(tokens[6]));
       nCoef++;
     }
-    setSlaters(false, false);
+    setSlaters(false);
     //moData.put("isNormalized", Boolean.TRUE);
     return false;
   }
@@ -413,7 +420,6 @@ public class MoldenReader extends MopacSlaterReader {
     setMOs("");// Molden does not specify units.
     if (haveEnergy && doSort)
       sortMOs();
-    
     return false;
   }
   

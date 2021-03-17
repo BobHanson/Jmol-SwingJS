@@ -219,7 +219,7 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
     }
     sortOrbitals();
     //System.out.println(Escape.escape(list, false));
-    setSlaters(true, true);
+    setSlaters(true);
     setMOs("eV");
   }
 

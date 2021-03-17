@@ -674,7 +674,7 @@ public class CsfReader extends MopacSlaterReader {
               : contractionCoefs[ipt][i]);
         }
       }
-      setSlaters(true, false); 
+      setSlaters(false); 
     }
   }  
 }

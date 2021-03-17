@@ -109,8 +109,7 @@ public class GamessUKReader extends GamessReader {
       String[] tokens = getTokens();
       int atomicNumber = (int) parseFloatStr(tokens[2]);
       Atom atom = setAtomCoordScaled(null, tokens, 3, ANGSTROMS_PER_BOHR);
-      atom.elementSymbol = getElementSymbol(atomicNumber);
-      atomNames.addLast(atom.atomName = tokens[1]);
+      setAtom(atom, atomicNumber, tokens[1], null);
     }
   }
 

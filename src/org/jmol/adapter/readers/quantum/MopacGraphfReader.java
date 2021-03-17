@@ -31,7 +31,6 @@ import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
 
-
 /**
  * Reads Mopac 2007 GRAPHF output files
  *
@@ -39,28 +38,29 @@ import org.jmol.adapter.smarter.Atom;
  * 
  */
 public class MopacGraphfReader extends MopacSlaterReader {
-    
+
   private int ac;
+
   private int nCoefficients;
-  
+
   @Override
   protected void initializeReader() {
     alphaBeta = "alpha";
   }
-  
+
   @Override
   protected boolean checkLine() throws Exception {
-      readAtoms();
-      if (doReadMolecularOrbitals) {
-        readSlaterBasis();
-        readMolecularOrbitals(false);
-        if (readKeywords())
-          readMolecularOrbitals(true);
-      }
-      continuing = false;
-      return false;
+    readAtoms();
+    if (doReadMolecularOrbitals) {
+      readSlaterBasis();
+      readMolecularOrbitals(false);
+      if (readKeywords())
+        readMolecularOrbitals(true);
+    }
+    continuing = false;
+    return false;
   }
-    
+
   private void readAtoms() throws Exception {
     asc.newAtomSet();
     ac = parseIntStr(line);
@@ -69,19 +69,19 @@ public class MopacGraphfReader extends MopacSlaterReader {
       rd();
       atomicNumbers[i] = parseIntRange(line, 0, 4);
       Atom atom = asc.addNewAtom();
-      setAtomCoordXYZ(atom, parseFloatRange(line, 4, 17), 
-          parseFloatRange(line, 17, 29), 
-          parseFloatRange(line, 29, 41));
+      setAtomCoordXYZ(atom, parseFloatRange(line, 4, 17),
+          parseFloatRange(line, 17, 29), parseFloatRange(line, 29, 41));
       if (line.length() > 41)
         atom.partialCharge = parseFloatStr(line.substring(41));
       atom.elementSymbol = getElementSymbol(atomicNumbers[i]);
       //System.out.println(atom.elementSymbol + " " + atom.x + " " + atom.y + " " + atom.z);
     }
   }
-  
+
   /*
    *  see http://openmopac.net/manual/graph.html
    *  
+   *  <code>
    Block 1, 1 line: Number of atoms (5 characters), plain text: "MOPAC-Graphical data"
    Block 2, 1 line per atom: Atom number (4 characters), Cartesian coordinates (3 sets of 12 characters)
    Block 3, 1 line per atom: Orbital exponents for "s", "p", and "d" Slater orbitals. (3 sets of 11 characters)
@@ -93,22 +93,24 @@ public class MopacGraphfReader extends MopacSlaterReader {
    6    1.2108153   0.0000000   0.0000000
    1    1.7927832   0.9304938   0.0000000
    1    1.7927832  -0.9304938   0.0000000
-
+  
    
    0         1         2         3         4
    01234567890123456789012345678901234567890
    
-
+  
    5.4217510  2.2709600  0.0000000
    2.0475580  1.7028410  0.0000000
    1.2686410  0.0000000  0.0000000
    1.2686410  0.0000000  0.0000000
+   </code>
    */
 
   private void readSlaterBasis() throws Exception {
     /*
      * We have two data structures for each slater, using the WebMO format: 
      * 
+     * <code>
      * int[] slaterInfo[] = {iatom, a, b, c, d}
      * float[] slaterData[] = {zeta, coef}
      * 
@@ -118,41 +120,27 @@ public class MopacGraphfReader extends MopacSlaterReader {
      * 
      * except: a == -2 ==> z^2 ==> (coef)(2z^2-x^2-y^2)(r^d)exp(-zeta*r)
      *    and: b == -2 ==> (coef)(x^2-y^2)(r^d)exp(-zeta*r)
+     * </code>
      */
     nCoefficients = 0;
     float[] values = new float[3];
     for (int iAtom = 0; iAtom < ac; iAtom++) {
       getTokensFloat(rd(), values, 3);
       int atomicNumber = atomicNumbers[iAtom];
-      float zeta;
-      if ((zeta = values[0]) != 0) {
-        createSphericalSlaterByType(iAtom, atomicNumber, "S", zeta, 1);
-      }
-      if ((zeta = values[1]) != 0) {
-        createSphericalSlaterByType(iAtom, atomicNumber, "Px", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Py", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Pz", zeta, 1);
-      }
-      if ((zeta = values[2]) != 0) {
-        createSphericalSlaterByType(iAtom, atomicNumber, "Dx2-y2", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Dxz", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Dz2", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Dyz", zeta, 1);
-        createSphericalSlaterByType(iAtom, atomicNumber, "Dxy", zeta, 1);
-      }
+      createMopacSlaters(iAtom, atomicNumber, values);
     }
     nCoefficients = slaters.size();
-    setSlaters(true, false);
+    setSlaters(false);
   }
 
   private float[][] invMatrix;
-  
+
   private boolean isNewFormat;
   private Lst<float[]> orbitalData;
   private Lst<String> orbitalInfo;
-  
+
   private void readMolecularOrbitals(boolean isBeta) throws Exception {
-    
+
     // read mo coefficients
 
     //  (5 data per line, 15 characters per datum, FORTRAN format: 5d15.8)
@@ -164,9 +152,9 @@ public class MopacGraphfReader extends MopacSlaterReader {
       return;
     isNewFormat = (line.indexOf("ORBITAL") >= 0);
     if (isNewFormat) {
-      orbitalData = new  Lst<float[]>();
+      orbitalData = new Lst<float[]>();
       if (line.length() > 10)
-        orbitalInfo = new  Lst<String>();
+        orbitalInfo = new Lst<String>();
     } else {
       list = new float[nCoefficients][nCoefficients];
     }
@@ -175,7 +163,8 @@ public class MopacGraphfReader extends MopacSlaterReader {
         rd();
       float[] data;
       if (isNewFormat) {
-        if (line == null || line.indexOf("ORBITAL") < 0 || line.indexOf("ORBITAL_LIST") >= 0)
+        if (line == null || line.indexOf("ORBITAL") < 0
+            || line.indexOf("ORBITAL_LIST") >= 0)
           break;
         orbitalData.addLast(data = new float[nCoefficients]);
         if (orbitalInfo != null)
@@ -204,7 +193,8 @@ public class MopacGraphfReader extends MopacSlaterReader {
     for (int i = 0; i < nOrbitals; i++)
       for (int j = 0; j < nCoefficients; j++) {
         for (int k = 0; k < nCoefficients; k++)
-          list2[i][j] += (list[i][k] * (k >= j ? invMatrix[k][j] : invMatrix[j][k]));
+          list2[i][j] += (list[i][k]
+              * (k >= j ? invMatrix[k][j] : invMatrix[j][k]));
         if (Math.abs(list2[i][j]) < MIN_COEF)
           list2[i][j] = 0;
       }
@@ -219,7 +209,8 @@ public class MopacGraphfReader extends MopacSlaterReader {
      */
 
     // read MO energies and occupancies, and fill "coefficients" element
-    if (isNewFormat && orbitalInfo == null && line != null && line.indexOf("ORBITAL_LIST") < 0)
+    if (isNewFormat && orbitalInfo == null && line != null
+        && line.indexOf("ORBITAL_LIST") < 0)
       rd();
     float[] values = new float[2];
     for (int iMo = 0; iMo < nOrbitals; iMo++) {
@@ -243,7 +234,7 @@ public class MopacGraphfReader extends MopacSlaterReader {
     }
     setMOs("eV");
   }
-  
+
   private boolean readKeywords() throws Exception {
     if (rd() == null || line.indexOf(" Keywords:") < 0)
       return false;
@@ -256,4 +247,5 @@ public class MopacGraphfReader extends MopacSlaterReader {
     }
     return isUHF;
   }
+
 }
