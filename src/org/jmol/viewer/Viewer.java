@@ -3730,6 +3730,7 @@ public class Viewer extends JmolViewer
     }
     if (captureParams != null
         && Boolean.FALSE != captureParams.get("captureEnabled")) {
+      captureParams.remove("imagePixels"); 
       //showString(transformManager.matrixRotate.toString(), false);
       long t = ((Long) captureParams.get("endTime")).longValue();
       if (t > 0 && System.currentTimeMillis() + 50 > t)
