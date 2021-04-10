@@ -7,14 +7,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import javajs.util.PT;
-import javajs.util.Rdr;
-
-import org.jmol.api.Interface;
 import org.jmol.translation.PO;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.PT;
+import javajs.util.Rdr;
 
 class Resource {
 
@@ -31,22 +30,25 @@ class Resource {
 
   static Resource getResource(Viewer vwr, String className, String name) {
     String poData = null;
-    if (vwr != null && vwr.isApplet) {
+    if (vwr != null && (Viewer.isJS || vwr.isApplet)) {
       // no longer using individual applet language JAR files
       String fname = Viewer.appletIdiomaBase + "/" + name + ".po";
       Logger.info("Loading language resource " + fname);
       poData = vwr.getFileAsString3(fname, false, "gt");
     } else {
-      try {
-        BufferedReader br = FileManager.getBufferedReaderForResource(vwr,
-            new PO(), "org/jmol/translation/",
-            (className.indexOf("Applet") >= 0 ? "JmolApplet/" : "Jmol/") + name
-                + ".po");
-        String[] data = new String[1];
-        Rdr.readAllAsString(br, Integer.MAX_VALUE, false, data, 0);
-        poData = data[0];
-      } catch (IOException e) {
-        return null;
+      /** @j2sNative */
+      {
+        try {
+          BufferedReader br = FileManager.getBufferedReaderForResource(vwr,
+              new PO(), "org/jmol/translation/",
+              (className.indexOf("Applet") >= 0 ? "JmolApplet/" : "Jmol/")
+                  + name + ".po");
+          String[] data = new String[1];
+          Rdr.readAllAsString(br, Integer.MAX_VALUE, false, data, 0);
+          poData = data[0];
+        } catch (IOException e) {
+          return null;
+        }
       }
     }
     return getResourceFromPO(poData);

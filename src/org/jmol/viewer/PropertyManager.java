@@ -71,7 +71,6 @@ import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.V3;
-import javajs.util.XmlUtil;
 
 /**
  * 
@@ -2266,8 +2265,8 @@ public class PropertyManager implements JmolPropertyManager {
     // creating an instance prevents pre-loading by JavaScript
     if (Viewer.isJS)
       Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
-    XmlUtil.openTag(sb, "molecule");
-    XmlUtil.openTag(sb, "atomArray");
+    openTag(sb, "molecule");
+    openTag(sb, "atomArray");
     BS bsAtoms = new BS();
     Atom[] atoms = vwr.ms.at;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -2277,14 +2276,14 @@ public class PropertyManager implements JmolPropertyManager {
       String name = atom.getAtomName();
       PT.rep(name, "\"", "''");
       bsAtoms.set(atom.i);
-      XmlUtil.appendTag(sb, "atom/", new String[] { "id",
+      appendTag(sb, "atom/", new String[] { "id",
           "a" + (atom.i + 1), "title", atom.getAtomName(), "elementType",
           atom.getElementSymbol(), "x3", "" + atom.x, "y3", "" + atom.y, "z3",
           "" + atom.z });
     }
-    XmlUtil.closeTag(sb, "atomArray");
+    closeTag(sb, "atomArray");
     if (addBonds) {
-      XmlUtil.openTag(sb, "bondArray");
+      openTag(sb, "bondArray");
       int bondCount = vwr.ms.bondCount;
       Bond[] bonds = vwr.ms.bo;
       for (int i = 0; i < bondCount; i++) {
@@ -2296,14 +2295,31 @@ public class PropertyManager implements JmolPropertyManager {
         String order = Edge.getCmlBondOrder(bond.order);
         if (order == null)
           continue;
-        XmlUtil.appendTag(sb, "bond/", new String[] { "atomRefs2",
+        appendTag(sb, "bond/", new String[] { "atomRefs2",
             "a" + (bond.atom1.i + 1) + " a" + (bond.atom2.i + 1),
             "order", order, });
       }
-      XmlUtil.closeTag(sb, "bondArray");
+      closeTag(sb, "bondArray");
     }
-    XmlUtil.closeTag(sb, "molecule");
+    closeTag(sb, "molecule");
     return sb.toString();
+  }
+
+  static void openTag(SB sb, String name) {
+    sb.append("<").append(name).append(">\n");
+  }
+
+  static void appendTag(SB sb, String name, String[] attributes) {
+    sb.append("<").append(name);
+    for (int i = 0; i < attributes.length; i++) {
+      sb.append(" ").append(attributes[i]).append("=\"").append(attributes[++i])
+          .append("\"");
+    }
+    sb.append("/>\n");
+  }
+
+  static void closeTag(SB sb, String name) {
+    sb.append("</").append(name).append(">\n");
   }
 
   /**
