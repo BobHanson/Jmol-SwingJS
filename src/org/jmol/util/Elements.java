@@ -236,6 +236,7 @@ public class Elements {
         if (symbol.length() == 2)
           map.put(symbol.toUpperCase(), boxed);
       }
+      map.put("Z",  Integer.valueOf(0));
       htElementMap = map;
     }
     if (elementSymbol == null)
