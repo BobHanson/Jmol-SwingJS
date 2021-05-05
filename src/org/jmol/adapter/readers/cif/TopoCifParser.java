@@ -143,7 +143,8 @@ public class TopoCifParser implements Parser {
       Hashtable<String, Object> info = new Hashtable<String, Object>();
       info.put("label1", a1.atomName);
       info.put("label2", a2.atomName);
-      info.put("distance", Float.valueOf(d));
+      if (!Float.isNaN(d))
+        info.put("distance", Float.valueOf(d));
       info.put("symop1", Integer.valueOf(op1 + 1));
       info.put("symop2", Integer.valueOf(op2 + 1));
       info.put("t1", t1);
@@ -234,9 +235,22 @@ public class TopoCifParser implements Parser {
       p2.setT(p2u);
       sym.toCartesian(p1, true);
       sym.toCartesian(p2, true);
-      isValid = isEqualD(p1, p2, link.d);
-//      if (!isValid)
-//        System.out.println(p1 + " " + p2 + " " + p1.distance(p2) + " " + link.d + "\n" + op);
+      if (Float.isNaN(link.d) || link.d == 0) {
+        // zero here is questionable, but NaN should be OK -- optional
+        System.out.println("TopoCifParser link distance " 
+            + link.p1f + "-" + link.p2f + " assigned " 
+            + p1.distance(p2) + " given as " + link.d);
+        link.d = p1.distance(p2);
+        isValid = true;
+      } else {
+        isValid = isEqualD(p1, p2, link.d);
+      }
+      if (!isValid) {
+       String msg = "TopoCifParser link ignored due to distance error " 
+           + link.p1f + "-" + link.p2f + " actual " 
+           + p1.distance(p2) + " expected " + link.d + " for operator " + symop + "\n";
+       reader.appendLoadNote(msg);
+      }
     }
 
     public String info() {
@@ -311,7 +325,7 @@ public class TopoCifParser implements Parser {
       }
 
       d = getFloat(topol_link_distance);
-      if (!(d > 0)) { // includes NaN
+      if (d == 0) {
         Logger.warn("TopoCifParser invalid distance");
         continue;
       }
@@ -445,6 +459,8 @@ public class TopoCifParser implements Parser {
         if (prim == null)
           continue;
         pa.setT(at1);
+        // The primitive may or may not be in cell 555. 
+        // Unitizing fixes that.
         sym.unitize(pa);
         if (isEqualD(pa, prim.p1u, 0)) {
           if (debugging)
@@ -458,15 +474,21 @@ public class TopoCifParser implements Parser {
 
       for (int i2 = bs2.nextSetBit(0); i2 >= 0; i2 = bs2.nextSetBit(i2 + 1)) {
 
-        Atom at2 = atoms[i2];
+        // Check first for same atom or wrong distance.
+        // This is just a convenience, for efficiency.
 
-        // check first for same atom or wrong distance
-
-        if (i1 == i2 || !isEqualD(carts[i1], carts[i2], link.d))
+        if (i1 == i2 
+            || !isEqualD(carts[i1], carts[i2], link.d))
           continue;
 
-        // now for each symmetry operation, check if the vector atom1->atom2 
-        // is the same as the primitive vector for this operation
+        // TODO -- What if the nodes aren't atoms? 
+        // Nodes could have their own position. Hmm.
+        
+        Atom at2 = atoms[i2];
+
+        // Now for each symmetry operation, check if the vector atom1->atom2 
+        // is the same as the primitive vector for this operation.
+        // And also check that we do not already have this bond.
 
         V3 va12 = V3.newVsub(at2, at1);
         for (int i = bsym.nextSetBit(0); i >= 0; i = bsym.nextSetBit(i + 1)) {
@@ -489,7 +511,7 @@ public class TopoCifParser implements Parser {
   }
 
   static boolean isEqualD(T3 p1, T3 p2, double d) {
-    return Math.abs(p1.distance(p2) - d) < ERROR_TOLERANCE;
+    return Double.isNaN(d) || Math.abs(p1.distance(p2) - d) < ERROR_TOLERANCE;
   }
 
   private int getInt(byte field) {
