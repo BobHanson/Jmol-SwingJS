@@ -90,6 +90,8 @@ public class JDXDecompressor {
   private double minY = Double.MAX_VALUE;
 
   private boolean debugging;
+
+  private boolean isNTUPLE;
   
   public double getMinY() {
     return minY;
@@ -115,8 +117,9 @@ public class JDXDecompressor {
    *        the expected number of points
    */
   public JDXDecompressor(JDXSourceStreamTokenizer t, double firstX, double xFactor,
-      double yFactor, double deltaX, int nPoints) {
+      double yFactor, double deltaX, int nPoints, boolean isNTUPLE) {
     this.t = t;
+    this.isNTUPLE = isNTUPLE;
     this.firstX = firstX;
     this.xFactor = xFactor;
     this.yFactor = yFactor;
@@ -179,7 +182,7 @@ public class JDXDecompressor {
       logError("firstX=" + firstX 
           + " xFactor=" + xFactor + " yFactor=" + yFactor + " deltaX=" + deltaX + " nPoints=" + nPoints);
 
-          testAlgorithm();
+          //testAlgorithm();
 
     xyCoords = new Coordinate[nPoints];
 
@@ -205,9 +208,11 @@ public class JDXDecompressor {
         Coordinate point = new Coordinate().set(xval, (yval = getYValue()) * yFactor);
         if (ipt == 0) {
           addPoint(point); // first data line only
+          //System.out.println(ipt + " " + xval + " " + point + " " + dx);
         } else {
           Coordinate lastPoint = xyCoords[ipt - 1];
           double xdif = Math.abs(lastPoint.getXVal() - point.getXVal());
+          //System.out.println(ipt + " " + xdif + " " + point + " " + dx + " " + lastPoint);
           // DIF Y checkpoint means X value does not advance at start
           // of new line. Remove last values and put in latest ones
           if (isCheckPoint && xdif < difMax) {
@@ -233,18 +238,21 @@ public class JDXDecompressor {
         }
         while (ich < lineLen || difVal != Integer.MIN_VALUE || dupCount > 0) {
           xval += deltaX;
-          if (!Double.isNaN(yval = getYValue()))
+          if (!Double.isNaN(yval = getYValue())) {
+            //System.out.println(ipt + " xval=" + xval + " " + dx + " " + deltaX);
             addPoint(new Coordinate().set(xval, yval * yFactor));
+          }
         }
         lastLine = line;
       }
     } catch (IOException ioe) {
     }
     if (nPoints != ipt) {
+      int n = (isNTUPLE ? nPoints : ipt);
       logError("Decompressor did not find " + nPoints
-          + " points -- instead " + ipt);
-      Coordinate[] temp = new Coordinate[ipt];
-      System.arraycopy(xyCoords, 0, temp, 0, ipt);
+          + " points -- instead " + ipt + " xyCoords.length set to " + n);
+      Coordinate[] temp = new Coordinate[n];
+      System.arraycopy(xyCoords, 0, temp, 0, Math.min(ipt,  n));
       xyCoords = temp;
     }
     return (deltaX > 0 ? xyCoords : Coordinate.reverse(xyCoords));
@@ -253,6 +261,7 @@ public class JDXDecompressor {
   private void logError(String s) {
     if (debugging)
       Logger.debug(s);
+    System.out.println(s);
     errorLog.append(s).appendC('\n');  
   }
 

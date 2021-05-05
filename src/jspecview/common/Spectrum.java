@@ -576,7 +576,7 @@ public class Spectrum extends JDXDataObject {
 
   @Override
   public String toString() {
-    return getTitleLabel();
+    return getTitleLabel() + " xyCoords.length=" + (xyCoords == null ? "" : xyCoords.length);
   }
 
   public PeakInfo findMatchingPeakInfo(PeakInfo pi) {

@@ -824,7 +824,7 @@ public class JDXReader implements JmolJDXMOLReader {
 
 		if (spec.dataClass.equals("XYDATA")) {
 			spec.checkRequiredTokens();
-			decompressData(spec, null);
+			decompressData(spec, null, false);
 			return true;
 		}
 		if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
@@ -894,7 +894,7 @@ public class JDXReader implements JmolJDXMOLReader {
           spec.nucleusX = "?";
       }
 
-      decompressData(spec, minMaxY);
+      decompressData(spec, minMaxY, true);
       return true;
     }
     if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
@@ -912,7 +912,7 @@ public class JDXReader implements JmolJDXMOLReader {
     return false;
   }
 
-  private void decompressData(JDXDataObject spec, double[] minMaxY) {
+  private void decompressData(JDXDataObject spec, double[] minMaxY, boolean isNTUPLE) {
 
     int errPt = errorLog.length();
     double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
@@ -920,7 +920,7 @@ public class JDXReader implements JmolJDXMOLReader {
     spec.setIncreasing(fileDeltaX > 0);
     spec.setContinuous(true);
     JDXDecompressor decompressor = new JDXDecompressor(t, spec.fileFirstX,
-        spec.xFactor, spec.yFactor, fileDeltaX, spec.nPointsFile);
+        spec.xFactor, spec.yFactor, fileDeltaX, spec.nPointsFile, isNTUPLE);
 
     double[] firstLastX = new double[2];
     long t = System.currentTimeMillis();
