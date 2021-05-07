@@ -1387,26 +1387,15 @@ public class CifReader extends AtomSetCollectionReader {
             + " has invalid/unknown coordinates");
         continue;
       }
-      if (atom.elementSymbol == null && atom.atomName != null)
-        atom.getElementSymbol();
-      if (!filterCIFAtom(atom, componentId))
+      if (!addCifAtom(atom, id, componentId, strChain))
         continue;
-      setAtomCoord(atom);
-      if (isMMCIF && !processSubclassAtom(atom, componentId, strChain))
-        continue;
-      if (asc.iSet < 0)
-        nextAtomSet();
-      asc.addAtomWithMappedName(atom);
-      if (id != null) {
-        asc.atomSymbolicMap.put(id, atom);
-        if (seqID > 0) {
-          V3 pt = atom.vib;
-          if (pt == null)
-            pt = asc.addVibrationVector(atom.index, 0, Float.NaN, T.seqid);
-          pt.x = seqID;
-        }
+      if (id != null && seqID > 0) {
+        V3 pt = atom.vib;
+        if (pt == null)
+          pt = asc.addVibrationVector(atom.index, 0, Float.NaN, T.seqid);
+        pt.x = seqID;
       }
-      ac++;
+
       if (modDim > 0 && siteMult != 0)
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }
@@ -1417,6 +1406,26 @@ public class CifReader extends AtomSetCollectionReader {
       skipping = false;
     return true;
   }
+
+  protected boolean addCifAtom(Atom atom, String id, String componentId, String strChain) {
+    if (atom.elementSymbol == null && atom.atomName != null)
+      atom.getElementSymbol();
+    if (!filterCIFAtom(atom, componentId))
+      return false;
+    setAtomCoord(atom);
+    if (isMMCIF && !processSubclassAtom(atom, componentId, strChain))
+      return false;
+    if (asc.iSet < 0)
+      nextAtomSet();
+    asc.addAtomWithMappedName(atom);
+    if (id != null) {
+      asc.atomSymbolicMap.put(id, atom);
+    }
+    ac++;
+    return true;
+  }
+
+
 
   /**
    * @param modelField
