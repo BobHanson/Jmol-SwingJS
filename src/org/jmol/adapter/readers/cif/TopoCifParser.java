@@ -166,7 +166,7 @@ public class TopoCifParser implements Parser {
         atomName = label;
       }
       if (nets.size() == 0)
-        nets.add(new Net(netIndex++, pre));
+        nets.addLast(new Net(netIndex++, pre));
       if (netID == null)
         netID = pre;
       Net net = (Net) getTopo(nets, netID, 'N');
