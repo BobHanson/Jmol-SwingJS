@@ -50,6 +50,8 @@ import jspecview.common.ScriptToken;
  * Modified 
  * 6 Oct 2010  added lastX for Inkscape SVG export so baseline could be printed
  * 
+ * 2021.05.08 Bob Hanson fixes SVG export for HTML5
+ * 
  * @author Debbie-Ann Facey
  * @author Khari A. Bryan
  * @author Craig A.D. Walters
@@ -87,9 +89,13 @@ public class SVGExporter extends FormExporter {
 			OC out, Spectrum spec, int startIndex, int endIndex,
 			PanelData pd, boolean asBase64) throws IOException {
 		initForm(viewer, out);
+		if (pd == null)
+		  pd = viewer.pd();
 		GenericColor plotAreaColor, backgroundColor, plotColor, gridColor, titleColor, scaleColor, unitsColor;
 		if (pd == null) {
-			plotAreaColor = backgroundColor = plotColor = gridColor = titleColor = scaleColor = unitsColor = ColorParameters.BLACK;
+		  plotAreaColor = backgroundColor = ColorParameters.LIGHT_GRAY;
+			plotColor = ColorParameters.BLUE; 
+			gridColor = titleColor = scaleColor = unitsColor = ColorParameters.BLACK;
 		} else {
 			plotAreaColor = pd.getColor(ScriptToken.PLOTAREACOLOR);
 			backgroundColor = pd.bgcolor;
@@ -132,8 +138,8 @@ public class SVGExporter extends FormExporter {
 		for (double i = minXOnScale; i < maxXOnScale + xStep / 2; i += xStep) {
 			xPt = leftPlotArea + ((i - minXOnScale) * xScaleFactor);
 			yPt = topPlotArea;
-			xStr = DF.formatDecimalTrimmed(xPt, 6);
-			yStr = DF.formatDecimalTrimmed(yPt, 6);
+			xStr = formatDecimalTrimmed(xPt, 6);
+			yStr = formatDecimalTrimmed(yPt, 6);
 			Map<String, String> hash = new Hashtable<String, String>();
 			hash.put("xVal", xStr);
 			hash.put("yVal", yStr);
@@ -143,8 +149,8 @@ public class SVGExporter extends FormExporter {
 		for (double i = minYOnScale; i < maxYOnScale + yStep / 2; i += yStep) {
 			xPt = leftPlotArea;
 			yPt = topPlotArea + ((i - minYOnScale) * yScaleFactor);
-			xStr = DF.formatDecimalTrimmed(xPt, 6);
-			yStr = DF.formatDecimalTrimmed(yPt, 6);
+			xStr = formatDecimalTrimmed(xPt, 6);
+			yStr = formatDecimalTrimmed(yPt, 6);
 			Map<String, String> hash = new Hashtable<String, String>();
 			hash.put("xVal", xStr);
 			hash.put("yVal", yStr);
@@ -162,8 +168,8 @@ public class SVGExporter extends FormExporter {
 			xPt = leftPlotArea + ((i - minXOnScale) * xScaleFactor);
 			xPt -= 10; // shift to left by 10
 			yPt = bottomPlotArea + 15; // shift down by 15
-			xStr = DF.formatDecimalTrimmed(xPt, 6);
-			yStr = DF.formatDecimalTrimmed(yPt, 6);
+			xStr = formatDecimalTrimmed(xPt, 6);
+			yStr = formatDecimalTrimmed(yPt, 6);
 			String iStr = DF.formatDecimalDbl(i, precisionX);
 			Map<String, String> hash = new Hashtable<String, String>();
 			hash.put("xVal", xStr);
@@ -175,8 +181,8 @@ public class SVGExporter extends FormExporter {
 			xPt = leftPlotArea + ((j - minXOnScale) * xScaleFactor);
 			xPt -= 10;
 			yPt = bottomPlotArea + 15; // shift down by 15
-			xStr = DF.formatDecimalTrimmed(xPt, 6);
-			yStr = DF.formatDecimalTrimmed(yPt, 6);
+			xStr = formatDecimalTrimmed(xPt, 6);
+			yStr = formatDecimalTrimmed(yPt, 6);
 			String iStr = DF.formatDecimalDbl(i, precisionX);
 
 			Map<String, String> hash = new Hashtable<String, String>();
@@ -191,8 +197,8 @@ public class SVGExporter extends FormExporter {
 			xPt = leftPlotArea - 55;
 			yPt = bottomPlotArea - ((i - minYOnScale) * yScaleFactor);
 			yPt += 3; // shift down by three
-			xStr = DF.formatDecimalTrimmed(xPt, 6);
-			yStr = DF.formatDecimalTrimmed(yPt, 6);
+			xStr = formatDecimalTrimmed(xPt, 6);
+			yStr = formatDecimalTrimmed(yPt, 6);
 			String iStr = DF.formatDecimalDbl(i, precisionY);
 
 			Map<String, String> hash = new Hashtable<String, String>();
@@ -205,8 +211,7 @@ public class SVGExporter extends FormExporter {
 		double firstTranslateX, firstTranslateY, secondTranslateX, secondTranslateY;
 		double scaleX, scaleY;
 
-		boolean increasing = spec.isXIncreasing();
-
+		boolean increasing = (pd != null && pd.getBoolean(ScriptToken.REVERSEPLOT));//false;//spec.isXIncreasing();
 		if (increasing) {
 			firstTranslateX = leftPlotArea;
 			firstTranslateY = bottomPlotArea;
@@ -226,13 +231,13 @@ public class SVGExporter extends FormExporter {
 		double yTickA = minYOnScale - (yStep / 2);
 		double yTickB = yStep / 5;
 
-		context.put("plotAreaColor", CU.toRGBHexString(plotAreaColor));
-		context.put("backgroundColor", CU.toRGBHexString(backgroundColor));
-		context.put("plotColor", CU.toRGBHexString(plotColor));
-		context.put("gridColor", CU.toRGBHexString(gridColor));
-		context.put("titleColor", CU.toRGBHexString(titleColor));
-		context.put("scaleColor", CU.toRGBHexString(scaleColor));
-		context.put("unitsColor", CU.toRGBHexString(unitsColor));
+		context.put("plotAreaColor", toRGBHexString(plotAreaColor));
+		context.put("backgroundColor", toRGBHexString(backgroundColor));
+		context.put("plotColor", toRGBHexString(plotColor));
+		context.put("gridColor", toRGBHexString(gridColor));
+		context.put("titleColor", toRGBHexString(titleColor));
+		context.put("scaleColor", toRGBHexString(scaleColor));
+		context.put("unitsColor", toRGBHexString(unitsColor));
 
 		context.put("svgHeight", new Integer(svgHeight));
 		context.put("svgWidth", new Integer(svgWidth));
@@ -266,7 +271,8 @@ public class SVGExporter extends FormExporter {
 		firstY = xyCoords[startIndex].getYVal();
 		lastX = xyCoords[endIndex].getXVal();
 
-		context.put("title", titleColor);
+		System.out.println("SVG " + spec.isXIncreasing() + " " + spec.shouldDisplayXAxisIncreasing() + " " + firstX + " "+ lastX + " " + startIndex + " " + endIndex + " " + newXYCoords.get(0).toString() + " " + increasing);
+		context.put("title", spec.getTitle());
 		context.put("xyCoords", newXYCoords);
 		context.put("continuous", new Boolean(spec.isContinuous()));
 		context.put("firstTranslateX", new Double(firstTranslateX));
@@ -275,6 +281,7 @@ public class SVGExporter extends FormExporter {
 		context.put("scaleY", new Double(scaleY));
 		context.put("secondTranslateX", new Double(secondTranslateX));
 		context.put("secondTranslateY", new Double(secondTranslateY));
+    context.put("plotStrokeWidth", getPlotStrokeWidth(scaleX, scaleY));
 
 		if (increasing) {
 			context.put("xScaleList", xScaleList);
@@ -312,6 +319,19 @@ public class SVGExporter extends FormExporter {
 		Logger.info("SVGExporter using " + vm);
 		return writeForm(vm);
 	}
+
+  private String getPlotStrokeWidth(double scaleX, double scaleY) {
+    String s = formatDecimalTrimmed(Math.abs(scaleY/1e12*2),10);
+    return s;
+  }
+
+  private static String toRGBHexString(GenericColor c) {
+    return "#" + CU.toRGBHexString(c);
+  }
+
+  private static String formatDecimalTrimmed(double x, int precision) {
+    return DF.formatDecimalTrimmed0(x, precision);
+  }
 
   /**
    * Export an overlaid graph as SVG with specified Coordinates and Colors

@@ -60,7 +60,7 @@ public class JSVPopupResourceBundle extends PopupResource {
               
       {   "JDXMenu", "XY DIF DIFDUP FIX PAC SQZ" },
 
-      {   "Export_AsMenu", "PDF - JAVAJPG PNG" },
+      {   "Export_AsMenu", "PDF - JPG PNG SVG" },
               
       {   "ShowMenu", "Show_Header Show_Source Show_Overlay_Key" }, //Window?
 

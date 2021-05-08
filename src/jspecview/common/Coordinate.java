@@ -84,28 +84,6 @@ public class Coordinate {
   }
 
   /**
-   * Returns the x value of the coordinate formatted to a maximum of eight
-   * decimal places
-   * 
-   * @return Returns the x value of the coordinate formatted to a maximum of
-   *         eight decimal places
-   */
-  public String getXString() {
-    return DF.formatDecimalTrimmed(xVal, 8);
-  }
-
-  /**
-   * Returns the y value of the coordinate formatted to a maximum of eight
-   * decimal places
-   * 
-   * @return Returns the y value of the coordinate formatted to a maximum of
-   *         eight decimal places
-   */
-  public String getYString() {
-    return DF.formatDecimalTrimmed(yVal, 8);
-  }
-
-  /**
    * Sets the x value of the coordinate
    * 
    * @param val

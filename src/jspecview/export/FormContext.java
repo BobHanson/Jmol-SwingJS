@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.OC;
+import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.PT;
 
@@ -253,8 +254,8 @@ class FormContext {
 					context.put("pointCount", new Integer(vt.pointCount));
 					context.put(vt.var + ".xVal", new Double(c.getXVal()));
 					context.put(vt.var + ".yVal", new Double(c.getYVal()));
-					context.put(vt.var + ".getXString()", c.getXString());
-					context.put(vt.var + ".getYString()", c.getYString());
+					context.put(vt.var + ".getXString()", getXString(c));
+					context.put(vt.var + ".getYString()", getYString(c));
 				} else if (varData instanceof Map<?, ?>) {
 					for (Map.Entry<String, String> entry : ((Map<String, String>) varData)
 							.entrySet())
@@ -266,6 +267,30 @@ class FormContext {
 		}
 		return (strError != null ? strError : out != null ? out.toString() : null);
 	}
+
+  /**
+   * Returns the x value of the coordinate formatted to a maximum of eight
+   * decimal places
+   * 
+   * @return Returns the x value of the coordinate formatted to a maximum of
+   *         eight decimal places
+   */
+  public String getXString(Coordinate c) {
+    return DF.formatDecimalTrimmed0(c.getXVal(), 8);
+  }
+
+  /**
+   * Returns the y value of the coordinate formatted to a maximum of eight
+   * decimal places
+   * 
+   * @return Returns the y value of the coordinate formatted to a maximum of
+   *         eight decimal places
+   */
+  public String getYString(Coordinate c) {
+    return DF.formatDecimalTrimmed0(c.getYVal(), 8);
+  }
+
+
 
   @SuppressWarnings("unchecked")
   private void foreach(FormToken vt) {
