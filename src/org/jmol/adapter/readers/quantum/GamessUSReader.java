@@ -295,6 +295,7 @@ public class GamessUSReader extends GamessReader {
       Atom atom = asc.addNewAtom();
       setAtomCoordXYZ(atom, x * ANGSTROMS_PER_BOHR, y * ANGSTROMS_PER_BOHR, z * ANGSTROMS_PER_BOHR);
       int atomicNumber = parseIntRange(line, 11, 14);
+      atom.elementSymbol = getElementSymbol(atomicNumber);
       setAtom(atom, atomicNumber, atom.elementSymbol + (++n), atomName);
     }
   }
@@ -325,6 +326,7 @@ public class GamessUSReader extends GamessReader {
       Atom atom = asc.addNewAtom();
       setAtomCoordXYZ(atom, x, y, z);
       int atomicNumber = parseIntRange(line, 11, 14);
+      atom.elementSymbol = getElementSymbol(atomicNumber);
       setAtom(atom, atomicNumber, atom.elementSymbol + (++n), atomName);
     }
     

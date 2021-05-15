@@ -49,7 +49,6 @@ abstract public class GamessReader extends MopacSlaterReader {
   }
 
   protected void setAtom(Atom atom, int atomicNumber, String name, String id) {
-    atom.elementSymbol = getElementSymbol(atomicNumber);
     atom.elementNumber = (short) atomicNumber;
     atom.atomName = name;
     atomNames.addLast(id == null ? name : id);
