@@ -134,7 +134,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean modulated;
   protected boolean isCourseGrained;
   boolean haveCellWaveVector;
-  private String latticeType = null;
+//  private String latticeType = null;
 
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
@@ -1656,8 +1656,7 @@ public class CifReader extends AtomSetCollectionReader {
     // broken in 13.3.4_dev_2013.08.20c
     // fixed in 14.4.3_2016.02.16
     boolean bondLoopBug = (stateScriptVersionInt >= 130304
-        && stateScriptVersionInt < 140403 || stateScriptVersionInt >= 150000
-        && stateScriptVersionInt < 150403);
+        && stateScriptVersionInt < 140403);
     parseLoopParameters(geomBondFields);
     if (bondLoopBug || !checkAllFieldsPresent(geomBondFields, 2, true)) {
       cifParser.skipLoop(false);
