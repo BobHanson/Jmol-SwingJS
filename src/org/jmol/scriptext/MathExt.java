@@ -3254,7 +3254,7 @@ public class MathExt {
     case T.eval:
       return (args.length == 2
           ? s.equalsIgnoreCase("JSON")
-              && mp.addXObj(vwr.parseJSONMap(SV.sValue(args[1])))
+              && mp.addXObj(vwr.parseJSON(SV.sValue(args[1])))
           : mp.addXObj(vwr.evaluateExpressionAsVariable(s)));
     case T.script:
       String appID = (args.length == 2 ? SV.sValue(args[1]) : ".");
