@@ -494,11 +494,10 @@ public class Ellipsoids extends AtomShape {
           continue;
         int i = e2.tensor.atomIndex1;
         // 
-        String c = (isADP ? "Ellipsoids " + e2.percent
+        BSUtil.setMapBitSet(temp, i, i, (isADP ? "Ellipsoids " + e2.percent
             : cmd + " scale " + e2.scale
             + (e2.options == null ? "" : " options " + PT.esc(e2.options))
-            + (e2.isOn ? " ON" : " OFF"));
-        BSUtil.setMapBitSet(temp, i, i, c);
+                + (e2.isOn ? " ON" : " OFF")));
         if (e2.colix != C.INHERIT_ALL)
           BSUtil.setMapBitSet(temp2, i, i,
               getColorCommand(cmd, e2.pid, e2.colix, translucentAllowed));
