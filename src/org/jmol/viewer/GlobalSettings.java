@@ -43,12 +43,22 @@ public class GlobalSettings {
     htNonbooleanParameterValues = new Hashtable<String, Object>();
     htBooleanParameterFlags = new Hashtable<String, Boolean>();
     htPropertyFlagsRemoved = new Hashtable<String, Boolean>();
+    
+    loadFormat = pdbLoadFormat = JC.databases.get("pdb");
+    pdbLoadLigandFormat = JC.databases.get("ligand");
+    nmrUrlFormat = JC.databases.get("nmr");
+    nmrPredictFormat = JC.databases.get("nmrdb");
+    pubChemFormat = JC.databases.get("pubchem");
+    resolverResolver = JC.databases.get("resolverresolver");
+    macroDirectory = JC.defaultMacroDirectory;
+
     if (g != null) {
       //persistent values not reset with the "initialize" command
       if (!clearUserVariables) {
         setO("_pngjFile", g.getParameter("_pngjFile", false));
         htUserVariables = g.htUserVariables; // 12.3.7, 12.2.7
       }
+
       
       debugScript = g.debugScript;
       disablePopupMenu = g.disablePopupMenu;
@@ -73,16 +83,12 @@ public class GlobalSettings {
       testFlag2 = g.testFlag2;
       testFlag3 = g.testFlag3;
       testFlag4 = g.testFlag4;
+      
+      nihResolverFormat = g.nihResolverFormat;
     }
-    loadFormat = pdbLoadFormat = JC.databases.get("pdb");
-    pdbLoadLigandFormat = JC.databases.get("ligand");
-    nmrUrlFormat = JC.databases.get("nmr");
-    nmrPredictFormat = JC.databases.get("nmrdb");
-    smilesUrlFormat = JC.databases.get("nci") + "/file?format=sdf&get3d=true";
-    nihResolverFormat = JC.databases.get("nci");
-    pubChemFormat = JC.databases.get("pubchem");
-    macroDirectory = JC.defaultMacroDirectory;
-
+    if (nihResolverFormat == null)
+      nihResolverFormat = JC.databases.get("nci");
+    setCIR(nihResolverFormat);
     // beyond these six, they are just in the form load =xxx/id
 
     for (CBK item : CBK.values())
@@ -454,7 +460,8 @@ public class GlobalSettings {
   char inlineNewlineChar = '|'; //pseudo static
   String loadFormat, pdbLoadFormat, pdbLoadLigandFormat,
       nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat,
-      pubChemFormat, macroDirectory;
+      pubChemFormat, macroDirectory, resolverResolver;
+  boolean checkCIR = false;
 
 //  String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file.omap";
 //  String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file_diff.omap";
@@ -968,7 +975,7 @@ public class GlobalSettings {
       + ";modelkitmode;autoplaymovie;allowaudio;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
       //  oops these were in some state scripts but should not have been
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
-      + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
+      + ";checkcir;resolverresolver;showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
       // removed in Jmol 14.29.18
       + ";selecthetero;selecthydrogen;"
       
@@ -1066,5 +1073,18 @@ public class GlobalSettings {
       return;
     s.append("  ").append(cmd).append(";\n");
   }
+
+  public void setCIR(String template) {
+    if (template == null || template.equals(nihResolverFormat))
+      return;
+    int pt = template.indexOf("/structure");
+    if (pt > 0) {
+      nihResolverFormat = template.substring(0, pt + 10);
+      smilesUrlFormat = nihResolverFormat  + "/%FILE/file?format=sdf&get3d=true";
+      System.out.println("CIR resolver set to " + nihResolverFormat);
+    }
+
+  }
+
 
 }

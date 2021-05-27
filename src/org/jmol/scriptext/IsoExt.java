@@ -1070,6 +1070,7 @@ public class IsoExt extends ScriptExt {
           // NBO "C1-C2"
           break;
         }
+        //$FALL-THROUGH$
       default:
         if (isNBO && eval.tokAt(i) == T.string) {
           nboName = paramAsStr(i++);
@@ -1133,7 +1134,7 @@ public class IsoExt extends ScriptExt {
     }
   }
 
-  @SuppressWarnings("static-access")
+  @SuppressWarnings({ "static-access", "unchecked" })
   private int setNBOType(Map<String, Object> moData, String type)
       throws ScriptException {
 

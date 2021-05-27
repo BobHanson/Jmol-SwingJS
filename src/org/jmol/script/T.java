@@ -984,12 +984,13 @@ public class T {
   public final static int bondmodeor                     = booleanparam | 36;
   public final static int bondpicking                    = booleanparam | 38;
 // set mathproperty  public final static int bonds                          = booleanparam | 40;
-  public final static int cartoonbaseedges               = booleanparam | 40;
-  public final static int cartoonsfancy                  = booleanparam | 41;
-  public final static int cartoonladders                 = booleanparam | 42;
-  public final static int cartoonribose                  = booleanparam | 43;
-  public final static int cartoonrockets                 = booleanparam | 44;
-  public final static int celshading                     = booleanparam | 45;
+  public final static int cartoonbaseedges               = booleanparam | 39;
+  public final static int cartoonsfancy                  = booleanparam | 40;
+  public final static int cartoonladders                 = booleanparam | 41;
+  public final static int cartoonribose                  = booleanparam | 42;
+  public final static int cartoonrockets                 = booleanparam | 43;
+  public final static int celshading                     = booleanparam | 44;
+  public final static int checkcir                       = booleanparam | 45;
   public final static int chaincasesensitive             = booleanparam | 46;
   public final static int ciprule6full                   = booleanparam | 47;
   public final static int colorrasmol                    = booleanparam | 48;
@@ -1156,7 +1157,7 @@ public class T {
   public final static int cancel        = misc  | 50;
   public final static int cap           = misc  | 51;
   public final static int cavity        = misc  | 52;
-  public final static int check         = misc  | 54;
+  public final static int check         = misc  | 53;
   public final static int chemical      = misc  | 55;
   public final static int circle        = misc  | 56;
   public final static int clash         = misc  | 57;
@@ -2226,6 +2227,7 @@ public class T {
        "cavity",
        "centroid",
        "check",
+       "checkCIR",
        "chemical",
        "circle",
        "collapsed",
@@ -3287,6 +3289,7 @@ public class T {
         cavity,                             //        "cavity"
         centroid,                           //        "centroid"
         check,                              //        "check"
+        checkcir,
         chemical,                           //        "chemical"
         circle,                             //        "circle"
         collapsed,                          //        "collapsed"

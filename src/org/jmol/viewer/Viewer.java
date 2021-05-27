@@ -287,7 +287,8 @@ public class Viewer extends JmolViewer
   private static String version_date;
 
   public static String getJmolVersion() {
-    return (version_date == null ? version_date = (JC.version + "  " + JC.date).trim()
+    return (version_date == null
+        ? version_date = (JC.version + "  " + JC.date).trim()
         : version_date);
   }
 
@@ -492,10 +493,10 @@ public class Viewer extends JmolViewer
       platform = (String) o;
       if (platform == "")
         platform = (
-            // could do this, but so far unnecessary isSwingJS ? "org.jmol.awtsw.Platform" : 
-            "org.jmol.awt.Platform");
+        // could do this, but so far unnecessary isSwingJS ? "org.jmol.awtsw.Platform" : 
+        "org.jmol.awt.Platform");
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
-      isJS = isSwingJS  || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      isJS = isSwingJS || isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
       async = !dataOnly && !autoExit
           && (testAsync || isJS && info.containsKey("async"));
       JSmolAppletObject applet = null;
@@ -507,9 +508,7 @@ public class Viewer extends JmolViewer
        * 
        *            if(self.Jmol) { jmol = Jmol; applet =
        *            Jmol._applets[this.htmlName.split("_object")[0]]; javaver =
-       *            Jmol._version;
-       *            applet && (applet._viewer = this);
-       *            }
+       *            Jmol._version; applet && (applet._viewer = this); }
        * 
        * 
        */
@@ -654,7 +653,8 @@ public class Viewer extends JmolViewer
         setTimeout("" + Math.random(), ((Integer) o).intValue(), "exitJmol");
       }
     }
-    useCommandThread = !isJS && !headless && checkOption2("useCommandThread", "-threaded");
+    useCommandThread = !isJS && !headless
+        && checkOption2("useCommandThread", "-threaded");
     setStartupBooleans();
     setIntProperty("_nProcessors", nProcessors);
     /*
@@ -1618,9 +1618,9 @@ public class Viewer extends JmolViewer
   }
 
   public void openFileDropped(String fname, boolean checkDims) {
-    getScriptManager().openFileAsync(fname, JmolScriptManager.FILE_DROPPED, checkDims);
+    getScriptManager().openFileAsync(fname, JmolScriptManager.FILE_DROPPED,
+        checkDims);
   }
-
 
   /**
    * 
@@ -1728,10 +1728,10 @@ public class Viewer extends JmolViewer
                                   SB sOptions, int tokType, String filecat) {
     if (htParams == null)
       htParams = setLoadParameters(null, isAppend);
+    if (tokType != T.nada)
+        htParams.put("dataType", T.nameOf(tokType));
     if (filecat != " ")
       htParams.put("concatenate", Boolean.TRUE);
-    if (tokType != T.nada)
-      htParams.put("dataType", T.nameOf(tokType));
     Object atomSetCollection;
     String[] saveInfo = fm.getFileInfo();
 
@@ -3494,13 +3494,13 @@ public class Viewer extends JmolViewer
    * 
    * @param mode
    * 
-   *        REFRESHrepaint: ONLY do a repaint -- no syncing
+   *        REFRESH_REPAINT: ONLY do a repaint -- no syncing
    * 
    *        REFRESH_SYNC: mouse motion requiring synchronization -- not going
    *        through Eval so we bypass Eval and mainline on the other vwr! Also
    *        called from j2sApplet.js
    * 
-   *        REFRESHrepaint_SYNC_MASK: same as REFRESHrepaint, but not WebGL
+   *        REFRESH_REPAINT_SYNC_MASK: same as REFRESH_REPAINT, but not WebGL
    * 
    *        REFRESH_NO_MOTION_ONLY: refresh only if not in motion
    * 
@@ -3514,7 +3514,7 @@ public class Viewer extends JmolViewer
    */
   @Override
   public void refresh(int mode, String strWhy) {
-   //System.out.println("Viewer refresh " + mode + " "+ strWhy);
+
     if (rm == null || !refreshing
         || mode == REFRESH_REPAINT_NO_MOTION_ONLY && getInMotion(true)
         || !isWebGL && mode == REFRESH_SEND_WEBGL_NEW_ORIENTATION)
@@ -3722,15 +3722,15 @@ public class Viewer extends JmolViewer
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
       } else {
-        drawImage(gRight, getImage(true, false, false), 0, 0,
+        drawImage(gRight, getImage(true, false), 0, 0,
             tm.stereoDoubleDTI);
-        drawImage(gLeft, getImage(false, false, false), 0, 0,
+        drawImage(gLeft, getImage(false, false), 0, 0,
             tm.stereoDoubleDTI);
       }
     }
     if (captureParams != null
         && Boolean.FALSE != captureParams.get("captureEnabled")) {
-      captureParams.remove("imagePixels"); 
+      captureParams.remove("imagePixels");
       //showString(transformManager.matrixRotate.toString(), false);
       long t = ((Long) captureParams.get("endTime")).longValue();
       if (t > 0 && System.currentTimeMillis() + 50 > t)
@@ -3773,14 +3773,16 @@ public class Viewer extends JmolViewer
    * 
    */
   private void updateJSView(int imodel, int iatom) {
-    if (this.html5Applet == null)
+    if (html5Applet == null)
       return;
+    @SuppressWarnings("unused")
+    JSmolAppletObject applet = this.html5Applet;
     boolean doViewPick = true;
     /**
      * @j2sNative
      * 
-     *            doViewPick = (this.html5Applet != null &&
-     *            this.html5Applet._viewSet != null);
+     *            doViewPick = (applet != null &&
+     *            applet._viewSet != null);
      * 
      */
     {
@@ -3806,19 +3808,16 @@ public class Viewer extends JmolViewer
    * 
    * @param isDouble
    * @param isImageWrite
-   * @param andReturnImage
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
-  private Object getImage(boolean isDouble, boolean isImageWrite,
-                          boolean andReturnImage) {
+  private Object getImage(boolean isDouble, boolean isImageWrite) {
     Object image = null;
     try {
       beginRendering(isDouble, isImageWrite);
       render();
       gdata.endRendering();
-      if (!andReturnImage)
-        image = gdata.getScreenImage(isImageWrite);
+      image = gdata.getScreenImage(isImageWrite);
     } catch (Error er) {
       gdata.getScreenImage(isImageWrite);
       handleError(er, false);
@@ -3868,8 +3867,10 @@ public class Viewer extends JmolViewer
    */
   private void drawImage(Object graphic, Object img, int x, int y,
                          boolean isDTI) {
-    apiPlatform.drawImage(graphic, img, x, y, dimScreen.width, dimScreen.height,
-        isDTI);
+	  if (graphic != null && img != null) {
+        apiPlatform.drawImage(graphic, img, x, y, dimScreen.width, dimScreen.height,
+          isDTI);
+	  }
     gdata.releaseScreenImage();
   }
 
@@ -3888,10 +3889,10 @@ public class Viewer extends JmolViewer
           ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true)
           : null);
     boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
-    boolean isBiColor = tm.stereoMode.isBiColor();
+    boolean isBicolor = tm.stereoMode.isBiColor();
     boolean mergeImages = (g == null && isDouble);
-    Object imageBuffer = null;
-    if (isBiColor) {
+    Object imageBuffer;
+    if (isBicolor) {
       beginRendering(true, isImageWrite);
       render();
       gdata.endRendering();
@@ -3902,7 +3903,7 @@ public class Viewer extends JmolViewer
       gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
       imageBuffer = gdata.getScreenImage(isImageWrite);
     } else {
-      imageBuffer = getImage(isDouble, isImageWrite, false);
+      imageBuffer = getImage(isDouble, isImageWrite);
     }
     Object imageBuffer2 = null;
     if (mergeImages) {
@@ -3916,39 +3917,37 @@ public class Viewer extends JmolViewer
     if (isDouble) {
       if (tm.stereoMode == STER.DTI) {
         drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
-        imageBuffer = getImage(false, false, false);
+        imageBuffer = getImage(false, false);
         drawImage(g, imageBuffer, 0, 0, true);
         g = null;
       } else {
         drawImage(g, imageBuffer, dimScreen.width, 0, false);
-        imageBuffer = getImage(false, false, false);
+        imageBuffer = getImage(false, false);
       }
     }
     if (g != null)
       drawImage(g, imageBuffer, 0, 0, false);
-    if (mergeImages)
-      imageBuffer = imageBuffer2;
-    return imageBuffer;
+    return (mergeImages ? imageBuffer2 : imageBuffer);
   }
 
-//  /**
-//   * will be true only if this is in an undecorated window such as an applet
-//   * 
-//   * @param graphics
-//   * @return
-//   */
-//  private boolean isUndecorated(Object graphics) {
-//    Graphics2D g = (Graphics2D) graphics;
-//
-//    int canvasWidth = -1, canvasHeight = -1;
-//    /**
-//     * @j2sNative
-//     * 
-//     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
-//     * 
-//     */
-//    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
-//  }
+  //  /**
+  //   * will be true only if this is in an undecorated window such as an applet
+  //   * 
+  //   * @param graphics
+  //   * @return
+  //   */
+  //  private boolean isUndecorated(Object graphics) {
+  //    Graphics2D g = (Graphics2D) graphics;
+  //
+  //    int canvasWidth = -1, canvasHeight = -1;
+  //    /**
+  //     * @j2sNative
+  //     * 
+  //     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
+  //     * 
+  //     */
+  //    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
+  //  }
 
   /**
    * @return byte[] image, or null and an error message
@@ -4005,8 +4004,7 @@ public class Viewer extends JmolViewer
 
   public String evalStringQuietSync(String strScript, boolean isQuiet,
                                     boolean allowSyncScript) {
-    
-    
+
     return (getScriptManager() == null ? null
         : scm.evalStringQuietSync(strScript, isQuiet, allowSyncScript));
   }
@@ -4125,9 +4123,10 @@ public class Viewer extends JmolViewer
   }
 
   String resolveDatabaseFormat(String fileName) {
-    if (hasDatabasePrefix(fileName))
-      fileName = (String) setLoadFormat(fileName, fileName.charAt(0), false);
-    return fileName;
+    return (hasDatabasePrefix(fileName)
+        || fileName.indexOf(JC.legacyResolver) >= 0
+            ? (String) setLoadFormat(fileName, fileName.charAt(0), false)
+            : fileName);
   }
 
   public static boolean hasDatabasePrefix(String fileName) {
@@ -4253,7 +4252,13 @@ public class Viewer extends JmolViewer
         }
       }
       return PT.formatStringS(format, "FILE", id);
+    case 'h':
+      // legacy resolver
+      checkCIR(false);
+      return g.nihResolverFormat
+          + name.substring(name.indexOf("/structure") + 10);
     case '$':
+      checkCIR(false);
       if (name.startsWith("$$")) {
         // 2D version
         id = id.substring(1);
@@ -4327,6 +4332,35 @@ public class Viewer extends JmolViewer
       break;
     }
     return id;
+  }
+
+  boolean cirChecked;
+
+  /**
+   * Check to see if the resolver is working
+   * 
+   * @param forceCheck
+   */
+  private void checkCIR(boolean forceCheck) {
+    if (cirChecked && !forceCheck)
+      return;
+    try {
+      g.removeParam("_cirStatus");
+      Map<String, Object> m = getModelSetAuxiliaryInfo();
+      m.remove("cirInfo");
+      Map<String, Object> map = parseJSONMap(
+          getFileAsString(g.resolverResolver));
+      m.put("cirInfo", map);
+      ms.msInfo = m;
+      String s = (String) map.get("status");
+      g.setO("_cirStatus", s);
+      g.setCIR((String) map.get("rfc6570Template"));
+      System.out.println("Viewer.checkCIR _.cirInfo.status = " + s);
+    } catch (Throwable t) {
+      System.out.println(
+          "Viewer.checkCIR failed at " + g.resolverResolver + ": " + t);
+    }
+    cirChecked = true;
   }
 
   public String getStandardLabelFormat(int type) {
@@ -4647,6 +4681,11 @@ public class Viewer extends JmolViewer
     }
     return modelkit;
   }
+
+//  public void setRotateBondIndex(int i) {
+//	    if (modelkit != null)
+//	      modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
+//	  }
 
   public String getMenu(String type) {
     getPopupMenu();
@@ -5340,7 +5379,7 @@ public class Viewer extends JmolViewer
     case T.helixstep:
       return g.helixStep;
     case T.infofontsize:
-      return g.infoFontSize;
+        return g.infoFontSize;
     case T.meshscale:
       return g.meshScale;
     case T.minpixelselradius:
@@ -5416,6 +5455,8 @@ public class Viewer extends JmolViewer
       return g.cartoonSteps;
     case T.cartoonblocks:
       return g.cartoonBlocks;
+    case T.checkcir:
+      return g.checkCIR;
     case T.bondmodeor:
       return g.bondModeOr;
     case T.cartoonbaseedges:
@@ -5563,7 +5604,6 @@ public class Viewer extends JmolViewer
       return g.testFlag3;
     case T.testflag4:
       // isosurface normals
-      // contact -- true: do not edit Cp list
       return g.testFlag4;
 
     case T.tracealpha:
@@ -6376,6 +6416,13 @@ public class Viewer extends JmolViewer
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.checkcir:
+      // 14.31.40
+      g.checkCIR = value;
+      if (value) {
+        checkCIR(true);
+      }
+      break;
     case T.ciprule6full:
       // 14.29.14
       g.cipRule6Full = value;
@@ -6990,8 +7037,8 @@ public class Viewer extends JmolViewer
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
-      setModelkitProperty("atomType", "C");
-      setModelkitProperty("bondType", "p");
+      getModelkit(false).setProperty("atomType", "C");
+      getModelkit(false).setProperty("bondType", "p");
       if (!isApplet)
         popupMenu(10, 0, 'm');
       if (isChange)
@@ -7001,6 +7048,8 @@ public class Viewer extends JmolViewer
         zap(false, true, true);
     } else {
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);
+      setStringProperty("pickingStyle", "toggle");
+      setBooleanProperty("bondPicking", false);
       if (isChange)
         sm.setCallbackFunction("modelkit", "OFF");
     }
@@ -7515,13 +7564,13 @@ public class Viewer extends JmolViewer
           for (int i = 0, n = isSwingJS ? 1 : 4; i < n
               && appConsole == null; i++) {
             appConsole = (
-              //  isApplet
-              //  ? (JmolAppConsoleInterface) Interface
-              //      .getOption("console.AppletConsole", null, null)
-              //  : 
-                  (JmolAppConsoleInterface) Interface.getInterface(
-                    "org.openscience.jmol.app.jmolpanel.console.AppConsole",
-                    null, null));
+            //  isApplet
+            //  ? (JmolAppConsoleInterface) Interface
+            //      .getOption("console.AppletConsole", null, null)
+            //  : 
+            (JmolAppConsoleInterface) Interface.getInterface(
+                "org.openscience.jmol.app.jmolpanel.console.AppConsole", null,
+                null));
             if (appConsole == null)
               try {
                 System.out.println("Viewer can't start appConsole");
@@ -7664,14 +7713,15 @@ public class Viewer extends JmolViewer
                                            float[] dihedralList, M4 m4) {
     // Eval: rotate INTERNAL
 
+    if (eval == null)
+        eval = this.eval;
+	  
     if (headless) {
       if (isSpin && endDegrees == Float.MAX_VALUE)
         return false;
       isSpin = false;
     }
 
-    if (eval == null)
-      eval = this.eval;
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
         translation, finalPoints, dihedralList, m4);
@@ -7883,7 +7933,8 @@ public class Viewer extends JmolViewer
       undoMoveActionClear(atomIndex, AtomCollection.TAINT_COORD, true);
     invertSelected(null, null, atomIndex, bs);
     if (isClick)
-      setStatusAtomPicked(atomIndex, "inverted: " + Escape.eBS(bs), null, true);
+      setStatusAtomPicked(atomIndex, "inverted: " + Escape.eBS(bs), null,
+    		  false);
   }
 
   public void invertSelected(P3 pt, P4 plane, int iAtom, BS bsAtoms) {
@@ -7981,8 +8032,8 @@ public class Viewer extends JmolViewer
    * 
    * @param index
    * @param closestAtomIndex
-   * @param x 
-   * @param y 
+   * @param x
+   * @param y
    */
   public void highlightBond(int index, int closestAtomIndex, int x, int y) {//, String msg) {
     if (!hoverEnabled)
@@ -8354,8 +8405,8 @@ public class Viewer extends JmolViewer
     if (outputManager != null)
       return outputManager;
     return (outputManager = (OutputManager) Interface.getInterface(
-        "org.jmol.viewer.OutputManager" + (isJSNoAWT ? "JS" : "Awt"), this, "file"))
-            .setViewer(this, privateKey);
+        "org.jmol.viewer.OutputManager" + (isJSNoAWT ? "JS" : "Awt"), this,
+        "file")).setViewer(this, privateKey);
   }
 
   private void setSyncTarget(int mode, boolean TF) {
@@ -8388,7 +8439,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public void syncScript(String script, String applet, int port) {
-   sm.syncScript(script, applet, port);
+    sm.syncScript(script, applet, port);
   }
 
   @Override
@@ -9525,6 +9576,7 @@ public class Viewer extends JmolViewer
         : eval.evaluateExpression(stringOrTokens, false, false));
   }
 
+  @Override
   public SV evaluateExpressionAsVariable(Object stringOrTokens) {
     return (getScriptManager() == null ? null
         : (SV) eval.evaluateExpression(stringOrTokens, true, false));
@@ -9851,7 +9903,8 @@ public class Viewer extends JmolViewer
 
   public Object parseJSON(String str) {
     return (str == null ? null
-        : (str = str.trim()).startsWith("{") ? parseJSONMap(str) : parseJSONArray(str));
+        : (str = str.trim()).startsWith("{") ? parseJSONMap(str)
+            : parseJSONArray(str));
   }
 
   public Map<String, Object> parseJSONMap(String jsonMap) {
@@ -10127,9 +10180,8 @@ public class Viewer extends JmolViewer
     }
   }
 
-
   private int consoleFontScale = 1;
-  
+
   public int getConsoleFontScale() {
     return consoleFontScale;
   }

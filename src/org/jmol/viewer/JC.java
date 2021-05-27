@@ -24,20 +24,18 @@
  */
 package org.jmol.viewer;
 
-import org.jmol.script.T;
-import org.jmol.util.Elements;
-import org.jmol.util.Logger;
-
-
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.V3;
-
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
+
+import org.jmol.script.T;
+import org.jmol.util.Elements;
+import org.jmol.util.Logger;
+
+import javajs.util.PT;
+import javajs.util.V3;
 
 
 public final class JC {
@@ -55,9 +53,9 @@ public final class JC {
       + "MO;;;;" // 40
       + "NO;;;;" // 41
       + ";;;;;;" // 42
-      + ";;;;;;" // 43
-      + "RNBO;" // 44
-      + "PRNBO;;" // 45
+      + "PRNBO;" // 43
+      + "RNBO;;" // 44
+      + ";;;;;;" // 45
       + "";
   
   public static int getNBOTypeFromName(String nboType) {
@@ -94,12 +92,15 @@ public final class JC {
 
   public static String getCIPChiralityName(int flags) {
     switch (flags) {
+    // going with ACD Labs idea E/Z and e/z, where e/z is the special case -- NOT pseudochiral 
     case CIP_CHIRALITY_seqcis_FLAG:
-    case CIP_CHIRALITY_seqCis_FLAG:
       return "Z";
+    case CIP_CHIRALITY_seqCis_FLAG:
+      return "z";
     case CIP_CHIRALITY_seqtrans_FLAG:
-    case CIP_CHIRALITY_seqTrans_FLAG:
       return "E";
+    case CIP_CHIRALITY_seqTrans_FLAG:
+      return "e";
     case CIP_CHIRALITY_M_FLAG:
       return "M";
     case CIP_CHIRALITY_P_FLAG:
@@ -134,8 +135,12 @@ public final class JC {
     switch (c) {
     case 'Z':
       return CIP_CHIRALITY_seqcis_FLAG;
+    case 'z':
+      return CIP_CHIRALITY_seqCis_FLAG;
     case 'E':
       return CIP_CHIRALITY_seqtrans_FLAG;
+    case 'e':
+      return CIP_CHIRALITY_seqTrans_FLAG;
     case 'R':
       return CIP_CHIRALITY_R_FLAG;
     case 'S':
@@ -187,7 +192,7 @@ public final class JC {
     "chebi", "https://www.ebi.ac.uk/chebi/saveStructure.do?defaultImage=true&chebiId=%file%2D%",
     "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif",
     "mp", "https://www.materialsproject.org/materials/mp-%FILE/cif#_DOCACHE_", // e.g. https://materialsproject.org/rest/v1/materials/mp-24972/cif 
-    "nci", "https://cactus.nci.nih.gov/chemical/structure/%FILE",
+    "nci", "https://cactus.nci.nih.gov/chemical/structure",
     "pdb", "https://files.rcsb.org/download/%FILE.pdb", // new Jmol 14.4.4 3/2016
     "pdb0", "https://files.rcsb.org/download/%FILE.pdb", // used in JSmol
     "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
@@ -197,8 +202,11 @@ public final class JC {
     "pdbemap", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file.ccp4",
     "pdbemapdiff", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
     "pdbemapserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
-    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1" /// last bit is just mine
+    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1", /// last bit is just mine
+    "resolverResolver", "https://chemapps.stolaf.edu/resolver"
   };
+  
+  final static String legacyResolver = "cactus.nci.nih.gov/chemical/structure";
 
   final static Map<String, String> databases = new Hashtable<String, String>();
 
@@ -262,6 +270,32 @@ public final class JC {
       Logger.info("JC.fixProtocol " + name + " --> " + newname);
     return newname;
   }
+
+
+  // unused
+  
+//  public static String[] macros = {
+//    "aflow",       "https://chemapps.stolaf.edu/jmol/macros/AFLOW.spt", "AFLOW macros",
+//    "bz",          "https://chemapps.stolaf.edu/jmol/macros/bz.spt", "Brillouin Zone/Wigner-Seitz macros",
+//    "topology",    "https://chemapps.stolaf.edu/jmol/macros/topology.spt", "Topology CIF macros",
+//    "topond",      "https://chemapps.stolaf.edu/jmol/macros/topond.spt", "CRYSTAL/TOPOND macros",
+//    "crystal",     "https://chemapps.stolaf.edu/jmol/macros/crystal.spt", "CRYSTAL macros"
+//  };
+// 
+//  public static String getMacroList() {
+//    SB s = new SB();
+//    for (int i = 0; i < macros.length; i += 3)
+//      s.append(macros[i]).append("\t").append(macros[i + 1]).append("\t").append(macros[i + 1]).append("\n");
+//    return s.toString();
+//  }
+//
+//
+//  public static String getMacro(String key) {
+//    for (int i = 0; i < macros.length; i += 3)
+//      if (macros[i].equals(key))
+//        return macros[i + 1];
+//    return null;
+//  }
 
   public final static String copyright = "(C) 2015 Jmol Development";
   

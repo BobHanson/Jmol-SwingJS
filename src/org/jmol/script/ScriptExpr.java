@@ -587,7 +587,7 @@ abstract class ScriptExpr extends ScriptParam {
                 || (v = PT.getMapValueNoCase(localVars, name)) == null
                 && allContext) {
               if (name.startsWith("_")) {
-                v = (name.equals("_") ? vwr.ms.getAuxiliaryInfo(null) : name
+                v = (name.equals("_") ? vwr.getModelSetAuxiliaryInfo() : name
                     .equals("_m") ? vwr.getCurrentModelAuxInfo() : null);
               }
               if (v == null)

@@ -93,7 +93,7 @@ public class Contact extends Isosurface {
   public void setProperty(String propertyName, Object value, BS bs) {
 
     if ("set" == propertyName) {
-      setContacts((Object[]) value, !vwr.getBoolean(T.testflag4));
+      setContacts((Object[]) value, true);//!vwr.getBoolean(T.testflag4));
       return;
     }
     if ("init" == propertyName) {
