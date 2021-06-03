@@ -614,7 +614,7 @@ public class Atom extends Point3fi implements Node {
    @Override
   public String getAtomName() {
      return (atomID > 0 ? Group.specialAtomNames[atomID]
-         : group.chain.model.ms.atomNames[i]);
+         : group.chain.model.ms.atomNames == null ? "" : group.chain.model.ms.atomNames[i]);
    }
    
    @Override
@@ -928,8 +928,8 @@ public class Atom extends Point3fi implements Node {
         return info.toString();
       info.append(".");
     }
-    info.append(getAtomName());
-    if (info.length() == 0) {
+       info.append(getAtomName());
+       if (info.length() == 0) {
       // since atomName cannot be null, this is unreachable
       info.append(getElementSymbolIso(false));
       info.append(" ");
@@ -1418,7 +1418,7 @@ public class Atom extends Point3fi implements Node {
       flags = group.chain.model.ms.getAtomCIPChiralityCode(this);
       formalChargeAndFlags |= ((flags == 0 ? JC.CIP_CHIRALITY_NONE : flags) << CIP_CHIRALITY_OFFSET);
     }
-    return (JC.getCIPChiralityName(flags));
+    return JC.getCIPChiralityName(flags);
   }
 
   public String getCIPChiralityRule() {

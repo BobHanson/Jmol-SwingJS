@@ -113,6 +113,28 @@ import org.jmol.util.Rectangle;
 import org.jmol.util.TempArray;
 import org.jmol.util.Triangulator;
 import org.jmol.viewer.binding.Binding;
+
+import javajs.api.GenericCifDataParser;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.DF;
+import javajs.util.JSJSONParser;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.Rdr;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+import javajs.util.ZipTools;
+
 /*
  * 
  * ****************************************************************
@@ -153,27 +175,6 @@ import org.jmol.viewer.binding.Binding;
  * 
  * ****************************************************************
  */
-
-import javajs.api.GenericCifDataParser;
-import javajs.util.AU;
-import javajs.util.BS;
-import javajs.util.CU;
-import javajs.util.DF;
-import javajs.util.JSJSONParser;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.OC;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.Rdr;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-import javajs.util.ZipTools;
 
 public class Viewer extends JmolViewer
     implements AtomDataServer, PlatformViewer {
@@ -682,6 +683,978 @@ public class Viewer extends JmolViewer
       getScriptManager();
   }
 
+  // //////////// screen/image methods ///////////////
+
+  // final Rectangle rectClip = new Rectangle();
+
+  private int maximumSize = Integer.MAX_VALUE;
+
+  private void setMaximumSize(int x) {
+    maximumSize = Math.max(x, 100);
+  }
+
+  /**
+   * A graphics from a "slave" stereo display that has been synchronized with
+   * this this applet.
+   */
+  private Object gRight;
+
+  /**
+   * A flag to indicate that THIS is the right-side panel of a pair of synced
+   * applets running a left-right stereo display (that would be piped into a
+   * dual-image polarized projector system such as GeoWall).
+   * 
+   */
+  private boolean isStereoSlave;
+
+  public void setStereo(boolean isStereoSlave, Object gRight) {
+    this.isStereoSlave = isStereoSlave;
+    this.gRight = gRight;
+  }
+
+  public float imageFontScaling = 1;
+
+  public String getMenu(String type) {
+    getPopupMenu();
+    if (type.equals("\0")) {
+      popupMenu(dimScreen.width - 120, 0, 'j');
+      return "OK";
+    }
+    return (jmolpopup == null ? ""
+        : jmolpopup.jpiGetMenuAsString(
+            "Jmol version " + getJmolVersion() + "|_GET_MENU|" + type));
+  }
+
+  @Override
+  public int[] resizeInnerPanel(int width, int height) {
+    if (!autoExit && haveDisplay)
+      return sm.resizeInnerPanel(width, height);
+    setScreenDimension(width, height);
+    return new int[] { dimScreen.width, dimScreen.height };
+  }
+
+  @Override
+  public void setScreenDimension(int width, int height) {
+    // There is a bug in Netscape 4.7*+MacOS 9 when comparing dimension objects
+    // so don't try dim1.equals(dim2)
+    height = Math.min(height, maximumSize);
+    width = Math.min(width, maximumSize);
+    if (tm.stereoDoubleFull)
+      width = (width + 1) / 2;
+    if (dimScreen.width == width && dimScreen.height == height)
+      return;
+    resizeImage(width, height, false, false, true);
+  }
+
+  void resizeImage(int width, int height, boolean isImageWrite,
+                   boolean isExport, boolean isReset) {
+    if (!isImageWrite && creatingImage)
+      return;
+    boolean wasAntialiased = antialiased;
+    antialiased = (isReset
+        ? g.antialiasDisplay && checkMotionRendering(T.antialiasdisplay)
+        : isImageWrite && !isExport ? g.antialiasImages : false);
+    if (!isExport && !isImageWrite
+        && (width > 0 || wasAntialiased != antialiased))
+      setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
+    imageFontScaling = (antialiased ? 2f : 1f)
+        * (isReset || tm.scale3D || width <= 0 ? 1
+            : (g.zoomLarge == (height > width) ? height : width) * 1f
+                / getScreenDim());
+    if (width > 0) {
+      dimScreen.width = width;
+      dimScreen.height = height;
+      if (!isImageWrite) {
+        g.setI("_width", width);
+        g.setI("_height", height);
+        //        setStatusResized(width, height);
+      }
+    } else {
+      width = (dimScreen.width == 0 ? dimScreen.width = 500 : dimScreen.width);
+      height = (dimScreen.height == 0 ? dimScreen.height = 500
+          : dimScreen.height);
+    }
+    tm.setScreenParameters(width, height,
+        isImageWrite || isReset ? g.zoomLarge : false, antialiased, false,
+        false);
+    gdata.setWindowParameters(width, height, antialiased);
+    if (width > 0 && !isImageWrite)
+      setStatusResized(width, height);
+  }
+
+  @Override
+  public int getScreenWidth() {
+    return dimScreen.width;
+  }
+
+  @Override
+  public int getScreenHeight() {
+    return dimScreen.height;
+  }
+
+  public int getScreenDim() {
+    return (g.zoomLarge == (dimScreen.height > dimScreen.width)
+        ? dimScreen.height
+        : dimScreen.width);
+  }
+
+  public void setWidthHeightVar() {
+    g.setI("_width", dimScreen.width);
+    g.setI("_height", dimScreen.height);
+  }
+
+  public int getBoundBoxCenterX() {
+    // used by axes renderer
+    return dimScreen.width / 2;
+  }
+
+  public int getBoundBoxCenterY() {
+    return dimScreen.height / 2;
+  }
+
+  private boolean updateWindow(int width, int height) {
+    if (!refreshing || creatingImage)
+      return (refreshing ? false : !isJSNoAWT);
+    if (isTainted || tm.slabEnabled)
+      setModelVisibility();
+    isTainted = false;
+    if (rm != null) {
+      if (width != 0)
+        setScreenDimension(width, height);
+    }
+    return true;
+  }
+
+  /**
+   * 
+   * @param isDouble
+   * @param isImageWrite
+   * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
+   *         of Jmol-Android a canvas in the case of JSmol
+   */
+  private Object getImage(boolean isDouble, boolean isImageWrite) {
+    Object image = null;
+    try {
+      beginRendering(isDouble, isImageWrite);
+      render();
+      gdata.endRendering();
+      image = gdata.getScreenImage(isImageWrite);
+    } catch (Error er) {
+      gdata.getScreenImage(isImageWrite);
+      handleError(er, false);
+      setErrorMessage("Error during rendering: " + er, null);
+    } catch (Exception e) {
+      System.out.println("render error" + e);
+    }
+    return image;
+  }
+
+  private void beginRendering(boolean isDouble, boolean isImageWrite) {
+    gdata.beginRendering(tm.getStereoRotationMatrix(isDouble), g.translucent,
+        isImageWrite, !checkMotionRendering(T.translucent));
+  }
+
+  public boolean antialiased;
+
+  private void render() {
+    if (mm.modelSet == null || !mustRender || !refreshing && !creatingImage
+        || rm == null)
+      return;
+    boolean antialias2 = antialiased && g.antialiasTranslucent;
+    int[] navMinMax = shm.finalizeAtoms(tm.bsSelectedAtoms, true);
+    if (isWebGL) {
+      rm.renderExport(gdata, ms, jsParams);
+      notifyViewerRepaintDone();
+      return;
+    }
+    rm.render(gdata, ms, true, navMinMax);
+    if (gdata.setPass2(antialias2)) {
+      tm.setAntialias(antialias2);
+      rm.render(gdata, ms, false, null);
+      tm.setAntialias(antialiased);
+    }
+  }
+
+  /**
+   * 
+   * @param graphic
+   *        In JavaScript/HTML5, a Canvas.Context2d
+   * @param img
+   * @param x
+   * @param y
+   * @param isDTI
+   *        DTI format -- scrunch width by factor of two
+   */
+  private void drawImage(Object graphic, Object img, int x, int y,
+                         boolean isDTI) {
+    if (graphic != null && img != null) {
+      apiPlatform.drawImage(graphic, img, x, y, dimScreen.width,
+          dimScreen.height, isDTI);
+    }
+    gdata.releaseScreenImage();
+  }
+
+  public Object getScreenImage() {
+    return getScreenImageBuffer(null, true);
+  }
+
+  /**
+   * Image.getJpgImage, ImageCreator.clipImage, getImageBytes,
+   * Viewer.renderScreenImageStereo
+   */
+  @Override
+  public Object getScreenImageBuffer(Object g, boolean isImageWrite) {
+    if (isWebGL)
+      return (isImageWrite
+          ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true)
+          : null);
+    boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
+    boolean isBicolor = tm.stereoMode.isBiColor();
+    boolean mergeImages = (g == null && isDouble);
+    Object imageBuffer;
+    if (isBicolor) {
+      beginRendering(true, isImageWrite);
+      render();
+      gdata.endRendering();
+      gdata.snapshotAnaglyphChannelBytes();
+      beginRendering(false, isImageWrite);
+      render();
+      gdata.endRendering();
+      gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
+      imageBuffer = gdata.getScreenImage(isImageWrite);
+    } else {
+      imageBuffer = getImage(isDouble, isImageWrite);
+    }
+    Object imageBuffer2 = null;
+    if (mergeImages) {
+      imageBuffer2 = apiPlatform.newBufferedImage(imageBuffer,
+          (tm.stereoDoubleDTI ? dimScreen.width : dimScreen.width << 1),
+          dimScreen.height);
+      g = apiPlatform.getGraphics(imageBuffer2);
+    }
+    if (g == null)
+      return imageBuffer;
+    if (isDouble) {
+      if (tm.stereoMode == STER.DTI) {
+        drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
+        imageBuffer = getImage(false, false);
+        drawImage(g, imageBuffer, 0, 0, true);
+        g = null;
+      } else {
+        drawImage(g, imageBuffer, dimScreen.width, 0, false);
+        imageBuffer = getImage(false, false);
+      }
+    }
+    if (g != null)
+      drawImage(g, imageBuffer, 0, 0, false);
+    return (mergeImages ? imageBuffer2 : imageBuffer);
+  }
+
+  public synchronized Object evalStringWaitStatusQueued(String returnType,
+                                                        String strScript,
+                                                        String statusList,
+                                                        boolean isQuiet,
+                                                        boolean isQueued) {
+
+    if (isJS && isApplet) {
+      if (strScript.indexOf("JSCONSOLE") == 0) {
+        jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
+        if (strScript.indexOf("CLEAR") >= 0)
+          jmolObject.clearConsole(html5Applet);
+        return null;
+      }
+
+    }
+    return (getScriptManager() == null ? null
+        : scm.evalStringWaitStatusQueued(returnType, strScript, statusList,
+            isQuiet, isQueued));
+  }
+
+  void popupMenu(int x, int y, char type) {
+    if (!haveDisplay || !refreshing || isPreviewOnly || g.disablePopupMenu)
+      return;
+    switch (type) {
+    case 'j':
+      try {
+        setCursor(Cursor.WAIT_CURSOR);
+        // can throw error if not present; that's ok
+        SwingUtilities.invokeLater(new Runnable() {
+
+          @Override
+          public void run() {
+            getPopupMenu();
+            jmolpopup.jpiShow(x, y);
+            setCursor(Cursor.DEFAULT_CURSOR);
+          }
+
+        });
+      } catch (Throwable e) {
+        // no Swing -- tough luck!
+        Logger.info(e.toString());
+        g.disablePopupMenu = true;
+      }
+      break;
+    case 'a':
+    case 'b':
+    case 'm':
+      // atom, bond, or main -- ignored
+      if (getModelkit(true) == null) {
+        return;
+      }
+      modelkit.jpiShow(x, y);
+      break;
+    }
+  }
+
+  public ModelKitPopup getModelkit(boolean andShow) {
+    if (modelkit == null) {
+      modelkit = (ModelKitPopup) apiPlatform.getMenuPopup(null, 'm');
+    } else if (andShow) {
+      modelkit.jpiUpdateComputedMenus();
+    }
+    return modelkit;
+  }
+
+  Object getPopupMenu() {
+    if (g.disablePopupMenu)
+      return null;
+    if (jmolpopup == null) {
+      jmolpopup = (allowScripting ? apiPlatform.getMenuPopup(menuStructure, 'j')
+          : null);
+      if (jmolpopup == null && !async) {
+        g.disablePopupMenu = true;
+        return null;
+      }
+    }
+    return jmolpopup.jpiGetMenuAsObject();
+  }
+
+  @Override
+  public void setMenu(String fileOrText, boolean isFile) {
+    if (isFile)
+      Logger
+          .info("Setting menu " + (fileOrText.length() == 0 ? "to Jmol defaults"
+              : "from file " + fileOrText));
+    if (fileOrText.length() == 0)
+      fileOrText = null;
+    else if (isFile)
+      fileOrText = getFileAsString3(fileOrText, false, null);
+    getProperty("DATA_API", "setMenu", fileOrText);
+    sm.setCallbackFunction("menu", fileOrText);
+  }
+
+  // // JavaScript callback methods for the applet
+
+  /*
+  * 
+  * animFrameCallback echoCallback (defaults to messageCallback) errorCallback
+  * evalCallback hoverCallback loadStructCallback measureCallback (defaults to
+  * messageCallback) messageCallback (no local version) minimizationCallback
+  * pickCallback resizeCallback scriptCallback (defaults to messageCallback)
+  * syncCallback
+  */
+
+  /*
+  * aniframeCallback is called:
+  * 
+  * -- each time a frame is changed -- whenever the animation state is changed
+  * -- whenever the visible frame range is changed
+  * 
+  * jmolSetCallback("animFrameCallback", "myAnimFrameCallback") function
+  * myAnimFrameCallback(frameNo, fileNo, modelNo, firstNo, lastNo) {}
+  * 
+  * frameNo == the current frame in fileNo == the current file number, starting
+  * at 1 modelNo == the current model number in the current file, starting at 1
+  * firstNo == flag1 * (the first frame of the set, in file * 1000000 + model
+  * notation) lastNo == flag2 * (the last frame of the set, in file * 1000000 +
+  * model notation)
+  * 
+  * where flag1 = 1 if animationDirection > 1 or -1 otherwise where flag2 = 1
+  * if currentDirection > 1 or -1 otherwise
+  * 
+  * RepaintManager.setStatusFrameChanged RepaintManager.setAnimationOff
+  * RepaintManager.setCurrentModelIndex RepaintManager.clearAnimation
+  * RepaintManager.rewindAnimation RepaintManager.setAnimationLast
+  * RepaintManager.setAnimationRelative RepaintManager.setFrameRangeVisible
+  * Viewer.setCurrentModelIndex Eval.file Eval.frame Eval.load
+  * Viewer.createImage (when creating movie frames with the WRITE FRAMES
+  * command) Viewer.initializeModel
+  */
+
+  private int prevFrame = Integer.MIN_VALUE;
+  private float prevMorphModel;
+
+  /**
+   * @param isVib
+   * @param doNotify
+   *        ignored; not implemented
+   */
+  void setStatusFrameChanged(boolean isVib, boolean doNotify) {
+    if (isVib) {
+      // force reset (reading vibrations)
+      prevFrame = Integer.MIN_VALUE;
+    }
+    tm.setVibrationPeriod(Float.NaN);
+    int firstIndex = am.firstFrameIndex;
+    int lastIndex = am.lastFrameIndex;
+
+    boolean isMovie = am.isMovie;
+    int modelIndex = am.cmi;
+    if (firstIndex == lastIndex && !isMovie)
+      modelIndex = firstIndex;
+    int frameID = getModelFileNumber(modelIndex);
+    int currentFrame = am.cmi;
+    int fileNo = frameID;
+    int modelNo = frameID % 1000000;
+    int firstNo = (isMovie ? firstIndex : getModelFileNumber(firstIndex));
+    int lastNo = (isMovie ? lastIndex : getModelFileNumber(lastIndex));
+
+    String strModelNo;
+    if (isMovie) {
+      strModelNo = "" + (currentFrame + 1);
+    } else if (fileNo == 0) {
+      strModelNo = getModelNumberDotted(firstIndex);
+      if (firstIndex != lastIndex)
+        strModelNo += " - " + getModelNumberDotted(lastIndex);
+      if (firstNo / 1000000 == lastNo / 1000000)
+        fileNo = firstNo;
+    } else {
+      strModelNo = getModelNumberDotted(modelIndex);
+    }
+    if (fileNo != 0)
+      fileNo = (fileNo < 1000000 ? 1 : fileNo / 1000000);
+
+    if (!isMovie) {
+      g.setI("_currentFileNumber", fileNo);
+      g.setI("_currentModelNumberInFile", modelNo);
+    }
+    float currentMorphModel = am.currentMorphModel;
+    g.setI("_currentFrame", currentFrame);
+    g.setI("_morphCount", am.morphCount);
+    g.setF("_currentMorphFrame", currentMorphModel);
+    g.setI("_frameID", frameID);
+    g.setI("_modelIndex", modelIndex);
+    g.setO("_modelNumber", strModelNo);
+    g.setO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
+    String title = (modelIndex < 0 ? "" : ms.getModelTitle(modelIndex));
+    g.setO("_modelTitle", title == null ? "" : title);
+    g.setO("_modelFile",
+        (modelIndex < 0 ? "" : ms.getModelFileName(modelIndex)));
+    g.setO("_modelType",
+        (modelIndex < 0 ? "" : ms.getModelFileType(modelIndex)));
+
+    if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
+      return;
+    prevFrame = currentFrame;
+    prevMorphModel = currentMorphModel;
+
+    String entryName = getModelName(currentFrame);
+    if (isMovie) {
+      entryName = "" + (entryName == "" ? currentFrame + 1 : am.caf + 1) + ": "
+          + entryName;
+    } else {
+      String script = "" + getModelNumberDotted(currentFrame);
+      if (!entryName.equals(script))
+        entryName = script + ": " + entryName;
+    }
+    // there was a point where I thought frameNo and currentFrame
+    // might be different. 
+    sm.setStatusFrameChanged(fileNo, modelNo,
+        (am.animationDirection < 0 ? -firstNo : firstNo),
+        (am.currentDirection < 0 ? -lastNo : lastNo), currentFrame,
+        currentMorphModel, entryName);
+    if (doHaveJDX())
+      getJSV().setModel(modelIndex);
+    if (isJS && isApplet)
+      updateJSView(modelIndex, -1);
+  }
+
+  // interaction with JSpecView
+
+  private boolean haveJDX;
+  private JmolJSpecView jsv;
+
+  private boolean doHaveJDX() {
+    // once-on, never off
+    return (haveJDX
+        || (haveJDX = getBooleanProperty("_JSpecView".toLowerCase())));
+  }
+
+  JmolJSpecView getJSV() {
+    if (jsv == null) {
+      jsv = (JmolJSpecView) Interface.getOption("jsv.JSpecView", this,
+          "script");
+      jsv.setViewer(this);
+    }
+    return jsv;
+  }
+
+  /**
+   * get the model designated as "baseModel" in a JCamp-MOL file for example,
+   * the model used for bonding for an XYZVIB file or the model used as the base
+   * model for a mass spec file. This might then allow pointing off a peak in
+   * JSpecView to switch to the model that is involved in HNMR or CNMR
+   * 
+   * @param modelIndex
+   * 
+   * @return modelIndex
+   */
+
+  public int getJDXBaseModelIndex(int modelIndex) {
+    if (!doHaveJDX())
+      return modelIndex;
+    return getJSV().getBaseModelIndex(modelIndex);
+  }
+
+  public Object getJspecViewProperties(Object myParam) {
+    // from getProperty("JSpecView...")
+    Object o = sm.getJspecViewProperties("" + myParam);
+    if (o != null)
+      haveJDX = true;
+    return o;
+  }
+
+  /*
+  * echoCallback is one of the two main status reporting mechanisms. Along with
+  * scriptCallback, it outputs to the console. Unlike scriptCallback, it does
+  * not output to the status bar of the application or applet. If
+  * messageCallback is enabled but not echoCallback, these messages go to the
+  * messageCallback function instead.
+  * 
+  * jmolSetCallback("echoCallback", "myEchoCallback") function
+  * myEchoCallback(app, message, queueState) {}
+  * 
+  * queueState = 1 -- queued queueState = 0 -- not queued
+  * 
+  * serves:
+  * 
+  * Eval.instructionDispatchLoop when app has -l flag
+  * ForceField.steepestDescenTakeNSteps for minimization done
+  * Viewer.setPropertyError Viewer.setBooleanProperty error
+  * Viewer.setFloatProperty error Viewer.setIntProperty error
+  * Viewer.setStringProperty error Viewer.showString adds a Logger.warn()
+  * message Eval.showString calculate, cd, dataFrame, echo, error, getProperty,
+  * history, isosurface, listIsosurface, pointGroup, print, set, show, write
+  * ForceField.steepestDescentInitialize for initial energy
+  * ForceField.steepestDescentTakeNSteps for minimization update
+  * Viewer.showParameter
+  */
+
+  public void scriptEcho(String strEcho) {
+    if (!Logger.isActiveLevel(Logger.LEVEL_INFO))
+      return;
+    if (isJS && !isSwingJS)
+      System.out.println(strEcho);
+    sm.setScriptEcho(strEcho, isScriptQueued());
+    if (listCommands && strEcho != null && strEcho.indexOf("$[") == 0)
+      Logger.info(strEcho);
+  }
+
+  private boolean isScriptQueued() {
+    return scm != null && scm.isScriptQueued();
+  }
+
+  /*
+  * errorCallback is a special callback that can be used to identify errors
+  * during scripting and file i/o, and also indicate out of memory conditions
+  * 
+  * jmolSetCallback("errorCallback", "myErrorCallback") function
+  * myErrorCallback(app, errType, errMsg, objectInfo, errMsgUntranslated) {}
+  * 
+  * errType == "Error" or "ScriptException" errMsg == error message, possibly
+  * translated, with added information objectInfo == which object (such as an
+  * isosurface) was involved errMsgUntranslated == just the basic message
+  * 
+  * Viewer.notifyError Eval.runEval on Error and file loading Exceptions
+  * Viewer.handleError Eval.runEval on OOM Error Viewer.createModelSet on OOM
+  * model initialization Error Viewer.getImage on OOM rendering Error
+  */
+  public void notifyError(String errType, String errMsg,
+                          String errMsgUntranslated) {
+    g.setO("_errormessage", errMsgUntranslated);
+    sm.notifyError(errType, errMsg, errMsgUntranslated);
+  }
+
+  /*
+  * evalCallback is a special callback that evaluates expressions in JavaScript
+  * rather than in Jmol.
+  * 
+  * Viewer.jsEval Eval.loadScriptFileInternal Eval.Rpn.evaluateScript
+  * Eval.script
+  */
+
+  public String jsEval(String strEval) {
+    return "" + sm.jsEval(strEval);
+  }
+
+  public SV jsEvalSV(String strEval) {
+    return SV.getVariable(isJS ? sm.jsEval(strEval) : jsEval(strEval));
+  }
+
+  /*
+  * loadStructCallback indicates file load status.
+  * 
+  * jmolSetCallback("loadStructCallback", "myLoadStructCallback") function
+  * myLoadStructCallback(fullPathName, fileName, modelName, errorMsg, ptLoad)
+  * {}
+  * 
+  * ptLoad == JmolConstants.FILE_STATUS_NOT_LOADED == -1 ptLoad == JmolConstants.FILE_STATUS_ZAPPED == 0
+  * ptLoad == JmolConstants.FILE_STATUS_CREATING_MODELSET == 2 ptLoad ==
+  * JmolConstants.FILE_STATUS_MODELSET_CREATED == 3 ptLoad == JmolConstants.FILE_STATUS_MODELS_DELETED == 5
+  * 
+  * Only -1 (error loading), 0 (zapped), and 3 (model set created) messages are
+  * passed on to the callback function. The others can be detected using
+  * 
+  * set loadStructCallback "jmolscript:someFunctionName"
+  * 
+  * At the time of calling of that method, the jmolVariable _loadPoint gives
+  * the value of ptLoad. These load points are also recorded in the status
+  * queue under types "fileLoaded" and "fileLoadError".
+  * 
+  * Viewer.setFileLoadStatus Viewer.createModelSet (2, 3)
+  * Viewer.createModelSetAndReturnError (-1, 1, 4) Viewer.deleteAtoms (5)
+  * Viewer.zap (0)
+  */
+  private void setFileLoadStatus(FIL ptLoad, String fullPathName,
+                                 String fileName, String modelName,
+                                 String strError, Boolean isAsync) {
+    setErrorMessage(strError, null);
+    g.setI("_loadPoint", ptLoad.getCode());
+    boolean doCallback = (ptLoad != FIL.CREATING_MODELSET);
+    if (doCallback)
+      setStatusFrameChanged(false, false);
+    sm.setFileLoadStatus(fullPathName, fileName, modelName, strError,
+        ptLoad.getCode(), doCallback, isAsync);
+    if (doCallback) {
+      //       setStatusFrameChanged(false, true); // ensures proper title in JmolFrame but then we miss the file name
+      if (doHaveJDX())
+        getJSV().setModel(am.cmi);
+      if (isJS && isApplet)
+        updateJSView(am.cmi, -2);
+    }
+
+  }
+
+  public String getZapName() {
+    return (g.modelKitMode ? JC.MODELKIT_ZAP_TITLE : JC.ZAP_TITLE);
+  }
+
+  /*
+  * measureCallback reports completed or pending measurements. Pending
+  * measurements are measurements that the user has started but has not
+  * completed -- this call comes when the user hesitates with the mouse over an
+  * atom and the "rubber band" is showing
+  * 
+  * jmolSetCallback("measureCallback", "myMeasureCallback") function
+  * myMeasureCallback(strMeasure, intInfo, status) {}
+  * 
+  * intInfo == (see below) status == "measurePicked" (intInfo == the number of
+  * atoms in the measurement) "measureComplete" (intInfo == the current number
+  * measurements) "measureDeleted" (intInfo == the index of the measurement
+  * deleted or -1 for all) "measurePending" (intInfo == number of atoms picked
+  * so far)
+  * 
+  * strMeasure:
+  * 
+  * For "set picking MEASURE ..." each time the user clicks an atom, a message
+  * is sent to the pickCallback function (see below), and if the picking is set
+  * to measure distance, angle, or torsion, then after the requisite number of
+  * atoms is picked and the pick callback message is sent, a call is also made
+  * to measureCallback with a string that indicates the measurement, such as:
+  * 
+  * Angle O #9 - Si #7 - O #2 : 110.51877
+  * 
+  * Under default conditions, when picking is not set to MEASURE, then
+  * measurement reports are sent when the measure is completed, deleted, or
+  * pending. These reports are in a psuedo array form that can be parsed more
+  * easily, involving the atoms and measurement with units, for example:
+  * 
+  * [Si #3, O #8, Si #7, 60.1 <degrees mark>]
+  * 
+  * Viewer.setStatusMeasuring Measures.clear Measures.define
+  * Measures.deleteMeasurement Measures.pending actionManager.atomPicked
+  */
+
+  public void setStatusMeasuring(String status, int intInfo, String strMeasure,
+                                 float value) {
+
+    // status           intInfo 
+
+    // measureCompleted index
+    // measurePicked    atom count
+    // measurePending   atom count
+    // measureDeleted   -1 (all) or index
+    // measureSequence  -2
+    sm.setStatusMeasuring(status, intInfo, strMeasure, value);
+  }
+
+  /*
+  * minimizationCallback reports the status of a currently running
+  * minimization.
+  * 
+  * jmolSetCallback("minimizationCallback", "myMinimizationCallback") function
+  * myMinimizationCallback(app, minStatus, minSteps, minEnergy, minEnergyDiff)
+  * {}
+  * 
+  * minStatus is one of "starting", "calculate", "running", "failed", or "done"
+  * 
+  * Viewer.notifyMinimizationStatus Minimizer.endMinimization
+  * Minimizer.getEnergyonly Minimizer.startMinimization
+  * Minimizer.stepMinimization
+  */
+
+  public void notifyMinimizationStatus() {
+    Object step = getP("_minimizationStep");
+    String ff = (String) getP("_minimizationForceField");
+    sm.notifyMinimizationStatus((String) getP("_minimizationStatus"),
+        step instanceof String ? Integer.valueOf(0) : (Integer) step,
+        (Float) getP("_minimizationEnergy"),
+        (step.toString().equals("0") ? Float.valueOf(0)
+            : (Float) getP("_minimizationEnergyDiff")),
+        ff);
+  }
+
+  /*
+  * pickCallback returns information about an atom, bond, or DRAW object that
+  * has been picked by the user.
+  * 
+  * jmolSetCallback("pickCallback", "myPickCallback") function
+  * myPickCallback(strInfo, iAtom, map) {}
+  * 
+  * iAtom == the index of the atom picked or -2 for a draw object or -3 for a
+  * bond
+  * 
+  * strInfo depends upon the type of object picked:
+  * 
+  * atom (iAtom>=0): a string determinied by the PICKLABEL parameter, which if "" delivers
+  * the atom identity along with its coordinates
+  * 
+  * bond (iAtom==-3): ["bond", bondIdentityString (quoted), x, y, z] where the coordinates
+  * are of the midpoint of the bond
+  * 
+  * draw (iAtom==-2): ["draw", ID(quoted), pickedModel, pickedVertex, x, y, z,
+  * title(quoted)]
+  * 
+  * isosurface (iAtom==-4): ["isosurface", ID(quoted), pickedModel, pickedVertex, x, y, z,
+  * title(quoted)]
+  * 
+  * map:
+  * 
+  * atom: null
+  * 
+  * bond: {pt, index, modelIndex, modelNumberDotted, type, strInfo}
+  * 
+  * Draw, isosurface: {pt, modelIndex, modelNumberDotted, id, vertex, type}
+  * 
+  * Viewer.setStatusAtomPicked Draw.checkObjectClicked (set picking DRAW)
+  * Sticks.checkObjectClicked (set bondPicking TRUE; set picking IDENTIFY)
+  * actionManager.atomPicked (set atomPicking TRUE; set picking IDENTIFY)
+  * actionManager.queueAtom (during measurements)
+  */
+
+  public void setStatusAtomPicked(int atomIndex, String info,
+                                  Map<String, Object> map, boolean andSelect) {
+    if (andSelect)
+      setSelectionSet(BSUtil.newAndSetBit(atomIndex));
+    if (info == null) {
+      info = g.pickLabel;
+      info = (info.length() == 0
+          ? getAtomInfoXYZ(atomIndex, g.messageStyleChime)
+          : ms.getAtomInfo(atomIndex, info, ptTemp));
+    }
+    setPicked(atomIndex, false);
+    if (atomIndex < 0) {
+      Measurement m = getPendingMeasurement();
+      if (m != null)
+        info = info.substring(0, info.length() - 1) + ",\"" + m.getString()
+            + "\"]";
+    }
+    g.setO("_pickinfo", info);
+    sm.setStatusAtomPicked(atomIndex, info, map);
+    if (atomIndex < 0)
+      return;
+    int syncMode = sm.getSyncMode();
+    if (syncMode == StatusManager.SYNC_DRIVER && doHaveJDX())
+      getJSV().atomPicked(atomIndex);
+    if (isJS && isApplet)
+      updateJSView(ms.at[atomIndex].mi, atomIndex);
+  }
+
+  @Override
+  public Object getProperty(String returnType, String infoType,
+                            Object paramInfo) {
+    // accepts a BitSet paramInfo
+    // return types include "JSON", "String", "readable", and anything else
+    // returns the Java object.
+    // Jmol 11.7.45 also uses this method as a general API
+    // for getting and returning script data from the console and editor
+
+    if (!"DATA_API".equals(returnType))
+      return getPropertyManager().getProperty(returnType, infoType, paramInfo);
+
+    switch (("scriptCheck........." // 0
+        + "consoleText........." // 20
+        + "scriptEditor........" // 40
+        + "scriptEditorState..." // 60
+        + "getAppConsole......." // 80
+        + "getScriptEditor....." // 100
+        + "setMenu............." // 120
+        + "spaceGroupInfo......" // 140
+        + "disablePopupMenu...." // 160
+        + "defaultDirectory...." // 180
+        + "getPopupMenu........" // 200
+        + "shapeManager........" // 220
+        + "getPreference......." // 240
+    ).indexOf(infoType)) {
+
+    case 0:
+      return scriptCheckRet((String) paramInfo, true);
+    case 20:
+      return (appConsole == null ? "" : appConsole.getText());
+    case 40:
+      showEditor((String[]) paramInfo);
+      return null;
+    case 60:
+      scriptEditorVisible = ((Boolean) paramInfo).booleanValue();
+      return null;
+    case 80:
+      if (isKiosk) {
+        appConsole = null;
+      } else if (paramInfo instanceof JmolAppConsoleInterface) {
+        appConsole = (JmolAppConsoleInterface) paramInfo;
+      } else if (paramInfo != null && !((Boolean) paramInfo).booleanValue()) {
+        appConsole = null;
+      } else if (appConsole == null && paramInfo != null
+          && ((Boolean) paramInfo).booleanValue()) {
+        if (isJSNoAWT) {
+          appConsole = (JmolAppConsoleInterface) Interface
+              .getOption("consolejs.AppletConsole", this, "script");
+        } else// if (isSwingJS) {
+        // no applet console yet for SwingJS -- need DefaultStyledDocument
+        //} else 
+        {
+          for (int i = 0, n = isSwingJS ? 1 : 4; i < n
+              && appConsole == null; i++) {
+            appConsole = (
+            //  isApplet
+            //  ? (JmolAppConsoleInterface) Interface
+            //      .getOption("console.AppletConsole", null, null)
+            //  : 
+            (JmolAppConsoleInterface) Interface.getInterface(
+                "org.openscience.jmol.app.jmolpanel.console.AppConsole", null,
+                null));
+            if (appConsole == null)
+              try {
+                System.out.println("Viewer can't start appConsole");
+                /**
+                 * @j2sNative break;
+                 */
+                Thread.currentThread().wait(100);
+              } catch (InterruptedException e) {
+                //
+              }
+          }
+
+        }
+        if (appConsole != null)
+          appConsole.start(this);
+      }
+      scriptEditor = (isJS || appConsole == null ? null
+          : appConsole.getScriptEditor());
+      return appConsole;
+    case 100:
+      if (appConsole == null && paramInfo != null
+          && ((Boolean) paramInfo).booleanValue()) {
+        getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
+        scriptEditor = (appConsole == null ? null
+            : appConsole.getScriptEditor());
+      }
+      return scriptEditor;
+    case 120:
+      if (jmolpopup != null)
+        jmolpopup.jpiDispose();
+      jmolpopup = null;
+      return menuStructure = (String) paramInfo;
+    case 140:
+      return getSymTemp().getSpaceGroupInfo(ms, null, -1, false, null);
+    case 160:
+      g.disablePopupMenu = true; // no false here, because it's a
+      // one-time setting
+      return null;
+    case 180:
+      return g.defaultDirectory;
+    case 200:
+      if (paramInfo instanceof String)
+        return getMenu((String) paramInfo);
+      return getPopupMenu();
+    case 220:
+      return shm.getProperty(paramInfo);
+    case 240:
+      return sm.syncSend("getPreference", paramInfo, 1);
+    }
+    Logger.error("ERROR in getProperty DATA_API: " + infoType);
+    return null;
+  }
+
+  public int notifyMouseClicked(int x, int y, int action, int mode) {
+    // change y to 0 at bottom
+    int modifiers = Binding.getButtonMods(action);
+    int clickCount = Binding.getClickCount(action);
+    g.setI("_mouseX", x);
+    g.setI("_mouseY", dimScreen.height - y);
+    g.setI("_mouseAction", action);
+    g.setI("_mouseModifiers", modifiers);
+    g.setI("_clickCount", clickCount);
+    return sm.setStatusClicked(x, dimScreen.height - y, action, clickCount,
+        mode);
+  }
+
+  private OutputManager outputManager;
+
+  private OutputManager getOutputManager() {
+    if (outputManager != null)
+      return outputManager;
+    return (outputManager = (OutputManager) Interface.getInterface(
+        "org.jmol.viewer.OutputManager" + (isJSNoAWT ? "JS" : "Awt"), this,
+        "file")).setViewer(this, privateKey);
+  }
+
+  //  private GenericZipTools jzt;
+  //
+  //  public GenericZipTools getJzt() {
+  //    return (jzt == null
+  //        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
+  //            this, "zip")
+  //        : jzt);
+  //  }
+  //
+
+  public void readFileAsMap(BufferedInputStream bis, Map<String, Object> map,
+                            String name) {
+    ZipTools.readFileAsMap(bis, map, name);
+  }
+
+  public String getZipDirectoryAsString(String fileName) {
+    Object t = fm.getBufferedInputStreamOrErrorMessageFromName(fileName,
+        fileName, false, false, null, false, true);
+    return ZipTools.getZipDirectoryAsStringAndClose((BufferedInputStream) t);
+  }
+
+  /**
+   * @return byte[] image, or null and an error message
+   */
+  @Override
+  public byte[] getImageAsBytes(String type, int width, int height, int quality,
+                                String[] errMsg) {
+    return getOutputManager().getImageAsBytes(type, width, height, quality,
+        errMsg);
+  }
+
+  @Override
+  public void releaseScreenImage() {
+    gdata.releaseScreenImage();
+  }
+
   public void setDisplay(Object canvas) {
     // used by JSmol/HTML5 when a canvas is resized
     display = canvas;
@@ -846,11 +1819,6 @@ public class Viewer extends JmolViewer
         (isPyMOL ? true : g.antialiasDisplay));
     stm.resetLighting();
     tm.setDefaultPerspective();
-  }
-
-  public void setWidthHeightVar() {
-    g.setI("_width", dimScreen.width);
-    g.setI("_height", dimScreen.height);
   }
 
   void saveModelOrientation() {
@@ -1729,7 +2697,7 @@ public class Viewer extends JmolViewer
     if (htParams == null)
       htParams = setLoadParameters(null, isAppend);
     if (tokType != T.nada)
-        htParams.put("dataType", T.nameOf(tokType));
+      htParams.put("dataType", T.nameOf(tokType));
     if (filecat != " ")
       htParams.put("concatenate", Boolean.TRUE);
     Object atomSetCollection;
@@ -2301,17 +3269,17 @@ public class Viewer extends JmolViewer
       if (bsNew.cardinality() > 0) {
         // is a 2D dataset, as from JME
         String jmolScript = (String) ms.getInfoM("jmolscript");
-        if (ms.getMSInfoB("doMinimize"))
+        if (ms.getMSInfoB("doMinimize")) {
           try {
             JmolScriptEvaluator eval = (JmolScriptEvaluator) htParams
                 .get("eval");
-            minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0, true, true,
-                true, true);
+            minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0,
+                MIN_ADDH | MIN_NO_RANGE | MIN_SILENT | MIN_QUICK);
           } catch (Exception e) {
-            // TODO
           }
-        else
-          addHydrogens(bsNew, false, true);
+        } else {
+          addHydrogens(bsNew, MIN_SILENT | MIN_QUICK);
+        }
         // no longer necessary? -- this is the JME/SMILES data:
         if (jmolScript != null)
           ms.msInfo.put("jmolscript", jmolScript);
@@ -2739,7 +3707,8 @@ public class Viewer extends JmolViewer
 
   public String getHybridizationAndAxes(int atomIndex, V3 z, V3 x,
                                         String lcaoType) {
-    return ms.getHybridizationAndAxes(atomIndex, 0, z, x, lcaoType, true, true);
+    return ms.getHybridizationAndAxes(atomIndex, 0, z, x, lcaoType, true, true,
+        false);
   }
 
   public BS getAllAtoms() {
@@ -2769,15 +3738,6 @@ public class Viewer extends JmolViewer
   @Override
   public V3 getBoundBoxCornerVector() {
     return ms.getBoundBoxCornerVector();
-  }
-
-  public int getBoundBoxCenterX() {
-    // used by axes renderer
-    return dimScreen.width / 2;
-  }
-
-  public int getBoundBoxCenterY() {
-    return dimScreen.height / 2;
   }
 
   @Override
@@ -3582,102 +4542,6 @@ public class Viewer extends JmolViewer
     return TF;
   }
 
-  // //////////// screen/image methods ///////////////
-
-  // final Rectangle rectClip = new Rectangle();
-
-  private int maximumSize = Integer.MAX_VALUE;
-
-  private void setMaximumSize(int x) {
-    maximumSize = Math.max(x, 100);
-  }
-
-  @Override
-  public void setScreenDimension(int width, int height) {
-    // There is a bug in Netscape 4.7*+MacOS 9 when comparing dimension objects
-    // so don't try dim1.equals(dim2)
-    height = Math.min(height, maximumSize);
-    width = Math.min(width, maximumSize);
-    if (tm.stereoDoubleFull)
-      width = (width + 1) / 2;
-    if (dimScreen.width == width && dimScreen.height == height)
-      return;
-    resizeImage(width, height, false, false, true);
-  }
-
-  /**
-   * A graphics from a "slave" stereo display that has been synchronized with
-   * this this applet.
-   */
-  private Object gRight;
-
-  /**
-   * A flag to indicate that THIS is the right-side panel of a pair of synced
-   * applets running a left-right stereo display (that would be piped into a
-   * dual-image polarized projector system such as GeoWall).
-   * 
-   */
-  private boolean isStereoSlave;
-
-  public void setStereo(boolean isStereoSlave, Object gRight) {
-    this.isStereoSlave = isStereoSlave;
-    this.gRight = gRight;
-  }
-
-  public float imageFontScaling = 1;
-
-  void resizeImage(int width, int height, boolean isImageWrite,
-                   boolean isExport, boolean isReset) {
-    if (!isImageWrite && creatingImage)
-      return;
-    boolean wasAntialiased = antialiased;
-    antialiased = (isReset
-        ? g.antialiasDisplay && checkMotionRendering(T.antialiasdisplay)
-        : isImageWrite && !isExport ? g.antialiasImages : false);
-    if (!isExport && !isImageWrite
-        && (width > 0 || wasAntialiased != antialiased))
-      setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
-    imageFontScaling = (antialiased ? 2f : 1f)
-        * (isReset || tm.scale3D || width <= 0 ? 1
-            : (g.zoomLarge == (height > width) ? height : width) * 1f
-                / getScreenDim());
-    if (width > 0) {
-      dimScreen.width = width;
-      dimScreen.height = height;
-      if (!isImageWrite) {
-        g.setI("_width", width);
-        g.setI("_height", height);
-        //        setStatusResized(width, height);
-      }
-    } else {
-      width = (dimScreen.width == 0 ? dimScreen.width = 500 : dimScreen.width);
-      height = (dimScreen.height == 0 ? dimScreen.height = 500
-          : dimScreen.height);
-    }
-    tm.setScreenParameters(width, height,
-        isImageWrite || isReset ? g.zoomLarge : false, antialiased, false,
-        false);
-    gdata.setWindowParameters(width, height, antialiased);
-    if (width > 0 && !isImageWrite)
-      setStatusResized(width, height);
-  }
-
-  @Override
-  public int getScreenWidth() {
-    return dimScreen.width;
-  }
-
-  @Override
-  public int getScreenHeight() {
-    return dimScreen.height;
-  }
-
-  public int getScreenDim() {
-    return (g.zoomLarge == (dimScreen.height > dimScreen.width)
-        ? dimScreen.height
-        : dimScreen.width);
-  }
-
   @Override
   public String generateOutputForExport(Map<String, Object> params) {
     return (noGraphicsAllowed || rm == null ? null
@@ -3722,10 +4586,8 @@ public class Viewer extends JmolViewer
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
       } else {
-        drawImage(gRight, getImage(true, false), 0, 0,
-            tm.stereoDoubleDTI);
-        drawImage(gLeft, getImage(false, false), 0, 0,
-            tm.stereoDoubleDTI);
+        drawImage(gRight, getImage(true, false), 0, 0, tm.stereoDoubleDTI);
+        drawImage(gLeft, getImage(false, false), 0, 0, tm.stereoDoubleDTI);
       }
     }
     if (captureParams != null
@@ -3781,187 +4643,13 @@ public class Viewer extends JmolViewer
     /**
      * @j2sNative
      * 
-     *            doViewPick = (applet != null &&
-     *            applet._viewSet != null);
+     *            doViewPick = (applet != null && applet._viewSet != null);
      * 
      */
     {
     }
     if (doViewPick)
       html5Applet._atomPickedCallback(imodel, iatom);
-  }
-
-  private boolean updateWindow(int width, int height) {
-    if (!refreshing || creatingImage)
-      return (refreshing ? false : !isJSNoAWT);
-    if (isTainted || tm.slabEnabled)
-      setModelVisibility();
-    isTainted = false;
-    if (rm != null) {
-      if (width != 0)
-        setScreenDimension(width, height);
-    }
-    return true;
-  }
-
-  /**
-   * 
-   * @param isDouble
-   * @param isImageWrite
-   * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
-   *         of Jmol-Android a canvas in the case of JSmol
-   */
-  private Object getImage(boolean isDouble, boolean isImageWrite) {
-    Object image = null;
-    try {
-      beginRendering(isDouble, isImageWrite);
-      render();
-      gdata.endRendering();
-      image = gdata.getScreenImage(isImageWrite);
-    } catch (Error er) {
-      gdata.getScreenImage(isImageWrite);
-      handleError(er, false);
-      setErrorMessage("Error during rendering: " + er, null);
-    } catch (Exception e) {
-      System.out.println("render error" + e);
-      e.printStackTrace();
-    }
-    return image;
-  }
-
-  private void beginRendering(boolean isDouble, boolean isImageWrite) {
-    gdata.beginRendering(tm.getStereoRotationMatrix(isDouble), g.translucent,
-        isImageWrite, !checkMotionRendering(T.translucent));
-  }
-
-  public boolean antialiased;
-
-  private void render() {
-    if (mm.modelSet == null || !mustRender || !refreshing && !creatingImage
-        || rm == null)
-      return;
-    boolean antialias2 = antialiased && g.antialiasTranslucent;
-    int[] navMinMax = shm.finalizeAtoms(tm.bsSelectedAtoms, true);
-    if (isWebGL) {
-      rm.renderExport(gdata, ms, jsParams);
-      notifyViewerRepaintDone();
-      return;
-    }
-    rm.render(gdata, ms, true, navMinMax);
-    if (gdata.setPass2(antialias2)) {
-      tm.setAntialias(antialias2);
-      rm.render(gdata, ms, false, null);
-      tm.setAntialias(antialiased);
-    }
-  }
-
-  /**
-   * 
-   * @param graphic
-   *        In JavaScript/HTML5, a Canvas.Context2d
-   * @param img
-   * @param x
-   * @param y
-   * @param isDTI
-   *        DTI format -- scrunch width by factor of two
-   */
-  private void drawImage(Object graphic, Object img, int x, int y,
-                         boolean isDTI) {
-	  if (graphic != null && img != null) {
-        apiPlatform.drawImage(graphic, img, x, y, dimScreen.width, dimScreen.height,
-          isDTI);
-	  }
-    gdata.releaseScreenImage();
-  }
-
-  public Object getScreenImage() {
-    return getScreenImageBuffer(null, true);
-  }
-
-  /**
-   * Image.getJpgImage, ImageCreator.clipImage, getImageBytes,
-   * Viewer.renderScreenImageStereo
-   */
-  @Override
-  public Object getScreenImageBuffer(Object g, boolean isImageWrite) {
-    if (isWebGL)
-      return (isImageWrite
-          ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true)
-          : null);
-    boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
-    boolean isBicolor = tm.stereoMode.isBiColor();
-    boolean mergeImages = (g == null && isDouble);
-    Object imageBuffer;
-    if (isBicolor) {
-      beginRendering(true, isImageWrite);
-      render();
-      gdata.endRendering();
-      gdata.snapshotAnaglyphChannelBytes();
-      beginRendering(false, isImageWrite);
-      render();
-      gdata.endRendering();
-      gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
-      imageBuffer = gdata.getScreenImage(isImageWrite);
-    } else {
-      imageBuffer = getImage(isDouble, isImageWrite);
-    }
-    Object imageBuffer2 = null;
-    if (mergeImages) {
-      imageBuffer2 = apiPlatform.newBufferedImage(imageBuffer,
-          (tm.stereoDoubleDTI ? dimScreen.width : dimScreen.width << 1),
-          dimScreen.height);
-      g = apiPlatform.getGraphics(imageBuffer2);
-    }
-    if (g == null)
-      return imageBuffer;
-    if (isDouble) {
-      if (tm.stereoMode == STER.DTI) {
-        drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
-        imageBuffer = getImage(false, false);
-        drawImage(g, imageBuffer, 0, 0, true);
-        g = null;
-      } else {
-        drawImage(g, imageBuffer, dimScreen.width, 0, false);
-        imageBuffer = getImage(false, false);
-      }
-    }
-    if (g != null)
-      drawImage(g, imageBuffer, 0, 0, false);
-    return (mergeImages ? imageBuffer2 : imageBuffer);
-  }
-
-  //  /**
-  //   * will be true only if this is in an undecorated window such as an applet
-  //   * 
-  //   * @param graphics
-  //   * @return
-  //   */
-  //  private boolean isUndecorated(Object graphics) {
-  //    Graphics2D g = (Graphics2D) graphics;
-  //
-  //    int canvasWidth = -1, canvasHeight = -1;
-  //    /**
-  //     * @j2sNative
-  //     * 
-  //     *            canvasWidth = g.width || 0; canvasHeight = g.height || 0;
-  //     * 
-  //     */
-  //    return canvasWidth == getScreenWidth() && canvasHeight == getScreenHeight();
-  //  }
-
-  /**
-   * @return byte[] image, or null and an error message
-   */
-  @Override
-  public byte[] getImageAsBytes(String type, int width, int height, int quality,
-                                String[] errMsg) {
-    return getOutputManager().getImageAsBytes(type, width, height, quality,
-        errMsg);
-  }
-
-  @Override
-  public void releaseScreenImage() {
-    gdata.releaseScreenImage();
   }
 
   // ///////////////////////////////////////////////////////////////
@@ -4052,26 +4740,6 @@ public class Viewer extends JmolViewer
         false, false);
     GT.setDoTranslate(doTranslateTemp);
     return ret;
-  }
-
-  public synchronized Object evalStringWaitStatusQueued(String returnType,
-                                                        String strScript,
-                                                        String statusList,
-                                                        boolean isQuiet,
-                                                        boolean isQueued) {
-
-    if (isJS && isApplet) {
-      if (strScript.indexOf("JSCONSOLE") == 0) {
-        jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
-        if (strScript.indexOf("CLEAR") >= 0)
-          jmolObject.clearConsole(html5Applet);
-        return null;
-      }
-
-    }
-    return (getScriptManager() == null ? null
-        : scm.evalStringWaitStatusQueued(returnType, strScript, statusList,
-            isQuiet, isQueued));
   }
 
   public void exitJmol() {
@@ -4259,20 +4927,25 @@ public class Viewer extends JmolViewer
           + name.substring(name.indexOf("/structure") + 10);
     case '$':
       checkCIR(false);
-      if (name.startsWith("$$")) {
-        // 2D version
-        id = id.substring(1);
-
-        //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
-        format = PT.rep(g.smilesUrlFormat, "&get3d=True", "");
-        return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
-      }
-      if (name.equals("$"))
+      if (name.equals("$")) {
         try {
           id = getOpenSmiles(bsA());
         } catch (Exception e) {
           // oh well...
         }
+      } else if (name.startsWith("$$")) {
+        // 2D version
+        id = id.substring(1);
+        if (id.length() == 0) {
+          try {
+            id = getOpenSmiles(bsA());
+          } catch (Exception e) {
+          }
+        }
+        //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
+        format = PT.rep(g.smilesUrlFormat, "?format=sdf&get3d=true", "");
+        return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
+      }
       //$FALL-THROUGH$
     case 'M':
     case 'N':
@@ -4286,23 +4959,23 @@ public class Viewer extends JmolViewer
       switch (type) {
       case 'M':
       case 'N':
-        format = g.nihResolverFormat + "/names";
+        format = g.nihResolverFormat + "/%FILE/names";
         break;
       case '2':
-        format = g.nihResolverFormat + "/image";
+        format = g.nihResolverFormat + "/%FILE/image";
         break;
       case 'I':
       case 'T':
-        format = g.nihResolverFormat + "/stdinchi";
+        format = g.nihResolverFormat + "/%FILE/stdinchi";
         break;
       case 'K':
-        format = g.nihResolverFormat + "/inchikey";
+        format = g.nihResolverFormat + "/%FILE/inchikey";
         break;
       case 'S':
-        format = g.nihResolverFormat + "/stdinchikey";
+        format = g.nihResolverFormat + "/%FILE/stdinchikey";
         break;
       case '/':
-        format = g.nihResolverFormat + "/";
+        format = g.nihResolverFormat + "/%FILE/";
         break;
       default:
         format = g.smilesUrlFormat;
@@ -4375,14 +5048,12 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public P3[] getAdditionalHydrogens(BS bsAtoms, boolean doAll,
-                                     boolean justCarbon,
-                                     Lst<Atom> vConnections) {
+  public P3[] getAdditionalHydrogens(BS bsAtoms, Lst<Atom> vConnections,
+                                     int flags) {
     if (bsAtoms == null)
       bsAtoms = bsA();
     int[] nTotal = new int[1];
-    P3[][] pts = ms.calculateHydrogens(bsAtoms, nTotal, doAll, justCarbon,
-        vConnections);
+    P3[][] pts = ms.calculateHydrogens(bsAtoms, nTotal, vConnections, flags);
     P3[] points = new P3[nTotal[0]];
     for (int i = 0, pt = 0; i < pts.length; i++)
       if (pts[i] != null)
@@ -4637,532 +5308,6 @@ public class Viewer extends JmolViewer
     return (!g.disablePopupMenu && getPopupMenu() != null);
   }
 
-  void popupMenu(int x, int y, char type) {
-    if (!haveDisplay || !refreshing || isPreviewOnly || g.disablePopupMenu)
-      return;
-    switch (type) {
-    case 'j':
-      try {
-        setCursor(Cursor.WAIT_CURSOR);
-        // can throw error if not present; that's ok
-        SwingUtilities.invokeLater(new Runnable() {
-
-          @Override
-          public void run() {
-            getPopupMenu();
-            jmolpopup.jpiShow(x, y);
-            setCursor(Cursor.DEFAULT_CURSOR);
-          }
-
-        });
-      } catch (Throwable e) {
-        // no Swing -- tough luck!
-        Logger.info(e.toString());
-        g.disablePopupMenu = true;
-      }
-      break;
-    case 'a':
-    case 'b':
-    case 'm':
-      // atom, bond, or main -- ignored
-      if (getModelkit(true) == null) {
-        return;
-      }
-      modelkit.jpiShow(x, y);
-      break;
-    }
-  }
-
-  public ModelKitPopup getModelkit(boolean andShow) {
-    if (modelkit == null) {
-      modelkit = (ModelKitPopup) apiPlatform.getMenuPopup(null, 'm');
-    } else if (andShow) {
-      modelkit.jpiUpdateComputedMenus();
-    }
-    return modelkit;
-  }
-
-//  public void setRotateBondIndex(int i) {
-//	    if (modelkit != null)
-//	      modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
-//	  }
-
-  public String getMenu(String type) {
-    getPopupMenu();
-    if (type.equals("\0")) {
-      popupMenu(dimScreen.width - 120, 0, 'j');
-      return "OK";
-    }
-    return (jmolpopup == null ? ""
-        : jmolpopup.jpiGetMenuAsString(
-            "Jmol version " + getJmolVersion() + "|_GET_MENU|" + type));
-  }
-
-  Object getPopupMenu() {
-    if (g.disablePopupMenu)
-      return null;
-    if (jmolpopup == null) {
-      jmolpopup = (allowScripting ? apiPlatform.getMenuPopup(menuStructure, 'j')
-          : null);
-      if (jmolpopup == null && !async) {
-        g.disablePopupMenu = true;
-        return null;
-      }
-    }
-    return jmolpopup.jpiGetMenuAsObject();
-  }
-
-  @Override
-  public void setMenu(String fileOrText, boolean isFile) {
-    if (isFile)
-      Logger
-          .info("Setting menu " + (fileOrText.length() == 0 ? "to Jmol defaults"
-              : "from file " + fileOrText));
-    if (fileOrText.length() == 0)
-      fileOrText = null;
-    else if (isFile)
-      fileOrText = getFileAsString3(fileOrText, false, null);
-    getProperty("DATA_API", "setMenu", fileOrText);
-    sm.setCallbackFunction("menu", fileOrText);
-  }
-
-  // // JavaScript callback methods for the applet
-
-  /*
-   * 
-   * animFrameCallback echoCallback (defaults to messageCallback) errorCallback
-   * evalCallback hoverCallback loadStructCallback measureCallback (defaults to
-   * messageCallback) messageCallback (no local version) minimizationCallback
-   * pickCallback resizeCallback scriptCallback (defaults to messageCallback)
-   * syncCallback
-   */
-
-  /*
-   * aniframeCallback is called:
-   * 
-   * -- each time a frame is changed -- whenever the animation state is changed
-   * -- whenever the visible frame range is changed
-   * 
-   * jmolSetCallback("animFrameCallback", "myAnimFrameCallback") function
-   * myAnimFrameCallback(frameNo, fileNo, modelNo, firstNo, lastNo) {}
-   * 
-   * frameNo == the current frame in fileNo == the current file number, starting
-   * at 1 modelNo == the current model number in the current file, starting at 1
-   * firstNo == flag1 * (the first frame of the set, in file * 1000000 + model
-   * notation) lastNo == flag2 * (the last frame of the set, in file * 1000000 +
-   * model notation)
-   * 
-   * where flag1 = 1 if animationDirection > 1 or -1 otherwise where flag2 = 1
-   * if currentDirection > 1 or -1 otherwise
-   * 
-   * RepaintManager.setStatusFrameChanged RepaintManager.setAnimationOff
-   * RepaintManager.setCurrentModelIndex RepaintManager.clearAnimation
-   * RepaintManager.rewindAnimation RepaintManager.setAnimationLast
-   * RepaintManager.setAnimationRelative RepaintManager.setFrameRangeVisible
-   * Viewer.setCurrentModelIndex Eval.file Eval.frame Eval.load
-   * Viewer.createImage (when creating movie frames with the WRITE FRAMES
-   * command) Viewer.initializeModel
-   */
-
-  private int prevFrame = Integer.MIN_VALUE;
-  private float prevMorphModel;
-
-  /**
-   * @param isVib
-   * @param doNotify
-   *        ignored; not implemented
-   */
-  void setStatusFrameChanged(boolean isVib, boolean doNotify) {
-    if (isVib) {
-      // force reset (reading vibrations)
-      prevFrame = Integer.MIN_VALUE;
-    }
-    tm.setVibrationPeriod(Float.NaN);
-    int firstIndex = am.firstFrameIndex;
-    int lastIndex = am.lastFrameIndex;
-
-    boolean isMovie = am.isMovie;
-    int modelIndex = am.cmi;
-    if (firstIndex == lastIndex && !isMovie)
-      modelIndex = firstIndex;
-    int frameID = getModelFileNumber(modelIndex);
-    int currentFrame = am.cmi;
-    int fileNo = frameID;
-    int modelNo = frameID % 1000000;
-    int firstNo = (isMovie ? firstIndex : getModelFileNumber(firstIndex));
-    int lastNo = (isMovie ? lastIndex : getModelFileNumber(lastIndex));
-
-    String strModelNo;
-    if (isMovie) {
-      strModelNo = "" + (currentFrame + 1);
-    } else if (fileNo == 0) {
-      strModelNo = getModelNumberDotted(firstIndex);
-      if (firstIndex != lastIndex)
-        strModelNo += " - " + getModelNumberDotted(lastIndex);
-      if (firstNo / 1000000 == lastNo / 1000000)
-        fileNo = firstNo;
-    } else {
-      strModelNo = getModelNumberDotted(modelIndex);
-    }
-    if (fileNo != 0)
-      fileNo = (fileNo < 1000000 ? 1 : fileNo / 1000000);
-
-    if (!isMovie) {
-      g.setI("_currentFileNumber", fileNo);
-      g.setI("_currentModelNumberInFile", modelNo);
-    }
-    float currentMorphModel = am.currentMorphModel;
-    g.setI("_currentFrame", currentFrame);
-    g.setI("_morphCount", am.morphCount);
-    g.setF("_currentMorphFrame", currentMorphModel);
-    g.setI("_frameID", frameID);
-    g.setI("_modelIndex", modelIndex);
-    g.setO("_modelNumber", strModelNo);
-    g.setO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
-    String title = (modelIndex < 0 ? "" : ms.getModelTitle(modelIndex));
-    g.setO("_modelTitle", title == null ? "" : title);
-    g.setO("_modelFile",
-        (modelIndex < 0 ? "" : ms.getModelFileName(modelIndex)));
-    g.setO("_modelType",
-        (modelIndex < 0 ? "" : ms.getModelFileType(modelIndex)));
-
-    if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
-      return;
-    prevFrame = currentFrame;
-    prevMorphModel = currentMorphModel;
-
-    String entryName = getModelName(currentFrame);
-    if (isMovie) {
-      entryName = "" + (entryName == "" ? currentFrame + 1 : am.caf + 1) + ": "
-          + entryName;
-    } else {
-      String script = "" + getModelNumberDotted(currentFrame);
-      if (!entryName.equals(script))
-        entryName = script + ": " + entryName;
-    }
-    // there was a point where I thought frameNo and currentFrame
-    // might be different. 
-    sm.setStatusFrameChanged(fileNo, modelNo,
-        (am.animationDirection < 0 ? -firstNo : firstNo),
-        (am.currentDirection < 0 ? -lastNo : lastNo), currentFrame,
-        currentMorphModel, entryName);
-    if (doHaveJDX())
-      getJSV().setModel(modelIndex);
-    if (isJS && isApplet)
-      updateJSView(modelIndex, -1);
-  }
-
-  // interaction with JSpecView
-
-  private boolean haveJDX;
-  private JmolJSpecView jsv;
-
-  private boolean doHaveJDX() {
-    // once-on, never off
-    return (haveJDX
-        || (haveJDX = getBooleanProperty("_JSpecView".toLowerCase())));
-  }
-
-  JmolJSpecView getJSV() {
-    if (jsv == null) {
-      jsv = (JmolJSpecView) Interface.getOption("jsv.JSpecView", this,
-          "script");
-      jsv.setViewer(this);
-    }
-    return jsv;
-  }
-
-  /**
-   * get the model designated as "baseModel" in a JCamp-MOL file for example,
-   * the model used for bonding for an XYZVIB file or the model used as the base
-   * model for a mass spec file. This might then allow pointing off a peak in
-   * JSpecView to switch to the model that is involved in HNMR or CNMR
-   * 
-   * @param modelIndex
-   * 
-   * @return modelIndex
-   */
-
-  public int getJDXBaseModelIndex(int modelIndex) {
-    if (!doHaveJDX())
-      return modelIndex;
-    return getJSV().getBaseModelIndex(modelIndex);
-  }
-
-  public Object getJspecViewProperties(Object myParam) {
-    // from getProperty("JSpecView...")
-    Object o = sm.getJspecViewProperties("" + myParam);
-    if (o != null)
-      haveJDX = true;
-    return o;
-  }
-
-  /*
-   * echoCallback is one of the two main status reporting mechanisms. Along with
-   * scriptCallback, it outputs to the console. Unlike scriptCallback, it does
-   * not output to the status bar of the application or applet. If
-   * messageCallback is enabled but not echoCallback, these messages go to the
-   * messageCallback function instead.
-   * 
-   * jmolSetCallback("echoCallback", "myEchoCallback") function
-   * myEchoCallback(app, message, queueState) {}
-   * 
-   * queueState = 1 -- queued queueState = 0 -- not queued
-   * 
-   * serves:
-   * 
-   * Eval.instructionDispatchLoop when app has -l flag
-   * ForceField.steepestDescenTakeNSteps for minimization done
-   * Viewer.setPropertyError Viewer.setBooleanProperty error
-   * Viewer.setFloatProperty error Viewer.setIntProperty error
-   * Viewer.setStringProperty error Viewer.showString adds a Logger.warn()
-   * message Eval.showString calculate, cd, dataFrame, echo, error, getProperty,
-   * history, isosurface, listIsosurface, pointGroup, print, set, show, write
-   * ForceField.steepestDescentInitialize for initial energy
-   * ForceField.steepestDescentTakeNSteps for minimization update
-   * Viewer.showParameter
-   */
-
-  public void scriptEcho(String strEcho) {
-    if (!Logger.isActiveLevel(Logger.LEVEL_INFO))
-      return;
-    if (isJS && !isSwingJS)
-      System.out.println(strEcho);
-    sm.setScriptEcho(strEcho, isScriptQueued());
-    if (listCommands && strEcho != null && strEcho.indexOf("$[") == 0)
-      Logger.info(strEcho);
-  }
-
-  private boolean isScriptQueued() {
-    return scm != null && scm.isScriptQueued();
-  }
-
-  /*
-   * errorCallback is a special callback that can be used to identify errors
-   * during scripting and file i/o, and also indicate out of memory conditions
-   * 
-   * jmolSetCallback("errorCallback", "myErrorCallback") function
-   * myErrorCallback(app, errType, errMsg, objectInfo, errMsgUntranslated) {}
-   * 
-   * errType == "Error" or "ScriptException" errMsg == error message, possibly
-   * translated, with added information objectInfo == which object (such as an
-   * isosurface) was involved errMsgUntranslated == just the basic message
-   * 
-   * Viewer.notifyError Eval.runEval on Error and file loading Exceptions
-   * Viewer.handleError Eval.runEval on OOM Error Viewer.createModelSet on OOM
-   * model initialization Error Viewer.getImage on OOM rendering Error
-   */
-  public void notifyError(String errType, String errMsg,
-                          String errMsgUntranslated) {
-    g.setO("_errormessage", errMsgUntranslated);
-    sm.notifyError(errType, errMsg, errMsgUntranslated);
-  }
-
-  /*
-   * evalCallback is a special callback that evaluates expressions in JavaScript
-   * rather than in Jmol.
-   * 
-   * Viewer.jsEval Eval.loadScriptFileInternal Eval.Rpn.evaluateScript
-   * Eval.script
-   */
-
-  public String jsEval(String strEval) {
-    return "" + sm.jsEval(strEval);
-  }
-
-  public SV jsEvalSV(String strEval) {
-    return SV.getVariable(isJS ? sm.jsEval(strEval) : jsEval(strEval));
-  }
-
-  /*
-   * loadStructCallback indicates file load status.
-   * 
-   * jmolSetCallback("loadStructCallback", "myLoadStructCallback") function
-   * myLoadStructCallback(fullPathName, fileName, modelName, errorMsg, ptLoad)
-   * {}
-   * 
-   * ptLoad == JmolConstants.FILE_STATUS_NOT_LOADED == -1 ptLoad == JmolConstants.FILE_STATUS_ZAPPED == 0
-   * ptLoad == JmolConstants.FILE_STATUS_CREATING_MODELSET == 2 ptLoad ==
-   * JmolConstants.FILE_STATUS_MODELSET_CREATED == 3 ptLoad == JmolConstants.FILE_STATUS_MODELS_DELETED == 5
-   * 
-   * Only -1 (error loading), 0 (zapped), and 3 (model set created) messages are
-   * passed on to the callback function. The others can be detected using
-   * 
-   * set loadStructCallback "jmolscript:someFunctionName"
-   * 
-   * At the time of calling of that method, the jmolVariable _loadPoint gives
-   * the value of ptLoad. These load points are also recorded in the status
-   * queue under types "fileLoaded" and "fileLoadError".
-   * 
-   * Viewer.setFileLoadStatus Viewer.createModelSet (2, 3)
-   * Viewer.createModelSetAndReturnError (-1, 1, 4) Viewer.deleteAtoms (5)
-   * Viewer.zap (0)
-   */
-  private void setFileLoadStatus(FIL ptLoad, String fullPathName,
-                                 String fileName, String modelName,
-                                 String strError, Boolean isAsync) {
-    setErrorMessage(strError, null);
-    g.setI("_loadPoint", ptLoad.getCode());
-    boolean doCallback = (ptLoad != FIL.CREATING_MODELSET);
-    if (doCallback)
-      setStatusFrameChanged(false, false);
-    sm.setFileLoadStatus(fullPathName, fileName, modelName, strError,
-        ptLoad.getCode(), doCallback, isAsync);
-    if (doCallback) {
-      //       setStatusFrameChanged(false, true); // ensures proper title in JmolFrame but then we miss the file name
-      if (doHaveJDX())
-        getJSV().setModel(am.cmi);
-      if (isJS && isApplet)
-        updateJSView(am.cmi, -2);
-    }
-
-  }
-
-  public String getZapName() {
-    return (g.modelKitMode ? JC.MODELKIT_ZAP_TITLE : JC.ZAP_TITLE);
-  }
-
-  /*
-   * measureCallback reports completed or pending measurements. Pending
-   * measurements are measurements that the user has started but has not
-   * completed -- this call comes when the user hesitates with the mouse over an
-   * atom and the "rubber band" is showing
-   * 
-   * jmolSetCallback("measureCallback", "myMeasureCallback") function
-   * myMeasureCallback(strMeasure, intInfo, status) {}
-   * 
-   * intInfo == (see below) status == "measurePicked" (intInfo == the number of
-   * atoms in the measurement) "measureComplete" (intInfo == the current number
-   * measurements) "measureDeleted" (intInfo == the index of the measurement
-   * deleted or -1 for all) "measurePending" (intInfo == number of atoms picked
-   * so far)
-   * 
-   * strMeasure:
-   * 
-   * For "set picking MEASURE ..." each time the user clicks an atom, a message
-   * is sent to the pickCallback function (see below), and if the picking is set
-   * to measure distance, angle, or torsion, then after the requisite number of
-   * atoms is picked and the pick callback message is sent, a call is also made
-   * to measureCallback with a string that indicates the measurement, such as:
-   * 
-   * Angle O #9 - Si #7 - O #2 : 110.51877
-   * 
-   * Under default conditions, when picking is not set to MEASURE, then
-   * measurement reports are sent when the measure is completed, deleted, or
-   * pending. These reports are in a psuedo array form that can be parsed more
-   * easily, involving the atoms and measurement with units, for example:
-   * 
-   * [Si #3, O #8, Si #7, 60.1 <degrees mark>]
-   * 
-   * Viewer.setStatusMeasuring Measures.clear Measures.define
-   * Measures.deleteMeasurement Measures.pending actionManager.atomPicked
-   */
-
-  public void setStatusMeasuring(String status, int intInfo, String strMeasure,
-                                 float value) {
-
-    // status           intInfo 
-
-    // measureCompleted index
-    // measurePicked    atom count
-    // measurePending   atom count
-    // measureDeleted   -1 (all) or index
-    // measureSequence  -2
-    sm.setStatusMeasuring(status, intInfo, strMeasure, value);
-  }
-
-  /*
-   * minimizationCallback reports the status of a currently running
-   * minimization.
-   * 
-   * jmolSetCallback("minimizationCallback", "myMinimizationCallback") function
-   * myMinimizationCallback(app, minStatus, minSteps, minEnergy, minEnergyDiff)
-   * {}
-   * 
-   * minStatus is one of "starting", "calculate", "running", "failed", or "done"
-   * 
-   * Viewer.notifyMinimizationStatus Minimizer.endMinimization
-   * Minimizer.getEnergyonly Minimizer.startMinimization
-   * Minimizer.stepMinimization
-   */
-
-  public void notifyMinimizationStatus() {
-    Object step = getP("_minimizationStep");
-    String ff = (String) getP("_minimizationForceField");
-    sm.notifyMinimizationStatus((String) getP("_minimizationStatus"),
-        step instanceof String ? Integer.valueOf(0) : (Integer) step,
-        (Float) getP("_minimizationEnergy"),
-        (step.toString().equals("0") ? Float.valueOf(0)
-            : (Float) getP("_minimizationEnergyDiff")),
-        ff);
-  }
-
-  /*
-   * pickCallback returns information about an atom, bond, or DRAW object that
-   * has been picked by the user.
-   * 
-   * jmolSetCallback("pickCallback", "myPickCallback") function
-   * myPickCallback(strInfo, iAtom, map) {}
-   * 
-   * iAtom == the index of the atom picked or -2 for a draw object or -3 for a
-   * bond
-   * 
-   * strInfo depends upon the type of object picked:
-   * 
-   * atom (iAtom>=0): a string determinied by the PICKLABEL parameter, which if "" delivers
-   * the atom identity along with its coordinates
-   * 
-   * bond (iAtom==-3): ["bond", bondIdentityString (quoted), x, y, z] where the coordinates
-   * are of the midpoint of the bond
-   * 
-   * draw (iAtom==-2): ["draw", ID(quoted), pickedModel, pickedVertex, x, y, z,
-   * title(quoted)]
-   * 
-   * isosurface (iAtom==-4): ["isosurface", ID(quoted), pickedModel, pickedVertex, x, y, z,
-   * title(quoted)]
-   * 
-   * map:
-   * 
-   * atom: null
-   * 
-   * bond: {pt, index, modelIndex, modelNumberDotted, type, strInfo}
-   * 
-   * Draw, isosurface: {pt, modelIndex, modelNumberDotted, id, vertex, type}
-   * 
-   * Viewer.setStatusAtomPicked Draw.checkObjectClicked (set picking DRAW)
-   * Sticks.checkObjectClicked (set bondPicking TRUE; set picking IDENTIFY)
-   * actionManager.atomPicked (set atomPicking TRUE; set picking IDENTIFY)
-   * actionManager.queueAtom (during measurements)
-   */
-
-  public void setStatusAtomPicked(int atomIndex, String info,
-                                  Map<String, Object> map, boolean andSelect) {
-    if (andSelect)
-      setSelectionSet(BSUtil.newAndSetBit(atomIndex));
-    if (info == null) {
-      info = g.pickLabel;
-      info = (info.length() == 0
-          ? getAtomInfoXYZ(atomIndex, g.messageStyleChime)
-          : ms.getAtomInfo(atomIndex, info, ptTemp));
-    }
-    setPicked(atomIndex, false);
-    if (atomIndex < 0) {
-      Measurement m = getPendingMeasurement();
-      if (m != null)
-        info = info.substring(0, info.length() - 1) + ",\"" + m.getString()
-            + "\"]";
-    }
-    g.setO("_pickinfo", info);
-    sm.setStatusAtomPicked(atomIndex, info, map);
-    if (atomIndex < 0)
-      return;
-    int syncMode = sm.getSyncMode();
-    if (syncMode == StatusManager.SYNC_DRIVER && doHaveJDX())
-      getJSV().atomPicked(atomIndex);
-    if (isJS && isApplet)
-      updateJSView(ms.at[atomIndex].mi, atomIndex);
-  }
-
   public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
     if (mode == 0) {
       g.setO("_fileDropped", fileName);
@@ -5379,7 +5524,7 @@ public class Viewer extends JmolViewer
     case T.helixstep:
       return g.helixStep;
     case T.infofontsize:
-        return g.infoFontSize;
+      return g.infoFontSize;
     case T.meshscale:
       return g.meshScale;
     case T.minpixelselradius:
@@ -5592,6 +5737,7 @@ public class Viewer extends JmolViewer
       // debug mouse actions
       return g.testFlag1;
     case T.testflag2:
+      // no load processing (jmolscript or 2D file load minimization)
       // passed to MOCalcuation, but not used
       // nciCalculation special params.testFlag = 2 "absolute" calc.
       // GIF reducedColors
@@ -5782,7 +5928,9 @@ public class Viewer extends JmolViewer
       return;
     case T.forcefield:
       // 12.3.25
-      g.forceField = value = ("UFF".equalsIgnoreCase(value) ? "UFF" : "MMFF");
+      g.forceField = value = ("UFF".equalsIgnoreCase(value) ? "UFF"
+          : "UFF2D".equalsIgnoreCase(value) ? "UFF2D"
+              : "MMFF2D".equalsIgnoreCase(value) ? "MMFF2D" : "MMFF");
       minimizer = null;
       break;
     case T.nmrurlformat:
@@ -7040,7 +7188,7 @@ public class Viewer extends JmolViewer
       getModelkit(false).setProperty("atomType", "C");
       getModelkit(false).setProperty("bondType", "p");
       if (!isApplet)
-        popupMenu(10, 0, 'm');
+        popupMenu(10, 0, 'm'); // was 0?
       if (isChange)
         sm.setCallbackFunction("modelkit", "ON");
       g.modelKitMode = true;
@@ -7508,122 +7656,6 @@ public class Viewer extends JmolViewer
     return getPropertyManager().getModelFileInfo(null);
   }
 
-  @Override
-  public Object getProperty(String returnType, String infoType,
-                            Object paramInfo) {
-    // accepts a BitSet paramInfo
-    // return types include "JSON", "String", "readable", and anything else
-    // returns the Java object.
-    // Jmol 11.7.45 also uses this method as a general API
-    // for getting and returning script data from the console and editor
-
-    if (!"DATA_API".equals(returnType))
-      return getPropertyManager().getProperty(returnType, infoType, paramInfo);
-
-    switch (("scriptCheck........." // 0
-        + "consoleText........." // 20
-        + "scriptEditor........" // 40
-        + "scriptEditorState..." // 60
-        + "getAppConsole......." // 80
-        + "getScriptEditor....." // 100
-        + "setMenu............." // 120
-        + "spaceGroupInfo......" // 140
-        + "disablePopupMenu...." // 160
-        + "defaultDirectory...." // 180
-        + "getPopupMenu........" // 200
-        + "shapeManager........" // 220
-        + "getPreference......." // 240
-    ).indexOf(infoType)) {
-
-    case 0:
-      return scriptCheckRet((String) paramInfo, true);
-    case 20:
-      return (appConsole == null ? "" : appConsole.getText());
-    case 40:
-      showEditor((String[]) paramInfo);
-      return null;
-    case 60:
-      scriptEditorVisible = ((Boolean) paramInfo).booleanValue();
-      return null;
-    case 80:
-      if (isKiosk) {
-        appConsole = null;
-      } else if (paramInfo instanceof JmolAppConsoleInterface) {
-        appConsole = (JmolAppConsoleInterface) paramInfo;
-      } else if (paramInfo != null && !((Boolean) paramInfo).booleanValue()) {
-        appConsole = null;
-      } else if (appConsole == null && paramInfo != null
-          && ((Boolean) paramInfo).booleanValue()) {
-        if (isJSNoAWT) {
-          appConsole = (JmolAppConsoleInterface) Interface
-              .getOption("consolejs.AppletConsole", this, "script");
-        } else// if (isSwingJS) {
-        // no applet console yet for SwingJS -- need DefaultStyledDocument
-        //} else 
-        {
-          for (int i = 0, n = isSwingJS ? 1 : 4; i < n
-              && appConsole == null; i++) {
-            appConsole = (
-            //  isApplet
-            //  ? (JmolAppConsoleInterface) Interface
-            //      .getOption("console.AppletConsole", null, null)
-            //  : 
-            (JmolAppConsoleInterface) Interface.getInterface(
-                "org.openscience.jmol.app.jmolpanel.console.AppConsole", null,
-                null));
-            if (appConsole == null)
-              try {
-                System.out.println("Viewer can't start appConsole");
-                /**
-                 * @j2sNative break;
-                 */
-                Thread.currentThread().wait(100);
-              } catch (InterruptedException e) {
-                //
-              }
-          }
-
-        }
-        if (appConsole != null)
-          appConsole.start(this);
-      }
-      scriptEditor = (isJS || appConsole == null ? null
-          : appConsole.getScriptEditor());
-      return appConsole;
-    case 100:
-      if (appConsole == null && paramInfo != null
-          && ((Boolean) paramInfo).booleanValue()) {
-        getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
-        scriptEditor = (appConsole == null ? null
-            : appConsole.getScriptEditor());
-      }
-      return scriptEditor;
-    case 120:
-      if (jmolpopup != null)
-        jmolpopup.jpiDispose();
-      jmolpopup = null;
-      return menuStructure = (String) paramInfo;
-    case 140:
-      return getSymTemp().getSpaceGroupInfo(ms, null, -1, false, null);
-    case 160:
-      g.disablePopupMenu = true; // no false here, because it's a
-      // one-time setting
-      return null;
-    case 180:
-      return g.defaultDirectory;
-    case 200:
-      if (paramInfo instanceof String)
-        return getMenu((String) paramInfo);
-      return getPopupMenu();
-    case 220:
-      return shm.getProperty(paramInfo);
-    case 240:
-      return sm.syncSend("getPreference", paramInfo, 1);
-    }
-    Logger.error("ERROR in getProperty DATA_API: " + infoType);
-    return null;
-  }
-
   public void showEditor(String[] file_text) {
     JmolScriptEditorInterface scriptEditor = (JmolScriptEditorInterface) getProperty(
         "DATA_API", "getScriptEditor", Boolean.TRUE);
@@ -7648,19 +7680,6 @@ public class Viewer extends JmolViewer
 
   public void setTainted(boolean TF) {
     isTainted = axesAreTainted = (TF && (refreshing || creatingImage));
-  }
-
-  public int notifyMouseClicked(int x, int y, int action, int mode) {
-    // change y to 0 at bottom
-    int modifiers = Binding.getButtonMods(action);
-    int clickCount = Binding.getClickCount(action);
-    g.setI("_mouseX", x);
-    g.setI("_mouseY", dimScreen.height - y);
-    g.setI("_mouseAction", action);
-    g.setI("_mouseModifiers", modifiers);
-    g.setI("_clickCount", clickCount);
-    return sm.setStatusClicked(x, dimScreen.height - y, action, clickCount,
-        mode);
   }
 
   Map<String, Object> checkObjectClicked(int x, int y, int modifiers) {
@@ -7714,8 +7733,8 @@ public class Viewer extends JmolViewer
     // Eval: rotate INTERNAL
 
     if (eval == null)
-        eval = this.eval;
-	  
+      eval = this.eval;
+
     if (headless) {
       if (isSpin && endDegrees == Float.MAX_VALUE)
         return false;
@@ -7934,7 +7953,7 @@ public class Viewer extends JmolViewer
     invertSelected(null, null, atomIndex, bs);
     if (isClick)
       setStatusAtomPicked(atomIndex, "inverted: " + Escape.eBS(bs), null,
-    		  false);
+          false);
   }
 
   public void invertSelected(P3 pt, P4 plane, int iAtom, BS bsAtoms) {
@@ -8399,16 +8418,6 @@ public class Viewer extends JmolViewer
     return getOutputManager().outputToFile(params);
   }
 
-  private OutputManager outputManager;
-
-  private OutputManager getOutputManager() {
-    if (outputManager != null)
-      return outputManager;
-    return (outputManager = (OutputManager) Interface.getInterface(
-        "org.jmol.viewer.OutputManager" + (isJSNoAWT ? "JS" : "Awt"), this,
-        "file")).setViewer(this, privateKey);
-  }
-
   private void setSyncTarget(int mode, boolean TF) {
     switch (mode) {
     case 0:
@@ -8722,7 +8731,6 @@ public class Viewer extends JmolViewer
       setBooleanProperty("refreshing", true);
       fm.setPathForAllFiles("");
       Logger.error("vwr handling error condition: " + er + "  ");
-      er.printStackTrace();
       notifyError("Error", "doClear=" + doClear + "; " + er, "" + er);
     } catch (Throwable e1) {
       try {
@@ -8736,6 +8744,7 @@ public class Viewer extends JmolViewer
   // / User-defined functions
 
   final static Map<String, JmolScriptFunction> staticFunctions = new Hashtable<String, JmolScriptFunction>();
+
   Map<String, JmolScriptFunction> localFunctions;
 
   public Map<String, JmolScriptFunction> getFunctions(boolean isStatic) {
@@ -8868,13 +8877,18 @@ public class Viewer extends JmolViewer
     if (!g.monitorEnergy)
       return;
     try {
-      minimize(null, 0, 0, getAllAtoms(), null, 0, false, false, true, false);
+      minimize(null, 0, 0, getAllAtoms(), null, 0, MIN_SILENT);
     } catch (Exception e) {
-      // TODO
     }
     echoMessage(getP("_minimizationForceField") + " Energy = "
         + getP("_minimizationEnergy"));
   }
+
+  public static final int MIN_SILENT = 1;
+  public static final int MIN_HAVE_FIXED = 2;
+  public static final int MIN_QUICK = 4;
+  public static final int MIN_ADDH = 8;
+  public static final int MIN_NO_RANGE = 16;
 
   /**
    * 
@@ -8886,18 +8900,17 @@ public class Viewer extends JmolViewer
    * @param bsSelected
    * @param bsFixed
    * @param rangeFixed
-   * @param addHydrogen
-   * @param isOnly
-   * @param isSilent
-   * @param isLoad2D
+   * @param flags
    * @throws Exception
    */
   public void minimize(JmolScriptEvaluator eval, int steps, float crit,
-                       BS bsSelected, BS bsFixed, float rangeFixed,
-                       boolean addHydrogen, boolean isOnly, boolean isSilent,
-                       boolean isLoad2D)
+                       BS bsSelected, BS bsFixed, float rangeFixed, int flags)
       throws Exception {
 
+    boolean isSilent = (flags & MIN_SILENT) == MIN_SILENT;
+    boolean isQuick = (flags & MIN_QUICK) == MIN_QUICK;
+    boolean hasRange = (flags & MIN_NO_RANGE) == 0;
+    boolean addHydrogen = (flags & MIN_ADDH) == MIN_ADDH;
     // We only work on atoms that are in frame
 
     String ff = g.forceField;
@@ -8925,7 +8938,7 @@ public class Viewer extends JmolViewer
     // are in the visible frame set and are within 5 angstroms
     // and are not already selected
 
-    BS bsNearby = (isOnly ? new BS()
+    BS bsNearby = (hasRange ? new BS()
         : ms.getAtomsWithinRadius(rangeFixed, bsSelected, true, null));
     bsNearby.andNot(bsSelected);
     if (haveFixed) {
@@ -8934,9 +8947,31 @@ public class Viewer extends JmolViewer
       bsMotionFixed = bsNearby;
     }
     bsMotionFixed.and(bsInFrame);
+    flags |= ((haveFixed ? MIN_HAVE_FIXED : 0)
+        | (getBooleanProperty("minimizationSilent") ? MIN_SILENT : 0));
+    if (isQuick) {
+      {
+        // carry out a preliminary UFF no-hydrogen calculation
+        // to clean up benzene rings and amides.
+        try {
+          if (!isSilent)
+            Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
+          getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
+              flags, "UFF");
+        } catch (Exception e) {
+          Logger.error("Minimization error: " + e.toString());
+          e.printStackTrace();
+        }
 
-    if (addHydrogen)
-      bsSelected.or(addHydrogens(bsSelected, isLoad2D, isSilent));
+      }
+    }
+    if (isQuick && getBoolean(T.testflag2))
+      return;
+    if (addHydrogen) {
+      BS bsH = addHydrogens(bsSelected, flags);
+      if (!isQuick)
+        bsSelected.or(bsH);
+    }
 
     int n = bsSelected.cardinality();
     if (ff.equals("MMFF") && n > g.minimizationMaxAtoms) {
@@ -8947,17 +8982,42 @@ public class Viewer extends JmolViewer
       return;
     }
     try {
+
       if (!isSilent)
         Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
-      getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
-          haveFixed, isSilent, ff);
+      getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed, flags,
+          (isQuick ? "MMFF" : ff));
+      if (isQuick) {
+        g.forceField = "MMFF";
+        setHydrogens(bsSelected);
+      }
     } catch (JmolAsyncException e) {
       if (eval != null)
         eval.loadFileResourceAsync(e.getFileName());
     } catch (Exception e) {
       Logger.error("Minimization error: " + e.toString());
-      e.printStackTrace();
     }
+  }
+
+  private void setHydrogens(BS bsAtoms) {
+    int[] nTotal = new int[1];
+    P3[][] hatoms = ms.calculateHydrogens(bsAtoms, nTotal, null,
+        AtomCollection.CALC_H_IGNORE_H | AtomCollection.CALC_H_QUICK);
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      P3[] pts = hatoms[i];
+      if (pts == null || pts.length == 0)
+        continue;
+      Atom a = ms.at[i];
+      Bond[] b = a.bonds;
+      for (int j = 0, pt = 0, n = a.getBondCount(); j < n; j++) {
+        Atom h = b[j].getOtherAtom(a);
+        if (h.getAtomicAndIsotopeNumber() == 1) {
+          P3 p = pts[pt++];
+          ms.setAtomCoord(h.i, p.x, p.y, p.z);
+        }
+      }
+    }
+    ms.resetMolecules();
   }
 
   public void setMotionFixedAtoms(BS bs) {
@@ -9484,14 +9544,6 @@ public class Viewer extends JmolViewer
     return sc;
   }
 
-  @Override
-  public int[] resizeInnerPanel(int width, int height) {
-    if (!autoExit && haveDisplay)
-      return sm.resizeInnerPanel(width, height);
-    setScreenDimension(width, height);
-    return new int[] { dimScreen.width, dimScreen.height };
-  }
-
   public String getDefaultPropertyParam(int propertyID) {
     return getPropertyManager().getDefaultPropertyParam(propertyID);
   }
@@ -9511,7 +9563,9 @@ public class Viewer extends JmolViewer
 
   //// requiring ScriptEvaluator:
 
-  public BS addHydrogens(BS bsAtoms, boolean is2DLoad, boolean isSilent) {
+  public BS addHydrogens(BS bsAtoms, int flags) {
+    boolean isSilent = ((flags & MIN_SILENT) == MIN_SILENT);
+    boolean isQuick = ((flags & MIN_QUICK) == MIN_QUICK);
     boolean doAll = (bsAtoms == null);
     if (bsAtoms == null)
       bsAtoms = getModelUndeletedAtomsBitSet(
@@ -9523,13 +9577,14 @@ public class Viewer extends JmolViewer
     if (modelIndex != ms.mc - 1)
       return bsB;
     Lst<Atom> vConnections = new Lst<Atom>();
-    P3[] pts = getAdditionalHydrogens(bsAtoms, doAll, false, vConnections);
+    P3[] pts = getAdditionalHydrogens(bsAtoms, vConnections,
+        flags | (doAll ? AtomCollection.CALC_H_DOALL : 0));
     boolean wasAppendNew = false;
     wasAppendNew = g.appendNew;
     if (pts.length > 0) {
       clearModelDependentObjects();
       try {
-        bsB = (is2DLoad ? ms.addHydrogens(vConnections, pts)
+        bsB = (isQuick ? ms.addHydrogens(vConnections, pts)
             : addHydrogensInline(bsAtoms, vConnections, pts));
       } catch (Exception e) {
         System.out.println(e.toString());
@@ -9829,32 +9884,29 @@ public class Viewer extends JmolViewer
     return getAnnotationParser(false).getAtomValidation(this, type, atom);
   }
 
-  //  private GenericZipTools jzt;
-  //
-  //  public GenericZipTools getJzt() {
-  //    return (jzt == null
-  //        ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools",
-  //            this, "zip")
-  //        : jzt);
-  //  }
-  //
-  void dragMinimizeAtom(int iAtom) {
+  void dragMinimizeAtom(final int iAtom) {
     stopMinimization();
     BS bs = (getMotionFixedAtoms().isEmpty()
         ? ms.getAtoms((ms.isAtomPDB(iAtom) ? T.group : T.molecule),
             BSUtil.newAndSetBit(iAtom))
         : BSUtil.setAll(ms.ac));
     try {
-      minimize(null, Integer.MAX_VALUE, 0, bs, null, 0, false, false, false,
-          false);
+      minimize(null, Integer.MAX_VALUE, 0, bs, null, 0, 0);
     } catch (Exception e) {
       if (!async)
         return;
+      final Viewer me = this;
+      @SuppressWarnings("unused")
+      Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          me.dragMinimizeAtom(iAtom);
+        }
+      };
       /**
        * @j2sNative
        * 
-       *            var me = this; setTimeout(function()
-       *            {me.dragMinimizeAtom$I(iAtom)}, 100);
+       *            setTimeout(function(){r.run()}, 100);
        * 
        */
       {
@@ -10190,9 +10242,7 @@ public class Viewer extends JmolViewer
     consoleFontScale = scale;
   }
 
-  public void readFileAsMap(BufferedInputStream bis, Map<String, Object> map,
-                            String name) {
-    ZipTools.readFileAsMap(bis, map, name);
+  public int confirm(String msg, String msgNo) {
+    return apiPlatform.confirm(msg, msgNo);
   }
-
 }

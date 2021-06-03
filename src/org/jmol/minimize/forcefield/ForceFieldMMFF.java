@@ -28,12 +28,7 @@ import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import org.jmol.api.SmilesMatcherInterface;
-import javajs.util.BS;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
@@ -47,6 +42,11 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JmolAsyncException;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
 
 /**
  * MMFF94 implementation 5/14/2012
@@ -203,7 +203,8 @@ public class ForceFieldMMFF extends ForceField {
   
 
   private static Lst<AtomType> atomTypes;
-  private static Map<Object, Object> ffParams;
+  private static Map<Object, Object> mmffParams;
+  protected Map<Object, Object> ffParams;
 
   private int[] rawAtomTypes;
   private int[] rawBondTypes;
@@ -226,11 +227,22 @@ public class ForceFieldMMFF extends ForceField {
    * vRings[3] list of aromatic 5-membered and 6-membered rings
    */
   private Lst<BS>[] vRings;
+  private static Map<Object, Object> mmff2DParams;
   
-  public ForceFieldMMFF(Minimizer m) throws JmolAsyncException {
+  public ForceFieldMMFF(Minimizer m, boolean isQuick)
+      throws JmolAsyncException {
     this.minimizer = m;
-    this.name = "MMFF";
-    getParameters();
+    if (isQuick) {
+      name = "MMFF2D";
+      ffParams = mmff2DParams;
+      if (ffParams == null)
+        mmff2DParams = ffParams = getParameters(true);
+    } else {
+      name = "MMFF";
+      ffParams = mmffParams;
+      if (ffParams == null)
+        mmffParams = ffParams = getParameters(false);
+    }
   }
   
   @Override
@@ -271,13 +283,12 @@ public class ForceFieldMMFF extends ForceField {
   }
   private final static String names = "END.BCI.CHG.ANG.NDK.OND.OOP.TBN.FSB.TOR.VDW.";
   private final static int[] types = {0, TYPE_PBCI, TYPE_CHRG, TYPE_ANGLE, TYPE_BNDK, TYPE_BOND, TYPE_OOP, TYPE_SB, TYPE_SBDEF, TYPE_TORSION, TYPE_VDW };
-  
-  private void getParameters() throws JmolAsyncException {
-    if (ffParams != null)
-      return;
+
+  protected Map<Object, Object> getParameters(boolean isQuick) throws JmolAsyncException {
     getAtomTypes();
+    String resourceName = (isQuick ? "mmff94.par.txt" : "mmff94_2d.par.txt");
+
     Hashtable<Object, Object> data = new Hashtable<Object, Object>();
-    String resourceName = "mmff94.par.txt";
     if (Logger.debugging)
       Logger.debug("reading data from " + resourceName);
     BufferedReader br = null;
@@ -305,7 +316,7 @@ public class ForceFieldMMFF extends ForceField {
         //ignore
       }
     }
-    ffParams = data;
+    return data;
   }
 
   private String line;
@@ -667,7 +678,7 @@ public class ForceFieldMMFF extends ForceField {
    * @param doRound 
    * @return   full array of partial charges
    */
-  public static float[] calculatePartialCharges(Bond[] bonds, int[] bTypes, Atom[] atoms,
+  public float[] calculatePartialCharges(Bond[] bonds, int[] bTypes, Atom[] atoms,
                                           int[] aTypes, BS bsAtoms, boolean doRound) {
 
     // start with formal charges specified by MMFF94 (not what is in file!)
@@ -766,14 +777,44 @@ public class ForceFieldMMFF extends ForceField {
     return partialCharges;
   }
 
-  private static boolean isBondType1(AtomType at1, AtomType at2) {
+  /**
+   * From forcefieldmmff94.cpp (flag BTij)
+   * 
+   * a) single bond between atoms i and j, both i and j are not aromatic and
+   * both types have sbmb set in mmffprop.par, or
+   * 
+   * b) between two aromatic atoms, but the bond is not aromatic (e.g.
+   * connecting bond in biphenyl)
+   * 
+   * (sbmb is 2, 3, 4, 9, 30, 37, 39, 54, 57, 58, 63, 64, 67, 75, 78, 80, 81)
+   * 
+   * 
+   * @param at1
+   * @param at2
+   * @return 0 or 1
+   */
+  private static boolean isSpecialBondType(AtomType at1, AtomType at2) {
     return at1.sbmb && at2.sbmb || at1.arom && at2.arom; 
     // but what about at1.sbmb && at2.arom?
   }
 
+  /**
+   * Get the bond type: 
+   * 
+   * 1 biphenyl or  
+   * 
+   * 0 any other
+   * 
+   * @param bond
+   * @param at1
+   * @param at2
+   * @param index1
+   * @param index2
+   * @return
+   */
   private int getBondType(Bond bond, AtomType at1, AtomType at2,
                                int index1, int index2) {
-  return (isBondType1(at1, at2) && 
+  return (isSpecialBondType(at1, at2) && 
       bond.getCovalentOrder() == 1 
       && !isAromaticBond(index1, index2) ? 1 : 0);  
  }
@@ -969,18 +1010,28 @@ public class ForceFieldMMFF extends ForceField {
 
   private final static int[] sbMap = {0, 1, 3, 5, 4, 6, 8, 9, 11};
 
+  /**
+   * Get the angle type: 
+   * 
+   * 0 The angle <i>i-j-k</i> is a "normal" bond angle
+   * 
+   * 1 Either bond <i>i-j</i> or bond <i>j-k</i> has a bond type of 1
+   * 
+   * 2 Bonds<i> i-j</i> and <i>j-k</i> each have bond types of 1; the sum is 2.
+   * 
+   * 3 The angle occurs in a three-membered ring
+   * 
+   * 4 The angle occurs in a four-membered ring
+   * 
+   * 5 Is in a three-membered ring and the sum of the bond types is 1
+   * 
+   * 6 Is in a three-membered ring and the sum of the bond types is 2
+   * 
+   * 7 Is in a four-membered ring and the sum of the bond types is 1
+   * 
+   * 8 Is in a four-membered ring and the sum of the bond types is 2
+   */
   private int setAngleType(MinAngle angle) {
-    /*
-    0      The angle <i>i-j-k</i> is a "normal" bond angle
-    1        Either bond <i>i-j</i> or bond <i>j-k</i> has a bond type of 1
-    2      Bonds<i> i-j</i> and <i>j-k</i> each have bond types of 1; the sum is 2.
-    3      The angle occurs in a three-membered ring
-    4      The angle occurs in a four-membered ring
-    5      Is in a three-membered ring and the sum of the bond types is 1
-    6      Is in a three-membered ring and the sum of the bond types is 2
-    7      Is in a four-membered ring and the sum of the bond types is 1
-    8      Is in a four-membered ring and the sum of the bond types is 2
-    */
     angle.type = minBonds[angle.data[ABI_IJ]].type + minBonds[angle.data[ABI_JK]].type;
     if (checkRings(vRings[R3], angle.data, 3)) {
       angle.type += (angle.type == 0 ? 3 : 4);
@@ -1016,6 +1067,23 @@ public class ForceFieldMMFF extends ForceField {
     return angle.type;
   }
   
+  /**
+   * Get the torsion type for [a,b,c,d], also called "FF class". One of the
+   * following, determined in this order:
+   * 
+   * 4: 4-membered ring
+   * 
+   * 1: ab-cd
+   * 
+   * 0: biphenyl and not 5-membered ring
+   * 
+   * 5: 5-membered ring
+   * 
+   * 2: a-x=x-b
+   * 
+   * @param t
+   * @return
+   */
   private int setTorsionType(MinTorsion t) {
     if (checkRings(vRings[R4], t.data, 4)) 
       return (t.type = 4); // in 4-membered ring
@@ -1425,7 +1493,7 @@ public class ForceFieldMMFF extends ForceField {
     }
   }
  
-  private static double getR0(MinBond b) {
+  private double getR0(MinBond b) {
     return (b.ddata == null ? ((double[]) ffParams.get(b.key)) : b.ddata)[1];   
   }
 

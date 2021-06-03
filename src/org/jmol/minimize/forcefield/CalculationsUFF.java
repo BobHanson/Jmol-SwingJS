@@ -131,7 +131,7 @@ class CalculationsUFF extends Calculations {
     int elemNo;
     for (int i = 0; i < ac; i++) {
       MinAtom a = minAtoms[i];
-      if (a.nBonds == 3 && isInvertible(elemNo = a.atom.getElementNumber()))
+      if (a.nBonds == 3 && a.sType != "C_3" && isInvertible(elemNo = a.atom.getElementNumber()))
         oopCalc.setData(calc, i, elemNo, 0);
     }
 

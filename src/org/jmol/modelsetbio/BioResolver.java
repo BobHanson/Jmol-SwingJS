@@ -34,6 +34,7 @@ import java.util.Properties;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
@@ -409,8 +410,7 @@ public final class BioResolver implements Comparator<String[]> {
     bsAddedMask = BSUtil.copy(bsAddedHydrogens);
     finalizePdbCharges();
     int[] nTotal = new int[1];
-    P3[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, true, false,
-        null);
+    P3[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
     Group groupLast = null;
     int ipt = 0;
     for (int i = 0; i < pts.length; i++) {

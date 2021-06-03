@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.net.URL;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
+
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericImageDialog;
 import org.jmol.api.GenericMenuInterface;
@@ -13,8 +15,6 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolInChI;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.js.JmolToJSmolInterface;
-import org.jmol.inchi.InChIJNI;
-import org.jmol.inchi.InChIJS;
 import org.jmol.script.ScriptContext;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
@@ -553,6 +553,15 @@ public class Platform implements GenericPlatform {
             (Viewer) vwr, "platform"))
         : inchi);
   }
-
+  
+  @Override
+  public int confirm(String msg, String msgNo) {
+    boolean ok = /** @j2sNative confirm(msg) || */false;
+    if (ok)
+      return JOptionPane.OK_OPTION;
+    if (msgNo != null)
+      ok =  /** @j2sNative confirm(msgNo) || */false;
+    return (ok ? JOptionPane.NO_OPTION : JOptionPane.CANCEL_OPTION);
+  }
 
 }

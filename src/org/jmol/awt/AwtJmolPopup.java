@@ -41,10 +41,10 @@ public class AwtJmolPopup extends JmolPopup {
   }
 
   @Override
-  protected void addMenu(String id, String item, SC subMenu, String label,
-                         PopupResource popupResourceBundle) {
+  protected void addMenu(final String id, final String item, final SC subMenu, final String label,
+                         final PopupResource popupResourceBundle) {
     
-    AwtSwingComponent c = (AwtSwingComponent) subMenu;
+    final AwtSwingComponent c = (AwtSwingComponent) subMenu;
     c.deferred = true;
     c.jm.addMenuListener(new MenuListener() {
 
@@ -72,48 +72,66 @@ public class AwtJmolPopup extends JmolPopup {
 
   @SuppressWarnings("unchecked")
   protected void updateAwtMenus(String item) {
-    switch (item) {
-    case "fileMenu":
-      updateFileMenu();
-      break;
-    case "elementsComputedMenu":
-      updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
-      break;
-    case "FRAMESbyModelComputedMenu":
-      updateFRAMESbyModelComputedMenu();
-      break;
-    case "PDBheteroComputedMenu":
-      updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
-      break;
-    case "modelSetMenu":
-      updateModelSetComputedMenu();
-      break;
-    case "spectraMenu":
-      updateSpectraMenu();
-      break;
-    case "sceneComputedMenu":
-      updateSceneComputedMenu();
-      break;
-    case "selectMenuText":
-      updatePDBComputedMenus();
-      break;
-    case "languageComputedMenu":
-      updateLanguageSubmenu();
-      break;
-    case "SYMMETRYSelectComputedMenu":
-      updateSYMMETRYSelectComputedMenu();
-      break;
-    case "SYMMETRYShowComputedMenu":
-      updateSYMMETRYShowComputedMenu();
-      break;
-    case "configurationComputedMenu":
+    switch (item.charAt(0)) {
+    case 'c':
+      //    case "configurationComputedMenu":
       updateConfigurationComputedMenu();
       break;
-    case "surfMoComputedMenuText":
-      updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
+    case 'f':
+      //    case "fileMenu":
+      updateFileMenu();
       break;
-    case "systemMenu":
-      updateAboutSubmenu();
+    case 'e':
+      //    case "elementsComputedMenu":
+      updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
+      break;
+    case 'F':
+      //    case "FRAMESbyModelComputedMenu":
+      updateFRAMESbyModelComputedMenu();
+      break;
+    case 'l':
+      //    case "languageComputedMenu":
+      updateLanguageSubmenu();
+      break;
+    case 'm':
+      //    case "modelSetMenu":
+      updateModelSetComputedMenu();
+      break;
+    case 'P':
+      //    case "PDBheteroComputedMenu":
+      updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
+      break;
+    case 's':
+      switch (item.charAt(1)) {
+      case 'p':
+        //    case "spectraMenu":
+        updateSpectraMenu();
+        break;
+      case 'c':
+        //    case "sceneComputedMenu":
+        updateSceneComputedMenu();
+        break;
+      case 'e':
+        //    case "selectMenuText":
+        updatePDBComputedMenus();
+        break;
+      case 'u':
+        //    case "surfMoComputedMenuText":
+        updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
+        break;
+      case 'y':
+        //    case "systemMenu":
+        updateAboutSubmenu();
+        break;
+      }
+      break;
+    case 'S':
+      if (item.indexOf("Select") >= 0)
+        //    case "SYMMETRYSelectComputedMenu":
+        updateSYMMETRYSelectComputedMenu();
+      else
+        //    case "SYMMETRYShowComputedMenu":
+        updateSYMMETRYShowComputedMenu();
       break;
     }
     updateFileTypeDependentMenus();

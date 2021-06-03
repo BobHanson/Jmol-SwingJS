@@ -803,7 +803,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (slen == (andBond ? 3 : 2) ? null : atomExpressionAt(andBond ? 3  : 2));
         eval.checkLast(eval.iToken);
         if (!chk) {
-          vwr.addHydrogens(bs1, false, false);
+          vwr.addHydrogens(bs1, 0);
           if (andBond) {
             if (bs1 == null)
               bs1 = vwr.bsA();
@@ -2735,7 +2735,7 @@ public class CmdExt extends ScriptExt {
     boolean addHydrogen = false;
     boolean isSilent = false;
     BS bsFixed = null;
-    boolean isOnly = false;
+    boolean noRange = false;
     Minimizer minimizer = vwr.getMinimizer(false);
     // may be null
     for (int i = 1; i < slen; i++)
@@ -2798,7 +2798,7 @@ public class CmdExt extends ScriptExt {
         continue;
       case T.bitset:
       case T.expressionBegin:
-        isOnly = true;
+        noRange = true;
         //$FALL-THROUGH$
       case T.select:
         if (e.theTok == T.select)
@@ -2807,7 +2807,7 @@ public class CmdExt extends ScriptExt {
         i = e.iToken;
         if (tokAt(i + 1) == T.only) {
           i++;
-          isOnly = true;
+          noRange = true;
         }
         continue;
       case T.silent:
@@ -2822,8 +2822,10 @@ public class CmdExt extends ScriptExt {
       }
     if (!chk)
       try {
-        vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, addHydrogen, isOnly,
-            isSilent, false);
+        vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, 
+            (addHydrogen ? Viewer.MIN_ADDH : 0)
+            | (noRange ? Viewer.MIN_NO_RANGE : 0) 
+            | (isSilent ? Viewer.MIN_SILENT: 0));
       } catch (Exception e1) {
         // actually an async exception
         throw new ScriptInterruption(e, "minimize", 1);
@@ -4942,7 +4944,7 @@ public class CmdExt extends ScriptExt {
       msg = "set selectHetero " + vwr.getBoolean(T.hetero);
       break;
     case T.addhydrogens:
-      msg = Escape.eAP(vwr.getAdditionalHydrogens(null, true, true, null));
+      msg = Escape.eAP(vwr.getAdditionalHydrogens(null, null, AtomCollection.CALC_H_DOALL | AtomCollection.CALC_H_JUSTC));
       break;
     case T.hydrogen:
       msg = "set selectHydrogens " + vwr.getBoolean(T.hydrogen);
@@ -4976,7 +4978,7 @@ public class CmdExt extends ScriptExt {
         msg = vwr.stm.getSavedCoordinates(nameC);
       break;
     case T.state:
-      if (!chk && eval.outputBuffer == null)
+      if (!chk && eval.outputBuffer == null && filter == null)
         vwr.sm.clearConsole();
       if ((len = slen) == 2) {
         if (!chk)
@@ -5524,11 +5526,15 @@ public class CmdExt extends ScriptExt {
   private void assign(int i) throws ScriptException {
     int atomsOrBonds = tokAt(i++);
     int index = -1, index2 = -1;
-    if (atomsOrBonds == T.atoms && tokAt(i) == T.string) {
+    boolean isAtom = (atomsOrBonds == T.atoms);
+    boolean isBond = (atomsOrBonds == T.bonds);
+    if (isAtom && tokAt(i) == T.string) {
       // new Jmol 14.29.28
       // assign "C" {0 0 0}
       e.iToken++;
       
+    } else if (isBond) {
+      index = ((BS) getToken(i).value).nextSetBit(0);
     } else {
       index = atomExpressionAt(i).nextSetBit(0);
       if (index < 0) {
@@ -5605,7 +5611,8 @@ public class CmdExt extends ScriptExt {
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
-      BS bsAtoms = (BS) vwr.setModelkitProperty("assignBond",  new int[] { bondIndex, type });
+      @SuppressWarnings("cast")      // old transpiler error converting char type to int
+      BS bsAtoms = (BS) vwr.setModelkitProperty("assignBond",  new int[] { bondIndex, (int) type });
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");
       vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);

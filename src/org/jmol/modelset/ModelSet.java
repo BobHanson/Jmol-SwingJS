@@ -771,6 +771,7 @@ public class ModelSet extends BondCollection {
   }
 
   public void resetMolecules() {
+    bsAll = null;
     molecules = null;
     moleculeCount = 0;
     resetChirality();
@@ -1444,8 +1445,7 @@ public class ModelSet extends BondCollection {
     if ((mode & AtomData.MODE_GET_ATTACHED_HYDROGENS) != 0) {
       int[] nH = new int[1];
       atomData.hAtomRadius = vwr.getVanderwaalsMar(1) / 1000f;
-      atomData.hAtoms = calculateHydrogens(atomData.bsSelected, nH, false,
-          true, null);
+      atomData.hAtoms = calculateHydrogens(atomData.bsSelected, nH, null, AtomCollection.CALC_H_JUSTC);
       atomData.hydrogenAtomCount = nH[0];
       return;
     }

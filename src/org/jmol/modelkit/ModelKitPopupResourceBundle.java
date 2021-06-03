@@ -60,11 +60,12 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "moreAtomMenu - assignAtom_plP!RD assignAtom_miP!RD" },
     { "moreAtomMenu", "clearQPersist - _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
     { "bondMenu", "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
-    { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalSymmetryPersistMenu xtalPackingPersistMenu xtalOptionsPersistMenu" },
+    { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalPackingPersistMenu xtalEditOptPersistMenu xtalOptionsPersistMenu" },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
-    { "xtalSelPersistMenu", "mksel_atom mksel_position" },
-    { "xtalSelOpPersistMenu", "xtalOp!PersistMenu mkselop_addOffset mkselop_atom2" },
-    { "xtalSymmetryPersistMenu", "mksymmetry_none mksymmetry_retainLocal mksymmetry_applyLocal mksymmetry_applyFull" },
+    { "xtalSelPersistMenu", "mksel_atom mksel_position" },    
+    { "xtalSelOpPersistMenu", "xtalOp!PersistMenu mkselop_atom2 mkselop_addOffset" },
+    { "xtalEditOptPersistMenu", "mksymmetry_none mksymmetry_retainLocal mksymmetry_applyLocal mksymmetry_applyFull" },
+
     { "xtalPackingPersistMenu", "mkunitcell_packed mkunitcell_extend" },
     { "xtalOptionsPersistMenu", "mkshowSymopInfoCB mkclicktosetelementCB mkaddHydrogensCB" }
 
@@ -100,7 +101,7 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "xtalSelPersistMenu","select atom or position",
         "xtalSelOpPersistMenu","select operator", 
         "xtalOp!PersistMenu","from list...", 
-        "xtalSymmetryPersistMenu", "symmetry",
+        "xtalEditOptPersistMenu", "edit options",
         "xtalOptionsPersistMenu", "more options...",
         "xtalPackingPersistMenu", "packing",
         "mkshowSymopInfoCB", "show symmetry operator info",

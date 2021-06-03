@@ -25,8 +25,6 @@
 
 package org.jmol.modelset;
 
-import javajs.util.AU;
-import javajs.util.Lst;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -44,33 +42,31 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.Bspf;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import javajs.util.BS;
 import org.jmol.modelsetbio.BioModelSet;
-
+import org.jmol.script.T;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.GData;
+import org.jmol.util.Logger;
+import org.jmol.util.Parser;
+import org.jmol.util.Tensor;
+import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
-
-import org.jmol.util.BSUtil;
-import org.jmol.util.Parser;
-import org.jmol.util.Tensor;
-import org.jmol.util.Escape;
-import org.jmol.util.Edge;
-import org.jmol.util.Logger;
 import javajs.util.T3;
 import javajs.util.V3;
-import org.jmol.util.Vibration;
-
-import org.jmol.viewer.JC;
-import org.jmol.script.T;
-import org.jmol.viewer.Viewer;
 
 abstract public class AtomCollection {
   
@@ -1271,20 +1267,29 @@ abstract public class AtomCollection {
     return r + rd.valueExtended;
   }
 
+  public final static int CALC_H_DOALL = 0x100;
+  public final static int CALC_H_JUSTC = 0x200;
+  public final static int CALC_H_HAVEH = 0x400;
+  public final static int CALC_H_QUICK = Viewer.MIN_QUICK;
+  public static final int CALC_H_IGNORE_H = 0x800;
+
+  
   /**
    * get a list of potential H atom positions based on 
    * elemental valence and formal charge
    * 
    * @param bs
    * @param nTotal
-   * @param doAll       -- whether we add to C that already have H or not.
-   * @param justCarbon
    * @param vConnect 
+   * @param flags [CALC_H_DOALL | CALC_H_JUSTC | CALC_H_HAVEH | CALC_H_QUICK
    * @return     array of arrays of points added to specific atoms
    */
   public P3[][] calculateHydrogens(BS bs, int[] nTotal,
-                                            boolean doAll, boolean justCarbon,
-                                            Lst<Atom> vConnect) {
+                                            Lst<Atom> vConnect, int flags) {
+    boolean doAll = ((flags & CALC_H_DOALL) == CALC_H_DOALL);
+    boolean justCarbon = ((flags & CALC_H_JUSTC) == CALC_H_JUSTC);
+    boolean isQuick = ((flags & CALC_H_QUICK) == CALC_H_QUICK);
+    boolean ignoreH = ((flags & CALC_H_IGNORE_H) == CALC_H_IGNORE_H);
     V3 z = new V3();
     V3 x = new V3();
     P3[][] hAtoms = new P3[ac][];
@@ -1311,14 +1316,17 @@ abstract public class AtomCollection {
           break;
         case 6:
         }
-        if (doAll && atom.getCovalentHydrogenCount() > 0)
+        int n = (doAll || ignoreH ? atom.getCovalentHydrogenCount() : 0);
+        if (doAll && n > 0 || ignoreH && n == 0)
           continue;
-        int n = getMissingHydrogenCount(atom, false);
-        if (n == 0)
+        int nMissing = getMissingHydrogenCount(atom, false);
+        if (doAll && nMissing == 0)
           continue;
+        if (!ignoreH)
+          n = nMissing;
         int targetValence = aaRet[0];
         int hybridization = aaRet[2];
-        int nBonds = aaRet[3];
+        int nBonds = aaRet[3] - (ignoreH ? n : 0);
         if (nBonds == 0 && atom.isHetero())
           continue; // no adding to water
         hAtoms[i] = new P3[n];
@@ -1365,19 +1373,19 @@ abstract public class AtomCollection {
           default:
             break;
           case 3: // three bonds needed RC
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3b", false, true);
+            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3b", false, true, isQuick);
             pt = new P3();
             pt.scaleAdd2(dHX, z, atom);
             hAtoms[i][hPt++] = pt;
             if (vConnect != null)
               vConnect.addLast(atom);
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3c", false, true);
+            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3c", false, true, isQuick);
             pt = new P3();
             pt.scaleAdd2(dHX, z, atom);
             hAtoms[i][hPt++] = pt;
             if (vConnect != null)
               vConnect.addLast(atom);
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3d", false, true);
+            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3d", false, true, isQuick);
             pt = new P3();
             pt.scaleAdd2(dHX, z, atom);
             hAtoms[i][hPt++] = pt;
@@ -1391,14 +1399,14 @@ abstract public class AtomCollection {
                 && targetValence == 4 
                 || atomicNumber == 7 && isAdjacentSp2(atom));
             getHybridizationAndAxes(i, atomicNumber, z, x, (isEne ? "sp2b"
-                : targetValence == 3 ? "sp3c" : "lpa"), false, true);
+                : targetValence == 3 ? "sp3c" : "lpa"), false, true, isQuick);
             pt = P3.newP(z);
             pt.scaleAdd2(dHX, z, atom);
             hAtoms[i][hPt++] = pt;
             if (vConnect != null)
               vConnect.addLast(atom);
             getHybridizationAndAxes(i, atomicNumber, z, x, (isEne ? "sp2c"
-                : targetValence == 3 ? "sp3d" : "lpb"), false, true);
+                : targetValence == 3 ? "sp3d" : "lpb"), false, true, isQuick);
             pt = P3.newP(z);
             pt.scaleAdd2(dHX, z, atom);
             hAtoms[i][hPt++] = pt;
@@ -1423,7 +1431,7 @@ abstract public class AtomCollection {
                   || atomicNumber == 7 
                   && (atom.group.getNitrogenAtom() == atom || isAdjacentSp2(atom))
                   ? "sp2c"
-                  : "sp3d"), true, false) != null) {
+                  : "sp3d"), true, false, isQuick) != null) {
                 pt = P3.newP(z);
                 pt.scaleAdd2(dHX, z, atom);
                 hAtoms[i][hPt++] = pt;
@@ -1436,7 +1444,7 @@ abstract public class AtomCollection {
             case 2:
               // sp2
               getHybridizationAndAxes(i, atomicNumber, z, x, (targetValence == 4 ? "sp2c"
-                  : "sp2b"), false, false);
+                  : "sp2b"), false, false, isQuick);
               pt = P3.newP(z);
               pt.scaleAdd2(dHX, z, atom);
               hAtoms[i][hPt++] = pt;
@@ -1445,7 +1453,7 @@ abstract public class AtomCollection {
               break;
             case 3:
               // sp
-              getHybridizationAndAxes(i, atomicNumber, z, x, "spb", false, true);
+              getHybridizationAndAxes(i, atomicNumber, z, x, "spb", false, true, isQuick);
               pt = P3.newP(z);
               pt.scaleAdd2(dHX, z, atom);
               hAtoms[i][hPt++] = pt;
@@ -1531,7 +1539,7 @@ abstract public class AtomCollection {
   public String getHybridizationAndAxes(int atomIndex, int atomicNumber, V3 z, V3 x,
                                         String lcaoTypeRaw,
                                         boolean hybridizationCompatible,
-                                        boolean doAlignZ) {
+                                        boolean doAlignZ, boolean isQuick) {
 
     String lcaoType = (lcaoTypeRaw.length() > 0 && lcaoTypeRaw.charAt(0) == '-' ? lcaoTypeRaw
         .substring(1)
@@ -1543,7 +1551,7 @@ abstract public class AtomCollection {
     Atom atom = at[atomIndex];
     if (atomicNumber == 0)
       atomicNumber = atom.getElementNumber();
-    Atom[] attached = getAttached(atom, 4, hybridizationCompatible);
+    Atom[] attached = getAttached(atom, 4, hybridizationCompatible, isQuick);
     int nAttached = attached.length;
     int pt = lcaoType.charAt(lcaoType.length() - 1) - 'a';
     if (pt < 0 || pt > 6)
@@ -1552,7 +1560,12 @@ abstract public class AtomCollection {
     x.set(0, 0, 0);
     V3[] v = new V3[4];
     for (int i = 0; i < nAttached; i++) {
-      v[i] = V3.newVsub(atom, attached[i]);
+      Atom a = attached[i];
+      if (a == null) {
+        nAttached = i;
+        break;
+      }
+      v[i] = V3.newVsub(atom, a);
       v[i].normalize();
       z.add(v[i]);
     }
@@ -1644,9 +1657,11 @@ abstract public class AtomCollection {
         break;
       default:
         // 3 or 4 bonds
-        if (isPlanar) {
+        if (isPlanar && !isQuick) {
           hybridization = "sp2";
         } else {
+          if (isPlanar)
+            z.setT(vTemp);
           if (isLp && nAttached == 3) {
             hybridization = "lp";
             break;
@@ -1786,7 +1801,7 @@ abstract public class AtomCollection {
       case 3:
         // special case, for example R2C=O oxygen
         getHybridizationAndAxes(attached[0].i, 0, x, vTemp, "pz", false,
-            doAlignZ);
+            doAlignZ, isQuick);
         vTemp.setT(x);
         if (isSp2) { // align z as sp2 orbital
           x.cross(x, z);
@@ -1813,7 +1828,7 @@ abstract public class AtomCollection {
             ok = ((a = attached[1]).getCovalentBondCount() == 3);
           if (ok) {
             // special case, for example R2C=C=CR2 central carbon
-            getHybridizationAndAxes(a.i, 0, x, z, "pz", false, doAlignZ);
+            getHybridizationAndAxes(a.i, 0, x, z, "pz", false, doAlignZ, isQuick);
             if (lcaoType.equals("px"))
               x.scale(-1);
             z.setT(v[0]);
@@ -1907,7 +1922,7 @@ abstract public class AtomCollection {
     // pt: a 0   b 1   c 2   d 3   e 4   f 5
     
     Atom atom = at[atomIndex];
-    Atom[] attached = getAttached(atom, 6, true);
+    Atom[] attached = getAttached(atom, 6, true, false);
     if (attached == null)
       return (z == null ? null : "?");
     int nAttached = attached.length;
@@ -2110,7 +2125,7 @@ abstract public class AtomCollection {
     return (isTrigonal ? "dsp3" : "d2sp3");
   }
 
-  private Atom[] getAttached(Atom atom, int nMax, boolean doSort) {
+  private Atom[] getAttached(Atom atom, int nMax, boolean doSort, boolean isQuick) {
     int nAttached = atom.getCovalentBondCount();
     if (nAttached > nMax)
       return null;
@@ -2119,9 +2134,12 @@ abstract public class AtomCollection {
       Bond[] bonds = atom.bonds;
       int n = 0;
       for (int i = 0; i < bonds.length; i++)
-        if (bonds[i].isCovalent())
-          attached[n++] = bonds[i].getOtherAtom(atom);
-      if (doSort)
+        if (bonds[i].isCovalent()) {
+          Atom a = bonds[i].getOtherAtom(atom);
+          if (!isQuick || a.getAtomicAndIsotopeNumber() != 1)
+            attached[n++] = a;
+        }
+      if (doSort && !isQuick)
         Arrays.sort(attached, new AtomSorter());
     }
     return attached;

@@ -15,6 +15,7 @@ import javajs.util.P3;
 import javajs.util.Rdr;
 
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericImageDialog;
@@ -22,6 +23,7 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
+import org.jmol.i18n.GT;
 import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
@@ -341,7 +343,28 @@ public class AwtPlatform implements GenericPlatform {
 
   @Override
   public InChIJNI getInChI() {
+    // n/a for JSpecView
     return null;
   }
+
+  @Override
+  public int confirm(String msg, String msgNo) {
+    int ret = JOptionPane.showConfirmDialog(null, GT.$(msg));
+    switch (ret) {
+    case JOptionPane.OK_OPTION:
+      return ret;
+    case JOptionPane.CANCEL_OPTION:
+      if (/** @j2sNative false && */
+      true)
+        return ret;
+      //$FALL-THROUGH$
+    case JOptionPane.NO_OPTION:
+    default:
+      return (msgNo != null && JOptionPane.showConfirmDialog(null,
+          GT.$(msgNo)) == JOptionPane.OK_OPTION ? JOptionPane.NO_OPTION
+              : JOptionPane.CANCEL_OPTION);
+    }
+  }
+
 
 }

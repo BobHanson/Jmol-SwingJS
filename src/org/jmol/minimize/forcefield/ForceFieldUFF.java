@@ -43,12 +43,24 @@ import org.jmol.viewer.JmolAsyncException;
 public class ForceFieldUFF extends ForceField {
 
   private static Lst<String[]> atomTypes;
-  private static Map<Object, Object> ffParams;
+  private Map<Object, Object> ffParams;
+  private static Map<Object, Object> uff2DParams;
+  private static Map<Object, Object> uffParams;
   private BS bsAromatic;
   
-  public ForceFieldUFF(Minimizer minimizer) {
+  public ForceFieldUFF(Minimizer minimizer, boolean isQuick) {
     this.minimizer = minimizer;
-    this.name = "UFF";
+    if (isQuick) {
+      name = "UFF2D";
+      ffParams = uff2DParams;
+      if (ffParams == null)
+        uff2DParams = ffParams = getParameters(true);
+    } else {
+      name = "UFF";
+      ffParams = uffParams;
+      if (ffParams == null)
+        uffParams = ffParams = getParameters(false);
+    }
   }
 
   @Override
@@ -60,9 +72,7 @@ public class ForceFieldUFF extends ForceField {
   public boolean setModel(BS bsElements, int elemnoMax) throws JmolAsyncException {
     setModelFields();
     Logger.info("minimize: setting atom types...");
-    if (atomTypes == null && (atomTypes = getAtomTypes()) == null)
-      return false;
-    if (ffParams == null  && (ffParams = getFFParameters()) == null)
+    if (ffParams == null || atomTypes == null && (atomTypes = getAtomTypes()) == null)
       return false;
     setAtomTypes(bsElements, elemnoMax);
     calc = new CalculationsUFF(this, ffParams, minAtoms, minBonds, 
@@ -88,8 +98,9 @@ public class ForceFieldUFF extends ForceField {
         break;
       else
         for (int j = minimizer.bsAtoms.nextSetBit(0), pt = 0; j < minimizer.atoms.length && j >= 0; j = minimizer.bsAtoms.nextSetBit(j + 1), pt++)
-            if (search.get(j))
+            if (search.get(j)) {
               minAtoms[pt].sType = data[1].intern();
+            }
     }
   }
 
@@ -181,13 +192,12 @@ public class ForceFieldUFF extends ForceField {
     return bs;
   }
   
-  private Map<Object, Object> getFFParameters() {
-    FFParam ffParam;
+  private Map<Object, Object> getParameters(boolean isQuick) {
 
-    Map<Object, Object> temp = new Hashtable<Object, Object>();
+    Map<Object, Object> data = new Hashtable<Object, Object>();
 
     // open UFF.txt
-    String resourceName = "UFF.txt";
+    String resourceName = (isQuick ? "UFF_2d.txt" : "UFF.txt");
     BufferedReader br = null;
     try {
       br = getBufferedReader(resourceName);
@@ -200,26 +210,26 @@ public class ForceFieldUFF extends ForceField {
           Logger.debug(line);
         if (line.substring(0, 5).equals("param")) {
           // set up all params from this
-          ffParam = new FFParam();
-          temp.put(vs[1], ffParam);
-          ffParam.dVal = new double[11];
-          ffParam.sVal = new String[1];
-          ffParam.sVal[0] = vs[1]; // atom type
+          FFParam p = new FFParam();
+          data.put(vs[1], p);
+          p.dVal = new double[11];
+          p.sVal = new String[1];
+          p.sVal[0] = vs[1]; // atom type
           
-          ffParam.dVal[CalculationsUFF.PAR_R] = PT.parseFloat(vs[2]); // r1
-          ffParam.dVal[CalculationsUFF.PAR_THETA] = PT.parseFloat(vs[3]) 
+          p.dVal[CalculationsUFF.PAR_R] = PT.parseFloat(vs[2]); // r1
+          p.dVal[CalculationsUFF.PAR_THETA] = PT.parseFloat(vs[3]) 
              * Calculations.DEG_TO_RAD; // theta0(radians)
-          ffParam.dVal[CalculationsUFF.PAR_X] = PT.parseFloat(vs[4]); // x1
-          ffParam.dVal[CalculationsUFF.PAR_D] = PT.parseFloat(vs[5]); // D1
-          ffParam.dVal[CalculationsUFF.PAR_ZETA] = PT.parseFloat(vs[6]); // zeta
-          ffParam.dVal[CalculationsUFF.PAR_Z] = PT.parseFloat(vs[7]); // Z1
-          ffParam.dVal[CalculationsUFF.PAR_V] = PT.parseFloat(vs[8]); // Vi
-          ffParam.dVal[CalculationsUFF.PAR_U] = PT.parseFloat(vs[9]); // Uj
-          ffParam.dVal[CalculationsUFF.PAR_XI] = PT.parseFloat(vs[10]); // Xi
-          ffParam.dVal[CalculationsUFF.PAR_HARD] = PT.parseFloat(vs[11]); // Hard
-          ffParam.dVal[CalculationsUFF.PAR_RADIUS] = PT.parseFloat(vs[12]); // Radius
+          p.dVal[CalculationsUFF.PAR_X] = PT.parseFloat(vs[4]); // x1
+          p.dVal[CalculationsUFF.PAR_D] = PT.parseFloat(vs[5]); // D1
+          p.dVal[CalculationsUFF.PAR_ZETA] = PT.parseFloat(vs[6]); // zeta
+          p.dVal[CalculationsUFF.PAR_Z] = PT.parseFloat(vs[7]); // Z1
+          p.dVal[CalculationsUFF.PAR_V] = PT.parseFloat(vs[8]); // Vi
+          p.dVal[CalculationsUFF.PAR_U] = PT.parseFloat(vs[9]); // Uj
+          p.dVal[CalculationsUFF.PAR_XI] = PT.parseFloat(vs[10]); // Xi
+          p.dVal[CalculationsUFF.PAR_HARD] = PT.parseFloat(vs[11]); // Hard
+          p.dVal[CalculationsUFF.PAR_RADIUS] = PT.parseFloat(vs[12]); // Radius
           
-          ffParam.iVal = new int[1];
+          p.iVal = new int[1];
 
           char coord = (vs[1].length() > 2 ? vs[1].charAt(2) : '1'); // 3rd character of atom type
 
@@ -239,7 +249,7 @@ public class ForceFieldUFF extends ForceField {
           case '6': // octahedral
             break;
           }
-          ffParam.iVal[0] = coord - '0';
+          p.iVal[0] = coord - '0';
         }
       }
       br.close();
@@ -253,8 +263,8 @@ public class ForceFieldUFF extends ForceField {
       }
       return null;
     }
-    Logger.info(temp.size() + " atom types read from " + resourceName);
-    return temp;
+    Logger.info(data.size() + " atom types read from " + resourceName);
+    return data;
   }
 
   private Lst<String[]> getAtomTypes() throws JmolAsyncException {
@@ -370,10 +380,18 @@ Token[keyword(0x880001) value=")"]
        T.o(T.string, "double"),
        T.tokenRightParen,
        T.tokenExpressionEnd},
-       /*6*/  new T[]{ //Nv vinylic == connected(3) && connected(connected("double"))
+       /*6*/  new T[]{ //Nv vinylic == (!_C || formalcharge != 0) && connected(3) && connected(connected("double"))
        T.tokenExpressionBegin,
        T.n(T.opEQ, T.elemno), 
        T.i(0)  ,  // 2
+       T.tokenAnd, 
+       T.tokenLeftParen,
+       T.n(T.opNE, T.elemno), 
+       T.i(6),
+       T.tokenOr, 
+       T.n(T.opNE, T.formalcharge), 
+       T.i(0),
+       T.tokenRightParen,
        T.tokenAnd, 
        T.tokenConnected,
        T.tokenLeftParen,

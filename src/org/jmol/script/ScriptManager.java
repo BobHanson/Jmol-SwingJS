@@ -29,10 +29,18 @@ import java.io.IOException;
 
 import javax.swing.JOptionPane;
 
+import javajs.api.ZInputStream;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.Rdr;
+import javajs.util.SB;
+
 import org.jmol.api.Interface;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.api.JmolScriptManager;
-import org.jmol.api.JmolStatusListener;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.thread.JmolThread;
@@ -42,16 +50,6 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
-
-import javajs.api.ZInputStream;
-import javajs.util.AU;
-import javajs.util.BS;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.Rdr;
-import javajs.util.SB;
-import javajs.util.ZipTools;
 
 public class ScriptManager implements JmolScriptManager {
 
@@ -600,15 +598,15 @@ public class ScriptManager implements JmolScriptManager {
         } else if (!type.equals("spt")) {
           if (flags == FILE_DROPPED) {
             flags = PDB_CARTOONS;
-            switch (vwr.ms.ac > 0 ? JOptionPane.showConfirmDialog(null, GT.$(
-                "Would you like to replace the current model with the selected model?"))
-                : JOptionPane.OK_OPTION) {
+            switch (vwr.ms.ac == 0 ? JOptionPane.OK_OPTION
+                : vwr.confirm(GT.$("Would you like to replace the current model with the selected model?"), 
+                    GT.$("Would you like to append?"))) {
             case JOptionPane.CANCEL_OPTION:
               return;
             case JOptionPane.OK_OPTION:
               break;
             default:
-              flags += JmolScriptManager.IS_APPEND; // append
+              flags |= JmolScriptManager.IS_APPEND;
               break;
             }
             if (checkDims && !type.endsWith("::")) {
@@ -673,7 +671,7 @@ public class ScriptManager implements JmolScriptManager {
         false, true, true, null);
     String modelType = null;
     if (br instanceof ZInputStream) {
-      String zipDirectory = getZipDirectoryAsString(fileName);
+      String zipDirectory = vwr.getZipDirectoryAsString(fileName);
       if (zipDirectory.indexOf("JmolManifest") >= 0)
         return "Jmol";
       modelType = vwr.getModelAdapter()
@@ -688,12 +686,6 @@ public class ScriptManager implements JmolScriptManager {
       return ((String[]) br)[0];
     }
     return null;
-  }
-
-  private String getZipDirectoryAsString(String fileName) {
-    Object t = vwr.fm.getBufferedInputStreamOrErrorMessageFromName(fileName,
-        fileName, false, false, null, false, true);
-    return ZipTools.getZipDirectoryAsStringAndClose((BufferedInputStream) t);
   }
 
   private static int prevCovalentVersion = 1;

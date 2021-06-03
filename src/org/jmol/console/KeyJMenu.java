@@ -36,13 +36,13 @@ public class KeyJMenu extends JMenu implements JmolAbstractButton {
 
   private String key;
   
-  public String[] itemKeys;
-  
   @Override
   public String getKey() {
     return key;
   }
   
+  public String[] itemKeys;
+
   public KeyJMenu(String key, String label, Map<String, Object> menuMap) {
     super(GenericConsole.getLabelWithoutMnemonic(label));
     GenericConsole.map(this, this.key = key, label, menuMap);

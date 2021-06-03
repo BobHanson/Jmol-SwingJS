@@ -142,4 +142,6 @@ public interface GenericPlatform extends FontManager {
 
   JmolInChI getInChI();
 
+  int confirm(String msg, String msgNo);
+
 }

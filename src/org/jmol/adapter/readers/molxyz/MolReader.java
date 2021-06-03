@@ -27,12 +27,14 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
@@ -128,8 +130,22 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   protected void finalizeReaderMR() throws Exception {
-    if (optimize2D)
+    if (optimize2D) {
       set2D();
+      if (asc.bsAtoms == null) {
+        asc.bsAtoms = new BS();
+        asc.bsAtoms.setBits(0, asc.ac);
+      }
+      for (int i = asc.bondCount; --i >= 0;) {
+        Bond b = asc.bonds[i];
+        if (asc.atoms[b.atomIndex2].elementSymbol.equals("H")
+            && b.order != JmolAdapter.ORDER_STEREO_NEAR
+            && b.order != JmolAdapter.ORDER_STEREO_FAR) {
+          asc.bsAtoms.clear(b.atomIndex2);
+        }
+      }
+
+    }
     isTrajectory = false;
     finalizeReaderASCR();
   }
@@ -167,7 +183,7 @@ public class MolReader extends AtomSetCollectionReader {
     if (is2D) {
       if (!allow2D)
         throw new Exception("File is 2D, not 3D");
-      appendLoadNote("This model is 2D. Its 3D structure has not been generated.");
+      appendLoadNote("This model is 2D. Its 3D structure " + (optimize2D ? " will be generated." : " has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D."));
     }
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.

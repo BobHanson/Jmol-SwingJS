@@ -623,7 +623,7 @@ public final class ModelLoader {
     Atom[] atoms = ms.at;
     // this next sets the bitset length to avoid 
     // unnecessary calls to System.arrayCopy
-    try {
+
     models[modelIndex].bsAtoms.set(atoms.length + 1);
     models[modelIndex].bsAtoms.clear(atoms.length + 1);
     String codes = (String) ms.getInfo(modelIndex, "altLocs");
@@ -641,11 +641,6 @@ public final class ModelLoader {
         || modelName.startsWith("Jmol Model Kit") || "Jme".equals(ms.getInfo(
         modelIndex, "fileType")));
     models[modelIndex].isModelKit = isModelKit;
-    } catch (Throwable t) {
-      System.gc();
-      System.out.println(atoms.length);
-      System.out.println(t);
-    }
   }
 
   /**
@@ -1361,11 +1356,14 @@ public final class ModelLoader {
 
   private void applyStereochemistry() {
 
-    // 1) implicit stereochemistry 
+    // 1) initialize average bond lengths
+    set2DLengths(baseAtomIndex, ms.ac);
+    
+    // 2) implicit stereochemistry 
     
     set2dZ(baseAtomIndex, ms.ac);
 
-    // 2) explicit stereochemistry
+    // 3) explicit stereochemistry
     
     if (vStereo != null) {
       BS bsToTest = new BS();
@@ -1389,6 +1387,32 @@ public final class ModelLoader {
       vStereo = null;
     } 
     is2D = false;
+  }
+
+  private void set2DLengths(int iatom1, int iatom2) {
+    float scaling = 0;
+    int n = 0;
+    for (int i = iatom1; i < iatom2; i++) {
+      Atom a = ms.at[i];
+      Bond[] bonds = a.bonds;
+      if (bonds == null)
+        continue;
+      for (int j = bonds.length; --j >= 0;) {
+        if (bonds[j] == null)
+          continue;
+        Atom b = bonds[j].getOtherAtom(a);
+        if (b.getAtomNumber() != 1 && b.getIndex() > i) {
+          scaling += b.distance(a);
+          n++;
+        }
+      }
+    }
+    if (n == 0)
+      return;
+    scaling = 1.45f / (scaling/n);
+    for (int i = iatom1; i < iatom2; i++) {
+      ms.at[i].scale(scaling);
+    }
   }
 
   private void set2dZ(int iatom1, int iatom2) {
@@ -1482,7 +1506,7 @@ public final class ModelLoader {
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    atom2.z = atomRef.z + (float) (0.8f * Math.sin(4*theta));
+    atom2.z = atomRef.z + (float) (0.4f * Math.sin(4*theta)); // was 0.8
   }
 
   ///////////////  shapes  ///////////////

@@ -84,7 +84,7 @@ public class Minimizer {
   public Lst<MMConstraint> constraints;
   
   private boolean isSilent;
-  
+ 
   public Minimizer() {
   }
 
@@ -139,6 +139,7 @@ public class Minimizer {
   
   private Map<String, MMConstraint> constraintMap;
   private int elemnoMax;
+  private boolean isQuick;
 
   /**
    * 
@@ -201,10 +202,13 @@ public class Minimizer {
   }
   
   
-  public boolean minimize(int steps, double crit, BS bsSelected,
-                          BS bsFixed, boolean haveFixed, boolean forceSilent, 
-                          String ff) throws JmolAsyncException {
-    isSilent = (forceSilent || vwr.getBooleanProperty("minimizationSilent"));
+  public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
+                          int flags, String ff)
+      throws JmolAsyncException {
+    isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
+    isQuick = (ff.indexOf("2D") >= 0 || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
+    boolean haveFixed = ((flags
+        & Viewer.MIN_HAVE_FIXED) == Viewer.MIN_HAVE_FIXED);
     Object val;
     setEnergyUnits();
     if (steps == Integer.MAX_VALUE) {
@@ -234,8 +238,8 @@ public class Minimizer {
       Logger.error(GT.o(GT.$("Could not get class for force field {0}"), ff));
       return false;
     }
-    Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps + " criterion = "
-        + crit + ") ...");
+    Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps
+        + " criterion = " + crit + ") ...");
     if (bsSelected.nextSetBit(0) < 0) {
       Logger.error(GT.$("No atoms selected -- nothing to do!"));
       return false;
@@ -326,7 +330,7 @@ public class Minimizer {
     if (!pFF.setModel(bsElements, elemnoMax)) {
       //pFF.log("could not setup force field " + ff);
       Logger.error(GT.o(GT.$("could not setup force field {0}"), ff));
-      if (ff.equals("MMFF")) {
+      if (ff.startsWith("MMFF")) {
         getForceField("UFF");
         //pFF.log("could not setup force field " + ff);
         return setModel(bsElements);        
@@ -490,18 +494,17 @@ public class Minimizer {
   public ForceField getForceField(String ff) throws JmolAsyncException {
     if (ff.startsWith("MMFF"))
       ff = "MMFF";
-    if (pFF == null || !ff.equals(this.ff)) {
-      if (ff.equals("UFF")) {
-        pFF = new ForceFieldUFF(this);
-      } else if (ff.equals("MMFF")) {
-        pFF = new ForceFieldMMFF(this);
+    if (pFF == null || !ff.equals(this.ff) || (pFF.name.indexOf("2D") >= 0) != isQuick) {
+      if (ff.equals("MMFF")) {
+        pFF = new ForceFieldMMFF(this, isQuick);
       } else {
         // default to UFF
-        pFF = new ForceFieldUFF(this);
+        pFF = new ForceFieldUFF(this, isQuick);
         ff = "UFF";
       }
       this.ff = ff;
-      vwr.setStringProperty("_minimizationForceField", ff);
+      if (!isQuick)
+        vwr.setStringProperty("_minimizationForceField", ff);
     }
     //Logger.info("minimize: forcefield = " + pFF);
     return pFF;
@@ -678,7 +681,7 @@ public class Minimizer {
 
   
   public void calculatePartialCharges(ModelSet ms, BS bsAtoms, BS bsReport) throws JmolAsyncException {
-    ForceFieldMMFF ff = new ForceFieldMMFF(this);
+    ForceFieldMMFF ff = new ForceFieldMMFF(this, false);
     ff.setArrays(ms.at, bsAtoms, ms.bo, ms.bondCount, true, true);
     vwr.setAtomProperty(bsAtoms, T.atomtype, 0, 0, null, null,
         ff.getAtomTypeDescriptions());

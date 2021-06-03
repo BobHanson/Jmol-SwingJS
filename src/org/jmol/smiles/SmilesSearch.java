@@ -605,7 +605,7 @@ public class SmilesSearch extends JmolMolecule {
     setFlags(flags);
     // flags are passed on from SmilesParser /xxxxx/
 
-    if (!isRingCheck && Logger.debugging && !isSilent)
+    if (!isRingCheck && Logger.debuggingHigh && !isSilent)
       Logger.debug("SmilesSearch processing " + pattern);
 
     if (vReturn == null && (asVector || getMaps))

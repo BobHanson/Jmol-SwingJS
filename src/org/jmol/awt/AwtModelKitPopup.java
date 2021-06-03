@@ -42,10 +42,10 @@ public class AwtModelKitPopup extends ModelKitPopup {
   }
   
   @Override
-  protected void addMenu(String id, String item, SC subMenu, String label,
-                         PopupResource popupResourceBundle) {
-    
-    AwtSwingComponent c = (AwtSwingComponent) subMenu;
+  protected void addMenu(final String id, final String item, final SC subMenu, String label,
+                         final PopupResource popupResourceBundle) {
+
+    final AwtSwingComponent c = (AwtSwingComponent) subMenu;
     c.deferred = true;
     c.jm.addMenuListener(new MenuListener() {
 
@@ -70,19 +70,16 @@ public class AwtModelKitPopup extends ModelKitPopup {
     });
     }
 
-
   protected void updateAwtMenus(String item) {
-    System.out.println("Awtmodelkitpopup "  + item);
-    switch (item) {
-    case "xtalOp!PersistMenu":
+    if (item.equals("xtalOp!PersistMenu")) {
       lastModelSet = null;
       jpiUpdateComputedMenus();
-      break;
-    default:
+    } else {
       updateOperatorMenu();
-      break;
     }
   }
+
+
 
   @Override
   protected void menuShowPopup(SC popup, int x, int y) {

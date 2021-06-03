@@ -251,7 +251,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         : centerAtomIndex >= 0 ? vwr.getAtomInfo(centerAtomIndex) : centerPoint.toString());
     setLabel("xtalSelPersistMenu", "Center: " + text);
     // operator
-    text = (symop == null ? "(no operator selected)" : symop instanceof Integer ? allOperators[((Integer) symop).intValue() - 1] : symop.toString());
+    text = (symop == null || allOperators == null ? "(no operator selected)" : symop instanceof Integer ? allOperators[((Integer) symop).intValue() - 1] : symop.toString());
     setLabel("operator", text);
 
     // editing option
@@ -269,7 +269,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       text = "apply full symmetry";
       break;
     }
-    setLabel("xtalSymmetryPersistMenu", "Edit option: " + text);
+    setLabel("xtalEditOptPersistMenu", "Edit option: " + text);
 
     // packing
     switch (getUnitCellState()) {
@@ -329,7 +329,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
                                                boolean selected) {
     String name = source.getName();
-   // System.out.println("MKP name=" + name);
     if (!updatingForShow && setActiveMenu(name) != null) {
       String text = source.getText();
       if (name.indexOf("Bond") >= 0) {
@@ -448,7 +447,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
     // getting only:
     
-    if (name == "isMolecular") {
+    if (name == "ismolecular") {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
     
@@ -562,11 +561,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
     if (name == "assignbond") {
       int[] data = (int[]) value;
-      return assignBond(data[0], data[1]);
+      return assignBond(data[0], (char) data[1]);
     }
 
     if (name == "atomtype") {
-     // System.out.println("MKP atomtype=" + value);
       if (value != null) {
         pickAtomAssignType = (String) value;
         isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
@@ -986,7 +984,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
     }
     if (addXtalHydrogens)
-      vwr.addHydrogens(bsA, false, true);
+      vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
   }
 
   /**
@@ -996,7 +994,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    * @param type
    * @return bit set of atoms to modify
    */
-  private BS assignBond(int bondIndex, int type) {
+  private BS assignBond(int bondIndex, char type) {
     int bondOrder = type - '0';
     Bond bond = vwr.ms.bo[bondIndex];
     vwr.ms.clearDB(bond.atom1.i);
@@ -1042,7 +1040,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       Logger.error("Exception in seBondOrder: " + e.toString());
     }
     if (type != '0' && addXtalHydrogens)
-      vwr.addHydrogens(bsAtoms, false, true);
+      vwr.addHydrogens(bsAtoms, Viewer.MIN_SILENT);
     return bsAtoms;
   }
 

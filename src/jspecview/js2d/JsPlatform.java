@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.net.URL;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
+
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericImageDialog;
 import org.jmol.api.GenericMenuInterface;
@@ -395,5 +397,17 @@ public class JsPlatform implements GenericPlatform {
     // TODO
     return null;
   }
+
+
+  @Override
+  public int confirm(String msg, String msgNo) {
+    boolean ok = /** @j2sNative confirm(msg) || */false;
+    if (ok)
+      return JOptionPane.OK_OPTION;
+    if (msgNo != null)
+      ok =  /** @j2sNative confirm(msgNo) || */false;
+    return (ok ? JOptionPane.NO_OPTION : JOptionPane.CANCEL_OPTION);
+  }
+
 
 }

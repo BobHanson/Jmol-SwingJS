@@ -272,7 +272,6 @@ class NBOFileHandler extends JPanel {
    * @return [ pre-keyword params, keywords, post-keyword params ]
    */
   protected String[] read47File(boolean doAll) {
-    int j;
     String[] fileData = new String[] { "", "", "", "" };
     String nboKeywords = "";
     SB data = new SB();

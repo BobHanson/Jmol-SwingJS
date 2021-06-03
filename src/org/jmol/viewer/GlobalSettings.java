@@ -1075,7 +1075,7 @@ public class GlobalSettings {
   }
 
   public void setCIR(String template) {
-    if (template == null || template.equals(nihResolverFormat))
+    if (template == null || template.equals(nihResolverFormat) && smilesUrlFormat != null)
       return;
     int pt = template.indexOf("/structure");
     if (pt > 0) {

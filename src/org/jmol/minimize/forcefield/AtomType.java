@@ -33,10 +33,42 @@ public class AtomType {
   int hType;
   float formalCharge;
   float fcadj;
+  
+  /**
+   * MMFF special bond types 2, 3, 4, 9, 30, 37, 39, 54, 57, 58, 63, 64, 67, 75, 78,
+   * 80, 81 for which a=b-c=d  bc bond should be considered single, not double
+   * 
+   */
   boolean sbmb;
+  
+  /**
+   * MMFF aromatic types
+   * 
+   * 37, 38, 39, 44, 58, 59, 63, 64, 65, 66, 69, 78, 79, 81, 82
+   * 
+   */
   boolean arom;
+  
+  /**
+   * MMFF pi lone pair type, i.e. "those atom types which have a pi lone pair
+   * capable of partaking in resonance interactions with, say, an adjacent
+   * multiple bond" [https://hpc.nih.gov/apps/charmm/c39b2html/mmff_params.html]
+   * 
+   * 6, 8, 10, 11, 12, 13, 14, 15, 26, 32, 35, 39, 40, 43, 44, 59, 62, 70, 72,
+   * 76
+   */
   boolean pilp;
+  
+  /**
+   * MMFF multiple bond type "specifies cases in which double (2) or triple (3)
+   * bonds are expected to be made to an atom having the listed atom type"
+   * [https://hpc.nih.gov/apps/charmm/c39b2html/mmff_params.html]
+   */
   int mltb;
+  
+  /**
+   * valence (number of bonds, generally 4 for neutral carbon, regardless of bonding, but 3 in the case of isonitrile)
+   */
   int val;
   
   AtomType(int elemNo, int mmType, int hType, float formalCharge, int val, String descr, String smartsCode) {
