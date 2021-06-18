@@ -39,10 +39,14 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
 
+import org.jmol.api.GenericFileInterface;
 import org.jmol.util.Logger;
 
+import jspecview.api.JSVPanel;
 import jspecview.api.JSVZipInterface;
+import jspecview.api.ScriptInterface;
 import jspecview.exception.JSVException;
+import jspecview.source.JDXSource;
 
 public class JSVFileManager {
 
@@ -130,7 +134,7 @@ public class JSVFileManager {
 					URL url = new URL((URL) null, name, null);
 					return url.toString();
 				}
-				return viewer.apiPlatform.newFile(name).getFullPath();
+				return newFile(name).getFullPath();
 			}
 			// This code is only for the applet
 			if (name.indexOf(":\\") == 1 || name.indexOf(":/") == 1)
@@ -717,8 +721,197 @@ public class JSVFileManager {
 				return null;
 			}
 		}
-		return viewer.apiPlatform.newFile(fileName).getName();
+		return newFile(fileName).getName();
 	}
+
+private static GenericFileInterface newFile(String fileName) {
+  if (viewer == null)
+    viewer = new JSViewer(new ScriptInterface() {
+
+      @Override
+      public void repaint() {
+        // TODO
+        
+      }
+
+      @Override
+      public void setCursor(int id) {
+        // TODO
+        
+      }
+
+      @Override
+      public boolean isSigned() {
+        // TODO
+        return false;
+      }
+
+      @Override
+      public void runScript(String script) {
+        // TODO
+        
+      }
+
+      @Override
+      public boolean runScriptNow(String script) {
+        // TODO
+        return false;
+      }
+
+      @Override
+      public void syncToJmol(String value) {
+        // TODO
+        
+      }
+
+      @Override
+      public void writeStatus(String msg) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siCheckCallbacks(String title) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSourceClosed(JDXSource source) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siExecHidden(boolean b) {
+        // TODO
+        
+      }
+
+      @Override
+      public String siLoaded(String value) {
+        // TODO
+        return null;
+      }
+
+      @Override
+      public void siExecScriptComplete(String msg, boolean isOK) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siExecSetCallback(ScriptToken st, String value) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siExecTest(String value) {
+        // TODO
+        
+      }
+
+      @Override
+      public JSVPanel siGetNewJSVPanel(Spectrum spec) {
+        // TODO
+        return null;
+      }
+
+      @Override
+      public JSVPanel siGetNewJSVPanel2(Lst<Spectrum> specs) {
+        // TODO
+        return null;
+      }
+
+      @Override
+      public void siOpenDataOrFile(Object data, String name,
+                                   Lst<Spectrum> specs, String url,
+                                   int firstSpec, int lastSpec, boolean doCheck,
+                                   String script, String id) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siProcessCommand(String script) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSendPanelChange() {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSetCurrentSource(JDXSource source) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSetLoaded(String fileName, String filePath) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSetMenuEnables(PanelNode node, boolean isSplit) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siNodeSet(PanelNode node) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSetPropertiesFromPreferences(JSVPanel jsvp, boolean b) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSetSelectedPanel(JSVPanel jsvp) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siSyncLoad(String fileName) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siUpdateBoolean(ScriptToken st, boolean TF) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siUpdateRecentMenus(String filePath) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siValidateAndRepaint(boolean isAll) {
+        // TODO
+        
+      }
+
+      @Override
+      public void siNewWindow(boolean isSelected, boolean fromFrame) {
+        // TODO
+        
+      }}, false, false);
+    return viewer.apiPlatform.newFile(fileName);
+  }
 
 //	public static String getQuotedJSONAttribute(String json, String key1,
 //			String key2) {

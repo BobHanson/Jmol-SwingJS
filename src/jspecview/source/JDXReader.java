@@ -139,6 +139,11 @@ public class JDXReader implements JmolJDXMOLReader {
         "stream", obscure, loadImaginary, -1, -1, nmrMaxY);
   }
 
+  public static JDXSource getHeaderOnly(Object in, String filePath) throws Exception {
+    return createJDXSource(in, filePath, false, false, 0, -1, 0);    
+  }
+
+    
   /**
    * general entrance method
    * 
@@ -153,81 +158,91 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    * @throws Exception
    */
-	public static JDXSource createJDXSource(Object in, String filePath,
-			boolean obscure, boolean loadImaginary,
-			int iSpecFirst, int iSpecLast, float nmrMaxY) throws Exception {
-	  
+  public static JDXSource createJDXSource(Object in, String filePath,
+                                          boolean obscure,
+                                          boolean loadImaginary, int iSpecFirst,
+                                          int iSpecLast, float nmrMaxY)
+      throws Exception {
+    boolean isHeaderOnly = (iSpecLast < iSpecFirst);
+
     String data = null;
-	  BufferedReader br;
-	  if (in instanceof String || AU.isAB(in)) {
-	    if (in instanceof String)
-	      data = (String) in;
-	    br = JSVFileManager.getBufferedReaderForStringOrBytes(in);
-	  } else if (in instanceof InputStream) {
-	    br = JSVFileManager.getBufferedReaderForInputStream((InputStream)in);
-	  } else {
-	    br = (BufferedReader) in;
-	  }
-	  
-		String header = null;
-		try {
-			if (br == null)
-				br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
-			br.mark(400);
-			char[] chs = new char[400];
-			br.read(chs, 0, 400);
-			br.reset();
-			header = new String(chs);
-      JDXSource source = null;
-			int pt1 = header.indexOf('#');
-			int pt2 = header.indexOf('<');
-			if (pt1 < 0 || pt2 >= 0 && pt2 < pt1) {
-				String xmlType = header.toLowerCase();
-				xmlType = (xmlType.contains("<animl")
-						|| xmlType.contains("<!doctype technique") ? "AnIML" : xmlType
-						.contains("xml-cml") ? "CML" : null);
-				if (xmlType != null)
-					source = ((SourceReader) JSViewer
-						.getInterface("jspecview.source." + xmlType + "Reader")).getSource(
-						filePath, br);
-				br.close();
-				if (source == null) {
-					Logger.error(header + "...");
-					throw new JSVException("File type not recognized");
-				}
-			} else {
-			 source = (new JDXReader(filePath, obscure, loadImaginary, iSpecFirst,
-					iSpecLast, nmrMaxY)).getJDXSource(br);
-			}			
-			if (data != null)
-			  source.setInlineData(data);
-      return source;			
-		} catch (Exception e) {
-			if (br != null)
-				br.close();
-			if (header != null)
-				Logger.error(header + "...");
-			String s = e.getMessage();
-			/*
-			 * @j2sNative
-			 *
-			 * if (header != null)s += "\n\n" + header;
-			 * 
-			 */
-			{}
-			throw new JSVException("Error reading data: " + s);
-		}
-	}
+    BufferedReader br;
+    if (in instanceof String || AU.isAB(in)) {
+      if (in instanceof String)
+        data = (String) in;
+      br = JSVFileManager.getBufferedReaderForStringOrBytes(in);
+    } else if (in instanceof InputStream) {
+      br = JSVFileManager.getBufferedReaderForInputStream((InputStream) in);
+    } else {
+      br = (BufferedReader) in;
+    }
+
+    String header = null;
+    JDXSource source = null;
+    try {
+      if (!isHeaderOnly) {
+        if (br == null)
+          br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
+        br.mark(400);
+        char[] chs = new char[400];
+        br.read(chs, 0, 400);
+        br.reset();
+        header = new String(chs);
+        int pt1 = header.indexOf('#');
+        int pt2 = header.indexOf('<');
+        if (pt1 < 0 || pt2 >= 0 && pt2 < pt1) {
+          String xmlType = header.toLowerCase();
+          xmlType = (xmlType.contains("<animl")
+              || xmlType.contains("<!doctype technique") ? "AnIML"
+                  : xmlType.contains("xml-cml") ? "CML" : null);
+          if (xmlType != null)
+            source = ((SourceReader) JSViewer
+                .getInterface("jspecview.source." + xmlType + "Reader"))
+                    .getSource(filePath, br);
+          br.close();
+          if (source == null) {
+            Logger.error(header + "...");
+            throw new JSVException("File type not recognized");
+          }
+        }
+      }
+      if (source == null) {
+        source = (new JDXReader(filePath, obscure, loadImaginary, iSpecFirst,
+            iSpecLast, nmrMaxY)).getJDXSource(br, isHeaderOnly);
+      }
+      if (data != null)
+        source.setInlineData(data);
+      return source;
+    } catch (Exception e) {
+      if (br != null)
+        br.close();
+      if (header != null)
+        Logger.error(header + "...");
+      String s = e.getMessage();
+      /*
+       * @j2sNative
+       *
+       * if (header != null)s += "\n\n" + header;
+       * 
+       */
+      {
+      }
+      throw new JSVException("Error reading data: " + s);
+    }
+  }
 
   /**
    * The starting point for reading all data.
    * 
-   * @param reader  a BufferedReader or a JSVZipFileSequentialReader
+   * @param reader
+   *        a BufferedReader or a JSVZipFileSequentialReader
+   * @param isHeaderOnly
    * 
    * @return source
    * @throws JSVException
    */
-  private JDXSource getJDXSource(Object reader) throws JSVException {
+  private JDXSource getJDXSource(Object reader, boolean isHeaderOnly)
+      throws JSVException {
 
     source = new JDXSource(JDXSource.TYPE_SIMPLE, filePath);
     isZipFile = (reader instanceof JSVZipReader);
@@ -238,47 +253,55 @@ public class JDXReader implements JmolJDXMOLReader {
     String value = null;
     boolean isOK = false;
     while (!done && "##TITLE".equals(t.peakLabel())) {
-    	isOK = true;
+      isOK = true;
       if (label != null && !isZipFile)
-        errorLog.append("Warning - file is a concatenation without LINK record -- does not conform to IUPAC standards!\n");
+        errorLog.append(
+            "Warning - file is a concatenation without LINK record -- does not conform to IUPAC standards!\n");
       Spectrum spectrum = new Spectrum();
       Lst<String[]> dataLDRTable = new Lst<String[]>();
-      while (!done && (label = t.getLabel()) != null && (value = getValue(label)) != null) {
+      if (isHeaderOnly)
+        spectrum.setHeaderTable(dataLDRTable);
+      while (!done && (label = t.getLabel()) != null
+          && (value = getValue(label)) != null) {
         if (isTabularData) {
           setTabularDataType(spectrum, label);
           if (!processTabularData(spectrum, dataLDRTable))
             throw new JSVException("Unable to read JDX file");
           addSpectrum(spectrum, false);
           if (isSimulation && spectrum.getXUnits().equals("PPM"))
-          	spectrum.setHZtoPPM(true);
+            spectrum.setHZtoPPM(true);
           spectrum = null;
           continue;
         }
-        if (label.equals("##DATATYPE")
-            && value.toUpperCase().equals("LINK")) {
-          getBlockSpectra(dataLDRTable);
-          spectrum = null;
-          continue;
-        }
-        if (label.equals("##NTUPLES") || label.equals("##VARNAME")) {
-          getNTupleSpectra(dataLDRTable, spectrum, label);
-          spectrum = null;
-          continue;
+        if (!isHeaderOnly) {
+          if (label.equals("##DATATYPE")
+              && value.toUpperCase().equals("LINK")) {
+            getBlockSpectra(dataLDRTable);
+            spectrum = null;
+            continue;
+          }
+          if (label.equals("##NTUPLES") || label.equals("##VARNAME")) {
+            getNTupleSpectra(dataLDRTable, spectrum, label);
+            spectrum = null;
+            continue;
+          }
         }
         if (label.equals("##JCAMPDX")) {
           setVenderSpecificValues(t.rawLine);
         }
         if (spectrum == null)
           spectrum = new Spectrum();
-        if (readDataLabel(spectrum, label, value, errorLog, obscure))
+        if (readDataLabel(spectrum, label, value, errorLog, obscure) && !isHeaderOnly)
           continue;
         addHeader(dataLDRTable, t.rawLabel, value);
-        if (checkCustomTags(spectrum, label, value))
-        	continue;
+        if (!isHeaderOnly && checkCustomTags(spectrum, label, value))
+          continue; // BH ??? nothing after this?
       }
+      if (isHeaderOnly)
+        addSpectrum(spectrum, false);
     }
     if (!isOK)
-    	throw new JSVException("##TITLE record not found");
+      throw new JSVException("##TITLE record not found");
     source.setErrorLog(errorLog.toString());
     return source;
   }

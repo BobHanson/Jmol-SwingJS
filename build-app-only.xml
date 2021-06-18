@@ -158,6 +158,7 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
         <exclude name="**/*.dx" />
         <exclude name="ant/**" />
         <include name="com/**" />
+        <include name="jspecview/**" />
         <include name="javajs/api/**" />
         <include name="javajs/awt/**" />
         <include name="javajs/export/**" />
