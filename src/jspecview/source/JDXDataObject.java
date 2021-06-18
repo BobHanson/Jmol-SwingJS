@@ -2,6 +2,9 @@ package jspecview.source;
 
 import javajs.util.DF;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.jmol.util.Logger;
 import javajs.util.PT;
 
@@ -265,8 +268,8 @@ public abstract class JDXDataObject extends JDXHeader {
     if (observedNucl.indexOf(nuc) >= 0) {
       freq = observedFreq;
     } else {
-      double g1 = getGyroMagneticRatio(observedNucl);
-      double g2 = getGyroMagneticRatio(nuc);
+      double g1 = getGyromagneticRatio(observedNucl);
+      double g2 = getGyromagneticRatio(nuc);
       freq = observedFreq * g2 / g1;
     }
     if (isX)
@@ -445,18 +448,50 @@ public abstract class JDXDataObject extends JDXHeader {
     243, 4.6 ,    // Am  Americium  5/2
     1E100
   };
+  
+  final private static Map<String, Double> gyroMap = new Hashtable<>();
+  
+  static {
+    for (int i = 0, n = gyroData.length - 1; i < n; i += 2)
+      gyroMap.put("" + (int)gyroData[i], Double.valueOf(gyroData[i + 1]));
 
-  private static double getGyroMagneticRatio(String nuc) {
-    int pt = 0;
-    while (pt < nuc.length() && !Character.isDigit(nuc.charAt(pt)))
-      pt++;
-    pt = PT.parseInt(nuc.substring(pt));
-    int i = 0;
-    for (; i < gyroData.length; i += 2)
-      if (gyroData[i] >= pt)
-        break;
-    return (gyroData[i] == pt ? gyroData[i + 1] : Double.NaN);
+//    System.out.println(getGyroMagneticRatio("13C"));
+//    System.out.println(getGyroMagneticRatio("1H"));
+//    System.out.println(getNominalSpecFreq("13C", 100.612769));
   }
+
+  public static int  getNominalSpecFreq(String nuc, double freq) {
+    double d = freq * getGyromagneticRatio("1H") / getGyromagneticRatio(nuc);
+    return (Double.isNaN(d) ? -1 : (int) d);
+    
+  }
+  
+  public static double getGyromagneticRatio(String nuc) {
+    Double v = null;
+    try {
+      v = gyroMap.get(nuc);
+      if (v != null)
+        return v.doubleValue();
+
+      int pt = 0;
+      while (pt < nuc.length() && Character.isDigit(nuc.charAt(pt)))
+        pt++;
+      v = gyroMap.get(nuc.substring(0, pt));
+      if (v != null)
+        gyroMap.put(nuc, v);
+    } catch (Exception e) {
+      /// ignore
+    }
+    return (v == null ? Double.NaN : v.doubleValue());
+    //    pt = PT.parseInt(nuc.substring(pt));
+    //    int i = 0;
+    //    for (int n = gyroData.length - 1; i < n; i += 2)
+    //      if (gyroData[i] >= pt)
+    //        break;
+    //    return (gyroData[i] == pt ? gyroData[i + 1] : Double.NaN);
+  }
+  
+  
 
 //////////////// derived info /////////////
   

@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Hashtable;
-
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -139,8 +139,22 @@ public class JDXReader implements JmolJDXMOLReader {
         "stream", obscure, loadImaginary, -1, -1, nmrMaxY);
   }
 
-  public static JDXSource getHeaderOnly(Object in, String filePath) throws Exception {
-    return createJDXSource(in, filePath, false, false, 0, -1, 0);    
+  public static Map<String, String> getHeaderMap(InputStream in, Map<String, String> map) throws Exception {
+    if (map == null)
+      map = new LinkedHashMap<>();
+    Lst<String[]> hlist = createJDXSource(in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
+    for (int i = 0, n = hlist.size(); i < n; i++) {
+      String[] h = hlist.get(i);
+      // element [2] is the cleaned LABEL
+      
+      // "When DATALABELS
+      // are parsed, alphabetic characters are converted to upper case, and all spaces,
+      // dashes, slashes, and underlines are discarded. (XUNITS, xunits XUNITS, and X_UNI-TS
+      // are equivalent, thus these characters can be used optionally as separators for readability."
+      
+      map.put(h[2], h[1]);
+    }
+    return map;    
   }
 
     
@@ -180,9 +194,9 @@ public class JDXReader implements JmolJDXMOLReader {
     String header = null;
     JDXSource source = null;
     try {
+      if (br == null)
+        br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
       if (!isHeaderOnly) {
-        if (br == null)
-          br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
         br.mark(400);
         char[] chs = new char[400];
         br.read(chs, 0, 400);
@@ -265,12 +279,16 @@ public class JDXReader implements JmolJDXMOLReader {
           && (value = getValue(label)) != null) {
         if (isTabularData) {
           setTabularDataType(spectrum, label);
-          if (!processTabularData(spectrum, dataLDRTable))
+          if (!processTabularData(spectrum, dataLDRTable, isHeaderOnly))
             throw new JSVException("Unable to read JDX file");
           addSpectrum(spectrum, false);
           if (isSimulation && spectrum.getXUnits().equals("PPM"))
             spectrum.setHZtoPPM(true);
           spectrum = null;
+          if (isHeaderOnly) {
+            addHeader(dataLDRTable, t.rawLabel, "<data>");
+            break;
+          }
           continue;
         }
         if (!isHeaderOnly) {
@@ -291,13 +309,13 @@ public class JDXReader implements JmolJDXMOLReader {
         }
         if (spectrum == null)
           spectrum = new Spectrum();
-        if (readDataLabel(spectrum, label, value, errorLog, obscure) && !isHeaderOnly)
+        if (readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly) && !isHeaderOnly)
           continue;
         addHeader(dataLDRTable, t.rawLabel, value);
         if (!isHeaderOnly && checkCustomTags(spectrum, label, value))
           continue; // BH ??? nothing after this?
       }
-      if (isHeaderOnly)
+      if (isHeaderOnly && spectrum != null)
         addSpectrum(spectrum, false);
     }
     if (!isOK)
@@ -418,7 +436,7 @@ public class JDXReader implements JmolJDXMOLReader {
 		Lst<String[]> dataLDRTable;
 		Spectrum spectrum = new Spectrum();
 		dataLDRTable = new Lst<String[]>();
-		readDataLabel(spectrum, label, value, errorLog, obscure);
+		readDataLabel(spectrum, label, value, errorLog, obscure, false);
 		try {
 			String tmp;
 			while ((tmp = t.getLabel()) != null) {
@@ -429,7 +447,7 @@ public class JDXReader implements JmolJDXMOLReader {
 				label = tmp;
 				if (isTabularData) {
 					setTabularDataType(spectrum, label);
-					if (!processTabularData(spectrum, dataLDRTable))
+					if (!processTabularData(spectrum, dataLDRTable, false))
 						throw new JSVException("Unable to read Block Source");
 					continue;
 				}
@@ -466,7 +484,7 @@ public class JDXReader implements JmolJDXMOLReader {
 					dataLDRTable = new Lst<String[]>();
 					continue;
 				}
-				if (readDataLabel(spectrum, label, value, errorLog, obscure))
+				if (readDataLabel(spectrum, label, value, errorLog, obscure, false))
 						continue;
 
 				addHeader(dataLDRTable, t.rawLabel, value);
@@ -660,11 +678,12 @@ public class JDXReader implements JmolJDXMOLReader {
    * @param value
    * @param errorLog
    * @param obscure
+	 * @param isHeaderOnly 
    * @return  true to skip saving this key in the spectrum headerTable
    */
   private boolean readDataLabel(JDXDataObject spectrum, String label,
                                        String value, 
-                                       SB errorLog, boolean obscure) {
+                                       SB errorLog, boolean obscure, boolean isHeaderOnly) {
     if (readHeaderLabel(spectrum, label, value, errorLog, obscure))
       return true;
 
@@ -841,13 +860,14 @@ public class JDXReader implements JmolJDXMOLReader {
 //    }
   }
 
-	private boolean processTabularData(JDXDataObject spec, Lst<String[]> table)
+	private boolean processTabularData(JDXDataObject spec, Lst<String[]> table, boolean isHeaderOnly)
 			throws JSVException {
 		spec.setHeaderTable(table);
 
 		if (spec.dataClass.equals("XYDATA")) {
 			spec.checkRequiredTokens();
-			decompressData(spec, null, false);
+			if (!isHeaderOnly)
+			  decompressData(spec, null, false);
 			return true;
 		}
 		if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
