@@ -410,7 +410,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   private boolean findRecord(String tag) throws Exception {
     if (line == null)
       readLine();
-    if (line.indexOf("<" + tag) < 0)
+    if (line != null && line.indexOf("<" + tag) < 0)
       line = loader.discardLinesUntilContains2("<" + tag, "##");
     return (line != null && line.indexOf("<" + tag) >= 0);
   }
