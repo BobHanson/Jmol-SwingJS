@@ -1353,6 +1353,7 @@ public final class JC {
   public static final int SMILES_GEN_BIO_NOCOMMENTS            = 0x02100000; // MathExt -> Generator
 
   public static final int SMILES_GROUP_BY_MODEL                = 0x04000000; // MathExt -> search
+  public static final int SMILES_2D                            = 0x08000000; // Viewer -> generator
 
   
 

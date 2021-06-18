@@ -94,6 +94,7 @@ public class JmeReader extends AtomSetCollectionReader {
       }
       atom.elementSymbol = elementSymbol;
     }
+    asc.setModelInfoForSet("dimension", "2D", asc.iSet);
     /*
     if (!doMinimize)
       return;

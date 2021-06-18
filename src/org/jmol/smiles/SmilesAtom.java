@@ -766,22 +766,27 @@ public class SmilesAtom extends P3 implements Node {
    * @param nH
    * @param isAromatic
    * @param stereo
+   * @param is2D 
    * @return label
    */
   static String getAtomLabel(int atomicNumber, int isotopeNumber, int valence,
                              int charge, float osclass, int nH, boolean isAromatic,
-                             String stereo) {
+                             String stereo, boolean is2D) {
     String sym = Elements.elementSymbolFromNumber(atomicNumber);
     if (isAromatic) {
       sym = sym.toLowerCase();
       if (atomicNumber != 6)
         valence = Integer.MAX_VALUE; // force [n]
     }
-    int count = (valence == Integer.MAX_VALUE || isotopeNumber != 0 
-        || charge != 0 || !Float.isNaN(osclass) 
-        || stereo != null && stereo.length() > 0 ? -1
-        : getDefaultCount(atomicNumber, false));
-    return (count == valence ? sym : 
+    boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber == 0 
+        && charge == 0 && Float.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
+    int norm = (simple ? getDefaultCount(atomicNumber, false) : -1);
+    if (is2D && nH == 0 && norm > 0) {
+      if (simple && atomicNumber == 6)
+        return sym;    
+      nH = norm - valence;
+    }
+    return (norm == valence || stereo == null && is2D ? sym : 
       // rearranged 14.5.3_2016.03.06 to 
       "["
         + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) 

@@ -130,6 +130,8 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   protected void finalizeReaderMR() throws Exception {
+    if (is2D && !optimize2D)
+      appendLoadNote("This model is 2D. Its 3D structure has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D.");
     if (optimize2D) {
       set2D();
       if (asc.bsAtoms == null) {
@@ -179,11 +181,10 @@ public class MolReader extends AtomSetCollectionReader {
     if (line == null)
       return;
     header += line + "\n";
-    set2D(line.length() >= 22 && line.substring(20, 22).equals("2D"));
+    is2D = (line.length() >= 22 && line.substring(20, 22).equals("2D"));
     if (is2D) {
       if (!allow2D)
         throw new Exception("File is 2D, not 3D");
-      appendLoadNote("This model is 2D. Its 3D structure " + (optimize2D ? " will be generated." : " has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D."));
     }
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.
@@ -237,7 +238,7 @@ public class MolReader extends AtomSetCollectionReader {
       // although “2D” will be interpreted as 3D if 
       // any non-zero Z-coordinates are found.
       if (is2D && z != 0)
-        set2D(false);
+        is2D = optimize2D = false;
       if (len < 34) {
         // deal with older Mol format where nothing after the symbol is used
         elementSymbol = line.substring(31).trim();
@@ -286,7 +287,7 @@ public class MolReader extends AtomSetCollectionReader {
       iAtom1 = line.substring(0, 3).trim();
       iAtom2 = line.substring(3, 6).trim();
       int order = parseIntRange(line, 6, 9);
-      if (optimize2D && order == 1 && line.length() >= 12)
+      if (is2D && order == 1 && line.length() >= 12)
         stereo = parseIntRange(line, 9, 12);
       order = fixOrder(order, stereo);
       if (haveAtomSerials)
@@ -320,11 +321,6 @@ public class MolReader extends AtomSetCollectionReader {
       asc.setCurrentModelInfo("molDataKeys", _keyList);
       asc.setCurrentModelInfo("molData", molData);
     }
-  }
-
-  private void set2D(boolean b) {
-    is2D = b;
-    asc.setInfo("dimension", (b ? "2D" : "3D"));
   }
 
   /**

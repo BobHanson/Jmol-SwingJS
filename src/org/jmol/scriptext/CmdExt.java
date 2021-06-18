@@ -751,21 +751,36 @@ public class CmdExt extends ScriptExt {
     boolean asDSSP = false;
     BS bs1 = null;
     BS bs2 = null;
-    ScriptEval eval = this.e;
+    ScriptEval e = this.e;
     int n = Integer.MIN_VALUE;
     int version = 2;
-    if ((eval.iToken = eval.slen) >= 2) {
-      eval.clearDefinedVariableAtomSets();
+    if ((e.iToken = e.slen) >= 2) {
+      e.clearDefinedVariableAtomSets();
       switch (getToken(1).tok) {
+      case T.integer:
+        // CALCULATE 3D <zap>
+      if (intParameter(1) != 3 || !paramAsStr(2).equalsIgnoreCase("D")) {
+        break;
+      }
+      if (vwr.am.cmi < 0)
+        e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
+            "calculate 3D");
+      String cmd = "load append $ filter '2D'";
+      if (e.optParameterAsString(3).equalsIgnoreCase("ZAP")) {
+        cmd += ";zap modelIndex=" + Math.max(vwr.am.cmi, 0);
+      }
+      if (!chk) 
+        e.runScript(cmd);
+      return;
       case T.identifier:
         checkLength(2);
         break;
       case T.chirality:
-        eval.iToken = 1;
+        e.iToken = 1;
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
-        eval.checkLast(eval.iToken);
+        e.checkLast(e.iToken);
         if (!chk) 
-          eval.showString(vwr.calculateChirality(bs1));
+          e.showString(vwr.calculateChirality(bs1));
         return;
       case T.formalcharge:
         checkLength(2);
@@ -780,28 +795,28 @@ public class CmdExt extends ScriptExt {
           vwr.ms.assignAromaticBondsBs(true, null);
         return;
       case T.hbond:
-        if (eval.slen != 2) {
+        if (e.slen != 2) {
           // calculate hbonds STRUCTURE -- only the DSSP/DSSR structurally-defining H bonds
-          asDSSP = (tokAt(++eval.iToken) == T.structure);
+          asDSSP = (tokAt(++e.iToken) == T.structure);
           if (asDSSP)
             bs1 = vwr.bsA();
           else
-            bs1 = atomExpressionAt(eval.iToken);
-          if (!asDSSP && !(asDSSP = (tokAt(++eval.iToken) == T.structure)))
-            bs2 = atomExpressionAt(eval.iToken);
+            bs1 = atomExpressionAt(e.iToken);
+          if (!asDSSP && !(asDSSP = (tokAt(++e.iToken) == T.structure)))
+            bs2 = atomExpressionAt(e.iToken);
         }
         if (chk)
           return;
         n = vwr.autoHbond(bs1, bs2, false);
         if (n != Integer.MIN_VALUE)
-          eval.report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
+          e.report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
         return;
       case T.hydrogen:
         boolean andBond = (tokAt(2) == T.on);
         if (andBond)
-          eval.iToken++;
+          e.iToken++;
         bs1 = (slen == (andBond ? 3 : 2) ? null : atomExpressionAt(andBond ? 3  : 2));
-        eval.checkLast(eval.iToken);
+        e.checkLast(e.iToken);
         if (!chk) {
           vwr.addHydrogens(bs1, 0);
           if (andBond) {
@@ -814,11 +829,11 @@ public class CmdExt extends ScriptExt {
         }
         return;
       case T.partialcharge:
-        eval.iToken = 1;
+        e.iToken = 1;
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
-        eval.checkLast(eval.iToken);
+        e.checkLast(e.iToken);
         if (!chk)
-          eval.getPartialCharges(bs1);
+          e.getPartialCharges(bs1);
         return;
       case T.symmetry:
       case T.pointgroup:
@@ -827,7 +842,7 @@ public class CmdExt extends ScriptExt {
             String id = (tokAt(3) == T.string ? stringParameter(3) : null);
             bs1 = (id != null || slen == 3 ? null : atomExpressionAt(3));
             Object[] data = new Object[] { id, null, bs1 };            
-            showString(eval.getShapePropertyData(JC.SHAPE_POLYHEDRA, "symmetry", data) ? (String) data[1] : "");
+            showString(e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "symmetry", data) ? (String) data[1] : "");
           } else {
             showString(vwr.ms.calculatePointGroup(vwr.bsA()));
           }
@@ -844,20 +859,20 @@ public class CmdExt extends ScriptExt {
       case T.structure:
         // calculate structure {.....} ...
         bs1 = (slen < 4 || isFloatParameter(3) ? null : atomExpressionAt(2));
-        switch (tokAt(++eval.iToken)) {
+        switch (tokAt(++e.iToken)) {
         case T.ramachandran:
           break;
         case T.dssr:
           if (chk)
             return;
-          eval.showString(vwr.getAnnotationParser(true).calculateDSSRStructure(vwr, bs1));
+          e.showString(vwr.getAnnotationParser(true).calculateDSSRStructure(vwr, bs1));
           return;
         case T.dssp:
           asDSSP = true;
           // calculate structure DSSP
           // calculate structure DSSP 1.0
           // calculate structure DSSP 2.0
-          version = (slen == eval.iToken + 1 ? 2 : (int) floatParameter(++eval.iToken));
+          version = (slen == e.iToken + 1 ? 2 : (int) floatParameter(++e.iToken));
           break;
         case T.nada:
           asDSSP = vwr.getBoolean(T.defaultstructuredssp);
@@ -869,17 +884,17 @@ public class CmdExt extends ScriptExt {
           showString(vwr.calculateStructures(bs1, asDSSP, true, version));
         return;
       case T.struts:
-        bs1 = (eval.iToken + 1 < slen ? atomExpressionAt(++eval.iToken) : null);
-        bs2 = (eval.iToken + 1 < slen ? atomExpressionAt(++eval.iToken) : null);
-        checkLength(++eval.iToken);
+        bs1 = (e.iToken + 1 < slen ? atomExpressionAt(++e.iToken) : null);
+        bs2 = (e.iToken + 1 < slen ? atomExpressionAt(++e.iToken) : null);
+        checkLength(++e.iToken);
         if (!chk) {
           n = vwr.calculateStruts(bs1, bs2);
           if (n > 0) {
             setShapeProperty(JC.SHAPE_STICKS, "type",
                 Integer.valueOf(Edge.BOND_STRUT));
-            eval.setShapePropertyBs(JC.SHAPE_STICKS, "color",
+            e.setShapePropertyBs(JC.SHAPE_STICKS, "color",
                 Integer.valueOf(0x0FFFFFF), null);
-            eval.setShapeTranslucency(JC.SHAPE_STICKS, "", "translucent", 0.5f,
+            e.setShapeTranslucency(JC.SHAPE_STICKS, "", "translucent", 0.5f,
                 null);
             setShapeProperty(JC.SHAPE_STICKS, "type",
                 Integer.valueOf(Edge.BOND_COVALENT_MASK));
@@ -898,29 +913,29 @@ public class CmdExt extends ScriptExt {
         boolean isFrom = false;
         switch (tokAt(2)) {
         case T.within:
-          eval.iToken++;
+          e.iToken++;
           break;
         case T.nada:
           isFrom = !isSurface;
           break;
         case T.from:
           isFrom = true;
-          eval.iToken++;
+          e.iToken++;
           break;
         default:
           isFrom = true;
         }
-        bs1 = (eval.iToken + 1 < slen ? atomExpressionAt(++eval.iToken) : vwr.bsA());
-        checkLength(++eval.iToken);
+        bs1 = (e.iToken + 1 < slen ? atomExpressionAt(++e.iToken) : vwr.bsA());
+        checkLength(++e.iToken);
         if (!chk)
           vwr.calculateSurface(bs1, (isFrom ? Float.MAX_VALUE : -1));
         return;
       }
     }
-    eval.errorStr2(
+    e.errorStr2(
         ScriptError.ERROR_what,
         "CALCULATE",
-        "aromatic? hbonds? hydrogen? formalCharge? partialCharge? pointgroup? straightness? structure? struts? surfaceDistance FROM? surfaceDistance WITHIN?");
+        "3D? aromatic? hbonds? hydrogen? formalCharge? partialCharge? pointgroup? straightness? structure? struts? surfaceDistance FROM? surfaceDistance WITHIN?");
   }
 
   private void capture() throws ScriptException {
@@ -2565,7 +2580,7 @@ public class CmdExt extends ScriptExt {
     // invertSelected HKL
     // invertSelected STEREO {sp3Atom} {one or two groups)
     // invertSelected ATOM {ring atom sets}
-    ScriptEval eval = this.e;
+    ScriptEval e = this.e;
     P3 pt = null;
     P4 plane = null;
     BS bs = null;
@@ -2587,8 +2602,8 @@ public class CmdExt extends ScriptExt {
     case T.expressionBegin:
     case T.define:
       bs = atomExpressionAt(ipt);
-      if (!eval.isAtomExpression(eval.iToken + 1)) {
-        eval.checkLengthErrorPt(eval.iToken + 1, eval.iToken + 1);
+      if (!e.isAtomExpression(e.iToken + 1)) {
+        e.checkLengthErrorPt(e.iToken + 1, e.iToken + 1);
         if (!chk) {
           for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
             vwr.invertRingAt(i, false);
@@ -2597,19 +2612,19 @@ public class CmdExt extends ScriptExt {
         return;
       }
       iAtom = bs.nextSetBit(0);
-      bs = atomExpressionAt(eval.iToken + 1);
+      bs = atomExpressionAt(e.iToken + 1);
       break;
     case T.point:
-      pt = eval.centerParameter(2, null);
+      pt = e.centerParameter(2, null);
       break;
     case T.plane:
-      plane = eval.planeParameter(1);
+      plane = e.planeParameter(1);
       break;
     case T.hkl:
-      plane = eval.hklParameter(2);
+      plane = e.hklParameter(2);
       break;
     }
-    eval.checkLengthErrorPt(eval.iToken + 1, 1);
+    e.checkLengthErrorPt(e.iToken + 1, 1);
     if (plane == null && pt == null && iAtom == Integer.MIN_VALUE)
       invArg();
     if (chk)
@@ -2628,7 +2643,7 @@ public class CmdExt extends ScriptExt {
     int tokProp1 = 0;
     int tokProp2 = 0;
     int tokKey = 0;
-    ScriptEval eval = this.e;
+    ScriptEval e = this.e;
     while (true) {
       if (tokAt(1) == T.selected) {
         bsFrom = vwr.bsA();
@@ -2636,21 +2651,21 @@ public class CmdExt extends ScriptExt {
         property1 = property2 = "selected";
       } else {
         bsFrom = atomExpressionAt(1);
-        if (tokAt(++eval.iToken) != T.per
-            || !T.tokAttr(tokProp1 = tokAt(++eval.iToken), T.atomproperty))
+        if (tokAt(++e.iToken) != T.per
+            || !T.tokAttr(tokProp1 = tokAt(++e.iToken), T.atomproperty))
           break;
-        property1 = paramAsStr(eval.iToken);
-        bsTo = atomExpressionAt(++eval.iToken);
-        if (tokAt(++eval.iToken) != T.per
-            || !T.tokAttr(tokProp2 = tokAt(++eval.iToken), T.settable))
+        property1 = paramAsStr(e.iToken);
+        bsTo = atomExpressionAt(++e.iToken);
+        if (tokAt(++e.iToken) != T.per
+            || !T.tokAttr(tokProp2 = tokAt(++e.iToken), T.settable))
           break;
-        property2 = paramAsStr(eval.iToken);
+        property2 = paramAsStr(e.iToken);
       }
-      if (T.tokAttr(tokKey = tokAt(eval.iToken + 1), T.atomproperty))
-        mapKey = paramAsStr(++eval.iToken);
+      if (T.tokAttr(tokKey = tokAt(e.iToken + 1), T.atomproperty))
+        mapKey = paramAsStr(++e.iToken);
       else
         mapKey = T.nameOf(tokKey = T.atomno);
-      eval.checkLast(eval.iToken);
+      e.checkLast(e.iToken);
       if (chk)
         return;
       BS bsOut = null;
@@ -2712,13 +2727,13 @@ public class CmdExt extends ScriptExt {
         BS bsSubset = BSUtil.copy(vwr.slm.bsSubset);
         vwr.slm.setSelectionSubset(bsTo);
         try {
-          eval.runScript(sb.toString());
+          e.runScript(sb.toString());
         } catch (Exception ex) {
           vwr.slm.setSelectionSubset(bsSubset);
-          eval.errorStr(-1, "Error: " + ex.getMessage());
+          e.errorStr(-1, "Error: " + ex.getMessage());
         } catch (Error er) {
           vwr.slm.setSelectionSubset(bsSubset);
-          eval.errorStr(-1, "Error: " + er.toString());
+          e.errorStr(-1, "Error: " + er.toString());
         }
         vwr.slm.setSelectionSubset(bsSubset);
       }
@@ -3186,20 +3201,20 @@ public class CmdExt extends ScriptExt {
   }
 
   private String plot(T[] args) throws ScriptException {
-    ScriptEval eval = this.e;
+    ScriptEval e = this.e;
     // also used for draw [quaternion, helix, ramachandran] 
     // and write quaternion, ramachandran, plot, ....
     // and plot property propertyX, propertyY, propertyZ //
     int modelIndex = vwr.am.cmi;
     if (modelIndex < 0)
-      eval.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK, "plot");
+      e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK, "plot");
     modelIndex = vwr.ms.getJmolDataSourceFrame(modelIndex);
     int pt = args.length - 1;
     boolean isReturnOnly = (args != st);
     boolean pdbFormat = true;
     T[] statementSave = st;
     if (isReturnOnly)
-      eval.st = st = args;
+      e.st = st = args;
     int tokCmd = (isReturnOnly ? T.show : args[0].tok);
     int pt0 = (isReturnOnly || tokCmd == T.quaternion
         || tokCmd == T.ramachandran ? 0 : 1);
@@ -3227,11 +3242,11 @@ public class CmdExt extends ScriptExt {
         filename = paramAsStr(pt - 2) + "." + paramAsStr(pt);
         pt -= 3;
       } else {
-        eval.st = st = statementSave;
-        eval.iToken = st.length;
+        e.st = st = statementSave;
+        e.iToken = st.length;
         error(ScriptError.ERROR_endOfStatementUnexpected);
       }
-      eval.slen = slen = pt + 1;
+      e.slen = slen = pt + 1;
       break;
     }
     String qFrame = "";
@@ -3246,7 +3261,7 @@ public class CmdExt extends ScriptExt {
 
     BS bs = BSUtil.copy(vwr.bsA());
     String preSelected = "; select " + Escape.eBS(bs) + ";\n ";
-    String type = eval.optParameterAsString(pt).toLowerCase();
+    String type = e.optParameterAsString(pt).toLowerCase();
     P3 minXYZ = null;
     P3 maxXYZ = null;
     String format = null;
@@ -3255,23 +3270,23 @@ public class CmdExt extends ScriptExt {
       tok = T.getTokFromName((String) args[pt0].value);
     switch (tok) {
     default:
-      eval.iToken = 1;
+      e.iToken = 1;
       invArg();
       break;
     case T.data:
-      eval.iToken = 1;
+      e.iToken = 1;
       type = "data";
       preSelected = "";
       break;
     case T.property:
-      eval.iToken = pt0 + 1;
+      e.iToken = pt0 + 1;
       for (int i = 0; i < 3; i++) {
-        switch (tokAt(eval.iToken)) {
+        switch (tokAt(e.iToken)) {
         case T.string:
-          propToks[i] = T.getTokFromName((String)eval.getToken(eval.iToken).value);
+          propToks[i] = T.getTokFromName((String)e.getToken(e.iToken).value);
           break;
         default:
-          propToks[i] = tokAt(eval.iToken);
+          propToks[i] = tokAt(e.iToken);
           break;
         case T.nada:
           if (i == 0)
@@ -3285,21 +3300,21 @@ public class CmdExt extends ScriptExt {
         }
         if (propToks[i] != T.property && !T.tokAttr(propToks[i], T.atomproperty))
           invArg();
-        props[i] = getToken(eval.iToken).value.toString();
-        eval.iToken++;
+        props[i] = getToken(e.iToken).value.toString();
+        e.iToken++;
       }
-      if (tokAt(eval.iToken) == T.format) {
-        format = stringParameter(++eval.iToken);
+      if (tokAt(e.iToken) == T.format) {
+        format = stringParameter(++e.iToken);
         pdbFormat = false;
-        eval.iToken++;
+        e.iToken++;
       }
-      if (tokAt(eval.iToken) == T.min) {
-        minXYZ = getPoint3f(++eval.iToken, false);
-        eval.iToken++;
+      if (tokAt(e.iToken) == T.min) {
+        minXYZ = getPoint3f(++e.iToken, false);
+        e.iToken++;
       }
-      if (tokAt(eval.iToken) == T.max) {
-        maxXYZ = getPoint3f(++eval.iToken, false);
-        eval.iToken++;
+      if (tokAt(e.iToken) == T.max) {
+        maxXYZ = getPoint3f(++e.iToken, false);
+        e.iToken++;
       }
       type = "property " + props[0]
           + (props[1] == null ? "" : " " + props[1])
@@ -3311,7 +3326,7 @@ public class CmdExt extends ScriptExt {
     case T.ramachandran:
       if (type.equalsIgnoreCase("draw")) {
         isDraw = true;
-        type = eval.optParameterAsString(--pt).toLowerCase();
+        type = e.optParameterAsString(--pt).toLowerCase();
       }
       isRamachandranRelative = (pt > pt0 && type.startsWith("r"));
       type = "ramachandran" + (isRamachandranRelative ? " r" : "")
@@ -3325,7 +3340,7 @@ public class CmdExt extends ScriptExt {
       // working backward this time:
       if (type.equalsIgnoreCase("draw")) {
         isDraw = true;
-        type = eval.optParameterAsString(--pt).toLowerCase();
+        type = e.optParameterAsString(--pt).toLowerCase();
       }
       isDerivative = (type.startsWith("deriv") || type.startsWith("diff"));
       isSecondDerivative = (isDerivative && type.indexOf("2") > 0);
@@ -3336,12 +3351,12 @@ public class CmdExt extends ScriptExt {
         isDerivative = true;
         pt = -1;
       }
-      type = ((pt <= pt0 ? "" : eval.optParameterAsString(pt)) + "w").substring(0,
+      type = ((pt <= pt0 ? "" : e.optParameterAsString(pt)) + "w").substring(0,
           1);
       if (type.equals("a") || type.equals("r"))
         isDerivative = true;
       if (!PT.isOneOf(type, ";w;x;y;z;r;a;")) // a absolute; r relative
-        eval.evalError("QUATERNION [w,x,y,z,a,r] [difference][2]", null);
+        e.evalError("QUATERNION [w,x,y,z,a,r] [difference][2]", null);
       type = "quaternion " + type + (isDerivative ? " difference" : "")
           + (isSecondDerivative ? "2" : "") + (isDraw ? " draw" : "");
       break;
@@ -3456,7 +3471,7 @@ public class CmdExt extends ScriptExt {
       Logger.debug(data);
 
     if (tokCmd == T.draw) {
-      eval.runScript(data);
+      e.runScript(data);
       return "";
     }
 
@@ -3527,10 +3542,10 @@ public class CmdExt extends ScriptExt {
     }
 
     // run the post-processing script and set rotation radius and display frame title
-    eval.runScript(script + preSelected);
+    e.runScript(script + preSelected);
     ss.setModelIndex(vwr.am.cmi);
     vwr.setRotationRadius(radius, true);
-    eval.sm.loadShape(JC.SHAPE_ECHO);
+    e.sm.loadShape(JC.SHAPE_ECHO);
     showString("frame "
         + vwr.getModelNumberDotted(modelCount - 1)
         + (type.length() > 0 ? " created: " + type
@@ -4477,7 +4492,7 @@ public class CmdExt extends ScriptExt {
         showString((String) ret);
         return null;
       }
-      bytes = (byte[]) ret;
+      bytes = ret;
     }
     if (bytes instanceof String && quality == Integer.MIN_VALUE)
       params.put("text", bytes);

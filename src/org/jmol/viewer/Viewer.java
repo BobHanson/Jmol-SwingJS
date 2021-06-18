@@ -8915,12 +8915,13 @@ public class Viewer extends JmolViewer
 
     String ff = g.forceField;
     BS bsInFrame = getFrameAtoms();
-
     if (bsSelected == null)
       bsSelected = getModelUndeletedAtomsBitSet(
           getVisibleFramesBitSet().length() - 1);
     else
       bsSelected.and(bsInFrame);
+    if (isQuick)
+      getAuxiliaryInfoForAtoms(bsSelected).put("dimension", "3D");
 
     if (rangeFixed <= 0)
       rangeFixed = JC.MINIMIZE_FIXED_RANGE;
@@ -9187,10 +9188,9 @@ public class Viewer extends JmolViewer
 
   @Override
   public String getSmiles(BS bs) throws Exception {
-    boolean is2D = ("2D".equals(ms.getInfoM("dimension")));
     return getSmilesOpt(bs, -1, -1,
         (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0)
-            | (is2D ? JC.SMILES_IGNORE_STEREOCHEMISTRY : 0),
+        ,
         null);
   }
 
@@ -9198,7 +9198,8 @@ public class Viewer extends JmolViewer
   public String getOpenSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1,
         JC.SMILES_TYPE_OPENSMILES
-            | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
+            | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0)
+            ,
         "/openstrict///");
   }
 
@@ -9252,6 +9253,7 @@ public class Viewer extends JmolViewer
         bsSelected.setBits(index1, index2 + 1);
       }
     }
+    flags |= (isModel2D(bsSelected) ? JC.SMILES_2D : 0);
     SmilesMatcherInterface sm = getSmilesMatcher();
     if (JC.isSmilesCanonical(options)) {
       String smiles = sm.getSmiles(atoms, ms.ac, bsSelected, "/noAromatic/",
@@ -9259,6 +9261,11 @@ public class Viewer extends JmolViewer
       return getChemicalInfo(smiles, "smiles", null).trim();
     }
     return sm.getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
+  }
+
+  private boolean isModel2D(BS bs) {
+    Model m = getModelForAtomIndex(bs.nextSetBit(0));
+    return (m != null && "2D".equals(m.auxiliaryInfo.get("dimension")));
   }
 
   public void alert(String msg) {
@@ -9939,7 +9946,7 @@ public class Viewer extends JmolViewer
         : jcm);
   }
 
-  public Object getAuxiliaryInfoForAtoms(Object atomExpression) {
+  public Map<String, Object> getAuxiliaryInfoForAtoms(Object atomExpression) {
     return ms
         .getAuxiliaryInfo(ms.getModelBS(getAtomBitSet(atomExpression), false));
   }

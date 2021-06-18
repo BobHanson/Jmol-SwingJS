@@ -230,4 +230,9 @@ public class Bond extends Edge {
     return atom1 + " - " + atom2;
   }
 
+  @Override
+  public SimpleNode getAtom(int i) {
+    return (i == 1 ? atom2 : atom1);
+  }
+
 }

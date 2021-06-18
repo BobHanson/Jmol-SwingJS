@@ -147,19 +147,27 @@ public abstract class Edge implements SimpleEdge {
 
   /**
    * used for formatting labels and in the connect PARTIAL command
-   *  
+   * 
    * @param order
    * @return a string representation to preserve float n.m
    */
   public final static String getBondOrderNumberFromOrder(int order) {
     order &= ~BOND_NEW;
-    if (order == BOND_ORDER_NULL || order == BOND_ORDER_ANY)
+    switch (order) {
+    case BOND_ORDER_NULL:
+    case BOND_ORDER_ANY:
       return "0"; // I don't think this is possible
-    if (isOrderH(order) || isAtropism(order) || (order & BOND_SULFUR_MASK) != 0)
-      return EnumBondOrder.SINGLE.number;
-    if ((order & BOND_PARTIAL_MASK) != 0)
-      return (order >> 5) + "." + (order & 0x1F);
-    return EnumBondOrder.getNumberFromCode(order);
+    case BOND_STEREO_NEAR:
+    case BOND_STEREO_FAR:
+      return "1";
+    default:
+      if (isOrderH(order) || isAtropism(order)
+          || (order & BOND_SULFUR_MASK) != 0)
+        return "1";
+      if ((order & BOND_PARTIAL_MASK) != 0)
+        return (order >> 5) + "." + (order & 0x1F);
+      return EnumBondOrder.getNumberFromCode(order);
+    }
   }
 
   public final static String getCmlBondOrder(int order) {
@@ -189,6 +197,10 @@ public abstract class Edge implements SimpleEdge {
     case BOND_ORDER_ANY:
     case BOND_ORDER_NULL:
       return "";
+    case BOND_STEREO_NEAR:
+      return "near";
+    case BOND_STEREO_FAR:
+      return "far";
     case BOND_STRUT:
       return EnumBondOrder.STRUT.name;
     case BOND_COVALENT_SINGLE:
@@ -290,6 +302,11 @@ public abstract class Edge implements SimpleEdge {
     } catch (NumberFormatException e) {
       // BOND_ORDER_NULL
     }
+    return order;
+  }
+  
+  @Override
+  public int getBondType() {
     return order;
   }
 

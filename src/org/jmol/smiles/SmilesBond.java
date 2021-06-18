@@ -246,11 +246,6 @@ public class SmilesBond extends Edge {
     }
   }
 
-
-  int getBondType() {
-    return order;
-  }
-
   int getValence() {
     return (order & 7);
   }
@@ -328,6 +323,11 @@ public class SmilesBond extends Edge {
 
   public Edge getMatchingBond() {
     return matchingBond == null ? this : matchingBond;
+  }
+
+  @Override
+  public SimpleNode getAtom(int i) {
+    return (i == 1 ? atom2 : atom1);
   }
 
 }

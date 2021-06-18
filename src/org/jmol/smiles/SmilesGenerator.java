@@ -42,6 +42,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
+import org.jmol.util.SimpleEdge;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 
@@ -104,6 +105,7 @@ public class SmilesGenerator {
   private Lst<BS> aromaticRings;
   private SmilesMatcher sm;
   private int iHypervalent;
+  private boolean is2D;
 
   // generation of SMILES strings
 
@@ -173,6 +175,7 @@ public class SmilesGenerator {
         & JC.SMILES_IGNORE_STEREOCHEMISTRY) == JC.SMILES_IGNORE_STEREOCHEMISTRY);
     isPolyhedral = ((flags
         & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
+    is2D = ((flags & JC.SMILES_2D) == JC.SMILES_2D);
     return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
@@ -902,7 +905,7 @@ public class SmilesGenerator {
           nH,
           isAromatic,
           atat != null ? atat : noStereo ? null : checkStereoPairs(atom,
-              alleneStereo == null ? atomIndex : -1, stereo, stereoFlag)));
+              alleneStereo == null ? atomIndex : -1, stereo, stereoFlag), is2D));
 
     // add the rings...
 
@@ -1110,27 +1113,59 @@ public class SmilesGenerator {
     
     // now deterimine the stereochemistry
     
-    return SmilesStereo.getStereoFlag(atom, stereo, n, vTemp);
+    return SmilesStereo.getStereoFlag(atom, stereo, n, vTemp, is2D);
   }
 
   private String checkStereoPairs(SimpleNode atom, int atomIndex,
                                   SimpleNode[] stereo, int stereoFlag) {
     if (stereoFlag < 4)
       return "";
-    if (explicitH == 0 && atomIndex >= 0 && stereoFlag == 4 && (atom.getElementNumber()) == 6) {
+    if (explicitH == 0 && atomIndex >= 0 && stereoFlag == 4
+        && (atom.getElementNumber()) == 6) {
       // do a quick check for two of the same group for tetrahedral carbon only
       String s = "";
       for (int i = 0; i < 4; i++) {
-        if ((s = addStereoCheck(0, atomIndex, stereo[i], s, BSUtil.newAndSetBit(atomIndex))) == null) {
+        if ((s = addStereoCheck(0, atomIndex, stereo[i], s,
+            BSUtil.newAndSetBit(atomIndex))) == null) {
           stereoFlag = 10;
           break;
         }
       }
     }
-    return (stereoFlag > 6 ? "" : SmilesStereo.getStereoFlag(atom, stereo,
-        stereoFlag, vTemp));
+    if (is2D && stereoFlag == 4) {
+      SimpleEdge[] bonds = atom.getEdges();
+      for (int i = atom.getBondCount(); --i >= 0;) {
+        SimpleEdge b = bonds[i];
+        if (atom == b.getAtom(0)) {
+          switch (b.getBondType()) {
+          case Edge.BOND_STEREO_FAR:
+            setStereoTemp(stereo, b.getAtom(1), 1);
+            break;
+          case Edge.BOND_STEREO_NEAR:
+            setStereoTemp(stereo, b.getAtom(1), -1);
+            break;
+          }
+        }
+
+      }
+
+    }
+    return (stereoFlag > 6 ? ""
+        : SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D));
   }
-  
+
+  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, float z) {
+    for (int i = 0; i < 4; i++) {
+      if (stereo[i] == a) {
+        SmilesAtom b = new SmilesAtom();
+        P3 c = a.getXYZ();
+        b.set(c.x, c.y, z);
+        stereo[i] = b;
+        break;
+      }
+    }
+  }
+
   private int chainCheck;
 
   /**

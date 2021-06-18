@@ -859,9 +859,10 @@ public class SmilesStereo {
    * @param atoms
    * @param nAtoms
    * @param v
+   * @param is2D 
    * @return String
    */
-  static String getStereoFlag(SimpleNode atom0, SimpleNode[] atoms, int nAtoms, VTemp v) {
+  static String getStereoFlag(SimpleNode atom0, SimpleNode[] atoms, int nAtoms, VTemp v, boolean is2D) {
     SimpleNode atom1 = atoms[0];
     SimpleNode atom2 = atoms[1];
     SimpleNode atom3 = atoms[2];
@@ -884,6 +885,8 @@ public class SmilesStereo {
       float d = Measure.getNormalThroughPoints((P3) atom1, (P3) atom2, (P3) atom3,
           v.vTemp, v.vA);
       if (Math.abs(Measure.distanceToPlaneV(v.vTemp, d, (P3) atom4)) < 0.2f) {
+        if (is2D)
+          return "";
         chiralClass = SQUARE_PLANAR;
         if (checkStereochemistryAll(false, atom0, chiralClass, 1, atom1, atom2,
             atom3, atom4, atom5, atom6, v))
