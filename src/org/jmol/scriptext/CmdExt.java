@@ -765,7 +765,7 @@ public class CmdExt extends ScriptExt {
       if (vwr.am.cmi < 0)
         e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
             "calculate 3D");
-      String cmd = "load append $ filter '2D'";
+      String cmd = "load append $ filter '2D';select visible;center selected";
       if (e.optParameterAsString(3).equalsIgnoreCase("ZAP")) {
         cmd += ";zap modelIndex=" + Math.max(vwr.am.cmi, 0);
       }
@@ -4682,6 +4682,8 @@ public class CmdExt extends ScriptExt {
         vwr.getNMRPredict(eval.optParameterAsString(2));
       return;
     }
+    case T.inchi:
+    case T.inchikey:
     case T.drawing:
     case T.chemical:
     case T.smiles:
@@ -4703,7 +4705,24 @@ public class CmdExt extends ScriptExt {
       }
       if (msg == null) {
         try {
-          if (tok != T.smiles) {
+          switch (tok) { 
+          case T.inchi:
+            msg = vwr.getInchi(vwr.bsA(), null, null);
+            break;
+          case T.inchikey:
+            msg = vwr.getInchi(vwr.bsA(), null, "key");
+            break;
+          case T.smiles:
+            if (param2.equalsIgnoreCase("true")) {
+              msg = vwr.getBioSmiles(null);
+              filter = null;
+            } else if (filter != null) {
+              msg = vwr.getSmilesOpt(null, -1, -1, JC.SMILES_TYPE_SMILES, filter
+                  + "///");
+              filter = null;
+            }
+            break;
+          default:
             msg = vwr.ms.getModelDataBaseName(vwr.bsA());
             // this does not work for NCI, because, for example, "$menthol" returns an enantiomer, but menthol/smiles uses nonstereo option
             // but we don't want to be generating our own SMILES here, do we?
@@ -4713,13 +4732,7 @@ public class CmdExt extends ScriptExt {
             } else {
               msg = null;
             }
-          } else if (param2.equalsIgnoreCase("true")) {
-            msg = vwr.getBioSmiles(null);
-            filter = null;
-          } else if (filter != null) {
-            msg = vwr.getSmilesOpt(null, -1, -1, JC.SMILES_TYPE_SMILES, filter
-                + "///");
-            filter = null;
+            break;
           }
           if (msg == null) {
             int level = Logger.getLogLevel();
