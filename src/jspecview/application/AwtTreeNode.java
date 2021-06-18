@@ -17,10 +17,10 @@ public class AwtTreeNode extends
 	  public PanelNode panelNode;
 		public int index;
 
-		@Override
-    public Enumeration<JSVTreeNode> children() {
-		  return super.children();
-		}
+//		@Override
+//    public Enumeration<JSVTreeNode> children() {
+//      return super.children();
+//		}
 		
 	  public AwtTreeNode(String text, PanelNode panelNode) {
 	    super(text);

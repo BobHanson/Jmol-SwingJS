@@ -5,9 +5,11 @@ package jspecview.api;
 
 import java.util.Enumeration;
 
+import javax.swing.tree.TreeNode;
+
 import jspecview.common.PanelNode;
 
-public interface JSVTreeNode {
+public interface JSVTreeNode extends TreeNode {
 
 	int getChildCount();
 
@@ -17,7 +19,7 @@ public interface JSVTreeNode {
 
 	PanelNode getPanelNode();
 
-	Enumeration<JSVTreeNode> children();
+	Enumeration<TreeNode> children();
 
 	int getIndex();
 

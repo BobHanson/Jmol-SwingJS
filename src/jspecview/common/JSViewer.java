@@ -11,6 +11,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.swing.tree.TreeNode;
+
 import javajs.api.BytePoster;
 import javajs.util.CU;
 import javajs.util.Lst;
@@ -1507,14 +1509,14 @@ public class JSViewer implements PlatformViewer, BytePoster {
     JSVTreeNode rootNode = spectraTree.getRootNode();
     String fileName = (source == null ? null : source.getFilePath());
     Lst<JSVTreeNode> toDelete = new Lst<JSVTreeNode>();
-    Enumeration<JSVTreeNode> enume = rootNode.children();
+    Enumeration<TreeNode> enume = rootNode.children();
     while (enume.hasMoreElements()) {
-      JSVTreeNode node = enume.nextElement();
+      JSVTreeNode node = (JSVTreeNode) enume.nextElement();
       if (fileName == null
           || node.getPanelNode().source.matchesFilePath(fileName)) {
         Logger.info("Closing " + node.getPanelNode().source.getFilePath());
-        for (Enumeration<JSVTreeNode> e = node.children(); e.hasMoreElements();) {
-          JSVTreeNode childNode = e.nextElement();
+        for (Enumeration<TreeNode> e = node.children(); e.hasMoreElements();) {
+          JSVTreeNode childNode = (JSVTreeNode) e.nextElement();
           toDelete.addLast(childNode);
           panelNodes.removeObj(childNode.getPanelNode());
         }

@@ -2,6 +2,8 @@ package jspecview.tree;
 
 import java.util.Enumeration;
 
+import javax.swing.tree.TreeNode;
+
 import javajs.util.Lst;
 
 
@@ -41,7 +43,7 @@ public class SimpleTreeNode implements JSVTreeNode {
 		}
 
 		@Override
-		public Enumeration<JSVTreeNode> children() {
+		public Enumeration<TreeNode> children() {
 			return new SimpleTreeEnumeration(this);
 		}
 
@@ -69,5 +71,25 @@ public class SimpleTreeNode implements JSVTreeNode {
 		public String toString() {
 			return text;
 		}
+
+    @Override
+    public TreeNode getChildAt(int childIndex) {
+      return children.get(childIndex);
+    }
+
+    @Override
+    public TreeNode getParent() {
+      return prevNode;
+    }
+
+    @Override
+    public int getIndex(TreeNode node) {
+      return children.indexOf(node);
+    }
+
+    @Override
+    public boolean getAllowsChildren() {
+      return true;
+    }
 
 }
