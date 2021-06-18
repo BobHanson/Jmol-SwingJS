@@ -780,13 +780,13 @@ public class SmilesAtom extends P3 implements Node {
     }
     boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber == 0 
         && charge == 0 && Float.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
-    int norm = (simple ? getDefaultCount(atomicNumber, false) : -1);
-    if (is2D && nH == 0 && norm > 0) {
+    int norm = getDefaultCount(atomicNumber, false);
+    if (is2D && nH == 0) {
       if (simple && atomicNumber == 6)
         return sym;    
       nH = norm - valence;
     }
-    return (norm == valence || stereo == null && is2D ? sym : 
+    return (simple && norm == valence ? sym : 
       // rearranged 14.5.3_2016.03.06 to 
       "["
         + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) 

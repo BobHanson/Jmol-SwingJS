@@ -142,7 +142,7 @@ public final class ModelLoader {
 
   private boolean someModelsHaveUnitcells;
   private boolean someModelsAreModulated;
-  private boolean is2D, isMutate;
+  private boolean is2D, isMOL2D, isMutate;
   public boolean isTrajectory; 
   private boolean isPyMOLsession;
   private boolean doMinimize;
@@ -1012,6 +1012,8 @@ public final class ModelLoader {
   
   private Lst<Bond> vStereo;
   
+  private int lastModel = -1;
+  
   private Bond bondAtoms(Object atomUid1, Object atomUid2, short order) {
     Atom atom1 = htAtomMap.get(atomUid1);
     if (atom1 == null) {
@@ -1031,7 +1033,13 @@ public final class ModelLoader {
     boolean isFar = (order == Edge.BOND_STEREO_FAR);
     Bond bond;
     if (isNear || isFar) {
-      bond = ms.bondMutually(atom1, atom2, (is2D ? order : 1), ms.getDefaultMadFromOrder(1), 0);
+      int m = atom1.getModelIndex();
+      if (m != lastModel) {
+        lastModel = m;
+        Map<String, Object> info = ms.getModelAuxiliaryInfo(m);
+        isMOL2D = (info != null && "2D".equals(info.get("dimension")));
+      }
+      bond = ms.bondMutually(atom1, atom2, (isMOL2D ? order : 1), ms.getDefaultMadFromOrder(1), 0);
       if (vStereo == null) {
         vStereo = new  Lst<Bond>();
       }
@@ -1050,6 +1058,7 @@ public final class ModelLoader {
   }
   
   public BS structuresDefinedInFile = new BS();
+  private int stereodir = 1;
 
   ////// symmetry ///////
 
@@ -1359,9 +1368,32 @@ public final class ModelLoader {
     // 1) initialize average bond lengths
     set2DLengths(baseAtomIndex, ms.ac);
     
+    V3 v = new V3();
+    
+    if (vStereo != null) {
+      out: for (int i = vStereo.size(); --i >= 0;) {
+        Bond b = vStereo.get(i);
+        Atom a1 = b.atom1;
+        Bond[] bonds = a1.bonds;
+        for (int j = a1.getBondCount(); --j >= 0;) {
+          Bond b2 = bonds[j];
+          if (b2 == b)
+            continue;
+          Atom a2 = b2.getOtherAtom(a1);
+          v.sub2(a2, a1);
+          System.out.println(b2 + " " + v);
+          if (Math.abs(v.x) < 0.1) {
+            if ((b.order == Edge.BOND_STEREO_NEAR) == (v.y < 0))
+              stereodir = -1;
+            break out;
+          }
+          
+        }
+      }}
+    
     // 2) implicit stereochemistry 
     
-    set2dZ(baseAtomIndex, ms.ac);
+    set2dZ(baseAtomIndex, ms.ac, v);
 
     // 3) explicit stereochemistry
     
@@ -1415,17 +1447,16 @@ public final class ModelLoader {
     }
   }
 
-  private void set2dZ(int iatom1, int iatom2) {
+  private void set2dZ(int iatom1, int iatom2, V3 v) {
     BS atomlist = BS.newN(iatom2);
     BS bsBranch = new BS();
-    V3 v = new V3();
     V3 v0 = V3.new3(0, 1, 0);
     V3 v1 = new V3();
     BS bs0 = new BS();
     bs0.setBits(iatom1, iatom2);
     for (int i = iatom1; i < iatom2; i++)
       if (!atomlist.get(i) && !bsBranch.get(i)) {
-        bsBranch = getBranch2dZ(i, -1, bs0, bsBranch, v, v0, v1);
+        bsBranch = getBranch2dZ(i, -1, bs0, bsBranch, v, v0, v1, stereodir );
         atomlist.or(bsBranch);
       }
   }
@@ -1442,7 +1473,7 @@ public final class ModelLoader {
    * @return   atom bitset
    */
   private BS getBranch2dZ(int atomIndex, int atomIndexNot, BS bs0, 
-                              BS bsBranch, V3 v, V3 v0, V3 v1) {
+                              BS bsBranch, V3 v, V3 v0, V3 v1, int dir) {
     BS bs = BS.newN(ms.ac);
     if (atomIndex < 0)
       return bs;
@@ -1450,13 +1481,13 @@ public final class ModelLoader {
     bsToTest.or(bs0);
     if (atomIndexNot >= 0)
       bsToTest.clear(atomIndexNot);
-    setBranch2dZ(ms.at[atomIndex], bs, bsToTest, v, v0, v1);
+    setBranch2dZ(ms.at[atomIndex], bs, bsToTest, v, v0, v1, dir);
     return bs;
   }
 
   private static void setBranch2dZ(Atom atom, BS bs,
                                             BS bsToTest, V3 v,
-                                            V3 v0, V3 v1) {
+                                            V3 v0, V3 v1, int dir) {
     int atomIndex = atom.i;
     if (!bsToTest.get(atomIndex))
       return;
@@ -1469,8 +1500,8 @@ public final class ModelLoader {
       if (bond.isHydrogen())
         continue;
       Atom atom2 = bond.getOtherAtom(atom);
-      setAtom2dZ(atom, atom2, v, v0, v1);
-      setBranch2dZ(atom2, bs, bsToTest, v, v0, v1);
+      setAtom2dZ(atom, atom2, v, v0, v1, dir);
+      setBranch2dZ(atom2, bs, bsToTest, v, v0, v1, dir);
     }
   }
 
@@ -1500,13 +1531,15 @@ public final class ModelLoader {
    * @param v0
    * @param v1
    */
-  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3 v, V3 v0, V3 v1) {
+  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3 v, V3 v0, V3 v1, int dir) {
     v.sub2(atom2, atomRef);
     v.z = 0;
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    atom2.z = atomRef.z + (float) (0.4f * Math.sin(4*theta)); // was 0.8
+    float f = (float) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
+    atom2.z = atomRef.z + f;
+    System.out.println(atomRef + " " + atom2 + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
 
   ///////////////  shapes  ///////////////

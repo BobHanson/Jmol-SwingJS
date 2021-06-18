@@ -905,7 +905,7 @@ public class SmilesGenerator {
           nH,
           isAromatic,
           atat != null ? atat : noStereo ? null : checkStereoPairs(atom,
-              alleneStereo == null ? atomIndex : -1, stereo, stereoFlag), is2D));
+              alleneStereo == null ? atomIndex : -1, stereo, stereoFlag, prevIndex == -1), is2D));
 
     // add the rings...
 
@@ -1117,8 +1117,8 @@ public class SmilesGenerator {
   }
 
   private String checkStereoPairs(SimpleNode atom, int atomIndex,
-                                  SimpleNode[] stereo, int stereoFlag) {
-    if (stereoFlag < 4)
+                                  SimpleNode[] stereo, int stereoFlag, boolean isFirst) {
+    if (stereoFlag == 10 || stereoFlag < (is2D ? 3 : 4))
       return "";
     if (explicitH == 0 && atomIndex >= 0 && stereoFlag == 4
         && (atom.getElementNumber()) == 6) {
@@ -1127,31 +1127,34 @@ public class SmilesGenerator {
       for (int i = 0; i < 4; i++) {
         if ((s = addStereoCheck(0, atomIndex, stereo[i], s,
             BSUtil.newAndSetBit(atomIndex))) == null) {
-          stereoFlag = 10;
-          break;
+          return "";
         }
       }
     }
-    if (is2D && stereoFlag == 4) {
+    if (is2D) {
+      int dir = (stereoFlag == 4 || !isFirst ? 1 : -1);
       SimpleEdge[] bonds = atom.getEdges();
+      SimpleNode c = null;
       for (int i = atom.getBondCount(); --i >= 0;) {
         SimpleEdge b = bonds[i];
         if (atom == b.getAtom(0)) {
           switch (b.getBondType()) {
-          case Edge.BOND_STEREO_FAR:
-            setStereoTemp(stereo, b.getAtom(1), 1);
-            break;
           case Edge.BOND_STEREO_NEAR:
-            setStereoTemp(stereo, b.getAtom(1), -1);
+            setStereoTemp(stereo, c = b.getAtom(1), dir);
+            break;
+          case Edge.BOND_STEREO_FAR:
+            setStereoTemp(stereo, c = b.getAtom(1), -dir);
             break;
           }
         }
-
       }
-
+      if (c == null)
+        return "";
+      if (stereoFlag == 3) {
+        stereo[stereoFlag++] = c;
+      }
     }
-    return (stereoFlag > 6 ? ""
-        : SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D));
+    return SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D);
   }
 
   private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, float z) {

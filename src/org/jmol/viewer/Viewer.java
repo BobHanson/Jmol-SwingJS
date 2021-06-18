@@ -4943,7 +4943,7 @@ public class Viewer extends JmolViewer
           }
         }
         //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
-        format = PT.rep(g.smilesUrlFormat, "?format=sdf&get3d=true", "");
+        format = PT.rep(g.smilesUrlFormat, "get3d=true", "get3d=false");
         return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
       }
       //$FALL-THROUGH$
@@ -8918,10 +8918,12 @@ public class Viewer extends JmolViewer
     if (bsSelected == null)
       bsSelected = getModelUndeletedAtomsBitSet(
           getVisibleFramesBitSet().length() - 1);
-    else
+    else if (!isQuick)
       bsSelected.and(bsInFrame);
-    if (isQuick)
+    if (isQuick) {
       getAuxiliaryInfoForAtoms(bsSelected).put("dimension", "3D");
+      bsInFrame = bsSelected;
+    }
 
     if (rangeFixed <= 0)
       rangeFixed = JC.MINIMIZE_FIXED_RANGE;
@@ -8991,6 +8993,7 @@ public class Viewer extends JmolViewer
       if (isQuick) {
         g.forceField = "MMFF";
         setHydrogens(bsSelected);
+        showString("Minimized by Jmol",  false);
       }
     } catch (JmolAsyncException e) {
       if (eval != null)

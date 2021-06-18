@@ -783,7 +783,7 @@ public class ModelSet extends BondCollection {
       for (int i = ac; --i >= 0;) {
         Atom a = at[i];
         a.setCIPChirality(0);
-        if (a.mi != modelIndex)
+        if (a.mi != modelIndex && a.mi < am.length)
           am[modelIndex = a.mi].hasChirality = false;
       }
     }
