@@ -865,14 +865,15 @@ public class T {
   public final static int bondtolerance                  = floatparam | 4;
   public final static int cameradepth                    = floatparam | 6;
   public final static int defaultdrawarrowscale          = floatparam | 8;
-  public final static int defaulttranslucent             = floatparam | 10;
-  public final static int dipolescale                    = floatparam | 11;
-  public final static int drawfontsize                   = floatparam | 12;
-  public final static int ellipsoidaxisdiameter          = floatparam | 13;
-  public final static int exportscale                    = floatparam | 14;
-  public final static int gestureswipefactor             = floatparam | 15;
-  public final static int hbondsangleminimum             = floatparam | 16;
-  public final static int hbondsdistancemaximum          = floatparam | 17;
+  public final static int defaulttranslucent             = floatparam | 9;
+  public final static int dipolescale                    = floatparam | 10;
+  public final static int drawfontsize                   = floatparam | 11;
+  public final static int ellipsoidaxisdiameter          = floatparam | 12;
+  public final static int exportscale                    = floatparam | 13;
+  public final static int gestureswipefactor             = floatparam | 14;
+  public final static int hbondsangleminimum             = floatparam | 15;
+  public final static int hbondnodistancemaximum          = floatparam | 16;
+  public final static int hbondhxdistancemaximum         = floatparam | 17;
   public final static int hoverdelay                     = floatparam | 18;
   public final static int loadatomdatatolerance          = floatparam | 19;  
   public final static int minbonddistance                = floatparam | 20;
@@ -2447,7 +2448,9 @@ public class T {
        "ellipsoidAxisDiameter",
        "gestureSwipeFactor",
        "hbondsAngleMinimum",
+       "hbondHXDistanceMaximum",
        "hbondsDistanceMaximum",
+       "hbondNODistanceMaximum",
        "hoverDelay",
        "loadAtomDataTolerance",
        "minBondDistance",
@@ -3509,7 +3512,9 @@ public class T {
         ellipsoidaxisdiameter,              //        "ellipsoidAxisDiameter"
         gestureswipefactor,                 //        "gestureSwipeFactor"
         hbondsangleminimum,                 //        "hbondsAngleMinimum"
-        hbondsdistancemaximum,              //        "hbondsDistanceMaximum"
+        hbondhxdistancemaximum,             //        "hbondHDistanceMaximum"
+        hbondnodistancemaximum,              //        "hbondsDistanceMaximum"
+        -1,
         hoverdelay,                         //        "hoverDelay"
         loadatomdatatolerance,              //        "loadAtomDataTolerance"
         minbonddistance,                    //        "minBondDistance"

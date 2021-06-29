@@ -325,6 +325,13 @@ public class AminoPolymer extends AlphaPolymer {
     double distCN = Math.sqrt(distCN2);
     double distON = Math.sqrt(distON2);
 
+    // (+) H .......... A(O) (-)   
+    //     |            |
+    //     |            | 
+    // (-) D(N)         C (+)
+    //
+    //    AH args[0], CH args[1], CD args[2], DA args[3]
+
     int energy = HBond.getEnergy(distOH, distCH, distCN, distON);
 
     boolean isHbond = (energy < -500 

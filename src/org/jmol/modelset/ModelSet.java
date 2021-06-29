@@ -170,7 +170,6 @@ public class ModelSet extends BondCollection {
   public ShapeManager sm;
 
   private static float hbondMinRasmol = 2.5f;
-  private static float hbondMaxReal = 2.5f;
 
   public boolean proteinStructureTainted;
 
@@ -2744,18 +2743,18 @@ public class ModelSet extends BondCollection {
         }
       }
     }
-    float dmax = vwr.getFloat(T.hbondsdistancemaximum);
+    float dmax;
     float min2;
     if (haveHAtoms) {
-      // ...set the max to be no greater than 2.5 Angstroms
-      if (dmax > hbondMaxReal)
-        dmax = hbondMaxReal;
+      // no set maximumn for this anymore -- default is 2.5A
+      dmax = vwr.getFloat(T.hbondhxdistancemaximum);
       min2 = 1f;
     } else {
+      dmax = vwr.getFloat(T.hbondnodistancemaximum);
       // default 3.25 for pseudo; user can make longer or shorter
       min2 = hbondMinRasmol * hbondMinRasmol;
     }
-    float max2 = dmax * dmax; // hxbondMax * hxbondMax
+    float max2 = dmax * dmax;
     float minAttachedAngle = (float) (vwr.getFloat(T.hbondsangleminimum)
         * Math.PI / 180);
     int nNew = 0;
@@ -2822,6 +2821,13 @@ public class ModelSet extends BondCollection {
         short bo;
         if (isH && !Float.isNaN(C.x) && !Float.isNaN(D.x)) {
           bo = Edge.BOND_H_CALC;
+          // (+) H .......... A (-)   
+          //     |            |
+          //     |            | 
+          // (-) D            C (+)
+          //
+          //    AH args[0], CH args[1], CD args[2], DA args[3]
+          //
           energy = HBond.getEnergy((float) Math.sqrt(d2), C.distance(atom),
               C.distance(D), atomNear.distance(D)) / 1000f;
         } else {

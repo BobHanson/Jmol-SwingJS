@@ -273,7 +273,8 @@ public class GlobalSettings {
     setF("particleRadius", particleRadius);
     setB("greyscaleRendering", greyscaleRendering);
     setF("hbondsAngleMinimum", hbondsAngleMinimum);
-    setF("hbondsDistanceMaximum", hbondsDistanceMaximum);
+    setF("hbondHXDistanceMaximum", hbondHXDistanceMaximum);
+    setF("hbondsDistanceMaximum", hbondNODistanceMaximum);
     setB("hbondsBackbone", hbondsBackbone);
     setB("hbondsRasmol", hbondsRasmol);
     setB("hbondsSolid", hbondsSolid);
@@ -541,7 +542,8 @@ public class GlobalSettings {
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;
   float hbondsAngleMinimum = 90f;
-  float hbondsDistanceMaximum = 3.25f;
+  float hbondNODistanceMaximum = 3.25f; // O----N
+  float hbondHXDistanceMaximum = 2.5f;  // O--H
   boolean hbondsRasmol = true; // 12.0.RC3
   boolean hbondsSolid = false;
   public byte modeMultipleBond = JC.MULTIBOND_NOTSMALL;

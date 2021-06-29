@@ -5813,8 +5813,10 @@ public class Viewer extends JmolViewer
       return g.exportScale;
     case T.hbondsangleminimum:
       return g.hbondsAngleMinimum;
-    case T.hbondsdistancemaximum:
-      return g.hbondsDistanceMaximum;
+    case T.hbondhxdistancemaximum:
+      return g.hbondHXDistanceMaximum;
+    case T.hbondnodistancemaximum:
+      return g.hbondNODistanceMaximum;
     case T.loadatomdatatolerance:
       return g.loadAtomDataTolerance;
     case T.minbonddistance:
@@ -6205,9 +6207,13 @@ public class Viewer extends JmolViewer
       // 11.7.9
       g.hbondsAngleMinimum = value;
       break;
-    case T.hbondsdistancemaximum:
+    case T.hbondhxdistancemaximum:
+      // 14.31.33
+      g.hbondHXDistanceMaximum = value;
+      break;
+    case T.hbondnodistancemaximum:
       // 11.7.9
-      g.hbondsDistanceMaximum = value;
+      g.hbondNODistanceMaximum = value;
       break;
     case T.pointgroupdistancetolerance:
       // 11.6.RC2//

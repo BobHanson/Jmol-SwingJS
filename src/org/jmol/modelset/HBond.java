@@ -81,15 +81,20 @@ public class HBond extends Bond {
     // A crude calculation based on simple distances. In the NH -- O=C
     // case this reads DH -- A=C
     // 
-    // (+) H .......... A (-) | | | | (-) D C (+)
-    // 
+    // (+) H .......... A (-)   
+    //     |            |
+    //     |            | 
+    // (-) D            C (+)
+    //
+    //    AH args[0], CH args[1], CD args[2], DA args[3]
     // 
     // E = Q/rAH - Q/rAD + Q/rCD - Q/rCH
         
     int energy = (int) Math.round(QConst / distAH - QConst / distAD + QConst / distCD - QConst
         / distCH);   
-    //Logger.info("HBond: distAH=" + distAH + " distAD=" + distAD + " distCD=" + distCD
-      //  + " distCH=" + distCH + " energy=" + energy);
+//    if (energy < -500)
+//    Logger.info("HBond: distAH=" + distAH + " distAD=" + distAD + " distCD=" + distCD
+//        + " distCH=" + distCH + " energy=" + energy);
     return energy;
   }
 }
