@@ -19,8 +19,6 @@
 
 package jspecview.dialog;
 
-import jspecview.dialog.JSVDialog;
-
 /**
  * Dialog for showing the legend or key for overlaid plots in a
  * <code>JSVPanel</code>.

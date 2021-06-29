@@ -24,7 +24,6 @@
 
 package org.jmol.smiles;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 
 import java.util.Map;

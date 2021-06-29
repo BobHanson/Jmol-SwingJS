@@ -31,7 +31,6 @@ import java.net.URL;
 
 import javajs.util.PT;
 
-import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;

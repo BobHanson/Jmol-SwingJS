@@ -4,7 +4,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.CifDataParser;
-import javajs.util.Lst;
 import javajs.util.PT;
 
 /**

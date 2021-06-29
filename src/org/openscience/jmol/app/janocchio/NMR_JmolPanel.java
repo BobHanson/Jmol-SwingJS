@@ -71,7 +71,6 @@ import org.jmol.dialog.FileChooser;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.NMRCalculation;
-import org.jmol.quantum.NMRNoeMatrix;
 import org.openscience.jmol.app.Jmol;
 import org.openscience.jmol.app.JmolApp;
 import org.openscience.jmol.app.jmolpanel.DisplayPanel;

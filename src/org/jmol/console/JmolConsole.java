@@ -26,7 +26,6 @@ package org.jmol.console;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolScriptEditorInterface;
-import org.jmol.api.JmolStatusListener;
 import org.jmol.awt.Platform;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.FileManager;

@@ -30,7 +30,6 @@ import javajs.util.AU;
 import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.quantum.SlaterData;
 
 /**
  * Reads Mopac 2007 GRAPHF output files

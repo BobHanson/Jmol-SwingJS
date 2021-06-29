@@ -25,12 +25,10 @@
 package org.jmol.api;
 
 import java.io.BufferedReader;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.PT;
 
-import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.util.Elements;
 import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;

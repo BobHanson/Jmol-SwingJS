@@ -28,7 +28,6 @@ package org.jmol.awtjs2d;
 import java.util.Map;
 
 import org.jmol.api.GenericImageDialog;
-import org.jmol.api.PlatformViewer;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
 

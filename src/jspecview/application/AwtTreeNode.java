@@ -1,7 +1,5 @@
 package jspecview.application;
 
-import java.util.Enumeration;
-
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import jspecview.api.JSVTreeNode;

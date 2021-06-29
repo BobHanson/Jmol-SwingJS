@@ -27,7 +27,6 @@ package org.jmol.script;
 
 import javajs.util.Lst;
 
-import org.jmol.api.JmolScriptManager;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;

@@ -1,7 +1,5 @@
 package jspecview.common;
 
-import org.jmol.viewer.Viewer;
-
 import jspecview.api.js.JSVAppletObject;
 import jspecview.api.js.JSVToJSmolInterface;
 

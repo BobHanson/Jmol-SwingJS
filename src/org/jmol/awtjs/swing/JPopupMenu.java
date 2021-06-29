@@ -1,7 +1,5 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.swing.Component;
-
 public class JPopupMenu extends AbstractButton {
   
   // note that in Java Swing JPopupMenu extends 

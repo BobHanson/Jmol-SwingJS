@@ -710,6 +710,8 @@ public class GaussianReader extends MOReader {
       // we now have the line with the vibration numbers in them, but don't need it
       String[] symmetries = PT.getTokens(rd());
       discardLinesUntilContains(" Frequencies");
+      if (line == null)
+        return;
       isHighPrecision = (line.indexOf("---") > 0);
       if (isHighPrecision ? !allowHighPrecision : haveHighPrecision)
         return;
@@ -758,10 +760,11 @@ public class GaussianReader extends MOReader {
         }
       } else {
         int nLines = 0;
+        int nMin = frequencyCount * 3 + 1;
         while (true) {
           // wide format
           fillDataBlockFixed(temp, 0, 0, 0);
-          if (temp[0].length < 10)
+          if (temp[0].length < nMin)
             break;
           atomIndices[nLines] = Integer.valueOf(temp[0][0]).intValue() - 1; 
           data[nLines++] = temp[0];

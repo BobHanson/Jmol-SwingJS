@@ -27,8 +27,6 @@
 
 package org.openscience.jmol.app.janocchio;
 
-import javax.swing.*;
-
 // Calculates the difference between calculated and experimental values for coloring table    
 public class MeasureCouple extends Measure {
   // Calculates the difference between calculated and experimental values for coloring table    

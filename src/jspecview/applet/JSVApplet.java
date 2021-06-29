@@ -64,7 +64,6 @@ import javax.swing.JFrame;
 import org.jmol.util.Logger;
 
 import javajs.util.Lst;
-import javajs.util.PT;
 import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppletInterface;
 import jspecview.api.JSVFileDropper;

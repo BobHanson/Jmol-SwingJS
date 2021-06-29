@@ -82,7 +82,7 @@ public class Resolver {
    * @param br
    * @return String file type
    */
-  static String getFileType(BufferedReader br) {
+  public static String getFileType(BufferedReader br) {
     try {
       return determineAtomSetCollectionReader(br, false);
     } catch (Exception e) {

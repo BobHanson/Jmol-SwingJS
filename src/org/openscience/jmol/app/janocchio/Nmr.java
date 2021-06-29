@@ -28,8 +28,6 @@ package org.openscience.jmol.app.janocchio;
 
 import java.awt.Cursor;
 
-import javajs.util.BS;
-
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.UIManager;

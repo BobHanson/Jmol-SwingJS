@@ -44,7 +44,6 @@ import org.jmol.c.CBK;
 import org.jmol.util.GenericApplet;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
-import org.jmol.viewer.Viewer;
 
 /*
  * This applet is produced in both Java and JavaScript using 

@@ -36,7 +36,6 @@ import javajs.util.XmlUtil;
 
 import javajs.util.BS;
 
-import org.jmol.shapesurface.Isosurface;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;

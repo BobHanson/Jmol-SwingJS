@@ -39,7 +39,6 @@ import javajs.util.SB;
 
 import org.jmol.api.JmolAppletInterface;
 import org.jmol.api.JmolSyncInterface;
-import org.jmol.applet.AppletWrapper;
 import org.jmol.util.GenericApplet;
 
 public class JmolApplet extends AppletWrapper implements

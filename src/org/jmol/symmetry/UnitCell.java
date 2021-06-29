@@ -32,7 +32,6 @@ import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;

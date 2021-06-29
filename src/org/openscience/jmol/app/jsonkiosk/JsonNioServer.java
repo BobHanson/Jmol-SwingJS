@@ -1,10 +1,6 @@
 package org.openscience.jmol.app.jsonkiosk;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Map;
-
-import org.jmol.util.JSONWriter;
 import org.jmol.viewer.Viewer;
 
 public interface JsonNioServer {

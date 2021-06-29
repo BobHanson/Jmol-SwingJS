@@ -18,7 +18,6 @@ import java.util.Map;
 import javax.swing.JFrame;
 
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import org.jmol.api.JmolViewer;
 import org.jmol.util.JUnitLogger;
 import org.jmol.util.Profiling;
 import org.openscience.jmol.app.Jmol;

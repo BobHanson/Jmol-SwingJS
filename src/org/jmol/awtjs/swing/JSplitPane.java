@@ -1,6 +1,5 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.swing.Container;
 import javajs.util.SB;
 
 public class JSplitPane extends JComponent {

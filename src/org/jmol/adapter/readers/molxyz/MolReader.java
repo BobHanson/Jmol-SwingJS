@@ -30,8 +30,6 @@ import java.util.Map;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Bond;

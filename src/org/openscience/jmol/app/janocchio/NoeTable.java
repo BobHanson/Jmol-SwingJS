@@ -33,7 +33,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 
 import javax.swing.JButton;

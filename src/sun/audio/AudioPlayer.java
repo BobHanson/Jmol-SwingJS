@@ -4,8 +4,6 @@ import javajs.util.JSThread;
 
 import java.io.InputStream;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
-
 import swingjs.api.JSUtilI;
 
 public class AudioPlayer extends JSThread {

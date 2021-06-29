@@ -5,7 +5,6 @@ import java.util.Properties;
 import org.jmol.api.PlatformViewer;
 import org.jmol.api.SC;
 import org.jmol.i18n.GT;
-import org.jmol.script.ScriptEval;
 import org.jmol.viewer.Viewer;
 
 /**

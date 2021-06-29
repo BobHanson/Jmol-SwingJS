@@ -26,8 +26,6 @@ package org.openscience.jmol.app.jmolpanel;
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
-
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

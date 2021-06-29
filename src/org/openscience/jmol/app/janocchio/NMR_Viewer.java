@@ -1,12 +1,9 @@
 package org.openscience.jmol.app.janocchio;
 
-import javax.swing.*;
-
 import java.awt.Image;
 import java.util.Map;
 
 import org.jmol.modelset.Atom;
-import org.jmol.quantum.NMRNoeMatrix;
 import org.jmol.viewer.Viewer;
 
 /**

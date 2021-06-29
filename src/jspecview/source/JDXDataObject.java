@@ -460,10 +460,10 @@ public abstract class JDXDataObject extends JDXHeader {
 //    System.out.println(getNominalSpecFreq("13C", 100.612769));
   }
 
-  public static int  getNominalSpecFreq(String nuc, double freq) {
+  public static int getNominalSpecFreq(String nuc, double freq) {
     double d = freq * getGyromagneticRatio("1H") / getGyromagneticRatio(nuc);
-    return (Double.isNaN(d) ? -1 : (int) d);
-    
+    int century = (int) Math.round(d / 100) * 100;
+    return (Double.isNaN(d) ? -1 : Math.abs(d - century) < 2 ? century : (int) Math.round(d));
   }
   
   public static double getGyromagneticRatio(String nuc) {

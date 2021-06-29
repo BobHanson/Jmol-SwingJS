@@ -26,8 +26,6 @@
  */
 package org.openscience.jmol.app.janocchio;
 
-import javax.swing.*;
-
 import java.util.Map;
 
 import org.jmol.i18n.GT;

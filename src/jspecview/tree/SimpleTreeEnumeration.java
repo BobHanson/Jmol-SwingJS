@@ -4,8 +4,6 @@ import java.util.Enumeration;
 
 import javax.swing.tree.TreeNode;
 
-import jspecview.api.JSVTreeNode;
-
 public class SimpleTreeEnumeration implements Enumeration<TreeNode> {
 
 	SimpleTreeNode node;

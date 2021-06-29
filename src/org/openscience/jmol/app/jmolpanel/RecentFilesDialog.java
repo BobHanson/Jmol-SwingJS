@@ -35,7 +35,6 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 
 import org.jmol.i18n.GT;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 /**
  * Manages a list of recently opened files.

@@ -24,11 +24,7 @@
 
 package org.openscience.jmol.app.jsonkiosk;
 
-import java.util.Map;
-
 import org.jmol.viewer.Viewer;
-
-import javajs.util.JSJSONParser;
 
 /**
  * a client of a JsonNioService -- just needs notices of the service shutting

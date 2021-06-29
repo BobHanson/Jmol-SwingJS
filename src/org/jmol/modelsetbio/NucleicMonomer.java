@@ -28,7 +28,6 @@ import javajs.util.A4;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.P3;
-import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.V3;
 

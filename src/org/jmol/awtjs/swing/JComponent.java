@@ -1,7 +1,5 @@
 package org.jmol.awtjs.swing;
 
-import org.jmol.awtjs.swing.Container;
-
 public abstract class JComponent extends Container {
 
   protected boolean autoScrolls;

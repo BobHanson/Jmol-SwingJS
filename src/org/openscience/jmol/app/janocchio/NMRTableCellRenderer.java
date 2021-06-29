@@ -34,8 +34,6 @@ package org.openscience.jmol.app.janocchio;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.text.DecimalFormat;
-
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;

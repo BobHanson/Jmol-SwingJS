@@ -27,7 +27,6 @@ package org.jmol.adapter.readers.pdb;
 import javajs.util.Lst;
 
 
-import org.jmol.adapter.readers.pdb.PdbReader;
 import org.jmol.adapter.smarter.Atom;
 
 /**

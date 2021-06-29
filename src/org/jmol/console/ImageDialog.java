@@ -34,7 +34,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
-import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;

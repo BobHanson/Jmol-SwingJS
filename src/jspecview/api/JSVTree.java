@@ -2,7 +2,6 @@ package jspecview.api;
 
 import javajs.util.Lst;
 
-import jspecview.api.ScriptInterface;
 import jspecview.source.JDXSource;
 
 public interface JSVTree {

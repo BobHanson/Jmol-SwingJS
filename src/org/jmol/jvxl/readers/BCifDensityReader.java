@@ -33,8 +33,6 @@ import javajs.util.AU;
 import javajs.util.BC;
 import javajs.util.MessagePackReader;
 import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.Rdr;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;

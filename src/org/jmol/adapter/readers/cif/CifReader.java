@@ -134,7 +134,6 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean modulated;
   protected boolean isCourseGrained;
   boolean haveCellWaveVector;
-//  private String latticeType = null;
 
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
@@ -996,7 +995,7 @@ public class CifReader extends AtomSetCollectionReader {
   protected final static byte NONE = -1;
   final private static byte TYPE_SYMBOL = 0;
   final private static byte LABEL = 1;
-  final private static byte AUTH_ATOM = 2;
+  final private static byte AUTH_ATOM_ID = 2;
   final private static byte FRACT_X = 3;
   final private static byte FRACT_Y = 4;
   final private static byte FRACT_Z = 5;
@@ -1005,7 +1004,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte CARTN_Z = 8;
   final private static byte OCCUPANCY = 9;
   final private static byte B_ISO = 10;
-  final private static byte COMP_ID = 11;
+  final private static byte AUTH_COMP_ID = 11;
   final private static byte AUTH_ASYM_ID = 12;
   final private static byte AUTH_SEQ_ID = 13;
   final private static byte INS_CODE = 14;
@@ -1054,7 +1053,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte CC_ATOM_Y_IDEAL = 56;
   final private static byte CC_ATOM_Z_IDEAL = 57;
   final private static byte DISORDER_ASSEMBLY = 58;
-  final private static byte ASYM_ID = 59;
+  final private static byte LABEL_ASYM_ID = 59;
   final private static byte SUBSYS_ID = 60;
   final private static byte SITE_MULT = 61;
   final private static byte THERMAL_TYPE = 62;
@@ -1066,34 +1065,86 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte MOMENT_Y = 68;
   final private static byte MOMENT_Z = 69;
   final private static byte ATOM_ID = 70;
-  final private static byte SEQ_ID = 71;
+  final private static byte LABEL_SEQ_ID = 71;
+  final private static byte LABEL_COMP_ID = 72;
+  final private static byte LABEL_ATOM_ID = 73;
   final protected static String FAMILY_ATOM = "_atom_site";
-  final private static String[] atomFields = { "*_type_symbol", "*_label",
-      "*_auth_atom_id", "*_fract_x", "*_fract_y", "*_fract_z", "*_cartn_x",
-      "*_cartn_y", "*_cartn_z", "*_occupancy", "*_b_iso_or_equiv",
-      "*_auth_comp_id", "*_auth_asym_id", "*_auth_seq_id",
-      "*_pdbx_pdb_ins_code", "*_label_alt_id", "*_group_pdb",
-      "*_pdbx_pdb_model_num", "*_calc_flag", "*_disorder_group",
-      "*_aniso_label", "*_anisotrop_id", "*_aniso_u_11", "*_aniso_u_22",
-      "*_aniso_u_33", "*_aniso_u_12", "*_aniso_u_13", "*_aniso_u_23",
-      "*_anisotrop_u[1][1]", "*_anisotrop_u[2][2]", "*_anisotrop_u[3][3]",
-      "*_anisotrop_u[1][2]", "*_anisotrop_u[1][3]", "*_anisotrop_u[2][3]",
-      "*_u_iso_or_equiv", "*_aniso_b_11", "*_aniso_b_22", "*_aniso_b_33",
-      "*_aniso_b_12", "*_aniso_b_13", "*_aniso_b_23", "*_aniso_beta_11",
-      "*_aniso_beta_22", "*_aniso_beta_33", "*_aniso_beta_12",
-      "*_aniso_beta_13", "*_aniso_beta_23", "*_adp_type",
-      "_chem_comp_atom_comp_id", "_chem_comp_atom_atom_id",
-      "_chem_comp_atom_type_symbol", "_chem_comp_atom_charge",
-      "_chem_comp_atom_model_cartn_x", "_chem_comp_atom_model_cartn_y",
-      "_chem_comp_atom_model_cartn_z",
-      "_chem_comp_atom_pdbx_model_cartn_x_ideal",
-      "_chem_comp_atom_pdbx_model_cartn_y_ideal",
-      "_chem_comp_atom_pdbx_model_cartn_z_ideal", "*_disorder_assembly",
-      "*_label_asym_id", "*_subsystem_code", "*_symmetry_multiplicity",
-      "*_thermal_displace_type", "*_moment_label", "*_moment_crystalaxis_mx",
-      "*_moment_crystalaxis_my", "*_moment_crystalaxis_mz",
-      "*_moment_crystalaxis_x", "*_moment_crystalaxis_y",
-      "*_moment_crystalaxis_z", "*_id", "*_label_seq_id" };
+  final private static String[] atomFields = { 
+      "*_type_symbol",  //0
+      "*_label",        //
+      "*_auth_atom_id",// 
+      "*_fract_x", //
+      "*_fract_y", //
+      "*_fract_z", //
+      "*_cartn_x",//
+      "*_cartn_y", //
+      "*_cartn_z", //
+      "*_occupancy", //
+      "*_b_iso_or_equiv", //10
+      "*_auth_comp_id", // 11
+      "*_auth_asym_id", // 
+      "*_auth_seq_id", //
+      "*_pdbx_pdb_ins_code", // 
+      "*_label_alt_id", // 
+      "*_group_pdb", //
+      "*_pdbx_pdb_model_num", // 
+      "*_calc_flag", // 
+      "*_disorder_group", //
+      "*_aniso_label", // 
+      "*_anisotrop_id", // 
+      "*_aniso_u_11", // 
+      "*_aniso_u_22", //
+      "*_aniso_u_33", // 
+      "*_aniso_u_12", // 
+      "*_aniso_u_13", // 
+      "*_aniso_u_23", //
+      "*_anisotrop_u[1][1]", // 
+      "*_anisotrop_u[2][2]", // 
+      "*_anisotrop_u[3][3]", //
+      "*_anisotrop_u[1][2]", // 
+      "*_anisotrop_u[1][3]", // 
+      "*_anisotrop_u[2][3]", //
+      "*_u_iso_or_equiv", // 
+      "*_aniso_b_11", // 
+      "*_aniso_b_22", // 
+      "*_aniso_b_33", //
+      "*_aniso_b_12", // 
+      "*_aniso_b_13", // 
+      "*_aniso_b_23", // 
+      "*_aniso_beta_11", //
+      "*_aniso_beta_22", // 
+      "*_aniso_beta_33", // 
+      "*_aniso_beta_12", //
+      "*_aniso_beta_13", // 
+      "*_aniso_beta_23", // 
+      "*_adp_type", //
+      "_chem_comp_atom_comp_id", //
+      "_chem_comp_atom_atom_id", //
+      "_chem_comp_atom_type_symbol", // 
+      "_chem_comp_atom_charge", //
+      "_chem_comp_atom_model_cartn_x", // 
+      "_chem_comp_atom_model_cartn_y", //
+      "_chem_comp_atom_model_cartn_z", //
+      "_chem_comp_atom_pdbx_model_cartn_x_ideal", //
+      "_chem_comp_atom_pdbx_model_cartn_y_ideal", //
+      "_chem_comp_atom_pdbx_model_cartn_z_ideal", // 
+      "*_disorder_assembly", //
+      "*_label_asym_id", // 
+      "*_subsystem_code", // 
+      "*_symmetry_multiplicity", //
+      "*_thermal_displace_type", // 
+      "*_moment_label", // 
+      "*_moment_crystalaxis_mx", //
+      "*_moment_crystalaxis_my", // 
+      "*_moment_crystalaxis_mz", //
+      "*_moment_crystalaxis_x", // 
+      "*_moment_crystalaxis_y", //
+      "*_moment_crystalaxis_z", // 
+      "*_id", // 70
+      "*_label_seq_id", // 
+      "*_label_comp_id", // 72 mmCIF dev 
+      "*_label_atom_id" // 73 mCIF dev 
+      };
 
   final private static String singleAtomID = atomFields[CC_COMP_ID];
 
@@ -1169,17 +1220,18 @@ public class CifReader extends AtomSetCollectionReader {
         }
       }
       String componentId = null;
-      String strChain = null;
       String id = null;
+      String authAtom = null;
+      String authComp = null;
+      String authSeq = null;
+      String authAsym = null;
+      boolean haveAuth = false;
       int seqID = 0;
       int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         int tok = fieldProperty(i);
         switch (tok) {
         case NONE:
-          break;
-        case SEQ_ID:
-          seqID = parseIntStr(field);
           break;
         case ATOM_ID:
           id = field;
@@ -1213,8 +1265,34 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case CC_ATOM_ID:
         case LABEL:
-        case AUTH_ATOM:
+        case LABEL_ATOM_ID:
           atom.atomName = field;
+          break;          
+        case AUTH_ATOM_ID:
+          haveAuth = true;
+          authAtom = field;
+          break;
+        case CC_COMP_ID:
+        case LABEL_COMP_ID:
+          atom.group3 = field;
+          break;
+        case AUTH_COMP_ID:
+          authComp = field;
+          haveAuth = true;
+          break;
+        case LABEL_ASYM_ID:
+          componentId = field;
+          break;
+        case AUTH_ASYM_ID:
+          authAsym = field;
+          haveAuth = true;
+          break;
+        case LABEL_SEQ_ID:
+          atom.sequenceNumber = seqID = parseIntStr(field);
+          break;
+        case AUTH_SEQ_ID:
+          haveAuth = true;
+          authSeq = field;
           break;
         case CC_ATOM_X_IDEAL:
           float x = parseFloatStr(field);
@@ -1256,23 +1334,6 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case B_ISO:
           atom.bfactor = parseFloatStr(field) * (isMMCIF ? 1 : 100f);
-          break;
-        case CC_COMP_ID:
-        case COMP_ID:
-          atom.group3 = field;
-          break;
-        case ASYM_ID:
-          componentId = field;
-          if (!useAuthorChainID)
-            setChainID(atom, strChain = field);
-          break;
-        case AUTH_ASYM_ID:
-          if (useAuthorChainID)
-            setChainID(atom, strChain = field);
-          break;
-        case AUTH_SEQ_ID:
-          maxSerial = Math.max(maxSerial,
-              atom.sequenceNumber = parseIntStr(field));
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;
@@ -1387,15 +1448,31 @@ public class CifReader extends AtomSetCollectionReader {
             + " has invalid/unknown coordinates");
         continue;
       }
+      // auth_xxx are optional; label_xxx are required
+      String strChain = componentId;
+      if (haveAuth) {
+        if (authAtom != null)
+          atom.atomName = authAtom;
+        if (authComp != null)
+          atom.group3 = authComp;
+        if (authSeq != null)
+          atom.sequenceNumber = parseIntStr(authSeq);
+        if (authAsym != null && useAuthorChainID)
+          strChain = authAsym;
+      }
+      if (strChain != null)
+        setChainID(atom, strChain);
+      if (maxSerial != Integer.MIN_VALUE)
+        maxSerial = Math.max(maxSerial, atom.sequenceNumber);
       if (!addCifAtom(atom, id, componentId, strChain))
         continue;
       if (id != null && seqID > 0) {
+        // co-op vibration vector when we have both id and seqID
         V3 pt = atom.vib;
         if (pt == null)
           pt = asc.addVibrationVector(atom.index, 0, Float.NaN, T.seqid);
         pt.x = seqID;
       }
-
       if (modDim > 0 && siteMult != 0)
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }

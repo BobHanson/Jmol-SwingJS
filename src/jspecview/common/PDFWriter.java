@@ -36,8 +36,6 @@ import javajs.util.CU;
 
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
-import jspecview.common.JSVersion;
-import jspecview.common.PrintLayout;
 
 /**
  * A class that creates the PDF document specific to JSpecView using

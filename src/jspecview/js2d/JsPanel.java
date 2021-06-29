@@ -52,7 +52,6 @@ import org.jmol.util.Logger;
 
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
-import jspecview.api.js.JSVAppletObject;
 import jspecview.common.ExportType;
 import jspecview.common.Spectrum;
 import jspecview.common.JSViewer;

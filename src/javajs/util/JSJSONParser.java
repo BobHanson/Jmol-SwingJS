@@ -1,7 +1,8 @@
 package javajs.util;
 
-import java.util.HashMap;
+import java.math.BigInteger;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -35,7 +36,7 @@ public class JSJSONParser {
    * requires { "key":"value", "key":"value",....}
    * 
    * @param str
-   * @param asHashTable TODO
+   * @param asHashTable true for a Hashtable (no null values); false for LinkedHashMap
    * 
    * @return Map or null
    */
@@ -163,13 +164,22 @@ public class JSJSONParser {
       try {
         if (string.indexOf('.') < 0 && string.indexOf('e') < 0
             && string.indexOf('E') < 0)
-          return new Integer(string);
+          return Integer.valueOf(string);
         // not allowing infinity or NaN
         // using float here because Jmol does not use Double
         Float d = Float.valueOf(string);
         if (!d.isInfinite() && !d.isNaN())
           return d;
       } catch (Exception e) {
+        try {
+          return Long.valueOf(string);
+        } catch (Exception e1) {
+          try {
+            return new BigInteger(string);
+          } catch (Exception e2) {
+            // fall through to error 
+          }            
+        }
       }
     // not a valid number
     System.out.println("JSON parser cannot parse " + string);
@@ -239,7 +249,7 @@ public class JSJSONParser {
   }
 
   private Object getObject() {
-    Map<String, Object> map = (asHashTable ? new Hashtable<String, Object>() : new HashMap<String, Object>());
+    Map<String, Object> map = (asHashTable ? new Hashtable<String, Object>() : new LinkedHashMap<String, Object>());
     String key = null;
     switch (getChar()) {
     case '}':

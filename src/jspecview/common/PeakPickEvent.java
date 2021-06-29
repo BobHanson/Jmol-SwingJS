@@ -2,8 +2,6 @@ package jspecview.common;
 
 import java.util.EventObject;
 
-import jspecview.common.Coordinate;
-
 @SuppressWarnings("serial")
 public class PeakPickEvent extends EventObject {
 	

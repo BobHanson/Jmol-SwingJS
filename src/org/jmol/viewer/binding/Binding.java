@@ -1,7 +1,5 @@
 package org.jmol.viewer.binding;
 
-import java.awt.event.InputEvent;
-
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;

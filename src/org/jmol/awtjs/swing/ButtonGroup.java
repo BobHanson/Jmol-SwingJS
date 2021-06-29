@@ -1,7 +1,6 @@
 package org.jmol.awtjs.swing;
 
 import org.jmol.api.SC;
-import org.jmol.awtjs.swing.Component;
 
 public class ButtonGroup {
   

@@ -31,7 +31,6 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.Arrays;
 
 import javajs.util.PT;
@@ -54,7 +53,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
 import org.jmol.modelset.Atom;
-import org.jmol.util.Logger;
 
 class NBOSearch extends NBOView {
 

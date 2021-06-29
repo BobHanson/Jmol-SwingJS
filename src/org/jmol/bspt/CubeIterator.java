@@ -22,13 +22,6 @@
  */
 package org.jmol.bspt;
 
-import javajs.util.BS;
-import org.jmol.script.T;
-import org.jmol.util.BSUtil;
-import org.jmol.util.Point3fi;
-
-import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.T3;
 
 /**

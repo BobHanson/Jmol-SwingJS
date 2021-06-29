@@ -19,8 +19,6 @@
 
 package jspecview.dialog;
 
-import jspecview.dialog.JSVDialog;
-
 /**
  * Dialog for managing the measurement list
  * for a Spectrum within a GraphSet

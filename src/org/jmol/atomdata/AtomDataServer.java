@@ -1,7 +1,6 @@
 package org.jmol.atomdata;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.util.Map;
 
 

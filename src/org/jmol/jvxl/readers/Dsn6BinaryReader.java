@@ -27,7 +27,6 @@ package org.jmol.jvxl.readers;
 import java.io.DataInputStream;
 import java.io.BufferedReader;
 
-import org.jmol.viewer.Viewer;
 import org.jmol.util.Logger;
 
 import javajs.util.Rdr;

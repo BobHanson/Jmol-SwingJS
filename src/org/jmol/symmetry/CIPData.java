@@ -7,7 +7,6 @@ import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.V3;
 
-import org.jmol.script.T;
 import org.jmol.symmetry.CIPChirality.CIPAtom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;

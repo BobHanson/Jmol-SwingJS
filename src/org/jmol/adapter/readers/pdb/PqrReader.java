@@ -24,7 +24,6 @@
 
 package org.jmol.adapter.readers.pdb;
 
-import org.jmol.adapter.readers.pdb.PdbReader;
 import org.jmol.adapter.smarter.Atom;
 
 /**

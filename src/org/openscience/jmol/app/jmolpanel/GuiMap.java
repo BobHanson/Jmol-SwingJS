@@ -50,7 +50,6 @@ import org.jmol.console.KeyJCheckBox;
 import org.jmol.console.KeyJCheckBoxMenuItem;
 import org.jmol.console.KeyJRadioButtonMenuItem;
 import org.jmol.i18n.GT;
-import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class GuiMap {

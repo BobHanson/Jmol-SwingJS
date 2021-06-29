@@ -44,7 +44,6 @@ import org.jmol.modelsetbio.BioResolver;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
-import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 

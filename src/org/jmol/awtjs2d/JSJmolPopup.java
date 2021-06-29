@@ -24,7 +24,6 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
-import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.JmolPopup;
 import org.jmol.api.SC;
 import org.jmol.awtjs.swing.Component;

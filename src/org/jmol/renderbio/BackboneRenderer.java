@@ -25,15 +25,9 @@
 
 package org.jmol.renderbio;
 
-import javajs.util.Lst;
-
 import org.jmol.modelset.Atom;
-import org.jmol.modelsetbio.BasePair;
-import org.jmol.modelsetbio.NucleicMonomer;
-import org.jmol.script.T;
 import org.jmol.shapebio.BioShape;
 import org.jmol.util.C;
-import org.jmol.util.GData;
 
 public class BackboneRenderer extends BioShapeRenderer {
 

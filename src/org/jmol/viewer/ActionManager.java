@@ -33,7 +33,6 @@ import org.jmol.i18n.GT;
 
 import javajs.util.AU;
 import javajs.util.BS;
-import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.MeasurementPending;
 import org.jmol.script.SV;

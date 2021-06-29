@@ -39,7 +39,6 @@ import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolViewer;
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 
 /**

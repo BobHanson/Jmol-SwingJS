@@ -4,7 +4,6 @@ package org.jmol.api;
 import java.net.URL;
 import java.util.Map;
 
-import org.jmol.api.JmolInChI;
 import org.jmol.util.Font;
 
 import javajs.util.P3;

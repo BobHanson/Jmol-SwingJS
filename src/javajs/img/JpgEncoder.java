@@ -36,7 +36,6 @@ package javajs.img;
 import java.io.IOException;
 import java.util.Map;
 
-import javajs.img.ImageEncoder;
 import javajs.util.AU;
 import javajs.util.OC;
 

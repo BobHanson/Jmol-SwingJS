@@ -70,7 +70,6 @@ import javajs.util.SB;
 import javajs.util.P3;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 
 /**

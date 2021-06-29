@@ -24,7 +24,6 @@
 package org.jmol.quantum.mo;
 
 import org.jmol.quantum.MOCalculation;
-import org.jmol.quantum.QS;
 
 
 

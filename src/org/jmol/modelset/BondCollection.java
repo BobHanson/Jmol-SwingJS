@@ -33,11 +33,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
-import org.jmol.util.Logger;
-
 import org.jmol.viewer.JC;
-import org.jmol.viewer.Viewer;
-
 import javajs.util.BS;
 import org.jmol.script.T;
 

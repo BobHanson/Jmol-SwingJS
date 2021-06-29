@@ -30,9 +30,6 @@ import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.GuiMap;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
-
 import java.awt.GridLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;

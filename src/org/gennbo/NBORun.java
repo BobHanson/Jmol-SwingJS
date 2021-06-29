@@ -26,7 +26,6 @@ package org.gennbo;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
@@ -36,7 +35,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Map;
 

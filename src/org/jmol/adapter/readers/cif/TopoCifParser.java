@@ -9,7 +9,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 
-import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4;
@@ -20,7 +19,7 @@ import javajs.util.V3;
 /**
  * See https://www.iucr.org/resources/cif/dictionaries/cif_topology
  * 
- * @author Bob Hanson hansonr@stolaf.edu 2020.11.17
+ * @author Bob Hanson hansonr@stolaf.edu 2020.11.17 2021.05.07
  * 
  */
 public class TopoCifParser implements Parser {

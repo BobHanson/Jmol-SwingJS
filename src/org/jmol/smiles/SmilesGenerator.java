@@ -35,7 +35,6 @@ import javajs.util.SB;
 
 import javajs.util.BS;
 
-import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;

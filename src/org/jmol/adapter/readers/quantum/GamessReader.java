@@ -33,7 +33,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
 
 abstract public class GamessReader extends MopacSlaterReader {
