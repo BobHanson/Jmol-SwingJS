@@ -812,10 +812,19 @@ public class CmdExt extends ScriptExt {
           e.report(GT.i(GT.$("{0} hydrogen bonds"), Math.abs(n)), false);
         return;
       case T.hydrogen:
-        boolean andBond = (tokAt(2) == T.on);
-        if (andBond)
+        // calculate hydrogen TRUE also does an aromatic calculation
+        int itok = tokAt(2);
+        boolean andBond = (itok == T.on);
+        if (andBond) {
           e.iToken++;
-        bs1 = (slen == (andBond ? 3 : 2) ? null : atomExpressionAt(andBond ? 3  : 2));
+        } else if (itok == T.stereo) {
+          // calculate Hydrogen stereo 
+          e.iToken++;
+        }
+        bs1 = (slen == e.iToken + 1 ? null : atomExpressionAt(e.iToken + 1));
+        if (bs1 == null && itok == T.stereo) {
+          bs1 = vwr.getAtomBitSet("_C & connected(3) & !connected(double)");
+        }
         e.checkLast(e.iToken);
         if (!chk) {
           vwr.addHydrogens(bs1, 0);

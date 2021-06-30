@@ -27,23 +27,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.A4;
-import javajs.util.AU;
-import javajs.util.BArray;
-import javajs.util.Base64;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.OC;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolScriptFunction;
@@ -54,7 +37,6 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
@@ -79,6 +61,24 @@ import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.BArray;
+import javajs.util.BS;
+import javajs.util.Base64;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class ScriptEval extends ScriptExpr {
 
@@ -487,7 +487,7 @@ public class ScriptEval extends ScriptExpr {
    * program counter is incremented to skip the initiating statement, and all
    * parent contexts up the line are set with mustResumeEval = true.
    * 
-   * @param sc
+   * @param sco
    */
 
   @Override
@@ -2457,7 +2457,7 @@ public class ScriptEval extends ScriptExpr {
           }
           break;
         }
-        // fall through
+        //$FALL-THROUGH$
       default:
         bad();
       }
@@ -5739,7 +5739,7 @@ public class ScriptEval extends ScriptExpr {
       // msg);
       // return;
     }
-    if (vwr.autoExit || !vwr.haveDisplay && !vwr.isWebGL)
+    if (vwr.autoExit || !vwr.haveDisplay && !Viewer.isWebGL)
       return false;
     if (scriptLevel == 0 && pc == aatoken.length - 1) {
       vwr.scriptStatus("nothing to pause: " + msg);
@@ -8764,7 +8764,8 @@ public class ScriptEval extends ScriptExpr {
    * 
    * @param a
    * @param min 
-   * @return int array
+   * @param asBS 
+   * @return float[] or BS
    * @throws ScriptException 
    */
   public Object expandFloatArray(float[] a, int min, boolean asBS) throws ScriptException {

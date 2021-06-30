@@ -55,7 +55,9 @@ public class V3000Rdr {
   void readAtomsAndBonds(String[] tokens) throws Exception {
     int ac = mr.parseIntStr(tokens[3]);
     readAtoms(ac);
-    readBonds(mr.parseIntStr(tokens[4]));
+    mr.asc.setModelInfoForSet("dimension", (mr.is2D ? "2D" : "3D"), mr.asc.iSet);
+
+    readBonds(mr.parseIntStr(tokens[4]));    
     readUserData(ac);
   }
 
@@ -78,6 +80,9 @@ public class V3000Rdr {
       float z = mr.parseFloatStr(tokens[6]);
       int charge = 0;
       int isotope = 0;
+      if (mr.is2D && z != 0)
+        mr.is2D = mr.optimize2D = false;
+
       for (int j = 7; j < tokens.length; j++) {
         String s = tokens[j].toUpperCase();
         if (s.startsWith("CHG="))

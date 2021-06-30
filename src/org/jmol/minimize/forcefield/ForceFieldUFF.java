@@ -47,19 +47,21 @@ public class ForceFieldUFF extends ForceField {
   private static Map<Object, Object> uff2DParams;
   private static Map<Object, Object> uffParams;
   private BS bsAromatic;
+  private boolean is2D;
   
   public ForceFieldUFF(Minimizer minimizer, boolean isQuick) {
     this.minimizer = minimizer;
     if (isQuick) {
       name = "UFF2D";
+      is2D = true;
       ffParams = uff2DParams;
       if (ffParams == null)
-        uff2DParams = ffParams = getParameters(true);
+        uff2DParams = ffParams = getParameters();
     } else {
       name = "UFF";
       ffParams = uffParams;
       if (ffParams == null)
-        uffParams = ffParams = getParameters(false);
+        uffParams = ffParams = getParameters();
     }
   }
 
@@ -192,12 +194,12 @@ public class ForceFieldUFF extends ForceField {
     return bs;
   }
   
-  private Map<Object, Object> getParameters(boolean isQuick) {
+  private Map<Object, Object> getParameters() {
 
     Map<Object, Object> data = new Hashtable<Object, Object>();
 
     // open UFF.txt
-    String resourceName = (isQuick ? "UFF_2d.txt" : "UFF.txt");
+    String resourceName = (is2D ? "UFF_2d.txt" : "UFF.txt");
     BufferedReader br = null;
     try {
       br = getBufferedReader(resourceName);
@@ -269,7 +271,7 @@ public class ForceFieldUFF extends ForceField {
 
   private Lst<String[]> getAtomTypes() throws JmolAsyncException {
     Lst<String[]> types = new  Lst<String[]>(); //!< external atom type rules
-    String fileName = "UFF.txt";
+    String fileName = (is2D ? "UFF_2d.txt" : "UFF.txt");
     try {
       BufferedReader br = getBufferedReader(fileName);
       String line;

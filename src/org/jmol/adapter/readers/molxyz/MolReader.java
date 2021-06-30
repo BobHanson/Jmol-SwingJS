@@ -79,14 +79,14 @@ public class MolReader extends AtomSetCollectionReader {
    * $END MOL
    */
 
-  private boolean optimize2D;
+  boolean optimize2D;
   private boolean haveAtomSerials;
   protected boolean allow2D = true;
   private int iatom0;
   private V3000Rdr vr;
   private int atomCount;
   private String[] atomData;
-  private boolean is2D;
+  boolean is2D;
 
   @Override
   public void initializeReader() throws Exception {

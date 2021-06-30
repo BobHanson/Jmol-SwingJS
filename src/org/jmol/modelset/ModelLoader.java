@@ -1381,7 +1381,7 @@ public final class ModelLoader {
             continue;
           Atom a2 = b2.getOtherAtom(a1);
           v.sub2(a2, a1);
-          System.out.println(b2 + " " + v);
+          //System.out.println(b2 + " " + v);
           if (Math.abs(v.x) < 0.1) {
             if ((b.order == Edge.BOND_STEREO_NEAR) == (v.y < 0))
               stereodir = -1;
@@ -1539,7 +1539,7 @@ public final class ModelLoader {
     double theta = Math.acos(v.dot(v0));
     float f = (float) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
-    System.out.println(atomRef + " " + atom2 + " " + f + " " + v + " " + (theta * 180/Math.PI));
+//    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
 
   ///////////////  shapes  ///////////////

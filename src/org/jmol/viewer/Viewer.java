@@ -3273,6 +3273,11 @@ public class Viewer extends JmolViewer
           try {
             JmolScriptEvaluator eval = (JmolScriptEvaluator) htParams
                 .get("eval");
+            BS stereo = getAtomBitSet("_C & connected(3) & !connected(double)");
+            stereo.and(bsNew);
+            if (stereo.nextSetBit(0) >= 0) {
+              bsNew.or(addHydrogens(stereo,MIN_NO_RANGE | MIN_SILENT | MIN_QUICK));
+            }
             minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0,
                 MIN_ADDH | MIN_NO_RANGE | MIN_SILENT | MIN_QUICK);
           } catch (Exception e) {
@@ -8958,6 +8963,8 @@ public class Viewer extends JmolViewer
     bsMotionFixed.and(bsInFrame);
     flags |= ((haveFixed ? MIN_HAVE_FIXED : 0)
         | (getBooleanProperty("minimizationSilent") ? MIN_SILENT : 0));
+    if (isQuick && getBoolean(T.testflag2))
+      return;
     if (isQuick) {
       {
         // carry out a preliminary UFF no-hydrogen calculation
@@ -8974,8 +8981,6 @@ public class Viewer extends JmolViewer
 
       }
     }
-    if (isQuick && getBoolean(T.testflag2))
-      return;
     if (addHydrogen) {
       BS bsH = addHydrogens(bsSelected, flags);
       if (!isQuick)
