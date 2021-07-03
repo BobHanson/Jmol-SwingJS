@@ -47,7 +47,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.EventListener;
 
+import javajs.util.DF;
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -711,5 +713,51 @@ public class ApplicationMenu extends JMenuBar {
 	  return item;
 	}
 
-
+//  private static String fixExponentInt(double x) {
+//    return (x == Math.floor(x) ? String.valueOf((int) x) : PT.rep(fixExponent(x), "E+00", ""));
+//  }
+//
+//  /**
+//   * JCAMP-DX requires 1.5E[+|-]nn or 1.5E[+|-]nnn only
+//   * not Java's 1.5E3 or 1.5E-2
+//   * 
+//   * @param x
+//   * @return exponent fixed
+//   */
+//  private static String fixExponent(double x) {
+//    String s = DF.formatDecimalDbl(x, -7); // "0.000000"
+//    int pt = s.indexOf("E");
+//    if (pt < 0) {
+//      return s;
+//    }
+//    // 4.3E+3
+//    // 4.3E-3
+//    if (s.length() == pt + 3) 
+//      s = s.substring(0, pt + 2) + "0" + s.substring(pt + 2);
+//    return s;
+//  }
+//    private static double parseDouble(String val) {
+//      int n = val.length();
+//      int pt = val.indexOf("E");
+//      if (pt > 0) {
+//        //.nnE+mm
+//        //...01234
+//        //.nnE-mmm
+//        //...012345
+//        char ch;
+//        if (pt + 4 != n && pt + 5 != n
+//            || (ch = val.charAt(pt + 1)) != '+' && ch != '-') {
+//          val = val.substring(0, pt);
+//        }
+//      }
+//      return Double.parseDouble(val);
+//    }
+//  
+//  static {
+//    System.out.println(fixExponent(3.56));
+//    System.out.println(parseDouble("29"));
+//    System.out.println(fixExponent(12.34567E15));
+//    System.out.println(fixExponent(3.56));
+//    System.out.println(fixExponent(3.56));
+//  }
 }

@@ -602,7 +602,7 @@ public class JDXReader implements JmolJDXMOLReader {
           if (pt >= 0)
             try {
               spectrum
-                  .setY2D(Double.parseDouble(page.substring(pt + 1).trim()));
+                  .setY2D(parseDouble(page.substring(pt + 1).trim()));
               String y2dUnits = page.substring(0, pt).trim();
               int i = symbols.indexOf(y2dUnits);
               if (i >= 0)
@@ -708,19 +708,19 @@ public class JDXReader implements JmolJDXMOLReader {
     		  + "##OFFSET  "
     		  ).indexOf(label)) {
     	case 0:
-        spectrum.fileFirstX = Double.parseDouble(value);
+        spectrum.fileFirstX = parseDouble(value);
         return true;
     	case 10:
-        spectrum.fileLastX = Double.parseDouble(value);
+        spectrum.fileLastX = parseDouble(value);
         return true;
     	case 20:
         spectrum.nPointsFile = Integer.parseInt(value);
         return true;
     	case 30:
-        spectrum.xFactor = Double.parseDouble(value);
+        spectrum.xFactor = parseDouble(value);
         return true;
     	case 40:
-        spectrum.yFactor = Double.parseDouble(value);
+        spectrum.yFactor = parseDouble(value);
         return true;
     	case 50:
         spectrum.setXUnits(value);
@@ -740,7 +740,7 @@ public class JDXReader implements JmolJDXMOLReader {
     	case 100:
         if (spectrum.shiftRefType != 0) {
         	if (spectrum.offset == JDXDataObject.ERROR)
-            spectrum.offset = Double.parseDouble(value);
+            spectrum.offset = parseDouble(value);
           // bruker doesn't need dataPointNum
           spectrum.dataPointNum = 1;
           // bruker type
@@ -756,7 +756,7 @@ public class JDXReader implements JmolJDXMOLReader {
       	if (label.length() < 17)
       		return false;   
         if (label.equals("##.OBSERVEFREQUENCY ")) {
-          spectrum.observedFreq = Double.parseDouble(value);
+          spectrum.observedFreq = parseDouble(value);
           return true;
         }
         if (label.equals("##.OBSERVENUCLEUS ")) {
@@ -764,7 +764,7 @@ public class JDXReader implements JmolJDXMOLReader {
           return true;    
         }
         if ((label.equals("##$REFERENCEPOINT ")) && (spectrum.shiftRefType != 0)) {
-          spectrum.offset = Double.parseDouble(value);
+          spectrum.offset = parseDouble(value);
           // varian doesn't need dataPointNum
           spectrum.dataPointNum = 1;
           // varian type
@@ -783,7 +783,7 @@ public class JDXReader implements JmolJDXMOLReader {
             srt.nextToken();
             srt.nextToken();
             spectrum.dataPointNum = Integer.parseInt(srt.nextToken().trim());
-            spectrum.offset = Double.parseDouble(srt.nextToken().trim());
+            spectrum.offset = parseDouble(srt.nextToken().trim());
           } catch (Exception e) {
             return true;
           }
@@ -912,15 +912,15 @@ public class JDXReader implements JmolJDXMOLReader {
       spec.varName = list.get(index2).toUpperCase();
 
       list = nTupleTable.get("##FACTOR");
-      spec.xFactor = Double.parseDouble(list.get(index1));
-      spec.yFactor = Double.parseDouble(list.get(index2));
+      spec.xFactor = parseDouble(list.get(index1));
+      spec.yFactor = parseDouble(list.get(index2));
 
       list = nTupleTable.get("##LAST");
-      spec.fileLastX = Double.parseDouble(list.get(index1));
+      spec.fileLastX = parseDouble(list.get(index1));
 
       list = nTupleTable.get("##FIRST");
-      spec.fileFirstX = Double.parseDouble(list.get(index1));
-      //firstY = Double.parseDouble((String)list.get(index2));
+      spec.fileFirstX = parseDouble(list.get(index1));
+      //firstY = parseDouble((String)list.get(index2));
 
       list = nTupleTable.get("##VARDIM");
       spec.nPointsFile = Integer.parseInt(list.get(index1));
@@ -953,6 +953,25 @@ public class JDXReader implements JmolJDXMOLReader {
       return true;
     }
     return false;
+  }
+
+  private static double parseDouble(String val) {
+    // only E+/-mm or E+/-mmm 
+    // thowing an error if anything else
+    int pt = val.indexOf("E");
+    if (pt > 0) {
+      //.nnE+mm
+      //...01234
+      //.nnE-mmm
+      //...012345
+      int n = val.length();
+      char ch;
+      if (pt + 4 != n && pt + 5 != n
+          || (ch = val.charAt(pt + 1)) != '+' && ch != '-') {
+        val = val.substring(0, pt);
+      }
+    }
+    return Double.parseDouble(val);
   }
 
   private void decompressData(JDXDataObject spec, double[] minMaxY, boolean isNTUPLE) {
