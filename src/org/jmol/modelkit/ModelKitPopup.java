@@ -917,13 +917,14 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
     boolean isDelete = false;
     if (atomicNumber > 0) {
-      vwr.ms.setElement(atom, atomicNumber, !addHsAndBond);
+      boolean doTaint = (atomicNumber > 1 || !addHsAndBond);
+      vwr.ms.setElement(atom, atomicNumber, doTaint);
       vwr.shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, vwr.rd,
           BSUtil.newAndSetBit(atomIndex));
-      vwr.ms.setAtomName(atomIndex, type + atom.getAtomNumber(), !addHsAndBond);
+      vwr.ms.setAtomName(atomIndex, type + atom.getAtomNumber(), doTaint);
       if (vwr.getBoolean(T.modelkitmode))
         vwr.ms.am[atom.mi].isModelKit = true;
-      if (!vwr.ms.am[atom.mi].isModelKit)
+      if (!vwr.ms.am[atom.mi].isModelKit || atomicNumber > 1)
         vwr.ms.taintAtom(atomIndex, AtomCollection.TAINT_ATOMNAME);
     } else if (type.toLowerCase().equals("pl")) {
       atom.setFormalCharge(atom.getFormalCharge() + 1);
