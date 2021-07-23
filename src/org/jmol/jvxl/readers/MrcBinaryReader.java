@@ -258,15 +258,18 @@ class MrcBinaryReader extends MapFileReader {
 
     getVectorsAndOrigin();
     
-    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
-      float sigma = (params.sigma < 0 || Float.isNaN(params.sigma) ? 1 : params.sigma);
-      params.cutoff = rmsDeviation * sigma + dmean;
-      Logger.info("Cutoff set to (mean + rmsDeviation*" + sigma + " = " + params.cutoff + ")\n");
-    }
-
     jvxlFileHeaderBuffer = new SB();
     jvxlFileHeaderBuffer.append("MRC DATA ").append(nlabel > 0 ? labels[0]: "").append("\n");
     jvxlFileHeaderBuffer.append("see http://ami.scripps.edu/software/mrctools/mrc_specification.php\n");
+
+    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
+      float sigma = (params.sigma < 0 || Float.isNaN(params.sigma) ? 1 : params.sigma);
+      params.cutoff = rmsDeviation * sigma + dmean;
+      s = "cutoff set to " + params.cutoff + " (mean + rmsDeviation*sigma = " + dmean + " + " + rmsDeviation + "*" + sigma + ")";
+      Logger.info(s);
+      jvxlFileHeaderBuffer.append(s + "\n");
+    }
+
   }
   
   @Override

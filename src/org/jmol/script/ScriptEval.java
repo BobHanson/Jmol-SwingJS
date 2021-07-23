@@ -6541,7 +6541,6 @@ public class ScriptEval extends ScriptExpr {
     String remotePath = null;
     String scriptPath = null;
     Lst<SV> params = null;
-
     if (tok == T.macro) {
       i = -2;
     }
@@ -6587,6 +6586,8 @@ public class ScriptEval extends ScriptExpr {
               remotePath = paramAsStr(++i);
             filename = paramAsStr(++i);
           }
+          if (filename.startsWith("spt::"))
+            filename = filename.substring(5);
           filename = checkFileExists("SCRIPT_", isAsync, filename, i, true);
         }
         if ((tok = tokAt(++i)) == T.check) {

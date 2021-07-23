@@ -589,6 +589,10 @@ public class ScriptManager implements JmolScriptManager {
           return;
         }
         // these next will end with the escaped file name
+        if (type.equals("spt::")) {
+          cmd = "script " + PT.esc(fname.substring(5));
+          return;
+        }
         if (type.equals("dssr")) {
           cmd = "model {visible} property dssr ";
         } else if (type.equals("Jmol")) {
