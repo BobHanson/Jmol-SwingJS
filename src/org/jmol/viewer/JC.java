@@ -202,8 +202,10 @@ public final class JC {
     "pdbemap", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file.ccp4",
     "pdbemapdiff", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
     "pdbemapserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
-    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1", /// last bit is just mine
-    "resolverResolver", "https://chemapps.stolaf.edu/resolver"
+    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1", // last bit is just mine
+    "emdbmap", "http://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
+    "emdbquery", "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
+    "resolverResolver", "https://chemapps.stolaf.edu/resolver",
   };
   
   final static String legacyResolver = "cactus.nci.nih.gov/chemical/structure";

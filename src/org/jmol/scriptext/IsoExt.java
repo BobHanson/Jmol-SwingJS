@@ -2755,6 +2755,7 @@ public class IsoExt extends ScriptExt {
         }
         if (filename.startsWith("*") || (isUppsala = filename.startsWith("="))
             && filename.length() > 1) {
+          boolean haveCutoff = (!Float.isNaN(cutoff) || !Float.isNaN(sigma));
           if (isUppsala) // Uppsala EDS decommissioned
             filename = filename.replace('=', '*');
           // new PDB ccp4 option
@@ -2762,7 +2763,7 @@ public class IsoExt extends ScriptExt {
           if (filename.indexOf("/diff") >= 0)
             filename = "*" + filename.substring(0, filename.indexOf("/diff"));
           if (filename.startsWith("**")) {
-            if (Float.isNaN(sigma))
+            if (!haveCutoff)
               addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = 3));
             if (!isSign) {
               isSign = true;
@@ -2770,10 +2771,12 @@ public class IsoExt extends ScriptExt {
               addShapeProperty(propertyList, "sign", Boolean.TRUE);
             }
           }
-          if (!Float.isNaN(sigma))
-            showString("using cutoff = " + sigma + " sigma");
+          String fn = filename;
           filename = (String) vwr.setLoadFormat(filename,
-              (isFull || pts == null ? '_' : '-'), false);
+              (chk? '?' : isFull || pts == null ? '_' : '-'), false);
+          if (filename == null)
+            eval.errorStr(ScriptError.ERROR_invalidArgument,
+                "error parsing filename: " + fn);
           // the initial dummy call just asertains that 
           checkWithin = !isFull;
         }
@@ -2798,6 +2801,22 @@ public class IsoExt extends ScriptExt {
           if (firstPass)
             defaultMesh = true;
         }
+        int p = (filename == null ? -1 : filename.indexOf("#-"));
+        if (Float.isNaN(sigma) && Float.isNaN(cutoff)) {
+          if ((p = filename.indexOf("#-cutoff=")) >= 0) {
+            addShapeProperty(propertyList, "cutoff", Float.valueOf(cutoff = Float.parseFloat(filename.substring(p + 9))));            
+            sbCommand.append(" cutoff " + cutoff);
+          } else if ((p = filename.indexOf("#-sigma=")) >= 0) {
+            addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = Float.parseFloat(filename.substring(p + 8))));            
+            sbCommand.append(" sigma " + sigma);
+          }
+        } else if (p >= 0) {
+          filename = filename.substring(0, p);
+        }
+        if (!Float.isNaN(sigma))
+          showString("using sigma = " + sigma);
+        else if (!Float.isNaN(cutoff))
+          showString("using cutoff = " + cutoff);
         if (firstPass && vwr.getP("_fileType").equals("Pdb")
             && Float.isNaN(sigma) && Float.isNaN(cutoff)) {
           // negative sigma just indicates that 

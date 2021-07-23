@@ -4821,7 +4821,7 @@ public class Viewer extends JmolViewer
    * user-specified database designation.
    * 
    * @param name
-   * @param type
+   * @param type a character to distinguish the type of file, '?' means we are just doing an isosurface check
    * @param withPrefix
    * @return String or String[]
    */
@@ -4988,7 +4988,8 @@ public class Viewer extends JmolViewer
       }
       return (withPrefix ? "MOL3D::" : "")
           + PT.formatStringS(format, "FILE", id);
-    case '-': // localized version
+    case '?': // check only
+    case '-': // localized version using the PDBe density server and box....
     case '_': // isosurface "=...", but we code that type as '_'
       // now *xxxx or =xxxx   --  both go to EBI instead of Uppsala, 
       // as Uppsala is being decommissioned in 2018
@@ -5000,6 +5001,45 @@ public class Viewer extends JmolViewer
       if (pt >= 0) {
         ciftype = id.substring(pt + 1);
         id = id.substring(0, pt);
+      }
+      if (id.equals("emdb"))
+        id += "/";
+      if (id.startsWith("emdb/")) {
+        // *emdb/9357
+        // *emdb/=6nef
+        // *emdb/=, *emdb/, *emdb
+        id = id.substring(5);
+        String ext = "#-sigma=10";
+        if (id.length() == 0 || id.startsWith("=")) {
+          id = (id.length() == 0 || id.equals("=") ? getPdbID() : id.substring(1));
+          if (id == null || type == '?')
+            return id;
+          id = JC.resolveDataBase("emdbquery", id, null);
+          String data = (String) fm.cacheGet(id, false);
+          if (data == null) {
+            showString("retrieving " +  id, false);
+            data = getFileAsString(id);
+            if (data == null) {
+              showString("retrieve failed", false);
+              return null;
+            }
+            showString(data, false);
+            fm.cachePut(id, data);
+          }
+          pt = data.indexOf("EMD-");
+          if (pt < 0)
+            return null;
+          id = data.substring(pt + 4);
+          pt = id.indexOf('\n');
+          if (pt > 0)
+            id = id.substring(0, pt);
+          pt = id.indexOf(",");
+          if (pt > 0) {
+            ext = "#-cutoff=" + id.substring(pt + 1);
+            id = id.substring(0, pt);
+          }
+        }
+        return JC.resolveDataBase("emdbmap", id, null) + ext;
       }
       id = JC.resolveDataBase(
           (isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""),
