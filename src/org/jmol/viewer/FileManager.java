@@ -57,6 +57,7 @@ import org.jmol.io.FileReader;
 import org.jmol.io.JmolUtil;
 import org.jmol.script.SV;
 import org.jmol.script.T;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
@@ -1361,6 +1362,8 @@ public class FileManager implements BytePoster {
         String s = PT.getQuotedStringAt(script, i);
         if (s.indexOf("::") >= 0)
           s = PT.split(s, "::")[1];
+          if (s.indexOf("\\u") >= 0)
+            s = Escape.unescapeUnicode(s);
         fileList.addLast(s);
       }
     }
