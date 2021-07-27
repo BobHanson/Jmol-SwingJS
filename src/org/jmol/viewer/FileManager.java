@@ -57,6 +57,7 @@ import org.jmol.io.FileReader;
 import org.jmol.io.JmolUtil;
 import org.jmol.script.SV;
 import org.jmol.script.T;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
@@ -228,7 +229,7 @@ public class FileManager implements BytePoster {
     String fullPathName = names[0];
     String fileName = names[1];
     htParams.put("fullPathName", (fileType == null ? "" : fileType + "::")
-        + FileManager.fixDOSName(fullPathName));
+        + fixDOSName(fullPathName));
     if (vwr.getBoolean(T.messagestylechime) && vwr.getBoolean(T.debugscript))
       vwr.getChimeMessenger().update(fullPathName);
     FileReader fileReader = new FileReader(vwr, fileName, fullPathName, nameAsGiven,
@@ -551,7 +552,7 @@ public class FileManager implements BytePoster {
     if (dir.length == 0) {
       String state = vwr.getFileAsString4(fileName, -1, false, true, false, "file");
       return (state.indexOf(JC.EMBEDDED_SCRIPT_TAG) < 0 ? ""
-          : FileManager.getEmbeddedScript(state));
+          : getEmbeddedScript(state));
     }
     for (int i = 0; i < dir.length; i++)
       if (dir[i].indexOf(sptName) >= 0) {
@@ -1057,7 +1058,7 @@ public class FileManager implements BytePoster {
     if (forDialog && localDir.length() == 0)
       localDir = (String) vwr.getP("defaultDirectoryLocal");
     if (localDir.length() == 0)
-      return (vwr.isJS ? null : vwr.apiPlatform.newFile(System
+      return (Viewer.isJS ? null : vwr.apiPlatform.newFile(System
           .getProperty("user.dir", ".")));
     if (vwr.isApplet && localDir.indexOf("file:/") == 0)
       localDir = localDir.substring(6);
@@ -1197,7 +1198,7 @@ public class FileManager implements BytePoster {
     if (pt0 >= 0) {
       if (line.charAt(0) == 0x83) // Finite map(3)
         return "BCifDensity";
-      if (line.indexOf(FileManager.PMESH_BINARY_MAGIC_NUMBER) == 0)
+      if (line.indexOf(PMESH_BINARY_MAGIC_NUMBER) == 0)
         return "Pmesh";
       if (line.indexOf("MAP ") == 208)
         return "Mrc";
@@ -1353,7 +1354,8 @@ public class FileManager implements BytePoster {
     return script;
   }
 
-  public static void getFileReferences(String script, Lst<String> fileList) {
+  public static void getFileReferences(String script, Lst<String> fileList,
+                                       Lst<String> fileListUTF) {
     for (int ipt = 0; ipt < scriptFilePrefixes.length; ipt++) {
       String tag = scriptFilePrefixes[ipt];
       int i = -1;
@@ -1362,6 +1364,11 @@ public class FileManager implements BytePoster {
         if (s.indexOf("::") >= 0)
           s = PT.split(s, "::")[1];
         fileList.addLast(s);
+        if (fileListUTF != null) {
+          if (s.indexOf("\\u") >= 0)
+            s = Escape.unescapeUnicode(s);
+          fileListUTF.addLast(s);
+        }
       }
     }
   }
@@ -1407,7 +1414,7 @@ public class FileManager implements BytePoster {
       return script;
     boolean noPath = (dataPath.length() == 0);
     Lst<String> fileNames = new  Lst<String>();
-    FileManager.getFileReferences(script, fileNames);
+    getFileReferences(script, fileNames, null);
     Lst<String> oldFileNames = new  Lst<String>();
     Lst<String> newFileNames = new  Lst<String>();
     int nFiles = fileNames.size();

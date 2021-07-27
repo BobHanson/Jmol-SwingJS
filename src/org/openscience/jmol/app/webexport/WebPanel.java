@@ -611,12 +611,13 @@ abstract class WebPanel extends JPanel implements ActionListener,
             LogPanel.log(GT.$("There was an error in the text encoding so the path to jsmol.zip is unknown."));
           }
         }
-        FileManager.getFileReferences(script, filesToCopy);
+        Lst<String> filesToCopyUTF = (Lst<String>) new ArrayList<String>();
+        FileManager.getFileReferences(script, filesToCopy, filesToCopyUTF);
         ArrayList<String> copiedFileNames = new  ArrayList<String>();
         int nFiles = filesToCopy.size();
         for (int iFile = 0; iFile < nFiles; iFile++) {
-          String newName = copyBinaryFile(filesToCopy.get(iFile), datadirPath);
-          copiedFileNames.add(newName.substring(newName.lastIndexOf('/') + 1));
+          String newName = copyBinaryFile(filesToCopyUTF.get(iFile), datadirPath);
+          copiedFileNames.add(PT.escUnicode(newName.substring(newName.lastIndexOf('/') + 1)));
         }
         script = replaceQuotedStrings(script, filesToCopy, copiedFileNames);
         LogPanel.log("      ..." + GT.o(GT.$("adding {0}"), javaname + ".spt"));

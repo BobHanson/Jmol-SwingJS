@@ -2029,8 +2029,10 @@ public class ScriptEval extends ScriptExpr {
     // so we construct one and point to it in the scriptContext
     // with a key to this point in the script. 
     
-    if (vwr.fm.cacheGet(filename, false) != null)
+    if (vwr.fm.cacheGet(filename, false) != null) {
+      cancelFileThread();
       return filename;
+    }
     if (prefix != null)
       prefix = "cache://local" + prefix;
     String key = pc + "_" + i + "_" + filename;
@@ -2044,12 +2046,7 @@ public class ScriptEval extends ScriptExpr {
     }
     cacheName = thisContext.htFileCache.get(key);
     if (cacheName != null && cacheName.length() > 0) {
-      // file has been loaded
-      fileLoadThread = null;
-      if (thisContext.why == "loadFileAsync") {
-        // remove temp context
-        popContext(false, false);
-      }
+      cancelFileThread();
       //no, problems with isosurface "?" map "?": popContext(false, false);
       vwr.queueOnHold = false;
       if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))
@@ -2070,6 +2067,15 @@ public class ScriptEval extends ScriptExpr {
     if (i < 0) // no need to hang on to this - never "canceled"
       fileLoadThread = null;
     throw new ScriptInterruption(this, "load", 1);
+  }
+
+  private void cancelFileThread() {
+    // file has been loaded
+    fileLoadThread = null;
+    if (thisContext != null && thisContext.why == "loadFileAsync") {
+      // remove temp context
+      popContext(false, false);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -2128,11 +2134,7 @@ public class ScriptEval extends ScriptExpr {
     if (fileLoadThread != null) {
       fileLoadThread.interrupt();
       fileLoadThread.resumeEval();
-      fileLoadThread = null;
-      if (thisContext != null && thisContext.why == "loadFileAsync") {
-        // remove temp context
-        popContext(false, false);
-      }
+      cancelFileThread();
     }
   }
   
