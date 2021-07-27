@@ -1363,6 +1363,8 @@ public class FileManager implements BytePoster {
         String s = PT.getQuotedStringAt(script, i);
         if (s.indexOf("::") >= 0)
           s = PT.split(s, "::")[1];
+          if (s.indexOf("\\u") >= 0)
+            s = Escape.unescapeUnicode(s);
         fileList.addLast(s);
         if (fileListUTF != null) {
           if (s.indexOf("\\u") >= 0)
