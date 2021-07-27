@@ -408,20 +408,16 @@ abstract class OutputManager {
   OC getOutputChannel(String fileName, String[] fullPath) {
     if (!vwr.haveAccess(ACCESS.ALL))
       return null;
-    boolean isCache = (fileName != null && fileName.startsWith("cache://"));
-    boolean isRemote = (fileName != null
-        && (fileName.startsWith("http://") || fileName.startsWith("https://")));
-    if (fileName != null && !isCache && !isRemote) {
+    boolean isRemote = OC.isRemote(fileName);
+    if (fileName != null && !isRemote && !fileName.startsWith("cache://")) {
       fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
       if (fileName == null)
         return null;
     }
     if (fullPath != null)
       fullPath[0] = fileName;
-    String localName = (isCache || isRemote || OC.isLocal(fileName) ? fileName
-        : null);
     try {
-      return openOutputChannel(privateKey, localName, false, false);
+      return openOutputChannel(privateKey, fileName, false, false);
     } catch (IOException e) {
       Logger.info(e.toString());
       return null;
@@ -991,6 +987,7 @@ abstract class OutputManager {
             : FileManager.stripPath(name));
         newName = PT.replaceAllCharacters(newName, "[]", "_");
         newName = PT.rep(newName, "#_DOCACHE_", "");
+        newName = PT.rep(newName, "localLOAD_", "");
         boolean isSparDir = (fm.spardirCache != null
             && fm.spardirCache.containsKey(name));
         if (isLocal && name.indexOf("|") < 0 && !isSparDir) {
