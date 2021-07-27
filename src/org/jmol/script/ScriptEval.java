@@ -2128,11 +2128,11 @@ public class ScriptEval extends ScriptExpr {
     if (fileLoadThread != null) {
       fileLoadThread.interrupt();
       fileLoadThread.resumeEval();
+      fileLoadThread = null;
       if (thisContext != null && thisContext.why == "loadFileAsync") {
         // remove temp context
         popContext(false, false);
       }
-      fileLoadThread = null;
     }
   }
   
