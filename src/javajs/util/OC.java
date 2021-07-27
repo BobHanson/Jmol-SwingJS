@@ -410,22 +410,19 @@ public class OC extends OutputStream implements GenericOutputChannel {
 		return bytePoster == null ? null : bytePoster.postByteArray(fileName, toByteArray());
 	}
 
-	public final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:", "file:" };
+	public final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:", "file:", "cache:"};
 	// note that SFTP is not supported
-	public final static int URL_LOCAL = 4;
+	public final static int URL_LOCAL = 4, URL_CACHE = 5;
 
 	public static boolean isRemote(String fileName) {
 		if (fileName == null)
 			return false;
 		int itype = urlTypeIndex(fileName);
-		return (itype >= 0 && itype != URL_LOCAL);
+		return (itype >= 0 && itype < URL_LOCAL);
 	}
 
 	public static boolean isLocal(String fileName) {
-		if (fileName == null)
-			return false;
-		int itype = urlTypeIndex(fileName);
-		return (itype < 0 || itype == URL_LOCAL);
+	  return (fileName != null && !isRemote(fileName));
 	}
 
 	public static int urlTypeIndex(String name) {

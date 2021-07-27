@@ -983,9 +983,10 @@ public class FileManager implements BytePoster {
       names[0] = pathForAllFiles + names[1];
       Logger.info("FileManager substituting " + name0 + " --> " + names[0]);
     }
-    if (isFullLoad && (file != null || OC.urlTypeIndex(names[0]) == OC.URL_LOCAL)) {
-      String path = (file == null ? PT.trim(names[0].substring(5), "/")
-          : names[0]);
+    if (isFullLoad && OC.isLocal(names[0])) {
+      String path = names[0];
+      if (file == null)
+        path = PT.trim(names[0].substring(names[0].indexOf(":") + 1), "/");
       int pt = path.length() - names[1].length() - 1;
       if (pt > 0) {
         path = path.substring(0, pt);
