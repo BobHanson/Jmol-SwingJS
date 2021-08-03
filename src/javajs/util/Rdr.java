@@ -90,9 +90,32 @@ public class Rdr implements GenericLineReader {
     return reader.readLine();
   }
 
-  public static Map<String, Object> readCifData(GenericCifDataParser parser, BufferedReader br) {
-    return parser.set(null, br, false).getAllCifData();
-  }
+	/**
+	 * Read an InputStream in its entirety as a byte array, closing the stream.
+	 * 
+	 * @param is
+	 * @return a byte array
+	 */
+	public static byte[] streamToBytes(InputStream is) throws IOException {
+		byte[] bytes = getLimitedStreamBytes(is, -1);
+		is.close();
+		return bytes;
+	}
+
+	/**
+	 * Read an InputStream in its entirety as a string, closing the stream.
+	 * 
+	 * @param is
+	 * @return a String
+	 * @throws IOException
+	 */
+	public static String streamToString(InputStream is) throws IOException {
+		return new String(streamToBytes(is));
+	}
+
+	public static Map<String, Object> readCifData(GenericCifDataParser parser, BufferedReader br) {
+		return parser.set(null, br, false).getAllCifData();
+	}
 
   ///////////
 
@@ -114,7 +137,7 @@ public class Rdr implements GenericLineReader {
    * XMLReaders
    * 
    * @param bis
-   * @return a UTF-8 string
+   * @return a UTF-8 string or null if there is an error
    */
   public static String streamToUTF8String(BufferedInputStream bis) {
     String[] data = new String[1];
@@ -144,7 +167,8 @@ public class Rdr implements GenericLineReader {
   }
 
   /**
-   * This method is specifically for strings that are marked for UTF 8 or 16.
+   * This method is specifically for strings that might be marked for UTF 8 or 16.
+   * In this case, Java would return a (0xFEFF) code point as the first character.
    * 
    * @param bytes
    * @return UTF-decoded bytes
@@ -326,7 +350,7 @@ public class Rdr implements GenericLineReader {
 
   public static BufferedInputStream toBIS(Object o) {
     return (AU.isAB(o) ? getBIS((byte[]) o)
-        : o instanceof SB ? getBIS(Rdr.getBytesFromSB((SB) o))
+        : o instanceof SB ? getBIS(getBytesFromSB((SB) o))
             : o instanceof String ? getBIS(((String) o).getBytes()) : null);
   }
 
@@ -343,6 +367,8 @@ public class Rdr implements GenericLineReader {
   /**
    * Read a an entire BufferedInputStream for its bytes, and either return them or
    * leave them in the designated output channel.
+   * 
+   * Closes the stream.
    * 
    * @param bis
    * @param out a destination output channel, or null
