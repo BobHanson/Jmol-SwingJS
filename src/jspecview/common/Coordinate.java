@@ -228,8 +228,7 @@ public class Coordinate {
    * @return the Delta X value
    */
   public static double deltaX(double last, double first, int numPoints) {
-    double test = (last - first) / (numPoints - 1);
-    return test;
+    return (last - first) / (numPoints - 1);
   }
 
   /**

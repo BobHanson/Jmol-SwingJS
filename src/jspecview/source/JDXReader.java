@@ -36,7 +36,7 @@ import javajs.util.SB;
 import org.jmol.api.JmolJDXMOLReader;
 import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.util.Logger;
-
+import org.jmol.viewer.Viewer;
 
 import jspecview.api.JSVZipReader;
 import jspecview.api.SourceReader;
@@ -103,6 +103,8 @@ public class JDXReader implements JmolJDXMOLReader {
    * For JEOL, skip ##SHIFTREFERENCE 
    */
   private boolean ignoreShiftReference; // BH 2020.09.16
+
+  private boolean ignorePeakTables;
 
   private JDXReader(String filePath, boolean obscure, boolean loadImaginary,
   		int iSpecFirst, int iSpecLast, float nmrNormalization) {
@@ -228,6 +230,8 @@ public class JDXReader implements JmolJDXMOLReader {
         source.setInlineData(data);
       return source;
     } catch (Exception e) {
+      if (!Viewer.isJS)
+        e.printStackTrace();
       if (br != null)
         br.close();
       if (header != null)
@@ -294,6 +298,7 @@ public class JDXReader implements JmolJDXMOLReader {
         if (!isHeaderOnly) {
           if (label.equals("##DATATYPE")
               && value.toUpperCase().equals("LINK")) {
+
             getBlockSpectra(dataLDRTable);
             spectrum = null;
             continue;
@@ -332,6 +337,10 @@ public class JDXReader implements JmolJDXMOLReader {
 	  if (rawLine.indexOf("JEOL") >= 0) {
 		  System.out.println("Skipping ##SHIFTREFERENCE for JEOL " + rawLine);
 		  ignoreShiftReference = true;
+	  }
+	  if (rawLine.indexOf("MestReNova") >= 0) {
+	    ignorePeakTables = true;
+	    
 	  }
   }
 
@@ -399,106 +408,114 @@ public class JDXReader implements JmolJDXMOLReader {
 		return true;
 	}
 
-	/**
-	 * reads BLOCK data
-	 * 
-	 * @param sourceLDRTable
-	 * @return source
-	 * @throws JSVException
-	 */
-	private JDXSource getBlockSpectra(Lst<String[]> sourceLDRTable)
-			throws JSVException {
+  /**
+   * reads BLOCK data
+   * 
+   * @param sourceLDRTable
+   * @return source
+   * @throws JSVException
+   */
+  private JDXSource getBlockSpectra(Lst<String[]> sourceLDRTable)
+      throws JSVException {
 
-		Logger.debug("--JDX block start--");
-		String label = "";
-		String value = null;
-		boolean isNew = (source.type == JDXSource.TYPE_SIMPLE);
-		boolean forceSub = false;
-		while ((label = t.getLabel()) != null 
-				 && !label.equals("##TITLE")) {
-			value = getValue(label);
-			if (isNew && !readHeaderLabel(source, label, value, errorLog, obscure))
-					addHeader(sourceLDRTable, t.rawLabel, value);
-			if (label.equals("##BLOCKS")) {
-				int nBlocks = PT.parseInt(value);
-				if (nBlocks > 100 && firstSpec <= 0)
-					forceSub = true;
-			}
-		}
-		value = getValue(label);
-		// If ##TITLE not found throw Exception
-		if (!"##TITLE".equals(label))
-			throw new JSVException("Unable to read block source");
-		if (isNew)
-			source.setHeaderTable(sourceLDRTable);
-		source.type = JDXSource.TYPE_BLOCK;
-		source.isCompoundSource = true;
-		Lst<String[]> dataLDRTable;
-		Spectrum spectrum = new Spectrum();
-		dataLDRTable = new Lst<String[]>();
-		readDataLabel(spectrum, label, value, errorLog, obscure, false);
-		try {
-			String tmp;
-			while ((tmp = t.getLabel()) != null) {
-				if ((value = getValue(tmp)) == null && "##END".equals(label)) {
-					Logger.debug("##END= " + t.getValue());
-					break;
-				}
-				label = tmp;
-				if (isTabularData) {
-					setTabularDataType(spectrum, label);
-					if (!processTabularData(spectrum, dataLDRTable, false))
-						throw new JSVException("Unable to read Block Source");
-					continue;
-				}
-				if (label.equals("##DATATYPE")
-						&& value.toUpperCase().equals("LINK")) {
-					// embedded LINK
-					getBlockSpectra(dataLDRTable);
-					spectrum = null;
-					label = null;
-				} else if (label.equals("##NTUPLES") || label.equals("##VARNAME")) {
-					getNTupleSpectra(dataLDRTable, spectrum, label);
-					spectrum = null;
-					label = "";
-				}
-				if (done)
-					break;
-				if (spectrum == null) {
-					spectrum = new Spectrum();
-					dataLDRTable = new Lst<String[]>();
-					if (label == "")
-						continue;
-					if (label == null) {
-						label = "##END";
-						continue;
-					}
-				}
-				if (value == null) {
-					// ##END -- Process Block
+    Logger.debug("--JDX block start--");
+    String label = "";
+    String value = null;
+    boolean isNew = (source.type == JDXSource.TYPE_SIMPLE);
+    boolean forceSub = false;
+    while ((label = t.getLabel()) != null && !label.equals("##TITLE")) {
+      value = getValue(label);
+      if (isNew && !readHeaderLabel(source, label, value, errorLog, obscure))
+        addHeader(sourceLDRTable, t.rawLabel, value);
+      if (label.equals("##BLOCKS")) {
+        int nBlocks = PT.parseInt(value);
+        if (nBlocks > 100 && firstSpec <= 0)
+          forceSub = true;
+      }
+    }
+    value = getValue(label);
+    // If ##TITLE not found throw Exception
+    if (!"##TITLE".equals(label))
+      throw new JSVException("Unable to read block source");
+    if (isNew)
+      source.setHeaderTable(sourceLDRTable);
+    source.type = JDXSource.TYPE_BLOCK;
+    source.isCompoundSource = true;
+    Lst<String[]> dataLDRTable;
+    Spectrum spectrum = new Spectrum();
+    dataLDRTable = new Lst<String[]>();
+    readDataLabel(spectrum, label, value, errorLog, obscure, false);
+    try {
+      String tmp;
+      while ((tmp = t.getLabel()) != null) {
+        if ((value = getValue(tmp)) == null && "##END".equals(label)) {
+          Logger.debug("##END= " + t.getValue());
+          break;
+        }
+        label = tmp;
+        if (isTabularData) {
+          setTabularDataType(spectrum, label);
+          if (!processTabularData(spectrum, dataLDRTable, false))
+            throw new JSVException("Unable to read Block Source");
+          continue;
+        }
+        if (label.equals("##DATATYPE")) {
+          if (value.toUpperCase().equals("LINK")) {
+            // embedded LINK
+            getBlockSpectra(dataLDRTable);
+            spectrum = null;
+            label = null;
+          } else if (value.toUpperCase().startsWith("NMR PEAK")) {
+            // we cannot handle XYW tables
+            if (ignorePeakTables) {
+              done = true;
+              return source;
+            }
+          }
+        } else if (label.equals("##NTUPLES") || label.equals("##VARNAME")) {
+          getNTupleSpectra(dataLDRTable, spectrum, label);
+          spectrum = null;
+          label = "";
+        }
+        if (done)
+          break;
+        if (spectrum == null) {
+          spectrum = new Spectrum();
+          dataLDRTable = new Lst<String[]>();
+          if (label == "")
+            continue;
+          if (label == null) {
+            label = "##END";
+            continue;
+          }
+        }
+        if (value == null) {
+          // ##END -- Process Block
 
-					if (spectrum.getXYCoords().length > 0
-							&& !addSpectrum(spectrum, forceSub))
-						return source;
-					spectrum = new Spectrum();
-					dataLDRTable = new Lst<String[]>();
-					continue;
-				}
-				if (readDataLabel(spectrum, label, value, errorLog, obscure, false))
-						continue;
+          if (spectrum.getXYCoords().length > 0
+              && !addSpectrum(spectrum, forceSub))
+            return source;
+          spectrum = new Spectrum();
+          dataLDRTable = new Lst<String[]>();
+          continue;
+        }
+        if (readDataLabel(spectrum, label, value, errorLog, obscure, false))
+          continue;
 
-				addHeader(dataLDRTable, t.rawLabel, value);
-				if (checkCustomTags(spectrum, label, value))
-					continue;
-			} // End Source File
-		} catch (Exception e) {
-			throw new JSVException(e.getMessage());
-		}
-		addErrorLogSeparator();
-		source.setErrorLog(errorLog.toString());
-		Logger.debug("--JDX block end--");
-		return source;
-	}
+        addHeader(dataLDRTable, t.rawLabel, value);
+        if (checkCustomTags(spectrum, label, value))
+          continue;
+      } // End Source File
+    } catch (Exception e) {
+      if (!Viewer.isJS)
+        e.printStackTrace();
+      throw new JSVException(e.getMessage());
+    }
+    addErrorLogSeparator();
+    source.setErrorLog(errorLog.toString());
+    Logger.debug("--JDX block end--");
+    return source;
+  }
 
 //	/**
 //	 * 
@@ -881,11 +898,13 @@ public class JDXReader implements JmolJDXMOLReader {
 			Coordinate[] xyCoords;
 
 			if (spec.xFactor != JDXDataObject.ERROR
-					&& spec.yFactor != JDXDataObject.ERROR)
-				xyCoords = Coordinate
-						.parseDSV(t.getValue(), spec.xFactor, spec.yFactor);
-			else
+					&& spec.yFactor != JDXDataObject.ERROR) {
+			  String data = t.getValue();
+ 				xyCoords = Coordinate
+						.parseDSV(data, spec.xFactor, spec.yFactor);
+			} else {
 				xyCoords = Coordinate.parseDSV(t.getValue(), 1, 1);
+			}
 			spec.setXYCoords(xyCoords);
 			double fileDeltaX = Coordinate.deltaX(
 					xyCoords[xyCoords.length - 1].getXVal(), xyCoords[0].getXVal(),
@@ -977,12 +996,10 @@ public class JDXReader implements JmolJDXMOLReader {
   private void decompressData(JDXDataObject spec, double[] minMaxY, boolean isNTUPLE) {
 
     int errPt = errorLog.length();
-    double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
-        spec.nPointsFile);
-    spec.setIncreasing(fileDeltaX > 0);
+    spec.setIncreasing(spec.fileLastX > spec.fileFirstX);
     spec.setContinuous(true);
     JDXDecompressor decompressor = new JDXDecompressor(t, spec.fileFirstX,
-        spec.xFactor, spec.yFactor, fileDeltaX, spec.nPointsFile, isNTUPLE);
+        spec.xFactor, spec.yFactor, spec.fileLastX, spec.nPointsFile, isNTUPLE);
 
     double[] firstLastX = new double[2];
     long t = System.currentTimeMillis();
@@ -1017,6 +1034,8 @@ public class JDXReader implements JmolJDXMOLReader {
       spec.setHZtoPPM(true);
     }
     if (errorLog.length() != errPt) {
+      double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
+          spec.nPointsFile);
       errorLog.append(spec.getTitle()).append("\n");
       errorLog.append("firstX: " + spec.fileFirstX + " Found " + firstLastX[0]
           + "\n");

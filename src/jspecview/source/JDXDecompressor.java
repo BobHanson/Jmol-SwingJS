@@ -57,9 +57,9 @@ public class JDXDecompressor {
   private double yFactor;
 
   /**
-   * The delta X value
+   * The delta X value calculated as (lastX - firstX) / (nPoints - 1)
    */
-  private double deltaX;
+  private double deltaXcalc;
 
 
   /**
@@ -83,8 +83,9 @@ public class JDXDecompressor {
   private int lineNumber = 0;
 
   private JDXSourceStreamTokenizer t;
+
   private double firstX;
-  private double dx;
+  private double lastX;
   
   private double maxY = Double.MIN_VALUE;
   private double minY = Double.MAX_VALUE;
@@ -92,6 +93,7 @@ public class JDXDecompressor {
   private boolean debugging;
 
   private boolean isNTUPLE;
+
   
   public double getMinY() {
     return minY;
@@ -106,24 +108,26 @@ public class JDXDecompressor {
    * x factor, the y factor and the deltaX value
    * @param t
    *        the data to be decompressed
-   * @param firstX TODO
+   * @param firstX first x listed in file
    * @param xFactor
    *        the x factor
    * @param yFactor
    *        the y factor
-   * @param deltaX
-   *        the delta X value
+   * @param lastX
+   *        the last X listed in file
    * @param nPoints
    *        the expected number of points
+   * @param isNTUPLE 
    */
   public JDXDecompressor(JDXSourceStreamTokenizer t, double firstX, double xFactor,
-      double yFactor, double deltaX, int nPoints, boolean isNTUPLE) {
+      double yFactor, double lastX, int nPoints, boolean isNTUPLE) {
     this.t = t;
     this.isNTUPLE = isNTUPLE;
     this.firstX = firstX;
     this.xFactor = xFactor;
     this.yFactor = yFactor;
-    this.deltaX = deltaX;
+    this.lastX = lastX;
+    this.deltaXcalc = Coordinate.deltaX(lastX, firstX, nPoints);
     this.nPoints = nPoints;
     this.lineNumber = t.labelLineNo;
     debugging = Logger.isActiveLevel(Logger.LEVEL_DEBUGHIGH);
@@ -132,28 +136,26 @@ public class JDXDecompressor {
   }
 
   private Coordinate[] xyCoords;
-  private int ipt;
-  private String line, lastLine;
+  private String line;
   private int lineLen;
   private SB errorLog;
 
-  private void addPoint(Coordinate pt) {
+  private void addPoint(Coordinate pt, int ipt) {
     //System.out.println(pt);
     if (ipt == xyCoords.length) {
       Coordinate[] t = new Coordinate[ipt * 2];
       System.arraycopy(xyCoords, 0, t, 0, ipt);
       xyCoords = t;
     }
-    double d = pt.getYVal();
-    if (d > maxY)
-      maxY = d;
-    else if (d < minY)
-      minY = d;
+    xyCoords[ipt] = pt;
+    firstLastX[1] = pt.getXVal();
+    double y = pt.getYVal();
+    if (y > maxY)
+      maxY = y;
+    else if (y < minY)
+      minY = y;
     if (debugging)
       logError("Coord: " + ipt + pt);
-    xyCoords[ipt++] = pt;
-    firstLastX[1] = pt.getXVal();
-
   }
 
   //private static final double FMINY = 0.6;
@@ -162,7 +164,7 @@ public class JDXDecompressor {
   private int difVal = Integer.MIN_VALUE;
   private int lastDif = Integer.MIN_VALUE;
   private int dupCount;
-  private double xval, yval;
+  private double yval;
 
   private double[] firstLastX;
 
@@ -171,7 +173,7 @@ public class JDXDecompressor {
    * coordinates in an array to be returned
    * 
    * @param errorLog
-   * @param firstLastX 
+   * @param firstLastX
    * @return the array of <code>Coordinate</code>s
    */
   public Coordinate[] decompressData(SB errorLog, double[] firstLastX) {
@@ -179,17 +181,23 @@ public class JDXDecompressor {
     this.errorLog = errorLog;
     this.firstLastX = firstLastX;
     if (debugging)
-      logError("firstX=" + firstX 
-          + " xFactor=" + xFactor + " yFactor=" + yFactor + " deltaX=" + deltaX + " nPoints=" + nPoints);
+      logError("firstX=" + firstX + " xFactor=" + xFactor + " yFactor="
+          + yFactor + " deltaX=" + deltaXcalc + " nPoints=" + nPoints);
 
-          //testAlgorithm();
+    //testAlgorithm();
 
     xyCoords = new Coordinate[nPoints];
 
-    double difMax = Math.abs(0.35 * deltaX);
-    double dif14 = Math.abs(1.4 * deltaX);
-    double dif06 = Math.abs(0.6 * deltaX);
+    //double difMax = Double.MAX_VALUE;//Math.abs(0.35 * deltaXcalc);
+    //double dif06 = Math.abs(0.6 * deltaXcalc);
+    //double dif14 = 1.4;//Math.abs(1.4 * deltaXcalc);
 
+    double difFracMax = 0.5;
+    double prevXcheck = 0;
+    int prevIpt = 0;
+    double x = firstX;
+    String lastLine = null;
+    int ipt = 0;
     try {
       while ((line = t.readLineTrimmed()) != null && line.indexOf("##") < 0) {
         lineNumber++;
@@ -199,48 +207,67 @@ public class JDXDecompressor {
           continue;
         ich = 0;
         boolean isCheckPoint = (lastDif != Integer.MIN_VALUE);
-        xval = getValueDelim() * xFactor;
+        double xcheck = getValueDelim() * xFactor;
+        yval = getYValue();
+        double y = yval * yFactor;
+        Coordinate point = new Coordinate().set(x, y);
         if (ipt == 0) {
-          firstLastX[0] = xval;
-          dx = firstX - xval;
-        }
-        xval += dx;
-        Coordinate point = new Coordinate().set(xval, (yval = getYValue()) * yFactor);
-        if (ipt == 0) {
-          addPoint(point); // first data line only
-          //System.out.println(ipt + " " + xval + " " + point + " " + dx);
+          firstLastX[0] = xcheck;
+          addPoint(point, ipt++); // first data line only
         } else {
+          // do check
           Coordinate lastPoint = xyCoords[ipt - 1];
-          double xdif = Math.abs(lastPoint.getXVal() - point.getXVal());
+          //double xdif = Math.abs(lastPoint.getXVal() - point.getXVal());
           //System.out.println(ipt + " " + xdif + " " + point + " " + dx + " " + lastPoint);
           // DIF Y checkpoint means X value does not advance at start
           // of new line. Remove last values and put in latest ones
-          if (isCheckPoint && xdif < difMax) {
+          if (isCheckPoint) {
+            // note that missing or out-of-order lines will result in a Y-value error and two X-check failures
             xyCoords[ipt - 1] = point;
             // Check for Y checkpoint error - Y values should correspond
-            double y = lastPoint.getYVal();
-            double y1 = point.getYVal();
-            if (y1 != y)
+            double lastY = lastPoint.getYVal();
+            if (y != lastY)
+              logError(
+                  lastLine + "\n" + line + "\nY-value Checkpoint Error! Line "
+                      + lineNumber + " for y=" + y + " yLast=" + lastY);
+            if (xcheck == prevXcheck || (xcheck < prevXcheck) != (deltaXcalc < 0)) {
+              // duplicated or out of order lines
+              logError(
+                  lastLine + "\n" + line + "\nX-sequence Checkpoint Error! Line "
+                      + lineNumber + " order for xCheck=" + xcheck
+                      + " after prevXCheck=" + prevXcheck);
+            }
+            // |--------|.....by ipt
+            // |---|..........by xcheck duplicated or out
+            // |------------|.by xcheck  missing a line
+            double xcheckDif = Math.abs(xcheck - prevXcheck);
+            double xiptDif = Math.abs((ipt - prevIpt) * deltaXcalc);
+            double fracDif = Math.abs((xcheckDif - xiptDif)) / xcheckDif;
+            if (debugging)
+              System.out.println("JDXD fracDif = " + xcheck + "\t" + prevXcheck + "\txcheckDif=" + xcheckDif + "\txiptDif=" + xiptDif + "\tf=" + fracDif);
+            if (fracDif > difFracMax) {
               logError(lastLine + "\n" + line
-                  + "\nY-value Checkpoint Error! Line " + lineNumber
-                  + " for y1=" + y1 + " y0=" + y);
-          } else {
-            addPoint(point);
-            // Check for X checkpoint error
-            // first point of new line should be deltaX away
-            // ACD/Labs seem to have large rounding error so using between 0.6 and 1.4
-            if (xdif < dif06 || xdif > dif14)
-              logError(lastLine + "\n" + line
-                  + "\nX-sequence Checkpoint Error! Line " + lineNumber
-                  + " |x1-x0|=" + xdif + " instead of " + Math.abs(deltaX)
-                  + " for x1=" + point.getXVal() + " x0=" + lastPoint.getXVal());
+                  + "\nX-value Checkpoint Error! Line " + lineNumber
+                  + " expected " + xiptDif + " but X-Sequence Check difference reads " + xcheckDif);
+            }
+            //          } else {
+            //            addPoint(point);
+            //            // Check for X checkpoint error
+            //            // first point of new line should be deltaX away
+            //            // ACD/Labs seem to have large rounding error so using between 0.6 and 1.4
+            //            if (xdif < dif06 || xdif > dif14)
+            //              logError(lastLine + "\n" + line
+            //                  + "\nX-sequence Checkpoint Error! Line " + lineNumber
+            //                  + " |x1-x0|=" + xdif + " instead of " + Math.abs(deltaX)
+            //                  + " for x1=" + point.getXVal() + " x0=" + lastPoint.getXVal());
           }
         }
+        prevIpt = (ipt == 1 ? 0 : ipt);
+        prevXcheck = xcheck;
         while (ich < lineLen || difVal != Integer.MIN_VALUE || dupCount > 0) {
-          xval += deltaX;
+          x += deltaXcalc;
           if (!Double.isNaN(yval = getYValue())) {
-            //System.out.println(ipt + " xval=" + xval + " " + dx + " " + deltaX);
-            addPoint(new Coordinate().set(xval, yval * yFactor));
+            addPoint(new Coordinate().set(x, yval * yFactor), ipt++);
           }
         }
         lastLine = line;
@@ -248,20 +275,20 @@ public class JDXDecompressor {
     } catch (IOException ioe) {
     }
     if (nPoints != ipt) {
-      int n = (isNTUPLE ? nPoints : ipt);
-      logError("Decompressor did not find " + nPoints
-          + " points -- instead " + ipt + " xyCoords.length set to " + n);
+      int n = nPoints;//(isNTUPLE ? nPoints : ipt);
+      logError("Decompressor did not find " + nPoints + " points -- instead "
+          + ipt + " xyCoords.length set to " + n);
       Coordinate[] temp = new Coordinate[n];
-      System.arraycopy(xyCoords, 0, temp, 0, Math.min(ipt,  n));
+      System.arraycopy(xyCoords, 0, temp, 0, Math.min(ipt, n));
       xyCoords = temp;
     }
-    return (deltaX > 0 ? xyCoords : Coordinate.reverse(xyCoords));
+    return (deltaXcalc > 0 ? xyCoords : Coordinate.reverse(xyCoords));
   }
 
   private void logError(String s) {
     if (debugging)
       Logger.debug(s);
-    System.out.println(s);
+    System.err.println(s);
     errorLog.append(s).appendC('\n');  
   }
 
