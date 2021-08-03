@@ -5,8 +5,6 @@ import java.util.Enumeration;
 import javax.swing.tree.TreeNode;
 
 import javajs.util.Lst;
-
-
 import jspecview.api.JSVTreeNode;
 import jspecview.common.PanelNode;
 
@@ -43,7 +41,7 @@ public class SimpleTreeNode implements JSVTreeNode {
 		}
 
 		@Override
-		public Enumeration<TreeNode> children() {
+		public Enumeration<JSVTreeNode> children() {
 			return new SimpleTreeEnumeration(this);
 		}
 

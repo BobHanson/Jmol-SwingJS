@@ -21,15 +21,11 @@ package jspecview.dialog;
 
 import java.util.Enumeration;
 
-import javax.swing.tree.TreeNode;
-
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
-
 import jspecview.api.JSVTreeNode;
 import jspecview.common.PanelNode;
-
-import javajs.util.PT;
 
 
 
@@ -76,9 +72,9 @@ public class ViewsDialog extends JSVDialog {
   }
 
 	private void addCheckBoxes(JSVTreeNode rootNode, int level, boolean isViews) {
-		Enumeration<TreeNode> enume = rootNode.children();
+		Enumeration<JSVTreeNode> enume = rootNode.children();
     while (enume.hasMoreElements()) {
-      JSVTreeNode treeNode = (JSVTreeNode) enume.nextElement();
+      JSVTreeNode treeNode = enume.nextElement();
     	PanelNode node = treeNode.getPanelNode();
     	if (node.isView != isViews)
     		continue;
@@ -124,9 +120,9 @@ public class ViewsDialog extends JSVDialog {
 				node.getPanelNode().isSelected = true;
 				checking = false;
 			}
-			Enumeration<TreeNode> enume = node.children();
+			Enumeration<JSVTreeNode> enume = node.children();
 			while (enume.hasMoreElements()) {
-				JSVTreeNode treeNode = (JSVTreeNode) enume.nextElement();
+				JSVTreeNode treeNode = enume.nextElement();
 				dialog.setSelected(checkBoxes.get(treeNode.getIndex()), isSelected);
 				treeNode.getPanelNode().isSelected = isSelected;
 				node.getPanelNode().isSelected = isSelected;

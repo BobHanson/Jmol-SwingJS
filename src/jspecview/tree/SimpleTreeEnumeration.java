@@ -2,9 +2,9 @@ package jspecview.tree;
 
 import java.util.Enumeration;
 
-import javax.swing.tree.TreeNode;
+import jspecview.api.JSVTreeNode;
 
-public class SimpleTreeEnumeration implements Enumeration<TreeNode> {
+public class SimpleTreeEnumeration implements Enumeration<JSVTreeNode> {
 
 	SimpleTreeNode node;
 	int pt;
@@ -19,7 +19,7 @@ public class SimpleTreeEnumeration implements Enumeration<TreeNode> {
 	}
 
 	@Override
-	public TreeNode nextElement() {
+	public JSVTreeNode nextElement() {
 		return node.children.get(pt++);
 	}
 

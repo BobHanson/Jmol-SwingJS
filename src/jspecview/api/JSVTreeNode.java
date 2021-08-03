@@ -11,15 +11,18 @@ import jspecview.common.PanelNode;
 
 public interface JSVTreeNode extends TreeNode {
 
-	int getChildCount();
+	@Override
+  int getChildCount();
 
 	Object[] getPath();
 
-	boolean isLeaf();
+	@Override
+  boolean isLeaf();
 
 	PanelNode getPanelNode();
 
-	Enumeration<TreeNode> children();
+	@Override
+  Enumeration<JSVTreeNode> children();
 
 	int getIndex();
 
