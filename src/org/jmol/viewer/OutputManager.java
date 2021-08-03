@@ -988,6 +988,7 @@ abstract class OutputManager {
         newName = PT.replaceAllCharacters(newName, "[]", "_");
         newName = PT.rep(newName, "#_DOCACHE_", "");
         newName = PT.rep(newName, "localLOAD_", "");
+        newName = PT.rep(newName, "DROP_", "");
         boolean isSparDir = (fm.spardirCache != null
             && fm.spardirCache.containsKey(name));
         if (isLocal && name.indexOf("|") < 0 && !isSparDir) {
