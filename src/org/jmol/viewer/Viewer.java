@@ -5002,8 +5002,10 @@ public class Viewer extends JmolViewer
         ciftype = id.substring(pt + 1);
         id = id.substring(0, pt);
       }
-      if (id.equals("emdb"))
+      if (id.equals("emdb") || id.equals("em"))
         id += "/";
+      if (id.startsWith("em/"))
+        id = "emdb" + id.substring(2);
       if (id.startsWith("emdb/")) {
         // *emdb/9357
         // *emdb/=6nef
@@ -5039,7 +5041,7 @@ public class Viewer extends JmolViewer
             id = id.substring(0, pt);
           }
         }
-        return JC.resolveDataBase("emdbmap", id, null) + ext;
+        return JC.resolveDataBase("emdbmap" + (type == '-' ? "server" : ""), id, null) + ext;
       }
       id = JC.resolveDataBase(
           (isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""),

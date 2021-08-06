@@ -203,8 +203,11 @@ public final class JC {
     "pdbemapdiff", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
     "pdbemapserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
     "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1", // last bit is just mine
-    "emdbmap", "http://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
+    //"emdbmap", "https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
+ // was considerably slower
+    "emdbmap", "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/cell?detail=6&space=cartesian&encoding=bcif",
     "emdbquery", "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
+    "emdbmapserver", "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
     "resolverResolver", "https://chemapps.stolaf.edu/resolver",
   };
   
