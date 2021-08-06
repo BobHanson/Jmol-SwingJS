@@ -457,15 +457,17 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		try {
 			vwr.autoIntegrate = Boolean.parseBoolean(properties
 					.getProperty("automaticallyIntegrate"));
-			vwr.parameters.integralMinY = Double.parseDouble(properties
-					.getProperty("integralMinY"));
-			vwr.parameters.integralRange = Double.parseDouble(properties
-					.getProperty("integralRange"));
-			vwr.parameters.integralOffset = Double.parseDouble(properties
-					.getProperty("integralOffset"));
+			vwr.parameters.integralMinY = parseDoubleSafely(properties
+					.getProperty("integralMinY"), vwr.parameters.integralMinY);
+			vwr.parameters.integralRange = parseDoubleSafely(properties
+					.getProperty("integralRange"),vwr.parameters.integralRange);
+			vwr.parameters.integralOffset = parseDoubleSafely(properties
+					.getProperty("integralOffset"), vwr.parameters.integralOffset);
 			vwr.parameters.set(null, ScriptToken.INTEGRALPLOTCOLOR, properties
 					.getProperty("integralPlotColor"));
 		} catch (Exception e) {
+		  System.err.println("Bad PropertyValue ");
+		  e.printStackTrace();
 			// bad property value
 		}
 
@@ -474,7 +476,11 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 
 	}
 
-	/**
+	private static double parseDoubleSafely(String sval, double defVal) {
+	  return (sval == null ? defVal : Double.parseDouble(sval));
+  }
+
+  /**
 	 * Initializes GUI components
 	 * 
 	 * @throws Exception

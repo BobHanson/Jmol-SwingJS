@@ -214,7 +214,7 @@ public class JDXDecompressor {
         boolean isCheckPoint = (lastDif != Integer.MIN_VALUE);
         double xcheck = getValueDelim() * xFactor;
         yval = getYValue();
-        if (!isCheckPoint)
+        if (!isCheckPoint && ipt > 0)
           x += deltaXcalc;
         double y = yval * yFactor;
         Coordinate point = new Coordinate().set(x, y);
