@@ -50,7 +50,7 @@ public class AppToolBar extends JToolBar {
   void setError(boolean isError, boolean isWarningOnly) {
     errorLogButton.setIcon(isWarningOnly ? errorLogYellowIcon
         : isError ? errorLogRedIcon : errorLogIcon);
-    errorLogButton.setEnabled(isError);
+    errorLogButton.setEnabled(isError || isWarningOnly);
   }
 
 	private void jbInit() {

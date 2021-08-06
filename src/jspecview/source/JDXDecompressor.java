@@ -141,12 +141,14 @@ public class JDXDecompressor {
   private SB errorLog;
 
   private void addPoint(Coordinate pt, int ipt) {
+    if (ipt >= nPoints)
+      return;
     //System.out.println(pt);
-    if (ipt == xyCoords.length) {
-      Coordinate[] t = new Coordinate[ipt * 2];
-      System.arraycopy(xyCoords, 0, t, 0, ipt);
-      xyCoords = t;
-    }
+//    if (ipt == xyCoords.length) {
+//      Coordinate[] t = new Coordinate[ipt * 2];
+//      System.arraycopy(xyCoords, 0, t, 0, ipt);
+//      xyCoords = t;
+//    }
     xyCoords[ipt] = pt;
     firstLastX[1] = pt.getXVal();
     double y = pt.getYVal();
@@ -167,6 +169,8 @@ public class JDXDecompressor {
   private double yval;
 
   private double[] firstLastX;
+
+  private int nptsFound;
 
   /**
    * Determines the type of compression, decompresses the data and stores
@@ -198,6 +202,7 @@ public class JDXDecompressor {
     double x = firstX;
     String lastLine = null;
     int ipt = 0;
+    boolean haveWarned = false;
     try {
       while ((line = t.readLineTrimmed()) != null && line.indexOf("##") < 0) {
         lineNumber++;
@@ -209,12 +214,14 @@ public class JDXDecompressor {
         boolean isCheckPoint = (lastDif != Integer.MIN_VALUE);
         double xcheck = getValueDelim() * xFactor;
         yval = getYValue();
+        if (!isCheckPoint)
+          x += deltaXcalc;
         double y = yval * yFactor;
         Coordinate point = new Coordinate().set(x, y);
         if (ipt == 0) {
           firstLastX[0] = xcheck;
           addPoint(point, ipt++); // first data line only
-        } else {
+        } else if (ipt < nPoints) {
           // do check
           Coordinate lastPoint = xyCoords[ipt - 1];
           //double xdif = Math.abs(lastPoint.getXVal() - point.getXVal());
@@ -230,12 +237,13 @@ public class JDXDecompressor {
               logError(
                   lastLine + "\n" + line + "\nY-value Checkpoint Error! Line "
                       + lineNumber + " for y=" + y + " yLast=" + lastY);
-            if (xcheck == prevXcheck || (xcheck < prevXcheck) != (deltaXcalc < 0)) {
+            if (xcheck == prevXcheck
+                || (xcheck < prevXcheck) != (deltaXcalc < 0)) {
               // duplicated or out of order lines
-              logError(
-                  lastLine + "\n" + line + "\nX-sequence Checkpoint Error! Line "
-                      + lineNumber + " order for xCheck=" + xcheck
-                      + " after prevXCheck=" + prevXcheck);
+              logError(lastLine + "\n" + line
+                  + "\nX-sequence Checkpoint Error! Line " + lineNumber
+                  + " order for xCheck=" + xcheck + " after prevXCheck="
+                  + prevXcheck);
             }
             // |--------|.....by ipt
             // |---|..........by xcheck duplicated or out
@@ -244,14 +252,15 @@ public class JDXDecompressor {
             double xiptDif = Math.abs((ipt - prevIpt) * deltaXcalc);
             double fracDif = Math.abs((xcheckDif - xiptDif)) / xcheckDif;
             if (debugging)
-              System.out.println("JDXD fracDif = " + xcheck + "\t" + prevXcheck + "\txcheckDif=" + xcheckDif + "\txiptDif=" + xiptDif + "\tf=" + fracDif);
+              System.out.println("JDXD fracDif = " + xcheck + "\t" + prevXcheck
+                  + "\txcheckDif=" + xcheckDif + "\txiptDif=" + xiptDif + "\tf="
+                  + fracDif);
             if (fracDif > difFracMax) {
-              logError(lastLine + "\n" + line
-                  + "\nX-value Checkpoint Error! Line " + lineNumber
-                  + " expected " + xiptDif + " but X-Sequence Check difference reads " + xcheckDif);
+              logError(
+                  lastLine + "\n" + line + "\nX-value Checkpoint Error! Line "
+                      + lineNumber + " expected " + xiptDif
+                      + " but X-Sequence Check difference reads " + xcheckDif);
             }
-            //          } else {
-            //            addPoint(point);
             //            // Check for X checkpoint error
             //            // first point of new line should be deltaX away
             //            // ACD/Labs seem to have large rounding error so using between 0.6 and 1.4
@@ -260,6 +269,8 @@ public class JDXDecompressor {
             //                  + "\nX-sequence Checkpoint Error! Line " + lineNumber
             //                  + " |x1-x0|=" + xdif + " instead of " + Math.abs(deltaX)
             //                  + " for x1=" + point.getXVal() + " x0=" + lastPoint.getXVal());
+          } else {
+            addPoint(point, ipt++);
           }
         }
         prevIpt = (ipt == 1 ? 0 : ipt);
@@ -270,17 +281,20 @@ public class JDXDecompressor {
             addPoint(new Coordinate().set(x, yval * yFactor), ipt++);
           }
         }
+        if (!haveWarned && ipt > nPoints) {
+          logError("! points overflow nPoints!");
+          haveWarned = true;
+        }
         lastLine = line;
       }
     } catch (IOException ioe) {
     }
+    nptsFound = ipt;
     if (nPoints != ipt) {
-      int n = nPoints;//(isNTUPLE ? nPoints : ipt);
       logError("Decompressor did not find " + nPoints + " points -- instead "
-          + ipt + " xyCoords.length set to " + n);
-      Coordinate[] temp = new Coordinate[n];
-      System.arraycopy(xyCoords, 0, temp, 0, Math.min(ipt, n));
-      xyCoords = temp;
+          + ipt + " xyCoords.length set to " + nPoints);
+      for (int i = ipt; i < nPoints; i++)
+        addPoint(new Coordinate().set(0, 0), i);
     }
     return (deltaXcalc > 0 ? xyCoords : Coordinate.reverse(xyCoords));
   }
@@ -307,8 +321,8 @@ public class JDXDecompressor {
     if (ich == lineLen)
       return Double.NaN;
     char ch = line.charAt(ich);
-    if (debugging)
-      Logger.info("" + ch);
+//    if (debugging)
+//      Logger.info("" + ch);
     switch (ch) {
     case '%':
       difVal = 0;
@@ -505,5 +519,9 @@ public class JDXDecompressor {
        System.out.println(line.substring(0, ich) + "\n" + ipt++ + " " + (yval = getYValue()));
      ipt= 0;
 */  }
+
+  public int getNPointsFound() {
+    return nptsFound;
+  }
 
 }

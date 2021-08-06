@@ -143,7 +143,7 @@ public class JDXReader implements JmolJDXMOLReader {
 
   public static Map<String, String> getHeaderMap(InputStream in, Map<String, String> map) throws Exception {
     if (map == null)
-      map = new LinkedHashMap<>();
+      map = new LinkedHashMap<String, String>();
     Lst<String[]> hlist = createJDXSource(in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
     for (int i = 0, n = hlist.size(); i < n; i++) {
       String[] h = hlist.get(i);
@@ -266,15 +266,14 @@ public class JDXReader implements JmolJDXMOLReader {
     isZipFile = (reader instanceof JSVZipReader);
     t = new JDXSourceStreamTokenizer((BufferedReader) reader);
     errorLog = new SB();
-
     String label = null;
     String value = null;
     boolean isOK = false;
     while (!done && "##TITLE".equals(t.peakLabel())) {
       isOK = true;
       if (label != null && !isZipFile)
-        errorLog.append(
-            "Warning - file is a concatenation without LINK record -- does not conform to IUPAC standards!\n");
+        logError(
+            "Warning - file is a concatenation without LINK record -- does not conform to JCAMP-DX standard 6.1.3!");
       Spectrum spectrum = new Spectrum();
       Lst<String[]> dataLDRTable = new Lst<String[]>();
       if (isHeaderOnly)
@@ -328,6 +327,13 @@ public class JDXReader implements JmolJDXMOLReader {
     source.setErrorLog(errorLog.toString());
     return source;
   }
+
+  String lastErrPath = null;
+  private void logError(String err) {
+    errorLog.append(filePath == null || filePath.equals(lastErrPath) ? "" : filePath).append("\n").append(err).append("\n");
+    lastErrPath = filePath;
+  }
+
 
   /**
    * Set any vendor-specific values. For example, JEOL implementation must ignore ##SHIFTREFERENCE
@@ -533,7 +539,7 @@ public class JDXReader implements JmolJDXMOLReader {
     if (errorLog.length() > 0
         && errorLog.lastIndexOf(ERROR_SEPARATOR) != errorLog.length()
             - ERROR_SEPARATOR.length())
-      errorLog.append(ERROR_SEPARATOR);
+      logError(ERROR_SEPARATOR);
   }
 
 
@@ -619,7 +625,7 @@ public class JDXReader implements JmolJDXMOLReader {
           if (pt >= 0)
             try {
               spectrum
-                  .setY2D(parseDouble(page.substring(pt + 1).trim()));
+                  .setY2D(parseAFFN(page.substring(0, pt), page.substring(pt + 1).trim()));
               String y2dUnits = page.substring(0, pt).trim();
               int i = symbols.indexOf(y2dUnits);
               if (i >= 0)
@@ -725,19 +731,19 @@ public class JDXReader implements JmolJDXMOLReader {
     		  + "##OFFSET  "
     		  ).indexOf(label)) {
     	case 0:
-        spectrum.fileFirstX = parseDouble(value);
+        spectrum.fileFirstX = parseAFFN(label, value);
         return true;
     	case 10:
-        spectrum.fileLastX = parseDouble(value);
+        spectrum.fileLastX = parseAFFN(label, value);
         return true;
     	case 20:
         spectrum.nPointsFile = Integer.parseInt(value);
         return true;
     	case 30:
-        spectrum.xFactor = parseDouble(value);
+        spectrum.xFactor = parseAFFN(label, value);
         return true;
     	case 40:
-        spectrum.yFactor = parseDouble(value);
+        spectrum.yFactor = parseAFFN(label, value);
         return true;
     	case 50:
         spectrum.setXUnits(value);
@@ -757,7 +763,7 @@ public class JDXReader implements JmolJDXMOLReader {
     	case 100:
         if (spectrum.shiftRefType != 0) {
         	if (spectrum.offset == JDXDataObject.ERROR)
-            spectrum.offset = parseDouble(value);
+            spectrum.offset = parseAFFN(label, value);
           // bruker doesn't need dataPointNum
           spectrum.dataPointNum = 1;
           // bruker type
@@ -773,7 +779,7 @@ public class JDXReader implements JmolJDXMOLReader {
       	if (label.length() < 17)
       		return false;   
         if (label.equals("##.OBSERVEFREQUENCY ")) {
-          spectrum.observedFreq = parseDouble(value);
+          spectrum.observedFreq = parseAFFN(label, value);
           return true;
         }
         if (label.equals("##.OBSERVENUCLEUS ")) {
@@ -781,7 +787,7 @@ public class JDXReader implements JmolJDXMOLReader {
           return true;    
         }
         if ((label.equals("##$REFERENCEPOINT ")) && (spectrum.shiftRefType != 0)) {
-          spectrum.offset = parseDouble(value);
+          spectrum.offset = parseAFFN(label, value);
           // varian doesn't need dataPointNum
           spectrum.dataPointNum = 1;
           // varian type
@@ -800,7 +806,7 @@ public class JDXReader implements JmolJDXMOLReader {
             srt.nextToken();
             srt.nextToken();
             spectrum.dataPointNum = Integer.parseInt(srt.nextToken().trim());
-            spectrum.offset = parseDouble(srt.nextToken().trim());
+            spectrum.offset = parseAFFN(label, srt.nextToken().trim());
           } catch (Exception e) {
             return true;
           }
@@ -835,7 +841,7 @@ public class JDXReader implements JmolJDXMOLReader {
         if (errorLog != null)
           errorLog
               .append("Warning: JCAMP-DX version may not be fully supported: "
-                  + value + "\n");
+                  + value);
       }
       return true;
   	case 20:
@@ -920,6 +926,7 @@ public class JDXReader implements JmolJDXMOLReader {
                                           String[] plotSymbols,
                                           double[] minMaxY) {
     Lst<String> list;
+    String label;
     if (spec.dataClass.equals("XYDATA")) {
       // Get Label Values
 
@@ -930,15 +937,15 @@ public class JDXReader implements JmolJDXMOLReader {
       list = nTupleTable.get("##VARNAME");
       spec.varName = list.get(index2).toUpperCase();
 
-      list = nTupleTable.get("##FACTOR");
-      spec.xFactor = parseDouble(list.get(index1));
-      spec.yFactor = parseDouble(list.get(index2));
+      list = nTupleTable.get(label = "##FACTOR");
+      spec.xFactor = parseAFFN(label, list.get(index1));
+      spec.yFactor = parseAFFN(label, list.get(index2));
 
-      list = nTupleTable.get("##LAST");
-      spec.fileLastX = parseDouble(list.get(index1));
+      list = nTupleTable.get(label = "##LAST");
+      spec.fileLastX = parseAFFN(label, list.get(index1));
 
-      list = nTupleTable.get("##FIRST");
-      spec.fileFirstX = parseDouble(list.get(index1));
+      list = nTupleTable.get(label = "##FIRST");
+      spec.fileFirstX = parseAFFN(label, list.get(index1));
       //firstY = parseDouble((String)list.get(index2));
 
       list = nTupleTable.get("##VARDIM");
@@ -974,19 +981,40 @@ public class JDXReader implements JmolJDXMOLReader {
     return false;
   }
 
-  private static double parseDouble(String val) {
+  /**
+   * See JCAMP-DX standard 4.5.3 AFFN (ASCII FREE FORMAT NUMERIC)
+   * @param label
+   * @param val
+   * @return val
+   */
+  private double parseAFFN(String label, String val) {
     // only E+/-mm or E+/-mmm 
-    // thowing an error if anything else
+    // logging an error if anything else
     int pt = val.indexOf("E");
     if (pt > 0) {
       //.nnE+mm
       //...01234
       //.nnE-mmm
       //...012345
-      int n = val.length();
+      int len = val.length();
       char ch;
-      if (pt + 4 != n && pt + 5 != n
-          || (ch = val.charAt(pt + 1)) != '+' && ch != '-') {
+      switch (len - pt) {
+      case 2:
+      case 3:
+        // 1.0E6
+        // 1.0E06
+        // 1.0E-6
+        logError("Warning - " + label + " value " + val + " is not of the format xxxE[+/-]nn or xxxE[+/-]nnn (spec. 4.5.3) -- warning only; accepted");
+        break;
+      case 4:
+      case 5:
+        // 1.0E-06
+        // 1.0E-006
+        if ((ch = val.charAt(pt + 1)) == '+' || ch == '-')
+          break;
+        //$FALL-THROUGH$
+      default: // ignore E part and flag error
+        logError("Error - " + label + " value " + val + " is not of the format xxxE[+/-]nn or xxxE[+/-]nnn (spec. 4.5.3) -- " + val.substring(pt) + " ignored!");
         val = val.substring(0, pt);
       }
     }
@@ -1036,16 +1064,16 @@ public class JDXReader implements JmolJDXMOLReader {
     if (errorLog.length() != errPt) {
       double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
           spec.nPointsFile);
-      errorLog.append(spec.getTitle()).append("\n");
-      errorLog.append("firstX: " + spec.fileFirstX + " Found " + firstLastX[0]
-          + "\n");
-      errorLog.append("lastX from Header " + spec.fileLastX + " Found "
-          + firstLastX[1] + "\n");
-      errorLog.append("deltaX from Header " + fileDeltaX + "\n");
-      errorLog.append("Number of points in Header " + spec.nPointsFile
-          + " Found " + xyCoords.length + "\n");
+      logError(spec.getTitle());
+      logError("firstX: " + spec.fileFirstX + " Found " + firstLastX[0]
+         );
+      logError("lastX from Header " + spec.fileLastX + " Found "
+          + firstLastX[1]);
+      logError("deltaX from Header " + fileDeltaX);
+      logError("Number of points in Header " + spec.nPointsFile
+          + " Found " + decompressor.getNPointsFound());
     } else {
-      //errorLog.append("No Errors decompressing data\n");
+      //logError("No Errors decompressing data");
     }
 
     if (Logger.debugging) {
