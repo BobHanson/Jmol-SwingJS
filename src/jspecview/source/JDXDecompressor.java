@@ -651,4 +651,8 @@ public class JDXDecompressor implements Iterator<Double> {
     return (hasNext() ? Double.valueOf(lastY = nextValue(lastY)) : null);
   }
 
+  @Override
+  public void remove() {
+  }
+
 }
