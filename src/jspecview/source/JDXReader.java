@@ -761,13 +761,13 @@ public class JDXReader implements JmolJDXMOLReader {
         spectrum.numDim = Integer.parseInt(value);
         return true;
       case 100:
-        if (spectrum.shiftRefType != 0) {
+        if (spectrum.shiftRefType != JDXDataObject.REF_TYPE_STANDARD) {
           if (spectrum.offset == JDXDataObject.ERROR)
             spectrum.offset = parseAFFN(label, value);
           // bruker doesn't need dataPointNum
           spectrum.dataPointNum = 1;
           // bruker type
-          spectrum.shiftRefType = 1;
+          spectrum.shiftRefType = JDXDataObject.REF_TYPE_BRUKER;
         }
         return false;
       default:
@@ -786,12 +786,11 @@ public class JDXReader implements JmolJDXMOLReader {
           spectrum.setObservedNucleus(value);
           return true;    
         }
-        if ((label.equals("##$REFERENCEPOINT ")) && (spectrum.shiftRefType != 0)) {
+        if ((label.equals("##$REFERENCEPOINT ")) && (spectrum.shiftRefType != JDXDataObject.REF_TYPE_STANDARD)) {
           spectrum.offset = parseAFFN(label, value);
           // varian doesn't need dataPointNum
           spectrum.dataPointNum = 1;
-          // varian type
-          spectrum.shiftRefType = 2;
+          spectrum.shiftRefType = JDXDataObject.REF_TYPE_VARIAN;
           return false; // save in file  
         }
         if (label.equals("##.SHIFTREFERENCE ")) {
@@ -807,12 +806,11 @@ public class JDXReader implements JmolJDXMOLReader {
             srt.nextToken();
             spectrum.dataPointNum = Integer.parseInt(srt.nextToken().trim());
             spectrum.offset = parseAFFN(label, srt.nextToken().trim());
+            if (spectrum.dataPointNum <= 0)
+              spectrum.dataPointNum = 1;
+            spectrum.shiftRefType = JDXDataObject.REF_TYPE_STANDARD;
           } catch (Exception e) {
-            return true;
           }
-          if (spectrum.dataPointNum <= 0)
-            spectrum.dataPointNum = 1;
-          spectrum.shiftRefType = 0;
           return true;
         }
     }
@@ -1066,6 +1064,7 @@ public class JDXReader implements JmolJDXMOLReader {
       double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
           spec.nPointsFile);
       logError(spec.getTitle());
+      logError("firstX from Header " + spec.fileFirstX);
       logError("lastX from Header " + spec.fileLastX + " Found "
           + decompressor.lastX);
       logError("deltaX from Header " + fileDeltaX);

@@ -318,7 +318,7 @@ public class Spectrum extends JDXDataObject {
   }
   
   public static final double MAXABS = 4; // maximum absorbance allowed
-
+ 
   public Spectrum getConvertedSpectrum() {
     return convertedSpectrum;
   }

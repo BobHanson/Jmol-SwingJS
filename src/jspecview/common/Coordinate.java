@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.StringTokenizer;
 
 import javajs.util.Lst;
+import jspecview.source.JDXDataObject;
 
 
 
@@ -292,19 +293,18 @@ public class Coordinate {
       throws IndexOutOfBoundsException {
   
     if (dataPointNum > xyCoords.length || dataPointNum < 0)
-      //throw new IndexOutOfBoundsException();
       return;
   
     Coordinate coord;
     switch (shiftRefType) {
-    case 0:
-      //double deltaX = JSpecViewUtils.deltaX(xyCoords[xyCoords.length - 1].getXVal(), xyCoords[0].getXVal(), xyCoords.length);     
-      offset = xyCoords[xyCoords.length - dataPointNum].getXVal() - offset * observedFreq;
+    case JDXDataObject.REF_TYPE_STANDARD:
+      int ipt = (firstX < lastX ? dataPointNum - 1 : xyCoords.length - dataPointNum);
+      offset = xyCoords[ipt].getXVal() - offset * observedFreq;
       break;
-    case 1:
+    case JDXDataObject.REF_TYPE_BRUKER:
       offset = firstX - offset * observedFreq;
       break;
-    case 2:
+    case JDXDataObject.REF_TYPE_VARIAN:
       offset = lastX + offset;
       break;
     }

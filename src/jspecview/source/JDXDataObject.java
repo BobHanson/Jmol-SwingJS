@@ -28,6 +28,11 @@ public abstract class JDXDataObject extends JDXHeader {
    */
   public static final double ERROR = Double.MAX_VALUE;
 
+  public static final int REF_TYPE_UNSPECIFIED = -1;
+  public static final int REF_TYPE_STANDARD = 0;  
+  public static final int REF_TYPE_BRUKER = 1;
+  public static final int REF_TYPE_VARIAN = 2;
+
   private String filePath;
   protected String filePathForwardSlash;
   public boolean isSimulation;
@@ -221,7 +226,7 @@ public abstract class JDXDataObject extends JDXHeader {
 
 
   public double offset = ERROR; // Shift Reference
-  public int shiftRefType = -1; // shiftRef = 0, bruker = 1, varian = 2
+  public int shiftRefType = REF_TYPE_UNSPECIFIED; // shiftRef = 0, bruker = 1, varian = 2
   public int dataPointNum = -1;
 
   public int numDim = 1;
@@ -449,8 +454,8 @@ public abstract class JDXDataObject extends JDXHeader {
     1E100
   };
   
-  final private static Map<String, Double> gyroMap = new Hashtable<>();
-  
+  final private static Map<String, Double> gyroMap = new Hashtable<String, Double>();
+
   static {
     for (int i = 0, n = gyroData.length - 1; i < n; i += 2)
       gyroMap.put("" + (int)gyroData[i], Double.valueOf(gyroData[i + 1]));

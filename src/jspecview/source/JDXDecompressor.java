@@ -25,6 +25,7 @@
 package jspecview.source;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.jmol.util.Logger;
 
@@ -43,7 +44,7 @@ import jspecview.common.Coordinate;
  * @author Prof Robert J. Lancashire
  * @author Bob Hanson - hansonr@stolaf.edu
  */
-public class JDXDecompressor {
+public class JDXDecompressor implements Iterator<Double> {
 
   /**
    * The x compression factor
@@ -91,7 +92,7 @@ public class JDXDecompressor {
   
   static {
     // from '%' to 's'; all others will remain 0, ACTION_UNKNOWN
-    for (int i = 0x25; i < 0x73; i++) {
+    for (int i = 0x25; i <= 0x73; i++) {
       switch(i) {      
       case '%':
       case 'J':
@@ -224,6 +225,12 @@ public class JDXDecompressor {
     //Logger.checkMemory();
   }
 
+  public JDXDecompressor(String line, int lastY) {
+    this.line = line.trim();
+    this.lineLen = line.length();
+    this.lastY = lastY;
+  }
+
   private Coordinate[] xyCoords;
   private String line;
   private int lineLen;
@@ -246,6 +253,8 @@ public class JDXDecompressor {
    * the number of points actually found
    */
   private int nptsFound;
+
+  private double lastY;
 
   /**
    * Determines the type of compression, decompresses the data and stores
@@ -277,6 +286,7 @@ public class JDXDecompressor {
     double difFracMax = 0.5;
     double prevXcheck = 0;
     int prevIpt = 0;
+    double lastXExpected = lastX;
     double x = lastX = firstX;
     String lastLine = null;
     int ipt = 0;
@@ -286,21 +296,21 @@ public class JDXDecompressor {
     try {
       while ((line = t.readLineTrimmed()) != null && line.indexOf("##") < 0) {
         lineNumber++;
-        if (debugging)
-          logError(lineNumber + "\t" + line);
         if ((lineLen = line.length()) == 0)
           continue;
         ich = 0;
-        boolean isCheckPoint = (lastDif != Integer.MIN_VALUE);
+        boolean isCheckPoint = isDIF;
         double xcheck = readSignedFloat() * xFactor;
-        yval = getDecompressedYValue(yval);
+        yval = nextValue(yval);
         // only advance x if this is not a checkpoint and not the first point
         if (!isCheckPoint && ipt > 0)
           x += deltaXcalc;
+        if (debugging)
+          logError("Line: " + lineNumber +  " isCP=" + isCheckPoint + "\t>>" + line + "<<\n x, xcheck " + x + " " + x/xFactor + " " + xcheck/xFactor + " " + deltaXcalc/xFactor);
         double y = yval * yFactor;
         Coordinate point = new Coordinate().set(x, y);
         if (ipt == 0 || !isCheckPoint) {
-          addPoint(point, ipt++); // first data line only
+          addPoint(point, ipt++); // first data line only or not a checkpoint
         } else if (ipt < nPoints) {
           // do check
           // DIF Y checkpoint means X value does not advance at start
@@ -329,7 +339,7 @@ public class JDXDecompressor {
           double xiptDif = Math.abs((ipt - prevIpt) * deltaXcalc);
           double fracDif = Math.abs((xcheckDif - xiptDif)) / xcheckDif;
           if (debugging)
-            System.out.println(
+            System.err.println(
                 "JDXD fracDif = " + xcheck + "\t" + prevXcheck + "\txcheckDif="
                     + xcheckDif + "\txiptDif=" + xiptDif + "\tf=" + fracDif);
           if (fracDif > difFracMax) {
@@ -341,14 +351,22 @@ public class JDXDecompressor {
         }
         prevIpt = (ipt == 1 ? 0 : ipt);
         prevXcheck = xcheck;
-        while (ich < lineLen || dupCount > 0) {
-          if (Double.isNaN(yval = getDecompressedYValue(yval))) {
-            logError("There was an error reading " + lineNumber + " char " + --ich + ":" + line.substring(0, ich) + ">>>>" + line.substring(ich));
+        int nX = 0;
+        while (hasNext()) {
+          int ich0 = ich;
+          if (debugging)
+            logError("line " + lineNumber + " char " + ich0 + ":" + line.substring(0, ich0) + ">>>>" + line.substring(ich));
+          if (Double.isNaN(yval = nextValue(yval))) {
+            logError("There was an error reading line " + lineNumber + " char " + ich0 + ":" + line.substring(0, ich0) + ">>>>" + line.substring(ich0));
           } else {
-            if (!isCheckPoint)
-              x += deltaXcalc;
-            addPoint(new Coordinate().set(x, (yval == INVALID_Y ? 0 : yval * yFactor)), ipt++);
-            isCheckPoint = false;
+            x += deltaXcalc;
+            if (yval == INVALID_Y) {
+              yval = 0;
+              logError("Point marked invalid '?' for line " + lineNumber + " char " + ich0 + ":" + line.substring(0, ich0) + ">>>>" + line.substring(ich0));              
+            }
+            addPoint(new Coordinate().set(x, yval * yFactor), ipt++);
+            if (debugging)
+              logError("nx=" + ++nX + " " + x + " " + x/xFactor + " yval=" + yval);
           }
         }
         lastX = x;
@@ -361,17 +379,20 @@ public class JDXDecompressor {
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
-    checkZeroFill(ipt);
+    checkZeroFill(ipt, lastXExpected);
     return (deltaXcalc > 0 ? xyCoords : Coordinate.reverse(xyCoords));
   }
 
-  private void checkZeroFill(int ipt) {
+  private void checkZeroFill(int ipt, double lastXExpected) {
     nptsFound = ipt;
-    if (nPoints != nptsFound) {
+    if (nPoints == nptsFound) {
+      if (Math.abs(lastXExpected - lastX) > 0.00001)
+        logError("Something went wrong! The last X value was " + lastX + " but expected " + lastXExpected);
+    } else {
       logError("Decompressor did not find " + nPoints + " points -- instead "
           + nptsFound + " xyCoords.length set to " + nPoints);
       for (int i = nptsFound; i < nPoints; i++)
-        addPoint(new Coordinate().set(0, 0), i);
+        addPoint(new Coordinate().set(0, Double.NaN), i);
     }
   }
 
@@ -420,14 +441,13 @@ public class JDXDecompressor {
    * @param yval
    * @return the double value, or NaN if any other character is found
    */
-  private double getDecompressedYValue(double yval) {
-    // if we are duplicating, just return duplicate Y value, or that plus the difference, if DIFDUP
-    // check for line overrun -- this is an error state
+  private double nextValue(double yval) {
     if (dupCount > 0)
       return getDuplicate(yval);
     char ch = skipUnknown();
     switch (actions[ch]) {
     case ACTION_DIF:
+      isDIF = true;
       return yval + (lastDif = readNextInteger(
           ch == '%' ? 0 : ch <= 'R' ? ch - 'I' : 'i' - ch));
     case ACTION_DUP:
@@ -447,10 +467,12 @@ public class JDXDecompressor {
       yval = Double.NaN;
       break;
     }
-    lastDif = Integer.MIN_VALUE;
+    isDIF = false;
     return yval;
   }
   
+  private boolean isDIF = true;
+
   /**
    * Skip all unknown characters, setting the ich field to the first known character or to 0 if the end of line has been reached
    * 
@@ -504,7 +526,7 @@ public class JDXDecompressor {
 
   private double getDuplicate(double yval) {
       dupCount--;
-      return (lastDif == Integer.MIN_VALUE ? yval : yval + lastDif);
+      return (isDIF ? yval + lastDif : yval);
   }
 
   /**
@@ -563,6 +585,70 @@ public class JDXDecompressor {
    */
   public int getNPointsFound() {
     return nptsFound;
+  }
+  
+  private static String[] testLines = new String[] {
+      "1JT%jX",
+      "D7m9jNOj9RjLmoPKLMj4oJ8j7PJT%olJ3MnJj2J0j7MQpJ9j3j0TJ0J2j3PKmJ2KJ4Ok2J4Mk",
+      "A4j5lqkJ4rNj0J6j3JTpPqPNj6K0%j1J1lnJ8k3Pj1%J3j8J6J2j0J%Jj1Pkj1RJ5nj2OnjJJ3",
+      "Ak8K1MPj4Nj2RJQoKnJ0j8J5mQl4L0j5J7k2NJMTJ1noLNj0KkqLmJ7Lk3MJ7p%qoLJ3nRjoJQ",
+      "b2TJ2j7Nj0J8jpLOlOj2Jj0RJ5pmqJ1lpJ1pPjKJjkPj2MjJ2j2Qj2k3L4qnJ4prmRKmoJ6J5r",
+      "I82314Q00sQ01Q00S2J85%W3A000100"
+    };
+
+  private static double dx5 = (1.287944E+03-3.500640E+03)/(2000-1);
+  private static double[][] testData = new double[][] {
+    new double[] {0, 1, 10, -3}, 
+    new double[] {8191, -1, 8139, 14},
+    new double[] {8139, -1, 8089, 1},
+    new double[] {8089, -1, 8034, 2},
+    new double[] {6142, -1, 6088, -9},
+    new double[] {1374.2821, dx5, 1287.9438 - dx5, 1000100}, 
+    };
+
+  private static int testIndex = 5;
+ 
+  public static void main(String[] args) {
+    String line;
+    double x, xexp, dx, yexp;
+    if (args.length == 0) {
+      line = testLines[testIndex];
+      double[] data = testData[testIndex];
+      x = data[0];
+      dx = data[1];
+      xexp = data[2];
+      yexp = data[3];
+      
+    } else {
+      line = args[0];
+      x = 0;
+      dx = 1;
+      xexp = -1;
+      yexp = Double.NaN;
+    }
+    JDXDecompressor d = new JDXDecompressor(line, 0);
+    int n = 0;
+    while(d.hasNext()) {
+      String s = line.substring(d.ich);
+      if (n > 0)
+        x += dx;
+      System.out.println(
+          (++n) + " " + 
+          x + " " + 
+              d.next() + " " + s);
+    }
+    if (xexp >= 0)
+      System.out.println("expected x " + xexp + " final x " + x + " expected y "  + yexp + " final y " + d.lastY);
+  }
+
+  @Override
+  public boolean hasNext() {
+    return (ich < lineLen || dupCount > 0);
+  }
+
+  @Override
+  public Double next() {
+    return (hasNext() ? Double.valueOf(lastY = nextValue(lastY)) : null);
   }
 
 }
