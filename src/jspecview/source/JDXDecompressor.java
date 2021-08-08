@@ -483,7 +483,6 @@ public class JDXDecompressor {
         break;
       }
     }
-    System.out.println(line.substring(ich0));
     return factor * Double.parseDouble(line.substring(ich0, ich));
   }
 

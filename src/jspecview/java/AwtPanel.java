@@ -96,11 +96,6 @@ import jspecview.common.ScriptToken;
 public class AwtPanel extends JPanel implements JSVPanel, Printable {
   private static final long serialVersionUID = 1L;
   
-  @Override
-  public void finalize() {
-    Logger.info("JSVPanel " + this + " finalized");
-  }
-
 	private GenericPlatform apiPlatform;
 	@Override
 	public GenericPlatform getApiPlatform() {
