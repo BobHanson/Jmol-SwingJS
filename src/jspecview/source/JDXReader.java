@@ -73,14 +73,14 @@ public class JDXReader implements JmolJDXMOLReader {
       " (XY..XY)    (X++(Y..Y)) (XY..XY)    " };
 
   public static String getVarList(String dataClass) {
-		int index = VAR_LIST_TABLE[0].indexOf(dataClass);
+    int index = VAR_LIST_TABLE[0].indexOf(dataClass);
     return VAR_LIST_TABLE[1].substring(index + 1, index+12).trim();
-	}
+  }
 
   final static String ERROR_SEPARATOR = "=====================\n";
   
-	private float nmrMaxY = Float.NaN;
-	
+  private float nmrMaxY = Float.NaN;
+  
 //  static {
 //    Arrays.sort(TABULAR_DATA_LABELS);  OUCH! - Breaks J2S
 //  }
@@ -97,7 +97,7 @@ public class JDXReader implements JmolJDXMOLReader {
 
   private boolean loadImaginary = true;
 
-	private boolean isSimulation;
+  private boolean isSimulation;
 
   /**
    * For JEOL, skip ##SHIFTREFERENCE 
@@ -107,16 +107,16 @@ public class JDXReader implements JmolJDXMOLReader {
   private boolean ignorePeakTables;
 
   private JDXReader(String filePath, boolean obscure, boolean loadImaginary,
-  		int iSpecFirst, int iSpecLast, float nmrNormalization) {
-  	filePath = PT.trimQuotes(filePath);
-  	isSimulation = (filePath != null && filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL)); 
-  	if (isSimulation) {
-  		//TODO: H1 vs. C13 here?
-  	  nmrMaxY = (Float.isNaN(nmrNormalization) ? 10000 : nmrNormalization);
-    	//filePath = JSVFileManager.getAbbrSimulationFileName(filePath);
-  	}
-  	// this.filePath is used for sending information back to Jmol
-  	// and also for setting the application tree label
+      int iSpecFirst, int iSpecLast, float nmrNormalization) {
+    filePath = PT.trimQuotes(filePath);
+    isSimulation = (filePath != null && filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL)); 
+    if (isSimulation) {
+      //TODO: H1 vs. C13 here?
+      nmrMaxY = (Float.isNaN(nmrNormalization) ? 10000 : nmrNormalization);
+      //filePath = JSVFileManager.getAbbrSimulationFileName(filePath);
+    }
+    // this.filePath is used for sending information back to Jmol
+    // and also for setting the application tree label
     this.filePath = filePath;
     this.obscure = obscure;
     firstSpec = iSpecFirst;
@@ -340,25 +340,25 @@ public class JDXReader implements JmolJDXMOLReader {
    * @param rawLine
    */
   private void setVenderSpecificValues(String rawLine) {
-	  if (rawLine.indexOf("JEOL") >= 0) {
-		  System.out.println("Skipping ##SHIFTREFERENCE for JEOL " + rawLine);
-		  ignoreShiftReference = true;
-	  }
-	  if (rawLine.indexOf("MestReNova") >= 0) {
-	    ignorePeakTables = true;
-	    
-	  }
+    if (rawLine.indexOf("JEOL") >= 0) {
+      System.out.println("Skipping ##SHIFTREFERENCE for JEOL " + rawLine);
+      ignoreShiftReference = true;
+    }
+    if (rawLine.indexOf("MestReNova") >= 0) {
+      ignorePeakTables = true;
+      
+    }
   }
 
 
   private String getValue(String label) {
-  	String value = (isTabularDataLabel(label) ? "" : t.getValue());
-  	return ("##END".equals(label) ? null : value);
+    String value = (isTabularDataLabel(label) ? "" : t.getValue());
+    return ("##END".equals(label) ? null : value);
   }
 
-	private boolean isTabularData;  
+  private boolean isTabularData;  
   private boolean isTabularDataLabel(String label) {
-  	return (isTabularData = ("##DATATABLE##PEAKTABLE##XYDATA##XYPOINTS#".indexOf(label + "#") >= 0));
+    return (isTabularData = ("##DATATABLE##PEAKTABLE##XYDATA##XYPOINTS#".indexOf(label + "#") >= 0));
   }
   
   private int firstSpec = 0;
@@ -367,52 +367,52 @@ public class JDXReader implements JmolJDXMOLReader {
 
   private double blockID;
 
-	private JmolJDXMOLParser mpr;
+  private JmolJDXMOLParser mpr;
 
-	private BufferedReader reader;
+  private BufferedReader reader;
 
-	private Spectrum modelSpectrum;
+  private Spectrum modelSpectrum;
 
-	private Lst<String[]> acdAssignments;
-	private String acdMolFile;
+  private Lst<String[]> acdAssignments;
+  private String acdMolFile;
 
-	private boolean addSpectrum(Spectrum spectrum, boolean forceSub) {
-		if (!loadImaginary && spectrum.isImaginary()) {
-			Logger
-					.info("FileReader skipping imaginary spectrum -- use LOADIMAGINARY TRUE to load this spectrum.");
-			return true;
-		}
-		if (acdAssignments != null) {
-			if (!spectrum.dataType.equals("MASS SPECTRUM") && !spectrum.isContinuous()) {
-				Logger.info("Skipping ACD Labs line spectrum for " + spectrum);
-				return true;
-			}
-			if (acdAssignments.size() > 0) {
-				try {
-					mpr.setACDAssignments(spectrum.title, spectrum.getTypeLabel(), 
-							source.peakCount, acdAssignments, acdMolFile);
-				} catch (Exception e) {
-					Logger.info("Failed to create peak data: " + e);
-				}
-			}
-			if (acdMolFile != null)
-				JSVFileManager.cachePut("mol", acdMolFile);
-		}
+  private boolean addSpectrum(Spectrum spectrum, boolean forceSub) {
+    if (!loadImaginary && spectrum.isImaginary()) {
+      Logger
+          .info("FileReader skipping imaginary spectrum -- use LOADIMAGINARY TRUE to load this spectrum.");
+      return true;
+    }
+    if (acdAssignments != null) {
+      if (!spectrum.dataType.equals("MASS SPECTRUM") && !spectrum.isContinuous()) {
+        Logger.info("Skipping ACD Labs line spectrum for " + spectrum);
+        return true;
+      }
+      if (acdAssignments.size() > 0) {
+        try {
+          mpr.setACDAssignments(spectrum.title, spectrum.getTypeLabel(), 
+              source.peakCount, acdAssignments, acdMolFile);
+        } catch (Exception e) {
+          Logger.info("Failed to create peak data: " + e);
+        }
+      }
+      if (acdMolFile != null)
+        JSVFileManager.cachePut("mol", acdMolFile);
+    }
     if (!Float.isNaN(nmrMaxY))
-			spectrum.doNormalize(nmrMaxY);
+      spectrum.doNormalize(nmrMaxY);
     else if (spectrum.getMaxY() >= 10000)
-			spectrum.doNormalize(1000);
-		if (isSimulation)
-			spectrum.setSimulated(filePath);
-		nSpec++;
-		if (firstSpec > 0 && nSpec < firstSpec)
-			return true;
-		if (lastSpec > 0 && nSpec > lastSpec)
-			return !(done = true);
-		spectrum.setBlockID(blockID);
-		source.addJDXSpectrum(null, spectrum, forceSub);
-		return true;
-	}
+      spectrum.doNormalize(1000);
+    if (isSimulation)
+      spectrum.setSimulated(filePath);
+    nSpec++;
+    if (firstSpec > 0 && nSpec < firstSpec)
+      return true;
+    if (lastSpec > 0 && nSpec > lastSpec)
+      return !(done = true);
+    spectrum.setBlockID(blockID);
+    source.addJDXSpectrum(null, spectrum, forceSub);
+    return true;
+  }
 
   /**
    * reads BLOCK data
@@ -523,19 +523,19 @@ public class JDXReader implements JmolJDXMOLReader {
     return source;
   }
 
-//	/**
-//	 * 
-//	 * @return ##TITLE or null
-//	 */
-//	private String skipBlock() {
-//		String label;
-//		while ((label = t.getLabel()) != null && !label.equals("##TITLE"))
-//			t.getValue();
-//		return label;
-//	}
+//  /**
+//   * 
+//   * @return ##TITLE or null
+//   */
+//  private String skipBlock() {
+//    String label;
+//    while ((label = t.getLabel()) != null && !label.equals("##TITLE"))
+//      t.getValue();
+//    return label;
+//  }
 
 
-	private void addErrorLogSeparator() {
+  private void addErrorLogSeparator() {
     if (errorLog.length() > 0
         && errorLog.lastIndexOf(ERROR_SEPARATOR) != errorLog.length()
             - ERROR_SEPARATOR.length())
@@ -554,7 +554,7 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    */
   @SuppressWarnings("null")
-	private JDXSource getNTupleSpectra(Lst<String[]> sourceLDRTable,
+  private JDXSource getNTupleSpectra(Lst<String[]> sourceLDRTable,
                                      JDXDataObject spectrum0, String label)
       throws JSVException {
     double[] minMaxY = new double[] { Double.MAX_VALUE, Double.MIN_VALUE };
@@ -694,14 +694,14 @@ public class JDXReader implements JmolJDXMOLReader {
     return source;
   }
 
-	/**
+  /**
    * 
    * @param spectrum
    * @param label
    * @param value
    * @param errorLog
    * @param obscure
-	 * @param isHeaderOnly 
+   * @param isHeaderOnly 
    * @return  true to skip saving this key in the spectrum headerTable
    */
   private boolean readDataLabel(JDXDataObject spectrum, String label,
@@ -719,50 +719,50 @@ public class JDXReader implements JmolJDXMOLReader {
 
     // NMR variations: need observedFreq, offset, dataPointNum, and shiftRefType 
     switch (("##FIRSTX  "
-    		  + "##LASTX   "
-    		  + "##NPOINTS "
-    		  + "##XFACTOR "
-    		  + "##YFACTOR "
-    		  + "##XUNITS  "
-    		  + "##YUNITS  "
-    		  + "##XLABEL  "
-    		  + "##YLABEL  "
-    		  + "##NUMDIM  "
-    		  + "##OFFSET  "
-    		  ).indexOf(label)) {
-    	case 0:
+          + "##LASTX   "
+          + "##NPOINTS "
+          + "##XFACTOR "
+          + "##YFACTOR "
+          + "##XUNITS  "
+          + "##YUNITS  "
+          + "##XLABEL  "
+          + "##YLABEL  "
+          + "##NUMDIM  "
+          + "##OFFSET  "
+          ).indexOf(label)) {
+      case 0:
         spectrum.fileFirstX = parseAFFN(label, value);
         return true;
-    	case 10:
+      case 10:
         spectrum.fileLastX = parseAFFN(label, value);
         return true;
-    	case 20:
+      case 20:
         spectrum.nPointsFile = Integer.parseInt(value);
         return true;
-    	case 30:
+      case 30:
         spectrum.xFactor = parseAFFN(label, value);
         return true;
-    	case 40:
+      case 40:
         spectrum.yFactor = parseAFFN(label, value);
         return true;
-    	case 50:
+      case 50:
         spectrum.setXUnits(value);
         return true;
-    	case 60:
+      case 60:
         spectrum.setYUnits(value);
         return true;
-    	case 70:
+      case 70:
         spectrum.setXLabel(value);
         return false; // store in hashtable
-    	case 80:
+      case 80:
         spectrum.setYLabel(value);
         return false; // store in hashtable
-    	case 90:
+      case 90:
         spectrum.numDim = Integer.parseInt(value);
         return true;
-    	case 100:
+      case 100:
         if (spectrum.shiftRefType != 0) {
-        	if (spectrum.offset == JDXDataObject.ERROR)
+          if (spectrum.offset == JDXDataObject.ERROR)
             spectrum.offset = parseAFFN(label, value);
           // bruker doesn't need dataPointNum
           spectrum.dataPointNum = 1;
@@ -776,8 +776,8 @@ public class JDXReader implements JmolJDXMOLReader {
         //      return true;
         //    }
 
-      	if (label.length() < 17)
-      		return false;   
+        if (label.length() < 17)
+          return false;   
         if (label.equals("##.OBSERVEFREQUENCY ")) {
           spectrum.observedFreq = parseAFFN(label, value);
           return true;
@@ -822,19 +822,19 @@ public class JDXReader implements JmolJDXMOLReader {
   private static boolean readHeaderLabel(JDXHeader jdxHeader, String label,
                                          String value, SB errorLog,
                                          boolean obscure) {
-  	switch (("##TITLE###" +
-  			     "##JCAMPDX#" +
-  			     "##ORIGIN##" +
-  			     "##OWNER###" +
-  			     "##DATATYPE" +
-  			     "##LONGDATE" +
-  			     "##DATE####" +
-  			     "##TIME####").indexOf(label + "#")) {
-  	case 0:
+    switch (("##TITLE###" +
+             "##JCAMPDX#" +
+             "##ORIGIN##" +
+             "##OWNER###" +
+             "##DATATYPE" +
+             "##LONGDATE" +
+             "##DATE####" +
+             "##TIME####").indexOf(label + "#")) {
+    case 0:
       jdxHeader.setTitle(obscure || value == null || value.equals("") ? "Unknown"
           : value);
       return true;
-  	case 10:
+    case 10:
       jdxHeader.jcampdx = value;
       float version = PT.parseFloat(value);
       if (version >= 6.0 || Float.isNaN(version)) {
@@ -844,23 +844,23 @@ public class JDXReader implements JmolJDXMOLReader {
                   + value);
       }
       return true;
-  	case 20:
+    case 20:
       jdxHeader.origin = (value != null && !value.equals("") ? value
           : "Unknown");
       return true;
-  	case 30:
+    case 30:
       jdxHeader.owner = (value != null && !value.equals("") ? value : "Unknown");
       return true;
-  	case 40:
+    case 40:
       jdxHeader.dataType = value;
       return true;
-  	case 50:
+    case 50:
       jdxHeader.longDate = value;
       return true;
-  	case 60:
+    case 60:
       jdxHeader.date = value;
       return true;
-  	case 70:
+    case 70:
       jdxHeader.time = value;
       return true;
     }
@@ -883,43 +883,43 @@ public class JDXReader implements JmolJDXMOLReader {
 //    }
   }
 
-	private boolean processTabularData(JDXDataObject spec, Lst<String[]> table, boolean isHeaderOnly)
-			throws JSVException {
-		spec.setHeaderTable(table);
+  private boolean processTabularData(JDXDataObject spec, Lst<String[]> table, boolean isHeaderOnly)
+      throws JSVException {
+    spec.setHeaderTable(table);
 
-		if (spec.dataClass.equals("XYDATA")) {
-			spec.checkRequiredTokens();
-			if (!isHeaderOnly)
-			  decompressData(spec, null, false);
-			return true;
-		}
-		if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
-			spec.setContinuous(spec.dataClass.equals("XYPOINTS"));
-			// check if there is an x and y factor
-			try {
-				t.readLineTrimmed();
-			} catch (IOException e) {
-				// ignore
-			}
-			Coordinate[] xyCoords;
+    if (spec.dataClass.equals("XYDATA")) {
+      spec.checkRequiredTokens();
+      if (!isHeaderOnly)
+        decompressData(spec, null);
+      return true;
+    }
+    if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
+      spec.setContinuous(spec.dataClass.equals("XYPOINTS"));
+      // check if there is an x and y factor
+      try {
+        t.readLineTrimmed();
+      } catch (IOException e) {
+        // ignore
+      }
+      Coordinate[] xyCoords;
 
-			if (spec.xFactor != JDXDataObject.ERROR
-					&& spec.yFactor != JDXDataObject.ERROR) {
-			  String data = t.getValue();
- 				xyCoords = Coordinate
-						.parseDSV(data, spec.xFactor, spec.yFactor);
-			} else {
-				xyCoords = Coordinate.parseDSV(t.getValue(), 1, 1);
-			}
-			spec.setXYCoords(xyCoords);
-			double fileDeltaX = Coordinate.deltaX(
-					xyCoords[xyCoords.length - 1].getXVal(), xyCoords[0].getXVal(),
-					xyCoords.length);
-			spec.setIncreasing(fileDeltaX > 0);
-			return true;
-		}
-		return false;
-	}
+      if (spec.xFactor != JDXDataObject.ERROR
+          && spec.yFactor != JDXDataObject.ERROR) {
+        String data = t.getValue();
+        xyCoords = Coordinate
+            .parseDSV(data, spec.xFactor, spec.yFactor);
+      } else {
+        xyCoords = Coordinate.parseDSV(t.getValue(), 1, 1);
+      }
+      spec.setXYCoords(xyCoords);
+      double fileDeltaX = Coordinate.deltaX(
+          xyCoords[xyCoords.length - 1].getXVal(), xyCoords[0].getXVal(),
+          xyCoords.length);
+      spec.setIncreasing(fileDeltaX > 0);
+      return true;
+    }
+    return false;
+  }
 
   private boolean readNTUPLECoords(JDXDataObject spec, 
                                           Map<String, Lst<String>> nTupleTable,
@@ -959,11 +959,11 @@ public class JDXReader implements JmolJDXMOLReader {
         spec.setNucleusAndFreq(list.get(0), false);
         spec.setNucleusAndFreq(list.get(index1), true);
       } else {
-      	if (spec.nucleusX == null)
+        if (spec.nucleusX == null)
           spec.nucleusX = "?";
       }
 
-      decompressData(spec, minMaxY, true);
+      decompressData(spec, minMaxY);
       return true;
     }
     if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
@@ -1021,19 +1021,19 @@ public class JDXReader implements JmolJDXMOLReader {
     return Double.parseDouble(val);
   }
 
-  private void decompressData(JDXDataObject spec, double[] minMaxY, boolean isNTUPLE) {
+  private void decompressData(JDXDataObject spec, double[] minMaxY) {
 
     int errPt = errorLog.length();
     spec.setIncreasing(spec.fileLastX > spec.fileFirstX);
     spec.setContinuous(true);
     JDXDecompressor decompressor = new JDXDecompressor(t, spec.fileFirstX,
-        spec.xFactor, spec.yFactor, spec.fileLastX, spec.nPointsFile, isNTUPLE);
+        spec.fileLastX, spec.xFactor, spec.yFactor, spec.nPointsFile);
 
-    double[] firstLastX = new double[2];
     long t = System.currentTimeMillis();
-    Coordinate[] xyCoords = decompressor.decompressData(errorLog, firstLastX);
+    Coordinate[] xyCoords = decompressor.decompressData(errorLog);
     if (Logger.debugging)
-    	Logger.debug("decompression time = " + (System.currentTimeMillis() - t) + " ms");
+      Logger.debug(
+          "decompression time = " + (System.currentTimeMillis() - t) + " ms");
     spec.setXYCoords(xyCoords);
     double d = decompressor.getMinY();
     if (minMaxY != null) {
@@ -1046,14 +1046,15 @@ public class JDXReader implements JmolJDXMOLReader {
     double freq = (Double.isNaN(spec.freq2dX) ? spec.observedFreq
         : spec.freq2dX);
     // apply offset
-    boolean isHz = freq != JDXDataObject.ERROR && spec.getXUnits().toUpperCase().equals("HZ");
+    boolean isHz = freq != JDXDataObject.ERROR
+        && spec.getXUnits().toUpperCase().equals("HZ");
     if (spec.offset != JDXDataObject.ERROR && freq != JDXDataObject.ERROR
         && spec.dataType.toUpperCase().contains("SPECTRUM")
         && spec.jcampdx.indexOf("JEOL") < 0 // BH 2020.09.16 J Muzyka Centre College
-    		) {
-      Coordinate
-          .applyShiftReference(xyCoords, spec.dataPointNum, spec.fileFirstX,
-              spec.fileLastX, spec.offset, isHz ? freq : 1, spec.shiftRefType);
+    ) {
+      Coordinate.applyShiftReference(xyCoords, spec.dataPointNum,
+          spec.fileFirstX, spec.fileLastX, spec.offset, isHz ? freq : 1,
+          spec.shiftRefType);
     }
 
     if (isHz) {
@@ -1065,13 +1066,11 @@ public class JDXReader implements JmolJDXMOLReader {
       double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
           spec.nPointsFile);
       logError(spec.getTitle());
-      logError("firstX: " + spec.fileFirstX + " Found " + firstLastX[0]
-         );
       logError("lastX from Header " + spec.fileLastX + " Found "
-          + firstLastX[1]);
+          + decompressor.lastX);
       logError("deltaX from Header " + fileDeltaX);
-      logError("Number of points in Header " + spec.nPointsFile
-          + " Found " + decompressor.getNPointsFound());
+      logError("Number of points in Header " + spec.nPointsFile + " Found "
+          + decompressor.getNPointsFound());
     } else {
       //logError("No Errors decompressing data");
     }
@@ -1093,92 +1092,92 @@ public class JDXReader implements JmolJDXMOLReader {
   }
 
 
-	////// JCAMP-DX/MOL reading //////
-	
-	private boolean checkCustomTags(Spectrum spectrum, String label,
-			String value) throws JSVException {
-		if (label.length() > 10)
-			label = label.substring(0, 10);
-		if (spectrum == null)
-			System.out.println(label);
-		else
-			modelSpectrum = spectrum;
+  ////// JCAMP-DX/MOL reading //////
+  
+  private boolean checkCustomTags(Spectrum spectrum, String label,
+      String value) throws JSVException {
+    if (label.length() > 10)
+      label = label.substring(0, 10);
+    if (spectrum == null)
+      System.out.println(label);
+    else
+      modelSpectrum = spectrum;
     int pt = "##$MODELS ##$PEAKS  ##$SIGNALS##$MOLFILE##PEAKASSI##$UVIRASS##$MSFRAGM".indexOf(label);
     //        0         10        20        30        40        50        60        
-		if (pt < 0)
-			return false;
-		getMpr().set(this, filePath, null);
-		try {
-			reader = new BufferedReader(new StringReader(value));
-			switch (pt) {
-			case 0:
-				mpr.readModels();
-				break;
-			case 10:
-			case 20:
-				peakData = new Lst<PeakInfo>();
-				source.peakCount += mpr.readPeaks(pt == 20, source.peakCount);
-				break;
-			case 30:
-				// moldata - skip
-				acdAssignments = new Lst<String[]>();
-				acdMolFile = PT.rep(value, "$$ Empty String", "");
-				break;
-	    case 40:
-	    case 50:
-	    case 60:
-	    	acdAssignments = mpr.readACDAssignments(spectrum.nPointsFile, pt == 40);
-	      break;
-			}				
-		} catch (Exception e) {
-			throw new JSVException(e.getMessage());
-		} finally {
-			reader = null;
-		}
-		return true;
-	}
+    if (pt < 0)
+      return false;
+    getMpr().set(this, filePath, null);
+    try {
+      reader = new BufferedReader(new StringReader(value));
+      switch (pt) {
+      case 0:
+        mpr.readModels();
+        break;
+      case 10:
+      case 20:
+        peakData = new Lst<PeakInfo>();
+        source.peakCount += mpr.readPeaks(pt == 20, source.peakCount);
+        break;
+      case 30:
+        // moldata - skip
+        acdAssignments = new Lst<String[]>();
+        acdMolFile = PT.rep(value, "$$ Empty String", "");
+        break;
+      case 40:
+      case 50:
+      case 60:
+        acdAssignments = mpr.readACDAssignments(spectrum.nPointsFile, pt == 40);
+        break;
+      }       
+    } catch (Exception e) {
+      throw new JSVException(e.getMessage());
+    } finally {
+      reader = null;
+    }
+    return true;
+  }
 
-	// methods called by JDXModelPeakParser()
+  // methods called by JDXModelPeakParser()
 
-	private JmolJDXMOLParser getMpr() {
-		return (mpr == null?
-			mpr = (JmolJDXMOLParser) JSViewer.getInterface("org.jmol.jsv.JDXMOLParser") : mpr);
-	}
+  private JmolJDXMOLParser getMpr() {
+    return (mpr == null?
+      mpr = (JmolJDXMOLParser) JSViewer.getInterface("org.jmol.jsv.JDXMOLParser") : mpr);
+  }
 
-	@Override
-	public String rd() throws Exception {
-	return reader.readLine();
-	}
+  @Override
+  public String rd() throws Exception {
+  return reader.readLine();
+  }
 
-	private Lst<PeakInfo> peakData;
+  private Lst<PeakInfo> peakData;
 
-	@Override
-	public void setSpectrumPeaks(int nH, String piUnitsX, String piUnitsY) {
-		modelSpectrum.setPeakList(peakData, piUnitsX, piUnitsY);
-		if (modelSpectrum.isNMR())
-			modelSpectrum.setNHydrogens(nH);		
-	}
+  @Override
+  public void setSpectrumPeaks(int nH, String piUnitsX, String piUnitsY) {
+    modelSpectrum.setPeakList(peakData, piUnitsX, piUnitsY);
+    if (modelSpectrum.isNMR())
+      modelSpectrum.setNHydrogens(nH);    
+  }
 
-	@Override
+  @Override
   public void addPeakData(String info) {
-		if (peakData == null)
-			peakData = new Lst<PeakInfo>();
-  	peakData.addLast(new PeakInfo(info));
-	}
-
-
-	@Override
-	public void processModelData(String id, String data, String type,
-			String base, String last, float modelScale, float vibScale, boolean isFirst)
-			throws Exception {
-		// Jmol only
-	}
+    if (peakData == null)
+      peakData = new Lst<PeakInfo>();
+    peakData.addLast(new PeakInfo(info));
+  }
 
 
   @Override
-	public String discardLinesUntilContains(String containsMatch)
+  public void processModelData(String id, String data, String type,
+      String base, String last, float modelScale, float vibScale, boolean isFirst)
       throws Exception {
-  	String line;
+    // Jmol only
+  }
+
+
+  @Override
+  public String discardLinesUntilContains(String containsMatch)
+      throws Exception {
+    String line;
     while ((line = rd()) != null && line.indexOf(containsMatch) < 0) {
     }
     return line;
@@ -1187,17 +1186,17 @@ public class JDXReader implements JmolJDXMOLReader {
   @Override
   public String discardLinesUntilContains2(String s1, String s2)
       throws Exception {
-  	String line;
+    String line;
     while ((line = rd()) != null && line.indexOf(s1) < 0 && line.indexOf(s2) < 0) {
     }
     return line;
   }
 
-	@Override
-	public String discardLinesUntilNonBlank() throws Exception {
-		String line;
-		while ((line = rd()) != null && line.trim().length() == 0) {
-		}
-		return line;
-	}
+  @Override
+  public String discardLinesUntilNonBlank() throws Exception {
+    String line;
+    while ((line = rd()) != null && line.trim().length() == 0) {
+    }
+    return line;
+  }
 }

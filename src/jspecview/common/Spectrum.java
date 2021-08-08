@@ -62,11 +62,6 @@ public class Spectrum extends JDXDataObject {
     }
   }
   
-  @Override
-  public void finalize() {
-    System.out.println("JDXSpectrum " + this + " finalized " + title);
-  }
-
   /**
    * spectra that can never be displayed independently, or at least not by default
    * 2D slices, for example.
