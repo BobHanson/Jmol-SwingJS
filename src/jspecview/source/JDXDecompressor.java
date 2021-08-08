@@ -26,10 +26,9 @@ package jspecview.source;
 
 import java.io.IOException;
 
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
 
+import javajs.util.SB;
 import jspecview.common.Coordinate;
 
 /**
@@ -78,15 +77,20 @@ public class JDXDecompressor {
 
   private static final int[] actions = new int[255];
 
-  private static final int ACTION_INVALID = -1;
-  private static final int ACTION_UNKNOWN = 0;
-  private static final int ACTION_DIF     = 1;
-  private static final int ACTION_DUP     = 2;
-  private static final int ACTION_SQZ     = 3;
-  private static final int ACTION_NUMERIC = 4;
+  private static final int ACTION_INVALID   = -1;
+  private static final int ACTION_UNKNOWN   = 0;
+  private static final int ACTION_DIF       = 1;
+  private static final int ACTION_DUP       = 2;
+  private static final int ACTION_SQZ       = 3;
+  private static final int ACTION_NUMERIC   = 4;
+  
+  /**
+   * if '?' is encountered, we will assign 0 to this value and continue
+   */
+  private static final double INVALID_Y = Double.MAX_VALUE;
   
   static {
-    // from '%' to 's'
+    // from '%' to 's'; all others will remain 0, ACTION_UNKNOWN
     for (int i = 0x25; i < 0x73; i++) {
       switch(i) {      
       case '%':
@@ -255,13 +259,12 @@ public class JDXDecompressor {
     this.errorLog = errorLog;
     double deltaXcalc = Coordinate.deltaX(lastX, firstX, nPoints);
 
-    
-//debugging = true;
-    
-    
+    //debugging = true;
+
     if (debugging)
-      logError("firstX=" + firstX + " xFactor=" + xFactor + " yFactor="
-          + yFactor + " deltaX=" + deltaXcalc + " nPoints=" + nPoints);
+      logError("firstX=" + firstX + " lastX=" + lastX + " xFactor=" + xFactor
+          + " yFactor=" + yFactor + " deltaX=" + deltaXcalc + " nPoints="
+          + nPoints);
 
     //testAlgorithm();
 
@@ -287,7 +290,7 @@ public class JDXDecompressor {
           logError(lineNumber + "\t" + line);
         if ((lineLen = line.length()) == 0)
           continue;
-        ich = 1;// first number starts at 0, but readSignedFloat expects 1 here
+        ich = 0;
         boolean isCheckPoint = (lastDif != Integer.MIN_VALUE);
         double xcheck = readSignedFloat() * xFactor;
         yval = getDecompressedYValue(yval);
@@ -296,57 +299,56 @@ public class JDXDecompressor {
           x += deltaXcalc;
         double y = yval * yFactor;
         Coordinate point = new Coordinate().set(x, y);
-        if (ipt == 0) {
+        if (ipt == 0 || !isCheckPoint) {
           addPoint(point, ipt++); // first data line only
         } else if (ipt < nPoints) {
           // do check
-          Coordinate lastPoint = xyCoords[ipt - 1];
           // DIF Y checkpoint means X value does not advance at start
           // of new line. Remove last values and put in latest ones
-          if (isCheckPoint) {
-            // note that missing or out-of-order lines will result in a Y-value error and two X-check failures
-            // Check for Y checkpoint error - Y values should correspond
-            double lastY = lastPoint.getYVal();
-            if (y != lastY) {
-              xyCoords[ipt - 1] = point;
-              logError(
-                  lastLine + "\n" + line + "\nY-value Checkpoint Error! Line "
-                      + lineNumber + " for y=" + y + " yLast=" + lastY);
-            }
-            if (xcheck == prevXcheck
-                || (xcheck < prevXcheck) != (deltaXcalc < 0)) {
-              // duplicated or out of order lines
-              logError(lastLine + "\n" + line
-                  + "\nX-sequence Checkpoint Error! Line " + lineNumber
-                  + " order for xCheck=" + xcheck + " after prevXCheck="
-                  + prevXcheck);
-            }
-            // |--------|.....by ipt
-            // |---|..........by xcheck duplicated or out
-            // |------------|.by xcheck  missing a line
-            double xcheckDif = Math.abs(xcheck - prevXcheck);
-            double xiptDif = Math.abs((ipt - prevIpt) * deltaXcalc);
-            double fracDif = Math.abs((xcheckDif - xiptDif)) / xcheckDif;
-            if (debugging)
-              System.out.println("JDXD fracDif = " + xcheck + "\t" + prevXcheck
-                  + "\txcheckDif=" + xcheckDif + "\txiptDif=" + xiptDif + "\tf="
-                  + fracDif);
-            if (fracDif > difFracMax) {
-              logError(
-                  lastLine + "\n" + line + "\nX-value Checkpoint Error! Line "
-                      + lineNumber + " expected " + xiptDif
-                      + " but X-Sequence Check difference reads " + xcheckDif);
-            }
-          } else {
-            addPoint(point, ipt++);
+          // note that missing or out-of-order lines will result in a Y-value error and two X-check failures
+          // Check for Y checkpoint error - Y values should correspond
+          double lastY = xyCoords[ipt - 1].getYVal();
+          if (y != lastY) {
+            xyCoords[ipt - 1] = point;
+            logError(
+                lastLine + "\n" + line + "\nY-value Checkpoint Error! Line "
+                    + lineNumber + " for y=" + y + " yLast=" + lastY);
+          }
+          if (xcheck == prevXcheck
+              || (xcheck < prevXcheck) != (deltaXcalc < 0)) {
+            // duplicated or out of order lines
+            logError(
+                lastLine + "\n" + line + "\nX-sequence Checkpoint Error! Line "
+                    + lineNumber + " order for xCheck=" + xcheck
+                    + " after prevXCheck=" + prevXcheck);
+          }
+          // |--------|.....by ipt
+          // |---|..........by xcheck duplicated or out
+          // |------------|.by xcheck  missing a line
+          double xcheckDif = Math.abs(xcheck - prevXcheck);
+          double xiptDif = Math.abs((ipt - prevIpt) * deltaXcalc);
+          double fracDif = Math.abs((xcheckDif - xiptDif)) / xcheckDif;
+          if (debugging)
+            System.out.println(
+                "JDXD fracDif = " + xcheck + "\t" + prevXcheck + "\txcheckDif="
+                    + xcheckDif + "\txiptDif=" + xiptDif + "\tf=" + fracDif);
+          if (fracDif > difFracMax) {
+            logError(
+                lastLine + "\n" + line + "\nX-value Checkpoint Error! Line "
+                    + lineNumber + " expected " + xiptDif
+                    + " but X-Sequence Check difference reads " + xcheckDif);
           }
         }
         prevIpt = (ipt == 1 ? 0 : ipt);
         prevXcheck = xcheck;
         while (ich < lineLen || dupCount > 0) {
-          x += deltaXcalc;  
-          if (!Double.isNaN(yval = getDecompressedYValue(yval))) {
-            addPoint(new Coordinate().set(x = x + deltaXcalc, yval * yFactor), ipt++);
+          if (Double.isNaN(yval = getDecompressedYValue(yval))) {
+            logError("There was an error reading " + lineNumber + " char " + --ich + ":" + line.substring(0, ich) + ">>>>" + line.substring(ich));
+          } else {
+            if (!isCheckPoint)
+              x += deltaXcalc;
+            addPoint(new Coordinate().set(x, (yval == INVALID_Y ? 0 : yval * yFactor)), ipt++);
+            isCheckPoint = false;
           }
         }
         lastX = x;
@@ -401,7 +403,7 @@ public class JDXDecompressor {
   }
 
   /**
-   * Process the number or pseudo-digit.
+   * Process the number or pseudo-digit on the current trimmed line.
    * 
    * Derive the yval from:
    * 
@@ -409,44 +411,58 @@ public class JDXDecompressor {
    * 
    * b) difference, if the next char is [%J-Rj-r],
    * 
-   * c) the next Squeezed number, or
+   * c) the next Squeezed number, if the next char is [@A-Ia-i], or
    * 
-   * d) the next floating point number
+   * d) the next floating point number, if the next char is [+-.0-9]
+   * 
+   * 
    * 
    * @param yval
-   * @return the double value or NaN
+   * @return the double value, or NaN if any other character is found
    */
   private double getDecompressedYValue(double yval) {
     // if we are duplicating, just return duplicate Y value, or that plus the difference, if DIFDUP
     // check for line overrun -- this is an error state
     if (dupCount > 0)
       return getDuplicate(yval);
-    while (true) {
-      if (ich == lineLen)
-        return Double.NaN;
-      char ch = line.charAt(ich++);
-      switch (actions[ch]) {
-      case ACTION_UNKNOWN:
-        lastDif = Integer.MIN_VALUE;
-        continue;
-      case ACTION_DIF:
-        return yval + (lastDif = readNextInteger(ch == '%' ? 0 : ch <= 'R' ? ch - 'I' : 'i' - ch));
-      case ACTION_DUP:
-        dupCount = readNextInteger((ch == 's' ? 9 : ch - 'R')) - 1;
-        return getDuplicate(yval);
-      case ACTION_NUMERIC:
-        lastDif = Integer.MIN_VALUE;
-        return readSignedFloat();
-      case ACTION_SQZ:
-        lastDif = Integer.MIN_VALUE;
-        return readNextSqueezedNumber(ch);
-      case invalidData:
-        lastDif = Integer.MIN_VALUE;
-        return Double.NaN;
-      }
+    char ch = skipUnknown();
+    switch (actions[ch]) {
+    case ACTION_DIF:
+      return yval + (lastDif = readNextInteger(
+          ch == '%' ? 0 : ch <= 'R' ? ch - 'I' : 'i' - ch));
+    case ACTION_DUP:
+      dupCount = readNextInteger((ch == 's' ? 9 : ch - 'R')) - 1;
+      return getDuplicate(yval);
+    case ACTION_SQZ:
+      yval = readNextSqueezedNumber(ch);
+      break;
+    case ACTION_NUMERIC:
+      ich--;
+      yval = readSignedFloat();
+      break;
+    case ACTION_INVALID:
+      yval = INVALID_Y;
+      break;
+    default:
+      yval = Double.NaN;
+      break;
     }
+    lastDif = Integer.MIN_VALUE;
+    return yval;
   }
   
+  /**
+   * Skip all unknown characters, setting the ich field to the first known character or to 0 if the end of line has been reached
+   * 
+   * @return the next known character, or 0 if end of line
+   */
+  private char skipUnknown() {
+    char ch = 0;
+    while (ich < lineLen && actions[ch = line.charAt(ich++)] == ACTION_UNKNOWN) {
+    }
+    return ch;
+  }
+
   /**
    * Read x or y as a number, possibly signed and possibly exponential of the form
    * xxxE[+-]nn or xxxE[+-]nnn.
@@ -455,7 +471,7 @@ public class JDXDecompressor {
    * @throws NumberFormatException
    */
   private double readSignedFloat() throws NumberFormatException {
-    int ich0 = --ich;
+    int ich0 = ich;
     char ch = '\0';
     while (ich < lineLen && delimiters.indexOf(ch = line.charAt(ich)) >= 0)
       ich++;
@@ -487,7 +503,7 @@ public class JDXDecompressor {
   }
 
   private double getDuplicate(double yval) {
-      --dupCount;
+      dupCount--;
       return (lastDif == Integer.MIN_VALUE ? yval : yval + lastDif);
   }
 
