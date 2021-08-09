@@ -228,13 +228,14 @@ public class JDXExporter implements JSVExporter {
     }
     double observedFreq = spectrum.getObservedFreq();
     if (!spectrum.is1D())
-      out.append("##NUM DIM= ").append("" + spectrum.numDim).append(
+      out.append("##NUM DIM= ").append("" + spectrum.getNumDim()).append(
           newLine);
     if (observedFreq != JDXDataObject.ERROR)
       out.append("##.OBSERVE FREQUENCY= ").append("" + observedFreq).append(
           newLine);
-    if (spectrum.observedNucl != "")
-      out.append("##.OBSERVE NUCLEUS= ").append(spectrum.observedNucl).append(
+    String nuc = spectrum.getObservedNucleus();
+    if (!"".equals(nuc))
+      out.append("##.OBSERVE NUCLEUS= ").append(nuc).append(
           newLine);
     //now need to put pathlength here
 

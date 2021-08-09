@@ -452,8 +452,9 @@ public class IntegralData extends MeasurementData {
 				y0 = y;
 			}
 		}
-		if (spec.nH > 0)
-			factorAllIntegrals(spec.nH / percentRange, false);
+		int nH =spec.getHydrogenCount();
+		if (nH > 0)
+			factorAllIntegrals(nH / percentRange, false);
 	}
 
 	@Override

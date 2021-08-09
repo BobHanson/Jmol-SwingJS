@@ -376,7 +376,7 @@ public class JDXDecompressor implements Iterator<Double> {
       ioe.printStackTrace();
     }
     checkZeroFill(ipt, lastXExpected);
-    return (deltaXcalc > 0 ? xyCoords : Coordinate.reverse(xyCoords));
+    return xyCoords;
   }
 
   private void checkZeroFill(int ipt, double lastXExpected) {

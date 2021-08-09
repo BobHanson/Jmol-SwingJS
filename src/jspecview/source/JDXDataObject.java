@@ -40,7 +40,83 @@ public abstract class JDXDataObject extends JDXHeader {
   private String filePath;
   private String filePathForwardSlash;
   private String inlineData;
-    
+
+  private double fileShiftRef = ERROR; // ##.Shift Reference
+  private int fileShiftRefType = REF_TYPE_UNSPECIFIED; // shiftRef = 0, bruker = 1, varian = 2
+  private int fileShiftRefDataPt = -1;
+
+  private double minX = Double.NaN, minY = Double.NaN;
+  private double maxX = Double.NaN, maxY = Double.NaN;
+  private double deltaX = Double.NaN;
+  
+  /**
+   * array of x,y coordinates
+   */
+  public Coordinate[] xyCoords;
+  private boolean continuous;
+
+  /**
+   * whether the x values were converted from HZ to PPM
+   */
+  private boolean isHZtoPPM = false;
+  private boolean xIncreases = true;
+
+  // --Required JDX Parameters --
+  
+  /**
+   * JDXReader only
+   */
+  double fileFirstX = ERROR;
+
+  /**
+   * JDXReader only
+   */
+  double fileLastX = ERROR;
+  
+  
+  /**
+   * JDXReader only
+   */
+  int fileNPoints = -1;
+
+  /**
+   * Also used in JDXExport
+   */
+  public double xFactor = ERROR;
+
+  /**
+   * Also used in JDXExport
+   */
+  public double yFactor = ERROR;
+  
+  // --Optional Spectral Parameters
+
+  public String nucleusX, nucleusY = "?";  
+  public double freq2dX = Double.NaN;
+  public double freq2dY = Double.NaN;
+  public String y2DUnits = "";
+  
+  protected Spectrum parent;
+  protected String xUnits = "";
+  protected String yUnits = "";
+  protected String xLabel = null;
+  protected String yLabel = null;
+
+  /**
+   * from JDXReader ##VARNAME
+   */
+  String varName = "";
+  
+
+  /**
+   * for example, ^1H, ^13C
+   */
+  private String observedNucl = "";
+  private double observedFreq = ERROR;
+  private int numDim = 1;
+  private int nH;
+  private double y2D = Double.NaN;
+
   public void setInlineData(String data) {
     inlineData = data;
     
@@ -71,8 +147,6 @@ public abstract class JDXDataObject extends JDXHeader {
     blockID = id;
   }
 
-  // --------------------Required JDX Parameters ------------------------------//
-  
   /**
    * for JDXReader only
    * @throws JSVException
@@ -89,32 +163,6 @@ public abstract class JDXDataObject extends JDXHeader {
       throw new JSVException("Error Reading Data Set: " + missingTag + " not found");
   }
 
-  /**
-   * JDXReader only
-   */
-  double fileFirstX = ERROR;
-
-  /**
-   * JDXReader only
-   */
-  double fileLastX = ERROR;
-  
-  
-  /**
-   * JDXReader only
-   */
-  int fileNPoints = -1;
-
-  /**
-   * Also used in JDXExport
-   */
-  public double xFactor = ERROR;
-
-  /**
-   * Also used in JDXExport
-   */
-  public double yFactor = ERROR;
-  
   /**
    * Sets the original xfactor, from JDXReader and XMLReader
    * 
@@ -153,23 +201,19 @@ public abstract class JDXDataObject extends JDXHeader {
     return yFactor;
   }
 
-  // --------------------Optional Spectral Parameters ------------------------------//
-
   /**
-   * from JDXReader ##VARNAME
+   * From ##VARNAME
+   * 
+   * @param name
    */
-  public String varName = "";
-  
+  public void setVarName(String name) {
+    varName = name;
+  }
+
   public boolean isImaginary() {
     return varName.contains("IMAG");
   }
 
-  protected String xUnits = "";
-  protected String yUnits = "";
-  protected String xLabel = null;
-  protected String yLabel = null;
-	public int nH;
-  
   /**
    * Sets the units for the x axis
    * 
@@ -218,18 +262,20 @@ public abstract class JDXDataObject extends JDXHeader {
     yLabel = value;
   }
 
-  // For NMR Spectra:
-  /**
-   * for example, ^1H, ^13C
-   */
-  public String observedNucl = "";
-  public double observedFreq = ERROR;
-  protected Spectrum parent;
 
 	public void setObservedNucleus(String value) {
 		observedNucl = value;
-		if (numDim == 1)
+		if (is1D())
 			parent.nucleusX = nucleusX = fixNucleus(value);
+	}
+	
+	/**
+	 * ^1H, ^13C, for example
+	 * 
+	 * @return observedNucl
+	 */
+	public String getObservedNucleus() {
+	  return observedNucl;
 	}
 
   /**
@@ -251,19 +297,27 @@ public abstract class JDXDataObject extends JDXHeader {
     return observedFreq;
   }
 
+  public void setHydrogenCount(int nH) {
+    this.nH = nH;
+  }
 
-  public int numDim = 1;
+  public int getHydrogenCount() {
+    return nH;
+  }
+
   public boolean is1D() {
     return numDim == 1;
   }
 
+  public int getNumDim() {
+    return numDim;
+  }
     
-  // 2D nucleus calc
-  public String nucleusX, nucleusY = "?";
-  public double freq2dX = Double.NaN;
-  public double freq2dY = Double.NaN;
-  private double y2D = Double.NaN;
-  
+  public void setNumDim(int n) {
+    numDim = n;
+  }
+
+  // 2D nucleus calc  
 
   public void setY2D(double d) {
     y2D = d;
@@ -273,7 +327,6 @@ public abstract class JDXDataObject extends JDXHeader {
     return y2D;
   } 
 
-  public String y2DUnits = "";
   public void setY2DUnits(String units) {
     y2DUnits = units;
   }
@@ -285,8 +338,7 @@ public abstract class JDXDataObject extends JDXHeader {
     return d;
   }
 
-
-  public void setNucleusAndFreq(String nuc, boolean isX) {
+  void setNucleusAndFreq(String nuc, boolean isX) {
   	nuc = fixNucleus(nuc);
     if (isX)
       nucleusX = nuc;
@@ -584,11 +636,6 @@ public abstract class JDXDataObject extends JDXHeader {
         && (xUnits.toLowerCase().contains("nanometer") || xUnits.equalsIgnoreCase("nm")) 
         && getFirstX() < 401 && getLastX() > 699 && xyCoords.length >= 30);
   }
-
-  /**
-   * whether the x values were converted from HZ to PPM
-   */
-  private boolean isHZtoPPM = false;
   
   /**
    * Determines if the spectrum should be displayed with abscissa unit of Part
@@ -610,8 +657,6 @@ public abstract class JDXDataObject extends JDXHeader {
   public void setHZtoPPM(boolean val) {
     isHZtoPPM = val;
   }
-
-  private boolean xIncreases = true;
 
   /**
    * Sets value to true if spectrum is increasing
@@ -655,7 +700,6 @@ public abstract class JDXDataObject extends JDXHeader {
     return xIncreases;
   }
 
-  private boolean continuous;
   /**
    * Sets value to true if spectrum is continuous
    * 
@@ -728,7 +772,7 @@ public abstract class JDXDataObject extends JDXHeader {
 		int precision = 1;
 		String units = "";
 		if (isNMR()) {
-			if (numDim == 1) {
+			if (is1D()) {
 				boolean isIntegral = (m instanceof Integral);
 				if (isHNMR() || isIntegral) {
 					if (!isIntegral) {
@@ -779,11 +823,6 @@ public abstract class JDXDataObject extends JDXHeader {
   }
   
   /**
-   * array of x,y coordinates
-   */
-  public Coordinate[] xyCoords;
-
-  /**
    * Returns the first X value
    * 
    * @return the first X value
@@ -825,10 +864,6 @@ public abstract class JDXDataObject extends JDXHeader {
     return xyCoords[xyCoords.length - 1].getYVal();
   }
 
-  private double minX = Double.NaN, minY = Double.NaN;
-  private double maxX = Double.NaN, maxY = Double.NaN;
-  private double deltaX = Double.NaN;
-
   /**
    * Calculates and returns the minimum x value in the list of coordinates
    * Fairly expensive operation
@@ -869,16 +904,14 @@ public abstract class JDXDataObject extends JDXHeader {
     return (Double.isNaN(maxY) ? (maxY = Coordinate.getMaxY(xyCoords, 0, xyCoords.length - 1)) : maxY);
   }
 
-	double normalizationFactor = 1;
-	
-	public void doNormalize(double max) {
+	public void normalizeSimulation(double max) {
 		// for simulations
 		if (!isNMR() || !is1D())
 			return;
-		normalizationFactor = max / getMaxY();
+		double f = max / getMaxY();
 		maxY = Double.NaN;
-		Coordinate.applyScale(xyCoords, 1, normalizationFactor);
-		Logger.info("Y values have been scaled by a factor of " + normalizationFactor);		
+		Coordinate.applyScale(xyCoords, 1, f);
+		Logger.info("Y values have been scaled by a factor of " + f);		
 	}
 
   /**
@@ -975,12 +1008,6 @@ public abstract class JDXDataObject extends JDXHeader {
 		return new double[] { x, y };
 	}
 
-	// JDXReader-only fields and methods
-	
-  private double fileShiftRef = ERROR; // ##.Shift Reference
-  private int fileShiftRefType = REF_TYPE_UNSPECIFIED; // shiftRef = 0, bruker = 1, varian = 2
-  private int fileShiftRefDataPt = -1;
-
 	/**
 	 * Called by JDXReader immediately after decompression.
 	 * 
@@ -997,6 +1024,8 @@ public abstract class JDXDataObject extends JDXHeader {
     ) {
       applyShiftReference(isHz ? freq : 1, fileShiftRef);
     }
+    if (fileFirstX > fileLastX)
+      Coordinate.reverse(xyCoords);
     if (isHz) {
       Coordinate.applyScale(xyCoords, (1.0 / freq), 1);
       setXUnits("PPM");
@@ -1037,8 +1066,7 @@ public abstract class JDXDataObject extends JDXHeader {
     Coordinate coord;
     switch (fileShiftRefType) {
     case REF_TYPE_STANDARD:
-      int ipt = (fileFirstX < fileLastX ? fileShiftRefDataPt - 1 : xyCoords.length - fileShiftRefDataPt);
-      shift = xyCoords[ipt].getXVal() - shift * referenceFreq;
+      shift = xyCoords[fileShiftRefDataPt - 1].getXVal() - shift * referenceFreq;
       break;
     case REF_TYPE_BRUKER:
       shift = fileFirstX - shift * referenceFreq;
@@ -1055,5 +1083,6 @@ public abstract class JDXDataObject extends JDXHeader {
     }
   
   }
+
 
 }

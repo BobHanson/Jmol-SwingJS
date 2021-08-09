@@ -111,7 +111,7 @@ public class MeasurementData extends Lst<Measurement> implements
 		for (int pt = 0, i = size(); --i >= 0;) {
 			double y = get(i).getValue();
 			if (toHz)
-				y *= spec.observedFreq;
+				y *= spec.getObservedFreq();
 			data[pt++] = new double[] { get(i).getXVal(), get(i).getXVal2(), y };
 		}
 		return data;

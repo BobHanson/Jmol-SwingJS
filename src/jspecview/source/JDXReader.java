@@ -399,9 +399,9 @@ public class JDXReader implements JmolJDXMOLReader {
         JSVFileManager.cachePut("mol", acdMolFile);
     }
     if (!Float.isNaN(nmrMaxY))
-      spectrum.doNormalize(nmrMaxY);
+      spectrum.normalizeSimulation(nmrMaxY);
     else if (spectrum.getMaxY() >= 10000)
-      spectrum.doNormalize(1000);
+      spectrum.normalizeSimulation(1000);
     if (isSimulation)
       spectrum.setSimulated(filePath);
     nSpec++;
@@ -561,7 +561,7 @@ public class JDXReader implements JmolJDXMOLReader {
     blockID = Math.random();
     boolean isOK = true;//(spectrum0.is1D() || firstSpec > 0);
     if (firstSpec > 0)
-      spectrum0.numDim = 1; // don't display in 2D if only loading some spectra
+      spectrum0.setNumDim(1); // don't display in 2D if only loading some spectra
 
     boolean isVARNAME = label.equals("##VARNAME");
     if (!isVARNAME) {
@@ -755,7 +755,7 @@ public class JDXReader implements JmolJDXMOLReader {
       spectrum.setYLabel(value);
       return true; // save in header
     case 90:
-      spectrum.numDim = Integer.parseInt(value);
+      spectrum.setNumDim(Integer.parseInt(value));
       return false;
     case 100:
       if (!spectrum.isShiftTypeSpecified()) {
@@ -767,7 +767,7 @@ public class JDXReader implements JmolJDXMOLReader {
       if (label.length() < 17)
         return true;
       if (label.equals("##.OBSERVEFREQUENCY ")) {
-        spectrum.observedFreq = parseAFFN(label, value);
+        spectrum.setObservedFreq(parseAFFN(label, value));
         return false;
       }
       if (label.equals("##.OBSERVENUCLEUS ")) {
@@ -923,7 +923,7 @@ public class JDXReader implements JmolJDXMOLReader {
       int index2 = list.indexOf(plotSymbols[1]);
 
       list = nTupleTable.get("##VARNAME");
-      spec.varName = list.get(index2).toUpperCase();
+      spec.setVarName(list.get(index2).toUpperCase());
 
       list = nTupleTable.get(label = "##FACTOR");
       spec.setXFactor(parseAFFN(label, list.get(index1)));
@@ -1123,10 +1123,10 @@ public class JDXReader implements JmolJDXMOLReader {
   private Lst<PeakInfo> peakData;
 
   @Override
-  public void setSpectrumPeaks(int nH, String piUnitsX, String piUnitsY) {
-    modelSpectrum.setPeakList(peakData, piUnitsX, piUnitsY);
+  public void setSpectrumPeaks(int nH, String peakXLabel, String peakYlabel) {
+    modelSpectrum.setPeakList(peakData, peakXLabel, peakYlabel);
     if (modelSpectrum.isNMR())
-      modelSpectrum.setNHydrogens(nH);    
+      modelSpectrum.setHydrogenCount(nH);    
   }
 
   @Override

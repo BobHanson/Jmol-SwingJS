@@ -481,7 +481,7 @@ public class Spectrum extends JDXDataObject {
    * @return true if was possible
    */
   public boolean addSubSpectrum(Spectrum spectrum, boolean forceSub) {
-    if (!forceSub && (numDim < 2 || blockID != spectrum.blockID)
+    if (!forceSub && (is1D() || blockID != spectrum.blockID)
         || !allowSubSpec(this, spectrum))
       return false;
     isForcedSubset = forceSub; // too many blocks (>100)
@@ -673,10 +673,8 @@ public class Spectrum extends JDXDataObject {
 		return (s1.isNMR() && s2.isNMR() && s1.nucleusX.equals(s2.nucleusY));
 	}
 
-	public void setNHydrogens(int nH) {
-		this.nH = nH;
-	}
-
+	// analysis fields
+	
 	public float getPeakWidth() {
 		double w = getLastX() - getFirstX();
 		return (float) (w/100);
