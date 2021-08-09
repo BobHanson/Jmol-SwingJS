@@ -27,7 +27,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   private String baseModel;
 
   private float vibScale;
-  private String piUnitsX, piUnitsY;
+  private String peakXLabel, peakYLabel;
 
   private JmolJDXMOLReader loader;
 
@@ -195,8 +195,8 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 			boolean isMS = (mytype.indexOf("MASS") == 0);
 			String file = " file=" + PT.esc(peakFilePath.replace('\\', '/'));
 			model = " model=" + PT.esc(model + " (assigned)");
-			piUnitsX = "";
-			piUnitsY = "";
+			peakXLabel = "";
+			peakYLabel = "";
 			float dx = getACDPeakWidth(mytype) / 2;
 			Map<String, Object[]> htSets = new Hashtable<String, Object[]>();
 			Lst<Object[]> list = new Lst<Object[]>();
@@ -292,8 +292,8 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 			String model = PT.getQuotedAttribute(line, "model");
 			model = " model=" + PT.esc(model == null ? thisModelID : model);
 			String mytype = PT.getQuotedAttribute(line, "type");
-			piUnitsX = PT.getQuotedAttribute(line, "xLabel");
-			piUnitsY = PT.getQuotedAttribute(line, "yLabel");
+			peakXLabel = PT.getQuotedAttribute(line, "xLabel");
+			peakYLabel = PT.getQuotedAttribute(line, "yLabel");
 			Map<String, Object[]> htSets = new Hashtable<String, Object[]>();
 			Lst<Object[]> list = new Lst<Object[]>();
 			while (readLine() != null
@@ -340,7 +340,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 			Logger.info("adding PeakData " + info);
 			loader.addPeakData(info);
 		}
-		loader.setSpectrumPeaks(nH, piUnitsX, piUnitsY);
+		loader.setSpectrumPeaks(nH, peakXLabel, peakYLabel);
 		return n;
 }
 

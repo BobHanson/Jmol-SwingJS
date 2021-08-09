@@ -313,7 +313,7 @@ public class JDXReader implements JmolJDXMOLReader {
         }
         if (spectrum == null)
           spectrum = new Spectrum();
-        if (readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly) && !isHeaderOnly)
+        if (!readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly) && !isHeaderOnly)
           continue;
         addHeader(dataLDRTable, t.rawLabel, value);
         if (!isHeaderOnly && checkCustomTags(spectrum, label, value))
@@ -701,120 +701,110 @@ public class JDXReader implements JmolJDXMOLReader {
    * @param value
    * @param errorLog
    * @param obscure
-   * @param isHeaderOnly 
-   * @return  true to skip saving this key in the spectrum headerTable
+   * @param isHeaderOnly
+   * @return false to skip saving this key in the spectrum headerTable
    */
   private boolean readDataLabel(JDXDataObject spectrum, String label,
-                                       String value, 
-                                       SB errorLog, boolean obscure, boolean isHeaderOnly) {
-    if (readHeaderLabel(spectrum, label, value, errorLog, obscure))
-      return true;
-
-    // NOTE: returning TRUE for these means they are 
-    // not included in the header map -- is that what we want?
-
+                                String value, SB errorLog, boolean obscure,
+                                boolean isHeaderOnly) {
+    if (!readHeaderLabel(spectrum, label, value, errorLog, obscure))
+      return false;
     label += " ";
-    if (("##MINX ##MINY ##MAXX ##MAXY ##FIRSTY ##DELTAX ##DATACLASS ").indexOf(label) >= 0)
-      return true;
+    if (("##MINX ##MINY ##MAXX ##MAXY ##FIRSTY ##DELTAX ##DATACLASS ")
+        .indexOf(label) >= 0)
+      return false;
 
     // NMR variations: need observedFreq, offset, dataPointNum, and shiftRefType 
-    switch (("##FIRSTX  "
-          + "##LASTX   "
-          + "##NPOINTS "
-          + "##XFACTOR "
-          + "##YFACTOR "
-          + "##XUNITS  "
-          + "##YUNITS  "
-          + "##XLABEL  "
-          + "##YLABEL  "
-          + "##NUMDIM  "
-          + "##OFFSET  "
-          ).indexOf(label)) {
-      case 0:
-        spectrum.fileFirstX = parseAFFN(label, value);
+    switch (("##FIRSTX  " // 0
+        + "##LASTX   " // 10
+        + "##NPOINTS " // 20 
+        + "##XFACTOR " // 30
+        + "##YFACTOR " // 40
+        + "##XUNITS  " // 50
+        + "##YUNITS  " // 60
+        + "##XLABEL  " // 70
+        + "##YLABEL  " // 80
+        + "##NUMDIM  " // 90
+        + "##OFFSET  " // 100
+        ).indexOf(label)) {
+    case 0:
+      spectrum.fileFirstX = parseAFFN(label, value);
+      return false;
+    case 10:
+      spectrum.fileLastX = parseAFFN(label, value);
+      return false;
+    case 20:
+      spectrum.fileNPoints = Integer.parseInt(value);
+      return false;
+    case 30:
+      spectrum.setXFactor(parseAFFN(label, value));
+      return false;
+    case 40:
+      spectrum.yFactor = parseAFFN(label, value);
+      return false;
+    case 50:
+      spectrum.setXUnits(value);
+      return false;
+    case 60:
+      spectrum.setYUnits(value);
+      return false;
+    case 70:
+      spectrum.setXLabel(value);
+      return true; // save in header
+    case 80:
+      spectrum.setYLabel(value);
+      return true; // save in header
+    case 90:
+      spectrum.numDim = Integer.parseInt(value);
+      return false;
+    case 100:
+      if (!spectrum.isShiftTypeSpecified()) {
+        spectrum.setShiftReference(parseAFFN(label, value), 1,
+            JDXDataObject.REF_TYPE_BRUKER);
+      }
+      return false; // was true BH 2021.08.09
+    default:
+      if (label.length() < 17)
         return true;
-      case 10:
-        spectrum.fileLastX = parseAFFN(label, value);
-        return true;
-      case 20:
-        spectrum.nPointsFile = Integer.parseInt(value);
-        return true;
-      case 30:
-        spectrum.xFactor = parseAFFN(label, value);
-        return true;
-      case 40:
-        spectrum.yFactor = parseAFFN(label, value);
-        return true;
-      case 50:
-        spectrum.setXUnits(value);
-        return true;
-      case 60:
-        spectrum.setYUnits(value);
-        return true;
-      case 70:
-        spectrum.setXLabel(value);
-        return false; // store in hashtable
-      case 80:
-        spectrum.setYLabel(value);
-        return false; // store in hashtable
-      case 90:
-        spectrum.numDim = Integer.parseInt(value);
-        return true;
-      case 100:
-        if (spectrum.shiftRefType != JDXDataObject.REF_TYPE_STANDARD) {
-          if (spectrum.offset == JDXDataObject.ERROR)
-            spectrum.offset = parseAFFN(label, value);
-          // bruker doesn't need dataPointNum
-          spectrum.dataPointNum = 1;
-          // bruker type
-          spectrum.shiftRefType = JDXDataObject.REF_TYPE_BRUKER;
+      if (label.equals("##.OBSERVEFREQUENCY ")) {
+        spectrum.observedFreq = parseAFFN(label, value);
+        return false;
+      }
+      if (label.equals("##.OBSERVENUCLEUS ")) {
+        spectrum.setObservedNucleus(value);
+        return false;
+      }
+      if (label.equals("##$REFERENCEPOINT ")
+          && !spectrum.isShiftTypeSpecified()) {
+        // ##$ values are delivered with comments
+        int pt = value.indexOf(" ");
+        if (pt > 0)
+          value = value.substring(0, pt);
+        spectrum.setShiftReference(parseAFFN(label, value), 1,
+            JDXDataObject.REF_TYPE_VARIAN);
+        return false;
+      }
+      if (label.equals("##.SHIFTREFERENCE ")) {
+        if (ignoreShiftReference
+            || !(spectrum.dataType.toUpperCase().contains("SPECTRUM")))
+          return false;
+        value = PT.replaceAllCharacters(value, ")(", "");
+        StringTokenizer srt = new StringTokenizer(value, ",");
+        if (srt.countTokens() != 4)
+          return false;
+        try {
+          srt.nextToken();
+          srt.nextToken();
+          int pt = Integer.parseInt(srt.nextToken().trim());
+          double shift = parseAFFN(label, srt.nextToken().trim());
+          spectrum.setShiftReference(shift, pt,
+              JDXDataObject.REF_TYPE_STANDARD);
+        } catch (Exception e) {
         }
         return false;
-      default:
-        //    if (label.equals("##PATHLENGTH")) {
-        //      jdxObject.pathlength = value;
-        //      return true;
-        //    }
-
-        if (label.length() < 17)
-          return false;   
-        if (label.equals("##.OBSERVEFREQUENCY ")) {
-          spectrum.observedFreq = parseAFFN(label, value);
-          return true;
-        }
-        if (label.equals("##.OBSERVENUCLEUS ")) {
-          spectrum.setObservedNucleus(value);
-          return true;    
-        }
-        if ((label.equals("##$REFERENCEPOINT ")) && (spectrum.shiftRefType != JDXDataObject.REF_TYPE_STANDARD)) {
-          spectrum.offset = parseAFFN(label, value);
-          // varian doesn't need dataPointNum
-          spectrum.dataPointNum = 1;
-          spectrum.shiftRefType = JDXDataObject.REF_TYPE_VARIAN;
-          return false; // save in file  
-        }
-        if (label.equals("##.SHIFTREFERENCE ")) {
-          //TODO: don't save in file??
-          if (ignoreShiftReference || !(spectrum.dataType.toUpperCase().contains("SPECTRUM")))
-            return true;
-          value = PT.replaceAllCharacters(value, ")(", "");
-          StringTokenizer srt =   new StringTokenizer(value, ",");
-          if (srt.countTokens() != 4)
-            return true;
-          try {
-            srt.nextToken();
-            srt.nextToken();
-            spectrum.dataPointNum = Integer.parseInt(srt.nextToken().trim());
-            spectrum.offset = parseAFFN(label, srt.nextToken().trim());
-            if (spectrum.dataPointNum <= 0)
-              spectrum.dataPointNum = 1;
-            spectrum.shiftRefType = JDXDataObject.REF_TYPE_STANDARD;
-          } catch (Exception e) {
-          }
-          return true;
-        }
+      }
+      return true; // save in header
     }
-    return false;
   }
 
   private static boolean readHeaderLabel(JDXHeader jdxHeader, String label,
@@ -831,7 +821,7 @@ public class JDXReader implements JmolJDXMOLReader {
     case 0:
       jdxHeader.setTitle(obscure || value == null || value.equals("") ? "Unknown"
           : value);
-      return true;
+      return false;
     case 10:
       jdxHeader.jcampdx = value;
       float version = PT.parseFloat(value);
@@ -841,28 +831,28 @@ public class JDXReader implements JmolJDXMOLReader {
               .append("Warning: JCAMP-DX version may not be fully supported: "
                   + value);
       }
-      return true;
+      return false;
     case 20:
       jdxHeader.origin = (value != null && !value.equals("") ? value
           : "Unknown");
-      return true;
+      return false;
     case 30:
       jdxHeader.owner = (value != null && !value.equals("") ? value : "Unknown");
-      return true;
+      return false;
     case 40:
       jdxHeader.dataType = value;
-      return true;
+      return false;
     case 50:
       jdxHeader.longDate = value;
-      return true;
+      return false;
     case 60:
       jdxHeader.date = value;
-      return true;
+      return false;
     case 70:
       jdxHeader.time = value;
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   private void setTabularDataType(JDXDataObject spectrum, String label) {
@@ -886,7 +876,7 @@ public class JDXReader implements JmolJDXMOLReader {
     spec.setHeaderTable(table);
 
     if (spec.dataClass.equals("XYDATA")) {
-      spec.checkRequiredTokens();
+      spec.checkJDXRequiredTokens();
       if (!isHeaderOnly)
         decompressData(spec, null);
       return true;
@@ -936,8 +926,8 @@ public class JDXReader implements JmolJDXMOLReader {
       spec.varName = list.get(index2).toUpperCase();
 
       list = nTupleTable.get(label = "##FACTOR");
-      spec.xFactor = parseAFFN(label, list.get(index1));
-      spec.yFactor = parseAFFN(label, list.get(index2));
+      spec.setXFactor(parseAFFN(label, list.get(index1)));
+      spec.setYFactor(parseAFFN(label, list.get(index2)));
 
       list = nTupleTable.get(label = "##LAST");
       spec.fileLastX = parseAFFN(label, list.get(index1));
@@ -947,7 +937,7 @@ public class JDXReader implements JmolJDXMOLReader {
       //firstY = parseDouble((String)list.get(index2));
 
       list = nTupleTable.get("##VARDIM");
-      spec.nPointsFile = Integer.parseInt(list.get(index1));
+      spec.fileNPoints = Integer.parseInt(list.get(index1));
 
       list = nTupleTable.get("##UNITS");
       spec.setXUnits(list.get(index1));
@@ -1025,7 +1015,7 @@ public class JDXReader implements JmolJDXMOLReader {
     spec.setIncreasing(spec.fileLastX > spec.fileFirstX);
     spec.setContinuous(true);
     JDXDecompressor decompressor = new JDXDecompressor(t, spec.fileFirstX,
-        spec.fileLastX, spec.xFactor, spec.yFactor, spec.nPointsFile);
+        spec.fileLastX, spec.xFactor, spec.yFactor, spec.fileNPoints);
 
     long t = System.currentTimeMillis();
     Coordinate[] xyCoords = decompressor.decompressData(errorLog);
@@ -1041,34 +1031,16 @@ public class JDXReader implements JmolJDXMOLReader {
       if (d > minMaxY[1])
         minMaxY[1] = d;
     }
-    double freq = (Double.isNaN(spec.freq2dX) ? spec.observedFreq
-        : spec.freq2dX);
-    // apply offset
-    boolean isHz = freq != JDXDataObject.ERROR
-        && spec.getXUnits().toUpperCase().equals("HZ");
-    if (spec.offset != JDXDataObject.ERROR && freq != JDXDataObject.ERROR
-        && spec.dataType.toUpperCase().contains("SPECTRUM")
-        && spec.jcampdx.indexOf("JEOL") < 0 // BH 2020.09.16 J Muzyka Centre College
-    ) {
-      Coordinate.applyShiftReference(xyCoords, spec.dataPointNum,
-          spec.fileFirstX, spec.fileLastX, spec.offset, isHz ? freq : 1,
-          spec.shiftRefType);
-    }
-
-    if (isHz) {
-      Coordinate.applyScale(xyCoords, (1.0 / freq), 1);
-      spec.setXUnits("PPM");
-      spec.setHZtoPPM(true);
-    }
+    spec.finalizeCoordinates();
     if (errorLog.length() != errPt) {
       double fileDeltaX = Coordinate.deltaX(spec.fileLastX, spec.fileFirstX,
-          spec.nPointsFile);
+          spec.fileNPoints);
       logError(spec.getTitle());
       logError("firstX from Header " + spec.fileFirstX);
       logError("lastX from Header " + spec.fileLastX + " Found "
           + decompressor.lastX);
       logError("deltaX from Header " + fileDeltaX);
-      logError("Number of points in Header " + spec.nPointsFile + " Found "
+      logError("Number of points in Header " + spec.fileNPoints + " Found "
           + decompressor.getNPointsFound());
     } else {
       //logError("No Errors decompressing data");
@@ -1125,7 +1097,7 @@ public class JDXReader implements JmolJDXMOLReader {
       case 40:
       case 50:
       case 60:
-        acdAssignments = mpr.readACDAssignments(spectrum.nPointsFile, pt == 40);
+        acdAssignments = mpr.readACDAssignments(((JDXDataObject) spectrum).fileNPoints, pt == 40);
         break;
       }       
     } catch (Exception e) {

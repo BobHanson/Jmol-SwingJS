@@ -43,9 +43,31 @@ import jspecview.source.JDXSourceStreamTokenizer;
  */
 public class Spectrum extends JDXDataObject {
 
-  private int currentSubSpectrumIndex;
-  private boolean isForcedSubset;
+  public String id = "";
+
+  GenericColor fillColor;
+
+  /**
+   * spectra that can never be displayed independently, or at least not by
+   * default; 2D slices, for example
+   */
+  private Lst<Spectrum> subSpectra;
+  private Lst<PeakInfo> peakList = new Lst<PeakInfo>();
+  private String peakXLabel, peakYLabel;
+  private PeakInfo selectedPeak, highlightedPeak;
+  private Spectrum convertedSpectrum;
+
+  private double specShift = 0;
+  private double userYFactor = 1;
   
+  private int currentSubSpectrumIndex;
+  
+  private boolean isForcedSubset;
+  private boolean exportXAxisLeftToRight;
+
+
+  
+    
   public enum IRMode {
     NO_CONVERT, TO_TRANS, TO_ABS, TOGGLE;
     public static IRMode getMode(String value) {
@@ -62,17 +84,6 @@ public class Spectrum extends JDXDataObject {
     }
   }
   
-  /**
-   * spectra that can never be displayed independently, or at least not by default
-   * 2D slices, for example.
-   */
-  private Lst<Spectrum> subSpectra;
-  private Lst<PeakInfo> peakList = new Lst<PeakInfo>();
-  private String piUnitsX, piUnitsY;
-  private PeakInfo selectedPeak, highlightedPeak;
-  private double specShift = 0;
-  
-
   public void dispose() {
   	// NO! NEVER DO THIS!!! 
   	// Just because a spectrum is no longer needed by a graphSet does not mean it 
@@ -91,7 +102,6 @@ public class Spectrum extends JDXDataObject {
     return isForcedSubset;
   }
 
-  public String id = "";
   public void setId(String id) {
     this.id = id;
   }
@@ -114,7 +124,7 @@ public class Spectrum extends JDXDataObject {
   public Spectrum copy() {
     Spectrum newSpectrum = new Spectrum();
     copyTo(newSpectrum);
-    newSpectrum.setPeakList(peakList, piUnitsX, null);
+    newSpectrum.setPeakList(peakList, peakXLabel, null);
     newSpectrum.fillColor = fillColor;
     return newSpectrum;
   }
@@ -133,10 +143,10 @@ public class Spectrum extends JDXDataObject {
     return peakList;
   }
 
-  public int setPeakList(Lst<PeakInfo> list, String piUnitsX, String piUnitsY) {
+  public int setPeakList(Lst<PeakInfo> list, String peakXLabel, String peakYLabel) {
     peakList = list;
-    this.piUnitsX = piUnitsX;
-    this.piUnitsY = piUnitsY;
+    this.peakXLabel = peakXLabel;
+    this.peakYLabel = peakYLabel;
     for (int i = list.size(); --i >= 0; )
       peakList.get(i).spectrum = this;
     if (Logger.debugging)
@@ -300,15 +310,12 @@ public class Spectrum extends JDXDataObject {
     return Coordinate.getYValueAt(xyCoords, x);
   }
 
-  private Spectrum convertedSpectrum;
 
   /**
-   * based YFactor used in View command 
+   * Set by JSViewer
    * 
-   * ?? BH not documented? Not used?
-   * 
+   * @param userYFactor
    */
-  private double userYFactor = 1;
   public void setUserYFactor(double userYFactor) {
     this.userYFactor = userYFactor;
   }
@@ -492,8 +499,6 @@ public class Spectrum extends JDXDataObject {
     return (subSpectra == null ? -1 : currentSubSpectrumIndex);
   }
 
-  private boolean exportXAxisLeftToRight;
-
   public void setExportXAxisDirection(boolean leftToRight) {
     exportXAxisLeftToRight = leftToRight;
   }
@@ -553,7 +558,7 @@ public class Spectrum extends JDXDataObject {
     	
       Parameters.putInfo(key, info, "titleLabel", getTitleLabel());
       Parameters.putInfo(key, info, "type", getDataType());
-      Parameters.putInfo(key, info, "isHZToPPM", Boolean.valueOf(isHZtoPPM));
+      Parameters.putInfo(key, info, "isHZToPPM", Boolean.valueOf(isHZtoPPM()));
       Parameters.putInfo(key, info, "subSpectrumCount", Integer
           .valueOf(subSpectra == null ? 0 : subSpectra.size()));
     	}
@@ -567,11 +572,6 @@ public class Spectrum extends JDXDataObject {
     try { return (Integer.valueOf(info)); } catch (Exception e) {}
     try { return (Double.valueOf(info)); } catch (Exception e) {}
     return info;
-  }
-
-  @Override
-  public String toString() {
-    return getTitleLabel() + " xyCoords.length=" + (xyCoords == null ? "" : xyCoords.length);
   }
 
   public PeakInfo findMatchingPeakInfo(PeakInfo pi) {
@@ -594,15 +594,15 @@ public class Spectrum extends JDXDataObject {
    * @return  suitable label or ""
    */
   public String getAxisLabel(boolean isX) {
-    String units = (isX ? piUnitsX : piUnitsY);
-    if (units == null)
-      units = (isX ? xLabel : yLabel);
-    if (units == null)
-      units = (isX ? xUnits : yUnits);
-    return (units == null ? "" 
-    		: units.equalsIgnoreCase("WAVENUMBERS") ? "1/cm"
-    	  : units.equalsIgnoreCase("nanometers") ? "nm"
-   			: units);
+    String label = (isX ? peakXLabel : peakYLabel);
+    if (label == null)
+      label = (isX ? xLabel : yLabel);
+    if (label == null)
+      label = (isX ? xUnits : yUnits);
+    return (label == null ? "" 
+    		: label.equalsIgnoreCase("WAVENUMBERS") ? "1/cm"
+    	  : label.equalsIgnoreCase("nanometers") ? "nm"
+   			: label);
   }
 
 	public double findXForPeakNearest(double x) {
@@ -693,13 +693,16 @@ public class Spectrum extends JDXDataObject {
 
 	}
 
-	GenericColor fillColor;
-
-
 	public void setFillColor(GenericColor color) {
 		fillColor = color;
 		if (convertedSpectrum != null)
 			convertedSpectrum.fillColor = color;
 	}
+
+  @Override
+  public String toString() {
+    return getTitleLabel() + (xyCoords == null ? "" : " xyCoords.length=" + xyCoords.length);
+  }
+
 
 }

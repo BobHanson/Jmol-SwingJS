@@ -1,18 +1,17 @@
 package jspecview.source;
 
-import javajs.util.DF;
-
 import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.util.Logger;
-import javajs.util.PT;
 
+import javajs.util.DF;
+import javajs.util.PT;
+import jspecview.common.Annotation.AType;
 import jspecview.common.Coordinate;
 import jspecview.common.Integral;
-import jspecview.common.Spectrum;
 import jspecview.common.Measurement;
-import jspecview.common.Annotation.AType;
+import jspecview.common.Spectrum;
 import jspecview.exception.JSVException;
 
 /**
@@ -33,12 +32,15 @@ public abstract class JDXDataObject extends JDXHeader {
   public static final int REF_TYPE_BRUKER = 1;
   public static final int REF_TYPE_VARIAN = 2;
 
-  private String filePath;
-  protected String filePathForwardSlash;
+  public String sourceID = "";
   public boolean isSimulation;
   
-  protected String inlineData;
+  protected double blockID; // a random number generated in JDXFileReader
 
+  private String filePath;
+  private String filePathForwardSlash;
+  private String inlineData;
+    
   public void setInlineData(String data) {
     inlineData = data;
     
@@ -47,8 +49,6 @@ public abstract class JDXDataObject extends JDXHeader {
   public String getInlineData() {
     return inlineData;
   }
-
-  public String sourceID = "";
 
   public void setFilePath(String filePath) {
   	if (filePath != null)
@@ -67,27 +67,56 @@ public abstract class JDXDataObject extends JDXHeader {
     return filePathForwardSlash;
   }
 
-  protected double blockID; // a random number generated in JDXFileReader
-
   public void setBlockID(double id) {
     blockID = id;
   }
 
-  // --------------------Required Spectral Parameters ------------------------------//
-  public double fileFirstX = ERROR;
-  public double fileLastX = ERROR;
-  public int nPointsFile = -1;
-
-  public double xFactor = ERROR;
-  public double yFactor = ERROR;
+  // --------------------Required JDX Parameters ------------------------------//
   
-  public String varName = "";
-  public boolean isImaginary() {
-  	return varName.contains("IMAG");
+  /**
+   * for JDXReader only
+   * @throws JSVException
+   */
+  public void checkJDXRequiredTokens() throws JSVException {
+    String missingTag = (
+        fileFirstX == ERROR ? "##FIRSTX"
+        : fileLastX == ERROR ? "##LASTX" 
+        : fileNPoints == -1 ? "##NPOINTS"
+        : xFactor == ERROR ? "##XFACTOR" 
+        : yFactor == ERROR ? "##YFACTOR"
+                : null);
+    if (missingTag != null)
+      throw new JSVException("Error Reading Data Set: " + missingTag + " not found");
   }
 
   /**
-   * Sets the original xfactor
+   * JDXReader only
+   */
+  double fileFirstX = ERROR;
+
+  /**
+   * JDXReader only
+   */
+  double fileLastX = ERROR;
+  
+  
+  /**
+   * JDXReader only
+   */
+  int fileNPoints = -1;
+
+  /**
+   * Also used in JDXExport
+   */
+  public double xFactor = ERROR;
+
+  /**
+   * Also used in JDXExport
+   */
+  public double yFactor = ERROR;
+  
+  /**
+   * Sets the original xfactor, from JDXReader and XMLReader
    * 
    * @param xFactor
    *        the x factor
@@ -106,7 +135,7 @@ public abstract class JDXDataObject extends JDXHeader {
   }
 
   /**
-   * Sets the original y factor
+   * Sets the original y factor, from JDXReader and XMLReader
    * 
    * @param yFactor
    *        the y factor
@@ -124,16 +153,16 @@ public abstract class JDXDataObject extends JDXHeader {
     return yFactor;
   }
 
-	public void checkRequiredTokens() throws JSVException {
-		String err = (fileFirstX == ERROR ? "##FIRSTX"
-				: fileLastX == ERROR ? "##LASTX" : nPointsFile == -1 ? "##NPOINTS"
-						: xFactor == ERROR ? "##XFACTOR" : yFactor == ERROR ? "##YFACTOR"
-								: null);
-		if (err != null)
-			throw new JSVException("Error Reading Data Set: " + err + " not found");
-	}
-
   // --------------------Optional Spectral Parameters ------------------------------//
+
+  /**
+   * from JDXReader ##VARNAME
+   */
+  public String varName = "";
+  
+  public boolean isImaginary() {
+    return varName.contains("IMAG");
+  }
 
   protected String xUnits = "";
   protected String yUnits = "";
@@ -189,12 +218,10 @@ public abstract class JDXDataObject extends JDXHeader {
     yLabel = value;
   }
 
-  public static final int SCALE_NONE = 0;
-  public static final int SCALE_TOP = 1;
-  public static final int SCALE_BOTTOM = 2;
-  public static final int SCALE_TOP_BOTTOM = 3;
-  
   // For NMR Spectra:
+  /**
+   * for example, ^1H, ^13C
+   */
   public String observedNucl = "";
   public double observedFreq = ERROR;
   protected Spectrum parent;
@@ -224,10 +251,6 @@ public abstract class JDXDataObject extends JDXHeader {
     return observedFreq;
   }
 
-
-  public double offset = ERROR; // Shift Reference
-  public int shiftRefType = REF_TYPE_UNSPECIFIED; // shiftRef = 0, bruker = 1, varian = 2
-  public int dataPointNum = -1;
 
   public int numDim = 1;
   public boolean is1D() {
@@ -273,7 +296,7 @@ public abstract class JDXDataObject extends JDXHeader {
     if (observedNucl.indexOf(nuc) >= 0) {
       freq = observedFreq;
     } else {
-      double g1 = getGyromagneticRatio(observedNucl);
+      double g1 = getGyromagneticRatio(fixNucleus(observedNucl));
       double g2 = getGyromagneticRatio(nuc);
       freq = observedFreq * g2 / g1;
     }
@@ -285,9 +308,13 @@ public abstract class JDXDataObject extends JDXHeader {
   }
 
 
+  /**
+   * Remove nonstandard marks to give simple nucleus 1H not ^1H
+   * @param nuc
+   * @return "1H", "13C", etc.
+   */
   private String fixNucleus(String nuc) {
   	return PT.rep(PT.trim(nuc,"[]^<>"), "NUC_", "");
-		// TODO Auto-generated method stub
 	}
 
 	/**
@@ -561,7 +588,7 @@ public abstract class JDXDataObject extends JDXHeader {
   /**
    * whether the x values were converted from HZ to PPM
    */
-  protected boolean isHZtoPPM = false;
+  private boolean isHZtoPPM = false;
   
   /**
    * Determines if the spectrum should be displayed with abscissa unit of Part
@@ -597,7 +624,7 @@ public abstract class JDXDataObject extends JDXHeader {
   }
 
   /**
-   * Returns true if the spectrum is increasing
+   * Returns true if the spectrum is increasing; used by SVGExporter only
    * 
    * @return true if the spectrum is increasing
    */
@@ -613,7 +640,7 @@ public abstract class JDXDataObject extends JDXHeader {
   public boolean shouldDisplayXAxisIncreasing() {
     String dt = dataType.toUpperCase();
     String xu = xUnits.toUpperCase();
-    if (dt.contains("NMR") && !(dt.contains("FID"))) {
+    if (dt.contains("NMR") && !dt.contains("FID")) {
       return false;
     } else if (dt.contains("LINK") && xu.contains("CM")) {
       return false; // I think this was because of a bug where BLOCK files kept type as LINK ?      
@@ -886,9 +913,9 @@ public abstract class JDXDataObject extends JDXHeader {
 
     newObj.observedFreq = observedFreq;
     newObj.observedNucl = observedNucl;
-    newObj.offset = offset;
-    newObj.dataPointNum = dataPointNum;
-    newObj.shiftRefType = shiftRefType;
+    newObj.fileShiftRef = fileShiftRef;
+    newObj.fileShiftRefDataPt = fileShiftRefDataPt;
+    newObj.fileShiftRefType = fileShiftRefType;
     newObj.isHZtoPPM = isHZtoPPM;
     newObj.numDim = numDim;
     newObj.nucleusX = nucleusX;
@@ -948,5 +975,85 @@ public abstract class JDXDataObject extends JDXHeader {
 		return new double[] { x, y };
 	}
 
+	// JDXReader-only fields and methods
 	
+  private double fileShiftRef = ERROR; // ##.Shift Reference
+  private int fileShiftRefType = REF_TYPE_UNSPECIFIED; // shiftRef = 0, bruker = 1, varian = 2
+  private int fileShiftRefDataPt = -1;
+
+	/**
+	 * Called by JDXReader immediately after decompression.
+	 * 
+	 */
+  void finalizeCoordinates() {
+    double freq = (Double.isNaN(freq2dX) ? observedFreq
+        : freq2dX);
+    // apply offset
+    boolean isHz = (freq != ERROR
+        && getXUnits().toUpperCase().equals("HZ"));
+    if (fileShiftRef != ERROR && freq != ERROR
+        && dataType.toUpperCase().contains("SPECTRUM")
+        && jcampdx.indexOf("JEOL") < 0 // BH 2020.09.16 J Muzyka Centre College
+    ) {
+      applyShiftReference(isHz ? freq : 1, fileShiftRef);
+    }
+    if (isHz) {
+      Coordinate.applyScale(xyCoords, (1.0 / freq), 1);
+      setXUnits("PPM");
+      setHZtoPPM(true);
+    }
+  }
+
+  /**
+   * Set the shift, pt, and type for applyShiftReference() from processing
+   * ##.SHIFTREFERENCE, ##$REFERENCEPOINT, or ##OFFSET
+   * 
+   * @param shift
+   * @param pt
+   * @param type
+   */
+  void setShiftReference(double shift, int pt, int type) {
+    fileShiftRef = shift;
+    fileShiftRefDataPt = (pt > 0 ? pt : 1);
+    fileShiftRefType = type;    
+  }
+  
+  boolean isShiftTypeSpecified() {
+    return  (fileShiftRefType != JDXDataObject.REF_TYPE_UNSPECIFIED);
+  }
+
+  /**
+   * Applies the shift reference to all coordinates. Used by JDXReader only.
+   * 
+   * @param referenceFreq
+   *        the observed frequency
+   * @param shift 
+   */
+  void applyShiftReference(double referenceFreq, double shift) {
+  
+    if (fileShiftRefDataPt > xyCoords.length || fileShiftRefDataPt < 0)
+      return;
+  
+    Coordinate coord;
+    switch (fileShiftRefType) {
+    case REF_TYPE_STANDARD:
+      int ipt = (fileFirstX < fileLastX ? fileShiftRefDataPt - 1 : xyCoords.length - fileShiftRefDataPt);
+      shift = xyCoords[ipt].getXVal() - shift * referenceFreq;
+      break;
+    case REF_TYPE_BRUKER:
+      shift = fileFirstX - shift * referenceFreq;
+      break;
+    case REF_TYPE_VARIAN:
+      shift = fileLastX + shift;
+      break;
+    }
+  
+    for (int index = 0; index < xyCoords.length; index++) {
+      coord = xyCoords[index];
+      coord.setXVal(coord.getXVal() - shift);
+      xyCoords[index] = coord;
+    }
+  
+  }
+
 }

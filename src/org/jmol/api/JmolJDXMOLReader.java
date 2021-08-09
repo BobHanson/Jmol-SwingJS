@@ -16,7 +16,7 @@ public interface JmolJDXMOLReader {
 
   String rd() throws Exception;
 
-  void setSpectrumPeaks(int nH, String piUnitsX, String piUnitsY);
+  void setSpectrumPeaks(int nH, String peakXLabel, String peakYLabel);
 
 
 }

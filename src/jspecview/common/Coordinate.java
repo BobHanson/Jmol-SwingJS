@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.StringTokenizer;
 
 import javajs.util.Lst;
-import jspecview.source.JDXDataObject;
 
 
 
@@ -265,58 +264,6 @@ public class Coordinate {
         xyCoords[i].setYVal(xyCoords[i].getYVal() * yScale);
       }
     }
-  }
-
-  /**
-   * Applies the shift reference to all coordinates
-   * 
-   * @param xyCoords
-   *        an array of coordinates
-   * @param dataPointNum
-   *        the number of the data point in the the spectrum, indexed from 1
-   * @param firstX
-   *        the first X value
-   * @param lastX
-   *        the last X value
-   * @param offset
-   *        the offset value
-   * @param observedFreq
-   *        the observed frequency
-   * @param shiftRefType
-   *        the type of shift
-   * @throws IndexOutOfBoundsException
-   */
-  public static void applyShiftReference(Coordinate[] xyCoords,
-                                         int dataPointNum, double firstX,
-                                         double lastX, double offset,
-                                         double observedFreq, int shiftRefType)
-      throws IndexOutOfBoundsException {
-  
-    if (dataPointNum > xyCoords.length || dataPointNum < 0)
-      return;
-  
-    Coordinate coord;
-    switch (shiftRefType) {
-    case JDXDataObject.REF_TYPE_STANDARD:
-      int ipt = (firstX < lastX ? dataPointNum - 1 : xyCoords.length - dataPointNum);
-      offset = xyCoords[ipt].getXVal() - offset * observedFreq;
-      break;
-    case JDXDataObject.REF_TYPE_BRUKER:
-      offset = firstX - offset * observedFreq;
-      break;
-    case JDXDataObject.REF_TYPE_VARIAN:
-      offset = lastX + offset;
-      break;
-    }
-  
-    for (int index = 0; index < xyCoords.length; index++) {
-      coord = xyCoords[index];
-      coord.setXVal(coord.getXVal() - offset);
-      xyCoords[index] = coord;
-    }
-  
-    firstX -= offset;
-    lastX -= offset;
   }
 
   /**
