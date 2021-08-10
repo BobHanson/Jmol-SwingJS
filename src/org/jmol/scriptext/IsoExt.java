@@ -2760,6 +2760,8 @@ public class IsoExt extends ScriptExt {
             filename = filename.replace('=', '*');
           // new PDB ccp4 option
           boolean isFull = (filename.indexOf("/full") >= 0);
+          if (isFull)
+            filename = PT.rep(filename, "/full", "");
           if (filename.indexOf("/diff") >= 0)
             filename = "*" + filename.substring(0, filename.indexOf("/diff"));
           if (filename.startsWith("**")) {
@@ -2773,7 +2775,7 @@ public class IsoExt extends ScriptExt {
           }
           String fn = filename;
           filename = (String) vwr.setLoadFormat(filename,
-              (chk? '?' : isFull || pts == null ? '_' : '-'), false);
+              (chk? '?' : isFull ? '_' : '-'), false);
           if (filename == null)
             eval.errorStr(ScriptError.ERROR_invalidArgument,
                 "error parsing filename: " + fn);
