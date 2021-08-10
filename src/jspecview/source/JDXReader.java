@@ -281,9 +281,7 @@ public class JDXReader implements JmolJDXMOLReader {
       while (!done && (label = t.getLabel()) != null
           && (value = getValue(label)) != null) {
         if (isTabularData) {
-          setTabularDataType(spectrum, label);
-          if (!processTabularData(spectrum, dataLDRTable, isHeaderOnly))
-            throw new JSVException("Unable to read JDX file");
+          processTabularData(spectrum, dataLDRTable, label, isHeaderOnly);
           addSpectrum(spectrum, false);
           if (isSimulation && spectrum.getXUnits().equals("PPM"))
             spectrum.setHZtoPPM(true);
@@ -313,11 +311,7 @@ public class JDXReader implements JmolJDXMOLReader {
         }
         if (spectrum == null)
           spectrum = new Spectrum();
-        if (!readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly) && !isHeaderOnly)
-          continue;
-        addHeader(dataLDRTable, t.rawLabel, value);
-        if (!isHeaderOnly && checkCustomTags(spectrum, label, value))
-          continue; // BH ??? nothing after this?
+        processLabel(spectrum, dataLDRTable, label, value, isHeaderOnly);
       }
       if (isHeaderOnly && spectrum != null)
         addSpectrum(spectrum, false);
@@ -326,6 +320,20 @@ public class JDXReader implements JmolJDXMOLReader {
       throw new JSVException("##TITLE record not found");
     source.setErrorLog(errorLog.toString());
     return source;
+  }
+
+  private void processLabel(Spectrum spectrum, Lst<String[]> dataLDRTable,
+                            String label, String value, boolean isHeaderOnly)
+      throws JSVException {
+    // when reading the header only (for example, as a plugin for 
+    // the IUPAC FAIRSpec project reference Extractor), we read ALL the tags 
+    // (particularly the vendor tags), just not the data, and no custom tags.
+    if (!readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly)
+        && !isHeaderOnly)
+      return;
+    addHeader(dataLDRTable, t.rawLabel, value);
+    if (!isHeaderOnly)
+      checkCustomTags(spectrum, label, value);
   }
 
   String lastErrPath = null;
@@ -460,10 +468,7 @@ public class JDXReader implements JmolJDXMOLReader {
         }
         label = tmp;
         if (isTabularData) {
-          setTabularDataType(spectrum, label);
-          if (!processTabularData(spectrum, dataLDRTable, false))
-            throw new JSVException("Unable to read Block Source");
-          continue;
+          processTabularData(spectrum, dataLDRTable, label, false);
         }
         if (label.equals("##DATATYPE")) {
           if (value.toUpperCase().equals("LINK")) {
@@ -505,12 +510,7 @@ public class JDXReader implements JmolJDXMOLReader {
           dataLDRTable = new Lst<String[]>();
           continue;
         }
-        if (readDataLabel(spectrum, label, value, errorLog, obscure, false))
-          continue;
-
-        addHeader(dataLDRTable, t.rawLabel, value);
-        if (checkCustomTags(spectrum, label, value))
-          continue;
+        processLabel(spectrum, dataLDRTable, label, value, false);
       } // End Source File
     } catch (Exception e) {
       if (!Viewer.isJS)
@@ -665,9 +665,7 @@ public class JDXReader implements JmolJDXMOLReader {
         if (countSyms == 2)
           break;
       }
-
       setTabularDataType(spectrum, "##" + (continuous ? "XYDATA" : "PEAKTABLE"));
-
       if (!readNTUPLECoords(spectrum, nTupleTable, plotSymbols, minMaxY))
         throw new JSVException("Unable to read Ntuple Source");
       if (!spectrum.nucleusX.equals("?"))
@@ -871,15 +869,15 @@ public class JDXReader implements JmolJDXMOLReader {
 //    }
   }
 
-  private boolean processTabularData(JDXDataObject spec, Lst<String[]> table, boolean isHeaderOnly)
+  private void processTabularData(JDXDataObject spec, Lst<String[]> table, String label, boolean isHeaderOnly)
       throws JSVException {
+    setTabularDataType(spec, label);   
     spec.setHeaderTable(table);
-
     if (spec.dataClass.equals("XYDATA")) {
       spec.checkJDXRequiredTokens();
       if (!isHeaderOnly)
         decompressData(spec, null);
-      return true;
+      return;
     }
     if (spec.dataClass.equals("PEAKTABLE") || spec.dataClass.equals("XYPOINTS")) {
       spec.setContinuous(spec.dataClass.equals("XYPOINTS"));
@@ -904,9 +902,9 @@ public class JDXReader implements JmolJDXMOLReader {
           xyCoords[xyCoords.length - 1].getXVal(), xyCoords[0].getXVal(),
           xyCoords.length);
       spec.setIncreasing(fileDeltaX > 0);
-      return true;
+      return;
     }
-    return false;
+    throw new JSVException("Unable to read JDX file tabular data for line " + t.labelLineNo);
   }
 
   private boolean readNTUPLECoords(JDXDataObject spec, 
