@@ -90,7 +90,8 @@ class BCifDensityReader extends MapFileReader {
     Object[] dataBlocks = (Object[]) cifData.get("dataBlocks");
     for (int i = dataBlocks.length; --i >= 0;) {
       Map<String, Object> map = (Map<String, Object>) dataBlocks[i];
-      if (type.equalsIgnoreCase(map.get("header").toString())) {
+      String header = map.get("header").toString();
+      if ("EM".equals(header) || type.equalsIgnoreCase(header)) {
         // flatten hierarchy
         Object[] categories = (Object[]) map.get("categories");
         for (int j = categories.length; --j >= 0;) {
