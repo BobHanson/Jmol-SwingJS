@@ -5011,6 +5011,8 @@ public class Viewer extends JmolViewer
         // *emdb/=6nef
         // *emdb/=, *emdb/, *emdb
         id = id.substring(5);
+        if (id.startsWith("*"))
+          id = "=" + id.substring(1);
         String ext = "#-sigma=10";
         if (id.length() == 0 || id.startsWith("=")) {
           id = (id.length() == 0 || id.equals("=") ? getPdbID() : id.substring(1));
