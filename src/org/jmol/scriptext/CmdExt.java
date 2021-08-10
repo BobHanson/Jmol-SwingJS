@@ -4249,10 +4249,10 @@ public class CmdExt extends ScriptExt {
             .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "XYZ");
     }
     if (scripts != null) {
+      if (!FileManager.isJmolType(type))
+        invArg();
       if (type.equals("PNG"))
         type = "PNGJ";
-      if (!type.equals("PNGJ") && !type.equals("ZIPALL") && !type.equals("ZIP"))
-        invArg();
     }
     if (!isImage
         && !isExport

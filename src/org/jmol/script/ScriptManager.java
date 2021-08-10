@@ -546,7 +546,8 @@ public class ScriptManager implements JmolScriptManager {
    */
   @Override
   public void openFileAsync(String fname, int flags, boolean checkDims) {
-
+    if (checkDims && FileManager.isEmbeddable(fname)) 
+      checkResize(fname);
     boolean noScript = ((flags & NO_SCRIPT) != 0);
     boolean noAutoPlay = ((flags & NO_AUTOPLAY) != 0);
 
@@ -613,16 +614,6 @@ public class ScriptManager implements JmolScriptManager {
               flags |= JmolScriptManager.IS_APPEND;
               break;
             }
-            if (checkDims && !type.endsWith("::")) {
-              try {
-                String data = vwr.fm.getEmbeddedFileState(fname, false,
-                    "state.spt");
-                if (data.indexOf("preferredWidthHeight") >= 0)
-                  vwr.sm.resizeInnerPanelString(data);
-              } catch (Throwable e) {
-                // ignore
-              }
-            }
           }
           boolean isAppend = ((flags & IS_APPEND) != 0);
           boolean pdbCartoons = ((flags & PDB_CARTOONS) != 0 && !isAppend);
@@ -655,6 +646,16 @@ public class ScriptManager implements JmolScriptManager {
     } finally {
       if (cmd != null)
         vwr.evalString(cmd + (noAutoPlay ? "#!NOAUTOPLAY" : ""));
+    }
+  }
+
+  private void checkResize(String fname) {
+    try {
+      String data = vwr.fm.getEmbeddedFileState(fname, false, "state.spt");
+      if (data.indexOf("preferredWidthHeight") >= 0)
+        vwr.sm.resizeInnerPanelString(data);
+    } catch (Throwable e) {
+      // ignore
     }
   }
 

@@ -547,22 +547,6 @@ public class FileManager implements BytePoster {
     }
   }
 
-  public String getEmbeddedFileState(String fileName, boolean allowCached, String sptName) {
-    String[] dir = getZipDirectory(fileName, false, allowCached);
-    if (dir.length == 0) {
-      String state = vwr.getFileAsString4(fileName, -1, false, true, false, "file");
-      return (state.indexOf(JC.EMBEDDED_SCRIPT_TAG) < 0 ? ""
-          : getEmbeddedScript(state));
-    }
-    for (int i = 0; i < dir.length; i++)
-      if (dir[i].indexOf(sptName) >= 0) {
-        String[] data = new String[] { fileName + "|" + dir[i], null };
-        getFileDataAsString(data, -1, false, false, false);
-        return data[1];
-      }
-    return "";
-  }
-
   /**
    * just check for a file as being readable. Do not go into a zip file
    * 
@@ -1334,27 +1318,6 @@ public class FileManager implements BytePoster {
     return null;
   }
 
-  public static String getEmbeddedScript(String script) {
-    if (script == null)
-      return script;
-    int pt = script.indexOf(JC.EMBEDDED_SCRIPT_TAG);
-    if (pt < 0)
-      return script;
-    int pt1 = script.lastIndexOf("/*", pt);
-    int pt2 = script.indexOf((script.charAt(pt1 + 2) == '*' ? "*" : "") + "*/",
-        pt);
-    if (pt1 >= 0 && pt2 >= pt)
-      script = script.substring(
-          pt + JC.EMBEDDED_SCRIPT_TAG.length(), pt2)
-          + "\n";
-    while ((pt1 = script.indexOf(JPEG_CONTINUE_STRING)) >= 0)
-      script = script.substring(0, pt1)
-          + script.substring(pt1 + JPEG_CONTINUE_STRING.length() + 4);
-    if (Logger.debugging)
-      Logger.debug(script);
-    return script;
-  }
-
   public static void getFileReferences(String script, Lst<String> fileList,
                                        Lst<String> fileListUTF) {
     for (int ipt = 0; ipt < scriptFilePrefixes.length; ipt++) {
@@ -1580,6 +1543,89 @@ public class FileManager implements BytePoster {
       }
     }
     return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
+  }
+
+  /**
+   * Check to see if this is a Jmol WRITE file type that might be or have attached a ZIP collection .
+   * 
+   * @param type the 
+   * @return true if PNG, PNGJ, JMOL, ZIP, or ZIPALL
+   */
+  public static boolean isJmolType(String type) {
+    return  (type.equals("PNG") || type.equals("PNGJ") || type.equals("JMOL") || type.equals("ZIP") || type.equals("ZIPALL"));
+  }
+
+  /**
+   * Check to see if it is possible that this file has been embedded by Jmol
+   * using JC.EMBEDDED_SCRIPT_TAG. This includes all Jmol types, JPEG images, and 
+   * export types POV, POVRAY, and IDTF
+   * 
+   * @param type raw extension or file name
+   * @return true if this file might contain an embedded script
+   */
+  public static boolean isEmbeddable(String type) {
+    int pt = type.lastIndexOf('.');
+    if (pt >= 0)
+      type = type.substring(pt + 1);
+    type = type.toUpperCase();
+    // note - not JPG64 here. Presumes that is just for image creation in JavaScript
+    return (isJmolType(type) || PT.isOneOf(type, ";JPG;JPEG;POV;IDTF;"));
+  }
+
+  /**
+   * Get the specified SPT file of a Jmol zip collection or the embedded script
+   * for any other file that is embeddable.
+   * 
+   * @param fileName
+   * @param allowCached
+   * @param sptName
+   *        state.spt, movie.spt, or null
+   * @return embedded state.spt, movie.spt, or a script embedded using
+   *         JC.EMBEDDED_SCRIPT_TAG, or "" if not found.
+   */
+  public String getEmbeddedFileState(String fileName, boolean allowCached, String sptName) {
+    if (!isEmbeddable(fileName))
+      return "";
+    String[] dir = getZipDirectory(fileName, false, allowCached);
+    if (dir.length == 0) {
+      String state = vwr.getFileAsString4(fileName, -1, false, true, false, "file");
+      return (state.indexOf(JC.EMBEDDED_SCRIPT_TAG) < 0 ? ""
+          : getEmbeddedScript(state));
+    }
+    for (int i = 0; i < dir.length; i++)
+      if (dir[i].indexOf(sptName) >= 0) {
+        String[] data = new String[] { fileName + "|" + dir[i], null };
+        getFileDataAsString(data, -1, false, false, false);
+        return data[1];
+      }
+    return "";
+  }
+
+  /**
+   * Extract a Jmol script embedded using JC.EMBEDDED_SCRIPT_TAG.
+   * 
+   * @param s
+   * @return the embedded script or null
+   */
+  public static String getEmbeddedScript(String s) {
+    if (s == null)
+      return s;
+    int pt = s.indexOf(JC.EMBEDDED_SCRIPT_TAG);
+    if (pt < 0)
+      return s;
+    int pt1 = s.lastIndexOf("/*", pt);
+    int pt2 = s.indexOf((s.charAt(pt1 + 2) == '*' ? "*" : "") + "*/",
+        pt);
+    if (pt1 >= 0 && pt2 >= pt)
+      s = s.substring(
+          pt + JC.EMBEDDED_SCRIPT_TAG.length(), pt2)
+          + "\n";
+    while ((pt1 = s.indexOf(JPEG_CONTINUE_STRING)) >= 0)
+      s = s.substring(0, pt1)
+          + s.substring(pt1 + JPEG_CONTINUE_STRING.length() + 4);
+    if (Logger.debugging)
+      Logger.debug(s);
+    return s;
   }
 
 

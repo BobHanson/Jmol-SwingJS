@@ -713,8 +713,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
   @Override
   public void loadFile(String fileName) {
     System.out.println(fileName);
-    if (fileName.endsWith("png") || fileName.endsWith("pngj")
-        || fileName.endsWith("jmol") || fileName.endsWith("zip")) {
+    if (FileManager.isEmbeddable(fileName)) {
       try {
         setSaveEnabled(fileName);
         output(vwr.fm.getEmbeddedFileState(fileName, false, "movie.spt"));
