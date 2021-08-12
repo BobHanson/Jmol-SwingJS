@@ -160,7 +160,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
             volumetricVectors[i].scale(ANGSTROMS_PER_BOHR);
           line = voxelCounts[i] + " " + volumetricVectors[i].x + " "
               + volumetricVectors[i].y + " " + volumetricVectors[i].z;
-          jvxlFileHeaderBuffer.append(line).appendC('\n');
+          //jvxlFileHeaderBuffer.append(line).appendC('\n');
           Logger.info("voxel grid count/vector:" + line);
         }
       scaleIsosurface(params.scale);

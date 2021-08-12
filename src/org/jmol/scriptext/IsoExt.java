@@ -2723,13 +2723,17 @@ public class IsoExt extends ScriptExt {
         break;
       case T.eds:
       case T.edsdiff:
+      case T.density:
       case T.string:
         boolean firstPass = (!surfaceObjectSeen && !planeSeen);
-        String filename;
+        String filename = null;
         propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
         if (tok == T.string) {
           filename = paramAsStr(i);
-        } else {
+        } else if (tok == T.density) {
+          filename = "=density/";
+        } 
+        if (filename == null || filename.length() == 0 || filename.equals("*") || filename.equals("=")) {
           String pdbID = vwr.getPdbID();
           if (pdbID == null)
             eval.errorStr(ScriptError.ERROR_invalidArgument,
@@ -2743,7 +2747,6 @@ public class IsoExt extends ScriptExt {
          * If the model auxiliary info has "jmolSufaceInfo", we use that.
          */
         boolean checkWithin = false;
-        boolean isUppsala = false;
         if (filename.startsWith("http://eds.bmc.uu.se/eds/dfs/cb/")
             && filename.endsWith(".omap")) {
           // decommissoning Uppsala
@@ -2753,12 +2756,9 @@ public class IsoExt extends ScriptExt {
           // 0         1         2         3 xxxx
           // 0123456789012345678901234567890123456789
         }
-        if (filename.startsWith("*") || (isUppsala = filename.startsWith("="))
-            && filename.length() > 1) {
+        
+        if (filename.startsWith("*") || filename.startsWith("=")) {
           boolean haveCutoff = (!Float.isNaN(cutoff) || !Float.isNaN(sigma));
-          if (isUppsala) // Uppsala EDS decommissioned
-            filename = filename.replace('=', '*');
-          // new PDB ccp4 option
           boolean isFull = (filename.indexOf("/full") >= 0);
           if (isFull)
             filename = PT.rep(filename, "/full", "");

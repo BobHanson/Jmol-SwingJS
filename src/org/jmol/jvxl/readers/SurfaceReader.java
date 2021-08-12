@@ -398,10 +398,13 @@ public abstract class SurfaceReader implements VertexDataServer {
     
     if (jvxlFileHeaderBuffer == null) {
       jvxlData.jvxlFileTitle = "";
+      jvxlData.jvxlFileSource = null;
+      jvxlData.jvxlFileMessage = null;
     } else {
       String s = jvxlFileHeaderBuffer.toString();
       int i = s.indexOf('\n', s.indexOf('\n', s.indexOf('\n') + 1) + 1) + 1;
       jvxlData.jvxlFileTitle = s.substring(0, i);
+      jvxlData.jvxlFileSource = params.fileName;
     }
     if (params.contactPair == null)
       setBBoxAll();

@@ -4821,7 +4821,9 @@ public class Viewer extends JmolViewer
    * user-specified database designation.
    * 
    * @param name
-   * @param type a character to distinguish the type of file, '?' means we are just doing an isosurface check
+   * @param type
+   *        a character to distinguish the type of file, '?' means we are just
+   *        doing an isosurface check
    * @param withPrefix
    * @return String or String[]
    */
@@ -5002,6 +5004,9 @@ public class Viewer extends JmolViewer
         ciftype = id.substring(pt + 1);
         id = id.substring(0, pt);
       }
+      boolean checkXray = id.startsWith("density");
+      if (checkXray)
+        id = "em" + id.substring(7);
       if (id.equals("emdb") || id.equals("em"))
         id += "/";
       if (id.startsWith("em/"))
@@ -5011,39 +5016,51 @@ public class Viewer extends JmolViewer
         // *emdb/=6nef
         // *emdb/=, *emdb/, *emdb
         id = id.substring(5);
-        if (id.startsWith("*"))
+        if (id.length() == 0)
+          id = "=";
+        else if (id.startsWith("*"))
           id = "=" + id.substring(1);
-        String ext = "#-sigma=10";
-        if (id.length() == 0 || id.startsWith("=")) {
-          id = (id.length() == 0 || id.equals("=") ? getPdbID() : id.substring(1));
+        String emdext = "#-sigma=10";
+        if (id.startsWith("=")) {
+          id = (id.equals("=") ? getPdbID()
+              : id.substring(1));
           if (id == null || type == '?')
             return id;
-          id = JC.resolveDataBase("emdbquery", id, null);
-          String data = (String) fm.cacheGet(id, false);
+          String q = JC.resolveDataBase("emdbquery", id, null);
+          String data = (String) fm.cacheGet(q, false);
           if (data == null) {
-            showString("retrieving " +  id, false);
-            data = getFileAsString(id);
+              showString("retrieving " + q, false);
+            data = getFileAsString(q);
             if (data == null) {
-              showString("retrieve failed", false);
-              return null;
+              showString("EM retrieve failed for " + id, false);
+              if (!checkXray)
+                return null;
+              data = "FAILED";
+            } else {
+              showString(data, false);
             }
-            showString(data, false);
-            fm.cachePut(id, data);
+            fm.cachePut(q, data);
           }
           pt = data.indexOf("EMD-");
-          if (pt < 0)
-            return null;
-          id = data.substring(pt + 4);
-          pt = id.indexOf('\n');
-          if (pt > 0)
-            id = id.substring(0, pt);
-          pt = id.indexOf(",");
-          if (pt > 0) {
-            ext = "#-cutoff=" + id.substring(pt + 1);
-            id = id.substring(0, pt);
+          if (pt >= 0) {
+            id = data.substring(pt + 4);
+            pt = id.indexOf('\n');
+            if (pt > 0)
+              id = id.substring(0, pt);
+            pt = id.indexOf(",");
+            if (pt > 0) {
+              emdext = "#-cutoff=" + id.substring(pt + 1);
+              id = id.substring(0, pt);
+            }
+          } else {
+            if (!checkXray)
+              return null;
+            emdext = null;
           }
         }
-        return JC.resolveDataBase("emdbmap" + (type == '-' ? "server" : ""), id, null) + ext;
+        if (emdext != null)
+          return JC.resolveDataBase("emdbmap" + (type == '-' ? "server" : ""), id,
+              null) + emdext;
       }
       id = JC.resolveDataBase(
           (isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""),
@@ -5051,6 +5068,8 @@ public class Viewer extends JmolViewer
       if ("cif".equals(ciftype)) {
         id = id.replace("bcif", "cif");
       }
+      if (type != '?')
+        showString("retrieving " + id, false);
       break;
     }
     return id;

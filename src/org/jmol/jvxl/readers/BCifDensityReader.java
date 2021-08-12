@@ -52,6 +52,8 @@ import org.jmol.util.Logger;
 
 class BCifDensityReader extends MapFileReader {
   
+  private String header;
+
   BCifDensityReader(){}
   
   protected void getCifData(String fileName, Object data) {
@@ -90,7 +92,7 @@ class BCifDensityReader extends MapFileReader {
     Object[] dataBlocks = (Object[]) cifData.get("dataBlocks");
     for (int i = dataBlocks.length; --i >= 0;) {
       Map<String, Object> map = (Map<String, Object>) dataBlocks[i];
-      String header = map.get("header").toString();
+      header = map.get("header").toString();
       if ("EM".equals(header) || type.equalsIgnoreCase(header)) {
         // flatten hierarchy
         Object[] categories = (Object[]) map.get("categories");
@@ -137,7 +139,7 @@ class BCifDensityReader extends MapFileReader {
         f = BC.bytesToDoubleToFloat(data, 0, false);
         break;
       default:
-        System.out.println("BCDensityReader: Number encoding not recognized: " + encoding);
+        System.out.println("BCifDensityReader: Number encoding not recognized: " + encoding);
         break;
       }
     } catch (Exception e) {
@@ -316,10 +318,7 @@ class BCifDensityReader extends MapFileReader {
     //setCutoffAutomatic();
 
     jvxlFileHeaderBuffer = new SB();
-    jvxlFileHeaderBuffer.append("CifDensity reader\n");
-    jvxlFileHeaderBuffer
-        .append("see http://www.ebi.ac.uk/pdbe/densities/x-ray/1cbs/dbox/\n");
-
+    jvxlFileHeaderBuffer.append("BCifDensity reader type=" + header + "\n");
   }
   
   private float getXYZ(P3 a, float x) {

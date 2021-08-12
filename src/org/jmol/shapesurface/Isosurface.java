@@ -187,7 +187,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private String scriptAppendix = "";
 
   protected SurfaceGenerator sg;
-  protected JvxlData jvxlData;
 
   private float withinDistance2;
   private boolean isWithinNot;

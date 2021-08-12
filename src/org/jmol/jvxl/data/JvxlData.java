@@ -89,6 +89,7 @@ public class JvxlData {
   public boolean wasJvxl;
   public boolean wasCubic;
   
+  public String jvxlFileSource;
   public String jvxlFileTitle;
   public String jvxlFileMessage;
   public String jvxlSurfaceData;

@@ -26,6 +26,8 @@ package org.jmol.shape;
 
 import org.jmol.viewer.StateManager;
 import javajs.util.BS;
+
+import org.jmol.jvxl.data.JvxlData;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 
@@ -52,6 +54,7 @@ public abstract class MeshCollection extends Shape {
 
   // CGO, Draw, Isosurface(Contact LcaoCartoon MolecularOrbital Pmesh)
     
+  protected JvxlData jvxlData;
   public int meshCount;
   public Mesh[] meshes = new Mesh[4];
   public Mesh currentMesh;
@@ -463,8 +466,7 @@ public abstract class MeshCollection extends Shape {
 
   protected Object getPropMC(String property, int index) {
     Mesh m = currentMesh;
-    if (index >= 0
-        && (index >= meshCount || (m = meshes[index]) == null))
+    if (index >= 0 && (index >= meshCount || (m = meshes[index]) == null))
       return null;
     if (property == "count") {
       int n = 0;
@@ -488,8 +490,8 @@ public abstract class MeshCollection extends Shape {
       SB sb = new SB();
       int k = 0;
       boolean isNamed = property.length() > 5;
-      String id = (property.equals("list") ? null : isNamed ? property
-          .substring(5) : m == null ? null : m.thisID);
+      String id = (property.equals("list") ? null
+          : isNamed ? property.substring(5) : m == null ? null : m.thisID);
       for (int i = 0; i < meshCount; i++) {
         m = meshes[i];
         if (id != null && !id.equalsIgnoreCase(m.thisID))
@@ -522,8 +524,24 @@ public abstract class MeshCollection extends Shape {
       return getValues(m);
     if (property == "vertices")
       return getVertices(m);
-    if (property == "info")
-      return (m == null ? null : m.getInfo(false));
+    if (property == "info") {
+      if (m == null)
+        return null;
+      @SuppressWarnings("unchecked")
+      Map<String, Object> info = (Map<String, Object>) m.getInfo(false);
+      if (info != null && jvxlData != null) {
+        String ss = jvxlData.jvxlFileTitle;
+        if (ss != null)
+          info.put("jvxlFileTitle", ss.trim());
+        ss = jvxlData.jvxlFileSource;
+        if (ss != null)
+          info.put("jvxlFileSource", ss);
+        ss = jvxlData.jvxlFileMessage;
+        if (ss != null)
+          info.put("jvxlFileMessage", ss.trim());
+      }
+      return info;
+    }
     if (property == "data")
       return (m == null ? null : m.getInfo(true));
 
