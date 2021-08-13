@@ -5068,8 +5068,6 @@ public class Viewer extends JmolViewer
       if ("cif".equals(ciftype)) {
         id = id.replace("bcif", "cif");
       }
-      if (type != '?')
-        showString("retrieving " + id, false);
       break;
     }
     return id;

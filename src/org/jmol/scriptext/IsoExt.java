@@ -2812,8 +2812,6 @@ public class IsoExt extends ScriptExt {
             addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = Float.parseFloat(filename.substring(p + 8))));            
             sbCommand.append(" sigma " + sigma);
           }
-        } else if (p >= 0) {
-          filename = filename.substring(0, p);
         }
         if (!Float.isNaN(sigma))
           showString("using sigma = " + sigma);

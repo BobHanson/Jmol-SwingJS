@@ -198,17 +198,17 @@ public final class JC {
     "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
     "pdbe2", "https://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif",
     "pubchem", "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
-    "map", "https://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
+    "map", "https://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true",
     "pdbemap", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file.ccp4",
     "pdbemapdiff", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
-    "pdbemapserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
-    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif&diff=1", // last bit is just mine
+    "pdbemapserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
+    "pdbemapdiffserver", "https://www.ebi.ac.uk/pdbe/densities/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif&diff=1", // last bit is just mine
     //"emdbmap", "https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
- // was considerably slower
+    // was considerably slower
     "emdbmap", "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/cell?detail=6&space=cartesian&encoding=bcif",
     "emdbquery", "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
-    "emdbmapserver", "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?space=cartesian&encoding=bcif",
-    "resolverResolver", "https://chemapps.stolaf.edu/resolver",
+    "emdbmapserver", "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
+    "resolverResolver", "https://chemapps.stolaf.edu/resolver"
   };
   
   final static String legacyResolver = "cactus.nci.nih.gov/chemical/structure";
