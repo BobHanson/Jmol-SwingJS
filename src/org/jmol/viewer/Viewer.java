@@ -95,6 +95,7 @@ import org.jmol.modelset.StateScript;
 import org.jmol.modelsetbio.BioResolver;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptContext;
+import org.jmol.script.ScriptEval;
 import org.jmol.script.T;
 import org.jmol.thread.TimeoutThread;
 import org.jmol.util.BSUtil;
@@ -9618,7 +9619,7 @@ public class Viewer extends JmolViewer
   public ScriptContext getEvalContextAndHoldQueue(JmolScriptEvaluator eval) {
     if (eval == null || !(isJS || testAsync))
       return null;
-    eval.pushContextDown("getEvalContextAndHoldQueue");
+    eval.pushContextDown(ScriptEval.CONTEXT_HOLD_QUEUE);
     ScriptContext sc = eval.getThisContext();
     sc.setMustResume();
     sc.isJSThread = true;

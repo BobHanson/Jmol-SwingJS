@@ -288,6 +288,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   public int scriptLevel;
+  public static final String CONTEXT_HOLD_QUEUE = "getEvalContextAndHoldQueue";
 
   public static int commandHistoryLevelMax = 0;
   private static int contextDepthMax = 100; // mutable using set scriptLevelMax
@@ -555,7 +556,7 @@ public class ScriptEval extends ScriptExpr {
       sc.pc++;
     thisContext = sc;
     
-    if (sc.scriptLevel > 0)
+    if (sc.scriptLevel > 0 && sc.why != CONTEXT_HOLD_QUEUE)
       scriptLevel = sc.scriptLevel - 1;
     restoreScriptContext(sc, true, false, false);
     pcResume = sc.pc;
