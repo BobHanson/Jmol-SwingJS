@@ -636,57 +636,57 @@ public class SymmetryOperation extends M4 {
     return str + n + "/" + m;
   }
 
-  final static String fortyEighthsOf(float n48ths) {
-    String str = "";
-    if (n48ths < 0) {
-      n48ths = -n48ths;
-      str = "-";
-    }
-    int m = 12;
-    int n = Math.round(n48ths);
-    if (Math.abs(n - n48ths) > 0.01f) {
-      // fifths? sevenths? eigths? ninths? sixteenths?
-      // Juan Manuel suggests 10 is large enough here 
-      float f = n48ths / 48;
-      int max = 20;
-      for (m = 5; m < max; m++) {
-        float fm = f * m;
-        n = Math.round(fm);
-        if (Math.abs(n - fm) < 0.01f)
-          break;
-      }
-      if (m == max)
-        return str + f;
-    } else {
-      if (n == 48)
-        return str + "1";
-      if (n < 48)
-        return str + twelfths[n % 48];
-      switch (n % 48) {
-      case 0:
-        return "" + n / 48;
-      case 2:
-      case 10:
-        m = 6;
-        break;
-      case 3:
-      case 9:
-        m = 4;
-        break;
-      case 4:
-      case 8:
-        m = 3;
-        break;
-      case 6:
-        m = 2;
-        break;
-      default:
-        break;
-      }
-      n = (n * m / 12);
-    }
-    return str + n + "/" + m;
-  }
+//  final static String fortyEighthsOf(float n48ths) {
+//    String str = "";
+//    if (n48ths < 0) {
+//      n48ths = -n48ths;
+//      str = "-";
+//    }
+//    int m = 12;
+//    int n = Math.round(n48ths);
+//    if (Math.abs(n - n48ths) > 0.01f) {
+//      // fifths? sevenths? eigths? ninths? sixteenths?
+//      // Juan Manuel suggests 10 is large enough here 
+//      float f = n48ths / 48;
+//      int max = 20;
+//      for (m = 5; m < max; m++) {
+//        float fm = f * m;
+//        n = Math.round(fm);
+//        if (Math.abs(n - fm) < 0.01f)
+//          break;
+//      }
+//      if (m == max)
+//        return str + f;
+//    } else {
+//      if (n == 48)
+//        return str + "1";
+//      if (n < 48)
+//        return str + twelfths[n % 48];
+//      switch (n % 48) {
+//      case 0:
+//        return "" + n / 48;
+//      case 2:
+//      case 10:
+//        m = 6;
+//        break;
+//      case 3:
+//      case 9:
+//        m = 4;
+//        break;
+//      case 4:
+//      case 8:
+//        m = 3;
+//        break;
+//      case 6:
+//        m = 2;
+//        break;
+//      default:
+//        break;
+//      }
+//      n = (n * m / 12);
+//    }
+//    return str + n + "/" + m;
+//  }
 
   private final static String[] twelfths = { "0", "1/12", "1/6", "1/4", "1/3",
   "5/12", "1/2", "7/12", "2/3", "3/4", "5/6", "11/12" };
