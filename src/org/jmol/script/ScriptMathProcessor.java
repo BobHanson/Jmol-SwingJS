@@ -1185,8 +1185,6 @@ public class ScriptMathProcessor {
         }
       case T.matrix3f:
         switch (x2.tok) {
-        default:
-          return addXFloat(x1.asFloat() + x2.asFloat());
         case T.matrix3f:
           m = M3.newM3((M3) x1.value);
           m.add((M3) x2.value);
@@ -1194,6 +1192,15 @@ public class ScriptMathProcessor {
         case T.point3f:
           return addXM4(getMatrix4f((M3) x1.value, (P3) x2.value));
         }
+        break;
+      case T.matrix4f:
+        switch (x2.tok) {
+        case T.point3f:
+          M4 m4b = M4.newM4((M4) x1.value);
+          m4b.add((T3) x2.value);
+          return addXM4(m4b);
+        }
+        break;
       case T.point4f:
         Quat q1 = Quat.newP4((P4) x1.value);
         switch (x2.tok) {

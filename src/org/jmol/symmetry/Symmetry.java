@@ -26,17 +26,6 @@ package org.jmol.symmetry;
 
 import java.util.Map;
 
-import javajs.util.BS;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Matrix;
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
@@ -52,6 +41,17 @@ import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Matrix;
+import javajs.util.P3;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class Symmetry implements SymmetryInterface {
   // NOTE: THIS CLASS IS VERY IMPORTANT.
@@ -165,7 +165,7 @@ public class Symmetry implements SymmetryInterface {
    * @param desiredSpaceGroupIndex
    * @param name
    * @param data a Lst<SymmetryOperation> or Lst<M4> 
-   * @param d in [3+d] modulation dimension
+   * @param modDim in [3+d] modulation dimension
    * @return true if a known space group
    */
   @Override
@@ -666,9 +666,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
-                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options) {
-    return getDesc(modelSet).getSymopInfo(iatom, xyz, op, pt, pt2,
-        id, type, scaleFactor, nth, options);
+                                    int op, P3 translation, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options) {
+    return getDesc(modelSet).getSymopInfo(iatom, xyz, op, translation, pt,
+        pt2, id, type, scaleFactor, nth, options);
   }
 
   @Override

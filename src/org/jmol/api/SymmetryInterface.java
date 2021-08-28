@@ -170,6 +170,7 @@ public interface SymmetryInterface {
    * @param iatom
    * @param xyz
    * @param op
+   * @param translation TODO
    * @param pt
    * @param pt2 a second point or an offset
    * @param id
@@ -180,7 +181,7 @@ public interface SymmetryInterface {
    * @return a variety of object types
    */
   public Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
-                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
+                                    P3 translation, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
 
   public void setTimeReversal(int op, int val);
 

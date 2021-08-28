@@ -4832,7 +4832,7 @@ public class CmdExt extends ScriptExt {
           : null);
       checkLength((len = ++eval.iToken) + filterLen);
       if (!chk) {
-        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, pt1, pt2, 0, type, 0, nth, 0);
+        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, null, pt1, pt2, 0, type, 0, nth, 0);
         msg = (o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
@@ -5430,7 +5430,7 @@ public class CmdExt extends ScriptExt {
             if (stype == null)
               stype = (String) vwr.getSymmetryInfo(
                   vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null,
-                  T.lattice, null, 0, -1, 0);
+                  null, T.lattice, null, 0, -1, 0);
             if (u == null)
               u = vwr.getSymTemp();
             u.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),

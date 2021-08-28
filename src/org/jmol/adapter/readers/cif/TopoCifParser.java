@@ -51,7 +51,7 @@ public class TopoCifParser implements Parser {
    * types set by filter TOPOSE_TYPES in the format of one or more of {v, vw, hb} separated by "+";
    * default is v+hb
    */
-  private String allowedTypes = "+v+hb+";
+  private String allowedTypes = "+v+hb+V+W+";
 
   /**
    * ensures that we only make one bond to any two atoms
@@ -264,11 +264,14 @@ public class TopoCifParser implements Parser {
       info.put("dt", dt);
       info.put("primitive1", p1f);
       info.put("primitive2", p2f);
-      int[] ops = new int[symops.cardinality()];
-      for (int p = 0, i = symops.nextSetBit(0); i >= 0 ; i = symops.nextSetBit(i + 1)) {
-        ops[p++] = i + 1;
+      if (symops != null) {
+        int[] ops = new int[symops.cardinality()];
+        for (int p = 0, i = symops.nextSetBit(0); i >= 0; i = symops
+            .nextSetBit(i + 1)) {
+          ops[p++] = i + 1;
+        }
+        info.put("primitiveSymops", ops);
       }
-      info.put("primitiveSymops", ops);
       info.put("topoOrder", Integer.valueOf(topoOrder));
       info.put("order", Integer.valueOf(order));
       return info;
@@ -395,19 +398,18 @@ public class TopoCifParser implements Parser {
 
   public Node addNodeIfNull(String label) throws Exception {
     Node node = (Node) getTopo(nodes, label, 'n');
-    Atom atom = reader.asc.getAtomFromName(node.atomName);
+    Atom atom = (node == null ? null : reader.asc.getAtomFromName(node.atomName));
     if (atom == null) {
       // look for atom not node
       atom = reader.asc.getAtomFromName(label);
       if (atom == null)
         throw new Exception("TopoCIFParser.addNodeIfNull no atom " + label);
-      Node n = new Node(nodeIndex++, atom.atomName, atom.atomName,
+      node = new Node(nodeIndex++, atom.atomName, atom.atomName,
           atom.getElementSymbol(), pre);
-      n.set(atom.x, atom.y, atom.z);
-      nodes.addLast(n);
-      atom = n;
+      node.set(atom.x, atom.y, atom.z);
+      nodes.addLast(node);
     }
-    return (Node) atom;
+    return node;
   }
 
   public Object getTopo(Lst<?> l, String id, char type) {
@@ -508,7 +510,7 @@ public class TopoCifParser implements Parser {
       int order = getInt(topol_link_order);
 
       String field = getField(topol_link_site_symmetry_translation_1);
-      if (field.length() > 1) {
+      if (field != null) {
         t1 = Cif2DataParser.getIntArrayFromStringList(field, 3);
       } else {
         t1[0] = getInt(topol_link_site_symmetry_translation_1_x);
@@ -516,7 +518,7 @@ public class TopoCifParser implements Parser {
         t1[2] = getInt(topol_link_site_symmetry_translation_1_z);
       }
       field = getField(topol_link_site_symmetry_translation_2);
-      if (field.length() > 1) {
+      if (field != null) {
         t2 = Cif2DataParser.getIntArrayFromStringList(field, 3);
       } else {
         t2[0] = getInt(topol_link_site_symmetry_translation_2_x);
@@ -537,11 +539,15 @@ public class TopoCifParser implements Parser {
     // opportunity to handle anything prior to applying symmetry
     if (reader == null)
       return false;
-    for (int i = 0; i < nodes.size(); i++) {
+    int n = nodes.size();
+    for (int i = 0; i < n; i++) {
       nodes.get(i).finalizeNode();
     }
     for (int i = 0; i < links.size(); i++) {
       links.get(i).finalizeLink();
+    }
+    for (int i = n; i < nodes.size(); i++) {
+      nodes.get(i).finalizeNode();
     }
     reader.applySymmetryAndSetTrajectory();
     return true;

@@ -55,6 +55,7 @@ import org.jmol.util.Parser;
 
 public class SymmetryOperation extends M4 {
   String xyzOriginal;
+  String xyzCanonical;
   String xyz;
   /**
    * "normalization" is the process of adjusting symmetry operator definitions
@@ -197,6 +198,13 @@ public class SymmetryOperation extends M4 {
     return (normalized && modDim == 0 || xyzOriginal == null ? xyz : xyzOriginal);
   }
 
+
+  public String getxyzTrans(P3 t) {
+    M4 m = newM4(this);
+    m.add(t);
+    return getXYZFromMatrix(m, false,  false, false);
+  }
+
   static void newPoint(M4 m, P3 atom1, P3 atom2, int x, int y, int z) {
     m.rotTrans2(atom1, atom2);
     atom2.add3(x,  y,  z);
@@ -218,7 +226,10 @@ public class SymmetryOperation extends M4 {
       float trans = r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
-      sb.append(twelfthsOf(isCanonical ? ((int)trans + 12)%12 : (int) trans)).append("\t]\n");
+      sb.append(twelfthsOf(isCanonical ? 
+          normalizeTwelfths(trans / 12, true) : (int) trans)
+          
+          ).append("\t]\n");
     }
     return sb.toString();
   }
@@ -293,13 +304,14 @@ public class SymmetryOperation extends M4 {
     String strOut = getMatrixFromString(this, xyz, linearRotTrans, allowScaling);
     if (strOut == null)
       return false;
+    xyzCanonical = strOut;
     if (mxyz != null) {
       // base time reversal on relationship between x and mx in relation to determinant
       boolean isProper = (M4.newA16(linearRotTrans).determinant3() == 1); 
       timeReversal = (((xyz.indexOf("-x") < 0) == (mxyz.indexOf("-mx") < 0)) == isProper ? 1 : -1);
     }
     setMatrix(isReverse);
-    this.xyz = (isReverse ? getXYZFromMatrix(this, true, false, false) : strOut);
+    this.xyz = (isReverse ? getXYZFromMatrix(this, true, false, false) : doNormalize ? strOut : xyz);
     if (timeReversal != 0)
       this.xyz += (timeReversal == 1 ? ",m" : ",-m");
     if (Logger.debugging)
@@ -359,7 +371,6 @@ public class SymmetryOperation extends M4 {
     setMatrix(isReverse);
     isFinalized = (offset == null);
     xyz = getXYZFromMatrix(this, true, false, false);
-    //System.out.println("testing " + xyz + " " + this + "\n" + Escape.eAF(linearRotTrans));
     return true;
   }
 

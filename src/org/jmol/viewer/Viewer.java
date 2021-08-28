@@ -10210,6 +10210,7 @@ public class Viewer extends JmolViewer
    *        or null
    * @param iOp
    *        the desired symmetry operation [1-n] or 0
+   * @param translation [i j k] translational addition to symop
    * @param pt1
    *        the starting point, or null if to use iatom or otherwise unnecessary
    * @param pt2
@@ -10233,14 +10234,16 @@ public class Viewer extends JmolViewer
    *        is an {i j k} offset from cell 555
    * @return string, Object[], or Lst<Object[]>
    */
-  public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3 pt1, P3 pt2,
-                                int type, String desc, float scaleFactor,
-                                int nth, int options) {
+  public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3 translation, P3 pt1,
+                                P3 pt2, int type, String desc,
+                                float scaleFactor, int nth, int options) {
     try {
-      return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, pt1, pt2,
-          desc, type, scaleFactor, nth, options);
+      return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, translation, pt1,
+          pt2, desc, type, scaleFactor, nth, options);
     } catch (Exception e) {
       System.out.println("Exception in Viewer.getSymmetryInfo: " + e);
+      if (!isJS)
+        e.printStackTrace();
       return null;
     }
   }

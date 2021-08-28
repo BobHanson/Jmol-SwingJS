@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -459,7 +460,7 @@ public class MathExt {
         stype = "I";
       else if (stype.length() == 0)
         stype = (String) vwr.getSymmetryInfo(iatom, null, 0, null, null,
-            T.lattice, null, 0, -1, 0);
+            null, T.lattice, null, 0, -1, 0);
       if (stype == null || stype.length() == 0)
         return false;
       if (u == null)
@@ -3457,6 +3458,15 @@ public class MathExt {
     // x = y.symop(n,"time")
     // Returns the time reversal of a symmetry operator in a magnetic space group
 
+    // x = y.symop(atomOrPoint, atomOrPoint)
+    
+    // x = y.symop(n, [h,k,l])
+    // adds a lattice translation to the symmetry operation
+    
+    // x = y.symop(n,...,"cif2")
+    // return a <symop> <translation> as nn [a b c] suitable for CIF2 inclusion
+    
+    
     SV x1 = (haveBitSet ? mp.getX() : null);
     if (x1 != null && x1.tok != T.bitset)
       return false;
@@ -3500,6 +3510,16 @@ public class MathExt {
         (bsAtoms == null ? (bsAtoms = new BS()) : bsAtoms)
             .or((BS) args[apt + 1].value);
     }
+    // allow for [ h k l ] lattice translation
+    P3 trans = null;
+    if (narg > apt && args[apt].tok == T.varray) {
+      List<SV> a = args[apt++].getList();
+      if (a.size() != 3)
+        return false;
+      trans = P3.new3(SV.fValue(a.get(0)), SV.fValue(a.get(1)), SV.fValue(a.get(2)));
+    } else if (narg > apt && args[apt].tok == T.integer) {
+      SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3(), 0, 0);
+    }
     P3 pt1 = null, pt2 = null;
     if ((pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
@@ -3516,8 +3536,8 @@ public class MathExt {
         : SV.sValue(args[apt++]).toLowerCase());
 
     return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length
-        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, pt1,
-            pt2, 0, desc, 0, nth, 0)));
+        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, trans,
+            pt1, pt2, T.array, desc, 0, nth, 0)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

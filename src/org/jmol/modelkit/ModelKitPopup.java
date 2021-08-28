@@ -469,8 +469,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       P3 atom = vwr.ms.getAtom(iatom);
       if (atom == null)
         return null;
-      return vwr.getSymmetryInfo(iatom, null, -1, atom, atom, T.array, null, 0,
-          0, 0);
+      return vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array, null,
+          0, 0, 0);
     }
 
     // set only (always returning null):

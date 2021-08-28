@@ -546,6 +546,7 @@ public class IsoExt extends ScriptExt {
         P3 target = null;
         BS bsAtoms = null;
         int options = 0;
+        P3 trans = null;
         if (tok == T.symop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -557,8 +558,13 @@ public class IsoExt extends ScriptExt {
             break;
           case T.integer:
           default:
-            if (!eval.isCenterParameter(i))
+            if (!eval.isCenterParameter(i)) {
               iSym = intParameter(i++);
+              if (eval.isArrayParameter(i)) {
+            	  trans = P3.newA(eval.floatParameterSet(i, 3, 3));
+            	  i = ++eval.iToken;
+              }
+            }
             Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
             if (eval.isCenterParameter(i))
               center = eval.centerParameter(i, ret);
@@ -601,8 +607,8 @@ public class IsoExt extends ScriptExt {
             int iatom = bsAtoms.nextSetBit(0);
             if (options != 0) {
               // options is T.offset, and target is an {i j k} offset from cell 555
-              Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, center, target,
-                  T.point, null, intScale / 100f, nth, options);
+              Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+                  target, T.point, null, intScale / 100f, nth, options);
               if (o instanceof P3)
                 target = (P3) o;
               else
@@ -611,8 +617,8 @@ public class IsoExt extends ScriptExt {
             if (thisId == null)
               thisId = "sym";
             if (s == null)
-              s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, center, target,
-                  T.draw, thisId, intScale / 100f, nth, options);
+              s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+                  target, T.draw, thisId, intScale / 100f, nth, options);
           }
           eval.runBufferedSafely(
               s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
