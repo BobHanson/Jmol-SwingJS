@@ -27,6 +27,9 @@ package org.jmol.symmetry;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.util.Logger;
+import org.jmol.util.Parser;
+
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
@@ -35,9 +38,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
-
-import org.jmol.util.Logger;
-import org.jmol.util.Parser;
 
 /*
  * Bob Hanson 4/2006
@@ -569,20 +569,20 @@ public class SymmetryOperation extends M4 {
     return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
-  private final static String xyzFraction48ths(float n48ths, boolean allPositive, boolean halfOrLess) {
-    float n = n48ths;
-    if (allPositive) {
-      while (n < 0)
-        n += 48f;
-    } else if (halfOrLess) {
-      while (n > 24f)
-        n -= 48f;
-      while (n < -24f)
-        n += 48f;
-    }
-    String s = fortyEighthsOf(n);
-    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
-  }
+//  private final static String xyzFraction48ths(float n48ths, boolean allPositive, boolean halfOrLess) {
+//    float n = n48ths;
+//    if (allPositive) {
+//      while (n < 0)
+//        n += 48f;
+//    } else if (halfOrLess) {
+//      while (n > 24f)
+//        n -= 48f;
+//      while (n < -24f)
+//        n += 48f;
+//    }
+//    String s = fortyEighthsOf(n);
+//    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
+//  }
 
   final static String twelfthsOf(float n12ths) {
     String str = "";
@@ -691,21 +691,21 @@ public class SymmetryOperation extends M4 {
   private final static String[] twelfths = { "0", "1/12", "1/6", "1/4", "1/3",
   "5/12", "1/2", "7/12", "2/3", "3/4", "5/6", "11/12" };
 
-  private final static String[] fortyeigths = { "0", 
-    "1/48", "1/24", "1/16", "1/12",
-    "5/48", "1/8", "7/48", "1/6", 
-    "3/16", "5/24", "11/48", "1/4",
-    "13/48", "7/24", "5/16", "1/3",
-    "17/48", "3/8", "19/48", "5/12",
-    "7/16", "11/24", "23/48", "1/2",
-    "25/48", "13/24", "9/16", "7/12",
-    "29/48", "15/24", "31/48", "2/3",
-    "11/12", "17/16", "35/48", "3/4",
-    "37/48", "19/24", "13/16", "5/6",
-    "41/48", "7/8", "43/48", "11/12",
-    "15/16", "23/24", "47/48"
-  };
-
+//  private final static String[] fortyeigths = { "0", 
+//    "1/48", "1/24", "1/16", "1/12",
+//    "5/48", "1/8", "7/48", "1/6", 
+//    "3/16", "5/24", "11/48", "1/4",
+//    "13/48", "7/24", "5/16", "1/3",
+//    "17/48", "3/8", "19/48", "5/12",
+//    "7/16", "11/24", "23/48", "1/2",
+//    "25/48", "13/24", "9/16", "7/12",
+//    "29/48", "15/24", "31/48", "2/3",
+//    "11/12", "17/16", "35/48", "3/4",
+//    "37/48", "19/24", "13/16", "5/6",
+//    "41/48", "7/8", "43/48", "11/12",
+//    "15/16", "23/24", "47/48"
+//  };
+//
   private static String plusMinus(String strT, float x, String sx) {
     return (x == 0 ? "" : (x < 0 ? "-" : strT.length() == 0 ? "" : "+") + (x == 1 || x == -1 ? "" : "" + (int) Math.abs(x)) + sx);
   }
@@ -721,17 +721,17 @@ public class SymmetryOperation extends M4 {
     return iValue;
   }
 
-  private static float normalize48ths(float iValue, boolean doNormalize) {
-    iValue *= 48f;
-    if (doNormalize) {
-      while (iValue > 24)
-        iValue -= 48;
-      while (iValue <= -24)
-        iValue += 48;
-    }
-    return iValue;
-  }
-
+//  private static float normalize48ths(float iValue, boolean doNormalize) {
+//    iValue *= 48f;
+//    if (doNormalize) {
+//      while (iValue > 24)
+//        iValue -= 48;
+//      while (iValue <= -24)
+//        iValue += 48;
+//    }
+//    return iValue;
+//  }
+//
   final static String[] labelsXYZ = new String[] {"x", "y", "z"};
   final static String[] labelsXn = new String[] {"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13"};
   final static String[] labelsXnSub = new String[] {"x", "y", "z", "a",  "b",  "c",  "d",  "e",  "f",  "g",   "h",   "i",   "j"};
