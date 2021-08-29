@@ -85,7 +85,7 @@ public class SymmetryOperation extends M4 {
   Matrix rsvs;
   boolean isBio;
   private Matrix sigma;
-  int index;
+  int number;
   String subsystemCode;
   int timeReversal;
   
@@ -118,7 +118,7 @@ public class SymmetryOperation extends M4 {
     opId = op.opId;
     modDim = op.modDim;
     myLabels = op.myLabels;
-    index = op.index;
+    number = op.number;
     linearRotTrans = op.linearRotTrans;
     sigma = op.sigma;
     subsystemCode = op.subsystemCode;
@@ -949,7 +949,7 @@ public class SymmetryOperation extends M4 {
       info.put("xyz", xyz);
       if (centering != null)
         info.put("centering", centering);
-      info.put("index", Integer.valueOf(index));
+      info.put("index", Integer.valueOf(number - 1));
       info.put("isCenteringOp", Boolean.valueOf(isCenteringOp));
       if (linearRotTrans != null)
         info.put("linearRotTrans", linearRotTrans);

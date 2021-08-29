@@ -617,7 +617,7 @@ class SpaceGroup {
       operations = (SymmetryOperation[]) AU.arrayCopyObject(operations,
           operationCount * 2);
     operations[operationCount++] = op;
-    op.index = operationCount;
+    op.number = operationCount;
     // check for initialization of group without time reversal
     if (op.timeReversal != 0)
       operations[0].timeReversal = 1;

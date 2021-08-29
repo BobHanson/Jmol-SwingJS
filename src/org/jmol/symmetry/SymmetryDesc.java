@@ -77,7 +77,7 @@ public class SymmetryDesc {
       null /*draw*/, "fractionalTranslation", "cartesianTranslation",
       "inversionCenter", null /*point*/, "axisVector", "rotationAngle",
       "matrix", "unitTranslation", "centeringVector", "timeReversal", "plane",
-      "_type", "index", "symop" ,"cif2", "xyzCanonical" };
+      "_type", "id", "cif2", "xyzCanonical" };
 
   private final static int KEY_DRAW = 3;
   private final static int KEY_POINT = 7;
@@ -252,6 +252,12 @@ public class SymmetryDesc {
 
   //////////// private methods ///////////
 
+  /** Determine the type of this request. 
+   * Note that label and xyz will be returned as T.xys and T.label 
+   * 
+   * @param id
+   * @return a code that identifies this request.
+   */
   private static int getType(String id) {
     int type;
     if (id == null)
@@ -270,10 +276,17 @@ public class SymmetryDesc {
     type = T.getTokFromName(id);
     if (type != 0)
       return type;
-    for (type = 0; type < keys.length; type++)
+    type = getKeyType(id);
+    return (type < 0 ? type : T.all);
+  }
+
+  private static int getKeyType(String id) {
+    if ("type".equals(id))
+      id = "_type";
+    for (int type = 0; type < keys.length; type++)
       if (id.equalsIgnoreCase(keys[type]))
         return -1 - type;
-    return T.full;
+    return 0;
   }
 
   private static Object nullReturn(int type) {
@@ -282,7 +295,9 @@ public class SymmetryDesc {
       return "draw ID sym_* delete";
     case T.full:
     case T.label:
+    case T.id:
     case T.xyz:
+    case T.matrix3f:
     case T.origin:
       return "";
     case T.atoms:
@@ -300,10 +315,7 @@ public class SymmetryDesc {
    * 
    * or a negative number (-length, -1]:
    * 
-   * { "xyz", "xyzOriginal", "label", "draw", "fractionalTranslation",
-   * "cartesianTranslation", "inversionCenter", "axisPoint", "axisVector",
-   * "rotationAngle", "matrix", "unitTranslation", "centeringVector",
-   * "timeReversal", "plane", "_type", "id", "symop" }
+   * { "xyz", etc. }
    * 
    * where "all" is the info array itself,
    * 
@@ -314,7 +326,9 @@ public class SymmetryDesc {
    */
   
   private static Object getInfo(Object[] info, int type) {
-    if (type < 0 && type >= -keys.length)
+    if (info.length == 0)
+      return "";
+    if (type < 0 && -type <= keys.length && -type <= info.length)
       return info[-1 - type];
     switch (type) {
     case T.all:
@@ -366,8 +380,6 @@ public class SymmetryDesc {
       return info[15];
     case T.id:
       return info[16];
-    case T.symop:
-      return info[17];
     }
   }
 
@@ -419,9 +431,8 @@ public class SymmetryDesc {
    * 
    *         [15] _type
    * 
-   *         [16] index
+   *         [16] id
    * 
-   *         [17] symop
    */
 
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
@@ -1098,9 +1109,9 @@ public class SymmetryDesc {
       xyzNew = op.fixMagneticXYZ(m2, xyzNew, true);
     T3 f0 = approx0(ftrans);
     T3 cift = null;
-    int cifi = (op.index < 0 ? 0 : op.index);
+    int cifi = (op.number < 0 ? 0 : op.number);
     if (!xyzNew.equals(op.xyzOriginal)) {
-      if (op.index >= 0) {
+      if (op.number > 0) {
         M4 orig = SymmetryOperation.getMatrixFromXYZ(op.xyzOriginal);
         orig.sub(m2);
         cift = new P3();
@@ -1115,7 +1126,7 @@ public class SymmetryDesc {
         (ang1 != 0 ? Integer.valueOf(ang1) : null), m2,
         (vtrans.lengthSquared() > 0 ? vtrans : null), op.getCentering(),
         Integer.valueOf(op.timeReversal), plane, type,
-        Integer.valueOf(op.index), Integer.valueOf(op.index), cif2, op.xyzCanonical };
+        Integer.valueOf(op.number), cif2, op.xyzCanonical };
   }
 
   private static void drawLine(SB s, String id, float diameter, P3 pt0, P3 pt1,
@@ -1221,9 +1232,27 @@ public class SymmetryDesc {
                                  Symmetry uc, String xyz, int op, P3 translation,
                                  P3 pt, P3 pt2, String id,
                                  int type, float scaleFactor, int nth, int options) {
-    if (type == T.lattice)
-      return uc.getLatticeType();
+    int returnType = 0;
     Object nullRet = nullReturn(type);
+    switch (type) {
+    case T.lattice:
+      return uc.getLatticeType();
+    case T.array:
+      returnType = getType(id);
+      switch (returnType) {
+      case T.atoms:
+      case T.draw:
+      case T.full:
+      case T.list:
+      case T.point:
+        type = returnType;
+        break;
+      default:
+        returnType = getKeyType(id);
+        break;
+      }
+      break;
+    }
     int iop = op;
     P3 offset = (options == T.offset  && (type == T.atoms || type == T.point)? pt2 : null);
     if (offset != null)
@@ -1255,7 +1284,7 @@ public class SymmetryDesc {
           .getSpaceGroupOperation(i);
       if (xyzOriginal != null)
         opTemp.xyzOriginal = xyzOriginal;
-      opTemp.index = op - 1;
+      opTemp.number = op;
       if (!isBio)
         opTemp.getCentering();
       if (pt == null && iatom >= 0)
@@ -1281,12 +1310,16 @@ public class SymmetryDesc {
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
           scaleFactor, options, (translation != null));
+      if (type == T.array && id != null) {
+        returnType = getKeyType(id);        
+      }
     } else {
       // pt1, pt2
       String stype = "info";
       boolean asString = false;
       switch (type) {
       case T.array: // new Jmol 14.29.45
+        returnType = getKeyType(id);
         id = stype = null;
         asString = false;
         if (nth == 0)
@@ -1327,14 +1360,19 @@ public class SymmetryDesc {
     }
     if (info == null)
       return nullRet;
-    if (nth < 0 && op <= 0 && (type == T.array || info.length > 0 && info[0] instanceof Object[])) {
-     if (type == T.array && !(info[0] instanceof Object[]))
+    boolean isList = (info.length > 0 && info[0] instanceof Object[]);
+    if (nth < 0 && op <= 0 && (type == T.array || isList)) {
+     if (type == T.array && info.length > 0 && !(info[0] instanceof Object[]))
        info = new Object[] { info }; 
       Lst<Object> lst = new Lst<Object>();
       for (int i = 0; i < info.length; i++)
-        lst.addLast(getInfo((Object[])info[i], type));
+        lst.addLast(getInfo((Object[])info[i], returnType < 0 ? returnType : type));
       return lst;
+    } else if (returnType < 0 && (nth >= 0 || op > 0)) {
+      type = returnType;
     }
+    if (nth > 0 && isList)
+      info = (Object[]) ((Object[]) info)[0];
     return getInfo(info, type);
   }
 
