@@ -231,10 +231,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String filePath;
   protected String fileName;
 
+  /**
+   *  first atom index for this collection, current modelset.ac
+   */
+  public int baseAtomIndex; 
+  
+  public int baseBondIndex;
+
   protected int stateScriptVersionInt = Integer.MAX_VALUE; // for compatibility PDB reader Jmol 12.0.RC24 fix 
   // http://jmol.svn.sourceforge.net/viewvc/jmol/trunk/Jmol/src/org/jmol/adapter/readers/cifpdb/PdbReader.java?r1=13502&r2=13525
-
-  public int baseAtomIndex;
 
   protected void setup(String fullPath, Map<String, Object> htParams, Object readerOrDocument) {
     setupASCR(fullPath, htParams, readerOrDocument);
@@ -288,8 +293,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     try {
     int baseModelIndex = ((Integer) htParams.get("baseModelIndex")).intValue();
     baseAtomIndex += asc.ac;
+    baseBondIndex += asc.bondCount;
     baseModelIndex += asc.atomSetCount;
     htParams.put("baseAtomIndex", Integer.valueOf(baseAtomIndex));
+    htParams.put("baseBondIndex", Integer.valueOf(baseBondIndex));
     htParams.put("baseModelIndex", Integer.valueOf(baseModelIndex));
     } catch (Exception e) {
       // ignore
@@ -520,6 +527,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private void initialize() {
     if (htParams.containsKey("baseAtomIndex"))
       baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
+    if (htParams.containsKey("baseBondIndex"))
+      baseBondIndex = ((Integer) htParams.get("baseBondIndex")).intValue();
     initializeSymmetry();
     vwr = (Viewer) htParams.remove("vwr"); // don't pass this on to user
     if (htParams.containsKey("stateScriptVersionInt"))

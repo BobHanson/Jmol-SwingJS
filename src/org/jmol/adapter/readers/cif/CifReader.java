@@ -84,13 +84,14 @@ public class CifReader extends AtomSetCollectionReader {
   interface Parser {
 
     Parser setReader(CifReader cifReader);
-    void processBlock(String key) throws Exception;
+    boolean processBlock(String key) throws Exception;
     boolean finalizeReader() throws Exception;
     void finalizeSymmetry(boolean haveSymmetry) throws Exception;
+    void ProcessRecord(String key, String data);
 
   }
 
-  Parser subParser;
+  Parser subParser; // TopoCifParser
   
   private static final String titleRecords = "__citation_title__publ_section_title__active_magnetic_irreps_details__";
   private MSCifParser modr; // Modulated Structure subreader
@@ -323,8 +324,8 @@ public class CifReader extends AtomSetCollectionReader {
         rotateHexCell = (isAFLOW && (intTableNo >= 143 && intTableNo <= 194)); // trigonal or hexagonal
       } else if (key.equals("_entry_id")) {
         pdbID = data;
-      } else {
-        processSubclassEntry();
+      } else if (key.startsWith("_topol_")){
+        getTopologyParser().ProcessRecord(key, data);
       }
     }
     return true;
@@ -475,7 +476,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   protected boolean finalizeSubclass() throws Exception {
-    // overridden by MMCifReader 
+    // overridden by MMCifReader and calling TopoCifReader
     return (subParser == null ? false : subParser.finalizeReader());    // see TopoCifParser
   }
 
@@ -868,16 +869,21 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected boolean processSubclassLoopBlock() throws Exception {
     if (key.startsWith("_topol_")) {
-      if (subParser == null) {
-        subParser = ((Parser) javajs.api.Interface
-            .getInterface("org.jmol.adapter.readers.cif.TopoCifParser"))
-                .setReader(this);
-      }
-      subParser.processBlock(key);
-      return true;
+      return getTopologyParser().processBlock(key);
     }
     return false;
   }
+
+  private Parser getTopologyParser() {
+    if (subParser == null) {
+      subParser = ((Parser) javajs.api.Interface
+          .getInterface("org.jmol.adapter.readers.cif.TopoCifParser"));
+              subParser = subParser.setReader(this);
+    }
+    return subParser;
+  }
+
+
 
   private void addMore() {
     String str;

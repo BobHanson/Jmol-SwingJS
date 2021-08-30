@@ -2528,6 +2528,7 @@ public class Viewer extends JmolViewer
     }
     boolean merging = (isAppend && !g.appendNew && ms.ac > 0);
     htParams.put("baseAtomIndex", Integer.valueOf(isAppend ? ms.ac : 0));
+    htParams.put("baseBondIndex", Integer.valueOf(isAppend ? ms.bondCount : 0));
     htParams.put("baseModelIndex",
         Integer.valueOf(ms.ac == 0 ? 0 : ms.mc + (merging ? -1 : 0)));
     if (merging)

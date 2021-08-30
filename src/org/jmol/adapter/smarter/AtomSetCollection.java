@@ -570,10 +570,14 @@ public class AtomSetCollection {
     return (a == null ? -1 : a.index);
   }
 
-  public void addNewBondWithOrder(int atomIndex1, int atomIndex2, int order) {
+  public Bond addNewBondWithOrder(int atomIndex1, int atomIndex2, int order) {
+    Bond b = null;
     if (atomIndex1 >= 0 && atomIndex1 < ac && atomIndex2 >= 0
-        && atomIndex2 < ac && atomIndex1 != atomIndex2)
-      addBond(new Bond(atomIndex1, atomIndex2, order));
+        && atomIndex2 < ac && atomIndex1 != atomIndex2) {
+      b = new Bond(atomIndex1, atomIndex2, order);
+      addBond(b);
+    }
+    return b;
   }
 
   public void addNewBondFromNames(String atomName1, String atomName2, int order) {

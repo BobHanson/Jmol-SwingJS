@@ -30,6 +30,7 @@ public class Bond extends AtomSetObject {
   public float radius = -1;
   public short colix = -1;
   public int uniqueID = -1;
+  public float distance;
 
 
   /**
@@ -41,5 +42,15 @@ public class Bond extends AtomSetObject {
     this.atomIndex1 = atomIndex1;
     this.atomIndex2 = atomIndex2;
     this.order = order;
+  }
+
+
+  public Bond() {
+    // for later completion
+  }
+  
+  @Override
+  public String toString() {
+    return "[Bond "+atomIndex1 +" " + atomIndex2 + " " + order+"]";
   }
 }
