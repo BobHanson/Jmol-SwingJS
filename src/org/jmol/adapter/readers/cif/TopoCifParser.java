@@ -123,129 +123,127 @@ public class TopoCifParser implements Parser {
       /*0*/"_topol_net_id",
       /*1*/"_topol_net_label",
       /*2*/"_topol_link_id",
-      /*3*/"_topol_link_label",
-      /*4*/"_topol_link_net_id",
-      /*5*/"_topol_link_node_id_1",
-      /*6*/"_topol_link_node_id_2",
-      /*7*/"_topol_link_node_label_1",
-      /*8*/"_topol_link_node_label_2",
-      /*9*/"_topol_link_atom_label_1",
-      /*10*/"_topol_link_atom_label_2",
-      /*11*/"_topol_link_symop_1",
-      /*12*/"_topol_link_translation_1",
-      /*13*/"_topol_link_translation_1_x",
-      /*14*/"_topol_link_translation_1_y",
-      /*15*/"_topol_link_translation_1_z",
-      /*16*/"_topol_link_symop_2",
-      /*17*/"_topol_link_translation_2",
-      /*18*/"_topol_link_translation_2_x",
-      /*19*/"_topol_link_translation_2_y",
-      /*20*/"_topol_link_translation_2_z",
-      /*21*/"_topol_link_distance",
-      /*22*/"_topol_link_type",
-      /*23*/"_topol_link_multiplicity",
-      /*24*/"_topol_link_voronoi_solidangle",
-      /*25*/"_topol_link_order",
-      /*26*/"_topol_node_id",
-      /*27*/"_topol_node_net_id",
-      /*28*/"_topol_node_label",
-      /*29*/"_topol_node_atom_label",
-      /*30*/"_topol_node_symop",
-      /*31*/"_topol_node_translation",
-      /*32*/"_topol_node_translation_x",
-      /*33*/"_topol_node_translation_y",
-      /*34*/"_topol_node_translation_z",
-      /*35*/"_topol_node_fract_x",
-      /*36*/"_topol_node_fract_y",
-      /*37*/"_topol_node_fract_z",
-      /*38*/"_topol_node_chemical_formula_sum",
-      /*39*/"_topol_atom_id",
-      /*40*/"_topol_atom_label",
-      /*41*/"_topol_atom_node_id",
-      /*42*/"_topol_atom_link_id",
-      /*43*/"_topol_atom_symop",
-      /*44*/"_topol_atom_translation",
-      /*45*/"_topol_atom_translation_x",
-      /*46*/"_topol_atom_translation_y",
-      /*47*/"_topol_atom_translation_z",
-      /*48*/"_topol_atom_fract_x",
-      /*49*/"_topol_atom_fract_y",
-      /*50*/"_topol_atom_fract_z",
-      /*51*/"_topol_atom_element_symbol",
-      /*52*/"_topol_link_site_symmetry_symop_1",
-      /*53*/"_topol_link_site_symmetry_translation_1_x",
-      /*54*/"_topol_link_site_symmetry_translation_1_y",
-      /*55*/"_topol_link_site_symmetry_translation_1_z",
-      /*56*/"_topol_link_site_symmetry_symop_2",
-      /*57*/"_topol_link_site_symmetry_translation_2_x",
-      /*58*/"_topol_link_site_symmetry_translation_2_y",
-      /*59*/"_topol_link_site_symmetry_translation_2_z",
-      /*60*/"_topol_link_site_symmetry_translation_1",
-      /*61*/"_topol_link_site_symmetry_translation_2",
+      /*3*/"_topol_link_net_id",
+      /*4*/"_topol_link_node_id_1",
+      /*5*/"_topol_link_node_id_2",
+      /*6*/"_topol_link_node_label_1",
+      /*7*/"_topol_link_node_label_2",
+      /*8*/"_topol_link_atom_label_1",
+      /*9*/"_topol_link_atom_label_2",
+      /*10*/"_topol_link_symop_1",
+      /*11*/"_topol_link_translation_1",
+      /*12*/"_topol_link_translation_1_x",
+      /*13*/"_topol_link_translation_1_y",
+      /*14*/"_topol_link_translation_1_z",
+      /*15*/"_topol_link_symop_2",
+      /*16*/"_topol_link_translation_2",
+      /*17*/"_topol_link_translation_2_x",
+      /*18*/"_topol_link_translation_2_y",
+      /*19*/"_topol_link_translation_2_z",
+      /*20*/"_topol_link_distance",
+      /*21*/"_topol_link_type",
+      /*22*/"_topol_link_multiplicity",
+      /*23*/"_topol_link_voronoi_solidangle",
+      /*24*/"_topol_link_order",
+      /*25*/"_topol_node_id",
+      /*26*/"_topol_node_net_id",
+      /*27*/"_topol_node_label",
+      /*28*/"_topol_node_atom_label",
+      /*29*/"_topol_node_symop",
+      /*30*/"_topol_node_translation",
+      /*31*/"_topol_node_translation_x",
+      /*32*/"_topol_node_translation_y",
+      /*33*/"_topol_node_translation_z",
+      /*34*/"_topol_node_fract_x",
+      /*35*/"_topol_node_fract_y",
+      /*36*/"_topol_node_fract_z",
+      /*37*/"_topol_node_chemical_formula_sum",
+      /*38*/"_topol_atom_id",
+      /*39*/"_topol_atom_atom_label",
+      /*40*/"_topol_atom_node_id",
+      /*41*/"_topol_atom_link_id",
+      /*42*/"_topol_atom_symop",
+      /*43*/"_topol_atom_translation",
+      /*44*/"_topol_atom_translation_x",
+      /*45*/"_topol_atom_translation_y",
+      /*46*/"_topol_atom_translation_z",
+      /*47*/"_topol_atom_fract_x",
+      /*48*/"_topol_atom_fract_y",
+      /*49*/"_topol_atom_fract_z",
+      /*50*/"_topol_atom_element_symbol",
+      /*51*/"_topol_link_site_symmetry_symop_1",
+      /*52*/"_topol_link_site_symmetry_translation_1_x",
+      /*53*/"_topol_link_site_symmetry_translation_1_y",
+      /*54*/"_topol_link_site_symmetry_translation_1_z",
+      /*55*/"_topol_link_site_symmetry_symop_2",
+      /*56*/"_topol_link_site_symmetry_translation_2_x",
+      /*57*/"_topol_link_site_symmetry_translation_2_y",
+      /*58*/"_topol_link_site_symmetry_translation_2_z",
+      /*59*/"_topol_link_site_symmetry_translation_1",
+      /*60*/"_topol_link_site_symmetry_translation_2",
   };
 
   private final static byte topol_net_id = 0;
   private final static byte topol_net_label = 1;
   private final static byte topol_link_id = 2;
-  private final static byte topol_link_label = 3;
-  private final static byte topol_link_net_id = 4;
-  private final static byte topol_link_node_id_1 = 5;
-  private final static byte topol_link_node_id_2 = 6;
-  private final static byte topol_link_node_label_1 = 7;
-  private final static byte topol_link_node_label_2 = 8;
-  private final static byte topol_link_atom_label_1 = 9;
-  private final static byte topol_link_atom_label_2 = 10;
-  private final static byte topol_link_symop_1 = 11;
-  private final static byte topol_link_translation_1 = 12;
-  private final static byte topol_link_translation_1_x = 13;
-  private final static byte topol_link_translation_1_y = 14;
-  private final static byte topol_link_translation_1_z = 15;
-  private final static byte topol_link_symop_2 = 16;
-  private final static byte topol_link_translation_2 = 17;
-  private final static byte topol_link_translation_2_x = 18;
-  private final static byte topol_link_translation_2_y = 19;
-  private final static byte topol_link_translation_2_z = 20;
-  private final static byte topol_link_distance = 21;
-  private final static byte topol_link_type = 22;
-  private final static byte topol_link_multiplicity = 23;
-  private final static byte topol_link_voronoi_solidangle = 24;
-  private final static byte topol_link_order = 25;
-  private final static byte topol_node_id = 26;
-  private final static byte topol_node_net_id = 27;
-  private final static byte topol_node_label = 28;
-  private final static byte topol_node_atom_label = 29;
-  private final static byte topol_node_symop = 30;
-  private final static byte topol_node_translation = 31;
-  private final static byte topol_node_translation_x = 32;
-  private final static byte topol_node_translation_y = 33;
-  private final static byte topol_node_translation_z = 34;
-  private final static byte topol_node_fract_x = 35;
-  private final static byte topol_node_fract_y = 36;
-  private final static byte topol_node_fract_z = 37;
-  private final static byte topol_node_chemical_formula_sum = 38;
-  private final static byte topol_atom_id = 39;
-  private final static byte topol_atom_label = 40;
-  private final static byte topol_atom_node_id = 41;
-  private final static byte topol_atom_link_id = 42;
-  private final static byte topol_atom_symop = 43;
-  private final static byte topol_atom_translation = 44;
-  private final static byte topol_atom_translation_x = 45;
-  private final static byte topol_atom_translation_y = 46;
-  private final static byte topol_atom_translation_z = 47;
-  private final static byte topol_atom_fract_x = 48;
-  private final static byte topol_atom_fract_y = 49;
-  private final static byte topol_atom_fract_z = 50;
-  private final static byte topol_atom_element_symbol = 51;
-  private final static byte topol_link_site_symmetry_symop_1 = 52;
-  private final static byte topol_link_site_symmetry_translation_1_x = 53;
-  private final static byte topol_link_site_symmetry_translation_1_y = 54;
-  private final static byte topol_link_site_symmetry_translation_1_z = 55;
-  private final static byte topol_link_site_symmetry_symop_2 = 56;
-  private final static byte topol_link_site_symmetry_translation_2_x = 57;
-  private final static byte topol_link_site_symmetry_translation_2_y = 58;
-  private final static byte topol_link_site_symmetry_translation_2_z = 59;
-  private final static byte topol_link_site_symmetry_translation_1 = 60;
-  private final static byte topol_link_site_symmetry_translation_2 = 61;
+  private final static byte topol_link_net_id = 3;
+  private final static byte topol_link_node_id_1 = 4;
+  private final static byte topol_link_node_id_2 = 5;
+  private final static byte topol_link_node_label_1 = 6;
+  private final static byte topol_link_node_label_2 = 7;
+  private final static byte topol_link_atom_label_1 = 8;
+  private final static byte topol_link_atom_label_2 = 9;
+  private final static byte topol_link_symop_1 = 10;
+  private final static byte topol_link_translation_1 = 11;
+  private final static byte topol_link_translation_1_x = 12;
+  private final static byte topol_link_translation_1_y = 13;
+  private final static byte topol_link_translation_1_z = 14;
+  private final static byte topol_link_symop_2 = 15;
+  private final static byte topol_link_translation_2 = 16;
+  private final static byte topol_link_translation_2_x = 17;
+  private final static byte topol_link_translation_2_y = 18;
+  private final static byte topol_link_translation_2_z = 19;
+  private final static byte topol_link_distance = 20;
+  private final static byte topol_link_type = 21;
+  private final static byte topol_link_multiplicity = 22;
+  private final static byte topol_link_voronoi_solidangle = 23;
+  private final static byte topol_link_order = 24;
+  private final static byte topol_node_id = 25;
+  private final static byte topol_node_net_id = 26;
+  private final static byte topol_node_label = 27;
+  private final static byte topol_node_atom_label = 28;
+  private final static byte topol_node_symop = 29;
+  private final static byte topol_node_translation = 30;
+  private final static byte topol_node_translation_x = 31;
+  private final static byte topol_node_translation_y = 32;
+  private final static byte topol_node_translation_z = 33;
+  private final static byte topol_node_fract_x = 34;
+  private final static byte topol_node_fract_y = 35;
+  private final static byte topol_node_fract_z = 36;
+  private final static byte topol_node_chemical_formula_sum = 37;
+  private final static byte topol_atom_id = 38;
+  private final static byte topol_atom_atom_label = 39;
+  private final static byte topol_atom_node_id = 40;
+  private final static byte topol_atom_link_id = 41;
+  private final static byte topol_atom_symop = 42;
+  private final static byte topol_atom_translation = 43;
+  private final static byte topol_atom_translation_x = 44;
+  private final static byte topol_atom_translation_y = 45;
+  private final static byte topol_atom_translation_z = 46;
+  private final static byte topol_atom_fract_x = 47;
+  private final static byte topol_atom_fract_y = 48;
+  private final static byte topol_atom_fract_z = 49;
+  private final static byte topol_atom_element_symbol = 50;
+  private final static byte topol_link_site_symmetry_symop_1 = 51;
+  private final static byte topol_link_site_symmetry_translation_1_x = 52;
+  private final static byte topol_link_site_symmetry_translation_1_y = 53;
+  private final static byte topol_link_site_symmetry_translation_1_z = 54;
+  private final static byte topol_link_site_symmetry_symop_2 = 55;
+  private final static byte topol_link_site_symmetry_translation_2_x = 56;
+  private final static byte topol_link_site_symmetry_translation_2_y = 57;
+  private final static byte topol_link_site_symmetry_translation_2_z = 58;
+  private final static byte topol_link_site_symmetry_translation_1 = 59;
+  private final static byte topol_link_site_symmetry_translation_2 = 60;
 
   public TopoCifParser() {
   }
@@ -327,9 +325,6 @@ public class TopoCifParser implements Parser {
         switch (p) {
         case topol_link_id:
           link.id = getInt(field);
-          break;
-        case topol_link_label:
-          link.label = field;
           break;
         case topol_link_net_id:
           int id = getInt(field);
@@ -504,7 +499,7 @@ public class TopoCifParser implements Parser {
         case topol_atom_id:
           atom.id = getInt(field);
           break;
-        case topol_atom_label:
+        case topol_atom_atom_label:
           atom.atomLabel = field;
           break;
         case topol_atom_node_id:
@@ -548,6 +543,7 @@ public class TopoCifParser implements Parser {
       return false;
     cifParser = null;
     reader.applySymmetryToBonds = true;
+    // finalize all topol_atom symmetries
     M4[] ops = getOperations();
     for (int i = 0; i < atoms.size(); i++) {
       atoms.get(i).finalizeAtom(ops);
@@ -610,6 +606,7 @@ public class TopoCifParser implements Parser {
    * 
    * 
    * @param bsConnected to be filled 
+   * @param bsAtoms 
    * 
    * @return number of bonds created
    */
@@ -618,20 +615,27 @@ public class TopoCifParser implements Parser {
     int nlinks = 0;
     Atom[] atoms = reader.asc.atoms;
    
-    // set associations
+    // set associations for links and nodes 
     for (int i = reader.asc.ac; --i >= ac0;) {
       Atom a = atoms[i];
       int id = a.sequenceNumber;
       if (id == Integer.MIN_VALUE || id == 0)
         continue;
       if (id > 0) {
-        getNodeById(id).bsAtoms.set(i0 + a.index);
+        TNode node = getNodeById(id);
+        if (node.bsAtoms == null)
+          node.bsAtoms = new BS();
+        node.bsAtoms.set(i0 + a.index);
       } else {
-        getLinkById(-id).bsAtoms.set(i0 + a.index);
+        TLink link = getLinkById(-id);
+        if (link.bsAtoms == null)
+          link.bsAtoms = new BS();
+        link.bsAtoms.set(i0 + a.index);
       }
       bsAtoms.set(a.index);
     }  
-    
+
+    // finish up with bonds
     Bond[] bonds = reader.asc.bonds;
     for (int i = reader.asc.bondCount; --i >= bc0;) {
       Bond b = bonds[i];
@@ -640,8 +644,11 @@ public class TopoCifParser implements Parser {
         continue;
       }
       if (b.order >= TOPOL_GROUP) {
-        b.order = 0;         
+        // associated atoms - don't show this bond
+        bonds[i] = null;
+//        b.order = Edge.BOND_PARTIAL01;         
       } else if (b.order >= TOPOL_LINK) {
+        // adjust link bond order, and add this bond to the link's bsBonds bitset
         b.order -= TOPOL_LINK;
         int id = b.order >> 2;
         TLink link = getLinkById(id);
@@ -661,14 +668,12 @@ public class TopoCifParser implements Parser {
         bsConnected.set(b.atomIndex2);
         nlinks++;
       }
-    }
-    
+    }    
     return nlinks;
   }
 
   static boolean isEqualD(T3 p1, T3 p2, double d) {
-    //System.out.println("TCP " + p1.distance(p2) + " " + d);
-    return Double.isNaN(d) || Math.abs(p1.distance(p2) - d) < ERROR_TOLERANCE;
+    return (Double.isNaN(d) || Math.abs(p1.distance(p2) - d) < ERROR_TOLERANCE);
   }
 
   private String getField(byte field) {
@@ -769,6 +774,7 @@ public class TopoCifParser implements Parser {
       if (a == null && atomLabel != null) {
         a = reader.asc.getAtomFromName(atomLabel);
       }
+      setElementSymbol();
       if (a == null && Float.isNaN(x)) {
         // no associated atom
         throw new Exception(
@@ -809,14 +815,14 @@ public class TopoCifParser implements Parser {
     }
 
     public void setElementSymbol() {
+      String name = atomName;
       if (formula == null) {
-        getElementSymbol();
+        atomName = atomName.substring(atomName.indexOf('_') + 1);
       } else {
-        String name = atomName;
         atomName = formula;
-        getElementSymbol();
-        atomName = name;
       }
+      getElementSymbol();
+      atomName = name;
     }
 
     /**
@@ -847,8 +853,8 @@ public class TopoCifParser implements Parser {
     
     BS bsAtoms = null;
     
-    int linkSymop = -1;
-    P3 linkTrans;
+    int linkSymop = 0;
+    P3 linkTrans = new P3();
     
     TNode() {
       super();
@@ -870,6 +876,8 @@ public class TopoCifParser implements Parser {
       if (!setAtom(a)) {        
         return false;
       }
+      if (label == null)
+        label = atomLabel;
       System.out.println("TopoCifParser.setLink " + this);
       return true;
     }
@@ -968,7 +976,6 @@ public class TopoCifParser implements Parser {
   private class TLink extends Bond {
 
     int id;
-    String label;
     int netID;
     String netLabel;
     int nodeID1, nodeID2;
@@ -1022,10 +1029,9 @@ public class TopoCifParser implements Parser {
 
     Map<String, Object> getInfo() {
       Hashtable<String, Object> info = new Hashtable<String, Object>();
+      info.put("index", Integer.valueOf(idx + 1));
       if (id > 0)
         info.put("id", Integer.valueOf(id));
-      if (label != null)
-        info.put("label", label);
       if (nodeID1 > 0)
         info.put("id1", Integer.valueOf(nodeID1));
       if (nodeID2 > 0)
@@ -1050,7 +1056,6 @@ public class TopoCifParser implements Parser {
       info.put("atomIndex2", Integer.valueOf(i0 + node2.index));
       if (bsAtoms != null && bsAtoms.cardinality() > 0)
         info.put("representedAtoms", bsAtoms);
-      info.put("index", Integer.valueOf(idx + 1));
       info.put("topoOrder", Integer.valueOf(topoOrder));
       info.put("order", Integer.valueOf(typeBondOrder));
       return info;
@@ -1075,33 +1080,43 @@ public class TopoCifParser implements Parser {
      * @throws Exception
      */
     void finalizeLink(M4[] ops) throws Exception {
-      node1 = addNodeIfNull(nodeID1, nodeLabel1, nodeOp1, nodeTrans1, netID);
-      node2 = addNodeIfNull(nodeID2, nodeLabel2, nodeOp2, nodeTrans2, netID);
+      node1 = addLinkNodeIfNull(nodeID1, nodeLabel1, nodeOp1, nodeTrans1, netID);
+      node2 = addLinkNodeIfNull(nodeID2, nodeLabel2, nodeOp2, nodeTrans2, netID);
       if (node1 == null || node2 == null) {
         Logger.warn("TopoCifParser atom "
             + (node1 == null ? nodeLabel1 : nodeLabel2) + " could not be found");
         return;
       }
-      if (node1 == node2)
+      // check for the same node (but different symmetry, then)
+      if (node1 == node2) {
         node2 = node1.copy();
+      }
       node1.finalizeNode(ops);
-      if (ops != null)
-        node1.applySymmetry(ops, nodeOp1, nodeTrans1);
       node2.finalizeNode(ops);
-      if (ops != null)
-        node2.applySymmetry(ops, nodeOp2, nodeTrans2);
-      order = TOPOL_LINK + (id << 2) + typeBondOrder;
+      
+      // apply symmetry
+      node1.applySymmetry(ops, nodeOp1, nodeTrans1);
+      node2.applySymmetry(ops, nodeOp2, nodeTrans2);
+ 
+      // set the Bond fields, encoding the order field with "link", id, and typeBondOrder
       atomIndex1 = node1.index;
       atomIndex2 = node2.index;
-      distance = node1.distance(node2);      
+      distance = node1.distance(node2);            
+      order = TOPOL_LINK + (id << 2) + typeBondOrder;
+
       System.out.println("link " + distance + " " + this);
+      
+      // encode the associated atom sequence number with this link's id.
+      
       if (tatoms != null) {
-        TAtom t0 = tatoms.get(0);
-        t0.sequenceNumber = -id;
+        TAtom aa = tatoms.get(0);
+        aa.finalizeAtom(ops);
+        aa.sequenceNumber = -id;
         for (int i = tatoms.size(); --i >= 1;) {
           TAtom a = tatoms.get(i);
+          a.finalizeAtom(ops);
           a.sequenceNumber = -id;
-//          reader.asc.addNewBondWithOrderA(t0, a, TOPOL_GROUP + id);
+          reader.asc.addNewBondWithOrderA(aa, a, TOPOL_GROUP + id);
         }        
       }
 
@@ -1109,25 +1124,37 @@ public class TopoCifParser implements Parser {
     }
     
     /**
-     * @param id  
-     * @param nodeLabel 
-     * @param nodeOp 
-     * @param nodeTrans 
-     * @param netID 
+     * @param id
+     * @param nodeLabel
+     * @param nodeOp
+     * @param nodeTrans
+     * @param netID
      * @return the node
-     * @throws Exception 
+     * @throws Exception
      */
-    public TNode addNodeIfNull(int id, String nodeLabel, int nodeOp, P3 nodeTrans, int netID) throws Exception {
-      
+    public TNode addLinkNodeIfNull(int id, String nodeLabel, int nodeOp,
+                                   P3 nodeTrans, int netID)
+        throws Exception {
+
+      // first check is for a node based on id
       TNode node = getNodeWithSym(id, nodeLabel, nodeOp, nodeTrans);
-      Atom atom = (node == null ? reader.asc.getAtomFromName(nodeLabel) : node);
-      if (atom == null) {
-          throw new Exception("TopoCIFParser.addNodeIfNull no atom " + nodeLabel);
-      }
       if (node == null) {
-        node = new TNode(atomCount++, atom, getNetByID(netID).label, nodeOp, nodeTrans);
-        nodes.addLast(node);
+        node = getNodeWithSym(id, nodeLabel, -1, null);
       }
+      // second check is for an atom_site atom with this label
+      Atom atom = (node == null ? reader.asc.getAtomFromName(nodeLabel) : null);
+      // we now either have a node or an atom_site atom or we have a problem
+      if (atom != null) {
+        node = new TNode(atomCount++, atom, getNetByID(netID).label, nodeOp, nodeTrans);
+      } else if (node != null) {
+        node = node.copy();
+        node.linkSymop = nodeOp;
+        node.linkTrans = nodeTrans;
+      } else {
+        throw new Exception(
+            "TopoCIFParser.addNodeIfNull no atom or node " + nodeLabel);
+      }
+      nodes.addLast(node);
       return node;
     }
 
@@ -1150,7 +1177,7 @@ public class TopoCifParser implements Parser {
       return getNodeById(nodeID);
     for (int i = nodes.size(); --i >= 0;) {
       TNode n = nodes.get(i);
-      if (n.label.equals(nodeLabel) && op == n.linkSymop && trans.equals(n.linkTrans))
+      if (n.label.equals(nodeLabel) && (op == -1 || op == n.linkSymop && trans.equals(n.linkTrans)))
         return n;
     }
     return null;
@@ -1205,7 +1232,8 @@ public class TopoCifParser implements Parser {
           return o;
         continue;
       case 'n':
-        if (((TNode) o).label.equals(label))
+        String s = ((TNode) o).label;
+        if (s != null && s.equals(label))
           return o;
         continue;
       case 'N':
