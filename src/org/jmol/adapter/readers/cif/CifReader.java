@@ -568,7 +568,7 @@ public class CifReader extends AtomSetCollectionReader {
   ////////////////////////////////////////////////////////////////
 
   private Hashtable<String, Object> htAudit;
-  private Lst<String> symops;
+  public Lst<String> symops;
 
   /**
    * initialize a new atom set

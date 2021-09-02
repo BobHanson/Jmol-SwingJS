@@ -1051,9 +1051,7 @@ public class XtalSymmetry {
             ia1 = ia2;
             ia2 = i;
           }
-          if ((ia1 != ia2 && (ia1 >= atomMax || ia2 >= atomMax))
-              && (bond.distance == 0 || 
-              Math.abs((d=atoms[ia1].distance(atoms[ia2])) - bond.distance) < 0.001f)
+          if (ia1 != ia2 && (ia1 >= atomMax || ia2 >= atomMax)
               && bondsFound.indexOf(key = "-" + ia1 + "," + ia2) < 0) {
             bondsFound.append(key);
             asc.addNewBondWithOrder(ia1, ia2, bond.order).distance = d;

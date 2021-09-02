@@ -376,7 +376,7 @@ public class SymmetryOperation extends M4 {
 
   public static M4 getMatrixFromXYZ(String xyz) {
     float[] linearRotTrans = new float[16];
-    xyz = getMatrixFromString(null, xyz, linearRotTrans, false);
+    xyz = getMatrixFromString(null, "!" + xyz, linearRotTrans, false);
     return (xyz == null ? null : div12(M4.newA16(linearRotTrans)));  
   }
 
@@ -400,7 +400,7 @@ public class SymmetryOperation extends M4 {
     boolean isNegative = false;
     int modDim = (op == null ? 0 : op.modDim);
     int nRows = 4 + modDim;
-    boolean doNormalize = (op != null && op.doNormalize);
+    boolean doNormalize = (op == null ? !xyz.startsWith("!") : op.doNormalize);
     int dimOffset = (modDim > 0 ? 3 : 0); // allow a b c to represent x y z
     linearRotTrans[linearRotTrans.length - 1] = 1;
     // may be a-b,-5a-5b,-c;0,0,0 form
