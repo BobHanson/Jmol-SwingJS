@@ -794,15 +794,6 @@ public class TopoCifParser implements Parser {
     }
   }
 
-  @Override
-  public Object clone() {
-    try {
-      return super.clone();
-    } catch (CloneNotSupportedException e) {
-      return null;
-    }
-  }
-  
   private class TNet {
     @SuppressWarnings("unused")
     String line;
@@ -856,6 +847,16 @@ public class TopoCifParser implements Parser {
       super();
     }
 
+    TAtom getTClone() {
+      try {
+        TAtom ta = (TAtom) clone();
+        ta.idx = atomCount++;
+        return ta;
+      } catch (CloneNotSupportedException e) {
+        return null;
+      }
+    }
+    
     boolean setAtom(int[] a, String line) {
       this.line = line;
       if (Float.isNaN(x) != Float.isNaN(y) || Float.isNaN(y) != Float.isNaN(z)) 
@@ -928,7 +929,7 @@ public class TopoCifParser implements Parser {
       atomName = (node != null ? "Node_" + nodeID + "_"
           : link != null ? "Link_" + linkID + "_" : "TAtom_") + atomLabel;
       System.out.println("TAtom adding " + this);
-      reader.asc.addAtom(this);
+      reader.addCifAtom(this, atomName, null, null);
     }
 
     @Override
@@ -1102,7 +1103,11 @@ public class TopoCifParser implements Parser {
       if (label != null && label.startsWith(atomName)) {
         atomName = "";
       }
-      atomName += (label != null ? label : atomLabel != null ? atomLabel : "Node_" + id);      
+      atomName += (label != null ? label : atomLabel != null ? atomLabel : "Node_" + id);
+      addNode();
+    }
+
+    private void addNode() {
       reader.addCifAtom(this, atomName, null, null);
       net.nNodes++;
     }
@@ -1130,6 +1135,17 @@ public class TopoCifParser implements Parser {
 
     public TNode copy() {
       TNode node = (TNode) clone();
+      node.idx = atomCount++;
+      if (node.isFinalized)
+        node.addNode();
+      if (tatoms != null) {
+        node.tatoms = new Lst<TAtom>();
+        for (int i = 0, n = tatoms.size(); i < n; i++) {
+          TAtom ta = tatoms.get(i).getTClone();
+          node.tatoms.addLast(ta);
+          reader.addCifAtom(ta, ta.atomName, null, null);
+        }
+      }
       return node;
     }
     
@@ -1307,7 +1323,6 @@ public class TopoCifParser implements Parser {
           a.finalizeAtom(ops);
           a.sequenceNumber = -idx - 1;
           a.atomName = net.label + "_" + a.atomName;
-//          reader.asc.addNewBondWithOrderA(aa, a, TOPOL_GROUP + id);
         }        
       }
 
@@ -1328,6 +1343,7 @@ public class TopoCifParser implements Parser {
 
       // first check is for a node based on id
       TNode node = getNodeWithSym(id, nodeLabel, nodeOp, nodeTrans);
+      TNode node0 = node;
       if (node == null) {
         node = getNodeWithSym(id, nodeLabel, -1, null);
       }
@@ -1339,7 +1355,8 @@ public class TopoCifParser implements Parser {
         node = new TNode(atomCount++, atom, net, nodeOp, nodeTrans);
       } else if (node != null) {
         setNet(node);
-        node = node.copy();
+        if (node0 == null)
+          node = node.copy();
         node.linkSymop = nodeOp;
         node.linkTrans = nodeTrans;
       } else {
@@ -1417,9 +1434,9 @@ public class TopoCifParser implements Parser {
     }
     if (net == null) {
       net = getNetByID(id < 1 ? 1 : id);
-      if (label != null)
-        net.label = label;
     }
+    if (label != null)
+      net.label = label;
   return net;
 }
 
