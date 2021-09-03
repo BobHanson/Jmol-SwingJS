@@ -854,7 +854,7 @@ public final class JC {
 
     //periodic table
     "@nonmetal _H,_He,_B,_C,_N,_O,_F,_Ne,_Si,_P,_S,_Cl,_Ar,_As,_Se,_Br,_Kr,_Te,_I,_Xe,_At,_Rn",
-    "@metal !nonmetal",
+    "@metal !nonmetal && !_Xx",
     "@alkaliMetal _Li,_Na,_K,_Rb,_Cs,_Fr",
     "@alkalineEarth _Be,_Mg,_Ca,_Sr,_Ba,_Ra",
     "@nobleGas _He,_Ne,_Ar,_Kr,_Xe,_Rn",
