@@ -2584,9 +2584,6 @@ public class ModelSet extends BondCollection {
       return false;
     float maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
     float maxAcceptable2 = maxAcceptable * maxAcceptable;
-    
-    System.out.println("MS isBondable " + bondingRadiusA + " " + bondingRadiusB + " " + Math.sqrt(distance2) + " " + maxAcceptable);
-
     return (distance2 <= maxAcceptable2);
   }
 
