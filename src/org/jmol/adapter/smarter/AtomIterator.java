@@ -123,6 +123,11 @@ class AtomIterator implements JmolAdapterAtomIterator {
 		return atom.radius;
 	}
 	
+  @Override
+  public float getBondRadius() {
+    return atom.bondRadius;
+  }
+  
 	/**
 	 * Note that atom.vib also serves to deliver specific 
 	 * data items.

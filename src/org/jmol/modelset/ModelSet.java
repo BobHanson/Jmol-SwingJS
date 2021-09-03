@@ -924,7 +924,7 @@ public class ModelSet extends BondCollection {
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
           atom1.getSeqID(), n, pts[i], Float.NaN, null, 0, 0, 100, Float.NaN,
-          null, false, (byte) 0, null);
+          null, false, (byte) 0, null, Float.NaN);
 
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -2541,6 +2541,10 @@ public class ModelSet extends BondCollection {
       float myBondingRadius = atom.getBondingRadius();
       if (myBondingRadius == 0)
         continue;
+      float myFormalCharge = atom.getFormalCharge();  
+      boolean useCharge = (myFormalCharge != 0);
+      if (useCharge)
+        myFormalCharge = Math.signum(myFormalCharge);
       boolean isFirstExcluded = (bsExclude != null && bsExclude.get(i));
       float searchRadius = myBondingRadius + maxBondingRadius + bondTolerance;
       setIteratorForAtom(iter, -1, i, searchRadius, null);
@@ -2556,7 +2560,9 @@ public class ModelSet extends BondCollection {
             || !(isAtomInSetA && isNearInSetB || isAtomInSetB && isNearInSetA)
             || isFirstExcluded && bsExclude.get(j) || useOccupation
             && occupancies != null
-            && (occupancies[i] < 50) != (occupancies[j] < 50))
+            && (occupancies[i] < 50) != (occupancies[j] < 50)
+            || useCharge && (Math.signum(atomNear.getFormalCharge()) == myFormalCharge)            
+            )
           continue;
         int order = (isBondable(myBondingRadius, atomNear.getBondingRadius(),
             iter.foundDistance2(), minBondDistance2, bondTolerance) ? 1 : 0);
@@ -2578,6 +2584,9 @@ public class ModelSet extends BondCollection {
       return false;
     float maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
     float maxAcceptable2 = maxAcceptable * maxAcceptable;
+    
+    System.out.println("MS isBondable " + bondingRadiusA + " " + bondingRadiusB + " " + Math.sqrt(distance2) + " " + maxAcceptable);
+
     return (distance2 <= maxAcceptable2);
   }
 
@@ -3077,7 +3086,7 @@ public class ModelSet extends BondCollection {
                       int atomSeqID, int atomSite, P3 xyz, float radius,
                       V3 vib, int formalCharge, float partialCharge,
                       float occupancy, float bfactor, Lst<Object> tensors,
-                      boolean isHetero, byte specialAtomID, BS atomSymmetry) {
+                      boolean isHetero, byte specialAtomID, BS atomSymmetry, float bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
         atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
@@ -3120,6 +3129,8 @@ public class ModelSet extends BondCollection {
     }
     if (vib != null)
       setVibrationVector(ac, vib);
+    if (!Float.isNaN(bondRadius))
+      setBondingRadius(ac, bondRadius);
     ac++;
     return atom;
   }

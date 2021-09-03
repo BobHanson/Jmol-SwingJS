@@ -897,7 +897,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return true;
   }
 
-  protected SymmetryInterface getSymmetry() {
+  public SymmetryInterface getSymmetry() {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {

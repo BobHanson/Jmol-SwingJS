@@ -53,7 +53,9 @@ public class Atom extends P3 implements Cloneable {
   public boolean isHetero;
   public int atomSerial = Integer.MIN_VALUE;
   public int chainID; // not public -- set using AtomSetCollectionReader.setChainID
-  
+
+  public float bondRadius = Float.NaN;
+
   public char altLoc = '\0';
   public String group3;
   public int sequenceNumber = Integer.MIN_VALUE;

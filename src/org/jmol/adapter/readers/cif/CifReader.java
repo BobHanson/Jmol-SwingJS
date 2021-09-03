@@ -447,6 +447,8 @@ public class CifReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    if (htOxStates != null)
+      setOxidationStates();
     // added check for final data_global
     if (asc.iSet > 0 && asc.getAtomSetAtomCount(asc.iSet) == 0)
       asc.atomSetCount--;
@@ -462,6 +464,30 @@ public class CifReader extends AtomSetCollectionReader {
     if (haveAromatic)
       addJmolScript("calculate aromatic");
   }
+
+  private void setOxidationStates() {
+    for (int i = asc.ac; --i >= 0;) {
+      Atom a = asc.atoms[i];
+      String sym = a.elementSymbol;
+      float[] data;
+      if (sym != null && (data = htOxStates.get(sym)) != null) {
+        float charge = data[0];
+        float radius = data[1];
+        if (!Float.isNaN(charge)) {
+          a.formalCharge = Math.round(charge);
+        }
+        if (!Float.isNaN(radius)) {
+          a.bondRadius = radius;
+        }
+      }
+      
+    }
+
+    // TODO
+    
+  }
+
+
 
   protected void addHeader() {
     String header = cifParser.getFileHeader();
@@ -953,7 +979,7 @@ public class CifReader extends AtomSetCollectionReader {
   // atom type data
   ////////////////////////////////////////////////////////////////
 
-  private Map<String, Float> htOxStates;
+  private Map<String, float[]> htOxStates;
   private Lst<Object[]> bondTypes = new Lst<Object[]>();
 
   private String disorderAssembly = ".";
@@ -964,9 +990,10 @@ public class CifReader extends AtomSetCollectionReader {
 
   final private static byte ATOM_TYPE_SYMBOL = 0;
   final private static byte ATOM_TYPE_OXIDATION_NUMBER = 1;
+  final private static byte ATOM_TYPE_RADIUS_BOND = 2;
 
   final private static String[] atomTypeFields = { "_atom_type_symbol",
-      "_atom_type_oxidation_number" };
+      "_atom_type_oxidation_number", "_atom_type_radius_bond" };
 
   /**
    * 
@@ -977,20 +1004,17 @@ public class CifReader extends AtomSetCollectionReader {
    */
   private void processAtomTypeLoopBlock() throws Exception {
     parseLoopParameters(atomTypeFields);
-    if (!checkAllFieldsPresent(atomTypeFields, -1, false)) {
-      cifParser.skipLoop(false);
-      return;
-    }
-    String atomTypeSymbol;
-    float oxidationNumber = 0;
     while (cifParser.getData()) {
-      if (isNull(atomTypeSymbol = getField(ATOM_TYPE_SYMBOL))
-          || Float
-              .isNaN(oxidationNumber = parseFloatStr(getField(ATOM_TYPE_OXIDATION_NUMBER))))
+      String sym = getField(ATOM_TYPE_SYMBOL);
+      if (sym == null)
         continue;
-      if (htOxStates == null)
-        htOxStates = new Hashtable<String, Float>();
-      htOxStates.put(atomTypeSymbol, Float.valueOf(oxidationNumber));
+      float oxno = parseFloatStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
+      float radius = parseFloatStr(getField(ATOM_TYPE_RADIUS_BOND));
+      if (Float.isNaN(oxno) && Float.isNaN(radius))
+        continue;
+        if (htOxStates == null)
+          htOxStates = new Hashtable<String, float[]>();
+        htOxStates.put(sym, new float[] {oxno, radius});
     }
   }
 
@@ -1258,16 +1282,6 @@ public class CifReader extends AtomSetCollectionReader {
             }
           }
           atom.elementSymbol = elementSymbol;
-          if (htOxStates != null && htOxStates.containsKey(field)) {
-            float charge = htOxStates.get(field).floatValue();
-            atom.formalCharge = Math.round(charge);
-            //because otherwise -1.6 is rounded UP to -1, and  1.6 is rounded DOWN to 1
-            if (Math.abs(atom.formalCharge - charge) > 0.1)
-              if (debugging) {
-                Logger.debug("CIF charge on " + field + " was " + charge
-                    + "; rounded to " + atom.formalCharge);
-              }
-          }
           break;
         case CC_ATOM_ID:
         case LABEL:

@@ -911,7 +911,7 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_PARTIALCHARGE);
   }
 
-  private void setBondingRadius(int atomIndex, float radius) {
+  protected void setBondingRadius(int atomIndex, float radius) {
     if (Float.isNaN(radius) || radius == at[atomIndex].getBondingRadius())
       return;
     if (bondingRadii == null)

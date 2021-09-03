@@ -79,4 +79,6 @@ public interface JmolAdapterAtomIterator {
 
   abstract public int getSeqID();
 
+  float getBondRadius();
+
 }

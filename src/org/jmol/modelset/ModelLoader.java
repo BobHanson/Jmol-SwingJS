@@ -819,7 +819,8 @@ public final class ModelLoader {
           group3,
           iterAtom.getVib(), 
           iterAtom.getAltLoc(),
-          iterAtom.getRadius()          
+          iterAtom.getRadius(), 
+          iterAtom.getBondRadius()
           );
     }
     if (groupCount > 0 && addH) {
@@ -902,7 +903,7 @@ public final class ModelLoader {
                        Lst<Object> tensors, float occupancy, float bfactor,
                        P3 xyz, boolean isHetero, int atomSerial, int atomSeqID,
                        String group3, V3 vib, char alternateLocationID,
-                       float radius) {
+                       float radius, float bondRadius) {
     byte specialAtomID = 0;
     String atomType = null;
     if (atomName != null) {
@@ -924,7 +925,7 @@ public final class ModelLoader {
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
         atomType, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
         partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
-        atomSymmetry);
+        atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
     htAtomMap.put(atomUid, atom);
   }
@@ -1144,26 +1145,28 @@ public final class ModelLoader {
     // 1. apply CONECT records and set bsExclude to omit them
     // 2. apply stereochemistry from JME
 
-    BS bsExclude = (ms
-        .getInfoM("someModelsHaveCONECT") == null ? null
-        : new BS());
-    if (bsExclude != null)
-      ms.setPdbConectBonding(baseAtomIndex, baseModelIndex, bsExclude);
+    int modelCount = ms.mc;
+    Model[] models = ms.am;
+    int modelAtomCount = 0;
+    BS bsExclude = (BS) ms.getInfoM("bsExcludeBonding");
+    if (bsExclude == null) {
+      bsExclude = (ms.getInfoM("someModelsHaveCONECT") == null ? null
+          : new BS());
+      if (bsExclude != null)
+        ms.setPdbConectBonding(baseAtomIndex, baseModelIndex, bsExclude);
+    }
 
     // 2. for each model in the collection,
-    int modelAtomCount = 0;
-    boolean symmetryAlreadyAppliedToBonds = vwr.getBoolean(T.applysymmetrytobonds);
+    boolean symmetryAlreadyAppliedToBonds = vwr
+        .getBoolean(T.applysymmetrytobonds);
     boolean doAutoBond = vwr.getBoolean(T.autobond);
     boolean forceAutoBond = vwr.getBoolean(T.forceautobond);
     BS bs = null;
     boolean autoBonding = false;
-    int modelCount = ms.mc;
-    Model[] models = ms.am;
     if (!noAutoBond)
       for (int i = baseModelIndex; i < modelCount; i++) {
         modelAtomCount = models[i].bsAtoms.cardinality();
-        int modelBondCount = ms.getInfoI(i,
-            "initialBondCount");
+        int modelBondCount = ms.getInfoI(i, "initialBondCount");
 
         boolean modelIsPDB = models[i].isBioModel;
         if (modelBondCount < 0) {
@@ -1178,10 +1181,12 @@ public final class ModelLoader {
         // use ATOM, so that's a problem. Those atoms would not be excluded from
         // the
         // automatic bonding, and additional bonds might be made.
-        boolean doBond = (forceAutoBond || doAutoBond
-            && (modelBondCount == 0
-                || modelIsPDB && jmolData == null && (ms.getMSInfoB("havePDBHeaderName") || modelBondCount < modelAtomCount / 2) 
-                || ms.getInfoB(i, "hasSymmetry") && !symmetryAlreadyAppliedToBonds && !ms.getInfoB(i, "hasBonds")));
+        boolean doBond = (forceAutoBond || doAutoBond && (modelBondCount == 0
+            || modelIsPDB && jmolData == null
+                && (ms.getMSInfoB("havePDBHeaderName")
+                    || modelBondCount < modelAtomCount / 2)
+            || ms.getInfoB(i, "hasSymmetry") && !symmetryAlreadyAppliedToBonds
+                && !ms.getInfoB(i, "hasBonds")));
         if (!doBond)
           continue;
         autoBonding = true;
@@ -1195,14 +1200,14 @@ public final class ModelLoader {
     if (modulationOn)
       ms.setModulation(null, true, modulationTUV, false);
     if (autoBonding) {
-      ms.autoBondBs4(bs, bs, bsExclude, null,
-          ms.defaultCovalentMad, vwr.getBoolean(T.legacyautobonding));
-      Logger
-          .info("ModelSet: autobonding; use  autobond=false  to not generate bonds automatically");
+      ms.autoBondBs4(bs, bs, bsExclude, null, ms.defaultCovalentMad,
+          vwr.getBoolean(T.legacyautobonding));
+      Logger.info(
+          "ModelSet: autobonding; use  autobond=false  to not generate bonds automatically");
     } else {
       //ms.initializeBspf();
-      Logger
-          .info("ModelSet: not autobonding; use  forceAutobond=true  to force automatic bond creation");
+      Logger.info(
+          "ModelSet: not autobonding; use  forceAutobond=true  to force automatic bond creation");
     }
   }
 

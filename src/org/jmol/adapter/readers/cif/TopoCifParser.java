@@ -6,6 +6,7 @@ import java.util.Map;
 import org.jmol.adapter.readers.cif.CifReader.Parser;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
+import org.jmol.api.SymmetryInterface;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
@@ -93,7 +94,7 @@ public class TopoCifParser implements Parser {
 
   public static final int LINK_TYPE_BITS = 4;
 
-//  private static double ERROR_TOLERANCE = 0.001;
+  static double ERROR_TOLERANCE = 0.001;
 
   /**
    * reader will be null if filter includes TOPOS_IGNORE
@@ -125,6 +126,8 @@ public class TopoCifParser implements Parser {
   int netCount;
   int linkCount;
   int atomCount;
+
+  T3 temp1 = new P3(), temp2 = new P3();
 
   private int ac0 = -1, bc0;
 
@@ -302,8 +305,7 @@ public class TopoCifParser implements Parser {
       types = "+" + types.toLowerCase() + "+";
       allowedTypes = types;
     }
-    if (reader.doApplySymmetry)
-      reader.asc.setNoAutoBond();
+//    reader.asc.setNoAutoBond();
     i0 = reader.baseAtomIndex;
     b0 = reader.baseBondIndex;
     return this;
@@ -311,7 +313,7 @@ public class TopoCifParser implements Parser {
 
   @Override
   public boolean processBlock(String key) throws Exception {
-    if (reader == null || !reader.doApplySymmetry || failed != null) {
+    if (reader == null || failed != null) {
       return false;
     }
     if (ac0 < 0) {
@@ -587,7 +589,7 @@ public class TopoCifParser implements Parser {
   @Override
   public boolean finalizeReader() throws Exception {
     // opportunity to handle anything prior to applying symmetry
-    if (reader == null || !reader.doApplySymmetry || reader.symops == null)
+    if (reader == null || reader.symops == null)
       return false;
     cifParser = null;
     reader.applySymmetryToBonds = true;
@@ -596,11 +598,14 @@ public class TopoCifParser implements Parser {
     for (int i = 0; i < atoms.size(); i++) {
       atoms.get(i).finalizeAtom(ops);
     }
+    
+    SymmetryInterface sym = reader.getSymmetry();
     // we do not have to finalize nodes directly -- finalizeLink will take care of that.
     for (int i = 0; i < links.size(); i++) {
-      links.get(i).finalizeLink(ops);
+      links.get(i).finalizeLink(ops, sym);
     }
-    reader.applySymmetryAndSetTrajectory();
+    if (reader.doApplySymmetry)
+      reader.applySymmetryAndSetTrajectory();
     return true;
   }
 
@@ -620,16 +625,25 @@ public class TopoCifParser implements Parser {
    */
   @Override
   public void finalizeSymmetry(boolean haveSymmetry) throws Exception {
-    if (reader == null || !haveSymmetry || !reader.doApplySymmetry || links.size() == 0)
+    if (reader == null || !haveSymmetry || links.size() == 0)
       return;
     
-    BS bsConnected = new BS();
-    BS bsAtoms = new BS();
+    BS bsConnected = new BS(); // atoms that are linked
+    BS bsAtoms = new BS(); // atoms that are associated or connected;
     int nLinks = processAssociations(bsConnected, bsAtoms);
     bsAtoms.or(bsConnected);
+    // create the excluded atoms set -- atoms of bsAtoms that are linked 
+    BS bsExclude = new BS();
+    for (int pt = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      while (bsAtoms.get(i)) {
+        bsExclude.setBitTo(pt++, bsConnected.get(i++));
+      }
+    }
     // If we have a network, remove all unconnected atoms.
-    if (bsConnected.cardinality() > 0)
+    if (bsConnected.cardinality() > 0) {
       reader.asc.bsAtoms = bsAtoms;
+      reader.asc.atomSetInfo.put("bsExcludeBonding", bsExclude);
+    }
     reader.appendLoadNote("TopoCifParser created " + bsConnected.cardinality() + " nodes and " + nLinks + " links");
 
     // add model info
@@ -666,16 +680,16 @@ public class TopoCifParser implements Parser {
     // set associations for links and nodes 
     for (int i = reader.asc.ac; --i >= ac0;) {
       Atom a = atoms[i];
-      int id = a.sequenceNumber;
-      if (id == Integer.MIN_VALUE || id == 0)
+      int idx = a.sequenceNumber;
+      if (idx == Integer.MIN_VALUE || idx == 0)
         continue;
-      if (id > 0) {
-        TNode node = getNodeById(id);
+      if (idx > 0) {
+        TNode node = getAssociatedNodeByIdx(idx - 1);
         if (node.bsAtoms == null)
           node.bsAtoms = new BS();
         node.bsAtoms.set(i0 + a.index);
       } else {
-        TLink link = getLinkById(-id);
+        TLink link = getAssoiatedLinkByIdx(-idx - 1);
         if (link.bsAtoms == null)
           link.bsAtoms = new BS();
         link.bsAtoms.set(i0 + a.index);
@@ -696,7 +710,6 @@ public class TopoCifParser implements Parser {
       if (b.order >= TOPOL_GROUP) {
         // associated atoms - don't show this bond
         bonds[i] = null;
-//        b.order = Edge.BOND_PARTIAL01;         
       } else if (b.order >= TOPOL_LINK) {
         // adjust link bond order, and add this bond to the link's bsBonds bitset
         b.order -= TOPOL_LINK;
@@ -821,19 +834,19 @@ public class TopoCifParser implements Parser {
 
   private class TAtom extends Atom {
 
+    @SuppressWarnings("unused")
     int id;
+    
     String atomLabel;
     int nodeID;
     int linkID;
     int symop = 0;
-    P3 trans = new P3();
+    private P3 trans = new P3();
     String formula;
 
     Atom atom;
-
-    boolean isFinalized;
-
-
+    private boolean isFinalized;
+    @SuppressWarnings("unused")
     int idx;
 
     @SuppressWarnings("unused")
@@ -871,23 +884,23 @@ public class TopoCifParser implements Parser {
       if (a == null && atomLabel != null) {
         a = reader.asc.getAtomFromName(atomLabel);
       }
-      setElementSymbol();
+      setElementSymbol(this, formula);
       if (a == null && Float.isNaN(x)) {
         // no associated atom
-        throw new Exception(
-            "TopoCIFParser.finalizeAtom no atom " + atomLabel);
+        throw new Exception("TopoCIFParser.finalizeAtom no atom " + atomLabel + " line=" + line);
       }
 
       // check for addition to a TNode
       TNode node = null;
-      if (nodeID > 0)
-        node = getNodeById(nodeID);
-      else if (atomLabel != null)
-        node = (TNode) getTopo(nodes, atomLabel, 'n');
-      if (node != null) {
-        node.addAtom(this);
+      if (nodeID > 0) {
+        node = getNodeById(nodeID, -1, null);
+        //      else if (atomLabel != null)
+        //        node = (TNode) getTopo(nodes, atomLabel, 'n');
+        if (node != null) {
+          node.addAtom(this);
+        }
       }
-      
+
       // check for addition to a TLink
       TLink link = null;
       if (linkID > 0) {
@@ -898,59 +911,82 @@ public class TopoCifParser implements Parser {
       if (node == null && link == null) {
         System.out.println("TAtom " + this + " ignored");
         return;
-      } 
-      
+      }
+
       // set the symmetry op [tx ty tz]
       if (a != null && (a == atom || Float.isNaN(x))) {
-        setT(a);
-        applySymmetry(ops, symop, trans);
+        setTAtom(a, this);
+        applySymmetry(this, ops, symop, trans);
       }
-      
+
       // add this atom to the AtomSetCollection
-      if (node != null && node.atomLabel == null) {
-        node.atomLabel = node.atomName = node.netLabel + "__" + atomName;
-        if (node.label == null)
-          node.label = node.atomLabel;
-      }
-      atomName = (node != null ? "Node_" + nodeID + "_" 
-          : link != null ? "Link_" + linkID + "_" 
-              : "TAtom_") + atomLabel;      
+//      if (node != null && node.atomLabel == null) {
+//        node.atomLabel = node.atomName = node.netLabel + "__" + atomName;
+//        if (node.label == null)
+//          node.label = node.atomLabel;
+//      }
+      atomName = (node != null ? "Node_" + nodeID + "_"
+          : link != null ? "Link_" + linkID + "_" : "TAtom_") + atomLabel;
+      System.out.println("TAtom adding " + this);
       reader.asc.addAtom(this);
     }
 
-    public void setElementSymbol() {
-      String name = atomName;
-      if (formula == null) {
-        atomName = (atomName == null ? "X" : atomName.substring(atomName.indexOf('_') + 1));
-      } else {
-        atomName = formula;
-      }
-      getElementSymbol();
-      atomName = name;
-    }
-
-    /**
-     * Apply the symmetry and translation
-     * @param ops
-     * @param op
-     * @param t
-     */
-    public void applySymmetry(M4[] ops, int op, T3 t) {
-      if (op >= 0) {
-        if (op > 1 || t.x != 0 || t.y != 0 || t.z != 0) {
-          if (op > 1)
-            ops[op].rotTrans(this);
-          this.add(t);
-        }
-      }
+    @Override
+    public String toString() {
+      return line + " " + super.toString();
     }
   }
 
-  private class TNode extends TAtom {
+  static void setTAtom(Atom a, Atom b) {
+    b.setT(a);
+    b.formalCharge = a.formalCharge;
+    b.bondRadius = a.bondRadius;
+  }
 
+
+  /**
+   * 
+   * @param a TNode or TAtom
+   * @param formula
+   */
+  static void setElementSymbol(Atom a, String formula) {
+    String name = a.atomName;
+    if (formula == null) {
+      a.atomName = (a.atomName == null ? "X" : a.atomName.substring(a.atomName.indexOf('_') + 1));
+    } else {
+      a.atomName = formula;
+    }
+    a.getElementSymbol();
+    a.atomName = name;
+  }
+
+  /**
+   * Apply the symmetry and translation
+   * @param a TNode or TAtom
+   * @param ops
+   * @param op
+   * @param t
+   */
+  static void applySymmetry(Atom a, M4[] ops, int op, T3 t) {
+    if (op >= 0) {
+      if (op > 1 || t.x != 0 || t.y != 0 || t.z != 0) {
+        if (op > 1)
+          ops[op].rotTrans(a);
+        a.add(t);
+      }
+    }
+  }
+  
+  private class TNode extends Atom {
+
+    public int id;
+    public String formula;
+    public String atomLabel;
     int netID;
     String netLabel;
     String label;
+    int symop = 0;
+    P3 trans = new P3();
     
     Lst<TAtom> tatoms;
     BS bsAtoms = null;
@@ -958,6 +994,10 @@ public class TopoCifParser implements Parser {
     int linkSymop = 0;
     P3 linkTrans = new P3();
     TNet net;
+    private boolean isFinalized;
+    int idx;
+    private Atom atom;
+    private String line;
     
     TNode() {
       super();
@@ -980,12 +1020,27 @@ public class TopoCifParser implements Parser {
       this.linkTrans = trans;
       this.label = this.atomName = this.atomLabel = atom.atomName;
       this.formula = atom.getElementSymbol();
-      setT(atom);
+      setTAtom(atom, this);
     }
 
     boolean setNode(int[] a, String line) {
-      if (!setAtom(a, line)) {        
-        return false;
+      this.line = line;
+      if (tatoms == null) {        
+        if (Float.isNaN(x) != Float.isNaN(y) || Float.isNaN(y) != Float.isNaN(z)) 
+          return false;
+        idx = atomCount++;
+        if (Float.isNaN(x)) {
+          trans = P3.new3(a[0], a[1], a[2]);        
+        } else {
+          symop = 0;
+        }
+        if (formula != null && formula.indexOf(" ") < 0) {
+          atomName = formula;
+          getElementSymbol();
+          if (!formula.equals(elementSymbol))
+            elementSymbol = "Z";
+          atomName = null;
+        }
       }
       if (net == null)
         net = getNetFor(netID, netLabel);
@@ -1004,58 +1059,67 @@ public class TopoCifParser implements Parser {
       if (isFinalized)
         return;
       isFinalized = true;
-      if (label == null) {
-        label = (atomLabel != null ? atomLabel 
-            : formula != null ? formula 
-            : id > 0 ? "Node" + id 
-            : "Node" + (index + 1));
-      }
-      // null atomName means no data for that
-      Atom a = (atom != null ? atom : atomLabel == null ? null : reader.asc.getAtomFromName(atomLabel));
       boolean haveXYZ = !Float.isNaN(x);
-      if (a == null) {
-        // no associated atom
-        if (!haveXYZ) {
+      Atom a;
+      if (tatoms == null) {
+        a = (atom != null ? atom
+            : atomLabel == null ? null : getAtomFromName(atomLabel));
+        setElementSymbol(this, formula == null ? a.elementSymbol : formula);
+        if (a == null && !haveXYZ) {
+          // no assigned atom_site
+          // no associated atom
           // no defined xyz
-          if (tatoms.size() == 0) {
-            // no associated TAtoms
-            throw new Exception(
-                "TopoCIFParser.finalizeNode no atom " + atomLabel);
+          throw new Exception(
+              "TopoCIFParser.finalizeNode no atom " + atomLabel + " line=" + line);
+        }
+      } else {
+        setCentroid();
+        if (tatoms.size() == 1) {
+          TAtom ta = tatoms.get(0);
+          setElementSymbol(ta, ta.elementSymbol);
+          atomLabel = ta.atomLabel;
+          formalCharge = ta.formalCharge;
+          tatoms = null;
+        } else {
+          net.hasAtoms = true;
+          elementSymbol = "Xx";
+          for (int i = tatoms.size(); --i >= 0;) {
+            TAtom ta = tatoms.get(i);
+            ta.sequenceNumber = idx + 1;
+            if (ta.atomName == null || !ta.atomName.startsWith(net.label + "_"))
+              ta.atomName = net.label + "_" + ta.atomName;
           }
-          setCentroid(this, tatoms);
-          if (tatoms.size() == 1)
-            tatoms = null;
         }
         a = this;
       }
       if (a == atom || !haveXYZ) {
-        setT(a);
-        applySymmetry(ops, symop, trans);
+        if (a != this) {
+          setTAtom(a, this);
+        }
+        applySymmetry(this, ops, symop, trans);
       }
-//      String s = (label != null ? label : "Node" + id);
-//      atomName = "TAtom_" + (atomLabel != null ? atomLabel : s);
-      setElementSymbol();
-      String s = net.label + "__";
-      if (atomName == null)
-        atomName = label;
-      if (label != null && label.startsWith(s))
-        s = "";
-      atomName = s + label;
+      atomName = netLabel + "__";
+      if (label != null && label.startsWith(atomName)) {
+        atomName = "";
+      }
+      atomName += (label != null ? label : atomLabel != null ? atomLabel : "Node_" + id);      
       reader.addCifAtom(this, atomName, null, null);
-      if (tatoms != null) {
-        net.hasAtoms = true;
-        for (int i = tatoms.size(); --i >= 0;) {
-          TAtom ta = tatoms.get(i);
-          ta.sequenceNumber = id;
-          if (ta.atomName == null || !ta.atomName.startsWith(net.label + "_"))
-            ta.atomName = net.label + "_" + ta.atomName;
-        } 
-      }
       net.nNodes++;
     }
 
+    private void setCentroid() {
+      x = y = z = 0;
+      int n = tatoms.size();
+      for (int i = n; --i >= 0;)
+        add(tatoms.get(i));
+      x /= n;
+      y /= n;
+      z /= n;
+    }
+
+
     public String info() {
-      return "[node " + idx + " " + label + "/" + atomName + " "
+      return "[node " + id + " " + label + "/" + atomName + " " 
           + super.toString() + "]";
     }
 
@@ -1065,7 +1129,8 @@ public class TopoCifParser implements Parser {
     }
 
     public TNode copy() {
-      return (TNode) clone();
+      TNode node = (TNode) clone();
+      return node;
     }
     
     @Override
@@ -1130,6 +1195,8 @@ public class TopoCifParser implements Parser {
     boolean setLink(int[] t1, int[] t2, String line) {
       this.line = line;
       idx = linkCount++;
+      if (id2 == 0)
+        id2 = id1;
       typeBondOrder = getBondType(type);
       // only a relative lattice change is necessary here.
       trans1 = P3.new3(t1[0], t1[1], t1[2]);
@@ -1179,8 +1246,7 @@ public class TopoCifParser implements Parser {
     }
 
     String info() {
-      return "[link " + (idx + 1) + " " + label1 + " " + label2 + " "
-          + distance + " " + type + "]";
+      return "[link " + line + " : " + distance + "]";
     }
 
     @Override
@@ -1193,10 +1259,11 @@ public class TopoCifParser implements Parser {
      * nodes and atoms
      * 
      * @param ops
+     * @param sym 
      * 
      * @throws Exception
      */
-    void finalizeLink(M4[] ops) throws Exception {
+    void finalizeLink(M4[] ops, SymmetryInterface sym) throws Exception {
       node1 = addLinkNodeIfNull(id1, label1, symop1, trans1);
       node2 = addLinkNodeIfNull(id2, label2, symop2, trans2);
       if (node1 == null || node2 == null) {
@@ -1210,28 +1277,37 @@ public class TopoCifParser implements Parser {
       }
       node1.finalizeNode(ops);
       node2.finalizeNode(ops);
-      node1.applySymmetry(ops, symop1, trans1);
-      node2.applySymmetry(ops, symop2, trans2);
+      applySymmetry(node1, ops, symop1, trans1);
+      applySymmetry(node2, ops, symop2, trans2);
+      
 
       // set the Bond fields, encoding the order field with "link", id, and typeBondOrder
       atomIndex1 = node1.index;
       atomIndex2 = node2.index;
-      distance = node1.distance(node2);            
       order = TOPOL_LINK + (id << LINK_TYPE_BITS) + typeBondOrder;
 
-      System.out.println("link " + distance + " " + this);
+      temp1.setT(node1);
+      temp2.setT(node2);
+      sym.toCartesian(temp1, true);
+      sym.toCartesian(temp2, true);
+      distance = temp1.distance(temp2);
+      if (cartesianDistance != 0 && Math.abs(distance - cartesianDistance) >= ERROR_TOLERANCE)
+        System.err.println("Distance error! distance=" + distance + " for " + line);
+      System.out.println("link d=" + distance + " " + this + node1 + node2);
       
       // encode the associated atom sequence number with this link's id.
       
       if (tatoms != null) {
-        TAtom aa = tatoms.get(0);
-        aa.finalizeAtom(ops);
-        aa.sequenceNumber = -id;
-        for (int i = tatoms.size(); --i >= 1;) {
+//        TAtom aa = tatoms.get(0);
+//        aa.finalizeAtom(ops);
+//        aa.sequenceNumber = -idx - 1;
+//        aa.atomName = net.label + "_" + aa.atomName;
+        for (int i = tatoms.size(); --i >= 0;) {
           TAtom a = tatoms.get(i);
           a.finalizeAtom(ops);
-          a.sequenceNumber = -id;
-          reader.asc.addNewBondWithOrderA(aa, a, TOPOL_GROUP + id);
+          a.sequenceNumber = -idx - 1;
+          a.atomName = net.label + "_" + a.atomName;
+//          reader.asc.addNewBondWithOrderA(aa, a, TOPOL_GROUP + id);
         }        
       }
 
@@ -1256,7 +1332,7 @@ public class TopoCifParser implements Parser {
         node = getNodeWithSym(id, nodeLabel, -1, null);
       }
       // second check is for an atom_site atom with this label
-      Atom atom = (node == null ? reader.asc.getAtomFromName(nodeLabel) : null);
+      Atom atom = (node == null ? getAtomFromName(nodeLabel) : null);
       // we now either have a node or an atom_site atom or we have a problem
       if (atom != null) {
         setNet(null);
@@ -1268,7 +1344,7 @@ public class TopoCifParser implements Parser {
         node.linkTrans = nodeTrans;
       } else {
         throw new Exception(
-            "TopoCIFParser.addNodeIfNull no atom or node " + nodeLabel);
+            "TopoCIFParser.addNodeIfNull no atom or node " + nodeLabel + " line=" + line);
       }
       nodes.addLast(node);
       return node;
@@ -1294,7 +1370,7 @@ public class TopoCifParser implements Parser {
     private TNode getNodeWithSym(int nodeID, String nodeLabel, int op,
                                 P3 trans) {
       if (nodeID > 0) 
-        return getNodeById(nodeID);
+        return getNodeById(nodeID, op, trans);
       for (int i = nodes.size(); --i >= 0;) {
         TNode n = nodes.get(i);
         if (n.label.equals(nodeLabel) && (op == -1 || op == n.linkSymop && trans.equals(n.linkTrans)))
@@ -1320,6 +1396,11 @@ public class TopoCifParser implements Parser {
     return n;
   }
 
+  public Atom getAtomFromName(String name) {
+    name = name.substring(name.lastIndexOf("_") + 1);
+    return reader.asc.getAtomFromName(name);
+  }
+
   /**
    * Find or create a TNet.
    * 
@@ -1342,6 +1423,24 @@ public class TopoCifParser implements Parser {
   return net;
 }
 
+  TLink getAssoiatedLinkByIdx(int idx) {
+    for (int i = links.size(); --i >= 0;) {
+      TLink l = links.get(i);
+      if (l.idx == idx)
+        return l;
+    }
+    return null;
+  }
+
+  TNode getAssociatedNodeByIdx(int idx) {
+    for (int i = nodes.size(); --i >= 0;) {
+      TNode n = nodes.get(i);
+      if (n.idx == idx)
+        return n;
+    }
+    return null;
+  }
+
   public TLink getLinkById(int linkID) {
     for (int i = links.size(); --i >= 0;) {
       TLink l = links.get(i);
@@ -1351,23 +1450,13 @@ public class TopoCifParser implements Parser {
     return null;
   }
 
-  public TNode getNodeById(int nodeID) {
+  public TNode getNodeById(int nodeID, int op, P3 trans) {
     for (int i = nodes.size(); --i >= 0;) {
       TNode n = nodes.get(i);
-      if (n.id == nodeID)
+      if (n.id == nodeID && (op < 0 || n.linkSymop == op && n.trans.equals(trans)))
         return n;
     }
     return null;
-  }
-
-  static void setCentroid(TAtom a, Lst<TAtom> tatoms) {
-    a.x = a.y = a.z = 0;
-    int n = tatoms.size();
-    for (int i = n; --i >= 0;)
-      a.add(tatoms.get(i));
-    a.x /= n;
-    a.y /= n;
-    a.z /= n;
   }
 
   public Object getTopo(Lst<?> l, String label, char type) {
