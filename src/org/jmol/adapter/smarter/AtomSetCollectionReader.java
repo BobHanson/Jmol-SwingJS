@@ -614,6 +614,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
     symmetryRange = (htParams.containsKey("symmetryRange") ? ((Float) htParams
         .get("symmetryRange")).floatValue() : 0);
+    paramsLattice = (T3) htParams.get("lattice");
+    paramsCentroid = htParams.containsKey("centroid");
+    paramsPacked = htParams.containsKey("packed");
     initializeSymmetryOptions();
     //this flag FORCES symmetry -- generally if coordinates are not fractional,
     //we may note the unit cell, but we do not apply symmetry
@@ -665,10 +668,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     isConcatenated = htParams.containsKey("concatenate");
   }
 
+  public T3 paramsLattice;
+  public boolean paramsCentroid;
+
+  private boolean paramsPacked;
+  
+  
+  
   protected void initializeSymmetryOptions() {
     latticeCells = new int[4];
     doApplySymmetry = false;
-    T3 pt = (T3) htParams.get("lattice");
+    T3 pt = paramsLattice; 
     if (pt == null || pt.length() == 0) {
       if (!forcePacked && strSupercell == null)
         return;
@@ -679,10 +689,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     latticeCells[2] = (int) pt.z;
     if (pt instanceof T4)
       latticeCells[3] = (int) ((T4) pt).w;
-    doCentroidUnitCell = (htParams.containsKey("centroid"));
+    doCentroidUnitCell = paramsCentroid;
     if (doCentroidUnitCell && (latticeCells[2] == -1 || latticeCells[2] == 0))
       latticeCells[2] = 1;
-    boolean isPacked = forcePacked || htParams.containsKey("packed");
+    boolean isPacked = forcePacked || paramsPacked;
     centroidPacked = doCentroidUnitCell && isPacked;
     doPackUnitCell = !doCentroidUnitCell && (isPacked || latticeCells[2] < 0);
     doApplySymmetry = (latticeCells[0] > 0 && latticeCells[1] > 0);
@@ -971,8 +981,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean doReadMolecularOrbitals;
   protected boolean reverseModels;
   private String nameRequired;
-  boolean doCentroidUnitCell;
-  boolean centroidPacked;
+  public boolean doCentroidUnitCell;
+  public boolean centroidPacked;
   public String strSupercell;
 
 

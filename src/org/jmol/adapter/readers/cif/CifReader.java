@@ -468,7 +468,7 @@ public class CifReader extends AtomSetCollectionReader {
   private void setOxidationStates() {
     for (int i = asc.ac; --i >= 0;) {
       Atom a = asc.atoms[i];
-      String sym = a.elementSymbol;
+      String sym = a.typeSymbol;
       float[] data;
       if (sym != null && (data = htOxStates.get(sym)) != null) {
         float charge = data[0];
@@ -480,11 +480,7 @@ public class CifReader extends AtomSetCollectionReader {
           a.bondRadius = radius;
         }
       }
-      
     }
-
-    // TODO
-    
   }
 
 
@@ -1282,6 +1278,7 @@ public class CifReader extends AtomSetCollectionReader {
             }
           }
           atom.elementSymbol = elementSymbol;
+          atom.typeSymbol = field;
           break;
         case CC_ATOM_ID:
         case LABEL:

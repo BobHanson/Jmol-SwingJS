@@ -74,8 +74,9 @@ public class Atom extends P3 implements Cloneable {
     return tensor;
   }
 
-  
   public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
+
+  public String typeSymbol; // CIF only
 
   public Atom() {
    set(Float.NaN, Float.NaN, Float.NaN);
