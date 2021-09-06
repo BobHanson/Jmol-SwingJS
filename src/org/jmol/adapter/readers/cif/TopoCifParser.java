@@ -1131,7 +1131,7 @@ public class TopoCifParser implements Parser {
     void addAtom(TAtom atom) {
       if (tatoms == null)
         tatoms = new Lst<TAtom>();
-      tatoms.add(atom);
+      tatoms.addLast(atom);
     }
 
     void finalizeNode(M4[] ops) throws Exception {
@@ -1304,7 +1304,7 @@ public class TopoCifParser implements Parser {
     void addAtom(TAtom atom) {
       if (tatoms == null)
         tatoms = new Lst<TAtom>();
-      tatoms.add(atom);
+      tatoms.addLast(atom);
     }
 
     /**
