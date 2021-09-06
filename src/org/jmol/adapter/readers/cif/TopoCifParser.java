@@ -775,11 +775,15 @@ public class TopoCifParser implements Parser {
         // adjust link bond order, and add this bond to the link's bsBonds bitset
         b.order -= TOPOL_LINK;
         TLink link = getAssoiatedLinkByIdx(b.order >> LINK_TYPE_BITS);
-        if (checkDistance && Math.abs(calculateDistance(atoms[b.atomIndex1], atoms[b.atomIndex2]) - link.distance) >= ERROR_TOLERANCE) {
+        if (checkDistance && Math
+            .abs(calculateDistance(atoms[b.atomIndex1], atoms[b.atomIndex2])
+                - link.distance) >= ERROR_TOLERANCE) {
           bonds[i] = null;
           continue;
         }
-       link.bsBonds.set(b0 + i);
+        if (link.bsBonds == null)
+          link.bsBonds = new BS();
+        link.bsBonds.set(b0 + i);
         switch (b.order & 0xF) {
         default:
           b.order = Edge.BOND_COVALENT_SINGLE;
@@ -917,6 +921,8 @@ public class TopoCifParser implements Parser {
     
     TAtom() {
       super();
+      @SuppressWarnings("unused")
+      int i = 0;// old transpiler hack
     }
 
     TAtom getTClone() {
@@ -1073,6 +1079,8 @@ public class TopoCifParser implements Parser {
     
     TNode() {
       super();
+      @SuppressWarnings("unused")
+      int i = 0;// old transpiler needs this?
     }
 
     /**
@@ -1270,12 +1278,14 @@ public class TopoCifParser implements Parser {
     int typeBondOrder;
 
     Lst<TAtom> tatoms;
-    BS bsAtoms = null;
-    BS bsBonds = new BS();
+    BS bsAtoms;
+    BS bsBonds;
     private String line;
     
     public TLink() {
       super();
+      @SuppressWarnings("unused")
+      int i = 0;
     }
 
     boolean setLink(int[] t1, int[] t2, String line) {
@@ -1550,7 +1560,7 @@ public class TopoCifParser implements Parser {
   public TNode getNodeById(int nodeID, int op, P3 trans) {
     for (int i = nodes.size(); --i >= 0;) {
       TNode n = nodes.get(i);
-      if (n.id == nodeID && (op < 0 || n.linkSymop == op && n.trans.equals(trans)))
+      if (n.id == nodeID && (op < 0 || n.linkSymop == op && n.linkTrans.equals(trans)))
         return n;
     }
     return null;
