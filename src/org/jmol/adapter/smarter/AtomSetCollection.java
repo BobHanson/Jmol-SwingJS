@@ -216,15 +216,14 @@ public class AtomSetCollection {
     int existingAtomsCount = ac;
 
     // auxiliary info
-    setInfo("loadState",
-        collection.atomSetInfo.get("loadState"));
+    setInfo("loadState", collection.atomSetInfo.get("loadState"));
 
     // append to bsAtoms if necessary (CIF reader molecular mode)
     if (collection.bsAtoms != null) {
       if (bsAtoms == null)
         bsAtoms = new BS();
-      for (int i = collection.bsAtoms.nextSetBit(0); i >= 0; i = collection.bsAtoms
-          .nextSetBit(i + 1))
+      for (int i = collection.bsAtoms
+          .nextSetBit(0); i >= 0; i = collection.bsAtoms.nextSetBit(i + 1))
         bsAtoms.set(existingAtomsCount + i);
     }
 
@@ -241,13 +240,9 @@ public class AtomSetCollection {
       setCurrentModelInfo("title", collection.collectionName);
       setAtomSetName(collection.getAtomSetName(atomSetNum));
       for (int atomNum = 0; atomNum < collection.atomSetAtomCounts[atomSetNum]; atomNum++) {
-        try {
-          if (bsAtoms != null)
-            bsAtoms.set(ac);
-          newCloneAtom(collection.atoms[clonedAtoms]);
-        } catch (Exception e) {
-          errorMessage = "appendAtomCollection error: " + e;
-        }
+        if (bsAtoms != null)
+          bsAtoms.set(ac);
+        newCloneAtom(collection.atoms[clonedAtoms]);
         clonedAtoms++;
       }
 
@@ -265,8 +260,8 @@ public class AtomSetCollection {
     // Clone bonds
     for (int bondNum = 0; bondNum < collection.bondCount; bondNum++) {
       Bond bond = collection.bonds[bondNum];
-      addNewBondWithOrder(bond.atomIndex1 + existingAtomsCount, bond.atomIndex2
-          + existingAtomsCount, bond.order);
+      addNewBondWithOrder(bond.atomIndex1 + existingAtomsCount,
+          bond.atomIndex2 + existingAtomsCount, bond.order);
     }
     // Set globals
     for (int i = globalBooleans.length; --i >= 0;)
@@ -471,7 +466,7 @@ public class AtomSetCollection {
     return n;
   }
 
-  public Atom newCloneAtom(Atom atom) throws Exception {
+  public Atom newCloneAtom(Atom atom) {
     Atom clone = atom.getClone();
     addAtom(clone);
     return clone;
@@ -480,7 +475,7 @@ public class AtomSetCollection {
   // FIX ME This should really also clone the other things pertaining
   // to an atomSet, like the bonds (which probably should be remade...)
   // but also the atomSetProperties and atomSetName...
-  public int cloneFirstAtomSet(int atomCount) throws Exception {
+  public int cloneFirstAtomSet(int atomCount) {
     if (!allowMultiple)
       return 0;
     newAtomSet();
@@ -491,7 +486,7 @@ public class AtomSetCollection {
     return ac;
   }
 
-  public void cloneAtomSetWithBonds(boolean isLast) throws Exception {
+  public void cloneAtomSetWithBonds(boolean isLast) {
     int nBonds = atomSetBondCounts[isLast ? iSet : 0];
     int atomIncrement = (isLast ? cloneLastAtomSet() : cloneFirstAtomSet(0));
     if (atomIncrement > 0)
@@ -502,11 +497,11 @@ public class AtomSetCollection {
       }
   }
 
-  public int cloneLastAtomSet() throws Exception {
+  public int cloneLastAtomSet() {//throws Exception {
     return cloneLastAtomSetFromPoints(0, null);
   }
 
-  public int cloneLastAtomSetFromPoints(int ac, P3[] pts) throws Exception {
+  public int cloneLastAtomSetFromPoints(int ac, P3[] pts) {
     if (!allowMultiple) // CASTEP reader only
       return 0;
     int count = (ac > 0 ? ac : getLastAtomSetAtomCount());

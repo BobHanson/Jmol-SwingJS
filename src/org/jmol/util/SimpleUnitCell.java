@@ -495,6 +495,19 @@ public class SimpleUnitCell {
     return ucnew;
   }
 
+  /**
+   * 
+   * @param dimension
+   * @param minXYZ
+   * @param maxXYZ
+   * @param kcode
+   *        Generally the multiplier is just {ijk ijk scale}, but when we have
+   *        1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java float
+   *        precision issues so we use P4 {1iiijjjkkk 1iiijjjkkk scale,
+   *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
+   *        renderer, but later -500 or -499 -- tells us which code we are
+   *        looking at, the first one or the second one.
+   */
   public static void setMinMaxLatticeParameters(int dimension, P3i minXYZ, P3i maxXYZ, int kcode) {
     
     if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {

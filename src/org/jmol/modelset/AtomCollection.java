@@ -914,8 +914,11 @@ abstract public class AtomCollection {
   protected void setBondingRadius(int atomIndex, float radius) {
     if (Float.isNaN(radius) || radius == at[atomIndex].getBondingRadius())
       return;
-    if (bondingRadii == null)
+    if (bondingRadii == null) {
       bondingRadii = new float[at.length];
+    } else if (bondingRadii.length < at.length) {
+      bondingRadii = (float[]) AU.ensureLength(bondingRadii, at.length);
+    }
     bondingRadii[atomIndex] = radius;
     taintAtom(atomIndex, TAINT_BONDINGRADIUS);
   }

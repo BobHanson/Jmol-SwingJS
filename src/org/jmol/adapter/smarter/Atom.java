@@ -82,8 +82,13 @@ public class Atom extends P3 implements Cloneable {
    set(Float.NaN, Float.NaN, Float.NaN);
   }
 
-  public Atom getClone() throws CloneNotSupportedException {
-    Atom a = (Atom)clone();
+  public Atom getClone() {
+    Atom a;
+    try {
+      a = (Atom)clone();
+    } catch (CloneNotSupportedException e) {
+      return null;
+    }
     if (vib != null) {
       if (vib instanceof Vibration) {
         a.vib = (Vibration) ((Vibration) vib).clone();
@@ -308,6 +313,12 @@ public class Atom extends P3 implements Cloneable {
    */
   private static boolean isValidSymChar1(char ch) {
     return (ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] != 0);
+  }
+
+  public Atom copyTo(P3 pt, AtomSetCollection asc) {
+    Atom a = asc.newCloneAtom(this);
+    a.setT(pt);
+    return a;
   }
 
 //  static {

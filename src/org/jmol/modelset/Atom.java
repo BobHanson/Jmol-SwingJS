@@ -554,7 +554,7 @@ public class Atom extends Point3fi implements Node {
 
   public float getBondingRadius() {
     float[] rr = group.chain.model.ms.bondingRadii;
-    float r = (rr == null ? 0 : rr[i]);
+    float r = (rr == null  || i >= rr.length ? 0 : rr[i]);
     return (r == 0 ? Elements.getBondingRadius(atomicAndIsotopeNumber,
         getFormalCharge()) : r);
   }
