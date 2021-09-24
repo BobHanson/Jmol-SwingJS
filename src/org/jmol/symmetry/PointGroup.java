@@ -269,32 +269,33 @@ class PointGroup {
     }
     if (isEqual(pgLast))
       return false;
-    findInversionCenter();
-
-    if (isLinear(points)) {
-      if (haveInversionCenter) {
-        name = "D(infinity)h";
-      } else {
-        name = "C(infinity)v";
-      }
-      vTemp.sub2(points[1], points[0]);
-      addAxis(c2, vTemp);
-      principalAxis = axes[c2][0];
-      if (haveInversionCenter) {
-        axes[0] = new Operation[1];
-        principalPlane = axes[0][nAxes[0]++] = new Operation(vTemp);
-      }
-      return true;
-    }
-    axes[0] = new Operation[15];
-    int nPlanes = 0;
-    findCAxes();
-    nPlanes = findPlanes();
-    findAdditionalAxes(nPlanes);
-
-    /* flow chart contribution of Dean Johnston */
-
     try {
+
+      findInversionCenter();
+
+      if (isLinear(points)) {
+        if (haveInversionCenter) {
+          name = "D(infinity)h";
+        } else {
+          name = "C(infinity)v";
+        }
+        vTemp.sub2(points[1], points[0]);
+        addAxis(c2, vTemp);
+        principalAxis = axes[c2][0];
+        if (haveInversionCenter) {
+          axes[0] = new Operation[1];
+          principalPlane = axes[0][nAxes[0]++] = new Operation(vTemp);
+        }
+        return true;
+      }
+      axes[0] = new Operation[15];
+      int nPlanes = 0;
+      findCAxes();
+      nPlanes = findPlanes();
+      findAdditionalAxes(nPlanes);
+
+      /* flow chart contribution of Dean Johnston */
+
       int n = getHighestOrder();
       if (nAxes[c3] > 1) {
         // must be Ix, Ox, or Tx
@@ -333,8 +334,8 @@ class PointGroup {
             return true;
           }
           name = "C1";
-        } else if ((n % 2) == 1 && nAxes[c2] > 0 || (n % 2) == 0
-            && nAxes[c2] > 1) {
+        } else if ((n % 2) == 1 && nAxes[c2] > 0
+            || (n % 2) == 0 && nAxes[c2] > 1) {
           // Dnh, Dnd, Dn, S4
 
           // here based on the presence of C2 axes in any odd-order group
@@ -383,8 +384,9 @@ class PointGroup {
       }
     } catch (Exception e) {
       name = "??";
+    } finally {
+      Logger.info("Point group found: " + name);
     }
-    Logger.info("Point group found: " + name);
     return true;
   }
 
@@ -439,7 +441,7 @@ class PointGroup {
     elements = new int[ac];
     if (ac == 0)
       return true;
-  
+
     // All Node points will be Point3fi, actually. But they might not be Atom.
     // It's not perfect.
     int atomIndexMax = 0;
@@ -455,24 +457,26 @@ class PointGroup {
       center = new P3();
     // we optionally include bonding information
     Bspt bspt = new Bspt(3, 0);
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), nAtoms++) {
-      T3 p = points[nAtoms] = atomset[i];
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+        .nextSetBit(i + 1), nAtoms++) {
+      T3 p = atomset[i];
       if (p instanceof Node) {
-        int bondIndex = (localEnvOnly ? 1 : 1 + Math.max(3,
-            ((Node) p).getCovalentBondCount()));
+        int bondIndex = (localEnvOnly ? 1
+            : 1 + Math.max(3, ((Node) p).getCovalentBondCount()));
         elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
         atomMap[((Point3fi) p).i] = nAtoms + 1;
-      } else if (p instanceof Point3fi) {
-        elements[nAtoms] = Math.max(0, ((Point3fi) p).sD);
       } else {
         Point3fi newPt = new Point3fi();
         newPt.setT(p);
-        newPt.i = nAtoms;
+        newPt.i = -1 - nAtoms;
+        if (p instanceof Point3fi)
+          elements[nAtoms] = Math.max(0, ((Point3fi) p).sD);
         p = newPt;
       }
       bspt.addTuple(p);
       if (needCenter)
-        center.add(points[nAtoms]);
+        center.add(p);
+      points[nAtoms] = p;
     }
     iter = bspt.allocateCubeIterator();
     if (needCenter)
@@ -487,7 +491,9 @@ class PointGroup {
     if (radius < 1.5f && distanceTolerance > 0.15f) {
       distanceTolerance = radius / 10;
       distanceTolerance2 = distanceTolerance * distanceTolerance;
-      System.out.println("PointGroup calculation adjusting distanceTolerance to " + distanceTolerance);
+      System.out
+          .println("PointGroup calculation adjusting distanceTolerance to "
+              + distanceTolerance);
     }
     return true;
   }
@@ -505,7 +511,7 @@ class PointGroup {
     int nFound = 0;
     boolean isInversion = (iOrder < firstProper);
 
-    out: for (int i = points.length; --i >= 0 && nFound < points.length;) {
+    out: for (int n = points.length, i = n; --i >= 0 && nFound < n;) {
       if (i == centerAtomIndex)
         continue;
       T3 a1 = points[i];
@@ -539,7 +545,11 @@ class PointGroup {
         if (a2 == a1)
           continue;
         int j = getPointIndex(((Point3fi) a2).i); // will be true atom index for an atom, not just in first molecule
-        if (centerAtomIndex >= 0 && j == centerAtomIndex || elements[j] != e1)
+        
+        if (centerAtomIndex >= 0 && j == centerAtomIndex 
+            || j >= elements.length
+            || 
+            elements[j] != e1 )
           continue;
         if (pt.distanceSquared(a2) < distanceTolerance2) {
           nFound++;
@@ -547,7 +557,8 @@ class PointGroup {
         //System.out.println("draw pt" + i + " " + pt + " color red");
         //System.out.println("draw a" + i + " " + a2 + " color green");
           continue out;
-        }
+        } 
+//        System.out.println("none found for " + a1 + " "  +a2 + " " + pt);
       }
       return false;
     }
@@ -555,7 +566,7 @@ class PointGroup {
   }
 
   private int getPointIndex(int j) {
-    return j < atomMap.length && atomMap[j] > 0 ? atomMap[j] - 1 : j;
+    return (j < 0 ? -j : atomMap[j]) - 1;
   }
 
   private boolean isLinear(T3[] atoms) {
@@ -791,6 +802,8 @@ class PointGroup {
     case c5:
       if (nAxes[c4] > 0 || nAxes[c6] > 0 || nAxes[c8] > 0) 
         return false;
+      break;
+    case c2:
       break;
     }
 
@@ -1039,8 +1052,9 @@ class PointGroup {
         String label = axes[i][0].getLabel();
         offset += 0.25f;
         float scale = scaleFactor * radius + offset;
+        boolean isProper = (i >= firstProper);
         if (!haveType || type.equalsIgnoreCase(label) || anyProperAxis
-            && i >= firstProper || anyImproperAxis && i < firstProper)
+            && isProper || anyImproperAxis && !isProper)
           for (int j = 0; j < nAxes[i]; j++) {
             if (index > 0 && j + 1 != index)
               continue;

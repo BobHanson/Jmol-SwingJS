@@ -27,12 +27,12 @@ class PolyhedronStereoSorter implements Comparator<Object[]> {
   public int compare(Object[] a, Object[] b) {
     float torA = ((Float) a[1]).floatValue();
     float torB = ((Float) b[1]).floatValue();
-    if (Math.abs(torA - torB) < 1f) {
+      if (Math.abs(torA - torB) < 1f) {
       torA = 0;
       vTemp.sub2((P3) b[2], (P3) a[2]);
       torB = vRef.dot(vTemp);
     }
-    return (torA < torB ? 1 : torA > torB ? -1 : 0);
+    return (torA < torB ? -1 : torA > torB ? 1 : 0);
   }
 
   private V3 align1 = new V3();

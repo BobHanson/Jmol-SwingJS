@@ -1327,6 +1327,9 @@ abstract public class AtomCollection {
           continue;
         if (!ignoreH)
           n = nMissing;
+        
+        // TODO - NPE while working with model kit after deleting and adding and dragging atoms.
+        
         int targetValence = aaRet[0];
         int hybridization = aaRet[2];
         int nBonds = aaRet[3] - (ignoreH ? n : 0);

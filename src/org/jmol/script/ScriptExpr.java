@@ -1550,7 +1550,7 @@ abstract class ScriptExpr extends ScriptParam {
     return SV.newSV(T.propselector, tok, paramAsStr(i));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "cast" })
   public Object getBitsetProperty(BS bs, Lst<SV> pts, int tok, P3 ptRef,
                                   P4 planeRef, Object tokenValue,
                                   Object opValue, boolean useAtomMap,

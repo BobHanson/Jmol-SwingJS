@@ -1132,6 +1132,14 @@ public class CmdExt extends ScriptExt {
         vwr.tm.setCenterAt(tok, pt);
   }
 
+  /**
+   * Compares one set of atoms to another, generating the matrix that takes that
+   * maps the first set's coordinates to the second's. Options TRANSLATE and
+   * ROTATE will generate an animation. See interactive documentation for more
+   * details.
+   * 
+   * @throws ScriptException
+   */
   private void compare() throws ScriptException {
     // compare {model1} {model2} 
     // compare {model1} {model2} ATOMS {bsAtoms1} {bsAtoms2}
@@ -1146,6 +1154,12 @@ public class CmdExt extends ScriptExt {
     // compare {model1} [coords] ATOMS {bsAtoms1}
     // compare {model1} {model2} BONDS "....."   /// flexible fit
     // compare {model1} {model2} BONDS SMILES   /// flexible fit
+    // compare {model1} {model2} ATOMS {bsAtoms1} {bsAtoms2} POLYHEDRA SMILES
+    // compare FRAMES
+    // compare {model1} {model2} POLYHEDRA
+    // compare {model1} {model2} SUBSET {polyhedra} POLYHEDRA    
+    // compare {model1} {model2} ATOMS @atom1 @atom2 POLYHEDRA
+    // compare FRAMES POLYHEDRA
 
     ScriptEval eval = e;
     boolean isQuaternion = false;
@@ -1160,41 +1174,55 @@ public class CmdExt extends ScriptExt {
     eval.iToken = 0;
     float nSeconds = (isFloatParameter(1) ? floatParameter(++eval.iToken)
         : Float.NaN);
+
     ///BS bsFrom = (tokAt(++iToken) == T.subset ? null : atomExpressionAt(iToken));
     //BS bsTo = (tokAt(++iToken) == T.subset ? null : atomExpressionAt(iToken));
     //if (bsFrom == null || bsTo == null)
     ///invArg();
-    BS bsFrom = atomExpressionAt(++eval.iToken);
     P3[] coordTo = null;
-    BS bsTo = null;
-    if (eval.isArrayParameter(++eval.iToken)) {
-      coordTo = eval.getPointArray(eval.iToken, -1, false);
-    } else if (tokAt(eval.iToken) != T.atoms) {
-      bsTo = atomExpressionAt(eval.iToken);
+    BS bsFrom = null, bsTo = null;
+    int tok = 0;
+    if (tokAt(1) == T.frame) {
+      bsFrom = vwr.bsA();
+    } else {
+      bsFrom = atomExpressionAt(1);
+      if (eval.isArrayParameter(++eval.iToken)) {
+        coordTo = eval.getPointArray(eval.iToken, -1, false);
+      } else if ((tok = tokAt(eval.iToken)) != T.atoms && tok != T.frame) {
+        bsTo = atomExpressionAt(eval.iToken);
+      }
     }
     BS bsSubset = null;
     boolean isSmiles = false;
+    boolean isPolyhedral = false;
     String strSmiles = null;
     BS bs = BSUtil.copy(bsFrom);
     if (bsTo != null)
       bs.or(bsTo);
-    boolean isToSubsetOfFrom = (coordTo == null && bsTo != null && bs
-        .equals(bsFrom));
+    boolean isToSubsetOfFrom = (coordTo == null && bsTo != null
+        && bs.equals(bsFrom));
     boolean isFrames = isToSubsetOfFrom;
     for (int i = eval.iToken + 1; i < slen; ++i) {
       switch (getToken(i).tok) {
       case T.frame:
         isFrames = true;
+        if (bsTo == null)
+          bsTo = BSUtil.copy(bsFrom);
         break;
       case T.smiles:
         isSmiles = true;
-        if (tokAt(i + 1) != T.string) {
+        tok = tokAt(i + 1);
+        if (tok != T.string && tok != T.polyhedra) {
           strSmiles = "*";
           break;
         }
         //$FALL-THROUGH$
       case T.search: // SMARTS
-        strSmiles = stringParameter(++i);
+        isPolyhedral = (tokAt(++i) == T.polyhedra);
+        strSmiles = (isPolyhedral ? "polyhedra" : stringParameter(i));
+        if (strSmiles.equalsIgnoreCase("polyhedra")
+            || strSmiles.equalsIgnoreCase("polyhedron"))
+          isPolyhedral = true;
         break;
       case T.bonds:
         isFlexFit = true;
@@ -1222,9 +1250,11 @@ public class CmdExt extends ScriptExt {
         if (vQuatSets != null)
           invArg();
         bsAtoms1 = atomExpressionAt(eval.iToken);
-        int tok = (isToSubsetOfFrom ? 0 : tokAt(eval.iToken + 1));
-        bsAtoms2 = (coordTo == null && eval.isArrayParameter(eval.iToken + 1) ? null
-            : (tok == T.bitset || tok == T.expressionBegin ? atomExpressionAt(++eval.iToken)
+        tok = (isToSubsetOfFrom ? 0 : tokAt(eval.iToken + 1));
+        bsAtoms2 = (coordTo == null && eval.isArrayParameter(eval.iToken + 1)
+            ? null
+            : (tok == T.bitset || tok == T.expressionBegin
+                ? atomExpressionAt(++eval.iToken)
                 : BSUtil.copy(bsAtoms1)));
         if (bsSubset != null) {
           bsAtoms1.and(bsSubset);
@@ -1240,6 +1270,13 @@ public class CmdExt extends ScriptExt {
           vAtomSets = new Lst<Object[]>();
         vAtomSets.addLast(new BS[] { bsAtoms1, bsAtoms2 });
         i = eval.iToken;
+        break;
+      case T.polyhedra:
+        // Jmol 14.31.55/15.1.55
+        isSmiles = isPolyhedral = true;
+        break;
+      case T.mapproperty:
+        
         break;
       case T.varray:
         if (vAtomSets != null)
@@ -1281,10 +1318,14 @@ public class CmdExt extends ScriptExt {
       doRotate = doTranslate = true;
     doAnimate = (nSeconds != 0);
 
-    boolean isAtoms = (!isQuaternion && strSmiles == null || coordTo != null);
+    boolean isAtoms = (!isQuaternion && strSmiles == null && !isPolyhedral
+        || coordTo != null);
     if (isAtoms)
       Interface.getInterface("javajs.util.Eigen", vwr, "script"); // preload interface
     if (vAtomSets == null && vQuatSets == null) {
+      if (isPolyhedral && bsSubset == null) {
+        bsSubset = vwr.getAtomBitSet("polyhedra");
+      }
       if (bsSubset == null) {
         bsAtoms1 = (isAtoms ? vwr.getAtomBitSet("spine") : new BS());
         if (bsAtoms1.nextSetBit(0) < 0) {
@@ -1310,18 +1351,26 @@ public class CmdExt extends ScriptExt {
     }
 
     BS[] bsFrames;
+    BS bsModels = null;
     if (isFrames) {
-      BS bsModels = vwr.ms.getModelBS(bsFrom, false);
+      // compare FRAMES 
+      bsModels = vwr.ms.getModelBS(bsFrom, false);
       bsFrames = new BS[bsModels.cardinality()];
-      for (int i = 0, iModel = bsModels.nextSetBit(0); iModel >= 0; iModel = bsModels
-          .nextSetBit(iModel + 1), i++)
+      for (int i = 0, iModel = bsModels.nextSetBit(
+          0); iModel >= 0; iModel = bsModels.nextSetBit(iModel + 1), i++)
         bsFrames[i] = vwr.getModelUndeletedAtomsBitSet(iModel);
     } else {
+      bsModels = BSUtil.newAndSetBit(0);
       bsFrames = new BS[] { bsFrom };
     }
-    for (int iFrame = 0; iFrame < bsFrames.length; iFrame++) {
+    for (int iFrame = 0, iModel = bsModels.nextSetBit(0); iFrame < bsFrames.length; iFrame++, iModel = bsModels.nextSetBit(iModel + 1)) {
       bsFrom = bsFrames[iFrame];
       float[] retStddev = new float[2]; // [0] final, [1] initial for atoms
+      if (isFrames && isPolyhedral && iFrame == 0) {
+        bsTo = bsFrom;
+        continue;
+      }
+
       Quat q = null;
       Lst<Quat> vQ = new Lst<Quat>();
       P3[][] centerAndPoints = null;
@@ -1354,10 +1403,10 @@ public class CmdExt extends ScriptExt {
               + ((Atom) bij).getInfo());
         }
         q = Measure.calculateQuaternionRotation(centerAndPoints, retStddev);
-        float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math
-            .round(retStddev[0] * 100) / 100f);
-        float r1 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math
-            .round(retStddev[1] * 100) / 100f);
+        float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN
+            : Math.round(retStddev[0] * 100) / 100f);
+        float r1 = (Float.isNaN(retStddev[1]) ? Float.NaN
+            : Math.round(retStddev[1] * 100) / 100f);
         showString("RMSD " + r0 + " --> " + r1 + " Angstroms");
       } else if (isQuaternion) {
         if (vQuatSets == null) {
@@ -1399,19 +1448,28 @@ public class CmdExt extends ScriptExt {
           }
         if (isFlexFit) {
           float[] list;
-          if (bsFrom == null
-              || bsTo == null
-              || (list = eval.getSmilesExt().getFlexFitList(bsFrom, bsTo,
-                  strSmiles, !isSmiles)) == null)
+          if (bsFrom == null || bsTo == null || (list = eval.getSmilesExt()
+              .getFlexFitList(bsFrom, bsTo, strSmiles, !isSmiles)) == null)
             return;
           vwr.setDihedrals(list, null, 1);
         }
-        float stddev = eval.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
-            strSmiles, null, null, m4, null, false, null, center,
-            false, JC.SMILES_IGNORE_STEREOCHEMISTRY | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
-//        System.out.println("compare:\n" + m4);
+        float stddev;
+        if (isPolyhedral) {
+          BS bs1 = BS.copy(bsAtoms1);
+          bs1.and(bsFrom);
+          BS bs2 = BS.copy(bsAtoms2);
+          bs2.and(bsTo);
+          stddev = eval.getSmilesExt().mapPolyhedra(bs1.nextSetBit(0),
+              bs2.nextSetBit(0), isSmiles, m4);
+        } else {
+          stddev = eval.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
+              strSmiles, null, null, m4, null, false, null, center, false,
+              JC.SMILES_IGNORE_STEREOCHEMISTRY
+                  | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
+        }
+        //        System.out.println("compare:\n" + m4);
         if (Float.isNaN(stddev)) {
-          showString("structures do not match");
+          showString("structures do not match from " + bsFrom + " to " + bsTo);
           return;
         }
         if (doTranslate) {
@@ -1424,6 +1482,13 @@ public class CmdExt extends ScriptExt {
           q = Quat.newM(m3);
         }
         showString("RMSD = " + stddev + " Angstroms");
+
+        if (isFrames) {
+          T3[] oabc = vwr.getV0abc(iModel, new Object[] {m4 });
+          if (oabc != null)
+            eval.setModelCagePts(iModel, oabc, null);
+        }
+
       }
       if (centerAndPoints != null)
         center = centerAndPoints[0][0];
@@ -1460,10 +1525,9 @@ public class CmdExt extends ScriptExt {
       }
       if (!eval.useThreads())
         doAnimate = false;
-      if (vwr.rotateAboutPointsInternal(eval, center, pt1, endDegrees / nSeconds,
-          endDegrees, doAnimate, bsFrom, translation, ptsB, null, null)
-          && doAnimate
-          && eval.isJS)
+      if (vwr.rotateAboutPointsInternal(eval, center, pt1,
+          endDegrees / nSeconds, endDegrees, doAnimate, bsFrom, translation,
+          ptsB, null, null) && doAnimate && eval.isJS)
         throw new ScriptInterruption(eval, "compare", 1);
     }
   }
@@ -5386,7 +5450,7 @@ public class CmdExt extends ScriptExt {
       }
       String stype = null;
       // parent, standard, conventional, primitive
-      eval.setCurrentCagePts(null, null);
+      eval.setModelCagePts(-1, null, null);
       // reset -- presumes conventional, so if it is not, 
       // _M.unitcell_conventional must be set in the reader.
 
@@ -5410,7 +5474,7 @@ public class CmdExt extends ScriptExt {
       if (stype == null)
         stype = (String) vwr.getModelInfo("latticeType");
       if (newUC != null)
-        eval.setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
+        eval.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
       // now guaranteed to be "conventional"
       if (!ucname.equals("conventional")) {
         s = (String) vwr.getModelInfo("unitcell_" + ucname);
@@ -5497,7 +5561,7 @@ public class CmdExt extends ScriptExt {
     case T.expressionBegin:
       int iAtom = atomExpressionAt(i).nextSetBit(0);
       if (!chk)
-        vwr.am.cai = iAtom;
+        vwr.am.setUnitCellAtomIndex(iAtom);
       if (iAtom < 0)
         return;
       i = eval.iToken;
@@ -5539,15 +5603,15 @@ public class CmdExt extends ScriptExt {
     if (chk || mad10 == Integer.MAX_VALUE)
       return;
     if (mad10 == Integer.MAX_VALUE)
-      vwr.am.cai = -1;
+      vwr.am.setUnitCellAtomIndex(-1);
     if (oabc == null && newUC != null)
-      oabc = vwr.getV0abc(newUC);
+      oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), null, icell);
     else if (id != null)
       vwr.setCurrentCage(id);
     else if (isReset || oabc != null)
-      eval.setCurrentCagePts(oabc, ucname);
+      eval.setModelCagePts(-1, oabc, ucname);
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);

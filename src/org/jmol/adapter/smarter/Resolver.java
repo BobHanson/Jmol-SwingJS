@@ -535,7 +535,7 @@ public class Resolver {
   
   private static int checkMol(String[] lines) {
     String line4trimmed = ("X" + lines[3]).trim().toUpperCase();
-    if (line4trimmed.length() < 7 || line4trimmed.indexOf(".") >= 0)
+    if (line4trimmed.length() < 7 || line4trimmed.indexOf(".") >= 0 || lines[0].startsWith("data_"))
       return 0;
     if (line4trimmed.endsWith("V2000"))
       return 2000;

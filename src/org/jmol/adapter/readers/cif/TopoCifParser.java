@@ -65,23 +65,29 @@ public class TopoCifParser implements Parser {
   public static final int LINK_TYPE_PI = 0xC;
   public static final int LINK_TYPE_HBOND = 0xD;
   public static final int LINK_TYPE_VDW = 0xE;
-  public static final int LINK_TYPE_OTHER = 0xF;
+  public static final int LINK_TYPE_OTHER = 0xF; // Special bond
 
-  public static String linkTypes = "?  " + "SIN" + "TRI" + "QUA" + "QUI" + "SEX"
-      + "SEP" + "OCT" + "ARO" + "POL" + "PI " + "HBO" + "VDW"; // also "W" ?
+  // officially v pi hb vw sb . (no bond)
+  public static String linkTypes = "?  " 
+      + "SIN" + "DOU" + "TRI" + "QUA" + "QUI" + "SEX" + "SEP" + "OCT" // 1-8
+      + "ARO" + "POL" + "DEL" // 9-11
+      + "PI " + "HBO" + "VDW"; //12-14 
 
   static int getBondType(String type, int order) {
     if (type == null)
-      return LINK_TYPE_SINGLE;
+      return LINK_TYPE_SINGLE; // no bond
     type = type.toUpperCase();
     if (type.equals("V"))
       return (order == 0 ? LINK_TYPE_SINGLE : order);
+    if (type.equals("sb"))
+      type = "?";
     switch (type.charAt(0)) {
     case 'V':
       return LINK_TYPE_VDW;
     }
     if (type.length() > 3)
       type = type.substring(0, 3);
+    // defaults to SINGLE
     return Math.max(1, linkTypes.indexOf(type) / 3);
   }
 
@@ -154,7 +160,6 @@ public class TopoCifParser implements Parser {
   String netNotes = "";
   private SymmetryInterface sym;
   String selectedNet;
-  int selectedNetID;
 
   // CifParser supports up to 100 fields
   final private static String[] topolFields = { /*0*/"_topol_net_id",
@@ -163,32 +168,32 @@ public class TopoCifParser implements Parser {
       /*5*/"_topol_link_node_id_1", /*6*/"_topol_link_node_id_2",
       /*7*/"_topol_link_node_label_1", /*8*/"_topol_link_node_label_2",
       /*9*/"_topol_link_atom_label_1", /*10*/"_topol_link_atom_label_2",
-      /*11*/"_topol_link_symop_1", /*12*/"_topol_link_translation_1",
+      /*11*/"_topol_link_symop_id_1", /*12*/"_topol_link_translation_1",
       /*13*/"_topol_link_translation_1_x", /*14*/"_topol_link_translation_1_y",
-      /*15*/"_topol_link_translation_1_z", /*16*/"_topol_link_symop_2",
+      /*15*/"_topol_link_translation_1_z", /*16*/"_topol_link_symop_id_2",
       /*17*/"_topol_link_translation_2", /*18*/"_topol_link_translation_2_x",
       /*19*/"_topol_link_translation_2_y", /*20*/"_topol_link_translation_2_z",
       /*21*/"_topol_link_distance", /*22*/"_topol_link_type",
       /*23*/"_topol_link_multiplicity", /*24*/"_topol_link_voronoi_solidangle",
       /*25*/"_topol_link_order", /*26*/"_topol_node_id",
       /*27*/"_topol_node_net_id", /*28*/"_topol_node_label",
-      /*29*/"_topol_node_atom_label", /*30*/"_topol_node_symop",
+      /*29*/"_topol_node_atom_label", /*30*/"_topol_node_symop_id",
       /*31*/"_topol_node_translation", /*32*/"_topol_node_translation_x",
       /*33*/"_topol_node_translation_y", /*34*/"_topol_node_translation_z",
       /*35*/"_topol_node_fract_x", /*36*/"_topol_node_fract_y",
       /*37*/"_topol_node_fract_z", /*38*/"_topol_node_chemical_formula_sum",
       /*39*/"_topol_atom_id", /*40*/"_topol_atom_atom_label",
       /*41*/"_topol_atom_node_id", /*42*/"_topol_atom_link_id",
-      /*43*/"_topol_atom_symop", /*44*/"_topol_atom_translation",
+      /*43*/"_topol_atom_symop_id", /*44*/"_topol_atom_translation",
       /*45*/"_topol_atom_translation_x", /*46*/"_topol_atom_translation_y",
       /*47*/"_topol_atom_translation_z", /*48*/"_topol_atom_fract_x",
       /*49*/"_topol_atom_fract_y", /*50*/"_topol_atom_fract_z",
       /*51*/"_topol_atom_element_symbol",
-      /*52*/"_topol_link_site_symmetry_symop_1",
+      /*52*/"_topol_link_site_symmetry_symop_id_1",
       /*53*/"_topol_link_site_symmetry_translation_1_x",
       /*54*/"_topol_link_site_symmetry_translation_1_y",
       /*55*/"_topol_link_site_symmetry_translation_1_z",
-      /*56*/"_topol_link_site_symmetry_symop_2",
+      /*56*/"_topol_link_site_symmetry_symop_id_2",
       /*57*/"_topol_link_site_symmetry_translation_2_x",
       /*58*/"_topol_link_site_symmetry_translation_2_y",
       /*59*/"_topol_link_site_symmetry_translation_2_z",
@@ -206,12 +211,12 @@ public class TopoCifParser implements Parser {
   private final static byte topol_link_node_label_2 = 8;
   private final static byte topol_link_atom_label_1 = 9;
   private final static byte topol_link_atom_label_2 = 10;
-  private final static byte topol_link_symop_1 = 11;
+  private final static byte topol_link_symop_id_1 = 11;
   private final static byte topol_link_translation_1 = 12;
   private final static byte topol_link_translation_1_x = 13;
   private final static byte topol_link_translation_1_y = 14;
   private final static byte topol_link_translation_1_z = 15;
-  private final static byte topol_link_symop_2 = 16;
+  private final static byte topol_link_symop_id_2 = 16;
   private final static byte topol_link_translation_2 = 17;
   private final static byte topol_link_translation_2_x = 18;
   private final static byte topol_link_translation_2_y = 19;
@@ -225,7 +230,7 @@ public class TopoCifParser implements Parser {
   private final static byte topol_node_net_id = 27;
   private final static byte topol_node_label = 28;
   private final static byte topol_node_atom_label = 29;
-  private final static byte topol_node_symop = 30;
+  private final static byte topol_node_symop_id = 30;
   private final static byte topol_node_translation = 31;
   private final static byte topol_node_translation_x = 32;
   private final static byte topol_node_translation_y = 33;
@@ -238,7 +243,7 @@ public class TopoCifParser implements Parser {
   private final static byte topol_atom_atom_label = 40;
   private final static byte topol_atom_node_id = 41;
   private final static byte topol_atom_link_id = 42;
-  private final static byte topol_atom_symop = 43;
+  private final static byte topol_atom_symop_id = 43;
   private final static byte topol_atom_translation = 44;
   private final static byte topol_atom_translation_x = 45;
   private final static byte topol_atom_translation_y = 46;
@@ -247,6 +252,8 @@ public class TopoCifParser implements Parser {
   private final static byte topol_atom_fract_y = 49;
   private final static byte topol_atom_fract_z = 50;
   private final static byte topol_atom_element_symbol = 51;
+  
+  // legacy
   private final static byte topol_link_site_symmetry_symop_1 = 52;
   private final static byte topol_link_site_symmetry_translation_1_x = 53;
   private final static byte topol_link_site_symmetry_translation_1_y = 54;
@@ -275,10 +282,6 @@ public class TopoCifParser implements Parser {
     this.reader = reader;
     String net = reader.getFilter("TOPOLNET=");
     selectedNet = net;
-    if (net != null) {
-      selectedNetID = reader.parseIntStr(net);
-    }
-
     String types = reader.getFilter("TOPOS_TYPES=");
     if (types == null)
       types = reader.getFilter("TOPOS_TYPE=");
@@ -341,15 +344,15 @@ public class TopoCifParser implements Parser {
         //  legacy net.id was not an integer, now net.label
       } else {
         if (singleNet == null) {
-          nets.addLast(singleNet = new TNet(netCount++, n, "Net" + n, null));
+          nets.addLast(singleNet = new TNet(netCount++, "" +n, "Net" + n, null));
         } else {
-          singleNet.id = n;
+          singleNet.id = "" + n;
         }
         return;
       }
     } else if (key.equals(topolFields[topol_net_special_details])) {
       if (singleNet == null) {
-        nets.addLast(singleNet = new TNet(netCount++, 1, null, data));
+        nets.addLast(singleNet = new TNet(netCount++, "1", null, data));
       } else {
         singleNet.specialDetails = data;
       }
@@ -359,7 +362,7 @@ public class TopoCifParser implements Parser {
     }
     // net.label
     if (singleNet == null) {
-      nets.addLast(singleNet = new TNet(netCount++, 1, data, null));
+      nets.addLast(singleNet = new TNet(netCount++, "1", data, null));
     } else {
       singleNet.label = data;
     }
@@ -373,10 +376,10 @@ public class TopoCifParser implements Parser {
    */
   private void processNets() throws Exception {
     while (cifParser.getData()) {
-      int id = getInt(getDataValue(topol_net_id));
-      if (id < 0)
-        id = 0;
+      String id = getDataValue(topol_net_id);
       String netLabel = getDataValue(topol_net_label);
+      if (id == null)
+        id = "" + (netCount + 1);
       TNet net = getNetFor(id, netLabel, true);
       net.specialDetails = getDataValue(topol_net_special_details);
       net.line = reader.line;
@@ -400,22 +403,16 @@ public class TopoCifParser implements Parser {
         String field = reader.field;
         switch (p) {
         case topol_link_id:
-          link.id = getInt(field);
+          link.id = field;
           break;
         case topol_link_net_id:
-          int id = getInt(field);
-          if (id == Integer.MIN_VALUE) {
-            // original, legacy -- net.id value is "net1"
-            link.netLabel = field;
-          } else {
-            link.netID = getInt(field);
-          }
+          link.netID = field;
           break;
         case topol_link_node_id_1:
-          link.nodeIds[0] = getInt(field);
+          link.nodeIds[0] = field;
           break;
         case topol_link_node_id_2:
-          link.nodeIds[1] = getInt(field);
+          link.nodeIds[1] = field;
           break;
         case topol_link_atom_label_1:
         case topol_link_node_label_1: // legacy
@@ -426,11 +423,11 @@ public class TopoCifParser implements Parser {
           link.atomLabels[1] = field;
           break;
         case topol_link_site_symmetry_symop_1:
-        case topol_link_symop_1:
+        case topol_link_symop_id_1:
           link.symops[0] = getInt(field) - 1;
           break;
         case topol_link_site_symmetry_symop_2:
-        case topol_link_symop_2:
+        case topol_link_symop_id_2:
           link.symops[1] = getInt(field) - 1;
           break;
         case topol_link_order:
@@ -484,18 +481,18 @@ public class TopoCifParser implements Parser {
         String field = reader.field;
         switch (p) {
         case topol_node_id:
-          node.id = getInt(field);
+          node.id = field;
           break;
         case topol_node_label:
           node.label = field;
           break;
         case topol_node_net_id:
-          node.netID = getInt(field);
+          node.netID = field;
           break;
         case topol_node_atom_label:
           node.atomLabel = field;
           break;
-        case topol_node_symop:
+        case topol_node_symop_id:
           node.symop = getInt(field) - 1;
           break;
         case topol_node_translation:
@@ -533,18 +530,18 @@ public class TopoCifParser implements Parser {
         String field = reader.field;
         switch (p) {
         case topol_atom_id:
-          atom.id = getInt(field);
+          atom.id = field;
           break;
         case topol_atom_atom_label:
           atom.atomLabel = field;
           break;
         case topol_atom_node_id:
-          atom.nodeID = getInt(field);
+          atom.nodeID = field;
           break;
         case topol_atom_link_id:
-          atom.linkID = getInt(field);
+          atom.linkID = field;
           break;
-        case topol_atom_symop:
+        case topol_atom_symop_id:
           atom.symop = getInt(field) - 1;
           break;
         case topol_atom_translation:
@@ -651,7 +648,10 @@ public class TopoCifParser implements Parser {
   }
 
   private void selectNet() {
-    TNet net = getNetFor(selectedNetID, selectedNet, false);
+    TNet net = getNetFor(null, selectedNet, false);
+    if (net == null) {
+      net = getNetFor(selectedNet, null, false);
+    }
     if (net == null)
       return;
     BS bsAtoms = reader.asc.bsAtoms;
@@ -889,7 +889,7 @@ public class TopoCifParser implements Parser {
   private class TNet {
     @SuppressWarnings("unused")
     String line;
-    int id;
+    String id;
     int nLinks, nNodes;
     String label;
     String specialDetails;
@@ -898,7 +898,7 @@ public class TopoCifParser implements Parser {
     int idx;
     boolean hasAtoms;
 
-    TNet(int index, int id, String label, String specialDetails) {
+    TNet(int index, String id, String label, String specialDetails) {
       idx = index;
       this.id = id;
       this.label = label;
@@ -906,15 +906,17 @@ public class TopoCifParser implements Parser {
     }
 
     void finalizeNet() {
+      if (id == null)
+        id = "" + (idx + 1);
       if (selectedNet != null && !label.equalsIgnoreCase(selectedNet)
-          && id != selectedNetID)
+          && !id.equalsIgnoreCase(selectedNet))
         return;
       String netKey = "," + id + ",";
       if (netNotes.indexOf(netKey) < 0) {
         reader
             .appendLoadNote("Net " + label
                 + (specialDetails == null ? "" : " '" + specialDetails + "'")
-                + " created with " + nLinks + " links and " + nNodes
+                + " created from " + nLinks + " links and " + nNodes
                 + " nodes.\n" + "Use DISPLAY "
                 + (hasAtoms ? label
                     + "__* to display it without associated atoms\nUse DISPLAY "
@@ -928,10 +930,10 @@ public class TopoCifParser implements Parser {
 
     // from CIF data:
     @SuppressWarnings("unused")
-    int id;
+    String id;
     String atomLabel;
-    int nodeID;
-    int linkID;
+    String nodeID;
+    String linkID;
     int symop = 0;
     private P3 trans = new P3();
     String formula;
@@ -998,8 +1000,8 @@ public class TopoCifParser implements Parser {
 
       // check for addition to a TNode
       TNode node = null;
-      if (nodeID > 0) {
-        node = getNodeById(nodeID, -1, null);
+      if (nodeID != null) {
+        node = findNode(nodeID, -1, null);
         if (node != null) {
           node.addAtom(this);
         }
@@ -1007,7 +1009,7 @@ public class TopoCifParser implements Parser {
 
       // check for addition to a TLink
       TLink link = null;
-      if (linkID > 0) {
+      if (linkID != null) {
         link = getLinkById(linkID);
         if (link != null)
           link.addAtom(this);
@@ -1031,10 +1033,10 @@ public class TopoCifParser implements Parser {
       reader.addCifAtom(this, atomName, null, null);
     }
 
-    private TLink getLinkById(int linkID) {
+    private TLink getLinkById(String linkID) {
       for (int i = links.size(); --i >= 0;) {
         TLink l = links.get(i);
-        if (l.id == linkID)
+        if (l.id.equalsIgnoreCase(linkID))
           return l;
       }
       return null;
@@ -1092,10 +1094,10 @@ public class TopoCifParser implements Parser {
 
   private class TNode extends Atom implements TPoint {
 
-    public int id;
+    public String id;
     public String formula;
     public String atomLabel;
-    int netID;
+    String netID;
     String label;
     int symop = 0;
     P3 trans = new P3();
@@ -1163,9 +1165,6 @@ public class TopoCifParser implements Parser {
           atomName = null;
         }
       }
-      if (net == null)
-        net = getNetFor(netID, null, true);
-      netID = net.id;
       return true;
     }
 
@@ -1179,6 +1178,8 @@ public class TopoCifParser implements Parser {
       if (isFinalized)
         return;
       isFinalized = true;
+      if (net == null)
+        net = getNetFor(netID, null, true);
       boolean haveXYZ = !Float.isNaN(x);
       Atom a;
       if (tatoms == null) {
@@ -1295,13 +1296,13 @@ public class TopoCifParser implements Parser {
    */
   private class TLink extends Bond {
 
-    int id;
-    int[] nodeIds = new int[2];
+    String id;
+    String[] nodeIds = new String[2];
     String[] atomLabels = new String[2];
     int[] symops = new int[2];
     P3[] translations = new P3[2];
 
-    int netID;
+    String netID;
     String netLabel;
     String type = "";
     int multiplicity;
@@ -1332,7 +1333,7 @@ public class TopoCifParser implements Parser {
     boolean setLink(int[] t1, int[] t2, String line) {
       this.line = line;
       idx = linkCount++;
-      if (nodeIds[1] == 0)
+      if (nodeIds[1] == null)
         nodeIds[1] = nodeIds[0];
       typeBondOrder = getBondType(type, topoOrder);
       // only a relative lattice change is necessary here.
@@ -1355,12 +1356,18 @@ public class TopoCifParser implements Parser {
      * @throws Exception
      */
     void finalizeLink() throws Exception {
-      if (netID == 0 && netLabel == null)
-        netID = 1;
-      net = getNetFor(netID, netLabel, true);
+      if (netID == null && netLabel == null) {
+        if (nets.size() > 0)
+          net = nets.get(0);
+        else
+          net = getNetFor(null, null, true);
+      } else {
+        net = getNetFor(netID, netLabel, true);
+      }
+      net.nLinks++;
       if (selectedNet != null) {
         if (!selectedNet.equalsIgnoreCase(net.label)
-            && selectedNetID != net.id) {
+            && !selectedNet.equalsIgnoreCase(net.id)) {
           return;
         }
       }
@@ -1404,7 +1411,7 @@ public class TopoCifParser implements Parser {
      */
     private void finalizeLinkNode(int index) throws Exception {
 
-      int id = nodeIds[index];
+      String id = nodeIds[index];
       String atomLabel = atomLabels[index];
       int op = symops[index];
       P3 trans = translations[index];
@@ -1412,17 +1419,15 @@ public class TopoCifParser implements Parser {
       // first check is for a node based on id
       TNode node = getNodeWithSym(id, atomLabel, op, trans);
       TNode node0 = node;
-      if (node == null) {
-        node = getNodeWithSym(id, atomLabel, -1, null);
+      if (node == null && id != null) {
+        node = getNodeWithSym(id, null, -1, null);
       }
       // second check is for an atom_site atom with this label
       Atom atom = (node == null ? getAtomFromName(atomLabel) : null);
       // we now either have a node or an atom_site atom or we have a problem
       if (atom != null) {
-        setNet(null);
         node = new TNode(atomCount++, atom, net, op, trans);
       } else if (node != null) {
-        setNet(node);
         if (node0 == null)
           node = node.copy();
         node.linkSymop = op;
@@ -1446,14 +1451,11 @@ public class TopoCifParser implements Parser {
       }
     }
 
-    private void setNet(TNode node) {
-      if (net != null)
-        return;
-      net = (node == null ? getNetFor(netID, netLabel, true) : node.net);
-      net.nLinks++;
-      netLabel = net.label;
-      netID = net.id;
-    }
+//    private void setNet(TNode node) {
+//      if (net != null)
+//        return;
+//      net = (node == null ? getNetFor(netID, netLabel, true) : node.net);
+//    }
 
     /**
      * Find a node that already matches this id and symmetry
@@ -1466,10 +1468,10 @@ public class TopoCifParser implements Parser {
      *        the translation, ignored if op < 0
      * @return found node or null
      */
-    private TNode getNodeWithSym(int nodeID, String nodeLabel, int op,
+    private TNode getNodeWithSym(String nodeID, String nodeLabel, int op,
                                  P3 trans) {
-      if (nodeID > 0)
-        return getNodeById(nodeID, op, trans);
+      if (nodeID != null)
+        return findNode(nodeID, op, trans);
       for (int i = nodes.size(); --i >= 0;) {
         TNode n = nodes.get(i);
         if (n.label.equals(nodeLabel)
@@ -1482,18 +1484,18 @@ public class TopoCifParser implements Parser {
     Map<String, Object> getLinkInfo() {
       Hashtable<String, Object> info = new Hashtable<String, Object>();
       info.put("index", Integer.valueOf(idx + 1));
-      if (id > 0)
-        info.put("id", Integer.valueOf(id));
-      info.put("netID", Integer.valueOf(net.id));
+      if (id != null)
+        info.put("id", id);
+      info.put("netID", net.id);
       info.put("netLabel", net.label);
       if (atomLabels[0] != null)
         info.put("atomLabel1", atomLabels[0]);
       if (atomLabels[1] != null)
         info.put("atomLabel2", atomLabels[1]);
-      if (nodeIds[0] > 0)
-        info.put("nodeId1", Integer.valueOf(nodeIds[0]));
-      if (nodeIds[1] > 0)
-        info.put("nodeId2", Integer.valueOf(nodeIds[1]));
+      if (nodeIds[0] != null)
+        info.put("nodeId1", nodeIds[0]);
+      if (nodeIds[1] != null)
+        info.put("nodeId2", nodeIds[1]);
       info.put("distance", Float.valueOf(cartesianDistance));
       if (!Float.isNaN(distance))
         info.put("distance", Float.valueOf(distance));
@@ -1532,10 +1534,10 @@ public class TopoCifParser implements Parser {
    * @param id
    * @return net, never null
    */
-  public TNet getNetByID(int id) {
+  public TNet getNetByID(String id) {
     for (int i = nets.size(); --i >= 0;) {
       TNet n = nets.get(i);
-      if (n.id == id)
+      if (n.id.equalsIgnoreCase(id))
         return n;
     }
     TNet n = new TNet(netCount++, id, "Net" + id, null);
@@ -1566,9 +1568,9 @@ public class TopoCifParser implements Parser {
    *        true to create a new net
    * @return a net, or null if not forceNew and not found
    */
-  public TNet getNetFor(int id, String label, boolean forceNew) {
+  public TNet getNetFor(String id, String label, boolean forceNew) {
     TNet net = null;
-    if (id > 0) {
+    if (id != null) {
       net = getNetByID(id);
       if (net != null && label != null && forceNew)
         net.label = label;
@@ -1584,7 +1586,7 @@ public class TopoCifParser implements Parser {
     if (net == null) {
       if (!forceNew)
         return null;
-      net = getNetByID(id < 1 ? 1 : id);
+      net = getNetByID(id == null ? "1" : id);
     }
     if (net != null && label != null && forceNew)
       net.label = label;
@@ -1625,14 +1627,14 @@ public class TopoCifParser implements Parser {
    * Called from TLink and TAtom to find a node with the given symmetry.
    * 
    * @param nodeID
-   * @param op
-   * @param trans
+   * @param op match for linkSymop
+   * @param trans match for linkTrans
    * @return the node, or null if no such node was found
    */
-  public TNode getNodeById(int nodeID, int op, P3 trans) {
+  public TNode findNode(String nodeID, int op, P3 trans) {
     for (int i = nodes.size(); --i >= 0;) {
       TNode n = nodes.get(i);
-      if (n.id == nodeID
+      if (n.id.equals(nodeID)
           && (op < 0 || n.linkSymop == op && n.linkTrans.equals(trans)))
         return n;
     }

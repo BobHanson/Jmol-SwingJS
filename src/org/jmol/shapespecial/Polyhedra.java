@@ -518,6 +518,15 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       data[1] = p.getInfo(vwr, "info");
       return true;
     }
+    if (property == "syminfo") {
+      // note that this does not set data[1] to null -- see ScriptExpr
+      p = findPoly(id, iatom, true);
+      if (p == null)
+        return false;
+      p.getSymmetry(vwr, true);
+      data[1] = p.getInfo(vwr, "info");
+      return true;
+    }
     if (property == "points") {
       p = findPoly(id, iatom, false);
       if (p == null)
@@ -726,6 +735,8 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private void buildPolyhedra() {
     Polyhedron p = null;
+    if (centers == null)
+      return;
     if (thisID != null) {
       if (PT.isWild(thisID))
         return;

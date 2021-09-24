@@ -6403,7 +6403,7 @@ public class ScriptEval extends ScriptExpr {
       switch (tok) {
       case T.unitcell:
         if (!chk)
-          setCurrentCagePts(null, null);
+          setModelCagePts(-1, null, null);
         return;
       case T.orientation:
       case T.rotation:
@@ -8092,12 +8092,14 @@ public class ScriptEval extends ScriptExpr {
       vwr.undoMoveAction(tokAt(0), n);
   }
 
-  public void setCurrentCagePts(T3[] originABC, String name) {
+  public void setModelCagePts(int iModel, T3[] originABC, String name) {
+    if (iModel < 0)
+      iModel = vwr.am.cmi;
     SymmetryInterface sym = Interface.getSymmetry(vwr, "eval");
     if (sym == null && vwr.async)
       throw new NullPointerException();
     try {
-      vwr.ms.setModelCage(vwr.am.cmi,
+      vwr.ms.setModelCage(iModel,
           originABC == null ? null : sym.getUnitCell(originABC, false, name));
     } catch (Exception e) {
       //

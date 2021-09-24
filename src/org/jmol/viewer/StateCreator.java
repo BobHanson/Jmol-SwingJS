@@ -1115,7 +1115,7 @@ public class StateCreator extends JmolStateCreator {
       if (!vwr.ms.haveUnitCells)
         return "";
       String st = s = getFontLineShapeState((FontLineShape) shape);
-      int iAtom = vwr.am.cai;
+      int iAtom = vwr.am.getUnitCellAtomIndex();
       if (iAtom >= 0)
         s += "  unitcell ({" + iAtom + "});\n"; 
       SymmetryInterface uc = vwr.getCurrentUnitCell();

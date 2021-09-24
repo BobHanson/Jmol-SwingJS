@@ -116,6 +116,8 @@ public class AtomSetCollection {
 
   private Lst<AtomSetCollectionReader> readerList;
 
+  public boolean atomMapAnyCase;
+
   public AtomSetCollection(String fileTypeName, AtomSetCollectionReader reader,
       AtomSetCollection[] array, Lst<?> list) {
 
@@ -436,6 +438,7 @@ public class AtomSetCollection {
       atoms[i] = null;
     ac = 0;
     atomSymbolicMap.clear();
+    atomMapAnyCase = false;
     atomSetCount = 0;
     iSet = -1;
     for (int i = atomSetAuxiliaryInfo.length; --i >= 0;) {
@@ -560,8 +563,23 @@ public class AtomSetCollection {
     return atomSymbolicMap.get(atomName);
   }
 
+  public void setAtomMapAnyCase() {
+    atomMapAnyCase = true;
+    Map<String, Atom> newMap = new Hashtable<String, Atom>();
+    newMap.putAll(atomSymbolicMap);
+    for (Map.Entry<String, Atom> e : atomSymbolicMap.entrySet()) {
+      String name = e.getKey();
+      String uc = name.toUpperCase();
+      if (!uc.equals(name))
+        newMap.put(uc, e.getValue());      
+    }
+    atomSymbolicMap = newMap;
+  }
+
   public int getAtomIndex(String name) {
     Atom a = atomSymbolicMap.get(name);
+    if (a == null && atomMapAnyCase)
+      a = atomSymbolicMap.get(name.toUpperCase());
     return (a == null ? -1 : a.index);
   }
 
@@ -853,8 +871,10 @@ public class AtomSetCollection {
     } else {
       atomSetNumbers[iSet] = atomSetCount;
     }
-    if (doClearMap) // false for CASTEP reader only
+    if (doClearMap) { // false for CASTEP reader only
       atomSymbolicMap.clear();
+      atomMapAnyCase = false;
+    }
     setCurrentModelInfo("title", collectionName);
   }
 
@@ -1184,7 +1204,6 @@ public class AtomSetCollection {
     while (atomSetCount > 0 && atomSetAtomCounts[atomSetCount - 1] == 0)
       atomSetCount--;
   }
-
 
 
 }

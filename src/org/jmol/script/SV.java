@@ -1749,6 +1749,8 @@ public class SV extends T implements JSONEncodable {
   public static boolean isScalar(SV x) {
     switch (x.tok) {
     case varray:
+    case matrix3f:
+    case matrix4f:
       return false;
     case string:
       return (((String) x.value).indexOf("\n") < 0);

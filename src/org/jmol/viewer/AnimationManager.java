@@ -429,7 +429,16 @@ public class AnimationManager {
   private int lastFramePainted;
   private int lastModelPainted;
   private int intAnimThread;
-  public int cai = -1;
+  private int cai = -1;
+  
+  public int getUnitCellAtomIndex() {
+    return cai;
+  }
+  
+  public void setUnitCellAtomIndex(int iAtom) {
+    cai = iAtom;
+  }
+
 
   private void setViewer(boolean clearBackgroundModel) {
     vwr.ms.setTrajectory(cmi);
@@ -540,5 +549,6 @@ public class AnimationManager {
   private int getFrameStep(int direction) {
     return frameStep * direction * currentDirection;
   }
+
 
 }

@@ -382,13 +382,13 @@ public class Polyhedron {
         SmilesMatcherInterface sm = vwr.getSmilesMatcher();
         try {
           String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
+          polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
+              vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_GEN_POLYHEDRAL
+                  | (Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0), details);
           smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null,
               JC.SMILES_GEN_TOPOLOGY, null);
           smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
               vertices, JC.SMILES_TYPE_SMILES, null);
-          polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
-              vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_GEN_POLYHEDRAL
-                  | (Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0), details);
         } catch (Exception e) {
         }
       }

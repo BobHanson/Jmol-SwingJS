@@ -435,7 +435,7 @@ public class CifReader extends AtomSetCollectionReader {
     iHaveDesiredModel = isLastModel(modelNumber);
     if (isCourseGrained)
       asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
-    if (nAtoms0 == asc.ac) {
+    if (nAtoms0 > 0 && nAtoms0 == asc.ac) {
       // we found no atoms -- must revert
       modelNumber--;
       haveModel = false;
@@ -1510,7 +1510,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (isMMCIF && !processSubclassAtom(atom, componentId, strChain))
       return false;
     if (asc.iSet < 0)
-      nextAtomSet();
+      nextAtomSet();    
     asc.addAtomWithMappedName(atom);
     if (id != null) {
       asc.atomSymbolicMap.put(id, atom);
@@ -1757,26 +1757,22 @@ public class CifReader extends AtomSetCollectionReader {
       return;
     }
     int bondCount = 0;
-    String name1, name2 = null;
     while (cifParser.getData()) {
-      name2 = null;
-      if (asc.getAtomIndex(name1 = getField(GEOM_BOND_ATOM_SITE_LABEL_1)) < 0
-          || asc.getAtomIndex(name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2)) < 0) {
-        // COD has error here in CIF files
-        if (name2 == null && asc.getAtomIndex(name1 = name1.toUpperCase()) < 0
-            || asc.getAtomIndex(name2 = name2.toUpperCase()) < 0)
-          continue;
-      }
+      String name1 = getField(GEOM_BOND_ATOM_SITE_LABEL_1);
+      String name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2);
       int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
       String sdist = getField(GEOM_BOND_DISTANCE);
       float distance = parseFloatStr(sdist);
       if (distance == 0 || Float.isNaN(distance)) {
         if (!iHaveFractionalCoordinates) {
           // maybe this is a simple Cartesian file with coordinates and bonds
-          Atom a = asc.getAtomFromName(name1);
-          Atom b = asc.getAtomFromName(name2);
-          if (a != null && b != null)
-            asc.addNewBondWithOrder(a.index, b.index, order);
+          Atom a = getAtomFromNameCheckCase(name1);
+          Atom b = getAtomFromNameCheckCase(name2);
+          if (a == null || b == null) {
+            System.err.println("ATOM_SITE atom for name " + (a != null ? name2 : b != null ? name1 : name1 + " and " + name2) + " not found");
+              continue;
+          }
+          asc.addNewBondWithOrder(a.index, b.index, order);
         }
         continue;
       }
@@ -1824,6 +1820,28 @@ public class CifReader extends AtomSetCollectionReader {
   //  bonding and molecular 
   /////////////////////////////////////
 
+  /**
+   * From GEOM_BOND, check first for an exact match. If that is not found, add
+   * all-caps keys and try again with all upper case.
+   * 
+   * This should solve the problem of GEOM_BOND_* using the wrong case while
+   * still preserving functionality when H15a and H15A are both present (COD
+   * 7700953 https://www.crystallography.net/cod/7700953.html)
+   * 
+   * @param name
+   * @return atom
+   */
+  private Atom getAtomFromNameCheckCase(String name) {
+    Atom a = asc.getAtomFromName(name);
+    if (a == null) {
+      if (!asc.atomMapAnyCase) {
+        asc.setAtomMapAnyCase();
+      }
+      a = asc.getAtomFromName(name.toUpperCase());
+    }
+    return a;
+  }
+
   private float[] atomRadius;
   private BS[] bsConnected;
   private BS[] bsSets;
@@ -1859,6 +1877,8 @@ public class CifReader extends AtomSetCollectionReader {
     symmetry = asc.getSymmetry();
     for (int i = firstAtom; i < ac; i++) {
       int ipt = asc.getAtomFromName(atoms[i].atomName).index - firstAtom;
+      if (ipt < 0)
+        continue;
       if (bsSets[ipt] == null)
         bsSets[ipt] = new BS();
       bsSets[ipt].set(i - firstAtom);
@@ -1975,8 +1995,14 @@ public class CifReader extends AtomSetCollectionReader {
       float distance = ((Float) o[2]).floatValue();
       float dx = ((Float) o[3]).floatValue();
       int order = ((Integer) o[4]).intValue();
-      int iatom1 = asc.getAtomIndex((String) o[0]);
-      int iatom2 = asc.getAtomIndex((String) o[1]);
+      Atom a1 = getAtomFromNameCheckCase((String) o[0]);
+      Atom a2 = getAtomFromNameCheckCase((String) o[1]);
+      if (a1 == null || a2 == null) {
+        a2 = getAtomFromNameCheckCase((String) o[1]);
+        continue;
+      }
+      int iatom1 = a1.index;
+      int iatom2 = a2.index;
       if (doInit) {
         String key = ";" + iatom1 + ";" +  iatom2 + ";" + distance;
         if (list.indexOf(key) >= 0) {

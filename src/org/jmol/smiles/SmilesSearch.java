@@ -79,6 +79,7 @@ public class SmilesSearch extends JmolMolecule {
   boolean aromaticUnknown;
   boolean noAromatic;
   boolean ignoreAtomClass;
+  boolean ignoreElement;
   boolean ignoreStereochemistry;
   boolean invertStereochemistry;
   boolean exitFirstMatch;  
@@ -157,6 +158,8 @@ public class SmilesSearch extends JmolMolecule {
    * indicates that we have [XxPHn] with no connected atoms
    */
   public SmilesStereo polyhedronStereo;
+
+  SmilesAtom polyAtom;
 
   static final int addFlags(int flags, String strFlags) {
     if (strFlags.indexOf("OPEN") >= 0)
@@ -248,7 +251,7 @@ public class SmilesSearch extends JmolMolecule {
     
     aromaticDefined = ((flags & JC.SMILES_AROMATIC_DEFINED) == JC.SMILES_AROMATIC_DEFINED); 
 
-    noAromatic = ((flags & JC.SMILES_NO_AROMATIC) == JC.SMILES_NO_AROMATIC);
+    noAromatic |= ((flags & JC.SMILES_NO_AROMATIC) == JC.SMILES_NO_AROMATIC);
 
     aromaticUnknown = !noAromatic 
         && !aromaticOpen 
@@ -265,6 +268,8 @@ public class SmilesSearch extends JmolMolecule {
     ignoreStereochemistry = ((flags & JC.SMILES_IGNORE_STEREOCHEMISTRY) == JC.SMILES_IGNORE_STEREOCHEMISTRY);
 
     invertStereochemistry = !ignoreStereochemistry && ((flags & JC.SMILES_INVERT_STEREOCHEMISTRY) == JC.SMILES_INVERT_STEREOCHEMISTRY);
+    
+    ignoreElement = ((flags & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
   }
 
   /*
@@ -383,9 +388,9 @@ public class SmilesSearch extends JmolMolecule {
   void setRingData(BS bsA, Lst<BS>[] vRings, boolean doProcessAromatic) throws InvalidSmilesException {
     if (isTopology || patternBioSequence)
       needAromatic = false;
+    needAromatic &= (bsA == null) & !noAromatic;
     if (needAromatic)
       needRingData = true;
-    needAromatic &= (bsA == null) & !noAromatic;
     // when using "xxx".find("search","....")
     // or $(...), the aromatic set has already been determined
     if (!needAromatic) {
@@ -678,6 +683,8 @@ public class SmilesSearch extends JmolMolecule {
             ii = a.getOffsetResidueAtom("\0", -1);
             if (ii >= 0)
               bs.set(ii);
+          } else if (pa == polyAtom){
+            bs.set(pa.getMatchingAtomIndex());
           } else {
             // clear out all atoms connected to the last atom only
             jmolBonds = a.getEdges();
@@ -804,8 +811,17 @@ public class SmilesSearch extends JmolMolecule {
 
     // check stereochemistry
 
-    if (!ignoreStereochemistry && !isRingCheck && !checkStereochemistry())
-      return true;
+    if (!ignoreStereochemistry && !isRingCheck) {
+      if (Logger.debuggingHigh) {
+        for (int i = 0; i < atomNum; i++)
+          Logger.debug("pattern atoms " + patternAtoms[i] + " "
+              + patternAtoms[i].matchingComponent);
+        Logger.debug("--ss-- " + bsFound.cardinality());
+      }
+      
+      if(!checkStereochemistry())
+        return true;
+    }
 
     // set up the return BitSet and Vector, if requested
 
@@ -1011,13 +1027,8 @@ public class SmilesSearch extends JmolMolecule {
     // The atom has passed both the atom and the bond test.
     // Add this atom to the growing list.
 
-    if (Logger.debuggingHigh && !isRingCheck) {//&& !isSilent) {
-      for (int i = 0; i <= atomNum; i++)
-        Logger.debug("pattern atoms " + patternAtoms[i] + " "
-            + patternAtoms[i].matchingComponent);
-      Logger.debug("--ss--");
-    }
     bsFound.set(iAtom);
+
     if (!nextPatternAtom(atomNum, iAtom, firstAtomOnly, c))
       return false;
     if (iAtom >= 0)
@@ -1071,7 +1082,7 @@ public class SmilesSearch extends JmolMolecule {
       // #<n> or Symbol Check atomic number
       // look out for atomElemNo == -2 --> "*" in target SMILES
       int n = patternAtom.elementNumber;
-      if (na >= 0 && n >= 0 && n != na)
+      if (na >= 0 && n >= 0 && n != na && !ignoreElement)
         break;
 
       if (patternAtom.isBioResidue) {
@@ -1902,9 +1913,11 @@ public class SmilesSearch extends JmolMolecule {
    * @param flags
    * @throws InvalidSmilesException
    */
-  static void normalizeAromaticity(SmilesAtom[] atoms, BS bsAromatic, int flags)
+  void normalizeAromaticity(BS bsAromatic)
       throws InvalidSmilesException {
+    SmilesAtom[] atoms = this.patternAtoms;
     SmilesSearch ss = new SmilesSearch();
+    ss.noAromatic = noAromatic;
     ss.setFlags(flags);
     ss.targetAtoms = atoms;
     ss.targetAtomCount = atoms.length;

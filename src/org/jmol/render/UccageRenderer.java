@@ -167,38 +167,39 @@ public class UccageRenderer extends CageRenderer {
   }
   
   private void renderInfo() {
-    if (isExport 
-        || !vwr.getBoolean(T.displaycellparameters) 
-        || unitcell.isSimple() 
-        || vwr.isPreviewOnly
-        || !vwr.gdata.setC(vwr.cm.colixBackgroundContrast)
+    boolean showDetails = vwr.getBoolean(T.showunitcelldetails);
+    if (isExport || !vwr.getBoolean(T.displaycellparameters)
+        || vwr.isPreviewOnly || !vwr.gdata.setC(vwr.cm.colixBackgroundContrast)
         || vwr.gdata.getTextPosition() != 0) // molecularOrbital has displayed
       return;
-    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 14 * imageFontScaling));
+    vwr.gdata.setFontFid(
+        vwr.gdata.getFontFidFS("Monospaced", 14 * imageFontScaling));
     xpos = (int) Math.floor(10 * imageFontScaling);
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
-    String sgName = (isPolymer ? "polymer" : isSlab ? "slab" : unitcell
-        .getSpaceGroupName());
-    if (sgName != null) {
-      if (sgName.startsWith("cell=!"))
-        sgName = "cell=inverse[" + sgName.substring(6) + "]";
-      sgName = PT.rep(sgName, ";0,0,0", "");
-      if (sgName.indexOf("#") < 0) {
-        String intTab = unitcell.getIntTableNumber();
-        if (intTab != null)
-          sgName += " #" + intTab;
+    if (!unitcell.isSimple()) {
+      String sgName = (isPolymer ? "polymer"
+          : isSlab ? "slab" : unitcell.getSpaceGroupName());
+      if (sgName != null) {
+        if (sgName.startsWith("cell=!"))
+          sgName = "cell=inverse[" + sgName.substring(6) + "]";
+        sgName = PT.rep(sgName, ";0,0,0", "");
+        if (sgName.indexOf("#") < 0) {
+          String intTab = unitcell.getIntTableNumber();
+          if (intTab != null)
+            sgName += " #" + intTab;
+        }
+        if (!sgName.equals("-- [--]")) {
+          drawInfo(sgName, 0, null);
+        }
       }
-      if (!sgName.equals("-- [--]")) {
-        drawInfo(sgName, 0, null);
-      }
+      Lst<String> info = unitcell.getMoreInfo();
+      if (info != null)
+        for (int i = 0; i < info.size(); i++)
+          drawInfo(info.get(i), 0, null);
+      if (!showDetails)
+        return;
     }
-    Lst<String> info = unitcell.getMoreInfo();
-    if (info != null)
-      for (int i = 0; i < info.size(); i++)
-        drawInfo(info.get(i), 0, null);
-    if (!vwr.getBoolean(T.showunitcelldetails))
-      return;
     drawInfo("a=", SimpleUnitCell.INFO_A, "\u00C5");
     if (!isPolymer)
       drawInfo("b=", SimpleUnitCell.INFO_B, "\u00C5");

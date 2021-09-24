@@ -3698,15 +3698,43 @@ public class Viewer extends JmolViewer
    * c. The string can be preceded by ! for "reverse of". For example,
    * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, but it still needs a
    * semicolon: "a/2,b/2,c;"
+   * @param iModel 
    * 
    * @param def
    *        a string or an M3 or M4
    * @return vectors [origin a b c]
    */
-  public T3[] getV0abc(Object def) {
-    SymmetryInterface uc = getCurrentUnitCell();
+  public T3[] getV0abc(int iModel, Object def) {
+    SymmetryInterface uc = (iModel < 0 ? getCurrentUnitCell() : getUnitCell(iModel));
     return (uc == null ? null : uc.getV0abc(def));
   }
+
+  public SymmetryInterface getCurrentUnitCell() {
+      int iAtom = am.getUnitCellAtomIndex(); 
+      if (iAtom >= 0)
+        return ms.getUnitCellForAtom(iAtom);
+      return getUnitCell(am.cmi);
+    }
+
+    private SymmetryInterface getUnitCell(int m) {
+      if (m >= 0)
+        return ms.getUnitCell(m);
+      BS models = getVisibleFramesBitSet();
+      SymmetryInterface ucLast = null;
+      for (int i = models.nextSetBit(0); i >= 0; i = models.nextSetBit(i + 1)) {
+        SymmetryInterface uc = ms.getUnitCell(i);
+        if (uc == null)
+          continue;
+        if (ucLast == null) {
+          ucLast = uc;
+          continue;
+        }
+        if (!ucLast.unitCellEquals(uc))
+          return null;
+      }
+      return ucLast;
+    }
+
 
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList) {
     ms.getPolymerPointsAndVectors(bs, vList, g.traceAlpha, g.sheetSmoothing);
@@ -4148,28 +4176,6 @@ public class Viewer extends JmolViewer
     // bsTo null --> use DSSP method further developed 
     // here to give the "defining" Hbond set only
     return ms.autoHbond(bsFrom, bsTo, onlyIfHaveCalculated);
-  }
-
-  public SymmetryInterface getCurrentUnitCell() {
-    if (am.cai >= 0)
-      return ms.getUnitCellForAtom(am.cai);
-    int m = am.cmi;
-    if (m >= 0)
-      return ms.getUnitCell(m);
-    BS models = getVisibleFramesBitSet();
-    SymmetryInterface ucLast = null;
-    for (int i = models.nextSetBit(0); i >= 0; i = models.nextSetBit(i + 1)) {
-      SymmetryInterface uc = ms.getUnitCell(i);
-      if (uc == null)
-        continue;
-      if (ucLast == null) {
-        ucLast = uc;
-        continue;
-      }
-      if (!ucLast.unitCellEquals(uc))
-        return null;
-    }
-    return ucLast;
   }
 
   /*

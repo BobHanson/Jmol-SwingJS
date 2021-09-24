@@ -537,4 +537,7 @@ public class SimpleUnitCell {
   }
 
 
+  public String toString() {
+    return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]";
+  }
 }

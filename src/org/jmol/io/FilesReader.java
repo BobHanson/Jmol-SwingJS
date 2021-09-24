@@ -89,19 +89,19 @@ public class FilesReader implements JmolFilesReaderInterface {
     if (dataReaders != null)
       return (forceBinary ? null : dataReaders[i].getBufferedReader()); // no binary strings
     String name = fullPathNamesIn[i];
-    String[] subFileList = null;
-    htParams.remove("subFileList");
-    if (name.indexOf("|") >= 0 && !htParams.containsKey("isStateScript")) {
-      subFileList = PT.split(name, "|");
-      name = subFileList[0];
-    }
+//    String[] subFileList = null;
+//    htParams.remove("subFileList");
+//    if (name.indexOf("|") >= 0 && !htParams.containsKey("isStateScript")) {
+//      subFileList = PT.split(name, "|");
+//      name = subFileList[0];
+//    }
     if (name.contains("#_DOCACHE_"))
       return FileReader.getChangeableReader(vwr, namesAsGivenIn[i], name);
-    Object t = fm.getUnzippedReaderOrStreamFromName(name, null, true,
+    Object t = fm.getUnzippedReaderOrStreamFromName(name, null, false,
         forceBinary, false, true, htParams);
     if (t instanceof BufferedInputStream && Rdr.isZipS((BufferedInputStream) t)) {
-      if (subFileList != null)
-        htParams.put("subFileList", subFileList);
+//      if (subFileList != null)
+//        htParams.put("subFileList", subFileList);
       String[] zipDirectory = fm.getZipDirectory(name, true, true);
       t = fm.getBufferedInputStreamOrErrorMessageFromName(name,
           fullPathNamesIn[i], false, false, null, false, true);

@@ -29,13 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import javajs.api.GenericBinaryDocument;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.Rdr;
-import javajs.util.V3;
-
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
@@ -44,6 +37,13 @@ import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.Rdr;
+import javajs.util.V3;
 
 public class SmarterJmolAdapter extends JmolAdapter {
   
@@ -244,7 +244,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
         htParams.put("vwr", vwr);
         if (reader == null)
           reader = filesReader.getBufferedReaderOrBinaryDocument(i, false);
-        if (!(reader instanceof BufferedReader || reader instanceof GenericBinaryDocument))
+        if (!(reader instanceof BufferedReader 
+            || reader instanceof GenericBinaryDocument))
           return reader;
         String fullPathName = names[i];
         htParams.put("fullPathName", fullPathName);

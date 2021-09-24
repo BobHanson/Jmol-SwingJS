@@ -30,6 +30,8 @@ import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
 
+import java.util.Map;
+
 import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
 import javajs.util.BS;
@@ -40,17 +42,15 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 
 public class SmilesExt {
-  
+
   private ScriptEval e;
-  private SmilesMatcherInterface sm;
-  
+
   public SmilesExt() {
     // used by Reflection
   }
 
   public SmilesExt init(Object se) {
     e = (ScriptEval) se;
-    sm = e.vwr.getSmilesMatcher();
     return this;
   }
 
@@ -75,14 +75,13 @@ public class SmilesExt {
    * @return standard deviation
    * @throws ScriptException
    */
-  public float getSmilesCorrelation(BS bsA, BS bsB, String smiles,
-                                    Lst<P3> ptsA, Lst<P3> ptsB, M4 m4,
-                                    Lst<BS> vReturn, 
+  public float getSmilesCorrelation(BS bsA, BS bsB, String smiles, Lst<P3> ptsA,
+                                    Lst<P3> ptsB, M4 m4, Lst<BS> vReturn,
                                     boolean asMap, int[][] mapSet, P3 center,
                                     boolean bestMap, int flags)
       throws ScriptException {
 
-//   middle two: boolean isSmarts,boolean firstMatchOnly, 
+    //   middle two: boolean isSmarts,boolean firstMatchOnly, 
     float tolerance = (mapSet == null ? 0.1f : Float.MAX_VALUE);
     try {
       if (ptsA == null) {
@@ -94,6 +93,7 @@ public class SmilesExt {
 
       Atom[] atoms = e.vwr.ms.at;
       int ac = e.vwr.ms.ac;
+      SmilesMatcherInterface sm = e.vwr.getSmilesMatcher();
       int[][] maps = sm.getCorrelationMaps(smiles, atoms, ac, bsA,
           flags | JC.SMILES_FIRST_MATCH_ONLY);
       if (maps == null)
@@ -117,7 +117,8 @@ public class SmilesExt {
           for (int j = 0; j < maps[i].length; j++)
             ptsB.addLast(atoms[maps[i][j]]);
           Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
-          float stddev = (ptsB.size() == 1 ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m, null));
+          float stddev = (ptsB.size() == 1 ? 0
+              : Measure.getTransformMatrix4(ptsA, ptsB, m, null));
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {
             if (stddev < tolerance) {
@@ -169,24 +170,23 @@ public class SmilesExt {
    */
   public Object getSmilesMatches(String pattern, String smiles, BS bsSelected,
                                  BS bsMatch3D, int flags, boolean asOneBitset,
-                                 boolean firstMatchOnly) throws ScriptException {
+                                 boolean firstMatchOnly)
+      throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
-    if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H") || pattern.equals("H2")
-        || pattern.equals("top") || pattern.equalsIgnoreCase("NOAROMATIC")) {
+    if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H")
+        || pattern.equals("H2") || pattern.equals("top")
+        || pattern.equalsIgnoreCase("NOAROMATIC")) {
       try {
 
-        return e.vwr
-            .getSmilesOpt(
-                bsSelected,
-                0,
-                0,
-                flags
-                    | (pattern.equals("H2") ? JC.SMILES_GEN_EXPLICIT_H2_ONLY : 0)
-                    | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0)
-                    | (pattern.equals("top") ? JC.SMILES_GEN_TOPOLOGY : 0)
-                    | (pattern.equalsIgnoreCase("NOAROMATIC") ? JC.SMILES_NO_AROMATIC
-                        : 0), (pattern.endsWith("///") ? pattern : null));
+        return e.vwr.getSmilesOpt(bsSelected, 0, 0,
+            flags | (pattern.equals("H2") ? JC.SMILES_GEN_EXPLICIT_H2_ONLY : 0)
+                | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0)
+                | (pattern.equals("top") ? JC.SMILES_GEN_TOPOLOGY : 0)
+                | (pattern.equalsIgnoreCase("NOAROMATIC")
+                    ? JC.SMILES_NO_AROMATIC
+                    : 0),
+            (pattern.endsWith("///") ? pattern : null));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
@@ -195,19 +195,23 @@ public class SmilesExt {
     if (bsMatch3D == null) {
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
       // not for string.find(string....)
-      boolean isSmarts = ((flags & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
-      boolean isOK = true;
       try {
         if (smiles == null) {
           b = e.vwr.getSubstructureSetArray(pattern, bsSelected, flags);
-        } else if (pattern.equals("chirality")){
+        } else if (pattern.equals("chirality")) {
           return e.vwr.calculateChiralityForSmiles(smiles);
         } else {
-          int[][] map = sm.find(pattern, smiles, (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES) 
-              | (firstMatchOnly ?  JC.SMILES_FIRST_MATCH_ONLY : 0));
+          boolean isSmarts = ((flags
+              & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
+          boolean ignoreElements = ((flags
+              & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
+          int[][] map = e.vwr.getSmilesMatcher().find(pattern, smiles,
+              (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES)
+                  | (firstMatchOnly ? JC.SMILES_FIRST_MATCH_ONLY : 0)
+                  | (ignoreElements ? JC.SMILES_GEN_TOPOLOGY : 0));
           if (!asOneBitset)
-            return (!firstMatchOnly ? map : map.length == 0 ? new int[0]
-                : map[0]);
+            return (!firstMatchOnly ? map
+                : map.length == 0 ? new int[0] : map[0]);
           BS bs = new BS();
           for (int j = 0; j < map.length; j++) {
             int[] a = map[j];
@@ -253,15 +257,17 @@ public class SmilesExt {
   }
 
   public float[] getFlexFitList(BS bs1, BS bs2, String smiles1,
-                                 boolean isSmarts) throws ScriptException {
+                                boolean isSmarts)
+      throws ScriptException {
     int[][] mapSet = AU.newInt2(2);
-    getSmilesCorrelation(bs1, bs2, smiles1, null, null, null, null,
-        false, mapSet, null, false, isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
+    getSmilesCorrelation(bs1, bs2, smiles1, null, null, null, null, false,
+        mapSet, null, false,
+        isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
     if (mapSet[0] == null)
       return null;
     int[][] bondMap1 = e.vwr.ms.getDihedralMap(mapSet[0]);
-    int[][] bondMap2 = (bondMap1 == null ? null : e.vwr
-        .ms.getDihedralMap(mapSet[1]));
+    int[][] bondMap2 = (bondMap1 == null ? null
+        : e.vwr.ms.getDihedralMap(mapSet[1]));
     if (bondMap2 == null || bondMap2.length != bondMap1.length)
       return null;
     float[][] angles = new float[bondMap1.length][3];
@@ -281,8 +287,8 @@ public class SmilesExt {
     return data;
   }
 
-  private static void getTorsions(Atom[] atoms, int[][] bondMap,
-                                  float[][] diff, int pt) {
+  private static void getTorsions(Atom[] atoms, int[][] bondMap, float[][] diff,
+                                  int pt) {
     for (int i = bondMap.length; --i >= 0;) {
       int[] map = bondMap[i];
       float v = Measure.computeTorsion(atoms[map[0]], atoms[map[1]],
@@ -295,6 +301,42 @@ public class SmilesExt {
       }
       diff[i][pt] = v;
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public float mapPolyhedra(int i1, int i2, boolean isSmiles, M4 m)
+      throws ScriptException {
+    Lst<P3> ptsA = new Lst<P3>();
+    Lst<P3> ptsB = new Lst<P3>();
+    Object[] data;
+    data = new Object[] { Integer.valueOf(i1), null };
+    e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "syminfo", data);
+    Map<String, Object> p1 = (Map<String, Object>) data[1];
+    data[0] = Integer.valueOf(i2);
+    data[1] = null;
+    e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "syminfo", data);
+    Map<String, Object> p2 = (Map<String, Object>) data[1];
+    if (p1 == null || p2 == null)
+      return Float.NaN;
+    String smiles1 = (String) p1.get("polySmiles");
+    String smiles2 = (String) p2.get("polySmiles");
+    int[] map = (int[]) getSmilesMatches(smiles2, smiles1, null, null,
+        isSmiles ? JC.SMILES_TYPE_SMILES
+            : JC.SMILES_GEN_TOPOLOGY | JC.SMILES_TYPE_SMILES,
+        false, true);
+    if (map.length == 0)
+      return Float.NaN;
+    // map new list
+    ptsA.addLast((P3) p1.get("center"));
+    P3[] a = (P3[]) p1.get("vertices");
+    for (int i = 0, n = a.length; i < n; i++)
+      ptsA.add(a[map[i + 1] - 1]);
+    ptsB.addLast((P3) p2.get("center"));
+    a = (P3[]) p2.get("vertices");
+    for (int i = 0, n = a.length; i < n; i++)
+      ptsB.add(a[i]);
+    Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
+    return Measure.getTransformMatrix4(ptsA, ptsB, m, null);
   }
 
 }

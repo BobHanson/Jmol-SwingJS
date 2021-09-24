@@ -24,13 +24,7 @@
 
 package org.jmol.smiles;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-
 import org.jmol.api.SmilesMatcherInterface;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -39,6 +33,12 @@ import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
 
 /**
  * Originating author: Nicholas Vervelle
@@ -401,6 +401,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       } else {
         atoms[i].elementNumber = (pt instanceof Point3fi ? ((Point3fi) pt).sD
             : -2);
+        if (pt != null)
+          atoms[i].setT(pt);
       }
       atoms[i].index = i;
     }
@@ -462,19 +464,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         flags, MODE_MAP, null);
   }
 
-
-  /**
-   * @deprecated Use {@link #matchPriv(String,Node[],int,BS,BS,boolean,int,int,SmilesSearch)} instead
-   */
-  @SuppressWarnings({ "unchecked" })
-  private Object matchPriv(String pattern, Node[] atoms, int ac, BS bsSelected,
-                           BS bsAromatic, boolean doTestAromatic, int flags,
-                           int mode) throws Exception {
-                            return matchPriv(pattern, atoms, ac, bsSelected,
-                                bsAromatic, doTestAromatic, flags, mode,
-                                null);
-                          }
-
   @SuppressWarnings({ "unchecked" })
   private Object matchPriv(String pattern, Node[] atoms, int ac, BS bsSelected,
                            BS bsAromatic, boolean doTestAromatic, int flags,
@@ -486,6 +475,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       // Note that additional flags are set when the pattern is parsed.
       SmilesSearch search = SmilesParser.newSearch(pattern, isSmarts, false);
+      boolean isTopo = ((flags
+          & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
 
       if (searchTarget != null) {
         search.haveTopo = true;
@@ -496,7 +487,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         ac = searchTarget.targetAtoms.length;
         String mfTarget = searchTarget.getMolecularFormulaImpl(true, null,
             false, false);
-        String mf = search.getMolecularFormulaImpl(true, null, false, false);
+        String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false, false));
         if (isSmarts) {
           int[] a1 = searchTarget.elementCounts;
           int[] a2 = search.elementCounts;
@@ -508,7 +499,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
             }
           }
         } else {
-          okMF = mf.equals(mfTarget);
+          okMF = (mf == null || mf.equals(mfTarget));
         }
         searchTarget.mf = search.mf = null;
       }
@@ -516,8 +507,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         if (!isSmarts && !search.patternAromatic) {
           if (bsAromatic == null)
             bsAromatic = new BS();
-          SmilesSearch.normalizeAromaticity(search.patternAtoms, bsAromatic,
-              search.flags);
+          search.normalizeAromaticity(bsAromatic);
           search.isNormalized = true;
         }
         search.targetAtoms = atoms;
@@ -541,7 +531,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         return (okMF ? search.search() : new BS());
       case MODE_ARRAY:
         if (!okMF)
-          return new Lst<BS>();
+          return new BS[0];//Lst<BS>();
         search.asVector = true;
         Lst<BS> vb = (Lst<BS>) search.search();
         return vb.toArray(new BS[vb.size()]);

@@ -622,7 +622,7 @@ public class SmilesGenerator {
     Edge[] bonds = (Edge[]) atom.getEdges();
     if (polySmilesCenter != null) {
       allowBranches = false;
-      sortBonds(atom, prevAtom, polySmilesCenter);
+      sortPolyBonds(atom, prevAtom, polySmilesCenter);
     }
     SimpleNode aH = null;
     int stereoFlag = (isAromatic ? 10 : 0);
@@ -1000,14 +1000,14 @@ public class SmilesGenerator {
     return false;
   }
 
-  void sortBonds(SimpleNode atom, SimpleNode refAtom, P3 center) {
+  void sortPolyBonds(SimpleNode atom, SimpleNode refAtom, P3 center) {
     if (smilesStereo == null)
       try {
         smilesStereo = SmilesStereo.newStereo(null);
       } catch (InvalidSmilesException e) {
         // not possible
       }
-    smilesStereo.sortBondsByStereo(atom, refAtom, center, atom.getEdges(), vTemp.vA);
+    smilesStereo.sortPolyBondsByStereo(atom, refAtom, center, atom.getEdges(), vTemp.vA);
   }
 
   /**
