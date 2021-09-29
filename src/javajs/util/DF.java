@@ -136,8 +136,7 @@ public class DF {
     int len = s1.length();
     int pt2 = decimalDigits + pt + 1;
     if (pt2 < len && s1.charAt(pt2) >= '5') {
-      return formatDecimal(
-          value + (isNeg ? -1 : 1) * formatAdds[decimalDigits], decimalDigits);
+      return formatDecimal((isNeg ? -1 : 1) * (value + formatAdds[decimalDigits]), decimalDigits);
     }
   
     String s0 = s1.substring(0, (decimalDigits == 0 ? pt
