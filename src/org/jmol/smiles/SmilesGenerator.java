@@ -70,7 +70,7 @@ public class SmilesGenerator {
    * 0x1000 CH2 explicit
    * 0x2000 CH2 and CH3 explicit
    */
-  private int explicitH;
+  private int explicitHydrogen;
   
   private Lst<BS> ringSets;
 
@@ -80,7 +80,7 @@ public class SmilesGenerator {
   private int nPairs, nPairsMax;
   private BS bsBondsUp = new BS();
   private BS bsBondsDn = new BS();
-  private BS bsToDo, bsIgnoreH = new BS();
+  private BS bsToDo, bsIgnoreHydrogen = new BS();
   private SimpleNode prevAtom;
   private SimpleNode[] prevSp2Atoms;
   private SimpleNode[] alleneStereo;
@@ -134,7 +134,7 @@ public class SmilesGenerator {
     aromaticDouble = ((flags
         & JC.SMILES_AROMATIC_DOUBLE) == JC.SMILES_AROMATIC_DOUBLE);
 
-    explicitH = ((flags
+    explicitHydrogen = ((flags
         & JC.SMILES_GEN_EXPLICIT_H2_ONLY) == JC.SMILES_GEN_EXPLICIT_H2_ONLY
             ? JC.SMILES_GEN_EXPLICIT_H2_ONLY
             : (flags
@@ -142,7 +142,7 @@ public class SmilesGenerator {
                     ? JC.SMILES_GEN_EXPLICIT_H_ALL
                     : 0);
 
-    if (explicitH == JC.SMILES_GEN_EXPLICIT_H2_ONLY) {
+    if (explicitHydrogen == JC.SMILES_GEN_EXPLICIT_H2_ONLY) {
       BS bsHa = new BS();
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1)) {
@@ -160,7 +160,7 @@ public class SmilesGenerator {
                 break;
             }
             if (doIgnore) {
-              bsIgnoreH.set(i);
+              bsIgnoreHydrogen.set(i);
               bsSelected.andNot(bsHa);
             }
           }
@@ -340,7 +340,7 @@ public class SmilesGenerator {
                                     boolean forceBrackets)
       throws InvalidSmilesException {
 
-    if (explicitH == 0 && atom.getAtomicAndIsotopeNumber() == 1
+    if (explicitHydrogen == 0 && atom.getAtomicAndIsotopeNumber() == 1
         && atom.getEdges().length > 0)
       atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
     
@@ -353,7 +353,7 @@ public class SmilesGenerator {
       if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral)
         iHypervalent = i;
     bsIncludingH = BSUtil.copy(bsSelected);
-    if (explicitH == 0)
+    if (explicitHydrogen == 0)
       for (int j = bsSelected.nextSetBit(0); j >= 0; j = bsSelected
           .nextSetBit(j + 1)) {
         Node a = atoms[j];
@@ -516,7 +516,7 @@ public class SmilesGenerator {
           Edge[] bb = ((Node) atomA).getEdges();
           for (int b = 0; b < bb.length; b++) {
             SimpleNode other;
-            if (bb[b].getCovalentOrder() != 1 || explicitH == 0 && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
+            if (bb[b].getCovalentOrder() != 1 || explicitHydrogen == 0 && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
                 && other.getIsotopeNumber() == 0)
               continue;
             edges[j][edgeCount++] = bb[b];
@@ -605,7 +605,7 @@ public class SmilesGenerator {
       return null;
     ptAtom++;
     bsToDo.clear(atomIndex);
-    boolean includeHs = (atomIndex == iHypervalent || explicitH != 0 && !bsIgnoreH.get(atomIndex));
+    boolean includeHs = (atomIndex == iHypervalent || explicitHydrogen != 0 && !bsIgnoreHydrogen.get(atomIndex));
     boolean isExtension = (!bsSelected.get(atomIndex));
     int prevIndex = (prevAtom == null ? -1 : prevAtom.getIndex());
     boolean isAromatic = bsAromatic.get(atomIndex);
@@ -1119,7 +1119,7 @@ public class SmilesGenerator {
                                   SimpleNode[] stereo, int stereoFlag, boolean isFirst) {
     if (stereoFlag == 10 || stereoFlag < (is2D ? 3 : 4))
       return "";
-    if (explicitH == 0 && atomIndex >= 0 && stereoFlag == 4
+    if (explicitHydrogen == 0 && atomIndex >= 0 && stereoFlag == 4
         && (atom.getElementNumber()) == 6) {
       // do a quick check for two of the same group for tetrahedral carbon only
       String s = "";
@@ -1188,7 +1188,7 @@ public class SmilesGenerator {
     //System.out.println("level=" + level + " atomIndex=" + atomIndex + " atom=" + atom + " s=" + s);
     int n = ((Node)atom).getAtomicAndIsotopeNumber();
     int nx = atom.getCovalentBondCount();
-    int nh = (n == 6 && explicitH != 0 ? ((Node) atom).getCovalentHydrogenCount() : 0);
+    int nh = (n == 6 && explicitHydrogen != 0 ? ((Node) atom).getCovalentHydrogenCount() : 0);
     // only carbon or singly-connected atoms are checked
     // for C we use nh -- CH3, for example.
     // for other atoms, we use number of bonds.
