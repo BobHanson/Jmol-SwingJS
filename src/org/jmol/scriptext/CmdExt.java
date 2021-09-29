@@ -1230,7 +1230,12 @@ public class CmdExt extends ScriptExt {
         strSmiles = paramAsStr(++i);
         if (strSmiles.equalsIgnoreCase("SMILES")) {
           isSmiles = true;
-          strSmiles = "*";
+          if (e.tokAt(i + 1) == T.hydrogen) {
+            strSmiles = "H";
+            i++;
+          } else {
+            strSmiles = "*";
+          }
         }
         break;
       case T.decimal:
@@ -1440,9 +1445,9 @@ public class CmdExt extends ScriptExt {
 
         M4 m4 = new M4();
         center = new P3();
-        if (("*".equals(strSmiles) || "".equals(strSmiles)) && bsFrom != null)
+        if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles) || "*".equals(strSmiles) || "".equals(strSmiles)))
           try {
-            strSmiles = vwr.getSmiles(bsFrom);
+            strSmiles = vwr.getSmilesOpt(bsFrom, -1, -1, ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0), null);
           } catch (Exception ex) {
             eval.evalError(ex.getMessage(), null);
           }
