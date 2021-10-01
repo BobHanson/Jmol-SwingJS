@@ -849,7 +849,7 @@ public class MathExt {
           String pattern = sOpt;
           if (sOpt == null || hMaps || allMaps || bestMap) {
             // with explicitH we set to find only the first match.
-            if (!isMap && !isSmiles || hMaps)
+            if (!isMap && !isSmiles || hMaps && isPolyhedron)
               return false;
             pattern = "/noaromatic" + (allMaps || bestMap ? "/" : " nostereo/")
                 + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
