@@ -28,6 +28,14 @@ package org.jmol.symmetry;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.SymmetryInterface;
+import org.jmol.modelset.Atom;
+import org.jmol.modelset.ModelSet;
+import org.jmol.script.T;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Measure;
@@ -38,14 +46,6 @@ import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
-
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.modelset.Atom;
-import org.jmol.modelset.ModelSet;
-import org.jmol.script.T;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
 
 /**
  * A class to handle requests for information about space groups and symmetry
