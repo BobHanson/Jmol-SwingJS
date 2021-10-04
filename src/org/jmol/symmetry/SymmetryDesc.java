@@ -750,7 +750,7 @@ public class SymmetryDesc {
     if (isInversionOnly) {
       ptemp.setT(ipt);
       uc.toFractional(ptemp, false);
-      info1 = "Ci: " + strCoord(ptemp, op.isBio);
+      info1 = "Ci: " + strCoord(op, ptemp, op.isBio);
       type = "inversion center";
     } else if (isRotation) {
       if (haveInversion) {
@@ -759,12 +759,12 @@ public class SymmetryDesc {
         type = info1 = (360 / ang) + "-fold screw axis";
         ptemp.setT(ax1);
         uc.toFractional(ptemp, false);
-        info1 += "|translation: " + strCoord(ptemp, op.isBio);
+        info1 += "|translation: " + strCoord(op, ptemp, op.isBio);
       } else {
         type = info1 = "C" + (360 / ang) + " axis";
       }
     } else if (trans != null) {
-      String s = " " + strCoord(ftrans, op.isBio);
+      String s = " " + strCoord(op, ftrans, op.isBio);
       if (isTranslation) {
         type = info1 = "translation";
         info1 += ":" + s;
@@ -772,7 +772,7 @@ public class SymmetryDesc {
         float fx = Math.abs(SymmetryOperation.approxF(ftrans.x));
         float fy = Math.abs(SymmetryOperation.approxF(ftrans.y));
         float fz = Math.abs(SymmetryOperation.approxF(ftrans.z));
-        s = " " + strCoord(ftrans, op.isBio);
+        s = " " + strCoord(op, ftrans, op.isBio);
         // set ITA Table 2.1.2.1
         if (fx != 0 && fy != 0 && fz != 0) {
           if (fx == 1 / 4f && fy == 1 / 4f && fz == 1 / 4f) {
@@ -818,7 +818,7 @@ public class SymmetryDesc {
     if (haveInversion && !isInversionOnly) {
       ptemp.setT(ipt);
       uc.toFractional(ptemp, false);
-      info1 += "|inversion center at " + strCoord(ptemp, op.isBio);
+      info1 += "|inversion center at " + strCoord(op, ptemp, op.isBio);
     }
 
     if (isTimeReversed) {
@@ -1175,9 +1175,9 @@ public class SymmetryDesc {
     return p0;
   }
 
-  private static String strCoord(T3 p, boolean isBio) {
+  private static String strCoord(SymmetryOperation op, T3 p, boolean isBio) {
     approx0(p);
-    return (isBio ? p.x + " " + p.y + " " + p.z : SymmetryOperation.fcoord(p));
+    return (isBio ? p.x + " " + p.y + " " + p.z : op.fcoord2(p));
   }
 
   private static T3 approx0(T3 pt) {

@@ -1698,6 +1698,7 @@ class SpaceGroup {
             true); // must normalize these
         newOp.modDim = modDim;
         SymmetryOperation op = operations[i];
+        newOp.divisor = op.divisor;
         newOp.linearRotTrans = AU.arrayCopyF(op.linearRotTrans, -1);
         newOp.setFromMatrix(data, false);
         if (magRev != -2)
