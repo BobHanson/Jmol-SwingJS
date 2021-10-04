@@ -29,15 +29,15 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.SymmetryInterface;
+import org.jmol.util.Logger;
+
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
-
-import org.jmol.api.SymmetryInterface;
-import org.jmol.util.Logger;
 
 /*
  * 
@@ -311,35 +311,35 @@ class SpaceGroup {
 //    return o;
   }
 
-  private Map<String, Object> info;
-
-  private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
-    
-    if (info == null) {
-      info = new Hashtable<String, Object>();
-      if (hmSymbol == null || hmSymbolExt == null) {
-        info.put("HMSymbol", "??");
-      } else {
-        Object seitz = dumpCanonicalSeitzList();
-        info.put("SeitzList", seitz == null ? "" : seitz);
-        info.put("HMSymbol", hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
-        info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
-        info.put("ITSNumberFull",  intlTableNumberFull);
-        info.put("crystalClass", crystalClass);
-        info.put("HallSymbol", hallInfo.hallSymbol.equals("--") ? "" : 
-                hallInfo.hallSymbol);
-      }
-      info.put("operationCount", Integer.valueOf(operationCount));
-      Lst<Map<String, Object>> ops = new Lst<Map<String, Object>>();
-      info.put("operationInfo", ops);
-      for (int i = 0; i < operationCount; i++)
-        ops.addLast(operations[i].getInfo());           
-    }
-    Map<String, Object> ucmap = (cellInfo == null ? null : cellInfo.getUnitCellInfoMap());
-    if (ucmap != null)
-      info.put("unitCell", ucmap);
-    return info;
-  }
+//  private Map<String, Object> info;
+//
+//  private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
+//    
+//    if (info == null) {
+//      info = new Hashtable<String, Object>();
+//      if (hmSymbol == null || hmSymbolExt == null) {
+//        info.put("HMSymbol", "??");
+//      } else {
+//        Object seitz = dumpCanonicalSeitzList();
+//        info.put("SeitzList", seitz == null ? "" : seitz);
+//        info.put("HMSymbol", hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
+//        info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
+//        info.put("ITSNumberFull",  intlTableNumberFull);
+//        info.put("crystalClass", crystalClass);
+//        info.put("HallSymbol", hallInfo.hallSymbol.equals("--") ? "" : 
+//                hallInfo.hallSymbol);
+//      }
+//      info.put("operationCount", Integer.valueOf(operationCount));
+//      Lst<Map<String, Object>> ops = new Lst<Map<String, Object>>();
+//      info.put("operationInfo", ops);
+//      for (int i = 0; i < operationCount; i++)
+//        ops.addLast(operations[i].getInfo());           
+//    }
+//    Map<String, Object> ucmap = (cellInfo == null ? null : cellInfo.getUnitCellInfoMap());
+//    if (ucmap != null)
+//      info.put("unitCell", ucmap);
+//    return info;
+//  }
 
   /**
    * 

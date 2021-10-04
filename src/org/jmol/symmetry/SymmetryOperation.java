@@ -252,10 +252,7 @@ public class SymmetryOperation extends M4 {
       float trans = r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
-      sb.append(twelfthsOf(
-          isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans, 12)
-
-      ).append("\t]\n");
+      sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans)).append("\t]\n");
     }
     return sb.toString();
   }
@@ -631,25 +628,25 @@ public class SymmetryOperation extends M4 {
     return ((n << DIVISOR_OFFSET) + denom);
   }
 
-  private final static String xyzFraction12(float n12ths, int divisor, boolean allPositive,
+  private final static String xyzFraction12(float n12ths, int denom, boolean allPositive,
                                             boolean halfOrLess) {
     float n = n12ths;
-    if (divisor != 12) {
+    if (denom != 12) {
       int in = (int) n;
-      divisor = (in & DIVISOR_MASK);
+      denom = (in & DIVISOR_MASK);
       n = in >> DIVISOR_OFFSET;
     }
-    int half = (divisor / 2);
+    int half = (denom / 2);
     if (allPositive) {
       while (n < 0)
-        n += divisor;
+        n += denom;
     } else if (halfOrLess) {
       while (n > half)
-        n -= divisor;
+        n -= denom;
       while (n < -half)
-        n += divisor;
+        n += denom;
     }
-    String s = twelfthsOf(n, divisor);
+    String s = (denom == 12 ? twelfthsOf(n) : n == 0 ? "0" : n + "/" + denom);
     return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
@@ -668,21 +665,18 @@ public class SymmetryOperation extends M4 {
   //    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   //  }
 
-  final static String twelfthsOf(float n12ths, int divisor) {
+  final static String twelfthsOf(float n12ths) {
     String str = "";
     if (n12ths < 0) {
       n12ths = -n12ths;
       str = "-";
     }
-    int m = divisor;
+    int m = 12;
     int n = Math.round(n12ths);
-    if (m != 12) {
-      return (n == 0 ? "0" : str + n + "/" + divisor);      
-    }
     if (Math.abs(n - n12ths) > 0.01f) {
       // fifths? sevenths? eigths? ninths? sixteenths?
       // Juan Manuel suggests 10 is large enough here 
-      float f = n12ths / divisor;
+      float f = n12ths / 12;
       int max = 20;
       for (m = 3; m < max; m++) {
         float fm = f * m;
@@ -693,78 +687,19 @@ public class SymmetryOperation extends M4 {
       if (m == max)
         return str + f;
     } else {
-      if (divisor == 12) {
-        if  (n == divisor)
-          return str + "1";
-        if (n < 12)
-          return str + twelfths[n % 12];
-      } else if (n == 0) {
-        return "0";
-      }
-      switch ((n % divisor) * ( divisor == 120 ? 100 : 1)) {
+      if (n == 12)
+        return str + "1";
+      if (n < 12)
+        return str + twelfths[n % 12];
+      switch (n % 12) {
       case 0:
-        return "" + n / divisor;
-        //         1/5, 2/5, 3/5, 4/5, 1/10, 3/10, 5/10, 7/10, 9/10
-        // * 120   24   48   72   96    12    36    60,  84, 108
-        
-//        1/8 15/120
-//        2/8 30/120
-//        3/8 45/120
-//        4/8 1/2
-//        5/8 75/120
-//        6/8 90/120
-//        7/8 105/120
-        
-//        1/6 20/120
-//        2/6 1/3
-//        3/6 1/2
-//        4/6 2/3
-//        5/6 100/120
-
-      case 1000:
-      case 5000:
-      case 7000:
-      case 11000:
-        m = 12;
-        break;
-      case 500:
-      case 2500:
-      case 3500:
-      case 5500:
-      case 6500:
-      case 8500:
-      case 9500:
-      case 11500:
-        m = 24;
-        break;
-      case 1500:
-      case 4500:
-      case 7500:
-      case 10500:
-        m = 8;
-        break;
-      case 2400:
-      case 4800:
-      case 7200:
-      case 9600:
-        m = 5;
-        break;
-      case 1200:
-      case 3600:
-      case 8400:
-      case 10800:
-        m = 10;
-        break;
+        return "" + n / 12;
       case 2:
       case 10:
-      case 2000:
-      case 10000:
         m = 6;
         break;
       case 3:
       case 9:
-      case 3000:
-      case 9000:
         m = 4;
         break;
       case 4:
@@ -772,13 +707,12 @@ public class SymmetryOperation extends M4 {
         m = 3;
         break;
       case 6:
-      case 6000:
         m = 2;
         break;
       default:
         break;
       }
-      n = (n * m / divisor);
+      n = (n * m / 12);
     }
     return str + n + "/" + m;
   }
@@ -900,9 +834,9 @@ public class SymmetryOperation extends M4 {
       return getXYZFromRsVs(op.rsvs.getRotation(), op.rsvs.getTranslation(),
           is12ths);
     float[] row = new float[4];
-    int divisor = (int) mat.getElement(3, 3);
-    if (divisor == 1)
-      divisor = 12;
+    int denom = (int) mat.getElement(3, 3);
+    if (denom == 1)
+      denom = 12;
     else
       mat.setElement(3, 3, 1);
     for (int i = 0; i < 3; i++) {
@@ -912,7 +846,7 @@ public class SymmetryOperation extends M4 {
       for (int j = 0; j < 3; j++)
         if (row[j] != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction12((is12ths ? row[3] : row[3] * divisor), divisor, allPositive,
+      term += xyzFraction12((is12ths ? row[3] : row[3] * denom), denom, allPositive,
           halfOrLess);
       str += "," + term;
     }
@@ -984,7 +918,7 @@ public class SymmetryOperation extends M4 {
   /**
    * Get string version of fraction when divisor == 0 
    * 
-   * @param p
+   * @param f
    * @return "1/2" for example
    */
   private String fc2(float f) {
@@ -1001,6 +935,7 @@ public class SymmetryOperation extends M4 {
    * @return "1/2" for example
    */
   static String fcoord(T3 p) {
+    // Castep reader only
     return fc(p.x) + " " + fc(p.y) + " " + fc(p.z);
   }
 
@@ -1012,20 +947,10 @@ public class SymmetryOperation extends M4 {
     if (x24 / 24f == (int) (x24 / 24f))
       return m + (x24 / 24);
     if (x24 % 8 != 0) {
-      return m + twelfthsOf(x24 >> 1, 12);
+      return m + twelfthsOf(x24 >> 1);
     }
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
   }
-
-//  static {
-//    for (int i = 1; i < 24; i++) {
-//      System.out.println(i + "/24 "+ fc(i/24f));
-//    }
-//    for (int i = 1; i < 10; i++) {
-//      System.out.println(i + "/10 "+ fc(i/10f));
-//    }
-//    System.out.println("test");
-//  }
   
   static float approxF(float f) {
     return PT.approx(f, 100);
