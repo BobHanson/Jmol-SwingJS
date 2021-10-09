@@ -485,9 +485,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         searchTarget.createTopoMap(bsAromatic);
         atoms = searchTarget.targetAtoms;
         ac = searchTarget.targetAtoms.length;
-        String mfTarget = searchTarget.getMolecularFormulaImpl(true, null,
-            false, false);
-        String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false, false));
         if (isSmarts) {
           int[] a1 = searchTarget.elementCounts;
           int[] a2 = search.elementCounts;
@@ -499,7 +496,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
             }
           }
         } else {
-          okMF = (mf == null || mf.equals(mfTarget));
+          String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false));
+          okMF = (mf == null || mf.equals(searchTarget.getMolecularFormulaImpl(true, null, false)));
         }
         searchTarget.mf = search.mf = null;
       }

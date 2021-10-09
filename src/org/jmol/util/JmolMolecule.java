@@ -64,6 +64,8 @@ public class JmolMolecule {
   public String mf;
   public BS atomList;
 
+  public int[] atNos; // alternative for molecular formula only
+
   /**
    * Creates an array of JmolMolecules from a set of atoms in the form of simple
    * JmolNodes. Allows for appending onto an already established set of
@@ -170,28 +172,34 @@ public class JmolMolecule {
   
   public String getMolecularFormula(boolean includeMissingHydrogens,
                                     float[] wts, boolean isEmpirical) {
-    return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical, true);
+    return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical);
   }
   
   public String getMolecularFormulaImpl(boolean includeMissingHydrogens,
-                                    float[] wts, boolean isEmpirical, boolean includeH) {
+                                        float[] wts, boolean isEmpirical) {
     if (mf != null)
       return mf;
     // get element and atom counts
     if (atomList == null) {
       atomList = new BS();
-      atomList.setBits(0, nodes.length);
+      atomList.setBits(0, atNos == null ? nodes.length : atNos.length);
     }
     elementCounts = new int[Elements.elementNumberMax];
     altElementCounts = new int[Elements.altElementMax];
     ac = atomList.cardinality();
-    nElements=0;
+    nElements = 0;
     for (int p = 0, i = atomList.nextSetBit(0); i >= 0; i = atomList
         .nextSetBit(i + 1), p++) {
-      Node node = nodes[i];
-      if (node == null)
-        continue;
-      int n = node.getAtomicAndIsotopeNumber();
+      int n;
+      Node node = null;
+      if (atNos == null) {
+        node = nodes[i];
+        if (node == null)
+          continue;
+        n = node.getAtomicAndIsotopeNumber();
+      } else {
+        n = atNos[i];
+      }
       int f = (wts == null ? 1 : (int) (8 * wts[p]));
       if (n < Elements.elementNumberMax) {
         if (elementCounts[n] == 0)
@@ -259,9 +267,8 @@ public class JmolMolecule {
     for (int i = 1; i <= altElementMax; i++) {
       nX = altElementCounts[i];
       if (nX != 0) {
-        mf += sep
-            + Elements.elementSymbolFromNumber(Elements
-                .altElementNumberFromIndex(i)) + " " + nX;
+        mf += sep + Elements.elementSymbolFromNumber(
+            Elements.altElementNumberFromIndex(i)) + " " + nX;
         sep = " ";
       }
     }
