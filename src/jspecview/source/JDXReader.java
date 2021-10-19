@@ -469,6 +469,7 @@ public class JDXReader implements JmolJDXMOLReader {
         label = tmp;
         if (isTabularData) {
           processTabularData(spectrum, dataLDRTable, label, false);
+          continue;
         }
         if (label.equals("##DATATYPE")) {
           if (value.toUpperCase().equals("LINK")) {
@@ -1051,7 +1052,7 @@ public class JDXReader implements JmolJDXMOLReader {
   }
 
   public static void addHeader(Lst<String[]> table, String label, String value) {
-    String[] entry;
+    String[] entry = null;
     for (int i = 0; i < table.size(); i++)
       if ((entry = table.get(i))[0].equals(label)) {
         entry[1] = value;

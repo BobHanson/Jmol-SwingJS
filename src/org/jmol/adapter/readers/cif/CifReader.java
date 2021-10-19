@@ -87,7 +87,7 @@ public class CifReader extends AtomSetCollectionReader {
     boolean processBlock(String key) throws Exception;
     boolean finalizeReader() throws Exception;
     void finalizeSymmetry(boolean haveSymmetry) throws Exception;
-    void ProcessRecord(String key, String data);
+    void ProcessRecord(String key, String data) throws Exception;
 
   }
 
@@ -301,8 +301,9 @@ public class CifReader extends AtomSetCollectionReader {
         } else if (key.equals("_audit_creation_date")) {
             symmetry = null;
         }
-      } else if (key.equals(singleAtomID)) {
-        readSingleAtom();
+      } else if (key.startsWith("_chem_comp_atom") || key.startsWith("_atom")) {
+        processLoopBlock();
+//        readSingleAtom();
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
           || key.startsWith("_symmetry_space_group_name_hall")
           || key.startsWith("_space_group_name") || key.contains("_ssg_name")
@@ -387,18 +388,18 @@ public class CifReader extends AtomSetCollectionReader {
     }
   }
 
-  /**
-   * No need for anything other than the atom name and symbol; coordinates will
-   * be (0 0 0), and no other information is needed.
-   */
-  private void readSingleAtom() {
-    Atom atom = new Atom();
-    atom.set(0, 0, 0);
-    atom.atomName = cifParser.fullTrim(data);
-    atom.getElementSymbol();
-    asc.addAtom(atom);
-  }
-
+//  /**
+//   * No need for anything other than the atom name and symbol; coordinates will
+//   * be (0 0 0), and no other information is needed.
+//   */
+//  private void readSingleAtom() {
+//    Atom atom = new Atom();
+//    atom.set(0, 0, 0);
+//    atom.atomName = cifParser.fullTrim(data);
+//    atom.getElementSymbol();
+//    asc.addAtom(atom);
+//  }
+//
   private MSCifParser getModulationReader() throws Exception {
     return (modr == null ? initializeMSCIF() : modr);
   }
@@ -435,13 +436,15 @@ public class CifReader extends AtomSetCollectionReader {
     iHaveDesiredModel = isLastModel(modelNumber);
     if (isCourseGrained)
       asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
-    if (nAtoms0 > 0 && nAtoms0 == asc.ac) {
-      // we found no atoms -- must revert
-      modelNumber--;
-      haveModel = false;
-      asc.removeCurrentAtomSet();
-    } else {
-      applySymmetryAndSetTrajectory();
+    if (nAtoms0 > 0) {
+      if (nAtoms0 == asc.ac) {
+        // we found no atoms -- must revert
+        modelNumber--;
+        haveModel = false;
+        asc.removeCurrentAtomSet();
+      } else {
+        applySymmetryAndSetTrajectory();
+      }
     }
   }
 
@@ -827,11 +830,13 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   protected void processLoopBlock() throws Exception {
-    cifParser.getTokenPeeked(); //loop_
-    key = (String) cifParser.peekToken();
-    if (key == null)
-      return;
-    key = cifParser.fixKey(key0 = key);
+    if (isLoop) {
+      cifParser.getTokenPeeked(); //loop_
+      key = (String) cifParser.peekToken();
+      if (key == null)
+        return;
+      key = cifParser.fixKey(key0 = key);
+    }
     if (modDim > 0)
       switch (getModulationReader().processLoopBlock()) {
       case 0:
@@ -844,7 +849,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
     boolean isLigand = false;
     if (key.startsWith(FAMILY_ATOM)
-        || (isLigand = key.equals("_chem_comp_atom_comp_id"))) {
+        || (isLigand = key.startsWith("_chem_comp_atom_"))) {
       if (!processAtomSiteLoopBlock(isLigand))
         return;
       if (thisDataSetName.equals("global"))

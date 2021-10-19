@@ -644,7 +644,9 @@ public class CifDataParser implements GenericCifDataParser {
         }
         Integer iField = htFields.get(fixKey(key));
         i = (iField == null ? NONE : iField.intValue());
-        if ((col2key[pt] = i) != NONE) 
+        if ((col2key[pt] = i) == NONE)
+          columnData[pt] = "";
+        else
           columnData[key2col[i] = pt] = data;
         if ((o = peekToken()) == null || !(o instanceof String) ||  !((String) o).startsWith(str0))
           break;
