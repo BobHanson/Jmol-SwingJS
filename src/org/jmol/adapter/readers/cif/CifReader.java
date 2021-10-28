@@ -436,17 +436,14 @@ public class CifReader extends AtomSetCollectionReader {
     iHaveDesiredModel = isLastModel(modelNumber);
     if (isCourseGrained)
       asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
-    if (nAtoms0 > 0) {
-      if (nAtoms0 == asc.ac) {
-        // we found no atoms -- must revert
+    if (nAtoms0 > 0 && nAtoms0 == asc.ac) {
         modelNumber--;
         haveModel = false;
         asc.removeCurrentAtomSet();
       } else {
         applySymmetryAndSetTrajectory();
       }
-    }
-  }
+ }
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
