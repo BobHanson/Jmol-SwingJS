@@ -21,8 +21,8 @@ public interface JSVTreeNode extends TreeNode {
 
 	PanelNode getPanelNode();
 
-	@Override
-  Enumeration<JSVTreeNode> children();
+//	@Override
+//  Enumeration<JSVTreeNode> children();
 
 	int getIndex();
 

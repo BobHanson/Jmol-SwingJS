@@ -1508,14 +1508,14 @@ public class JSViewer implements PlatformViewer, BytePoster {
     JSVTreeNode rootNode = spectraTree.getRootNode();
     String fileName = (source == null ? null : source.getFilePath());
     Lst<JSVTreeNode> toDelete = new Lst<JSVTreeNode>();
-    Enumeration<JSVTreeNode> enume = rootNode.children();
+    Enumeration enume = rootNode.children();
     while (enume.hasMoreElements()) {
-      JSVTreeNode node = enume.nextElement();
+      JSVTreeNode node = (JSVTreeNode) enume.nextElement();
       if (fileName == null
           || node.getPanelNode().source.matchesFilePath(fileName)) {
         Logger.info("Closing " + node.getPanelNode().source.getFilePath());
-        for (Enumeration<JSVTreeNode> e = node.children(); e.hasMoreElements();) {
-          JSVTreeNode childNode = e.nextElement();
+        for (Enumeration e = node.children(); e.hasMoreElements();) {
+          JSVTreeNode childNode = (JSVTreeNode) e.nextElement();
           toDelete.addLast(childNode);
           panelNodes.removeObj(childNode.getPanelNode());
         }
