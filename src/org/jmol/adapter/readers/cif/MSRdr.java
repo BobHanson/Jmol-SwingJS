@@ -494,7 +494,7 @@ public class MSRdr implements MSInterface {
           int ipt = key.indexOf("?");
           if (ipt >= 0) {
             String s = key.substring(ipt + 1);
-            pt = getMod(key.substring(0, 2) + s + "#*;*");
+            pt = getMod(key.substring(0, 2) + MSCifParser.SEP + s + "#*;*");
             // may have       Vy1    0.0          0.0   , resulting in null pt here
             if (pt != null)
               addModulation(map, key = key.substring(0, ipt), pt, iModel);
@@ -585,10 +585,11 @@ public class MSRdr implements MSInterface {
         for (int i = p.length; --i >= 0;)
           p[i] = params[i];
         double[] qcoefs = getQCoefs(key);
-        if (qcoefs == null)
-          throw new Exception(
-              "Missing cell wave vector for atom wave vector for " + key + " "
+        if (qcoefs == null) {
+          System.err.println("Missing cell wave vector for atom wave vector for " + key + " "
                   + Escape.e(params));
+          break;
+        }
         addAtomModulation(atomName, axis, type, p, utens, qcoefs);
         haveAtomMods = true;
         break;
@@ -679,6 +680,7 @@ public class MSRdr implements MSInterface {
         qs[i] = toP3(getMod("W_" + (i + 1)));
       }
     }
+//    System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
     P3 pt = toP3(p);
     // test n * q
     for (int i = 0; i < modDim; i++)
@@ -695,7 +697,7 @@ public class MSRdr implements MSInterface {
     int jmax = (modDim < 2 ? 0 : 3);
     int kmin = (modDim < 3 ? 0 : -3);
     int kmax = (modDim < 3 ? 0 : 3);
-    for (int i = -3; i <= 3; i++)
+    for (int i = -4; i <= 4; i++)
       for (int j = jmin; j <= jmax; j++)
         for (int k = kmin; k <= kmax; k++) {
           // test linear combination -3 to +3:

@@ -11,6 +11,12 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jmol.api.GenericFileInterface;
+import org.jmol.api.GenericGraphics;
+import org.jmol.api.GenericPlatform;
+import org.jmol.api.PlatformViewer;
+import org.jmol.util.Logger;
+
 import javajs.api.BytePoster;
 import javajs.util.CU;
 import javajs.util.Lst;
@@ -39,12 +45,6 @@ import jspecview.popup.JSVGenericPopup;
 import jspecview.source.JDXReader;
 import jspecview.source.JDXSource;
 import jspecview.tree.SimpleTree;
-
-import org.jmol.api.GenericFileInterface;
-import org.jmol.api.GenericGraphics;
-import org.jmol.api.GenericPlatform;
-import org.jmol.api.PlatformViewer;
-import org.jmol.util.Logger;
 
 /**
  * This class encapsulates all general functionality of applet and app. Most
@@ -1232,6 +1232,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
       {
       }
     }
+    GenericFileInterface file = null;
     if (data != null) {
       try {
         fileName = name;
@@ -1254,9 +1255,11 @@ public class JSViewer implements PlatformViewer, BytePoster {
         fileName = JSVFileManager.getTagName(filePath);
         // System.out.println("fileName=" + fileName);
       } catch (MalformedURLException e) {
-        GenericFileInterface file = apiPlatform.newFile(strUrl);
+        file = apiPlatform.newFile(strUrl);
         fileName = file.getName();
         newPath = filePath = file.getFullPath();
+        if (!file.isDirectory())
+          file = null;
         recentURL = null;
       }
     }
@@ -1277,7 +1280,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     si.setCursor(GenericPlatform.CURSOR_WAIT);
     try {
       si.siSetCurrentSource(isView ? JDXSource.createView(specs) : JDXReader
-          .createJDXSource(data, filePath,
+          .createJDXSource(file == null ? data : file, filePath,
               obscureTitleFromUser == Boolean.TRUE, loadImaginary, firstSpec,
               lastSpec, nmrMaxY));
 
@@ -1508,13 +1511,13 @@ public class JSViewer implements PlatformViewer, BytePoster {
     JSVTreeNode rootNode = spectraTree.getRootNode();
     String fileName = (source == null ? null : source.getFilePath());
     Lst<JSVTreeNode> toDelete = new Lst<JSVTreeNode>();
-    Enumeration enume = rootNode.children();
+    Enumeration<?> enume = rootNode.children();
     while (enume.hasMoreElements()) {
       JSVTreeNode node = (JSVTreeNode) enume.nextElement();
       if (fileName == null
           || node.getPanelNode().source.matchesFilePath(fileName)) {
         Logger.info("Closing " + node.getPanelNode().source.getFilePath());
-        for (Enumeration e = node.children(); e.hasMoreElements();) {
+        for (Enumeration<?> e = node.children(); e.hasMoreElements();) {
           JSVTreeNode childNode = (JSVTreeNode) e.nextElement();
           toDelete.addLast(childNode);
           panelNodes.removeObj(childNode.getPanelNode());

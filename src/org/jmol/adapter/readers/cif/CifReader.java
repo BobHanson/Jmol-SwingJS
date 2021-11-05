@@ -222,7 +222,7 @@ public class CifReader extends AtomSetCollectionReader {
         return false;
       if (desiredModelNumber != Integer.MIN_VALUE)
         appendLoadNote(null);
-      newModel(++modelNumber);
+      newModel(-1);
       haveCellWaveVector = false;
       if (auditBlockCode == null)
         modulated = false;
@@ -277,6 +277,8 @@ public class CifReader extends AtomSetCollectionReader {
         processChemicalInfo("formula");
       } else if (key.equals("_cell_modulation_dimension")) {
         modDim = parseIntStr(data);
+        if (modr != null)
+          modr.setModDim(modDim);
       } else if (key.startsWith("_cell_") && key.indexOf("_commen_") < 0) {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
@@ -423,7 +425,18 @@ public class CifReader extends AtomSetCollectionReader {
 
   public Map<String, Integer> modelMap;
 
+  private boolean haveGlobalDummy;
   protected void newModel(int modelNo) throws Exception {
+    if (modelNo < 0) {
+      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy) {
+        modelNumber = 0;
+        haveModel = false;
+        haveGlobalDummy = true;
+        asc.removeCurrentAtomSet();
+      }      
+      modelNo = ++modelNumber;
+    }
+    
     skipping = !doGetModel(modelNumber = modelNo, null);
     if (skipping) {
       if (!isMMCIF)

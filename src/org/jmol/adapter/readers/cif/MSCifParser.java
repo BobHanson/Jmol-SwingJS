@@ -226,6 +226,8 @@ public class MSCifParser extends MSRdr {
   
   private static final int NONE = -1;
 
+  static final String SEP = "_";
+
   private M3 comSSMat;
   public void processEntry() throws Exception {
     CifReader cr = (CifReader) this.cr;
@@ -290,6 +292,7 @@ public class MSCifParser extends MSRdr {
       double w = Double.NaN;
       String fid = null;
       int n = cr.cifParser.getColumnCount();
+      String sep = SEP;
       for (int i = 0; i < n; ++i) {
         switch (tok = fieldProperty(cr, i)) {
         case FWV_ID:
@@ -298,14 +301,17 @@ public class MSCifParser extends MSRdr {
           pt[0] = pt[1] = pt[2] = 0;
           type_id = "F_";
           fid = field;
+          sep = "";
           break;
         case WV_ID:
           cr.haveCellWaveVector = true;
+          sep = "";
           //$FALL-THROUGH$
         case FD_ID:
         case FO_ID:
         case FU_ID:
           pt[0] = pt[1] = pt[2] = 0;
+          sep = "";
           //$FALL-THROUGH$
         case FWV_DISP_SEQ_ID:
         case FWV_OCC_SEQ_ID:
@@ -317,6 +323,7 @@ public class MSCifParser extends MSRdr {
           switch (tok) {
           case WV_ID:
             type_id = "W_";
+            sep = "";
             break;
           case FD_ID:
           case FO_ID:
@@ -337,7 +344,7 @@ public class MSCifParser extends MSRdr {
                 + "_";
             break;
           }
-          type_id += field;
+          type_id += sep + field;
           break;
         case JANA_OCC_ABS_LABEL:
           type_id = "J_O";

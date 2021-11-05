@@ -726,6 +726,12 @@ abstract class ScriptTokenParser {
       switch (tok0) {
       case T.define:
         break;
+      case T.centroid:
+      case T.cell:
+        addTokenToPostfix(T.string, theValue);
+        clauseCell(T.point3f);
+        key = "";
+        break;
       case T.dssr:
       case T.rna3d:
       case T.search:
@@ -1032,29 +1038,31 @@ abstract class ScriptTokenParser {
   private boolean clauseCell(int tok) {
     P3 cell = new P3();
     tokenNext(); // CELL
-    if (!tokenNextTok(T.opEQ)) // =
-      return errorStr(ERROR_tokenExpected, "=");
+    if (tok != T.point3f) {
+      if (!tokenNextTok(T.opEQ)) // =
+        return errorStr(ERROR_tokenExpected, "=");
+    }
     if (getToken() == null)
       return error(ERROR_coordinateExpected);
     // 555 = {1 1 1}
     //Token coord = tokenNext(); // 555 == {1 1 1}
     if (theToken.tok == T.integer) {
-      SimpleUnitCell.ijkToPoint3f(theToken.intValue,  cell,  1, 0);
-      return addTokenToPostfix(tok, cell);
+      SimpleUnitCell.ijkToPoint3f(theToken.intValue, cell, 1, 0);
+    } else {
+      if (theToken.tok != T.leftbrace || !getNumericalToken())
+        return error(ERROR_coordinateExpected); // i
+      cell.x = floatValue();
+      if (tokPeekIs(T.comma)) // ,
+        tokenNext();
+      if (!getNumericalToken())
+        return error(ERROR_coordinateExpected); // j
+      cell.y = floatValue();
+      if (tokPeekIs(T.comma)) // ,
+        tokenNext();
+      if (!getNumericalToken() || !tokenNextTok(T.rightbrace))
+        return error(ERROR_coordinateExpected); // k
+      cell.z = floatValue();
     }
-    if (theToken.tok != T.leftbrace || !getNumericalToken())
-      return error(ERROR_coordinateExpected); // i
-    cell.x = floatValue();
-    if (tokPeekIs(T.comma)) // ,
-      tokenNext();
-    if (!getNumericalToken())
-      return error(ERROR_coordinateExpected); // j
-    cell.y = floatValue();
-    if (tokPeekIs(T.comma)) // ,
-      tokenNext();
-    if (!getNumericalToken() || !tokenNextTok(T.rightbrace))
-      return error(ERROR_coordinateExpected); // k
-    cell.z = floatValue();
     return addTokenToPostfix(tok, cell);
   }
 

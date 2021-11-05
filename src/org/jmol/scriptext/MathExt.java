@@ -3623,9 +3623,9 @@ public class MathExt {
 
   private boolean evaluateWithin(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length < 1 || args.length > 5)
-      return false;
     int len = args.length;
+    if (len < 1 || len > 5)
+      return false;
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     float distance = 0;
@@ -3727,7 +3727,6 @@ public class MathExt {
     } else if (!isDistance) {
       return false;
     }
-
     switch (len) {
     case 1:
       // within (sheet)
@@ -3759,8 +3758,10 @@ public class MathExt {
       case T.rna3d:
       case T.domains:
       case T.validation:
-        return mp
-            .addXBs(vwr.ms.getAtoms(tok, SV.sValue(args[args.length - 1])));
+        return mp.addXBs(vwr.ms.getAtoms(tok, SV.sValue(args[1])));
+      case T.cell:
+      case T.centroid:
+        return mp.addXBs(vwr.ms.getAtoms(tok, SV.ptValue(args[1])));
       }
       break;
     case 3:
@@ -3854,8 +3855,13 @@ public class MathExt {
       return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
     if (bs == null)
       bs = new BS();
-    if (!isDistance)
-      return mp.addXBs(vwr.ms.getAtoms(tok, bs));
+    if (!isDistance) {
+      try {
+        return mp.addXBs(vwr.ms.getAtoms(tok, bs));
+      } catch (Exception e) {
+        return false;
+      }
+    }
     if (isWithinGroup)
       return mp.addXBs(vwr.getGroupsWithin((int) distance, bs));
     if (isVdw) {

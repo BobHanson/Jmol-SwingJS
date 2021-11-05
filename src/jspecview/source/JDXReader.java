@@ -34,6 +34,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.api.JmolJDXMOLReader;
+import org.jmol.api.GenericFileInterface;
 import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
@@ -46,6 +47,7 @@ import jspecview.common.JSVFileManager;
 import jspecview.common.JSViewer;
 import jspecview.common.PeakInfo;
 import jspecview.exception.JSVException;
+import javajs.api.Interface;
 
 /**
  * <code>JDXFileReader</code> reads JDX data, including complex BLOCK files that
@@ -179,6 +181,9 @@ public class JDXReader implements JmolJDXMOLReader {
                                           boolean loadImaginary, int iSpecFirst,
                                           int iSpecLast, float nmrMaxY)
       throws Exception {
+    
+ 
+    
     boolean isHeaderOnly = (iSpecLast < iSpecFirst);
 
     String data = null;
@@ -189,6 +194,13 @@ public class JDXReader implements JmolJDXMOLReader {
       br = JSVFileManager.getBufferedReaderForStringOrBytes(in);
     } else if (in instanceof InputStream) {
       br = JSVFileManager.getBufferedReaderForInputStream((InputStream) in);
+    } else if (in instanceof GenericFileInterface){
+      GenericFileInterface file = (GenericFileInterface) in;
+      JDXSource source = ((BrukerDirReader) Interface.getInterface("jspecview.source.BrukerDirReader")).getJDXFromBrukerDir(file.getFullPath());
+      Spectrum spectrum = source.getJDXSpectrum(0);
+      if (spectrum.getMaxY() >= 10000)
+        spectrum.normalizeSimulation(1000);
+      return source;
     } else {
       br = (BufferedReader) in;
     }
@@ -196,8 +208,9 @@ public class JDXReader implements JmolJDXMOLReader {
     String header = null;
     JDXSource source = null;
     try {
-      if (br == null)
+      if (br == null) {
         br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
+      }
       if (!isHeaderOnly) {
         br.mark(400);
         char[] chs = new char[400];
@@ -1169,4 +1182,5 @@ public class JDXReader implements JmolJDXMOLReader {
     }
     return line;
   }
+
 }

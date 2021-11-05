@@ -269,7 +269,7 @@ class JmolPanel extends JPanel {
     adapter = new SmarterJmolAdapter();
     viewer = JmolViewer.allocateViewer(this, adapter);
     viewer
-        .scriptWait("frank off;set defaultDirectory 'http://chemapps.stolaf.edu/jmol/docs/examples-11/data/'");
+        .scriptWait("frank off;set defaultDirectory 'https://chemapps.stolaf.edu/jmol/data/'");
   }
 
   public JmolViewer getViewer() {
@@ -284,7 +284,7 @@ class JmolPanel extends JPanel {
     viewer.setScreenDimension(currentSize.width, currentSize.height);
     //Rectangle rectClip = new Rectangle();
     //g.getClipBounds(rectClip);
-    viewer.renderScreenImage(g, currentSize.width, currentSize.height);
+    viewer.renderScreenImage(g, currentSize.width, currentSize.height); 
   }
  
 }

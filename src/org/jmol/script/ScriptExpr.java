@@ -958,9 +958,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.cell:
         P3 pt = (P3) value;
         rpn.addXBs(getAtomBits(
-            instruction.tok,
-            new int[] { (int) Math.floor(pt.x * 1000),
-                (int) Math.floor(pt.y * 1000), (int) Math.floor(pt.z * 1000) }));
+            instruction.tok, (P3) value));
         break;
       case T.thismodel:
         rpn.addXBs(vwr.am.cmi < 0 ? vwr.getFrameAtoms() : vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));

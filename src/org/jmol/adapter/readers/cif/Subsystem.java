@@ -119,8 +119,8 @@ class Subsystem {
       Matrix rv = s0.getOperationRsVs(iop);
       Matrix r0 = rv.getRotation();
       Matrix v0 = rv.getTranslation();
-      Matrix r = w.mul(r0).mul(winv);
-      Matrix v = w.mul(v0);
+      Matrix r = cleanMatrix(w.mul(r0).mul(winv));
+      Matrix v = cleanMatrix(w.mul(v0));
       String code = this.code;
       if(isMixed(r)) {
         // This operator mixes x4,x5... into x1,x2,x3. 
@@ -134,7 +134,7 @@ class Subsystem {
           Subsystem ss = e.getValue();
           if (ss == this)
             continue;
-          Matrix rj = ss.w.mul(r0).mul(winv);
+          Matrix rj = cleanMatrix(ss.w.mul(r0).mul(winv));
           if (!isMixed(rj)) {
             // We have found the corresponding subsystem.
             // The result of this operation will be in other system,
@@ -151,6 +151,21 @@ class Subsystem {
       String jf = symmetry.addOp(code, r, v, sigma_nu);      
       Logger.info(this.code + "." + (iop + 1) + (this.code.equals(code) ? "   " : ">" + code + " ") + jf);
     }
+  }
+
+  private Matrix cleanMatrix(Matrix m) {
+    double[][] a = m.getArray();
+    int d1 = a.length;
+    int d2 = a[0].length;
+    for (int i = d1; --i >= 0;)
+      for (int j = d2; --j >= 0;)
+        if (approxZero(a[i][j]))
+            a[i][j] = 0;
+    return m;
+  }
+
+  private static boolean approxZero(double d) {
+    return d < 1e-7 && d > -1e-7;
   }
 
   private boolean isMixed(Matrix r) {
