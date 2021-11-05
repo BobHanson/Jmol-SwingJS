@@ -20,6 +20,7 @@
 package jspecview.source;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -28,26 +29,26 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
-import org.jmol.api.JmolJDXMOLReader;
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.JmolJDXMOLParser;
+import org.jmol.api.JmolJDXMOLReader;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.Interface;
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.Rdr;
+import javajs.util.SB;
 import jspecview.api.JSVZipReader;
 import jspecview.api.SourceReader;
 import jspecview.common.Coordinate;
-import jspecview.common.Spectrum;
 import jspecview.common.JSVFileManager;
 import jspecview.common.JSViewer;
 import jspecview.common.PeakInfo;
+import jspecview.common.Spectrum;
 import jspecview.exception.JSVException;
-import javajs.api.Interface;
 
 /**
  * <code>JDXFileReader</code> reads JDX data, including complex BLOCK files that
@@ -139,14 +140,14 @@ public class JDXReader implements JmolJDXMOLReader {
    */
   public static JDXSource createJDXSourceFromStream(InputStream in, boolean obscure, boolean loadImaginary, float nmrMaxY)
       throws Exception {
-    return createJDXSource(in,
+    return createJDXSource(null, in,
         "stream", obscure, loadImaginary, -1, -1, nmrMaxY);
   }
 
   public static Map<String, String> getHeaderMap(InputStream in, Map<String, String> map) throws Exception {
     if (map == null)
       map = new LinkedHashMap<String, String>();
-    Lst<String[]> hlist = createJDXSource(in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
+    Lst<String[]> hlist = createJDXSource(null, in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
     for (int i = 0, n = hlist.size(); i < n; i++) {
       String[] h = hlist.get(i);
       // element [2] is the cleaned LABEL
@@ -165,6 +166,7 @@ public class JDXReader implements JmolJDXMOLReader {
   /**
    * general entrance method
    * 
+   * @param file
    * @param in
    *        one of: BufferedReader, InputStream, String, byte[]
    * @param filePath
@@ -176,31 +178,27 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    * @throws Exception
    */
-  public static JDXSource createJDXSource(Object in, String filePath,
-                                          boolean obscure,
+  public static JDXSource createJDXSource(GenericFileInterface file, Object in,
+                                          String filePath, boolean obscure,
                                           boolean loadImaginary, int iSpecFirst,
                                           int iSpecLast, float nmrMaxY)
       throws Exception {
-    
- 
-    
     boolean isHeaderOnly = (iSpecLast < iSpecFirst);
-
     String data = null;
     BufferedReader br;
-    if (in instanceof String || AU.isAB(in)) {
+    byte[] bytes = null;
+    if (AU.isAB(in)) {
+      bytes = (byte[]) in;
+      if (Rdr.isZipB(bytes)) {
+        return  readBrukerFileZip(bytes, file.getFullPath());
+      }
+    }
+    if (in instanceof String || bytes != null) {
       if (in instanceof String)
         data = (String) in;
       br = JSVFileManager.getBufferedReaderForStringOrBytes(in);
     } else if (in instanceof InputStream) {
       br = JSVFileManager.getBufferedReaderForInputStream((InputStream) in);
-    } else if (in instanceof GenericFileInterface){
-      GenericFileInterface file = (GenericFileInterface) in;
-      JDXSource source = ((BrukerDirReader) Interface.getInterface("jspecview.source.BrukerDirReader")).getJDXFromBrukerDir(file.getFullPath());
-      Spectrum spectrum = source.getJDXSpectrum(0);
-      if (spectrum.getMaxY() >= 10000)
-        spectrum.normalizeSimulation(1000);
-      return source;
     } else {
       br = (BufferedReader) in;
     }
@@ -209,6 +207,8 @@ public class JDXReader implements JmolJDXMOLReader {
     JDXSource source = null;
     try {
       if (br == null) {
+        if (file != null && file.isDirectory())
+          return readBrukerFileDir(file.getFullPath());
         br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
       }
       if (!isHeaderOnly) {
@@ -217,6 +217,17 @@ public class JDXReader implements JmolJDXMOLReader {
         br.read(chs, 0, 400);
         br.reset();
         header = new String(chs);
+        if (header.startsWith("PK")) {
+          br.close();
+          return readBrukerFileZip(null, file.getFullPath());
+        }
+        if (header.indexOf('\0') >= 0 || header.indexOf('\u00FF') >= 0 
+            || header.indexOf("##TITLE= Parameter file") == 0
+            || header.indexOf("##TITLE= Audit trail") == 0
+            ) {
+          br.close();
+          return readBrukerFileDir(file.getParentAsFile().getFullPath());
+        }
         int pt1 = header.indexOf('#');
         int pt2 = header.indexOf('<');
         if (pt1 < 0 || pt2 >= 0 && pt2 < pt1) {
@@ -224,10 +235,11 @@ public class JDXReader implements JmolJDXMOLReader {
           xmlType = (xmlType.contains("<animl")
               || xmlType.contains("<!doctype technique") ? "AnIML"
                   : xmlType.contains("xml-cml") ? "CML" : null);
-          if (xmlType != null)
-            source = ((SourceReader) JSViewer
-                .getInterface("jspecview.source." + xmlType + "Reader"))
-                    .getSource(filePath, br);
+          if (xmlType == null)
+            return readBrukerFileDir(file.getFullPath());
+          source = ((SourceReader) JSViewer
+              .getInterface("jspecview.source." + xmlType + "Reader"))
+                  .getSource(filePath, br);
           br.close();
           if (source == null) {
             Logger.error(header + "...");
@@ -261,6 +273,15 @@ public class JDXReader implements JmolJDXMOLReader {
       throw new JSVException("Error reading data: " + s);
     }
   }
+
+  private static JDXSource readBrukerFileDir(String filePath) throws FileNotFoundException, Exception {
+    return ((BrukerReader) Interface.getInterface("jspecview.source.BrukerReader")).readBrukerDir(filePath);
+  }
+
+  private static JDXSource readBrukerFileZip(byte[] bytes, String filePath) throws FileNotFoundException, Exception {
+    return ((BrukerReader) Interface.getInterface("jspecview.source.BrukerReader")).readBrukerZip(bytes, filePath);
+  }
+
 
   /**
    * The starting point for reading all data.

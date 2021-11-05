@@ -66,7 +66,6 @@ public class JSVZipFileSequentialReader extends BufferedReader implements JSVZip
   @Override
   public void close() {
     try {
-      close();
       zis.close();
     } catch (IOException e) {
     }

@@ -243,7 +243,11 @@ public class Spectrum extends JDXDataObject {
     return (selectedPeak != null ? selectedPeak.getTitle() : highlightedPeak != null ? highlightedPeak.getTitle() : getTitleLabel());
   }
 
+  private String titleLabel;
+  
   public String getTitleLabel() {
+    if (titleLabel != null)
+      return titleLabel;
     String type = (peakList == null || peakList.size() == 0 ? 
     		getQualifiedDataType() : 
     			peakList.get(0).getType());
@@ -251,11 +255,10 @@ public class Spectrum extends JDXDataObject {
     	if (nucleusY != null && !nucleusY.equals("?")) {
     		type = "2D" + type;
     	} else {
-    		type = nucleusX + type;
+    		type = getNominalSpecFreq(nucleusX, getObservedFreq()) + " MHz " + nucleusX + " " + type;
     	}
-    	
     }
-    return (type != null && type.length() > 0 ? type + " " : "") 
+    return titleLabel = (type != null && type.length() > 0 ? type + " " : "") 
     + getTitle();
   }
 

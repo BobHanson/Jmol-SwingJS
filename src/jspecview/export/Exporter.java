@@ -284,7 +284,6 @@ public class Exporter implements ExportInterface {
     case SQZ:
     case DIF:
     case DIFDUP:
-    case SOURCE:
     	if (!(name.endsWith("_" + imode)))
     		name += "_" + imode;    		
       ext = ".jdx";
@@ -292,6 +291,12 @@ public class Exporter implements ExportInterface {
     case AML:
     	ext = ".xml";
     	break;
+    case SOURCE:
+      if (!(name.endsWith("_" + imode)))
+        name += "_" + imode;
+      String lc = (sourcePath == null ? "jspecview" : sourcePath.toLowerCase());
+      ext = (lc.endsWith(".zip") ? ".zip" : lc.endsWith(".jdx") ? ".jdx" : "");
+      break;
     case JPG:
     case PNG:
     case PDF:

@@ -194,10 +194,11 @@ public class JSVFileManager {
 				return new BufferedReader(new StringReader(new String((byte[]) ret)));
 			BufferedInputStream bis = new BufferedInputStream((InputStream) ret);
 			InputStream in = bis;
-			if (isZipFile(bis))
-				return ((JSVZipInterface) JSViewer
-						.getInterface("jspecview.common.JSVZipUtil"))
-						.newJSVZipFileSequentialReader(in, subFileList, startCode);
+			// TODO: check for bruker?
+//			if (isZipFile(bis))
+//				return ((JSVZipInterface) JSViewer
+//						.getInterface("jspecview.common.JSVZipUtil"))
+//						.newJSVZipFileSequentialReader(in, subFileList, startCode);
 			if (isGzip(bis))
 				in = ((JSVZipInterface) JSViewer
 						.getInterface("jspecview.common.JSVZipUtil")).newGZIPInputStream(in);

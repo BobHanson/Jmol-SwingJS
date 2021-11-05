@@ -1245,6 +1245,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
       newPath = fileName = filePath = "View" + (++nViews);
     } else if (strUrl != null) {
       try {
+        file = apiPlatform.newFile(strUrl);
         // System.out.println("strURL=" + strUrl);
         // System.out.println("JSVFileManager.appletDocumentBase=" +
         // JSVFileManager.appletDocumentBase);
@@ -1255,11 +1256,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
         fileName = JSVFileManager.getTagName(filePath);
         // System.out.println("fileName=" + fileName);
       } catch (MalformedURLException e) {
-        file = apiPlatform.newFile(strUrl);
         fileName = file.getName();
         newPath = filePath = file.getFullPath();
-        if (!file.isDirectory())
-          file = null;
         recentURL = null;
       }
     }
@@ -1280,7 +1278,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     si.setCursor(GenericPlatform.CURSOR_WAIT);
     try {
       si.siSetCurrentSource(isView ? JDXSource.createView(specs) : JDXReader
-          .createJDXSource(file == null ? data : file, filePath,
+          .createJDXSource(file, data, filePath,
               obscureTitleFromUser == Boolean.TRUE, loadImaginary, firstSpec,
               lastSpec, nmrMaxY));
 

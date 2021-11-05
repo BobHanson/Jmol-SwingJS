@@ -66,7 +66,7 @@ public abstract class JDXDataObject extends JDXHeader {
   /**
    * JDXReader only
    */
-  double fileFirstX = ERROR;
+  public double fileFirstX = ERROR;
 
   /**
    * JDXReader only
