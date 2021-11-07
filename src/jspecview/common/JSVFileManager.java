@@ -264,12 +264,7 @@ public class JSVFileManager {
 	}
 
 	public static boolean isAB(Object x) {
-		/**
-		 * @j2sNative return Clazz.isAB(x);
-		 */
-		{
-			return x instanceof byte[];
-		}
+	  return AU.isAB(x);
 	}
 
 	public static boolean isZipFile(InputStream is) throws JSVException {

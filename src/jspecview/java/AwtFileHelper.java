@@ -77,9 +77,11 @@ public class AwtFileHelper implements JSVFileHelper {
 		Component c = (Component) panelOrFrame;
 		fc.setSelectedFile(new File(name));
 		if (isSave) {
+		    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			if (useDirLastExported)
 				fc.setCurrentDirectory(new File(dirLastExported));
 		} else {
+		    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			if (useDirLastOpened)
 				fc.setCurrentDirectory(new File(dirLastOpened));
 		}

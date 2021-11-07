@@ -71,13 +71,13 @@ public abstract class JDXDataObject extends JDXHeader {
   /**
    * JDXReader only
    */
-  double fileLastX = ERROR;
+  public double fileLastX = ERROR;
   
   
   /**
    * JDXReader only
    */
-  int fileNPoints = -1;
+  public int fileNPoints = -1;
 
   /**
    * Also used in JDXExport
@@ -338,7 +338,7 @@ public abstract class JDXDataObject extends JDXHeader {
     return d;
   }
 
-  void setNucleusAndFreq(String nuc, boolean isX) {
+  public void setNucleusAndFreq(String nuc, boolean isX) {
   	nuc = fixNucleus(nuc);
     if (isX)
       nucleusX = nuc;
@@ -1058,7 +1058,7 @@ public abstract class JDXDataObject extends JDXHeader {
    *        the observed frequency
    * @param shift 
    */
-  void applyShiftReference(double referenceFreq, double shift) {
+  private void applyShiftReference(double referenceFreq, double shift) {
   
     if (fileShiftRefDataPt > xyCoords.length || fileShiftRefDataPt < 0)
       return;

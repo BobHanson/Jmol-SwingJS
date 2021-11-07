@@ -37,8 +37,8 @@
 
 package jspecview.java;
 
-
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -50,11 +50,6 @@ import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import javajs.api.GenericColor;
-import javajs.util.Lst;
-import javajs.util.OC;
-import javajs.util.PT;
 
 import javax.imageio.ImageIO;
 import javax.print.attribute.Attribute;
@@ -74,17 +69,22 @@ import org.jmol.api.GenericPlatform;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
 
+import javajs.api.GenericColor;
+import javajs.util.Lst;
+import javajs.util.OC;
+import javajs.util.PT;
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
-import jspecview.common.Spectrum;
+import jspecview.common.ColorParameters;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
-import jspecview.common.ColorParameters;
 import jspecview.common.PrintLayout;
 import jspecview.common.ScriptToken;
+import jspecview.common.Spectrum;
 
 /**
- * JSVPanel class represents a View combining one or more GraphSets, each with one or more JDXSpectra.
+ * JSVPanel class represents a View combining one or more GraphSets, each with
+ * one or more JDXSpectra.
  * 
  * @author Debbie-Ann Faceyf
  * @author Khari A. Bryan
@@ -95,38 +95,42 @@ import jspecview.common.ScriptToken;
 
 public class AwtPanel extends JPanel implements JSVPanel, Printable {
   private static final long serialVersionUID = 1L;
-  
-	private GenericPlatform apiPlatform;
-	@Override
-	public GenericPlatform getApiPlatform() {
-		return apiPlatform;
-	}
-	
-  private PanelData pd;
+
+  private GenericPlatform apiPlatform;
+
   @Override
-	public PanelData getPanelData() {
+  public GenericPlatform getApiPlatform() {
+    return apiPlatform;
+  }
+
+  private PanelData pd;
+
+  @Override
+  public PanelData getPanelData() {
     return pd;
   }
 
-	private JSViewer vwr;
-	private GenericMouseInterface mouse;
+  private JSViewer vwr;
+  private GenericMouseInterface mouse;
 
   private GenericColor bgcolor;
-	
+
   /**
    * Constructs a new JSVPanel
-   * @param viewer 
+   * 
+   * @param viewer
    * 
    * @return this
    */
   public static AwtPanel getEmptyPanel(JSViewer viewer) {
     // initial applet with no spectrum but with pop-up capability
-  	return new AwtPanel(viewer, false);
+    return new AwtPanel(viewer, false);
   }
- 
+
   /**
    * Constructs a new JSVPanel
-   * @param viewer 
+   * 
+   * @param viewer
    * 
    * @param spectrum
    *        the spectrum
@@ -137,42 +141,44 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
     // standard application split spectra
     // removal of integration, taConvert
     // Preferences Dialog sample.jdx
-  	ToolTipManager.sharedInstance().setInitialDelay(0);
-  	AwtPanel p = new AwtPanel(viewer, true);
+    ToolTipManager.sharedInstance().setInitialDelay(0);
+    AwtPanel p = new AwtPanel(viewer, true);
     p.pd.initOne(spectrum);
     return p;
   }
- 
-	/**
+
+  /**
    * Constructs a <code>JSVPanel</code> with List of spectra and corresponding
    * start and end indices of data points that should be displayed
-   * @param viewer 
+   * 
+   * @param viewer
    * 
    * @param spectra
    *        the List of <code>Graph</code> instances
    * @return this
    */
   public static AwtPanel getPanelMany(JSViewer viewer, Lst<Spectrum> spectra) {
-  	AwtPanel p = new AwtPanel(viewer, true);
+    AwtPanel p = new AwtPanel(viewer, true);
     p.pd.initMany(spectra, viewer.initialStartIndex, viewer.initialEndIndex);
     return p;
   }
 
   private AwtPanel(JSViewer viewer, boolean withPD) {
-  	this.vwr = viewer;
+    this.vwr = viewer;
     this.pd = (withPD ? new PanelData(this, viewer) : null);
-  	this.apiPlatform = viewer.apiPlatform;
+    this.apiPlatform = viewer.apiPlatform;
     mouse = apiPlatform.getMouseManager(0, this);
     setBorder(BorderFactory.createLineBorder(Color.BLACK));
-	}
+    setCursor(Cursor.getDefaultCursor()); // BH SwingJS needed this because of divider with no location?
+  }
 
   @Override
-	public String getTitle() {
-  	return pd.getTitle();
+  public String getTitle() {
+    return pd.getTitle();
   }
-  
+
   @Override
-	public void dispose() {
+  public void dispose() {
     //toolTip = null;
     if (pd != null)
       pd.dispose();
@@ -181,43 +187,42 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   }
 
   @Override
-	public void setTitle(String title) {
+  public void setTitle(String title) {
     pd.title = title;
     setName(title);
   }
 
-	public void setColorOrFont(ColorParameters ds, ScriptToken st) {
-  	pd.setColorOrFont(ds, st);
+  public void setColorOrFont(ColorParameters ds, ScriptToken st) {
+    pd.setColorOrFont(ds, st);
   }
 
   @Override
-	public void setBackgroundColor(GenericColor color) {
-  	setBackground((Color) (bgcolor = color));
+  public void setBackgroundColor(GenericColor color) {
+    setBackground((Color) (bgcolor = color));
   }
-  
+
   public GenericColor getBackgroundColor() {
-  	return bgcolor;
+    return bgcolor;
   }
-  
+
   /*----------------------- JSVPanel PAINTING METHODS ---------------------*/
 
   @Override
-	public void doRepaint(boolean andTaintAll) {
-  	if (andTaintAll)
-  		pd.setTaintedAll();
-  	// to the system
-  	if (!pd.isPrinting)
+  public void doRepaint(boolean andTaintAll) {
+    if (andTaintAll)
+      pd.setTaintedAll();
+    // to the system
+    if (!pd.isPrinting)
       vwr.requestRepaint();
   }
-  
+
   @Override
-	public void update(Graphics g) {
-  	// from the system
-  	// System: Do not clear rectangle -- we are opaque and will take care of that.
-  	// seems unnecessary, but apparently for the Mac it is critical. Still not totally convinced!
-      paint(g);
+  public void update(Graphics g) {
+    // from the system
+    // System: Do not clear rectangle -- we are opaque and will take care of that.
+    // seems unnecessary, but apparently for the Mac it is critical. Still not totally convinced!
+    paint(g);
   }
- 
 
   /**
    * Overrides paintComponent in class JPanel in order to draw the spectrum
@@ -227,118 +232,121 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
    */
   @Override
   public void paintComponent(Graphics g) {
-  	
-  	// from the system, via update or applet/app repaint
-  	
+
+    // from the system, via update or applet/app repaint
+
     if (vwr == null || pd == null || pd.graphSets == null || pd.isPrinting)
       return;
-    
+
     super.paintComponent(g); // paint background
     try {
-    	// despite the above catch for pd == null, it can still get here 
-    	pd.g2d = pd.g2d0;
-    	pd.drawGraph(g, g, g, getWidth(), getHeight(), false);
+      // despite the above catch for pd == null, it can still get here 
+      pd.g2d = pd.g2d0;
+      g.setColor(getBackground());
+      g.fillRect(0, 0, getWidth(), getHeight());
+      pd.drawGraph(g, g, g, getWidth(), getHeight(), false);
     } catch (Exception e) {
-    	System.out.println("Exception while painting " + e);
-    	e.printStackTrace();
+      System.out.println("Exception while painting " + e);
+      e.printStackTrace();
     }
-    
+
     vwr.repaintDone();
   }
-  
+
   @Override
-	public String getInput(String message, String title, String sval) {
+  public String getInput(String message, String title, String sval) {
     String ret = (String) JOptionPane.showInputDialog(this, message, title,
         JOptionPane.QUESTION_MESSAGE, null, null, sval);
     getFocusNow(true);
     return ret;
   }
 
-	@Override
-	public void showMessage(String msg, String title) {
-		Logger.info(msg);
-		if (title != null)
-			JOptionPane.showMessageDialog(this, msg, title, (msg.startsWith("<html>") ? JOptionPane.INFORMATION_MESSAGE 
-					: JOptionPane.PLAIN_MESSAGE));	
-		getFocusNow(true);
-	}
+  @Override
+  public void showMessage(String msg, String title) {
+    Logger.info(msg);
+    if (title != null)
+      JOptionPane.showMessageDialog(this, msg, title,
+          (msg.startsWith("<html>") ? JOptionPane.INFORMATION_MESSAGE
+              : JOptionPane.PLAIN_MESSAGE));
+    getFocusNow(true);
+  }
 
+  /*----------------- METHODS IN INTERFACE Printable ---------------------- */
 
-	/*----------------- METHODS IN INTERFACE Printable ---------------------- */
+  /**
+   * Send a print job of the spectrum to the default printer on the system
+   * 
+   * @param pl
+   *        the layout of the print job
+   * @param os
+   * @param title
+   */
+  @Override
+  public void printPanel(PrintLayout pl, OutputStream os, String title) {
 
-	/**
-	 * Send a print job of the spectrum to the default printer on the system
-	 * 
-	 * @param pl
-	 *          the layout of the print job
-	 * @param os
-	 * @param title
-	 */
-	@Override
-	public void printPanel(PrintLayout pl, OutputStream os, String title) {
+    // MediaSize size = MediaSize.getMediaSizeForName(pl.paper);
 
-		// MediaSize size = MediaSize.getMediaSizeForName(pl.paper);
+    pl.title = title;
+    pl.date = apiPlatform.getDateFormat("8824");
+    pd.setPrint(pl, os == null ? pl.font : "Helvetica");
 
-		pl.title = title;
-		pl.date = apiPlatform.getDateFormat("8824");
-		pd.setPrint(pl, os == null ? pl.font : "Helvetica");
+    /* Create a print job */
 
-		/* Create a print job */
+    try {
+      PrinterJob pj = (os == null ? PrinterJob.getPrinterJob() : null);
+      if (pj != null) {
+        if (title.length() > 30)
+          title = title.substring(0, 30);
+        pj.setJobName(title);
+        pj.setPrintable(this);
+      }
+      if (pj == null || pj.printDialog()) {
+        try {
+          if (pj == null) {
+            Dimension d = getDimension((MediaSizeName) pl.paper);
+            pl.paperWidth = d.width;
+            pl.paperHeight = d.height;
+            ((JSVPdfWriter) JSViewer.getInterface("jspecview.common.PDFWriter"))
+                .createPdfDocument(this, pl, os);
+          } else {
+            PrintRequestAttributeSet aset = new HashPrintRequestAttributeSet();
+            aset.add(
+                pl.layout.equals("landscape") ? OrientationRequested.LANDSCAPE
+                    : OrientationRequested.PORTRAIT);
+            aset.add((Attribute) pl.paper);
+            pj.print(aset);
+          }
+        } catch (PrinterException ex) {
+          String s = ex.getMessage();
+          if (s == null)
+            return;
+          s = PT.rep(s, "not accepting job.", "not accepting jobs.");
+          // not my fault -- Windows grammar error!
+          showMessage(s, "Printer Error");
+        }
+      }
+    } catch (Exception e) {
+      System.out.println(e);
+    } finally {
+      pd.setPrint(null, null);
+    }
+  }
 
-		try {
-			PrinterJob pj = (os == null ? PrinterJob.getPrinterJob() : null);
-			if (pj != null) {
-				if (title.length() > 30)
-					title = title.substring(0, 30);
-				pj.setJobName(title);
-				pj.setPrintable(this);
-			}
-			if (pj == null || pj.printDialog()) {
-				try {
-					if (pj == null) {
-						Dimension d = getDimension((MediaSizeName) pl.paper);
-						pl.paperWidth = d.width;
-						pl.paperHeight = d.height;
-						((JSVPdfWriter) JSViewer.getInterface("jspecview.common.PDFWriter")).createPdfDocument(this, pl, os);
-					} else {
-						PrintRequestAttributeSet aset = new HashPrintRequestAttributeSet();
-						aset
-								.add(pl.layout.equals("landscape") ? OrientationRequested.LANDSCAPE
-										: OrientationRequested.PORTRAIT);
-						aset.add((Attribute) pl.paper);
-						pj.print(aset);
-					}
-				} catch (PrinterException ex) {
-					String s = ex.getMessage();
-					if (s == null)
-						return;
-					s = PT.rep(s, "not accepting job.", "not accepting jobs.");
-					// not my fault -- Windows grammar error!
-					showMessage(s, "Printer Error");
-				}
-			}
-		} catch (Exception e) {
-			System.out.println(e);
-		} finally {
-			pd.setPrint(null, null);
-		}
-	}
-
-	private Dimension getDimension(MediaSizeName paper) {
-		// ftp://ftp.pwg.org/pub/pwg/media-sizes/pwg-media-size-03.pdf
-		// at 72 dpi we have...
-		if (paper == MediaSizeName.NA_LETTER) {
-			return new Dimension((int) (8.5 * 72), 11 * 72);
-		}
-		if (paper == MediaSizeName.NA_LEGAL) {
-			return new Dimension((int) (8.5 * 72), 14 * 72);
-		}
-		if (paper == MediaSizeName.ISO_A4) {
-			return new Dimension((int) (210 / 25.4 * 72), (int) (297 / 25.4 * 72));
-		}
-		// if (paper == MediaSizeName.ISO_B4) {
-		return new Dimension((int) (250 / 25.4 * 72), (int) (353 / 25.4 * 72));
-	}
+  private Dimension getDimension(MediaSizeName paper) {
+    // ftp://ftp.pwg.org/pub/pwg/media-sizes/pwg-media-size-03.pdf
+    // at 72 dpi we have...
+    if (paper == MediaSizeName.NA_LETTER) {
+      return new Dimension((int) (8.5 * 72), 11 * 72);
+    }
+    if (paper == MediaSizeName.NA_LEGAL) {
+      return new Dimension((int) (8.5 * 72), 14 * 72);
+    }
+    if (paper == MediaSizeName.ISO_A4) {
+      return new Dimension((int) (210 / 25.4 * 72), (int) (297 / 25.4 * 72));
+    }
+    // if (paper == MediaSizeName.ISO_B4) {
+    return new Dimension((int) (250 / 25.4 * 72), (int) (353 / 25.4 * 72));
+  }
 
   /**
    * Implements method print in interface printable
@@ -353,79 +361,77 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
    * @throws PrinterException
    */
   @Override
-	public int print(Graphics g, PageFormat pf, int pi) throws PrinterException {
-  	return pd.print(g, pf.getImageableHeight(), pf.getImageableWidth(), 
-  			pf.getImageableX(), pf.getImageableY(),
-  			pf.getPaper().getHeight(), pf.getPaper().getWidth(), 
-  			pf.getOrientation() == PageFormat.PORTRAIT, pi);
+  public int print(Graphics g, PageFormat pf, int pi) throws PrinterException {
+    return pd.print(g, pf.getImageableHeight(), pf.getImageableWidth(),
+        pf.getImageableX(), pf.getImageableY(), pf.getPaper().getHeight(),
+        pf.getPaper().getWidth(), pf.getOrientation() == PageFormat.PORTRAIT,
+        pi);
   }
 
-	@Override
-	public int getFontFaceID(String name) {
-		return Font.getFontFaceID("SansSerif");
-	}
-	
+  @Override
+  public int getFontFaceID(String name) {
+    return Font.getFontFaceID("SansSerif");
+  }
 
-	@Override
-	public String saveImage(String type, GenericFileInterface file, OC out) {
-		String msg = "OK";
+  @Override
+  public String saveImage(String type, GenericFileInterface file, OC out) {
+    String msg = "OK";
     try {
-	    Image image = createImage(getWidth(), getHeight());
-	    paint(image.getGraphics());
-			ImageIO.write((RenderedImage) image, type, (File) file);
-		} catch (IOException e) {
-			msg = e.toString();
-			showMessage(msg, "Error Saving Image");
-		}
-		return null;
-	}
+      Image image = createImage(getWidth(), getHeight());
+      paint(image.getGraphics());
+      ImageIO.write((RenderedImage) image, type, (File) file);
+    } catch (IOException e) {
+      msg = e.toString();
+      showMessage(msg, "Error Saving Image");
+    }
+    return null;
+  }
 
-	///// threading and focus
-	
-	@Override
-	public void getFocusNow(boolean asThread) {
-		if (asThread)
-			SwingUtilities.invokeLater(new RequestThread());
-		else
-  		requestFocusInWindow();
-		if (pd != null)
-			pd.dialogsToFront(null);
-	}
+  ///// threading and focus
+
+  @Override
+  public void getFocusNow(boolean asThread) {
+    if (asThread)
+      SwingUtilities.invokeLater(new RequestThread());
+    else
+      requestFocusInWindow();
+    if (pd != null)
+      pd.dialogsToFront(null);
+  }
 
   public class RequestThread implements Runnable {
-		@Override
-		public void run() {
-			requestFocusInWindow();
-		}
+    @Override
+    public void run() {
+      requestFocusInWindow();
+    }
   }
 
-	
-	///////////
-	
+  ///////////
+
   @Override
   public String toString() {
     return pd.getSpectrumAt(0).toString();
   }
 
-	@Override
-	public boolean processMouseEvent(int id, int x, int y, int modifiers,
-			long time) {
-		return mouse.processEvent(id, x, y, modifiers, time);
-	}
+  @Override
+  public boolean processMouseEvent(int id, int x, int y, int modifiers,
+                                   long time) {
+    return mouse.processEvent(id, x, y, modifiers, time);
+  }
 
-	@Override
-	public void processTwoPointGesture(float[][][] touches) {
-		// n/a
-	}
+  @Override
+  public void processTwoPointGesture(float[][][] touches) {
+    // n/a
+  }
 
-	@Override
-	public void showMenu(int x, int y) {
-  	vwr.showMenu(x, y);
-	}
+  @Override
+  public void showMenu(int x, int y) {
+    vwr.showMenu(x, y);
+  }
 
-	@Override
-	public void paintComponent(Object display) {
-		super.paintComponent((Graphics) display);
-	}
+  @Override
+  public void paintComponent(Object display) {
+    super.paintComponent((Graphics) display);
+  }
 
 }

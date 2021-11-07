@@ -503,6 +503,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		bl.setHgap(2);
 		bl.setVgap(2);
 		statusPanel.setLayout(bl);
+		mainSplitPane.setCursor(Cursor.getDefaultCursor());
 		mainSplitPane.setOneTouchExpandable(true);
 		mainSplitPane.setResizeWeight(0.3);
 		getContentPane().add(statusPanel, BorderLayout.SOUTH);

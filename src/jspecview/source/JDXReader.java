@@ -145,6 +145,10 @@ public class JDXReader implements JmolJDXMOLReader {
   }
 
   public static Map<String, String> getHeaderMap(InputStream in, Map<String, String> map) throws Exception {
+    return getHeaderMapS(in, map, null);
+  }
+
+  public static Map<String, String> getHeaderMapS(InputStream in, Map<String, String> map, String suffix) throws Exception {
     if (map == null)
       map = new LinkedHashMap<String, String>();
     Lst<String[]> hlist = createJDXSource(null, in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
@@ -157,7 +161,7 @@ public class JDXReader implements JmolJDXMOLReader {
       // dashes, slashes, and underlines are discarded. (XUNITS, xunits XUNITS, and X_UNI-TS
       // are equivalent, thus these characters can be used optionally as separators for readability."
       
-      map.put(h[2], h[1]);
+      map.put((suffix == null ? h[2] : h[2] + suffix), h[1]);
     }
     return map;    
   }
@@ -221,7 +225,7 @@ public class JDXReader implements JmolJDXMOLReader {
           br.close();
           return readBrukerFileZip(null, file.getFullPath());
         }
-        if (header.indexOf('\0') >= 0 || header.indexOf('\u00FF') >= 0 
+        if (header.indexOf('\0') >= 0 || header.indexOf('\uFFFD') >= 0 
             || header.indexOf("##TITLE= Parameter file") == 0
             || header.indexOf("##TITLE= Audit trail") == 0
             ) {

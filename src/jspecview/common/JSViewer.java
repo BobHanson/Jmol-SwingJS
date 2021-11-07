@@ -1402,7 +1402,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
      * 
      * @j2sNative
      * 
-     *            isID = (applet._viewSet != null && !value.startsWith("ID"));
+     *            isID = (applet && applet._viewSet != null && !value.startsWith("ID"));
      * 
      */
     if (isID) {
