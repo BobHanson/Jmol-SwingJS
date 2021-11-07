@@ -1570,6 +1570,7 @@ class GraphSet implements XYScaleConverter {
 			// no 2D grid?
 			drawWidgets(gFront, g2, subIndex, needNewPins, doDraw1DObjects, true,
 					true);
+			widgetsAreSet = true;
 		}
 		if (annotations != null)
 			drawAnnotations(gFront, annotations, null);
@@ -1810,14 +1811,14 @@ class GraphSet implements XYScaleConverter {
 	private void drawBar(Object g, PeakInfo pi, double xMin, double xMax,
 			ScriptToken whatColor, int tickSize) {
 		
-		double r = xMax + xMin;
-		double d = Math.abs(xMax - xMin);
-		double range = Math.abs(toX(xPixel1) - toX(xPixel0));
-		if (false && tickSize > 0 && d > range / 20) {
-			d = range / 20;
-			xMin = r / 2 - d/2;
-			xMax = r / 2 + d/2;
-		}
+//		double r = xMax + xMin;
+//		double d = Math.abs(xMax - xMin);
+//		double range = Math.abs(toX(xPixel1) - toX(xPixel0));
+//		if (tickSize > 0 && d > range / 20) {
+//			d = range / 20;
+//			xMin = r / 2 - d/2;
+//			xMax = r / 2 + d/2;
+//		}
 
 		int x1 = toPixelX(xMin);
 		int x2 = toPixelX(xMax);
@@ -2891,6 +2892,11 @@ class GraphSet implements XYScaleConverter {
 			Highlight hl = (Highlight) obj;
 			return ((hl.x1 == this.x1) && (hl.x2 == this.x2));
 		}
+		
+		@Override
+		public int hashCode() {
+		  return (int) (x1 * 1000 + x2 * 1000000); 
+		}
 	}
 
 	// called only by PanelData
@@ -3070,7 +3076,7 @@ class GraphSet implements XYScaleConverter {
 				return true;
 
 			widget = getPinSelected(xPixel, yPixel);
-			if (widget == null) {
+			if (widget == null) {			  
 				yPixel = fixY(yPixel);
 				if (xPixel < xPixel1) {
 					if (pd.shiftPressed)
@@ -3501,7 +3507,7 @@ class GraphSet implements XYScaleConverter {
 	}
 
 
-  public void mousePressedEvent(int xPixel, int yPixel, int clickCount) {
+  public void mousePressedEvent(int xPixel, int yPixel, @SuppressWarnings("unused") int clickCount) {
     checkWidgetEvent(xPixel, yPixel, true);    
   }
   
@@ -3562,7 +3568,6 @@ class GraphSet implements XYScaleConverter {
 
 	synchronized void mouseMovedEvent(int xPixel, int yPixel) {
 		if (nSpectra > 1) {
-
 			int iFrame = getSplitPoint(yPixel);
 			setPositionForFrame(iFrame);
 			setSpectrumMovedTo(nSplit > 1 ? iFrame : iSpectrumSelected);
@@ -4386,7 +4391,7 @@ class GraphSet implements XYScaleConverter {
   }
 
   
-  private boolean get2DImage(Spectrum spec0) {
+  private boolean get2DImage(@SuppressWarnings("unused") Spectrum spec0) {
     imageView = new ImageView();
     imageView.set(viewList.get(0).getScale());
     if (!update2dImage(true))
