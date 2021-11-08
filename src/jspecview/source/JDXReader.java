@@ -194,7 +194,7 @@ public class JDXReader implements JmolJDXMOLReader {
     if (AU.isAB(in)) {
       bytes = (byte[]) in;
       if (Rdr.isZipB(bytes)) {
-        return  readBrukerFileZip(bytes, file.getFullPath());
+        return  readBrukerFileZip(bytes, file == null ? filePath : file.getFullPath());
       }
     }
     if (in instanceof String || bytes != null) {
