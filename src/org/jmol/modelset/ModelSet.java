@@ -31,20 +31,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import javajs.util.A4;
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolModulationSet;
@@ -56,7 +42,6 @@ import org.jmol.bspt.CubeIterator;
 import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
-import javajs.util.BS;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.ScriptCompiler;
 import org.jmol.script.T;
@@ -78,6 +63,21 @@ import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 
 /*
@@ -547,8 +547,15 @@ public class ModelSet extends BondCollection {
       }
     }
 
-    if (type != null && type.indexOf(":") >= 0)
-      type = type.substring(0, type.indexOf(":"));
+    int tp;
+    if (type != null && (tp = type.indexOf(":")) >= 0)
+      type = type.substring(0, tp);
+    if (type != null && (tp = type.indexOf(".")) >= 0) {
+      index = PT.parseInt(type.substring(tp + 1));
+      if (index < 0)
+        index = 0;
+      type = type.substring(0, tp);
+    }
     pointGroup = symmetry.setPointGroup(pointGroup, center, pts, bs,
         haveVibration, (isPoints ? 0 : vwr.getFloat(T.pointgroupdistancetolerance)),
         vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
@@ -2051,7 +2058,6 @@ public class ModelSet extends BondCollection {
   }
 
   protected BS getAtomBitsMaybeDeleted(int tokType, Object specInfo) {
-    int[] info;
     BS bs;
     switch (tokType) {
     default:

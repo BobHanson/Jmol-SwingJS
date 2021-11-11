@@ -1159,10 +1159,14 @@ class PointGroup {
       nTotal++;
       nElements++;
     }
-    if (asInfo)
+    if (asInfo) {
       info.put(ctype, center);
-    else
+      if (haveInversionCenter)
+        info.put("center", center);
+      info.put(ctype, center);
+    } else {
       sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
+    }
     for (int i = maxAxis; --i >= 0;) {
       if (nAxes[i] > 0) {
         // includes planes

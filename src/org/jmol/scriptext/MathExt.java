@@ -3593,8 +3593,10 @@ public class MathExt {
         o = map.get(xyz);
         return (o == null ? mp.addXStr("") : mp.addXObj(o));
       }
+      P3 centerPt;
       try {
         if (o instanceof SV) {
+          centerPt = (P3) ((SV) map.get("center")).value;
           SV obj = (SV) o;
           if (obj.tok == T.matrix3f) {
             m = (M3) obj.value;
@@ -3603,10 +3605,13 @@ public class MathExt {
           } else {
             return false;
           }
-        } else if (o instanceof M3) {
-          m = (M3) o;
         } else {
-          m = ((Lst<M3>) o).get(iOp - 1);
+          centerPt = (P3) map.get("center");
+          if (o instanceof M3) {
+            m = (M3) o;
+          } else {
+            m = ((Lst<M3>) o).get(iOp - 1);
+          }
         }
         M3 m0 = m;
         m = M3.newM3(m);
@@ -3618,7 +3623,9 @@ public class MathExt {
         if (pt1 == null)
           return mp.addXObj(m);
         pt1 = P3.newP(pt1);
+        pt1.sub(centerPt);
         m.rotate(pt1);
+        pt1.add(centerPt);
         return mp.addXPt(pt1);
       } catch (Exception e) {
         return false;
