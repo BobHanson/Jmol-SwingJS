@@ -343,7 +343,7 @@ public class IsoExt extends ScriptExt {
           type = eval.optParameterAsString(i);
           break;
         }
-        float scale = 1;
+        float scale = (intScale == 0 ? 1 : intScale/100f);
         int index = 0;
         if (type.length() > 0) {
           if (isFloatParameter(++i))

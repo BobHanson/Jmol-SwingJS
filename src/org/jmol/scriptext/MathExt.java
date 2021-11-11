@@ -331,6 +331,8 @@ public class MathExt {
         return false;
       }
       break;
+    case 0:
+      return mp.addXObj(vwr.ms.getPointGroupInfo(null));
     default:
       return false;
     }
@@ -2382,13 +2384,16 @@ public class MathExt {
 
     T token = opTokenFor(tok);
 
-    SV[] olist = new SV[len];
     if (isArray1 && isAll) {
       Lst<SV> llist = new Lst<SV>();
       return mp.addXList(addAllLists(x1.getList(), llist));
     }
     SV a = (isScalar1 ? x1 : null);
     SV b;
+    boolean justVal = (len == Integer.MAX_VALUE);
+    if (justVal)
+      len = 1;
+    SV[] olist = new SV[len];
     for (int i = 0; i < len; i++) {
       if (isScalar2)
         b = scalar;
@@ -2417,7 +2422,7 @@ public class MathExt {
         return false;
       olist[i] = mp.getX();
     }
-    return mp.addXAV(olist);
+    return (justVal ? mp.addXObj(olist[0]) : mp.addXAV(olist));
   }
 
   private Lst<SV> addAllLists(Lst<SV> list, Lst<SV> l) {
@@ -3452,6 +3457,7 @@ public class MathExt {
     return mp.addXBs(bs);
   }
 
+  @SuppressWarnings("unchecked")
   private boolean evaluateSymop(ScriptMathProcessor mp, SV[] args,
                                 boolean haveBitSet)
       throws ScriptException {
@@ -3481,14 +3487,13 @@ public class MathExt {
     // Returns the time reversal of a symmetry operator in a magnetic space group
 
     // x = y.symop(atomOrPoint, atomOrPoint)
-    
+
     // x = y.symop(n, [h,k,l])
     // adds a lattice translation to the symmetry operation
-    
+
     // x = y.symop(n,...,"cif2")
     // return a <symop> <translation> as nn [a b c] suitable for CIF2 inclusion
-    
-    
+
     SV x1 = (haveBitSet ? mp.getX() : null);
     if (x1 != null && x1.tok != T.bitset)
       return false;
@@ -3538,9 +3543,11 @@ public class MathExt {
       List<SV> a = args[apt++].getList();
       if (a.size() != 3)
         return false;
-      trans = P3.new3(SV.fValue(a.get(0)), SV.fValue(a.get(1)), SV.fValue(a.get(2)));
+      trans = P3.new3(SV.fValue(a.get(0)), SV.fValue(a.get(1)),
+          SV.fValue(a.get(2)));
     } else if (narg > apt && args[apt].tok == T.integer) {
-      SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3(), 0, 0);
+      SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3(), 0,
+          0);
     }
     P3 pt1 = null, pt2 = null;
     if ((pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
@@ -3553,13 +3560,77 @@ public class MathExt {
       apt++;
     if (iOp == Integer.MIN_VALUE)
       iOp = 0;
+    Map<String, ?> map = null;
+    if (xyz != null) {
+      if (apt == narg) {
+        map = vwr.ms.getPointGroupInfo(null);
+      } else if (args[apt].tok == T.hash) {
+        map = args[apt].getMap();
+      }
+    }
+    if (map != null) {
+      M3 m;
+      // pointgroup. 
+      int pt = xyz.indexOf('.');
+      int p1 = xyz.indexOf('^');
+      if (p1 > 0) {
+        nth = PT.parseInt(xyz.substring(p1 + 1));
+      } else {
+        p1 = xyz.length();
+        nth = 1;
+      }
+      if (pt > 0 && p1 > pt + 1) {
+        iOp = PT.parseInt(xyz.substring(pt + 1, p1));
+        if (iOp < 1)
+          iOp = 1;
+        p1 = pt;
+      } else {
+        iOp = 1;
+      }
+      xyz = xyz.substring(0, p1);
+      Object o = map.get(xyz + "_m");
+      if (o == null) {
+        o = map.get(xyz);
+        return (o == null ? mp.addXStr("") : mp.addXObj(o));
+      }
+      try {
+        if (o instanceof SV) {
+          SV obj = (SV) o;
+          if (obj.tok == T.matrix3f) {
+            m = (M3) obj.value;
+          } else if (obj.tok == T.varray) {
+            m = (M3) obj.getList().get(iOp - 1).value;
+          } else {
+            return false;
+          }
+        } else if (o instanceof M3) {
+          m = (M3) o;
+        } else {
+          m = ((Lst<M3>) o).get(iOp - 1);
+        }
+        M3 m0 = m;
+        m = M3.newM3(m);
+        if (nth > 1) {
+          for (int i = 1; i < nth; i++) {
+            m.mul(m0);
+          }
+        }
+        if (pt1 == null)
+          return mp.addXObj(m);
+        pt1 = P3.newP(pt1);
+        m.rotate(pt1);
+        return mp.addXPt(pt1);
+      } catch (Exception e) {
+        return false;
+      }
+    }
     String desc = (narg == apt
         ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
         : SV.sValue(args[apt++]).toLowerCase());
 
     return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length
-        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp, trans,
-            pt1, pt2, T.array, desc, 0, nth, 0)));
+        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp,
+            trans, pt1, pt2, T.array, desc, 0, nth, 0)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

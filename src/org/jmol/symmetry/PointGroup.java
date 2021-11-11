@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
+import javajs.util.M3;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -810,7 +811,7 @@ class PointGroup {
     v.normalize();
     if (haveAxis(iOrder, v))
       return false;
-    Quat q = Quat.newVA(v, (iOrder < firstProper ? 180 : 0) + 360 / (iOrder % firstProper));
+    Quat q = getQuaternion(v, iOrder);
     if (!checkOperation(q, center, iOrder))
       return false;
     addAxis(iOrder, v);
@@ -965,17 +966,29 @@ class PointGroup {
   final static String[] typeNames = { "plane", "proper axis", "improper axis",
       "center of inversion" };
 
+  final static M3 mInv = M3.newA9(new float[] {
+      -1, 0, 0, 
+      0, -1, 0,
+      0, 0, -1
+      });
+
+  static Quat getQuaternion(V3 v, int iOrder) {
+    return Quat.newVA(v, (iOrder < firstProper ? 180 : 0) + (iOrder == 0 ? 0 : 360 / (iOrder % firstProper)));
+  }
+
   int nOps = 0;
   private class Operation {
     int type;
     int order;
     int index;
     V3 normalOrAxis;
+    private int typeOrder;
 
     Operation() {
       index = ++nOps;
       type = OPERATION_INVERSION_CENTER;
       order = 1;
+      typeOrder = 1;
       if (Logger.debugging)
         Logger.debug("new operation -- " + typeNames[type]);
     }
@@ -983,6 +996,7 @@ class PointGroup {
     Operation(V3 v, int i) {
       index = ++nOps;
       type = (i < firstProper ? OPERATION_IMPROPER_AXIS : OPERATION_PROPER_AXIS);
+      typeOrder = i;
       order = i % firstProper;
       normalOrAxis = Quat.newVA(v, 180).getNormal();
       if (Logger.debugging)
@@ -1009,6 +1023,28 @@ class PointGroup {
       default:
         return "C" + order;
       }
+    }
+
+    M3 mat;
+    
+    public M3 getM3() {
+      if (mat != null)
+        return mat;
+      M3 m = M3.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrix());
+      if (type == OPERATION_PLANE || type == OPERATION_IMPROPER_AXIS)
+        m.mul(mInv);
+      cleanMatrix(m);
+      return mat = m;
+    }
+
+    private void cleanMatrix(M3 m) {
+      for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++)
+        m.setElement(i,  j, approx0(m.getElement(i, j)));
+    }
+
+    private float approx0(float v) {
+      return (v > 1e-15f || v < -1e-15f ? v : 0);
     }
   }
 
@@ -1098,7 +1134,7 @@ class PointGroup {
         }
       sb.append("# name=").append(name);
       sb.append(", nCi=").appendI(haveInversionCenter ? 1 : 0);
-      sb.append(", nCs=").appendI(nAxes[0]);
+      sb.append(", nCs=").appendI(nAxes[OPERATION_PLANE]);
       sb.append(", nCn=").appendI(nType[OPERATION_PROPER_AXIS][0]);
       sb.append(", nSn=").appendI(nType[OPERATION_IMPROPER_AXIS][0]);
       sb.append(": ");
@@ -1116,15 +1152,20 @@ class PointGroup {
     }
     int n = 0;
     int nTotal = 1;
+    int nElements = 0; // planes Cs
+    
     String ctype = (haveInversionCenter ? "Ci" : "center");
-    if (haveInversionCenter)
+    if (haveInversionCenter) {
       nTotal++;
+      nElements++;
+    }
     if (asInfo)
       info.put(ctype, center);
     else
       sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
     for (int i = maxAxis; --i >= 0;) {
       if (nAxes[i] > 0) {
+        // includes planes
         n = nUnique[i];
         String label = axes[i][0].getLabel();
         if (asInfo)
@@ -1133,24 +1174,31 @@ class PointGroup {
           sb.append("\n\n").append(name).append("\tn").append(label).append("\t").appendI(nAxes[i]).append("\t").appendI(n);
         n *= nAxes[i];
         nTotal += n;
+        nElements += nAxes[i];
         nType[axes[i][0].type][1] += n;
         Lst<V3> vinfo = (asInfo ? new  Lst<V3>() : null);
+        Lst<M3> minfo = (asInfo ? new  Lst<M3>() : null);
         for (int j = 0; j < nAxes[i]; j++) {
           //axes[i][j].typeIndex = j + 1;
-          if (asInfo)
-            vinfo.addLast(axes[i][j].normalOrAxis);
-          else
+          Operation aop = axes[i][j];
+          if (asInfo) {
+            vinfo.addLast(aop.normalOrAxis);
+            minfo.addLast(aop.getM3());
+          } else {
             sb.append("\n").append(name).append("\t").append(label).append("_").appendI(j + 1).append("\t"
-                ).appendO(axes[i][j].normalOrAxis);
+                ).appendO(aop.normalOrAxis);
+          }
         }
-        if (asInfo)
+        if (asInfo) {
           info.put(label, vinfo);
+          info.put(label + "_m", minfo);
+        }
       }
     }
     
     if (!asInfo) {
       sb.append("\n");
-      sb.append("\n").append(name).append("\ttype\tnType\tnUnique");
+      sb.append("\n").append(name).append("\ttype\tnElements\tnUnique");
       sb.append("\n").append(name).append("\tE\t  1\t  1");
 
       n = (haveInversionCenter ? 1 : 0);
@@ -1175,7 +1223,10 @@ class PointGroup {
     info.put("name", name);
     info.put("nAtoms", Integer.valueOf(nAtoms));
     info.put("nTotal", Integer.valueOf(nTotal));
+    info.put("nElements", Integer.valueOf(nElements));
     info.put("nCi", Integer.valueOf(haveInversionCenter ? 1 : 0));
+    if (haveInversionCenter)
+      info.put("Ci_m", M3.newM3(mInv));
     info.put("nCs", Integer.valueOf(nAxes[0]));
     info.put("nCn", Integer.valueOf(nType[OPERATION_PROPER_AXIS][0]));
     info.put("nSn", Integer.valueOf(nType[OPERATION_IMPROPER_AXIS][0]));
