@@ -115,7 +115,7 @@ public class BrukerReader {
         }
       }
       zis.close();
-      map.put("##TITLE", title);
+      map.put("##TITLE", (title == null ? "" : title));
       return getSource(fullPath, map, data1r, data1i, data2rr);
     } catch (Exception e) {
       return null;
