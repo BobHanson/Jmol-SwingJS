@@ -1,0 +1,72 @@
+2021.11.13 BH
+
+Jmol Object Model Notes. This is not in any way a comprehensive discussion of the Jmol object model.
+
+org.jmol.viewer.Viewer
+
+Jmol is built around the idea of the Viewer class. There can be any number of Viewer objects. 
+Each Viewer has its own java.swing.JPanel or JApplet when not operating in headless mode (JmolData.jar). 
+
+Two instances of Viewer are completely independent, maintaining its own mouse and keyboard handler, size, viewing orientation, etc. 
+
+Each Viewer instance has a number of associated classes ["org.jmol." implied prefix here]:
+
+g3d.Graphics3D
+modelset.ModelSet
+viewer.ActionManager
+viewer.AnimationManager
+viewer.ColorManager
+viewer.DataManager
+viewer.FileManager
+viewer.GlobalSettings
+viewer.JmolStateCreator
+viewer.ModelManager
+viewer.MouseState
+viewer.OutputManager
+viewer.PropertyManager
+viewer.SelectionManager
+viewer.ShapeManager
+viewer.StateCreator
+viewer.StateManager
+viewer.StatusManager
+viewer.TransformManager
+
+and a number of others. 
+
+So each Viewer objects are completely independent. There is no cross-talk among Viewers.
+
+
+
+org.jmol.modelset.ModelSet extends org.jmol.modelset.BondCollection extends org.jmol.modelset.AtomCollection
+
+Each Viewer object maintains one ModelSet, which (because of its size) is separated into three inheretance classes. The superclass AtomCollection handles all atom-related methods. BondCollection handles all bond-related methods. And ModelSet handles all model-related methods. But there is only one actual Object here --- all of this is just for programming convenience. Thus, there are occasional 
+references in AtomColletion to itself as a ModelSet:
+
+  private void fixTrajectory(Atom a) {
+    if (((ModelSet) this).isTrajectory(a.mi))
+      trajectory.fixAtom(a);
+  }
+
+Admittedly, this is a bit nonstandard. But the advantage of separating out the methods of a class into superclasses does have its advantages, and that is the design.
+ 
+
+The ModelSet maintained by a Viewer maintains several key arrays. The use of minimally describing names here (at, bo, am) is
+not best practice, but there is a reason for it. It derives from the desire to have as small as possible JavaScript footprint. 
+For the  same reason, many of the fields in ModelSet and its superclasses are public. Again, not considered best practice, but introduced as a way of optimizing JavaScript speed and, again, code size after transpilation.
+
+  public Atom[] at;  (in AtomCollection)
+  public Bond[] bo;  (in BondCollection)
+  public Model[] am; (in ModelSet)
+
+Each Model object (also referred to as a "frame" when scripting) is associated with a set of atoms via a javajs.util.BS 32-bit bitset. 
+(The reason java.util.BitSet is never used in Jmol is that it is 64-bit, and whiile SwingJS supports 64-bit "long", their operations 
+are considerably slower than 32-bit operations, since JavaScript does not hvae a 64-bit integer.) 
+
+So there is one Atom[] array per Viewer, and its atoms are chunked into subsets, each associated with a different Model. 
+
+Deleting atoms or hiding atoms is no problem. We just maintain a bitset of deleted atoms and just skip them.
+
+Adding atoms is far more complex, and it currently is only supported for the last Model in the set of Model[]. This limitation
+is due to the way we add atoms to a model by appending a set of atoms to the end of the Atom[] array. The feeling was that 
+there are just too many atom-related bitsets maintained to allow for insertion of atoms into the middle of a bitset. 
+
