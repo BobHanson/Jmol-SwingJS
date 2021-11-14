@@ -1035,7 +1035,8 @@ public class ActionManager implements EventManager {
       dragAtomIndex = vwr.findNearestAtomIndexMovable(x, y, true);
       if (dragAtomIndex >= 0
           && (apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)
-          && vwr.ms.isAtomInLastModel(dragAtomIndex)) {
+//          && vwr.ms.isAtomInLastModel(dragAtomIndex)
+          ) {
         if (bondPickingMode == PICKING_ROTATE_BOND) {          
           vwr.setModelkitProperty("bondAtomIndex", Integer.valueOf(dragAtomIndex));
         }

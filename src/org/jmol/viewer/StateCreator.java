@@ -495,7 +495,7 @@ public class StateCreator extends JmolStateCreator {
         }
         m.loadScript = new SB();
         getInlineData(commands, vwr.getModelExtract(bs, false, true, "MOL"),
-            i > 0, null);
+            i > 0, null, null);
       } else {
         commands.appendSB(m.loadScript);
         Lst<String> auxFiles = (Lst<String>) m.auxiliaryInfo.get("auxFiles");
@@ -521,9 +521,12 @@ public class StateCreator extends JmolStateCreator {
   }
 
   @Override
-  public void getInlineData(SB loadScript, String strModel, boolean isAppend, String loadFilter) {
-    String tag = (isAppend ? "append" : "model") + " inline";
-    loadScript.append("load /*data*/ data \"").append(tag).append("\"\n")
+  public void getInlineData(SB loadScript, String strModel, boolean isAppend, Integer appendToModelIndex, String loadFilter) {
+    String tag = (isAppend ? "append" 
+        + (appendToModelIndex != null && appendToModelIndex.intValue() != vwr.ms.mc - 1 ?  " modelindex=" + appendToModelIndex : "") 
+        : "model") + " inline";
+    loadScript.append("load /*data*/ data \"")
+        .append(tag).append("\"\n")
         .append(strModel).append("end \"").append(tag)
         .append(loadFilter == null || loadFilter.length() == 0 ? "" : " filter" + PT.esc(loadFilter))
         .append("\";");
@@ -1754,7 +1757,7 @@ public class StateCreator extends JmolStateCreator {
         sb.append("zap ");
         sb.append(Escape.eBS(bs)).append(";");
         getInlineData(sb, vwr.getModelExtract(bs, false, true,
-            "MOL"), true, null);
+            "MOL"), true, null, null);
         sb.append("set refreshing false;").append(
             vwr.acm.getPickingState()).append(
             vwr.tm.getMoveToText(0, false)).append(

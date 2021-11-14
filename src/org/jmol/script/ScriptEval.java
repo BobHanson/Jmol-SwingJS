@@ -4320,9 +4320,20 @@ public class ScriptEval extends ScriptExpr {
         tok = T.getTokFromName(modelName);
         break;
       case T.append:
-        isAppend = true;
-        loadScript.append(" append");
+        // we are looking out for state scripts after model 1.1 deletion.
         modelName = optParameterAsString(++i);
+        int ami = PT.parseInt(modelName);
+        isAppend = (!isStateScript || vwr.ms.mc > 0);
+        if (isAppend)
+          loadScript.append(" append");
+        if (ami >= 0) {
+          modelName = optParameterAsString(++i);
+          if (isAppend) {
+            loadScript.append(" " + ami);
+            appendNew = false;
+            htParams.put("appendToModelIndex", Integer.valueOf(ami));
+          }
+        }
         tok = T.getTokFromName(modelName);
         break;
       case T.orientation:
@@ -4428,7 +4439,15 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.data:
         String key = stringParameter(++i).toLowerCase();
+        modelName = optParameterAsString(i + 1);
         isAppend = key.startsWith("append");
+        if (isAppend && key.startsWith("append modelindex=")) {
+           int ami = PT.parseInt(key.substring(18));
+           if (ami >= 0) {
+             appendNew = false;
+             htParams.put("appendToModelIndex", Integer.valueOf(ami));
+           }
+        }
         doOrient = (key.indexOf("orientation") >= 0);
         i = addLoadData(loadScript, key, htParams, i);
         isData = true;

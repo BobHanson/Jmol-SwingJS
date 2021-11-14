@@ -188,6 +188,12 @@ public class Model {
   private BS bsCheck;
 
   boolean hasChirality;
+
+  /**
+   * a flag that, when false, indicates that the model has atoms in different regions of the Atom[] array
+   * 
+   */
+  public boolean isOrderly = true;
   
   /**
    * 

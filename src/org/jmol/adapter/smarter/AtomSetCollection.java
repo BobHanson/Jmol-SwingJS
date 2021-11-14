@@ -131,6 +131,9 @@ public class AtomSetCollection {
     p.put("PATH_KEY", SmarterJmolAdapter.PATH_KEY);
     p.put("PATH_SEPARATOR", SmarterJmolAdapter.PATH_SEPARATOR);
     setInfo("properties", p);
+    Integer modelIndex = (reader == null ? null : (Integer) reader.htParams.get("appendToModelIndex"));
+    if (modelIndex != null)
+      this.setInfo("appendToModelIndex",modelIndex);
     if (array != null) {
       int n = 0;
       readerList = new Lst<AtomSetCollectionReader>();

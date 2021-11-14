@@ -37,7 +37,7 @@ public abstract class JmolStateCreator {
   abstract void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo);
 
   abstract void getInlineData(SB loadScript, String strModel, boolean isAppend,
-                     String defaultLoadFilter);
+                     Integer appendToModelIndex, String defaultLoadFilter);
 
   public abstract String getAtomShapeState(AtomShape shape); // called by Polyhedra
 }

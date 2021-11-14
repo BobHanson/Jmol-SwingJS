@@ -538,7 +538,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (isMMCIF)
       asc.checkSpecial = false;
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
-    if (isMMCIF) {
+    if (isMMCIF && asc.iSet >= 0) {
       int modelIndex = asc.iSet;
       asc.setCurrentModelInfo(
           "PDB_CONECT_firstAtom_count_max",

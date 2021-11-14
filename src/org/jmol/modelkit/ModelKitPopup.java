@@ -163,8 +163,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (vwr.ms != lastModelSet) {
       lastModelSet = vwr.ms;
       isOK = false;
-    } else if (currentModelIndex == -1 || currentModelIndex != vwr.am.cmi) {
-      isOK = false;
+//    } else if (currentModelIndex == -1 || currentModelIndex != vwr.am.cmi) {
+//      isOK = false;
     }
     currentModelIndex = Math.max(vwr.am.cmi, 0);
     iatom0 = vwr.ms.am[currentModelIndex].firstAtomIndex;
@@ -731,9 +731,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    */
   private String getHoverLabel(int atomIndex) {
     int state = getMKState();
-    if (state != STATE_XTALVIEW && atomIndex >= 0 && !vwr.ms.isAtomInLastModel(atomIndex)) {
-      return "Only atoms in the last model may be edited.";
-    }
+//    if (state != STATE_XTALVIEW && atomIndex >= 0 && !vwr.ms.isAtomInLastModel(atomIndex)) {
+//      return "Only atoms in the last model may be edited.";
+//    }
     String msg = null;
     switch (state) {
     case STATE_XTALVIEW:
