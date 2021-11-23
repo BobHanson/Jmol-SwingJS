@@ -143,6 +143,8 @@ public class Balls extends AtomShape {
     BS bsDeleted = vwr.slm.bsDeleted;
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];
+      if (atom == null)
+        continue;
       atom.setClickable(0);
       if (bsDeleted != null && bsDeleted.get(i)
           || (atom.shapeVisibilityFlags & vf) == 0

@@ -784,7 +784,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.hkl:
         rpn.addX(SV.newT(instruction));
-        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2)));
+        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, false)));
         pc = iToken;
         break;
       case T.plane:
@@ -816,7 +816,7 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addX(SV.newT(instruction));
         // note that the compiler has changed all within() types to strings.
         if (s.equals("hkl")) {
-          rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2)));
+          rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, false)));
           pc = iToken;
         }
         break;
@@ -1278,6 +1278,8 @@ abstract class ScriptExpr extends ScriptParam {
     for (int i = ac; --i >= 0;) {
       boolean match = false;
       Atom atom = atoms[i];
+      if (atom == null)
+        continue;
       if (isProp) {
         if (data == null || data.length <= i)
           continue;
@@ -1397,6 +1399,8 @@ abstract class ScriptExpr extends ScriptParam {
     for (int i = 0; i < ac; ++i) {
       boolean match = false;
       Atom atom = atoms[i];
+      if (atom == null)
+        continue;
       switch (tokWhat) {
       default:
         ia = atom.atomPropertyInt(tokWhat);

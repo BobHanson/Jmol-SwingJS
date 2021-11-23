@@ -87,7 +87,7 @@ public abstract class ShapeRenderer {
   }
 
   protected boolean isVisibleForMe(Atom a) {
-    return a.isVisible(myVisibilityFlag | Atom.ATOM_INFRAME_NOTHIDDEN);
+    return a != null && a.isVisible(myVisibilityFlag | Atom.ATOM_INFRAME_NOTHIDDEN);
   }
 
  

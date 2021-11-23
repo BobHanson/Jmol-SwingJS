@@ -33,7 +33,6 @@ import org.jmol.api.GenericFileInterface;
 import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.api.JmolJDXMOLReader;
 import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 
 import javajs.api.Interface;
 import javajs.util.AU;
@@ -259,7 +258,7 @@ public class JDXReader implements JmolJDXMOLReader {
         source.setInlineData(data);
       return source;
     } catch (Exception e) {
-      if (!Viewer.isJS)
+      if (!JSViewer.isJS)
         e.printStackTrace();
       if (br != null)
         br.close();
@@ -552,7 +551,7 @@ public class JDXReader implements JmolJDXMOLReader {
         processLabel(spectrum, dataLDRTable, label, value, false);
       } // End Source File
     } catch (Exception e) {
-      if (!Viewer.isJS)
+      if (!JSViewer.isJS)
         e.printStackTrace();
       throw new JSVException(e.getMessage());
     }

@@ -657,7 +657,7 @@ public class IsoExt extends ScriptExt {
           if (eval.theTok == T.hkl) {
             havePoints = true;
             setShapeProperty(JC.SHAPE_DRAW, "plane", null);
-            plane = eval.hklParameter(++i);
+            plane = eval.hklParameter(++i, true);
             i = eval.iToken;
             propertyName = "coords";
             Lst<P3> list = new Lst<P3>();
@@ -674,7 +674,7 @@ public class IsoExt extends ScriptExt {
         if (eval.theTok == T.plane) {
           plane = eval.planeParameter(i);
         } else {
-          plane = eval.hklParameter(++i);
+          plane = eval.hklParameter(++i, false);
         }
         i = eval.iToken;
         if (tokIntersect != 0) {
@@ -1982,7 +1982,7 @@ public class IsoExt extends ScriptExt {
         // miller indices hkl
         planeSeen = true;
         propertyName = "plane";
-        propertyValue = eval.hklParameter(++i);
+        propertyValue = eval.hklParameter(++i, false);
         i = eval.iToken;
         sbCommand.append(" plane ").append(Escape.eP4((P4) propertyValue));
         break;

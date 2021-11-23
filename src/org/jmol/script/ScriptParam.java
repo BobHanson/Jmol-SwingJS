@@ -377,11 +377,16 @@ abstract public class ScriptParam extends ScriptError {
     return data;
   }
 
-  public P4 hklParameter(int i) throws ScriptException {
+  public P4 hklParameter(int i, boolean getPts) throws ScriptException {
     if (!chk && vwr.getCurrentUnitCell() == null)
       error(ERROR_noUnitCell);
     P3 pt = (P3) getPointOrPlane(i, false, true, false, true, 3, 3, true);
-    P4 p = getHklPlane(pt);
+    float offset = Float.NaN;
+    if (tokAt(iToken + 1) == T.offset) {
+      iToken++;
+      offset = floatParameter(++iToken);
+    }
+    P4 p = getHklPlane(pt, offset, getPts);
     if (p == null)
       error(ERROR_badMillerIndices);
     if (!chk && Logger.debugging)
@@ -390,7 +395,7 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   public P3 pt1, pt2, pt3;
-  public P4 getHklPlane(P3 pt) {
+  public P4 getHklPlane(P3 pt, float offset, boolean getPts) {
     pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
     pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
     pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
@@ -417,7 +422,18 @@ abstract public class ScriptParam extends ScriptError {
     vwr.toCartesian(pt1, false);
     vwr.toCartesian(pt2, false);
     vwr.toCartesian(pt3, false);    
-    return Measure.getPlaneThroughPoints(pt1,  pt2, pt3, new V3(), new V3(), new P4());
+    V3 v3 = new V3();
+    P4 plane = Measure.getPlaneThroughPoints(pt1,  pt2, pt3, new V3(), v3, new P4());
+    if (!Float.isNaN(offset)) {
+      plane.w = offset;
+      if (getPts) {
+      // for draw
+        Measure.getPlaneProjection(pt1, plane, pt1, v3);
+        Measure.getPlaneProjection(pt2, plane, pt2, v3);
+        Measure.getPlaneProjection(pt3, plane, pt3, v3);
+      }
+    }
+    return plane;
   }
 
   public Object getPointOrPlane(int index, boolean integerOnly,

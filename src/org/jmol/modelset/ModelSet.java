@@ -711,19 +711,40 @@ public class ModelSet extends BondCollection {
 
     validateBspf(false);
 
+    bsDeleted = new BS();
+    // if atoms have been added to a not-last model, and that model is not one being deleted, 
+    // then we can't (yet) delete the model AND shift any values.
+    boolean allOrderly = true;
+    boolean isOneOfSeveral = false;
+    BS files = new BS();
+    for (int i = 0; i < mc; i++) {
+      Model m = am[i];
+      allOrderly &= m.isOrderly;//isOrderly(m);
+      if (bsModels.get(i)) { // get a good count now
+        if (m.fileIndex >= 0)
+          files.set(m.fileIndex);
+        bsDeleted.or(getModelAtomBitSetIncludingDeleted(i, false));
+      } else {
+        if (m.fileIndex >= 0 && files.get(m.fileIndex))
+          isOneOfSeveral = true;
+      }
+    }
+    if (!allOrderly || isOneOfSeveral) {
+      vwr.deleteAtoms(bsDeleted, false);
+      return null;
+    }
     // create a new models array,
     // and pre-calculate Model.bsAtoms and Model.ac
     Model[] newModels = new Model[mc - nModelsDeleted];
     Model[] oldModels = am;
-    bsDeleted = new BS();
-    for (int i = 0, mpt = 0; i < mc; i++)
-      if (bsModels.get(i)) { // get a good count now
-        getAtomCountInModel(i);
-        bsDeleted.or(getModelAtomBitSetIncludingDeleted(i, false));
-      } else {
-        am[i].modelIndex = mpt;
-        newModels[mpt++] = am[i];
+    for (int i = 0, mpt = 0; i < mc; i++) {
+      if (!bsModels.get(i)) { // get a good count now
+        Model m = am[i];
+        // TODO this does not account for file numbers!
+        m.modelIndex = mpt;
+        newModels[mpt++] = m;
       }
+    }
     am = newModels;
     int oldModelCount = mc;
     // delete bonds
@@ -737,18 +758,23 @@ public class ModelSet extends BondCollection {
         mpt++;
         continue;
       }
-      int nAtoms = oldModels[i].act;
+      Model old = oldModels[i];
+      int nAtoms = old.act;
       if (nAtoms == 0)
         continue;
-      BS bsModelAtoms = oldModels[i].bsAtoms;
-      int firstAtomIndex = oldModels[i].firstAtomIndex;
+      BS bsModelAtoms = old.bsAtoms;
+      int firstAtomIndex = old.firstAtomIndex;
 
       // delete from symmetry set
       BSUtil.deleteBits(bsSymmetry, bsModelAtoms);
 
       // delete from stateScripts, model arrays and bitsets,
       // atom arrays, and atom bitsets
-      deleteModel(mpt, firstAtomIndex, nAtoms, bsModelAtoms, bsBonds);
+      deleteModel(mpt, bsModelAtoms, bsBonds);
+      
+      deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
+      vwr.deleteModelAtoms(mpt, firstAtomIndex, nAtoms, bsModelAtoms);
+
 
       // adjust all models after this one
       for (int j = oldModelCount; --j > i;)
@@ -776,6 +802,10 @@ public class ModelSet extends BondCollection {
     return bsDeleted;
   }
 
+  private boolean isOrderly(Model m) {
+    return m.firstAtomIndex + m.act == m.bsAtoms.length();
+  }
+
   public void resetMolecules() {
     bsAll = null;
     molecules = null;
@@ -788,6 +818,8 @@ public class ModelSet extends BondCollection {
       int modelIndex = -1;
       for (int i = ac; --i >= 0;) {
         Atom a = at[i];
+        if (a == null)
+          continue;
         a.setCIPChirality(0);
         if (a.mi != modelIndex && a.mi < am.length)
           am[modelIndex = a.mi].hasChirality = false;
@@ -795,8 +827,7 @@ public class ModelSet extends BondCollection {
     }
   }
 
-  private void deleteModel(int modelIndex, int firstAtomIndex, int nAtoms,
-                           BS bsModelAtoms, BS bsBonds) {
+  private void deleteModel(int modelIndex, BS bsModelAtoms, BS bsBonds) {
     /*
      *   ModelCollection.modelSetAuxiliaryInfo["group3Lists", "group3Counts, "models"]
      * ModelCollection.stateScripts ?????
@@ -843,8 +874,6 @@ public class ModelSet extends BondCollection {
         stateScripts.removeItemAt(i);
       }
     }
-    deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
-    vwr.deleteModelAtoms(modelIndex, firstAtomIndex, nAtoms, bsModelAtoms);
   }
 
   public void setAtomProperty(BS bs, int tok, int iValue, float fValue,
@@ -1114,6 +1143,8 @@ public class ModelSet extends BondCollection {
     BS bs = new BS();
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       if (!bsModels.get(atom.mi))
         i = am[atom.mi].firstAtomIndex;
       else if (atom.checkVisible() && rect.contains(atom.sX, atom.sY))
@@ -1144,13 +1175,18 @@ public class ModelSet extends BondCollection {
       return defaultBBox.getMaxDim() / 2 * 1.2f;
     float maxRadius = 0;
     for (int i = ac; --i >= 0;) {
-      if (isJmolDataFrameForAtom(at[i])) {
-        modelIndex = at[i].mi;
-        while (i >= 0 && at[i].mi == modelIndex)
+      Atom atom = at[i];
+      if (atom == null)
+        continue;
+      if (isJmolDataFrameForAtom(atom)) {
+        modelIndex = atom.mi;
+        while (i >= 0 && at[i] != null && at[i].mi == modelIndex)
           i--;
         continue;
       }
-      Atom atom = at[i];
+      atom = at[i];
+      if (atom == null)
+        continue;
       float distAtom = center.distance(atom);
       float outerVdw = distAtom + getRadiusVdwJmol(atom);
       if (outerVdw > maxRadius)
@@ -1401,6 +1437,13 @@ public class ModelSet extends BondCollection {
     return (trajectory != null && trajectory.hasMeasure(countPlusIndices));
   }
 
+  /**
+   * Get the set of models associated with a set of atoms. 
+   * This must allow for appended models.
+   * @param atomList
+   * @param allTrajectories
+   * @return
+   */
   public BS getModelBS(BS atomList, boolean allTrajectories) {
     BS bs = new BS();
     int modelIndex = 0;
@@ -1412,8 +1455,11 @@ public class ModelSet extends BondCollection {
       bs.set(modelIndex = at[i].mi);
       if (allTrajectories)
         trajectory.getModelBS(modelIndex, bs);
-      i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
+      Model m = am[modelIndex];
+      if (m.isOrderly)
+        i = m.firstAtomIndex + m.act - 1;
     }
+    System.out.println("MS " + atomList + " " + bs);
     return bs;
   }
 
@@ -1928,7 +1974,7 @@ public class ModelSet extends BondCollection {
       // important that we go backward here, because we are going to 
       // use System.arrayCopy to expand the array ONCE only
       Atom atom = at[i];
-      if (!atom.isDeleted() && !isTrajectorySubFrame(atom.mi)) {
+      if (atom != null && !atom.isDeleted() && !isTrajectorySubFrame(atom.mi)) {
         bspf.addTuple(am[atom.mi].trajectoryBaseIndex, atom);
         bsNew.set(atom.mi);
       }
@@ -2090,7 +2136,7 @@ public class ModelSet extends BondCollection {
       P3 pt = (P3) specInfo;
       boolean ignoreOffset = false;//!vwr.getBoolean(T.fractionalrelative);
       for (int i = ac; --i >= 0;)
-        if (isInLatticeCell(i, pt, ptTemp2, ignoreOffset))
+        if (at[i] != null && isInLatticeCell(i, pt, ptTemp2, ignoreOffset))
           bs.set(i);
       return bs;
     case T.centroid:
@@ -2119,6 +2165,8 @@ public class ModelSet extends BondCollection {
       int nOps = 0;
       for (int i = ac; --i >= 0;) {
         Atom atom = at[i];
+        if (atom == null)
+          continue;
         BS bsSym = atom.atomSymmetry;
         if (bsSym != null) {
           if (atom.mi != modelIndex) {
@@ -2153,7 +2201,7 @@ public class ModelSet extends BondCollection {
         return bs;
       ptTemp1.set(1, 1, 1);
       for (int i = ac; --i >= 0;)
-        if (isInLatticeCell(i, ptTemp1, ptTemp2, false))
+        if (at[i] != null && isInLatticeCell(i, ptTemp1, ptTemp2, false))
           bs.set(i);
       return bs;
     }
@@ -2305,7 +2353,7 @@ public class ModelSet extends BondCollection {
       distance = -distance;
       for (int i = ac; --i >= 0;) {
         Atom atom = at[i];
-        if (modelIndex >= 0 && at[i].mi != modelIndex)
+        if (atom == null || modelIndex >= 0 && atom.mi != modelIndex)
           continue;
         if (!bsResult.get(i)
             && atom.getFractionalUnitDistance(coord, ptTemp1, ptTemp2) <= distance)
@@ -2646,12 +2694,14 @@ public class ModelSet extends BondCollection {
      */
     int lastModelIndex = -1;
     for (int i = ac; --i >= 0;) {
+      Atom atom = at[i];
+      if (atom == null)
+        continue;
       boolean isAtomInSetA = (bsA == null || bsA.get(i));
       boolean isAtomInSetB = (bsB == null || bsB.get(i));
       if (!isAtomInSetA && !isAtomInSetB)
         //|| bsExclude != null && bsExclude.get(i))
         continue;
-      Atom atom = at[i];
       if (atom.isDeleted())
         continue;
       int modelIndex = atom.mi;
@@ -2660,7 +2710,7 @@ public class ModelSet extends BondCollection {
         lastModelIndex = modelIndex;
         if (isJmolDataFrameForModel(modelIndex)) {
           for (; --i >= 0;)
-            if (at[i].mi != modelIndex)
+            if (at[i] == null || at[i].mi != modelIndex)
               break;
           i++;
           continue;
@@ -2890,6 +2940,8 @@ public class ModelSet extends BondCollection {
     int imodel = -1;
     int lastmodel = -1;
     for (int i = 0; i < ac; i++) {
+      if (at[i] == null)
+        continue;
       if ((imodel = at[i].mi) != lastmodel) {
         idnew = 0;
         lastmodel = imodel;
@@ -2985,12 +3037,18 @@ public class ModelSet extends BondCollection {
     if (bs == null)
       return;
     BS bsBonds = new BS();
-    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1))
+    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1)) {
       at[i].delete(bsBonds);
+      at[i] = null;//testing
+    }
     for (int i = 0; i < mc; i++) {
-      am[i].bsAtomsDeleted.or(bs);
-      am[i].bsAtomsDeleted.and(am[i].bsAtoms);
-      am[i].resetDSSR(false);
+      Model m = am[i];
+      m.resetDSSR(false);
+      m.bsAtomsDeleted.or(bs);
+      m.bsAtomsDeleted.and(m.bsAtoms);
+      bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
+      m.firstAtomIndex = bs.nextSetBit(0);
+      m.act = bs.cardinality();
     }
     deleteBonds(bsBonds, false);
     validateBspf(false);

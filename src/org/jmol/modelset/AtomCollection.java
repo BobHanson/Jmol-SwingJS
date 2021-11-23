@@ -319,7 +319,7 @@ abstract public class AtomCollection {
     //definitely want FIRST (model) not last here
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];
-      if (atom.getAtomNumber() == atomNumber && bsVisibleFrames.get(atom.mi))
+      if (atom != null && atom.getAtomNumber() == atomNumber && bsVisibleFrames.get(atom.mi))
         return i;
     }
     return -1;
@@ -338,7 +338,7 @@ abstract public class AtomCollection {
   public float[] getAtomicCharges() {
     float[] charges = new float[ac];
     for (int i = ac; --i >= 0; )
-      charges[i] = at[i].getElementNumber();
+      charges[i] = (at[i] == null ? 0 : at[i].getElementNumber());
     return charges;
   }
 
@@ -358,6 +358,8 @@ abstract public class AtomCollection {
     float r;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       if ((r = atom.getBondingRadius()) > maxBondingRadius)
         maxBondingRadius = r;
       if ((r = atom.getVanderwaalsRadiusFloat(vwr, VDW.AUTO)) > maxVanderwaalsRadius)
@@ -385,6 +387,8 @@ abstract public class AtomCollection {
   }
 
   private void setBf(int i) {
+    if (at[i] == null)
+      return;
     int bf = at[i].getBfactor100();
     if (bf < bfactor100Lo)
       bfactor100Lo = bf;
@@ -459,7 +463,7 @@ abstract public class AtomCollection {
     float radiusAdjust = (envelopeRadius == Float.MAX_VALUE ? 0 : envelopeRadius);
     for (int i = 0; i < ac; i++) {
       //surfaceDistance100s[i] = Integer.MIN_VALUE;
-      if (bsSurface.get(i)) {
+      if (bsSurface.get(i) || at[i] == null) {
         surfaceDistance100s[i] = 0;
       } else {
         float dMin = Float.MAX_VALUE;
@@ -1184,10 +1188,10 @@ abstract public class AtomCollection {
    */
   protected void findNearest2(int x, int y, Atom[] closest, BS bsNot, int min) {
     Atom champion = null;
+    Atom contender;
     for (int i = ac; --i >= 0;) {
-      if (bsNot != null && bsNot.get(i))
+      if (bsNot != null && bsNot.get(i) || (contender = at[i]) == null)
         continue;
-      Atom contender = at[i];
       if (contender.isClickable()
           && isCursorOnTopOf(contender, x, y, min,
               champion))
@@ -1222,7 +1226,7 @@ abstract public class AtomCollection {
     boolean isMultiModel = ((mode & AtomData.MODE_FILL_MULTIMODEL) != 0);
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];
-      if (atom.isDeleted() || !isMultiModel && atomData.modelIndex >= 0
+      if (atom == null || atom.isDeleted() || !isMultiModel && atomData.modelIndex >= 0
           && atom.mi != atomData.firstModelIndex) {
         if (atomData.bsIgnored == null)
           atomData.bsIgnored = new BS();
@@ -2200,20 +2204,24 @@ abstract public class AtomCollection {
       boolean isType = (tokType == T.atomtype);
       String names = "," + specInfo + ",";
       for (int i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         String s = (isType ? at[i].getAtomType() : at[i].getAtomName());
         if (names.indexOf("," + s + ",") >= 0)
           bs.set(i);
       }
       return bs;
     case T.atomno:
-      for (int i = ac; --i >= 0;)
-        if (at[i].getAtomNumber() == iSpec)
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].getAtomNumber() == iSpec)
           bs.set(i);
+      }
       return bs;
     case T.bonded:
-      for (int i = ac; --i >= 0;)
-        if (at[i].getCovalentBondCount() > 0)
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].getCovalentBondCount() > 0)
           bs.set(i);
+      }
       return bs;
     case T.carbohydrate:
     case T.dna:
@@ -2229,21 +2237,24 @@ abstract public class AtomCollection {
       iSpec = 1;
       //$FALL-THROUGH$
     case T.elemno:
-      for (int i = ac; --i >= 0;)
-        if (at[i].getElementNumber() == iSpec)
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].getElementNumber() == iSpec)
           bs.set(i);
+      }
       return bs;
     case T.hetero:
-      for (int i = ac; --i >= 0;)
-        if (at[i].isHetero())
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].isHetero())
           bs.set(i);
+      }
       return bs;
     case T.identifier:
       return getIdentifierOrNull((String) specInfo);
     case T.leadatom:
-      for (int i = ac; --i >= 0;)
-        if (at[i].isLeadAtom())
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].isLeadAtom())
           bs.set(i);
+      }
       return bs;
     case T.polymer:
     case T.structure:
@@ -2251,9 +2262,10 @@ abstract public class AtomCollection {
           : bs);
     case T.resno:
       // could be PDB type file with UNK
-      for (int i = ac; --i >= 0;)
-        if (at[i].getResno() == iSpec)
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null && at[i].getResno() == iSpec)
           bs.set(i);
+      }
       return bs;
     case T.solvent:
       // fast search for water
@@ -2267,6 +2279,8 @@ abstract public class AtomCollection {
       int[] hs = new int[2];
       Atom a;
       for (int i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         int g = at[i].group.groupID;
         if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
           bs.set(i);
@@ -2291,7 +2305,7 @@ abstract public class AtomCollection {
       // could be PDB type file with UNK or a modulated CIF file subsystem
       String spec = (String) specInfo;
       for (int i = ac; --i >= 0;)
-        if (isAltLoc(at[i].altloc, spec))
+        if (at[i] != null && isAltLoc(at[i].altloc, spec))
           bs.set(i);
       return bs;
     case T.spec_atom:
@@ -2303,7 +2317,7 @@ abstract public class AtomCollection {
       if (allowStar)
         atomSpec = atomSpec.substring(1);
       for (int i = ac; --i >= 0;)
-        if (isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
+        if (at[i] != null && isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
           bs.set(i);
       return bs;
     case T.spec_chain:
@@ -2313,19 +2327,19 @@ abstract public class AtomCollection {
     case T.spec_resid:
       // could be PDB type file with UNK
       for (int i = ac; --i >= 0;)
-        if (at[i].group.groupID == iSpec)
+        if (at[i] != null && at[i].group.groupID == iSpec)
           bs.set(i);
       return bs;
     case T.spec_seqcode:
       return BSUtil.copy(getSeqcodeBits(iSpec, true));
     case T.inscode:
       for (int i = ac; --i >= 0;)
-        if (at[i].group.getInsCode() == iSpec)
+        if (at[i] != null && at[i].group.getInsCode() == iSpec)
           bs.set(i);
       return bs;
     case T.symop:
       for (int i = ac; --i >= 0;)
-        if (at[i].getSymOp() == iSpec)
+        if (at[i] != null && at[i].getSymOp() == iSpec)
           bs.set(i);
       return bs;
     }
@@ -2358,7 +2372,7 @@ abstract public class AtomCollection {
       for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
         bsTemp.set(at[i].getElementNumber());
       for (int i = ac; --i >= 0;)
-        if (bsTemp.get(at[i].getElementNumber()))
+        if (at[i] != null && bsTemp.get(at[i].getElementNumber()))
           bs.set(i);
       return bs;
     case T.group:
@@ -2375,7 +2389,7 @@ abstract public class AtomCollection {
       for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
         bsTemp.set(at[i].atomSite);
       for (int i = ac; --i >= 0;)
-        if (bsTemp.get(at[i].atomSite))
+        if (at[i] != null && bsTemp.get(at[i].atomSite))
           bs.set(i);
       return bs;
     }
@@ -2429,6 +2443,8 @@ abstract public class AtomCollection {
     switch (insCode) {
     case '?':
       for (int i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         int atomSeqcode = at[i].group.seqcode;
         if ((!haveSeqNumber 
             || seqNum == Group.getSeqNumberFor(atomSeqcode))
@@ -2440,6 +2456,8 @@ abstract public class AtomCollection {
       break;
     default:
       for (int i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         int atomSeqcode = at[i].group.seqcode;
         if (seqcode == atomSeqcode || 
             !haveSeqNumber && seqcode == Group.getInsertionCodeFor(atomSeqcode) 
@@ -2512,6 +2530,8 @@ abstract public class AtomCollection {
         name = name.substring(1);
 
     for (int i = ac; --i >= 0;) {
+      if (at[i] == null)
+        continue;
       String g3 = at[i].getGroup3(true);
       if (g3 != null && g3.length() > 0) {
         if (PT.isMatch(g3, name, checkStar, true)) {
@@ -2553,6 +2573,8 @@ abstract public class AtomCollection {
     BS bsResult = new BS();
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       float d = Measure.distanceToPlane(plane, atom);
       if (distance > 0 && d >= -0.1 && d <= distance || distance < 0
           && d <= 0.1 && d >= distance || distance == 0 && Math.abs(d) < 0.01)
@@ -2570,7 +2592,7 @@ abstract public class AtomCollection {
     clearVisibleSets();
     bsAtoms.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i].isVisible(Atom.ATOM_INFRAME))
+      if (at[i] != null && at[i].isVisible(Atom.ATOM_INFRAME))
         bsAtoms.set(i);
   }
 
@@ -2583,7 +2605,7 @@ abstract public class AtomCollection {
     }
     bsVisible.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i].checkVisible())
+      if (at[i] != null && at[i].checkVisible())
         bsVisible.set(i);
     if (vwr.shm.bsSlabbedInternal != null)
       bsVisible.andNot(vwr.shm.bsSlabbedInternal);
@@ -2598,7 +2620,7 @@ abstract public class AtomCollection {
       return bsClickable;
     bsClickable.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i].isClickable())
+      if (at[i] != null && at[i].isClickable())
         bsClickable.set(i);
     haveBSClickable = true;
     return bsClickable;

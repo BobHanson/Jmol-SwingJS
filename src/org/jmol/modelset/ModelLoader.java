@@ -272,6 +272,7 @@ public final class ModelLoader {
   private boolean modulationOn;
   
   private Map<String, String> htGroup1; // from mmCIF and PDB
+  private Integer appendToModelIndex;
 
   
   public int getAtomCount() {
@@ -286,8 +287,9 @@ public final class ModelLoader {
     adapterModelCount = (adapter == null ? 1 : adapter
         .getAtomSetCount(asc));
     // cannot append a trajectory into a previous model
+    appendToModelIndex = (ms.msInfo == null ? null : ((Integer) ms.msInfo.get("appendToModelIndex")));
     appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
-        || isTrajectory || vwr.getBoolean(T.appendnew));
+        || isTrajectory || vwr.getBoolean(T.appendnew) && appendToModelIndex == null);
     htAtomMap.clear();
     chainOf = new Chain[defaultGroupCount];
     group3Of = new String[defaultGroupCount];
@@ -475,8 +477,8 @@ public final class ModelLoader {
         baseModelIndex = baseModelCount;
         ms.mc = baseModelCount + adapterModelCount;
       } else {
-        baseModelIndex = vwr.am.cmi;
-        if (baseModelIndex < 0)
+        baseModelIndex = (appendToModelIndex == null ? vwr.am.cmi : appendToModelIndex.intValue());
+        if (baseModelIndex < 0 || baseModelIndex >= baseModelCount)
           baseModelIndex = baseModelCount - 1;
         ms.mc = baseModelCount;
       }
@@ -562,7 +564,7 @@ public final class ModelLoader {
       //if (ms.getInfo(ipt, "periodicOriginXyz") != null)
         //ms.someModelsHaveSymmetry = true;
     }
-    Model m = ms.am[baseModelIndex];
+    Model m = ms.am[appendToModelIndex == null ? baseModelIndex : ms.mc - 1];
     vwr.setSmilesString((String) ms.msInfo.get("smilesString"));
     String loadState = (String) ms.msInfo.remove("loadState");
     SB loadScript = (SB)ms.msInfo.remove("loadScript");
@@ -576,7 +578,7 @@ public final class ModelLoader {
       }
       m.loadState += m.loadScript.toString() + sb.toString();
       m.loadScript = new SB();
-      if (loadScript.indexOf("load append ") >= 0)
+      if (loadScript.indexOf("load append ") >= 0 || loadScript.indexOf("data \"append ") >= 0)
         loadScript.append("; set appendNew true");
       m.loadScript.append("  ").appendSB(loadScript).append(";\n");
     }
@@ -775,8 +777,8 @@ public final class ModelLoader {
     int nRead = 0;
     Model[] models = ms.am;
     if (ms.mc > 0)
-      nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0), "",
-          0, -1, -1);
+      nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0),
+          "", 0, -1, -1);
     while (iterAtom.hasNext()) {
       nRead++;
       int modelIndex = iterAtom.getAtomSetIndex() + baseModelIndex;
@@ -786,8 +788,9 @@ public final class ModelLoader {
         model = models[modelIndex];
         currentChainID = Integer.MAX_VALUE;
         isNewChain = true;
-        models[modelIndex].bsAtoms.clearAll();
-        isPdbThisModel = models[modelIndex].isBioModel;
+        model.bsAtoms.clearAll();
+        model.isOrderly = (appendToModelIndex == null);
+        isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
         addH = isPdbThisModel && doAddHydrogens;
         if (jbr != null)
@@ -795,52 +798,43 @@ public final class ModelLoader {
       }
       String group3 = iterAtom.getGroup3();
       int chainID = iterAtom.getChainID();
-      checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(), 
+      checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
           iterAtom.getInsertionCode(), addH, isLegacyHAddition);
       int isotope = iterAtom.getElementNumber();
       if (addH && Elements.getElementNumber(isotope) == 1)
         jbr.setHaveHsAlready(true);
-      String name = iterAtom.getAtomName(); 
-      int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      addAtom(isPdbThisModel, iterAtom.getSymmetry(),
-          iterAtom.getAtomSite(),
-          iterAtom.getUniqueID(),
-          isotope,
-          name,
-          charge, 
-          iterAtom.getPartialCharge(),
-          iterAtom.getTensors(), 
-          iterAtom.getOccupancy(), 
-          iterAtom.getBfactor(), 
-          iterAtom.getXYZ(),
-          iterAtom.getIsHetero(), 
-          iterAtom.getSerial(), 
-          iterAtom.getSeqID(),
-          group3,
-          iterAtom.getVib(), 
-          iterAtom.getAltLoc(),
-          iterAtom.getRadius(), 
-          iterAtom.getBondRadius()
-          );
+      String name = iterAtom.getAtomName();
+      int charge = (addH ? getPdbCharge(group3, name)
+          : iterAtom.getFormalCharge());
+      addAtom(isPdbThisModel, iterAtom.getSymmetry(), iterAtom.getAtomSite(),
+          iterAtom.getUniqueID(), isotope, name, charge,
+          iterAtom.getPartialCharge(), iterAtom.getTensors(),
+          iterAtom.getOccupancy(), iterAtom.getBfactor(), iterAtom.getXYZ(),
+          iterAtom.getIsHetero(), iterAtom.getSerial(), iterAtom.getSeqID(),
+          group3, iterAtom.getVib(), iterAtom.getAltLoc(), iterAtom.getRadius(),
+          iterAtom.getBondRadius());
     }
     if (groupCount > 0 && addH) {
-      jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1, isNewChain && !isLegacyHAddition? 1 : 0);
+      jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1,
+          isNewChain && !isLegacyHAddition ? 1 : 0);
     }
     iLast = -1;
     VDW vdwtypeLast = null;
     Atom[] atoms = ms.at;
+    models[0].firstAtomIndex = 0;
     for (int i = 0; i < ms.ac; i++) {
-      if (atoms[i].mi != iLast) {
+      if (atoms[i].mi > iLast) {
         iLast = atoms[i].mi;
         models[iLast].firstAtomIndex = i;
         VDW vdwtype = ms.getDefaultVdwType(iLast);
         if (vdwtype != vdwtypeLast) {
-          Logger.info("Default Van der Waals type for model" + " set to " + vdwtype.getVdwLabel());
+          Logger.info("Default Van der Waals type for model" + " set to "
+              + vdwtype.getVdwLabel());
           vdwtypeLast = vdwtype;
         }
       }
     }
-    Logger.info(nRead + " atoms created");    
+    Logger.info(nRead + " atoms created");
   }
 
   private void addJmolDataProperties(Model m,

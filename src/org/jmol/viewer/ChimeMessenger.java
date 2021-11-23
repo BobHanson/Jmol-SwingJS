@@ -159,10 +159,13 @@ public class ChimeMessenger implements JmolChimeMessenger {
       int lastid = -1;
       nH = 0;
       for (int i = ac; --i >= 0;) {
-        boolean isHetero = atoms[i].isHetero();
+        Atom a = atoms[i];
+        if (a == null)
+          continue;
+        boolean isHetero = a.isHetero();
         if (isHetero)
           nHetero++;
-        Group g = atoms[i].group;
+        Group g = a.group;
         if (!map.containsKey(g)) {
           map.put(g, Boolean.TRUE);
           if (isHetero)
@@ -170,7 +173,7 @@ public class ChimeMessenger implements JmolChimeMessenger {
           else
             ng++;
         }
-        if (atoms[i].mi == 0) {
+        if (a.mi == 0) {
           if ((id = g.getStrucNo()) != lastid && id != 0) {
             lastid = id;
             switch (g.getProteinStructureType()) {

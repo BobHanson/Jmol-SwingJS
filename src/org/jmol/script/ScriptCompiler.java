@@ -1075,7 +1075,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
     return theTok = theToken.tok;
   }
-
+  
   /**
    * 
    * Check for special parameters, including:
@@ -1092,16 +1092,16 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (lookingAtString(!implicitString)) {
       if (cchToken < 0)
         return ERROR(ERROR_endOfCommandUnexpected);
-      String str = getUnescapedStringLiteral(lastToken != null
-          && !iHaveQuotedString
-          && lastToken.tok != T.inline
-          && (tokCommand == T.set && nTokens == 2
-              && lastToken.tok == T.defaultdirectory || tokCommand == T.load
-              || tokCommand == T.background || tokCommand == T.script || tokCommand == T.macro));
+      String str = getUnescapedStringLiteral(
+          lastToken != null && !iHaveQuotedString && lastToken.tok != T.inline
+              && (tokCommand == T.set && nTokens == 2
+                  && lastToken.tok == T.defaultdirectory || tokCommand == T.load
+                  || tokCommand == T.background || tokCommand == T.script
+                  || tokCommand == T.macro));
       iHaveQuotedString = true;
       if ((tokCommand == T.load || tokCommand == T.cgo)
-          && lastToken.tok == T.data || tokCommand == T.data
-          && str.indexOf("@") < 0) {
+          && lastToken.tok == T.data
+          || tokCommand == T.data && str.indexOf("@") < 0) {
         if (!getData(str)) {
           return ERROR(ERROR_missingEnd, "data");
         }
@@ -1129,7 +1129,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         // data += what
 
       }
-      if (isNewSet || tokCommand == T.set || T.tokAttr(tokCommand, T.setparam)) {
+      if (isNewSet || tokCommand == T.set
+          || T.tokAttr(tokCommand, T.setparam)) {
         if (ch == '=')
           setEqualPt = ichToken;
 
@@ -1142,8 +1143,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         // the FIRST parameter of the set command.
         if (T.tokAttr(tokCommand, T.setparam) && ch == '='
             || (isNewSet || isSetBrace) && isOperation) {
-          setCommand(isAndEquals ? T.tokenSet : ch == '[' && !isSetBrace
-              || ch == '.' && ch2 == '.' ? T.tokenSetArray : T.tokenSetProperty);
+          setCommand(isAndEquals ? T.tokenSet
+              : ch == '[' && !isSetBrace || ch == '.' && ch2 == '.'
+                  ? T.tokenSetArray
+                  : T.tokenSetProperty);
           ltoken.add(0, tokenCommand);
           cchToken = 1;
           switch (ch) {
@@ -1213,7 +1216,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         haveMacro = true;
         break out;
       case T.load:
-        if (nTokens == 1 || nTokens == 2 && (tokAt(1) == T.append)) {
+        boolean isAppend = (tokAt(1) == T.append);
+        if (nTokens == 1 || isAppend && (nTokens == 2 || nTokens == 3 && tokAt(2) == T.integer)) {
+          if (isAppend && nTokens == 2 && PT.isDigit(charAt(ichToken))) 
+                break out;
           boolean isDataBase = Viewer.isDatabaseCode(charAt(ichToken));
           if (lookingAtLoadFormat(isDataBase)) {
             String strFormat = script.substring(ichToken, ichToken + cchToken);
@@ -1306,7 +1312,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
         if (lookingAtImpliedString(true, true, true)) {
           String str = script.substring(ichToken, ichToken + cchToken);
-          int pt = str.indexOf(" as ");          
+          int pt = str.indexOf(" as ");
           if (pt > 0)
             str = str.substring(0, cchToken = pt);
           if (str.indexOf(" ") < 0 && str.indexOf(".") >= 0) {
@@ -1321,8 +1327,8 @@ public class ScriptCompiler extends ScriptTokenParser {
     // cd echo goto help hover javascript label message pause
     // possibly script
     implicitString &= (nTokens == 1);
-    if (implicitString && !((tokCommand == T.script || tokCommand == T.macro) && iHaveQuotedString)
-        && lookingAtImpliedString(true, true, true)) {
+    if (implicitString && !((tokCommand == T.script || tokCommand == T.macro)
+        && iHaveQuotedString) && lookingAtImpliedString(true, true, true)) {
       String str = script.substring(ichToken, ichToken + cchToken);
       if (tokCommand == T.label
           && PT.isOneOf(str.toLowerCase(), ";on;off;hide;display;"))
@@ -1333,8 +1339,8 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
     if (lookingAtObjectID()) {
       addTokenToPrefix(T.getTokenFromName("$"));
-      addTokenToPrefix(T.o(T.identifier,
-          script.substring(ichToken, ichToken + cchToken)));
+      addTokenToPrefix(
+          T.o(T.identifier, script.substring(ichToken, ichToken + cchToken)));
       return CONTINUE;
     }
     float value;
@@ -1344,16 +1350,17 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
     if (lookingAtDecimal()) {
       value = Float.parseFloat(script.substring(ichToken, ichToken + cchToken));
-      int intValue = (ScriptParam.getFloatEncodedInt(script.substring(ichToken,
-          ichToken + cchToken)));
+      int intValue = (ScriptParam
+          .getFloatEncodedInt(script.substring(ichToken, ichToken + cchToken)));
       addNumber(T.decimal, intValue, Float.valueOf(value));
       return CONTINUE;
     }
     if (lookingAtSeqcode()) {
       ch = script.charAt(ichToken);
       try {
-        int seqNum = (ch == '*' || ch == '^' ? Integer.MAX_VALUE : Integer
-            .parseInt(script.substring(ichToken, ichToken + cchToken - 2)));
+        int seqNum = (ch == '*' || ch == '^' ? Integer.MAX_VALUE
+            : Integer
+                .parseInt(script.substring(ichToken, ichToken + cchToken - 2)));
         char insertionCode = script.charAt(ichToken + cchToken - 1);
         if (insertionCode == '^')
           insertionCode = ' ';
@@ -1374,15 +1381,15 @@ public class ScriptCompiler extends ScriptTokenParser {
       if (tokCommand == T.breakcmd || tokCommand == T.continuecmd) {
         if (nTokens != 1)
           return ERROR(ERROR_badArgumentCount);
-        ScriptFlowContext f = (flowContext == null ? null : flowContext
-            .getBreakableContext(val = Math.abs(val)));
+        ScriptFlowContext f = (flowContext == null ? null
+            : flowContext.getBreakableContext(val = Math.abs(val)));
         if (f == null)
           return ERROR(ERROR_badContext, (String) tokenCommand.value);
         tokenAt(0).intValue = f.pt0; // copy
       }
-// BAD IDEA! Just check the string for this!
-  // if (val == 0 && intString.equals("-0"))
-  //      addTokenToPrefix(T.tokenMinus);
+      // BAD IDEA! Just check the string for this!
+      // if (val == 0 && intString.equals("-0"))
+      //      addTokenToPrefix(T.tokenMinus);
       addNumber(T.integer, val, intString);
       return CONTINUE;
     }
@@ -1402,8 +1409,8 @@ public class ScriptCompiler extends ScriptTokenParser {
       boolean isBondOrMatrix = (script.charAt(ichToken) == '[');
       BS bs = lookingAtBitset();
       if (bs != null) {
-        addTokenToPrefix(T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null)
-            : bs));
+        addTokenToPrefix(
+            T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null) : bs));
         return CONTINUE;
       }
       if (isBondOrMatrix) {

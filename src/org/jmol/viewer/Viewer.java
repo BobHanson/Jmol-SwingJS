@@ -2960,7 +2960,8 @@ public class Viewer extends JmolViewer
       if (!isAppend)
         zap(true, false/*true*/, false);
       if (!isLoadVariable && (!haveFileData || isString))
-        getStateCreator().getInlineData(loadScript, strModel, isAppend,
+        getStateCreator().getInlineData(loadScript, strModel, isAppend, 
+            (Integer) htParams.get("appendToModelIndex"),
             g.defaultLoadFilter);
       atomSetCollection = fm.createAtomSetCollectionFromString(strModel,
           htParams, isAppend);
@@ -3182,7 +3183,7 @@ public class Viewer extends JmolViewer
       zap(true, false/*true*/, false);
     if (!isLoadCommand)
       getStateCreator().getInlineData(loadScript, strModel, isAppend,
-          g.defaultLoadFilter);
+          (Integer) htParams.get("appendToModelIndex"), g.defaultLoadFilter);
     Object atomSetCollection = fm.createAtomSetCollectionFromString(strModel,
         htParams, isAppend);
     return createModelSetAndReturnError(atomSetCollection, isAppend, loadScript,
@@ -8635,16 +8636,17 @@ public class Viewer extends JmolViewer
     if (atomIndex < 0)
       return 0;
     clearModelDependentObjects();
-    if (!fullModels) {
+    int mi = ms.at[atomIndex].mi;
+    if (!fullModels) {      
       sm.modifySend(atomIndex, ms.at[atomIndex].mi, 4,
           "deleting atom " + ms.at[atomIndex].getAtomName());
       ms.deleteAtoms(bsAtoms);
       int n = slm.deleteAtoms(bsAtoms);
       setTainted(true);
-      sm.modifySend(atomIndex, ms.at[atomIndex].mi, -4, "OK");
+      sm.modifySend(atomIndex, mi, -4, "OK");
       return n;
     }
-    return deleteModels(ms.at[atomIndex].mi, bsAtoms);
+    return deleteModels(mi, bsAtoms);
   }
 
   /**
@@ -8660,12 +8662,17 @@ public class Viewer extends JmolViewer
     // fileManager.addLoadScript("zap " + Escape.escape(bs));
     sm.modifySend(-1, modelIndex, 5,
         "deleting model " + getModelNumberDotted(modelIndex));
+    int currentModel = am.cmi;
     setCurrentModelIndexClear(0, false);
     am.setAnimationOn(false);
     BS bsD0 = BSUtil.copy(slm.bsDeleted);
     BS bsModels = (bsAtoms == null ? BSUtil.newAndSetBit(modelIndex)
         : ms.getModelBS(bsAtoms, false));
     BS bsDeleted = ms.deleteModels(bsModels);
+    if (bsDeleted == null) {
+      setCurrentModelIndexClear(currentModel, false);
+      return 0;
+    }
     slm.processDeletedModelAtoms(bsDeleted);
     if (eval != null)
       eval.deleteAtomsInVariables(bsDeleted);
@@ -9663,9 +9670,8 @@ public class Viewer extends JmolViewer
     BS bsB = new BS();
     if (bsAtoms.isEmpty())
       return bsB;
-    int modelIndex = ms.at[bsAtoms.nextSetBit(0)].mi;
-    if (modelIndex != ms.mc - 1)
-      return bsB;
+//    if (!ms.isAtomInLastModel(bsAtoms.nextSetBit(0)))
+//      return bsB;
     Lst<Atom> vConnections = new Lst<Atom>();
     P3[] pts = getAdditionalHydrogens(bsAtoms, vConnections,
         flags | (doAll ? AtomCollection.CALC_H_DOALL : 0));

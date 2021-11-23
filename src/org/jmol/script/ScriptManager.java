@@ -26,6 +26,8 @@ package org.jmol.script;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 
@@ -731,8 +733,8 @@ public class ScriptManager implements JmolScriptManager {
       throws Exception {
     int iatom = bsAtoms.nextSetBit(0);
     int modelIndex = (iatom < 0 ? vwr.ms.mc - 1 : vwr.ms.at[iatom].mi);
-    if (modelIndex != vwr.ms.mc - 1)
-      return new BS();
+//    if (!vwr.ms.isAtomInLastModel(iatom))
+//      return new BS();
 
     // must be added to the LAST data set only
 
@@ -741,7 +743,7 @@ public class ScriptManager implements JmolScriptManager {
     // BitSet bsB = getAtomBits(Token.hydrogen, null);
     // bsA.andNot(bsB);
     int atomIndex = vwr.ms.ac;
-    int atomno = vwr.ms.getAtomCountInModel(modelIndex);
+    int atomno = vwr.ms.getAtomCountInModel(modelIndex);// BH! not quite right if deleted
     SB sbConnect = new SB();
     for (int i = 0; i < vConnections.size(); i++) {
       Atom a = vConnections.get(i);
@@ -755,7 +757,10 @@ public class ScriptManager implements JmolScriptManager {
       sb.append("H ").appendF(pts[i].x).append(" ").appendF(pts[i].y)
           .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
-    vwr.openStringInlineParamsAppend(sb.toString(), null, true);
+    
+    Map<String, Object> htParams = new Hashtable<String, Object>();
+    htParams.put("appendToModelIndex", Integer.valueOf(modelIndex));
+    vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
     eval.runScriptBuffer(sbConnect.toString(), null, false);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);

@@ -220,7 +220,7 @@ public abstract class AtomShape extends Shape {
       return;
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];
-      if ((atom.shapeVisibilityFlags & vf) == 0
+      if (atom == null || (atom.shapeVisibilityFlags & vf) == 0
           || ms.isAtomHidden(i))
         continue;
       atom.setClickable(vf);

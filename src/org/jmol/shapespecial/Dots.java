@@ -131,7 +131,7 @@ public class Dots extends AtomShape {
         ec.setMads(null);
         mads = new short[ac];
         for (int i = 0; i < ac; i++)          
-          if (atoms[i].isVisible(Atom.ATOM_INFRAME | vf)) 
+          if (atoms[i] != null && atoms[i].isVisible(Atom.ATOM_INFRAME | vf)) 
             // was there a reason we were not checking for hidden?
             try {
               mads[i] = (short) (ec.getAppropriateRadius(i) * 1000);
@@ -250,7 +250,8 @@ public class Dots extends AtomShape {
     }
 
     for (int i = ac; --i >= 0;)
-      atoms[i].setShapeVisibility(vf, bsOn.get(i));
+      if (atoms[i] != null)
+        atoms[i].setShapeVisibility(vf, bsOn.get(i));
     if (!isVisible)
       return;
     if (newSet) {
@@ -262,7 +263,7 @@ public class Dots extends AtomShape {
     BS[] dotsConvexMaps = ec.getDotsConvexMaps();
     if (dotsConvexMaps != null) {
       for (int i = ac; --i >= 0;)
-        if (bsOn.get(i)) {
+        if (atoms[i] != null && bsOn.get(i)) {
           dotsConvexMaps[i] = null;
         }
     }
@@ -281,8 +282,8 @@ public class Dots extends AtomShape {
   public void setAtomClickability() {
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];
-      if ((atom.shapeVisibilityFlags & vf) == 0
-          || ms.isAtomHidden(i))
+      if (atom != null && ((atom.shapeVisibilityFlags & vf) == 0
+          || ms.isAtomHidden(i)))
         continue;
       atom.setClickable(vf);
     }
