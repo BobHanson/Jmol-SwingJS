@@ -8636,16 +8636,17 @@ public class Viewer extends JmolViewer
     if (atomIndex < 0)
       return 0;
     clearModelDependentObjects();
-    if (!fullModels) {
+    int mi = ms.at[atomIndex].mi;
+    if (!fullModels) {      
       sm.modifySend(atomIndex, ms.at[atomIndex].mi, 4,
           "deleting atom " + ms.at[atomIndex].getAtomName());
       ms.deleteAtoms(bsAtoms);
       int n = slm.deleteAtoms(bsAtoms);
       setTainted(true);
-      sm.modifySend(atomIndex, ms.at[atomIndex].mi, -4, "OK");
+      sm.modifySend(atomIndex, mi, -4, "OK");
       return n;
     }
-    return deleteModels(ms.at[atomIndex].mi, bsAtoms);
+    return deleteModels(mi, bsAtoms);
   }
 
   /**

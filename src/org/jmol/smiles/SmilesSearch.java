@@ -1219,7 +1219,8 @@ public class SmilesSearch extends JmolMolecule {
         // so is NOT appropriate for PDB file MMFF94 calc
         if (patternAtom.degree > 0
             && patternAtom.degree != targetAtom.getCovalentBondCount()
-                - targetAtom.getImplicitHydrogenCount())
+                //- targetAtom.getImplicitHydrogenCount()
+                )
           break;
 
         // d<n> degree

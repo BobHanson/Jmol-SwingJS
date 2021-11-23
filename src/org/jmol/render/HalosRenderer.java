@@ -53,7 +53,7 @@ public class HalosRenderer extends ShapeRenderer {
     g3d.addRenderer(T.circle);
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
-      if ((atom.shapeVisibilityFlags & Atom.ATOM_INFRAME) == 0)
+      if (atom == null || (atom.shapeVisibilityFlags & Atom.ATOM_INFRAME) == 0)
         continue;
       boolean isHidden = ms.isAtomHidden(i);
       mad = (halos.mads == null ? 0 : halos.mads[i]);

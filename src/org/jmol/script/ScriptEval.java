@@ -7786,7 +7786,7 @@ public class ScriptEval extends ScriptExpr {
       case T.minus:
         str = paramAsStr(2);
         if (str.equalsIgnoreCase("hkl"))
-          plane = hklParameter(3);
+          plane = hklParameter(3, false);
         else if (str.equalsIgnoreCase("plane"))
           plane = planeParameter(2);
         if (plane == null)
@@ -7802,7 +7802,7 @@ public class ScriptEval extends ScriptExpr {
         }
         break;
       case T.hkl:
-        plane = (getToken(2).tok == T.none ? null : hklParameter(2));
+        plane = (getToken(2).tok == T.none ? null : hklParameter(2, false));
         break;
       case T.reference:
         // only in 11.2; deprecated

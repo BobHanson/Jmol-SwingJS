@@ -667,19 +667,21 @@ public class ForceFieldMMFF extends ForceField {
       break;
     }
   }
+
   /**
    * assign partial charges ala MMFF94
    * 
    * @param bonds
-   * @param bTypes 
+   * @param bTypes
    * @param atoms
    * @param aTypes
    * @param bsAtoms
-   * @param doRound 
-   * @return   full array of partial charges
+   * @param doRound
+   * @return full array of partial charges
    */
-  public float[] calculatePartialCharges(Bond[] bonds, int[] bTypes, Atom[] atoms,
-                                          int[] aTypes, BS bsAtoms, boolean doRound) {
+  public float[] calculatePartialCharges(Bond[] bonds, int[] bTypes,
+                                         Atom[] atoms, int[] aTypes, BS bsAtoms,
+                                         boolean doRound) {
 
     // start with formal charges specified by MMFF94 (not what is in file!)
 
@@ -693,9 +695,9 @@ public class ForceFieldMMFF extends ForceField {
       Atom a2 = bonds[i].atom2;
       // It's possible that some of our atoms are not in the atom set,
       // but we don't want both of them to be out of the set.
-      
+
       boolean ok1 = bsAtoms.get(a1.i);
-      boolean ok2 = bsAtoms.get(a2.i); 
+      boolean ok2 = bsAtoms.get(a2.i);
       if (!ok1 && !ok2)
         continue;
       int it = aTypes[a1.i];
@@ -704,34 +706,45 @@ public class ForceFieldMMFF extends ForceField {
       it = aTypes[a2.i];
       AtomType at2 = atomTypes.get(Math.max(0, it));
       int type2 = (it < 0 ? -it : at2.mmType);
-      
+
       // we are only interested in bonds that are between different atom types
-      
-//      if (type1 == type2)
-  //      continue;
-      
+
+      //      if (type1 == type2)
+      //      continue;
+
       // check for bond charge increment
-      
+
       // The table is created using the key (100 * type1 + type2), 
       // where type1 < type2. In addition, we encode the partial bci values
       // with key (100 * type)
-      
-      float dq;  // the difference in charge to be added or subtracted from the formal charges
+
+      float dq = Float.NaN; // the difference in charge to be added or subtracted from the formal charges
       try {
         int bondType = bTypes[i];
         float bFactor = (type1 < type2 ? -1 : 1);
-        Integer key = MinObject.getKey(bondType, bFactor == 1 ? type2 : type1, bFactor == 1 ? type1 : type2, 127, A4_CHRG);
+        Integer key = MinObject.getKey(bondType, bFactor == 1 ? type2 : type1,
+            bFactor == 1 ? type1 : type2, 127, A4_CHRG);
         Float bciValue = (Float) ffParams.get(key);
-        float bci;
-        String msg = (Logger.debugging ? a1 + "/" + a2 + " mmTypes=" + type1 + "/" + type2 + " formalCharges=" + at1.formalCharge + "/" + at2.formalCharge + " bci = " : null);
-        if (bciValue == null) { 
+        float bci = Float.NaN;
+        String msg = (Logger.debugging
+            ? a1 + "/" + a2 + " mmTypes=" + type1 + "/" + type2
+                + " formalCharges=" + at1.formalCharge + "/" + at2.formalCharge
+                + " bci = "
+            : null);
+        if (bciValue == null) {
           // no bci was found; we have to use partial bond charge increments
           // a failure here indicates we don't have information
-          float pa = ((Float) ffParams.get(MinObject.getKey(KEY_PBCI, type1, 127, 127, 127))).floatValue();
-          float pb = ((Float) ffParams.get(MinObject.getKey(KEY_PBCI, type2, 127, 127, 127))).floatValue();
-          bci = pa - pb;
-          if (Logger.debugging)
-            msg += pa + " - " + pb + " = ";
+          Float a, b;
+          if ((a = (Float) ffParams
+              .get(MinObject.getKey(KEY_PBCI, type1, 127, 127, 127))) != null
+              && (b = (Float) ffParams.get(
+                  MinObject.getKey(KEY_PBCI, type2, 127, 127, 127))) != null) {
+            float pa = a.floatValue();
+            float pb = b.floatValue();
+            bci = pa - pb;
+            if (Logger.debugging)
+              msg += pa + " - " + pb + " = ";
+          }
         } else {
           bci = bFactor * bciValue.floatValue();
         }
@@ -751,7 +764,7 @@ public class ForceFieldMMFF extends ForceField {
         // 2) Then the bond charge increment is added.
         //
         // Note that this value I call "dq" is added to one atom and subtracted from its partner
-        
+
         dq = at2.fcadj * at2.formalCharge - at1.fcadj * at1.formalCharge + bci;
       } catch (Exception e) {
         dq = Float.NaN;
@@ -761,9 +774,9 @@ public class ForceFieldMMFF extends ForceField {
       if (ok2)
         partialCharges[a2.i] -= dq;
     }
-    
+
     // just rounding to 0.001 here:
-    
+
     if (doRound) {
       float abscharge = 0;
       for (int i = partialCharges.length; --i >= 0;) {
@@ -771,9 +784,9 @@ public class ForceFieldMMFF extends ForceField {
         abscharge += Math.abs(partialCharges[i]);
       }
       if (abscharge == 0 && a1 != null) {
-        partialCharges[a1.i]= -0.0f;
+        partialCharges[a1.i] = -0.0f;
       }
-    }    
+    }
     return partialCharges;
   }
 

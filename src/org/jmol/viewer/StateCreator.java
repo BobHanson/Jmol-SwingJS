@@ -1253,7 +1253,7 @@ public class StateCreator extends JmolStateCreator {
       byte[] pids = balls.paletteIDs;
       float r = 0;
       for (int i = 0; i < ac; i++) {
-        if (shape.bsSizeSet != null && shape.bsSizeSet.get(i)) {
+        if (atoms[i] != null && shape.bsSizeSet != null && shape.bsSizeSet.get(i)) {
           if ((r = atoms[i].madAtom) < 0)
             BSUtil.setMapBitSet(temp, i, i, "Spacefill on");
           else
@@ -1567,7 +1567,7 @@ public class StateCreator extends JmolStateCreator {
     BS[] tainted = vwr.ms.tainted;
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (atoms[i].isDeleted())
+        if (atoms[i] == null || atoms[i].isDeleted())
           continue;
         s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
             .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(

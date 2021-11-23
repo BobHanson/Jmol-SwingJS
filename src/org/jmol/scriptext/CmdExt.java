@@ -2699,7 +2699,7 @@ public class CmdExt extends ScriptExt {
       plane = e.planeParameter(1);
       break;
     case T.hkl:
-      plane = e.hklParameter(2);
+      plane = e.hklParameter(2, false);
       break;
     }
     e.checkLengthErrorPt(e.iToken + 1, 1);

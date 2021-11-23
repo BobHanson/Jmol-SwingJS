@@ -418,7 +418,7 @@ public class BioModelSet {
     if (bsAtoms != null && mode == T.ramachandran) {
       bsAtoms = BSUtil.copy(bsAtoms);
       for (int i = ms.ac; --i >= 0;)
-        if (Float.isNaN(atoms[i].group.getGroupParameter(T.phi))
+        if (atoms[i] == null || Float.isNaN(atoms[i].group.getGroupParameter(T.phi))
             || Float.isNaN(atoms[i].group.getGroupParameter(T.psi)))
           bsAtoms.clear(i);
     }

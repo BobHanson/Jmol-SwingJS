@@ -818,6 +818,8 @@ public class ModelSet extends BondCollection {
       int modelIndex = -1;
       for (int i = ac; --i >= 0;) {
         Atom a = at[i];
+        if (a == null)
+          continue;
         a.setCIPChirality(0);
         if (a.mi != modelIndex && a.mi < am.length)
           am[modelIndex = a.mi].hasChirality = false;
@@ -1141,6 +1143,8 @@ public class ModelSet extends BondCollection {
     BS bs = new BS();
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       if (!bsModels.get(atom.mi))
         i = am[atom.mi].firstAtomIndex;
       else if (atom.checkVisible() && rect.contains(atom.sX, atom.sY))
@@ -1171,13 +1175,18 @@ public class ModelSet extends BondCollection {
       return defaultBBox.getMaxDim() / 2 * 1.2f;
     float maxRadius = 0;
     for (int i = ac; --i >= 0;) {
-      if (isJmolDataFrameForAtom(at[i])) {
-        modelIndex = at[i].mi;
-        while (i >= 0 && at[i].mi == modelIndex)
+      Atom atom = at[i];
+      if (atom == null)
+        continue;
+      if (isJmolDataFrameForAtom(atom)) {
+        modelIndex = atom.mi;
+        while (i >= 0 && at[i] != null && at[i].mi == modelIndex)
           i--;
         continue;
       }
-      Atom atom = at[i];
+      atom = at[i];
+      if (atom == null)
+        continue;
       float distAtom = center.distance(atom);
       float outerVdw = distAtom + getRadiusVdwJmol(atom);
       if (outerVdw > maxRadius)
@@ -1965,7 +1974,7 @@ public class ModelSet extends BondCollection {
       // important that we go backward here, because we are going to 
       // use System.arrayCopy to expand the array ONCE only
       Atom atom = at[i];
-      if (!atom.isDeleted() && !isTrajectorySubFrame(atom.mi)) {
+      if (atom != null && !atom.isDeleted() && !isTrajectorySubFrame(atom.mi)) {
         bspf.addTuple(am[atom.mi].trajectoryBaseIndex, atom);
         bsNew.set(atom.mi);
       }
@@ -2127,7 +2136,7 @@ public class ModelSet extends BondCollection {
       P3 pt = (P3) specInfo;
       boolean ignoreOffset = false;//!vwr.getBoolean(T.fractionalrelative);
       for (int i = ac; --i >= 0;)
-        if (isInLatticeCell(i, pt, ptTemp2, ignoreOffset))
+        if (at[i] != null && isInLatticeCell(i, pt, ptTemp2, ignoreOffset))
           bs.set(i);
       return bs;
     case T.centroid:
@@ -2156,6 +2165,8 @@ public class ModelSet extends BondCollection {
       int nOps = 0;
       for (int i = ac; --i >= 0;) {
         Atom atom = at[i];
+        if (atom == null)
+          continue;
         BS bsSym = atom.atomSymmetry;
         if (bsSym != null) {
           if (atom.mi != modelIndex) {
@@ -2190,7 +2201,7 @@ public class ModelSet extends BondCollection {
         return bs;
       ptTemp1.set(1, 1, 1);
       for (int i = ac; --i >= 0;)
-        if (isInLatticeCell(i, ptTemp1, ptTemp2, false))
+        if (at[i] != null && isInLatticeCell(i, ptTemp1, ptTemp2, false))
           bs.set(i);
       return bs;
     }
@@ -2342,7 +2353,7 @@ public class ModelSet extends BondCollection {
       distance = -distance;
       for (int i = ac; --i >= 0;) {
         Atom atom = at[i];
-        if (modelIndex >= 0 && at[i].mi != modelIndex)
+        if (atom == null || modelIndex >= 0 && atom.mi != modelIndex)
           continue;
         if (!bsResult.get(i)
             && atom.getFractionalUnitDistance(coord, ptTemp1, ptTemp2) <= distance)
@@ -2683,12 +2694,14 @@ public class ModelSet extends BondCollection {
      */
     int lastModelIndex = -1;
     for (int i = ac; --i >= 0;) {
+      Atom atom = at[i];
+      if (atom == null)
+        continue;
       boolean isAtomInSetA = (bsA == null || bsA.get(i));
       boolean isAtomInSetB = (bsB == null || bsB.get(i));
       if (!isAtomInSetA && !isAtomInSetB)
         //|| bsExclude != null && bsExclude.get(i))
         continue;
-      Atom atom = at[i];
       if (atom.isDeleted())
         continue;
       int modelIndex = atom.mi;
@@ -2697,7 +2710,7 @@ public class ModelSet extends BondCollection {
         lastModelIndex = modelIndex;
         if (isJmolDataFrameForModel(modelIndex)) {
           for (; --i >= 0;)
-            if (at[i].mi != modelIndex)
+            if (at[i] == null || at[i].mi != modelIndex)
               break;
           i++;
           continue;
@@ -2927,6 +2940,8 @@ public class ModelSet extends BondCollection {
     int imodel = -1;
     int lastmodel = -1;
     for (int i = 0; i < ac; i++) {
+      if (at[i] == null)
+        continue;
       if ((imodel = at[i].mi) != lastmodel) {
         idnew = 0;
         lastmodel = imodel;
@@ -3022,12 +3037,18 @@ public class ModelSet extends BondCollection {
     if (bs == null)
       return;
     BS bsBonds = new BS();
-    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1))
+    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1)) {
       at[i].delete(bsBonds);
+      at[i] = null;//testing
+    }
     for (int i = 0; i < mc; i++) {
-      am[i].bsAtomsDeleted.or(bs);
-      am[i].bsAtomsDeleted.and(am[i].bsAtoms);
-      am[i].resetDSSR(false);
+      Model m = am[i];
+      m.resetDSSR(false);
+      m.bsAtomsDeleted.or(bs);
+      m.bsAtomsDeleted.and(m.bsAtoms);
+      bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
+      m.firstAtomIndex = bs.nextSetBit(0);
+      m.act = bs.cardinality();
     }
     deleteBonds(bsBonds, false);
     validateBspf(false);

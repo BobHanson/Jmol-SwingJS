@@ -84,13 +84,22 @@ public class JSpecView implements JSVInterface {
 
     if (args.length > 0) {
       // check for command-line arguments
-      if (args.length == 2 && args[0].equalsIgnoreCase("-script"))
+      int n = args.length;
+      boolean autoexit = false;
+      if (args[args.length - 1].equalsIgnoreCase("-exit")) {
+        autoexit = true;
+        n--;
+      }
+      if (n == 2 && args[0].equalsIgnoreCase("-script")) {
         jsv.mainFrame.runScriptNow(args[1]);
-      else
+        if (autoexit)
+          System.exit(0);
+      } else {
         for (int i = 0; i < args.length; i++) {
           System.out.println("JSpecView is attempting to open " + args[i]);
           jsv.mainFrame.vwr.openFile(args[i], false);
         }
+      }
     }
     jsv.mainFrame.setVisible(true);
     //if (args.length == 0)
