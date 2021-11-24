@@ -252,6 +252,7 @@ public class PdbReader extends AtomSetCollectionReader {
       getHeader = false;
       // PDB is different -- targets actual model number
       int modelNo = (forceNewModel ? modelNumber + 1 : getModelNumber());
+      String modelName = getModelName();
       modelNumber = (useFileModelNumbers ? modelNo : modelNumber + 1);
       if (!doGetModel(modelNumber, null)) {
         handleTlsMissingModels();
@@ -265,7 +266,8 @@ public class PdbReader extends AtomSetCollectionReader {
       if (ac > 0)
         applySymmetryAndSetTrajectory();
       // supposedly MODEL is only for NMR
-      model(modelNo);
+      model(modelNo, modelName);
+      
       if (isLegacyModelType || !isAtom) // Jmol 12.0.RC24 fixed this bug, but for earlier scripts we need to unfix it.
         return true;
     }
@@ -412,8 +414,9 @@ public class PdbReader extends AtomSetCollectionReader {
  
   protected void finalizeReaderPDB() throws Exception {
     checkNotPDB();
-    if (pdbID != null) {
-      asc.setAtomSetName(pdbID);
+    if (pdbID != null && pdbID.length() > 0) {
+      if (!isMultiModel)
+        asc.setAtomSetName(pdbID);
       asc.setCurrentModelInfo("pdbID", pdbID);
     }
     
@@ -1327,15 +1330,6 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   private int getModelNumber() {
-    int startModelColumn = 6; // should be 10 0-based
-    int endModelColumn = 14;
-    if (endModelColumn > lineLength)
-      endModelColumn = lineLength;
-    int iModel = parseIntRange(line, startModelColumn, endModelColumn);
-    return (iModel == Integer.MIN_VALUE ? 0 : iModel);
-  }
-  
-  protected void model(int modelNumber) {
     /****************************************************************
      * mth 2004 02 28 note that the pdb spec says: COLUMNS DATA TYPE FIELD
      * DEFINITION
@@ -1345,7 +1339,30 @@ public class PdbReader extends AtomSetCollectionReader {
      * but I received a file with the serial number right after the word MODEL
      * :-(
      ****************************************************************/
+    int startModelColumn = 6; // should be 10 0-based
+    int endModelColumn = 14;
+    if (endModelColumn > lineLength)
+      endModelColumn = lineLength;
+    int iModel = parseIntRange(line, startModelColumn, endModelColumn);
+    return (iModel == Integer.MIN_VALUE ? 0 : iModel);
+  }
+
+  /**
+   * A Jmol add-on -- allows for model name on MODEL line starting in column 15 (0-based)
+   * 
+   * @return name or null
+   */
+  private String getModelName() {
+    if (lineLength < 16)
+      return null;
+    String name = line.substring(15, lineLength).trim();
+    return (name.length() == 0 ? null  : name);
+  }
+
+  protected void model(int modelNumber, String name) {
     checkNotPDB();
+    if (name == null)
+      name = pdbID;
     //not cleaer that this shoudl come irset...    
     haveMappedSerials = false;
     sbConect = null;
@@ -1353,8 +1370,7 @@ public class PdbReader extends AtomSetCollectionReader {
     asc.setCurrentModelInfo("pdbID", pdbID);
     if (asc.iSet == 0 || isTrajectory)
       asc.setAtomSetName(pdbID);
-    else
-      asc.setCurrentModelInfo("name", pdbID);
+    asc.setCurrentModelInfo("name", name);
     checkUnitCellParams();
     if (!isCourseGrained)
       setModelPDB(true);

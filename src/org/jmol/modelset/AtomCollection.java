@@ -2399,12 +2399,20 @@ abstract public class AtomCollection {
   
   public BS getChainBits(int chainID) {
     boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
-    if (chainID >= 0 && chainID < 300 && !caseSensitive)
+    if (caseSensitive) {
+    	// check for script compiler run before setting chain ids
+      if (chainID >= 97 && chainID <= 122)
+        chainID += 159;    
+    } else {
+      if (chainID >= 0 && chainID < 300)
       chainID = chainToUpper(chainID);
+    }
     BS bs = new BS();
     BS bsDone = BS.newN(ac);
     int id;
     for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
+      if (at[i] == null)
+        continue;
       Chain chain = at[i].group.chain;
       if (chainID == (id = chain.chainID) || !caseSensitive 
           && id >= 0 && id < 300 && chainID == chainToUpper(id)) {

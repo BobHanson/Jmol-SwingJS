@@ -1404,8 +1404,9 @@ public class CmdExt extends ScriptExt {
           P3 bij = centerAndPoints[1][i];
           if (!(aij instanceof Atom) || !(bij instanceof Atom))
             break;
-          Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
-              + ((Atom) bij).getInfo());
+          if (!isFrames)
+            Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
+               + ((Atom) bij).getInfo());
         }
         q = Measure.calculateQuaternionRotation(centerAndPoints, retStddev);
         float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN
@@ -1516,6 +1517,8 @@ public class CmdExt extends ScriptExt {
         if (endDegrees == 0 && doTranslate) {
           if (translation.length() > 0.01f)
             endDegrees = 1e10f;
+          else if (isFrames)
+            continue;
           else
             doRotate = doTranslate = doAnimate = false;
         }

@@ -402,7 +402,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     for (int j = 0; j < stateCount; j++) {
       if (!doGetModel(++nModels, null))
         continue;
-      model(nModels);
+      model(nModels, null);
       pymolScene.currentAtomSetIndex = asc.iSet;
       if (isTrajectory) {
         trajectoryStep = new P3[totalAtomCount];

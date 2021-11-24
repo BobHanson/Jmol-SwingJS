@@ -9817,10 +9817,13 @@ public class Viewer extends JmolViewer
     int i = id.charAt(0);
     if (id.length() > 1) {
       i = 300 + chainList.size();
-    } else if (isAssign && 97 <= i && i <= 122) { // lower case
+    } else if ((isAssign || chainCaseSpecified) && 97 <= i && i <= 122) { // lower case
       i += 159; // starts at 256
     }
     if (i >= 256) {
+    	iboxed = (Integer) chainMap.get(id);
+        if (iboxed != null)
+          return iboxed.intValue();
       //this will force chainCaseSensitive when it is necessary
       chainCaseSpecified |= isAssign;
       chainList.addLast(id);
