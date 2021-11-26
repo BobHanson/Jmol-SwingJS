@@ -38,6 +38,7 @@ import javajs.util.P3;
 import javajs.util.SB;
 
 import org.jmol.util.BSUtil;
+import org.jmol.viewer.FileManager;
 
 public class Model {
 
@@ -157,11 +158,15 @@ public class Model {
       auxiliaryInfo = new Hashtable<String, Object>();
     }
     this.auxiliaryInfo = auxiliaryInfo;
-    if (auxiliaryInfo.containsKey("biosymmetryCount")) {
-      biosymmetryCount = ((Integer) auxiliaryInfo.get("biosymmetryCount"))
-          .intValue();
+    Integer bc = ((Integer) auxiliaryInfo.get("biosymmetryCount"));
+    if (bc != null) {
+      biosymmetryCount = bc.intValue();
       biosymmetry = (SymmetryInterface) auxiliaryInfo.get("biosymmetry");
     }
+    String fname = (String) auxiliaryInfo.get("fileName");
+    if (fname != null)
+      auxiliaryInfo.put("fileName", FileManager.stripTypePrefix(fname));
+    
     this.properties = properties;
     if (jmolData == null) {
       jmolFrameType = "modelSet";

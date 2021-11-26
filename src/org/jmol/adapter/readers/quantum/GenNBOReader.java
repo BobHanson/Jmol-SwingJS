@@ -38,6 +38,7 @@ import javajs.util.SB;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -249,13 +250,11 @@ public class GenNBOReader extends MOReader {
   }
 
   private String getFileData(String ext) throws Exception {
-    String fileName = (String) htParams.get("fullPathName");
+    String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
     int pt = fileName.lastIndexOf(".");
     if (pt < 0)
       pt = fileName.length();
     fileName = fileName.substring(0, pt);
-    if (fileName.startsWith("GenNBO::"))
-      fileName = fileName.substring(8);
     moData.put("nboRoot", fileName);
     if (ext.startsWith(".")) {
       fileName += ext;

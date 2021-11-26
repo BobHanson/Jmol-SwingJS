@@ -217,7 +217,6 @@ public class FileManager implements BytePoster {
       htParams.put("filter", (filter == null ? "" : filter) + "2D");
       name = name.substring(0, name.length() - 4);
     }
-      
     int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);
     String fileType = (pt >= 0 ? name.substring(0, pt) : null);
@@ -249,8 +248,6 @@ public class FileManager implements BytePoster {
       int pt = fileNames[i].indexOf("::");
       String nameAsGiven = (pt >= 0 ? fileNames[i].substring(pt + 2)
           : fileNames[i]);
-      
-      System.out.println(i + " FM " + nameAsGiven);
       String fileType = (pt >= 0 ? fileNames[i].substring(0, pt) : null);
       String[] names = getClassifiedName(nameAsGiven, true);
       if (names.length == 1)
@@ -1324,11 +1321,9 @@ public class FileManager implements BytePoster {
       String tag = scriptFilePrefixes[ipt];
       int i = -1;
       while ((i = script.indexOf(tag, i + 1)) >= 0) {
-        String s = PT.getQuotedStringAt(script, i);
-        if (s.indexOf("::") >= 0)
-          s = PT.split(s, "::")[1];
-          if (s.indexOf("\\u") >= 0)
-            s = Escape.unescapeUnicode(s);
+        String s = stripTypePrefix(PT.getQuotedStringAt(script, i));
+        if (s.indexOf("\\u") >= 0)
+          s = Escape.unescapeUnicode(s);
         fileList.addLast(s);
         if (fileListUTF != null) {
           if (s.indexOf("\\u") >= 0)
@@ -1599,6 +1594,17 @@ public class FileManager implements BytePoster {
         return data[1];
       }
     return "";
+  }
+
+  /**
+   * Stip PDB::file://... from a file name
+   * 
+   * @param fileName
+   * @return  stripped name
+   */
+  public static String stripTypePrefix(String fileName) {
+    int pt = fileName.indexOf("::");
+    return (pt < 0 || pt >= 20 ? fileName : fileName.substring(pt + 2));
   }
 
   /**

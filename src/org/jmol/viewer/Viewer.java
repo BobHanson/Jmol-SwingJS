@@ -4840,6 +4840,13 @@ public class Viewer extends JmolViewer
     String format = null;
     String id = name.substring(1);
     switch (type) {
+    case 'c': // cache:local//... legacyResolver....
+      return name;
+    case 'h':
+      // legacy resolver https://
+      checkCIR(false);
+      return g.nihResolverFormat
+          + name.substring(name.indexOf("/structure") + 10);
     case '=':
       if (name.startsWith("==")) {
         id = id.substring(1);
@@ -4936,11 +4943,6 @@ public class Viewer extends JmolViewer
         }
       }
       return PT.formatStringS(format, "FILE", id);
-    case 'h':
-      // legacy resolver
-      checkCIR(false);
-      return g.nihResolverFormat
-          + name.substring(name.indexOf("/structure") + 10);
     case '$':
       checkCIR(false);
       if (name.equals("$")) {

@@ -29,9 +29,10 @@
   import org.jmol.adapter.smarter.Atom;
   import org.jmol.adapter.smarter.AtomSetCollectionReader;
   import org.jmol.adapter.smarter.Bond;
-  import org.jmol.util.Logger;
-  
-  import javajs.util.PT;
+import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
+
+import javajs.util.PT;
   import javajs.util.Rdr;
   
   /**
@@ -228,11 +229,8 @@
     }
   
     private void getTopData() {
-      String fileName = (String) htParams.get("fullPathName");
-      int pt = fileName.indexOf("::");
-      if (pt > 0)
-        fileName = fileName.substring(pt + 2);
-      pt = fileName.lastIndexOf(".");
+      String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
+      int pt = fileName.lastIndexOf(".");
       if (pt < 0)
         pt = fileName.length();
       int ptv = fileName.lastIndexOf("Frame", pt);

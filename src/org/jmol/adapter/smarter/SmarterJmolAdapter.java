@@ -248,7 +248,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
             || reader instanceof GenericBinaryDocument))
           return reader;
         String fullPathName = names[i];
-        htParams.put("fullPathName", fullPathName);
+        htParams.put("fullPathName", fullPathName); // this may include xxx::
         Object ret = Resolver.getAtomCollectionReader(names[i],
             (types == null ? null : types[i]), reader, htParams, i);
         if (!(ret instanceof AtomSetCollectionReader))
