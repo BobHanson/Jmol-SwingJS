@@ -8854,6 +8854,7 @@ public class Viewer extends JmolViewer
       return null;
     JmolScriptFunction function = (isStaticFunction(name) ? staticFunctions
         : localFunctions).get(name);
+//    System.out.println("get " + function);
     return (function == null || function.geTokens() == null ? null : function);
   }
 
@@ -8873,6 +8874,7 @@ public class Viewer extends JmolViewer
 
   public void addFunction(JmolScriptFunction function) {
     String name = function.getName();
+    //System.out.println("add " + function);
     (isStaticFunction(name) ? staticFunctions : localFunctions).put(name,
         function);
   }
@@ -9371,7 +9373,8 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Ask for new file name when opening a file
+   * Ask for new file name when saving or opening a file in Java and saving a file in JavaScript.
+   * JavaScript use of FileReader goes through loadFileAsync
    * 
    * @param type
    * @param fileName

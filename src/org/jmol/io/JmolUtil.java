@@ -234,7 +234,7 @@ public class JmolUtil {
       }
       if (is instanceof BufferedInputStream && Rdr.isPngZipStream(is))
         is = ZipTools.getPngZipStream((BufferedInputStream) is, true);
-      ZipInputStream zis = (ZipInputStream) ZipTools.newZipInputStream(is);
+      ZipInputStream zis = ZipTools.newZipInputStream(is);
       ZipEntry ze;
       if (haveManifest)
         manifest = '|' + manifest.replace('\r', '|').replace('\n', '|') + '|';
@@ -376,6 +376,13 @@ public class JmolUtil {
     }
   }
 
+  /**
+   * Get the cached PNGJ bytes for xxx.png or xxx.png|yyyy. Does not extract the |yyyy bytes.
+   * 
+   * @param fm
+   * @param pathName
+   * @return
+   */
   public byte[] getCachedPngjBytes(FileManager fm, String pathName) {
     if (pathName.startsWith("file:///"))
       pathName = "file:" + pathName.substring(7);

@@ -521,6 +521,7 @@ public class FileManager implements BytePoster {
         return Rdr.getBufferedReader(
             new BufferedInputStream((InputStream) url.getContent()), null);
     }
+    // applet only
     resourceName = (url == null 
         ? vwr.vwrOptions.get("codePath") + classPath + resourceName
             : url.getFile());
@@ -702,7 +703,7 @@ public class FileManager implements BytePoster {
   }
 
   public Object getFileAsBytes(String name, OC out) {
-    // ?? used by eval of "WRITE FILE"
+    // used by OutputManager.createZipSet"
     // will be full path name
     if (name == null)
       return null;
@@ -716,8 +717,7 @@ public class FileManager implements BytePoster {
     // but in that case we can get the bytes directly and not
     // fool with a BufferedInputStream, and we certainly do not want to 
     // open it twice in the case of the returned interior file being another PNGJ file
-    Object bytes = (subFileList == null ? null : getPngjOrDroppedBytes(
-        fullName, name));
+    Object bytes = (subFileList != null ? null : getPngjOrDroppedBytes(fullName, name));
     if (bytes == null) {
       Object t = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
           false, false, null, false, true);
@@ -728,8 +728,8 @@ public class FileManager implements BytePoster {
         bytes = (out != null || subFileList == null || subFileList.length <= 1
             || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
              && !Rdr.isTar(bis)
-            ? Rdr
-            .getStreamAsBytes(bis, out) : ZipTools.getZipFileContentsAsBytes(bis, subFileList, 1));
+            ? Rdr.getStreamAsBytes(bis, out)
+                : ZipTools.getZipFileContentsAsBytes(bis, subFileList, 1));
         bis.close();
       } catch (Exception ioe) {
         return ioe.toString();

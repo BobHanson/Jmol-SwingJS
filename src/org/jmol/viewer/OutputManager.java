@@ -320,7 +320,7 @@ abstract class OutputManager {
             }
 
           };
-          if (vwr.isJS) {
+          if (Viewer.isJS) {
             errRet[0] = "async";
             new Thread(r).start();
             return true;
@@ -341,7 +341,7 @@ abstract class OutputManager {
     return errRet[0] == null;
   }
 
-  private void finishImage(String[] errRet, String type, OC out,
+  void finishImage(String[] errRet, String type, OC out,
                            Object objImage, Map<String, Object> params) {
     GenericImageEncoder ie = (GenericImageEncoder) Interface
         .getInterface("javajs.img." + type + "Encoder", vwr, "file");
@@ -368,7 +368,7 @@ abstract class OutputManager {
     }
   }
 
-  private void getImagePixels(Object objImage, Map<String, Object> params)
+  void getImagePixels(Object objImage, Map<String, Object> params)
       throws Exception {
     int w = objImage == null ? -1
         : AU.isAI(objImage) ? ((Integer) params.get("width")).intValue()
@@ -1122,8 +1122,9 @@ abstract class OutputManager {
       OutputStream zos = (OutputStream) ZipTools.getZipOutputStream(bos);
       for (int i = 0; i < fileNamesAndByteArrays.size(); i += 3) {
         String fname = (String) fileNamesAndByteArrays.get(i);
-        byte[] bytes = null;
-        Object data = fm.cacheGet(fname, false);
+        String fnameShort = (String) fileNamesAndByteArrays.get(i + 1);
+        byte[] bytes = (byte[]) fileNamesAndByteArrays.get(i + 2);
+        Object data = (bytes == null ? fm.cacheGet(fname, false) : null);
         if (data instanceof Map<?, ?>)
           continue;
         if (fname.indexOf("file:/") == 0) {
@@ -1133,13 +1134,10 @@ abstract class OutputManager {
         } else if (fname.indexOf("cache://") == 0) {
           fname = fname.substring(8);
         }
-        String fnameShort = (String) fileNamesAndByteArrays.get(i + 1);
         if (fnameShort == null)
           fnameShort = fname;
         if (data != null)
           bytes = (AU.isAB(data) ? (byte[]) data : ((String) data).getBytes());
-        if (bytes == null)
-          bytes = (byte[]) fileNamesAndByteArrays.get(i + 2);
         String key = ";" + fnameShort + ";";
         if (fileList.indexOf(key) >= 0) {
           Logger.info("duplicate entry");

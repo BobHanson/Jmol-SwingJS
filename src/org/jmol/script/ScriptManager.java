@@ -28,10 +28,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.zip.ZipInputStream;
 
 import javax.swing.JOptionPane;
 
-import javajs.api.ZInputStream;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -593,7 +593,7 @@ public class ScriptManager implements JmolScriptManager {
         }
         // these next will end with the escaped file name
         if (type.equals("spt::")) {
-          cmd = "script " + PT.esc(fname.substring(5));
+          cmd = "script " + PT.esc((fname.startsWith("spt::") ? fname.substring(5) : fname));
           return;
         }
         if (type.equals("dssr")) {
@@ -677,7 +677,7 @@ public class ScriptManager implements JmolScriptManager {
     Object br = vwr.fm.getUnzippedReaderOrStreamFromName(fileName, null, true,
         false, true, true, null);
     String modelType = null;
-    if (br instanceof ZInputStream) {
+    if (br instanceof ZipInputStream) {
       String zipDirectory = vwr.getZipDirectoryAsString(fileName);
       if (zipDirectory.indexOf("JmolManifest") >= 0)
         return "Jmol";

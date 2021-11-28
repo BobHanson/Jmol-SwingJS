@@ -31,16 +31,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Map;
-
-import javajs.api.GenericBinaryDocument;
-import javajs.api.ZInputStream;
-import javajs.util.AU;
-import javajs.util.PT;
-import javajs.util.Rdr;
+import java.util.zip.ZipInputStream;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.util.AU;
+import javajs.util.PT;
+import javajs.util.Rdr;
 
 public class FileReader {
   /**
@@ -113,7 +113,7 @@ public class FileReader {
       }
       if (t instanceof BufferedReader) {
         readerOrDocument = t;
-      } else if (t instanceof ZInputStream) {
+      } else if (t instanceof ZipInputStream) {
         String name = fullPathNameIn;
         String[] subFileList = null;
         name = name.replace('\\', '/');
