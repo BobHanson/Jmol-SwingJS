@@ -8854,11 +8854,10 @@ public class Viewer extends JmolViewer
       return null;
     JmolScriptFunction function = (isStaticFunction(name) ? staticFunctions
         : localFunctions).get(name);
-//    System.out.println("get " + function);
     return (function == null || function.geTokens() == null ? null : function);
   }
 
-  private static boolean isStaticFunction(String name) {
+  static boolean isStaticFunction(String name) {
     return name.startsWith("static_");
   }
 
@@ -8874,7 +8873,6 @@ public class Viewer extends JmolViewer
 
   public void addFunction(JmolScriptFunction function) {
     String name = function.getName();
-    //System.out.println("add " + function);
     (isStaticFunction(name) ? staticFunctions : localFunctions).put(name,
         function);
   }

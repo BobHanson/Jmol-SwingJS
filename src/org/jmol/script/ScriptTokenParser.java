@@ -38,20 +38,22 @@ import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 
 
+/**
+ * An abstract class subclassed by ScriptCompiler taking care of the second
+ * phase of syntax checking. After all the tokens are created, these methods
+ * ensure that they are in the proper order in terms of expressions, primarily.
+ * 
+ * Here we are going from an "infix" to a "postfix" set of tokens and then back
+ * to infix for final storage.
+ * 
+ */
+
+
 abstract class ScriptTokenParser {
   
-  /*
-   * An abstract class taking care of the second phase of 
-   * syntax checking, after all the tokens are created,  
-   * these methods ensure that they are in the proper order
-   * in terms of expressions, primarily.
-   * 
-   * Here we are going from an "infix" to a "postfix" set
-   * of tokens and then back to infix for final storage.
-   * 
-   */
-
   protected Viewer vwr;
+
+  protected Map<String, Boolean> htUserFunctions;
 
   protected String script;
   protected boolean isStateScript;
@@ -149,6 +151,7 @@ abstract class ScriptTokenParser {
       }
     }
 
+    // must avoid roll-over to negative number in JavaScript
     if ((isNewSet || isSetBrace) && ptNewSetModifier != Integer.MAX_VALUE && size < ptNewSetModifier + 2) {
       if (!isNewSet || !haveMacro)
         return commandExpected();
@@ -266,7 +269,6 @@ abstract class ScriptTokenParser {
     return true;
   }
 
-  protected Map<String, Boolean> htUserFunctions;
   protected boolean isUserFunction(String name) {
     name = name.toLowerCase();
     return (!isStateScript && (vwr.isFunction(name) || htUserFunctions.containsKey(name)));

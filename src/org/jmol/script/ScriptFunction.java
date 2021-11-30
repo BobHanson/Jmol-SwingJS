@@ -37,7 +37,7 @@ public class ScriptFunction implements JmolScriptFunction {
 
   // / functions
 
-  /*
+  /**
    * functions are either local or global (static). The idea there is that a set
    * of applets might share a set of functions. The default is global; prefix
    * underscore makes them local.
@@ -61,6 +61,7 @@ public class ScriptFunction implements JmolScriptFunction {
   int tok;
 
   Map<String, String> variables = new Hashtable<String, String>();
+
   boolean isVariable(String ident) {
     return variables.containsKey(ident);
   }
@@ -71,6 +72,8 @@ public class ScriptFunction implements JmolScriptFunction {
   short[] lineNumbers;
   String script;
 
+  boolean isPrivate;
+  
   public ScriptFunction() {
     // for reflection with ScriptParallelProcessor
   }

@@ -343,6 +343,7 @@ public class T {
 //public final static int quaternion   see mathfunc
   public final static int parallel     = flowCommand   | 36;
   public final static int plot         = scriptCommand | 37;
+  public final static int privat       = scriptCommand | 38;
   public final static int process      = flowCommand   | 39;
 //  public final static int prompt  see mathfunc
 //  public final static int push  see mathfunc //internal only
@@ -1806,6 +1807,7 @@ public class T {
         "pause",
         "wait",
         "plot",
+        "private",
         "plot3d",
         "pmesh",
         "polygon",
@@ -2870,6 +2872,7 @@ public class T {
         pause,                              // "pause"
         -1,                                 // "wait"
         plot,                               // "plot"
+        privat,                             // "private"
         plot3d,                             // "plot3d"
         pmesh,                              // "pmesh"
         polygon,                            // "polygon"

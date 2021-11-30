@@ -29,6 +29,9 @@ abstract public class ScriptParam extends ScriptError {
 
   
   public Map<String, SV> contextVariables;
+  
+  public Map<String, ScriptFunction> contextFunctions;
+  
   public ScriptContext thisContext;
 
   public int iToken;

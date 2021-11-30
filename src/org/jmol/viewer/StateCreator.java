@@ -1493,6 +1493,10 @@ public class StateCreator extends JmolStateCreator {
     return sb.toString();
   }
 
+  /**
+   * A relatively static method that is only called on a new StateCreator
+   * so as to all StateCreator to be modular.
+   */
   @Override
   String getFunctionCalls(String f) {
     if (f == null)
@@ -1500,7 +1504,7 @@ public class StateCreator extends JmolStateCreator {
     SB s = new SB();
     int pt = f.indexOf("*");
     boolean isGeneric = (pt >= 0);
-    boolean isStatic = (f.indexOf("static_") == 0);
+    boolean isStatic = Viewer.isStaticFunction(f);
     boolean namesOnly = (f.equalsIgnoreCase("names") || f
         .equalsIgnoreCase("static_names"));
     if (namesOnly)

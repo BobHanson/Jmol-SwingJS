@@ -1,0 +1,120 @@
+// tests for asynchronous try/catch issues 
+// BH 2021.11.29 all passing
+
+// function(){delay error}
+
+function test() {
+
+delay 5
+load "adfad"
+
+}
+
+try {
+
+print "outer1"
+test;
+print "piter2"
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";
+
+
+// delay with function(){error}
+
+function test() {
+
+load "adfad"
+
+}
+
+try {
+
+print "outer1"
+delay 1;
+print "piter2"
+
+
+test;
+
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";
+
+
+
+
+// delay catch
+
+
+try {
+
+print "outer1"
+delay 5;
+print "inner2"
+
+load "xx";
+
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";
+
+
+
+
+
+// delay nocatch
+
+try {
+
+print "outer1"
+delay 5;
+print "inner2"
+
+
+//test;
+
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";
+
+
+
+
+
+
+
+
+
+
+//simple catch
+
+try {
+
+print "inner1"
+load "XXX"
+print "inner2"
+
+
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";
+
+
+//simple nocatch
+
+try {
+
+print "inner1"
+print "inner2"
+
+
+} catch (e) {
+print "caught " + e;
+}
+print "outer ok";

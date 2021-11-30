@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.BArray;
+import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M34;
@@ -17,7 +18,7 @@ import javajs.util.T3;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
-import javajs.util.BS;
+
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -44,6 +45,8 @@ import org.jmol.viewer.JC;
 abstract class ScriptExpr extends ScriptParam {
 
   public boolean debugHigh;
+
+  protected Map<String, ScriptFunction> privateFuncs;
 
   private CmdExt cmdExt;
   public CmdExt getCmdExt() {
@@ -597,7 +600,7 @@ abstract class ScriptExpr extends ScriptParam {
             }
           if (v == null) {
 
-            if (T.tokAttr(theTok, T.identifier) && vwr.isFunction(name)) {
+            if (T.tokAttr(theTok, T.identifier) && isFunction(name)) {
               if (!rpn.addOp(SV.newV(T.function, theToken.value)))
                 invArg();
               if (!haveParens) {
@@ -1544,7 +1547,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (tok != T.opIf && !T.tokAttr(tok, T.identifier))
         break;
       String name = paramAsStr(i);
-      if (vwr.isFunction(name.toLowerCase())) {
+      if (isFunction(name.toLowerCase())) {
         tok = T.function;
         break;
       }
@@ -2625,5 +2628,26 @@ abstract class ScriptExpr extends ScriptParam {
 
     return true;
   }
-  
+
+  protected boolean isFunction(String sf) {
+    return (getFunction(sf) != null);
+  }
+
+  protected void addFunction(ScriptFunction f) {
+    if (f == null || f.isPrivate) {
+      if (privateFuncs == null)
+        privateFuncs = new Hashtable<String, ScriptFunction>();
+      if (f != null)
+        privateFuncs.put(f.name, f);
+    } else {
+      vwr.addFunction(f);
+    }
+  }
+
+  protected ScriptFunction getFunction(String sf) {
+    ScriptFunction f = (privateFuncs == null ? null : privateFuncs.get(sf));
+    return (f == null ? (ScriptFunction) vwr.getFunction(sf) : f);
+  }
+
+
 }

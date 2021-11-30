@@ -77,6 +77,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   // returns:
 
+  private Map<String, ScriptFunction> contextFunctions;
   private Map<String, SV> contextVariables;
   private T[][] aatokenCompiled;
   private short[] lineNumbers;
@@ -87,6 +88,9 @@ public class ScriptCompiler extends ScriptTokenParser {
   private boolean isShowScriptOutput;
   private boolean isCheckOnly;
   private boolean haveComments;
+  private boolean isPrivateFunc; // private function...
+  private boolean isPrivateScript; // "//@private"
+  
 
   String scriptExtensions;
 
@@ -292,7 +296,8 @@ public class ScriptCompiler extends ScriptTokenParser {
       errorMessage = null;
       errorMessageUntranslated = null;
       errorLine = null;
-
+      isPrivateScript = false;
+      isPrivateFunc = false;      
       nSemiSkip = 0;
       ichToken = 0;
       ichCurrentCommand = 0;
@@ -676,6 +681,10 @@ public class ScriptCompiler extends ScriptTokenParser {
 
     // first character was a sharp, but was not #jx ... strip it all
     cchToken = ichT - ichToken;
+    if (!isSharp && cchToken == 10 
+    		&& script.substring(ichToken, ichT).equals("//@private")) {
+      isPrivateScript = true;
+    }
     return (nTokens == 0 ? OK2 : CONTINUE);
   }
 
@@ -1017,8 +1026,9 @@ public class ScriptCompiler extends ScriptTokenParser {
         && isContextVariable(identLC);
     String myName = ident;//(isUserVar ? ident : null);
     String preserveCase = null;
-    if (nTokens == 0)
+    if (nTokens == 0) {
       isUserToken = isUserVar;
+    }
     if (nTokens == 1
         && (tokCommand == T.function || tokCommand == T.parallel || tokCommand == T.var)
 
@@ -1638,6 +1648,9 @@ public class ScriptCompiler extends ScriptTokenParser {
       return OK;
     }
     switch (tok) {
+    case T.privat:
+      isPrivateFunc = true;
+      return CONTINUE;
     case T.end:
       if (tokCommand == T.cgo || tokCommand == T.capture && nTokens == 1)
         return OK;
@@ -1905,6 +1918,8 @@ public class ScriptCompiler extends ScriptTokenParser {
             .getInterface("org.jmol.script.ScriptParallelProcessor", null, null)
             : new ScriptFunction(ident, tokCommand));
         thisFunction.set(ident, tokCommand);
+        thisFunction.isPrivate = isStateScript || isPrivateScript || isPrivateFunc;
+        isPrivateFunc = false;
         htUserFunctions.put(ident, Boolean.TRUE);
         flowContext.setFunction(thisFunction);
         break; // function f

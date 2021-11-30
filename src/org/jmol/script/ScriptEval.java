@@ -289,6 +289,13 @@ public class ScriptEval extends ScriptExpr {
 
   public int scriptLevel;
   public static final String CONTEXT_HOLD_QUEUE = "getEvalContextAndHoldQueue";
+  public static final String CONTEXT_DELAY = "delay";
+
+  private static final long DELAY_INTERRUPT_MS = 1000000; // testing! 
+
+  private static final int EXEC_ASYNC = -1;
+  private static final int EXEC_ERR   = 1;
+  private static final int EXEC_OK    = 0;
 
   public static int commandHistoryLevelMax = 0;
   private static int contextDepthMax = 100; // mutable using set scriptLevelMax
@@ -381,7 +388,8 @@ public class ScriptEval extends ScriptExpr {
   public boolean compileScriptFile(String filename, boolean tQuiet) {
     clearState(tQuiet);
     contextPath = filename;
-    return compileScriptFileInternal(filename, null, null, null);
+    String script = getScriptFileInternal(filename, null, null, null);
+    return  (script != null && compileScript(filename, script, debugScript));
   }
 
   @Override
@@ -395,6 +403,7 @@ public class ScriptEval extends ScriptExpr {
     chk = this.isCmdLine_c_or_C_Option = isCmdLine_c_or_C_Option;
     this.historyDisabled = historyDisabled;
     this.outputBuffer = outputBuffer;
+    privateFuncs = null;
     currentThread = Thread.currentThread();
     setAllowJSThreads(allowThreads & !vwr.getBoolean(T.nodelay));
     this.listCommands = listCommands;
@@ -415,11 +424,11 @@ public class ScriptEval extends ScriptExpr {
         && vwr.haveDisplay && outputBuffer == null && allowJSThreads);
   }
 
-  private void executeCommands(boolean isTry, boolean reportCompletion) {
+  private int executeCommands(boolean isTry, boolean reportCompletion) {
     boolean haveError = false;
     try {
       if (!dispatchCommands(false, false, isTry))
-        return;
+        return EXEC_ASYNC;
     } catch (Error er) {
       vwr.handleError(er, false);
       setErrorMessage("" + er + " " + vwr.getShapeErrorState());
@@ -439,11 +448,11 @@ public class ScriptEval extends ScriptExpr {
         // it's not a real exception, but it has that 
         // property so that it can be caught here.
         
-        return;
+        return EXEC_ASYNC;
       }
       if (isTry) {
         vwr.setStringProperty("_errormessage", "" + e);
-        return;
+        return EXEC_ERR;
       }
       setErrorMessage(e.toString());
       errorMessageUntranslated = e.getErrorMessageUntranslated();
@@ -471,6 +480,7 @@ public class ScriptEval extends ScriptExpr {
     if (!tQuiet && reportCompletion)
       vwr.setScriptStatus("Jmol script terminated", errorMessage,
           1 + (int) (timeEndExecution - timeBeginExecution), msg);
+    return EXEC_OK;
   }
 
 
@@ -493,7 +503,7 @@ public class ScriptEval extends ScriptExpr {
 
   @Override
   public void resumeEval(Object sco) {
-    
+
     ScriptContext sc = (ScriptContext) sco;
 
     // 
@@ -552,15 +562,29 @@ public class ScriptEval extends ScriptExpr {
       resumeViewer("resumeEval");
       return;
     }
-    if (!executionPaused)
-      sc.pc++;
     thisContext = sc;
-    
+
     if (sc.scriptLevel > 0 && sc.why != CONTEXT_HOLD_QUEUE)
       scriptLevel = sc.scriptLevel - 1;
-    restoreScriptContext(sc, true, false, false);
-    pcResume = sc.pc;
-    executeCommands(sc.isTryCatch, scriptLevel <= 0);
+    if (sc.isTryCatch) {
+      postProcessTry(null);
+      pcResume = -1;
+    } else {
+      if (!executionPaused)
+        sc.pc++;
+      restoreScriptContext(sc, true, false, false);
+      pcResume = sc.pc;
+    }
+    switch (executeCommands(thisContext != null && thisContext.isTryCatch,
+        scriptLevel <= 0)) {
+    case EXEC_ASYNC:
+      break;
+    case EXEC_ERR:
+    case EXEC_OK:
+      postProcessTry(null);
+      executeCommands(true, false);
+      break;
+    }
     pcResume = -1;
   }
 
@@ -951,8 +975,14 @@ public class ScriptEval extends ScriptExpr {
                                boolean debugCompiler) {
     scriptFileName = filename;
     strScript = fixScriptPath(strScript, filename);
-    restoreScriptContext(compiler.compile(filename, strScript, false, false,
-        debugCompiler && Logger.debugging, false), false, false, false);
+    ScriptContext sc = compiler.compile(filename, strScript, false, false,
+        debugCompiler && Logger.debugging, false);
+    addFunction(null);
+    Map<String, ScriptFunction> pf = privateFuncs;
+    restoreScriptContext(sc, false, false, false);
+    privateFuncs = null;
+    if (thisContext != null)
+      thisContext.privateFuncs = pf;
     isStateScript = compiler.isStateScript;
     forceNoAddHydrogens = (isStateScript && script.indexOf("pdbAddHydrogens") < 0);
     String s = script;
@@ -1000,17 +1030,25 @@ public class ScriptEval extends ScriptExpr {
     return pc;
   }
 
-  private boolean compileScriptFileInternal(String filename, String localPath,
+  /**
+   * Retrieve the uncompiled script or null if failed
+   * @param filename
+   * @param localPath
+   * @param remotePath
+   * @param scriptPath
+   * @return  Jmol script or null
+   */
+  private String getScriptFileInternal(String filename, String localPath,
                                             String remotePath, String scriptPath) {
     // from "script" command, with push/pop surrounding or vwr
-    if (filename.toLowerCase().indexOf("javascript:") == 0)
-      return compileScript(filename, vwr.jsEval(filename.substring(11)),
-          debugScript);
+    if (filename.toLowerCase().indexOf("javascript:") == 0) {
+      return vwr.jsEval(filename.substring(11));
+    }
     String[] data = new String[2];
     data[0] = filename;
     if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // first opening
       setErrorMessage("io error reading " + data[0] + ": " + data[1]);
-      return false;
+      return null;
     }
     String movieScript = "";
     if (("\n" + data[1]).indexOf("\nJmolManifest.txt\n") >= 0) {
@@ -1029,7 +1067,7 @@ public class ScriptEval extends ScriptExpr {
         data[0] = filename;
         if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // second entry
           setErrorMessage("io error reading " + data[0] + ": " + data[1]);
-          return false;
+          return null;
         }
         path = FileManager.getManifestScriptPath(data[1]);
       }
@@ -1038,11 +1076,12 @@ public class ScriptEval extends ScriptExpr {
             + path;
         if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // third entry
           setErrorMessage("io error reading " + data[0] + ": " + data[1]);
-          return false;
+          return null;
         }
       }
       if (filename.endsWith("|state.spt")) {
-        vwr.g.setO("_pngjFile", filename.substring(0, filename.length() - 10) + "?");
+        vwr.g.setO("_pngjFile", filename.substring(0, filename.length() - 10)
+            + "?");
       }   
     }
     scriptFileName = filename;
@@ -1053,9 +1092,8 @@ public class ScriptEval extends ScriptExpr {
       scriptPath = scriptPath.substring(0,
           Math.max(scriptPath.lastIndexOf("|"), scriptPath.lastIndexOf("/")));
     }
-    script = FileManager.setScriptFileReferences(script, localPath, remotePath,
-        scriptPath);
-    return compileScript(filename, script + movieScript, debugScript);
+    return FileManager.setScriptFileReferences(script, localPath, remotePath,
+        scriptPath) + movieScript;
   }
 
   // ///////////// Jmol function support  // ///////////////
@@ -1100,7 +1138,7 @@ public class ScriptEval extends ScriptExpr {
     if (function == null) {
       // general function call
       name = name.toLowerCase();
-      function = vwr.getFunction(name);
+      function = getFunction(name);
       if (function == null)
         return null;
       if (setContextPath)
@@ -1125,11 +1163,15 @@ public class ScriptEval extends ScriptExpr {
       contextVariables.put("_breakval", SV.newI(Integer.MAX_VALUE));
       contextVariables.put("_errorval", SV.newS(""));
       Map<String, SV> cv = contextVariables;
-      executeCommands(true, false);
-      //JavaScript will not return here after DELAY
-      while (thisContext.tryPt > vwr.tryPt)
-        popContext(false, false);
-      processTry(cv);
+      switch(executeCommands(true, false)) {
+      case EXEC_ASYNC:
+        // do this later
+        break;
+      case EXEC_ERR:
+      case EXEC_OK:
+      //JavaScript will not return here after DELAY   
+        postProcessTry(cv);
+      }
       return null;
     } else if (function instanceof JmolParallelProcessor) {
       synchronized (function) // can't do this -- too general
@@ -1149,7 +1191,13 @@ public class ScriptEval extends ScriptExpr {
     return v;
   }
 
-  private void processTry(Map<String, SV> cv) throws ScriptException {
+  private void postProcessTry(Map<String, SV> cv) {
+    while (thisContext.tryPt > vwr.tryPt)
+      popContext(false, false);
+    boolean isJSReturn = (cv == null);
+    if (isJSReturn) {
+      cv = contextVariables;
+    }
     vwr.displayLoadErrors = thisContext.displayLoadErrorsSave;
     popContext(false, false);
     String err = (String) vwr.getP("_errormessage");
@@ -1160,7 +1208,11 @@ public class ScriptEval extends ScriptExpr {
     cv.put("_tryret", cv.get("_retval"));
     SV ret = cv.get("_tryret");
     if (ret.value != null || ret.intValue != Integer.MAX_VALUE) {
-      cmdReturn(ret);
+      try {
+        cmdReturn(ret);
+      } catch (ScriptException e) {
+        e.printStackTrace();
+      }
       return;
     }
     String errMsg = (String) (cv.get("_errorval")).value;
@@ -1179,6 +1231,8 @@ public class ScriptEval extends ScriptExpr {
         ct.contextVariables.put(ct.name0, SV.newS(errMsg));
       ct.intValue = (errMsg.length() > 0 ? 1 : -1) * Math.abs(ct.intValue);
     }
+    if (isJSReturn)
+      pc++;
   }
 
   private void breakAt(int pt) {
@@ -1549,6 +1603,8 @@ public class ScriptEval extends ScriptExpr {
       if (statementOnly)
         return;
     }
+    if (context.privateFuncs != null)
+      privateFuncs = context.privateFuncs;
     mustResumeEval = context.mustResumeEval;
     script = context.script;
     lineNumbers = context.lineNumbers;
@@ -1859,7 +1915,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   public void report(String s, boolean isError) {
-    if (chk)
+    if (chk || isError && s.indexOf(" of try:") >= 0)
       return;
     if (outputBuffer == null)
       vwr.scriptStatus(s);
@@ -1955,6 +2011,10 @@ public class ScriptEval extends ScriptExpr {
       vwr.captureParams.put("captureDelayMS", Integer.valueOf(millis));
     }
     scriptDelayThread = new ScriptDelayThread(this, vwr, millis);
+    if (isJS && allowJSThreads) {
+      // abort this; wait for delay to come back.
+       pc = aatoken.length;
+    }
     scriptDelayThread.run();
   }
 
@@ -1968,7 +2028,7 @@ public class ScriptEval extends ScriptExpr {
     if (!useThreads())
       return;
     if (isJS)
-      throw new ScriptInterruption(this, "delay", millis);
+      throw new ScriptInterruption(this, CONTEXT_DELAY, millis);
     delayScript(millis);
   }
 
@@ -2222,7 +2282,7 @@ public class ScriptEval extends ScriptExpr {
     for (; pc < aatoken.length && pc < pcEnd; pc++) {
       if (allowJSInterrupt) {
         // every 1 s check for interruptions
-        if (!executionPaused && System.currentTimeMillis() - lastTime > 1000) {
+        if (!executionPaused && System.currentTimeMillis() - lastTime > DELAY_INTERRUPT_MS) {
           pc--;
           doDelay(-1);
         }
@@ -3835,7 +3895,7 @@ public class ScriptEval extends ScriptExpr {
         return false;
       case T.function:
       case T.parallel:
-        vwr.addFunction((ScriptFunction) theToken.value);
+        addFunction((ScriptFunction) theToken.value);
         return isForCheck;
       case T.catchcmd:
         popContext(true, false);
@@ -3987,7 +4047,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.removeFunction(name);
       return;
     }
-    if (!vwr.isFunction(name))
+    if (!isFunction(name))
       error(ERROR_commandExpected);
     Lst<SV> params = (slen == 1 || slen == 3 && tokAt(1) == T.leftparen
         && tokAt(2) == T.rightparen ? null : parameterExpressionList(1, -1,
@@ -6579,6 +6639,7 @@ public class ScriptEval extends ScriptExpr {
         filename = paramAsStr(++i);
       }
       if (filename.equalsIgnoreCase("applet")) {
+        filename = null;
         // script APPLET x "....."
         String appID = paramAsStr(++i);
         theScript = parameterExpressionString(++i, 0); // had _script variable??
@@ -6596,6 +6657,7 @@ public class ScriptEval extends ScriptExpr {
         tok = tokAt(slen - 1);
         doStep = (tok == T.step);
         if (filename.equalsIgnoreCase("inline")) {
+          filename = null;
           theScript = parameterExpressionString(++i, (doStep ? slen - 1 : 0));
           i = iToken;
         } else {
@@ -6671,9 +6733,9 @@ public class ScriptEval extends ScriptExpr {
       chk = isCmdLine_c_or_C_Option = true;
     pushContext(null, "SCRIPT");
     contextPath += " >> " + filename;
-    if (theScript == null
-        ? compileScriptFileInternal(filename, localPath, remotePath, scriptPath)
-        : compileScript(null, theScript, false)) {
+    if (theScript == null)
+      theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
+    if (compileScript(filename, theScript, filename != null && debugScript)) {
       this.pcEnd = pcEnd;
       this.lineEnd = lineEnd;
       while (pc < lineNumbers.length && lineNumbers[pc] < lineNumber)
@@ -6690,12 +6752,13 @@ public class ScriptEval extends ScriptExpr {
               : SV.getVariableList(params)));
       contextVariables.put("_argcount",
           SV.newI(params == null ? 0 : params.size()));
-
+      
       if (isCheck)
         listCommands = true;
       boolean timeMsg = vwr.getBoolean(T.showtiming);
       if (timeMsg)
         Logger.startTimer("script");
+      privateFuncs = null;
       dispatchCommands(false, false, false);
       if (isStateScript)
         ScriptManager.setStateScriptVersion(vwr, null);

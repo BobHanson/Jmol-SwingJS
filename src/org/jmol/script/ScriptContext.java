@@ -83,6 +83,8 @@ public class ScriptContext {
 
   public String why;
   
+  public Map<String, ScriptFunction> privateFuncs;
+  
   ScriptContext() {
     id = ++contextCount;
   }
