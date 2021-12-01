@@ -413,10 +413,10 @@ public final class BioResolver implements Comparator<String[]> {
     P3[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
     Group groupLast = null;
     int ipt = 0;
+    Atom atom;
     for (int i = 0; i < pts.length; i++) {
-      if (pts[i] == null)
+      if (pts[i] == null || (atom = ms.at[i]) == null)
         continue;
-      Atom atom = ms.at[i];
       Group g = atom.group;
       if (g != groupLast) {
         groupLast = g;
@@ -567,8 +567,11 @@ public final class BioResolver implements Comparator<String[]> {
     Model[] models = ms.am;
     Atom[] atoms = ms.at;
     for (int i = ml.baseAtomIndex; i < ms.ac; i++) {
-      models[atoms[i].mi].bsAtoms.clear(i);
-      models[atoms[i].mi].bsAtomsDeleted.clear(i);
+      Atom a = atoms[i];
+      if (a == null)
+        continue;
+      models[a.mi].bsAtoms.clear(i);
+      models[a.mi].bsAtomsDeleted.clear(i);
       if (bsDeletedAtoms.get(i)) {
         mapOldToNew[i] = n - 1;
         models[atoms[i].mi].act--;

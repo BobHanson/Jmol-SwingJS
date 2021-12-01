@@ -111,13 +111,16 @@ public class Trajectory {
     int iMax = iFirst + ms.getAtomCountInModel(baseModelIndex);
     if (f == 0) {
       for (int pt = 0, i = iFirst; i < iMax && pt < t1.length; i++, pt++) {
-        at[i].mi = (short) modelIndex;
+        Atom a = at[i];
+        if (a == null)
+          continue;
+        a.mi = (short) modelIndex;
         if (t1[pt] == null)
           continue;
         if (isFractional)
-          at[i].setFractionalCoordTo(t1[pt], true);
+          a.setFractionalCoordTo(t1[pt], true);
         else
-          at[i].setT(t1[pt]);
+          a.setT(t1[pt]);
         if (ms.vibrationSteps != null) {
           if (vibs != null && vibs[pt] != null)
             vib = vibs[pt];
@@ -129,15 +132,18 @@ public class Trajectory {
       P3 p = new P3();
       int n = Math.min(t1.length, t2.length);
       for (int pt = 0, i = iFirst; i < iMax && pt < n; i++, pt++) {
-        at[i].mi = (short) modelIndex;
+        Atom a = at[i];
+        if (a == null)
+          continue;
+        a.mi = (short) modelIndex;
         if (t1[pt] == null || t2[pt] == null)
           continue;
         p.sub2(t2[pt], t1[pt]);
         p.scaleAdd2(f, p, t1[pt]);
         if (isFractional)
-          at[i].setFractionalCoordTo(p, true);
+          a.setFractionalCoordTo(p, true);
         else
-          at[i].setT(p);
+          a.setT(p);
         bs.set(i);
       } 
     }
@@ -239,8 +245,9 @@ public class Trajectory {
    * @param bs
    */
   public void selectDisplayed(BS bs) {
+    Atom a;
     for (int i = ms.mc; --i >= 0;) {
-      if (ms.am[i].isTrajectory && ms.at[ms.am[i].firstAtomIndex].mi != i)
+      if (ms.am[i].isTrajectory && ((a = ms.at[ms.am[i].firstAtomIndex]) == null || a.mi != i))
         bs.clear(i);
     }
   }

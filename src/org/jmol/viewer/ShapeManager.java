@@ -382,7 +382,8 @@ public class ShapeManager {
     if (atoms.length > 0) {
       for (int i = ms.ac; --i >= 0;) {
         Atom atom = atoms[i];
-        atom.shapeVisibilityFlags &= Atom.ATOM_NOFLAGS;
+        if (atom != null)
+          atom.shapeVisibilityFlags &= Atom.ATOM_NOFLAGS;
         if (bsDeleted != null && bsDeleted.get(i))
           continue;
         if (bs.get(atom.mi)) {

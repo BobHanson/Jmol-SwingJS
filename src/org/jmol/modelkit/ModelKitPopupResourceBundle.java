@@ -54,13 +54,13 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
     { "optionsMenu", "new center addh minimize hmin " +
         " - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
-    { "atomMenu" , "assignAtom_XP!RD assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
+    { ModelKitPopup.ATOM_MENU , "assignAtom_XP!RD assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
         "invertStereoP!RD - assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
         "_??P!RD _??P!RD _??P!RD " +
         "moreAtomMenu - assignAtom_plP!RD assignAtom_miP!RD" },
     { "moreAtomMenu", "clearQPersist - _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
-    { "bondMenu", "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
-    { "xtalMenu", "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalPackingPersistMenu xtalEditOptPersistMenu xtalOptionsPersistMenu" },
+    { ModelKitPopup.BOND_MENU, "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
+    { ModelKitPopup.XTAL_MENU, "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalPackingPersistMenu xtalEditOptPersistMenu xtalOptionsPersistMenu" },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
     { "xtalSelPersistMenu", "mksel_atom mksel_position" },    
     { "xtalSelOpPersistMenu", "xtalOp!PersistMenu mkselop_atom2 mkselop_addOffset" },
@@ -91,12 +91,12 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     
     boolean wasTranslating = GT.setDoTranslate(true);
     String[] words = new String[] {
-        "atomMenu", "<atoms.png>",//GT.$("atoms"),
+        ModelKitPopup.ATOM_MENU, "<atoms.png>",//GT.$("atoms"),
         "moreAtomMenu", "<dotdotdot.png>",//GT.$("more..."),
-        "bondMenu", "<bonds.png>",//GT.$("bonds"),
+        ModelKitPopup.BOND_MENU, "<bonds.png>",//GT.$("bonds"),
         "optionsMenu", "<dotdotdot.png>",//GT.$("atoms"),
         "operator", "(no operator selected)",
-        "xtalMenu", "<xtal.png>",
+        ModelKitPopup.XTAL_MENU, "<xtal.png>",
         "xtalModePersistMenu","mode",
         "xtalSelPersistMenu","select atom or position",
         "xtalSelOpPersistMenu","select operator", 

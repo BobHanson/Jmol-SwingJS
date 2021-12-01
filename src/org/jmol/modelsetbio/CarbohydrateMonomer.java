@@ -61,7 +61,7 @@ public class CarbohydrateMonomer extends Monomer {
       for (int j = possiblyPreviousMonomer.firstAtomIndex; j <= possiblyPreviousMonomer.lastAtomIndex; j++) {
         Atom a = chain.model.ms.at[i];
         Atom b = chain.model.ms.at[j];
-        if (a.getElementNumber() + b.getElementNumber() == 14
+        if (a != null && b != null && a.getElementNumber() + b.getElementNumber() == 14
             && a.distanceSquared(b) < 3.24) // C and O; d < 1.8 (very generous)
           return true;
       }

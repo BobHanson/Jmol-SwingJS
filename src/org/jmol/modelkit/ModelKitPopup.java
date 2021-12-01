@@ -128,6 +128,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   //////////////// menu creation and update ///////////////
     
   private static final int MAX_LABEL = 32;
+  static final String ATOM_MENU = "atomMenu";
+  static final String BOND_MENU = "bondMenu";
+  static final String XTAL_MENU = "xtalMenu";
 
   private static PopupResource bundle = new ModelKitPopupResourceBundle(null, null);
   @Override
@@ -158,7 +161,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   @Override
   public void jpiUpdateComputedMenus() {
     hasUnitCell = (vwr.getCurrentUnitCell() != null);
-    htMenus.get("xtalMenu").setEnabled(hasUnitCell);
+    htMenus.get(XTAL_MENU).setEnabled(hasUnitCell);
     boolean isOK = true;
     if (vwr.ms != lastModelSet) {
       lastModelSet = vwr.ms;
@@ -305,13 +308,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    */
   public String setActiveMenu(String name) {
     // TODO -- if the hovering is working, this should not be necessary
-    String active = (name.indexOf("xtalMenu") >= 0 ? "xtalMenu"
-        : name.indexOf("atomMenu") >= 0 ? "atomMenu"
-            : name.indexOf("bondMenu") >= 0 ? "bondMenu" : null);
+    String active = (name.indexOf(XTAL_MENU) >= 0 ? XTAL_MENU
+        : name.indexOf(ATOM_MENU) >= 0 ? ATOM_MENU
+            : name.indexOf(BOND_MENU) >= 0 ? BOND_MENU : null);
     if (active != null) {
       activeMenu = active;
-      if ((active == "xtalMenu") == (getMKState() == STATE_MOLECULAR))
-        setMKState(active == "xtalMenu" ? STATE_XTALVIEW : STATE_MOLECULAR);
+      if ((active == XTAL_MENU) == (getMKState() == STATE_MOLECULAR))
+        setMKState(active == XTAL_MENU ? STATE_XTALVIEW : STATE_MOLECULAR);
       
       
       vwr.refresh(Viewer.REFRESH_REPAINT, "modelkit");
@@ -331,12 +334,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String name = source.getName();
     if (!updatingForShow && setActiveMenu(name) != null) {
       String text = source.getText();
-      if (name.indexOf("Bond") >= 0) {
+      System.out.println("MKP " + activeMenu + " " + name + " / " + text);
+      if (activeMenu == BOND_MENU) {
         bondHoverLabel = text;
-      }
-      else if (name.indexOf("assignAtom") >= 0)
+      } else if (activeMenu == ATOM_MENU)
         atomHoverLabel = text;
-      else if (activeMenu == "xtalMenu")
+      else if (activeMenu == XTAL_MENU)
         xtalHoverLabel = atomHoverLabel = text;
     }
   }
@@ -1090,7 +1093,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     isRotateBond = isRotate;
     bondAtomIndex1 = vwr.ms.bo[index].getAtomIndex1();
     bondAtomIndex2 = vwr.ms.bo[index].getAtomIndex2();
-    setActiveMenu("bondMenu");
+    setActiveMenu(BOND_MENU);
   }
 
 

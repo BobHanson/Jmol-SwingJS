@@ -274,6 +274,8 @@ public class BioModelSet {
     case T.sheet: // WITHIN -- not ends
       STR type = (tokType == T.helix ? STR.HELIX : STR.SHEET);
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isWithinStructure(type))
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -281,6 +283,8 @@ public class BioModelSet {
       break;
     case T.carbohydrate:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isCarbohydrate())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -288,6 +292,8 @@ public class BioModelSet {
       break;
     case T.dna:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isDna())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -295,6 +301,8 @@ public class BioModelSet {
       break;
     case T.nucleic:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isNucleic())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -302,6 +310,8 @@ public class BioModelSet {
       break;
     case T.protein:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isProtein())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -310,6 +320,8 @@ public class BioModelSet {
       break;
     case T.purine:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isPurine())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -317,6 +329,8 @@ public class BioModelSet {
       break;
     case T.pyrimidine:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isPyrimidine())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -324,6 +338,8 @@ public class BioModelSet {
       break;
     case T.rna:
       for (i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
         if ((g = at[i].group).isRna())
           g.setAtomBits(bs);
         i = g.firstAtomIndex;
@@ -976,6 +992,8 @@ public class BioModelSet {
     boolean isAll = (bsAtoms == null);
     int i0 = (isAll ? ms.ac - 1 : bsAtoms.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsAtoms.nextSetBit(i + 1))) {
+      if (ms.at[i] == null)
+          continue;
       int modelIndex = ms.am[ms.at[i].mi].trajectoryBaseIndex;
       if (ms.isJmolDataFrameForModel(modelIndex))
         continue;

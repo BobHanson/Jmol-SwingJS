@@ -2578,7 +2578,7 @@ public class ModelSet extends BondCollection {
       boolean isAtomInSetA = (isAll || bsA.get(i));
       boolean isAtomInSetB = (isAll || bsB.get(i));
       Atom atom = at[i];
-      if (atom.isDeleted())
+      if (atom == null || atom.isDeleted())
         continue;
       int modelIndex = atom.mi;
       // no connections allowed in a data frame
@@ -3270,6 +3270,8 @@ public class ModelSet extends BondCollection {
     int atomNo = 1;
     for (int i = iFirst; i < ac; ++i) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       if (atom.mi != lastModelIndex) {
         lastModelIndex = atom.mi;
         atomNo = (isZeroBased ? 0 : 1);

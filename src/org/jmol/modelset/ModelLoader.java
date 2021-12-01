@@ -804,15 +804,27 @@ public final class ModelLoader {
       if (addH && Elements.getElementNumber(isotope) == 1)
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
-      int charge = (addH ? getPdbCharge(group3, name)
-          : iterAtom.getFormalCharge());
-      addAtom(isPdbThisModel, iterAtom.getSymmetry(), iterAtom.getAtomSite(),
-          iterAtom.getUniqueID(), isotope, name, charge,
-          iterAtom.getPartialCharge(), iterAtom.getTensors(),
-          iterAtom.getOccupancy(), iterAtom.getBfactor(), iterAtom.getXYZ(),
-          iterAtom.getIsHetero(), iterAtom.getSerial(), iterAtom.getSeqID(),
-          group3, iterAtom.getVib(), iterAtom.getAltLoc(), iterAtom.getRadius(),
-          iterAtom.getBondRadius());
+      int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
+      addAtom(isPdbThisModel, iterAtom.getSymmetry(),
+          iterAtom.getAtomSite(),
+          iterAtom.getUniqueID(),
+          isotope,
+          name,
+          charge, 
+          iterAtom.getPartialCharge(),
+          iterAtom.getTensors(), 
+          iterAtom.getOccupancy(), 
+          iterAtom.getBfactor(), 
+          iterAtom.getXYZ(),
+          iterAtom.getIsHetero(), 
+          iterAtom.getSerial(), 
+          iterAtom.getSeqID(),
+          group3,
+          iterAtom.getVib(), 
+          iterAtom.getAltLoc(),
+          iterAtom.getRadius(), 
+          iterAtom.getBondRadius()
+          );
     }
     if (groupCount > 0 && addH) {
       jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1,
@@ -1274,7 +1286,7 @@ public final class ModelLoader {
     group.groupIndex = groupIndex;
 
     for (int i = lastAtomIndex + 1; --i >= firstAtomIndex;)
-      ms.at[i].group = group;
+        ms.at[i].group = group;
 
   }
 
@@ -1354,11 +1366,14 @@ public final class ModelLoader {
     for (int i = 0; i < ms.mc; i++)
       ms.elementsPresent[i] = BS.newN(64);
     for (int i = ms.ac; --i >= 0;) {
-      int n = ms.at[i].getAtomicAndIsotopeNumber();
+      Atom a = ms.at[i];
+      if (a == null)
+        continue;
+      int n = a.getAtomicAndIsotopeNumber();
       if (n >= Elements.elementNumberMax)
         n = Elements.elementNumberMax
             + Elements.altElementIndexFromNumber(n);
-      ms.elementsPresent[ms.at[i].mi].set(n);
+      ms.elementsPresent[a.mi].set(n);
     }
   }
 
