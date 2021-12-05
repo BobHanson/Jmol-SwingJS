@@ -243,7 +243,7 @@ public class StatusManager {
     return list;
   }
 
-  private Map<String, String> jmolScriptCallbacks = new Hashtable<>();
+  private Map<String, String> jmolScriptCallbacks = new Hashtable<String, String>();
 
   private String jmolScriptCallback(CBK callback) {
     String s = jmolScriptCallbacks.get(callback.name());
@@ -432,6 +432,16 @@ public class StatusManager {
                   isAsync });
     }
   }
+
+  synchronized void setStatusModelKit(int istate) {
+    String state = (istate == 1 ? "ON" : "OFF");
+    setStatusChanged("modelkit", istate, state, false);
+    String sJmol = jmolScriptCallback(CBK.MODELKIT);
+    if (notifyEnabled(CBK.MODELKIT))
+      cbl.notifyCallback(CBK.MODELKIT,
+          new Object[] { sJmol, state });
+  }
+
 
   synchronized void setStatusFrameChanged(int fileNo, int modelNo, int firstNo,
                                           int lastNo, int currentFrame,
@@ -1030,7 +1040,6 @@ public class StatusManager {
     }
     vwr.showString("error reading SYNC command: " + script, false);
   }
-
 
 
 }

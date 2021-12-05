@@ -802,10 +802,6 @@ public class ModelSet extends BondCollection {
     return bsDeleted;
   }
 
-  private boolean isOrderly(Model m) {
-    return m.firstAtomIndex + m.act == m.bsAtoms.length();
-  }
-
   public void resetMolecules() {
     bsAll = null;
     molecules = null;
@@ -1452,6 +1448,8 @@ public class ModelSet extends BondCollection {
     int i0 = (isAll ? 0 : atomList.nextSetBit(0));
     for (int i = i0; i >= 0 && i < ac; i = (isAll ? i + 1 : atomList
         .nextSetBit(i + 1))) {
+      if (at[i] == null)
+        continue;
       bs.set(modelIndex = at[i].mi);
       if (allTrajectories)
         trajectory.getModelBS(modelIndex, bs);
@@ -1459,7 +1457,7 @@ public class ModelSet extends BondCollection {
       if (m.isOrderly)
         i = m.firstAtomIndex + m.act - 1;
     }
-    System.out.println("MS " + atomList + " " + bs);
+   // System.out.println("MS " + atomList + " " + bs);
     return bs;
   }
 
@@ -2402,6 +2400,10 @@ public class ModelSet extends BondCollection {
                                 float energy) {
     if (bsBonds == null)
       bsBonds = new BS();
+
+    //System.out.println("MS makeConn2 " + bsA + " " + bsB  + " " + order + " " + minD + " " + maxD + " " + connectOperation);
+    
+
     boolean matchAny = (order == Edge.BOND_ORDER_ANY);
     boolean matchNull = (order == Edge.BOND_ORDER_NULL);
     boolean isAtrop = (order == Edge.TYPE_ATROPISOMER);
@@ -2486,7 +2488,7 @@ public class ModelSet extends BondCollection {
             if (j == i)
               continue;
             atomB = at[j];
-            if (atomA.mi != atomB.mi || atomB.isDeleted())
+            if (atomB == null || atomA.mi != atomB.mi || atomB.isDeleted())
               continue;
             if (altloc != '\0' && altloc != atomB.altloc
                 && atomB.altloc != '\0')
@@ -2585,6 +2587,7 @@ public class ModelSet extends BondCollection {
       if (modelIndex != lastModelIndex) {
         lastModelIndex = modelIndex;
         if (isJmolDataFrameForModel(modelIndex)) {
+          // ok here -- all data frames are orderly
           i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
           continue;
         }
@@ -3037,9 +3040,11 @@ public class ModelSet extends BondCollection {
     if (bs == null)
       return;
     BS bsBonds = new BS();
+    boolean doNull = Viewer.nullDeletedAtoms; 
     for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1)) {
       at[i].delete(bsBonds);
-      at[i] = null;//testing
+      if (doNull)
+        at[i] = null;
     }
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
@@ -3049,6 +3054,7 @@ public class ModelSet extends BondCollection {
       bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
       m.firstAtomIndex = bs.nextSetBit(0);
       m.act = bs.cardinality();
+      m.isOrderly = (m.act == m.bsAtoms.length()); 
     }
     deleteBonds(bsBonds, false);
     validateBspf(false);
@@ -3279,14 +3285,17 @@ public class ModelSet extends BondCollection {
       // 1) do not change numbers assigned by adapter
       // 2) do not change the number already assigned when merging
       // 3) restart numbering with new atoms, not a continuation of old
+      int ano = atomSerials[i];
+      
       if (i >= -baseAtomIndex) {
-        if (atomSerials[i] == 0 || baseAtomIndex < 0)
+        if (ano == 0 || baseAtomIndex < 0)
           atomSerials[i] = (i < baseAtomIndex ? mergeSet.atomSerials[i]
               : atomNo);
         if (atomNames[i] == null || baseAtomIndex < 0)
           atomNames[i] = (atom.getElementSymbol() + atomSerials[i]).intern();
+      } else if (ano > atomNo) {
+        atomNo = ano;
       }
-
       if (!am[lastModelIndex].isModelKit || atom.getElementNumber() > 0
           && !atom.isDeleted())
         atomNo++;

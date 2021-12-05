@@ -2140,12 +2140,12 @@ public class ScriptEval extends ScriptExpr {
   }
 
   @SuppressWarnings("unchecked")
-  private void logLoadInfo(String msg) {
+  private void logLoadInfo(String msg, boolean isData) {
     if (msg.length() > 0)
       Logger.info(msg);
     SB sb = new SB();
     int modelCount = vwr.ms.mc;
-    if (modelCount > 1)
+    if (modelCount > 1 && !isData)
       sb.append((vwr.am.isMovie ? vwr.am.getFrameCount() + " frames"
           : modelCount + " models") + "\n");
     for (int i = 0; i < modelCount; i++) {
@@ -4889,7 +4889,7 @@ public class ScriptEval extends ScriptExpr {
           false);
 
     finalizeLoad(isAppend, appendNew, isConcat, doOrient, nFiles, ac0,
-        modelCount0);
+        modelCount0, isData);
 
   }
 
@@ -5102,14 +5102,16 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void finalizeLoad(boolean isAppend, boolean appendNew,
-                            boolean isConcat, boolean doOrient,
-                            int nFiles, int ac0, int modelCount0) throws ScriptException {
+                            boolean isConcat, boolean doOrient, int nFiles,
+                            int ac0, int modelCount0, boolean isData)
+      throws ScriptException {
     if (isAppend && (appendNew || nFiles > 1)) {
       vwr.setAnimationRange(-1, -1);
       vwr.setCurrentModelIndex(modelCount0);
-    }    
+    }
     String msg;
-    if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2) && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null)
+    if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2)
+        && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null)
       vwr.showString(msg, false);
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
     if (AU.isAI(centroid) && vwr.ms.ac > 0) {
@@ -5122,28 +5124,29 @@ public class ScriptEval extends ScriptExpr {
       msg += "\nUsing defaultLoadScript: " + script;
     String embeddedScript;
     Map<String, Object> info = vwr.ms.msInfo;
-    if (info != null && vwr.allowEmbeddedScripts() 
-        && (embeddedScript = (String) info.remove("jmolscript")) != null 
+    if (info != null && vwr.allowEmbeddedScripts()
+        && (embeddedScript = (String) info.remove("jmolscript")) != null
         && embeddedScript.length() > 0) {
-        msg += "\nAdding embedded #jmolscript: " + embeddedScript;
-        script += ";" + embeddedScript;
-        setStringProperty("_loadScript", script);
-        script = "allowEmbeddedScripts = false;try{" + script
-            + "} allowEmbeddedScripts = true;";
-        isEmbedded = !isCmdLine_c_or_C_Option;
+      msg += "\nAdding embedded #jmolscript: " + embeddedScript;
+      script += ";" + embeddedScript;
+      setStringProperty("_loadScript", script);
+      script = "allowEmbeddedScripts = false;try{" + script
+          + "} allowEmbeddedScripts = true;";
+      isEmbedded = !isCmdLine_c_or_C_Option;
     } else {
       setStringProperty("_loadScript", "");
     }
-    logLoadInfo(msg);
+    logLoadInfo(msg, isData);
 
-    String siteScript = (info == null ? null : (String) info.remove("sitescript"));
+    String siteScript = (info == null ? null
+        : (String) info.remove("sitescript"));
     if (siteScript != null)
       script = siteScript + ";" + script;
     if (doOrient)
       script += ";restore orientation preload";
     if (script.length() > 0 && !isCmdLine_c_or_C_Option)
       // NOT checking embedded scripts in some cases
-    runScript(script);
+      runScript(script);
     isEmbedded = false;
   }
 

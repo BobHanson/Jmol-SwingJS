@@ -366,7 +366,8 @@ public final class ModelLoader {
       atoms[i].setMadAtom(vwr, rd);
     Model[] models = ms.am;
     for (int i = models[baseModelIndex].firstAtomIndex; i < ac; i++)
-      models[atoms[i].mi].bsAtoms.set(i);
+      if (atoms[i] != null)
+        models[atoms[i].mi].bsAtoms.set(i);
 
     freeze();
     finalizeShapes();
@@ -578,8 +579,10 @@ public final class ModelLoader {
       }
       m.loadState += m.loadScript.toString() + sb.toString();
       m.loadScript = new SB();
-      if (loadScript.indexOf("load append ") >= 0 || loadScript.indexOf("data \"append ") >= 0)
-        loadScript.append("; set appendNew true");
+      if (loadScript.indexOf("load append ") >= 0 || loadScript.indexOf("data \"append ") >= 0) {
+        loadScript.insert(0,  ";var anew = appendNew;");
+        loadScript.append(";set appendNew anew");
+      }
       m.loadScript.append("  ").appendSB(loadScript).append(";\n");
     }
     if (isTrajectory) {
@@ -835,7 +838,7 @@ public final class ModelLoader {
     Atom[] atoms = ms.at;
     models[0].firstAtomIndex = 0;
     for (int i = 0; i < ms.ac; i++) {
-      if (atoms[i].mi > iLast) {
+      if (atoms[i] != null && atoms[i].mi > iLast) {
         iLast = atoms[i].mi;
         models[iLast].firstAtomIndex = i;
         VDW vdwtype = ms.getDefaultVdwType(iLast);

@@ -44,6 +44,7 @@ public enum CBK {
   MEASURE,
   MESSAGE,
   MINIMIZATION,
+  MODELKIT,
   SERVICE,
   PICK,
   RESIZE,

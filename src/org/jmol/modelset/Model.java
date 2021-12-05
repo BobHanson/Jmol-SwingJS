@@ -121,7 +121,10 @@ public class Model {
   
   public int altLocCount;
   int insertionCount;
-  public int act = 0; // atom count; includes deleted atoms
+  /**
+   * atom count; includes deleted atoms only if not being nulled (Jmol 14.31 or below)
+   */
+  public int act = 0; 
   private int bondCount = -1;
   protected int chainCount = 0;
   public int groupCount = -1;
@@ -132,6 +135,10 @@ public class Model {
   public int firstAtomIndex;
   int firstMoleculeIndex;
   
+  /**
+   * Note that this bitset may or may not include bsAtomsDeleted
+   * 
+   */
   public final BS bsAtoms = new BS();
   public final BS bsAtomsDeleted = new BS();
 
@@ -187,7 +194,7 @@ public class Model {
    */
   // this one is variable and calculated only if necessary:
   public int getTrueAtomCount() {
-    return bsAtoms.cardinality() - bsAtomsDeleted.cardinality();
+    return BSUtil.andNot(bsAtoms, bsAtomsDeleted).cardinality();
   }
 
   private BS bsCheck;
@@ -208,10 +215,11 @@ public class Model {
   public boolean isContainedIn(BS bs) {
     if (bsCheck == null)
       bsCheck = new BS();
+    bsCheck.clearAll();
     bsCheck.or(bs);
-    bsCheck.and(bsAtoms);
-    bsCheck.andNot(bsAtomsDeleted);
-    return (bsCheck.cardinality() == getTrueAtomCount());
+    BS bsa = BSUtil.andNot(bsAtoms, bsAtomsDeleted);
+    bsCheck.and(bsa);
+    return bsCheck.equals(bsa);
   }
 
   public void resetBoundCount() {

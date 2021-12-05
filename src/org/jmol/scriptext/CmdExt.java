@@ -111,7 +111,7 @@ public class CmdExt extends ScriptExt {
       st[0].value = prepareBinaryOutput((SV) st[0]);
       return null;
     case T.assign:
-      assign(1);
+      assign();
       break;
     case T.cache:
       cache();
@@ -233,7 +233,10 @@ public class CmdExt extends ScriptExt {
       e.cmdRotate(false, true);
       return;
     case T.assign:
-      assign(2);
+      ++e.iToken;
+      //$FALL-THROUGH$
+    case T.connect:
+      assign();
       return;
     }
     ModelKitPopup kit = vwr.getModelkit(false);
@@ -298,7 +301,7 @@ public class CmdExt extends ScriptExt {
         break;
       default:
         if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
-          isOn = (tok == T.nada || tokAt(++i) == T.on);
+          isOn = ((tok = tokAt(++i)) == T.nada || tok == T.on);
           value = Boolean.valueOf(isOn);
           break;
         }
@@ -4758,12 +4761,16 @@ public class CmdExt extends ScriptExt {
         msg = SV.getVariable(info[1]).asString();
       }
       break;
-    case T.nmr: {
+    case T.nmr:
       if (!chk)
         vwr.getNMRPredict(eval.optParameterAsString(2));
       return;
-    }
-    case T.inchi:
+    case T.modelkitmode:
+      if (!chk && slen == 3) {
+        msg = "" + vwr.getModelkitProperty(eval.stringParameter(2));
+        len = 3;
+      }
+      break;
     case T.inchikey:
     case T.drawing:
     case T.chemical:
@@ -5632,117 +5639,94 @@ public class CmdExt extends ScriptExt {
   ///////// private methods used by commands ///////////
 
   
-  private void assign(int i) throws ScriptException {
-    int atomsOrBonds = tokAt(i++);
+  /**
+   * Though a command, not documented. Use the MODELKIT command instead
+   * 
+   * @throws ScriptException
+   */
+  private void assign() throws ScriptException {
+    int i = ++e.iToken;
+    int mode = tokAt(i); // ATOMS, BONDS, or CONNECT; defaults to ATOMS
     int index = -1, index2 = -1;
-    boolean isAtom = (atomsOrBonds == T.atoms);
-    boolean isBond = (atomsOrBonds == T.bonds);
-    if (isAtom && tokAt(i) == T.string) {
+    boolean isAtom = (mode == T.atoms);
+    boolean isBond = (mode == T.bonds);
+    boolean isConnect = (mode == T.connect);
+    if (isAtom || isBond || isConnect)
+      i++;
+    else
+      mode = T.atoms;
+    BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
+    BS bs;
+    if (isBond) {
+      if (getToken(i).value instanceof BondSet) {
+        index = ((BS) getToken(i).value).nextSetBit(0);        
+      } else {
+        bs = expFor(i, bsAtoms);
+        index = bs.nextSetBit(0);
+        switch (bs.cardinality()) {
+        case 1:
+          bs = expFor(i = ++e.iToken, bsAtoms);
+          index2 = bs.nextSetBit(0);
+          if (index2 < 0)
+            invArg();
+          bs.set(index);          
+          //$FALL-THROUGH$
+        case 2:
+          bs = vwr.ms.getBondsForSelectedAtoms(bs, false);
+          if (bs.cardinality() > 0) {
+            index = bs.nextSetBit(0);
+          } else {
+            isConnect = true;
+            mode = T.connect;
+          }
+          break;
+        case 0:
+        default:
+          invArg();
+        }
+      }
+      i = ++e.iToken;
+    } else if (mode == T.atoms && tokAt(i) == T.string) {
       // new Jmol 14.29.28
       // assign "C" {0 0 0}
-      e.iToken++;
-      
-    } else if (isBond) {
-      index = ((BS) getToken(i).value).nextSetBit(0);
+      // assign atom "C" {0 0 0}
     } else {
-      index = atomExpressionAt(i).nextSetBit(0);
+      bs = expFor(i, bsAtoms);
+      index = bs.nextSetBit(0);
       if (index < 0) {
         return;
       }
+      i = ++e.iToken;
     }
     String type = null;
-    if (atomsOrBonds == T.connect) {
-      index2 = atomExpressionAt(++e.iToken).nextSetBit(0);
-    } else {
-      type = paramAsStr(++e.iToken);
+    if (!isConnect) {
+      type = e.optParameterAsString(i);
+    } else if (index2 < 0) {      
+      bs = expFor(i, bsAtoms);
+      index2 = bs.nextSetBit(0);
     }
-    P3 pt = (++e.iToken < slen ? centerParameter(e.iToken) : null);
+    boolean isClick = (tokAt(slen - 1) == T.on);
+    P3 pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
     if (chk)
       return;
     vwr.pushState();
-    switch (atomsOrBonds) {
+    switch (mode) {
     case T.atoms:
       e.clearDefinedVariableAtomSets();
-      assignAtom(index, pt, type);
+      vwr.getModelkit(false).cmdAssignAtom(index, pt, type, e.fullCommand, isClick);
       break;
     case T.bonds:
-      assignBond(index, (type + "p").charAt(0));
+      vwr.getModelkit(false).cmdAssignBond(index, (type + "p").charAt(0), e.fullCommand);
       break;
     case T.connect:
-      assignConnect(index, index2);
+      vwr.getModelkit(false).cmdAssignConnect(index, index2, e.fullCommand, isClick);
     }
   }
 
-  private void assignAtom(int atomIndex, P3 pt, String type) {
-    if (type.equals("X"))
-      vwr.setModelKitRotateBondIndex(-1);
-//    if (atomIndex >= 0 && !vwr.ms.isAtomInLastModel(atomIndex))
-//      return;
-    vwr.clearModelDependentObjects();
-    int ac = vwr.ms.ac;
-    if (pt == null) {
-      if (atomIndex < 0)
-        return;
-      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
-      // After this next command, vwr.modelSet will be a different instance
-      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex, 1, 1 }});
-      if (!PT.isOneOf(type, ";Mi;Pl;X;"))
-        vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
-      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
-      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
-      return;
-    }
-    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
-    BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
-    P3[] pts = new P3[] { pt };
-    Lst<Atom> vConnections = new Lst<Atom>();
-    int modelIndex = -1;
-    if (atom != null) {
-      vConnections.addLast(atom);
-      modelIndex = atom.mi;
-      vwr.sm.modifySend(atomIndex, modelIndex, 3, e.fullCommand);
-    }
-    try {
-      bs = vwr.addHydrogensInline(bs, vConnections, pts);
-      int atomIndex2 = bs.nextSetBit(0);
-      vwr.setModelkitProperty("assignAtom", new Object[] { type, new int[] { atomIndex2, -1, atomIndex}});
-      atomIndex = atomIndex2;
-    } catch (Exception ex) {
-      //
-    }
-    vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null);
-    vwr.sm.modifySend(atomIndex, modelIndex, -3, "OK");
-  }
-
-  private void assignBond(int bondIndex, char type) {
-    int modelIndex = -1;
-    try {
-      modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
-      vwr.sm.modifySend(bondIndex, modelIndex, 2,
-          e.fullCommand);
-      @SuppressWarnings("cast")      // old transpiler error converting char type to int
-      BS bsAtoms = (BS) vwr.setModelkitProperty("assignBond",  new int[] { bondIndex, (int) type });
-      if (bsAtoms == null || type == '0')
-        vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");
-      vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
-    } catch (Exception ex) {
-      Logger.error("assignBond failed");
-      vwr.sm.modifySend(bondIndex, modelIndex, -2, "ERROR " + ex);
-    }
-  }
-
-  private void assignConnect(int index, int index2) {
-    vwr.clearModelDependentObjects();
-    float[][] connections = AU.newFloat2(1);
-    connections[0] = new float[] { index, index2 };
-    int modelIndex = vwr.ms.at[index].mi;
-    vwr.sm.modifySend(index, modelIndex, 2, e.fullCommand);
-    vwr.ms.connect(connections);
-    // note that vwr.ms changes during the assignAtom command 
-    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index, 1, 1} });
-    vwr.setModelkitProperty("assignAtom",  new Object[] { ".", new int[] {index2, 1, 1} });
-    vwr.sm.modifySend(index, modelIndex, -2, "OK");
-    vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
+  private BS expFor(int i, BS bsAtoms) throws ScriptException {
+    BS bs = BS.copy(atomExpressionAt(i));
+    bs.and(bsAtoms);
+    return bs;
   }
 
   private String getContext(boolean withVariables) {

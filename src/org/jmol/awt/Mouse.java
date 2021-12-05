@@ -302,7 +302,7 @@ class Mouse implements MouseWheelListener, MouseListener,
       elemno = Elements.elementNumberFromSymbol(keyBuffer.toUpperCase(), true);
     System.out.println("CHECKELEME " + ch + " " +  keyBuffer + " " + elemno);
     if (elemno > 0)
-      vwr.assignAtom(-1, Elements.elementSymbolFromNumber(elemno), null);
+      vwr.getModelkit(false).assignAtomClick(vwr.atomHighlighted, Elements.elementSymbolFromNumber(elemno), null);
     if (!PT.isUpperCase(ch))
       keyBuffer = "";
   }

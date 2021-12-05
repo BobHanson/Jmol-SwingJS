@@ -646,7 +646,7 @@ public class Labels extends AtomShape {
       return;
     for (int i = strings.length; --i >= 0;) {
       String label = strings[i];
-      if (label != null && ms.at.length > i
+      if (label != null && ms.at.length > i && ms.at[i] != null
           && !ms.isAtomHidden(i))
         ms.at[i].setClickable(vf);
     }

@@ -86,6 +86,7 @@ class MyStatusListener implements JmolStatusListener {
     case IMAGE:
     case MEASURE:
     case MINIMIZATION:
+    case MODELKIT:
     case SERVICE:
     case RESIZE:
     case SYNC:

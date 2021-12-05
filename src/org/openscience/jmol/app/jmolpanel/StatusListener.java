@@ -106,16 +106,17 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case ERROR:
     case MESSAGE:
     case MINIMIZATION:
+    case MODELKIT:
+    case DRAGDROP:
+    case RESIZE:
+    case CLICK:
+    case ATOMMOVED:
+    case HOVER:
       return true;
     case APPLETREADY:
-    case ATOMMOVED:
     case AUDIO:
-    case CLICK:
-    case DRAGDROP:
     case EVAL:
-    case HOVER:
     case IMAGE:
-    case RESIZE:
       // applet only (but you could change this for your listener)
       break;
     }
@@ -138,8 +139,8 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     if (!jmolPanel.plugins.isEmpty())
       for (JmolPlugin p : jmolPanel.plugins.values())
         p.notifyCallback(type, data);
-    String strInfo = (data == null || data[1] == null ? null : data[1]
-        .toString());
+    String strInfo = (data == null || data[1] == null ? null
+        : data[1].toString());
     Map<String, Object> info;
     switch (type) {
     case MESSAGE:
@@ -200,7 +201,17 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         if (data[2] != null && display.haveDisplay) {
           jmolPanel.setStatus(1, (String) data[2]);
         }
-      }      
+      }
+      break;
+    case MODELKIT:
+      String state = (String) data[1];
+      if (state.equals("ON")) {
+        if (display.buttonModelkit != null)
+          display.buttonModelkit.setSelected(true);
+      } else {
+        if (display.buttonRotate != null)
+          display.buttonRotate.setSelected(true);
+      }
       break;
     case MEASURE:
       String mystatus = (String) data[3];
@@ -235,40 +246,42 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         return;
       }
       if (lc.equals("getpreference")) {
-        data[0] = (data[2] == null ? jmolPanel.preferencesDialog : jmolPanel
-            .getPreference(data[2].toString()));
+        data[0] = (data[2] == null ? jmolPanel.preferencesDialog
+            : jmolPanel.getPreference(data[2].toString()));
         return;
       }
       if (strInfo != null && strInfo.toLowerCase().startsWith("nbo:")) {
         if (nboOptions == null)
-          nboOptions= new Hashtable<String, Object>();
+          nboOptions = new Hashtable<String, Object>();
         nboOptions.put("options", strInfo);
         jmolPanel.startNBO(nboOptions);
         return;
       }
-      jmolPanel.sendNioSyncRequest(null, ((Integer) data[3]).intValue(), strInfo);
+      jmolPanel.sendNioSyncRequest(null, ((Integer) data[3]).intValue(),
+          strInfo);
       return;
     case AUDIO:
-    case HOVER:
     case IMAGE:
     case EVAL:
-    case ATOMMOVED:
     case APPLETREADY:
-    case RESIZE:
-    case CLICK:
-    case DRAGDROP:
-      // see above -- not implemented in Jmol.jar; not for SYNC
+      // see above -- not implemented in Jmol.jar
       return;
       // passed on to listener
+    case HOVER:
+    case ATOMMOVED:
+    case DRAGDROP:
+    case RESIZE:
+    case CLICK:
     case ERROR:
     case ECHO:
     case MINIMIZATION:
       break;
     }
     if (jmolPanel.isServer())
-      jmolPanel.sendNioSyncRequest(null, JmolPanel.OUTSOCKET, (type + ":" + strInfo).trim());
-    JmolCallbackListener appConsole = (JmolCallbackListener) vwr.getProperty(
-        "DATA_API", "getAppConsole", null);
+      jmolPanel.sendNioSyncRequest(null, JmolPanel.OUTSOCKET,
+          (type + ":" + strInfo).trim());
+    JmolCallbackListener appConsole = (JmolCallbackListener) vwr
+        .getProperty("DATA_API", "getAppConsole", null);
     if (appConsole != null)
       appConsole.notifyCallback(type, data);
   }
@@ -295,16 +308,6 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
 
   @Override
   public void setCallbackFunction(String callbackType, String callbackFunction) {
-    if (callbackType.equals("modelkit")) {
-      if (callbackFunction.equals("ON")) {
-        if (display.buttonModelkit != null)
-        display.buttonModelkit.setSelected(true);
-      }else {
-        if (display.buttonRotate != null)
-        display.buttonRotate.setSelected(true);
-      }
-      return;
-    }
     //if (callbackType.equalsIgnoreCase("menu")) {
       //jmol.setupNewFrame(vi/ewer);
       //return;

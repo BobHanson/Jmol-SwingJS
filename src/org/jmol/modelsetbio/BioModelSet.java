@@ -592,6 +592,8 @@ public class BioModelSet {
     }
     int[] lastStrucNo = new int[ms.mc];
     for (int i = 0; i < ms.ac; i++) {
+      if (at[i] == null)
+        continue;
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
         i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
@@ -606,6 +608,8 @@ public class BioModelSet {
       }
     }
     for (int i = 0; i < ms.ac; i++) {
+      if (at[i] == null)
+        continue;
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
         i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;

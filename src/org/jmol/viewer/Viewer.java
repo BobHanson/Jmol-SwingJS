@@ -180,6 +180,8 @@ import javajs.util.ZipTools;
 public class Viewer extends JmolViewer
     implements AtomDataServer, PlatformViewer {
 
+  public final static boolean nullDeletedAtoms = true; // Jmol 15.2+
+
   static public boolean isSwingJS = /** @j2sNative true|| */
       false;
 
@@ -3606,10 +3608,7 @@ public class Viewer extends JmolViewer
         if (zapModelKit)
           g.removeParam("_pngjFile");
         if (zapModelKit && g.modelKitMode) {
-          openStringInlineParamsAppend(JC.MODELKIT_ZAP_STRING, null, true);
-          setRotationRadius(5.0f, true);
-          setStringProperty("picking", "assignAtom_C");
-          setStringProperty("picking", "assignBond_p");
+          loadDefaultModelKit(null);
         }
         undoClear();
       }
@@ -3622,6 +3621,13 @@ public class Viewer extends JmolViewer
     }
     if (Logger.debugging)
       Logger.checkMemory();
+  }
+
+  private void loadDefaultModelKit(Map<String, Object> htParams) {
+    openStringInlineParamsAppend(JC.MODELKIT_ZAP_STRING, htParams, true);
+    setRotationRadius(5.0f, true);
+    setStringProperty("picking", "assignAtom_C");
+    setStringProperty("picking", "assignBond_p");
   }
 
   private void zapMsg(String msg) {
@@ -7262,7 +7268,9 @@ public class Viewer extends JmolViewer
           : ActionManager.PICKING_IDENTIFY);
     }
     boolean isChange = (g.modelKitMode != value);
+    
     g.modelKitMode = value;
+    g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
     if (value) {
       setNavigationMode(false);
@@ -7273,16 +7281,22 @@ public class Viewer extends JmolViewer
       if (!isApplet)
         popupMenu(10, 0, 'm'); // was 0?
       if (isChange)
-        sm.setCallbackFunction("modelkit", "ON");
+        sm.setStatusModelKit(1);
       g.modelKitMode = true;
       if (ms.ac == 0)
         zap(false, true, true);
+      else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
+        Map<String, Object> htParams = new Hashtable<String, Object>();
+        htParams.put("appendToModelIndex", Integer.valueOf(am.cmi));
+        loadDefaultModelKit(htParams);
+      }
     } else {
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);
       setStringProperty("pickingStyle", "toggle");
       setBooleanProperty("bondPicking", false);
-      if (isChange)
-        sm.setCallbackFunction("modelkit", "OFF");
+      if (isChange) {
+        sm.setStatusModelKit(0);
+      }
     }
   }
 
@@ -9157,6 +9171,7 @@ public class Viewer extends JmolViewer
   // parallel processing
 
   public static int nProcessors = 1;
+
   static {
     /**
      * @j2sIgnore
@@ -10181,15 +10196,6 @@ public class Viewer extends JmolViewer
    */
   public Object getModelInfo(String key) {
     return ms.getInfo(am.cmi, key);
-  }
-
-  public void assignAtom(int atomIndex, String element, P3 ptNew) {
-    if (atomIndex < 0)
-      atomIndex = atomHighlighted;
-    if (ms.isAtomInLastModel(atomIndex)) {
-      script("assign atom ({" + atomIndex + "}) \"" + element + "\" "
-          + (ptNew == null ? "" : Escape.eP(ptNew)));
-    }
   }
 
   public void notifyScriptEditor(int msWalltime, Object[] data) {

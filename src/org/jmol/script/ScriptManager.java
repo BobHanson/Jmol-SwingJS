@@ -728,17 +728,27 @@ public class ScriptManager implements JmolScriptManager {
     vwr.stateScriptVersionInt = Integer.MAX_VALUE;
   }
 
+  /**
+   * Add hydrogens to a model
+   * 
+   * @param bsAtoms at least one atom, for identification of a model index
+   * @param vConnections return list of atoms added
+   * @param pts list of point positions for the added hydrogens?
+   */ 
   @Override
   public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts)
       throws Exception {
     int iatom = bsAtoms.nextSetBit(0);
-    int modelIndex = (iatom < 0 ? vwr.ms.mc - 1 : vwr.ms.at[iatom].mi);
+    int modelIndex = (iatom < 0 ? vwr.am.cmi : vwr.ms.at[iatom].mi);
+    if (modelIndex < 0)
+      modelIndex = vwr.ms.mc - 1;
 //    if (!vwr.ms.isAtomInLastModel(iatom))
 //      return new BS();
 
     // must be added to the LAST data set only
 
     BS bsA = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    boolean wasAppendNew = vwr.g.appendNew;
     vwr.g.appendNew = false;
     // BitSet bsB = getAtomBits(Token.hydrogen, null);
     // bsA.andNot(bsB);
@@ -764,6 +774,7 @@ public class ScriptManager implements JmolScriptManager {
     eval.runScriptBuffer(sbConnect.toString(), null, false);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
+    vwr.g.appendNew = wasAppendNew;
     return bsB;
   }
 

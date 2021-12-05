@@ -40,13 +40,16 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.MouseState;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -444,233 +447,232 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    * @return null or "get" value
    */
   public synchronized Object setProperty(String name, Object value) {
-    name = name.toLowerCase().intern();
-    //    if (value != null)
-    //      System.out.println("ModelKitPopup.setProperty " + name + "=" + value);
+    try {
+      name = name.toLowerCase().intern();
+      //    if (value != null)
+      //      System.out.println("ModelKitPopup.setProperty " + name + "=" + value);
 
-    // getting only:
-    
-    if (name == "ismolecular") {
-      return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
-    }
-    
-    if (name == "hoverlabel") {
-      // no setting of this, only getting
-      return getHoverLabel(((Integer) value).intValue());
-    }
+      // getting only:
 
-    if (name == "alloperators") {
-      return allOperators;
-    }
+      if (name == "addhydrogen" || name == "addhydrogens") {
+        if (value != null)
+          addXtalHydrogens = isTrue(value);
+        return Boolean.valueOf(addXtalHydrogens);
+      }
 
-    if (name == "data") {
-      return getData(value == null ? null : value.toString());
-    }
+      if (name == "clicktosetelement") {
+        if (value != null)
+          clickToSetElement = isTrue(value);
+        return Boolean.valueOf(clickToSetElement);
+      }
 
-    if (name == "invariant") {
-      int iatom = (value instanceof BS ? ((BS) value).nextSetBit(0) : -1);
-      P3 atom = vwr.ms.getAtom(iatom);
-      if (atom == null)
+      if (name == "showsymopinfo") {
+        if (value != null)
+          showSymopInfo = isTrue(value);
+        return Boolean.valueOf(showSymopInfo);
+      }
+
+      if (name == "ismolecular") {
+        return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
+      }
+
+      if (name == "hoverlabel") {
+        // no setting of this, only getting
+        return getHoverLabel(((Integer) value).intValue());
+      }
+
+      if (name == "alloperators") {
+        return allOperators;
+      }
+
+      if (name == "data") {
+        return getData(value == null ? null : value.toString());
+      }
+
+      if (name == "invariant") {
+        int iatom = (value instanceof BS ? ((BS) value).nextSetBit(0) : -1);
+        P3 atom = vwr.ms.getAtom(iatom);
+        if (atom == null)
+          return null;
+        return vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array,
+            null, 0, 0, 0);
+      }
+
+      // set only (always returning null):
+
+      if (name == "assignatom") {
+        // standard entry point for an atom click in the ModelKit
+        Object[] o = ((Object[]) value);
+        String type = (String) o[0];
+        int[] data = (int[]) o[1];
+        int atomIndex = data[0];
+        boolean autoBond = (data[1] >= 0);
+        boolean addHsAndBond = (data[2] >= 0);
+        assignAtom(atomIndex, type, autoBond, addHsAndBond, true);
         return null;
-      return vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array, null,
-          0, 0, 0);
-    }
-
-    // set only (always returning null):
-
-    if (name == "assignatom") {
-      // standard entry point for an atom click in the ModelKit
-      Object[] o = ((Object[]) value);
-      String type = (String) o[0];
-      int[] data = (int[]) o[1];
-      int atomIndex = data[0];
-      if (isVwrRotateBond()) {
-        bondAtomIndex1 = atomIndex;
-      } else if (!processAtomClick(data[0]) && (clickToSetElement
-          || vwr.ms.getAtom(atomIndex).getElementNumber() == 1))
-        assignAtom(atomIndex, type, data[1] >= 0, data[2] >= 0);
-      return null;
-    }
-
-    if (name == "bondatomindex") {
-      int i = ((Integer) value).intValue();
-      if (i != bondAtomIndex2)
-        bondAtomIndex1 = i;
-
-      bsRotateBranch = null;
-      return null;
-    }
-
-    if (name == "highlight") {
-      if (value == null)
-        bsHighlight = new BS();
-      else
-        bsHighlight = (BS) value;
-      return null;
-    }
-    if (name == "mode") { // view, edit, or molecular
-      boolean isEdit = ("edit".equals(value));
-      setMKState("view".equals(value) ? STATE_XTALVIEW
-          : isEdit ? STATE_XTALEDIT : STATE_MOLECULAR);
-      if (isEdit)
-        addXtalHydrogens = false;
-      return null;
-    }
-
-    if (name == "symmetry") {
-      setDefaultState(STATE_XTALEDIT);
-      name = ((String) value).toLowerCase().intern();
-      setSymEdit(name == "applylocal" ? STATE_SYM_APPLYLOCAL
-          : name == "retainlocal" ? STATE_SYM_RETAINLOCAL
-              : name == "applyfull" ? STATE_SYM_APPLYFULL : 0);
-      showXtalSymmetry();
-      return null;
-    }
-
-    if (name == "unitcell") { // packed or extend
-      boolean isPacked = "packed".equals(value);
-      setUnitCell(isPacked ? STATE_UNITCELL_PACKED : STATE_UNITCELL_EXTEND);
-      viewOffset = (isPacked ? Pt000 : null);
-      return null;
-    }
-
-    if (name == "symop") {
-      setDefaultState(STATE_XTALVIEW);
-      if (value != null) {
-        symop = value;
-        showSymop(symop);
       }
-      return symop;
-    }
 
-    if (name == "center") {
-      setDefaultState(STATE_XTALVIEW);
-      P3 centerAtom = (P3) value;
-      lastCenter = centerAtom.x + " " + centerAtom.y + " " + centerAtom.z;
-      centerAtomIndex = (centerAtom instanceof Atom ? ((Atom) centerAtom).i
-          : -1);
-      atomIndexSphere = -1;
-      secondAtomIndex = -1;
-      processAtomClick(centerAtomIndex);
-      return null;
-    }
+      if (name == "bondatomindex") {
+        int i = ((Integer) value).intValue();
+        if (i != bondAtomIndex2)
+          bondAtomIndex1 = i;
 
-    if (name == "scriptassignbond") {
-      appRunScript(
-          "assign bond [{" + value + "}] \"" + pickBondAssignType + "\"");
-      return null;
-    }
-    // set and get:
-
-    if (name == "assignbond") {
-      int[] data = (int[]) value;
-      return assignBond(data[0], (char) data[1]);
-    }
-
-    if (name == "atomtype") {
-      if (value != null) {
-        pickAtomAssignType = (String) value;
-        isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
-            || pickAtomAssignType.equals("mi"));
+        bsRotateBranch = null;
+        return null;
       }
-      return pickAtomAssignType;
-    }
 
-    if (name == "bondtype") {
-      if (value != null) {
-        pickBondAssignType = ((String) value).substring(0, 1).toLowerCase();
+      if (name == "highlight") {
+        if (value == null)
+          bsHighlight = new BS();
+        else
+          bsHighlight = (BS) value;
+        return null;
       }
-      return pickBondAssignType;
-    }
-
-    if (name == "bondindex") {
-      if (value != null) {
-        setBondIndex(((Integer) value).intValue(), false);
+      if (name == "mode") { // view, edit, or molecular
+        boolean isEdit = ("edit".equals(value));
+        setMKState("view".equals(value) ? STATE_XTALVIEW
+            : isEdit ? STATE_XTALEDIT : STATE_MOLECULAR);
+        if (isEdit)
+          addXtalHydrogens = false;
+        return null;
       }
-      return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
-    }
 
-    if (name == "rotatebondindex") {
-      if (value != null) {
-        setBondIndex(((Integer) value).intValue(), true);
-      }
-      return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
-    }
-
-    if (name == "addhydrogen" || name == "addhydrogens") {
-      if (value != null)
-        addXtalHydrogens = isTrue(value);
-      return Boolean.valueOf(addXtalHydrogens);
-    }
-
-    if (name == "clicktosetelement") {
-      if (value != null)
-        clickToSetElement = isTrue(value);
-      return Boolean.valueOf(clickToSetElement);
-    }
-
-    if (name == "showsymopinfo") {
-      if (value != null)
-        showSymopInfo = isTrue(value);
-      return Boolean.valueOf(showSymopInfo);
-    }
-
-    if (name == "offset") {
-      if (value == "none") {
-        viewOffset = null;
-      } else if (value != null) {
-        viewOffset = (value instanceof P3 ? (P3) value
-            : pointFromTriad(value.toString()));
-        if (viewOffset != null)
-          setSymViewState(STATE_SYM_SHOW);
-      }
-      showXtalSymmetry();
-      return viewOffset;
-    }
-
-    if (name == "distance") {
-      setDefaultState(STATE_XTALEDIT);
-      float d = (value == null ? Float.NaN
-          : value instanceof Float ? ((Float) value).floatValue()
-              : PT.parseFloat((String) value));
-      if (!Float.isNaN(d)) {
-        notImplemented("setProperty: distance");
-        centerDistance = d;
-      }
-      return Float.valueOf(centerDistance);
-    }
-
-    if (name == "point") {
-      if (value != null) {
-        notImplemented("setProperty: point");
+      if (name == "symmetry") {
         setDefaultState(STATE_XTALEDIT);
-        spherePoint = (P3) value;
-        atomIndexSphere = (spherePoint instanceof Atom ? ((Atom) spherePoint).i
+        name = ((String) value).toLowerCase().intern();
+        setSymEdit(name == "applylocal" ? STATE_SYM_APPLYLOCAL
+            : name == "retainlocal" ? STATE_SYM_RETAINLOCAL
+                : name == "applyfull" ? STATE_SYM_APPLYFULL : 0);
+        showXtalSymmetry();
+        return null;
+      }
+
+      if (name == "unitcell") { // packed or extend
+        boolean isPacked = "packed".equals(value);
+        setUnitCell(isPacked ? STATE_UNITCELL_PACKED : STATE_UNITCELL_EXTEND);
+        viewOffset = (isPacked ? Pt000 : null);
+        return null;
+      }
+
+      if (name == "symop") {
+        setDefaultState(STATE_XTALVIEW);
+        if (value != null) {
+          symop = value;
+          showSymop(symop);
+        }
+        return symop;
+      }
+
+      if (name == "center") {
+        setDefaultState(STATE_XTALVIEW);
+        centerPoint = (P3) value;
+        lastCenter = centerPoint.x + " " + centerPoint.y + " " + centerPoint.z;
+        centerAtomIndex = (centerPoint instanceof Atom ? ((Atom) centerPoint).i
             : -1);
+        atomIndexSphere = -1;
+        secondAtomIndex = -1;
+        processAtomClick(centerAtomIndex);
+        return null;
       }
-      return spherePoint;
-    }
 
-    if (name == "screenxy") {
-      if (value != null) {
-        screenXY = (int[]) value;
+      if (name == "scriptassignbond") {
+        appRunScript("modelkit assign bond [{" + value + "}] \""
+            + pickBondAssignType + "\"");
+        return null;
       }
-      return screenXY;
-    }
+      // set and get:
 
-    if (name == "addconstraint") {
-      notImplemented("setProperty: addConstraint");
-    }
+      if (name == "atomtype") {
+        if (value != null) {
+          pickAtomAssignType = (String) value;
+          isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
+              || pickAtomAssignType.equals("mi"));
+        }
+        return pickAtomAssignType;
+      }
 
-    if (name == "removeconstraint") {
-      notImplemented("setProperty: removeConstraint");
-    }
+      if (name == "bondtype") {
+        if (value != null) {
+          pickBondAssignType = ((String) value).substring(0, 1).toLowerCase();
+        }
+        return pickBondAssignType;
+      }
 
-    if (name == "removeallconstraints") {
-      notImplemented("setProperty: removeAllConstraints");
-    }
+      if (name == "bondindex") {
+        if (value != null) {
+          setBondIndex(((Integer) value).intValue(), false);
+        }
+        return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
+      }
 
-    System.err.println("ModelKitPopup.setProperty? " + name + " " + value);
+      if (name == "rotatebondindex") {
+        if (value != null) {
+          setBondIndex(((Integer) value).intValue(), true);
+        }
+        return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
+      }
+
+      if (name == "offset") {
+        if (value == "none") {
+          viewOffset = null;
+        } else if (value != null) {
+          viewOffset = (value instanceof P3 ? (P3) value
+              : pointFromTriad(value.toString()));
+          if (viewOffset != null)
+            setSymViewState(STATE_SYM_SHOW);
+        }
+        showXtalSymmetry();
+        return viewOffset;
+      }
+
+      if (name == "distance") {
+        setDefaultState(STATE_XTALEDIT);
+        float d = (value == null ? Float.NaN
+            : value instanceof Float ? ((Float) value).floatValue()
+                : PT.parseFloat((String) value));
+        if (!Float.isNaN(d)) {
+          notImplemented("setProperty: distance");
+          centerDistance = d;
+        }
+        return Float.valueOf(centerDistance);
+      }
+
+      if (name == "point") {
+        if (value != null) {
+          notImplemented("setProperty: point");
+          setDefaultState(STATE_XTALEDIT);
+          spherePoint = (P3) value;
+          atomIndexSphere = (spherePoint instanceof Atom
+              ? ((Atom) spherePoint).i
+              : -1);
+        }
+        return spherePoint;
+      }
+
+      if (name == "screenxy") {
+        if (value != null) {
+          screenXY = (int[]) value;
+        }
+        return screenXY;
+      }
+
+      if (name == "addconstraint") {
+        notImplemented("setProperty: addConstraint");
+      }
+
+      if (name == "removeconstraint") {
+        notImplemented("setProperty: removeConstraint");
+      }
+
+      if (name == "removeallconstraints") {
+        notImplemented("setProperty: removeAllConstraints");
+      }
+
+      System.err.println("ModelKitPopup.setProperty? " + name + " " + value);
+
+    } catch (Exception e) {
+      return "?";
+    }
 
     return null;
   }
@@ -685,6 +687,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    */
   @SuppressWarnings("javadoc")
   private Object getData(String key) {
+    addData("clickToSetElement", Boolean.valueOf(clickToSetElement));
+    addData("addHydrogens", Boolean.valueOf(addXtalHydrogens));
+    addData("isMolecular", Boolean.valueOf(getMKState() == STATE_MOLECULAR));
+    addData("showSymopInfo", Boolean.valueOf(showSymopInfo));
     addData("centerPoint" , centerPoint);
     addData("centerAtomIndex", Integer.valueOf(centerAtomIndex));
     addData("secondAtomIndex", Integer.valueOf(secondAtomIndex));
@@ -734,9 +740,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    */
   private String getHoverLabel(int atomIndex) {
     int state = getMKState();
-//    if (state != STATE_XTALVIEW && atomIndex >= 0 && !vwr.ms.isAtomInLastModel(atomIndex)) {
-//      return "Only atoms in the last model may be edited.";
-//    }
     String msg = null;
     switch (state) {
     case STATE_XTALVIEW:
@@ -899,10 +902,22 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    * @param type
    * @param autoBond
    * @param addHsAndBond
+   * @param isClick whether this is a click or not
    */
   private void assignAtom(int atomIndex, String type, boolean autoBond,
-                          boolean addHsAndBond) {
+                          boolean addHsAndBond, boolean isClick) {
+    if (isClick) {
+      
+      if (isVwrRotateBond()) {
+        bondAtomIndex1 = atomIndex;
+        return;
+      }
 
+      if (processAtomClick(atomIndex) || !clickToSetElement
+          && vwr.ms.getAtom(atomIndex).getElementNumber() != 1)
+        return;
+
+    }
     vwr.ms.clearDB(atomIndex);
     if (type == null)
       type = "C";
@@ -914,7 +929,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     Atom atom = vwr.ms.at[atomIndex];
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = (PT.isUpperCase(type.charAt(0)) ? Elements.elementNumberFromSymbol(type, true) : -1);
+    int atomicNumber = (PT.isUpperCase(type.charAt(0))
+        ? Elements.elementNumberFromSymbol(type, true)
+        : -1);
 
     // 1) change the element type or charge
 
@@ -942,6 +959,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (!addHsAndBond)
       return;
 
+    // type = "." is for connect
+    
     // 2) delete noncovalent bonds and attached hydrogens for that atom.
 
     vwr.ms.removeUnnecessaryBonds(atom, isDelete);
@@ -966,7 +985,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     BS bsA = BSUtil.newAndSetBit(atomIndex);
 
     if (isDelete) {
-      vwr.deleteAtoms(bsA, false);      
+      vwr.deleteAtoms(bsA, false);
     }
     if (atomicNumber != 1 && autoBond) {
 
@@ -1393,12 +1412,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String atomType = pickAtomAssignType;
     if (mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
-      appRunScript("assign connect " + mp.getMeasurementScript(" ", false));
+      appRunScript("modelkit connect " + mp.getMeasurementScript(" ", false) + " true");
     } else if (atomType.equals("Xx")) {
       return false;
     } else {
       if (inRange) {
-        String s = "assign atom ({" + dragAtomIndex + "}) \"" + atomType + "\"";
+        String s = "modelkit assign atom ({" + dragAtomIndex + "}) \"" + atomType + "\" true";
         if (isCharge) {
           s += ";{atomindex=" + dragAtomIndex + "}.label='%C'; ";
           vwr.undoMoveActionClear(dragAtomIndex,
@@ -1411,8 +1430,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         vwr.undoMoveActionClear(-1, T.save, true);
         Atom a = vwr.ms.at[dragAtomIndex];
         if (a.getElementNumber() == 1) {
-          vwr.assignAtom(dragAtomIndex, "X", null);
-          //          runScript("assign atom ({" + dragAtomIndex + "}) \"X\"");
+          assignAtomClick(dragAtomIndex, "X", null);
         } else {
           int x = dragged.x;
           int y = dragged.y;
@@ -1424,11 +1442,94 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
           P3 ptNew = P3.new3(x, y, a.sZ);
           vwr.tm.unTransformPoint(ptNew, ptNew);
-          vwr.assignAtom(dragAtomIndex, atomType, ptNew);
+          assignAtomClick(dragAtomIndex, atomType, ptNew);
         }
       }
     }
     return true;
+  }
+  
+  public void cmdAssignAtom(int atomIndex, P3 pt, String type, String cmd, boolean isClick) {
+    if (isClick && type.equals("X"))
+      vwr.setModelKitRotateBondIndex(-1);
+    int ac = vwr.ms.ac;
+    if (pt == null) {
+      if (atomIndex < 0)
+        return;
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, cmd);
+      // After this next command, vwr.modelSet will be a different instance
+      assignAtom(atomIndex, type, true, true, true);
+      if (!PT.isOneOf(type, ";Mi;Pl;X;"))
+        vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
+      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
+      return;
+    }
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+    BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
+    P3[] pts = new P3[] { pt };
+    Lst<Atom> vConnections = new Lst<Atom>();
+    int modelIndex = -1;
+    if (atom != null) {
+      vConnections.addLast(atom);
+      modelIndex = atom.mi;
+      vwr.sm.modifySend(atomIndex, modelIndex, 3, cmd);
+    }
+    try {
+      boolean isMK = vwr.getBoolean(T.modelkitmode);
+      if (!isMK)
+        vwr.setBooleanProperty("modelkitmode", true);
+      bs = vwr.addHydrogensInline(bs, vConnections, pts);
+      if (!isMK)
+        vwr.setBooleanProperty("modelkitmode", false);
+      int atomIndex2 = bs.nextSetBit(0);
+      assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
+      atomIndex = atomIndex2;
+    } catch (Exception ex) {
+      //
+    }
+    vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+    vwr.sm.modifySend(atomIndex, modelIndex, -3, "OK");
+  }
+
+  public void cmdAssignBond(int bondIndex, char type, String cmd) {
+    int modelIndex = -1;
+    try {
+      modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
+      int ac = vwr.ms.ac;
+      vwr.sm.modifySend(bondIndex, modelIndex, 2,
+          cmd);
+      BS bsAtoms = assignBond(bondIndex, type);
+      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+      if (bsAtoms == null || type == '0')
+        vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
+      vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
+    } catch (Exception ex) {
+      Logger.error("assignBond failed");
+      vwr.sm.modifySend(bondIndex, modelIndex, -2, "ERROR " + ex);
+    }
+  }
+
+  public void cmdAssignConnect(int index, int index2, String cmd, boolean isClick) {
+    float[][] connections = AU.newFloat2(1);
+    connections[0] = new float[] { index, index2 };
+    int modelIndex = vwr.ms.at[index].mi;
+    vwr.sm.modifySend(index, modelIndex, 2, cmd);
+    vwr.ms.connect(connections);    
+    int ac = vwr.ms.ac;
+    // note that vwr.ms changes during the assignAtom command 
+    assignAtom(index, ".", true, true, isClick);
+    assignAtom(index2, ".", true, true, isClick);
+    vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+    vwr.sm.modifySend(index, modelIndex, -2, "OK");
+    vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
+  }
+
+  public void assignAtomClick(int atomIndex, String element, P3 ptNew) {
+//    if (vwr.ms.isAtomInLastModel(atomIndex)) {
+      vwr.script("modelkit assign atom ({" + atomIndex + "}) \"" + element + "\" "
+          + (ptNew == null ? "" : Escape.eP(ptNew)) + " true");
+//    }
   }
 
 }
