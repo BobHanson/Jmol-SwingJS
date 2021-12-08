@@ -3447,7 +3447,7 @@ public class MathExt {
       try {
         BS bsSelected = (isSelector ? (BS) mp.getX().value
             : args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
-                : null);
+                : vwr.getModelUndeletedAtomsBitSet(-1));
         bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
             vwr.ms.ac, bsSelected,
             (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));

@@ -1192,6 +1192,8 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void postProcessTry(Map<String, SV> cv) {
+    if (thisContext == null)
+      return;
     while (thisContext.tryPt > vwr.tryPt)
       popContext(false, false);
     boolean isJSReturn = (cv == null);

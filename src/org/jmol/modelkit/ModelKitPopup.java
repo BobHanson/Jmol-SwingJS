@@ -80,6 +80,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   protected ModelSet lastModelSet;
 
   private String pickAtomAssignType = "C";
+  private String lastElementType = "C";
   private String pickBondAssignType = "p"; // increment up
   private boolean isPickAtomAssignCharge; // pl or mi
 
@@ -334,6 +335,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   @Override
   protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
                                                boolean selected) {
+    if (!selected)
+      return;
     String name = source.getName();
     if (!updatingForShow && setActiveMenu(name) != null) {
       String text = source.getText();
@@ -587,6 +590,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
           pickAtomAssignType = (String) value;
           isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
               || pickAtomAssignType.equals("mi"));
+          if (!isPickAtomAssignCharge && !"X".equals(pickAtomAssignType)) {
+            lastElementType = pickAtomAssignType;
+          }
         }
         return pickAtomAssignType;
       }
@@ -745,8 +751,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     case STATE_XTALVIEW:
       if (symop == null)
         symop = Integer.valueOf(1);
-      msg = "view symop " + symop + " for "
-          + vwr.getAtomInfo(atomIndex);
+      msg = "view symop " + symop + " for " + vwr.getAtomInfo(atomIndex);
       break;
     case STATE_XTALEDIT:
       msg = "start editing for " + vwr.getAtomInfo(atomIndex);
@@ -761,9 +766,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
           msg = "rotate bond";
           bsRotateBranch = null;
           branchAtomIndex = -1;
-//          resetBondFields("gethover");
+          //          resetBondFields("gethover");
         }
-      }  
+      }
       if (bondIndex < 0) {
         if (atomHoverLabel.length() <= 2) {
           msg = atomHoverLabel = "Click to change to " + atomHoverLabel
@@ -779,7 +784,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
             vwr.highlight(BSUtil.newAndSetBit(atomIndex));
             //$FALL-THROUGH$
           case 1:
-            msg = atomHoverLabel;
+            if (atomHoverLabel.indexOf("charge") >= 0) {
+              int ch = vwr.ms.at[atomIndex].getFormalCharge();
+              ch += (atomHoverLabel.indexOf("increase") >= 0 ? 1 :-1);
+              msg = atomHoverLabel + " to " + (ch > 0 ? "+" : "") + ch;
+            } else {
+              msg = atomHoverLabel;
+            }
             break;
           case 2:
             msg = bondHoverLabel;
@@ -789,9 +800,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       }
       break;
     }
+
     return msg;
   }
-
+  
   private void setDefaultState(int mode) {
     if (!hasUnitCell)
       mode = STATE_MOLECULAR;
@@ -918,6 +930,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         return;
 
     }
+    Atom atom = vwr.ms.at[atomIndex];
     vwr.ms.clearDB(atomIndex);
     if (type == null)
       type = "C";
@@ -926,7 +939,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     // if we click on an H, and C is being defined,
     // this sprouts an sp3-carbon at that position.
 
-    Atom atom = vwr.ms.at[atomIndex];
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
     int atomicNumber = (PT.isUpperCase(type.charAt(0))
@@ -1010,7 +1022,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
   }
 
-  /**
+  /** 
    * Original ModelKit functionality -- assign a bond.
    * 
    * @param bondIndex
@@ -1412,10 +1424,15 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String atomType = pickAtomAssignType;
     if (mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
-      appRunScript("modelkit connect " + mp.getMeasurementScript(" ", false) + " true");
-    } else if (atomType.equals("Xx")) {
-      return false;
+      if (((Atom) mp.getAtom(1)).isBonded((Atom) mp.getAtom(2))) {
+        appRunScript("modelkit assign bond " + mp.getMeasurementScript(" ", false) + "'p' true");
+      } else {
+        appRunScript("modelkit connect " + mp.getMeasurementScript(" ", false) + " true");
+      }
     } else {
+      if (atomType.equals("Xx")) {
+        atomType = lastElementType;
+      }
       if (inRange) {
         String s = "modelkit assign atom ({" + dragAtomIndex + "}) \"" + atomType + "\" true";
         if (isCharge) {
@@ -1453,19 +1470,20 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (isClick && type.equals("X"))
       vwr.setModelKitRotateBondIndex(-1);
     int ac = vwr.ms.ac;
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
     if (pt == null) {
-      if (atomIndex < 0)
+      if (atomIndex < 0 || atom == null)
         return;
-      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, 1, cmd);
+      int mi = atom.mi;
+      vwr.sm.modifySend(atomIndex, mi, 1, cmd);
       // After this next command, vwr.modelSet will be a different instance
       assignAtom(atomIndex, type, true, true, true);
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-      vwr.sm.modifySend(atomIndex, vwr.ms.at[atomIndex].mi, -1, "OK");
+      vwr.sm.modifySend(atomIndex, mi, -1, "OK");
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
       return;
     }
-    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
     BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
     P3[] pts = new P3[] { pt };
     Lst<Atom> vConnections = new Lst<Atom>();
@@ -1484,6 +1502,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         vwr.setBooleanProperty("modelkitmode", false);
       int atomIndex2 = bs.nextSetBit(0);
       assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
+      if (atomIndex >= 0)
+        assignAtom(atomIndex, ".", true, true, isClick);
+
       atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
@@ -1532,4 +1553,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 //    }
   }
 
+  @Override
+  protected boolean appRunSpecialCheckBox(SC item, String basename, String script,
+                                         boolean TF) {
+    if (basename.indexOf("assignAtom_Xx") == 0) {
+      pickAtomAssignType = lastElementType;
+    }
+    return super.appRunSpecialCheckBox(item, basename, script, TF);
+  }
 }

@@ -3839,7 +3839,7 @@ public class Viewer extends JmolViewer
   public boolean frankClickedModelKit(int x, int y) {
     // top left indicator
     return !g.disablePopupMenu && g.modelKitMode && x >= 0 && y >= 0 && x < 40
-        && y < 80;
+        && y < 26*4; // See FrankRenderer
   }
 
   @Override
@@ -7268,7 +7268,6 @@ public class Viewer extends JmolViewer
           : ActionManager.PICKING_IDENTIFY);
     }
     boolean isChange = (g.modelKitMode != value);
-    
     g.modelKitMode = value;
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
@@ -8652,10 +8651,13 @@ public class Viewer extends JmolViewer
     if (atomIndex < 0)
       return 0;
     clearModelDependentObjects();
-    int mi = ms.at[atomIndex].mi;
+    Atom a = ms.at[atomIndex];
+    if (a == null)
+      return 0;
+    int mi = a.mi;
     if (!fullModels) {      
-      sm.modifySend(atomIndex, ms.at[atomIndex].mi, 4,
-          "deleting atom " + ms.at[atomIndex].getAtomName());
+      sm.modifySend(atomIndex, a.mi, 4,
+          "deleting atom " + a.getAtomName());
       ms.deleteAtoms(bsAtoms);
       int n = slm.deleteAtoms(bsAtoms);
       setTainted(true);
@@ -9019,8 +9021,7 @@ public class Viewer extends JmolViewer
     String ff = g.forceField;
     BS bsInFrame = getFrameAtoms();
     if (bsSelected == null)
-      bsSelected = getModelUndeletedAtomsBitSet(
-          getVisibleFramesBitSet().length() - 1);
+      bsSelected = getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
     else if (!isQuick)
       bsSelected.and(bsInFrame);
     if (isQuick) {
@@ -9103,6 +9104,7 @@ public class Viewer extends JmolViewer
         eval.loadFileResourceAsync(e.getFileName());
     } catch (Exception e) {
       Logger.error("Minimization error: " + e.toString());
+      e.printStackTrace();
     }
   }
 
@@ -9591,7 +9593,7 @@ public class Viewer extends JmolViewer
 
   public void calculatePartialCharges(BS bsSelected) throws JmolAsyncException {
     if (bsSelected == null || bsSelected.isEmpty())
-      bsSelected = getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
+      bsSelected = getFrameAtoms();
     if (bsSelected.isEmpty())
       return;
     //    // this forces an array if it does not exist 

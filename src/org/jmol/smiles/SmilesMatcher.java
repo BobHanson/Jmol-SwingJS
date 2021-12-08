@@ -510,9 +510,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         }
         search.targetAtoms = atoms;
         search.targetAtomCount = ac;
+        search.setSelected(bsSelected);
         if (ac != 0 && (bsSelected == null || !bsSelected.isEmpty())) {
           boolean is3D = !(atoms[0] instanceof SmilesAtom);
-          search.setSelected(bsSelected);
           search.getSelections();
           if (!doTestAromatic)
             search.bsAromatic = bsAromatic;

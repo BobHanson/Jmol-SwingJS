@@ -13,6 +13,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JToggleButton;
 import javax.swing.MenuElement;
 import javax.swing.MenuSelectionManager;
 
@@ -93,6 +94,8 @@ public class AwtSwingComponent implements SC {
 
       @Override
       public void doClick(int n) {
+        ((JToggleButton.ToggleButtonModel) getModel()).getGroup().clearSelection();
+        // force click even if already selected
         super.doClick(n);
           helper.reinstateMenu(this, path);
       }

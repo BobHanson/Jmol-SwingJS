@@ -1437,7 +1437,9 @@ abstract public class AtomCollection {
                 hAtoms[i] = null;
                 continue;
               }
-              if (getHybridizationAndAxes(i, atomicNumber, z, x, (hybridization == 2 || atomicNumber == 5 
+              if (getHybridizationAndAxes(i, atomicNumber, z, x, 
+                  (hybridization == 2 || atomicNumber == 5 
+                  || atomicNumber == 6 &&  aaRet[1] == 1
                   || atomicNumber == 7 
                   && (atom.group.getNitrogenAtom() == atom || isAdjacentSp2(atom))
                   ? "sp2c"
@@ -1789,7 +1791,8 @@ abstract public class AtomCollection {
           atom = a0;
           a0 = a;
         }
-        if (vTemp.length() > 0.1f) {
+        if (isSp) {
+        } else if (vTemp.length() > 0.1f) {
           z.cross(vTemp, x);
           // C=C or RC=C
           z.normalize();
@@ -1819,6 +1822,8 @@ abstract public class AtomCollection {
             x.scale(-1);
           x.scale(sqrt3_2);
           z.scaleAdd2(0.5f, z, x);
+        } else if (isSp) {
+          
         } else {
           vTemp.setT(z);
           z.setT(x);

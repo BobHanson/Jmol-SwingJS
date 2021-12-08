@@ -157,6 +157,10 @@ public abstract class GenericPopup implements GenericMenuInterface {
         helper.menuAddButtonGroup(null);
         continue;
       }
+      if (",".equals(item)) {
+        menuAddSeparator(menu);
+        continue;        
+      }
       String label = popupResourceBundle.getWord(item);
       SC newItem = null;
       String script = "";

@@ -315,6 +315,7 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   void setSelected(BS bs) {
+    selectedAtomCount = (bs == null ? targetAtomCount: bs.cardinality());
     if (bs == null) {
       // null because this is an atom set
       // constructed by SmilesParser.getMolecule
@@ -437,7 +438,7 @@ public class SmilesSearch extends JmolMolecule {
       ringData = new BS[ringDataMax + 1];
     }
     ringSets = new Lst<BS>();
-    if (targetAtomCount < 3)
+    if (selectedAtomCount < 3)
       return;  
     String s = "****";
     int max = ringDataMax;
@@ -526,6 +527,7 @@ public class SmilesSearch extends JmolMolecule {
     search.targetAtoms = targetAtoms;
     search.targetAtomCount = targetAtomCount;
     search.bsSelected = bsSelected;
+    search.selectedAtomCount = selectedAtomCount;
     search.htNested = htNested;
     search.haveTopo = haveTopo;
     search.bsCheck = bsCheck;
@@ -614,11 +616,6 @@ public class SmilesSearch extends JmolMolecule {
 
     if (vReturn == null && (asVector || getMaps))
       vReturn = new  Lst<Object>();
-    if (bsSelected == null) {
-      bsSelected = BS.newN(targetAtomCount);
-      bsSelected.setBits(0, targetAtomCount);
-    }
-    selectedAtomCount = bsSelected.cardinality();
     if (subSearches != null) {
       // SMARTS || SMARTS
       for (int i = 0; i < subSearches.length; i++) {
@@ -630,7 +627,7 @@ public class SmilesSearch extends JmolMolecule {
             break;
         }
       }
-    } else if (ac > 0) {
+    } else if (ac > 0 && ac <= selectedAtomCount) {
       if (nestedBond == null) {
         // specifically for non-bioSmarts or not $(....) 
         clearBsFound(-1);

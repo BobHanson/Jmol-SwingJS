@@ -93,11 +93,12 @@ public class JmolMolecule {
     
     for (int i = 0; i < atoms.length; i++)
       if (!bsExclude.get(i) && !bsBranch.get(i)) {
-        if (atoms[i].isDeleted()) {
+        Node a = atoms[i];
+        if (a == null || a.isDeleted()) {
           bsExclude.set(i);
           continue;
         }          
-        int modelIndex = atoms[i].getModelIndex();
+        int modelIndex = a.getModelIndex();
         if (modelIndex != thisModelIndex) {
           thisModelIndex = modelIndex;
           indexInModel = 0;
