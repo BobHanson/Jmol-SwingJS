@@ -57,7 +57,7 @@ public class Resolver {
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;Wien2k;Xcrysden;",
+             "VaspPoscar;Wien2k;Xcrysden;PWmat;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
@@ -411,7 +411,6 @@ public class Resolver {
 
     if (nLines == 1 && lines[0].length() > 0 && PT.isDigit(lines[0].charAt(0)))
       return "Jme"; //only one line, and that line starts with a number 
-
     if (checkMopacGraphf(lines))
       return "MopacGraphf"; //must be prior to checkFoldingXyz and checkMol
     if (checkOdyssey(lines))
@@ -428,6 +427,8 @@ public class Resolver {
       return "Xyz";
     case 2:
       return "Bilbao";
+    case 3: 
+      return "PWmat";
     }
     if (checkAlchemy(lines[0]))
       return "Alchemy";
@@ -594,8 +595,11 @@ public class Resolver {
  
   private static int checkXyz(String[] lines) {
     // first and third lines numerical --> Bilbao format
+    // first int and line[5] starts with "POSITION" (case insensitice) --> PWmat atom.config
     if (isInt(lines[0].trim()))
-      return (isInt(lines[2].trim()) ? 2 : 1);
+      return (isInt(lines[2]) ? 2 
+          : lines.length > 5 && lines[5].length() > 8 && lines[5].substring(0,8).equalsIgnoreCase("position") ? 3
+          : 1);
     return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : 0);
   }
   

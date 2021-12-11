@@ -14,6 +14,9 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
  *         Cambridge, MA 02139 
  * 
  *         http://www.xcrysden.org
+ *         
+ *         
+ *         http://www.xcrysden.org/doc/XSF.html
  * 
  * @version 1.1
  */
