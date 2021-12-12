@@ -28,9 +28,10 @@ public class PWmatReader extends AtomSetCollectionReader {
       setFractionalCoordinates(true);
       return true;
     }
-    if (line.equalsIgnoreCase("lattice vector")) {
+    String lc = line.toLowerCase();
+    if (lc.startsWith("lattice")) {
       readUnitCell();
-    } else if (line.toLowerCase().startsWith("position")) {
+    } else if (lc.startsWith("position")) {
       readCoordinates();
     } else {
       continuing = false;
