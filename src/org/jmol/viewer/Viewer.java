@@ -5290,7 +5290,7 @@ public class Viewer extends JmolViewer
     apiPlatform.setCursor(currentCursor = cursor, display);
   }
 
-  void setPickingMode(String strMode, int pickingMode) {
+  public void setPickingMode(String strMode, int pickingMode) {
     if (!haveDisplay)
       return;
     showSelected = false;
@@ -7272,11 +7272,12 @@ public class Viewer extends JmolViewer
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
     if (value) {
+      ModelKitPopup kit = getModelkit(false);
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
-      getModelkit(false).setProperty("atomType", "C");
-      getModelkit(false).setProperty("bondType", "p");
+      kit.setProperty("atomType", "C");
+      kit.setProperty("bondType", "p");
       if (!isApplet)
         popupMenu(10, 0, 'm'); // was 0?
       if (isChange)

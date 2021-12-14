@@ -28,6 +28,7 @@ import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -98,6 +99,20 @@ public class AwtModelKitPopup extends ModelKitPopup {
       // ignore
     }
   }
+  
+  @Override
+  protected void exitBondRotation() {
+    try {
+      if (bondRotationCheckBox != null)
+        ((JRadioButtonMenuItem) bondRotationCheckBox).setSelected(false);
+      if (prevBondCheckBox != null)
+        ((JRadioButtonMenuItem) prevBondCheckBox).setSelected(true);
+   } catch (Exception e) {
+      // ignore
+    }
+    super.exitBondRotation(); 
+  }
+
 
   @Override
   protected Object getImageIcon(String fileName) {

@@ -6,7 +6,9 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**
  * 
- * crude PCmat atom.config reader
+ * crude PWmat atom.config reader
+ * 
+ * http://pwmatus.com/manual
  * 
  * @author hansonr
  */

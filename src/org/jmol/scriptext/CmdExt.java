@@ -215,17 +215,18 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void modelkit() throws ScriptException {
-    boolean isOn = true;
     int i = 0;
-    switch (tokAt(1)) {
+    int tok = tokAt(1);
+    switch (tok) {
     case T.off:
-      isOn = false;
-      //$FALL-THROUGH$
     case T.nada:
     case T.on:
       if (!chk)
-        vwr.setBooleanProperty("modelkitmode", isOn);
-      return;
+        vwr.setBooleanProperty("modelkitmode", tok != T.off);
+      if (tokAt(i + 1) == T.nada)
+        return;
+      i =  ++e.iToken;
+      break;
     case T.rotate:
       e.cmdRotate(false, false);
       return;
@@ -240,14 +241,23 @@ public class CmdExt extends ScriptExt {
       return;
     }
     ModelKitPopup kit = vwr.getModelkit(false);
-    int tok = 0;
     while ((tok = tokAt(++i)) != T.nada) {
       String key = paramAsStr(i).toLowerCase();
       Object value = null;
       switch (tok) {
+      case T.on:
+      case T.off:
+        if (!chk)
+          vwr.setBooleanProperty("modelkitmode", tok == T.on);
+        continue;
+      case T.display:
+      case T.hide:
+        key = "hidden";
+        value = Boolean.valueOf(tok != T.display);
+        break;
       case T.set:
         key = paramAsStr(++i);
-        value = paramAsStr(++i);
+        value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
         break;
       case T.mode:
         value = paramAsStr(++i).toLowerCase();
@@ -301,8 +311,7 @@ public class CmdExt extends ScriptExt {
         break;
       default:
         if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
-          isOn = ((tok = tokAt(++i)) == T.nada || tok == T.on);
-          value = Boolean.valueOf(isOn);
+          value = Boolean.valueOf((tok = tokAt(++i)) == T.nada || tok == T.on);
           break;
         }
         if (PT.isOneOf(key, ModelKitPopup.MODE_OPTIONS)) {
@@ -317,8 +326,9 @@ public class CmdExt extends ScriptExt {
         }
         invArg();
       }
-      if (value != null && !chk)
-        kit.setProperty(key, value);
+      if (!chk && value != null 
+          && (value = kit.setProperty(key, value)) != null && key != "hidden" && !kit.isHidden())
+          vwr.showString("modelkit " + key + " = " + value.toString(), false);
     }
   }
 
@@ -5645,6 +5655,12 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void assign() throws ScriptException {
+    /**
+     * final parameter TRUE is only for internal use so that we can determine if 
+     * this command should be handled specially because it is an actual click of the mouse
+     * and some other feature is involved.
+     */
+    boolean isClick = (tokAt(slen - 1) == T.on);
     int i = ++e.iToken;
     int mode = tokAt(i); // ATOMS, BONDS, or CONNECT; defaults to ATOMS
     int index = -1, index2 = -1;
@@ -5705,7 +5721,6 @@ public class CmdExt extends ScriptExt {
       bs = expFor(i, bsAtoms);
       index2 = bs.nextSetBit(0);
     }
-    boolean isClick = (tokAt(slen - 1) == T.on);
     P3 pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
     if (chk)
       return;
@@ -5719,7 +5734,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignBond(index, (type + "p").charAt(0), e.fullCommand);
       break;
     case T.connect:
-      vwr.getModelkit(false).cmdAssignConnect(index, index2, e.fullCommand, isClick);
+      vwr.getModelkit(false).cmdAssignConnect(index, index2, e.fullCommand);
     }
   }
 

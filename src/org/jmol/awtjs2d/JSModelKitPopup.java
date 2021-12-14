@@ -24,6 +24,7 @@
 package org.jmol.awtjs2d;
 
 import org.jmol.awtjs.swing.JPopupMenu;
+import org.jmol.awtjs.swing.JRadioButtonMenuItem;
 import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.api.SC;
 import org.jmol.awtjs.swing.Component;
@@ -55,6 +56,19 @@ public class JSModelKitPopup extends ModelKitPopup {
     }
   }
   
+  @Override
+  protected void exitBondRotation() {
+    try {
+      if (bondRotationCheckBox != null)
+        ((JRadioButtonMenuItem) bondRotationCheckBox).setSelected(false);
+      if (prevBondCheckBox != null)
+        ((JRadioButtonMenuItem) prevBondCheckBox).setSelected(true);
+    } catch (Exception e) {
+      // ignore
+    }
+    super.exitBondRotation(); 
+  }
+
   @Override
   protected Object getImageIcon(String fileName) {
     return "org/jmol/modelkit/images/" + fileName;

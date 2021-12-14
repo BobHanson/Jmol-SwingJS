@@ -56,12 +56,12 @@ public class FrankRenderer extends ShapeRenderer {
     int dy = frank.frankDescent;
     g3d.drawStringNoSlab(frank.frankString, frank.font3d, vwr.gdata.width - dx,
         vwr.gdata.height - dy, 0, (short) 0);
-    if (modelKitMode) {
+    ModelKitPopup kit = (modelKitMode ? vwr.getModelkit(false) : null);
+    if (modelKitMode && !kit.isHidden()) {
       g3d.setC(C.GRAY);
       int w = 10;
       int h = 26;
       g3d.fillTextRect(0, 0, 1, 0, w, h*4);
-      ModelKitPopup kit = vwr.getModelkit(false);
       String active = kit.getActiveMenu();  
       if (active != null) {
         if ("atomMenu".equals(active)) {
