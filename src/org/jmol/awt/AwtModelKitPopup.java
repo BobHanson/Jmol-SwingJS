@@ -91,6 +91,15 @@ public class AwtModelKitPopup extends ModelKitPopup {
   }
 
   @Override
+  protected void menuHidePopup(SC popup) {
+    try {
+      ((JPopupMenu)((AwtSwingComponent)popup).jc).setVisible(false);
+    } catch (Exception e) {
+      // ignore
+    }
+  }
+
+  @Override
   protected Object getImageIcon(String fileName) {
     String imageName = "org/jmol/modelkit/images/" + fileName;
     URL imageUrl = this.getClass().getClassLoader().getResource(imageName);

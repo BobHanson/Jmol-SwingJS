@@ -485,11 +485,11 @@ public class ActionManager implements EventManager {
     return -1;
   }
 
-  int getAtomPickingMode() {
+  public int getAtomPickingMode() {
     return apm;
   }
 
-  void setPickingMode(int pickingMode) {
+  public void setPickingMode(int pickingMode) {
     boolean isNew = false;
     switch (pickingMode) {
     case PICKING_MK_RESET: 

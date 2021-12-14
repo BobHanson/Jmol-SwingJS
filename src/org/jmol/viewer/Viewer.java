@@ -3608,7 +3608,7 @@ public class Viewer extends JmolViewer
         if (zapModelKit)
           g.removeParam("_pngjFile");
         if (zapModelKit && g.modelKitMode) {
-          loadDefaultModelKit(null);
+          loadDefaultModelKitModel(null);
         }
         undoClear();
       }
@@ -3623,8 +3623,8 @@ public class Viewer extends JmolViewer
       Logger.checkMemory();
   }
 
-  private void loadDefaultModelKit(Map<String, Object> htParams) {
-    openStringInlineParamsAppend(JC.MODELKIT_ZAP_STRING, htParams, true);
+  private void loadDefaultModelKitModel(Map<String, Object> htParams) {
+    openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams, true);
     setRotationRadius(5.0f, true);
     setStringProperty("picking", "assignAtom_C");
     setStringProperty("picking", "assignBond_p");
@@ -7287,7 +7287,7 @@ public class Viewer extends JmolViewer
       else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
         Map<String, Object> htParams = new Hashtable<String, Object>();
         htParams.put("appendToModelIndex", Integer.valueOf(am.cmi));
-        loadDefaultModelKit(htParams);
+        loadDefaultModelKitModel(htParams);
       }
     } else {
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);

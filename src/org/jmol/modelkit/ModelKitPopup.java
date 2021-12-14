@@ -69,6 +69,8 @@ import javajs.util.V3;
 
 abstract public class ModelKitPopup extends JmolGenericPopup {
   
+  abstract protected void menuHidePopup(SC popup);
+
   private boolean hasUnitCell;
   private String[] allOperators;
   private int currentModelIndex = -1;
@@ -120,6 +122,11 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   private String drawScript;
   private int iatom0;
 
+  /**
+   * set true only when ModelKit is off and running assignAtom
+   */
+  private boolean isQuiet = false;
+
   public ModelKitPopup() {
   }
 
@@ -162,6 +169,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     //setProperty("addhydrogen",Boolean.valueOf(!hasUnitCell));
   }
 
+  @Override
+  public void jpiShow(int x, int y) {
+    if (!isQuiet)
+      super.jpiShow(x, y);
+  }
+  
   @Override
   public void jpiUpdateComputedMenus() {
     hasUnitCell = (vwr.getCurrentUnitCell() != null);
@@ -964,7 +977,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       atom.setFormalCharge(atom.getFormalCharge() - 1);
     } else if (type.equals("X")) {
       isDelete = true;
-    } else if (!type.equals(".")) {
+    } else if (!type.equals(".") || !addXtalHydrogens) {
       return; // uninterpretable
     }
 
@@ -1495,16 +1508,22 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     }
     try {
       boolean isMK = vwr.getBoolean(T.modelkitmode);
-      if (!isMK)
+      int pickingMode = vwr.acm.getAtomPickingMode();
+      if (!isMK) {
+        isQuiet = true;
         vwr.setBooleanProperty("modelkitmode", true);
+      }
       bs = vwr.addHydrogensInline(bs, vConnections, pts);
-      if (!isMK)
+      if (!isMK) {
+        isQuiet = false;
         vwr.setBooleanProperty("modelkitmode", false);
+        vwr.acm.setPickingMode(pickingMode);
+        menuHidePopup(popupMenu);
+      }
       int atomIndex2 = bs.nextSetBit(0);
       assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
       if (atomIndex >= 0)
         assignAtom(atomIndex, ".", true, true, isClick);
-
       atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
@@ -1560,5 +1579,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       pickAtomAssignType = lastElementType;
     }
     return super.appRunSpecialCheckBox(item, basename, script, TF);
+  }
+
+  public String getDefaultModel() {
+    return (addXtalHydrogens ? JC.MODELKIT_ZAP_STRING : "1\n\nC 0 0 0\n");
   }
 }

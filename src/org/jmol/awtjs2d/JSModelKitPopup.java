@@ -46,6 +46,16 @@ public class JSModelKitPopup extends ModelKitPopup {
   }
   
   @Override
+  public void menuHidePopup(SC popup) {
+
+    try {
+      ((JPopupMenu) popup).setVisible(false);
+    } catch (Exception e) {
+      // ignore
+    }
+  }
+  
+  @Override
   protected Object getImageIcon(String fileName) {
     return "org/jmol/modelkit/images/" + fileName;
   }
