@@ -435,7 +435,7 @@ public class OC extends OutputStream implements GenericOutputChannel {
   public final static int URL_LOCAL = 4, URL_CACHE = 5;
 
   public static boolean isRemote(String fileName) {
-    if (fileName == null)
+		if (fileName == null || fileName.equals(";base64,"))
       return false;
     int itype = urlTypeIndex(fileName);
     return (itype >= 0 && itype < URL_LOCAL);
