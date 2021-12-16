@@ -146,6 +146,10 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
     <unjar dest="${appjars.dir}" src="${lib.dir}/${inchi.jar}"/>
   	<move file="${appjars.dir}/META-INF/LICENSE" tofile="${appjars.dir}/META-INF/LICENSE-JNI-INCHI"/>
   	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
+  	<!-- the following mitigation is in accord with https://logging.apache.org/log4j/2.x/security.html
+  	     despite the fact that the org/apache/logging package is not included in Jmol.
+  	     It is added here in case JNI-InChI is ever upgraded to Log4J2 (which requires Java 7+) -->  
+  	<delete file="${appjars.dir}/org/apache/logging/log4j/core/lookup/JndiLookup.class" />
     <touch file="build/libjars.timestamp"/>
   </target>
 
