@@ -139,7 +139,6 @@ public class CifReader extends AtomSetCollectionReader {
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
   private int titleAtomSet = 1;
-  private int intTableNo;
 
   @Override
   public void initializeReader() throws Exception {
@@ -323,7 +322,7 @@ public class CifReader extends AtomSetCollectionReader {
       } else if (key.startsWith("_aflow_")) {
         isAFLOW = true;
       } else if (key.equals("_symmetry_int_tables_number")) {
-        intTableNo = parseIntStr(data);
+        int intTableNo = parseIntStr(data);
         rotateHexCell = (isAFLOW && (intTableNo >= 143 && intTableNo <= 194)); // trigonal or hexagonal
       } else if (key.equals("_entry_id")) {
         pdbID = data;

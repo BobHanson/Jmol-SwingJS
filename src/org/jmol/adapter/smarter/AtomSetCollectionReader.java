@@ -780,7 +780,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (ignoreFileSpaceGroupName || name == null)
       return;
     String s = name.trim();
-    if (s.equals(sgName))
+    if (s.length() == 0 || s.equals("HM:") || s.equals(sgName))
       return;
     if (!s.equals("P1"))
       Logger.info("Setting space group name to " + s);
