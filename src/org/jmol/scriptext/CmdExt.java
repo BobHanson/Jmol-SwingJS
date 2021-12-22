@@ -4781,6 +4781,7 @@ public class CmdExt extends ScriptExt {
         len = 3;
       }
       break;
+    case T.inchi:
     case T.inchikey:
     case T.drawing:
     case T.chemical:
