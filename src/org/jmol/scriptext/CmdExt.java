@@ -4807,6 +4807,8 @@ public class CmdExt extends ScriptExt {
           switch (tok) { 
           case T.inchi:
             msg = vwr.getInchi(vwr.bsA(), null, null);
+            if (msg == null)
+              msg = "?";
             break;
           case T.inchikey:
             msg = vwr.getInchi(vwr.bsA(), null, "key");
