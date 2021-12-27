@@ -1704,6 +1704,12 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
     return null;
   }
 
+  public BioModelSet getBioModelSet(ModelSet modelSet) {
+    if (modelSet.bioModelset == null)
+      modelSet.bioModelset = new BioModelSet().set(vwr, modelSet);
+    return modelSet.bioModelset;
+  }
+
 }
 
 

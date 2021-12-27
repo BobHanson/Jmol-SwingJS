@@ -177,8 +177,7 @@ public final class ModelLoader {
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
     doAddHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
         && !ms.getMSInfoB("pdbNoHydrogens") && (ms
-        .getMSInfoB("pdbAddHydrogens") || vwr
-        .getBooleanProperty("pdbAddHydrogens")));
+        .getMSInfoB("pdbAddHydrogens") || vwr.getBoolean(T.pdbaddhydrogens)));
     if (info != null) {
       info.remove("pdbNoHydrogens");
       info.remove("pdbAddHydrogens");
@@ -840,7 +839,9 @@ public final class ModelLoader {
     for (int i = 0; i < ms.ac; i++) {
       if (atoms[i] != null && atoms[i].mi > iLast) {
         iLast = atoms[i].mi;
-        models[iLast].firstAtomIndex = i;
+        Model m = models[iLast];
+        m.firstAtomIndex = i;
+        m.isOrderly = (m.act == m.bsAtoms.length()); 
         VDW vdwtype = ms.getDefaultVdwType(iLast);
         if (vdwtype != vdwtypeLast) {
           Logger.info("Default Van der Waals type for model" + " set to "
@@ -993,11 +994,12 @@ public final class ModelLoader {
     if (iterBond == null)
       return;
     short mad = vwr.getMadBond();
+    boolean force1 = isMutate && ! vwr.getBoolean(T.pdbaddhydrogens);
     ms.defaultCovalentMad = (jmolData == null ? mad : 0);
     boolean haveMultipleBonds = false;
     while (iterBond.hasNext()) {
       int iOrder = iterBond.getEncodedOrder();
-      short order = (short) iOrder;
+      short order = (force1 ? 1 : (short) iOrder);
       Bond b = bondAtoms(iterBond.getAtomUniqueID1(), iterBond
           .getAtomUniqueID2(), order);
       if (b != null) {

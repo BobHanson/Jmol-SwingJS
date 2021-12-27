@@ -83,8 +83,7 @@ public final class BioModel extends Model {
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     
     isBioModel = true;
-    if (modelSet.bioModelset == null)
-      modelSet.bioModelset = new BioModelSet().set(vwr, ms);
+    vwr.getJBR().getBioModelSet(modelSet);
     clearBioPolymers();
     modelSet.am[modelIndex] = this;
     pdbID = (String) auxiliaryInfo.get("name");

@@ -4380,6 +4380,7 @@ public class ScriptEval extends ScriptExpr {
         loadScript.append(" mutate");
         modelName = optParameterAsString(++i);
         tok = T.getTokFromName(modelName);
+        htParams.put("appendToModelIndex", Integer.valueOf(vwr.am.cmi));
         break;
       case T.append:
         // we are looking out for state scripts after model 1.1 deletion.

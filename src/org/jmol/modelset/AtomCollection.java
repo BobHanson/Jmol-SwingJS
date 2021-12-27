@@ -1279,6 +1279,7 @@ abstract public class AtomCollection {
   public final static int CALC_H_HAVEH = 0x400;
   public final static int CALC_H_QUICK = Viewer.MIN_QUICK;
   public static final int CALC_H_IGNORE_H = 0x800;
+  public static final int CALC_H_ALLOW_H = 0x1000;
 
   
   /**
@@ -1297,6 +1298,7 @@ abstract public class AtomCollection {
     boolean justCarbon = ((flags & CALC_H_JUSTC) == CALC_H_JUSTC);
     boolean isQuick = ((flags & CALC_H_QUICK) == CALC_H_QUICK);
     boolean ignoreH = ((flags & CALC_H_IGNORE_H) == CALC_H_IGNORE_H);
+    boolean allowH = ((flags & CALC_H_ALLOW_H) == CALC_H_ALLOW_H);
     V3 z = new V3();
     V3 x = new V3();
     P3[][] hAtoms = new P3[ac][];
@@ -1323,7 +1325,7 @@ abstract public class AtomCollection {
           break;
         case 6:
         }
-        int n = (doAll || ignoreH ? atom.getCovalentHydrogenCount() : 0);
+        int n = (doAll || ignoreH || allowH ? atom.getCovalentHydrogenCount() : 0);
         if (doAll && n > 0 || ignoreH && n == 0)
           continue;
         int nMissing = getMissingHydrogenCount(atom, false);
@@ -1441,7 +1443,7 @@ abstract public class AtomCollection {
                   (hybridization == 2 || atomicNumber == 5 
                   || atomicNumber == 6 &&  aaRet[1] == 1
                   || atomicNumber == 7 
-                  && (atom.group.getNitrogenAtom() == atom || isAdjacentSp2(atom))
+                  && (atom.group.getNitrogenAtom() == atom & atom.getFormalCharge() == 0 || isAdjacentSp2(atom))
                   ? "sp2c"
                   : "sp3d"), true, false, isQuick) != null) {
                 pt = P3.newP(z);

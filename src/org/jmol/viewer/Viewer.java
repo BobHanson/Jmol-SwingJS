@@ -3757,6 +3757,19 @@ public class Viewer extends JmolViewer
     return getModelUndeletedAtomsBitSet(-1);
   }
 
+  public BS getFrameAtoms() {
+    return getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
+  }
+
+  @Override
+  public BS getVisibleFramesBitSet() {
+    BS bs = BSUtil.copy(am.bsVisibleModels);
+    if (ms.trajectory != null)
+      ms.trajectory.selectDisplayed(bs);
+    return bs;
+
+  }
+
   public BS getModelUndeletedAtomsBitSet(int modelIndex) {
     return slm.excludeAtoms(
         ms.getModelAtomBitSetIncludingDeleted(modelIndex, true), false);
@@ -4304,19 +4317,6 @@ public class Viewer extends JmolViewer
 
   public void setAnimationRange(int modelIndex1, int modelIndex2) {
     am.setAnimationRange(modelIndex1, modelIndex2);
-  }
-
-  @Override
-  public BS getVisibleFramesBitSet() {
-    BS bs = BSUtil.copy(am.bsVisibleModels);
-    if (ms.trajectory != null)
-      ms.trajectory.selectDisplayed(bs);
-    return bs;
-
-  }
-
-  public BS getFrameAtoms() {
-    return getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
   }
 
   public void defineAtomSets(Map<String, Object> info) {
@@ -5774,6 +5774,8 @@ public class Viewer extends JmolViewer
       return g.navigationPeriodic;
     case T.partialdots:
       return g.partialDots;
+    case T.pdbaddhydrogens:
+      return g.pdbAddHydrogens;
     case T.pdbsequential:
       return g.pdbSequential;
     case T.preservestate:
@@ -8983,7 +8985,7 @@ public class Viewer extends JmolViewer
     if (!g.monitorEnergy)
       return;
     try {
-      minimize(null, 0, 0, getAllAtoms(), null, 0, MIN_SILENT);
+      minimize(null, 0, 0, getFrameAtoms(), null, 0, MIN_SILENT);
     } catch (Exception e) {
     }
     echoMessage(getP("_minimizationForceField") + " Energy = "
@@ -9412,7 +9414,7 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public int stateScriptVersionInt;
+  public int stateScriptVersionInt = Integer.MAX_VALUE;
 
   private JmolRendererInterface jsExporter3D;
 

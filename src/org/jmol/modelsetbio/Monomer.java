@@ -378,7 +378,7 @@ public abstract class Monomer extends Group {
     Quat q1 = (mStep < 1 ? Quat.getQuaternionFrameV(JC.axisX, JC.axisY,
         JC.axisZ, false) : prev == null ? null : prev.getQuaternion(qType));
     if (q1 == null || q2 == null)
-      return getHelixData(tokType, qType, mStep);
+      return super.getHelixData(tokType, qType, mStep);
     P3 a = (mStep < 1 ? P3.new3(0, 0, 0) : prev.getQuaternionFrameCenter(qType));
     P3 b = getQuaternionFrameCenter(qType);
     return (a == null || b == null ? getHelixData(tokType, qType, mStep)
@@ -547,6 +547,13 @@ public abstract class Monomer extends Group {
   public void setGroupID(String group3) {
     groupID = BioResolver.getGroupIdFor(group3);
   }
+  
+  @Override
+  public String toString() {
+    return "[" + getGroup3() + "-" + getSeqcodeString() +  " " + getStructure() + "]";
+  }
+
+
 }
   
 

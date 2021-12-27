@@ -1246,16 +1246,16 @@ public class MathExt {
       return false;
     }
 
-    if (tok == T.cross) {
-      P3 a = P3.newP(mp.ptValue(x1, null));
-      a.cross(a, mp.ptValue(x2, null));
-      return mp.addXPt(a);
-    }
-
-    P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
-    P4 plane2 = ScriptMathProcessor.planeValue(x2);
     float f = Float.NaN;
     try {
+      if (tok == T.cross) {
+        P3 a = P3.newP(mp.ptValue(x1, null));
+        a.cross(a, mp.ptValue(x2, null));
+        return mp.addXPt(a);
+      }
+
+      P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
+      P4 plane2 = ScriptMathProcessor.planeValue(x2);
       if (isDist) {
         int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
         boolean isMinMax = (minMax == T.min || minMax == T.max);

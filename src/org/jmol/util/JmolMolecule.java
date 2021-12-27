@@ -312,6 +312,8 @@ public class JmolMolecule {
           for (int j = b.nextSetBit(0); j >= 0; j = b.nextSetBit(j + 1)) {
             Node atom1 = atoms[j];
             // allow just this atom for now
+            if (atom1 == null)
+              continue;
             bsToTest.set(j);
             getCovalentlyConnectedBitSet(atoms, atom1, bsToTest, allowCyclic,
                 allowBioResidue, biobranches, bsResult);

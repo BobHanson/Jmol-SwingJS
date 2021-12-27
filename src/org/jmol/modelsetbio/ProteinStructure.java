@@ -36,12 +36,14 @@ import org.jmol.util.Logger;
 
 public abstract class ProteinStructure implements Structure {
 
+  private static int ids;
   STR type;
   STR subtype;
   String structureID;
   int strucNo;
   int serialID;
   int strandCount = 1;
+  int id;
 
   public int nRes;
   public AlphaPolymer apolymer;
@@ -54,6 +56,9 @@ public abstract class ProteinStructure implements Structure {
   private static int globalStrucNo = 1000;
   private P3[] segments;
 
+  protected ProteinStructure() {
+    id = ++ids;
+  }
   /**
    * 
    * @param apolymer
@@ -218,6 +223,8 @@ public abstract class ProteinStructure implements Structure {
 
   public Monomer findMonomer(BS bsAtoms, boolean isFirst) {
     Monomer[] ms = apolymer.monomers;
+    if (monomerIndexFirst < 0)
+      return null;
     if (isFirst) {
       for (int i = monomerIndexFirst; i <= monomerIndexLast; i++)
         if (bsAtoms == null || bsAtoms.get(ms[i].leadAtomIndex))
@@ -228,5 +235,9 @@ public abstract class ProteinStructure implements Structure {
           return ms[i];
     }
     return null;
+  }
+  
+  public String toString() {
+    return "["+id + " " + this.type + (this.subtype == null ? "" : " " + subtype) + " (" + monomerIndexFirst + "-" + monomerIndexLast + ")]";
   }
 }

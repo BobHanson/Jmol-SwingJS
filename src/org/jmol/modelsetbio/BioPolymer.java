@@ -293,7 +293,11 @@ public abstract class BioPolymer implements Structure {
     // mon#    2         1        0
     for (int i = 1; i < monomerCount; ++i) {
       leadPointPrev = leadPoint;
-      leadPoints[i] = leadPoint = getLeadPoint(i);
+      leadPoint = getLeadPoint(i);
+      if (leadPoint == null) {
+        return;
+      }
+      leadPoints[i] = leadPoint;
       P3 midpoint = new P3();
       midpoint.ave(leadPoint, leadPointPrev);
       leadMidpoints[i] = midpoint;

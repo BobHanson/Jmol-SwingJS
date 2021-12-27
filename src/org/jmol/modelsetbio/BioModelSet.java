@@ -30,6 +30,8 @@ public class BioModelSet {
 
   // general methods
 
+  private static final int DEFAULT_DSSP_VERSION = 2;
+  
   private Viewer vwr;
   private ModelSet ms;
   private BioExt ext;
@@ -41,6 +43,9 @@ public class BioModelSet {
   }
 
   public BioModelSet set(Viewer vwr, ModelSet ms) {
+    // note that in ModelLoader when merging with set appendnew false, 
+    // ms (new) is not the same as vwr.ms (old).
+    
     this.vwr = vwr;
     this.ms = ms;
     unitIdSets = null;
@@ -131,10 +136,10 @@ public class BioModelSet {
         for (int pt = 0, j = baseGroupIndex; j < groupCount; ++j, pt++) {
           Group g = groups[j];
           Model model = g.getModel();
-          if (!model.isBioModel || !(g instanceof Monomer))
+          if (!model.isBioModel || !(g instanceof Monomer) || g.getLeadAtom() == null)
             continue;
           boolean doCheck = checkConnections
-              && !ms.isJmolDataFrameForModel(ms.at[g.firstAtomIndex].mi);
+              && !ms.isJmolDataFrameForModel(ms.at[g.getLeadAtom().i].mi);
           BioPolymer bp = (((Monomer) g).bioPolymer == null ? BioResolver
               .allocateBioPolymer(groups, j, doCheck, pt) : null);
           if (bp == null || bp.monomerCount == 0)
@@ -170,6 +175,8 @@ public class BioModelSet {
                                       boolean doReport,
                                       boolean dsspIgnoreHydrogen,
                                       boolean setStructure, int version) {
+    if (version <= 0)
+      version = DEFAULT_DSSP_VERSION;
     BS bsAllAtoms = new BS();
     BS bsModelsExcluded = BSUtil.copyInvert(modelsOf(bsAtoms, bsAllAtoms),
         ms.mc);
@@ -428,7 +435,7 @@ public class BioModelSet {
       return "";
     boolean scriptMode = (mode == T.state || mode == T.all);
     Atom[] atoms = ms.at;
-    int at0 = (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0));
+    int at0 = (bsAtoms == null ? vwr.getAllAtoms() : bsAtoms).nextSetBit(0);
     if (at0 < 0)
       return "";
     if (bsAtoms != null && mode == T.ramachandran) {
@@ -438,7 +445,7 @@ public class BioModelSet {
             || Float.isNaN(atoms[i].group.getGroupParameter(T.psi)))
           bsAtoms.clear(i);
     }
-    int at1 = (bsAtoms == null ? ms.ac : bsAtoms.length()) - 1;
+    int at1 = (bsAtoms == null ? vwr.getAllAtoms() : bsAtoms).length() - 1;
     int im0 = atoms[at0].mi;
     int im1 = atoms[at1].mi;
     Lst<ProteinStructure> lstStr = new Lst<ProteinStructure>();
@@ -465,8 +472,8 @@ public class BioModelSet {
       }
       ProteinStructure ps;
       for (int i = i0; i >= 0; i = bsA.nextSetBit(i + 1)) {
-        Atom a = atoms[i];
-        if (!(a.group instanceof AlphaMonomer)
+        Atom a = atoms[i]; 
+        if (a == null || !(a.group instanceof AlphaMonomer)
             || (ps = ((AlphaMonomer) a.group).proteinStructure) == null
             || map.containsKey(ps))
           continue;
@@ -539,8 +546,8 @@ public class BioModelSet {
     return bs;
   }
 
-  public boolean mutate(BS bs, String group, String[] sequence) {
-    return getBioExt().mutate(vwr, bs, group, sequence);
+  public boolean mutate(BS bs, String group, String[] sequence, String alphaType, float[] phipsi) {
+    return getBioExt().mutate(vwr, bs, group, sequence, alphaType, phipsi);
   }
 
   public void recalculateAllPolymers(BS bsModelsExcluded, Group[] groups) {
@@ -572,55 +579,48 @@ public class BioModelSet {
       }
   }
 
+  /**
+   * called from state STRUCTURE command
+   * 
+   * @param bs
+   * @param type
+   */
   public void setAllProteinType(BS bs, STR type) {
     int monomerIndexCurrent = -1;
-    int iLast = -1;
     BS bsModels = ms.getModelBS(bs, false);
     setAllDefaultStructure(bsModels);
-    Atom[] at = ms.at;
-    Model[] am = ms.am;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      Atom a = at[i];
-      Group g = a.group;
-      if (g.isAdded(i) || g.getBioPolymerLength() == 0) 
+    Group[] groups = ms.getGroups();
+    int lastStrucNo = 0;
+    int lastResNo = Integer.MIN_VALUE;
+    BioPolymer lastPolymer = null;
+    Model lastModel = null;
+    boolean isNone = (type == STR.NONE);
+    for (int i = 0; i < groups.length; i++) {
+      Group g = groups[i];
+      if (g.getBioPolymerLength() == 0 || !bs.get(g.firstAtomIndex))
         continue;
+      Model m = g.getModel();
+      if (!isNone) {
+        if (m != lastModel) {
+          lastModel = m;
+          lastStrucNo = 0;
+          lastPolymer = null;
+        }
+        if (lastPolymer != ((Monomer) g).bioPolymer) {
+          lastResNo = Integer.MIN_VALUE;
+          lastPolymer = ((Monomer) g).bioPolymer;
+        }
+        int resno = g.getResno();
+        if (resno != lastResNo + 1) {
+          monomerIndexCurrent = -1;
+        }
+        lastResNo = resno;
+      }
       monomerIndexCurrent = g.setProteinStructureType(type,
-          iLast == i - 1 ? monomerIndexCurrent : -1);
-      int modelIndex = a.mi;
-      ms.proteinStructureTainted = am[modelIndex].structureTainted = true;
-      iLast = i = g.lastAtomIndex;
-    }
-    int[] lastStrucNo = new int[ms.mc];
-    for (int i = 0; i < ms.ac; i++) {
-      if (at[i] == null)
-        continue;
-      int modelIndex = at[i].mi;
-      if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
-        continue;
-      }
-      Group g = at[i].group;
-      if (!g.isAdded(i)) {
-        iLast = g.getStrucNo();
-        if (iLast < 1000 && iLast > lastStrucNo[modelIndex])
-          lastStrucNo[modelIndex] = iLast;
-        i = g.lastAtomIndex;
-      }
-    }
-    for (int i = 0; i < ms.ac; i++) {
-      if (at[i] == null)
-        continue;
-      int modelIndex = at[i].mi;
-      if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
-        continue;
-      }
-      Group g = at[i].group;
-      if (!g.isAdded(i)) {
-        i = g.lastAtomIndex;
-        if (g.getStrucNo() > 1000)
-          g.setStrucNo(++lastStrucNo[modelIndex]);
-      }
+          monomerIndexCurrent);
+      if (g.getStrucNo() > 1000)
+        g.setStrucNo(++lastStrucNo);
+      ms.proteinStructureTainted = m.structureTainted = true;
     }
   }
 

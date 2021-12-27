@@ -239,6 +239,10 @@ public class CmdExt extends ScriptExt {
     case T.connect:
       assign();
       return;
+    case T.mutate:
+      ++e.iToken;
+      mutate();
+      return;
     }
     ModelKitPopup kit = vwr.getModelkit(false);
     while ((tok = tokAt(++i)) != T.nada) {
@@ -766,7 +770,7 @@ public class CmdExt extends ScriptExt {
     BS bs2 = null;
     ScriptEval e = this.e;
     int n = Integer.MIN_VALUE;
-    int version = 2;
+    int version = -1;
     if ((e.iToken = e.slen) >= 2) {
       e.clearDefinedVariableAtomSets();
       switch (getToken(1).tok) {
@@ -894,7 +898,7 @@ public class CmdExt extends ScriptExt {
           // calculate structure DSSP
           // calculate structure DSSP 1.0
           // calculate structure DSSP 2.0
-          version = (slen == e.iToken + 1 ? 2 : (int) floatParameter(++e.iToken));
+          version = (slen == e.iToken + 1 ? -1 : (int) floatParameter(++e.iToken));
           break;
         case T.nada:
           asDSSP = vwr.getBoolean(T.defaultstructuredssp);
@@ -3039,51 +3043,102 @@ public class CmdExt extends ScriptExt {
   }
 
   private void mutate() throws ScriptException {
-    // mutate {resno} "LYS" or "file identifier"
-    // mutate {1-3} ~GGGL
+    // [modelkit] mutate {resno} "LYS" or "file identifier"
+    // [modelkit] mutate {1-3} ~GGGL
+    // [modelkit] mutate CREATE ~GGGL "alpha"
+    // [modelkit] mutate CREATE ~GGGL [phi psi phi psi...]
+    // [modelkit] mutate CREATE "ala-phe-lys" ....
+    
+
+    int i = e.iToken;
     BS bs;
-    int i;
-    switch (tokAt(1)) {
+    String alphaType = null;
+    String sequence = null;
+    float[] phipsi = null;
+    boolean isCreate = false;
+    switch (tokAt(++i)) {
+    case T.create:
+      alphaType = "alpha";
+      isCreate = true;
+      bs = null;
+      switch (tokAt(++i)) {
+      case T.nada:
+        invArg();
+        break;
+      default:
+        sequence = e.paramAsStr(i);
+        i = e.iToken;
+        switch (tokAt(i + 1)) {
+        case T.nada:
+          break;
+        case T.leftsquare:
+        case T.spacebeforesquare:
+        case T.varray:
+          alphaType = null;
+          phipsi = e.floatParameterSet(++i, 2, Integer.MAX_VALUE);
+          if (phipsi.length % 2 == 1)
+            invArg();
+          i = e.iToken;
+          break;
+        default:
+          alphaType = e.paramAsStr(++i);
+          i = e.iToken;
+          break;
+        }
+        break;
+      }
+      break;
     case T.integer:
       st[1] = T.o(T.string, "" + st[1].value); // allows @x and "*"
       //$FALL-THROUGH$
     default:
-      bs = atomExpressionAt(1);
+      bs = atomExpressionAt(i);
       i = ++e.iToken;
       break;
     case T.times:
-      bs = vwr.getAllAtoms();
-      i = 2;
+      bs = vwr.getFrameAtoms();
+      i = ++e.iToken;
       break;
     }
-
-    // check for last model 
-    bs.and(vwr.getModelUndeletedAtomsBitSet(vwr.ms.mc - 1));
-    int iatom = bs.length() - 1;
-    int imodel = 0;
-    if (iatom < 0 || (imodel = vwr.ms.at[iatom].mi) != vwr.ms.mc - 1
-        || vwr.ms.isTrajectory(imodel))
-      return;
-    String group = e.optParameterAsString(i);
-    e.checkLast(i);
-    if (chk || !vwr.ms.am[imodel].isBioModel)
-      return;
-    boolean isFile = (tokAt(i) == T.string && !group.startsWith("~"));
-    String[] list = null;
-    if (isFile) {
-      list = new String[] { group };
-      group = null;
-    } else {
-      group = PT.replaceAllCharacters(group, ",; \t\n", " ").trim()
-          .toUpperCase();
-      boolean isOneLetter = group.startsWith("~"); 
-      if (isOneLetter || group.length() != 3
-          || !vwr.getJBR().isKnownPDBGroup(group, 20))
-        group = vwr.getJBR().toStdAmino3(isOneLetter ? group.substring(1) : group);
-      list = PT.getTokens(group);
+    if (!chk && bs != null) {
+      bs.and(vwr.getFrameAtoms());
+      int iatom = bs.nextSetBit(0);
+      if (iatom < 0)
+        invArg();
+      int imodel = vwr.ms.at[iatom].mi;
+      if (vwr.ms.isTrajectory(imodel) || !vwr.ms.am[imodel].isBioModel)
+        return;
     }
-    if (list.length > 0)
-      vwr.ms.bioModelset.mutate(bs, group, list);
+    if (sequence == null)
+      sequence = e.optParameterAsString(i);
+    e.checkLast(i);
+    if (chk)
+      return;
+    // ~ introduces single-letter sequences
+    boolean isOneLetter = sequence.startsWith("~");
+    boolean isFile = (!isOneLetter && !isCreate
+        && (sequence.indexOf(".") >= 0 || sequence.indexOf("-") < 0));
+    String[] list;
+    if (isFile) {
+      list = new String[] { sequence };
+      sequence = null;
+    } else {
+      sequence = PT.replaceAllCharacters(sequence, ",; \t\n", " ").trim()
+          .toUpperCase();
+      if (!isOneLetter && sequence.indexOf("-") >= 0) {
+        list = PT.split(sequence, "-");
+      } else {
+        if (isOneLetter || sequence.length() != 3
+            || !vwr.getJBR().isKnownPDBGroup(sequence, 20))
+          sequence = vwr.getJBR()
+              .toStdAmino3(isOneLetter ? sequence.substring(1) : sequence);
+        list = PT.getTokens(sequence);
+      }
+    }
+    e.iToken = e.slen;
+    if (list.length > 0 && !vwr.getJBR().getBioModelSet(vwr.ms).mutate(bs, sequence, list, alphaType,
+          phipsi))
+      invArg();
   }
 
   private void navigate() throws ScriptException {
@@ -5658,6 +5713,8 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void assign() throws ScriptException {
+    // [modelkit] assign
+    // modelkit connect
     /**
      * final parameter TRUE is only for internal use so that we can determine if 
      * this command should be handled specially because it is an actual click of the mouse
@@ -5674,6 +5731,8 @@ public class CmdExt extends ScriptExt {
       i++;
     else
       mode = T.atoms;
+    if (vwr.am.cmi < 0)
+      invArg();
     BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
     BS bs;
     if (isBond) {

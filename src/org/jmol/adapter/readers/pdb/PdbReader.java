@@ -1355,6 +1355,8 @@ public class PdbReader extends AtomSetCollectionReader {
   private String getModelName() {
     if (lineLength < 16)
       return null;
+    if (line.startsWith("ATOM"))
+      return "";
     String name = line.substring(15, lineLength).trim();
     return (name.length() == 0 ? null  : name);
   }

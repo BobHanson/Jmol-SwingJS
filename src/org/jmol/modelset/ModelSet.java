@@ -1066,7 +1066,7 @@ public class ModelSet extends BondCollection {
    * 
    * @return full array of groups in modelSet
    */
-  Group[] getGroups() {
+  public Group[] getGroups() {
     int n = 0;
     for (int i = 0; i < mc; i++)
       n += am[i].getGroupCount();
@@ -1247,8 +1247,9 @@ public class ModelSet extends BondCollection {
     int i0 = (isAll ? ac - 1 : bs.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bs.nextSetBit(i + 1))) {
       nAtoms++;
-      if (!isJmolDataFrameForAtom(at[i]))
-        boxInfo.addBoundBoxPoint(at[i]);
+      Atom a = at[i]; 
+      if (a != null && !isJmolDataFrameForAtom(a))
+        boxInfo.addBoundBoxPoint(a);
     }
     return nAtoms;
   }
@@ -1438,7 +1439,7 @@ public class ModelSet extends BondCollection {
    * This must allow for appended models.
    * @param atomList
    * @param allTrajectories
-   * @return
+   * @return bit set of models
    */
   public BS getModelBS(BS atomList, boolean allTrajectories) {
     BS bs = new BS();
@@ -1597,7 +1598,7 @@ public class ModelSet extends BondCollection {
   }
 
   private boolean isJmolDataFrameForAtom(Atom atom) {
-    return (am[atom.mi].isJmolDataFrame);
+    return am[atom.mi].isJmolDataFrame;
   }
 
   public void setJmolDataFrame(String type, int modelIndex, int modelDataIndex) {
