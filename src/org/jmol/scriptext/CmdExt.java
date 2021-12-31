@@ -5586,42 +5586,44 @@ public class CmdExt extends ScriptExt {
    */
   private void modelkit() throws ScriptException {
     // modelkit [ON(nada)/OFF/DISPLAY/HIDE]
-    // modelkit ROTATE
-    // modelkit ROTATESELECTED
     //    
     //  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
     //
     //  -- action options include alternatives to the given commands (assign is undocumented)
     //  
-    //  modelkit ROTATE ...  (for example, ROTATE BOND @1 @2 degrees)
-    //  modelkit ROTATESELECTED ...
     //  modelkit ASSIGN ATOM [symbol|pl|mi] point
     //  modelkit ASSIGN ATOM @1 [symbol|pl|mi]
     //  modelkit ASSIGN ATOM @1 [symbol|pl|mi] point
-    //  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m]
-    //  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m]
-    //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m]
-    //  modelkit ASSIGN CONNECT @1 @2
+    //  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m] (default P)
+    //  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m] (default P)
+    //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m] (default P)
     //
+    //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
+    //
+    //  modelkit ROTATE ...  (same as ROTATE for example, ROTATE BOND @1 @2 degrees)
+    //  modelkit ROTATESELECTED (same as ROTATESLECTED)
+    //
+    // view mode     
+    //  MODELKIT SYMOP [n]
+    //  MODELKIT SYMOP "x,-y,z"
+    //  MODELKIT SYMOP [[4x4 matrix]]
+    //  MODELKIT OFFSET [{i j k}/NONE]
+
     //  -- configuration options include the following; CAPS is default:
     //       
-    //  MODELKIT  SET addHydrogens [TRUE|false]
-    //  MODELKIT  SET autobond [true|FALSE]
-    //  MODELKIT  SET clickToSetElement [TRUE|false]
-    //  MODELKIT  SET showSymopInfo [TRUE|false]
-    //  MODELKIT  SET element [name or symbol]
-    //  MODELKIT  SET MODE [molecular|view|edit]
-    //  MODELKIT  SET UNITCELL [EXTEND|PACKED]
+    //  MODELKIT SET addHydrogens [TRUE|false]
+    //  MODELKIT SET autobond [true|FALSE]
+    //  MODELKIT SET clickToSetElement [TRUE|false]
+    //  MODELKIT SET showSymopInfo [TRUE|false]
+    //  MODELKIT SET bondtype [0,1,2,3,4,5,p,m]
+    //  MODELKIT SET element [name or symbol]
+    //  MODELKIT SET MODE [molecular|view|edit]
+    //  MODELKIT SET UNITCELL [EXTEND|PACKED]
     //
     // edit mode -- not implemented
     //
-    //  MODELKIT  SET SYMMETRY [APPLYFULL|APPLYLOCAL|RETAINLOCAL] // not implemented
+    //  MODELKIT SET SYMMETRY [APPLYFULL|APPLYLOCAL|RETAINLOCAL] // not implemented
     //  MODELKIT POINT point or atoms // not implemented
-    // view mode     
-    //  MODELKIT  SYMOP [n]
-    //  MODELKIT  SYMOP "x,-y,z"
-    //  MODELKIT  SYMOP [[4x4 matrix]]
-    //  MODELKIT  OFFSET [{i j k}/NONE]
     //    
     //  -- configuration options can be given sequentially within one MODELKIT command or in individual commands
     //  -- examples:
@@ -5851,7 +5853,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignAtom(index, pt, type, e.fullCommand, isClick);
       break;
     case T.bonds:
-      vwr.getModelkit(false).cmdAssignBond(index, (type + "p").charAt(0), e.fullCommand);
+      vwr.getModelkit(false).cmdAssignBond(index, (type + "-").charAt(0), e.fullCommand);
       break;
     case T.connect:
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);

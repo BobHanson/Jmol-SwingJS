@@ -135,7 +135,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   private String pickAtomAssignType = "C";
   private String lastElementType = "C";
-  private String pickBondAssignType = "p"; // increment up
+  private char pickBondAssignType = 'p'; // increment up
   private boolean isPickAtomAssignCharge; // pl or mi
 
   private BS bsHighlight = new BS();
@@ -446,10 +446,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     return state & STATE_BITS_SYM_EDIT;
   }
 
-  private int getViewState() {
-    return state & STATE_BITS_SYM_VIEW;
-  }
-
   private void setSymViewState(int bits) {
     state = (state & ~STATE_BITS_SYM_VIEW) | bits;
   }
@@ -579,9 +575,11 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
       if (name == "bondtype") {
         if (value != null) {
-          pickBondAssignType = ((String) value).substring(0, 1).toLowerCase();
+          String s = ((String) value).substring(0, 1).toLowerCase();
+          if (" 012345pm".indexOf(s) > 0)
+            pickBondAssignType = s.charAt(0);
         }
-        return pickBondAssignType;
+        return "" + pickBondAssignType;
       }
 
       if (name == "bondindex") {
@@ -1585,6 +1583,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
     int modelIndex = -1;
     try {
+      if (type == '-')
+        type = pickBondAssignType;
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       int ac = vwr.ms.ac;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
