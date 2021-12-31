@@ -203,140 +203,6 @@ public class CmdExt extends ScriptExt {
   }
 
 
-  /**
-   * Configure the ModelKitPopup for Crystallographic symmetry viewing and
-   * structure editing
-   * 
-   * new 14.29.45
-   * 
-   * see modelkit.ModelKitPopup.java
-   *
-   * 
-   * @throws ScriptException
-   */
-  private void modelkit() throws ScriptException {
-    int i = 0;
-    int tok = tokAt(1);
-    switch (tok) {
-    case T.off:
-    case T.nada:
-    case T.on:
-      if (!chk)
-        vwr.setBooleanProperty("modelkitmode", tok != T.off);
-      if (tokAt(i + 1) == T.nada)
-        return;
-      i =  ++e.iToken;
-      break;
-    case T.rotate:
-      e.cmdRotate(false, false);
-      return;
-    case T.rotateSelected:
-      e.cmdRotate(false, true);
-      return;
-    case T.assign:
-      ++e.iToken;
-      //$FALL-THROUGH$
-    case T.connect:
-      assign();
-      return;
-    case T.mutate:
-      ++e.iToken;
-      mutate();
-      return;
-    }
-    ModelKitPopup kit = vwr.getModelkit(false);
-    while ((tok = tokAt(++i)) != T.nada) {
-      String key = paramAsStr(i).toLowerCase();
-      Object value = null;
-      switch (tok) {
-      case T.on:
-      case T.off:
-        if (!chk)
-          vwr.setBooleanProperty("modelkitmode", tok == T.on);
-        continue;
-      case T.display:
-      case T.hide:
-        key = "hidden";
-        value = Boolean.valueOf(tok != T.display);
-        break;
-      case T.set:
-        key = paramAsStr(++i);
-        value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
-        break;
-      case T.mode:
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.MODE_OPTIONS))
-          invArg();
-        break;
-      case T.unitcell:
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.UNITCELL_OPTIONS))
-          invArg();
-        break;
-      case T.symop:
-        switch (tokAt(++i)) {
-        case T.string:
-        case T.none:
-          value = paramAsStr(i);
-          break;
-        case T.matrix4f:
-          value = getToken(i).value;
-          break;
-        case T.integer:
-          value = Integer.valueOf(getToken(i).intValue);
-          break;
-        default:
-          if (e.isCenterParameter(i)) {
-            key = "center";
-            value = e.centerParameter(i, null);
-            i = e.iToken;
-          } else {
-            invArg();
-          }
-          break;
-        }
-        break;
-      case T.symmetry:
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
-          invArg();
-        break;
-      case T.offset:
-        value = paramAsStr(i + 1);
-        if (value.equals("none")) {
-          ++i;
-          break;
-        }
-        //$FALL-THROUGH$
-      case T.center:
-      case T.point:
-        value = e.atomCenterOrCoordinateParameter(++i, null);
-        i = e.iToken;
-        break;
-      default:
-        if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
-          value = Boolean.valueOf((tok = tokAt(++i)) == T.nada || tok == T.on);
-          break;
-        }
-        if (PT.isOneOf(key, ModelKitPopup.MODE_OPTIONS)) {
-          value = key;
-          key = "mode";
-          break;
-        }
-        if (PT.isOneOf(key, ModelKitPopup.UNITCELL_OPTIONS)) {
-          value = key;
-          key = "unitcell";
-          break;
-        }
-        invArg();
-      }
-      if (!chk && value != null 
-          && (value = kit.setProperty(key, value)) != null && key != "hidden" && !kit.isHidden())
-          vwr.showString("modelkit " + key + " = " + value.toString(), false);
-    }
-  }
-
-  
   private void macro() throws ScriptException {
     if (chk)
       return;
@@ -5708,6 +5574,186 @@ public class CmdExt extends ScriptExt {
 
   
   /**
+   * Configure the ModelKitPopup for Crystallographic symmetry viewing and
+   * structure editing
+   * 
+   * new 14.29.45
+   * 
+   * see modelkit.ModelKitPopup.java
+   *
+   * 
+   * @throws ScriptException
+   */
+  private void modelkit() throws ScriptException {
+    // modelkit [ON(nada)/OFF/DISPLAY/HIDE]
+    // modelkit ROTATE
+    // modelkit ROTATESELECTED
+    //    
+    //  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
+    //
+    //  -- action options include alternatives to the given commands (assign is undocumented)
+    //  
+    //  modelkit ROTATE ...  (for example, ROTATE BOND @1 @2 degrees)
+    //  modelkit ROTATESELECTED ...
+    //  modelkit ASSIGN ATOM [symbol|pl|mi] point
+    //  modelkit ASSIGN ATOM @1 [symbol|pl|mi]
+    //  modelkit ASSIGN ATOM @1 [symbol|pl|mi] point
+    //  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m]
+    //  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m]
+    //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m]
+    //  modelkit ASSIGN CONNECT @1 @2
+    //
+    //  -- configuration options include the following; CAPS is default:
+    //       
+    //  MODELKIT  SET addHydrogens [TRUE|false]
+    //  MODELKIT  SET autobond [true|FALSE]
+    //  MODELKIT  SET clickToSetElement [TRUE|false]
+    //  MODELKIT  SET showSymopInfo [TRUE|false]
+    //  MODELKIT  SET element [name or symbol]
+    //  MODELKIT  SET MODE [molecular|view|edit]
+    //  MODELKIT  SET UNITCELL [EXTEND|PACKED]
+    //
+    // edit mode -- not implemented
+    //
+    //  MODELKIT  SET SYMMETRY [APPLYFULL|APPLYLOCAL|RETAINLOCAL] // not implemented
+    //  MODELKIT POINT point or atoms // not implemented
+    // view mode     
+    //  MODELKIT  SYMOP [n]
+    //  MODELKIT  SYMOP "x,-y,z"
+    //  MODELKIT  SYMOP [[4x4 matrix]]
+    //  MODELKIT  OFFSET [{i j k}/NONE]
+    //    
+    //  -- configuration options can be given sequentially within one MODELKIT command or in individual commands
+    //  -- examples:
+    //  
+    //  modelkit set mode view symop 5 center @3 
+    //  modelkit set mode view symop 5 center @3 offset {0 0 0}   // unitized [0,1)    
+    
+    int i = 0;
+    int tok = tokAt(1);
+    switch (tok) {
+    case T.off:
+    case T.nada:
+    case T.on:
+      if (!chk)
+        vwr.setBooleanProperty("modelkitmode", tok != T.off);
+      if (tokAt(i + 1) == T.nada)
+        return;
+      i =  ++e.iToken;
+      break;
+    case T.rotate:
+      e.cmdRotate(false, false);
+      return;
+    case T.rotateSelected:
+      e.cmdRotate(false, true);
+      return;
+    case T.assign:
+      ++e.iToken;
+      //$FALL-THROUGH$
+    case T.connect:
+      assign();
+      return;
+    case T.mutate:
+      ++e.iToken;
+      mutate();
+      return;
+    }
+    ModelKitPopup kit = vwr.getModelkit(false);
+    while ((tok = tokAt(++i)) != T.nada) {
+      String key = paramAsStr(i).toLowerCase();
+      Object value = null;
+      switch (tok) {
+      case T.on:
+      case T.off:
+        if (!chk)
+          vwr.setBooleanProperty("modelkitmode", tok == T.on);
+        continue;
+      case T.display:
+      case T.hide:
+        key = "hidden";
+        value = Boolean.valueOf(tok != T.display);
+        break;
+      case T.set:
+        key = paramAsStr(++i);
+        value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
+        break;
+      case T.mode:
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.MODE_OPTIONS))
+          invArg();
+        break;
+      case T.unitcell:
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.UNITCELL_OPTIONS))
+          invArg();
+        break;
+      case T.symop:
+        switch (tokAt(++i)) {
+        case T.string:
+        case T.none:
+          value = paramAsStr(i);
+          break;
+        case T.matrix4f:
+          value = getToken(i).value;
+          break;
+        case T.integer:
+          value = Integer.valueOf(getToken(i).intValue);
+          break;
+        default:
+          if (e.isCenterParameter(i)) {
+            key = "center";
+            value = e.centerParameter(i, null);
+            i = e.iToken;
+          } else {
+            invArg();
+          }
+          break;
+        }
+        break;
+      case T.symmetry:
+        // undocumented -- deprecated -- use SET SYMMETRY
+        value = paramAsStr(++i).toLowerCase();
+        if (!PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
+          invArg();
+        break;
+      case T.offset:
+        value = paramAsStr(i + 1);
+        if (value.equals("none")) {
+          ++i;
+          break;
+        }
+        //$FALL-THROUGH$
+      case T.point:
+        // not implemented -- "spherePoint"
+      case T.center:
+        value = e.atomCenterOrCoordinateParameter(++i, null);
+        i = e.iToken;
+        break;
+      default:
+        if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
+          value = Boolean.valueOf((tok = tokAt(++i)) == T.nada || tok == T.on);
+          break;
+        }
+        if (PT.isOneOf(key, ModelKitPopup.MODE_OPTIONS)) {
+          value = key;
+          key = "mode";
+          break;
+        }
+        if (PT.isOneOf(key, ModelKitPopup.UNITCELL_OPTIONS)) {
+          value = key;
+          key = "unitcell";
+          break;
+        }
+        invArg();
+      }
+      if (!chk && value != null 
+          && (value = kit.setProperty(key, value)) != null && key != "hidden" && !kit.isHidden())
+          vwr.showString("modelkit " + key + " = " + value.toString(), false);
+    }
+  }
+
+  
+  /**
    * Though a command, not documented. Use the MODELKIT command instead
    * 
    * @throws ScriptException
@@ -5731,18 +5777,22 @@ public class CmdExt extends ScriptExt {
       i++;
     else
       mode = T.atoms;
+    // single model only
     if (vwr.am.cmi < 0)
       invArg();
     BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
     BS bs;
     if (isBond) {
-      if (getToken(i).value instanceof BondSet) {
+      if(tokAt(i) == T.integer) {
+        index = e.intParameter(i);
+      } else if (getToken(i).value instanceof BondSet) {
         index = ((BS) getToken(i).value).nextSetBit(0);        
       } else {
         bs = expFor(i, bsAtoms);
         index = bs.nextSetBit(0);
         switch (bs.cardinality()) {
         case 1:
+          // assign BOND @3 @4 ...
           bs = expFor(i = ++e.iToken, bsAtoms);
           index2 = bs.nextSetBit(0);
           if (index2 < 0)
@@ -5750,10 +5800,13 @@ public class CmdExt extends ScriptExt {
           bs.set(index);          
           //$FALL-THROUGH$
         case 2:
+          // assign BOND ({3 4}) ...
           bs = vwr.ms.getBondsForSelectedAtoms(bs, false);
           if (bs.cardinality() > 0) {
+            // bonded already
             index = bs.nextSetBit(0);
           } else {
+            // was not bonded already
             isConnect = true;
             mode = T.connect;
           }
@@ -5766,9 +5819,10 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
     } else if (mode == T.atoms && tokAt(i) == T.string) {
       // new Jmol 14.29.28
-      // assign "C" {0 0 0}
-      // assign atom "C" {0 0 0}
+      // assign ATOM "C" {0 0 0}
     } else {
+      // assign ATOM @3 "C" {0 0 0}
+      // assign CONNECT @3 @4
       bs = expFor(i, bsAtoms);
       index = bs.nextSetBit(0);
       if (index < 0) {
@@ -5777,13 +5831,17 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
     }
     String type = null;
+    P3 pt = null;
     if (!isConnect) {
       type = e.optParameterAsString(i);
+      if (isAtom)
+        pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
     } else if (index2 < 0) {      
+      // assign CONNECT @3 @4
       bs = expFor(i, bsAtoms);
       index2 = bs.nextSetBit(0);
+      type = e.optParameterAsString(++e.iToken);
     }
-    P3 pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
     if (chk)
       return;
     vwr.pushState();
@@ -5796,7 +5854,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignBond(index, (type + "p").charAt(0), e.fullCommand);
       break;
     case T.connect:
-      vwr.getModelkit(false).cmdAssignConnect(index, index2, e.fullCommand);
+      vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
     }
   }
 

@@ -699,6 +699,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       }
 
       if (name == "scriptassignbond") {
+        // from ActionManger only
         appRunScript("modelkit assign bond [{" + value + "}] \""
             + pickBondAssignType + "\"");
         return null;
@@ -1599,7 +1600,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     }
   }
 
-  public void cmdAssignConnect(int index, int index2, String cmd) {
+  public void cmdAssignConnect(int index, int index2, char type, String cmd) {
     float[][] connections = AU.newFloat2(1);
     connections[0] = new float[] { index, index2 };
     int modelIndex = vwr.ms.at[index].mi;
@@ -1611,6 +1612,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     assignAtom(index2, ".", true, true, false);
     vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
     vwr.sm.modifySend(index, modelIndex, -2, "OK");
+    if (type != '1') {
+      BS bs = BSUtil.newAndSetBit(index);
+      bs.set(index2);
+      bs = vwr.getBondsForSelectedAtoms(bs);
+      int bondIndex = bs.nextSetBit(0);
+      cmdAssignBond(bondIndex, type, cmd);
+    }
     vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }
 

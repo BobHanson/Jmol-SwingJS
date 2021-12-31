@@ -3,22 +3,8 @@ package org.jmol.script;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.BArray;
-import javajs.util.BS;
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.M34;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.T3;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
-
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -33,6 +19,19 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
+
+import javajs.util.BArray;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.M34;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.T3;
 
 /**
  * The ScriptExpr class holds the main functions for 
@@ -959,9 +958,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.centroid:
       case T.cell:
-        P3 pt = (P3) value;
-        rpn.addXBs(getAtomBits(
-            instruction.tok, (P3) value));
+        rpn.addXBs(getAtomBits(instruction.tok, value));
         break;
       case T.thismodel:
         rpn.addXBs(vwr.am.cmi < 0 ? vwr.getFrameAtoms() : vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));
