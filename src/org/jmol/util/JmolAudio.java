@@ -23,23 +23,19 @@
  */
 package org.jmol.util;
 
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 
-import javajs.util.AU;
-
-import org.jmol.api.JmolAudioPlayer;
-import org.jmol.api.js.JSmolAppletObject;
-import org.jmol.api.js.JmolToJSmolInterface;
-import org.jmol.viewer.Viewer;
-
-import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
-import sun.audio.AudioData;
-import sun.audio.AudioDataStream;
+
+import org.jmol.api.JmolAudioPlayer;
+import org.jmol.api.js.JSmolAppletObject;
+import org.jmol.api.js.JmolToJSmolInterface;
+import org.jmol.viewer.Viewer;
 
 public class JmolAudio implements LineListener, JmolAudioPlayer {
 
@@ -101,15 +97,13 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
    */
   private void getClip() throws Exception {
     Object data = vwr.fm.getFileAsBytes(fileName, null);
-    if (!AU.isAB(data)) {
+    if (data == null || data instanceof String) {
       Logger.info("File " + fileName + " " + data);
       return;
     }
     myClip = (Clip) AudioSystem.getLine(new Line.Info(Clip.class));
     myClip.addLineListener(this);
-    AudioInputStream ais = AudioSystem.getAudioInputStream(new AudioDataStream(
-        new AudioData((byte[]) data)));
-    myClip.open(ais);
+    myClip.open(AudioSystem.getAudioInputStream(new ByteArrayInputStream((byte[]) data)));
   }
 
   @Override

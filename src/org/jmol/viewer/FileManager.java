@@ -702,6 +702,11 @@ public class FileManager implements BytePoster {
     return ZipTools.getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
+  /**
+   * @param name
+   * @param out
+   * @return a byte[] or error string
+   */
   public Object getFileAsBytes(String name, OC out) {
     // used by OutputManager.createZipSet"
     // will be full path name
