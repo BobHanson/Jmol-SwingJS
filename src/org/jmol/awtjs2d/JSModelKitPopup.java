@@ -76,11 +76,6 @@ public class JSModelKitPopup extends ModelKitPopup {
 
   
   @Override
-  public void menuClickCallback(SC source, String script) {
-    doMenuClickCallbackMK(source, script);
-  }
-
-  @Override
   public void menuCheckBoxCallback(SC source) {
     doMenuCheckBoxCallback(source);
   }

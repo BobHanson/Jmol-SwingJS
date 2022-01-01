@@ -768,7 +768,7 @@ public class PropertyManager implements JmolPropertyManager {
       myParam = (iHaveParameter ? paramInfo: getDefaultPropertyParam(id));
     switch (id) {
     case PROP_MODELKIT_INFO:
-      return vwr.getModelkitProperty(myParam);
+      return vwr.getModelkitProperty(myParam.toString());
     case PROP_APPLET_INFO:
       return getAppletInfo();
     case PROP_ANIMATION_INFO:
@@ -1714,7 +1714,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("date", JC.date);
     info.put("javaVendor", Viewer.strJavaVendor);
     info.put("javaVersion", Viewer.strJavaVersion
-        + (!Viewer.isJS ? "" : Viewer.isWebGL ? "(WebGL)" : "(HTML5)"));
+        + (!Viewer.isJS ? "" : vwr.isWebGL ? "(WebGL)" : "(HTML5)"));
     info.put("operatingSystem", Viewer.strOSName);
     return info;
   }

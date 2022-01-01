@@ -28,7 +28,7 @@ public abstract class JmolGenericPopup extends GenericPopup {
 
   protected SC frankPopup;
   protected int nFrankList = 0;
-  protected Viewer vwr;
+  public Viewer vwr;
   protected Properties menuText = new Properties();
 
   @Override
@@ -67,8 +67,8 @@ public abstract class JmolGenericPopup extends GenericPopup {
 
   @Override
   public void jpiDispose() {
-    helper.menuClearListeners(popupMenu);
-    popupMenu = thisPopup = null;
+    vwr = null;
+    super.jpiDispose();
   }
 
   @Override

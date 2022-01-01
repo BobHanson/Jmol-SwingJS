@@ -80,6 +80,7 @@ import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.minimize.Minimizer;
+import org.jmol.modelkit.ModelKit;
 import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -200,8 +201,8 @@ public class Viewer extends JmolViewer
   public boolean autoExit = false;
   public boolean haveDisplay = false;
 
-  static public boolean isJS, isWebGL; // note that we now allow (isJS and !isApplet) 
-  public boolean isApplet, isJNLP;
+  static public boolean isJS; // note that we now allow (isJS and !isApplet) 
+  public boolean isApplet, isJNLP, isWebGL;
 
   public boolean isSingleThreaded;
   public boolean queueOnHold = false;
@@ -1004,19 +1005,21 @@ public class Viewer extends JmolViewer
       if (getModelkit(true) == null) {
         return;
       }
-      modelkit.jpiShow(x, y);
+      modelkit.showMenu(x,y);
       break;
     }
   }
 
-  public ModelKitPopup getModelkit(boolean andShow) {
-    if (modelkit == null) {
-      modelkit = (ModelKitPopup) apiPlatform.getMenuPopup(null, 'm');
-    } else if (andShow) {
-      modelkit.jpiUpdateComputedMenus();
-    }
-    return modelkit;
-  }
+  public ModelKit getModelkit(boolean andShow) {
+	    if (modelkit == null) {
+	      (modelkit = (ModelKit) Interface
+	          .getInterface("org.jmol.modelkit.ModelKit", this, "script"))
+	              .setMenu((ModelKitPopup) apiPlatform.getMenuPopup(null, 'm'));
+	    } else if (andShow) {
+	      modelkit.updateMenu();
+	    }
+	    return modelkit;
+	  }
 
   Object getPopupMenu() {
     if (g.disablePopupMenu)
@@ -1754,7 +1757,7 @@ public class Viewer extends JmolViewer
     if (jmolpopup != null)
       jmolpopup.jpiDispose();
     if (modelkit != null)
-      modelkit.jpiDispose();
+      modelkit.dispose();
     try {
       if (appConsole != null) {
         appConsole.dispose();
@@ -7277,7 +7280,7 @@ public class Viewer extends JmolViewer
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
     if (value) {
-      ModelKitPopup kit = getModelkit(false);
+      ModelKit kit = getModelkit(false);
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
@@ -7743,7 +7746,7 @@ public class Viewer extends JmolViewer
   public JmolAppConsoleInterface appConsole;
   private JmolScriptEditorInterface scriptEditor;
   GenericMenuInterface jmolpopup;
-  private ModelKitPopup modelkit;
+  private ModelKit modelkit;
   private Map<String, Object> headlessImageParams;
 
   public String getChimeInfo(int tok) {
@@ -10218,13 +10221,13 @@ public class Viewer extends JmolViewer
   }
 
   /**
+   * Get a ModelKit property.
    * 
-   * @param nameOrData
-   *        could be name or [name,value]
+   * @param name
    * @return value
    */
-  public Object getModelkitProperty(Object nameOrData) {
-    return (modelkit == null ? null : modelkit.getProperty(nameOrData));
+  public Object getModelkitProperty(String name) {
+    return (modelkit == null ? null : modelkit.getProperty(name));
   }
 
   public Object setModelkitProperty(String key, Object value) {

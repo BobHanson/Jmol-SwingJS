@@ -45,7 +45,6 @@ import org.jmol.c.VDW;
 import org.jmol.modelsetbio.BioModelSet;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
-import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
@@ -1488,11 +1487,9 @@ abstract public class AtomCollection {
     for (int i = 0; i < bonds.length; i++) {
       Bond[] b2 = bonds[i].getOtherAtom(atom).bonds;
       for (int j = 0; j < b2.length; j++)
-        switch (b2[j].order) {
-        case Edge.BOND_AROMATIC:
-        case Edge.BOND_AROMATIC_DOUBLE:
-        case Edge.BOND_COVALENT_DOUBLE:
-        case Edge.BOND_COVALENT_TRIPLE:
+        switch (b2[j].getCovalentOrder()) {
+        case 2:
+        case 3:
           return true;
         }
     }

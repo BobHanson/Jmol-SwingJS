@@ -116,7 +116,7 @@ abstract public class DialogManager {
 		}
 		try {
 			String s = JSVFileManager.getFileAsString(filePath);
-			if (vwr.isJS)
+			if (JSViewer.isJS)
 				s = PT.rep(s, "<", "&lt;");
 			showMessage(null, s, fixTitle(filePath));
 		} catch (Exception ex) {

@@ -224,4 +224,10 @@ public class AwtPopupHelper implements
     }
   }
 
+  @Override
+  public void dispose(SC popupMenu) {
+    menuClearListeners(popupMenu);
+    popup = null;
+  }
+
 }

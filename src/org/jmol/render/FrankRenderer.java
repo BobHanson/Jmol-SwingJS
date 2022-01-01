@@ -22,7 +22,7 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 package org.jmol.render;
-import org.jmol.modelkit.ModelKitPopup;
+import org.jmol.modelkit.ModelKit;
 import org.jmol.script.T;
 import org.jmol.shape.Frank;
 import org.jmol.util.C;
@@ -41,7 +41,7 @@ public class FrankRenderer extends ShapeRenderer {
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
     colix = (modelKitMode ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
-        || (Viewer.isJS || Viewer.isSwingJS) && !Viewer.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
+        || (Viewer.isJS || Viewer.isSwingJS) && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
         : C.GRAY);
     if (isExport
         || !vwr.getShowFrank()
@@ -56,7 +56,7 @@ public class FrankRenderer extends ShapeRenderer {
     int dy = frank.frankDescent;
     g3d.drawStringNoSlab(frank.frankString, frank.font3d, vwr.gdata.width - dx,
         vwr.gdata.height - dy, 0, (short) 0);
-    ModelKitPopup kit = (modelKitMode ? vwr.getModelkit(false) : null);
+    ModelKit kit = (modelKitMode ? vwr.getModelkit(false) : null);
     if (modelKitMode && !kit.isHidden()) {
       g3d.setC(C.GRAY);
       int w = 10;

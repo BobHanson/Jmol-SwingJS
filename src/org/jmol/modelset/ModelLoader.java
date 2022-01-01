@@ -1489,6 +1489,7 @@ public final class ModelLoader {
    * @param v 
    * @param v0 
    * @param v1 
+   * @param dir 
    * @return   atom bitset
    */
   private BS getBranch2dZ(int atomIndex, int atomIndexNot, BS bs0, 
@@ -1549,6 +1550,7 @@ public final class ModelLoader {
    * @param v
    * @param v0
    * @param v1
+   * @param dir 
    */
   private static void setAtom2dZ(Atom atomRef, Atom atom2, V3 v, V3 v0, V3 v1, int dir) {
     v.sub2(atom2, atomRef);

@@ -25,5 +25,7 @@ public interface PopupHelper {
   SC getSwingComponent(Object component);
 
   void menuClearListeners(SC c);
+
+  void dispose(SC popupMenu);
  
 }

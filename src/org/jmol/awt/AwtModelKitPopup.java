@@ -73,7 +73,7 @@ public class AwtModelKitPopup extends ModelKitPopup {
 
   protected void updateAwtMenus(String item) {
     if (item.equals("xtalOp!PersistMenu")) {
-      lastModelSet = null;
+      clearLastModelSet();
       jpiUpdateComputedMenus();
     } else {
       updateOperatorMenu();

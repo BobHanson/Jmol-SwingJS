@@ -523,4 +523,11 @@ public abstract class GenericPopup implements GenericMenuInterface {
     return (int) (num / (1024 * 1024));
   }
 
+  @Override
+  public void jpiDispose() {
+    popupMenu = thisPopup = null;
+    helper.dispose(popupMenu);
+    helper = null;
+  }
+
 }

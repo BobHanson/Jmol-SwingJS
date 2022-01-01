@@ -161,5 +161,10 @@ import org.jmol.popup.PopupHelper;
     popup.menuFocusCallback(jmi.getName(), jmi.getActionCommand(), false);
   }
 
+  @Override
+  public void dispose(SC popupMenu) {
+    menuClearListeners(popupMenu);
+    popup = null;
+  }
   
 }

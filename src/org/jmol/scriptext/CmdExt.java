@@ -36,7 +36,7 @@ import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.minimize.Minimizer;
-import org.jmol.modelkit.ModelKitPopup;
+import org.jmol.modelkit.ModelKit;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -5660,7 +5660,7 @@ public class CmdExt extends ScriptExt {
       mutate();
       return;
     }
-    ModelKitPopup kit = vwr.getModelkit(false);
+    ModelKit kit = vwr.getModelkit(false);
     while ((tok = tokAt(++i)) != T.nada) {
       String key = paramAsStr(i).toLowerCase();
       Object value = null;
@@ -5681,12 +5681,12 @@ public class CmdExt extends ScriptExt {
         break;
       case T.mode:
         value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.MODE_OPTIONS))
+        if (!PT.isOneOf((String) value, ModelKit.MODE_OPTIONS))
           invArg();
         break;
       case T.unitcell:
         value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.UNITCELL_OPTIONS))
+        if (!PT.isOneOf((String) value, ModelKit.UNITCELL_OPTIONS))
           invArg();
         break;
       case T.symop:
@@ -5715,7 +5715,7 @@ public class CmdExt extends ScriptExt {
       case T.symmetry:
         // undocumented -- deprecated -- use SET SYMMETRY
         value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKitPopup.SYMMETRY_OPTIONS))
+        if (!PT.isOneOf((String) value, ModelKit.SYMMETRY_OPTIONS))
           invArg();
         break;
       case T.offset:
@@ -5732,16 +5732,16 @@ public class CmdExt extends ScriptExt {
         i = e.iToken;
         break;
       default:
-        if (PT.isOneOf(key, ModelKitPopup.BOOLEAN_OPTIONS)) {
+        if (PT.isOneOf(key, ModelKit.BOOLEAN_OPTIONS)) {
           value = Boolean.valueOf((tok = tokAt(++i)) == T.nada || tok == T.on);
           break;
         }
-        if (PT.isOneOf(key, ModelKitPopup.MODE_OPTIONS)) {
+        if (PT.isOneOf(key, ModelKit.MODE_OPTIONS)) {
           value = key;
           key = "mode";
           break;
         }
-        if (PT.isOneOf(key, ModelKitPopup.UNITCELL_OPTIONS)) {
+        if (PT.isOneOf(key, ModelKit.UNITCELL_OPTIONS)) {
           value = key;
           key = "unitcell";
           break;

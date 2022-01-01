@@ -226,7 +226,7 @@ public class Exporter implements ExportInterface {
 			GenericFileInterface file = helper.getFile(pdfFileName, jsvp, true);
 			if (file == null)
 				return null;
-			if (!viewer.isJS)
+			if (!JSViewer.isJS)
 				viewer.setProperty("directoryLastExportedFile",
 						helper.setDirLastExported(file.getParentAsFile().getFullPath()));
 			pdfFileName = file.getFullPath();

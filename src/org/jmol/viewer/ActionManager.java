@@ -30,9 +30,6 @@ import org.jmol.api.GenericPlatform;
 import org.jmol.api.Interface;
 import org.jmol.awtjs.Event;
 import org.jmol.i18n.GT;
-
-import javajs.util.AU;
-import javajs.util.BS;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.MeasurementPending;
 import org.jmol.script.SV;
@@ -44,13 +41,14 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
-
-import javajs.util.P3;
-import javajs.util.PT;
-
 import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.P3;
+import javajs.util.PT;
 
 public class ActionManager implements EventManager {
 
@@ -65,7 +63,7 @@ public class ActionManager implements EventManager {
   private Binding dragBinding;
   private Binding rasmolBinding;
   private Binding predragBinding;
-  private int LEFT_CLICKED;
+  //private int LEFT_CLICKED;
   private int LEFT_DRAGGED;
   
   /**
@@ -78,7 +76,7 @@ public class ActionManager implements EventManager {
     if (!Viewer.isJS)
       createActions();
     setBinding(jmolBinding = new JmolBinding());
-    LEFT_CLICKED = Binding.getMouseAction(1, Binding.LEFT, Event.CLICKED);
+    //LEFT_CLICKED = Binding.getMouseAction(1, Binding.LEFT, Event.CLICKED);
     LEFT_DRAGGED = Binding.getMouseAction(1, Binding.LEFT, Event.DRAGGED);
     dragGesture = new Gesture(20, vwr);
   }
@@ -1049,15 +1047,7 @@ public class ActionManager implements EventManager {
       return;
     }
     if (bnd(pressAction, ACTION_popupMenu)) {
-      char type = 'j';
-      if (vwr.getBoolean(T.modelkitmode)) {
-        Map<String, Object> t = vwr.checkObjectClicked(x, y, LEFT_CLICKED);
-        type = (
-//            t != null && "bond".equals(t.get("type")) ? 'b' : vwr
-//            .findNearestAtomIndex(x, y) >= 0 ? 'a' : 
-              'm');
-      }
-      vwr.popupMenu(x, y, type);
+      vwr.popupMenu(x, y, vwr.getBoolean(T.modelkitmode) ? 'm' : 'j');
       return;
     }
     if (dragSelectedMode) {
@@ -1327,7 +1317,7 @@ public class ActionManager implements EventManager {
         exitMeasurementMode(null);
         return;
       }
-      assignNew(x, y);
+      assignNew();
       return;
     }
     dragAtomIndex = -1;
@@ -1941,7 +1931,7 @@ public class ActionManager implements EventManager {
     vwr.setStatusAtomPicked(atomIndex, null, null, false);
   }
 
-  private void assignNew(int x, int y) {
+  private void assignNew() {
     if (!vwr.getModelkit(false).handleAssignNew(pressed, dragged, mp, dragAtomIndex)) {
       exitMeasurementMode("bond dropped");      
     }

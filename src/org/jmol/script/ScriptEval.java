@@ -5830,7 +5830,7 @@ public class ScriptEval extends ScriptExpr {
       // msg);
       // return;
     }
-    if (vwr.autoExit || !vwr.haveDisplay && !Viewer.isWebGL)
+    if (vwr.autoExit || !vwr.haveDisplay && !vwr.isWebGL)
       return false;
     if (scriptLevel == 0 && pc == aatoken.length - 1) {
       vwr.scriptStatus("nothing to pause: " + msg);
