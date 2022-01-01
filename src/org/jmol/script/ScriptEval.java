@@ -480,7 +480,7 @@ public class ScriptEval extends ScriptExpr {
     if (!tQuiet && reportCompletion)
       vwr.setScriptStatus("Jmol script terminated", errorMessage,
           1 + (int) (timeEndExecution - timeBeginExecution), msg);
-    return EXEC_OK;
+    return (haveError ? EXEC_ERR : EXEC_OK);
   }
 
 
@@ -582,7 +582,8 @@ public class ScriptEval extends ScriptExpr {
     case EXEC_ERR:
     case EXEC_OK:
       postProcessTry(null);
-      executeCommands(true, false);
+      if (executing)
+        executeCommands(true, false);
       break;
     }
     pcResume = -1;

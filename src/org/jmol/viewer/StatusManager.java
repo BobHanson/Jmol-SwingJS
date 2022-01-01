@@ -459,7 +459,7 @@ public class StatusManager {
               sJmol,
               new int[] { frameNo, fileNo, modelNo, firstNo, lastNo,
                   currentFrame }, entryName, Float.valueOf(currentMorphModel) });
-    if (!animating)
+    if (!animating && !vwr.isJSNoAWT)
       vwr.checkMenuUpdate();
   }
 

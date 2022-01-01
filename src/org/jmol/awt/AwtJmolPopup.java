@@ -98,8 +98,14 @@ public class AwtJmolPopup extends JmolPopup {
       updateModelSetComputedMenu();
       break;
     case 'P':
-      //    case "PDBheteroComputedMenu":
-      updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
+      if (item.equals("PDBheteroComputedMenu"))
+        updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
+      else if (item.equals("PDBnucleicResiduesComputedMenu"))
+        updatePDBResidueComputedMenus();
+      else if (item.equals("PDBaaResiduesComputedMenu"))
+        updatePDBResidueComputedMenus();
+      else if (item.equals("PDBaaResiduesComputedMenu"))
+        updatePDBResidueComputedMenus();
       break;
     case 's':
       switch (item.charAt(1)) {
@@ -113,7 +119,7 @@ public class AwtJmolPopup extends JmolPopup {
         break;
       case 'e':
         //    case "selectMenuText":
-        updatePDBComputedMenus();
+        updatePDBResidueComputedMenus();
         break;
       case 'u':
         //    case "surfMoComputedMenuText":

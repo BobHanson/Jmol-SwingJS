@@ -168,7 +168,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
       updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
       updateFileTypeDependentMenus();
-      updatePDBComputedMenus();
+      updatePDBResidueComputedMenus();
       updateMode = UPDATE_CONFIG;
       updateConfigurationComputedMenu();
       updateSYMMETRYComputedMenus();
@@ -585,25 +585,28 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, true);
   }
 
-  protected void updatePDBComputedMenus() {
-
+  protected void updatePDBResidueComputedMenus() {
+    boolean haveMenu = false;
     SC menu3 = htMenus.get("PDBaaResiduesComputedMenu");
     if (menu3 != null) {
       menuRemoveAll(menu3, 0);
       menuEnable(menu3, false);
+      haveMenu = true;
     }
     SC menu1 = htMenus.get("PDBnucleicResiduesComputedMenu");
     if (menu1 != null) {
       menuRemoveAll(menu1, 0);
       menuEnable(menu1, false);
+      haveMenu = true;
     }
 
     SC menu2 = htMenus.get("PDBcarboResiduesComputedMenu");
     if (menu2 != null) {
       menuRemoveAll(menu2, 0);
       menuEnable(menu2, false);
+      haveMenu = true;
     }
-    if (modelSetInfo == null)
+    if (modelSetInfo == null || !haveMenu)
       return;
     int n = (modelIndex < 0 ? 0 : modelIndex + 1);
     String[] lists = ((String[]) modelSetInfo.get("group3Lists"));
@@ -614,7 +617,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     if (group3List == null)
       return;
     //next is correct as "<=" because it includes "UNK"
-    int nItems = 0;
+    int nItems = 0; 
     String groupList = Group.standardGroupList;
     if (menu3 != null) {
       for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)

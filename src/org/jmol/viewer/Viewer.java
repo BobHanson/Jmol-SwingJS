@@ -1024,11 +1024,14 @@ public class Viewer extends JmolViewer
     if (jmolpopup == null) {
       jmolpopup = (allowScripting ? apiPlatform.getMenuPopup(menuStructure, 'j')
           : null);
-      if (jmolpopup == null && !async) {
-        g.disablePopupMenu = true;
+      if (jmolpopup == null) {
+        if (!async)
+          g.disablePopupMenu = true;
         return null;
-      }
+      } 
     }
+    if (isJSNoAWT)
+      checkMenuUpdate();
     return jmolpopup.jpiGetMenuAsObject();
   }
 
