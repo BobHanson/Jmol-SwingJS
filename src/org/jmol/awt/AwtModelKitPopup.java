@@ -77,6 +77,7 @@ public class AwtModelKitPopup extends ModelKitPopup {
       jpiUpdateComputedMenus();
     } else {
       updateOperatorMenu();
+      updateCheckBoxesForModelKit(item);
     }
   }
 

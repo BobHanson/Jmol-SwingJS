@@ -47,6 +47,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -162,6 +163,8 @@ public class ModelKit {
   String bondRotationName = ".modelkitMenu.bondMenu.rotateBondP!RD";
   
   String lastCenter = "0 0 0", lastOffset = "0 0 0";
+
+  private Atom a0, a3;
 
 
   public ModelKit() {
@@ -300,6 +303,12 @@ public class ModelKit {
 
       // boolean get/set
       
+      if (name == "reset") {
+//        setProperty("atomType", "C");
+//        setProperty("bondType", "p");
+        return null;
+      }
+      
       if (name == "addhydrogen" || name == "addhydrogens") {
         if (value != null)
           addXtalHydrogens = isTrue(value);
@@ -356,6 +365,7 @@ public class ModelKit {
           String s = ((String) value).substring(0, 1).toLowerCase();
           if (" 012345pm".indexOf(s) > 0)
             pickBondAssignType = s.charAt(0);
+          isRotateBond = false;
         }
         return "" + pickBondAssignType;
       }
@@ -525,6 +535,26 @@ public class ModelKit {
     return null;
   }
   
+  public MeasurementPending setBondMeasure(int bi,
+                                           MeasurementPending mp) {
+    if (branchAtomIndex < 0)
+      return null;
+    Bond b = vwr.ms.bo[bi];
+    Atom a1 = b.atom1;
+    Atom a2 = b.atom2;
+    a0 = a3 = null;
+    if (a1.getCovalentBondCount() == 1 || a2.getCovalentBondCount() == 1)
+      return null;
+    mp.addPoint((a0 = getOtherAtomIndex(a1, a2)).i, null, true);
+    mp.addPoint(a1.i, null, true);
+    mp.addPoint(a2.i, null, true);
+    mp.addPoint((a3 = getOtherAtomIndex(a2, a1)).i, null, true);
+    mp.mad = 50;
+    mp.inFront = true;
+    //System.out.println(mp);
+    return mp;
+  }
+
   /**
    * Actually rotate the bond.
    * 
@@ -543,12 +573,12 @@ public class ModelKit {
     BS bsBranch = bsRotateBranch;
     Atom atomFix, atomMove;
     ModelSet ms = vwr.ms;
+    Bond b = ms.bo[bondIndex];
     if (forceFull) {
       bsBranch = null;
       branchAtomIndex = -1;
     }
     if (bsBranch == null) {
-      Bond b = ms.bo[bondIndex];
       atomMove = (branchAtomIndex == b.atom1.i ? b.atom1 : b.atom2);
       atomFix = (atomMove == b.atom1 ? b.atom2 : b.atom1);
       vwr.undoMoveActionClear(atomFix.i, AtomCollection.TAINT_COORD, true);
@@ -564,6 +594,7 @@ public class ModelKit {
         }
       if (bsBranch == null) {
         bsBranch = ms.getMoleculeBitSetForAtom(atomFix.i);
+        forceFull = true;
       }
       bsRotateBranch = bsBranch;
       bondAtomIndex1 = atomFix.i;
@@ -575,10 +606,17 @@ public class ModelKit {
     V3 v1 = V3.new3(atomMove.sX - atomFix.sX, atomMove.sY - atomFix.sY, 0);
     V3 v2 = V3.new3(deltaX, deltaY, 0);
     v1.cross(v1, v2);
-    float degrees = (v1.z > 0 ? 1 : -1) * v2.length();
-
+    float f = (v1.z > 0 ? 1 : -1);
+    float degrees = f;// * v2.length();
+    if (!forceFull && a0 != null) {
+      // integerize
+      float ang0 = Measure.computeTorsion(a0, b.atom1, b.atom2, a3, true);
+      float ang1 = Math.round(ang0 + degrees);
+      degrees = ang1 - ang0;
+    }
     BS bs = BSUtil.copy(bsBranch);
     bs.andNot(vwr.slm.getMotionFixedAtoms());
+    
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false, bs,
         null, null, null, null);
   }
@@ -917,6 +955,8 @@ public class ModelKit {
   }
 
   void setHoverLabel(String activeMenu, String text) {
+    if (text == null)
+      return;
     if (activeMenu == ModelKitPopup.BOND_MENU) {
       bondHoverLabel = text;
     } else if (activeMenu == ModelKitPopup.ATOM_MENU) {
@@ -1368,13 +1408,14 @@ public class ModelKit {
       msg = "start editing for " + vwr.getAtomInfo(atomIndex);
       break;
     case STATE_MOLECULAR:
+      Atom[] atoms = vwr.ms.at;
       if (isRotateBond) {
         if (atomIndex == bondAtomIndex1 || atomIndex == bondAtomIndex2) {
-          msg = "rotate branch";
+          msg = "rotate branch " + atoms[atomIndex].getAtomName();
           branchAtomIndex = atomIndex;
           bsRotateBranch = null;
         } else {
-          msg = "rotate bond";
+          msg = "rotate bond"  + getBondLabel(atoms);
           bsRotateBranch = null;
           branchAtomIndex = -1;
           //          resetBondFields("gethover");
@@ -1385,7 +1426,7 @@ public class ModelKit {
           msg = atomHoverLabel = "Click to change to " + atomHoverLabel
               + " or drag to add " + atomHoverLabel;
         } else {
-          msg = atomHoverLabel;
+          msg = atoms[atomIndex].getAtomName() + ": " + atomHoverLabel;
           vwr.highlight(BSUtil.newAndSetBit(atomIndex));
         }
       } else {
@@ -1404,9 +1445,10 @@ public class ModelKit {
             } else {
               msg = atomHoverLabel;
             }
+            msg = atoms[atomIndex].getAtomName() + ": " + msg;
             break;
           case 2:
-            msg = bondHoverLabel;
+            msg = bondHoverLabel + getBondLabel(atoms);
             break;
           }
         }
@@ -1416,6 +1458,25 @@ public class ModelKit {
     return msg;
   }
   
+  private String getBondLabel(Atom[] atoms) {
+    return " for " + atoms[Math.min(bondAtomIndex1, bondAtomIndex2)].getAtomName() 
+     + "-" + atoms[Math.max(bondAtomIndex1, bondAtomIndex2)].getAtomName();
+   }
+
+  private Atom getOtherAtomIndex(Atom a1, Atom a2) {
+    Bond[] b = a1.bonds;
+    Atom a;
+    Atom ret = null;
+    int zmin = Integer.MAX_VALUE;
+    for (int i = -1; ++i < b.length;) {
+      if (b[i] != null && b[i].isCovalent() && (a = b[i].getOtherAtom(a1)) != a2 && a.sZ < zmin) {
+        zmin = a.sZ;
+        ret = a;
+      }
+    }
+    return ret;
+  }
+
   private boolean isVwrRotateBond() {
     return (vwr.acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }

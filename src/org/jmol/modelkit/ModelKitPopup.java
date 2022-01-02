@@ -23,6 +23,8 @@
  */
 package org.jmol.modelkit;
 
+import java.util.Map;
+
 import org.jmol.api.SC;
 import org.jmol.i18n.GT;
 import org.jmol.popup.JmolGenericPopup;
@@ -91,8 +93,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   @Override
   public void jpiShow(int x, int y) {
-    if (!hidden)
+    if (!hidden) {
+      updateCheckBoxesForModelKit(null);
       super.jpiShow(x, y);
+    }
   }
 
   @Override
@@ -259,7 +263,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   @Override
   protected void appUpdateSpecialCheckBoxValue(SC source, String actionCommand,
                                                boolean selected) {
-    if (!selected)
+    if (source == null || !selected)
       return;
     String name = source.getName();
     if (!updatingForShow && setActiveMenu(name) != null) {
@@ -281,8 +285,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     
     // called by subclasses
     
-    modelkit.exitBondRotation(
-        prevBondCheckBox == null ? null : prevBondCheckBox.getText());
+    modelkit.exitBondRotation(prevBondCheckBox == null ? null : prevBondCheckBox.getText());
+    if (bondRotationCheckBox != null)
+      bondRotationCheckBox.setSelected(false);
+    if (prevBondCheckBox != null)
+      prevBondCheckBox.setSelected(true);
+
   }
 
   /////////////////// menu execution //////////////
@@ -363,6 +371,20 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       modelkit.resetAtomPickType();
     }
     return super.appRunSpecialCheckBox(item, basename, script, TF);
+  }
+
+  public void updateCheckBoxesForModelKit(String menuName) {
+    String thisBondType = "assignBond_"+modelkit.pickBondAssignType;
+    String thisAtomType = "assignAtom_" + modelkit.pickAtomAssignType + "P"; 
+    for (Map.Entry<String, SC> entry : htCheckbox.entrySet()) {
+      String key = entry.getKey();
+      SC item = entry.getValue();
+      if (key.startsWith(thisBondType) || key.startsWith(thisAtomType)) {
+        item.setSelected(false);
+        item.setSelected(true);
+      }
+
+    }
   }
 
 }

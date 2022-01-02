@@ -1064,7 +1064,8 @@ public class ActionManager implements EventManager {
   }
 
   private void checkDragWheelAction(int dragWheelAction, int x, int y,
-                                    int deltaX, int deltaY, long time, int mode) {
+                                    int deltaX, int deltaY, long time,
+                                    int mode) {
     int buttonmods = Binding.getButtonMods(dragWheelAction);
     if (buttonmods != 0) {
       int newAction = vwr.notifyMouseClicked(x, y,
@@ -1083,19 +1084,28 @@ public class ActionManager implements EventManager {
 
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
-
-    if (vwr.g.modelKitMode && vwr.getModelkit(false).getRotateBondIndex() >= 0) {
+    int bi = (vwr.g.modelKitMode ? vwr.getModelkit(false).getRotateBondIndex()
+        : -1);
+    if (bi >= 0) {
       if (dragAtomIndex >= 0 || mkBondPressed
           || bnd(dragWheelAction, ACTION_rotateBranch)) {
+        if (dragAtomIndex >= 0) {
+          if (measurementQueued == null || measurementQueued.numSet == 0) {
+            vwr.setPendingMeasurement(vwr.getModelkit(false).setBondMeasure(bi,
+                measurementQueued = mp = getMP()));
+          } else {
+            measurementQueued.refresh(null);
+          }
+        }
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
             false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
         return;
       }
     }
-    
+
     BS bs = null;
     if (dragAtomIndex >= 0 && apm != PICKING_LABEL) {
-      
+
       switch (apm) {
       case PICKING_DRAG_SELECTED:
         dragSelected(dragWheelAction, deltaX, deltaY, true);
@@ -1104,7 +1114,8 @@ public class ActionManager implements EventManager {
       case PICKING_DRAG_MODEL:
       case PICKING_DRAG_MOLECULE:
       case PICKING_DRAG_MINIMIZE_MOLECULE:
-        bs = vwr.ms.getAtoms((apm == PICKING_DRAG_MODEL ? T.model : T.molecule), BSUtil.newAndSetBit(dragAtomIndex));
+        bs = vwr.ms.getAtoms((apm == PICKING_DRAG_MODEL ? T.model : T.molecule),
+            BSUtil.newAndSetBit(dragAtomIndex));
         if (apm == PICKING_DRAG_LIGAND)
           bs.and(vwr.getAtomBitSet("ligand"));
         //$FALL-THROUGH$
@@ -1126,11 +1137,9 @@ public class ActionManager implements EventManager {
             vwr.select(bs, false, 0, true);
             break;
           }
-          vwr.moveAtomWithHydrogens(
-              dragAtomIndex,
-              deltaX,
-              deltaY,
-              (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE),
+          vwr.moveAtomWithHydrogens(dragAtomIndex, deltaX, deltaY,
+              (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY
+                  : Integer.MIN_VALUE),
               bs);
         }
         // NAH! if (atomPickingMode == PICKING_DRAG_MINIMIZE_MOLECULE && (dragGesture.getPointCount() % 5 == 0))
@@ -1182,7 +1191,8 @@ public class ActionManager implements EventManager {
         vwr.undoMoveActionClear(iatom, AtomCollection.TAINT_COORD, true);
       else
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, buttonmods);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false,
+            buttonmods);
       dragSelected(dragWheelAction, deltaX, deltaY, false);
       return;
     }
@@ -1194,7 +1204,7 @@ public class ActionManager implements EventManager {
       }
     }
     if (checkMotionRotateZoom(dragWheelAction, x, deltaX, deltaY, true)) {
-      if (vwr.tm.slabEnabled && bnd(dragWheelAction,ACTION_slabAndDepth))
+      if (vwr.tm.slabEnabled && bnd(dragWheelAction, ACTION_slabAndDepth))
         vwr.slabDepthByPixels(deltaY);
       else
         vwr.zoomBy(deltaY);
@@ -1219,7 +1229,7 @@ public class ActionManager implements EventManager {
             Integer.MAX_VALUE);
       }
       return;
-    } 
+    }
     if (vwr.tm.slabEnabled) {
       if (bnd(dragWheelAction, ACTION_depth)) {
         vwr.depthByPixels(deltaY);
@@ -1237,7 +1247,7 @@ public class ActionManager implements EventManager {
     if (bnd(dragWheelAction, ACTION_wheelZoom)) {
       zoomByFactor(deltaY, Integer.MAX_VALUE, Integer.MAX_VALUE);
       return;
-    } 
+    }
     if (bnd(dragWheelAction, ACTION_rotateZ)) {
       setMotion(GenericPlatform.CURSOR_MOVE, true);
       vwr.rotateZBy(-deltaX, Integer.MAX_VALUE, Integer.MAX_VALUE);

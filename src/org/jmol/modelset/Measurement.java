@@ -85,6 +85,7 @@ public class Measurement {
   private String newUnits;
   public float fixedValue = Float.NaN;
   private boolean isPending;
+  public boolean inFront;
   
   public boolean isTainted() {
     return (tainted && !(tainted = false));

@@ -217,15 +217,15 @@ public class MeasuresRenderer extends LabelsRenderer {
       return;
     if (mad > 0)
       radius <<= 1;
-    int z = (zA + zB) / 2;
-    if (z < 1)
-      z = 1;
+    int zLabel = (m.inFront ? Math.min(zA, zB) - 10 : (zA + zB) / 2);      
+    if (zLabel < 1)
+      zLabel = 1;
     int x = (a.sX + b.sX) / 2;
     int y = (a.sY + b.sY) / 2;
     if (m.text == null) {
       g3d.setC(labelColix);
       // Correction to center measurement vertically false,true not false,false BH 2019.08.18
-      drawString(x, y, z, radius, doJustify
+      drawString(x, y, zLabel, radius, doJustify
           && (x - a.sX) * (y - a.sY) > 0, false, true,
           (doJustify ? 0 : Integer.MAX_VALUE), s);
     } else {
@@ -297,7 +297,9 @@ public class MeasuresRenderer extends LabelsRenderer {
       matrixT.rotate(pointT);
       pointT.add(b);
       tm.transformPt(pointT);
-      int zLabel = p3i.z - zOffset;
+      int zLabel = (m.inFront ? Math.min(Math.min(zA, zB), zC) : p3i.z - zOffset);
+      if (zLabel < 1)
+        zLabel = 1;
       if (m.text == null) {
         g3d.setC(labelColix);
         drawString(p3i.x, p3i.y, zLabel, radius, p3i.x < b.sX, false,
@@ -322,7 +324,9 @@ public class MeasuresRenderer extends LabelsRenderer {
         d.sY, zD, mad);
     if (s == null)
       return;
-    int zLabel = (zA + zB + zC + zD) / 4;
+    int zLabel = (m.inFront ? Math.min(Math.min(Math.min(zA, zB), zC), zD) : (zA + zB + zC + zD) / 4);
+    if (zLabel < 1)
+      zLabel = 1;
     radius /= 3;
     if (m.text == null) {
       g3d.setC(labelColix);

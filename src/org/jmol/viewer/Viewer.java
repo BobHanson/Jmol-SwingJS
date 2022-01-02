@@ -7284,8 +7284,8 @@ public class Viewer extends JmolViewer
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
-      kit.setProperty("atomType", "C");
-      kit.setProperty("bondType", "p");
+      setStringProperty("picking", "assignAtom_C");
+      setStringProperty("picking", "assignBond_p");
       if (!isApplet)
         popupMenu(10, 0, 'm'); // was 0?
       if (isChange)
