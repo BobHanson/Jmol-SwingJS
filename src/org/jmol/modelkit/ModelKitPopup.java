@@ -373,7 +373,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     return super.appRunSpecialCheckBox(item, basename, script, TF);
   }
 
-  public void updateCheckBoxesForModelKit(String menuName) {
+  public void updateCheckBoxesForModelKit(@SuppressWarnings("unused") String menuName) {
     String thisBondType = "assignBond_"+modelkit.pickBondAssignType;
     String thisAtomType = "assignAtom_" + modelkit.pickAtomAssignType + "P"; 
     for (Map.Entry<String, SC> entry : htCheckbox.entrySet()) {

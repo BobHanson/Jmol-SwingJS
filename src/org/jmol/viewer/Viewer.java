@@ -7280,7 +7280,6 @@ public class Viewer extends JmolViewer
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
     if (value) {
-      ModelKit kit = getModelkit(false);
       setNavigationMode(false);
       selectAll();
       // setShapeProperty(JmolConstants.SHAPE_LABELS, "color", "RED");
