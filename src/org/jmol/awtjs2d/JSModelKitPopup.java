@@ -23,11 +23,10 @@
  */
 package org.jmol.awtjs2d;
 
-import org.jmol.awtjs.swing.JPopupMenu;
-import org.jmol.awtjs.swing.JRadioButtonMenuItem;
-import org.jmol.modelkit.ModelKitPopup;
 import org.jmol.api.SC;
 import org.jmol.awtjs.swing.Component;
+import org.jmol.awtjs.swing.JPopupMenu;
+import org.jmol.modelkit.ModelKitPopup;
 
 public class JSModelKitPopup extends ModelKitPopup {
 

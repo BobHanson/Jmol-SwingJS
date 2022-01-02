@@ -69,7 +69,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   TickInfo tickInfo;
   public TickInfo defaultTickInfo;
-  public static Font font3d;
+  public Font font3d;
   private Map<String, Integer> htMin;
   
   @Override

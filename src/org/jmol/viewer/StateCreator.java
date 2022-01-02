@@ -498,6 +498,7 @@ public class StateCreator extends JmolStateCreator {
             i > 0, null, null);
       } else {
         commands.appendSB(m.loadScript);
+        @SuppressWarnings("unchecked")
         Lst<String> auxFiles = (Lst<String>) m.auxiliaryInfo.get("auxFiles");
         if (auxFiles != null) {
           for (int j = 0; j < auxFiles.size(); j++)
@@ -954,7 +955,7 @@ public class StateCreator extends JmolStateCreator {
 
     Lst<Measurement> mList = shape.measurements;
     int measurementCount = shape.measurementCount;
-    Font font3d = Measures.font3d;
+    Font font3d = shape.font3d;
     TickInfo ti = shape.defaultTickInfo;
     SB commands = new SB();
     app(commands, "measures delete");

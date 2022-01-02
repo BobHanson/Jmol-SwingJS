@@ -242,7 +242,7 @@ public class Measurement {
   /**
    * 
    * @param units from MEASURE or measure()
-   * @return
+   * @return format
    */
   private String formatDistance(String units) {
     String label = getLabelString();
