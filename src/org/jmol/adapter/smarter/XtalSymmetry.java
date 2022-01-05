@@ -1142,11 +1142,16 @@ public class XtalSymmetry {
       return;
     acr.lstNCS = null; // disable NCS
     setLatticeCells();
-    int[] lc = (latticeCells != null && latticeCells[0] != 0 ? new int[3] : null);
+    int[] lc = (latticeCells != null && latticeCells[0] != 0 ? new int[3]
+        : null);
     if (lc != null)
       for (int i = 0; i < 3; i++)
         lc[i] = latticeCells[i];
     latticeCells = null;
+    
+    String bmChains = acr.getFilter("BMCHAINS");
+    int fixBMChains = (bmChains == null ? -1
+        : bmChains.length() < 2 ? 0 : bmChains.charAt(1) - 48);
     int particleMode = (filter.indexOf("BYCHAIN") >= 0 ? PARTICLE_CHAIN
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
     doNormalize = false;
@@ -1156,7 +1161,7 @@ public class XtalSymmetry {
     symmetry = null;
     // it's not clear to me why you would do this:
     //if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
-      //setUnitCell(unitCellParams, null, unitCellOffset);
+    //setUnitCell(unitCellParams, null, unitCellOffset);
     getSymmetry().setSpaceGroup(doNormalize);
     //symmetry.setUnitCell(null);
     addSpaceGroupOperation("x,y,z", false);
@@ -1226,8 +1231,14 @@ public class XtalSymmetry {
           PT.parseInt(filter.substring(filter.indexOf("#<") + 2)) - 1);
       filter = PT.rep(filter, "#<", "_<");
     }
-    for (int iAtom = firstAtom; iAtom < atomMax; iAtom++)
+    int minChain = atoms[firstAtom].chainID;
+    int maxChain = 0;
+    for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
       atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
+      int chainID = atoms[iAtom].chainID;
+      if (chainID > maxChain)
+        maxChain = chainID;
+    }
     BS bsAtoms = asc.bsAtoms;
     int[] atomMap = (addBonds ? new int[asc.ac] : null);
     for (int i = (biomtchains == null ? 1 : 0); i < len; i++) {
@@ -1251,11 +1262,9 @@ public class XtalSymmetry {
         chains = null;
       }
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
-        if (bsAtoms != null
-            && !bsAtoms.get(iAtom)
-            || chains != null
-            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID)
-                + ";") < 0)
+        if (bsAtoms != null && !bsAtoms.get(iAtom)
+            || chains != null && chains.indexOf(
+                ":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID) + ";") < 0)
           continue;
         try {
           int atomSite = atoms[iAtom].atomSite;
@@ -1280,7 +1289,7 @@ public class XtalSymmetry {
             Bond bond = asc.bonds[bondNum];
             int iAtom1 = atomMap[atoms[bond.atomIndex1].atomSite];
             int iAtom2 = atomMap[atoms[bond.atomIndex2].atomSite];
-//            if (iAtom1 >= atomMax || iAtom2 >= atomMax)
+            //            if (iAtom1 >= atomMax || iAtom2 >= atomMax)
             asc.addNewBondWithOrder(iAtom1, iAtom2, bond.order);
           }
         }
@@ -1292,9 +1301,24 @@ public class XtalSymmetry {
       asc.bsAtoms.clearBits(firstAtom, atomMax);
     }
 
+    if (particleMode == 0 && fixBMChains >= 0) {
+      //For PDB and mmCIF, convert chains for symmetry-generated atoms to unique
+      // ids. Two options allow for
+      // If delta > 0, chain names are assumed to be of the form {A B C...}, and
+      // the return values will be in the range [A-Z].
+      int delta = (fixBMChains > 0 ? maxChain - minChain - 66 : 0);
+      atoms = asc.atoms;
+      for (int i = atomMax, n = asc.ac; i < n; i++) {
+        int ic = atoms[i].chainID;
+        int isym = atoms[i].bsSymmetry.nextSetBit(0) + 1;
+        String ch = (delta == 0 ? acr.vwr.getChainIDStr(ic) + isym
+            : "" + (char) (((ic + delta + isym) % 26) + 65));
+        atoms[i].chainID = acr.vwr.getChainID(ch, true);
+      }
+    }
+
     noSymmetryCount = atomMax - firstAtom;
-    asc.setCurrentModelInfo("presymmetryAtomIndex",
-        Integer.valueOf(firstAtom));
+    asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
     asc.setCurrentModelInfo("presymmetryAtomCount",
         Integer.valueOf(noSymmetryCount));
     asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(len));
@@ -1302,6 +1326,7 @@ public class XtalSymmetry {
     finalizeSymmetry(symmetry);
     setSymmetryOps();
     reset();
+
     //TODO: need to clone bonds
   }
 
