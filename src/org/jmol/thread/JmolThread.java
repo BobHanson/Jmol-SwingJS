@@ -185,4 +185,7 @@ abstract public class JmolThread extends Thread {
     interrupt();
   }
 
+  public String toString() {
+    return super.toString() + "[" + name + "]";
+  }
 }

@@ -527,8 +527,6 @@ public class AnimationManager {
         nextMorphFrame -= 2 * frameStep * morphStep;
       }
     }
-    //Logger.debug("next="+modelIndexNext+" dir="+currentDirection+" isDone="+isDone);
-    //System.out.println("setAnimRel dir=" + direction + " step=" + frameStep + " this=" + thisFrame + " next=" + frameNext + " morphcount=" + morphCount + " done=" + isDone + " mode=" + animationReplayMode);
     if (morphCount < 1) {
       if (frameNext < 0 || frameNext >= getFrameCount())
         return false;

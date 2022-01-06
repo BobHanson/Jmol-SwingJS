@@ -71,7 +71,6 @@ public class AnimationThread extends JmolThread {
   @Override
   protected void run1(int mode) throws InterruptedException {
     while (true) {
-      //System.out.println("AnimationThread " + mode  + " "  + this + " " + sleepTime);
       switch (mode) {
       case INIT:
         if (Logger.debugging)
@@ -83,7 +82,6 @@ public class AnimationThread extends JmolThread {
         mode = MAIN;
         break;
       case MAIN:
-        //System.out.println("anim thred " + animationManager.getCurrentFrame() +" "+ framePointer);
         if (!am.animationOn || checkInterrupted(am.animationThread)) {
           mode = FINISH;
           break;
@@ -133,7 +131,10 @@ public class AnimationThread extends JmolThread {
       case FINISH:
         if (Logger.debugging)
           Logger.debug("animation thread " + intThread + " exiting");
-        am.stopThread(false);
+        if (am.animationThread == this)
+          am.stopThread(false);
+        else
+          interrupt();
         return;
       }
     }
