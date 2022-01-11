@@ -24,7 +24,6 @@
 
 package org.jmol.applet;
 
-import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -35,6 +34,7 @@ import java.util.Map;
 import javajs.util.PT;
 import swingjs.api.JSUtilI;
 
+import javax.swing.JApplet;
 import javax.swing.UIManager;
 
 import netscape.javascript.JSObject; // Java applet only
@@ -154,7 +154,7 @@ public class Jmol extends GenericApplet implements WrappedApplet {
 
   private FileDropper dropper;
 
-  private Applet applet;
+  private JApplet applet;
 
   static {
     /**
@@ -192,8 +192,9 @@ public class Jmol extends GenericApplet implements WrappedApplet {
    * project. " + "See http://www.jmol.org for more information");
    */
   @Override
-  public void setApplet(Applet a, boolean isSigned) {
-    appletObject = applet = a;
+  public void setApplet(Object a, boolean isSigned) {
+    appletObject= a;
+    applet = (JApplet) a;
     this.isSigned = isSigned;
     init(appletObject);
     if (isSigned) {
@@ -384,12 +385,13 @@ public class Jmol extends GenericApplet implements WrappedApplet {
   synchronized private static void cleanRegistry() {
     if (isJS)
       return;
-    Applet app = null;
+    java.applet.Applet aa;
+    JApplet app = null;
     boolean closed = true;
     for (Map.Entry<String, Object> entry : htRegistry.entrySet()) {
       String theApplet = entry.getKey();
       try {
-        app = (Applet) (entry.getValue());
+        app = (JApplet) (entry.getValue());
         JSObject theWindow = JSObject.getWindow(app);
         //System.out.print("checking " + app + " window : ");
         closed = ((Boolean) theWindow.getMember("closed")).booleanValue();

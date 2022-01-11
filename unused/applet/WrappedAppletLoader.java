@@ -36,8 +36,8 @@ class WrappedAppletLoader extends Thread {
 
   //private final static int minimumLoadSeconds = 0;
 
-  WrappedAppletLoader(JApplet applet, boolean isSigned) {
-    this.applet = applet;
+  WrappedAppletLoader(Object applet, boolean isSigned) {
+    this.applet = (JApplet) applet;
     this.isSigned = isSigned;
   }
 

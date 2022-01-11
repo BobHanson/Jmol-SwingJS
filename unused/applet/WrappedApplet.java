@@ -28,7 +28,7 @@ import java.applet.Applet;
 import java.awt.Graphics;
 
 public interface WrappedApplet {
-  public void setApplet(Applet applet, boolean isSigned);
+  public void setApplet(Object applet, boolean isSigned);
   public void update(Graphics g);
   public void paint(Graphics g);
 }
