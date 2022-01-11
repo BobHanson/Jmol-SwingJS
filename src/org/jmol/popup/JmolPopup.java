@@ -119,9 +119,9 @@ abstract public class JmolPopup extends JmolGenericPopup {
   
   @Override
   public void jpiDispose() {
-    super.jpiDispose();
     helper.menuClearListeners(frankPopup);
     frankPopup = null;
+    super.jpiDispose();
   }
 
   @Override

@@ -80,6 +80,7 @@ import javax.swing.event.MenuListener;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolScriptManager;
+import org.jmol.api.JmolStatusListener;
 import org.jmol.awt.FileDropper;
 import org.jmol.awt.Platform;
 import org.jmol.console.JmolButton;
@@ -362,7 +363,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     say(GT.$("Initializing 3D display..."));
     display = new DisplayPanel(this);
     vwrOptions.put("display", display);
+    JmolStatusListener userStatusListener = (JmolStatusListener) vwrOptions.get("statusListener");
     myStatusListener = new StatusListener(this, display);
+    myStatusListener.userStatusListener = userStatusListener;
     vwrOptions.put("statusListener", myStatusListener);
   }
 

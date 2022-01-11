@@ -78,6 +78,9 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
   private MainFrame jSpecViewFrame;
   private boolean jSpecViewForceNew;
   
+  private String lastSimulate;
+  JmolStatusListener userStatusListener;
+  
   
   public void setViewer(Viewer vwr) {
     this.vwr = vwr;
@@ -92,6 +95,8 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
   // / JmolCallbackListener interface ///
   @Override
   public boolean notifyEnabled(CBK type) {
+    if (userStatusListener != null && userStatusListener.notifyEnabled(type))
+      return true;
     switch (type) {
     case ANIMFRAME:
     case LOADSTRUCT:
@@ -132,6 +137,8 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       // during initialization
       return;
     }
+    if (userStatusListener != null && userStatusListener.notifyEnabled(type))
+      userStatusListener.notifyCallback(type, data);
     if (jmolPanel.isServer() && data != null && "SYNC".equals(data[0])) {
       data[0] = type.toString();
       jmolPanel.sendNioSyncRequest(data, JmolPanel.OUTSOCKET, null);
@@ -477,8 +484,6 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     return jmolPanel.resizeInnerPanel(data);
   }
 
-  private String lastSimulate;
-  
   private void checkJSpecView(boolean closeAll) {
     if (jSpecViewFrame != null && modificationMode <= 0) {
       jSpecViewForceNew = jSpecViewFrame.isVisible();
