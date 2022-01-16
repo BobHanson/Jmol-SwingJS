@@ -4177,5 +4177,21 @@ public class ModelSet extends BondCollection {
     return s;
   }
 
+  /**
+   * pick up the appropriate value for this atom
+   * @param i 
+   * @param a
+   * @param q
+   * @param pTemp
+   */
+  public void getPointTransf(int i, Atom a, Quat q, P3 pTemp) {
+    if (isTrajectory(i >= 0 ? i : a.mi))
+      trajectory.getFractional(a, pTemp);
+    else
+      pTemp.setT(a);
+    if (q != null)
+      q.transform2(pTemp, pTemp);
+  }
+
 }
 

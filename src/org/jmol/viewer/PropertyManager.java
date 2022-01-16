@@ -1278,7 +1278,7 @@ public class PropertyManager implements JmolPropertyManager {
           String s = LabelToken.formatLabelAtomArray(vwr, atoms[j], (asXYZVIB
               && ms.getVibration(j, false) != null ? tokensVib : tokensXYZ),
               '\0', null, ptTemp);
-          getPointTransf(i, ms, atoms[j], q, ptTemp);
+          ms.getPointTransf(i, atoms[j], q, ptTemp);
           s = PT.rep(s, "_XYZ_", PT.sprintf("%12.5p %12.5p %12.5p", "p", o));
           mol.append(s);
         }
@@ -1332,24 +1332,6 @@ public class PropertyManager implements JmolPropertyManager {
         bsBonds.set(i);
     }
     return bsBonds;
-  }
-
-  /**
-   * pick up the appropriate value for this atom
-   * @param i 
-   * 
-   * @param ms
-   * @param a
-   * @param q
-   * @param pTemp
-   */
-  public static void getPointTransf(int i, ModelSet ms, Atom a, Quat q, P3 pTemp) {
-    if (ms.isTrajectory(i >= 0 ? i : a.mi))
-      ms.trajectory.getFractional(a, pTemp);
-    else
-      pTemp.setT(a);
-    if (q != null)
-      q.transform2(pTemp, pTemp);
   }
 
   @Override

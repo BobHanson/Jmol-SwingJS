@@ -144,7 +144,7 @@ public class PDBWriter implements JmolWriter {
           + pdbKey(a.group.groupIndex)
           + LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp)
           + (XX.length() == 1 ? " " + XX : XX.substring(0, 2)) + "  ";
-      getPointTransf(-1, vwr.ms, a, q, ptTemp);
+      vwr.ms.getPointTransf(-1, a, q, ptTemp);
       String xyz = PT.sprintf("%8.3p%8.3p%8.3p", "p", o);
       if (xyz.length() > 24)
         xyz = PT.sprintf("%8.2p%8.2p%8.2p", "p", o);
@@ -210,15 +210,6 @@ public class PDBWriter implements JmolWriter {
     return toString();
   }
   
-  private void getPointTransf(int i, ModelSet ms, Atom a, Quat q, P3 pTemp) {
-    if (ms.isTrajectory(i >= 0 ? i : a.mi))
-      ms.trajectory.getFractional(a, pTemp);
-    else
-      pTemp.setT(a);
-    if (q != null)
-      q.transform2(pTemp, pTemp);
-  }
-
   private String pdbKey(int np) {
     String xp = (np < 0 ? "~999" : "   " + np); 
     return xp.substring(xp.length() - 4);

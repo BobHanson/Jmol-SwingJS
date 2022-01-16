@@ -12,7 +12,6 @@ import org.jmol.script.T;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
-import org.jmol.viewer.PropertyManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -195,7 +194,7 @@ public class MOLWriter {
     //    1.7906    0.2081    0.0011 C   0  0  0  0  0  0
     //xxxxx.xxxxyyyyy.yyyyzzzzz.zzzz aaaddcccssshhhbbbvvvHHHrrriiimmmnnneee
     //012345678901234567890123456789012
-    PropertyManager.getPointTransf(iModel, ms, a, q, pTemp);
+    ms.getPointTransf(iModel, a, q, pTemp);
     int elemNo = a.getElementNumber();
     String sym = (a.isDeleted() ? "Xx" : Elements
         .elementSymbolFromNumber(elemNo));
