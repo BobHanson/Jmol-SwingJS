@@ -1459,10 +1459,12 @@ public class Viewer extends JmolViewer
   * Sticks.checkObjectClicked (set bondPicking TRUE; set picking IDENTIFY)
   * actionManager.atomPicked (set atomPicking TRUE; set picking IDENTIFY)
   * actionManager.queueAtom (during measurements)
+  * 
   */
 
   public void setStatusAtomPicked(int atomIndex, String info,
                                   Map<String, Object> map, boolean andSelect) {
+    // andSelect is never true
     if (andSelect)
       setSelectionSet(BSUtil.newAndSetBit(atomIndex));
     if (info == null) {
@@ -2362,17 +2364,20 @@ public class Viewer extends JmolViewer
   // delegated to SelectionManager
   // ///////////////////////////////////////////////////////////////
 
+  public boolean hasSelected;
+  
   public void select(BS bs, boolean isGroup, int addRemove, boolean isQuiet) {
     // Eval, ActionManager
     if (isGroup)
       bs = getUndeletedGroupAtomBits(bs);
     slm.select(bs, addRemove, isQuiet);
     shm.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MAX_VALUE, null, null);
+    hasSelected = true;
   }
 
   @Override
   public void setSelectionSet(BS set) {
-    select(set, false, 0, true);
+    selectStatus(set, false, 0, true, true);
   }
 
   public void selectBonds(BS bs) {
@@ -3585,6 +3590,7 @@ public class Viewer extends JmolViewer
       am.clear();
       tm.clear();
       slm.clear();
+      hasSelected = true;
       clearAllMeasurements();
       clearMinimization();
       gdata.clear();
@@ -8165,8 +8171,8 @@ public class Viewer extends JmolViewer
     if (index >= 0) {
       Bond b = ms.bo[index];
       int i = b.atom2.i;
-      if (!ms.isAtomInLastModel(i))
-        return;
+//      if (!ms.isAtomInLastModel(i))
+//        return;
       bs = BSUtil.newAndSetBit(i);
       bs.set(b.atom1.i);
     }
@@ -10333,11 +10339,92 @@ public class Viewer extends JmolViewer
         : null;
   }
 
+  private int consoleFontScale = 1;
+
+  public int getConsoleFontScale() {
+    return consoleFontScale;
+  }
+
+  public void setConsoleFontScale(int scale) {
+    consoleFontScale = scale;
+  }
+
+  public int confirm(String msg, String msgNo) {
+    return apiPlatform.confirm(msg, msgNo);
+  }
+
+  /**
+   * Run a script asynchronously, adding the GUI flag to indicate that we should
+   * fire the SELECT callback at the end if there is one.
+   * 
+   * @param script
+   */
+  public void evalStringGUI(String script) {
+    evalStringQuiet(script + JC.SCRIPT_GUI);
+  }
+
+  /**
+   * "SELECT" starting with comma triggers the SELECT callback from a SELECT command.
+   * GUI scripts also trigger this if a select command has been given and the 
+   * last select command given did not start with comma.
+   * 
+   * @param bs
+   * @param isGroup
+   * @param addRemove
+   * @param isQuiet
+   * @param reportStatus
+   */
+  public void selectStatus(BS bs, boolean isGroup, int addRemove, boolean isQuiet,
+                           boolean reportStatus) {
+    select(bs, isGroup, addRemove, isQuiet);
+    if (reportStatus) {
+      setStatusSelect(bs);
+    }
+  }
+
+  /**
+   * Make the SelectCallback call and reset the hasSelected value to false. 
+   * This method is called by SELECT , ... or by a GUI script command completion
+   * or an atom selection using the mouse.
+   * 
+   * 
+   * @param bs
+   */
+  public void setStatusSelect(BS bs) {
+    hasSelected = false;
+    sm.setStatusSelect(bs == null ? bsA() : bs);
+  }
+
+  /**
+   * WASM inchi must be initialized asynchronously
+   * 
+   * @param cmd
+   * @return cmd
+   */
+  public String wasmInchiHack(String cmd) {
+    if (Viewer.isJS
+        && (cmd.indexOf("inchi") >= 0 || cmd.indexOf("INCHI") >= 0)
+        || cmd.indexOf("TAUTOMER") >= 0 || cmd.indexOf("tautomer") >= 0) {
+      getInchi(null, null, null);
+    }
+    return cmd;
+  }
+
+  /**
+   * Get an InChI or InChIKey for a set of atoms or MOL data.
+   * 
+   * @param atoms
+   * @param molData null, or MOL data, or a database $ or : call, or SMILES, or "InChI=...." to retrieve the key
+   * @param options
+   * @return InChI or InChIKey
+   */
   public String getInchi(BS atoms, String molData, String options) {
     try {
       JmolInChI inch = this.apiPlatform.getInChI();
-      if (atoms == null && molData == null)
+      if (atoms == null && molData == null) {
+        // JavaScript initialization only
         return "";
+      }
       if (molData != null) {
         if (molData.startsWith("$") || molData.startsWith(":")) {
           molData = getFileAsString4(molData, -1, false, false, true, "script");
@@ -10353,17 +10440,5 @@ public class Viewer extends JmolViewer
     }
   }
 
-  private int consoleFontScale = 1;
 
-  public int getConsoleFontScale() {
-    return consoleFontScale;
-  }
-
-  public void setConsoleFontScale(int scale) {
-    consoleFontScale = scale;
-  }
-
-  public int confirm(String msg, String msgNo) {
-    return apiPlatform.confirm(msg, msgNo);
-  }
 }

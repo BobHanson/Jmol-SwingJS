@@ -49,6 +49,7 @@ public enum CBK {
   PICK,
   RESIZE,
   SCRIPT,
+  SELECT,
   SYNC, STRUCTUREMODIFIED;
 
   public static CBK getCallback(String name) {

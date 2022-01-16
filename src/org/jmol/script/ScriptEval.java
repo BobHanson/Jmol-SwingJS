@@ -350,6 +350,8 @@ public class ScriptEval extends ScriptExpr {
   private boolean forceNoAddHydrogens;
 
   private boolean isEmbedded;
+
+  private boolean isGUI;
   
 
   public ScriptEval() {
@@ -413,10 +415,14 @@ public class ScriptEval extends ScriptExpr {
     executing = true;
     vwr.pushHoldRepaintWhy("runEval");
     setScriptExtensions();
+    vwr.hasSelected = false;
     executeCommands(false, true);
     this.isCmdLine_C_Option = tempOpen;
     if(isStateScript)
       ScriptManager.setStateScriptVersion(vwr, null); // set by compiler
+    if (vwr.hasSelected && isGUI)
+      vwr.setStatusSelect(null);
+    vwr.hasSelected = false;
   }
 
   public boolean useThreads() {
@@ -987,6 +993,10 @@ public class ScriptEval extends ScriptExpr {
     isStateScript = compiler.isStateScript;
     forceNoAddHydrogens = (isStateScript && script.indexOf("pdbAddHydrogens") < 0);
     String s = script;
+    isGUI = (s.indexOf(JC.SCRIPT_GUI) >= 0);
+    if (isGUI) {
+      s = PT.rep(s, JC.SCRIPT_GUI, "");
+    }
     pc = setScriptExtensions();
     if (!chk && vwr.scriptEditorVisible
         && strScript.indexOf(JC.SCRIPT_EDITOR_IGNORE) < 0)
@@ -6787,22 +6797,25 @@ public class ScriptEval extends ScriptExpr {
     isCmdLine_c_or_C_Option = wasScriptCheck;
   }
 
+  /**
+   * 
+   * @param i 2 from RESTRICT BONDS, otherwise 1
+   * @throws ScriptException
+   */
   private void cmdSelect(int i) throws ScriptException {
     // NOTE this is called by restrict()
     if (slen == 1) {
-      vwr.select(null, false, 0, !doReport());
+      vwr.selectStatus(null, false, 0, !doReport(), false);
       return;
     }
     if (slen == 2 && tokAt(1) == T.only)
       return; // coming from "cartoon only"
-    // select beginexpr none endexpr
     int tok = tokAt(2);
-    vwr.slm.noneSelected = Boolean.valueOf(slen == 4 && tok == T.none);
     BS bs = null;
     switch (tok) {
     case T.bitset:
       // select beginexpr bonds ( {...} ) endex pr
-      if (getToken(2).value instanceof BondSet || tokAt(2) == T.bonds
+      if (getToken(2).value instanceof BondSet || tok == T.bonds
           && getToken(3).tok == T.bitset) {
         if (slen != iToken + 2)
           invArg();
@@ -6839,6 +6852,9 @@ public class ScriptEval extends ScriptExpr {
 
     int addRemove = 0;
     boolean isGroup = false;
+    boolean reportStatus = (tokAt(i) == T.comma);
+    if (reportStatus)
+      i++;
     if (getToken(1).intValue == 0 && theTok != T.off) {
       Object v = parameterExpressionToken(0).value;
       if (!(v instanceof BS))
@@ -6866,6 +6882,7 @@ public class ScriptEval extends ScriptExpr {
       isGroup = (tok == T.group);
       if (isGroup)
         tok = tokAt(++i);
+      // select ... beginexpr none endexpr
       bs = atomExpressionAt(i);
     }
     if (chk)
@@ -6878,7 +6895,8 @@ public class ScriptEval extends ScriptExpr {
         bs1.and(bs);
         bs = bs1;
       }
-      vwr.select(bs, isGroup, addRemove, !doReport());
+      vwr.selectStatus(bs, isGroup, addRemove, !doReport(), reportStatus);
+      vwr.slm.noneSelected = Boolean.valueOf(slen == 4 && tokAt(2) == T.none);
     }
   }
 
@@ -8333,7 +8351,7 @@ public class ScriptEval extends ScriptExpr {
     boolean isQuiet = !doReport();
     if (!isQuiet)
       report(GT.i(GT.$("{0} atoms deleted"), nDeleted), false);
-    vwr.select(null, false, 0, isQuiet);
+    vwr.selectStatus(null, false, 0, isQuiet, false);
   }
 
   private void cmdZoom(boolean isZoomTo) throws ScriptException {
@@ -8449,9 +8467,7 @@ public class ScriptEval extends ScriptExpr {
     Object colorvalue1 = null;
     BS bs = null;
     String prefix = (index == 2 && tokAt(1) == T.balls ? "ball" : "");
-    boolean isColor = false;
     boolean isIsosurface = (shapeType == JC.SHAPE_ISOSURFACE || shapeType == JC.SHAPE_CONTACT);
-    int typeMask = 0;
     boolean doClearBondSet = false;
     float translucentLevel = Float.MAX_VALUE;
     if (index < 0) {
@@ -8508,8 +8524,8 @@ public class ScriptEval extends ScriptExpr {
         translucentLevel = getTranslucentLevel(index++);
     }
     tok = 0;
-    if (index < slen && tokAt(index) != T.on && tokAt(index) != T.off) {
-      isColor = true;
+    boolean isColor = (index < slen && tokAt(index) != T.on && tokAt(index) != T.off);
+    if (isColor) {
       tok = getToken(index).tok;
       if ((!isIsosurface || tokAt(index + 1) != T.to) && isColorParam(index)) {
         int argb = getArgbParamOrNone(index, false);
@@ -8658,6 +8674,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (chk || shapeType < 0)
       return;
+    int typeMask;
     switch (shapeType) {
     case JC.SHAPE_STRUTS:
       typeMask = Edge.BOND_STRUT;

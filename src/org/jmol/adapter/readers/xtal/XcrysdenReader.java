@@ -31,27 +31,26 @@ public class XcrysdenReader extends AtomSetCollectionReader {
 
   @Override
   protected void initializeReader() throws Exception {
+    setFractionalCoordinates(false);
     doApplySymmetry = true;
   }
 
   @Override
   protected boolean checkLine() throws Exception {
+    if (line.startsWith("ATOMS")) {
+      doApplySymmetry = false;
+      return readCoordinates();
+    }
     if (line.contains("ANIMSTEP")) {
-      readNostep();
-    } else if (line.contains("CRYSTAL")) {
-      setFractionalCoordinates(false);
+      animation = true;
     } else if (line.contains("PRIMVEC")) {
       readUnitCell();
     } else if (line.contains("PRIMCOORD")) {
-      readCoordinates();
+      return readCoordinates();
     }
     return true;
   }
   
-  private void readNostep() throws Exception { 
-    animation = true;
-  }
-
   private void readUnitCell() throws Exception {
     setSymmetry();
     fillFloatArray(null, 0, unitCellData);
@@ -82,18 +81,31 @@ public class XcrysdenReader extends AtomSetCollectionReader {
       6  -0.916425367  5.375190418 -7.209984663
       6  -4.773254987  4.300512942  6.348687286
   */
-  private void readCoordinates() throws Exception {
-    String[] atomStr = PT.getTokens(rd());
-    nAtoms = Integer.parseInt(atomStr[0]);
-
+  private boolean readCoordinates() throws Exception {
+    if (doApplySymmetry) {
+      String[] atomStr = PT.getTokens(rd());
+      nAtoms = Integer.parseInt(atomStr[0]);
+    } else {
+      nAtoms = Integer.MAX_VALUE;
+    }
     setFractionalCoordinates(false);
     int counter = 0;
     while (counter < nAtoms && rd() != null) {
       String[] tokens = getTokens();
-      addAtomXYZSymName(tokens, 1, null, getElementSymbol(Integer.parseInt(tokens[0])));
+      int an = PT.parseInt(tokens[0]);
+      if (an < 0) {
+        break;
+      }
+      line = null;
+      addAtomXYZSymName(tokens, 1, null,
+          getElementSymbol(an));
       counter++;
     }
-    asc.setAtomSetName(animation ? "Structure " + (animationStep++) : "Initial coordinates");
+    asc.setAtomSetName(
+        animation ? "Structure " + (++animationStep) : "Initial coordinates");
+    if (line != null)
+      setSymmetry();
+    return (line == null);
   }
 
 }

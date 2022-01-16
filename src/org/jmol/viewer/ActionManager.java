@@ -1134,7 +1134,7 @@ public class ActionManager implements EventManager {
           case PICKING_DRAG_MODEL:
           case PICKING_DRAG_MOLECULE:
           case PICKING_DRAG_MINIMIZE_MOLECULE:
-            vwr.select(bs, false, 0, true);
+            vwr.selectStatus(bs, false, 0, true, true);
             break;
           }
           vwr.moveAtomWithHydrogens(dragAtomIndex, deltaX, deltaY,
@@ -1769,7 +1769,7 @@ public class ActionManager implements EventManager {
   /// methods that utilize vwr.script
 
   private void runScript(String script) {
-    vwr.script(script);
+    vwr.evalStringGUI(script);
   }
 
   private void atomOrPointPicked(int atomIndex, Point3fi ptClicked) {
@@ -1779,7 +1779,7 @@ public class ActionManager implements EventManager {
     if (atomIndex < 0) {
       resetMeasurement(); // for set picking measure only
       if (bnd(clickAction, ACTION_selectNone)) {
-        runScript("select none");
+        runScript("select none"); // note that this sets us up for default labels
         return;
       }
       if (apm != PICKING_SPIN
@@ -2039,7 +2039,7 @@ public class ActionManager implements EventManager {
   }
 
   private void setAtomsPicked(BS bs, String msg) {
-    vwr.select(bs, false, 0, false);
+    vwr.selectStatus(bs, false, 0, false, true);
     vwr.setStatusAtomPicked(-1, msg, null, false);
   }
 

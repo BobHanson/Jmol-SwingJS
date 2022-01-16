@@ -116,6 +116,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case RESIZE:
     case CLICK:
     case ATOMMOVED:
+    case SELECT:
     case HOVER:
       return true;
     case APPLETREADY:
@@ -282,6 +283,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case ERROR:
     case ECHO:
     case MINIMIZATION:
+    case SELECT:
       break;
     }
     if (jmolPanel.isServer())

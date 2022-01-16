@@ -694,17 +694,21 @@ public class MathExt {
     // compare({bitset},{bitset},"MAP")
     // compare(@1,@2,"SMILES", "polyhedra"[,"stddev"])
     // compare(@1,@2,"SMARTS", "polyhedra"[,"stddev"])
-
-    if (args.length < 2 || args.length > 5)
+    int narg = args.length;
+    if (narg < 2 || narg > 5)
       return false;
     float stddev;
-    String sOpt = SV.sValue(args[args.length - 1]);
+    boolean isTrue = (args[narg - 1].tok == T.on);
+    if (isTrue || args[narg - 1].tok == T.off)
+      narg--;
+    String sOpt = SV.sValue(args[narg - 1]);
     boolean isStdDev = sOpt.equalsIgnoreCase("stddev");
     boolean isIsomer = sOpt.equalsIgnoreCase("ISOMER");
+    boolean isTautomer = isIsomer && isTrue;
     boolean isBonds = sOpt.equalsIgnoreCase("BONDS");
     boolean isPoints = (args[0].tok == T.varray && args[1].tok == T.varray);
     boolean isSmiles = (!isPoints && !isIsomer
-        && args.length > (isStdDev ? 3 : 2));
+        && narg > (isStdDev ? 3 : 2));
     BS bs1 = (args[0].tok == T.bitset ? (BS) args[0].value : null);
     BS bs2 = (args[1].tok == T.bitset ? (BS) args[1].value : null);
     String smiles1 = (bs1 == null ? SV.sValue(args[0]) : "");
@@ -712,7 +716,7 @@ public class MathExt {
     stddev = Float.NaN;
     try {
       if (isBonds) {
-        if (args.length != 4)
+        if (narg != 4)
           return false;
         // A, B, ........................BONDS
         // A, B, SMILES,...................BONDS
@@ -729,14 +733,16 @@ public class MathExt {
         return (data == null ? mp.addXStr("") : mp.addXAF(data));
       }
       if (isIsomer) {
-        if (args.length != 3)
+        if (narg != 3)
           return false;
 
         // A, B, ISOMER
 
-        if (bs1 == null && bs2 == null)
-          return mp.addXStr(vwr.getSmilesMatcher()
-              .getRelationship(smiles1, smiles2).toUpperCase());
+        if (bs1 == null && bs2 == null) {
+          String ret = vwr.getSmilesMatcher().getRelationship(smiles1, smiles2)
+              .toUpperCase();
+          return mp.addXStr(ret);
+        }
         String mf1 = (bs1 == null
             ? vwr.getSmilesMatcher().getMolecularFormula(smiles1, false)
             : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs1, null,
@@ -801,7 +807,14 @@ public class MathExt {
               return mp.addXStr("DIASTEREOMERS");
           }
           // MF matches, but not enantiomers or diastereomers
-          return mp.addXStr("CONSTITUTIONAL ISOMERS");
+          String ret = "CONSTITUTIONAL ISOMERS";
+          if (isTautomer) {
+            // check for inchi same -- tautomers
+            String inchi = vwr.getInchi(bs1, null, null);
+            if (inchi != null && inchi.equals(vwr.getInchi(bs2, null, null)))
+              ret = "TAUTOMERS";
+          }
+          return mp.addXStr(ret);
         }
         //identical or conformational 
         if (bs1 == null || bs2 == null)
@@ -827,14 +840,14 @@ public class MathExt {
         isSmiles = sOpt.equalsIgnoreCase("SMILES");
         boolean isSearch = (isMap || sOpt.equalsIgnoreCase("SMARTS"));
         if (isSmiles || isSearch)
-          sOpt = (args.length > (isStdDev ? 4 : 3) ? SV.sValue(args[3]) : null);
+          sOpt = (narg > (isStdDev ? 4 : 3) ? SV.sValue(args[3]) : null);
 
         // sOpts = "H", "allH", "bestH", "polyhedra", pattern, or null
         boolean hMaps = (("H".equalsIgnoreCase(sOpt)
             || "allH".equalsIgnoreCase(sOpt)
             || "bestH".equalsIgnoreCase(sOpt)));
 
-        boolean isPolyhedron = !hMaps && ("polyhedra".equalsIgnoreCase(sOpt) 
+        boolean isPolyhedron = !hMaps && ("polyhedra".equalsIgnoreCase(sOpt)
             || "polyhedron".equalsIgnoreCase(sOpt));
         if (isPolyhedron) {
           stddev = e.getSmilesExt().mapPolyhedra(bs1.nextSetBit(0),
@@ -888,10 +901,9 @@ public class MathExt {
         // A, B, int[] map, stddev
         ptsA = e.getPointVector(args[0], 3);
         ptsB = e.getPointVector(args[1], 3);
-        Lst<SV> a = (args.length >= 3 ? args[2].getList() : null);
-        int na = args.length;
+        Lst<SV> a = (narg >= 3 ? args[2].getList() : null);
         if (a != null) {
-          na--;
+          narg--;
           int n = a.size();
           if (n != ptsA.size() || n != ptsB.size())
             return false;
@@ -900,7 +912,7 @@ public class MathExt {
             list.addLast(ptsA.get(a.get(i).intValue));
           ptsA = list;
         }
-        switch (na) {
+        switch (narg) {
         case 2:
           break;
         case 3:

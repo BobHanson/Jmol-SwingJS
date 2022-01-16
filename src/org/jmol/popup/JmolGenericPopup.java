@@ -113,7 +113,7 @@ public abstract class JmolGenericPopup extends GenericPopup {
 
   @Override
   protected void appRunScript(String script) {
-    vwr.evalStringQuiet(script);
+    vwr.evalStringGUI(script);
 //    System.out.println("eval 1 " + vwr.eval.isExecuting());
 //    System.out.println(script);
 //    ((ScriptEval) vwr.eval).runBufferedSafely(script, null);

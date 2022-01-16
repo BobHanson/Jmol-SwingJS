@@ -583,7 +583,7 @@ public class AppConsole extends JmolConsole
       if (strErrorMessage.length() > 0) {
         console.outputError(strErrorMessage);
       } else {
-        vwr.script(strCommand
+        vwr.script(strCommand + JC.SCRIPT_GUI
             + (strCommand.indexOf("\1##") >= 0 ? "" : JC.SCRIPT_EDITOR_IGNORE));
       }
     }
@@ -883,7 +883,7 @@ public class AppConsole extends JmolConsole
           isError = true;
           cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
         }
-        cmd = PT.trim(cmd, ";");
+        cmd = PT.trim(cmd, "; ");
         consoleDoc.replaceCommand(cmd, isError);
       } catch (BadLocationException e) {
         e.printStackTrace();

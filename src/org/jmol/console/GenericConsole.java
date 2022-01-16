@@ -228,7 +228,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     String cmd = (strCommand == null ? input.getText() : strCommand);
     if (strCommand == null)
       input.setText(null);
-    String strErrorMessage = vwr.script(cmd + JC.SCRIPT_EDITOR_IGNORE);
+    String strErrorMessage = vwr.script(cmd + JC.SCRIPT_GUI + JC.SCRIPT_EDITOR_IGNORE);
     if (strErrorMessage != null && !strErrorMessage.equals("pending"))
       outputMsg(strErrorMessage);
   }
@@ -306,6 +306,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     case ANIMFRAME:
     case APPLETREADY:
     case ATOMMOVED:
+    case AUDIO:
     case CLICK:
     case DRAGDROP:
     case ERROR:
@@ -314,12 +315,13 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     case IMAGE:
     case LOADSTRUCT:
     case MINIMIZATION:
+    case MODELKIT:
     case SERVICE:
     case RESIZE:
     case SCRIPT:
-    case SYNC:
+    case SELECT:
     case STRUCTUREMODIFIED:
-    case AUDIO:
+    case SYNC:
       break;
     }
     return false;

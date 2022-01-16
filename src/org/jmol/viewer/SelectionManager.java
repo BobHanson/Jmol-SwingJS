@@ -50,6 +50,9 @@ public class SelectionManager {
 
   public BS bsSubset; 
   public BS bsDeleted;
+  /**
+   * a flag to indicate that labels and fonts should be set to default values; set only by SELECT NONE;
+   */
   public Boolean noneSelected;
 
 

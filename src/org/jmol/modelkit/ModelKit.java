@@ -604,10 +604,12 @@ public class ModelKit {
       atomMove = ms.at[bondAtomIndex2];
     }
     V3 v1 = V3.new3(atomMove.sX - atomFix.sX, atomMove.sY - atomFix.sY, 0);
+    v1.scale(1f/v1.length());
     V3 v2 = V3.new3(deltaX, deltaY, 0);
     v1.cross(v1, v2);
+    
     float f = (v1.z > 0 ? 1 : -1);
-    float degrees = f;// * v2.length();
+    float degrees = f * ((int) v2.length()/2 + 1);
     if (!forceFull && a0 != null) {
       // integerize
       float ang0 = Measure.computeTorsion(a0, b.atom1, b.atom2, a3, true);
@@ -616,7 +618,7 @@ public class ModelKit {
     }
     BS bs = BSUtil.copy(bsBranch);
     bs.andNot(vwr.slm.getMotionFixedAtoms());
-    
+
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false, bs,
         null, null, null, null);
   }

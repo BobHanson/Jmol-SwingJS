@@ -427,6 +427,7 @@ public final class JC {
  
   public final static String SCRIPT_EDITOR_IGNORE = "\1## EDITOR_IGNORE ##";
   public final static String REPAINT_IGNORE = "\1## REPAINT_IGNORE ##";
+  public final static String SCRIPT_GUI = "; ## GUI ##";
 
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";
       

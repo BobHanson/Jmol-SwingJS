@@ -850,6 +850,47 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   protected void addPluginMenu(JMenuBar mb) {
     pluginMenu = guimap.newJMenu("plugins");
+    mb.add(pluginMenu);
+    boolean isOK = false;
+    try {
+      PropertyResourceBundle bundle = new PropertyResourceBundle(
+          getClass().getResourceAsStream(
+              "/org/openscience/jmol/app/plugins/plugin.properties"));
+      isOK = bundle.getKeys().hasMoreElements();
+    } catch (IOException e1) {
+      // ignore
+    }
+    if (isOK) {
+      pluginMenu.addMenuListener(new MenuListener() {
+
+        @Override
+        public void menuSelected(MenuEvent e) {
+          setPlugins();
+        }
+
+        @Override
+        public void menuDeselected(MenuEvent e) {
+          // TODO
+
+        }
+
+        @Override
+        public void menuCanceled(MenuEvent e) {
+          // TODO
+
+        }
+
+      });
+    }
+    pluginMenu.setEnabled(isOK);
+  }
+
+  boolean pluginsSet = false;
+  
+  void setPlugins() {
+    if (pluginsSet)
+      return;
+    pluginsSet = true;
     try {
       PropertyResourceBundle bundle = new PropertyResourceBundle(getClass()
           .getResourceAsStream(
@@ -892,10 +933,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     } catch (IOException ex) {
       throw new RuntimeException(ex.toString());
     }
-    mb.add(pluginMenu);
     pluginMenu.setEnabled(pluginMenu.getPopupMenu().getComponentCount() > 0);
   }
-
   protected void addMacrosMenu(JMenuBar menuBar) {
     // ok, here needs to be added the funny stuff
     JMenu macroMenu = guimap.newJMenu("macros");

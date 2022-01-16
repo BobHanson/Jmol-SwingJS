@@ -1,4 +1,4 @@
-package org.jmol.util;
+package org.jmol.adapter.writers;
 
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -9,6 +9,9 @@ import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.T;
+import org.jmol.util.Edge;
+import org.jmol.util.Elements;
+import org.jmol.util.Escape;
 import org.jmol.viewer.PropertyManager;
 import org.jmol.viewer.Viewer;
 
@@ -22,7 +25,7 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
-public class MolWriter {
+public class MOLWriter {
 
   private Viewer vwr;
 
@@ -33,11 +36,11 @@ public class MolWriter {
   private int[] connections;
 
 
-  public MolWriter() {
+  public MOLWriter() {
     
   }
   
-  public MolWriter setViewer(Viewer vwr) {
+  public MOLWriter setViewer(Viewer vwr) {
     this.vwr = vwr;
     return this;
   }

@@ -3226,17 +3226,19 @@ public class ModelSet extends BondCollection {
     return i >= 0 && am[at[i].mi].isBioModel;
   }
 
-  /**
-   * Ensure the atom index is >= 0 and that the
-   * atom's model is the last model.
-   * 
-   * @param i
-   * @return true if that is the case
-   */
-  public boolean isAtomInLastModel(int i) {
-    return i >= 0 && at[i].mi == mc - 1;
-  }
-
+//  /**
+//   * Ensure the atom index is >= 0 and that the
+//   * atom's model is the last model.
+//   * 
+//   * This method was only for the model kit -- no longer necessary.
+//   * 
+//   * @param i
+//   * @return true if that is the case
+//   */
+//  public boolean isAtomInLastModel(int i) {
+//    return i >= 0 && at[i].mi == mc - 1;
+//  }
+//
   public boolean haveModelKit() {
     for (int i = 0; i < mc; i++)
       if (am[i].isModelKit)

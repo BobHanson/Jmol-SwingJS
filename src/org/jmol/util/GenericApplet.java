@@ -540,6 +540,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case MESSAGE:
     case MEASURE:
     case PICK:
+    case SELECT:
     case SYNC:
       return true;
     case ANIMFRAME:
@@ -640,6 +641,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
       }
       break;
     case ATOMMOVED:
+    case SELECT:
       break;
     case ECHO:
       boolean isPrivate = (data.length == 2);

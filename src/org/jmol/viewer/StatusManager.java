@@ -310,6 +310,14 @@ public class StatusManager {
           new Object[] { sJmol, bsMoved });
   }
 
+  synchronized void setStatusSelect(BS atoms) {
+    String sJmol = jmolScriptCallback(CBK.SELECT);
+    setStatusChanged("select", -1, atoms, false);
+    if (notifyEnabled(CBK.SELECT))
+      cbl.notifyCallback(CBK.SELECT,
+          new Object[] { sJmol, atoms });
+  }
+
   /**
    * 
    * @param atomIndex  -2 for draw, -3 for bond
@@ -345,7 +353,7 @@ public class StatusManager {
   }
 
   boolean haveHoverCallback() {
-    return (jmolScriptCallbacks.containsKey(CBK.HOVER) || notifyEnabled(CBK.HOVER));
+    return (jmolScriptCallbacks.containsKey(CBK.HOVER.name()) || notifyEnabled(CBK.HOVER));
   }
   
   synchronized void setStatusAtomHovered(int iatom, String strInfo) {
@@ -1040,7 +1048,6 @@ public class StatusManager {
     }
     vwr.showString("error reading SYNC command: " + script, false);
   }
-
 
 }
 

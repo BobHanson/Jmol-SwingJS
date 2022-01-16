@@ -89,6 +89,7 @@ class MyStatusListener implements JmolStatusListener {
     case MODELKIT:
     case SERVICE:
     case RESIZE:
+    case SELECT:
     case SYNC:
     case STRUCTUREMODIFIED:
     case SCRIPT:

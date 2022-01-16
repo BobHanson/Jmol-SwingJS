@@ -1,24 +1,25 @@
 package org.jmol.adapter.writers;
 
-import java.io.OutputStream;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.DF;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.SB;
-
+import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.SlaterData;
 import org.jmol.util.JSONWriter;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.Viewer;
 import org.qcschema.QCSchemaUnits;
+
+import javajs.util.BS;
+import javajs.util.DF;
+import javajs.util.Lst;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * A very experimental class for writing QCJSON files. This standard is in the
@@ -32,7 +33,7 @@ import org.qcschema.QCSchemaUnits;
  * https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/qcjson
  * 
  */
-public class QCJSONWriter extends JSONWriter {
+public class QCJSONWriter extends JSONWriter implements JmolWriter {
 
   // Current status: 
   // 
@@ -47,11 +48,24 @@ public class QCJSONWriter extends JSONWriter {
 
   private Viewer vwr;
 
-  public void set(Viewer viewer, OutputStream os) {
-    vwr = viewer;
-    setWriteNullAsString(false);
-    setStream(os);
+  public QCJSONWriter() {
+    // for JavaScript dynamic loading
   }
+
+  @Override
+  public void set(Viewer viewer, OC oc, Object[] data) {
+    vwr = viewer;
+    this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
+    setWriteNullAsString(false);
+    setStream(oc);
+  }
+
+  @Override
+  public String write(BS bs) {
+    writeJSON();
+    return toString();
+  }
+
 
   @Override
   public String toString() {

@@ -1456,7 +1456,7 @@ public class CmdExt extends ScriptExt {
         Integer.valueOf(Edge.BOND_HYDROGEN_MASK));
     e.setShapeSizeBs(JC.SHAPE_STICKS, 0, bsAtoms);
     vwr.autoHbond(bsAtoms, bsAtoms, true);
-    vwr.select(bsAtoms, false, 0, e.tQuiet);
+    vwr.selectStatus(bsAtoms, false, 0, e.tQuiet, false);
   }
 
   @SuppressWarnings("static-access")
@@ -4127,7 +4127,7 @@ public class CmdExt extends ScriptExt {
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));
       } else if (PT.isOneOf(val.toLowerCase(),
-          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;qcjson;")) {
+          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;pwm;qcjson;xsf;")) {
         // this still could be overruled by a type indicated
         type = val.toUpperCase();
         if (pt + 1 == argCount)
@@ -4265,12 +4265,12 @@ public class CmdExt extends ScriptExt {
         && !PT
             .isOneOf(
                 type,
-                ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;QUAT;RAMA;SDF;V2000;V3000;QCJSON;INLINE;"))
+                ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWM;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
       eval.errorStr2(
           ScriptError.ERROR_writeWhat,
           "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
               + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
-          "CIF|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
+          "CIF|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWM|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
               + driverList.toUpperCase().replace(';', '|'));
     if (chk)
       return "";
@@ -4349,9 +4349,7 @@ public class CmdExt extends ScriptExt {
           data = vwr.getCurrentFileAsString("script");
         else
           writeFileData = true;
-      } else if (data == "CIF" || data == "SDF" || data == "MOL" || data == "MOL67" || data == "V2000"
-          || data == "V3000" || data == "CD" || data == "JSON" || data == "XYZ"
-          || data == "XYZRN" || data == "XYZVIB" || data == "CML" || data == "QCJSON") {
+      } else if (PT.isOneOf(data,";CIF;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWM;XSF;")) {
         BS selected = vwr.bsA(), bsModel;
         msg = " (" + selected.cardinality() + " atoms)";
         if (vwr.am.cmi >= 0 && !selected.equals(bsModel = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi)))

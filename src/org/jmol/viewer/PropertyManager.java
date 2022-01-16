@@ -25,18 +25,17 @@ package org.jmol.viewer;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.jmol.adapter.writers.QCJSONWriter;
+import org.jmol.adapter.writers.MOLWriter;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolPropertyManager;
-import org.jmol.api.SymmetryInterface;
+import org.jmol.api.JmolWriter;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -55,7 +54,6 @@ import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-import org.jmol.util.MolWriter;
 import org.jmol.viewer.binding.Binding;
 
 import javajs.util.AU;
@@ -1163,7 +1161,7 @@ public class PropertyManager implements JmolPropertyManager {
 
   /**
    * 
-   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON
+   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON, PWM, XSF
    * 
    * MOL67 is MOL with bonds of type 6 or 7 (aromatic single/double)
    * 
@@ -1172,21 +1170,20 @@ public class PropertyManager implements JmolPropertyManager {
   public String getModelExtract(BS bs, boolean doTransform, boolean isModelKit,
                                 String type, boolean allTrajectories) {
     
-    if (type.equalsIgnoreCase("CIF"))
-      return getModelCif(bs);
-    if (type.equalsIgnoreCase("QCJSON"))
-      return getQCJSON(bs);
-    if (type.equalsIgnoreCase("CML"))
+    String uc = type.toUpperCase();
+    if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWM;"))
+      return getModel(uc, bs, null, null);
+    if (uc.equals("CML"))
       return getModelCml(bs, Integer.MAX_VALUE, true, doTransform, allTrajectories);
-    if (type.equals("PDB") || type.equals("PQR"))
-      return getPdbAtomData(bs, null, type.equals("PQR"), doTransform, allTrajectories);
-    boolean asV3000 = type.equalsIgnoreCase("V3000");
-    boolean asSDF = type.equalsIgnoreCase("SDF");
-    boolean noAromatic = type.equalsIgnoreCase("MOL");
-    boolean asXYZVIB = (!doTransform && type.equalsIgnoreCase("XYZVIB"));
-    boolean asXYZRN = type.equalsIgnoreCase("XYZRN");
-    boolean isXYZ = type.toUpperCase().startsWith("XYZ");
-    boolean asJSON = type.equalsIgnoreCase("JSON") || type.equalsIgnoreCase("CD");
+    if (uc.equals("PDB") || uc.equals("PQR"))
+      return getPdbAtomData(bs, null, uc.equals("PQR"), doTransform, allTrajectories);
+    boolean asV3000 = uc.equals("V3000");
+    boolean asSDF = uc.equals("SDF");
+    boolean noAromatic = uc.equals("MOL");
+    boolean asXYZVIB = (!doTransform && uc.equals("XYZVIB"));
+    boolean asXYZRN = uc.equals("XYZRN");
+    boolean isXYZ = uc.startsWith("XYZ");
+    boolean asJSON = uc.equals("JSON") || uc.equals("CD");
     SB mol = new SB();
     ModelSet ms = vwr.ms;
     BS bsAtoms = BSUtil.copy(bs);
@@ -1287,7 +1284,7 @@ public class PropertyManager implements JmolPropertyManager {
         }
       }
     } else {
-      MolWriter mw = ((MolWriter) Interface.getInterface("org.jmol.util.MolWriter", vwr, "write")).setViewer(vwr);
+      MOLWriter mw = ((MOLWriter) Interface.getInterface("org.jmol.adapter.writers.MOLWriter", vwr, "write")).setViewer(vwr);
       if (asSDF) {
         String header = mol.toString();
         mol = new SB();
@@ -1314,48 +1311,16 @@ public class PropertyManager implements JmolPropertyManager {
    * 
    * create a QCJSON file -- very preliminary
    * 
-   * @param bs  ignored
-   * @return JSON string
+   * @param type 
+   * @param bs 
+   * @param data to pass to reader
+   * @param out
+   * @return file data
    */
-  private String getQCJSON(BS bs) {
-    // bs is ignored here
-    QCJSONWriter writer = (QCJSONWriter) Interface.getInterface("org.jmol.adapter.writers.QCJSONWriter", vwr, "script");
-    writer.set(vwr, null);
-    writer.writeJSON();
-    return writer.toString();
-  }
-
-  /**
-   * just a very primitive CIF file reader
-   * @param bs
-   * @return CIf data
-   */
-  private String getModelCif(BS bs) {    
-    SB sb = new SB();
-    sb.append("# primitive CIF file created by Jmol " + Viewer.getJmolVersion() + "\ndata_primitive");
-    SymmetryInterface unitcell = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-    float[] params = (unitcell == null ? new float[] {1,1,1,90,90,90} : unitcell.getUnitCellAsArray(false));
-    sb.append("\n_cell_length_a ").appendF(params[0]);
-    sb.append("\n_cell_length_b ").appendF(params[1]);
-    sb.append("\n_cell_length_c ").appendF(params[2]);
-    sb.append("\n_cell_angle_alpha ").appendF(params[3]);
-    sb.append("\n_cell_angle_beta ").appendF(params[4]);
-    sb.append("\n_cell_angle_gamma ").appendF(params[5]);
-    sb.append("\n\n_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n'x,y,z'");
-    sb.append("\n\nloop_\n_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n");
-    Atom[] atoms = vwr.ms.at;
-    P3 p = new P3();
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      Atom a = atoms[i];
-      p.setT(a);
-      if (unitcell != null)
-      unitcell.toFractional(p, false);
-      sb.append(a.getElementSymbol()).append("\t")
-      .append(PT.formatF(p.x, 10, 5, true, false)).append("\t")
-      .append(PT.formatF(p.y, 10, 5, true, false)).append("\t")
-      .append(PT.formatF(p.z, 10, 5, true, false)).append("\n");
-    }
-     return sb.toString();
+  private String getModel(String type, BS bs, Object[] data, OC out) {
+    JmolWriter writer = (JmolWriter) Interface.getInterface("org.jmol.adapter.writers." + type + "Writer", vwr, "script");
+    writer.set(vwr, out, data);
+    return writer.write(bs);
   }
 
   private static BS getCovalentBondsForAtoms(Bond[] bonds, int bondCount, BS bsAtoms) {
@@ -1826,242 +1791,13 @@ public class PropertyManager implements JmolPropertyManager {
    *        StringXBuilder or BufferedWriter
    * @return PDB file data string
    */
+  @SuppressWarnings("boxing")
   @Override
   public String getPdbAtomData(BS bs, OC out, boolean isPQR,
                                boolean doTransform, boolean allTrajectories) {
     if (vwr.ms.ac == 0 || bs.nextSetBit(0) < 0)
       return "";
-    if (out == null) {
-      out = vwr.getOutputChannel(null, null);
-    } else {
-      isPQR |= (out.getType().indexOf("PQR") >= 0);
-      doTransform |= (out.getType().indexOf("-coord true") >= 0);
-    }
-    Atom[] atoms = vwr.ms.at;
-    Model[] models = vwr.ms.am;
-    String occTemp = "%6.2Q%6.2b          ";
-    if (isPQR) {
-      occTemp = "%8.4P%7.4V       ";
-      float charge = 0;
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        charge += atoms[i].getPartialCharge();
-      out.append(
-          "REMARK   1 PQR file generated by Jmol " + Viewer.getJmolVersion())
-          .append("\nREMARK   1 " + "created " + (new Date()))
-          .append("\nREMARK   1 Forcefield Used: unknown\nREMARK   1")
-          .append("\nREMARK   5")
-          .append(
-              "\nREMARK   6 Total charge on this protein: " + charge
-                  + " e\nREMARK   6\n");
-    }
-
-    int iModel = atoms[bs.nextSetBit(0)].mi;
-    int iModelLast = -1;
-    int lastAtomIndex = bs.length() - 1;
-    int lastModelIndex = atoms[lastAtomIndex].mi;
-    boolean isMultipleModels = (iModel != lastModelIndex);
-    BS bsModels = vwr.ms.getModelBS(bs, true);
-    int nModels = bsModels.cardinality();
-    Lst<String> lines = new Lst<String>();
-    boolean isMultipleBondPDB = models[iModel].isPdbWithMultipleBonds;
-    boolean uniqueAtomNumbers = false;
-    if (nModels > 1) {
-      Object conectArray = null;
-      for (int nFiles = 0, i = bsModels.nextSetBit(0); i >= 0; i = bsModels
-          .nextSetBit(i + 1)) {
-        Object a = vwr.ms.getModelAuxiliaryInfo(i).get("PDB_CONECT_bonds");
-        if (a != conectArray || !vwr.ms.am[i].isBioModel) {
-          conectArray = a;
-          if (nFiles++ > 0) {
-            uniqueAtomNumbers = true;
-            break;
-          }
-        }
-      }
-    }
-    LabelToken[] tokens;
-    P3 ptTemp = new P3();
-    Object[] o = new Object[] { ptTemp };
-    Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
-    Map<String, Integer> map = new Hashtable<String, Integer>();
-    boolean isBiomodel = false;
-    int[] firstAtomIndexNew = (uniqueAtomNumbers ? new int[nModels] : null);
-    int modelPt = 0;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      Atom a = atoms[i];
-      isBiomodel = models[a.mi].isBioModel;
-      if (isMultipleModels && a.mi != iModelLast) {
-        if (iModelLast != -1) {
-          modelPt = fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
-          out.append("ENDMDL\n");
-        }
-        lines = new Lst<String>();
-        iModel = iModelLast = a.mi;
-        out.append("MODEL     " + (iModelLast + 1) + "\n");
-      }
-      String sa = a.getAtomName();
-      boolean leftJustify = (a.getElementSymbol().length() == 2
-          || sa.length() >= 4 || PT.isDigit(sa.charAt(0)));
-      boolean isHetero = a.isHetero();
-      if (!isBiomodel)
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
-            null)
-
-        );
-      else if (isHetero)
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
-            '\0', null));
-      else
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "ATOM  %5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "ATOM  %5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
-            '\0', null));
-      String XX = a.getElementSymbolIso(false).toUpperCase();
-      XX = pdbKey(a.group.getBioPolymerIndexInModel())
-          + pdbKey(a.group.groupIndex)
-          + LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp)
-          + (XX.length() == 1 ? " " + XX : XX.substring(0, 2)) + "  ";
-      getPointTransf(-1, vwr.ms, a, q, ptTemp);
-      String xyz = PT.sprintf("%8.3p%8.3p%8.3p", "p", o);
-      if (xyz.length() > 24)
-        xyz = PT.sprintf("%8.2p%8.2p%8.2p", "p", o);
-      XX = PT.rep(XX, "_XYZ_", xyz);
-      lines.addLast(XX);
-    }
-    fixPDBFormat(lines, map, out, firstAtomIndexNew, modelPt);
-    if (isMultipleModels)
-      out.append("ENDMDL\n");
-
-    // now for CONECT records...
-    modelPt = -1;
-    iModelLast = -1;
-    String conectKey = "" + (isMultipleModels ? modelPt : 0);
-   isBiomodel = false;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      Atom a = atoms[i];
-      if (isMultipleModels && a.mi != iModelLast) {
-        iModelLast = a.mi;
-        isBiomodel = models[iModelLast].isBioModel;
-        modelPt++;
-      }
-      boolean isHetero = (!isBiomodel || a.isHetero());
-      boolean isCysS = !isHetero && (a.getElementNumber() == 16);
-      if (isHetero || isMultipleBondPDB || isCysS) {
-        Bond[] bonds = a.bonds;
-        if (bonds != null)
-          for (int j = 0; j < bonds.length; j++) {
-            int iThis = a.getAtomNumber();
-            Atom a2 = bonds[j].getOtherAtom(a);
-            if (!bs.get(a2.i))
-              continue;
-            int n = bonds[j].getCovalentOrder();
-            if (n == 1
-                && (isMultipleBondPDB && !isHetero && !isCysS || isCysS
-                    && a2.getElementNumber() != 16))
-              continue;
-            int iOther = a2.getAtomNumber();
-            switch (n) {
-            case 2:
-            case 3:
-              if (iOther < iThis)
-                continue; // only one entry in this case -- pseudo-PmapDB style
-              //$FALL-THROUGH$
-            case 1:
-              Integer inew = map.get(conectKey + "."
-                  + Integer.valueOf(iThis));
-              Integer inew2 = map.get(conectKey + "."
-                  + Integer.valueOf(iOther));
-              if (inew == null || inew2 == null)
-                break;
-              out.append("CONECT").append(
-                  PT.formatStringS("%5s", "s", "" + inew));
-              String s = PT.formatStringS("%5s", "s", "" + inew2);
-              for (int k = 0; k < n; k++)
-                out.append(s);
-              out.append("\n");
-              break;
-            }
-          }
-      }
-    }
-
-    return out.toString();
-  }
-
-  private String pdbKey(int np) {
-    String xp = (np < 0 ? "~999" : "   " + np); 
-    return xp.substring(xp.length() - 4);
-  }
-
-  /**
-   * must re-order by resno and then renumber atoms and add TER records based on
-   * BioPolymers
-   * 
-   * note: 3hbt has a break between residues 39 and 51 with no TER record, but
-   * Jmol will put that in.
-   * 
-   * @param lines
-   * @param map
-   * @param out
-   * @param modelPt
-   * @param firstAtomIndexNew
-   * @return new modelPt
-   */
-  private int fixPDBFormat(Lst<String> lines, Map<String, Integer> map, OC out,
-                           int[] firstAtomIndexNew, int modelPt) {
-    lines.addLast("~999~999XXXXXX99999999999999999999~99~");
-    String[] alines = new String[lines.size()];
-    lines.toArray(alines);
-    Arrays.sort(alines);
-    lines.clear();
-    for (int i = 0, n = alines.length; i < n; i++) {
-      lines.addLast(alines[i]);
-    }
-    String lastPoly = null;
-    String lastLine = null;
-    int n = lines.size();
-    int newAtomNumber = 0;
-    int iBase = (firstAtomIndexNew == null ? 0 : firstAtomIndexNew[modelPt]);
-    for (int i = 0; i < n; i++) {
-      String s = lines.get(i);
-      String poly = s.substring(0, 4);
-      s = s.substring(8);
-      boolean isTerm = false;
-      boolean isLast = (s.indexOf("~99~") >= 0);
-      if (!poly.equals(lastPoly) || isLast) {
-        if (lastPoly != null && !lastPoly.equals("~999")) {
-          isTerm = true;
-          //TER     458      ASN A  78C                                                      
-          s = "TER   " + lastLine.substring(6, 11) + "      "
-              + lastLine.substring(17, 27);
-          lines.add(i, poly + "~~~~" + s);
-          n++;
-        }
-        lastPoly = poly;
-      }
-      if (isLast && !isTerm)
-        break;
-      lastLine = s;
-      newAtomNumber = i + 1 + iBase;
-      if (map != null && !isTerm)
-        map.put(
-            "" + modelPt + "."
-                + Integer.valueOf(PT.parseInt(s.substring(6, 11))),
-            Integer.valueOf(newAtomNumber));
-      String si = "     " + newAtomNumber;
-      out.append(s.substring(0, 6)).append(si.substring(si.length() - 5))
-          .append(s.substring(11)).append("\n");
-    }
-    if (firstAtomIndexNew != null && ++modelPt < firstAtomIndexNew.length)
-      firstAtomIndexNew[modelPt] = newAtomNumber;
-    return modelPt;
+    return getModel("PDB", bs, new Object[] { isPQR, doTransform, allTrajectories}, out);
   }
 
 //
@@ -2237,91 +1973,12 @@ public class PropertyManager implements JmolPropertyManager {
     return out.toString();
   }
 
-  /*
-   * <molecule title="acetic_acid.mol"
-   * xmlns="http://www.xml-cml.org/schema/cml2/core"
-   * xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   * xsi:schemaLocation="http://www.xml-cml.org/schema/cml2/core cmlAll.xsd">
-   * <atomArray> <atom id="a1" elementType="C" x3="0.1853" y3="0.0096"
-   * z3="0.4587"/> <atom id="a2" elementType="O" x3="0.6324" y3="1.0432"
-   * z3="0.8951"/> <atom id="a3" elementType="C" x3="-1.0665" y3="-0.1512"
-   * z3="-0.3758"/> <atom id="a4" elementType="O" x3="0.7893" y3="-1.1734"
-   * z3="0.6766" formalCharge="-1"/> <atom id="a5" elementType="H" x3="-1.7704"
-   * y3="-0.8676" z3="0.1055"/> <atom id="a6" elementType="H" x3="-0.8068"
-   * y3="-0.5215" z3="-1.3935"/> <atom id="a7" elementType="H" x3="-1.5889"
-   * y3="0.8259" z3="-0.4854"/> </atomArray> <bondArray> <bond atomRefs2="a1 a2"
-   * order="partial12"/> <bond atomRefs2="a1 a3" order="S"/> <bond
-   * atomRefs2="a1 a4" order="partial12"/> <bond atomRefs2="a3 a5" order="S"/>
-   * <bond atomRefs2="a3 a6" order="S"/> <bond atomRefs2="a3 a7" order="S"/>
-   * </bondArray> </molecule>
-   */
+  @SuppressWarnings("boxing")
   @Override
   public String getModelCml(BS bs, int atomsMax, boolean addBonds, boolean doTransform, boolean allTrajectories) {
-    // not allowing full trajectory business here. 
-    SB sb = new SB();
-    int nAtoms = bs.cardinality();
-    if (nAtoms == 0)
-      return "";
-    // creating an instance prevents pre-loading by JavaScript
-    if (Viewer.isJS)
-      Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
-    openTag(sb, "molecule");
-    openTag(sb, "atomArray");
-    BS bsAtoms = new BS();
-    Atom[] atoms = vwr.ms.at;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (--atomsMax < 0)
-        break;
-      Atom atom = atoms[i];
-      String name = atom.getAtomName();
-      PT.rep(name, "\"", "''");
-      bsAtoms.set(atom.i);
-      appendTag(sb, "atom/", new String[] { "id",
-          "a" + (atom.i + 1), "title", atom.getAtomName(), "elementType",
-          atom.getElementSymbol(), "x3", "" + atom.x, "y3", "" + atom.y, "z3",
-          "" + atom.z });
-    }
-    closeTag(sb, "atomArray");
-    if (addBonds) {
-      openTag(sb, "bondArray");
-      int bondCount = vwr.ms.bondCount;
-      Bond[] bonds = vwr.ms.bo;
-      for (int i = 0; i < bondCount; i++) {
-        Bond bond = bonds[i];
-        Atom a1 = bond.atom1;
-        Atom a2 = bond.atom2;
-        if (!bsAtoms.get(a1.i) || !bsAtoms.get(a2.i))
-          continue;
-        String order = Edge.getCmlBondOrder(bond.order);
-        if (order == null)
-          continue;
-        appendTag(sb, "bond/", new String[] { "atomRefs2",
-            "a" + (bond.atom1.i + 1) + " a" + (bond.atom2.i + 1),
-            "order", order, });
-      }
-      closeTag(sb, "bondArray");
-    }
-    closeTag(sb, "molecule");
-    return sb.toString();
+    return getModel("CML", bs, new Object[] { atomsMax, addBonds, doTransform, allTrajectories }, null);
   }
-
-  static void openTag(SB sb, String name) {
-    sb.append("<").append(name).append(">\n");
-  }
-
-  static void appendTag(SB sb, String name, String[] attributes) {
-    sb.append("<").append(name);
-    for (int i = 0; i < attributes.length; i++) {
-      sb.append(" ").append(attributes[i]).append("=\"").append(attributes[++i])
-          .append("\"");
-    }
-    sb.append("/>\n");
-  }
-
-  static void closeTag(SB sb, String name) {
-    sb.append("</").append(name).append(">\n");
-  }
-
+  
   /**
    * Fix a JME string returned from NCI CIR to have the proper formal charges.
    */

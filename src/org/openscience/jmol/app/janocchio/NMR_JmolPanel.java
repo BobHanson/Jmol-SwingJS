@@ -80,9 +80,6 @@ import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import org.openscience.jmol.app.jmolpanel.Splash;
 import org.openscience.jmol.app.jmolpanel.StatusBar;
 import org.openscience.jmol.app.jmolpanel.StatusListener;
-//import org.json.Lst<Object>;
-//import org.json.JSONException;
-//import org.json.JSONObject;
 
 public class NMR_JmolPanel extends JmolPanel {
 
@@ -1093,28 +1090,18 @@ public class NMR_JmolPanel extends JmolPanel {
         // this one is totally not helpful. Why doesn't MESSAGE fire this??
         break;
       case APPLETREADY:
-        break;
       case ATOMMOVED:
-        break;
       case AUDIO:
-        break;
       case CLICK:
-        break;
       case DRAGDROP:
-        break;
       case ECHO:
-        break;
       case ERROR:
-        break;
       case EVAL:
-        break;
       case HOVER:
-        break;
       case IMAGE:
-        break;
       case MINIMIZATION:
-        break;
       case RESIZE:
+      case SELECT:
         break;
       case SCRIPT:
         // looking for the script started, which has the script as data[2]

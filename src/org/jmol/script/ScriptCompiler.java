@@ -23,28 +23,27 @@
 
 package org.jmol.script;
 
-import org.jmol.util.Escape;
+import java.util.Hashtable;
+import java.util.Map;
+
+import org.jmol.api.Interface;
+import org.jmol.i18n.GT;
+import org.jmol.modelset.BondSet;
+import org.jmol.modelset.Group;
 import org.jmol.util.CommandHistory;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.jmol.api.Interface;
-import org.jmol.i18n.GT;
-import javajs.util.BS;
-import org.jmol.modelset.BondSet;
-import org.jmol.modelset.Group;
 
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M34;
-import javajs.util.SB;
 import javajs.util.M4;
 import javajs.util.PT;
-
-import java.util.Hashtable;
-
-import java.util.Map;
+import javajs.util.SB;
 
 public class ScriptCompiler extends ScriptTokenParser {
 
@@ -77,7 +76,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   // returns:
 
-  private Map<String, ScriptFunction> contextFunctions;
+//  private Map<String, ScriptFunction> contextFunctions;
   private Map<String, SV> contextVariables;
   private T[][] aatokenCompiled;
   private short[] lineNumbers;

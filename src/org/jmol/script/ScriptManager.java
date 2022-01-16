@@ -366,8 +366,7 @@ public class ScriptManager implements JmolScriptManager {
       if (!isQuiet)
         vwr.setScriptStatus(null, strScript, -2 - (++scriptIndex), null);
       eval.evaluateCompiledScript(vwr.isSyntaxCheck, vwr.isSyntaxAndFileCheck,
-          historyDisabled, vwr.listCommands, outputBuffer,
-          isQueued || !vwr.isSingleThreaded);
+          historyDisabled, vwr.listCommands, outputBuffer, isQueued);
     } else {
       vwr.scriptStatus(strErrorMessage);
       vwr.setScriptStatus("Jmol script terminated", strErrorMessage, 1,
@@ -406,7 +405,7 @@ public class ScriptManager implements JmolScriptManager {
       return "script processing stepped";
     if (checkHalt(str, isInsert))
       return "script execution halted";
-    wasmHack(strScript);
+    vwr.wasmInchiHack(strScript);
     return null;
   }
 
@@ -520,19 +519,9 @@ public class ScriptManager implements JmolScriptManager {
     if (strScript.indexOf(")") == 0 || strScript.indexOf("!") == 0) // history
       // disabled
       strScript = strScript.substring(1);
-    strScript = wasmHack(strScript);
+    strScript = vwr.wasmInchiHack(strScript);
     ScriptContext sc = newScriptEvaluator().checkScriptSilent(strScript);
     return (returnContext || sc.errorMessage == null ? sc : sc.errorMessage);
-  }
-
-  public String wasmHack(String cmd) {
-    if (Viewer.isJS
-        && (cmd.indexOf("find('inchi')") >= 0
-            || cmd.indexOf("find(\"inchi\")") >= 0)
-        || cmd.indexOf(".inchi(") >= 0) {
-      vwr.getInchi(null, null, null);
-    }
-    return cmd;
   }
 
   //////////////////////// open file async ///////////////////////

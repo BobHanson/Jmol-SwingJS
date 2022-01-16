@@ -434,6 +434,8 @@ public class Resolver {
       return "Alchemy";
     if (checkFoldingXyz(lines))
       return "FoldingXyz";
+    if (checkXSF(lines))
+      return "Xcrysden";
     if (checkCube(lines))
       return "Cube";
     if (checkWien2k(lines))
@@ -445,6 +447,14 @@ public class Resolver {
     return null;
   }
   
+  private static boolean checkXSF(String[] lines) {
+    int i = 0;
+    while (lines[i].length() == 0) {
+      i++;
+    }
+    return (lines[i].startsWith("ANIMSTEPS ") || lines[i].equals("ATOMS\n") && PT.parseInt(lines[i + 1]) > 0);
+  }
+
   private static boolean checkAims(String[] lines) {
 
     // use same tokenizing mechanism as in AimsReader.java to also recognize
@@ -474,7 +484,7 @@ public class Resolver {
     11 ATOMS,    12 BONDS,     0 CHARGES
     */
     int pt;
-    if ((pt = line.indexOf("ATOMS")) >= 0 && line.indexOf("BONDS") > pt) {
+    if ((pt = line.indexOf("ATOMS")) > 0 && line.indexOf("BONDS") > pt) {
         int n = PT.parseInt(line.substring(0, pt).trim());
         return (n > 0);
       }

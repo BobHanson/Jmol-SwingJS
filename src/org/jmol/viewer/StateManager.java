@@ -242,10 +242,10 @@ public class StateManager {
         : lastSelected);
     BS bsSelected = (BS) getNoCase(saved, name);
     if (bsSelected == null) {
-      vwr.select(new BS(), false, 0, false);
+      vwr.selectStatus(new BS(), false, 0, false, false);
       return false;
     }
-    vwr.select(bsSelected, false, 0, false);
+    vwr.selectStatus(bsSelected, false, 0, false, false);
     return true;
   }
 

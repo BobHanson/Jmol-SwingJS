@@ -562,7 +562,7 @@ public class ShapeManager {
       if (bsSubset != null) {
         bsSelected = vwr.slm.getSelectedAtomsNoSubset();
         bsSelected.and(bsSubset);
-        vwr.select(bsSelected, false, 0, true);
+        vwr.selectStatus(bsSelected, false, 0, true, false);
         BSUtil.invertInPlace(bsSelected, vwr.ms.ac);
         bsSelected.and(bsSubset);
       }
@@ -590,7 +590,7 @@ public class ShapeManager {
     setLabel(null, bs);
     if (!isBond)
       vwr.setBooleanProperty("bondModeOr", bondmode);
-    vwr.select(bsSelected, false, 0, true);
+    vwr.selectStatus(bsSelected, false, 0, true, false);
   }
 
 }

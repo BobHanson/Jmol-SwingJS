@@ -70,9 +70,13 @@ public class Labels extends AtomShape {
   public short defaultBgcolix;
   public byte defaultPaletteID;
   public int defaultPointer;
+  
   public byte zeroFontId;
 
-  private boolean defaultsOnlyForNone = true;
+//  private boolean defaultsOnlyForNone = true;
+  /**
+   * defaults are set after giving SELECT NONE;
+   */
   private boolean setDefaults = false;
   
   //labels
@@ -92,7 +96,7 @@ public class Labels extends AtomShape {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void setProperty(String propertyName, Object value, BS bsSelected) {
+  public void setProperty(String propertyName, Object value, BS bs) {
     isActive = true;
 
     if ("setDefaults" == propertyName) {
@@ -103,15 +107,14 @@ public class Labels extends AtomShape {
     if ("color" == propertyName) {
       byte pid = PAL.pidOf(value);
       short colix = C.getColixO(value);
-      if (!setDefaults) {
-        int n = checkColixLength(colix, bsSelected.length());
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
-            .nextSetBit(i + 1))
-          setLabelColix(i, colix, pid);
-      }
-      if (setDefaults || !defaultsOnlyForNone) {
+      if (setDefaults) {// || !defaultsOnlyForNone) {
         defaultColix = colix;
         defaultPaletteID = pid;
+      } else {
+        int n = checkColixLength(colix, bs.length());
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < n; i = bs.nextSetBit(i + 1))
+          setLabelColix(i, colix, pid);
       }
       return;
     }
@@ -122,8 +125,8 @@ public class Labels extends AtomShape {
       float val = ((Float) value).floatValue();
       float scalePixelsPerMicron = (val == 0 ? 0 : 10000f / val);
       int n = Math.min(ac, strings.length);
-      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
-          .nextSetBit(i + 1)) {
+      for (int i = bs.nextSetBit(0); i >= 0
+          && i < n; i = bs.nextSetBit(i + 1)) {
         Text text = getLabel(i);
         if (text == null) {
           text = Text.newLabel(vwr, null, strings[i], C.INHERIT_ALL, (short) 0,
@@ -137,20 +140,21 @@ public class Labels extends AtomShape {
     }
 
     if ("label" == propertyName) {
-      boolean isPicked = (isPickingMode() && bsSelected.cardinality() == 1 && bsSelected.nextSetBit(0) == lastPicked);
+      boolean isPicked = (isPickingMode() && bs.cardinality() == 1
+          && bs.nextSetBit(0) == lastPicked);
       setScaling();
       LabelToken[][] tokens = null;
-      int nbs = checkStringLength(bsSelected.length());
+      int nbs = checkStringLength(bs.length());
       if (defaultColix != C.INHERIT_ALL || defaultPaletteID != 0)
-        checkColixLength(defaultColix, bsSelected.length());
+        checkColixLength(defaultColix, bs.length());
       if (defaultBgcolix != C.INHERIT_ALL)
-        checkBgColixLength(defaultBgcolix, bsSelected.length());
+        checkBgColixLength(defaultBgcolix, bs.length());
       if (value instanceof Lst) {
         Lst<SV> list = (Lst<SV>) value;
         int n = list.size();
         tokens = new LabelToken[][] { null };
-        for (int pt = 0, i = bsSelected.nextSetBit(0); i >= 0 && i < nbs; i = bsSelected
-            .nextSetBit(i + 1)) {
+        for (int pt = 0, i = bs.nextSetBit(0); i >= 0
+            && i < nbs; i = bs.nextSetBit(i + 1)) {
           if (pt >= n) {
             setLabel(nullToken, "", i, !isPicked);
             continue;
@@ -162,8 +166,8 @@ public class Labels extends AtomShape {
         String strLabel = (String) value;
         tokens = (strLabel == null || strLabel.length() == 0 ? nullToken
             : new LabelToken[][] { null });
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
           setLabel(tokens, strLabel, i, !isPicked);
       }
       return;
@@ -178,8 +182,8 @@ public class Labels extends AtomShape {
       String label = propertyName.substring(6);
       if (label.length() == 0)
         label = null;
-      setLabel(new LabelToken[][] { null }, label,
-          ((Integer) value).intValue(), false);
+      setLabel(new LabelToken[][] { null }, label, ((Integer) value).intValue(),
+          false);
       return;
     }
 
@@ -198,14 +202,14 @@ public class Labels extends AtomShape {
       if (bsBgColixSet == null)
         bsBgColixSet = BS.newN(ac);
       short bgcolix = C.getColixO(value);
-      if (!setDefaults) {
-        int n = checkBgColixLength(bgcolix, bsSelected.length());
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
-            .nextSetBit(i + 1))
+      if (setDefaults) { // || !defaultsOnlyForNone)
+        defaultBgcolix = bgcolix;
+      } else {
+        int n = checkBgColixLength(bgcolix, bs.length());
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < n; i = bs.nextSetBit(i + 1))
           setBgcolix(i, bgcolix);
       }
-      if (setDefaults || !defaultsOnlyForNone)
-        defaultBgcolix = bgcolix;
       return;
     }
 
@@ -221,44 +225,46 @@ public class Labels extends AtomShape {
         return;
       }
       byte fid = vwr.gdata.getFontFid(fontsize);
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setFont(i, fid);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) { // || !defaultsOnlyForNone)
         defaultFontId = fid;
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setFont(i, fid);
+      }
       return;
     }
 
     if ("font" == propertyName) {
       byte fid = ((Font) value).fid;
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setFont(i, fid);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) {// || !defaultsOnlyForNone)
         defaultFontId = fid;
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setFont(i, fid);
+      }
       return;
     }
 
     if ("offset" == propertyName) {
-      if (!(value instanceof Integer)) {
-        if (!setDefaults) {
-          checkColixLength((short)-1, ac);
-          for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-              .nextSetBit(i + 1))
-            setPymolOffset(i, (float[]) value);
+      if (value instanceof Integer) {
+        int offset = ((Integer) value).intValue();
+        if (setDefaults) {// || !defaultsOnlyForNone)
+          defaultOffset = offset;
+        } else {
+          for (int i = bs.nextSetBit(0); i >= 0
+              && i < ac; i = bs.nextSetBit(i + 1))
+            setOffsets(i, offset);
         }
-        return;
       }
-
-      int offset = ((Integer) value).intValue();
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setOffsets(i, offset);
-      if (setDefaults || !defaultsOnlyForNone)
-        defaultOffset = offset;
+      // pymol offset only
+      if (!setDefaults) {
+        checkColixLength((short) -1, ac);
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setPymolOffset(i, (float[]) value);
+      }
       return;
     }
 
@@ -268,51 +274,56 @@ public class Labels extends AtomShape {
       int hAlignment = (type.equalsIgnoreCase("right") ? JC.TEXT_ALIGN_RIGHT
           : type.equalsIgnoreCase("center") ? JC.TEXT_ALIGN_CENTER
               : JC.TEXT_ALIGN_LEFT);
-      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-          .nextSetBit(i + 1))
-        setHorizAlignment(i, hAlignment);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) {// || !defaultsOnlyForNone)
         defaultAlignment = hAlignment;
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setHorizAlignment(i, hAlignment);
+      }
       return;
     }
 
     if ("pointer" == propertyName) {
       int pointer = ((Integer) value).intValue();
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setPointer(i, pointer);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) {// || !defaultsOnlyForNone)
         defaultPointer = pointer;
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setPointer(i, pointer);
+      }
       return;
     }
 
     if ("front" == propertyName) {
       boolean TF = ((Boolean) value).booleanValue();
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setZPos(i, JC.LABEL_ZPOS_FRONT, TF);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) {// || !defaultsOnlyForNone)
         defaultZPos = (TF ? JC.LABEL_ZPOS_FRONT : 0);
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setZPos(i, JC.LABEL_ZPOS_FRONT, TF);
+      }
       return;
     }
 
     if ("group" == propertyName) {
       boolean TF = ((Boolean) value).booleanValue();
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-            .nextSetBit(i + 1))
-          setZPos(i, JC.LABEL_ZPOS_GROUP, TF);
-      if (setDefaults || !defaultsOnlyForNone)
+      if (setDefaults) {// || !defaultsOnlyForNone)
         defaultZPos = (TF ? JC.LABEL_ZPOS_GROUP : 0);
+      } else {
+        for (int i = bs.nextSetBit(0); i >= 0
+            && i < ac; i = bs.nextSetBit(i + 1))
+          setZPos(i, JC.LABEL_ZPOS_GROUP, TF);
+      }
       return;
     }
 
     if ("display" == propertyName || "toggleLabel" == propertyName) {
       // toggle
-      int mode = ("toggleLabel" == propertyName ? 0 : ((Boolean) value)
-          .booleanValue() ? 1 : -1);
+      int mode = ("toggleLabel" == propertyName ? 0
+          : ((Boolean) value).booleanValue() ? 1 : -1);
       if (mads == null)
         mads = new short[ac];
       String strLabelPDB = null;
@@ -321,12 +332,12 @@ public class Labels extends AtomShape {
       LabelToken[] tokensUNK = null;
       String strLabel;
       LabelToken[] tokens;
-      int nstr = checkStringLength(bsSelected.length());
+      int nstr = checkStringLength(bs.length());
       short bgcolix = defaultBgcolix;
-      int nbg = checkBgColixLength(bgcolix, bsSelected.length());
+      int nbg = checkBgColixLength(bgcolix, bs.length());
       short thisMad = (short) (mode >= 0 ? 1 : -1);
-      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-          .nextSetBit(i + 1)) {
+      for (int i = bs.nextSetBit(0); i >= 0
+          && i < ac; i = bs.nextSetBit(i + 1)) {
         Atom atom = atoms[i];
         if (i < nstr && strings[i] != null) {
           // an old string -- toggle
@@ -363,7 +374,7 @@ public class Labels extends AtomShape {
     }
 
     if ("pymolLabels" == propertyName) {
-      setPymolLabels((Map<Integer, Text>) value, bsSelected);
+      setPymolLabels((Map<Integer, Text>) value, bs);
       return;
     }
 
@@ -380,12 +391,12 @@ public class Labels extends AtomShape {
           nAtomsDeleted);
       strings = (String[]) AU.deleteElements(strings, firstAtomDeleted,
           nAtomsDeleted);
-      BSUtil.deleteBits(bsFontSet, bsSelected);
-      BSUtil.deleteBits(bsBgColixSet, bsSelected);
+      BSUtil.deleteBits(bsFontSet, bs);
+      BSUtil.deleteBits(bsBgColixSet, bs);
       // pass to super
     }
 
-    setPropAS(propertyName, value, bsSelected);
+    setPropAS(propertyName, value, bs);
 
   }
 
