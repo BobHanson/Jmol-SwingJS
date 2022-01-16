@@ -2,6 +2,7 @@ package org.jmol.viewer;
 
 import org.jmol.modelset.Atom;
 
+import javajs.util.BS;
 import javajs.util.SB;
 
 public interface JmolChimeMessenger {
@@ -20,5 +21,7 @@ public interface JmolChimeMessenger {
   void update(String msg);
 
   void getAllChimeInfo(SB sb);
+
+  String getChimeInfoA(Atom[] at, int tok, BS bs);
 
 }

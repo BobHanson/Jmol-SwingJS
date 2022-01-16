@@ -26,13 +26,17 @@ package org.jmol.viewer;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.BS;
+import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.c.CBK;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.T;
 import org.jmol.util.Logger;
 
 /**
@@ -206,5 +210,83 @@ public class ChimeMessenger implements JmolChimeMessenger {
       sb.append("\nNumber of Turns ..... " + nT);
     }
   }
+
+  @Override
+  public String getChimeInfoA(Atom[] atoms, int tok, BS bs) {
+    SB info = new SB();
+    info.append("\n");
+    String s = "";
+    Chain clast = null;
+    Group glast = null;
+    int modelLast = -1;
+    int n = 0;
+    if (bs != null)
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Atom a = atoms[i];
+        switch (tok) {
+        default:
+          return "";
+        case T.selected:
+          s = a.getInfo();
+          break;
+        case T.atoms:
+          s = "" + a.getAtomNumber();
+          break;
+        case T.group:
+          s = a.getGroup3(false);
+          break;
+        case T.chain:
+        case T.residue:
+        case T.sequence:
+        case T.group1:
+          int id = a.getChainID();
+          s = (id == 0 ? " " : a.getChainIDStr());
+          if (id >= 300)
+            s = PT.esc(s);
+          switch (tok) {
+          case T.residue:
+            s = "[" + a.getGroup3(false) + "]" + a.group.getSeqcodeString() + ":" + s;
+            break;
+          case T.sequence:
+          case T.group1:
+            if (a.mi != modelLast) {
+              info.appendC('\n');
+              n = 0;
+              modelLast = a.mi;
+              info.append("Model " + a.getModelNumber());
+              glast = null;
+              clast = null;
+            }
+            if (a.group.chain != clast) {
+              info.appendC('\n');
+              n = 0;
+              clast = a.group.chain;
+              info.append("Chain " + s + ":\n");
+              glast = null;
+            }
+            Group g = a.group;
+            if (g != glast) {
+              glast = g;
+              if (tok == T.group1) {
+                info.append(a.getGroup1('?'));
+              } else {
+                if ((n++) % 5 == 0 && n > 1)
+                  info.appendC('\n');
+                PT.leftJustify(info, "          ", "[" + a.getGroup3(false)
+                    + "]" + a.getResno() + " ");
+              }
+            }
+            continue;
+          }
+          break;
+        }
+        if (info.indexOf("\n" + s + "\n") < 0)
+          info.append(s).appendC('\n');
+      }
+    if (tok == T.sequence)
+      info.appendC('\n');
+    return info.toString().substring(1);
+  }
+
 
 }
