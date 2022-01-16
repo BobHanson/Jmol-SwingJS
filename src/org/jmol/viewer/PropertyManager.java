@@ -1161,7 +1161,7 @@ public class PropertyManager implements JmolPropertyManager {
 
   /**
    * 
-   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON, PWM, XSF
+   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON, PWMAT, XSF
    * 
    * MOL67 is MOL with bonds of type 6 or 7 (aromatic single/double)
    * 
@@ -1171,7 +1171,7 @@ public class PropertyManager implements JmolPropertyManager {
                                 String type, boolean allTrajectories) {
     
     String uc = type.toUpperCase();
-    if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWM;"))
+    if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWMAT;"))
       return getModel(uc, bs, null, null);
     if (uc.equals("CML"))
       return getModelCml(bs, Integer.MAX_VALUE, true, doTransform, allTrajectories);
