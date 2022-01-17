@@ -105,15 +105,28 @@ public class SmilesGenerator {
   private SmilesMatcher sm;
   private int iHypervalent;
   private boolean is2D;
+  private boolean haveSmilesAtoms;
 
   // generation of SMILES strings
 
+  /**
+   * The main entry point from SmilesMatcher
+   * @param sm
+   * @param atoms
+   * @param ac
+   * @param bsSelected
+   * @param comment
+   * @param flags
+   * @return
+   * @throws InvalidSmilesException
+   */
   String getSmiles(SmilesMatcher sm, Node[] atoms, int ac, BS bsSelected,
                    String comment, int flags)
       throws InvalidSmilesException {
     int ipt = bsSelected.nextSetBit(0);
     if (ipt < 0)
       return "";
+    haveSmilesAtoms = (atoms[ipt] instanceof SmilesAtom && ((SmilesAtom) atoms[ipt]).definesStereo());
     this.sm = sm;
     this.flags = flags;
     this.atoms = atoms;
@@ -340,9 +353,7 @@ public class SmilesGenerator {
                                     boolean forceBrackets)
       throws InvalidSmilesException {
 
-    if (explicitHydrogen == 0 && atom.getAtomicAndIsotopeNumber() == 1
-        && atom.getEdges().length > 0)
-      atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
+    atom = checkFirstAtom(atom);
     
     bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
         BSUtil.copy(bs), null, -1, true, allowBioResidues);
@@ -422,6 +433,34 @@ public class SmilesGenerator {
   }
 
   /**
+   * Don't start with H or central cumulene (in case there is symmetry)
+   * 
+   * @param atom
+   * @return starting node atom
+   */
+  private Node checkFirstAtom(Node atom) {
+    if (explicitHydrogen == 0 && atom.getAtomicAndIsotopeNumber() == 1
+        && atom.getEdges().length > 0)
+      atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
+    Node a = atom;
+    Node aprev = null;
+    while (true) {
+      if (a.getCovalentBondCount() != 2)
+        break;
+      Edge[] bonds = a.getEdges();
+      if (bonds[0].getBondType() != Edge.BOND_COVALENT_DOUBLE
+          || bonds[1].getBondType() != Edge.BOND_COVALENT_DOUBLE)
+        break;
+      Node anext = (Node) bonds[0].getOtherNode(a);
+      if (anext == aprev)
+        anext = (Node) bonds[1].getOtherNode(a);
+      aprev = a;
+      a = anext;
+    }
+    return (a == null ? atom : a);
+  }
+
+  /**
    * 
    * get aromaticity, ringSets, and aromaticRings fields so that we can
    * assign / and \ and also provide inter-aromatic single bond
@@ -463,18 +502,18 @@ public class SmilesGenerator {
   }
 
   /**
-   * Creates global BitSets bsBondsUp and bsBondsDown. Noniterative. 
+   * Creates global BitSets bsBondsUp and bsBondsDown. Noniterative.
    *
    */
   private void setBondDirections() {
     BS bsDone = new BS();
     Edge[][] edges = new Edge[2][3];
-    
+
     // We don't assume a bond list, just an atom list, so we
     // loop through all the bonds of all the atoms, flagging them
     // as having been done already so as not to do twice. 
     // The bonds we are marking will be bits in bsBondsUp or bsBondsDn
-    
+
     for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
         .nextSetBit(i + 1)) {
       Node atom1 = atoms[i];
@@ -484,7 +523,8 @@ public class SmilesGenerator {
         int index = bond.index;
         SimpleNode atom2;
         if (bsDone.get(index) || bond.getCovalentOrder() != 2
-            || SmilesSearch.isRingBond(ringSets, null, i, (atom2 = bond.getOtherNode(atom1)).getIndex()))
+            || SmilesSearch.isRingBond(ringSets, null, i,
+                (atom2 = bond.getOtherNode(atom1)).getIndex()))
           continue;
         bsDone.set(index);
         int nCumulene = 0;
@@ -504,19 +544,20 @@ public class SmilesGenerator {
         int i0 = 0;
         SimpleNode[] atom12 = new SimpleNode[] { atom1, atom2 };
         int edgeCount = 1;
-        
+
         // OK, so we have a double bond. Only looking at single bonds around it.
-        
+
         // First pass: just see if there is an already-assigned bond direction
         // and collect the edges in an array. 
-        
+
         for (int j = 0; j < 2 && edgeCount > 0 && edgeCount < 3; j++) {
           edgeCount = 0;
           SimpleNode atomA = atom12[j];
           Edge[] bb = ((Node) atomA).getEdges();
           for (int b = 0; b < bb.length; b++) {
             SimpleNode other;
-            if (bb[b].getCovalentOrder() != 1 || explicitHydrogen == 0 && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
+            if (bb[b].getCovalentOrder() != 1 || explicitHydrogen == 0
+                && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
                 && other.getIsotopeNumber() == 0)
               continue;
             edges[j][edgeCount++] = bb[b];
@@ -528,15 +569,15 @@ public class SmilesGenerator {
         }
         if (edgeCount == 3 || edgeCount == 0)
           continue;
-        
+
         // If no bond around this double bond is already marked, we assign it UP.
-        
+
         if (b0 == null) {
           i0 = 0;
           b0 = edges[i0][0];
           bsBondsUp.set(b0.index);
         }
-        
+
         // The character '/' or '\\' is assigned based on a
         // geometric reference to the reference bond. Initially
         // this comes in in reference to the double bond, but
@@ -552,7 +593,7 @@ public class SmilesGenerator {
         // "more than 90 degrees apart" (ab, and cd)
         // Parity errors would be caught here, but I doubt you
         // could ever get that with a real molecule. 
-        
+
         char c0 = getBondStereochemistry(b0, atom12[i0]);
         a0 = b0.getOtherNode(atom12[i0]);
         if (a0 == null)
@@ -574,11 +615,24 @@ public class SmilesGenerator {
             //      \   /
             //    [i0]=[j]       /a /b  \c \d
             //   
-            boolean isOpposite = SmilesStereo.isDiaxial(atom12[i0], atom12[j],
-                a0, a1, vTemp, 0);
+            boolean isOpposite;
+
+            if (haveSmilesAtoms) {
+              Boolean isop = ((SmilesAtom) a0).isStereoOpposite(a1.getIndex());
+              if (isop == null) {
+                if (Logger.debugging)
+                  Logger.debug("SmilesGenerator could not find stereo for " + a0 + "/" + a1);
+                continue;
+              }
+              isOpposite = isop.booleanValue();
+            } else {
+              isOpposite = SmilesStereo.isDiaxial(atom12[i0], atom12[j], a0, a1,
+                  vTemp, 0);
+            }
+
             if (c1 == '\0' || (c1 != c0) == isOpposite) {
-              boolean isUp = (c0 == '\\' && isOpposite || c0 == '/'
-                  && !isOpposite);
+              boolean isUp = (c0 == '\\' && isOpposite
+                  || c0 == '/' && !isOpposite);
               if (isUp == (b1.getAtomIndex1() != a1.getIndex()))
                 bsBondsUp.set(bi);
               else
@@ -645,7 +699,7 @@ public class SmilesGenerator {
         }
         
         boolean isH = !includeHs
-            && (atom1.getElementNumber() == 1 && atom1.getIsotopeNumber() == 0);
+            && (atom1.getElementNumber() == 1 && atom1.getIsotopeNumber() <= 0);
         if (!bsIncludingH.get(index1)) {
           if (!isH && allowConnectionsToOutsideWorld
               && bsSelected.get(atomIndex))
@@ -878,6 +932,13 @@ public class SmilesGenerator {
       }
       prevStereo = null;
     }
+    
+    
+    if (haveSmilesAtoms && atat == null && stereoFlag == 4) {
+      atat = ((SmilesAtom) atom).getStereoAtAt(stereo);
+    }
+    
+    
     int charge = atom.getFormalCharge();
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();

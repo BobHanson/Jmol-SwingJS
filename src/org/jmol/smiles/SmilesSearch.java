@@ -836,7 +836,7 @@ public class SmilesSearch extends JmolMolecule {
       if (patternAtoms[j].isBioAtomWild)
         targetAtoms[i].getGroupBits(bs);
       if (firstAtomOnly)
-        break; // TODO -- ohoh, I need this?
+        break;
       if (!isSmarts)
         if (!setAtropicity && patternAtoms[j].explicitHydrogenCount > 0) {
           Node atom = targetAtoms[i];
@@ -1499,7 +1499,7 @@ public class SmilesSearch extends JmolMolecule {
         b = sAtom1.getBond(j);
         boolean isAtom2 = (b.atom2 == sAtom1);
         indexOrder = (b.atom1.index < b.atom2.index);
-        int type = b.order;
+        int type = b.getBondType();
         switch (type) {
         case Edge.TYPE_ATROPISOMER:
         case Edge.TYPE_ATROPISOMER_REV:
@@ -1543,6 +1543,7 @@ public class SmilesSearch extends JmolMolecule {
           Logger.info("atropisomer check for atoms " + sAtomDirected1 + sAtom1
               + " " + sAtom2 + sAtomDirected2);
       } else {
+        // double bond
         if (sAtom2 == null || dir1 == 0)
           continue;
         // cumulene stuff here
@@ -1561,7 +1562,7 @@ public class SmilesSearch extends JmolMolecule {
         nBonds = sAtom2.getBondCount();
         for (int j = 0; j < nBonds && dir2 == 0; j++) {
           b = sAtom2.getBond(j);
-          int type = b.order;
+          int type = b.getBondType();
           switch (type) {
           case Edge.BOND_STEREO_NEAR:
           case Edge.BOND_STEREO_FAR:
@@ -1642,7 +1643,7 @@ public class SmilesSearch extends JmolMolecule {
     return (s + "   ").substring(0, 3);
   }
 
-  private void setTopoCoordinates(SmilesAtom dbAtom1, SmilesAtom dbAtom2,
+  private static void setTopoCoordinates(SmilesAtom dbAtom1, SmilesAtom dbAtom2,
                                       SmilesAtom dbAtom1a, SmilesAtom dbAtom2a,
                                       int bondType) {
     dbAtom1.set(-1, 0, 0);
@@ -1906,9 +1907,7 @@ public class SmilesSearch extends JmolMolecule {
    * 
    * Not applicable to SMARTS
    * 
-   * @param atoms
    * @param bsAromatic
-   * @param flags
    * @throws InvalidSmilesException
    */
   void normalizeAromaticity(BS bsAromatic)

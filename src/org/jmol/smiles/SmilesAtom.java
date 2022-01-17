@@ -33,6 +33,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
+import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 
 //import org.jmol.util.Logger;
@@ -49,7 +50,7 @@ public class SmilesAtom extends P3 implements Node {
     return (UNBRACKETED_SET.indexOf(xx + ",") >= 0);
   }
 
-  SmilesAtom() {
+  public SmilesAtom() {
   }
 
   int patternIndex = -1;
@@ -228,13 +229,13 @@ public class SmilesAtom extends P3 implements Node {
 
     if (elementNumber == 7 && isAromatic && bondCount == 2) {
       // is it -N= or -NH- ? 
-      if (bonds[0].order == Edge.BOND_COVALENT_SINGLE
-           && bonds[1].order == Edge.BOND_COVALENT_SINGLE)
+      if (bonds[0].getBondType() == Edge.BOND_COVALENT_SINGLE
+           && bonds[1].getBondType() == Edge.BOND_COVALENT_SINGLE)
         count++;
     }
     for (int i = 0; i < bondCount; i++) {
       SmilesBond bond = bonds[i];
-      switch (bond.order) {
+      switch (bond.getBondType()) {
       case SmilesBond.TYPE_ANY: // for aromatics
         if (elementNumber == 7) {
           Logger.info("Ambiguous bonding to aromatic N found -- MF may be in error");
@@ -253,7 +254,7 @@ public class SmilesAtom extends P3 implements Node {
       case Edge.BOND_COVALENT_SINGLE:
       case Edge.BOND_COVALENT_TRIPLE:
       case Edge.BOND_COVALENT_QUADRUPLE:
-        count -= bond.order;
+        count -= bond.getBondType();
         break;
       }
     }
@@ -540,7 +541,7 @@ public class SmilesAtom extends P3 implements Node {
       subAtoms = (SmilesAtom[]) AU.arrayCopyObject(subAtoms, subAtoms.length);
     for (int i = 0; i < bonds.length; i++) {
       SmilesBond b = bonds[i];
-      if (isBioAtom && b.order == SmilesBond.TYPE_AROMATIC)
+      if (isBioAtom && b.getBondType() == SmilesBond.TYPE_AROMATIC)
         b.order = SmilesBond.TYPE_BIO_CROSSLINK;
       if (b.atom1.index > b.atom2.index) {
         // it is possible, particularly for a connection to a an atom 
@@ -697,7 +698,7 @@ public class SmilesAtom extends P3 implements Node {
         return index;
       for (int k = 0; k < bonds.length; k++)
         if (bonds[k].getAtomIndex1() == index
-            && bonds[k].order == SmilesBond.TYPE_BIO_SEQUENCE)
+            && bonds[k].getBondType() == SmilesBond.TYPE_BIO_SEQUENCE)
           return bonds[k].getOtherAtom(this).index;
     }
     return -1;
@@ -753,7 +754,7 @@ public class SmilesAtom extends P3 implements Node {
   public String getChainIDStr() {
     return "";
   }
-
+  
   /**
    *
    * called from SmilesGenerator
@@ -778,7 +779,7 @@ public class SmilesAtom extends P3 implements Node {
       if (atomicNumber != 6)
         valence = Integer.MAX_VALUE; // force [n]
     }
-    boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber == 0 
+    boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber <= 0 
         && charge == 0 && Float.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
     int norm = getDefaultCount(atomicNumber, false);
     if (is2D && nH == 0) {
@@ -851,7 +852,7 @@ public class SmilesAtom extends P3 implements Node {
         //    + " ar:" + isAromatic 
         //    + " H:" + explicitHydrogenCount
         //    + " h:" + implicitHydrogenCount
-        + "]" + s2 + "(" + x + "," + y + "," + z + ")";
+        + "]->" + s2 + "(" + x + "," + y + "," + z + ")";
   }
 
   @Override
@@ -899,6 +900,23 @@ public class SmilesAtom extends P3 implements Node {
   @Override
   public boolean modelIsRawPDB() {
     return false;
+  }
+
+  /**
+   * for InChI or any other system that self-defines stereochemistry.
+   * 
+   * @return
+   */
+  public boolean definesStereo() {
+    return false;
+  }
+
+  public String getStereoAtAt(SimpleNode[] nodes) {
+    return null;
+  }
+
+  public Boolean isStereoOpposite(int iatom) {
+    return null;
   }
 
 }

@@ -2584,7 +2584,7 @@ public class ScriptEval extends ScriptExpr {
       cmdRestrict();
       break;
     case T.resume:
-      if (slen == 0) {
+      if (slen == 1) {
         if (!chk)
           resumePausedExecution();
         break;

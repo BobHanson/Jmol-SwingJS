@@ -397,8 +397,12 @@ public class ScriptManager implements JmolScriptManager {
 
   private String checkScriptExecution(String strScript, boolean isInsert) {
     String str = strScript;
-    if (str.indexOf("\1##") >= 0)
-      str = str.substring(0, str.indexOf("\1##"));
+    int pt = str.indexOf(JC.SCRIPT_GUI);
+    if (pt >= 0)
+      str = str.substring(0, pt);
+    else if ((pt = str.indexOf("\1##")) >= 0)
+      str = str.substring(0, pt);
+
     if (checkResume(str))
       return "script processing resumed";
     if (checkStepping(str))

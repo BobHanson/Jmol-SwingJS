@@ -110,7 +110,7 @@ public class CIPDataSmiles extends CIPData {
       return CIPChirality.NO_CHIRALITY;
     // get ordered list based on the SMILES string, 
     // correctly inserting lone pairs where needed
-    Node[] jn = center.stereo.getAlleneAtoms(center, (SmilesAtom) b.atom);
+    Node[] jn = center.stereo.getAlleneAtoms(false, null, center, (SmilesAtom) b.atom);
     if (jn == null)
       return CIPChirality.NO_CHIRALITY;
     center.stereo.setTopoCoordinates(center, null, null, jn, false);

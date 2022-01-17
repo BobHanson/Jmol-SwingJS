@@ -1170,7 +1170,7 @@ public class SmilesParser {
       if (!isBracketed)
         setBondAtom(bond, null, newAtom, search);
       if (branchLevel == 0
-          && (bond.order == SmilesBond.TYPE_AROMATIC || bond.order == SmilesBond.TYPE_BIO_CROSSLINK))
+          && (bond.getBondType() == SmilesBond.TYPE_AROMATIC || bond.order == SmilesBond.TYPE_BIO_CROSSLINK))
         branchLevel++;
     }
     // if (Logger.debugging)

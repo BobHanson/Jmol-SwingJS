@@ -138,7 +138,7 @@ public class SmilesAromatic {
         .nextSetBit(i + 1)) {
       Edge[] bonds = jmolAtoms[i].getEdges();
       for (int j = 0; j < bonds.length; j++) {
-        switch (bonds[j].order) {
+        switch (bonds[j].getBondType()) {
         case Edge.BOND_AROMATIC:
         case Edge.BOND_AROMATIC_DOUBLE:
         case Edge.BOND_AROMATIC_SINGLE:

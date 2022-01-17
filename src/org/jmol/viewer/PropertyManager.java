@@ -1568,10 +1568,10 @@ public class PropertyManager implements JmolPropertyManager {
     vwr.ms.getAtomIdentityInfo(atom2.i, infoB, ptTemp);
     info.put("atom1", infoA);
     info.put("atom2", infoB);
-    info.put("jmol_order", "0x" + Integer.toHexString(bond.order));
+    info.put("jmol_order", "0x" + Integer.toHexString(bond.getBondType()));
     info.put("order", Float.valueOf(Edge
-        .getBondOrderNumberFromOrder(bond.order)));
-    info.put("type", Edge.getBondOrderNameFromOrder(bond.order));
+        .getBondOrderNumberFromOrder(bond.getBondType())));
+    info.put("type", Edge.getBondOrderNameFromOrder(bond.getBondType()));
     info.put("radius", Float.valueOf((float) (bond.mad / 2000.)));
     info.put("length_Ang", Float.valueOf(atom1.distance(atom2)));
     info.put("visible", Boolean.valueOf(bond.shapeVisibilityFlags != 0));

@@ -1463,6 +1463,8 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // "test.find("t");
+    // "test.find("t","v"); // or "m" or "i"
     // {1.1}.find("2.1","map", labelFormat)
     // {*}.find("inchi",inchi-options)
     // {*}.find("crystalClass")
@@ -1489,7 +1491,6 @@ public class MathExt {
     // {1.1}.find("SMARTS", {2.1})
     // smiles1.find("SMILES", smiles2)
     // smiles1.find("SMILES", smiles2)
-    
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
@@ -1525,11 +1526,47 @@ public class MathExt {
       sFind = "SMARTS";
     }
 
-    boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
-    boolean isSMARTS = !isList && sFind.equalsIgnoreCase("SMARTS");
-    boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
-    boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
-    boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
+    String smiles = null;
+    boolean isStr = false;
+    if (x1.tok == T.string) {
+      // check in case pattern is "SMILES" or "SMARTS" or one of the other options tested for next
+      switch (args.length) {
+      case 1:
+        if (((String) x1.value).startsWith("InChI=")) {
+          if (sFind.equals("SMILES")) {
+            return mp.addXStr(vwr.getInchi(null, (String)x1.value, "SMILES")); 
+          }
+        }
+        isStr = true;
+        break;
+      case 2:
+        // "xx".find("yyy",FALSE|TRUE|""|"m"|"i"|"v") or some combination of m,i,v
+        if (isOff || isON) {
+          isStr = true;
+        } else if (((String) x1.value).startsWith("InChI=")) {
+          if (sFind.equals("SMARTS")) {
+            smiles = vwr.getInchi(null, (String)x1.value, "SMILES");
+          } else {
+            isStr = true;
+          }
+        } else if (flags.length() <= 3) {
+          if (flags.replace('m', ' ').replace('i', ' ').replace('v', ' ').trim().length() == 0)
+            isStr = true;
+        }
+        break;
+      }
+
+      // check for simple
+    }
+
+    boolean isSmiles = !isList && !isStr && sFind.equalsIgnoreCase("SMILES");
+    boolean isSMARTS = !isList && !isStr && sFind.equalsIgnoreCase("SMARTS");
+    boolean isChemical = !isList && !isStr
+        && sFind.equalsIgnoreCase("CHEMICAL");
+    boolean isMF = !isList && !isStr && sFind.equalsIgnoreCase("MF");
+    boolean isCF = !isList && !isStr && sFind.equalsIgnoreCase("CELLFORMULA");
+
+    
     boolean isInchi = isAtoms && !isList && sFind.equalsIgnoreCase("INCHI");
     boolean isInchiKey = isAtoms && !isList
         && sFind.equalsIgnoreCase("INCHIKEY");
@@ -1561,8 +1598,12 @@ public class MathExt {
         Object ret = null;
         switch (x1.tok) {
         case T.string:
-          String smiles = SV.sValue(x1);
-          if (bs2 != null || isSmiles && args.length == 1)
+          if (smiles == null)
+            smiles = SV.sValue(x1);
+          if ((isSmiles || isSMARTS) && args.length == 1) {
+            return false;
+          }
+          if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
             ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS);

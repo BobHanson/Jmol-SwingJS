@@ -3106,8 +3106,12 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private boolean handleError() {
     errorType = errorMessage;
-    errorLine = script.substring(ichCurrentCommand,
-        ichEnd <= ichCurrentCommand ? ichToken + cchToken : ichEnd);
+    String s = script;
+    int igui = s.indexOf(JC.SCRIPT_GUI);
+    if (igui < 0)
+      igui = ichEnd;
+    errorLine = s.substring(ichCurrentCommand,
+        Math.min(igui, ichEnd <= ichCurrentCommand ? ichToken + cchToken : ichEnd));
     String lineInfo = (ichToken < ichEnd ? errorLine.substring(0, ichToken
         - ichCurrentCommand)
         + " >>>> " + errorLine.substring(ichToken - ichCurrentCommand)

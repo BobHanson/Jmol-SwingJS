@@ -687,12 +687,11 @@ public class SmilesStereo {
       }
       return 0;
     case ALLENE:
-      jn = getAlleneAtoms(pAtom, null);
+      jn = getAlleneAtoms(haveTopo, sAtom0, pAtom, null);
       if (jn == null)
         return 0;
-      if (haveTopo && !setTopoCoordinates(sAtom0, pAtom, pAtom2, jn, false))
+      if (jn.length == 0)
         return -1;
-      
       if (!checkStereochemistryAll(isNot, atom0,
           chiralClass, order, jn[0], jn[1], jn[2], jn[3], null, null, v))
         return -1;
@@ -753,7 +752,15 @@ public class SmilesStereo {
     return true;
   }
 
-  public Node[] getAlleneAtoms(SmilesAtom pAtom, SmilesAtom pAtom1) {
+  /**
+   * 
+   * @param haveTopo 
+   * @param sAtom0 
+   * @param pAtom
+   * @param pAtom1
+   * @return
+   */
+  public Node[] getAlleneAtoms(boolean haveTopo, SmilesAtom sAtom0, SmilesAtom pAtom, SmilesAtom pAtom1) {
     if (pAtom1 == null)
       pAtom1 = pAtom.getBond(0).getOtherAtom(pAtom);
     SmilesAtom pAtom2 = pAtom.getBond(1).getOtherAtom(pAtom);
@@ -825,6 +832,9 @@ public class SmilesStereo {
     for (int k = 0; k < 4; k++)
       if (jn[k] == null)
         addAlleneLonePair(k < 2 ? pAtom : pAtom2, jn, k);
+    
+    if (haveTopo && !setTopoCoordinates(sAtom0, pAtom, pAtom2, jn, false))
+      return new Node[0]; 
     return jn;
   }
 

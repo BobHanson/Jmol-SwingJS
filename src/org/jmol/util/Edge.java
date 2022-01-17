@@ -307,7 +307,7 @@ public abstract class Edge implements SimpleEdge {
   
   @Override
   public int getBondType() {
-    return order;
+    return order & ~BOND_NEW;
   }
 
   private enum EnumBondOrder {

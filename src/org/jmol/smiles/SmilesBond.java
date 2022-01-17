@@ -178,7 +178,7 @@ public class SmilesBond extends Edge {
    * @param bondType Bond type
    * @param isNot 
    */
-  SmilesBond(SmilesAtom atom1, SmilesAtom atom2, int bondType,
+  public SmilesBond(SmilesAtom atom1, SmilesAtom atom2, int bondType,
       boolean isNot) {
     set2(bondType, isNot);
     set2a(atom1, atom2);
@@ -266,7 +266,7 @@ public class SmilesBond extends Edge {
 
   @Override
   public int getCovalentOrder() {
-    return order;
+    return order & ~BOND_NEW;
   }
 
   @Override
@@ -294,7 +294,7 @@ public class SmilesBond extends Edge {
     SmilesAtom a = atom1;
     atom1 = atom2;
     atom2 = a;
-    switch (order) {
+    switch (order & ~BOND_NEW) {
     case TYPE_ATROPISOMER:
       order = TYPE_ATROPISOMER_REV;
       break;
@@ -311,14 +311,14 @@ public class SmilesBond extends Edge {
   }
 
   public int getRealCovalentOrder() {
-    switch (order) {
+    switch (order & ~BOND_NEW) {
     case TYPE_ATROPISOMER:
     case TYPE_ATROPISOMER_REV:
     case BOND_STEREO_NEAR:
     case BOND_STEREO_FAR:
       return BOND_COVALENT_SINGLE;
     }
-    return order;
+    return order & ~BOND_NEW;
   }
 
   public Edge getMatchingBond() {
