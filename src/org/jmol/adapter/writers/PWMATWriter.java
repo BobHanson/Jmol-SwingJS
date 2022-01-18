@@ -16,7 +16,7 @@ import javajs.util.V3;
  * A writer for PWMAT atom.config files.
  * 
  */
-public class PWMWriter implements JmolWriter {
+public class PWMATWriter implements JmolWriter {
 
 
   private Viewer vwr;
@@ -24,7 +24,7 @@ public class PWMWriter implements JmolWriter {
   private SymmetryInterface uc;
 
   
-  public PWMWriter() {
+  public PWMATWriter() {
     // for JavaScript dynamic loading
   }
 
