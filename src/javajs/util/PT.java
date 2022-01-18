@@ -896,6 +896,7 @@ public class PT {
 		return packageJSON(infoType, (s == null ? sb.toString() : s));
 	}
 
+
   /**
    * Checks to see if an object is an array (including typed arrays), and if it is, returns null;
    * otherwise it returns the string equivalent of that object.

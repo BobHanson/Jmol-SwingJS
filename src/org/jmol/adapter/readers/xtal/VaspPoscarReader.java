@@ -59,11 +59,15 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    if (!iHaveFractionalCoordinates)
+      fractionalizeCoordinates(true);
     if (!haveAtomLabels && !atomsLabeledInline)     
       appendLoadNote("VASP POSCAR reader using pseudo atoms Al B C Db...");
     finalizeReaderASCR();
   }
 
+  private float[] unitCellData;
+  
   protected void readUnitCellVectors() throws Exception {
     // Read Unit Cell
     setSpaceGroupName("P1");
@@ -72,7 +76,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     boolean isVolume = (scaleFac < 0);
     if (isVolume)
       scaleFac = (float) Math.pow(-scaleFac, 1./3.);      
-    float[] unitCellData = new float[9];
+    unitCellData = new float[9];
     String s = rdline() + " " + rdline() + " " + rdline();
     Parser.parseStringInfestedFloatArray(s, null, unitCellData);
     if (isVolume) {
@@ -83,9 +87,6 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     if (scaleFac != 1)
       for (int i = 0; i < unitCellData.length; i++)
         unitCellData[i] *= scaleFac;
-    addExplicitLatticeVector(0, unitCellData, 0);
-    addExplicitLatticeVector(1, unitCellData, 3);
-    addExplicitLatticeVector(2, unitCellData, 6);
   }
 
   protected String[] elementLabel;
@@ -145,8 +146,12 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     if (isSelective)    
       rd();
     boolean isCartesian = (line.toLowerCase().contains("cartesian")); 
-    if (isCartesian)
+    if (isCartesian) {
       setFractionalCoordinates(false);
+    }
+    addExplicitLatticeVector(0, unitCellData, 0);
+    addExplicitLatticeVector(1, unitCellData, 3);
+    addExplicitLatticeVector(2, unitCellData, 6);
     for (int i = 0; i < ac; i++) {
       float radius = Float.NaN;
       String[] tokens = PT.getTokens(rdline());
