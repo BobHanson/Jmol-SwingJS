@@ -195,6 +195,7 @@ abstract class ScriptTokenParser {
       switch(tok) {
       case T.on:
       case T.off:
+      case T.comma:
         tok = tokAt(++firstToken);
         break;
       }

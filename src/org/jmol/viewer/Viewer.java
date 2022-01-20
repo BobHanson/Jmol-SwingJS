@@ -3730,9 +3730,7 @@ public class Viewer extends JmolViewer
 
   public SymmetryInterface getCurrentUnitCell() {
       int iAtom = am.getUnitCellAtomIndex(); 
-      if (iAtom >= 0)
-        return ms.getUnitCellForAtom(iAtom);
-      return getUnitCell(am.cmi);
+      return (iAtom >= 0 ? ms.getUnitCellForAtom(iAtom) : getUnitCell(am.cmi));
     }
 
     private SymmetryInterface getUnitCell(int m) {
@@ -3881,13 +3879,17 @@ public class Viewer extends JmolViewer
 
   /**
    * absolute or relative to origin of UNITCELL {x y z}
-   * 
    * @param pt
    * @param ignoreOffset
    *        TODO
    */
   public void toCartesian(T3 pt, boolean ignoreOffset) {
-    SymmetryInterface unitCell = getCurrentUnitCell();
+    toCartesianUC(null, pt, ignoreOffset);
+  }
+
+  public void toCartesianUC(SymmetryInterface unitCell, T3 pt, boolean ignoreOffset) {
+    if (unitCell == null)
+      unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toCartesian(pt, ignoreOffset);
       if (!g.legacyJavaFloat)
@@ -3903,13 +3905,17 @@ public class Viewer extends JmolViewer
    *        UNITCELL {x y z}
    */
   public void toFractional(T3 pt, boolean ignoreOffset) {
-    SymmetryInterface unitCell = getCurrentUnitCell();
+    toFractionalUC(null, pt, ignoreOffset);
+  }
+
+  public void toFractionalUC(SymmetryInterface unitCell, T3 pt, boolean ignoreOffset) {
+    if (unitCell == null)
+      unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toFractional(pt, ignoreOffset);
       if (!g.legacyJavaFloat)
         PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
-
   }
 
   /**

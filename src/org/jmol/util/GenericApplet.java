@@ -595,6 +595,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case SERVICE:
     case RESIZE:
     case DRAGDROP:
+    case ATOMMOVED:
+    case SELECT:
       // just send it
       break;
     case CLICK:
@@ -639,9 +641,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
             data[2]/*entryName*/, data[3]/*morphModel*/
             };
       }
-      break;
-    case ATOMMOVED:
-    case SELECT:
       break;
     case ECHO:
       boolean isPrivate = (data.length == 2);
@@ -719,6 +718,10 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case SYNC:
       sendScript(strInfo, (String) data[2], true, doCallback);
       return;
+    case MODELKIT:
+      break;
+    default:
+      break;
     }
     if (toConsole) {
       JmolCallbackListener appConsole = (JmolCallbackListener) viewer

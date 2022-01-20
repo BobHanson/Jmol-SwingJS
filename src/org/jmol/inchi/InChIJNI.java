@@ -76,7 +76,7 @@ public class InChIJNI implements JmolInChI {
       boolean getStructure = (lc.indexOf("structure") >= 0);
       if (lc.startsWith("structure/")) {
         inchi = options.substring(10);
-        lc = "";
+        options = lc = "";
       }
       if (molData != null && molData.startsWith("InChI=")) {
         inchi = molData;

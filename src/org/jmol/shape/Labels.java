@@ -257,9 +257,8 @@ public class Labels extends AtomShape {
               && i < ac; i = bs.nextSetBit(i + 1))
             setOffsets(i, offset);
         }
-      }
-      // pymol offset only
-      if (!setDefaults) {
+      } else if (!setDefaults) {
+        // pymol offset only
         checkColixLength((short) -1, ac);
         for (int i = bs.nextSetBit(0); i >= 0
             && i < ac; i = bs.nextSetBit(i + 1))

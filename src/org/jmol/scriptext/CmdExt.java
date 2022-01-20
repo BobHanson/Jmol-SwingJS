@@ -101,8 +101,21 @@ public class CmdExt extends ScriptExt {
     // used by Reflection
   }
 
+  /**
+   * The command dispatcher for the set of commands extended by this class.
+   * These commands can be from the Jmol command of their method name or another
+   * command or method working as though it were a command, with a non-GUI-generated compiled script.
+   * 
+   * @param iTok
+   *        the current statement position, usually 1
+   * @param flag
+   *        a command-specific flag
+   * @param st
+   *        the compiled statement for this command
+   * 
+   */
   @Override
-  public String dispatch(int iTok, boolean b, T[] st) throws ScriptException {
+  public String dispatch(int iTok, boolean flag, T[] st) throws ScriptException {
     chk = e.chk;
     slen = e.slen;
     this.st = st;
@@ -182,10 +195,10 @@ public class CmdExt extends ScriptExt {
       stereo();
       break;
     case T.unitcell:
-      unitcell(b ? 2 : 1);
+      unitcell(flag ? 2 : 1, false);
       break;
     case T.write:
-      return write(b ? st : null);
+      return write(flag ? st : null);
     case JC.SHAPE_MEASURES:
       measure();
       break;
@@ -5366,7 +5379,7 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i) throws ScriptException {
+  private void unitcell(int i, boolean doTransform) throws ScriptException {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
@@ -5440,8 +5453,8 @@ public class CmdExt extends ScriptExt {
                 : u.getUnitCellVectors());
             if (stype == null)
               stype = (String) vwr.getSymmetryInfo(
-                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null,
-                  null, T.lattice, null, 0, -1, 0);
+                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
+                  T.lattice, null, 0, -1, 0);
             if (u == null)
               u = vwr.getSymTemp();
             u.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
@@ -5553,12 +5566,41 @@ public class CmdExt extends ScriptExt {
       vwr.am.setUnitCellAtomIndex(-1);
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
-    if (icell != Integer.MAX_VALUE)
+    if (icell != Integer.MAX_VALUE) {
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), null, icell);
-    else if (id != null)
+    } else if (id != null) {
       vwr.setCurrentCage(id);
-    else if (isReset || oabc != null)
-      eval.setModelCagePts(-1, oabc, ucname);
+    } else if (isReset || oabc != null) {
+      isReset = true;
+      SymmetryInterface unitCell = (doTransform ? vwr.getCurrentUnitCell() : null);
+      if (unitCell != null) {
+        BS bsAtoms = null;
+        bsAtoms = vwr.getFrameAtoms();
+        P3[] fxyz = null;
+        int n = bsAtoms.cardinality();
+        isReset = (n == 0);
+        if (!isReset) {
+          fxyz = new P3[n];
+          Atom[] a = vwr.ms.at;
+          for (int j = n; --j >= 0;) {
+            fxyz[j] = P3.newP(a[j]);
+            vwr.toFractionalUC(unitCell, fxyz[j], false);
+          }
+          eval.setModelCagePts(-1, oabc, ucname);
+          unitCell = vwr.getCurrentUnitCell();
+          for (int j = n; --j >= 0;) {
+            a[j].setT(fxyz[j]);
+            vwr.toCartesianUC(unitCell, a[j], false);
+          }
+          vwr.ms.setTaintedAtoms(bsAtoms, AtomCollection.TAINT_COORD);
+        }
+      } else {
+        isReset = true;
+      }
+      if (isReset) {
+        eval.setModelCagePts(-1, oabc, ucname);
+      }
+    }
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
@@ -5684,8 +5726,10 @@ public class CmdExt extends ScriptExt {
         break;
       case T.unitcell:
         value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKit.UNITCELL_OPTIONS))
-          invArg();
+        if (!PT.isOneOf((String) value, ModelKit.UNITCELL_OPTIONS)) {
+          unitcell(2, true);
+          return;
+        }
         break;
       case T.symop:
         switch (tokAt(++i)) {

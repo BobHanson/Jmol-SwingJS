@@ -310,12 +310,22 @@ public class StatusManager {
           new Object[] { sJmol, bsMoved });
   }
 
+  /**
+   * Callback for selection change. Data will include
+   * 
+   * [callbackFuncName, atoms, numberSelected, firstIndex, lastIndex + 1]
+   * 
+   * 
+   * @param atoms 
+   * 
+   */
   synchronized void setStatusSelect(BS atoms) {
     String sJmol = jmolScriptCallback(CBK.SELECT);
     setStatusChanged("select", -1, atoms, false);
     if (notifyEnabled(CBK.SELECT))
       cbl.notifyCallback(CBK.SELECT,
-          new Object[] { sJmol, atoms });
+          new Object[] { sJmol, atoms, Integer.valueOf(atoms.cardinality()), 
+              Integer.valueOf(atoms.nextSetBit(0)), Integer.valueOf(atoms.length()) });
   }
 
   /**

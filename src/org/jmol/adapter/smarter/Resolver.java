@@ -610,7 +610,7 @@ public class Resolver {
       return (isInt(lines[2]) ? 2 
           : lines.length > 5 && lines[5].length() > 8 && lines[5].substring(0,8).equalsIgnoreCase("position") ? 3
           : 1);
-    return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : 0);
+    return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : lines[1].indexOf("Lattice vector") == 0 ? 3 : 0);
   }
   
   ////////////////////////////////////////////////////////////////

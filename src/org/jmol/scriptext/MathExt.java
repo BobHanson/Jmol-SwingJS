@@ -400,7 +400,7 @@ public class MathExt {
     int ptParam = (haveUC ? 1 : 0);
     if (ucnew == null && !haveUC && tok0 != T.point3f) {
       // unitcell() or {1.1}.unitcell
-      u = (iatom < 0 ? null : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
+      u = (iatom < 0 ? vwr.getCurrentUnitCell() : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
       ucnew = (u == null
           ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0), P3.new3(0, 1, 0),
               P3.new3(0, 0, 1) }
