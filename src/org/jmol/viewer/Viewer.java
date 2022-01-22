@@ -8001,9 +8001,13 @@ public class Viewer extends JmolViewer
   public void setAtomCoords(BS bs, int tokType, Object xyzValues) {
     if (bs.isEmpty())
       return;
+    Atom atom = ms.at[bs.nextSetBit(0)];
+    int n = bs.cardinality();
+    sm.setStatusStructureModified(atom.i, atom.mi, 3, "setAtomCoords", n, bs);
     ms.setAtomCoords(bs, tokType, xyzValues);
     checkMinimization();
     sm.setStatusAtomMoved(bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
   }
 
   public void setAtomCoordsRelative(T3 offset, BS bs) {
@@ -8012,63 +8016,70 @@ public class Viewer extends JmolViewer
       bs = bsA();
     if (bs.isEmpty())
       return;
+    boolean doNotify = (offset.lengthSquared() != 0);
+    Atom atom = ms.at[bs.nextSetBit(0)];
+    int n = bs.cardinality();
+    if (doNotify) {
+      sm.setStatusStructureModified(atom.i, atom.mi, 3, "setAtomCoords", n, bs);
+    }
     ms.setAtomCoordsRelative(offset, bs);
     checkMinimization();
-    sm.setStatusAtomMoved(bs);
-  }
-
-  public void invertAtomCoordPt(P3 pt, BS bs) {
-    // Eval
-    ms.invertSelected(pt, null, -1, bs);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
-  }
-
-  public void invertAtomCoordPlane(P4 plane, BS bs) {
-    ms.invertSelected(null, plane, -1, bs);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
-  }
-
-  public void invertRingAt(int atomIndex, boolean isClick) {
-    // [r50 here just sets the max ring size to 50
-    BS bs = getAtomBitSet(
-        "connected(atomIndex=" + atomIndex + ") and !within(SMARTS,'[r50,R]')");
-    int nb = bs.cardinality();
-    switch (nb) {
-    case 0:
-    case 1:
-      // not enough non-ring atoms
-      return;
-    case 2:
-      break;
-    case 3:
-    case 4:
-      // three or four are not in a ring. So let's find the shortest two
-      // branches and invert them.
-      int[] lengths = new int[nb];
-      int[] points = new int[nb];
-      int ni = 0;
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ni++) {
-        lengths[ni] = getBranchBitSet(i, atomIndex, true).cardinality();
-        points[ni] = i;
-      }
-      for (int j = 0; j < nb - 2; j++) {
-        int max = Integer.MIN_VALUE;
-        int imax = 0;
-        for (int i = 0; i < nb; i++)
-          if (lengths[i] >= max && bs.get(points[i])) {
-            imax = points[i];
-            max = lengths[i];
-          }
-        bs.clear(imax);
-      }
+    if (doNotify) {
+      sm.setStatusAtomMoved(bs);
+      sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
     }
+  }
+
+  public void invertAtomCoord(P3 pt, P4 plane, BS bs, int ringAtomIndex, boolean isClick) {
+    // Eval
+    if (ringAtomIndex >= 0) {
+      // invert ring [r50 here just sets the max ring size to 50
+      bs = getAtomBitSet(
+          "connected(atomIndex=" + ringAtomIndex + ") and !within(SMARTS,'[r50,R]')");
+      int nb = bs.cardinality();
+      switch (nb) {
+      case 0:
+      case 1:
+        // not enough non-ring atoms
+        return;
+      case 2:
+        break;
+      case 3:
+      case 4:
+        // three or four are not in a ring. So let's find the shortest two
+        // branches and invert them.
+        int[] lengths = new int[nb];
+        int[] points = new int[nb];
+        int ni = 0;
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ni++) {
+          lengths[ni] = getBranchBitSet(i, ringAtomIndex, true).cardinality();
+          points[ni] = i;
+        }
+        for (int j = 0; j < nb - 2; j++) {
+          int max = Integer.MIN_VALUE;
+          int imax = 0;
+          for (int i = 0; i < nb; i++)
+            if (lengths[i] >= max && bs.get(points[i])) {
+              imax = points[i];
+              max = lengths[i];
+            }
+          bs.clear(imax);
+        }
+      }
+      if (isClick && bs.cardinality() > 0)
+        undoMoveActionClear(ringAtomIndex, AtomCollection.TAINT_COORD, true);
+    }    
+    int n = bs.cardinality();
+    if (n == 0)
+      return;
+    Atom atom = ms.at[bs.nextSetBit(0)];
+    sm.setStatusStructureModified(atom.i, atom.mi, 3, "invertAtomCoords", n, bs);
+    ms.invertSelected(pt, plane, ringAtomIndex, bs);
+    checkMinimization();
+    sm.setStatusAtomMoved(bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
     if (isClick)
-      undoMoveActionClear(atomIndex, AtomCollection.TAINT_COORD, true);
-    invertSelected(null, null, atomIndex, bs);
-    if (isClick)
-      setStatusAtomPicked(atomIndex, "inverted: " + Escape.eBS(bs), null,
+      setStatusAtomPicked(ringAtomIndex, "inverted: " + Escape.eBS(bs), null,
           false);
   }
 
@@ -8675,16 +8686,16 @@ public class Viewer extends JmolViewer
     if (a == null)
       return 0;
     int mi = a.mi;
-    if (!fullModels) {      
-      sm.modifySend(atomIndex, a.mi, 4,
-          "deleting atom " + a.getAtomName());
-      ms.deleteAtoms(bsAtoms);
-      int n = slm.deleteAtoms(bsAtoms);
-      setTainted(true);
-      sm.modifySend(atomIndex, mi, -4, "OK");
-      return n;
+    if (fullModels) {
+      return deleteModels(mi, bsAtoms);
     }
-    return deleteModels(mi, bsAtoms);
+    sm.setStatusStructureModified(atomIndex, a.mi, 4,
+        "deleting atoms " + bsAtoms, bsAtoms.cardinality(), bsAtoms);
+    ms.deleteAtoms(bsAtoms);
+    int n = slm.deleteAtoms(bsAtoms);
+    setTainted(true);
+    sm.setStatusStructureModified(atomIndex, mi, -4, "OK", n, bsAtoms);
+    return n;
   }
 
   /**
@@ -8696,21 +8707,23 @@ public class Viewer extends JmolViewer
    * @return number of atoms deleted
    */
   public int deleteModels(int modelIndex, BS bsAtoms) {
+    BS bsModels = (bsAtoms == null ? BSUtil.newAndSetBit(modelIndex)
+        : ms.getModelBS(bsAtoms, false));
     clearModelDependentObjects();
     // fileManager.addLoadScript("zap " + Escape.escape(bs));
-    sm.modifySend(-1, modelIndex, 5,
-        "deleting model " + getModelNumberDotted(modelIndex));
+    bsAtoms = getModelUndeletedAtomsBitSetBs(bsModels);
+    int n = bsAtoms.cardinality();
     int currentModel = am.cmi;
     setCurrentModelIndexClear(0, false);
     am.setAnimationOn(false);
     BS bsD0 = BSUtil.copy(slm.bsDeleted);
-    BS bsModels = (bsAtoms == null ? BSUtil.newAndSetBit(modelIndex)
-        : ms.getModelBS(bsAtoms, false));
     BS bsDeleted = ms.deleteModels(bsModels);
     if (bsDeleted == null) {
       setCurrentModelIndexClear(currentModel, false);
       return 0;
     }
+    sm.setStatusStructureModified(-1, modelIndex, 5,
+        "deleting model " + getModelNumberDotted(modelIndex), n, bsAtoms);
     slm.processDeletedModelAtoms(bsDeleted);
     if (eval != null)
       eval.deleteAtomsInVariables(bsDeleted);
@@ -8724,25 +8737,32 @@ public class Viewer extends JmolViewer
     refreshMeasures(true);
     if (bsD0 != null)
       bsDeleted.andNot(bsD0);
-    sm.modifySend(-1, modelIndex, -5, "OK");
-    return BSUtil.cardinalityOf(bsDeleted);
+    n = BSUtil.cardinalityOf(bsDeleted);
+    sm.setStatusStructureModified(-1, modelIndex, -5, "OK", n, bsDeleted);
+    return n;
   }
 
   public void deleteBonds(BS bsDeleted) {
     int modelIndex = ms.bo[bsDeleted.nextSetBit(0)].atom1.mi;
-    sm.modifySend(-1, modelIndex, 2, "delete bonds " + Escape.eBond(bsDeleted));
+    int n = bsDeleted.cardinality();
+    if (n == 0)
+      return;
+    sm.setStatusStructureModified(-1, modelIndex, 2, "delete bonds " + Escape.eBond(bsDeleted), bsDeleted.cardinality(), bsDeleted);
     ms.deleteBonds(bsDeleted, false);
-    sm.modifySend(-1, modelIndex, -2, "OK");
+    sm.setStatusStructureModified(-1, modelIndex, -2, "OK", bsDeleted.cardinality(), bsDeleted);
   }
 
   public void deleteModelAtoms(int modelIndex, int firstAtomIndex, int nAtoms,
                                BS bsModelAtoms) {
     // called from ModelCollection.deleteModel
-    sm.modifySend(-1, modelIndex, 1,
-        "delete atoms " + Escape.eBS(bsModelAtoms));
+    int n = bsModelAtoms.cardinality();
+    if (n == 0)
+      return; 
+    sm.setStatusStructureModified(-1, modelIndex, 1,
+        "delete atoms " + Escape.eBS(bsModelAtoms), n, bsModelAtoms);
     BSUtil.deleteBits(tm.bsFrameOffsets, bsModelAtoms);
     getDataManager().deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
-    sm.modifySend(-1, modelIndex, -1, "OK");
+    sm.setStatusStructureModified(-1, modelIndex, -1, "OK", n, bsModelAtoms);
   }
 
   public char getQuaternionFrame() {

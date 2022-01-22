@@ -712,6 +712,7 @@ public class T {
   public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
   public final static int intersection     = 35 | 0 << 9 | mathfunc;
   public final static int spacegroup       = 36 | 0 << 9 | mathfunc;
+  public final static int _args            = 37 | 0 << 9 | mathfunc;
 
 
     // xxx(a)
@@ -1911,6 +1912,7 @@ public class T {
         "_",
         "abs",
         "absolute",
+        "_args",
         "acos",
         "add",
         "adpmax",
@@ -2973,9 +2975,10 @@ public class T {
          
          // misc
          
-        __,                                  // "_" (getProperty function)
+        __,                                  // "__" (getProperty function)
         abs,                                // "abs"
         absolute,                           // "absolute"
+        _args,                              // "_args"
         acos,                               // "acos"
         add,                                // "add"
         adpmax,                             // "adpmax"

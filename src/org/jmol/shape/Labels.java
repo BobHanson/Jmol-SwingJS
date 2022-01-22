@@ -45,7 +45,6 @@ import org.jmol.viewer.JC;
 
 import java.util.Hashtable;
 
-
 import java.util.Map;
 
 public class Labels extends AtomShape {
@@ -70,15 +69,15 @@ public class Labels extends AtomShape {
   public short defaultBgcolix;
   public byte defaultPaletteID;
   public int defaultPointer;
-  
+
   public byte zeroFontId;
 
-//  private boolean defaultsOnlyForNone = true;
+  //  private boolean defaultsOnlyForNone = true;
   /**
    * defaults are set after giving SELECT NONE;
    */
   private boolean setDefaults = false;
-  
+
   //labels
 
   @Override
@@ -224,13 +223,17 @@ public class Labels extends AtomShape {
         fids = null;
         return;
       }
-      byte fid = vwr.gdata.getFontFid(fontsize);
+      Font f;
       if (setDefaults) { // || !defaultsOnlyForNone)
-        defaultFontId = fid;
+        f = Font.getFont3D(defaultFontId);
+        defaultFontId = vwr.getFont3D(f.fontFace, f.fontStyle, fontsize).fid;
       } else {
         for (int i = bs.nextSetBit(0); i >= 0
-            && i < ac; i = bs.nextSetBit(i + 1))
-          setFont(i, fid);
+            && i < ac; i = bs.nextSetBit(i + 1)) {
+          f = Font.getFont3D(
+              fids == null || i >= fids.length ? fids[i] : defaultFontId);
+          setFont(i, vwr.getFont3D(f.fontFace, f.fontStyle, fontsize).fid);
+        }
       }
       return;
     }
@@ -400,7 +403,8 @@ public class Labels extends AtomShape {
   }
 
   private boolean isPickingMode() {
-    return (vwr.getPickingMode() == ActionManager.PICKING_LABEL && labelBoxes != null);
+    return (vwr.getPickingMode() == ActionManager.PICKING_LABEL
+        && labelBoxes != null);
   }
 
   private int checkStringLength(int n) {
@@ -422,20 +426,20 @@ public class Labels extends AtomShape {
       bgcolixes = AU.ensureLengthShort(bgcolixes, n);
     return n;
   }
-  
+
   private void setPymolLabels(Map<Integer, Text> labels, BS bsSelected) {
     // from PyMOL reader
     setScaling();
     int n = checkStringLength(ac);
-    checkColixLength((short)-1, n);
-    for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
-        .nextSetBit(i + 1))
+    checkColixLength((short) -1, n);
+    for (int i = bsSelected.nextSetBit(0); i >= 0
+        && i < n; i = bsSelected.nextSetBit(i + 1))
       setPymolLabel(i, labels.get(Integer.valueOf(i)), null);
   }
 
   /**
-   * Sets offset using PyMOL standard array;
-   * only operates in cases where label is already defined
+   * Sets offset using PyMOL standard array; only operates in cases where label
+   * is already defined
    * 
    * @param i
    * @param value
@@ -461,22 +465,24 @@ public class Labels extends AtomShape {
   private boolean isScaled;
   private float scalePixelsPerMicron;
   private P3 ptTemp = new P3();
-  
+
   private void setScaling() {
     isActive = true;
     if (bsSizeSet == null)
       bsSizeSet = BS.newN(ac);
     isScaled = vwr.getBoolean(T.fontscaling);
-    scalePixelsPerMicron = (isScaled ? vwr
-        .getScalePixelsPerAngstrom(false) * 10000f : 0);
+    scalePixelsPerMicron = (isScaled
+        ? vwr.getScalePixelsPerAngstrom(false) * 10000f
+        : 0);
   }
-  
+
   private void setPymolLabel(int i, Text t, String format) {
     if (t == null)
       return;
     String label = t.text;
     Atom atom = atoms[i];
-    addString(atom, i, label, format == null ? PT.rep(label, "%", "%%") : format);
+    addString(atom, i, label,
+        format == null ? PT.rep(label, "%", "%%") : format);
     atom.setShapeVisibility(vf, true);
     if (t.colix >= 0)
       setLabelColix(i, t.colix, PAL.UNKNOWN.id);
@@ -484,19 +490,22 @@ public class Labels extends AtomShape {
     putLabel(i, t);
   }
 
-  private void setLabel(LabelToken[][] temp, String strLabel, int i, boolean doAll) {
+  private void setLabel(LabelToken[][] temp, String strLabel, int i,
+                        boolean doAll) {
     // checkStringLength must be first
     Atom atom = atoms[i];
     LabelToken[] tokens = temp[0];
     if (tokens == null)
       tokens = temp[0] = LabelToken.compile(vwr, strLabel, '\0', null);
-    String label = (tokens == null ? null : LabelToken.formatLabelAtomArray(
-        vwr, atom, tokens, '\0', null, ptTemp ));
+    String label = (tokens == null ? null
+        : LabelToken.formatLabelAtomArray(vwr, atom, tokens, '\0', null,
+            ptTemp));
     boolean isNew = addString(atom, i, label, strLabel);
     doAll |= isNew || label == null;
     Text text = getLabel(i);
     if (isScaled && doAll) {
-      text = Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0, scalePixelsPerMicron);
+      text = Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0,
+          scalePixelsPerMicron);
       putLabel(i, text);
     } else if (text != null && label != null) {
       text.setText(label);
@@ -535,11 +544,13 @@ public class Labels extends AtomShape {
 
   @Override
   public Object getProperty(String property, int index) {
+    if (property.equals("font"))
+      return Font.getFont3D(defaultFontId);
     if (property.equals("offsets"))
       return offsets;
     if (property.equals("label"))
-      return (strings != null && index < strings.length && strings[index] != null 
-          ? strings[index] : "");
+      return (strings != null && index < strings.length
+          && strings[index] != null ? strings[index] : "");
     return null;
   }
 
@@ -548,7 +559,7 @@ public class Labels extends AtomShape {
       atomLabels.remove(Integer.valueOf(i));
     else {
       atomLabels.put(Integer.valueOf(i), text);
-      text.textUnformatted = formats[i]; 
+      text.textUnformatted = formats[i];
     }
   }
 
@@ -558,7 +569,7 @@ public class Labels extends AtomShape {
 
   public void putBox(int i, float[] boxXY) {
     if (labelBoxes == null)
-      labelBoxes = new Hashtable<Integer, float[]>(); 
+      labelBoxes = new Hashtable<Integer, float[]>();
     labelBoxes.put(Integer.valueOf(i), boxXY);
   }
 
@@ -567,7 +578,7 @@ public class Labels extends AtomShape {
       return null;
     return labelBoxes.get(Integer.valueOf(i));
   }
-  
+
   private void setLabelColix(int i, short colix, byte pid) {
     setColixAndPalette(colix, pid, i);
     // text is only created by labelsRenderer
@@ -585,7 +596,7 @@ public class Labels extends AtomShape {
   }
 
   private void setOffsets(int i, int offset) {
-    
+
     if (offsets == null || i >= offsets.length) {
       if (offset == JC.LABEL_DEFAULT_OFFSET)
         return;
@@ -662,21 +673,22 @@ public class Labels extends AtomShape {
     }
   }
 
-//  @Override
-//  public String getShapeState() {
-//    // not implemented -- see org.jmol.viewer.StateCreator
-//    return null;
-//  }
+  //  @Override
+  //  public String getShapeState() {
+  //    // not implemented -- see org.jmol.viewer.StateCreator
+  //    return null;
+  //  }
 
   private int pickedAtom = -1;
   private int lastPicked = -1;
   private int pickedOffset = 0;
   private int pickedX;
   private int pickedY;
-  
-  
+
   @Override
-  public Map<String, Object> checkObjectClicked(int x, int y, int modifiers, BS bsVisible, boolean drawPicking) {
+  public Map<String, Object> checkObjectClicked(int x, int y, int modifiers,
+                                                BS bsVisible,
+                                                boolean drawPicking) {
     if (!isPickingMode())
       return null;
     int iAtom = findNearestLabel(x, y);
@@ -705,8 +717,9 @@ public class Labels extends AtomShape {
         vwr.acm.setDragAtomIndex(iAtom);
         pickedX = x;
         pickedY = y;
-        pickedOffset = (offsets == null || pickedAtom >= offsets.length ? 
-            JC.LABEL_DEFAULT_OFFSET : offsets[pickedAtom]);
+        pickedOffset = (offsets == null || pickedAtom >= offsets.length
+            ? JC.LABEL_DEFAULT_OFFSET
+            : offsets[pickedAtom]);
         return true;
       }
       return false;
@@ -719,7 +732,7 @@ public class Labels extends AtomShape {
     move2D(pickedAtom, x, y);
     return true;
   }
-                         
+
   private int findNearestLabel(int x, int y) {
     if (labelBoxes == null)
       return -1;
@@ -728,15 +741,18 @@ public class Labels extends AtomShape {
     float zmin = Float.MAX_VALUE;
     float afactor = (vwr.antialiased ? 2 : 1);
     for (Map.Entry<Integer, float[]> entry : labelBoxes.entrySet()) {
-      if (!atoms[entry.getKey().intValue()].isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))
+      if (!atoms[entry.getKey().intValue()]
+          .isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))
         continue;
       float[] boxXY = entry.getValue();
-      float dx = (x - boxXY[0])*afactor;
-      float dy = (y - boxXY[1])*afactor;
-      if (dx <= 0 || dy <= 0 || dx >= boxXY[2] || dy >= boxXY[3] || boxXY[4] > zmin)
+      float dx = (x - boxXY[0]) * afactor;
+      float dy = (y - boxXY[1]) * afactor;
+      if (dx <= 0 || dy <= 0 || dx >= boxXY[2] || dy >= boxXY[3]
+          || boxXY[4] > zmin)
         continue;
       zmin = boxXY[4];
-      float d = Math.min(Math.abs(dx - boxXY[2]/2), Math.abs(dy - boxXY[3]/2));
+      float d = Math.min(Math.abs(dx - boxXY[2] / 2),
+          Math.abs(dy - boxXY[3] / 2));
       if (d <= dmin) {
         dmin = d;
         imin = entry.getKey().intValue();
@@ -747,7 +763,7 @@ public class Labels extends AtomShape {
 
   private void move2D(int pickedAtom, int x, int y) {
     int xOffset = JC.getXOffset(pickedOffset);
-    int yOffset = JC.getYOffset(pickedOffset);        
+    int yOffset = JC.getYOffset(pickedOffset);
     xOffset += x - pickedX;
     yOffset -= y - pickedY;
     int offset = JC.getOffset(xOffset, yOffset, true);
@@ -766,5 +782,5 @@ public class Labels extends AtomShape {
     }
     return colix;
   }
-  
+
 }

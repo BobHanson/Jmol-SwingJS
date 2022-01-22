@@ -2569,7 +2569,7 @@ public class CmdExt extends ScriptExt {
         return;
       bs = vwr.bsA();
       pt = vwr.ms.getAtomSetCenter(bs);
-      vwr.invertAtomCoordPt(pt, bs);
+      vwr.invertAtomCoord(pt, null, bs, -1, false);
       return;
     case T.stereo:
     case T.atoms:
@@ -2582,8 +2582,8 @@ public class CmdExt extends ScriptExt {
       if (!e.isAtomExpression(e.iToken + 1)) {
         e.checkLengthErrorPt(e.iToken + 1, e.iToken + 1);
         if (!chk) {
-          for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-            vwr.invertRingAt(i, false);
+            for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+              vwr.invertAtomCoord(null, null, bs, i, false);
           }
         }
         return;

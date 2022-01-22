@@ -3970,6 +3970,7 @@ public class ScriptEval extends ScriptExpr {
   private void cmdFont(int shapeType, float fontsize) throws ScriptException {
     String fontface = "SansSerif";
     String fontstyle = "Plain";
+    String name = "font";
     int sizeAdjust = 0;
     float scaleAngstromsPerPixel = -1;
     switch (iToken = slen) {
@@ -4002,6 +4003,7 @@ public class ScriptEval extends ScriptExpr {
       } else {// labels --- old set fontsize N
         if (fontsize >= 1)
           fontsize += (sizeAdjust = 5);
+        fontface = null;
       }
       break;
     case 2:
@@ -4009,29 +4011,35 @@ public class ScriptEval extends ScriptExpr {
       if (shapeType == JC.SHAPE_LABELS) {
         // set fontsize
         fontsize = JC.LABEL_DEFAULT_FONTSIZE;
+        name = "fontsize";
         break;
       }
       bad();
     }
     if (shapeType == JC.SHAPE_LABELS) {
-      if (fontsize < 0
-          || fontsize >= 1
-          && (fontsize < JC.LABEL_MINIMUM_FONTSIZE || fontsize > JC.LABEL_MAXIMUM_FONTSIZE)) {
+      if (fontsize < 0 || fontsize >= 1 && (fontsize < JC.LABEL_MINIMUM_FONTSIZE
+          || fontsize > JC.LABEL_MAXIMUM_FONTSIZE)) {
         integerOutOfRange(JC.LABEL_MINIMUM_FONTSIZE - sizeAdjust,
             JC.LABEL_MAXIMUM_FONTSIZE - sizeAdjust);
         return;
       }
-      setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
+      if (fontsize == 0)
+        setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
     }
     if (chk)
       return;
-    if (Font.getFontStyleID(fontface) >= 0) {
-      fontstyle = fontface;
-      fontface = "SansSerif";
+    Object value;
+    if (name == "font") {
+      if (Font.getFontStyleID(fontface) >= 0) {
+        fontstyle = fontface;
+        fontface = "SansSerif";
+      }
+      value = vwr.getFont3D(fontface, fontstyle, fontsize);
+    } else {
+      value = Float.valueOf(fontsize);
     }
-    Font font3d = vwr.getFont3D(fontface, fontstyle, fontsize);
     sm.loadShape(shapeType);
-    setShapeProperty(shapeType, "font", font3d);
+    setShapeProperty(shapeType, name, value);
     if (scaleAngstromsPerPixel >= 0)
       setShapeProperty(shapeType, "scalereference",
           Float.valueOf(scaleAngstromsPerPixel));
@@ -6396,13 +6404,8 @@ public class ScriptEval extends ScriptExpr {
       if (points[0] != null)
         nPoints = 1;
     }
-    if (invPoint != null) {
-      vwr.invertAtomCoordPt(invPoint, bsAtoms);
-      if (rotAxis == null)
-        return;
-    }
-    if (invPlane != null) {
-      vwr.invertAtomCoordPlane(invPlane, bsAtoms);
+    if (invPoint != null || invPlane != null) {
+      vwr.invertAtomCoord(invPoint, null, bsAtoms, -1, false);
       if (rotAxis == null)
         return;
     }
@@ -8817,10 +8820,12 @@ public class ScriptEval extends ScriptExpr {
         value = Math.round(floatParameter(index));
         iToken = ++index;
         factorType = EnumType.FACTOR;
-        if (value < 0 || value > 200) {
+        if (Math.abs(value) > 200) {
           integerOutOfRange(0, 200);
           return null;
         }
+        if (isOnly)
+          value = -value;
         value /= 100;
         break;
       } else if (tok == T.integer) {
@@ -9454,9 +9459,8 @@ public class ScriptEval extends ScriptExpr {
       scale = 0;
       break;
     case T.decimal:
-      isOnly = (floatParameter(1) < 0);
-      //$FALL-THROUGH$
     case T.integer:
+      isOnly = (floatParameter(1) < 0 && (tok == T.decimal || tokAt(2) == T.percent));
     default:
       rd = encodeRadiusParameter(1, isOnly, true);
       if (rd == null)

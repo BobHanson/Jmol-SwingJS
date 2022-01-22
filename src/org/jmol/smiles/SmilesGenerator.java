@@ -934,7 +934,9 @@ public class SmilesGenerator {
     }
     
     
-    if (haveSmilesAtoms && atat == null && stereoFlag == 4) {
+    if (haveSmilesAtoms && atat == null && (
+    		// TODO [S@] stereoFlag == 3 || 
+    		stereoFlag == 4)) {
       atat = ((SmilesAtom) atom).getStereoAtAt(stereo);
     }
     

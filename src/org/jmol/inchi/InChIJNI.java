@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Hashtable;
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
@@ -351,12 +350,15 @@ public class InChIJNI implements JmolInChI {
   }
 
   protected String decodeInchiStereo(SimpleNode[] nodes) {
-    int[] list = new int[] { nodes[0].getIndex(),
-        nodes[1].getIndex(), nodes[2].getIndex(), nodes[3].getIndex() };
+    int[] list = new int[] { getNodeIndex(nodes[0]),
+        getNodeIndex(nodes[1]), getNodeIndex(nodes[2]), getNodeIndex(nodes[3]) };
     int[] list2 = mapTet.get(orderList(list));
     return (list2 == null ? null : isPermutation(list, list2) ? "@@" : "@");
   }
 
+  private static int getNodeIndex(SimpleNode node) {
+    return (node == null ? -1 : node.getIndex());
+  }
   private static Integer getIntKey(int i, int j) {
     return Integer.valueOf((Math.min(i, j) << 12) + Math.max(i, j));
   }

@@ -389,10 +389,14 @@ public class LabelToken {
         ++ich;
       }
       if (ich < cch && PT.isDigit(ch = strFormat.charAt(ich))) {
+        ++ich;
         lt.precision = ch - '0';
+        if (ich < cch && PT.isDigit(ch = strFormat.charAt(ich))) {
+          ++ich;
+          lt.precision = lt.precision * 10 + (ch - '0');
+        }
         if (isNegative)
           lt.precision = -1 - lt.precision;
-        ++ich;
       }
     }
     if (ich < cch && htValues != null)

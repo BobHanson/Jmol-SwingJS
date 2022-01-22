@@ -274,7 +274,7 @@ public class Resolver {
       return (readerName.equals("Xml") ? getXmlType(llr.getHeader(0))
           : readerName);
     }
-
+   
     // now allow identification in first 16 lines
     // excluding those starting with "#"
 

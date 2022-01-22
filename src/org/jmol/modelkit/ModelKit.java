@@ -707,12 +707,12 @@ public class ModelKit {
       if (atomIndex < 0 || atom == null)
         return;
       int mi = atom.mi;
-      vwr.sm.modifySend(atomIndex, mi, 1, cmd);
+      vwr.sm.setStatusStructureModified(atomIndex, mi, 1, cmd, 1, null);
       // After this next command, vwr.modelSet will be a different instance
       assignAtom(atomIndex, type, autoBond, true, true);
       if (!PT.isOneOf(type, ";Mi;Pl;X;"))
         vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-      vwr.sm.modifySend(atomIndex, mi, -1, "OK");
+      vwr.sm.setStatusStructureModified(atomIndex, mi, -1, "OK", 1, null);
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
       return;
     }
@@ -723,7 +723,7 @@ public class ModelKit {
     if (atom != null) {
       vConnections.addLast(atom);
       modelIndex = atom.mi;
-      vwr.sm.modifySend(atomIndex, modelIndex, 3, cmd);
+      vwr.sm.setStatusStructureModified(atomIndex, modelIndex, 3, cmd, 1, null);
     }
     try {
       int pickingMode = vwr.acm.getAtomPickingMode();
@@ -743,15 +743,18 @@ public class ModelKit {
         menu.hidePopup();
       }
       int atomIndex2 = bs.nextSetBit(0);
+      int state = getMKState();
+      setMKState(STATE_MOLECULAR);
       assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
       if (atomIndex >= 0)
         assignAtom(atomIndex, ".", false, true, isClick);
+      setMKState(state);
       atomIndex = atomIndex2;
     } catch (Exception ex) {
       //
     }
     vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-    vwr.sm.modifySend(atomIndex, modelIndex, -3, "OK");
+    vwr.sm.setStatusStructureModified(atomIndex, modelIndex, -3, "OK", 1, null);
   }
 
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
@@ -764,16 +767,16 @@ public class ModelKit {
         type = pickBondAssignType;
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       int ac = vwr.ms.ac;
-      vwr.sm.modifySend(bondIndex, modelIndex, 2,
-          cmd);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, 2,
+          cmd, 1, null);
       BS bsAtoms = assignBond(bondIndex, type);
       vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
-      vwr.sm.modifySend(bondIndex, modelIndex, -2, "" + type);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "" + type, 1, null);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
-      vwr.sm.modifySend(bondIndex, modelIndex, -2, "ERROR " + ex);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "ERROR " + ex, 1, null);
     }
   }
 
@@ -784,14 +787,14 @@ public class ModelKit {
     float[][] connections = AU.newFloat2(1);
     connections[0] = new float[] { index, index2 };
     int modelIndex = vwr.ms.at[index].mi;
-    vwr.sm.modifySend(index, modelIndex, 2, cmd);
+    vwr.sm.setStatusStructureModified(index, modelIndex, 2, cmd, 1, null);
     vwr.ms.connect(connections);    
     int ac = vwr.ms.ac;
     // note that vwr.ms changes during the assignAtom command 
     assignAtom(index, ".", true, true, false);
     assignAtom(index2, ".", true, true, false);
     vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-    vwr.sm.modifySend(index, modelIndex, -2, "OK");
+    vwr.sm.setStatusStructureModified(index, modelIndex, -2, "OK", 1, null);
     if (type != '1') {
       BS bs = BSUtil.newAndSetBit(index);
       bs.set(index2);

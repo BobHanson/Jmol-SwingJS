@@ -568,7 +568,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
    * @param type the callback type or null for getJsObjectInfo() -- Java applet only
    * @param data type-dependent
    */
-  @SuppressWarnings("unchecked")
   @Override
   public void notifyCallback(CBK type, Object[] data) {
     String callback = (type == null ? null : callbacks.get(type));

@@ -138,6 +138,8 @@ public class MathExt {
     case T.array:
       return evaluateArray(mp, args,
           tok == T.array && op.tok == T.propselector);
+    case T._args:
+      return mp.addXObj(vwr.sm.getParameter(args.length == 0 ? Integer.MIN_VALUE : args[0].intValue));
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
