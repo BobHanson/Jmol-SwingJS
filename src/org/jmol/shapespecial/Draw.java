@@ -1433,11 +1433,9 @@ private void initDraw() {
 
   private String getCommand2(Mesh mesh, int iModel) {
     DrawMesh dmesh = (DrawMesh) mesh;
-    if (!dmesh.isValid || 
-        dmesh.drawType == EnumDrawType.NONE  
-        && dmesh.lineData == null 
-        && dmesh.drawVertexCount == 0 && dmesh.drawVertexCounts == null
-        )
+    if (!dmesh.isValid
+        || dmesh.drawType == EnumDrawType.NONE && dmesh.lineData == null
+            && dmesh.drawVertexCount == 0 && dmesh.drawVertexCounts == null)
       return "";
     SB str = new SB();
     int modelCount = vwr.ms.mc;
@@ -1453,13 +1451,16 @@ private void initDraw() {
     else if (dmesh.isBarb)
       str.append(" barb");
     if (dmesh.scale != 1 && dmesh.isScaleSet
-        && (dmesh.haveXyPoints || dmesh.connectedAtoms != null || dmesh.drawType == EnumDrawType.CIRCLE || dmesh.drawType == EnumDrawType.ARC))
+        && (dmesh.haveXyPoints || dmesh.connectedAtoms != null
+            || dmesh.drawType == EnumDrawType.CIRCLE
+            || dmesh.drawType == EnumDrawType.ARC))
       str.append(" scale ").appendF(dmesh.scale);
     if (dmesh.width != 0)
       str.append(" diameter ").appendF(
           (dmesh.drawType == EnumDrawType.CYLINDER ? Math.abs(dmesh.width)
-              : dmesh.drawType == EnumDrawType.CIRCULARPLANE ? Math
-                  .abs(dmesh.width * dmesh.scale) : dmesh.width));
+              : dmesh.drawType == EnumDrawType.CIRCULARPLANE
+                  ? Math.abs(dmesh.width * dmesh.scale)
+                  : dmesh.width));
     else if (dmesh.diameter > 0)
       str.append(" diameter ").appendI(dmesh.diameter);
     if (dmesh.lineData != null) {
@@ -1477,9 +1478,12 @@ private void initDraw() {
       }
       str.append("]");
     } else {
-      int nVertices = dmesh.drawVertexCount > 0  || dmesh.drawVertexCounts == null ? dmesh.drawVertexCount
-          : dmesh.drawVertexCounts[iModel >= 0 ? iModel : 0];
-      switch (dmesh.drawTypes == null || dmesh.drawTypes[iModel] == null ? dmesh.drawType : dmesh.drawTypes[iModel]) {
+      int nVertices = dmesh.drawVertexCount > 0
+          || dmesh.drawVertexCounts == null ? dmesh.drawVertexCount
+              : dmesh.drawVertexCounts[iModel >= 0 ? iModel : 0];
+      switch (dmesh.drawTypes == null || dmesh.drawTypes[iModel] == null
+          ? dmesh.drawType
+          : dmesh.drawTypes[iModel]) {
       case NONE:
       case MULTIPLE:
         break;
@@ -1551,10 +1555,11 @@ private void initDraw() {
       dmesh.mat4.getTranslation(v);
       str.append(" offset ").append(Escape.eP(v));
     }
+    if (dmesh.titleColor != null) {
+      str.append(" title color ")
+          .append(Escape.escapeColor(dmesh.titleColor.intValue()));
+    }
     if (dmesh.title != null) {
-      if (dmesh.titleColor != null) {
-        str.append(" title color ").append(Escape.escapeColor(dmesh.titleColor.intValue()));
-      }
       String s = "";
       for (int i = 0; i < dmesh.title.length; i++)
         s += "|" + dmesh.title[i];
