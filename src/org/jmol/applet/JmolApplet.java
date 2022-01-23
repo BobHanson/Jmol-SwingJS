@@ -27,8 +27,6 @@ package org.jmol.applet;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Event;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.util.Map;
 
@@ -50,7 +48,7 @@ import javajs.util.SB;
  * the JRE being used. No real difference, I think.
  * 
  */
-public class JmolApplet1 extends JApplet implements
+public class JmolApplet extends JApplet implements
 JmolAppletInterface {
   
   public Jmol jmol;
@@ -72,7 +70,7 @@ JmolAppletInterface {
     super.destroy();
   }
 
-  public JmolApplet1() {
+  public JmolApplet() {
   }
 
   public boolean isSigned() {
@@ -127,13 +125,18 @@ JmolAppletInterface {
     return false;
   }
   
+  /**
+   * @param g  
+   * @param dim 
+   * @return true
+   */
   private boolean completeInitialization(Graphics g, Dimension dim) {
     needToCompleteInitialization = false;
     String bgcolorName = getParameter("boxbgcolor");
     if (bgcolorName == null)
       bgcolorName = getParameter("bgcolor");
     bgcolor = getColorFromName(bgcolorName);
-    return isSigned;
+    return isSigned = true;
   }
 
   private final static String[] colorNames = {

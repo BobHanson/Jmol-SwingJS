@@ -141,7 +141,7 @@ import swingjs.api.JSUtilI;
  * 
  */
 
-public class Jmol extends GenericApplet implements WrappedApplet {
+public class Jmol extends GenericApplet {
 
   private boolean isUpdating;
   private boolean showPaintTime;
@@ -189,7 +189,6 @@ public class Jmol extends GenericApplet implements WrappedApplet {
    * static String appletInfo = GT.$("Jmol Applet. Part of the OpenScience
    * project. " + "See http://www.jmol.org for more information");
    */
-  @Override
   public void setApplet(Object a, boolean isSigned) {
     appletObject= a;
     applet = (JApplet) a;
@@ -205,14 +204,12 @@ public class Jmol extends GenericApplet implements WrappedApplet {
     }
   }
 
-  @Override
   public void paint(Graphics g) {
     //paint is invoked for system-based updates (obscurring, for example)
     //Opera has a bug in relation to displaying the Java Console. 
     update(g, "paint ");
   }
 
-  @Override
   public void update(Graphics g) {
     //update is called in response to repaintManager's repaint() request.
     update(g, "update");
