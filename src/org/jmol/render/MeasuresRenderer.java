@@ -232,7 +232,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       atomPt.ave(a, b);
       atomPt.sX = (a.sX + b.sX) / 2;
       atomPt.sY = (a.sY + b.sY) / 2;
-      renderLabelOrMeasure(m.text, s);
+      renderLabelOrMeasure(m.text, s, false);
     }
   }
                           
@@ -256,7 +256,7 @@ public class MeasuresRenderer extends LabelsRenderer {
             false, false, false, (doJustify ? 0 : Integer.MAX_VALUE), s);
       } else {
         atomPt.setT(b);
-        renderLabelOrMeasure(m.text, s);
+        renderLabelOrMeasure(m.text, s, false);
       }
       return;
     }
@@ -306,7 +306,7 @@ public class MeasuresRenderer extends LabelsRenderer {
             false, (doJustify ? b.sY : Integer.MAX_VALUE), s);
       } else {
         atomPt.setT(pointT);
-        renderLabelOrMeasure(m.text, s);
+        renderLabelOrMeasure(m.text, s, false);
       }
     }
   }
@@ -338,7 +338,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       atomPt.add(c);
       atomPt.add(d);
       atomPt.scale(0.25f);
-      renderLabelOrMeasure(m.text, s);
+      renderLabelOrMeasure(m.text, s, false);
     }
   }
 

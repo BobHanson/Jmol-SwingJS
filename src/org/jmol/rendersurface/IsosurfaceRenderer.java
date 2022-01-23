@@ -305,7 +305,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       int cX = (showNumbers ? vwr.getScreenWidth() / 2 : 0);
       int cY = (showNumbers ? vwr.getScreenHeight() / 2 : 0);
       if (showNumbers)
-        vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 24));
+        vwr.gdata.setFontBold("Monospaced", 24);
       for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
           : imesh.firstRealVertex); i < vertexCount; i += incr) {
         if (vertexValues != null && Float.isNaN(vertexValues[i]) || frontOnly
@@ -529,7 +529,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
   private void renderNormals() {
     if (!g3d.setC(C.copyColixTranslucency(mesh.colix, C.WHITE)))
       return;
-    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 24));
+    vwr.gdata.setFontBold("Monospaced", 24);
     V3[] vertexVectors = Normix.getVertexVectors();
     for (int i = vertexCount; --i >= 0;) {
       if (vertexValues != null && Float.isNaN(vertexValues[i]))

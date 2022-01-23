@@ -34,6 +34,7 @@ import org.jmol.shapespecial.Draw;
 import org.jmol.shapespecial.DrawMesh;
 import org.jmol.shapespecial.Draw.EnumDrawType;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.util.GData;
 import javajs.util.Lst;
 
@@ -45,6 +46,7 @@ import javajs.util.P3i;
 import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.viewer.ActionManager;
+import org.jmol.viewer.JC;
 
 public class DrawRenderer extends MeshRenderer {
 
@@ -504,13 +506,19 @@ public class DrawRenderer extends MeshRenderer {
     if (isExport || mesh.title == null || vwr.getDrawHover()
         || !g3d.setC(vwr.cm.colixBackgroundContrast))
       return;
+    Font f0 = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font", -1);
+    Font f = f0;
+    int lastFID = -1;
+    boolean haveFont = false;
     for (int i = dmesh.pc; --i >= 0;)
       if (isPolygonDisplayable(i)) {
         //just the first line of the title -- nothing fancy here.
-        float size = vwr.getFloat(T.drawfontsize);
-        if (size <= 0)
-          size = 14;
-        vwr.gdata.setFontFid(vwr.gdata.getFontFid(size * imageFontScaling));
+        if (!haveFont || dmesh.fontID != lastFID) {
+          f = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font", i);
+          lastFID = f.fid;
+          vwr.gdata.setFont(imageFontScaling == 1 ? f : vwr.gdata.getFont3DFSS(f.fontFace, f.fontStyle, f.fontSize * imageFontScaling));
+          haveFont = true;
+        }
         String s = mesh.title[i < mesh.title.length ? i : mesh.title.length - 1];
         int pt = 0;
         if (s.length() > 1 && s.charAt(0) == '>') {
@@ -523,6 +531,8 @@ public class DrawRenderer extends MeshRenderer {
           pt1f.setT(vertices[dmesh.pis[i][pt]]);
         tm.transformPtScr(pt1f, pt1i);
         int offset = Math.round(5 * imageFontScaling);
+        if (dmesh.titleColor != null)
+          vwr.gdata.setColor(dmesh.titleColor.intValue());
         g3d.drawString(s, null, pt1i.x + offset, pt1i.y - offset, pt1i.z,
             pt1i.z, (short) 0);
         break;

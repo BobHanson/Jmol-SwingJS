@@ -23,18 +23,18 @@
  */
 package org.jmol.modelset;
 
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.BS;
-
 import org.jmol.shape.Shape;
 import org.jmol.util.C;
 import org.jmol.util.Font;
 import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.PT;
+import javajs.util.SB;
 
 public class Text {
  
@@ -43,7 +43,7 @@ public class Text {
   public boolean doFormatText;
 
   public Font font;
-  private byte fid;
+  private int fid;
   private int ascent;
   public int descent;
   private int lineHeight;
@@ -108,7 +108,7 @@ public class Text {
   private void set(Font font, short colix, int align,
                    float scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
-    this.isEcho = isEcho;
+    //this.isEcho = isEcho;
     this.colix = colix;
     this.align = align;
     this.setFont(font, !isEcho);
@@ -128,7 +128,7 @@ public class Text {
     lineHeight = ascent + descent;
   }
 
-  public void setFontFromFid(byte fid) { //labels only
+  public void setFontFromFid(int fid) { //labels only
     if (this.fid == fid)
       return;
     fontScale = 0;

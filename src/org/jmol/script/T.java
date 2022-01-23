@@ -915,20 +915,21 @@ public class T {
   public final static int ambientocclusion               = intparam | 1;               
   public final static int ambientpercent                 = intparam | 2;               
   public final static int animationfps                   = intparam | 4;
-  public final static int axesmode                       = intparam | 6;
-  public final static int bondradiusmilliangstroms       = intparam | 8;
-  public final static int celshadingpower                = intparam | 9;
-  public final static int bondingversion             = intparam | 10;
-  public final static int delaymaximumms                 = intparam | 11;
-  public final static int diffusepercent                 = intparam | 12;
-  public final static int dotdensity                     = intparam | 13;
-  public final static int dotscale                       = intparam | 14;
-  public final static int ellipsoiddotcount              = intparam | 15;  
-  public final static int helixstep                      = intparam | 16;
-  public final static int hermitelevel                   = intparam | 17;
-  public final static int historylevel                   = intparam | 18;
-  public final static int infofontsize                   = intparam | 19;
-  public final static int isosurfacepropertysmoothingpower=intparam | 20;
+  public final static int axesmode                       = intparam | 5;
+  public final static int bondradiusmilliangstroms       = intparam | 6;
+  public final static int celshadingpower                = intparam | 7;
+  public final static int bondingversion                 = intparam | 8;
+  public final static int delaymaximumms                 = intparam | 9;
+  public final static int diffusepercent                 = intparam | 10;
+  public final static int dotdensity                     = intparam | 11;
+  public final static int dotscale                       = intparam | 12;
+  public final static int ellipsoiddotcount              = intparam | 13;  
+  public final static int helixstep                      = intparam | 14;
+  public final static int hermitelevel                   = intparam | 15;
+  public final static int historylevel                   = intparam | 16;
+  public final static int infofontsize                   = intparam | 17;
+  public final static int isosurfacepropertysmoothingpower=intparam | 18;
+  public final static int labelpointerwidth              = intparam | 19;
   public final static int loglevel                       = intparam | 21;
   public final static int meshscale                      = intparam | 22;
   public final static int minimizationsteps              = intparam | 23;
@@ -2511,6 +2512,7 @@ public class T {
        "helixStep",
        "hermiteLevel",
        "historyLevel",
+       "labelpointerwidth",
        "lighting",
        "logLevel",
        "meshScale",
@@ -3577,6 +3579,7 @@ public class T {
         helixstep,                          //        "helixStep"
         hermitelevel,                       //        "hermiteLevel"
         historylevel,                       //        "historyLevel"
+        labelpointerwidth,                  //        "labelpointerwidth"
         lighting,                           //        "lighting"
         loglevel,                           //        "logLevel"
         meshscale,                          //        "meshScale"

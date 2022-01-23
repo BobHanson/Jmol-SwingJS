@@ -1203,11 +1203,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void setFontFid(byte fid) {
-    currentFont = Font.getFont3D(fid);
-  }
-
-  @Override
   public void setFont(Font font3d) {
     currentFont = font3d;
   }

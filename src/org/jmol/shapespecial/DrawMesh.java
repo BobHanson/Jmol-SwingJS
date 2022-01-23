@@ -66,6 +66,8 @@ public class DrawMesh extends Mesh {
   public float scale = 1;
   public boolean isScaleSet;
 
+  public int fontID = -1;
+  public Integer titleColor;
 
   @Override
   public void clear(String meshType) {

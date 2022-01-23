@@ -9461,6 +9461,7 @@ public class ScriptEval extends ScriptExpr {
     case T.decimal:
     case T.integer:
       isOnly = (floatParameter(1) < 0 && (tok == T.decimal || tokAt(2) == T.percent));
+      //$FALL-THROUGH$
     default:
       rd = encodeRadiusParameter(1, isOnly, true);
       if (rd == null)

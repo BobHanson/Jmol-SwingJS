@@ -5626,6 +5626,8 @@ public class Viewer extends JmolViewer
       return g.helixStep;
     case T.infofontsize:
       return g.infoFontSize;
+    case T.labelpointerwidth:
+      return g.labelPointerWidth;
     case T.meshscale:
       return g.meshScale;
     case T.minpixelselradius:
@@ -6246,6 +6248,7 @@ public class Viewer extends JmolViewer
     case T.drawfontsize:
       // 13.3.6
       g.drawFontSize = value;
+      shm.setShapePropertyBs(JC.SHAPE_DRAW, "font", null, null);
       break;
     case T.exportscale:
       // 13.1.19
@@ -6450,6 +6453,10 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.labelpointerwidth:
+      // 14.32.15
+      g.labelPointerWidth = value;
+      break;
     case T.minimizationmaxatoms:
       // 14.30.0
       g.minimizationMaxAtoms = value;

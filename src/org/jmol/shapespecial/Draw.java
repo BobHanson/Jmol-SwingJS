@@ -36,6 +36,7 @@ import java.util.Map;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
@@ -60,6 +61,12 @@ public class Draw extends MeshCollection {
 
   // bob hanson hansonr@stolaf.edu 3/2006
   
+  private final static int PT_COORD = 1;
+  private final static int PT_IDENTIFIER = 2;
+  private final static int PT_BITSET = 3;
+  private final static int PT_MODEL_INDEX = 4;
+  private final static int PT_MODEL_BASED_POINTS = 5;
+
   public Draw() {
     // from reflection
     htObjects = new Hashtable<String, Mesh>();
@@ -131,11 +138,10 @@ public void initShape() {
   private P3[] boundBox;
   
   private Lst<P3[]> lineData;
-  private final static int PT_COORD = 1;
-  private final static int PT_IDENTIFIER = 2;
-  private final static int PT_BITSET = 3;
-  private final static int PT_MODEL_INDEX = 4;
-  private final static int PT_MODEL_BASED_POINTS = 5;
+  public int defaultFontId0 = -1;
+  public int defaultFontId = -1;
+  private int thisFontID = -1;
+  private Integer titleColor;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -147,6 +153,20 @@ public void initShape() {
       return;
     }
 
+    if ("font" == propertyName) {
+      defaultFontId = (value == null ? -1 : ((Font) value).fid);
+      defaultFontSize = ((Font) value).fontSize;
+      return;
+    }
+    
+    if ("myfont" == propertyName) {
+      thisFontID = ((Font) value).fid;
+      if (thisMesh != null) {
+        thisMesh.fontID = thisFontID; 
+      }
+      return;
+    }
+    
     if ("length" == propertyName) {
       length = ((Float) value).floatValue();
       return;
@@ -385,6 +405,22 @@ public void initShape() {
       addPoints(PT_MODEL_BASED_POINTS, value);
       return;
     }
+    
+    if ("title" == propertyName) {
+      if (thisMesh != null) {
+        thisMesh.title = setTitle(value);
+        return;
+      }
+    }
+
+    if ("titlecolor" == propertyName) {
+      Integer c = ((Integer) value);
+      titleColor = c;
+      if (thisMesh != null) {
+        thisMesh.titleColor = c;
+      }
+      return;
+    }
 
     if ("set" == propertyName) {
       if (thisMesh == null) {
@@ -400,6 +436,8 @@ public void initShape() {
         thisMesh.initialize(T.fullylit, null, null);
         setAxes(thisMesh);
         thisMesh.title = title;
+        thisMesh.titleColor = titleColor;
+        thisMesh.fontID = thisFontID;
         thisMesh.visible = true;
       }
       nPoints = -1; // for later scaling
@@ -454,6 +492,7 @@ private void initDraw() {
    color = 0xFFFFFFFF;
    diameter = 0;
    explicitID = false;
+   thisFontID = -1;
    indicatedModelIndex = -1;
    intersectID = null;
    isCurve = isArc = isArrow = isPlane = isCircle = isCylinder = isLine = false;
@@ -468,6 +507,7 @@ private void initDraw() {
    plane = null;
    polygon = null;
    slabData = null;
+   titleColor = null;
    vData = new  Lst<Object[]>();
    width = 0;
    setPropertySuper("thisID", MeshCollection.PREVIOUS_MESH_ID, null);
@@ -503,6 +543,15 @@ private void initDraw() {
     DrawMesh m = thisMesh;
     if (index >= 0 && (index >= meshCount || (m = (DrawMesh) meshes[index]) == null))
       return null;
+    if (property.equals("font")) {
+      if (defaultFontId < 0) {
+        setProperty("font", vwr.gdata.getFont3DFSS(JC.DEFAULT_FONTFACE,
+            JC.DEFAULT_FONTSTYLE, vwr.getFloat(T.drawfontsize)), null);
+        defaultFontId0 = defaultFontId;
+      }
+      return Font.getFont3D(index < 0 || m.fontID < 0 ? defaultFontId : m.fontID);
+    }
+
     if (property == "command")
       return getCommand(m);
     if (property == "type")
@@ -1171,6 +1220,7 @@ private void initDraw() {
   private final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
 
   private final P3i ptXY = new P3i();
+  private float defaultFontSize;
   
   @Override
   public Map<String, Object> checkObjectClicked(int x, int y, int action,
@@ -1502,10 +1552,16 @@ private void initDraw() {
       str.append(" offset ").append(Escape.eP(v));
     }
     if (dmesh.title != null) {
+      if (dmesh.titleColor != null) {
+        str.append(" title color ").append(Escape.escapeColor(dmesh.titleColor.intValue()));
+      }
       String s = "";
       for (int i = 0; i < dmesh.title.length; i++)
         s += "|" + dmesh.title[i];
-      str.append(PT.esc(s.substring(1)));
+      str.append(" ").append(PT.esc(s.substring(1)));
+    }
+    if (dmesh.fontID >= 0) {
+      str.append(" font " + Font.getFont3D(dmesh.fontID).getInfo());
     }
     str.append(";\n");
     appendCmd(str, dmesh.getState("draw"));
@@ -1609,6 +1665,9 @@ private void initDraw() {
     SB s = new SB();
     s.append("\n");
     appendCmd(s, myType + " delete");
+    if (defaultFontId >= 0 && (
+        defaultFontId != defaultFontId0 || defaultFontSize != JC.DRAW_DEFAULT_FONTSIZE))
+      appendCmd(s, getFontCommand("draw", (Font) getProperty("font", -1)));
     for (int i = 0; i < meshCount; i++) {
       DrawMesh mesh = dmeshes[i];
       if (mesh.vc == 0 && mesh.lineData == null)

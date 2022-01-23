@@ -292,6 +292,7 @@ public class GlobalSettings {
     setB("isosurfacePropertySmoothing", isosurfacePropertySmoothing);
     setI("isosurfacePropertySmoothingPower", isosurfacePropertySmoothingPower);
     setB("jmolInJSpecView", jmolInJSpecView);
+    setI("labelPointerWidth", labelPointerWidth);
     setB("justifyMeasurements", justifyMeasurements);
     setB("legacyAutoBonding", legacyAutoBonding);
     setB("legacyHAddition", legacyHAddition);
@@ -607,7 +608,7 @@ public class GlobalSettings {
   float defaultTranslucent = 0.5f;
   int delayMaximumMs = 0;
   float dipoleScale = 1f;
-  float drawFontSize = 14f;
+  float drawFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   boolean disablePopupMenu = false;
   boolean dragSelected = false;
   boolean drawHover = false;
@@ -622,6 +623,7 @@ public class GlobalSettings {
   int helixStep = 1;
   boolean hideNameInPopup = false;
   int hoverDelayMs = 500;
+  public int labelPointerWidth = 2; // BH 2022.01.22
   float loadAtomDataTolerance = 0.01f;
   public boolean logCommands = false;
   public boolean logGestures = false;

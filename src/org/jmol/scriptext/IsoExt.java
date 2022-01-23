@@ -59,6 +59,7 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
 import org.jmol.util.Parser;
@@ -736,9 +737,38 @@ public class IsoExt extends ScriptExt {
       case T.reverse:
         propertyName = "reverse";
         break;
+      case T.title:
+        if (tokAt(++i) == T.color) {
+          propertyValue = Integer.valueOf(e.getArgbParamOrNone(++i, false));
+          propertyName = "titlecolor";
+          i = e.iToken;
+          break;
+        }
+        if (tokAt(i) == T.font) {
+          --i;
+          continue;
+        }
+        //$FALL-THROUGH$
       case T.string:
         propertyValue = stringParameter(i);
         propertyName = "title";
+        break;
+      case T.font:
+        // must be LAST set of parameters
+        float fontSize = floatParameter(++i);
+        String fontFace = (tokAt(i + 1) == T.identifier ? paramAsStr(++i) : null);
+        String fontStyle = (tokAt(i + 1) == T.identifier ? paramAsStr(++i) : null);
+        if (tokAt(i + 1) != T.string && ++i != slen  || fontSize <= 0 || fontSize > 0xFF)
+          invArg();
+        propertyName = "myfont";
+        if (fontFace == null || fontStyle == null) {
+          Font f = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font", -1);
+          if (fontFace == null)
+            fontFace = f.fontFace;
+          if (fontStyle == null)
+            fontStyle = f.fontStyle;
+        }
+        propertyValue = vwr.getFont3D(fontFace, fontStyle, fontSize);
         break;
       case T.vector:
         propertyName = "vector";

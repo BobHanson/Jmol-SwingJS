@@ -52,7 +52,7 @@ public class Labels extends AtomShape {
   public String[] strings;
   public String[] formats;
   public short[] bgcolixes;
-  public byte[] fids;
+  public int[] fids;
   public int[] offsets;
 
   private Map<Integer, Text> atomLabels = new Hashtable<Integer, Text>();
@@ -64,13 +64,13 @@ public class Labels extends AtomShape {
   public int defaultOffset;
   public int defaultAlignment;
   public int defaultZPos;
-  public byte defaultFontId;
+  public int defaultFontId;
   public short defaultColix;
   public short defaultBgcolix;
   public byte defaultPaletteID;
   public int defaultPointer;
 
-  public byte zeroFontId;
+  public int zeroFontId;
 
   //  private boolean defaultsOnlyForNone = true;
   /**
@@ -239,7 +239,7 @@ public class Labels extends AtomShape {
     }
 
     if ("font" == propertyName) {
-      byte fid = ((Font) value).fid;
+      int fid = ((Font) value).fid;
       if (setDefaults) {// || !defaultsOnlyForNone)
         defaultFontId = fid;
       } else {
@@ -384,7 +384,7 @@ public class Labels extends AtomShape {
       labelBoxes = null;
       int firstAtomDeleted = ((int[]) ((Object[]) value)[2])[1];
       int nAtomsDeleted = ((int[]) ((Object[]) value)[2])[2];
-      fids = (byte[]) AU.deleteElements(fids, firstAtomDeleted, nAtomsDeleted);
+      fids = (int[]) AU.deleteElements(fids, firstAtomDeleted, nAtomsDeleted);
       bgcolixes = (short[]) AU.deleteElements(bgcolixes, firstAtomDeleted,
           nAtomsDeleted);
       offsets = (int[]) AU.deleteElements(offsets, firstAtomDeleted,
@@ -450,7 +450,7 @@ public class Labels extends AtomShape {
     if (text == null) {
       if (strings == null || i >= strings.length || strings[i] == null)
         return;
-      byte fid = (bsFontSet != null && bsFontSet.get(i) ? fids[i] : -1);
+      int fid = (bsFontSet != null && bsFontSet.get(i) ? fids[i] : -1);
       if (fid < 0)
         setFont(i, fid = defaultFontId);
       text = Text.newLabel(vwr, Font.getFont3D(fid), strings[i],
@@ -647,11 +647,11 @@ public class Labels extends AtomShape {
     offsets[i] = JC.setZPosition(offsets[i], TF ? flag : 0);
   }
 
-  private void setFont(int i, byte fid) {
+  private void setFont(int i, int fid) {
     if (fids == null || i >= fids.length) {
       if (fid == zeroFontId)
         return;
-      fids = AU.ensureLengthByte(fids, ac);
+      fids = AU.ensureLengthI(fids, ac);
     }
     fids[i] = fid;
     bsFontSet.set(i);

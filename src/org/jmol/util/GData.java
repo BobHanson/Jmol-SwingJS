@@ -7,6 +7,7 @@ import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
 
+
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.JmolGraphicsInterface;
 import org.jmol.api.JmolRendererInterface;
@@ -407,7 +408,7 @@ public class GData implements JmolGraphicsInterface {
         Font.FONT_STYLE_PLAIN, fontSize, fontSize, apiPlatform, graphicsForMetrics);
   }
 
-  public byte getFontFidFS(String fontFace, float fontSize) {
+  public int getFontFidFS(String fontFace, float fontSize) {
     return getFont3DFSS(fontFace, "Bold", fontSize).fid;
   }
 
@@ -426,9 +427,27 @@ public class GData implements JmolGraphicsInterface {
         font.idFontFace, font.idFontStyle, newScale, font.fontSizeNominal, apiPlatform, graphicsForMetrics));
   }
 
-  public byte getFontFid(float fontSize) {
+  public int getFontFidI(float fontSize) {
     return getFont3D(fontSize).fid;
   }
+
+  protected Font currentFont;
+
+  public Font getFont3DCurrent() {
+    return currentFont;
+  }
+
+  /**
+   * @param font3d  
+   */
+  public void setFont(Font font3d) {
+    // see Graphics3D
+  }
+  
+  public void setFontBold(String fontFace, float fontSize) {
+    setFont(getFont3DFSS(fontFace, "Bold", fontSize));
+  }
+
 
   /**
    * @param TF  
@@ -593,18 +612,6 @@ public class GData implements JmolGraphicsInterface {
   public void renderBackground(JmolRendererInterface jmolRenderer) {
   }
 
-  /**
-   * @param font3d  
-   */
-  public void setFont(Font font3d) {
-  }
-
-  /**
-   * @param fid  
-   */
-  public void setFontFid(byte fid) {
-  }
-
   public int argbNoisyUp, argbNoisyDn;
 
   public void setColor(int argb) {
@@ -740,11 +747,6 @@ public class GData implements JmolGraphicsInterface {
   }
 
   protected static short normixCount = Normix.getNormixCount();
-  
-  protected Font currentFont;
-
-  public Font getFont3DCurrent() {
-    return currentFont;
-  }
+ 
 
 }

@@ -204,26 +204,7 @@ public abstract class MeshCollection extends Shape {
     }
 
     if ("title" == propertyName) {
-      if (value == null) {
-        title = null;
-      } else if (value instanceof String){
-        int nLine = 1;
-        String lines = (String) value;
-        for (int i = lines.length(); --i >= 0;)
-          if (lines.charAt(i) == '|')
-            nLine++;
-        title = new String[nLine];
-        nLine = 0;
-        int i0 = -1;
-        for (int i = 0; i < lines.length(); i++)
-          if (lines.charAt(i) == '|') {
-            title[nLine++] = lines.substring(i0 + 1, i);
-            i0 = i;
-          }
-        title[nLine] = lines.substring(i0 + 1);
-      } else {
-        title = (String[]) value;
-      }
+      setTitle(value);
       return;
     }
 
@@ -331,6 +312,31 @@ public abstract class MeshCollection extends Shape {
     }
     setPropS(propertyName, value, bs);
   }
+
+  protected String[] setTitle(Object value) {
+    if (value instanceof String) {
+      int nLine = 1;
+      String lines = (String) value;
+      if (lines.length() > 0) {
+        for (int i = lines.length(); --i >= 0;)
+          if (lines.charAt(i) == '|')
+            nLine++;
+        title = new String[nLine];
+        nLine = 0;
+        int i0 = -1;
+        for (int i = 0; i < lines.length(); i++)
+          if (lines.charAt(i) == '|') {
+            title[nLine++] = lines.substring(i0 + 1, i);
+            i0 = i;
+          }
+        title[nLine] = lines.substring(i0 + 1);
+        return title;
+      }
+      value = null;
+    }
+    return (title = (value == null ? null : (String[]) value));
+  }  
+
 
   protected void checkExplicit(String id) {
     if (explicitID) // not twice

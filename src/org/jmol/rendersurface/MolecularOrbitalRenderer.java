@@ -45,7 +45,7 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
         || vwr.gdata.getTextPosition() != 0)
       return;
     float ht = vwr.getInt(T.infofontsize);
-    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", ht * imageFontScaling));
+    vwr.gdata.setFontBold("Serif", ht * imageFontScaling);
     int lineheight = Math.round((ht + 1) * imageFontScaling);
     int x = Math.round(5 * imageFontScaling);
     int y = lineheight;    

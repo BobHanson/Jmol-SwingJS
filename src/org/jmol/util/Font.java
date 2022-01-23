@@ -31,7 +31,7 @@ import javajs.util.AU;
 
 /**
  *<p>
- * Provides font support using a byte fid
+ * Provides font support using a int fid
  * (<strong>F</strong>ont <strong>ID</strong>) as an index into font table.
  *</p>
  *<p>
@@ -42,7 +42,7 @@ import javajs.util.AU;
  */
 final public class Font {
 
-  public final byte fid;
+  public final int fid;
   public final String fontFace;
   public final String fontStyle;
   public final float fontSizeNominal;
@@ -57,7 +57,7 @@ final public class Font {
   private boolean isBold;
   private boolean isItalic;
   
-  private Font(FontManager manager, byte fid, int idFontFace,
+  private Font(FontManager manager, int fid, int idFontFace,
       int idFontStyle, float fontSize, float fontSizeNominal, Object graphics) {
     this.manager = manager;
     this.fid = fid;
@@ -85,29 +85,34 @@ final public class Font {
   private static int[] fontkeys = new int[FONT_ALLOCATION_UNIT];
   private static Font[] font3ds = new Font[FONT_ALLOCATION_UNIT];
 
-  public static Font getFont3D(byte fontID) {
-    return font3ds[fontID & 0xFF];
+  public static Font getFont3D(int fontID) {
+    return font3ds[fontID];
   }
   
   public static synchronized Font createFont3D(int fontface, int fontstyle,
-                                       float fontsize, float fontsizeNominal,
-                                       FontManager manager, Object graphicsForMetrics) {
+                                               float fontsize,
+                                               float fontsizeNominal,
+                                               FontManager manager,
+                                               Object graphicsForMetrics) {
     //if (graphicsForMetrics == null)
-     // return null;
+    // return null;
     if (fontsize > 0xFF)
       fontsize = 0xFF;
     int fontsizeX16 = ((int) fontsize) << 4;
-    int fontkey = ((fontface & 3) | ((fontstyle & 3) << 2) | (fontsizeX16 << 4));
+    int fontkey = ((fontface & 3) | ((fontstyle & 3) << 2)
+        | (fontsizeX16 << 4));
     // watch out for race condition here!
     for (int i = fontkeyCount; --i > 0;)
       if (fontkey == fontkeys[i]
           && font3ds[i].fontSizeNominal == fontsizeNominal)
         return font3ds[i];
     int fontIndexNext = fontkeyCount++;
-    if (fontIndexNext == fontkeys.length)
+    if (fontIndexNext == fontkeys.length) {
       fontkeys = AU.arrayCopyI(fontkeys, fontIndexNext + FONT_ALLOCATION_UNIT);
-      font3ds = (Font[]) AU.arrayCopyObject(font3ds, fontIndexNext + FONT_ALLOCATION_UNIT);
-    Font font3d = new Font(manager, (byte) fontIndexNext, fontface, fontstyle,
+      font3ds = (Font[]) AU.arrayCopyObject(font3ds,
+          fontIndexNext + FONT_ALLOCATION_UNIT);
+    }
+    Font font3d = new Font(manager, fontIndexNext, fontface, fontstyle,
         fontsize, fontsizeNominal, graphicsForMetrics);
     // you must set the font3d before setting the fontkey in order
     // to prevent a race condition with getFont3D

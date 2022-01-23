@@ -1121,7 +1121,7 @@ abstract public class ScriptParam extends ScriptError {
     return icolor;
   }
 
-  protected int getArgbParamOrNone(int index, boolean allowNone)
+  public int getArgbParamOrNone(int index, boolean allowNone)
       throws ScriptException {
     P3 pt = null;
     if (checkToken(index)) {

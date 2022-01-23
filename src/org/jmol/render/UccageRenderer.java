@@ -172,8 +172,7 @@ public class UccageRenderer extends CageRenderer {
         || vwr.isPreviewOnly || !vwr.gdata.setC(vwr.cm.colixBackgroundContrast)
         || vwr.gdata.getTextPosition() != 0) // molecularOrbital has displayed
       return;
-    vwr.gdata.setFontFid(
-        vwr.gdata.getFontFidFS("Monospaced", 14 * imageFontScaling));
+    vwr.gdata.setFontBold("Monospaced", 14 * imageFontScaling);
     xpos = (int) Math.floor(10 * imageFontScaling);
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
