@@ -245,10 +245,18 @@ public class StatusManager {
     return list;
   }
 
-  synchronized void setCallbackFunction(String callbackType,
-                                        String callbackFunction) {
+  /**
+   * Set a JmolScript or JavaScript or Java callback. 
+   * This method can be called with a JavaScript function, but only 
+   * directly by an applet method, not using Jmol scripting.
+   * @param callbackType
+   * @param callbackObject
+   */
+  synchronized public void setCallbackFunction(String callbackType,
+                                        Object callbackObject) {
     // menu and language setting also use this route
     CBK cbk = CBK.getCallback(callbackType);
+    String callbackFunction = (callbackObject instanceof String ? (String) callbackObject : null);
     if (cbk != null) {
       String callback = CBK.getCallback(callbackType).name();
       Logger.info("StatusManager callback set for " + callbackType + " f="
@@ -266,20 +274,25 @@ public class StatusManager {
         }
       } else {
         String lc = "";
+        // allowing for "script:" or "jmolscript:" here. 
         int pt = (callbackFunction == null ? 0
             : (lc = callbackFunction.toLowerCase()).startsWith("script:") ? 7
                 : lc.startsWith("jmolscript:") ? 11 : 0);
         if (pt == 0) {
-          jmolScriptCallbacks.remove(callback);
+          // could be a function object
+          if (callbackObject == null)
+            jmolScriptCallbacks.remove(callback);
         } else {
           jmolScriptCallbacks.put(callback,
               callbackFunction.substring(pt).trim());
+          return;
         }
       }
     }
-    // allow for specialized callbacks
+    // allow for specialized internal callbacks that may not be part of the CBK system.
+    // note that in JavaScript, the callabackObject may be a function() object.
     if (cbl != null)
-      cbl.setCallbackFunction(callbackType, callbackFunction);
+      cbl.setCallbackFunction(callbackType, (String) callbackObject);
   }
   
   boolean notifyEnabled(CBK type) {
@@ -288,7 +301,7 @@ public class StatusManager {
 
   private Map<String, String> jmolScriptCallbacks = new Hashtable<String, String>();
 
-  private String jmolScriptCallbackNew(CBK callback) {
+  private String getJmolScriptCallback(CBK callback) {
     return jmolScriptCallbacks.get(callback.name());
   }
 
@@ -325,14 +338,14 @@ public class StatusManager {
   }
   
   synchronized void setStatusAppletReady(String htmlName, boolean isReady) {
-    String sJmol = (isReady ? jmolScriptCallbackNew(CBK.APPLETREADY) : null);
+    String sJmol = (isReady ? getJmolScriptCallback(CBK.APPLETREADY) : null);
     boolean isEnabled =  notifyEnabled(CBK.APPLETREADY);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.APPLETREADY, new Object[] { sJmol, htmlName, Boolean.valueOf(isReady), null });
   }
 
   synchronized void setStatusAtomMoved(BS bsMoved) {    
-    String sJmol = jmolScriptCallbackNew(CBK.ATOMMOVED);
+    String sJmol = getJmolScriptCallback(CBK.ATOMMOVED);
     setStatusChanged("atomMoved", -1, bsMoved, false);
     boolean isEnabled =  notifyEnabled(CBK.ATOMMOVED);
     if (isEnabled || sJmol != null)
@@ -350,7 +363,7 @@ public class StatusManager {
    * 
    */
   synchronized void setStatusSelect(BS atoms) {
-    String sJmol = jmolScriptCallbackNew(CBK.SELECT);
+    String sJmol = getJmolScriptCallback(CBK.SELECT);
     setStatusChanged("select", -1, atoms, false);
     boolean isEnabled =  notifyEnabled(CBK.SELECT);
     if (isEnabled || sJmol != null)
@@ -363,7 +376,7 @@ public class StatusManager {
                                          int mode, String msg, int n, BS bsAtoms) {
     if (atomIndex >= 0 && bsAtoms == null)
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-    String sJmol = jmolScriptCallbackNew(CBK.STRUCTUREMODIFIED);
+    String sJmol = getJmolScriptCallback(CBK.STRUCTUREMODIFIED);
     boolean isEnabled =  notifyEnabled(CBK.STRUCTUREMODIFIED);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.STRUCTUREMODIFIED,
@@ -380,7 +393,7 @@ public class StatusManager {
    * @param map 
    */
   synchronized void setStatusAtomPicked(int atomIndex, String strInfo, Map<String, Object> map) {
-    String sJmol = jmolScriptCallbackNew(CBK.PICK);
+    String sJmol = getJmolScriptCallback(CBK.PICK);
     Logger.info("setStatusAtomPicked(" + atomIndex + "," + strInfo + ")");
     setStatusChanged("atomPicked", atomIndex, strInfo, false);
     boolean isEnabled =  notifyEnabled(CBK.PICK);
@@ -391,7 +404,7 @@ public class StatusManager {
 
   synchronized int setStatusClicked(int x, int y, int action, int clickCount, int mode) {
     // also called on drag movements
-    String sJmol = jmolScriptCallbackNew(CBK.CLICK);
+    String sJmol = getJmolScriptCallback(CBK.CLICK);
     int[] m = new int[] { action, mode };
     boolean isEnabled =  notifyEnabled(CBK.CLICK);
     if (isEnabled || sJmol != null)
@@ -401,7 +414,7 @@ public class StatusManager {
   }
 
   synchronized void setStatusResized(int width, int height){
-    String sJmol = jmolScriptCallbackNew(CBK.RESIZE);
+    String sJmol = getJmolScriptCallback(CBK.RESIZE);
     boolean isEnabled =  notifyEnabled(CBK.RESIZE);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.RESIZE,
@@ -413,7 +426,7 @@ public class StatusManager {
   }
   
   synchronized void setStatusAtomHovered(int iatom, String strInfo) {
-    String sJmol = jmolScriptCallbackNew(CBK.HOVER);
+    String sJmol = getJmolScriptCallback(CBK.HOVER);
     boolean isEnabled =  notifyEnabled(CBK.HOVER);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.HOVER, 
@@ -421,7 +434,7 @@ public class StatusManager {
   }
   
   synchronized void setStatusObjectHovered(String id, String strInfo, T3 pt) {
-    String sJmol = jmolScriptCallbackNew(CBK.HOVER);
+    String sJmol = getJmolScriptCallback(CBK.HOVER);
     boolean isEnabled =  notifyEnabled(CBK.HOVER);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.HOVER, 
@@ -439,7 +452,7 @@ public class StatusManager {
   synchronized void showImage(String title, Object image) {
     String[] a = PT.split(title,  "\1");
     title = (a.length < 2 ? "Jmol" : a.length < 3 || a[2].equals("null") ? a[1].substring(a[1].lastIndexOf("/") + 1) : a[2]);
-    String sJmol = jmolScriptCallbackNew(CBK.IMAGE);
+    String sJmol = getJmolScriptCallback(CBK.IMAGE);
     boolean isEnabled =  notifyEnabled(CBK.IMAGE);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.IMAGE, new Object[] { sJmol, title, image });
@@ -485,7 +498,7 @@ public class StatusManager {
     setStatusChanged("fileLoaded", ptLoad, fullPathName, false);
     if (errorMsg != null)
       setStatusChanged("fileLoadError", ptLoad, errorMsg, false);
-    String sJmol = jmolScriptCallbackNew(CBK.LOADSTRUCT);
+    String sJmol = getJmolScriptCallback(CBK.LOADSTRUCT);
     boolean isEnabled =  doCallback && notifyEnabled(CBK.LOADSTRUCT);
     if (isEnabled || sJmol != null) {
       String name = (String) vwr.getP("_smilesString");
@@ -503,7 +516,7 @@ public class StatusManager {
   synchronized void setStatusModelKit(int istate) {
     String state = (istate == 1 ? "ON" : "OFF");
     setStatusChanged("modelkit", istate, state, false);
-    String sJmol = jmolScriptCallbackNew(CBK.MODELKIT);
+    String sJmol = getJmolScriptCallback(CBK.MODELKIT);
     boolean isEnabled = notifyEnabled(CBK.MODELKIT);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MODELKIT,
@@ -520,7 +533,7 @@ public class StatusManager {
     int frameNo = (animating ? -2 - currentFrame : currentFrame);
     setStatusChanged("frameChanged", frameNo,
         (currentFrame >= 0 ? vwr.getModelNumberDotted(currentFrame) : ""), false);
-    String sJmol = jmolScriptCallbackNew(CBK.ANIMFRAME);
+    String sJmol = getJmolScriptCallback(CBK.ANIMFRAME);
     boolean isEnabled =  notifyEnabled(CBK.ANIMFRAME);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.ANIMFRAME,
@@ -535,7 +548,7 @@ public class StatusManager {
   synchronized boolean setStatusDragDropped(int mode, int x, int y,
                                             String fileName) {
     setStatusChanged("dragDrop", 0, "", false);
-    String sJmol = jmolScriptCallbackNew(CBK.DRAGDROP);
+    String sJmol = getJmolScriptCallback(CBK.DRAGDROP);
     boolean isEnabled = notifyEnabled(CBK.DRAGDROP);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.DRAGDROP,
@@ -549,7 +562,7 @@ public class StatusManager {
     if (strEcho == null)
       return;
     setStatusChanged("scriptEcho", 0, strEcho, false);
-    String sJmol = jmolScriptCallbackNew(CBK.ECHO);
+    String sJmol = getJmolScriptCallback(CBK.ECHO);
     boolean isEnabled =  notifyEnabled(CBK.ECHO);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.ECHO,
@@ -561,7 +574,7 @@ public class StatusManager {
     String sJmol = null;
     if(status.equals("measureCompleted")) { 
       Logger.info("measurement["+intInfo+"] = "+strMeasure);
-      sJmol = jmolScriptCallbackNew(CBK.MEASURE);
+      sJmol = getJmolScriptCallback(CBK.MEASURE);
     } else if (status.equals("measurePicked")) {
         setStatusChanged("measurePicked", intInfo, strMeasure, false);
         Logger.info("measurePicked " + intInfo + " " + strMeasure);
@@ -574,7 +587,7 @@ public class StatusManager {
   
   synchronized void notifyError(String errType, String errMsg,
                                 String errMsgUntranslated) {
-    String sJmol = jmolScriptCallbackNew(CBK.ERROR);
+    String sJmol = getJmolScriptCallback(CBK.ERROR);
     boolean isEnabled = notifyEnabled(CBK.ERROR);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.ERROR,
@@ -585,7 +598,7 @@ public class StatusManager {
   
   synchronized void notifyMinimizationStatus(String minStatus, Integer minSteps, 
                                              Float minEnergy, Float minEnergyDiff, String ff) {
-    String sJmol = jmolScriptCallbackNew(CBK.MINIMIZATION);
+    String sJmol = getJmolScriptCallback(CBK.MINIMIZATION);
     boolean isEnabled = notifyEnabled(CBK.MINIMIZATION);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MINIMIZATION,
@@ -603,7 +616,7 @@ public class StatusManager {
     } else if (strStatus == null) {
       return;
     }
-    String sJmol = (msWalltime == 0 ? jmolScriptCallbackNew(CBK.SCRIPT)
+    String sJmol = (msWalltime == 0 ? getJmolScriptCallback(CBK.SCRIPT)
         : null);
     boolean isScriptCompletion = (strStatus == JC.SCRIPT_COMPLETED);
 
@@ -947,11 +960,11 @@ public class StatusManager {
       vwr.script(script);
     if (status == "ended")
       registerAudio((String) htParams.get("id"), null);
-    String sJmol = jmolScriptCallbackNew(CBK.AUDIO);
+    String sJmol = getJmolScriptCallback(CBK.AUDIO);
     boolean isEnabled = notifyEnabled(CBK.AUDIO);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.AUDIO,
-          new Object[] { sJmol, htParams });
+          new Object[] { sJmol, htParams, status });
   }
   
   

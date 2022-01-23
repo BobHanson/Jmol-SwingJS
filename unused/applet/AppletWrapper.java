@@ -44,11 +44,6 @@ import org.jmol.util.Logger;
 
 import javajs.util.PT;
 
-/**
- * Using Applet only because originally there was the possibility of non-Swing versions of 
- * the JRE being used. No real difference, I think.
- * 
- */
 public class AppletWrapper extends JApplet {
 
   public WrappedApplet wrappedApplet;

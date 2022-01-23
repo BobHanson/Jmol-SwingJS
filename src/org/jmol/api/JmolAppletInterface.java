@@ -36,6 +36,8 @@ import java.awt.Event;
 
 public interface JmolAppletInterface extends JmolSyncInterface {
 
+  public void setCallback(String name, Object callbackObject);
+
   public boolean handleEvent(Event event);  
   public String getAppletInfo();
   public void destroy();
@@ -113,4 +115,5 @@ public interface JmolAppletInterface extends JmolSyncInterface {
    */
   @Deprecated
   public String loadInline(String[] strModels, String script);
+
 }

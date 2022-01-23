@@ -6,26 +6,29 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.api.JmolAppletInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
+import org.jmol.api.js.JmolToJSmolInterface;
 import org.jmol.c.CBK;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.JSInterface;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.SB;
+
 /**
- * A collection of all methods necessary for initialization of and communication with the applet, 
- * whether it be JavaScript or Java.
+ * A collection of all methods necessary for initialization of and communication with the applet.
+ * JavaScript only -- Java applet is no longer supported.
+ * 
+ * abandoned -- no longer necessary
  * 
  */
-public abstract class GenericApplet implements JmolAppletInterface,
-    JmolStatusListener {
+public abstract class GenericApplet implements JSInterface, JmolAppletInterface, JmolStatusListener {
 
   protected static Map<String, Object> htRegistry;
 
@@ -60,11 +63,70 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   protected Object appletObject;
 
-  protected boolean isJNLP;
-
   private boolean loading;
   private String syncId;
   private SB outputBuffer;
+
+  @Override
+  public Object setStereoGraphics(boolean isStereo) {
+    /**
+     * @j2sNative
+     * 
+     * if (isStereo)
+     *   return vwr.apiPlatform.context;
+     * 
+     */
+    {
+    }
+    return null;
+  }
+
+  @Override
+  public boolean processMouseEvent(int id, int x, int y, int modifiers,
+                                   long time) {
+    return viewer.processMouseEvent(id, x, y, modifiers, time);
+  }
+
+  @Override
+  public void setDisplay(Object canvas) {
+    viewer.setDisplay(canvas);
+  }
+
+  @Override
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+    return viewer.setStatusDragDropped(mode, x, y, fileName);
+  }
+
+  @Override
+  public void startHoverWatcher(boolean enable) {
+    viewer.startHoverWatcher(enable);
+  }
+
+  @Override
+  public void update() {
+    viewer.updateJS();
+  }
+
+  @Override
+  public void openFileAsyncSpecial(String fileName, int flags) {
+    viewer.openFileAsyncSpecial(fileName, flags);
+  }
+
+  @Override
+  public void processTwoPointGesture(float[][][] touches) {
+    viewer.processTwoPointGesture(touches);
+  }
+
+  @Override
+  public void setScreenDimension(int width, int height) {
+    viewer.setScreenDimension(width, height);
+  }
+
+  void resizeDisplay(int width, int height) {
+    JmolToJSmolInterface jmol = org.jmol.awtjs2d.Platform.Jmol();
+    jmol.resizeApplet(viewer.html5Applet, new int[] {width, height});
+  }
+
 
   protected void init(Object applet) {
     callbacks = new Hashtable<CBK, String>();
@@ -103,8 +165,25 @@ public abstract class GenericApplet implements JmolAppletInterface,
         getValue("bgcolor", getValue("boxbgcolor", "black")));
     viewer.setBooleanProperty("frank", true);
     loading = true;
-    for (CBK item : CBK.values())
-      setValue(item.name() + "Callback", null);
+    for (CBK item : CBK.values()) {
+      String name = item.name();
+      Object o = getValue(name, null);
+      if (o != null) {
+        if (o instanceof String) {
+          setStringProperty(name + "Callback", (String) o);
+        } else {
+          String def = null;
+          /**
+           * @j2sNative 
+           * 
+           * def = "Info." + o.name;
+           */
+          {}
+          setStringProperty(name + "Callback", def);
+          setCallback(name, o);
+        }
+      }
+    }
     loading = false;
     if (language != null)
       System.out.print("requested language=" + language + "; ");
@@ -194,10 +273,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
         value = null;
     }
     return value;
-  }
-
-  private void setValue(String name, String defaultValue) {
-    setStringProperty(name, getValue(name, defaultValue));
   }
 
   private void setStringProperty(String name, String value) {
@@ -505,8 +580,20 @@ public abstract class GenericApplet implements JmolAppletInterface,
       outputBuffer.append(s).appendC('\n');
   }
 
+  /**
+   * set a callback either as a function or a function name from JavaScript
+   * 
+   */
   @Override
-  public void setCallbackFunction(String callbackName, String callbackFunction) {
+  public void setCallback(String name, Object callbackObject) {
+    viewer.sm.setCallbackFunction(name, callbackObject);
+  }
+
+  /**
+   * From StatusManager
+   */
+  @Override
+  public void setCallbackFunction(String callbackName, String callbackObject) {
     //also serves to change language for callbacks and menu
     if (callbackName.equalsIgnoreCase("language")) {
       consoleMessage(""); // clear
@@ -515,10 +602,10 @@ public abstract class GenericApplet implements JmolAppletInterface,
     }
     CBK callback = CBK.getCallback(callbackName);
     if (callback != null && (loading || callback != CBK.EVAL)) {
-      if (callbackFunction == null)
+      if (callbackObject == null)
         callbacks.remove(callback);
       else
-        callbacks.put(callback, callbackFunction);
+        callbacks.put(callback, callbackObject);
       return;
     }
     consoleMessage("Available callbacks include: "
@@ -534,30 +621,32 @@ public abstract class GenericApplet implements JmolAppletInterface,
   @Override
   public boolean notifyEnabled(CBK type) {
     switch (type) {
-    case SERVICE:
-      return false;
-    case ECHO:
-    case MESSAGE:
-    case MEASURE:
-    case PICK:
-    case SELECT:
     case SYNC:
-      return true;
+      if (!isJS)
+        return false;
+      //$FALL-THROUGH$
     case ANIMFRAME:
     case DRAGDROP:
+    case ECHO:
     case ERROR:
     case EVAL:
     case IMAGE:
     case LOADSTRUCT:
+    case MEASURE:
+    case MESSAGE:
+    case PICK:
     case SCRIPT:
-      return !isJNLP;
+      return true;
     case AUDIO: // Jmol 14.29.2
     case APPLETREADY: // Jmol 12.1.48
     case ATOMMOVED: // Jmol 12.1.48
     case CLICK:
     case HOVER:
     case MINIMIZATION:
+    case MODELKIT:
     case RESIZE:
+    case SELECT:
+    case SERVICE:
     case STRUCTUREMODIFIED:
       break;
     }
@@ -570,7 +659,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
    */
   @Override
   public void notifyCallback(CBK type, Object[] data) {
-    String callback = (type == null ? null : callbacks.get(type));
+    Object callback = (type == null ? null : callbacks.get(type));
     boolean doCallback = (type == null || callback != null && (data == null || data[0] == null));
     boolean toConsole = false;
     if (data != null)
@@ -596,6 +685,18 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case DRAGDROP:
     case ATOMMOVED:
     case SELECT:
+    case MODELKIT:
+    case STRUCTUREMODIFIED:
+//    int mode = ((Integer) data[1]).intValue();
+//    int atomIndex = ((Integer) data[2]).intValue();
+//    int modelIndex = ((Integer) data[3]).intValue();
+//    switch (mode) {
+//    case 1/-1: // assign atom
+//    case 2/-2: // assign bond
+//    case 3/-3: // 
+//    case 4/-4: // delete atoms
+//    case 5/-5: // delete models
+//    }
       // just send it
       break;
     case CLICK:
@@ -702,25 +803,9 @@ public abstract class GenericApplet implements JmolAppletInterface,
       output(strInfo);
       doShowStatus(strInfo);
       break;
-    case STRUCTUREMODIFIED:
-//      int mode = ((Integer) data[1]).intValue();
-//      int atomIndex = ((Integer) data[2]).intValue();
-//      int modelIndex = ((Integer) data[3]).intValue();
-//      switch (mode) {
-//      case 1/-1: // assign atom
-//      case 2/-2: // assign bond
-//      case 3/-3: // 
-//      case 4/-4: // delete atoms
-//      case 5/-5: // delete models
-//      }
-      break;
     case SYNC:
       sendScript(strInfo, (String) data[2], true, doCallback);
       return;
-    case MODELKIT:
-      break;
-    default:
-      break;
     }
     if (toConsole) {
       JmolCallbackListener appConsole = (JmolCallbackListener) viewer
@@ -728,13 +813,12 @@ public abstract class GenericApplet implements JmolAppletInterface,
       if (appConsole != null) {
         appConsole.notifyCallback(type, data);
         output(strInfo);
-        doSendJsTextareaStatus(strInfo);
       }
     }
     if (!doCallback || !mayScript)
       return;
     try {
-      doSendCallback(callback, data, strInfo);
+      doSendCallback(type, callback, data, strInfo);
     } catch (Exception e) {
       if (!haveNotifiedError)
         if (Logger.debugging) {
@@ -747,6 +831,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   private String sendScript(String script, String appletName, boolean isSync,
                             boolean doCallback) {
+    if (!isJS)
+      return "";
     if (doCallback) {
       script = notifySync(script, appletName);
       // if the notified JavaScript function returns "" or 0, then 
@@ -802,7 +888,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     if (!mayScript || syncCallback == null)
       return info;
     try {
-      return doSendCallback(syncCallback, new Object[] { fullName, info,
+      return doSendCallback(CBK.SYNC, syncCallback, new Object[] { fullName, info,
           appletName }, null);
     } catch (Exception e) {
       if (!haveNotifiedError)
@@ -828,16 +914,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
       return "";
     }
     return doEval(strEval);
-  }
-
-  @Override
-  public float[][] functionXY(String functionName, int nX, int nY) {
-    return doFunctionXY(functionName, nX, nY);
-  }
-
-  @Override
-  public float[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
-    return doFunctionXYZ(functionName, nX, nY, nZ);
   }
 
   @Override
@@ -867,7 +943,10 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   @Override
   public int[] resizeInnerPanel(String data) {
-    return new int[] { viewer.getScreenWidth(), viewer.getScreenHeight() };
+    float[] dims = new float[2];
+    Parser.parseStringInfestedFloatArray(data, null, dims);
+    resizeDisplay((int) dims[0], (int) dims[1]);
+    return new int[] { (int) dims[0], (int) dims[1] };
   }
 
   //////////// applet registration for direct applet-applet communication ////////////
@@ -953,17 +1032,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
     return (o == null ? null : "" + o);
   }
 
-  protected void doSendJsTextStatus(String message) {
-    System.out.println(message);
-    // not implemented
-  }
-
-  protected void doSendJsTextareaStatus(String message) {
-    System.out.println(message);
-    // not implemented
-  }
-
-  protected float[][] doFunctionXY(String functionName, int nX, int nY) {
+  @Override
+  public float[][] functionXY(String functionName, int nX, int nY) {
     /*three options:
      * 
      *  nX > 0  and  nY > 0        return one at a time, with (slow) individual function calls
@@ -1027,8 +1097,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
     return fxy;
   }
 
-  protected float[][][] doFunctionXYZ(String functionName, int nX, int nY,
-                                      int nZ) {
+  @Override
+  public float[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
     float[][][] fxyz = new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
     if (!mayScript || !haveDocumentAccess || nX == 0 || nY == 0 || nZ == 0)
       return fxyz;
@@ -1091,31 +1161,42 @@ public abstract class GenericApplet implements JmolAppletInterface,
     }
   }
 
-  protected String doSendCallback(String callback, Object[] data, String strInfo) {
-    if (callback == null || callback.length() == 0) {
-    } else if (callback.equals("alert")) {
-      /**
-       * @j2sNative alert(strInfo); return "";
-       */
-      {
-        System.out.println(strInfo);
-      }
+  @SuppressWarnings("unused")
+  protected String doSendCallback(CBK type, Object callback, Object[] data, String strInfo) {
+    boolean isString = (callback instanceof String);
+    if (callback == null || isString && ((String) callback).length() == 0) {
     } else {
-      String[] tokens = PT.split(callback, ".");
-      /**
-       * @j2sNative
-       * 
-       *            try{ 
-       *            var o = window[tokens[0]]; 
-       *            for (var i = 1; i < tokens.length; i++) 
-       *              o = o[tokens[i]];
-       *            for (var i = 0; i < data.length; i++) 
-       *              data[i] && data[i].booleanValue && (data[i] = data[i].booleanValue());
-       *            return o.apply(null,data)
-       *            } catch (e) { System.out.println(callback + " failed " + e); }
-       */
-      {
-        System.out.println(tokens + " " + data);
+      if (isString && "alert".equals(callback)) {
+        /**
+         * @j2sNative alert(strInfo);
+         */
+        {
+        }
+        return "";
+      }
+      String[] tokens = (isString ? PT.split(((String) callback), ".") : null);
+      try{
+        /**
+         * @j2sNative
+         * 
+         *              var o; 
+         *              if (isString) {
+         *                o = window[tokens[0]]; 
+         *                for (var i = 1; i < tokens.length; i++) 
+         *                o = o[tokens[i]];
+         *              } else {
+         *                o = callback;
+         *              }
+         *              for (var i = 0; i < data.length; i++) {
+         *                data[i] && data[i].booleanValue && (data[i] = data[i].booleanValue());
+         *                data[i] instanceof Number && (data[i] = +data[i]);
+         *              }
+         *              return o.apply(this,data)
+         */
+        {
+        }
+      } catch (Throwable e) { 
+        System.out.println("callback " + type + " failed " + e); 
       }
     }
     return "";
@@ -1123,6 +1204,9 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   /**
    * return RAW JAVASCRIPT OBJECT, NOT A STRING 
+   * 
+   * @param strEval 
+   * @return result, not necessarily a String
    */
   protected String doEval(String strEval) {
     try {
@@ -1134,7 +1218,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
        */
       {
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       Logger.error("# error evaluating " + strEval + ":" + e.toString());
     }
     return "";
@@ -1171,17 +1255,19 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   // JSInterface -- methods called from JSmol JavaScript library
   
+  @Override
   public int cacheFileByName(String fileName, boolean isAdd) {
     return viewer.cacheFileByName(fileName, isAdd);
   }
 
+  @Override
   public void cachePut(String key, Object data) {
     viewer.cachePut(key, data);
   }
 
+  @Override
   public String getFullName() {
     return fullName;
   }
-
 
 }

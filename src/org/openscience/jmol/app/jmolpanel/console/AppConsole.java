@@ -100,6 +100,8 @@ public class AppConsole extends JmolConsole
 
   private int fontSize;
 
+  private boolean noPrefs;
+
   // note:  "Check" "Top" "Step" not included in 12.1
 
   public AppConsole() {
@@ -168,7 +170,7 @@ public class AppConsole extends JmolConsole
 
   @Override
   public void updateFontSize() {
-    int scale = (Viewer.isJS ? vwr.getConsoleFontScale()
+    int scale = (Viewer.isJS || noPrefs ? vwr.getConsoleFontScale()
         : PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference",
             "consoleFontScale")));
     scale = (scale < 0 ? 1 : scale) % 5;
@@ -641,15 +643,12 @@ public class AppConsole extends JmolConsole
       return;
     }
     if (source == fontButton) {
-      if (Viewer.isJS) {
-        vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
-        updateFontSize();
-      } else {
-        PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API",
-            "getPreference", null);
-        if (d != null)
-          d.setFontScale(-1);
+      if (!Viewer.isJS && !noPrefs) {
+        if (updateFont())
+          return;
       }
+      vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
+      updateFontSize();
       return;
     }
     if (source == helpButton) {
@@ -663,6 +662,20 @@ public class AppConsole extends JmolConsole
       //        (new HelpDialog(null, url)).setVisible(true);
     }
     super.actionPerformed(e);
+  }
+
+  private boolean updateFont() {
+    PreferencesDialog d = null;
+    try {
+      d = (PreferencesDialog) vwr.getProperty("DATA_API",
+          "getPreference", null);
+      if (d != null)
+        d.setFontScale(-1);
+      return true;
+    } catch (Exception ee) {
+      noPrefs = true;
+    }
+    return false;
   }
 
   class ConsoleTextPane extends JTextPane implements KeyListener {

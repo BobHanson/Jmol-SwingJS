@@ -1,9 +1,9 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2008-11-27 09:48:39 -0600 (Thu, 27 Nov 2008) $
- * $Revision: 10382 $
+ * $Date: 2013-12-02 23:05:12 -0600 (Mon, 02 Dec 2013) $
+ * $Revision: 19049 $
  *
- * Copyright (C) 2002-2005  The Jmol Development Team
+ * Copyright (C) 2004-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
  *
@@ -22,23 +22,12 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package org.jmol.api;
+package org.jmol.applet;
 
-import org.jmol.c.CBK;
+import java.awt.Graphics;
 
-public interface JmolCallbackListener {
-/*
- * These methods specifically provide notification from 
- * Viewer.StatusManager for callback methods.
- * 
- * See Jmol.java for implementation examples.
- * 
- */
-
-  public void setCallbackFunction(String callbackType, String callbackObject);
-  
-  public void notifyCallback(CBK message, Object[] data);
-
-  public boolean notifyEnabled(CBK type);
-
+public interface WrappedApplet {
+  public void setApplet(Object applet, boolean isSigned);
+  public void update(Graphics g);
+  public void paint(Graphics g);
 }

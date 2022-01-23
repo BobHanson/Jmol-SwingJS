@@ -272,6 +272,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   protected String filename;
   private Map<String, Object> map;
+  private boolean noPrefs;
   
   private synchronized void setContext(ScriptContext context) {
     pauseButton.setEnabled(vwr.isScriptExecuting());
@@ -352,9 +353,11 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       return;
     }
     if (source == fontButton) {
-      PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API", "getPreference", null);
-      if (d != null)
-        d.setFontScale(-1);
+      if (!Viewer.isJS && !noPrefs) {
+        if (updateFont())
+          return;
+      }
+      vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
       updateFontSize();
       return;
     }
@@ -403,6 +406,20 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   }
  
+    private boolean updateFont() {
+      PreferencesDialog d = null;
+      try {
+        d = (PreferencesDialog) vwr.getProperty("DATA_API",
+            "getPreference", null);
+        if (d != null)
+          d.setFontScale(-1);
+        return true;
+      } catch (Exception ee) {
+        noPrefs = true;
+      }
+      return false;
+    }
+
   private void saveZip(boolean isAs) {
     if (isAs) {
     // TODO
@@ -421,7 +438,9 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
   private String zipFileName;
 
   public void updateFontSize() {
-    int scale = PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference", "consoleFontScale"));
+    int scale = (Viewer.isJS || noPrefs ? vwr.getConsoleFontScale()
+        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference",
+            "consoleFontScale")));
     scale = (scale < 0 ? 1 : scale) % 5;
     fontSize = scale * 4 + 12;
     if (editor != null)

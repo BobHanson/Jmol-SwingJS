@@ -45,17 +45,20 @@ public enum CBK {
   MESSAGE,
   MINIMIZATION,
   MODELKIT,
-  SERVICE,
   PICK,
   RESIZE,
   SCRIPT,
   SELECT,
-  SYNC, STRUCTUREMODIFIED;
+  SERVICE,
+  STRUCTUREMODIFIED,
+  SYNC;
 
   public static CBK getCallback(String name) {
     
     name = name.toUpperCase();
-    name = name.substring(0, Math.max(name.indexOf("CALLBACK"), 0));
+    int pt = name.indexOf("CALLBACK");
+    if (pt > 0)
+      name = name.substring(0, pt);
     for (CBK item : values())
       if (item.name().equalsIgnoreCase(name))
         return item;
