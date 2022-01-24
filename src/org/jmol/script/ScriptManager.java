@@ -536,27 +536,34 @@ public class ScriptManager implements JmolScriptManager {
    * 
    * @param fname
    * @param flags
-   *        1=pdbCartoons, 2=no scripting, 4=append, 8=noAutoPlay
+   * 
+   *        1=pdbCartoons, 
+   *        2=no scripting, 
+   *        4=append, 
+   *        8=no autoplay, 
+   *        16=file dropped, 
+   *        32=script only (dropped into console)
+   *        64=check dims for resize 
    * 
    */
   @Override
-  public void openFileAsync(String fname, int flags, boolean checkDims) {
-    if (checkDims && FileManager.isEmbeddable(fname)) 
+  public void openFileAsync(String fname, int flags) {
+    boolean scriptOnly = ((flags & SCRIPT_ONLY) != 0);
+    if (!scriptOnly && (flags & CHECK_DIMS) != 0 && FileManager.isEmbeddable(fname)) 
       checkResize(fname);
     boolean noScript = ((flags & NO_SCRIPT) != 0);
     boolean noAutoPlay = ((flags & NO_AUTOPLAY) != 0);
 
     String cmd = null;
-    fname = fname.trim();
-    if (fname.startsWith("\t")) {
-      noScript = true;
-      fname = fname.substring(1);
-    }
-    fname = fname.replace('\\', '/');
+    fname = fname.trim().replace('\\', '/');
     boolean isCached = fname.startsWith("cache://");
     if (vwr.isApplet && fname.indexOf("://") < 0)
       fname = "file://" + (fname.startsWith("/") ? "" : "/") + fname;
     try {
+      if (scriptOnly) {
+        cmd = "script " + PT.esc(fname);
+        return;
+      }
       // using finally... here on return
       if (fname.endsWith(".pse")) {
         cmd = (isCached ? "" : "zap;") + "load SYNC " + PT.esc(fname)

@@ -93,7 +93,7 @@ public class AppConsole extends JmolConsole
     getScriptEditor().loadFile(fileName);
     if (!isVisible)
       se.setVisible(false);    
-    vwr.openFileAsyncSpecial(fileName, JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.NO_SCRIPT | JmolScriptManager.PDB_CARTOONS);
+    vwr.openFileAsyncSpecial(fileName, JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.SCRIPT_ONLY | JmolScriptManager.PDB_CARTOONS);
   }
 
   public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";

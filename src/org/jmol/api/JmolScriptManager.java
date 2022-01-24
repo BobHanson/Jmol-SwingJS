@@ -17,6 +17,9 @@ public interface JmolScriptManager {
   public final static int IS_APPEND    = 4;
   public final static int NO_AUTOPLAY  = 8;
   public static final int FILE_DROPPED = 16;
+  public static final int SCRIPT_ONLY = 32;
+  public static final int CHECK_DIMS = 64;
+
 
   JmolScriptEvaluator setViewer(Viewer vwr);
   
@@ -53,7 +56,7 @@ public interface JmolScriptManager {
 
   boolean isQueueProcessing();
 
-  void openFileAsync(String fileName, int flags, boolean checkDims);
+  void openFileAsync(String fileName, int flags);
 
   String evalFile(String strFilename);
 

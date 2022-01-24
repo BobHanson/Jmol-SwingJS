@@ -23,9 +23,7 @@ import javajs.util.SB;
 
 /**
  * A collection of all methods necessary for initialization of and communication with the applet.
- * JavaScript only -- Java applet is no longer supported.
- * 
- * abandoned -- no longer necessary
+ * JavaScript and Java applet (which is still part of Jmol-SwingJS).
  * 
  */
 public abstract class GenericApplet implements JSInterface, JmolAppletInterface, JmolStatusListener {
@@ -167,7 +165,7 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
     loading = true;
     for (CBK item : CBK.values()) {
       String name = item.name();
-      Object o = getValue(name, null);
+      Object o = getValue(name + "Callback", null);
       if (o != null) {
         if (o instanceof String) {
           setStringProperty(name + "Callback", (String) o);

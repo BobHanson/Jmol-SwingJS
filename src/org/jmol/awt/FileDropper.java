@@ -39,7 +39,10 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.List;
 
+import javax.swing.text.JTextComponent;
+
 import org.jmol.api.JmolDropEditor;
+import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
@@ -113,7 +116,9 @@ public class FileDropper implements DropTargetListener {
       fname = (fname.startsWith("/") ? "file://" : "file:///") + fname;
     if (!vwr.setStatusDragDropped(0, x, y, fname))
       return;
-    vwr.openFileDropped(fname, statusListener != null);
+    vwr.openFileAsyncSpecial(fname, JmolScriptManager.FILE_DROPPED 
+        | (statusListener == null ? 0 : JmolScriptManager.CHECK_DIMS));
+//    vwr.openFileDropped(fname, statusListener != null);
   }
 
   private void loadFiles(List<File> fileList) {
@@ -174,6 +179,7 @@ public class FileDropper implements DropTargetListener {
   public void drop(DropTargetDropEvent dtde) {
     if (Logger.debugging)
       Logger.debug("Drop detected...");
+    System.out.println("FileDropper " + dtde.getDropTargetContext().getComponent());
     Transferable t = dtde.getTransferable();
     boolean isAccepted = false;
     if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {

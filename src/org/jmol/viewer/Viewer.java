@@ -2584,25 +2584,25 @@ public class Viewer extends JmolViewer
 
   /**
    * opens a file as a model, a script, or a surface via the creation of a
-   * script that is queued \t at the beginning disallows script option - used by
-   * JmolFileDropper and JmolPanel file-open actions - sets up a script to load
-   * the file.
+   * script that is queued.
    * 
    * Called from (JSmolCore.js)Jmol.$appEvent(,,"drop").reader.onloadend()
    * 
    * @param fileName
    * @param flags
-   *        1=pdbCartoons, 2=no scripting, 4=append, 8=fileOpen, 16=fileDropped
+   * 
+   *        1=pdbCartoons, 
+   *        2=no scripting, 
+   *        4=append, 
+   *        8=no autoplay, 
+   *        16=file dropped, 
+   *        32=script only (dropped into console)
+   *        64=check dims for resize 
    * 
    */
   @Override
   public void openFileAsyncSpecial(String fileName, int flags) {
-    getScriptManager().openFileAsync(fileName, flags, false);
-  }
-
-  public void openFileDropped(String fname, boolean checkDims) {
-    getScriptManager().openFileAsync(fname, JmolScriptManager.FILE_DROPPED,
-        checkDims);
+    getScriptManager().openFileAsync(fileName, flags);
   }
 
   /**
