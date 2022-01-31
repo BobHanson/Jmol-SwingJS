@@ -166,7 +166,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     sc.isComplete = isOK;
     sc.script = script;
     sc.scriptExtensions = scriptExtensions;
-    sc.isEditor = (scriptExtensions.indexOf(JC.SCRIPT_ISEDITOR) >= 0);
+    sc.isEditor = (scriptExtensions != null && scriptExtensions.indexOf(JC.SCRIPT_ISEDITOR) >= 0);
     sc.errorType = errorType;
     if (errorType != null) {
       sc.iCommandError = iCommand;
