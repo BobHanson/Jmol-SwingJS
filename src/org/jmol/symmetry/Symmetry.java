@@ -317,6 +317,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
+  public String getSpaceGroupNameType(String type) {
+    return (spaceGroup == null ? null : spaceGroup.getNameType(type, this));
+  }
+
+  @Override
   public void setSpaceGroupName(String name) {
     if (spaceGroup != null) 
       spaceGroup.setName(name);
@@ -426,8 +431,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setUnitCell(float[] unitCellParams, boolean setRelative) {
+  public SymmetryInterface setUnitCell(float[] unitCellParams, boolean setRelative) {
     unitCell = UnitCell.fromParams(unitCellParams, setRelative);
+    return this;
   }
 
   @Override
@@ -681,8 +687,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry();
-      cellInfo.setUnitCell(cellParams, false);
+      cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
         null, 0, -1, isFull, isForModel, 0, cellInfo);

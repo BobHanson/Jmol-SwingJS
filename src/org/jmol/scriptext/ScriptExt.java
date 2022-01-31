@@ -202,9 +202,7 @@ public abstract class ScriptExt {
       if (points == null) {
         if (bs == null) 
           bs = vwr.getAllAtoms();
-        points = new P3[bs.cardinality()];
-        for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs.nextSetBit(i + 1))
-          points[pt++] = vwr.ms.at[i];
+        points = bsToArray(bs);
       }
     } catch (Exception e) {
     }
@@ -212,6 +210,13 @@ public abstract class ScriptExt {
       invArg();
     return points;
 
+  }
+
+  protected P3[] bsToArray(BS bs) {
+    P3[] p = new P3[bs.cardinality()];
+    for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs.nextSetBit(i + 1))
+      p[pt++] = vwr.ms.at[i];
+    return p;
   }
 
 

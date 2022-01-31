@@ -163,7 +163,7 @@ public interface JSUtilI {
    * object, that reference itself would simply load the class, and we want the
    * core package to include that as well.
    * 
-   * @param resourcePath
+   * @param resource
    * @param className
    */
   void loadResourceIfClassUnknown(String resource, String className);

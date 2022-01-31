@@ -138,13 +138,13 @@ public class VideoReader {
 		case "smhd":
 		case "vmhd":
 			thisTrackMap.put("_trackType", (blockType.equals("smhd") ? "sound" : "video"));
-			// fall through;
-		default:
+      //$FALL-THROUGH$
+    default:
 			skip(len);
 			len = 0;
 			break;
 		}
-		return (int) len;
+		return len;
 	}
 
 	protected int readInner(int len, Map<String, Object> map) throws IOException {

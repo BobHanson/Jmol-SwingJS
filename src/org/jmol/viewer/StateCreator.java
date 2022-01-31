@@ -772,7 +772,7 @@ public class StateCreator extends JmolStateCreator {
       app(commands, "set navigationMode true");
     app(commands, vwr.ms.getBoundBoxCommand(false));
     app(commands, "center " + Escape.eP(tm.fixedRotationCenter));
-    commands.append(vwr.getOrientationText(T.name, null, null).toString());
+    commands.append(vwr.getOrientation(T.name, null, null).toString());
 
     app(commands, moveToText);
 // stereo mode should not be in the state - just a display option

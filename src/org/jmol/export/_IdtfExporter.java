@@ -881,14 +881,14 @@ public class _IdtfExporter extends __CartesianExporter {
       for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsPolygons.nextSetBit(i + 1))) {
         //if (polygonColixes == null) {
           sbColorIndexes.append(" "
-              + htColixes.get("" + colixes[indices[i][0]]) + " "
-              + htColixes.get("" + colixes[indices[i][1]]) + " "
-              + htColixes.get("" + colixes[indices[i][2]]));
+              + htColixes.get(Short.valueOf(colixes[indices[i][0]])) + " "
+              + htColixes.get(Short.valueOf(colixes[indices[i][1]])) + " "
+              + htColixes.get(Short.valueOf(colixes[indices[i][2]])));
           if (faceVertexMax == 4 && indices[i].length == 4)
             sbColorIndexes.append(" "
-                + htColixes.get("" + colixes[indices[i][0]]) + " "
-                + htColixes.get("" + colixes[indices[i][2]]) + " "
-                + htColixes.get("" + colixes[indices[i][3]]));
+                + htColixes.get(Short.valueOf(colixes[indices[i][0]])) + " "
+                + htColixes.get(Short.valueOf(colixes[indices[i][2]])) + " "
+                + htColixes.get(Short.valueOf(colixes[indices[i][3]])));
         //} else {
           // TODO polygon colixes
           // output(htColixes.get("" + polygonColixes[i]) + "\n");

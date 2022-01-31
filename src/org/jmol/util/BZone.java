@@ -71,9 +71,9 @@ public class BZone {
   private String color;
   private Lst<P3> latticePts, newLatticePts, newPlanePts;
   private Lst<P4> planes, newPlanes;
-  private float volume = 0;
-  private int zoneIndex;
-  private P3 offset, center;
+  float volume = 0;
+  int zoneIndex;
+  P3 offset, center;
   private Lst<P4> planesUnused;
   private Lst<P3> ptsUnused;
   private Lst<Object> pmeshes;
@@ -101,6 +101,10 @@ public class BZone {
    * alpha beta gamma], false) create a BZ for a given primitive lattice unit
    * cell /// createbZ(0, [a b c alpha beta gamma], true) create a BZ for a
    * given reciprocal lattice unit cell
+   * @param zone 
+   * @param array 
+   * @param isK 
+   * @param id 
    * @param scale 
    * 
    */
@@ -124,6 +128,7 @@ public class BZone {
    * /// primitive cell is assumed -- user is responsible for unitcell PRIMITIVE
    * /// executed first (unitcell CONVENTIONAL later if desired) ///
    * createWS("p1") for example.
+   * @param id 
    * 
    * 
    */
@@ -140,6 +145,10 @@ public class BZone {
    * bNote that even for the 4th Brillouin zone, this is time consuming.
    * 
    * If n = -1, then this is a Wigner-Seitz cell
+   * @param n 
+   * @param discardPrev 
+   * @param id 
+   * @param scale 
    * 
    */
   private void createAllBZs(int n, boolean discardPrev, String id, float scale) {
@@ -342,6 +351,7 @@ public class BZone {
   /**
    * Loop through all points, looking for non-excluded points using St. Olaf
    * half-distance sphere test.
+   * @param zone 
    */
   private void getNewLatticePoints(BZone zone) {
 
@@ -409,6 +419,8 @@ public class BZone {
 
   /**
    * initialize a new Brillouin zone
+   * @param i 
+   * @return new BZone
    */
   private BZone newBZ(int i) {
     BZone bzone = new BZone();
@@ -429,6 +441,8 @@ public class BZone {
 
   /**
    * give each Brillouin zone a new color
+   * @param i 
+   * @return color as string 
    */
   private String bzColor(int i) {
     return bzColors[(i - 1) % bzColors.length];
@@ -439,6 +453,7 @@ public class BZone {
    * 
    * A calculation is done to ensure that enough points are provided in all
    * directions, which may not be the same number.
+   * @param n 
    * 
    */
   private void getLatticePoints(int n) {
@@ -496,6 +511,10 @@ public class BZone {
     }
   }
 
+  /**
+   * @param array  
+   * @param isK 
+   */
   private void demoBZ(Object[] array, boolean isK) {
     // TODO
 
@@ -507,6 +526,8 @@ public class BZone {
    * minimum number of triangles (that is, starting with two giant 
    * triangles, not a grid of small triangles). 
    * Also slab each plane by all other planes to form a face.
+   * @param subzone 
+   * @return true if total area gt 0 
    */
   private boolean getSubzonePmeshes(BZone subzone) {
      planes = subzone.planes;
@@ -600,10 +621,8 @@ public class BZone {
 
   private static P3 ptInner = P3.new3(Float.NaN,  0,  0);
   private Object[] ret = new Object[1];
-  private String polyid;
-  private P3[] pts;
-  
-  @SuppressWarnings("unchecked")
+  String polyid;
+  P3[] pts;
   
   private Object getProperty(String name, String key) {
     Object[] data = new Object[3];
@@ -622,6 +641,8 @@ public class BZone {
 
   /**
    * Generate the polyhedra.
+   * @param subzone 
+   * @param id 
    *  
    */
   private void createSubzonePolyhedron(BZone subzone, String id) {
@@ -692,6 +713,7 @@ public class BZone {
 
   private P3[] cleanFace(P3[] face) {
     PointIterator.withinDistPoints(0.01f, ptInner, face, null, ret);
+    @SuppressWarnings("unchecked")
     Lst<P3> l = (Lst<P3>) ret[0];
     return l.toArray(new P3[l.size()]);
   }
@@ -718,11 +740,17 @@ public class BZone {
     return pts;
   }
 
+  /**
+   * @param zone  
+   */
   private void drawZoneCenters(BZone zone) {
     // TODO - debugging only
 
   }
 
+  /**
+   * @param subzone  
+   */
   private void drawSubzonePolygons(BZone subzone) {
     // TODO - debugging only
 
@@ -730,6 +758,7 @@ public class BZone {
 
   /**
    *  Finalize a Brillouin zone. 
+   * @param zone 
    */
   private void finalizeZone(BZone zone) {
 

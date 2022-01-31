@@ -85,7 +85,7 @@ public class Mouse implements GenericMouseInterface {
       pressed(time, x, y, modifiers, false);
       break;
     case MouseEvent.MOUSE_DRAGGED:
-      dragged(time, x, y, modifiers);
+      dragged(time, x, y);
       break;
     case MouseEvent.MOUSE_ENTERED:
       entry(time, x, y, false);
@@ -201,7 +201,7 @@ public class Mouse implements GenericMouseInterface {
     if ((modifiers & Event.BUTTON_MASK) == 0)
       modifiers |= Event.MOUSE_LEFT;
     /****************************************************************/
-    dragged(e.getWhen(), e.getX(), e.getY(), modifiers);
+    dragged(e.getWhen(), e.getX(), e.getY());
   }
 
   public void mouseMoved(MouseEvent e) {
@@ -390,7 +390,7 @@ public class Mouse implements GenericMouseInterface {
     manager.mouseAction(Event.RELEASED, time, x, y, 0, modifiers);
   }
 
-  private void dragged(long time, int x, int y, int modifiers) {
+  private void dragged(long time, int x, int y) {
     if (wheeling)
       return;
     if ((modifiersDown & Event.MAC_COMMAND) == Event.MAC_COMMAND)

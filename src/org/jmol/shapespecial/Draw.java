@@ -51,6 +51,7 @@ import javajs.util.V3;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import javajs.util.BS;
+
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
@@ -118,6 +119,7 @@ public void initShape() {
   private boolean isCylinder;
   private boolean isVertices;
   private boolean isPlane;
+//  private boolean isBest;
   private boolean isReversed;
   private boolean isRotated45;
   private boolean isCrossed;
@@ -135,7 +137,6 @@ public void initShape() {
   
   private Lst<Object[]> vData;
   private String intersectID;
-  private P3[] boundBox;
   
   private Lst<P3[]> lineData;
   public int defaultFontId0 = -1;
@@ -155,7 +156,7 @@ public void initShape() {
 
     if ("font" == propertyName) {
       defaultFontId = (value == null ? -1 : ((Font) value).fid);
-      defaultFontSize = ((Font) value).fontSize;
+      defaultFontSize = (value == null ? JC.DRAW_DEFAULT_FONTSIZE : ((Font) value).fontSize);
       return;
     }
     
@@ -178,10 +179,7 @@ public void initShape() {
     }
 
     if ("intersect" == propertyName) {
-      if (value instanceof String)
         intersectID = (String) value;
-      else
-        boundBox = (P3[]) value;
       return;
     }
 
@@ -229,7 +227,7 @@ public void initShape() {
 
     if ("planedef" == propertyName) {
       plane = (P4) value;
-      if (intersectID != null || boundBox != null || slabData != null)
+      if (intersectID != null || slabData != null)
         return;
       if (isCircle || isArc)
         isPlane = true;
@@ -422,6 +420,11 @@ public void initShape() {
       return;
     }
 
+//    if ("best" == propertyName) {
+//      isBest = ((Boolean) value).booleanValue();
+//      return;
+//    }
+//    
     if ("set" == propertyName) {
       if (thisMesh == null) {
         allocMesh(null, null);
@@ -486,7 +489,6 @@ public void initShape() {
 }
 
 private void initDraw() {
-   boundBox = null;
    bsAllModels = null;
    colix = C.ORANGE;
    color = 0xFFFFFFFF;
@@ -496,6 +498,7 @@ private void initDraw() {
    indicatedModelIndex = -1;
    intersectID = null;
    isCurve = isArc = isArrow = isPlane = isCircle = isCylinder = isLine = false;
+   //isBest = 
    isFixed = isReversed = isRotated45 = isCrossed = noHead = isBarb = false;
    isPerpendicular = isVertices = isVector = false;
    isValid = true;
@@ -602,13 +605,8 @@ private void initDraw() {
     thisMesh.clear("draw");
     thisMesh.diameter = diameter;
     thisMesh.width = width;
-    if (intersectID != null || boundBox != null) {
-      if (boundBox != null) {
-        // TODO
-        if (plane == null) {
-
-        }
-      } else if (plane != null && intersectID != null) {
+    if (plane != null) {
+      if (intersectID != null) {
         Lst<P3[]> vData = new Lst<P3[]>();
         Object[] data = new Object[] { intersectID, plane, vData, null };
         vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "intersectPlane",
@@ -617,32 +615,31 @@ private void initDraw() {
           indicatedModelIndex = ((Integer) data[3]).intValue();
           lineData = vData;
         }
+      } else if (slabData != null) {
+        slabData.getMeshSlicer().getIntersection(0, plane, null, null, null,
+            null, null, false, true, T.plane, false);
+        polygon = new Lst<Object>();
+        polygon.addLast(slabData.vs);
+        polygon.addLast(slabData.pis);
       }
-    } else if (slabData != null && plane != null) {
-      slabData.getMeshSlicer().getIntersection(0, plane, null, null, null,
-          null, null, false, true, T.plane, false);
-      polygon = new Lst<Object>();
-      polygon.addLast(slabData.vs);
-      polygon.addLast(slabData.pis);
     }
     if (polygon == null
         && (lineData != null ? lineData.size() == 0
-            : (vData.size() == 0) == (connections == null)) || !isArrow
-        && connections != null)
+            : (vData.size() == 0) == (connections == null))
+        || !isArrow && connections != null)
       return false; // connections only for arrows at this point
     int modelCount = vwr.ms.mc;
-    if (polygon != null
-        || lineData != null
-        || indicatedModelIndex < 0
-        && (isFixed || isArrow || isCurve || isCircle || isCylinder || modelCount == 1)) {
+    if (polygon != null || lineData != null
+        || indicatedModelIndex < 0 && (isFixed || isArrow || isCurve
+            || isCircle || isCylinder || modelCount == 1)) {
       // make just ONE copy 
-      
+
       // arrows and curves simply can't be handled as
       // multiple frames yet
       thisMesh.modelIndex = (lineData == null ? vwr.am.cmi
           : indicatedModelIndex);
-      thisMesh.isFixed = (isFixed || lineData == null
-          && thisMesh.modelIndex < 0 && modelCount > 1);
+      thisMesh.isFixed = (isFixed
+          || lineData == null && thisMesh.modelIndex < 0 && modelCount > 1);
       if (isFixed && modelCount > 1)
         thisMesh.modelIndex = -1;
       else if (lineData == null && thisMesh.modelIndex < 0)
@@ -714,7 +711,7 @@ private void initDraw() {
     thisMesh.isBarb = isBarb;
     thisMesh.width = (thisMesh.drawType == EnumDrawType.CYLINDER
         || thisMesh.drawType == EnumDrawType.CIRCULARPLANE ? -Math.abs(width)
-        : width);
+            : width);
     thisMesh.setCenter(-1);
     if (offset != null)
       thisMesh.offset(offset);
@@ -736,9 +733,9 @@ private void initDraw() {
 
   MeshSurface slabData;
   
+  @SuppressWarnings("unchecked")
   private void addPoints(int type, Object value) {
-    @SuppressWarnings("unchecked")
-    Lst<SV> pts = (Lst<SV>) value;
+    Lst<?> pts = (Lst<?>) value;
     Integer key = Integer.valueOf(type);
     boolean isModelPoints = (type == PT_MODEL_BASED_POINTS);
     if (isModelPoints)
@@ -766,7 +763,7 @@ private void initDraw() {
         }
       }
       if (isModelPoints) {
-        pts.set(i, SV.getVariable(pt));
+        ((Lst<SV>) pts).set(i, SV.getVariable(pt));
       } else {
         vData.addLast(new Object[] { key, pt });
       }
@@ -1020,7 +1017,8 @@ private void initDraw() {
             vAB);
         center = new P3();
         Measure.calcAveragePointN(ptList, nVertices, center);
-        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center) : length);
+        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center)
+            : length);
         normal.scale(dist);
         ptList[0].setT(center);
         ptList[1].add2(center, normal);
@@ -1028,7 +1026,8 @@ private void initDraw() {
       } else if (nVertices == 2 && isPerpendicular) {
         // perpendicular line to line or plane to line
         Measure.calcAveragePoint(ptList[0], ptList[1], center);
-        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center) : length);
+        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center)
+            : length);
         if (isPlane && length != Float.MAX_VALUE)
           dist /= 2f;
         if (isPlane && isRotated45)
@@ -1081,9 +1080,10 @@ private void initDraw() {
         ptList[0].sub2(center, normal);
         ptList[1].add2(center, normal);
       }
-      if (nVertices > 4)
+      if (nVertices > 4) {
+        // even 4 is problematic
         nVertices = 4; // for now
-
+      }
       switch (nVertices) {
       case -2:
         nVertices = 2;
@@ -1091,12 +1091,15 @@ private void initDraw() {
       case 1:
         break;
       case 2:
+        //isBest = false;
         drawType = (isArc ? EnumDrawType.ARC
             : isPlane && isCircle ? EnumDrawType.CIRCULARPLANE
-                : isCylinder ? EnumDrawType.CYLINDER
-                    : EnumDrawType.LINE);
+                : isCylinder ? EnumDrawType.CYLINDER : EnumDrawType.LINE);
         break;
       default:
+//        if (isBest) {
+//          drawType = (isPlane ? EnumDrawType.PLANE : EnumDrawType.LINE);
+//        }
         drawType = (thisMesh.connectedAtoms == null ? EnumDrawType.PLANE
             : EnumDrawType.ARROW);
       }
@@ -1114,8 +1117,7 @@ private void initDraw() {
     thisMesh.setPolygonCount(nPoly + 1);
     thisMesh.pis[nPoly] = new int[npoints];
     for (int i = 0; i < npoints; i++) {
-      thisMesh.pis[nPoly][i] = nVertices0
-          + (i < nVertices ? i : nVertices - 1);
+      thisMesh.pis[nPoly][i] = nVertices0 + (i < nVertices ? i : nVertices - 1);
     }
     return;
   }
@@ -1220,7 +1222,7 @@ private void initDraw() {
   private final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
 
   private final P3i ptXY = new P3i();
-  private float defaultFontSize;
+  private float defaultFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   
   @Override
   public Map<String, Object> checkObjectClicked(int x, int y, int action,
@@ -1329,8 +1331,8 @@ private void initDraw() {
     
     int action = moveAll ? ActionManager.ACTION_dragDrawObject : ActionManager.ACTION_dragDrawPoint;
     if (vwr.acm.userActionEnabled(action) 
-    		&& !vwr.acm.userAction(action, new Object[] { mesh.thisID, new int[] {x, y, iVertex} } ))
-    	return;
+        && !vwr.acm.userAction(action, new Object[] { mesh.thisID, new int[] {x, y, iVertex} } ))
+      return;
     P3 pt = new P3();
     int ptVertex = vertexes[iVertex];
     P3 coord = P3.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3) mesh.altVertices[ptVertex]);
@@ -1461,7 +1463,7 @@ private void initDraw() {
               : dmesh.drawType == EnumDrawType.CIRCULARPLANE
                   ? Math.abs(dmesh.width * dmesh.scale)
                   : dmesh.width));
-    else if (dmesh.diameter > 0)
+    else if (dmesh.diameter != 0)
       str.append(" diameter ").appendI(dmesh.diameter);
     if (dmesh.lineData != null) {
       str.append("  lineData [");

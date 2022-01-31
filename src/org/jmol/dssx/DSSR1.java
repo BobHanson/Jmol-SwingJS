@@ -376,8 +376,8 @@ public class DSSR1 extends AnnotationParser {
       }
       if (n != Integer.MIN_VALUE && dbObj instanceof Lst) {
         if (n <= 0)
-          n += ((Lst) dbObj).size();
-        dbObj = ((Lst) dbObj).get(n - 1);        
+          n += ((Lst<?>) dbObj).size();
+        dbObj = ((Lst<?>) dbObj).get(n - 1);        
       }
       bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));
       bs.and(bsModel);

@@ -295,8 +295,6 @@ public class GenNBOReader extends MOReader {
 
   /**
    * read the labels from xxxx.46
-   * 
-   * @throws Exception
    */
   private void getFile46() {
     nNOs = nAOs = nOrbitals;

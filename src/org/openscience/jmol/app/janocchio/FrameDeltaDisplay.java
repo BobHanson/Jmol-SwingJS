@@ -86,12 +86,14 @@ public class FrameDeltaDisplay extends JPanel {
     setNoeWeight(noeWeight);
 
     noeWeightField.addActionListener(new java.awt.event.ActionListener() {
+      @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         String text = noeWeightField.getText();
         setNoeWeight(Double.parseDouble(text));
       }
     });
     coupleWeightField.addActionListener(new java.awt.event.ActionListener() {
+      @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         String text = coupleWeightField.getText();
         setCoupleWeight(Double.parseDouble(text));
@@ -144,14 +146,14 @@ public class FrameDeltaDisplay extends JPanel {
     return text;
   }
 
-  private void setNoeWeight(double weight) {
+  void setNoeWeight(double weight) {
     this.noeWeight = weight;
     DecimalFormat df = new DecimalFormat("#0.0");
     noeWeightField.setText(df.format(weight));
     setFieldText();
   }
 
-  private void setCoupleWeight(double weight) {
+  void setCoupleWeight(double weight) {
     this.coupleWeight = weight;
     DecimalFormat df = new DecimalFormat("#0.0");
     coupleWeightField.setText(df.format(weight));

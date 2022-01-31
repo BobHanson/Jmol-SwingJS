@@ -1186,7 +1186,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_atom_id" // 73 mCIF dev 
       };
 
-  final private static String singleAtomID = atomFields[CC_COMP_ID];
+//  final private static String singleAtomID = atomFields[CC_COMP_ID];
 
   /* to: hansonr@stolaf.edu
    * from: Zukang Feng zfeng@rcsb.rutgers.edu

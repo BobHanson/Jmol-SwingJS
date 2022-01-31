@@ -165,7 +165,7 @@ public abstract class JSThread extends Thread {
 
 	/**
 	 * 
-	 * @param r2
+	 * @param delay
 	 * @param state
 	 * @return true if we should interrupt (i.e. JavaScript)
 	 * @throws InterruptedException

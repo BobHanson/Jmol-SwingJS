@@ -905,17 +905,17 @@ public class SmilesAtom extends P3 implements Node {
   /**
    * for InChI or any other system that self-defines stereochemistry.
    * 
-   * @return
+   * @return false
    */
   public boolean definesStereo() {
     return false;
   }
 
-  public String getStereoAtAt(SimpleNode[] nodes) {
+  public String getStereoAtAt(@SuppressWarnings("unused") SimpleNode[] nodes) {
     return null;
   }
 
-  public Boolean isStereoOpposite(int iatom) {
+  public Boolean isStereoOpposite(@SuppressWarnings("unused") int iatom) {
     return null;
   }
 

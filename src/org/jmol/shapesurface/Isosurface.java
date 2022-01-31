@@ -998,7 +998,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       SB sb = new SB();
       Lst<Mesh> list = getMeshList((index < 0 ? previousMeshID : m.thisID), false);
       for (int i = list.size(); --i >= 0;)
-         getMeshCommand(sb, i);
+         getMeshCommand(sb, list.get(i).index);
       return sb.toString();
     }
     if (property == "atoms") {

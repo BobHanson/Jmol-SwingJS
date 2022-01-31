@@ -1090,7 +1090,8 @@ public final class ModelLoader {
     if (someModelsHaveUnitcells) {
       ms.unitCells = new SymmetryInterface[ms.mc];
       ms.haveUnitCells = true;
-      boolean haveMergeCells = (modelSet0 != null && modelSet0.unitCells != null);
+      boolean haveMergeCells = (modelSet0 != null
+          && modelSet0.unitCells != null);
       for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = modelSet0.unitCells[i];
@@ -1103,7 +1104,8 @@ public final class ModelLoader {
             if (lst != null)
               notionalCell = lst.get(pt++);
           }
-          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i), notionalCell);
+          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i),
+              notionalCell);
         }
       }
     }
@@ -1113,11 +1115,9 @@ public final class ModelLoader {
       for (int iAtom = baseAtomIndex, iModel = -1, i0 = 0; iAtom < ms.ac; iAtom++) {
         if (atoms[iAtom].mi != iModel) {
           iModel = atoms[iAtom].mi;
-          i0 = baseAtomIndex
-              + ms.getInfoI(iModel,
-                  "presymmetryAtomIndex")
-              + ms.getInfoI(iModel,
-                  "presymmetryAtomCount");
+          i0 = baseAtomIndex + ms.getInfoI(iModel, "presymmetryAtomIndex");
+          ms.am[iModel].auxiliaryInfo.put("presymmetryAtomIndex", Integer.valueOf(i0));
+          i0 += ms.getInfoI(iModel, "presymmetryAtomCount");
         }
         if (iAtom >= i0)
           ms.bsSymmetry.set(iAtom);
@@ -1141,7 +1141,7 @@ public final class ModelLoader {
           c = atoms[i].getUnitCell();
           c.toCartesian(c.toSupercell(atoms[i]), false);
           if (roundCoords)
-            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);          
+            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }
       }
       for (int imodel = baseModelIndex; imodel < ms.mc; imodel++)

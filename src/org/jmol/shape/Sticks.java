@@ -246,6 +246,7 @@ public class Sticks extends Shape {
    * @param y
    * @param bsVisible  UNUSED?
    * @param pt
+   * @param closestAtom 
    * @return picked bond or null
    */
   private Bond findPickedBond(int x, int y, BS bsVisible, P3 pt, int[] closestAtom) {

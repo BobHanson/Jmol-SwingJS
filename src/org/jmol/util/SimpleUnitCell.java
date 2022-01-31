@@ -98,7 +98,7 @@ public class SimpleUnitCell {
       params = new float[] {1, 1, 1, 90, 90, 90};
     if (!isValid(params))
       return;
-    unitCellParams = AU.arrayCopyF(params, params.length);
+    params = unitCellParams = AU.arrayCopyF(params, params.length);
 
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
     
@@ -170,7 +170,6 @@ public class SimpleUnitCell {
       c *= fc;
       dimension = 3;
     }
-
     setCellParams();
     
     if (params.length > 21 && !Float.isNaN(params[21])) {
@@ -260,6 +259,13 @@ public class SimpleUnitCell {
     alpha = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
     beta = (c < 0 ? 90 : va.angle(vc) / toRadians);
     gamma = (b < 0 ? 90 : va.angle(vb) / toRadians);
+    float[] p = unitCellParams;
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = alpha;
+    p[4] = beta;
+    p[5] = gamma;
   }
 
   private void setCellParams() {
@@ -537,6 +543,7 @@ public class SimpleUnitCell {
   }
 
 
+  @Override
   public String toString() {
     return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]";
   }

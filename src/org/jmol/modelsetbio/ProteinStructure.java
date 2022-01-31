@@ -237,6 +237,7 @@ public abstract class ProteinStructure implements Structure {
     return null;
   }
   
+  @Override
   public String toString() {
     return "["+id + " " + this.type + (this.subtype == null ? "" : " " + subtype) + " (" + monomerIndexFirst + "-" + monomerIndexLast + ")]";
   }

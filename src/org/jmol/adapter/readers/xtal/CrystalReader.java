@@ -1047,7 +1047,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   /**
    * Read the lattice parameters.
    * 
-   * @param isNewSet
+   * @param isPrimitive
    * @throws Exception
    */
   private void readLatticeParams(boolean isPrimitive) throws Exception {

@@ -1015,7 +1015,7 @@ public class ModelSet extends BondCollection {
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
     if (modelIndex >= 0 && modelIndex < mc) {
-      am[modelIndex].simpleCage = simpleCage;
+      am[modelIndex].setSimpleCage(simpleCage);
       haveUnitCells = true;
     }
   }
@@ -2512,7 +2512,7 @@ public class ModelSet extends BondCollection {
               bondAB.setOrder(order);
               if (isAtrop) {
                 haveAtropicBonds = true;
-                bondAB.setAtropisomerOptions(bsA, bsB);
+                bondAB.setAtropisomerOptions();
               }
               bsAromatic.clear(bondAB.index);
             }
@@ -3708,7 +3708,14 @@ public class ModelSet extends BondCollection {
       }
       mat4.setM4(m4);
       translation = null;
-    } else if (!translationOnly) {
+    } else if (translationOnly) {
+      if (!isInternal) {
+        // translation is already in angstroms; just rotate it
+        matInv.setM3(rotation);
+        matInv.invert();
+        matInv.rotate(translation);
+      }
+    } else {
       if (mNew == null) {
         matTemp.setM3(rotation);
       } else {

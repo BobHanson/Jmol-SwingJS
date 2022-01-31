@@ -8,6 +8,7 @@ import javax.swing.Timer;
 
 import org.jmol.api.JmolViewer;
 import org.jmol.script.ScriptContext;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class InputScannerThread extends Thread {
@@ -118,7 +119,7 @@ public class InputScannerThread extends Thread {
       }
     }
     buffer = new StringBuilder();
-    s += "\1##noendcheck";
+    s += JC.SCRIPT_NOENDCHECK;
     if (isSilent)
       vwr.evalStringQuiet(s);
     else

@@ -890,7 +890,7 @@ public class GaussianReader extends MOReader {
 
   private void readCouplings() throws Exception {
     String type = (line.indexOf(" K ") >= 0 ? "K" : "J");
-    int i0 = asc.getLastAtomSetAtomIndex();
+    //int i0 = asc.getLastAtomSetAtomIndex();
     int n = asc.getLastAtomSetAtomCount();
     float[][] data = new float[n][n];
     int k0 = 0;

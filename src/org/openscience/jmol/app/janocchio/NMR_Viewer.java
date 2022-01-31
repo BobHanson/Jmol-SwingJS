@@ -45,6 +45,7 @@ public class NMR_Viewer extends Viewer {
     setSelectionHalosEnabled(b);
   }
 
+  @Override
   public Image getScreenImage() {
     return (Image) getScreenImageBuffer(null, true);
   }

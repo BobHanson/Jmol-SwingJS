@@ -90,21 +90,21 @@ import org.jmol.viewer.Viewer;
  */
 public class NMRNoeMatrix {
   
-  static int id = 0;
+  static int staticid = 0;
   
   public static class NOEParams {
 
-    private boolean noesy;
+    boolean noesy;
 
     
     /**
      * the correlation time in seconds. typical value would be 80E-12
      */
-    private double tau;
-    private double freq;
-    private double tMix;
-    private double cutoff;
-    private double rhoStar;
+    double tau;
+    double freq;
+    double tMix;
+    double cutoff;
+    double rhoStar;
     {
       freq = 400 * 2 * Math.PI * 1E6; // freq (entered as MHz)
       tau = 80E-12; //sec (entered as ps)
@@ -240,14 +240,14 @@ public class NMRNoeMatrix {
   double[][] distanceMatrix;
   NOEAtom[] atoms;
   int nHAtoms, atomCounter, i, j, k, m, n, p, q;
-  private int[] atomMap;
+  int[] atomMap;
 
   /**
    * first index for this frame
    * 
    */
-  private int baseIndex = 0;
-  private final NOEParams params;
+  int baseIndex = 0;
+  final NOEParams params;
 
   private NMRNoeMatrix() {
     params = new NOEParams();
@@ -344,7 +344,7 @@ public class NMRNoeMatrix {
 
   private NMRNoeMatrix(NOEParams params) {
     this.params = params;
-    params.id = ++id;
+    params.id = ++staticid;
   }
 
   /**
@@ -366,16 +366,16 @@ public class NMRNoeMatrix {
     if (nHAtoms != atomCounter) {
       throw new Exception("Not all atoms have been read in yet!");
     }
-    boolean isNew = false;
+//    boolean isNew = false;
     if (params.tainted) {
       calcRelaxMatrix();
       Diagonalise();
-      isNew = true;
+//      isNew = true;
     }
     if (params.tainted || params.mixingChanged) {
       calcNoeMatrix();
       params.mixingChanged = false;
-      isNew = true;
+//      isNew = true;
     }
     params.tainted = false;
 //    if (isNew)

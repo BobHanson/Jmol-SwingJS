@@ -48,7 +48,7 @@ public class SurfaceStatus {
   boolean ghostOn;
   boolean foundDuringLastSync;
   Slice slice;
-  private boolean isShell;
+//  private boolean isShell;
 
   /**
    * @param m
@@ -68,7 +68,7 @@ public class SurfaceStatus {
     meshTranslucency = 0; //ignored for now    
     lighting = m.lighting;
     frontonly = m.frontOnly;
-    isShell = m.isShell;
+   // isShell = m.isShell;
     beenSliced = false;
     capOn = false;
     ghostOn = false;
@@ -86,7 +86,7 @@ public class SurfaceStatus {
     meshTranslucency = 0; //ignored for now    
     lighting = m.lighting;
     frontonly = m.frontOnly;
-    isShell = m.isShell;
+    //isShell = m.isShell;
     foundDuringLastSync = true;
   }
 }

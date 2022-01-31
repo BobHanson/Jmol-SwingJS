@@ -48,6 +48,7 @@ public class MyFileFilter extends FileFilter {
   }
 
   //Accept all directories and all jnc files.
+  @Override
   public boolean accept(File f) {
     if (f.isDirectory()) {
       return true;
@@ -56,6 +57,7 @@ public class MyFileFilter extends FileFilter {
   }
 
   //The description of this filter
+  @Override
   public String getDescription() {
     String ext = new String();
     for (int j = 0; j < extensions.length; j++) {

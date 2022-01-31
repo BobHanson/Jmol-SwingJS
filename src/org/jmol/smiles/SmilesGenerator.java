@@ -117,7 +117,7 @@ public class SmilesGenerator {
    * @param bsSelected
    * @param comment
    * @param flags
-   * @return
+   * @return SMILES
    * @throws InvalidSmilesException
    */
   String getSmiles(SmilesMatcher sm, Node[] atoms, int ac, BS bsSelected,

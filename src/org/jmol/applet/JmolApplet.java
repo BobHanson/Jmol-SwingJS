@@ -174,15 +174,15 @@ JmolAppletInterface {
     return Color.black;
   }
 
-  private Color getContrastingBlackOrWhite(Color color) {
-    // return a grayscale value 0-FF using NTSC color luminance algorithm
-    int argb = color.getRGB();
-    int grayscale = ((2989 * (argb >> 16) & 0xFF) +
-                     (5870 * (argb >> 8) & 0xFF) +
-                     (1140 * (argb & 0xFF)) + 500) / 1000;
-    return grayscale < 128 ? Color.white : Color.black;
-  }
-
+//  private Color getContrastingBlackOrWhite(Color color) {
+//    // return a grayscale value 0-FF using NTSC color luminance algorithm
+//    int argb = color.getRGB();
+//    int grayscale = ((2989 * (argb >> 16) & 0xFF) +
+//                     (5870 * (argb >> 8) & 0xFF) +
+//                     (1140 * (argb & 0xFF)) + 500) / 1000;
+//    return grayscale < 128 ? Color.white : Color.black;
+//  }
+//
   /**
    * set a callback either as a function or a function name from JavaScript
    * 

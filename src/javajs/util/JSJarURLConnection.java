@@ -27,7 +27,7 @@ public class JSJarURLConnection extends JarURLConnection {
     return null; 
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({ "unused", "null" })
   @Override
   public void connect() throws IOException {
     Object data = /** @j2sNative this.url._streamData ||*/null;
@@ -43,6 +43,7 @@ public class JSJarURLConnection extends JarURLConnection {
     return;
   }
   
+  @SuppressWarnings("null")
   @Override
   public InputStream getInputStream() {
     Object data = /** @j2sNative this.url._streamData ||*/null;

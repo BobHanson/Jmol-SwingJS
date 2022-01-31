@@ -202,6 +202,24 @@ public class BoxInfo {
   
   private final static int[] toCanonical = new int[] {0, 3, 4, 7, 1, 2, 5, 6};
 
+  /**
+   * Change points references to canonical form used in Triangulator, while also scaling.
+   * 
+   * Box Pt to canonical:
+   * <pre>
+    0 to 0 
+    1 to 3
+    2 to 4
+    3 to 7
+    4 to 1
+    5 to 2
+    6 to 5
+    7 to 6
+     </pre>
+   * @param boxPoints
+   * @param scale
+   * @return canonical P3 array
+   */
   public final static P3[] getCanonicalCopy(P3[] boxPoints, float scale) {
     P3[] pts = new P3[8];
     for (int i = 0; i < 8; i++)

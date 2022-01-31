@@ -23,7 +23,7 @@ public class PMeshWriter {
   private IsosurfaceMesh imesh;
   boolean isBinary;
   private OC oc;
-  private int i0;
+//  private int i0;
   private int[][] polygonIndexes;
   private boolean selectedPolyOnly;
   private BS bsPolygons;

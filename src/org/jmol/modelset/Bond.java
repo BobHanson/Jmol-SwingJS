@@ -25,7 +25,6 @@
 
 package org.jmol.modelset;
 
-import javajs.util.BS;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.SimpleNode;
@@ -165,10 +164,7 @@ public class Bond extends Edge {
     return (atom1 == thisAtom ? atom2 : atom2 == thisAtom || thisAtom == null ? atom1 : null);
   }
   
-  public void setAtropisomerOptions(BS bsA, BS bsB) {
-    boolean isBA = bsB.get(atom1.i);
-    BS bs1 = (isBA ? bsB : bsA);
-    BS bs2 = (isBA ? bsA : bsB);
+  public void setAtropisomerOptions() {
     int i1, i2 = Integer.MAX_VALUE;
     Bond[] bonds = atom1.bonds;
     for (i1 = 0; i1 < bonds.length; i1++) {

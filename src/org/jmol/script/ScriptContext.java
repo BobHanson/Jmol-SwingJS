@@ -47,6 +47,8 @@ public class ScriptContext {
   public String errorType;
   public boolean executionPaused;
   public boolean executionStepping;
+  public boolean isEditor;
+  public boolean isEditorScript;
   public String functionName;
   public int iCommandError = -1;
   public int id;

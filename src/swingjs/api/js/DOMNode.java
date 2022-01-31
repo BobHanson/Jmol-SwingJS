@@ -279,7 +279,6 @@ public interface DOMNode {
 	 * attached to it.
 	 * 
 	 * @param node
-	 * @return parent or null
 	 */
 	public static void dispose(DOMNode node) {
 		if (node != null)		

@@ -241,7 +241,7 @@ public final class Navigator extends JmolThread implements
   }
 
   private void navigate(float seconds, P3[][] pathGuide, P3[] path,
-                        float[] theta, int indexStart, int indexEnd) {
+                        @SuppressWarnings("unused") float[] theta, int indexStart, int indexEnd) {
      //this.theta = theta;
      floatSecondsTotal = seconds;
      setupNav(seconds, pathGuide, path, indexStart, indexEnd);

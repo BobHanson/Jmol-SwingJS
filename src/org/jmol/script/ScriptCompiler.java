@@ -166,6 +166,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     sc.isComplete = isOK;
     sc.script = script;
     sc.scriptExtensions = scriptExtensions;
+    sc.isEditor = (scriptExtensions.indexOf(JC.SCRIPT_ISEDITOR) >= 0);
     sc.errorType = errorType;
     if (errorType != null) {
       sc.iCommandError = iCommand;
@@ -245,12 +246,12 @@ public class ScriptCompiler extends ScriptTokenParser {
       script = script.replace('\u201D', '"');
     if (script.indexOf('\uFEFF') >= 0)
       script = script.replace('\uFEFF', ' ');
-    int pt = (script.indexOf("\1##"));
+    int pt = (script.indexOf(JC.SCRIPT_EXT));
     if (pt >= 0) {
       // these are for jmolConsole and scriptEditor
-      scriptExtensions = script.substring(pt + 1);
+      allowMissingEnd = (script.indexOf(JC.SCRIPT_NOENDCHECK, pt) >= 0); // when typing
+      scriptExtensions = script.substring(pt);
       script = script.substring(0, pt);
-      allowMissingEnd = (scriptExtensions.indexOf("##noendcheck") >= 0); // when typing
     }
     haveComments = (script.indexOf("#") >= 0); // speeds processing
     return FileManager.getEmbeddedScript(script);

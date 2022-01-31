@@ -55,7 +55,7 @@ public class Helix extends ProteinStructure {
       apolymer.getLeadMidPoint(monomerIndexFirst + i, points[i] = new P3());
     axisA = new P3();
     axisUnitVector = new V3();
-    Measure.calcBestAxisThroughPoints(points, axisA, axisUnitVector,
+    Measure.calcBestAxisThroughPoints(points, points.length, axisA, axisUnitVector,
         vectorProjection, 4);  
     axisB = P3.newP(points[nRes]);
     Measure.projectOntoAxis(axisB, axisA, axisUnitVector, vectorProjection);

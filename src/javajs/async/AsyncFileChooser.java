@@ -145,7 +145,7 @@ public class AsyncFileChooser extends JFileChooser implements PropertyChangeList
 		/**
 		 * Run yes.run() if a file doesn't exist or if the user allows it, else run no.run()
 		 * @param parent
-		 * @param filename
+		 * @param outfile
 		 * @param title
 		 * @param yes (approved)
 		 * @param no (optional)

@@ -272,7 +272,7 @@ private final static byte LONG = 76; /* L */
         break;
       case LONG:
         String val = new String(readStringAsBytes());
-        if (val != null && val.endsWith("L")) {
+        if (val.endsWith("L")) {
           val = val.substring(0, val.length() - 1);
         }
 //        BigInteger bi = new BigInteger(val);
@@ -301,7 +301,7 @@ private final static byte LONG = 76; /* L */
         }
         break;
         case EMPTY_TUPLE:
-          push(new Lst());
+          push(new Lst<Object>());
           break;
       default:
 
@@ -423,7 +423,7 @@ private final static byte LONG = 76; /* L */
   private void putMemo(int i, boolean doCheck) {
     Object o = peek();
     if (AU.isAB(o))
-      o = bytesToString((byte[]) o);
+      o = bytesToString(o);
     if (o instanceof String) {
 // BH 2019.09.20 we need all the memos for PyMOL 2.3.0; don't know about inMovie
 //      if (doCheck && markCount >= 6 || markCount == 3 && inMovie)
@@ -493,7 +493,7 @@ private final static byte LONG = 76; /* L */
       // BH: Note that JavaScript string == object first converts object to string, then checks. 
       // This can be very slow if the object is complex.
       if (AU.isAB(o)) {
-        thisSection = bytesToString((byte[]) o);
+        thisSection = bytesToString(o);
         inMovie = "movie".equals(thisSection);
         inNames = "names".equals(thisSection);
       }

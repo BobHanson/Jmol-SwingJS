@@ -2771,7 +2771,7 @@ public class MathExt {
       case T.hkl:
         // hkl(i,j,k)
         return mp.addXPt4(e.getHklPlane(P3.new3(SV.fValue(args[0]),
-            SV.fValue(args[1]), SV.fValue(args[2])), Float.NaN, false));
+            SV.fValue(args[1]), SV.fValue(args[2])), Float.NaN, null));
       case T.intersection:
         pt1 = mp.ptValue(args[0], null);
         pt2 = mp.ptValue(args[1], null);
@@ -3111,7 +3111,7 @@ public class MathExt {
       } else {
         String s = SV.sValue(args[0]);
         Object v = Escape.uP(s.equalsIgnoreCase("best")
-            ? vwr.getOrientationText(T.best, "best", null).toString()
+            ? vwr.getOrientation(T.best, "best", null).toString()
             : s);
         if (!(v instanceof P4))
           return false;
@@ -3934,7 +3934,7 @@ public class MathExt {
     case T.point3f:
       pt = (P3) args[last].value;
       if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
-        plane = e.getHklPlane(pt, Float.NaN, false);
+        plane = e.getHklPlane(pt, Float.NaN, null);
       break;
     case T.varray:
       pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList() : null);

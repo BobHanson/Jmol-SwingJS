@@ -122,7 +122,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
    * @param slicer
    *        (SurfaceTool) the surfaceTool that activated this GUI
    */
-  SurfaceToolGUI(JmolViewer vwr, HistoryFile hfxile, String winName,
+  SurfaceToolGUI(JmolViewer vwr, HistoryFile hfile, String winName,
       SurfaceTool slicer) {
     super(new BorderLayout());
     this.histWinName = winName;

@@ -26,19 +26,19 @@
 package org.jmol.render;
 
 import org.jmol.c.PAL;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.script.T;
 import org.jmol.util.C;
-import org.jmol.util.GData;
 import org.jmol.util.Edge;
+import org.jmol.util.GData;
+import org.jmol.viewer.JC;
 
 import javajs.util.A4;
+import javajs.util.BS;
 import javajs.util.M3;
 import javajs.util.P3;
 import javajs.util.V3;
-import org.jmol.viewer.JC;
 
 public class SticksRenderer extends FontLineShapeRenderer {
 
@@ -76,7 +76,6 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private final P3 p2 = new P3();
   private final BS bsForPass2 = BS.newN(64);
   private boolean isPass2;
-  private double rTheta;
 
   @Override
   protected boolean render() {
@@ -290,14 +289,15 @@ public class SticksRenderer extends FontLineShapeRenderer {
     }
 
     // draw the bond
-
+    int renderD = (!isExport || mad == 1 ? width : mad);
     switch (mask) {
     case -2:
       drawBond(0);
       getMultipleBondSettings(false);
       break;
     case -1:
-      drawDashed(xA, yA, zA, xB, yB, zB, hDashes);
+      drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, hDashes, 
+          width, colixA, colixB, renderD, asLineOnly, s1);
       break;
     default:
       switch (bondOrder) {
@@ -369,6 +369,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     boolean isEndOn = (dx == 0 && dy == 0);
     if (isEndOn && asLineOnly && !isCartesian)
       return;
+    int renderD = (!isExport || mad == 1 ? width : mad);
     boolean doFixedSpacing = (bondOrder > 1 && multipleBondSpacing > 0);
     boolean isPiBonded = doFixedSpacing
         && (vwr.getHybridizationAndAxes(a.i, z, x, "pz") != null || vwr
@@ -380,16 +381,17 @@ public class SticksRenderer extends FontLineShapeRenderer {
       int step = width + space;
       int y = yA - (bondOrder - 1) * step / 2;
       do {
-        fillCylinder(colixA, colixB, endcaps, width, xA, y, zA, xB, y, zB);
+        fillCylinder(g3d, colixA, colixB, endcaps, xA, y, zA, xB, y, zB, renderD, asLineOnly );
         y += step;
       } while (--bondOrder > 0);
       return;
     }
     if (bondOrder == 1) {
       if (isDashed)
-        drawDashed(xA, yA, zA, xB, yB, zB, dashDots);
+        drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, dashDots, 
+            width, colixA, colixB, renderD, asLineOnly, s1);
       else
-        fillCylinder(colixA, colixB, endcaps, width, xA, yA, zA, xB, yB, zB);
+        fillCylinder(g3d, colixA, colixB, endcaps, xA, yA, zA, xB, yB, zB, renderD, asLineOnly);
       return;
     }
     if (doFixedSpacing) {
@@ -439,10 +441,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
           tm.transformPtScr(p1, s1);
           tm.transformPtScr(p2, s2);
           if (isDashed)
-            drawDashed(s1.x, s1.y, s1.z, s2.x, s2.y, s2.z, dashDots);
+            drawDashedCylinder(g3d, s1.x, s1.y, s1.z, s2.x, s2.y, s2.z, dashDots,
+                width, colixA, colixB, renderD, asLineOnly, s1);
           else
-            fillCylinder(colixA, colixB, endcaps, width, s1.x, s1.y, s1.z,
-                s2.x, s2.y, s2.z);
+            fillCylinder(g3d, colixA, colixB, endcaps, s1.x, s1.y, s1.z, s2.x,
+                s2.y, s2.z, renderD, asLineOnly);
         }
         dottedMask >>= 1;
         isDashed = (dottedMask & 1) != 0;
@@ -459,8 +462,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
     mag2d = (int) Math.round(Math.sqrt(dxB + dyB));
     resetAxisCoordinates();
     if (isCartesian && bondOrder == 3) {
-      fillCylinder(colixA, colixB, endcaps, width, xAxis1, yAxis1, zA, xAxis2,
-          yAxis2, zB);
+      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2, yAxis2,
+          zB, renderD, asLineOnly);
       stepAxisCoordinates();
       x.sub2(b, a);
       x.scale(0.05f);
@@ -468,16 +471,17 @@ public class SticksRenderer extends FontLineShapeRenderer {
       p2.add2(b, x);
       g3d.drawBond(p1, p2, colixA, colixB, endcaps, mad, -2);
       stepAxisCoordinates();
-      fillCylinder(colixA, colixB, endcaps, width, xAxis1, yAxis1, zA, xAxis2,
-          yAxis2, zB);
+      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2, yAxis2,
+          zB, renderD, asLineOnly);
       return;
     }
     while (true) {
       if ((dottedMask & 1) != 0)
-        drawDashed(xAxis1, yAxis1, zA, xAxis2, yAxis2, zB, dashDots);
+        drawDashedCylinder(g3d, xAxis1, yAxis1, zA, xAxis2, yAxis2, zB, dashDots,
+            width, colixA, colixB, renderD, asLineOnly, s1);
       else
-        fillCylinder(colixA, colixB, endcaps, width, xAxis1, yAxis1, zA,
-            xAxis2, yAxis2, zB);
+        fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2,
+            yAxis2, zB, renderD, asLineOnly);
       dottedMask >>= 1;
       if (--bondOrder <= 0)
         break;

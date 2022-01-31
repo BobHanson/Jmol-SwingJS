@@ -292,7 +292,7 @@ public abstract class ___Exporter {
     sb.append("\n").append(commentChar).append("boundboxCenter: " + vwr.getBoundBoxCenter());
     sb.append("\n").append(commentChar).append("translationOffset: " + tm.getTranslationScript());
     sb.append("\n").append(commentChar).append("zoom: " + vwr.tm.zmPct);
-    sb.append("\n").append(commentChar).append("moveto command: " + vwr.getOrientationText(T.moveto, null, null));
+    sb.append("\n").append(commentChar).append("moveto command: " + vwr.getOrientation(T.moveto, null, null));
     sb.append("\n");
     return sb.toString();
   }

@@ -1093,7 +1093,7 @@ public class TopoCifParser implements Parser {
     }
   }
 
-  private final static P3 ZERO = new P3();
+  final static P3 ZERO = new P3();
   private class TNode extends Atom implements TPoint {
 
     public String id;

@@ -177,6 +177,7 @@ public class AppConsole extends JmolConsole
     fontSize = scale * 4 + 12;
     if (console != null)
       console.setFont(new Font("dialog", Font.PLAIN, fontSize));
+    vwr.notifyScriptEditor(Integer.MAX_VALUE, new Object[] { Integer.valueOf(fontSize)});
   }
 
   public JDialog jcd;
@@ -548,6 +549,7 @@ public class AppConsole extends JmolConsole
 
     String strErrorMessage = null;
     doWait = (strCommand.indexOf("WAITTEST ") == 0);
+    boolean hasExtension = false;
     if (doWait) { //for testing, mainly
       // demonstrates using the statusManager system; probably hangs application.
       Object o = vwr.scriptWaitStatus(strCommand.substring(5),
@@ -575,6 +577,7 @@ public class AppConsole extends JmolConsole
       strErrorMessage = "";
       String str = strCommand;
       boolean isInterrupt = (str.charAt(0) == '!');
+      hasExtension = (strCommand.indexOf(JC.SCRIPT_EXT) >= 0);
       if (isInterrupt)
         str = str.substring(1);
       if (vwr.checkHalt(str, isInterrupt))
@@ -583,13 +586,14 @@ public class AppConsole extends JmolConsole
             : "no script was executing - use exitJmol to exit Jmol");
       //the problem is that scriptCheck is synchronized, so these might get backed up. 
       if (strErrorMessage.length() > 0) {
-        console.outputError(strErrorMessage);
+        if (!hasExtension)
+          console.outputError(strErrorMessage);
       } else {
         vwr.script(strCommand + JC.SCRIPT_GUI
-            + (strCommand.indexOf("\1##") >= 0 ? "" : JC.SCRIPT_EDITOR_IGNORE));
+            + (strCommand.indexOf(JC.SCRIPT_EXT) >= 0 ? "" : JC.SCRIPT_EDITOR_IGNORE));
       }
     }
-    if (strCommand.indexOf("\1##") < 0)
+    if (!hasExtension)
       console.grabFocus();
   }
 
@@ -610,7 +614,7 @@ public class AppConsole extends JmolConsole
     }
     if (source == checkButton) {
       if (scriptEditor != null)
-        scriptEditor.checkScript();
+        scriptEditor.checkScript(0);
     }
     if (source == stepButton) {
       if (scriptEditor != null)

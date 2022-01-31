@@ -176,7 +176,8 @@ public class JSVFileManager {
 		return (itype < 0 || itype == URL_LOCAL);
 	}
 
-	private static BufferedReader getUnzippedBufferedReaderFromName(String name,
+	@SuppressWarnings("resource")
+  private static BufferedReader getUnzippedBufferedReaderFromName(String name,
 			String startCode) throws JSVException {
 		String[] subFileList = null;
 		if (name.indexOf("|") >= 0) {

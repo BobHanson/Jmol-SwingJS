@@ -72,7 +72,11 @@ public class WebExport extends JPanel implements WindowListener {
   private static JFrame webFrame;
   private static String windowName;
 
-  private WebExport(Viewer vwr, HistoryFile hxxFile) {
+  /**
+   * @param vwr 
+   * @param hFile  
+   */
+  private WebExport(Viewer vwr, HistoryFile hFile) {
     super(new BorderLayout());
 
     remoteAppletPath = JmolPanel.getJmolProperty("webMakerAppletPath", chemappsPath);

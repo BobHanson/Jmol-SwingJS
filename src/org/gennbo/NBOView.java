@@ -69,6 +69,7 @@ import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.Timer;
+import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -96,7 +97,7 @@ class NBOView {
 
   private static final int MODE_VIEW_IMAGE = 13;
   private static final int MODE_VIEW_LIST = 23;
-  private static final int MODE_VIEW_VIDEO= 33;
+  private static final int MODE_VIEW_VIDEO = 33;
 
   protected NBOView(NBODialog dialog) {
     this.dialog = dialog;
@@ -116,22 +117,20 @@ class NBOView {
   protected final int BASIS_PRNBO = 10;
   protected final int BASIS_RNBO = 11;
 
-  protected final static String[] basSet = 
-    { "AO",  // 0   
-      "PNAO", "NAO",  // 1,2 
-      "PNHO", "NHO",  // 3,4
+  protected final static String[] basSet = { "AO", // 0   
+      "PNAO", "NAO", // 1,2 
+      "PNHO", "NHO", // 3,4
       "PNBO", "NBO", "PNLMO", "NLMO", // 5-8 
       "MO", // 9
-      "PRNBO","RNBO"}; // 10,11
+      "PRNBO", "RNBO" }; // 10,11
 
-  protected final static int[] basisLabelKey = 
-    {//AO   NAO    NHOab     NBOab     MO  PRNBO RNBO
-        0,  1, 1,  2, 2,  3, 3, 3, 3,  4,    3,  3, // alpha
-        0,  1, 1,  5, 5,  6, 6, 6, 6,  7,    6,  6  // beta   
-    };
-  
+  protected final static int[] basisLabelKey = { //AO   NAO    NHOab     NBOab     MO  PRNBO RNBO
+      0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 3, 3, // alpha
+      0, 1, 1, 5, 5, 6, 6, 6, 6, 7, 6, 6 // beta   
+  };
+
   private String[][] orbitalLabels;
-  
+
   private void clearLabelSet() {
     orbitalLabels = new String[8][];
   }
@@ -139,14 +138,15 @@ class NBOView {
   private String[] getLabelSet(int ibas, boolean isAlpha) {
     return orbitalLabels[getIbasKey(ibas, isAlpha)];
   }
-  
+
   private int getIbasKey(int ibas, boolean isBeta) {
     return basisLabelKey[ibas + (isBeta ? 12 : 0)];
   }
+
   private void addBasisLabel(int ikey, String[] tokens) {
     orbitalLabels[ikey] = tokens;
   }
-  
+
   private JScrollPane orbScroll;
   private Box centerBox, bottomBox;
   private Box vecBox;
@@ -154,7 +154,7 @@ class NBOView {
   private JRadioButton profileBtn, contourBtn, viewBtn;
   private JRadioButton atomOrient;
   private DefaultListModel<String> alphaList, betaList; // useful for no-NBOServe use?
-  
+
   /**
    * "Jmol" vs. "Atom" perspective chosen
    */
@@ -189,35 +189,35 @@ class NBOView {
 
   //NBOServe view settings
   private String[] plVal, vecVal, lineVal;
-  
-  private String videoInputFileType;
-  
+
+  String videoInputFileType;
+
   private JRadioButton video;
-  
+
   //dialog box for video
   private JDialog videoDialog;
-  
+
   private NBOFileHandler scriptVideoFileHandler;
   private NBOFileHandler gifVideoFileHandler;
   private final int SCRIPT_MODE = 0;
   private final int GIF_MODE = 1;
-  
-  private JRadioButton createVideo,saveVideo,playVideo;
-  
-  private boolean validScriptFilePath, validGifFilePath;
-  
+
+  private JRadioButton createVideo, saveVideo, playVideo;
+
+  boolean validScriptFilePath, validGifFilePath;
+
   private JSpinner spinner;
   private int frameRate;
-  
-  private String scriptVideoPath, gifVideoPath;
+
+  String scriptVideoPath, gifVideoPath;
   public String savevideo_jobstem;
-  
-  private boolean file43Exists;
-  private boolean file44Exists;
+
+  boolean file43Exists;
+  boolean file44Exists;
   //indicates if this module is just being entered. this variable is being used
   //to not reset camera parameters if user selects new 47 file, as long as user stays in this module
   private boolean switchModule;
-  
+
   /**
    * reset the arrays of values that will be sent to NBOServe to their default
    * values.
@@ -228,26 +228,25 @@ class NBOView {
         "3.0", "-3.0", "3.0", "25" };
     vecVal = new String[] { "1", "2", "0.5", "-2.0", "2.0", "-1.0", "1.0",
         "100" };
-    lineVal = new String[] { "0.03", "0.05", "4", "0.05", "0.05", "0.1", "0.1" };
+    lineVal = new String[] { "0.03", "0.05", "4", "0.05", "0.05", "0.1",
+        "0.1" };
   }
-
 
   private final JTextField[] vectorFields = new JTextField[8];
   private final JTextField[] planeFields = new JTextField[12];
   private final JTextField[] camFields = new JTextField[53];
   private final JTextField[] lineFields = new JTextField[7];
 
-  private String[] camVal = { "6.43", "0.0", "0.0", "50.0", "2.0", "2.0",
-      "0.0", "0.60", "1.0", "1.0", "40.0", "0.0", "0.60", "1.0", "1.0", "40.0",
-      "0.0", "0.60", "1.0", "1.0", "40.0", "0.0", "0.60", "1.0", "1.0", "40.0",
-      "0.5", "1.0", "1.0", "1.0", "0.8", "0.0", "0.0", "1.0", "0.8", "0.4",
-      "0.0", "1.0", "1.0", "0.5", "0.5", "0.5", "0.0", "0.7", "1.0", "0.22",
-      "0.40", "0.10", "0.05", "0.0316", "0.0001", "0.4000", "1" };
+  private String[] camVal = { "6.43", "0.0", "0.0", "50.0", "2.0", "2.0", "0.0",
+      "0.60", "1.0", "1.0", "40.0", "0.0", "0.60", "1.0", "1.0", "40.0", "0.0",
+      "0.60", "1.0", "1.0", "40.0", "0.0", "0.60", "1.0", "1.0", "40.0", "0.5",
+      "1.0", "1.0", "1.0", "0.8", "0.0", "0.0", "1.0", "0.8", "0.4", "0.0",
+      "1.0", "1.0", "0.5", "0.5", "0.5", "0.0", "0.7", "1.0", "0.22", "0.40",
+      "0.10", "0.05", "0.0316", "0.0001", "0.4000", "1" };
 
   private String[] camFieldIDs = {
       // 0 - 6
-      "1a", "1b", "1c", "1d", "1e", "1f",
-      "1g",
+      "1a", "1b", "1c", "1d", "1e", "1f", "1g",
       // 7 - 26
       "2a", "2b", "2c", "2d", "2e", "2f", "2g", "2h", "2i", "2j", "2k", "2l",
       "2m", "2n", "2o", "2p", "2q", "2r", "2s", "2t",
@@ -265,7 +264,7 @@ class NBOView {
     ///panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     dialog.runScriptQueued("set bondpicking true");
 
-    Box b = createViewSearchJobBox(NBOFileHandler.MODE_VIEW,true);
+    Box b = createViewSearchJobBox(NBOFileHandler.MODE_VIEW, true);
     if (!dialog.jmolOptionNONBO)
       panel.add(b, BorderLayout.NORTH);
 
@@ -278,8 +277,8 @@ class NBOView {
     panel.add(createBottomBox(), BorderLayout.SOUTH);
 
     updateViewSettings();
-    frameRate=-1;
-    switchModule=true;
+    frameRate = -1;
+    switchModule = true;
     dialog.inputFileHandler.setBrowseEnabled(true);
 
     //    String fileType = dialog.runScriptNow("print _fileType");
@@ -291,12 +290,13 @@ class NBOView {
 
     return panel;
   }
-  
+
   /**
    * Creates the title blocks for VIEW module with background color for headers.
    * 
-   * Instead of creating title box at NBOUtil, we created it in NBOView because we will need to add
-   * radio button and action listener to the title box of NBOView (Special case)
+   * Instead of creating title box at NBOUtil, we created it in NBOView because
+   * we will need to add radio button and action listener to the title box of
+   * NBOView (Special case)
    * 
    * @param title
    *        - title for the section
@@ -312,40 +312,37 @@ class NBOView {
     label.setForeground(Color.white);
     label.setFont(NBOConfig.titleFont);
     label.setOpaque(true);
-    
-    video=new JRadioButton("Video");
-    video.setHorizontalAlignment(JRadioButton.CENTER);
-    video.addActionListener(new ActionListener()
-    {
+
+    video = new JRadioButton("Video");
+    video.setHorizontalAlignment(SwingConstants.CENTER);
+    video.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent arg0)
-      {
+      public void actionPerformed(ActionEvent arg0) {
         doVideo();
       }
-    }
-    );
-    
+    });
+
     if (rightSideComponent != null) {
       JPanel box2 = new JPanel(new BorderLayout());
       box2.setAlignmentX(0);
       box2.setMaximumSize(new Dimension(360, 25));
       box2.add(label, BorderLayout.WEST);
-      box2.add(video,BorderLayout.CENTER);
+      box2.add(video, BorderLayout.CENTER);
       box2.add(rightSideComponent, BorderLayout.EAST);
       box.add(box2);
-    } else
-    {
-      box.add(label,BorderLayout.WEST);
-      box.add(video,BorderLayout.CENTER);
+    } else {
+      box.add(label, BorderLayout.WEST);
+      box.add(video, BorderLayout.CENTER);
     }
-    
+
     video.setVisible(false);
     box.setAlignmentX(0.0f);
-  
+
     return box;
   }
-  
-  public static Box createTitleBoxForVideoMenu(String title, Component rightSideComponent) {
+
+  public static Box createTitleBoxForVideoMenu(String title,
+                                               Component rightSideComponent) {
     Box box = Box.createVerticalBox();
     JLabel label = new JLabel(title);
     label.setAlignmentX(0);
@@ -361,25 +358,22 @@ class NBOView {
       box2.setMaximumSize(new Dimension(400, 25));
       box.add(box2);
     } else
-      box.add(label,BorderLayout.WEST);
+      box.add(label, BorderLayout.WEST);
     box.setAlignmentX(0.0f);
-  
+
     return box;
   }
-  
+
   /*
    * Helper function to create file handler for VIDEO
    */
-  private NBOFileHandler getFileHandlerForVideo(int mode)
-  {
-    NBOFileHandler fileHandler=null;
-    if(mode==SCRIPT_MODE)
-    {
-      fileHandler=new NBOFileHandler("","",NBOFileHandler.MODE_VIEW_VIDEO, NBOConfig.SCRIPT_VIDEO_EXTENSIONS, dialog)
-      {
+  private NBOFileHandler getFileHandlerForVideo(int mode) {
+    NBOFileHandler fileHandler = null;
+    if (mode == SCRIPT_MODE) {
+      fileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_VIEW_VIDEO,
+          NBOConfig.SCRIPT_VIDEO_EXTENSIONS, dialog) {
         @Override
-        protected boolean doFileBrowsePressed()
-        {
+        protected boolean doFileBrowsePressed() {
           String folder = tfDir.getText().trim();
           String name = tfName.getText();
           String ext = tfExt.getText().trim();
@@ -389,12 +383,12 @@ class NBOView {
             ext = "script";
           folder = NBOUtil.getWindowsFullNameFor(folder, name, ext);
           JFileChooser myChooser = new JFileChooser();
-          
+
           useExt = (ext.equals("") ? NBOConfig.SCRIPT_VIDEO_EXTENSIONS : ext);
           //file type must be only be script for now. But the structure of this method is set up such that 
           //it can easily allow other file type other than cmd in the future.
-          videoInputFileType="script";
-          String filter=useExt;
+          videoInputFileType = "script";
+          String filter = useExt;
           myChooser.setFileFilter(new FileNameExtensionFilter(filter, filter));
           myChooser.setFileHidingEnabled(true);
           if (folder.endsWith("/"))
@@ -402,42 +396,35 @@ class NBOView {
           if (!folder.equals(""))
             myChooser.setSelectedFile(new File(folder));
           int button = myChooser.showDialog(this, GT.$("Select"));
-          if (button == JFileChooser.APPROVE_OPTION) 
-          {
-            if (PT.isOneOf(videoInputFileType, NBOConfig.SCRIPT_VIDEO_EXTENSIONS)) 
-            {
+          if (button == JFileChooser.APPROVE_OPTION) {
+            if (PT.isOneOf(videoInputFileType,
+                NBOConfig.SCRIPT_VIDEO_EXTENSIONS)) {
               File newFile = myChooser.getSelectedFile();
-              if (newFile.toString().indexOf(".") < 0) 
-              {
+              if (newFile.toString().indexOf(".") < 0) {
                 dialog.logError("File not found");
-                validScriptFilePath=false;
+                validScriptFilePath = false;
                 return false;
               }
               //do something to process the file here
-              scriptVideoPath=newFile.getAbsolutePath();
+              scriptVideoPath = newFile.getAbsolutePath();
               jobStem = NBOUtil.getJobStem(newFile);
               tfName.setText(jobStem);
-              dialog.inputFileHandler.setInput(fullFilePath, jobStem, NBOUtil.getExt(newFile));
-              validScriptFilePath=true;
+              dialog.inputFileHandler.setInput(fullFilePath, jobStem,
+                  NBOUtil.getExt(newFile));
+              validScriptFilePath = true;
               return true;
-            }
-            else
-            {
-              dialog.logError("Invalid input file type defined");
-            }
+            } 
+            dialog.logError("Invalid input file type defined");
           }
-          validScriptFilePath=false;
+          validScriptFilePath = false;
           return false;
         }
       };
-    }
-    else if(mode==GIF_MODE)
-    {
-      fileHandler=new NBOFileHandler("","",NBOFileHandler.MODE_VIEW_VIDEO, NBOConfig.GIF_VIDEO_EXTENSIONS, dialog)
-      {
+    } else if (mode == GIF_MODE) {
+      fileHandler = new NBOFileHandler("", "", NBOFileHandler.MODE_VIEW_VIDEO,
+          NBOConfig.GIF_VIDEO_EXTENSIONS, dialog) {
         @Override
-        protected boolean doFileBrowsePressed()
-        {
+        protected boolean doFileBrowsePressed() {
           String folder = tfDir.getText().trim();
           String name = tfName.getText();
           String ext = tfExt.getText().trim();
@@ -447,10 +434,10 @@ class NBOView {
             ext = "gif";
           folder = NBOUtil.getWindowsFullNameFor(folder, name, ext);
           JFileChooser myChooser = new JFileChooser();
-          
+
           useExt = (ext.equals("") ? NBOConfig.GIF_VIDEO_EXTENSIONS : ext);
-          
-          String filter=useExt;
+
+          String filter = useExt;
           myChooser.setFileFilter(new FileNameExtensionFilter(filter, filter));
           myChooser.setFileHidingEnabled(true);
           if (folder.endsWith("/"))
@@ -458,78 +445,72 @@ class NBOView {
           if (!folder.equals(""))
             myChooser.setSelectedFile(new File(folder));
           int button = myChooser.showDialog(this, GT.$("Select"));
-          if (button == JFileChooser.APPROVE_OPTION) 
-          {
-            if (PT.isOneOf(useExt, NBOConfig.GIF_VIDEO_EXTENSIONS)) 
-            {
+          if (button == JFileChooser.APPROVE_OPTION) {
+            if (PT.isOneOf(useExt, NBOConfig.GIF_VIDEO_EXTENSIONS)) {
               File newFile = myChooser.getSelectedFile();
-              if (newFile.toString().indexOf(".") < 0) 
-              {
+              if (newFile.toString().indexOf(".") < 0) {
                 dialog.logError("File not found");
-                validGifFilePath=false;
+                validGifFilePath = false;
                 return false;
               }
               //do something to process the file here
               jobStem = NBOUtil.getJobStem(newFile);
               tfName.setText(jobStem);
-              dialog.inputFileHandler.setInput(fullFilePath, jobStem, NBOUtil.getExt(newFile));
-              gifVideoPath=newFile.getAbsolutePath();
-              validGifFilePath=true;
+              dialog.inputFileHandler.setInput(fullFilePath, jobStem,
+                  NBOUtil.getExt(newFile));
+              gifVideoPath = newFile.getAbsolutePath();
+              validGifFilePath = true;
               return true;
             }
-            else
-            {
-              dialog.logError("Invalid input file type defined. Only gif file is accepted.");
-            }
+            dialog.logError(
+                "Invalid input file type defined. Only gif file is accepted.");
+
           }
-          validGifFilePath=false;
+          validGifFilePath = false;
           return false;
         }
       };
     }
     return fileHandler;
   }
-  
-  private void createIncrementerDecrementerForGIFCreation()
-  {
-                                               //initial value  min   max    step
-    SpinnerModel spinnerModel=new SpinnerNumberModel(10,        0,    1000,   1 );
-    spinner=new JSpinner(spinnerModel);
-  }
-  
-  private void computeFrameRate(String num)
-  {
-    int number=Integer.parseInt(num);
 
-    if(number==-1)
-      frameRate=-1;
-    else
-      frameRate=(int)((1.0/number)*1000);
+  private void createIncrementerDecrementerForGIFCreation() {
+    //initial value  min   max    step
+    SpinnerModel spinnerModel = new SpinnerNumberModel(10, 0, 1000, 1);
+    spinner = new JSpinner(spinnerModel);
   }
-  
+
+  private void computeFrameRate(String num) {
+    int number = Integer.parseInt(num);
+
+    if (number == -1)
+      frameRate = -1;
+    else
+      frameRate = (int) ((1.0 / number) * 1000);
+  }
+
   /*
    * create and return VIDEO menu
    */
-  public void doVideo()
-  {
-    if(videoDialog!=null)
-    {    
+  public void doVideo() {
+    if (videoDialog != null) {
       videoDialog.setVisible(true);
       return;
     }
-    
-    Box box=createTitleBoxForVideoMenu("Animated GIF Sequence",dialog.new HelpBtn("view_video_help.htm"));
-    
-    ButtonGroup buttonGroup=new ButtonGroup();
-    
-    final JLabel scriptFileIn=new JLabel(" Script File");
+
+    Box box = createTitleBoxForVideoMenu("Animated GIF Sequence",
+        dialog.new HelpBtn("view_video_help.htm"));
+
+    //    ButtonGroup buttonGroup=new ButtonGroup();
+
+    final JLabel scriptFileIn = new JLabel(" Script File");
     scriptFileIn.setFont(NBOConfig.monoFont);
-    final JLabel gifFileIn=new JLabel(" GIF File");
+    final JLabel gifFileIn = new JLabel(" GIF File");
     gifFileIn.setFont(NBOConfig.monoFont);
-   
-   
-    validScriptFilePath=false; validGifFilePath=false; 
-    
+
+    validScriptFilePath = false;
+    validGifFilePath = false;
+
     final JButton goBtn = new JButton("GO ");
     goBtn.setMinimumSize(new Dimension(60, 30));
     goBtn.setMaximumSize(new Dimension(60, 30));
@@ -542,34 +523,36 @@ class NBOView {
         goBtn.setEnabled(true);
       }
     };
-    
+
     /////////////////////////////buttons for video menu
     ButtonGroup bg = new ButtonGroup();
-    
-    createVideo=new JRadioButton("CREATE frames from script");
-    createVideo.setSelected(false); 
+
+    createVideo = new JRadioButton("CREATE frames from script");
+    createVideo.setSelected(false);
     createVideo.addActionListener(goEnableAction);
-    
-    saveVideo=new JRadioButton("SAVE frames to GIF file");
-    saveVideo.setSelected(false); 
+
+    saveVideo = new JRadioButton("SAVE frames to GIF file");
+    saveVideo.setSelected(false);
     saveVideo.addActionListener(goEnableAction);
-    
-    playVideo=new JRadioButton("PLAY GIF file as animated video");
-    playVideo.setSelected(false); 
+
+    playVideo = new JRadioButton("PLAY GIF file as animated video");
+    playVideo.setSelected(false);
     playVideo.addActionListener(goEnableAction);
-    
-    bg.add(createVideo); bg.add(saveVideo); bg.add(playVideo);
-    
+
+    bg.add(createVideo);
+    bg.add(saveVideo);
+    bg.add(playVideo);
+
     /////////////////////////////file handlers for video menu
-    
-    scriptVideoFileHandler=getFileHandlerForVideo(SCRIPT_MODE);
+
+    scriptVideoFileHandler = getFileHandlerForVideo(SCRIPT_MODE);
     scriptVideoFileHandler.tfExt.setText("script");
-   
-    gifVideoFileHandler=getFileHandlerForVideo(GIF_MODE);
+
+    gifVideoFileHandler = getFileHandlerForVideo(GIF_MODE);
     gifVideoFileHandler.tfExt.setText("gif");
-    
+
     /////////////////////////////panel for storing file handlers
-    JPanel fileHandlerPanel=new JPanel(new GridLayout(4,1,0,0));
+    JPanel fileHandlerPanel = new JPanel(new GridLayout(4, 1, 0, 0));
     fileHandlerPanel.setMaximumSize(new Dimension(400, 175));
     fileHandlerPanel.setPreferredSize(new Dimension(400, 175));
     fileHandlerPanel.setMinimumSize(new Dimension(400, 175));
@@ -578,52 +561,50 @@ class NBOView {
     fileHandlerPanel.add(scriptVideoFileHandler);
     fileHandlerPanel.add(gifFileIn);
     fileHandlerPanel.add(gifVideoFileHandler);
-    
+
     ////////////////////////////////panel for storing radio buttons
     createIncrementerDecrementerForGIFCreation();
-    JPanel buttonPanel_1=new JPanel(new GridLayout(2,1,0,0));
-//    buttonPanel_1.setMaximumSize(new Dimension(250, 150));
-//    buttonPanel_1.setPreferredSize(new Dimension(250, 150));
-//    buttonPanel_1.setMinimumSize(new Dimension(250, 150));
+    JPanel buttonPanel_1 = new JPanel(new GridLayout(2, 1, 0, 0));
+    //    buttonPanel_1.setMaximumSize(new Dimension(250, 150));
+    //    buttonPanel_1.setPreferredSize(new Dimension(250, 150));
+    //    buttonPanel_1.setMinimumSize(new Dimension(250, 150));
     buttonPanel_1.setAlignmentX(0);
     buttonPanel_1.add(createVideo);
     buttonPanel_1.add(saveVideo);
-    
-    JPanel buttonPanel_2=new JPanel(new GridLayout(1,3,0,0));
-    buttonPanel_2.setMaximumSize(new Dimension(225,40));
-    buttonPanel_2.setMinimumSize(new Dimension(225,40));
-    buttonPanel_2.setPreferredSize(new Dimension(225,40));
+
+    JPanel buttonPanel_2 = new JPanel(new GridLayout(1, 3, 0, 0));
+    buttonPanel_2.setMaximumSize(new Dimension(225, 40));
+    buttonPanel_2.setMinimumSize(new Dimension(225, 40));
+    buttonPanel_2.setPreferredSize(new Dimension(225, 40));
     buttonPanel_2.setAlignmentX(0);
-    JLabel frame_sec=new JLabel(" frames/sec");
-    
+    JLabel frame_sec = new JLabel(" frames/sec");
+
     buttonPanel_2.add(new JLabel("  ")); //add empty jlabel to move jspinner a little bit to the right (not stick right to left)
     buttonPanel_2.add(spinner);
     buttonPanel_2.add(frame_sec);
-    
-    
-    JPanel buttonPanel_3=new JPanel(new GridLayout(1,1,0,0));
+
+    JPanel buttonPanel_3 = new JPanel(new GridLayout(1, 1, 0, 0));
     buttonPanel_3.setAlignmentX(0);
     buttonPanel_3.add(playVideo);
-    
-    
-    JPanel goPanel=new JPanel(new BorderLayout());
+
+    JPanel goPanel = new JPanel(new BorderLayout());
     goPanel.setMaximumSize(new Dimension(380, 40));
     goPanel.setMinimumSize(new Dimension(380, 40));
     goPanel.setPreferredSize(new Dimension(380, 40));
     goPanel.setAlignmentX(0);
-    goPanel.add(goBtn,BorderLayout.EAST);
+    goPanel.add(goBtn, BorderLayout.EAST);
     goBtn.setHorizontalAlignment(SwingConstants.RIGHT);
-    
+
     goBtn.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         doVideoGoPressed();
       }
     });
-//    inner.add(goPanel);
-    
+    //    inner.add(goPanel);
+
     Box box2 = Box.createVerticalBox();
-    
+
     box2.add(fileHandlerPanel);
     box2.add(buttonPanel_1);
     box2.add(buttonPanel_2);
@@ -631,246 +612,212 @@ class NBOView {
     box.add(box2);
     box2.setAlignmentX(0.0f);
     box.add(goPanel);
-     
-    
-    videoDialog=new JDialog(dialog,"Video Menu");
+
+    videoDialog = new JDialog(dialog, "Video Menu");
     videoDialog.setSize(400, 450);
     videoDialog.setVisible(true);
-    
+
     videoDialog.add(box);
-    centerDialog(videoDialog,200);
+    centerDialog(videoDialog, 200);
   }
-  
-  
-  private void doVideoGoPressed()
-  {
-    if(createVideo.isSelected())
+
+  void doVideoGoPressed() {
+    if (createVideo.isSelected())
       createVideo();
-    else if(saveVideo.isSelected())
-    {
+    else if (saveVideo.isSelected()) {
       computeFrameRate(String.valueOf(spinner.getModel().getValue()));
       saveVideo();
-    }
-    else if(playVideo.isSelected())
+    } else if (playVideo.isSelected())
       playVideo();
-    
+
     videoDialog.setVisible(false);
   }
-  
-  private void createVideo()
-  {
-    if(!validScriptFilePath)
-    {
+
+  private void createVideo() {
+    if (!validScriptFilePath) {
       dialog.logInfo("Error: Invalid path for script file", Logger.LEVEL_ERROR);
       return;
     }
     SB sb = new SB();
-    NBOUtil.postAddCmd(sb, "VC "+scriptVideoPath);
-    postNBO_v(sb, MODE_VIEW_VIDEO, -1, null,"Sending video create command..", null, null);
+    NBOUtil.postAddCmd(sb, "VC " + scriptVideoPath);
+    postNBO_v(sb, MODE_VIEW_VIDEO, -1, null, "Sending video create command..",
+        null, null);
   }
-  
-  
-  
+
   /* find and return all the files with the specified filename in the given directory
    */
-  private File[] finder(String directoryName,String jobstem)
-  { 
-    savevideo_jobstem=jobstem;
-    
-    File dir=new File(directoryName);
-    File bmpFiles[]=dir.listFiles(new FilenameFilter()
-    {
+  private File[] finder(String directoryName, String jobstem) {
+    savevideo_jobstem = jobstem;
+
+    File dir = new File(directoryName);
+    File bmpFiles[] = dir.listFiles(new FilenameFilter() {
       @Override
-      public boolean accept(File dir, String filename)
-      {
-        String curr_filename=filename.trim();
-        if(curr_filename.startsWith(savevideo_jobstem+"_") && curr_filename.endsWith(".bmp"))
-        {
-          try
-          {
-            String splitDot[]=curr_filename.split("\\.");
-            if(splitDot.length!=2)
+      public boolean accept(File dir, String filename) {
+        String curr_filename = filename.trim();
+        if (curr_filename.startsWith(savevideo_jobstem + "_")
+            && curr_filename.endsWith(".bmp")) {
+          try {
+            String splitDot[] = curr_filename.split("\\.");
+            if (splitDot.length != 2)
               return false;
-                  
-            curr_filename=splitDot[0];
-            int counter=Integer.parseInt(curr_filename.substring(savevideo_jobstem.length()+1));
-            if(counter>0)
+
+            curr_filename = splitDot[0];
+            int counter = Integer.parseInt(
+                curr_filename.substring(savevideo_jobstem.length() + 1));
+            if (counter > 0)
               return true;
             return false;
 
-          }
-          catch(IndexOutOfBoundsException e1)
-          {
+          } catch (IndexOutOfBoundsException e1) {
             return false;
-          }
-          catch(NumberFormatException e2)
-          {
+          } catch (NumberFormatException e2) {
             return false;
           }
         }
         return false;
       }
     });
-    
+
     return bmpFiles;
   }
-  
-  private File[] sortFilenames(File files[])
-  {
+
+  private File[] sortFilenames(File files[]) {
     int i;
-    
+
     //sort the files according to their filename
-    ArrayList<BMP_File> sortedFiles=new ArrayList<BMP_File>();
-    
-    for(i=0;i<files.length;i++)
-    {
-      File currentFile=files[i];
-      BMP_File currentBMPFile=new BMP_File(currentFile,currentFile.getName(),savevideo_jobstem);
+    ArrayList<BMP_File> sortedFiles = new ArrayList<BMP_File>();
+
+    for (i = 0; i < files.length; i++) {
+      File currentFile = files[i];
+      BMP_File currentBMPFile = new BMP_File(currentFile, currentFile.getName(),
+          savevideo_jobstem);
       sortedFiles.add(currentBMPFile);
     }
-    
+
     Collections.sort(sortedFiles);
-    
-    File bmps[]=new File[sortedFiles.size()];
-    for(i=0;i<sortedFiles.size();i++)
-    {
-      bmps[i]=sortedFiles.get(i).getFile();
+
+    File bmps[] = new File[sortedFiles.size()];
+    for (i = 0; i < sortedFiles.size(); i++) {
+      bmps[i] = sortedFiles.get(i).getFile();
     }
-    
+
     return bmps;
   }
-  
-  private void saveVideo()
-  { 
+
+  private void saveVideo() {
     String folder = gifVideoFileHandler.tfDir.getText().trim();
     String name = gifVideoFileHandler.tfName.getText();
     String ext = gifVideoFileHandler.tfExt.getText().trim();
-    
-    if(( folder.equals("")||name.equals("")||ext.equals("") ) && !validGifFilePath )
-    {
+
+    if ((folder.equals("") || name.equals("") || ext.equals(""))
+        && !validGifFilePath) {
       dialog.logInfo("Error: Invalid path for gif file", Logger.LEVEL_ERROR);
       return;
-    }
-    else if(frameRate==-1)
-    {
+    } else if (frameRate == -1) {
       dialog.logInfo("Error: Please select a framerate", Logger.LEVEL_ERROR);
       return;
     }
-    
-    int timeBetweenFrameInSecond=frameRate;
+
+    int timeBetweenFrameInSecond = frameRate;
     int i;
-    GIFWriter writer=null;
-    ImageOutputStream output=null;
-    
-    File files[]=finder(folder,name);
-    File bmpFiles[]=sortFilenames(files);
-    
-    if(bmpFiles.length==0)
-    {
-      dialog.logInfo("Error: No BMP file with input filename found. Could not create GIF.", Logger.LEVEL_ERROR);
+    GIFWriter writer = null;
+    ImageOutputStream output = null;
+
+    File files[] = finder(folder, name);
+    File bmpFiles[] = sortFilenames(files);
+
+    if (bmpFiles.length == 0) {
+      dialog.logInfo(
+          "Error: No BMP file with input filename found. Could not create GIF.",
+          Logger.LEVEL_ERROR);
       return;
     }
-    
-    int strLength=folder.length();
-    if(folder.charAt(strLength-1)!='/')
-      folder=folder+"/";
-    gifVideoPath=folder+name+"."+ext;
-    
-    try
-    {
-      BufferedImage firstImage=ImageIO.read(bmpFiles[0]);
-      output=new FileImageOutputStream(new File(gifVideoPath));
-      writer=new GIFWriter(output,firstImage.getType(),timeBetweenFrameInSecond,true);
+
+    int strLength = folder.length();
+    if (folder.charAt(strLength - 1) != '/')
+      folder = folder + "/";
+    gifVideoPath = folder + name + "." + ext;
+
+    try {
+      BufferedImage firstImage = ImageIO.read(bmpFiles[0]);
+      output = new FileImageOutputStream(new File(gifVideoPath));
+      writer = new GIFWriter(output, firstImage.getType(),
+          timeBetweenFrameInSecond, true);
       writer.writeToSequence(firstImage);
-      for(i=1;i<bmpFiles.length;i++)
-      {
-        BufferedImage nextImage=ImageIO.read(bmpFiles[i]);
+      for (i = 1; i < bmpFiles.length; i++) {
+        BufferedImage nextImage = ImageIO.read(bmpFiles[i]);
         writer.writeToSequence(nextImage);
       }
-      
-    }
-    catch(IIOException e1)
-    {
-      dialog.logInfo("Error creating GIF: "+e1, Logger.LEVEL_ERROR);
-    }
-    catch(IOException e2)
-    {
-      dialog.logInfo("Error creating GIF: "+e2, Logger.LEVEL_ERROR);
-    }
-    finally
-    {
+
+    } catch (IIOException e1) {
+      dialog.logInfo("Error creating GIF: " + e1, Logger.LEVEL_ERROR);
+    } catch (IOException e2) {
+      dialog.logInfo("Error creating GIF: " + e2, Logger.LEVEL_ERROR);
+    } finally {
       //this method of writing is ugly, but it's essential to ensure that the writer and output is close no matter what.
       //improvement can be made here for code aesthetics
-      try
-      {
-        if(writer!=null)
-        {
+      try {
+        if (writer != null) {
           writer.close();
         }
-        if(output!=null)
-        {
+        if (output != null) {
           output.close();
         }
-      }
-      catch(IOException ioError)
-      {
-        dialog.logInfo("Fatal Error: Unable to close gifWriter or output stream", Logger.LEVEL_ERROR);
+      } catch (IOException ioError) {
+        dialog.logInfo(
+            "Fatal Error: Unable to close gifWriter or output stream",
+            Logger.LEVEL_ERROR);
       }
     }
-    dialog.logValue("GIF file has been successfully created at "+gifVideoPath);
+    dialog
+        .logValue("GIF file has been successfully created at " + gifVideoPath);
   }
-  
-  private void playVideo()
-  {
+
+  private void playVideo() {
     String folder = gifVideoFileHandler.tfDir.getText().trim();
     String name = gifVideoFileHandler.tfName.getText();
     String ext = gifVideoFileHandler.tfExt.getText().trim();
-    
-    if(( folder.equals("")||name.equals("")||ext.equals("") ) && !validGifFilePath )
-    {
+
+    if ((folder.equals("") || name.equals("") || ext.equals(""))
+        && !validGifFilePath) {
       dialog.logInfo("Error: Invalid path for gif file", Logger.LEVEL_ERROR);
       return;
     }
-    
-   
-    int strLength=folder.length();
-    if(folder.charAt(strLength-1)!='/')
-      folder=folder+"/";
-    gifVideoPath=folder+name+"."+ext;
-    
-    File file=new File(gifVideoPath);
-    if(!file.exists())
-    {
+
+    int strLength = folder.length();
+    if (folder.charAt(strLength - 1) != '/')
+      folder = folder + "/";
+    gifVideoPath = folder + name + "." + ext;
+
+    File file = new File(gifVideoPath);
+    if (!file.exists()) {
       dialog.logInfo("Error: Invalid path for gif file", Logger.LEVEL_ERROR);
       return;
     }
-    
-    
+
     ImageIcon icon = new ImageIcon(gifVideoPath);
     JLabel label = new JLabel(icon);
-    
-    JFrame f=new JFrame("Animation");
+
+    JFrame f = new JFrame("Animation");
     f.getContentPane().add(label);
-    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     f.pack();
     f.setLocationRelativeTo(null);
     f.setVisible(true);
   }
-  
-  
-  protected Box createViewSearchJobBox(int mode,boolean isNBOView) {
+
+  protected Box createViewSearchJobBox(int mode, boolean isNBOView) {
     Box topBox;
-    if(isNBOView)
-    {
-      topBox = createTitleBox(" Select Job ", dialog.new HelpBtn(
-          (mode == NBOFileHandler.MODE_SEARCH ? "search" : "view")
-              + "_job_help.htm"));
-    }
-    else
-    {
-      topBox = NBOUtil.createTitleBox(" Select Job ", dialog.new HelpBtn(
-          (mode == NBOFileHandler.MODE_SEARCH ? "search" : "view")
-              + "_job_help.htm"));
+    if (isNBOView) {
+      topBox = createTitleBox(" Select Job ",
+          dialog.new HelpBtn(
+              (mode == NBOFileHandler.MODE_SEARCH ? "search" : "view")
+                  + "_job_help.htm"));
+    } else {
+      topBox = NBOUtil.createTitleBox(" Select Job ",
+          dialog.new HelpBtn(
+              (mode == NBOFileHandler.MODE_SEARCH ? "search" : "view")
+                  + "_job_help.htm"));
     }
     Box inputBox = NBOUtil.createBorderBox(true);
     inputBox.setPreferredSize(new Dimension(360, 50));
@@ -883,8 +830,8 @@ class NBOView {
   }
 
   private Component createBottomBox() {
-    bottomBox = NBOUtil.createTitleBox(" Display Type ", dialog.new HelpBtn(
-        "view_display_help.htm"));
+    bottomBox = NBOUtil.createTitleBox(" Display Type ",
+        dialog.new HelpBtn("view_display_help.htm"));
     JPanel profBox = new JPanel(new GridLayout(2, 3, 0, 0));
     profBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     profBox.setAlignmentX(0.0f);
@@ -916,7 +863,7 @@ class NBOView {
     viewBtn.addActionListener(goEnableAction);
     bg.add(viewBtn);
     profBox.add(viewBtn);//.setFont(nboFont);
-    
+
     vecBox = Box.createHorizontalBox();
     vecBox.setAlignmentX(0.0f);
     vecBox.setMaximumSize(new Dimension(120, 25));
@@ -934,11 +881,11 @@ class NBOView {
       }
     });
     profBox.add(goBtn);
-    
+
     //Added by fzy: set 3D view to default
     viewBtn.setSelected(true);
     goBtn.setEnabled(true);
-    
+
     bottomBox.add(profBox);
     bottomBox.setVisible(false);
     return bottomBox;
@@ -954,23 +901,17 @@ class NBOView {
     comboBasis1.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if (comboBasis1.isEnabled())
-        {
+        if (comboBasis1.isEnabled()) {
           boolean isBeta = dialog.isOpenShell() && !isAlphaSpin();
-          if(comboBasis1.getSelectedIndex()==BASIS_PRNBO)
-          {
-            if(!file43Exists)
-            {
+          if (comboBasis1.getSelectedIndex() == BASIS_PRNBO) {
+            if (!file43Exists) {
               dialog.logCmd("select " + comboBasis1.getSelectedItem() + " "
                   + (isBeta ? "beta" : dialog.isOpenShell() ? "alpha" : ""));
               dialog.logInfo("NBOPro can't do that. ", Logger.LEVEL_WARN);
               return;
             }
-          }
-          else if(comboBasis1.getSelectedIndex()==BASIS_RNBO)
-          {
-            if(!file44Exists)
-            {
+          } else if (comboBasis1.getSelectedIndex() == BASIS_RNBO) {
+            if (!file44Exists) {
               dialog.logCmd("select " + comboBasis1.getSelectedItem() + " "
                   + (isBeta ? "beta" : dialog.isOpenShell() ? "alpha" : ""));
               dialog.logInfo("NBOPro can't do that. ", Logger.LEVEL_WARN);
@@ -990,8 +931,8 @@ class NBOView {
       public void actionPerformed(ActionEvent event) {
 
         //        if (type != null) {
-//          dialog.doSetStructure(type);
-//        }
+        //          dialog.doSetStructure(type);
+        //        }
 
         if (NBOConfig.nboView) {
           dialog.runScriptQueued("select *;color bonds lightgrey");
@@ -999,16 +940,14 @@ class NBOView {
 
         doSetNewBasis(false, true);
 
-        
-        
-//        doSetSpin(event.getSource() == alphaSpin ? "alpha" : "beta");
+        //        doSetSpin(event.getSource() == alphaSpin ? "alpha" : "beta");
       }
     };
     alphaSpin.addActionListener(spinListener);
     betaSpin.addActionListener(spinListener);
     ButtonGroup spinSelection = new ButtonGroup();
     spinSelection.add(alphaSpin);
-    spinSelection.add(betaSpin);    
+    spinSelection.add(betaSpin);
     horizBox.add(alphaSpin);
     horizBox.add(betaSpin);
     alphaSpin.setVisible(dialog.isOpenShell());
@@ -1023,13 +962,14 @@ class NBOView {
     orbScroll = new JScrollPane();
     orbScroll.setMaximumSize(new Dimension(355, 400));
     orbScroll.getViewport().setMinimumSize(new Dimension(250, 400));
-    orbScroll
-        .setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+    orbScroll.setVerticalScrollBarPolicy(
+        ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
     orbPanel.add(orbScroll, BorderLayout.CENTER);
 
     orbPanel.setAlignmentX(0.0f);
-    orbPanel.add(new JLabel(
-        "click to turn up to 9 orbitals on/off; hold to reverse phase"),
+    orbPanel.add(
+        new JLabel(
+            "click to turn up to 9 orbitals on/off; hold to reverse phase"),
         BorderLayout.SOUTH);
     newOrbitals();
     return orbPanel;
@@ -1398,9 +1338,8 @@ class NBOView {
     bo.add(camFields[26]);
     in.add(bo);
     cam2.add(in, BorderLayout.CENTER);
-    cam2.add(
-        new JLabel(
-            "                    amb              diff           spec        pow        transp"),
+    cam2.add(new JLabel(
+        "                    amb              diff           spec        pow        transp"),
         BorderLayout.NORTH);
     //JButton b = new JButton("OK");
     //cam2.add(b, BorderLayout.SOUTH);
@@ -1468,9 +1407,8 @@ class NBOView {
     in.add(bo);
 
     cam3.add(in, BorderLayout.CENTER);
-    cam3.add(
-        new JLabel(
-            "                                                 Blue               Green             Red"),
+    cam3.add(new JLabel(
+        "                                                 Blue               Green             Red"),
         BorderLayout.NORTH);
     cam3.setAlignmentX(0.0f);
     box.add(cam3);
@@ -1610,7 +1548,7 @@ class NBOView {
     //set default VIEW orientation to Jmol orientation
     jmolOrient.setSelected(true);
     doViewByJmol();
-    
+
     dialog.viewSettingsBox.add(btnCam, BorderLayout.SOUTH);
     dialog.repaint();
     dialog.revalidate();
@@ -1618,13 +1556,13 @@ class NBOView {
 
   protected void doViewByJmol() {
     //commented out by fzy. planeBox should be showed no matter what the view orientation is
-//    planeBox.setVisible(false);
+    //    planeBox.setVisible(false);
     jmolView = true;
   }
 
   protected void doViewByAtoms() {
     //commented out by fzy. planeBox should be showed no matter what the view orientation is
-//    planeBox.setVisible(true);
+    //    planeBox.setVisible(true);
     dialog.nboService.restartIfNecessary();
     setDefaultParameterArrays();
     jmolView = false;
@@ -1639,8 +1577,9 @@ class NBOView {
     resetCurrentOrbitalClicked();
 
     if (comboBasis1.getSelectedIndex() == BASIS_MO) {
-      if (!dialog.runPanel.cleanNBOKeylist(
-          dialog.inputFileHandler.read47File(false)[1], true).contains("CMO")) {
+      if (!dialog.runPanel
+          .cleanNBOKeylist(dialog.inputFileHandler.read47File(false)[1], true)
+          .contains("CMO")) {
         dialog.runPanel.doRunGenNBOJob("CMO");
         return null;
       }
@@ -1673,7 +1612,7 @@ class NBOView {
     if (isFileLoading) {
       return f;
     }
-    
+
     dialog.logCmd("select " + comboBasis1.getSelectedItem() + " "
         + (isBeta ? "beta" : dialog.isOpenShell() ? "alpha" : ""));
     int ibasis = comboBasis1.getSelectedIndex();
@@ -1682,10 +1621,11 @@ class NBOView {
       orbitals.loadList(tokens, list);
       return f;
     }
-    if (dialog.jmolOptionNONBO) 
+    if (dialog.jmolOptionNONBO)
       return f;
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
-       MODE_VIEW_LIST, getIbasKey(ibasis, isBeta), list, "Getting list", null, null);
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
+        MODE_VIEW_LIST, getIbasKey(ibasis, isBeta), list, "Getting list", null,
+        null);
     return null;
   }
 
@@ -1696,11 +1636,12 @@ class NBOView {
    * 
    * @param addBasis
    *        if desired, from comboBasis
+   * @param addPathAndJobStem
    * 
    * @return a new string buffer using javajs.util.SB
    * 
    */
-  protected SB getMetaHeader(boolean addBasis,boolean addPathAndJobStem) {
+  protected SB getMetaHeader(boolean addBasis, boolean addPathAndJobStem) {
     SB sb = new SB();
     if (addPathAndJobStem) {
       NBOUtil.postAddGlobalC(sb, "PATH",
@@ -1709,9 +1650,10 @@ class NBOView {
     }
     if (addBasis)
       NBOUtil.postAddGlobalI(sb, "BAS_1", 1, comboBasis1);
-    System.out.println("VIEW spin " + dialog.isOpenShell() + " " + isAlphaSpin());
-    NBOUtil.postAddGlobalI(sb, "SPIN", (!dialog.isOpenShell() ? 0
-        : isAlphaSpin() ? 1 : -1), null);
+    System.out
+        .println("VIEW spin " + dialog.isOpenShell() + " " + isAlphaSpin());
+    NBOUtil.postAddGlobalI(sb, "SPIN",
+        (!dialog.isOpenShell() ? 0 : isAlphaSpin() ? 1 : -1), null);
     return sb;
   }
 
@@ -1723,10 +1665,10 @@ class NBOView {
   private void appendCameraParams(SB sb) {
     int n = camFields.length;
     for (int i = 0; i < n; i++) {
-//      //if (!camFields[i].getText().equals(camVal[i])) {
-//        camVal[i] = camFields[i].getText();
-        NBOUtil.postAddGlobalT(sb, "CAMERA_" + camFieldIDs[i], camFields[i]);
-      }
+      //      //if (!camFields[i].getText().equals(camVal[i])) {
+      //        camVal[i] = camFields[i].getText();
+      NBOUtil.postAddGlobalT(sb, "CAMERA_" + camFieldIDs[i], camFields[i]);
+    }
   }
 
   /**
@@ -1754,7 +1696,7 @@ class NBOView {
 
     // ? needed ? sendJmolOrientation();
 
-    SB sb = getMetaHeader(true,true);
+    SB sb = getMetaHeader(true, true);
 
     int ind = orbitals.bsOn.nextSetBit(0);
 
@@ -1774,17 +1716,20 @@ class NBOView {
 
   private void appendLineParams(SB sb) {
     for (int i = 0; i < lineFields.length; i++)
-      NBOUtil.postAddGlobal(sb, "LINES_" + (char) ('a' + i), lineVal[i] = lineFields[i].getText());
+      NBOUtil.postAddGlobal(sb, "LINES_" + (char) ('a' + i),
+          lineVal[i] = lineFields[i].getText());
   }
 
   private void appendVectorParams(SB sb) {
     for (int i = 0; i < vectorFields.length; i++)
-      NBOUtil.postAddGlobal(sb, "VECTOR_" + (char) ('a' + i), vecVal[i] = vectorFields[i].getText());
+      NBOUtil.postAddGlobal(sb, "VECTOR_" + (char) ('a' + i),
+          vecVal[i] = vectorFields[i].getText());
   }
 
   private void appendPlaneParams(SB sb) {
     for (int i = 0; i < planeFields.length; i++)
-       NBOUtil.postAddGlobal(sb, "PLANE_" + (char) ('a' + i), plVal[i] = planeFields[i].getText());
+      NBOUtil.postAddGlobal(sb, "PLANE_" + (char) ('a' + i),
+          plVal[i] = planeFields[i].getText());
   }
 
   private void setJmolView(boolean is2D) {
@@ -1795,8 +1740,8 @@ class NBOView {
     for (int i = 1; i <= 3; i++) {
       String tmp2 = "";
       for (int j = 1; j <= 3; j++) {
-        Object oi = vwr.getProperty("string", "orientationInfo.rotationMatrix["
-            + j + "][" + i + "]", null);
+        Object oi = vwr.getProperty("string",
+            "orientationInfo.rotationMatrix[" + j + "][" + i + "]", null);
         tmp2 += oi.toString() + " ";
       }
       sb.append(key + i + " " + tmp2 + NBOUtil.sep);
@@ -1804,27 +1749,26 @@ class NBOView {
 
     // I do not understand why a LABEL command has to be given here. A bug? 
 
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
         NBOService.MODE_RAW, -1, null, "", "jview.txt", sb.toString());
 
-    postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1, null,
-        "Sending Jmol orientation", null, null);
+    postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1,
+        null, "Sending Jmol orientation", null, null);
 
     //    sb = getMetaHeader(true);
     //    sb.append("CMD LABEL");
     //    nboService.rawCmdNew("v", sb, MODE_RAW, null, "");
 
   }
-  
-  private void setAtomsView()
-  {
-    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
-        NBOService.MODE_RAW, -1, null, "", null,null);
-    
-    postNBO_v(NBOUtil.postAddCmd(new SB(), "AVIEW"), NBOService.MODE_RAW, -1, null,
-        "Sending Jmol orientation", null, null);
+
+  private void setAtomsView() {
+    postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
+        NBOService.MODE_RAW, -1, null, "", null, null);
+
+    postNBO_v(NBOUtil.postAddCmd(new SB(), "AVIEW"), NBOService.MODE_RAW, -1,
+        null, "Sending Jmol orientation", null, null);
   }
-  
+
   protected void createImage1or2DMultiple(boolean oneD) {
 
     //    sb = getMetaHeader(true);
@@ -1837,40 +1781,38 @@ class NBOView {
     String profileList = "";
     for (int pt = 0, i = orbitals.bsOn.nextSetBit(0); i >= 0; i = orbitals.bsOn
         .nextSetBit(i + 1)) {
-      sb = getMetaHeader(true,true);
+      sb = getMetaHeader(true, true);
       appendOrbitalPhaseSign(sb, i);
       NBOUtil.postAddCmd(sb, (oneD ? "PROFILE " : "CONTOUR ") + (i + 1));
       msg += " " + (i + 1);
       profileList += " " + (++pt);
-      postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending " + msg, null, null);
+      postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending " + msg, null,
+          null);
     }
     dialog.logCmd(msg);
-    sb = getMetaHeader(false,true);
+    sb = getMetaHeader(false, true);
     appendLineParams(sb);
     NBOUtil.postAddCmd(sb, "DRAW" + profileList);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Drawing...", null, null);
   }
 
   protected void createImage3D() {
-    if(jmolView)
-    {
-      postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true,true), "LABEL"),
+    if (jmolView) {
+      postNBO_v(NBOUtil.postAddCmd(getMetaHeader(true, true), "LABEL"),
           NBOService.MODE_RAW, -1, null, "", null, null);
-      
-      postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1, null,
-          "Sending Jmol orientation", null, null);
-    }
-    else
-    {
+
+      postNBO_v(NBOUtil.postAddCmd(new SB(), "JVIEW"), NBOService.MODE_RAW, -1,
+          null, "Sending Jmol orientation", null, null);
+    } else {
       setAtomsView();
     }
-    
+
     SB sb = new SB();
     String tmp = "View";
     String list = "";
     BS bs = orbitals.bsOn;
     for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      sb = getMetaHeader(true,true);
+      sb = getMetaHeader(true, true);
       appendOrbitalPhaseSign(sb, i);
       NBOUtil.postAddCmd(sb, "PROFILE " + (i + 1));
       postNBO_v(sb, NBOService.MODE_RAW, -1, null, "Sending profile " + (i + 1),
@@ -1882,7 +1824,7 @@ class NBOView {
     String jviewData = sb.toString();
     // BH: It turns out it is CRITICAL that if you send camera parameters, you MUST NOT SEND basis information.
     // (no idea why!)
-    sb = getMetaHeader(false,true);
+    sb = getMetaHeader(false, true);
     appendCameraParams(sb);
     NBOUtil.postAddCmd(sb, "VIEW" + list);
     postNBO_v(sb, MODE_VIEW_IMAGE, -1, null, "Raytracing...", null, jviewData);
@@ -1942,8 +1884,8 @@ class NBOView {
       case BASIS_NHO: {
         String sat1 = vwr.ms.at[at1 - 1].getElementSymbol() + at1;
         String sat2 = vwr.ms.at[at2 - 1].getElementSymbol() + at2;
-        showOrbital(nextOrbitalForBondPick(sat1 + "(" + sat2 + ")", sat2 + "("
-            + at1 + ")"));
+        showOrbital(nextOrbitalForBondPick(sat1 + "(" + sat2 + ")",
+            sat2 + "(" + at1 + ")"));
       }
         break;
       case BASIS_PNBO:
@@ -1954,7 +1896,8 @@ class NBOView {
       case BASIS_NLMO: {
         String sat1 = vwr.ms.at[at1 - 1].getElementSymbol() + at1;
         String sat2 = vwr.ms.at[at2 - 1].getElementSymbol() + at2;
-        showOrbital(nextOrbitalForBondPick(sat1 + "-" + sat2, sat2 + "-" + sat1));
+        showOrbital(
+            nextOrbitalForBondPick(sat1 + "-" + sat2, sat2 + "-" + sat1));
       }
         break;
       }
@@ -2039,7 +1982,7 @@ class NBOView {
       return;
     clearLabelSet();
     video.setVisible(true);
-    if(videoDialog!=null)
+    if (videoDialog != null)
       videoDialog.dispose();
     centerBox.setVisible(true);
     bottomBox.setVisible(!dialog.jmolOptionNONBO);
@@ -2064,8 +2007,7 @@ class NBOView {
     int ibas = comboBasis1.getSelectedIndex();
     if (type.charAt(0) == 'P')
       type = type.substring(1);
-    boolean isBeta = dialog.isOpenShell() && !isAlphaSpin()
-        && betaList != null;
+    boolean isBeta = dialog.isOpenShell() && !isAlphaSpin() && betaList != null;
     try {
       boolean needab = (getIbasKey(ibas, true) != getIbasKey(ibas, false));
       alphaSpin.setVisible(needab && dialog.isOpenShell()); // old
@@ -2081,12 +2023,11 @@ class NBOView {
         lineFields[i] = new JTextField(lineVal[i]);
       //fzy: Professor Frank doesn't want the parameter of camera to be reset everytime
       //a new file is being loaded.
-      if(switchModule)
-      {
+      if (switchModule) {
         for (int i = 0; i < camFields.length; i++)
           camFields[i] = new JTextField(camVal[i]);
-        
-        switchModule=false;
+
+        switchModule = false;
       }
 
       vecBox.removeAll();
@@ -2115,8 +2056,8 @@ class NBOView {
       } else {
         doSetNewBasis(false, true);
       }
-      
-//      orbitals.setModelList(list, true);
+
+      //      orbitals.setModelList(list, true);
     } catch (NullPointerException e) {
       //not a problem? dialog.log(e.getMessage() + " reading file", 'r');
       e.printStackTrace();
@@ -2138,20 +2079,18 @@ class NBOView {
     File f = doSetNewBasis(true, true);
     if (f == null)
       return;
-    dialog.loadModelFileQueued(
-        f,
-        NBOUtil.pathWithoutExtension(f.getAbsolutePath()).equals(
-            NBOUtil.pathWithoutExtension(dialog.getJmolFilename())));
+    dialog.loadModelFileQueued(f,
+        NBOUtil.pathWithoutExtension(f.getAbsolutePath())
+            .equals(NBOUtil.pathWithoutExtension(dialog.getJmolFilename())));
   }
 
   protected void showLewisStructure() {
     dialog.doSetStructure(isAlphaSpin() ? "alpha" : "beta");
   }
-  
-  protected boolean isAlphaSpin() {
-   return !(betaSpin.isVisible() && betaSpin.isSelected());
-  }
 
+  protected boolean isAlphaSpin() {
+    return !(betaSpin.isVisible() && betaSpin.isSelected());
+  }
 
   /**
    * Indicate that we have a new model and clear all bit sets.
@@ -2165,13 +2104,13 @@ class NBOView {
     clearLabelSet();
   }
 
-   class OrbitalList extends JList<String> implements ListSelectionListener,
-      MouseListener, KeyListener {
+  class OrbitalList extends JList<String>
+      implements ListSelectionListener, MouseListener, KeyListener {
 
     protected BS bsOn = new BS();
     protected BS bsNeg = new BS();
     protected BS bsKnownAlpha = new BS();
-    protected BS bsKnownBeta=new BS();
+    protected BS bsKnownBeta = new BS();
 
     public OrbitalList() {
       super();
@@ -2201,7 +2140,7 @@ class NBOView {
       addMouseListener(this);
     }
 
-    public void loadList(String[] lines, DefaultListModel<String> list) {      
+    public void loadList(String[] lines, DefaultListModel<String> list) {
       list.clear();
       for (int i = 0; i < lines.length; i++)
         list.addElement(lines[i]);
@@ -2319,21 +2258,21 @@ class NBOView {
             // just turn it on - no?
             script += "isosurface " + id + " on;";
             //script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
-              // isBeta, bsNeg.get(i));
+            // isBeta, bsNeg.get(i));
           } else {
             setKnownIsosurface(i, true);
             // create the isosurface
-            script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1,
-                isBeta, bsNeg.get(i));
+            script += NBOConfig.getJmolIsosurfaceScript(id, type, i + 1, isBeta,
+                bsNeg.get(i));
           }
         }
-//        if (bsOn.get(i)) {
-//          dialog.logCmd("...orbital " + orbitals.getModel().getElementAt(i)
-//              + (bsNeg.get(i) ? " [-]" : ""));
-//        }
+        //        if (bsOn.get(i)) {
+        //          dialog.logCmd("...orbital " + orbitals.getModel().getElementAt(i)
+        //              + (bsNeg.get(i) ? " [-]" : ""));
+        //        }
       }
       updateModelFromBitSet();
-      dialog.runScriptQueued(script);       
+      dialog.runScriptQueued(script);
     }
 
     private String updateBitSetFromModel() {
@@ -2441,15 +2380,15 @@ class NBOView {
       }
 
     }
-    
+
     private void setKnownIsosurface(int i, boolean isON) {
-      (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).setBitTo(i,  isON);      
+      (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).setBitTo(i, isON);
     }
 
     private boolean isKnownIsosurface(int i) {
       return (isAlphaSpin() ? bsKnownAlpha : bsKnownBeta).get(i);
     }
-    
+
     @Override
     public void mouseClicked(MouseEvent e) {
     }
@@ -2486,7 +2425,7 @@ class NBOView {
    *        command data
    * @param mode
    *        type of request
-   * @param ikey 
+   * @param ikey
    * @param list
    *        optional list to fill
    * @param statusMessage
@@ -2505,10 +2444,11 @@ class NBOView {
       public void run() {
         processNBO_v(req, mode, ikey, list);
       }
-    }, false, statusMessage, "v_cmd.txt", sb.toString(), dataFileName, fileData);
+    }, false, statusMessage, "v_cmd.txt", sb.toString(), dataFileName,
+        fileData);
     //Added by fzy
-    if(mode==MODE_VIEW_VIDEO)
-      req.isVideoCreate=true;
+    if (mode == MODE_VIEW_VIDEO)
+      req.isVideoCreate = true;
     dialog.nboService.postToNBO(req);
   }
 
@@ -2518,7 +2458,7 @@ class NBOView {
    * 
    * @param req
    * @param mode
-   * @param ikey 
+   * @param ikey
    * @param list
    */
   protected void processNBO_v(NBORequest req, int mode, int ikey,
@@ -2526,18 +2466,18 @@ class NBOView {
     String[] lines = req.getReplyLines();
     switch (mode) {
     case MODE_VIEW_LIST:
-      file43Exists=checkIfCurrentJobStemFileExists(43);
-      file44Exists=checkIfCurrentJobStemFileExists(44);
-//      if(file43Exists && file44Exists)
-//        comboBasis1 = new JComboBox<String>(basSet);
-//      else if(file43Exists)
-//        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 11));
-//      //cannot handle the case of !file43.exists and file44.exists
-//      //in this case, we will just show [AO,PNAO,NAO,PNHO,NHO,PNBO,NBO,PNLMO,NLMO,MO] 
-//      else
-//        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 10));
-//      comboBasis1.revalidate();
-//      comboBasis1.repaint();
+      file43Exists = checkIfCurrentJobStemFileExists(43);
+      file44Exists = checkIfCurrentJobStemFileExists(44);
+      //      if(file43Exists && file44Exists)
+      //        comboBasis1 = new JComboBox<String>(basSet);
+      //      else if(file43Exists)
+      //        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 11));
+      //      //cannot handle the case of !file43.exists and file44.exists
+      //      //in this case, we will just show [AO,PNAO,NAO,PNHO,NHO,PNBO,NBO,PNLMO,NLMO,MO] 
+      //      else
+      //        comboBasis1 = new JComboBox<String>(Arrays.copyOfRange(basSet, 0, 10));
+      //      comboBasis1.revalidate();
+      //      comboBasis1.repaint();
 
       addBasisLabel(ikey, lines);
       orbitals.loadList(lines, list);
@@ -2558,99 +2498,107 @@ class NBOView {
       break;
     }
   }
-  
+
   //check if file <current jobstem.argument extension> exists in user work directory
-  private boolean checkIfCurrentJobStemFileExists(int fileExtension)
-  {
-    Path filePath=null;
-    if(fileExtension==43)
-      filePath=Paths.get(dialog.getWorkingPath(),dialog.inputFileHandler.jobStem+".43");
-    else if(fileExtension==44)
-      filePath=Paths.get(dialog.getWorkingPath(),dialog.inputFileHandler.jobStem+".44");
-    
-    File f=new File(filePath.toString());
+  private boolean checkIfCurrentJobStemFileExists(int fileExtension) {
+    Path filePath = null;
+    if (fileExtension == 43)
+      filePath = Paths.get(dialog.getWorkingPath(),
+          dialog.inputFileHandler.jobStem + ".43");
+    else if (fileExtension == 44)
+      filePath = Paths.get(dialog.getWorkingPath(),
+          dialog.inputFileHandler.jobStem + ".44");
+
+    File f = new File(filePath.toString());
     return f.exists() && !f.isDirectory();
   }
- 
-} 
+
+}
 ///////
-
-
 
 /*
  * Reference to https://stackoverflow.com/questions/16649620/is-there-a-way-to-create-one-gif-image-from-multiple-images-in-java
  */
-class GIFWriter
-{
+class GIFWriter {
   private ImageWriter gifWriter;
   private ImageWriteParam imageWriteParam;
   private IIOMetadata imageMetadata;
-  
+
   /**
    * Creates a new GifSequenceWriter
    * 
-   * @param outputStream the ImageOutputStream to be written to
-   * @param imageType one of the imageTypes specified in BufferedImage
-   * @param timeBetweenFramesInMS the time between frames in miliseconds
-   * @param loopContinuous indicates if the gif should loop repeatedly
-   * @throws IIOException if no gif ImageWriters are found
+   * @param outputStream
+   *        the ImageOutputStream to be written to
+   * @param imageType
+   *        one of the imageTypes specified in BufferedImage
+   * @param timeBetweenFramesInMS
+   *        the time between frames in miliseconds
+   * @param loopContinuous
+   *        indicates if the gif should loop repeatedly
+   * @throws IIOException
+   *         if no gif ImageWriters are found
+   * @throws IOException
    */
-  public GIFWriter(ImageOutputStream outputStream, int imageType, int timeBetweenFramesInMS, boolean loopContinuous) throws IIOException, IOException
-  {
+  public GIFWriter(ImageOutputStream outputStream, int imageType,
+      int timeBetweenFramesInMS, boolean loopContinuous)
+      throws IIOException, IOException {
     int loop;
-    gifWriter=getWriter();
-    imageWriteParam=gifWriter.getDefaultWriteParam();
-    ImageTypeSpecifier imageTypeSpecifier=ImageTypeSpecifier.createFromBufferedImageType(imageType);
-    imageMetadata=gifWriter.getDefaultImageMetadata(imageTypeSpecifier, imageWriteParam);
-    
-    String metadataFormatName=imageMetadata.getNativeMetadataFormatName();
-    IIOMetadataNode root=(IIOMetadataNode)imageMetadata.getAsTree(metadataFormatName);
-    IIOMetadataNode graphicsControlExtensionNode=getNode(root,"GraphicControlExtension");
-    
+    gifWriter = getWriter();
+    imageWriteParam = gifWriter.getDefaultWriteParam();
+    ImageTypeSpecifier imageTypeSpecifier = ImageTypeSpecifier
+        .createFromBufferedImageType(imageType);
+    imageMetadata = gifWriter.getDefaultImageMetadata(imageTypeSpecifier,
+        imageWriteParam);
+
+    String metadataFormatName = imageMetadata.getNativeMetadataFormatName();
+    IIOMetadataNode root = (IIOMetadataNode) imageMetadata
+        .getAsTree(metadataFormatName);
+    IIOMetadataNode graphicsControlExtensionNode = getNode(root,
+        "GraphicControlExtension");
+
     graphicsControlExtensionNode.setAttribute("disposalMethod", "none");
     graphicsControlExtensionNode.setAttribute("userInputFlag", "FALSE");
-    graphicsControlExtensionNode.setAttribute("transparentColorFlag","FALSE");
-    graphicsControlExtensionNode.setAttribute("delayTime",Integer.toString(timeBetweenFramesInMS/10));
-    graphicsControlExtensionNode.setAttribute("transparentColorIndex","0");
-    
-    IIOMetadataNode appExtensionsNode = getNode(root,"ApplicationExtensions");
+    graphicsControlExtensionNode.setAttribute("transparentColorFlag", "FALSE");
+    graphicsControlExtensionNode.setAttribute("delayTime",
+        Integer.toString(timeBetweenFramesInMS / 10));
+    graphicsControlExtensionNode.setAttribute("transparentColorIndex", "0");
+
+    IIOMetadataNode appExtensionsNode = getNode(root, "ApplicationExtensions");
     IIOMetadataNode child = new IIOMetadataNode("ApplicationExtension");
 
     child.setAttribute("applicationID", "NETSCAPE");
     child.setAttribute("authenticationCode", "2.0");
 
-    if(loopContinuous)
-      loop=0;
-     else
-      loop=1;
-    
-    child.setUserObject( new byte[] { 0x1, (byte) (loop & 0xFF), (byte)((loop >> 8) & 0xFF)} );
+    if (loopContinuous)
+      loop = 0;
+    else
+      loop = 1;
+
+    child.setUserObject(
+        new byte[] { 0x1, (byte) (loop & 0xFF), (byte) ((loop >> 8) & 0xFF) });
     appExtensionsNode.appendChild(child);
-    
+
     imageMetadata.setFromTree(metadataFormatName, root);
-    
+
     gifWriter.setOutput(outputStream);
     gifWriter.prepareWriteSequence(null);
   }
-  
+
   /*
    * This method returns GIF Image Writer using ImageIO.getImageWritersBySuffix("gif")
    * 
    * @return: GIF ImageWriter
    * @throws IIOException if error finding available GIF image writers
    */
-  private static ImageWriter getWriter() throws IIOException
-  {
-    Iterator<ImageWriter> iterator=ImageIO.getImageWritersBySuffix("gif");
-    if(!iterator.hasNext())
-    {
+  private static ImageWriter getWriter() throws IIOException {
+    Iterator<ImageWriter> iterator = ImageIO.getImageWritersBySuffix("gif");
+    if (!iterator.hasNext()) {
       throw new IIOException("Error finding GIF Image Writer");
     }
-    else
-    {
       return iterator.next();
-    }
+    
   }
+
   /*
    * Create and return a new child node if the requested node doesn't exist, else, return existing child node
    * 
@@ -2659,69 +2607,62 @@ class GIFWriter
    * 
    * @return: return existing child node if it exists, else return a new node with name nodeName
    */
-  private static IIOMetadataNode getNode(IIOMetadataNode root,String nodeName)
-  {
+  private static IIOMetadataNode getNode(IIOMetadataNode root,
+                                         String nodeName) {
     int i;
-    int numNodes=root.getLength();
-    for(i=0;i<numNodes;i++)
-    {
-      if(root.item(i).getNodeName().compareToIgnoreCase(nodeName)==0)
-      {
+    int numNodes = root.getLength();
+    for (i = 0; i < numNodes; i++) {
+      if (root.item(i).getNodeName().compareToIgnoreCase(nodeName) == 0) {
         return (IIOMetadataNode) root.item(i);
       }
     }
-    IIOMetadataNode newNode=new IIOMetadataNode(nodeName);
+    IIOMetadataNode newNode = new IIOMetadataNode(nodeName);
     root.appendChild(newNode);
     return newNode;
   }
-  
-  public void writeToSequence(RenderedImage image)throws IOException
-  {
-    gifWriter.writeToSequence(new IIOImage(image,null,imageMetadata), imageWriteParam);
+
+  public void writeToSequence(RenderedImage image) throws IOException {
+    gifWriter.writeToSequence(new IIOImage(image, null, imageMetadata),
+        imageWriteParam);
   }
-  
+
   /*
    * Closes GIFWriter object (finishes off the GIF). 
    * Note: This method doesn't close underlying stream
    */
-  public void close() throws IOException
-  {
+  public void close() throws IOException {
     gifWriter.endWriteSequence();
   }
-  
+
 }
 ////
 
-class BMP_File implements Comparable<BMP_File>
-{
+class BMP_File implements Comparable<BMP_File> {
   private File file;
   private int fileNum;
-  
-  public BMP_File(File file,String filename,String jobstem)
-  {
-    this.file=file;
-    
-    filename=filename.trim();
-    String splitDot[]=filename.split("\\.");
-    String splittedFilename=splitDot[0];
-    
-  
-    this.fileNum=Integer.parseInt(splittedFilename.substring(jobstem.length()+1));
+
+  public BMP_File(File file, String filename, String jobstem) {
+    this.file = file;
+
+    filename = filename.trim();
+    String splitDot[] = filename.split("\\.");
+    String splittedFilename = splitDot[0];
+
+    this.fileNum = Integer
+        .parseInt(splittedFilename.substring(jobstem.length() + 1));
   }
-  
-  public File getFile()
-  {
+
+  public File getFile() {
     return this.file;
   }
-  public int getFileNum()
-  {
+
+  public int getFileNum() {
     return this.fileNum;
   }
-  
+
   @Override
-  public int compareTo(BMP_File other)
-  {
-    return this.getFileNum()-other.getFileNum();
+  public int compareTo(BMP_File other) {
+    return this.getFileNum() - other.getFileNum();
   }
-  
+
 }

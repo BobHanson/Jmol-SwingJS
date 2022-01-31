@@ -628,6 +628,7 @@ public class Tensor {
     case TYPE_CSA:
       sortIso = true;
       typeFactor = CHEMICAL_SHIFT_ANISOTROPY_FACTOR;
+      break;
     case TYPE_MS:
       sortIso = true;
       typeFactor = MAGNETIC_SUSCEPTIBILITY_FACTOR;

@@ -364,7 +364,7 @@ abstract public class __CartesianExporter extends ___Exporter {
    * @param tempP2  
    * @param tempP3  
    */
-  protected void outputSolidPlate(P3 tempP1, P3 tempP2, P3 tempP3, short colix) {
+  protected void outputSolidPlate(P3 tempP1, P3 tempP2, P3 tempP3, @SuppressWarnings("unused") short colix) {
     // VRML/STL only
   }
 

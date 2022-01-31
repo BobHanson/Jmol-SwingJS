@@ -74,6 +74,7 @@ public class PopulationDisplay extends JPanel {
 
     populationFrames = new JCheckBox("Display Populated Conformers");
     populationFrames.addActionListener(new java.awt.event.ActionListener() {
+      @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         populationFramesActionPerformed(evt);
       }
@@ -84,7 +85,7 @@ public class PopulationDisplay extends JPanel {
     add(populationFrames, BorderLayout.EAST);
   }
 
-  private void populationFramesActionPerformed(ActionEvent evt) {
+  void populationFramesActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
     String command;
 
     if (populationFrames.isSelected()) {

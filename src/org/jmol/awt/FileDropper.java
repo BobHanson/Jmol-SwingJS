@@ -39,8 +39,6 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.List;
 
-import javax.swing.text.JTextComponent;
-
 import org.jmol.api.JmolDropEditor;
 import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;

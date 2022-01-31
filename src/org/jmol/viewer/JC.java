@@ -424,9 +424,14 @@ public final class JC {
   }
 
   public final static String NOTE_SCRIPT_FILE = "NOTE: file recognized as a script file: ";
- 
-  public final static String SCRIPT_EDITOR_IGNORE = "\1## EDITOR_IGNORE ##";
-  public final static String REPAINT_IGNORE = "\1## REPAINT_IGNORE ##";
+
+  public static final String SCRIPT_EXT = "\1##";
+  public static final String SCRIPT_STEP = SCRIPT_EXT + "SCRIPT_STEP";
+  public static final String SCRIPT_START = SCRIPT_EXT + "SCRIPT_START";
+  public static final String SCRIPT_NOENDCHECK = SCRIPT_EXT + "NOENDCHECK";
+  public final static String SCRIPT_ISEDITOR = SCRIPT_EXT + " ISEDITOR";
+  public final static String SCRIPT_EDITOR_IGNORE = SCRIPT_EXT + " EDITOR_IGNORE ##";
+  public final static String REPAINT_IGNORE = SCRIPT_EXT + " REPAINT_IGNORE ##";
   public final static String SCRIPT_GUI = "; ## GUI ##";
 
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";

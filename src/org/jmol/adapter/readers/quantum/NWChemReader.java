@@ -310,6 +310,7 @@ public class NWChemReader extends MOReader {
 
   /**
    * Reads the output coordinates section into a new AtomSet.
+   * @param thisLine 
    * @throws Exception If an error occurs.
    **/
   private void readAtoms(String thisLine) throws Exception {
@@ -1017,7 +1018,7 @@ rate(mb/s): 3.96e+02  2.06e+03  0.00e+00* 2.49e+03*
         discardLinesUntilStartsWith("--");
         purging = false;
         return rd();
-      };
+      }
       discardLinesUntilStartsWith("*");
       rd();
       purging = false;

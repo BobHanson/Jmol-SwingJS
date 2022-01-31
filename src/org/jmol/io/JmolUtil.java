@@ -381,7 +381,7 @@ public class JmolUtil {
    * 
    * @param fm
    * @param pathName
-   * @return
+   * @return byte array
    */
   public byte[] getCachedPngjBytes(FileManager fm, String pathName) {
     if (pathName.startsWith("file:///"))

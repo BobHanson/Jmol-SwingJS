@@ -505,10 +505,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
   }
 
   protected void drawEdge(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
-                          P3i sB) {
+                          @SuppressWarnings("unused") P3i sB) {
     byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
         || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT
-        : GData.ENDCAPS_SPHERICAL);
+            : GData.ENDCAPS_SPHERICAL);
     if (width == 0) {
       if (diameter == 0)
         diameter = (mesh.diameter > 0 ? mesh.diameter : iA == iB ? 7 : 3);
@@ -517,29 +517,40 @@ public abstract class MeshRenderer extends ShapeRenderer {
         tm.transformPtScr(pt1f, pt1i);
       }
       if (iA == iB) {
-//        if (isPrecision) {
-          pt1f.set(sA.x, sA.y, sA.z);
-          g3d.fillSphereBits(diameter, pt1f);
-//        } else {
-//          g3d.fillSphereI(diameter, pt1i);
-//        }
+        //        if (isPrecision) {
+        pt1f.set(sA.x, sA.y, sA.z);
+        g3d.fillSphereBits(diameter, pt1f);
+        //        } else {
+        //          g3d.fillSphereI(diameter, pt1i);
+        //        }
         return;
       }
-//      if (!isPrecision) {
-//        g3d.fillCylinder(endCap, diameter, sA, sB);
-//        return;
-//      }
+      //      if (!isPrecision) {
+      //        g3d.fillCylinder(endCap, diameter, sA, sB);
+      //        return;
+      //      }
     } else {
       pt1f.ave(vA, vB);
       tm.transformPtScr(pt1f, pt1i);
-      int mad = (int) Math.floor(Math.abs(width) * 1000);
-      diameter = (int) (vwr.tm.scaleToScreen(pt1i.z, mad));
+      if (width < 0) {
+        diameter = -1;
+      } else {
+        int mad = (int) Math.floor(Math.abs(width) * 1000);
+        diameter = (int) (vwr.tm.scaleToScreen(pt1i.z, mad));
+      }
     }
     if (diameter == 0)
       diameter = 1;
     tm.transformPt3f(vA, pt1f);
     tm.transformPt3f(vB, pt2f);
-    g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);
+    if (diameter == -1) {
+      g3d.drawLineAB(pt1f, pt2f);
+    } else if (diameter < 0) {
+      int idash = (int) -diameter;
+      g3d.drawDashedLineBits(idash<<1, idash, pt1f, pt2f);
+    } else {
+      g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);
+    }
   }
 
   protected void exportSurface(short colix) {

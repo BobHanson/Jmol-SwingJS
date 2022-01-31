@@ -47,22 +47,22 @@ public class DOMReader {
   }
 
   void run() {
-    Object info = null;
-    
-    /**
-     * ignored 
-     * 
-     * @j2sNative
-     * 
-     * 
-     */
-    {
-//      info= vwr.apiPlatform.getJsObjectInfo(aDOMNode, null, null);
-    }
-    // note that this will not work in JSmol because we don't implement the nameSpaceInfo stuff there
-    // and we cannot pass [HTMLUnknownObject]
-    if (info != null)
-      htParams.put("nameSpaceInfo", info);
+//    Object info = null;
+//    
+//    /**
+//     * ignored 
+//     * 
+//     * @j2sNative
+//     * 
+//     * 
+//     */
+//    {
+////      info= vwr.apiPlatform.getJsObjectInfo(aDOMNode, null, null);
+//    }
+//    // note that this will not work in JSmol because we don't implement the nameSpaceInfo stuff there
+//    // and we cannot pass [HTMLUnknownObject]
+//    if (info != null)
+//      htParams.put("nameSpaceInfo", info);
     // no append option here
     vwr.zap(false, true, false);
     atomSetCollection = vwr.getModelAdapter().getAtomSetCollectionFromDOM(

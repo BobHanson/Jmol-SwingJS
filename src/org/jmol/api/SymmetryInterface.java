@@ -185,7 +185,7 @@ public interface SymmetryInterface {
 
   public void setTimeReversal(int op, int val);
 
-  public void setUnitCell(float[] params, boolean setRelative);
+  public SymmetryInterface setUnitCell(float[] params, boolean setRelative);
 
   public void initializeOrientation(M3 matUnitCellOrientation);
 
@@ -234,6 +234,13 @@ public interface SymmetryInterface {
   public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
 
   public void setUnitCell(Symmetry uc);
+
+  /**
+   * 
+   * @param type "Hall" or "HM" or "ITA"
+   * @return type or null
+   */
+  String getSpaceGroupNameType(String type);
 
 //  void unitize01(T3 ptFrac);
 

@@ -302,7 +302,7 @@ abstract public class BondCollection extends AtomCollection {
    * @param minFrac
    * @param maxfrac
    * @param isFractional
-   * @return
+   * @return true if in range
    */
   protected boolean isInRange(Atom atom1, Atom atom2, float minD, float maxD,
                             boolean minFrac, boolean maxfrac,

@@ -407,7 +407,8 @@ abstract class ScriptExpr extends ScriptParam {
           }
           v = getAssocArray(i);
         } else {
-          v = getPointOrPlane(i, false, true, true, false, 3, 4, true);
+          v = getPointOrPlane(i, MODE_P34 
+              | MODE_P_ALLOW_FRACTIONAL | MODE_P_CONVERT_TO_CARTESIAN);
         }
         i = iToken;
         break;
@@ -786,12 +787,12 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.hkl:
         rpn.addX(SV.newT(instruction));
-        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, false)));
+        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null)));
         pc = iToken;
         break;
       case T.plane:
         rpn.addX(SV.newT(instruction));
-        rpn.addX(SV.newV(T.point4f, planeParameter(pc + 2)));
+        rpn.addX(SV.newV(T.point4f, planeParameter(pc + 2, false)));
         pc = iToken;
         break;
       case T.coord:
@@ -818,7 +819,7 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addX(SV.newT(instruction));
         // note that the compiler has changed all within() types to strings.
         if (s.equals("hkl")) {
-          rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, false)));
+          rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null)));
           pc = iToken;
         }
         break;
@@ -2432,7 +2433,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (st[i].tok == T.define)
         break;
     }
-    if (i == slen)// || isScriptCheck)
+    if (i == slen || chk)
       return i == slen;
     switch (st[0].tok) {
     case T.parallel:

@@ -60,6 +60,7 @@ public class FrameCounter extends JPanel {
     field = new JTextField(5);
     field.setText(String.valueOf(getFrameNumber()));
     field.addActionListener(new java.awt.event.ActionListener() {
+      @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         fieldActionPerformed(evt);
       }
@@ -69,7 +70,7 @@ public class FrameCounter extends JPanel {
     add(field, BorderLayout.CENTER);
   }
 
-  private void fieldActionPerformed(ActionEvent evt) {
+  void fieldActionPerformed(@SuppressWarnings("unused") ActionEvent evt) {
     int number = Integer.parseInt(field.getText());
     setFrameNumberChangeViewer(number);
 

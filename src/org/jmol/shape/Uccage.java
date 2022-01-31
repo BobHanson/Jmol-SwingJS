@@ -33,23 +33,6 @@ public class Uccage extends FontLineShape {
     setPropFLS(propertyName, value);
   }
   
-//  @Override
-//  public String getShapeState() {
-//    if (!ms.haveUnitCells)
-//      return "";
-//    String st = getShapeStateFL();
-//    String s = st;
-//    int iAtom = vwr.am.cai;
-//    if (iAtom >= 0)
-//      s += "  unitcell ({" + iAtom + "});\n"; 
-//    SymmetryInterface uc = vwr.getCurrentUnitCell();
-//    if (uc != null) { 
-//      s += uc.getUnitCellState();
-//      s += st; // needs to be after this state as well.
-//    }
-//    return s;
-//  }
-
   @Override
   public void initShape() {
     super.initShape();

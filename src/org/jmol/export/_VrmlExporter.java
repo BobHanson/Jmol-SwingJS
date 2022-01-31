@@ -679,7 +679,7 @@ public class _VrmlExporter extends __CartesianExporter {
     output("}\n");
   }
 
-  private void outputTriangleGeometry(T3 pt1, T3 pt2, T3 pt3, short colix) {
+  private void outputTriangleGeometry(T3 pt1, T3 pt2, T3 pt3, @SuppressWarnings("unused") short colix) {
     if (oneFace == null) {
       oneFace = new int[][] {new int[] { 0, 1, 2 }};
       threeVertices = new P3[] { tempP1, tempP2, tempP3 };

@@ -809,6 +809,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * return a conventional lattice from a primitive
    * 
    * @param latticeType  "A" "B" "C" "R" etc.
+   * @param primitiveToCrystal 
    * @return [origin va vb vc]
    */
   public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCrystal) {

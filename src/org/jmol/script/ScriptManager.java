@@ -400,7 +400,7 @@ public class ScriptManager implements JmolScriptManager {
     int pt = str.indexOf(JC.SCRIPT_GUI);
     if (pt >= 0)
       str = str.substring(0, pt);
-    else if ((pt = str.indexOf("\1##")) >= 0)
+    else if ((pt = str.indexOf(JC.SCRIPT_EXT)) >= 0)
       str = str.substring(0, pt);
 
     if (checkResume(str))
@@ -469,7 +469,7 @@ public class ScriptManager implements JmolScriptManager {
 
   @Override
   public boolean checkHalt(String str, boolean isInsert) {
-    if (str.equalsIgnoreCase("pause")) {
+    if (str.equalsIgnoreCase("pause") || str.equalsIgnoreCase("pause" + JC.SCRIPT_EXT)) {
       vwr.pauseScriptExecution();
       if (vwr.scriptEditorVisible)
         vwr.setScriptStatus("", "paused -- type RESUME to continue", 0, null);

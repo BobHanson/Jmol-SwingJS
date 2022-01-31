@@ -187,7 +187,7 @@ public interface HTML5Video extends DOMNode {
 	 * @param key
 	 * @return value or value boxed as Double or Boolean
 	 */
-	@SuppressWarnings("unused")
+	@SuppressWarnings({ "unused", "null" })
 	public static Object getProperty(HTML5Video jsvideo, String key) {
 		Object val = (/** @j2sNative 1? jsvideo[key] : */
 		null);

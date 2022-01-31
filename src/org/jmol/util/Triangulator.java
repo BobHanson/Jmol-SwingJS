@@ -2,15 +2,16 @@ package org.jmol.util;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.T3;
-
+import javajs.util.V3;
 import javajs.util.BS;
 
 public class Triangulator extends TriangleData {
 
-  
+// see also BoxInfo
 //                       Y 
 //                        4 --------4--------- 5                   
 //                       /|                   /| 
@@ -31,14 +32,67 @@ public class Triangulator extends TriangleData {
 //                Z                           
 
   public final static int[][] fullCubePolygon = new int[][] {
-    { 0, 4, 5, 3 }, { 5, 1, 0, 3 }, // back
-    { 1, 5, 6, 2 }, { 6, 2, 1, 3 }, 
-    { 2, 6, 7, 2 }, { 7, 3, 2, 3 }, // front
-    { 3, 7, 4, 2 }, { 4, 0, 3, 2 },
-    { 6, 5, 4, 0 }, { 4, 7, 6, 0 }, // top
-    { 0, 1, 2, 0 }, { 2, 3, 0, 0 }, // bottom
+    /* 0 1   */ { 0, 4, 5, 3 }, { 5, 1, 0, 3 }, // back
+    /* 2 3   */ { 1, 5, 6, 2 }, { 6, 2, 1, 3 }, 
+    /* 4 5   */ { 2, 6, 7, 2 }, { 7, 3, 2, 3 }, // front
+    /* 6 7   */ { 3, 7, 4, 2 }, { 4, 0, 3, 2 },
+    /* 8 9   */ { 6, 5, 4, 0 }, { 4, 7, 6, 0 }, // top
+    /* 10 11 */ { 0, 1, 2, 0 }, { 2, 3, 0, 0 }, // bottom
   };
 
+  /**
+   * For each corner 0-7:
+   * 
+   * {c c c t}
+   * 
+   *  where 
+   *  
+   *  c c c are the connected corners, arranged clockwise
+   *  
+   *  and
+   *  
+   *  t is the bitset of triangles associated
+   *  with faces intersecting at this corner.
+   *  
+   */
+  public final static int[][] fullCubeCorners = new int[][] {
+    { 1, 4, 3,   (3 << 0) | (3 << 6) | (3 << 10) }, // 0
+    { 0, 2, 5,   (3 << 0) | (3 << 2) | (3 << 10) }, // 1
+    { 1, 3, 6,   (3 << 2) | (3 << 4) | (3 << 10) }, // 2
+    { 2, 0, 7,   (3 << 4) | (3 << 6) | (3 << 10) }, // 3
+    { 0, 5, 7,   (3 << 0) | (3 << 6) | (3 << 8) }, // 4
+    { 1, 6, 4,   (3 << 0) | (3 << 2) | (3 << 8) }, // 5
+    { 2, 7, 5,   (3 << 2) | (3 << 4) | (3 << 8) }, // 6
+    { 3, 4, 6,   (3 << 4) | (3 << 6) | (3 << 8) }, // 7
+  };
+
+  
+  public static Lst<Object> getCellProjection(P4 plane, T3[] pts) {
+    V3 vTemp = new V3();
+    // find the point furthest from the plane
+    float d = 0, dmax = Float.MIN_VALUE;
+    int imax = 0;
+    P3[] newPts = new P3[8];
+    for (int i = 0; i < 8; i++) {
+      d = pts[i].dot(plane);
+      if (d < dmax) {
+        dmax = d;
+        imax = i;
+      }
+      Measure.getPlaneProjection(pts[i], plane, newPts[i] = new P3(), vTemp);
+    }
+    int t = fullCubeCorners[imax][3];
+    int[][]polygons = new int[6][];
+    for (int p = 0, i = 0; i < 12; i++) {
+      if ((t & Pwr2[i]) != 0) {
+        polygons[p++] = fullCubePolygon[i];
+      }
+    }
+    Lst<Object> poly = new Lst<Object>();
+    poly.addLast(newPts);
+    poly.addLast(polygons);
+    return poly;
+  }
   /**
    * a generic cell - plane intersector -- used for finding the plane through a
    * 
@@ -49,11 +103,14 @@ public class Triangulator extends TriangleData {
    * @param plane  intersecting plane, or null for a full list of all faces
    * @param vertices the vertices of the box or unit cell in canonical format
    * @param flags
-   *          0 -- polygon int[]  1 -- edges only 2 -- triangles only 3 -- both
+   *          -1 -- projection, of cell only, 0 -- polygon int[],  1 -- edges only, 2 -- triangles only 3 -- both
    * @return Lst of P3[3] triangles and P3[2] edge lines
    */
 
   public Lst<Object> intersectPlane(P4 plane, T3[] vertices, int flags) {
+    if (flags == -1 && vertices.length == 8) {
+      return getCellProjection(plane, vertices);
+    }
     Lst<Object> v = new Lst<Object>();
     P3[] edgePoints = new P3[12];
     int insideMask = 0;

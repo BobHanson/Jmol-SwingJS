@@ -112,16 +112,16 @@ class BCifDensityReader extends MapFileReader {
     return null;
   }
   
-  @SuppressWarnings("unchecked")
-  protected String getCifString(String key) {
-    Map<String, Object> map = (Map<String, Object>) thisData.get(key);
-    byte[] data = (byte[]) map.get("data");
-    Map<String, Object> encoding = (Map<String, Object>) ((Object[]) map
-        .get("encoding"))[0];
-    Object o = encoding.get("offsetEncoding");
+//  @SuppressWarnings("unchecked")
+//  protected String getCifString(String key) {
+//    Map<String, Object> map = (Map<String, Object>) thisData.get(key);
+//    byte[] data = (byte[]) map.get("data");
+//    Map<String, Object> encoding = (Map<String, Object>) ((Object[]) map
+//        .get("encoding"))[0];
+//    Object o = encoding.get("offsetEncoding");
 //    System.out.println(encoding + " " + f);
-    return null;
-  }
+//    return null;
+//  }
 
   @SuppressWarnings("unchecked")
   protected float getCifFloat(String key) {
@@ -209,7 +209,7 @@ class BCifDensityReader extends MapFileReader {
     //    readP3("_density_server_result.query_box_b", p3);
     getCifMap(isDiff ? "FO-FC" : "2FO-FC");
 
-    String test = getCifString("_volume_data_3d_info_name");
+//    String test = getCifString("_volume_data_3d_info_name");
     readCifP3("_volume_data_3d_info_axis_order", p3);
 
     //    _volume_data_3d_info.axis_order[0]                1 

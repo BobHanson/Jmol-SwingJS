@@ -321,4 +321,10 @@ public class Model {
           chains[i].groupCount);
   }
 
+  public void setSimpleCage(SymmetryInterface ucell) {
+  simpleCage = ucell;
+  float[] params = ucell.getUnitCellParams();
+  auxiliaryInfo.put("unitCellParams", params);
+  }
+
  }

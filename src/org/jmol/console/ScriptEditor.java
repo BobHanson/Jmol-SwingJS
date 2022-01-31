@@ -37,8 +37,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Map;
 
-import javajs.util.PT;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -63,9 +61,12 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
 
+import javajs.util.PT;
+
 public final class ScriptEditor extends JDialog implements JmolScriptEditorInterface, ActionListener, WindowListener {
 
   protected EditorTextPane editor;
+  private JPanel buttonPanel;
   private JButton openButton;
   private JButton closeButton;
   private JButton loadButton;
@@ -80,12 +81,17 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
   private JButton clearButton;
   private JButton stateButton;
   private JButton consoleButton;
-  
-  protected JButton stepButton;
-  protected JButton resumeButton;
+  private JButton stepButton;
+  private JButton resumeButton;
 
   private Viewer vwr;
 
+  private int state;
+
+  private final static int STATE_EDITING = 1;
+  private final static int STATE_RUNNING = 2;
+  private final static int STATE_PAUSED  = 3;
+  
   /*
    * methods sendeditorEcho, sendeditorMessage(strStatus), notifyScriptStart(),
    * notifyScriptTermination() are public in case developers want to use
@@ -134,12 +140,13 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   }
   
-  private JPanel buttonPanel = new JPanel();
-
   void layoutWindow(Container container) {
     editor = new EditorTextPane();
     editor.setDragEnabled(true);
     editor.setDropTarget(new DropTarget(editor, new FileDropper(null, vwr, this)));
+    editor.setEnabled(true);
+    editor.setDisabledTextColor(Color.DARK_GRAY);
+    buttonPanel = new JPanel();
     JScrollPane editorPane = new JScrollPane(editor);
     updateFontSize();
 
@@ -150,14 +157,11 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     loadButton = setButton(GT.$("Script"));
     checkButton = setButton(GT.$("Check"));
     topButton = setButton(PT.split(GT.$("Top[as in \"go to the top\" - (translators: remove this bracketed part]"), "[")[0]);
-    stepButton = setButton(GT.$("Step"));
     runButton = setButton(GT.$("Run"));
     pauseButton = setButton(GT.$("Pause"));
-    pauseButton.setEnabled(true);
+    stepButton = setButton(GT.$("Step"));
     resumeButton = setButton(GT.$("Resume"));
-    resumeButton.setEnabled(false);
     haltButton = setButton(GT.$("Halt"));
-    haltButton.setEnabled(false);
     clearButton = setButton(GT.$("Clear"));
     closeButton = setButton(GT.$("Close"));
     saveButton = setButton(GT.$("Save"));
@@ -193,24 +197,58 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     return b;
   }
   
-  @Override
   public void notifyScriptStart() {
-    runButton.setEnabled(false);
-    resumeButton.setEnabled(false);
-    haltButton.setEnabled(true);
-    pauseButton.setEnabled(true);
+    setState();
   }
 
-  @Override
-  public void notifyScriptTermination() {
-    runButton.setEnabled(true);
-    pauseButton.setEnabled(false);
-    resumeButton.setEnabled(false);
-    haltButton.setEnabled(false);
-    editor.editorDoc.clearHighlight();
-    editor.setCaretPosition(editor.editorDoc.getLength());
+  private void setState() {
+    if (vwr.eval.isPaused()) {
+      state = STATE_PAUSED;
+    } else if (vwr.eval.isExecuting()) {
+      state = STATE_RUNNING;
+    } else {
+      state = STATE_EDITING;
+    }
+    setEnables();
   }
 
+  private void setEnables() {
+    editor.setEnabled(state == STATE_EDITING);
+    openButton.setEnabled(state == STATE_EDITING);
+    closeButton.setEnabled(state == STATE_EDITING);
+    loadButton.setEnabled(state == STATE_EDITING);
+    topButton.setEnabled(state == STATE_EDITING);
+    fontButton.setEnabled(state == STATE_EDITING);
+    checkButton.setEnabled(state == STATE_EDITING);
+    runButton.setEnabled(state == STATE_EDITING);
+    pauseButton.setEnabled(state == STATE_RUNNING);
+    //saveButton.setEnabled(state == STATE_EDIT);
+    //saveAsButton.setEnabled(state == STATE_EDIT);
+    haltButton.setEnabled(state == STATE_RUNNING || state == STATE_PAUSED);
+    clearButton.setEnabled(state == STATE_EDITING);
+    if (stateButton != null)
+      stateButton.setEnabled(state == STATE_EDITING);
+    consoleButton.setEnabled(true);
+    stepButton.setEnabled(state == STATE_EDITING || state == STATE_PAUSED);
+    resumeButton.setEnabled(state == STATE_PAUSED);
+  }
+
+  public synchronized void notifyScriptTermination(@SuppressWarnings("unused") String msg) {
+    setState();
+    String err = vwr.eval.getErrorMessage();
+    if (err == null) {
+      editor.editorDoc.clearHighlight();
+      editor.setCaretPosition(editor.editorDoc.getLength());
+      //vwr.alert(msg);
+    } else {
+      editor.editorDoc.doHighlight(lastIndices >> 16, lastIndices & 0xFFFF,
+          attError);
+//      if (hasFocus())
+//        vwr.alert(err);
+    }
+
+  }
+  
   @Override
   public void setVisible(boolean b) {
     super.setVisible(b);
@@ -219,13 +257,11 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       editor.grabFocus();
   }
   
-  @Override
   public String getText() {
     return editor.getText();
   }
 
   
-  @Override
   public void output(String message) {
     setSaveEnabled(null);
     editor.clearContent(message);
@@ -242,31 +278,14 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     super.dispose();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.jmol.api.JmolScriptEditorInterface#notifyContext(org.jmol.script.ScriptContext, java.lang.Object[])
-   * 
-   * from org.jmol.viewer.StatusManager:
-   * 
-      if (isScriptCompletion && vwr.getMessageStyleChime()
-          && vwr.getDebugScript()) {
-        jmolCallbackListener.notifyCallback(EnumCallback.SCRIPT,
-            new Object[] { null, "script <exiting>", statusMessage,
-                Integer.valueOf(-1), strErrorMessageUntranslated });
-        strStatus = "Jmol script completed.";
-      }
-      jmolCallbackListener.notifyCallback(EnumCallback.SCRIPT,
-          new Object[] { sJmol, strStatus, statusMessage,
-              Integer.valueOf(isScriptCompletion ? -1 : msWalltime),
-              strErrorMessageUntranslated });
-   */
-  
   @Override
   public void notifyContext(ScriptContext context, Object[] data) {
-    haltButton.setEnabled(context.errorMessage == null);
-    pauseButton.setEnabled(context.errorMessage == null);
+    boolean isOK = (context.errorMessage == null);
+    haltButton.setEnabled(isOK);
+    pauseButton.setEnabled(isOK);
     resumeButton.setEnabled(false);
-    if (context.errorMessage == null)
+    setState();
+    if (isOK)
       setContext(context); 
   }
 
@@ -285,17 +304,15 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       filename = "function " + context.functionName; 
     //pcLast = context.pc;
     parsedData = editor.editorDoc.outputEcho(context.script);
-    boolean isPaused = context.executionPaused || context.executionStepping;
-    pauseButton.setEnabled(!isPaused && vwr.isScriptExecuting());
-    resumeButton.setEnabled(isPaused);
-    gotoCommand(context.pc, isPaused, attHighlight);
+    setState();
   }
-  
-  private void gotoCommand(int pt, boolean isPaused, SimpleAttributeSet attr) {    
+
+  private void gotoCommand(int pt, SimpleAttributeSet attr) {
     ScriptContext context = parsedContext;
     try {
       try {
         setVisible(true);
+        System.out.println(editor.getText());
         int pt2;
         int pt1;
         if (pt < 0) {
@@ -306,23 +323,21 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
         } else if (pt < context.getTokenCount()) {
           pt1 = context.lineIndices[pt][0];
           pt2 = context.lineIndices[pt][1];
-          //System.out.println ("cursor set to " + pt + " ispaused " + isPaused + " " + context.pc + " " + context.lineIndices.length);
+          if (pt1 == pt2 && pt1 >= 2)
+            pt1 -= 2;
         } else {
           pt1 = pt2 = editor.getDocument().getLength();
         }
-        if (isPaused) {
-          editor.setCaretPosition(pt1);
-          editor.editorDoc.doHighlight(pt1, pt2, attr);
-          //System.out.println("highlighting /" + editor.editorDoc.getText(pt1,pt2 - pt1) + "/");
-        }
-        //editor.grabFocus();
+        editor.setCaretPosition(pt1);
+        editor.editorDoc.doHighlight(pt1, pt2, attr);
       } catch (Exception e) {
+        //editor.grabFocus();
         editor.setCaretPosition(0);
         // do we care?
       }
     } catch (Error er) {
       // no. We don't.
-    }    
+    }
   }
 
   @Override
@@ -353,26 +368,19 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       return;
     }
     if (source == fontButton) {
-      if (!Viewer.isJS && !noPrefs) {
-        if (updateFont())
-          return;
-      }
-      vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
-      updateFontSize();
+      doFont();
       return;
     }
     if (source == checkButton) {
-      checkScript();
+      checkScript(0);
       return;
     }
     if (source == runButton) {
-      notifyScriptStart();
-      String s = editor.getText();
-      jmolConsole.execute(s + "\1##");
+      doRun();
       return;
     }
     if (source == pauseButton) {
-      jmolConsole.execute("!pause\1##");
+      doPause();
       return;
     }
     if (source == resumeButton) {
@@ -392,7 +400,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       return;
     }
     if (source == haltButton) {
-      vwr.haltScriptExecution();
+      doHalt();
       return;
     }
     if (source == saveButton) {
@@ -406,19 +414,69 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   }
  
-    private boolean updateFont() {
-      PreferencesDialog d = null;
-      try {
-        d = (PreferencesDialog) vwr.getProperty("DATA_API",
-            "getPreference", null);
-        if (d != null)
-          d.setFontScale(-1);
-        return true;
-      } catch (Exception ee) {
-        noPrefs = true;
-      }
-      return false;
+  private void doFont() {
+    if (!Viewer.isJS && !noPrefs) {
+      if (updateFont())
+        return;
     }
+    vwr.setConsoleFontScale((vwr.getConsoleFontScale() + 1) % 5);
+    updateFontSize();
+  }
+
+  private void doRun() {
+    notifyScriptStart();
+    String s = editor.getText();
+    jmolConsole.execute(s + JC.SCRIPT_ISEDITOR);
+  }
+
+  private void doPause() {
+    jmolConsole.execute("!pause" + JC.SCRIPT_EXT);
+    state = STATE_PAUSED;
+    setEnables();
+  }
+
+  public void doStep() {
+    boolean isPaused = vwr.eval.isPaused();
+    int pos = editor.getCaretPosition();
+    int len = editor.getText().length();
+    if (pos == len)
+      pos = 0;
+    String s = (isPaused ? "!step" + JC.SCRIPT_EXT 
+        : editor.getText()  + JC.SCRIPT_ISEDITOR + JC.SCRIPT_STEP + JC.SCRIPT_START +  pos);
+    System.out.println(s);
+    jmolConsole.execute(s);
+    state = STATE_RUNNING;
+    setEnables();
+  }
+
+  protected void doResume() {
+    //editor.clearContent();
+    jmolConsole.execute("!resume" + JC.SCRIPT_EXT);
+    setState();
+  }
+
+  private void gotoPosition(int i, int j) {
+    editor.scrollRectToVisible(new Rectangle(i, j));
+  }
+
+  private void doHalt() {
+    vwr.haltScriptExecution();
+    setState();
+  }
+
+  private boolean updateFont() {
+    PreferencesDialog d = null;
+    try {
+      d = (PreferencesDialog) vwr.getProperty("DATA_API",
+          "getPreference", null);
+      if (d != null)
+        d.setFontScale(-1);
+      return true;
+    } catch (Exception ee) {
+      noPrefs = true;
+    }
+    return false;
+  }
 
   private void saveZip(boolean isAs) {
     if (isAs) {
@@ -449,6 +507,15 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   private static String[] lastOpened = {"?.spt", null} ;
   private void doOpen() {
+    new Thread() {
+      @Override
+      public void run() {
+        open();
+      }
+    }.start();
+  }
+
+  protected void open() {
     vwr.fm.getFileDataAsString(lastOpened, -1, false, false, true);
     editor.clearContent(lastOpened[1]);
     lastOpened[1] = null;
@@ -457,15 +524,17 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
   public void gotoTop() {
     editor.setCaretPosition(0);
     editor.grabFocus();
+    editor.editorDoc.clearHighlight();
     gotoPosition(0, 0);
   }
 
-  public void checkScript() {
+  public void checkScript(int i) {
+    if (i == 0)
     parsedContext = null;
-    parseScript(editor.getText());
+    parseScript(editor.getText(), i);
   }
   
-  protected void parseScript(String text) {
+  protected void parseScript(String text, int i) {
     if (text == null || text.length() == 0) {
       parsedContext = null;
       parsedData = "";
@@ -476,29 +545,15 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       parsedData = text;
       parsedContext = (ScriptContext) vwr.getProperty("DATA_API","scriptCheck", text);
     }
-    gotoParsedLine();
+    gotoParsedLine(i);
   }
 
-  private void gotoParsedLine() {
+  private void gotoParsedLine(int i) {
     setTitle(title + " " + parsedContext.contextPath 
         + " -- " + (parsedContext.getTokenCount() < 0 ? "" : parsedContext.getTokenCount() + " commands ") 
         + (parsedContext.iCommandError < 0 ? "" : " ERROR: " + parsedContext.errorType));
-    boolean isError = (parsedContext.iCommandError >= 0);
-    gotoCommand(isError ? parsedContext.iCommandError : 0, true, isError ? attError : attHighlight);
-  }
-
-  public void doStep() {
-    boolean isPaused = vwr.getBooleanProperty("executionPaused");
-    jmolConsole.execute(isPaused ? "!step\1##" 
-        : editor.getText() + "\1##SCRIPT_STEP\n##SCRIPT_START=" +  editor.getCaretPosition());
-  }
-
-  protected void doResume() {
-    editor.clearContent();
-    jmolConsole.execute("!resume\1##");
-  }
-  private void gotoPosition(int i, int j) {
-    editor.scrollRectToVisible(new Rectangle(i, j));
+    boolean isError = (i == 0 && parsedContext.iCommandError >= 0);
+    gotoCommand(isError ? parsedContext.iCommandError : i, isError ? attError : attHighlight);
   }
 
   class EditorTextPane extends JTextPane {
@@ -521,7 +576,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
     public synchronized void clearContent(String text) {
       editorDoc.outputEcho(text);
-      parseScript(text);
+      parseScript(text, 0);
     }
     
     @Override
@@ -546,12 +601,12 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
           }
           break;
         case KeyEvent.VK_F5:
-          if (stepButton.isEnabled())
-            doStep();
+//          if (stepButton.isEnabled())
+//            doStep();
           return;
         case KeyEvent.VK_F8:
-          if (resumeButton.isEnabled())
-            doResume();
+//          if (resumeButton.isEnabled())
+//            doResume();
           return;
         }
       }
@@ -646,7 +701,6 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     }
   }
 
-  @Override
   public void setFilename(String filename) {
     this.filename = filename;
   }
@@ -668,32 +722,22 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   @Override
   public void windowOpened(WindowEvent e) {
-    // TODO
-    
   }
 
   @Override
   public void windowClosing(WindowEvent e) {
-    // TODO
-    
   }
 
   @Override
   public void windowClosed(WindowEvent e) {
-    // TODO
-    
   }
 
   @Override
   public void windowIconified(WindowEvent e) {
-    // TODO
-    
   }
 
   @Override
   public void windowDeiconified(WindowEvent e) {
-    // TODO
-    
   }
 
   @Override
@@ -703,26 +747,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   @Override
   public void windowDeactivated(WindowEvent e) {
-    // TODO
-    
   }
-
-//  @Override
-//  public void dragOver(DropTargetDragEvent dtde) {
-//    if (Logger.debugging)
-//      Logger.debug("DropOver detected...");
-//    if (processDragDrop(dtde, null))
-//      dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
-//  }
-//
-//  @Override
-//  public void dragEnter(DropTargetDragEvent dtde) {
-//    if (Logger.debugging)
-//      Logger.debug("DropEnter detected...");
-//    if (processDragDrop(dtde, null))
-//      dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
-//  }
-//
 
   @Override
   public void loadContent(String script) {
@@ -731,7 +756,6 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   @Override
   public void loadFile(String fileName) {
-    System.out.println(fileName);
     if (FileManager.isEmbeddable(fileName)) {
       try {
         setSaveEnabled(fileName);
@@ -756,15 +780,51 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   @Override
   public void notify(int msWalltime, Object[] data) {
-    if (msWalltime > 0) {
+     if (data == null) {
+      notifyThisCommand(msWalltime, attHighlight);
+      return;
+    }
+    if (msWalltime == Integer.MAX_VALUE) {
+      notifyFont(((Integer)data[0]).intValue());
+    } else if (msWalltime == 0) {
+      notifyDone();
+    } else if (msWalltime > 0) {
       // termination -- button legacy
-      notifyScriptTermination();
+      notifyScriptTermination((String) data[1]);
     } else if (msWalltime < 0) {
-      if (msWalltime == -2)
+      //if (msWalltime == -2)
+      if (msWalltime == -1) {
+        //notifyScriptTermination();
+      } else {
         notifyScriptStart();
+      }
     } else if (isVisible()
         && ((String) data[2]).length() > 0) {
       notifyContext(vwr.getScriptContext("SE notify"), data);
+    }
+    setState();
+ }
+
+  
+  private void notifyFont(int fontSize) {
+    editor.setFont(new Font("dialog", Font.PLAIN, fontSize));
+  }
+
+  private void notifyDone() {
+    state = STATE_EDITING;
+    setState();
+  }
+
+  int lastIndices;
+  
+  private void notifyThisCommand(int indices, SimpleAttributeSet att) {
+    try {
+      lastIndices = indices;
+      setState();
+      editor.editorDoc.clearHighlight();
+      editor.editorDoc.doHighlight(indices >> 16, indices & 0xFFFF, att);
+    } catch (Exception e) {
+      
     }
   }
 }

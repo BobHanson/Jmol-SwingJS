@@ -4,16 +4,15 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.util.Map;
 
-import javajs.api.GenericBinaryDocument;
-import javajs.util.DataReader;
-import javajs.util.PT;
-import javajs.util.Rdr;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.util.DataReader;
+import javajs.util.Rdr;
 
 /**
  * open a set of models residing in different files

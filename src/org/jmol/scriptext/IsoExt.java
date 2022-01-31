@@ -26,17 +26,6 @@ package org.jmol.scriptext;
 
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.adapter.readers.quantum.GenNBOReader;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
@@ -44,7 +33,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.MepCalculation;
 import org.jmol.script.SV;
@@ -68,6 +56,18 @@ import org.jmol.util.TempArray;
 import org.jmol.util.Triangulator;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.V3;
 
 public class IsoExt extends ScriptExt {
 
@@ -273,7 +273,8 @@ public class IsoExt extends ScriptExt {
     boolean isIntersect = false;
     boolean isFrame = false;
     P4 plane;
-    int tokIntersect = 0;
+    P3[] pts = null;
+    int tokIntersectBox = 0;
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int intScale = 0;
@@ -286,18 +287,213 @@ public class IsoExt extends ScriptExt {
     int[] connections = null;
     int iConnect = 0;
     int iArray = -1;
-    SymmetryInterface uc = null;
+    int iOn = -1;
+    boolean isBest = false;
+    int tok = 0;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
-      int tok = getToken(i).tok;
+      tok = getToken(i).tok;
       switch (tok) {
+      case T.intersection:
+        switch (getToken(i + (tokAt(i + 1) == T.best ? 2 : 1)).tok) {
+        case T.unitcell:
+        case T.boundbox:
+          tokIntersectBox = tok;
+          isIntersect = true;
+          continue;
+        case T.dollarsign:
+          ++i;
+          // intersection will be done in Draw
+          propertyName = "intersect";
+          propertyValue = eval.objectNameParameter(++i);
+          isIntersect = true;
+          havePoints = true;
+          break;
+        default:
+          invArg();
+        }
+        break;
+      case T.best:
+        isBest = true;
+        if (iOn == i - 1)
+          iOn++;
+        switch (tokAt(i + 1)) {
+        case T.plane:
+        case T.line:
+        case T.boundbox:
+          continue;
+        default:
+          invArg();
+        }
+        break;
+      case T.unitcell:
+      case T.boundbox:
+        // boundbox
+        // boundbox best
+        // boundbox @1 @2 @3...
+        // best boundbox @1 @2 @3....
+        // unitcell
+        // unitcell [o a b c]
+        // 
+
+        SymmetryInterface uc = null;
+        BS bs = null;
+        switch (tok) {
+        case T.boundbox:
+          switch (tokAt(i + 1)) {
+          case T.best:
+            switch (tokAt(i + 2)) {
+            case T.plane:
+            case T.line:
+              break;
+            default:
+              isBest = true;
+              i++;
+            }
+            break;
+          case T.bitset:
+          case T.expressionBegin:
+            bs = eval.getAtomsStartingAt(i + 1);
+            i = eval.iToken;
+          }
+          break;
+        case T.unitcell:
+          if (isBest)
+            invArg();
+          if (eval.isArrayParameter(i + 1)) {
+            // unitcell [o a b c]
+            uc = vwr.getSymTemp()
+                .getUnitCell(eval.getPointArray(i + 1, -1, false), false, null);
+            i = eval.iToken;
+          }
+          break;
+        }
+        if (chk)
+          break;
+        if (bs != null) {
+          if (isBest) {
+            uc = vwr.getSymTemp().getUnitCell(
+                (P3[]) vwr.getOrientation(T.unitcell, "array", bs), false,
+                null);
+          }
+        } else if (isBest) {
+          uc = vwr.getSymTemp().getUnitCell(
+              (P3[]) vwr.getOrientation(T.unitcell, "array", null), false,
+              null);
+        } else if (tok == T.unitcell) {
+          uc = vwr.getCurrentUnitCell();
+        }
+        pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
+            intScale / 100f);
+        isBest = false;
+        if (!isIntersect) {
+          if (pts == null)
+            invArg();
+          propertyName = "polygon";
+          Lst<Object> v = new Lst<Object>();
+          v.addLast(pts);
+          vwr.getTriangulator();// initialize for legacy java2script
+          v.addLast(Triangulator.fullCubePolygon);
+          propertyValue = v;
+          havePoints = true;
+          intScale = 0;
+          break;
+        }
+        if (tokAt(i + 1) == T.on) {
+          //intersection boundbox... ON ...
+          iOn = ++i;
+        }
+        break;
+      case T.line:
+      case T.hkl:
+      case T.plane:
+        boolean isProjection = (iOn == i - 1);
+        if (!havePoints && !isIntersect && tokIntersectBox == 0) {
+          // no intersection
+          if (eval.theTok == T.hkl) {
+            havePoints = true;
+            setShapeProperty(JC.SHAPE_DRAW, "plane", null);
+            Lst<P3> list = new Lst<P3>();
+            plane = eval.hklParameter(++i, list);
+            i = eval.iToken;
+            propertyName = "coords";
+            propertyValue = list;
+            break;
+          }
+          if (!isBest) {
+            // not an intersection and not isBest
+            propertyName = (tok == T.plane ? "plane" : "line");
+            iArray = i + 1;
+            break;
+          }
+          // best but no intersection
+          if (!chk && pts == null) {
+            uc = vwr.getCurrentUnitCell();
+            tokIntersectBox = (uc == null ? T.boundbox : T.unitcell);
+            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100f);
+          }
+          isIntersect = true;
+        }
+        // best or intersection
+        plane = null;
+        P3[] linePts = null;
+        switch (tok) {
+        case T.plane:
+          plane = eval.planeParameter(i, isBest);
+          break;
+        case T.hkl:
+          plane = eval.hklParameter(++i, null);
+          break;
+        case T.line:
+          if (isBest) {
+            linePts = bsToArray(eval.getAtomsStartingAt(++i));
+          } else {
+            linePts = eval.getPointArray(++i, 2, false);
+          }
+          if (linePts.length < 2)
+            invArg();
+          break;
+        }
+        i = eval.iToken;
+        havePoints = true;
+        if (chk)
+          break;
+        if (tok == T.line) {
+          linePts = Measure.getBestLineThroughPoints(linePts, -1);
+          if (tokIntersectBox != 0) {
+            V3 v = V3.newVsub(linePts[1], linePts[0]);
+            v.scale(1 / v.length());
+            linePts = Measure.getProjectedLineSegment(pts, -1, linePts[0], v,
+                null);
+          }
+          if (!isInitialized) {
+            setShapeProperty(JC.SHAPE_DRAW, "points",
+                Integer.valueOf(intScale));
+            isInitialized = true;
+          }
+          Lst<P3> l = new Lst<P3>();
+          l.addLast(linePts[0]);
+          l.addLast(linePts[1]);
+          setShapeProperty(JC.SHAPE_DRAW, "coords", l);
+          break;
+        }
+        // plane only
+        if (tokIntersectBox == 0) {
+          // plane or intersect $xxx plane
+          propertyValue = plane;
+          propertyName = "planedef";
+        } else {
+          propertyName = "polygon";
+          propertyValue = vwr.getTriangulator().intersectPlane(plane, pts, isProjection ? -1 : 0);
+          intScale = 0;
+        }
+        break;
       case T.pointgroup:
         // draw pointgroup [array  of points] CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
-        P3[] pts = (eval.isArrayParameter(++i)
-            ? eval.getPointArray(i, -1, false)
+        pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false)
             : null);
         if (pts != null) {
           i = eval.iToken + 1;
@@ -344,7 +540,7 @@ public class IsoExt extends ScriptExt {
           type = eval.optParameterAsString(i);
           break;
         }
-        float scale = (intScale == 0 ? 1 : intScale/100f);
+        float scale = (intScale == 0 ? 1 : intScale / 100f);
         int index = 0;
         if (type.length() > 0) {
           if (isFloatParameter(++i))
@@ -356,36 +552,6 @@ public class IsoExt extends ScriptExt {
           eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), type, index,
               scale, pts, center, thisId == null ? "" : thisId));
         return;
-      case T.unitcell:
-      case T.boundbox:
-        if (chk)
-          break;
-        if (tok == T.boundbox && tokAt(i + 1) == T.best) {
-          tok = T.unitcell;
-        }
-        if (tok == T.unitcell) {
-          if (eval.isArrayParameter(i + 1)) {
-            P3[] oabc = eval.getPointArray(i + 1, -1, false);
-            uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
-            i = eval.iToken;
-          } else if (tokAt(i + 1) == T.best) {
-            i++;
-            uc = vwr.getSymTemp().getUnitCell(
-                (P3[]) vwr.getOrientationText(T.unitcell, "array", null), false,
-                null);
-          } else {
-            uc = vwr.getCurrentUnitCell();
-          }
-          if (uc == null)
-            invArg();
-        }
-        Lst<Object> vp = getPlaneIntersection(tok, null, uc, intScale / 100f,
-            0);
-        intScale = 0;
-        propertyName = "polygon";
-        propertyValue = vp;
-        havePoints = true;
-        break;
       case T.connect:
         connections = new int[4];
         iConnect = 4;
@@ -422,28 +588,9 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         break;
-      case T.intersection:
-        switch (getToken(i + 1).tok) {
-        case T.unitcell:
-        case T.boundbox:
-          tokIntersect = eval.theTok;
-          isIntersect = true;
-          continue;
-        case T.dollarsign:
-          propertyName = "intersect";
-          propertyValue = eval.objectNameParameter(++i);
-          i = eval.iToken;
-          isIntersect = true;
-          havePoints = true;
-          break;
-        default:
-          invArg();
-        }
-        break;
       case T.polyhedra:
       case T.point:
       case T.polygon:
-        tok = eval.theTok;
         boolean isPoints = (tok == T.point);
         propertyName = "polygon";
         havePoints = true;
@@ -562,8 +709,8 @@ public class IsoExt extends ScriptExt {
             if (!eval.isCenterParameter(i)) {
               iSym = intParameter(i++);
               if (eval.isArrayParameter(i)) {
-            	  trans = P3.newA(eval.floatParameterSet(i, 3, 3));
-            	  i = ++eval.iToken;
+                trans = P3.newA(eval.floatParameterSet(i, 3, 3));
+                i = ++eval.iToken;
               }
             }
             Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
@@ -652,46 +799,6 @@ public class IsoExt extends ScriptExt {
         i = eval.iToken;
         havePoints = true;
         break;
-      case T.hkl:
-      case T.plane:
-        if (!havePoints && !isIntersect && tokIntersect == 0) {
-          if (eval.theTok == T.hkl) {
-            havePoints = true;
-            setShapeProperty(JC.SHAPE_DRAW, "plane", null);
-            plane = eval.hklParameter(++i, true);
-            i = eval.iToken;
-            propertyName = "coords";
-            Lst<P3> list = new Lst<P3>();
-            list.addLast(P3.newP(eval.pt1));
-            list.addLast(P3.newP(eval.pt2));
-            list.addLast(P3.newP(eval.pt3));
-            propertyValue = list;
-          } else {
-            propertyName = "plane";
-            iArray = i + 1;
-          }
-          break;
-        }
-        if (eval.theTok == T.plane) {
-          plane = eval.planeParameter(i);
-        } else {
-          plane = eval.hklParameter(++i, false);
-        }
-        i = eval.iToken;
-        if (tokIntersect != 0) {
-          if (chk)
-            break;
-          Lst<Object> vpc = getPlaneIntersection(tokIntersect, plane, uc,
-              intScale / 100f, 0);
-          intScale = 0;
-          propertyName = "polygon";
-          propertyValue = vpc;
-        } else {
-          propertyValue = plane;
-          propertyName = "planedef";
-        }
-        havePoints = true;
-        break;
       case T.linedata:
         propertyName = "lineData";
         propertyValue = eval.floatParameterSet(++i, 0, Integer.MAX_VALUE);
@@ -756,13 +863,17 @@ public class IsoExt extends ScriptExt {
       case T.font:
         // must be LAST set of parameters
         float fontSize = floatParameter(++i);
-        String fontFace = (tokAt(i + 1) == T.identifier ? paramAsStr(++i) : null);
-        String fontStyle = (tokAt(i + 1) == T.identifier ? paramAsStr(++i) : null);
-        if (tokAt(i + 1) != T.string && ++i != slen  || fontSize <= 0 || fontSize > 0xFF)
+        String fontFace = (tokAt(i + 1) == T.identifier ? paramAsStr(++i)
+            : null);
+        String fontStyle = (tokAt(i + 1) == T.identifier ? paramAsStr(++i)
+            : null);
+        if (tokAt(i + 1) != T.string && ++i != slen || fontSize <= 0
+            || fontSize > 0xFF)
           invArg();
         propertyName = "myfont";
         if (fontFace == null || fontStyle == null) {
-          Font f = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font", -1);
+          Font f = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font",
+              -1);
           if (fontFace == null)
             fontFace = f.fontFace;
           if (fontStyle == null)
@@ -824,11 +935,6 @@ public class IsoExt extends ScriptExt {
         propertyValue = Float.valueOf(floatParameter(++i));
         propertyName = "width";
         swidth = propertyName + " " + propertyValue;
-        break;
-      case T.line:
-        propertyName = "line";
-        propertyValue = Boolean.TRUE;
-        iArray = i + 1;
         break;
       case T.curve:
         propertyName = "curve";
@@ -1051,7 +1157,7 @@ public class IsoExt extends ScriptExt {
       case T.plane:
         propertyName = "plane";
         propertyValue = (tokAt(e.iToken = ++i) == T.none ? null
-            : eval.planeParameter(i));
+            : eval.planeParameter(i, false));
         break;
       case T.point:
         addShapeProperty(propertyList, "randomSeed",
@@ -1387,6 +1493,7 @@ public class IsoExt extends ScriptExt {
       return;
     int iptDisplayProperty = 0;
     boolean isDisplay = false;
+    boolean isBest = false;
     boolean isIsosurface = (iShape == JC.SHAPE_ISOSURFACE);
     boolean isPmesh = (iShape == JC.SHAPE_PMESH);
     boolean isPlot3d = (iShape == JC.SHAPE_PLOT3D);
@@ -1950,11 +2057,14 @@ public class IsoExt extends ScriptExt {
           surfaceObjectSeen = false;
         i = eval.iToken;
         break;
+      case T.best:
+        isBest = true;
+        continue;
       case T.plane:
         // plane {X, Y, Z, W}
         planeSeen = true;
         propertyName = "plane";
-        propertyValue = eval.planeParameter(i);
+        propertyValue = eval.planeParameter(i, isBest);
         i = eval.iToken;
         //if (surfaceObjectSeen)
         sbCommand.append(" plane ").append(Escape.eP4((P4) propertyValue));
@@ -2012,7 +2122,7 @@ public class IsoExt extends ScriptExt {
         // miller indices hkl
         planeSeen = true;
         propertyName = "plane";
-        propertyValue = eval.hklParameter(++i, false);
+        propertyValue = eval.hklParameter(++i, null);
         i = eval.iToken;
         sbCommand.append(" plane ").append(Escape.eP4((P4) propertyValue));
         break;
@@ -3874,7 +3984,7 @@ public class IsoExt extends ScriptExt {
         break;
       }
       // isosurface SLAB [plane]
-      plane = eval.planeParameter(++i);
+      plane = eval.planeParameter(++i, false);
       float off = (isFloatParameter(eval.iToken + 1)
           ? floatParameter(++eval.iToken)
           : Float.NaN);
@@ -4101,40 +4211,23 @@ public class IsoExt extends ScriptExt {
     return true;
   }
 
-  /**
-   * 
-   * @param type
-   *        unitcell or boundbox
-   * @param plane
-   *        plane to intersect, or null for just the full box
-   * @param scale
-   * @param uc
-   * @param flags
-   *        1 -- edges only 2 -- triangles only 3 -- both
-   * @return Vector
-   */
-  private Lst<Object> getPlaneIntersection(int type, P4 plane,
-                                           SymmetryInterface uc, float scale,
-                                           int flags) {
-    T3[] pts = null;
+  private P3[] getBoxPoints(int type, SymmetryInterface uc, BS bsAtoms,
+                                     float scale) {
     switch (type) {
     case T.unitcell:
-      if (uc == null)
-        return null;
-      pts = uc.getCanonicalCopy(scale, true);
-      break;
+      return (uc == null ? null : uc.getCanonicalCopy(scale, true));
     case T.boundbox:
-      pts = BoxInfo.getCanonicalCopy(vwr.ms.getBoxInfo().getBoundBoxVertices(),
-          scale);
-      break;
+      BoxInfo box;
+      if (bsAtoms == null) {
+        box = vwr.ms.getBoxInfo();
+      } else {
+            box = new BoxInfo();
+            vwr.calcAtomsMinMax(bsAtoms, box);
+      }
+      return BoxInfo.getCanonicalCopy(box.getBoundBoxVertices(), scale);
+    default:
+      return null;
     }
-    Triangulator t = vwr.getTriangulator(); // this instantiation forces reflection to get Triangulator class
-    if (plane != null)
-      return t.intersectPlane(plane, pts, flags);
-    Lst<Object> v = new Lst<Object>();
-    v.addLast(pts);
-    v.addLast(Triangulator.fullCubePolygon);
-    return v;
   }
 
 }

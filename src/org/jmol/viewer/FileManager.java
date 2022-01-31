@@ -51,7 +51,6 @@ import javajs.util.ZipTools;
 import org.jmol.adapter.readers.spartan.SpartanUtil;
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.Interface;
-import org.jmol.api.JmolDomReaderInterface;
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.io.FileReader;
 import org.jmol.io.JmolUtil;
@@ -359,13 +358,14 @@ public class FileManager implements BytePoster {
     return fr;
   }
 
-  Object createAtomSetCollectionFromDOM(Object DOMNode,
-                                        Map<String, Object> htParams) {
-    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReader", vwr, "file");
-    aDOMReader.set(this, vwr, DOMNode, htParams);
-    aDOMReader.run();
-    return aDOMReader.getAtomSetCollection();
-  }
+// this was never of any use
+//  Object createAtomSetCollectionFromDOM(Object DOMNode,
+//                                        Map<String, Object> htParams) {
+//    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReader", vwr, "file");
+//    aDOMReader.set(this, vwr, DOMNode, htParams);
+//    aDOMReader.run();
+//    return aDOMReader.getAtomSetCollection();
+//  }
 
   /**
    * not used in Jmol project -- will close reader

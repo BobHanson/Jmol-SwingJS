@@ -53,7 +53,7 @@ public class SmilesStereo {
   private String details;
   private SmilesSearch search;
   private Node[] jmolAtoms;
-  private String directives;
+//  private String directives;
   final public static int DEFAULT = 0;
   final public static int POLYHEDRAL = 1;           // Jmol polySMILES
   final public static int ALLENE = 2;
@@ -77,12 +77,12 @@ public class SmilesStereo {
   }
 
   SmilesStereo(int chiralClass, int chiralOrder, int atomCount, String details,
-      String directives) throws InvalidSmilesException {
+      @SuppressWarnings("unused") String directives) throws InvalidSmilesException {
     this.chiralClass = chiralClass;
     this.chiralOrder = chiralOrder;
     this.atomCount = atomCount;
     this.details = details;
-    this.directives = directives;
+//    this.directives = directives;
     if (chiralClass == POLYHEDRAL)
       getPolyhedralOrders();
   }
@@ -327,7 +327,7 @@ public class SmilesStereo {
    * @param sAtom2 allene atom
    * @param cAtoms the target atoms
    * @param isNot
-   * @return
+   * @return true if successful
    */
   public boolean setTopoCoordinates(SmilesAtom sAtom0, SmilesAtom pAtom,
                                        SmilesAtom sAtom2, Node[] cAtoms, boolean isNot) {
@@ -595,7 +595,7 @@ public class SmilesStereo {
 
   public int checkStereoForAtom(SmilesAtom pAtom, boolean isNot, boolean haveTopo) {
     Node atom1 = null, atom2 = null, atom3 = null, atom4 = null, atom5 = null, atom6 = null;
-    SmilesAtom pAtom2 = null, sAtom0 = null;
+    SmilesAtom sAtom0 = null;
     Node[] jn;
 
     Node atom0 = pAtom.getMatchingAtom();
@@ -758,7 +758,7 @@ public class SmilesStereo {
    * @param sAtom0 
    * @param pAtom
    * @param pAtom1
-   * @return
+   * @return allene atoms
    */
   public Node[] getAlleneAtoms(boolean haveTopo, SmilesAtom sAtom0, SmilesAtom pAtom, SmilesAtom pAtom1) {
     if (pAtom1 == null)
@@ -1144,7 +1144,7 @@ public class SmilesStereo {
       details = "!" + details.substring(1);
     if (details.length() == 0 || details.equals("!")) {
       for (int i = 2; i <= atomCount; i++)
-        details += (i < 10 ? i : "%" + i);
+        details += (i < 10 ? "" + i : "%" + i);
     }
     int[] temp = new int[details.length()];
     int[] ret = new int[1];

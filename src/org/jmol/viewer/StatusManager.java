@@ -280,9 +280,13 @@ public class StatusManager {
                 : lc.startsWith("jmolscript:") ? 11 : 0);
         if (pt == 0) {
           // could be a function object
+          // note that setting a function or clearing it 
+          // also clears any JmolScript callback
           if (callbackObject == null)
             jmolScriptCallbacks.remove(callback);
         } else {
+          // but setting or clearing a JmolScript callback does not have
+          // an impact on JavaScript callbacks. 
           jmolScriptCallbacks.put(callback,
               callbackFunction.substring(pt).trim());
           return;

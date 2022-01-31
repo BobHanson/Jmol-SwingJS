@@ -345,7 +345,7 @@ public class CmdExt extends ScriptExt {
    T3 lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
+     lattice = eval.getFractionalPoint(i);
      tok = tokAt(i = eval.iToken + 1);
    }
 
@@ -499,15 +499,16 @@ public class CmdExt extends ScriptExt {
 
    // OFFSET {x y z} (fractional or not) (Jmol 12.1.17)
 
-   if (offset != null)
-     eval.coordinatesAreFractional = false;
-   else if (tokAt(i) == T.offset)
+   boolean areFractional = false;
+   if (offset == null && tokAt(i) == T.offset) {
      offset = getPoint3f(++i, true);
+     areFractional = eval.coordinatesAreFractional;
+   }
    if (offset != null) {
-     if (eval.coordinatesAreFractional) {
+     if (areFractional) {
        offset.setT(eval.fractionalPoint);
        htParams.put("unitCellOffsetFractional",
-           (eval.coordinatesAreFractional ? Boolean.TRUE : Boolean.FALSE));
+           (areFractional ? Boolean.TRUE : Boolean.FALSE));
        sOptions.append( " offset {" + offset.x + " " + offset.y + " " + offset.z
            + "/1}");
      } else {
@@ -2377,7 +2378,7 @@ public class CmdExt extends ScriptExt {
             l = new Lst<SV>();
             for (int i1 = 3; --i1 >= 0;) {
               switch (tokAt(++i)) {
-              case T.leftsquare:
+          case T.leftsquare:
                 break;
               default:
                 if (eval.isCenterParameter(i)) {
@@ -2388,7 +2389,7 @@ public class CmdExt extends ScriptExt {
                   l.addLast((SV) getToken(i));
                 }
               }
-              i = eval.iToken;
+            i = eval.iToken;
             }
             if (getToken(++i).tok != T.rightsquare)
               invArg();
@@ -2595,10 +2596,10 @@ public class CmdExt extends ScriptExt {
       pt = e.centerParameter(2, null);
       break;
     case T.plane:
-      plane = e.planeParameter(1);
+      plane = e.planeParameter(1, false);
       break;
     case T.hkl:
-      plane = e.hklParameter(2, false);
+      plane = e.hklParameter(2, null);
       break;
     }
     e.checkLengthErrorPt(e.iToken + 1, 1);
@@ -5165,7 +5166,7 @@ public class CmdExt extends ScriptExt {
       len = 3;
       if (!chk && slen == len) {
         msg = paramAsStr(2);
-        msg = vwr.getOrientationText(T.getTokFromName(msg.equals("box") ? "volume" : msg.equals("rotation") ? "best" : msg), "best", null).toString();
+        msg = vwr.getOrientation(T.getTokFromName(msg.equals("box") ? "volume" : msg.equals("rotation") ? "best" : msg), "best", null).toString();
       }
       break;
     case T.rotation:
@@ -5178,7 +5179,7 @@ public class CmdExt extends ScriptExt {
     case T.translation:
     case T.moveto:
       if (!chk)
-        msg = vwr.getOrientationText(tok, null, null).toString();
+        msg = vwr.getOrientation(tok, null, null).toString();
       break;
     case T.orientation:
       len = 2;
@@ -5190,11 +5191,11 @@ public class CmdExt extends ScriptExt {
       case T.moveto:
       case T.nada:
         if (!chk)
-          msg = vwr.getOrientationText(tok, null, null).toString();
+          msg = vwr.getOrientation(tok, null, null).toString();
         break;
       default:
         name = eval.optParameterAsString(2);
-        msg = vwr.getOrientationText(T.name, name, null).toString();
+        msg = vwr.getOrientation(T.name, name, null).toString();
       }
       len = slen;
       break;
@@ -5530,7 +5531,7 @@ public class CmdExt extends ScriptExt {
       isOffset = true;
       //$FALL-THROUGH$
     case T.range:
-      pt = (T3) eval.getPointOrPlane(++i, false, true, false, true, 3, 3, true);
+      pt = eval.getFractionalPoint(++i);
       pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
       i = eval.iToken;
       break;
@@ -5551,12 +5552,13 @@ public class CmdExt extends ScriptExt {
         oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
-        pt = (T3) eval.getPointOrPlane(i, false, true, false, true, 3, 3, true);
+        pt = eval.getFractionalPoint(i);
         i = eval.iToken;
       } else {
         // backup for diameter
         i--;
       }
+      break;
     }
     mad10 = eval.getSetAxesTypeMad10(++i);
     eval.checkLast(eval.iToken);

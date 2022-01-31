@@ -184,6 +184,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
   private int crystGroup;
   
 
+  @SuppressWarnings("unused")
   @Override
   protected void processBinaryDocument() throws Exception {
     byte[] bytes = new byte[40];

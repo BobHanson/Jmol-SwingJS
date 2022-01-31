@@ -119,7 +119,6 @@ public class SiestaReader extends AtomSetCollectionReader {
   }
 
   private String fixToken(int i) {
-    String s = tokens[i];
     return PT.replaceAllCharacters(tokens[i], "_.-","").toLowerCase();
   }
   

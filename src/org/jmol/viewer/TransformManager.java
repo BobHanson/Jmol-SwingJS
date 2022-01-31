@@ -600,8 +600,8 @@ public class TransformManager {
     return 0;
   }
 
-  int angstromsToPixels(float distance) {
-    return (int) Math.floor(scalePixelsPerAngstrom * distance);
+  float angstromsToPixels(float distance) {
+    return scalePixelsPerAngstrom * distance;
   }
 
   void translateXYBy(int xDelta, int yDelta) {
@@ -2396,7 +2396,27 @@ public class TransformManager {
   BS bsSelectedAtoms;
   P3 ptOffset = new P3();
 
-  void setSelectedTranslation(BS bsAtoms, char xyz, int xy) {
+  void setSelectedTranslation(BS bsAtoms, char xyz, float xy, float x) {
+    if (!perspectiveDepth) {
+      V3 v = new V3();
+      switch (xyz) {
+      case 'X':
+      case 'x':
+        v.set(x, 0, 0);
+        break;
+      case 'Y':
+      case 'y':
+        v.set(0, x, 0);
+        break;
+      case 'Z':
+      case 'z':
+        v.set(0, 0, x);
+        break;
+      }
+      vwr.moveAtoms(null, null, matrixRotate, v, internalRotationCenter,
+          false, bsAtoms, true);
+      return;
+    }
     this.bsSelectedAtoms = bsAtoms;
     switch (xyz) {
     case 'X':

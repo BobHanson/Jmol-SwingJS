@@ -2056,13 +2056,13 @@ public class Viewer extends JmolViewer
   }
 
   public void translate(char xyz, float x, char type, BS bsAtoms) {
-    int xy = (type == '\0' ? (int) x
+    float xy = (type == '\0' ? x
         : type == '%' ? tm.percentToPixels(xyz, x)
             : tm.angstromsToPixels(x * (type == 'n' ? 10f : 1f)));
     if (bsAtoms != null) {
-      if (xy == 0)
+      if (x == 0)
         return;
-      tm.setSelectedTranslation(bsAtoms, xyz, xy);
+      tm.setSelectedTranslation(bsAtoms, xyz, xy, x);
     } else {
       switch (xyz) {
       case 'X':
@@ -2070,21 +2070,21 @@ public class Viewer extends JmolViewer
         if (type == '\0')
           tm.translateToPercent('x', x);
         else
-          tm.translateXYBy(xy, 0);
+          tm.translateXYBy((int) xy, 0);
         break;
       case 'Y':
       case 'y':
         if (type == '\0')
           tm.translateToPercent('y', x);
         else
-          tm.translateXYBy(0, xy);
+          tm.translateXYBy(0, (int) xy);
         break;
       case 'Z':
       case 'z':
         if (type == '\0')
           tm.translateToPercent('z', x);
         else
-          tm.translateZBy(xy);
+          tm.translateZBy((int) xy);
         break;
       }
     }
@@ -2177,7 +2177,7 @@ public class Viewer extends JmolViewer
    * @param bs
    * @return String or Quat or P3[]
    */
-  public Object getOrientationText(int type, String name, BS bs) {
+  public Object getOrientation(int type, String name, BS bs) {
     switch (type) {
     case T.volume:
     case T.unitcell:
@@ -2190,7 +2190,7 @@ public class Viewer extends JmolViewer
         bs = bsA();
       if (bs.isEmpty())
         return (type == T.volume ? "0"
-            : type == T.unitcell ? null : new Quat());
+            : type == T.unitcell || type == T.best ? null : new Quat());
       Object q = ms.getBoundBoxOrientation(type, bs);
       return (name == "best" && type != T.volume
           ? ((Quat) q).div(tm.getRotationQ())
@@ -2769,11 +2769,12 @@ public class Viewer extends JmolViewer
           fileName, reader, setLoadParameters(htParams, isAppend));
 
     } else {
-
-      // 4) a DOM reader (could be used by Jmol) 
-
-      atomSetCollection = fm.createAtomSetCollectionFromDOM(reader,
-          setLoadParameters(htParams, isAppend));
+      return "ERROR - invalid reader";
+//
+//      // 4) a DOM reader (could be used by Jmol) 
+//
+//      atomSetCollection = fm.createAtomSetCollectionFromDOM(reader,
+//          setLoadParameters(htParams, isAppend));
 
     }
 
@@ -10472,6 +10473,5 @@ public class Viewer extends JmolViewer
       return "";
     }
   }
-
 
 }

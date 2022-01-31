@@ -36,6 +36,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.api.JmolWriter;
+import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
@@ -1169,7 +1170,8 @@ public class PropertyManager implements JmolPropertyManager {
   @Override
   public String getModelExtract(BS bs, boolean doTransform, boolean isModelKit,
                                 String type, boolean allTrajectories) {
-    
+    if (bs.nextSetBit(0) < 0)
+      return "";
     String uc = type.toUpperCase();
     if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWMAT;"))
       return getModel(uc, bs, null, null);
@@ -1454,13 +1456,20 @@ public class PropertyManager implements JmolPropertyManager {
   public Lst<Map<String, Object>> getAllAtomInfo(BS bs) {
     Lst<Map<String, Object>> V = new  Lst<Map<String, Object>>();
     P3 ptTemp = new P3();
+    int imodel = -1;
+    SymmetryInterface ucell = null;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      V.addLast(getAtomInfoLong(i, ptTemp));
+      int mi = vwr.ms.at[i].getModelIndex();
+      if (mi != imodel) {
+        ucell = vwr.ms.getUnitCell(mi);
+        imodel = mi;
+      }
+      V.addLast(getAtomInfoLong(i, ptTemp, ucell));
     }
     return V;
   }
 
-  private Map<String, Object> getAtomInfoLong(int i, P3 ptTemp) {
+  private Map<String, Object> getAtomInfoLong(int i, P3 ptTemp, SymmetryInterface ucell) {
     ModelSet ms = vwr.ms;
     Atom atom = ms.at[i];
     Map<String, Object> info = new Hashtable<String, Object>();
@@ -1470,6 +1479,13 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("x", Float.valueOf(atom.x));
     info.put("y", Float.valueOf(atom.y));
     info.put("z", Float.valueOf(atom.z));
+    if (ucell != null) {
+      ptTemp.setT(atom);
+      ucell.toFractional(ptTemp, true);
+      info.put("fx", Float.valueOf(ptTemp.x));
+      info.put("fy", Float.valueOf(ptTemp.y));
+      info.put("fz", Float.valueOf(ptTemp.z));
+    }
     info.put("coord", P3.newP(atom));
     if (ms.vibrations != null && ms.vibrations[i] != null)
       ms.vibrations[i].getInfo(info);

@@ -1372,7 +1372,7 @@ public class SymmetryDesc {
       type = returnType;
     }
     if (nth > 0 && isList)
-      info = (Object[]) ((Object[]) info)[0];
+      info = (Object[]) info[0];
     return getInfo(info, type);
   }
 

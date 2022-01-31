@@ -83,7 +83,7 @@ public class AjaxURLConnection extends HttpURLConnection {
 		return null;
 	}
 
-	@SuppressWarnings("unused")
+	@SuppressWarnings({ "unused", "null" })
 	@Override
 	public Map<String, List<String>> getHeaderFields() {
 		Map<String, List<String>> map = new HashMap<>();
@@ -329,7 +329,8 @@ public class AjaxURLConnection extends HttpURLConnection {
 									 */
 			null);
 			if (formData instanceof Map<?, ?>) {
-				Map<String, Object> data = (Map<String, Object>) formData;
+				@SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) formData;
 				for (Entry<String, Object> e : data.entrySet()) {
 					String key = e.getKey();
 					Object val = e.getValue();
@@ -475,7 +476,7 @@ public class AjaxURLConnection extends HttpURLConnection {
 	/**
 	 * We have to consider that POST is not
 	 */
-	private boolean doCache() {
+	boolean doCache() {
 		if (!useCaches || !getRequestMethod().equals("POST")) {
 			return useCaches;
 		}
@@ -492,7 +493,7 @@ public class AjaxURLConnection extends HttpURLConnection {
 		@SuppressWarnings("unused")
 		URL url = this.url;
 		if (data instanceof byte[]) {
-			/** @j2sNative url._streamData = data */;
+			/** @j2sNative url._streamData = data */
 		}
 		boolean isAjax = /** @j2sNative url.ajax || */
 				false;
@@ -523,8 +524,8 @@ public class AjaxURLConnection extends HttpURLConnection {
 		return bis;
 	}
 
-	@SuppressWarnings("unused")
-	private void setCachedStream() {
+	@SuppressWarnings({ "unused", "null" })
+	void setCachedStream() {
 		Object data = /** @j2sNative this.url._streamData || */
 				null;
 		if (data != null) {
@@ -545,7 +546,7 @@ public class AjaxURLConnection extends HttpURLConnection {
 	}
 
 	@SuppressWarnings("unused")
-	private boolean isNetworkError(BufferedInputStream is) {
+	boolean isNetworkError(BufferedInputStream is) {
 		if (is != null) {
 			responseCode = HTTP_OK;
 			if (/** @j2sNative is._jsonData || */

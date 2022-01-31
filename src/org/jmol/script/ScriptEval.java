@@ -263,6 +263,7 @@ public class ScriptEval extends ScriptExpr {
   private boolean executionPaused;
   private boolean executionStepping;
   private boolean executing;
+  private boolean isEditor;
 
   private long timeBeginExecution;
   private long timeEndExecution;
@@ -713,6 +714,10 @@ public class ScriptEval extends ScriptExpr {
   public void resumePausedExecution() {
     executionPaused = false;
     executionStepping = false;
+    if (!tQuiet)
+      vwr.setScriptStatus("Jmol script resumed", errorMessage,
+          1 + (int) (timeEndExecution - timeBeginExecution), "resumed");
+
   }
 
   @Override
@@ -1022,14 +1027,14 @@ public class ScriptEval extends ScriptExpr {
     String extensions = scriptExtensions;
     if (extensions == null)
       return 0;
-    int pt = extensions.indexOf("##SCRIPT_STEP");
+    int pt = extensions.indexOf(JC.SCRIPT_STEP);
     if (pt >= 0) {
       executionStepping = true;
     }
-    pt = extensions.indexOf("##SCRIPT_START=");
+    pt = extensions.indexOf(JC.SCRIPT_START);
     if (pt < 0)
       return 0;
-    pt = PT.parseInt(extensions.substring(pt + 15));
+    pt = PT.parseInt(extensions.substring(pt + JC.SCRIPT_START.length()));
     if (pt == Integer.MIN_VALUE)
       return 0;
     for (pc = 0; pc < lineIndices.length; pc++) {
@@ -1571,6 +1576,7 @@ public class ScriptEval extends ScriptExpr {
     context.executionStepping = executionStepping;
     context.executionPaused = executionPaused;
     context.scriptExtensions = scriptExtensions;
+    context.isEditor = isEditor;
 
     context.mustResumeEval = mustResumeEval;
     context.allowJSThreads = allowJSThreads;
@@ -1625,6 +1631,7 @@ public class ScriptEval extends ScriptExpr {
     aatoken = context.restoreTokens();
     contextVariables = context.vars;
     scriptExtensions = context.scriptExtensions;
+    isEditor = context.isEditor;
 
     if (isPopContext) {
       contextPath = context.contextPath;
@@ -1981,7 +1988,14 @@ public class ScriptEval extends ScriptExpr {
           + scriptLevel + ": " + thisCommand);
     }
     refresh(false);
+    boolean doShowPC = true;
     while (executionPaused) {
+      if (!isJS) {
+        Thread.yield();
+      }
+      if (isEditor && doShowPC)
+        notifyScriptEditor(pc);
+      doShowPC = false;
       vwr.popHoldRepaint("pause " + JC.REPAINT_IGNORE);
       // does not actually do a repaint
       // but clears the way for interaction
@@ -2003,7 +2017,8 @@ public class ScriptEval extends ScriptExpr {
           setErrorMessage(null);
         }
         restoreScriptContext(scSave, true, false, false);
-        pauseExecution(false);
+        if (!script.startsWith("resume\1") && !script.startsWith("step\1"))
+          pauseExecution(false);
       }
       doDelay(ScriptDelayThread.PAUSE_DELAY);
       // JavaScript will not reach this point, 
@@ -2058,7 +2073,7 @@ public class ScriptEval extends ScriptExpr {
    * provides support for the script editor
    * 
    * @param i
-   * @return true if displayable
+   * @return true if displayable (not a } )
    */
   private boolean isCommandDisplayable(int i) {
     if (i >= aatoken.length || i >= pcEnd || aatoken[i] == null)
@@ -2177,11 +2192,9 @@ public class ScriptEval extends ScriptExpr {
   @Override
   public void notifyResumeStatus() {
     if (!chk && !executionStopped && !executionStepping && !executionPaused) {
-      vwr.scriptStatus("script execution "
-          + (error || executionStopped ? "interrupted" : "resumed"));
+      boolean isInterrupt = (error || executionStopped);
+      vwr.scriptStatus("script execution " + (isInterrupt ? "interrupted" : "resumed"));
     }
-    if (Logger.debugging)
-      Logger.debug("script execution resumed");
   }
 
   /**
@@ -2292,6 +2305,7 @@ public class ScriptEval extends ScriptExpr {
       Logger.info("-----");
     }
 
+    boolean isFirst = true;
     for (; pc < aatoken.length && pc < pcEnd; pc++) {
       if (allowJSInterrupt) {
         // every 1 s check for interruptions
@@ -2301,8 +2315,9 @@ public class ScriptEval extends ScriptExpr {
         }
         lastTime = System.currentTimeMillis();
       }
-      if (!chk && !checkContinue())
+      if (!chk && (!executionStepping || !isFirst) && !checkContinue())
         break;
+      isFirst = false;
       if (pc >= lineNumbers.length || lineNumbers[pc] > lineEnd)
         break;
       if (debugHigh) {
@@ -2334,8 +2349,9 @@ public class ScriptEval extends ScriptExpr {
           runScript(script);
       }
       if (!setStatement(aatoken[pc], 1)) {
-        Logger.info(getCommand(pc, true, false)
-            + " -- STATEMENT CONTAINING @{} SKIPPED");
+        // chk cannot process @{...}
+//        Logger.info(getCommand(pc, true, false)
+//            + " -- STATEMENT CONTAINING @{} SKIPPED");
         continue;
       }
       thisCommand = getCommand(pc, false, true);
@@ -2372,6 +2388,14 @@ public class ScriptEval extends ScriptExpr {
           vwr.log(thisCommand);
         if (debugHigh && theToken != null)
           Logger.debug(theToken.toString());
+        if (!isJS && isEditor && scriptLevel == 0) { 
+          notifyScriptEditor(pc);
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) {
+            // TODO
+          }
+        }
       }
       if (theToken == null)
         continue;
@@ -2397,7 +2421,7 @@ public class ScriptEval extends ScriptExpr {
         }
         processCommand(tok);
         setCursorWait(false);
-        if (executionStepping) {
+        if (tok != T.step && executionStepping) {
           executionPaused = (isCommandDisplayable(pc + 1));
         }
       }
@@ -2407,6 +2431,11 @@ public class ScriptEval extends ScriptExpr {
   //  public void terminateAfterStep() {
   //    pc = pcEnd;
   //  }
+
+  private void notifyScriptEditor(int pc) {
+    vwr.notifyScriptEditor((lineIndices[pc][0] << 16) | lineIndices[pc][1],
+        null);
+  }
 
   private void processCommand(int tok) throws ScriptException {
     if (T.tokAttr(theToken.tok, T.shapeCommand)) {
@@ -5693,8 +5722,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.getSymTemp();
-          uc.setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 }, false);
+          uc = vwr.getSymTemp().setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 }, false);
         }
         q = uc.getQuaternionRotation(abc);
         if (q == null)
@@ -6174,11 +6202,6 @@ public class ScriptEval extends ScriptExpr {
             q.q0 = 1e-10f;
           rotAxis.setT(q.getNormal());
           endDegrees = q.getTheta(); // returns [0-180]
-//          System.out.println(q + " " + rotAxis + " " + endDegrees);
-//          if (q.q0 < 0) {
-            // greater than 180 degrees - we go the other way, in case this is a spin
-         //   endDegrees = -endDegrees;
-//          }
         }
         break;
       case T.plane:
@@ -7844,7 +7867,7 @@ public class ScriptEval extends ScriptExpr {
     P4 plane = null;
     String str;
     if (isCenterParameter(1) || tokAt(1) == T.point4f)
-      plane = planeParameter(1);
+      plane = planeParameter(1, false);
     else
       switch (getToken(1).tok) {
       case T.integer:
@@ -7877,9 +7900,9 @@ public class ScriptEval extends ScriptExpr {
       case T.minus:
         str = paramAsStr(2);
         if (str.equalsIgnoreCase("hkl"))
-          plane = hklParameter(3, false);
+          plane = hklParameter(3, null);
         else if (str.equalsIgnoreCase("plane"))
-          plane = planeParameter(2);
+          plane = planeParameter(2, false);
         if (plane == null)
           invArg();
         plane.scale4(-1);
@@ -7889,11 +7912,11 @@ public class ScriptEval extends ScriptExpr {
         case T.none:
           break;
         default:
-          plane = planeParameter(1);
+          plane = planeParameter(1, false);
         }
         break;
       case T.hkl:
-        plane = (getToken(2).tok == T.none ? null : hklParameter(2, false));
+        plane = (getToken(2).tok == T.none ? null : hklParameter(2, null));
         break;
       case T.reference:
         // only in 11.2; deprecated

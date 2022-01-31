@@ -46,7 +46,6 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 public class VaspOutcarReader extends AtomSetCollectionReader {
 
   private String[] atomNames;
-  private boolean haveIonNames;
   private int ac = 0;
   private boolean inputOnly;
   private boolean mDsimulation = false; //this is for MD simulations

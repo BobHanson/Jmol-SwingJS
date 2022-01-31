@@ -62,7 +62,8 @@ public class SwingJSUtils {
 	public static Dimension setDim(int w, int h) {
 		String baseURI = (/** @j2sNative document.body.baseURI || */
 		null);
-		boolean isTest = (baseURI == null || baseURI.indexOf("_applet.html") >= 0);
+		@SuppressWarnings("null")
+    boolean isTest = (baseURI == null || baseURI.indexOf("_applet.html") >= 0);
 		if (!isTest)
 			return null;
 		/**
@@ -78,9 +79,10 @@ public class SwingJSUtils {
 	 * 
 	 * adaptable - here we are returning an image or a string
 	 * 
-	 * @param cl       the classname of the object to return (Image.class,
-	 *                 String.class) null for InputStream
+   * @param baseClass 
 	 * @param filename
+   * @param cl       the classname of the object to return (Image.class,
+   *                 String.class) null for InputStream
 	 * @return
 	 * 
 	 * @author hansonr
@@ -327,7 +329,7 @@ public class SwingJSUtils {
 			return nextStatePriv(this, state, level);
 		}
 
-		private static boolean nextStatePriv(Object oThis, int state, int level) {
+		static boolean nextStatePriv(Object oThis, int state, int level) {
 			StateHelper me = (StateHelper) oThis;
 			if (me.interrupted)
 				return false;
@@ -498,10 +500,7 @@ public class SwingJSUtils {
 		 * 
 		 * @param ms        delay milliseconds. if 0, then this action will be called
 		 *                  synchronously
-		 * @param id        id for this event, possibly ACTION_PERFORMED (1001), but not
-		 *                  necessarily
-		 * @param command   key for ActionEvent.getCommand()
-		 * @param listener  ActionListener to be called.
+		 * @param runnable  Runnable to be called.
 		 * @param stateNext state to run after the event is processed by the listener,
 		 *                  or UNCHANGED (Integer.MIN_VALUE) to allow listener to handle
 		 *                  this.

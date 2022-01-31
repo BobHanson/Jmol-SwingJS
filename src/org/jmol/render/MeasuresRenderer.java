@@ -171,7 +171,6 @@ public class MeasuresRenderer extends LabelsRenderer {
       mad = mad0;
     } else {
       mad = (short) m.mad;
-      //dashDots = hDashes;
       dotsOrDashes = true;
       dashDots = (mad < 0 ? null : ndots);
     }
@@ -378,6 +377,6 @@ public class MeasuresRenderer extends LabelsRenderer {
       vwr.tm.scaleToScreen((z1 + z2) / 2, mad) : mad);
     if (dotsOrDashes && (dashDots == null || dashDots == ndots))
       width = diameter;
-    return drawLine2(x1, y1, z1, x2, y2, z2, diameter);
+    return drawLine2(g3d, x1, y1, z1, x2, y2, z2, diameter);
   }
 }

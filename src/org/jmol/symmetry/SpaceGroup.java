@@ -1744,6 +1744,32 @@ class SpaceGroup {
     return op;
   }
 
+  Object info;
+  public String getNameType(String type, SymmetryInterface uc) {
+    String ret = null;
+    if (type.equals("HM")) {
+      ret = hmSymbol;
+    } else if (type.equals("ITA")) {
+      ret = intlTableNumber;
+    } else if (type.equals("Hall")) {
+      ret = hallSymbol;
+    } else {
+      ret = "?";
+    }
+    if (ret != null)
+      return ret;
+    // find the space group using canonical Seitz
+    if (info == null)
+      info = getInfo(this,hmSymbol, uc, true);
+    if (info instanceof String)
+      return null;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = (Map<String, Object>) info;
+    Object v = map.get(type.equals("Hall") ? "HallSymbol" :
+      type.equals("ITA") ? "ita" : "HermannMauguinSymbol");
+    return (v == null ? null : v.toString());
+  }
+
 //  private int[] latticeOps;
 //  public int[] getAllLatticeOps() {
 //    // presumes all lattice operations are listed at end of operations list
