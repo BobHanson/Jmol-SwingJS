@@ -428,12 +428,12 @@ public class IsoExt extends ScriptExt {
             break;
           }
           // best but no intersection
-          if (!chk && pts == null) {
+          if (!chk && tok != T.line && pts == null) {
             uc = vwr.getCurrentUnitCell();
             tokIntersectBox = (uc == null ? T.boundbox : T.unitcell);
             pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100f);
+            isIntersect = true;
           }
-          isIntersect = true;
         }
         // best or intersection
         plane = null;
