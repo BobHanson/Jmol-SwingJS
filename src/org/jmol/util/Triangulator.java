@@ -76,7 +76,7 @@ public class Triangulator extends TriangleData {
     V3 vAB = new V3();
     P3 pmin = null, pmax = null, p = new P3();
     P4 plane = new P4();
-    float dmin = Float.MAX_VALUE, dmax = -Float.MAX_VALUE;
+    float dmin = Float.MAX_VALUE, dmax = Float.MIN_VALUE;
     for (int i = 0; i < 12; i++) {
       int[] c = fullCubePolygon[i];
       if (i % 2 == 0) {
@@ -97,6 +97,9 @@ public class Triangulator extends TriangleData {
         if (d > dmax) {
           dmax = d;
           pmax = p;
+        }
+        if ((i % 2) == 0) {
+          i++;
         }
         if (dmax - dmin > 0.01f)
           break;
