@@ -830,10 +830,13 @@ public class GaussianReader extends MOReader {
   
   private void readCSATensors() throws Exception {
     rd();
-    while (rd() != null && line.indexOf("Isotropic") >= 0) {
+    rd();
+    while (line != null && line.indexOf("Isotropic") >= 0) {
       int iatom = parseIntAt(line,  0);
       String[] data = (rd() + rd() + rd()).split("=");
       addTensor(iatom, data);
+      if (rd() != null && line.indexOf("Eigen") >= 0)
+        rd();
     }
     appendLoadNote("NMR shift tensors are available for model=" + (asc.iSet + 1) + "\n using \"ellipsoids set 'csa'.");
 
