@@ -448,10 +448,10 @@ public class IsoExt extends ScriptExt {
         case T.line:
           if (isBest) {
             linePts = bsToArray(eval.getAtomsStartingAt(++i));
-          } else if (eval.isCenterParameter(++i)){
-            linePts = new P3[] { centerParameter(i), centerParameter(i + 1) };
+          } else if (eval.isCenterParameter(i + 1)){
+            linePts = new P3[] { centerParameter(++i), centerParameter(eval.iToken + 1) };
           } else {
-            linePts = eval.getPointArray(i, 2, false);
+            linePts = eval.getPointArray(++i, 2, false);
           }
           if (linePts.length < 2)
             invArg();
@@ -469,7 +469,7 @@ public class IsoExt extends ScriptExt {
             linePts = (isProjection
                 ? Measure.getProjectedLineSegment(pts, -1, linePts[0], v, null)
                 : vwr.getTriangulator().intersectLine(pts, -1, linePts[0], v));
-            if (linePts == null)
+            if (linePts == null || linePts[1] == null)
               return;
           }
           if (!isInitialized) {

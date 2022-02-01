@@ -66,6 +66,7 @@ public class Triangulator extends TriangleData {
     { 3, 4, 6,   (3 << 4) | (3 << 6) | (3 << 8) }, // 7
   };
 
+  @SuppressWarnings("null")
   public P3[] intersectLine(P3[] points, int nPoints, P3 ptA,
                                    V3 unitVector) {
     if (nPoints < 0)
@@ -76,15 +77,17 @@ public class Triangulator extends TriangleData {
     V3 vAB = new V3();
     P3 pmin = null, pmax = null, p = new P3();
     P4 plane = new P4();
-    float dmin = Float.MAX_VALUE, dmax = Float.MIN_VALUE;
+    float dmin = Float.MAX_VALUE, dmax = -Float.MAX_VALUE;
     for (int i = 0; i < 12; i++) {
       int[] c = fullCubePolygon[i];
       if (i % 2 == 0) {
         Measure.getPlaneThroughPoints(points[c[0]], points[c[1]], points[c[2]],
             v1, v2, plane);
         P3 ret = Measure.getIntersection(ptA, unitVector, plane, p, v1, v3);
-        if (ret == null)
+        if (ret == null) {
+          i++;
           continue;
+        }
         vAB.sub2(p, ptA);
       }
       if (Measure.isInTriangle(p, points[c[0]], points[c[1]], points[c[2]], v1,
@@ -107,7 +110,7 @@ public class Triangulator extends TriangleData {
       }
 
     }
-    return (pmin == null ? null : new P3[] { pmin, pmax });
+    return (pmin == null || (pmax == null || pmin.distance(pmax) < 0.001f) && (pmax = pmin) == null ? null : new P3[] { pmin, pmax });
   }
 
   private Lst<Object> getCellProjection(P4 plane, T3[] pts) {
