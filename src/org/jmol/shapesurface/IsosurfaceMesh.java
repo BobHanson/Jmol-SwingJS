@@ -1010,7 +1010,7 @@ public class IsosurfaceMesh extends Mesh {
 
   float[] getDataMinMax() { 
     float min = Float.MAX_VALUE;
-    float max = Float.MIN_VALUE;
+    float max = -Float.MAX_VALUE;
     for (int i = vvs.length; --i >= 0;) {
       float v = vvs[i];
       if (v < min)

@@ -76,7 +76,7 @@ public class Triangulator extends TriangleData {
     V3 vAB = new V3();
     P3 pmin = null, pmax = null, p = new P3();
     P4 plane = new P4();
-    float dmin = Float.MAX_VALUE, dmax = Float.MIN_VALUE;
+    float dmin = Float.MAX_VALUE, dmax = -Float.MAX_VALUE;
     for (int i = 0; i < 12; i++) {
       int[] c = fullCubePolygon[i];
       if (i % 2 == 0) {
@@ -87,7 +87,7 @@ public class Triangulator extends TriangleData {
           continue;
         vAB.sub2(p, ptA);
       }
-      if (isInTriangle(p, points[c[0]], points[c[1]], points[c[2]], v1,
+      if (Measure.isInTriangle(p, points[c[0]], points[c[1]], points[c[2]], v1,
           v2, v3)) {
         float d = unitVector.dot(vAB);
         if (d < dmin) {
@@ -98,6 +98,8 @@ public class Triangulator extends TriangleData {
           dmax = d;
           pmax = p;
         }
+        if (dmax - dmin > 0.01f)
+          break;
         p = new P3();
       }
 
@@ -105,27 +107,10 @@ public class Triangulator extends TriangleData {
     return (pmin == null ? null : new P3[] { pmin, pmax });
   }
 
-  private boolean isInTriangle(P3 p, P3 a, P3 b, P3 c, V3 v0, V3 v1, V3 v2) { 
-    // from http: //www.blackpawn.com/texts/pointinpoly/default.html 
-    // Compute   barycentric coordinates 
-    v0.sub2(c, a);
-    v1.sub2(b, a);
-    v2.sub2(p, a);
-    float dot00 = v0.dot(v0);
-    float dot01 = v0.dot(v1);
-    float dot02 = v0.dot(v2);
-    float dot11 = v1.dot(v1);
-    float dot12 = v1.dot(v2);
-    float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
-    float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-    float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
-    return (u >= 0 && v >= 0 && u + v <= 1);
-  }
-  
   private Lst<Object> getCellProjection(P4 plane, T3[] pts) {
     V3 vTemp = new V3();
     // find the point furthest from the plane
-    float d = 0, dmax = Float.MIN_VALUE;
+    float d = 0, dmax = -Float.MAX_VALUE;
     int imax = 0;
     P3[] newPts = new P3[8];
     for (int i = 0; i < 8; i++) {

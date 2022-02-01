@@ -779,7 +779,7 @@ final public class Measure {
     if (vTemp == null)
       vTemp = new V3();
     P3 pmin = null, pmax = null, p; 
-    float dmin = Float.MAX_VALUE, dmax = Float.MIN_VALUE;
+    float dmin = Float.MAX_VALUE, dmax = -Float.MAX_VALUE;
     for (int i = 0; i < points.length; i++) {
       projectOntoAxis(p = P3.newP(points[i]), ptA, unitVector, vTemp);
       float d = unitVector.dot(vTemp);
@@ -795,6 +795,23 @@ final public class Measure {
     return new P3[] { pmin, pmax };
   }
 
+  public static boolean isInTriangle(P3 p, P3 a, P3 b, P3 c, V3 v0, V3 v1, V3 v2) { 
+    // from http: //www.blackpawn.com/texts/pointinpoly/default.html 
+    // Compute   barycentric coordinates 
+    v0.sub2(c, a);
+    v1.sub2(b, a);
+    v2.sub2(p, a);
+    float dot00 = v0.dot(v0);
+    float dot01 = v0.dot(v1);
+    float dot02 = v0.dot(v2);
+    float dot11 = v1.dot(v1);
+    float dot12 = v1.dot(v2);
+    float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+    float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+    float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+    return (u >= 0 && v >= 0 && u + v <= 1);
+  }
+  
   /**
    * Calculate the best ax + by + cz + d = 0 plane through a number of points
    * using a three-step check for the best plane based on normal distance. this
