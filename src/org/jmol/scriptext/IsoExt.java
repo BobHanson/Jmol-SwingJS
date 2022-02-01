@@ -464,8 +464,11 @@ public class IsoExt extends ScriptExt {
           if (tokIntersectBox != 0) {
             V3 v = V3.newVsub(linePts[1], linePts[0]);
             v.scale(1 / v.length());
-            linePts = Measure.getProjectedLineSegment(pts, -1, linePts[0], v,
-                null);
+            linePts = (isProjection
+                ? Measure.getProjectedLineSegment(pts, -1, linePts[0], v, null)
+                : vwr.getTriangulator().intersectLine(pts, -1, linePts[0], v));
+            if (linePts == null)
+              return;
           }
           if (!isInitialized) {
             setShapeProperty(JC.SHAPE_DRAW, "points",
@@ -485,7 +488,8 @@ public class IsoExt extends ScriptExt {
           propertyName = "planedef";
         } else {
           propertyName = "polygon";
-          propertyValue = vwr.getTriangulator().intersectPlane(plane, pts, isProjection ? -1 : 0);
+          propertyValue = vwr.getTriangulator().intersectPlane(plane, pts,
+              isProjection ? -1 : 0);
           intScale = 0;
         }
         break;
