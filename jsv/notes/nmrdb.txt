@@ -1,0 +1,31 @@
+Notes
+
+The NMRDB interface was written by Luc Patini at EPFL, in Lausanne, Switzerland.
+It involves a call to http://www.nmrdb.org/tools/jmol/predict.php
+with a posted key of molfile containing the value of a valid MOL file
+
+JSpecView accepts two types of access that will trigger this call. 
+
+1) LOAD "http://SIMULATION/MOL=...mol file data..." (\n between lines)
+
+The MOL file data may be 2D (from JSME) or 3D (from Jmol). It doesn't matter, 
+because the calculation is done with a molecular graph only.  
+
+2) LOAD "http://SIMULATION/$chemicalIdentifier"
+
+In this case, JSpecView must first go to NIH and retrieve a MOL file from 
+the chemical identifier. An representative call would be:
+
+http://cactus.nci.nih.gov/chemical/structure/caffeine/file?format=sdf
+
+  
+
+
+
+
+
+
+
+
+
+

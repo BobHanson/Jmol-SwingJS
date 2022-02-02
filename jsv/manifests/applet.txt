@@ -1,0 +1,7 @@
+Main-Class: JSpecView
+Sealed: true
+Codebase: *
+Application-Name: JSpecView
+Caller-Allowable-Codebase: *
+Application-Library-Allowable-Codebase: *
+Permissions: sandbox

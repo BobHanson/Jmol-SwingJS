@@ -1,0 +1,2753 @@
+##TITLE= GC-MS info for coffee
+##JCAMP-DX= 5.0
+##DATA TYPE= LINK
+##BLOCKS=22
+##ORIGIN= Department of Chemistry, UWI, JAMAICA
+##OWNER= public domain
+##TITLE= Coffee Headspace GC/MS simulation
+##JCAMP-DX= 4.24   $$home made
+##DATA TYPE= GAS CHROMATOGRAPH
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= Public Domain
+##BLOCK ID=1
+##$MODELS=
+<Models>
+<ModelData id="GCtrace" type="MOL">
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="GC/MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="2-methylfuran (~11)" peakShape="sharp" model="1mefur.1"  xMax="11.5" xMin="10.5"    />
+<PeakData id="2" title="2-butanone (~13)" peakShape="sharp" model="2but.1"  xMax="13.4" xMin="12.5"    />
+<PeakData id="3" title="2-methylbutanal (~14)" peakShape="sharp" model="3mebut.1"  xMax="14.5" xMin="13.6"    />
+<PeakData id="4" title="2,5-dimethylfuran (~16)" peakShape="sharp" model="4dimeth.1"  xMax="16.5" xMin="15.5"    />
+<PeakData id="5" title="2,3-butanedione (~18)" peakShape="sharp" model="5butdione.1"  xMax="18.5" xMin="17.5"    />
+<PeakData id="6" title="pyrrolidine (~22)" peakShape="sharp" model="6pyrrol.1"  xMax="22.5" xMin="21.5"    />
+<PeakData id="7" title="2,3-pentanedione (~24)" peakShape="sharp" model="7pent.1"  xMax="24.4" xMin="23.5"    />
+<PeakData id="8" title="2-methylthiophene (~25)" peakShape="sharp" model="8methio.1"  xMax="25.4" xMin="24.6"    />
+<PeakData id="9" title="2-methylbutenal (~26)" peakShape="sharp" model="9mebut.1"  xMax="26.5" xMin="25.6"    />
+<PeakData id="10" title="4-methyl-2,3-pentanedione (~31)" peakShape="sharp" model="10mepent.1"  xMax="31.5" xMin="30.5"    />
+<PeakData id="11" title="3-methyl-1-hydroxybenzene (m-cresol) (~33)" peakShape="sharp" model="11mcresol.1"  xMax="33.5" xMin="32.5"    />
+<PeakData id="12" title="pyrazine (~49)" peakShape="sharp" model="12pyraz.1"  xMax="49.5" xMin="48.5"    />
+<PeakData id="13" title="furfurylmethylether (~52)" peakShape="sharp" model="13furfurme.1"  xMax="52.5" xMin="51.5"    />
+<PeakData id="14" title="2-methylpyrazine (~61)" peakShape="sharp" model="14mepyr.1"  xMax="61.5" xMin="60.5"    />
+<PeakData id="15" title="acetoin (~69)" peakShape="sharp" model="15acetoin.1"  xMax="69.5" xMin="68.5"    />
+<PeakData id="16" title="hydroxyacetone (~72)" peakShape="sharp" model="16acetol.1"  xMax="72.4" xMin="71.5"    />
+<PeakData id="17" title="2,5-dimethylpyrazine (~73)" peakShape="sharp" model="17dimepyr.1"  xMax="73.5" xMin="72.6"    />
+<PeakData id="18" title="2,6-dimethylpyrazine (~75)" peakShape="sharp" model="18dimepyr.1"  xMax="75.5" xMin="74.5"    />
+<PeakData id="19" title="furfural (~103)" peakShape="sharp" model="19furfur.1"  xMax="103.5" xMin="102.5"    />
+<PeakData id="20" title="ethyleneglycol diacetate (~107)" peakShape="sharp" model="20egdiac.1"  xMax="107.5" xMin="106.5"    />
+<PeakData id="21" title="furfuryl formate (~111)" peakShape="sharp" model="21furform.1"  xMax="111.4" xMin="110.5"    />
+<PeakData id="22" title="2-acetylfuran (~112)" peakShape="sharp" model="22acfur.1"  xMax="112.5" xMin="111.6"    />
+<PeakData id="23" title="pyrrole (~114)" peakShape="sharp" model="23pyrrole.1"  xMax="114.5" xMin="113.5"    />
+<PeakData id="24" title="furfuryl acetate (~121)" peakShape="sharp" model="24furac.1"  xMax="121.5" xMin="120.5"    />
+<PeakData id="25" title="5-methylfurfural (~128)" peakShape="sharp" model="25mefur.1"  xMax="128.5" xMin="127.5"    />
+<PeakData id="26" title="furfuryl alcohol (~150)" peakShape="sharp" model="26fufol.1"  xMax="150.5" xMin="149.5"    />
+</Peaks>
+##$URL= http://wwwchem.uwimona.edu.jm/lectures/coffee.html
+##XUNITS= ARBITRARY
+##YUNITS= ARBITRARY
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 160
+##NPOINTS= 29
+##FIRSTY= 0
+##MAXY= 100
+##MINY= 17
+##PEAK TABLE= (XY..XY)
+0,0 11,100 13,100 14,100 16,100 18,100 22,42 24,100 25,31 26,27 31,100 33,63 49,23
+52,23 61,93 69,17 72,24 73,28 75,45 103,85 107,21 111,48 112,42 114,52 117,17
+121,92 128,62 150,62 160,0
+##END= $$ end of GC Peak Table
+##TITLE= 2-methylfuran
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=2
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="methylfuran" type="MOL">
+2-methylfuran
+RL                  3D
+ Structure written by MMmdl.
+ 12 12  0  0  1  0            999 V2000
+   -0.1251   -1.3554   -0.0924 O   0  0  0  0  0  0
+    2.0569   -0.3478    0.1758 C   0  0  0  0  0  0
+    2.3775   -0.5932   -0.8366 H   0  0  0  0  0  0
+    2.4163   -1.1304    0.8439 H   0  0  0  0  0  0
+    2.5328    0.5892    0.4643 H   0  0  0  0  0  0
+   -1.4439   -1.0458    0.0366 C   0  0  0  0  0  0
+   -2.1299   -1.8461   -0.2008 H   0  0  0  0  0  0
+    0.5734   -0.2363    0.2457 C   0  0  0  0  0  0
+   -1.5975    0.2471    0.4497 C   0  0  0  0  0  0
+   -2.5367    0.7494    0.6309 H   0  0  0  0  0  0
+   -0.2831    0.7739    0.5857 C   0  0  0  0  0  0
+    0.0013    1.7694    0.8943 H   0  0  0  0  0  0
+  1  6  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2  8  1  0  0  0
+  6  7  1  0  0  0
+  6  9  2  0  0  0
+  8 11  2  0  0  0
+  9 10  1  0  0  0
+  9 11  1  0  0  0
+ 11 12  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="1mefur" type="MOL" baseModel="methylfuran" >
+2-methylfuran
+RL                  3D
+ Structure written by MMmdl.
+ 12 12  0  0  1  0            999 V2000
+   -0.1251   -1.3554   -0.0924 O   0  0  0  0  0  0
+    2.0569   -0.3478    0.1758 C   0  0  0  0  0  0
+    2.3775   -0.5932   -0.8366 H   0  0  0  0  0  0
+    2.4163   -1.1304    0.8439 H   0  0  0  0  0  0
+    2.5328    0.5892    0.4643 H   0  0  0  0  0  0
+   -1.4439   -1.0458    0.0366 C   0  0  0  0  0  0
+   -2.1299   -1.8461   -0.2008 H   0  0  0  0  0  0
+    0.5734   -0.2363    0.2457 C   0  0  0  0  0  0
+   -1.5975    0.2471    0.4497 C   0  0  0  0  0  0
+   -2.5367    0.7494    0.6309 H   0  0  0  0  0  0
+   -0.2831    0.7739    0.5857 C   0  0  0  0  0  0
+    0.0013    1.7694    0.8943 H   0  0  0  0  0  0
+  1  6  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2  8  1  0  0  0
+  6  7  1  0  0  0
+  6  9  2  0  0  0
+  8 11  2  0  0  0
+  9 10  1  0  0  0
+  9 11  1  0  0  0
+ 11 12  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~82)" peakShape="sharp" model="1mefur.1"  xMax="83" xMin="81"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 83
+##NPOINTS= 17
+##FIRSTY= 0
+##MAXY= 1000
+##MINY= 0
+##PEAK TABLE= (XY..XY)
+0,0 26,141 27,387 28,141 29,167 37,92 38,112 39,497 43,116 50,195 51,187
+52,102 53,763 54,177 81,617 82,1000 83,56
+##END= $$ end of 2-mefuran
+##TITLE= 2-butanone
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PAEAK TABLE
+##BLOCK ID=3
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= Prof Robert Lancashire
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="but2one" type="MOL">
+butan-2-one
+RL                  3D
+ Structure written by MMmdl.
+ 13 12  0  0  1  0            999 V2000
+    5.5902   -5.9954   -0.0098 C   0  0  0  0  0  0
+    7.1271   -5.9091   -0.0027 C   0  0  0  0  0  0
+    7.8194   -7.2716    0.0850 C   0  0  0  0  0  0
+    9.3407   -7.2854    0.0457 C   0  0  0  0  0  0
+    7.1866   -8.3195    0.1912 O   0  0  0  0  0  0
+    5.2127   -6.3548    0.9484 H   0  0  0  0  0  0
+    5.2280   -6.6737   -0.7850 H   0  0  0  0  0  0
+    5.1476   -5.0159   -0.1916 H   0  0  0  0  0  0
+    7.4572   -5.2961    0.8359 H   0  0  0  0  0  0
+    7.4673   -5.4129   -0.9109 H   0  0  0  0  0  0
+    9.7432   -7.2921    1.0579 H   0  0  0  0  0  0
+    9.7283   -6.4140   -0.4808 H   0  0  0  0  0  0
+    9.6923   -8.1806   -0.4661 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  6  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  9  1  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  3  5  2  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  4 13  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="2but" type="MOL" baseModel="but2one" >
+butan-2-one
+RL                  3D
+ Structure written by MMmdl.
+ 13 12  0  0  1  0            999 V2000
+    5.5902   -5.9954   -0.0098 C   0  0  0  0  0  0
+    7.1271   -5.9091   -0.0027 C   0  0  0  0  0  0
+    7.8194   -7.2716    0.0850 C   0  0  0  0  0  0
+    9.3407   -7.2854    0.0457 C   0  0  0  0  0  0
+    7.1866   -8.3195    0.1912 O   0  0  0  0  0  0
+    5.2127   -6.3548    0.9484 H   0  0  0  0  0  0
+    5.2280   -6.6737   -0.7850 H   0  0  0  0  0  0
+    5.1476   -5.0159   -0.1916 H   0  0  0  0  0  0
+    7.4572   -5.2961    0.8359 H   0  0  0  0  0  0
+    7.4673   -5.4129   -0.9109 H   0  0  0  0  0  0
+    9.7432   -7.2921    1.0579 H   0  0  0  0  0  0
+    9.7283   -6.4140   -0.4808 H   0  0  0  0  0  0
+    9.6923   -8.1806   -0.4661 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  6  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  9  1  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  3  5  2  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  4 13  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~72)" peakShape="sharp" model="2but.1"  xMax="73" xMin="71"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 26
+##LASTX= 73
+##NPOINTS= 16
+##FIRSTY= 39
+##PEAK TABLE= (XY..XY)
+26,39 27,117 28,26 29,193 39,18 41,13 42,48 43,1000 44,24 45,9 50,5 55,5 57,65
+71,9 72,241 73,12
+##END= $$ end of 2-butanone
+##TITLE= 2-methylbutanal
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=4
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="mebutanal" type="MOL">
+2-methylbutanal
+RL                  3D
+ Structure written by MMmdl.
+ 16 15  0  0  1  0            999 V2000
+    6.7088   -5.9290    0.7614 C   0  0  0  0  0  0
+    8.0891   -5.9754    0.0881 C   0  0  0  0  0  0
+    8.9772   -7.1473    0.5667 C   0  0  2  0  0  0
+   10.4186   -7.0122    0.0580 C   0  0  0  0  0  0
+    8.3985   -8.5242    0.1904 C   0  0  0  0  0  0
+   11.0305   -5.9507    0.1562 O   0  0  0  0  0  0
+    6.8004   -5.8823    1.8467 H   0  0  0  0  0  0
+    6.1055   -6.8010    0.5102 H   0  0  0  0  0  0
+    6.1543   -5.0468    0.4404 H   0  0  0  0  0  0
+    8.5934   -5.0280    0.2882 H   0  0  0  0  0  0
+    7.9637   -6.0217   -0.9947 H   0  0  0  0  0  0
+    9.0492   -7.0955    1.6533 H   0  0  0  0  0  0
+   10.8564   -7.9106   -0.3784 H   0  0  0  0  0  0
+    7.4603   -8.7126    0.7117 H   0  0  0  0  0  0
+    9.0779   -9.3332    0.4632 H   0  0  0  0  0  0
+    8.2044   -8.5975   -0.8806 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2 10  1  0  0  0
+  2 11  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+  3 12  1  0  0  0
+  4  6  2  0  0  0
+  4 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+  5 16  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="3mebut" type="MOL" baseModel="mebutanal" >
+2-methylbutanal
+RL                  3D
+ Structure written by MMmdl.
+ 16 15  0  0  1  0            999 V2000
+    6.7088   -5.9290    0.7614 C   0  0  0  0  0  0
+    8.0891   -5.9754    0.0881 C   0  0  0  0  0  0
+    8.9772   -7.1473    0.5667 C   0  0  2  0  0  0
+   10.4186   -7.0122    0.0580 C   0  0  0  0  0  0
+    8.3985   -8.5242    0.1904 C   0  0  0  0  0  0
+   11.0305   -5.9507    0.1562 O   0  0  0  0  0  0
+    6.8004   -5.8823    1.8467 H   0  0  0  0  0  0
+    6.1055   -6.8010    0.5102 H   0  0  0  0  0  0
+    6.1543   -5.0468    0.4404 H   0  0  0  0  0  0
+    8.5934   -5.0280    0.2882 H   0  0  0  0  0  0
+    7.9637   -6.0217   -0.9947 H   0  0  0  0  0  0
+    9.0492   -7.0955    1.6533 H   0  0  0  0  0  0
+   10.8564   -7.9106   -0.3784 H   0  0  0  0  0  0
+    7.4603   -8.7126    0.7117 H   0  0  0  0  0  0
+    9.0779   -9.3332    0.4632 H   0  0  0  0  0  0
+    8.2044   -8.5975   -0.8806 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2 10  1  0  0  0
+  2 11  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+  3 12  1  0  0  0
+  4  6  2  0  0  0
+  4 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+  5 16  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~86)" peakShape="sharp" model="3mebut.1"  xMax="87" xMin="85"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 87
+##NPOINTS= 17
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 27,269 28,88 29,884 39,170 41,813 42,42 43,100 53,30 55,85 56,88 57,1000
+58,654 71,44 74,43 86,152 87,30
+##END= $$ end of 2-methylbutanal
+##TITLE= 2,5-dimethylfuran
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=5
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="d25mepz" type="MOL">
+2,5-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    5.4069   -8.1290    0.9168 N   0  0  0  0  0  0
+    6.8912   -5.7032    0.8319 N   0  0  0  0  0  0
+    7.4949   -6.9146    0.8072 C   0  0  0  0  0  0
+    4.8031   -6.9177    0.9423 C   0  0  0  0  0  0
+    5.5398   -5.7106    0.8984 C   0  0  0  0  0  0
+    6.7583   -8.1217    0.8502 C   0  0  0  0  0  0
+    9.0062   -6.9184    0.7392 C   0  0  0  0  0  0
+    3.2922   -6.9146    1.0149 C   0  0  0  0  0  0
+    5.0456   -4.7503    0.9166 H   0  0  0  0  0  0
+    7.2525   -9.0821    0.8323 H   0  0  0  0  0  0
+    2.8693   -6.8963    0.0106 H   0  0  0  0  0  0
+    2.9268   -7.8052    1.5272 H   0  0  0  0  0  0
+    2.9337   -6.0398    1.5578 H   0  0  0  0  0  0
+    9.4254   -6.9209    1.7453 H   0  0  0  0  0  0
+    9.3731   -6.0358    0.2143 H   0  0  0  0  0  0
+    9.3666   -7.8017    0.2118 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  7 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="4dimeth" type="MOL" baseModel="d25mepz" >
+2,5-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    5.4069   -8.1290    0.9168 N   0  0  0  0  0  0
+    6.8912   -5.7032    0.8319 N   0  0  0  0  0  0
+    7.4949   -6.9146    0.8072 C   0  0  0  0  0  0
+    4.8031   -6.9177    0.9423 C   0  0  0  0  0  0
+    5.5398   -5.7106    0.8984 C   0  0  0  0  0  0
+    6.7583   -8.1217    0.8502 C   0  0  0  0  0  0
+    9.0062   -6.9184    0.7392 C   0  0  0  0  0  0
+    3.2922   -6.9146    1.0149 C   0  0  0  0  0  0
+    5.0456   -4.7503    0.9166 H   0  0  0  0  0  0
+    7.2525   -9.0821    0.8323 H   0  0  0  0  0  0
+    2.8693   -6.8963    0.0106 H   0  0  0  0  0  0
+    2.9268   -7.8052    1.5272 H   0  0  0  0  0  0
+    2.9337   -6.0398    1.5578 H   0  0  0  0  0  0
+    9.4254   -6.9209    1.7453 H   0  0  0  0  0  0
+    9.3731   -6.0358    0.2143 H   0  0  0  0  0  0
+    9.3666   -7.8017    0.2118 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  7 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="4dimeth.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 97
+##NPOINTS= 17
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 15,266 27,270 39,141 41,119 42,76 43,1000 50,157 51,191 52,103 53,536
+67,70 81,337 94,31 95,697 96,833 97,60
+##END= $$ end  of 2,5-dimethylfuran
+##TITLE= 2,3-butanedione
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=6
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="butdione" type="MOL">
+2,3-butanedione
+                    3D
+ Structure written by MMmdl.
+ 12 11  0  0  1  0            999 V2000
+    4.5906   -8.1086    0.0093 C   0  0  0  0  0  0
+    5.9212   -7.3627    0.0306 C   0  0  0  0  0  0
+    7.2213   -8.1932    0.0101 C   0  0  0  0  0  0
+    8.5501   -7.4450    0.0147 C   0  0  0  0  0  0
+    7.1925   -9.4246   -0.0064 O   0  0  0  0  0  0
+    5.9501   -6.1317    0.0663 O   0  0  0  0  0  0
+    4.2601   -8.3159    1.0270 H   0  0  0  0  0  0
+    4.6808   -9.0538   -0.5282 H   0  0  0  0  0  0
+    3.8307   -7.5030   -0.4835 H   0  0  0  0  0  0
+    8.8654   -7.2461    1.0385 H   0  0  0  0  0  0
+    8.4643   -6.4959   -0.5154 H   0  0  0  0  0  0
+    9.3184   -8.0441   -0.4728 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  6  2  0  0  0
+  3  4  1  0  0  0
+  3  5  2  0  0  0
+  4 10  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="5butdione" type="MOL" baseModel="butdione" >
+2,3-butanedione
+                    3D
+ Structure written by MMmdl.
+ 12 11  0  0  1  0            999 V2000
+    4.5906   -8.1086    0.0093 C   0  0  0  0  0  0
+    5.9212   -7.3627    0.0306 C   0  0  0  0  0  0
+    7.2213   -8.1932    0.0101 C   0  0  0  0  0  0
+    8.5501   -7.4450    0.0147 C   0  0  0  0  0  0
+    7.1925   -9.4246   -0.0064 O   0  0  0  0  0  0
+    5.9501   -6.1317    0.0663 O   0  0  0  0  0  0
+    4.2601   -8.3159    1.0270 H   0  0  0  0  0  0
+    4.6808   -9.0538   -0.5282 H   0  0  0  0  0  0
+    3.8307   -7.5030   -0.4835 H   0  0  0  0  0  0
+    8.8654   -7.2461    1.0385 H   0  0  0  0  0  0
+    8.4643   -6.4959   -0.5154 H   0  0  0  0  0  0
+    9.3184   -8.0441   -0.4728 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  6  2  0  0  0
+  3  4  1  0  0  0
+  3  5  2  0  0  0
+  4 10  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="5butdione.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS= m/z
+##YUNITS= relative abundance
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 87
+##NPOINTS= 15
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 26,12 27,14 28,40 29,26 31,32 32,11 41,18 42,75 43,1000 44,58 45,9 60,30
+86,272 87,12
+##END= $$ end of 2,3-butanedione
+##TITLE= pyrrolidine
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##ORIGIN=  UWI
+##OWNER= public domain
+##BLOCK ID=7
+##NAMES= NIST 1992
+##CAS NAME=Pyrrolidine
+##MOLFORM=C4H9N
+##CAS REGISTRY NO=000123-75-1
+##$EPA MASS SPEC NO=118205
+##MP= -300
+##BP= -300
+##MW= 71.073
+##$RETENTION INDEX=0
+##$CONDENSED SPECTRUM=NO
+##$MODELS=
+<Models>
+<ModelData id="pyrrolidine" type="MOL">
+pyrrolidine
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+    5.9836   -3.2102    0.6593 N   0  0  0  0  0  0
+    7.0021   -4.0984    0.1232 C   0  0  0  0  0  0
+    4.7293   -3.7377    0.1451 C   0  0  0  0  0  0
+    6.3946   -5.4861    0.3124 C   0  0  0  0  0  0
+    4.8873   -5.2544    0.2602 C   0  0  0  0  0  0
+    6.1333   -2.2470    0.3877 H   0  0  0  0  0  0
+    7.9585   -3.9837    0.6356 H   0  0  0  0  0  0
+    7.1539   -3.8880   -0.9371 H   0  0  0  0  0  0
+    4.6123   -3.4464   -0.9004 H   0  0  0  0  0  0
+    3.8697   -3.3607    0.7013 H   0  0  0  0  0  0
+    6.6757   -5.8879    1.2870 H   0  0  0  0  0  0
+    6.7381   -6.1883   -0.4479 H   0  0  0  0  0  0
+    4.4203   -5.7652   -0.5824 H   0  0  0  0  0  0
+    4.4174   -5.6222    1.1732 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  1  0  0  0
+  1  6  1  0  0  0
+  2  4  1  0  0  0
+  2  7  1  0  0  0
+  2  8  1  0  0  0
+  3  5  1  0  0  0
+  3  9  1  0  0  0
+  3 10  1  0  0  0
+  4  5  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="6pyrrol" type="MOL" baseModel="pyrrolidine" >
+pyrrolidine
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+    5.9836   -3.2102    0.6593 N   0  0  0  0  0  0
+    7.0021   -4.0984    0.1232 C   0  0  0  0  0  0
+    4.7293   -3.7377    0.1451 C   0  0  0  0  0  0
+    6.3946   -5.4861    0.3124 C   0  0  0  0  0  0
+    4.8873   -5.2544    0.2602 C   0  0  0  0  0  0
+    6.1333   -2.2470    0.3877 H   0  0  0  0  0  0
+    7.9585   -3.9837    0.6356 H   0  0  0  0  0  0
+    7.1539   -3.8880   -0.9371 H   0  0  0  0  0  0
+    4.6123   -3.4464   -0.9004 H   0  0  0  0  0  0
+    3.8697   -3.3607    0.7013 H   0  0  0  0  0  0
+    6.6757   -5.8879    1.2870 H   0  0  0  0  0  0
+    6.7381   -6.1883   -0.4479 H   0  0  0  0  0  0
+    4.4203   -5.7652   -0.5824 H   0  0  0  0  0  0
+    4.4174   -5.6222    1.1732 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  1  0  0  0
+  1  6  1  0  0  0
+  2  4  1  0  0  0
+  2  7  1  0  0  0
+  2  8  1  0  0  0
+  3  5  1  0  0  0
+  3  9  1  0  0  0
+  3 10  1  0  0  0
+  4  5  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="6pyrrol.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX= 1
+##LASTX= 73
+##FIRSTY=80
+##NPOINTS= 51
+##PEAK TABLE=(XY..XY)
+1, 8  2, 1 12, 1 13, 2 14, 14 15, 79 16, 2 17, 2 18, 10 24, 1
+25, 2 26, 35 27, 126 28, 364 29, 31 30, 89 31, 2 32, 1 33, 1
+34, 5 35, 2 36, 1 37, 11 38, 26 39, 131 40, 42 41, 184
+42, 202 43, 1000 44, 37 45, 1 49, 1 50, 1 51, 3 52, 4 53, 6
+54, 7 55, 1 56, 10 57, 1 63, 1 64, 1 65, 1 66, 1 67, 8
+68, 43 69, 8 70, 334 71, 248 72, 12 73, 1
+##END= $$ end of pyrrolidine
+##TITLE= 2,3-pentanedione
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=8
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="pendione" type="MOL">
+2,3-pentanedione
+                    3D
+ Structure written by MMmdl.
+ 15 14  0  0  1  0            999 V2000
+    5.1530   -6.4283    0.0933 C   0  0  0  0  0  0
+    6.6739   -6.4084   -0.0039 C   0  0  0  0  0  0
+    7.4187   -7.7558    0.0765 C   0  0  0  0  0  0
+    8.9482   -7.7250   -0.0275 C   0  0  0  0  0  0
+    9.6017   -9.1177    0.0230 C   0  0  0  0  0  0
+    7.2854   -5.3481   -0.1409 O   0  0  0  0  0  0
+    6.7987   -8.8118    0.2208 O   0  0  0  0  0  0
+    4.8488   -6.6101    1.1235 H   0  0  0  0  0  0
+    4.7447   -7.2211   -0.5335 H   0  0  0  0  0  0
+    4.7383   -5.4751   -0.2336 H   0  0  0  0  0  0
+    9.3301   -7.1055    0.7842 H   0  0  0  0  0  0
+    9.2161   -7.2216   -0.9570 H   0  0  0  0  0  0
+    9.3737   -9.6280    0.9595 H   0  0  0  0  0  0
+   10.6858   -9.0401   -0.0572 H   0  0  0  0  0  0
+    9.2519   -9.7497   -0.7944 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  1 10  1  0  0  0
+  2  3  1  0  0  0
+  2  6  2  0  0  0
+  3  4  1  0  0  0
+  3  7  2  0  0  0
+  4  5  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="7pent" type="MOL" baseModel="pendione" >
+2,3-pentanedione
+                    3D
+ Structure written by MMmdl.
+ 15 14  0  0  1  0            999 V2000
+    5.1530   -6.4283    0.0933 C   0  0  0  0  0  0
+    6.6739   -6.4084   -0.0039 C   0  0  0  0  0  0
+    7.4187   -7.7558    0.0765 C   0  0  0  0  0  0
+    8.9482   -7.7250   -0.0275 C   0  0  0  0  0  0
+    9.6017   -9.1177    0.0230 C   0  0  0  0  0  0
+    7.2854   -5.3481   -0.1409 O   0  0  0  0  0  0
+    6.7987   -8.8118    0.2208 O   0  0  0  0  0  0
+    4.8488   -6.6101    1.1235 H   0  0  0  0  0  0
+    4.7447   -7.2211   -0.5335 H   0  0  0  0  0  0
+    4.7383   -5.4751   -0.2336 H   0  0  0  0  0  0
+    9.3301   -7.1055    0.7842 H   0  0  0  0  0  0
+    9.2161   -7.2216   -0.9570 H   0  0  0  0  0  0
+    9.3737   -9.6280    0.9595 H   0  0  0  0  0  0
+   10.6858   -9.0401   -0.0572 H   0  0  0  0  0  0
+    9.2519   -9.7497   -0.7944 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  1 10  1  0  0  0
+  2  3  1  0  0  0
+  2  6  2  0  0  0
+  3  4  1  0  0  0
+  3  7  2  0  0  0
+  4  5  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="7pent.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 15
+##LASTX= 101
+##NPOINTS= 16
+##FIRSTY= 235
+##MAXY= 1000
+##MINY= 10
+##PEAK TABLE= (XY..XY)
+15,235 26,91 27,280 28,88 29,651 41,18 42,75 43,1000 44,38 55,12 57,393 58,20
+83,12 85,11 100,173 101,10
+##END= $$ end of 2,3-pentanedione
+##TITLE= 2-methyl thiophene
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=9
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= Prof Robert Lancashire
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="methylthiophene" type="MOL">
+2-methylthiophene
+                    3D
+ Structure written by MMmdl.
+ 12 12  0  0  1  0            999 V2000
+    1.2970   -0.2787   -0.0610 C   0  0  0  0  0  0
+    0.6951    0.9405   -0.2421 C   0  0  0  0  0  0
+   -0.7247    0.8856   -0.1263 C   0  0  0  0  0  0
+   -1.1856   -0.3765    0.1409 C   0  0  0  0  0  0
+    2.7527   -0.5967   -0.1113 C   0  0  0  0  0  0
+    1.2191    1.8618   -0.4518 H   0  0  0  0  0  0
+   -1.3472    1.7612   -0.2418 H   0  0  0  0  0  0
+   -2.2057   -0.7048    0.2774 H   0  0  0  0  0  0
+    0.1182   -1.5253    0.2554 S   0  0  0  0  0  0
+    2.9940   -1.1541   -1.0166 H   0  0  0  0  0  0
+    3.0467   -1.2020    0.7464 H   0  0  0  0  0  0
+    3.3554    0.3117   -0.1030 H   0  0  0  0  0  0
+  1  2  2  0  0  0
+  1  5  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  6  1  0  0  0
+  3  4  2  0  0  0
+  3  7  1  0  0  0
+  4  8  1  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+  5 11  1  0  0  0
+  5 12  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="8methio" type="MOL" baseModel="methylthiophene" >
+2-methylthiophene
+                    3D
+ Structure written by MMmdl.
+ 12 12  0  0  1  0            999 V2000
+    1.2970   -0.2787   -0.0610 C   0  0  0  0  0  0
+    0.6951    0.9405   -0.2421 C   0  0  0  0  0  0
+   -0.7247    0.8856   -0.1263 C   0  0  0  0  0  0
+   -1.1856   -0.3765    0.1409 C   0  0  0  0  0  0
+    2.7527   -0.5967   -0.1113 C   0  0  0  0  0  0
+    1.2191    1.8618   -0.4518 H   0  0  0  0  0  0
+   -1.3472    1.7612   -0.2418 H   0  0  0  0  0  0
+   -2.2057   -0.7048    0.2774 H   0  0  0  0  0  0
+    0.1182   -1.5253    0.2554 S   0  0  0  0  0  0
+    2.9940   -1.1541   -1.0166 H   0  0  0  0  0  0
+    3.0467   -1.2020    0.7464 H   0  0  0  0  0  0
+    3.3554    0.3117   -0.1030 H   0  0  0  0  0  0
+  1  2  2  0  0  0
+  1  5  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  6  1  0  0  0
+  3  4  2  0  0  0
+  3  7  1  0  0  0
+  4  8  1  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+  5 11  1  0  0  0
+  5 12  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="8methio.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 100
+##NPOINTS= 27
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0, 0 26, 10 27, 42 37, 18 38, 31 39, 95 45, 141 47, 11
+49, 22 50, 27 51, 29 52, 10 53, 84 57, 26 58, 47 59, 37
+61, 12 62, 16 63, 24 65, 23 69, 50 70, 14 71, 33 97, 1000
+98, 571 99, 71 100, 27
+##END= $$ end of 2-methyl thiophene
+##TITLE= 2-methylbutenal
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=10
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="mebutenal" type="MOL">
+trans-2-methyl-2-butenal
+                    3D
+ Structure written by MMmdl.
+ 14 13  0  0  1  0            999 V2000
+    6.2574   -4.6693    0.0380 C   0  0  0  0  0  0
+    7.7458   -4.9632    0.0993 C   0  0  0  0  0  0
+    8.3414   -6.1735    0.0427 C   0  0  0  0  0  0
+    9.8138   -6.2323    0.1433 C   0  0  0  0  0  0
+    7.6257   -7.5101   -0.1080 C   0  0  0  0  0  0
+   10.4643   -7.2761    0.1230 O   0  0  0  0  0  0
+    5.9687   -4.0600    0.8948 H   0  0  0  0  0  0
+    5.6374   -5.5633    0.0517 H   0  0  0  0  0  0
+    6.0252   -4.1080   -0.8674 H   0  0  0  0  0  0
+    8.3620   -4.0793    0.1972 H   0  0  0  0  0  0
+   10.3097   -5.2664    0.2435 H   0  0  0  0  0  0
+    7.6142   -8.0380    0.8459 H   0  0  0  0  0  0
+    8.1433   -8.1407   -0.8323 H   0  0  0  0  0  0
+    6.6009   -7.4079   -0.4572 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  2  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+  4  6  2  0  0  0
+  4 11  1  0  0  0
+  5 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="9mebut" type="MOL" baseModel="mebutenal" >
+trans-2-methyl-2-butenal
+                    3D
+ Structure written by MMmdl.
+ 14 13  0  0  1  0            999 V2000
+    6.2574   -4.6693    0.0380 C   0  0  0  0  0  0
+    7.7458   -4.9632    0.0993 C   0  0  0  0  0  0
+    8.3414   -6.1735    0.0427 C   0  0  0  0  0  0
+    9.8138   -6.2323    0.1433 C   0  0  0  0  0  0
+    7.6257   -7.5101   -0.1080 C   0  0  0  0  0  0
+   10.4643   -7.2761    0.1230 O   0  0  0  0  0  0
+    5.9687   -4.0600    0.8948 H   0  0  0  0  0  0
+    5.6374   -5.5633    0.0517 H   0  0  0  0  0  0
+    6.0252   -4.1080   -0.8674 H   0  0  0  0  0  0
+    8.3620   -4.0793    0.1972 H   0  0  0  0  0  0
+   10.3097   -5.2664    0.2435 H   0  0  0  0  0  0
+    7.6142   -8.0380    0.8459 H   0  0  0  0  0  0
+    8.1433   -8.1407   -0.8323 H   0  0  0  0  0  0
+    6.6009   -7.4079   -0.4572 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  2  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+  4  6  2  0  0  0
+  4 11  1  0  0  0
+  5 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="9mebut.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 26
+##LASTX= 98
+##NPOINTS= 31
+##FIRSTY= 43
+##PEAK TABLE= (XY..XY)
+26, 43 27, 303 28, 110 29, 457 30, 10 31, 10 37, 19 38, 31 39, 289
+40, 38 41, 287 42, 20 43, 42 44, 52 45, 20 49, 14 50, 59 51, 63
+52, 20 53, 169 54, 41 55, 974 56, 96 57, 18 65, 15 66, 11
+69, 35 83, 140 84, 1000 85, 71 98, 12
+##END=  $$ end of 2-methylbutenal
+##TITLE= 4-methyl-2,3-pentanedione
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=11
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="mpedione" type="MOL">
+4-methyl-2,3-pentanedione
+                    3D
+ Structure written by MMmdl.
+ 18 17  0  0  1  0            999 V2000
+    6.0589   -8.3667    0.7519 C   0  0  0  0  0  0
+    7.3309   -7.6089    0.3907 C   0  0  0  0  0  0
+    8.6833   -8.2883    0.7016 C   0  0  0  0  0  0
+    9.9797   -7.5314    0.3587 C   0  0  0  0  0  0
+   11.1593   -8.4928    0.1127 C   0  0  0  0  0  0
+   10.3287   -6.5047    1.4518 C   0  0  0  0  0  0
+    7.2748   -6.4943   -0.1306 O   0  0  0  0  0  0
+    8.7137   -9.4068    1.2196 O   0  0  0  0  0  0
+    5.9831   -8.4722    1.8338 H   0  0  0  0  0  0
+    6.0760   -9.3615    0.3073 H   0  0  0  0  0  0
+    5.1811   -7.8342    0.3875 H   0  0  0  0  0  0
+    9.7913   -6.9906   -0.5695 H   0  0  0  0  0  0
+   11.4375   -9.0255    1.0233 H   0  0  0  0  0  0
+   12.0387   -7.9524   -0.2378 H   0  0  0  0  0  0
+   10.9113   -9.2396   -0.6429 H   0  0  0  0  0  0
+   10.5087   -6.9906    2.4118 H   0  0  0  0  0  0
+    9.5255   -5.7794    1.5903 H   0  0  0  0  0  0
+   11.2270   -5.9453    1.1898 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  9  1  0  0  0
+  1 10  1  0  0  0
+  1 11  1  0  0  0
+  2  3  1  0  0  0
+  2  7  2  0  0  0
+  3  4  1  0  0  0
+  3  8  2  0  0  0
+  4  5  1  0  0  0
+  4  6  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+  6 16  1  0  0  0
+  6 17  1  0  0  0
+  6 18  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="10mepent" type="MOL" baseModel="mpedione" >
+4-methyl-2,3-pentanedione
+                    3D
+ Structure written by MMmdl.
+ 18 17  0  0  1  0            999 V2000
+    6.0589   -8.3667    0.7519 C   0  0  0  0  0  0
+    7.3309   -7.6089    0.3907 C   0  0  0  0  0  0
+    8.6833   -8.2883    0.7016 C   0  0  0  0  0  0
+    9.9797   -7.5314    0.3587 C   0  0  0  0  0  0
+   11.1593   -8.4928    0.1127 C   0  0  0  0  0  0
+   10.3287   -6.5047    1.4518 C   0  0  0  0  0  0
+    7.2748   -6.4943   -0.1306 O   0  0  0  0  0  0
+    8.7137   -9.4068    1.2196 O   0  0  0  0  0  0
+    5.9831   -8.4722    1.8338 H   0  0  0  0  0  0
+    6.0760   -9.3615    0.3073 H   0  0  0  0  0  0
+    5.1811   -7.8342    0.3875 H   0  0  0  0  0  0
+    9.7913   -6.9906   -0.5695 H   0  0  0  0  0  0
+   11.4375   -9.0255    1.0233 H   0  0  0  0  0  0
+   12.0387   -7.9524   -0.2378 H   0  0  0  0  0  0
+   10.9113   -9.2396   -0.6429 H   0  0  0  0  0  0
+   10.5087   -6.9906    2.4118 H   0  0  0  0  0  0
+    9.5255   -5.7794    1.5903 H   0  0  0  0  0  0
+   11.2270   -5.9453    1.1898 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  9  1  0  0  0
+  1 10  1  0  0  0
+  1 11  1  0  0  0
+  2  3  1  0  0  0
+  2  7  2  0  0  0
+  3  4  1  0  0  0
+  3  8  2  0  0  0
+  4  5  1  0  0  0
+  4  6  1  0  0  0
+  4 12  1  0  0  0
+  5 13  1  0  0  0
+  5 14  1  0  0  0
+  5 15  1  0  0  0
+  6 16  1  0  0  0
+  6 17  1  0  0  0
+  6 18  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="10mepent.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 115
+##NPOINTS= 18
+##FIRSTY= 0
+##MAXY= 1000
+##MINY= 0
+##PEAK TABLE= (XY..XY)
+0,0 15,57 27,127 28,71 29,25 39,65 41,188 42,68 43,1000 44,36 45,15 57,15
+58,27 68,15 71,141 72,9 114,28 115,2
+##END= $$ end of 4-methyl-2,3-pentanedione
+##TITLE=Phenol, 3-methyl-
+##JCAMP-DX=4.24   $$
+##DATA TYPE=MASS SPECTRUM
+##BLOCK ID=12
+##ORIGIN=Dept of Chemistry, UWI, JA
+##OWNER=public domain
+##CAS REGISTRY NO=108-39-4
+##MOLFORM=C7H8O
+##MW=108
+##.IONIZATION ENERGY=70
+##$MODELS=
+<Models>
+<ModelData id="m-cresol" type="MOL">
+m-cresol (3-methyl-1-hydroxybenzene)
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    6.7991   -6.0009    0.0379 C   0  0  0  0  0  0
+    5.5741   -5.3072    0.0164 C   0  0  0  0  0  0
+    6.8167   -7.4115    0.0408 C   0  0  0  0  0  0
+    5.5734   -3.9437    0.0125 O   0  0  0  0  0  0
+    4.3753   -7.4314    0.0051 C   0  0  0  0  0  0
+    4.3603   -6.0229   -0.0007 C   0  0  0  0  0  0
+    5.6007   -8.1258    0.0265 C   0  0  0  0  0  0
+    8.1361   -8.1555    0.0652 C   0  0  0  0  0  0
+    7.7250   -5.4441    0.0524 H   0  0  0  0  0  0
+    4.7085   -3.5654   -0.0036 H   0  0  0  0  0  0
+    3.4452   -7.9806   -0.0067 H   0  0  0  0  0  0
+    3.4133   -5.5044   -0.0174 H   0  0  0  0  0  0
+    5.6026   -9.2067    0.0322 H   0  0  0  0  0  0
+    8.4496   -8.3319    1.0943 H   0  0  0  0  0  0
+    8.9152   -7.5820   -0.4377 H   0  0  0  0  0  0
+    8.0503   -9.1186   -0.4385 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  9  1  0  0  0
+  2  4  1  0  0  0
+  2  6  2  0  0  0
+  3  7  1  0  0  0
+  3  8  1  0  0  0
+  4 10  1  0  0  0
+  5  7  2  0  0  0
+  5  6  1  0  0  0
+  5 11  1  0  0  0
+  6 12  1  0  0  0
+  7 13  1  0  0  0
+  8 14  1  0  0  0
+  8 15  1  0  0  0
+  8 16  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="11mcresol" type="MOL" baseModel="m-cresol" >
+m-cresol (3-methyl-1-hydroxybenzene)
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    6.7991   -6.0009    0.0379 C   0  0  0  0  0  0
+    5.5741   -5.3072    0.0164 C   0  0  0  0  0  0
+    6.8167   -7.4115    0.0408 C   0  0  0  0  0  0
+    5.5734   -3.9437    0.0125 O   0  0  0  0  0  0
+    4.3753   -7.4314    0.0051 C   0  0  0  0  0  0
+    4.3603   -6.0229   -0.0007 C   0  0  0  0  0  0
+    5.6007   -8.1258    0.0265 C   0  0  0  0  0  0
+    8.1361   -8.1555    0.0652 C   0  0  0  0  0  0
+    7.7250   -5.4441    0.0524 H   0  0  0  0  0  0
+    4.7085   -3.5654   -0.0036 H   0  0  0  0  0  0
+    3.4452   -7.9806   -0.0067 H   0  0  0  0  0  0
+    3.4133   -5.5044   -0.0174 H   0  0  0  0  0  0
+    5.6026   -9.2067    0.0322 H   0  0  0  0  0  0
+    8.4496   -8.3319    1.0943 H   0  0  0  0  0  0
+    8.9152   -7.5820   -0.4377 H   0  0  0  0  0  0
+    8.0503   -9.1186   -0.4385 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  9  1  0  0  0
+  2  4  1  0  0  0
+  2  6  2  0  0  0
+  3  7  1  0  0  0
+  3  8  1  0  0  0
+  4 10  1  0  0  0
+  5  7  2  0  0  0
+  5  6  1  0  0  0
+  5 11  1  0  0  0
+  6 12  1  0  0  0
+  7 13  1  0  0  0
+  8 14  1  0  0  0
+  8 15  1  0  0  0
+  8 16  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="11mcresol.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=15
+##LASTX=110
+##FIRSTY=2
+##NPOINTS=61
+##PEAK TABLE=(XY..XY)
+15,2 25,1 26,8 27,33 29,11 30,1 31,1 36,1 37,16 38,39
+39,119 40,16 41,11 42,7 43,10 44,1 45,1 48,1 49,10 50,68
+51,112 52,57 53,99 54,30 55,25 56,1 60,2 61,16 62,32 63,71
+64,18 65,38 66,20 67,10 68,10  69,5 73,6 74,20 75,9 76,8
+77,325 78,78 79,349 80,108 81,25 82,4 84,1 85,4 86,6 87,4
+88,1 89,49 90,121 91,67 92,6 93,3 105,9 107,953 108,999 109,82
+110,5
+##END= $$ end of m-cresol
+##TITLE=Pyrazine
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##BLOCK ID=13
+##ORIGIN=Japan AIST/NIMC Database- Spectrum MS-NW-5010
+##OWNER=NIST Mass Spectrometry Data Center
+##CAS REGISTRY NO=290-37-9
+##$EPA MASS SPEC NO=230075
+##MOLFORM=C4H4N2
+##MW=80
+##.IONIZATION ENERGY=70
+##$MODELS=
+<Models>
+<ModelData id="pyrazine" type="MOL">
+pyrazine
+                    3D
+ Structure written by MMmdl.
+ 10 10  0  0  1  0            999 V2000
+    6.0758   -8.3373    0.0318 N   0  0  0  0  0  0
+    6.1856   -5.4947    0.0463 N   0  0  0  0  0  0
+    7.3059   -6.2540    0.0767 C   0  0  0  0  0  0
+    4.9554   -7.5780    0.0014 C   0  0  0  0  0  0
+    5.0099   -6.1651    0.0087 C   0  0  0  0  0  0
+    7.2514   -7.6669    0.0695 C   0  0  0  0  0  0
+    8.2520   -5.7338    0.1069 H   0  0  0  0  0  0
+    4.0093   -8.0982   -0.0289 H   0  0  0  0  0  0
+    4.1068   -5.5732   -0.0159 H   0  0  0  0  0  0
+    8.1545   -8.2588    0.0940 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="12pyraz" type="MOL" baseModel="pyrazine" >
+pyrazine
+                    3D
+ Structure written by MMmdl.
+ 10 10  0  0  1  0            999 V2000
+    6.0758   -8.3373    0.0318 N   0  0  0  0  0  0
+    6.1856   -5.4947    0.0463 N   0  0  0  0  0  0
+    7.3059   -6.2540    0.0767 C   0  0  0  0  0  0
+    4.9554   -7.5780    0.0014 C   0  0  0  0  0  0
+    5.0099   -6.1651    0.0087 C   0  0  0  0  0  0
+    7.2514   -7.6669    0.0695 C   0  0  0  0  0  0
+    8.2520   -5.7338    0.1069 H   0  0  0  0  0  0
+    4.0093   -8.0982   -0.0289 H   0  0  0  0  0  0
+    4.1068   -5.5732   -0.0159 H   0  0  0  0  0  0
+    8.1545   -8.2588    0.0940 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="12pyraz.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=12
+##LASTX=82
+##FIRSTY=3
+##NPOINTS=25
+##PEAK TABLE=(XY..XY)
+12,3 13,3 14,1 24,4 25,21 26,422 27,26 28,55 29,1 37,3
+38,17 39,19 40,13 41,2 50,9 51,70 52,103 53,452 54,16 76,2
+77,4 79,7 80,1000 81,55 82,1
+##END=  $$ end of pyrazine
+##TITLE=Furan, 2-(methoxymethyl)-
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##BLOCK ID=14
+##OWNER=NIST Mass Spectrometry Data Center
+##CAS REGISTRY NO=13679-46-4
+##MOLFORM=C6 H8 O2
+##MW=112
+##$MODELS=
+<Models>
+<ModelData id="furfurme" type="MOL">
+furfuryl methylether
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+   -1.5949   -1.2416    0.5188 O   0  0  0  0  0  0
+    0.7995   -1.0669    0.1779 C   0  0  0  0  0  0
+    0.7963   -1.7449   -0.6769 H   0  0  0  0  0  0
+    1.0245   -1.6497    1.0723 H   0  0  0  0  0  0
+    1.7589   -0.0357   -0.0033 O   0  0  0  0  0  0
+    3.0758   -0.5382   -0.1448 C   0  0  0  0  0  0
+    3.1581   -1.1928   -1.0135 H   0  0  0  0  0  0
+    3.3851   -1.0920    0.7426 H   0  0  0  0  0  0
+    3.7704    0.2907   -0.2821 H   0  0  0  0  0  0
+   -2.6997   -0.4521    0.6164 C   0  0  0  0  0  0
+   -2.3649    0.8652    0.4801 C   0  0  0  0  0  0
+   -3.6295   -0.9779    0.7801 H   0  0  0  0  0  0
+   -0.9560    0.8919    0.2847 C   0  0  0  0  0  0
+   -3.0458    1.7029    0.5163 H   0  0  0  0  0  0
+   -0.3173    1.7512    0.1382 H   0  0  0  0  0  0
+   -0.5345   -0.4091    0.3162 C   0  0  0  0  0  0
+  1 10  1  0  0  0
+  1 16  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2 16  1  0  0  0
+  5  6  1  0  0  0
+  6  7  1  0  0  0
+  6  8  1  0  0  0
+  6  9  1  0  0  0
+ 10 11  2  0  0  0
+ 10 12  1  0  0  0
+ 11 13  1  0  0  0
+ 11 14  1  0  0  0
+ 13 15  1  0  0  0
+ 13 16  2  0  0  0
+M  END
+</ModelData>
+<ModelData id="13furfurme" type="MOL" baseModel="furfurme" >
+furfuryl methylether
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+   -1.5949   -1.2416    0.5188 O   0  0  0  0  0  0
+    0.7995   -1.0669    0.1779 C   0  0  0  0  0  0
+    0.7963   -1.7449   -0.6769 H   0  0  0  0  0  0
+    1.0245   -1.6497    1.0723 H   0  0  0  0  0  0
+    1.7589   -0.0357   -0.0033 O   0  0  0  0  0  0
+    3.0758   -0.5382   -0.1448 C   0  0  0  0  0  0
+    3.1581   -1.1928   -1.0135 H   0  0  0  0  0  0
+    3.3851   -1.0920    0.7426 H   0  0  0  0  0  0
+    3.7704    0.2907   -0.2821 H   0  0  0  0  0  0
+   -2.6997   -0.4521    0.6164 C   0  0  0  0  0  0
+   -2.3649    0.8652    0.4801 C   0  0  0  0  0  0
+   -3.6295   -0.9779    0.7801 H   0  0  0  0  0  0
+   -0.9560    0.8919    0.2847 C   0  0  0  0  0  0
+   -3.0458    1.7029    0.5163 H   0  0  0  0  0  0
+   -0.3173    1.7512    0.1382 H   0  0  0  0  0  0
+   -0.5345   -0.4091    0.3162 C   0  0  0  0  0  0
+  1 10  1  0  0  0
+  1 16  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2 16  1  0  0  0
+  5  6  1  0  0  0
+  6  7  1  0  0  0
+  6  8  1  0  0  0
+  6  9  1  0  0  0
+ 10 11  2  0  0  0
+ 10 12  1  0  0  0
+ 11 13  1  0  0  0
+ 11 14  1  0  0  0
+ 13 15  1  0  0  0
+ 13 16  2  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="13furfurme.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE INTENSITY
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=14
+##LASTX=114
+##FIRSTY=5
+##NPOINTS=49
+##PEAK TABLE=(XY..XY)
+14,5 15,22 17,3 18,11 26,16 27,105 28,20 29,71 30,5 31,11 32,6 37,14 38,28
+39,89 40,11 41,53 42,17 43,21 44,7 45,49 49,5 50,34 51,58 52,45
+53,337 54,27 55,29 56,3 58,32 66,3 67,5 68,16 69,36 70,4 71,7 79,5 80,6
+81,1000 82,214 83,18 84,11 95,54 96,22 97,53 98,9 111,211 112,431 113,30
+114,3
+##END= $$ end of furfurylmethylether
+##TITLE= methylpyrazine
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=15
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="methylpyrazine" type="MOL">
+2-methylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 13 13  0  0  1  0            999 V2000
+    6.6220   -7.8728    0.0176 N   0  0  0  0  0  0
+    6.6867   -5.0284    0.0294 N   0  0  0  0  0  0
+    7.8191   -5.7703    0.0165 C   0  0  0  0  0  0
+    5.4902   -7.1301    0.0281 C   0  0  0  0  0  0
+    5.5213   -5.7155    0.0359 C   0  0  0  0  0  0
+    7.7876   -7.1839    0.0112 C   0  0  0  0  0  0
+    8.7572   -5.2353    0.0107 H   0  0  0  0  0  0
+    4.1811   -7.8882    0.0385 C   0  0  0  0  0  0
+    4.6106   -5.1341    0.0478 H   0  0  0  0  0  0
+    8.7003   -7.7611    0.0017 H   0  0  0  0  0  0
+    3.8629   -8.0712    1.0647 H   0  0  0  0  0  0
+    4.2848   -8.8488   -0.4670 H   0  0  0  0  0  0
+    3.4018   -7.3198   -0.4696 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="14mepyr" type="MOL" baseModel="methylpyrazine" >
+2-methylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 13 13  0  0  1  0            999 V2000
+    6.6220   -7.8728    0.0176 N   0  0  0  0  0  0
+    6.6867   -5.0284    0.0294 N   0  0  0  0  0  0
+    7.8191   -5.7703    0.0165 C   0  0  0  0  0  0
+    5.4902   -7.1301    0.0281 C   0  0  0  0  0  0
+    5.5213   -5.7155    0.0359 C   0  0  0  0  0  0
+    7.7876   -7.1839    0.0112 C   0  0  0  0  0  0
+    8.7572   -5.2353    0.0107 H   0  0  0  0  0  0
+    4.1811   -7.8882    0.0385 C   0  0  0  0  0  0
+    4.6106   -5.1341    0.0478 H   0  0  0  0  0  0
+    8.7003   -7.7611    0.0017 H   0  0  0  0  0  0
+    3.8629   -8.0712    1.0647 H   0  0  0  0  0  0
+    4.2848   -8.8488   -0.4670 H   0  0  0  0  0  0
+    3.4018   -7.3198   -0.4696 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="14mepyr.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 95
+##NPOINTS= 17
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 26,512 27,118 28,391 37,123 38,226 39,449 40,413 41,144 42,231 51,65
+52,125 53,257 66,52 67,722 94,1000 95,64
+##END=  $$ end of methylpyrazine
+##TITLE= 2-butanol-3-one (acetoin)
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=16
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= SDBS
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="acetoin" type="MOL">
+2-butanol-3-one
+                    3D
+ Structure written by MMmdl.
+ 14 13  0  0  1  0            999 V2000
+    6.1945   -7.2138    0.0504 C   0  0  0  0  0  0
+    7.5198   -6.5456    0.4010 C   0  0  0  0  0  0
+    8.7593   -7.4330    0.6231 C   0  0  2  0  0  0
+   10.0149   -6.8382   -0.0293 C   0  0  0  0  0  0
+    7.5876   -5.3232    0.5188 O   0  0  0  0  0  0
+    8.5556   -8.7494    0.1369 O   0  0  0  0  0  0
+    5.8148   -7.7561    0.9164 H   0  0  0  0  0  0
+    6.3225   -7.9165   -0.7736 H   0  0  0  0  0  0
+    5.4593   -6.4652   -0.2455 H   0  0  0  0  0  0
+    8.9157   -7.4932    1.7006 H   0  0  0  0  0  0
+   10.2625   -5.8793    0.4279 H   0  0  0  0  0  0
+    9.8687   -6.6628   -1.0956 H   0  0  0  0  0  0
+   10.8803   -7.4888    0.0922 H   0  0  0  0  0  0
+    9.3223   -9.2691    0.3234 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  4  1  0  0  0
+  3  6  1  0  0  0
+  3 10  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  4 13  1  0  0  0
+  6 14  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="15acetoin" type="MOL" baseModel="acetoin" >
+2-butanol-3-one
+                    3D
+ Structure written by MMmdl.
+ 14 13  0  0  1  0            999 V2000
+    6.1945   -7.2138    0.0504 C   0  0  0  0  0  0
+    7.5198   -6.5456    0.4010 C   0  0  0  0  0  0
+    8.7593   -7.4330    0.6231 C   0  0  2  0  0  0
+   10.0149   -6.8382   -0.0293 C   0  0  0  0  0  0
+    7.5876   -5.3232    0.5188 O   0  0  0  0  0  0
+    8.5556   -8.7494    0.1369 O   0  0  0  0  0  0
+    5.8148   -7.7561    0.9164 H   0  0  0  0  0  0
+    6.3225   -7.9165   -0.7736 H   0  0  0  0  0  0
+    5.4593   -6.4652   -0.2455 H   0  0  0  0  0  0
+    8.9157   -7.4932    1.7006 H   0  0  0  0  0  0
+   10.2625   -5.8793    0.4279 H   0  0  0  0  0  0
+    9.8687   -6.6628   -1.0956 H   0  0  0  0  0  0
+   10.8803   -7.4888    0.0922 H   0  0  0  0  0  0
+    9.3223   -9.2691    0.3234 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  1  9  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  4  1  0  0  0
+  3  6  1  0  0  0
+  3 10  1  0  0  0
+  4 11  1  0  0  0
+  4 12  1  0  0  0
+  4 13  1  0  0  0
+  6 14  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="15acetoin.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 14
+##LASTX= 115
+##FIRSTY= 22
+##NPOINTS= 26
+##PEAK TABLE= (XY..XY)
+14, 22 15, 114 18, 25 19, 67 26, 15 27, 118 28, 17 29, 62 31, 13
+39, 15 41, 15 42, 44 43, 1000 44, 40 45, 978 46, 23 54, 12
+55, 22 57, 27 71, 69 72, 208 73, 22 87, 20 88, 76 114, 46
+115, 28
+##END=  $$ end of 2-butanol-3-one
+##TITLE= hydroxyacetone
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=17
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= SDBS
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##MW=74
+##$MODELS=
+<Models>
+<ModelData id="acetol" type="MOL">
+1-propanol-2-one
+                    3D
+ Structure written by MMmdl.
+ 11 10  0  0  1  0            999 V2000
+    8.0577   -7.7167    0.0214 C   0  0  0  0  0  0
+    8.1360   -6.1924    0.0268 C   0  0  0  0  0  0
+    9.5084   -5.5082   -0.0161 C   0  0  0  0  0  0
+    7.1106   -5.5175    0.0649 O   0  0  0  0  0  0
+   10.5747   -6.4348   -0.1602 O   0  0  0  0  0  0
+    8.3045   -8.1083    1.0072 H   0  0  0  0  0  0
+    8.7527   -8.1368   -0.7053 H   0  0  0  0  0  0
+    7.0510   -8.0377   -0.2398 H   0  0  0  0  0  0
+    9.6440   -4.9380    0.9040 H   0  0  0  0  0  0
+    9.5198   -4.8023   -0.8458 H   0  0  0  0  0  0
+   11.3888   -5.9540   -0.2002 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  6  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  4  2  0  0  0
+  3  5  1  0  0  0
+  3  9  1  0  0  0
+  3 10  1  0  0  0
+  5 11  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="16acetol" type="MOL" baseModel="acetol" >
+1-propanol-2-one
+                    3D
+ Structure written by MMmdl.
+ 11 10  0  0  1  0            999 V2000
+    8.0577   -7.7167    0.0214 C   0  0  0  0  0  0
+    8.1360   -6.1924    0.0268 C   0  0  0  0  0  0
+    9.5084   -5.5082   -0.0161 C   0  0  0  0  0  0
+    7.1106   -5.5175    0.0649 O   0  0  0  0  0  0
+   10.5747   -6.4348   -0.1602 O   0  0  0  0  0  0
+    8.3045   -8.1083    1.0072 H   0  0  0  0  0  0
+    8.7527   -8.1368   -0.7053 H   0  0  0  0  0  0
+    7.0510   -8.0377   -0.2398 H   0  0  0  0  0  0
+    9.6440   -4.9380    0.9040 H   0  0  0  0  0  0
+    9.5198   -4.8023   -0.8458 H   0  0  0  0  0  0
+   11.3888   -5.9540   -0.2002 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  6  1  0  0  0
+  1  7  1  0  0  0
+  1  8  1  0  0  0
+  2  3  1  0  0  0
+  2  4  2  0  0  0
+  3  5  1  0  0  0
+  3  9  1  0  0  0
+  3 10  1  0  0  0
+  5 11  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="16acetol.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 14
+##LASTX= 112
+##FIRSTY= 13
+##NPOINTS= 25
+##PEAK TABLE= (XY..XY)
+14, 13 15, 94 18, 36 26, 11 27, 31 28, 18 29, 58 30, 10 31, 168
+39, 14 40, 27 41, 17 42, 43 43, 1000 44, 27 45, 45 55, 11
+57, 18 58, 18 68, 13 74, 80 75, 11 97, 19 99, 10 112, 32
+##END= $$ end of hydroxyacetone
+##TITLE= 2,5-dimethylpyrazine
+##JCAMP-DX= 4.24  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=18
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="25-dimepyr" type="MOL">
+2,5-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    5.4069   -8.1290    0.9168 N   0  0  0  0  0  0
+    6.8912   -5.7032    0.8319 N   0  0  0  0  0  0
+    7.4949   -6.9146    0.8072 C   0  0  0  0  0  0
+    4.8031   -6.9177    0.9423 C   0  0  0  0  0  0
+    5.5398   -5.7106    0.8984 C   0  0  0  0  0  0
+    6.7583   -8.1217    0.8502 C   0  0  0  0  0  0
+    9.0062   -6.9184    0.7392 C   0  0  0  0  0  0
+    3.2922   -6.9146    1.0149 C   0  0  0  0  0  0
+    5.0456   -4.7503    0.9166 H   0  0  0  0  0  0
+    7.2525   -9.0821    0.8323 H   0  0  0  0  0  0
+    2.8693   -6.8963    0.0106 H   0  0  0  0  0  0
+    2.9268   -7.8052    1.5272 H   0  0  0  0  0  0
+    2.9337   -6.0398    1.5578 H   0  0  0  0  0  0
+    9.4254   -6.9209    1.7453 H   0  0  0  0  0  0
+    9.3731   -6.0358    0.2143 H   0  0  0  0  0  0
+    9.3666   -7.8017    0.2118 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  7 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="17dimepyr" type="MOL" baseModel="25-dimepyr" >
+2,5-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    5.4069   -8.1290    0.9168 N   0  0  0  0  0  0
+    6.8912   -5.7032    0.8319 N   0  0  0  0  0  0
+    7.4949   -6.9146    0.8072 C   0  0  0  0  0  0
+    4.8031   -6.9177    0.9423 C   0  0  0  0  0  0
+    5.5398   -5.7106    0.8984 C   0  0  0  0  0  0
+    6.7583   -8.1217    0.8502 C   0  0  0  0  0  0
+    9.0062   -6.9184    0.7392 C   0  0  0  0  0  0
+    3.2922   -6.9146    1.0149 C   0  0  0  0  0  0
+    5.0456   -4.7503    0.9166 H   0  0  0  0  0  0
+    7.2525   -9.0821    0.8323 H   0  0  0  0  0  0
+    2.8693   -6.8963    0.0106 H   0  0  0  0  0  0
+    2.9268   -7.8052    1.5272 H   0  0  0  0  0  0
+    2.9337   -6.0398    1.5578 H   0  0  0  0  0  0
+    9.4254   -6.9209    1.7453 H   0  0  0  0  0  0
+    9.3731   -6.0358    0.2143 H   0  0  0  0  0  0
+    9.3666   -7.8017    0.2118 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3  7  1  0  0  0
+  4  5  1  0  0  0
+  4  8  1  0  0  0
+  5  9  1  0  0  0
+  6 10  1  0  0  0
+  7 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  8 11  1  0  0  0
+  8 12  1  0  0  0
+  8 13  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="17dimepyr.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 28
+##LASTX= 109
+##NPOINTS= 16
+##FIRSTY= 47
+##PEAK TABLE= (XY..XY)
+28,47 38,63 39,252 40,221 41,36 42,843 43,26 51,24 52,41 66,14 67,27 80,28
+81,131 107,27 108,1000 109,72
+##END= $$ end of 2,5-dimethylpyrazine
+##TITLE= 2,6-dimethylpyrazine
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=19
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="26-dimepyr" type="MOL">
+2,6-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    4.8941   -7.5942    0.9781 N   0  0  0  0  0  0
+    6.3157   -5.1302    0.9190 N   0  0  0  0  0  0
+    6.9540   -6.3230    0.9126 C   0  0  0  0  0  0
+    4.2580   -6.3995    0.9867 C   0  0  0  0  0  0
+    4.9641   -5.1738    0.9551 C   0  0  0  0  0  0
+    6.2463   -7.5479    0.9397 C   0  0  0  0  0  0
+    2.7463   -6.4355    1.0250 C   0  0  0  0  0  0
+    4.4446   -4.2267    0.9584 H   0  0  0  0  0  0
+    6.9702   -8.8759    0.9349 C   0  0  0  0  0  0
+    2.3468   -6.4401    0.0110 H   0  0  0  0  0  0
+    2.3919   -7.3292    1.5396 H   0  0  0  0  0  0
+    2.3532   -5.5638    1.5485 H   0  0  0  0  0  0
+    8.0335   -6.2989    0.8863 H   0  0  0  0  0  0
+    7.1522   -9.2059    1.9574 H   0  0  0  0  0  0
+    7.9283   -8.7920    0.4220 H   0  0  0  0  0  0
+    6.3783   -9.6377    0.4268 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3 13  1  0  0  0
+  4  5  1  0  0  0
+  4  7  1  0  0  0
+  5  8  1  0  0  0
+  6  9  1  0  0  0
+  7 10  1  0  0  0
+  7 11  1  0  0  0
+  7 12  1  0  0  0
+  9 14  1  0  0  0
+  9 15  1  0  0  0
+  9 16  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="18dimepyr" type="MOL" baseModel="26-dimepyr" >
+2,6-dimethylpyrazine
+                    3D
+ Structure written by MMmdl.
+ 16 16  0  0  1  0            999 V2000
+    4.8941   -7.5942    0.9781 N   0  0  0  0  0  0
+    6.3157   -5.1302    0.9190 N   0  0  0  0  0  0
+    6.9540   -6.3230    0.9126 C   0  0  0  0  0  0
+    4.2580   -6.3995    0.9867 C   0  0  0  0  0  0
+    4.9641   -5.1738    0.9551 C   0  0  0  0  0  0
+    6.2463   -7.5479    0.9397 C   0  0  0  0  0  0
+    2.7463   -6.4355    1.0250 C   0  0  0  0  0  0
+    4.4446   -4.2267    0.9584 H   0  0  0  0  0  0
+    6.9702   -8.8759    0.9349 C   0  0  0  0  0  0
+    2.3468   -6.4401    0.0110 H   0  0  0  0  0  0
+    2.3919   -7.3292    1.5396 H   0  0  0  0  0  0
+    2.3532   -5.5638    1.5485 H   0  0  0  0  0  0
+    8.0335   -6.2989    0.8863 H   0  0  0  0  0  0
+    7.1522   -9.2059    1.9574 H   0  0  0  0  0  0
+    7.9283   -8.7920    0.4220 H   0  0  0  0  0  0
+    6.3783   -9.6377    0.4268 H   0  0  0  0  0  0
+  1  4  2  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  5  2  0  0  0
+  3  6  2  0  0  0
+  3 13  1  0  0  0
+  4  5  1  0  0  0
+  4  7  1  0  0  0
+  5  8  1  0  0  0
+  6  9  1  0  0  0
+  7 10  1  0  0  0
+  7 11  1  0  0  0
+  7 12  1  0  0  0
+  9 14  1  0  0  0
+  9 15  1  0  0  0
+  9 16  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="18dimepyr.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 29
+##LASTX= 109
+##NPOINTS= 16
+##FIRSTY= 30
+##PEAK TABLE= (XY..XY)
+29,30 38,66 39,259 40,367 41,41 42,648 43,30 52,23 54,21 66,38 67,75 81,57
+93,20 107,37 108,1000 109,72
+##END= $$ end of 2,6-dimethylpyrazine
+##TITLE= furfural
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=20
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="furfural" type="MOL">
+furfural
+                    3D
+ Structure written by MMmdl.
+ 11 11  0  0  1  0            999 V2000
+    9.3766   -7.0174    0.1720 C   0  0  0  0  0  0
+    8.4614   -8.0290    0.2341 O   0  0  0  0  0  0
+    8.7412   -5.8068    0.2501 C   0  0  0  0  0  0
+    7.2358   -7.4469    0.3546 C   0  0  0  0  0  0
+    7.3495   -6.0861    0.3665 C   0  0  0  0  0  0
+   11.6710   -6.4837    0.0164 O   0  0  0  0  0  0
+   10.7920   -7.3446    0.0440 C   0  0  0  0  0  0
+    9.2275   -4.8418    0.2246 H   0  0  0  0  0  0
+    6.3997   -8.1293    0.4176 H   0  0  0  0  0  0
+    6.5349   -5.3810    0.4508 H   0  0  0  0  0  0
+   11.0141   -8.4098   -0.0259 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  7  1  0  0  0
+  2  4  1  0  0  0
+  3  5  1  0  0  0
+  3  8  1  0  0  0
+  4  5  2  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+  6  7  2  0  0  0
+  7 11  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="19furfur" type="MOL" baseModel="furfural" >
+furfural
+                    3D
+ Structure written by MMmdl.
+ 11 11  0  0  1  0            999 V2000
+    9.3766   -7.0174    0.1720 C   0  0  0  0  0  0
+    8.4614   -8.0290    0.2341 O   0  0  0  0  0  0
+    8.7412   -5.8068    0.2501 C   0  0  0  0  0  0
+    7.2358   -7.4469    0.3546 C   0  0  0  0  0  0
+    7.3495   -6.0861    0.3665 C   0  0  0  0  0  0
+   11.6710   -6.4837    0.0164 O   0  0  0  0  0  0
+   10.7920   -7.3446    0.0440 C   0  0  0  0  0  0
+    9.2275   -4.8418    0.2246 H   0  0  0  0  0  0
+    6.3997   -8.1293    0.4176 H   0  0  0  0  0  0
+    6.5349   -5.3810    0.4508 H   0  0  0  0  0  0
+   11.0141   -8.4098   -0.0259 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  7  1  0  0  0
+  2  4  1  0  0  0
+  3  5  1  0  0  0
+  3  8  1  0  0  0
+  4  5  2  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+  6  7  2  0  0  0
+  7 11  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="19furfur.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 97
+##NPOINTS= 17
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 29,202 37,108 38,268 39,640 40,68 42,71 43,430 50,30 51,30 57,30
+67,69 73,19 86,30 95,880 96,1000 97,60
+##END= $$ end of furfural
+##TITLE=1,2-Ethanediol, diacetate
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##BLOCK ID=21
+##ORIGIN=Japan AIST/NIMC Database- Spectrum MS-NW-1252
+##OWNER=NIST Mass Spectrometry Data Center
+##CAS REGISTRY NO=111-55-7
+##$EPA MASS SPEC NO=229026
+##MOLFORM=C6H10O4
+##MW=146
+##$NIST SOURCE=MSDC
+##.IONIZATION ENERGY=70
+##$MODELS=
+<Models>
+<ModelData id="egdiac" type="MOL">
+ethyleneglycol diacetate
+                    3D
+ Structure written by MMmdl.
+ 20 19  0  0  1  0            999 V2000
+   12.8534   -6.3779    0.0221 C   0  0  0  0  0  0
+   12.9526   -7.6031    0.0315 O   0  0  0  0  0  0
+   11.7082   -5.6884    0.0299 O   0  0  0  0  0  0
+    8.0962   -6.1129    0.0667 O   0  0  0  0  0  0
+   14.0805   -5.4810    0.0024 C   0  0  0  0  0  0
+    9.3225   -5.4025    0.0513 C   0  0  0  0  0  0
+   10.4819   -6.3988    0.0465 C   0  0  0  0  0  0
+    6.9510   -5.4237    0.0485 C   0  0  0  0  0  0
+    5.7238   -6.3205    0.0699 C   0  0  0  0  0  0
+    6.8518   -4.1988    0.0200 O   0  0  0  0  0  0
+   14.3927   -5.2519    1.0208 H   0  0  0  0  0  0
+   13.8666   -4.5472   -0.5172 H   0  0  0  0  0  0
+   14.9022   -5.9825   -0.5088 H   0  0  0  0  0  0
+    9.3862   -4.7551    0.9272 H   0  0  0  0  0  0
+    9.3717   -4.7655   -0.8330 H   0  0  0  0  0  0
+   10.4341   -7.0355    0.9312 H   0  0  0  0  0  0
+   10.4169   -7.0466   -0.8289 H   0  0  0  0  0  0
+    5.4355   -6.5354    1.0984 H   0  0  0  0  0  0
+    5.9260   -7.2614   -0.4414 H   0  0  0  0  0  0
+    4.8903   -5.8262   -0.4289 H   0  0  0  0  0  0
+  1  2  2  0  0  0
+  1  3  1  0  0  0
+  1  5  1  0  0  0
+  3  7  1  0  0  0
+  4  6  1  0  0  0
+  4  8  1  0  0  0
+  5 11  1  0  0  0
+  5 12  1  0  0  0
+  5 13  1  0  0  0
+  6  7  1  0  0  0
+  6 14  1  0  0  0
+  6 15  1  0  0  0
+  7 16  1  0  0  0
+  7 17  1  0  0  0
+  8  9  1  0  0  0
+  8 10  2  0  0  0
+  9 18  1  0  0  0
+  9 19  1  0  0  0
+  9 20  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="20egdiac" type="MOL" baseModel="egdiac" >
+ethyleneglycol diacetate
+                    3D
+ Structure written by MMmdl.
+ 20 19  0  0  1  0            999 V2000
+   12.8534   -6.3779    0.0221 C   0  0  0  0  0  0
+   12.9526   -7.6031    0.0315 O   0  0  0  0  0  0
+   11.7082   -5.6884    0.0299 O   0  0  0  0  0  0
+    8.0962   -6.1129    0.0667 O   0  0  0  0  0  0
+   14.0805   -5.4810    0.0024 C   0  0  0  0  0  0
+    9.3225   -5.4025    0.0513 C   0  0  0  0  0  0
+   10.4819   -6.3988    0.0465 C   0  0  0  0  0  0
+    6.9510   -5.4237    0.0485 C   0  0  0  0  0  0
+    5.7238   -6.3205    0.0699 C   0  0  0  0  0  0
+    6.8518   -4.1988    0.0200 O   0  0  0  0  0  0
+   14.3927   -5.2519    1.0208 H   0  0  0  0  0  0
+   13.8666   -4.5472   -0.5172 H   0  0  0  0  0  0
+   14.9022   -5.9825   -0.5088 H   0  0  0  0  0  0
+    9.3862   -4.7551    0.9272 H   0  0  0  0  0  0
+    9.3717   -4.7655   -0.8330 H   0  0  0  0  0  0
+   10.4341   -7.0355    0.9312 H   0  0  0  0  0  0
+   10.4169   -7.0466   -0.8289 H   0  0  0  0  0  0
+    5.4355   -6.5354    1.0984 H   0  0  0  0  0  0
+    5.9260   -7.2614   -0.4414 H   0  0  0  0  0  0
+    4.8903   -5.8262   -0.4289 H   0  0  0  0  0  0
+  1  2  2  0  0  0
+  1  3  1  0  0  0
+  1  5  1  0  0  0
+  3  7  1  0  0  0
+  4  6  1  0  0  0
+  4  8  1  0  0  0
+  5 11  1  0  0  0
+  5 12  1  0  0  0
+  5 13  1  0  0  0
+  6  7  1  0  0  0
+  6 14  1  0  0  0
+  6 15  1  0  0  0
+  7 16  1  0  0  0
+  7 17  1  0  0  0
+  8  9  1  0  0  0
+  8 10  2  0  0  0
+  9 18  1  0  0  0
+  9 19  1  0  0  0
+  9 20  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="20egdiac.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=14
+##LASTX=117
+##FIRSTY=9
+##MAXX=117
+##MINX=14
+##MAXY=999
+##MINY=1
+##NPOINTS=27
+##PEAK TABLE=(XY..XY)
+14,9 15,65 16,1 18,2 26,3 27,7 28,17 29,11 30,1 31,7
+32,3 41,1 42,23 43,999 44,29 45,6 61,6 73,47 74,13 75,1
+86,110 87,9 88,1 103,19 104,2 116,46 117,2
+##END= $$ end of 1,2-Ethanediol, diacetate
+##TITLE= furfuryl formate
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=22
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= SDBS
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="furfurylformate" type="MOL">
+furfuryl formate
+                    3D
+ Structure written by MMmdl.
+ 15 15  0  0  1  0            999 V2000
+    5.3371   -5.0556    0.0570 C   0  0  0  0  0  0
+    5.1011   -6.3999    0.0395 O   0  0  0  0  0  0
+    4.1518   -4.3730    0.0339 C   0  0  0  0  0  0
+    3.7511   -6.5635    0.0034 C   0  0  0  0  0  0
+    3.1202   -5.3522   -0.0014 C   0  0  0  0  0  0
+    6.7665   -4.6092    0.0990 C   0  0  0  0  0  0
+    7.5958   -5.7564    0.0563 O   0  0  0  0  0  0
+    8.9166   -5.5850    0.0848 C   0  0  0  0  0  0
+    9.7341   -6.5004    0.0530 O   0  0  0  0  0  0
+    4.0405   -3.2986    0.0413 H   0  0  0  0  0  0
+    3.4117   -7.5896   -0.0147 H   0  0  0  0  0  0
+    2.0518   -5.1926   -0.0271 H   0  0  0  0  0  0
+    6.9543   -4.0425    1.0120 H   0  0  0  0  0  0
+    6.9801   -3.9584   -0.7500 H   0  0  0  0  0  0
+    9.1680   -4.5247    0.1398 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  6  1  0  0  0
+  2  4  1  0  0  0
+  3  5  1  0  0  0
+  3 10  1  0  0  0
+  4  5  2  0  0  0
+  4 11  1  0  0  0
+  5 12  1  0  0  0
+  6  7  1  0  0  0
+  6 13  1  0  0  0
+  6 14  1  0  0  0
+  7  8  1  0  0  0
+  8  9  2  0  0  0
+  8 15  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="21furform" type="MOL" baseModel="furfurylformate" >
+furfuryl formate
+                    3D
+ Structure written by MMmdl.
+ 15 15  0  0  1  0            999 V2000
+    5.3371   -5.0556    0.0570 C   0  0  0  0  0  0
+    5.1011   -6.3999    0.0395 O   0  0  0  0  0  0
+    4.1518   -4.3730    0.0339 C   0  0  0  0  0  0
+    3.7511   -6.5635    0.0034 C   0  0  0  0  0  0
+    3.1202   -5.3522   -0.0014 C   0  0  0  0  0  0
+    6.7665   -4.6092    0.0990 C   0  0  0  0  0  0
+    7.5958   -5.7564    0.0563 O   0  0  0  0  0  0
+    8.9166   -5.5850    0.0848 C   0  0  0  0  0  0
+    9.7341   -6.5004    0.0530 O   0  0  0  0  0  0
+    4.0405   -3.2986    0.0413 H   0  0  0  0  0  0
+    3.4117   -7.5896   -0.0147 H   0  0  0  0  0  0
+    2.0518   -5.1926   -0.0271 H   0  0  0  0  0  0
+    6.9543   -4.0425    1.0120 H   0  0  0  0  0  0
+    6.9801   -3.9584   -0.7500 H   0  0  0  0  0  0
+    9.1680   -4.5247    0.1398 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  2  0  0  0
+  1  6  1  0  0  0
+  2  4  1  0  0  0
+  3  5  1  0  0  0
+  3 10  1  0  0  0
+  4  5  2  0  0  0
+  4 11  1  0  0  0
+  5 12  1  0  0  0
+  6  7  1  0  0  0
+  6 13  1  0  0  0
+  6 14  1  0  0  0
+  7  8  1  0  0  0
+  8  9  2  0  0  0
+  8 15  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="21furform.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 26
+##LASTX= 127
+##FIRSTY= 23
+##NPOINTS= 33
+##PEAK TABLE= (XY..XY)
+26, 23 27, 102 28, 18 29, 103 31, 22 37, 29 38, 54 39, 145 40, 14
+41, 66 42, 29 43, 25 44, 42 49, 15 50, 79 51, 113 52, 246 53, 391
+54, 22 55, 15 68, 11 69, 34 70, 26 79, 13 80, 222 81, 1000 82, 82
+95, 44 96, 10 97, 39 98, 74 126, 449 127, 30
+##END=  $$ end of furfuryl formate
+##TITLE=Ethanone, 1-(2-furanyl)-
+##JCAMP-DX=4.24
+##DATA TYPE=MASS SPECTRUM
+##BLOCK ID=23
+##ORIGIN=Japan AIST/NIMC Database- Spectrum MS-NW-1322
+##OWNER=NIST Mass Spectrometry Data Center
+##CAS REGISTRY NO=1192-62-7
+##MOLFORM=C6H6O2
+##MW=110
+##.IONIZATION ENERGY=70
+##$MODELS=
+<Models>
+<ModelData id="acetylfuran" type="MOL">
+2-acetylfuran
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+   10.6794   -8.1603    1.0168 O   0  0  0  0  0  0
+    9.3668   -8.5254    1.0018 C   0  0  0  0  0  0
+   10.7126   -6.8005    1.1486 C   0  0  0  0  0  0
+    8.5619   -7.4281    1.1109 C   0  0  0  0  0  0
+    9.4363   -6.3097    1.2146 C   0  0  0  0  0  0
+    9.1798   -9.5869    0.9113 H   0  0  0  0  0  0
+    7.4804   -7.4324    1.1212 H   0  0  0  0  0  0
+    9.1724   -5.2672    1.3155 H   0  0  0  0  0  0
+   11.9978   -6.1073    1.1989 C   0  0  0  0  0  0
+   13.2651   -6.9090    0.9398 C   0  0  0  0  0  0
+   12.0796   -4.9020    1.4287 O   0  0  0  0  0  0
+   13.6320   -7.3498    1.8657 H   0  0  0  0  0  0
+   14.0417   -6.2653    0.5254 H   0  0  0  0  0  0
+   13.0618   -7.7069    0.2272 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  1  0  0  0
+  2  4  2  0  0  0
+  2  6  1  0  0  0
+  3  5  2  0  0  0
+  3  9  1  0  0  0
+  4  5  1  0  0  0
+  4  7  1  0  0  0
+  5  8  1  0  0  0
+  9 10  1  0  0  0
+  9 11  2  0  0  0
+ 10 12  1  0  0  0
+ 10 13  1  0  0  0
+ 10 14  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="22acfur" type="MOL" baseModel="acetylfuran" >
+2-acetylfuran
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+   10.6794   -8.1603    1.0168 O   0  0  0  0  0  0
+    9.3668   -8.5254    1.0018 C   0  0  0  0  0  0
+   10.7126   -6.8005    1.1486 C   0  0  0  0  0  0
+    8.5619   -7.4281    1.1109 C   0  0  0  0  0  0
+    9.4363   -6.3097    1.2146 C   0  0  0  0  0  0
+    9.1798   -9.5869    0.9113 H   0  0  0  0  0  0
+    7.4804   -7.4324    1.1212 H   0  0  0  0  0  0
+    9.1724   -5.2672    1.3155 H   0  0  0  0  0  0
+   11.9978   -6.1073    1.1989 C   0  0  0  0  0  0
+   13.2651   -6.9090    0.9398 C   0  0  0  0  0  0
+   12.0796   -4.9020    1.4287 O   0  0  0  0  0  0
+   13.6320   -7.3498    1.8657 H   0  0  0  0  0  0
+   14.0417   -6.2653    0.5254 H   0  0  0  0  0  0
+   13.0618   -7.7069    0.2272 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  3  1  0  0  0
+  2  4  2  0  0  0
+  2  6  1  0  0  0
+  3  5  2  0  0  0
+  3  9  1  0  0  0
+  4  5  1  0  0  0
+  4  7  1  0  0  0
+  5  8  1  0  0  0
+  9 10  1  0  0  0
+  9 11  2  0  0  0
+ 10 12  1  0  0  0
+ 10 13  1  0  0  0
+ 10 14  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="22acfur.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR=1
+##YFACTOR=1
+##FIRSTX=12
+##LASTX=112
+##FIRSTY=1
+##NPOINTS=52
+##PEAK TABLE=(XY..XY)
+12,1 13,3 14,11 15,52 17,1 18,7 25,4 26,13 27,35 28,20
+29,22 31,2 32,4 33,1 36,4 37,27 38,60 39,235 40,35 41,9
+42,28 43,168 44,4 45,1 49,6 50,15 51,33 52,8 53,17 54,3
+55,4 57,1 60,1 61,4 62,3 63,4 64,1 65,2 66,6 67,49
+68,36 69,2 77,1 79,1 81,6 82,1 95,999 96,52 97,6 110,435
+111,31 112,3
+##END= $$ end of 2-acetylfuran
+##TITLE= pyrrole
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=24
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="pyrrole" type="MOL">
+pyrrole
+                    3D
+ Structure written by MMmdl.
+ 10 10  0  0  1  0            999 V2000
+    0.0245    0.9796   -0.2329 N   0  0  0  0  0  0
+    1.1043    0.1237   -0.1693 C   0  0  0  0  0  0
+    0.6090   -1.1178    0.1196 C   0  0  0  0  0  0
+   -0.8087   -1.0086    0.2336 C   0  0  0  0  0  0
+   -1.1489    0.2971    0.0118 C   0  0  0  0  0  0
+    0.0848    1.9696   -0.4312 H   0  0  0  0  0  0
+    2.1151    0.4711   -0.3333 H   0  0  0  0  0  0
+    1.2023   -2.0136    0.2375 H   0  0  0  0  0  0
+   -1.5050   -1.8052    0.4550 H   0  0  0  0  0  0
+   -2.1082    0.7962    0.0061 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  5  1  0  0  0
+  1  6  1  0  0  0
+  2  3  2  0  0  0
+  2  7  1  0  0  0
+  3  4  1  0  0  0
+  3  8  1  0  0  0
+  4  5  2  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="23pyrrole" type="MOL" baseModel="pyrrole" >
+pyrrole
+                    3D
+ Structure written by MMmdl.
+ 10 10  0  0  1  0            999 V2000
+    0.0245    0.9796   -0.2329 N   0  0  0  0  0  0
+    1.1043    0.1237   -0.1693 C   0  0  0  0  0  0
+    0.6090   -1.1178    0.1196 C   0  0  0  0  0  0
+   -0.8087   -1.0086    0.2336 C   0  0  0  0  0  0
+   -1.1489    0.2971    0.0118 C   0  0  0  0  0  0
+    0.0848    1.9696   -0.4312 H   0  0  0  0  0  0
+    2.1151    0.4711   -0.3333 H   0  0  0  0  0  0
+    1.2023   -2.0136    0.2375 H   0  0  0  0  0  0
+   -1.5050   -1.8052    0.4550 H   0  0  0  0  0  0
+   -2.1082    0.7962    0.0061 H   0  0  0  0  0  0
+  1  2  1  0  0  0
+  1  5  1  0  0  0
+  1  6  1  0  0  0
+  2  3  2  0  0  0
+  2  7  1  0  0  0
+  3  4  1  0  0  0
+  3  8  1  0  0  0
+  4  5  2  0  0  0
+  4  9  1  0  0  0
+  5 10  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="23pyrrole.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 26
+##LASTX= 68
+##NPOINTS= 16
+##FIRSTY= 33
+##MAXY= 1000
+##MINY= 9
+##PEAK TABLE= (XY..XY)
+26,33 27,26 28,421 37,117 38,196 39,579 40,505 41,581 42,15 52,19 63,9 64,10
+65,9 66,68 67,1000 68,46
+##END= $$ end of pyrrole
+##TITLE= furfuryl acetate
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PAEAK TABLE
+##BLOCK ID=25
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= Prof Robert Lancashire
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##MOLFORM=C7H8O3
+##MW=140
+##$MODELS=
+<Models>
+<ModelData id="furfurylacetate" type="MOL">
+furfuryl acetate
+                    3D
+ Structure written by MMmdl.
+ 18 18  0  0  1  0            999 V2000
+   -2.0496   -1.2393    0.1950 O   0  0  0  0  0  0
+    0.1209   -0.8201    1.2044 C   0  0  0  0  0  0
+    1.1561   -1.1745    0.2973 O   0  0  0  0  0  0
+    2.0579   -0.2579   -0.0803 C   0  0  0  0  0  0
+   -2.6252    0.6829   -0.8075 C   0  0  0  0  0  0
+   -3.0009   -0.6034   -0.5429 C   0  0  0  0  0  0
+    3.0859   -0.8166   -1.0507 C   0  0  0  0  0  0
+    2.0965    0.9140    0.2912 O   0  0  0  0  0  0
+   -1.3543    0.8546   -0.1916 C   0  0  0  0  0  0
+   -1.0484   -0.3382    0.4038 C   0  0  0  0  0  0
+   -0.1575   -1.7019    1.7813 H   0  0  0  0  0  0
+    0.4462   -0.0608    1.9171 H   0  0  0  0  0  0
+   -3.1920    1.4076   -1.3736 H   0  0  0  0  0  0
+   -3.8682   -1.1991   -0.7907 H   0  0  0  0  0  0
+    3.8139   -1.4260   -0.5163 H   0  0  0  0  0  0
+    3.6117   -0.0038   -1.5512 H   0  0  0  0  0  0
+    2.5985   -1.4329   -1.8055 H   0  0  0  0  0  0
+   -0.7316    1.7383   -0.1839 H   0  0  0  0  0  0
+  1  6  1  0  0  0
+  1 10  1  0  0  0
+  2 11  1  0  0  0
+  2 12  1  0  0  0
+  2  3  1  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  4  7  1  0  0  0
+  4  8  2  0  0  0
+  5 13  1  0  0  0
+  5  6  2  0  0  0
+  5  9  1  0  0  0
+  6 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  7 17  1  0  0  0
+  9 18  1  0  0  0
+  9 10  2  0  0  0
+M  END
+</ModelData>
+<ModelData id="24furac" type="MOL" baseModel="furfurylacetate" >
+furfuryl acetate
+                    3D
+ Structure written by MMmdl.
+ 18 18  0  0  1  0            999 V2000
+   -2.0496   -1.2393    0.1950 O   0  0  0  0  0  0
+    0.1209   -0.8201    1.2044 C   0  0  0  0  0  0
+    1.1561   -1.1745    0.2973 O   0  0  0  0  0  0
+    2.0579   -0.2579   -0.0803 C   0  0  0  0  0  0
+   -2.6252    0.6829   -0.8075 C   0  0  0  0  0  0
+   -3.0009   -0.6034   -0.5429 C   0  0  0  0  0  0
+    3.0859   -0.8166   -1.0507 C   0  0  0  0  0  0
+    2.0965    0.9140    0.2912 O   0  0  0  0  0  0
+   -1.3543    0.8546   -0.1916 C   0  0  0  0  0  0
+   -1.0484   -0.3382    0.4038 C   0  0  0  0  0  0
+   -0.1575   -1.7019    1.7813 H   0  0  0  0  0  0
+    0.4462   -0.0608    1.9171 H   0  0  0  0  0  0
+   -3.1920    1.4076   -1.3736 H   0  0  0  0  0  0
+   -3.8682   -1.1991   -0.7907 H   0  0  0  0  0  0
+    3.8139   -1.4260   -0.5163 H   0  0  0  0  0  0
+    3.6117   -0.0038   -1.5512 H   0  0  0  0  0  0
+    2.5985   -1.4329   -1.8055 H   0  0  0  0  0  0
+   -0.7316    1.7383   -0.1839 H   0  0  0  0  0  0
+  1  6  1  0  0  0
+  1 10  1  0  0  0
+  2 11  1  0  0  0
+  2 12  1  0  0  0
+  2  3  1  0  0  0
+  2 10  1  0  0  0
+  3  4  1  0  0  0
+  4  7  1  0  0  0
+  4  8  2  0  0  0
+  5 13  1  0  0  0
+  5  6  2  0  0  0
+  5  9  1  0  0  0
+  6 14  1  0  0  0
+  7 15  1  0  0  0
+  7 16  1  0  0  0
+  7 17  1  0  0  0
+  9 18  1  0  0  0
+  9 10  2  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~136)" peakShape="sharp" model="24furac.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 14
+##LASTX= 150
+##NPOINTS= 37
+##FIRSTY= 2
+##PEAK TABLE= (XY..XY)
+14, 20 15, 80 18, 20 26, 20 27, 160 28, 30 29, 50 37, 10 38, 30 39, 100
+40, 10 41, 70 42, 60 43, 580 44, 10 45, 20 50, 30 51, 70 52, 420
+53, 330 54, 10 55, 10 60, 10 61, 10 69, 50 70, 30 79, 10 80, 210
+81, 1000 82, 50 95, 30 97, 120 98, 660 99, 30 140, 420 141, 3
+150,0
+##END= $$ end of furfuryl acetate
+##TITLE= 5-methylfurfural
+##JCAMP-DX= 5  $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=26
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= Prof Robert Lancashire
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="mefurfur" type="MOL">
+5-methylfurfural
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+   -0.1032    1.0998    0.2293 O   0  0  0  0  0  0
+    0.5673   -1.0320    0.3315 C   0  0  0  0  0  0
+    1.2174   -1.8919    0.4087 H   0  0  0  0  0  0
+    0.9759    0.2735    0.3465 C   0  0  0  0  0  0
+    2.3060    0.8551    0.4621 C   0  0  0  0  0  0
+   -1.2069    0.3064    0.1391 C   0  0  0  0  0  0
+   -2.5110    1.0133    0.0027 C   0  0  0  0  0  0
+   -0.8488   -1.0112    0.1969 C   0  0  0  0  0  0
+   -1.5204   -1.8565    0.1487 H   0  0  0  0  0  0
+   -2.5243    1.6291   -0.8964 H   0  0  0  0  0  0
+   -2.6904    1.6616    0.8604 H   0  0  0  0  0  0
+   -3.3348    0.3027   -0.0621 H   0  0  0  0  0  0
+    2.3323    1.9446    0.4447 H   0  0  0  0  0  0
+    3.3218    0.1686    0.5709 O   0  0  0  0  0  0
+  1  4  1  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  4  2  0  0  0
+  2  8  1  0  0  0
+  4  5  1  0  0  0
+  5 13  1  0  0  0
+  5 14  2  0  0  0
+  6  7  1  0  0  0
+  6  8  2  0  0  0
+  7 10  1  0  0  0
+  7 11  1  0  0  0
+  7 12  1  0  0  0
+  8  9  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="25mefur" type="MOL" baseModel="mefurfur" >
+5-methylfurfural
+                    3D
+ Structure written by MMmdl.
+ 14 14  0  0  1  0            999 V2000
+   -0.1032    1.0998    0.2293 O   0  0  0  0  0  0
+    0.5673   -1.0320    0.3315 C   0  0  0  0  0  0
+    1.2174   -1.8919    0.4087 H   0  0  0  0  0  0
+    0.9759    0.2735    0.3465 C   0  0  0  0  0  0
+    2.3060    0.8551    0.4621 C   0  0  0  0  0  0
+   -1.2069    0.3064    0.1391 C   0  0  0  0  0  0
+   -2.5110    1.0133    0.0027 C   0  0  0  0  0  0
+   -0.8488   -1.0112    0.1969 C   0  0  0  0  0  0
+   -1.5204   -1.8565    0.1487 H   0  0  0  0  0  0
+   -2.5243    1.6291   -0.8964 H   0  0  0  0  0  0
+   -2.6904    1.6616    0.8604 H   0  0  0  0  0  0
+   -3.3348    0.3027   -0.0621 H   0  0  0  0  0  0
+    2.3323    1.9446    0.4447 H   0  0  0  0  0  0
+    3.3218    0.1686    0.5709 O   0  0  0  0  0  0
+  1  4  1  0  0  0
+  1  6  1  0  0  0
+  2  3  1  0  0  0
+  2  4  2  0  0  0
+  2  8  1  0  0  0
+  4  5  1  0  0  0
+  5 13  1  0  0  0
+  5 14  2  0  0  0
+  6  7  1  0  0  0
+  6  8  2  0  0  0
+  7 10  1  0  0  0
+  7 11  1  0  0  0
+  7 12  1  0  0  0
+  8  9  1  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~110)" peakShape="sharp" model="25mefur.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 15
+##LASTX= 120
+##NPOINTS= 25
+##FIRSTY= 3
+##PEAK TABLE= (XY..XY)
+15, 30 26, 30 27, 220 28, 20 29, 50 37, 20 38, 40 39, 110 41, 10
+42, 10 43, 90 49, 10 50, 70 51, 100 52, 60 53, 510 54, 40 55, 10
+79, 10 80, 10 81, 100 95, 20 110, 1000 111, 70 120, 0
+##END= $$ end of 5-METHYL-2-FURALDEHYDE
+##TITLE= furfuryl alcohol
+##JCAMP-DX= 5 $$home made
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAK TABLE
+##BLOCK ID=27
+##ORIGIN= UWI, Mona, JAMAICA
+##OWNER= public domain
+##$URL= http://wwwchem.uwimona.edu.jm/spectra
+##SPECTROMETER/DATA SYSTEM= Finnigan
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP
+##.INLET= GC
+##.IONIZATION MODE= EI+
+##$MODELS=
+<Models>
+<ModelData id="furfurol" type="MOL">
+furfuryl alcohol
+                    3D
+ Structure written by MMmdl.
+ 13 13  0  0  1  0            999 V2000
+   -0.9718   -1.3817    0.2186 O   0  0  0  0  0  0
+    1.4013   -0.9439   -0.0041 C   0  0  0  0  0  0
+    1.4992   -1.6413   -0.8368 H   0  0  0  0  0  0
+    1.6345   -1.4987    0.9054 H   0  0  0  0  0  0
+    2.3449    0.0969   -0.1625 O   0  0  0  0  0  0
+    3.2082   -0.2842   -0.1979 H   0  0  0  0  0  0
+   -2.1599   -0.7179    0.2561 C   0  0  0  0  0  0
+   -1.9651    0.6280    0.1279 C   0  0  0  0  0  0
+   -3.0335   -1.3421    0.3770 H   0  0  0  0  0  0
+   -0.5596    0.8089    0.0025 C   0  0  0  0  0  0
+   -2.7344    1.3862    0.1247 H   0  0  0  0  0  0
+   -0.0107    1.7318   -0.1180 H   0  0  0  0  0  0
+   -0.0011   -0.4378    0.0633 C   0  0  0  0  0  0
+  1  7  1  0  0  0
+  1 13  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2 13  1  0  0  0
+  5  6  1  0  0  0
+  7  8  2  0  0  0
+  7  9  1  0  0  0
+  8 10  1  0  0  0
+  8 11  1  0  0  0
+ 10 12  1  0  0  0
+ 10 13  2  0  0  0
+M  END
+</ModelData>
+<ModelData id="26fufol" type="MOL" baseModel="furfurol" >
+furfuryl alcohol
+                    3D
+ Structure written by MMmdl.
+ 13 13  0  0  1  0            999 V2000
+   -0.9718   -1.3817    0.2186 O   0  0  0  0  0  0
+    1.4013   -0.9439   -0.0041 C   0  0  0  0  0  0
+    1.4992   -1.6413   -0.8368 H   0  0  0  0  0  0
+    1.6345   -1.4987    0.9054 H   0  0  0  0  0  0
+    2.3449    0.0969   -0.1625 O   0  0  0  0  0  0
+    3.2082   -0.2842   -0.1979 H   0  0  0  0  0  0
+   -2.1599   -0.7179    0.2561 C   0  0  0  0  0  0
+   -1.9651    0.6280    0.1279 C   0  0  0  0  0  0
+   -3.0335   -1.3421    0.3770 H   0  0  0  0  0  0
+   -0.5596    0.8089    0.0025 C   0  0  0  0  0  0
+   -2.7344    1.3862    0.1247 H   0  0  0  0  0  0
+   -0.0107    1.7318   -0.1180 H   0  0  0  0  0  0
+   -0.0011   -0.4378    0.0633 C   0  0  0  0  0  0
+  1  7  1  0  0  0
+  1 13  1  0  0  0
+  2  3  1  0  0  0
+  2  4  1  0  0  0
+  2  5  1  0  0  0
+  2 13  1  0  0  0
+  5  6  1  0  0  0
+  7  8  2  0  0  0
+  7  9  1  0  0  0
+  8 10  1  0  0  0
+  8 11  1  0  0  0
+ 10 12  1  0  0  0
+ 10 13  2  0  0  0
+M  END
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="MS" xUnitsExpected="M/Z"  >
+<PeakData id="1" title="molecular ion (~98)" peakShape="sharp" model="26fufol.1"  xMax="137" xMin="135"    />
+</Peaks>
+##XUNITS=M/Z
+##YUNITS=RELATIVE ABUNDANCE
+##XFACTOR= 1
+##YFACTOR= 1
+##FIRSTX= 0
+##LASTX= 98
+##NPOINTS= 17
+##FIRSTY= 0
+##PEAK TABLE= (XY..XY)
+0,0 27,483 29,595 38,321 39,965 41,977 42,775 43,213 51,229 52,176
+53,657 69,341 70,342 81,657 82,136 97,549 98,1000
+##END= $$ end of furfuryl alcohol
+##END= $$ end of file
+

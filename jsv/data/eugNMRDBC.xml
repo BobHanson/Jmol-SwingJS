@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<cml xmlns="http://www.xml-cml.org/schema">
+ <spectrum id="nmrshiftdb20099897" moleculeRef="nmrshiftdb10009242" type="NMR" xmlns:cmlDict="http://www.xml-cml.org/dict/cmlDict" xmlns:subst="http://www.xml-cml.org/dict/substDict" xmlns:siUnits="http://www.xml-cml.org/units/siUnits" xmlns:nmr="http://www.nmrshiftdb.org/dict" xmlns:units="http://www.xml-cml.org/units/units" xmlns:cml="http://www.xml-cml.org/dict/cml" xmlns:macie="http://www.xml-cml.org/dict/macie">
+  <conditionList>
+   <scalar dataType="xsd:string" dictRef="cml:field" units="siUnits:hertz">Unreported</scalar>
+   <scalar dataType="xsd:string" dictRef="cml:temp" units="siUnits:k">Unreported</scalar>
+  </conditionList>
+  <metadataList>
+   <metadata name="nmr:assignmentMethod" content="Unreported"/>
+   <metadata name="nmr:OBSERVENUCLEUS" content="13C"/>
+  </metadataList>
+  <substanceList>
+   <substance dictRef="" role="subst:solvent" title="Unreported"/>
+  </substanceList>
+  <peakList>
+   <peak xValue="39.900001525878906" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="T" id="p0" atomRefs="a7"/>
+   <peak xValue="55.79999923706055" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="Q" id="p1" atomRefs="a10"/>
+   <peak xValue="111.0999984741211" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="D" id="p2" atomRefs="a2"/>
+   <peak xValue="114.19999694824219" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="D" id="p3" atomRefs="a5"/>
+   <peak xValue="115.5999984741211" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="T" id="p4" atomRefs="a9"/>
+   <peak xValue="121.19999694824219" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="D" id="p5" atomRefs="a6"/>
+   <peak xValue="132.0" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="S" id="p6" atomRefs="a1"/>
+   <peak xValue="137.89999389648438" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="D" id="p7" atomRefs="a8"/>
+   <peak xValue="143.89999389648438" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="S" id="p8" atomRefs="a4"/>
+   <peak xValue="146.5" xUnits="units:ppm" peakShape="sharp" peakMultiplicity="S" id="p9" atomRefs="a3"/>
+  </peakList>
+ </spectrum>
+</cml>

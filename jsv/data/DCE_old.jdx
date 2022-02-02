@@ -1,0 +1,816 @@
+##TITLE= 1,2-dichloroethylene
+##JCAMP-DX=5.01
+##DATA TYPE= LINK
+##BLOCKS= 4
+##TITLE= cis-1,2-dichloroethylene (Z)
+##JCAMP-DX= 5.01
+##DATA TYPE= INFRARED SPECTRUM
+##DATA CLASS= XYDATA
+##BLOCK ID=1
+##ORIGIN= Department of Chemistry, UWI, JAMAICA
+##OWNER= public domain
+##LONGDATE= 2012/02/18 12:31:56.0440 -0500 $$ export date from JSpecView
+##SPECTROMETER/DATA SYSTEM= from scan
+##$MODELS=
+<Models>
+<ModelData id="Cc2h2cl2" type="MOL">
+cis-1,2-dichloroethylene (Z)
+RLDSViewer          3D                             0
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.6703    0.9615 C   0  0  0  0  0  0  0  0  0  1
+    0.0000    1.6559   -0.4509 Cl  0  0  0  0  0  0  0  0  0  2
+    0.0000   -0.6703    0.9615 C   0  0  0  0  0  0  0  0  0  3
+    0.0000   -1.2543    1.8960 H   0  0  0  0  0  0  0  0  0  4
+    0.0000   -1.6559   -0.4509 Cl  0  0  0  0  0  0  0  0  0  5
+    0.0000    1.2543    1.8960 H   0  0  0  0  0  0  0  0  0  6
+  1  6  1  0  0  0
+  1  3  2  0  0  0
+  1  2  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="C1" type="XYZVIB" baseModel="Cc2h2cl2" vibrationScale=".5">
+6
+Model[1]: Convg=0.2429D-08;-V/T=1.0002;Energy=NaN;E(RPM3)=0.919026666692E-02 A.U.;Range=M.O.s;PATH=Calculation 1;Input
+C     0.00000    0.00000    0.00000
+Cl    0.00000    0.00000    1.72231
+C     1.09934    0.00000   -0.76714
+H     1.04351    0.00000   -1.86773
+Cl    2.71588    0.00000   -0.17287
+H    -1.01374    0.00000   -0.43215
+6
+Model[2]: Convg=0.2429D-08;-V/T=1.0002;Energy=0.009190267;E(RPM3)=0.919026666692E-02 A.U.;Range=M.O.s;PATH=Calculation 1;Standard
+C     0.00000    0.67027    0.96153
+Cl    0.00000    1.65587   -0.45089
+C     0.00000   -0.67027    0.96153
+H     0.00000   -1.25431    1.89604
+Cl    0.00000   -1.65587   -0.45089
+H     0.00000    1.25431    1.89604
+6
+Model[3]: IRIntensity=0.1623 KM/Mole;ReducedMass=27.1796 AMU;ForceConstant=0.3452 mDyne/A;Frequency=146.8263 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.00000   -0.28000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.59000    0.10000
+C     0.00000   -0.67027    0.96153    0.00000    0.00000   -0.28000
+H     0.00000   -1.25431    1.89604    0.00000    0.20000   -0.14000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.59000    0.10000
+H     0.00000    1.25431    1.89604    0.00000   -0.20000   -0.14000
+6
+Model[4]: IRIntensity=0.0000 KM/Mole;ReducedMass=2.7386 AMU;ForceConstant=0.2504 mDyne/A;Frequency=393.9051 cm^-1;FrequencyLabel=A2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.27000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089   -0.05000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153   -0.27000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604   -0.65000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089    0.05000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.65000    0.00000    0.00000
+6
+Model[5]: IRIntensity=9.3488 KM/Mole;ReducedMass=9.5299 AMU;ForceConstant=1.3839 mDyne/A;Frequency=496.4658 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.47000    0.13000
+Cl    0.00000    1.65587   -0.45089    0.00000   -0.17000    0.13000
+C     0.00000   -0.67027    0.96153    0.00000    0.47000   -0.13000
+H     0.00000   -1.25431    1.89604    0.00000    0.43000   -0.17000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.17000   -0.13000
+H     0.00000    1.25431    1.89604    0.00000    0.43000    0.17000
+6
+Model[6]: IRIntensity=24.2180 KM/Mole;ReducedMass=9.9009 AMU;ForceConstant=1.9484 mDyne/A;Frequency=577.9285 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.00000    0.51000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.12000   -0.18000
+C     0.00000   -0.67027    0.96153    0.00000    0.00000    0.51000
+H     0.00000   -1.25431    1.89604    0.00000   -0.35000    0.27000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.12000   -0.18000
+H     0.00000    1.25431    1.89604    0.00000    0.35000    0.27000
+6
+Model[7]: IRIntensity=45.6105 KM/Mole;ReducedMass=5.6061 AMU;ForceConstant=1.9169 mDyne/A;Frequency=761.7979 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000   -0.03000    0.43000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.01000   -0.09000
+C     0.00000   -0.67027    0.96153    0.00000   -0.03000   -0.43000
+H     0.00000   -1.25431    1.89604    0.00000   -0.21000   -0.51000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.01000    0.09000
+H     0.00000    1.25431    1.89604    0.00000   -0.21000    0.51000
+6
+Model[8]: IRIntensity=50.3660 KM/Mole;ReducedMass=1.2298 AMU;ForceConstant=0.4404 mDyne/A;Frequency=779.5981 cm^-1;FrequencyLabel=B1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.10000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089   -0.01000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.10000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604   -0.70000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089   -0.01000    0.00000    0.00000
+H     0.00000    1.25431    1.89604   -0.70000    0.00000    0.00000
+6
+Model[9]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.4436 AMU;ForceConstant=0.7836 mDyne/A;Frequency=959.8055 cm^-1;FrequencyLabel=A2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.14000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153   -0.14000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604    0.69000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604   -0.69000    0.00000    0.00000
+6
+Model[10]: IRIntensity=3.0206 KM/Mole;ReducedMass=1.0231 AMU;ForceConstant=0.8402 mDyne/A;Frequency=1180.6516 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000   -0.01000    0.01000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000   -0.01000
+C     0.00000   -0.67027    0.96153    0.00000    0.01000    0.01000
+H     0.00000   -1.25431    1.89604    0.00000    0.61000    0.36000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000   -0.01000
+H     0.00000    1.25431    1.89604    0.00000   -0.61000    0.36000
+6
+Model[11]: IRIntensity=39.6557 KM/Mole;ReducedMass=1.1647 AMU;ForceConstant=1.0093 mDyne/A;Frequency=1212.7624 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.06000   -0.06000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000   -0.01000
+C     0.00000   -0.67027    0.96153    0.00000    0.06000    0.06000
+H     0.00000   -1.25431    1.89604    0.00000   -0.61000   -0.34000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.01000
+H     0.00000    1.25431    1.89604    0.00000   -0.61000    0.34000
+6
+Model[12]: IRIntensity=20.1196 KM/Mole;ReducedMass=8.4412 AMU;ForceConstant=15.0914 mDyne/A;Frequency=1741.9642 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.58000   -0.03000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000   -0.58000   -0.03000
+H     0.00000   -1.25431    1.89604    0.00000   -0.08000    0.39000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000    0.08000    0.39000
+6
+Model[13]: IRIntensity=41.8464 KM/Mole;ReducedMass=1.0801 AMU;ForceConstant=5.7403 mDyne/A;Frequency=3003.3938 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.03000    0.05000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000    0.03000   -0.05000
+H     0.00000   -1.25431    1.89604    0.00000   -0.36000    0.60000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000   -0.36000   -0.60000
+6
+Model[14]: IRIntensity=36.4698 KM/Mole;ReducedMass=1.0964 AMU;ForceConstant=5.9009 mDyne/A;Frequency=3022.3735 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.04000    0.05000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000   -0.04000    0.05000
+H     0.00000   -1.25431    1.89604    0.00000    0.37000   -0.60000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000   -0.37000   -0.60000
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="IR" xUnitsExpected="1/cm"  >
+<PeakData id="1" title="B1-asymm stretch of C-H group (~3088 cm-1)" peakShape="broad" model="C1.13" xMax="3120" xMin="3080"    />
+<PeakData id="2" title="A1-symm stretch of C-H group (~3080 cm-1)" peakShape="broad" model="C1.14" xMax="3100" xMin="3060"    />
+<PeakData id="3" title="A1- C=C stretch (~1590 cm-1)" peakShape="broad" model="C1.12" xMax="1600" xMin="1555"    />
+<PeakData id="4" title="B1-asymm C-H bend (~1300 cm-1)" peakShape="broad" model="C1.11" xMax="1320" xMin="1240"    />
+<PeakData id="5" title="A1- C-H scissors (~1180 cm-1)" peakShape="broad" model="C1.10" xMax="1210" xMin="1160"    />
+<PeakData id="6" title="Inactive A2- C-H rocking (~875 cm-1)" peakShape="broad" model="C1.8" xMax="900" xMin="860"    />
+<PeakData id="7" title="B1-asymm stretch of C-Cl group (~850 cm-1)" peakShape="broad" model="C1.7" xMax="870" xMin="830"    />
+<PeakData id="8" title="A1-symm stretch of C-Cl group (~715 cm-1)" peakShape="broad" model="C1.6" xMax="735" xMin="695"    />
+<PeakData id="9" title="B2-asym C-H flap (~697 cm-1)" peakShape="broad" model="C1.9" xMax="720" xMin="670"    />
+<PeakData id="10" title="B2-asymm bend of C-Cl group (~571 cm-1)" peakShape="broad" model="C1.5" xMax="590" xMin="550"    />
+<PeakData id="11" title="Inactive A2- Cl-C=C-Cl torsion (~406 cm-1)" peakShape="broad" model="C1.4" xMax="420" xMin="380"    />
+<PeakData id="12" title="A1-symm bend of C-Cl group (~173 cm-1)" peakShape="broad" model="C1.3" xMax="190" xMin="150"    />
+</Peaks>
+##XUNITS= 1/CM
+##YUNITS= TRANSMITTANCE
+##XFACTOR= 1E0
+##YFACTOR= 8.49006E-7
+##FIRSTX= 550
+##FIRSTY= 0.911305
+##LASTX= 3846
+##NPOINTS= 825
+##XYDATA= (X++(Y..Y))
+550.0A073379r6938k0972J80j762J367m820l849N0898O9566M4710A133629
+598.0A138017K302M68o83%M67n071m857o618j2949j9028k6510l7804I79210
+654.0I17414p6041q2767q7155p4494o2444l4531k9747j5610j62082A71684
+698.0B89126J36399o116J7230J2949K6223K3956M5610P0284Q6328G75440
+742.0H34071N2229N2983M7121M0466L2624K3957J6618J1905O799A120608
+786.0A121039k266l417n648p193n108l813j1259k9063n6796r2551G48499
+834.0E40305k03231j32045n1149k842P553J2626p878J3058J37260F01346
+878.0H80365J47369N2408J8811J2806Q381O367N970L921O83K555A142405
+926.0A145427%P19O83J188K15K52M68m68%M68M67r35k52K52r35m68A147549
+998.0A146829o83j403l704m68J403k52%J151P20J366K122r35J151A150103
+1058.0A151038m68j403j870P20k52m892k986K17J870Q99k16K16R35A144959
+1118.0A146146J619R35j151m68J403j655k301J834K52j403m68J403A145211
+1174.0A143808R35O84%o84%Tk15m68j655k15M67k52M68%k769k555A136650
+1246.0A133880l920q669j1583j6329j8705k3308l0107n4099r6399G34795
+1290.0F14151l4639L3272J6402J7769k5898O474J29852J66973J19779A102515
+1334.0A125608Q704L237M68O84M68o85k769j618k518k986j834M67A129493
+1390.0A128593m568j618K301L633K986K553K051R35O83%M68M67%o83A136650
+1454.0A134312k985j151J403Q98q98o84K16J618L669K554%k086k769A130176
+1514.0A125391o402j0827j6330k3453l6689n3452p3953q2479p5573F93609
+1558.0F63717k4352l0034l6942j1762K3021L3884L6690K5322l058F71559
+1602.0G09147P4998Q1688O8882N4099M3307L5179K7877J9964J2769A135248
+1646.0A139169J618%r00r35k51r00k301l023k984m102m567m317m964A106795
+1706.0A105465K15J331k16l812M31P446Q813O618L885L236L454K770A141255
+1762.0A142657J151J403O83P20R35K16m68%P20O83k16k52K52K16K52A149419
+1830.0A148952m68K16P19K16r35o83%k52K52%M67m67k52M67k15O83A148952
+1902.0A148700k16M68O83k16k52K52k52K52k52k15%M67%k52k15K15A148700
+1974.0A148484K16M67K52%k52M68K52K16%TK52%p20%k16K16M68%j151A148952
+2058.0A149635K52m68%R36O83m68o83%m68r35k52K52m67k52o84r35A145894
+2130.0A145427k16k52m31K15M68k52K52m68m67J403J402K16R35%m67A148232
+2198.0A148484k52%j618%J403m68K16%k16J151k16m67M67%p19m68A147081
+2270.0A146362r35%TM67K52j187o83R35%M68%TJ150P20M68m68j403A147081
+2346.0A147549m68j187j618j151p20K52o83r35%K16M67K52O83R36A144528
+2410.0A144528r35K15R35K16%TJ655R35M68J150k15%Tm68O83P20m68A148700
+2486.0A147765J187M67p19k16K16K52k52%M67m67k16%R35O84K52k52A150570
+2558.0A149635%k16r35M68%p20R35K52p19R35M68o84M68%K16M67k15A150355
+2634.0A150570m67m68M68M67k15r36m67M67M68K16%k16p20K52M68A150822
+2702.0A151038r35P19%j187R35K52j655r35%o83m68j187o83J151K52A145894
+2770.0A145894R35J188M67m67K15R35P20%k52o83m68%p19r36j870A142873
+2838.0A142405j618l238l452k770k519j834m67k16K16K086M569L021A138017
+2894.0A141255L021K086K52K15M68o83R35J151m68k15K15R35k15k52A148952
+2958.0A148232j403k15J618P20%p20M68j403k086j403m67m68M68r36A141039
+3022.0A140571j402k088j833k086m102n035q669j6618k6473l9531I75073
+3070.0I10939o0790k2984R963q129J5143o007K2950J00787R1004M9639A120608
+3118.0A129276M821M172J835J618J619k16k52M68P19M68O83R35TO84A148017
+3182.0A146146%R35%O84R35K52%TK15K52m67J151R35j403j618K15A148484
+3254.0A147765M67R35m67j151m68R36R35M67m67r35O83k16J403M68A149167
+3318.0A149419k52r35k15R35%TK15m67r35P19%Tm67r36J619P19j187A147297
+3394.0A146614J151P19%M68K15j150M67m67j188R36J187p20j618M67A146146
+3458.0A145679J618J187m67j188k15K15J188M67p19k16J403J151m68A148484
+3518.0A149419%K16P20j188m67k16%m67r36M68K16M67J655m68j870A147765
+3586.0A148700%j151%R35r35M68k52k338%m68o83k16j655m31m67p20A141039
+3658.0A141722O83K52O84K338TM67j655%J403%o83J151r35k554%J618A146614
+3730.0A145427K52%p20R35M68%Tj619m67O83J187O83k15k338k086A143125
+3798.0A144060m67M67K769M68k338%K52o83J618K086A149167
+3846.0A150103  $$checkpoint
+##END= $$ end of cis-DCE IR
+##TITLE=Raman of cis-1,2-dichloroethylene (Z) $$ Begin of the data block
+##JCAMP-DX=5.00 $$ ACD/DocManager Library v 5.00
+##DATA TYPE=RAMAN SPECTRUM
+##DATA CLASS=XYDATA
+##BLOCK ID=2
+##DATE=19 Feb 2012 10:29:22
+##ORIGIN= Department of Chemistry, UWI, Jamaica
+##OWNER= public domain
+##SPECTROMETER/DATA SYSTEM=from scan
+##$MODELS=
+<Models>
+<ModelData id="Cc2h2cl2" type="MOL">
+cis-1,2-dichloroethylene (Z)
+RLDSViewer          3D                             0
+
+  6  5  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.6703    0.9615 C   0  0  0  0  0  0  0  0  0  1
+    0.0000    1.6559   -0.4509 Cl  0  0  0  0  0  0  0  0  0  2
+    0.0000   -0.6703    0.9615 C   0  0  0  0  0  0  0  0  0  3
+    0.0000   -1.2543    1.8960 H   0  0  0  0  0  0  0  0  0  4
+    0.0000   -1.6559   -0.4509 Cl  0  0  0  0  0  0  0  0  0  5
+    0.0000    1.2543    1.8960 H   0  0  0  0  0  0  0  0  0  6
+  1  6  1  0  0  0
+  1  3  2  0  0  0
+  1  2  1  0  0  0
+  3  4  1  0  0  0
+  3  5  1  0  0  0
+M  END
+</ModelData>
+<ModelData id="C2" type="XYZVIB" baseModel="Cc2h2cl2" vibrationScale=".5">
+6
+Model[1]: Convg=0.2429D-08;-V/T=1.0002;Energy=NaN;E(RPM3)=0.919026666692E-02 A.U.;Range=M.O.s;PATH=Calculation 1;Input
+C     0.00000    0.00000    0.00000
+Cl    0.00000    0.00000    1.72231
+C     1.09934    0.00000   -0.76714
+H     1.04351    0.00000   -1.86773
+Cl    2.71588    0.00000   -0.17287
+H    -1.01374    0.00000   -0.43215
+6
+Model[2]: Convg=0.2429D-08;-V/T=1.0002;Energy=0.009190267;E(RPM3)=0.919026666692E-02 A.U.;Range=M.O.s;PATH=Calculation 1;Standard
+C     0.00000    0.67027    0.96153
+Cl    0.00000    1.65587   -0.45089
+C     0.00000   -0.67027    0.96153
+H     0.00000   -1.25431    1.89604
+Cl    0.00000   -1.65587   -0.45089
+H     0.00000    1.25431    1.89604
+6
+Model[3]: IRIntensity=0.1623 KM/Mole;ReducedMass=27.1796 AMU;ForceConstant=0.3452 mDyne/A;Frequency=146.8263 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.00000   -0.28000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.59000    0.10000
+C     0.00000   -0.67027    0.96153    0.00000    0.00000   -0.28000
+H     0.00000   -1.25431    1.89604    0.00000    0.20000   -0.14000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.59000    0.10000
+H     0.00000    1.25431    1.89604    0.00000   -0.20000   -0.14000
+6
+Model[4]: IRIntensity=0.0000 KM/Mole;ReducedMass=2.7386 AMU;ForceConstant=0.2504 mDyne/A;Frequency=393.9051 cm^-1;FrequencyLabel=A2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.27000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089   -0.05000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153   -0.27000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604   -0.65000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089    0.05000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.65000    0.00000    0.00000
+6
+Model[5]: IRIntensity=9.3488 KM/Mole;ReducedMass=9.5299 AMU;ForceConstant=1.3839 mDyne/A;Frequency=496.4658 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.47000    0.13000
+Cl    0.00000    1.65587   -0.45089    0.00000   -0.17000    0.13000
+C     0.00000   -0.67027    0.96153    0.00000    0.47000   -0.13000
+H     0.00000   -1.25431    1.89604    0.00000    0.43000   -0.17000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.17000   -0.13000
+H     0.00000    1.25431    1.89604    0.00000    0.43000    0.17000
+6
+Model[6]: IRIntensity=24.2180 KM/Mole;ReducedMass=9.9009 AMU;ForceConstant=1.9484 mDyne/A;Frequency=577.9285 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.00000    0.51000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.12000   -0.18000
+C     0.00000   -0.67027    0.96153    0.00000    0.00000    0.51000
+H     0.00000   -1.25431    1.89604    0.00000   -0.35000    0.27000
+Cl    0.00000   -1.65587   -0.45089    0.00000   -0.12000   -0.18000
+H     0.00000    1.25431    1.89604    0.00000    0.35000    0.27000
+6
+Model[7]: IRIntensity=45.6105 KM/Mole;ReducedMass=5.6061 AMU;ForceConstant=1.9169 mDyne/A;Frequency=761.7979 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000   -0.03000    0.43000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.01000   -0.09000
+C     0.00000   -0.67027    0.96153    0.00000   -0.03000   -0.43000
+H     0.00000   -1.25431    1.89604    0.00000   -0.21000   -0.51000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.01000    0.09000
+H     0.00000    1.25431    1.89604    0.00000   -0.21000    0.51000
+6
+Model[8]: IRIntensity=50.3660 KM/Mole;ReducedMass=1.2298 AMU;ForceConstant=0.4404 mDyne/A;Frequency=779.5981 cm^-1;FrequencyLabel=B1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.10000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089   -0.01000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.10000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604   -0.70000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089   -0.01000    0.00000    0.00000
+H     0.00000    1.25431    1.89604   -0.70000    0.00000    0.00000
+6
+Model[9]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.4436 AMU;ForceConstant=0.7836 mDyne/A;Frequency=959.8055 cm^-1;FrequencyLabel=A2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.14000    0.00000    0.00000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153   -0.14000    0.00000    0.00000
+H     0.00000   -1.25431    1.89604    0.69000    0.00000    0.00000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604   -0.69000    0.00000    0.00000
+6
+Model[10]: IRIntensity=3.0206 KM/Mole;ReducedMass=1.0231 AMU;ForceConstant=0.8402 mDyne/A;Frequency=1180.6516 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000   -0.01000    0.01000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000   -0.01000
+C     0.00000   -0.67027    0.96153    0.00000    0.01000    0.01000
+H     0.00000   -1.25431    1.89604    0.00000    0.61000    0.36000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000   -0.01000
+H     0.00000    1.25431    1.89604    0.00000   -0.61000    0.36000
+6
+Model[11]: IRIntensity=39.6557 KM/Mole;ReducedMass=1.1647 AMU;ForceConstant=1.0093 mDyne/A;Frequency=1212.7624 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.06000   -0.06000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000   -0.01000
+C     0.00000   -0.67027    0.96153    0.00000    0.06000    0.06000
+H     0.00000   -1.25431    1.89604    0.00000   -0.61000   -0.34000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.01000
+H     0.00000    1.25431    1.89604    0.00000   -0.61000    0.34000
+6
+Model[12]: IRIntensity=20.1196 KM/Mole;ReducedMass=8.4412 AMU;ForceConstant=15.0914 mDyne/A;Frequency=1741.9642 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.58000   -0.03000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000   -0.58000   -0.03000
+H     0.00000   -1.25431    1.89604    0.00000   -0.08000    0.39000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000    0.08000    0.39000
+6
+Model[13]: IRIntensity=41.8464 KM/Mole;ReducedMass=1.0801 AMU;ForceConstant=5.7403 mDyne/A;Frequency=3003.3938 cm^-1;FrequencyLabel=B2;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.03000    0.05000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000    0.03000   -0.05000
+H     0.00000   -1.25431    1.89604    0.00000   -0.36000    0.60000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000   -0.36000   -0.60000
+6
+Model[14]: IRIntensity=36.4698 KM/Mole;ReducedMass=1.0964 AMU;ForceConstant=5.9009 mDyne/A;Frequency=3022.3735 cm^-1;FrequencyLabel=A1;PATH=Calculation 1;FrequenciesFrequencies
+C     0.00000    0.67027    0.96153    0.00000    0.04000    0.05000
+Cl    0.00000    1.65587   -0.45089    0.00000    0.00000    0.00000
+C     0.00000   -0.67027    0.96153    0.00000   -0.04000    0.05000
+H     0.00000   -1.25431    1.89604    0.00000    0.37000   -0.60000
+Cl    0.00000   -1.65587   -0.45089    0.00000    0.00000    0.00000
+H     0.00000    1.25431    1.89604    0.00000   -0.37000   -0.60000
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="RAMAN" xUnitsExpected="1/cm"  >
+<PeakData id="1" title="B1-asymm stretch of C-H group (~3088 cm-1)" peakShape="broad" model="C2.13" xMax="3120" xMin="3080"    />
+<PeakData id="2" title="A1-symm stretch of C-H group (~3080 cm-1)" peakShape="broad" model="C2.14" xMax="3100" xMin="3060"    />
+<PeakData id="3" title="A1- C=C stretch (~1590 cm-1)" peakShape="broad" model="C2.12" xMax="1600" xMin="1555"    />
+<PeakData id="4" title="B1-asymm C-H bend (~1300 cm-1)" peakShape="broad" model="C2.11" xMax="1320" xMin="1240"    />
+<PeakData id="5" title="A1- C-H scissors (~1180 cm-1)" peakShape="broad" model="C2.10" xMax="1210" xMin="1160"    />
+<PeakData id="6" title="A2- C-H rocking (~875 cm-1)" peakShape="broad" model="C2.8" xMax="900" xMin="860"    />
+<PeakData id="7" title="B1-asymm stretch of C-Cl group (~850 cm-1)" peakShape="broad" model="C2.7" xMax="870" xMin="830"    />
+<PeakData id="8" title="A1-symm stretch of C-Cl group (~715 cm-1)" peakShape="broad" model="C2.6" xMax="735" xMin="695"    />
+<PeakData id="9" title="B2-asym C-H flap (~697 cm-1)" peakShape="broad" model="C2.9" xMax="720" xMin="670"    />
+<PeakData id="10" title="B2-asymm bend of C-Cl group (~571 cm-1)" peakShape="broad" model="C2.5" xMax="590" xMin="550"    />
+<PeakData id="11" title="A2- Cl-C=C-Cl torsion (~406 cm-1)" peakShape="broad" model="C2.4" xMax="420" xMin="380"    />
+<PeakData id="12" title="A1-symm bend of C-Cl group (~173 cm-1)" peakShape="broad" model="C2.3" xMax="190" xMin="150"    />
+</Peaks>
+##XUNITS=1/CM
+##YUNITS=RAMAN INTENSITY
+##XFACTOR=1.0000000000
+##YFACTOR=0.0025460010
+##FIRSTX=68.91406250
+##LASTX=3365.00000000
+##FIRSTY=61.04759979
+##DELTAX=12.82523727
+##NPOINTS=258
+##XYDATA=(X++(Y..Y))
+68.9B3978n329m594m132k420n14K3665j7436q113k020q85k88j91%j05k60k20r6J02
+299.8A142N55K101k84q40r81J214M855m747j493k61r6j88j91%M7O36J21k17J843J54
+556.3C370j693n88j09P4Q8K17L93L97M9K9802j7030j1751j473m37q7r0r7J15N07j25
+812.8A532j85%P0J10m52k50R8N0%n4r7l6%Wl5q7j7J96J01q7l6J95M81L264J396l948
+1184.7B209r06l30%J31L31R95j137l82j25%Un8r7K5Q8rr7l9%O4R7m5r7N0Q8J75K19
+1543.8A150L34J8469j6215k436m30j56q7L3R7M99J053p94o34j73j11%S8M2Q8K3r7n6
+2031.2E99%X7J9Q7P2r6o8R7P6%K8R7K07L92J539J5845j2797l634j132r7JL30O32p91
+3172.6A406n35k25R7pq7n0%O8R7Uo0q7J29K20
+3365A160
+##END=$$ End of the data block
+##TITLE= trans-1,2-dichloroethene (E)
+##JCAMP-DX= 5.01
+##DATA TYPE= INFRARED SPECTRUM
+##DATA CLASS= XYDATA
+##BLOCK ID=3
+##ORIGIN= Department of Chemistry, UWI, JAMAICA
+##OWNER= public domain
+##LONGDATE= 2012/02/18 12:32:26.0301 -0500 $$ export date from JSpecView
+##SPECTROMETER/DATA SYSTEM= from scan
+##$MODELS=
+<Models>
+<ModelData id="Tc2h2cl2" type="MOL">
+trans-1,2-dichloroethylene (E)
+
+  created with ArgusLab version 4.0.1
+  6  5  0  0  0  0  0  0  0  0  0 V2000
+   -0.3642    0.5617    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4662    0.5830    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3642    2.1208    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+    0.3642   -0.5617    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4662   -0.5830    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3642   -2.1208    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  2  0  0  0  0
+  4  5  1  0  0  0  0
+  4  6  1  0  0  0  0
+M  END
+</ModelData>
+<ModelData id="T1" type="XYZVIB" baseModel="Tc2h2cl2" vibrationScale=".5">
+6
+Model[1]: E(RAM1)=-0.434016412453E-02 A.U.;Convg=0.4972D-08;-V/T=0.9999;Energy=NaN;Range=M.O.s;PATH=Calculation 1;Input
+C     0.00000    0.00000    0.00000
+H     0.00000    0.00000    1.10217
+Cl    1.57296    0.00000   -0.69806
+C    -1.10899    0.00000   -0.75009
+H    -1.10899    0.00000   -1.85226
+Cl   -2.68195    0.00000   -0.05203
+6
+Model[2]: E(RAM1)=-0.434016412453E-02 A.U.;Convg=0.4972D-08;-V/T=0.9999;Energy=-0.004340164;Range=M.O.s;PATH=Calculation 1;Standard
+C    -0.36422    0.56166    0.00000
+H    -1.46618    0.58304    0.00000
+Cl    0.36422    2.12079    0.00000
+C     0.36422   -0.56166    0.00000
+H     1.46618   -0.58304    0.00000
+Cl   -0.36422   -2.12079    0.00000
+6
+Model[3]: IRIntensity=1.0809 KM/Mole;ReducedMass=6.8502 AMU;ForceConstant=0.2257 mDyne/A;Frequency=236.4958 cm^-1;FrequencyLabel=AU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000    0.43000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000    0.54000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000   -0.16000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000    0.43000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.54000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000   -0.16000
+6
+Model[4]: IRIntensity=2.4048 KM/Mole;ReducedMass=6.8794 AMU;ForceConstant=0.2853 mDyne/A;Frequency=265.3070 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.40000    0.15000    0.00000
+H    -1.46618    0.58304    0.00000   -0.38000    0.38000    0.00000
+Cl    0.36422    2.12079    0.00000    0.15000   -0.06000    0.00000
+C     0.36422   -0.56166    0.00000   -0.40000    0.15000    0.00000
+H     1.46618   -0.58304    0.00000   -0.38000    0.38000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.15000   -0.06000    0.00000
+6
+Model[5]: IRIntensity=0.0000 KM/Mole;ReducedMass=18.4278 AMU;ForceConstant=1.4783 mDyne/A;Frequency=368.9947 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.21000    0.15000    0.00000
+H    -1.46618    0.58304    0.00000    0.21000    0.39000    0.00000
+Cl    0.36422    2.12079    0.00000    0.05000    0.48000    0.00000
+C     0.36422   -0.56166    0.00000   -0.21000   -0.15000    0.00000
+H     1.46618   -0.58304    0.00000   -0.21000   -0.39000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.05000   -0.48000    0.00000
+6
+Model[6]: IRIntensity=0.0000 KM/Mole;ReducedMass=4.8520 AMU;ForceConstant=2.0603 mDyne/A;Frequency=848.9532 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.32000    0.19000    0.00000
+H    -1.46618    0.58304    0.00000    0.31000    0.50000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.07000   -0.08000    0.00000
+C     0.36422   -0.56166    0.00000   -0.32000   -0.19000    0.00000
+H     1.46618   -0.58304    0.00000   -0.31000   -0.50000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.07000    0.08000    0.00000
+6
+Model[7]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.8465 AMU;ForceConstant=0.8421 mDyne/A;Frequency=879.8182 cm^-1;FrequencyLabel=BG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000    0.19000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000   -0.68000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000   -0.01000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000   -0.19000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.68000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.01000
+6
+Model[8]: IRIntensity=156.1848 KM/Mole;ReducedMass=10.4115 AMU;ForceConstant=4.7511 mDyne/A;Frequency=880.0642 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.21000    0.51000    0.00000
+H    -1.46618    0.58304    0.00000    0.18000    0.35000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.08000   -0.19000    0.00000
+C     0.36422   -0.56166    0.00000    0.21000    0.51000    0.00000
+H     1.46618   -0.58304    0.00000    0.18000    0.35000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.08000   -0.19000    0.00000
+6
+Model[9]: IRIntensity=85.4112 KM/Mole;ReducedMass=1.1165 AMU;ForceConstant=0.6016 mDyne/A;Frequency=956.3369 cm^-1;FrequencyLabel=AU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000   -0.07000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000    0.70000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000   -0.07000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.70000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+6
+Model[10]: IRIntensity=16.6654 KM/Mole;ReducedMass=1.0902 AMU;ForceConstant=0.9190 mDyne/A;Frequency=1196.1292 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.02000   -0.06000    0.00000
+H    -1.46618    0.58304    0.00000    0.06000    0.70000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.01000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.02000   -0.06000    0.00000
+H     1.46618   -0.58304    0.00000    0.06000    0.70000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.01000    0.00000    0.00000
+6
+Model[11]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.1490 AMU;ForceConstant=1.0669 mDyne/A;Frequency=1255.3385 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.07000   -0.04000    0.00000
+H    -1.46618    0.58304    0.00000   -0.04000    0.70000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.01000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.07000    0.04000    0.00000
+H     1.46618   -0.58304    0.00000    0.04000   -0.70000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.01000    0.00000    0.00000
+6
+Model[12]: IRIntensity=0.0000 KM/Mole;ReducedMass=9.1626 AMU;ForceConstant=17.0165 mDyne/A;Frequency=1775.4231 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.29000    0.53000    0.00000
+H    -1.46618    0.58304    0.00000   -0.36000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000   -0.01000    0.00000
+C     0.36422   -0.56166    0.00000    0.29000   -0.53000    0.00000
+H     1.46618   -0.58304    0.00000    0.36000    0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.01000    0.00000
+6
+Model[13]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.0823 AMU;ForceConstant=6.2456 mDyne/A;Frequency=3129.6222 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.06000    0.01000    0.00000
+H    -1.46618    0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.06000   -0.01000    0.00000
+H     1.46618   -0.58304    0.00000   -0.70000    0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+6
+Model[14]: IRIntensity=124.2254 KM/Mole;ReducedMass=1.0815 AMU;ForceConstant=6.2982 mDyne/A;Frequency=3143.8929 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.06000    0.00000    0.00000
+H    -1.46618    0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000   -0.06000    0.00000    0.00000
+H     1.46618   -0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="IR" xUnitsExpected="1/cm"  >
+<PeakData id="1" title="Bu- asymm stretch of CH group (~3096 cm-1)" peakShape="broad" model="T1.14" xMax="3130" xMin="3080"    />
+<PeakData id="2" title="Inactive Ag-symm stretch of CH group (~3071 cm-1)" peakShape="broad" model="T1.13" xMax="3090" xMin="3050"    />
+<PeakData id="3" title="Inactive Ag- C=C stretch (~1576 cm-1)" peakShape="broad" model="T1.12" xMax="1600" xMin="1545"    />
+<PeakData id="4" title="Inactive Ag- H-C-H scissors (~1272 cm-1)" peakShape="broad" model="T1.11" xMax="1300" xMin="1230"    />
+<PeakData id="5" title="Bu- C-H scissors (~1205 cm-1)" peakShape="broad" model="T1.10" xMax="1230" xMin="1175"    />
+<PeakData id="6" title="Au- C-H wagging (~900 cm-1)" peakShape="broad" model="T1.9" xMax="920" xMin="880"    />
+<PeakData id="7" title="Inactive Ag-symm stretch of CCl group (~845 cm-1)" peakShape="broad" model="T1.6" xMax="870" xMin="830"    />
+<PeakData id="8" title="Bu- asymm stretch of CCl group (~830 cm-1)" peakShape="broad" model="T1.8" xMax="850" xMin="790"    />
+<PeakData id="9" title="Bg- wag of CH group (~750 cm-1)" peakShape="broad" model="T1.7" xMax="770" xMin="730"    />
+<PeakData id="10" title="Inactive Ag-symm bend of CCl group (~350 cm-1)" peakShape="broad" model="T1.5" xMax="370" xMin="330"    />
+<PeakData id="11" title="Bu-asymm bend of CCl group (~265 cm-1)" peakShape="broad" model="T1.4" xMax="285" xMin="245"    />
+<PeakData id="12" title="Au-Cl-C=C-Cl torsion  (~192 cm-1)" peakShape="broad" model="T1.3" xMax="220" xMin="170"    />
+</Peaks>
+##XUNITS= 1/CM
+##YUNITS= TRANSMITTANCE
+##XFACTOR= 1E0
+##YFACTOR= 9.83769E-7
+##FIRSTX= 450
+##FIRSTY= 0.995466
+##LASTX= 3966
+##NPOINTS= 880
+##XYDATA= (X++(Y..Y))
+450.0A011890n818m776j960K21Tj201j929m43K530M490L416k85k751A002308
+510.0A004205L037J865M75o01j804k782k940k562j645q21q85r81I94782
+566.0I96047P91K84J423K309P58j771j928N38K782K308K22r81r48A001392
+626.0A001834J233J044J26m74q22p60J59O01n70j833j708j012m74I96996
+686.0I95605k087j59K688TQ53r4p27j138J26J802J423n05m270j0657I70181
+750.0I56583o861J89M206M174L510N471N312j138j0783l0136p8769F90583
+802.0D52821k29130j34486n2619j7487o071j138O640L8263J75025F32810
+846.0H65293p4944r0975m0571k9060j9004m870j0119j8941j1795E50373
+890.0E05849n7803k2989K9788N2270K5329n123j360J5621K3147K6910F25917
+938.0F64084L6997L7789L8831L3708K6183K2008K0143J8688J4831I19713
+982.0I21104Q601K0238K1503J2901N471K118j89j234q54r48j359I86561
+1034.0I86814J233J992J455R4m42o33j771k244j044%J26O02Q21m42I84948
+1098.0I83652o33J58J550J771L1j044j043k339l638k909l415o229I58829
+1154.0I52347p938p368l067j834k056j739k9313r6224j30629q9204E52144
+1202.0E38420j8024J7961R6224J51214J14566L4720J233K403K688I44915
+1246.0I52979Q664O135N754N124K909K181K436J770J455J802Q23m12I91209
+1302.0I91051m11O3Q85O64%k84o3O63J234L80q54n07P60J075N05J91I95636
+1374.0I95699m10o01J57J266J327O3j390j772o64J107J613L2j455I94056
+1434.0I94339l16j834j233J708L573J676j739k277O3O64j422k088I91241
+1490.0I92632J58l2J993L035J392%M43J26k150l005o3K909J076l225I91936
+1554.0I92853K973%l225k909j170j107k087k056q53o4n70j201j012I78845
+1614.0I77833j328k561o199j0276j5716k9629m7465m7306k3336R18H01480
+1662.0H09764K7037M9772M8697K6246R044L985K150L003O768N913I92664
+1710.0I91936K909K720r80j043K023K150n06j676o64j26r81j549n06I95067
+1770.0I96901J58j992k625j454j90k85j201j170l2O01L1j57P90J202I90672
+1834.0I90165R17K689K150l2j075O3J582J959Q23o64j012O4J106P90I99399
+1898.0I98956r4K53N06O64M73r4o01o64o3P27Q85J90l47k53K20L80A001360
+1970.0A001296m11n37l80R5M12K20l79o32k85J58M43M75J89k85m74I99684
+2038.0I99715o3l48m11j90J27L48K84l1q86k403l700Tk560j487o64I85169
+2106.0I89154N754M554J771%j26R5J90L16L79J58j27j57j27r5l1O3A001865
+2178.0A001992J26L2O3K22K84K22L1r4j59o3J26K22J27r6k84j58J58A003035
+2254.0A003225j58l79m43k21l2j90o64j297j833k087k150k309k498I86845
+2314.0I85548o32m10l17%O3j90j26O3p59k719l605j360K688N281N249I93012
+2382.0I96743L573K782J487M74%l1L1L2j26m12o95o64m75l16r5O3A002213
+2454.0A001549o95j90K21J26o3J90O01P91O01L16J89L16M75N38M42A005755
+2522.0A006135M74N05M44J89o3l2L16N07M74L16O3k53l16r4K52L48A009550
+2594.0A009708L1L2J58To3j26%R4J90L16K85O3j90k85j89R5R4j89A009835
+2674.0A009550r6L2J27L2k85m75m73l17k21j59k84m74o01n69o01m75A004332
+2746.0A003826q22j328k088k592j929l79M42P28J643L194L416J707A005818
+2802.0A005407l2R6L1R5o3l16l48r6%o3O3J28l2j90j59r4o3Tr6r4A004048
+2890.0A003858l17o3J90L2l80l16L1K22L1k84k53O4J26k85m75k20A001928
+2962.0A001865j26l1j27j26r5k22k53l1l2j90o3Tn38p59n38p58q85I96585
+3038.0I95699j771j423j233k466k182n69k815r138k1755n3821r5370G01904
+3090.0F41349j4515M870J5273N1764J02960J14280O4952J2616k277I90672
+3134.0I89912M43L099K530P59O64L48l80l1N38L16L79O32J59l48k53I98418
+3202.0I97882o4M11J89j89k84k22o3R5l2l1K21L16o3l16o4L2%J90I98451
+3282.0I98671j26k53k21k53m43l79R5M74K85o4o3l1j91l47n06o01I95731
+3354.0I96015N38O3m42m75j89L2L1k53m12j89J58R5k21k53J26O02I95636
+3426.0I95226q87m42K53L79O3l16n05l49K53O33L80j59m42l16j59I93549
+3494.0I93422j26r4j59k53l2L48O01L80r6m42m11r5l1l80p27o01%I91747
+3570.0I91968n06p90j27P90P60l16j202j012O3R49O64l48k53R48Q54I91114
+3638.0I88679l16K150J645r80k625j961M11K436K277o5j580q54L48I89439
+3698.0I88237r81K53P60l2r18o64N07J612J898J517J265J075J27j739I90292
+3762.0I88742k20j90m44J59L48m74n38J170K593J518q22j392M12J706I92758
+3826.0I90988p60J519J043j392j327J107J928K53o32J90O01l2k53I93106
+3886.0I92126j802p59J423J865L3j424q85L79O95R6p28j549j992j265I86466
+3950.0I87130m75j26I90609
+3966.0A000032  $$checkpoint
+##END= $$ end of trans-DCE IR
+##TITLE=Raman of trans-1,2-dichloroethylene (E) $$ Begin of the data block
+##JCAMP-DX=5.00 $$ ACD/DocManager Library v 5.00
+##DATA TYPE=RAMAN SPECTRUM
+##DATA CLASS=XYDATA
+##BLOCK ID=4
+##DATE=19 Feb 2012 10:30:00
+##ORIGIN= Department of Chemistry, UWI, Jamaica
+##OWNER= public domain
+##SPECTROMETER/DATA SYSTEM=from scan
+##$MODELS=
+<Models>
+<ModelData id="Tc2h2cl2" type="MOL">
+trans-1,2-dichloroethylene (E)
+
+  created with ArgusLab version 4.0.1
+  6  5  0  0  0  0  0  0  0  0  0 V2000
+   -0.3642    0.5617    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4662    0.5830    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3642    2.1208    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+    0.3642   -0.5617    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4662   -0.5830    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3642   -2.1208    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  2  0  0  0  0
+  4  5  1  0  0  0  0
+  4  6  1  0  0  0  0
+M  END
+</ModelData>
+<ModelData id="T2" type="XYZVIB" baseModel="Tc2h2cl2" vibrationScale=".5">
+6
+Model[1]: E(RAM1)=-0.434016412453E-02 A.U.;Convg=0.4972D-08;-V/T=0.9999;Energy=NaN;Range=M.O.s;PATH=Calculation 1;Input
+C     0.00000    0.00000    0.00000
+H     0.00000    0.00000    1.10217
+Cl    1.57296    0.00000   -0.69806
+C    -1.10899    0.00000   -0.75009
+H    -1.10899    0.00000   -1.85226
+Cl   -2.68195    0.00000   -0.05203
+6
+Model[2]: E(RAM1)=-0.434016412453E-02 A.U.;Convg=0.4972D-08;-V/T=0.9999;Energy=-0.004340164;Range=M.O.s;PATH=Calculation 1;Standard
+C    -0.36422    0.56166    0.00000
+H    -1.46618    0.58304    0.00000
+Cl    0.36422    2.12079    0.00000
+C     0.36422   -0.56166    0.00000
+H     1.46618   -0.58304    0.00000
+Cl   -0.36422   -2.12079    0.00000
+6
+Model[3]: IRIntensity=1.0809 KM/Mole;ReducedMass=6.8502 AMU;ForceConstant=0.2257 mDyne/A;Frequency=236.4958 cm^-1;FrequencyLabel=AU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000    0.43000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000    0.54000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000   -0.16000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000    0.43000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.54000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000   -0.16000
+6
+Model[4]: IRIntensity=2.4048 KM/Mole;ReducedMass=6.8794 AMU;ForceConstant=0.2853 mDyne/A;Frequency=265.3070 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.40000    0.15000    0.00000
+H    -1.46618    0.58304    0.00000   -0.38000    0.38000    0.00000
+Cl    0.36422    2.12079    0.00000    0.15000   -0.06000    0.00000
+C     0.36422   -0.56166    0.00000   -0.40000    0.15000    0.00000
+H     1.46618   -0.58304    0.00000   -0.38000    0.38000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.15000   -0.06000    0.00000
+6
+Model[5]: IRIntensity=0.0000 KM/Mole;ReducedMass=18.4278 AMU;ForceConstant=1.4783 mDyne/A;Frequency=368.9947 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.21000    0.15000    0.00000
+H    -1.46618    0.58304    0.00000    0.21000    0.39000    0.00000
+Cl    0.36422    2.12079    0.00000    0.05000    0.48000    0.00000
+C     0.36422   -0.56166    0.00000   -0.21000   -0.15000    0.00000
+H     1.46618   -0.58304    0.00000   -0.21000   -0.39000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.05000   -0.48000    0.00000
+6
+Model[6]: IRIntensity=0.0000 KM/Mole;ReducedMass=4.8520 AMU;ForceConstant=2.0603 mDyne/A;Frequency=848.9532 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.32000    0.19000    0.00000
+H    -1.46618    0.58304    0.00000    0.31000    0.50000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.07000   -0.08000    0.00000
+C     0.36422   -0.56166    0.00000   -0.32000   -0.19000    0.00000
+H     1.46618   -0.58304    0.00000   -0.31000   -0.50000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.07000    0.08000    0.00000
+6
+Model[7]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.8465 AMU;ForceConstant=0.8421 mDyne/A;Frequency=879.8182 cm^-1;FrequencyLabel=BG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000    0.19000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000   -0.68000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000   -0.01000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000   -0.19000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.68000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.01000
+6
+Model[8]: IRIntensity=156.1848 KM/Mole;ReducedMass=10.4115 AMU;ForceConstant=4.7511 mDyne/A;Frequency=880.0642 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.21000    0.51000    0.00000
+H    -1.46618    0.58304    0.00000    0.18000    0.35000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.08000   -0.19000    0.00000
+C     0.36422   -0.56166    0.00000    0.21000    0.51000    0.00000
+H     1.46618   -0.58304    0.00000    0.18000    0.35000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.08000   -0.19000    0.00000
+6
+Model[9]: IRIntensity=85.4112 KM/Mole;ReducedMass=1.1165 AMU;ForceConstant=0.6016 mDyne/A;Frequency=956.3369 cm^-1;FrequencyLabel=AU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.00000    0.00000   -0.07000
+H    -1.46618    0.58304    0.00000    0.00000    0.00000    0.70000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.00000    0.00000   -0.07000
+H     1.46618   -0.58304    0.00000    0.00000    0.00000    0.70000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+6
+Model[10]: IRIntensity=16.6654 KM/Mole;ReducedMass=1.0902 AMU;ForceConstant=0.9190 mDyne/A;Frequency=1196.1292 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000    0.02000   -0.06000    0.00000
+H    -1.46618    0.58304    0.00000    0.06000    0.70000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.01000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.02000   -0.06000    0.00000
+H     1.46618   -0.58304    0.00000    0.06000    0.70000    0.00000
+Cl   -0.36422   -2.12079    0.00000   -0.01000    0.00000    0.00000
+6
+Model[11]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.1490 AMU;ForceConstant=1.0669 mDyne/A;Frequency=1255.3385 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.07000   -0.04000    0.00000
+H    -1.46618    0.58304    0.00000   -0.04000    0.70000    0.00000
+Cl    0.36422    2.12079    0.00000   -0.01000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.07000    0.04000    0.00000
+H     1.46618   -0.58304    0.00000    0.04000   -0.70000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.01000    0.00000    0.00000
+6
+Model[12]: IRIntensity=0.0000 KM/Mole;ReducedMass=9.1626 AMU;ForceConstant=17.0165 mDyne/A;Frequency=1775.4231 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.29000    0.53000    0.00000
+H    -1.46618    0.58304    0.00000   -0.36000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000   -0.01000    0.00000
+C     0.36422   -0.56166    0.00000    0.29000   -0.53000    0.00000
+H     1.46618   -0.58304    0.00000    0.36000    0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.01000    0.00000
+6
+Model[13]: IRIntensity=0.0000 KM/Mole;ReducedMass=1.0823 AMU;ForceConstant=6.2456 mDyne/A;Frequency=3129.6222 cm^-1;FrequencyLabel=AG;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.06000    0.01000    0.00000
+H    -1.46618    0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000    0.06000   -0.01000    0.00000
+H     1.46618   -0.58304    0.00000   -0.70000    0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+6
+Model[14]: IRIntensity=124.2254 KM/Mole;ReducedMass=1.0815 AMU;ForceConstant=6.2982 mDyne/A;Frequency=3143.8929 cm^-1;FrequencyLabel=BU;PATH=Calculation 1;FrequenciesFrequencies
+C    -0.36422    0.56166    0.00000   -0.06000    0.00000    0.00000
+H    -1.46618    0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl    0.36422    2.12079    0.00000    0.00000    0.00000    0.00000
+C     0.36422   -0.56166    0.00000   -0.06000    0.00000    0.00000
+H     1.46618   -0.58304    0.00000    0.70000   -0.03000    0.00000
+Cl   -0.36422   -2.12079    0.00000    0.00000    0.00000    0.00000
+</ModelData>
+</Models>
+##$PEAKS=
+<Peaks type="RAMAN" xUnitsExpected="1/cm"  >
+<PeakData id="1" title="Inactive Bu- asymm stretch of CH group (~3096 cm-1)" peakShape="broad" model="T2.14" xMax="3130" xMin="3080"    />
+<PeakData id="2" title="Ag-symm stretch of CH group (~3071 cm-1)" peakShape="broad" model="T2.13" xMax="3090" xMin="3050"    />
+<PeakData id="3" title="Ag- C=C stretch (~1576 cm-1)" peakShape="broad" model="T2.12" xMax="1600" xMin="1545"    />
+<PeakData id="4" title="Ag- H-C-H scissors (~1272 cm-1)" peakShape="broad" model="T2.11" xMax="1300" xMin="1230"    />
+<PeakData id="5" title="Inactive Bu- C-H scissors (~1205 cm-1)" peakShape="broad" model="T2.10" xMax="1230" xMin="1175"    />
+<PeakData id="6" title="Inactive Au- C-H wagging (~900 cm-1)" peakShape="broad" model="T2.9" xMax="920" xMin="880"    />
+<PeakData id="7" title="Ag-symm stretch of CCl group (~845 cm-1)" peakShape="broad" model="T2.6" xMax="870" xMin="830"    />
+<PeakData id="8" title="Inactive Bu- asymm stretch of CCl group (~830 cm-1)" peakShape="broad" model="T2.8" xMax="850" xMin="790"    />
+<PeakData id="9" title="Bg- wag of CH group (~750 cm-1)" peakShape="broad" model="T2.7" xMax="770" xMin="730"    />
+<PeakData id="10" title="Ag-symm bend of CCl group (~350 cm-1)" peakShape="broad" model="T2.5" xMax="370" xMin="330"    />
+<PeakData id="11" title="Inactive Bu-asymm bend of CCl group (~265 cm-1)" peakShape="broad" model="T2.4" xMax="285" xMin="245"    />
+<PeakData id="12" title="Inactive Au-Cl-C=C-Cl torsion  (~192 cm-1)" peakShape="broad" model="T2.3" xMax="220" xMin="170"    />
+</Peaks>
+##XUNITS=1/CM
+##YUNITS=RAMAN INTENSITY
+##XFACTOR=1.0000000000
+##YFACTOR=0.0033493126
+##FIRSTX=77.97656250
+##FIRSTY=107.17800140
+##LASTX=3388.00000000
+##DELTAX=11.18251133
+##NPOINTS=297
+##XYDATA=(X++(Y..Y))
+78C2000k808n758m351m779m011k822j391j529r00n35l94j67q0l37l71k37j68%K0K40
+301.6A622M72J2493O582p936j0199j100l75k37m5J42N0j58j59Tj00%To5p0P7J42pj59
+558.8H11m1O4N3p0p1Tp0J00J92J35p9l8R1J18J42N79J336r65o28l83%J21O47J2009
+827.2A3982l23j0909j538l94q2%k4p0o2%XK0Q0N6%VO3P0j9o4n0%WK1O4TJ47J60J2523
+1252.1A3715K99j0841j539l94l14k37p5O4N8%qo3o4K6P1Np0n3%VN9P1J60K14N32J6281
+1565.2A7897j2922m049J42J40R1n2l61j50%L94P00q73j95j41m1%WOP1Tj16j41M7J42
+1867.2F60J1j41r1O4TJ3%n9p0J2O4N3%j3o4o3L7P0np1m7%TO2P0K4%j5p1p0O4O3K9%
+2247.4E80k4p1o1%TM8P0Qo4o2%VM2P1M3%To0o3l3%S8N2O4J3p0n9%VJ8P1O3q0o7O4TO8
+2884.8F25P1J3o4o3O7P1l8p0PP1R6J42J88M60J256J6515j1133o256n47j41O6K40K50
+3142A826p2o27k34%m7p1l9%VJ26J60r0j41n5%K6O4TJ55J60
+3388A205
+##END=$$ End of the data block
+##END= $$ end of file

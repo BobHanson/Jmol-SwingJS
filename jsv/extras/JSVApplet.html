@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>JSpecView Applet Test Page</title>
+
+<script language="javascript" type="text/javascript">
+//<![CDATA[
+
+
+//  Original template created by RJLancashire, UWI, Mona, JAMAICA
+// last modified 3rd March, 2006
+
+var author="Prof Robert John Lancashire";
+var address1="Department of Chemistry";
+var address2="University of the West Indies";
+var address3="Mona, Kingston 7, JAMAICA";
+var lastMod="3rd March, 2006";
+
+function MyCallBack(x, y) {
+  alert("ESTIMATE-> " + x + " "+ y);
+}
+
+function MyPeakCallBack(x1, y1, x2, y2, index) {
+  alert("ACTUAL-> " + x1 + ", " + y1 + ", "+ x2 + ", "+ y2 + ", " + index);
+}
+
+//]]>
+</script>
+</head>
+<body>
+<script language="JavaScript" type="text/javascript" src="JSVfunctions.js"></script>
+
+jspecview.applet.JSVApplet will appear below in a Java enabled
+browser.<br />
+<br />
+
+<script language="javascript" type="text/javascript">
+//<![CDATA[
+  jsvls="load pclanilIR.jdx; interface single; reverseplot false; coordcallbackfunctionname MyDXCallback;";
+  insertJSVObject("jspecview.jar","JSVApplet","600","400",jsvls);
+//]]>
+</script>
+<br />
+<br />
+
+<script language="javascript" type="text/javascript">
+//<![CDATA[
+ document.write("JSpecView version number is "+document.getElementById("JSVApplet").getAppletVersion());
+ document.write('<br /><p>Created and maintained by ');
+ document.write(author + '<br />');
+ document.write(address1+ '<br />');
+ document.write(address2+ '<br />');
+ document.write(address3+ '<br />');
+ document.write('last modified '+lastMod+'<\/p>');
+//]]>
+</script>
+
+</body>
+</html>

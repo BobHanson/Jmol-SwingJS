@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<cml xmlns="http://www.xml-cml.org/schema">
+ <spectrum id="nmrshiftdb30133949" moleculeRef="nmrshiftdb10009242" type="NMR" xmlns:cmlDict="http://www.xml-cml.org/dict/cmlDict" xmlns:subst="http://www.xml-cml.org/dict/substDict" xmlns:siUnits="http://www.xml-cml.org/units/siUnits" xmlns:nmr="http://www.nmrshiftdb.org/dict" xmlns:units="http://www.xml-cml.org/units/units" xmlns:cml="http://www.xml-cml.org/dict/cml" xmlns:macie="http://www.xml-cml.org/dict/macie">
+  <conditionList>
+   <scalar dataType="xsd:string" dictRef="cml:field" units="siUnits:hertz">Unreported</scalar>
+   <scalar dataType="xsd:string" dictRef="cml:temp" units="siUnits:k">Unreported</scalar>
+  </conditionList>
+  <metadataList>
+   <metadata name="nmr:assignmentMethod" content="Unreported"/>
+   <metadata name="nmr:OBSERVENUCLEUS" content="1H"/>
+  </metadataList>
+  <substanceList>
+   <substance dictRef="" role="subst:solvent" title="Unreported"/>
+  </substanceList>
+  <peakList>
+   <peak xValue="3.2909998893737793" xUnits="units:ppm" peakShape="sharp" id="p0" atomRefs="a16"/>
+   <peak xValue="3.8010001182556152" xUnits="units:ppm" peakShape="sharp" id="p1" atomRefs="a21"/>
+   <peak xValue="5.039000034332275" xUnits="units:ppm" peakShape="sharp" id="p2" atomRefs="a19"/>
+   <peak xValue="5.058000087738037" xUnits="units:ppm" peakShape="sharp" id="p3" atomRefs="a20"/>
+   <peak xValue="5.730000019073486" xUnits="units:ppm" peakShape="sharp" id="p4" atomRefs="a24"/>
+   <peak xValue="5.933000087738037" xUnits="units:ppm" peakShape="sharp" id="p5" atomRefs="a18"/>
+   <peak xValue="6.650000095367432" xUnits="units:ppm" peakShape="sharp" id="p6" atomRefs="a14"/>
+   <peak xValue="6.659999847412109" xUnits="units:ppm" peakShape="sharp" id="p7" atomRefs="a13"/>
+   <peak xValue="6.831999778747559" xUnits="units:ppm" peakShape="sharp" id="p8" atomRefs="a15"/>
+  </peakList>
+ </spectrum>
+</cml>

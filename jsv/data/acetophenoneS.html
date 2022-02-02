@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Combo JSpecView/jmol Display</title>
+</script>
+
+<script language="JavaScript" type="text/javascript" src="Jmol.js">
+//<![CDATA[
+// load the Jmol specific variables and functions
+//]]>
+</script>
+
+<script language="JavaScript" type="text/javascript" src="JSVfunctions.js">
+//<![CDATA[
+// load the JSpecView specific variables and functions
+//]]>
+</script>
+
+
+<script language="javascript" type="text/javascript">
+//<![CDATA[
+numBlocks=4;
+var blockid=1;
+var tempinfo = new Array();
+haveJmol = false;
+haveJsv = false;
+
+function resetform()
+{
+     blockid=1;
+     if (document.theform.radioObj[0].checked!="1")
+          document.theform.radioObj[0].click();
+}
+
+function readyCallback(app, msg, isReady) {
+  if (!isReady)return
+  if (app.indexOf("jmolApplet") == 0)
+	haveJmol = true
+  else
+	haveJsv = true
+  if (haveJmol && haveJsv) document.title="applets are ready"
+  else
+     document.title="applets are not ready"
+}
+
+function mySyncCallback(app,msg) {
+  var toJmol = (haveJmol && msg.indexOf("Select:") == 0)
+  var toJsv = (haveJsv && msg.indexOf("JSpecView:") >= 0)
+  if (!toJmol && !toJsv) return 1
+  _jmolFindApplet(toJmol ? "jmolApplet0" : "JSVApplet").syncScript(msg)
+  document.title = [app,msg]
+  return 0 // prevents further Jmol sync processing
+}
+
+function Blkdisplay() {
+      for (var i=0; i<numBlocks; i++)
+         if (document.theform.radioObj[i].checked=="1")
+            blockid=i+1;
+//         resetselection(" ");
+   coord = document.getElementById("JSVApplet").setSpectrumNumber(blockid);
+}
+
+	function toggleGrid() {
+		coord = document.getElementById("JSVApplet").toggleGrid();
+	}
+
+	function toggleCoordinate() {
+		coord = document.getElementById("JSVApplet").toggleCoordinate();
+	}
+
+	function reversePlot() {
+		coord = document.getElementById("JSVApplet").reversePlot();
+  }
+
+	function sendJSVScript() {
+   	var msg = document.getElementById("myJDXscript");
+		coord = document.getElementById("JSVApplet").runScript(msg.value);		
+	}
+        
+// onload="resetform()"
+//]]>
+</script>
+</head>
+
+<body>
+
+<script language="JavaScript" type="text/javascript">
+//<![CDATA[
+     jmolInitialize(".","JmolApplet.jar");
+//]]>
+</script>
+<form name="theform">
+<table width='99%' border='1' summary='JSpecView/jmol display' >
+<td>
+<input type="radio" name="radioObj" value="1" checked="checked" onclick="Blkdisplay()" />IR spectrum
+<br />
+<input type="radio" name="radioObj" value="2" onclick="Blkdisplay()" />HNMR spectrum
+<br />
+<input type="radio" name="radioObj" value="3" onclick="Blkdisplay()" />CNMR spectrum
+<br />
+<input type="radio" name="radioObj" value="4" onclick="Blkdisplay()" />mass spectrum
+<br />
+</td>
+<td>
+<script language="javascript" type="text/javascript">
+//<![CDATA[
+  jsvils="load acetophenone.jdx; compoundMenuOn true; appletreadycallbackfunctionname readyCallback; synccallbackfunctionname mySyncCallback; gridon true ";
+  insertJSVObject("Sjspecview.jar","JSVApplet","500","400",jsvils);
+//]]>
+</script>
+<br />
+    <input type="checkbox" name="toggleGridButton" onClick="toggleGrid()" /> Toggle Grid
+    <input type="checkbox" name="toggleCoordButton" onClick="toggleCoordinate()" /> Toggle Coordinates
+    <input type="checkbox" name="reversePlotButton" onClick="reversePlot()" /> Reverse Plot
+    <br />
+		<br />
+     Enter a script: 
+     <input type='text' id='myJDXscript' size="40" />
+     <input type='button' onclick='sendJSVScript()' value='submit' />		 
+		 	<br />
+</td>
+<td align="center">
+<script language="javascript" type="text/javascript">
+      _jms= "load acetophenone.jdx;background white; vibration off; vectors off;sync on";
+        jmolSetCallback("syncCallback", "mySyncCallback");
+        jmolSetCallback("appletReadyCallback", "readyCallback");
+ 	jmolApplet(400,_jms,"0");
+</script>
+<br />
+
+<script language="Javascript" type="text/javascript">
+//<![CDATA[
+	jmolCheckbox("spin on", "spin off", "spin On/Off ");
+        jmolCheckbox("background black", "background white","bg black/white");
+        jmolBr();
+        jmolCheckbox("vibration 2; vibration scale 0.2","vibration 0.8; vibration scale 0.05" ,"vibration big/small");
+        jmolCheckbox("vectors 0.1;vector scale 1.8; color vectors yellow","vectors 0.08;vector scale 1.2; color vectors yellow" ,"vectors big/small");
+        jmolBr();
+        jmolBr();
+//]]>
+</script>
+    <br />
+    <input type="button" name="ResetAtoms" value="Reset" onclick="resetselection(this.form)" />
+ </td>
+ </tr>
+</table>
+</form>
+
+The spectra are "hot-linked" to the molecular graphic display such that selecting a peak in the IR spectrum
+will cause a vibrational mode animation to be loaded, or selecting a peak in the NMR spectra will
+cause the appropriate H or C atoms to be highlighted.<br />
+<br />
+<strong>Reference:</strong>
+<a href="https://docs.google.com/document/d/16Ht5baVsDogiJlZr7IvugM0sE5r22rLmFw5fVHSNLeE/edit?pli=1">Google Docs</a>
+<br />
+<br />
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+jspecview.applet
+jspecview.application
+jspecview.common
+jspecview.exception
+jspecview.export
+jspecview.source
+jspecview.util
+org.jmol.api
