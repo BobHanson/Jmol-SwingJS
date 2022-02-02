@@ -61,10 +61,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -78,32 +74,29 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import org.jmol.api.JSVInterface;
+import org.jmol.api.JmolSyncInterface;
+
+import javajs.util.Lst;
+import javajs.util.SB;
 import jspecview.api.JSVAppInterface;
 import jspecview.api.JSVFileDropper;
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVTreeNode;
 import jspecview.api.PanelListener;
 import jspecview.app.JSVAppPro;
-import jspecview.common.ColorParameters;
 import jspecview.common.JSVFileManager;
 import jspecview.common.JSViewer;
-import jspecview.common.PanelData;
 import jspecview.common.PanelNode;
 import jspecview.common.Parameters;
 import jspecview.common.PeakPickEvent;
 import jspecview.common.ScriptToken;
-import jspecview.common.Spectrum;
 import jspecview.common.SubSpecChangeEvent;
 import jspecview.common.ZoomEvent;
 import jspecview.export.Exporter;
 import jspecview.java.AwtFileHelper;
 import jspecview.java.AwtMainPanel;
-import jspecview.java.AwtPanel;
 import jspecview.source.JDXSource;
-
-import org.jmol.api.JSVInterface;
-import org.jmol.api.JmolSyncInterface;
-import org.jmol.util.Logger;
 
 // BH 1/14/17 moves command checking to JSViewer
 
@@ -133,8 +126,9 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 
 	// ----------------------------------------------------------------------
 
-	public JSViewer      vwr;
-	private ApplicationMenu         appMenu;
+	JSViewer      vwr;
+	
+	ApplicationMenu         appMenu;
 	private AppToolBar      toolBar;
 	private JTextField      commandInput = new JTextField();
 	private BorderLayout    mainborderLayout = new BorderLayout();
@@ -153,13 +147,11 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	private JSVAppPro     					advancedApplet;
 	private CommandHistory          commandHistory;
 	private DisplaySchemesProcessor dsp;
-	private JmolSyncInterface       jmol;
 	private Component               jmolDisplay;
 	private Dimension               jmolDimensionOld;
 	private JPanel                  jmolPanel;
 	private Dimension               jmolDimensionNew = new Dimension(350, 300);
 	private JSVInterface            jmolOrAdvancedApplet;
-	private JSVPanel                prevPanel;
 	private Lst<String>        recentFilePaths = new Lst<String>();
 	private JScrollPane             spectraTreeScrollPane;
 	private Component               mainPanel;
@@ -181,7 +173,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	private boolean isHidden;
 
 	private String tempDS;
-	private String defaultDisplaySchemeName;
+  private JSpecView jsv;
 	
 	
 	
@@ -200,12 +192,14 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 
 	/**
 	 * Constructor
+	 * @param jsv 
 	 * @param jmolDisplay 
 	 * 
 	 * @param jmolOrAdvancedApplet
 	 */
-	public MainFrame(Component jmolDisplay, JSVInterface jmolOrAdvancedApplet) {
-		vwr = new JSViewer(this, false, false);
+	public MainFrame(JSpecView jsv, Component jmolDisplay, JSVInterface jmolOrAdvancedApplet) {
+	  this.jsv = jsv;
+	  this.vwr = jsv.vwr;
 		JSVFileManager.setDocumentBase(vwr, null);
 		this.jmolDisplay = jmolDisplay;
 		if (jmolDisplay != null) {
@@ -215,6 +209,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		this.jmolOrAdvancedApplet = jmolOrAdvancedApplet;
 		advancedApplet = (jmolOrAdvancedApplet instanceof JSVAppPro ? (JSVAppPro) jmolOrAdvancedApplet
 				: null);
+		
 		init();
 	}
 
@@ -279,7 +274,6 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	 * Task to do when program starts
 	 */
 	private void init() {
-
 		// initialise MainFrame as a target for the drag-and-drop action
 		DropTargetListener dtl = (DropTargetListener) vwr.getPlatformInterface("FileDropper");
 		((JSVFileDropper) dtl).set(vwr);
@@ -288,39 +282,8 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		URL iconURL = cl.getResource("icons/spec16.gif"); // imageIcon
 		setIconImage(Toolkit.getDefaultToolkit().getImage(iconURL));
 
-		// Initalize application properties with defaults
-		// and load properties from file
-		Properties properties = vwr.properties = new Properties();
-		// sets the list of recently opened files property to be initially empty
-		properties.setProperty("recentFilePaths", "");
-		properties.setProperty("confirmBeforeExit", "true");
-		properties.setProperty("automaticallyOverlay", "false");
-		properties.setProperty("automaticallyShowLegend", "false");
-		properties.setProperty("useDirectoryLastOpenedFile", "true");
-		properties.setProperty("useDirectoryLastExportedFile", "false");
-		properties.setProperty("directoryLastOpenedFile", "");
-		properties.setProperty("directoryLastExportedFile", "");
-		properties.setProperty("showSidePanel", "true");
-		properties.setProperty("showToolBar", "true");
-		properties.setProperty("showStatusBar", "true");
-		properties.setProperty("defaultDisplaySchemeName", "Default");
-		properties.setProperty("showGrid", "false");
-		properties.setProperty("showCoordinates", "false");
-		properties.setProperty("showXScale", "true");
-		properties.setProperty("showYScale", "true");
-		properties.setProperty("svgForInkscape", "false");
-		properties.setProperty("automaticTAConversion", "false");
-		properties.setProperty("AtoTSeparateWindow", "false");
-		properties.setProperty("automaticallyIntegrate", "false");
-		properties.setProperty("integralMinY", "0.1");
-		properties.setProperty("integralFactor", "50");
-		properties.setProperty("integralOffset", "30");
-		properties.setProperty("integralPlotColor", "#ff0000");
-
-		jmolOrAdvancedApplet.setProperties(properties);
-
-		dsp = new DisplaySchemesProcessor();
-
+		dsp = jsv.getDisplaySchemesProcessor(jmolOrAdvancedApplet);
+		
 		// try loading display scheme from the file system otherwise load it from
 		// the jar
 		if (!dsp.load("displaySchemes.xml")) {
@@ -331,7 +294,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		}
 
 		setApplicationProperties(true);
-		tempDS = defaultDisplaySchemeName;
+		tempDS = jsv.defaultDisplaySchemeName;
 		// initialise Spectra tree
 		vwr.spectraTree = tree = new AwtTree(vwr);
 		tree.setCellRenderer(new SpectraTreeCellRenderer());
@@ -418,67 +381,12 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		showExitDialog = Boolean.parseBoolean(properties
 				.getProperty("confirmBeforeExit"));
 
-		vwr.interfaceOverlaid = Boolean.parseBoolean(properties
-				.getProperty("automaticallyOverlay"));
-		vwr.autoShowLegend = Boolean.parseBoolean(properties
-				.getProperty("automaticallyShowLegend"));
-		AwtFileHelper fh = (AwtFileHelper) vwr.fileHelper; 
-		fh.useDirLastOpened = Boolean.parseBoolean(properties
-				.getProperty("useDirectoryLastOpenedFile"));
-		fh.useDirLastExported = Boolean.parseBoolean(properties
-				.getProperty("useDirectoryLastExportedFile"));
-		fh.dirLastOpened = properties.getProperty("directoryLastOpenedFile");
-		fh.dirLastExported = properties.getProperty("directoryLastExportedFile");
-
 		sidePanelOn = Boolean.parseBoolean(properties.getProperty("showSidePanel"));
 		toolbarOn = Boolean.parseBoolean(properties.getProperty("showToolBar"));
 		statusbarOn = Boolean.parseBoolean(properties.getProperty("showStatusBar"));
 
-		// Initialise DisplayProperties
-		defaultDisplaySchemeName = properties
-				.getProperty("defaultDisplaySchemeName");
-
-		if (shouldApplySpectrumDisplaySettings) {
-			vwr.parameters.setBoolean(ScriptToken.GRIDON, Parameters.isTrue(properties
-					.getProperty("showGrid")));
-			vwr.parameters.setBoolean(ScriptToken.COORDINATESON, Parameters
-					.isTrue(properties.getProperty("showCoordinates")));
-			vwr.parameters.setBoolean(ScriptToken.XSCALEON, Parameters.isTrue(properties
-					.getProperty("showXScale")));
-			vwr.parameters.setBoolean(ScriptToken.YSCALEON, Parameters.isTrue(properties
-					.getProperty("showYScale")));
-		}
-
-		// TODO: Need to apply Properties to all panels that are opened
-		// and update coordinates and grid CheckBoxMenuItems
-
-		// Processing Properties
-		vwr.setIRmode(properties.getProperty("automaticTAConversion"));
-		try {
-			vwr.autoIntegrate = Boolean.parseBoolean(properties
-					.getProperty("automaticallyIntegrate"));
-			vwr.parameters.integralMinY = parseDoubleSafely(properties
-					.getProperty("integralMinY"), vwr.parameters.integralMinY);
-			vwr.parameters.integralRange = parseDoubleSafely(properties
-					.getProperty("integralRange"),vwr.parameters.integralRange);
-			vwr.parameters.integralOffset = parseDoubleSafely(properties
-					.getProperty("integralOffset"), vwr.parameters.integralOffset);
-			vwr.parameters.set(null, ScriptToken.INTEGRALPLOTCOLOR, properties
-					.getProperty("integralPlotColor"));
-		} catch (Exception e) {
-		  System.err.println("Bad PropertyValue ");
-		  e.printStackTrace();
-			// bad property value
-		}
-
-  //		svgForInkscape = Boolean.parseBoolean(properties
-	//			.getProperty("svgForInkscape"));
-
+		jsv.setApplicationProperties(shouldApplySpectrumDisplaySettings);
 	}
-
-	private static double parseDoubleSafely(String sval, double defVal) {
-	  return (sval == null ? defVal : Double.parseDouble(sval));
-  }
 
   /**
 	 * Initializes GUI components
@@ -546,7 +454,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		} else {
 			mainSplitPane.setLeftComponent(spectraTreeScrollPane);
 		}
-		mainPanel = (Component) (vwr.mainPanel = new AwtMainPanel(new BorderLayout()));
+		mainPanel = (Component) vwr.mainPanel;
 		mainSplitPane.setRightComponent(mainPanel);
 	}
 
@@ -559,7 +467,7 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
   }
 
 
-	private void setError(boolean isError, boolean isWarningOnly) {
+	void setError(boolean isError, boolean isWarningOnly) {
 		appMenu.setError(isError, isWarningOnly);
 		toolBar.setError(isError, isWarningOnly);
 	}
@@ -631,13 +539,13 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 		setApplicationProperties(shouldApplySpectrumDisplaySetting);
 
 		for (int i = vwr.panelNodes.size(); --i >= 0;)
-			siSetPropertiesFromPreferences(vwr.panelNodes.get(i).jsvp,
+			jsv.siSetPropertiesFromPreferences(vwr.panelNodes.get(i).jsvp,
 					shouldApplySpectrumDisplaySetting);
 
 		setApplicationElements();
 
 		dsp.getDisplaySchemes();
-		if (defaultDisplaySchemeName.equals("Current")) {
+		if (jsv.defaultDisplaySchemeName.equals("Current")) {
 			vwr.setProperty("defaultDisplaySchemeName", tempDS);
 		}
 	}
@@ -712,23 +620,8 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	 */
 	@Override
 	public void register(String appletID, JmolSyncInterface jmolStatusListener) {
-		jmol = jmolStatusListener;
+		jsv.jmol = jmolStatusListener;
 		isEmbedded = true;
-	}
-
-	@Override
-	public synchronized void syncToJmol(String msg) {
-		Logger.info("JSV>Jmol " + msg);
-		//System.out.println(Thread.currentThread() + "MainFrame sync JSV>Jmol 21"
-			//	+ Thread.currentThread());
-		if (jmol != null) { // MainFrame --> embedding application
-			jmol.syncScript(msg);
-			//System.out.println(Thread.currentThread() + "MainFrame JSV>Jmol sync 22"
-				//	+ Thread.currentThread());
-			return;
-		}
-		if (jmolOrAdvancedApplet != null) // MainFrame --> embedding applet
-			jmolOrAdvancedApplet.syncToJmol(msg);
 	}
 
 	@Override
@@ -776,12 +669,12 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 
 	@Override
 	public void loadInline(String data) {
-		siOpenDataOrFile(data, null, null, null, -1, -1, true, null, null);
+		jsv.siOpenDataOrFile(data, null, null, null, -1, -1, true, null, null);
 	}
 
 	@Override
 	public void setFilePath(String tmpFilePath) {
-		siProcessCommand("load " + tmpFilePath);
+		jsv.siProcessCommand("load " + tmpFilePath);
 	}
 
 	/**
@@ -858,232 +751,6 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 
 	// /////////// JSApp/MainFrame ScriptInterface ////////////
 
-	@Override
-	public void siOpenDataOrFile(Object data, String name, Lst<Spectrum> specs,
-			String url, int firstSpec, int lastSpec, boolean isAppend, String script,
-			String id) {
-		boolean isOne = (vwr.currentSource == null);
-		switch (name == null && url == null ? JSViewer.FILE_OPEN_ERROR : vwr.openDataOrFile(data, name, specs, url, firstSpec, lastSpec,
-				isAppend, id)) {
-		case JSViewer.FILE_OPEN_OK:
-			if (script == null && isOne && vwr.currentSource.isCompoundSource
-					&& vwr.pd().getSpectrum().isGC())
-				script = "VIEW ALL;PEAK GC/MS ID=#1";
-			if (script != null)
-				runScript(script);
-			break;			
-		case JSViewer.FILE_OPEN_ERROR:
-			awaken(false);
-			awaken(true);
-			JOptionPane.showMessageDialog(this, "There was an error reading " + (name != null ? name : url));
-			break;
-		}
-		siValidateAndRepaint(false);
-	}
-
-	@Override
-	public void siSetCurrentSource(JDXSource source) {
-		vwr.currentSource = source;
-		if (source != null)
-		  appMenu.setCloseMenuItem(JSVFileManager.getTagName(source.getFilePath()));
-		boolean isError = (source != null && source.getErrorLog().length() > 0);
-		setError(isError, (isError && source.getErrorLog().indexOf("Warning") >= 0));
-	}
-
-	/**
-	 * Sets the display properties as specified from the preferences dialog or the
-	 * properties file
-	 * 
-	 * @param jsvp
-	 *          the display panel
-	 */
-	@Override
-	public void siSetPropertiesFromPreferences(JSVPanel jsvp,
-			boolean includeMeasures) {
-		ColorParameters ds = dsp.getDisplaySchemes().get(defaultDisplaySchemeName);
-		jsvp.getPanelData().addListener(this);
-		vwr.parameters.setFor(jsvp, (ds == null ? dsp.getDefaultScheme() : ds),
-				includeMeasures);
-		vwr.checkAutoIntegrate();
-		jsvp.doRepaint(true);
-	}
-
-
-	@Override
-	public void siProcessCommand(String script) {
-		runScriptNow(script);
-	}
-
-	@Override
-	public void siSetSelectedPanel(JSVPanel jsvp) {
-		if (vwr.selectedPanel != null)
-      mainSplitPosition = mainSplitPane.getDividerLocation();
-		vwr.mainPanel.setSelectedPanel(vwr, jsvp, vwr.panelNodes);
-		vwr.selectedPanel = jsvp;
-		vwr.spectraTree.setSelectedPanel(this, jsvp);
-		validate();
-		if (jsvp != null) {
-      jsvp.setEnabled(true);
-      jsvp.setFocusable(true);
-		}
-		if (mainSplitPosition != 0)
-  		mainSplitPane.setDividerLocation(mainSplitPosition);
-	}
-
-
-	@Override
-	public void siSendPanelChange() {
-		if (vwr.selectedPanel == prevPanel)
-			return;
-		prevPanel = vwr.selectedPanel;
-		vwr.sendPanelChange();
-	}
-
-	@Override
-	public void siSyncLoad(String filePath) {
-		vwr.closeSource(null);
-		siOpenDataOrFile(null, null, null, filePath, -1, -1, false, null, null);
-		if (vwr.currentSource == null)
-			return;
-		if (vwr.panelNodes.get(0).getSpectrum().isAutoOverlayFromJmolClick())
-			vwr.execView("*", false);
-	}
-
-	@Override
-	public void siValidateAndRepaint(boolean isAll) {
-		validate();
-		if (isAll)
-			repaint();
-		else
-			vwr.requestRepaint();
-	}
-
-	@Override
-	public void siExecHidden(boolean b) {
-		isHidden = (jmol != null && b);
-		setVisible(!isHidden);
-	}
-
-	@Override
-	public String siLoaded(String value) {
-		PanelData pd = vwr.pd();
-		return (!pd.getSpectrum().is1D() && pd.getDisplay1D() ?
-				"Click on the spectrum and use UP or DOWN keys to see subspectra." : null);
-	}
-
-	@Override
-	public void siExecScriptComplete(String msg, boolean isOK) {
-		vwr.requestRepaint();
-		if (msg != null) {
-			writeStatus(msg);
-			if (msg.length() == 0)
-				msg = null;
-		}
-		// if (msg == null) {
-		// commandInput.requestFocus();
-		// }
-	}
-
-	@Override
-	public void siExecSetCallback(ScriptToken st, String value) {
-		if (advancedApplet != null)
-			advancedApplet.siExecSetCallback(st, value);
-	}
-
-	@Override
-	@SuppressWarnings("incomplete-switch")
-	public void siUpdateBoolean(ScriptToken st, boolean TF) {
-		if (vwr.selectedPanel != null)
-			switch (st) {
-			case COORDINATESON:
-				toolBar.coordsToggleButton.setSelected(TF);
-				break;
-			case GRIDON:
-				toolBar.gridToggleButton.setSelected(TF);
-				break;
-			}
-	}
-
-	@Override
-	public void siCheckCallbacks(String title) {
-		// setMainTitle(title);
-	}
-
-	@Override
-	public void siNodeSet(PanelNode panelNode) {
-		siSetMenuEnables(panelNode, false);
-		writeStatus("");
-	}
-
-	/**
-	 * Closes the <code>JDXSource</code> specified by source
-	 * 
-	 * @param source
-	 *          the <code>JDXSource</code>
-	 */
-	@Override
-	public void siSourceClosed(JDXSource source) {
-		appMenu.clearSourceMenu(source);
-		setError(false, false);
-		setTitle("JSpecView");
-		siValidateAndRepaint(false);			
-	}
-
-	@Override
-	public void siSetLoaded(String fileName, String filePath) {
-		appMenu.setCloseMenuItem(fileName);
-		setTitle("JSpecView - " + (filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL) ? JSVFileManager.getSimulationType(filePath) + " SIMULATION" : filePath));
-		appMenu.setSourceEnabled(true);
-	}
-
-	@Override
-	public void siUpdateRecentMenus(String filePath) {
-
-		// ADD TO RECENT FILE PATHS
-		if (filePath.length() > 100)
-			return;
-		if (recentFilePaths.size() >= MAX_RECENT)
-			recentFilePaths.removeItemAt(MAX_RECENT - 1);
-		if (recentFilePaths.contains(filePath))
-			recentFilePaths.removeObj(filePath);
-		recentFilePaths.add(0, filePath);
-		SB filePaths = new SB();
-		int n = recentFilePaths.size();
-		for (int index = 0; index < n; index++)
-			filePaths.append(", ").append(recentFilePaths.get(index));
-		vwr.setProperty("recentFilePaths", (n == 0 ? "" : filePaths
-				.substring(2)));
-		appMenu.updateRecentMenus(recentFilePaths);
-	}
-
-	@Override
-	public void siSetMenuEnables(PanelNode node, boolean isSplit) {
-		appMenu.setMenuEnables(node);
-		toolBar.setMenuEnables(node);
-		// if (isSplit) // not sure why we care...
-		// commandInput.requestFocusInWindow();
-	}
-
-	@Override
-	public JSVPanel siGetNewJSVPanel(Spectrum spec) {
-		return (spec == null ? null : AwtPanel.getPanelOne(vwr, spec));
-	}
-
-	@Override
-	public JSVPanel siGetNewJSVPanel2(Lst<Spectrum> specs) {
-		return AwtPanel.getPanelMany(vwr, specs);
-	}
-
-	@Override
-	public void siExecTest(String value) {
-		System.out.println(PT.toJSON(null, vwr.getPropertyAsJavaObject(value)));
-		//syncScript("Jmol sending to JSpecView: jmolApplet_object__5768809713073075__JSpecView: <PeakData file=\"file:/C:/jmol-dev/workspace/Jmol-documentation/script_documentation/examples-12/jspecview/acetophenone.jdx\" index=\"31\" type=\"13CNMR\" id=\"6\" title=\"carbonyl ~200\" peakShape=\"multiplet\" model=\"acetophenone\" atoms=\"1\" xMax=\"199\" xMin=\"197\"  yMax=\"10000\" yMin=\"0\" />");
-	}
-
-	@Override
-	public void siNewWindow(boolean isSelected, boolean fromFrame) {
-		// not implemented for MainFrame
-	}
 
 	@Override
 	public String print(String fileName) {
@@ -1097,5 +764,96 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 			System.out.println(s);
 		return s;
 	}
+
+  public void setSelectedPanel(JSVPanel jsvp) {
+    if (vwr.selectedPanel != null)
+      mainSplitPosition = mainSplitPane.getDividerLocation();
+    vwr.mainPanel.setSelectedPanel(vwr, jsvp, vwr.panelNodes);
+    vwr.selectedPanel = jsvp;
+    vwr.spectraTree.setSelectedPanel(jsv, jsvp);
+    validate();
+    if (jsvp != null) {
+      jsvp.setEnabled(true);
+      jsvp.setFocusable(true);
+    }
+    if (mainSplitPosition != 0)
+      mainSplitPane.setDividerLocation(mainSplitPosition);
+  }
+
+  public void validateAndRepaint(boolean isAll) {
+    validate();
+    if (isAll)
+      repaint();
+    else
+      vwr.requestRepaint();
+  }
+
+  public void execHidden(boolean b) {
+    isHidden = (jsv.jmol != null && b);
+    setVisible(!isHidden);
+  }
+
+  public void setCallback(ScriptToken st, String value) {
+    if (advancedApplet != null)
+      advancedApplet.siExecSetCallback(st, value);
+  }
+
+  public void updateToolbar(ScriptToken st, boolean tf) {
+    if (vwr.selectedPanel != null)
+      switch (st) {
+      case COORDINATESON:
+        toolBar.coordsToggleButton.setSelected(tf);
+        break;
+      case GRIDON:
+        toolBar.gridToggleButton.setSelected(tf);
+        break;
+      }
+  }
+
+  public void sourceClosed(JDXSource source) {
+    appMenu.clearSourceMenu(source);
+    setTitle("JSpecView");
+    validateAndRepaint(false);      
+  }
+
+  public void setLoading(String fileName, String filePath) {
+    appMenu.setCloseMenuItem(fileName);
+    setTitle("JSpecView - "
+        + (filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL)
+            ? JSVFileManager.getSimulationType(filePath) + " SIMULATION"
+            : filePath));
+    appMenu.setSourceEnabled(true);
+  }
+
+  public void updateRecentMenus(String filePath) {
+    // ADD TO RECENT FILE PATHS
+    if (filePath.length() > 100)
+      return;
+    if (recentFilePaths.size() >= MAX_RECENT)
+      recentFilePaths.removeItemAt(MAX_RECENT - 1);
+    if (recentFilePaths.contains(filePath))
+      recentFilePaths.removeObj(filePath);
+    recentFilePaths.add(0, filePath);
+    SB filePaths = new SB();
+    int n = recentFilePaths.size();
+    for (int index = 0; index < n; index++)
+      filePaths.append(", ").append(recentFilePaths.get(index));
+    vwr.setProperty("recentFilePaths", (n == 0 ? "" : filePaths
+        .substring(2)));
+    appMenu.updateRecentMenus(recentFilePaths);
+  }
+
+  public void setMenuEnables(PanelNode node, @SuppressWarnings("unused") boolean isSplit) {
+    appMenu.setMenuEnables(node);
+    toolBar.setMenuEnables(node);
+    // if (isSplit) // not sure why we care...
+    // commandInput.requestFocusInWindow();
+    
+  }
+
+  public void syncToJmol(String msg) {
+    if (jmolOrAdvancedApplet != null && jmolOrAdvancedApplet != jsv) // MainFrame --> embedding applet
+      jmolOrAdvancedApplet.syncToJmol(msg);
+  }
 
 }

@@ -42,6 +42,7 @@ package jspecview.app;
 import java.util.Properties;
 
 import jspecview.api.AppletFrame;
+import jspecview.api.ScriptInterface;
 
 import org.jmol.api.JSVInterface;
 
@@ -50,7 +51,7 @@ import org.jmol.api.JSVInterface;
  */
 
 public class JSVAppPro extends JSVApp implements
-    JSVInterface {
+    JSVInterface, ScriptInterface {
 
   public JSVAppPro(AppletFrame appletFrame, boolean isJS) {
 		super(appletFrame, isJS);

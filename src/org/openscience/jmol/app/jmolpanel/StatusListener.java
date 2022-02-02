@@ -47,6 +47,7 @@ import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 import org.openscience.jmol.app.webexport.WebExport;
 
 import javajs.util.PT;
+import jspecview.application.JSpecView;
 import jspecview.application.MainFrame;
 
 public class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterface {
@@ -515,7 +516,8 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         return;
     }
     if (jSpecViewFrame == null) {
-      jSpecViewFrame = new MainFrame(vwr.getBoolean(T.jmolinjspecview) ? (Component) vwr.display : null, this);
+      JSpecView jsv = new JSpecView(true, this);
+      jsv.setMainFrame(jSpecViewFrame = new MainFrame(jsv, vwr.getBoolean(T.jmolinjspecview) ? (Component) vwr.display : null, this));
       jSpecViewFrame.setSize(Math.max(1000, jmolPanel.frame.getWidth() + 50), 600);
       jSpecViewFrame.setLocation(jmolPanel.frame.getLocation().x + 10, jmolPanel.frame
           .getLocation().y + 100);

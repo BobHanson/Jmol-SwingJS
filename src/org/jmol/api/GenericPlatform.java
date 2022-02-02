@@ -139,7 +139,7 @@ public interface GenericPlatform extends FontManager {
 
   boolean forceAsyncLoad(String filename);
 
-  JmolInChI getInChI();
+  Object getInChI();
 
   int confirm(String msg, String msgNo);
 

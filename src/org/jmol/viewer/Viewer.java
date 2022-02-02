@@ -10454,7 +10454,7 @@ public class Viewer extends JmolViewer
    */
   public String getInchi(BS atoms, String molData, String options) {
     try {
-      JmolInChI inch = this.apiPlatform.getInChI();
+      JmolInChI inch = (JmolInChI) this.apiPlatform.getInChI();
       if (atoms == null && molData == null) {
         // JavaScript initialization only
         return "";

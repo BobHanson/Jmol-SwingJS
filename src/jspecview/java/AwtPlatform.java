@@ -24,7 +24,6 @@ import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
-import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
 import jspecview.api.JSVPanel;
@@ -342,7 +341,7 @@ public class AwtPlatform implements GenericPlatform {
   }
 
   @Override
-  public InChIJNI getInChI() {
+  public Object getInChI() {
     // n/a for JSpecView
     return null;
   }

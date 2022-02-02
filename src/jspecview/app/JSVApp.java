@@ -50,6 +50,7 @@ import jspecview.api.AppletFrame;
 import jspecview.api.JSVAppInterface;
 import jspecview.api.JSVPanel;
 import jspecview.api.PanelListener;
+import jspecview.api.ScriptInterface;
 import jspecview.api.js.JSVAppletObject;
 import jspecview.common.Coordinate;
 import jspecview.common.JSVFileManager;
@@ -75,7 +76,7 @@ import jspecview.source.JDXSource;
  * @author Prof Robert J. Lancashire
  */
 
-public class JSVApp implements PanelListener, JSVAppInterface {
+public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 
 	public static final String CREDITS = "Authors:\nProf. Robert M. Hanson,\nD. Facey, K. Bryan, C. Walters, Prof. Robert J. Lancashire and\nvolunteer developers through sourceforge.";
 
