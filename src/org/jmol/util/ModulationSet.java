@@ -621,7 +621,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     modInfo.put("sigma", sigma.getArray());
     modInfo.put("symop", Integer.valueOf(iop + 1));
     modInfo.put("strop", strop);
-    modInfo.put("unitcell", symmetry.getUnitCellInfo());
+    modInfo.put("unitcell", symmetry.getUnitCellInfo(true));
 
     Lst<Hashtable<String, Object>> mInfo = new Lst<Hashtable<String, Object>>();
     for (int i = 0; i < mods.size(); i++)

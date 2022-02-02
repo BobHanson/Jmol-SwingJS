@@ -28,6 +28,14 @@ package org.jmol.symmetry;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.Interface;
+import org.jmol.util.BoxInfo;
+import org.jmol.util.Escape;
+import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -38,14 +46,6 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.T4;
 import javajs.util.V3;
-
-import org.jmol.api.Interface;
-import org.jmol.util.BoxInfo;
-import org.jmol.util.Escape;
-import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.Tensor;
-import org.jmol.viewer.JC;
-import org.jmol.viewer.Viewer;
 
 /**
  * a class private to the org.jmol.symmetry package
@@ -64,17 +64,31 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   private P3 fractionalOffset;
   /**
    * this flag TRUE causes an update of matrixCtoFNoOffset each time an offset is changed
-   * so that it is updated and the two stay the same; set true only for JmolData, tensors, and isosurfaceMesh
+   * so that it is updated and the two stay the same; set true only for isosurfaceMesh
    * 
-   * it is no longer clear to me exactly why this is necessary, and perhaps it is not for some of these
-   *  
-   *
    */
   private boolean allFractionalRelative;
   
   protected final P3 cartesianOffset = new P3();
+  /**
+   * a P3 or P4; the raw multiplier for the cell from 
+   * 
+   * UNITCELL {ijk ijk scale}
+   * 
+   * UNITCELL {1iiijjjkkk 1iiijjjkkk scale}
+   * 
+   * (encoded as a P4: {1iiijjjkkk 1iiijjjkkk scale 1kkkkkk} )
+   * 
+   */
   protected T3 unitCellMultiplier;
+  
+  /**
+   * the multiplied, offset UnitCell derived from this UnitCell
+   */
+  private UnitCell unitCellMultiplied;
+
   public Lst<String> moreInfo;
+  
   public String name = "";
   
   private UnitCell() {
@@ -145,7 +159,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     } else {
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
-      // when allFractionalRelative is set true (special cases only)
+      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
       matrixCtoFNoOffset.rotTrans(pt);
       unitize(pt);
       pt.add(offset); 
@@ -174,20 +188,19 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
 
   public void reset() {
     unitCellMultiplier = null;
+    unitCellMultiplied = null;
     setOffset(P3.new3(0, 0, 0));
   }
   
   void setOffset(T3 pt) {
     if (pt == null)
       return;
+    unitCellMultiplied = null;
     T4 pt4 = (pt instanceof T4 ? (T4) pt : null);
     boolean isCell555P4 = (pt4 != null && pt4.w > 999999);
     if (pt4 != null ? pt4.w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
-      // from "unitcell range {ijk ijk scale}"
-      //   or "unitcell range {1iiijjjkkk 1iiijjjkkk scale}"
-      //     where we have encoded this as a P4: {1iiijjjkkk 1iiijjjkkk scale 1kkkkkk}
-      //   or "unitcell reset"
       unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4.newPt((P4) pt4) : P3.newP(pt));
+      unitCellMultiplied = null;
       if (pt4 == null || pt4.w == 0 || isCell555P4)
         return;
       // from reset, continuing 
@@ -238,6 +251,9 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   Map<String, Object> getInfo() {
+    UnitCell m = getUnitCellMultiplied();
+    if (m != this)
+      return m.getInfo();       
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("params", unitCellParams);
     info.put("vectors", getUnitCellVectors());
@@ -247,12 +263,25 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return info;
   }
   
-  String dumpInfo(boolean isFull) {
+  String dumpInfo(boolean isDebug, boolean multiplied) {
+    UnitCell m = (multiplied ? getUnitCellMultiplied() : this);
+    if (m != this)
+      return m.dumpInfo(isDebug, false);
     return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
-       + "\n" + Escape.eAP(getUnitCellVectors())
+       + "\noabc=" + Escape.eAP(getUnitCellVectors())
        + "\nvolume=" + volume
-       + (isFull ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
+       + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
        + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
+  }
+
+  UnitCell getUnitCellMultiplied() {
+    if (unitCellMultiplier == null || unitCellMultiplier.z > 0 && unitCellMultiplier.z == (int) unitCellMultiplier.z)
+      return this;
+    if (unitCellMultiplied == null) {
+      P3[] pts = BoxInfo.toOABC(getScaledCell(true), null);
+      unitCellMultiplied = fromOABC(pts, false);
+    }
+    return unitCellMultiplied;
   }
 
   P3[] getVertices() {
@@ -419,29 +448,36 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @return points in Triangulator order
    */
   P3[] getCanonicalCopy(float scale, boolean withOffset) {
+    P3[] pts = getScaledCell(withOffset);
+    return BoxInfo.getCanonicalCopy(pts, scale);
+  }
+
+  private P3[] getScaledCell(boolean withOffset) {
     P3[] pts  = new P3[8];
     P3 cell0 = null;
     P3 cell1 = null;
-    if (withOffset && unitCellMultiplier != null) {
+    if (withOffset && unitCellMultiplier != null && unitCellMultiplier.z == 0) {
       cell0 = new P3();
       cell1 = new P3();
       ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0, 0);
       ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0, 0);
       cell1.sub(cell0);
     }
+    float scale = (unitCellMultiplier == null || unitCellMultiplier.z == 0 ? 1
+        : Math.abs(unitCellMultiplier.z));
     for (int i = 0; i < 8; i++) {
       P3 pt = pts[i] = P3.newP(BoxInfo.unitCubePoints[i]);
       if (cell0 != null) {
-        scale *= (unitCellMultiplier.z == 0 ? 1 : unitCellMultiplier.z);
         pts[i].add3(cell0.x + cell1.x * pt.x, 
             cell0.y + cell1.y * pt.y,
             cell0.z + cell1.z * pt.z);
       }
+      pts[i].scale(scale);
       matrixFractionalToCartesian.rotTrans(pt);
       if (!withOffset)
         pt.sub(cartesianOffset);
     }
-    return BoxInfo.getCanonicalCopy(pts, scale);
+    return pts;
   }
 
   /// private methods

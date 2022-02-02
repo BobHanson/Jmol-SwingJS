@@ -112,7 +112,7 @@ class Subsystem {
     // Part 3: Transform the operators 
     // 
 
-    Logger.info("unit cell parameters: " + symmetry.getUnitCellInfo());
+    Logger.info("unit cell parameters: " + symmetry.getUnitCellInfo(true));
     symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4>(), d);
     int nOps = s0.getSpaceGroupOperationCount();
     for (int iop = 0; iop < nOps; iop++) {

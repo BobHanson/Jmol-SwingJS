@@ -3865,10 +3865,12 @@ public class MathExt {
       // within (sheet)
       // within (helix)
       // within (boundbox)
+      // within (unitcell)
       switch (tok) {
       case T.helix:
       case T.sheet:
       case T.boundbox:
+      case T.unitcell:
         return mp.addXBs(ms.getAtoms(tok, null));
       case T.basepair:
         return mp.addXBs(ms.getAtoms(tok, ""));
@@ -3878,6 +3880,7 @@ public class MathExt {
       return false;
     case 2:
       // within (atomName, "XX,YY,ZZZ")
+      // within (unitcell, u);
       switch (tok) {
       case T.spec_seqcode:
         tok = T.sequence;
@@ -3895,6 +3898,22 @@ public class MathExt {
       case T.cell:
       case T.centroid:
         return mp.addXBs(vwr.ms.getAtoms(tok, SV.ptValue(args[1])));
+      case T.unitcell:
+        Lst<SV> l = args[1].getList();
+        if (l == null)
+          return false;
+        P3[] oabc = null;
+        SymmetryInterface uc = null;
+        if (l.size() != 4)
+          return false;
+        oabc = new P3[4];
+        for (int i = 0; i < 4; i++) {
+          if ((oabc[i] = SV.ptValue(l.get(i))) == null)
+            return false;
+        }
+        uc = vwr.getSymTemp().getUnitCell(oabc,  false, null);
+        return mp
+            .addXBs(vwr.ms.getAtoms(tok, uc));
       }
       break;
     case 3:

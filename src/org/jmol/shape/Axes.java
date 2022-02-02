@@ -26,6 +26,7 @@ package org.jmol.shape;
 
 
 import javajs.util.P3;
+import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
@@ -109,36 +110,36 @@ public class Axes extends FontLineShape {
     myType = "axes";
     font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
     int axesMode = vwr.g.axesMode;
-    if (axesMode == T.axesunitcell && ms.unitCells != null) {
-      SymmetryInterface unitcell = vwr.getCurrentUnitCell();
-      if (unitcell != null) {
-        float voffset = vwr.getFloat(T.axesoffset);
-        fixedOriginUC.set(voffset, voffset, voffset);
-        P3 offset = unitcell.getCartesianOffset();
-        P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
-        originPoint.add2(offset, vertices[0]);
-        if (voffset != 0)
-          unitcell.toCartesian(fixedOriginUC, false);
-        else if (fixedOrigin != null)
-          originPoint.setT(fixedOrigin);
-        if (voffset != 0) {
-          originPoint.add(fixedOriginUC);
-        }
-//        unitcell.setAxes(scale, axisPoints, fixedO, originPoint);
-        // We must divide by 2 because that is the default for ALL axis types.
-        // Not great, but it will have to do.
-        scale = vwr.getFloat(T.axesscale) / 2f;
-        // these are still relative vectors, not points
-        axisPoints[0].scaleAdd2(scale, vertices[4], originPoint);
-        axisPoints[1].scaleAdd2(scale, vertices[2], originPoint);
-        axisPoints[2].scaleAdd2(scale, vertices[1], originPoint);
-        return;
-      }
+    SymmetryInterface unitcell;
+    if (axesMode != T.axesunitcell || ms.unitCells == null
+        || (unitcell = vwr.getCurrentUnitCell()) == null) {
+      originPoint.setT(fixedOrigin != null ? fixedOrigin
+          : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() : pt0);
+      // We must divide by 2 because that is the default for non-unitcell axis types.
+      setScale(vwr.getFloat(T.axesscale) / 2f);
+      return;
     }
-    originPoint.setT(fixedOrigin != null ? fixedOrigin
-        : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() 
-        : pt0);
-    setScale(vwr.getFloat(T.axesscale) / 2f);
+    // have unit cell
+    T3 fset = unitcell.getUnitCellMultiplier();
+    unitcell = unitcell.getUnitCellMultiplied();
+    float voffset = vwr.getFloat(T.axesoffset);
+    fixedOriginUC.set(voffset, voffset, voffset);
+    P3 offset = unitcell.getCartesianOffset();
+    P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
+    originPoint.add2(offset, vertices[0]);
+    if (voffset != 0)
+      unitcell.toCartesian(fixedOriginUC, false);
+    else if (fixedOrigin != null)
+      originPoint.setT(fixedOrigin);
+    if (voffset != 0) {
+      originPoint.add(fixedOriginUC);
+    }
+    float scale = this.scale = vwr.getFloat(T.axesscale) / 2f;
+    if (fset != null && fset.z > 0)
+      scale *= Math.abs(fset.z);
+    axisPoints[0].scaleAdd2(scale, vertices[4], originPoint);
+    axisPoints[1].scaleAdd2(scale, vertices[2], originPoint);
+    axisPoints[2].scaleAdd2(scale, vertices[1], originPoint);
   }
   
   public void reinitShape() {

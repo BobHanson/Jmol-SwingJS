@@ -4141,7 +4141,7 @@ public class CmdExt extends ScriptExt {
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));
       } else if (PT.isOneOf(val.toLowerCase(),
-          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;pwmat;qcjson;xsf;")) {
+          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;cifp1;pwmat;qcjson;xsf;")) {
         // this still could be overruled by a type indicated
         type = val.toUpperCase();
         if (pt + 1 == argCount)
@@ -4279,12 +4279,12 @@ public class CmdExt extends ScriptExt {
         && !PT
             .isOneOf(
                 type,
-                ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
+                ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
       eval.errorStr2(
           ScriptError.ERROR_writeWhat,
           "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
               + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
-          "CIF|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWMAT|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
+          "CIF|CIFP1|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWMAT|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
               + driverList.toUpperCase().replace(';', '|'));
     if (chk)
       return "";
@@ -4363,7 +4363,7 @@ public class CmdExt extends ScriptExt {
           data = vwr.getCurrentFileAsString("script");
         else
           writeFileData = true;
-      } else if (PT.isOneOf(data,";CIF;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;XSF;")) {
+      } else if (PT.isOneOf(data,";CIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;XSF;")) {
         BS selected = vwr.bsA(), bsModel;
         msg = " (" + selected.cardinality() + " atoms)";
         if (vwr.am.cmi >= 0 && !selected.equals(bsModel = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi)))
@@ -5532,7 +5532,12 @@ public class CmdExt extends ScriptExt {
       //$FALL-THROUGH$
     case T.range:
       pt = eval.getFractionalPoint(++i);
-      pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
+      if (pt instanceof P4) {
+        if (isOffset)
+          invArg();       
+      } else {
+        pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
+      }
       i = eval.iToken;
       break;
     case T.decimal:

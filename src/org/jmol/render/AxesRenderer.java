@@ -72,15 +72,16 @@ public class AxesRenderer extends CageRenderer {
     pt000 = (isDataFrame ? pt0 : axes.originPoint);
 
     // includes check here for background model present
-    boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (vwr.ms.isJmolDataFrameForModel(modelIndex)
         && !vwr.ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
+    boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (isUnitCell && modelIndex < 0 && vwr.getCurrentUnitCell() == null)
       return false;
+    isUnitCell &= (ms.unitCells != null);
     int nPoints = 6;
     int labelPtr = 0;
-    if (isUnitCell && ms.unitCells != null) {
+    if (isUnitCell) {
       nPoints = 3;
       labelPtr = 6;
     } else if (isXY) {
@@ -124,7 +125,7 @@ public class AxesRenderer extends CageRenderer {
         // offset is from {0 0 0}
         pointT.setT(pt000);
         for (int i = 0; i < 3; i++)
-          pointT.add(axes.getAxisPoint(i, false));
+          pointT.add(axes.getAxisPoint(i, false)); 
         pt0i.setT(tm.transformPt(pt000));
         pt2i.scaleAdd(-1, pt0i, tm.transformPt(pointT));
         if (pt2i.x < 0)

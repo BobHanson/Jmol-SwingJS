@@ -172,7 +172,7 @@ public class PropertyManager implements JmolPropertyManager {
     "service"    , "<hashTable>", "",
     "CIFInfo"        , "<filename>", "",
     "modelkitInfo", "<key>","data",
-
+    "unitcellInfo"   , "", "",
   };
 
   private final static int PROP_APPLET_INFO = 0;
@@ -228,7 +228,8 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_SERVICE = 44;
   private final static int PROP_CIF_INFO = 45;
   private final static int PROP_MODELKIT_INFO = 46;
-  private final static int PROP_COUNT = 47;
+  private final static int PROP_UNITCELL_INFO = 47;
+  private final static int PROP_COUNT = 48;
 
   //// static methods used by Eval and Viewer ////
 
@@ -766,6 +767,8 @@ public class PropertyManager implements JmolPropertyManager {
     if (myParam == null)
       myParam = (iHaveParameter ? paramInfo: getDefaultPropertyParam(id));
     switch (id) {
+    case PROP_UNITCELL_INFO :
+      return getUnitCellInfo();
     case PROP_MODELKIT_INFO:
       return vwr.getModelkitProperty(myParam.toString());
     case PROP_APPLET_INFO:
@@ -884,6 +887,11 @@ public class PropertyManager implements JmolPropertyManager {
       if (data[i].length() > 0)
         info.append("\n getProperty ").append(data[i]);
     return info.toString();
+  }
+
+  private Object getUnitCellInfo() {
+    SymmetryInterface uc = vwr.getCurrentUnitCell();
+    return (uc == null ? "" : uc.getUnitCellInfoMap());
   }
 
   private Object getImage(String params, boolean asBytes) {
@@ -1175,6 +1183,8 @@ public class PropertyManager implements JmolPropertyManager {
     String uc = type.toUpperCase();
     if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWMAT;"))
       return getModel(uc, bs, null, null);
+    if (uc.equals("CIFP1"))
+      return getModel("CIF", bs, new Object[] { "P1"}, null);
     if (uc.equals("CML"))
       return getModelCml(bs, Integer.MAX_VALUE, true, doTransform, allTrajectories);
     if (uc.equals("PDB") || uc.equals("PQR"))

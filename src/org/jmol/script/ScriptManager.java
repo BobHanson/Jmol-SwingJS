@@ -775,6 +775,9 @@ public class ScriptManager implements JmolScriptManager {
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
     vwr.g.appendNew = wasAppendNew;
+    bsA = vwr.ms.am[modelIndex].bsAsymmetricUnit;
+    if (bsA != null)
+      bsA.or(bsB);
     return bsB;
   }
 

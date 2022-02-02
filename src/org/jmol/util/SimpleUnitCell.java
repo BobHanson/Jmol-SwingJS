@@ -24,6 +24,8 @@
 
 package org.jmol.util;
 
+import org.jmol.api.SymmetryInterface;
+
 import javajs.util.AU;
 import javajs.util.M4;
 import javajs.util.P3;
@@ -547,4 +549,32 @@ public class SimpleUnitCell {
   public String toString() {
     return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]";
   }
+
+  /**
+   * allowance for rounding in [0,1)
+   */
+  private final static float SLOP2 = 0.0001f;
+  
+  /**
+   * check atom position for range [0, 1) allowing for rounding
+
+   * @param pt 
+   * @return true if in [0, 1)
+   */
+  public static boolean checkPeriodic(P3 pt) {
+    return (pt.x >= -SLOP2 && pt.x < 1 - SLOP2
+        && pt.y >= -SLOP2 && pt.y < 1 - SLOP2
+        && pt.z >= -SLOP2 && pt.z < 1 - SLOP2
+        );
+  }
+
+  public static boolean checkUnitCell(SymmetryInterface uc, P3 cell, P3 ptTemp) {
+    uc.toFractional(ptTemp, false);
+    // {1 1 1} here is the original cell
+    return (ptTemp.x >= cell.x - 1f - SLOP && ptTemp.x <= cell.x + SLOP
+        && ptTemp.y >= cell.y - 1f - SLOP && ptTemp.y <= cell.y + SLOP
+        && ptTemp.z >= cell.z - 1f - SLOP && ptTemp.z <= cell.z + SLOP);
+  }
+
+
 }

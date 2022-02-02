@@ -3703,7 +3703,7 @@ public class Viewer extends JmolViewer
 
   public String getUnitCellInfoText() {
     SymmetryInterface c = getCurrentUnitCell();
-    return (c == null ? "not applicable" : c.getUnitCellInfo());
+    return (c == null ? "not applicable" : c.getUnitCellInfo(true));
   }
 
   public float getUnitCellInfo(int infoType) {

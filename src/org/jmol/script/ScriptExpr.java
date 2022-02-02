@@ -2060,6 +2060,9 @@ abstract class ScriptExpr extends ScriptParam {
     Lst<SV> lst = (Lst<SV>) obj;
     if (lst.size() == 0)
       return "";
+    SV v0 = lst.get(0);
+    if (SV.ptValue(v0) != null)
+      return obj;
     if (lst.get(0).asString().contains("|"))
       return vwr.ms.getAtoms(T.sequence, SV.newV(T.varray, lst).asString());
     BS bs = SV.unEscapeBitSetArray(lst, true);

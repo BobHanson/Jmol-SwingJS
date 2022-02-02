@@ -2,6 +2,12 @@ package org.jmol.api;
 
 import java.util.Map;
 
+import org.jmol.modelset.Atom;
+import org.jmol.modelset.ModelSet;
+import org.jmol.symmetry.Symmetry;
+import org.jmol.util.Tensor;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
@@ -12,12 +18,6 @@ import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
-
-import org.jmol.modelset.Atom;
-import org.jmol.modelset.ModelSet;
-import org.jmol.symmetry.Symmetry;
-import org.jmol.util.Tensor;
-import org.jmol.viewer.Viewer;
 
 public interface SymmetryInterface {
 
@@ -31,8 +31,6 @@ public interface SymmetryInterface {
 
   public boolean checkDistance(P3 f1, P3 f2, float distance, 
                                         float dx, int iRange, int jRange, int kRange, P3 ptOffset);
-
-  public boolean checkUnitCell(SymmetryInterface uc, P3 cell, P3 ptTemp, boolean isAbsolute);
 
   public boolean createSpaceGroup(int desiredSpaceGroupIndex,
                                            String name,
@@ -101,7 +99,7 @@ public interface SymmetryInterface {
 
   public float[] getUnitCellAsArray(boolean vectorsOnly);
 
-  public String getUnitCellInfo();
+  public String getUnitCellInfo(boolean scaled);
 
   public float getUnitCellInfoType(int infoType);
 
@@ -241,6 +239,8 @@ public interface SymmetryInterface {
    * @return type or null
    */
   String getSpaceGroupNameType(String type);
+
+  Symmetry getUnitCellMultiplied();
 
 //  void unitize01(T3 ptFrac);
 

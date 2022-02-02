@@ -906,8 +906,7 @@ public class IsosurfaceMesh extends Mesh {
     return (unitCell != null
         || (unitCell = vwr.ms.am[modelIndex].biosymmetry) != null
         || (unitCell = vwr.ms.getUnitCell(modelIndex)) != null
-        || oabc != null && (unitCell = Interface.getSymmetry(vwr, "symmetry").getUnitCell(
-            oabc, true, null)) != null ? unitCell : null);
+        || oabc != null && (unitCell = vwr.getSymTemp().getUnitCell(oabc, true, null)) != null ? unitCell : null);
   }
 
   void fixLattice() {

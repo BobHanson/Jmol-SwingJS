@@ -552,7 +552,7 @@ abstract public class ScriptParam extends ScriptError {
           break;
         case T.integer:
         case T.spec_seqcode:
-          if (n == 6)
+          if (n == 6 || theToken.intValue == Integer.MAX_VALUE)
             invArg();
           if (implicitFractional && theToken.intValue > 999999999)
             useCell555P4 = true;
@@ -680,8 +680,14 @@ abstract public class ScriptParam extends ScriptError {
         | (throwE ? 0 : MODE_P_NULL_ON_ERROR));
   }
 
-  public P3 getFractionalPoint(int i) throws ScriptException {
-    return (P3) getPointOrPlane(i, MODE_P3 | MODE_P_IMPLICIT_FRACTIONAL);
+  /**
+   * Could return a P4 for large 1100100100 type indicators
+   * @param i
+   * @return
+   * @throws ScriptException
+   */
+  public T3 getFractionalPoint(int i) throws ScriptException {
+    return getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
   }
   
   public P4 getPoint4f(int i) throws ScriptException {

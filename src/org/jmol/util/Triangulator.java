@@ -121,7 +121,7 @@ public class Triangulator extends TriangleData {
     P3[] newPts = new P3[8];
     for (int i = 0; i < 8; i++) {
       d = pts[i].dot(plane);
-      if (d < dmax) {
+      if (d > dmax) {
         dmax = d;
         imax = i;
       }
@@ -129,9 +129,16 @@ public class Triangulator extends TriangleData {
     }
     int t = fullCubeCorners[imax][3];
     int[][]polygons = new int[6][];
+    // set polygon triangles and adjust edges
     for (int p = 0, i = 0; i < 12; i++) {
       if ((t & Pwr2[i]) != 0) {
-        polygons[p++] = fullCubePolygon[i];
+        int[] t1 = new int[4];
+        int[] t0 = fullCubePolygon[i];
+        t1[0] = t0[0];
+        t1[1] = t0[1];
+        t1[2] = t0[2];
+        t1[3] = (t0[0] == imax ? 2 : t0[1] == imax ? 0 : t0[2] == imax ? 1 : 3);
+        polygons[p++] = t1;
       }
     }
     Lst<Object> poly = new Lst<Object>();

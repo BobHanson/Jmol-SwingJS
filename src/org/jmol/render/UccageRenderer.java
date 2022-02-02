@@ -99,7 +99,7 @@ public class UccageRenderer extends CageRenderer {
     offset.sub(offsetT);
     boolean hiddenLines = vwr.getBoolean(T.hiddenlinesdashed);
     T3 fset = unitcell.getUnitCellMultiplier();
-    boolean haveMultiple = (fset != null && fset.distanceSquared(fset0) != 0);
+    boolean haveMultiple = (fset != null && !fset.equals(fset0));
     if (!haveMultiple)
       fset = fset0;
     int t3w = (fset instanceof T4 ? (int)((T4) fset).w : 0);

@@ -206,6 +206,11 @@ public class Model {
    * 
    */
   public boolean isOrderly = true;
+
+  /**
+   * tracks all presymmetry asymmetric unit atoms; atoms added using the ModelKit will add to this.
+   */
+  public BS bsAsymmetricUnit;
   
   /**
    * 

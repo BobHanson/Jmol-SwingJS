@@ -1116,8 +1116,10 @@ public final class ModelLoader {
         if (atoms[iAtom].mi != iModel) {
           iModel = atoms[iAtom].mi;
           i0 = baseAtomIndex + ms.getInfoI(iModel, "presymmetryAtomIndex");
+          int n = ms.getInfoI(iModel, "presymmetryAtomCount");
           ms.am[iModel].auxiliaryInfo.put("presymmetryAtomIndex", Integer.valueOf(i0));
-          i0 += ms.getInfoI(iModel, "presymmetryAtomCount");
+          ms.setInfo(iModel, "asymmetricUnit", ms.am[iModel].bsAsymmetricUnit = BSUtil.newBitSet2(i0,  i0 + n));
+          i0 += n;
         }
         if (iAtom >= i0)
           ms.bsSymmetry.set(iAtom);

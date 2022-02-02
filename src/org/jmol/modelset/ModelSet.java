@@ -2114,8 +2114,9 @@ public class ModelSet extends BondCollection {
     case T.basepair:
     case T.sequence:
       bs = new BS();
-      return (haveBioModels ? bioModelset.getAtomBitsStr(tokType,
-          (String) specInfo, bs) : bs);
+      return (haveBioModels
+          ? bioModelset.getAtomBitsStr(tokType, (String) specInfo, bs)
+          : bs);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
@@ -2133,25 +2134,37 @@ public class ModelSet extends BondCollection {
       // select cell=1500500500
       bs = new BS();
       P3 pt = (P3) specInfo;
-      boolean ignoreOffset = false;//!vwr.getBoolean(T.fractionalrelative);
-      for (int i = ac; --i >= 0;)
-        if (at[i] != null && isInLatticeCell(i, pt, ptTemp2, ignoreOffset))
+
+      SymmetryInterface uc = vwr.getSymTemp();
+      for (int mi = -1, i = ac; --i >= 0;) {
+        if (at[i] == null)
+          continue;
+        int mia = at[i].getModelIndex();
+        if (mi != mia) {
+          mi = mia;
+          uc = getUnitCell(mi);
+        }
+        if (uc == null)
+          continue;
+        ptTemp.setT(at[i]);
+        if (SimpleUnitCell.checkUnitCell(uc, pt, ptTemp))
           bs.set(i);
+      }
       return bs;
     case T.centroid:
       // select centroid=555  -- like cell=555 but for whole molecules
       // if it  is one full molecule, then return the EMPTY bitset      
       bs = BSUtil.newBitSet2(0, ac);
       P3 pt1 = (P3) specInfo;
-      int[] minmax = new int[] { (int) pt1.x - 1, (int) pt1.y - 1, (int) pt1.z - 1, 
-          (int) pt1.x, (int) pt1.y, (int) pt1.z, 0 };
+      int[] minmax = new int[] { (int) pt1.x - 1, (int) pt1.y - 1,
+          (int) pt1.z - 1, (int) pt1.x, (int) pt1.y, (int) pt1.z, 0 };
       for (int i = mc; --i >= 0;) {
-        SymmetryInterface uc = getUnitCell(i);
-        if (uc == null) {
+        SymmetryInterface uc1 = getUnitCell(i);
+        if (uc1 == null) {
           BSUtil.andNot(bs, am[i].bsAtoms);
           continue;
         }
-        bs.andNot(uc.notInCentroid(this, am[i].bsAtoms, minmax));
+        bs.andNot(uc1.notInCentroid(this, am[i].bsAtoms, minmax));
       }
       return bs;
     case T.molecule:
@@ -2190,18 +2203,26 @@ public class ModelSet extends BondCollection {
       }
       return bs;
     case T.symmetry:
-      return BSUtil.copy(bsSymmetry == null ? bsSymmetry = BS.newN(ac)
-          : bsSymmetry);
+      return BSUtil
+          .copy(bsSymmetry == null ? bsSymmetry = BS.newN(ac) : bsSymmetry);
     case T.unitcell:
       // select UNITCELL (a relative quantity)
+      // this one is [0, 1)
       bs = new BS();
-      SymmetryInterface unitcell = vwr.getCurrentUnitCell();
-      if (unitcell == null)
+      SymmetryInterface uc1 = (specInfo instanceof SymmetryInterface
+          ? (SymmetryInterface) specInfo
+          : vwr.getCurrentUnitCell());
+      if (uc1 == null)
         return bs;
-      ptTemp1.set(1, 1, 1);
-      for (int i = ac; --i >= 0;)
-        if (at[i] != null && isInLatticeCell(i, ptTemp1, ptTemp2, false))
-          bs.set(i);
+      uc1 = uc1.getUnitCellMultiplied();
+      for (int i = ac; --i >= 0;) {
+        if (at[i] != null) {
+          ptTemp1.setT(at[i]);
+          uc1.toFractional(ptTemp1, false);
+          if (SimpleUnitCell.checkPeriodic(ptTemp1))
+            bs.set(i);
+        }
+      }
       return bs;
     }
   }
@@ -2282,17 +2303,6 @@ public class ModelSet extends BondCollection {
     for (int i = indexA; i <= indexB; ++i)
       groups[i].setAtomBits(bs);
     return (isInexact ? -1 : indexB + 1);
-  }
-
-  private boolean isInLatticeCell(int i, P3 cell, P3 ptTemp, boolean isAbsolute) {
-    // this is the one method that allows for an absolute fractional cell business
-    // but it is always called with isAbsolute FALSE.
-    // so then it is determining values for select UNITCELL and the like.
-
-    int iModel = at[i].mi;
-    SymmetryInterface uc = getUnitCell(iModel);
-    ptTemp.setT(at[i]);
-    return (uc != null && uc.checkUnitCell(uc, cell, ptTemp, isAbsolute));
   }
 
   /**
@@ -3052,6 +3062,8 @@ public class ModelSet extends BondCollection {
       m.resetDSSR(false);
       m.bsAtomsDeleted.or(bs);
       m.bsAtomsDeleted.and(m.bsAtoms);
+      if (m.bsAsymmetricUnit != null)
+        m.bsAsymmetricUnit.andNot(bs);
       bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
       m.firstAtomIndex = bs.nextSetBit(0);
       m.act = bs.cardinality();

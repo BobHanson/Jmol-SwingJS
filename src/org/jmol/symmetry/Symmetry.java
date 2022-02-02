@@ -408,7 +408,7 @@ public class Symmetry implements SymmetryInterface {
         initializeOrientation(matUnitCellOrientation);
       if (Logger.debugging)
         Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
-            + unitCell.dumpInfo(true));
+            + unitCell.dumpInfo(true, true));
     }
     return this;
   }
@@ -418,16 +418,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean haveUnitCell() {
     return (unitCell != null);
-  }
-
-  @Override
-  public boolean checkUnitCell(SymmetryInterface uc, P3 cell, P3 ptTemp,
-                               boolean isAbsolute) {
-    uc.toFractional(ptTemp, isAbsolute);
-    // {1 1 1} here is the original cell
-    return (ptTemp.x >= cell.x - 1f - SimpleUnitCell.SLOP && ptTemp.x <= cell.x + SimpleUnitCell.SLOP
-        && ptTemp.y >= cell.y - 1f - SimpleUnitCell.SLOP && ptTemp.y <= cell.y + SimpleUnitCell.SLOP
-        && ptTemp.z >= cell.z - 1f - SimpleUnitCell.SLOP && ptTemp.z <= cell.z + SimpleUnitCell.SLOP);
   }
 
   @Override
@@ -453,7 +443,7 @@ public class Symmetry implements SymmetryInterface {
 
   public String getUnitsymmetryInfo() {
     // not used in Jmol?
-    return unitCell.dumpInfo(false);
+    return unitCell.dumpInfo(false, true);
   }
 
   @Override
@@ -546,6 +536,17 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
+  public Symmetry getUnitCellMultiplied() {
+    UnitCell uc = unitCell.getUnitCellMultiplied();
+    if (uc == unitCell)
+      return this;
+    Symmetry s = new Symmetry();
+    s.unitCell = uc;
+    return s;
+  }
+
+
+  @Override
   public P3[] getCanonicalCopy(float scale, boolean withOffset) {
     return unitCell.getCanonicalCopy(scale, withOffset);
   }
@@ -556,8 +557,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getUnitCellInfo() {
-    return unitCell.dumpInfo(false);
+  public String getUnitCellInfo(boolean scaled) {
+    return unitCell.dumpInfo(false, scaled);
   }
 
   @Override
