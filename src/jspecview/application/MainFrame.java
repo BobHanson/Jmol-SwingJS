@@ -200,7 +200,6 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	public MainFrame(JSpecView jsv, Component jmolDisplay, JSVInterface jmolOrAdvancedApplet) {
 	  this.jsv = jsv;
 	  this.vwr = jsv.vwr;
-		JSVFileManager.setDocumentBase(vwr, null);
 		this.jmolDisplay = jmolDisplay;
 		if (jmolDisplay != null) {
 			jmolPanel = (JPanel) jmolDisplay.getParent();

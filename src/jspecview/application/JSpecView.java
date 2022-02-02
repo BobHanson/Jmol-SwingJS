@@ -43,7 +43,6 @@ package jspecview.application;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GraphicsEnvironment;
-import java.awt.Toolkit;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
@@ -51,6 +50,12 @@ import java.util.Properties;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
+import org.jmol.api.JSVInterface;
+import org.jmol.api.JmolSyncInterface;
+import org.jmol.util.Logger;
+
+import javajs.util.Lst;
+import javajs.util.PT;
 import jspecview.api.JSVPanel;
 import jspecview.api.ScriptInterface;
 import jspecview.common.ColorParameters;
@@ -67,14 +72,6 @@ import jspecview.java.AwtFileHelper;
 import jspecview.java.AwtMainPanel;
 import jspecview.java.AwtPanel;
 import jspecview.source.JDXSource;
-
-import org.jmol.api.JSVInterface;
-import org.jmol.api.JmolSyncInterface;
-import org.jmol.util.Logger;
-
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
 
 
 
@@ -105,6 +102,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   public JSpecView(boolean hasDisplay, JSVInterface jmol) {
     vwr = new JSViewer(this, false, false);
+    JSVFileManager.setDocumentBase(vwr, null);
     vwr.mainPanel = new AwtMainPanel(new BorderLayout());
     if (hasDisplay) {
       mainFrame = new MainFrame(this, null, jmol == null ? this : jmol);
@@ -359,7 +357,6 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   }
 
   @Override
-  @SuppressWarnings("incomplete-switch")
   public void siUpdateBoolean(ScriptToken st, boolean TF) {
     if (mainFrame != null)
       mainFrame.updateToolbar(st, TF);
