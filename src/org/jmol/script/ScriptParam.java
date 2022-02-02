@@ -683,7 +683,7 @@ abstract public class ScriptParam extends ScriptError {
   /**
    * Could return a P4 for large 1100100100 type indicators
    * @param i
-   * @return
+   * @return P3 or P4
    * @throws ScriptException
    */
   public T3 getFractionalPoint(int i) throws ScriptException {
