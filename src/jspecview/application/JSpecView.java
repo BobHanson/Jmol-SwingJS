@@ -42,6 +42,7 @@ package jspecview.application;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -130,8 +131,8 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
 		int n = args.length;
 
-    boolean autoexit = false;
-    boolean noDisplay = false;
+    boolean noDisplay = GraphicsEnvironment.isHeadless();
+    boolean autoexit = noDisplay;
 
     // check for command-line arguments  "file" "file" "file" -script "xxxx" -nodisplay -exit
     // IN THAT ORDER
@@ -157,10 +158,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       if (n == 2 && args[0].equalsIgnoreCase("-script")) {
         String script = args[1];
         System.out.println("JSpecView is running script " + script);
-
         jsv.vwr.runScriptNow(args[1]);
-        if (autoexit)
-          exitNow();
       } else {
         for (int i = 0; i < args.length; i++) {
           System.out.println("JSpecView is attempting to open " + args[i]);
@@ -169,7 +167,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       }
     }
     
-    if (noDisplay)
+    if (noDisplay || autoexit)
       exitNow();
     jsv.mainFrame.setVisible(true);
   }
