@@ -128,7 +128,7 @@ public class Triangulator extends TriangleData {
       Measure.getPlaneProjection(pts[i], plane, newPts[i] = new P3(), vTemp);
     }
     int t = fullCubeCorners[imax][3];
-    int[][]polygons = new int[6][];
+    int[][]polygons = AU.newInt2(6);
     // set polygon triangles and adjust edges
     for (int p = 0, i = 0; i < 12; i++) {
       if ((t & Pwr2[i]) != 0) {
