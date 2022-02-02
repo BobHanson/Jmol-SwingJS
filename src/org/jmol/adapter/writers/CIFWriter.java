@@ -12,7 +12,6 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
-import javajs.util.T4;
 
 /**
  * An XCrysDen XSF writer
