@@ -89,7 +89,6 @@ import javajs.util.SB;
 public class JSpecView implements JSVInterface, ScriptInterface {
 
   private MainFrame mainFrame;
-  private boolean noGraphicsAllowed;
   JSViewer vwr;
   public String defaultDisplaySchemeName;
   private DisplaySchemesProcessor dsp;
@@ -105,7 +104,6 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   //  ------------------------ Program Properties -------------------------
 
   public JSpecView(boolean hasDisplay, JSVInterface jmol) {
-    noGraphicsAllowed = !hasDisplay;
     vwr = new JSViewer(this, false, false);
     vwr.mainPanel = new AwtMainPanel(new BorderLayout());
     if (hasDisplay) {
@@ -129,27 +127,30 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
 		Logger.info("JSpecView Application " + JSVersion.VERSION);
 
-		int n = args.length;
 
     boolean noDisplay = GraphicsEnvironment.isHeadless();
     boolean autoexit = noDisplay;
 
+    int n = args.length;
+    
     // check for command-line arguments  "file" "file" "file" -script "xxxx" -nodisplay -exit
     // IN THAT ORDER
 
-    if (n > 0) {
-      if (args[n - 1].equalsIgnoreCase("-exit")) {
+    if (n > 0 && args[n - 1].equalsIgnoreCase("-exit")) {
         autoexit = true;
         n--;
-      }
     }
-    if (n > 0) {
-      noDisplay = args[n - 1].equalsIgnoreCase("-nodisplay");
-      if (noDisplay) {
-        autoexit = true;
+    if (n > 0 && args[n - 1].equalsIgnoreCase("-nodisplay")) {
+      noDisplay = autoexit = true;
         n--;
-      }      
     }
+
+    if (autoexit)
+      System.out.println("JSpecview running headless");
+
+
+    if (noDisplay)
+      System.out.println("JSpecview has no display");
 
     JSpecView jsv = new JSpecView(!noDisplay, null);
 
