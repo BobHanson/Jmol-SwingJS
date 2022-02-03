@@ -1147,10 +1147,10 @@ public class XtalSymmetry {
       for (int i = 0; i < 3; i++)
         lc[i] = latticeCells[i];
     latticeCells = null;
-    
+
     String bmChains = acr.getFilterWithCase("BMCHAINS");
-    int fixBMChains = (bmChains == null ? -1 : bmChains.length() < 2 ? 0 
-        : PT.parseInt(bmChains.substring(1)));
+    int fixBMChains = (bmChains == null ? -1
+        : bmChains.length() < 2 ? 0 : PT.parseInt(bmChains.substring(1)));
     if (fixBMChains == Integer.MIN_VALUE) {
       fixBMChains = -(int) bmChains.charAt(1);
     }
@@ -1304,7 +1304,9 @@ public class XtalSymmetry {
 
     if (particleMode == 0 && fixBMChains != -1) {
       boolean assignABC = (fixBMChains != 0);
-      Map<String, String> chainMap = (assignABC ? new Hashtable<String, String>() : null);
+      Map<String, String> chainMap = (assignABC
+          ? new Hashtable<String, String>()
+          : null);
       BS bsChains = (assignABC ? new BS() : null);
       atoms = asc.atoms;
       int firstNew = 0;
@@ -1315,9 +1317,10 @@ public class XtalSymmetry {
         // bmChains or bmChains=0: append symmetry operator number to chain ID
         // bmChains=q: start with 'q'
         // bmChains= 3 : start with last chain ID + 3
-        firstNew = (fixBMChains < 0 ? -fixBMChains : Math.max(maxChain + fixBMChains, 0 + 'A'));
-        bsChains.setBits(0,  firstNew - 1);
-        bsChains.setBits(1 + 'Z',  0 + 'a');
+        firstNew = (fixBMChains < 0 ? Math.max(-fixBMChains, maxChain + 1)
+            : Math.max(maxChain + fixBMChains, 0 + 'A'));
+        bsChains.setBits(0, firstNew - 1);
+        bsChains.setBits(1 + 'Z', 0 + 'a');
         bsChains.setBits(1 + 'z', 200);
       }
       for (int i = atomMax, n = asc.ac; i < n; i++) {
