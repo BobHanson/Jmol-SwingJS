@@ -28,6 +28,16 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.api.JmolModulationSet;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.Symmetry;
+import org.jmol.symmetry.SymmetryOperation;
+import org.jmol.util.BSUtil;
+import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
+import org.jmol.util.Vibration;
+
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -37,16 +47,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
-
-import org.jmol.api.JmolModulationSet;
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.symmetry.Symmetry;
-import org.jmol.symmetry.SymmetryOperation;
-import org.jmol.util.BSUtil;
-import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.Tensor;
-import org.jmol.util.Vibration;
 
 /**
  * 
@@ -980,7 +980,6 @@ public class XtalSymmetry {
             if (pc == null)
               continue;
             float d2 = c.distanceSquared(pc);
-            //System.out.println(iSym + " " +  i + " " + j + " " + pc + " " + c + " " + d2);
             if (checkSpecial && d2 < d0) {
               /* checkSpecial indicates that we are looking for atoms with (nearly) the
                * same cartesian position.  
@@ -1149,9 +1148,12 @@ public class XtalSymmetry {
         lc[i] = latticeCells[i];
     latticeCells = null;
     
-    String bmChains = acr.getFilter("BMCHAINS");
-    int fixBMChains = (bmChains == null ? -1
-        : bmChains.length() < 2 ? 0 : bmChains.charAt(1) - 48);
+    String bmChains = acr.getFilterWithCase("BMCHAINS");
+    int fixBMChains = (bmChains == null ? -1 : bmChains.length() < 2 ? 0 
+        : PT.parseInt(bmChains.substring(1)));
+    if (fixBMChains == Integer.MIN_VALUE) {
+      fixBMChains = -(int) bmChains.charAt(1);
+    }
     int particleMode = (filter.indexOf("BYCHAIN") >= 0 ? PARTICLE_CHAIN
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
     doNormalize = false;
@@ -1231,7 +1233,6 @@ public class XtalSymmetry {
           PT.parseInt(filter.substring(filter.indexOf("#<") + 2)) - 1);
       filter = PT.rep(filter, "#<", "_<");
     }
-    int minChain = atoms[firstAtom].chainID;
     int maxChain = 0;
     for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
       atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
@@ -1301,18 +1302,45 @@ public class XtalSymmetry {
       asc.bsAtoms.clearBits(firstAtom, atomMax);
     }
 
-    if (particleMode == 0 && fixBMChains >= 0) {
-      //For PDB and mmCIF, convert chains for symmetry-generated atoms to unique
-      // ids. Two options allow for
-      // If delta > 0, chain names are assumed to be of the form {A B C...}, and
-      // the return values will be in the range [A-Z].
-      int delta = (fixBMChains > 0 ? maxChain - minChain - 66 : 0);
+    if (particleMode == 0 && fixBMChains != -1) {
+      boolean assignABC = (fixBMChains != 0);
+      Map<String, String> chainMap = (assignABC ? new Hashtable<String, String>() : null);
+      BS bsChains = (assignABC ? new BS() : null);
       atoms = asc.atoms;
+      int firstNew = 0;
+      if (assignABC) {
+        // tested for 1k28 and 1auy
+        //For PDB and mmCIF, convert chains for symmetry-generated atoms to unique
+        // ids. Three options:
+        // bmChains or bmChains=0: append symmetry operator number to chain ID
+        // bmChains=q: start with 'q'
+        // bmChains= 3 : start with last chain ID + 3
+        firstNew = (fixBMChains < 0 ? -fixBMChains : Math.max(maxChain + fixBMChains, 0 + 'A'));
+        bsChains.setBits(0,  firstNew - 1);
+        bsChains.setBits(1 + 'Z',  0 + 'a');
+        bsChains.setBits(1 + 'z', 200);
+      }
       for (int i = atomMax, n = asc.ac; i < n; i++) {
         int ic = atoms[i].chainID;
         int isym = atoms[i].bsSymmetry.nextSetBit(0) + 1;
-        String ch = (delta == 0 ? acr.vwr.getChainIDStr(ic) + isym
-            : "" + (char) (((ic + delta + isym) % 26) + 65));
+        String ch = acr.vwr.getChainIDStr(ic) + isym;
+        if (assignABC) {
+          String known = chainMap.get(ch);
+          if (known == null) {
+            int pt = (firstNew < 200 ? bsChains.nextClearBit(firstNew) : 200);
+            if (pt < 200) {
+              bsChains.set(pt);
+              // have A-Z or a-z
+              known = "" + (char) pt;
+              chainMap.put(ch, known);
+              firstNew = pt;
+            } else {
+              // 1auy will do this
+              known = ch;
+            }
+          }
+          ch = known;
+        }
         atoms[i].chainID = acr.vwr.getChainID(ch, true);
       }
     }
@@ -1380,7 +1408,6 @@ public class XtalSymmetry {
         if (v.modDim > 0) {
           ((JmolModulationSet) v).setMoment();
         } else {
-          //System.out.println("xytalsym v=" + v + "  "+ i + "  ");
           v = (Vibration) v.clone(); // this could be a modulation set
           sym.toCartesian(v, true);
           asc.atoms[i].vib = v;

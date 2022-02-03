@@ -226,6 +226,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected P3 unitCellOffset;
   private boolean unitCellOffsetFractional;
   private Lst<String> moreUnitCellInfo;
+  public T3 paramsLattice;
+  public boolean paramsCentroid;
+  private boolean paramsPacked;
 
 
   protected String filePath;
@@ -668,13 +671,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     isConcatenated = htParams.containsKey("concatenate");
   }
 
-  public T3 paramsLattice;
-  public boolean paramsCentroid;
-
-  private boolean paramsPacked;
-  
-  
-  
   protected void initializeSymmetryOptions() {
     latticeCells = new int[4];
     doApplySymmetry = false;
@@ -956,7 +952,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   /////////// FILTER /////////////////
 
   protected BS bsFilter;
-  public String filter;
+  public String filter, filterCased;
   public boolean haveAtomFilter;
   private boolean filterAltLoc;
   private boolean filterGroup3;
@@ -1019,6 +1015,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // from PDB REMARK350()
       bsFilter = null;
     }
+    if (filterCased == null)
+      filterCased = (filter0 == null ? null : filter0 + ";");
     if (filter0 != null)
       filter0 = filter0.toUpperCase();
     filter = filter0;
@@ -1100,6 +1098,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private String filter1, filter2;
+
+  public String getFilterWithCase(String key) {
+    int pt = (filterCased == null ? -1 : filterCased.toUpperCase().indexOf(key.toUpperCase()));
+    return (pt < 0 ? null : filterCased.substring(pt + key.length(), filterCased.indexOf(";", pt)));
+  }
 
   public String getFilter(String key) {
     int pt = (filter == null ? -1 : filter.indexOf(key));
