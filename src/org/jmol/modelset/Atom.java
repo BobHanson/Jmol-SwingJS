@@ -753,18 +753,20 @@ public class Atom extends Point3fi implements Node {
     return this;
   }
   
-  public P3 getFractionalCoordPt(boolean fixJavaFloat, boolean ignoreOffset, P3 pt) {
+  public P3 getFractionalCoordPt(boolean fixJavaFloat, boolean ignoreOffset,
+                                 P3 pt) {
     // ignoreOffset TRUE uses the original unshifted matrix
     SymmetryInterface c = getUnitCell();
-    if (c == null) 
-      return this;
     if (pt == null)
       pt = P3.newP(this);
     else
       pt.setT(this);
-    c.toFractional(pt, ignoreOffset);
-    if (fixJavaFloat)
-      PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+    if (c != null) {
+      c = c.getUnitCellMultiplied();
+      c.toFractional(pt, ignoreOffset);
+      if (fixJavaFloat)
+        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+    }
     return pt;
   }
   
@@ -785,12 +787,13 @@ public class Atom extends Point3fi implements Node {
    */
   P3 getFractionalUnitCoordPt(boolean fixJavaFloat, boolean asCartesian, P3 pt) {
     SymmetryInterface c = getUnitCell();
-    if (c == null)
-      return this;
     if (pt == null)
       pt = P3.newP(this);
     else
       pt.setT(this);
+    if (c == null)
+      return pt;
+    c = c.getUnitCellMultiplied();
     if (group.chain.model.isJmolDataFrame) {
       c.toFractional(pt, false);
       if (asCartesian)

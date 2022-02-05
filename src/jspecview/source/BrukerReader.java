@@ -14,6 +14,7 @@ import java.util.zip.ZipInputStream;
 
 import javajs.util.BinaryDocument;
 import javajs.util.Lst;
+import javajs.util.Rdr;
 import jspecview.common.Coordinate;
 import jspecview.common.Spectrum;
 
@@ -425,19 +426,8 @@ public class BrukerReader {
   }
 
   private byte[] getBytes(InputStream in, int len, boolean andClose) {
-    byte[] bytes = new byte[len];
     try {
-      int pos = 0;
-      while (len > 0) {
-        int n = in.read(bytes, pos, len);
-        if (n < 0)
-          break;
-        len -= n;
-        pos += n;
-      }
-      if (andClose)
-        in.close();
-      return bytes;
+      return Rdr.getLimitedStreamBytes(in, len);
     } catch (Exception e) {
     }
     return new byte[0];

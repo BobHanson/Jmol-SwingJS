@@ -242,7 +242,6 @@ public interface SymmetryInterface {
 
   Symmetry getUnitCellMultiplied();
 
-//  void unitize01(T3 ptFrac);
-
+  Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString);
 
 }

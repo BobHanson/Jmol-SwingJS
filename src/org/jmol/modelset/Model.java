@@ -328,8 +328,10 @@ public class Model {
 
   public void setSimpleCage(SymmetryInterface ucell) {
   simpleCage = ucell;
-  float[] params = ucell.getUnitCellParams();
-  auxiliaryInfo.put("unitCellParams", params);
+  if (ucell != null) {
+    float[] params = ucell.getUnitCellParams();
+    auxiliaryInfo.put("unitCellParams", params);
+  }
   }
 
  }

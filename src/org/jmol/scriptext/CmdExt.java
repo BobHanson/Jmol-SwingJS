@@ -4838,15 +4838,15 @@ public class CmdExt extends ScriptExt {
         // show symop n @1 @2
         // not show symop n "type"
         // not show symop "xxxxx" "type"
-        BS[] ret = new BS[] { null, vwr.getFrameAtoms() };
+        Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
         pt1 = eval.centerParameter(2 + (iop == 0 ? 0 : 1), ret);
-        if (ret[0] != null && ret[0].cardinality() == 0) {
+        if (ret[0] != null && ((BS)ret[0]).cardinality() == 0) {
           len = slen;
           break;
         }
         ret[0] = null;
         pt2 = eval.centerParameter(++eval.iToken, ret);
-        if (ret[0] != null && ret[0].cardinality() == 0) {
+        if (ret[0] != null && ((BS)ret[0]).cardinality() == 0) {
           len = slen;
           break;
         }
@@ -5540,6 +5540,12 @@ public class CmdExt extends ScriptExt {
       }
       i = eval.iToken;
       break;
+    case T.fill:
+    case T.supercell:
+      pt = eval.getFractionalPoint(++i);
+      pt = getSupercell(pt, tok == T.fill);
+      i = eval.iToken;
+      break;
     case T.decimal:
     case T.integer:
       float f = floatParameter(i);
@@ -5619,7 +5625,14 @@ public class CmdExt extends ScriptExt {
 
   ///////// private methods used by commands ///////////
 
-  
+  private P4 getSupercell(T3 pt, boolean isFill) throws ScriptException {
+
+    if (pt.x < 1 || pt.y < 1 || pt.z < 1 || pt.x != (int) pt.x
+        || pt.y != (int) pt.y || pt.z != (int) pt.z)
+      invArg();
+    return SimpleUnitCell.ptToIJK(pt, isFill ? 1 : 0);
+  }
+
   /**
    * Configure the ModelKitPopup for Crystallographic symmetry viewing and
    * structure editing

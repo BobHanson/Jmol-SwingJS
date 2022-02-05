@@ -103,8 +103,13 @@ public class UccageRenderer extends CageRenderer {
     if (!haveMultiple)
       fset = fset0;
     int t3w = (fset instanceof T4 ? (int)((T4) fset).w : 0);
+    if (fset.x > 100) {
     SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0, t3w);
     SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1, t3w);
+    } else {
+      cell0.set(0, 0, 0);
+      cell1.setT(fset);
+    }
     int firstLine, allow0, allow1;
     if (fset.z < 0) {
       cell0.scale(-1 / fset.z);

@@ -765,8 +765,9 @@ public class ScriptEval extends ScriptExpr {
       return "";
     if (allThisLine) {
       int pt0 = -1;
-      int pt1 = script.length();
-      for (int i = 0; i < lineNumbers.length; i++)
+      String s = script;
+      int pt1 = s.length();
+      for (int i = 0; i < lineNumbers.length; i++) {
         if (lineNumbers[i] == lineNumbers[pc]) {
           if (pt0 < 0)
             pt0 = lineIndices[i][0];
@@ -774,13 +775,14 @@ public class ScriptEval extends ScriptExpr {
         } else if (lineNumbers[i] == 0 || lineNumbers[i] > lineNumbers[pc]) {
           break;
         }
-      String s = script;
+      }
       if (s.indexOf('\1') >= 0)
         s = s.substring(0, s.indexOf('\1'));
-      if (pt1 == s.length() - 1 && s.endsWith("}"))
+      int len = s.length();
+      if (pt1 == len - 1 && s.endsWith("}"))
         pt1++;
-      return (pt0 == s.length() || pt1 < pt0 ? "" : s.substring(
-          Math.max(pt0, 0), Math.min(s.length(), pt1)));
+      return (pt0 >= len || pt1 < pt0 || pt1 < 0 ? "" : s.substring(
+          Math.max(pt0, 0), Math.min(len, pt1)));
     }
     int ichBegin = lineIndices[pc][0];
     int ichEnd = lineIndices[pc][1];

@@ -358,10 +358,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       vib = v;
       vib.modScale = 1;
       mxyz = new V3(); // modulations of spin
-      axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz
-      if (axesLengths == null)
-        axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz
-        
+      axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz        
     }
     Matrix vR00 = Matrix.newT(r00, true);
     Matrix vR0 = Matrix.newT(r0, true);

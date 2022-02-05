@@ -1160,10 +1160,12 @@ class PointGroup {
       nElements++;
     }
     if (asInfo) {
+      if (center != null) {
       info.put(ctype, center);
       if (haveInversionCenter)
         info.put("center", center);
       info.put(ctype, center);
+      }
     } else {
       sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
     }

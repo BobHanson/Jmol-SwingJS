@@ -259,6 +259,7 @@ class SpaceGroup {
     
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         SymmetryInterface cellInfo, boolean asMap) {
+    try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
       if (sgDerived != null)
@@ -274,7 +275,9 @@ class SpaceGroup {
             cellInfo.getUnitCellParams());
       }
     } else if (spaceGroup.equalsIgnoreCase("ALL")) {
-      return SpaceGroup.dumpAll();
+      return SpaceGroup.dumpAll(asMap);
+    } else if (spaceGroup.equalsIgnoreCase("MAP")) {
+      return SpaceGroup.dumpAll(true);
     } else if (spaceGroup.equalsIgnoreCase("ALLSEITZ")) {
       return SpaceGroup.dumpAllSeitz();
     } else {
@@ -301,45 +304,10 @@ class SpaceGroup {
       return sb.toString();
     }
     return asMap ? null : "?";
-//    Object o;
-//    try {
-//      o = (asMap ? (sg == null ? null : sg.getInfo(cellInfo))
-//          : sg == null ? "?" : sg.dumpInfo());
-//    } catch (Exception e) {
-//      o = null;
-//    }
-//    return o;
+    } catch (Exception e) {
+      return "?";
+    }
   }
-
-//  private Map<String, Object> info;
-//
-//  private Map<String, Object> getInfo(SymmetryInterface cellInfo) {
-//    
-//    if (info == null) {
-//      info = new Hashtable<String, Object>();
-//      if (hmSymbol == null || hmSymbolExt == null) {
-//        info.put("HMSymbol", "??");
-//      } else {
-//        Object seitz = dumpCanonicalSeitzList();
-//        info.put("SeitzList", seitz == null ? "" : seitz);
-//        info.put("HMSymbol", hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
-//        info.put("ITSNumber",  Integer.valueOf(intlTableNumber));
-//        info.put("ITSNumberFull",  intlTableNumberFull);
-//        info.put("crystalClass", crystalClass);
-//        info.put("HallSymbol", hallInfo.hallSymbol.equals("--") ? "" : 
-//                hallInfo.hallSymbol);
-//      }
-//      info.put("operationCount", Integer.valueOf(operationCount));
-//      Lst<Map<String, Object>> ops = new Lst<Map<String, Object>>();
-//      info.put("operationInfo", ops);
-//      for (int i = 0; i < operationCount; i++)
-//        ops.addLast(operations[i].getInfo());           
-//    }
-//    Map<String, Object> ucmap = (cellInfo == null ? null : cellInfo.getUnitCellInfoMap());
-//    if (ucmap != null)
-//      info.put("unitCell", ucmap);
-//    return info;
-//  }
 
   /**
    * 
@@ -392,7 +360,7 @@ class SpaceGroup {
     String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
     map.put("HermannMauguinSymbol", s);
     if (intlTableNumber != null) {
-      map.put("ita", Integer.valueOf(intlTableNumber));
+      map.put("ita", Integer.valueOf(PT.parseInt(intlTableNumber)));
       map.put("itaFull", intlTableNumberFull);
       map.put("crystalClass", crystalClass);
       map.put("operationCount", Integer.valueOf(operationCount));
@@ -494,9 +462,15 @@ class SpaceGroup {
     return null;
   }
 
-  private final static String dumpAll() {
-   SB sb = new SB();
-   getSpaceGroups();
+  private final static Object dumpAll(boolean asMap) {
+    getSpaceGroups();
+    if (asMap) {
+    Lst<Object> info = new Lst<Object>();
+    for (int i = 0; i < SG.length; i++)
+      info.addLast(SG[i].dumpInfoObj());
+      return info;
+    }
+     SB sb = new SB();
    for (int i = 0; i < SG.length; i++)
      sb.append("\n----------------------\n" + SG[i].dumpInfo());
    return sb.toString();
@@ -917,7 +891,7 @@ class SpaceGroup {
     // the 5th term is not actually checked; we have ";-b" as 5th term right now for "not Bilbao"
     // "48:1;8;d2h^2;p n n n:1;p 2 2 -1n;-b",
     // and is probably origin choice 1.    
-    // 4:c*;2;c2^2;p 1 1 21*;p 21
+    // 4:c*;2;c2^2;p 1 1 21;p 21
 
     // added # of operators to help in search phase
 
@@ -1009,7 +983,7 @@ class SpaceGroup {
 
   @Override
   public String toString() {
-    return "" + intlTableNumberFull + "[" + index  + "," + nHallOperators + "] " + hmSymbolFull + " " + hallSymbol;
+    return "" + intlTableNumberFull + " H_M:" + hmSymbolFull + " Hall:" + hallSymbol;
   }
   
   private static SpaceGroup[] SG;
@@ -1020,11 +994,16 @@ class SpaceGroup {
         : SG);
   }
 
+  static Map<String, SpaceGroup> nameToGroup;
+  
   private static SpaceGroup[] createSpaceGroups() {
     int n = STR_SG.length;
+    nameToGroup = new Hashtable<String, SpaceGroup>();
     SpaceGroup[] defs = new SpaceGroup[n];
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
       defs[i] = new SpaceGroup(i, STR_SG[i], true);
+      nameToGroup.put(defs[i].intlTableNumberFull, defs[i]);
+    }
     STR_SG = null;
     return defs;
   }
@@ -1069,7 +1048,22 @@ class SpaceGroup {
   
   /**
    * intlNo:options;nOps;schoenflies;hermannMauguin;Hall;BilbaoFlag
+   * 
+   * 530 settings, some with multiple names
    */
+  
+  // intlNo:options;nOps;schoenflies;hermannMauguin;Hall;BilbaoFlag
+  //   0             1        2            3         4        5
+
+  // the 5th term is not actually checked; we have ";-b" as 5th term right now for "not Bilbao"
+  // "48:1;8;d2h^2;p n n n:1;p 2 2 -1n;-b",
+  // and is probably origin choice 1.   
+  // * indicates a nonstandard Hall name  "p 21" same as "p 2yb"
+  // 4:c*;2;c2^2;p 1 1 21*;p 21         
+  // added # of operators to help in search phase
+  // "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
+
+
   private static String[] STR_SG = {
     "1;1;c1^1;p 1;p 1",  
     "2;2;ci^1;p -1;-p 1",  
@@ -1575,7 +1569,8 @@ class SpaceGroup {
     "151;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
     "152;6;d3^4;p 31 2 1;p 31 2\"",  
     "153;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
-    "154;6;d3^6;p 32 2 1;p 32 2\"",   //  NOTE: MSA quartz.cif gives different operators for this -- 
+    "154:_1;6;d3^6;p 32 2 1;p 32 2\"",    
+    "154:_2;6;d3^6;p 32 2 1;p 32 2\" (0 0 4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
     "155:h;18;d3^7;r 3 2:h;r 3 2\"",  
     "155:r;6;d3^7;r 3 2:r;p 3* 2",  
     "156;6;c3v^1;p 3 m 1;p 3 -2\"",  
@@ -1787,7 +1782,7 @@ class SpaceGroup {
 //    return latticeOps;
 //  }
 
-// 826 settings for 230 space groups
+// 591 settings for 230 space groups
   /*  see http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
  
 intl#     H-M full       HM-abbr   HM-short  Hall

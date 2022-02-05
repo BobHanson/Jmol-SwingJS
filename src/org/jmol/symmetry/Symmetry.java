@@ -855,4 +855,10 @@ public class Symmetry implements SymmetryInterface {
     unitCell = UnitCell.cloneUnitCell(uc.unitCell);   
   }
 
+  @Override
+  public Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString) {
+    return ((SpaceGroupFinder) Interface.getInterface(
+        "org.jmol.symmetry.SpaceGroupFinder", vwr, "eval")).findSpaceGroup(vwr, atoms, this, asString);
+  }
+
 }

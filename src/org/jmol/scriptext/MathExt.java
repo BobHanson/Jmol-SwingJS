@@ -249,6 +249,7 @@ public class MathExt {
     // spacegroup(3);
     // spacegroup("x,y,z,-x,-y,-z");
     // spacegroup("x,y,z,-x,-y,-z", [unitcellParams]);
+    // spacegroup("all");
 
     float[] unitCell = null;
     switch (args.length) {
@@ -261,8 +262,12 @@ public class MathExt {
         unitCell = null;
       //$FALL-THROUGH$
     case 1:
-      return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
+      BS atoms = SV.getBitSet(args[0], true);
+      if (atoms == null)
+        return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
           "" + args[0].asString(), Integer.MIN_VALUE, true, unitCell));
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      return mp.addXObj(uc == null ? "<no unitcell>" : uc.findSpaceGroup(vwr, atoms, true));
     default:
       return false;
     }
@@ -1465,6 +1470,7 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {*}.find("spacegroup")
     // "test.find("t");
     // "test.find("t","v"); // or "m" or "i"
     // {1.1}.find("2.1","map", labelFormat)
@@ -1657,6 +1663,10 @@ public class MathExt {
           break;
         case T.bitset:
           BS bs = (BS) x1.value;
+          if (sFind.equalsIgnoreCase("spacegroup")) {
+            SymmetryInterface uc = vwr.getCurrentUnitCell();
+            return mp.addXObj(uc == null ? null : uc.findSpaceGroup(vwr, bs, false));      
+          } 
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
             // {*}.find("crystalClass", pt)

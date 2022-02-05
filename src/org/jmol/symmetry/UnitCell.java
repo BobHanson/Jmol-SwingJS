@@ -173,18 +173,8 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param pt
    */
   public void unitize(T3 pt) {
-    switch (dimension) {
-    case 3:
-      pt.z = toFractionalX(pt.z);  
-      //$FALL-THROUGH$
-    case 2:
-      pt.y = toFractionalX(pt.y);
-      //$FALL-THROUGH$
-    case 1:
-      pt.x = toFractionalX(pt.x);
-    }
+	  unitizeDim(dimension, pt);
   }
-
 
   public void reset() {
     unitCellMultiplier = null;
@@ -197,13 +187,14 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       return;
     unitCellMultiplied = null;
     T4 pt4 = (pt instanceof T4 ? (T4) pt : null);
-    boolean isCell555P4 = (pt4 != null && pt4.w > 999999);
-    if (pt4 != null ? pt4.w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
+    float w = (pt4 == null ? Float.MIN_VALUE : pt4.w);
+    boolean isCell555P4 = (w > 999999);
+    if (pt4 != null ? w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
       unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4.newPt((P4) pt4) : P3.newP(pt));
       unitCellMultiplied = null;
       if (pt4 == null || pt4.w == 0 || isCell555P4)
         return;
-      // from reset, continuing 
+      // pt4.w == -1 from reset, continuing 
     }
     // from "unitcell offset {i j k}"
     if (hasOffset() || pt.lengthSquared() > 0) {
@@ -481,15 +472,6 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   /// private methods
-  
-  
-  private static float toFractionalX(float x) {
-    // introduced in Jmol 11.7.36
-    x = (float) (x - Math.floor(x));
-    if (x > 0.9999f || x < 0.0001f) 
-      x = 0;
-    return x;
-  }
   
   
   private void initUnitcellVertices() {

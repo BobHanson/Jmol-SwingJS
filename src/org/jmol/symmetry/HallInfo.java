@@ -183,5 +183,9 @@ class HallInfo {
     nRotations++;
     return name;
   }  
+  
+  public String toString() {
+    return hallSymbol;
+  }
 }
 

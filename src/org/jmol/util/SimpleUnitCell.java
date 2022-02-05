@@ -67,7 +67,7 @@ public class SimpleUnitCell {
   protected double cA_, cB_;
   protected double a_;
   protected double b_, c_;
-  protected int dimension;
+  protected int dimension = 3;
   private P3 fractionalOrigin;
 
   public static boolean isValid(float[] parameters) {
@@ -417,6 +417,21 @@ public class SimpleUnitCell {
     cell.z = (kcode == 0 ? nnn % f 
         : (offset == -500 ? kcode / f : kcode) % f) + offset;
   }
+  
+
+  /**
+   * Convert user's {3 2 1} to {1500500500, 1503502501, 0 or 1, 1500501}
+   * @param pt
+   * @param scale 1 for block of unit cells; 0 for one large supercell
+   * @return converted P4
+   */
+  public static P4 ptToIJK(T3 pt, int scale) {
+    if (pt.x <= 5 && pt.y <= 5 && pt.z <= 5) {
+      return P4.new4(555, (pt.x + 4) * 100 + (pt.y + 4) * 10 + pt.z + 4, scale, 0);
+    } 
+    int i555 = 1500500500;
+    return P4.new4(i555, i555 + pt.x*1000000 + pt.y * 1000 + pt.z, scale, 1500500 + pt.z);
+  }
 
   /**
    * Generally the multiplier is just {ijk ijk scale}, but when we have
@@ -437,7 +452,6 @@ public class SimpleUnitCell {
     }
     return Escape.eP(pt);
   }
-  
 
   public final static float SLOP = 0.02f;
   private final static float SLOP1 = 1 - SLOP;
@@ -550,6 +564,28 @@ public class SimpleUnitCell {
     return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]";
   }
 
+  public static void unitizeDim(int dimension, T3 pt) {
+    switch (dimension) {
+    case 3:
+      pt.z = unitizeX(pt.z);  
+      //$FALL-THROUGH$
+    case 2:
+      pt.y = unitizeX(pt.y);
+      //$FALL-THROUGH$
+    case 1:
+      pt.x = unitizeX(pt.x);
+    }
+  }
+
+  public static float unitizeX(float x) {
+    // introduced in Jmol 11.7.36
+    x = (float) (x - Math.floor(x));
+    if (x > 0.9999f || x < 0.0001f) 
+      x = 0;
+    return x;
+  }
+  
+  
   /**
    * allowance for rounding in [0,1)
    */
@@ -575,6 +611,5 @@ public class SimpleUnitCell {
         && ptTemp.y >= cell.y - 1f - SLOP && ptTemp.y <= cell.y + SLOP
         && ptTemp.z >= cell.z - 1f - SLOP && ptTemp.z <= cell.z + SLOP);
   }
-
 
 }
