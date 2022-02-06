@@ -170,22 +170,21 @@ public class NMRCalculation implements JmolNMRInterface {
   public BS getUniqueTensorSet(BS bsAtoms) {
     BS bs = new BS();
     Atom[] atoms = vwr.ms.at;
-    for (int i = vwr.ms.mc; --i >= 0;) {
-      BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(i);
-      bsModelAtoms.and(bsAtoms);
+    for (int mi = vwr.ms.mc; --mi >= 0;) {
+      BS bsModelAtoms = vwr.restrictToModel(bsAtoms, mi);
       // exclude any models without symmetry
-      if (vwr.ms.getUnitCell(i) == null)
+      if (vwr.ms.getUnitCell(mi) == null)
         continue;
       // exclude any symmetry-
-      for (int j = bsModelAtoms.nextSetBit(0); j >= 0; j = bsModelAtoms
-          .nextSetBit(j + 1))
-        if (atoms[j].atomSite != atoms[j].i + 1)
-          bsModelAtoms.clear(j);
+      for (int i = bsModelAtoms.nextSetBit(0); i >= 0; i = bsModelAtoms
+          .nextSetBit(i + 1))
+        if (atoms[i].atomSite != atoms[i].i + 1)
+          bsModelAtoms.clear(i);
       bs.or(bsModelAtoms);
       // march through all the atoms in the model...
-      for (int j = bsModelAtoms.nextSetBit(0); j >= 0; j = bsModelAtoms
-          .nextSetBit(j + 1)) {
-        Object[] ta = atoms[j].getTensors();
+      for (int i = bsModelAtoms.nextSetBit(0); i >= 0; i = bsModelAtoms
+          .nextSetBit(i + 1)) {
+        Object[] ta = atoms[i].getTensors();
         if (ta == null)
           continue;
         // go through all this atom's tensors...
@@ -194,7 +193,7 @@ public class NMRCalculation implements JmolNMRInterface {
           if (t == null)
             continue;
           // for each tensor in A, go through all atoms after the first-selected one...
-          for (int k = bsModelAtoms.nextSetBit(j + 1); k >= 0; k = bsModelAtoms
+          for (int k = bsModelAtoms.nextSetBit(i + 1); k >= 0; k = bsModelAtoms
               .nextSetBit(k + 1)) {
             Object[] tb = atoms[k].getTensors();
             if (tb == null)

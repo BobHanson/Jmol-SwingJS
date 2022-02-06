@@ -719,6 +719,9 @@ class SpaceGroup {
       checkBilbao = true;
       name = name.substring(7);
     }
+    int pt = name.indexOf("hall:");
+    if (pt > 0)
+      name = name.substring(pt);
     int nameType = (name.startsWith("hall:") ? NAME_HALL : name
         .startsWith("hm:") ? NAME_HM : NAME_UNK);
     switch (nameType) {
@@ -983,7 +986,7 @@ class SpaceGroup {
 
   @Override
   public String toString() {
-    return "" + intlTableNumberFull + " H_M:" + hmSymbolFull + " Hall:" + hallSymbol;
+    return "" + intlTableNumberFull + " HM:" + hmSymbolFull + " Hall:" + hallSymbol;
   }
   
   private static SpaceGroup[] SG;
@@ -1763,6 +1766,18 @@ class SpaceGroup {
     Object v = map.get(type.equals("Hall") ? "HallSymbol" :
       type.equals("ITA") ? "ita" : "HermannMauguinSymbol");
     return (v == null ? null : v.toString());
+  }
+
+  public static SpaceGroup getSpaceGroupFromITAName(String ita) {
+    getSpaceGroups();
+    int n = SG.length;
+    for (int i = 0; i < n; i++)
+      if (ita.equals(SG[i].intlTableNumberFull))
+        return SG[i];
+    for (int i = 0; i < n; i++)
+      if (ita.equals(SG[i].intlTableNumber))
+        return SG[i];
+    return null;
   }
 
 //  private int[] latticeOps;

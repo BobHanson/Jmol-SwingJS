@@ -2,16 +2,15 @@ package org.jmol.adapter.readers.cif;
 
 import java.util.Map.Entry;
 
+import org.jmol.api.SymmetryInterface;
+import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
+
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.T3;
 import javajs.util.V3;
-
-import org.jmol.api.SymmetryInterface;
-import org.jmol.symmetry.Symmetry;
-import org.jmol.util.Logger;
-import org.jmol.util.SimpleUnitCell;
 
 
 class Subsystem {
@@ -103,7 +102,7 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
     uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null, 1);
-    symmetry = ((Symmetry) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
+    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
-import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Tensor;
 import org.jmol.viewer.Viewer;
 
@@ -158,8 +157,6 @@ public interface SymmetryInterface {
 
   public void setSpaceGroup(boolean doNormalize);
 
-  public void setSpaceGroupFrom(SymmetryInterface symmetry);
-
   public SymmetryInterface setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
 
   /**
@@ -231,7 +228,7 @@ public interface SymmetryInterface {
 
   public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
 
-  public void setUnitCell(Symmetry uc);
+  public void setUnitCell(SymmetryInterface uc);
 
   /**
    * 
@@ -240,8 +237,14 @@ public interface SymmetryInterface {
    */
   String getSpaceGroupNameType(String type);
 
-  Symmetry getUnitCellMultiplied();
+  SymmetryInterface getUnitCellMultiplied();
 
   Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString);
+
+  /**
+   * 
+   * @param spaceGroup ITA number, ITA full name ("48:1")
+   */
+  public void setSpaceGroupTo(Object spaceGroup);
 
 }

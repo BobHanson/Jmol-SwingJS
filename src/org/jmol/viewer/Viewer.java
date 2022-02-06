@@ -9069,7 +9069,7 @@ public class Viewer extends JmolViewer
     String ff = g.forceField;
     BS bsInFrame = getFrameAtoms();
     if (bsSelected == null)
-      bsSelected = getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
+      bsSelected = getThisModelAtoms();
     else if (!isQuick)
       bsSelected.and(bsInFrame);
     if (isQuick) {
@@ -10473,5 +10473,50 @@ public class Viewer extends JmolViewer
       return "";
     }
   }
+
+  public Object findSpaceGroup(BS bsAtoms, boolean asString) {
+    bsAtoms = restrictToModel(bsAtoms, -1);
+    Object ret = null;
+    if (!bsAtoms.isEmpty()) {
+      SymmetryInterface uc = getCurrentUnitCell();
+      ret = (uc == null ? null : uc.findSpaceGroup(this, bsAtoms, asString));
+    }
+    return (ret == null && asString ? "" : ret);
+  }
+
+  /**
+   * Restrict this bitset to the current model or its initial atom's model.
+   * 
+   * @param bs
+   *        or null for selected (or if none selected, then the current model)
+   * @param mi
+   *        >=0 for a specific model, 
+   *        -1 to restrict to current model if a
+   *        single model or the first model of multiply displayed models
+   * @return restricted atom set
+   */
+  public BS restrictToModel(BS bs, int mi) {
+    if (bs == null)
+      bs = bsA();
+    boolean isEmpty = bs.isEmpty();
+    if (isEmpty && mi >= 0)
+      return bs;
+    if (mi == -1)
+      mi = am.cmi;
+    if (mi < 0) {
+      if (isEmpty) {
+        return getThisModelAtoms();
+      }
+      mi = ms.at[bs.nextSetBit(0)].getModelIndex();
+    }
+    BS bsm = getModelUndeletedAtomsBitSet(mi);
+    bsm.and(bs);
+    return bsm;
+  }
+
+  public BS getThisModelAtoms() {
+    return getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
+  }
+
 
 }

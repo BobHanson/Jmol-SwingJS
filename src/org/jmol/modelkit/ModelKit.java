@@ -26,6 +26,7 @@ package org.jmol.modelkit;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.SymmetryInterface;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -39,6 +40,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.MouseState;
@@ -49,8 +51,10 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
+import javajs.util.T3;
 import javajs.util.V3;
 
 /**
@@ -1515,6 +1519,54 @@ public class ModelKit {
 
   private static void notImplemented(String action) {
     System.err.println("ModelKit.notImplemented(" + action + ")");
+  }
+
+  public String cmdAssignSpaceGroup() {
+    try {
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (uc == null)
+        uc = vwr.getSymTemp()
+            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
+      BS bsAtoms = vwr.getThisModelAtoms();
+      boolean noAtoms = bsAtoms.isEmpty();
+      int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      T3 m = uc.getUnitCellMultiplier();
+      if (m != null && m.z == 1) {
+        m.z = 0;
+      }
+      P3 supercell;
+      float[] params;
+      String name;
+      String ita;
+      BS basis;
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sg = (noAtoms ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, false));
+      if (sg == null) {
+        name = "P1";
+        supercell = P3.new3(1, 1, 1);
+        params = uc.getUnitCellParams();
+        ita = "1";
+        basis = null;
+      } else {
+        supercell = (P3) sg.get("supercell");
+        params = (float[]) sg.get("unitcell");
+        name = (String) sg.get("name");
+        ita = (String) sg.get("itaFull");
+        basis = (BS) sg.get("basis");
+      }
+      uc.setUnitCell(params, false);
+      uc.setSpaceGroupTo(ita);
+      uc.setSpaceGroupName(name);
+      vwr.ms.setSpaceGroup(mi, uc, basis);
+      P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
+      vwr.ms.setUnitCellOffset(uc, pt, 0);
+      return name;
+    } catch (Exception e) {
+      if (!Viewer.isJS)
+        e.printStackTrace();
+      return e.getMessage();
+    }
   }
 
 }

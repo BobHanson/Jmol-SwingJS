@@ -69,8 +69,7 @@ public class XSFWriter implements JmolWriter {
           } else {
             writeLattice(sn);
             oc.append(header);
-            BS bsm = vwr.getModelUndeletedAtomsBitSet(mi);
-            bsm.and(bs);
+            BS bsm = vwr.restrictToModel(bs, mi);
             oc.append(PT.formatStringI("%6i 1\n", "i", bsm.cardinality()));
           }
           lastmi = mi;

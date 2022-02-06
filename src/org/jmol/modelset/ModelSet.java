@@ -512,6 +512,8 @@ public class ModelSet extends BondCollection {
     boolean isPoints = (pts != null);
     int modelIndex = vwr.am.cmi;
     if (!isPoints) {
+      // if multiple models, set modelIndex to first atom of bsAtoms if nonzero
+      // if that does not work, use the first model of the visible frames
       int iAtom = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
       if (modelIndex < 0 && iAtom >= 0)
         modelIndex = at[iAtom].mi;
@@ -519,12 +521,16 @@ public class ModelSet extends BondCollection {
         modelIndex = vwr.getVisibleFramesBitSet().nextSetBit(0);
         bsAtoms = null;
       }
+      // guaranteed to have a single model now
+      // check to see if the specified bitset is completely this model, or we have a "local" environment
       bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
       localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms
           .cardinality());
+      // ensure that this set of atoms is only in this model
       if (bsAtoms != null)
         bs.and(bsAtoms);
       iAtom = bs.nextSetBit(0);
+      // if we have no atoms, pick up the first atom of the model
       if (iAtom < 0) {
         bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
         iAtom = bs.nextSetBit(0);
@@ -1011,6 +1017,19 @@ public class ModelSet extends BondCollection {
           am[modelIndex].auxiliaryInfo, null);
     }
     return null;
+  }
+  
+  public void setSpaceGroup(int mi, SymmetryInterface sg, BS basis) {
+    if (unitCells == null)
+      unitCells = new SymmetryInterface[mc];
+    unitCells[mi] = sg;
+    haveUnitCells = true;
+    sg.setFinalOperations(null, null,  -1,  -1,  false,  null);
+    am[mi].bsAsymmetricUnit = basis;
+    setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+    setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
+    setInfo(mi, "spaceGroupInfo", null);
+    setModelCage(mi, null);
   }
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
@@ -1530,8 +1549,12 @@ public class ModelSet extends BondCollection {
   }
 
   public void setInfo(int modelIndex, Object key, Object value) {
-    if (modelIndex >= 0 && modelIndex < mc)
-      am[modelIndex].auxiliaryInfo.put((String) key, value);
+    if (modelIndex >= 0 && modelIndex < mc) {
+      if (value == null)
+        am[modelIndex].auxiliaryInfo.remove(key);
+      else
+        am[modelIndex].auxiliaryInfo.put((String) key, value);
+    }
   }
 
   public Object getInfo(int modelIndex, String key) {
@@ -4211,6 +4234,7 @@ public class ModelSet extends BondCollection {
     if (q != null)
       q.transform2(pTemp, pTemp);
   }
+
 
 }
 

@@ -155,11 +155,6 @@ public class Symmetry implements SymmetryInterface {
     return spaceGroup;
   }
 
-  @Override
-  public void setSpaceGroupFrom(SymmetryInterface symmetry) {
-    spaceGroup = (SpaceGroup) symmetry.getSpaceGroup();
-  }
-
   /**
    * 
    * @param desiredSpaceGroupIndex
@@ -366,7 +361,13 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getSymmetryInfoStr() {
-    return (symmetryInfo == null ? "" : symmetryInfo.infoStr);
+    if (symmetryInfo != null)
+      return symmetryInfo.infoStr;
+    if (spaceGroup == null)
+      return "";
+    symmetryInfo = new SymmetryInfo();
+    symmetryInfo.setSymmetryInfo(null, getUnitCellParams(), spaceGroup);
+    return symmetryInfo.infoStr;
   }
 
   @Override
@@ -380,7 +381,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean isSimple() {
-    return (symmetryInfo == null || symmetryInfo.symmetryOperations == null);
+    return (spaceGroup == null && (symmetryInfo == null || symmetryInfo.symmetryOperations == null));
   }
 
   /**
@@ -395,7 +396,7 @@ public class Symmetry implements SymmetryInterface {
                                            float[] unitCellParams) {
     symmetryInfo = new SymmetryInfo();
     float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
-        unitCellParams);
+        unitCellParams, null);
     if (params != null) {
       setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
       unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
@@ -536,7 +537,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Symmetry getUnitCellMultiplied() {
+  public SymmetryInterface getUnitCellMultiplied() {
     UnitCell uc = unitCell.getUnitCellMultiplied();
     if (uc == unitCell)
       return this;
@@ -851,14 +852,24 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setUnitCell(Symmetry uc) {
-    unitCell = UnitCell.cloneUnitCell(uc.unitCell);   
+  public void setUnitCell(SymmetryInterface uc) {
+    unitCell = UnitCell.cloneUnitCell(((Symmetry)uc).unitCell);   
   }
 
   @Override
   public Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString) {
     return ((SpaceGroupFinder) Interface.getInterface(
         "org.jmol.symmetry.SpaceGroupFinder", vwr, "eval")).findSpaceGroup(vwr, atoms, this, asString);
+  }
+
+  @Override
+  public void setSpaceGroupTo(Object sg) {
+    symmetryInfo = null;
+    if (sg instanceof SpaceGroup) {
+      spaceGroup = (SpaceGroup) sg;
+    } else {
+      spaceGroup = SpaceGroup.getSpaceGroupFromITAName(sg.toString());
+    }
   }
 
 }

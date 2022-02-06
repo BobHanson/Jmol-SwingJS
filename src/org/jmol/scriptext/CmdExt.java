@@ -672,6 +672,13 @@ public class CmdExt extends ScriptExt {
       case T.identifier:
         checkLength(2);
         break;
+      case T.spacegroup:
+        e.iToken = 1;
+        bs1 = (slen == 2 ? null : atomExpressionAt(2));
+        e.checkLast(e.iToken);
+        if (!chk) 
+          e.showString("" + vwr.findSpaceGroup(bs1, true));
+        return;
       case T.chirality:
         e.iToken = 1;
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
@@ -4858,7 +4865,7 @@ public class CmdExt extends ScriptExt {
       checkLength((len = ++eval.iToken) + filterLen);
       if (!chk) {
         Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, null, pt1, pt2, 0, type, 0, nth, 0);
-        msg = (o instanceof Map ? SV.getVariable(o).asString() : o.toString());
+        msg = (o == null ? "" : o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
     case T.vanderwaals:
@@ -5536,7 +5543,11 @@ public class CmdExt extends ScriptExt {
         if (isOffset)
           invArg();       
       } else {
-        pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
+        if (!isOffset && pt.x < 555) {
+          pt = getSupercell(pt, true);
+        } else {
+          pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
+        }
       }
       i = eval.iToken;
       break;
@@ -5657,7 +5668,7 @@ public class CmdExt extends ScriptExt {
 //  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m] (default P)
 //  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m] (default P)
 //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m] (default P)
-//
+//  modelkit ASSIGN SPACEGROUP    
 //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
 //
 //  modelkit ROTATE ...  (same as ROTATE for example, ROTATE BOND @1 @2 degrees)
@@ -5712,6 +5723,7 @@ public class CmdExt extends ScriptExt {
     case T.assign:
       ++e.iToken;
       //$FALL-THROUGH$
+    case T.spacegroup:
     case T.connect:
       assign();
       return;
@@ -5823,7 +5835,7 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void assign() throws ScriptException {
-    // [modelkit] assign
+    // [modelkit] assign...
     // modelkit connect
     /**
      * final parameter TRUE is only for internal use so that we can determine if 
@@ -5837,7 +5849,8 @@ public class CmdExt extends ScriptExt {
     boolean isAtom = (mode == T.atoms);
     boolean isBond = (mode == T.bonds);
     boolean isConnect = (mode == T.connect);
-    if (isAtom || isBond || isConnect)
+    boolean isSpacegroup = (mode == T.spacegroup);
+    if (isAtom || isBond || isConnect || isSpacegroup)
       i++;
     else
       mode = T.atoms;
@@ -5884,7 +5897,7 @@ public class CmdExt extends ScriptExt {
     } else if (mode == T.atoms && tokAt(i) == T.string) {
       // new Jmol 14.29.28
       // assign ATOM "C" {0 0 0}
-    } else {
+    } else if (!isSpacegroup) { 
       // assign ATOM @3 "C" {0 0 0}
       // assign CONNECT @3 @4
       bs = expFor(i, bsAtoms);
@@ -5896,7 +5909,8 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3 pt = null;
-    if (!isConnect) {
+    if (isSpacegroup) {
+    } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
         pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
@@ -5919,6 +5933,10 @@ public class CmdExt extends ScriptExt {
       break;
     case T.connect:
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
+      break;
+    case T.spacegroup:
+      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup());
+      break;
     }
   }
 

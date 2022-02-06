@@ -24,27 +24,24 @@
 
 package org.jmol.adapter.readers.pdb;
 
+import java.util.Hashtable;
+import java.util.Map;
+
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Structure;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.c.STR;
-import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Escape;
-
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
 
+import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.P3;
-import java.util.Hashtable;
-
-import java.util.Map;
+import javajs.util.PT;
+import javajs.util.SB;
 
 
 /**
@@ -435,7 +432,7 @@ public class PdbReader extends AtomSetCollectionReader {
       }
     }
     if (vTlsModels != null) {
-      symmetry = (Symmetry) getInterface("org.jmol.symmetry.Symmetry");
+      symmetry = (SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry");
       int n = asc.atomSetCount;
       if (n == vTlsModels.size()) {
         for (int i = n; --i >= 0;)

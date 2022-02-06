@@ -117,7 +117,7 @@ public class SymmetryDesc {
     // generally get the result from getSymmetryInfo
     
     if (type != T.draw || op != Integer.MAX_VALUE) {
-      return getSymmetryInfo((Symmetry) uc, iModel, iAtom, (Symmetry) uc, xyz,
+      return getSymmetryInfo(uc, iModel, iAtom, uc, xyz,
           op, translation, pt, pt2, id, type, scaleFactor, nth, options);
     }
     
@@ -137,7 +137,7 @@ public class SymmetryDesc {
   }
 
   @SuppressWarnings("unchecked")
-  Map<String, Object> getSpaceGroupInfo(Symmetry sym, int modelIndex,
+  Map<String, Object> getSpaceGroupInfo(SymmetryInterface sym, int modelIndex,
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
                                         float scaleFactor, int nth, 
@@ -181,7 +181,7 @@ public class SymmetryDesc {
       int opCount = 0;
       if (ops != null) {
         if (isBio)
-          sym.spaceGroup = SpaceGroup.getNull(false, false, false);
+          sym.setSpaceGroupTo(SpaceGroup.getNull(false, false, false));
         else
           sym.setSpaceGroup(false);
         // check to make sure that new group has been created magnetic or not
@@ -1228,8 +1228,8 @@ public class SymmetryDesc {
    * @param options 0 or T.offset
    * @return a string or an Object[] containing information
    */
-  private Object getSymmetryInfo(Symmetry sym, int iModel, int iatom,
-                                 Symmetry uc, String xyz, int op, P3 translation,
+  private Object getSymmetryInfo(SymmetryInterface sym, int iModel, int iatom,
+                                 SymmetryInterface uc, String xyz, int op, P3 translation,
                                  P3 pt, P3 pt2, String id,
                                  int type, float scaleFactor, int nth, int options) {
     int returnType = 0;
@@ -1275,7 +1275,7 @@ public class SymmetryDesc {
       symTemp.setSpaceGroup(false);
       boolean isBio = uc.isBio();
       int i = (isBio ? symTemp.addBioMoleculeOperation(
-          uc.spaceGroup.finalOperations[iop], op < 0) : symTemp
+          ((SpaceGroup) uc.getSpaceGroup()).finalOperations[iop], op < 0) : symTemp
           .addSpaceGroupOperation((op < 0 ? "!" : "=") + xyz, Math.abs(op)));
 
       if (i < 0)
@@ -1376,7 +1376,7 @@ public class SymmetryDesc {
     return getInfo(info, type);
   }
 
-  private BS getAtom(Symmetry uc, int iModel, int iAtom, T3 sympt) {
+  private BS getAtom(SymmetryInterface uc, int iModel, int iAtom, T3 sympt) {
     BS bsElement = null;
     if (iAtom >= 0)
       modelSet.getAtomBitsMDa(T.elemno,
@@ -1415,7 +1415,7 @@ public class SymmetryDesc {
    * @return Object[] or String or Object[Object[]] (nth = 0, "array")
    * 
    */
-  private Object getSymopInfoForPoints(Symmetry sym, int modelIndex, int symOp,
+  private Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
                                        P3 translation, P3 pt1, P3 pt2,
                                        String drawID, String stype, float scaleFactor,
                                        int nth, boolean asString, int options) {

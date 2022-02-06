@@ -52,20 +52,41 @@ class SymmetryInfo {
    * @param unitCellParams
    *        an array of parameters could be from model, but also could be from a
    *        trajectory listing
+   * @param sg space group determined by SpaceGroupFinder via modelkit
    * @return actual unit cell parameters
    */
-  float[] setSymmetryInfo(Map<String, Object> info, float[] unitCellParams) {
-    cellRange = (int[]) info.get("unitCellRange");
-    sgName = (String) info.get("spaceGroup");
-    if (sgName == null || sgName == "")
-      sgName = "spacegroup unspecified";
-    infoStr = "Spacegroup: " + sgName;
-    if ((latticeType = (String) info.get("latticeType")) == null)
-      latticeType = "P";
-    intlTableNo = (String) info.get("intlTableNo");
-    int symmetryCount = info.containsKey("symmetryCount") ? ((Integer) info
-        .get("symmetryCount")).intValue() : 0;
-    symmetryOperations = (SymmetryOperation[]) info.remove("symmetryOps");
+  float[] setSymmetryInfo(Map<String, Object> info, float[] unitCellParams,
+                          SpaceGroup sg) {
+    int symmetryCount;
+    if (sg == null) {
+      // from ModelAdapter only
+      cellRange = (int[]) info.get("unitCellRange");
+      sgName = (String) info.get("spaceGroup");
+      if (sgName == null || sgName == "")
+        sgName = "spacegroup unspecified";
+      intlTableNo = (String) info.get("intlTableNo");
+      if ((latticeType = (String) info.get("latticeType")) == null)
+        latticeType = "P";
+      symmetryCount = info.containsKey("symmetryCount")
+          ? ((Integer) info.get("symmetryCount")).intValue()
+          : 0;
+      symmetryOperations = (SymmetryOperation[]) info.remove("symmetryOps");
+      coordinatesAreFractional = info.containsKey("coordinatesAreFractional")
+          ? ((Boolean) info.get("coordinatesAreFractional")).booleanValue()
+          : false;
+      isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
+      infoStr = "Spacegroup: " + sgName;
+    } else {
+      // from ModelKit
+      cellRange = null;
+      sgName = sg.getName();
+      intlTableNo = sg.intlTableNumber;
+      latticeType = sg.latticeType;
+      symmetryCount = sg.getOperationCount();
+      symmetryOperations = sg.finalOperations;
+      coordinatesAreFractional = true;
+      infoStr = "Spacegroup: " + sgName;
+    }
     if (symmetryOperations != null) {
       String c = "";
       String s = "\nNumber of symmetry operations: "
@@ -88,9 +109,6 @@ class SymmetryInfo {
       unitCellParams = (float[]) info.get("unitCellParams");
     if (!SimpleUnitCell.isValid(unitCellParams))
       return null;
-    coordinatesAreFractional = info.containsKey("coordinatesAreFractional") ? ((Boolean) info
-        .get("coordinatesAreFractional")).booleanValue() : false;
-    isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
     return unitCellParams;
   }
 }

@@ -122,8 +122,7 @@ public class DSSR1 extends AnnotationParser {
       info = vwr.ms.getModelAuxiliaryInfo(modelIndex);
       if (info.containsKey("dssr"))
         break;
-      BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-      bs.and(vwr.ms.getAtoms(T.nucleic, null));
+      BS bs = vwr.restrictToModel(vwr.ms.getAtoms(T.nucleic, null), modelIndex);
       if (bs.nextClearBit(0) < 0) {
         info = null;
         break;

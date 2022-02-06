@@ -381,7 +381,7 @@ public class IsoExt extends ScriptExt {
           uc = vwr.getSymTemp().getUnitCell(
               (P3[]) vwr.getOrientation(T.unitcell, "array", null), false,
               null);
-        } else if (tok == T.unitcell) {
+        } else if (tok == T.unitcell && uc == null) {
           uc = vwr.getCurrentUnitCell();
         }
         pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
@@ -1768,9 +1768,8 @@ public class IsoExt extends ScriptExt {
         if (eval.fullCommand.indexOf("# WITHIN=") >= 0)
           bs = BS.unescape(PT.getQuotedAttribute(eval.fullCommand, "# WITHIN"));
         if (!chk) {
-          if (bs != null && modelIndex >= 0) {
-            bs.and(vwr.getModelUndeletedAtomsBitSet(modelIndex));
-          }
+          if (bs != null && modelIndex >= 0)
+            bs = vwr.restrictToModel(bs, modelIndex);
           if (ptc == null)
             ptc = (bs == null ? new P3() : vwr.ms.getAtomSetCenter(bs));
           pts = getWithinDistanceVector(propertyList, distance, ptc, bs,

@@ -102,14 +102,9 @@ public class UccageRenderer extends CageRenderer {
     boolean haveMultiple = (fset != null && !fset.equals(fset0));
     if (!haveMultiple)
       fset = fset0;
-    int t3w = (fset instanceof T4 ? (int)((T4) fset).w : 0);
-    if (fset.x > 100) {
+    int t3w = (fset instanceof T4 ? (int) ((T4) fset).w : 0);
     SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0, t3w);
     SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1, t3w);
-    } else {
-      cell0.set(0, 0, 0);
-      cell1.setT(fset);
-    }
     int firstLine, allow0, allow1;
     if (fset.z < 0) {
       cell0.scale(-1 / fset.z);
@@ -121,9 +116,11 @@ public class UccageRenderer extends CageRenderer {
       axes.reinitShape();
     P3[] axisPoints = (axes == null
         || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 || axes.axisXY.z != 0
-        || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0 ? null
-        : axes.axisPoints);
-    boolean drawAllLines = (isExport || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0
+        || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0
+            ? null
+            : axes.axisPoints);
+    boolean drawAllLines = (isExport
+        || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0
         || vwr.getFloat(T.axesscale) < 2 || axisPoints == null);
     P3[] aPoints = axisPoints;
     int[][] faces = (hiddenLines ? BoxInfo.facePoints : null);
@@ -138,12 +135,13 @@ public class UccageRenderer extends CageRenderer {
       allow1 = 0xFF;
       P3[] pts = BoxInfo.unitCubePoints;
       for (int i = 8; --i >= 0;) {
-        P3 v = P3.new3(pts[i].x * (cell1.x - cell0.x), pts[i].y
-            * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
+        P3 v = P3.new3(pts[i].x * (cell1.x - cell0.x),
+            pts[i].y * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
         unitcell.toCartesian(v, true);
         verticesT[i].add2(v, offsetT);
       }
-      renderCage(mad10, verticesT, faces, aPoints, firstLine, allow0, allow1, 1);
+      renderCage(mad10, verticesT, faces, aPoints, firstLine, allow0, allow1,
+          1);
     } else
       for (int x = (int) cell0.x; x < cell1.x; x++) {
         for (int y = (int) cell0.y; y < cell1.y; y++) {

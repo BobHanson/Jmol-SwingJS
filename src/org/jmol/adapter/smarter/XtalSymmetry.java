@@ -131,7 +131,7 @@ public class XtalSymmetry {
   public SymmetryInterface symmetry;
 
   public SymmetryInterface getSymmetry() {
-    return (symmetry == null ?(symmetry = (Symmetry) acr.getInterface("org.jmol.symmetry.Symmetry")) : symmetry);
+    return (symmetry == null ?(symmetry = (SymmetryInterface) acr.getInterface("org.jmol.symmetry.Symmetry")) : symmetry);
   }
 
   SymmetryInterface setSymmetry(SymmetryInterface symmetry) {
@@ -263,7 +263,7 @@ public class XtalSymmetry {
   }
 
   public void setSpaceGroupFrom(SymmetryInterface readerSymmetry) {
-    getSymmetry().setSpaceGroupFrom(readerSymmetry);
+    getSymmetry().setSpaceGroupTo(readerSymmetry.getSpaceGroup());
   }
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {

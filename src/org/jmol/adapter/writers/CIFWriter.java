@@ -118,7 +118,7 @@ public class CIFWriter implements JmolWriter {
       sb.append(
           "\n\nloop_\n_space_group_symop_id\n_space_group_symop_operation_xyz");
       if (n == 0) {
-        sb.append("\nx,y,z");
+        sb.append("\n1 x,y,z");
       } else {
         for (int i = 0; i < n; i++) {
           sb.append("\n").appendI(i + 1).append("\t")
@@ -135,7 +135,7 @@ public class CIFWriter implements JmolWriter {
       Atom[] atoms = vwr.ms.at;
       P3 p = new P3();
       int nAtoms = 0;
-      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
+      for (int c = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
@@ -146,8 +146,7 @@ public class CIFWriter implements JmolWriter {
         nAtoms++;
         String name = a.getAtomName();
         String sym = a.getElementSymbol();
-        boolean useName = name.startsWith(sym);
-        sb.append(PT.formatS(useName ? name : sym, 3, 0, true, false))
+        sb.append(PT.formatS(sym + ++c, 5, 0, true, false))
             .append(PT.formatF(p.x, 18, 12, false, false))
             .append(PT.formatF(p.y, 18, 12, false, false))
             .append(PT.formatF(p.z, 18, 12, false, false));
@@ -155,7 +154,7 @@ public class CIFWriter implements JmolWriter {
           sb.append(PT.formatF(a.x, 18, 12, false, false))
               .append(PT.formatF(a.y, 18, 12, false, false))
               .append(PT.formatF(a.z, 18, 12, false, false));
-        sb.append("  # ").append(useName ? sym : name).append("\n");
+        sb.append("  # ").append(name).append("\n");
       }
       sb.append("\n# ").appendI(nAtoms).append(" atoms\n");
       oc.append(sb.toString());

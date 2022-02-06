@@ -14,9 +14,21 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M3;
 import javajs.util.P3;
 
 public class SpaceGroupFinder {
+
+  /**
+   * maximum allowable supercell
+   */
+  private static final int MAX_COUNT = 100;
+
+
+  /**
+   * tolerance for fractional coord and 
+   */
+  private float SLOP = 0.001f;  // 0.0001 was too tight here. 
 
   private static int GROUP_COUNT; // 530
   private static int OP_COUNT; // 882
@@ -28,18 +40,9 @@ public class SpaceGroupFinder {
 
   private static BufferedReader rdr = null;
 
-  static {
-
-  }
-
   private SGAtom[] atoms;
   private int nAtoms;
-  P3 pt = new P3();
-
-  /**
-   * maximum allowable supercell
-   */
-  private static final int MAX_COUNT = 100;
+  private P3 pt = new P3();
 
   public SpaceGroupFinder() {
   }
@@ -48,8 +51,7 @@ public class SpaceGroupFinder {
     int type;
     public int index;
 
-    SGAtom(P3 uxyz, int type, int index) {
-      setT(uxyz);
+    SGAtom(int type, int index) {
       this.type = type;
       this.index = index;
     }
@@ -57,6 +59,7 @@ public class SpaceGroupFinder {
 
   public Object findSpaceGroup(Viewer vwr, BS atoms0, SymmetryInterface uc,
                                boolean asString) {
+    Atom[] cartesians = vwr.ms.at;
     int isg = 0;
     BS bsAtoms = BSUtil.copy(atoms0);
     BS bsGroups = new BS();
@@ -83,13 +86,23 @@ public class SpaceGroupFinder {
       System.out.println("bsAtoms = " + bsAtoms);
       for (int p = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1), p++) {
-        Atom a = vwr.ms.at[i];
+        Atom a = cartesians[i];
         int type = a.getAtomicAndIsotopeNumber();
-        pt.setT(a);
-        uc.toFractional(pt, false);
-        atoms[p] = new SGAtom(pt, type, i);
+        (atoms[p] = new SGAtom(type, i)).setT(toFractional(a, uc));
+        
       }
       BS bsPoints = BSUtil.newBitSet2(0, nAtoms);
+
+      // Look out for tetrgonal aac issue
+
+      SymmetryInterface uc0 = uc;
+      M3 mtet = new M3();
+      uc = checkTetragonal(vwr, uc, mtet);
+      if (uc == uc0) {
+        mtet = null;
+      } else {
+        System.out.println("tetragonoal setting issue detected");
+      }
 
       // 2. Check that packing atoms, if any, are complete and only those packed.
 
@@ -106,34 +119,45 @@ public class SpaceGroupFinder {
 
       // 3. Unitize and check for supercells in each direction
 
-
       nAtoms = bsPoints.cardinality();
+      uc0 = uc;
+      boolean isSupercell = false;
       if (nAtoms > 0) {
         for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
             .nextSetBit(i + 1)) {
           SimpleUnitCell.unitizeDim(3, atoms[i]);
         }
-        uc = checkSupercell(uc, bsPoints, 1, scaling);
-        uc = checkSupercell(uc, bsPoints, 2, scaling);
-        uc = checkSupercell(uc, bsPoints, 3, scaling);
-        if (scaling.x != 1)
-          System.out.println("supercell found; a scaled by 1/" + scaling.x);
-        if (scaling.y != 1)
-          System.out.println("supercell found; b scaled by 1/" + scaling.y);
-        if (scaling.z != 1)
-          System.out.println("supercell found; c scaled by 1/" + scaling.z);
+        uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
+        uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
+        uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
+        isSupercell = (uc != uc0);
+        if (isSupercell) {
+          if (scaling.x != 1)
+            System.out.println("supercell found; a scaled by 1/" + scaling.x);
+          if (scaling.y != 1)
+            System.out.println("supercell found; b scaled by 1/" + scaling.y);
+          if (scaling.z != 1)
+            System.out.println("supercell found; c scaled by 1/" + scaling.z);
+        }
       }
 
-      // 4. Remove unneeded atoms
+      // 4. Remove unneeded atoms and recalculate fractional position if a supercell
 
       n = bsPoints.cardinality();
       bsAtoms = new BS();
       SGAtom[] newAtoms = new SGAtom[n];
       for (int p = 0, i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
           .nextSetBit(i + 1)) {
-        newAtoms[p++] = atoms[i];
+        SGAtom a = atoms[i];
+        newAtoms[p++] = a;
+        if (isSupercell) {
+          a.setT(toFractional(cartesians[a.index], uc));
+          if (mtet != null)
+            mtet.rotate(a);
+        }
         bsAtoms.set(atoms[i].index);
       }
+      
       atoms = newAtoms;
       nAtoms = n;
       System.out.println("bsAtoms(within cell) = " + bsAtoms);
@@ -142,7 +166,7 @@ public class SpaceGroupFinder {
       BS bsPoints0 = BS.copy(bsPoints);
       BS temp1 = BS.newN(OP_COUNT);
       BS targeted = BS.newN(nAtoms);
-      
+
       if (nAtoms == 0) {
         bsGroups.clearBits(1, GROUP_COUNT);
         bsOps.clearAll();
@@ -215,7 +239,6 @@ public class SpaceGroupFinder {
         checkBasis(uncheckedOps, bsPoints, targets);
       }
 
-      
     } catch (Exception e) {
       e.printStackTrace();
       bsGroups.clearAll();
@@ -228,18 +251,19 @@ public class SpaceGroupFinder {
     }
     if (n != 1)
       return null;
-    String name = groupNames[isg];
+    SpaceGroup sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
+    String name = sg.toString();
     uc.setSpaceGroupName(name);
     System.out.println("found " + name);
-    SpaceGroup sg = SpaceGroup.nameToGroup.get(name);
     if (asString)
-      return sg.toString();
+      return name;
     @SuppressWarnings("unchecked")
-    Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();       
+    Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
     BS basis = BSUtil.copy(bsAtoms);
-     basis.andNot(targets);    
+    basis.andNot(targets);
     System.out.println("basis is " + basis);
     System.out.println("unitcell is " + uc.getUnitCellInfo(true));
+    map.put("name", name);
     map.put("basis", basis);
     map.put("supercell", scaling);
     float[] params = uc.getUnitCellParams();
@@ -247,6 +271,40 @@ public class SpaceGroupFinder {
       System.arraycopy(params, 0, params = new float[6], 0, 6);
     map.put("unitcell", params);
     return map;
+  }
+
+  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3 mtet) {    
+//    float[] params = uc.getUnitCellParams();
+//    if (!approx0(params[0] - params[1])
+//        && approx0(params[1] - params[2])
+//        && approx0(params[3] - 90) && approx0(params[4] - 90)
+//        && approx0(params[5] - 90)) {
+//      // b==c, so a->c->b->a
+//      mtet.setA(new float[] {0, 1, 0, 0, 0, 1, 1, 0, 0});
+//      for (int i = 0; i < nAtoms; i++) {
+//        mtet.rotate(atoms[i]);
+//      }
+//      P3[] oabc = uc.getUnitCellVectors();
+//      uc = vwr.getSymTemp().getUnitCell(new P3[] {oabc[0], oabc[2], oabc[3], oabc[1]}, false, "permuted");
+//    } else if (!approx0(params[0] - params[1])
+//        && approx0(params[0] - params[2])
+//        && approx0(params[3] - 90) && approx0(params[4] - 90)
+//        && approx0(params[5] - 90)) {
+//      // a==c, so b->c->a->b
+//      mtet.setA(new float[] {1, 0, 0, 0, 0, 1, 0, 1, 0});
+//      for (int i = 0; i < nAtoms; i++) {
+//        mtet.rotate(atoms[i]);
+//      }
+//      P3[] oabc = uc.getUnitCellVectors();
+//      uc = vwr.getSymTemp().getUnitCell(new P3[] {oabc[0], oabc[1], oabc[3], oabc[2]}, false, "permuted");
+//    }
+    return uc;
+  }
+
+  P3 toFractional(Atom a, SymmetryInterface uc) {
+    pt.setT(a);
+    uc.toFractional(pt, false);
+    return pt;
   }
 
   private static SymmetryOperation getOp(int iop) {
@@ -340,7 +398,8 @@ public class SpaceGroupFinder {
 
   /**
    * Look for a supercell and adjust lattice down if necessary.
-   * 
+
+   * @param vwr 
    * @param uc
    * @param bsPoints
    * @param abc
@@ -349,8 +408,8 @@ public class SpaceGroupFinder {
    *        set to [na, nb, nc]
    * @return revised unit cell
    */
-  public SymmetryInterface checkSupercell(SymmetryInterface uc, BS bsPoints,
-                                          int abc, P3 scaling) {
+  public SymmetryInterface checkSupercell(Viewer vwr, SymmetryInterface uc,
+                                          BS bsPoints, int abc, P3 scaling) {
     if (bsPoints.cardinality() == 0)
       return uc;
     int minF = Integer.MAX_VALUE, maxF = Integer.MIN_VALUE;
@@ -368,26 +427,26 @@ public class SpaceGroupFinder {
         pt.sub2(b, a);
         switch (abc) {
         case 1:
-          f = pt.x;
-          if (f <= 0.0001f || !approx0(pt.y) || !approx0(pt.z))
+          if (approx0(f = pt.x) || !approx0(pt.y) || !approx0(pt.z))
             continue;
           break;
         case 2:
-          f = pt.y;
-          if (f <= 0.0001f || !approx0(pt.x) || !approx0(pt.z))
+          if (approx0(f = pt.y) || !approx0(pt.x) || !approx0(pt.z))
             continue;
           break;
         default:
         case 3:
-          f = pt.z;
-          if (f <= 0.0001f || !approx0(pt.x) || !approx0(pt.y))
+          if (approx0(f = pt.z) || !approx0(pt.x) || !approx0(pt.y))
             continue;
           break;
         }
         int n = approxInt(1 / f);
         // must be positive
+        System.out.println(f + " " + n);
+        //System.out.println(n + " " + f + " " + abc + " " + pt + " " + a + " " + b + " " + nAtoms + " " + n + " " + counts[n]);
         if (n == 0 || nAtoms / n != 1f * nAtoms / n || n > MAX_COUNT)
           continue;
+        //System.out.println(abc + " " + pt + " " + a + " " + b + " " + nAtoms + " " + n + " " + counts[n]);
         if (n > maxF)
           maxF = n;
         if (n < minF)
@@ -395,53 +454,48 @@ public class SpaceGroupFinder {
         counts[n]++;
       }
     }
-    for (int n = maxF; n >= minF; n--) {
+    int n = maxF;
+    while (n >= minF) {
       if (counts[n] > 0 && counts[n] == (n - 1) * nAtoms / n) {
-        P3[] oabc = uc.getUnitCellVectors();
-        oabc[abc].scale(1f / n);
-        switch (abc) {
-        case 1:
-          scaling.x = n;
-          break;
-        case 2:
-          scaling.y = n;
-          break;
-        case 3:
-          scaling.z = n;
-          break;
-        }
-        uc = uc.getUnitCell(oabc, false, "scaled");
-
-        for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-            .nextSetBit(i + 1)) {
-          float f;
-          switch (abc) {
-          case 1:
-            f = approxInt(n * atoms[i].x);
-            if (f == 0) {
-              atoms[i].x *= n;
-              continue;
-            }
-            break;
-          case 2:
-            f = approxInt(n * atoms[i].y);
-            if (f == 0) {
-              atoms[i].y *= n;
-              continue;
-            }
-            break;
-          case 3:
-            f = approxInt(n * atoms[i].x);
-            if (f == 0) {
-              atoms[i].z *= n;
-              continue;
-            }
-            break;
-          }
-          atoms[i] = null;
-          bsPoints.clear(i);
-        }
         break;
+      }
+      --n;
+    }
+    if (n < minF)
+      return uc;
+    // we have the smallest unit in this direction
+    P3[] oabc = uc.getUnitCellVectors();
+    oabc[abc].scale(1f / n);
+    switch (abc) {
+    case 1:
+      scaling.x = n;
+      break;
+    case 2:
+      scaling.y = n;
+      break;
+    case 3:
+      scaling.z = n;
+      break;
+    }
+    uc = vwr.getSymTemp().getUnitCell(oabc, false, "scaled");
+    // remove points not within this unitcell
+    float f = 0;
+    for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
+        .nextSetBit(i + 1)) {
+      switch (abc) {
+      case 1:
+        f = approxInt(n * atoms[i].x);
+        break;
+      case 2:
+        f = approxInt(n * atoms[i].y);
+        break;
+      case 3:
+        f = approxInt(n * atoms[i].x);
+        break;
+      }
+      if (f != 0) {
+        atoms[i] = null;
+        bsPoints.clear(i);
       }
     }
     nAtoms = bsPoints.cardinality();
@@ -449,12 +503,13 @@ public class SpaceGroupFinder {
   }
 
   private boolean approx0(float f) {
-    return (Math.abs(f) < 0.0001f);
+    return (Math.abs(f) < SLOP);
   }
 
   private int approxInt(float finv) {
-    int i = (int) (finv + 0.0001f);
-    return (Math.abs(finv - i) < 0.0001f ? i : 0);
+//    int i = Math.round (finv); // was 
+    int i = (int) (finv + SLOP);
+    return (Math.abs(finv - i) < SLOP ? i : 0);
   }
 
   private int findEquiv(SymmetryOperation op, int i, BS bsPoints, P3 pt) {

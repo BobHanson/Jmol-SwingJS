@@ -28,8 +28,17 @@ package org.jmol.adapter.smarter;
 import java.io.BufferedReader;
 import java.util.Map;
 
+import org.jmol.api.Interface;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.script.SV;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+
 import javajs.api.GenericBinaryDocument;
 import javajs.api.GenericLineReader;
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -41,16 +50,6 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.T4;
 import javajs.util.V3;
-
-import org.jmol.api.Interface;
-import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.script.SV;
-import org.jmol.symmetry.Symmetry;
-import org.jmol.util.BSUtil;
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 
 
 /*
@@ -941,7 +940,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     setFractionalCoordinates(toFrac);
   }
   protected SymmetryInterface getNewSymmetry() {
-    return symmetry = (Symmetry) getInterface("org.jmol.symmetry.Symmetry");
+    return symmetry = (SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry");
   }
 
   public void setFractionalCoordinates(boolean TF) {
