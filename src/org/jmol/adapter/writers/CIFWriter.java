@@ -26,6 +26,7 @@ public class CIFWriter implements JmolWriter {
   private OC oc;
 
   private boolean isP1;
+  private boolean haveUnitCell;
 
   private final static P3 fset0 = P3.new3(555,555,1);
 
@@ -48,7 +49,7 @@ public class CIFWriter implements JmolWriter {
       short mi = vwr.ms.at[bs.nextSetBit(0)].mi;
 
       SymmetryInterface uc = vwr.getCurrentUnitCell();
-      boolean haveUnitCell = (uc != null);
+      haveUnitCell = (uc != null);
       if (!haveUnitCell)
         uc = vwr.getSymTemp().setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 },
             false);
@@ -126,13 +127,21 @@ public class CIFWriter implements JmolWriter {
         }
       }
 
-      sb.append("\n" + "\nloop_" + "\n_atom_site_label" + "\n_atom_site_fract_x"
-          + "\n_atom_site_fract_y" + "\n_atom_site_fract_z");
+      Atom[] atoms = vwr.ms.at;
+      String elements = "";
+
+       sb.append("\n" 
+          + "\nloop_" 
+          + "\n_atom_site_label" 
+          + "\n_atom_site_type_symbol" 
+          + "\n_atom_site_fract_x"
+          + "\n_atom_site_fract_y" 
+          + "\n_atom_site_fract_z");
       if (!haveUnitCell)
-        sb.append("\n_atom_site_Cartn_x" + "\n_atom_site_Cartn_y"
+        sb.append("\n_atom_site_Cartn_x" 
+            + "\n_atom_site_Cartn_y"
             + "\n_atom_site_Cartn_z");
       sb.append("\n");
-      Atom[] atoms = vwr.ms.at;
       P3 p = new P3();
       int nAtoms = 0;
       for (int c = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
@@ -146,16 +155,25 @@ public class CIFWriter implements JmolWriter {
         nAtoms++;
         String name = a.getAtomName();
         String sym = a.getElementSymbol();
+        String key = sym + "\n";
+        if (elements.indexOf(key) < 0)
+          elements += key;
+        
         sb.append(PT.formatS(sym + ++c, 5, 0, true, false))
-            .append(PT.formatF(p.x, 18, 12, false, false))
-            .append(PT.formatF(p.y, 18, 12, false, false))
-            .append(PT.formatF(p.z, 18, 12, false, false));
+            .append(PT.formatS(sym, 3, 0, true, false))
+            .append(clean(p.x)).append(clean(p.y)).append(clean(p.z));
         if (!haveUnitCell)
-          sb.append(PT.formatF(a.x, 18, 12, false, false))
-              .append(PT.formatF(a.y, 18, 12, false, false))
-              .append(PT.formatF(a.z, 18, 12, false, false));
-        sb.append("  # ").append(name).append("\n");
+          sb.append(clean(a.x)).append(clean(a.y)).append(clean(a.z));
+        if (!name.equals(sym))
+            sb.append("  #Jmol_atomName ").append(name);
+        sb.append("\n");
       }
+      
+      if (nAtoms > 0) {
+        // add atom_type aka element symbol
+        sb.append("\nloop_\n_atom_type_symbol\n").append(elements).append("\n");
+      }
+
       sb.append("\n# ").appendI(nAtoms).append(" atoms\n");
       oc.append(sb.toString());
     } catch (Exception e) {
@@ -163,6 +181,37 @@ public class CIFWriter implements JmolWriter {
     }
     return toString();
   }
+
+
+  private String clean(float f) {
+    int t;
+    return (!haveUnitCell || (t = Math.abs(twelfthsOf(f))) < 0 
+        ? PT.formatF(f, 18, 12, false, false) 
+            : (f < 0 ? "   -" : "    ") + twelfths[t]);
+  }
+
+  private static final String[] twelfths = new String[] {
+      "0.000000000000",
+      "0.083333333333",
+      "0.166666666667",
+      "0.250000000000",
+      "0.333333333333",
+      "0.416666666667",
+      "0.500000000000",
+      "0.583333333333",
+      "0.666666666667",
+      "0.750000000000",
+      "0.833333333333",
+      "0.916666666667",
+      "1.000000000000",
+  };
+
+  private static int twelfthsOf(float f) {
+    f = Math.abs(f * 12);
+    int i = Math.round (f); 
+  return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : Integer.MIN_VALUE);
+}
+
 
   private SB appendKey(SB sb, String key) {
     return sb.append("\n").append(PT.formatS(key, 27, 0, true, false));
@@ -172,7 +221,6 @@ public class CIFWriter implements JmolWriter {
   public String toString() {
     return (oc == null ? "" : oc.toString());
   }
-
 
 }
 
