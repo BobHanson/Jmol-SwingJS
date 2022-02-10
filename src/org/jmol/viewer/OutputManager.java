@@ -976,6 +976,13 @@ abstract class OutputManager {
     Lst<String> newFileNames = new Lst<String>();
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name = fileNamesUTF.get(iFile);
+      int pt = name.indexOf("::");
+      String type = "";
+      if (pt >= 0) {
+        type = name.substring(0, pt + 2);
+        name = name.substring(pt + 2);
+      }
+        
       boolean isLocal = OC.isLocal(name);
       String newName = name;
       // also check that somehow we don't have a local file with the same name as
@@ -1004,7 +1011,7 @@ abstract class OutputManager {
           newName = addPngFileBytes(name, (byte[]) ret, iFile, crcMap,
               isSparDir, newName, ptSlash, v);
         }
-        name = "$SCRIPT_PATH$" + newName;
+        name = type + "$SCRIPT_PATH$" + newName;
       }
       crcMap.put(newName, newName);
       newFileNames.addLast(PT.escUnicode(name));

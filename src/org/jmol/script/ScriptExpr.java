@@ -1051,7 +1051,7 @@ abstract class ScriptExpr extends ScriptParam {
       exp = (chk ? new BS() : getAtomBitSet(exp));
     }
     if (ret != null && !(exp instanceof BS)) {
-      ret[0] = null;//exp;
+      ret[0] = exp;
       return null;
     }
     bs = (exp instanceof BS ? (BS) exp : new BS());

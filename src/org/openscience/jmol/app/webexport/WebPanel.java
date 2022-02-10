@@ -616,8 +616,15 @@ abstract class WebPanel extends JPanel implements ActionListener,
         ArrayList<String> copiedFileNames = new  ArrayList<String>();
         int nFiles = filesToCopy.size();
         for (int iFile = 0; iFile < nFiles; iFile++) {
-          String newName = copyBinaryFile(filesToCopyUTF.get(iFile), datadirPath);
-          copiedFileNames.add(PT.escUnicode(newName.substring(newName.lastIndexOf('/') + 1)));
+          String name = filesToCopyUTF.get(iFile);
+          int pt = name.indexOf("::");
+          String type = "";
+          if (pt >= 0) {
+            type = name.substring(0, pt + 2);
+            name = name.substring(pt + 2);
+          }
+          String newName = copyBinaryFile(name, datadirPath);
+          copiedFileNames.add(PT.escUnicode(type + newName.substring(newName.lastIndexOf('/') + 1)));
         }
         script = replaceQuotedStrings(script, filesToCopy, copiedFileNames);
         LogPanel.log("      ..." + GT.o(GT.$("adding {0}"), javaname + ".spt"));

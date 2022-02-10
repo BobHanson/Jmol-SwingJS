@@ -1326,7 +1326,7 @@ public class FileManager implements BytePoster {
       String tag = scriptFilePrefixes[ipt];
       int i = -1;
       while ((i = script.indexOf(tag, i + 1)) >= 0) {
-        String s = stripTypePrefix(PT.getQuotedStringAt(script, i));
+        String s = PT.getQuotedStringAt(script, i);
         if (s.indexOf("\\u") >= 0)
           s = Escape.unescapeUnicode(s);
         fileList.addLast(s);
@@ -1387,8 +1387,15 @@ public class FileManager implements BytePoster {
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name0 = fileNames.get(iFile);
       String name = name0;
+      int pt = name.indexOf("::");
+      String type = "";
+      if (pt >= 0) {
+        // throwing away the type here. 
+        type = name.substring(pt + 2);
+        name = name.substring(pt + 2);
+      }
       if (isLocal == OC.isLocal(name)) {
-        int pt = (noPath ? -1 : name.indexOf("/" + dataPath + "/"));
+        pt = (noPath ? -1 : name.indexOf("/" + dataPath + "/"));
         if (pt >= 0) {
           name = name.substring(pt + 1);
         } else {
@@ -1400,6 +1407,7 @@ public class FileManager implements BytePoster {
           name = dataPath + name.substring(pt);
         }
       }
+      name = type + name;
       Logger.info("FileManager substituting " + name0 + " --> " + name);
       oldFileNames.addLast("\"" + name0 + "\"");
       newFileNames.addLast("\1\"" + name + "\"");
