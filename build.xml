@@ -20,10 +20,10 @@ see build.README.txt
   <property file="${user.home}/.jmol.build.properties" />
   <!-- compile options -->
   <property name="build.sysclasspath" value="ignore" />
-  <property name="build.compiler" value="javac1.6" />
+  <property name="build.compiler" value="javac1.8" />
   <!-- for some reason, I can't get ant to use this ${java.version}
        property as the value of the source parameter -->
-  <property name="java.version" value="1.6" />
+  <property name="java.version" value="1.8" />
   <property name="debug" value="on" />
   <property name="deprecation" value="off" />
   <property name="optimization" value="off" />
@@ -52,7 +52,8 @@ see build.README.txt
   <echo message="version=${version}" />
   <property name="jvxl_version" value="0.1" />
 
-  <input message="private property file:" addproperty="Private.propertyFile" defaultValue="none" />
+  <!-- input message="private property file:" addproperty="Private.propertyFile" defaultValue="none" / -->
+  <property name="Private.propertyFile" value="none" />
   <if><available file="${Private.propertyFile}" /><then>
   	<property file="${Private.propertyFile}" />
 	<echo>using ${Private.keystore} ${Private.storetype}</echo>
@@ -63,15 +64,16 @@ see build.README.txt
   <property name="appjars.dir" value="build/appjars" />
   <property name="classes.dir" value="build/classes" />
   <property name="test-classes.dir" value="build/test-classes" />
-  <property name="applet.classes.dir" value="build/applet-classes" />
+  <!-- property name="applet.classes.dir" value="build/applet-classes" / -->
   <property name="apisio.classes.dir" value="build/apisio-classes" />
   <property name="tests.dir" value="build/unit.tests" />
   <property name="javadoc.dir" value="build/javadoc" />
-  <property name="jmol.applet.web.dir" value="appletweb" />
+  <!-- property name="jmol.applet.web.dir" value="appletweb" / -->
   <property name="docbook-xsl" value="docbook-xsl-1.76.1" />
   <property name="docbook-xml" value="docbook-xml-4.4" />
   <property name="naga.jar" value="naga-3_0.jar" />
   <property name="commons-cli.jar" value="commons-cli-1.2.jar" />
+  <property name="inchi.jar" value="jni-inchi-0.7-jar-with-dependencies.jar" />
   <property name="saxon.jar" value="saxon.jar" />
   <property name="saxon.main" value="com.icl.saxon.StyleSheet" />
   <property name="selfsign.store" value="ca-cert/selfSignedCertificate/selfSignedCertificate.store" />
@@ -100,21 +102,21 @@ see build.README.txt
     </fileset>
   </path>
   
-  <path id="applet-project.class.path">
+  <!-- path id="applet-project.class.path">
     <fileset dir="${lib.dir}">
       <include name="*.jar" />
     </fileset>
-  </path>
+  </path -->
   
   <path id="apisio-project.class.path">
     <fileset dir="${lib.dir}">
       <!-- include name="${vecmath.jar}" / -->
-      <include name="netscape.jar" />
+      <!-- include name="netscape.jar" / -->
       <include name="gnujaxp.jar" />
     </fileset>
   </path>
 
-  <target name="main" id="main" depends="init,jar,applet-jar,signed-applet,smiles-applet-jar"/>
+  <target name="main" id="main" depends="init,jar"/>
   
   <target name="all" id="all" depends="doc,main"/>
 
@@ -239,7 +241,7 @@ see build.README.txt
     <mkdir dir="${classes.dir}"/>
     <javac srcdir="src" destdir="${classes.dir}" encoding="UTF8"
            debug="${debug}" deprecation="${deprecation}"
-           optimize="${optimization}" source="1.6" target="1.6">
+           optimize="${optimization}" source="1.8" target="1.8">
       <classpath refid="project.class.path" />
       <exclude name="astex/**/*.java"/>
       <exclude name="java_cup/**/*.java"/>
@@ -278,10 +280,11 @@ see build.README.txt
       </fileset>
     </copy>
 
-    <property name="build.compiler" value="javac1.6" />
+    <property name="build.compiler" value="javac1.8" />
   	
     <!-- 
       	
+bh 20220215  changed to 1.8, 1.8
 bh 20131124  changed to 1.6, 1.6
   	
 mth 20040713 ... with the Sun Java 1.5 compiler the default
@@ -322,7 +325,7 @@ all support for previous versions removed
     <javac srcdir="src" destdir="${applet.classes.dir}"
            debug="${debug}" deprecation="${deprecation}"
            optimize="${optimization}"
-           source="1.6" target="1.6" encoding="UTF8"
+           source="1.8" target="1.8" encoding="UTF8"
            includesfile="applet.classes"
            classpathref="applet-project.class.path" />
 
@@ -352,7 +355,7 @@ all support for previous versions removed
     <mkdir dir="${apisio.classes.dir}"/>
     <javac srcdir="src" destdir="${apisio.classes.dir}"
            debug="${debug}" deprecation="${deprecation}"
-           optimize="${optimization}" source="1.6" encoding="UTF8"
+           optimize="${optimization}" source="1.8" encoding="UTF8"
            includesfile="apisio.classes"
            classpathref="apisio-project.class.path" />
     <copy todir="${apisio.classes.dir}" >
@@ -393,6 +396,7 @@ all support for previous versions removed
         <uptodate targetfile="${appjars.dir}">
           <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
           <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
+          <srcfiles dir="${lib.dir}" includes="${inchi.jar}"/>
         </uptodate>
         <uptodate targetfile="build/libjars.timestamp"
                   srcfile="${appjars.dir}"/>
@@ -429,12 +433,19 @@ all support for previous versions removed
   	<delete dir="${appjars.dir}/org/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />
   	<delete dir="${appjars.dir}/META-INF" />
+    <unjar dest="${appjars.dir}" src="${lib.dir}/${inchi.jar}"/>
+  	<move file="${appjars.dir}/META-INF/LICENSE" tofile="${appjars.dir}/META-INF/LICENSE-JNI-INCHI"/>
+  	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
+  	<!-- the following mitigation is in accord with https://logging.apache.org/log4j/2.x/security.html
+  	     despite the fact that the org/apache/logging package is not included in Jmol.
+  	     It is added here in case JNI-InChI is ever upgraded to Log4J2 (which requires Java 7+) -->  
+  	<delete file="${appjars.dir}/org/apache/logging/log4j/core/lookup/JndiLookup.class" />
     <touch file="build/libjars.timestamp"/>
   </target>
 
   <target name="jar" id="jar"
           depends="init,classes,jmolGuide,jmolHistory,jmolDevelopersGuide,libjars,main-i18n">
-    <if><equals arg1="${Private.propertyFile}" arg2="none" />
+    <if><equals arg1="${Private.propertyFile}" arg2="nojar" />
     	<then><echo>Skipping jar creation</echo></then><else>
 
   	
@@ -453,6 +464,7 @@ all support for previous versions removed
         <include name="**/*.html" />
       </fileset>
     </copy>
+    	    <echo message="Creating Jmol.jar -- if this fails, check to see that build/Jmol.jar is not open." />
     <jar destfile="build/Jmol.jar"
          manifest="manifest/application.txt">
       <fileset dir="${classes.dir}" >
@@ -460,6 +472,7 @@ all support for previous versions removed
         <exclude name="**/*.dx" />
         <exclude name="ant/**" />
         <include name="com/**" />
+        <include name="net/sf/**" />
         <include name="javajs/api/**" />
         <include name="javajs/awt/**" />
         <include name="javajs/export/**" />
@@ -476,28 +489,34 @@ all support for previous versions removed
         <exclude name="**/app/JmolData.class" />
       </fileset>
       <fileset dir="${appjars.dir}" includes="**/*"/>
-      <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
-      <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
     </jar>
     <antcall target="sign-jar-file">
       <param name="sign-jar-file-dir" value="build" />
       <param name="sign-jar-file-name"  value="Jmol.jar" />
     </antcall>
   	
+    	    <echo message="Creating JmolData.jar -- if this fails, check to see that build/Jmol.jar is not open." />
     <jar destfile="build/JmolData.jar"
          manifest="manifest/applicationData.txt">
       <fileset dir="${classes.dir}" >
+        <exclude name="**/Test*.class" />
+        <exclude name="**/jmol/jcamp/**" />
+        <exclude name="**/jmol/applet/*" /> 
         <exclude name="**/.*" />
         <exclude name="**/*.dx" />
         <exclude name="**/Test*.class" />
         <exclude name="ant/**" />
         <exclude name="com/**" />
+        <include name="net/sf/**" />
         <include name="javajs/api/**" />
         <include name="javajs/awt/**" />
         <include name="javajs/export/**" />
         <include name="javajs/img/**" />
         <include name="javajs/util/**" />
-        <include name="org/qcschema/**" />
+        <include name="**/jspecview/**" />
+        <include name="**/org/gennbo/**" />
+        <include name="**/org/apache/**" />
+        <include name="**/org/qcschema/**" />
         <include name="**/jmol/**" />
         <exclude name="**/jmol/_documents/**" />
         <exclude name="**/jmol/applet/**" />
@@ -511,9 +530,7 @@ all support for previous versions removed
         <exclude name="**/openscience/jmol/app/jmolpanel/**" />
         <exclude name="**/openscience/jmol/app/webexport/**" />
       </fileset>
-      <fileset dir="${appjars.dir}" includes="**/cli/** **/naga/**" />
-      <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
-      <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
+      <fileset dir="${appjars.dir}" includes="**/*"/>
     </jar>
     <antcall target="sign-jar-file">
       <param name="sign-jar-file-dir" value="build" />
@@ -588,7 +605,7 @@ all support for previous versions removed
   </target>
 
   
-  <target name="applet-jar" id="applet-jar"
+  <!-- target name="applet-jar" id="applet-jar"
           depends="applet-classes">
   <if><equals arg1="${Private.propertyFile}" arg2="none" />
     	<then><echo>Skipping applet-jar</echo></then><else>
@@ -615,19 +632,6 @@ all support for previous versions removed
   	
     <echo message="Creating JmolApplet0*.jar" />
   	
-  	<!-- 
-    <for list="${all.JmolApplet.languages}" delimiter=","
-         param="current.Jmol.language">
-      <sequential>
-        <jar destfile="build/JmolApplet0_i18n_@{current.Jmol.language}.jar"
-             manifest="manifest/applet_i18n.txt" >
-          <fileset dir="${applet.classes.dir}">
-            <include name="org/jmol/translation/JmolApplet/@{current.Jmol.language}/**" />
-          </fileset>
-        </jar>
-      </sequential>
-    </for>
-    -->
     <jar destfile="build/JmolApplet0_Image.jar" manifest="manifest/applet.txt">
       <fileset dir="${applet.classes.dir}">
         <include name="org/jmol/dialog/**" />
@@ -761,13 +765,13 @@ all support for previous versions removed
       </fileset>
     </jar>
 
-<!--
+< ! - -
     <jar destfile="build/JmolApplet0_Spectrum.jar" manifest="manifest/applet.txt">
       <fileset dir="${applet.classes.dir}">
         <include name="org/jmol/spectrum/**" />
       </fileset>
     </jar>
--->
+ - - >
   	<jar destfile="build/JmolApplet0_Symmetry.jar" manifest="manifest/applet.txt">
       <fileset dir="${applet.classes.dir}">
         <include name="org/jmol/symmetry/**" />
@@ -775,8 +779,7 @@ all support for previous versions removed
     </jar>
 
 
-    <!-- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv -->
-    <!-- changes to this must be replicated below for the signed applet -->
+    < ! - - changes to this must be replicated below for the signed applet - - >
     <jar destfile="build/JmolApplet0.jar"  manifest="manifest/applet0.txt"
          index="true" >
       <fileset dir="${applet.classes.dir}">
@@ -809,9 +812,9 @@ all support for previous versions removed
         <include name="org/jmol/viewer/**" />
       </fileset>
 
-      <!-- changes to this must be replicated below for the all-permissions applet -->
+      < ! - - changes to this must be replicated below for the all-permissions applet - - >
       <indexjars>
-      	<!-- no export or multitouch here - this is the sandboxed applet -->
+      	< ! - -  no export or multitouch here - this is the sandboxed applet - - >
         <pathelement path="build/JmolApplet0_Console.jar" />
         <pathelement path="build/JmolApplet0_Image.jar" />
       	<pathelement path="build/JmolApplet0_JSV.jar" />
@@ -833,8 +836,8 @@ all support for previous versions removed
         <pathelement path="build/JmolApplet0_ShapeSurface.jar" />
         <pathelement path="build/JmolApplet0_Smiles.jar" />
         <pathelement path="build/JmolApplet0_Symmetry.jar" />
-<!-- <pathelement path="build/JmolApplet0_Spectrum.jar" />
-        <fileset dir="build" includes="JmolApplet0_i18n_*.jar" />   -->
+< ! - - <pathelement path="build/JmolApplet0_Spectrum.jar" />
+        <fileset dir="build" includes="JmolApplet0_i18n_*.jar" />   - - >
       </indexjars>
     </jar>
 	<echo message="creating JmolLib.jar" level="info" />
@@ -857,9 +860,8 @@ all support for previous versions removed
         <exclude name="org/jmol/multitouch/jni/*" />
         <exclude name="org/jmol/multitouch/sparshui/*" />
         <exclude name="org/jmol/popup/**/*" />
-        <exclude name="org/jmol/translation/**/*" />
         <exclude name="org/openscience/**/*" />
-      	<!-- just need sparshUI gestureType.class -->
+      	< ! - - just need sparshUI gestureType.class - - >
         <exclude name="com/sparshui/client/*" />
         <exclude name="com/sparshui/common/**/**/*" />
         <exclude name="com/sparshui/cpp/*" />
@@ -893,20 +895,6 @@ all support for previous versions removed
     </jar>
 
   	<echo message="Creating JmolAppletsigned0*.jar" />
-  	
-  	<!--
-    <for list="${all.JmolApplet.languages}" delimiter=","
-         param="current.Jmol.language">
-      <sequential>
-        <jar destfile="build/JmolAppletSigned0_i18n_@{current.Jmol.language}.jar"
-             manifest="manifest/applet_i18nSigned.txt" >
-             <fileset dir="${applet.classes.dir}">
-               <include name="org/jmol/translation/JmolApplet/@{current.Jmol.language}/**" />
-             </fileset>
-        </jar>
-      </sequential>
-    </for>
-	-->
     <jar destfile="build/JmolAppletSigned0_Console.jar" manifest="manifest/appletSigned.txt">
       <fileset dir="${applet.classes.dir}">
         <include name="org/jmol/console/**" />
@@ -1048,13 +1036,13 @@ all support for previous versions removed
       </fileset>
     </jar>
   	
-<!--      	
+< ! - -      	
     <jar destfile="build/JmolAppletSigned0_Spectrum.jar" manifest="manifest/appletSigned.txt">
       <fileset dir="${applet.classes.dir}">
         <include name="org/jmol/spectrum/**" />
       </fileset>
     </jar>
--->
+- - >
   	
     <jar destfile="build/JmolAppletSigned0_Symmetry.jar" manifest="manifest/appletSigned.txt">
       <fileset dir="${applet.classes.dir}">
@@ -1118,10 +1106,10 @@ all support for previous versions removed
         <pathelement path="build/JmolAppletSigned0_ShapeSurface.jar" />
         <pathelement path="build/JmolAppletSigned0_Smiles.jar" />
         <pathelement path="build/JmolAppletSigned0_Symmetry.jar" />
-      	<!--      	
+      	< ! - -      	
         <pathelement path="build/JmolAppletSigned0_Spectrum.jar" />
         <fileset dir="build" includes="JmolAppletSigned0_i18n_*.jar" />
-        -->
+        - - >
       	
       </indexjars>
     </jar>
@@ -1138,7 +1126,7 @@ all support for previous versions removed
   <if><equals arg1="${Private.propertyFile}" arg2="none" />
     	<then><echo>Skipping smiles-applet-jar</echo></then><else>
   	
- <!-- JmolSmilesApplet.jar is skipped for now because it has no HTML5 equivalent
+ < ! - - JmolSmilesApplet.jar is skipped for now because it has no HTML5 equivalent
   	
     <echo message="Creating JmolSmilesApplet.jar" />
     <jar destfile="build/JmolSmilesApplet.jar"
@@ -1175,9 +1163,9 @@ all support for previous versions removed
       <param name="sign-jar-file-name"  value="JmolSmilesApplet.jar" />
     </antcall>
     
-    -->
+    - - >
   </else></if>
-  </target>
+  </target>   -->
   	
 
 	  <!-- target name="dist" id="dist"
@@ -1202,6 +1190,7 @@ all support for previous versions removed
         <include name="JmolData.jar" />
         <include name="JmolLib.jar" />
         <include name="JSpecView.jar" />
+        <include name="jspecview.properties" />
       </fileset>
       <fileset dir=".">
         <include name="jmol" />
@@ -1256,7 +1245,7 @@ all support for previous versions removed
 
     <copy todir="build/dist/jmol-${version}/src" >
       <fileset dir="src" />
-      <fileset dir="srcjsv" />
+<!--      <fileset dir="srcjsv" />  -->
     </copy>
 
     <copy todir="build/dist/jmol-${version}/ca-cert" >
@@ -1315,9 +1304,9 @@ all support for previous versions removed
       <tarfileset dir="build/dist"
                   excludes="*/jmol,*/jmol.sh"
                   includes="jmol-${version}/**" />
-      <tarfileset dir="build/dist"
+      <tarfileset dir="build/dist/jmol-${version}"
                   mode="755"
-                  includes="*/jmol,*/jmol.sh" />
+                  includes="jmol,jmol.sh" />
     </tar>
 
     <!-- Copy other files to have a complete distribution -->
@@ -1372,7 +1361,7 @@ all support for previous versions removed
     <copy todir="build/dist/jmolapisio-${version}/${lib.dir}" >
       <fileset dir="${lib.dir}">
         <!-- include name="${vecmath.jar}"/ -->
-        <include name="netscape.jar"/>
+        <!-- include name="netscape.jar"/ -->
       </fileset>
     </copy>
 
@@ -1486,6 +1475,7 @@ all support for previous versions removed
 
   <target name="javadoc" depends="initdoc" unless="javadoc.uptodate"
           description="Generation of Javadoc">
+  	<!--
     <mkdir dir="${javadoc.dir}"/>
     <javadoc destdir="${javadoc.dir}" sourcepath="src"
              private="true" encoding="UTF8"
@@ -1497,6 +1487,8 @@ all support for previous versions removed
       <tag name="j2sIgnoreSuperConstructor" enabled="false" />
       <tag name="j2sOverride" enabled="false" />
     </javadoc>
+    
+    -->
   </target>
 
   <target name="jmolGuide" id="jmolGuide" depends="initdoc"
@@ -1652,7 +1644,7 @@ all support for previous versions removed
     <mkdir dir="${test-classes.dir}"/>
     <javac srcdir="test" destdir="${test-classes.dir}"
            debug="off" deprecation="on"
-           optimize="off" source="1.6" encoding="UTF8">
+           optimize="off" source="1.8" encoding="UTF8">
       <classpath>
         <pathelement location="build/Jmol.jar" />
         <pathelement location="./jars/junit.jar" />
@@ -1718,14 +1710,104 @@ all support for previous versions removed
     <ant antfile="tools/build-i18n.xml" target="spotless-i18n"/>
   </target>
 
-  <target name="dotnet" depends="applet-jar">
+  <!-- target name="dotnet" depends="applet-jar">
     <exec executable="${ikvm.home}/ikvmc.exe">
       <arg value="-target:library"/>
       <arg value="-out:build/JmolLib.dll"/>
       <arg value="-debug"/>
       <arg value="build/JmolLib.jar"/>
-      <!-- arg value="${lib.dir}/${vecmath.jar}"/ -->
+      < ! - - arg value="${lib.dir}/${vecmath.jar}"/  - - >
     </exec>
-  </target>
+  </target>   -->
+	
+
+	
+	
+	
+	  <!--
+	    To use this script, the scp task must be available.
+	    The scp task requires the jsch jar in the class path.
+	  -->
+
+	  <!-- Contributions -->
+	  <taskdef resource="net/sf/antcontrib/antlib.xml">
+	    <classpath>
+	      <pathelement location="tools/ant-contrib.jar" />
+	    </classpath>
+	  </taskdef>
+
+		
+	  <property name="sendZip"         value="true" />
+	  <property name="dist.dir"        value="build/dist" />
+	  <property name="src.dir"         value="src" />
+	  <property name="temp.dir"        value="build/release" />
+	  <property name="web.dir"         value="/home/frs/project/j/jm/jmol" />
+	  <property name="web.host"        value="frs.sourceforge.net" /> 
+	  <property name="prefix.release"  value="Jmol " />
+
+	  <echo message="${dist.dir}" />
+		
+	<!--
+
+	12/17/2016	
+	Release Note: switching to semantic versioning (http://semver.org/)
+	Release Note: When releasing stable version, remove "-beta"
+		
+	-->
+		
+		
+	  <property file="${dist.dir}/Jmol.properties" prefix="Jmol.properties" />
+	  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
+	  <propertyregex property="version"
+		  override = "true"
+		  input="${version}"
+		  regexp='(")([^"]+)(")'
+	  	  select="\2"
+	      global="true"
+	  />
+	  <echo message="version=${version}" />
+
+		<loadresource property="versionMajorMinor">
+		  <string value="${version}"/>
+		  <filterchain>
+		    <tokenfilter>
+			      <replaceregex pattern="([0-9]+[.][0-9]+)(.*)" replace="\1"/>
+		    </tokenfilter>
+		  </filterchain>
+		</loadresource>
+		<echo message="versionMajorMinor: ${versionMajorMinor}"/>
+		
+		<loadresource property="versionMajorMinorPatch">
+		  <string value="${version}"/>
+		  <filterchain>
+		    <tokenfilter>
+			      <replaceregex pattern="([^-]*)(-beta)(.*)" replace="\1"/>
+		    </tokenfilter>
+		  </filterchain>
+		</loadresource>
+		<echo message="versionMajorMinorPatch: ${versionMajorMinorPatch}"/>
+
+			<loadresource property="betaFlag">
+		  <string value="${version}"/>
+		  <filterchain>
+		    <tokenfilter>
+		      <replaceregex pattern="([^-]*)(-beta)(.*)" replace="\2"/>
+		    </tokenfilter>
+		  </filterchain>
+		</loadresource>
+		<property name="pathdir-full" value="Jmol/Version" />
+	  	<if>
+	     <equals arg1="${betaFlag}" arg2="${version}" />
+	  	 <then>
+	  		<property name="pathdir"    value="${pathdir-full}" />
+	    </then>
+	  	<else>
+	  		<property name="pathdir"    value="Jmol-beta/Jmol" />
+	  	</else>
+	  	</if>
+		<echo message="betaFlag: ${betaFlag}"/>
+
+		<property name="path.release"    value="${pathdir} ${versionMajorMinor}" />
+		<echo message="path.release: ${path.release}"/>
   	
 </project>
