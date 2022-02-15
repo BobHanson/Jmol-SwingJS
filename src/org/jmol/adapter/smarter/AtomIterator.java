@@ -125,7 +125,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
   @Override
   public float getBondRadius() {
-    return atom.bondRadius;
+    return atom.bondingRadius;
   }
   
 	/**

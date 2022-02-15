@@ -88,7 +88,7 @@ public class GlobalSettings {
     }
     if (nihResolverFormat == null)
       nihResolverFormat = JC.databases.get("nci");
-    setCIR(nihResolverFormat);
+    setCIR(nihResolverFormat, false);
     // beyond these six, they are just in the form load =xxx/id
 
     for (CBK item : CBK.values())
@@ -1078,14 +1078,15 @@ public class GlobalSettings {
     s.append("  ").append(cmd).append(";\n");
   }
 
-  public void setCIR(String template) {
+  public void setCIR(String template, boolean notify) {
     if (template == null || template.equals(nihResolverFormat) && smilesUrlFormat != null)
       return;
     int pt = template.indexOf("/structure");
     if (pt > 0) {
       nihResolverFormat = template.substring(0, pt + 10);
       smilesUrlFormat = nihResolverFormat  + "/%FILE/file?format=sdf&get3d=true";
-      System.out.println("CIR resolver set to " + nihResolverFormat);
+      if (notify)
+        Logger.info("CIR resolver set to " + nihResolverFormat + " template=" + template);
     }
 
   }

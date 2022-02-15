@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -262,11 +263,18 @@ public class MathExt {
         unitCell = null;
       //$FALL-THROUGH$
     case 1:
-      BS atoms = SV.getBitSet(args[0], true);
-      if (atoms == null)
-        return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-          "" + args[0].asString(), Integer.MIN_VALUE, true, unitCell));
-      return mp.addXObj(vwr.findSpaceGroup(atoms, true));
+      BS atoms = null;
+      String op = null;
+      if (args[0].tok == T.string) {
+        // spacegroup("x,y,z")
+        op = args[0].asString();
+      } else {
+        atoms = SV.getBitSet(args[0], true);
+        if (atoms == null)
+          return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
+              "" + args[0].asString(), Integer.MIN_VALUE, true, unitCell));
+      }
+      return mp.addXObj(vwr.findSpaceGroup(atoms, op, (op == null)));
     default:
       return false;
     }
@@ -1663,7 +1671,7 @@ public class MathExt {
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(bs, false));      
+            return mp.addXObj(vwr.findSpaceGroup(bs, null, false));
           } 
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
@@ -1997,6 +2005,7 @@ public class MathExt {
    * @return true if no syntax problems
    * @throws ScriptException
    */
+  @SuppressWarnings("unchecked")
   private boolean evaluateGetProperty(ScriptMathProcessor mp, SV[] args,
                                       int tok0, boolean isAtomProperty)
       throws ScriptException {
@@ -2094,6 +2103,25 @@ public class MathExt {
         }
         //$FALL-THROUGH$
       default:
+        if (tok0 == T.pivot && x.tok == T.hash) {
+          Map<String, Object> map = new Hashtable<String, Object>();
+          Map<String, SV> map0 = x.getMap();
+          for (Entry<String, SV> e : map0.entrySet()) {
+             String key = e.getKey();
+             String s = e.getValue().asString();
+            Lst<String> l = (Lst<String>) map.get(s);
+             if (l == null)
+               map.put(s,  l = new Lst<String>());
+             l.addLast(key);
+          }
+          if ("count".equals(lc)) {
+            for (Entry<String, Object> e : map.entrySet()) {
+              e.setValue(Integer.valueOf(((Lst<String>) e.getValue()).size()));
+            }
+            
+          }
+          return mp.addXMap(map);
+        }
         if (isSelect)
           propertyName = "[SELECT " + propertyName + "]";
         return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
@@ -4084,6 +4112,8 @@ public class MathExt {
     Atom[] at = vwr.ms.at;
     for (int i = vwr.ms.ac; --i >= 0;) {
       Atom atom = at[i];
+      if (atom == null)
+        continue;
       for (int j = bsInclude.nextSetBit(0); j >= 0; j = bsInclude
           .nextSetBit(j + 1))
         if (atom.distance(points[j]) < distance) {

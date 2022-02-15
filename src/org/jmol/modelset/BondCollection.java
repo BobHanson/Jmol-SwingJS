@@ -799,7 +799,7 @@ abstract public class BondCollection extends AtomCollection {
     boolean nonbonded = (min == 0);
     for (i = ac; --i >= 0;) {
       int n = nBonded[i];
-      if (n < min || n > max)
+      if (at[i] == null || n < min || n > max)
         bsResult.clear(i);
       else if (nonbonded && n == 0)
         bsResult.set(i);

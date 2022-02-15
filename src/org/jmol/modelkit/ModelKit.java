@@ -33,6 +33,7 @@ import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementPending;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
@@ -1030,14 +1031,14 @@ public class ModelKit {
 
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = (PT.isUpperCase(type.charAt(0))
+    int atomicNumber = (type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
         ? Elements.elementNumberFromSymbol(type, true)
         : -1);
 
     // 1) change the element type or charge
 
     boolean isDelete = false;
-    if (atomicNumber > 0) {
+    if (atomicNumber >= 0) {
       boolean doTaint = (atomicNumber > 1 || !addHsAndBond);
       vwr.ms.setElement(atom, atomicNumber, doTaint);
       vwr.shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, vwr.rd,
@@ -1521,13 +1522,20 @@ public class ModelKit {
     System.err.println("ModelKit.notImplemented(" + action + ")");
   }
 
-  public String cmdAssignSpaceGroup() {
+  public String cmdAssignSpaceGroup(BS bs) {
     try {
+      if (bs != null && bs.isEmpty())
+        return "";
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         uc = vwr.getSymTemp()
             .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
       BS bsAtoms = vwr.getThisModelAtoms();
+      if (bs == null) {
+        bs = SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true);
+      }
+      if (bs != null)
+        bsAtoms.and(bs);
       boolean noAtoms = bsAtoms.isEmpty();
       int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
       T3 m = uc.getUnitCellMultiplier();
@@ -1541,7 +1549,7 @@ public class ModelKit {
       BS basis;
       @SuppressWarnings("unchecked")
       Map<String, Object> sg = (noAtoms ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, false));
+          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, null, false));
       if (sg == null) {
         name = "P1";
         supercell = P3.new3(1, 1, 1);
@@ -1561,7 +1569,7 @@ public class ModelKit {
       vwr.ms.setSpaceGroup(mi, uc, basis);
       P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
       vwr.ms.setUnitCellOffset(uc, pt, 0);
-      return name;
+      return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)
         e.printStackTrace();

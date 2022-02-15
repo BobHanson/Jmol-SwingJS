@@ -54,7 +54,7 @@ public class Atom extends P3 implements Cloneable {
   public int atomSerial = Integer.MIN_VALUE;
   public int chainID; // not public -- set using AtomSetCollectionReader.setChainID
 
-  public float bondRadius = Float.NaN;
+  public float bondingRadius = Float.NaN; // only for CIF oxidation state and TopoCifParser; co-opted for Biomolecule 
 
   public char altLoc = '\0';
   public String group3;
@@ -62,6 +62,9 @@ public class Atom extends P3 implements Cloneable {
   public char insertionCode = '\0';
   public float[] anisoBorU; //[6] = 1 for U, 0 for B; [7] = bFactor
   public Lst<Object> tensors;
+  public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
+  public String typeSymbol; // CIF only
+
   
   public Tensor addTensor(Tensor tensor, String type, boolean reset) {
     if (tensor == null)
@@ -73,10 +76,6 @@ public class Atom extends P3 implements Cloneable {
       tensor.setType(type);
     return tensor;
   }
-
-  public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
-
-  public String typeSymbol; // CIF only
 
   public Atom() {
    set(Float.NaN, Float.NaN, Float.NaN);

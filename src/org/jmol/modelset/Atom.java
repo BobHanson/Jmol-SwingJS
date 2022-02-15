@@ -1533,4 +1533,13 @@ public class Atom extends Point3fi implements Node {
     return (m.isBioModel && !m.isPdbWithMultipleBonds && m.hydrogenCount == 0);
   }
 
+  public void setSymop(int isym, boolean andClear) {
+    if (atomSymmetry == null)
+      atomSymmetry = new BS();
+    if (andClear)
+    atomSymmetry.clearAll();
+    if (isym > 0)
+      atomSymmetry.set(isym - 1);
+  }
+
 }

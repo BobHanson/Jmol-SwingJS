@@ -580,7 +580,7 @@ public class SimpleUnitCell {
   public static float unitizeX(float x) {
     // introduced in Jmol 11.7.36
     x = (float) (x - Math.floor(x));
-    if (x > 0.9999f || x < 0.0001f) 
+    if (x > 0.999f || x < 0.001f)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
       x = 0;
     return x;
   }

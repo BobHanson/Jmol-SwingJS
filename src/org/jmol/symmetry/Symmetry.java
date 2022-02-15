@@ -174,8 +174,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo, boolean isFull) {
-    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull);
+  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo, boolean isFull, boolean addNonstandard) {
+    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull, addNonstandard);
   }
 
   @Override
@@ -857,9 +857,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString) {
+  public Object findSpaceGroup(Viewer vwr, BS atoms, String opXYZ, boolean asString) {
     return ((SpaceGroupFinder) Interface.getInterface(
-        "org.jmol.symmetry.SpaceGroupFinder", vwr, "eval")).findSpaceGroup(vwr, atoms, this, asString);
+        "org.jmol.symmetry.SpaceGroupFinder", vwr, "eval")).findSpaceGroup(vwr, atoms, opXYZ, this, asString);
   }
 
   @Override

@@ -1121,9 +1121,9 @@ public class StateCreator extends JmolStateCreator {
       String st = s = getFontLineShapeState((FontLineShape) shape);
       int iAtom = vwr.am.getUnitCellAtomIndex();
       if (iAtom >= 0)
-        s += "  unitcell ({" + iAtom + "});\n"; 
+        s += "  unitcell ({" + iAtom + "});\n";
       SymmetryInterface uc = vwr.getCurrentUnitCell();
-      if (uc != null) { 
+      if (uc != null) {
         s += uc.getUnitCellState();
         s += st; // needs to be after this state as well.
       }
@@ -1158,26 +1158,31 @@ public class StateCreator extends JmolStateCreator {
       break;
     case JC.SHAPE_HALOS:
       Halos hs = (Halos) shape;
-      s = getAtomShapeState(hs)
-          + (hs.colixSelection == C.USE_PALETTE ? ""
-              : hs.colixSelection == C.INHERIT_ALL ? "  color SelectionHalos NONE;\n"
-                  : Shape.getColorCommandUnk("selectionHalos",
-                      hs.colixSelection, hs.translucentAllowed) + ";\n");
+      s = getAtomShapeState(hs) + (hs.colixSelection == C.USE_PALETTE ? ""
+          : hs.colixSelection == C.INHERIT_ALL
+              ? "  color SelectionHalos NONE;\n"
+              : Shape.getColorCommandUnk("selectionHalos", hs.colixSelection,
+                  hs.translucentAllowed) + ";\n");
       if (hs.bsHighlight != null)
-        s += "  set highlight "
-            + Escape.eBS(hs.bsHighlight)
-            + "; "
+        s += "  set highlight " + Escape.eBS(hs.bsHighlight) + "; "
             + Shape.getColorCommandUnk("highlight", hs.colixHighlight,
-                hs.translucentAllowed) + ";\n";
+                hs.translucentAllowed)
+            + ";\n";
       break;
     case JC.SHAPE_HOVER:
       clearTemp();
       Hover h = (Hover) shape;
-      if (h.atomFormats != null)
-        for (int i = vwr.ms.ac; --i >= 0;)
-          if (h.atomFormats[i] != null)
+      if (h.atomFormats != null) {
+        Atom[] at = vwr.ms.at;
+        for (int i = vwr.ms.ac; --i >= 0;) {
+          if (at[i] == null)
+            h.atomFormats[i] = null;
+          if (h.atomFormats[i] != null) {
             BSUtil.setMapBitSet(temp, i, i,
                 "set hoverLabel " + PT.esc(h.atomFormats[i]));
+          }
+        }
+      }
       s = "\n  hover " + PT.esc((h.labelFormat == null ? "" : h.labelFormat))
           + ";\n" + getCommands(temp, null, "select");
       clearTemp();
@@ -1208,17 +1213,15 @@ public class StateCreator extends JmolStateCreator {
         Text text = l.getLabel(i);
         float sppm = (text != null ? text.scalePixelsPerMicron : 0);
         if (sppm > 0)
-          BSUtil.setMapBitSet(temp2, i, i, "set labelScaleReference "
-              + (10000f / sppm));
+          BSUtil.setMapBitSet(temp2, i, i,
+              "set labelScaleReference " + (10000f / sppm));
         if (l.offsets != null && l.offsets.length > i) {
           int offsetFull = l.offsets[i];
-          BSUtil.setMapBitSet(
-              temp2,
-              i,
-              i,
+          BSUtil.setMapBitSet(temp2, i, i,
               "set "
                   + (JC.isOffsetAbsolute(offsetFull) ? "labelOffsetAbsolute "
-                      : "labelOffset ") + JC.getXOffset(offsetFull) + " "
+                      : "labelOffset ")
+                  + JC.getXOffset(offsetFull) + " "
                   + JC.getYOffset(offsetFull));
           String align = JC.getHorizAlignmentName(offsetFull >> 2);
           String pointer = JC.getPointerName(offsetFull);
@@ -1254,7 +1257,8 @@ public class StateCreator extends JmolStateCreator {
       byte[] pids = balls.paletteIDs;
       float r = 0;
       for (int i = 0; i < ac; i++) {
-        if (atoms[i] != null && shape.bsSizeSet != null && shape.bsSizeSet.get(i)) {
+        if (atoms[i] != null && shape.bsSizeSet != null
+            && shape.bsSizeSet.get(i)) {
           if ((r = atoms[i].madAtom) < 0)
             BSUtil.setMapBitSet(temp, i, i, "Spacefill on");
           else

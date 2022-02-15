@@ -334,7 +334,7 @@ public class PropertyManager implements JmolPropertyManager {
   @Override
   public Object extractProperty(Object prop, Object args, int ptr,
                                 Lst<Object> v2, boolean isCompiled) {
-     if (ptr < 0) {
+    if (ptr < 0) {
       args = getArguments((String) args);
       ptr = 0;
     }
@@ -342,18 +342,18 @@ public class PropertyManager implements JmolPropertyManager {
       return prop;
     if (!isCompiled) {
       args = compileSelect((SV[]) args);
-      SV[] svargs = (SV[]) args; 
+      SV[] svargs = (SV[]) args;
       for (int i = ptr, n = svargs.length; i < n; i++) {
         if (svargs[i].tok == T.select) {
           SV[] a = new SV[i + 1];
-          for (int p = 0; p <= i; p++) 
+          for (int p = 0; p <= i; p++)
             a[p] = svargs[p];
           prop = extractProperty(prop, a, ptr, null, true);
           for (; ++i < n;) {
             a[a.length - 1] = svargs[i];
             prop = extractProperty(prop, a, a.length - 1, null, true);
           }
-          return prop;                   
+          return prop;
         }
       }
       args = svargs;
@@ -368,8 +368,9 @@ public class PropertyManager implements JmolPropertyManager {
         Lst<Object> v = (Lst<Object>) property;
         if (pt < 0)
           pt += v.size();
-        return (pt >= 0 && pt < v.size() ? extractProperty(v.get(pt), args,
-            ptr, null, true) : "");
+        return (pt >= 0 && pt < v.size()
+            ? extractProperty(v.get(pt), args, ptr, null, true)
+            : "");
       }
       if (property instanceof M3) {
         M3 m = (M3) property;
@@ -378,7 +379,8 @@ public class PropertyManager implements JmolPropertyManager {
             new float[] { m.m20, m.m21, m.m22 } };
         if (pt < 0)
           pt += 3;
-        return (pt >= 0 && pt < 3 ? extractProperty(f, args, --ptr, null, true) : "");
+        return (pt >= 0 && pt < 3 ? extractProperty(f, args, --ptr, null, true)
+            : "");
       }
       if (property instanceof M4) {
         M4 m = (M4) property;
@@ -389,7 +391,8 @@ public class PropertyManager implements JmolPropertyManager {
             new float[] { m.m30, m.m31, m.m32, m.m33 } };
         if (pt < 0)
           pt += 4;
-        return (pt >= 0 && pt < 4 ? extractProperty(f, args, --ptr, null, true) : "");
+        return (pt >= 0 && pt < 4 ? extractProperty(f, args, --ptr, null, true)
+            : "");
       }
       if (AU.isAI(property)) {
         int[] ilist = (int[]) property;
@@ -407,31 +410,35 @@ public class PropertyManager implements JmolPropertyManager {
         float[] flist = (float[]) property;
         if (pt < 0)
           pt += flist.length;
-        return (pt >= 0 && pt < flist.length ? Float.valueOf(flist[pt]): "");
+        return (pt >= 0 && pt < flist.length ? Float.valueOf(flist[pt]) : "");
       }
       if (AU.isAII(property)) {
         int[][] iilist = (int[][]) property;
         if (pt < 0)
           pt += iilist.length;
-        return (pt >= 0 && pt < iilist.length ? extractProperty(iilist[pt], args, ptr, null, true): "");
+        return (pt >= 0 && pt < iilist.length
+            ? extractProperty(iilist[pt], args, ptr, null, true)
+            : "");
       }
       if (AU.isAFF(property)) {
         float[][] fflist = (float[][]) property;
         if (pt < 0)
           pt += fflist.length;
-        return (pt >= 0 && pt < fflist.length ? extractProperty(fflist[pt], args, ptr, null, true): "");
+        return (pt >= 0 && pt < fflist.length
+            ? extractProperty(fflist[pt], args, ptr, null, true)
+            : "");
       }
       if (AU.isAS(property)) {
         String[] slist = (String[]) property;
         if (pt < 0)
           pt += slist.length;
-        return (pt >= 0 && pt < slist.length ? slist[pt]: "");
+        return (pt >= 0 && pt < slist.length ? slist[pt] : "");
       }
       if (property instanceof Object[]) {
         Object[] olist = (Object[]) property;
         if (pt < 0)
           pt += olist.length;
-        return (pt >= 0 && pt < olist.length ? olist[pt]: "");
+        return (pt >= 0 && pt < olist.length ? olist[pt] : "");
       }
       break;
     case T.select:
@@ -442,7 +449,8 @@ public class PropertyManager implements JmolPropertyManager {
         boolean asMap = false;
         boolean asArray = false;
         boolean isCaseSensitive = false;
-        Lst<String> keys = (arg.tok == T.select ? (Lst<String>) ((Object[]) arg.value)[0]
+        Lst<String> keys = (arg.tok == T.select
+            ? (Lst<String>) ((Object[]) arg.value)[0]
             : null);
         T[] whereArgs = null;
         if (arg.tok == T.select) {
@@ -471,28 +479,35 @@ public class PropertyManager implements JmolPropertyManager {
                   break;
                 default:
                   if (!(o instanceof Map<?, ?>)
-                      && !(isList = (o instanceof Lst<?>)))
-                    o = null;
-                }
-                if (o != null) {
-                  if (isList) {
-                    if (v2 == null)
-                      v2 = new Lst<Object>();
-                    Lst<?> olst = (Lst<?>) o;
-                    for (int n = olst.size(), j = 0; j < n; j++) {
-                      o = olst.get(j);
-                      if (!(o instanceof SV) || (o = ((SV) o).getMap()) == null)
-                        continue;
-                      if (whereArgs == null
-                          || vwr.checkSelect((Map<String, SV>) o, whereArgs))
-                        v2.addLast(o);
+                      && !(isList = (o instanceof Lst<?>))) {
+                    if (isList || whereArgs == null)
+                      continue;
+                    Map<String, SV> map = new Hashtable<String, SV>();
+                    map.put("key", SV.newS(k));
+                    map.put("value", (SV) e.getValue());
+                    if (vwr.checkSelect(map, whereArgs)) {
+                      newKey += "," + k;
                     }
-                    return v2;
+                    continue;
                   }
-                  if (whereArgs == null
-                      || vwr.checkSelect((Map<String, SV>) o, whereArgs))
-                    newKey += "," + k;
                 }
+                if (isList) {
+                  if (v2 == null)
+                    v2 = new Lst<Object>();
+                  Lst<?> olst = (Lst<?>) o;
+                  for (int n = olst.size(), j = 0; j < n; j++) {
+                    o = olst.get(j);
+                    if (!(o instanceof SV) || (o = ((SV) o).getMap()) == null)
+                      continue;
+                    if (whereArgs == null
+                        || vwr.checkSelect((Map<String, SV>) o, whereArgs))
+                      v2.addLast(o);
+                  }
+                  return v2;
+                }
+                if (whereArgs == null
+                    || vwr.checkSelect((Map<String, SV>) o, whereArgs))
+                  newKey += "," + k;
               }
             }
             if (newKey.length() == 0)
@@ -512,18 +527,20 @@ public class PropertyManager implements JmolPropertyManager {
             return extractProperty(lst, args, ptr, null, true);
           }
         }
-        boolean havePunctuation = (asArray || key.indexOf(",") >= 0 || key
-            .indexOf(";") >= 0);
+        boolean havePunctuation = (asArray || key.indexOf(",") >= 0
+            || key.indexOf(";") >= 0);
         if (isCaseSensitive && !havePunctuation) {
           havePunctuation = true;
           key += ",";
         }
-        boolean isWild = (asArray || key.startsWith("*") || key.endsWith("*") || havePunctuation);
+        boolean isWild = (asArray || key.startsWith("*") || key.endsWith("*")
+            || havePunctuation);
         boolean wasV2 = (v2 != null);
         if (isWild) {
           if (!wasV2)
             v2 = new Lst<Object>();
-          if (!asArray && (keys == null ? key.length() == 1 : keys.size() == 0)) {
+          if (!asArray
+              && (keys == null ? key.length() == 1 : keys.size() == 0)) {
             if (ptr == ((SV[]) args).length) {
               if (!wasV2)
                 return property;
@@ -565,8 +582,9 @@ public class PropertyManager implements JmolPropertyManager {
           return extractProperty(mapNew, args, ptr, (wasV2 ? v2 : null), true);
         }
         key = checkMap(h, key, isWild, v2, args, ptr, isCaseSensitive);
-        return (key != null && !isWild ? extractProperty(h.get(key), args, ptr,
-            null, true) : !isWild ? "" : wasV2 ? v2 : v2);
+        return (key != null && !isWild
+            ? extractProperty(h.get(key), args, ptr, null, true)
+            : !isWild ? "" : wasV2 ? v2 : v2);
       }
       if (property instanceof Lst<?>) {
         // drill down into vectors for this key
@@ -578,10 +596,8 @@ public class PropertyManager implements JmolPropertyManager {
         for (pt = 0; pt < v.size(); pt++) {
           Object o = v.get(pt);
           if (o instanceof Map<?, ?> || (isList = (o instanceof Lst<?>))
-              || (o instanceof SV)
-              && (((SV) o).getMap() != null || 
-              (isList = (((SV) o).getList() != null)))
-              ) {
+              || (o instanceof SV) && (((SV) o).getMap() != null
+                  || (isList = (((SV) o).getList() != null)))) {
             if (isList || (arg.index == 1)) {
               Object ret = extractProperty(o, args, ptr, null, true);
               if (ret != "")
@@ -631,7 +647,7 @@ public class PropertyManager implements JmolPropertyManager {
 
         String ucKey = key.toUpperCase();
         if (ucKey.startsWith("WHERE"))
-          ucKey = (key = "SELECT * " + key).toUpperCase(); 
+          ucKey = (key = "SELECT * " + key).toUpperCase();
         if (ucKey.startsWith("SELECT ")) {
           if (argsNew == null)
             argsNew = (SV[]) AU.arrayCopyObject(args, args.length);
@@ -651,16 +667,17 @@ public class PropertyManager implements JmolPropertyManager {
             index = 1;
           }
           if (pt < 0) {
-            argsNew[i] = SV.newV(T.select, new Object[] { getKeys(select), null });
+            argsNew[i] = SV.newV(T.select,
+                new Object[] { getKeys(select), null });
             argsNew[i].myName = select;
             argsNew[i].index = index;
           } else {
             // allow for (A*,B) to be same as A*;B
             select += ext;
-            argsNew[i] = SV.newV(
-                T.select,
-                new Object[] { getKeys(select),
-                    vwr.compileExpr(key.substring(pt + 6 + ext.length()).trim()) });
+            Object[] o = new Object[] { getKeys(select),
+                vwr.compileExpr(key.substring(pt + 6 + ext.length()).trim()) };
+            argsNew[i] = SV.newV(T.select, o);
+
             argsNew[i].index = index;
             argsNew[i].myName = select;
           }

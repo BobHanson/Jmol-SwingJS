@@ -719,6 +719,7 @@ public class PdbReader extends AtomSetCollectionReader {
             setFilter(filter + chainlist);
             Logger.info("filter set to \"" + filter + "\"");
             thisBiomolecule = info;
+            haveMappedSerials = applySymmetry;
           }
           continue;
         }
@@ -1363,7 +1364,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (name == null)
       name = pdbID;
     //not cleaer that this shoudl come irset...    
-    haveMappedSerials = false;
+    haveMappedSerials = (thisBiomolecule != null && applySymmetry);
     sbConect = null;
     asc.newAtomSet();
     asc.setCurrentModelInfo("pdbID", pdbID);

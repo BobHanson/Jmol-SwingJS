@@ -1053,7 +1053,7 @@ public class TopoCifParser implements Parser {
   static void setTAtom(Atom a, Atom b) {
     b.setT(a);
     b.formalCharge = a.formalCharge;
-    b.bondRadius = a.bondRadius;
+    b.bondingRadius = a.bondingRadius;
   }
 
   /**

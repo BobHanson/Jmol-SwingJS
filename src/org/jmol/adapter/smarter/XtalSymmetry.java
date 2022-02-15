@@ -59,6 +59,7 @@ public class XtalSymmetry {
   private final static int PARTICLE_NONE = 0;
   private final static int PARTICLE_CHAIN = 1;
   private final static int PARTICLE_SYMOP = 2;
+  private static final float MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
 
   private AtomSetCollectionReader acr;
   private AtomSetCollection asc;
@@ -1137,7 +1138,8 @@ public class XtalSymmetry {
   public void applySymmetryBio(Map<String, Object> thisBiomolecule,
                                boolean applySymmetryToBonds, String filter) {
     Lst<M4> biomts = (Lst<M4>) thisBiomolecule.get("biomts");
-    if (biomts.size() < 2)
+    int len = biomts.size();
+    if (len < 2)
       return;
     acr.lstNCS = null; // disable NCS
     setLatticeCells();
@@ -1158,6 +1160,7 @@ public class XtalSymmetry {
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
     doNormalize = false;
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
+    // Q: Why this? I think each biomt MUST have a chain
     if (biomtchains.get(0).equals(biomtchains.get(1)))
       biomtchains = null;
     symmetry = null;
@@ -1169,7 +1172,6 @@ public class XtalSymmetry {
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
     setAtomSetSpaceGroupName(acr.sgName = name);
-    int len = biomts.size();
     this.applySymmetryToBonds = applySymmetryToBonds;
     bondCount0 = asc.bondCount;
     firstAtom = asc.getLastAtomSetAtomIndex();
@@ -1228,30 +1230,37 @@ public class XtalSymmetry {
     }
     Map<String, BS> assemblyIdAtoms = (Map<String, BS>) thisBiomolecule
         .get("asemblyIdAtoms");
+
     if (filter.indexOf("#<") >= 0) {
+      // ??
       len = Math.min(len,
           PT.parseInt(filter.substring(filter.indexOf("#<") + 2)) - 1);
       filter = PT.rep(filter, "#<", "_<");
     }
+
     int maxChain = 0;
     for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
-      atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
+      atoms[iAtom].bsSymmetry = new BS(); //TODO was set 0, but this is not necessarily true now
       int chainID = atoms[iAtom].chainID;
       if (chainID > maxChain)
         maxChain = chainID;
     }
     BS bsAtoms = asc.bsAtoms;
     int[] atomMap = (addBonds ? new int[asc.ac] : null);
-    for (int i = (biomtchains == null ? 1 : 0); i < len; i++) {
+    // allow for filtering BIOMT number
+    // len >= 2, so I don't know what is going on here -- no chains? 
+    for (int imt = (biomtchains == null ? 1 : 0); imt < len; imt++) {
       if (filter.indexOf("!#") >= 0) {
-        if (filter.indexOf("!#" + (i + 1) + ";") >= 0)
+        if (filter.indexOf("!#" + (imt + 1) + ";") >= 0)
           continue;
       } else if (filter.indexOf("#") >= 0
-          && filter.indexOf("#" + (i + 1) + ";") < 0) {
+          && filter.indexOf("#" + (imt + 1) + ";") < 0) {
         continue;
       }
-      M4 mat = biomts.get(i);
-      String chains = (biomtchains == null ? null : biomtchains.get(i));
+      M4 mat = biomts.get(imt);
+      // if asym_id is given, that is what is being referred to, not author chains
+      // we just set bsAtoms to match
+      String chains = (biomtchains == null ? null : biomtchains.get(imt));
       if (chains != null && assemblyIdAtoms != null) {
         // must use label_asym_id, not auth_asym_id // bug fix 11/18/2015 
         bsAtoms = new BS();
@@ -1262,10 +1271,16 @@ public class XtalSymmetry {
           bsAtoms.and(asc.bsAtoms);
         chains = null;
       }
+
+      int lastID = -1, id;
+      boolean skipping = false;
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
-        if (bsAtoms != null && !bsAtoms.get(iAtom)
-            || chains != null && chains.indexOf(
-                ":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID) + ";") < 0)
+        if (bsAtoms != null) { 
+          skipping = !bsAtoms.get(iAtom);
+        } else if (chains != null && (id = atoms[iAtom].chainID) != lastID) {
+          skipping = (chains.indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
+        }
+        if (skipping)
           continue;
         try {
           int atomSite = atoms[iAtom].atomSite;
@@ -1273,16 +1288,18 @@ public class XtalSymmetry {
           if (addBonds)
             atomMap[atomSite] = asc.ac;
           atom1 = asc.newCloneAtom(atoms[iAtom]);
+          atom1.bondingRadius = imt; // temporary only -- to distinguish transforms
+          asc.atomSymbolicMap.put("" + atom1.atomSerial, atom1);
           if (asc.bsAtoms != null)
             asc.bsAtoms.set(atom1.index);
           atom1.atomSite = atomSite;
           mat.rotTrans(atom1);
-          atom1.bsSymmetry = BSUtil.newAndSetBit(i);
+          atom1.bsSymmetry = BSUtil.newAndSetBit(imt);
         } catch (Exception e) {
           asc.errorMessage = "appendAtomCollection error: " + e;
         }
       }
-      if (i > 0) {
+      if (imt > 0) {
         symmetry.addBioMoleculeOperation(mat, false);
         if (addBonds) {
           // Clone bonds
@@ -1300,54 +1317,81 @@ public class XtalSymmetry {
       if (asc.bsAtoms == null)
         asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
       asc.bsAtoms.clearBits(firstAtom, atomMax);
-    }
+      if (particleMode == PARTICLE_NONE) {
+        // check for BMCHAINS filter 
+        if (fixBMChains != -1) {
+          boolean assignABC = (fixBMChains != 0);
+          Map<String, String> chainMap = (assignABC
+              ? new Hashtable<String, String>()
+              : null);
+          BS bsChains = (assignABC ? new BS() : null);
+          atoms = asc.atoms;
+          int firstNew = 0;
+          if (assignABC) {
+            // tested for 1k28 and 1auy
+            //For PDB and mmCIF, convert chains for symmetry-generated atoms to unique
+            // ids. Three options:
+            // bmChains or bmChains=0: append symmetry operator number to chain ID
+            // bmChains=q: start with 'q'
+            // bmChains= 3 : start with last chain ID + 3
+            firstNew = (fixBMChains < 0 ? Math.max(-fixBMChains, maxChain + 1)
+                : Math.max(maxChain + fixBMChains, 0 + 'A'));
+            bsChains.setBits(0, firstNew - 1);
+            bsChains.setBits(1 + 'Z', 0 + 'a');
+            bsChains.setBits(1 + 'z', 200);
+          }
+          for (int i = atomMax, n = asc.ac; i < n; i++) {
+            int ic = atoms[i].chainID;
+            int isym = atoms[i].bsSymmetry.nextSetBit(0) + 1;
+            String ch = acr.vwr.getChainIDStr(ic) + isym;
+            if (assignABC) {
+              String known = chainMap.get(ch);
+              if (known == null) {
+                int pt = (firstNew < 200 ? bsChains.nextClearBit(firstNew)
+                    : 200);
+                if (pt < 200) {
+                  bsChains.set(pt);
+                  // have A-Z or a-z
+                  known = "" + (char) pt;
+                  chainMap.put(ch, known);
+                  firstNew = pt;
+                } else {
+                  // 1auy will do this
+                  known = ch;
+                }
+              }
+              ch = known;
+            }
+            atoms[i].chainID = acr.vwr.getChainID(ch, true);
+          }
+        }
 
-    if (particleMode == 0 && fixBMChains != -1) {
-      boolean assignABC = (fixBMChains != 0);
-      Map<String, String> chainMap = (assignABC
-          ? new Hashtable<String, String>()
-          : null);
-      BS bsChains = (assignABC ? new BS() : null);
-      atoms = asc.atoms;
-      int firstNew = 0;
-      if (assignABC) {
-        // tested for 1k28 and 1auy
-        //For PDB and mmCIF, convert chains for symmetry-generated atoms to unique
-        // ids. Three options:
-        // bmChains or bmChains=0: append symmetry operator number to chain ID
-        // bmChains=q: start with 'q'
-        // bmChains= 3 : start with last chain ID + 3
-        firstNew = (fixBMChains < 0 ? Math.max(-fixBMChains, maxChain + 1)
-            : Math.max(maxChain + fixBMChains, 0 + 'A'));
-        bsChains.setBits(0, firstNew - 1);
-        bsChains.setBits(1 + 'Z', 0 + 'a');
-        bsChains.setBits(1 + 'z', 200);
-      }
-      for (int i = atomMax, n = asc.ac; i < n; i++) {
-        int ic = atoms[i].chainID;
-        int isym = atoms[i].bsSymmetry.nextSetBit(0) + 1;
-        String ch = acr.vwr.getChainIDStr(ic) + isym;
-        if (assignABC) {
-          String known = chainMap.get(ch);
-          if (known == null) {
-            int pt = (firstNew < 200 ? bsChains.nextClearBit(firstNew) : 200);
-            if (pt < 200) {
-              bsChains.set(pt);
-              // have A-Z or a-z
-              known = "" + (char) pt;
-              chainMap.put(ch, known);
-              firstNew = pt;
-            } else {
-              // 1auy will do this
-              known = ch;
+        // clean interchain CONECT 
+        Lst<int[]> vConnect = (Lst<int[]>) asc.getAtomSetAuxiliaryInfoValue(-1,
+            "PDB_CONECT_bonds");
+        if (!addBonds && vConnect != null) {
+          for (int i = vConnect.size(); --i >= 0;) {
+            int[] bond = vConnect.get(i);
+            Atom a = asc.getAtomFromName("" + bond[0]);
+            Atom b = asc.getAtomFromName("" + bond[1]);
+            // bondingRadius here just being used for BIOMT 
+            if (a != null && b != null && a.bondingRadius != b.bondingRadius
+                && (bsAtoms == null
+                    || bsAtoms.get(a.index) && bsAtoms.get(b.index))
+                && a.distanceSquared(b) > MAX_INTERCHAIN_BOND_2) {
+              vConnect.remove(i);
+              System.out.println("long interchain bond removed for @"
+                  + a.atomSerial + "-@" + b.atomSerial);
             }
           }
-          ch = known;
         }
-        atoms[i].chainID = acr.vwr.getChainID(ch, true);
       }
-    }
+      // reset bondingRadius to NaN
+      for (int i = atomMax, n = asc.ac; i < n; i++) {
+        asc.atoms[i].bondingRadius = Float.NaN;
+      }
 
+    }
     noSymmetryCount = atomMax - firstAtom;
     asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
     asc.setCurrentModelInfo("presymmetryAtomCount",
@@ -1356,6 +1400,7 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("biosymmetry", symmetry);
     finalizeSymmetry(symmetry);
     setSymmetryOps();
+
     reset();
 
     //TODO: need to clone bonds

@@ -32,6 +32,8 @@ import javajs.util.SB;
 import javajs.util.V3;
 
 import javajs.util.BS;
+
+import org.jmol.modelset.Atom;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.C;
@@ -224,9 +226,11 @@ public class LcaoCartoon extends Isosurface {
     // older method
 
     int ac = vwr.ms.ac;
-    for (int i = ac; --i >= 0;)
+    Atom[] at = vwr.ms.at;
+    for (int i = ac; --i >= 0;) {
       if (lcaoID != null || thisSet.get(i))
-        setLcaoOn(i, TF);
+        setLcaoOn(i, TF && at[i] != null);
+    }
   }
 
   private void setLcaoOn(int iAtom, boolean TF) {
@@ -243,6 +247,7 @@ public class LcaoCartoon extends Isosurface {
     }
     // older method does not use * but still deletes multiple lobes
     int ac = vwr.ms.ac;
+    // null test unnecessary here
     for (int i = ac; --i >= 0;)
       if (lcaoID != null || thisSet.get(i))
         deleteLcaoCartoon(i);

@@ -21,14 +21,13 @@ import javajs.util.T3;
  */
 public class CIFWriter implements JmolWriter {
 
-
   private Viewer vwr;
   private OC oc;
 
   private boolean isP1;
   private boolean haveUnitCell;
 
-  private final static P3 fset0 = P3.new3(555,555,1);
+  private final static P3 fset0 = P3.new3(555, 555, 1);
 
   public CIFWriter() {
     // for JavaScript dynamic loading
@@ -37,7 +36,7 @@ public class CIFWriter implements JmolWriter {
   @Override
   public void set(Viewer viewer, OC oc, Object[] data) {
     vwr = viewer;
-    this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
+    this.oc = (oc == null ? vwr.getOutputChannel(null, null) : oc);
     isP1 = (data != null && data.length > 0 && "P1".equals(data[0]));
   }
 
@@ -127,24 +126,31 @@ public class CIFWriter implements JmolWriter {
         }
       }
 
+      
+      // write the atoms 
+      
       Atom[] atoms = vwr.ms.at;
       String elements = "";
 
-       sb.append("\n" 
-          + "\nloop_" 
-          + "\n_atom_site_label" 
-          + "\n_atom_site_type_symbol" 
-          + "\n_atom_site_fract_x"
-          + "\n_atom_site_fract_y" 
-          + "\n_atom_site_fract_z");
+      
+      int sbLength = sb.length();
+      
+      sb.append("\n" + "\nloop_" + "\n_atom_site_label"
+          + "\n_atom_site_type_symbol" + "\n_atom_site_fract_x"
+          + "\n_atom_site_fract_y" + "\n_atom_site_fract_z");
       if (!haveUnitCell)
-        sb.append("\n_atom_site_Cartn_x" 
-            + "\n_atom_site_Cartn_y"
+        sb.append("\n_atom_site_Cartn_x" + "\n_atom_site_Cartn_y"
             + "\n_atom_site_Cartn_z");
       sb.append("\n");
-      P3 p = new P3();
+
+      SB jmol_atom = new SB();
+      jmol_atom.append("\n" + "\nloop_" + "\n_jmol_atom_index" + "\n_jmol_atom_name"
+          + "\n_jmol_atom_site_label\n");
+
       int nAtoms = 0;
-      for (int c = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
+      P3 p = new P3();
+      for (int c = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut
+          .nextSetBit(i + 1)) {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
@@ -158,60 +164,130 @@ public class CIFWriter implements JmolWriter {
         String key = sym + "\n";
         if (elements.indexOf(key) < 0)
           elements += key;
-        
-        sb.append(PT.formatS(sym + ++c, 5, 0, true, false))
-            .append(PT.formatS(sym, 3, 0, true, false))
-            .append(clean(p.x)).append(clean(p.y)).append(clean(p.z));
+        String label = sym + ++c;
+        sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
+            .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
+            .append(clean(p.y)).append(clean(p.z));
         if (!haveUnitCell)
           sb.append(clean(a.x)).append(clean(a.y)).append(clean(a.z));
-        if (!name.equals(sym))
-            sb.append("  #Jmol_atomName ").append(name);
         sb.append("\n");
+
+        jmol_atom.append(PT.formatS("" + a.getIndex(), 3, 0, false, false))
+            .append(" ");
+        writeChecked(jmol_atom, name);
+        jmol_atom.append(" ").append(PT.formatS(label, 5, 0, false, false))
+            .append("\n");
       }
-      
+
       if (nAtoms > 0) {
         // add atom_type aka element symbol
         sb.append("\nloop_\n_atom_type_symbol\n").append(elements).append("\n");
+        sb.appendSB(jmol_atom);
+      } else {
+        sb.setLength(sbLength);
       }
 
       sb.append("\n# ").appendI(nAtoms).append(" atoms\n");
       oc.append(sb.toString());
     } catch (Exception e) {
-      //
+      if (!Viewer.isJS)
+        e.printStackTrace();
     }
     return toString();
   }
 
+  /**
+   * see https://github.com/rcsb/ciftools-java/blob/master/src/main/java/org/rcsb/cif/text/TextCifWriter.java
+   * @param output 
+   * @param val 
+   * @return true if multiline
+   * 
+   */
+  private boolean writeChecked(SB output, String val) {
+    if (val == null || val.isEmpty()) {
+      output.append(". ");
+      return false;
+    }
+
+    boolean escape = val.charAt(0) == '_';
+    String escapeCharStart = "'";
+    String escapeCharEnd = "' ";
+    boolean hasWhitespace = false;
+    boolean hasSingle = false;
+    boolean hasDouble = false;
+    for (int i = 0; i < val.length(); i++) {
+      char c = val.charAt(i);
+
+      switch (c) {
+      case '\t':
+      case ' ':
+        hasWhitespace = true;
+        break;
+      case '\n':
+        writeMultiline(output, val);
+        return true;
+      case '"':
+        if (hasSingle) {
+          writeMultiline(output, val);
+          return true;
+        }
+
+        hasDouble = true;
+        escape = true;
+        escapeCharStart = "'";
+        escapeCharEnd = "' ";
+        break;
+      case '\'':
+        if (hasDouble) {
+          writeMultiline(output, val);
+          return true;
+        }
+        escape = true;
+        hasSingle = true;
+        escapeCharStart = "\"";
+        escapeCharEnd = "\" ";
+        break;
+      }
+    }
+
+    char fst = val.charAt(0);
+    if (!escape && (fst == '#' || fst == '$' || fst == ';' || fst == '['
+        || fst == ']' || hasWhitespace)) {
+      escapeCharStart = "'";
+      escapeCharEnd = "' ";
+      escape = true;
+    }
+
+    if (escape) {
+      output.append(escapeCharStart).append(val).append(escapeCharEnd);
+    } else {
+      output.append(val).append(" ");
+    }
+
+    return false;
+  }
+
+  private void writeMultiline(SB output, String val) {
+    output.append("\n;").append(val).append("\n;\n");
+  }
 
   private String clean(float f) {
     int t;
-    return (!haveUnitCell || (t = Math.abs(twelfthsOf(f))) < 0 
-        ? PT.formatF(f, 18, 12, false, false) 
-            : (f < 0 ? "   -" : "    ") + twelfths[t]);
+    return (!haveUnitCell || (t = Math.abs(twelfthsOf(f))) < 0
+        ? PT.formatF(f, 18, 12, false, false)
+        : (f < 0 ? "   -" : "    ") + twelfths[t]);
   }
 
-  private static final String[] twelfths = new String[] {
-      "0.000000000000",
-      "0.083333333333",
-      "0.166666666667",
-      "0.250000000000",
-      "0.333333333333",
-      "0.416666666667",
-      "0.500000000000",
-      "0.583333333333",
-      "0.666666666667",
-      "0.750000000000",
-      "0.833333333333",
-      "0.916666666667",
-      "1.000000000000",
-  };
+  private static final String[] twelfths = new String[] { "0.000000000000",
+      "0.083333333333", "0.166666666667", "0.250000000000", "0.333333333333",
+      "0.416666666667", "0.500000000000", "0.583333333333", "0.666666666667",
+      "0.750000000000", "0.833333333333", "0.916666666667", "1.000000000000", };
 
   private static int twelfthsOf(float f) {
     f = Math.abs(f * 12);
-    int i = Math.round (f); 
-  return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : Integer.MIN_VALUE);
-}
-
+    int i = Math.round(f);
+    return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : Integer.MIN_VALUE);
+  }
 
   private SB appendKey(SB sb, String key) {
     return sb.append("\n").append(PT.formatS(key, 27, 0, true, false));
@@ -223,4 +299,3 @@ public class CIFWriter implements JmolWriter {
   }
 
 }
-

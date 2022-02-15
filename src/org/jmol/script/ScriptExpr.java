@@ -1323,6 +1323,8 @@ abstract class ScriptExpr extends ScriptParam {
     if (!isCaseSensitive)
       comparisonString = comparisonString.toLowerCase();
     for (int i = ac; --i >= 0;) {
+      if (atoms[i] == null)
+        continue;
       String propertyString = atoms[i]
           .atomPropertyString(vwr, tokWhat);
       if (!isCaseSensitive)

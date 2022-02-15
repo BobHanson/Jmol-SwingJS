@@ -238,7 +238,7 @@ public class SymmetryDesc {
     } else {
       if (haveName && !haveRawName)
         sym.setSpaceGroupName(sgName);
-      data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull);
+      data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull, !isForModel);
       if (data == null || data.equals("?")) {
         data = "?";
         info.put("spaceGroupNote", "could not identify space group from name: " + sgName

@@ -110,6 +110,9 @@ public class InChIJNI implements JmolInChI {
       }
       return (getKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
     } catch (Exception e) {
+      
+      System.out.println(e);
+      
       if (e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
             + "\n See https://www.inchi-trust.org/download/104/inchi-faq.pdf for valid options");

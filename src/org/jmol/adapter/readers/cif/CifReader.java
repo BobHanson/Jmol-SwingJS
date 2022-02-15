@@ -489,7 +489,7 @@ public class CifReader extends AtomSetCollectionReader {
           a.formalCharge = Math.round(charge);
         }
         if (!Float.isNaN(radius)) {
-          a.bondRadius = radius;
+          a.bondingRadius = radius;
         }
       }
     }

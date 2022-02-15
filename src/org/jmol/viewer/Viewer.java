@@ -5129,8 +5129,9 @@ public class Viewer extends JmolViewer
       ms.msInfo = m;
       String s = (String) map.get("status");
       g.setO("_cirStatus", s);
-      g.setCIR((String) map.get("rfc6570Template"));
-      System.out.println("Viewer.checkCIR _.cirInfo.status = " + s);
+      g.setCIR((String) map.get("rfc6570Template"), !isSilent);
+      if (!isSilent)
+        Logger.info("Viewer.checkCIR _.cirInfo.status = " + s);
     } catch (Throwable t) {
       System.out.println(
           "Viewer.checkCIR failed at " + g.resolverResolver + ": " + t);
@@ -10474,12 +10475,19 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public Object findSpaceGroup(BS bsAtoms, boolean asString) {
-    bsAtoms = restrictToModel(bsAtoms, -1);
+  public Object findSpaceGroup(BS bsAtoms, String opXYZ, boolean asString) {
     Object ret = null;
-    if (!bsAtoms.isEmpty()) {
-      SymmetryInterface uc = getCurrentUnitCell();
-      ret = (uc == null ? null : uc.findSpaceGroup(this, bsAtoms, asString));
+    if (opXYZ == null) {
+      if (bsAtoms == null)
+          bsAtoms = SV.getBitSet(evaluateExpressionAsVariable("{within(unitcell)}"), true);
+      bsAtoms = restrictToModel(bsAtoms, -1);
+      if (!bsAtoms.isEmpty()) {
+        SymmetryInterface uc = getCurrentUnitCell();
+        ret = (uc == null ? null
+            : uc.findSpaceGroup(this, bsAtoms, opXYZ, asString));
+      }
+    } else {
+      ret = getSymTemp().findSpaceGroup(this, null, opXYZ, asString);
     }
     return (ret == null && asString ? "" : ret);
   }

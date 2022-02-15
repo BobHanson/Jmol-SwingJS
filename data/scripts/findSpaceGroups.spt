@@ -1,0 +1,55 @@
+// script data/scripts/findSpaceGroups.spt
+// list of minerals is from https://en.wikipedia.org/wiki/List_of_minerals
+
+set logfile "sg.log"
+show logfile
+log "$CLEAR$"
+
+print "$SCRIPT_PATH$"
+isLocal = true
+
+
+function findSGs() {
+ list = load("$SCRIPT_PATH$minerals.txt").lines
+ out = "";
+ print "" + list.length + " minerals";
+ var i = 0;
+ var mlast = ""
+ for (var m in list) {
+  if (m == mlast) continue;
+  mlast = m;
+  i++;
+  try {
+    localName = "$SCRIPT_PATH$../minerals/"+m+".cif"
+    src = (isLocal ? localName : "=ams/" + m);
+    load @src 1 packed
+    if (!isLocal)
+	    write @localName
+    log "" + i + "\t" + m 
+	+ "\t" + _M.spaceGroup + "\t#" + show("spacegroup/#").trim().split("#")[0] 
+	+ "\t#" + script("calculate spacegroup {within(unitcell)}").trim().split(" ")[1]+":" 
+  } catch (e) {
+    log "" + i + "\t" + m + "\t?"  
+  }
+  refresh
+ }
+ print "" + i + " files processed"
+}
+
+findSGs
+
+function checkJmol(mineral) {
+  load @{"=ams/" + mineral} 1 packed
+  modelkit assign spacegroup
+  write t.cif
+  load append t.cif packed
+  var n1 = {1.1};
+  var n2 = {2.1};
+  var not2in1 = {2.1 and not within(0.1, true, 1.1)}
+  var not1in2 = {1.1 and not within(0.1, true, 2.1)}
+  print "checkJmol: sameCount=" + (n1.count == n2.count) + " noExtra1=" + (not1in2.count == 0) + " noExtra2=" + (not2in1.count == 0)
+}
+
+
+
+

@@ -677,7 +677,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
         e.checkLast(e.iToken);
         if (!chk) 
-          e.showString("" + vwr.findSpaceGroup(bs1, true));
+          e.showString("" + vwr.findSpaceGroup(bs1, null, true));
         return;
       case T.chirality:
         e.iToken = 1;
@@ -5857,8 +5857,8 @@ public class CmdExt extends ScriptExt {
     // single model only
     if (vwr.am.cmi < 0)
       invArg();
-    BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
-    BS bs;
+    BS bsAtoms = vwr.getThisModelAtoms();
+    BS bs = null;
     if (isBond) {
       if(tokAt(i) == T.integer) {
         index = e.intParameter(i);
@@ -5897,7 +5897,7 @@ public class CmdExt extends ScriptExt {
     } else if (mode == T.atoms && tokAt(i) == T.string) {
       // new Jmol 14.29.28
       // assign ATOM "C" {0 0 0}
-    } else if (!isSpacegroup) { 
+    } else if (!isSpacegroup || e.isAtomExpression(i)) { 
       // assign ATOM @3 "C" {0 0 0}
       // assign CONNECT @3 @4
       bs = expFor(i, bsAtoms);
@@ -5935,7 +5935,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
     case T.spacegroup:
-      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup());
+      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs));
       break;
     }
   }

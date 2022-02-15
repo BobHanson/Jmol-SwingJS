@@ -1612,8 +1612,11 @@ public class ScriptMathProcessor {
         bs = BSUtil.copy(bs);
         bs.and(bsRestrict);
       }
-      return (P3) eval.getBitsetProperty(bs, null, T.xyz, null,
-          null, x.value, null, false, Integer.MAX_VALUE, false);
+      Object o = (bs.cardinality() == 0 ? null : eval.getBitsetProperty(bs, null, T.xyz, null,
+          null, x.value, null, false, Integer.MAX_VALUE, false));
+//      if (o != null && !(o instanceof P3))
+//        System.out.println("ScriptMathProc OHOH");
+      return (P3) o;
     case T.string:
       pt = Escape.uP(SV.sValue(x));
       if (pt instanceof P3)

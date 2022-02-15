@@ -72,7 +72,7 @@ public interface SymmetryInterface {
   public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, float[] cellParams);
 
   Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
-                              boolean isFull);
+                              boolean isFull, boolean addNonstandard);
 
   public String getSpaceGroupName();
 
@@ -239,7 +239,7 @@ public interface SymmetryInterface {
 
   SymmetryInterface getUnitCellMultiplied();
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, boolean asString);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String op, boolean asString);
 
   /**
    * 

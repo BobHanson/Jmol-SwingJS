@@ -258,7 +258,7 @@ class SpaceGroup {
   }
     
   static Object getInfo(SpaceGroup sg, String spaceGroup,
-                        SymmetryInterface cellInfo, boolean asMap) {
+                        SymmetryInterface cellInfo, boolean asMap, boolean andNonstandard) {
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
@@ -297,7 +297,7 @@ class SpaceGroup {
       while (sg != null) {
         // I don't know why there would be multiples here
         sb.append(sg.dumpInfo());
-        if (sg.index >= SG.length)
+        if (sg.index >= SG.length || !andNonstandard)
           break;
         sg = SpaceGroup.determineSpaceGroupNS(spaceGroup, sg);
       }
@@ -986,10 +986,15 @@ class SpaceGroup {
 
   @Override
   public String toString() {
-    return "" + intlTableNumberFull + " HM:" + hmSymbolFull + " Hall:" + hallSymbol;
+    return asString();
   }
   
+  public String asString() {
+    return "" + intlTableNumberFull + " HM:" + hmSymbolFull + " Hall:" + hallSymbol;
+  }
+
   private static SpaceGroup[] SG;
+  
   private static Map<Integer, Lst<SpaceGroup>> htByOpCount = new Hashtable<Integer, Lst<SpaceGroup>>();
   
   private synchronized static SpaceGroup[] getSpaceGroups() {
@@ -1758,7 +1763,7 @@ class SpaceGroup {
       return ret;
     // find the space group using canonical Seitz
     if (info == null)
-      info = getInfo(this,hmSymbol, uc, true);
+      info = getInfo(this,hmSymbol, uc, true, false);
     if (info instanceof String)
       return null;
     @SuppressWarnings("unchecked")
@@ -1778,6 +1783,11 @@ class SpaceGroup {
       if (ita.equals(SG[i].intlTableNumber))
         return SG[i];
     return null;
+  }
+ 
+  public static String getID(int i) {
+    getSpaceGroups();
+    return SG[i].asString();
   }
 
 //  private int[] latticeOps;

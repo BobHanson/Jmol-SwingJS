@@ -1026,6 +1026,15 @@ public class ModelSet extends BondCollection {
     haveUnitCells = true;
     sg.setFinalOperations(null, null,  -1,  -1,  false,  null);
     am[mi].bsAsymmetricUnit = basis;
+    // set symmetry at least for symop=1555
+    bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
+    BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
+    bsSymmetry.or(bs);
+    bsSymmetry.andNot(basis);
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      at[i].setSymop(basis.get(i) ? 1 : 0, true);
+    }
+    // TODO: actually set atomSymmetry properly
     setInfo(mi, "unitCellParams", sg.getUnitCellParams());
     setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
     setInfo(mi, "spaceGroupInfo", null);
@@ -2398,9 +2407,12 @@ public class ModelSet extends BondCollection {
     AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
         false);
     for (int iModel = mc; --iModel >= 0;) {
-      if (!bsCheck.get(iModel) || am[iModel].bsAtoms.isEmpty())
+      if (!bsCheck.get(iModel))
         continue;
-      setIteratorForAtom(iter, -1, am[iModel].firstAtomIndex, -1, null);
+      int i = am[iModel].bsAtoms.nextSetBit(0);
+      if (i < 0)
+        continue;
+      setIteratorForAtom(iter, -1, i, -1, null);
       iter.setCenter(coord, distance);
       iter.addAtoms(bsResult);
     }
