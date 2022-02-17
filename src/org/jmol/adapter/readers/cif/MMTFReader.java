@@ -163,8 +163,7 @@ public class MMTFReader extends MMCifReader {
   public void applySymmetryAndSetTrajectory() throws Exception {
     ac0 = ac;
     super.applySymmetryAndSetTrajectory();
-    if (haveStructure)
-      addStructureSymmetry();
+    addStructureSymmetry();
   }
   
   //////////////////////////////// MMTF-Specific /////////////////////////  
@@ -179,7 +178,6 @@ public class MMTFReader extends MMCifReader {
   private int groupCount;
   private int ac0;
   private BS[] bsStructures;
-  private int lastGroup;
 
 
   // TODO  - also consider mapping group indices
@@ -318,7 +316,7 @@ public class MMTFReader extends MMCifReader {
         }
         atomMap[iatom] = a;
         atomGroup[ac] = j;
-        groupMap[j] = lastGroup = thisGroup;
+        groupMap[j] = thisGroup;
         ac++;
       }
       if (!isCourseGrained) {
@@ -461,16 +459,20 @@ public class MMTFReader extends MMCifReader {
    * We must add groups to the proper bsStructure element
    *
    */
-  private void addStructureSymmetry() {
-    if (asc.ac == 0)
+  public void addStructureSymmetry() {
+    if (asc.ac == 0 || !haveStructure || thisBiomolecule == null || ac0 == asc.ac)
       return;
     Atom[] atoms = asc.atoms;
     BS bsAtoms = asc.bsAtoms;
 
     // must point to groups here.
     
-    int ptGroup = lastGroup;
+    
+    int ptGroup = -1;
     int mygroup = -1;
+    for (int i = bsStructures.length; --i >= 0;)
+      if (bsStructures[i] != null)
+        bsStructures[i].clearAll();
     for (int i = ac0, n = asc.ac; i < n; i++) {
       if (bsAtoms == null || bsAtoms.get(i)) {
         Atom a = atoms[i];
@@ -478,10 +480,10 @@ public class MMTFReader extends MMCifReader {
         if (igroup != mygroup) {
           mygroup = igroup;
           ptGroup++;
-        }
-        int dssp = groupDSSP[igroup];
-        if (dssp > 0) {
-          bsStructures[dssp - 1].set(ptGroup);
+          int dssp = groupDSSP[igroup];
+          if (dssp > 0) {
+            bsStructures[dssp - 1].set(ptGroup);
+          }
         }
       }
     }

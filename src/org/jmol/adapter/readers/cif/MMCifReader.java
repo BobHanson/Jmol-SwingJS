@@ -261,6 +261,7 @@ public class MMCifReader extends CifReader {
         asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
             applySymmetryToBonds, filter);
         asc.xtalSymmetry = null;
+        
       }
       doCheckUnitCell &= iHaveUnitCell && doApplySymmetry;
       if (doCheckUnitCell) {
@@ -781,10 +782,10 @@ public class MMCifReader extends CifReader {
   ////////////////////////////////////////////////////////////////
 
   private void addStructure(Structure structure) {    
-    structure.startChainID = vwr.getChainID(structure.startChainStr = getField(BEG_ASYM_ID), true);
+    structure.startChainID = vwr.getChainID(getField(BEG_ASYM_ID), true);
     structure.startSequenceNumber = parseIntStr(getField(BEG_SEQ_ID));
     structure.startInsertionCode = getField(BEG_INS_CODE).charAt(0);
-    structure.endChainID = vwr.getChainID(structure.endChainStr = getField(END_ASYM_ID), true);
+    structure.endChainID = vwr.getChainID(getField(END_ASYM_ID), true);
     structure.endSequenceNumber = parseIntStr(getField(END_SEQ_ID));
     structure.endInsertionCode = getField(END_INS_CODE).charAt(0);
     asc.addStructure(structure);

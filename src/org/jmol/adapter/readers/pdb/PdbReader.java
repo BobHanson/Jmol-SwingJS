@@ -1323,7 +1323,7 @@ public class PdbReader extends AtomSetCollectionReader {
     Structure structure = new Structure(-1, structureType, substructureType,
         structureID, serialID, strandCount, null);
     structure.set(startChainID, startSequenceNumber,
-        startInsertionCode, endChainID, endSequenceNumber, endInsertionCode, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        startInsertionCode, endChainID, endSequenceNumber, endInsertionCode, 0, 0);
     asc.addStructure(structure);
   }
 

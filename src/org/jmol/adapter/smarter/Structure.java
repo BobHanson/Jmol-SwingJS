@@ -27,7 +27,7 @@ package org.jmol.adapter.smarter;
 import org.jmol.c.STR;
 import javajs.util.BS;
 
-public class Structure {
+public class Structure implements Cloneable {
   public STR structureType;
   public STR substructureType;
   public String structureID;
@@ -36,12 +36,10 @@ public class Structure {
 
   public int startSequenceNumber;
   public int startChainID;
-  public String startChainStr;  
   public char startInsertionCode = '\0';
   
   public int endSequenceNumber;
   public int endChainID;
-  public String endChainStr;
   public char endInsertionCode = '\0';
   
   public int[] atomStartEnd = new int[2];
@@ -91,6 +89,16 @@ public class Structure {
     this.endInsertionCode = endInsertionCode;
     atomStartEnd[0] = istart;
     atomStartEnd[1] = iend;
+  }
+  
+  @Override
+  public Structure clone() {
+    Structure s = null;
+    try {
+      s = (Structure) super.clone();
+    } catch (CloneNotSupportedException e) {
+    }
+    return s;
   }
   
 }

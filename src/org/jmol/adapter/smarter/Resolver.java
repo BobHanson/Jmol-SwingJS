@@ -58,7 +58,7 @@ public class Resolver {
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;PWmat;",
-    "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
+    "xml.",  ";XmlChemDraw;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
 
@@ -723,6 +723,9 @@ public class Resolver {
     }
     if (header.indexOf("C3XML") >= 0) {
       return "XmlChem3d";
+    }
+    if (header.indexOf("CDXML") >= 0) {
+      return "XmlChemDraw";
     }
     if (header.indexOf("arguslab") >= 0) {
       return "XmlArgus";

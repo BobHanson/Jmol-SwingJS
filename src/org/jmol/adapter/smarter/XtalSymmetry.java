@@ -1275,10 +1275,11 @@ public class XtalSymmetry {
       int lastID = -1, id;
       boolean skipping = false;
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
-        if (bsAtoms != null) { 
+        if (bsAtoms != null) {
           skipping = !bsAtoms.get(iAtom);
         } else if (chains != null && (id = atoms[iAtom].chainID) != lastID) {
-          skipping = (chains.indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
+          skipping = (chains
+              .indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
         }
         if (skipping)
           continue;
@@ -1321,9 +1322,6 @@ public class XtalSymmetry {
         // check for BMCHAINS filter 
         if (fixBMChains != -1) {
           boolean assignABC = (fixBMChains != 0);
-          Map<String, String> chainMap = (assignABC
-              ? new Hashtable<String, String>()
-              : null);
           BS bsChains = (assignABC ? new BS() : null);
           atoms = asc.atoms;
           int firstNew = 0;
@@ -1340,29 +1338,72 @@ public class XtalSymmetry {
             bsChains.setBits(1 + 'Z', 0 + 'a');
             bsChains.setBits(1 + 'z', 200);
           }
+          BS[] bsAll = (asc.structureCount == 1 ? asc.structures[0].bsAll : null);
+          Map<String, Integer> chainMap = new Hashtable<String, Integer>();
+          Map<Integer, Integer> knownMap = new Hashtable<Integer, Integer>();
+          Map<Integer, int[]> knownAtomMap = (bsAll == null ? null : new Hashtable<Integer, int[]>());
+          int[] lastKnownAtom = null;
           for (int i = atomMax, n = asc.ac; i < n; i++) {
             int ic = atoms[i].chainID;
-            int isym = atoms[i].bsSymmetry.nextSetBit(0) + 1;
-            String ch = acr.vwr.getChainIDStr(ic) + isym;
-            if (assignABC) {
-              String known = chainMap.get(ch);
-              if (known == null) {
+            int isym = atoms[i].bsSymmetry.nextSetBit(0);
+            String ch0 = acr.vwr.getChainIDStr(ic);
+            String ch = (isym == 0 ? ch0 : ch0 + isym);
+            Integer known = chainMap.get(ch);
+            if (known == null) {
+              if (assignABC && isym != 0) {
                 int pt = (firstNew < 200 ? bsChains.nextClearBit(firstNew)
                     : 200);
                 if (pt < 200) {
                   bsChains.set(pt);
                   // have A-Z or a-z
-                  known = "" + (char) pt;
-                  chainMap.put(ch, known);
+                  known = Integer
+                      .valueOf(acr.vwr.getChainID("" + (char) pt, true));
                   firstNew = pt;
                 } else {
                   // 1auy will do this
-                  known = ch;
                 }
               }
-              ch = known;
+              if (known == null)
+                known = Integer.valueOf(acr.vwr.getChainID(ch, true));
+              if (ch != ch0) {
+                knownMap.put(known, Integer.valueOf(ic));
+                if (bsAll != null) {
+                  if (lastKnownAtom != null)
+                    lastKnownAtom[1] = i;
+                  knownAtomMap.put(known, lastKnownAtom = new int[] {i, n});
+                }
+              }
+              chainMap.put(ch, known);
             }
-            atoms[i].chainID = acr.vwr.getChainID(ch, true);
+            atoms[i].chainID = known.intValue();
+          }
+          if (asc.structureCount > 0) {
+            // update structures
+            Structure[] strucs = asc.structures;
+            for (Entry<Integer, Integer> e : knownMap.entrySet()) {
+              Integer known = e.getKey();
+              int ch1 = known.intValue();
+              int ch0 = e.getValue().intValue();
+              for (int i = 0, n = asc.structureCount; i < n; i++) {
+                Structure s = strucs[i];
+                if (s.bsAll != null) {
+                  // MMTFReader processes bsAll[] in addStructureSymmetry()
+                } else if (s.startChainID == s.endChainID) {
+                  if (s.startChainID == ch0) {
+                    Structure s1 = s.clone();
+                    s1.startChainID = s1.endChainID = ch1;
+                    asc.addStructure(s1);
+                  }
+                } else {
+                  System.err.println(
+                      "XtalSymmetry not processing biomt chain structure "
+                          + acr.vwr.getChainIDStr(ch0) + " to "
+                          + acr.vwr.getChainIDStr(ch1));
+                  // TODO now what??
+                }
+              }
+
+            }
           }
         }
 
@@ -1379,7 +1420,7 @@ public class XtalSymmetry {
                 && (bsAtoms == null
                     || bsAtoms.get(a.index) && bsAtoms.get(b.index))
                 && a.distanceSquared(b) > MAX_INTERCHAIN_BOND_2) {
-              vConnect.remove(i);
+              vConnect.removeItemAt(i);
               System.out.println("long interchain bond removed for @"
                   + a.atomSerial + "-@" + b.atomSerial);
             }

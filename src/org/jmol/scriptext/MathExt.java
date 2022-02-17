@@ -1465,7 +1465,9 @@ public class MathExt {
     // smiles.inchi(options) // including "key"
     // molFIleData.inchi(options) // including "key"
     SV x1 = mp.getX();
-    String flags = (args.length > 0 ? SV.sValue(args[0]) : "");
+    String flags = (args.length > 0 ? SV.sValue(args[0]) : "fixedh?");
+    if (flags.toLowerCase().equals("standard"))
+      flags = "";
     BS atoms = SV.getBitSet(x1, true);
     String molData = null;
     if (atoms == null) {

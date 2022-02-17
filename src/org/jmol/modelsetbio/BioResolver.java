@@ -847,7 +847,7 @@ public final class BioResolver implements Comparator<String[]> {
       for (int i = m0, t0; i <= m1; i++)
         if ((m = models[i]) instanceof BioModel)
           for (int j = 0; j < 5; j++)
-            if ((bs = bsAll[t0 = mytypes[j]]) != null)
+            if ((bs = bsAll[t0 = mytypes[j]]) != null && !bs.isEmpty())
               ((BioModel) m).addStructureByBS(0, t0, types[j], bs);
       return;
     }

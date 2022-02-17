@@ -1054,7 +1054,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       filter0 = filter = PT.rep(filter, "NAME=", "");
     }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
-    if (filter.startsWith("_") || filter.indexOf(";_") >= 0)
+    if (filter.startsWith("_") || filter.startsWith("!_") || filter.indexOf(";_") >= 0)
       filterElement = checkFilterKey("_");
 
     filterGroup3 = checkFilterKey("[");

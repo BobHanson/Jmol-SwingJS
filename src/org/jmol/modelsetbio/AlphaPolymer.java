@@ -33,6 +33,9 @@ import javajs.util.V3;
 
 public class AlphaPolymer extends BioPolymer {
 
+  /**
+   * Specifically for mmTF bitset setting of structures
+   */
   public int pt0;
 
   AlphaPolymer(Monomer[] monomers, int pt0) {

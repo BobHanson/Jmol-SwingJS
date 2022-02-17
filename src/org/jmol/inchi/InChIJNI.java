@@ -43,6 +43,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.P3;
+import javajs.util.PT;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
 import net.sf.jniinchi.INCHI_PARITY;
 import net.sf.jniinchi.INCHI_STEREOTYPE;
@@ -73,6 +74,7 @@ public class InChIJNI implements JmolInChI {
       String lc = options.toLowerCase();
       boolean getSmiles = (lc.indexOf("smiles") == 0);
       boolean getStructure = (lc.indexOf("structure") >= 0);
+      String smilesOptions = (getSmiles ? options : null);
       if (lc.startsWith("structure/")) {
         inchi = options.substring(10);
         options = lc = "";
@@ -84,35 +86,44 @@ public class InChIJNI implements JmolInChI {
           getKey = true;
         }
       } else {
+        options = lc;
         getKey = (options.indexOf("key") >= 0);
         if (getKey) {
           options = options.replace("inchikey", "");
           options = options.replace("key", "");
         }
-        JniInchiInput in = new JniInchiInput(getSmiles ? "" : options);
-        JniInchiStructure struc;
-        if (atoms == null) {
-          in.setStructure(struc = newJniInchiStructure(vwr, molData));
+
+        if (options.indexOf("fixedh?") >= 0) {
+          String fxd = getInchi(vwr, atoms, molData, options.replace('?', ' '));
+          options = PT.rep(options, "fixedh?", "");
+          String std = getInchi(vwr, atoms, molData, options);
+          inchi = (fxd != null && fxd.length() <= std.length() ? std : fxd);
         } else {
-          in.setStructure(struc = newJniInchiStructure(vwr, atoms));
+          JniInchiInput in = new JniInchiInput(getSmiles ? "" : options);
+          JniInchiStructure struc;
+          if (atoms == null) {
+            in.setStructure(struc = newJniInchiStructure(vwr, molData));
+          } else {
+            in.setStructure(struc = newJniInchiStructure(vwr, atoms));
+          }
+          if (getStructure) {
+            return toString(struc);
+          }
+          inchi = JniInchiWrapper.getInchi(in).getInchi();
         }
-        if (getStructure) {
-          return toString(struc);
-        }
-        inchi = JniInchiWrapper.getInchi(in).getInchi();
       }
       if (getSmiles || getStructure) {
         JniInchiInputInchi in = new JniInchiInputInchi(inchi);
         JniInchiOutputStructure struc = JniInchiWrapper
             .getStructureFromInchi(in);
-        return (getSmiles ? getSmiles(vwr, struc, options)
+        return (getSmiles ? getSmiles(vwr, struc, smilesOptions)
             : getStructure(struc));
       }
       return (getKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
     } catch (Exception e) {
-      
+
       System.out.println(e);
-      
+
       if (e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
             + "\n See https://www.inchi-trust.org/download/104/inchi-faq.pdf for valid options");
@@ -246,7 +257,7 @@ public class InChIJNI implements JmolInChI {
   private Map<Integer, Boolean> mapPlanar;
 
   private String getSmiles(Viewer vwr, JniInchiOutputStructure struc,
-                           String options) {
+                           String smilesOptions) {
     int nAtoms = struc.getNumAtoms();
     int nBonds = struc.getNumBonds();
     int nh = 0;
@@ -340,7 +351,7 @@ public class InChIJNI implements JmolInChI {
     }
     try {
       SmilesMatcherInterface m = vwr.getSmilesMatcher();
-      return m.getSmiles(atoms, na, BSUtil.newBitSet2(0, na), options,
+      return m.getSmiles(atoms, na, BSUtil.newBitSet2(0, na), smilesOptions,
           JC.SMILES_TYPE_SMILES);
     } catch (Exception e) {
       e.printStackTrace();
