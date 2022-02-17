@@ -35,8 +35,11 @@ import javajs.util.PT;
 public class XmlChemDrawReader extends XmlReader {
 
   boolean optimize2D;
+  private float minX = Float.MAX_VALUE;
+  private float minY = Float.MAX_VALUE;
+  private float maxY = -Float.MAX_VALUE;
+  private float maxX = -Float.MAX_VALUE;
 
-  
   public XmlChemDrawReader() {
   }
 
@@ -83,9 +86,18 @@ public class XmlChemDrawReader extends XmlReader {
         String xy = atts.get("p");
         tokens = PT.getTokens(xy);
         x = parseFloatStr(tokens[0]);
-        y = parseFloatStr(tokens[1]);
+        y = -parseFloatStr(tokens[1]);
+        if (x < minX)
+          minX = x;
+        if (x > maxX)
+          maxX = x;
+        if (y < minY)
+          minY = y;
+        if (y > maxY)
+          maxY = y;
       }
-      atom.set(x, -y, 0);
+      
+      atom.set(x, y, 0);
       asc.addAtomWithMappedName(atom);
       return;
     }
@@ -126,6 +138,22 @@ public class XmlChemDrawReader extends XmlReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    center();
     asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+  }
+
+
+  private void center() {
+    if (minX > maxX)
+      return;
+    float cx = (maxX + minX)/2;
+    float cy = (maxY + minY)/2;
+    for (int i = asc.ac; --i >= 0;) {
+      Atom a = asc.atoms[i];
+      a.x -= cx;
+      a.y -= cy;
+    }
+      
+    
   }
 }
