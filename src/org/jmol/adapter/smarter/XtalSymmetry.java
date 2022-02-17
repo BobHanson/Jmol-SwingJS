@@ -1161,8 +1161,8 @@ public class XtalSymmetry {
     doNormalize = false;
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
     // Q: Why this? I think each biomt MUST have a chain
-    if (biomtchains.get(0).equals(biomtchains.get(1)))
-      biomtchains = null;
+//    if (biomtchains.get(0).equals(biomtchains.get(1)))
+//      biomtchains = null;
     symmetry = null;
     // it's not clear to me why you would do this:
     //if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
@@ -1380,11 +1380,12 @@ public class XtalSymmetry {
           if (asc.structureCount > 0) {
             // update structures
             Structure[] strucs = asc.structures;
+            int nStruc = asc.structureCount;   
             for (Entry<Integer, Integer> e : knownMap.entrySet()) {
               Integer known = e.getKey();
               int ch1 = known.intValue();
               int ch0 = e.getValue().intValue();
-              for (int i = 0, n = asc.structureCount; i < n; i++) {
+              for (int i = 0; i < nStruc; i++) {
                 Structure s = strucs[i];
                 if (s.bsAll != null) {
                   // MMTFReader processes bsAll[] in addStructureSymmetry()
