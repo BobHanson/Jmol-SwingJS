@@ -147,10 +147,11 @@ public class XmlReader extends AtomSetCollectionReader {
     return selectReaderAndGo(saxReader);
   }
 
+  private XmlReader thisReader = null;
+
   private String selectReaderAndGo(Object saxReader) {
     asc = new AtomSetCollection(readerName, this, null, null);
     String className = null;
-    XmlReader thisReader = null;
     int pt = readerName.indexOf("(");
     String name = (pt < 0 ? readerName : readerName.substring(0, pt));
     className = Resolver.getReaderClassBase(name);
@@ -482,6 +483,13 @@ public class XmlReader extends AtomSetCollectionReader {
 
   public void endDocument() {
     // CML reader uses this
+  }
+
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    if (thisReader != null)
+      thisReader.finalizeSubclassReader();
+    thisReader = null;
   }
 
 }

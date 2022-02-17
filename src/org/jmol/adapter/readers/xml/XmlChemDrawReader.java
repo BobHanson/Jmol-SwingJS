@@ -35,7 +35,6 @@ import javajs.util.PT;
 public class XmlChemDrawReader extends XmlReader {
 
   boolean optimize2D;
-  boolean is2D = true;
 
   
   public XmlChemDrawReader() {
@@ -47,6 +46,7 @@ public class XmlChemDrawReader extends XmlReader {
                             Object saxReader) throws Exception {
     optimize2D = checkFilterKey("2D");
     processXml2(parent, saxReader);
+    this.filter = parent.filter;
     set2D();
   }
 
@@ -54,7 +54,7 @@ public class XmlChemDrawReader extends XmlReader {
   public void processStartElement(String localName, String nodeName) {
     String[] tokens;
     if ("fragment".equals(localName)) {
-      asc.newAtomSet();
+//nah      asc.newAtomSet();
       return;
     }
 
@@ -85,7 +85,7 @@ public class XmlChemDrawReader extends XmlReader {
         x = parseFloatStr(tokens[0]);
         y = parseFloatStr(tokens[1]);
       }
-      atom.set(x, y, 0);
+      atom.set(x, -y, 0);
       asc.addAtomWithMappedName(atom);
       return;
     }
@@ -99,14 +99,14 @@ public class XmlChemDrawReader extends XmlReader {
       if (buf != null) {
         if (buf.equals("WedgeEnd")) {
           invertEnds = true;
-          order = JmolAdapter.ORDER_STEREO_FAR;
-        } else if (buf.equals("WedgeBegin")) {
-          order = JmolAdapter.ORDER_STEREO_FAR;
-        } else if (buf.equals("Hash") || buf.equals("WedgedHashBegin")) {
           order = JmolAdapter.ORDER_STEREO_NEAR;
+        } else if (buf.equals("WedgeBegin")) {
+          order = JmolAdapter.ORDER_STEREO_NEAR;
+        } else if (buf.equals("Hash") || buf.equals("WedgedHashBegin")) {
+          order = JmolAdapter.ORDER_STEREO_FAR;
         } else if (buf.equals("WedgedHashEnd")) {
           invertEnds = true;
-          order = JmolAdapter.ORDER_STEREO_NEAR;
+          order = JmolAdapter.ORDER_STEREO_FAR;
         }
       }
       if (invertEnds) {
@@ -124,4 +124,8 @@ public class XmlChemDrawReader extends XmlReader {
     setKeepChars(false);
   }
 
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+  }
 }
