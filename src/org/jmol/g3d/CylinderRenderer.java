@@ -56,7 +56,7 @@ class CylinderRenderer {
   private short colixA, colixB;
   private int[] shadesA;
   private int[] shadesB;
-  private int xA, yA, zA;
+  private int xA, yA, zA, xAend, yAend, zAend;
   private int dxB, dyB, dzB;
   private float xAf, yAf, zAf;
   private float dxBf, dyBf, dzBf;
@@ -637,7 +637,7 @@ class CylinderRenderer {
   private void renderFlatEndcap(boolean isCylinder, boolean isPrecise, int[][] xyzf) {
     int xT, yT, zT;
     if (isPrecise) {
-      if (dzBf == 0 || !g3d.setC(colixEndcap))
+      if (dzBf == 0 || colixEndcap == 0 || !g3d.setC(colixEndcap))
         return;
       float xTf = xAf;
       float yTf = yAf;
@@ -651,11 +651,11 @@ class CylinderRenderer {
       yT = (int) yTf;
       zT = (int) zTf;
     } else {
-      if (dzB == 0 || !g3d.setC(colixEndcap))
+      if (dzB == 0 || colixEndcap == 0 || !g3d.setC(colixEndcap))
         return;
-      xT = xA;
-      yT = yA;
-      zT = zA;
+      xT = xAend;
+      yT = yAend;
+      zT = zAend;
       if (isCylinder && dzB < 0) {
         xT += dxB;
         yT += dyB;
@@ -738,24 +738,37 @@ class CylinderRenderer {
     float dzf = (isFloat ? dzBf : (float) dzB);
     if (endcaps == GData.ENDCAPS_SPHERICAL || dzf == 0)
       return;
-    xEndcap = xA;
-    yEndcap = yA;
-    zEndcap = zA;
+    xEndcap = xAend = xA;
+    yEndcap = yAend = yA;
+    zEndcap = zAend = zA;
     int[] shadesEndcap;
     float dxf = (isFloat ? dxBf : (float) dxB);
     float dyf = (isFloat ? dyBf : (float) dyB);
     if (dzf >= 0 || !tCylinder) {
       endcapShadeIndex = shader.getShadeIndex(-dxf, -dyf, dzf);
-      colixEndcap = colixA;
-      shadesEndcap = shadesA;
+      if (colixA == 0) {
+        xAend += dxB/2;
+        yAend += dyB/2;
+        zAend += dzB/2;
+        colixEndcap = colixB;
+      } else {
+        colixEndcap = colixA;
+      }
     } else {
       endcapShadeIndex = shader.getShadeIndex(dxf, dyf, -dzf);
-      colixEndcap = colixB;
-      shadesEndcap = shadesB;
-      xEndcap += dxB;
-      yEndcap += dyB;
-      zEndcap += dzB;
+      if (colixB == 0) {
+        colixEndcap = colixA;
+        xAend -= dxB/2;
+        yAend -= dyB/2;
+        zAend -= dzB/2;
+      } else {
+        colixEndcap = colixB;
+        xEndcap += dxB;
+        yEndcap += dyB;
+        zEndcap += dzB;
+      }
     }
+    shadesEndcap = (colixEndcap == colixA ? shadesA : shadesB);
     // limit specular glare on endcap
     if (endcapShadeIndex > Shader.SHADE_INDEX_NOISY_LIMIT)
       endcapShadeIndex = Shader.SHADE_INDEX_NOISY_LIMIT;

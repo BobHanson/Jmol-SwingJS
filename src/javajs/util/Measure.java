@@ -251,19 +251,22 @@ final public class Measure {
   }
 
   /**
-   * Project a point onto a plane, also returning the normal vector.
+   * Project a point onto a plane, also returning the normal vector and the directed distance to the plane.
    * 
    * @param pt
    * @param plane
    * @param retPtProj  returned pt (can be pt)
    * @param retNorm returned normal vector
+   * @return directed distance to plane
    */
-  public static void getPlaneProjection(T3 pt, P4 plane, T3 retPtProj, V3 retNorm) {
+  public static float getPlaneProjection(T3 pt, P4 plane, T3 retPtProj, V3 retNorm) {
     float dist = distanceToPlane(plane, pt);
     retNorm.set(plane.x, plane.y, plane.z);
     retNorm.normalize();
-    retNorm.scale(-dist);
-    retPtProj.add2(pt, retNorm);
+    if (dist > 0)
+      retNorm.scale(-1);
+    retPtProj.scaleAdd2(-dist, retNorm, pt);
+    return dist;
   }
 
   /**
@@ -978,7 +981,6 @@ final public class Measure {
       pts[i] = new P3();
       P3 p = rndPt();
       getPlaneProjection(p, plane, ptProj, vNorm );
-      vNorm.scale(1/vNorm.length());
       pts[i].setT(ptProj);
       float d = (float)Math.random()*0.1f;
       pts[i].scaleAdd2(d, vNorm, ptProj);

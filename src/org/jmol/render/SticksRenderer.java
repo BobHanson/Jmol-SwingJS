@@ -361,6 +361,9 @@ public class SticksRenderer extends FontLineShapeRenderer {
 
   private void drawBond(int dottedMask) {
     boolean isDashed = (dottedMask & 1) != 0;
+    byte endcaps = ((colixA & C.TRANSLUCENT_MASK) == C.TRANSPARENT
+        || (colixB & C.TRANSLUCENT_MASK) == C.TRANSPARENT ?
+            GData.ENDCAPS_FLAT : this.endcaps);
     if (isCartesian && bondOrder == 1 && !isDashed) {
       // bypass screen rendering and just use the atoms themselves
       g3d.drawBond(a, b, colixA, colixB, endcaps, mad, -1);
