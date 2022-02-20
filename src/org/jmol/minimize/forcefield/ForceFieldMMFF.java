@@ -823,7 +823,7 @@ public class ForceFieldMMFF extends ForceField {
    * @param at2
    * @param index1
    * @param index2
-   * @return
+   * @return 0 or 1
    */
   private int getBondType(Bond bond, AtomType at1, AtomType at2,
                                int index1, int index2) {
@@ -903,7 +903,6 @@ public class ForceFieldMMFF extends ForceField {
         bsElements.set(n);
       }
     }
-
     // generate a list of SMART codes 
 
     int nUsed = 0;
@@ -1043,6 +1042,9 @@ public class ForceFieldMMFF extends ForceField {
    * 7 Is in a four-membered ring and the sum of the bond types is 1
    * 
    * 8 Is in a four-membered ring and the sum of the bond types is 2
+   * 
+   * @param angle 
+   * @return type (0-8)
    */
   private int setAngleType(MinAngle angle) {
     angle.type = minBonds[angle.data[ABI_IJ]].type + minBonds[angle.data[ABI_JK]].type;
@@ -1095,7 +1097,7 @@ public class ForceFieldMMFF extends ForceField {
    * 2: a-x=x-b
    * 
    * @param t
-   * @return
+   * @return type (0, 1, 2, 4, or 5)
    */
   private int setTorsionType(MinTorsion t) {
     if (checkRings(vRings[R4], t.data, 4)) 

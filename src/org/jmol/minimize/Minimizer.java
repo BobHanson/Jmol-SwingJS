@@ -124,6 +124,117 @@ public class Minimizer {
     return this;
   }
 
+  public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
+                          int flags, String ff)
+      throws JmolAsyncException {
+    isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
+    isQuick = (ff.indexOf("2D") >= 0
+        || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
+    boolean haveFixed = ((flags
+        & Viewer.MIN_HAVE_FIXED) == Viewer.MIN_HAVE_FIXED);
+    BS bsXx = ((flags & Viewer.MIN_XX) == Viewer.MIN_XX ? new BS() : null);
+    Object val;
+    if (crit <= 0) {
+      val = vwr.getP("minimizationCriterion");
+      if (val != null && val instanceof Float)
+        crit = ((Float) val).floatValue();
+    }
+    this.crit = Math.max(crit, 0.0001);
+    if (steps == Integer.MAX_VALUE) {
+      val = vwr.getP("minimizationSteps");
+      if (val != null && val instanceof Integer)
+        steps = ((Integer) val).intValue();
+    }
+    this.steps = steps;
+    try {
+      setEnergyUnits();
+
+      // if the user indicated minimize ... FIX ... or we don't have any defualt,
+      // use the bsFixed coming in here, which is set to "nearby and in frame" in that case. 
+      // and if something is fixed, then AND it with "nearby and in frame" as well.
+      if (!haveFixed && bsFixedDefault != null)
+        bsFixed.and(bsFixedDefault);
+      if (minimizationOn)
+        return false;
+      ForceField pFF0 = pFF;
+      getForceField(ff);
+      if (pFF == null) {
+        Logger.error(GT.o(GT.$("Could not get class for force field {0}"), ff));
+        return false;
+      }
+      Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps
+          + " criterion = " + crit + ")"
+                + " silent=" + isSilent 
+                + " quick=" + isQuick 
+                + " fixed=" + haveFixed 
+                + " Xx=" + (bsXx != null)
+              + " ...");
+      if (bsSelected.nextSetBit(0) < 0) {
+        Logger.error(GT.$("No atoms selected -- nothing to do!"));
+        return false;
+      }
+      atoms = vwr.ms.at;
+      bsAtoms = BSUtil.copy(bsSelected);
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        if (atoms[i].getElementNumber() == 0) {
+          if (bsXx == null) {
+            bsAtoms.clear(i);
+            Logger.info("minimize: Ignoring Xx for atomIndex=" + i);
+          } else {
+            bsXx.set(i);
+            Logger.info("minimize: Setting Xx to fluorine for atomIndex=" + i);
+            atoms[i].setAtomicAndIsotopeNumber(9); // Xx -> fluorine
+          }
+        }
+      }
+      if (bsFixed != null)
+        bsAtoms.or(bsFixed);
+      ac = bsAtoms.cardinality();
+
+      boolean sameAtoms = BSUtil.areEqual(bsSelected, this.bsSelected);
+      this.bsSelected = bsSelected;
+      if (pFF0 != null && pFF != pFF0)
+        sameAtoms = false;
+      if (!sameAtoms)
+        pFF.clear();
+      if ((!sameAtoms || !BSUtil.areEqual(bsFixed, this.bsFixed))
+          && !setupMinimization()) {
+        clear();
+        return false;
+      }
+      if (steps > 0) {
+        bsTaint = BSUtil.copy(bsAtoms);
+        BSUtil.andNot(bsTaint, bsFixed);
+        vwr.ms.setTaintedAtoms(bsTaint, AtomCollection.TAINT_COORD);
+      }
+      if (bsFixed != null)
+        this.bsFixed = bsFixed;
+      setAtomPositions();
+
+      if (constraints != null)
+        for (int i = constraints.size(); --i >= 0;)
+          constraints.get(i).set(steps, bsAtoms, atomMap);
+
+      pFF.setConstraints(this);
+
+      // minimize and store values
+
+      if (steps <= 0)
+        getEnergyOnly();
+      else if (isSilent || !vwr.useMinimizationThread())
+        minimizeWithoutThread();
+      else
+        setMinimizationOn(true);
+    } finally {
+      if (bsXx != null && !bsXx.isEmpty()) {
+        for (int i = bsXx.nextSetBit(0); i >= 0; i = bsXx.nextSetBit(i + 1)) {
+          atoms[i].setAtomicAndIsotopeNumber(0);
+        }
+      }
+    }
+    return true;
+  }
   
   /**
    * @param propertyName 
@@ -201,95 +312,6 @@ public class Minimizer {
     pFF = null;
   }
   
-  
-  public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
-                          int flags, String ff)
-      throws JmolAsyncException {
-    isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
-    isQuick = (ff.indexOf("2D") >= 0 || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
-    boolean haveFixed = ((flags
-        & Viewer.MIN_HAVE_FIXED) == Viewer.MIN_HAVE_FIXED);
-    Object val;
-    setEnergyUnits();
-    if (steps == Integer.MAX_VALUE) {
-      val = vwr.getP("minimizationSteps");
-      if (val != null && val instanceof Integer)
-        steps = ((Integer) val).intValue();
-    }
-    this.steps = steps;
-
-    // if the user indicated minimize ... FIX ... or we don't have any defualt,
-    // use the bsFixed coming in here, which is set to "nearby and in frame" in that case. 
-    // and if something is fixed, then AND it with "nearby and in frame" as well.
-    if (!haveFixed && bsFixedDefault != null)
-      bsFixed.and(bsFixedDefault);
-    if (crit <= 0) {
-      val = vwr.getP("minimizationCriterion");
-      if (val != null && val instanceof Float)
-        crit = ((Float) val).floatValue();
-    }
-    this.crit = Math.max(crit, 0.0001);
-
-    if (minimizationOn)
-      return false;
-    ForceField pFF0 = pFF;
-    getForceField(ff);
-    if (pFF == null) {
-      Logger.error(GT.o(GT.$("Could not get class for force field {0}"), ff));
-      return false;
-    }
-    Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps
-        + " criterion = " + crit + ") ...");
-    if (bsSelected.nextSetBit(0) < 0) {
-      Logger.error(GT.$("No atoms selected -- nothing to do!"));
-      return false;
-    }
-    atoms = vwr.ms.at;
-    bsAtoms = BSUtil.copy(bsSelected);
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1))
-      if (atoms[i].getElementNumber() == 0)
-        bsAtoms.clear(i);
-    if (bsFixed != null)
-      bsAtoms.or(bsFixed);
-    ac = bsAtoms.cardinality();
-
-    boolean sameAtoms = BSUtil.areEqual(bsSelected, this.bsSelected);
-    this.bsSelected = bsSelected;
-    if (pFF0 != null && pFF != pFF0)
-      sameAtoms = false;
-    if (!sameAtoms)
-      pFF.clear();
-    if ((!sameAtoms || !BSUtil.areEqual(bsFixed, this.bsFixed))
-        && !setupMinimization()) {
-      clear();
-      return false;
-    }
-    if (steps > 0) {
-      bsTaint = BSUtil.copy(bsAtoms);
-      BSUtil.andNot(bsTaint, bsFixed);
-      vwr.ms.setTaintedAtoms(bsTaint, AtomCollection.TAINT_COORD);
-    }
-    if (bsFixed != null)
-      this.bsFixed = bsFixed;
-    setAtomPositions();
-
-    if (constraints != null)
-      for (int i = constraints.size(); --i >= 0;)
-        constraints.get(i).set(steps, bsAtoms, atomMap);
-
-    pFF.setConstraints(this);
-
-    // minimize and store values
-
-    if (steps <= 0)
-      getEnergyOnly();
-    else if (isSilent || !vwr.useMinimizationThread())
-      minimizeWithoutThread();
-    else
-      setMinimizationOn(true);
-    return true;
-  }
-
   private void setEnergyUnits() {
     String s = vwr.g.energyUnits;
     units = (s.equalsIgnoreCase("kcal") ? "kcal" : "kJ");
@@ -528,12 +550,9 @@ public class Minimizer {
   }
 
   private void setMinimizationOn(boolean minimizationOn) {
-    //TODO -- shouldn't we allow run() here?
-    //System.out.println("Minimizer setMinimizationOn "+ minimizationOn + " " + minimizationThread + " " + this.minimizationOn);
     this.minimizationOn = minimizationOn;
     if (!minimizationOn) {
       if (minimizationThread != null) {
-        //minimizationThread.interrupt(); // did not seem to work with applet
         minimizationThread = null;
       }
       return;
@@ -562,7 +581,7 @@ public class Minimizer {
   
   public boolean startMinimization() {
    try {
-      Logger.info("minimizer: startMinimization");
+      Logger.info("minimize: startMinimization");
       vwr.setIntProperty("_minimizationStep", 0);
       vwr.setStringProperty("_minimizationStatus", "starting");
       vwr.setFloatProperty("_minimizationEnergy", 0);
@@ -613,10 +632,10 @@ public class Minimizer {
       reportEnergy();
       vwr.setStringProperty("_minimizationStatus", (failed ? "failed" : "done"));
       vwr.notifyMinimizationStatus();
-      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "Minimizer:done"
+      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "minimize:done"
           + (failed ? " EXPLODED" : "OK"));
     }
-    Logger.info("minimizer: endMinimization");
+    Logger.info("minimize: endMinimization");
   }
 
   double[][] coordSaved;

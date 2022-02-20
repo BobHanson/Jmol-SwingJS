@@ -3296,11 +3296,11 @@ public class Viewer extends JmolViewer
               bsNew.or(addHydrogens(stereo,MIN_NO_RANGE | MIN_SILENT | MIN_QUICK));
             }
             minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0,
-                MIN_ADDH | MIN_NO_RANGE | MIN_SILENT | MIN_QUICK);
+                MIN_ADDH | MIN_NO_RANGE | MIN_SILENT | MIN_QUICK | MIN_XX);
           } catch (Exception e) {
           }
         } else {
-          addHydrogens(bsNew, MIN_SILENT | MIN_QUICK);
+          addHydrogens(bsNew, MIN_SILENT | MIN_QUICK | MIN_XX);
         }
         // no longer necessary? -- this is the JME/SMILES data:
         if (jmolScript != null)
@@ -9043,6 +9043,7 @@ public class Viewer extends JmolViewer
   public static final int MIN_QUICK = 4;
   public static final int MIN_ADDH = 8;
   public static final int MIN_NO_RANGE = 16;
+  public static final int MIN_XX = 32;
 
   /**
    * 
