@@ -247,7 +247,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       return m.getInfo();       
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("params", unitCellParams);
-    info.put("vectors", getUnitCellVectors());
+    info.put("oabc", getUnitCellVectors());
     info.put("volume", Double.valueOf(volume));
     info.put("matFtoC", matrixFractionalToCartesian);
     info.put("matCtoF", matrixCartesianToFractional);
@@ -443,7 +443,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return BoxInfo.getCanonicalCopy(pts, scale);
   }
 
-  private P3[] getScaledCell(boolean withOffset) {
+  public P3[] getScaledCell(boolean withOffset) {
     P3[] pts  = new P3[8];
     P3 cell0 = null;
     P3 cell1 = null;

@@ -57,6 +57,7 @@ import org.jmol.script.ScriptMathProcessor;
 import org.jmol.script.ScriptParam;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
+import org.jmol.util.BoxInfo;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
@@ -468,6 +469,9 @@ public class MathExt {
     }
 
     String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
+    
+    
+    
     boolean toPrimitive = "primitive".equalsIgnoreCase(op);
     if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
       String stype = (++ptParam > lastParam ? ""
@@ -488,6 +492,8 @@ public class MathExt {
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
       scale = 1;
+    } else if ("vertices".equalsIgnoreCase(op)) {
+      return mp.addXObj(BoxInfo.getVerticesFromOABC(ucnew));
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)

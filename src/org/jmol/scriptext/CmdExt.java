@@ -2606,7 +2606,7 @@ public class CmdExt extends ScriptExt {
       plane = e.planeParameter(1, false);
       break;
     case T.hkl:
-      plane = e.hklParameter(2, null);
+      plane = e.hklParameter(2, null, true);
       break;
     }
     e.checkLengthErrorPt(e.iToken + 1, 1);
@@ -5400,6 +5400,7 @@ public class CmdExt extends ScriptExt {
     String ucname = null;
     boolean isOffset = false;
     boolean isReset = false;
+    SymmetryInterface u = vwr.getCurrentUnitCell();
     int tok = tokAt(++i);
     switch (tok) {
     case T.restore:
@@ -5407,6 +5408,57 @@ public class CmdExt extends ScriptExt {
       isReset = true;
       pt = P4.new4(0, 0, 0, -1); // reset offset and range
       eval.iToken++;
+      break;
+    case T.surface:
+      P4 plane = eval.hklParameter(i + 1, null, false);
+      T3 hkl = eval.getPointOrPlane(i 
+          + 1, ScriptParam.MODE_P34);
+      i = eval.iToken;
+      float zscale = Float.NaN;
+      if (isFloatParameter(i + 1)) {
+        zscale = floatParameter(++i);
+        if (tokAt(i + 1) == T.percent) {
+          zscale = -zscale / 100;
+          i++;
+        }
+      }
+      float zoffset = Float.NaN;
+      boolean zoffPercent = false;
+      if (isFloatParameter(i + 1)) {
+        zoffset = floatParameter(++i);
+        if (tokAt(i + 1) == T.percent) {
+          zoffPercent = true;
+          i++;
+        }
+      }
+      if (chk)
+        return;
+      eval.iToken = i;
+      if (hkl instanceof P3) {
+        hkl = P4.new4(hkl.x, hkl.y, hkl.z, 0);
+      } else if (Float.isNaN(zoffset)) {
+        zoffset = ((P4) hkl).w; 
+      }
+      oabc = getOABCFromHKL(u, (P4) hkl, plane);
+      P3 p = new P3();
+      V3 vt = new V3();
+      Measure.getPlaneProjection(new P3(), plane, p, vt);
+      if (zscale > 0) {
+        oabc[3].normalize();
+        oabc[3].scale(zscale);
+      } else if (zscale < 0) { 
+        oabc[3].scale(-zscale);
+      }
+
+      if (!Float.isNaN(zoffset) && zoffset != 0) {
+        // o ---pdist-----vt-------> p
+        // o - offset--o'---------> p
+        if (zoffPercent) {
+          zoffset = zoffset/100 * oabc[3].length();
+        }
+        oabc[0].scaleAdd2(zoffset, vt, oabc[0]);
+      }
+
       break;
     case T.string:
     case T.identifier:
@@ -5453,7 +5505,6 @@ public class CmdExt extends ScriptExt {
                 : tokAt(i + 1) == T.integer
                     ? intParameter(++i) * (float) Math.PI
                     : floatParameter(++i));
-            SymmetryInterface u = vwr.getCurrentUnitCell();
             ucname = (u == null ? "" : u.getSpaceGroupName() + " ") + ucname;
             oabc = (u == null
                 ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
@@ -5591,12 +5642,12 @@ public class CmdExt extends ScriptExt {
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE) {
-      vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), null, icell);
+      vwr.ms.setUnitCellOffset(u, null, icell);
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
       isReset = true;
-      SymmetryInterface unitCell = (doTransform ? vwr.getCurrentUnitCell() : null);
+      SymmetryInterface unitCell = (doTransform ? u : null);
       if (unitCell != null) {
         BS bsAtoms = null;
         bsAtoms = vwr.getFrameAtoms();
@@ -5634,8 +5685,63 @@ public class CmdExt extends ScriptExt {
 
 
 
-  ///////// private methods used by commands ///////////
+  /**
+   * create a uvw-space unit cell from an HKL plane
+   * @param uc 
+   * 
+   * @param hkl
+   * @param plane 
+   * @param zoffset 
+   * @param zscale 
+   * @return oabc
+   * @throws ScriptException
+   */
+  private P3[] getOABCFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
+      throws ScriptException {
+    int h = (int) hkl.x;
+    int k = (int) hkl.y;
+    int l = (int) hkl.z;
+    
+    if (h == 0 && k == 0 && l == 0 || h != hkl.x || k != hkl.y || l != hkl.z)
+      invArg();
+    P3[] oabc = uc.getUnitCellVectors();
+    float dist0 = plane.w;
+    P3 a = oabc[1];
+    P3 b = oabc[2];
+    P3 c = oabc[3];
+    if (h == 0 && k == 0) {
+      // no a,b intercept
+      oabc[3].scale(1f / l);
+    } else if (h == 0 && l == 0) {
+      // no a,c intercept
+      // axes are ca
+      b.scale(1f / k);
+      oabc[1] = c;
+      oabc[2] = a;
+      oabc[3] = b;
+    } else if (k == 0 && l == 0) {
+      // no b,c intercept
+      a.scale(1f / h);
+      oabc[1] = b;
+      oabc[2] = c;
+      oabc[3] = a;
+    } else {
+      a.scale(h == 0 ? 1 : 1f / h);
+      b.scale(k == 0 ? 1 : 1f / k);
+      c.scale(l == 0 ? l : 1f / l);
+      P3 u = oabc[1];
+      P3 v = oabc[2];
+      P3 w = oabc[3];
+      u.scaleAdd2(-1, b, a);
+      v.scaleAdd2(-1, c, b);
+      w.cross(u, v);
+      w.normalize();
+      w.scale(Math.abs(dist0));
+    }
+    return oabc;
+  }
 
+  ///////// private methods used by commands ///////////
   private P4 getSupercell(T3 pt, boolean isFill) throws ScriptException {
 
     if (pt.x < 1 || pt.y < 1 || pt.z < 1 || pt.x != (int) pt.x

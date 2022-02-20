@@ -7902,7 +7902,7 @@ public class ScriptEval extends ScriptExpr {
       case T.minus:
         str = paramAsStr(2);
         if (str.equalsIgnoreCase("hkl"))
-          plane = hklParameter(3, null);
+          plane = hklParameter(3, null, true);
         else if (str.equalsIgnoreCase("plane"))
           plane = planeParameter(2, false);
         if (plane == null)
@@ -7918,7 +7918,7 @@ public class ScriptEval extends ScriptExpr {
         }
         break;
       case T.hkl:
-        plane = (getToken(2).tok == T.none ? null : hklParameter(2, null));
+        plane = (getToken(2).tok == T.none ? null : hklParameter(2, null, true));
         break;
       case T.reference:
         // only in 11.2; deprecated
@@ -8427,8 +8427,6 @@ public class ScriptEval extends ScriptExpr {
       center = vwr.ms.getAtomSetCenter(bsCenter);
     }
 
-    // disabled sameAtom stuff -- just too weird
-    boolean isSameAtom = false;// && (center != null && currentCenter.distance(center) < 0.1);
     // zoom/zoomTo [0|n|+n|-n|*n|/n|IN|OUT]
     // zoom/zoomTo percent|-factor|+factor|*factor|/factor | 0
     float zoom = vwr.tm.getZoomSetting();
@@ -8448,7 +8446,7 @@ public class ScriptEval extends ScriptExpr {
       if (isZoomTo) {
         // undocumented!
         // no factor -- check for no center (zoom out) or same center (zoom in)
-        if (slen == 1 || isSameAtom)
+        if (slen == 1)
           newZoom *= 2;
         else if (center == null)
           newZoom /= 2;
@@ -8476,7 +8474,7 @@ public class ScriptEval extends ScriptExpr {
       xTrans = 0;
     if (Float.isNaN(yTrans))
       yTrans = 0;
-    if (isSameAtom && Math.abs(zoom - newZoom) < 1 || !useThreads())
+    if (!useThreads())
       floatSecondsTotal = 0;
     vwr.moveTo(this, floatSecondsTotal, center, JC.center, Float.NaN, null,
         newZoom, xTrans, yTrans, Float.NaN, null, Float.NaN, Float.NaN,
@@ -9002,6 +9000,7 @@ public class ScriptEval extends ScriptExpr {
     Object[] data = new Object[] { id, null, null };
     return (getShapePropertyData(JC.SHAPE_ISOSURFACE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_PMESH, "getBoundingBox", data)
+//        || getShapePropertyData(JC.SHAPE_UCCAGE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_CONTACT, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_NBO, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_MO, "getBoundingBox", data) ? (P3[]) data[2]

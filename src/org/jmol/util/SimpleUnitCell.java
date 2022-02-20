@@ -473,15 +473,27 @@ public class SimpleUnitCell {
     return f;
   }
   
+  /**
+   * Generate the reciprocal unit cell, scaled as desired
+   * 
+   * @param abc [a,b,c] or [o,a,b,c]
+   * @param ret
+   * @param scale 0 for 2pi, teneral reciprocal lattice
+   * @return oabc
+   */
   public static T3[] getReciprocal(T3[] abc, T3[] ret, float scale) {
+    if (scale == 0)
+      scale = (float)(2 * Math.PI);
     P3[] rabc = new P3[4];
     int off = (abc.length == 4 ? 1 : 0);
     rabc[0] = (off == 1 ? P3.newP(abc[0]) : new P3()); // origin
+    // a' = 2pi/V * b x c  = 2pi * (b x c) / (a . (b x c))
+    // b' = 2pi/V * c x a 
+    // c' = 2pi/V * a x b 
     for (int i = 0; i < 3; i++) {
-      rabc[i + 1] = new P3();
-      rabc[i + 1].cross(abc[((i + off) % 3) + off], abc[((i + off + 1) % 3)
-          + off]);
-      rabc[i + 1].scale(scale / abc[i + off].dot(rabc[i + 1]));
+      P3 v = rabc[i + 1] = new P3();
+      v.cross(abc[((i + 1) % 3) + off], abc[((i + 2) % 3) + off]);
+      v.scale(scale / abc[i + off].dot(v));
     }
     if (ret == null)
       return rabc;

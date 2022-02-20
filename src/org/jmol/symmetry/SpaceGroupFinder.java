@@ -81,6 +81,7 @@ public class SpaceGroupFinder {
 
   public Object findSpaceGroup(Viewer vwr, BS atoms0, String opXYZ0,
                                SymmetryInterface uc, boolean asString) {
+    P3[] oabc = uc.getUnitCellVectors();
     Atom[] cartesians = vwr.ms.at;
     int isg = 0;
     BS bsGroups = new BS();
@@ -343,10 +344,10 @@ public class SpaceGroupFinder {
     map.put("name", name);
     map.put("basis", basis);
     map.put("supercell", scaling);
-    float[] params = uc.getUnitCellParams();
-    if (Float.isNaN(params[6]))
-      System.arraycopy(params, 0, params = new float[6], 0, 6);
-    map.put("unitcell", params);
+    oabc[1].scale(scaling.x);
+    oabc[2].scale(scaling.y);
+    oabc[3].scale(scaling.z);
+    map.put("unitcell", oabc);
     return map;
   }
 

@@ -137,7 +137,7 @@ public class BoxInfo {
    * @param oabc [center a b c]
    * @return all eight vertices
    */
-  public final static P3[] getVerticesFromOABC(P3[] oabc) {
+  public final static P3[] getVerticesFromOABC(T3[] oabc) {
     P3[] vertices = new P3[8];
     for (int i = 0; i <= XYZ; i++) {
       vertices[i] = P3.newP(oabc[0]);
