@@ -1543,7 +1543,7 @@ public class ModelKit {
         m.z = 0;
       }
       P3 supercell;
-      float[] params;
+      P3[] oabc;
       String name;
       String ita;
       BS basis;
@@ -1553,17 +1553,17 @@ public class ModelKit {
       if (sg == null) {
         name = "P1";
         supercell = P3.new3(1, 1, 1);
-        params = uc.getUnitCellParams();
+        oabc = uc.getUnitCellVectors();
         ita = "1";
         basis = null;
       } else {
         supercell = (P3) sg.get("supercell");
-        params = (float[]) sg.get("unitcell");
+        oabc = (P3[]) sg.get("unitcell");
         name = (String) sg.get("name");
         ita = (String) sg.get("itaFull");
         basis = (BS) sg.get("basis");
       }
-      uc.setUnitCell(params, false);
+      uc.getUnitCell(oabc,  false, null);
       uc.setSpaceGroupTo(ita);
       uc.setSpaceGroupName(name);
       vwr.ms.setSpaceGroup(mi, uc, basis);
