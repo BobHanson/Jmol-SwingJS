@@ -105,9 +105,9 @@ public class AwtModelKitPopup extends ModelKitPopup {
   protected void exitBondRotation() {
     try {
       if (bondRotationCheckBox != null)
-        ((JRadioButtonMenuItem) bondRotationCheckBox).setSelected(false);
+        bondRotationCheckBox.setSelected(false);
       if (prevBondCheckBox != null)
-        ((JRadioButtonMenuItem) prevBondCheckBox).setSelected(true);
+        prevBondCheckBox.setSelected(true);
    } catch (Exception e) {
       // ignore
     }
