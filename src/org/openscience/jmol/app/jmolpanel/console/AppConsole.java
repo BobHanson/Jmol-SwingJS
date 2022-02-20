@@ -80,6 +80,24 @@ import javajs.util.PT;
 public class AppConsole extends JmolConsole
     implements EnterListener, JmolDropEditor {
 
+  public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
+
+  public JDialog jcd;
+  protected ConsoleTextPane console;
+  protected ConsoleDocument consoleDoc;
+
+  private JmolAbstractButton varButton, haltButton, closeButton, clearButton,
+      stepButton;
+  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton,
+      topButton, fontButton;
+  private JPanel buttonPanel = new JPanel();
+
+  protected JScrollBar vBar, hBar;
+
+  private int fontSize;
+  private boolean noPrefs;
+
+
   @Override
   public void loadContent(String script) {
     getScriptEditor().setVisible(true);
@@ -95,12 +113,6 @@ public class AppConsole extends JmolConsole
       se.setVisible(false);    
     vwr.openFileAsyncSpecial(fileName, JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.SCRIPT_ONLY | JmolScriptManager.PDB_CARTOONS);
   }
-
-  public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
-
-  private int fontSize;
-
-  private boolean noPrefs;
 
   // note:  "Check" "Top" "Step" not included in 12.1
 
@@ -179,17 +191,6 @@ public class AppConsole extends JmolConsole
       console.setFont(new Font("dialog", Font.PLAIN, fontSize));
     vwr.notifyScriptEditor(Integer.MAX_VALUE, new Object[] { Integer.valueOf(fontSize)});
   }
-
-  public JDialog jcd;
-
-  protected ConsoleTextPane console;
-  private JmolAbstractButton varButton, haltButton, closeButton, clearButton,
-      stepButton;
-  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton,
-      topButton, fontButton;
-  private JPanel buttonPanel = new JPanel();
-
-  protected JScrollBar vBar, hBar;
 
   /*
    * methods sendConsoleEcho and sendConsoleMessage(strStatus)
@@ -681,14 +682,55 @@ public class AppConsole extends JmolConsole
     }
     return false;
   }
+  
+  /**
+   * Recall command history.
+   * 
+   * @param up
+   *        - history up or down
+   * @param pageup
+   *        TODO
+   */
+  @Override
+  protected void recallCommand(boolean up, boolean pageup) {
+    String cmd = (pageup ? vwr.historyFind(
+        console.pageUpBuffer == null ? (console.pageUpBuffer = consoleDoc.getCommandString())
+            : console.pageUpBuffer,
+        up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
+    if (cmd == null) {
+      EventQueue.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            hBar.setValue(0);
+          } catch (Throwable e) {
+            //
+          }
+        }
+      });
+      return;
+    }
+    boolean isError = false;
+    try {
+      if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
+        isError = true;
+        cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
+      }
+      cmd = trimGUI(cmd);
+      consoleDoc.replaceCommand(cmd, isError);
+    } catch (BadLocationException e) {
+      e.printStackTrace();
+    }
+  }
+
+
 
   class ConsoleTextPane extends JTextPane implements KeyListener {
 
-    private ConsoleDocument consoleDoc;
     private EnterListener enterListener;
 
     boolean checking = false;
-    private String pageUpBuffer;
+    String pageUpBuffer;
     boolean checkingCommand;
     private Timer checkTimer;
 
@@ -865,45 +907,6 @@ public class AppConsole extends JmolConsole
           }
         }
         break;
-      }
-    }
-
-    /**
-     * Recall command history.
-     * 
-     * @param up
-     *        - history up or down
-     * @param pageup
-     *        TODO
-     */
-    void recallCommand(boolean up, boolean pageup) {
-      String cmd = (pageup ? vwr.historyFind(
-          pageUpBuffer == null ? (pageUpBuffer = consoleDoc.getCommandString())
-              : pageUpBuffer,
-          up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
-      if (cmd == null) {
-        EventQueue.invokeLater(new Runnable() {
-          @Override
-          public void run() {
-            try {
-              hBar.setValue(0);
-            } catch (Throwable e) {
-              //
-            }
-          }
-        });
-        return;
-      }
-      boolean isError = false;
-      try {
-        if (cmd.endsWith(CommandHistory.ERROR_FLAG)) {
-          isError = true;
-          cmd = cmd.substring(0, cmd.indexOf(CommandHistory.ERROR_FLAG));
-        }
-        cmd = PT.trim(cmd, "; ");
-        consoleDoc.replaceCommand(cmd, isError);
-      } catch (BadLocationException e) {
-        e.printStackTrace();
       }
     }
 

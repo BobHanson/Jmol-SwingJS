@@ -24,6 +24,7 @@
 
 package org.jmol.console;
 
+import java.awt.event.KeyEvent;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -416,10 +417,23 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
 
   // key listener actions
   
-  protected void recallCommand(boolean up) {
+  /**
+   * @param up 
+   * @param pageUp  
+   */
+  protected void recallCommand(boolean up, boolean pageUp) {
     String cmd = vwr.getSetHistory(up ? -1 : 1);
-    if (cmd != null)
+    if (cmd != null) {
+      cmd = trimGUI(cmd);
       input.setText(PT.escUnicode(cmd));
+    }
+  }
+  
+  protected String trimGUI(String cmd) {
+    int pt = cmd.indexOf(JC.SCRIPT_GUI);
+    if (pt >= 0)
+      cmd = cmd.substring(0, pt);
+   return PT.trim(cmd, "; ");
   }
   
   /**

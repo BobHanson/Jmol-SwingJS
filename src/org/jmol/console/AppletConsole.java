@@ -301,7 +301,7 @@ public class AppletConsole extends JmolConsole {
         return mode;
       }
       if (kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN) {
-        recallCommand(kcode == KeyEvent.VK_UP);
+        recallCommand(kcode == KeyEvent.VK_UP, false);
         return mode;
       }
       break;
