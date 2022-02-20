@@ -197,7 +197,7 @@ public final class ModelLoader {
     }
     noAutoBond = ms.getMSInfoB("noAutoBond");
     is2D = ms.getMSInfoB("is2D");
-    doMinimize = is2D && ms.getMSInfoB("doMinimize");
+    doMinimize = (is2D || ms.getMSInfoB("minimize3D")) && ms.getMSInfoB("doMinimize");
     adapterTrajectoryCount = (isTrajectory ? ms.trajectory.steps.size() : 0);
     ms.someModelsHaveSymmetry = ms.getMSInfoB("someModelsHaveSymmetry");
     someModelsHaveUnitcells = ms.getMSInfoB("someModelsHaveUnitcells");
@@ -1405,6 +1405,8 @@ public final class ModelLoader {
           Atom a2 = b2.getOtherAtom(a1);
           v.sub2(a2, a1);
           //System.out.println(b2 + " " + v);
+          // in the case where we have a vertical stereochemical indicator, 
+          // South and wedge or North and hash sets to invert stereo??
           if (Math.abs(v.x) < 0.1) {
             if ((b.order == Edge.BOND_STEREO_NEAR) == (v.y < 0))
               stereodir = -1;
