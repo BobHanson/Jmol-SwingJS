@@ -29,6 +29,7 @@ import org.jmol.api.SC;
 import org.jmol.i18n.GT;
 import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.PopupResource;
+import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -57,6 +58,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   static final String ATOM_MENU = "atomMenu";
   static final String BOND_MENU = "bondMenu";
   static final String XTAL_MENU = "xtalMenu";
+  static final String OPTIONS_MENU = "optionsMenu";
 
   /**
    * set by MODELKIT [DISPLAY/HIDE]
@@ -250,6 +252,9 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       vwr.refresh(Viewer.REFRESH_REPAINT, "modelkit");
       if (active == BOND_MENU && prevBondCheckBox == null)
         prevBondCheckBox = htMenus.get("assignBond_pP!RD");
+    } else if (name.indexOf(OPTIONS_MENU) >= 0) {
+        htMenus.get("undo").setEnabled(vwr.undoMoveAction(T.undomove, T.count) > 0);
+        htMenus.get("redo").setEnabled(vwr.undoMoveAction(T.redomove, T.count) > 0);
     }
     //    System.out.println("active menu is " + activeMenu + " state=" + getMKState());
     return active;

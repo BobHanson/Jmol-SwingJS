@@ -349,7 +349,8 @@ public class T {
 //  public final static int push  see mathfunc //internal only
   public final static int quit         = scriptCommand | 41 | noArgs;
   public final static int ramachandran = scriptCommand | 42;
-  public final static int redomove = scriptCommand | 43;
+  public final static int redo         = scriptCommand | 43;
+  public final static int redomove     = scriptCommand | 44;
   public final static int refresh      = scriptCommand | 44 | noArgs;
   public final static int reset        = scriptCommand | 45;
   public final static int restore      = scriptCommand | 46;
@@ -370,7 +371,7 @@ public class T {
   public final static int timeout      = scriptCommand | 62 | setparam;
   public final static int translate    = scriptCommand | 64;
   public final static int translateSelected   = scriptCommand | 66;
-  public final static int unbind              = scriptCommand | 68;
+  public final static int unbind              = scriptCommand | 67;
   public final static int undomove     = scriptCommand | 69;
   public final static int vibration    = scriptCommand | 70;
   //public final static int write   see mathfunc
@@ -587,7 +588,7 @@ public class T {
   public final static int site          = intproperty | 22;
   public final static int strucno       = intproperty | 23;
   public final static int subsystem     = intproperty | 24;
-  public final static int valence       = intproperty | 25 | settable;
+  public final static int valence       = intproperty | 26 | settable;
 
   // float values must be multiplied by 100 prior to comparing to integer values
 
@@ -803,7 +804,6 @@ public class T {
   public final static int showscript       = setparam | 10;
   public final static int specular         = setparam | 12;
   public final static int trajectory       = setparam | 14;
-  public final static int undo             = setparam | 16;
   public final static int usercolorscheme  = setparam | 18;
   public final static int window           = setparam  | 20;
 
@@ -955,7 +955,8 @@ public class T {
   public final static int strandcount                    = intparam | 50;
   public final static int strandcountformeshribbon       = intparam | 52;
   public final static int strandcountforstrands          = intparam | 54;
-  public final static int strutspacing                   = intparam | 56;
+  public final static int strutspacing                   = intparam | 55;
+  public final static int undomax                        = intparam | 56;
   public final static int vectortrail                    = intparam | 57;
   public final static int zdepth                         = intparam | 58;
   public final static int zslab                          = intparam | 60;
@@ -1107,6 +1108,8 @@ public class T {
   public final static int tracealpha                     = booleanparam | 190;
   public final static int translucent                    = booleanparam | 191;
   public final static int twistedsheets                  = booleanparam | 192;
+  public final static int undo                           = booleanparam | scriptCommand | 193;
+  public final static int undoauto                       = booleanparam | 193;
   //public final static int usearcball                     = booleanparam | 193;
   public final static int useminimizationthread          = booleanparam | 194;
   public final static int usenumberlocalization          = booleanparam | 195;
@@ -2660,6 +2663,7 @@ public class T {
        "perspectiveDepth",
        "preserveState",
        "rangeSelected",
+       "redo",
        "redoMove",
        "refreshing",
        "ribbonBorder",
@@ -2703,7 +2707,9 @@ public class T {
        "testFlag4",
        "traceAlpha",
        "twistedSheets",
+       "undoAuto",
        "undo",
+       "undoMax",
        "undoMove",
 //       "useArcBall",
        "useMinimizationThread",
@@ -3727,6 +3733,7 @@ public class T {
         perspectivedepth,                   //        "perspectiveDepth"
         preservestate,                      //        "preserveState"
         rangeselected,                      //        "rangeSelected"
+        redo,                               //        "redo"
         redomove,                           //        "redoMove"
         refreshing,                         //        "refreshing"
         ribbonborder,                       //        "ribbonBorder"
@@ -3770,7 +3777,9 @@ public class T {
         testflag4,                          //        "testFlag4"
         tracealpha,                         //        "traceAlpha"
         twistedsheets,                      //        "twistedSheets"
+        undoauto,
         undo,                               //        "undo"
+        undomax,                            //        "undoMax"
         undomove,                           //        "undoMove"
 //        usearcball,                         //        "useArcBall"
         useminimizationthread,              //        "useMinimizationThread"

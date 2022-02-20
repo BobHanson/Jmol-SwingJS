@@ -2601,9 +2601,11 @@ public class ScriptEval extends ScriptExpr {
     case T.prompt:
       cmdPrompt();
       break;
+    case T.undo:
+    case T.redo:
     case T.redomove:
     case T.undomove:
-      cmdUndoRedoMove();
+      cmdUndoRedo(tok);
       break;
     case T.refresh:
       refresh(true);
@@ -2669,7 +2671,7 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.sync:
       cmdSync();
-      break;
+      break;      
     case T.throwcmd:
       cmdThrow();
       break;
@@ -6591,9 +6593,13 @@ public class ScriptEval extends ScriptExpr {
       case T.state:
         if (chk)
           return;
-        String state = vwr.stm.getSavedState(saveName);
-        if (state == null)
+        String state;
+        state = vwr.stm.getSavedState(saveName);
+        if (state == null) {
+          if (saveName.equalsIgnoreCase("UNDO"))
+            return;
           invArg();
+        }
         runScript(state);
         return;
       case T.structure:
@@ -7165,6 +7171,15 @@ public class ScriptEval extends ScriptExpr {
     case T.togglelabel:
       cmdSetLabel("toggle");
       return;
+    case T.undo:
+      if (slen == 2) {
+        if (!chk && vwr.getBoolean(T.preservestate)) {
+          vwr.stm.saveState("undo");
+          vwr.setBooleanProperty("undoAuto", false);
+        }
+        return;
+      }
+      break;
     case T.usercolorscheme:
       Lst<Integer> v = new Lst<Integer>();
       for (int i = 2; i < slen; i++) {
@@ -8205,10 +8220,21 @@ public class ScriptEval extends ScriptExpr {
       vwr.unBindAction(mouseAction, name);
   }
 
-  private void cmdUndoRedoMove() throws ScriptException {
+  public void cmdUndoRedo(int tok) throws ScriptException {
     // Jmol 12.1.46
     int n = 1;
     int len = 2;
+    switch (tok) {
+    case T.undo:
+    case T.redo:
+      String state = vwr.stm.getUndoRedoState(tok);
+      if (state != null)
+        runScript(state);  
+      return;
+    case T.undomove:
+    case T.redomove:
+      break;
+    }
     switch (tokAt(1)) {
     case T.nada:
       len = 1;
@@ -8224,7 +8250,7 @@ public class ScriptEval extends ScriptExpr {
     }
     checkLength(len);
     if (!chk)
-      vwr.undoMoveAction(tokAt(0), n);
+      vwr.undoMoveAction(tok, n);
   }
 
   public void setModelCagePts(int iModel, T3[] originABC, String name) {

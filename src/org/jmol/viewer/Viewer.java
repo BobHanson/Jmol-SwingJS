@@ -331,8 +331,6 @@ public class Viewer extends JmolViewer
   }
 
   final Dimension dimScreen;
-  final Lst<String> actionStates;
-  final Lst<String> actionStatesRedo;
   VDW defaultVdw;
 
   public RadiusData rd;
@@ -364,8 +362,6 @@ public class Viewer extends JmolViewer
     defaultVdw = VDW.JMOL;
     localFunctions = new Hashtable<String, JmolScriptFunction>();
     privateKey = Math.random();
-    actionStates = new Lst<String>();
-    actionStatesRedo = new Lst<String>();
     chainMap = new Hashtable<Object, Object>();
     chainList = new Lst<String>();
     info.put("isJava", Boolean.TRUE);
@@ -3623,7 +3619,7 @@ public class Viewer extends JmolViewer
         if (zapModelKit && g.modelKitMode) {
           loadDefaultModelKitModel(null);
         }
-        undoClear();
+        undoMoveAction(T.undomove, -2);
       }
       System.gc();
     }
@@ -5648,6 +5644,8 @@ public class Viewer extends JmolViewer
       return g.smallMoleculeMaxAtoms;
     case T.strutspacing:
       return g.strutSpacing;
+    case T.undomax:
+      return stm.getUndoMax();
     case T.vectortrail:
       return g.vectorTrail;
     }
@@ -6455,6 +6453,10 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.undomax:
+      // 14.32.25
+      stm.setUndoMax(value);
+      break;
     case T.labelpointerwidth:
       // 14.32.15
       g.labelPointerWidth = value;
@@ -6877,7 +6879,7 @@ public class Viewer extends JmolViewer
       // 11.9.23
       g.preserveState = value;
       ms.setPreserveState(value);
-      undoClear();
+      undoMoveAction(T.undomove, -2);
       break;
     case T.strutsmultiple:
       // 11.9.23
@@ -8878,7 +8880,7 @@ public class Viewer extends JmolViewer
     try {
       if (doClear)
         zapMsg("" + er); // get some breathing room
-      undoClear();
+      undoMoveAction(T.undomove, -2);
       if (Logger.getLogLevel() == 0)
         Logger.setLogLevel(Logger.LEVEL_INFO);
       setCursor(GenericPlatform.CURSOR_DEFAULT);
@@ -9292,11 +9294,6 @@ public class Viewer extends JmolViewer
     return g.multiProcessor && isParallel;
   }
 
-  void undoClear() {
-    actionStates.clear();
-    actionStatesRedo.clear();
-  }
-
   /**
    * 
    * @param action
@@ -9304,10 +9301,11 @@ public class Viewer extends JmolViewer
    * @param n
    *        number of steps to go back/forward; 0 for all; -1 for clear; -2 for
    *        clear BOTH
+   * @return stack list count for action = T.count, or 0
    * 
    */
-  public void undoMoveAction(int action, int n) {
-    getStateCreator().undoMoveAction(action, n);
+  public int undoMoveAction(int action, int n) {
+    return (g.preserveState ? getStateCreator().undoMoveAction(action, n) : 0);
   }
 
   public void undoMoveActionClear(int taintedAtom, int type,

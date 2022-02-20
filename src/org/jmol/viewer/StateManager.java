@@ -1,28 +1,27 @@
- /* $RCSfile$
- * $Author: egonw $
- * $Date: 2005-11-10 09:52:44 -0600 (Thu, 10 Nov 2005) $
- * $Revision: 4255 $
- *
- * Copyright (C) 2002-2005  The Jmol Development Team
- *
- * Contact: jmol-developers@lists.sf.net
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- */
+/* $RCSfile$
+* $Author: egonw $
+* $Date: 2005-11-10 09:52:44 -0600 (Thu, 10 Nov 2005) $
+* $Revision: 4255 $
+*
+* Copyright (C) 2002-2005  The Jmol Development Team
+*
+* Contact: jmol-developers@lists.sf.net
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 package org.jmol.viewer;
-
 
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -30,6 +29,8 @@ import java.util.Map;
 
 import org.jmol.api.JmolSceneGenerator;
 import javajs.util.BS;
+import javajs.util.Lst;
+
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
@@ -70,6 +71,10 @@ public class StateManager {
   public final static int OBJ_MAX = 7;
   private final static String objectNameList = "background axis1      axis2      axis3      boundbox   unitcell   frank      ";
 
+  private static final int MAX_UNDO_DEFAULT = 20;
+
+  private int maxUndo = MAX_UNDO_DEFAULT;
+
   public static String getVariableList(Map<String, SV> htVariables, int nMax,
                                        boolean withSites, boolean definedOnly) {
     SB sb = new SB();
@@ -80,10 +85,10 @@ public class StateManager {
     for (Map.Entry<String, SV> entry : htVariables.entrySet()) {
       String key = entry.getKey();
       SV var = entry.getValue();
-      if ((withSites || !key.startsWith("site_")) && (!definedOnly || key.charAt(0) == '@'))
-        list[n++] = key
-            + (key.charAt(0) == '@' ? " " + var.asString() : " = "
-                + varClip(key, var.escape(), nMax));
+      if ((withSites || !key.startsWith("site_"))
+          && (!definedOnly || key.charAt(0) == '@'))
+        list[n++] = key + (key.charAt(0) == '@' ? " " + var.asString()
+            : " = " + varClip(key, var.escape(), nMax));
     }
     Arrays.sort(list, 0, n);
     for (int i = 0; i < n; i++)
@@ -93,7 +98,7 @@ public class StateManager {
       sb.append("# --no global user variables defined--;\n");
     return sb.toString();
   }
-  
+
   public static int getObjectIdFromName(String name) {
     if (name == null)
       return -1;
@@ -109,7 +114,7 @@ public class StateManager {
 
   protected final Viewer vwr;
   protected Map<String, Object> saved = new Hashtable<String, Object>();
-  
+
   private String lastOrientation = "";
   private String lastContext = "";
   private String lastConnections = "";
@@ -122,7 +127,7 @@ public class StateManager {
   StateManager(Viewer vwr) {
     this.vwr = vwr;
   }
-  
+
   void clear(GlobalSettings global) {
     vwr.setShowAxes(false);
     vwr.setShowBbcage(false);
@@ -135,20 +140,20 @@ public class StateManager {
    * 
    */
   public void resetLighting() {
-    vwr.setIntProperty("ambientPercent",  45);
-    vwr.setIntProperty("celShadingPower", 10);      
-    vwr.setIntProperty("diffusePercent",  84);
-    vwr.setIntProperty("phongExponent",   64);
+    vwr.setIntProperty("ambientPercent", 45);
+    vwr.setIntProperty("celShadingPower", 10);
+    vwr.setIntProperty("diffusePercent", 84);
+    vwr.setIntProperty("phongExponent", 64);
     vwr.setIntProperty("specularExponent", 6); // log2 of phongExponent
     vwr.setIntProperty("specularPercent", 22);
-    vwr.setIntProperty("specularPower",   40);
-    vwr.setIntProperty("zDepth",           0);
-    vwr.setIntProperty("zShadePower",      3);
-    vwr.setIntProperty("zSlab",           50);
-    
-    vwr.setBooleanProperty("specular",    true);
+    vwr.setIntProperty("specularPower", 40);
+    vwr.setIntProperty("zDepth", 0);
+    vwr.setIntProperty("zShadePower", 3);
+    vwr.setIntProperty("zSlab", 50);
+
+    vwr.setBooleanProperty("specular", true);
     vwr.setBooleanProperty("celShading", false);
-    vwr.setBooleanProperty("zshade",     false);
+    vwr.setBooleanProperty("zshade", false);
   }
 
   void setCrystallographicDefaults() {
@@ -161,10 +166,8 @@ public class StateManager {
 
   private void setCommonDefaults() {
     vwr.setBooleanProperty("perspectiveDepth", true);
-    vwr.setFloatProperty("bondTolerance",
-        JC.DEFAULT_BOND_TOLERANCE);
-    vwr.setFloatProperty("minBondDistance",
-        JC.DEFAULT_MIN_BOND_DISTANCE);
+    vwr.setFloatProperty("bondTolerance", JC.DEFAULT_BOND_TOLERANCE);
+    vwr.setFloatProperty("minBondDistance", JC.DEFAULT_MIN_BOND_DISTANCE);
     vwr.setIntProperty("bondingVersion", Elements.RAD_COV_IONIC_OB1_100_1);
     vwr.setBooleanProperty("translucent", true);
   }
@@ -174,8 +177,7 @@ public class StateManager {
     vwr.setStringProperty("defaultColorScheme", "Jmol");
     vwr.setBooleanProperty("axesOrientationRasmol", false);
     vwr.setBooleanProperty("zeroBasedXyzRasmol", false);
-    vwr.setIntProperty("percentVdwAtom",
-        JC.DEFAULT_PERCENT_VDW_ATOM);
+    vwr.setIntProperty("percentVdwAtom", JC.DEFAULT_PERCENT_VDW_ATOM);
     vwr.setIntProperty("bondRadiusMilliAngstroms",
         JC.DEFAULT_BOND_MILLIANGSTROM_RADIUS);
     vwr.setVdwStr("auto");
@@ -201,12 +203,12 @@ public class StateManager {
     for (Entry<String, Object> e : saved.entrySet())
       if (e.getKey().equalsIgnoreCase(name))
         return e.getValue();
-   return null;
+    return null;
   }
 
   public String listSavedStates() {
     String names = "";
-    for (String name: saved.keySet())
+    for (String name : saved.keySet())
       names += "\n" + name;
     return names;
   }
@@ -227,7 +229,7 @@ public class StateManager {
         e.remove();
     }
   }
-  
+
   public void saveSelection(String saveName, BS bsSelected) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("Selected_");
@@ -252,6 +254,12 @@ public class StateManager {
   public void saveState(String saveName) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("State_");
+      clearStateStack();
+      return;
+    }
+    if (saveName.equalsIgnoreCase("UNDO")) {
+      appendState(getStack(T.undo));
+      redoStateStack.clear();
       return;
     }
     saveName = lastState = "State_" + saveName;
@@ -259,23 +267,66 @@ public class StateManager {
   }
 
   public String getSavedState(String saveName) {
+    if (saveName.equalsIgnoreCase("UNDO")) {
+      // does not pop the stack - from RESTORE UNDO
+      Lst<String> stack = getStack(T.undo);
+      return (stack.size() > 0 ? stack.get(stack.size() - 1) : null);
+    }
     String name = (saveName.length() > 0 ? "State_" + saveName : lastState);
     String script = (String) getNoCase(saved, name);
     return (script == null ? "" : script);
   }
 
-  /*  
-   boolean restoreState(String saveName) {
-   //not used -- more efficient just to run the script 
-   String name = (saveName.length() > 0 ? "State_" + saveName
-   : lastState);
-   String script = (String) getNoCase(saved, name);
-   if (script == null)
-   return false;
-   vwr.script(script + CommandHistory.NOHISTORYATALL_FLAG);
-   return true;
-   }
+  /**
+   * Remove the last item on the specified stack, and save the current state to
+   * the other stack provided that state is not null.
+   * 
+   * @param type
+   * @return state to run
    */
+  public String popStack(int type) {
+    Lst<String> stack = getStack(type);
+    String state = (stack.size() > 0 ? stack.remove(stack.size() - 1) : null);
+    System.out.println("STM pop " + stack.size() + " " + (state != null) + " " + (type == T.undo));
+    if (state != null) {
+      appendState(getStack(type == T.undo ? T.redo : T.undo));
+    }
+    checkStack(getStack(T.undo));
+    return state;
+  }
+
+  private void appendState(Lst<String> stack) {
+    checkStack(stack);
+    if (maxUndo > 0)
+      stack.addLast(vwr.getStateInfo());
+    System.out.println("STM append " + stack.size() + (stack == undoStateStack));
+  }
+
+  private void checkStack(Lst<String> stack) {
+    while (stack.size() > maxUndo)
+      stack.removeItemAt(0);
+  }
+
+  private Lst<String> getStack(int type) {
+    if (undoStateStack == null) {
+      undoStateStack = new Lst<String>();
+      redoStateStack = new Lst<String>();
+    }
+    System.out.println("StateManager getStack " + undoStateStack.size() + " " + redoStateStack.size() + " " + (type == T.undo));
+
+    return (type == T.undo ? undoStateStack : redoStateStack);
+  }
+
+  Lst<String> undoStateStack;
+  Lst<String> redoStateStack;
+
+  private void clearStateStack() {
+    if (undoStateStack == null)
+      return;
+    undoStateStack.clear();
+    redoStateStack.clear();
+  }
+
   public void saveStructure(String saveName) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("Shape_");
@@ -337,8 +388,8 @@ public class StateManager {
   }
 
   public boolean restoreScene(String saveName, float timeSeconds) {
-    Scene o = (Scene) getNoCase(saved, (saveName.length() > 0 ? "Scene_"
-        + saveName : lastScene));
+    Scene o = (Scene) getNoCase(saved,
+        (saveName.length() > 0 ? "Scene_" + saveName : lastScene));
     return (o != null && o.restore(vwr, timeSeconds));
   }
 
@@ -347,19 +398,21 @@ public class StateManager {
       deleteSavedType("Orientation_");
       return;
     }
-    Orientation o = new Orientation(vwr, saveName.equalsIgnoreCase("default"), pymolView);
+    Orientation o = new Orientation(vwr, saveName.equalsIgnoreCase("default"),
+        pymolView);
     o.saveName = lastOrientation = "Orientation_" + saveName;
     saved.put(o.saveName, o);
   }
-  
-  public boolean restoreOrientation(String saveName, float timeSeconds, boolean isAll) {
+
+  public boolean restoreOrientation(String saveName, float timeSeconds,
+                                    boolean isAll) {
     Orientation o = getOrientationFor(saveName);
     return (o != null && o.restore(timeSeconds, isAll));
   }
 
   private Orientation getOrientationFor(String saveName) {
     String name = (saveName.length() > 0 ? "Orientation_" + saveName
-        : lastOrientation);    
+        : lastOrientation);
     return (Orientation) getNoCase(saved, name);
   }
 
@@ -372,9 +425,10 @@ public class StateManager {
   }
 
   public Object getContext(String saveName) {
-    return saved.get(saveName.length() == 0 ? lastContext : "Context_" + saveName);
+    return saved
+        .get(saveName.length() == 0 ? lastContext : "Context_" + saveName);
   }
-  
+
   public void saveBonds(String saveName) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("Bonds_");
@@ -396,16 +450,40 @@ public class StateManager {
   public static String varClip(String name, String sv, int nMax) {
     if (nMax > 0 && sv.length() > nMax)
       sv = sv.substring(0, nMax) + " #...more (" + sv.length()
-          + " bytes -- use SHOW " + name + " or MESSAGE @" + name
-          + " to view)";
+          + " bytes -- use SHOW " + name + " or MESSAGE @" + name + " to view)";
     return sv;
   }
+
+  public int getUndoMax() {
+    return maxUndo;
+  }
+
+  public void setUndoMax(int n) {
+    maxUndo = Math.max(n, 0);
+    checkStack(getStack(T.undo));
+    checkStack(getStack(T.redo));
+  }
+
+  public String getUndoRedoState(int tok) {
+    return popStack(tok);
+  }
+
+  public boolean canDo(int type) {
+    return (maxUndo > 0 && vwr.getBooleanProperty("preserveState") && !getStack(type).isEmpty());
+  }
+
+  public String getUndoInfo() {
+    boolean auto = vwr.getBooleanProperty("undoAuto");
+    return (vwr.getBooleanProperty("preserveState") ? "undoAuto=" + auto + (!auto ? "; user stack sizes: UNDO=" + getStack(T.undo).size() + ", REDO="
+        + getStack(T.redo).size() : "") : "SET preserveState = FALSE -- undo/redo is disabled");
+  }
+  
 }
 
 class Scene {
-  protected String  saveName;
+  protected String saveName;
   private Map<String, Object> scene;
-  
+
   protected Scene(Map<String, Object> scene) {
     this.scene = scene;
   }
@@ -436,8 +514,8 @@ class Connections {
     Bond[] bonds = modelSet.bo;
     for (int i = bondCount; --i >= 0;) {
       Bond b = bonds[i];
-      connections[i] = new Connection(b.atom1.i, b.atom2.i, b
-          .mad, b.colix, b.order, b.getEnergy(), b.shapeVisibilityFlags);
+      connections[i] = new Connection(b.atom1.i, b.atom2.i, b.mad, b.colix,
+          b.order, b.getEnergy(), b.shapeVisibilityFlags);
     }
   }
 
@@ -452,12 +530,13 @@ class Connections {
       if (c.atomIndex1 >= ac || c.atomIndex2 >= ac)
         continue;
       Bond b = modelSet.bondAtoms(modelSet.at[c.atomIndex1],
-          modelSet.at[c.atomIndex2], c.order, c.mad, null, c.energy, false, true);
+          modelSet.at[c.atomIndex2], c.order, c.mad, null, c.energy, false,
+          true);
       b.colix = c.colix;
       b.shapeVisibilityFlags = c.shapeVisibilityFlags;
     }
     for (int i = modelSet.bondCount; --i >= 0;)
-        modelSet.bo[i].index = i;
+      modelSet.bo[i].index = i;
     vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
     return true;
   }
@@ -472,8 +551,8 @@ class Connection {
   protected float energy;
   protected int shapeVisibilityFlags;
 
-  protected Connection(int atom1, int atom2, short mad, short colix, int order, float energy,
-      int shapeVisibilityFlags) {
+  protected Connection(int atom1, int atom2, short mad, short colix, int order,
+      float energy, int shapeVisibilityFlags) {
     atomIndex1 = atom1;
     atomIndex2 = atom2;
     this.mad = mad;
@@ -483,5 +562,3 @@ class Connection {
     this.shapeVisibilityFlags = shapeVisibilityFlags;
   }
 }
-
-

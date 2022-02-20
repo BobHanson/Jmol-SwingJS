@@ -96,10 +96,16 @@ import javajs.util.SB;
  */
 public class StateCreator extends JmolStateCreator {
 
+
+  private boolean undoWorking = false;
+  private final static int MAX_ACTION_UNDO = 100;
+
+  final Lst<String> actionStates;
+  final Lst<String> actionStatesRedo;
+  
   public StateCreator() {
-
-    // by reflection only!
-
+    actionStates = new Lst<String>();
+    actionStatesRedo = new Lst<String>();
   }
 
   private Viewer vwr;
@@ -107,7 +113,11 @@ public class StateCreator extends JmolStateCreator {
   @Override
   void setViewer(Viewer vwr) {
     this.vwr = vwr;
+
   }
+
+  // by reflection only!
+
 
 
   /////////////////// creating the state script ////////////////////
@@ -1548,8 +1558,6 @@ public class StateCreator extends JmolStateCreator {
 
   @Override
   String getAtomicPropertyState(int taintWhat, BS bsSelected) {
-    if (!vwr.g.preserveState)
-      return "";
     BS bs;
     SB commands = new SB();
     for (int type = 0; type < AtomCollection.TAINT_MAX; type++)
@@ -1664,16 +1672,19 @@ public class StateCreator extends JmolStateCreator {
   
   
   @Override
-  void undoMoveAction(int action, int n) {
+  int undoMoveAction(int action, int n) {
     switch (action) {
     case T.undomove:
     case T.redomove:
       switch (n) {
+      case T.count:
+        return (action == T.undomove ? actionStates : actionStatesRedo).size();
       case -2:
-        vwr.undoClear();
+        actionStates.clear();
+        actionStatesRedo.clear();
         break;
       case -1:
-        (action == T.undomove ? vwr.actionStates : vwr.actionStatesRedo)
+        (action == T.undomove ? actionStates : actionStatesRedo)
             .clear();
         break;
       case 0:
@@ -1681,13 +1692,14 @@ public class StateCreator extends JmolStateCreator {
         //$FALL-THROUGH$
       default:
         if (n > MAX_ACTION_UNDO)
-          n = (action == T.undomove ? vwr.actionStates
-              : vwr.actionStatesRedo).size();
+          n = (action == T.undomove ? actionStates
+              : actionStatesRedo).size();
         for (int i = 0; i < n; i++)
           undoMoveActionClear(0, action, true);
       }
       break;
     }
+    return 0;
   }
 
   @Override
@@ -1714,13 +1726,13 @@ public class StateCreator extends JmolStateCreator {
       switch (type) {
       default:
       case T.undomove:
-        list1 = vwr.actionStates;
-        list2 = vwr.actionStatesRedo;
+        list1 = actionStates;
+        list2 = actionStatesRedo;
         break;
       case T.redomove:
-        list1 = vwr.actionStatesRedo;
-        list2 = vwr.actionStates;
-        if (vwr.actionStatesRedo.size() == 1)
+        list1 = actionStatesRedo;
+        list2 = actionStates;
+        if (actionStatesRedo.size() == 1)
           return;
         break;
       }
@@ -1728,7 +1740,7 @@ public class StateCreator extends JmolStateCreator {
         return;
       undoWorking = true;
       list2.add(0, list1.removeItemAt(0));
-      s = vwr.actionStatesRedo.get(0);
+      s = actionStatesRedo.get(0);
       if (type == T.undomove && list2.size() == 1) {
         // must save current state, coord, etc.
         // but this destroys actionStatesRedo
@@ -1747,7 +1759,7 @@ public class StateCreator extends JmolStateCreator {
       } else {
         // if it's not modelkit mode and we are trying to do a zap, then ignore
         // and clear all action states.
-        vwr.actionStates.clear();
+        actionStates.clear();
       }
       break;
     default:
@@ -1774,20 +1786,16 @@ public class StateCreator extends JmolStateCreator {
 
       }
       if (clearRedo) {
-        vwr.actionStates.add(0, sb.toString());
-        vwr.actionStatesRedo.clear();
+        actionStates.add(0, sb.toString());
+        actionStatesRedo.clear();
       } else {
-        vwr.actionStatesRedo.add(1, sb.toString());
+        actionStatesRedo.add(1, sb.toString());
       }
-      if (vwr.actionStates.size() == MAX_ACTION_UNDO) {
-        vwr.actionStates.removeItemAt(MAX_ACTION_UNDO - 1);
+      if (actionStates.size() == MAX_ACTION_UNDO) {
+        actionStates.removeItemAt(MAX_ACTION_UNDO - 1);
       }
     }
     undoWorking = !clearRedo;
   }
-
-  private boolean undoWorking = false;
-  private final static int MAX_ACTION_UNDO = 100;
-  
 
 }

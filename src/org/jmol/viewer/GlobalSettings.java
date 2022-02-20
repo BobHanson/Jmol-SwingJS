@@ -52,7 +52,10 @@ public class GlobalSettings {
     resolverResolver = JC.databases.get("resolverresolver");
     macroDirectory = JC.defaultMacroDirectory;
 
-    if (g != null) {
+    if (g == null) {
+      setB("undoAuto", !vwr.isApplet);
+    } else {
+      setB("undoAuto", vwr.getBooleanProperty("undoAuto"));
       //persistent values not reset with the "initialize" command
       if (!clearUserVariables) {
         setO("_pngjFile", g.getParameter("_pngjFile", false));
@@ -106,6 +109,7 @@ public class GlobalSettings {
     // also initialized within the managers. 
 
     setF("cameraDepth", TransformManager.DEFAULT_CAMERA_DEPTH);
+    setI("undoMax", vwr.stm.getUndoMax()); // maintained by ScriptEval
     setI("contextDepthMax", 100); // maintained by ScriptEval
     setI("depth", 0); // maintained by TransformManager
     setF("gestureSwipeFactor", ActionManager.DEFAULT_GESTURE_SWIPE_FACTOR);
@@ -179,7 +183,7 @@ public class GlobalSettings {
     setI("propertyAtomNumberField", 0);
     setI("propertyDataColumnCount", 0);
     setI("propertyDataField", 0);
-    setB("undo", true);
+    setI("undoMax", vwr.stm.getUndoMax());
 
     // OK, all of the rest of these are maintained here as global values (below)
 
@@ -755,7 +759,7 @@ public class GlobalSettings {
   public void setB(String name, boolean value) {
     name = name.toLowerCase();
     if (htNonbooleanParameterValues.containsKey(name))
-      return; // don't allow setting boolean of a numeric
+      return; // don't allow setting boolean of a numeric    
     htBooleanParameterFlags.put(name, value ? Boolean.TRUE : Boolean.FALSE);
   }
 
@@ -975,7 +979,7 @@ public class GlobalSettings {
       + ";scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount"
       + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;"
       + CBK.getNameList()
-      + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
+      + ";undo;undoauto;undomax;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
       + ";modelkitmode;autoplaymovie;allowaudio;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
       //  oops these were in some state scripts but should not have been
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"

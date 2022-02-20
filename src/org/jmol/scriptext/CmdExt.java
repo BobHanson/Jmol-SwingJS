@@ -4648,6 +4648,10 @@ public class CmdExt extends ScriptExt {
       if (!chk)
         msg = ((SV) eval.theToken).escape();
       break;
+    case T.undo:
+      if (!chk)
+        msg = vwr.stm.getUndoInfo();
+      break;
     case T.domains:
       eval.checkLength23();
       len = st.length;
@@ -5433,6 +5437,9 @@ public class CmdExt extends ScriptExt {
       }
       if (chk)
         return;
+      boolean refTop = (tokAt(i + 1) == T.top); 
+      if (refTop)
+        i++;
       eval.iToken = i;
       if (hkl instanceof P3) {
         hkl = P4.new4(hkl.x, hkl.y, hkl.z, 0);
@@ -5458,7 +5465,9 @@ public class CmdExt extends ScriptExt {
         }
         oabc[0].scaleAdd2(zoffset, vt, oabc[0]);
       }
-
+      if (refTop)
+        oabc[0].scaleAdd2(-oabc[3].length(), vt, oabc[0]);
+      ucname = "surface" + ((int) hkl.x)  + ((int) hkl.y)  + ((int) hkl.z);
       break;
     case T.string:
     case T.identifier:
@@ -5529,7 +5538,6 @@ public class CmdExt extends ScriptExt {
           if (s.indexOf(",") >= 0)
             newUC = s;
         }
-        showString(ucname);
       }
       break;
     case T.isosurface:
@@ -5681,20 +5689,21 @@ public class CmdExt extends ScriptExt {
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
+    if (ucname != null)
+      showString(ucname + (oabc == null ? "" : " " + Escape.e(oabc)));
   }
 
 
 
   /**
    * create a uvw-space unit cell from an HKL plane
-   * @param uc 
-   * 
+   * @param uc
    * @param hkl
-   * @param plane 
-   * @param zoffset 
-   * @param zscale 
-   * @return oabc
+   * @param plane
+   * @return [o a b c]
+   * 
    * @throws ScriptException
+   * 
    */
   private P3[] getOABCFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
       throws ScriptException {
@@ -5811,6 +5820,10 @@ public class CmdExt extends ScriptExt {
     int i = 0;
     int tok = tokAt(1);
     switch (tok) {
+    case T.undo:
+    case T.redo:
+       e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
+       return;
     case T.off:
     case T.nada:
     case T.on:

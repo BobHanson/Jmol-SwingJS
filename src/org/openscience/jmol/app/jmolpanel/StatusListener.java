@@ -210,6 +210,10 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         if (data[2] != null && display.haveDisplay) {
           jmolPanel.setStatus(1, (String) data[2]);
         }
+      } else if (msWalltime == -1) {
+        AppConsole console = jmolPanel.getConsole();
+        if (console != null)
+          console.checkUndoEnabled();        
       }
       break;
     case MODELKIT:

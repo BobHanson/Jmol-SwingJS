@@ -80,8 +80,8 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     { "SIGNEDsaveFile", "select visible;write COORD '?jmol.mol'" },
     { "SIGNEDsaveState", "write '?jmol.jpg'" },
     { "clearQ", "clearQ" },
-    { "undo" , "!UNDO" },
-    { "redo" , "!REDO" },
+    { "undo" , "!undoMove" },
+    { "redo" , "!redoMove" },
     { "operator", "" },
     { "exit!Persist", "set modelkitMode false" }
   };

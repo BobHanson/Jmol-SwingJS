@@ -69,6 +69,7 @@ import org.jmol.awt.Platform;
 import org.jmol.console.JmolConsole;
 import org.jmol.console.ScriptEditor;
 import org.jmol.i18n.GT;
+import org.jmol.script.T;
 import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
@@ -396,16 +397,12 @@ public class AppConsole extends JmolConsole
   void executeCommandAsThread(String strCommand) {
     if (strCommand == null)
       strCommand = console.getCommandString().trim();
-    if (strCommand.equalsIgnoreCase("undo")) {
-      undoRedo(false);
-      console.appendNewline();
-      console.setPrompt();
-      return;
-    } else if (strCommand.equalsIgnoreCase("redo")) {
-      undoRedo(true);
-      console.appendNewline();
-      console.setPrompt();
-      return;
+    boolean isUndo = strCommand.equalsIgnoreCase("undo");
+    if ((isUndo || strCommand.equalsIgnoreCase("redo")) && checkUndoEnabled() != UNDO_USER) {
+        undoRedo(isUndo);
+        console.appendNewline();
+        console.setPrompt();
+        return;
     } else if (strCommand.equalsIgnoreCase("exitJmol")) {
       System.exit(0);
     } else if (strCommand.startsWith("font console")) {
@@ -416,7 +413,7 @@ public class AppConsole extends JmolConsole
       strCommand = " ";
     } else if (strCommand.length() == 0) {
       strCommand = "!resume";
-      undoSetEnabled();
+      checkUndoEnabled();
     }
 
     if (strCommand.length() > 0) {
@@ -444,25 +441,40 @@ public class AppConsole extends JmolConsole
     redoButton.setEnabled(false);
   }
 
-  private boolean undoSetEnabled() {
-    if (undoButton == null)
-      return false;
-    boolean undoAllowed = (vwr.getBooleanProperty("undo")
-        && vwr.getBooleanProperty("preserveState"));
-    undoButton.setEnabled(
-        undoAllowed && undoPointer > 0 && undoStack[undoPointer - 1] != null);
-    redoButton.setEnabled(undoAllowed && undoPointer < MAXUNDO
-        && undoStack[undoPointer + 1] != null);
-    return undoAllowed;
+  final static int UNDO_NONE = 0;
+  final static int UNDO_CONSOLE = 1;
+  final static int UNDO_USER = 2;
+  
+  public int checkUndoEnabled() {
+    boolean undoAllowed = vwr.getBooleanProperty("undoAuto");
+    if (undoAllowed) {
+      if (undoButton == null)
+        return UNDO_NONE;
+      undoAllowed = vwr.getBooleanProperty("preserveState");
+      undoButton.setEnabled(
+          undoAllowed && undoPointer > 0 && undoStack[undoPointer - 1] != null);
+      redoButton.setEnabled(undoAllowed && undoPointer < MAXUNDO
+          && undoStack[undoPointer + 1] != null);
+      return UNDO_CONSOLE;
+    }
+    // user has turned the console undo off
+    if (undoButton != null && vwr.stm.getUndoMax() > 0) {
+      undoButton.setEnabled(vwr.stm.canDo(T.undo));
+      redoButton.setEnabled(vwr.stm.canDo(T.redo));
+    }
+    return UNDO_USER;
   }
 
   private void undoRedo(boolean isRedo) {
-    if (undoButton == null)
-      return;
     // pointer is always left at the undo slot when a command is given
     // redo at CURRENT pointer position
-    if (!undoSetEnabled())
+    switch (checkUndoEnabled()) {
+    case UNDO_NONE:
       return;
+    case UNDO_USER:
+      executeCommand(isRedo ? "redo" : "undo");
+      return;
+    }
     //dumpUndo("undoRedo1");
     int ptr = undoPointer + (isRedo ? 1 : -1);
     if (!undoSaved) {
@@ -478,7 +490,7 @@ public class AppConsole extends JmolConsole
       vwr.evalStringQuiet(state);
       undoPointer = ptr;
     }
-    undoSetEnabled();
+    checkUndoEnabled();
     //dumpUndo("undoRedo DONE");
   }
 
@@ -489,7 +501,7 @@ public class AppConsole extends JmolConsole
   private void undoSave(boolean incrementPtr) {
     if (undoButton == null)
       return;
-    if (!vwr.getBooleanProperty("undo")
+    if (!vwr.getBooleanProperty("undoAuto")
         || !vwr.getBooleanProperty("preserveState"))
       return;
     //delete redo items, since they will no longer be valid
@@ -510,11 +522,11 @@ public class AppConsole extends JmolConsole
       dontsave = true;
     }
     if (dontsave || Logger.checkTimer("(console", false) > 2000) {
-      vwr.setBooleanProperty("undo", false);
+      vwr.setBooleanProperty("undoAuto", false);
       undoClear();
       Logger.info("command processing slow; undo disabled");
     } else {
-      undoSetEnabled();
+      checkUndoEnabled();
     }
     undoSaved = true;
     //dumpUndo("undoSave DONE");

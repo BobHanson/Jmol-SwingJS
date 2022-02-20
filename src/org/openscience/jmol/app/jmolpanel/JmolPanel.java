@@ -480,8 +480,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected void setupConsole() {
     say(GT.$("Initializing Script Window..."));
     vwr.getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
-    AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
-        "getAppConsole", null);
+    AppConsole console = getConsole();
     if (console != null) {
       if (console.jcd != null && historyFile != null) {
         historyFile.repositionWindow(SCRIPT_WINDOW_NAME, console.jcd, 200, 100,
@@ -679,8 +678,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     if (frame != null) {
       historyFile.addWindowInfo(windowName, frame, null, display.dimSize);
     }
-    AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
-        "getAppConsole", null);
+    AppConsole console = getConsole();
     if (console != null && console.jcd != null)
       historyFile.addWindowInfo(SCRIPT_WINDOW_NAME, console.jcd, null);
     Component c = (Component) vwr.getProperty("DATA_API", "getScriptEditor",
@@ -1524,8 +1522,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
-          "getAppConsole", null);
+      AppConsole console = getConsole();
       if (console != null) {
         console.setVisible(true);
       }
@@ -1953,9 +1950,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     vwr.syncScript(script, "~", 0);
   }
 
+  public AppConsole getConsole() {
+    return   (AppConsole) vwr.getProperty("DATA_API", "getAppConsole", null);
+  }
+  
   public void updateConsoleFont() {
-    AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
-        "getAppConsole", null);
+    AppConsole console = getConsole();
     if (console != null)
       console.updateFontSize();
   }
