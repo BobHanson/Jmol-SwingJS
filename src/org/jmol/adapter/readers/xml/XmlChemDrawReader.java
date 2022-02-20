@@ -23,9 +23,17 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.JmolAdapter;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.Bond;
+import org.jmol.api.JmolAdapter;
+import org.jmol.util.Logger;
+
+import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.PT;
 
 /**
@@ -37,42 +45,53 @@ public class XmlChemDrawReader extends XmlReader {
   boolean optimize2D;
   private float minX = Float.MAX_VALUE;
   private float minY = Float.MAX_VALUE;
+  private float minZ = Float.MAX_VALUE;
+  private float maxZ = -Float.MAX_VALUE;
   private float maxY = -Float.MAX_VALUE;
   private float maxX = -Float.MAX_VALUE;
-
+  private boolean is3D;
+  
+  private Lst<Object[]> bonds = new Lst<Object[]>();
+  private Atom warningAtom;
+  
   public XmlChemDrawReader() {
   }
 
-  
   @Override
-  protected void processXml(XmlReader parent,
-                            Object saxReader) throws Exception {
+  protected void processXml(XmlReader parent, Object saxReader)
+      throws Exception {
     optimize2D = checkFilterKey("2D");
     processXml2(parent, saxReader);
     this.filter = parent.filter;
-    set2D();
   }
 
   @Override
   public void processStartElement(String localName, String nodeName) {
-    String[] tokens;
     if ("fragment".equals(localName)) {
-//nah      asc.newAtomSet();
+      //nah      asc.newAtomSet();
       return;
     }
 
     if ("n".equals(localName)) {
-      String type = atts.get("type");
-      if (type != null && !type.equals("unspecified")
-          && !type.equals("eLement")) {
-        System.err.println("XmlChemDrawReader Unsupported type: " + type);
+      if (asc.bsAtoms == null)
+        asc.bsAtoms = new BS();
+      
+      String nodeType = atts.get("nodetype");
+
+      if ("Fragment".equals(nodeType))
         return;
-      }
+      
+      boolean isNickname = "Nickname".equals(nodeType);
+      boolean isConnectionPt = "ExternalConnectionPoint".equals(nodeType);
+      
+      String warning = atts.get("warning");
+
       atom = new Atom();
       atom.atomName = atts.get("id");
       String element = atts.get("element");
-      short elNo = (short) (element == null ? 6 : Integer.parseInt(element));
-      element = JmolAdapter.getElementSymbol(elNo);
+      atom.elementNumber = (short) (warning != null ? 0 : element == null ? 6
+          : Integer.parseInt(element));
+      element = JmolAdapter.getElementSymbol(atom.elementNumber);
       String isotope = atts.get("isotope");
       if (isotope != null)
         element = isotope + element;
@@ -81,26 +100,36 @@ public class XmlChemDrawReader extends XmlReader {
       if (s != null) {
         atom.formalCharge = Integer.parseInt(s);
       }
-      float x = 0, y = 0;
-      if (atts.containsKey("p")) {
-        String xy = atts.get("p");
-        tokens = PT.getTokens(xy);
-        x = parseFloatStr(tokens[0]);
-        y = -parseFloatStr(tokens[1]);
-        if (x < minX)
-          minX = x;
-        if (x > maxX)
-          maxX = x;
-        if (y < minY)
-          minY = y;
-        if (y > maxY)
-          maxY = y;
+      if (atts.containsKey("xyz")) {
+        is3D = true;
+        setAtom("xyz");
+      } else if (atts.containsKey("p")) {
+        setAtom("p");
       }
-      
-      atom.set(x, y, 0);
+
       asc.addAtomWithMappedName(atom);
+      
+      if (warning != null) {
+        atom.atomName = PT.rep(warning, "&apos;", "'");
+        warningAtom = atom;
+      } else {
+        warningAtom = null;
+      }
+
+      //  ......................O --- Nickname
+      //  ExternalConnectionPoint --- TBS
+      if (!isConnectionPt && !isNickname) {
+        asc.bsAtoms.set(atom.index);
+      }
       return;
     }
+    
+    if ("s".equals(localName)) {
+      if (warningAtom != null) {
+        setKeepChars(true);
+      }
+    }
+    
     if ("b".equals(localName)) {
       String atom1 = atts.get("b");
       String atom2 = atts.get("e");
@@ -121,39 +150,116 @@ public class XmlChemDrawReader extends XmlReader {
           order = JmolAdapter.ORDER_STEREO_FAR;
         }
       }
-      if (invertEnds) {
-        asc.addNewBondFromNames(atom2, atom1, order);
-      } else {
-        asc.addNewBondFromNames(atom1, atom2, order);
-      }
+      bonds.addLast(new Object[] {(invertEnds ? atom2 : atom1),
+          (invertEnds ? atom1 : atom2), Integer.valueOf(order) });
       return;
     }
 
   }
 
+  private void setAtom(String key) {
+    String xyz = atts.get(key);
+    String[] tokens = PT.getTokens(xyz);
+    float x = parseFloatStr(tokens[0]);
+    float y = -parseFloatStr(tokens[1]);
+    float z = (key == "xyz" ? parseFloatStr(tokens[2]) : 0);
+    if (x < minX)
+      minX = x;
+    if (x > maxX)
+      maxX = x;
+    if (y < minY)
+      minY = y;
+    if (y > maxY)
+      maxY = y;
+    if (z < minZ)
+      minZ = z;
+    if (z > maxZ)
+      maxZ = z;
+    atom.set(x, y, z);
+  }
+
   @Override
   void processEndElement(String localName) {
+    if ("s".equals(localName)) {
+      if (warningAtom != null) {
+        String group = chars.toString();
+        warningAtom.atomName += ": " + group;
+        parent.appendLoadNote("Warning: " + warningAtom.atomName);
+        warningAtom = null;
+      }
+    }
+    
     setKeepChars(false);
   }
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    fixConnections();
     center();
-    asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+    System.out.println("bsAtoms = " + asc.bsAtoms);
+    asc.setInfo("minimize3D", Boolean.valueOf(is3D));
+    set2D();
+    asc.setInfo("is2D", Boolean.valueOf(!is3D));
+    if (!is3D)
+      asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+    parent.appendLoadNote("ChemDraw CDXML: " + (is3D ? "3D" : "2D"));
   }
 
+  private void fixConnections() {
+    for (int i = 0, n = bonds.size(); i < n; i++) {
+      Object[] o = bonds.get(i);
+      Bond b = asc.addNewBondFromNames((String) o[0],(String) o[1], ((Integer) o[2]).intValue());
+      if (b == null)
+        continue; // bond to nickname
+      
+      Atom a1 = asc.atoms[b.atomIndex1];
+      Atom a2 = asc.atoms[b.atomIndex2];
+      Atom pt = (!asc.bsAtoms.get(b.atomIndex1) ? a1 : !asc.bsAtoms.get(b.atomIndex2) ? a2 : null);
+      if (pt == null)
+        continue;
+      for (int j = asc.bsAtoms.nextSetBit(0); j >= 0; j = asc.bsAtoms.nextSetBit(j + 1)) {
+        Atom a = asc.atoms[j];
+        if (Math.abs(a.x - pt.x) < 0.1f && Math.abs(a.y - pt.y) < 0.1f) {
+          if (pt == a1) {
+            b.atomIndex1 = (a1 = a).index;
+          } else {
+            b.atomIndex2 = (a2 = a).index;
+          }
+          break;
+        }
+      }
+      b.distance = a1.distance(a2);
+    }
+  }
 
   private void center() {
     if (minX > maxX)
       return;
-    float cx = (maxX + minX)/2;
-    float cy = (maxY + minY)/2;
+    float sum = 0;
+    int n = 0;
+    if (is3D) {
+      for (int i = asc.bondCount; --i >= 0;) {
+        if (asc.atoms[asc.bonds[i].atomIndex1].elementNumber > 1
+            && asc.atoms[asc.bonds[i].atomIndex2].elementNumber > 1) {
+          sum += asc.bonds[i].distance;
+          n++;
+        }
+      }
+    }
+    float f = 1;
+    if (sum > 0) {
+      f = 1.45f * n / sum;
+    }
+
+    float cx = (maxX + minX) / 2;
+    float cy = (maxY + minY) / 2;
+    float cz = (maxZ + minZ) / 2;
     for (int i = asc.ac; --i >= 0;) {
       Atom a = asc.atoms[i];
-      a.x -= cx;
-      a.y -= cy;
+      a.x = (a.x - cx) * f;
+      a.y = (a.y - cy) * f;
+      a.z = (a.z - cz) * f;
     }
-      
-    
+
   }
 }

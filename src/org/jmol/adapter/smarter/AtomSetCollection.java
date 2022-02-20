@@ -596,14 +596,13 @@ public class AtomSetCollection {
     return b;
   }
 
-  public void addNewBondFromNames(String atomName1, String atomName2, int order) {
-    addNewBondWithOrderA(getAtomFromName(atomName1), getAtomFromName(atomName2), order);
+  public Bond addNewBondFromNames(String atomName1, String atomName2, int order) {
+    return addNewBondWithOrderA(getAtomFromName(atomName1), getAtomFromName(atomName2), order);
   }
 
-  public void addNewBondWithOrderA(Atom atom1, Atom atom2,
+  public Bond addNewBondWithOrderA(Atom atom1, Atom atom2,
                                     int order) {
-    if (atom1 != null && atom2 != null)
-      addNewBondWithOrder(atom1.index, atom2.index, order);
+    return (atom1 != null && atom2 != null ? addNewBondWithOrder(atom1.index, atom2.index, order) : null);
   }
 
   public void addBond(Bond bond) {

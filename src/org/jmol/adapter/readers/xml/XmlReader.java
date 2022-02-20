@@ -120,7 +120,7 @@ public class XmlReader extends AtomSetCollectionReader {
   }
 
   private String parseXML() {
-    Object saxReader = null;
+    org.xml.sax.XMLReader saxReader = null;
 
     /**
      * @j2sNative
@@ -135,6 +135,13 @@ public class XmlReader extends AtomSetCollectionReader {
         spf.setNamespaceAware(true);
         javax.xml.parsers.SAXParser saxParser = spf.newSAXParser();
         saxReader = saxParser.getXMLReader();
+
+        // otherwise, DTD UTI is treated as a URL, retrieved, and scanned.
+        // see https://stackoverflow.com/questions/10257576/how-to-ignore-inline-dtd-when-parsing-xml-file-in-java
+        saxReader.setFeature("http://xml.org/sax/features/validation", false);
+        saxReader.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+        saxReader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        
         if (debugging)
           Logger.debug("Using JAXP/SAX XML parser.");
       } catch (Exception e) {
@@ -160,7 +167,9 @@ public class XmlReader extends AtomSetCollectionReader {
     try {
       thisReader.processXml(this, saxReader);
     } catch (Exception e) {
+      e.printStackTrace();
       return "Error reading XML: " + (e.getMessage());
+      
     }
     return null;
   }
@@ -184,7 +193,7 @@ public class XmlReader extends AtomSetCollectionReader {
     if (saxReader == null) {
       //domAttributes = getDOMAttributes();
       attribs = new Object[1];
-      attArgs = new Object[1];
+      //attArgs = new Object[1];
       domObj = new Object[1];
       Object o = "";
       byte[] data = null;
@@ -342,8 +351,8 @@ public class XmlReader extends AtomSetCollectionReader {
 
   private Object[] domObj = new Object[1];
   private Object[] attribs;
-  private Object[] attArgs;
-  private Object[] nullObj = new Object[0];
+//  private Object[] attArgs;
+//  private Object[] nullObj = new Object[0];
 
   private void walkDOMTree() {
     String localName;
@@ -469,6 +478,11 @@ public class XmlReader extends AtomSetCollectionReader {
 //    }
 //  }
 //
+  /**
+   * @param jsObject  
+   * @param name 
+   * @return an object
+   */
   private Object jsObjectGetMember(Object[] jsObject, String name) {
     /**
      * @j2sNative
