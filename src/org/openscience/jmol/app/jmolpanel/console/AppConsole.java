@@ -796,12 +796,6 @@ public class AppConsole extends JmolConsole
       setPrompt();
     }
 
-    //    /*
-    //    * (non-Javadoc)
-    //    * 
-    //    * @see java.awt.Component#processKeyEvent(java.awt.event.KeyEvent)
-    //    */
-    //
     /**
      * Custom key event processing for command 0 implementation.
      * 

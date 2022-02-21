@@ -435,7 +435,56 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
       cmd = cmd.substring(0, pt);
    return PT.trim(cmd, "; ");
   }
+
+  /**
+   * 
+   * @param kcode
+   * @param kid
+   * @param isControlDown
+   * @return  1 = consume; 2 = super.process; 3 = both
+   */
+  protected int processKey(int kcode, int kid, boolean isControlDown) {
+    int mode = 0;
+    switch (kid) {
+    case KeyEvent.KEY_PRESSED:
+      switch (kcode) {
+      case KeyEvent.VK_TAB:
+        String s = input.getText();
+        if (s.endsWith("\n") || s.endsWith("\t"))
+          return 0;
+        mode = 1;
+        if (input.getCaretPosition() == s.length()) {
+          String cmd = completeCommand(s);
+          if (cmd != null)
+            input.setText(PT.escUnicode(cmd).replace('\t',' '));
+          nTab++;
+          return mode;
+        }
+        break;
+      case KeyEvent.VK_ESCAPE:
+        mode = 1;
+        input.setText("");
+        break;
+      }
+      nTab = 0;
+      if (kcode == KeyEvent.VK_ENTER && !isControlDown) {
+        execute(null);
+        return mode;
+      }
+      if (kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN) {
+        recallCommand(kcode == KeyEvent.VK_UP, false);
+        return mode;
+      }
+      break;
+    case KeyEvent.KEY_RELEASED:
+      if (kcode == KeyEvent.VK_ENTER && !isControlDown)
+        return mode;
+      break;
+    }
+    return mode | 2;
+  }
   
+
   /**
    * separate a command line into three sections:
    * 
