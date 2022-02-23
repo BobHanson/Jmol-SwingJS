@@ -258,6 +258,7 @@ public class StateManager {
       return;
     }
     if (saveName.length() == 0) {
+      vwr.setBooleanProperty("undoAuto", false);
       appendState(getStack(T.undo));
       redoStateStack.clear();
       return;

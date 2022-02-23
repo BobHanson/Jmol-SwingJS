@@ -2188,7 +2188,7 @@ public class ScriptEval extends ScriptExpr {
           .append(vwr.getModelNumberDotted(i)).append("\n");
     }
     if (sb.length() > 0)
-     vwr.showString(sb.toString(), false);
+     showString(sb.toString());
   }
 
   @Override
@@ -2560,6 +2560,7 @@ public class ScriptEval extends ScriptExpr {
           if (chk) {
           } else {
             if (Viewer.isJS) {
+            	// using vwr.showString here, as this is just a general message
               vwr.showString("InChI module initialized", false);
               doDelay(1);
             }
@@ -5166,8 +5167,9 @@ public class ScriptEval extends ScriptExpr {
     }
     String msg;
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2)
-        && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null)
-      vwr.showString(msg, false);
+        && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null) {
+      showString(msg);
+    }
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
     if (AU.isAI(centroid) && vwr.ms.ac > 0) {
       BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
@@ -6643,8 +6645,12 @@ public class ScriptEval extends ScriptExpr {
         }
         return;
       case T.state:
-        if (!chk)
+        if (!chk) {
           vwr.stm.saveState(saveName);
+          if (saveName.length() == 0) {
+            showString(vwr.stm.getUndoInfo());
+          }
+        }
         return;
       case T.structure:
         if (!chk)
