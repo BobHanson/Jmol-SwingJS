@@ -30,6 +30,7 @@ import java.util.Map;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 
+import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
@@ -1087,5 +1088,17 @@ public class SymmetryOperation extends M4 {
     }
     return info;
   }
+
+  public static Lst<P3> getLatticeCentering(SymmetryOperation[] ops) {
+    // TODO -- check 'R' types
+    Lst<P3> list = new Lst<P3>();
+    for (int i = 0; i < ops.length; i++) {
+      T3 c = (ops[i]  == null ? null : ops[i].getCentering());
+      if (c != null)
+        list.addLast(P3.newP(c));
+    }
+    return list;
+  }
+
 
 }

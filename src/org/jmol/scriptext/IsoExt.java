@@ -40,6 +40,7 @@ import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
 import org.jmol.script.ScriptInterruption;
+import org.jmol.script.ScriptParam;
 import org.jmol.script.T;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.BSUtil;
@@ -290,13 +291,14 @@ public class IsoExt extends ScriptExt {
     int iOn = -1;
     boolean isBest = false;
     int tok = 0;
+    P3 lattice = null;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
       tok = getToken(i).tok;
       switch (tok) {
       case T.intersection:
-        switch (getToken(i + (tokAt(i + 1) == T.best ? 2 : 1)).tok) {
+        switch (tok = getToken(i + (tokAt(i + 1) == T.best ? 2 : 1)).tok) {
         case T.unitcell:
         case T.boundbox:
           tokIntersectBox = tok;
@@ -327,6 +329,7 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         break;
+      case T.lattice:
       case T.unitcell:
       case T.boundbox:
         // boundbox
@@ -337,6 +340,7 @@ public class IsoExt extends ScriptExt {
         // unitcell [o a b c]
         // 
 
+        lattice = null;
         SymmetryInterface uc = null;
         BS bs = null;
         switch (tok) {
@@ -367,6 +371,14 @@ public class IsoExt extends ScriptExt {
                 .getUnitCell(eval.getPointArray(i + 1, -1, false), false, null);
             i = eval.iToken;
           }
+          if (tokAt(i + 1) == T.lattice) {
+            if (tokIntersectBox == T.unitcell)
+              tokIntersectBox = T.lattice;
+            ++i;
+            lattice = (P3) eval
+                .checkHKL(eval.getPointOrPlane(++i, ScriptParam.MODE_P3));
+            i = eval.iToken;
+          }
           break;
         }
         if (chk)
@@ -384,8 +396,18 @@ public class IsoExt extends ScriptExt {
         } else if (tok == T.unitcell && uc == null) {
           uc = vwr.getCurrentUnitCell();
         }
-        pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
-            intScale / 100f);
+        if (lattice == null) {
+          pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
+              intScale / 100f);
+        } else {
+          Lst<P3> cpts = Measure.getLatticePoints(uc.getLatticeCentering(),
+              (int) lattice.x, (int) lattice.y, (int) lattice.z);
+          pts = new P3[cpts.size()];
+          for (int j = 0; j < cpts.size(); j++) {
+            pts[j] = cpts.get(j);
+              uc.toCartesian(pts[j], true);
+          }
+        }
         isBest = false;
         if (!isIntersect) {
           if (pts == null)
@@ -393,8 +415,12 @@ public class IsoExt extends ScriptExt {
           propertyName = "polygon";
           Lst<Object> v = new Lst<Object>();
           v.addLast(pts);
-          vwr.getTriangulator();// initialize for legacy java2script
-          v.addLast(Triangulator.fullCubePolygon);
+          if (lattice == null) {
+            vwr.getTriangulator();// initialize for legacy java2script
+            v.addLast(Triangulator.fullCubePolygon);
+          } else {
+            v.addLast(null);
+          }
           propertyValue = v;
           havePoints = true;
           intScale = 0;
@@ -446,10 +472,13 @@ public class IsoExt extends ScriptExt {
           plane = eval.hklParameter(++i, null, true);
           break;
         case T.line:
+          if (tokIntersectBox == T.lattice)
+            invArg();
           if (isBest) {
             linePts = bsToArray(eval.getAtomsStartingAt(++i));
-          } else if (eval.isCenterParameter(i + 1)){
-            linePts = new P3[] { centerParameter(++i), centerParameter(eval.iToken + 1) };
+          } else if (eval.isCenterParameter(i + 1)) {
+            linePts = new P3[] { centerParameter(++i),
+                centerParameter(eval.iToken + 1) };
           } else {
             linePts = eval.getPointArray(++i, 2, false);
           }
@@ -488,6 +517,15 @@ public class IsoExt extends ScriptExt {
           // plane or intersect $xxx plane
           propertyValue = plane;
           propertyName = "planedef";
+        } else if (tokIntersectBox == T.lattice) {
+          propertyName = "polygon";
+          Lst<P3> cpts = Measure.getPointsOnPlane(pts, plane);
+          pts = cpts.toArray(new P3[cpts.size()]);
+          Lst<Object> v = new Lst<Object>();
+          v.addLast(pts);
+          v.addLast(null);
+          propertyValue = v;
+          intScale = 0;
         } else {
           propertyName = "polygon";
           propertyValue = vwr.getTriangulator().intersectPlane(plane, pts,

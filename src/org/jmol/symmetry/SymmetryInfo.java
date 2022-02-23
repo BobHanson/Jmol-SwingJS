@@ -39,7 +39,7 @@ class SymmetryInfo {
   SymmetryOperation[] symmetryOperations;
   String infoStr;
   int[] cellRange;
-  String latticeType = "P";
+  char latticeType = 'P';
   public String intlTableNo;
 
   SymmetryInfo() {    
@@ -65,8 +65,8 @@ class SymmetryInfo {
       if (sgName == null || sgName == "")
         sgName = "spacegroup unspecified";
       intlTableNo = (String) info.get("intlTableNo");
-      if ((latticeType = (String) info.get("latticeType")) == null)
-        latticeType = "P";
+      String s = (String) info.get("latticeType");
+        latticeType = (s == null ? 'P' : s.charAt(0));
       symmetryCount = info.containsKey("symmetryCount")
           ? ((Integer) info.get("symmetryCount")).intValue()
           : 0;

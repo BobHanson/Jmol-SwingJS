@@ -5446,7 +5446,7 @@ public class CmdExt extends ScriptExt {
       } else if (Float.isNaN(zoffset)) {
         zoffset = ((P4) hkl).w; 
       }
-      oabc = getOABCFromHKL(u, (P4) hkl, plane);
+      oabc = getUVBoxFromHKL(u, (P4) hkl, plane);
       P3 p = new P3();
       V3 vt = new V3();
       Measure.getPlaneProjection(new P3(), plane, p, vt);
@@ -5468,6 +5468,23 @@ public class CmdExt extends ScriptExt {
       if (refTop)
         oabc[0].scaleAdd2(-oabc[3].length(), vt, oabc[0]);
       ucname = "surface" + ((int) hkl.x)  + ((int) hkl.y)  + ((int) hkl.z);
+      break;
+    case T.scale:
+    case T.supercell:
+      pt = (tok == T.scale ? eval.getPointOrPlane(++i, ScriptParam.MODE_P3)
+          : eval.checkHKL(eval.getFractionalPoint(++i)));
+      i = eval.iToken;
+      oabc = u.getUnitCellVectors();
+      oabc[1].scale(Math.abs(pt.x));
+      oabc[2].scale(Math.abs(pt.y));
+      oabc[3].scale(Math.abs(pt.z));
+      pt = null;
+      ucname = "supercell";
+      break;
+    case T.fill:
+      pt = SimpleUnitCell.ptToIJK(eval.checkHKL(eval.getFractionalPoint(++i)), 1);
+      i = eval.iToken;
+
       break;
     case T.string:
     case T.identifier:
@@ -5603,17 +5620,11 @@ public class CmdExt extends ScriptExt {
           invArg();       
       } else {
         if (!isOffset && pt.x < 555) {
-          pt = getSupercell(pt, true);
+          pt = SimpleUnitCell.ptToIJK(eval.checkHKL(pt), 1);
         } else {
           pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
         }
       }
-      i = eval.iToken;
-      break;
-    case T.fill:
-    case T.supercell:
-      pt = eval.getFractionalPoint(++i);
-      pt = getSupercell(pt, tok == T.fill);
       i = eval.iToken;
       break;
     case T.decimal:
@@ -5693,10 +5704,9 @@ public class CmdExt extends ScriptExt {
       showString(ucname + (oabc == null ? "" : " " + Escape.e(oabc)));
   }
 
-
-
   /**
    * create a uvw-space unit cell from an HKL plane
+   * 
    * @param uc
    * @param hkl
    * @param plane
@@ -5705,58 +5715,143 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    * 
    */
-  private P3[] getOABCFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
+  private P3[] getUVBoxFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
       throws ScriptException {
     int h = (int) hkl.x;
     int k = (int) hkl.y;
     int l = (int) hkl.z;
-    
+
     if (h == 0 && k == 0 && l == 0 || h != hkl.x || k != hkl.y || l != hkl.z)
       invArg();
+
+    // reduce {2 2 2} to {1 1 1}
+    while ((h % 2) == 0 && (k % 2) == 0 && (l % 2) == 0) {
+      h /= 2;
+      k /= 2;
+      l /= 2;
+    }
     P3[] oabc = uc.getUnitCellVectors();
     float dist0 = plane.w;
-    P3 a = oabc[1];
-    P3 b = oabc[2];
-    P3 c = oabc[3];
-    if (h == 0 && k == 0) {
-      // no a,b intercept
-      oabc[3].scale(1f / l);
-    } else if (h == 0 && l == 0) {
-      // no a,c intercept
-      // axes are ca
-      b.scale(1f / k);
-      oabc[1] = c;
-      oabc[2] = a;
-      oabc[3] = b;
-    } else if (k == 0 && l == 0) {
-      // no b,c intercept
-      a.scale(1f / h);
-      oabc[1] = b;
-      oabc[2] = c;
-      oabc[3] = a;
-    } else {
-      a.scale(h == 0 ? 1 : 1f / h);
-      b.scale(k == 0 ? 1 : 1f / k);
-      c.scale(l == 0 ? l : 1f / l);
-      P3 u = oabc[1];
-      P3 v = oabc[2];
-      P3 w = oabc[3];
-      u.scaleAdd2(-1, b, a);
-      v.scaleAdd2(-1, c, b);
-      w.cross(u, v);
-      w.normalize();
-      w.scale(Math.abs(dist0));
+    P4 p0 = P4.new4(plane.x, plane.y, plane.z, 0);
+    Lst<P3> cpts = Measure.getLatticePoints(uc.getLatticeCentering(), h, k, l);
+    for (int j = 0; j < cpts.size(); j++) {
+      uc.toCartesian(cpts.get(j), true);
     }
-    return oabc;
-  }
-
-  ///////// private methods used by commands ///////////
-  private P4 getSupercell(T3 pt, boolean isFill) throws ScriptException {
-
-    if (pt.x < 1 || pt.y < 1 || pt.z < 1 || pt.x != (int) pt.x
-        || pt.y != (int) pt.y || pt.z != (int) pt.z)
+    cpts = Measure.getPointsOnPlane(cpts.toArray(new P3[cpts.size()]), p0);
+    P3 zero = new P3();
+    float amin = -179;
+    float dmin = Float.MAX_VALUE, dmin2 = Float.MAX_VALUE;
+    P3 v = null, v1 = null;
+    float da = amin, damin = Float.MAX_VALUE, d;
+    for (int i = cpts.size(); --i >= 0;) {
+      P3 pt = cpts.get(i);
+      d = pt.length();
+      boolean checkv1 = false;
+      boolean isnew = false;
+      boolean checkAngle = false;
+      // check for 0 or linear
+      if (d < 0.01f || v != null && ((da = Math.abs(Measure.computeTorsion(v, zero, plane, pt, true))) > -amin))
+        continue;
+      System.out.println(d + " " + pt + da);
+      if (v == null) {
+        // load v
+        v = pt;
+        dmin = d;
+      } else if (d < dmin - 0.01f) {
+        isnew = true;
+        damin = Float.MAX_VALUE;
+        da = Float.MAX_VALUE;
+        checkv1 = true;
+      } else if (d < dmin2 - 0.01f) {
+        damin = Float.MAX_VALUE;
+        // new v1
+        checkv1 = true;
+      } else if (d < dmin2 + 0.01f) {
+        // hexagonal
+        checkv1 = true;
+        checkAngle = true;
+      }
+      if (checkv1) {
+        boolean okAng = (da > 89);
+        if (isnew || d < dmin + 0.1f && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Float.MAX_VALUE || damin < 89)) {
+          // special first-quadrant check
+          v1 = v;
+          dmin2 = dmin;
+          v = pt;
+          dmin = d;
+          if (!isnew && da < damin)
+            damin = da;
+        } else if (d < dmin2 + 0.1f && okAng) {
+          v1 = pt;
+          dmin2 = d;
+          if (da < damin)
+            damin = da;
+        }
+        System.out.println(v + " " + v1 + " " + d + " " + da  + " " + dmin + " " + dmin2 + " "+ damin);
+      }
+    }
+    if (v == null)
       invArg();
-    return SimpleUnitCell.ptToIJK(pt, isFill ? 1 : 0);
+    P3 u = null;
+    if (v1 != null) {
+      da = Measure.computeTorsion(v, zero, plane, v1, true);
+      if (da > 0) {
+        u = v;
+        v = v1;
+      } else {
+        u = v1;
+      }
+    } else {
+      System.out.println(v + " " + v1 + " " + da);
+
+      for (int i = cpts.size(); --i >= 0;) {
+        P3 pt = cpts.get(i);
+        da = Measure.computeTorsion(v, zero, plane, pt, true);
+        if (da < -89.9f && da > amin + 0.01f) {
+          amin = da;
+          u = pt;
+        }
+      }
+    }
+    if (u == null)
+      invArg();
+    oabc[1] = u;
+    oabc[2] = v;
+    // odd number of negatives -- reverse
+    boolean doReverse = ((((h < 0 ? 1 : 0) + (k < 0 ? 1 : 0) + (l < 0 ? 1 : 0))
+        % 2) == 1);
+    P3 w = oabc[3];
+    P3 a = P3.newP(oabc[1]);
+    P3 b = P3.newP(oabc[2]);
+    if (h == 0 && k == 0) {
+      // 001
+      // no a,b intercept
+      b.scale(-1);
+      a.scale(-1);
+      oabc[1] = a;
+      oabc[2] = b;
+    } else if (h == 0 && l == 0) {
+      // 010
+      // no a,c intercept
+      //      oabc[1] = b;
+      //      oabc[2] = a;
+    } else if (k == 0 && l == 0) {
+      //100
+      // no b,c intercept
+      a.scale(-1);
+      b.scale(-1);
+      oabc[1] = b;
+      oabc[2] = a;
+    }
+    if (doReverse) {
+      a = oabc[1];
+      oabc[1] = oabc[2];
+      oabc[2] = a;
+    }
+    w.cross(v, u);
+    w.normalize();
+    w.scale(dist0);
+    return oabc;
   }
 
   /**

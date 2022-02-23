@@ -489,7 +489,7 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   
-  final protected static int MODE_P3  = 3;
+  public final static int MODE_P3  = 3;
   final protected static int MODE_P4  = 4;
   final public    static int MODE_P34 = 7; // P3 or P4
   final protected static int MODE_P_INT_ONLY = 8; // for HKL
@@ -1399,5 +1399,19 @@ abstract public class ScriptParam extends ScriptError {
     if (!chk)
       vwr.setStringProperty(key, value);
   }
+
+  /**
+   * Note - this check does not allow a 0 for h, k, or l.
+   * @param pt
+   * @return
+   * @throws ScriptException
+   */
+  public T3 checkHKL(T3 pt) throws ScriptException {
+    if (Math.abs(pt.x) < 1 || Math.abs(pt.y) < 1 || Math.abs(pt.z) < 1 || pt.x != (int) pt.x
+        || pt.y != (int) pt.y || pt.z != (int) pt.z)
+      invArg();
+    return pt;
+  }
+
 
 }

@@ -110,7 +110,7 @@ class SpaceGroup {
 
   boolean isBilbao;
 
-  String latticeType = "P"; // P A B C I F
+  char latticeType = 'P'; // P A B C I F
 
   private Integer nHallOperators;
 
@@ -625,10 +625,10 @@ class SpaceGroup {
     case 'S':
     case 'T':
     case 'P':
-      latticeType = "P";
+      latticeType = 'P';
       break;
     default:
-      latticeType = "" + h.latticeCode;
+      latticeType = h.latticeCode;
       break;
     }
     M4 mat1 = new M4();
@@ -965,7 +965,7 @@ class SpaceGroup {
 
   private void setHMSymbol(String name) {
     hmSymbolFull = toCap(name, 1);
-    latticeType = hmSymbolFull.substring(0, 1);
+    latticeType = hmSymbolFull.charAt(0);
     String[] parts = PT.split(hmSymbolFull, ":");
     hmSymbol = parts[0];
     hmSymbolExt = (parts.length == 1 ? "" : parts[1]);

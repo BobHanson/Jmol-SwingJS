@@ -211,9 +211,7 @@ public interface SymmetryInterface {
   boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
                           M3 primitiveToCrystal);
 
-  public String getLatticeType();
-
-  public void setLatticeType(String type);
+  public char getLatticeType();
 
   public String getIntTableNumber();
 
@@ -245,6 +243,8 @@ public interface SymmetryInterface {
    * 
    * @param spaceGroup ITA number, ITA full name ("48:1")
    */
-  public void setSpaceGroupTo(Object spaceGroup);
+  void setSpaceGroupTo(Object spaceGroup);
+
+  Lst<P3> getLatticeCentering();
 
 }

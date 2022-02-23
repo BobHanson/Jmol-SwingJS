@@ -999,4 +999,55 @@ final public class Measure {
     System.exit(0);
   }
 
+  /**
+   * Based on a set of centering points, returns the list of points on a given
+   * plane.
+   * 
+   * @param pts
+   *        initial list centering points such as {1/2 1/2 0}
+   * @param plane
+   * @return non-null list
+   */
+  public static Lst<P3> getPointsOnPlane(P3[] pts, P4 plane) {
+    Lst<P3> ret = new Lst<P3>();
+    for (int i = pts.length; --i >= 0;) {
+      float d = Math.abs(Measure.distanceToPlane(plane, pts[i]));
+      if (d < 0.001f) {
+        ret.addLast(pts[i]);
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * Based on a set of centering points, creates a list of lattice points in place.
+   * 
+   * @param cpts centering points such as {1/2 1/2 0}
+   * @param h
+   * @param k
+   * @param l
+   * @return non-null list
+*/
+  public static Lst<P3> getLatticePoints(Lst<P3> cpts, int h, int k, int l) {
+    cpts.addLast(new P3());
+    h = (h == 0 ? 1 : Math.abs(h));
+    k = (k == 0 ? 1 : Math.abs(k));
+    l = (l == 0 ? 1 : Math.abs(l));
+    int n = cpts.size();
+    for (int ih = -h; ih <= h; ih++) {
+      for (int ik = -k; ik <= k; ik++) {
+        for (int il = -l; il <= l; il++) {
+          for (int i = 0; i < n; i++) {
+            P3 pt = P3.new3(ih, ik, il);
+            pt.add(cpts.get(i));
+            cpts.addLast(pt);
+          }
+        }
+      }
+    }
+    for (int i = n; --i >= 0;)
+      cpts.removeItemAt(i);
+    return cpts;
+  }
+
 }

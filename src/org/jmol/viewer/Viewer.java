@@ -8429,6 +8429,8 @@ public class Viewer extends JmolViewer
   public void addCommand(String command) {
     if (autoExit || !haveDisplay || !getPreserveState())
       return;
+    if (command.startsWith("pause ") || command.equals("pause"))
+      command = "resume" + command.substring(5);
     commandHistory.addCommand(PT.replaceAllCharacters(command, "\r\n\t", " "));
   }
 

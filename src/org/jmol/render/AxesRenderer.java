@@ -163,7 +163,7 @@ public class AxesRenderer extends CageRenderer {
     colixes[0] = vwr.getObjectColix(StateManager.OBJ_AXIS1);
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
-    boolean showOrigin = (!isXY && nPoints == 3 && axes.scale == 2);
+    boolean showOrigin = (!isXY && nPoints == 3 && (axes.scale == 2 || isUnitCell));
     for (int i = nPoints; --i >= 0;) {
       if (checkAxisType
           && !axes.axisType.contains(axesTypes[i])

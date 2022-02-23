@@ -299,7 +299,7 @@ public class XtalSymmetry {
     rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
     P3 pt0 = null;
     if (acr.latticeType == null)
-      acr.latticeType = symmetry.getLatticeType();
+      acr.latticeType = "" + symmetry.getLatticeType();
     if (acr.isPrimitive) {
       asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
       if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {

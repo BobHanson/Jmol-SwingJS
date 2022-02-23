@@ -168,6 +168,7 @@ public class DisplayPanel extends JPanel
 
   @Override
   public void paint(Graphics g) {
+    System.out.println("DisplayPanel paint g");
     updateSize(false); // important for JavaScript, as the update comes too late. 
     if (dimSize.width == 0)
       return;

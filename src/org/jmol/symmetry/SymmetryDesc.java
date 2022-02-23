@@ -1236,7 +1236,7 @@ public class SymmetryDesc {
     Object nullRet = nullReturn(type);
     switch (type) {
     case T.lattice:
-      return uc.getLatticeType();
+      return "" + uc.getLatticeType();
     case T.array:
       returnType = getType(id);
       switch (returnType) {

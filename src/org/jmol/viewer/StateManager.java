@@ -257,7 +257,7 @@ public class StateManager {
       clearStateStack();
       return;
     }
-    if (saveName.equalsIgnoreCase("UNDO")) {
+    if (saveName.length() == 0) {
       appendState(getStack(T.undo));
       redoStateStack.clear();
       return;
@@ -267,7 +267,7 @@ public class StateManager {
   }
 
   public String getSavedState(String saveName) {
-    if (saveName.equalsIgnoreCase("UNDO")) {
+    if (saveName.length() == 0) {
       // does not pop the stack - from RESTORE UNDO
       Lst<String> stack = getStack(T.undo);
       return (stack.size() > 0 ? stack.get(stack.size() - 1) : null);

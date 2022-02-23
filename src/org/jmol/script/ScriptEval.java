@@ -7174,8 +7174,7 @@ public class ScriptEval extends ScriptExpr {
     case T.undo:
       if (slen == 2) {
         if (!chk && vwr.getBoolean(T.preservestate)) {
-          vwr.stm.saveState("undo");
-          vwr.setBooleanProperty("undoAuto", false);
+          vwr.stm.saveState("");
         }
         return;
       }

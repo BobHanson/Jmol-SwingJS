@@ -266,6 +266,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
+  public Lst<P3> getLatticeCentering() {
+    return SymmetryOperation.getLatticeCentering(getSymmetryOperations());
+  }
+
+  @Override
   public Matrix getOperationRsVs(int iop) {
     return (spaceGroup.finalOperations == null ? spaceGroup.operations
         : spaceGroup.finalOperations)[iop].rsvs;
@@ -330,16 +335,10 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getLatticeType() {
+  public char getLatticeType() {
     return (symmetryInfo != null ? symmetryInfo.latticeType 
-        : spaceGroup == null ? "P" 
+        : spaceGroup == null ? 'P' 
             : spaceGroup.latticeType);
-  }
-
-  @Override
-  public void setLatticeType(String type) {
-    if (spaceGroup != null)
-      spaceGroup.latticeType = type;
   }
 
   @Override
@@ -371,7 +370,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public M4[] getSymmetryOperations() {
+  public SymmetryOperation[] getSymmetryOperations() {
     if (symmetryInfo != null)
       return symmetryInfo.symmetryOperations;
     if (spaceGroup == null)
