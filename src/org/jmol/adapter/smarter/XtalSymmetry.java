@@ -1133,14 +1133,21 @@ public class XtalSymmetry {
     return (maxXYZ0 == null ? V3.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
         maxXYZ.z - minXYZ.z) : V3.newVsub(maxXYZ0, minXYZ0));
   }
+
+  M4 mident;
   
   @SuppressWarnings("unchecked")
   public void applySymmetryBio(Map<String, Object> thisBiomolecule,
                                boolean applySymmetryToBonds, String filter) {
     Lst<M4> biomts = (Lst<M4>) thisBiomolecule.get("biomts");
     int len = biomts.size();
-    if (len < 2)
-      return;
+    // this was a bad idea - biomt can be just the identity matrix, in which case this is just a selection set -- 7OJP
+    //    if (len < 2)
+    //      return;
+    if (mident == null) {
+      mident = new M4();
+      mident.setIdentity();
+    }
     acr.lstNCS = null; // disable NCS
     setLatticeCells();
     int[] lc = (latticeCells != null && latticeCells[0] != 0 ? new int[3]
@@ -1161,8 +1168,8 @@ public class XtalSymmetry {
     doNormalize = false;
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
     // Q: Why this? I think each biomt MUST have a chain
-//    if (biomtchains.get(0).equals(biomtchains.get(1)))
-//      biomtchains = null;
+    //    if (biomtchains.get(0).equals(biomtchains.get(1)))
+    //      biomtchains = null;
     symmetry = null;
     // it's not clear to me why you would do this:
     //if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
@@ -1258,6 +1265,8 @@ public class XtalSymmetry {
         continue;
       }
       M4 mat = biomts.get(imt);
+      boolean notIdentity = !mat.equals(mident);
+
       // if asym_id is given, that is what is being referred to, not author chains
       // we just set bsAtoms to match
       String chains = (biomtchains == null ? null : biomtchains.get(imt));
@@ -1277,7 +1286,8 @@ public class XtalSymmetry {
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
         if (bsAtoms != null) {
           skipping = !bsAtoms.get(iAtom);
-        } else if (chains != null && (id = atoms[iAtom].chainID) != lastID) {
+        } else if (chains != null && lastID >= 0
+            && (id = atoms[iAtom].chainID) != lastID) {
           skipping = (chains
               .indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
         }
@@ -1294,23 +1304,25 @@ public class XtalSymmetry {
           if (asc.bsAtoms != null)
             asc.bsAtoms.set(atom1.index);
           atom1.atomSite = atomSite;
-          mat.rotTrans(atom1);
+          if (notIdentity)
+            mat.rotTrans(atom1);
           atom1.bsSymmetry = BSUtil.newAndSetBit(imt);
         } catch (Exception e) {
           asc.errorMessage = "appendAtomCollection error: " + e;
         }
       }
-      if (imt > 0) {
+      // not the identity, which is always the first entry (set by Jmol in reader)
+      // symmetry always has first operation x,y,z
+      if (notIdentity)
         symmetry.addBioMoleculeOperation(mat, false);
-        if (addBonds) {
-          // Clone bonds
-          for (int bondNum = asc.bondIndex0; bondNum < bondCount0; bondNum++) {
-            Bond bond = asc.bonds[bondNum];
-            int iAtom1 = atomMap[atoms[bond.atomIndex1].atomSite];
-            int iAtom2 = atomMap[atoms[bond.atomIndex2].atomSite];
-            //            if (iAtom1 >= atomMax || iAtom2 >= atomMax)
-            asc.addNewBondWithOrder(iAtom1, iAtom2, bond.order);
-          }
+      if (addBonds) {
+        // Clone bonds
+        for (int bondNum = asc.bondIndex0; bondNum < bondCount0; bondNum++) {
+          Bond bond = asc.bonds[bondNum];
+          int iAtom1 = atomMap[atoms[bond.atomIndex1].atomSite];
+          int iAtom2 = atomMap[atoms[bond.atomIndex2].atomSite];
+          //            if (iAtom1 >= atomMax || iAtom2 >= atomMax)
+          asc.addNewBondWithOrder(iAtom1, iAtom2, bond.order);
         }
       }
     }
@@ -1338,10 +1350,12 @@ public class XtalSymmetry {
             bsChains.setBits(1 + 'Z', 0 + 'a');
             bsChains.setBits(1 + 'z', 200);
           }
-          BS[] bsAll = (asc.structureCount == 1 ? asc.structures[0].bsAll : null);
+          BS[] bsAll = (asc.structureCount == 1 ? asc.structures[0].bsAll
+              : null);
           Map<String, Integer> chainMap = new Hashtable<String, Integer>();
           Map<Integer, Integer> knownMap = new Hashtable<Integer, Integer>();
-          Map<Integer, int[]> knownAtomMap = (bsAll == null ? null : new Hashtable<Integer, int[]>());
+          Map<Integer, int[]> knownAtomMap = (bsAll == null ? null
+              : new Hashtable<Integer, int[]>());
           int[] lastKnownAtom = null;
           for (int i = atomMax, n = asc.ac; i < n; i++) {
             int ic = atoms[i].chainID;
@@ -1370,7 +1384,7 @@ public class XtalSymmetry {
                 if (bsAll != null) {
                   if (lastKnownAtom != null)
                     lastKnownAtom[1] = i;
-                  knownAtomMap.put(known, lastKnownAtom = new int[] {i, n});
+                  knownAtomMap.put(known, lastKnownAtom = new int[] { i, n });
                 }
               }
               chainMap.put(ch, known);
@@ -1380,7 +1394,7 @@ public class XtalSymmetry {
           if (asc.structureCount > 0) {
             // update structures
             Structure[] strucs = asc.structures;
-            int nStruc = asc.structureCount;   
+            int nStruc = asc.structureCount;
             for (Entry<Integer, Integer> e : knownMap.entrySet()) {
               Integer known = e.getKey();
               int ch1 = known.intValue();
