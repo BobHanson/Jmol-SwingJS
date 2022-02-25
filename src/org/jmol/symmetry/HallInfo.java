@@ -76,6 +76,8 @@ class HallInfo {
   
   HallInfo(String hallSymbol) {
     try {
+      if (hallSymbol.startsWith("Hall:"))
+        hallSymbol = hallSymbol.substring(5).trim();
       String str = this.hallSymbol = hallSymbol.trim();
       str = extractLatticeInfo(str);
       if (HallTranslation.getLatticeIndex(latticeCode) == 0)

@@ -1522,7 +1522,7 @@ public class ModelKit {
     System.err.println("ModelKit.notImplemented(" + action + ")");
   }
 
-  public String cmdAssignSpaceGroup(BS bs) {
+  public String cmdAssignSpaceGroup(BS bs, boolean isP1) {
     try {
       if (bs != null && bs.isEmpty())
         return "";
@@ -1530,12 +1530,15 @@ public class ModelKit {
       if (uc == null)
         uc = vwr.getSymTemp()
             .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
+      BS bsCell = SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true);
       BS bsAtoms = vwr.getThisModelAtoms();
       if (bs == null) {
-        bs = SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true);
+        bs = (isP1 ? bsAtoms : bsCell);
       }
       if (bs != null)
         bsAtoms.and(bs);
+      if (bs != null && !isP1)
+        bsAtoms.and(bsCell);
       boolean noAtoms = bsAtoms.isEmpty();
       int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
       T3 m = uc.getUnitCellMultiplier();
@@ -1548,7 +1551,7 @@ public class ModelKit {
       String ita;
       BS basis;
       @SuppressWarnings("unchecked")
-      Map<String, Object> sg = (noAtoms ? null
+      Map<String, Object> sg = (noAtoms || isP1 ? null
           : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, null, false));
       if (sg == null) {
         name = "P1";
@@ -1566,6 +1569,8 @@ public class ModelKit {
       uc.getUnitCell(oabc,  false, null);
       uc.setSpaceGroupTo(ita);
       uc.setSpaceGroupName(name);
+      if (basis == null)
+        basis = uc.removeDuplicates(vwr.ms, bsAtoms);
       vwr.ms.setSpaceGroup(mi, uc, basis);
       P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
       vwr.ms.setUnitCellOffset(uc, pt, 0);
@@ -1575,6 +1580,14 @@ public class ModelKit {
         e.printStackTrace();
       return e.getMessage();
     }
+  }
+
+  public int cmdAssignDeleteAtoms(BS bs) {
+    bs.and(vwr.getThisModelAtoms());
+    bs = vwr.ms.getSymmetryEquivAtoms(bs);
+    if (!bs.isEmpty())
+      vwr.deleteAtoms(bs, false);
+    return bs.cardinality();
   }
 
 }

@@ -130,6 +130,17 @@ public class SV extends T implements JSONEncodable {
     switch (x == null ? nada : x.tok) {
     case bitset:
       return bsSelectToken(x).cardinality();
+    case barray:
+      return ((BArray) x.value).data.length;
+    case string:
+      return ((String) x.value).length();
+    case varray:
+      return x.intValue == Integer.MAX_VALUE ? ((SV)x).getList().size()
+          : sizeOf(selectItemTok(x, Integer.MIN_VALUE));
+    case hash:
+      return ((Map<String, SV>) x.value).size();
+    case context:
+      return ((ScriptContext) x.value).getFullMap().size();
     case on:
     case off:
       return -1;
@@ -145,17 +156,6 @@ public class SV extends T implements JSONEncodable {
       return -32;
     case matrix4f:
       return -64;
-    case barray:
-      return ((BArray) x.value).data.length;
-    case string:
-      return ((String) x.value).length();
-    case varray:
-      return x.intValue == Integer.MAX_VALUE ? ((SV)x).getList().size()
-          : sizeOf(selectItemTok(x, Integer.MIN_VALUE));
-    case hash:
-      return ((Map<String, SV>) x.value).size();
-    case context:
-      return ((ScriptContext) x.value).getFullMap().size();
     default:
       return 0;
     }
@@ -540,7 +540,7 @@ public class SV extends T implements JSONEncodable {
 
   // math-related Token static methods
 
-  private final static P3 pt0 = new P3();
+  final static P3 pt0 = new P3();
 
   /**
    * 
@@ -1749,8 +1749,6 @@ public class SV extends T implements JSONEncodable {
   public static boolean isScalar(SV x) {
     switch (x.tok) {
     case varray:
-    case matrix3f:
-    case matrix4f:
       return false;
     case string:
       return (((String) x.value).indexOf("\n") < 0);

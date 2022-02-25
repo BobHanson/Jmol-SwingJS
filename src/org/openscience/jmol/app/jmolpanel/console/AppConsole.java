@@ -450,7 +450,7 @@ public class AppConsole extends JmolConsole
     if (undoAllowed) {
       if (undoButton == null)
         return UNDO_NONE;
-      undoAllowed = vwr.getBooleanProperty("preserveState");
+      undoAllowed = vwr.getBoolean(T.preservestate);
       undoButton.setEnabled(
           undoAllowed && undoPointer > 0 && undoStack[undoPointer - 1] != null);
       redoButton.setEnabled(undoAllowed && undoPointer < MAXUNDO
@@ -502,7 +502,7 @@ public class AppConsole extends JmolConsole
     if (undoButton == null)
       return;
     if (!vwr.getBooleanProperty("undoAuto")
-        || !vwr.getBooleanProperty("preserveState"))
+        || !vwr.getBoolean(T.preservestate))
       return;
     //delete redo items, since they will no longer be valid
     for (int i = undoPointer + 1; i <= MAXUNDO; i++)

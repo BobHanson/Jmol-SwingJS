@@ -6645,7 +6645,7 @@ public class ScriptEval extends ScriptExpr {
         }
         return;
       case T.state:
-        if (!chk) {
+        if (!chk && vwr.getBoolean(T.preservestate)) {
           vwr.stm.saveState(saveName);
           if (saveName.length() == 0) {
             showString(vwr.stm.getUndoInfo());
@@ -7177,14 +7177,6 @@ public class ScriptEval extends ScriptExpr {
     case T.togglelabel:
       cmdSetLabel("toggle");
       return;
-    case T.undo:
-      if (slen == 2) {
-        if (!chk && vwr.getBoolean(T.preservestate)) {
-          vwr.stm.saveState("");
-        }
-        return;
-      }
-      break;
     case T.usercolorscheme:
       Lst<Integer> v = new Lst<Integer>();
       for (int i = 2; i < slen; i++) {

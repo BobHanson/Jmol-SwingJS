@@ -25,6 +25,7 @@ package org.jmol.viewer;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.c.VDW;
@@ -257,7 +258,13 @@ public class DataManager implements JmolDataManager {
 
   @Override
   public Object getData(String label, BS bsSelected, int dataType) {
-    if (dataValues.size() == 0 || label == null)
+    if (label == null)
+      return null;
+    if (label.equals("*")) {
+      Set<String> s = dataValues.keySet();
+      return s.toArray(new String[s.size()]);
+    }
+    if (dataValues.size() == 0)
       return null;
     label = label.toLowerCase();
     switch (dataType) {
@@ -280,9 +287,19 @@ public class DataManager implements JmolDataManager {
         return data[JmolDataManager.DATA_VALUE];
       // When bsSelected is not null, this returns a truncated array, which must be of type float[] or float[][]
       if (data[JmolDataManager.DATA_TYPE] == Integer
+          .valueOf(JmolDataManager.DATA_TYPE_AFFF)) {
+        float[][][] fff = (float[][][]) data[JmolDataManager.DATA_VALUE];
+        float[][][] fnew = AU.newFloat3(bsSelected.cardinality(), 0);
+        // load array
+        for (int i = 0, n = fff.length, p = bsSelected.nextSetBit(0); p >= 0
+            && i < n; p = bsSelected.nextSetBit(p + 1)) {
+          fnew[i++] = fff[p];
+        }
+        return fnew;
+      } else if (data[JmolDataManager.DATA_TYPE] == Integer
           .valueOf(JmolDataManager.DATA_TYPE_AFF)) {
         float[][] ff = (float[][]) data[JmolDataManager.DATA_VALUE];
-        float[][] fnew = new float[bsSelected.cardinality()][];
+        float[][] fnew = AU.newFloat2(bsSelected.cardinality());
         // load array
         for (int i = 0, n = ff.length, p = bsSelected.nextSetBit(0); p >= 0
             && i < n; p = bsSelected.nextSetBit(p + 1))

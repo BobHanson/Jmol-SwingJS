@@ -3240,7 +3240,7 @@ public class Viewer extends JmolViewer
    * @param atomSetCollection
    * @param isAppend
    * @param loadScript
-   *        if null, then some special method like DOM; turn of preserveState
+   *        if null, then some special method like DOM; turn off preserveState
    * @param htParams
    * @return errMsg
    */
@@ -10526,6 +10526,20 @@ public class Viewer extends JmolViewer
   public BS getThisModelAtoms() {
     return getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
   }
+
+  public Lst<P3> getSymmetryEquivPoints(P3 pt, String flags) {
+    SymmetryInterface uc = getCurrentUnitCell();
+    return (uc == null ? new Lst<P3>() : uc.getEquivPoints(pt, flags));
+  }
+
+  public Lst<?> getSymmetryEquivPointList(Lst<P3> pts, String flags) {
+    SymmetryInterface uc = getCurrentUnitCell();
+    if (uc == null)
+      return new Lst<P3>();
+    uc.getEquivPointList(pts, flags.toLowerCase());
+    return pts;
+  }
+
 
 
 }

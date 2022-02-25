@@ -1734,7 +1734,14 @@ abstract class ScriptExpr extends ScriptParam {
       for (int i = i0; i >= 0 && i < i1; i = (haveBitSet ? bs.nextSetBit(i + 1)
           : i + 1)) {
         n++;
-        Atom atom = (pts == null ? modelSet.at[i] : null);
+        Atom atom;
+        if (pts == null) {
+          atom = modelSet.at[i];
+          if (atom == null)
+            continue;
+        } else {
+          atom = null;
+        }
         switch (mode) {
         case 0: // float
           float fv = Float.MAX_VALUE;

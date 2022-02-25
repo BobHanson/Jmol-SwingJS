@@ -594,6 +594,8 @@ public class SimpleUnitCell {
     x = (float) (x - Math.floor(x));
     if (x > 0.999f || x < 0.001f)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
       x = 0;
+    if (x > 0.4999f && x < 0.5001f)
+      x = 0.5f;
     return x;
   }
   

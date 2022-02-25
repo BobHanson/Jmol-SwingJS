@@ -288,7 +288,7 @@ public class StateManager {
   public String popStack(int type) {
     Lst<String> stack = getStack(type);
     String state = (stack.size() > 0 ? stack.remove(stack.size() - 1) : null);
-    System.out.println("STM pop " + stack.size() + " " + (state != null) + " " + (type == T.undo));
+    //System.out.println("STM pop " + stack.size() + " " + (state != null) + " " + (type == T.undo));
     if (state != null) {
       appendState(getStack(type == T.undo ? T.redo : T.undo));
     }
@@ -300,7 +300,7 @@ public class StateManager {
     checkStack(stack);
     if (maxUndo > 0)
       stack.addLast(vwr.getStateInfo());
-    System.out.println("STM append " + stack.size() + (stack == undoStateStack));
+    //System.out.println("STM append " + stack.size() + (stack == undoStateStack));
   }
 
   private void checkStack(Lst<String> stack) {
@@ -313,7 +313,7 @@ public class StateManager {
       undoStateStack = new Lst<String>();
       redoStateStack = new Lst<String>();
     }
-    System.out.println("StateManager getStack " + undoStateStack.size() + " " + redoStateStack.size() + " " + (type == T.undo));
+    //System.out.println("StateManager getStack " + undoStateStack.size() + " " + redoStateStack.size() + " " + (type == T.undo));
 
     return (type == T.undo ? undoStateStack : redoStateStack);
   }
@@ -470,12 +470,12 @@ public class StateManager {
   }
 
   public boolean canDo(int type) {
-    return (maxUndo > 0 && vwr.getBooleanProperty("preserveState") && !getStack(type).isEmpty());
+    return (maxUndo > 0 && vwr.getBoolean(T.preservestate) && !getStack(type).isEmpty());
   }
 
   public String getUndoInfo() {
     boolean auto = vwr.getBooleanProperty("undoAuto");
-    return (vwr.getBooleanProperty("preserveState") ? "undoAuto=" + auto + (!auto ? "; user stack sizes: UNDO=" + getStack(T.undo).size() + ", REDO="
+    return (vwr.getBoolean(T.preservestate) ? "undoAuto=" + auto + (!auto ? "; user stack sizes: UNDO=" + getStack(T.undo).size() + ", REDO="
         + getStack(T.redo).size() : "") : "SET preserveState = FALSE -- undo/redo is disabled");
   }
   

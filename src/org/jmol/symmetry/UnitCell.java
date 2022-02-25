@@ -846,4 +846,71 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return ucnew;
   }
 
+  /**
+   * 
+   * @param pt   the point to transform
+   * @param flags "tofractional,fromfractional,packed"
+   * @param ops  space group operations
+   * @param list the list to append to
+   * @param i0 the starting index of the list; if &gt; 0, then we assume to/from fractional 
+   * @return augmented list
+   */
+  public Lst<P3> getEquivPoints(P3 pt, String flags, M4[] ops, Lst<P3> list,
+                                int i0) {
+    boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
+    boolean tofractional = (flags.indexOf("tofractional") >= 0);
+    boolean packed = (flags.indexOf("packed") >= 0);
+    if (list == null)
+      list = new Lst<P3>();
+    P3 pf = P3.newP(pt);
+    if (!fromfractional)
+      toFractional(pf, true);
+    int n = list.size();
+    out: for (int i = 0, nops = ops.length; i < nops; i++) {
+      P3 p = P3.newP(pf);
+      ops[i].rotTrans(p);
+      unitize(p);
+      for (int j = i0; j < n; j++) {
+        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
+          continue out;
+        }
+      }
+      list.addLast(p);
+      n++;
+    }
+    if (packed) {
+      // duplicate all the points. 
+      for (int i = i0; i < n; i++) {
+        P3 p = list.get(i);
+        if (p.x == 0) {
+          list.addLast(P3.new3(1, p.y, p.z));
+          if (p.y == 0) {
+            list.addLast(P3.new3(1, 1, p.z));
+            if (p.z == 0) {
+              list.addLast(P3.new3(1, 1, 1));
+            }
+          }
+        }
+        if (p.y == 0) {
+          list.addLast(P3.new3(p.x, 1, p.z));
+          if (p.z == 0) {
+            list.addLast(P3.new3(p.x, 1, 1));
+          }
+        }
+        if (p.z == 0) {
+          list.addLast(P3.new3(p.x, p.y, 1));
+          if (p.x == 0) {
+            list.addLast(P3.new3(1, p.y, 1));
+          }
+        }
+      }
+    }
+    if (!tofractional) {
+      for (int i = i0; i < n; i++)
+        toCartesian(list.get(i), true);
+    }
+    return list;
+  }
+
+
 }

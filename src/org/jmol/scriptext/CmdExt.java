@@ -4372,10 +4372,13 @@ public class CmdExt extends ScriptExt {
           writeFileData = true;
       } else if (PT.isOneOf(data,";CIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;XSF;")) {
         BS selected = vwr.bsA(), bsModel;
-        msg = " (" + selected.cardinality() + " atoms)";
+        // mechanism to pass information back from writer, changing the number of atoms written
+        vwr.setErrorMessage(null, " (" + selected.cardinality() + " atoms)");
+        data = vwr.getModelExtract(selected, isCoord, false, data);
+        msg = vwr.getErrorMessageUn();
+        vwr.setErrorMessage(null, null);
         if (vwr.am.cmi >= 0 && !selected.equals(bsModel = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi)))
           msg += "\nNote! Selected atom set " + selected + " is not the same as the current model " + bsModel;
-        data = vwr.getModelExtract(selected, isCoord, false, data);
         if (data.startsWith("ERROR:"))
           bytes = data;
       } else if (data == "CFI") {
@@ -5612,6 +5615,12 @@ public class CmdExt extends ScriptExt {
       break;
     case T.offset:
       isOffset = true;
+      if (eval.isAtomExpression(i + 1)) {
+        pt = eval.centerParameter(++i, null);
+        vwr.toFractional(pt, false);
+        i = eval.iToken;
+        break;
+      }
       //$FALL-THROUGH$
     case T.range:
       pt = eval.getFractionalPoint(++i);
@@ -5748,11 +5757,10 @@ public class CmdExt extends ScriptExt {
       d = pt.length();
       boolean checkv1 = false;
       boolean isnew = false;
-      boolean checkAngle = false;
+//      boolean checkAngle = false;
       // check for 0 or linear
       if (d < 0.01f || v != null && ((da = Math.abs(Measure.computeTorsion(v, zero, plane, pt, true))) > -amin))
         continue;
-      System.out.println(d + " " + pt + da);
       if (v == null) {
         // load v
         v = pt;
@@ -5769,8 +5777,8 @@ public class CmdExt extends ScriptExt {
       } else if (d < dmin2 + 0.01f) {
         // hexagonal
         checkv1 = true;
-        checkAngle = true;
-      }
+    //        checkAngle = true;
+  }
       if (checkv1) {
         boolean okAng = (da > 89);
         if (isnew || d < dmin + 0.1f && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Float.MAX_VALUE || damin < 89)) {
@@ -5787,7 +5795,6 @@ public class CmdExt extends ScriptExt {
           if (da < damin)
             damin = da;
         }
-        System.out.println(v + " " + v1 + " " + d + " " + da  + " " + dmin + " " + dmin2 + " "+ damin);
       }
     }
     if (v == null)
@@ -5802,8 +5809,6 @@ public class CmdExt extends ScriptExt {
         u = v1;
       }
     } else {
-      System.out.println(v + " " + v1 + " " + da);
-
       for (int i = cpts.size(); --i >= 0;) {
         P3 pt = cpts.get(i);
         da = Measure.computeTorsion(v, zero, plane, pt, true);
@@ -5880,6 +5885,7 @@ public class CmdExt extends ScriptExt {
 //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m] (default P)
 //  modelkit ASSIGN SPACEGROUP    
 //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
+//  modelkit DELETE ATOM @1
 //
 //  modelkit ROTATE ...  (same as ROTATE for example, ROTATE BOND @1 @2 degrees)
 //  modelkit ROTATESELECTED (same as ROTATESLECTED)
@@ -5939,6 +5945,7 @@ public class CmdExt extends ScriptExt {
       //$FALL-THROUGH$
     case T.spacegroup:
     case T.connect:
+    case T.delete:
       assign();
       return;
     case T.mutate:
@@ -6063,8 +6070,10 @@ public class CmdExt extends ScriptExt {
     boolean isAtom = (mode == T.atoms);
     boolean isBond = (mode == T.bonds);
     boolean isConnect = (mode == T.connect);
+    boolean isDelete = (mode == T.delete);
+    
     boolean isSpacegroup = (mode == T.spacegroup);
-    if (isAtom || isBond || isConnect || isSpacegroup)
+    if (isAtom || isBond || isConnect || isSpacegroup || isDelete)
       i++;
     else
       mode = T.atoms;
@@ -6114,6 +6123,7 @@ public class CmdExt extends ScriptExt {
     } else if (!isSpacegroup || e.isAtomExpression(i)) { 
       // assign ATOM @3 "C" {0 0 0}
       // assign CONNECT @3 @4
+      // assign DELETE @1
       bs = expFor(i, bsAtoms);
       index = bs.nextSetBit(0);
       if (index < 0) {
@@ -6123,7 +6133,7 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3 pt = null;
-    if (isSpacegroup) {
+    if (isSpacegroup || isDelete) {
     } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
@@ -6133,6 +6143,7 @@ public class CmdExt extends ScriptExt {
       bs = expFor(i, bsAtoms);
       index2 = bs.nextSetBit(0);
       type = e.optParameterAsString(++e.iToken);
+      i = e.iToken;
     }
     if (chk)
       return;
@@ -6148,8 +6159,14 @@ public class CmdExt extends ScriptExt {
     case T.connect:
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
+    case T.delete:
+      int n = vwr.getModelkit(false).cmdAssignDeleteAtoms(bs);
+      if (e.doReport())
+        e.report(GT.i(GT.$("{0} atoms deleted"), n), false);
+      break;
     case T.spacegroup:
-      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs));
+      boolean isP1 = e.optParameterAsString(i).equalsIgnoreCase("P1");
+      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs, isP1));
       break;
     }
   }

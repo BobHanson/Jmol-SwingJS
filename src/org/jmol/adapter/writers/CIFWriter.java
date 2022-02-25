@@ -65,7 +65,7 @@ public class CIFWriter implements JmolWriter {
       uc = ucm;
 
       // only write the asymmetric unit set
-      BS modelAU = (isP1 ? null : vwr.ms.am[mi].bsAsymmetricUnit);
+      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs) : vwr.ms.am[mi].bsAsymmetricUnit);
       BS bsOut;
       if (modelAU == null) {
         bsOut = bs;
@@ -74,8 +74,11 @@ public class CIFWriter implements JmolWriter {
         bsOut.or(modelAU);
         bsOut.and(bs);
       }
+      // pass message back to WRITE via vwr.errorMessageUntranslated
+      vwr.setErrorMessage(null, " (" + bsOut.cardinality() + " atoms)");
       if (bsOut.cardinality() == 0)
         return "";
+
       SB sb = new SB();
       sb.append("## CIF file created by Jmol " + Viewer.getJmolVersion());
       if (haveCustom) {
@@ -156,8 +159,8 @@ public class CIFWriter implements JmolWriter {
         if (haveUnitCell) {
           uc.toFractional(p, !isP1);
         }
-        if (isP1 && !SimpleUnitCell.checkPeriodic(p))
-          continue;
+//        if (isP1 && !SimpleUnitCell.checkPeriodic(p))
+//          continue;
         nAtoms++;
         String name = a.getAtomName();
         String sym = a.getElementSymbol();
@@ -196,6 +199,7 @@ public class CIFWriter implements JmolWriter {
     return toString();
   }
 
+
   /**
    * see https://github.com/rcsb/ciftools-java/blob/master/src/main/java/org/rcsb/cif/text/TextCifWriter.java
    * @param output 
@@ -204,7 +208,7 @@ public class CIFWriter implements JmolWriter {
    * 
    */
   private boolean writeChecked(SB output, String val) {
-    if (val == null || val.isEmpty()) {
+    if (val == null || val.length() == 0) {
       output.append(". ");
       return false;
     }

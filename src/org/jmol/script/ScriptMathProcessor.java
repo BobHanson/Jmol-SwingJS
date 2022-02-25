@@ -1005,6 +1005,10 @@ public class ScriptMathProcessor {
         String[] keys = x2.getKeys((op.intValue & T.minmaxmask) == T.minmaxmask);
         return (keys == null ? addXStr("") : addXAS(keys));
       case T.length:
+        if (x2.tok == T.point3f) {
+          return addXFloat(((T3) x2.value).distance(SV.pt0));
+        }
+        //$FALL-THROUGH$
       case T.count:
       case T.size:
         if (iv == T.length && x2.value instanceof BondSet)

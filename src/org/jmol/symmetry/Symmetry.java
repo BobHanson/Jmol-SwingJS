@@ -40,6 +40,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -870,5 +871,77 @@ public class Symmetry implements SymmetryInterface {
       spaceGroup = SpaceGroup.getSpaceGroupFromITAName(sg.toString());
     }
   }
+
+  @Override
+  public BS removeDuplicates(ModelSet ms, BS bs) {
+      UnitCell uc = this.unitCell;
+      Atom[] atoms = ms.at;
+      float[] occs = ms.occupancies;
+      boolean haveOccupancies = (occs != null);
+      P3 pt = new P3();
+      P3 pt2 = new P3();
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Atom a = atoms[i];
+        pt.setT(a);
+        uc.toFractional(pt, false);
+        uc.unitize(pt);
+        int type = a.getAtomicAndIsotopeNumber();
+        
+        float occ = (haveOccupancies ? occs[i] : 0);
+        for (int j = bs.nextSetBit(i + 1); j >= 0; j = bs.nextSetBit(j + 1)) {
+          Atom b = atoms[j];
+          if (type != b.getAtomicAndIsotopeNumber()
+              || (haveOccupancies && occ != occs[j]))
+              continue;
+          pt2.setT(b);
+          uc.toFractional(pt2, false);
+          uc.unitize(pt2);
+          if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
+            bs.clear(j);
+          }
+        }        
+      }
+    return bs;
+  }
+
+  @Override
+  public Lst<P3> getEquivPoints(P3 pt, String flags) {
+    M4[] ops = getSymmetryOperations();
+    return (ops == null || unitCell == null ? null
+        : unitCell.getEquivPoints(pt, flags, ops, new Lst<P3>(), 0));
+  }
+
+  @Override
+  public void getEquivPointList(Lst<P3> pts, String flags) {
+    M4[] ops = getSymmetryOperations();
+    // we will preserve the points temporarily, then remove them at the end
+    int n = pts.size();
+    boolean tofractional = (flags.indexOf("tofractional") >= 0);
+    // fractionalize all points if necessary
+    if (flags.indexOf("fromfractional") <= 0) {
+      for (int i = 0; i < pts.size(); i++) {
+        toFractional(pts.get(i), true);
+      }
+    }
+    // signal to make no changes in points
+    flags += ",fromfractional,tofractional";
+    if (ops != null || unitCell != null) {
+      for (int i = 0; i < n; i++) {
+        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, n);
+      }
+    }
+    // now remove the starting points
+    for (int i = 0; i < n; i++)
+      pts.removeItemAt(0);
+    // and turn these to Cartesians if desired
+    if (!tofractional) {
+      for (int i = pts.size(); --i >= 0;)
+        toCartesian(pts.get(i), true);
+    }
+  }
+
+
+
+
 
 }

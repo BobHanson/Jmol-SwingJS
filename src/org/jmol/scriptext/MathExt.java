@@ -1138,15 +1138,12 @@ public class MathExt {
     // x = data("data2d_xxxx") # 2D data (x,y paired values)
     // x = data("data2d_xxxx", iSelected) # selected row of 2D data, with <=0
     // meaning "relative to the last row"
-    // x = data("property_x", "property_y") # array mp.addition of two property
-    // sets
     // x = data({atomno < 10},"xyz") # (or "pdb" or "mol") coordinate data in
     // xyz, pdb, or mol format
     // x = data(someData,ptrFieldOrColumn,nBytes,firstLine) # extraction of a
     // column of data based on a field (nBytes = 0) or column range (nBytes >
     // 0)
     String selected = (args.length == 0 ? "" : SV.sValue(args[0]));
-    String type = "";
     switch (args.length) {
     case 0:
     case 1:
@@ -1186,21 +1183,12 @@ public class MathExt {
 
     // parallel mp.addition of float property data sets
 
+    if (selected.equals("*") || selected.equals("?"))
+      return mp.addXAS((String[]) vwr.getDataObj("*", null, 0));
     if (selected.indexOf("property_") == 0) {
       float[] f1 = (float[]) vwr.getDataObj(selected, null,
           JmolDataManager.DATA_TYPE_AF);
-      if (f1 == null)
-        return mp.addXStr("");
-      float[] f2 = (type.indexOf("property_") == 0
-          ? (float[]) vwr.getDataObj(selected, null,
-              JmolDataManager.DATA_TYPE_AF)
-          : null);
-      if (f2 != null) {
-        f1 = AU.arrayCopyF(f1, -1);
-        for (int i = Math.min(f1.length, f2.length); --i >= 0;)
-          f1[i] += f2[i];
-      }
-      return mp.addXStr(Escape.escapeFloatA(f1, false));
+      return (f1 == null ? mp.addXStr("") : mp.addXStr(Escape.escapeFloatA(f1, false)));
     }
 
     // some other data type -- just return it
@@ -1208,7 +1196,7 @@ public class MathExt {
     //if (args.length == 1) {
     Object[] data = (Object[]) vwr.getDataObj(selected, null,
         JmolDataManager.DATA_TYPE_UNKNOWN);
-    return mp.addXStr(data == null ? "" : "" + data[1]);
+    return mp.addXStr(data == null || data.length < 2 ? "" : "" + data[1]);
     // }
   }
 
@@ -1274,6 +1262,13 @@ public class MathExt {
       x1 = mp.getX();
       x2 = args[0];
       break;
+    case 0:
+      if (isDist) {
+        x1 = mp.getX();
+        x2 = SV.getVariable(new P3());
+        break;
+      }
+      //$FALL-THROUGH$
     default:
       return false;
     }
@@ -1485,6 +1480,7 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {*}.find("equivalentAtoms")
     // {*}.find("spacegroup")
     // "test.find("t");
     // "test.find("t","v"); // or "m" or "i"
@@ -1578,8 +1574,6 @@ public class MathExt {
         }
         break;
       }
-
-      // check for simple
     }
 
     boolean isSmiles = !isList && !isStr && sFind.equalsIgnoreCase("SMILES");
@@ -1595,8 +1589,28 @@ public class MathExt {
         && sFind.equalsIgnoreCase("INCHIKEY");
     boolean isStructureMap = (!isSmiles && !isSMARTS && tok0 == T.bitset
         && flags.toLowerCase().indexOf("map") >= 0);
+    boolean isEquivalent = ((x1.tok == T.bitset || x1.tok == T.point3f || x1.tok == T.varray) 
+        && sFind.toLowerCase().startsWith("equivalent"));
+    
     try {
-      if (isInchi || isInchiKey) {
+      if (isEquivalent) {
+        switch (x1.tok) {
+        case T.bitset:
+            return mp.addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value));
+        case T.point3f:
+          return mp.addXList(vwr.getSymmetryEquivPoints((P3) x1.value, sFind + flags));
+        case T.varray:
+          Lst<P3> lst = new Lst<P3>();
+          Lst<SV> l0 = x1.getList();
+          for (int i = 0, n = l0.size(); i < n; i++) {
+            P3 p = SV.ptValue(l0.get(i));
+            if (p == null)
+              return false;
+            lst.addLast(p);
+          }
+          return mp.addXList(vwr.getSymmetryEquivPointList(lst, sFind + flags));
+        }
+      } else if (isInchi || isInchiKey) {
         if (isInchiKey)
           flags += " key";
         return mp.addXStr(vwr.getInchi(SV.getBitSet(x1, true), null, flags));
@@ -1876,7 +1890,7 @@ public class MathExt {
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0) || isOff;
     boolean asMatch = (flags.indexOf("m") >= 0);
     boolean checkEmpty = (sFind.length() == 0);
-    boolean isPattern = (!checkEmpty && args.length == 2);
+    boolean isPattern = (!checkEmpty && !isEquivalent && args.length == 2);
     if (isList || isPattern) {
       JmolPatternMatcher pm = (isPattern ? getPatternMatcher() : null);
       Pattern pattern = null;

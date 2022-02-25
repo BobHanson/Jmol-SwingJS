@@ -247,4 +247,10 @@ public interface SymmetryInterface {
 
   Lst<P3> getLatticeCentering();
 
+  public BS removeDuplicates(ModelSet ms, BS bs);
+
+  public Lst<P3> getEquivPoints(P3 pt, String flags);
+
+  public void getEquivPointList(Lst<P3> pts, String flags);
+
 }

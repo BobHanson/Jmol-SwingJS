@@ -10,11 +10,12 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.FileManager;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
+//import javajs.util.M3;
 import javajs.util.P3;
 
 /**
@@ -36,19 +37,13 @@ public class SpaceGroupFinder {
   /**
    * maximum allowable distance fx, fy ,fz for atom finder
    */
-  private static final float SLOP0014 = 0.0014f;
-
-  /**
-   * maximum allowable distance squared for atom finder
-   */
-  private static final float MAX_DIST_2 = SLOP0014 * SLOP0014;
-  //0.00000169f; // sqrt of 0.0013 too small for ams/phengite
-
+  private static final float SLOP0014 = (float) Math.sqrt(JC.UC_TOLERANCE2);
 
   /**
    * tolerance for fractional coord and 
    */
-  private final static float SLOP02 = 0.02f, SLOP001 = 0.001f, SLOP0001= 0.0001f;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
+  private final static float //SLOP02 = 0.02f, 
+      SLOP001 = 0.001f, SLOP0001= 0.0001f;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
 
   private static int GROUP_COUNT; // 530
   private static int OP_COUNT; // 882
@@ -106,10 +101,10 @@ public class SpaceGroupFinder {
       uc = uc.getUnitCellMultiplied();
       filterGroups(bsGroups, uc);
       withinCell = vwr.ms.getAtoms(T.unitcell, uc);
-      BS extraAtoms = BSUtil.copy(bsAtoms);
-      extraAtoms.andNot(withinCell);
+      //BS extraAtoms = BSUtil.copy(bsAtoms);
+      //extraAtoms.andNot(withinCell);
       withinCell.and(bsAtoms);
-      int nExtra = extraAtoms.cardinality();
+      //int nExtra = extraAtoms.cardinality();
 
       // 1. Get ALL atoms.
 
@@ -135,20 +130,21 @@ public class SpaceGroupFinder {
 //        System.out.println("tetragonoal setting issue detected");
 //      }
 
-      // 2. Check that packing atoms, if any, are complete and only those packed.
+//      // 2. Check that packing atoms, if any, are complete and only those packed.
+      // decided this was unnecessary. We can just unitize and remove duplicates
 
-      if (nExtra > 0) {
-        BS packedAtoms = new BS();
-        checkPackingAtoms(bsPoints, extraAtoms, 1, packedAtoms);
-        checkPackingAtoms(bsPoints, extraAtoms, 2, packedAtoms);
-        checkPackingAtoms(bsPoints, extraAtoms, 3, packedAtoms);
-        if (packedAtoms.cardinality() == nExtra) {
-          bsPoints.andNot(packedAtoms);
-        } else {
-          System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
-          bsPoints.clearAll();
-        }
-      }
+//      if (nExtra > 0) {
+//        BS packedAtoms = new BS();
+//        checkPackingAtoms(bsPoints, extraAtoms, 1, packedAtoms);
+//        checkPackingAtoms(bsPoints, extraAtoms, 2, packedAtoms);
+//        checkPackingAtoms(bsPoints, extraAtoms, 3, packedAtoms);
+//        if (packedAtoms.cardinality() == nExtra) {
+//          bsPoints.andNot(packedAtoms);
+//        } else {
+//          System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
+//          bsPoints.clearAll();
+//        }
+//      }
 
       // 3. Unitize and check for supercells in each direction
 
@@ -160,6 +156,7 @@ public class SpaceGroupFinder {
             .nextSetBit(i + 1)) {
           SimpleUnitCell.unitizeDim(3, atoms[i]);
         }
+        removeDuplicates(bsPoints);
         uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
         uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
         uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
@@ -248,8 +245,8 @@ public class SpaceGroupFinder {
             hasC1 = true;
           // iop was found
           targets.or(targeted);
-          System.out.println("targeted=" + targeted);
-          System.out.println("targets=" + targets);
+          //System.out.println("targeted=" + targeted);
+          //System.out.println("targets=" + targets);
           //reduce the number of possible groups to groups having this operation
           bsGroups.and(myGroups);
           // reduce the number of operations to check to only those NOT common to 
@@ -288,7 +285,7 @@ public class SpaceGroupFinder {
         }
       }
       isg = bsGroups.nextSetBit(0);
-      if (n == 1 && !asString) {
+      if (n == 1) {
         if (isg > 0) {
           opsChecked.and(bsGroupOps[isg]);
           uncheckedOps.and(bsGroupOps[isg]);
@@ -298,16 +295,16 @@ public class SpaceGroupFinder {
           uncheckedOps.clear(0);
 
           bsPoints.or(bsPoints0);
-          System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
-          System.out.println("test2 targets " + targets.cardinality() + " " + targets);
-          System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
-          System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
+//          System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
+//          System.out.println("test2 targets " + targets.cardinality() + " " + targets);
+//          System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
+//          System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
           bsPoints.andNot(targets);
           if (!checkBasis(uncheckedOps, bsPoints, targets)) {
             isg = 0;
           }
-          System.out.println("test2b targets " + targets.cardinality() + " " + targets);
-          System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
+//          System.out.println("test2b targets " + targets.cardinality() + " " + targets);
+//          System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
         }
         if (isg == 0)
           targets.clearAll();
@@ -328,15 +325,15 @@ public class SpaceGroupFinder {
     SpaceGroup sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
     String name = sg.asString();
     uc.setSpaceGroupName(name);
-    System.out.println("found " + name);
-    if (asString)
-      return name;
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
     BS basis = BSUtil.copy(isg == 0 ? withinCell : bsAtoms);
     for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i+ 1))
       basis.clear(atoms[i].index);
     System.out.println("basis is " + basis.cardinality() + ": " + basis);
+    System.out.println("found " + name + "; basis=" + basis);
+    if (asString)
+      return name + "; basis=" + basis;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
     System.out.println("unitcell is " + uc.getUnitCellInfo(true));
     BS bs1 = BS.copy(bsPoints0);
     bs1.andNot(targets);
@@ -351,6 +348,21 @@ public class SpaceGroupFinder {
     return map;
   }
 
+  private void removeDuplicates(BS bs) {
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      SGAtom a = atoms[i];
+      for (int j = bs.nextSetBit(0); j < i; j = bs.nextSetBit(j + 1)) {
+        SGAtom b = atoms[j];
+        if (a.typeAndOcc == b.typeAndOcc && a.distanceSquared(b) < JC.UC_TOLERANCE2) {
+          bs.clear(i);
+          break;
+        }
+      }
+      
+    }
+  }
+
+  @SuppressWarnings("unused")
   private void dumpBasis(BS ops, BS bs1, BS bsPoints) {
 //    System.out.println("----");
 //    for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
@@ -558,7 +570,7 @@ public class SpaceGroupFinder {
     return null;
   }
 
-  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3 mtet) {    
+//  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3 mtet) {    
 //    float[] params = uc.getUnitCellParams();
 //    if (!approx0(params[0] - params[1])
 //        && approx0(params[1] - params[2])
@@ -583,8 +595,8 @@ public class SpaceGroupFinder {
 //      P3[] oabc = uc.getUnitCellVectors();
 //      uc = vwr.getSymTemp().getUnitCell(new P3[] {oabc[0], oabc[1], oabc[3], oabc[2]}, false, "permuted");
 //    }
-    return uc;
-  }
+//    return uc;
+//  }
 
   P3 toFractional(Atom a, SymmetryInterface uc) {
     pt.setT(a);
@@ -602,52 +614,52 @@ public class SpaceGroupFinder {
     return op;
   }
 
-  /**
-   * Check for the same number of base (coord 0) atoms is the same as the number
-   * of packed atoms. If that is not the case, we have P1 symmetry, and we just
-   * clear all points.
-   * 
-   * @param bsPoints
-   *        set to empty if there is a problem
-   * @param extraAtoms
-   * @param packedAtoms
-   *        to be filled
-   * @param abc
-   */
-  private void checkPackingAtoms(BS bsPoints, BS extraAtoms, int abc,
-                                 BS packedAtoms) {
-    int nextra = extraAtoms.cardinality();
-    if (nextra == 0)
-      return;
-    int nbase = 0;
-    int npacked = 0;
-    float f = 0;
-    for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-        .nextSetBit(i + 1)) {
-      SGAtom a = atoms[i];
-      switch (abc) {
-      case 1:
-        f = a.x;
-        break;
-      case 2:
-        f = a.y;
-        break;
-      case 3:
-        f = a.z;
-        break;
-      }
-      if (approx01(f)) {
-        nbase++;
-      } else if (approx01(f - 1)) {
-        npacked++;
-        packedAtoms.set(i);
-      }
-    }
-    if (nbase != npacked) {
-      bsPoints.clearAll();
-      extraAtoms.clearAll();
-    }
-  }
+//  /**
+//   * Check for the same number of base (coord 0) atoms is the same as the number
+//   * of packed atoms. If that is not the case, we have P1 symmetry, and we just
+//   * clear all points.
+//   * 
+//   * @param bsPoints
+//   *        set to empty if there is a problem
+//   * @param extraAtoms
+//   * @param packedAtoms
+//   *        to be filled
+//   * @param abc
+//   */
+//  private void checkPackingAtoms(BS bsPoints, BS extraAtoms, int abc,
+//                                 BS packedAtoms) {
+//    int nextra = extraAtoms.cardinality();
+//    if (nextra == 0)
+//      return;
+//    int nbase = 0;
+//    int npacked = 0;
+//    float f = 0;
+//    for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
+//        .nextSetBit(i + 1)) {
+//      SGAtom a = atoms[i];
+//      switch (abc) {
+//      case 1:
+//        f = a.x;
+//        break;
+//      case 2:
+//        f = a.y;
+//        break;
+//      case 3:
+//        f = a.z;
+//        break;
+//      }
+//      if (approx01(f)) {
+//        nbase++;
+//      } else if (approx01(f - 1)) {
+//        npacked++;
+//        packedAtoms.set(i);
+//      }
+//    }
+//    if (nbase != npacked) {
+//      bsPoints.clearAll();
+//      extraAtoms.clearAll();
+//    }
+//  }
 
   /**
    * Look for a supercell and adjust lattice down if necessary.
@@ -671,7 +683,7 @@ public class SpaceGroupFinder {
         .nextSetBit(i + 1)) {
       SGAtom a = atoms[i];
       int type = a.typeAndOcc;
-      String name = a.name;
+      //String name = a.name;
       SGAtom b;
       float f;
       for (int j = bsPoints.nextSetBit(0); j >= 0; j = bsPoints
@@ -767,16 +779,17 @@ public class SpaceGroupFinder {
     return (Math.abs(f) < SLOP0014);
   }
 
-  private boolean approx01(float f) {
-    return (Math.abs(f) < SLOP02);
-  }
-
+//  private boolean approx01(float f) {
+//    return (Math.abs(f) < SLOP02);
+//  }
+//
   private int approxInt(float finv) {
 //    int i = Math.round (finv); // was 
     int i = (int) (finv + SLOP001);
     return (Math.abs(finv - i) < SLOP001 ? i : 0);
   }
 
+  @SuppressWarnings("unused")
   private int findEquiv(int iop, SymmetryOperation op, int i, BS bsPoints,
                         P3 pt, boolean andClear) {
     SGAtom a = atoms[i];
@@ -797,8 +810,8 @@ public class SpaceGroupFinder {
       float d = b.distance(pt);
 //      if (iop == 15 && j == 98 && i == 46)
 //        System.out.println("???");
-      if (d * d < MAX_DIST_2 
-          || (1 - d) * (1 - d) < MAX_DIST_2
+      if (d * d < JC.UC_TOLERANCE2 
+          || (1 - d) * (1 - d) < JC.UC_TOLERANCE2
           && latticeShift(pt, b)
           ) { // this is a SQUARE
         if (andClear) {

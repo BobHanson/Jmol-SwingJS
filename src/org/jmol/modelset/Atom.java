@@ -81,7 +81,7 @@ public class Atom extends Point3fi implements Node {
   public Group group;
   private float userDefinedVanDerWaalRadius;
   byte valence;
-  private short atomicAndIsotopeNumber;
+  short atomicAndIsotopeNumber;
   public BS atomSymmetry;
 
   private int formalChargeAndFlags; //  cccc CIP_ _CIP --hv

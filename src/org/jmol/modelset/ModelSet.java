@@ -1024,15 +1024,47 @@ public class ModelSet extends BondCollection {
       unitCells = new SymmetryInterface[mc];
     unitCells[mi] = sg;
     haveUnitCells = true;
-    sg.setFinalOperations(null, null,  -1,  -1,  false,  null);
+    sg.setFinalOperations(null, null, -1, -1, false, null);
     am[mi].bsAsymmetricUnit = basis;
     // set symmetry at least for symop=1555
     bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
     BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
     bsSymmetry.or(bs);
     bsSymmetry.andNot(basis);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    boolean isP1 = (basis.cardinality() == bs.cardinality());
+    // assign sites to basis atoms
+    for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       at[i].setSymop(basis.get(i) ? 1 : 0, true);
+      if (isP1)
+        at[i].atomSite = ++p;
+    }
+    if (!isP1) {
+      boolean haveOccupancies = (occupancies != null);
+      int nops = sg.getSpaceGroupOperationCount();
+      P3 a, b = new P3();
+      Atom bb;
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Atom ba = at[i];
+        a = P3.newP(ba);
+        sg.toFractional(a, true);
+        sg.unitize(a);
+        int type = at[i].atomicAndIsotopeNumber;
+        float occ = (haveOccupancies ? occupancies[i] : 0);
+        out: for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
+          if ((bb = at[j]).atomicAndIsotopeNumber != type || haveOccupancies && occupancies[j] != occ)
+            continue;
+          for (int k = 0; k < nops; k++) {
+            b.setT(bb);
+            sg.toFractional(b, true);
+            sg.getSpaceGroupOperation(k).rotTrans(b);
+            sg.unitize(b);
+            if (b.distanceSquared(a) < JC.UC_TOLERANCE2) {
+              ba.atomSite = bb.atomSite;
+              break out;
+            }
+          }
+        }
+      }
     }
     // TODO: actually set atomSymmetry properly
     setInfo(mi, "unitCellParams", sg.getUnitCellParams());
@@ -4247,6 +4279,30 @@ public class ModelSet extends BondCollection {
       q.transform2(pTemp, pTemp);
   }
 
+  public BS getSymmetryEquivAtoms(BS bs) {
+    BS bsNew = new BS();
+    bsNew.or(bs);
+    SymmetryInterface uc = vwr.getCurrentUnitCell();
+   if (uc != null) {
+     BS bsAtoms = BSUtil.copy(vwr.getThisModelAtoms());
+     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+       Atom a = at[i];
+       int site = a.getAtomSite();
+       if (site > 0) {
+         for (int j = bsAtoms.nextSetBit(0); j >= 0; j = bsAtoms.nextSetBit(j + 1)) {
+           if (at[j].getAtomSite() == site) {
+             bsNew.set(j);
+             bsAtoms.clear(j);
+             bs.clear(j);
+           }
+         }
+       } else {
+         // ?? is this possible?
+       }
+     }
+   }
+    return bsNew;
+  }
 
 }
 
