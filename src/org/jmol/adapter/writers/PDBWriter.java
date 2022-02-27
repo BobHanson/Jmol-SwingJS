@@ -10,7 +10,6 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
-import org.jmol.modelset.ModelSet;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;

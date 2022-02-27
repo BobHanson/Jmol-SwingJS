@@ -98,9 +98,9 @@ public class PWMATWriter implements JmolWriter {
   }
   
   private float[] getData(String name) { 
-    name = "property_pwm_" + name;
+    name = "property_pwm_" + name.toLowerCase();
     for (int i = names.length; --i >= 0;) {
-      if (name.equalsIgnoreCase(names[i])) {
+      if (names[i] != null && name.equalsIgnoreCase(names[i])) {
         names[i] = null;
         return (float[]) vwr.getDataObj(name, bs, JmolDataManager.DATA_TYPE_AF);
       }
@@ -125,6 +125,8 @@ public class PWMATWriter implements JmolWriter {
 
   private void writeVectors(String name) {
     float[][] xyz = getVectors(name);
+    if (xyz[0] == null)
+      return;
     Atom[] a = vwr.ms.at;
     P3 p = new P3();
     oc.append(name.toUpperCase()).append("\n");
@@ -145,29 +147,30 @@ public class PWMATWriter implements JmolWriter {
 
   private void writeItem2(float[] m, String name) {
     float[] v = getData(name);
-    if (v != null) {
-      Atom[] a = vwr.ms.at;
-      oc.append(name.toUpperCase()).append("\n");
-      String f = "%4i%18.12f%18.12f\n";
-      for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-          .nextSetBit(i + 1), ic++) {
-        oc.append(PT.sprintf(f, "iff", new Object[] {
-            Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]), Float.valueOf(v[ic]) }));
-      }
+    if (v == null)
+      return;
+    Atom[] a = vwr.ms.at;
+    oc.append(name.toUpperCase()).append("\n");
+    String f = "%4i%18.12f%18.12f\n";
+    for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
+        .nextSetBit(i + 1), ic++) {
+      oc.append(PT.sprintf(f, "iff",
+          new Object[] { Integer.valueOf(a[i].getElementNumber()),
+              Float.valueOf(m[ic]), Float.valueOf(v[ic]) }));
     }
   }
 
   private float[] writeItems(String name) {
     float[] m = getData(name);
-    if (m != null) {
-      Atom[] a = vwr.ms.at;
-      oc.append(name.toUpperCase()).append("\n");
-      String f = "%4i%18.12f\n";
-      for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-          .nextSetBit(i + 1), ic++) {
-        oc.append(PT.sprintf(f, "if", new Object[] {
-            Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]) }));
-      }
+    if (m == null)
+      return null;
+    Atom[] a = vwr.ms.at;
+    oc.append(name.toUpperCase()).append("\n");
+    String f = "%4i%18.12f\n";
+    for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
+        .nextSetBit(i + 1), ic++) {
+      oc.append(PT.sprintf(f, "if", new Object[] {
+          Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]) }));
     }
     return m;
   }

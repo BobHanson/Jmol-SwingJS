@@ -124,7 +124,7 @@ public class PWmatReader extends AtomSetCollectionReader {
     }
     asc.setAtomProperties(name, values, asc.iSet, false);
     Logger.info("PWmatReader: " + name.toUpperCase()  +" processed for " + n + " atoms");
-    appendLoadNote("property_" + name + " read");
+    appendLoadNote("PWmatReader read property_" + name);
   }
 
   private void readVectors(String name, int offset, boolean haveLine) throws Exception {
@@ -170,7 +170,7 @@ public class PWmatReader extends AtomSetCollectionReader {
     asc.setAtomProperties(name + "_z", valuesZ, asc.iSet, false);
     Logger.info("PWmatReader: " + name.toUpperCase() + " processed for " + n
         + " atoms");
-    appendLoadNote("property_" + name + "_x/_y/_z read");
+    appendLoadNote("PWmatReader read property_" + name + "_x/_y/_z");
   }
 
 }
