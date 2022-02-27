@@ -6,7 +6,9 @@ import java.util.Map;
 import org.jmol.modelset.TickInfo;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.BS;
 import javajs.util.CU;
@@ -311,7 +313,7 @@ abstract public class ScriptParam extends ScriptError {
       case T.identifier:
       case T.string:
       case T.point4f:
-        plane = ScriptMathProcessor.planeValue(theToken);
+        plane = planeValue(theToken);
         break;
       case T.leftbrace:
       case T.point3f:
@@ -383,7 +385,7 @@ abstract public class ScriptParam extends ScriptError {
     }
     if (plane == null)
       errorMore(ERROR_planeExpected, "{a b c d}",
-          "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\"", "$xxxxx");
+          "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\" \"ab\" \"bc\" \"ac\" \"ab1\" \"bc1\" \"ac1\"", "$xxxxx");
     if (isNegated) {
       plane.scale4(-1);
     }
@@ -1403,7 +1405,7 @@ abstract public class ScriptParam extends ScriptError {
   /**
    * Note - this check does not allow a 0 for h, k, or l.
    * @param pt
-   * @return
+   * @return pt or throw invArg
    * @throws ScriptException
    */
   public T3 checkHKL(T3 pt) throws ScriptException {
@@ -1412,6 +1414,64 @@ abstract public class ScriptParam extends ScriptError {
       invArg();
     return pt;
   }
+
+  public P4 planeValue(T x) {
+    Object pt;
+    switch (x.tok) {
+    case T.point4f:
+      return (P4) x.value;
+    case T.varray:
+      break;
+    case T.string:
+    case T.misc:
+      String s = (String) x.value;
+      boolean isMinus = s.startsWith("-");
+      float f = (isMinus ? -1 : 1);
+      if (isMinus)
+        s = s.substring(1);
+      P4 p4 = null;
+      boolean is1 = (s.length() > 2 && s.charAt(2) == '1');
+      int mode = (s.length() < 2 ? -1
+          : "xy yz xz x= y= z= ab bc ac".indexOf(s.substring(0, 2)));
+      if (mode >= 18 && vwr.getCurrentUnitCell() == null) {
+        mode -= 18; // to xy yz xz if no unit cell       
+      }
+      switch (mode) {
+      case 0:
+        return P4.new4(1, 1, 0, f);
+      case 3:
+        return P4.new4(0, 1, 1, f);
+      case 6:
+        return P4.new4(1, 0, 1, f);
+      case 9:
+        p4 = P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
+        break;
+      case 12:
+        p4 = P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
+        break;
+      case 15:
+        p4 = P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
+        break;
+      case 18: // ab
+        p4 = getHklPlane(P3.new3(0, 0, 1), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_C) : 0, null);
+        break;
+      case 21: // bc
+        p4 = getHklPlane(P3.new3(1, 0, 0), is1 ? -vwr.getUnitCellInfo(SimpleUnitCell.INFO_A) : 0, null);
+        break;
+      case 24: // ac
+        p4 = getHklPlane(P3.new3(0, 1, 0), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_B) : 0, null);
+        break;
+      }
+      if (p4 != null && !Float.isNaN(p4.w))
+        return p4;
+      break;
+    default:
+      return null;
+    }
+    pt = Escape.uP(SV.sValue(x));
+    return (pt instanceof P4 ? (P4) pt : null);
+  }
+
 
 
 }

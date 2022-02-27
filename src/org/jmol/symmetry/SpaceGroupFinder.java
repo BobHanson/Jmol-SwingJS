@@ -76,7 +76,7 @@ public class SpaceGroupFinder {
 
   public Object findSpaceGroup(Viewer vwr, BS atoms0, String opXYZ0,
                                SymmetryInterface uc, boolean asString) {
-    P3[] oabc = uc.getUnitCellVectors();
+    P3[] oabc = null;
     Atom[] cartesians = vwr.ms.at;
     int isg = 0;
     BS bsGroups = new BS();
@@ -98,6 +98,7 @@ public class SpaceGroupFinder {
       if (opXYZ0 != null) {
         return getGroupsWithOp(opXYZ0);
       }
+      oabc = uc.getUnitCellVectors();
       uc = uc.getUnitCellMultiplied();
       filterGroups(bsGroups, uc);
       withinCell = vwr.ms.getAtoms(T.unitcell, uc);

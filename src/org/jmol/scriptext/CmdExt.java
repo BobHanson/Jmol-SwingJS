@@ -5871,60 +5871,63 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void modelkit() throws ScriptException {
-// modelkit [ON(nada)/OFF/DISPLAY/HIDE]
-//    
-//  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
-//
-//  -- action options include alternatives to the given commands (assign is undocumented)
-//  
-//  modelkit ASSIGN ATOM [symbol|pl|mi] point
-//  modelkit ASSIGN ATOM @1 [symbol|pl|mi]
-//  modelkit ASSIGN ATOM @1 [symbol|pl|mi] point
-//  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m] (default P)
-//  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m] (default P)
-//  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m] (default P)
-//  modelkit ASSIGN SPACEGROUP    
-//  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
-//  modelkit DELETE ATOM @1
-//
-//  modelkit ROTATE ...  (same as ROTATE for example, ROTATE BOND @1 @2 degrees)
-//  modelkit ROTATESELECTED (same as ROTATESLECTED)
-//
-// view mode     
-//  MODELKIT SYMOP [n]
-//  MODELKIT SYMOP "x,-y,z"
-//  MODELKIT SYMOP [[4x4 matrix]]
-//  MODELKIT OFFSET [{i j k}/NONE]
-//
-//  -- configuration options include the following; CAPS is default:
-//       
-//  MODELKIT SET addHydrogens [TRUE|false]
-//  MODELKIT SET autobond [true|FALSE]
-//  MODELKIT SET clickToSetElement [TRUE|false]
-//  MODELKIT SET showSymopInfo [TRUE|false]
-//  MODELKIT SET bondtype [0,1,2,3,4,5,p,m]
-//  MODELKIT SET element [name or symbol]
-//  MODELKIT SET MODE [molecular|view|edit]
-//  MODELKIT SET UNITCELL [EXTEND|PACKED]
-//
-// edit mode -- not implemented
-//
-//  MODELKIT SET SYMMETRY [APPLYFULL|APPLYLOCAL|RETAINLOCAL] // not implemented
-//  MODELKIT POINT point or atoms // not implemented
-//    
-//  -- configuration options can be given sequentially within one MODELKIT command or in individual commands
-//  -- examples:
-//  
-//  modelkit set mode view symop 5 center @3 
-//  modelkit set mode view symop 5 center @3 offset {0 0 0}   // unitized [0,1)    
-    
+    // modelkit [ON(nada)/OFF/DISPLAY/HIDE]
+    //    
+    //  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
+    //
+    //  -- action options include alternatives to the given commands (assign is undocumented)
+    //  
+    //  modelkit ASSIGN ATOM [symbol|pl|mi] point
+    //  modelkit ASSIGN ATOM @1 [symbol|pl|mi]
+    //  modelkit ASSIGN ATOM @1 [symbol|pl|mi] point
+    //  modelkit ASSIGN BOND (integer) [0,1,2,3,4,5,p,m] (default P)
+    //  modelkit ASSIGN BOND {atom1 atom2} [0,1,2,3,4,5,p,m] (default P)
+    //  modelkit ASSIGN BOND @1 @2 [0,1,2,3,4,5,p,m] (default P)
+    //  modelkit ASSIGN SPACEGROUP    
+    //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
+    //  modelkit DELETE @1
+    //  modelkit MOVETO @1 point
+    //  modelkit FIXED VECTOR pt1 pt2
+    //  modelkit FIXED PLANE pt1 pt2
+    //  modelkit FIXED NONE
+    //  modelkit ROTATE ...  (same as ROTATE for example, ROTATE BOND @1 @2 degrees)
+    //  modelkit ROTATESELECTED (same as ROTATESLECTED)
+    //
+    // view mode     
+    //  MODELKIT SYMOP [n]
+    //  MODELKIT SYMOP "x,-y,z"
+    //  MODELKIT SYMOP [[4x4 matrix]]
+    //  MODELKIT OFFSET [{i j k}/NONE]
+    //
+    //  -- configuration options include the following; CAPS is default:
+    //       
+    //  MODELKIT SET addHydrogens [TRUE|false]
+    //  MODELKIT SET autobond [true|FALSE]
+    //  MODELKIT SET clickToSetElement [TRUE|false]
+    //  MODELKIT SET showSymopInfo [TRUE|false]
+    //  MODELKIT SET bondtype [0,1,2,3,4,5,p,m]
+    //  MODELKIT SET element [name or symbol]
+    //  MODELKIT SET MODE [molecular|view|edit]
+    //  MODELKIT SET UNITCELL [EXTEND|PACKED]
+    //
+    // edit mode -- not implemented
+    //
+    //  MODELKIT SET SYMMETRY [APPLYFULL|APPLYLOCAL|RETAINLOCAL] // not implemented
+    //  MODELKIT POINT point or atoms // not implemented
+    //    
+    //  -- configuration options can be given sequentially within one MODELKIT command or in individual commands
+    //  -- examples:
+    //  
+    //  modelkit set mode view symop 5 center @3 
+    //  modelkit set mode view symop 5 center @3 offset {0 0 0}   // unitized [0,1)    
+
     int i = 0;
     int tok = tokAt(1);
     switch (tok) {
     case T.undo:
     case T.redo:
-       e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
-       return;
+      e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
+      return;
     case T.off:
     case T.nada:
     case T.on:
@@ -5932,7 +5935,7 @@ public class CmdExt extends ScriptExt {
         vwr.setBooleanProperty("modelkitmode", tok != T.off);
       if (tokAt(i + 1) == T.nada)
         return;
-      i =  ++e.iToken;
+      i = ++e.iToken;
       break;
     case T.rotate:
       e.cmdRotate(false, false);
@@ -5946,6 +5949,7 @@ public class CmdExt extends ScriptExt {
     case T.spacegroup:
     case T.connect:
     case T.delete:
+    case T.moveto:
       assign();
       return;
     case T.mutate:
@@ -5960,13 +5964,53 @@ public class CmdExt extends ScriptExt {
       switch (tok) {
       case T.on:
       case T.off:
-        if (!chk)
+        if (!chk) {
           vwr.setBooleanProperty("modelkitmode", tok == T.on);
+          vwr.setStringProperty("picking", "identify");
+        }
         continue;
       case T.display:
       case T.hide:
         key = "hidden";
         value = Boolean.valueOf(tok != T.display);
+        break;
+      case T.fixed:
+        key = "constraint";
+        value = "";
+        int type = tokAt(++i);
+        T3 v1 = null, v2 = null;
+        P4 plane = null;
+        switch (type) {
+        case T.off:
+        case T.none:
+          if (!chk)
+            vwr.setBooleanProperty("dragPicking", false);
+          break;
+        case T.vector:
+          v1 = e.getPoint3f(++i, true, true);
+          i = e.iToken;
+          v2 = e.getPoint3f(++i, true, true);
+          value = null;
+          break;
+        case T.hkl:
+          plane = e.hklParameter(++i, null, true);
+          value = null;
+          break;
+        case T.plane:
+          plane = e.planeParameter(++i, false);
+          value = null;
+          break;
+        default:
+          invArg();
+        }
+        if (value == null) {
+          if ((v1 == null || v2 == null) == (plane == null))
+            invArg();
+          value = new Object[] { v1, v2, plane };
+        } else {
+          value = null;
+        }
+        i = e.iToken;
         break;
       case T.set:
         key = paramAsStr(++i);
@@ -6043,9 +6087,9 @@ public class CmdExt extends ScriptExt {
         }
         invArg();
       }
-      if (!chk && value != null 
-          && (value = kit.setProperty(key, value)) != null && key != "hidden" && !kit.isHidden())
-          vwr.showString("modelkit " + key + " = " + value.toString(), false);
+      if (!chk && value != null && (value = kit.setProperty(key, value)) != null
+          && key != "hidden" && !kit.isHidden())
+        vwr.showString("modelkit " + key + " = " + value.toString(), false);
     }
   }
 
@@ -6071,9 +6115,9 @@ public class CmdExt extends ScriptExt {
     boolean isBond = (mode == T.bonds);
     boolean isConnect = (mode == T.connect);
     boolean isDelete = (mode == T.delete);
-    
+    boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
-    if (isAtom || isBond || isConnect || isSpacegroup || isDelete)
+    if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove)
       i++;
     else
       mode = T.atoms;
@@ -6124,6 +6168,7 @@ public class CmdExt extends ScriptExt {
       // assign ATOM @3 "C" {0 0 0}
       // assign CONNECT @3 @4
       // assign DELETE @1
+      // assign MOVETO @1
       bs = expFor(i, bsAtoms);
       index = bs.nextSetBit(0);
       if (index < 0) {
@@ -6133,7 +6178,9 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3 pt = null;
-    if (isSpacegroup || isDelete) {
+    if (isMove) {
+      pt = getPoint3f(++e.iToken, true);
+    } else if (isSpacegroup || isDelete) {
     } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
@@ -6163,6 +6210,11 @@ public class CmdExt extends ScriptExt {
       int n = vwr.getModelkit(false).cmdAssignDeleteAtoms(bs);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms deleted"), n), false);
+      break;
+    case T.moveto:
+      int m = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
+      if (e.doReport())
+        e.report(GT.i(GT.$("{0} atoms moved"), m), false);
       break;
     case T.spacegroup:
       boolean isP1 = e.optParameterAsString(i).equalsIgnoreCase("P1");

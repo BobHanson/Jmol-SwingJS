@@ -34,6 +34,7 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -140,8 +141,10 @@ public class SymmetryDesc {
   Map<String, Object> getSpaceGroupInfo(SymmetryInterface sym, int modelIndex,
                                         String sgName, int symOp, P3 pt1,
                                         P3 pt2, String drawID,
-                                        float scaleFactor, int nth, 
-                                        boolean isFull, boolean isForModel, int options, SymmetryInterface cellInfo) {
+                                        float scaleFactor, int nth,
+                                        boolean isFull, boolean isForModel,
+                                        int options, SymmetryInterface cellInfo,
+                                        boolean matrixOnly) {
     Map<String, Object> info = null;
     boolean isStandard = (pt1 == null && drawID == null && nth <= 0);
     boolean isBio = false;
@@ -155,7 +158,8 @@ public class SymmetryDesc {
             : modelSet.vwr.am.cmi);
       if (modelIndex < 0)
         sgNote = "no single current model";
-      else if (cellInfo == null && !(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
+      else if (cellInfo == null
+          && !(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
           && (cellInfo = modelSet.getUnitCell(modelIndex)) == null)
         sgNote = "not applicable";
       if (sgNote != null) {
@@ -180,49 +184,66 @@ public class SymmetryDesc {
       String slist = (haveRawName ? "" : null);
       int opCount = 0;
       if (ops != null) {
-        if (isBio)
-          sym.setSpaceGroupTo(SpaceGroup.getNull(false, false, false));
-        else
-          sym.setSpaceGroup(false);
+        if (!matrixOnly) {
+          if (isBio)
+            sym.setSpaceGroupTo(SpaceGroup.getNull(false, false, false));
+          else
+            sym.setSpaceGroup(false);
+        }
         // check to make sure that new group has been created magnetic or not
         if (ops[0].timeReversal != 0)
           ((SymmetryOperation) sym.getSpaceGroupOperation(0)).timeReversal = 1;
         Object[][] infolist = new Object[ops.length][];
         String sops = "";
         for (int i = 0, nop = 0; i < ops.length && nop != nth; i++) {
-          
+
           SymmetryOperation op = ops[i];
-          boolean isNewIncomm = (i == 0 && op.xyz.indexOf("x4") >= 0);
-          int iop = (!isNewIncomm && sym.getSpaceGroupOperation(i) != null ? i : isBio ? sym
-              .addBioMoleculeOperation(sg.finalOperations[i], false) : sym
-              .addSpaceGroupOperation("=" + op.xyz, i + 1));
-          if (iop < 0)
-            continue;
           String xyzOriginal = op.xyzOriginal;
+          int iop;
+          if (matrixOnly) {
+            iop = i;
+          } else {
+            boolean isNewIncomm = (i == 0 && op.xyz.indexOf("x4") >= 0);
+            iop = (!isNewIncomm && sym.getSpaceGroupOperation(i) != null ? i
+                : isBio
+                    ? sym.addBioMoleculeOperation(sg.finalOperations[i], false)
+                    : sym.addSpaceGroupOperation("=" + op.xyz, i + 1));
+            if (iop < 0)
+              continue;
           op = (SymmetryOperation) sym.getSpaceGroupOperation(i);
           if (op == null)
             continue;
           op.xyzOriginal = xyzOriginal;
+          }
           if (op.timeReversal != 0 || op.modDim > 0)
             isStandard = false;
           if (slist != null)
             slist += ";" + op.xyz;
           Object[] ret = (symOp > 0 && symOp - 1 != iop ? null
-              : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor, options, false));
+              : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor,
+                  options, false, matrixOnly));
           if (ret != null) {
             if (nth > 0 && ++nop != nth)
               continue;
             infolist[i] = ret;
-            sops += "\n" + (i + 1) + "\t" + ret[0] + "\t" + ret[2];
+            if (!matrixOnly)
+              sops += "\n" + (i + 1) + "\t" + ret[0] + "\t" + ret[2];
             opCount++;
           }
         }
         info.put("operations", infolist);
-        info.put("symmetryInfo", (sops.length() == 0 ? "" : sops.substring(1)));
+        if (!matrixOnly)
+          info.put("symmetryInfo",
+              (sops.length() == 0 ? "" : sops.substring(1)));
+      }
+      if (matrixOnly) {
+        return info;
       }
       sgNote = (opCount == 0 ? "\n no symmetry operations"
-          : nth <= 0 && symOp <= 0 ? "\n" + opCount
-            + " symmetry operation" + (opCount == 1 ? ":\n" : "s:\n") : "");
+          : nth <= 0 && symOp <= 0
+              ? "\n" + opCount + " symmetry operation"
+                  + (opCount == 1 ? ":\n" : "s:\n")
+              : "");
       if (slist != null)
         sgName = slist.substring(slist.indexOf(";") + 1);
       if (saveModelInfo)
@@ -241,9 +262,10 @@ public class SymmetryDesc {
       data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull, !isForModel);
       if (data == null || data.equals("?")) {
         data = "?";
-        info.put("spaceGroupNote", "could not identify space group from name: " + sgName
-            + "\nformat: show spacegroup \"2\" or \"P 2c\" "
-            + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"");
+        info.put("spaceGroupNote",
+            "could not identify space group from name: " + sgName
+                + "\nformat: show spacegroup \"2\" or \"P 2c\" "
+                + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"");
       }
     }
     info.put("spaceGroupInfo", data);
@@ -396,7 +418,8 @@ public class SymmetryDesc {
    *        scale for rotation vector only
    * @param options
    *        0 or T.offset
-   * @param haveTranslation TODO
+   * @param haveTranslation
+   *        TODO
    * @return Object[] containing:
    * 
    *         [0] xyz (Jones-Faithful calculated from matrix)
@@ -435,21 +458,25 @@ public class SymmetryDesc {
    * 
    */
 
+  V3 vtemp = new V3();
+  P3 ptemp = new P3();
+  P3 ptemp2 = new P3();
+  P3 pta01 = new P3();
+  P3 pta02 = new P3();
+  V3 vtrans = new V3();
+
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
                                    P3 pta00, P3 ptTarget, String id,
-                                   float scaleFactor, int options, boolean haveTranslation) {
+                                   float scaleFactor, int options,
+                                   boolean haveTranslation,
+                                   boolean matrixOnly) {
     if (!op.isFinalized)
       op.doFinalize();
     boolean isTimeReversed = (op.timeReversal == -1);
     if (scaleFactor == 0)
       scaleFactor = 1f;
-    V3 vtemp = new V3();
-    P3 ptemp = new P3();
-    P3 ptemp2 = new P3();
-    P3 pta01 = new P3();
-    P3 pta02 = new P3();
-    V3 ftrans = new V3();
-    V3 vtrans = new V3();
+    ptemp.set(0, 0, 0);
+    vtrans.set(0, 0, 0);
     P4 plane = null;
 
     if (pta00 == null || Float.isNaN(pta00.x))
@@ -457,25 +484,57 @@ public class SymmetryDesc {
     if (ptTarget != null) {
 
       // Check to see that this is the correct operator
-
-      setFractional(uc, pta00, pta01, ptemp);
-      op.rotTrans(pta01);
-      uc.toCartesian(pta01, false);
-      uc.toUnitCell(pta01, ptemp);
-      pta02.setT(ptTarget);
-      uc.toUnitCell(pta02, ptemp);
-      if (pta01.distance(pta02) > 0.1f)
-        return null;
-
+      // using cartesian here
       // Check to see if the two points only differ by
       // a translation after transformation.
       // If so, add that difference to the matrix transformation
 
-      setFractional(uc, pta00, pta01, null);
+      //      setFractional(uc, pta00, pta01, ptemp);
+      //      op.rotTrans(pta01);
+      //      uc.toCartesian(pta01, false);
+      //      uc.toUnitCell(pta01, ptemp);
+      //      pta02.setT(ptTarget);
+      //      uc.toUnitCell(pta02, ptemp);
+      //      if (pta01.distance(pta02) > 0.1f)
+      //        return null;
+      //      setFractional(uc, pta00, pta01, null);
+      //      op.rotTrans(pta01);
+      //      setFractional(uc, ptTarget, pta02, null);
+      //      vtrans.sub2(pta02, pta01);
+
+      pta01.setT(pta00);
+      pta02.setT(ptTarget);
+      if (!matrixOnly) {
+        uc.toFractional(pta01, true);
+        uc.toFractional(pta02, true);
+      }
       op.rotTrans(pta01);
-      setFractional(uc, ptTarget, pta02, null);
-      vtrans.sub2(pta02, pta01);
+      ptemp.setT(pta01);
+      uc.unitize(pta01);
+      vtrans.setT(pta02);
+      uc.unitize(pta02);
+      //      uc.toCartesian(pta01, true);
+      //      uc.toCartesian(pta02, true);
+      //      if (pta01.distanceSquared(pta02) > 0.1f)
+      //        return null;
+      if (pta01.distanceSquared(pta02) > JC.UC_TOLERANCE2)
+        return null;
+      vtrans.sub(ptemp);
     }
+    M4 m2 = M4.newM4(op);
+    m2.add(vtrans);
+
+    boolean isMagnetic = (op.timeReversal != 0);
+
+    if (matrixOnly && !isMagnetic) {
+      // quick-return -- note that this is not for magnetic!
+      int im = getKeyType("matrix");
+      Object[] o = new Object[-im];
+      o[-1 - im] = m2;
+      return o;
+    }
+
+    V3 ftrans = new V3();
 
     // get the frame vectors and points
 
@@ -1092,20 +1151,13 @@ public class SymmetryDesc {
     }
 
     // and display translation if still not {0 0 0}
+    // TODO: here we need magnetic
     if (ax1 != null)
       ax1.normalize();
-    M4 m2 = null;
-    m2 = M4.newM4(op);
-    if (vtrans.length() != 0) {
-      m2.m03 += vtrans.x;
-      m2.m13 += vtrans.y;
-      m2.m23 += vtrans.z;
-    }
-    // TODO: here we need magnetic
     xyzNew = (op.isBio ? m2.toString()
         : op.modDim > 0 ? op.xyzOriginal
             : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
-    if (op.timeReversal != 0)
+    if (isMagnetic)
       xyzNew = op.fixMagneticXYZ(m2, xyzNew, true);
     T3 f0 = approx0(ftrans);
     T3 cift = null;
@@ -1119,7 +1171,8 @@ public class SymmetryDesc {
       }
     }
     String cif2 = cifi + (cift == null ? " [0 0 0]"
-        : " [" + (int) -cift.x + " " + (int) -cift.y + " " + (int) -cift.z + "]");
+        : " [" + (int) -cift.x + " " + (int) -cift.y + " " + (int) -cift.z
+            + "]");
     return new Object[] { xyzNew, op.xyzOriginal, info1, cmds, f0,
         approx0(trans), approx0(ipt), approx0(pa1),
         (plane == null ? approx0(ax1) : null),
@@ -1233,11 +1286,13 @@ public class SymmetryDesc {
                                  P3 pt, P3 pt2, String id,
                                  int type, float scaleFactor, int nth, int options) {
     int returnType = 0;
+    boolean matrixOnly = false;
     Object nullRet = nullReturn(type);
     switch (type) {
     case T.lattice:
       return "" + uc.getLatticeType();
     case T.array:
+      matrixOnly = "matrix".equals(id);
       returnType = getType(id);
       switch (returnType) {
       case T.atoms:
@@ -1309,7 +1364,7 @@ public class SymmetryDesc {
         return (type == T.atoms ? getAtom(uc, iModel, iatom, sympt) : sympt);
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
-          scaleFactor, options, (translation != null));
+          scaleFactor, options, (translation != null), false);
       if (type == T.array && id != null) {
         returnType = getKeyType(id);        
       }
@@ -1345,7 +1400,7 @@ public class SymmetryDesc {
           nth = 1;
       }
       Object ret1 = getSymopInfoForPoints(sym, iModel, op, translation, pt, pt2, id,
-          stype, scaleFactor, nth, asString, options);
+          stype, scaleFactor, nth, asString, options, matrixOnly);
       if (asString)
         return ret1;
       if (ret1 instanceof String)
@@ -1415,13 +1470,13 @@ public class SymmetryDesc {
    * @return Object[] or String or Object[Object[]] (nth = 0, "array")
    * 
    */
-  private Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
+  Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
                                        P3 translation, P3 pt1, P3 pt2,
                                        String drawID, String stype, float scaleFactor,
-                                       int nth, boolean asString, int options) {
+                                       int nth, boolean asString, int options, boolean matrixOnly) {
     Object ret = (asString ? "" : null);
     Map<String, Object> sginfo = getSpaceGroupInfo(sym, modelIndex, null,
-        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true, options, null);
+        symOp, pt1, pt2, drawID, scaleFactor, nth, false, true, options, null, matrixOnly);
     if (sginfo == null)
       return ret;
     Object[][] infolist = (Object[][]) sginfo.get("operations");

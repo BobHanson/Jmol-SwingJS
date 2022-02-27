@@ -707,10 +707,11 @@ public class T {
   public final static int sort             = 28 | 0 << 9 | mathfunc | mathproperty;
   public final static int tensor           = 29 | 0 << 9 | mathfunc | mathproperty;
   public final static int unitcell         = 30 | 0 << 9 | mathfunc | mathproperty | shapeCommand | deprecatedparam | predefinedset | defaultON;
+  public final static int __               = 30 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
   public final static int within           = 31 | 0 << 9 | mathfunc;
+  public final static int pointgroup       = 31 | 0 << 9 | mathfunc | mathproperty;
+  // NO mathproperty AFTER 31, as F << 5 is the minmax mask
   public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int __               = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
-  public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
   public final static int intersection     = 35 | 0 << 9 | mathfunc;
   public final static int spacegroup       = 36 | 0 << 9 | mathfunc;
   public final static int _args            = 37 | 0 << 9 | mathfunc;

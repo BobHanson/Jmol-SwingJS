@@ -1291,8 +1291,8 @@ public class ScriptMathProcessor {
       }
       pt = (x1.tok == T.matrix3f || x1.tok == T.matrix4f ? ptValue(x2, null)
           : x2.tok == T.matrix3f ? ptValue(x1, null) : null);
-      pt4 = (x1.tok == T.matrix4f ? planeValue(x2)
-          : x2.tok == T.matrix4f ? planeValue(x1) : null);
+      pt4 = (x1.tok == T.matrix4f ? eval.planeValue(x2)
+          : x2.tok == T.matrix4f ? eval.planeValue(x1) : null);
       // checking here to make sure arrays remain arrays and
       // points remain points with matrix operations.
       // we check x2, because x1 could be many things.
@@ -1469,6 +1469,7 @@ public class ScriptMathProcessor {
       // Point3f * Point3f does dot product
       // Point3f / Point3f divides by magnitude
       // float * Point3f gets magnitude
+      // Point3f % n.0 offsets n,n,n ???
       // Point4f % n returns q0, q1, q2, q3, or theta
       // Point4f % Point4f
       s = null;
@@ -1506,6 +1507,7 @@ public class ScriptMathProcessor {
         return addXAS(list);
       case T.point3f:
         pt = P3.newP((P3) x1.value);
+        // BH why such an esoteric offset? unfortunately, is documented
         vwr.toUnitCell(pt, P3.new3(n, n, n));
         return addXPt(pt);
       case T.point4f:
@@ -1633,48 +1635,6 @@ public class ScriptMathProcessor {
       break;
     }
     return null;
-  }
-
-  public static P4 planeValue(T x) {
-    Object pt;
-    switch (x.tok) {
-    case T.point4f:
-      return (P4) x.value;
-    case T.varray:
-      break;
-    case T.string:
-      String s = (String) x.value;
-      boolean isMinus = s.startsWith("-");
-      float f = (isMinus ? -1 : 1);
-      if (isMinus)
-        s = s.substring(1);
-      P4 p4 = null;
-      switch (s.length() < 2 ? -1
-          : "xy yz xz x= y= z=".indexOf(s.substring(0, 2))) {
-      case 0:
-        return P4.new4(1, 1, 0, f);
-      case 3:
-        return P4.new4(0, 1, 1, f);
-      case 6:
-        return P4.new4(1, 0, 1, f);
-      case 9:
-        p4 = P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
-        break;
-      case 12:
-        p4 = P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
-        break;
-      case 15:
-        p4 = P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
-        break;
-      }
-      if (p4 != null && !Float.isNaN(p4.w))
-        return p4;
-      break;
-    default:
-      return null;
-    }
-    pt = Escape.uP(SV.sValue(x));
-    return (pt instanceof P4 ? (P4) pt : null);
   }
 
   static private String typeOf(SV x) {

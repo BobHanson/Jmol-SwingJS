@@ -253,4 +253,8 @@ public interface SymmetryInterface {
 
   public void getEquivPointList(Lst<P3> pts, String flags);
 
+  public int[] getSymmetryInvariant(P3 p3, int[] v0);
+
+  M4 getTransform(ModelSet ms, int modelIndex, P3 pa, P3 pb);
+
 }

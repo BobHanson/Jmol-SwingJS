@@ -3916,10 +3916,11 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * relative to origin without regard to UNITCELL {x y z}
+   * Returns the relative to origin without regard to offset created using the UNITCELL command.
+   * This method has limited use. Used in point3f % 1, where {0 0 0} % 1 gives {a b c}
    * 
-   * @param pt
-   * @param offset
+   * @param pt a Cartesian point
+   * @param offset a lattice offset, or null to apply the current offset
    */
   public void toUnitCell(P3 pt, P3 offset) {
     SymmetryInterface unitCell = getCurrentUnitCell();
@@ -7302,6 +7303,9 @@ public class Viewer extends JmolViewer
     g.modelKitMode = value;
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
+    if (isChange && modelkit != null) {
+      getModelkit(false).setProperty("constraint", null);
+    }
     if (value) {
       setNavigationMode(false);
       selectAll();
@@ -8173,8 +8177,13 @@ public class Viewer extends JmolViewer
           P3 ptNew = new P3();
           tm.unTransformPoint(ptScreenNew, ptNew);
           // script("draw ID 'pt" + Math.random() + "' " + Escape.escape(ptNew));
+         if (g.modelKitMode & modelkit != null && modelkit.getProperty("constraint") != null) {
+           getModelkit(false).constrain(bsSelected, ptNew);
+         }
+         if (!Float.isNaN(ptNew.x)) {
           ptNew.sub(ptCenter);
           setAtomCoordsRelative(ptNew, bsSelected);
+         }
         } else {
           tm.rotateXYBy(deltaX, deltaY, bsSelected);
         }
@@ -9324,7 +9333,7 @@ public class Viewer extends JmolViewer
     if (bsAtoms == null) {
       Atom atom = ms.at[atomIndex];
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      Bond[] bonds = atom.bonds;
+      Bond[] bonds = (!g.modelKitMode || modelkit == null || modelkit.getProperty("constraint") == null ? atom.bonds : null);
       if (bonds != null)
         for (int i = 0; i < bonds.length; i++) {
           Atom atom2 = bonds[i].getOtherAtom(atom);
@@ -10539,7 +10548,6 @@ public class Viewer extends JmolViewer
     uc.getEquivPointList(pts, flags.toLowerCase());
     return pts;
   }
-
 
 
 }

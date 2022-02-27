@@ -23,7 +23,14 @@
  */
 package org.jmol.modelkit;
 
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
+
+import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.V3;
 
 public class Constraint {
 
@@ -31,17 +38,29 @@ public class Constraint {
   public final static int TYPE_DISTANCE = 1;
   public final static int TYPE_ANGLE    = 2;
   public final static int TYPE_DIHEDRAL = 3;
+  public final static int TYPE_VECTOR = 4;
+  public final static int TYPE_PLANE = 5;
   
   int type;
   
   private String symop;
   private P3[] points;
   private P3 offset;
+  private P4 plane;
+  private V3 unitVector;
   private double value;
     
-  public Constraint(int type, Object... params) throws IllegalArgumentException {
+  public Constraint(int type, Object[] params) throws IllegalArgumentException {
     this.type = type;
     switch (type) {
+    case TYPE_VECTOR:
+      offset = (P3) params[0];
+      unitVector = V3.newVsub((P3) params[1], offset);
+      unitVector.normalize();
+      break;
+    case TYPE_PLANE:
+      this.plane = (P4) params[0];
+      break;
     case TYPE_SYMMETRY:
       symop = (String) params[0];
       points = new P3[1];
@@ -64,6 +83,29 @@ public class Constraint {
     }
     
     
+  }
+
+  public void constrain(P3 ptOld, P3 ptNew) {
+    V3 v = new V3();
+    P3 p = P3.newP(ptOld);
+    switch (type) {
+    case TYPE_VECTOR:
+      Measure.projectOntoAxis(p, offset, unitVector, v);
+      if (p.distanceSquared(ptOld) > JC.UC_TOLERANCE2) {
+        ptNew.x = Float.NaN;
+      } else {
+        Measure.projectOntoAxis(ptNew, offset, unitVector, v);
+      }
+      break;
+    case TYPE_PLANE:
+      if (Math.abs(Measure.getPlaneProjection(p, plane, v, v)) > 0.01f) {
+        ptNew.x = Float.NaN;
+      } else {
+        Measure.getPlaneProjection(ptNew, plane, v, v);
+        ptNew.setT(v);
+      }
+      break;
+    }
   }
   
 }

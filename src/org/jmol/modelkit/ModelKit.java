@@ -50,6 +50,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -171,6 +172,8 @@ public class ModelKit {
 
   private Atom a0, a3;
 
+  private Constraint constraint;
+
 
   public ModelKit() {
   }
@@ -272,6 +275,10 @@ public class ModelKit {
     
     name = name.toLowerCase().intern();
 
+    if (name == "constraint") {
+      return constraint;
+    }
+
     if (name == "ismolecular") {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
@@ -293,58 +300,77 @@ public class ModelKit {
    * 
    * Also can be used for "get" purposes.
    * 
-   * @param name
-   * @param value to set, or null to simply return the current value
+   * @param key
+   * @param value
+   *        to set, or null to simply return the current value
    * @return null or "get" value
    */
-  public synchronized Object setProperty(String name, Object value) {
+  public synchronized Object setProperty(String key, Object value) {
 
     // from Viewer and CmdExt
-    
+
     try {
-      name = name.toLowerCase().intern();
+      key = key.toLowerCase().intern();
       //    if (value != null)
       //      System.out.println("ModelKitPopup.setProperty " + name + "=" + value);
 
       // boolean get/set
-      
-      if (name == "reset") {
-//        setProperty("atomType", "C");
-//        setProperty("bondType", "p");
+
+      if (key == "constraint") {
+        constraint = null;
+        Object[] o = (Object[]) value;
+        if (o != null) {
+          P3 v1 = (P3) o[0];
+          P3 v2 = (P3) o[1];
+          P4 plane = (P4) o[2];
+          if (v1 != null && v2 != null) {
+            constraint = new Constraint(Constraint.TYPE_VECTOR,
+                new Object[] { v1, v2 });
+          } else if (plane != null) {
+            constraint = new Constraint(Constraint.TYPE_PLANE,
+                new Object[] { plane });
+          }
+        }
+        // no message
         return null;
       }
-      
-      if (name == "addhydrogen" || name == "addhydrogens") {
+      if (key == "reset") {
+        //        setProperty("atomType", "C");
+        //        setProperty("bondType", "p");
+        return null;
+      }
+
+      if (key == "addhydrogen" || key == "addhydrogens") {
         if (value != null)
           addXtalHydrogens = isTrue(value);
         return Boolean.valueOf(addXtalHydrogens);
       }
 
-      if (name == "autobond") {
+      if (key == "autobond") {
         if (value != null)
           autoBond = isTrue(value);
         return Boolean.valueOf(autoBond);
       }
 
-      if (name == "clicktosetelement") {
+      if (key == "clicktosetelement") {
         if (value != null)
           clickToSetElement = isTrue(value);
         return Boolean.valueOf(clickToSetElement);
       }
 
-      if (name == "hidden") {
+      if (key == "hidden") {
         if (value != null)
           menu.hidden = isTrue(value);
         return Boolean.valueOf(menu.hidden);
       }
 
-      if (name == "showsymopinfo") {
+      if (key == "showsymopinfo") {
         if (value != null)
           showSymopInfo = isTrue(value);
         return Boolean.valueOf(showSymopInfo);
       }
 
-      if (name == "symop") {
+      if (key == "symop") {
         setDefaultState(STATE_XTALVIEW);
         if (value != null) {
           symop = value;
@@ -353,7 +379,7 @@ public class ModelKit {
         return symop;
       }
 
-      if (name == "atomtype") {
+      if (key == "atomtype") {
         if (value != null) {
           pickAtomAssignType = (String) value;
           isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
@@ -365,7 +391,7 @@ public class ModelKit {
         return pickAtomAssignType;
       }
 
-      if (name == "bondtype") {
+      if (key == "bondtype") {
         if (value != null) {
           String s = ((String) value).substring(0, 1).toLowerCase();
           if (" 012345pm".indexOf(s) > 0)
@@ -375,21 +401,21 @@ public class ModelKit {
         return "" + pickBondAssignType;
       }
 
-      if (name == "bondindex") {
+      if (key == "bondindex") {
         if (value != null) {
           setBondIndex(((Integer) value).intValue(), false);
         }
         return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
       }
 
-      if (name == "rotatebondindex") {
+      if (key == "rotatebondindex") {
         if (value != null) {
           setBondIndex(((Integer) value).intValue(), true);
         }
         return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
       }
 
-      if (name == "offset") {
+      if (key == "offset") {
         if (value == "none") {
           viewOffset = null;
         } else if (value != null) {
@@ -402,7 +428,7 @@ public class ModelKit {
         return viewOffset;
       }
 
-      if (name == "screenxy") {
+      if (key == "screenxy") {
         if (value != null) {
           screenXY = (int[]) value;
         }
@@ -411,7 +437,7 @@ public class ModelKit {
 
       // set only (always returning null):
 
-      if (name == "bondatomindex") {
+      if (key == "bondatomindex") {
         int i = ((Integer) value).intValue();
         if (i != bondAtomIndex2)
           bondAtomIndex1 = i;
@@ -420,15 +446,15 @@ public class ModelKit {
         return null;
       }
 
-      if (name == "highlight") {
+      if (key == "highlight") {
         if (value == null)
           bsHighlight = new BS();
         else
           bsHighlight = (BS) value;
         return null;
       }
-      
-      if (name == "mode") { // view, edit, or molecular
+
+      if (key == "mode") { // view, edit, or molecular
         boolean isEdit = ("edit".equals(value));
         setMKState("view".equals(value) ? STATE_XTALVIEW
             : isEdit ? STATE_XTALEDIT : STATE_MOLECULAR);
@@ -437,24 +463,24 @@ public class ModelKit {
         return null;
       }
 
-      if (name == "symmetry") {
+      if (key == "symmetry") {
         setDefaultState(STATE_XTALEDIT);
-        name = ((String) value).toLowerCase().intern();
-        setSymEdit(name == "applylocal" ? STATE_SYM_APPLYLOCAL
-            : name == "retainlocal" ? STATE_SYM_RETAINLOCAL
-                : name == "applyfull" ? STATE_SYM_APPLYFULL : 0);
+        key = ((String) value).toLowerCase().intern();
+        setSymEdit(key == "applylocal" ? STATE_SYM_APPLYLOCAL
+            : key == "retainlocal" ? STATE_SYM_RETAINLOCAL
+                : key == "applyfull" ? STATE_SYM_APPLYFULL : 0);
         showXtalSymmetry();
         return null;
       }
 
-      if (name == "unitcell") { // packed or extend
+      if (key == "unitcell") { // packed or extend
         boolean isPacked = "packed".equals(value);
         setUnitCell(isPacked ? STATE_UNITCELL_PACKED : STATE_UNITCELL_EXTEND);
         viewOffset = (isPacked ? Pt000 : null);
         return null;
       }
 
-      if (name == "center") {
+      if (key == "center") {
         setDefaultState(STATE_XTALVIEW);
         centerPoint = (P3) value;
         lastCenter = centerPoint.x + " " + centerPoint.y + " " + centerPoint.z;
@@ -466,7 +492,7 @@ public class ModelKit {
         return null;
       }
 
-      if (name == "scriptassignbond") {
+      if (key == "scriptassignbond") {
         // from ActionManger only
         appRunScript("modelkit assign bond [{" + value + "}] \""
             + pickBondAssignType + "\"");
@@ -474,24 +500,24 @@ public class ModelKit {
       }
 
       // get only, but with a value argument
-      
-      if (name == "hoverlabel") {
+
+      if (key == "hoverlabel") {
         // no setting of this, only getting
         return getHoverLabel(((Integer) value).intValue());
       }
 
       // not yet implemented
-      
-      if (name == "invariant") {
+
+      if (key == "invariant") {
         // not really a model kit issue
         int iatom = (value instanceof BS ? ((BS) value).nextSetBit(0) : -1);
         P3 atom = vwr.ms.getAtom(iatom);
-        return (atom == null ? null : vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array,
-            null, 0, 0, 0));
+        return (atom == null ? null
+            : vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array,
+                null, 0, 0, 0));
       }
 
-
-      if (name == "distance") {
+      if (key == "distance") {
         setDefaultState(STATE_XTALEDIT);
         float d = (value == null ? Float.NaN
             : value instanceof Float ? ((Float) value).floatValue()
@@ -503,7 +529,7 @@ public class ModelKit {
         return Float.valueOf(centerDistance);
       }
 
-      if (name == "point") {
+      if (key == "point") {
         if (value != null) {
           notImplemented("setProperty: point");
           setDefaultState(STATE_XTALEDIT);
@@ -515,23 +541,22 @@ public class ModelKit {
         return spherePoint;
       }
 
-
-      if (name == "addconstraint") {
+      if (key == "addconstraint") {
         notImplemented("setProperty: addConstraint");
         return null;
       }
 
-      if (name == "removeconstraint") {
+      if (key == "removeconstraint") {
         notImplemented("setProperty: removeConstraint");
         return null;
       }
 
-      if (name == "removeallconstraints") {
+      if (key == "removeallconstraints") {
         notImplemented("setProperty: removeAllConstraints");
         return null;
       }
 
-      System.err.println("ModelKitPopup.setProperty? " + name + " " + value);
+      System.err.println("ModelKitPopup.setProperty? " + key + " " + value);
 
     } catch (Exception e) {
       return "?";
@@ -700,37 +725,41 @@ public class ModelKit {
     return true;
   }
   
-  public void cmdAssignAtom(int atomIndex, P3 pt, String type, String cmd, boolean isClick) {
-    
+  public void cmdAssignAtom(int atomIndex, P3 pt, String type, String cmd,
+                            boolean isClick) {
+
     // from CmdExt
-    
-    if (isClick && type.equals("X"))
-      vwr.setModelKitRotateBondIndex(-1);
-    int ac = vwr.ms.ac;
-    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
-    if (pt == null) {
-      if (atomIndex < 0 || atom == null)
-        return;
-      int mi = atom.mi;
-      vwr.sm.setStatusStructureModified(atomIndex, mi, 1, cmd, 1, null);
-      // After this next command, vwr.modelSet will be a different instance
-      assignAtom(atomIndex, type, autoBond, true, true);
-      if (!PT.isOneOf(type, ";Mi;Pl;X;"))
-        vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-      vwr.sm.setStatusStructureModified(atomIndex, mi, -1, "OK", 1, null);
-      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
-      return;
-    }
-    BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
-    P3[] pts = new P3[] { pt };
-    Lst<Atom> vConnections = new Lst<Atom>();
-    int modelIndex = -1;
-    if (atom != null) {
-      vConnections.addLast(atom);
-      modelIndex = atom.mi;
-      vwr.sm.setStatusStructureModified(atomIndex, modelIndex, 3, cmd, 1, null);
-    }
+
+    int state = getMKState();
     try {
+      if (isClick && type.equals("X"))
+        vwr.setModelKitRotateBondIndex(-1);
+      int ac = vwr.ms.ac;
+      Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+      if (pt == null) {
+        if (atomIndex < 0 || atom == null)
+          return;
+        int mi = atom.mi;
+        vwr.sm.setStatusStructureModified(atomIndex, mi, 1, cmd, 1, null);
+        // After this next command, vwr.modelSet will be a different instance
+        assignAtom(atomIndex, type, autoBond, true, true);
+        if (!PT.isOneOf(type, ";Mi;Pl;X;"))
+          vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+        vwr.sm.setStatusStructureModified(atomIndex, mi, -1, "OK", 1, null);
+        vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
+        return;
+      }
+      setMKState(STATE_MOLECULAR);
+      BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
+      P3[] pts = new P3[] { pt };
+      Lst<Atom> vConnections = new Lst<Atom>();
+      int modelIndex = -1;
+      if (atom != null) {
+        vConnections.addLast(atom);
+        modelIndex = atom.mi;
+        vwr.sm.setStatusStructureModified(atomIndex, modelIndex, 3, cmd, 1,
+            null);
+      }
       int pickingMode = vwr.acm.getAtomPickingMode();
       boolean wasHidden = menu.hidden;
       boolean isMK = vwr.getBoolean(T.modelkitmode);
@@ -748,18 +777,18 @@ public class ModelKit {
         menu.hidePopup();
       }
       int atomIndex2 = bs.nextSetBit(0);
-      int state = getMKState();
-      setMKState(STATE_MOLECULAR);
+      // avoid setting symmetry operator
       assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
       if (atomIndex >= 0)
         assignAtom(atomIndex, ".", false, true, isClick);
-      setMKState(state);
       atomIndex = atomIndex2;
+      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+      vwr.sm.setStatusStructureModified(atomIndex, modelIndex, -3, "OK", 1,
+          null);
     } catch (Exception ex) {
-      //
+    } finally {
+      setMKState(state);
     }
-    vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-    vwr.sm.setStatusStructureModified(atomIndex, modelIndex, -3, "OK", 1, null);
   }
 
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
@@ -767,7 +796,9 @@ public class ModelKit {
     // from CmdExt
     
     int modelIndex = -1;
+    int state = getMKState();
     try {
+      setMKState(STATE_MOLECULAR);
       if (type == '-')
         type = pickBondAssignType;
       modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
@@ -782,32 +813,40 @@ public class ModelKit {
     } catch (Exception ex) {
       Logger.error("assignBond failed");
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "ERROR " + ex, 1, null);
+    } finally {
+      setMKState(state);
     }
   }
 
   public void cmdAssignConnect(int index, int index2, char type, String cmd) {
 
     // from CmdExt
-    
-    float[][] connections = AU.newFloat2(1);
-    connections[0] = new float[] { index, index2 };
-    int modelIndex = vwr.ms.at[index].mi;
-    vwr.sm.setStatusStructureModified(index, modelIndex, 2, cmd, 1, null);
-    vwr.ms.connect(connections);    
-    int ac = vwr.ms.ac;
-    // note that vwr.ms changes during the assignAtom command 
-    assignAtom(index, ".", true, true, false);
-    assignAtom(index2, ".", true, true, false);
-    vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-    vwr.sm.setStatusStructureModified(index, modelIndex, -2, "OK", 1, null);
-    if (type != '1') {
-      BS bs = BSUtil.newAndSetBit(index);
-      bs.set(index2);
-      bs = vwr.getBondsForSelectedAtoms(bs);
-      int bondIndex = bs.nextSetBit(0);
-      cmdAssignBond(bondIndex, type, cmd);
+    int state = getMKState();
+    try {
+      float[][] connections = AU.newFloat2(1);
+      connections[0] = new float[] { index, index2 };
+      int modelIndex = vwr.ms.at[index].mi;
+      vwr.sm.setStatusStructureModified(index, modelIndex, 2, cmd, 1, null);
+      vwr.ms.connect(connections);
+      int ac = vwr.ms.ac;
+      // note that vwr.ms changes during the assignAtom command 
+      assignAtom(index, ".", true, true, false);
+      assignAtom(index2, ".", true, true, false);
+      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+      vwr.sm.setStatusStructureModified(index, modelIndex, -2, "OK", 1, null);
+      if (type != '1') {
+        BS bs = BSUtil.newAndSetBit(index);
+        bs.set(index2);
+        bs = vwr.getBondsForSelectedAtoms(bs);
+        int bondIndex = bs.nextSetBit(0);
+        cmdAssignBond(bondIndex, type, cmd);
+      }
+      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
+    } catch (Exception e) {
+      // ignore?
+    } finally {
+      setMKState(state);
     }
-    vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
   }
 
   public void assignAtomClick(int atomIndex, String element, P3 ptNew) {
@@ -1170,6 +1209,153 @@ public class ModelKit {
     return bsAtoms;
   }
 
+  public String cmdAssignSpaceGroup(BS bs, boolean isP1) {
+    try {
+      if (bs != null && bs.isEmpty())
+        return "";
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (uc == null)
+        uc = vwr.getSymTemp()
+            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
+      BS bsCell = SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true);
+      BS bsAtoms = vwr.getThisModelAtoms();
+      if (bs == null) {
+        bs = (isP1 ? bsAtoms : bsCell);
+      }
+      if (bs != null)
+        bsAtoms.and(bs);
+      if (bs != null && !isP1)
+        bsAtoms.and(bsCell);
+      boolean noAtoms = bsAtoms.isEmpty();
+      int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      T3 m = uc.getUnitCellMultiplier();
+      if (m != null && m.z == 1) {
+        m.z = 0;
+      }
+      P3 supercell;
+      P3[] oabc;
+      String name;
+      String ita;
+      BS basis;
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sg = (noAtoms || isP1 ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, null, false));
+      if (sg == null) {
+        name = "P1";
+        supercell = P3.new3(1, 1, 1);
+        oabc = uc.getUnitCellVectors();
+        ita = "1";
+        basis = null;
+      } else {
+        supercell = (P3) sg.get("supercell");
+        oabc = (P3[]) sg.get("unitcell");
+        name = (String) sg.get("name");
+        ita = (String) sg.get("itaFull");
+        basis = (BS) sg.get("basis");
+      }
+      uc.getUnitCell(oabc,  false, null);
+      uc.setSpaceGroupTo(ita);
+      uc.setSpaceGroupName(name);
+      if (basis == null)
+        basis = uc.removeDuplicates(vwr.ms, bsAtoms);
+      vwr.ms.setSpaceGroup(mi, uc, basis);
+      P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
+      vwr.ms.setUnitCellOffset(uc, pt, 0);
+      return name + " basis=" + basis;
+    } catch (Exception e) {
+      if (!Viewer.isJS)
+        e.printStackTrace();
+      return e.getMessage();
+    }
+  }
+
+  /**
+   * Delete all atoms that are equivalent to this atom.
+   * 
+   * @param bs
+   * @return number of deleted atoms
+   */
+  public int cmdAssignDeleteAtoms(BS bs) {
+    bs.and(vwr.getThisModelAtoms());
+    bs = vwr.ms.getSymmetryEquivAtoms(bs);
+    if (!bs.isEmpty())
+      vwr.deleteAtoms(bs, false);
+    return bs.cardinality();
+  }
+
+  /**
+   * Move all atoms that are equivalent to this atom PROVIDED that they have the
+   * same symmetry-invariant properties.
+   * 
+   * @param iatom
+   *        atom index
+   * @param p
+   *        new position for this atom
+   * @return number of atoms moved
+   */
+  public int cmdAssignMoveAtom(int iatom, P3 p) {
+    int state = getMKState();
+    setMKState(STATE_MOLECULAR);
+    try {
+    if (iatom < 0)
+      return 0;
+    BS bs = BSUtil.newAndSetBit(iatom);
+    bs.and(vwr.getThisModelAtoms());
+    if (bs.isEmpty())
+      return 0;
+    BS bseq = vwr.ms.getSymmetryEquivAtoms(bs);
+    if (bseq.cardinality() == 1) {
+      vwr.ms.setAtomCoord(iatom, p.x, p.y, p.z);
+      return 1;
+    }
+    P3 pa = P3.newP(vwr.ms.at[iatom]);
+    P3 pt = P3.newP(p);
+    SymmetryInterface sg = vwr.getCurrentUnitCell();
+    int[] v0 = sg.getSymmetryInvariant(pa, null);
+    int[] v1 = sg.getSymmetryInvariant(p, v0);
+    if ((v1 == null) != (v0 == null))
+      return 0;
+    sg.toFractional(pa, true);
+    sg.toFractional(pt, true);
+    P3[] points = new P3[bseq.cardinality()];
+    SymmetryInterface sym = vwr.getSymTemp();
+    for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
+        .nextSetBit(ia + 1)) {
+      p = P3.newP(vwr.ms.at[ia]);
+      sg.toFractional(p, true);
+      M4 m = sym.getTransform(vwr.ms, vwr.ms.at[iatom].mi, pa, p);
+      if (m == null) {
+        System.err
+            .println("ModelKit failed to find tranformation for atomIndex " + ia
+                + " " + pa + " to " + p);
+        return 0;
+      }
+      p.setT(pt);
+      m.rotTrans(p);
+      sg.toCartesian(p, true);
+      points[k++] = p;
+    }
+    for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
+        .nextSetBit(ia + 1)) {
+      p = points[k++];
+      vwr.ms.setAtomCoord(ia, p.x, p.y, p.z);
+    }
+    return bseq.cardinality();
+    } finally {
+      setMKState(state);
+    }
+  }
+
+  public void constrain(BS bsSelected, P3 ptNew) {
+    int iatom = bsSelected.nextSetBit(0);
+    if (iatom < 0 || constraint == null)
+      return;
+    constraint.constrain(vwr.ms.at[iatom], ptNew);
+    if (!Float.isNaN(ptNew.x))
+      cmdAssignMoveAtom(iatom, ptNew);
+    ptNew.x = Float.NaN;
+  }
+
   /**
    * Set the bond for rotation -- called by Sticks.checkObjectHovered via
    * Viewer.highlightBond.
@@ -1520,74 +1706,6 @@ public class ModelKit {
 
   private static void notImplemented(String action) {
     System.err.println("ModelKit.notImplemented(" + action + ")");
-  }
-
-  public String cmdAssignSpaceGroup(BS bs, boolean isP1) {
-    try {
-      if (bs != null && bs.isEmpty())
-        return "";
-      SymmetryInterface uc = vwr.getCurrentUnitCell();
-      if (uc == null)
-        uc = vwr.getSymTemp()
-            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
-      BS bsCell = SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true);
-      BS bsAtoms = vwr.getThisModelAtoms();
-      if (bs == null) {
-        bs = (isP1 ? bsAtoms : bsCell);
-      }
-      if (bs != null)
-        bsAtoms.and(bs);
-      if (bs != null && !isP1)
-        bsAtoms.and(bsCell);
-      boolean noAtoms = bsAtoms.isEmpty();
-      int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
-      T3 m = uc.getUnitCellMultiplier();
-      if (m != null && m.z == 1) {
-        m.z = 0;
-      }
-      P3 supercell;
-      P3[] oabc;
-      String name;
-      String ita;
-      BS basis;
-      @SuppressWarnings("unchecked")
-      Map<String, Object> sg = (noAtoms || isP1 ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, null, false));
-      if (sg == null) {
-        name = "P1";
-        supercell = P3.new3(1, 1, 1);
-        oabc = uc.getUnitCellVectors();
-        ita = "1";
-        basis = null;
-      } else {
-        supercell = (P3) sg.get("supercell");
-        oabc = (P3[]) sg.get("unitcell");
-        name = (String) sg.get("name");
-        ita = (String) sg.get("itaFull");
-        basis = (BS) sg.get("basis");
-      }
-      uc.getUnitCell(oabc,  false, null);
-      uc.setSpaceGroupTo(ita);
-      uc.setSpaceGroupName(name);
-      if (basis == null)
-        basis = uc.removeDuplicates(vwr.ms, bsAtoms);
-      vwr.ms.setSpaceGroup(mi, uc, basis);
-      P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
-      vwr.ms.setUnitCellOffset(uc, pt, 0);
-      return name + " basis=" + basis;
-    } catch (Exception e) {
-      if (!Viewer.isJS)
-        e.printStackTrace();
-      return e.getMessage();
-    }
-  }
-
-  public int cmdAssignDeleteAtoms(BS bs) {
-    bs.and(vwr.getThisModelAtoms());
-    bs = vwr.ms.getSymmetryEquivAtoms(bs);
-    if (!bs.isEmpty())
-      vwr.deleteAtoms(bs, false);
-    return bs.cardinality();
   }
 
 }

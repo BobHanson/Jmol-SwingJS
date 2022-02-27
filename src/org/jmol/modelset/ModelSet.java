@@ -3713,6 +3713,16 @@ public class ModelSet extends BondCollection {
     return ops;
   }
 
+  public int[] getSymmetryInvariant(BS bsAtoms) {
+    // get first atom with this atom's atomSite
+    int iatom = getSymmetryEquivAtoms(bsAtoms).nextSetBit(0);
+    if (iatom < 0)
+      return new int[0];
+    SymmetryInterface sg = getUnitCellForAtom(iatom);
+    return sg.getSymmetryInvariant(at[iatom], null);
+  }
+
+
   public BS[] getBsBranches(float[] dihedralList) {
     int n = dihedralList.length / 6;
     BS[] bsBranches = new BS[n];
@@ -4282,25 +4292,27 @@ public class ModelSet extends BondCollection {
   public BS getSymmetryEquivAtoms(BS bs) {
     BS bsNew = new BS();
     bsNew.or(bs);
-    SymmetryInterface uc = vwr.getCurrentUnitCell();
-   if (uc != null) {
-     BS bsAtoms = BSUtil.copy(vwr.getThisModelAtoms());
-     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-       Atom a = at[i];
-       int site = a.getAtomSite();
-       if (site > 0) {
-         for (int j = bsAtoms.nextSetBit(0); j >= 0; j = bsAtoms.nextSetBit(j + 1)) {
-           if (at[j].getAtomSite() == site) {
-             bsNew.set(j);
-             bsAtoms.clear(j);
-             bs.clear(j);
-           }
-         }
-       } else {
-         // ?? is this possible?
-       }
-     }
-   }
+    int iAtom = bs.nextSetBit(0);
+    SymmetryInterface uc = getUnitCellForAtom(iAtom);
+    if (uc != null) {
+      BS bsAtoms = BSUtil.copy(vwr.getModelUndeletedAtomsBitSet(at[iAtom].mi));
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Atom a = at[i];
+        int site = a.getAtomSite();
+        if (site > 0) {
+          for (int j = bsAtoms.nextSetBit(0); j >= 0; j = bsAtoms
+              .nextSetBit(j + 1)) {
+            if (at[j].getAtomSite() == site) {
+              bsNew.set(j);
+              bsAtoms.clear(j);
+              bs.clear(j);
+            }
+          }
+        } else {
+          // ?? is this possible?
+        }
+      }
+    }
     return bsNew;
   }
 

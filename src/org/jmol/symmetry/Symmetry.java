@@ -581,6 +581,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public P3[] getUnitCellVectors() {
+    if (unitCell == null)
+      System.out.println("Symmetry no unitCell!! ?? ");
     return unitCell.getUnitCellVectors();
   }
 
@@ -692,7 +694,7 @@ public class Symmetry implements SymmetryInterface {
       cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel, 0, cellInfo);
+        null, 0, -1, isFull, isForModel, 0, cellInfo, false);
   }
 
   
@@ -938,6 +940,48 @@ public class Symmetry implements SymmetryInterface {
       for (int i = pts.size(); --i >= 0;)
         toCartesian(pts.get(i), true);
     }
+  }
+
+  @Override
+  public int[] getSymmetryInvariant(P3 pt, int[] v0) {
+    M4[] ops = getSymmetryOperations();
+    if (ops == null)
+      return new int[0];
+    BS bs = new BS();
+    P3 p = new P3();
+    P3 p0 = new P3();
+    int nops = ops.length;
+    for (int i = 1; i < nops; i++) {
+      p.setT(pt);
+      toFractional(p, true);
+      unitize(p);
+      p0.setT(p);
+      ops[i].rotTrans(p);
+      unitize(p);
+      if (p0.distanceSquared(p) < JC.UC_TOLERANCE2)
+        bs.set(i+1);
+    }
+    int[] ret = new int[bs.cardinality()];
+    if (v0 != null && ret.length != v0.length)
+      return null;
+    for (int k = 0, i = 0; i < nops; i++) {
+      boolean isOK = bs.get(k);
+      if (isOK) {
+        if (v0 != null && v0[k] != i)
+          return null;
+        ret[k++] = i;
+      }
+    }
+    return ret;
+  }
+
+  @Override
+  public M4 getTransform(ModelSet ms, int modelIndex, P3 pa, P3 pb) {
+    Object[] o = (Object[]) getDesc(ms).getSymopInfoForPoints(this, modelIndex, 0, null, pa, pb, null, null, 0, 1, false, 0, true);
+    if (o == null || o.length < 1)
+      return null;
+    o = (Object[]) o[0];
+    return (M4) o[o.length - 1];    
   }
 
 

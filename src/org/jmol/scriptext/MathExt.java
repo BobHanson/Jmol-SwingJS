@@ -212,7 +212,7 @@ public class MathExt {
     case T.point:
       return evaluatePoint(mp, args);
     case T.pointgroup:
-      return evaluatePointGroup(mp, args);
+      return evaluatePointGroup(mp, args, op.tok == T.propselector);
     case T.prompt:
       return evaluatePrompt(mp, args);
     case T.random:
@@ -282,7 +282,11 @@ public class MathExt {
   }
 
   @SuppressWarnings("unchecked")
-  private boolean evaluatePointGroup(ScriptMathProcessor mp, SV[] args) {
+  private boolean evaluatePointGroup(ScriptMathProcessor mp, SV[] args,
+                                     boolean isAtomProperty)
+      throws ScriptException {
+    // @1.pointGroup("spacegroup")
+    // pointGroup("spacegroup",@1)
     // pointGroup(points)
     // pointGroup(points, center)
     // pointGroup(points, center, distanceTolerance (def. 0.2 A), linearTolerance (def. 8 deg.)
@@ -291,7 +295,8 @@ public class MathExt {
     P3 center = null;
     float distanceTolerance = Float.NaN;
     float linearTolerance = Float.NaN;
-    BS bsAtoms;
+    BS bsAtoms = null;
+    boolean isSpaceGroup = false;
     switch (args.length) {
     case 4:
       linearTolerance = args[3].asFloat();
@@ -307,24 +312,14 @@ public class MathExt {
       case T.bitset:
         // pointgroup {vertices} {center}
         bsAtoms = SV.getBitSet(args[1], false);
-        int iatom = bsAtoms.nextSetBit(0);
-        if (iatom < 0 || iatom >= vwr.ms.ac || bsAtoms.cardinality() != 1)
-          return false;
-        if (SV.sValue(args[0]).equalsIgnoreCase("spaceGroup")) {
-          // pointgroup("spaceGroup", @1)
-          Lst<P3> lst = vwr.ms.generateCrystalClass(iatom,
-              P3.new3(Float.NaN, Float.NaN, Float.NaN));
-          pts = new T3[lst.size()];
-          for (int i = pts.length; --i >= 0;)
-            pts[i] = lst.get(i);
-          center = new P3();
+        if (args[0].asString().equalsIgnoreCase("spaceGroup")) {
+          isSpaceGroup = true;
           if (args.length == 2)
             distanceTolerance = 0; // will set tolerances especially tight
-        } else {
-          center = vwr.ms.at[iatom];
         }
+        break;
       }
-      if (pts != null)
+      if (isSpaceGroup)
         break;
       //$FALL-THROUGH$
     case 1:
@@ -342,6 +337,18 @@ public class MathExt {
         for (int i = pts.length; --i >= 0;)
           pts[i] = atoms.get(i);
         break;
+      case T.string:
+        if (isAtomProperty) {
+          bsAtoms = SV.getBitSet(mp.getX(), true);
+          if (bsAtoms == null || bsAtoms.isEmpty())
+            return false;
+          String s = args[0].asString();
+          if ("spacegroup".equals(s)) {
+            isSpaceGroup = true;
+            break;
+          }
+        }
+        //$FALL-THROUGH$
       default:
         return false;
       }
@@ -350,6 +357,23 @@ public class MathExt {
       return mp.addXObj(vwr.ms.getPointGroupInfo(null));
     default:
       return false;
+    }
+    if (bsAtoms != null) {
+      int iatom = bsAtoms.nextSetBit(0);
+      if (iatom < 0 || iatom >= vwr.ms.ac || bsAtoms.cardinality() != 1)
+        return false;
+      if (isSpaceGroup) {
+        // @1.pointgroup("spacegroup")
+        // pointgroup("spaceGroup", @1)
+        Lst<P3> lst = vwr.ms.generateCrystalClass(iatom,
+            P3.new3(Float.NaN, Float.NaN, Float.NaN));
+        pts = new T3[lst.size()];
+        for (int i = pts.length; --i >= 0;)
+          pts[i] = lst.get(i);
+        center = new P3();
+      } else {
+        center = vwr.ms.at[iatom];
+      }
     }
     SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
         pts, null, false,
@@ -1282,7 +1306,7 @@ public class MathExt {
       }
 
       P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
-      P4 plane2 = ScriptMathProcessor.planeValue(x2);
+      P4 plane2 = e.planeValue(x2);
       if (isDist) {
         int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
         boolean isMinMax = (minMax == T.min || minMax == T.max);
@@ -1376,7 +1400,7 @@ public class MathExt {
         }
       }
       P3 pt1 = mp.ptValue(x1, null);
-      P4 plane1 = ScriptMathProcessor.planeValue(x1);
+      P4 plane1 = e.planeValue(x1);
       if (isDist) {
         if (plane2 != null && x3 != null)
           f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
@@ -2786,7 +2810,7 @@ public class MathExt {
         || args.length == 0 || args.length > 4)
       return false;
     P3 pt1, pt2, pt3;
-    P4 plane = ScriptMathProcessor.planeValue(args[0]);
+    P4 plane = e.planeValue(args[0]);
     V3 norm, vTemp;
     switch (args.length) {
     case 1:
@@ -2803,7 +2827,7 @@ public class MathExt {
       if (tok == T.intersection) {
         // intersection(plane, plane)
         // intersection(point, plane)
-        P4 plane1 = ScriptMathProcessor.planeValue(args[1]);
+        P4 plane1 = e.planeValue(args[1]);
         if (plane1 == null)
           return false;
         pt3 = new P3();
@@ -2837,7 +2861,7 @@ public class MathExt {
           return mp.addXStr("");
         V3 vLine = V3.newV(pt2);
         vLine.normalize();
-        P4 plane2 = ScriptMathProcessor.planeValue(args[2]);
+        P4 plane2 = e.planeValue(args[2]);
         if (plane2 != null) {
           // intersection(ptLine, vLine, plane)
           pt3 = new P3();
@@ -3202,7 +3226,7 @@ public class MathExt {
         }
       }
       P3 pt1 = mp.ptValue(args[1], null);
-      p4 = ScriptMathProcessor.planeValue(args[0]);
+      p4 = e.planeValue(args[0]);
       if (pt1 != null)
         q = Quat.getQuaternionFrame(P3.new3(0, 0, 0), pt0, pt1);
       else
@@ -3587,6 +3611,8 @@ public class MathExt {
     // This can be the 1-based index of a symmetry operation in a file (use show spacegroup to get this listing) 
     // or a specific Jones-Faithful expression in quotes such as "x,1/2-y,z".
 
+    // x = y.symop("invariant")
+
     // x = y.symop(op,"label")
     // This form of the .symop() function returns a set of draw commands that describe 
     // the symmetry operation in terms of rotation axes, inversion centers, planes, and 
@@ -3613,10 +3639,10 @@ public class MathExt {
     BS bsAtoms = (x1 == null ? null : (BS) x1.value);
     if (bsAtoms == null && vwr.ms.mc == 1)
       bsAtoms = vwr.getModelUndeletedAtomsBitSet(0);
+    if (bsAtoms != null && bsAtoms.isEmpty())
+      return false;
     int narg = args.length;
     if (narg == 0) {
-      if (bsAtoms.isEmpty())
-        return false;
       String[] ops = PT.split(PT.trim((String) vwr
           .getSymTemp().getSpaceGroupInfo(vwr.ms, null,
               vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
@@ -3627,11 +3653,13 @@ public class MathExt {
       return mp.addXList(lst);
     }
     String xyz = null;
+    boolean invariant = false;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
+      invariant = xyz.equalsIgnoreCase("invariant");
       apt++;
       break;
     case T.matrix4f:
@@ -3650,6 +3678,11 @@ public class MathExt {
         (bsAtoms == null ? (bsAtoms = new BS()) : bsAtoms)
             .or((BS) args[apt + 1].value);
     }
+
+    if (invariant) {
+     return (bsAtoms != null && mp.addXAI(vwr.ms.getSymmetryInvariant(bsAtoms)));
+    }
+    
     // allow for [ h k l ] lattice translation
     P3 trans = null;
     if (narg > apt && args[apt].tok == T.varray) {
@@ -3822,16 +3855,14 @@ public class MathExt {
     float distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;
-    int tok = args[0].tok;
-    if (tok == T.string)
-      tok = T.getTokFromName(withinStr);
     ModelSet ms = vwr.ms;
     boolean isVdw = false;
     boolean isWithinModelSet = false;
     boolean isWithinGroup = false;
     boolean isDistance = false;
     RadiusData rd = null;
-    switch (tok) {
+    int tok = args[0].tok;
+    switch (tok == T.string ? tok = T.getTokFromName(withinStr) : tok) {
     case T.vanderwaals:
       isVdw = true;
       withinSpec = null;
@@ -3865,6 +3896,8 @@ public class MathExt {
           tok = T.vanderwaals;
         } else if (s.equalsIgnoreCase("unitcell")) {
           tok = T.unitcell;
+        } else if (s.equalsIgnoreCase("coord")) {
+          tok = T.coord;
         } else {
           return false;
         }
@@ -3973,6 +4006,11 @@ public class MathExt {
         return mp
             .addXBs(vwr.ms.getAtoms(tok, uc));
       }
+      break;
+    case T.varray:
+       // {*}.within(0.1, [points])
+      
+      
       break;
     case 3:
       switch (tok) {
