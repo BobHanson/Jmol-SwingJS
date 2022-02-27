@@ -265,7 +265,7 @@ final public class Measure {
     retNorm.normalize();
     if (dist > 0)
       retNorm.scale(-1);
-    retPtProj.scaleAdd2(-dist, retNorm, pt);
+    retPtProj.scaleAdd2(Math.abs(dist), retNorm, pt);
     return dist;
   }
 
