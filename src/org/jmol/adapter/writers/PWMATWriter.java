@@ -9,6 +9,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -25,7 +26,7 @@ public class PWMATWriter implements JmolWriter {
   private Viewer vwr;
   private OC oc;
   private SymmetryInterface uc;
-  private String[] names;
+  private Lst<String> names;
   private BS bs;
   
 
@@ -40,19 +41,25 @@ public class PWMATWriter implements JmolWriter {
     this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
   }
 
+  
+  private final static String PWM_PREFIX = "property_pwm_";
+  private final static int PREFIX_LEN = 13;
+  
+  @SuppressWarnings("unchecked")
   @Override
   public String write(BS bs) {
-    this.bs = (bs == null ? vwr.bsA() : bs);
+    if (bs == null)
+      bs = vwr.bsA();
     try {
-    int n = bs.cardinality();
-    String line = PT.formatStringI("%12i\n", "i", n);
-    oc.append(line);
-    uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-    bs = uc.removeDuplicates(vwr.ms, bs);
-    names = (String[]) vwr.getDataObj("*", bs, JmolDataManager.DATA_TYPE_AF);
-    writeLattice();
-    writePositions();
-    writeDataBlocks();
+      int n = bs.cardinality();
+      String line = PT.formatStringI("%12i\n", "i", n);
+      oc.append(line);
+      uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
+      this.bs = uc.removeDuplicates(vwr.ms, bs);
+      names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
+      writeLattice();
+      writePositions();
+      writeDataBlocks();
     } catch (Exception e) {
       System.err.println("Error writing PWmat file " + e);
     }
@@ -99,22 +106,20 @@ public class PWMATWriter implements JmolWriter {
   }
   
   private float[] getData(String name) { 
-    name = "property_pwm_" + name.toLowerCase();
-    for (int i = names.length; --i >= 0;) {
-      if (names[i] != null && name.equalsIgnoreCase(names[i])) {
-        names[i] = null;
-        return (float[]) vwr.getDataObj(name, bs, JmolDataManager.DATA_TYPE_AF);
+    name = PWM_PREFIX + name.toLowerCase();
+    for (int i = names.size(); --i >= 0;) {
+      String n = names.get(i);
+      if (name.equalsIgnoreCase(n)) {
+        names.removeItemAt(i);
+        return (float[]) vwr.getDataObj(n, bs, JmolDataManager.DATA_TYPE_AF);
       }
     }
     return null;
   }
 
   private float[][] getVectors(String name) {
-    float[][] vectors = AU.newFloat2(3);
-    float[] x = vectors[0] = getData(name + "_x");
-    x = vectors[1] = (x == null ? null : getData(name + "_y"));
-    vectors[2] = (x == null ? null : getData(name + "_z"));
-    return (vectors[2] == null ? null : vectors);
+    float[][] vectors = new float[][] { getData(name + "_x"), getData(name + "_y"), getData(name + "_z") };
+    return (vectors[0] == null || vectors[1] == null || vectors[2] == null ? null : vectors);
   }
 
   private void writeDataBlocks() {
@@ -136,6 +141,7 @@ public class PWMATWriter implements JmolWriter {
       p.set(xyz[0][ic], xyz[1][ic], xyz[2][ic]);
       oc.append(PT.sprintf(f, "ip", new Object[] { Integer.valueOf(a[i].getElementNumber()), p }));
     }    
+    Logger.info("PWMATWriter: " + name);
   }
 
   private void writeMagnetic() {
@@ -143,7 +149,7 @@ public class PWMATWriter implements JmolWriter {
     if (m == null)
       return;
     writeItem2(m, "CONSTRAINT_MAG");
-    writeVectors("MAGNETIC_XYZ");
+//    writeVectors("MAGNETIC_XYZ");
   }
 
   private void writeItem2(float[] m, String name) {
@@ -166,19 +172,35 @@ public class PWMATWriter implements JmolWriter {
     if (m == null)
       return null;
     Atom[] a = vwr.ms.at;
-    oc.append(name.toUpperCase()).append("\n");
+    name = name.toUpperCase();
+    oc.append(name).append("\n");
     String f = "%4i%18.12f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
       oc.append(PT.sprintf(f, "if", new Object[] {
           Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]) }));
     }
+    Logger.info("PWMATWriter: " + name);
     return m;
   }
 
   private void writeMoreData() {
-    // TODO
-    
+    int n = names.size();
+    int i0 = 0;
+    while (names.size() > i0 && --n >= 0) {
+      String name = names.get(i0).substring(PREFIX_LEN);
+      System.out.println(name);
+      if (name.endsWith("_y") || name.endsWith("_z")) {
+        i0++;
+        continue;
+      }
+      if (name.endsWith("_x")) {
+        writeVectors(name.substring(0, name.length() - 2));
+        i0 = 0;
+      } else {
+        writeItems(name);
+      }
+    }
   }
 
   @Override

@@ -30,6 +30,8 @@ import java.util.Set;
 import org.jmol.api.JmolDataManager;
 import org.jmol.c.VDW;
 import javajs.util.BS;
+import javajs.util.Lst;
+
 import org.jmol.modelset.AtomCollection;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
@@ -260,9 +262,18 @@ public class DataManager implements JmolDataManager {
   public Object getData(String label, BS bsSelected, int dataType) {
     if (label == null)
       return null;
-    if (label.equals("*")) {
-      Set<String> s = dataValues.keySet();
-      return s.toArray(new String[s.size()]);
+    // wildcard xxx* finds all data of this type are returns a list
+    if (label.endsWith("*")) {
+      Lst<String> list = new Lst<String>();
+      label = label.substring(0, label.length() - 1);
+      int len = label.length();
+      for (String key: dataValues.keySet()) {
+        if (len == 0 || key.length() >= len && key.substring(0, len).equalsIgnoreCase(label)) {
+          list.addLast(key);
+        }
+      }
+      return list;
+      
     }
     if (dataValues.size() == 0)
       return null;

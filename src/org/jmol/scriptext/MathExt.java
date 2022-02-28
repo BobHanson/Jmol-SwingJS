@@ -1158,6 +1158,7 @@ public class MathExt {
 
   private boolean evaluateData(ScriptMathProcessor mp, SV[] args) {
 
+    // x = data("someprefix*") # the data
     // x = data("somedataname") # the data
     // x = data("data2d_xxxx") # 2D data (x,y paired values)
     // x = data("data2d_xxxx", iSelected) # selected row of 2D data, with <=0
@@ -1207,8 +1208,8 @@ public class MathExt {
 
     // parallel mp.addition of float property data sets
 
-    if (selected.equals("*") || selected.equals("?"))
-      return mp.addXAS((String[]) vwr.getDataObj("*", null, 0));
+    if (selected.endsWith("*"))
+      return mp.addXList((Lst<?>) vwr.getDataObj(selected, null, 0));
     if (selected.indexOf("property_") == 0) {
       float[] f1 = (float[]) vwr.getDataObj(selected, null,
           JmolDataManager.DATA_TYPE_AF);
