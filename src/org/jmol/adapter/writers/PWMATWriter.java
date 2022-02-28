@@ -48,6 +48,7 @@ public class PWMATWriter implements JmolWriter {
     String line = PT.formatStringI("%12i\n", "i", n);
     oc.append(line);
     uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
+    bs = uc.removeDuplicates(vwr.ms, bs);
     names = (String[]) vwr.getDataObj("*", bs, JmolDataManager.DATA_TYPE_AF);
     writeLattice();
     writePositions();
@@ -125,7 +126,7 @@ public class PWMATWriter implements JmolWriter {
 
   private void writeVectors(String name) {
     float[][] xyz = getVectors(name);
-    if (xyz[0] == null)
+    if (xyz == null)
       return;
     Atom[] a = vwr.ms.at;
     P3 p = new P3();
