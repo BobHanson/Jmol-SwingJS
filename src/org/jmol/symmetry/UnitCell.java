@@ -852,11 +852,11 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param flags "tofractional,fromfractional,packed"
    * @param ops  space group operations
    * @param list the list to append to
-   * @param i0 the starting index of the list; if &gt; 0, then we assume to/from fractional 
+   * @param i0 the starting index of the list
    * @return augmented list
    */
-  public Lst<P3> getEquivPoints(P3 pt, String flags, M4[] ops, Lst<P3> list,
-                                int i0) {
+  Lst<P3> getEquivPoints(P3 pt, String flags, M4[] ops, Lst<P3> list,
+                                int i0, int n0) {
     boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
     boolean packed = (flags.indexOf("packed") >= 0);
@@ -866,21 +866,16 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     if (!fromfractional)
       toFractional(pf, true);
     int n = list.size();
-    out: for (int i = 0, nops = ops.length; i < nops; i++) {
+    for (int i = 0, nops = ops.length; i < nops; i++) {
       P3 p = P3.newP(pf);
       ops[i].rotTrans(p);
       unitize(p);
-      for (int j = i0; j < n; j++) {
-        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
-          continue out;
-        }
-      }
       list.addLast(p);
       n++;
     }
     if (packed) {
       // duplicate all the points. 
-      for (int i = i0; i < n; i++) {
+      for (int i = n0; i < n; i++) {
         P3 p = list.get(i);
         if (p.x == 0) {
           list.addLast(P3.new3(1, p.y, p.z));
@@ -905,12 +900,28 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         }
       }
     }
+    checkDuplicate(list, i0, n0);
     if (!tofractional) {
-      for (int i = i0; i < n; i++)
+      for (int i = n0; i < n; i++)
         toCartesian(list.get(i), true);
     }
     return list;
   }
+
+  private void checkDuplicate(Lst<P3> list, int i0, int n0) {
+    int n = list.size();
+    out: for (int i = i0; i < n; i++) {
+      P3 p = list.get(i);
+      for (int j = Math.max(i + 1, n0); j < n; j++) {
+        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
+          list.removeItemAt(j);
+          n--;
+          j--;
+        }
+      }
+    }
+  }
+
 
 
 }

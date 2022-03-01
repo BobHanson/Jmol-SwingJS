@@ -482,6 +482,7 @@ abstract class ScriptExpr extends ScriptParam {
             if (tokAt(iToken + 3) == T.per && tokAt(iToken + 4) == T.bin)
               tok2 = T.selectedfloat;
             //$FALL-THROUGH$
+          case T.pivot:
           case T.min:
           case T.max:
           case T.stddev:
@@ -489,8 +490,8 @@ abstract class ScriptExpr extends ScriptParam {
           case T.sum2:
           case T.average:
             allowMathFunc = (isUserFunction || var.intValue == T.distance
-                || tok2 == T.minmaxmask || tok2 == T.selectedfloat);
-            var.intValue |= tok2;
+                || tok2 == T.minmaxmask || tok2 == T.selectedfloat || tok2 == T.pivot);
+            var.intValue |= tok2 & T.minmaxmask;
             getToken(iToken + 2);
           }
         }
@@ -1533,6 +1534,7 @@ abstract class ScriptExpr extends ScriptParam {
   private SV getBitsetPropertySelector(int i, int xTok) throws ScriptException {
     int tok = getToken(i).tok;
     switch (tok) {
+    case T.pivot:
     case T.min:
     case T.max:
     case T.average:
@@ -1573,6 +1575,9 @@ abstract class ScriptExpr extends ScriptParam {
 
     int minmaxtype = tok & T.minmaxmask;
     boolean selectedFloat = (minmaxtype == T.selectedfloat);
+    boolean isPivot = (minmaxtype == T.apivot);
+    if (isPivot)
+      minmaxtype = T.minmaxmask;
     int ac = vwr.ms.ac;
     float[] fout = (minmaxtype == T.allfloat ? new float[ac] : null);
     boolean isExplicitlyAll = (minmaxtype == T.minmaxmask || selectedFloat);
@@ -1936,8 +1941,12 @@ abstract class ScriptExpr extends ScriptParam {
     if (minmaxtype == T.allfloat)
       return fout;
     if (minmaxtype == T.all) {
-      if (asVectorIfAll)
+      if (asVectorIfAll) {
+        if (isPivot) {
+          return getMathExt().getMinMax(vout, T.pivot, false);
+        }
         return vout;
+      }
       int len = vout.size();
       if ((isString || isHash) && !isExplicitlyAll && len == 1)
         return vout.get(0);

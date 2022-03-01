@@ -5886,6 +5886,7 @@ public class CmdExt extends ScriptExt {
     //  modelkit ASSIGN SPACEGROUP    
     //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
     //  modelkit DELETE @1
+    //  modelkit ADD "C" point
     //  modelkit MOVETO @1 point
     //  modelkit FIXED VECTOR pt1 pt2
     //  modelkit FIXED PLANE pt1 pt2
@@ -5949,6 +5950,7 @@ public class CmdExt extends ScriptExt {
     case T.spacegroup:
     case T.connect:
     case T.delete:
+    case T.add:
     case T.moveto:
       assign();
       return;
@@ -6115,9 +6117,10 @@ public class CmdExt extends ScriptExt {
     boolean isBond = (mode == T.bonds);
     boolean isConnect = (mode == T.connect);
     boolean isDelete = (mode == T.delete);
+    boolean isAdd = (mode == T.add);
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
-    if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove)
+    if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove || isAdd)
       i++;
     else
       mode = T.atoms;
@@ -6161,9 +6164,10 @@ public class CmdExt extends ScriptExt {
         }
       }
       i = ++e.iToken;
-    } else if (mode == T.atoms && tokAt(i) == T.string) {
+    } else if (mode == T.atoms && tokAt(i) == T.string || mode == T.add) {
       // new Jmol 14.29.28
       // assign ATOM "C" {0 0 0}
+      // assign ADD "C" {0 0 0}
     } else if (!isSpacegroup || e.isAtomExpression(i)) { 
       // assign ATOM @3 "C" {0 0 0}
       // assign CONNECT @3 @4
@@ -6178,7 +6182,23 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3 pt = null;
-    if (isMove) {
+    boolean isPacked = false;
+    if (isAdd) {
+      if (e.isAtomExpression(i)) {
+        bs = expFor(++e.iToken, bsAtoms);
+        i = e.iToken;
+        type = e.optParameterAsString(i + 1);
+        i = e.iToken;        
+      } else {
+        type = e.optParameterAsString(i);      
+        pt = getPoint3f(++e.iToken, true);
+      }
+      if (type.length() == 0)
+        type = null;
+      isPacked = (tokAt(i + 1) == T.packed);
+      if (isPacked)
+        i = ++e.iToken;
+    } else if (isMove) {
       pt = getPoint3f(++e.iToken, true);
     } else if (isSpacegroup || isDelete) {
     } else if (!isConnect) {
@@ -6206,15 +6226,20 @@ public class CmdExt extends ScriptExt {
     case T.connect:
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
-    case T.delete:
-      int n = vwr.getModelkit(false).cmdAssignDeleteAtoms(bs);
+    case T.add:
+      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pt, bs, (isPacked ? "packed" : ""), e.fullCommand);
       if (e.doReport())
-        e.report(GT.i(GT.$("{0} atoms deleted"), n), false);
+        e.report(GT.i(GT.$("{0} atoms added"), na), false);
+      break;
+    case T.delete:
+      int nd = vwr.getModelkit(false).cmdAssignDeleteAtoms(bs);
+      if (e.doReport())
+        e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
-      int m = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
       if (e.doReport())
-        e.report(GT.i(GT.$("{0} atoms moved"), m), false);
+        e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
       boolean isP1 = e.optParameterAsString(i).equalsIgnoreCase("P1");

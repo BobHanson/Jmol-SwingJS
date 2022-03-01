@@ -157,7 +157,7 @@ public class NMRCalculation implements JmolNMRInterface {
       if (!bsA.get(i))
         continue;
       Atom a = atoms[i];
-      bs.set(models[a.mi].firstAtomIndex - 1 + a.atomSite);
+      bs.set(models[a.mi].firstAtomIndex - 1 + a.getAtomSite());
     }
     return bs;
   }
@@ -178,7 +178,7 @@ public class NMRCalculation implements JmolNMRInterface {
       // exclude any symmetry-
       for (int i = bsModelAtoms.nextSetBit(0); i >= 0; i = bsModelAtoms
           .nextSetBit(i + 1))
-        if (atoms[i].atomSite != atoms[i].i + 1)
+        if (atoms[i].getAtomSite() != atoms[i].i + 1)
           bsModelAtoms.clear(i);
       bs.or(bsModelAtoms);
       // march through all the atoms in the model...

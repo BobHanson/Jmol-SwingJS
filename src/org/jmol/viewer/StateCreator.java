@@ -1630,6 +1630,9 @@ public class StateCreator extends JmolStateCreator {
           else
             s.appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(v.modScale);
           break;
+        case AtomCollection.TAINT_SITE:
+          s.appendI(atoms[i].getAtomSite());
+          break;
         case AtomCollection.TAINT_ELEMENT:
           s.appendI(atoms[i].getAtomicAndIsotopeNumber());
           break;

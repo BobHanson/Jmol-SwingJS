@@ -509,6 +509,7 @@ public class T {
   public final static int stddev        = 6 << 5;
   public final static int selectedfloat = 7 << 5; //not user-selectable
   public final static int allfloat      = 8 << 5; //not user-selectable
+  public final static int apivot        = 9 << 5;
 
   public final static int settable           = 1 << 11;
   
@@ -697,7 +698,7 @@ public class T {
   public final static int label            = 18 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
-  public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty;
+  public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty | apivot;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
   public final static int polyhedra        = 24 | 0 << 9 | mathfunc | mathproperty | shapeCommand;

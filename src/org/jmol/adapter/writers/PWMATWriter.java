@@ -51,12 +51,10 @@ public class PWMATWriter implements JmolWriter {
     if (bs == null)
       bs = vwr.bsA();
     try {
-      int n = bs.cardinality();
-      String line = PT.formatStringI("%12i\n", "i", n);
-      oc.append(line);
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
       this.bs = uc.removeDuplicates(vwr.ms, bs);
       names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
+      writeHeader();
       writeLattice();
       writePositions();
       writeDataBlocks();
@@ -64,6 +62,10 @@ public class PWMATWriter implements JmolWriter {
       System.err.println("Error writing PWmat file " + e);
     }
     return toString();
+  }
+
+  private void writeHeader() {
+    oc.append(PT.formatStringI("%12i\n", "i", bs.cardinality()));
   }
 
   private void writeLattice() {

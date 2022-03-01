@@ -8018,11 +8018,11 @@ public class Viewer extends JmolViewer
       return;
     Atom atom = ms.at[bs.nextSetBit(0)];
     int n = bs.cardinality();
-    sm.setStatusStructureModified(atom.i, atom.mi, 3, "setAtomCoords", n, bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD, "setAtomCoords", n, bs);
     ms.setAtomCoords(bs, tokType, xyzValues);
     checkMinimization();
     sm.setStatusAtomMoved(bs);
-    sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n, bs);
   }
 
   public void setAtomCoordsRelative(T3 offset, BS bs) {
@@ -8035,13 +8035,13 @@ public class Viewer extends JmolViewer
     Atom atom = ms.at[bs.nextSetBit(0)];
     int n = bs.cardinality();
     if (doNotify) {
-      sm.setStatusStructureModified(atom.i, atom.mi, 3, "setAtomCoords", n, bs);
+      sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD, "setAtomCoords", n, bs);
     }
     ms.setAtomCoordsRelative(offset, bs);
     checkMinimization();
     if (doNotify) {
       sm.setStatusAtomMoved(bs);
-      sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
+      sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n, bs);
     }
   }
 
@@ -8088,11 +8088,11 @@ public class Viewer extends JmolViewer
     if (n == 0)
       return;
     Atom atom = ms.at[bs.nextSetBit(0)];
-    sm.setStatusStructureModified(atom.i, atom.mi, 3, "invertAtomCoords", n, bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD, "invertAtomCoords", n, bs);
     ms.invertSelected(pt, plane, ringAtomIndex, bs);
     checkMinimization();
     sm.setStatusAtomMoved(bs);
-    sm.setStatusStructureModified(atom.i, atom.mi, -3, "OK", n, bs);
+    sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n, bs);
     if (isClick)
       setStatusAtomPicked(ringAtomIndex, "inverted: " + Escape.eBS(bs), null,
           false);
@@ -8699,6 +8699,15 @@ public class Viewer extends JmolViewer
     return getDataManager().getDefaultVdwNameOrData(type, bs);
   }
 
+  
+  public final static int MODIFY_DELETE_ATOMS = 1;
+  public final static int MODIFY_DELETE_BONDS = 2;
+  public final static int MODIFY_SET_COORD = 3;
+  public final static int MODIFY_DELETE_ATOM = 4;
+  public final static int MODIFY_DELETE_MODEL = 5;
+  public final static int MODIFY_MAKE_BOND = 6;
+  
+  
   public int deleteAtoms(BS bsAtoms, boolean fullModels) {
     int atomIndex = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
     if (atomIndex < 0)
@@ -8711,12 +8720,12 @@ public class Viewer extends JmolViewer
     if (fullModels) {
       return deleteModels(mi, bsAtoms);
     }
-    sm.setStatusStructureModified(atomIndex, a.mi, 4,
+    sm.setStatusStructureModified(atomIndex, a.mi, MODIFY_DELETE_ATOM,
         "deleting atoms " + bsAtoms, bsAtoms.cardinality(), bsAtoms);
     ms.deleteAtoms(bsAtoms);
     int n = slm.deleteAtoms(bsAtoms);
     setTainted(true);
-    sm.setStatusStructureModified(atomIndex, mi, -4, "OK", n, bsAtoms);
+    sm.setStatusStructureModified(atomIndex, mi, -MODIFY_DELETE_ATOM, "OK", n, bsAtoms);
     return n;
   }
 
@@ -8744,7 +8753,7 @@ public class Viewer extends JmolViewer
       setCurrentModelIndexClear(currentModel, false);
       return 0;
     }
-    sm.setStatusStructureModified(-1, modelIndex, 5,
+    sm.setStatusStructureModified(-1, modelIndex, MODIFY_DELETE_MODEL,
         "deleting model " + getModelNumberDotted(modelIndex), n, bsAtoms);
     slm.processDeletedModelAtoms(bsDeleted);
     if (eval != null)
@@ -8760,7 +8769,7 @@ public class Viewer extends JmolViewer
     if (bsD0 != null)
       bsDeleted.andNot(bsD0);
     n = BSUtil.cardinalityOf(bsDeleted);
-    sm.setStatusStructureModified(-1, modelIndex, -5, "OK", n, bsDeleted);
+    sm.setStatusStructureModified(-1, modelIndex, -MODIFY_DELETE_MODEL, "OK", n, bsDeleted);
     return n;
   }
 
@@ -8769,9 +8778,9 @@ public class Viewer extends JmolViewer
     int n = bsDeleted.cardinality();
     if (n == 0)
       return;
-    sm.setStatusStructureModified(-1, modelIndex, 2, "delete bonds " + Escape.eBond(bsDeleted), bsDeleted.cardinality(), bsDeleted);
+    sm.setStatusStructureModified(-1, modelIndex, MODIFY_DELETE_BONDS, "delete bonds " + Escape.eBond(bsDeleted), bsDeleted.cardinality(), bsDeleted);
     ms.deleteBonds(bsDeleted, false);
-    sm.setStatusStructureModified(-1, modelIndex, -2, "OK", bsDeleted.cardinality(), bsDeleted);
+    sm.setStatusStructureModified(-1, modelIndex, -MODIFY_DELETE_BONDS, "OK", bsDeleted.cardinality(), bsDeleted);
   }
 
   public void deleteModelAtoms(int modelIndex, int firstAtomIndex, int nAtoms,
@@ -8780,11 +8789,11 @@ public class Viewer extends JmolViewer
     int n = bsModelAtoms.cardinality();
     if (n == 0)
       return; 
-    sm.setStatusStructureModified(-1, modelIndex, 1,
+    sm.setStatusStructureModified(-1, modelIndex, MODIFY_DELETE_ATOMS,
         "delete atoms " + Escape.eBS(bsModelAtoms), n, bsModelAtoms);
     BSUtil.deleteBits(tm.bsFrameOffsets, bsModelAtoms);
     getDataManager().deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
-    sm.setStatusStructureModified(-1, modelIndex, -1, "OK", n, bsModelAtoms);
+    sm.setStatusStructureModified(-1, modelIndex, -MODIFY_DELETE_ATOMS, "OK", n, bsModelAtoms);
   }
 
   public char getQuaternionFrame() {
@@ -9760,7 +9769,7 @@ public class Viewer extends JmolViewer
       clearModelDependentObjects();
       try {
         bsB = (isQuick ? ms.addHydrogens(vConnections, pts)
-            : addHydrogensInline(bsAtoms, vConnections, pts));
+            : addHydrogensInline(bsAtoms, vConnections, pts, null));
       } catch (Exception e) {
         System.out.println(e.toString());
         // ignore
@@ -9773,11 +9782,11 @@ public class Viewer extends JmolViewer
     return bsB;
   }
 
-  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts)
+  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts, Map<String, Object> htParams)
       throws Exception {
     if (getScriptManager() == null)
       return null;
-    return scm.addHydrogensInline(bsAtoms, vConnections, pts);
+    return scm.addHydrogensInline(bsAtoms, vConnections, pts, htParams);
   }
 
   @Override
@@ -10538,14 +10547,14 @@ public class Viewer extends JmolViewer
 
   public Lst<P3> getSymmetryEquivPoints(P3 pt, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
-    return (uc == null ? new Lst<P3>() : uc.getEquivPoints(pt, flags));
+    return (uc == null ? new Lst<P3>() : uc.getEquivPoints(null, pt, flags));
   }
 
   public Lst<?> getSymmetryEquivPointList(Lst<P3> pts, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
     if (uc == null)
       return new Lst<P3>();
-    uc.getEquivPointList(pts, flags.toLowerCase());
+    uc.getEquivPointList(pts, 0, flags.toLowerCase());
     return pts;
   }
 

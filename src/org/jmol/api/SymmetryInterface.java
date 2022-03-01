@@ -249,9 +249,9 @@ public interface SymmetryInterface {
 
   public BS removeDuplicates(ModelSet ms, BS bs);
 
-  public Lst<P3> getEquivPoints(P3 pt, String flags);
+  public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags);
 
-  public void getEquivPointList(Lst<P3> pts, String flags);
+  public void getEquivPointList(Lst<P3> pts, int nIgnore, String flags);
 
   public int[] getSymmetryInvariant(P3 p3, int[] v0);
 

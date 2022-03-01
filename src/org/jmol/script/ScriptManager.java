@@ -731,19 +731,27 @@ public class ScriptManager implements JmolScriptManager {
   /**
    * Add hydrogens to a model
    * 
-   * @param bsAtoms at least one atom, for identification of a model index
-   * @param vConnections return list of atoms added
-   * @param pts list of point positions for the added hydrogens?
-   */ 
+   * @param bsAtoms
+   *        at least one atom, for identification of a model index
+   * @param vConnections
+   *        return list of atoms added
+   * @param pts
+   *        list of point positions for the added hydrogens?
+   */
   @Override
-  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts)
+  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+                               Map<String, Object> htParams)
       throws Exception {
     int iatom = bsAtoms.nextSetBit(0);
+    if (htParams == null)
+      htParams = new Hashtable<String, Object>();
     int modelIndex = (iatom < 0 ? vwr.am.cmi : vwr.ms.at[iatom].mi);
     if (modelIndex < 0)
       modelIndex = vwr.ms.mc - 1;
-//    if (!vwr.ms.isAtomInLastModel(iatom))
-//      return new BS();
+    htParams.put("appendToModelIndex", Integer.valueOf(modelIndex));
+    boolean siteFixed = (htParams.containsKey("fixedSite"));
+    //    if (!vwr.ms.isAtomInLastModel(iatom))
+    //      return new BS();
 
     // must be added to the LAST data set only
 
@@ -767,17 +775,17 @@ public class ScriptManager implements JmolScriptManager {
       sb.append("H ").appendF(pts[i].x).append(" ").appendF(pts[i].y)
           .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
-    
-    Map<String, Object> htParams = new Hashtable<String, Object>();
-    htParams.put("appendToModelIndex", Integer.valueOf(modelIndex));
+
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
     eval.runScriptBuffer(sbConnect.toString(), null, false);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
     vwr.g.appendNew = wasAppendNew;
-    bsA = vwr.ms.am[modelIndex].bsAsymmetricUnit;
-    if (bsA != null)
-      bsA.or(bsB);
+    if (!siteFixed) {
+      bsA = vwr.ms.am[modelIndex].bsAsymmetricUnit;
+      if (bsA != null)
+        bsA.or(bsB);
+    }
     return bsB;
   }
 

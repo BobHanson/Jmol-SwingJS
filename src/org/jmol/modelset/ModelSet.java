@@ -1036,7 +1036,7 @@ public class ModelSet extends BondCollection {
     for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       at[i].setSymop(basis.get(i) ? 1 : 0, true);
       if (isP1)
-        at[i].atomSite = ++p;
+        setSite(at[i], ++p, true);
     }
     if (!isP1) {
       boolean haveOccupancies = (occupancies != null);
@@ -1059,7 +1059,7 @@ public class ModelSet extends BondCollection {
             sg.getSpaceGroupOperation(k).rotTrans(b);
             sg.unitize(b);
             if (b.distanceSquared(a) < JC.UC_TOLERANCE2) {
-              ba.atomSite = bb.atomSite;
+              setSite(ba, bb.getAtomSite(), true);
               break out;
             }
           }
@@ -3344,41 +3344,51 @@ public class ModelSet extends BondCollection {
    * @param mergeSet
    */
   public void setAtomNamesAndNumbers(int iFirst, int baseAtomIndex,
-                                     AtomCollection mergeSet) {
+                                     AtomCollection mergeSet, boolean isModelKit) {
     // first, validate that all atomSerials are NaN
-    if (baseAtomIndex < 0)
-      iFirst = am[at[iFirst].mi].firstAtomIndex;
+    int mi0 = -1;
+    if (isModelKit) {
+      // from ModelKit
+      mi0 = at[iFirst].mi;
+      iFirst = am[mi0].firstAtomIndex;
+    }
     if (atomSerials == null)
       atomSerials = new int[ac];
     if (atomNames == null)
       atomNames = new String[ac];
     // now, we'll assign 1-based atom numbers within each model
     boolean isZeroBased = isXYZ && vwr.getBoolean(T.zerobasedxyzrasmol);
-    int lastModelIndex = Integer.MAX_VALUE;
+    int thisModelIndex = Integer.MAX_VALUE;
     int atomNo = 1;
     for (int i = iFirst; i < ac; ++i) {
       Atom atom = at[i];
       if (atom == null)
         continue;
-      if (atom.mi != lastModelIndex) {
-        lastModelIndex = atom.mi;
+      if (atom.mi != thisModelIndex) {
+        if (isModelKit && thisModelIndex != Integer.MAX_VALUE && atom.mi != mi0)
+          continue;
+        thisModelIndex = atom.mi;
         atomNo = (isZeroBased ? 0 : 1);
       }
       // 1) do not change numbers assigned by adapter
       // 2) do not change the number already assigned when merging
       // 3) restart numbering with new atoms, not a continuation of old
-      int ano = atomSerials[i];
-      
+      int ano = atomSerials[i];      
       if (i >= -baseAtomIndex) {
-        if (ano == 0 || baseAtomIndex < 0)
+        if (ano == 0 || isModelKit)
           atomSerials[i] = (i < baseAtomIndex ? mergeSet.atomSerials[i]
               : atomNo);
-        if (atomNames[i] == null || baseAtomIndex < 0)
+        if (atomNames[i] == null || isModelKit)
           atomNames[i] = (atom.getElementSymbol() + atomSerials[i]).intern();
-      } else if (ano > atomNo) {
-        atomNo = ano;
+      } else {
+        if (ano > atomNo) {
+          atomNo = ano;
+        }
+        if (isModelKit) {
+          atomNames[i] = (atom.getElementSymbol() + ano).intern();
+        }
       }
-      if (!am[lastModelIndex].isModelKit || atom.getElementNumber() > 0
+      if (!am[thisModelIndex].isModelKit || atom.getElementNumber() > 0
           && !atom.isDeleted())
         atomNo++;
     }
@@ -3684,7 +3694,7 @@ public class ModelSet extends BondCollection {
   }
 
   public SymmetryInterface getUnitCellForAtom(int index) {
-    if (index < 0 || index > ac)
+    if (index < 0 || index > ac || at[index] == null)
       return null;
     if (bsModulated != null) {
       JmolModulationSet ms = getModulation(index);

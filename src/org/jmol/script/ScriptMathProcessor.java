@@ -466,6 +466,7 @@ public class ScriptMathProcessor {
       if (!wasX)
         op = SV.newV(T.unaryMinus, "-");
       break;
+    case T.pivot:
     case T.min:
     case T.max:
     case T.average:
@@ -1716,7 +1717,7 @@ public class ScriptMathProcessor {
       case T.sum:
       case T.sum2:
       case T.pivot:
-        return addXObj(eval.getMathExt().getMinMax(x2.getList(), op.intValue));
+        return addXObj(eval.getMathExt().getMinMax(x2.getList(), op.intValue, true));
       case T.pop:
         return addX(x2.pushPop(null, null));
       case T.sort:

@@ -2058,7 +2058,7 @@ public class MathExt {
       throws ScriptException {
     int nargs = args.length;
     boolean isSelect = (isAtomProperty && tok0 == T.select);
-    boolean isPivot = (isAtomProperty && tok0 == T.pivot && nargs > 0);
+    boolean isPivot = (isAtomProperty && tok0 == T.pivot);
     boolean isAuxiliary = (tok0 == T.__);
     int pt = 0;
     int tok = (nargs == 0 ? T.nada : args[0].tok);
@@ -2115,6 +2115,8 @@ public class MathExt {
       case T.varray:
         if (isPivot) {
           Lst<SV> lstx = x.getList();
+          if (nargs == 0)
+            return mp.addXObj(getMinMax(lstx, T.pivot, true));
           // array of hash pivot("key")
           Map<String, SV> map = new Hashtable<String, SV>();
           String sep = (nargs > 1 ? SV.sValue(args[nargs - 1]) : null);
@@ -4186,9 +4188,9 @@ public class MathExt {
   }
 
   @SuppressWarnings("unchecked")
-  public Object getMinMax(Object floatOrSVArray, int tok) {
+  public Object getMinMax(Object floatOrSVArray, int tok, boolean isSV) {
     float[] data = null;
-    Lst<SV> sv = null;
+    Lst<?> sv = null;
     int ndata = 0;
     Map<String, Integer> htPivot = null;
     while (true) {
@@ -4200,14 +4202,14 @@ public class MathExt {
         if (ndata == 0)
           break;
       } else if (floatOrSVArray instanceof Lst<?>) {
-        sv = (Lst<SV>) floatOrSVArray;
+        sv = (Lst<?>) floatOrSVArray;
         ndata = sv.size();
         if (ndata == 0) {
           if (tok != T.pivot)
             break;
         } else {
           if (tok != T.pivot) {
-            SV sv0 = sv.get(0);
+            SV sv0 = (SV) sv.get(0);
             if (sv0.tok == T.point3f)
               return getMinMaxPoint(sv, tok);
             if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
@@ -4215,7 +4217,7 @@ public class MathExt {
               if (pt instanceof P3)
                 return getMinMaxPoint(sv, tok);
               if (pt instanceof P4)
-                return getMinMaxQuaternion(sv, tok);
+                return getMinMaxQuaternion((Lst<SV>) sv, tok);
               break;
             }
           }
@@ -4248,7 +4250,8 @@ public class MathExt {
       boolean isInt = true;
       boolean isPivot = (tok == T.pivot);
       for (int i = ndata; --i >= 0;) {
-        SV svi = (sv == null ? SV.vF : sv.get(i));
+        Object o = (sv == null ? null : sv.get(i));
+        SV svi = (!isSV ? null : o == null ? SV.vF : (SV) o);
         float v = (isPivot ? 1 : data == null ? SV.fValue(svi) : data[i]);
         if (Float.isNaN(v))
           continue;
@@ -4263,8 +4266,7 @@ public class MathExt {
           sum += v;
           break;
         case T.pivot:
-          isInt &= (svi.tok == T.integer);
-          String key = svi.asString();
+          String key = (svi == null ? o.toString() : svi.asString());
           Integer ii = htPivot.get(key);
           htPivot.put(key,
               (ii == null ? new Integer(1) : new Integer(ii.intValue() + 1)));
@@ -4350,7 +4352,7 @@ public class MathExt {
           break;
         }
       }
-      Object f = getMinMax(fdata, tok);
+      Object f = getMinMax(fdata, tok, true);
       if (!(f instanceof Number))
         return "NaN";
       float value = ((Number) f).floatValue();

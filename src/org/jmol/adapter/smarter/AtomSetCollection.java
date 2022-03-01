@@ -118,6 +118,8 @@ public class AtomSetCollection {
 
   public boolean atomMapAnyCase;
 
+  private int fixedSite;
+
   public AtomSetCollection(String fileTypeName, AtomSetCollectionReader reader,
       AtomSetCollection[] array, Lst<?> list) {
 
@@ -131,9 +133,14 @@ public class AtomSetCollection {
     p.put("PATH_KEY", SmarterJmolAdapter.PATH_KEY);
     p.put("PATH_SEPARATOR", SmarterJmolAdapter.PATH_SEPARATOR);
     setInfo("properties", p);
-    Integer modelIndex = (reader == null ? null : (Integer) reader.htParams.get("appendToModelIndex"));
-    if (modelIndex != null)
-      this.setInfo("appendToModelIndex",modelIndex);
+    if (reader != null) {
+    Integer ii = (Integer) reader.htParams.get("appendToModelIndex");   
+    if (ii != null)
+      this.setInfo("appendToModelIndex",ii);
+    ii = (Integer) reader.htParams.get("fixedSite");   
+    if (ii != null)
+      fixedSite = ii.intValue();    
+    }
     if (array != null) {
       int n = 0;
       readerList = new Lst<AtomSetCollectionReader>();
@@ -546,7 +553,7 @@ public class AtomSetCollection {
     atom.index = ac;
     atoms[ac++] = atom;    
     atom.atomSetIndex = iSet;
-    atom.atomSite = atomSetAtomCounts[iSet]++;
+    atom.atomSite = (fixedSite > 0 ? fixedSite - 1 : atomSetAtomCounts[iSet]++);
     return atom;
   }
 
@@ -881,8 +888,6 @@ public class AtomSetCollection {
   }
 
   public int getAtomSetAtomIndex(int i) {
-    if  (i < 0)
-      System.out.println("??");
     return atomSetAtomIndexes[i];
   }
 

@@ -3,6 +3,9 @@ package org.jmol.api;
 
 
 import javajs.util.BS;
+
+import java.util.Map;
+
 import org.jmol.modelset.Atom;
 
 import javajs.util.Lst;
@@ -60,7 +63,9 @@ public interface JmolScriptManager {
 
   String evalFile(String strFilename);
 
-  BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts) throws Exception;
+  BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+                        Map<String, Object> htParams)
+      throws Exception;
 
 }
 

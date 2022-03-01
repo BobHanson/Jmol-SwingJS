@@ -191,7 +191,7 @@ public class SymmetryDesc {
             sym.setSpaceGroup(false);
         }
         // check to make sure that new group has been created magnetic or not
-        if (ops[0].timeReversal != 0)
+        if (ops.length > 0 && ops[0].timeReversal != 0)
           ((SymmetryOperation) sym.getSpaceGroupOperation(0)).timeReversal = 1;
         Object[][] infolist = new Object[ops.length][];
         String sops = "";

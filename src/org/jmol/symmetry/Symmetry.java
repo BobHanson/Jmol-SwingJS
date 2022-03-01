@@ -907,37 +907,44 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Lst<P3> getEquivPoints(P3 pt, String flags) {
+  public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags) {
     M4[] ops = getSymmetryOperations();
     return (ops == null || unitCell == null ? null
-        : unitCell.getEquivPoints(pt, flags, ops, new Lst<P3>(), 0));
+        : unitCell.getEquivPoints(pt, flags, ops, pts == null ? new Lst<P3>() : pts, 0, -1));
   }
 
   @Override
-  public void getEquivPointList(Lst<P3> pts, String flags) {
+  public void getEquivPointList(Lst<P3> pts, int nIgnored, String flags) {
     M4[] ops = getSymmetryOperations();
     // we will preserve the points temporarily, then remove them at the end
     int n = pts.size();
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
     // fractionalize all points if necessary
-    if (flags.indexOf("fromfractional") <= 0) {
+    if (flags.indexOf("fromfractional") < 0) {
       for (int i = 0; i < pts.size(); i++) {
         toFractional(pts.get(i), true);
       }
     }
     // signal to make no changes in points
     flags += ",fromfractional,tofractional";
+    int check0 = (nIgnored > 0 ? 0 : n);
+    int n0 = (nIgnored > 0 ? nIgnored : n);
+    P3 p0 = (nIgnored > 0 ? pts.get(nIgnored) : null);
     if (ops != null || unitCell != null) {
-      for (int i = 0; i < n; i++) {
-        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, n);
+      for (int i = nIgnored; i < n; i++) {
+        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0);
       }
     }
-    // now remove the starting points
-    for (int i = 0; i < n; i++)
-      pts.removeItemAt(0);
+    // now remove the starting points, checking to see if perhaps our
+    // test point itself has been removed.
+    if (pts.size() == nIgnored || pts.get(nIgnored) != p0)
+      n--;
+    for (int i = n - nIgnored; --i >= 0;)
+      pts.removeItemAt(nIgnored);
+    
     // and turn these to Cartesians if desired
     if (!tofractional) {
-      for (int i = pts.size(); --i >= 0;)
+      for (int i = pts.size(); --i >= nIgnored;)
         toCartesian(pts.get(i), true);
     }
   }

@@ -1345,7 +1345,7 @@ public final class ModelLoader {
         bondsCache[j] = null;
     }
 
-    ms.setAtomNamesAndNumbers(0, baseAtomIndex, modelSet0);
+    ms.setAtomNamesAndNumbers(0, baseAtomIndex, modelSet0, false);
 
     // find elements for the popup menus
 

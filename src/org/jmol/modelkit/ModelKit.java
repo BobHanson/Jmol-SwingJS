@@ -581,7 +581,6 @@ public class ModelKit {
     mp.addPoint((a3 = getOtherAtomIndex(a2, a1)).i, null, true);
     mp.mad = 50;
     mp.inFront = true;
-    //System.out.println(mp);
     return mp;
   }
 
@@ -727,8 +726,23 @@ public class ModelKit {
   
   public void cmdAssignAtom(int atomIndex, P3 pt, String type, String cmd,
                             boolean isClick) {
+    // single atom - clicked
+    assignAtoms(null, atomIndex, 0, 0, pt, type, cmd, null, isClick, null);
+  }
+  
+  private void assignAtoms(SymmetryInterface uc, int atomIndex, int atomicNo,
+                           int site, P3 pt, String type, String cmd,
+                           Lst<P3> points, boolean isClick, String packing) {
 
     // from CmdExt
+
+    int nIgnored = 0;
+    if (points != null) {
+      nIgnored = points.size();
+      uc.toFractional(pt, true);
+      points.addLast(pt);
+      uc.getEquivPointList(points, nIgnored, packing);
+    }
 
     int state = getMKState();
     try {
@@ -736,7 +750,7 @@ public class ModelKit {
         vwr.setModelKitRotateBondIndex(-1);
       int ac = vwr.ms.ac;
       Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
-      if (pt == null) {
+      if (pt == null && points == null) {
         if (atomIndex < 0 || atom == null)
           return;
         int mi = atom.mi;
@@ -744,21 +758,41 @@ public class ModelKit {
         // After this next command, vwr.modelSet will be a different instance
         assignAtom(atomIndex, type, autoBond, true, true);
         if (!PT.isOneOf(type, ";Mi;Pl;X;"))
-          vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+          vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null, true);
         vwr.sm.setStatusStructureModified(atomIndex, mi, -1, "OK", 1, null);
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
         return;
       }
       setMKState(STATE_MOLECULAR);
       BS bs = (atomIndex < 0 ? new BS() : BSUtil.newAndSetBit(atomIndex));
-      P3[] pts = new P3[] { pt };
+      P3[] pts;
+      if (points == null) {
+        pts = new P3[] { pt };
+      } else {
+        pts = new P3[points.size() - nIgnored];
+        for (int i = pts.length; --i >= 0;) {
+          pts[i] = points.get(nIgnored + i);
+        }
+
+      }
       Lst<Atom> vConnections = new Lst<Atom>();
-      int modelIndex = -1;
-      if (atom != null) {
-        vConnections.addLast(atom);
-        modelIndex = atom.mi;
-        vwr.sm.setStatusStructureModified(atomIndex, modelIndex, 3, cmd, 1,
-            null);
+      int modelIndex = vwr.am.cmi;
+      if (site == 0) {
+        if (atom != null) {
+          vConnections.addLast(atom);
+          modelIndex = atom.mi;
+          vwr.sm.setStatusStructureModified(atomIndex, modelIndex, 3, cmd, 1,
+              null);
+        }
+        if (points != null) {
+          BS bsM = vwr.getThisModelAtoms();
+          for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+            int as = vwr.ms.at[i].getAtomSite();
+            if (as > site)
+              site = as;
+          }
+          site++;
+        }
       }
       int pickingMode = vwr.acm.getAtomPickingMode();
       boolean wasHidden = menu.hidden;
@@ -768,7 +802,10 @@ public class ModelKit {
         menu.hidden = true;
         menu.allowPopup = false;
       }
-      bs = vwr.addHydrogensInline(bs, vConnections, pts);
+      Map<String, Object> htParams = new Hashtable<String, Object>();
+      if (site > 0)
+        htParams.put("fixedSite", Integer.valueOf(site));
+      bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
       if (!isMK) {
         vwr.setBooleanProperty("modelkitmode", false);
         menu.hidden = wasHidden;
@@ -777,14 +814,36 @@ public class ModelKit {
         menu.hidePopup();
       }
       int atomIndex2 = bs.nextSetBit(0);
-      // avoid setting symmetry operator
-      assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
-      if (atomIndex >= 0)
-        assignAtom(atomIndex, ".", false, true, isClick);
-      atomIndex = atomIndex2;
-      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-      vwr.sm.setStatusStructureModified(atomIndex, modelIndex, -3, "OK", 1,
-          null);
+      if (points == null) {
+        // new atom
+        assignAtom(atomIndex2, type, false, atomIndex >= 0, true);
+        if (atomIndex >= 0)
+          assignAtom(atomIndex, ".", false, true, isClick);
+        vwr.ms.setAtomNamesAndNumbers(atomIndex2, -ac, null, true);
+        vwr.sm.setStatusStructureModified(atomIndex2, modelIndex, -3, "OK", 1,
+            bs);
+      } else {
+        if (atomIndex2 >= 0) {
+          BS asymm = vwr.getModelForAtomIndex(atomIndex2).bsAsymmetricUnit;
+          for (int i = atomIndex2; i >= 0; i = bs.nextSetBit(i + 1)) {
+            assignAtom(i, type, false, false, true);
+            vwr.ms.setSite(vwr.ms.at[i], site, true);
+          }
+          asymm.clearBits(ac + 1, vwr.ms.ac);
+        }
+        int firstAtom = vwr.ms.am[modelIndex].firstAtomIndex;
+        if (atomicNo >= 0) {
+          atomicNo = Elements.elementNumberFromSymbol(type, true);
+          BS bsM = vwr.getThisModelAtoms();
+          for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+            if (vwr.ms.at[i].getAtomSite() == site)
+              vwr.ms.setElement(vwr.ms.at[i], atomicNo, true);
+          }
+        }
+        vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
+        vwr.sm.setStatusStructureModified(-1, modelIndex, -3, "OK", 1, bs);
+
+      }
     } catch (Exception ex) {
     } finally {
       setMKState(state);
@@ -801,15 +860,16 @@ public class ModelKit {
       setMKState(STATE_MOLECULAR);
       if (type == '-')
         type = pickBondAssignType;
-      modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
+      Atom a1 = vwr.ms.bo[bondIndex].atom1;
+      modelIndex = a1.mi;
       int ac = vwr.ms.ac;
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, 2,
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_MAKE_BOND,
           cmd, 1, null);
       BS bsAtoms = assignBond(bondIndex, type);
-      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
+      vwr.ms.setAtomNamesAndNumbers(a1.i, -ac, null, true);
       if (bsAtoms == null || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "" + type, 1, null);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_MAKE_BOND, "" + type, 1, null);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "ERROR " + ex, 1, null);
@@ -826,14 +886,14 @@ public class ModelKit {
       float[][] connections = AU.newFloat2(1);
       connections[0] = new float[] { index, index2 };
       int modelIndex = vwr.ms.at[index].mi;
-      vwr.sm.setStatusStructureModified(index, modelIndex, 2, cmd, 1, null);
+      vwr.sm.setStatusStructureModified(index, modelIndex, Viewer.MODIFY_MAKE_BOND, cmd, 1, null);
       vwr.ms.connect(connections);
       int ac = vwr.ms.ac;
       // note that vwr.ms changes during the assignAtom command 
       assignAtom(index, ".", true, true, false);
       assignAtom(index2, ".", true, true, false);
-      vwr.ms.setAtomNamesAndNumbers(0, -ac, null);
-      vwr.sm.setStatusStructureModified(index, modelIndex, -2, "OK", 1, null);
+      vwr.ms.setAtomNamesAndNumbers(index, -ac, null, true);
+      vwr.sm.setStatusStructureModified(index, modelIndex, -Viewer.MODIFY_MAKE_BOND, "OK", 1, null);
       if (type != '1') {
         BS bs = BSUtil.newAndSetBit(index);
         bs.set(index2);
@@ -1043,23 +1103,23 @@ public class ModelKit {
    * @param addHsAndBond
    * @param isClick whether this is a click or not
    */
-  private void assignAtom(int atomIndex, String type, boolean autoBond,
+  private int assignAtom(int atomIndex, String type, boolean autoBond,
                           boolean addHsAndBond, boolean isClick) {
     if (isClick) {
       
       if (isVwrRotateBond()) {
         bondAtomIndex1 = atomIndex;
-        return;
+        return -1;
       }
 
       if (processAtomClick(atomIndex) || !clickToSetElement
           && vwr.ms.getAtom(atomIndex).getElementNumber() != 1)
-        return;
+        return -1;
 
     }
     Atom atom = vwr.ms.at[atomIndex];
     if (atom == null)
-      return;
+      return -1;
     vwr.ms.clearDB(atomIndex);
     if (type == null)
       type = "C";
@@ -1094,11 +1154,11 @@ public class ModelKit {
     } else if (type.equals("X")) {
       isDelete = true;
     } else if (!type.equals(".") || !addXtalHydrogens) {
-      return; // uninterpretable
+      return -1; // uninterpretable
     }
 
     if (!addHsAndBond)
-      return;
+      return atomicNumber;
 
     // type = "." is for connect
     
@@ -1150,6 +1210,7 @@ public class ModelKit {
     
     if (addXtalHydrogens)
       vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
+    return atomicNumber;
   }
 
   /** 
@@ -1282,6 +1343,65 @@ public class ModelKit {
       vwr.deleteAtoms(bs, false);
     return bs.cardinality();
   }
+  
+  public int cmdAssignAddAtoms(String type, P3 pt, BS bsAtoms, String packing, String cmd) {
+    boolean isPoint = (bsAtoms == null);
+    if (!isPoint && bsAtoms.isEmpty())
+      return 0;
+    SymmetryInterface uc = vwr.getCurrentUnitCell();
+    if (uc == null) {
+      if (isPoint)
+        assignAtoms(null, -1, 1, -1, pt, type, cmd, null, false, "");
+      return (isPoint ? 1 : 0);
+    }
+    BS bsM = vwr.getThisModelAtoms();
+    int n = bsM.cardinality();
+    String stype = "" + type;
+    P3 pf = null;
+    if (isPoint) {
+      pf = P3.newP(pt);
+      uc.toFractional(pf, true);
+    }
+    Lst<P3> list = new Lst<P3>();
+    int atomicNo = -1;
+    int site = 0;
+    for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+      if (bsAtoms == null || !bsAtoms.get(i)) {
+        P3 p = P3.newP(vwr.ms.at[i]);
+        uc.toFractional(p, true);
+        if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
+          site = vwr.ms.at[i].getAtomSite();
+          if (type == null)
+            type = vwr.ms.at[i].getElementSymbolIso(true);
+        } else {
+          list.addLast(p);
+        }
+      }
+    }
+    int nIgnored = list.size();    
+    packing = "fromfractional;tocartesian;" + packing;
+    if (type != null)
+      atomicNo = Elements.elementNumberFromSymbol(type, true);
+    if (isPoint) {
+      assignAtoms(uc, -1, atomicNo, site, P3.newP(pt), stype, null, list, false, packing);
+    } else {
+      BS sites = new BS();
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+        Atom a = vwr.ms.at[i];
+        site = a.getAtomSite();
+        if (sites.get(site))
+          continue;
+        sites.set(site);
+        stype = (type == null ? a.getElementSymbolIso(true) : stype);
+        assignAtoms(uc, -1, atomicNo, site, P3.newP(a), stype, null, list, false, packing);
+        for (int j = list.size(); --j >= nIgnored;)
+          list.removeItemAt(j);
+      }
+    }
+    n = vwr.getThisModelAtoms().cardinality() - n;
+    return n;
+  }
+
 
   /**
    * Move all atoms that are equivalent to this atom PROVIDED that they have the
@@ -1707,5 +1827,6 @@ public class ModelKit {
   private static void notImplemented(String action) {
     System.err.println("ModelKit.notImplemented(" + action + ")");
   }
+
 
 }
