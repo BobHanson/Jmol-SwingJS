@@ -3,7 +3,6 @@ package org.jmol.adapter.writers;
 import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
-import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;

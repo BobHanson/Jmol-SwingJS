@@ -131,8 +131,8 @@ public class SymmetryDesc {
         id = "sg";
       int n = ops.length;
       for (op = 0; op < n; op++)
-        s += (String) getSymmetryInfo((Symmetry) uc, iModel, iAtom,
-            (Symmetry) uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
+        s += (String) getSymmetryInfo(uc, iModel, iAtom,
+            uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
     }
     return s;
   }
@@ -405,6 +405,14 @@ public class SymmetryDesc {
     }
   }
 
+
+  V3 vtemp = new V3();
+  P3 ptemp = new P3();
+  P3 ptemp2 = new P3();
+  P3 pta01 = new P3();
+  P3 pta02 = new P3();
+  V3 vtrans = new V3();
+
   /**
    * 
    * @param op
@@ -420,6 +428,7 @@ public class SymmetryDesc {
    *        0 or T.offset
    * @param haveTranslation
    *        TODO
+   * @param matrixOnly
    * @return Object[] containing:
    * 
    *         [0] xyz (Jones-Faithful calculated from matrix)
@@ -457,14 +466,6 @@ public class SymmetryDesc {
    *         [16] id
    * 
    */
-
-  V3 vtemp = new V3();
-  P3 ptemp = new P3();
-  P3 ptemp2 = new P3();
-  P3 pta01 = new P3();
-  P3 pta02 = new P3();
-  V3 vtrans = new V3();
-
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
                                    P3 pta00, P3 ptTarget, String id,
                                    float scaleFactor, int options,
@@ -1467,6 +1468,7 @@ public class SymmetryDesc {
    * @param nth
    * @param asString
    * @param options 0 or T.offset
+   * @param matrixOnly 
    * @return Object[] or String or Object[Object[]] (nth = 0, "array")
    * 
    */

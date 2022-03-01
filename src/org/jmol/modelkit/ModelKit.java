@@ -1102,6 +1102,7 @@ public class ModelKit {
    * @param autoBond
    * @param addHsAndBond
    * @param isClick whether this is a click or not
+   * @return atomic number of atom assigned
    */
   private int assignAtom(int atomIndex, String type, boolean autoBond,
                           boolean addHsAndBond, boolean isClick) {
