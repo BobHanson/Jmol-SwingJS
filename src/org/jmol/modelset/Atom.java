@@ -77,7 +77,7 @@ public class Atom extends Point3fi implements Node {
 
   public char altloc = '\0';
   public byte atomID;
-  public int atomSite;
+  int atomSite;
   public Group group;
   private float userDefinedVanDerWaalRadius;
   byte valence;
@@ -604,6 +604,10 @@ public class Atom extends Point3fi implements Node {
   @Override
   public int getAtomSite() {
     return atomSite;
+  }
+
+  public void setAtomSite(int site) {
+    atomSite = site;
   }
 
   @Override
