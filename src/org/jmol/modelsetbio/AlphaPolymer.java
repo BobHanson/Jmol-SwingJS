@@ -219,7 +219,7 @@ public class AlphaPolymer extends BioPolymer {
     int runLength = 0;
     for (int i = 0; i < monomerCount; ++i) {
       // throw away the sheets ... their angle technique does not work well
-      if (codes[i] == code && code != Code.NADA && code != Code.BETA_SHEET) {
+      if (codes[i] == code && code != Code.NADA) {// && code != Code.BETA_SHEET) {
         ++runLength;
         if (runLength == 4) {
           tag = (code == Code.BETA_SHEET ? STR.SHEET : STR.HELIX);
