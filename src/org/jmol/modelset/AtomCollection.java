@@ -165,7 +165,7 @@ abstract public class AtomCollection {
     if (userSettableValues == null)
       userSettableValues = ("atomName atomType coord element formalCharge hydrophobicity " +
           "ionic occupancy partialCharge temperature valence vanderWaals vibrationVector " +
-          "atomNo seqID resNo chain").split(" ");
+          "atomNo seqID resNo chain site").split(" ");
   }
 
   final public static int TAINT_ATOMNAME = 0;
@@ -185,7 +185,8 @@ abstract public class AtomCollection {
   final public static int TAINT_SEQID = 14;
   final public static int TAINT_RESNO = 15;
   final public static int TAINT_CHAIN = 16;
-  final public static int TAINT_MAX = 17; // 1 more than last number, above
+  final public static int TAINT_SITE = 17;
+  final public static int TAINT_MAX = 18; // 1 more than last number, above
   
 
   String[] atomNames;
@@ -860,6 +861,16 @@ abstract public class AtomCollection {
       taintAtom(atom.i, TAINT_ELEMENT);
   }
 
+  public void setSite(Atom atom, int site, boolean doTaint) {
+    if (site > 2)
+      System.out.println("???");
+    if (atom.atomSite == site)
+      return;
+    if (doTaint)
+      taintAtom(atom.i, TAINT_SITE);
+  }
+
+
   private void resetPartialCharges() {
     partialCharges = null;
     bsPartialCharges = null;
@@ -1006,6 +1017,9 @@ abstract public class AtomCollection {
           break;
         case TAINT_CHAIN:
           setChainID(atomIndex, tokens[pt]);
+          break;
+        case TAINT_SITE:
+          atom.atomSite = (int) x;
           break;
         case TAINT_ELEMENT:
           atom.setAtomicAndIsotopeNumber((int)x);
