@@ -1102,7 +1102,6 @@ public class ModelKit {
    * @param autoBond
    * @param addHsAndBond
    * @param isClick whether this is a click or not
-   * @return atomic number of atom assigned
    */
   private int assignAtom(int atomIndex, String type, boolean autoBond,
                           boolean addHsAndBond, boolean isClick) {
@@ -1345,62 +1344,74 @@ public class ModelKit {
     return bs.cardinality();
   }
   
-  public int cmdAssignAddAtoms(String type, P3 pt, BS bsAtoms, String packing, String cmd) {
-    boolean isPoint = (bsAtoms == null);
-    if (!isPoint && bsAtoms.isEmpty())
-      return 0;
-    SymmetryInterface uc = vwr.getCurrentUnitCell();
-    if (uc == null) {
-      if (isPoint)
-        assignAtoms(null, -1, 1, -1, pt, type, cmd, null, false, "");
-      return (isPoint ? 1 : 0);
-    }
-    BS bsM = vwr.getThisModelAtoms();
-    int n = bsM.cardinality();
-    String stype = "" + type;
-    P3 pf = null;
-    if (isPoint) {
-      pf = P3.newP(pt);
-      uc.toFractional(pf, true);
-    }
-    Lst<P3> list = new Lst<P3>();
-    int atomicNo = -1;
-    int site = 0;
-    for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
-      if (bsAtoms == null || !bsAtoms.get(i)) {
-        P3 p = P3.newP(vwr.ms.at[i]);
-        uc.toFractional(p, true);
-        if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
-          site = vwr.ms.at[i].getAtomSite();
-          if (type == null)
-            type = vwr.ms.at[i].getElementSymbolIso(true);
-        } else {
-          list.addLast(p);
+  public int cmdAssignAddAtoms(String type, P3 pt, BS bsAtoms, String packing,
+                               String cmd) {
+    try {
+      vwr.pushHoldRepaintWhy("modelkit");
+      boolean isPoint = (bsAtoms == null);
+      if (!isPoint && bsAtoms.isEmpty())
+        return 0;
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (uc == null) {
+        if (isPoint)
+          assignAtoms(null, -1, 1, -1, pt, type, cmd, null, false, "");
+        return (isPoint ? 1 : 0);
+      }
+      BS bsM = vwr.getThisModelAtoms();
+      int n = bsM.cardinality();
+      String stype = "" + type;
+      P3 pf = null;
+      if (isPoint) {
+        pf = P3.newP(pt);
+        uc.toFractional(pf, true);
+      }
+      Lst<P3> list = new Lst<P3>();
+      int atomicNo = -1;
+      int site = 0;
+      for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+        if (bsAtoms == null || !bsAtoms.get(i)) {
+          P3 p = P3.newP(vwr.ms.at[i]);
+          uc.toFractional(p, true);
+          if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
+            site = vwr.ms.at[i].getAtomSite();
+            if (type == null)
+              type = vwr.ms.at[i].getElementSymbolIso(true);
+          } else {
+            list.addLast(p);
+          }
         }
       }
-    }
-    int nIgnored = list.size();    
-    packing = "fromfractional;tocartesian;" + packing;
-    if (type != null)
-      atomicNo = Elements.elementNumberFromSymbol(type, true);
-    if (isPoint) {
-      assignAtoms(uc, -1, atomicNo, site, P3.newP(pt), stype, null, list, false, packing);
-    } else {
-      BS sites = new BS();
-      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-        Atom a = vwr.ms.at[i];
-        site = a.getAtomSite();
-        if (sites.get(site))
-          continue;
-        sites.set(site);
-        stype = (type == null ? a.getElementSymbolIso(true) : stype);
-        assignAtoms(uc, -1, atomicNo, site, P3.newP(a), stype, null, list, false, packing);
-        for (int j = list.size(); --j >= nIgnored;)
-          list.removeItemAt(j);
+      int nIgnored = list.size();
+      packing = "fromfractional;tocartesian;" + packing;
+      if (type != null)
+        atomicNo = Elements.elementNumberFromSymbol(type, true);
+      if (isPoint) {
+        assignAtoms(uc, -1, atomicNo, site, P3.newP(pt), stype, null, list,
+            false, packing);
+      } else {
+        BS sites = new BS();
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1)) {
+          Atom a = vwr.ms.at[i];
+          site = a.getAtomSite();
+          if (sites.get(site))
+            continue;
+          sites.set(site);
+          stype = (type == null ? a.getElementSymbolIso(true) : stype);
+          assignAtoms(uc, -1, atomicNo, site, P3.newP(a), stype, null, list,
+              false, packing);
+          for (int j = list.size(); --j >= nIgnored;)
+            list.removeItemAt(j);
+        }
       }
+      n = vwr.getThisModelAtoms().cardinality() - n;
+      return n;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return 0;
+    } finally {
+      vwr.popHoldRepaint("modelkit");
     }
-    n = vwr.getThisModelAtoms().cardinality() - n;
-    return n;
   }
 
 

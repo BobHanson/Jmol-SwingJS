@@ -6189,6 +6189,10 @@ public class CmdExt extends ScriptExt {
         i = e.iToken;
         type = e.optParameterAsString(i + 1);
         i = e.iToken;        
+        if (type.toLowerCase().equals("packed")) {
+          isPacked = true;
+          type = "";
+        }
       } else {
         type = e.optParameterAsString(i);      
         pt = getPoint3f(++e.iToken, true);
