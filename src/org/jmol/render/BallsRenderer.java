@@ -42,6 +42,8 @@ public class BallsRenderer extends ShapeRenderer {
       short[] colixes = ((Balls) shape).colixes;
       BS bsOK = vwr.shm.bsRenderableAtoms;
       for (int i = bsOK.nextSetBit(0); i >= 0; i = bsOK.nextSetBit(i + 1)) {
+        if (atoms == null || atoms[i] == null)
+          return false;
         Atom atom = atoms[i];
         if (atom.sD > 0
             && (atom.shapeVisibilityFlags & myVisibilityFlag) != 0) {
