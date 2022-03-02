@@ -582,48 +582,74 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     int mul = (abc.charAt(0) == '-' ? -1 : 1);
     if (mul < 0)
       abc = abc.substring(1);
-    int quadrant = 0;
+    String abc0 = abc;
+    abc = PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(abc, 
+        "ab", "A"), //3
+        "bc", "B"), //4
+        "ca", "C"), //5
+        "ba", "D"), //6
+        "cb", "E"), //7
+        "ac", "F"); //8
+    boolean isFace = !abc0.equals(abc);
+    int quadrant = (isFace ? 1 : 0);
     if (abc.length() == 2) { // a1 a2 a3 a4 b1 b2 b3 b4...
       quadrant = abc.charAt(1) - 48;
       abc = abc.substring(0, 1);
     }
     boolean isEven = (quadrant % 2 == 0);
-    int axis = "abc".indexOf(abc);
+    int axis = "abcABCDEF".indexOf(abc);
 
-    T3 v1, v2;
+    T3 v1, v2, v3;
     switch (axis) {
-    case 0:
+    case 7: // cb
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 4: // bc
+      a.cross(c, b);
+      quadrant = ((5 - quadrant) % 4) + 1;
+          //$FALL-THROUGH$
+    case 0: // a
     default:
       v1 = a;
       v2 = c;
-      if (quadrant > 0) {
-        if (mul > 0 == isEven) {
-          v2 = b;
-          v1.scale(-1);
-        }
-      }
+      v3 = b;
       break;
+    case 8: // ca
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 5: // ac
+      mul = -mul;
+      b.cross(c, a);
+      quadrant = ((2 + quadrant) % 4) + 1;
+    //$FALL-THROUGH$
     case 1: // b
       v1 = b;
       v2 = a;
-      if (quadrant > 0) {
-        if (mul > 0 == isEven) {
-          v2 = c;
-          v1.scale(-1);
-        }
-      }
+      v3 = c;
+      mul = -mul;
       break;
+    case 3: // ab
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 6: // ba
+      c.cross(a,b);
+      if (isEven)
+        quadrant = 6 - quadrant;
+      //$FALL-THROUGH$
     case 2: // c
       v1 = c;
       v2 = a;
-      if (quadrant > 0) {
+      v3 = b;
+      if (!isFace && quadrant > 0) {
         quadrant = 5 - quadrant;
-        if (mul > 0 != isEven) {
-          v2 = b;
-          v1.scale(-1);
-        }
       }
-      break;
+     break;
+    }
+    if (quadrant > 0) {
+      if (mul > 0 != isEven) {
+        v2 = v3;
+        v1.scale(-1);
+      }
     }
     switch (quadrant) {
     case 0:
