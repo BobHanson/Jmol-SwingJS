@@ -24,7 +24,7 @@ public interface SymmetryInterface {
 
   public boolean addLatticeVectors(Lst<float[]> lattvecs);
 
-  public String addOp(String code, Matrix rs, Matrix vs, Matrix sigma);
+  public String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma);
 
   public int addSpaceGroupOperation(String xyz, int opId);
 

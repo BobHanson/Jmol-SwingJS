@@ -40,7 +40,8 @@ public class Constraint {
   public final static int TYPE_DIHEDRAL = 3;
   public final static int TYPE_VECTOR = 4;
   public final static int TYPE_PLANE = 5;
-  
+  public final static int TYPE_LOCKED = 6;
+
   int type;
   
   private String symop;
@@ -53,6 +54,8 @@ public class Constraint {
   public Constraint(int type, Object[] params) throws IllegalArgumentException {
     this.type = type;
     switch (type) {
+    case TYPE_LOCKED:
+      break;
     case TYPE_VECTOR:
       offset = (P3) params[0];
       unitVector = V3.newVsub((P3) params[1], offset);
@@ -89,6 +92,9 @@ public class Constraint {
     V3 v = new V3();
     P3 p = P3.newP(ptOld);
     switch (type) {
+    case TYPE_LOCKED:
+      ptNew.x = Float.NaN;
+      return;
     case TYPE_VECTOR:
       Measure.projectOntoAxis(p, offset, unitVector, v);
       if (p.distanceSquared(ptOld) > JC.UC_TOLERANCE2) {

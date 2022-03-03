@@ -1033,38 +1033,49 @@ public class ModelSet extends BondCollection {
     bsSymmetry.andNot(basis);
     boolean isP1 = (basis.cardinality() == bs.cardinality());
     // assign sites to basis atoms
+    // TODO assign sites 
     for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      at[i].setSymop(basis.get(i) ? 1 : 0, true);
-      if (isP1)
+      boolean isBasis = basis.get(i);
+      at[i].setSymop(isBasis ? 1 : 0, true);
+      if (isP1 || isBasis)
         setSite(at[i], ++p, true);
     }
+    bs.andNot(basis);
     if (!isP1) {
       boolean haveOccupancies = (occupancies != null);
       int nops = sg.getSpaceGroupOperationCount();
-      P3 a, b = new P3();
-      Atom bb;
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Atom ba = at[i];
-        a = P3.newP(ba);
-        sg.toFractional(a, true);
-        sg.unitize(a);
-        int type = at[i].atomicAndIsotopeNumber;
-        float occ = (haveOccupancies ? occupancies[i] : 0);
-        out: for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
-          if ((bb = at[j]).atomicAndIsotopeNumber != type || haveOccupancies && occupancies[j] != occ)
+      M4[] ops = sg.getSymmetryOperations();
+      P3 a = new P3(), b = new P3(), t = new P3();
+      for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
+        Atom bb = at[j];
+        b.setT(bb);
+        sg.toFractional(b, true);
+        sg.unitize(b);
+        int site = bb.atomSite;
+        float occj = (haveOccupancies ? occupancies[j] : 0);
+        out: for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          Atom ba = at[i];
+          int type = ba.atomicAndIsotopeNumber;
+          if (ba.atomicAndIsotopeNumber != type || haveOccupancies && occj != occupancies[i])
             continue;
+          a.setT(ba);
+          sg.toFractional(a, true);
+          sg.unitize(a);
           for (int k = 0; k < nops; k++) {
-            b.setT(bb);
-            sg.toFractional(b, true);
-            sg.getSpaceGroupOperation(k).rotTrans(b);
-            sg.unitize(b);
-            if (b.distanceSquared(a) < JC.UC_TOLERANCE2) {
-              setSite(ba, bb.getAtomSite(), true);
-              break out;
+            t.setT(b);
+            ops[k].rotTrans(t);
+            sg.unitize(t);
+            if (t.distanceSquared(a) < JC.UC_TOLERANCE2) {
+              setSite(ba, site, true);
+              bs.clear(i);
+              continue out;
             }
           }
         }
       }
+    }
+    if (!bs.isEmpty()) {
+      System.err.println("Model basis atoms not found for " + bs);
     }
     // TODO: actually set atomSymmetry properly
     setInfo(mi, "unitCellParams", sg.getUnitCellParams());

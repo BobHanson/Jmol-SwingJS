@@ -147,7 +147,7 @@ class Subsystem {
           }
         }
       }
-      String jf = symmetry.addOp(code, r, v, sigma_nu);      
+      String jf = symmetry.addSubSystemOp(code, r, v, sigma_nu);      
       Logger.info(this.code + "." + (iop + 1) + (this.code.equals(code) ? "   " : ">" + code + " ") + jf);
     }
   }

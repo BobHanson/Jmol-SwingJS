@@ -213,7 +213,8 @@ class SpaceGroup {
         intlTableNumber = sg.intlTableNumber;
       }
     }
-    
+    if (operationCount == 0)
+      this.addOperation("x,y,z", 1, false);
     finalOperations = new SymmetryOperation[operationCount];
     if (doNormalize && count > 0 && atoms != null) {
       // we must apply this first to (x,y,z) JUST IN CASE the 

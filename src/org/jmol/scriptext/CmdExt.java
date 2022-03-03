@@ -6199,9 +6199,10 @@ public class CmdExt extends ScriptExt {
       }
       if (type.length() == 0)
         type = null;
-      isPacked = (tokAt(i + 1) == T.packed);
-      if (isPacked)
+      if (tokAt(i + 1) == T.packed) {
+        isPacked = true;
         i = ++e.iToken;
+      }
     } else if (isMove) {
       pt = getPoint3f(++e.iToken, true);
     } else if (isSpacegroup || isDelete) {

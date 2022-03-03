@@ -35,6 +35,7 @@ import org.jmol.bspt.CubeIterator;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
+import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
@@ -288,7 +289,7 @@ public class Symmetry implements SymmetryInterface {
    * @param trans is a (3+d)x(1) array of translations
    * @return Jones-Faithful representation
    */
-  public String addOp(String code, Matrix rs, Matrix vs, Matrix sigma) {
+  public String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma) {
     spaceGroup.isSSG = true;
     String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
     int i = spaceGroup.addSymmetry(s, -1, true);
@@ -376,6 +377,7 @@ public class Symmetry implements SymmetryInterface {
       return symmetryInfo.symmetryOperations;
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, false, true);
+    spaceGroup.setFinalOperations(null, -1, 0, false);
     return spaceGroup.finalOperations;
   }
 
@@ -694,7 +696,7 @@ public class Symmetry implements SymmetryInterface {
       cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel, 0, cellInfo, false);
+        null, 0, -1, isFull, isForModel, 0, cellInfo, null);
   }
 
   
@@ -966,17 +968,17 @@ public class Symmetry implements SymmetryInterface {
       ops[i].rotTrans(p);
       unitize(p);
       if (p0.distanceSquared(p) < JC.UC_TOLERANCE2)
-        bs.set(i+1);
+        bs.set(i);
     }
     int[] ret = new int[bs.cardinality()];
     if (v0 != null && ret.length != v0.length)
       return null;
-    for (int k = 0, i = 0; i < nops; i++) {
-      boolean isOK = bs.get(k);
+    for (int k = 0, i = 1; i < nops; i++) {
+      boolean isOK = bs.get(i);
       if (isOK) {
         if (v0 != null && v0[k] != i)
           return null;
-        ret[k++] = i;
+        ret[k++] = i + 1;
       }
     }
     return ret;
@@ -984,9 +986,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public M4 getTransform(ModelSet ms, int modelIndex, P3 pa, P3 pb) {
-    Object[] o = (Object[]) getDesc(ms).getSymopInfoForPoints(this, modelIndex, 0, null, pa, pb, null, null, 0, 1, false, 0, true);
-    if (o == null || o.length < 1)
-      return null;
+    Object[] o = (Object[]) getDesc(ms).getSymopInfoForPoints(this, modelIndex, 0, null, pa, pb, 
+        null, null, 0, 1, 0, BSUtil.newAndSetBit(SymmetryDesc.RET_TRANSFORMONLY));
     o = (Object[]) o[0];
     return (M4) o[o.length - 1];    
   }

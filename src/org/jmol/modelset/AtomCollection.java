@@ -862,10 +862,9 @@ abstract public class AtomCollection {
   }
 
   public void setSite(Atom atom, int site, boolean doTaint) {
-    if (site > 2)
-      System.out.println("???");
     if (atom.atomSite == site)
       return;
+    atom.atomSite = site;
     if (doTaint)
       taintAtom(atom.i, TAINT_SITE);
   }

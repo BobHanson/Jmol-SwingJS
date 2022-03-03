@@ -151,22 +151,25 @@ public class CIFWriter implements JmolWriter {
 
       int nAtoms = 0;
       P3 p = new P3();
-      for (int c = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut
+      int[] elemNums = new int[130];
+      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut
           .nextSetBit(i + 1)) {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
           uc.toFractional(p, !isP1);
         }
+        
 //        if (isP1 && !SimpleUnitCell.checkPeriodic(p))
 //          continue;
         nAtoms++;
         String name = a.getAtomName();
         String sym = a.getElementSymbol();
+        int elemno = a.getElementNumber();
         String key = sym + "\n";
         if (elements.indexOf(key) < 0)
           elements += key;
-        String label = sym + ++c;
+        String label = sym + ++elemNums[elemno];
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
             .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
             .append(clean(p.y)).append(clean(p.z));
@@ -276,7 +279,7 @@ public class CIFWriter implements JmolWriter {
 
   private String clean(float f) {
     int t;
-    return (!haveUnitCell || (t = Math.abs(twelfthsOf(f))) < 0
+    return (!haveUnitCell || (t = twelfthsOf(f)) < 0
         ? PT.formatF(f, 18, 12, false, false)
         : (f < 0 ? "   -" : "    ") + twelfths[t]);
   }
@@ -289,7 +292,7 @@ public class CIFWriter implements JmolWriter {
   private static int twelfthsOf(float f) {
     f = Math.abs(f * 12);
     int i = Math.round(f);
-    return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : Integer.MIN_VALUE);
+    return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : -1);
   }
 
   private SB appendKey(SB sb, String key) {
