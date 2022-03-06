@@ -776,6 +776,10 @@ public class ScriptManager implements JmolScriptManager {
           .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
 
+    
+ //   System.out.println("sm\n" + sb);
+    
+    
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
     eval.runScriptBuffer(sbConnect.toString(), null, false);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);

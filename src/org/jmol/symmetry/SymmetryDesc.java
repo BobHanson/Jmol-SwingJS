@@ -1617,42 +1617,49 @@ public class SymmetryDesc {
       bsInfo.set(RET_XYZ);
       bsInfo.set(RET_LABEL);
     }
-    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX) || bsInfo.get(RET_TRANSFORMONLY));
+    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX)
+        || bsInfo.get(RET_TRANSFORMONLY));
     Map<String, Object> info = null;
-    boolean isStandard = (pt1 == null && drawID == null && nth <= 0 && bsInfo.cardinality() >= keys.length);
+    boolean isStandard = (!matrixOnly && pt1 == null && drawID == null
+        && nth <= 0 && bsInfo.cardinality() >= keys.length);
     boolean isBio = false;
     String sgNote = null;
     boolean haveName = (sgName != null && sgName.length() > 0);
     boolean haveRawName = (haveName && sgName.indexOf("[--]") >= 0);
     if (isForModel || !haveName) {
       boolean saveModelInfo = (isStandard && symOp == 0);
-      if (modelIndex < 0)
-        modelIndex = (pt1 instanceof Atom ? ((Atom) pt1).mi
-            : modelSet.vwr.am.cmi);
-      if (modelIndex < 0)
-        sgNote = "no single current model";
-      else if (cellInfo == null
-          && !(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
-          && (cellInfo = modelSet.getUnitCell(modelIndex)) == null)
-        sgNote = "not applicable";
-      if (sgNote != null) {
-        info = new Hashtable<String, Object>();
-        info.put("spaceGroupInfo", "");
-        info.put("spaceGroupNote", sgNote);
-        info.put("symmetryInfo", "");
-      } else if (isStandard) {
-        info = (Map<String, Object>) modelSet.getInfo(modelIndex,
-            "spaceGroupInfo");
-      }
-      // created once
-      if (info != null)
-        return info;
+      if (matrixOnly) {
+        cellInfo = sym;
+      } else {
+        if (modelIndex < 0)
+          modelIndex = (pt1 instanceof Atom ? ((Atom) pt1).mi
+              : modelSet.vwr.am.cmi);
+        if (modelIndex < 0)
+          sgNote = "no single current model";
+        else if (cellInfo == null
+            && !(isBio = (cellInfo = modelSet.am[modelIndex].biosymmetry) != null)
+            && (cellInfo = modelSet.getUnitCell(modelIndex)) == null)
+          sgNote = "not applicable";
+        if (sgNote != null) {
+          info = new Hashtable<String, Object>();
+          info.put("spaceGroupInfo", "");
+          info.put("spaceGroupNote", sgNote);
+          info.put("symmetryInfo", "");
+        } else if (isStandard) {
+          info = (Map<String, Object>) modelSet.getInfo(modelIndex,
+              "spaceGroupInfo");
+        }
+        // created once
+        if (info != null)
+          return info;
 
-      // show symop or symop(a,b)
-      
-      // full check
+        // show symop or symop(a,b)
+
+        // full check
+        sgName = cellInfo.getSpaceGroupName();
+
+      }
       info = new Hashtable<String, Object>();
-      sgName = cellInfo.getSpaceGroupName();
       SymmetryOperation[] ops = (SymmetryOperation[]) cellInfo
           .getSymmetryOperations();
       SpaceGroup sg = (isBio ? ((Symmetry) cellInfo).spaceGroup : null);
@@ -1701,7 +1708,8 @@ public class SymmetryDesc {
               continue;
             infolist[i] = ret;
             if (!matrixOnly)
-              sops += "\n" + (i + 1) + "\t" + ret[RET_XYZ] + "\t" + ret[RET_LABEL];
+              sops += "\n" + (i + 1) + "\t" + ret[RET_XYZ] + "\t"
+                  + ret[RET_LABEL];
             opCount++;
           }
         }

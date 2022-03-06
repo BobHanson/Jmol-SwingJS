@@ -91,7 +91,7 @@ public class SpaceGroupFinder {
     int n = 0;
     int nChecked = 0;
     P3 scaling = P3.new3(1, 1, 1);
-    BS withinCell = null;
+//    BS withinCell = null;
     try {
       if (bsOpGroups == null)
         loadData(vwr, this);
@@ -101,10 +101,10 @@ public class SpaceGroupFinder {
       oabc = uc.getUnitCellVectors();
       uc = uc.getUnitCellMultiplied();
       filterGroups(bsGroups, uc);
-      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
+//      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
       //BS extraAtoms = BSUtil.copy(bsAtoms);
       //extraAtoms.andNot(withinCell);
-      withinCell.and(bsAtoms);
+//      withinCell.and(bsAtoms);
       //int nExtra = extraAtoms.cardinality();
 
       // 1. Get ALL atoms.
@@ -147,7 +147,7 @@ public class SpaceGroupFinder {
 //        }
 //      }
 
-      // 3. Unitize and check for supercells in each direction
+      // 3. Unitize, remove duplicates, and check for supercells in each direction
 
       nAtoms = bsPoints.cardinality();
       uc0 = uc;
@@ -326,13 +326,16 @@ public class SpaceGroupFinder {
     SpaceGroup sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
     String name = sg.asString();
     uc.setSpaceGroupName(name);
-    BS basis = BSUtil.copy(isg == 0 ? withinCell : bsAtoms);
+    BS basis = BSUtil.copy(
+        //isg == 0 ? withinCell : 
+          bsAtoms);
     for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i+ 1))
       basis.clear(atoms[i].index);
-    System.out.println("basis is " + basis.cardinality() + ": " + basis);
-    System.out.println("found " + name + "; basis=" + basis);
+    int nb = basis.cardinality();
+    String msg = name + "\nbasis is " + nb + " atom" + (nb == 1 ? "" : "s") + ": " + basis;
+    System.out.println(msg);
     if (asString)
-      return name + "; basis=" + basis;
+      return msg;
     @SuppressWarnings("unchecked")
     Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
     System.out.println("unitcell is " + uc.getUnitCellInfo(true));

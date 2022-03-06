@@ -3683,7 +3683,7 @@ public class MathExt {
     }
 
     if (invariant) {
-     return (bsAtoms != null && mp.addXAI(vwr.ms.getSymmetryInvariant(bsAtoms)));
+     return (bsAtoms != null && mp.addXAI(vwr.ms.getSymmetryInvariant(bsAtoms.nextSetBit(0))));
     }
     
     // allow for [ h k l ] lattice translation

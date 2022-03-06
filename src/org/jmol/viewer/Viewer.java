@@ -3572,6 +3572,8 @@ public class Viewer extends JmolViewer
     stopMinimization();
     minimizer = null;
     smilesMatcher = null;
+    if (modelkit != null)
+      modelkit.clearConstraints();
   }
 
   public void zap(boolean notify, boolean resetUndo, boolean zapModelKit) {
@@ -3615,7 +3617,7 @@ public class Viewer extends JmolViewer
       setBooleanProperty("legacyjavafloat", false);
       if (resetUndo) {
         if (zapModelKit)
-          g.removeParam("_pngjFile");
+          g.removeParam("_pngjFile"); 
         if (zapModelKit && g.modelKitMode) {
           loadDefaultModelKitModel(null);
         }
@@ -3858,7 +3860,7 @@ public class Viewer extends JmolViewer
 
   public boolean frankClickedModelKit(int x, int y) {
     // top left indicator
-    return !g.disablePopupMenu && g.modelKitMode && x >= 0 && y >= 0 && x < 40
+    return !g.disablePopupMenu && isModelKitOpen() && x >= 0 && y >= 0 && x < 40
         && y < 26*4; // See FrankRenderer
   }
 
@@ -5212,7 +5214,7 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : g.modelKitMode && modelkit != null
+        : isModelKitOpen()
             ? (String) modelkit.setProperty("hoverLabel",
                 Integer.valueOf(atomIndex))
             : null);
@@ -5265,7 +5267,7 @@ public class Viewer extends JmolViewer
 
   void hoverOff() {
     try {
-      if (g.modelKitMode
+      if (isModelKitOpen()
           && acm.getBondPickingMode() != ActionManager.PICKING_ROTATE_BOND)
         highlight(null);
       if (!hoverEnabled)
@@ -5665,7 +5667,7 @@ public class Viewer extends JmolViewer
   }
 
   public int getHoverDelay() {
-    return (g.modelKitMode ? 20 : g.hoverDelayMs);
+    return (isModelKitOpen() ? 20 : g.hoverDelayMs);
 
   }
 
@@ -5888,8 +5890,12 @@ public class Viewer extends JmolViewer
   }
 
   boolean getBondsPickable() {
-    return (g.bondPicking || g.modelKitMode
+    return (g.bondPicking || isModelKitOpen()
         && getModelkitProperty("isMolecular") == Boolean.TRUE);
+  }
+
+  private boolean isModelKitOpen() {
+    return g.modelKitMode && modelkit != null && !modelkit.isHidden();
   }
 
   public boolean useMinimizationThread() {
@@ -8176,9 +8182,12 @@ public class Viewer extends JmolViewer
                 ptScreen.y + deltaY * f + 0.5f, ptScreen.z);
           P3 ptNew = new P3();
           tm.unTransformPoint(ptScreenNew, ptNew);
+          SymmetryInterface uc = getCurrentUnitCell();
+          if (uc != null && uc.getSymmetryOperations() != null) {
           // script("draw ID 'pt" + Math.random() + "' " + Escape.escape(ptNew));
-         if (g.modelKitMode & modelkit != null && modelkit.getProperty("constraint") != null) {
-           getModelkit(false).constrain(bsSelected, ptNew);
+//         if (//g.modelKitMode & modelkit != null && 
+//             getCurrentUnitCell() != null) {
+           getModelkit(false).constrain(bsSelected.nextSetBit(0), ptNew, null);
          }
          if (!Float.isNaN(ptNew.x)) {
           ptNew.sub(ptCenter);
@@ -9090,12 +9099,24 @@ public class Viewer extends JmolViewer
     boolean addHydrogen = (flags & MIN_ADDH) == MIN_ADDH;
     // We only work on atoms that are in frame
 
+    // only allow crystal symmetry constraints 
+    if (isModelKitOpen())
+      modelkit.setProperty("constraint", null);
     String ff = g.forceField;
     BS bsInFrame = getFrameAtoms();
     if (bsSelected == null)
       bsSelected = getThisModelAtoms();
     else if (!isQuick)
       bsSelected.and(bsInFrame);
+    
+    if (bsSelected.isEmpty())
+      return;
+ 
+    BS bsBasis = ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit;
+    if (bsBasis != null) {
+      bsSelected = getAtomBitSet("cell=555");
+    }
+
     if (isQuick) {
       getAuxiliaryInfoForAtoms(bsSelected).put("dimension", "3D");
       bsInFrame = bsSelected;
@@ -9117,7 +9138,8 @@ public class Viewer extends JmolViewer
     // are in the visible frame set and are within 5 angstroms
     // and are not already selected
 
-    BS bsNearby = (hasRange ? new BS()
+    BS bsNearby = (bsBasis != null ? getThisModelAtoms() 
+        : hasRange && !haveFixed ? new BS()
         : ms.getAtomsWithinRadius(rangeFixed, bsSelected, true, null));
     bsNearby.andNot(bsSelected);
     if (haveFixed) {
@@ -9138,7 +9160,7 @@ public class Viewer extends JmolViewer
           if (!isSilent)
             Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
           getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
-              flags, "UFF");
+              null, flags, "UFF");
         } catch (Exception e) {
           Logger.error("Minimization error: " + e.toString());
           e.printStackTrace();
@@ -9164,8 +9186,8 @@ public class Viewer extends JmolViewer
 
       if (!isSilent)
         Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
-      getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed, flags,
-          (isQuick ? "MMFF" : ff));
+      getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed, bsBasis,
+          flags, (isQuick ? "MMFF" : ff));
       if (isQuick) {
         g.forceField = "MMFF";
         setHydrogens(bsSelected);
@@ -9205,8 +9227,16 @@ public class Viewer extends JmolViewer
     slm.setMotionFixedAtoms(bs);
   }
 
+  public void setMotionFixed(BS bs) {
+    slm.setMotionFixedAtoms(bs);
+  }
+
+
   public BS getMotionFixedAtoms() {
-    return slm.getMotionFixedAtoms();
+    BS bs = BSUtil.copy(slm.getMotionFixedAtoms());
+    if (modelkit != null)
+      modelkit.addLockedAtoms(bs);
+    return bs;
   }
 
   //  void rotateArcBall(int x, int y, float factor) {
@@ -9342,7 +9372,7 @@ public class Viewer extends JmolViewer
     if (bsAtoms == null) {
       Atom atom = ms.at[atomIndex];
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      Bond[] bonds = (!g.modelKitMode || modelkit == null || modelkit.getProperty("constraint") == null ? atom.bonds : null);
+      Bond[] bonds = (isModelKitOpen() && !modelkit.hasConstraint(atomIndex, true, false) ? atom.bonds : null);
       if (bonds != null)
         for (int i = 0; i < bonds.length; i++) {
           Atom atom2 = bonds[i].getOtherAtom(atom);
@@ -10498,8 +10528,7 @@ public class Viewer extends JmolViewer
     Object ret = null;
     if (opXYZ == null) {
       if (bsAtoms == null)
-          bsAtoms = SV.getBitSet(evaluateExpressionAsVariable("{within(unitcell)}"), true);
-      bsAtoms = restrictToModel(bsAtoms, -1);
+          bsAtoms = getThisModelAtoms();
       if (!bsAtoms.isEmpty()) {
         SymmetryInterface uc = getCurrentUnitCell();
         ret = (uc == null ? null

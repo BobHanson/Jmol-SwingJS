@@ -92,6 +92,9 @@ abstract public class ForceField {
   MinPosition[] minPositions;
   BS bsFixed;
   
+  double trustRadius = 0.3; // don't move further than 0.3 Angstroms
+
+  
   Minimizer minimizer;
 
   abstract public void clear();
@@ -122,12 +125,13 @@ abstract public class ForceField {
 
   ////////////// calculation /////////////////
   
-  public void steepestDescentInitialize(int stepMax, double criterion) {
+  public void steepestDescentInitialize(int stepMax, double criterion, double trustRadius) {
     this.stepMax = stepMax;//1000
     // The criterion must be in the units of the calculation.
     // However, the user is setting this, so they will be in Minimizer units.
     // 
     this.criterion = criterion / toUserUnits(1); //1e-3
+    this.trustRadius = trustRadius;
     currentStep = 0;
     clearForces();
     calc.setLoggingEnabled(true);
@@ -372,36 +376,26 @@ abstract public class ForceField {
 
   private void linearSearch() {
 
-    //double alpha = 0.0; // Scale factor along direction vector
-    double step = 0.23;
-    double trustRadius = 0.3; // don't move further than 0.3 Angstroms
+    double step = 0.75 * trustRadius;
     double trustRadius2 = trustRadius * trustRadius;
 
     double e1 = energyFull(false, true);
 
     for (int iStep = 0; iStep < 10; iStep++) {
       saveCoordinates();
-      for (int i = 0; i < minAtomCount; ++i)
+      for (int i = 0; i < minAtomCount; ++i) {
         if (bsFixed == null || !bsFixed.get(i)) {
           double[] force = minAtoms[i].force;
           double[] coord = minAtoms[i].coord;
-          double f2 = (force[0] * force[0] + force[1] * force[1] + force[2]
-              * force[2]);
+          double f2 = (force[0] * force[0] + force[1] * force[1]
+              + force[2] * force[2]);
           if (f2 > trustRadius2 / step / step) {
             f2 = trustRadius / Math.sqrt(f2) / step;
-            // if (i == 2)
-            //System.out.println("atom 3: force/coord " + force[0] + " " +
-            // force[1] + " " + force[2] + "/" + coord[0] + " " + coord[1] + " "
-            // + coord[2] + " " + f2);
             force[0] *= f2;
             force[1] *= f2;
             force[2] *= f2;
           }
-          /*
-           * if (i == 2) f.println("#atom 3; draw " + "{" + coord[0] + " " +
-           * coord[1] + " " + coord[2] + "} " + "{" + (coord[0] + force[0]) +
-           * " " + (coord[1] + force[1]) + " " + (coord[2] + force[2]) +"}" );
-           */for (int j = 0; j < 3; ++j) {
+          for (int j = 0; j < 3; ++j) {
             if (Util.isFinite(force[j])) {
               double tempStep = force[j] * step;
               if (tempStep > trustRadius)
@@ -413,11 +407,8 @@ abstract public class ForceField {
             }
           }
         }
-
+      }
       double e2 = energyFull(false, true);
-
-      //System.out.println("step is " + step + " " + (e2 < e1) + " " + e1 + " "
-      // + e2);
       if (Util.isNear3(e2, e1, 1.0e-3))
         break;
       if (e2 > e1) {
@@ -425,13 +416,11 @@ abstract public class ForceField {
         restoreCoordinates();
       } else if (e2 < e1) {
         e1 = e2;
-        //alpha += step;
         step *= 2.15;
         if (step > 1.0)
           step = 1.0;
       }
     }
-    //System.out.println("alpha = " + alpha);
   }
 
   private void saveCoordinates() {

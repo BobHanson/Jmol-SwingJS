@@ -583,8 +583,6 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public P3[] getUnitCellVectors() {
-    if (unitCell == null)
-      System.out.println("Symmetry no unitCell!! ?? ");
     return unitCell.getUnitCellVectors();
   }
 
@@ -670,10 +668,19 @@ public class Symmetry implements SymmetryInterface {
   // info
 
   private SymmetryDesc desc;
+  private static SymmetryDesc nullDesc;
 
   private SymmetryDesc getDesc(ModelSet modelSet) {
-    return (desc == null ? (desc = ((SymmetryDesc) Interface.getInterface(
-        "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval"))) : desc).set(modelSet);
+    if (modelSet == null) {
+      return (nullDesc == null
+          ? (nullDesc = ((SymmetryDesc) Interface.getInterface(
+              "org.jmol.symmetry.SymmetryDesc", null, "modelkit")))
+          : nullDesc);
+    }
+    return (desc == null
+        ? (desc = ((SymmetryDesc) Interface.getInterface(
+            "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval")))
+        : desc).set(modelSet);
   }
 
   @Override
@@ -912,7 +919,7 @@ public class Symmetry implements SymmetryInterface {
   public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags) {
     M4[] ops = getSymmetryOperations();
     return (ops == null || unitCell == null ? null
-        : unitCell.getEquivPoints(pt, flags, ops, pts == null ? new Lst<P3>() : pts, 0, -1));
+        : unitCell.getEquivPoints(pt, flags, ops, pts == null ? new Lst<P3>() : pts, 0, 0));
   }
 
   @Override
@@ -930,6 +937,10 @@ public class Symmetry implements SymmetryInterface {
     // signal to make no changes in points
     flags += ",fromfractional,tofractional";
     int check0 = (nIgnored > 0 ? 0 : n);
+    boolean allPoints = (nIgnored == n);
+    if (allPoints) {
+      nIgnored--;
+    }
     int n0 = (nIgnored > 0 ? nIgnored : n);
     P3 p0 = (nIgnored > 0 ? pts.get(nIgnored) : null);
     if (ops != null || unitCell != null) {
@@ -939,7 +950,7 @@ public class Symmetry implements SymmetryInterface {
     }
     // now remove the starting points, checking to see if perhaps our
     // test point itself has been removed.
-    if (pts.size() == nIgnored || pts.get(nIgnored) != p0)
+    if (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints)
       n--;
     for (int i = n - nIgnored; --i >= 0;)
       pts.removeItemAt(nIgnored);
@@ -952,7 +963,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public int[] getSymmetryInvariant(P3 pt, int[] v0) {
+  public int[] getInvariantSymops(P3 pt, int[] v0) {
     M4[] ops = getSymmetryOperations();
     if (ops == null)
       return new int[0];
@@ -963,10 +974,10 @@ public class Symmetry implements SymmetryInterface {
     for (int i = 1; i < nops; i++) {
       p.setT(pt);
       toFractional(p, true);
-      unitize(p);
+     // unitize(p);
       p0.setT(p);
       ops[i].rotTrans(p);
-      unitize(p);
+     // unitize(p);
       if (p0.distanceSquared(p) < JC.UC_TOLERANCE2)
         bs.set(i);
     }
@@ -976,7 +987,7 @@ public class Symmetry implements SymmetryInterface {
     for (int k = 0, i = 1; i < nops; i++) {
       boolean isOK = bs.get(i);
       if (isOK) {
-        if (v0 != null && v0[k] != i)
+        if (v0 != null && v0[k] != i + 1)
           return null;
         ret[k++] = i + 1;
       }
@@ -984,16 +995,21 @@ public class Symmetry implements SymmetryInterface {
     return ret;
   }
 
+
+  /**
+   * @param fracA 
+   * @param fracB 
+   * @return matrix
+   */
   @Override
-  public M4 getTransform(ModelSet ms, int modelIndex, P3 pa, P3 pb) {
-    Object[] o = (Object[]) getDesc(ms).getSymopInfoForPoints(this, modelIndex, 0, null, pa, pb, 
+  public M4 getTransform(P3 fracA, P3 fracB) {
+    Object[] o = (Object[]) getDesc(null).getSymopInfoForPoints(this, -1, 0, null, fracA, fracB,
         null, null, 0, 1, 0, BSUtil.newAndSetBit(SymmetryDesc.RET_TRANSFORMONLY));
+    if (o.length == 0) {
+      return null;
+    }
     o = (Object[]) o[0];
     return (M4) o[o.length - 1];    
   }
-
-
-
-
 
 }

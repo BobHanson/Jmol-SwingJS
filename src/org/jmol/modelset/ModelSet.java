@@ -3353,6 +3353,7 @@ public class ModelSet extends BondCollection {
    *        0 from ModelLoader.freeze; -1 from Viewer.assignAtom
    * @param baseAtomIndex
    * @param mergeSet
+   * @param isModelKit 
    */
   public void setAtomNamesAndNumbers(int iFirst, int baseAtomIndex,
                                      AtomCollection mergeSet, boolean isModelKit) {
@@ -3734,13 +3735,12 @@ public class ModelSet extends BondCollection {
     return ops;
   }
 
-  public int[] getSymmetryInvariant(BS bsAtoms) {
+  public int[] getSymmetryInvariant(int iatom) {
     // get first atom with this atom's atomSite
-    int iatom = getSymmetryEquivAtoms(bsAtoms).nextSetBit(0);
-    if (iatom < 0)
+    Atom a = getBasisAtom(iatom);
+    if (a == null)
       return new int[0];
-    SymmetryInterface sg = getUnitCellForAtom(iatom);
-    return sg.getSymmetryInvariant(at[iatom], null);
+    return getUnitCellForAtom(a.i).getInvariantSymops(a, null);
   }
 
 
@@ -4311,8 +4311,8 @@ public class ModelSet extends BondCollection {
   }
 
   public BS getSymmetryEquivAtoms(BS bs) {
-    BS bsNew = new BS();
-    bsNew.or(bs);
+    bs = BS.copy(bs);
+    BS bsNew = BS.copy(bs);
     int iAtom = bs.nextSetBit(0);
     SymmetryInterface uc = getUnitCellForAtom(iAtom);
     if (uc != null) {
@@ -4335,6 +4335,46 @@ public class ModelSet extends BondCollection {
       }
     }
     return bsNew;
+  }
+
+  public Atom getBasisAtom(int iatom) {
+    Atom a = at[iatom];
+    if (getUnitCellForAtom(iatom) != null) {
+      int site = a.atomSite;
+      if (site > 0) {
+        BS au = am[a.mi].bsAsymmetricUnit;
+        if (au != null) {
+          for (int p = 0, i = au.nextSetBit(0); i >= 0; i = au
+              .nextSetBit(i + 1)) {
+            if (++p == site)
+              return at[i];
+          }
+        }
+      }
+    }
+    return a;
+  }
+
+  public void updateBasisFromSite(int iatom) {
+    Atom a = at[iatom];
+    if (getUnitCellForAtom(iatom) != null) {
+      BS bsAU = am[a.mi].bsAsymmetricUnit;
+      //BS bsSym = getAtomBitsMDb(T.symmetry, null);
+      bsAU.clearAll();//andNot(bs);
+      //bsSym.or(bs);
+      BS bsSites = new BS();
+      BS bs = vwr.getModelUndeletedAtomsBitSet(a.mi);
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        int site = at[i].atomSite;
+        if (!bsSites.get(site)) {
+           bsSites.set(site);
+           bsAU.set(i);
+        }
+      }
+      bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
+      bsSymmetry.or(bs);
+      bsSymmetry.andNot(bsAU);
+    }
   }
 
 }

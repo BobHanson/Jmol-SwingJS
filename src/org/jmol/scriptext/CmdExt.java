@@ -5886,6 +5886,9 @@ public class CmdExt extends ScriptExt {
     //  modelkit ASSIGN SPACEGROUP    
     //  modelkit CONNECT @1 @2 [0,1,2,3,4,5,p,m] (default 1)
     //  modelkit DELETE @1
+    //  modelkit ADD @1 
+    //  modelkit ADD @1 "C"
+    //  modelkit ADD @1 "C" point (bonding)
     //  modelkit ADD "C" point
     //  modelkit MOVETO @1 point
     //  modelkit FIXED VECTOR pt1 pt2
@@ -6195,8 +6198,9 @@ public class CmdExt extends ScriptExt {
         }
       } else {
         type = e.optParameterAsString(i);      
-        pt = getPoint3f(++e.iToken, true);
       }
+      if (e.isPoint3f(e.iToken + 1))
+        pt = getPoint3f(++e.iToken, true);
       if (type.length() == 0)
         type = null;
       if (tokAt(i + 1) == T.packed) {
@@ -6242,6 +6246,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
+      bs.andNot(vwr.getMotionFixedAtoms());
       int nm = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);

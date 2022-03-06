@@ -26,6 +26,8 @@ package org.jmol.minimize;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.P3;
+
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -82,6 +84,7 @@ public class Minimizer {
   private BS bsFixed;
   
   public Lst<MMConstraint> constraints;
+  public BS bsBasis;
   
   private boolean isSilent;
  
@@ -125,8 +128,10 @@ public class Minimizer {
   }
 
   public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
-                          int flags, String ff)
+                          BS bsBasis, int flags, String ff)
       throws JmolAsyncException {
+    this.bsBasis = bsBasis;
+    trustRadius = (bsBasis == null ? 0.3 : 0.03);
     isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
     isQuick = (ff.indexOf("2D") >= 0
         || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
@@ -175,6 +180,7 @@ public class Minimizer {
       }
       atoms = vwr.ms.at;
       bsAtoms = BSUtil.copy(bsSelected);
+      
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1)) {
         if (atoms[i].getElementNumber() == 0) {
@@ -543,6 +549,7 @@ public class Minimizer {
   }
 
   private MinimizationThread minimizationThread;
+  private double trustRadius = 0.3;
   
   
   public JmolThread getThread() {
@@ -567,7 +574,7 @@ public class Minimizer {
   private void getEnergyOnly() {
     if (pFF == null || vwr == null)
       return;
-    pFF.steepestDescentInitialize(steps, crit);      
+    pFF.steepestDescentInitialize(steps, crit, trustRadius);      
     vwr.setFloatProperty("_minimizationEnergyDiff", 0);
     reportEnergy();
     vwr.setStringProperty("_minimizationStatus", "calculate");
@@ -588,7 +595,7 @@ public class Minimizer {
       vwr.setFloatProperty("_minimizationEnergyDiff", 0);
       vwr.notifyMinimizationStatus();
       vwr.stm.saveCoordinates("minimize", bsTaint);
-      pFF.steepestDescentInitialize(steps, crit);
+      pFF.steepestDescentInitialize(steps, crit, trustRadius);
       reportEnergy();
       saveCoordinates();
     } catch (Exception e) {
@@ -667,15 +674,36 @@ public class Minimizer {
       restoreCoordinates();
   }
   
+  private P3 p = new P3();
+  
   void updateAtomXYZ() {
     if (steps <= 0)
       return;
-    for (int i = 0; i < ac; i++) {
-      MinAtom minAtom = minAtoms[i];
-      Atom atom = minAtom.atom;
-      atom.x = (float) minAtom.coord[0];
-      atom.y = (float) minAtom.coord[1];
-      atom.z = (float) minAtom.coord[2];
+    if (bsBasis == null) {
+      for (int i = 0; i < ac; i++) {
+        MinAtom minAtom = minAtoms[i];
+        minAtom.atom.set((float) minAtom.coord[0], (float) minAtom.coord[1],
+            (float) minAtom.coord[2]);
+      }
+    } else {
+      Atom a;
+      // only accept the minimization for the basis atoms
+      // ModelKit will transfer the corresponding symmetry changes to the other atoms
+      for (int i = 0; i < ac; i++) {
+        MinAtom minAtom = minAtoms[i];
+        if (bsBasis.get((a = minAtom.atom).i)) {
+          p.set((float) minAtom.coord[0], (float) minAtom.coord[1],
+              (float) minAtom.coord[2]);
+          vwr.getModelkit(false).constrain(a.i, p, bsFixed);
+        }
+      }
+      // now transfer back all atom coordinates
+      for (int i = 0; i < ac; i++) {
+        MinAtom minAtom = minAtoms[i];
+        minAtom.coord[0] = (a = minAtom.atom).x;
+        minAtom.coord[1] = a.y;
+        minAtom.coord[2] = a.z;
+      }
     }
     vwr.refreshMeasures(false);
   }

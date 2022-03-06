@@ -606,10 +606,6 @@ public class Atom extends Point3fi implements Node {
     return atomSite;
   }
 
-  public void setAtomSite(int site) {
-    atomSite = site;
-  }
-
   @Override
   public void getGroupBits(BS bs) {
      group.setAtomBits(bs);

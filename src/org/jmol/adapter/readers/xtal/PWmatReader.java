@@ -171,6 +171,12 @@ public class PWmatReader extends AtomSetCollectionReader {
     Logger.info("PWmatReader: " + name.toUpperCase() + " processed for " + n
         + " atoms");
     appendLoadNote("PWmatReader read property_" + name + "_x/_y/_z");
+    if (name.equals("pwm_magnetic_xyz")) {
+      for (int i = 0; i < nAtoms; i++) {
+        asc.addVibrationVector(i, valuesX[i], valuesY[i], valuesZ[i]);
+      }
+      addJmolScript("vectors 0.2;set vectorscentered");
+    }
   }
 
 }
