@@ -3977,8 +3977,9 @@ public class Viewer extends JmolViewer
     g.minBondDistance = minBondDistance;
   }
 
-  public BS getAtomsNearPt(float distance, P3 coord) {
-    BS bs = new BS();
+  public BS getAtomsNearPt(float distance, P3 coord, BS bs) {
+    if (bs == null)
+      bs = new BS();
     ms.getAtomsWithin(distance, coord, bs, -1);
     return bs;
   }
@@ -8181,7 +8182,7 @@ public class Viewer extends JmolViewer
                 tm.unTransformPoint(ptScreenNew, ptNew);
           SymmetryInterface uc = getCurrentUnitCell();
           if (uc != null && uc.getSymmetryOperations() != null) {
-           getModelkit(false).constrain(bsSelected.nextSetBit(0), ptNew, null);
+           getModelkit(false).cmdAssignMoveAtom(bsSelected.nextSetBit(0), ptNew);
          }
          if (!Float.isNaN(ptNew.x)) {
           ptNew.sub(ptCenter);
