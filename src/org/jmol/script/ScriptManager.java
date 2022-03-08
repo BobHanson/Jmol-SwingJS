@@ -760,12 +760,12 @@ public class ScriptManager implements JmolScriptManager {
     vwr.g.appendNew = false;
     // BitSet bsB = getAtomBits(Token.hydrogen, null);
     // bsA.andNot(bsB);
-    int atomIndex = vwr.ms.ac;
     int atomno = vwr.ms.getAtomCountInModel(modelIndex);// BH! not quite right if deleted
     SB sbConnect = new SB();
-    for (int i = 0; i < vConnections.size(); i++) {
+    for (int i = 0, atomIndex = vwr.ms.ac; i < vConnections.size(); i++, atomIndex++) {
       Atom a = vConnections.get(i);
-      sbConnect.append(";  connect 0 100 ").append("({" + (atomIndex++) + "}) ")
+      if (a != null)
+        sbConnect.append(";  connect 0 100 ").append("({" + (atomIndex) + "}) ")
           .append("({" + a.i + "}) group;");
     }
     SB sb = new SB();
@@ -776,10 +776,6 @@ public class ScriptManager implements JmolScriptManager {
           .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
 
-    
- //   System.out.println("sm\n" + sb);
-    
-    
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
     eval.runScriptBuffer(sbConnect.toString(), null, false);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);

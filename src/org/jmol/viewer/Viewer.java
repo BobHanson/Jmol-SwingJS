@@ -3635,6 +3635,8 @@ public class Viewer extends JmolViewer
   }
 
   private void loadDefaultModelKitModel(Map<String, Object> htParams) {
+    if (modelkit.isHidden())
+      return;
     openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams, true);
     setRotationRadius(5.0f, true);
     setStringProperty("picking", "assignAtom_C");
@@ -8180,8 +8182,8 @@ public class Viewer extends JmolViewer
           else
             ptScreenNew.set(ptScreen.x + deltaX * f, ptScreen.y + deltaY * f, ptScreen.z);
                 tm.unTransformPoint(ptScreenNew, ptNew);
-          SymmetryInterface uc = getCurrentUnitCell();
-          if (uc != null && uc.getSymmetryOperations() != null) {
+          SymmetryInterface uc = getOperativeSymmetry();
+          if (uc != null) {
            getModelkit(false).cmdAssignMoveAtom(bsSelected.nextSetBit(0), ptNew);
          }
          if (!Float.isNaN(ptNew.x)) {
@@ -9229,7 +9231,7 @@ public class Viewer extends JmolViewer
 
   public BS getMotionFixedAtoms() {
     BS bs = BSUtil.copy(slm.getMotionFixedAtoms());
-    if (modelkit != null)
+    if (modelkit != null || getOperativeSymmetry() != null && getModelkit(false) != null)
       modelkit.addLockedAtoms(bs);
     return bs;
   }
@@ -10580,6 +10582,16 @@ public class Viewer extends JmolViewer
       return new Lst<P3>();
     uc.getEquivPointList(pts, 0, flags.toLowerCase());
     return pts;
+  }
+
+  /**
+   * Only return symmetry that has operators.
+   * 
+   * @return SymmetryInterface or null
+   */
+  public SymmetryInterface getOperativeSymmetry() {
+    SymmetryInterface sg = getCurrentUnitCell();
+    return (sg == null || sg.getSymmetryOperations() == null ? null : sg);
   }
 
 

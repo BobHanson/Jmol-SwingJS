@@ -949,7 +949,7 @@ public class ModelKit {
   }
 
   boolean setHasUnitCell() {
-    return hasUnitCell = (getOperativeSymmetry() != null);
+    return hasUnitCell = (vwr.getOperativeSymmetry() != null);
   }
 
   boolean checkNewModel() {
@@ -1205,7 +1205,7 @@ public class ModelKit {
     try {
       if (bs != null && bs.isEmpty())
         return "";
-      SymmetryInterface uc = getOperativeSymmetry();
+      SymmetryInterface uc = vwr.getOperativeSymmetry();
       if (uc == null)
         uc = vwr.getSymTemp()
             .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
@@ -1704,7 +1704,7 @@ public class ModelKit {
     int ac = vwr.ms.ac;
     int state = getMKState();
     boolean isDelete = type.equals("X");
-    boolean isXtal = (getOperativeSymmetry() != null);
+    boolean isXtal = (vwr.getOperativeSymmetry() != null);
     try {
       if (isDelete) {
         if (isClick) {
@@ -1759,6 +1759,7 @@ public class ModelKit {
           } else {
             P3 p = P3.newP(atom);
             uc.toFractional(p, true);
+            bs.or(bsEquiv);
             Lst<P3> list = uc.getEquivPoints(null, p, packing);
             for (int j = 0, n = list.size(); j < n; j++) {
               for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -1768,6 +1769,27 @@ public class ModelKit {
                 }
               }
             }
+          }
+          boolean isOK = (vConnections.size() == pts.length);
+          if (isOK) {
+//            for (int i = pts.length; --i >= 0;) {
+//              System.out.println("" + P3.newP(vConnections.get(i)) + " " + pts[i]);
+//            }
+            float d = Float.MAX_VALUE;
+            for (int i = pts.length; --i >= 0;) {
+              float d1 = vConnections.get(i).distance(pts[i]);
+              if (d == Float.MAX_VALUE)
+                d1 = d;
+              else if (Math.abs(d1 - d) > 0.001f) {
+                vConnections.set(i,  null);
+                System.out.println("ModelKit connection failed for " + d + " " + d1 + " " + vConnections.get(i) + " " + pts[i]);                
+                break;
+              }
+            }
+          }
+          if (!isOK) {
+            System.err.println("ModelKit cannot connect points");
+            vConnections.clear();
           }
           vwr.sm.setStatusStructureModified(atomIndex, mi, 3, cmd, 1, null);
         }
@@ -1827,8 +1849,6 @@ public class ModelKit {
           vwr.ms.setSite(vwr.ms.at[i], site, true);
         }
         vwr.ms.updateBasisFromSite(atomIndexNew);
-        System.out.println(vwr.getAtomBitSet("symmetry"));
-        System.out.println(vwr.getModelForAtomIndex(atomIndexNew).bsAsymmetricUnit);
       }
       int firstAtom = vwr.ms.am[mi].firstAtomIndex;
       if (atomicNo >= 0) {
@@ -1842,6 +1862,7 @@ public class ModelKit {
       vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
       vwr.sm.setStatusStructureModified(-1, mi, -3, "OK", 1, bs);
     } catch (Exception ex) {
+      ex.printStackTrace();
     } finally {
       setMKState(state);
     }
@@ -1912,7 +1933,7 @@ public class ModelKit {
     
     
     vwr.script("modelkit "
-        + (getOperativeSymmetry() == null ?  "assign atom" : "ADD")
+        + (vwr.getOperativeSymmetry() == null ?  "assign atom" : "ADD")
         + " ({" + atomIndex + "}) \"" + element + "\" "
           + (ptNew == null ? "" : Escape.eP(ptNew)) + " true");
   }
@@ -1933,11 +1954,11 @@ public class ModelKit {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
-      boolean isConnected = !isPoint;
+      boolean isConnected = (pt != null && !isPoint);
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
       if (!isPoint && atomIndex < 0)
         return 0;
-      SymmetryInterface uc = getOperativeSymmetry();
+      SymmetryInterface uc = vwr.getOperativeSymmetry();
       if (uc == null) {
         if (isPoint)
           assignAtoms(pt, true, -1, type, cmd, false, null, 1, -1, null, null, "");
@@ -2114,7 +2135,7 @@ public class ModelKit {
   }
   
   public boolean hasConstraint(int iatom, boolean ignoreGeneral, boolean addNew) {
-    Constraint c = getConstraint(getOperativeSymmetry(), iatom, addNew ? GET_CREATE : GET); 
+    Constraint c = getConstraint(vwr.getOperativeSymmetry(), iatom, addNew ? GET_CREATE : GET); 
     return (c != null && (!ignoreGeneral || c.type != Constraint.TYPE_GENERAL));
   }
 
@@ -2124,12 +2145,13 @@ public class ModelKit {
    * @param iatom
    * @param ptNew
    * @param bsFixed
+   * @param doAssign allow for exit with setting ptNew but not creating atoms
    * @return number of atoms moved
    */
   public int constrain(int iatom, P3 ptNew, BS bsFixed, boolean doAssign) {
     int n = 0;
-    SymmetryInterface sym = getOperativeSymmetry();
-    if (iatom < 0 || sym == null || sym.getSymmetryOperations() == null) {
+    SymmetryInterface sym;
+    if (iatom < 0 || (sym = vwr.getOperativeSymmetry()) == null) {
       // molecular crystals loaded without packed or centroid will not have operations
       return 0;
     }
@@ -2243,11 +2265,11 @@ public class ModelKit {
           line1 = line2;
         } else {
           T3 v1 = (T3) line1[1];
-          if (1 - Math.abs(v1.dot((T3) line2[1])) > 0.001f)
+          if (Math.abs(v1.dot((T3) line2[1])) < 0.999f)
             return locked;
-          V3 v = V3.newVsub((T3) line1[0], (T3) line2[0]);
-          if (1 - Math.abs(v.dot(v1)) > 0.001f)
-            return locked;
+//          V3 v = V3.newVsub((T3) line1[0], (T3) line2[0]);
+//          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999f)
+//            return locked;
         }
       }
     }
@@ -2276,7 +2298,7 @@ public class ModelKit {
   }
 
   public void addLockedAtoms(BS bs) {
-    SymmetryInterface sg = getOperativeSymmetry();
+    SymmetryInterface sg = vwr.getOperativeSymmetry();
     if (sg == null)
       return;
     BS bsm = vwr.getThisModelAtoms();
@@ -2285,16 +2307,6 @@ public class ModelKit {
         bs.set(i);
       }
     }
-  }
-
-  /**
-   * Only return symmetry that has operators.
-   * 
-   * @return SymmetryInterface or null
-   */
-  private SymmetryInterface getOperativeSymmetry() {
-    SymmetryInterface sg = vwr.getCurrentUnitCell();
-    return (sg == null || sg.getSymmetryOperations() == null ? null : sg);
   }
 
 

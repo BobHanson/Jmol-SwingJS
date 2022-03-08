@@ -936,7 +936,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     checkDuplicate(list, i0, n0, -1);
     if (!tofractional) {
-      for (int i = n0; i < n; i++)
+      for (int i = list.size(); --i >= n0;)
         toCartesian(list.get(i), true);
     }
     return list;
