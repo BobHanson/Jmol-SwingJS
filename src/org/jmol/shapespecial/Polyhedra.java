@@ -631,7 +631,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       if (d > maxDistance)
         maxDistance = d;
     }
-    BS bsAtoms = BSUtil.copy(vwr.getAtomsNearPt(maxDistance + offset, center));
+    BS bsAtoms = BSUtil.copy(vwr.getAtomsNearPt(maxDistance + offset, center, null));
     Atom[] atoms = vwr.ms.at;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       for (int f = faces.length; --f >= 0;) {

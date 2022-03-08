@@ -694,7 +694,7 @@ public class Minimizer {
         if (bsBasis.get((a = minAtom.atom).i)) {
           p.set((float) minAtom.coord[0], (float) minAtom.coord[1],
               (float) minAtom.coord[2]);
-          vwr.getModelkit(false).constrain(a.i, p, bsFixed);
+          vwr.getModelkit(false).constrain(a.i, p, bsFixed, true);
         }
       }
       // now transfer back all atom coordinates

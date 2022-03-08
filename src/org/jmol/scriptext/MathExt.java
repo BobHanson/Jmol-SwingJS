@@ -3599,7 +3599,7 @@ public class MathExt {
 
   @SuppressWarnings("unchecked")
   private boolean evaluateSymop(ScriptMathProcessor mp, SV[] args,
-                                boolean haveBitSet)
+                                boolean isProperty)
       throws ScriptException {
 
     // In the following, "op" can be the operator number in a space group 
@@ -3636,12 +3636,14 @@ public class MathExt {
     // x = y.symop(n,...,"cif2")
     // return a <symop> <translation> as nn [a b c] suitable for CIF2 inclusion
 
-    SV x1 = (haveBitSet ? mp.getX() : null);
-    if (x1 != null && x1.tok != T.bitset)
+    SV x1 = (isProperty ? mp.getX() : null);
+    boolean isPoint = false;
+    if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
       return false;
-    BS bsAtoms = (x1 == null ? null : (BS) x1.value);
-    if (bsAtoms == null && vwr.ms.mc == 1)
-      bsAtoms = vwr.getModelUndeletedAtomsBitSet(0);
+    BS bsAtoms = (x1 == null || isPoint ? null : (BS) x1.value);
+    P3 pt1 = (isPoint ? SV.ptValue(x1) : null);
+    if (!isPoint && bsAtoms == null)
+      bsAtoms = vwr.getThisModelAtoms();
     if (bsAtoms != null && bsAtoms.isEmpty())
       return false;
     int narg = args.length;
@@ -3659,10 +3661,10 @@ public class MathExt {
     boolean invariant = false;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
+    P3 pt2 = null;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
-      invariant = xyz.equalsIgnoreCase("invariant");
       apt++;
       break;
     case T.matrix4f:
@@ -3674,6 +3676,19 @@ public class MathExt {
       apt++;
       break;
     }
+    invariant = (xyz != null && xyz.equalsIgnoreCase("invariant"));
+
+    if (invariant && iOp == Integer.MIN_VALUE) {
+      int[] ret = null;
+      if (pt1 != null) {
+        SymmetryInterface sym = vwr.getCurrentUnitCell();
+        ret = (sym == null ? new int[0] : sym.getInvariantSymops(pt1, null));
+      } else if (bsAtoms != null) {
+        ret = vwr.ms.getSymmetryInvariant(bsAtoms.nextSetBit(0));
+      }
+      return (ret != null && mp.addXAI(ret));
+    }
+
     if (bsAtoms == null) {
       if (apt < narg && args[apt].tok == T.bitset)
         (bsAtoms = new BS()).or((BS) args[apt].value);
@@ -3682,10 +3697,6 @@ public class MathExt {
             .or((BS) args[apt + 1].value);
     }
 
-    if (invariant) {
-     return (bsAtoms != null && mp.addXAI(vwr.ms.getSymmetryInvariant(bsAtoms.nextSetBit(0))));
-    }
-    
     // allow for [ h k l ] lattice translation
     P3 trans = null;
     if (narg > apt && args[apt].tok == T.varray) {
@@ -3698,8 +3709,7 @@ public class MathExt {
       SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3(), 0,
           0);
     }
-    P3 pt1 = null, pt2 = null;
-    if ((pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
+    if (pt1 == null && (pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
     if ((pt2 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
@@ -3783,9 +3793,18 @@ public class MathExt {
     String desc = (narg == apt
         ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
         : SV.sValue(args[apt++]).toLowerCase());
+    boolean haveAtom = (bsAtoms != null && !bsAtoms.isEmpty());
+    int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
+    if (desc.equals("invariant") && isProperty) {
+      if (haveAtom && pt1 == null)
+        pt1 = vwr.ms.at[iatom];
+      haveAtom = (pt1 != null);
+      if (iatom < 0)
+        iatom = vwr.getThisModelAtoms().nextSetBit(0);
+    }
 
-    return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length
-        && mp.addXObj(vwr.getSymmetryInfo(bsAtoms.nextSetBit(0), xyz, iOp,
+    return (haveAtom && apt == args.length
+        && mp.addXObj(vwr.getSymmetryInfo(iatom, xyz, iOp,
             trans, pt1, pt2, T.array, desc, 0, nth, 0)));
   }
 
@@ -4099,7 +4118,7 @@ public class MathExt {
           return false; // error return
         }
       }
-      return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
+      return mp.addXBs(vwr.getAtomsNearPt(distance, pt, null));
     }
 
     if (tok == T.sequence)
@@ -4159,7 +4178,7 @@ public class MathExt {
     data[1] = Integer.valueOf(0);
     data[2] = Integer.valueOf(-1);
     if (e.getShapePropertyData(JC.SHAPE_DRAW, "getCenter", data))
-      return vwr.getAtomsNearPt(distance, (P3) data[2]);
+      return vwr.getAtomsNearPt(distance, (P3) data[2], null);
     data[1] = Float.valueOf(distance);
     if (e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "getAtomsWithin", data))
       return (BS) data[2];

@@ -98,6 +98,7 @@ public class SymmetryDesc {
   // additional flags
   final static int RET_LIST = 21;
   final static int RET_TRANSFORMONLY = 22;
+  final static int RET_INVARIANT = 23;
 
   private final static String[] keys = { 
       "xyz", 
@@ -346,6 +347,7 @@ public class SymmetryDesc {
       bsInfo.set(RET_POINT);
       bsInfo.set(RET_AXISVECTOR);
       bsInfo.set(RET_PLANE);
+      bsInfo.set(RET_INVARIANT);
       break;
     }
     return bsInfo;
@@ -563,6 +565,8 @@ public class SymmetryDesc {
     P3 ipt = null; // inversion center
     P3 ptref = null; // reflection center
 
+    float w = 0, margin = 0; // for plane
+    
     boolean isTranslation = (ang1 == 0);
     boolean isRotation = !isTranslation;
     boolean isInversionOnly = false;
@@ -674,6 +678,14 @@ public class SymmetryDesc {
         } else {
           trans = null;
         }
+        vtemp.setT(ax1);
+        vtemp.normalize();
+        // ax + by + cz + d = 0
+        // so if a point is in the plane, then N dot X = -d
+        w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
+        plane = P4.new4(vtemp.x, vtemp.y, vtemp.z, w);
+        margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30f
+            : 1.05f);
         isRotation = false;
         haveInversion = false;
         isMirrorPlane = true;
@@ -978,14 +990,6 @@ public class SymmetryDesc {
         // We expand the unit cell by 5% in all directions just so we are
         // guaranteed to get cutoffs.
 
-        vtemp.setT(ax1);
-        vtemp.normalize();
-        // ax + by + cz + d = 0
-        // so if a point is in the plane, then N dot X = -d
-        float w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
-        plane = P4.new4(vtemp.x, vtemp.y, vtemp.z, w);
-        float margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30f
-            : 1.05f);
         // returns triangles and lines
         Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(plane,
             uc.getCanonicalCopy(margin, true), 3);
@@ -1148,7 +1152,7 @@ public class SymmetryDesc {
         ret[i] = approx0(ipt);
         break;
       case RET_POINT:
-        ret[i] = approx0(pa1);
+        ret[i] = approx0(pa1 != null && bsInfo.get(RET_INVARIANT) ? pta00 : pa1);
         break;
       case RET_AXISVECTOR:
         ret[i] = (plane == null ? approx0(ax1) : null);
@@ -1170,6 +1174,10 @@ public class SymmetryDesc {
         ret[i] = Integer.valueOf(op.timeReversal);
         break;
       case RET_PLANE:
+        if (plane != null && bsInfo.get(RET_INVARIANT)) {
+          float d = Measure.distanceToPlane(plane, pta00);
+          plane.w += d;
+        }
         ret[i] = plane;
         break;
       case RET_TYPE:
@@ -1595,7 +1603,7 @@ public class SymmetryDesc {
       if (id == null)
         id = "sg";
       int n = ops.length;
-      for (op = 0; op < n; op++)
+      for (op = 1; op <= n; op++)
         s += (String) getSymmetryInfo(uc, iModel, iAtom,
             uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
     }

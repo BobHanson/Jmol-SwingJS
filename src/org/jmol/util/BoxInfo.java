@@ -376,8 +376,10 @@ public class BoxInfo {
       pt.z *= bbVector.z;
       pt.add(bbCenter);
     }
-    bbCorner0.setT(bbVertices[0]);
-    bbCorner1.setT(bbVertices[7]);
+    if (scale != 1) {
+      bbCorner0.setT(bbVertices[0]);
+      bbCorner1.setT(bbVertices[7]);
+    }
   }
   
   public boolean isWithin(P3 pt) {
@@ -392,6 +394,11 @@ public class BoxInfo {
     return bbVector.length() * 2;
   }
 
+  
+  @Override
+  public String toString() {
+    return "" + bbCorner0 + bbCorner1;
+  }
 
 
 }

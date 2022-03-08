@@ -909,6 +909,10 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_OCCUPANCY);
   }
   
+  public float getOccupancyFloat(int i) {
+    return (occupancies == null || i >= occupancies.length? 100 : occupancies[i]);
+  }
+  
   protected void setPartialCharge(int atomIndex, float partialCharge, boolean doTaint) {
     if (Float.isNaN(partialCharge))
       return;

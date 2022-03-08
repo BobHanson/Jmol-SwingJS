@@ -2176,6 +2176,7 @@ public class T {
         "surface",
         "surfaceDistance",
         "symop",
+        "symops",
         "sx",
         "sy",
         "sz",
@@ -3246,6 +3247,7 @@ public class T {
         surface,                            // "surface"
         surfacedistance,                    // "surfaceDistance"
         symop,                              // "symop"
+        -1,
         screenx,                            // "sx"
         screeny,                            // "sy"
         screenz,                            // "sz"

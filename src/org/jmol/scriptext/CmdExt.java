@@ -6203,23 +6203,25 @@ public class CmdExt extends ScriptExt {
         pt = getPoint3f(++e.iToken, true);
       if (type.length() == 0)
         type = null;
-      if (tokAt(i + 1) == T.packed) {
+      if (tokAt(e.iToken + 1) == T.packed) {
         isPacked = true;
-        i = ++e.iToken;
+        ++e.iToken;
       }
     } else if (isMove) {
       pt = getPoint3f(++e.iToken, true);
-    } else if (isSpacegroup || isDelete) {
+    } else if (isSpacegroup) {
+      type = e.optParameterAsString(i);
     } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
         pt = (++e.iToken < (isClick ? slen - 1 : slen) ? centerParameter(e.iToken) : null);
+    } else if (isDelete) {
+      // N/A
     } else if (index2 < 0) {      
       // assign CONNECT @3 @4
       bs = expFor(i, bsAtoms);
       index2 = bs.nextSetBit(0);
       type = e.optParameterAsString(++e.iToken);
-      i = e.iToken;
     }
     if (chk)
       return;
@@ -6252,8 +6254,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      boolean isP1 = e.optParameterAsString(i).equalsIgnoreCase("P1");
-      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs, isP1));
+      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type));
       break;
     }
   }

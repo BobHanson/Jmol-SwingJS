@@ -925,6 +925,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public void getEquivPointList(Lst<P3> pts, int nIgnored, String flags) {
     M4[] ops = getSymmetryOperations();
+    boolean newPt = (flags.indexOf("newpt") >= 0);
     // we will preserve the points temporarily, then remove them at the end
     int n = pts.size();
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
@@ -938,10 +939,11 @@ public class Symmetry implements SymmetryInterface {
     flags += ",fromfractional,tofractional";
     int check0 = (nIgnored > 0 ? 0 : n);
     boolean allPoints = (nIgnored == n);
+    int n0 = (nIgnored > 0 ? nIgnored : n);
     if (allPoints) {
       nIgnored--;
+      n0--;
     }
-    int n0 = (nIgnored > 0 ? nIgnored : n);
     P3 p0 = (nIgnored > 0 ? pts.get(nIgnored) : null);
     if (ops != null || unitCell != null) {
       for (int i = nIgnored; i < n; i++) {
@@ -950,10 +952,13 @@ public class Symmetry implements SymmetryInterface {
     }
     // now remove the starting points, checking to see if perhaps our
     // test point itself has been removed.
-    if (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints)
+    if (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints || newPt)
       n--;
     for (int i = n - nIgnored; --i >= 0;)
       pts.removeItemAt(nIgnored);
+    // final check for removing duplicates
+//    if (nIgnored > 0)
+//      UnitCell.checkDuplicate(pts, 0, nIgnored - 1, nIgnored);
     
     // and turn these to Cartesians if desired
     if (!tofractional) {
@@ -974,12 +979,14 @@ public class Symmetry implements SymmetryInterface {
     for (int i = 1; i < nops; i++) {
       p.setT(pt);
       toFractional(p, true);
-     // unitize(p);
+      // unitize here should take care of all Wyckoff positions
+     unitize(p);
       p0.setT(p);
       ops[i].rotTrans(p);
-     // unitize(p);
-      if (p0.distanceSquared(p) < JC.UC_TOLERANCE2)
+     unitize(p);
+      if (p0.distanceSquared(p) < JC.UC_TOLERANCE2) {
         bs.set(i);
+      }
     }
     int[] ret = new int[bs.cardinality()];
     if (v0 != null && ret.length != v0.length)

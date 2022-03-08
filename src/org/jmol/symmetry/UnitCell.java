@@ -874,11 +874,19 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
 
   /**
    * 
-   * @param pt   the point to transform
-   * @param flags "tofractional,fromfractional,packed"
-   * @param ops  space group operations
-   * @param list the list to append to
-   * @param i0 the starting index of the list
+   * @param pt
+   *        the point to transform
+   * @param flags
+   *        "tofractional,fromfractional,packed"
+   * @param ops
+   *        space group operations
+   * @param list
+   *        the list to append to
+   * @param i0
+   *        the starting index of the list
+   * @param n0
+   *        the first point that is to be duplicated; prior points are just
+   *        references for removing duplicates
    * @return augmented list
    */
   Lst<P3> getEquivPoints(P3 pt, String flags, M4[] ops, Lst<P3> list,
@@ -926,7 +934,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         }
       }
     }
-    checkDuplicate(list, i0, n0);
+    checkDuplicate(list, i0, n0, -1);
     if (!tofractional) {
       for (int i = n0; i < n; i++)
         toCartesian(list.get(i), true);
@@ -934,9 +942,10 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return list;
   }
 
-  private void checkDuplicate(Lst<P3> list, int i0, int n0) {
-    int n = list.size();
-    out: for (int i = i0; i < n; i++) {
+  private static void checkDuplicate(Lst<P3> list, int i0, int n0, int n) {
+    if (n < 0)
+      n = list.size();
+    for (int i = i0; i < n; i++) {
       P3 p = list.get(i);
       for (int j = Math.max(i + 1, n0); j < n; j++) {
         if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {

@@ -3573,7 +3573,7 @@ public class Viewer extends JmolViewer
     minimizer = null;
     smilesMatcher = null;
     if (modelkit != null)
-      modelkit.clearConstraints();
+      modelkit.clearAtomConstraints();
   }
 
   public void zap(boolean notify, boolean resetUndo, boolean zapModelKit) {
@@ -8129,8 +8129,9 @@ public class Viewer extends JmolViewer
 
   private boolean movingSelected;
   private boolean showSelected;
+  private P3 ptScreen = new P3(), ptScreenNew = new P3(), ptNew = new P3();
 
-  public void moveSelected(int deltaX, int deltaY, int deltaZ, int x, int y,
+  public synchronized void moveSelected(int deltaX, int deltaY, int deltaZ, int x, int y,
                            BS bsSelected, boolean isTranslation,
                            boolean asAtoms, int modifiers) {
     // called by actionManager
@@ -8172,21 +8173,14 @@ public class Viewer extends JmolViewer
           P3 ptCenter = ms.getAtomSetCenter(bsSelected);
           tm.finalizeTransformParameters();
           float f = (g.antialiasDisplay ? 2 : 1);
-          P3i ptScreen = tm.transformPt(ptCenter);
-          P3 ptScreenNew;
+          tm.transformPt3f(ptCenter, ptScreen);
           if (deltaZ != Integer.MIN_VALUE)
-            ptScreenNew = P3.new3(ptScreen.x, ptScreen.y,
-                ptScreen.z + deltaZ + 0.5f);
+            ptScreenNew.set(ptScreen.x, ptScreen.y, ptScreen.z + deltaZ);
           else
-            ptScreenNew = P3.new3(ptScreen.x + deltaX * f + 0.5f,
-                ptScreen.y + deltaY * f + 0.5f, ptScreen.z);
-          P3 ptNew = new P3();
-          tm.unTransformPoint(ptScreenNew, ptNew);
+            ptScreenNew.set(ptScreen.x + deltaX * f, ptScreen.y + deltaY * f, ptScreen.z);
+                tm.unTransformPoint(ptScreenNew, ptNew);
           SymmetryInterface uc = getCurrentUnitCell();
           if (uc != null && uc.getSymmetryOperations() != null) {
-          // script("draw ID 'pt" + Math.random() + "' " + Escape.escape(ptNew));
-//         if (//g.modelKitMode & modelkit != null && 
-//             getCurrentUnitCell() != null) {
            getModelkit(false).constrain(bsSelected.nextSetBit(0), ptNew, null);
          }
          if (!Float.isNaN(ptNew.x)) {
