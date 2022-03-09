@@ -340,7 +340,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       modelInfo = new Hashtable<String, Object>();
     isPDB = checkBoolean("isPDB");
     isMultiFrame = (modelCount > 1);
-    hasSymmetry = modelInfo.containsKey("hasSymmetry");
+    hasSymmetry = !isPDB && modelInfo.containsKey("hasSymmetry");
     isUnitCell = modelInfo.containsKey("unitCellParams");
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);

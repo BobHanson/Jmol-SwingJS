@@ -1057,8 +1057,14 @@ public class SymmetryDesc {
 
       draw1.append("\nsym_point = " + Escape.eP(pta00));
       draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
-      draw1.append(
-          "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
+      
+      if (pta00 instanceof Atom) {      
+        draw1.append(
+            "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
+      } else {
+        draw1.append(
+            "\nvar set2 = p0.uxyz");
+      }
       if (pta00 instanceof Atom)
         draw1.append("\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
       draw1.append("\nsym_target = set2;if (set2) {");
@@ -1188,7 +1194,7 @@ public class SymmetryDesc {
         break;
       case RET_CIF2:
         T3 cift = null;
-        if (!xyzNew.equals(op.xyzOriginal)) {
+        if (!op.isBio && !xyzNew.equals(op.xyzOriginal)) {
           if (op.number > 0) {
             M4 orig = SymmetryOperation.getMatrixFromXYZ(op.xyzOriginal);
             orig.sub(m2);

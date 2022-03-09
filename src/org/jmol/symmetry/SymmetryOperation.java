@@ -302,7 +302,7 @@ public class SymmetryOperation extends M4 {
       setMatrix(isReverse);
       isFinalized = true;
       isBio = (xyz.indexOf("bio") >= 0);
-      this.xyz = (isBio ? toString()
+      this.xyz = (isBio ? (this.xyzOriginal = super.toString())
           : getXYZFromMatrix(this, false, false, false));
       return true;
     }
@@ -454,6 +454,7 @@ public class SymmetryOperation extends M4 {
     boolean isDenominator = false;
     boolean isDecimal = false;
     boolean isNegative = false;
+    xyz = PT.rep(xyz,  "[bio[", "");
     int modDim = (op == null ? 0 : op.modDim);
     int nRows = 4 + modDim;
     int divisor = (op == null ? setDivisor(xyz) : op.divisor);
