@@ -68,7 +68,7 @@ public interface SymmetryInterface {
 
   int[] getInvariantSymops(P3 p3, int[] v0);
 
-  AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
+  AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, float radius);
 
   Lst<P3> getLatticeCentering();
 

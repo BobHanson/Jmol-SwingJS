@@ -4232,7 +4232,7 @@ public class ModelSet extends BondCollection {
     if (iAtom >= 0) {
       SymmetryInterface unitCell = getUnitCellForAtom(iAtom);
       if (unitCell != null) {
-        AtomIndexIterator iter = unitCell.getIterator(vwr, at[iAtom], at, bs,
+        AtomIndexIterator iter = unitCell.getIterator(vwr, at[iAtom], bs,
             distance);
         if (pt != null)
           iter.setCenter(pt, distance);

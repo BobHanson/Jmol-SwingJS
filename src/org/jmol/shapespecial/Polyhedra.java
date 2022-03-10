@@ -632,7 +632,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
         maxDistance = d;
     }
     BS bsAtoms = BSUtil.copy(vwr.getAtomsNearPt(maxDistance + offset, center, null));
-    Atom[] atoms = vwr.ms.at;
+    Atom[] atoms = ms.at;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       for (int f = faces.length; --f >= 0;) {
         System.out.println(Measure.distanceToPlane(p.planes[f], atoms[i]));
@@ -725,6 +725,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private void setVisible(boolean visible) {
     BS bs = findPolyBS(centers);
+    Atom[] atoms = ms.at;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Polyhedron p = polyhedrons[i];
       p.visible = visible;
@@ -748,7 +749,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     } else if (info != null && info.containsKey("id")) {
       Object o = info.get("id"); 
       thisID = (o instanceof SV ? ((SV) o).asString() : o.toString());
-      p = new Polyhedron().setInfo(vwr, info, vwr.ms.at);
+      p = new Polyhedron().setInfo(vwr, info, ms.at);
     }
     if (p != null) {
       addPolyhedron(p);
@@ -760,6 +761,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
             : useBondAlgorithm ? MODE_BONDING : MODE_RADIUS);
     AtomIndexIterator iter = (buildMode == MODE_RADIUS ? ms
         .getSelectedAtomIterator(null, false, false, false, false) : null);
+    Atom[] atoms = ms.at;
     for (int i = centers.nextSetBit(0); i >= 0; i = centers.nextSetBit(i + 1)) {
       Atom atom = atoms[i];
       p = null;
@@ -778,7 +780,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
         p = constructRadiusPolyhedron(atom, iter);
         break;
       case MODE_INFO:
-        p = new Polyhedron().setInfo(vwr, info, vwr.ms.at);
+        p = new Polyhedron().setInfo(vwr, info, ms.at);
         break;
       case MODE_POINTS:
         p = validatePolyhedron(atom, nPoints);
@@ -795,10 +797,12 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private void setPointsFromBitset() {
     // polyhedra ID p1 @6 to {connected(@6)}
-    if (bsVertices != null)
+    if (bsVertices != null) {
+      Atom[] atoms = ms.at;
       for (int i = bsVertices.nextSetBit(0); i >= 0 && nPoints < MAX_VERTICES; i = bsVertices
           .nextSetBit(i + 1))
         otherAtoms[nPoints++] = atoms[i];
+    }
   }
 
   private void addPolyhedron(Polyhedron p) {
@@ -838,7 +842,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private Polyhedron constructUnitCellPolygon(Atom atom,
                                               boolean useBondAlgorithm) {
-    SymmetryInterface unitcell = vwr.ms.getUnitCellForAtom(atom.i);
+    SymmetryInterface unitcell = ms.getUnitCellForAtom(atom.i);
     if (unitcell == null)
       return null;
     BS bsAtoms = BSUtil.copy(vwr.getModelUndeletedAtomsBitSet(atom.mi));
@@ -846,7 +850,8 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       bsAtoms.and(bsVertices);
     if (bsAtoms.isEmpty())
       return null;
-    AtomIndexIterator iter = unitcell.getIterator(vwr, atom, atoms, bsAtoms,
+    Atom[] atoms = ms.at;
+    AtomIndexIterator iter = unitcell.getIterator(vwr, atom, bsAtoms,
         useBondAlgorithm ? 5f : radius);
     if (!useBondAlgorithm)
       return constructRadiusPolyhedron(atom, iter);
@@ -857,12 +862,12 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     float minBondDistance = (radiusMin == 0 ? vwr.getFloat(T.minbonddistance) : radiusMin);
     float minBondDistance2 = minBondDistance * minBondDistance;
     int otherAtomCount = 0;
-    outer: while (iter.hasNext()) {
+   outer: while (iter.hasNext()) {
       Atom other = atoms[iter.next()];
       float otherRadius = other.getBondingRadius();
       P3 pt = iter.getPosition();
       float distance2 = atom.distanceSquared(pt);
-      if (!vwr.ms.isBondable(myBondingRadius, otherRadius, distance2,
+      if (!ms.isBondable(myBondingRadius, otherRadius, distance2,
           minBondDistance2, bondTolerance))
         continue;
       for (int i = 0; i < otherAtomCount; i++)
@@ -881,6 +886,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       return null;
     int otherAtomCount = 0;
     distanceRef = 0;
+    Atom[] atoms = ms.at;
     for (int i = bsVertices.nextSetBit(0); i >= 0; i = bsVertices
         .nextSetBit(i + 1))
       otherAtoms[otherAtomCount++] = atoms[i];
@@ -892,6 +898,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     distanceRef = radius;
     float r2 = radius * radius;
     float r2min = radiusMin * radiusMin;
+    Atom[] atoms = ms.at;
     outer: while (iter.hasNext()) {
       Atom other = atoms[iter.next()];
       P3 pt = iter.getPosition();
@@ -1475,7 +1482,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
        p.visibilityFlags = (p.visible && bsModels.get(p.modelIndex)
             && !ms.isAtomHidden(ia)
             && !ms.at[ia].isDeleted() ? vf : 0);
-        atoms[ia].setShapeVisibility(vf, p.visibilityFlags != 0);
+        ms.at[ia].setShapeVisibility(vf, p.visibilityFlags != 0);
       } else {
         p.visibilityFlags = (p.visible
             && (p.modelIndex < 0 || bsModels.get(p.modelIndex)) ? vf : 0);

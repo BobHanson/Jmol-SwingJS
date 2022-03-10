@@ -744,10 +744,10 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms,
+  public AtomIndexIterator getIterator(Viewer vwr, Atom atom,
                                        BS bsAtoms, float radius) {
     return ((UnitCellIterator) Interface.getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
-        .set(this, atom, atoms, bsAtoms, radius);
+        .set(this, atom, vwr.ms.at, bsAtoms, radius);
   }
 
   @Override
