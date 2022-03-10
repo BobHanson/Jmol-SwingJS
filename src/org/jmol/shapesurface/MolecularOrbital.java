@@ -404,10 +404,10 @@ public class MolecularOrbital extends Isosurface {
   public String getMoInfo(int modelIndex) {
     SB sb = new SB();
 
-    for (int m = 0, mc = vwr.ms.mc; m < mc; m++) {
+    for (int m = 0, mc = ms.mc; m < mc; m++) {
       if (modelIndex >= 0 && m != modelIndex)
         continue;
-      Map<String, Object> moData = (Map<String, Object>) vwr.ms.getInfo(m, "moData");
+      Map<String, Object> moData = (Map<String, Object>) ms.getInfo(m, "moData");
       if (moData == null)
         continue;
       Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (moData
@@ -435,12 +435,12 @@ public class MolecularOrbital extends Isosurface {
         String energy = "" + mo.get("energy");
         if (Float.isNaN(PT.parseFloat(energy)))
           sb.append(PT.sprintf("model %-2s; %s %-2i # %s\n", "ssis",
-              new Object[] { vwr.ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
+              new Object[] { ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
                   type }));
         else
           sb.append(PT.sprintf("model %-2s;  %s %-2i # energy %-8.3f %s %s\n",
               "ssifss",
-              new Object[] { vwr.ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
+              new Object[] { ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
                   mo.get("energy"), units, type }));
       }
     }
@@ -559,7 +559,7 @@ public class MolecularOrbital extends Isosurface {
     if (htModels == null)
       return "";
     SB s = new SB();
-    int modelCount = vwr.ms.mc;
+    int modelCount = ms.mc;
     for (int iModel = 0; iModel < modelCount; iModel++) {
       if (!getSettings(getId(iModel)))
         continue;

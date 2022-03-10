@@ -70,7 +70,7 @@ public class Dots extends AtomShape {
   public void initShape() {
     super.initShape();
     translucentAllowed = false; //except for geosurface
-    ec = new EnvelopeCalculation().set(vwr, ac, mads);
+    ec = new EnvelopeCalculation().set(vwr, ms.ac, mads);
   }
 
   @Override
@@ -115,18 +115,20 @@ public class Dots extends AtomShape {
     }
     if ("atom" == propertyName) {
       thisAtom = ((Integer) value).intValue();
-      if (thisAtom >= atoms.length)
+      if (thisAtom >= ms.at.length)
         return;
-      atoms[thisAtom].setShapeVisibility(vf, true);
-      ec.allocDotsConvexMaps(ac);
+      ms.at[thisAtom].setShapeVisibility(vf, true);
+      ec.allocDotsConvexMaps(ms.ac);
       return;
     }
     if ("dots" == propertyName) {
+      Atom[] atoms = ms.at;
       if (thisAtom >= atoms.length)
         return;
       isActive = true;
       ec.setFromBits(thisAtom, (BS) value);
       atoms[thisAtom].setShapeVisibility(vf, true);
+      int ac = ms.ac;
       if (mads == null) {
         ec.setMads(null);
         mads = new short[ac];
@@ -176,7 +178,7 @@ public class Dots extends AtomShape {
     bsIgnore = null;
     isActive = false;
     if (ec == null)
-      ec = new EnvelopeCalculation().set(vwr, ac, mads);
+      ec = new EnvelopeCalculation().set(vwr, ms.ac, mads);
   }
 
   @Override
@@ -243,13 +245,15 @@ public class Dots extends AtomShape {
         }
     } else {
       boolean isAll = (bsSelected == null);
-      int i0 = (isAll ? ac - 1 : bsSelected.nextSetBit(0));
+      int i0 = (isAll ? ms.ac - 1 : bsSelected.nextSetBit(0));
       for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsSelected
           .nextSetBit(i + 1)))
         bsOn.setBitTo(i, false);
     }
+    
+    Atom[] atoms = ms.at;
 
-    for (int i = ac; --i >= 0;)
+    for (int i = ms.ac; --i >= 0;)
       if (atoms[i] != null)
         atoms[i].setShapeVisibility(vf, bsOn.get(i));
     if (!isVisible)
@@ -262,15 +266,15 @@ public class Dots extends AtomShape {
     // always delete old surfaces for selected atoms
     BS[] dotsConvexMaps = ec.getDotsConvexMaps();
     if (dotsConvexMaps != null) {
-      for (int i = ac; --i >= 0;)
+      for (int i = ms.ac; --i >= 0;)
         if (atoms[i] != null && bsOn.get(i)) {
           dotsConvexMaps[i] = null;
         }
     }
     // now, calculate surface for selected atoms
 
-    if (dotsConvexMaps == null && (colixes == null || colixes.length != ac))
-      checkColixLength(C.BLACK, ac);
+    if (dotsConvexMaps == null && (colixes == null || colixes.length != ms.ac))
+      checkColixLength(C.BLACK, ms.ac);
     ec.calculate(rd, maxRadius, bsOn, bsIgnore, !vwr.getBoolean(T.dotsurface),
         vwr.getBoolean(T.dotsselectedonly), isSurface, true);
 
@@ -280,8 +284,8 @@ public class Dots extends AtomShape {
 
   @Override
   public void setAtomClickability() {
-    for (int i = ac; --i >= 0;) {
-      Atom atom = atoms[i];
+    for (int i = ms.ac; --i >= 0;) {
+      Atom atom = ms.at[i];
       if (atom != null && ((atom.shapeVisibilityFlags & vf) == 0
           || ms.isAtomHidden(i)))
         continue;
@@ -296,7 +300,7 @@ public class Dots extends AtomShape {
       return "";
     SB s = new SB();
     Map<String, BS> temp = new Hashtable<String, BS>();
-    int ac = vwr.ms.ac;
+    int ac = ms.ac;
     String type = (isSurface ? "geoSurface " : "dots ");
     for (int i = 0; i < ac; i++) {
       if (!bsOn.get(i) || dotsConvexMaps[i] == null)

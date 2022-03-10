@@ -36,7 +36,7 @@ public class BackboneRenderer extends BioShapeRenderer {
   @Override
   protected void renderBioShape(BioShape bioShape) {
     boolean checkPass2 = (!isExport && !vwr.gdata.isPass2);
-    isDataFrame = vwr.ms.isJmolDataFrameForModel(bioShape.modelIndex);
+    isDataFrame = ms.isJmolDataFrameForModel(bioShape.modelIndex);
     int n = monomerCount;
     Atom[] atoms = ms.at;
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible

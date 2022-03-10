@@ -219,10 +219,11 @@ public class NucleicRenderer {
       short cA = C.getColixInherited(colix, atomA.colixAtom);
       if (bps != null) {
         boolean checkPass2 = (!bsr.isExport && !vwr.gdata.isPass2);
+        Atom[] atoms = vwr.ms.at;
         for (int j = bps.size(); --j >= 0;) {
           int iAtom = bps.get(j).getPartnerAtom(g);
           if (iAtom > i) {
-            Atom atomB = vwr.ms.at[iAtom];
+            Atom atomB = atoms[iAtom];
             short cB = C.getColixInherited(colix, atomB.colixAtom);
             if (!checkPass2 || bsr.setBioColix(cA) || bsr.setBioColix(cB))
               bsr.drawSegmentAB(atomA, atomB, cA, cB, 1000);

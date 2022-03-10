@@ -72,8 +72,8 @@ public class AxesRenderer extends CageRenderer {
     pt000 = (isDataFrame ? pt0 : axes.originPoint);
 
     // includes check here for background model present
-    if (vwr.ms.isJmolDataFrameForModel(modelIndex)
-        && !vwr.ms.getJmolFrameType(modelIndex).equals("plot data"))
+    if (ms.isJmolDataFrameForModel(modelIndex)
+        && !ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (isUnitCell && modelIndex < 0 && vwr.getCurrentUnitCell() == null)

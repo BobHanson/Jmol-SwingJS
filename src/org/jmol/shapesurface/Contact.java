@@ -147,8 +147,8 @@ public class Contact extends Isosurface {
     }
 
     BS bs;
-    ac = vwr.ms.ac;
-    atoms = vwr.ms.at;
+    ac = ms.ac;
+    atoms = ms.at;
 
     int intramolecularMode = (int) (parameters == null || parameters.length < 2 ? 0
         : parameters[1]);

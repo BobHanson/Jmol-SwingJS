@@ -27,6 +27,8 @@ package org.jmol.shape;
 
 
 import javajs.util.BS;
+
+import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 
@@ -69,10 +71,12 @@ public class Halos extends AtomShape {
   @Override
   public void setModelVisibilityFlags(BS bs) {
     BS bsSelected = (vwr.getSelectionHalosEnabled() ? vwr.bsA() : null);
-    for (int i = ac; --i >= 0;)
+    Atom[] atoms = ms.at;
+    for (int i = ms.ac; --i >= 0;) {
       if (atoms[i] != null)
         atoms[i].setShapeVisibility(vf, bsSelected != null && bsSelected.get(i)
           || mads != null && mads[i] != 0);
+    }
   }
 
 //  @Override

@@ -79,7 +79,6 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (m != null)
         m.ms = ms;
     }
-    atoms = ms.at;
   }
   
   @Override
@@ -259,7 +258,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
 
     if ("deleteModelAtoms" == propertyName) {
-      atoms = (Atom[]) ((Object[]) value)[1];
+      //atoms = (Atom[]) ((Object[]) value)[1];
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       int firstAtomDeleted = ((int[]) ((Object[]) value)[2])[1];
       int nAtomsDeleted = ((int[]) ((Object[]) value)[2])[2];
@@ -489,9 +488,10 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     // same atom number in each model
     Lst<Object> points = new  Lst<Object>();
     int nPoints = m.count;
+    Atom[] atoms = ms.at;
     for (int i = 1; i <= nPoints; i++) {
       int atomIndex = m.getAtomIndex(i);
-      points.addLast(atomIndex >= 0 ? (Object) vwr.ms.getAtoms(T.atomno,
+      points.addLast(atomIndex >= 0 ? (Object) ms.getAtoms(T.atomno,
           Integer.valueOf(atoms[atomIndex].getAtomNumber())) : (Object) m
           .getAtom(i));
     }
@@ -684,6 +684,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         info.put("tickStart", Float.valueOf(tickInfo.first));
     }
     Lst<Map<String, Object>> atomsInfo = new  Lst<Map<String,Object>>();
+    Atom[] atoms = ms.at;
     for (int i = 1; i <= count; i++) {
       Map<String, Object> atomInfo = new Hashtable<String, Object>();
       int atomIndex = m.getAtomIndex(i);

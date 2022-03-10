@@ -449,7 +449,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       displayWithinDistance2 *= displayWithinDistance2;
       displayWithinPoints = (Lst<P3>) o[3];
       if (displayWithinPoints.size() == 0)
-        displayWithinPoints = vwr.ms.getAtomPointVector((BS) o[2]);
+        displayWithinPoints = ms.getAtomPointVector((BS) o[2]);
       return;
     }
 
@@ -470,7 +470,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("connections" == propertyName) {
       if (currentMesh != null) {
         connections = (int[]) value;
-        if (connections[0] >= 0 && connections[0] < vwr.ms.ac)
+        if (connections[0] >= 0 && connections[0] < ms.ac)
           currentMesh.connectedAtoms = connections;
         else
           connections = currentMesh.connectedAtoms = null;
@@ -657,7 +657,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       withinDistance2 *= withinDistance2;
       withinPoints = (Lst<P3>) o[3];
       if (withinPoints.size() == 0)
-        withinPoints = vwr.ms.getAtomPointVector((BS) o[2]);
+        withinPoints = ms.getAtomPointVector((BS) o[2]);
     } else if (("nci" == propertyName || "orbital" == propertyName)
         && sg != null) {
       sg.params.testFlags = (vwr.getBoolean(T.testflag2) ? 2 : 0);
@@ -797,7 +797,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       short colix = (thisMesh.isColorSolid ? thisMesh.colix : 0);
       setProperty("init", null, null);
       setProperty("map", Boolean.FALSE, null);
-      setProperty("property", new float[vwr.ms.ac], null);
+      setProperty("property", new float[ms.ac], null);
       if (colix != 0) {
         thisMesh.colorCommand = "color isosurface "
             + C.getHexCode(colix);
@@ -1090,7 +1090,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (imesh == null || imesh.scriptCommand == null)
       return;
     String cmd = imesh.scriptCommand;
-    int modelCount = vwr.ms.mc;
+    int modelCount = ms.mc;
     if (modelCount > 1)
       appendCmd(sb, "frame " + vwr.getModelNumberDotted(imesh.modelIndex));
     cmd = PT.rep(cmd, ";; isosurface map"," map");
@@ -1194,7 +1194,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         return false;
       bs = BS.unescape(script.substring(i + 3, j + 1));
       if (bsCmd == null)
-        vwr.ms.setTrajectoryBs(bs);
+        ms.setTrajectoryBs(bs);
       else
         bsCmd[2] = bs;
     }
@@ -1275,7 +1275,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private void setMeshI() {
     thisMesh.visible = true;
     if ((thisMesh.atomIndex = atomIndex) >= 0)
-      thisMesh.modelIndex = vwr.ms.at[atomIndex].mi;
+      thisMesh.modelIndex = ms.at[atomIndex].mi;
     else if (isFixed)
       thisMesh.modelIndex = -1;
     else if (modelIndex >= 0)
@@ -1428,7 +1428,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return;
     }
     if (lcaoCartoon.equals("spacefill") || lcaoCartoon.equals("cpk")) {
-      createLcaoLobe(null, 2 * vwr.ms.at[atomIndex].getRadius(), nElectrons);
+      createLcaoLobe(null, 2 * ms.at[atomIndex].getRadius(), nElectrons);
       return;      
     }
 

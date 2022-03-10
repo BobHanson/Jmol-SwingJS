@@ -52,10 +52,10 @@ public class Balls extends AtomShape {
     isActive = true;
     if (bsSizeSet == null)
       bsSizeSet = new BS();
-    int bsLength = Math.min(atoms.length, bsSelected.length());
+    int bsLength = Math.min(ms.at.length, bsSelected.length());
     for (int i = bsSelected.nextSetBit(0); i >= 0 && i < bsLength; i = bsSelected
         .nextSetBit(i + 1)) {
-      Atom atom = atoms[i];
+      Atom atom = ms.at[i];
       atom.setMadAtom(vwr, rd);
       bsSizeSet.set(i);
     }
@@ -71,7 +71,7 @@ public class Balls extends AtomShape {
         bsColixSet = new BS();
       byte pid = PAL.pidOf(value);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Atom atom = atoms[i];
+        Atom atom = ms.at[i];
         atom.colixAtom = getColixA(colix, pid, atom);
         bsColixSet.setBitTo(i, colix != C.USE_PALETTE
             || pid != PAL.NONE.id);
@@ -95,7 +95,7 @@ public class Balls extends AtomShape {
         if (colix == C.INHERIT_ALL)
           colix = C.USE_PALETTE;
         byte pid = PAL.pidOf(color);
-        Atom atom = atoms[i];
+        Atom atom = ms.at[i];
         atom.colixAtom = getColixA(colix, pid, atom);
         bsColixSet.setBitTo(i, colix != C.USE_PALETTE
             || pid != PAL.NONE.id);
@@ -110,6 +110,7 @@ public class Balls extends AtomShape {
       if (bsColixSet == null)
         bsColixSet = new BS();
       short c;
+      Atom[] atoms = ms.at;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (i >= colixes.length ||(c = colixes[i]) == C.INHERIT_ALL)
           continue;
@@ -125,6 +126,7 @@ public class Balls extends AtomShape {
       boolean isTranslucent = (((String) value).equals("translucent"));
       if (bsColixSet == null)
         bsColixSet = new BS();
+      Atom[] atoms = ms.at;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         atoms[i].setTranslucent(isTranslucent, translucentLevel);
         if (isTranslucent)
@@ -141,8 +143,8 @@ public class Balls extends AtomShape {
   @Override
   public void setAtomClickability() {
     BS bsDeleted = vwr.slm.bsDeleted;
-    for (int i = ac; --i >= 0;) {
-      Atom atom = atoms[i];
+    for (int i = ms.ac; --i >= 0;) {
+      Atom atom = ms.at[i];
       if (atom == null)
         continue;
       atom.setClickable(0);

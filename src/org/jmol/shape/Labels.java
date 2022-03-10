@@ -97,7 +97,8 @@ public class Labels extends AtomShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
     isActive = true;
-
+    Atom[] atoms = ms.at;
+    int ac = ms.ac;
     if ("setDefaults" == propertyName) {
       setDefaults = ((Boolean) value).booleanValue();
       return;
@@ -408,6 +409,7 @@ public class Labels extends AtomShape {
   }
 
   private int checkStringLength(int n) {
+    int ac = ms.ac;
     n = Math.min(ac, n);
     if (strings == null || n > strings.length) {
       formats = AU.ensureLengthS(formats, n);
@@ -419,7 +421,7 @@ public class Labels extends AtomShape {
   }
 
   private int checkBgColixLength(short colix, int n) {
-    n = Math.min(ac, n);
+    n = Math.min(ms.ac, n);
     if (colix == C.INHERIT_ALL)
       return (bgcolixes == null ? 0 : bgcolixes.length);
     if (bgcolixes == null || n > bgcolixes.length)
@@ -430,7 +432,7 @@ public class Labels extends AtomShape {
   private void setPymolLabels(Map<Integer, Text> labels, BS bsSelected) {
     // from PyMOL reader
     setScaling();
-    int n = checkStringLength(ac);
+    int n = checkStringLength(ms.ac);
     checkColixLength((short) -1, n);
     for (int i = bsSelected.nextSetBit(0); i >= 0
         && i < n; i = bsSelected.nextSetBit(i + 1))
@@ -453,8 +455,9 @@ public class Labels extends AtomShape {
       int fid = (bsFontSet != null && bsFontSet.get(i) ? fids[i] : -1);
       if (fid < 0)
         setFont(i, fid = defaultFontId);
+      Atom a = ms.at[i];
       text = Text.newLabel(vwr, Font.getFont3D(fid), strings[i],
-          getColix2(i, atoms[i], false), getColix2(i, atoms[i], true), 0,
+          getColix2(i, a, false), getColix2(i, a, true), 0,
           scalePixelsPerMicron);
       setPymolLabel(i, text, formats[i]);
     }
@@ -469,7 +472,7 @@ public class Labels extends AtomShape {
   private void setScaling() {
     isActive = true;
     if (bsSizeSet == null)
-      bsSizeSet = BS.newN(ac);
+      bsSizeSet = BS.newN(ms.ac);
     isScaled = vwr.getBoolean(T.fontscaling);
     scalePixelsPerMicron = (isScaled
         ? vwr.getScalePixelsPerAngstrom(false) * 10000f
@@ -480,7 +483,9 @@ public class Labels extends AtomShape {
     if (t == null)
       return;
     String label = t.text;
-    Atom atom = atoms[i];
+    Atom atom = ms.at[i];
+    if (atom == null)
+      return;
     addString(atom, i, label,
         format == null ? PT.rep(label, "%", "%%") : format);
     atom.setShapeVisibility(vf, true);
@@ -493,7 +498,7 @@ public class Labels extends AtomShape {
   private void setLabel(LabelToken[][] temp, String strLabel, int i,
                         boolean doAll) {
     // checkStringLength must be first
-    Atom atom = atoms[i];
+    Atom atom = ms.at[i];
     LabelToken[] tokens = temp[0];
     if (tokens == null)
       tokens = temp[0] = LabelToken.compile(vwr, strLabel, '\0', null);
@@ -600,7 +605,7 @@ public class Labels extends AtomShape {
     if (offsets == null || i >= offsets.length) {
       if (offset == JC.LABEL_DEFAULT_OFFSET)
         return;
-      offsets = AU.ensureLengthI(offsets, ac);
+      offsets = AU.ensureLengthI(offsets, ms.ac);
     }
     offsets[i] = (offsets[i] & JC.LABEL_FLAGS) | offset;
 
@@ -616,7 +621,7 @@ public class Labels extends AtomShape {
       case JC.TEXT_ALIGN_LEFT:
         return;
       }
-      offsets = AU.ensureLengthI(offsets, ac);
+      offsets = AU.ensureLengthI(offsets, ms.ac);
     }
     if (hAlign == JC.TEXT_ALIGN_NONE)
       hAlign = JC.TEXT_ALIGN_LEFT;
@@ -630,7 +635,7 @@ public class Labels extends AtomShape {
     if (offsets == null || i >= offsets.length) {
       if (pointer == JC.LABEL_POINTER_NONE)
         return;
-      offsets = AU.ensureLengthI(offsets, ac);
+      offsets = AU.ensureLengthI(offsets, ms.ac);
     }
     offsets[i] = JC.setPointer(offsets[i], pointer);
     Text text = getLabel(i);
@@ -642,7 +647,7 @@ public class Labels extends AtomShape {
     if (offsets == null || i >= offsets.length) {
       if (!TF)
         return;
-      offsets = AU.ensureLengthI(offsets, ac);
+      offsets = AU.ensureLengthI(offsets, ms.ac);
     }
     offsets[i] = JC.setZPosition(offsets[i], TF ? flag : 0);
   }
@@ -651,7 +656,7 @@ public class Labels extends AtomShape {
     if (fids == null || i >= fids.length) {
       if (fid == zeroFontId)
         return;
-      fids = AU.ensureLengthI(fids, ac);
+      fids = AU.ensureLengthI(fids, ms.ac);
     }
     fids[i] = fid;
     bsFontSet.set(i);
@@ -740,6 +745,7 @@ public class Labels extends AtomShape {
     int imin = -1;
     float zmin = Float.MAX_VALUE;
     float afactor = (vwr.antialiased ? 2 : 1);
+    Atom[] atoms = ms.at;
     for (Map.Entry<Integer, float[]> entry : labelBoxes.entrySet()) {
       if (!atoms[entry.getKey().intValue()]
           .isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))

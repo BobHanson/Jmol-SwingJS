@@ -218,7 +218,7 @@ public void initShape() {
     if ("modelIndex" == propertyName) {
       //from saved state -- used to set modelVertices
       indicatedModelIndex = ((Integer) value).intValue();
-      if (indicatedModelIndex < 0 || indicatedModelIndex >= vwr.ms.mc)
+      if (indicatedModelIndex < 0 || indicatedModelIndex >= ms.mc)
         return;
       vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX),
           (modelInfo = new int[] { indicatedModelIndex, 0 }) });
@@ -390,7 +390,7 @@ public void initShape() {
       vData.addLast(new Object[] { Integer.valueOf(PT_BITSET), bsAtoms });
       //nbitsets++;
       if (isCircle && diameter == 0 && width == 0)
-        width = vwr.ms.calcRotationRadiusBs(bsAtoms) * 2.0f;
+        width = ms.calcRotationRadiusBs(bsAtoms) * 2.0f;
       return;
     }
 
@@ -628,7 +628,7 @@ private void initDraw() {
             : (vData.size() == 0) == (connections == null))
         || !isArrow && connections != null)
       return false; // connections only for arrows at this point
-    int modelCount = vwr.ms.mc;
+    int modelCount = ms.mc;
     if (polygon != null || lineData != null
         || indicatedModelIndex < 0 && (isFixed || isArrow || isCurve
             || isCircle || isCylinder || modelCount == 1)) {
@@ -752,7 +752,7 @@ private void initDraw() {
         case T.bitset:
           if (!isModelPoints && ((BS) v.value).isEmpty())
             continue;
-          pt = vwr.ms.getAtomSetCenter((BS) v.value);
+          pt = ms.getAtomSetCenter((BS) v.value);
           break;
         case T.point3f:
           if (isModelPoints)
@@ -840,7 +840,7 @@ private void initDraw() {
         if (bsModel != null)
           bs.and(bsModel);
         if (bs.length() > 0)
-          addPoint(vwr.ms.getAtomSetCenter(bs), (makePoints ? iModel : -1));
+          addPoint(ms.getAtomSetCenter(bs), (makePoints ? iModel : -1));
         break;
       case PT_IDENTIFIER:
         int[] idInfo = (int[]) info[1];
@@ -891,7 +891,7 @@ private void initDraw() {
               if (bsModel != null)
                 bs.and(bsModel);
               if (bs.length() > 0)
-                addPoint(vwr.ms.getAtomSetCenter(bs), j);
+                addPoint(ms.getAtomSetCenter(bs), j);
             } else if (point instanceof SV) {
               addPoint(SV.ptValue((SV) point), j);
             }
@@ -1385,7 +1385,7 @@ private void initDraw() {
       DrawMesh m = dmeshes[i];
       if (m.visibilityFlags != 0) {
         int mCount = (m.isDrawPolygon ? m.pc
-            : m.modelFlags == null ? 1 : vwr.ms.mc);
+            : m.modelFlags == null ? 1 : ms.mc);
         for (int iModel = mCount; --iModel >= 0;) {
           if (m.modelFlags != null
               && !m.modelFlags.get(iModel)
@@ -1440,7 +1440,7 @@ private void initDraw() {
             && dmesh.drawVertexCount == 0 && dmesh.drawVertexCounts == null)
       return "";
     SB str = new SB();
-    int modelCount = vwr.ms.mc;
+    int modelCount = ms.mc;
     if (!dmesh.isFixed && iModel >= 0 && modelCount > 1)
       appendCmd(str, "frame " + vwr.getModelNumberDotted(iModel));
     str.append("  draw ID ").append(PT.esc(dmesh.thisID));
@@ -1625,7 +1625,7 @@ private void initDraw() {
       info.put("scale", Float.valueOf(mesh.scale));
       if (mesh.drawType == EnumDrawType.MULTIPLE) {
         Lst<Map<String, Object>> m = new  Lst<Map<String,Object>>();
-        int modelCount = vwr.ms.mc;
+        int modelCount = ms.mc;
         for (int k = 0; k < modelCount; k++) {
           if (mesh.ptCenters[k] == null)
             continue;

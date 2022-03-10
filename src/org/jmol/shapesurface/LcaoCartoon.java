@@ -225,8 +225,8 @@ public class LcaoCartoon extends Isosurface {
     }
     // older method
 
-    int ac = vwr.ms.ac;
-    Atom[] at = vwr.ms.at;
+    int ac = ms.ac;
+    Atom[] at = ms.at;
     for (int i = ac; --i >= 0;) {
       if (lcaoID != null || thisSet.get(i))
         setLcaoOn(i, TF && at[i] != null);
@@ -246,7 +246,7 @@ public class LcaoCartoon extends Isosurface {
       return;
     }
     // older method does not use * but still deletes multiple lobes
-    int ac = vwr.ms.ac;
+    int ac = ms.ac;
     // null test unnecessary here
     for (int i = ac; --i >= 0;)
       if (lcaoID != null || thisSet.get(i))
@@ -318,7 +318,7 @@ public class LcaoCartoon extends Isosurface {
       setPropI((isRadical ? "radical" : isLonePair ? "lonePair" : "lcaoCartoon"), axes, null);
     }
     if (isCpk) {
-      short colix = vwr.ms.at[iAtom].colixAtom;
+      short colix = ms.at[iAtom].colixAtom;
       if (C.isColixTranslucent(colix)) {
         setPropI("translucentLevel", Float.valueOf(C.getColixTranslucencyLevel(colix)), null);
         setPropI("translucency", "translucent", null);

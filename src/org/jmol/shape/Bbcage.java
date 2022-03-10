@@ -46,7 +46,7 @@ public class Bbcage extends FontLineShape {
   @Override
   public void setModelVisibilityFlags(BS bs) {
     BS bboxModels;
-    isVisible = (vwr.getShowBbcage() && ((bboxModels = vwr.ms.bboxModels) == null || bs
+    isVisible = (vwr.getShowBbcage() && ((bboxModels = ms.bboxModels) == null || bs
         .intersects(bboxModels)));
   }
   

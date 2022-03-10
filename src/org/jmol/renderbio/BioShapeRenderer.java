@@ -143,7 +143,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
             .getInterface("org.jmol.renderbio.BioMeshRenderer");
         meshRenderer.setViewerG3dShapeID(vwr, shape.shapeID);
       }
-      meshRenderer.setup(g3d, vwr.ms, shape);
+      meshRenderer.setup(g3d, ms, shape);
     }
     TF = vwr.getBoolean(T.tracealpha);
     if (TF != isTraceAlpha)
@@ -193,7 +193,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
 
   private boolean initializePolymer(BioShape bioShape) {
     BS bsDeleted = vwr.slm.bsDeleted;
-    if (vwr.ms.isJmolDataFrameForModel(bioShape.modelIndex)) {
+    if (ms.isJmolDataFrameForModel(bioShape.modelIndex)) {
       controlPoints = bioShape.bioPolymer.getControlPoints(true, 0, false);
     } else {
       controlPoints = bioShape.bioPolymer.getControlPoints(isTraceAlpha,

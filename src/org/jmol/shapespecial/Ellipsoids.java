@@ -148,14 +148,15 @@ public class Ellipsoids extends AtomShape {
 
   @Override
   protected void setSize(int size, BS bsSelected) {
-    if (atoms == null || size == 0 && ms.atomTensors == null)
+    if (!isSet || size == 0 && ms.atomTensors == null)
       return;
     boolean isAll = (bsSelected == null);
     if (!isAll && selectedAtoms != null)
       bsSelected = selectedAtoms;
-    Lst<Object> tensors = vwr.ms.getAllAtomTensors(typeSelected);
+    Lst<Object> tensors = ms.getAllAtomTensors(typeSelected);
     if (tensors == null)
       return;
+    Atom[] atoms = ms.at;
     for (int i = tensors.size(); --i >= 0;) {
       Tensor t = (Tensor) tensors.get(i);
       if (isAll || t.isSelected(bsSelected, -1)) {
@@ -514,11 +515,12 @@ public class Ellipsoids extends AtomShape {
      */
     if (!isActive())
       return;
-    setVis(simpleEllipsoids, bsModels, atoms);
-    setVis(atomEllipsoids, bsModels, atoms);
+    setVis(simpleEllipsoids, bsModels);
+    setVis(atomEllipsoids, bsModels);
   }
 
-  private void setVis(Map<?, Ellipsoid> ellipsoids, BS bs, Atom[] atoms) {
+  private void setVis(Map<?, Ellipsoid> ellipsoids, BS bs) {
+    Atom[] atoms = ms.at;
     for (Ellipsoid e : ellipsoids.values()) {
       Tensor t = e.tensor;
       boolean isOK = (t != null && e.isValid && e.isOn);
@@ -539,6 +541,7 @@ public class Ellipsoids extends AtomShape {
   public void setAtomClickability() {
     if (atomEllipsoids.isEmpty())
       return;
+    Atom[] atoms = ms.at;
     for (Ellipsoid e : atomEllipsoids.values()) {
       int i = e.tensor.atomIndex1;
       Atom atom = atoms[i];

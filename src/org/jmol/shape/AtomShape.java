@@ -45,9 +45,11 @@ public abstract class AtomShape extends Shape {
   public short[] mads;
   public short[] colixes;
   public byte[] paletteIDs;
-  public int ac;
-  public Atom[] atoms;
+  //public int ac;
+//  public Atom[] atoms;
   public boolean isActive;
+  private RadiusData rd;
+  protected boolean isSet;
   
   public int monomerCount;
   public BS bsSizeDefault;
@@ -59,8 +61,9 @@ public abstract class AtomShape extends Shape {
   
   @Override
   protected void initModelSet() {
-    atoms = ms.at;
-    ac = ms.ac;
+//    atoms = ms.at;
+    isSet = true;
+    int ac = ms.ac;
     // in case this is due to "load append"
     if (mads != null)
       mads = AU.arrayCopyShort(mads, ac);
@@ -80,8 +83,6 @@ public abstract class AtomShape extends Shape {
     setSize2(size, bsSelected);
   }
 
-  private RadiusData rd;
-
   protected void setSize2(int size, BS bsSelected) {
     if (size == 0) {
       setSizeRD(null, bsSelected);
@@ -97,11 +98,12 @@ public abstract class AtomShape extends Shape {
   @Override
   protected void setSizeRD(RadiusData rd, BS bsSelected) {
     // Halos Stars Vectors
-    if (atoms == null)  // vector values are ignored if there are none for a model 
+    if (!isSet)  // vector values are ignored if there are none for a model 
       return;
     isActive = true;
     boolean isVisible = (rd != null && rd.value != 0);
     boolean isAll = (bsSelected == null);
+    int ac = ms.ac;
     int i0 = (isAll ? ac - 1 : bsSelected.nextSetBit(0));
     if (bsSizeSet == null)
       bsSizeSet = BS.newN(ac);
@@ -112,7 +114,7 @@ public abstract class AtomShape extends Shape {
   }
 
   protected void setSizeRD2(int i, RadiusData rd, boolean isVisible) {
-    Atom atom = atoms[i];
+    Atom atom = ms.at[i];
     mads[i] = atom.calculateMad(vwr, rd);
     bsSizeSet.setBitTo(i, isVisible);
     atom.setShapeVisibility(vf, isVisible);
@@ -143,7 +145,7 @@ public abstract class AtomShape extends Shape {
         bsSizeSet = new BS();
       int i0 = bs.nextSetBit(0);
       if (mads == null && i0 >= 0)
-        mads = new short[ac];
+        mads = new short[ms.ac];
       
       int n = checkColixLength(colixes == null ? 0 : C.BLACK, bs.length());
       for (int i = i0, pt = 0; i >= 0 && i < n; i = bs.nextSetBit(i + 1), pt++) {
@@ -164,7 +166,7 @@ public abstract class AtomShape extends Shape {
     if ("translucency" == propertyName) {
       isActive = true;
       boolean isTranslucent = (value.equals("translucent"));
-      checkColixLength(C.BLACK, ac);
+      checkColixLength(C.BLACK, ms.ac);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         colixes[i] = C.getColixTranslucent3(colixes[i], isTranslucent,
             translucentLevel);
@@ -174,9 +176,8 @@ public abstract class AtomShape extends Shape {
       return;
     }
     if (propertyName == "deleteModelAtoms") {
-      atoms = (Atom[]) ((Object[]) value)[1];
+      Atom[] atoms = (Atom[]) ((Object[]) value)[1];
       int[] info = (int[]) ((Object[]) value)[2];
-      ac = ms.ac;
       int firstAtomDeleted = info[1];
       int nAtomsDeleted = info[2];
       mads = (short[]) AU.deleteElements(mads, firstAtomDeleted,
@@ -193,7 +194,7 @@ public abstract class AtomShape extends Shape {
   }
 
   protected int checkColixLength(short colix, int n) {
-    n = Math.min(ac, n);
+    n = Math.min(ms.ac, n);
     if (colix == C.INHERIT_ALL)
       return (colixes == null ? 0 : colixes.length);
     if (colixes == null || n > colixes.length) {
@@ -201,13 +202,13 @@ public abstract class AtomShape extends Shape {
       paletteIDs = AU.ensureLengthByte(paletteIDs, n);
     }
     if (bsColixSet == null)
-      bsColixSet = BS.newN(ac);
+      bsColixSet = BS.newN(ms.ac);
     return n;
   }
   
   protected void setColixAndPalette(short colix, byte paletteID, int atomIndex) {
     if (colixes == null) {
-      checkColixLength((short)-1, ac);
+      checkColixLength((short)-1, ms.ac);
     }
     colixes[atomIndex] = colix = getColixI(colix, paletteID, atomIndex);
     bsColixSet.setBitTo(atomIndex, colix != C.INHERIT_ALL || shapeID == JC.SHAPE_BALLS);
@@ -218,7 +219,8 @@ public abstract class AtomShape extends Shape {
   public void setAtomClickability() {
     if (!isActive)
       return;
-    for (int i = ac; --i >= 0;) {
+    Atom[] atoms = ms.at;
+    for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (atom == null || (atom.shapeVisibilityFlags & vf) == 0
           || ms.isAtomHidden(i))

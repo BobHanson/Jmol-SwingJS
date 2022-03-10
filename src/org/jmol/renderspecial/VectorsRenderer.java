@@ -80,7 +80,6 @@ public class VectorsRenderer extends ShapeRenderer {
     short[] mads = vectors.mads;
     if (mads == null)
       return false;
-    Atom[] atoms = vectors.atoms;
     short[] colixes = vectors.colixes;
     boolean needTranslucent = false;
     vectorScale = vwr.getFloat(T.vectorscale);
@@ -95,6 +94,7 @@ public class VectorsRenderer extends ShapeRenderer {
     if (vectorScale < 0)
       headScale = -headScale;
     boolean haveModulations = false;
+    Atom[] atoms = ms.at;
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))

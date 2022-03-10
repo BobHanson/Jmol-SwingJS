@@ -206,7 +206,7 @@ public class CGO extends MeshCollection {
   @Override
   public String getShapeState() {
     SB sb = new SB();
-    int modelCount = vwr.ms.mc;
+    int modelCount = ms.mc;
     for (int i = 0; i < meshCount; i++) {
       CGOMesh mesh = cmeshes[i];
       if (mesh == null || mesh.cmds == null || mesh.modelIndex >= modelCount)

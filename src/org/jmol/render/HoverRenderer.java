@@ -51,8 +51,8 @@ public class HoverRenderer extends ShapeRenderer {
       label = (hover.specialLabel != null ? hover.specialLabel 
           : hover.atomFormats != null
           && hover.atomFormats[hover.atomIndex] != null ? 
-              vwr.ms.getLabeler().formatLabel(vwr, atom, hover.atomFormats[hover.atomIndex], ptTemp)
-          : hover.labelFormat != null ? vwr.ms.getLabeler().formatLabel(vwr, atom, fixLabel(atom, hover.labelFormat), ptTemp)
+              ms.getLabeler().formatLabel(vwr, atom, hover.atomFormats[hover.atomIndex], ptTemp)
+          : hover.labelFormat != null ? ms.getLabeler().formatLabel(vwr, atom, fixLabel(atom, hover.labelFormat), ptTemp)
               : null);
       if (label == null)
         return false;
@@ -75,7 +75,7 @@ public class HoverRenderer extends ShapeRenderer {
   String fixLabel(Atom atom, String label) {
     if (label == null)
       return null;
-    return (vwr.ms.isJmolDataFrameForModel(atom.mi) 
+    return (ms.isJmolDataFrameForModel(atom.mi) 
         && label.equals("%U") ?"%W" : label);
   }
 }
