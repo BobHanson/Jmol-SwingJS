@@ -1516,6 +1516,8 @@ abstract public class AtomCollection {
   int[] aaRet;
   
   public int getMissingHydrogenCount(Atom atom, boolean allowNegative) {
+    if (aaRet == null)
+      aaRet = new int[5];
     int targetCount = atom.getTargetValence();
     if (targetCount < 0)
       return 0;
@@ -1523,8 +1525,6 @@ abstract public class AtomCollection {
     int valence = atom.getValence();
     Model model = ((ModelSet) this).am[atom.mi];
     String s = (model.isBioModel && !model.isPdbWithMultipleBonds ? atom.group.getGroup3() : null);
-    if (aaRet == null)
-      aaRet = new int[5];
     aaRet[0] = targetCount;
     aaRet[1] = charge;
     aaRet[2] = 0; // hybridization

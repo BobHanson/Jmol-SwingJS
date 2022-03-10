@@ -1055,7 +1055,7 @@ public class ModelKit {
 
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = (type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
+    int atomicNumber = (type.equals("X") ? -1 : type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
         ? Elements.elementNumberFromSymbol(type, true)
         : -1);
 
@@ -1757,10 +1757,10 @@ public class ModelKit {
         // and set up the connections
 
         if (atom != null) {
-          if (bs.isEmpty()) {
+          if (bs.cardinality() <= 1) {
             vConnections.addLast(atom);
             isConnected = true;
-          } else {
+          } else if (uc != null) {
             P3 p = P3.newP(atom);
             uc.toFractional(p, true);
             bs.or(bsEquiv);
