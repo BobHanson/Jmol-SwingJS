@@ -591,14 +591,14 @@ public class SimpleUnitCell {
 
   public static float unitizeX(float x) {
     // introduced in Jmol 11.7.36
-    x = (float) (x - Math.floor(x));
-    if (x > 0.999f || x < 0.001f)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
-      x = 0;
-    if (x > 0.4999f && x < 0.5001f)
-      x = 0.5f;
-    return x;
+    return (float) (x - Math.floor(x));
   }
-  
+
+
+  public static float normalizeXRnd(float x) {
+    return Math.round(x*12) / 12;
+  }
+
   
   /**
    * allowance for rounding in [0,1)

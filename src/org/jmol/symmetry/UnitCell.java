@@ -957,6 +957,11 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
   }
 
+  public void normalize(V3 vtrans) {
+    vtrans.x = normalizeXRnd(vtrans.x);
+    vtrans.y = normalizeXRnd(vtrans.y);
+    vtrans.z = normalizeXRnd(vtrans.z);    
+  }
 
 
 }

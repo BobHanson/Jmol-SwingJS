@@ -152,7 +152,7 @@ public class ModelKit {
       case TYPE_VECTOR:
         if (pt == null) { // generic constraint 
           Measure.projectOntoAxis(p, offset, unitVector, v);
-          if (p.distanceSquared(ptOld) > JC.UC_TOLERANCE2) {
+          if (p.distanceSquared(ptOld) >= JC.UC_TOLERANCE2) {
             ptNew.x = Float.NaN;
             return;
           }
@@ -192,10 +192,10 @@ public class ModelKit {
 
   ////////////// modelkit state //////////////
   
-  final static int STATE_BITS_XTAL /* 0b00000000011*/ = 0x03;
   final static int STATE_MOLECULAR /* 0b00000000000*/ = 0x00;
   final static int STATE_XTALVIEW /* 0b00000000001*/ = 0x01;
   final static int STATE_XTALEDIT /* 0b00000000010*/ = 0x02;
+  final static int STATE_BITS_XTAL /* 0b00000000011*/ = 0x03;
 
   final static int STATE_BITS_SYM_VIEW /* 0b00000011100*/ = 0x1c;
   final static int STATE_SYM_NONE      /* 0b00000000000*/ = 0x00;
@@ -302,7 +302,9 @@ public class ModelKit {
     centerPoint = spherePoint = null;
    // no! atomHoverLabel = bondHoverLabel = xtalHoverLabel = null;
     symop = null;
-    setDefaultState(setHasUnitCell() ? STATE_XTALVIEW : STATE_MOLECULAR);
+    setDefaultState(
+        //setHasUnitCell() ? STATE_XTALVIEW);
+         STATE_MOLECULAR);
     //setProperty("clicktosetelement",Boolean.valueOf(!hasUnitCell));
     //setProperty("addhydrogen",Boolean.valueOf(!hasUnitCell));
   }
@@ -1603,7 +1605,7 @@ public class ModelKit {
   }
 
   private void appRunScript(String script) {
-    vwr.evalStringQuiet(script);
+    vwr.runScript(script);
   }
 
   private String runScriptBuffered(String script) {
@@ -1681,25 +1683,25 @@ public class ModelKit {
                            // strictly internal, for crystal work:
                            BS bs, int atomicNo, int site, SymmetryInterface uc,
                            Lst<P3> points, String packing) {
-
-    // from CmdExt
-
+    boolean haveAtom = (atomIndex >= 0);
     if (bs == null)
       bs = new BS();
     int nIgnored = 0;
     int np = 0;
+    if (!haveAtom)
+      atomIndex = bs.nextSetBit(0);
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+    float bd = (pt != null && atom != null ? pt.distance(atom) : -1);
     if (points != null) {
       np = nIgnored = points.size();
       uc.toFractional(pt, true);
       points.addLast(pt);
-      if (newPoint && atomIndex >= 0)
+      if (newPoint && haveAtom)
         nIgnored++;
       uc.getEquivPointList(points, nIgnored, packing + (newPoint && atomIndex < 0 ? "newpt" : ""));
     }
-    if (atomIndex < 0)
-      atomIndex = bs.nextSetBit(0);
-    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
     BS bsEquiv = (atom == null ? null : vwr.ms.getSymmetryEquivAtoms(bs));
+    BS bs0 = BSUtil.copy(bsEquiv);
     int mi = (atom == null ? vwr.am.cmi : atom.mi);
     int ac = vwr.ms.ac;
     int state = getMKState();
@@ -1747,6 +1749,7 @@ public class ModelKit {
       // connections list for the new atoms
 
       Lst<Atom> vConnections = new Lst<Atom>();
+      boolean isConnected = false;
 
       if (site == 0) {
 
@@ -1756,6 +1759,7 @@ public class ModelKit {
         if (atom != null) {
           if (bs.isEmpty()) {
             vConnections.addLast(atom);
+            isConnected = true;
           } else {
             P3 p = P3.newP(atom);
             uc.toFractional(p, true);
@@ -1770,25 +1774,21 @@ public class ModelKit {
               }
             }
           }
-          boolean isOK = (vConnections.size() == pts.length);
-          if (isOK) {
-//            for (int i = pts.length; --i >= 0;) {
-//              System.out.println("" + P3.newP(vConnections.get(i)) + " " + pts[i]);
-//            }
+          isConnected = (vConnections.size() == pts.length);
+          if (isConnected) {
             float d = Float.MAX_VALUE;
             for (int i = pts.length; --i >= 0;) {
               float d1 = vConnections.get(i).distance(pts[i]);
               if (d == Float.MAX_VALUE)
                 d1 = d;
               else if (Math.abs(d1 - d) > 0.001f) {
-                vConnections.set(i,  null);
-                System.out.println("ModelKit connection failed for " + d + " " + d1 + " " + vConnections.get(i) + " " + pts[i]);                
+                // this did not work
+                isConnected = false;
                 break;
               }
             }
           }
-          if (!isOK) {
-            System.err.println("ModelKit cannot connect points");
+          if (!isConnected) {
             vConnections.clear();
           }
           vwr.sm.setStatusStructureModified(atomIndex, mi, 3, cmd, 1, null);
@@ -1818,7 +1818,13 @@ public class ModelKit {
       Map<String, Object> htParams = new Hashtable<String, Object>();
       if (site > 0)
         htParams.put("fixedSite", Integer.valueOf(site));
+//      // TODO idea not implemented
+//      if (type != null)
+//        htParams.put("fixedElement", type);
       bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
+      if (bd > 0 && !isConnected && vConnections.isEmpty()) {
+        appRunScript("connect " + (bd - 0.1f) + " " + (bd + 0.01f) + " " + bs0 + " " + bs);
+      }
 
       // bs now points to the new atoms
 
@@ -1932,7 +1938,7 @@ public class ModelKit {
     // from Mouse -- run it through the MODELKIT ASSIGN ATOM command
     
     
-    vwr.script("modelkit "
+    appRunScript("modelkit "
         + (vwr.getOperativeSymmetry() == null ?  "assign atom" : "ADD")
         + " ({" + atomIndex + "}) \"" + element + "\" "
           + (ptNew == null ? "" : Escape.eP(ptNew)) + " true");
@@ -1947,10 +1953,11 @@ public class ModelKit {
    * @param bsAtoms the atoms to process, presumably from different sites
    * @param packing  "packed" or ""
    * @param cmd the command generating this call
+   * @param isClick 
    * @return the number of atoms added
    */
   public int cmdAssignAddAtoms(String type, P3 pt, BS bsAtoms, String packing,
-                               String cmd) {
+                               String cmd, boolean isClick) {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
@@ -2012,6 +2019,9 @@ public class ModelKit {
             list.removeItemAt(j);
         }
       }
+      if (isClick) {
+        vwr.setPickingMode("dragAtom", 0);
+      }
       n = vwr.getThisModelAtoms().cardinality() - n;
       return n;
     } catch (Exception e) {
@@ -2030,7 +2040,7 @@ public class ModelKit {
    * @param iatom
    *        atom index
    * @param p
-   *        new position for this atom
+   *        new position for this atom, which may be modified
    * @return number of atoms moved
    */
   public int cmdAssignMoveAtom(int iatom, P3 p) { 
@@ -2060,71 +2070,115 @@ public class ModelKit {
     return n;
   }
 
-  public int assignMoveAtom(int iatom, P3 fb, BS bsFixed) { 
-    if (Float.isNaN(fb.x))
+  public int assignMoveAtom(int iatom, P3 pt, BS bsFixed) {
+    // check to see if a constraint has stopped this changae
+    if (Float.isNaN(pt.x) || iatom < 0)
       return 0;
-    int state = getMKState();
-    setMKState(STATE_MOLECULAR);
-    try {
     if (iatom < 0)
       return 0;
+    // check that this is an atom in the current model set.
+    // must be an atom in the current model set
     BS bs = BSUtil.newAndSetBit(iatom);
     bs.and(vwr.getThisModelAtoms());
     if (bs.isEmpty())
       return 0;
-    BS bseq = vwr.ms.getSymmetryEquivAtoms(bs);
-    int au = bseq.nextSetBit(0);
-    SymmetryInterface sg = vwr.getCurrentUnitCell();
-    if (getConstraint(sg, au, GET_CREATE).type == Constraint.TYPE_LOCKED) {
-      return 0;
-    }
-    P3 fa = P3.newP(vwr.ms.at[iatom]);
-    P3 pt = P3.newP(fb);
-    // cecking here that the new point has not moved to a special position
-    int[] v0 = sg.getInvariantSymops(fa, null);    
-    int[] v1 = sg.getInvariantSymops(fb, v0);
-    if ((v1 == null) != (v0 == null) || !Arrays.equals(v0, v1))
-      return 0;
-    sg.toFractional(fa, true);
-    sg.toFractional(pt, true);
-    P3[] points = new P3[bseq.cardinality()];
-    //SymmetryInterface sym = vwr.getSymTemp();
-    if (bsFixed != null)
-      bseq.andNot(bsFixed);
-    int n = bseq.cardinality();
-    if (n == 0) {
-      return 0;
-    }
-
-    int ia0 = bseq.nextSetBit(0);
-    int mi = vwr.ms.at[ia0].mi;
-    vwr.sm.setStatusStructureModified(ia0, mi, Viewer.MODIFY_SET_COORD, "dragatom", n, bseq);
-    for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
-        .nextSetBit(ia + 1)) {
-      fb = P3.newP(vwr.ms.at[ia]);
-      sg.toFractional(fb, true);
-      M4 m = sg.getTransform(fa, fb);
-      if (m == null) {
-        System.err
-            .println("ModelKit failed to find tranformation for atomIndex " + ia
-                + " " + fa + " to " + fb);
+    int state = getMKState();
+    setMKState(STATE_MOLECULAR);
+    try {
+      // check for locked atoms
+      BS bseq = vwr.ms.getSymmetryEquivAtoms(bs);
+      SymmetryInterface sg = vwr.getCurrentUnitCell();
+      if (getConstraint(sg, bseq.nextSetBit(0), GET_CREATE).type == Constraint.TYPE_LOCKED) {
         return 0;
       }
-      fb.setT(pt);
-      m.rotTrans(fb);
-      sg.toCartesian(fb, true);
-      points[k++] = fb;
-    }
-    for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
-        .nextSetBit(ia + 1)) {
-      fb = points[k++];
-      vwr.ms.setAtomCoord(ia, fb.x, fb.y, fb.z);
-    }
-    vwr.sm.setStatusStructureModified(ia0, mi, -Viewer.MODIFY_SET_COORD, "dragatom", n, bseq);
-    return n;
+      if (bsFixed != null)
+        bseq.andNot(bsFixed);
+      int n = bseq.cardinality();
+      if (n == 0) {
+        return 0;
+      }
+      // checking here that the new point has not moved to a special position
+      Atom a = vwr.ms.at[iatom];
+      int[] v0 = sg.getInvariantSymops(a, null);
+      int[] v1 = sg.getInvariantSymops(pt, v0);
+      if ((v1 == null) != (v0 == null) || !Arrays.equals(v0, v1))
+        return 0;
+      P3[] points = new P3[n];
+      // If this next call fails, then we have a serious problem. 
+      // An operator was not found for one of the atoms that transforms it
+      // into its presumed symmetry-equivalent atom
+      int ia0 = bseq.nextSetBit(0);
+      if (!fillPointsForMove(sg, bseq, ia0, a, pt, points)) {
+        return 0;
+      }
+      int mi = vwr.ms.at[ia0].mi;
+      vwr.sm.setStatusStructureModified(ia0, mi, Viewer.MODIFY_SET_COORD,
+          "dragatom", n, bseq);
+      for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
+          .nextSetBit(ia + 1)) {
+        P3 p = points[k++];
+        vwr.ms.setAtomCoord(ia, p.x, p.y, p.z);
+      }
+      vwr.sm.setStatusStructureModified(ia0, mi, -Viewer.MODIFY_SET_COORD,
+          "dragatom", n, bseq);
+      return n;
     } finally {
       setMKState(state);
     }
+  }
+  
+  /**
+   * Find the operator that transforms fractional point fa to one of its
+   * symmetry-equivalent points, and then also transform pt by that same matrix.
+   * Optionally, save the transformed points in a compact array.
+   * 
+   * @param sg
+   * @param bseq
+   * @param i0
+   * @param a
+   * @param pt
+   * @param points
+   * @return false if there is a failure to find a transform
+   */
+  private boolean fillPointsForMove(SymmetryInterface sg, BS bseq, int i0,
+                                    P3 a, P3 pt, P3[] points) {
+    float d = a.distance(pt);
+    P3 fa = P3.newP(a);
+    P3 fb = P3.newP(pt);
+    sg.toFractional(fa, true);
+    sg.toFractional(fb, true);
+    for (int k = 0, i = i0; i >= 0; i = bseq.nextSetBit(i + 1)) {
+      P3 p = P3.newP(vwr.ms.at[i]);
+      sg.toFractional(p, true);
+      M4 m = sg.getTransform(fa, p, false);
+      if (m == null) {
+//        m = sg.getTransform(fa, p, true);
+        return false;
+      }
+      P3 p2 = P3.newP(fb);
+      m.rotTrans(p2);
+      sg.toCartesian(p2, true);
+      if (Math.abs(d - vwr.ms.at[i].distance(p2)) > 0.001f)
+        return false;
+      points[k++] = p2;
+    }
+    fa.setT(points[0]);
+    sg.toFractional(fa, true);
+    // check for sure that all new positions are also OK
+    for (int k = points.length; --k >= 0;) {
+      fb.setT(points[k]);
+      sg.toFractional(fb, true);
+      M4 m = sg.getTransform(fa, fb, false);
+      if (m == null) {
+//        m = sg.getTransform(fa, fb, true);
+        return false;
+      }
+      for (int i = points.length; --i > k;) {
+        if (points[i].distance(points[k]) < 0.1f)
+          return false;
+      }
+    }
+    return true;
   }
 
   public void clearAtomConstraints() {
@@ -2170,7 +2224,7 @@ public class ModelKit {
         sym.toFractional(fa, true);
         P3 fb = P3.newP(b);
         sym.toFractional(fb, true);
-        M4 m = sym.getTransform(fa, fb);
+        M4 m = sym.getTransform(fa, fb, true);
         if (m == null) {
           System.err.println(
               "ModelKit - null matrix for " + iatom + " " + a + " to " + b);

@@ -6238,7 +6238,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
     case T.add:
-      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pt, bs, (isPacked ? "packed" : ""), e.fullCommand);
+      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pt, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms added"), na), false);
       break;

@@ -702,7 +702,7 @@ public class Symmetry implements SymmetryInterface {
     if (cellParams != null) {
       cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
-    return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
+    return (Map<String, Object>) getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
         null, 0, -1, isFull, isForModel, 0, cellInfo, null);
   }
 
@@ -980,10 +980,10 @@ public class Symmetry implements SymmetryInterface {
       p.setT(pt);
       toFractional(p, true);
       // unitize here should take care of all Wyckoff positions
-     unitize(p);
+     unitCell.unitize(p);
       p0.setT(p);
       ops[i].rotTrans(p);
-     unitize(p);
+     unitCell.unitize(p);
       if (p0.distanceSquared(p) < JC.UC_TOLERANCE2) {
         bs.set(i);
       }
@@ -1004,19 +1004,14 @@ public class Symmetry implements SymmetryInterface {
 
 
   /**
-   * @param fracA 
-   * @param fracB 
+   * @param fracA
+   * @param fracB
    * @return matrix
    */
   @Override
-  public M4 getTransform(P3 fracA, P3 fracB) {
-    Object[] o = (Object[]) getDesc(null).getSymopInfoForPoints(this, -1, 0, null, fracA, fracB,
-        null, null, 0, 1, 0, BSUtil.newAndSetBit(SymmetryDesc.RET_TRANSFORMONLY));
-    if (o.length == 0) {
-      return null;
-    }
-    o = (Object[]) o[0];
-    return (M4) o[o.length - 1];    
+  public M4 getTransform(P3 fracA, P3 fracB, boolean best) {
+    return getDesc(null).getTransform(unitCell, getSymmetryOperations(), fracA,
+        fracB, best);
   }
 
 }

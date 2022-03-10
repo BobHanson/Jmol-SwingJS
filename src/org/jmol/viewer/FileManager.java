@@ -1647,5 +1647,9 @@ public class FileManager implements BytePoster {
     return s;
   }
 
+  public boolean isZipStream(Object br) {
+    return ZipTools.isZipStream(br);
+  }
+
 
 }

@@ -28,8 +28,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.zip.ZipInputStream;
-
 import javax.swing.JOptionPane;
 
 import javajs.util.AU;
@@ -677,7 +675,7 @@ public class ScriptManager implements JmolScriptManager {
     Object br = vwr.fm.getUnzippedReaderOrStreamFromName(fileName, null, true,
         false, true, true, null);
     String modelType = null;
-    if (br instanceof ZipInputStream) {
+    if (vwr.fm.isZipStream(br)) {
       String zipDirectory = vwr.getZipDirectoryAsString(fileName);
       if (zipDirectory.indexOf("JmolManifest") >= 0)
         return "Jmol";
@@ -777,7 +775,7 @@ public class ScriptManager implements JmolScriptManager {
           .appendC('\n');
 
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
-    eval.runScriptBuffer(sbConnect.toString(), null, false);
+    vwr.runScript(sbConnect.toString());
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
     vwr.g.appendNew = wasAppendNew;

@@ -615,4 +615,8 @@ public class ZipTools {//implements GenericZipTools {
     return bytes;
   }
 
+  public static boolean isZipStream(Object br) {
+    return br instanceof ZipInputStream;
+  }
+
 }

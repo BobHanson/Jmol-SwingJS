@@ -20,144 +20,109 @@ import javajs.util.V3;
 
 public interface SymmetryInterface {
 
-  public int addBioMoleculeOperation(M4 mat, boolean isReverse);
+  int addBioMoleculeOperation(M4 mat, boolean isReverse);
 
-  public boolean addLatticeVectors(Lst<float[]> lattvecs);
+  boolean addLatticeVectors(Lst<float[]> lattvecs);
 
-  public String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma);
+  int addSpaceGroupOperation(String xyz, int opId);
 
-  public int addSpaceGroupOperation(String xyz, int opId);
+  String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma);
 
-  public boolean checkDistance(P3 f1, P3 f2, float distance, 
+  void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
+
+  String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+      throws Exception;
+
+  boolean checkDistance(P3 f1, P3 f2, float distance, 
                                         float dx, int iRange, int jRange, int kRange, P3 ptOffset);
 
-  public boolean createSpaceGroup(int desiredSpaceGroupIndex,
+  boolean createSpaceGroup(int desiredSpaceGroupIndex,
                                            String name,
                                            Object data, int modDim);
 
-  public String fcoord(T3 p);
+  String fcoord(T3 p);
 
-  public P3[] getCanonicalCopy(float scale, boolean withOffset);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String op, boolean asString);
 
-  public P3 getCartesianOffset();
+  Lst<P3> generateCrystalClass(P3 pt0);
 
-  public int[] getCellRange();
+  P3[] getCanonicalCopy(float scale, boolean withOffset);
 
-  public boolean getCoordinatesAreFractional();
+  P3 getCartesianOffset();
 
-  public P3 getFractionalOffset();
+  int[] getCellRange();
 
-  public Object getLatticeDesignation();
+  T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
 
-  public int getLatticeOp();
+  boolean getCoordinatesAreFractional();
 
-  public String getMatrixFromString(String xyz, float[] temp, boolean allowScaling, int modDim);
+  void getEquivPointList(Lst<P3> pts, int nIgnore, String flags);
+
+  Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags);
+  
+  P3 getFractionalOffset();
+
+  T3 getFractionalOrigin();
+
+  String getIntTableNumber();
+
+  int[] getInvariantSymops(P3 p3, int[] v0);
+
+  AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
+
+  Lst<P3> getLatticeCentering();
+
+  Object getLatticeDesignation();
+
+  int getLatticeOp();
+
+  char getLatticeType();
+
+  String getMatrixFromString(String xyz, float[] temp, boolean allowScaling, int modDim);
 
   Lst<String> getMoreInfo();
 
-  public float[] getUnitCellParams();
+  Matrix getOperationRsVs(int op);
 
-  public Matrix getOperationRsVs(int op);
-  
-  public Object getPointGroupInfo(int modelIndex, String drawID,
+  Object getPointGroupInfo(int modelIndex, String drawID,
                                            boolean asInfo, String type,
                                            int index, float scale);
 
-  public String getPointGroupName();
+  String getPointGroupName();
 
-  public int getSiteMultiplicity(P3 a);
+  Quat getQuaternionRotation(String abc);
 
-  public Object getSpaceGroup();
+  int getSiteMultiplicity(P3 a);
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, float[] cellParams);
+  Object getSpaceGroup();
+
+  Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, float[] cellParams);
 
   Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
                               boolean isFull, boolean addNonstandard);
 
-  public String getSpaceGroupName();
-
-  public void setSpaceGroupName(String name);
-
-  public M4 getSpaceGroupOperation(int i);
-
-  public M4 getSpaceGroupOperationRaw(int i);
-
-  public String getSpaceGroupOperationCode(int op);
-
-  public int getSpaceGroupOperationCount();
-
-  public String getSpaceGroupXyz(int i, boolean doNormalize);
-
-  public String getSymmetryInfoStr();
-
-  public M4[] getSymmetryOperations();
-
-  public float getSpinOp(int op);
-
-  public SymmetryInterface getUnitCell(T3[] points, boolean setRelative, String name);
-
-  public float[] getUnitCellAsArray(boolean vectorsOnly);
-
-  public String getUnitCellInfo(boolean scaled);
-
-  public float getUnitCellInfoType(int infoType);
-
-  public T3 getUnitCellMultiplier();
-
-  public String getUnitCellState();
-  
-  public P3[] getUnitCellVectors();
-
-  public P3[] getUnitCellVerticesNoOffset();
-  
-  public Map<String, Object> getUnitCellInfoMap();
-  
-  public boolean haveUnitCell();
-
-  public boolean isBio();
-
-  public boolean isSimple();
-
-  public boolean isPolymer();
-
-  public boolean isSlab();
-
-  public boolean isSupercell();
-
-  public void newSpaceGroupPoint(int i, P3 atom1, P3 atom2,
-                                          int transX, int transY, int transZ, M4 o);
-
-  public BS notInCentroid(ModelSet modelSet, BS bsAtoms,
-                          int[] minmax);
-
-  public V3[] rotateAxes(int iop, V3[] axes, P3 ptTemp, M3 mTemp);
-
-  public void setFinalOperations(String name, P3[] atoms,
-                                          int iAtomFirst,
-                                          int noSymmetryCount, boolean doNormalize, String filterSymop);
+  String getSpaceGroupName();
 
   /**
-   * set symmetry lattice type using Hall rotations
    * 
-   * @param latt SHELX index or character lattice character P I R F A B C S T or \0
-   * 
+   * @param type "Hall" or "HM" or "ITA"
+   * @return type or null
    */
-  public void setLattice(int latt);
+  String getSpaceGroupNameType(String type);
 
-  public void setOffset(int nnn);
+  M4 getSpaceGroupOperation(int i);
+  
+  String getSpaceGroupOperationCode(int op);
 
-  public void setOffsetPt(T3 pt);
+  int getSpaceGroupOperationCount();
+  
+  M4 getSpaceGroupOperationRaw(int i);
+  
+  String getSpaceGroupXyz(int i, boolean doNormalize);
 
-  public SymmetryInterface setPointGroup(
-                                     SymmetryInterface pointGroupPrevious,
-                                     T3 center, T3[] atomset,
-                                     BS bsAtoms,
-                                     boolean haveVibration,
-                                     float distanceTolerance, float linearTolerance, boolean localEnvOnly);
+  float getSpinOp(int op);
 
-  public void setSpaceGroup(boolean doNormalize);
-
-  public SymmetryInterface setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
+  boolean getState(SB commands);
 
   /**
    * 
@@ -175,69 +140,91 @@ public interface SymmetryInterface {
    * @param options could be T.offset
    * @return a variety of object types
    */
-  public Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
+  Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
                                     P3 translation, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
 
-  public void setTimeReversal(int op, int val);
+  String getSymmetryInfoStr();
 
-  public SymmetryInterface setUnitCell(float[] params, boolean setRelative);
+  M4[] getSymmetryOperations();
 
-  public void initializeOrientation(M3 matUnitCellOrientation);
+  Tensor getTensor(Viewer vwr, float[] anisoBorU);
 
-  public void toCartesian(T3 pt, boolean asAbsolute);
+  M4 getTransform(P3 fracA, P3 fracB, boolean debug);
 
-  public void toFractional(T3 pt, boolean asAbsolute);
+  SymmetryInterface getUnitCell(T3[] points, boolean setRelative, String name);
 
-  public P3 toSupercell(P3 fpt);
+  float[] getUnitCellAsArray(boolean vectorsOnly);
 
-  public void toUnitCell(T3 pt, T3 offset);
+  String getUnitCellInfo(boolean scaled);
 
-  public boolean unitCellEquals(SymmetryInterface uc2);
+  Map<String, Object> getUnitCellInfoMap();
 
-  public void unitize(T3 ptFrac);
-
-  public T3[] getV0abc(Object def);
-
-  public Quat getQuaternionRotation(String abc);
-
-  public Tensor getTensor(Viewer vwr, float[] anisoBorU);
-
-  public T3 getFractionalOrigin();
-
-  public boolean getState(SB commands);
-
-  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
-
-  boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
-                          M3 primitiveToCrystal);
-
-  public char getLatticeType();
-
-  public String getIntTableNumber();
-
-  Lst<P3> generateCrystalClass(P3 pt0);
-
-  void toFractionalM(M4 m);
-
-  void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
-
-  String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
-      throws Exception;
-
-  public T3[] getConventionalUnitCell(String latticeType, M3 primitiveToCryst);
-
-  public void setUnitCell(SymmetryInterface uc);
-
-  /**
-   * 
-   * @param type "Hall" or "HM" or "ITA"
-   * @return type or null
-   */
-  String getSpaceGroupNameType(String type);
+  float getUnitCellInfoType(int infoType);
 
   SymmetryInterface getUnitCellMultiplied();
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String op, boolean asString);
+  T3 getUnitCellMultiplier();
+
+  float[] getUnitCellParams();
+
+  String getUnitCellState();
+
+  P3[] getUnitCellVectors();
+
+  P3[] getUnitCellVerticesNoOffset();
+
+  T3[] getV0abc(Object def);
+
+  boolean haveUnitCell();
+
+  void initializeOrientation(M3 matUnitCellOrientation);
+
+  boolean isBio();
+
+  boolean isPolymer();
+
+  boolean isSimple();
+
+  boolean isSlab();
+
+  boolean isSupercell();
+
+  void newSpaceGroupPoint(int i, P3 atom1, P3 atom2,
+                                          int transX, int transY, int transZ, M4 o);
+
+  BS notInCentroid(ModelSet modelSet, BS bsAtoms,
+                          int[] minmax);
+
+  BS removeDuplicates(ModelSet ms, BS bs);
+
+  V3[] rotateAxes(int iop, V3[] axes, P3 ptTemp, M3 mTemp);
+
+  void setFinalOperations(String name, P3[] atoms,
+                                          int iAtomFirst,
+                                          int noSymmetryCount, boolean doNormalize, String filterSymop);
+
+  /**
+   * set symmetry lattice type using Hall rotations
+   * 
+   * @param latt SHELX index or character lattice character P I R F A B C S T or \0
+   * 
+   */
+  void setLattice(int latt);
+
+  void setOffset(int nnn);
+
+  void setOffsetPt(T3 pt);
+
+  SymmetryInterface setPointGroup(
+                                     SymmetryInterface pointGroupPrevious,
+                                     T3 center, T3[] atomset,
+                                     BS bsAtoms,
+                                     boolean haveVibration,
+                                     float distanceTolerance, float linearTolerance, boolean localEnvOnly);
+
+  void setSpaceGroup(boolean doNormalize);
+
+  void setSpaceGroupName(String name);
 
   /**
    * 
@@ -245,16 +232,29 @@ public interface SymmetryInterface {
    */
   void setSpaceGroupTo(Object spaceGroup);
 
-  Lst<P3> getLatticeCentering();
+  SymmetryInterface setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
 
-  public BS removeDuplicates(ModelSet ms, BS bs);
+  void setTimeReversal(int op, int val);
 
-  public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags);
+  SymmetryInterface setUnitCell(float[] params, boolean setRelative);
 
-  public void getEquivPointList(Lst<P3> pts, int nIgnore, String flags);
+  void setUnitCell(SymmetryInterface uc);
 
-  public int[] getInvariantSymops(P3 p3, int[] v0);
+  void toCartesian(T3 pt, boolean asAbsolute);
 
-  M4 getTransform(P3 fracA, P3 fracB);
+  void toFractional(T3 pt, boolean asAbsolute);
+
+  void toFractionalM(M4 m);
+
+  boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
+                          M3 primitiveToCrystal);
+
+  P3 toSupercell(P3 fpt);
+
+  void toUnitCell(T3 pt, T3 offset);
+
+  boolean unitCellEquals(SymmetryInterface uc2);
+
+  void unitize(T3 ptFrac);
 
 }

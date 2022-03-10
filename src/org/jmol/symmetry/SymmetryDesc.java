@@ -97,8 +97,7 @@ public class SymmetryDesc {
 
   // additional flags
   final static int RET_LIST = 21;
-  final static int RET_TRANSFORMONLY = 22;
-  final static int RET_INVARIANT = 23;
+  final static int RET_INVARIANT = 22;
 
   private final static String[] keys = { 
       "xyz", 
@@ -354,12 +353,12 @@ public class SymmetryDesc {
   }
 
 
-  V3 vtemp = new V3();
-  P3 ptemp = new P3();
-  P3 ptemp2 = new P3();
-  P3 pta01 = new P3();
-  P3 pta02 = new P3();
-  V3 vtrans = new V3();
+  private static V3 vtemp = new V3();
+  private static P3 ptemp = new P3();
+  private static P3 ptemp2 = new P3();
+  private static P3 pta01 = new P3();
+  private static P3 pta02 = new P3();
+  private static V3 vtrans = new V3();
 
   /**
    * 
@@ -419,13 +418,12 @@ public class SymmetryDesc {
    * 
    */
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
-                                   P3 pta00, P3 ptTarget, String id,
-                                   float scaleFactor, int options,
-                                   boolean haveTranslation, BS bsInfo) {
+                                 P3 pta00, P3 ptTarget, String id,
+                                 float scaleFactor, int options,
+                                 boolean haveTranslation, BS bsInfo) {
     if (!op.isFinalized)
       op.doFinalize();
-    boolean isFractional = bsInfo.get(RET_TRANSFORMONLY);
-    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX) || isFractional);
+    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     boolean isTimeReversed = (op.timeReversal == -1);
     if (scaleFactor == 0)
       scaleFactor = 1f;
@@ -458,10 +456,8 @@ public class SymmetryDesc {
 
       pta01.setT(pta00);
       pta02.setT(ptTarget);
-      if (!isFractional) {
-        uc.toFractional(pta01, true);
-        uc.toFractional(pta02, true);
-      }
+      uc.toFractional(pta01, true);
+      uc.toFractional(pta02, true);
       op.rotTrans(pta01);
       ptemp.setT(pta01);
       uc.unitize(pta01);
@@ -471,13 +467,12 @@ public class SymmetryDesc {
       //      uc.toCartesian(pta02, true);
       //      if (pta01.distanceSquared(pta02) > 0.1f)
       //        return null;
-      if (pta01.distanceSquared(pta02) > JC.UC_TOLERANCE2)
+      if (pta01.distanceSquared(pta02) >= JC.UC_TOLERANCE2)
         return null;
       vtrans.sub(ptemp);
     }
     M4 m2 = M4.newM4(op);
     m2.add(vtrans);
-
     boolean isMagnetic = (op.timeReversal != 0);
 
     if (matrixOnly && !isMagnetic) {
@@ -566,7 +561,7 @@ public class SymmetryDesc {
     P3 ptref = null; // reflection center
 
     float w = 0, margin = 0; // for plane
-    
+
     boolean isTranslation = (ang1 == 0);
     boolean isRotation = !isTranslation;
     boolean isInversionOnly = false;
@@ -1057,8 +1052,8 @@ public class SymmetryDesc {
 
       draw1.append("\nsym_point = " + Escape.eP(pta00));
       draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
-      
-      if (pta00 instanceof Atom) {      
+
+      if (pta00 instanceof Atom) {
         draw1.append(
             "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
       } else {
@@ -1126,11 +1121,11 @@ public class SymmetryDesc {
 
     String xyzNew = null;
     if (bsInfo.get(RET_XYZ) || bsInfo.get(RET_CIF2)) {
-    xyzNew = (op.isBio ? m2.toString()
-        : op.modDim > 0 ? op.xyzOriginal
-            : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
-    if (isMagnetic)
-      xyzNew = op.fixMagneticXYZ(m2, xyzNew, true);
+      xyzNew = (op.isBio ? m2.toString()
+          : op.modDim > 0 ? op.xyzOriginal
+              : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
+      if (isMagnetic)
+        xyzNew = op.fixMagneticXYZ(m2, xyzNew, true);
     }
 
     Object[] ret = new Object[RET_COUNT];
@@ -1140,7 +1135,7 @@ public class SymmetryDesc {
         ret[i] = xyzNew;
         break;
       case RET_XYZORIGINAL:
-        ret[i] =op.xyzOriginal; 
+        ret[i] = op.xyzOriginal;
         break;
       case RET_LABEL:
         ret[i] = info1;
@@ -1392,12 +1387,10 @@ public class SymmetryDesc {
         if (Float.isNaN(pt.x))
           return nullRet;
         P3 sympt = new P3();
-        symTemp.newSpaceGroupPoint(i, pt, sympt, 0, 0, 0, null);
-        
+        symTemp.newSpaceGroupPoint(i, pt, sympt, 0, 0, 0, null);        
         if (options == T.offset) {
-          uc.unitize(sympt);//uc.unitize01(sympt);
-          if (options == T.offset)
-            sympt.add(offset);
+          uc.unitize(sympt);
+          sympt.add(offset);
         }
         symTemp.toCartesian(sympt, false);
         return (type == T.atoms ? getAtom(uc, iModel, iatom, sympt) : sympt);
@@ -1631,8 +1624,7 @@ public class SymmetryDesc {
       bsInfo.set(RET_XYZ);
       bsInfo.set(RET_LABEL);
     }
-    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX)
-        || bsInfo.get(RET_TRANSFORMONLY));
+    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     Map<String, Object> info = null;
     boolean isStandard = (!matrixOnly && pt1 == null && drawID == null
         && nth <= 0 && bsInfo.cardinality() >= keys.length);
@@ -1766,6 +1758,57 @@ public class SymmetryDesc {
     }
     info.put("spaceGroupInfo", data);
     return info;
+  }
+
+  public M4 getTransform(UnitCell uc, SymmetryOperation[] ops, P3 fracA,
+                         P3 fracB, boolean best) {
+    if (pta01 == null) {
+      pta01 = new P3();
+      pta02 = new P3();
+      ptemp = new P3();
+      vtrans = new V3();
+    }
+    pta02.setT(fracB);
+    vtrans.setT(pta02);
+    uc.unitize(pta02);
+    float dmin = Float.MAX_VALUE;
+    int imin = -1;
+    for (int i = 0, n = ops.length; i < n; i++) {
+      SymmetryOperation op = ops[i];
+      pta01.setT(fracA);
+      op.rotTrans(pta01);
+      ptemp.setT(pta01);
+      uc.unitize(pta01);
+      float d = pta01.distanceSquared(pta02);
+      if (d < JC.UC_TOLERANCE2) {
+        vtrans.sub(ptemp);
+        uc.normalize(vtrans);
+        M4 m2 = M4.newM4(op);
+        m2.add(vtrans);
+        // but check...
+        pta01.setT(fracA);
+        m2.rotTrans(pta01);
+        uc.unitize(pta01);
+        d = pta01.distanceSquared(pta02);
+        if (d >= JC.UC_TOLERANCE2) {
+          continue;
+        }
+        return m2;
+      }
+      if (d < dmin) {
+        dmin = d;
+        imin = i;
+      }
+    }
+    if (best) {
+      SymmetryOperation op = ops[imin];
+      pta01.setT(fracA);
+      op.rotTrans(pta01);
+      uc.unitize(pta01);
+      System.err.println("" + imin + " " + pta01.distance(pta02) + " " + pta01
+          + " " + pta02 + " " + V3.newVsub(pta02, pta01));
+    }
+    return null;
   }
 
 
