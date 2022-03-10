@@ -274,6 +274,8 @@ public class SmilesAtom extends P3 implements Node {
     case -1: // A a
     case -2: // *
       return -1;
+    case 1:
+      return 1;
     case 6: // C
       return (isAromatic ? 3 : 4);
     case 8: // O
@@ -291,8 +293,11 @@ public class SmilesAtom extends P3 implements Node {
     case 35: // Br
     case 53: // I
       return 1;
+    default:
+      // unbracketed atom
+      return 0; 
     }
-    return -2;
+    //return -2;
   }
 
   /**

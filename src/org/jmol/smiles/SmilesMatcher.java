@@ -181,6 +181,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    */
   public boolean areEqualTest(String smiles, SmilesSearch search)
       throws Exception {
+    search.set();
     BS[] ret = (BS[]) matchPriv(smiles, null, 0, null, null, false, JC.SMILES_TYPE_SMILES
         | JC.SMILES_FIRST_MATCH_ONLY, MODE_ARRAY, search);
     return (ret != null && ret.length == 1);
@@ -497,7 +498,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           }
         } else {
           String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false));
-          okMF = (mf == null || mf.equals(searchTarget.getMolecularFormulaImpl(true, null, false)));
+          String s = searchTarget.getMolecularFormulaImpl(true, null, false);
+          okMF = (mf == null || mf.equals(s));
         }
         searchTarget.mf = search.mf = null;
       }

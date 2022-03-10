@@ -1285,7 +1285,7 @@ public class TestSmilesParser extends TestCase {
    * @param expected SMILES molecule
    */
   private static void checkMolecule(String smiles, SmilesSearch expected) {
-    System.out.print("Checking " + smiles + "...");
+    System.out.println("Checking " + smiles + "...");
     try {
       assertTrue(new SmilesMatcher().areEqualTest(smiles, expected));
       System.out.println("OK");
