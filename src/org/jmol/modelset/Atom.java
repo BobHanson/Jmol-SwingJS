@@ -897,19 +897,25 @@ public class Atom extends Point3fi implements Node {
    */
    
   public String getInfo() {
-    return getIdentity(true);
+    return getIdentity(ID_ALL);
   } 
 
-  public String getIdentityXYZ(boolean allInfo, P3 pt) {
-    pt = (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
-    return getIdentity(allInfo) 
-        + " " + PT.formatF(pt.x, 0, 3, true, true) 
+  public final static int ID_U    = 1;
+  public final static int ID_ALL  = 2;
+  public final static int ID_XTAL = 3;
+  public final static int ID_CHIME = 4;
+  
+  public String getIdentityXYZ(P3 pt, int mode) {
+    pt = (mode == ID_XTAL || group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
+    String s = (mode == ID_XTAL ? "" : getIdentity(mode) + " ")
+        + PT.formatF(pt.x, 0, 3, true, true) 
         + " " + PT.formatF(pt.y, 0, 3, true, true) 
         + " " + PT.formatF(pt.z, 0, 3, true, true) 
-        ;  
+        ; 
+    return s;
   }
   
-  String getIdentity(boolean allInfo) {
+  String getIdentity(int mode) {
     SB info = new SB();
     String group3 = getGroup3(true);
     if (group3 != null && group3.length() > 0 && (!group3.equals("UNK") || group.chain.model.isBioModel)) {
@@ -927,7 +933,7 @@ public class Atom extends Point3fi implements Node {
           s = PT.esc(s);
         info.append(s);
       }
-      if (!allInfo)
+      if (mode != ID_ALL)
         return info.toString();
       info.append(".");
     }
@@ -1382,7 +1388,7 @@ public class Atom extends Point3fi implements Node {
     case T.element:
       return getElementSymbolIso(true);
     case T.identify:
-      return getIdentity(true);
+      return getIdentity(ID_ALL);
     case T.insertion:
       ch = group.getInsertionCode();
       return (ch == '\0' ? "" : "" + ch);

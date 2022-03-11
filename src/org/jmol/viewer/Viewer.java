@@ -1466,7 +1466,8 @@ public class Viewer extends JmolViewer
     if (info == null) {
       info = g.pickLabel;
       info = (info.length() == 0
-          ? getAtomInfoXYZ(atomIndex, g.messageStyleChime)
+          ? getAtomInfoXYZ(atomIndex, g.messageStyleChime ? Atom.ID_CHIME : Atom.ID_ALL)
+              + (getOperativeSymmetry() == null ? "" : " (" + getAtomInfoXYZ(atomIndex, Atom.ID_XTAL) + ")")
           : ms.getAtomInfo(atomIndex, info, ptTemp));
     }
     setPicked(atomIndex, false);
@@ -5211,7 +5212,7 @@ public class Viewer extends JmolViewer
     g.setUserVariable("hovered",
         SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
     if (sm.haveHoverCallback())
-      sm.setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, false));
+      sm.setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, Atom.ID_ALL));
     if (!hoverEnabled || eval != null && isScriptExecuting()
         || atomIndex == hoverAtomIndex || g.hoverDelayMs == 0
         || !slm.isInSelectionSubset(atomIndex))
@@ -5378,13 +5379,13 @@ public class Viewer extends JmolViewer
             -atomOrPointIndex));
   }
 
-  private String getAtomInfoXYZ(int atomIndex, boolean useChimeFormat) {
+  private String getAtomInfoXYZ(int atomIndex, int mode) {
     Atom atom = ms.at[atomIndex];
-    if (useChimeFormat)
+    if (mode == Atom.ID_CHIME)
       return getChimeMessenger().getInfoXYZ(atom);
     if (ptTemp == null)
       ptTemp = new P3();
-    return atom.getIdentityXYZ(true, ptTemp);
+    return atom.getIdentityXYZ(ptTemp, mode);
   }
 
   // //////////////status manager dispatch//////////////

@@ -607,7 +607,7 @@ public class LabelToken {
         strT = atom.atomPropertyString(vwr, t.tok);
         break;
       case T.w:
-        strT = atom.getIdentityXYZ(false, ptTemp);
+        strT = atom.getIdentityXYZ(ptTemp, Atom.ID_U);
         break;
         
       // characters only
