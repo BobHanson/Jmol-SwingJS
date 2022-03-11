@@ -584,9 +584,13 @@ public class ScriptManager implements JmolScriptManager {
           } catch (IOException e) {
             return;
           }
-          cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
+          if (type == "MENU") {
+            cmd = "load MENU " + PT.esc(fname);
+          } else {
+            cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
               + PT.esc(fname) + " mesh nofill }; else; { isosurface "
               + PT.esc(fname) + "}";
+          }
           return;
         }
         // these next will end with the escaped file name

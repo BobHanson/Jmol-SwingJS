@@ -6784,14 +6784,21 @@ public class ScriptEval extends ScriptExpr {
       return;
     if (isCmdLine_c_or_C_Option)
       isCheck = true;
+    if (theScript == null)
+      theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
+    if (isMenu(theScript)) {
+      vwr.setMenu(theScript, false);
+      return;
+    }
+
+    
+    
     boolean wasSyntaxCheck = chk;
     boolean wasScriptCheck = isCmdLine_c_or_C_Option;
     if (isCheck)
       chk = isCmdLine_c_or_C_Option = true;
     pushContext(null, "SCRIPT");
     contextPath += " >> " + filename;
-    if (theScript == null)
-      theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
     if (compileScript(filename, theScript, filename != null && debugScript)) {
       this.pcEnd = pcEnd;
       this.lineEnd = lineEnd;
@@ -6835,6 +6842,11 @@ public class ScriptEval extends ScriptExpr {
 
     chk = wasSyntaxCheck;
     isCmdLine_c_or_C_Option = wasScriptCheck;
+  }
+
+  private boolean isMenu(String s) {
+    int pt = s.indexOf("Menu Structure");
+    return (s.startsWith("#") && pt > 0 && pt < s.indexOf("\n"));
   }
 
   /**

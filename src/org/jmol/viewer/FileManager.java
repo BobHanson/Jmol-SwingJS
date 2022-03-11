@@ -1134,6 +1134,13 @@ public class FileManager implements BytePoster {
 //    return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";jvxl;kin;o;msms;map;pmesh;mrc;efvet;cube;obj;dssr;bcif;");
 //  }
 //  
+  
+  /**
+   * Try to determine a surface file type based on its header. 
+   * Also identifies Menu files. 
+   * @param bufferedReader
+   * @return file type
+   */
   public static String determineSurfaceFileType(BufferedReader bufferedReader) {
     // drag-drop and isosurface command only
     // JVXL should be on the FIRST line of the file, but it may be 
@@ -1213,6 +1220,8 @@ public class FileManager implements BytePoster {
         return "Obj"; // #file: pymol.obj
       if (line.indexOf("MSMS") >= 0)
         return "Msms";
+      if (line.indexOf("Menu") >= 0)
+        return "MENU";
       break;
     case '&':
       if (line.indexOf("&plot") == 0)
