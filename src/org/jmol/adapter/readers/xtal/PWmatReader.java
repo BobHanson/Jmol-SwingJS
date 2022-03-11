@@ -74,18 +74,18 @@ public class PWmatReader extends AtomSetCollectionReader {
         constraints.addLast(new float[] { Float.parseFloat(tokens[4]),
             Float.parseFloat(tokens[4]), Float.parseFloat(tokens[4]) });
     }
-    if (haveConstraints) {
-      float[] cx = new float[nAtoms];
-      float[] cy = new float[nAtoms];
-      float[] cz = new float[nAtoms];
-      for (i = nAtoms; --i >= 0;) {
-        float[] c = constraints.get(i);
-        cx[i] = c[0];
-        cy[i] = c[1];
-        cz[i] = c[2];        
-      }
-      setVectors("constraints", cx, cy, cz, nAtoms);      
+    float[] cx = new float[nAtoms];
+    float[] cy = new float[nAtoms];
+    float[] cz = new float[nAtoms];
+    float[] c = new float[] { 1, 1, 1 };
+    for (i = nAtoms; --i >= 0;) {
+      if (haveConstraints)
+        c = constraints.get(i);
+      cx[i] = c[0];
+      cy[i] = c[1];
+      cz[i] = c[2];
     }
+    setVectors("constraints", cx, cy, cz, nAtoms);
   }
 
   private void readDataBlock(String name) throws Exception {
