@@ -207,20 +207,22 @@ public class JmolMolecule {
           nElements++;
         elementCounts[n] += f;
         elementNumberMax = Math.max(elementNumberMax, n);
-        if (includeMissingHydrogens) {
-          int nH = node.getImplicitHydrogenCount();
-          if (nH > 0) {
-            if (elementCounts[1] == 0)
-              nElements++;
-            elementCounts[1] += nH * f;
-          }
-        }
       } else {
         n = Elements.altElementIndexFromNumber(n);
         if (altElementCounts[n] == 0)
           nElements++;
         altElementCounts[n] += f;
         altElementMax = Math.max(altElementMax, n);
+      }
+      if (includeMissingHydrogens) {
+        int nH = Math.max(0, node.getImplicitHydrogenCount()) + 
+            Math.max(node.getExplicitHydrogenCount(), 0);
+        if (nH > 0) {
+          if (elementCounts[1] == 0)
+            nElements++;
+          elementCounts[1] += nH * f;
+          elementNumberMax = Math.max(elementNumberMax, 1);
+        }
       }
     }
     if (wts != null)

@@ -184,7 +184,7 @@ public class SmilesBond extends Edge {
     set2a(atom1, atom2);
   }
 
-  void set2(int bondType, boolean isNot) {
+  public void set2(int bondType, boolean isNot) {
     order = bondType;
     this.isNot = isNot;
   }
@@ -246,11 +246,11 @@ public class SmilesBond extends Edge {
     }
   }
 
-  int getValence() {
+  public int getValence() {
     return (order & 7);
   }
 
-  SmilesAtom getOtherAtom(SmilesAtom a) {
+  public SmilesAtom getOtherAtom(SmilesAtom a) {
     return (atom1 == a ? atom2 : atom1);
   }
 

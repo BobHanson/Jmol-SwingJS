@@ -19,14 +19,14 @@ public class TestSmilesParser extends TestCase {
    * Using examples from Chapter 1 of Smiles tutorial
    */
   public void testChapter1_01() {    // Test [H+]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomH = molecule.addAtom();
     atomH.setCharge(1);
     atomH.setSymbol("H");
     checkMolecule("[H+]", molecule);
   }
   public void testChapter1_02() {    // Test C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
     addHydrogen(molecule, atomC);
@@ -36,7 +36,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C", molecule);
   }
   public void testChapter1_03() {    // Test O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
     addHydrogen(molecule, atomO);
@@ -44,7 +44,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("O", molecule);
   }
   public void testChapter1_04() {    // Test [OH3+]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setCharge(1);
     atomO.setSymbol("O");
@@ -54,7 +54,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[OH3+]", molecule);
   }
   public void testChapter1_05() {    // Test [2H]O[2H]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomH1 = molecule.addAtom();
     atomH1.setAtomicMass(2);
     atomH1.setSymbol("H");
@@ -68,13 +68,13 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[2H]O[2H]", molecule);
   }
   public void testChapter1_06() {    // Test [Au]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomAu = molecule.addAtom();
     atomAu.setSymbol("Au");
     checkMolecule("[Au]", molecule);
   }
   public void testChapter1_07() {    // Test CCO
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -92,7 +92,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("CCO", molecule);
   }
   public void testChapter1_08() {    // Test O=C=O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO1 = molecule.addAtom();
     atomO1.setSymbol("O");
     SmilesAtom atomC = molecule.addAtom();
@@ -104,7 +104,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("O=C=O", molecule);
   }
   public void testChapter1_09() {    // Test C#N
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
     SmilesAtom atomN = molecule.addAtom();
@@ -114,7 +114,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C#N", molecule);
   }
   public void testChapter1_10() {    // Test CC(=O)O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -133,7 +133,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("CC(=O)O", molecule);
   }
   public void testChapter1_11() {    // Test C1CCCCC1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -167,7 +167,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C1CCCCC1", molecule);
   }
   public void testChapter1_12() {    // Test C1CC2CCCCC2CC1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -226,7 +226,7 @@ public class TestSmilesParser extends TestCase {
     // Not implemented
   }
   public void testChapter1_15() {    // Test C/C=C/C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -250,7 +250,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter1_16() throws InvalidSmilesException {    
     // Test N[C@@H](C)C(=O)O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     
     SmilesAtom atomN = molecule.addAtom();
     atomN.setSymbol("N");
@@ -291,7 +291,7 @@ public class TestSmilesParser extends TestCase {
     // it is critical to order the bond creation carefully, exactly along
     // the lines of what is in the SMILES string
     
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     
     SmilesAtom atomO1 = molecule.addAtom();
     atomO1.setSymbol("O");
@@ -347,7 +347,7 @@ public class TestSmilesParser extends TestCase {
    * Using examples from Chapter 2 of Smiles tutorial
    */
   public void testChapter2_01() {    // Test [S]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomS = molecule.addAtom();
     atomS.setSymbol("S");
     checkMolecule("[S]", molecule);
@@ -359,7 +359,7 @@ public class TestSmilesParser extends TestCase {
     testChapter1_02();
   }
   public void testChapter2_04() {    // Test P
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomP = molecule.addAtom();
     atomP.setSymbol("P");
     addHydrogen(molecule, atomP);
@@ -368,7 +368,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("P", molecule);
   }
   public void testChapter2_05() {    // Test S
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomS = molecule.addAtom();
     atomS.setSymbol("S");
     addHydrogen(molecule, atomS);
@@ -376,14 +376,14 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("S", molecule);
   }
   public void testChapter2_06() {    // Test Cl
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomCl = molecule.addAtom();
     atomCl.setSymbol("Cl");
     addHydrogen(molecule, atomCl);
     checkMolecule("Cl", molecule);
   }
   public void testChapter2_07() {    // Test [OH-]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setCharge(-1);
     atomO.setSymbol("O");
@@ -391,7 +391,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[OH-]", molecule);
   }
   public void testChapter2_08() {    // Test [OH-1]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setCharge(-1);
     atomO.setSymbol("O");
@@ -399,28 +399,28 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[OH-1]", molecule);
   }
   public void testChapter2_09() {    // Test [Fe+2]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomFe = molecule.addAtom();
     atomFe.setCharge(2);
     atomFe.setSymbol("Fe");
     checkMolecule("[Fe+2]", molecule);
   }
   public void testChapter2_10() {    // Test [Fe++]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomFe = molecule.addAtom();
     atomFe.setCharge(2);
     atomFe.setSymbol("Fe");
     checkMolecule("[Fe++]", molecule);
   }
   public void testChapter2_11() {    // Test [235U]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomU = molecule.addAtom();
     atomU.setAtomicMass(235);
     atomU.setSymbol("U");
     checkMolecule("[235U]", molecule);
   }
   public void testChapter2_12() {    // Test [*+2]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atom = molecule.addAtom();
     atom.setCharge(2);
     atom.setSymbol("*");
@@ -432,7 +432,7 @@ public class TestSmilesParser extends TestCase {
    * Using examples from Chapter 3 of Smiles tutorial
    */
   public void testChapter3_01() {    // Test CC
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -447,7 +447,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("CC", molecule);
   }
   public void testChapter3_02() {    // Test C-C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -462,7 +462,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C-C", molecule);
   }
   public void testChapter3_03() {    // Test [CH3]-[CH3]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -477,7 +477,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[CH3]-[CH3]", molecule);
   }
   public void testChapter3_04() {    // Test C=O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
     SmilesAtom atomO = molecule.addAtom();
@@ -491,7 +491,7 @@ public class TestSmilesParser extends TestCase {
     testChapter1_09();
   }
   public void testChapter3_06() {    // Test C=C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -507,7 +507,7 @@ public class TestSmilesParser extends TestCase {
     // Not implemented
   }
   public void testChapter3_08() {    // Test C=CC=C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -536,7 +536,7 @@ public class TestSmilesParser extends TestCase {
    * Using examples from Chapter 4 of Smiles tutorial
    */
   public void testChapter4_01() {    // Test CC(C)C(=O)O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -565,7 +565,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("CC(C)C(=O)O", molecule);
   }
   public void testChapter4_02() {    // Test FC(F)F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF1 = molecule.addAtom();
     atomF1.setSymbol("F");
     SmilesAtom atomC = molecule.addAtom();
@@ -581,7 +581,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("FC(F)F", molecule);
   }
   public void testChapter4_03() {    // Test C(F)(F)F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
     SmilesAtom atomF1 = molecule.addAtom();
@@ -597,7 +597,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C(F)(F)F", molecule);
   }
   public void testChapter4_04() {    // Test O=Cl(=O)(=O)[O-]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO1 = molecule.addAtom();
     atomO1.setSymbol("O");
     SmilesAtom atomCl = molecule.addAtom();
@@ -616,7 +616,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("O=Cl(=O)(=O)[O-]", molecule);
   }
   public void testChapter4_05() {    // Test Cl(=O)(=O)(=O)[O-]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomCl = molecule.addAtom();
     atomCl.setSymbol("Cl");
     SmilesAtom atomO1 = molecule.addAtom();
@@ -635,7 +635,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("Cl(=O)(=O)(=O)[O-]", molecule);
   }
   public void testChapter4_06() {    // Test CCCC(C(=O)O)CCC
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -692,7 +692,7 @@ public class TestSmilesParser extends TestCase {
     testChapter1_11();
   }
   public void testChapter5_02() {    // Test C1=CCCCC1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -724,7 +724,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C1=CCCCC1", molecule);
   }
   public void testChapter5_03() {    // Test C=1CCCCC1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -756,7 +756,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C=1CCCCC1", molecule);
   }
   public void testChapter5_04() {    // Test C1CCCCC=1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -788,7 +788,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("C1CCCCC=1", molecule);
   }
   public void testChapter5_05() {    // Test C=1CCCCC=1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomC2 = molecule.addAtom();
@@ -837,7 +837,7 @@ public class TestSmilesParser extends TestCase {
    * Using examples from Chapter 6 of Smiles tutorial
    */
   public void testChapter6_01() {    // Test [Na+].[Cl-]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomNa = molecule.addAtom();
     atomNa.setCharge(1);
     atomNa.setSymbol("Na");
@@ -853,7 +853,7 @@ public class TestSmilesParser extends TestCase {
     // Not implemented
   }
   public void testChapter6_04() {    // Test C1.O2.C12
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     SmilesAtom atomO = molecule.addAtom();
@@ -882,27 +882,27 @@ public class TestSmilesParser extends TestCase {
     testChapter1_02();
   }
   public void testChapter7_02() {    // Test [C]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
     checkMolecule("[C]", molecule);
   }
   public void testChapter7_03() {    // Test [12C]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setAtomicMass(12);
     atomC.setSymbol("C");
     checkMolecule("[12C]", molecule);
   }
   public void testChapter7_04() {    // Test [13C]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setAtomicMass(13);
     atomC.setSymbol("C");
     checkMolecule("[13C]", molecule);
   }
   public void testChapter7_05() {    // Test [13CH4]
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC = molecule.addAtom();
     atomC.setAtomicMass(13);
     atomC.setSymbol("C");
@@ -913,7 +913,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("[13CH4]", molecule);
   }
   public void testChapter7_06() {    // Test F/C=C/F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF1 = molecule.addAtom();
     atomF1.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -930,7 +930,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("F/C=C/F", molecule);
   }
   public void testChapter7_07() {    // Test F\C=C\F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF1 = molecule.addAtom();
     atomF1.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -947,7 +947,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("F\\C=C\\F", molecule);
   }
   public void testChapter7_08() {    // Test F/C=C\F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF1 = molecule.addAtom();
     atomF1.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -964,7 +964,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("F/C=C\\F", molecule);
   }
   public void testChapter7_09() {    // Test F\C=C/F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF1 = molecule.addAtom();
     atomF1.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -981,7 +981,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("F\\C=C/F", molecule);
   }
   public void testChapter7_10() {    // Test F/C=C/C=C/C
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF = molecule.addAtom();
     atomF.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -1009,7 +1009,7 @@ public class TestSmilesParser extends TestCase {
     checkMolecule("F/C=C/C=C/C", molecule);
   }
   public void testChapter7_11() {    // Test F/C=C/C=CC
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF = molecule.addAtom();
     atomF.setSymbol("F");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -1042,7 +1042,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_13() throws InvalidSmilesException {    
     // Test N[C@H](C)C(=O)O
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomN = molecule.addAtom();
     atomN.setSymbol("N");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -1076,7 +1076,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_15() throws InvalidSmilesException {    
     // Test C1C[C@H]2CCCC[C@H]2CC1
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
     addHydrogen(molecule, atomC1);
@@ -1134,7 +1134,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_16() throws InvalidSmilesException {    
  // Test OC(Cl)=[C@]=C(C)F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
     SmilesAtom atomC1 = molecule.addAtom();
@@ -1170,7 +1170,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_17() throws InvalidSmilesException {    
     // Test OC(Cl)=[C@AL1]=C(C)F
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
     addHydrogen(molecule, atomO);
@@ -1200,7 +1200,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_18() throws InvalidSmilesException {    
     // Test F[Po@SP1](Cl)(Br)I
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomF = molecule.addAtom();
     atomF.setSymbol("F");
     SmilesAtom atomPo = molecule.addAtom();
@@ -1220,7 +1220,7 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_19() throws InvalidSmilesException {    
     // Test O=C[As@](F)(Cl)(Br)S
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
     SmilesAtom atomC = molecule.addAtom();
@@ -1248,12 +1248,12 @@ public class TestSmilesParser extends TestCase {
   }
   public void testChapter7_20() throws InvalidSmilesException {    
     // Test O=C[Co@](F)(Cl)(Br)(I)S
-    SmilesSearch molecule = new SmilesSearch();
+    SmilesSearch molecule = newSmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
     SmilesAtom atomC = molecule.addAtom();
     atomC.setSymbol("C");
-    createBond(atomO, atomC, Edge.BOND_COVALENT_DOUBLE, true);
+    createBond(atomO, atomC, Edge.BOND_COVALENT_TRIPLE, true);
     SmilesAtom atomCo = molecule.addAtom();
     atomCo.stereo = new SmilesStereo(SmilesStereo.OCTAHEDRAL, 1, 0, null, null);
     atomCo.setSymbol("Co");
@@ -1273,11 +1273,17 @@ public class TestSmilesParser extends TestCase {
     SmilesAtom atomS = molecule.addAtom();
     atomS.setSymbol("S");
     createBond(atomCo, atomS, Edge.BOND_COVALENT_SINGLE, true);
-    addHydrogen(molecule, atomC);
+// what is this??    addHydrogen(molecule, atomC);
     addHydrogen(molecule, atomS);
-    checkMolecule("O=C[Co@](F)(Cl)(Br)(I)S", molecule);
+    checkMolecule("O#C[Co@](F)(Cl)(Br)(I)S", molecule);
   }
   
+  private SmilesSearch newSmilesSearch() {
+    SmilesSearch s = new SmilesSearch();
+    s.autoAddImplicitH = false;
+    return s;
+  }
+
   /**
    * Check that the SMILES parsing is correct
    * 
@@ -1285,7 +1291,7 @@ public class TestSmilesParser extends TestCase {
    * @param expected SMILES molecule
    */
   private static void checkMolecule(String smiles, SmilesSearch expected) {
-    System.out.println("Checking " + smiles + "...");
+    System.out.println("Checking " + smiles + "....");
     try {
       assertTrue(new SmilesMatcher().areEqualTest(smiles, expected));
       System.out.println("OK");

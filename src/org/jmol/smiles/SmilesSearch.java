@@ -161,6 +161,8 @@ public class SmilesSearch extends JmolMolecule {
 
   SmilesAtom polyAtom;
 
+  public boolean autoAddImplicitH = true;
+
   static final int addFlags(int flags, String strFlags) {
     if (strFlags.indexOf("OPEN") >= 0)
       flags |= JC.SMILES_TYPE_OPENSMILES;
@@ -292,7 +294,7 @@ public class SmilesSearch extends JmolMolecule {
       if (atom.isAromatic)
         patternAromatic = true;
       atom.setBondArray();
-      if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount())
+      if (autoAddImplicitH && !isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount())
         throw new InvalidSmilesException("unbracketed atoms must be one of: "
             + SmilesAtom.UNBRACKETED_SET);
     }
@@ -1769,7 +1771,7 @@ public class SmilesSearch extends JmolMolecule {
    */
   void createTopoMap(BS bsAro) throws InvalidSmilesException {
     boolean isForMF = (bsAro == null);
-    int nAtomsMissing = getMissingHydrogenCount();
+    int nAtomsMissing = (autoAddImplicitH ? getMissingHydrogenCount() : 0);
     int totalAtoms = ac + nAtomsMissing;
     SmilesAtom[] atoms = new SmilesAtom[totalAtoms];
     targetAtoms = atoms;
@@ -1777,14 +1779,14 @@ public class SmilesSearch extends JmolMolecule {
       SmilesAtom sAtom = patternAtoms[i];
       // this number will include the number of Hs in [CH2] as well as the number needed by C by itself
       int n = sAtom.explicitHydrogenCount;
-      if (n < 0)
+      if (n < 0 || !autoAddImplicitH)
         n = 0;
       // create a Jmol atom for this pattern atom
       // we co-opt atom.matchingAtom here
       // because this search will never actually be run
       SmilesAtom atom = atoms[ptAtom] = new SmilesAtom().setTopoAtom(sAtom.component, ptAtom,
           sAtom.symbol, sAtom.getCharge(), i);
-      atom.implicitHydrogenCount = n;
+        atom.implicitHydrogenCount = n;
       if (isForMF)
         continue;
       atom.mapIndex = i;

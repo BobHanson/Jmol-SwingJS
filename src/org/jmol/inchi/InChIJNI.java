@@ -309,12 +309,17 @@ public class InChIJNI implements JmolInChI {
       JniInchiAtom a1 = b.getOriginAtom();
       JniInchiAtom a2 = b.getTargetAtom();
       int bt = getJmolBondType(b);
-      SmilesBond sb = new SmilesBond(map.get(a1), map.get(a2), bt, false);
+      SmilesAtom sa1 = map.get(a1);
+      SmilesAtom sa2 = map.get(a2);
+      SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
     for (int i = 0; i < na; i++) {
       atoms[i].setBondArray();
     }
+    checkFormalCharges(atoms);
+
+    
     for (int i = struc.getNumStereo0D(); --i >= 0;) {
       JniInchiStereo0D sd = struc.getStereo0D(i);
       JniInchiAtom[] an = sd.getNeighbors();
@@ -356,6 +361,60 @@ public class InChIJNI implements JmolInChI {
     } catch (Exception e) {
       e.printStackTrace();
       return "";
+    }
+  }
+
+  private void checkFormalCharges(SmilesAtom[] atoms) {
+    for (int i = atoms.length; --i >= 0;) {
+      SmilesAtom a = atoms[i];
+      int val = a.getValence();
+      int nbonds = a.getCovalentBondCount();
+      int nbtot = a.getBondCount();
+      int ano = a.getElementNumber();
+      System.out.println("InChIJNI " + ano + " " + val + " " + nbonds);
+      SmilesBond b1 = null, b2 = null;
+      switch (val * 10 + nbonds) {
+      case 53:
+        if (ano == 7) {
+          // X=N(R)=X -->  (-)X-N(+)(R)=X
+          for (int j = 0; j < nbtot; j++) {
+            SmilesBond b = a.getBond(j);
+            if (b.getCovalentOrder() == 2) {
+              if (b1 == null) {
+                b1 = b;
+              } else {
+                b2 = b;
+                break;
+              }
+            }
+          }
+        }
+        break;
+      case 54:
+//        if (ano == 15) {
+//          // X=P(R)=X -->  (-)X-N(+)(R)=X
+//          for (int j = 0; j < nbtot; j++) {
+//            SmilesBond b = a.getBond(j);
+//            if (b.getCovalentOrder() == 2) {
+//              if (b1 == null) {
+//                b1 = b;
+//              } else {
+//                b2 = b;
+//                break;
+//              }
+//            }
+//          }
+//        }
+        break;
+
+      }
+      if (b2 != null) {
+        SmilesAtom a2 = b2.getOtherAtom(a);
+        a2.setCharge(-1);
+        a.setCharge(1);
+        b2.set2(Edge.BOND_COVALENT_SINGLE, false);
+      }
+
     }
   }
 

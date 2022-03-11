@@ -1548,4 +1548,10 @@ public class Atom extends Point3fi implements Node {
       atomSymmetry.set(isym - 1);
   }
 
+  @Override
+  public int getExplicitHydrogenCount() {
+    // SMILES only [CH2]
+    return 0;
+  }
+
 }

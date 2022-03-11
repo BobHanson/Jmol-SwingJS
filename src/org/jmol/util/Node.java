@@ -78,6 +78,14 @@ public interface Node extends SimpleNode {
    * @return number of missing H atoms
    */
   public int getImplicitHydrogenCount();
+
+  /**
+   * [CH2] for example
+   * 
+   * @return number of H atoms in brackets
+   */
+  public int getExplicitHydrogenCount();
+
   /**
    *  includes actual + missing
    * @return actual + missing

@@ -500,6 +500,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false));
           String s = searchTarget.getMolecularFormulaImpl(true, null, false);
           okMF = (mf == null || mf.equals(s));
+          if (!okMF) {
+            System.out.println("\n" + pattern + "\n" + mf + " \n" + s );
+            s = searchTarget.getMolecularFormulaImpl(true, null, false);
+          }
         }
         searchTarget.mf = search.mf = null;
       }
