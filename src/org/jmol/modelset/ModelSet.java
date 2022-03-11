@@ -1079,6 +1079,14 @@ public class ModelSet extends BondCollection {
     }
     // TODO: actually set atomSymmetry properly
     setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+
+    
+    String sgName = (String) getInfo(mi, "spaceGroup");
+    String sgOrig = (String) getInfo(mi, "spaceGroupOriginal");
+    if (sgOrig == null) {
+      if (sgName != null)
+        setInfo(mi, "spaceGroupOriginal", sgName);
+    }    
     setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
     setInfo(mi, "spaceGroupInfo", null);
     setModelCage(mi, null);

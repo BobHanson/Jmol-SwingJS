@@ -9359,7 +9359,10 @@ public class Viewer extends JmolViewer
   public void undoMoveActionClear(int taintedAtom, int type,
                                   boolean clearRedo) {
     // called by actionManager
-    if (g.preserveState)
+    // This older method involves saving the model as a MOL file -- 
+    // because it is from the model kit using simple operations. 
+    // But it does not handle space groups. 
+    if (g.preserveState && getOperativeSymmetry() == null)
       getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
   }
 

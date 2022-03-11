@@ -368,7 +368,7 @@ public class StateCreator extends JmolStateCreator {
           if (symmetry == null)
             continue;
           sb.setLength(0);
-          if (symmetry.getState(sb)) {
+          if (symmetry.getState(ms, i, sb)) {
             loadUC = true;
             commands.append("  frame ").append(ms.getModelNumberDotted(i))
                 .appendSB(sb).append(";\n");

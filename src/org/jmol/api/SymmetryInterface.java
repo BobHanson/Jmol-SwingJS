@@ -122,7 +122,7 @@ public interface SymmetryInterface {
 
   float getSpinOp(int op);
 
-  boolean getState(SB commands);
+  boolean getState(ModelSet ms, int modelIndex, SB commands);
 
   /**
    * 

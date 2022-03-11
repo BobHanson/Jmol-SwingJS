@@ -35,7 +35,6 @@ import org.jmol.bspt.CubeIterator;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
-import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
@@ -50,6 +49,7 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
@@ -702,7 +702,7 @@ public class Symmetry implements SymmetryInterface {
     if (cellParams != null) {
       cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
-    return (Map<String, Object>) getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
+    return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
         null, 0, -1, isFull, isForModel, 0, cellInfo, null);
   }
 
@@ -728,7 +728,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean getState(SB commands) {
+  public boolean getState(ModelSet ms, int modelIndex, SB commands) {
     T3 pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
@@ -738,6 +738,12 @@ public class Symmetry implements SymmetryInterface {
     pt = getUnitCellMultiplier();
     if (pt != null) {
       commands.append("; set unitcell ").append(SimpleUnitCell.escapeMultiplier(pt));
+      loadUC = true;
+    }
+    String sg0 = (String) ms.getInfo(modelIndex, "spaceGroupOriginal");
+    String sg = (String) ms.getInfo(modelIndex, "spaceGroup");    
+    if (sg0 != null && sg != null && !sg.equals(sg0)) {
+      commands.append("\nMODELKIT SPACEGROUP " + PT.esc(sg));
       loadUC = true;
     }
     return loadUC;
