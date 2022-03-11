@@ -106,7 +106,11 @@ public class PWmatReader extends AtomSetCollectionReader {
     }
   }
 
+  private boolean haveMagnetic = false;
+  
   private void readItems(String name, int offset, float[] values) throws Exception {
+    if (name.equalsIgnoreCase("magnetic"))
+      haveMagnetic = true;
     name = "pwm_" + name;
     if (values == null) {
       values = new float[nAtoms];
@@ -122,6 +126,10 @@ public class PWmatReader extends AtomSetCollectionReader {
         break;
       getLine();
     }
+    setProperties(name, values, asc.iSet, n);
+  }
+
+  private void setProperties(String name, float[] values, int iSet, int n) {
     asc.setAtomProperties(name, values, asc.iSet, false);
     Logger.info("PWmatReader: " + name.toUpperCase()  +" processed for " + n + " atoms");
     appendLoadNote("PWmatReader read property_" + name);
@@ -176,6 +184,13 @@ public class PWmatReader extends AtomSetCollectionReader {
         asc.addVibrationVector(i, valuesX[i], valuesY[i], valuesZ[i]);
       }
       addJmolScript("vectors 0.2;set vectorscentered");
+    }
+  }
+
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    if (!haveMagnetic) {
+      setProperties("pwm_magnetic", new float[nAtoms], asc.iSet, nAtoms);
     }
   }
 

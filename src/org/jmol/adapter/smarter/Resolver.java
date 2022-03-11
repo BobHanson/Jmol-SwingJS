@@ -606,11 +606,11 @@ public class Resolver {
   private static int checkXyz(String[] lines) {
     // first and third lines numerical --> Bilbao format
     // first int and line[5] starts with "POSITION" (case insensitice) --> PWmat atom.config
-    if (isInt(lines[0].trim()))
+    if (isInt(lines[0].trim())) {
       return (isInt(lines[2]) ? 2 
-          : lines.length > 5 && lines[5].length() > 8 && lines[5].substring(0,8).equalsIgnoreCase("position") ? 3
-          : 1);
-    return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : lines[1].indexOf("Lattice vector") == 0 ? 3 : 0);
+          : lines[1].trim().equalsIgnoreCase("Lattice vector") ? 3 : 1);
+    }
+    return (lines[0].indexOf("Bilabao Crys") >= 0 ? 2 : lines.length > 1 && lines[1].trim().equalsIgnoreCase("Lattice vector") ? 3 : 0);
   }
   
   ////////////////////////////////////////////////////////////////
