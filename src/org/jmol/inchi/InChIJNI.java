@@ -42,6 +42,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
@@ -99,7 +100,7 @@ public class InChIJNI implements JmolInChI {
           String std = getInchi(vwr, atoms, molData, options);
           inchi = (fxd != null && fxd.length() <= std.length() ? std : fxd);
         } else {
-          JniInchiInput in = new JniInchiInput(getSmiles ? "" : options);
+          JniInchiInput in = new JniInchiInput(getSmiles ? "fixedh" : options);
           JniInchiStructure struc;
           if (atoms == null) {
             in.setStructure(struc = newJniInchiStructure(vwr, molData));
@@ -258,6 +259,7 @@ public class InChIJNI implements JmolInChI {
 
   private String getSmiles(Viewer vwr, JniInchiOutputStructure struc,
                            String smilesOptions) {
+    boolean hackImine = (smilesOptions.indexOf("imine") >= 0);
     int nAtoms = struc.getNumAtoms();
     int nBonds = struc.getNumBonds();
     int nh = 0;
@@ -265,7 +267,7 @@ public class InChIJNI implements JmolInChI {
       JniInchiAtom a = struc.getAtom(i);
       nh += a.getImplicitH();
     }
-    SmilesAtom[] atoms = new SmilesAtom[nAtoms + nh];
+    Lst<SmilesAtom> atoms = new Lst<SmilesAtom>();
     Map<JniInchiAtom, SmilesAtom> map = new Hashtable<JniInchiAtom, SmilesAtom>();
     mapTet = new Hashtable<BS, int[]>();
     mapPlanar = new Hashtable<Integer, Boolean>();
@@ -273,34 +275,32 @@ public class InChIJNI implements JmolInChI {
     int na = 0;
     for (int i = 0; i < nAtoms; i++) {
       JniInchiAtom a = struc.getAtom(i);
-      SmilesAtom n = atoms[na] = new SmilesAtom() {
+      SmilesAtom n = new SmilesAtom() {
         @Override
         public boolean definesStereo() {
           return true;
         }
-        
+
         @Override
         public String getStereoAtAt(SimpleNode[] nodes) {
           return decodeInchiStereo(nodes);
         }
-        
+
         @Override
-        public Boolean isStereoOpposite(int iatom) {
-          return isInchiOpposite(getIndex(), iatom);
+        public Boolean isStereoOpposite(int i2, int iA, int iB) {
+          return isInchiOpposite(getIndex(), i2, iA, iB);
         }
 
       };
+      atoms.addLast(n);
       n.set((float) a.getX(), (float) a.getY(), (float) a.getZ());
       n.setIndex(na++);
       n.setCharge(a.getCharge());
       n.setSymbol(a.getElementType());
       nh = a.getImplicitH();
       for (int j = 0; j < nh; j++) {
-        SmilesAtom h = atoms[na] = new SmilesAtom();
-        h.setIndex(na++);
-        h.setSymbol("H");
-        SmilesBond sb = new SmilesBond(n, h, Edge.BOND_COVALENT_SINGLE, false);
-        sb.index = nb++;
+        addH(atoms, n, nb++);
+        na++;
       }
       map.put(a, n);
     }
@@ -314,12 +314,15 @@ public class InChIJNI implements JmolInChI {
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
+    nb = checkFormalCharges(atoms, nb, hackImine);
+    na = atoms.size();
+    SmilesAtom[] aatoms = new SmilesAtom[na];
+    atoms.toArray(aatoms);
     for (int i = 0; i < na; i++) {
-      atoms[i].setBondArray();
+      aatoms[i].setBondArray();
     }
-    checkFormalCharges(atoms);
 
-    
+    int iA = -1, iB = -1;
     for (int i = struc.getNumStereo0D(); --i >= 0;) {
       JniInchiStereo0D sd = struc.getStereo0D(i);
       JniInchiAtom[] an = sd.getNeighbors();
@@ -330,14 +333,17 @@ public class InChIJNI implements JmolInChI {
       int i1 = map.get(an[1]).getIndex();
       int i2 = map.get(an[2]).getIndex();
       int i3 = map.get(an[3]).getIndex();
+//      System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
       boolean isEven = (sd.getParity() == INCHI_PARITY.EVEN);
       INCHI_STEREOTYPE type = sd.getStereoType();
       switch (type) {
       case ALLENE:
       case DOUBLEBOND:
-        // alkene or 2N-cumnulene
-        i1 = getOtherEneAtom(atoms, i1, i0);
-        i2 = getOtherEneAtom(atoms, i2, i3);
+        // alkene or 2N-cummulene
+        iA = i1;
+        iB = i2;
+        i1 = getOtherEneAtom(aatoms, i1, i0);
+        i2 = getOtherEneAtom(aatoms, i2, i3);
         break;
       case NONE:
         continue;
@@ -345,18 +351,22 @@ public class InChIJNI implements JmolInChI {
         break;
       }
       if (ca == null) {
-        mapPlanar.put(getIntKey(i0, i3), Boolean.valueOf(isEven));
-        mapPlanar.put(getIntKey(i0, i2), Boolean.valueOf(!isEven));
-        mapPlanar.put(getIntKey(i1, i3), Boolean.valueOf(!isEven));
-        mapPlanar.put(getIntKey(i1, i2), Boolean.valueOf(isEven));
-      } else {
+//        addStereoMap(aatoms, i0, i1, i2, i3, isEven);
+        // i1 and i2 are now substituents on the original A=B, possibly -1, but we don't care
+        setPlanarKey(i0, i3, iA, iB, Boolean.valueOf(isEven));
+        setPlanarKey(i0, i2, iA, iB, Boolean.valueOf(!isEven));
+        setPlanarKey(i1, i2, iA, iB, Boolean.valueOf(isEven));
+        setPlanarKey(i1, i3, iA, iB, Boolean.valueOf(!isEven));
+        setPlanarKey(i0, i1, iA, iB, Boolean.TRUE);
+        setPlanarKey(i2, i3, iA, iB, Boolean.TRUE);
+     } else {
         int[] list = new int[] { isEven ? i0 : i1, isEven ? i1 : i0, i2, i3 };
         mapTet.put(orderList(list), list);
       }
     }
     try {
       SmilesMatcherInterface m = vwr.getSmilesMatcher();
-      return m.getSmiles(atoms, na, BSUtil.newBitSet2(0, na), smilesOptions,
+      return m.getSmiles(aatoms, na, BSUtil.newBitSet2(0, na), smilesOptions,
           JC.SMILES_TYPE_SMILES);
     } catch (Exception e) {
       e.printStackTrace();
@@ -364,18 +374,45 @@ public class InChIJNI implements JmolInChI {
     }
   }
 
-  private void checkFormalCharges(SmilesAtom[] atoms) {
-    for (int i = atoms.length; --i >= 0;) {
-      SmilesAtom a = atoms[i];
+  private void setPlanarKey(int i0, int i3, int iA, int iB, Boolean v) {
+    mapPlanar.put(getIntKey(i0, iA, i3), v);    
+    mapPlanar.put(getIntKey(i0, iB, i3), v);    
+  }
+
+  private SmilesAtom addH(Lst<SmilesAtom> atoms, SmilesAtom n, int nb) {
+    SmilesAtom h = new SmilesAtom();
+    h.setIndex(atoms.size());
+    h.setSymbol("H");
+    atoms.addLast(h);
+    SmilesBond sb = new SmilesBond(n, h, Edge.BOND_COVALENT_SINGLE, false);
+    sb.index = nb;
+    return h;
+  }
+
+  private int checkFormalCharges(Lst<SmilesAtom> atoms, int nb, boolean hackImine) {
+    for (int i = atoms.size(); --i >= 0;) {
+      SmilesAtom a = atoms.get(i);
       int val = a.getValence();
       int nbonds = a.getCovalentBondCount();
       int nbtot = a.getBondCount();
       int ano = a.getElementNumber();
-      System.out.println("InChIJNI " + ano + " " + val + " " + nbonds);
+      int formalCharge = a.getCharge();
+      //System.out.println("InChIJNI " + ano + " " + val + " " + nbonds);
       SmilesBond b1 = null, b2 = null;
       switch (val * 10 + nbonds) {
+      case 32:
+        // X-N=Y
+        if (ano == 7 && hackImine) {
+          // change N to C17 and add H5
+          // the MOL reader will fix these
+          a.setSymbol("C");
+          a.setAtomicMass(17);
+          SmilesAtom h = addH(atoms, a, nb++);
+          h.setAtomicMass(5);
+        }
+        break;
       case 53:
-        if (ano == 7) {
+        if (ano == 7 && formalCharge == 0) {
           // X=N(R)=X -->  (-)X-N(+)(R)=X
           for (int j = 0; j < nbtot; j++) {
             SmilesBond b = a.getBond(j);
@@ -414,12 +451,12 @@ public class InChIJNI implements JmolInChI {
         a.setCharge(1);
         b2.set2(Edge.BOND_COVALENT_SINGLE, false);
       }
-
     }
+    return nb;
   }
 
-  protected Boolean isInchiOpposite(int index, int iatom) {
-    return mapPlanar.get(getIntKey(index, iatom));
+  protected Boolean isInchiOpposite(int i1, int i2, int iA, int iB) {
+    return mapPlanar.get(getIntKey(i1, Math.max(iA, iB), i2));
   }
 
   protected String decodeInchiStereo(SimpleNode[] nodes) {
@@ -432,8 +469,12 @@ public class InChIJNI implements JmolInChI {
   private static int getNodeIndex(SimpleNode node) {
     return (node == null ? -1 : node.getIndex());
   }
-  private static Integer getIntKey(int i, int j) {
-    return Integer.valueOf((Math.min(i, j) << 12) + Math.max(i, j));
+  private static Integer getIntKey(int i, int iA, int j) {
+    Integer v =  Integer.valueOf((Math.min(i, j) << 24) +
+        (iA << 12) +  Math.max(i, j));
+//    System.out.println("getIntKey " + i + " " + iA + " "+ j + " " + 
+//        (v == null ? null : Integer.toHexString(v.intValue())));
+    return v;
   }
 
   private static BS orderList(int[] list) {

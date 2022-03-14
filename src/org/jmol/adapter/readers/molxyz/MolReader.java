@@ -87,10 +87,16 @@ public class MolReader extends AtomSetCollectionReader {
   private int atomCount;
   private String[] atomData;
   boolean is2D;
+  private BS bsDeleted;
+  /**
+   * fix charges for RN(=O)(O), =N(O)*, =N
+   */
+  private boolean fixN;
 
   @Override
   public void initializeReader() throws Exception {
     optimize2D = checkFilterKey("2D");
+    fixN = checkFilterKey("FIXN");
   }
 
   @Override
@@ -128,23 +134,29 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   protected void finalizeReaderMR() throws Exception {
+    if (fixN) {
+      addJmolScript("{search('[Nv4+0,nv4+0]')}.formalCharge=1;{search('{[Ov1-0]}[Nv4+1,nv4+1]')}.formalCharge=-1;");
+    }
     if (is2D && !optimize2D)
       appendLoadNote("This model is 2D. Its 3D structure has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D.");
-    if (optimize2D) {
-      set2D();
+    if (optimize2D || bsDeleted != null) {
       if (asc.bsAtoms == null) {
         asc.bsAtoms = new BS();
         asc.bsAtoms.setBits(0, asc.ac);
       }
-      for (int i = asc.bondCount; --i >= 0;) {
-        Bond b = asc.bonds[i];
-        if (asc.atoms[b.atomIndex2].elementSymbol.equals("H")
-            && b.order != JmolAdapter.ORDER_STEREO_NEAR
-            && b.order != JmolAdapter.ORDER_STEREO_FAR) {
-          asc.bsAtoms.clear(b.atomIndex2);
+      if (bsDeleted != null)
+        asc.bsAtoms.andNot(bsDeleted);
+      if (optimize2D) {
+        set2D();
+        for (int i = asc.bondCount; --i >= 0;) {
+          Bond b = asc.bonds[i];
+          if (asc.atoms[b.atomIndex2].elementSymbol.equals("H")
+              && b.order != JmolAdapter.ORDER_STEREO_NEAR
+              && b.order != JmolAdapter.ORDER_STEREO_FAR) {
+            asc.bsAtoms.clear(b.atomIndex2);
+          }
         }
       }
-
     }
     isTrajectory = false;
     finalizeReaderASCR();
@@ -356,7 +368,17 @@ public class MolReader extends AtomSetCollectionReader {
         Atom atom = asc.atoms[ipt + i0 - 1];
         int iso = parseIntAt(line, pt + 4);
         pt += 8;
-        atom.elementSymbol = "" + iso + PT.replaceAllCharacters(atom.elementSymbol, "0123456789", "");
+        String sym = PT.replaceAllCharacters(atom.elementSymbol, "0123456789", "");
+        // special hack to get SMILES imine stereochemistry correct with CIR
+        if (iso == 17 && sym.equals("C")) {
+          atom.elementSymbol = "N";
+        } else if (iso == 5 && sym.equals("H")) {
+          if (bsDeleted == null)
+            bsDeleted = new BS();
+          bsDeleted.set(atom.index);
+        } else {
+          atom.elementSymbol = "" + iso + sym;
+        }
       }
     } catch (Throwable e) {
       // ignore error here

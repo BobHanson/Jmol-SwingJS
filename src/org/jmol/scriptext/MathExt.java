@@ -1576,9 +1576,10 @@ public class MathExt {
       // check in case pattern is "SMILES" or "SMARTS" or one of the other options tested for next
       switch (args.length) {
       case 1:
+        // InChI.find("SMILES")
         if (((String) x1.value).startsWith("InChI=")) {
-          if (sFind.equals("SMILES")) {
-            return mp.addXStr(vwr.getInchi(null, (String)x1.value, "SMILES")); 
+          if (sFind.equalsIgnoreCase("SMILES")) {
+            return mp.addXStr(vwr.getInchi(null, (String)x1.value, "SMILES" + flags)); 
           }
         }
         isStr = true;
@@ -1588,6 +1589,7 @@ public class MathExt {
         if (isOff || isON) {
           isStr = true;
         } else if (((String) x1.value).startsWith("InChI=")) {
+          // InChI.find("SMARTS", ....);
           if (sFind.equals("SMARTS")) {
             smiles = vwr.getInchi(null, (String)x1.value, "SMILES");
           } else {
@@ -1847,6 +1849,9 @@ public class MathExt {
           }
           flags = flags.toUpperCase();
           BS bsMatch3D = bs2;
+          if (flags.indexOf("INCHI") >= 0) {
+            return mp.addXStr(vwr.getInchi(bs, null, "SMILES/" + flags)); 
+          }
           if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
@@ -1854,7 +1859,7 @@ public class MathExt {
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                     | JC.SMILES_FIRST_MATCH_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
-          } else if (flags.equalsIgnoreCase("map")) {
+          } else if (flags.equals("MAP")) {
             // we add NO_AROMATIC because that is not important for structure-SMILES matching
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
                 vwr.ms.at, vwr.ms.ac, bs,
@@ -3575,10 +3580,12 @@ public class MathExt {
   private boolean evaluateSubstructure(ScriptMathProcessor mp, SV[] args,
                                        int tok, boolean isSelector)
       throws ScriptException {
-    // select substucture(....) legacy - was same as smiles(), now search()
+    // select substructure(....) legacy - was same as smiles(), now search()
     // select smiles(...)
     // select search(...)  now same as substructure
     // print {*}.search(...)
+    // x = {*}.smiles(options)
+    // x = {*}.smiles("inchi/smilesoptions") --> {*}.inchi("smiles/options")
     if (args.length == 0 || isSelector && args.length > 1)
       return false;
     BS bs = new BS();
