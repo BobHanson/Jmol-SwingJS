@@ -712,6 +712,8 @@ public class ModelSet extends BondCollection {
       vwr.zap(true, false, false);
       return bsDeleted;
     }
+    
+    
 
     // zero out reproducible arrays
 
@@ -725,7 +727,8 @@ public class ModelSet extends BondCollection {
     BS files = new BS();
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
-      allOrderly &= m.isOrderly;//isOrderly(m);
+      if (i < mc - 1)
+        allOrderly &= m.isOrderly;//isOrderly(m);
       if (bsModels.get(i)) { // get a good count now
         if (m.fileIndex >= 0)
           files.set(m.fileIndex);
@@ -3139,6 +3142,8 @@ public class ModelSet extends BondCollection {
     BS bsBonds = new BS();
     boolean doNull = Viewer.nullDeletedAtoms; 
     for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1)) {
+      if (at[i] == null)
+        continue;
       at[i].delete(bsBonds);
       if (doNull)
         at[i] = null;
