@@ -4602,6 +4602,12 @@ public class ScriptEval extends ScriptExpr {
     String appendedData = null;
     String appendedKey = null;
 
+    if (isSmiles && tokAt(i+1) == T.filter) {
+        ++i;
+        filter = stringParameter(++i);
+    }
+    
+
     if (slen == i + 1) {
       // end-of-command options:
       // LOAD SMILES "xxxx" --> load "$xxxx"
