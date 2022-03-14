@@ -293,7 +293,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private void fixBaseIndices() {
     try {
-    int baseModelIndex = ((Integer) htParams.get("baseModelIndex")).intValue();
+    Integer ii = (Integer) htParams.get("baseModelIndex");
+    if (ii == null)
+      return;
+    int baseModelIndex = ii.intValue();
     baseAtomIndex += asc.ac;
     baseBondIndex += asc.bondCount;
     baseModelIndex += asc.atomSetCount;
