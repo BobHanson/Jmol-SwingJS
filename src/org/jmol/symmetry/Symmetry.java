@@ -465,6 +465,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
+  public void toUnitCellRnd(T3 pt, T3 offset) {
+    unitCell.toUnitCellRnd(pt, offset);
+  }
+
+  @Override
   public P3 toSupercell(P3 fpt) {
     return unitCell.toSupercell(fpt);
   }

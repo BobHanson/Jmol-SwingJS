@@ -253,8 +253,11 @@ public interface SymmetryInterface {
 
   void toUnitCell(T3 pt, T3 offset);
 
+  void toUnitCellRnd(T3 pt, T3 offset);
+
   boolean unitCellEquals(SymmetryInterface uc2);
 
   void unitize(T3 ptFrac);
+
 
 }

@@ -168,12 +168,46 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
   
   /**
+   * when offset is null, use the current cell, otherwise use the original unit cell
+   * 
+   * @param pt
+   * @param offset
+   */
+  final void toUnitCellRnd(T3 pt, T3 offset) {
+    if (matrixCartesianToFractional == null)
+      return;
+    if (offset == null) {
+      // used redefined unitcell 
+      matrixCartesianToFractional.rotTrans(pt);
+      unitizeRnd(pt);
+      matrixFractionalToCartesian.rotTrans(pt);
+    } else {
+      // use original unit cell
+      // note that this matrix will be the same as matrixCartesianToFractional
+      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
+      matrixCtoFNoOffset.rotTrans(pt);
+      unitizeRnd(pt);
+      pt.add(offset); 
+      matrixFtoCNoOffset.rotTrans(pt);
+    }
+  }
+  
+  /**
    * returns [0,1)
    * 
    * @param pt
    */
   public void unitize(T3 pt) {
 	  unitizeDim(dimension, pt);
+  }
+
+  /**
+   * returns [0,1) with rounding to 0.0001
+   * 
+   * @param pt
+   */
+  public void unitizeRnd(T3 pt) {
+    unitizeDimRnd(dimension, pt);
   }
 
   public void reset() {

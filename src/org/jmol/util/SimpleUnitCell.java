@@ -589,10 +589,32 @@ public class SimpleUnitCell {
     }
   }
 
+  public static void unitizeDimRnd(int dimension, T3 pt) {
+    switch (dimension) {
+    case 3:
+      pt.z = unitizeXRnd(pt.z);  
+      //$FALL-THROUGH$
+    case 2:
+      pt.y = unitizeXRnd(pt.y);
+      //$FALL-THROUGH$
+    case 1:
+      pt.x = unitizeXRnd(pt.x);
+    }
+  }
+
   public static float unitizeX(float x) {
     // introduced in Jmol 11.7.36
     return (float) (x - Math.floor(x));
   }
+
+  public static float unitizeXRnd(float x) {
+    // introduced in Jmol 11.7.36
+    x = (float) (x - Math.floor(x));
+    if (x > 0.9999f || x < 0.0001f) 
+      x = 0;
+    return x;
+  }
+  
 
 
   public static float normalizeXRnd(float x) {

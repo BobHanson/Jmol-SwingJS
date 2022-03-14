@@ -778,7 +778,7 @@ public class XtalSymmetry {
             if (doPackUnitCell) {
 
               // 555 cell 
-              sym.toUnitCell(c, ptOffset);
+              sym.toUnitCellRnd(c, ptOffset);
               pttemp.setT(c);
               sym.toFractional(pttemp, false);
               if (acr.fixJavaFloat)
@@ -949,7 +949,7 @@ public class XtalSymmetry {
         P3 c = P3.newP(pttemp); // cartesian position
         sym.toCartesian(c, false);
         if (doPackUnitCell) {
-          sym.toUnitCell(c, ptOffset);
+          sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
           if (acr.fixJavaFloat)
