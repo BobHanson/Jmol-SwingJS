@@ -502,11 +502,11 @@ public class SmilesSearch extends JmolMolecule {
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1)) {
         Node atom = targetAtoms[i];
-        Edge[] bonds = atom.getEdges();
-        if (bonds != null)
-          for (int k = bonds.length; --k >= 0;)
+        int nb = atom.getBondCount();
+          for (int k = nb; --k >= 0;) {
             if (ringCounts[atom.getBondedAtomIndex(k)] > 0)
               ringConnections[i]++;
+          }
       }
     }
   }

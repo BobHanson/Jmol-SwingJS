@@ -24,17 +24,17 @@
 
 package org.jmol.smiles;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3;
-
-import javajs.util.BS;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
 
 //import org.jmol.util.Logger;
 
@@ -608,6 +608,7 @@ public class SmilesAtom extends P3 implements Node {
     return implicitHydrogenCount;
   }
 
+  @Override
   public int getExplicitHydrogenCount() {
     return explicitHydrogenCount;
   }
@@ -646,7 +647,7 @@ public class SmilesAtom extends P3 implements Node {
       return parent.getValence();
     int n = valence;
     if (n <= 0 && bonds != null)
-      for (int i = bonds.length; --i >= 0;)
+      for (int i = bondCount; --i >= 0;)
         n += bonds[i].getValence();
     valence = n;
     return n;
@@ -779,10 +780,10 @@ public class SmilesAtom extends P3 implements Node {
                              int charge, float osclass, int nH, boolean isAromatic,
                              String stereo, boolean is2D) {
     String sym = Elements.elementSymbolFromNumber(atomicNumber);
-    if (isAromatic) {
-      sym = sym.toLowerCase();
-      if (atomicNumber != 6)
-        valence = Integer.MAX_VALUE; // force [n]
+    if (atomicNumber == 1 
+        || isAromatic && !(sym = sym.toLowerCase()).equals("c")) {
+      // force [n]
+      valence = Integer.MAX_VALUE;
     }
     boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber <= 0 
         && charge == 0 && Float.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
@@ -920,7 +921,14 @@ public class SmilesAtom extends P3 implements Node {
     return null;
   }
 
-  public Boolean isStereoOpposite(@SuppressWarnings("unused") int iatom) {
+  /**
+   * @param i2  
+   * @param iA
+   * @param iB
+   * @return TRUE if opposite
+   */
+  public Boolean isStereoOpposite(int i2, int iA, int iB) {
+    // InChIJNI.java subclass only
     return null;
   }
 

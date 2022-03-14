@@ -369,7 +369,10 @@ public class SmilesGenerator {
           .nextSetBit(j + 1)) {
         Node a = atoms[j];
         if (a.getAtomicAndIsotopeNumber() == 1 
-            && a.getBondCount() > 0 && a.getBondedAtomIndex(0) != iHypervalent)
+            && a.getBondCount() > 0 
+            && a.getBondedAtomIndex(0) != iHypervalent
+            && !isExplicitOnly(atoms[a.getBondedAtomIndex(0)])
+            )
           bsSelected.clear(j);
       }
     bsAromatic = new BS();
@@ -497,8 +500,10 @@ public class SmilesGenerator {
     int i = bond.index;
     boolean isFirst = (atomFrom == null || bond.getAtomIndex1() == atomFrom
         .getIndex());
-    return (bsBondsUp.get(i) ? (isFirst ? '/' : '\\')
-        : bsBondsDn.get(i) ? (isFirst ? '\\' : '/') : '\0');
+    return (bsBondsUp.get(i) ? 
+        (isFirst ? '/' : '\\')
+        : bsBondsDn.get(i) ? 
+            (isFirst ? '\\' : '/') : '\0');
   }
 
   /**
@@ -554,9 +559,11 @@ public class SmilesGenerator {
           edgeCount = 0;
           SimpleNode atomA = atom12[j];
           Edge[] bb = ((Node) atomA).getEdges();
+          boolean explicitH = explicitHydrogen > 0 || isExplicitOnly(atomA);
           for (int b = 0; b < bb.length; b++) {
             SimpleNode other;
-            if (bb[b].getCovalentOrder() != 1 || explicitHydrogen == 0
+            if (bb[b].getCovalentOrder() != 1 
+                || !explicitH
                 && (other = bb[b].getOtherNode(atomA)).getElementNumber() == 1
                 && other.getIsotopeNumber() == 0)
               continue;
@@ -593,32 +600,38 @@ public class SmilesGenerator {
         // "more than 90 degrees apart" (ab, and cd)
         // Parity errors would be caught here, but I doubt you
         // could ever get that with a real molecule. 
-
-        char c0 = getBondStereochemistry(b0, atom12[i0]);
-        a0 = b0.getOtherNode(atom12[i0]);
+        SimpleNode aA = atom12[i0];
+        char c0 = getBondStereochemistry(b0, aA);
+        a0 = b0.getOtherNode(aA);
         if (a0 == null)
           continue;
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < 2; j++) {
+          SimpleNode aB = atom12[j];
           for (int jj = 0; jj < 2; jj++) {
             Edge b1 = edges[j][jj];
             if (b1 == null || b1 == b0)
               continue;
             int bi = b1.index;
-            SimpleNode a1 = b1.getOtherNode(atom12[j]);
+            SimpleNode a1 = b1.getOtherNode(aB);
             if (a1 == null)
               continue;
-            char c1 = getBondStereochemistry(b1, atom12[j]);
+            char c1 = getBondStereochemistry(b1, aB);
 
             //   c1 is FROM the double bond:
             //    
             //     a0    a1
             //      \   /
-            //    [i0]=[j]       /a /b  \c \d
-            //   
+            //      aA=aB       /a /b  \c \d
+            //  
+            // or   a0
+            //       \
+            //       aA=aB   when aA == aB  (j == 0)
+            //       /
+            //      a1
             boolean isOpposite;
 
             if (haveSmilesAtoms) {
-              Boolean isop = ((SmilesAtom) a0).isStereoOpposite(a1.getIndex());
+              Boolean isop = ((SmilesAtom) a0).isStereoOpposite(a1.getIndex(), aA.getIndex(), aB.getIndex());
               if (isop == null) {
                 if (Logger.debugging)
                   Logger.debug("SmilesGenerator could not find stereo for " + a0 + "/" + a1);
@@ -626,25 +639,29 @@ public class SmilesGenerator {
               }
               isOpposite = isop.booleanValue();
             } else {
-              isOpposite = SmilesStereo.isDiaxial(atom12[i0], atom12[j], a0, a1,
+              isOpposite = SmilesStereo.isDiaxial(aA, aB, a0, a1,
                   vTemp, 0);
             }
 
             if (c1 == '\0' || (c1 != c0) == isOpposite) {
               boolean isUp = (c0 == '\\' && isOpposite
                   || c0 == '/' && !isOpposite);
-              if (isUp == (b1.getAtomIndex1() != a1.getIndex()))
+              if (isUp == (b1.getAtomIndex1() != a1.getIndex())) {
                 bsBondsUp.set(bi);
-              else
+              } else {
                 bsBondsDn.set(bi);
+              }
             } else {
-              Logger.error("BOND STEREOCHEMISTRY ERROR");
+              bsBondsUp.clear(bi);
+              bsBondsDn.clear(bi);
+              Logger.error("BOND STEREOCHEMISTRY PARITY ERROR-stereochemistry for bond " + bi + "");
             }
             if (Logger.debugging)
-              Logger.debug(getBondStereochemistry(b0, atom12[0]) + " "
+              Logger.debug(getBondStereochemistry(b0, aA) + " "
                   + a0.getIndex() + " " + a1.getIndex() + " "
-                  + getBondStereochemistry(b1, atom12[j]));
+                  + getBondStereochemistry(b1, aB));
           }
+        }
       }
     }
   }
@@ -659,7 +676,11 @@ public class SmilesGenerator {
       return null;
     ptAtom++;
     bsToDo.clear(atomIndex);
-    boolean includeHs = (atomIndex == iHypervalent || explicitHydrogen != 0 && !bsIgnoreHydrogen.get(atomIndex));
+    boolean includeHs = (
+        atomIndex == iHypervalent 
+        || explicitHydrogen != 0 && !bsIgnoreHydrogen.get(atomIndex)
+        );
+    boolean explicitHs = isExplicitOnly(atom);
     boolean isExtension = (!bsSelected.get(atomIndex));
     int prevIndex = (prevAtom == null ? -1 : prevAtom.getIndex());
     boolean isAromatic = bsAromatic.get(atomIndex);
@@ -698,7 +719,7 @@ public class SmilesGenerator {
           continue;
         }
         
-        boolean isH = !includeHs
+        boolean isH = !includeHs && !explicitHs
             && (atom1.getElementNumber() == 1 && atom1.getIsotopeNumber() <= 0);
         if (!bsIncludingH.get(index1)) {
           if (!isH && allowConnectionsToOutsideWorld
@@ -762,7 +783,7 @@ public class SmilesGenerator {
         Edge bond = v.get(i);
         SimpleNode a = bond.getOtherNode(atom);
         int n = a.getCovalentBondCount()
-            - (includeHs ? 0 : ((Node) a).getCovalentHydrogenCount());
+            - (includeHs || isExplicitOnly(a) ? 0 : ((Node) a).getCovalentHydrogenCount());
         int order = bond.getCovalentOrder();
         if (n == 1 && (bondNext != null || i < nBonds - 1)) {
           bsBranches.set(bond.index);
@@ -794,9 +815,16 @@ public class SmilesGenerator {
     if (stereoFlag < 7 && nH == 1)
       stereo[stereoFlag++] = aH;
 
-    boolean deferStereo = (orderNext == 1 && sp2Atoms == null);
+    boolean 
+// I guess I thought that we should not put a / before a ring number
+// for a future ring, but that is not true. fixed 2022.03.12 Jmol 14.32.34
+//
+//    deferStereo = (orderNext == 1 && sp2Atoms == null);
+//    if (deferStereo) {
+      deferStereo = false;
+//    }
+    
     char chBond = getBondStereochemistry(bondPrev, prevAtom);
-
     if (strPrev != null || chBond != '\0') {
       if (chBond != '\0')
         strPrev = "" + chBond;
@@ -863,9 +891,8 @@ public class SmilesGenerator {
         continue;
       SimpleNode a = bond.getOtherNode(atom);
       strPrev = getBondOrder(bond, atomIndex, a.getIndex(), isAromatic);
-      if (!deferStereo) {
-        chBond = getBondStereochemistry(bond, atom);
-        if (chBond != '\0')
+      chBond = getBondStereochemistry(bond, atom);
+      if (!deferStereo && chBond != '\0') {
           strPrev = "" + chBond;
       }
       sbRings.append(strPrev);
@@ -1006,6 +1033,11 @@ public class SmilesGenerator {
     prevSp2Atoms = sp2Atoms;
     prevAtom = atom;
     return atomNext;
+  }
+
+  private boolean isExplicitOnly(SimpleNode atom) {
+    // imine hack here
+    return (atom.getElementNumber() == 7 || atom.getElementNumber() == 6 && atom.getIsotopeNumber() == 17);
   }
 
   private SimpleNode[] atemp;
@@ -1248,7 +1280,6 @@ public class SmilesGenerator {
                                 BS bsDone) {
     if (bsDone != null)
       bsDone.set(atomIndex);
-    //System.out.println("level=" + level + " atomIndex=" + atomIndex + " atom=" + atom + " s=" + s);
     int n = ((Node)atom).getAtomicAndIsotopeNumber();
     int nx = atom.getCovalentBondCount();
     int nh = (n == 6 && explicitHydrogen != 0 ? ((Node) atom).getCovalentHydrogenCount() : 0);
@@ -1352,14 +1383,6 @@ public class SmilesGenerator {
   protected static String getRingKey(int i0, int i1) {
     return Math.min(i0, i1) + "_" + Math.max(i0, i1);
   }
-
-//static {
-//  T3 atom = P3.new3(0,  0.0001f,  -1);
-//  T3 atomPrev = P3.new3(0,  0 , 1);
-//  T3 ref = P3.new3(0,  0 , 0);
-//  T3 a = P3.new3(1,  0,  0);
-// System.out.println(Measure.computeTorsion((T3) atom, (T3)atomPrev, ref, (T3) a, true));  
-//}
 
 }
 
