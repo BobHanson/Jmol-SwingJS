@@ -544,6 +544,45 @@ public class CrystalReader extends AtomSetCollectionReader {
 //  }
 //
 //  
+//  /**
+//   * Process a CP data line
+//   * 
+//   * @param line full TOPOND data line
+//   * @param list entries to fill with information
+//   * @return matrix information for eigenvectors
+//   */
+//  private String getCPAtomInfo(String line, Lst<Object> list) {
+//    // tokens (molecular):
+//    // ( C   1   1.437 AU )                                 -0.216    0.000    0.976
+//    // 0 1   2   3     4  5 
+//    // tokens (crystal):
+//    // ( C   1   0  0  0   1.111 AU )                       -0.945   -0.021    0.326
+//    // 0 1   2   3  4  5      6  7  8
+//    Map<String, Object> atomInfo = new Hashtable<String, Object>();
+//    String data = line.substring(0, 52).trim();
+//    String[] tokens = PT.getTokens(data);
+//    if (tokens.length == 6 || tokens.length == 9) {
+//      String element = tokens[1];
+//      int atomno = parseIntStr(tokens[2]);
+//      int pt = 3;
+//      P3 cellOffset = (tokens.length == 9 ? P3.new3(
+//          parseFloatStr(tokens[pt++]), parseFloatStr(tokens[pt++]),
+//          parseFloatStr(tokens[pt++])) : null);
+//      float dist = parseFloatStr(tokens[pt++]);
+//      if (tokens[pt].equals("AU"))
+//        dist *= ANGSTROMS_PER_BOHR;
+//      atomInfo.put("element", element);
+//      atomInfo.put("atomno",  Integer.valueOf(atomno));
+//      if (cellOffset != null)
+//        atomInfo.put("cellOffset", cellOffset);
+//      atomInfo.put("d", Float.valueOf(dist));
+//      list.addLast(atomInfo);
+//    }
+//    return line.substring(53);
+//  }
+//
+
+  
   private int cpno = -1;
   
   private final static String[] crtypes = {"??", "nuclei", "bonds", "rings", "cages"};
@@ -732,43 +771,6 @@ public class CrystalReader extends AtomSetCollectionReader {
   }
 
 
-  /**
-   * Process a CP data line
-   * 
-   * @param line full TOPOND data line
-   * @param list entries to fill with information
-   * @return matrix information for eigenvectors
-   */
-  private String getCPAtomInfo(String line, Lst<Object> list) {
-    // tokens (molecular):
-    // ( C   1   1.437 AU )                                 -0.216    0.000    0.976
-    // 0 1   2   3     4  5 
-    // tokens (crystal):
-    // ( C   1   0  0  0   1.111 AU )                       -0.945   -0.021    0.326
-    // 0 1   2   3  4  5      6  7  8
-    Map<String, Object> atomInfo = new Hashtable<String, Object>();
-    String data = line.substring(0, 52).trim();
-    String[] tokens = PT.getTokens(data);
-    if (tokens.length == 6 || tokens.length == 9) {
-      String element = tokens[1];
-      int atomno = parseIntStr(tokens[2]);
-      int pt = 3;
-      P3 cellOffset = (tokens.length == 9 ? P3.new3(
-          parseFloatStr(tokens[pt++]), parseFloatStr(tokens[pt++]),
-          parseFloatStr(tokens[pt++])) : null);
-      float dist = parseFloatStr(tokens[pt++]);
-      if (tokens[pt].equals("AU"))
-        dist *= ANGSTROMS_PER_BOHR;
-      atomInfo.put("element", element);
-      atomInfo.put("atomno",  Integer.valueOf(atomno));
-      if (cellOffset != null)
-        atomInfo.put("cellOffset", cellOffset);
-      atomInfo.put("d", Float.valueOf(dist));
-      list.addLast(atomInfo);
-    }
-    return line.substring(53);
-  }
-
   private void newLattice(boolean isConv) throws Exception {
     lstCoords = null;
     readLatticeParams(!isConv);
@@ -837,6 +839,9 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    asc.setInfo("symmetryType",
+        (isSlab ? "2D - SLAB" : isPolymer ? "1D - POLYMER" : type));
+    
     processCoordLines();
     if (energy != null)
       setEnergy();
@@ -927,23 +932,25 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   // SHIFT OF THE ORIGIN                  :    3/4    1/4      0
 
-  /**
-   * Read the origin shift
-   * 
-   * @return true
-   */
-  private boolean readShift() {
-    // BH: Is this necessary? Doesn't appear to be. I introduced it 3/4/10 rev. 12559
-    String[] tokens = getTokens();
-    int pt = tokens.length - 3;
-    ptOriginShift.set(PT.parseFloatFraction(tokens[pt++]),
-        PT.parseFloatFraction(tokens[pt++]), PT.parseFloatFraction(tokens[pt]));
-    return true;
-  }
+//  /**
+//   * Read the origin shift
+//   * 
+//   * @return true
+//   */
+//  private boolean readShift() {
+//    // BH: Is this necessary? Doesn't appear to be. I introduced it 3/4/10 rev. 12559
+//    String[] tokens = getTokens();
+//    int pt = tokens.length - 3;
+//    ptOriginShift.set(PT.parseFloatFraction(tokens[pt++]),
+//        PT.parseFloatFraction(tokens[pt++]), PT.parseFloatFraction(tokens[pt]));
+//    return true;
+//  }
 
   private float primitiveVolume;
   private float primitiveDensity;
   private String firstLine;
+  private String type;
+  
 
   //0         1         2         3         4         5         6         7
   //01234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -981,7 +988,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       name = line.trim();
       rd();
     }
-    String type = rd().trim();
+    type = rd().trim();
     int pt = type.indexOf("- PROPERTIES");
     if (pt >= 0) {
       isProperties = true;
@@ -1002,8 +1009,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     isPolymer = (type.equals("1D - POLYMER")
         || type.equals("POLYMER CALCULATION"));
     isSlab = (type.equals("2D - SLAB") || type.equals("SLAB CALCULATION"));
-    asc.setInfo("symmetryType",
-        (isSlab ? "2D - SLAB" : isPolymer ? "1D - POLYMER" : type));
     if ((isPolymer || isSlab) && !isPrimitive) {
       Logger.error("Cannot use FILTER \"conventional\" with POLYMER or SLAB");
       isPrimitive = true;
@@ -1071,21 +1076,27 @@ public class CrystalReader extends AtomSetCollectionReader {
           primitiveDensity = parseFloatStr(line.substring(66));
         }
       String[] tokens = PT.getTokens(rd());
+      float a = parseFloatStr(tokens[0]);
+      float b = parseFloatStr(tokens[1]);
+      if (!isSlab && !isPolymer && tokens.length == 7) {
+        primitiveVolume =  parseFloatStr(tokens[6]);
+        if (Math.abs(primitiveVolume - a * b) < 0.1f) {
+          isSlab = true;
+        }       
+      }
       if (isSlab) {
         if (isPrimitive) // primitive
-          setUnitCell(parseFloatStr(tokens[0]) * f,
-              parseFloatStr(tokens[1]) * f, -1, parseFloatStr(tokens[3]),
+          setUnitCell(a * f, b * f, -1, parseFloatStr(tokens[3]),
               parseFloatStr(tokens[4]), parseFloatStr(tokens[5]));
         else
-          setUnitCell(parseFloatStr(tokens[0]) * f,
-              parseFloatStr(tokens[1]) * f, -1, 90, 90,
+          setUnitCell(a * f, b * f, -1, 90, 90,
               parseFloatStr(tokens[2]));
       } else if (isPolymer) {
-        setUnitCell(parseFloatStr(tokens[0]) * f, -1, -1,
+        setUnitCell(a, -1, -1,
             parseFloatStr(tokens[3]), parseFloatStr(tokens[4]),
             parseFloatStr(tokens[5]));
       } else {
-        setUnitCell(parseFloatStr(tokens[0]) * f, parseFloatStr(tokens[1]) * f,
+        setUnitCell(a * f, b * f,
             parseFloatStr(tokens[2]) * f, parseFloatStr(tokens[3]),
             parseFloatStr(tokens[4]), parseFloatStr(tokens[5]));
       }

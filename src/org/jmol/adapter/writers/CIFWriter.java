@@ -18,13 +18,12 @@ import javajs.util.T3;
  * see http://www.xcrysden.org/doc/XSF.html
  * 
  */
-public class CIFWriter implements JmolWriter {
+public class CIFWriter extends XtlWriter implements JmolWriter {
 
   private Viewer vwr;
   private OC oc;
 
   private boolean isP1;
-  private boolean haveUnitCell;
 
   private final static P3 fset0 = P3.new3(555, 555, 1);
 
@@ -277,23 +276,6 @@ public class CIFWriter implements JmolWriter {
     output.append("\n;").append(val).append("\n;\n");
   }
 
-  private String clean(float f) {
-    int t;
-    return (!haveUnitCell || (t = twelfthsOf(f)) < 0
-        ? PT.formatF(f, 18, 12, false, false)
-        : (f < 0 ? "   -" : "    ") + twelfths[t]);
-  }
-
-  private static final String[] twelfths = new String[] { "0.000000000000",
-      "0.083333333333", "0.166666666667", "0.250000000000", "0.333333333333",
-      "0.416666666667", "0.500000000000", "0.583333333333", "0.666666666667",
-      "0.750000000000", "0.833333333333", "0.916666666667", "1.000000000000", };
-
-  private static int twelfthsOf(float f) {
-    f = Math.abs(f * 12);
-    int i = Math.round(f);
-    return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : -1);
-  }
 
   private SB appendKey(SB sb, String key) {
     return sb.append("\n").append(PT.formatS(key, 27, 0, true, false));

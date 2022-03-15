@@ -906,7 +906,7 @@ public class Symmetry implements SymmetryInterface {
         Atom a = atoms[i];
         pt.setT(a);
         uc.toFractional(pt, false);
-        uc.unitize(pt);
+        uc.unitizeRnd(pt);
         int type = a.getAtomicAndIsotopeNumber();
         
         float occ = (haveOccupancies ? occs[i] : 0);
@@ -917,7 +917,7 @@ public class Symmetry implements SymmetryInterface {
               continue;
           pt2.setT(b);
           uc.toFractional(pt2, false);
-          uc.unitize(pt2);
+          uc.unitizeRnd(pt2);
           if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
             bs.clear(j);
           }

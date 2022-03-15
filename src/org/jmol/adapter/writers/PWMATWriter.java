@@ -20,7 +20,7 @@ import javajs.util.V3;
  * A writer for PWMAT atom.config files.
  * 
  */
-public class PWMATWriter implements JmolWriter {
+public class PWMATWriter extends XtlWriter implements JmolWriter {
 
 
   private Viewer vwr;
@@ -89,14 +89,15 @@ public class PWMATWriter implements JmolWriter {
     float[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
     float[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
     oc.append("Position, move_x, move_y, move_z\n");
-    String f = "%4i%18.12p%18.12p%18.12p" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
+    String f = "%4i%s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
     Atom[] a = vwr.ms.at;
     P3 p = new P3();
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       p.setT(a[i]);
       uc.toFractional(p, true);
+      String coord = clean(p.x) + clean(p.y) + clean(p.z);
       if (cz == null) {
-        oc.append(PT.sprintf(f, "ip", new Object[] { Integer.valueOf(a[i].getElementNumber()), p }));
+        oc.append(PT.sprintf(f, "is", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord }));
       } else {
         int ix = (int) cx[ic];
         int iy = (int) cy[ic];
