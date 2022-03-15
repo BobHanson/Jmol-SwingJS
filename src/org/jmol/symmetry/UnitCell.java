@@ -937,7 +937,10 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     for (int i = 0, nops = ops.length; i < nops; i++) {
       P3 p = P3.newP(pf);
       ops[i].rotTrans(p);
-      unitize(p);
+      //not using unitize here, because it does some averaging
+      p.x = (float) (p.x - Math.floor(p.x));
+      p.y = (float) (p.y - Math.floor(p.y));
+      p.z = (float) (p.z - Math.floor(p.z));
       list.addLast(p);
       n++;
     }
