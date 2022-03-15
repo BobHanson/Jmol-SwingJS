@@ -604,7 +604,11 @@ public class SimpleUnitCell {
 
   public static float unitizeX(float x) {
     // introduced in Jmol 11.7.36
-    return (float) (x - Math.floor(x));
+    x = (float) (x - Math.floor(x));
+    // question - does this cause problems with dragatom?
+    if (x > 0.999f || x < 0.001f)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
+      x = 0;
+    return x;
   }
 
   public static float unitizeXRnd(float x) {

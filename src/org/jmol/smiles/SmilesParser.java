@@ -489,7 +489,9 @@ public class SmilesParser {
         boolean isAtom = (!isConnect && (ch == '_' || ch == '[' || ch == '*' || PT
             .isLetter(ch)));
         if (isConnect) {
-          if (wasMeasure || wasBranch)
+          if (wasMeasure
+//              || wasBranch // relaxing this constraint as per Open Smiles Jmol 14.32.36
+            )
             throw new InvalidSmilesException(
                 "connection number must immediately follow its connecting atom");
           index = getRingNumber(pattern, index, ch, ret);
