@@ -6208,7 +6208,7 @@ public class CmdExt extends ScriptExt {
         ++e.iToken;
       }
     } else if (isMove) {
-      pt = getPoint3f(++e.iToken, true);
+      pt = getPoint3f(i, true);
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
     } else if (!isConnect) {
