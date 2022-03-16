@@ -89,7 +89,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     float[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
     float[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
     oc.append("Position, move_x, move_y, move_z\n");
-    String f = "%4i%s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
+    String f = "%4i%40s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
     Atom[] a = vwr.ms.at;
     P3 p = new P3();
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
@@ -102,7 +102,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
         int ix = (int) cx[ic];
         int iy = (int) cy[ic];
         int iz = (int) cz[ic];
-        oc.append(PT.sprintf(f, "ipiii", new Object[] { Integer.valueOf(a[i].getElementNumber()), p, Integer.valueOf(ix), Integer.valueOf(iy),Integer.valueOf(iz) }));
+        oc.append(PT.sprintf(f, "isiii", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord, Integer.valueOf(ix), Integer.valueOf(iy),Integer.valueOf(iz) }));
       }
     }    
     Logger.info("PWMATWriter: POSITIONS");
