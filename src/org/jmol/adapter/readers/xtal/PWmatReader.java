@@ -53,15 +53,24 @@ public class PWmatReader extends AtomSetCollectionReader {
   }
 
   private void readUnitCell() throws Exception {
-    float[] unitCellData = new float[9];
-    fillFloatArray(null, 0, unitCellData);
-    addExplicitLatticeVector(0, unitCellData, 0);
-    addExplicitLatticeVector(1, unitCellData, 3);
-    addExplicitLatticeVector(2, unitCellData, 6);
+    // The lattice section consists of 3 lines representing 
+    // the lattice vector. For each line, there could be an extra 
+    // 3 numbers followed, please ignore.
+    
+    float[] unitCellData = new float[3];
+    addExplicitLatticeVector(0, fillFloatArray(getLine(), 0, unitCellData), 0);
+    addExplicitLatticeVector(1, fillFloatArray(getLine(), 0, unitCellData), 0);
+    addExplicitLatticeVector(2, fillFloatArray(getLine(), 0, unitCellData), 0);
   }
 
 
   private void readCoordinates() throws Exception {
+    // Following lattice section is the position section. 
+    // As long as there is "position" case-insensitive 
+    // leading the line, that is our position section. 
+    // The position section consists of N lines. 
+    // Atom number is the from the line.
+    
     Lst<float[]> constraints = new Lst<float[]>();
     boolean haveConstraints = true;
     int i = 0;

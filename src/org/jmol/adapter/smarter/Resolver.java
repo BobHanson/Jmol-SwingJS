@@ -620,7 +620,7 @@ public class Resolver {
     if ((checkPWM || lines.length > 5 && i > 0)
         && ((s = lines[1].trim().toUpperCase()).startsWith("LATTICE VECTOR") || s.equals("LATTICE")))
       return 3;
-    return 1;
+    return (checkPWM ? 1 : 0);
   }
   
   ////////////////////////////////////////////////////////////////

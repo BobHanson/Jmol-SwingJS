@@ -333,7 +333,7 @@ class SpaceGroup {
           .append("\n\n")
           .appendI(operationCount)
           .append(" operators")
-          .append(
+          .append(hallInfo != null && 
               !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
                   + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
           .append(": ");
