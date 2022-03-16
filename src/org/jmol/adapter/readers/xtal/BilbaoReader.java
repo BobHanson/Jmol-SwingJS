@@ -160,6 +160,8 @@ public class BilbaoReader extends AtomSetCollectionReader {
     if (!doGetModel(++modelNumber, title))
       return;
     asc.newAtomSet();
+    if (line.startsWith("#"))
+      rdLine();
     if (line.startsWith("Bilbao Crys:")) {
       title = line.substring(13).trim();
       rdLine();
@@ -177,7 +179,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
       setSpaceGroupName("bilbao:" + intTableNo);
     }
     float[] data = new float[6];
-    fillFloatArray(null, 0, data);
+    fillFloatArray(rdLine(), 0, data);
     for (int i = 0; i < 6; i++)
       setUnitCellItem(i, data[i]);
     i0 = asc.ac;
