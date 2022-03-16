@@ -72,7 +72,7 @@ public class PWmatReader extends AtomSetCollectionReader {
       haveConstraints = (tokens.length >= 7) && haveConstraints;
       if (haveConstraints)
         constraints.addLast(new float[] { Float.parseFloat(tokens[4]),
-            Float.parseFloat(tokens[4]), Float.parseFloat(tokens[4]) });
+            Float.parseFloat(tokens[5]), Float.parseFloat(tokens[6]) });
     }
     float[] cx = new float[nAtoms];
     float[] cy = new float[nAtoms];
