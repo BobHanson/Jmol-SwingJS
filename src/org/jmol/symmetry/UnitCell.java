@@ -948,6 +948,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       // duplicate all the points. 
       for (int i = n0; i < n; i++) {
         P3 p = list.get(i);
+        unitizeRnd(p);
         if (p.x == 0) {
           list.addLast(P3.new3(1, p.y, p.z));
           if (p.y == 0) {

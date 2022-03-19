@@ -937,6 +937,7 @@ public class Symmetry implements SymmetryInterface {
   public void getEquivPointList(Lst<P3> pts, int nIgnored, String flags) {
     M4[] ops = getSymmetryOperations();
     boolean newPt = (flags.indexOf("newpt") >= 0);
+    boolean zapped = (flags.indexOf("zapped") >= 0);
     // we will preserve the points temporarily, then remove them at the end
     int n = pts.size();
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
@@ -955,6 +956,8 @@ public class Symmetry implements SymmetryInterface {
       nIgnored--;
       n0--;
     }
+    if (zapped)
+      n0 = 0;
     P3 p0 = (nIgnored > 0 ? pts.get(nIgnored) : null);
     if (ops != null || unitCell != null) {
       for (int i = nIgnored; i < n; i++) {
@@ -963,7 +966,7 @@ public class Symmetry implements SymmetryInterface {
     }
     // now remove the starting points, checking to see if perhaps our
     // test point itself has been removed.
-    if (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints || newPt)
+    if (!zapped && (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints || newPt))
       n--;
     for (int i = n - nIgnored; --i >= 0;)
       pts.removeItemAt(nIgnored);

@@ -3634,7 +3634,7 @@ public class Viewer extends JmolViewer
   }
 
   private void loadDefaultModelKitModel(Map<String, Object> htParams) {
-    if (modelkit.isHidden())
+    if (modelkit.isHidden() || getOperativeSymmetry() != null)
       return;
     openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams,
         true);

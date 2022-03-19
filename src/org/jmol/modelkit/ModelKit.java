@@ -1973,6 +1973,8 @@ public class ModelKit {
       }
       BS bsM = vwr.getThisModelAtoms();
       int n = bsM.cardinality();
+      if (n == 0)
+        packing = "zapped;" + packing;
       String stype = "" + type;
       P3 pf = null;
       isPoint = (pt != null);
