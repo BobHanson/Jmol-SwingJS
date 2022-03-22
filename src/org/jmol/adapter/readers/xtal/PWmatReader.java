@@ -1,5 +1,9 @@
 package org.jmol.adapter.readers.xtal;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.util.Logger;
 
@@ -197,9 +201,33 @@ public class PWmatReader extends AtomSetCollectionReader {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
+  public void applySymmetryAndSetTrajectory() throws Exception {
+    super.applySymmetryAndSetTrajectory();
+    if (nAtoms != asc.ac) {
+      nAtoms = asc.ac;
+      Map<String, Object> p = (Map<String, Object>) asc
+          .getAtomSetAuxiliaryInfoValue(asc.iSet, "atomProperties");
+      if (p != null) {
+        Atom[] atoms = asc.atoms;
+        for (Entry<String, Object> e : p.entrySet()) {
+          String key = e.getKey();
+          if (key.startsWith("pwm_")) {
+            float[] af = (float[]) e.getValue();
+            float[] af2 = new float[nAtoms];
+            for (int j = 0; j < nAtoms; j++)
+              af2[j] = af[atoms[j].atomSite];
+            e.setValue(af2);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
   protected void finalizeSubclassReader() throws Exception {
     if (!haveMagnetic) {
-      setProperties("pwm_magnetic", new float[nAtoms], asc.iSet, nAtoms);
+      setProperties("pwm_magnetic", new float[asc.ac], nAtoms, nAtoms);
     }
   }
 
