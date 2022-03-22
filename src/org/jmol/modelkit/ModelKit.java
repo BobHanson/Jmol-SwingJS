@@ -1138,68 +1138,11 @@ public class ModelKit {
     return atomicNumber;
   }
 
-  /** 
-   * Original ModelKit functionality -- assign a bond.
-   * 
-   * @param bondIndex
-   * @param type
-   * @return bit set of atoms to modify
-   */
-  private BS assignBond(int bondIndex, char type) {
-    int bondOrder = type - '0';
-    Bond bond = vwr.ms.bo[bondIndex];
-    vwr.ms.clearDB(bond.atom1.i);
-    switch (type) {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-      break;
-    case 'p':
-    case 'm':
-      bondOrder = Edge.getBondOrderNumberFromOrder(bond.getCovalentOrder())
-          .charAt(0) - '0' + (type == 'p' ? 1 : -1);
-      if (bondOrder > 3)
-        bondOrder = 1;
-      else if (bondOrder < 0)
-        bondOrder = 3;
-      break;
-    default:
-      return null;
-    }
-    BS bsAtoms = new BS();
-    try {
-      if (bondOrder == 0) {
-        BS bs = new BS();
-        bs.set(bond.index);
-        bsAtoms.set(bond.atom1.i);
-        bsAtoms.set(bond.atom2.i);
-        vwr.ms.deleteBonds(bs, false);
-      } else {
-        bond.setOrder(bondOrder | Edge.BOND_NEW);
-        if (bond.atom1.getElementNumber() != 1
-            && bond.atom2.getElementNumber() != 1) {
-          vwr.ms.removeUnnecessaryBonds(bond.atom1, false);
-          vwr.ms.removeUnnecessaryBonds(bond.atom2, false);
-        }
-        bsAtoms.set(bond.atom1.i);
-        bsAtoms.set(bond.atom2.i);
-      }
-    } catch (Exception e) {
-      Logger.error("Exception in seBondOrder: " + e.toString());
-    }
-    if (type != '0' && addXtalHydrogens)
-      vwr.addHydrogens(bsAtoms, Viewer.MIN_SILENT);
-    return bsAtoms;
-  }
-
   /**
    * Assign a given space group, currently only "P1"
    * @param bs atoms in the set defining the space group
    * @param name "P1" or "1" or ignored
-   * @return
+   * @return new name or "" or error message
    */
   public String cmdAssignSpaceGroup(BS bs, String name) {
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
@@ -1667,6 +1610,8 @@ public class ModelKit {
    * 
    * 
    * @param pt
+   * @param newPoint 
+   * @param atomIndex 
    * @param type
    * @param cmd
    * @param isClick
@@ -1887,13 +1832,15 @@ public class ModelKit {
       Atom a1 = vwr.ms.bo[bondIndex].atom1;
       modelIndex = a1.mi;
       int ac = vwr.ms.ac;
+      BS bsAtoms = BSUtil.newAndSetBit(a1.i);
+      bsAtoms.set(vwr.ms.bo[bondIndex].atom2.i);
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_MAKE_BOND,
-          cmd, 1, null);
-      BS bsAtoms = assignBond(bondIndex, type);
+          cmd, 1, bsAtoms);
+      boolean ok = assignBond(bondIndex, type, bsAtoms);
       vwr.ms.setAtomNamesAndNumbers(a1.i, -ac, null, true);
-      if (bsAtoms == null || type == '0')
+      if (!ok || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_MAKE_BOND, "" + type, 1, null);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_MAKE_BOND, "" + type, 1, bsAtoms);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "ERROR " + ex, 1, null);
@@ -1902,25 +1849,84 @@ public class ModelKit {
     }
   }
 
+  /** 
+   * Original ModelKit functionality -- assign a bond.
+   * 
+   * @param bondIndex
+   * @param type
+   * @param bsAtoms 
+   * @return bit set of atoms to modify
+   */
+  private boolean assignBond(int bondIndex, char type, BS bsAtoms) {
+    int bondOrder = type - '0';
+    Bond bond = vwr.ms.bo[bondIndex];
+    vwr.ms.clearDB(bond.atom1.i);
+    switch (type) {
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+      break;
+    case 'p':
+    case 'm':
+      bondOrder = Edge.getBondOrderNumberFromOrder(bond.getCovalentOrder())
+          .charAt(0) - '0' + (type == 'p' ? 1 : -1);
+      if (bondOrder > 3)
+        bondOrder = 1;
+      else if (bondOrder < 0)
+        bondOrder = 3;
+      break;
+    default:
+      return false;
+    }
+    try {
+      if (bondOrder == 0) {
+        BS bs = new BS();
+        bs.set(bond.index);
+        vwr.ms.deleteBonds(bs, false);
+      } else {
+        bond.setOrder(bondOrder | Edge.BOND_NEW);
+        if (bond.atom1.getElementNumber() != 1
+            && bond.atom2.getElementNumber() != 1) {
+          vwr.ms.removeUnnecessaryBonds(bond.atom1, false);
+          vwr.ms.removeUnnecessaryBonds(bond.atom2, false);
+        }
+      }
+    } catch (Exception e) {
+      Logger.error("Exception in seBondOrder: " + e.toString());
+    }
+    if (type != '0' && addXtalHydrogens)
+      vwr.addHydrogens(bsAtoms, Viewer.MIN_SILENT);
+    return true;
+  }
+
   public void cmdAssignConnect(int index, int index2, char type, String cmd) {
     // TODO: connect equivalent atoms?
     // from CmdExt
+    Atom[] atoms = vwr.ms.at;
+    if (index < 0 || index2 < 0 || index >= atoms.length || index2 >= atoms.length
+        || atoms[index] == null || atoms[index2] == null)
+      return;
     int state = getMKState();
     try {
       float[][] connections = AU.newFloat2(1);
       connections[0] = new float[] { index, index2 };
-      int modelIndex = vwr.ms.at[index].mi;
-      vwr.sm.setStatusStructureModified(index, modelIndex, Viewer.MODIFY_MAKE_BOND, cmd, 1, null);
+      int modelIndex = atoms[index].mi;
+      BS bs = BSUtil.newAndSetBit(index);
+      bs.set(index2);
+      BS bsBonds = vwr.ms.getBondsForSelectedAtoms(bs, false);
+      vwr.sm.setStatusStructureModified(-1, modelIndex, Viewer.MODIFY_MAKE_BOND, cmd, 1, bs);
       vwr.ms.connect(connections);
       int ac = vwr.ms.ac;
       // note that vwr.ms changes during the assignAtom command 
       assignAtom(index, ".", true, true, false, null);
       assignAtom(index2, ".", true, true, false, null);
       vwr.ms.setAtomNamesAndNumbers(index, -ac, null, true);
-      vwr.sm.setStatusStructureModified(index, modelIndex, -Viewer.MODIFY_MAKE_BOND, "OK", 1, null);
+      bsBonds = vwr.ms.getBondsForSelectedAtoms(bs, false);
+      vwr.sm.setStatusStructureModified(bsBonds.nextSetBit(0), modelIndex, -Viewer.MODIFY_MAKE_BOND, "OK", 1, bs);
       if (type != '1') {
-        BS bs = BSUtil.newAndSetBit(index);
-        bs.set(index2);
         bs = vwr.getBondsForSelectedAtoms(bs);
         int bondIndex = bs.nextSetBit(0);
         cmdAssignBond(bondIndex, type, cmd);
@@ -1961,7 +1967,6 @@ public class ModelKit {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
-      boolean isConnected = (pt != null && !isPoint);
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
       if (!isPoint && atomIndex < 0)
         return 0;
@@ -2260,9 +2265,10 @@ public class ModelKit {
   /**
    * This constraint will be set for the site only.
    * 
-   * @param sym 
-   * @param ia 
-   * @param mode GET, GET_CREATE, or GET_DELETE
+   * @param sym
+   * @param ia
+   * @param mode
+   *        GET, GET_CREATE, or GET_DELETE
    * @return a Constraint, or possibly null if not createNew
    */
   private Constraint getConstraint(SymmetryInterface sym, int ia, int mode) {
@@ -2270,7 +2276,9 @@ public class ModelKit {
       return null;
     Atom a = vwr.ms.getBasisAtom(ia);
     int iatom = a.i;
-    Constraint ac = (atomConstraints != null && iatom < atomConstraints.length ? atomConstraints[iatom] : null);
+    Constraint ac = (atomConstraints != null && iatom < atomConstraints.length
+        ? atomConstraints[iatom]
+        : null);
     if (ac != null || mode != GET_CREATE) {
       if (ac != null && mode == GET_DELETE) {
         atomConstraints[iatom] = null;
@@ -2278,18 +2286,23 @@ public class ModelKit {
       return ac;
     }
     if (sym == null)
-      return addConstraint(iatom, new Constraint(a, Constraint.TYPE_NONE, null));
+      return addConstraint(iatom,
+          new Constraint(a, Constraint.TYPE_NONE, null));
     // the first atom is the site atom
     int[] ops = sym.getInvariantSymops(a, null);
+    if (Logger.debugging)
+      System.out.println("MK.getConstraint atomIndex=" + iatom + " symops=" + Arrays.toString(ops));
     // if no invariant operators, this is a general position
     if (ops.length == 0)
-      return addConstraint(iatom, new Constraint(a, Constraint.TYPE_GENERAL, null));
+      return addConstraint(iatom,
+          new Constraint(a, Constraint.TYPE_GENERAL, null));
     // we need only work with the first plane or line or point
     P4 plane1 = null;
     Object[] line1 = null;
     for (int i = ops.length; --i >= 0;) {
       Object[] line2 = null;
-      Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a, null, "invariant", T.array, 0, -1, 0);
+      Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
+          null, "invariant", T.array, 0, -1, 0);
       if (c instanceof String) {
         // this would be a translation
         return locked;
@@ -2303,14 +2316,14 @@ public class ModelKit {
         // note that the planes cannot be parallel, because a point cannot be
         // invariant on two parallel planes.
         Lst<Object> line = Measure.getIntersectionPP(plane1, plane);
-          if (line == null || line.size() == 0) {
-            // not possible?
-            return locked;
-          }
-          line2 = new Object[] { line.get(0), line.get(1) };
+        if (line == null || line.size() == 0) {
+          // not possible?
+          return locked;
+        }
+        line2 = new Object[] { line.get(0), line.get(1) };
       } else if (c instanceof P3) {
         return locked;
-      } else {        
+      } else {
         // check line
         // [p3, p3]
         line2 = (Object[]) c;
@@ -2323,15 +2336,20 @@ public class ModelKit {
           T3 v1 = (T3) line1[1];
           if (Math.abs(v1.dot((T3) line2[1])) < 0.999f)
             return locked;
-//          V3 v = V3.newVsub((T3) line1[0], (T3) line2[0]);
-//          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999f)
-//            return locked;
+          //          V3 v = V3.newVsub((T3) line1[0], (T3) line2[0]);
+          //          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999f)
+          //            return locked;
+        }
+        if (plane1 != null) {
+          if (Math.abs(plane1.dot((T3) line2[1])) > 0.001f)
+              return locked;
         }
       }
     }
-    return addConstraint(iatom, plane1 != null ? new Constraint(a, Constraint.TYPE_PLANE, new Object[] { plane1 })
-        : line1 != null ? new Constraint(a, Constraint.TYPE_VECTOR, line1)
-            :  new Constraint(a, Constraint.TYPE_GENERAL, null));
+    return addConstraint(iatom,
+        line1 != null ? new Constraint(a, Constraint.TYPE_VECTOR, line1)
+            : plane1 != null ? new Constraint(a, Constraint.TYPE_PLANE, new Object[] { plane1 })
+            : new Constraint(a, Constraint.TYPE_GENERAL, null));
   }
 
   private Constraint addConstraint(int iatom, Constraint c) {

@@ -5677,22 +5677,20 @@ public class CmdExt extends ScriptExt {
       isReset = true;
       SymmetryInterface unitCell = (doTransform ? u : null);
       if (unitCell != null) {
-        BS bsAtoms = null;
-        bsAtoms = vwr.getFrameAtoms();
-        P3[] fxyz = null;
+        BS bsAtoms = vwr.getFrameAtoms();
         int n = bsAtoms.cardinality();
         isReset = (n == 0);
         if (!isReset) {
-          fxyz = new P3[n];
+          P3[] fxyz = new P3[n];
           Atom[] a = vwr.ms.at;
-          for (int j = n; --j >= 0;) {
-            fxyz[j] = P3.newP(a[j]);
-            vwr.toFractionalUC(unitCell, fxyz[j], false);
+          for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms.nextSetBit(j + 1), k++) {  
+            fxyz[k] = P3.newP(a[j]);
+            vwr.toFractionalUC(unitCell, fxyz[k], false);
           }
           eval.setModelCagePts(-1, oabc, ucname);
           unitCell = vwr.getCurrentUnitCell();
-          for (int j = n; --j >= 0;) {
-            a[j].setT(fxyz[j]);
+          for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms.nextSetBit(j + 1), k++) {  
+            a[j].setT(fxyz[k]);
             vwr.toCartesianUC(unitCell, a[j], false);
           }
           vwr.ms.setTaintedAtoms(bsAtoms, AtomCollection.TAINT_COORD);
