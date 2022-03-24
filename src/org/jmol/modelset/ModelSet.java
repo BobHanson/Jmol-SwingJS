@@ -2399,40 +2399,44 @@ public class ModelSet extends BondCollection {
    * @param bs
    * @param withinAllModels
    * @param rd
+   * @param bsSubset
+   *        limit selection to this subset of atoms
    * @return the set of atoms
    */
-  public BS getAtomsWithinRadius(float distance, BS bs,
-                                 boolean withinAllModels, RadiusData rd) {
+  public BS getAtomsWithinRadius(float distance, BS bs, boolean withinAllModels,
+                                 RadiusData rd, BS bsSubset) {
     BS bsResult = new BS();
-    BS bsCheck = getIterativeModels(false);
     bs = BSUtil.andNot(bs, vwr.slm.bsDeleted);
-    AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
-        false);
+    AtomIndexIterator iter = getSelectedAtomIterator(bsSubset, false, false,
+        false, false);
     if (withinAllModels) {
       boolean fixJavaFloat = !vwr.g.legacyJavaFloat;
       P3 ptTemp = new P3();
+      BS bsModels = (bsSubset == null ? BSUtil.newBitSet2(0, mc)
+          : getModelBS(bsSubset, false));
+      bsModels.and(getIterativeModels(false));
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        for (int iModel = mc; --iModel >= 0;) {
-          if (!bsCheck.get(iModel))
-            continue;
+        for (int iModel = bsModels.nextSetBit(0); iModel >= 0; iModel = bsModels
+            .nextSetBit(iModel + 1)) {
           if (distance < 0) {
             getAtomsWithin(distance,
                 at[i].getFractionalUnitCoordPt(fixJavaFloat, true, ptTemp),
                 bsResult, -1);
-            continue;
+          } else {
+            setIteratorForAtom(iter, iModel, i, distance, rd);
+            iter.addAtoms(bsResult);
           }
-          setIteratorForAtom(iter, iModel, i, distance, rd);
-          iter.addAtoms(bsResult);
         }
     } else {
-      bsResult.or(bs);
+      if (bsSubset == null)
+        bsResult.or(bs);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (distance < 0) {
           getAtomsWithin(distance, at[i], bsResult, at[i].mi);
-          continue;
+        } else {
+          setIteratorForAtom(iter, -1, i, distance, rd);
+          iter.addAtoms(bsResult);
         }
-        setIteratorForAtom(iter, -1, i, distance, rd);
-        iter.addAtoms(bsResult);
       }
     }
     iter.release();
@@ -3373,7 +3377,7 @@ public class ModelSet extends BondCollection {
     // first, validate that all atomSerials are NaN
     int mi0 = -1;
     if (isModelKit) {
-      // from ModelKit
+      // from ModelKit --- baseAtomIndex will be <= 0
       mi0 = at[iFirst].mi;
       iFirst = am[mi0].firstAtomIndex;
     }

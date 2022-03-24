@@ -714,8 +714,9 @@ public class ScriptManager implements JmolScriptManager {
           int ver = vwr.stateScriptVersionInt = main * 10000 + sub * 100
               + minor;
           vwr.setBooleanProperty("legacyautobonding", (ver < 110924));
-          vwr.g.legacyHAddition = (ver < 130117);
-          vwr.setBooleanProperty("legacyjavafloat",
+          vwr.setBooleanProperty("legacyHAddition", (ver < 130117));
+          if (!vwr.getBoolean(T.doubleprecision))
+            vwr.setBooleanProperty("legacyjavafloat",
               (ver < 140206 || ver >= 140300 && ver < 140306));
           vwr.setIntProperty("bondingVersion", ver < 140111 ? 0 : 1);
           return;
@@ -726,7 +727,7 @@ public class ScriptManager implements JmolScriptManager {
     }
     vwr.setIntProperty("bondingVersion", prevCovalentVersion);
     vwr.setBooleanProperty("legacyautobonding", false);
-    vwr.g.legacyHAddition = false;
+    vwr.setBooleanProperty("legacyHAddition", false);
     vwr.stateScriptVersionInt = Integer.MAX_VALUE;
   }
 

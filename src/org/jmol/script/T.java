@@ -1007,21 +1007,22 @@ public class T {
   public final static int displaycellparameters          = booleanparam | 52;
   public final static int dotsselectedonly               = booleanparam | 53;
   public final static int dotsurface                     = booleanparam | 54;
-  public final static int dragselected                   = booleanparam | 55;
-  public final static int drawhover                      = booleanparam | 56;
-  public final static int drawpicking                    = booleanparam | 57;
-  public final static int dsspcalchydrogen               = booleanparam | 58;
-  public final static int dynamicmeasurements            = booleanparam | 59; //DEPRECATED; not implemented; leave here to avoid SET error
-  public final static int ellipsoidarcs                  = booleanparam | 60;  
-  public final static int ellipsoidarrows                = booleanparam | 61;  
-  public final static int ellipsoidaxes                  = booleanparam | 62;  
-  public final static int ellipsoidball                  = booleanparam | 63;  
-  public final static int ellipsoiddots                  = booleanparam | 64;  
-  public final static int ellipsoidfill                  = booleanparam | 65;  
-  public final static int filecaching                    = booleanparam | 66;
+  public final static int doubleprecision                = booleanparam | 55;
+  public final static int dragselected                   = booleanparam | 56;
+  public final static int drawhover                      = booleanparam | 57;
+  public final static int drawpicking                    = booleanparam | 58;
+  public final static int dsspcalchydrogen               = booleanparam | 59;
+  public final static int dynamicmeasurements            = booleanparam | 60; //DEPRECATED; not implemented; leave here to avoid SET error
+  public final static int ellipsoidarcs                  = booleanparam | 61;  
+  public final static int ellipsoidarrows                = booleanparam | 62;  
+  public final static int ellipsoidaxes                  = booleanparam | 63;  
+  public final static int ellipsoidball                  = booleanparam | 64;  
+  public final static int ellipsoiddots                  = booleanparam | 65;  
+  public final static int ellipsoidfill                  = booleanparam | 66;  
+  public final static int filecaching                    = booleanparam | 67;
   public final static int fontcaching                    = booleanparam | 68;
   public final static int fontscaling                    = booleanparam | 69;
-  public final static int forceautobond                  = booleanparam | 70;
+  public final static int forceautobond                  = booleanparam | 71;
   public final static int fractionalrelative             = booleanparam | 72;
 // see shapecommand public final static int frank                          = booleanparam | 72;
   public final static int greyscalerendering             = booleanparam | 74;
@@ -2599,6 +2600,7 @@ public class T {
        "showUnitcellInfo", // oops
        "dotsSelectedOnly",
        "dotSurface",
+       "doublePrecision",
        "dragSelected",
        "drawHover",
        "drawPicking",
@@ -3670,6 +3672,7 @@ public class T {
         -1,                                 //        "showUnitCellInfo"
         dotsselectedonly,                   //        "dotsSelectedOnly"
         dotsurface,                         //        "dotSurface"
+        doubleprecision,
         dragselected,                       //        "dragSelected"
         drawhover,                          //        "drawHover"
         drawpicking,                        //        "drawPicking"

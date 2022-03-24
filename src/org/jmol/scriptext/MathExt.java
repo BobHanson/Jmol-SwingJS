@@ -239,7 +239,7 @@ public class MathExt {
     case T.tensor:
       return evaluateTensor(mp, args);
     case T.within:
-      return evaluateWithin(mp, args);
+      return evaluateWithin(mp, args, op.tok == T.propselector);
     case T.write:
       return evaluateWrite(mp, args);
     }
@@ -3874,13 +3874,27 @@ public class MathExt {
     return (var == null ? false : mp.addX(var));
   }
 
-  private boolean evaluateWithin(ScriptMathProcessor mp, SV[] args)
+  private boolean evaluateWithin(ScriptMathProcessor mp, SV[] args,
+                                 boolean isAtomProperty)
       throws ScriptException {
+    // within({atoms})
+    // within (distance, group, {atom collection})
+    // within (distance, true|false, {atom collection})
+    // within (distance, plane|hkl, [plane definition] )
+    // within (distance, coord, [point or atom center] )
+    // within(distance, pt, [pt1, pt2, pt3...])
+    // within(distance, [pt1, pt2, pt3...])
+    // {atoms}.within(distance,[points])
+    // {atoms}.within(distance,{otheratoms})
+    // within("SMILES", "...", {atoms}) or {atoms}.within("SMILES", "...")
+    // within("SMARTS", "...", {atoms}) or {atoms}.within("SMARTS", "...") // returns all sets
+    // ...several more 
     int len = args.length;
     if (len < 1 || len > 5)
       return false;
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
+    BS bs = (isAtomProperty ? SV.getBitSet(mp.getX(), false) : null);
     float distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;
@@ -3909,6 +3923,8 @@ public class MathExt {
         isWithinModelSet = args[1].asBoolean();
         if (len > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
           tok = T.unitcell;
+        else if (len > 2 && args[2].tok != T.bitset)
+          return false;
         len = 0;
         break;
       case T.string:
@@ -3923,12 +3939,10 @@ public class MathExt {
           withinSpec = null;
           isVdw = true;
           tok = T.vanderwaals;
-        } else if (s.equalsIgnoreCase("unitcell")) {
-          tok = T.unitcell;
-        } else if (s.equalsIgnoreCase("coord")) {
-          tok = T.coord;
         } else {
-          return false;
+          tok = T.getTokFromName(s);
+          if (tok == T.nada)
+            return false;
         }
         break;
       }
@@ -3947,12 +3961,15 @@ public class MathExt {
     case T.smiles:
     case T.substructure: // same as "SMILES"
     case T.search:
-      // within("smiles", "...", {bitset})
-      // within("smiles", "...", {bitset})
+      // within("smiles", "...", {atoms})
+      // within("smarts", "...", {atoms})
+      // {atoms}.within("smiles", "...")
+      // {atoms}.within("smarts", "...")
       BS bsSelected = null;
       boolean isOK = true;
       switch (len) {
       case 2:
+        bsSelected = bs;
         break;
       case 3:
         isOK = (args[2].tok == T.bitset);
@@ -3962,12 +3979,11 @@ public class MathExt {
       default:
         isOK = false;
       }
-      if (!isOK)
-        e.invArg();
-      return mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]),
-          null, bsSelected, null,
-          tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
-          mp.asBitSet, false));
+      return isOK
+          && mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]),
+              null, bsSelected, null,
+              tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
+              mp.asBitSet, false));
     }
 
     if (withinSpec instanceof String) {
@@ -3986,6 +4002,8 @@ public class MathExt {
       // within (helix)
       // within (boundbox)
       // within (unitcell)
+      // within (basepair)
+      // within ("...a sequence...")
       switch (tok) {
       case T.helix:
       case T.sheet:
@@ -4031,15 +4049,11 @@ public class MathExt {
           if ((oabc[i] = SV.ptValue(l.get(i))) == null)
             return false;
         }
-        uc = vwr.getSymTemp().getUnitCell(oabc,  false, null);
-        return mp
-            .addXBs(vwr.ms.getAtoms(tok, uc));
+        uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
+        return mp.addXBs(vwr.ms.getAtoms(tok, uc));
+      case T.varray:
+        break;
       }
-      break;
-    case T.varray:
-       // {*}.within(0.1, [points])
-      
-      
       break;
     case 3:
       switch (tok) {
@@ -4088,7 +4102,9 @@ public class MathExt {
     }
     if (plane != null)
       return mp.addXBs(ms.getAtomsNearPlane(distance, plane));
-    BS bs = (args[last].tok == T.bitset ? (BS) args[last].value : null);
+    BS bsLast = (args[last].tok == T.bitset ? (BS) args[last].value : null);
+    if (bs == null)
+      bs = bsLast;
     if (last > 0 && pt == null && pts1 == null && bs == null)
       return false;
     // if we have anything, it must have a point or an array or a plane or a bitset from here on out    
@@ -4101,6 +4117,7 @@ public class MathExt {
       if (args[last].tok == T.varray) {
         // within(dist, pt, [pt1, pt2, pt3...])
         // within(dist, [pt1, pt2, pt3...])
+        // {*}.within(0.1, [points])
         Lst<SV> sv = args[last].getList();
         P3[] ap3 = new P3[sv.size()];
         for (int i = ap3.length; --i >= 0;)
@@ -4112,7 +4129,14 @@ public class MathExt {
             ap31[i] = SV.ptValue(pts1.get(i));
         }
         Object[] ret = new Object[1];
-        switch (PointIterator.withinDistPoints(distance, pt, ap3, ap31, ret)) {
+        if (bs != null) {
+          bs.and(vwr.getAllAtoms());
+          ap31 = vwr.ms.at;
+        }
+        switch (PointIterator.withinDistPoints(distance, pt, ap3, ap31, bs,
+            ret)) {
+        case T.bitset:
+          return mp.addXBs((BS) ret[0]);
         case T.point:
           return mp.addXPt((P3) ret[0]);
         case T.list:
@@ -4127,7 +4151,6 @@ public class MathExt {
       }
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt, null));
     }
-
     if (tok == T.sequence)
       return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
     if (bs == null)
@@ -4147,8 +4170,14 @@ public class MathExt {
       if (distance < 0)
         distance = 0; // not used, but this prevents a diversion
     }
-    return mp.addXBs(
-        vwr.ms.getAtomsWithinRadius(distance, bs, isWithinModelSet, rd));
+    BS bsret = vwr.ms.getAtomsWithinRadius(distance,
+        (isAtomProperty ? bsLast : bs), isWithinModelSet,
+        rd, isAtomProperty ? bs : null);
+    if (isAtomProperty) {
+      // {*}.within(0.001, x) excludes atoms x 
+      bsret.andNot(bsLast);
+    }
+    return mp.addXBs(bsret);
   }
 
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
@@ -4477,17 +4506,17 @@ public class MathExt {
       boolean setBfirst = (!localOnly || bsA.cardinality() < bsB.cardinality());
       if (setBfirst) {
         bs = vwr.ms.getAtomsWithinRadius(distance, bsA, withinAllModels,
-            (Float.isNaN(distance) ? rd : null));
+            (Float.isNaN(distance) ? rd : null), null);
         bsB.and(bs);
       }
       if (localOnly) {
         // we can just get the near atoms for A as well.
         bs = vwr.ms.getAtomsWithinRadius(distance, bsB, withinAllModels,
-            (Float.isNaN(distance) ? rd : null));
+            (Float.isNaN(distance) ? rd : null), null);
         bsA.and(bs);
         if (!setBfirst) {
           bs = vwr.ms.getAtomsWithinRadius(distance, bsA, withinAllModels,
-              (Float.isNaN(distance) ? rd : null));
+              (Float.isNaN(distance) ? rd : null), null);
           bsB.and(bs);
         }
         // If the two sets are not the same,

@@ -184,7 +184,7 @@ public final class ModelLoader {
       info.remove("trajectorySteps");
       if (isTrajectory)
         ms.vibrationSteps = (Lst<V3[]>) info.remove("vibrationSteps");
-      if (info.containsKey("legacyJavaFloat")) {
+      if (info.containsKey("highPrecision")) {
         // we must RESET this, because 'ZAP' has unset it in the script
         vwr.setBooleanProperty("legacyJavaFloat", true);
       }
@@ -1132,7 +1132,7 @@ public final class ModelLoader {
       int modelIndex = -1;
       SymmetryInterface c = null;
       boolean isFractional = false;
-      boolean roundCoords = !vwr.g.legacyJavaFloat;
+      boolean roundCoords = (!vwr.getBoolean(T.doubleprecision) && !vwr.getBoolean(T.legacyjavafloat));
       for (int i = baseAtomIndex; i < ms.ac; i++) {
         if (atoms[i].mi != modelIndex) {
           modelIndex = atoms[i].mi;

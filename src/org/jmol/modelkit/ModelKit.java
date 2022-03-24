@@ -1117,7 +1117,7 @@ public class ModelKit {
 
       // 4) clear out all atoms within 1.0 angstrom
       vwr.ms.validateBspf(false);
-      bs = vwr.ms.getAtomsWithinRadius(1.0f, bsA, false, null);
+      bs = vwr.ms.getAtomsWithinRadius(1.0f, bsA, false, null, null);
       bs.andNot(bsA);
       if (bs.nextSetBit(0) >= 0)
         vwr.deleteAtoms(bs, false);

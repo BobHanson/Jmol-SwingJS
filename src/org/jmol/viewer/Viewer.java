@@ -1825,7 +1825,7 @@ public class Viewer extends JmolViewer
     am.setAnimationFps(g.animationFps);
     sm.playAudio(null);
     sm.allowStatusReporting = g.statusReporting;
-    setBooleanProperty("antialiasDisplay",
+    setBooleanPropertyTok("antialiasDisplay", T.antialiasdisplay,
         (isPyMOL ? true : g.antialiasDisplay));
     stm.resetLighting();
     tm.setDefaultPerspective();
@@ -2529,8 +2529,8 @@ public class Viewer extends JmolViewer
       htParams.put("getHeader", Boolean.TRUE);
     if (g.pdbSequential)
       htParams.put("isSequential", Boolean.TRUE);
-    if (g.legacyJavaFloat)
-      htParams.put("legacyJavaFloat", Boolean.TRUE);
+    if (g.legacyJavaFloat || g.doublePrecision)
+      htParams.put("highPrecision", Boolean.TRUE);
     htParams.put("stateScriptVersionInt",
         Integer.valueOf(stateScriptVersionInt));
     if (!htParams.containsKey("filter")) {
@@ -3252,7 +3252,7 @@ public class Viewer extends JmolViewer
     String fileName = fm.getFileName();
     String errMsg;
     if (loadScript == null) {
-      setBooleanProperty("preserveState", false);
+      setBooleanPropertyTok("preserveState", T.preservestate, false);
       loadScript = new SB().append("load \"???\"");
     }
     if (atomSetCollection instanceof String) {
@@ -3613,7 +3613,8 @@ public class Viewer extends JmolViewer
       lastData = null;
       if (dm != null)
         dm.clear();
-      setBooleanProperty("legacyjavafloat", false);
+      if (!g.doublePrecision && g.legacyJavaFloat)
+        setBooleanPropertyTok("legacyjavafloat", T.legacyjavafloat, false);
       if (resetUndo) {
         if (zapModelKit)
           g.removeParam("_pngjFile");
@@ -3672,7 +3673,7 @@ public class Viewer extends JmolViewer
     setSelectionHalosEnabled(false);
     tm.setCenter();
     am.initializePointers(1);
-    setBooleanProperty("multipleBondBananas", false);
+    setBooleanPropertyTok("multipleBondBananas", T.multiplebondbananas, false);
     if (!ms.getMSInfoB("isPyMOL")) {
       clearAtomSets();
       setCurrentModelIndex(0);
@@ -5746,6 +5747,8 @@ public class Viewer extends JmolViewer
       return g.dotSurface;
     case T.dotsselectedonly:
       return g.dotsSelectedOnly;
+    case T.doubleprecision:
+      return g.doublePrecision;
     case T.drawpicking:
       return g.drawPicking;
     case T.fontcaching:
@@ -6701,6 +6704,11 @@ public class Viewer extends JmolViewer
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.doubleprecision:
+      // 14.32.42
+      g.doublePrecision = value;
+      setBooleanPropertyTok("legacyJavaFloat", T.legacyjavafloat, value);
+      break;
     case T.checkcir:
       // 14.31.40
       g.checkCIR = value;
@@ -6744,7 +6752,8 @@ public class Viewer extends JmolViewer
       break;
     case T.legacyjavafloat:
       // 14.3.5
-      g.legacyJavaFloat = value;
+      if (value || !g.doublePrecision)
+        g.legacyJavaFloat = value;
       break;
     case T.showmodvecs:
       // 14.3.5
@@ -7343,7 +7352,7 @@ public class Viewer extends JmolViewer
     } else {
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);
       setStringProperty("pickingStyle", "toggle");
-      setBooleanProperty("bondPicking", false);
+      setBooleanPropertyTok("bondPicking", T.bondpicking, false);
       if (isChange) {
         sm.setStatusModelKit(0);
       }
@@ -7770,7 +7779,7 @@ public class Viewer extends JmolViewer
 
   public void setStereoMode(int[] twoColors, STER stereoMode, float degrees) {
     setFloatProperty("stereoDegrees", degrees);
-    setBooleanProperty("greyscaleRendering", stereoMode.isBiColor());
+    setBooleanPropertyTok("greyscaleRendering", T.greyscalerendering, stereoMode.isBiColor());
     if (twoColors != null)
       tm.setStereoMode2(twoColors);
     else
@@ -8931,7 +8940,7 @@ public class Viewer extends JmolViewer
       if (Logger.getLogLevel() == 0)
         Logger.setLogLevel(Logger.LEVEL_INFO);
       setCursor(GenericPlatform.CURSOR_DEFAULT);
-      setBooleanProperty("refreshing", true);
+      setBooleanPropertyTok("refreshing", T.refreshing, true);
       fm.setPathForAllFiles("");
       Logger.error("vwr handling error condition: " + er + "  ");
       notifyError("Error", "doClear=" + doClear + "; " + er, "" + er);
@@ -9158,7 +9167,7 @@ public class Viewer extends JmolViewer
 
     BS bsNearby = (bsBasis != null ? getThisModelAtoms()
         : hasRange && !haveFixed ? new BS()
-            : ms.getAtomsWithinRadius(rangeFixed, bsSelected, true, null));
+            : ms.getAtomsWithinRadius(rangeFixed, bsSelected, true, null, null));
     bsNearby.andNot(bsSelected);
     if (haveFixed) {
       bsMotionFixed.and(bsNearby);

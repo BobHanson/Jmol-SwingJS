@@ -1709,7 +1709,7 @@ public class CmdExt extends ScriptExt {
           nAtoms++;
           BS bs2 = BSUtil.copy(bs);
           BSUtil.invertInPlace(bs2, vwr.ms.ac);
-          bs2.and(vwr.ms.getAtomsWithinRadius(5, bs, false, null));
+          bs2.and(vwr.ms.getAtomsWithinRadius(5, bs, false, null, null));
           points.addLast(bs2);
         }
         break;

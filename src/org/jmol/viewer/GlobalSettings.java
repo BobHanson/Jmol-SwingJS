@@ -76,6 +76,7 @@ public class GlobalSettings {
       legacyAutoBonding = g.legacyAutoBonding;
       legacyHAddition = g.legacyHAddition;
       legacyJavaFloat = g.legacyJavaFloat;
+      doublePrecision = g.doublePrecision;
       bondingVersion = g.bondingVersion;
       platformSpeed = g.platformSpeed;
       useScriptQueue = g.useScriptQueue;
@@ -269,6 +270,7 @@ public class GlobalSettings {
     //      setParameterValue("_fileCaching", _fileCaching);
     //      setParameterValue("_fileCache", _fileCache);
     setF("exportScale", exportScale);
+    setB("doublePrecision", doublePrecision);
     setB("fontScaling", fontScaling);
     setB("fontCaching", fontCaching);
     setB("forceAutoBond", forceAutoBond);
@@ -484,8 +486,13 @@ public class GlobalSettings {
   boolean smartAromatic = true;
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
-  public boolean legacyHAddition = false;
+  boolean legacyHAddition = false;
   public boolean legacyJavaFloat = false; // float/double issue with crystallographic symmetry before Jmol 14.2.5
+  /**
+   * setting doublePrecision will also toggle legacyJavaFloat to doublePrecision
+   * in order to avoid any rounding 
+   */
+  boolean doublePrecision = false; // set true for full double precision (JavaScript only) 
   boolean jmolInJSpecView = true;
 
   boolean modulateOccupancy = true;

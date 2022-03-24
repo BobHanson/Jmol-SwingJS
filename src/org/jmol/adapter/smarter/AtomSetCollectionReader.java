@@ -409,6 +409,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         asc.centralize();
       if (fillRange != null)// && previousUnitCell == null)
         asc.setInfo("boundbox", fillRange);
+      
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
       if (info != null) {
         if (domains != null) {
@@ -446,7 +447,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       }
     }
     if (!fixJavaFloat)
-      asc.setInfo("legacyJavaFloat", Boolean.TRUE);
+      asc.setInfo("highPrecision", Boolean.TRUE);
     setLoadNote();
   }
 
@@ -542,7 +543,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     Object o = htParams.get("packingError");
     if (o != null)
       packingError = ((Float) o).floatValue();
-    else if (htParams.get("legacyJavaFloat") != null) {
+    else if (htParams.get("highPrecision") != null) {
       // earlier versions were not fully JavaScript compatible
       // because XtalSymmetry.isWithinUnitCell was giving different answers
       // for floats (Java) as for doubles (JavaScript).
@@ -1326,6 +1327,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     finalizeSubclassSymmetry(sym != null);
     //if (sym != null && ptSupercell != null)
       //asc.getXSymmetry().finalizeUnitCell(ptSupercell);
+    
+    if (sym != null && iHaveFractionalCoordinates && iHaveUnitCell && merging) {
+      fractionalizeCoordinates(false);
+      addJmolScript("modelkit spacegroup p1");
+    }
     initializeSymmetry();
     return sym;
   }

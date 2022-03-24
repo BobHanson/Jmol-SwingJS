@@ -4889,7 +4889,7 @@ public class ScriptEval extends ScriptExpr {
     boolean timeMsg = vwr.getBoolean(T.showtiming);
     if (timeMsg)
       Logger.startTimer("load");
-    if (!isStateScript && !isAppend)
+    if (!isStateScript && !isAppend && !vwr.getBoolean(T.doubleprecision))
       vwr.setBooleanProperty("legacyJavaFloat", false);
     if (isMutate)
       htParams.put("isMutate", Boolean.TRUE);

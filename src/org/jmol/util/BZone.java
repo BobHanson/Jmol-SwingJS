@@ -702,17 +702,17 @@ public class BZone {
   }
 
   private int[] faceIndices(P3[] p3s, P3[] pts) {
-    PointIterator.withinDistPoints(0, null, pts, p3s, ret);
+    PointIterator.withinDistPoints(0, null, pts, p3s, null, ret);
     return (int[]) ret[0];
   }
 
   private P3 closest(P3 center, P3[] ap3) {
-    PointIterator.withinDistPoints(0, center, ap3, null, ret);
+    PointIterator.withinDistPoints(0, center, ap3, null, null, ret);
     return (P3) ret[0];
   }
 
   private P3[] cleanFace(P3[] face) {
-    PointIterator.withinDistPoints(0.01f, ptInner, face, null, ret);
+    PointIterator.withinDistPoints(0.01f, ptInner, face, null, null, ret);
     @SuppressWarnings("unchecked")
     Lst<P3> l = (Lst<P3>) ret[0];
     return l.toArray(new P3[l.size()]);

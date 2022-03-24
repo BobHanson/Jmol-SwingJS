@@ -1356,6 +1356,7 @@ public final class JC {
   public static final int SMILES_GEN_TOPOLOGY                  = 0x00004000; // SmilesExt -> generator
   public static final int SMILES_GEN_POLYHEDRAL                = 0x00010000; // polyhedron -> generator
   public static final int SMILES_GEN_ATOM_COMMENT              = 0x00020000; // polyhedron,Viewer -> generator
+  public static final int SMILES_GEN_NO_BRANCHES               = 0x00040000; // MathExt -> Generator
   
   public static final int SMILES_GEN_BIO                       = 0x00100000; // MathExt -> generator
   public static final int SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS = 0x00300000; // MathExt -> generator

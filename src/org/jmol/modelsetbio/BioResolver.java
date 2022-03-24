@@ -297,7 +297,7 @@ public final class BioResolver implements Comparator<String[]> {
     if (htGroupBonds.get(group3) != null)
       return;
     String[][] bondInfo = (model == null ? getPdbBondInfo(group3,
-        vwr.g.legacyHAddition) : getLigandBondInfo(adapter, model, group3));
+        vwr.getBoolean(T.legacyhaddition)) : getLigandBondInfo(adapter, model, group3));
     if (bondInfo == null)
       return;
     htGroupBonds.put(group3, Boolean.TRUE);
