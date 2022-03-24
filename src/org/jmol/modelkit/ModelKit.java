@@ -2339,14 +2339,18 @@ public class ModelKit {
           //          V3 v = V3.newVsub((T3) line1[0], (T3) line2[0]);
           //          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999f)
           //            return locked;
-        }
+          }
         if (plane1 != null) {
           if (Math.abs(plane1.dot((T3) line2[1])) > 0.001f)
               return locked;
         }
       }
     }
-    return addConstraint(iatom,
+    if (line1 != null) {
+      // translate line to be through this atom
+      line1[0] = P3.newP(a);
+    }
+    return addConstraint(iatom, //true ? locked : 
         line1 != null ? new Constraint(a, Constraint.TYPE_VECTOR, line1)
             : plane1 != null ? new Constraint(a, Constraint.TYPE_PLANE, new Object[] { plane1 })
             : new Constraint(a, Constraint.TYPE_GENERAL, null));

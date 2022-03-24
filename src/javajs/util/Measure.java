@@ -315,7 +315,7 @@ final public class Measure {
    * @param pt input pt to be projected, returns projected
    * @param ptA input point on line
    * @param axisUnitVector input unit vector
-   * @param vectorProjection return for pt.sub(ptA)
+   * @param vectorProjection return for pt.sub(ptA) parallel to the axis
    */
   public static void projectOntoAxis(P3 pt, P3 ptA,
                                      V3 axisUnitVector,
