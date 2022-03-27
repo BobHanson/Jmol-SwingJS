@@ -324,8 +324,15 @@ public final class ModelLoader {
             .info("Use \"set autoLoadOrientation TRUE\" before loading or \"restore orientation DEFAULT\" after loading to view this orientation.");
       }
       iterateOverAllNewModels(adapter, asc);
-      iterateOverAllNewAtoms(adapter, asc);
-      iterateOverAllNewBonds(adapter, asc);
+      JmolAdapterBondIterator iterBond = adapter.getBondIterator(asc);
+      boolean haveBonds = (iterBond != null);
+      iterateOverAllNewAtoms(adapter, asc, haveBonds);
+      short mad = vwr.getMadBond();
+      if (haveBonds) {
+        ms.defaultCovalentMad = (jmolData == null ? mad : 0);
+        iterateOverAllNewBonds(iterBond);
+      }
+      ms.defaultCovalentMad = mad;
       if (merging && !appendNew) {
         Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(
             asc, 0);
@@ -767,7 +774,7 @@ public final class ModelLoader {
     }
   }
 
-  private void iterateOverAllNewAtoms(JmolAdapter adapter, Object asc) {
+  private void iterateOverAllNewAtoms(JmolAdapter adapter, Object asc, boolean haveBonds) {
     // atom is created, but not all methods are safe, because it
     // has no group -- this is only an issue for debugging
     int iLast = -1;
@@ -775,6 +782,7 @@ public final class ModelLoader {
     boolean addH = false;
     boolean isLegacyHAddition = false;//vwr.getBoolean(T.legacyhaddition);
     JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(asc);
+    int nAtoms = adapter.getAtomCount(asc);
     ms.setCapacity(adapter.getAtomCount(asc));
     int nRead = 0;
     Model[] models = ms.am;
@@ -790,6 +798,8 @@ public final class ModelLoader {
         model = models[modelIndex];
         currentChainID = Integer.MAX_VALUE;
         isNewChain = true;
+        // set the internal array for model.bsAtoms to be large enough
+        model.bsAtoms.set(ms.ac + nAtoms);
         model.bsAtoms.clearAll();
         model.isOrderly = (appendToModelIndex == null);
         isPdbThisModel = model.isBioModel;
@@ -807,9 +817,9 @@ public final class ModelLoader {
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      addAtom(isPdbThisModel, iterAtom.getSymmetry(),
+      
+      Atom atom = addAtom(isPdbThisModel, iterAtom.getSymmetry(),
           iterAtom.getAtomSite(),
-          iterAtom.getUniqueID(),
           isotope,
           name,
           charge, 
@@ -827,6 +837,8 @@ public final class ModelLoader {
           iterAtom.getRadius(), 
           iterAtom.getBondRadius()
           );
+      if (haveBonds)
+        htAtomMap.put(iterAtom.getUniqueID(), atom);
     }
     if (groupCount > 0 && addH) {
       jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1,
@@ -907,8 +919,7 @@ public final class ModelLoader {
             : 0);
   }
 
-  private void addAtom(boolean isPDB, BS atomSymmetry, int atomSite,
-                       Object atomUid, int atomicAndIsotopeNumber,
+  private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
                        String atomName, int formalCharge, float partialCharge,
                        Lst<Object> tensors, float occupancy, float bfactor,
                        P3 xyz, boolean isHetero, int atomSerial, int atomSeqID,
@@ -937,7 +948,7 @@ public final class ModelLoader {
         partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
         atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
-    htAtomMap.put(atomUid, atom);
+    return atom;
   }
 
   private void checkNewGroup(JmolAdapter adapter, int chainID,
@@ -987,21 +998,14 @@ public final class ModelLoader {
     return model.chains[model.chainCount++] = new Chain(model, chainID, (chainID == 0 || chainID == 32 ? 0 : ++iChain));
   }
 
-  private void iterateOverAllNewBonds(JmolAdapter adapter,
-                                      Object asc) {
-    JmolAdapterBondIterator iterBond = adapter
-        .getBondIterator(asc);
-    if (iterBond == null)
-      return;
-    short mad = vwr.getMadBond();
-    boolean force1 = isMutate && ! vwr.getBoolean(T.pdbaddhydrogens);
-    ms.defaultCovalentMad = (jmolData == null ? mad : 0);
+  private void iterateOverAllNewBonds(JmolAdapterBondIterator iterBond) {
+    boolean force1 = isMutate && !vwr.getBoolean(T.pdbaddhydrogens);
     boolean haveMultipleBonds = false;
     while (iterBond.hasNext()) {
       int iOrder = iterBond.getEncodedOrder();
       short order = (force1 ? 1 : (short) iOrder);
-      Bond b = bondAtoms(iterBond.getAtomUniqueID1(), iterBond
-          .getAtomUniqueID2(), order);
+      Bond b = bondAtoms(iterBond.getAtomUniqueID1(),
+          iterBond.getAtomUniqueID2(), order);
       if (b != null) {
         if (order > 1 && order != Edge.BOND_STEREO_NEAR
             && order != Edge.BOND_STEREO_FAR)
@@ -1017,9 +1021,8 @@ public final class ModelLoader {
     }
     if (haveMultipleBonds && ms.someModelsHaveSymmetry
         && !vwr.getBoolean(T.applysymmetrytobonds))
-      Logger
-          .info("ModelSet: use \"set appletSymmetryToBonds TRUE \" to apply the file-based multiple bonds to symmetry-generated atoms.");
-    ms.defaultCovalentMad = mad;
+      Logger.info(
+          "ModelSet: use \"set appletSymmetryToBonds TRUE \" to apply the file-based multiple bonds to symmetry-generated atoms.");
   }
   
   private Lst<Bond> vStereo;

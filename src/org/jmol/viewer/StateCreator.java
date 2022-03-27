@@ -1314,28 +1314,7 @@ public class StateCreator extends JmolStateCreator {
   private String getAxesState(Axes axes) {
     SB sb = new SB();
     sb.append(getFontLineShapeState(axes));
-    sb.append("  axes scale ").appendF(vwr.getFloat(T.axesscale)).append(";\n"); 
-    if (axes.fixedOrigin != null)
-      sb.append("  axes center ")
-          .append(Escape.eP(axes.fixedOrigin)).append(";\n");
-    P3 axisXY = axes.axisXY;
-    if (axisXY.z != 0)
-      sb.append("  axes position [")
-          .appendI((int) axisXY.x).append(" ")
-          .appendI((int) axisXY.y).append(" ")
-          .append(axisXY.z < 0 ? " %" : "").append("];\n");
-    String[] labels = axes.labels;
-    if (labels != null) {
-      sb.append("  axes labels ");
-      for (int i = 0; i < labels.length; i++)
-        if (labels[i] != null)
-          sb.append(PT.esc(labels[i])).append(" ");
-      sb.append(";\n");
-    }
-    if (axes.axisType != null) {
-      sb.append("  axes type " + PT.esc(axes.axisType));
-    }
-    return sb.toString();
+    return axes.getAxesState(sb);
   }
 
 

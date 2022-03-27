@@ -26,7 +26,6 @@ package org.jmol.modelset;
 import org.jmol.shape.Shape;
 import org.jmol.util.C;
 import org.jmol.util.Font;
-import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -46,7 +45,7 @@ public class Text {
   private int fid;
   private int ascent;
   public int descent;
-  private int lineHeight;
+  public int lineHeight;
 
   protected int offsetX; // Labels only
   protected int offsetY; // Labels only
@@ -62,6 +61,8 @@ public class Text {
   
   public Object image;
   public float imageScale = 1;
+
+  public int barPixels;
 
 
 
@@ -218,7 +219,12 @@ public class Text {
     else if (fontScale != imageFontScaling)
       setFontScale(imageFontScaling);
     if (doFormatText) {
-      text = (isEcho ? Txt.formatText(vwr, textUnformatted) : textUnformatted);
+      text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
+      recalc();
+    } else if ("%SCALE".equals(textUnformatted)) {
+      int[] retPixels = new int[1];
+      text = vwr.getScaleText(retPixels);
+      barPixels = retPixels[0];
       recalc();
     }
     float dx = offsetX * imageFontScaling;
@@ -290,6 +296,7 @@ public class Text {
           //$FALL-THROUGH$
         case JC.TEXT_ALIGN_LEFT:
           dy = 0;
+          break;
         }
       //System.out.println(dx + " Text " + dy + " " + boxWidth + " " + boxHeight);
       setBoxXY(boxWidth, boxHeight, dx, dy, boxXY, isAbsolute);
@@ -336,19 +343,23 @@ public class Text {
       xLeft = xRight = xCenter = x + offsetX;
     } else {
       xLeft = 5 * scale;
-      xCenter = windowWidth / 2;
+      xCenter = (windowWidth + barPixels) / 2;
       xRight = windowWidth - xLeft;
+      xLeft += barPixels;
     }
 
     // set box X from alignments
 
-    boxXY[0] = xLeft;
     switch (align) {
     case JC.TEXT_ALIGN_CENTER:
       boxXY[0] = xCenter - boxWidth / 2;
       break;
     case JC.TEXT_ALIGN_RIGHT:
       boxXY[0] = xRight - boxWidth;
+      break;
+    default:
+      boxXY[0] = xLeft;
+      break;
     }
 
     // set box Y from alignments

@@ -29,23 +29,36 @@ import org.jmol.api.JmolRendererInterface;
 import org.jmol.modelset.Text;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
+import org.jmol.viewer.JC;
+
+import javajs.util.P3i;
 
 class TextRenderer {
   
+  static final int MODE_IS_ANTIALIASED = 4;
+  
   static boolean render(Text text, JmolRendererInterface g3d,
                         float scalePixelsPerMicron, float imageFontScaling,
-                        boolean isAbsolute, float[] boxXY, float[] temp,
-                        boolean doPointer, short pointerColix,
-                        int pointerWidth, boolean isAntialiased) {
+                        float[] boxXY, float[] temp,
+                        short pointerColix,
+                        int pointerWidth, int mode) {
     if (text == null
         || text.image == null && !text.doFormatText && text.lines == null)
       return false;
+    boolean isAbsolute = ((mode & JC.LABEL_EXPLICIT) != 0);
+    boolean doPointer = ((mode & JC.LABEL_POINTER_ON) != 0);
+    boolean isAntialiased = ((mode & MODE_IS_ANTIALIASED) != 0);
     boolean showText = g3d.setC(text.colix);
     if (!showText && (text.image == null
         && (text.bgcolix == 0 || !g3d.setC(text.bgcolix))))
       return false;
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     // draw the box if necessary; colix has been set
+//    if ("%SCALE".equals(text.textUnformatted)) {
+//      renderScale(text);
+//      return false;
+//    }
+//
     if (text.image == null) {
       // text colix will be opaque, but we need to render it in translucent pass 
       // now set x and y positions for text from (new?) box position
@@ -63,6 +76,9 @@ class TextRenderer {
         g3d.drawString(text.lines[i], text.font, (int) temp[0], (int) temp[1],
             text.z, text.zSlab, text.bgcolix);
       }
+      if (text.barPixels > 0) {
+        renderScale(g3d, text, temp, isAntialiased);
+      }
     } else {
       g3d.drawImage(text.image, (int) text.boxX, (int) text.boxY, text.z,
           text.zSlab, text.bgcolix, (int) text.boxWidth, (int) text.boxHeight);
@@ -75,6 +91,35 @@ class TextRenderer {
         text.zSlab, text.boxWidth, text.boxHeight, pointerColix, pointerWidth * (isAntialiased ? 2 : 1));
     return true;
   }
+
+  /**
+   * Render a short |---| bar with label from ECHO "%SCALE"
+   * @param g3d
+   * @param text
+   * @param temp
+   * @param isAntialiased
+   */
+  private static void renderScale(JmolRendererInterface g3d, Text text, float[] temp, boolean isAntialiased) {
+    int z = text.z;
+    // barPixels has a 4-pixel margin
+    int ia = (isAntialiased? 2 : 1);
+    for (int i = (ia == 2 ? 3 : 1); i > 0; i -= 1) {
+    int x1 = (int) temp[0] - text.barPixels - i - ia * 2;
+    int x2 = (int) temp[0] - i - ia * 2;
+    int h = text.lineHeight / 4;
+    int y = (int) temp[1] - h - i;
+    P3i sA = P3i.new3(x1, y, z);
+    P3i sB = P3i.new3(x2, y, z);
+    g3d.drawLinePixels(sA, sB);
+    sA.y = y + h;
+    sB.y = y - h;    
+    sB.x = x1;
+    g3d.drawLinePixels(sA, sB);
+    sA.x = sB.x = x2;
+    g3d.drawLinePixels(sA, sB);
+    }
+  }
+
 
   private static void drawLineXYZ(JmolRendererInterface g3d, int x0, int y0,
                                   int z0, float x1, float y1, int z1, float w,
@@ -113,8 +158,7 @@ class TextRenderer {
                                 String strLabel, short colix, short bgcolix,
                                 float[] boxXY, int z, int zSlab, int xOffset,
                                 int yOffset, float ascent, int descent,
-                                boolean isAbsolute, boolean doPointer, short pointerColix,
-                                int pointerWidth, boolean isAntialiased) {
+                               short pointerColix, int pointerWidth, int mode) {
 
     // old static style -- quick, simple, no line breaks, odd alignment?
     // LabelsRenderer only
@@ -125,7 +169,10 @@ class TextRenderer {
     int x0 = (int) boxXY[0];
     int y0 = (int) boxXY[1];
 
-    Text.setBoxXY(w, h, xOffset, yOffset, boxXY, isAbsolute);
+    boolean isAbsolute = ((mode & JC.LABEL_EXPLICIT) != 0);
+    boolean doPointer = ((mode & JC.LABEL_POINTER_ON) != 0);
+    boolean isAntialiased = ((mode & MODE_IS_ANTIALIASED) != 0);
+    Text.setBoxXY(w, h, xOffset, yOffset, boxXY, isAbsolute );
 
     float x = boxXY[0];
     float y = boxXY[1];

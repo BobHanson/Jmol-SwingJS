@@ -53,7 +53,6 @@ import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.Txt;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
@@ -3091,7 +3090,8 @@ public class ScriptEval extends ScriptExpr {
       }
       return;
     }
-    // axes position [x y %]
+    // axes position [x y] or [x y %] 
+    // axes position [x y] or [x y %] "xyz"
     if (type.equals("position")) {
       P3 xyp;
       if (tokAt(++index) == T.off) {
@@ -3101,6 +3101,7 @@ public class ScriptEval extends ScriptExpr {
         if (xyp == null)
           invArg();
         index = iToken;
+        setShapeProperty(JC.SHAPE_AXES, "axes2", (tokAt(index + 1) == T.string ? stringParameter(++index) : null));
       }
       setShapeProperty(JC.SHAPE_AXES, "position", xyp);
       return;
@@ -3602,8 +3603,8 @@ public class ScriptEval extends ScriptExpr {
       if (text != null)
         setShapeProperty(JC.SHAPE_ECHO, "text", text);
     }
-    if (doRefresh && vwr.getRefreshing())
-      showString(Txt.formatText(vwr, text));
+    if (doRefresh && vwr.getRefreshing() && text != null && !text.equals("%SCALE"))
+      showString(vwr.formatText(text));
   }
 
   private void cmdFile() throws ScriptException {
@@ -5239,7 +5240,7 @@ public class ScriptEval extends ScriptExpr {
     String text = paramAsStr(checkLast(1));
     if (chk)
       return;
-    String s = Txt.formatText(vwr, text);
+    String s = vwr.formatText(text);
     if (outputBuffer == null && !vwr.isPrintOnly)
       Logger.warn(s);
     if (!s.startsWith("_"))
@@ -5895,7 +5896,7 @@ public class ScriptEval extends ScriptExpr {
       return false;
     }
     msg = (msg.length() == 0 ? ": RESUME to continue." : ": "
-        + Txt.formatText(vwr, msg));
+        + vwr.formatText(msg));
     pauseExecution(true);
     vwr.scriptStatusMsg("script execution paused" + msg,
         "script paused for RESUME");

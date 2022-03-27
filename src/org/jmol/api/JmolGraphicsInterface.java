@@ -1,5 +1,6 @@
 package org.jmol.api;
 
+import javajs.util.P3i;
 
 public interface JmolGraphicsInterface {
 
@@ -14,5 +15,7 @@ public interface JmolGraphicsInterface {
   public abstract void setSlab(int slabValue);
 
   public abstract void setSlabAndZShade(int slabValue, int depthValue, int zSlab, int zDepth, int zPower);
+
+  public abstract void drawLinePixels(P3i sA, P3i sB);
 
 }

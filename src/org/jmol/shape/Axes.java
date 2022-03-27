@@ -26,6 +26,8 @@ package org.jmol.shape;
 
 
 import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -33,6 +35,7 @@ import org.jmol.api.SymmetryInterface;
 
 import javajs.util.BS;
 import org.jmol.script.T;
+import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.viewer.JC;
 
@@ -50,6 +53,7 @@ public class Axes extends FontLineShape {
   final public P3[] axisPoints = new P3[6];
   public String[] labels;
   public String axisType; //a b c ab, ac, bc
+  public String axes2;
   
   {
     for (int i = 6; --i >= 0; )
@@ -94,10 +98,13 @@ public class Axes extends FontLineShape {
     }
     if ("type" == propertyName) {
       axisType = (String) value;
-      if (axisType.equals("abc"))
+      if ("abc".equals(axisType))
         axisType = null;
     }
-    
+    if ("axes2" == propertyName) {
+      axes2 = (value == null || value.equals("") ? null : (String) value);
+      return;
+    }
     setPropFLS(propertyName, value);
   }
 
@@ -109,7 +116,10 @@ public class Axes extends FontLineShape {
     translucentAllowed = false;
     myType = "axes";
     font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
-    int axesMode = vwr.g.axesMode;
+    setPoints(vwr.g.axesMode);
+  } 
+  
+  public void setPoints(int axesMode) {
     SymmetryInterface unitcell;
     if (axesMode != T.axesunitcell || ms.unitCells == null
         || (unitcell = vwr.getCurrentUnitCell()) == null) {
@@ -141,7 +151,7 @@ public class Axes extends FontLineShape {
     axisPoints[1].scaleAdd2(scale, vertices[2], originPoint);
     axisPoints[2].scaleAdd2(scale, vertices[1], originPoint);
   }
-  
+
   public void reinitShape() {
     Font f = font3d;
     initShape();
@@ -149,19 +159,21 @@ public class Axes extends FontLineShape {
       font3d = f;
   }
 
-  final P3 ptTemp = new P3();
   /**
    * get actual point or 1/2 vector from origin to this point
    * 
    * @param i
-   * @param isDataFrame
+   * @param unscaled
+   * @param ptTemp 
    * @return actual point if not a data frame and not an XY request; otherwise return 1/2 vector along unit cell
    */
-  public P3 getAxisPoint(int i, boolean isDataFrame) {
-    if (!isDataFrame && axisXY.z == 0)
-      return axisPoints[i];
-    ptTemp.sub2(axisPoints[i], originPoint);
-    ptTemp.scale(0.5f);
+  public P3 getAxisPoint(int i, boolean unscaled, P3 ptTemp) {
+    if (unscaled) {
+      ptTemp.setT(axisPoints[i]);
+    } else {
+      ptTemp.sub2(axisPoints[i], originPoint);
+      ptTemp.scale(0.5f);
+    }
     return ptTemp; 
   }
   
@@ -202,9 +214,30 @@ public class Axes extends FontLineShape {
     }
   }
   
-// @Override
-//public String getShapeState() {
-//   return null;
-//  }
+  public String getAxesState(SB sb) {
+    sb.append("  axes scale ").appendF(vwr.getFloat(T.axesscale)).append(";\n"); 
+    if (fixedOrigin != null)
+      sb.append("  axes center ")
+          .append(Escape.eP(fixedOrigin)).append(";\n");
+    if (axisXY.z != 0)
+      sb.append("  axes position [")
+          .appendI((int) axisXY.x).append(" ")
+          .appendI((int) axisXY.y).append(" ")
+          .append(axisXY.z < 0 ? " %" : "").append("]");
+    if (axes2 != null)
+      sb.append(" ").append(PT.esc(axes2));
+    sb.append(";\n");
+    if (labels != null) {
+      sb.append("  axes labels ");
+      for (int i = 0; i < labels.length; i++)
+        if (labels[i] != null)
+          sb.append(PT.esc(labels[i])).append(" ");
+      sb.append(";\n");
+    }
+    if (axisType != null) {
+      sb.append("  axes type " + PT.esc(axisType));
+    }
+    return sb.toString();
+  }
 
 }

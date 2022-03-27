@@ -28,7 +28,6 @@ import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.shape.Echo;
 import org.jmol.util.C;
-import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 
 public class EchoRenderer extends LabelsRenderer {
@@ -42,6 +41,7 @@ public class EchoRenderer extends LabelsRenderer {
         .getScalePixelsPerAngstrom(true) * 10000 : 0);
     imageFontScaling = vwr.imageFontScaling;
     boolean haveTranslucent = false;
+    int alias = (g3d.isAntialiased() ? TextRenderer.MODE_IS_ANTIALIASED : 0);
     for (Text t : echo.objects.values()) {
       if (!t.visible || t.hidden) {
         continue;
@@ -73,8 +73,7 @@ public class EchoRenderer extends LabelsRenderer {
         if (t.zSlab == Integer.MIN_VALUE)
           t.zSlab = 1;
       }
-      if (TextRenderer.render(t, g3d, sppm, imageFontScaling,
-          false, null, xy, false, (short) 0, 0, false)
+      if (TextRenderer.render(t, g3d, sppm, imageFontScaling, null, xy, (short) 0, 0, alias)
           && t.valign == JC.ECHO_BOTTOM
           && t.align == JC.TEXT_ALIGN_RIGHT)
         vwr.noFrankEcho = false;
@@ -86,9 +85,7 @@ public class EchoRenderer extends LabelsRenderer {
       String frameTitle = vwr.getFrameTitle();
       if (frameTitle != null && frameTitle.length() > 0) {
         if (g3d.setC(vwr.cm.colixBackgroundContrast)) {
-          if (frameTitle.indexOf("%{") >= 0 || frameTitle.indexOf("@{") >= 0)
-            frameTitle = Txt.formatText(vwr, frameTitle);
-          renderFrameTitle(frameTitle);
+          renderFrameTitle(vwr.formatText(frameTitle));
         }
       }
     }

@@ -115,7 +115,8 @@ public class UccageRenderer extends CageRenderer {
     if (axes != null && vwr.areAxesTainted())
       axes.reinitShape();
     P3[] axisPoints = (axes == null
-        || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 || axes.axisXY.z != 0
+        || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 
+        || axes.axisXY.z != 0 && axes.axes2 == null
         || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0
             ? null
             : axes.axisPoints);

@@ -23,12 +23,11 @@
  */
 package org.jmol.render;
 
-import javajs.util.P3;
-
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Text;
 import org.jmol.shape.Hover;
-import org.jmol.util.Txt;
+
+import javajs.util.P3;
 
 public class HoverRenderer extends ShapeRenderer {
   
@@ -63,12 +62,11 @@ public class HoverRenderer extends ShapeRenderer {
     } else {
       return true;
     }
-    if (vwr != null &&(label.indexOf("%{") >= 0 || label
-        .indexOf("@{") >= 0))
-      label = Txt.formatText(vwr, label);
+    if (vwr != null)
+      label = vwr.formatText(label);
     text.setText(label);
     //System.out.println("hoverRenderer " + text.getText());
-    TextRenderer.render(text, g3d, 0, antialias ? 2 : 1, false, null, tempXY, false, (short) 0, 0, false);
+    TextRenderer.render(text, g3d, 0, antialias ? 2 : 1, null, tempXY, (short) 0, 0, 0);
     return true;
   }
   

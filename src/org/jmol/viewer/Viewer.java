@@ -7673,7 +7673,6 @@ public class Viewer extends JmolViewer
     // Eval
     g.setUnits(units);
     if (isDistance) {
-      g.setUnits(units);
       setShapeProperty(JC.SHAPE_MEASURES, "reformatDistances", null);
     } else {
 
@@ -10630,5 +10629,102 @@ public class Viewer extends JmolViewer
     SymmetryInterface sg = getCurrentUnitCell();
     return (sg == null || sg.getSymmetryOperations() == null ? null : sg);
   }
+
+  public String formatText(String text0) {
+    int i;
+    if ((i = text0.indexOf("@{")) < 0 && (i = text0.indexOf("%{")) < 0)
+      return text0;
+
+    // old style %{ now @{
+
+    String text = text0;
+    boolean isEscaped = (text.indexOf("\\") >= 0);
+    if (isEscaped) {
+      text = PT.rep(text, "\\%", "\1");
+      text = PT.rep(text, "\\@", "\2");
+      isEscaped = !text.equals(text0);
+    }
+    text = PT.rep(text, "%{", "@{");
+    String name;
+    while ((i = text.indexOf("@{")) >= 0) {
+      i++;
+      int i0 = i + 1;
+      int len = text.length();
+      // push to math terminator
+      int nP = 1;
+      char chFirst = '\0';
+      char chLast = '\0';
+      while (nP > 0 && ++i < len) {
+        char ch = text.charAt(i);
+        if (chFirst != '\0') {
+          if (chLast == '\\') {
+            ch = '\0';
+          } else if (ch == chFirst) {
+            chFirst = '\0';
+          }
+          chLast = ch;
+          continue;
+        }
+        switch(ch) {
+        case '\'':
+        case '"':
+          chFirst = ch;
+          break;
+        case '{':
+          nP++;
+          break;
+        case '}':
+          nP--;
+          break;
+        }
+      }
+      if (i >= len)
+        return text;
+      name = text.substring(i0, i);
+      if (name.length() == 0)
+        return text;
+      Object v = evaluateExpression(name);
+      if (v instanceof P3)
+        v = Escape.eP((P3) v);
+      text = text.substring(0, i0 - 2) + v.toString() + text.substring(i + 1);
+    }
+    if (isEscaped) {
+      text = PT.rep(text, "\2", "@");
+      text = PT.rep(text, "\1", "%");
+    }
+    return text;
+  }
+
+  /**
+   * Depending upon the measure text, we need to indicate
+   * |-------| 1 A or 0.1 A for example.
+   * 
+   * @return text
+   */
+  public String getScaleText(int[] retPixels) {
+    String u = Measurement
+        .fixUnits(g.measureDistanceUnits.equals("vdw") ? "angstroms"
+            : g.measureDistanceUnits);
+    float d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
+        / tm.scalePixelsPerAngstrom / 4;
+    int m = 0, p = 0;
+    float e = 0;
+    int min = (g.antialiasDisplay ? 30 : 15);
+    while (p < min) {
+      e = Measurement.toUnits(d, u, false);
+      m = (int) Math.floor(Math.log10(e));
+      e = (float) Math.pow(10, m) + 0.000001f;
+      p = (int) (Measurement.fromUnits(e, u) * tm.scalePixelsPerAngstrom);
+      if (p < min) {
+        d *= 10;
+      }
+    }
+    String se = (m >= 0 ? " " + (int) e + " "
+        : " 0." + "000000000".substring(0, -1 - m) + "1 ");
+    //System.out.println("vwr " + d + " p=" + p + " " + se + " " + u);
+    retPixels[0] = p;
+    return se + u;
+  }
+
 
 }

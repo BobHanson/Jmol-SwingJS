@@ -29,12 +29,12 @@ import org.jmol.modelset.Group;
 import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.shape.Labels;
-import javajs.util.P3;
-import javajs.util.P3i;
-
 import org.jmol.util.Font;
 import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
+
+import javajs.util.P3;
+import javajs.util.P3i;
 
 public class LabelsRenderer extends FontLineShapeRenderer {
 
@@ -60,7 +60,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   private Atom atom;
   protected Point3fi atomPt;
 
-  private boolean isAbsolute;
+  private int doPointer;
 
   private int offset;
 
@@ -75,6 +75,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   private float[] boxXY;
 
   private float scalePixelsPerMicron;
+
+  private int mode;
 
   @Override
   protected boolean render() {
@@ -114,8 +116,10 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       boolean labelsFront = ((offset & JC.LABEL_ZPOS_FRONT) != 0);
       boolean labelsGroup = ((offset & JC.LABEL_ZPOS_GROUP) != 0);
       textAlign = JC.getAlignment(offset);
-      isAbsolute = JC.isOffsetAbsolute(offset);
       pointer = JC.getPointer(offset);
+      doPointer = (pointer & JC.LABEL_POINTER_ON);
+      int isAbsolute = offset & JC.LABEL_EXPLICIT;
+      mode = (doPointer | isAbsolute | (isAntialiased ? TextRenderer.MODE_IS_ANTIALIASED : 0));
       zSlab = atom.sZ - atom.sD / 2 - 3;
       if (zSlab < 1)
         zSlab = 1;
@@ -138,7 +142,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       boxXY = (!isExport || vwr.creatingImage ? labels.getBox(i) : new float[5]);
       if (boxXY == null)
         labels.putBox(i, boxXY = new float[5]);
-      text = renderLabelOrMeasure(text, label, isAntialiased);
+      text = renderLabelOrMeasure(text, label);
       if (text != null) {
         labels.putLabel(i, text);
       }
@@ -151,9 +155,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     return false;
   }
 
-  protected Text renderLabelOrMeasure(Text text, String label, boolean isAntialiased) {
+  protected Text renderLabelOrMeasure(Text text, String label) {
     boolean newText = false;
-    boolean doPointer = ((pointer & JC.LABEL_POINTER_ON) != 0);
     short pointerColix = ((pointer & JC.LABEL_POINTER_BACKGROUND) != 0
         && bgcolix != 0 ? bgcolix : labelColix);
     if (text != null) {
@@ -190,7 +193,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         boxXY[1] = atomPt.sY;
         TextRenderer.renderSimpleLabel(g3d, font3d, label, labelColix, bgcolix,
             boxXY, zBox, zSlab, JC.getXOffset(offset), JC.getYOffset(offset),
-            ascent, descent, isAbsolute, doPointer, pointerColix, (doPointer ? vwr.getInt(T.labelpointerwidth) : 0), isAntialiased);
+            ascent, descent, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
         return null;
       }
       text = Text.newLabel(vwr, font3d, label, labelColix, bgcolix, textAlign,
@@ -210,7 +213,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     }
     text.pointer = pointer;
     TextRenderer.render(text, g3d, scalePixelsPerMicron, imageFontScaling,
-        isAbsolute, boxXY, xy, doPointer, pointerColix, (doPointer ? vwr.getInt(T.labelpointerwidth) : 0), isAntialiased);
+       boxXY, xy, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
     return (newText ? text : null);
   }
 }

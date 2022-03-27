@@ -274,7 +274,7 @@ public class Measurement {
     return formatString(f, newUnits, label);
   }
 
-  private static String fixUnits(String units) {
+  public static String fixUnits(String units) {
     if (units.equals("nanometers"))
       return "nm";
     else if (units.equals("picometers"))
@@ -338,21 +338,7 @@ public class Measurement {
             units = "pm";
         }
       }
-      if (Float.isNaN(dist))
-        return Float.NaN;
-      if (units.equals("hz"))
-        return (andRound ? Math.round(dist * 10) / 10f : dist);
-      if (units.equals("noe"))
-        return (andRound ? Math.round(dist * 100) / 100f : dist);
-      if (units.equals("nm"))
-        return (andRound ? Math.round(dist * 100) / 1000f : dist / 10);
-      if (units.equals("pm"))
-        return (andRound ? Math.round(dist * 1000) / 10f : dist * 100);
-      if (units.equals("au"))
-        return (andRound ? Math.round(dist / JC.ANGSTROMS_PER_BOHR * 1000) / 1000f
-            : dist / JC.ANGSTROMS_PER_BOHR);
-      if (units.endsWith("khz"))
-        return (andRound ? Math.round(dist / 10) / 100f : dist / 1000);
+      return toUnits(dist, units, andRound);
     }
     return (andRound ? Math.round(dist * 100) / 100f : dist);
   }
@@ -607,5 +593,35 @@ public class Measurement {
       ";nm;nanometers;pm;picometers;angstroms;angstroms;ang;\u00C5;au;vanderwaals;vdw;%;noe;")
       || s.indexOf(" ") < 0 && s.endsWith("hz"));
   }
+
+  public static float toUnits(float dist, String units, boolean andRound) {
+    if (Float.isNaN(dist))
+      return Float.NaN;
+    if (units.equals("hz"))
+      return (andRound ? Math.round(dist * 10) / 10f : dist);
+    if (units.equals("nm"))
+      return (andRound ? Math.round(dist * 100) / 1000f : dist / 10);
+    if (units.equals("pm"))
+      return (andRound ? Math.round(dist * 1000) / 10f : dist * 100);
+    if (units.equals("au"))
+      return (andRound ? Math.round(dist / JC.ANGSTROMS_PER_BOHR * 1000) / 1000f
+          : dist / JC.ANGSTROMS_PER_BOHR);
+    if (units.endsWith("khz"))
+      return (andRound ? Math.round(dist / 10) / 100f : dist / 1000);
+//    if (units.equals("noe"))
+//      return (andRound ? Math.round(dist * 100) / 100f : dist);
+    return (andRound ? Math.round(dist * 100) / 100f : dist);
+  }
+
+  public static float fromUnits(float dist, String units) {
+    if (units.equals("nm"))
+      return dist * 10;
+    if (units.equals("pm"))
+      return dist / 100;
+    if (units.equals("au"))
+      return dist * JC.ANGSTROMS_PER_BOHR;
+    return dist;
+  }
+
 
 }

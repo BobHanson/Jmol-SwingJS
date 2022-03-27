@@ -32,7 +32,7 @@ public abstract class FontLineShape extends Shape {
 
   // Axes, Bbcage, Uccage
   
-  public TickInfo[] tickInfos = new TickInfo[4];
+  public final TickInfo[] tickInfos = new TickInfo[4];
 
   public Font font3d;
 
@@ -47,11 +47,11 @@ public abstract class FontLineShape extends Shape {
       TickInfo t = (TickInfo) value;
       if (t.ticks == null) {
         // null ticks is an indication to delete the tick info
-        if (t.type.equals(" "))
+        if (t.type.equals(" ")) {
           tickInfos[0] = tickInfos[1] = tickInfos[2] = tickInfos[3] = null;
-        else
-          tickInfos["xyz".indexOf(t.type) + 1] = null;
-        return;
+          return;
+        }
+        t = null;
       }
       tickInfos["xyz".indexOf(t.type) + 1] = t;
       return;
@@ -64,12 +64,6 @@ public abstract class FontLineShape extends Shape {
 
   @Override
   public String getShapeState() {
-    // see StateCreator
     return null;
   }
-//
-//  protected String getShapeStateFL() {
-//    String s = vwr.getFontState(myType, font3d);
-//    return (tickInfos == null ? s : vwr.getFontLineShapeState(s, myType, tickInfos));
-//  }
 }

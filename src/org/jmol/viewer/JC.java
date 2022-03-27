@@ -1184,7 +1184,7 @@ public final class JC {
   public final static int LABEL_ZPOS_GROUP            = 0x010;
   public final static int LABEL_ZPOS_FRONT            = 0x020;
   
-  private final static int LABEL_EXPLICIT             = 0x040;
+  public final static int LABEL_EXPLICIT             = 0x040;
   
   private final static int LABEL_CENTERED             = 0x100;
 

@@ -4,6 +4,7 @@ package org.jmol.util;
 import javajs.util.AU;
 import javajs.util.M3;
 import javajs.util.P3;
+import javajs.util.P3i;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -748,5 +749,10 @@ public class GData implements JmolGraphicsInterface {
 
   protected static short normixCount = Normix.getNormixCount();
  
+  @Override
+  public void drawLinePixels(P3i sA, P3i sB) {
+    return;
+  }
+
 
 }

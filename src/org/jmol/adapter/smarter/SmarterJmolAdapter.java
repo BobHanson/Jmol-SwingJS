@@ -447,7 +447,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
 
   @Override
   public JmolAdapterBondIterator getBondIterator(Object asc) {
-    return new BondIterator((AtomSetCollection)asc);
+    return (((AtomSetCollection) asc).bondCount == 0 ? null : new BondIterator((AtomSetCollection)asc));
   }
 
   @Override
