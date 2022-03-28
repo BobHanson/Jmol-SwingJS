@@ -2029,9 +2029,9 @@ public class CmdExt extends ScriptExt {
         isColorOrRadius = true;
         break;
       case T.none:
-      case T.delete:
         if (++i != slen)
           invArg();
+      case T.delete:
         operation = T.delete;
         // if (isColorOrRadius) / for struts automatic color
         // invArg();
@@ -3813,10 +3813,10 @@ public class CmdExt extends ScriptExt {
         if (typeSeen)
           error(ScriptError.ERROR_incompatibleArguments);
         typeSeen = true;
-        if (isFloatParameter(i + 1))
+        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
+        if (needsGenerating && isFloatParameter(i + 1))
           setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
               Float.valueOf(floatParameter(++i)));
-        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
         break;
       case T.noedges:
       case T.edges:
