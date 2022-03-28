@@ -763,7 +763,13 @@ public class ScriptManager implements JmolScriptManager {
     vwr.g.appendNew = false;
     // BitSet bsB = getAtomBits(Token.hydrogen, null);
     // bsA.andNot(bsB);
-    int atomno = vwr.ms.getAtomCountInModel(modelIndex);// BH! not quite right if deleted
+    int atomno = 0;
+    for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
+      int an = vwr.ms.at[i].getAtomNumber();
+      if (an > atomno)
+         atomno = an;
+    }
+    
     SB sbConnect = new SB();
     for (int i = 0, atomIndex = vwr.ms.ac; i < vConnections.size(); i++, atomIndex++) {
       Atom a = vConnections.get(i);
