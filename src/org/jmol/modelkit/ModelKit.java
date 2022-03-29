@@ -1799,7 +1799,7 @@ public class ModelKit {
           assignAtom(i, type, false, false, true, null);
           vwr.ms.setSite(vwr.ms.at[i], site, true);
         }
-        vwr.ms.updateBasisFromSite(atomIndexNew);
+        vwr.ms.updateBasisFromSite(mi);
       }
       int firstAtom = vwr.ms.am[mi].firstAtomIndex;
       if (atomicNo >= 0) {

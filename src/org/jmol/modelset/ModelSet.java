@@ -3143,6 +3143,7 @@ public class ModelSet extends BondCollection {
     //averageAtomPoint = null;
     if (bs == null)
       return;
+    BS bsModels = getModelBS(bs, false);
     BS bsBonds = new BS();
     boolean doNull = Viewer.nullDeletedAtoms; 
     for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1)) {
@@ -3159,6 +3160,9 @@ public class ModelSet extends BondCollection {
       m.bsAtomsDeleted.and(m.bsAtoms);
       if (m.bsAsymmetricUnit != null)
         m.bsAsymmetricUnit.andNot(bs);
+      if (bsModels.get(m.modelIndex)) {
+        updateBasisFromSite(m.modelIndex);
+      }
       bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
       m.firstAtomIndex = bs.nextSetBit(0);
       m.act = bs.cardinality();
@@ -4361,9 +4365,9 @@ public class ModelSet extends BondCollection {
       if (site > 0) {
         BS au = am[a.mi].bsAsymmetricUnit;
         if (au != null) {
-          for (int p = 0, i = au.nextSetBit(0); i >= 0; i = au
+          for (int i = au.nextSetBit(0); i >= 0; i = au
               .nextSetBit(i + 1)) {
-            if (++p == site)
+            if (at[i].atomSite == site)
               return at[i];
           }
         }
@@ -4372,21 +4376,25 @@ public class ModelSet extends BondCollection {
     return a;
   }
 
-  public void updateBasisFromSite(int iatom) {
-    Atom a = at[iatom];
-    if (getUnitCellForAtom(iatom) != null) {
-      BS bsAU = am[a.mi].bsAsymmetricUnit;
+  public void updateBasisFromSite(int imodel) {
+    if (getUnitCell(imodel) != null) {
+      BS bsAU = am[imodel].bsAsymmetricUnit;
       //BS bsSym = getAtomBitsMDb(T.symmetry, null);
       bsAU.clearAll();//andNot(bs);
       //bsSym.or(bs);
       BS bsSites = new BS();
-      BS bs = vwr.getModelUndeletedAtomsBitSet(a.mi);
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      BS bs = vwr.getModelUndeletedAtomsBitSet(imodel);
+      int[] sites = new int[ac];
+      for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        if (at[i] == null)
+          continue;
         int site = at[i].atomSite;
         if (!bsSites.get(site)) {
-           bsSites.set(site);
-           bsAU.set(i);
+          bsSites.set(site);
+          sites[site] = ++p;
+          bsAU.set(i);
         }
+        at[i].atomSite = sites[site];
       }
       bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
       bsSymmetry.or(bs);
