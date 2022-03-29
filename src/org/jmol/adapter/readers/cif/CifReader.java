@@ -568,7 +568,8 @@ public class CifReader extends AtomSetCollectionReader {
     SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry()
         .getBaseSymmetry() : null);
     if (sym != null && sym.getSpaceGroup() == null) {
-      appendLoadNote("Invalid or missing space group operations!");
+      if (!isBinary) // ignore this for MMTF
+        appendLoadNote("Invalid or missing space group operations!");
       sym = null;
     }
     if (modDim > 0 && sym != null) {

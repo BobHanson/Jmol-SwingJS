@@ -437,17 +437,6 @@ public class ActionManager implements EventManager {
   public final static int PICKING_DRAG_LIGAND = 36;
   public final static int PICKING_DRAG_MODEL = 37;
 
-  /**
-   * picking styles
-   */
-  public final static int PICKINGSTYLE_SELECT_JMOL = 0;
-  public final static int PICKINGSTYLE_SELECT_CHIME = 0;
-  public final static int PICKINGSTYLE_SELECT_RASMOL = 1;
-  public final static int PICKINGSTYLE_SELECT_PFAAT = 2;
-  public final static int PICKINGSTYLE_SELECT_DRAG = 3;
-  public final static int PICKINGSTYLE_MEASURE_ON = 4;
-  public final static int PICKINGSTYLE_MEASURE_OFF = 5;
-
   private final static String[] pickingModeNames;
   static {
     pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel".split(" ");
@@ -464,6 +453,17 @@ public class ActionManager implements EventManager {
         return i;
     return -1;
   }
+
+  /**
+   * picking styles
+   */
+  public final static int PICKINGSTYLE_SELECT_JMOL = 0;
+  public final static int PICKINGSTYLE_SELECT_CHIME = 0;
+  public final static int PICKINGSTYLE_SELECT_RASMOL = 1;
+  public final static int PICKINGSTYLE_SELECT_PFAAT = 2;
+  public final static int PICKINGSTYLE_SELECT_DRAG = 3;
+  public final static int PICKINGSTYLE_MEASURE_ON = 4;
+  public final static int PICKINGSTYLE_MEASURE_OFF = 5;
 
   private final static String[] pickingStyleNames;
   
@@ -1657,12 +1657,8 @@ public class ActionManager implements EventManager {
 
   private boolean isSelectAction(int action) {
     return (bnd(action, ACTION_pickAtom)
-        || !drawMode
-        && !labelMode
-        && apm == PICKING_IDENTIFY
-        && bnd(action, ACTION_center)
-        || dragSelectedMode
-        && bnd(dragAction, ACTION_rotateSelected, ACTION_dragSelected) 
+        || !drawMode && !labelMode && apm == PICKING_IDENTIFY && bnd(action, ACTION_center)
+        || dragSelectedMode && bnd(dragAction, ACTION_rotateSelected, ACTION_dragSelected) 
         || bnd(action, ACTION_pickPoint, ACTION_selectToggle, ACTION_selectAndNot,
             ACTION_selectOr, ACTION_selectToggleExtended, ACTION_select));
   }
@@ -2018,13 +2014,13 @@ public class ActionManager implements EventManager {
     if (mp != null || selectionWorking)
       return;
     selectionWorking = true;
-    String s = (rubberbandSelectionMode
-        || bnd(clickAction, ACTION_selectToggle) ? "selected and not ("
-        + item + ") or (not selected) and " : bnd(clickAction,
-        ACTION_selectAndNot) ? "selected and not " : bnd(clickAction,
-        ACTION_selectOr) ? "selected or " : clickAction == 0
-        || bnd(clickAction, ACTION_selectToggleExtended) ? "selected tog "
-        : bnd(clickAction, ACTION_select) ? "" : null);
+    String s = (rubberbandSelectionMode || bnd(clickAction, ACTION_selectToggle) ? 
+        "selected and not (" + item + ") or (not selected) and " 
+        : bnd(clickAction, ACTION_selectAndNot) ? "selected and not " 
+        : bnd(clickAction, ACTION_selectOr) ? "selected or " 
+        : clickAction == 0 || bnd(clickAction, ACTION_selectToggleExtended) ? "selected tog "
+        : bnd(clickAction, ACTION_select) ? "" 
+        : null);
     if (s != null) {
       s += "(" + item + ")";
       try {
