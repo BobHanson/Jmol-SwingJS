@@ -10707,14 +10707,15 @@ public class Viewer extends JmolViewer
             : g.measureDistanceUnits);
     float d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
+    float f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1);
     int m = 0, p = 0;
     float e = 0;
     int min = (g.antialiasDisplay ? 30 : 15);
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
-      e = (float) Math.pow(10, m) + 0.000001f;
-      p = (int) (Measurement.fromUnits(e, u) * tm.scalePixelsPerAngstrom);
+      e = Measurement.fromUnits((float) Math.pow(10, m) + 0.000001f, u);
+      p = (int) (e * tm.scalePixelsPerAngstrom * f);
       if (p < min) {
         d *= 10;
       }
