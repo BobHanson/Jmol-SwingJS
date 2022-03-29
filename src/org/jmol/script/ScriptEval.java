@@ -815,6 +815,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void logDebugScript(T[] st, int ifLevel) {
+    int itok = iToken;
     iToken = -9999;
     if (debugHigh) {
       if (st.length > 0)
@@ -833,7 +834,7 @@ public class ScriptEval extends ScriptExpr {
       if (cmd != "")
         vwr.scriptStatus(cmd);
     }
-
+    iToken = itok;
   }
 
   // /////////////// string-based evaluation support /////////////////////

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
@@ -1280,7 +1281,7 @@ abstract class ScriptExpr extends ScriptParam {
     for (int i = ac; --i >= 0;) {
       boolean match = false;
       Atom atom = atoms[i];
-      if (atom == null)
+      if (AtomCollection.isDeleted(atom))
         continue;
       if (isProp) {
         if (data == null || data.length <= i)
@@ -1403,7 +1404,7 @@ abstract class ScriptExpr extends ScriptParam {
     for (int i = 0; i < ac; ++i) {
       boolean match = false;
       Atom atom = atoms[i];
-      if (atom == null)
+      if (AtomCollection.isDeleted(atom))
         continue;
       switch (tokWhat) {
       default:
@@ -1742,7 +1743,7 @@ abstract class ScriptExpr extends ScriptParam {
         Atom atom;
         if (pts == null) {
           atom = modelSet.at[i];
-          if (atom == null)
+          if (AtomCollection.isDeleted(atom))
             continue;
         } else {
           atom = null;

@@ -1566,7 +1566,7 @@ public class StateCreator extends JmolStateCreator {
     BS[] tainted = vwr.ms.tainted;
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (atoms[i] == null || atoms[i].isDeleted())
+        if (AtomCollection.isDeleted(atoms[i]))
           continue;
         s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
             .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(

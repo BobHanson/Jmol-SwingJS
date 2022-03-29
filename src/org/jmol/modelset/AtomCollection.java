@@ -319,7 +319,7 @@ abstract public class AtomCollection {
     //definitely want FIRST (model) not last here
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];
-      if (atom != null && atom.getAtomNumber() == atomNumber && bsVisibleFrames.get(atom.mi))
+      if (!isDeleted(atom) && atom.getAtomNumber() == atomNumber && bsVisibleFrames.get(atom.mi))
         return i;
     }
     return -1;
@@ -338,7 +338,7 @@ abstract public class AtomCollection {
   public float[] getAtomicCharges() {
     float[] charges = new float[ac];
     for (int i = ac; --i >= 0; )
-      charges[i] = (at[i] == null ? 0 : at[i].getElementNumber());
+      charges[i] = (isDeleted(at[i]) ? 0 : at[i].getElementNumber());
     return charges;
   }
 
@@ -358,7 +358,7 @@ abstract public class AtomCollection {
     float r;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
-      if (atom == null)
+      if (isDeleted(atom))
         continue;
       if ((r = atom.getBondingRadius()) > maxBondingRadius)
         maxBondingRadius = r;
@@ -387,7 +387,7 @@ abstract public class AtomCollection {
   }
 
   private void setBf(int i) {
-    if (at[i] == null)
+    if (isDeleted(at[i]))
       return;
     int bf = at[i].getBfactor100();
     if (bf < bfactor100Lo)
@@ -463,7 +463,7 @@ abstract public class AtomCollection {
     float radiusAdjust = (envelopeRadius == Float.MAX_VALUE ? 0 : envelopeRadius);
     for (int i = 0; i < ac; i++) {
       //surfaceDistance100s[i] = Integer.MIN_VALUE;
-      if (bsSurface.get(i) || at[i] == null) {
+      if (bsSurface.get(i) || isDeleted(at[i])) {
         surfaceDistance100s[i] = 0;
       } else {
         float dMin = Float.MAX_VALUE;
@@ -1057,7 +1057,7 @@ abstract public class AtomCollection {
         vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AF)}, 0, 0, 0, 0, 0);
         
     } catch (Exception e) {
-      Logger.error("AtomCollection.loadData error: " + e);
+      Logger.error("loadData error: " + e);
     }  
   }
   
@@ -1242,7 +1242,7 @@ abstract public class AtomCollection {
     boolean isMultiModel = ((mode & AtomData.MODE_FILL_MULTIMODEL) != 0);
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];
-      if (atom == null || atom.isDeleted() || !isMultiModel && atomData.modelIndex >= 0
+      if (isDeleted(atom) || !isMultiModel && atomData.modelIndex >= 0
           && atom.mi != atomData.firstModelIndex) {
         if (atomData.bsIgnored == null)
           atomData.bsIgnored = new BS();
@@ -2225,7 +2225,7 @@ abstract public class AtomCollection {
       boolean isType = (tokType == T.atomtype);
       String names = "," + specInfo + ",";
       for (int i = ac; --i >= 0;) {
-        if (at[i] == null)
+        if (isDeleted(at[i]))
           continue;
         String s = (isType ? at[i].getAtomType() : at[i].getAtomName());
         if (names.indexOf("," + s + ",") >= 0)
@@ -2234,13 +2234,13 @@ abstract public class AtomCollection {
       return bs;
     case T.atomno:
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].getAtomNumber() == iSpec)
+        if (!isDeleted(at[i]) && at[i].getAtomNumber() == iSpec)
           bs.set(i);
       }
       return bs;
     case T.bonded:
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].getCovalentBondCount() > 0)
+        if (!isDeleted(at[i]) && at[i].getCovalentBondCount() > 0)
           bs.set(i);
       }
       return bs;
@@ -2259,13 +2259,13 @@ abstract public class AtomCollection {
       //$FALL-THROUGH$
     case T.elemno:
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].getElementNumber() == iSpec)
+        if (!isDeleted(at[i]) && at[i].getElementNumber() == iSpec)
           bs.set(i);
       }
       return bs;
     case T.hetero:
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].isHetero())
+        if (!isDeleted(at[i]) && at[i].isHetero())
           bs.set(i);
       }
       return bs;
@@ -2273,7 +2273,7 @@ abstract public class AtomCollection {
       return getIdentifierOrNull((String) specInfo);
     case T.leadatom:
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].isLeadAtom())
+        if (!isDeleted(at[i]) && at[i].isLeadAtom())
           bs.set(i);
       }
       return bs;
@@ -2284,7 +2284,7 @@ abstract public class AtomCollection {
     case T.resno:
       // could be PDB type file with UNK
       for (int i = ac; --i >= 0;) {
-        if (at[i] != null && at[i].getResno() == iSpec)
+        if (!isDeleted(at[i]) && at[i].getResno() == iSpec)
           bs.set(i);
       }
       return bs;
@@ -2300,7 +2300,7 @@ abstract public class AtomCollection {
       int[] hs = new int[2];
       Atom a;
       for (int i = ac; --i >= 0;) {
-        if (at[i] == null)
+        if (isDeleted(at[i]))
           continue;
         int g = at[i].group.groupID;
         if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
@@ -2326,7 +2326,7 @@ abstract public class AtomCollection {
       // could be PDB type file with UNK or a modulated CIF file subsystem
       String spec = (String) specInfo;
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && isAltLoc(at[i].altloc, spec))
+        if (!isDeleted(at[i]) && isAltLoc(at[i].altloc, spec))
           bs.set(i);
       return bs;
     case T.spec_atom:
@@ -2338,7 +2338,7 @@ abstract public class AtomCollection {
       if (allowStar)
         atomSpec = atomSpec.substring(1);
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
+        if (!isDeleted(at[i]) && isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
           bs.set(i);
       return bs;
     case T.spec_chain:
@@ -2348,19 +2348,19 @@ abstract public class AtomCollection {
     case T.spec_resid:
       // could be PDB type file with UNK
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && at[i].group.groupID == iSpec)
+        if (!isDeleted(at[i]) && at[i].group.groupID == iSpec)
           bs.set(i);
       return bs;
     case T.spec_seqcode:
       return BSUtil.copy(getSeqcodeBits(iSpec, true));
     case T.inscode:
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && at[i].group.getInsCode() == iSpec)
+        if (!isDeleted(at[i]) && at[i].group.getInsCode() == iSpec)
           bs.set(i);
       return bs;
     case T.symop:
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && at[i].getSymOp() == iSpec)
+        if (!isDeleted(at[i]) && at[i].getSymOp() == iSpec)
           bs.set(i);
       return bs;
     }
@@ -2393,7 +2393,7 @@ abstract public class AtomCollection {
       for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
         bsTemp.set(at[i].getElementNumber());
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && bsTemp.get(at[i].getElementNumber()))
+        if (!isDeleted(at[i]) && bsTemp.get(at[i].getElementNumber()))
           bs.set(i);
       return bs;
     case T.group:
@@ -2410,7 +2410,7 @@ abstract public class AtomCollection {
       for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
         bsTemp.set(at[i].atomSite);
       for (int i = ac; --i >= 0;)
-        if (at[i] != null && bsTemp.get(at[i].atomSite))
+        if (!isDeleted(at[i]) && bsTemp.get(at[i].atomSite))
           bs.set(i);
       return bs;
     }
@@ -2432,7 +2432,7 @@ abstract public class AtomCollection {
     BS bsDone = BS.newN(ac);
     int id;
     for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
-      if (at[i] == null)
+      if (isDeleted(at[i]))
         continue;
       Chain chain = at[i].group.chain;
       if (chainID == (id = chain.chainID) || !caseSensitive 
@@ -2472,7 +2472,7 @@ abstract public class AtomCollection {
     switch (insCode) {
     case '?':
       for (int i = ac; --i >= 0;) {
-        if (at[i] == null)
+        if (isDeleted(at[i]))
           continue;
         int atomSeqcode = at[i].group.seqcode;
         if ((!haveSeqNumber 
@@ -2485,7 +2485,7 @@ abstract public class AtomCollection {
       break;
     default:
       for (int i = ac; --i >= 0;) {
-        if (at[i] == null)
+        if (isDeleted(at[i]))
           continue;
         int atomSeqcode = at[i].group.seqcode;
         if (seqcode == atomSeqcode || 
@@ -2559,7 +2559,7 @@ abstract public class AtomCollection {
         name = name.substring(1);
 
     for (int i = ac; --i >= 0;) {
-      if (at[i] == null)
+      if (isDeleted(at[i]))
         continue;
       String g3 = at[i].getGroup3(true);
       if (g3 != null && g3.length() > 0) {
@@ -2602,7 +2602,7 @@ abstract public class AtomCollection {
     BS bsResult = new BS();
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
-      if (atom == null)
+      if (isDeleted(atom))
         continue;
       float d = Measure.distanceToPlane(plane, atom);
       if (distance > 0 && d >= -0.1 && d <= distance || distance < 0
@@ -2621,7 +2621,7 @@ abstract public class AtomCollection {
     clearVisibleSets();
     bsAtoms.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i] != null && at[i].isVisible(Atom.ATOM_INFRAME))
+      if (!isDeleted(at[i]) && at[i].isVisible(Atom.ATOM_INFRAME))
         bsAtoms.set(i);
   }
 
@@ -2634,7 +2634,7 @@ abstract public class AtomCollection {
     }
     bsVisible.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i] != null && at[i].checkVisible())
+      if (!isDeleted(at[i]) && at[i].checkVisible())
         bsVisible.set(i);
     if (vwr.shm.bsSlabbedInternal != null)
       bsVisible.andNot(vwr.shm.bsSlabbedInternal);
@@ -2649,7 +2649,7 @@ abstract public class AtomCollection {
       return bsClickable;
     bsClickable.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i] != null && at[i].isClickable())
+      if (!isDeleted(at[i]) && at[i].isClickable())
         bsClickable.set(i);
     haveBSClickable = true;
     return bsClickable;
@@ -2887,6 +2887,10 @@ abstract public class AtomCollection {
     return (sym == null ? new Lst<P3>() : sym
         .generateCrystalClass(isRandom ? null : pt != null ? pt : at[atomIndex]));
 
+  }
+
+  public static boolean isDeleted(Atom atom) {
+    return (atom == null || atom.isDeleted());
   }
 
 
