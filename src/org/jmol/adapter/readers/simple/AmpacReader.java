@@ -27,6 +27,8 @@ package org.jmol.adapter.readers.simple;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
+import org.jmol.api.JmolAdapter;
+
 import javajs.util.P3;
 
 
@@ -35,7 +37,7 @@ import javajs.util.P3;
  *
  * @author Bob Hanson (hansonr@stolaf.edu)
  */
-public class AmpacReader extends AtomSetCollectionReader {
+public class AmpacReader extends InputReader {
 
   private int ac;
   private int freqAtom0 = -1;
@@ -50,6 +52,13 @@ public class AmpacReader extends AtomSetCollectionReader {
       readCoordinates();
       return true;
     }
+    if (line.indexOf("FINAL GEOMETRY OBTAINED") >= 0) {
+      if (!doGetModel(++modelNumber, null))
+        return checkLastModel();
+      readZmatrixCoordinates();
+      return true;
+    }
+   
     if (!doProcessLines)
       return true;
     if (line.indexOf("NET ATOMIC CHARGES") >= 0) {
@@ -61,6 +70,46 @@ public class AmpacReader extends AtomSetCollectionReader {
       return true;
     }
     return true;
+  }
+
+  private void readZmatrixCoordinates() throws Exception {
+    rd();
+    rd();
+    rd();
+    setFractionalCoordinates(false);
+    while (rd() != null && line.length() >= 50) {
+      Atom atom = new Atom();
+      vAtoms.addLast(atom);
+      atom.x = parseFloatRange(line, 4, 16);
+      atom.y = parseFloatRange(line, 19, 31);
+      atom.z = parseFloatRange(line, 34, 46);
+      if (line.length() > 48 && ac < 3 || line.charAt(48) != '0') {
+        // internal coordinates
+        switch (ac) {
+        case 0:
+          break;
+        case 1:
+          atom.sub(vAtoms.get(0));
+          break;
+        case 2:
+          setAtom(atom, 0, 1, 0, atom.x, atom.y, Float.MAX_VALUE);
+          break;
+        default:
+          setAtom(atom, parseIntRange(line, 50, 54) - 1,
+              parseIntRange(line, 54, 58) - 1, parseIntRange(line, 58, 62) - 1,
+              atom.x, atom.y, atom.z);
+        }
+      }
+      String sym = line.substring(1, 4).trim();
+      atom.elementSymbol = sym;
+      ac++;
+      int len = line.length();
+      if (len > 64)
+        atom.partialCharge = parseFloatRange(line, 64, len);
+      if (JmolAdapter.getElementNumber(sym) != 0)
+        asc.addAtom(atom);
+      setAtomCoord(atom);
+    }
   }
 
   /**

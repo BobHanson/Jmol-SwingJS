@@ -1286,7 +1286,7 @@ public class XtalSymmetry {
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
         if (bsAtoms != null) {
           skipping = !bsAtoms.get(iAtom);
-        } else if (chains != null && lastID >= 0
+        } else if (chains != null 
             && (id = atoms[iAtom].chainID) != lastID) {
           skipping = (chains
               .indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
