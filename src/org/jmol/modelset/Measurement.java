@@ -274,18 +274,6 @@ public class Measurement {
     return formatString(f, newUnits, label);
   }
 
-  public static String fixUnits(String units) {
-    if (units.equals("nanometers"))
-      return "nm";
-    else if (units.equals("picometers"))
-      return "pm";
-    else if (units.equals("angstroms"))
-      return "\u00C5";
-    else if (units.equals("vanderwaals") || units.equals("vdw"))
-      return "%";
-    return units;
-  }
-
   /**
    * 
    * @param units  final units
@@ -620,7 +608,25 @@ public class Measurement {
       return dist / 100;
     if (units.equals("au"))
       return dist * JC.ANGSTROMS_PER_BOHR;
-    return dist;
+    if (units.equals("\u00C5"))
+      return dist;
+    return 0;
+  }
+
+  public static String fixUnits(String u) {
+    u = (u.equals("\u00C5") ? u : u.toLowerCase());
+    String units = (u.endsWith("s") ? u.substring(0, u.length() - 1) : u);
+    if (units.equals("nanometer"))
+      return "nm";
+    else if (units.equals("bohr") || units.equals("atomicunits") || units.equals("atomic"))
+      return "au";
+    else if (units.equals("picometer"))
+      return "pm";
+    else if (units.equals("angstrom") || units.equals("a") || units.equals("ang"))
+      return "\u00C5";
+    else if (units.equals("vanderwaal") || units.equals("vdw"))
+      return "%";
+    return u;
   }
 
 

@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2018-07-22 20:29:48 -0500 (Sun, 22 Jul 2018) $
- * $Revision: 21922 $
+ * $Date: 2021-01-05 12:09:21 -0600 (Tue, 05 Jan 2021) $
+ * $Revision: 22083 $
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
@@ -30,6 +30,9 @@ import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+import org.openscience.jmol.app.jmolpanel.GuiMap;
+import org.openscience.jmol.app.jmolpanel.JmolPanel;
+
 import java.awt.GridLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -80,6 +83,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   boolean showAxes;
   boolean showBoundingBox;
   boolean axesOrientationRasmol;
+  boolean antialiasDisplay;
+  boolean measureAngstroms;
   boolean openFilePreview;
   boolean clearHistory;
   int fontScale = 1;
@@ -96,6 +101,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JCheckBox cH, cM;
   private JCheckBox cbPerspectiveDepth;
   private JCheckBox cbShowAxes, cbShowBoundingBox;
+  private JCheckBox cbAntialias, cbMeasureAngstroms;
   private JCheckBox cbAxesOrientationRasmol;
   private JCheckBox cbOpenFilePreview;
   private JCheckBox cbClearHistory;
@@ -111,6 +117,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   final static String[] jmolDefaults = { "jmolDefaults", "true",
       "showHydrogens", "true", "showMeasurements", "true", "perspectiveDepth",
       "true", "showAxes", "false", "showBoundingBox", "false",
+      "antialiasDisplay", "true", "measureAngstroms", "true",
       "axesOrientationRasmol", "false", "openFilePreview", "true", "autoBond",
       "true", "percentVdwAtom", "" + JC.DEFAULT_PERCENT_VDW_ATOM, "marBond",
       "" + JC.DEFAULT_BOND_MILLIANGSTROM_RADIUS, "minBondDistance",
@@ -224,7 +231,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     JPanel fooPanel = new JPanel();
     fooPanel.setBorder(new TitledBorder(""));
-    fooPanel.setLayout(new GridLayout(2, 1));
+    fooPanel.setLayout(new GridLayout(3, 3));
 
     cbPerspectiveDepth = guimap.newJCheckBox("Prefs.perspectiveDepth",
         vwr.tm.perspectiveDepth);
@@ -234,6 +241,14 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cbShowAxes = guimap.newJCheckBox("Prefs.showAxes", vwr.getShowAxes());
     cbShowAxes.addItemListener(checkBoxListener);
     fooPanel.add(cbShowAxes);
+
+    cbMeasureAngstroms = guimap.newJCheckBox("Prefs.measureAngstroms", vwr.g.measureDistanceUnits.equals("angstroms"));
+    cbMeasureAngstroms.addItemListener(checkBoxListener);
+    fooPanel.add(cbMeasureAngstroms);
+
+    cbAntialias = guimap.newJCheckBox("Prefs.antialiasDisplay", vwr.g.antialiasDisplay);
+    cbAntialias.addItemListener(checkBoxListener);
+    fooPanel.add(cbAntialias);
 
     cbShowBoundingBox = guimap.newJCheckBox("Prefs.showBoundingBox",
         vwr.getShowBbcage());
@@ -554,6 +569,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cbPerspectiveDepth.setSelected(vwr.tm.perspectiveDepth);
     cbShowAxes.setSelected(vwr.getShowAxes());
     cbShowBoundingBox.setSelected(vwr.getShowBbcage());
+    String s = vwr.g.measureDistanceUnits;
+    cbMeasureAngstroms.setSelected(s.equals("angstroms"));
+    cbAntialias.setSelected(vwr.getBooleanProperty("antialiasDisplay"));
 
     cbAxesOrientationRasmol
         .setSelected(vwr.getBoolean(T.axesorientationrasmol));
@@ -652,7 +670,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     openFilePreview = Boolean
         .parseBoolean(currentProperties.getProperty("openFilePreview", "true"));
     clearHistory = getBoolean("clearHistory");
-
+    antialiasDisplay = getBoolean("antialiasDisplay");
+    measureAngstroms = getBoolean("measureAngstroms");
     minBondDistance = Float.parseFloat(getProp("minBondDistance"));
     bondTolerance = Float.parseFloat(getProp("bondTolerance"));
     marBond = Short.parseShort(getProp("marBond"));
@@ -677,7 +696,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.setBooleanProperty("showAxes", showAxes);
     vwr.setBooleanProperty("showBoundBox", showBoundingBox);
     vwr.setBooleanProperty("axesOrientationRasmol", axesOrientationRasmol);
-
+    vwr.setBooleanProperty("antialiasDisplay", antialiasDisplay);
+    vwr.setStringProperty("measurementUnits", measureAngstroms ? "angstroms" : "nm");
     jmol.updateConsoleFont();
 
   }
@@ -731,6 +751,14 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         showMeasurements = isSelected;
         vwr.setBooleanProperty("showMeasurements", showMeasurements);
         currentProperties.put("showMeasurements", strSelected);
+      } else if (key.equals("Prefs.antialiasDisplay")) {
+        antialiasDisplay = isSelected;
+        vwr.setBooleanProperty("antialiasDisplay", antialiasDisplay);
+        currentProperties.put("antialiasDisplay", strSelected);
+      } else if (key.equals("Prefs.measureAngstroms")) {
+        measureAngstroms = isSelected;
+        vwr.setStringProperty("measurementUnits", measureAngstroms ? "angstroms" : "nm");
+        currentProperties.put("measureAngstroms", strSelected);
       } else if (key.equals("Prefs.perspectiveDepth")) {
         perspectiveDepth = isSelected;
         vwr.setBooleanProperty("perspectiveDepth", perspectiveDepth);

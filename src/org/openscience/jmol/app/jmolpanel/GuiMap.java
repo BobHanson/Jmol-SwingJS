@@ -77,11 +77,11 @@ public class GuiMap {
     labels.put("openmol", GT.$("Get &MOL"));
     labels.put("reloadScript", GT.$("&Reload"));
 
-    labels.put("spectrumMenu", "&Spectra");
+    labels.put("spectrumMenu", GT.$("&Spectra"));
 
     labels.put("openJSpecViewScript", "JSpecView");
-    labels.put("simulate1HSpectrumScript", "Simulated 1H Spectrum");
-    labels.put("simulate13CSpectrumScript", "Simulated 13C Spectrum");
+    labels.put("simulate1HSpectrumScript", GT.$("Simulated 1H Spectrum"));
+    labels.put("simulate13CSpectrumScript", GT.$("Simulated 13C Spectrum"));
 
     labels.put("editor", GT.$("Scrip&t Editor...")); // new %t 11.7.45
     labels.put("console", GT.$("Conso&le..."));
@@ -229,6 +229,8 @@ public class GuiMap {
     labels.put("Prefs.perspectiveDepth", GT.$("Perspective Depth"));
     labels.put("Prefs.showAxes", GT.$("Axes"));
     labels.put("Prefs.showBoundingBox", GT.$("Bounding Box"));
+    labels.put("Prefs.measureAngstroms", GT.$("Measurements") + " Angstroms");
+    labels.put("Prefs.antialiasDisplay", "set antialiasDisplay");
     labels.put("Prefs.axesOrientationRasmol",
         GT.$("RasMol/Chime compatible axes orientation/rotations"));
     labels.put("Prefs.openFilePreview",

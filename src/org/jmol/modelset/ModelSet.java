@@ -223,6 +223,7 @@ public class ModelSet extends BondCollection {
 
   protected void releaseModelSet() {
     am = null;
+    mc = 0;
     closest[0] = null;
     /*
      * Probably unnecessary, but here for general accounting.
@@ -238,7 +239,6 @@ public class ModelSet extends BondCollection {
      * Bob Hanson 11/7/07
      * 
      */
-    am = null;
     bsSymmetry = null;
     bsAll = null;
     unitCells = null;
@@ -1680,7 +1680,7 @@ public class ModelSet extends BondCollection {
   }
 
   public boolean isJmolDataFrameForModel(int modelIndex) {
-    return (modelIndex >= 0 && modelIndex < mc && am[modelIndex].isJmolDataFrame);
+    return (am != null && modelIndex >= 0 && modelIndex < mc && am[modelIndex].isJmolDataFrame);
   }
 
   private boolean isJmolDataFrameForAtom(Atom atom) {

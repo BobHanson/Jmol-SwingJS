@@ -3604,7 +3604,7 @@ public class ScriptEval extends ScriptExpr {
       if (text != null)
         setShapeProperty(JC.SHAPE_ECHO, "text", text);
     }
-    if (doRefresh && vwr.getRefreshing() && text != null && !text.equals("%SCALE"))
+    if (doRefresh && vwr.getRefreshing() && text != null && !text.startsWith("%SCALE"))
       showString(vwr.formatText(text));
   }
 

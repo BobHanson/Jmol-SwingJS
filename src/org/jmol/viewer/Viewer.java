@@ -10698,31 +10698,38 @@ public class Viewer extends JmolViewer
   /**
    * Depending upon the measure text, we need to indicate
    * |-------| 1 A or 0.1 A for example.
-   * 
+   * @param units 
+   * @param isAntialiased 
+   * @param retPixels return bar length in pixels
    * @return text
    */
-  public String getScaleText(int[] retPixels) {
+  public String getScaleText(String units, boolean isAntialiased, int[] retPixels) {
     String u = Measurement
-        .fixUnits(g.measureDistanceUnits.equals("vdw") ? "angstroms"
+        .fixUnits(units.length() > 0 ? units.toLowerCase() : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
+    if (Measurement.fromUnits(1, u) == 0) {
+      // unrecognized units
+      u = Measurement.fixUnits(g.measureDistanceUnits);
+    }
     float d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
-    float f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1);
+    float af = (!tm.perspectiveDepth && isAntialiased ? 2f : 1f);
+    float f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
-    float e = 0;
-    int min = (g.antialiasDisplay ? 30 : 15);
+    float e = 0, mp = 0;
+    int min = 15;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
-      e = Measurement.fromUnits((float) Math.pow(10, m) + 0.000001f, u);
+      mp = (float) Math.pow(10, m);
+      e = Measurement.fromUnits(mp + 0.000001f, u);
       p = (int) (e * tm.scalePixelsPerAngstrom * f);
       if (p < min) {
         d *= 10;
       }
     }
-    String se = (m >= 0 ? " " + (int) e + " "
+    String se = (m >= 0 ? " " + (int) mp + " "
         : " 0." + "000000000".substring(0, -1 - m) + "1 ");
-    //System.out.println("vwr " + d + " p=" + p + " " + se + " " + u);
     retPixels[0] = p;
     return se + u;
   }

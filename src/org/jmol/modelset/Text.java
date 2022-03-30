@@ -137,9 +137,11 @@ public class Text {
   }
 
   public void setText(String text) {
-    if (image != null)
+    if (image != null) {
       getFontMetrics();
-    image = null;
+      image = null;
+    }
+    barPixels = 0;
     if (text != null && text.length() == 0)
       text = null;
     if (this.text != null && this.text.equals(text))
@@ -221,10 +223,10 @@ public class Text {
     if (doFormatText) {
       text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
       recalc();
-    } else if ("%SCALE".equals(textUnformatted)) {
+    } else if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
       int[] retPixels = new int[1];
-      text = vwr.getScaleText(retPixels);
-      barPixels = retPixels[0];
+      text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, retPixels);
+      barPixels = retPixels[0] * (int) imageFontScaling;
       recalc();
     }
     float dx = offsetX * imageFontScaling;

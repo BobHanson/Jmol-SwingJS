@@ -524,7 +524,7 @@ public class GlobalSettings {
   //rendering
 
   int infoFontSize = 20;
-  boolean antialiasDisplay = false;
+  public boolean antialiasDisplay = false;
   boolean antialiasImages = true;
   boolean imageState = true;
   boolean antialiasTranslucent = true;

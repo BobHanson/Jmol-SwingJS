@@ -1275,18 +1275,22 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
     setScreeni(pointA, sA);
     setScreeni(pointB, sB);
-    line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
-    if (isAntialiased()) {
-      if (Math.abs(pointA.x - pointB.x) < Math.abs(pointA.y - pointB.y)) {
+    drawLineABBits(run, rise, true);
+  }
+
+  public void drawLineABBits(int run, int rise, boolean andClip) {
+    line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, andClip);
+//    if (true || isAntialiased()) {
+      if (Math.abs(sA.x - sB.x) < Math.abs(sA.y - sB.y)) {
         sA.x += 1;
         sB.x += 1;
-        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, andClip);
       } else {
         sA.y += 1;
         sB.y += 1;
-        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, true);
+        line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, run, rise, andClip);
       }
-    }
+//    }
   }
 
   private void setScreeni(P3 pt, P3i p) {
@@ -1330,8 +1334,11 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
   
   @Override
-  public void drawLinePixels(P3i sA, P3i sB) {
-    line3d.plotLineBits(argbCurrent, argbCurrent, sA, sB, 0, 0, false);
+  public void drawLinePixels(P3i a, P3i b) {
+    sA.setT(a);
+    sB.setT(b);
+    sA.z = sB.z = slab + 2;
+    drawLineABBits(0,  0,  false);
   }
   
 

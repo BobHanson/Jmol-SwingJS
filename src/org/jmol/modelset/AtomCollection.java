@@ -206,6 +206,7 @@ abstract public class AtomCollection {
   
   
   protected void releaseModelSetAC() {
+    ac = 0;
     at = null;
     vwr = null;
     g3d = null;

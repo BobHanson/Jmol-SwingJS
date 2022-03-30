@@ -54,11 +54,6 @@ class TextRenderer {
       return false;
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     // draw the box if necessary; colix has been set
-//    if ("%SCALE".equals(text.textUnformatted)) {
-//      renderScale(text);
-//      return false;
-//    }
-//
     if (text.image == null) {
       // text colix will be opaque, but we need to render it in translucent pass 
       // now set x and y positions for text from (new?) box position
