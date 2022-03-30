@@ -93,6 +93,9 @@ public abstract class TextShape extends Shape {
     }
 
     if ("delete" == propertyName) {
+      if (value instanceof Text) {
+        currentObject = (Text) value;
+      }
       if (currentObject != null) {
         objects.remove(currentObject.target);
         currentObject = null;

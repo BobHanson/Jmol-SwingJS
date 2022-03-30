@@ -105,7 +105,7 @@ public class Text {
     t.zSlab = Integer.MIN_VALUE;
     return t;
   }
-
+  
   private void set(Font font, short colix, int align,
                    float scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
@@ -342,7 +342,7 @@ public class Text {
       float x = (movableXPercent != Integer.MAX_VALUE ? movableXPercent
           * windowWidth / 100 : is3dEcho ? movableX : movableX * scale);
       float offsetX = this.offsetX * scale;
-      xLeft = xRight = xCenter = x + offsetX;
+      xLeft = xRight = xCenter = x + offsetX + barPixels;
     } else {
       xLeft = 5 * scale;
       xCenter = (windowWidth + barPixels) / 2;

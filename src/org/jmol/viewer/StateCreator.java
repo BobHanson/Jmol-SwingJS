@@ -1157,12 +1157,10 @@ public class StateCreator extends JmolStateCreator {
     case JC.SHAPE_ECHO:
       Echo es = (Echo) shape;
       SB sb = new SB();
-      sb.append("\n  set echo off;\n");
+      sb.append("\n  set echo off;set echo \"%SCALE\" off;\n");
+      getEchoState(sb, es.scaleObject);
       for (Text t : es.objects.values()) {
-        sb.append(getTextState(t));
-        if (t.hidden)
-          sb.append("  set echo ID ").append(PT.esc(t.target))
-              .append(" hidden;\n");
+        getEchoState(sb, t);
       }
       s = sb.toString();
       break;
@@ -1342,14 +1340,14 @@ public class StateCreator extends JmolStateCreator {
     return s;
   }
 
-  private String getTextState(Text t) {
-    SB s = new SB();
-    // ECHO "%SCALE"
-    String text = (t.barPixels > 0 ? t.textUnformatted : t.text); 
+  private void getEchoState(SB sb, Text t) {
+    // ECHO "%SCALE" uses unformatted text
+    boolean isScale = (t != null && t.barPixels > 0);
+    String text = (t == null ? null : isScale ? t.textUnformatted : t.text); 
     if (text == null || !t.isEcho || t.target.equals("error"))
-      return "";
+      return;
     //set echo top left
-    //set echo myecho x y
+    //set echo ID myecho x y
     //echo .....
     boolean isImage = (t.image != null);
     //    if (isDefine) {
@@ -1370,40 +1368,40 @@ public class StateCreator extends JmolStateCreator {
     case JC.ECHO_XYZ:
       if (strOff == null)
         strOff = Escape.eP(t.xyz);
-      s.append("  ").append(echoCmd).append(" ").append(strOff);
+      sb.append("  ").append(echoCmd).append(" ").append(strOff);
       if (t.align != JC.TEXT_ALIGN_LEFT)
-        s.append(";  ").append(echoCmd).append(" ").append(
+        sb.append(";  ").append(echoCmd).append(" ").append(
             JC.getHorizAlignmentName(t.align));
       break;
     default:
-      s.append("  set echo ").append(JC.getEchoName(t.valign)).append(" ")
+      sb.append("  set echo ").append(JC.getEchoName(t.valign)).append(" ")
           .append(JC.getHorizAlignmentName(t.align));
     }
     if (t.movableZPercent != Integer.MAX_VALUE)
-      s.append(";  ").append(echoCmd).append(" depth ").appendI(
+      sb.append(";  ").append(echoCmd).append(" depth ").appendI(
           t.movableZPercent);
     if (isImage)
-      s.append("; ").append(echoCmd).append(" IMAGE /*file*/");
+      sb.append("; ").append(echoCmd).append(" IMAGE /*file*/");
     else
-      s.append("; echo ");
-    s.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
-    s.append(";\n");
+      sb.append("; echo ");
+    sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
+    sb.append(";\n");
     if (isImage && t.imageScale != 1)
-      s.append("  ").append(echoCmd).append(" scale ").appendF(t.imageScale)
+      sb.append("  ").append(echoCmd).append(" scale ").appendF(t.imageScale)
           .append(";\n");
     if (t.script != null)
-      s.append("  ").append(echoCmd).append(" script ").append(
+      sb.append("  ").append(echoCmd).append(" script ").append(
           PT.esc(t.script)).append(";\n");
     if (t.modelIndex >= 0)
-      s.append("  ").append(echoCmd).append(" model ").append(
+      sb.append("  ").append(echoCmd).append(" model ").append(
           vwr.getModelNumberDotted(t.modelIndex)).append(";\n");
     if (t.pointerPt != null) {
-      s.append("  ").append(echoCmd).append(" point ").append(
+      sb.append("  ").append(echoCmd).append(" point ").append(
           t.pointerPt instanceof Atom ? "({" + ((Atom) t.pointerPt).i
               + "})" : Escape.eP(t.pointerPt)).append(";\n");
     }
     if (t.pymolOffset != null) {
-      s.append("  ").append(echoCmd).append(" offset ").append(
+      sb.append("  ").append(echoCmd).append(" offset ").append(
           Escape.escapeFloatA(t.pymolOffset, true)).append(";\n");
     }
     //    }
@@ -1416,19 +1414,22 @@ public class StateCreator extends JmolStateCreator {
     //    if (isDefine != target.equals("top"))
     //      return s.toString();
     // these may not change much:
-    t.appendFontCmd(s);
-    s.append("; color echo");
+    t.appendFontCmd(sb);
+    sb.append("; color echo");
     if (C.isColixTranslucent(t.colix))
-      s.append(C.getColixTranslucencyLabel(t.colix));
-    s.append(" ").append(C.getHexCode(t.colix));
+      sb.append(C.getColixTranslucencyLabel(t.colix));
+    sb.append(" ").append(C.getHexCode(t.colix));
     if (t.bgcolix != 0) {
-      s.append("; color echo background ");
+      sb.append("; color echo background ");
       if (C.isColixTranslucent(t.bgcolix))
-        s.append(C.getColixTranslucencyLabel(t.bgcolix)).append(" ");
-      s.append(C.getHexCode(t.bgcolix));
+        sb.append(C.getColixTranslucencyLabel(t.bgcolix)).append(" ");
+      sb.append(C.getHexCode(t.bgcolix));
     }
-    s.append(";\n");
-    return s.toString();
+    sb.append(";\n");
+    if (t.hidden)
+      sb.append("  set echo ID ").append(PT.esc(t.target))
+          .append(" hidden;\n");
+    return;
   }
 
   @Override

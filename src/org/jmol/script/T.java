@@ -279,6 +279,7 @@ public class T {
 //public final static int label        see mathfunc
   public final static int message      = 5 /* must be odd */ | implicitStringCommand;
   public final static int pause        = 7 /* must be odd */ | implicitStringCommand;
+  public final static int scale        = 1 | scriptCommand | setparam;
 
   //these commands control flow
   //sorry about GOTO!
@@ -357,13 +358,13 @@ public class T {
   public final static int resume       = scriptCommand | 47;
   public final static int rotate       = scriptCommand | 48 | defaultON;
   public final static int rotateSelected = scriptCommand | 49;
-  public final static int save  = scriptCommand | 50;
+  public final static int save           = scriptCommand | 50;
 //public final static int script   see mathfunc
-  public final static int selectionhalos = scriptCommand | 51 | deprecatedparam | defaultON;
+  public final static int selectionhalos = scriptCommand | 52 | deprecatedparam | defaultON;
 // public final static int show     see mathfunc
-  public final static int slab  = scriptCommand | 53 | intparam | defaultON;
+  public final static int slab         = scriptCommand | 53 | intparam | defaultON;
   public final static int spin         = scriptCommand | 55 | deprecatedparam | defaultON;
-  public final static int ssbond = scriptCommand | 56 | deprecatedparam | defaultON;
+  public final static int ssbond       = scriptCommand | 56 | deprecatedparam | defaultON;
   public final static int step         = scriptCommand | 58 | noArgs;
   public final static int stereo       = scriptCommand | 59 | defaultON;
 //public final static int structure    see intproperty
@@ -1334,7 +1335,6 @@ public class T {
   public final static int rubberband     = misc  | 310;
   public final static int sasurface      = misc  | 311;
   public final static int saved          = misc  | 312;
-  public final static int scale          = misc  | 314;
   public final static int scene          = misc  | 315; // Jmol 12.3.32
   public final static int selection      = misc  | 316;
   public final static int shapely        = misc  | 320;

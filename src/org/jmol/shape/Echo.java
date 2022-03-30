@@ -36,6 +36,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.util.C;
+import org.jmol.util.Font;
 import org.jmol.viewer.JC;
 
 public class Echo extends TextShape {
@@ -53,7 +54,9 @@ public class Echo extends TextShape {
   private final static String FONTFACE = "Serif";
   private final static int FONTSIZE = 20;
   private final static short COLOR = C.RED;
-    
+
+  public Text scaleObject;
+  
   @Override
   public void initShape() {
     setProperty("target", "top", null);
@@ -61,6 +64,102 @@ public class Echo extends TextShape {
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
+
+    if ("thisID" == propertyName) {
+      if (value == null) {
+        currentObject = null;
+        return;
+      }
+      String target = (String) value;
+      currentObject = objects.get(target);
+      if (currentObject == null && PT.isWild(target))
+        thisID = target.toUpperCase();
+      return;
+    }
+
+    if ("%SCALE" == propertyName) {
+      currentObject = scaleObject = (Text) value;
+      return;
+    }
+
+    if ("color" == propertyName || "font" == propertyName) {
+      if (scaleObject != null && currentObject == scaleObject) {
+        Font f = currentFont;
+        Object c = currentColor;
+        setPropTS(propertyName, value, bs);
+        currentFont = f;
+        currentColor = c;
+        return;
+      }
+      // continue to TextShape
+    }
+
+    if ("off" == propertyName) {
+      if (currentObject == scaleObject) {
+        currentObject = scaleObject = null;
+        return;
+      }
+      // continue to TextShape
+    }
+
+    if ("text" == propertyName) {
+      if (((String) value).startsWith("%SCALE")) {
+        setPropTS("text", value, null);
+        scaleObject = currentObject;
+        setPropTS("delete", scaleObject, null);
+        currentObject = scaleObject;
+        return;
+      }
+      // continue to TextShape
+    }
+    if ("target" == propertyName) {
+      thisID = null;
+      if ("%SCALE".equals(value)) {
+        currentObject = scaleObject;
+        return;
+      }
+      String target = ((String) value).intern().toLowerCase();
+      if (target != "none" && target != "all") {
+        isAll = false;
+        Text text = objects.get(target);
+        if (text == null) {
+          int valign = JC.ECHO_XY;
+          int halign = JC.TEXT_ALIGN_LEFT;
+          if ("top" == target) {
+            valign = JC.ECHO_TOP;
+            halign = JC.TEXT_ALIGN_CENTER;
+          } else if ("middle" == target) {
+            valign = JC.ECHO_MIDDLE;
+            halign = JC.TEXT_ALIGN_CENTER;
+          } else if ("bottom" == target) {
+            valign = JC.ECHO_BOTTOM;
+          } else if ("error" == target) {
+            valign = JC.ECHO_TOP;
+          }
+          if (scaleObject != null && scaleObject.valign == valign
+              && scaleObject.align == halign) {
+            text = scaleObject;
+          } else {
+            text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
+                target, COLOR, valign, halign, 0);
+            text.adjustForWindow = true;
+            objects.put(target, text);
+            if (currentFont != null)
+              text.setFont(currentFont, true);
+            if (currentColor != null)
+              text.colix = C.getColixO(currentColor);
+            if (currentBgColor != null)
+              text.bgcolix = C.getColixO(currentBgColor);
+            if (currentTranslucentLevel != 0)
+              text.setTranslucent(currentTranslucentLevel, false);
+            if (currentBgTranslucentLevel != 0)
+              text.setTranslucent(currentBgTranslucentLevel, true);
+          }
+        }
+        currentObject = text;
+        return;
+      }
+    }
 
     if ("scalereference" == propertyName) {
       if (currentObject != null) {
@@ -79,10 +178,11 @@ public class Echo extends TextShape {
       }
       return;
     }
+
     if ("xyz" == propertyName) {
       if (currentObject != null && vwr.getBoolean(T.fontscaling))
-        currentObject.setScalePixelsPerMicron(vwr
-            .getScalePixelsPerAngstrom(false) * 10000f);
+        currentObject.setScalePixelsPerMicron(
+            vwr.getScalePixelsPerAngstrom(false) * 10000f);
       // continue on to Object2d setting
     }
 
@@ -95,6 +195,7 @@ public class Echo extends TextShape {
       }
       return;
     }
+
     if ("image" == propertyName) {
       if (currentObject != null) {
         (currentObject).setImage(value);
@@ -102,13 +203,6 @@ public class Echo extends TextShape {
         for (Text t : objects.values())
           t.setImage(value);
       }
-      return;
-    }
-    if ("thisID" == propertyName) {
-      String target = (String) value;
-      currentObject = objects.get(target);
-      if (currentObject == null && PT.isWild(target))
-        thisID = target.toUpperCase();
       return;
     }
 
@@ -188,47 +282,7 @@ public class Echo extends TextShape {
       }
       return;
     }
-    
-    if ("target" == propertyName) {
-      thisID = null;
-      String target = ((String) value).intern().toLowerCase();
-      if (target != "none" && target != "all") {
-        isAll = false;
-        Text text = objects.get(target);
-        if (text == null) {
-          int valign = JC.ECHO_XY;
-          int halign = JC.TEXT_ALIGN_LEFT;
-          if ("top" == target) {
-            valign = JC.ECHO_TOP;
-            halign = JC.TEXT_ALIGN_CENTER;
-          } else if ("middle" == target) {
-            valign = JC.ECHO_MIDDLE;
-            halign = JC.TEXT_ALIGN_CENTER;
-          } else if ("bottom" == target) {
-            valign = JC.ECHO_BOTTOM;
-          } else if ("error" == target) {
-            valign = JC.ECHO_TOP;
-          }
-          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
-              target, COLOR, valign, halign, 0);
-          text.adjustForWindow = true;
-          objects.put(target, text);
-          if (currentFont != null)
-            text.setFont(currentFont, true);
-          if (currentColor != null)
-            text.colix = C.getColixO(currentColor);
-          if (currentBgColor != null)
-            text.bgcolix = C.getColixO(currentBgColor);
-          if (currentTranslucentLevel != 0)
-            text.setTranslucent(currentTranslucentLevel, false);
-          if (currentBgTranslucentLevel != 0)
-            text.setTranslucent(currentBgTranslucentLevel, true);
-        }
-        currentObject = text;
-        return;
-      }
-    }
-    
+
     setPropTS(propertyName, value, null);
   }
 
@@ -236,6 +290,10 @@ public class Echo extends TextShape {
   public boolean getPropertyData(String property, Object[] data) {
     if ("currentTarget" == property) {
       return (currentObject != null && (data[0] = currentObject.target) != null);
+    }
+    if (property == "%SCALE") {
+      data[0] = scaleObject;
+      return (data[0] != null);
     }
     if (property == "checkID") {
       String key = ((String) data[0]).toUpperCase();

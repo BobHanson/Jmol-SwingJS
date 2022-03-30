@@ -26,33 +26,32 @@ package org.jmol.viewer;
 
 import java.util.Map;
 
-
 import org.jmol.api.Interface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
-import org.jmol.util.GData;
 import org.jmol.util.Edge;
-
+import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
+import org.jmol.util.Vibration;
 
+import javajs.util.BS;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
-import org.jmol.util.Vibration;
 
 public class ShapeManager {
 
   private ModelSet ms;
   public Shape[] shapes;
   public Viewer vwr;
+  private Object scaleText;
 
   public ShapeManager(Viewer vwr) {
     this.vwr = vwr;
@@ -65,7 +64,7 @@ public class ShapeManager {
    * 
    */
   public void setParallel() {
-    resetShapes();
+    resetShapes(false);
     loadDefaultShapes(vwr.ms);
   }
   
@@ -156,9 +155,21 @@ public class ShapeManager {
       shapes[shapeID] = null;  
   }
   
-  public void resetShapes() {
-//    if (!vwr.noGraphicsAllowed)  ?? Why this?? We need shapes!
-      shapes = new Shape[JC.SHAPE_MAX];
+  public void setScale() {
+    if (scaleText != null) {
+      loadShape(JC.SHAPE_ECHO);
+      setShapePropertyBs(JC.SHAPE_ECHO, "%SCALE", scaleText, null);
+      scaleText = null;
+    }
+  }
+
+  public void resetShapes(boolean cacheScale) {
+    if (cacheScale) {
+      Object[] data = new Object[1];
+      getShapePropertyData(JC.SHAPE_ECHO, "%SCALE", data);
+      scaleText = data[0];
+    }
+    shapes = new Shape[JC.SHAPE_MAX];
   }
   
   /**

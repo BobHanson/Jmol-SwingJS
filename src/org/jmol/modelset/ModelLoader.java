@@ -1579,7 +1579,7 @@ public final class ModelLoader {
     ms.sm.setModelSet(ms);
     ms.setBsHidden(vwr.slm.getHiddenSet());
     if (!merging)
-      ms.sm.resetShapes();
+      ms.sm.resetShapes(false);
     ms.sm.loadDefaultShapes(ms);
     if (ms.someModelsHaveAromaticBonds && vwr.getBoolean(T.smartaromatic))      
       ms.assignAromaticBondsBs(false, null);

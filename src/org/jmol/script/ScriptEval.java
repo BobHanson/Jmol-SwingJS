@@ -40,6 +40,7 @@ import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
+import org.jmol.modelset.Measurement;
 import org.jmol.modelset.TickInfo;
 import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
@@ -2602,6 +2603,9 @@ public class ScriptEval extends ScriptExpr {
     case T.prompt:
       cmdPrompt();
       break;
+    case T.scale:
+      cmdScale(1);
+      break;
     case T.undo:
     case T.redo:
     case T.redomove:
@@ -3148,8 +3152,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.setBackgroundImage(null, null);
       return;
     }
-    int iShape = getShapeType(theTok);
-    colorShape(iShape, i + 1, true);
+    colorShape(-theTok, i + 1, true);
   }
 
   private void cmdBind() throws ScriptException {
@@ -3406,7 +3409,7 @@ public class ScriptEval extends ScriptExpr {
         break;
       }
     }
-    colorShape(getShapeType(theTok), i, false);
+    colorShape(-theTok, i, false);
   }
 
   private void cmdDefine() throws ScriptException {
@@ -4028,13 +4031,12 @@ public class ScriptEval extends ScriptExpr {
       if (!isFloatParameter(2))
         error(ERROR_numberExpected);
       fontsize = floatParameter(2);
-      shapeType = getShapeType(getToken(1).tok);
+      shapeType = -1;
       break;
     case 3:
       if (!isFloatParameter(2))
         error(ERROR_numberExpected);
       if (shapeType == -1) {
-        shapeType = getShapeType(getToken(1).tok);
         fontsize = floatParameter(2);
       } else {// labels --- old set fontsize N
         if (fontsize >= 1)
@@ -4052,6 +4054,10 @@ public class ScriptEval extends ScriptExpr {
       }
       bad();
     }
+    boolean isScale = (tokAt(1) == T.scale);
+    if (shapeType == -1)
+      shapeType = (isScale ? JC.SHAPE_ECHO : getShapeType(getToken(1).tok));
+
     if (shapeType == JC.SHAPE_LABELS) {
       if (fontsize < 0 || fontsize >= 1 && (fontsize < JC.LABEL_MINIMUM_FONTSIZE
           || fontsize > JC.LABEL_MAXIMUM_FONTSIZE)) {
@@ -4075,10 +4081,14 @@ public class ScriptEval extends ScriptExpr {
       value = Float.valueOf(fontsize);
     }
     sm.loadShape(shapeType);
+    if (isScale)
+      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");
     setShapeProperty(shapeType, name, value);
     if (scaleAngstromsPerPixel >= 0)
       setShapeProperty(shapeType, "scalereference",
-          Float.valueOf(scaleAngstromsPerPixel));
+          Float.valueOf(scaleAngstromsPerPixel));    
+    if (isScale)
+      setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
   }
 
   private void cmdFrank(int i) throws ScriptException {
@@ -7135,7 +7145,10 @@ public class ScriptEval extends ScriptExpr {
         vwr.showParameter("logLevel", true, 80);
       return;
     case T.echo:
-      cmdSetEcho();
+      cmdSetEcho(0);
+      return;
+    case T.scale:
+      cmdScale(2);
       return;
     case T.fontsize:
       cmdFont(JC.SHAPE_LABELS, checkLength23() == 2 ? 0 : floatParameter(2));
@@ -7494,17 +7507,20 @@ public class ScriptEval extends ScriptExpr {
       vwr.showParameter(key, true, 80);
   }
 
-  private void cmdSetEcho() throws ScriptException {
+  private void cmdSetEcho(int i) throws ScriptException {
     String propertyName = null;
     Object propertyValue = null;
     String id = null;
     boolean echoShapeActive = true;
+    boolean isScale = (i > 0); // SCALE ... bottom left
     // set echo xxx
-    int pt = 2;
+    // SCALE ...
+    // SCALS units ...
+    int pt = (i == 0 ? 2 : i);
 
     // check for ID name or just name
     // also check simple OFF, NONE
-    switch (getToken(2).tok) {
+    switch (isScale ? T.nada : getToken(pt).tok) {
     case T.off:
       id = propertyName = "allOff";
       checkLength(++pt);
@@ -7517,6 +7533,11 @@ public class ScriptEval extends ScriptExpr {
       id = paramAsStr(2);
       checkLength(++pt);
       break;
+    }
+    switch (getToken(2).tok) {
+    case T.id:
+        pt++;
+      //$FALL-THROUGH$
     case T.left:
     case T.center:
     case T.right:
@@ -7525,13 +7546,9 @@ public class ScriptEval extends ScriptExpr {
     case T.bottom:
     case T.identifier:
     case T.string:
-    case T.id:
-      if (theTok == T.id)
-        pt++;
       id = paramAsStr(pt++);
       break;
     }
-
     if (!chk) {
       vwr.ms.setEchoStateActive(echoShapeActive);
       sm.loadShape(JC.SHAPE_ECHO);
@@ -7543,6 +7560,15 @@ public class ScriptEval extends ScriptExpr {
     if (pt < slen) {
       // set echo name xxx
       // pt is usually 3, but could be 4 if ID used
+      if (isScale) {
+        switch (tokAt(pt)) {
+        case T.scale:
+        case T.image:
+        case T.string:
+          invArg();
+        }
+      }
+      
       switch (getToken(pt++).tok) {
       case T.align:
         propertyName = "align";
@@ -8531,6 +8557,13 @@ public class ScriptEval extends ScriptExpr {
 
   private void colorShape(int shapeType, int index, boolean isBackground)
       throws ScriptException {
+
+    boolean isScale = (Math.abs(shapeType) == T.scale);
+    if (isScale) {
+      shapeType = JC.SHAPE_ECHO;
+    } else if (shapeType < 0) {
+      shapeType = getShapeType(-shapeType);
+    }
     String translucency = null;
     Object colorvalue = null;
     Object colorvalue1 = null;
@@ -8743,6 +8776,8 @@ public class ScriptEval extends ScriptExpr {
     }
     if (chk || shapeType < 0)
       return;
+    if (isScale)
+      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");
     int typeMask;
     switch (shapeType) {
     case JC.SHAPE_STRUTS:
@@ -8812,6 +8847,8 @@ public class ScriptEval extends ScriptExpr {
     if (translucency != null)
       setShapeTranslucency(shapeType, prefix, translucency, translucentLevel,
           bs);
+    if (isScale)
+      setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
     if (typeMask != 0)
       setShapeProperty(JC.SHAPE_STICKS, "type",
           Integer.valueOf(Edge.BOND_COVALENT_MASK));
@@ -9626,4 +9663,34 @@ public class ScriptEval extends ScriptExpr {
     return str.toString();
   }
 
+  private void cmdScale(int pt) throws ScriptException {
+    // also set SCALE (for script compatibility with older versions)
+    if (chk)
+      return;
+    String text = "%SCALE";
+    switch (tokAt(pt)) {
+    case T.off:
+      setShapeProperty(JC.SHAPE_ECHO, "%SCALE", null);
+      checkLast(pt);
+      return;
+    case T.on:
+      pt++;
+      break;
+    default:
+      String units = Measurement.fixUnits(optParameterAsString(pt));
+      if (Measurement.fromUnits(1, units) != 0) {
+        text += " " + units;
+        pt++;
+      }
+      break;
+    }
+    if (tokAt(pt) == T.nada) {
+      vwr.ms.setEchoStateActive(true);
+      vwr.shm.loadShape(JC.SHAPE_ECHO);
+      setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
+    } else {
+      cmdSetEcho(pt);
+    }
+    setShapeProperty(JC.SHAPE_ECHO, "text", text);    
+  }
 }

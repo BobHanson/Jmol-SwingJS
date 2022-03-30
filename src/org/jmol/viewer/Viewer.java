@@ -3680,6 +3680,7 @@ public class Viewer extends JmolViewer
     }
     setBackgroundModelIndex(-1);
     setFrankOn(getShowFrank());
+    shm.setScale();
     startHoverWatcher(true);
     setTainted(true);
     finalizeTransformParameters();
@@ -7674,8 +7675,6 @@ public class Viewer extends JmolViewer
     g.setUnits(units);
     if (isDistance) {
       setShapeProperty(JC.SHAPE_MEASURES, "reformatDistances", null);
-    } else {
-
     }
   }
 
@@ -9353,7 +9352,7 @@ public class Viewer extends JmolViewer
   }
 
   public void resetShapes(boolean andCreateNew) {
-    shm.resetShapes();
+    shm.resetShapes(!andCreateNew);
     if (andCreateNew) {
       shm.loadDefaultShapes(ms);
       clearRepaintManager(-1);

@@ -66,6 +66,7 @@ public class GlobalSettings {
       debugScript = g.debugScript;
       disablePopupMenu = g.disablePopupMenu;
       messageStyleChime = g.messageStyleChime;
+      measureDistanceUnits = g.measureDistanceUnits;
       defaultDirectory = g.defaultDirectory;
       autoplayMovie = g.autoplayMovie;
       allowAudio = g.allowAudio;

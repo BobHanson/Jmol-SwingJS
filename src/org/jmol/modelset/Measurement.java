@@ -614,7 +614,6 @@ public class Measurement {
   }
 
   public static String fixUnits(String u) {
-    u = (u.equals("\u00C5") ? u : u.toLowerCase());
     String units = (u.endsWith("s") ? u.substring(0, u.length() - 1) : u);
     if (units.equals("nanometer"))
       return "nm";
@@ -622,7 +621,7 @@ public class Measurement {
       return "au";
     else if (units.equals("picometer"))
       return "pm";
-    else if (units.equals("angstrom") || units.equals("a") || units.equals("ang"))
+    else if (units.equals("\u00E5") || units.equals("angstrom") || units.equals("a") || units.equals("ang"))
       return "\u00C5";
     else if (units.equals("vanderwaal") || units.equals("vdw"))
       return "%";
