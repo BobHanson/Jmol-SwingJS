@@ -7552,9 +7552,12 @@ public class ScriptEval extends ScriptExpr {
     if (!chk) {
       vwr.ms.setEchoStateActive(echoShapeActive);
       sm.loadShape(JC.SHAPE_ECHO);
-      if (id != null)
+      if (id != null) {
+        if (propertyName == null && !isScale)
+          setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
         setShapeProperty(JC.SHAPE_ECHO, propertyName == null ? "target"
             : propertyName, id);
+      }
     }
 
     if (pt < slen) {
@@ -9684,13 +9687,16 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     }
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", "%SCALE");    
     if (tokAt(pt) == T.nada) {
       vwr.ms.setEchoStateActive(true);
       vwr.shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
     } else {
+      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");    
       cmdSetEcho(pt);
     }
     setShapeProperty(JC.SHAPE_ECHO, "text", text);    
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", null);    
   }
 }

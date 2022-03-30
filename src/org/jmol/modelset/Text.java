@@ -725,4 +725,8 @@ public class Text {
     setScalePixelsPerMicron(sppm);
   }
 
+  @Override
+  public String toString() {
+    return textUnformatted;
+  }
 }

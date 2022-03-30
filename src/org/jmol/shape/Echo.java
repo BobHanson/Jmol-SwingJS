@@ -65,20 +65,28 @@ public class Echo extends TextShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
+    System.out.println(propertyName + " "  + value);
     if ("thisID" == propertyName) {
       if (value == null) {
         currentObject = null;
+        thisID = null;
         return;
       }
       String target = (String) value;
-      currentObject = objects.get(target);
-      if (currentObject == null && PT.isWild(target))
-        thisID = target.toUpperCase();
+      if (target == "%SCALE") {
+        currentObject = scaleObject;
+        thisID = target;
+      } else {
+        currentObject = objects.get(target);
+        if (currentObject == null && PT.isWild(target))
+          thisID = target.toUpperCase();
+      }
       return;
     }
 
     if ("%SCALE" == propertyName) {
       currentObject = scaleObject = (Text) value;
+      thisID = "%SCALE";
       return;
     }
 
@@ -104,24 +112,26 @@ public class Echo extends TextShape {
 
     if ("text" == propertyName) {
       if (((String) value).startsWith("%SCALE")) {
+        thisID = "%SCALE";
         setPropTS("text", value, null);
         scaleObject = currentObject;
-        setPropTS("delete", scaleObject, null);
+        if (objects.get(scaleObject.target) == scaleObject)
+          setPropTS("delete", scaleObject, null);
         currentObject = scaleObject;
         return;
       }
       // continue to TextShape
     }
     if ("target" == propertyName) {
-      thisID = null;
       if ("%SCALE".equals(value)) {
         currentObject = scaleObject;
+        thisID = "%SCALE";
         return;
       }
       String target = ((String) value).intern().toLowerCase();
       if (target != "none" && target != "all") {
         isAll = false;
-        Text text = objects.get(target);
+        Text text = (thisID == "%SCALE" ? scaleObject : objects.get(target));
         if (text == null) {
           int valign = JC.ECHO_XY;
           int halign = JC.TEXT_ALIGN_LEFT;
@@ -136,27 +146,32 @@ public class Echo extends TextShape {
           } else if ("error" == target) {
             valign = JC.ECHO_TOP;
           }
-          if (scaleObject != null && scaleObject.valign == valign
-              && scaleObject.align == halign) {
-            text = scaleObject;
-          } else {
-            text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
-                target, COLOR, valign, halign, 0);
-            text.adjustForWindow = true;
+          //          if (scaleObject != null && scaleObject.valign == valign
+          //              && scaleObject.align == halign) {
+          //            text = scaleObject;
+          //          } else {
+          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
+              target, COLOR, valign, halign, 0);
+          text.adjustForWindow = true;
+          if (thisID == "%SCALE")
+            scaleObject = text;
+          else
             objects.put(target, text);
-            if (currentFont != null)
-              text.setFont(currentFont, true);
-            if (currentColor != null)
-              text.colix = C.getColixO(currentColor);
-            if (currentBgColor != null)
-              text.bgcolix = C.getColixO(currentBgColor);
-            if (currentTranslucentLevel != 0)
-              text.setTranslucent(currentTranslucentLevel, false);
-            if (currentBgTranslucentLevel != 0)
-              text.setTranslucent(currentBgTranslucentLevel, true);
-          }
+          if (currentFont != null)
+            text.setFont(currentFont, true);
+          if (currentColor != null)
+            text.colix = C.getColixO(currentColor);
+          if (currentBgColor != null)
+            text.bgcolix = C.getColixO(currentBgColor);
+          if (currentTranslucentLevel != 0)
+            text.setTranslucent(currentTranslucentLevel, false);
+          if (currentBgTranslucentLevel != 0)
+            text.setTranslucent(currentBgTranslucentLevel, true);
+          //          }
         }
         currentObject = text;
+        if (thisID != "%SCALE")
+          thisID = null;
         return;
       }
     }

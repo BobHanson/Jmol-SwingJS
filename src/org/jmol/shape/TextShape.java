@@ -97,7 +97,7 @@ public abstract class TextShape extends Shape {
         currentObject = (Text) value;
       }
       if (currentObject != null) {
-        objects.remove(currentObject.target);
+          objects.remove(currentObject.target);
         currentObject = null;
       } else if (isAll || thisID != null) {
         Iterator<Text> e = objects.values().iterator();
