@@ -1017,6 +1017,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     } else {
       // from PDB REMARK350()
       bsFilter = null;
+      filterCased = null;
     }
     if (filterCased == null)
       filterCased = (filter0 == null ? null : filter0 + ";");
@@ -1091,16 +1092,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       Logger.info("filtering with " + filter);
       if (haveAtomFilter) {
         int ipt;
-        filter1 = filter;
+        filter1Cased = filterCased;
+        filter2Cased = "";
         if ((ipt = filter.indexOf("|")) >= 0) {
-          filter1 = filter.substring(0, ipt).trim() + ";";
-          filter2 = ";" + filter.substring(ipt).trim();
+          filter1Cased = filter.substring(0, ipt).trim() + ";";
+          filter2Cased = ";" + filter.substring(ipt).trim();
         }
+        filter1 = filter1Cased.toUpperCase();
+        filter2 = filter2Cased.toUpperCase();
       }
     }
   }
 
-  private String filter1, filter2;
+  private String filter1, filter2, filter1Cased, filter2Cased;
 
   public String getFilterWithCase(String key) {
     int pt = (filterCased == null ? -1 : filterCased.toUpperCase().indexOf(key.toUpperCase()));
@@ -1142,12 +1146,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!haveAtomFilter)
       return true;
     // cif, mdtop, pdb, gromacs, pqr
-    boolean isOK = checkFilter(atom, filter1);
+    boolean isOK = checkFilter(atom, filter1, filter1Cased);
     if (filter2 != null)
-      isOK |= checkFilter(atom, filter2);
+      isOK |= checkFilter(atom, filter2, filter2Cased);
     if (isOK && filterEveryNth)
       isOK = (((nFiltered++) % filterN) == 0);
     bsFilter.setBitTo(iAtom >= 0 ? iAtom : asc.ac, isOK);
+    if (!isOK)
+      System.out.println("????");
     return isOK;
   }
 
@@ -1157,7 +1163,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * @param f
    * @return  true if a filter is found
    */
-  private boolean checkFilter(Atom atom, String f) {
+  private boolean checkFilter(Atom atom, String f, String fCased) {
     return (!filterGroup3 || atom.group3 == null || !filterReject(f, "[",
         atom.group3.toUpperCase() + "]"))
         && (!filterAtomName || allowAtomName(atom.atomName, f))
@@ -1165,7 +1171,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             || atom.atomName.toUpperCase().indexOf("\0" + filterAtomTypeStr) >= 0)
         && (!filterElement || atom.elementSymbol == null || !filterReject(f, "_",
             atom.elementSymbol.toUpperCase() + ";"))
-        && (!filterChain || atom.chainID == 0 || !filterReject(f, ":", ""
+        && (!filterChain || atom.chainID == 0 || !filterReject(fCased, ":", ""
             + vwr.getChainIDStr(atom.chainID)))
         && (!filterAltLoc || atom.altLoc == '\0' || !filterReject(
             f, "%", "" + atom.altLoc))

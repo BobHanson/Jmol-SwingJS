@@ -239,6 +239,7 @@ public class ModelSet extends BondCollection {
      * Bob Hanson 11/7/07
      * 
      */
+    am = null;
     bsSymmetry = null;
     bsAll = null;
     unitCells = null;
@@ -619,6 +620,8 @@ public class ModelSet extends BondCollection {
       int[] atomInfo = (int[]) getInfo(i, "PDB_CONECT_firstAtom_count_max");
       int firstAtom = atomInfo[0] + baseAtomIndex;
       int atomMax = firstAtom + atomInfo[1];
+      if (atomMax > atomSerials.length)
+        atomMax = atomSerials.length;
       int max = atomInfo[2];
       int[] serialMap = new int[max + 1];
       int iSerial;

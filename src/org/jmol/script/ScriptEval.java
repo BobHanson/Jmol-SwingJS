@@ -6802,8 +6802,11 @@ public class ScriptEval extends ScriptExpr {
       return;
     if (isCmdLine_c_or_C_Option)
       isCheck = true;
-    if (theScript == null)
+    if (theScript == null) {
       theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
+      if (theScript == null)
+        invArg();
+    }
     if (isMenu(theScript)) {
       vwr.setMenu(theScript, false);
       return;
@@ -6863,8 +6866,8 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private boolean isMenu(String s) {
-    int pt = s.indexOf("Menu Structure");
-    return (s.startsWith("#") && pt > 0 && pt < s.indexOf("\n"));
+    int pt = (s == null ? -1 : s.indexOf("Menu Structure"));
+    return (pt > 0 && s.startsWith("#") &&  pt < s.indexOf("\n"));
   }
 
   /**

@@ -19,9 +19,11 @@ public class XtlWriter {
       "0.750000000000", "0.833333333333", "0.916666666667", "1.000000000000", };
 
   private static int twelfthsOf(float f) {
+    if (f == 0)
+      return 0;
     f = Math.abs(f * 12);
     int i = Math.round(f);
-    return (i <= 12 && Math.abs(f - i) < 0.00015 ? i : -1);
+    return (i <= 12 && Math.abs(f - i) < 0.00015 * 12 ? i : -1);
   }
 
 }
