@@ -65,7 +65,6 @@ public class Echo extends TextShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
-    System.out.println(propertyName + " "  + value);
     if ("thisID" == propertyName) {
       if (value == null) {
         currentObject = null;

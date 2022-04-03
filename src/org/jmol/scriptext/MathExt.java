@@ -2813,7 +2813,8 @@ public class MathExt {
    */
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
-    if (tok == T.hkl && args.length != 3 || tok == T.intersection
+    if (tok == T.hkl && args.length != 3 && args.length != 4 
+        || tok == T.intersection
         && args.length != 2 && args.length != 3 && args.length != 4
         || args.length == 0 || args.length > 4)
       return false;
@@ -2860,8 +2861,9 @@ public class MathExt {
       switch (tok) {
       case T.hkl:
         // hkl(i,j,k)
+        float offset = (args.length == 4 ? SV.fValue(args[3]) : Float.NaN);
         return mp.addXPt4(e.getHklPlane(P3.new3(SV.fValue(args[0]),
-            SV.fValue(args[1]), SV.fValue(args[2])), Float.NaN, null));
+            SV.fValue(args[1]), SV.fValue(args[2])), offset, null));
       case T.intersection:
         pt1 = mp.ptValue(args[0], null);
         pt2 = mp.ptValue(args[1], null);
