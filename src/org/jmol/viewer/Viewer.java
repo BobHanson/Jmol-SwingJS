@@ -8192,8 +8192,14 @@ public class Viewer extends JmolViewer
       modelkit.actionRotateBond(deltaX, deltaY, x, y,
           (modifiers & Event.VK_SHIFT) != 0);
     } else {
+      int iatom = bsSelected.nextSetBit(0);
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
-      if (!bsSelected.isEmpty()) {
+      
+      if (bsSelected.isEmpty()) {
+        bsSelected.set(iatom);
+        sm.setStatusStructureModified(iatom, getModelForAtomIndex(iatom).modelIndex, 
+            -MODIFY_SET_COORD, "FAILED", 1, bsSelected);
+      } else {
         if (isTranslation) {
           P3 ptCenter = ms.getAtomSetCenter(bsSelected);
           tm.finalizeTransformParameters();
