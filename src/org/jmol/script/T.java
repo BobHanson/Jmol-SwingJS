@@ -700,6 +700,7 @@ public class T {
   public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
   public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty | apivot;
+  public final static int pivot2           = 21 | 0 << 9 | mathfunc | mathproperty;
   public final static int plane            = 22 | 0 << 9 | mathfunc;
   public final static int point            = 23 | 0 << 9 | mathfunc;
   public final static int polyhedra        = 24 | 0 << 9 | mathfunc | mathproperty | shapeCommand;

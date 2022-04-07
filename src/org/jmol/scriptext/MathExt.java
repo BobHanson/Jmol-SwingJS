@@ -189,6 +189,9 @@ public class MathExt {
     case T.function:
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
+    case T.pivot2:
+      tok = T.pivot;
+      //$FALL-THROUGH$
     case T.__:
     case T.pivot:
     case T.select:

@@ -716,7 +716,7 @@ public class PdbReader extends AtomSetCollectionReader {
           chainlist += ";";
           if (checkFilterKey("BIOMOLECULE " + id + ";")
               || checkFilterKey("BIOMOLECULE=" + id + ";")) {
-            setFilter(filter + chainlist);
+            setFilter(filterCased + chainlist);
             Logger.info("filter set to \"" + filter + "\"");
             thisBiomolecule = info;
             haveMappedSerials = applySymmetry;
