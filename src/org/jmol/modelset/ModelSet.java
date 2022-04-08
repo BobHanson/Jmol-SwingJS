@@ -4396,7 +4396,8 @@ public class ModelSet extends BondCollection {
           sites[site] = ++p;
           bsAU.set(i);
         }
-        at[i].atomSite = sites[site];
+        setSite(at[i], -1, false);
+        setSite(at[i], sites[site], true);
       }
       bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
       bsSymmetry.or(bs);

@@ -1797,6 +1797,8 @@ public class ModelKit {
       if (atomIndexNew >= 0) {
         for (int i = atomIndexNew; i >= 0; i = bs.nextSetBit(i + 1)) {
           assignAtom(i, type, false, false, true, null);
+          // ensure that site is tainted
+          vwr.ms.setSite(vwr.ms.at[i], -1, false);
           vwr.ms.setSite(vwr.ms.at[i], site, true);
         }
         vwr.ms.updateBasisFromSite(mi);
