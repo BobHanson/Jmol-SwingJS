@@ -522,9 +522,9 @@ abstract public class AtomCollection {
             setAtomCoord(i, xyz.x, xyz.y, xyz.z);
             break;
           case T.fracxyz:
-            at[i].setFractionalCoordTo(xyz, true);
-            taintAtom(i, TAINT_COORD);
-            break;
+//            at[i].setFractionalCoordTo(xyz, true);
+//            taintAtom(i, TAINT_COORD);
+//            break;
           case T.fuxyz:
             at[i].setFractionalCoordTo(xyz, false);
             taintAtom(i, TAINT_COORD);
@@ -632,9 +632,9 @@ abstract public class AtomCollection {
       case T.fracx:
       case T.fracy:
       case T.fracz:
-        atom.setFractionalCoord(tok, fValue, true);
-        taintAtom(i, TAINT_COORD);
-        break;
+//        atom.setFractionalCoord(tok, fValue, true);
+//        taintAtom(i, TAINT_COORD);
+//        break;
       case T.fux:
       case T.fuy:
       case T.fuz:
