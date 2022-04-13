@@ -4627,7 +4627,7 @@ public class ScriptEval extends ScriptExpr {
       if (filename == null
           && (i == 0 || filenames == null
               && (filename = paramAsStr(filePt)).length() == 0))
-        filename = getFullPathName();
+        filename = getFullPathName(true);
       if (filename == null && filenames == null) {
         cmdZap(false);
         return;
@@ -4659,7 +4659,7 @@ public class ScriptEval extends ScriptExpr {
       // LOAD "" --> prevous file      
 
       if (filename == null && (filename = paramAsStr(filePt)).length() == 0
-          && (filename = getFullPathName()) == null) {
+          && (filename = getFullPathName(true)) == null) {
         // no previously loaded file
         cmdZap(false);
         return;
@@ -9074,11 +9074,16 @@ public class ScriptEval extends ScriptExpr {
         color2, nColors));
   }
 
-  public String getFullPathName() throws ScriptException {
+  public String getFullPathName(boolean withType) throws ScriptException {
     String filename = (!chk || isCmdLine_C_Option ? vwr
         .fm.getFullPathName(true) : "test.xyz");
     if (filename == null)
       invArg();
+    if (withType) {
+      String ft = vwr.fm.getFileType();
+      if (ft != null && ft.length() > 0)
+        filename = ft + "::" + filename;
+    }
     return filename;
   }
 

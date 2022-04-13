@@ -3015,7 +3015,7 @@ public class IsoExt extends ScriptExt {
         if (filename.length() == 0) {
           if (modelIndex < 0)
             modelIndex = vwr.am.cmi;
-          filename = eval.getFullPathName();
+          filename = eval.getFullPathName(false);
           propertyValue = vwr.ms.getInfo(modelIndex, "jmolSurfaceInfo"); // not implemented?
         }
         int fileIndex = -1;

@@ -864,7 +864,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     if (i == 0)
       for (int j = 0; j < 6; j++)
-        unitCellParams[j] = 0;
+        unitCellParams[j] = 0;  
     i = 6 + i * 3;
     unitCellParams[i++] = xyz[i0++];
     unitCellParams[i++] = xyz[i0++];
@@ -1161,6 +1161,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * 
    * @param atom
    * @param f
+   * @param fCased 
    * @return  true if a filter is found
    */
   private boolean checkFilter(Atom atom, String f, String fCased) {

@@ -135,6 +135,7 @@ public class FileManager implements BytePoster {
     if (!nameAsGiven.equals(JC.ZAP_TITLE)) {
       lastNameAsGiven = nameAsGiven;
       lastFullPathName = fullPathName;
+      
     }
   }
 
@@ -146,6 +147,16 @@ public class FileManager implements BytePoster {
   public String getFullPathName(boolean orPrevious) {
     String f =(fullPathName != null ? fullPathName : nameAsGiven);
     return (!orPrevious || !f.equals(JC.ZAP_TITLE) ? f : lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
+  }
+
+  private String lastFileType;
+
+  public String getFileType() {
+    return lastFileType;
+  }
+
+  public void setFileType(String fileType) {
+    lastFileType = fileType;
   }
 
   public String getFileName() {
@@ -226,6 +237,7 @@ public class FileManager implements BytePoster {
       return names[0];
     String fullPathName = names[0];
     String fileName = names[1];
+    lastFileType= fileType;
     htParams.put("fullPathName", (fileType == null ? "" : fileType + "::")
         + fixDOSName(fullPathName));
     if (vwr.getBoolean(T.messagestylechime) && vwr.getBoolean(T.debugscript))

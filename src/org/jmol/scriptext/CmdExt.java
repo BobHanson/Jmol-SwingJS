@@ -4910,7 +4910,7 @@ public class CmdExt extends ScriptExt {
       // in a new window
       if ((len = slen) == 2) {
         if (!chk)
-          vwr.showUrl(eval.getFullPathName());
+          vwr.showUrl(eval.getFullPathName(false));
       } else {
         name = paramAsStr(2);
         if (!chk)
