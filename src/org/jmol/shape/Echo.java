@@ -65,7 +65,7 @@ public class Echo extends TextShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
-    if ("thisID" == propertyName) {
+     if ("thisID" == propertyName) {
       if (value == null) {
         currentObject = null;
         thisID = null;
@@ -114,7 +114,7 @@ public class Echo extends TextShape {
         thisID = "%SCALE";
         setPropTS("text", value, null);
         scaleObject = currentObject;
-        if (objects.get(scaleObject.target) == scaleObject)
+        if (scaleObject != null && objects.get(scaleObject.target) == scaleObject)
           setPropTS("delete", scaleObject, null);
         currentObject = scaleObject;
         return;
@@ -125,7 +125,8 @@ public class Echo extends TextShape {
       if ("%SCALE".equals(value)) {
         currentObject = scaleObject;
         thisID = "%SCALE";
-        return;
+        if (currentObject != null)
+          return;
       }
       String target = ((String) value).intern().toLowerCase();
       if (target != "none" && target != "all") {
@@ -286,6 +287,8 @@ public class Echo extends TextShape {
     if ("xyz" == propertyName) {
       if (currentObject != null) {
         currentObject.setXYZ((P3) value, true);
+        if (currentObject.pymolOffset == null)
+          currentObject.pymolOffset = new float[] { -1, 2, 0, 0, 0, 0, 0 };        
       }
       return;
     }

@@ -442,12 +442,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setTainted() {
-    if (unitCell != null)
-      unitCell.setTainted();
-  }
-
-  @Override
   public Lst<String> getMoreInfo() {
     return unitCell.moreInfo;
   }

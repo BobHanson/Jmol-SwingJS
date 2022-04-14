@@ -212,8 +212,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         text.setAlignment(textAlign);
     }
     text.pointer = pointer;
-    TextRenderer.render(text, g3d, scalePixelsPerMicron, imageFontScaling,
-       boxXY, xy, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
+    TextRenderer.render(null, text, g3d, scalePixelsPerMicron, imageFontScaling,
+       boxXY, xy, null, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
     return (newText ? text : null);
   }
 }

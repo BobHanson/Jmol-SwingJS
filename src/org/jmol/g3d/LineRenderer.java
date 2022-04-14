@@ -565,7 +565,7 @@ final class LineRenderer extends PrecisionRenderer {
     // measures, axes, bbcage, mesh, cylinders 
     if (ptA.z <= 1 || ptB.z <= 1)
       return;
-    boolean clipped = true;
+    boolean zclipped = true;
     x1t = ptA.x;
     y1t = ptA.y;
     z1t = ptA.z;
@@ -576,7 +576,7 @@ final class LineRenderer extends PrecisionRenderer {
     case VISIBILITY_OFFSCREEN:
       return;
     case VISIBILITY_UNCLIPPED:
-      clipped = false;
+      zclipped = false;
       break;
     default:
       if (andClip) {
@@ -604,7 +604,7 @@ final class LineRenderer extends PrecisionRenderer {
     //boolean tScreened = tScreened1;
     int argb = argbA;
     Pixelator p = g3d.pixel;
-    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax
+    if (argb != 0 && !zclipped && offset >= 0 && offset < offsetMax
         && z < zbuf[offset])
       p.addPixel(offset, z, argb);
 

@@ -10705,10 +10705,11 @@ public class Viewer extends JmolViewer
    * |-------| 1 A or 0.1 A for example.
    * @param units 
    * @param isAntialiased 
-   * @param retPixels return bar length in pixels
+   * @param min 
+   * @param ret return bar length in pixels
    * @return text
    */
-  public String getScaleText(String units, boolean isAntialiased, int[] retPixels) {
+  public String getScaleText(String units, boolean isAntialiased, int min, float[] ret) {
     String u = Measurement
         .fixUnits(units.length() > 0 ? units.toLowerCase() : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
@@ -10722,7 +10723,6 @@ public class Viewer extends JmolViewer
     float f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
     float e = 0, mp = 0;
-    int min = 15;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
@@ -10735,7 +10735,8 @@ public class Viewer extends JmolViewer
     }
     String se = (m >= 0 ? " " + (int) mp + " "
         : " 0." + "000000000".substring(0, -1 - m) + "1 ");
-    retPixels[0] = p;
+    ret[0] = p;
+    ret[1] = e;
     return se + u;
   }
 

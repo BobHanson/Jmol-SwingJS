@@ -1334,11 +1334,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
   
   @Override
-  public void drawLinePixels(P3i a, P3i b) {
+  public void drawLinePixels(P3i a, P3i b, int z, int zslab) {
     sA.setT(a);
     sB.setT(b);
-    sA.z = sB.z = slab + 2;
+    sA.z = sB.z = z;//(zslab == Integer.MIN_VALUE ? 2 : zslab);
+    int slab0 = slab;
+    if (zslab == Integer.MIN_VALUE)
+      slab = 0;
     drawLineABBits(0,  0,  false);
+    slab = slab0;
   }
   
 

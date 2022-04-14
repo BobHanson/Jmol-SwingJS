@@ -64,7 +64,7 @@ public class Text {
 
   public int barPixels;
 
-
+  public float barDistance;
 
   public Text() {
     // public for reflection
@@ -223,11 +223,14 @@ public class Text {
     if (doFormatText) {
       text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
       recalc();
-    } else if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
-      int[] retPixels = new int[1];
-      text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, retPixels);
-      barPixels = retPixels[0] * (int) imageFontScaling;
-      recalc();
+    } else {
+      if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
+        float[] ret = new float[2];
+        text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, (xyz == null ? 15 : 8), ret);
+        barPixels = (int) (ret[0] * imageFontScaling);
+        barDistance = ret[1];
+        recalc();
+      }
     }
     float dx = offsetX * imageFontScaling;
     float dy = offsetY * imageFontScaling;
@@ -266,7 +269,7 @@ public class Text {
          * 
          */
         // dx and dy are the overall object offset, with text
-        dx = getPymolXYOffset(pymolOffset[1], textWidth, pixelsPerAngstrom);
+        dx = (xyz != null && barPixels > 0 ? 0 : getPymolXYOffset(pymolOffset[1], textWidth, pixelsPerAngstrom));
         int dh = ascent - descent;
         dy = -getPymolXYOffset(-pymolOffset[2], dh, pixelsPerAngstrom)
             - (textHeight + dh) / 2;
@@ -300,6 +303,7 @@ public class Text {
           dy = 0;
           break;
         }
+      // don't apply an X-offset if this is a scale and set on a point
       //System.out.println(dx + " Text " + dy + " " + boxWidth + " " + boxHeight);
       setBoxXY(boxWidth, boxHeight, dx, dy, boxXY, isAbsolute);
     } else {
@@ -396,6 +400,7 @@ public class Text {
     float xBoxOffset, yBoxOffset;
 
     // these are based on a standard |_ grid, so y is reversed.
+    
     if (xOffset > 0 || isAbsolute) {
       xBoxOffset = xOffset;
     } else {
@@ -536,6 +541,8 @@ public class Text {
   public float[] boxXY;
 
   public float scalePixelsPerMicron;
+
+  public int barPixelsXYZ;
 
   public void setScalePixelsPerMicron(float scalePixelsPerMicron) {
     fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;

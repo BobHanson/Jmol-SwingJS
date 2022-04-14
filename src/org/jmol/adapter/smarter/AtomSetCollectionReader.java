@@ -1152,8 +1152,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (isOK && filterEveryNth)
       isOK = (((nFiltered++) % filterN) == 0);
     bsFilter.setBitTo(iAtom >= 0 ? iAtom : asc.ac, isOK);
-    if (!isOK)
-      System.out.println("????");
     return isOK;
   }
 

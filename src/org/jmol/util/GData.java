@@ -750,7 +750,7 @@ public class GData implements JmolGraphicsInterface {
   protected static short normixCount = Normix.getNormixCount();
  
   @Override
-  public void drawLinePixels(P3i sA, P3i sB) {
+  public void drawLinePixels(P3i sA, P3i sB, int z, int zslab) {
     return;
   }
 

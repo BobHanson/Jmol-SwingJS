@@ -91,6 +91,10 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   
   public String name = "";
   
+  /**
+   * Indicate that this is a new unit cell, not one from a file.
+   * 
+   */  
   private UnitCell() {
     super();  
   }
@@ -582,17 +586,6 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return (fractionalOffset != null && fractionalOffset.lengthSquared() != 0);
   }
 
-  public String getState() {
-    String s = "";
-    // unitcell offset {1 1 1}
-    if (fractionalOffset != null && fractionalOffset.lengthSquared() != 0)
-      s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
-    // unitcell range {444 555 1}
-    if (unitCellMultiplier != null)
-      s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";
-    return s;
-  }
-
   /**
    * Returns a quaternion that will take the standard frame to a view down a
    * particular axis, expressed as its counterparts.
@@ -999,6 +992,17 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     vtrans.x = normalizeXRnd(vtrans.x);
     vtrans.y = normalizeXRnd(vtrans.y);
     vtrans.z = normalizeXRnd(vtrans.z);    
+  }
+
+  public String getState() {
+    String s = "";
+    // unitcell offset {1 1 1}
+    if (fractionalOffset != null && fractionalOffset.lengthSquared() != 0)
+      s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
+    // unitcell range {444 555 1}
+    if (unitCellMultiplier != null)
+      s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";
+    return s;
   }
 
 

@@ -30,6 +30,7 @@ import org.jmol.modelset.Text;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.TransformManager;
 
 import javajs.util.P3i;
 
@@ -37,10 +38,10 @@ class TextRenderer {
   
   static final int MODE_IS_ANTIALIASED = 4;
   
-  static boolean render(Text text, JmolRendererInterface g3d,
+  static boolean render(TransformManager tm, Text text, JmolRendererInterface g3d,
                         float scalePixelsPerMicron, float imageFontScaling,
                         float[] boxXY, float[] temp,
-                        short pointerColix,
+                        P3i pTemp, short pointerColix,
                         int pointerWidth, int mode) {
     if (text == null
         || text.image == null && !text.doFormatText && text.lines == null)
@@ -52,27 +53,32 @@ class TextRenderer {
     if (!showText && (text.image == null
         && (text.bgcolix == 0 || !g3d.setC(text.bgcolix))))
       return false;
+    if (tm != null && text.valign == JC.ECHO_XYZ)
+      calcBarPixelsXYZ(tm, text, pTemp, false);
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
+    int barPixels = (tm != null && text.valign == JC.ECHO_XYZ ? calcBarPixelsXYZ(tm, text, pTemp, false) : text.barPixels);
     // draw the box if necessary; colix has been set
     if (text.image == null) {
       // text colix will be opaque, but we need to render it in translucent pass 
       // now set x and y positions for text from (new?) box position
       if (text.bgcolix != 0) {
         if (g3d.setC(text.bgcolix))
-          showBox(g3d, text.colix, (int) text.boxX,
+          showBox(g3d, text.colix, (int) text.boxX - (barPixels == 0 ? 0 : barPixels + 4),
               (int) text.boxY + text.boxYoff2 * 2, text.z + 2, text.zSlab,
-              (int) text.boxWidth, (int) text.boxHeight, text.fontScale,
+              (int) text.boxWidth + barPixels, (int) text.boxHeight, text.fontScale,
               !text.isEcho);
         if (!showText)
           return false;
       } // now write properly aligned text
       for (int i = 0; i < text.lines.length; i++) {
         text.setXYA(temp, i);
+        if (text.xyz != null)
+          temp[1] += 2; // fudge
         g3d.drawString(text.lines[i], text.font, (int) temp[0], (int) temp[1],
             text.z, text.zSlab, text.bgcolix);
       }
       if (text.barPixels > 0) {
-        renderScale(g3d, text, temp, isAntialiased);
+        renderScale(g3d, text, temp, barPixels, isAntialiased);
       }
     } else {
       g3d.drawImage(text.image, (int) text.boxX, (int) text.boxY, text.z,
@@ -87,31 +93,47 @@ class TextRenderer {
     return true;
   }
 
+  static int calcBarPixelsXYZ(TransformManager tm, Text t, P3i pTemp, boolean andSet) {
+    int barPixels = t.barPixels;
+    if (t.xyz != null) {
+      tm.transformPtScr(t.xyz, pTemp);
+      if (andSet)
+        t.setXYZs(pTemp.x, pTemp.y, pTemp.z, pTemp.z);
+      if (barPixels > 0 && tm.perspectiveDepth) {
+        float d = tm.unscaleToScreen(pTemp.z, barPixels);
+        barPixels = t.barPixelsXYZ = (int) (barPixels * t.barDistance / d);
+      }
+    }
+    return barPixels;
+  }
+
   /**
    * Render a short |---| bar with label from ECHO "%SCALE"
    * @param g3d
    * @param text
    * @param temp
+   * @param barPixels 
    * @param isAntialiased
    */
-  private static void renderScale(JmolRendererInterface g3d, Text text, float[] temp, boolean isAntialiased) {
+  private static void renderScale(JmolRendererInterface g3d, Text text, float[] temp, int barPixels, boolean isAntialiased) {
     int z = text.z;
+    int xoff = (text.xyz == null ? 0 : 2);
     // barPixels has a 4-pixel margin
     int ia = (isAntialiased? 2 : 1);
     for (int i = (ia == 2 ? 3 : 1); i > 0; i -= 1) {
-    int x1 = (int) temp[0] - text.barPixels - i - ia * 2;
-    int x2 = (int) temp[0] - i - ia * 2;
+    int x1 = xoff + (int) temp[0] - barPixels - i - ia * 2;
+    int x2 = xoff + (int) temp[0] - i - ia * 2;
     int h = text.lineHeight / 4;
     int y = (int) temp[1] - h - i;
     P3i sA = P3i.new3(x1, y, z);
     P3i sB = P3i.new3(x2, y, z);
-    g3d.drawLinePixels(sA, sB);
+    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
     sA.y = y + h;
     sB.y = y - h;    
     sB.x = x1;
-    g3d.drawLinePixels(sA, sB);
+    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
     sA.x = sB.x = x2;
-    g3d.drawLinePixels(sA, sB);
+    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
     }
   }
 

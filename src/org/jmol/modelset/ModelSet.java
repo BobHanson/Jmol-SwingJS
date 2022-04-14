@@ -1048,7 +1048,6 @@ public class ModelSet extends BondCollection {
       sg.setOffsetPt(new P3());
       setTaintedAtoms(bs, TAINT_COORD);
     }
-    sg.setTainted();
     // assign sites to basis atoms
     for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (offset != null) {

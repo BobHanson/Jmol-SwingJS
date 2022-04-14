@@ -66,7 +66,7 @@ public class HoverRenderer extends ShapeRenderer {
       label = vwr.formatText(label);
     text.setText(label);
     //System.out.println("hoverRenderer " + text.getText());
-    TextRenderer.render(text, g3d, 0, antialias ? 2 : 1, null, tempXY, (short) 0, 0, 0);
+    TextRenderer.render(null, text, g3d, 0, antialias ? 2 : 1, null, tempXY, null, (short) 0, 0, 0);
     return true;
   }
   

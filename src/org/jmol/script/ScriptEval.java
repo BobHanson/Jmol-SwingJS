@@ -7540,7 +7540,7 @@ public class ScriptEval extends ScriptExpr {
       checkLength(++pt);
       break;
     }
-    switch (getToken(2).tok) {
+    switch (isScale ? tokAt(2) : getToken(2).tok) {
     case T.id:
         pt++;
       //$FALL-THROUGH$
@@ -9727,7 +9727,8 @@ public class ScriptEval extends ScriptExpr {
       setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");    
       cmdSetEcho(pt);
     }
-    setShapeProperty(JC.SHAPE_ECHO, "text", text);    
-    setShapeProperty(JC.SHAPE_ECHO, "thisID", null);    
+    setShapeProperty(JC.SHAPE_ECHO, "text", text);  
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
+    refresh(false);
   }
 }

@@ -827,7 +827,7 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void drawLinePixels(P3i sA, P3i sB) {
+  public void drawLinePixels(P3i sA, P3i sB, int z, int zslab) {
     return;
   }
 
