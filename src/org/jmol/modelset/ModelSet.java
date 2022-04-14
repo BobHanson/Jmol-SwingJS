@@ -1038,9 +1038,22 @@ public class ModelSet extends BondCollection {
     bsSymmetry.or(bs);
     bsSymmetry.andNot(basis);
     boolean isP1 = (basis.cardinality() == bs.cardinality());
+    // remove any cage created by UNITCELL command
+    // move any origin offset into atom positions
+    setModelCage(mi, null);
+    P3 offset = P3.newP(sg.getCartesianOffset());
+    if (offset.length() == 0) {
+      offset = null;
+    } else {
+      sg.setOffsetPt(new P3());
+      setTaintedAtoms(bs, TAINT_COORD);
+    }
+    sg.setTainted();
     // assign sites to basis atoms
-    // TODO assign sites 
     for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (offset != null) {
+        at[i].sub(offset);
+      }
       boolean isBasis = basis.get(i);
       at[i].setSymop(isBasis ? 1 : 0, true);
       if (isP1 || isBasis)
@@ -4393,6 +4406,8 @@ public class ModelSet extends BondCollection {
         int site = at[i].atomSite;
         if (!bsSites.get(site)) {
           bsSites.set(site);
+          if (site >= sites.length)
+            continue;
           sites[site] = ++p;
           bsAU.set(i);
         }

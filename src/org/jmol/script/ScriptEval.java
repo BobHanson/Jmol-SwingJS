@@ -46,6 +46,7 @@ import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
+import org.jmol.util.BoxInfo;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
@@ -3257,6 +3258,8 @@ public class ScriptEval extends ScriptExpr {
       vwr.setNewRotationCenter(null);
       return;
     }
+    if (slen == 4 && tokAt(2) == T.unitcell)
+      i = 2;
     P3 center = centerParameter(i, null);
     if (center == null)
       invArg();
@@ -8490,7 +8493,7 @@ public class ScriptEval extends ScriptExpr {
     // zoom {x y z} or (atomno=3)
     int ptCenter = 0;
     BS bsCenter = null;
-    if (isCenterParameter(i)) {
+    if (tokAt(i) == T.unitcell || isCenterParameter(i)) {
       ptCenter = i;
       Object[] ret = new Object[1];
       center = centerParameter(i, ret);
@@ -9091,11 +9094,12 @@ public class ScriptEval extends ScriptExpr {
     Object[] data = new Object[] { id, null, null };
     return (getShapePropertyData(JC.SHAPE_ISOSURFACE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_PMESH, "getBoundingBox", data)
-//        || getShapePropertyData(JC.SHAPE_UCCAGE, "getBoundingBox", data)
+        //        || getShapePropertyData(JC.SHAPE_UCCAGE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_CONTACT, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_NBO, "getBoundingBox", data)
-        || getShapePropertyData(JC.SHAPE_MO, "getBoundingBox", data) ? (P3[]) data[2]
-        : null);
+        || getShapePropertyData(JC.SHAPE_MO, "getBoundingBox", data)
+            ? (P3[]) data[2]
+            : null);
   }
 
   protected P3 getObjectCenter(String axisID, int index, int modelIndex) {
@@ -9239,10 +9243,29 @@ public class ScriptEval extends ScriptExpr {
       // moveTo/zoom/zoomTo {center} 0
       float r = Float.NaN;
       if (bs == null) {
-        if (tokAt(ptCenter) == T.dollarsign) {
+        switch (tokAt(ptCenter)) {
+        case T.unitcell:
+          SymmetryInterface uc = vwr.getCurrentUnitCell();
+          if (uc == null)
+            invArg(); 
+          P3[] pts = uc.getUnitCellVerticesNoOffset();
+          P3 off = uc.getCartesianOffset();
+          P3 pt = new P3();
+          BoxInfo bi = new BoxInfo();
+          for (int j = 0; j < 8; j++) {
+            pt.add2(off, pts[j]);
+            bi.addBoundBoxPoint(pt);
+          }
+          bi.setBbcage(1);
+          r = bi.bbCorner0.distance(bi.bbCorner1) / 2;
+          if (r == 0)
+            invArg();
+          break;
+        case T.dollarsign:
           P3[] bbox = getObjectBoundingBox(objectNameParameter(ptCenter + 1));
           if (bbox == null || (r = bbox[0].distance(bbox[1]) / 2) == 0)
-            invArg();
+            invArg(); 
+          break;          
         }
       } else {
         r = vwr.ms.calcRotationRadiusBs(bs);

@@ -3,6 +3,7 @@ package org.jmol.script;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.TickInfo;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -241,6 +242,19 @@ abstract public class ScriptParam extends ScriptError {
     P3 center = null;
     if (checkToken(i)) {
       switch (getToken(i).tok) {
+      case T.unitcell:
+        center = new P3();
+        SymmetryInterface uc = vwr.getCurrentUnitCell();
+        if (uc != null) {
+          P3[] pts = uc.getUnitCellVerticesNoOffset();
+          P3 off = uc.getCartesianOffset();
+          for (int j = 0; j < 8; j++) {
+            center.add(pts[j]);
+            center.add(off);
+          }
+        }
+        center.scale(1f/8);
+        break;
       case T.dollarsign:
         String id = objectNameParameter(++i);
         int index = Integer.MIN_VALUE;

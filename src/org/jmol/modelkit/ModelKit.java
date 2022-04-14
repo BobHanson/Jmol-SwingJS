@@ -1150,9 +1150,9 @@ public class ModelKit {
     try {
       if (bs != null && bs.isEmpty())
         return "";
-      SymmetryInterface uc = vwr.getOperativeSymmetry();
-      if (uc == null)
-        uc = vwr.getSymTemp()
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (sym == null)
+        sym = vwr.getSymTemp()
             .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
       // limit the atoms to 
       BS bsAtoms = vwr.getThisModelAtoms();
@@ -1167,7 +1167,7 @@ public class ModelKit {
       }
       boolean noAtoms = bsAtoms.isEmpty();
       int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
-      T3 m = uc.getUnitCellMultiplier();
+      T3 m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
       }
@@ -1181,7 +1181,7 @@ public class ModelKit {
       if (sg == null) {
         name = "P1";
         supercell = P3.new3(1, 1, 1);
-        oabc = uc.getUnitCellVectors();
+        oabc = sym.getUnitCellVectors();
         ita = "1";
         basis = null;
       } else {
@@ -1191,14 +1191,14 @@ public class ModelKit {
         ita = (String) sg.get("itaFull");
         basis = (BS) sg.get("basis");
       }
-      uc.getUnitCell(oabc,  false, null);
-      uc.setSpaceGroupTo(ita);
-      uc.setSpaceGroupName(name);
+      sym.getUnitCell(oabc,  false, null);
+      sym.setSpaceGroupTo(ita);
+      sym.setSpaceGroupName(name);
       if (basis == null)
-        basis = uc.removeDuplicates(vwr.ms, bsAtoms);
-      vwr.ms.setSpaceGroup(mi, uc, basis);
+        basis = sym.removeDuplicates(vwr.ms, bsAtoms);
+      vwr.ms.setSpaceGroup(mi, sym, basis);
       P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
-      vwr.ms.setUnitCellOffset(uc, pt, 0);
+      vwr.ms.setUnitCellOffset(sym, pt, 0);
       return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)

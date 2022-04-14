@@ -94,7 +94,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     P3 p = new P3();
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       p.setT(a[i]);
-      uc.toFractional(p, true);
+      uc.toFractional(p, false);
       String coord = clean(p.x) + clean(p.y) + clean(p.z);
       if (cz == null) {
         oc.append(PT.sprintf(f, "is", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord }));

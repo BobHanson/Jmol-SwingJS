@@ -5394,7 +5394,8 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i, boolean doTransform) throws ScriptException {
+  private void unitcell(int i, boolean isModelkit) throws ScriptException {
+    boolean doTransform = isModelkit;
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
@@ -5407,7 +5408,7 @@ public class CmdExt extends ScriptExt {
     String ucname = null;
     boolean isOffset = false;
     boolean isReset = false;
-    SymmetryInterface u = vwr.getCurrentUnitCell();
+    SymmetryInterface sym = vwr.getCurrentUnitCell();
     int tok = tokAt(++i);
     switch (tok) {
     case T.restore:
@@ -5449,7 +5450,7 @@ public class CmdExt extends ScriptExt {
       } else if (Float.isNaN(zoffset)) {
         zoffset = ((P4) hkl).w; 
       }
-      oabc = getUVBoxFromHKL(u, (P4) hkl, plane);
+      oabc = getUVBoxFromHKL(sym, (P4) hkl, plane);
       P3 p = new P3();
       V3 vt = new V3();
       Measure.getPlaneProjection(new P3(), plane, p, vt);
@@ -5477,7 +5478,7 @@ public class CmdExt extends ScriptExt {
       pt = (tok == T.scale ? eval.getPointOrPlane(++i, ScriptParam.MODE_P3)
           : eval.checkHKL(eval.getFractionalPoint(++i)));
       i = eval.iToken;
-      oabc = u.getUnitCellVectors();
+      oabc = sym.getUnitCellVectors();
       oabc[1].scale(Math.abs(pt.x));
       oabc[2].scale(Math.abs(pt.y));
       oabc[3].scale(Math.abs(pt.z));
@@ -5534,18 +5535,18 @@ public class CmdExt extends ScriptExt {
                 : tokAt(i + 1) == T.integer
                     ? intParameter(++i) * (float) Math.PI
                     : floatParameter(++i));
-            ucname = (u == null ? "" : u.getSpaceGroupName() + " ") + ucname;
-            oabc = (u == null
+            ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
+            oabc = (sym == null
                 ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
                     P3.new3(0, 1, 0), P3.new3(0, 0, 1) }
-                : u.getUnitCellVectors());
+                : sym.getUnitCellVectors());
             if (stype == null)
               stype = (String) vwr.getSymmetryInfo(
                   vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
                   T.lattice, null, 0, -1, 0);
-            if (u == null)
-              u = vwr.getSymTemp();
-            u.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
+            if (sym == null)
+              sym = vwr.getSymTemp();
+            sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
                 oabc,
                 (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
@@ -5670,12 +5671,12 @@ public class CmdExt extends ScriptExt {
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE) {
-      vwr.ms.setUnitCellOffset(u, null, icell);
+      vwr.ms.setUnitCellOffset(sym, null, icell);
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
       isReset = true;
-      SymmetryInterface unitCell = (doTransform ? u : null);
+      SymmetryInterface unitCell = (doTransform ? sym : null);
       if (unitCell != null) {
         BS bsAtoms = vwr.getFrameAtoms();
         int n = bsAtoms.cardinality();
