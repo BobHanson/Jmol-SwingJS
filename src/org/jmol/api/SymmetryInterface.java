@@ -259,5 +259,7 @@ public interface SymmetryInterface {
 
   void unitize(T3 ptFrac);
 
+  void setTainted();
+
 
 }

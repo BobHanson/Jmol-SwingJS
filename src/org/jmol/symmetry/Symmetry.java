@@ -436,7 +436,15 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getUnitCellState() {
-    return (unitCell == null ? "" : unitCell.getState());
+    if (unitCell == null)
+      return "";
+    return unitCell.getState();
+  }
+
+  @Override
+  public void setTainted() {
+    if (unitCell != null)
+      unitCell.setTainted();
   }
 
   @Override
