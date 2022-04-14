@@ -1047,7 +1047,7 @@ public class ActionManager implements EventManager {
       return;
     }
     if (bnd(pressAction, ACTION_popupMenu)) {
-      vwr.popupMenu(x, y, vwr.getBoolean(T.modelkitmode) ? 'm' : 'j');
+      doPopup(x, y);
       return;
     }
     if (dragSelectedMode) {
@@ -1414,6 +1414,10 @@ public class ActionManager implements EventManager {
       return;
     int nearestAtomIndex = findNearestAtom(x, y, nearestPoint, clickedCount > 0);
 
+    if (bnd(clickAction, ACTION_popupMenu)) {
+      doPopup(x, y);
+      return;
+    }
     if (clickedCount == 0 && apm != PICKING_ASSIGN_ATOM) {
       // mouse move
       if (mp == null)
@@ -1485,6 +1489,10 @@ public class ActionManager implements EventManager {
         reset();
       return;
     }
+  }
+
+  private void doPopup(int x, int y) {
+    vwr.popupMenu(x, y, vwr.getBoolean(T.modelkitmode) ? 'm' : 'j');
   }
 
   private void pickLabel(int iatom) {
@@ -1657,8 +1665,12 @@ public class ActionManager implements EventManager {
 
   private boolean isSelectAction(int action) {
     return (bnd(action, ACTION_pickAtom)
-        || !drawMode && !labelMode && apm == PICKING_IDENTIFY && bnd(action, ACTION_center)
-        || dragSelectedMode && bnd(dragAction, ACTION_rotateSelected, ACTION_dragSelected) 
+        || !drawMode
+        && !labelMode
+        && apm == PICKING_IDENTIFY
+        && bnd(action, ACTION_center)
+        || dragSelectedMode
+        && bnd(dragAction, ACTION_rotateSelected, ACTION_dragSelected) 
         || bnd(action, ACTION_pickPoint, ACTION_selectToggle, ACTION_selectAndNot,
             ACTION_selectOr, ACTION_selectToggleExtended, ACTION_select));
   }
