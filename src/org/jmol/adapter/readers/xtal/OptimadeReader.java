@@ -7,18 +7,14 @@ import java.util.Map;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
+import javajs.util.P3;
 import javajs.util.SB;
 
 /**
- * A molecular structure and orbital reader for MolDen files.
- * See http://www.cmbi.ru.nl/molden/molden_format.html
+ * A (preliminary) reader for OPTIMADE resources.
  * 
- * updated by Bob Hanson <hansonr@stolaf.edu> for Jmol 12.0/12.1
- * 
- * adding [spacegroup] [operators] [cell] [cellaxes] for Jmol 14.3.7 
- * 
- * @author Matthew Zwier <mczwier@gmail.com>
- */
+ * @author Bob Hanson hansonr@stolaf.edu
+*/
 
 @SuppressWarnings("unchecked")
 public class OptimadeReader extends AtomSetCollectionReader {
@@ -29,7 +25,6 @@ public class OptimadeReader extends AtomSetCollectionReader {
   private float ndims;
   private boolean isPolymer;
   private boolean isSlab;
-  private boolean isMolecular;
 
 
   @Override
@@ -97,13 +92,28 @@ public class OptimadeReader extends AtomSetCollectionReader {
   private boolean readLattice(List<Object> lattice) {
     if (lattice == null)
       return false;
+    float[] abc = new float[3];
+    P3[] vabc = new P3[3]; 
     for (int i = 0; i < 3; i++) {
       if (!toFloatArray((List<Number>) lattice.get(i), xyz)) {
         return false;
       }
       unitCellParams[0] = Float.NaN;
+      if (isSlab || isPolymer) {
+        vabc[i] = P3.new3(xyz[0], xyz[1], xyz[2]);
+        abc[i] = vabc[i].length();
+      }
+      if (i == 2) {
+        if (isSlab || isPolymer) {
+          unitCellParams[0] = abc[0];
+          if (isSlab)
+            unitCellParams[1] = abc[1];
+        }
+        
+      }
       addExplicitLatticeVector(i, xyz, 0);
     }
+    
     doApplySymmetry = true;
     return true;
   }
@@ -158,4 +168,8 @@ public class OptimadeReader extends AtomSetCollectionReader {
     return true;
   }
 
+  @Override
+  protected void finalizeSubclassSymmetry(boolean haveSymmetry) throws Exception {
+    super.finalizeSubclassSymmetry(haveSymmetry);
+  }
 }

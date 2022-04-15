@@ -119,7 +119,7 @@ class SpaceGroup {
     SpaceGroup sg = new SpaceGroup(-1, null, doInit);
     sg.doNormalize = doNormalize;
     if (doFinalize)
-      sg.setFinalOperations(null, 0, 0, false);
+      sg.setFinalOperations();
     return sg;
   }
   
@@ -193,19 +193,24 @@ class SpaceGroup {
         (xyz.indexOf("x") < 0 || xyz.indexOf("y") < 0 || xyz.indexOf("z") < 0) 
         ? -1 : addOperation(xyz, opId, allowScaling));
   }
-  
-  void setFinalOperations(P3[] atoms, int atomIndex, int count,
-                          boolean doNormalize) {
+
+  void setFinalOperations() {
+    setFinalOperationsForAtoms(3, null, 0, 0, false);
+  }
+
+  void setFinalOperationsForAtoms(int dim, P3[] atoms, int atomIndex, int count,
+                                  boolean doNormalize) {
     //from AtomSetCollection.applySymmetry only
     if (hallInfo == null && latticeParameter != 0) {
-      HallInfo h = new HallInfo(HallTranslation
-          .getHallLatticeEquivalent(latticeParameter));
+      HallInfo h = new HallInfo(
+          HallTranslation.getHallLatticeEquivalent(latticeParameter));
       generateAllOperators(h);
       //doNormalize = false;  // why this here?
     }
     finalOperations = null;
     isBio = (name.indexOf("bio") >= 0);
-    if (index >= getSpaceGroups().length && !isBio && name.indexOf("SSG:") < 0  && name.indexOf("[subsystem") < 0) {
+    if (index >= getSpaceGroups().length && !isBio && name.indexOf("SSG:") < 0
+        && name.indexOf("[subsystem") < 0) {
       SpaceGroup sg = getDerivedSpaceGroup();
       if (sg != null) {
         name = sg.getName();
@@ -214,29 +219,42 @@ class SpaceGroup {
       }
     }
     if (operationCount == 0)
-      this.addOperation("x,y,z", 1, false);
+      addOperation("x,y,z", 1, false);
     finalOperations = new SymmetryOperation[operationCount];
-    if (doNormalize && count > 0 && atoms != null) {
-      // we must apply this first to (x,y,z) JUST IN CASE the 
+    SymmetryOperation op = null;
+    boolean doOffset = (doNormalize && count > 0 && atoms != null);
+    if (doOffset) {
+      // we must apply this first to "x,y,z" JUST IN CASE the 
       // model center itself is out of bounds, because we want
-      // NO operation for (x,y,z). This requires REDEFINING ATOM LOCATIONS
-      finalOperations[0] = new SymmetryOperation(operations[0], atoms,
-          atomIndex, count, true);
+      // NO operation for "x,y,z". This requires REDEFINING ATOM LOCATIONS
+      op = finalOperations[0] = new SymmetryOperation(operations[0], 0, true);
+      if (op.sigma == null)
+        SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
       P3 atom = atoms[atomIndex];
       P3 c = P3.newP(atom);
-      finalOperations[0].rotTrans(c);
-      if (c.distance(atom) > 0.0001f) // not cartesian, but this is OK here
+      op.rotTrans(c);
+      if (c.distance(atom) > 0.0001f) {
+        // not cartesian, but this is OK here
         for (int i = 0; i < count; i++) {
           atom = atoms[atomIndex + i];
           c.setT(atom);
-          finalOperations[0].rotTrans(c);
+          op.rotTrans(c);
           atom.setT(c);
         }
+      }
+      if (!doNormalize)
+        op = null;
     }
     for (int i = 0; i < operationCount; i++) {
-      finalOperations[i] = new SymmetryOperation(operations[i], atoms,
-          atomIndex, count, doNormalize);
-      finalOperations[i].getCentering();
+      // not necessary to duplicate first operation if we have it already
+      if (i > 0 || op == null) {
+        op = finalOperations[i] = new SymmetryOperation(operations[i], 0,
+            doNormalize);
+      }
+      if (doOffset && op.sigma == null) {
+        SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
+      }
+      op.getCentering();
     }
   }
 
@@ -253,11 +271,6 @@ class SpaceGroup {
       : finalOperations[i].getXyz(doNormalize));
   }
 
-  void newPoint(int i, P3 atom1, P3 atom2,
-                       int transX, int transY, int transZ) {
-    SymmetryOperation.newPoint(finalOperations[i], atom1, atom2, transX, transY, transZ);
-  }
-    
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         SymmetryInterface cellInfo, boolean asMap, boolean andNonstandard) {
     try {
@@ -434,7 +447,7 @@ class SpaceGroup {
         || operations[0].timeReversal != 0)
       return this;
     if (finalOperations != null)
-      setFinalOperations(null, 0, 0, false);
+      setFinalOperations();
     String s = getCanonicalSeitzList();
     return (s == null ? null : findSpaceGroup(operationCount, s));
   }
@@ -548,8 +561,7 @@ class SpaceGroup {
       }
 
     }
-    SymmetryOperation op = new SymmetryOperation(null, null, 0, opId,
-        doNormalize);
+    SymmetryOperation op = new SymmetryOperation(null, opId, doNormalize);
     if (!op.setMatrixFromXYZ(xyz0, modDim, allowScaling)) {
       Logger.error("couldn't interpret symmetry operation: " + xyz0);
       return -1;
@@ -1698,8 +1710,7 @@ class SpaceGroup {
       if (data.length > modDim + 3)
         return false;
       for (int i = 0; i < nOps; i++) {
-        SymmetryOperation newOp = new SymmetryOperation(null, null, 0, 0,
-            true); // must normalize these
+        SymmetryOperation newOp = new SymmetryOperation(null, 0, true); // must normalize these
         newOp.modDim = modDim;
         SymmetryOperation op = operations[i];
         newOp.divisor = op.divisor;
@@ -1742,7 +1753,7 @@ class SpaceGroup {
   }
 
   public M4 getRawOperation(int i) {
-    SymmetryOperation op = new SymmetryOperation(null, null, 0, 0, false);
+    SymmetryOperation op = new SymmetryOperation(null, 0, false);
     op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
     op.doFinalize();
     return op;

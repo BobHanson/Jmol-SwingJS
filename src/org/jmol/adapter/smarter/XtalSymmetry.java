@@ -146,11 +146,6 @@ public class XtalSymmetry {
 
   private void setLatticeCells() {
 
-    //    int[] latticeCells, boolean applySymmetryToBonds,
-    //  }
-    //                       boolean doPackUnitCell, boolean doCentroidUnitCell,
-    //                       boolean centroidPacked, String strSupercell,
-    //                       P3 ptSupercell) {
     //set when unit cell is determined
     // x <= 555 and y >= 555 indicate a range of cells to load
     // AROUND the central cell 555 and that
@@ -627,12 +622,12 @@ public class XtalSymmetry {
     applySymmetryToBonds = acr.applySymmetryToBonds;
     doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
     bondCount0 = asc.bondCount;
+    ndims = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
     finalizeSymmetry(symmetry);
     int operationCount = symmetry.getSpaceGroupOperationCount();
     BS excludedOps = (acr.thisBiomolecule == null ? null : new BS());
     if (excludedOps != null)
       asc.checkSpecial = true;
-    ndims = (int) symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
     SimpleUnitCell.setMinMaxLatticeParameters(ndims, minXYZ, maxXYZ, 0);
     latticeOp = symmetry.getLatticeOp();
     latticeOnly = (asc.checkLatticeOnly && latticeOp >= 0); // CrystalReader
@@ -732,8 +727,8 @@ public class XtalSymmetry {
         for (int j = 0; j < nn; j++) {
           M4 m = M4.newM4(lstNCS.get(j));
           m.mul2(m1, m);
-          if (doNormalize)
-            SymmetryOperation.setOffset(m, atoms, firstAtom, noSymmetryCount);
+          if (doNormalize && noSymmetryCount > 0)
+            SymmetryOperation.normalizeOperationToCentroid(3, m, atoms, firstAtom, noSymmetryCount);
           lstNCS.addLast(m);
         }
       }
@@ -852,7 +847,8 @@ public class XtalSymmetry {
   private int symmetryAddAtoms(int transX, int transY, int transZ,
                                int baseCount, int pt, int iCellOpPt,
                                P3[] cartesians, MSInterface ms, BS excludedOps,
-                               int[] atomMap) throws Exception {
+                               int[] atomMap)
+      throws Exception {
     boolean isBaseCell = (baseCount == 0);
     boolean addBonds = (atomMap != null);
     if (doPackUnitCell)
@@ -894,8 +890,8 @@ public class XtalSymmetry {
     int j00 = (bsAtoms == null ? firstAtom : bsAtoms.nextSetBit(firstAtom));
     out: for (int iSym = 0; iSym < nOperations; iSym++) {
 
-      if (isBaseCell && iSym == 0 
-          || latticeOnly && iSym > 0 && (iSym % latticeOp) != 0 
+      if (isBaseCell && iSym == 0
+          || latticeOnly && iSym > 0 && (iSym % latticeOp) != 0
           || excludedOps != null && excludedOps.get(iSym))
         continue;
 
@@ -911,29 +907,25 @@ public class XtalSymmetry {
 
       int pt0 = firstAtom + (checkSpecial || excludedOps != null ? pt
           : checkRange111 ? baseCount : 0);
-      float spinOp = (iSym >= nOp ? 0 : asc.vibScale == 0 ? sym
-          .getSpinOp(iSym) : asc.vibScale);
+      float spinOp = (iSym >= nOp ? 0
+          : asc.vibScale == 0 ? sym.getSpinOp(iSym) : asc.vibScale);
       int i0 = Math.max(firstAtom,
           (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
       boolean checkDistance = checkDistances;
       int spt = (iSym >= nOp ? (iSym - nOp) / nNCS : iSym);
       int cpt = spt + iCellOpPt;
-      
-      
-      
-      
       for (int i = i0; i < atomMax; i++) {
         Atom a = asc.atoms[i];
         if (a.ignoreSymmetry || bsAtoms != null && !bsAtoms.get(i))
           continue;
 
         if (ms == null) {
-          sym.newSpaceGroupPoint(iSym, a, pttemp, transX, transY, transZ,
-              (iSym >= nOp ? lstNCS.get(iSym - nOp) : null));
+          sym.newSpaceGroupPoint(a, iSym,
+              (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
+              transZ, pttemp);
         } else {
           sym = ms.getAtomSymmetry(a, this.symmetry);
-          sym.newSpaceGroupPoint(iSym, a, pttemp, transX, transY, transZ,
-              null);
+          sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
           // COmmensurate structures may use a symmetry operator
           // to changes space groups.
           code = sym.getSpaceGroupOperationCode(iSym);
@@ -964,9 +956,8 @@ public class XtalSymmetry {
         if (checkDistance) {
           // for range checking, we first make sure we are not out of range
           // for the cartesian
-          if (checkSymmetryRange
-              && (c.x < rminx || c.y < rminy || c.z < rminz || c.x > rmaxx
-                  || c.y > rmaxy || c.z > rmaxz))
+          if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz
+              || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
             continue;
           float minDist2 = Float.MAX_VALUE;
           // checkAll means we have to check against operations that have
@@ -992,7 +983,7 @@ public class XtalSymmetry {
                 excludedOps.set(iSym);
                 continue out;
               }
-              special = asc.atoms[j];              
+              special = asc.atoms[j];
               if ((special.atomName == null || special.atomName.equals(name))
                   && special.altLoc == id)
                 break;
@@ -1060,10 +1051,10 @@ public class XtalSymmetry {
           if (atom1 == null || atom2 == null
               || atom2.atomSetIndex < atom1.atomSetIndex)
             continue;
-          
+
           int ia1 = atomMap[atom1.atomSite];
           int ia2 = atomMap[atom2.atomSite];
-//          float d = 0;
+          //          float d = 0;
           if (ia1 > ia2) {
             int i = ia1;
             ia1 = ia2;
@@ -1105,7 +1096,7 @@ public class XtalSymmetry {
 
   private void finalizeSymmetry(SymmetryInterface symmetry) {
     String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, "spaceGroup");
-    symmetry.setFinalOperations(name, asc.atoms, firstAtom,
+    symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!"))
       setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());

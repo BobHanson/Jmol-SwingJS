@@ -1387,7 +1387,7 @@ public class SymmetryDesc {
         if (Float.isNaN(pt.x))
           return nullRet;
         P3 sympt = new P3();
-        symTemp.newSpaceGroupPoint(i, pt, sympt, 0, 0, 0, null);        
+        symTemp.newSpaceGroupPoint(pt, i, null, 0, 0, 0, sympt);        
         if (options == T.offset) {
           uc.unitize(sympt);
           sympt.add(offset);

@@ -81,11 +81,26 @@ public class SimpleUnitCell {
 
   /**
    * 
-   * @param params len = 6 [a b c alpha beta gamma] 
-   *            or len = 15 [-1 0 0 0 0 0 va vb vc]
-   *            or len = 22 [a b c alpha beta gamma m00 m01 .. m33]
-   *            and/or len = 25 [......................  na nb nc]
-   *             
+   * @param params
+   * 
+   *        len = 6 [a b c alpha beta gamma]
+   * 
+   *        len = 6 [a b -1 alpha beta gamma] // slab
+   * 
+   *        len = 6 [a -1 -1 alpha beta gamma] // polymer
+   * 
+   *        or len = 15 [-1 -1 -1 -1 -1 -1 va[3] vb[3] vc[3]] // vectors only
+   * 
+   *        or len = 15 [a -1 -1 -1 -1 -1 va[3] vb[3] vc[3]] // polymer, vectors only
+   * 
+   *        or len = 15 [a b -1 -1 -1 -1 va[3] vb[3] vc[3]] // slab, vectors only
+   * 
+   *        or len = 22 [a b c alpha beta gamma m00 m01 .. m33] // matrix included
+   * 
+   *        and/or len = 25 [...................... na nb nc] // supercell
+   * 
+   *        and/or len = 26 [...................... na nb nc scale] // scaled supercell
+   * 
    * @return a simple unit cell
    */
   public static SimpleUnitCell newA(float[] params) {
@@ -107,10 +122,16 @@ public class SimpleUnitCell {
     a = params[0];
     b = params[1];
     c = params[2];
+    if (b <= 0) {
+      dimension = 1;
+    } else if (c <= 0) {
+      dimension = 2;
+    }
+    
     alpha = params[3];
     beta = params[4];
     gamma = params[5];
-    if (gamma == -1) {
+    if (gamma == -1 && c > 0) {
       rotateHex = true;
       gamma = 120;
     }
@@ -129,7 +150,7 @@ public class SimpleUnitCell {
       fa = fb = fc = 1;
     }
 
-    if (a <= 0) {
+    if (c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
       V3 va = V3.new3(params[6], params[7], params[8]);
       V3 vb = V3.new3(params[9], params[10], params[11]);
@@ -162,15 +183,12 @@ public class SimpleUnitCell {
     a *= fa; 
     if (b <= 0) {
       b = c = 1;
-      dimension = 1;
     } else if (c <= 0) {
       c = 1;
       b *= fb;
-      dimension = 2;
     } else {
       b *= fb;
       c *= fc;
-      dimension = 3;
     }
     setCellParams();
     

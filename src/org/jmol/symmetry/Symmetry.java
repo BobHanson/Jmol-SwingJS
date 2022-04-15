@@ -55,33 +55,34 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
+/* Symmetry is a wrapper class that allows access to the package-local
+ * classes PointGroup, SpaceGroup, SymmetryInfo, and UnitCell.
+ * 
+ * When symmetry is detected in ANY model being loaded, a SymmetryInterface
+ * is established for ALL models.
+ * 
+ * The SpaceGroup information could be saved with each model, but because this 
+ * depends closely on what atoms have been selected, and since tracking that with atom
+ * deletion is a bit complicated, instead we just use local instances of that class.
+ * 
+ * The three PointGroup methods here could be their own interface; they are just here
+ * for convenience.
+ * 
+ * The file readers use SpaceGroup and UnitCell methods
+ * 
+ * The modelSet and modelLoader classes use UnitCell and SymmetryInfo 
+ * 
+ */
 public class Symmetry implements SymmetryInterface {
   // NOTE: THIS CLASS IS VERY IMPORTANT.
   // IN ORDER TO MODULARIZE IT, IT IS REFERENCED USING 
   // xxxx = Interface.getSymmetry();
 
-  /* Symmetry is a wrapper class that allows access to the package-local
-   * classes PointGroup, SpaceGroup, SymmetryInfo, and UnitCell.
-   * 
-   * When symmetry is detected in ANY model being loaded, a SymmetryInterface
-   * is established for ALL models.
-   * 
-   * The SpaceGroup information could be saved with each model, but because this 
-   * depends closely on what atoms have been selected, and since tracking that with atom
-   * deletion is a bit complicated, instead we just use local instances of that class.
-   * 
-   * The three PointGroup methods here could be their own interface; they are just here
-   * for convenience.
-   * 
-   * The file readers use SpaceGroup and UnitCell methods
-   * 
-   * The modelSet and modelLoader classes use UnitCell and SymmetryInfo 
-   * 
-   */
-  private PointGroup pointGroup;
   SpaceGroup spaceGroup;
+  private PointGroup pointGroup;
   private SymmetryInfo symmetryInfo;
   private UnitCell unitCell;
+  private CIPChirality cip;
   private boolean isBio;
 
   @Override
@@ -97,15 +98,16 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setPointGroup(SymmetryInterface siLast,
-                                         T3 center, T3[] atomset,
-                                         BS bsAtoms,
+  public SymmetryInterface setPointGroup(SymmetryInterface siLast, T3 center,
+                                         T3[] atomset, BS bsAtoms,
                                          boolean haveVibration,
                                          float distanceTolerance,
-                                         float linearTolerance, boolean localEnvOnly) {
-    pointGroup = PointGroup.getPointGroup(siLast == null ? null
-        : ((Symmetry) siLast).pointGroup, center, atomset, bsAtoms,
-        haveVibration, distanceTolerance, linearTolerance, localEnvOnly);
+                                         float linearTolerance,
+                                         boolean localEnvOnly) {
+    pointGroup = PointGroup.getPointGroup(
+        siLast == null ? null : ((Symmetry) siLast).pointGroup, center, atomset,
+        bsAtoms, haveVibration, distanceTolerance, linearTolerance,
+        localEnvOnly);
     return this;
   }
 
@@ -115,9 +117,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object getPointGroupInfo(int modelIndex, String drawID,
-                                  boolean asInfo, String type, int index,
-                                  float scale) {
+  public Object getPointGroupInfo(int modelIndex, String drawID, boolean asInfo,
+                                  String type, int index, float scale) {
     if (drawID == null && !asInfo && pointGroup.textInfo != null)
       return pointGroup.textInfo;
     else if (drawID == null && pointGroup.isDrawType(type, index, scale))
@@ -161,23 +162,27 @@ public class Symmetry implements SymmetryInterface {
    * 
    * @param desiredSpaceGroupIndex
    * @param name
-   * @param data a Lst<SymmetryOperation> or Lst<M4> 
-   * @param modDim in [3+d] modulation dimension
+   * @param data
+   *        a Lst<SymmetryOperation> or Lst<M4>
+   * @param modDim
+   *        in [3+d] modulation dimension
    * @return true if a known space group
    */
   @Override
   public boolean createSpaceGroup(int desiredSpaceGroupIndex, String name,
                                   Object data, int modDim) {
-    spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name,
-        data, modDim);
+    spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name, data,
+        modDim);
     if (spaceGroup != null && Logger.debugging)
       Logger.debug("using generated space group " + spaceGroup.dumpInfo());
     return spaceGroup != null;
   }
 
   @Override
-  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo, boolean isFull, boolean addNonstandard) {
-    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull, addNonstandard);
+  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
+                                     boolean isFull, boolean addNonstandard) {
+    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull,
+        addNonstandard);
   }
 
   @Override
@@ -186,9 +191,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setFinalOperations(String name, P3[] atoms, int iAtomFirst,
-                                 int noSymmetryCount, boolean doNormalize,
-                                 String filterSymop) {
+  public void setFinalOperations(int dim, String name, P3[] atoms,
+                                 int iAtomFirst, int noSymmetryCount,
+                                 boolean doNormalize, String filterSymop) {
     if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0)) // filter SYMOP
       spaceGroup.name = name;
     if (filterSymop != null) {
@@ -200,16 +205,16 @@ public class Symmetry implements SymmetryInterface {
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
           name + " *(" + filterSymop.trim() + ")", lst, -1);
     }
-    spaceGroup.setFinalOperations(atoms, iAtomFirst, noSymmetryCount,
-        doNormalize);
+    spaceGroup.setFinalOperationsForAtoms(dim, atoms, iAtomFirst,
+        noSymmetryCount, doNormalize);
   }
 
   @Override
   public M4 getSpaceGroupOperation(int i) {
     return (spaceGroup == null || spaceGroup.operations == null // bio 
         || i >= spaceGroup.operations.length ? null
-        : spaceGroup.finalOperations == null ? spaceGroup.operations[i]
-            : spaceGroup.finalOperations[i]);
+            : spaceGroup.finalOperations == null ? spaceGroup.operations[i]
+                : spaceGroup.finalOperations[i]);
   }
 
   @Override
@@ -223,23 +228,24 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void newSpaceGroupPoint(int i, P3 atom1, P3 atom2, int transX,
-                                 int transY, int transZ, M4 o) {
+  public void newSpaceGroupPoint(P3 pt, int i, M4 o, int transX,
+                                 int transY, int transZ, P3 retPoint) {
     if (o == null && spaceGroup.finalOperations == null) {
-      SymmetryOperation op = spaceGroup.operations[i]; 
+      SymmetryOperation op = spaceGroup.operations[i];
       // temporary spacegroups don't have to have finalOperations
       if (!op.isFinalized)
         op.doFinalize();
-      SymmetryOperation.newPoint(op, atom1, atom2, transX, transY, transZ);
-      return;
+      o = op;
     }
-    SymmetryOperation.newPoint((o == null ? spaceGroup.finalOperations[i] : o), atom1, atom2, transX, transY, transZ);
+    newPoint((o == null ? spaceGroup.finalOperations[i] : o), pt, transX,
+        transY, transZ, retPoint);
   }
 
   @Override
   public V3[] rotateAxes(int iop, V3[] axes, P3 ptTemp, M3 mTemp) {
-    return (iop == 0 ? axes : spaceGroup.finalOperations[iop].rotateAxes(axes,
-        unitCell, ptTemp, mTemp));
+    return (iop == 0 ? axes
+        : spaceGroup.finalOperations[iop].rotateAxes(axes, unitCell, ptTemp,
+            mTemp));
   }
 
   @Override
@@ -285,11 +291,14 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   /**
-   * @param rot is a full (3+d)x(3+d) array of epsilons
-   * @param trans is a (3+d)x(1) array of translations
+   * @param rot
+   *        is a full (3+d)x(3+d) array of epsilons
+   * @param trans
+   *        is a (3+d)x(1) array of translations
    * @return Jones-Faithful representation
    */
-  public String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma) {
+  public String addSubSystemOp(String code, Matrix rs, Matrix vs,
+                               Matrix sigma) {
     spaceGroup.isSSG = true;
     String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
     int i = spaceGroup.addSymmetry(s, -1, true);
@@ -310,12 +319,14 @@ public class Symmetry implements SymmetryInterface {
   // in lieu of saving the actual unit cell read in the reader. Not perfect.
   // The idea was to be able to create the unit cell from "scratch" independent
   // of the reader. 
-  
+
   @Override
   public String getSpaceGroupName() {
     return (symmetryInfo != null ? symmetryInfo.sgName
-        : spaceGroup != null ? spaceGroup.getName() : unitCell != null
-            && unitCell.name.length() > 0 ? "cell=" + unitCell.name : "");
+        : spaceGroup != null ? spaceGroup.getName()
+            : unitCell != null && unitCell.name.length() > 0
+                ? "cell=" + unitCell.name
+                : "");
   }
 
   @Override
@@ -325,29 +336,28 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroupName(String name) {
-    if (spaceGroup != null) 
+    if (spaceGroup != null)
       spaceGroup.setName(name);
   }
 
   @Override
   public int getSpaceGroupOperationCount() {
     return (symmetryInfo != null ? symmetryInfo.symmetryOperations.length
-        : spaceGroup != null && spaceGroup.finalOperations != null ? spaceGroup.finalOperations.length
+        : spaceGroup != null && spaceGroup.finalOperations != null
+            ? spaceGroup.finalOperations.length
             : 0);
   }
 
   @Override
   public char getLatticeType() {
-    return (symmetryInfo != null ? symmetryInfo.latticeType 
-        : spaceGroup == null ? 'P' 
-            : spaceGroup.latticeType);
+    return (symmetryInfo != null ? symmetryInfo.latticeType
+        : spaceGroup == null ? 'P' : spaceGroup.latticeType);
   }
 
   @Override
   public String getIntTableNumber() {
-    return (symmetryInfo != null ? symmetryInfo.intlTableNo 
-        : spaceGroup == null ? null 
-            : spaceGroup.intlTableNumber);
+    return (symmetryInfo != null ? symmetryInfo.intlTableNo
+        : spaceGroup == null ? null : spaceGroup.intlTableNumber);
   }
 
   @Override
@@ -377,13 +387,14 @@ public class Symmetry implements SymmetryInterface {
       return symmetryInfo.symmetryOperations;
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, false, true);
-    spaceGroup.setFinalOperations(null, -1, 0, false);
+    spaceGroup.setFinalOperations();
     return spaceGroup.finalOperations;
   }
 
   @Override
   public boolean isSimple() {
-    return (spaceGroup == null && (symmetryInfo == null || symmetryInfo.symmetryOperations == null));
+    return (spaceGroup == null
+        && (symmetryInfo == null || symmetryInfo.symmetryOperations == null));
   }
 
   /**
@@ -424,7 +435,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setUnitCell(float[] unitCellParams, boolean setRelative) {
+  public SymmetryInterface setUnitCell(float[] unitCellParams,
+                                       boolean setRelative) {
     unitCell = UnitCell.fromParams(unitCellParams, setRelative);
     return this;
   }
@@ -481,7 +493,7 @@ public class Symmetry implements SymmetryInterface {
     if (!isBio)
       unitCell.toFractional(pt, ignoreOffset);
   }
-  
+
   @Override
   public void toFractionalM(M4 m) {
     if (!isBio)
@@ -555,7 +567,6 @@ public class Symmetry implements SymmetryInterface {
     return s;
   }
 
-
   @Override
   public P3[] getCanonicalCopy(float scale, boolean withOffset) {
     return unitCell.getCanonicalCopy(scale, withOffset);
@@ -583,7 +594,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean checkDistance(P3 f1, P3 f2, float distance, float dx,
-                               int iRange, int jRange, int kRange, P3 ptOffset) {
+                               int iRange, int jRange, int kRange,
+                               P3 ptOffset) {
     return unitCell.checkDistance(f1, f2, distance, dx, iRange, jRange, kRange,
         ptOffset);
   }
@@ -594,8 +606,10 @@ public class Symmetry implements SymmetryInterface {
   }
 
   /**
-   * @param oabc  [ptorigin, va, vb, vc]
-   * @param setRelative a flag only set true for IsosurfaceMesh
+   * @param oabc
+   *        [ptorigin, va, vb, vc]
+   * @param setRelative
+   *        a flag only set true for IsosurfaceMesh
    * @param name
    * @return this SymmetryInterface
    */
@@ -623,7 +637,8 @@ public class Symmetry implements SymmetryInterface {
       JmolMolecule[] molecules = modelSet.getMolecules();
       int moleculeCount = molecules.length;
       Atom[] atoms = modelSet.at;
-      boolean isOneMolecule = (molecules[moleculeCount - 1].firstAtomIndex == modelSet.am[atoms[iAtom0].mi].firstAtomIndex);
+      boolean isOneMolecule = (molecules[moleculeCount
+          - 1].firstAtomIndex == modelSet.am[atoms[iAtom0].mi].firstAtomIndex);
       P3 center = new P3();
       boolean centroidPacked = (minmax[6] == 1);
       nextMol: for (int i = moleculeCount; --i >= 0
@@ -665,11 +680,13 @@ public class Symmetry implements SymmetryInterface {
           || center.x - 0.000005f > minmax[3]
           || center.y + 0.000005f <= minmax[1]
           || center.y - 0.000005f > minmax[4]
-          || center.z + 0.000005f <= minmax[2] || center.z - 0.000005f > minmax[5]);
+          || center.z + 0.000005f <= minmax[2]
+          || center.z - 0.000005f > minmax[5]);
 
-    return (center.x + 0.000005f <= minmax[0]
-        || center.x + 0.00005f > minmax[3] || center.y + 0.000005f <= minmax[1]
-        || center.y + 0.00005f > minmax[4] || center.z + 0.000005f <= minmax[2] || center.z + 0.00005f > minmax[5]);
+    return (center.x + 0.000005f <= minmax[0] || center.x + 0.00005f > minmax[3]
+        || center.y + 0.000005f <= minmax[1] || center.y + 0.00005f > minmax[4]
+        || center.z + 0.000005f <= minmax[2]
+        || center.z + 0.00005f > minmax[5]);
   }
 
   // info
@@ -692,16 +709,21 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
-                                    int op, P3 translation, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options) {
-    return getDesc(modelSet).getSymopInfo(iatom, xyz, op, translation, pt,
-        pt2, id, type, scaleFactor, nth, options);
+                                    int op, P3 translation, P3 pt, P3 pt2,
+                                    String id, int type, float scaleFactor,
+                                    int nth, int options) {
+    return getDesc(modelSet).getSymopInfo(iatom, xyz, op, translation, pt, pt2,
+        id, type, scaleFactor, nth, options);
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex, boolean isFull, float[] cellParams) {
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName,
+                                               int modelIndex, boolean isFull,
+                                               float[] cellParams) {
     boolean isForModel = (sgName == null);
     if (sgName == null) {
-      Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
+      Map<String, Object> info = modelSet
+          .getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
         sgName = (String) info.get("spaceGroup");
     }
@@ -709,11 +731,10 @@ public class Symmetry implements SymmetryInterface {
     if (cellParams != null) {
       cellInfo = new Symmetry().setUnitCell(cellParams, false);
     }
-    return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
-        null, 0, -1, isFull, isForModel, 0, cellInfo, null);
+    return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
+        null, null, null, 0, -1, isFull, isForModel, 0, cellInfo, null);
   }
 
-  
   @Override
   public String fcoord(T3 p) {
     return SymmetryOperation.fcoord(p);
@@ -722,7 +743,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public T3[] getV0abc(Object def) {
     return (unitCell == null ? null : unitCell.getV0abc(def));
-  } 
+  }
 
   @Override
   public Quat getQuaternionRotation(String abc) {
@@ -744,11 +765,12 @@ public class Symmetry implements SymmetryInterface {
     }
     pt = getUnitCellMultiplier();
     if (pt != null) {
-      commands.append("; set unitcell ").append(SimpleUnitCell.escapeMultiplier(pt));
+      commands.append("; set unitcell ")
+          .append(SimpleUnitCell.escapeMultiplier(pt));
       loadUC = true;
     }
     String sg0 = (String) ms.getInfo(modelIndex, "spaceGroupOriginal");
-    String sg = (String) ms.getInfo(modelIndex, "spaceGroup");    
+    String sg = (String) ms.getInfo(modelIndex, "spaceGroup");
     if (sg0 != null && sg != null && !sg.equals(sg0)) {
       commands.append("\nMODELKIT SPACEGROUP " + PT.esc(sg));
       loadUC = true;
@@ -757,25 +779,28 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public AtomIndexIterator getIterator(Viewer vwr, Atom atom,
-                                       BS bsAtoms, float radius) {
-    return ((UnitCellIterator) Interface.getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
-        .set(this, atom, vwr.ms.at, bsAtoms, radius);
+  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bsAtoms,
+                                       float radius) {
+    return ((UnitCellIterator) Interface
+        .getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
+            .set(this, atom, vwr.ms.at, bsAtoms, radius);
   }
 
   @Override
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc, M3 primitiveToCrystal) {
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
+                                 M3 primitiveToCrystal) {
     if (unitCell == null)
       unitCell = UnitCell.fromOABC(oabc, false);
-    return unitCell.toFromPrimitive(toPrimitive, type, oabc, primitiveToCrystal);
+    return unitCell.toFromPrimitive(toPrimitive, type, oabc,
+        primitiveToCrystal);
   }
 
   @Override
   public Lst<P3> generateCrystalClass(P3 pt0) {
-     M4[] ops = getSymmetryOperations();
+    M4[] ops = getSymmetryOperations();
     Lst<P3> lst = new Lst<P3>();
     boolean isRandom = (pt0 == null);
-    float rand1=0,rand2=0,rand3=0;
+    float rand1 = 0, rand2 = 0, rand3 = 0;
     if (isRandom) {
       rand1 = (float) Math.E;
       rand2 = (float) Math.PI;
@@ -832,30 +857,36 @@ public class Symmetry implements SymmetryInterface {
   public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
     vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
-    String dataClass = (vwr.getBoolean(T.testflag1) ? "CIPData" : "CIPDataTracker");
-    CIPData data = ((CIPData) Interface.getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr, bsAtoms);
+    String dataClass = (vwr.getBoolean(T.testflag1) ? "CIPData"
+        : "CIPDataTracker");
+    CIPData data = ((CIPData) Interface
+        .getInterface("org.jmol.symmetry." + dataClass, vwr, "script")).set(vwr,
+            bsAtoms);
     data.setRule6Full(vwr.getBoolean(T.ciprule6full));
     cip.getChiralityForAtoms(data);
     vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
   }
-  
+
   @Override
-  public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles) throws Exception {
+  public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+      throws Exception {
     vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
-    CIPDataSmiles data = ((CIPDataSmiles) Interface.getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script")).setAtomsForSmiles(vwr, smiles);
+    CIPDataSmiles data = ((CIPDataSmiles) Interface
+        .getInterface("org.jmol.symmetry.CIPDataSmiles", vwr, "script"))
+            .setAtomsForSmiles(vwr, smiles);
     cip.getChiralityForAtoms(data);
     vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-       return data.getSmilesChiralityArray();
-  }
-  
-  CIPChirality cip;
-  
-  private CIPChirality getCIPChirality(Viewer vwr) {
-    return (cip == null ? (cip = ((CIPChirality) Interface.getInterface("org.jmol.symmetry.CIPChirality", vwr, "script"))) : cip);
+    return data.getSmilesChiralityArray();
   }
 
-  
+  private CIPChirality getCIPChirality(Viewer vwr) {
+    return (cip == null
+        ? (cip = ((CIPChirality) Interface
+            .getInterface("org.jmol.symmetry.CIPChirality", vwr, "script")))
+        : cip);
+  }
+
   /**
    * return a conventional lattice from a primitive
    * 
@@ -877,13 +908,15 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setUnitCell(SymmetryInterface uc) {
-    unitCell = UnitCell.cloneUnitCell(((Symmetry)uc).unitCell);   
+    unitCell = UnitCell.cloneUnitCell(((Symmetry) uc).unitCell);
   }
 
   @Override
-  public Object findSpaceGroup(Viewer vwr, BS atoms, String opXYZ, boolean asString) {
-    return ((SpaceGroupFinder) Interface.getInterface(
-        "org.jmol.symmetry.SpaceGroupFinder", vwr, "eval")).findSpaceGroup(vwr, atoms, opXYZ, this, asString);
+  public Object findSpaceGroup(Viewer vwr, BS atoms, String opXYZ,
+                               boolean asString) {
+    return ((SpaceGroupFinder) Interface
+        .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
+            .findSpaceGroup(vwr, atoms, opXYZ, this, asString);
   }
 
   @Override
@@ -898,33 +931,33 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public BS removeDuplicates(ModelSet ms, BS bs) {
-      UnitCell uc = this.unitCell;
-      Atom[] atoms = ms.at;
-      float[] occs = ms.occupancies;
-      boolean haveOccupancies = (occs != null);
-      P3 pt = new P3();
-      P3 pt2 = new P3();
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Atom a = atoms[i];
-        pt.setT(a);
-        uc.toFractional(pt, false);
-        uc.unitizeRnd(pt);
-        int type = a.getAtomicAndIsotopeNumber();
-        
-        float occ = (haveOccupancies ? occs[i] : 0);
-        for (int j = bs.nextSetBit(i + 1); j >= 0; j = bs.nextSetBit(j + 1)) {
-          Atom b = atoms[j];
-          if (type != b.getAtomicAndIsotopeNumber()
-              || (haveOccupancies && occ != occs[j]))
-              continue;
-          pt2.setT(b);
-          uc.toFractional(pt2, false);
-          uc.unitizeRnd(pt2);
-          if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
-            bs.clear(j);
-          }
-        }        
+    UnitCell uc = this.unitCell;
+    Atom[] atoms = ms.at;
+    float[] occs = ms.occupancies;
+    boolean haveOccupancies = (occs != null);
+    P3 pt = new P3();
+    P3 pt2 = new P3();
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      Atom a = atoms[i];
+      pt.setT(a);
+      uc.toFractional(pt, false);
+      uc.unitizeRnd(pt);
+      int type = a.getAtomicAndIsotopeNumber();
+
+      float occ = (haveOccupancies ? occs[i] : 0);
+      for (int j = bs.nextSetBit(i + 1); j >= 0; j = bs.nextSetBit(j + 1)) {
+        Atom b = atoms[j];
+        if (type != b.getAtomicAndIsotopeNumber()
+            || (haveOccupancies && occ != occs[j]))
+          continue;
+        pt2.setT(b);
+        uc.toFractional(pt2, false);
+        uc.unitizeRnd(pt2);
+        if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
+          bs.clear(j);
+        }
       }
+    }
     return bs;
   }
 
@@ -932,7 +965,8 @@ public class Symmetry implements SymmetryInterface {
   public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags) {
     M4[] ops = getSymmetryOperations();
     return (ops == null || unitCell == null ? null
-        : unitCell.getEquivPoints(pt, flags, ops, pts == null ? new Lst<P3>() : pts, 0, 0));
+        : unitCell.getEquivPoints(pt, flags, ops,
+            pts == null ? new Lst<P3>() : pts, 0, 0));
   }
 
   @Override
@@ -968,14 +1002,15 @@ public class Symmetry implements SymmetryInterface {
     }
     // now remove the starting points, checking to see if perhaps our
     // test point itself has been removed.
-    if (!zapped && (pts.size() == nIgnored || pts.get(nIgnored) != p0 || allPoints || newPt))
+    if (!zapped && (pts.size() == nIgnored || pts.get(nIgnored) != p0
+        || allPoints || newPt))
       n--;
     for (int i = n - nIgnored; --i >= 0;)
       pts.removeItemAt(nIgnored);
     // final check for removing duplicates
-//    if (nIgnored > 0)
-//      UnitCell.checkDuplicate(pts, 0, nIgnored - 1, nIgnored);
-    
+    //    if (nIgnored > 0)
+    //      UnitCell.checkDuplicate(pts, 0, nIgnored - 1, nIgnored);
+
     // and turn these to Cartesians if desired
     if (!tofractional) {
       for (int i = pts.size(); --i >= nIgnored;)
@@ -996,10 +1031,10 @@ public class Symmetry implements SymmetryInterface {
       p.setT(pt);
       toFractional(p, true);
       // unitize here should take care of all Wyckoff positions
-     unitCell.unitize(p);
+      unitCell.unitize(p);
       p0.setT(p);
       ops[i].rotTrans(p);
-     unitCell.unitize(p);
+      unitCell.unitize(p);
       if (p0.distanceSquared(p) < JC.UC_TOLERANCE2) {
         bs.set(i);
       }
@@ -1018,7 +1053,6 @@ public class Symmetry implements SymmetryInterface {
     return ret;
   }
 
-
   /**
    * @param fracA
    * @param fracB
@@ -1028,6 +1062,11 @@ public class Symmetry implements SymmetryInterface {
   public M4 getTransform(P3 fracA, P3 fracB, boolean best) {
     return getDesc(null).getTransform(unitCell, getSymmetryOperations(), fracA,
         fracB, best);
+  }
+
+  static void newPoint(M4 m, P3 atom1, int x, int y, int z, P3 atom2) {
+    m.rotTrans2(atom1, atom2);
+    atom2.add3(x, y, z);
   }
 
 }

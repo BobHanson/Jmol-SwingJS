@@ -189,8 +189,8 @@ public interface SymmetryInterface {
 
   boolean isSupercell();
 
-  void newSpaceGroupPoint(int i, P3 atom1, P3 atom2,
-                                          int transX, int transY, int transZ, M4 o);
+  void newSpaceGroupPoint(P3 pt, int i, M4 o,
+                                          int transX, int transY, int transZ, P3 retPoint);
 
   BS notInCentroid(ModelSet modelSet, BS bsAtoms,
                           int[] minmax);
@@ -199,7 +199,7 @@ public interface SymmetryInterface {
 
   V3[] rotateAxes(int iop, V3[] axes, P3 ptTemp, M3 mTemp);
 
-  void setFinalOperations(String name, P3[] atoms,
+  void setFinalOperations(int dim, String name, P3[] atoms,
                                           int iAtomFirst,
                                           int noSymmetryCount, boolean doNormalize, String filterSymop);
 

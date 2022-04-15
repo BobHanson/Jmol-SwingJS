@@ -68,8 +68,6 @@ public class SymmetryOperation extends M4 {
   private int opId;
   private V3 centering;
 
-  private static P3 atomTest;
-
   private String[] myLabels;
   int modDim;
 
@@ -95,7 +93,7 @@ public class SymmetryOperation extends M4 {
   Matrix rsvs;
 
   boolean isBio;
-  private Matrix sigma;
+  Matrix sigma;
   int number;
   String subsystemCode;
   int timeReversal;
@@ -112,17 +110,14 @@ public class SymmetryOperation extends M4 {
 
   /**
    * 
-   * @param op
-   * @param atoms
-   * @param atomIndex
-   * @param countOrId
-   * @param doNormalize
+   * @param op operation to clone or null
+   * @param id opId for this operation; ignored if cloning
+   * @param doNormalize 
    */
-  SymmetryOperation(SymmetryOperation op, P3[] atoms, int atomIndex,
-      int countOrId, boolean doNormalize) {
+  SymmetryOperation(SymmetryOperation op, int id, boolean doNormalize) {
     this.doNormalize = doNormalize;
     if (op == null) {
-      opId = countOrId;
+      opId = id;
       return;
     }
     /*
@@ -143,8 +138,6 @@ public class SymmetryOperation extends M4 {
     setMatrix(false);
     if (!op.isFinalized)
       doFinalize();
-    if (doNormalize && sigma == null)
-      setOffset(this, atoms, atomIndex, countOrId);
   }
 
   private void setGamma(boolean isReverse) {
@@ -231,11 +224,6 @@ public class SymmetryOperation extends M4 {
     M4 m = newM4(this);
     m.add(t);
     return getXYZFromMatrix(m, false, false, false);
-  }
-
-  static void newPoint(M4 m, P3 atom1, P3 atom2, int x, int y, int z) {
-    m.rotTrans2(atom1, atom2);
-    atom2.add3(x, y, z);
   }
 
   String dumpInfo() {
@@ -855,40 +843,7 @@ public class SymmetryOperation extends M4 {
     return str.substring(1);
   }
 
-  public static void setOffset(M4 m, P3[] atoms, int atomIndex, int count) {
-    if (count == 0)
-      return;
-    /*
-     * the center of mass of the full set of atoms is moved into the cell with this
-     *  
-     */
-    float x = 0;
-    float y = 0;
-    float z = 0;
-    if (atomTest == null)
-      atomTest = new P3();
-    for (int i = atomIndex, i2 = i + count; i < i2; i++) {
-      newPoint(m, atoms[i], atomTest, 0, 0, 0);
-      x += atomTest.x;
-      y += atomTest.y;
-      z += atomTest.z;
-    }
-    x /= count;
-    y /= count;
-    z /= count;
-    while (x < -0.001 || x >= 1.001) {
-      m.m03 += (x < 0 ? 1 : -1);
-      x += (x < 0 ? 1 : -1);
-    }
-    while (y < -0.001 || y >= 1.001) {
-      m.m13 += (y < 0 ? 1 : -1);
-      y += (y < 0 ? 1 : -1);
-    }
-    while (z < -0.001 || z >= 1.001) {
-      m.m23 += (z < 0 ? 1 : -1);
-      z += (z < 0 ? 1 : -1);
-    }
-  }
+  
 
   //  // action of this method depends upon setting of unitcell
   //  private void transformCartesian(UnitCell unitcell, P3 pt) {
@@ -1067,6 +1022,7 @@ public class SymmetryOperation extends M4 {
   }
 
   private Hashtable<String, Object> info;
+  static P3 atomTest;
 
   public Map<String, Object> getInfo() {
     if (info == null) {
@@ -1088,6 +1044,49 @@ public class SymmetryOperation extends M4 {
         info.put("xyzOriginal", xyzOriginal);
     }
     return info;
+  }
+
+  /**
+   * Adjust the translation for this operator so that it moves the center of
+   * mass of the full set of atoms into the cell.
+   * 
+   * @param dim
+   * @param m
+   * @param atoms
+   * @param atomIndex first index
+   * @param count number of atoms
+   */
+  public static void normalizeOperationToCentroid(int dim, M4 m, P3[] atoms, int atomIndex, int count) {
+    if (count <= 0)
+      return;
+    float x = 0;
+    float y = 0;
+    float z = 0;
+    if (SymmetryOperation.atomTest == null)
+      SymmetryOperation.atomTest = new P3();
+    for (int i = atomIndex, i2 = i + count; i < i2; i++) {
+      Symmetry.newPoint(m, atoms[i], 0, 0, 0, SymmetryOperation.atomTest);
+      x += SymmetryOperation.atomTest.x;
+      y += SymmetryOperation.atomTest.y;
+      z += SymmetryOperation.atomTest.z;
+    }
+    x /= count;
+    y /= count;
+    z /= count;
+    while (x < -0.001 || x >= 1.001) {
+      m.m03 += (x < 0 ? 1 : -1);
+      x += (x < 0 ? 1 : -1);
+    }
+    if (dim > 1)
+    while (y < -0.001 || y >= 1.001) {
+      m.m13 += (y < 0 ? 1 : -1);
+      y += (y < 0 ? 1 : -1);
+    }
+    if (dim > 2)
+    while (z < -0.001 || z >= 1.001) {
+      m.m23 += (z < 0 ? 1 : -1);
+      z += (z < 0 ? 1 : -1);
+    }
   }
 
   public static Lst<P3> getLatticeCentering(SymmetryOperation[] ops) {

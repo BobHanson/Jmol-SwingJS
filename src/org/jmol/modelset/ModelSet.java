@@ -1030,7 +1030,7 @@ public class ModelSet extends BondCollection {
       unitCells = new SymmetryInterface[mc];
     unitCells[mi] = sg;
     haveUnitCells = true;
-    sg.setFinalOperations(null, null, -1, -1, false, null);
+    sg.setFinalOperations(3, null, null, -1, -1, false, null);
     am[mi].bsAsymmetricUnit = basis;
     // set symmetry at least for symop=1555
     bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
-import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.FileManager;
@@ -611,7 +610,7 @@ public class SpaceGroupFinder {
   private static SymmetryOperation getOp(int iop) {
     SymmetryOperation op = ops[iop];
     if (op == null) {
-      ops[iop] = op = new SymmetryOperation(null, null, 0, iop, false);
+      ops[iop] = op = new SymmetryOperation(null, iop, false);
       op.setMatrixFromXYZ(opXYZ[iop], 0, false);
       op.doFinalize();
     }
