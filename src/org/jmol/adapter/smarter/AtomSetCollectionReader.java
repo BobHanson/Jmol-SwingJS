@@ -34,6 +34,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.script.SV;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
@@ -736,14 +737,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     previousUnitCell = unitCellParams;
     iHaveUnitCell = ignoreFileUnitCell;
     if (!ignoreFileUnitCell) {
-      unitCellParams = new float[26];
+      unitCellParams = new float[SimpleUnitCell.PARAM_COUNT];
       //0-5 a b c alpha beta gamma
       //6-21 m00 m01... m33 cartesian-->fractional
       //22-24 supercell.x supercell.y supercell.z
       //25 scaling
-      for (int i = 25; --i >= 0;)
+      for (int i = SimpleUnitCell.PARAM_COUNT; --i >= 0;)
         unitCellParams[i] = Float.NaN;
-      unitCellParams[25] = latticeScaling;
+      unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling;
       symmetry = null;
     }
     if (!ignoreFileSpaceGroupName)
@@ -800,19 +801,20 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private void initializeCartesianToFractional() {
     for (int i = 0; i < 16; i++)
-      if (!Float.isNaN(unitCellParams[6 + i]))
+      if (!Float.isNaN(unitCellParams[SimpleUnitCell.PARAM_M4 + i]))
         return; //just do this once
+    // set the matrix to the identity matrix
     for (int i = 0; i < 16; i++)
-      unitCellParams[6 + i] = ((i % 5 == 0 ? 1 : 0));
+      unitCellParams[SimpleUnitCell.PARAM_M4 + i] = ((i % 5 == 0 ? 1 : 0));
     nMatrixElements = 0;
   }
 
   public void clearUnitCell() {
     if (ignoreFileUnitCell)
       return;
-    for (int i = 6; i < 22; i++)
+    for (int i = SimpleUnitCell.PARAM_STD; i < SimpleUnitCell.PARAM_SUPERCELL; i++)
       unitCellParams[i] = Float.NaN;
-    checkUnitCell(6);
+    checkUnitCell(SimpleUnitCell.PARAM_STD);
   }
 
   public float[] ucItems;
@@ -821,23 +823,23 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     if (i == 0 && x == 1 && !allow_a_len_1  || i == 3 && x == 0) {
       if (ucItems == null)
-        ucItems = new float[6];
+        ucItems = new float[SimpleUnitCell.PARAM_STD];
       ucItems[i] = x;
       return;
     }
-    if (ucItems != null && i < 6)
+    if (ucItems != null && i < SimpleUnitCell.PARAM_STD)
       ucItems[i] = x;
 
-    if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
+    if (!Float.isNaN(x) && i >= SimpleUnitCell.PARAM_M4 && Float.isNaN(unitCellParams[SimpleUnitCell.PARAM_M4]))
       initializeCartesianToFractional();
     unitCellParams[i] = x;
     if (debugging) {
       Logger.debug("setunitcellitem " + i + " " + x);
     }
-    if (i < 6 || Float.isNaN(x))
-      iHaveUnitCell = checkUnitCell(6);
+    if (i < SimpleUnitCell.PARAM_STD || Float.isNaN(x))
+      iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_STD);
     else if (++nMatrixElements == 12)
-      iHaveUnitCell = checkUnitCell(22);
+      iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_M4+16);
   }
 
   protected M3 matUnitCellOrientation;
@@ -856,7 +858,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       unitCellParams[4] = beta;
     if (gamma != 0)
       unitCellParams[5] = gamma;
-    iHaveUnitCell = checkUnitCell(6);
+    iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_STD);
   }
 
   public void addExplicitLatticeVector(int i, float[] xyz, int i0) {
@@ -870,32 +872,48 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     unitCellParams[i++] = xyz[i0++];
     unitCellParams[i] = xyz[i0];
     if (Float.isNaN(unitCellParams[0])) {
-      for (i = 0; i < 6; i++)
+      for (i = 0; i < SimpleUnitCell.PARAM_STD; i++)
         unitCellParams[i] = -1;
     }
-    iHaveUnitCell = checkUnitCell(15);
+    iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_VABC+9);
+    if (iHaveUnitCell) {
+      if (slabXY || polymerX)
+        unitCellParams[2] = -1;
+      if (polymerX)
+        unitCellParams[1] = -1;
+    }
   }
 
   private boolean checkUnitCell(int n) {
     for (int i = 0; i < n; i++)
       if (Float.isNaN(unitCellParams[i]))
         return false;
-    if (n == 22 && unitCellParams[0] == 1) {
+    if (n == SimpleUnitCell.PARAM_M4+16 && unitCellParams[0] == 1) {
       if (unitCellParams[1] == 1 
           && unitCellParams[2] == 1 
-          && unitCellParams[6] == 1 
-          && unitCellParams[11] == 1 
-          && unitCellParams[16] == 1 
-          )
+          && unitCellParams[SimpleUnitCell.PARAM_M4] == 1 
+          && unitCellParams[SimpleUnitCell.PARAM_M4+5] == 1 
+          && unitCellParams[SimpleUnitCell.PARAM_M4+10] == 1 
+          ) {
+        // this is an mmCIF or PDB case for NMR models having
+        // CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          
+        // ORIGX1      1.000000  0.000000  0.000000        0.00000                         
+        // ORIGX2      0.000000  1.000000  0.000000        0.00000                         
+        // ORIGX3      0.000000  0.000000  1.000000        0.00000                         
+        // SCALE1      1.000000  0.000000  0.000000        0.00000                         
+        // SCALE2      0.000000  1.000000  0.000000        0.00000                         
+        // SCALE3      0.000000  0.000000  1.000000        0.00000 
         return false; 
-      // this is an mmCIF or PDB case for NMR models having
-      // CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          
-      // ORIGX1      1.000000  0.000000  0.000000        0.00000                         
-      // ORIGX2      0.000000  1.000000  0.000000        0.00000                         
-      // ORIGX3      0.000000  0.000000  1.000000        0.00000                         
-      // SCALE1      1.000000  0.000000  0.000000        0.00000                         
-      // SCALE2      0.000000  1.000000  0.000000        0.00000                         
-      // SCALE3      0.000000  0.000000  1.000000        0.00000 
+      }
+    }
+    if (n == SimpleUnitCell.PARAM_STD && Float.isNaN(unitCellParams[SimpleUnitCell.PARAM_VABC])) {
+      if (slabXY && unitCellParams[2] > 0) {
+        SimpleUnitCell.addVectors(unitCellParams);
+        unitCellParams[2] = -1;
+      } else if (polymerX && unitCellParams[1] > 0) {
+        SimpleUnitCell.addVectors(unitCellParams);
+        unitCellParams[1] = unitCellParams[2] = -1;
+      }
     }
     if (doApplySymmetry) {
       getSymmetry();
@@ -987,6 +1005,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   public boolean allow_a_len_1 = false;
 
+  public boolean slabXY;
+
+  private boolean polymerX;
+
+  // xtal structures -- SLAB
+  
   // ALL:  "CENTER" "REVERSEMODELS"
   // ALL:  "SYMOP=n"
   // MANY: "NOVIB" "NOMO"
@@ -1033,6 +1057,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     useAltNames = checkFilterKey("ALTNAME");
     reverseModels = checkFilterKey("REVERSEMODELS");
     allow_a_len_1 =checkFilterKey("TOPOS");
+    slabXY = checkFilterKey("SLABXY");
+    polymerX = !slabXY && checkFilterKey("POLYMERX");
 
     if (filter == null)
       return;
@@ -1084,8 +1110,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       htParams.put("bsFilter", bsFilter);
       filter = (";" + filter + ";").replace(',', ';');
       String s = getFilter("LATTICESCALING=");
-      if (s != null && unitCellParams.length > 25) 
-        unitCellParams[25] = latticeScaling = parseFloatStr(s); 
+      if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE) 
+        unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseFloatStr(s); 
       s = getFilter("SYMOP=");
       if (s != null)
         filterSymop = " " + s + " ";

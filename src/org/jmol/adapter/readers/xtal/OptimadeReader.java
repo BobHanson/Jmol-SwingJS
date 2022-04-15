@@ -98,6 +98,7 @@ public class OptimadeReader extends AtomSetCollectionReader {
       if (!toFloatArray((List<Number>) lattice.get(i), xyz)) {
         return false;
       }
+      // this will set [0-6] to -1
       unitCellParams[0] = Float.NaN;
       if (isSlab || isPolymer) {
         vabc[i] = P3.new3(xyz[0], xyz[1], xyz[2]);

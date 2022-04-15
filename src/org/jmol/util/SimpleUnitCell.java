@@ -48,7 +48,15 @@ import javajs.util.V3;
 
 public class SimpleUnitCell {
 
-  protected float[] unitCellParams; //6 parameters + optional 16 matrix items
+
+  public static final int PARAM_STD = 6;
+  public static final int PARAM_VABC = 6;
+  public static final int PARAM_M4 = 6;
+  public static final int PARAM_SUPERCELL = 22;
+  public static final int PARAM_SCALE = 25;
+  public static final int PARAM_COUNT = 26;
+
+  protected float[] unitCellParams;
   public M4 matrixCartesianToFractional;
   public M4 matrixFractionalToCartesian;
   public double volume;
@@ -109,7 +117,6 @@ public class SimpleUnitCell {
     return c;
   }
   
-  
   protected void init(float[] params) {
     if (params == null)
       params = new float[] {1, 1, 1, 90, 90, 90};
@@ -122,9 +129,9 @@ public class SimpleUnitCell {
     a = params[0];
     b = params[1];
     c = params[2];
-    if (b <= 0) {
+    if (b < 0) {
       dimension = 1;
-    } else if (c <= 0) {
+    } else if (c < 0) {
       dimension = 2;
     }
     
@@ -138,11 +145,11 @@ public class SimpleUnitCell {
     
     // (int) Float.NaN == 0 (but not in JavaScript!)
     // supercell
-    float fa = na = Math.max(1, params.length >= 25 && !Float.isNaN(params[22]) ? (int) params[22] : 1);
-    float fb = nb = Math.max(1, params.length >= 25 && !Float.isNaN(params[23]) ? (int) params[23] : 1);
-    float fc = nc = Math.max(1, params.length >= 25 && !Float.isNaN(params[24]) ? (int) params[24] : 1);
-    if (params.length > 25 && !Float.isNaN(params[25])) {
-      float fScale = params[25];
+    float fa = na = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Float.isNaN(params[PARAM_SUPERCELL]) ? (int) params[PARAM_SUPERCELL] : 1);
+    float fb = nb = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Float.isNaN(params[PARAM_SUPERCELL+1]) ? (int) params[PARAM_SUPERCELL+1] : 1);
+    float fc = nc = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Float.isNaN(params[PARAM_SUPERCELL+2]) ? (int) params[PARAM_SUPERCELL+2] : 1);
+    if (params.length > PARAM_SCALE && !Float.isNaN(params[PARAM_SCALE])) {
+      float fScale = params[PARAM_SCALE];
       fa *= fScale;
       fb *= fScale;
       fc *= fScale;
@@ -152,9 +159,9 @@ public class SimpleUnitCell {
 
     if (c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
-      V3 va = V3.new3(params[6], params[7], params[8]);
-      V3 vb = V3.new3(params[9], params[10], params[11]);
-      V3 vc = V3.new3(params[12], params[13], params[14]);
+      V3 va = V3.new3(params[PARAM_VABC], params[PARAM_VABC+1], params[PARAM_VABC+2]);
+      V3 vb = V3.new3(params[PARAM_VABC+3], params[PARAM_VABC+4], params[PARAM_VABC+5]);
+      V3 vc = V3.new3(params[PARAM_VABC+6], params[PARAM_VABC+7], params[PARAM_VABC+8]);
       setABC(va, vb, vc);
       if (c < 0) {
         float[] n = AU.arrayCopyF(params, -1);
@@ -178,14 +185,17 @@ public class SimpleUnitCell {
         params = n;
       }
     }
-    //System.out.println("unitcell " + a + " " + b + " " + c);
     
+    // checking here for still a dimension issue with b or c
+    // was < 0 above; here <= 0
     a *= fa; 
     if (b <= 0) {
       b = c = 1;
+      dimension = 1;
     } else if (c <= 0) {
       c = 1;
       b *= fb;
+      dimension = 2;
     } else {
       b *= fb;
       c *= fc;
@@ -254,6 +264,14 @@ public class SimpleUnitCell {
     matrixCtoFNoOffset = matrixCartesianToFractional;
     matrixFtoCNoOffset = matrixFractionalToCartesian;
   }
+
+  public static void addVectors(float[] params) {
+    SimpleUnitCell c = SimpleUnitCell.newA(params);
+    M4 m = c.matrixFractionalToCartesian;
+    for (int i = 0; i < 9; i++)
+    params[PARAM_VABC + i] = m.getElement(i%3, i/3);
+  }
+
 
   private void setParamsFromMatrix() {
     V3 va = V3.new3(1,  0,  0);
