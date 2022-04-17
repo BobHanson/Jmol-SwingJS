@@ -933,7 +933,7 @@ public class IsosurfaceMesh extends Mesh {
           if (tx == 0 && ty == 0 && tz == 0)
             continue;
           latticeOffset.set(tx, ty, tz);
-          unitCell.toCartesian(latticeOffset, false);
+          unitCell.toCartesianF(latticeOffset, false);
           for (int i = 0; i < vc0; i++) {
             normixes[vc] = normixes[i];
             P3 v = P3.newP(vs[i]);

@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.util.Logger;
 
@@ -6253,7 +6254,7 @@ class PyMOL {
    * @param pymolVersion
    * @return setting or 0
    */
-   static float getDefaultSetting(int i, int pymolVersion) {
+   static double getDefaultSetting(int i, int pymolVersion) {
     switch (i) {
     case sphere_color:
     case cartoon_color:
@@ -6309,13 +6310,13 @@ class PyMOL {
     case surface_carve_cutoff:
       return 0;
     case cartoon_loop_radius:
-      return 0.2F;
+      return 0.2;
     case cartoon_rect_length:
-      return 1.4F;
+      return 1.4;
     case nonbonded_size:
-      return 0.25F;
+      return 0.25;
     case fog_start:
-      return 0.45f;
+      return 0.45;
     case label_size:
       return 14;
     case label_color:
@@ -6330,19 +6331,19 @@ class PyMOL {
     case cartoon_putty_scale_max:
       return 4;
     case cartoon_putty_radius:
-      return 0.4f;
+      return 0.4;
     case cartoon_putty_scale_min:
-      return 0.6f;
+      return 0.6;
     case cartoon_putty_scale_power:
-      return 1.5f;
+      return 1.5;
     case cartoon_tube_radius:
-      return 0.5f;
+      return 0.5;
     case solvent_radius:
-      return 1.4f;
+      return 1.4;
     case dash_width:
-      return 2.5f;
+      return 2.5;
     case line_width:
-      return 1.49f;
+      return 1.49;
     case ribbon_width:
       return 3;
     case field_of_view:
@@ -6350,18 +6351,18 @@ class PyMOL {
     case movie_fps:
       return 30;
     case stick_radius:
-      return 0.25f;
+      return 0.25;
     case cartoon_oval_length:
-      return 1.2f;
+      return 1.2;
     case cartoon_oval_width:
-      return 0.25f;
+      return 0.25;
     default:
-      Logger.error("PyMOL " + pymolVersion + " default float setting not found: " + i);
+      Logger.error("PyMOL " + pymolVersion + " default double setting not found: " + i);
       return 0;
     }
   }
 
-  static P3 getDefaultSettingPt(int i, int pymolVersion, P3 pt) {
+  static P3d getDefaultSettingPt(int i, int pymolVersion, P3d pt) {
     switch (i) {
     case label_position:
       pt.set(0,  0,  0.75f);
@@ -6515,7 +6516,7 @@ class PyMOL {
 //    int resv;
 //    int customType;
 //    int priority;
-//    float b, q, vdw, partialCharge;
+//    double b, q, vdw, partialCharge;
 //    int selEntry;
 //    int color;
 //    int id;                       // PDB ID
@@ -6523,7 +6524,7 @@ class PyMOL {
 //    int temp1;                    /* kludge fields - to remove */
 //    int unique_id;                /* introduced in version 0.77 */
 //    int discrete_state;           /* state+1 for atoms in discrete objects */
-//    float elec_radius;            /* radius for PB calculations */
+//    double elec_radius;            /* radius for PB calculations */
 //    int rank;
 //    int textType;
 //    int custom;
@@ -6569,7 +6570,7 @@ class PyMOL {
 //    ResName resn;
 //
 //    // replace with pointer?
-//    float U11, U22, U33, U12, U13, U23;
+//    double U11, U22, U33, U12, U13, U23;
 //
 //    int oldid; // for undo
 //
@@ -6578,7 +6579,7 @@ class PyMOL {
   final static int[] v177 = {LEN, 144,
   //  typedef struct AtomInfoType_1_7_7 {
   //    union {
-  //      float * anisou;               // only allocate with get_anisou
+  //      double * anisou;               // only allocate with get_anisou
   //      int64_t dummyanisou;
   //    };
     RESV, 8,
@@ -6591,7 +6592,7 @@ class PyMOL {
     OCCUPANCY, 24,
     VDW,       28,
     PARTIALCHARGE, 32,
-  //    float b, q, vdw, partialCharge;
+  //    double b, q, vdw, partialCharge;
     //SELENTRY, 36;
   //    int selEntry;
     COLOR, 40,
@@ -6607,7 +6608,7 @@ class PyMOL {
     DISCRETESTATE, 60,
   //    int discrete_state;           /* state+1 for atoms in discrete objects */
     ELECRADIUS,    64,
-  //    float elec_radius;            /* radius for PB calculations */
+  //    double elec_radius;            /* radius for PB calculations */
     RANK,          68,
   //    int rank;
     TEXTTYPE,      -72,
@@ -6709,17 +6710,17 @@ class PyMOL {
     RESV,         40, //  int resv;
     CUSTOMTYPE,   44, //  int customType;
     PRIORITY,     48, //  int priority;
-    BFACTOR,      52, //  float b;
-    OCCUPANCY,    56, //  float q;
-    VDW,          60, //  float vdw;
-    PARTIALCHARGE,64, //  float partialCharge;
+    BFACTOR,      52, //  double b;
+    OCCUPANCY,    56, //  double q;
+    VDW,          60, //  double vdw;
+    PARTIALCHARGE,64, //  double partialCharge;
     COLOR,        68, //  int color;
     ID,           72, //  int id;                       // PDB ID
     
     FLAGS,        76, //  unsigned int flags;
     UNIQUEID,     80, //  int unique_id;                /* introduced in version 0.77 */
     DISCRETESTATE,84, //  int discrete_state;           /* state+1 for atoms in discrete objects */
-    ELECRADIUS,   88, //  float elec_radius;            /* radius for PB calculations */
+    ELECRADIUS,   88, //  double elec_radius;            /* radius for PB calculations */
     RANK,         92, //  int rank;
     VISREP,       96, //  int visRep;                   /* bitmask for all reps */
     

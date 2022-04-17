@@ -6,10 +6,10 @@ public class XtlWriter {
 
   protected boolean haveUnitCell = true;
 
-  protected String clean(float f) {
+  protected String clean(double f) {
     int t;
     return (!haveUnitCell || (t = twelfthsOf(f)) < 0
-        ? PT.formatF(f, 18, 12, false, false)
+        ? PT.formatD(f, 18, 12, false, false)
         : (f < 0 ? "   -" : "    ") + twelfths[t]);
   }
 
@@ -18,11 +18,11 @@ public class XtlWriter {
       "0.416666666667", "0.500000000000", "0.583333333333", "0.666666666667",
       "0.750000000000", "0.833333333333", "0.916666666667", "1.000000000000", };
 
-  private static int twelfthsOf(float f) {
+  private static int twelfthsOf(double f) {
     if (f == 0)
       return 0;
     f = Math.abs(f * 12);
-    int i = Math.round(f);
+    int i = (int) Math.round(f);
     return (i <= 12 && Math.abs(f - i) < 0.00015 * 12 ? i : -1);
   }
 

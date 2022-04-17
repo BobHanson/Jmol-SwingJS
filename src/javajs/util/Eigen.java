@@ -97,15 +97,15 @@ public class Eigen implements EigenInterface {
    * 
    */
   @Override
-  public void fillFloatArrays(V3[] eigenVectors, float[] eigenValues) {
+  public void fillDoubleArrays(V3d[] eigenVectors, double[] eigenValues) {
     for (int i = 0; i < 3; i++) {
       if (eigenVectors != null) {
         if (eigenVectors[i] == null)
-          eigenVectors[i] = new V3();
-        eigenVectors[i].set((float) V[0][i], (float) V[1][i], (float) V[2][i]);
+          eigenVectors[i] = new V3d();
+        eigenVectors[i].set(V[0][i], V[1][i], V[2][i]);
       }
       if (eigenValues != null)
-        eigenValues[i] = (float) d[i];
+        eigenValues[i] = d[i];
     }
   }
 
@@ -115,11 +115,11 @@ public class Eigen implements EigenInterface {
    * @return ROWS of eigenvectors f[0], f[1], f[2], etc.
    */
   @Override
-  public float[][] getEigenvectorsFloatTransposed() {
-    float[][] f = new float[n][n];
+  public double[][] getEigenvectorsDoubleTransposed() {
+    double[][] f = new double[n][n];
     for (int i = n; --i >= 0;)
       for (int j = n; --j >= 0;)
-        f[j][i] = (float) V[i][j];
+        f[j][i] = V[i][j];
     return f;
   }
 

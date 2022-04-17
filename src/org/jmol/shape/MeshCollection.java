@@ -24,31 +24,25 @@
 
 package org.jmol.shape;
 
-import org.jmol.viewer.StateManager;
-import javajs.util.BS;
+import java.util.Hashtable;
+import java.util.Map;
 
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.script.SV;
 import org.jmol.script.T;
-
-
-import java.util.Hashtable;
-
-import java.util.Map;
-
-
 import org.jmol.util.C;
 import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+import org.jmol.viewer.StateManager;
 
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M4d;
+import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.M4;
 import javajs.util.T3;
-
-import org.jmol.util.Logger;
-import javajs.util.P3;
 
 public abstract class MeshCollection extends Shape {
 
@@ -178,7 +172,7 @@ public abstract class MeshCollection extends Shape {
 
     if ("symops" == propertyName) {
       if (currentMesh != null) {
-        currentMesh.symops = (M4[]) value;
+        currentMesh.symops = (M4d[]) value;
         if (currentMesh.symops == null)
           return;
         int n = currentMesh.symops.length;

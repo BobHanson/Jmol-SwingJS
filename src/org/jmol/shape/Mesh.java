@@ -45,6 +45,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -72,7 +73,7 @@ public class Mesh extends MeshSurface {
   public String scriptCommand;
   public String colorCommand;
   public P3 lattice;
-  public M4[] symops;
+  public M4d[] symops;
   public short[][] symopNormixes;
   public boolean visible = true;
   public int lighting = T.frontlit;

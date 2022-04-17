@@ -30,6 +30,7 @@ import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
 
 import javajs.util.P3;
+import javajs.util.P3d;
 
 
 /**
@@ -41,8 +42,8 @@ public class AmpacReader extends InputReader {
 
   private int ac;
   private int freqAtom0 = -1;
-  private float[] partialCharges;
-  private P3[] atomPositions;
+  private double[] partialCharges;
+  private P3d[] atomPositions;
     
   @Override
   protected boolean checkLine() throws Exception {
@@ -80,9 +81,9 @@ public class AmpacReader extends InputReader {
     while (rd() != null && line.length() >= 50) {
       Atom atom = new Atom();
       vAtoms.addLast(atom);
-      atom.x = parseFloatRange(line, 4, 16);
-      atom.y = parseFloatRange(line, 19, 31);
-      atom.z = parseFloatRange(line, 34, 46);
+      atom.x = parseDoubleRange(line, 4, 16);
+      atom.y = parseDoubleRange(line, 19, 31);
+      atom.z = parseDoubleRange(line, 34, 46);
       if (line.length() > 48 && ac < 3 || line.charAt(48) != '0') {
         // internal coordinates
         switch (ac) {
@@ -92,7 +93,7 @@ public class AmpacReader extends InputReader {
           atom.sub(vAtoms.get(0));
           break;
         case 2:
-          setAtom(atom, 0, 1, 0, atom.x, atom.y, Float.MAX_VALUE);
+          setAtom(atom, 0, 1, 0, atom.x, atom.y, Double.MAX_VALUE);
           break;
         default:
           setAtom(atom, parseIntRange(line, 50, 54) - 1,
@@ -105,7 +106,7 @@ public class AmpacReader extends InputReader {
       ac++;
       int len = line.length();
       if (len > 64)
-        atom.partialCharge = parseFloatRange(line, 64, len);
+        atom.partialCharge = parseDoubleRange(line, 64, len);
       if (JmolAdapter.getElementNumber(sym) != 0)
         asc.addAtom(atom);
       setAtomCoord(atom);
@@ -132,7 +133,7 @@ public class AmpacReader extends InputReader {
      */
     boolean haveFreq = (freqAtom0 >= 0);
     if (haveFreq) {
-      atomPositions = new P3[ac];
+      atomPositions = new P3d[ac];
     } else {
       asc.newAtomSet();
     }
@@ -143,7 +144,7 @@ public class AmpacReader extends InputReader {
       if (tokens.length < 5)
         break;
       if (haveFreq) {
-        atomPositions[ac] = P3.new3(parseFloatStr(tokens[2]), parseFloatStr(tokens[3]), parseFloatStr(tokens[4]));
+        atomPositions[ac] = P3d.new3(parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3]), parseDoubleStr(tokens[4]));
       } else {
         addAtomXYZSymName(tokens, 2, tokens[1], null);
       }
@@ -171,12 +172,12 @@ public class AmpacReader extends InputReader {
            3         C           -0.0249          4.0249
  */
     rd();
-    partialCharges = new float[ac];
+    partialCharges = new double[ac];
     String[] tokens;
     for (int i = 0; i < ac; i++) {
       if (rd() == null || (tokens = getTokens()).length < 4)
         break;
-      partialCharges[i] = parseFloatStr(tokens[2]);
+      partialCharges[i] = parseDoubleStr(tokens[2]);
     }
   }
 

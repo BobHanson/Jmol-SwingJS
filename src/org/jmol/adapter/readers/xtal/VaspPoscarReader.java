@@ -8,6 +8,7 @@ import org.jmol.util.Parser;
 
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -30,7 +31,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
   protected Lst<String> atomLabels;
   private boolean haveAtomLabels = true;
   private boolean atomsLabeledInline;
-  private float scaleFac;
+  private double scaleFac;
   protected int ac;
   protected String title;
   protected boolean quiet;
@@ -66,21 +67,21 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     finalizeReaderASCR();
   }
 
-  private float[] unitCellData;
+  private double[] unitCellData;
   
   protected void readUnitCellVectors() throws Exception {
     // Read Unit Cell
     setSpaceGroupName("P1");
     setFractionalCoordinates(true);
-    scaleFac = parseFloatStr(rdline().trim());
+    scaleFac = parseDoubleStr(rdline().trim());
     boolean isVolume = (scaleFac < 0);
     if (isVolume)
-      scaleFac = (float) Math.pow(-scaleFac, 1./3.);      
-    unitCellData = new float[9];
+      scaleFac = Math.pow(-scaleFac, 1./3.);      
+    unitCellData = new double[9];
     String s = rdline() + " " + rdline() + " " + rdline();
-    Parser.parseStringInfestedFloatArray(s, null, unitCellData);
+    Parser.parseStringInfestedDoubleArray(s, null, unitCellData);
     if (isVolume) {
-      M3 m = M3.newA9(unitCellData);
+      M3d m = M3d.newA9(unitCellData);
       scaleFac /= m.determinant3();
  //     System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
     }
@@ -153,7 +154,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     addExplicitLatticeVector(1, unitCellData, 3);
     addExplicitLatticeVector(2, unitCellData, 6);
     for (int i = 0; i < ac; i++) {
-      float radius = Float.NaN;
+      double radius = Double.NaN;
       String[] tokens = PT.getTokens(rdline());
       if (radiusPt == Integer.MIN_VALUE) {
         for (int j = tokens.length; --j > 2;) {
@@ -167,14 +168,14 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
         }
       }
       if (radiusPt >= 0)
-        radius = parseFloatStr(tokens[radiusPt]);
+        radius = parseDoubleStr(tokens[radiusPt]);
       String label = (atomsLabeledInline ? tokens[elementPt] : atomLabels.get(i));
       if (isCartesian)
         for (int j = 0; j < 3; j++)
-          tokens[j] = "" + parseFloatStr(tokens[j]) * scaleFac;
+          tokens[j] = "" + parseDoubleStr(tokens[j]) * scaleFac;
       Atom atom = addAtomXYZSymName(tokens, 0, null, label);
-      if (!Float.isNaN(radius))
-        atom.radius = radius * scaleFac;
+      if (!Double.isNaN(radius))
+        atom.radius = (float) (radius * scaleFac);
       if (asc.bsAtoms != null)
         asc.bsAtoms.set(atom.index);
     }

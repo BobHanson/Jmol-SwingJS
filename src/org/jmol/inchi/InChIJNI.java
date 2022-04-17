@@ -43,7 +43,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
 import net.sf.jniinchi.INCHI_PARITY;
@@ -205,8 +205,8 @@ public class InChIJNI implements JmolInChI {
       JniInchiAtom[] atoms = new JniInchiAtom[asc.getAtomSetAtomCount(0)];
       int n = 0;
       while (ai.hasNext() && n < atoms.length) {
-        P3 p = ai.getXYZ();
-        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
+        P3d p = ai.getXYZ();
+        JniInchiAtom a = new JniInchiAtom((float) p.x, (float) p.y, (float) p.z,
             Elements.elementSymbolFromNumber(ai.getElementNumber()));
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);

@@ -52,8 +52,10 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -1153,7 +1155,7 @@ public class ModelKit {
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null)
         sym = vwr.getSymTemp()
-            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
+            .setUnitCell(new double[] { 10, 10, 10, 90, 90, 90 }, false);
       // limit the atoms to 
       BS bsAtoms = vwr.getThisModelAtoms();
       BS bsCell = (isP1 ? bsAtoms : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true));
@@ -1172,7 +1174,7 @@ public class ModelKit {
         m.z = 0;
       }
       P3 supercell;
-      P3[] oabc;
+      P3d[] oabc;
       String ita;
       BS basis;
       @SuppressWarnings("unchecked")
@@ -1186,12 +1188,12 @@ public class ModelKit {
         basis = null;
       } else {
         supercell = (P3) sg.get("supercell");
-        oabc = (P3[]) sg.get("unitcell");
+        oabc = (P3d[]) sg.get("unitcell");
         name = (String) sg.get("name");
         ita = (String) sg.get("itaFull");
         basis = (BS) sg.get("basis");
       }
-      sym.getUnitCell(oabc,  false, null);
+      sym.getUnitCelld(oabc,  false, null);
       sym.setSpaceGroupTo(ita);
       sym.setSpaceGroupName(name);
       if (basis == null)
@@ -1639,7 +1641,7 @@ public class ModelKit {
     float bd = (pt != null && atom != null ? pt.distance(atom) : -1);
     if (points != null) {
       np = nIgnored = points.size();
-      uc.toFractional(pt, true);
+      uc.toFractionalF(pt, true);
       points.addLast(pt);
       if (newPoint && haveAtom)
         nIgnored++;
@@ -1707,7 +1709,7 @@ public class ModelKit {
             isConnected = true;
           } else if (uc != null) {
             P3 p = P3.newP(atom);
-            uc.toFractional(p, true);
+            uc.toFractionalF(p, true);
             bs.or(bsEquiv);
             Lst<P3> list = uc.getEquivPoints(null, p, packing);
             for (int j = 0, n = list.size(); j < n; j++) {
@@ -1987,14 +1989,14 @@ public class ModelKit {
       isPoint = (pt != null);
       if (isPoint) {
         pf = P3.newP(pt);
-        uc.toFractional(pf, true);
+        uc.toFractionalF(pf, true);
       }
       Lst<P3> list = new Lst<P3>();
       int atomicNo = -1;
       int site = 0;
       for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
           P3 p = P3.newP(vwr.ms.at[i]);
-          uc.toFractional(p, true);
+          uc.toFractionalF(p, true);
           if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
             site = vwr.ms.at[i].getAtomSite();
             if (type == null)
@@ -2152,32 +2154,32 @@ public class ModelKit {
   private boolean fillPointsForMove(SymmetryInterface sg, BS bseq, int i0,
                                     P3 a, P3 pt, P3[] points) {
     float d = a.distance(pt);
-    P3 fa = P3.newP(a);
-    P3 fb = P3.newP(pt);
+    P3d fa = P3d.newPd(a);
+    P3d fb = P3d.newPd(pt);
     sg.toFractional(fa, true);
     sg.toFractional(fb, true);
     for (int k = 0, i = i0; i >= 0; i = bseq.nextSetBit(i + 1)) {
-      P3 p = P3.newP(vwr.ms.at[i]);
+      P3d p = P3d.newPd(vwr.ms.at[i]);
       sg.toFractional(p, true);
-      M4 m = sg.getTransform(fa, p, false);
+      M4d m = sg.getTransform(fa, p, false);
       if (m == null) {
 //        m = sg.getTransform(fa, p, true);
         return false;
       }
-      P3 p2 = P3.newP(fb);
+      P3d p2 = P3d.newP(fb);
       m.rotTrans(p2);
       sg.toCartesian(p2, true);
-      if (Math.abs(d - vwr.ms.at[i].distance(p2)) > 0.001f)
+      if (Math.abs(d - p.distance(p2)) > 0.001f)
         return false;
-      points[k++] = p2;
+      points[k++] = p2.toP3();
     }
-    fa.setT(points[0]);
+    fa.setP(points[0]);
     sg.toFractional(fa, true);
     // check for sure that all new positions are also OK
     for (int k = points.length; --k >= 0;) {
-      fb.setT(points[k]);
+      fb.setP(points[k]);
       sg.toFractional(fb, true);
-      M4 m = sg.getTransform(fa, fb, false);
+      M4d m = sg.getTransform(fa, fb, false);
       if (m == null) {
 //        m = sg.getTransform(fa, fb, true);
         return false;
@@ -2229,19 +2231,21 @@ public class ModelKit {
       } else {
         // transform the shift to the basis
         Atom b = vwr.ms.getBasisAtom(iatom);
-        P3 fa = P3.newP(a);
+        P3d fa = P3d.newPd(a);
         sym.toFractional(fa, true);
-        P3 fb = P3.newP(b);
+        P3d fb = P3d.newPd(b);
         sym.toFractional(fb, true);
-        M4 m = sym.getTransform(fa, fb, true);
+        M4d m = sym.getTransform(fa, fb, true);
         if (m == null) {
           System.err.println(
               "ModelKit - null matrix for " + iatom + " " + a + " to " + b);
           iatom = -1;
         } else {
-          sym.toFractional(ptNew, true);
-          m.rotTrans(ptNew);
-          sym.toCartesian(ptNew, true);
+          P3d p = P3d.new3(ptNew.x,  ptNew.y,  ptNew.z);
+          sym.toFractional(p, true);
+          m.rotTrans(p);
+          sym.toCartesian(p, true);
+          ptNew.set((float) p.x, (float) p.y, (float) p.z);
           c.constrain(b, ptNew);
           iatom = b.i;
         }

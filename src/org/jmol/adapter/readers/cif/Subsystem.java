@@ -10,7 +10,9 @@ import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 
 class Subsystem {
@@ -73,8 +75,8 @@ class Subsystem {
     // Part 2: Get the new unit cell and symmetry operators
 
     SymmetryInterface s0 = msRdr.cr.asc.getSymmetry();
-    T3[] vu43 = s0.getUnitCellVectors();
-    T3[] vr43 = SimpleUnitCell.getReciprocal(vu43, null, 1);
+    T3d[] vu43 = s0.getUnitCellVectors();
+    T3d[] vr43 = SimpleUnitCell.getReciprocal(vu43, null, 1);
 
     // using full matrix math here:
     //
@@ -97,12 +99,12 @@ class Subsystem {
     
     // back to vector notation and direct lattice
     
-    T3[] uc_nu = new T3[4];
+    T3d[] uc_nu = new T3d[4];
     uc_nu[0] = vu43[0]; // origin
     for (int i = 0; i < 3; i++)
-      uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
+      uc_nu[i + 1] = V3d.new3(a[i][0], a[i][1], a[i][2]);    
     uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null, 1);
-    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
+    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCelld(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

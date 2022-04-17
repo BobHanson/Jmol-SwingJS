@@ -268,7 +268,7 @@ public class Modulation {
     }
 
     if (isSpin) {
-      float[] f = ms.axesLengths;
+      double[] f = ms.axesLengths;
       if (f == null)
         System.out.println("Modulation.java axis error");
       switch (axis) {
@@ -294,12 +294,12 @@ public class Modulation {
         ms.z += v;
         break;
       case 'U':
-        ms.addUTens(utens, (float) v);
+        ms.addUTens(utens, v);
         break;
       default:
-        if (Float.isNaN(ms.vOcc))
+        if (Double.isNaN(ms.vOcc))
           ms.vOcc = 0;
-        ms.vOcc += (float) v;
+        ms.vOcc += v;
       }
     }
   }

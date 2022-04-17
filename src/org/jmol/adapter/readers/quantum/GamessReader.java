@@ -79,8 +79,8 @@ abstract public class GamessReader extends MopacSlaterReader {
     if (tokens.length < energyToken + 1)
       return;
     String strEnergy = tokens[energyToken];
-    float e = parseFloatStr(strEnergy);
-    if (!Float.isNaN(e)) {
+    double e = parseDoubleStr(strEnergy);
+    if (!Double.isNaN(e)) {
       asc.setAtomSetEnergy(strEnergy, e);
       asc.setCurrentModelInfo("EnergyType", energyType);
       if (!energyType.equals("ENERGY"))
@@ -151,7 +151,7 @@ abstract public class GamessReader extends MopacSlaterReader {
       tokens = gdata.get(i);
       gaussians[i] = new float[tokens.length - 3];
       for (int j = 3; j < tokens.length; j++)
-        gaussians[i][j - 3] = parseFloatStr(tokens[j]);
+        gaussians[i][j - 3] = (float) parseDoubleStr(tokens[j]);
     }
     int ac = atomNames.size();
     if (shells == null && ac > 0) {
@@ -190,12 +190,12 @@ abstract public class GamessReader extends MopacSlaterReader {
     while (line != null && line.indexOf("FREQUENCY:") >= 0) {
       int frequencyCount = 0;
       String[] tokens = getTokens();
-      float[] frequencies = new float[tokens.length];
+      double[] frequencies = new double[tokens.length];
       for (int i = 0; i < tokens.length; i++) {
-        float frequency = parseFloatStr(tokens[i]);
+        double frequency = parseDoubleStr(tokens[i]);
         if (tokens[i].equals("I"))
           frequencies[frequencyCount - 1] = -frequencies[frequencyCount - 1];
-        if (Float.isNaN(frequency))
+        if (Double.isNaN(frequency))
           continue; // may be "I" for imaginary
         frequencies[frequencyCount++] = frequency;
         if (debugging) {

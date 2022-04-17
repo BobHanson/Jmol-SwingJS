@@ -29,6 +29,7 @@ import org.jmol.util.Logger;
 
 import javajs.util.SB;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3i;
 
 class HallRotationTerm {
@@ -39,7 +40,7 @@ class HallRotationTerm {
   String translationString;
   HallRotation rotation;
   HallTranslation translation;
-  M4 seitzMatrix12ths = new M4();
+  M4d seitzMatrix12ths = new M4d();
   boolean isImproper;
   int order;
   char axisType = '\0';
@@ -155,8 +156,8 @@ class HallRotationTerm {
     }
 
     if (hallInfo.vectorCode.length() > 0) {
-      M4 m1 = M4.newM4(null);
-      M4 m2 = M4.newM4(null);
+      M4d m1 = M4d.newM4(null);
+      M4d m2 = M4d.newM4(null);
       P3i v = hallInfo.vector12ths;
       m1.m03 = v.x;
       m1.m13 = v.y;

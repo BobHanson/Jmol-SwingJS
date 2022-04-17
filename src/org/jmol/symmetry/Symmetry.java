@@ -43,17 +43,23 @@ import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 /* Symmetry is a wrapper class that allows access to the package-local
  * classes PointGroup, SpaceGroup, SymmetryInfo, and UnitCell.
@@ -142,7 +148,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public int addBioMoleculeOperation(M4 mat, boolean isReverse) {
+  public int addBioMoleculeOperation(M4d mat, boolean isReverse) {
     isBio = spaceGroup.isBio = true;
     return spaceGroup.addSymmetry((isReverse ? "!" : "") + "[[bio" + mat, 0,
         false);
@@ -191,7 +197,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setFinalOperations(int dim, String name, P3[] atoms,
+  public void setFinalOperations(int dim, String name, P3d[] atoms,
                                  int iAtomFirst, int noSymmetryCount,
                                  boolean doNormalize, String filterSymop) {
     if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0)) // filter SYMOP
@@ -210,17 +216,17 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public M4 getSpaceGroupOperation(int i) {
+  public M4d getSpaceGroupOperation(int i) {
     return (spaceGroup == null || spaceGroup.operations == null // bio 
         || i >= spaceGroup.operations.length ? null
             : spaceGroup.finalOperations == null ? spaceGroup.operations[i]
                 : spaceGroup.finalOperations[i]);
   }
 
-  @Override
-  public M4 getSpaceGroupOperationRaw(int i) {
-    return spaceGroup.getRawOperation(i);
-  }
+//  @Override
+//  public M4d getSpaceGroupOperationRaw(int i) {
+//    return spaceGroup.getRawOperation(i);
+//  }
 
   @Override
   public String getSpaceGroupXyz(int i, boolean doNormalize) {
@@ -228,8 +234,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void newSpaceGroupPoint(P3 pt, int i, M4 o, int transX,
-                                 int transY, int transZ, P3 retPoint) {
+  public void newSpaceGroupPoint(P3d pt, int i, M4d o, int transX,
+                                 int transY, int transZ, P3d retPoint) {
     if (o == null && spaceGroup.finalOperations == null) {
       SymmetryOperation op = spaceGroup.operations[i];
       // temporary spacegroups don't have to have finalOperations
@@ -242,7 +248,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public V3[] rotateAxes(int iop, V3[] axes, P3 ptTemp, M3 mTemp) {
+  public V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp) {
     return (iop == 0 ? axes
         : spaceGroup.finalOperations[iop].rotateAxes(axes, unitCell, ptTemp,
             mTemp));
@@ -259,7 +265,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public float getSpinOp(int op) {
+  public int getSpinOp(int op) {
     return spaceGroup.operations[op].getMagneticOp();
   }
 
@@ -285,7 +291,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public int getSiteMultiplicity(P3 pt) {
+  public int getSiteMultiplicity(P3d pt) {
     return spaceGroup.getSiteMultiplicity(pt, unitCell);
   }
 
@@ -406,9 +412,9 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public SymmetryInterface setSymmetryInfo(int modelIndex,
                                            Map<String, Object> modelAuxiliaryInfo,
-                                           float[] unitCellParams) {
+                                           double[] unitCellParams) {
     symmetryInfo = new SymmetryInfo();
-    float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
+    double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
         unitCellParams, null);
     if (params != null) {
       setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
@@ -416,7 +422,7 @@ public class Symmetry implements SymmetryInterface {
           .get("moreUnitCellInfo");
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
       setOffsetPt((T3) modelAuxiliaryInfo.get("unitCellOffset"));
-      M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo
+      M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
           .get("matUnitCellOrientation");
       if (matUnitCellOrientation != null)
         initializeOrientation(matUnitCellOrientation);
@@ -435,7 +441,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setUnitCell(float[] unitCellParams,
+  public SymmetryInterface setUnitCell(double[] unitCellParams,
                                        boolean setRelative) {
     unitCell = UnitCell.fromParams(unitCellParams, setRelative);
     return this;
@@ -464,12 +470,12 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void initializeOrientation(M3 mat) {
+  public void initializeOrientation(M3d mat) {
     unitCell.initOrientation(mat);
   }
 
   @Override
-  public void unitize(T3 ptFrac) {
+  public void unitize(T3d ptFrac) {
     unitCell.unitize(ptFrac);
   }
 
@@ -479,7 +485,12 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toUnitCellRnd(T3 pt, T3 offset) {
+  public void toUnitCellD(T3d pt, T3d offset) {
+    unitCell.toUnitCellD(pt, offset);
+  }
+
+  @Override
+  public void toUnitCellRnd(T3d pt, T3d offset) {
     unitCell.toUnitCellRnd(pt, offset);
   }
 
@@ -489,39 +500,57 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toFractional(T3 pt, boolean ignoreOffset) {
+  public void toFractionalF(T3 pt, boolean ignoreOffset) {
     if (!isBio)
-      unitCell.toFractional(pt, ignoreOffset);
+      unitCell.toFractionalF(pt, ignoreOffset);
   }
 
   @Override
-  public void toFractionalM(M4 m) {
+  public void toFractional(T3d pt, boolean ignoreOffset) {
+    if (!isBio)
+      unitCell.toFractionalD(pt, ignoreOffset);    
+  }
+
+  @Override
+  public void toFractionalM(M4d m) {
     if (!isBio)
       unitCell.toFractionalM(m);
   }
 
   @Override
-  public void toCartesian(T3 fpt, boolean ignoreOffset) {
+  public void toCartesianF(T3 fpt, boolean ignoreOffset) {
     if (!isBio)
-      unitCell.toCartesian(fpt, ignoreOffset);
+      unitCell.toCartesianF(fpt, ignoreOffset);
+  }
+
+
+  @Override
+  public void toCartesian(T3d pt, boolean ignoreOffset) {
+    if (!isBio)
+      unitCell.toCartesian(pt, ignoreOffset);
   }
 
   @Override
-  public float[] getUnitCellParams() {
-    return unitCell.getUnitCellParams();
+  public double[] getUnitCellParams() {
+    return unitCell.getUnitCellParamsD();
   }
 
   @Override
-  public float[] getUnitCellAsArray(boolean vectorsOnly) {
-    return unitCell.getUnitCellAsArray(vectorsOnly);
+  public float[] getUnitCellParamsF() {
+    return unitCell.getUnitCellParamsF();
   }
 
   @Override
-  public Tensor getTensor(Viewer vwr, float[] parBorU) {
+  public double[] getUnitCellAsArray(boolean vectorsOnly) {
+    return unitCell.getUnitCellAsArrayD(vectorsOnly);
+  }
+
+  @Override
+  public Tensor getTensor(Viewer vwr, double[] parBorU) {
     if (parBorU == null)
       return null;
     if (unitCell == null)
-      unitCell = UnitCell.fromParams(new float[] { 1, 1, 1, 90, 90, 90 }, true);
+      unitCell = UnitCell.fromParams(new double[] { 1, 1, 1, 90, 90, 90 }, true);
     return unitCell.getTensor(vwr, parBorU);
   }
 
@@ -536,7 +565,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public P3 getFractionalOffset() {
+  public P3d getFractionalOffset() {
     return unitCell.getFractionalOffset();
   }
 
@@ -573,7 +602,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public float getUnitCellInfoType(int infoType) {
+  public double getUnitCellInfoType(int infoType) {
     return unitCell.getInfo(infoType);
   }
 
@@ -593,16 +622,16 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean checkDistance(P3 f1, P3 f2, float distance, float dx,
+  public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
                                int iRange, int jRange, int kRange,
-                               P3 ptOffset) {
+                               P3d ptOffset) {
     return unitCell.checkDistance(f1, f2, distance, dx, iRange, jRange, kRange,
         ptOffset);
   }
 
   @Override
-  public P3[] getUnitCellVectors() {
-    return unitCell.getUnitCellVectors();
+  public P3d[] getUnitCellVectors() {
+    return unitCell.getUnitCellVectorsD();
   }
 
   /**
@@ -619,6 +648,17 @@ public class Symmetry implements SymmetryInterface {
     if (oabc == null)
       return null;
     unitCell = UnitCell.fromOABC(oabc, setRelative);
+    if (name != null)
+      unitCell.name = name;
+    return this;
+  }
+
+  @Override
+  public SymmetryInterface getUnitCelld(T3d[] oabc, boolean setRelative,
+                                       String name) {
+    if (oabc == null)
+      return null;
+    unitCell = UnitCell.fromOABCd(oabc, setRelative);
     if (name != null)
       unitCell.name = name;
     return this;
@@ -672,7 +712,7 @@ public class Symmetry implements SymmetryInterface {
   private boolean isNotCentroid(P3 center, int n, int[] minmax,
                                 boolean centroidPacked) {
     center.scale(1f / n);
-    toFractional(center, false);
+    toFractionalF(center, false);
     // we have to disallow just a tiny slice of atoms due to rounding errors
     // so  -0.000001 is OK, but 0.999991 is not.
     if (centroidPacked)
@@ -729,7 +769,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry().setUnitCell(cellParams, false);
+      cellInfo = new Symmetry().setUnitCell(AU.toDoubleA(cellParams), false);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
         null, null, null, 0, -1, isFull, isForModel, 0, cellInfo, null);
@@ -741,7 +781,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public T3[] getV0abc(Object def) {
+  public T3d[] getV0abc(Object def) {
     return (unitCell == null ? null : unitCell.getV0abc(def));
   }
 
@@ -751,22 +791,22 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public T3 getFractionalOrigin() {
+  public P3 getFractionalOrigin() {
     return unitCell.getFractionalOrigin();
   }
 
   @Override
   public boolean getState(ModelSet ms, int modelIndex, SB commands) {
-    T3 pt = getFractionalOffset();
+    T3d pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
-      commands.append("; set unitcell ").append(Escape.eP(pt));
+      commands.append("; set unitcell ").append(Escape.ePd(pt));
       loadUC = true;
     }
-    pt = getUnitCellMultiplier();
-    if (pt != null) {
+    T3 ptm = getUnitCellMultiplier();
+    if (ptm != null) {
       commands.append("; set unitcell ")
-          .append(SimpleUnitCell.escapeMultiplier(pt));
+          .append(SimpleUnitCell.escapeMultiplier(ptm));
       loadUC = true;
     }
     String sg0 = (String) ms.getInfo(modelIndex, "spaceGroupOriginal");
@@ -787,68 +827,67 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc,
-                                 M3 primitiveToCrystal) {
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] oabc,
+                                 M3d primitiveToCrystal) {
     if (unitCell == null)
-      unitCell = UnitCell.fromOABC(oabc, false);
+      unitCell = UnitCell.fromOABCd(oabc, false);
     return unitCell.toFromPrimitive(toPrimitive, type, oabc,
         primitiveToCrystal);
   }
 
   @Override
-  public Lst<P3> generateCrystalClass(P3 pt0) {
-    M4[] ops = getSymmetryOperations();
+  public Lst<P3> generateCrystalClass(P3 pt00) {
+    M4d[] ops = getSymmetryOperations();
     Lst<P3> lst = new Lst<P3>();
-    boolean isRandom = (pt0 == null);
-    float rand1 = 0, rand2 = 0, rand3 = 0;
+    boolean isRandom = (pt00 == null);
+    double rand1 = 0, rand2 = 0, rand3 = 0;
+    P3d pt0;
     if (isRandom) {
-      rand1 = (float) Math.E;
-      rand2 = (float) Math.PI;
-      rand3 = (float) Math.log10(2000);
-      pt0 = P3.new3(rand1 + 1, rand2 + 2, rand3 + 3);
+      rand1 = Math.E;
+      rand2 = Math.PI;
+      rand3 = Math.log10(2000);
+      pt0 = P3d.new3(rand1 + 1, rand2 + 2, rand3 + 3);
     } else {
-      pt0 = P3.newP(pt0);
+      pt0 = P3d.newPd(pt00);
     }
     if (ops == null || unitCell == null) {
-      lst.addLast(pt0);
+      lst.addLast(pt0.toP3());
     } else {
-      unitCell.toFractional(pt0, true); // ignoreOffset
-      P3 pt1 = null;
-      P3 pt2 = null;
-      P3 pt3 = null;
+      unitCell.toFractionalD(pt0, true); // ignoreOffset
+      P3d pt1 = null;
+      P3d pt2 = null;
+      P3d pt3 = null;
       if (isRandom) {
-        pt1 = P3.new3(rand2 + 4, rand3 + 5, rand1 + 6);
-        unitCell.toFractional(pt1, true); // ignoreOffset
-        pt2 = P3.new3(rand3 + 7, rand1 + 8, rand2 + 9);
-        unitCell.toFractional(pt2, true); // ignoreOffset
+        pt1 = P3d.new3(rand2 + 4, rand3 + 5, rand1 + 6);
+        unitCell.toFractionalD(pt1, true); // ignoreOffset
+        pt2 = P3d.new3(rand3 + 7, rand1 + 8, rand2 + 9);
+        unitCell.toFractionalD(pt2, true); // ignoreOffset
       }
       Bspt bspt = new Bspt(3, 0);
       CubeIterator iter = bspt.allocateCubeIterator();
-      P3 pt = new P3();
+      P3d pt = new P3d();
       out: for (int i = ops.length; --i >= 0;) {
         ops[i].rotate2(pt0, pt);
-        iter.initialize(pt, 0.001f, false);
+        P3 ptf = pt.toP3();
+        iter.initialize(ptf, 0.001f, false);
         if (iter.hasMoreElements())
           continue out;
-        P3 ptNew = P3.newP(pt);
-        lst.addLast(ptNew);
-        bspt.addTuple(ptNew);
+        lst.addLast(ptf);
+        bspt.addTuple(ptf);
         if (isRandom) {
           if (pt2 != null) {
-            pt3 = new P3();
-            ops[i].rotate2(pt2, pt3);
-            lst.addLast(pt3);
+            ops[i].rotate2(pt2, pt);
+            lst.addLast(pt.toP3());
           }
           if (pt1 != null) {
             // pt2 is necessary to distinguish between Cs, Ci, and C1
-            pt3 = new P3();
-            ops[i].rotate2(pt1, pt3);
-            lst.addLast(pt3);
+            ops[i].rotate2(pt1, pt);
+            lst.addLast(pt.toP3());
           }
         }
       }
       for (int j = lst.size(); --j >= 0;)
-        unitCell.toCartesian(lst.get(j), true); // ignoreOffset
+        unitCell.toCartesianF(lst.get(j), true); // ignoreOffset
     }
     return lst;
   }
@@ -895,8 +934,8 @@ public class Symmetry implements SymmetryInterface {
    * @return [origin va vb vc]
    */
   @Override
-  public T3[] getConventionalUnitCell(String latticeType,
-                                      M3 primitiveToCrystal) {
+  public T3d[] getConventionalUnitCell(String latticeType,
+                                      M3d primitiveToCrystal) {
     return (unitCell == null || latticeType == null ? null
         : unitCell.getConventionalUnitCell(latticeType, primitiveToCrystal));
   }
@@ -935,12 +974,12 @@ public class Symmetry implements SymmetryInterface {
     Atom[] atoms = ms.at;
     float[] occs = ms.occupancies;
     boolean haveOccupancies = (occs != null);
-    P3 pt = new P3();
-    P3 pt2 = new P3();
+    P3d pt = new P3d();
+    P3d pt2 = new P3d();
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      pt.setT(a);
-      uc.toFractional(pt, false);
+      pt.setP(a);
+      uc.toFractionalD(pt, false);
       uc.unitizeRnd(pt);
       int type = a.getAtomicAndIsotopeNumber();
 
@@ -950,8 +989,8 @@ public class Symmetry implements SymmetryInterface {
         if (type != b.getAtomicAndIsotopeNumber()
             || (haveOccupancies && occ != occs[j]))
           continue;
-        pt2.setT(b);
-        uc.toFractional(pt2, false);
+        pt2.setP(b);
+        uc.toFractionalD(pt2, false);
         uc.unitizeRnd(pt2);
         if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
           bs.clear(j);
@@ -963,7 +1002,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags) {
-    M4[] ops = getSymmetryOperations();
+    M4d[] ops = getSymmetryOperations();
     return (ops == null || unitCell == null ? null
         : unitCell.getEquivPoints(pt, flags, ops,
             pts == null ? new Lst<P3>() : pts, 0, 0));
@@ -971,7 +1010,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void getEquivPointList(Lst<P3> pts, int nIgnored, String flags) {
-    M4[] ops = getSymmetryOperations();
+    M4d[] ops = getSymmetryOperations();
     boolean newPt = (flags.indexOf("newpt") >= 0);
     boolean zapped = (flags.indexOf("zapped") >= 0);
     // we will preserve the points temporarily, then remove them at the end
@@ -980,7 +1019,7 @@ public class Symmetry implements SymmetryInterface {
     // fractionalize all points if necessary
     if (flags.indexOf("fromfractional") < 0) {
       for (int i = 0; i < pts.size(); i++) {
-        toFractional(pts.get(i), true);
+        toFractionalF(pts.get(i), true);
       }
     }
     // signal to make no changes in points
@@ -1014,21 +1053,21 @@ public class Symmetry implements SymmetryInterface {
     // and turn these to Cartesians if desired
     if (!tofractional) {
       for (int i = pts.size(); --i >= nIgnored;)
-        toCartesian(pts.get(i), true);
+        toCartesianF(pts.get(i), true);
     }
   }
 
   @Override
   public int[] getInvariantSymops(P3 pt, int[] v0) {
-    M4[] ops = getSymmetryOperations();
+    M4d[] ops = getSymmetryOperations();
     if (ops == null)
       return new int[0];
     BS bs = new BS();
-    P3 p = new P3();
-    P3 p0 = new P3();
+    P3d p = new P3d();
+    P3d p0 = new P3d();
     int nops = ops.length;
     for (int i = 1; i < nops; i++) {
-      p.setT(pt);
+      p.setP(pt);
       toFractional(p, true);
       // unitize here should take care of all Wyckoff positions
       unitCell.unitize(p);
@@ -1059,12 +1098,12 @@ public class Symmetry implements SymmetryInterface {
    * @return matrix
    */
   @Override
-  public M4 getTransform(P3 fracA, P3 fracB, boolean best) {
+  public M4d getTransform(P3d fracA, P3d fracB, boolean best) {
     return getDesc(null).getTransform(unitCell, getSymmetryOperations(), fracA,
         fracB, best);
   }
 
-  static void newPoint(M4 m, P3 atom1, int x, int y, int z, P3 atom2) {
+  static void newPoint(M4d m, P3d atom1, int x, int y, int z, P3d atom2) {
     m.rotTrans2(atom1, atom2);
     atom2.add3(x, y, z);
   }

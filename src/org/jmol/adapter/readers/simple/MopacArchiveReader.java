@@ -28,6 +28,7 @@ package org.jmol.adapter.readers.simple;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
 import javajs.util.P3;
+import javajs.util.P3d;
 
 /**
  * 
@@ -82,7 +83,7 @@ public class MopacArchiveReader extends InputReader {
     if (line.indexOf("TOTAL ENERGY") >= 0) {
       String[] tokens = getTokens();
       energyWithUnits = " (" + tokens[3] + " " + tokens[4] + ")";
-      asc.setAtomSetEnergy(tokens[3], parseFloatStr(tokens[3]));      
+      asc.setAtomSetEnergy(tokens[3], parseDoubleStr(tokens[3]));      
     }
     return true;
   }
@@ -107,9 +108,9 @@ MERS=(1,2,2)   GNORM=4
     setFractionalCoordinates(false);
     while (rd() != null && line.length() >= 50) {
       vAtoms.addLast(atom = new Atom());
-      atom.x = parseFloatRange(line, 5, 18);
-      atom.y = parseFloatRange(line, 21, 34);
-      atom.z = parseFloatRange(line, 37, 50);
+      atom.x = parseDoubleRange(line, 5, 18);
+      atom.y = parseDoubleRange(line, 21, 34);
+      atom.z = parseDoubleRange(line, 37, 50);
       if (line.length() > 58 && line.charAt(58) != ' ') {
         // internal coordinates
         switch (ac) {
@@ -119,7 +120,7 @@ MERS=(1,2,2)   GNORM=4
           atom.sub(vAtoms.get(0));
           break;
         case 2:
-          setAtom(atom, 0, 1, 0, atom.x, atom.y, Float.MAX_VALUE);
+          setAtom(atom, 0, 1, 0, atom.x, atom.y, Double.MAX_VALUE);
           break;
         default:
           setAtom(atom, 
@@ -134,7 +135,7 @@ MERS=(1,2,2)   GNORM=4
       if (!sym.equals("Tv")) {
         ac++;
         if (line.length() >= 84)
-          atom.partialCharge = parseFloatRange(line, 76, 84);
+          atom.partialCharge = parseDoubleRange(line, 76, 84);
         if (JmolAdapter.getElementNumber(sym) != 0)
           asc.addAtom(atom);
         setAtomCoord(atom);
@@ -146,11 +147,11 @@ MERS=(1,2,2)   GNORM=4
       int nTv = vAtoms.size() - ac;
       for (int i = nTv; i < 3; i++)
         vAtoms.addLast(new Atom()); 
-      float[] xyz = new float[9];
+      double[] xyz = new double[9];
       for (int i = 0; i < 3; i++) {
         int j = i * 3;
         atom = vAtoms.get(ac + i);
-        if (!Float.isNaN(atom.x)) {
+        if (!Double.isNaN(atom.x)) {
           xyz[j] = atom.x;
           xyz[j + 1] = atom.y;
           xyz[j + 2] = atom.z;
@@ -159,8 +160,8 @@ MERS=(1,2,2)   GNORM=4
       }
       for (int i = ac; --i >= 0;)
         setAtomCoord(vAtoms.get(i));
-      P3 ptMax = P3.new3(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
-      P3 ptMin = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+      P3d ptMax = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
+      P3d ptMin = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       if (doCentralize) {
         for (int i = ac; --i >= 0;) {
           atom = vAtoms.get(i);
@@ -171,19 +172,19 @@ MERS=(1,2,2)   GNORM=4
           ptMin.y = Math.min(ptMin.y, atom.y);
           ptMin.z = Math.min(ptMin.z, atom.z);
         }
-        P3 ptCenter = new P3();
+        P3d ptCenter = new P3d();
         switch (nTv) {
         case 3:
-          ptCenter.x = 0.5f;
+          ptCenter.x = 0.5;
           //$FALL-THROUGH$
         case 2:
-          ptCenter.y = 0.5f;
+          ptCenter.y = 0.5;
           //$FALL-THROUGH$
         case 1:
-          ptCenter.z = 0.5f;
+          ptCenter.z = 0.5;
         }
-        ptCenter.scaleAdd2(-0.5f, ptMin, ptCenter);
-        ptCenter.scaleAdd2(-0.5f, ptMax, ptCenter);
+        ptCenter.scaleAdd2(-0.5, ptMin, ptCenter);
+        ptCenter.scaleAdd2(-0.5, ptMax, ptCenter);
         for (int i = ac; --i >= 0;)
           vAtoms.get(i).add(ptCenter);
       }

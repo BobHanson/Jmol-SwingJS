@@ -41,7 +41,9 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M34;
+import javajs.util.M34d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -1427,6 +1429,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         Object m = lookingAtMatrix();
         if (m instanceof M34) {
           addTokenToPrefix(T.o((m instanceof M4 ? T.matrix4f : T.matrix3f), m));
+          return CONTINUE;
+        }
+        if (m instanceof M34d) {
+          addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
           return CONTINUE;
         }
       }

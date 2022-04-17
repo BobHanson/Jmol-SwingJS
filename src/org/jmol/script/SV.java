@@ -48,7 +48,9 @@ import javajs.util.BArray;
 import javajs.util.Base64;
 import javajs.util.M3;
 import javajs.util.M34;
+import javajs.util.M34d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -266,6 +268,8 @@ public class SV extends T implements JSONEncodable {
       return newV(point4f, ((Quat) x).toPoint4f());
     if (x instanceof M34)
       return newV(x instanceof M4 ? matrix4f : matrix3f, x);
+    if (x instanceof M34d)
+      return newV(x instanceof M4d ? matrix4f : matrix3f, x);
     if (x instanceof Map)
       return getVariableMap((Map<String, ?>)x);
     if (x instanceof Lst)

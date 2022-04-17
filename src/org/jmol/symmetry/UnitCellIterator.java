@@ -2,7 +2,9 @@ package org.jmol.symmetry;
 
 import javajs.util.Lst;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.T3;
 
@@ -78,11 +80,11 @@ public class UnitCellIterator implements AtomIndexIterator {
     p = new P3();
     P3 ptC = new P3();
     ptC.setT(center);
-    unitCell.toFractional(ptC, true);
+    unitCell.toFractionalF(ptC, true);
     for (int i = 0; i < 8; i++) {
       p.scaleAdd2(-2f, pts[i], pts[7]);
       p.scaleAdd2(distance, p, center);
-      unitCell.toFractional(p, true);
+      unitCell.toFractionalF(p, true);
       if (min.x > p.x)
         min.x = p.x;
       if (max.x < p.x)
@@ -113,27 +115,31 @@ public class UnitCellIterator implements AtomIndexIterator {
       return;
     unitList = new Lst<P3[]>();
     String cat = "";
-    M4[] ops = unitCell.getSymmetryOperations();
+    M4d[] ops = unitCell.getSymmetryOperations();
     int nOps = ops.length;
+    P3d pt = new P3d();
+    P3 pa = new P3();
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       for (int j = 0; j < nOps; j++) {
-        P3 pt = new P3();
-        pt.setT(a);
         if (j > 0) {
+          pt.setP(a);
           unitCell.toFractional(pt, false);
           ops[j].rotTrans(pt);
           unitCell.unitize(pt);
           unitCell.toCartesian(pt, false);
+          pt.putP(pa);
         } else {
-          unitCell.toUnitCell(pt, null);
+          pa.setT(a);
+          unitCell.toUnitCell(pa, null);
         }
-        String key = "_" + (int) (pt.x * 100) + "_" + (int) (pt.y * 100) + "_"
-            + (int) (pt.z * 100) + "_";
+        String key = "_" + (int) (pa.x * 100) + "_" + (int) (pa.y * 100) + "_"
+            + (int) (pa.z * 100) + "_";
         if (cat.indexOf(key) >= 0)
           continue;
         cat += key;
-        unitList.addLast(new P3[] { a, pt });
+        unitList.addLast(new P3[] { a, pa });
+        pa = new P3();
       }
     }
     nAtoms = unitList.size();
@@ -170,7 +176,7 @@ public class UnitCellIterator implements AtomIndexIterator {
       }
     }
     translation.set(t.x, t.y, t.z);
-    unitCell.toCartesian(translation, false);
+    unitCell.toCartesianF(translation, false);
     ipt = 0;
     return true;
   }

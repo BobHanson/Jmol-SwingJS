@@ -28,11 +28,13 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import javajs.util.BS;
+import javajs.util.P3;
+
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 
 
@@ -180,7 +182,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
   private int nAtoms;
   private int nFree;
   private BS bsFree;
-  private float[] xAll, yAll, zAll;
+  private double[] xAll, yAll, zAll;
   private int crystGroup;
   
 
@@ -245,9 +247,9 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
     return s.trim();
   }
 
-  private float[] readFloatArray() throws Exception {
+  private double[] readFloatArray() throws Exception {
     int n = binaryDoc.readInt() / 4; // HEADER
-    float[] data = new float[n];
+    double[] data = new double[n];
     for (int i = 0; i < n; i++)
       data[i] = binaryDoc.readFloat();
     binaryDoc.readInt();// TRAILER
@@ -290,9 +292,9 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
     int n = -1;
     if (crystGroup > 0)
       calcUnitCell( readDoubleArray());
-    float[] x = readFloatArray();
-    float[] y = readFloatArray();
-    float[] z = readFloatArray();
+    double[] x = readFloatArray();
+    double[] y = readFloatArray();
+    double[] z = readFloatArray();
     BS bs = (xAll == null ? null : bsFree);
     if (bs == null) {
       xAll = x;
@@ -302,10 +304,10 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
     for (int i = 0, vpt = 0; i < nAtoms; i++) {
       P3 pt = new P3();
       if (bs == null || bs.get(i)) {
-        pt.set(x[vpt], y[vpt], z[vpt]);
+        pt.set((float) x[vpt], (float) y[vpt], (float) z[vpt]);
         vpt++;
       } else {
-        pt.set(xAll[i], yAll[i], zAll[i]);
+        pt.set((float) xAll[i], (float) yAll[i], (float) zAll[i]);
       }
       if (bsFilter == null || bsFilter.get(i)) {
         if (++n == ac)
@@ -319,7 +321,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
     }
   }
 
-  private float[] calcUnitCell(double[] abc) {
+  private double[] calcUnitCell(double[] abc) {
     
 // from openmm/wrappers/python/simtk/openmm/app/dcdfile.py
 // https://github.com/pandegroup/openmm.git
@@ -345,7 +347,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
 
     System.out.println("unitcell:[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]");
     
-    return new float[] {(float) a, (float) b, (float) c, (float) alpha, (float) beta, (float) gamma};
+    return new double[] {a, b, c, alpha, beta, gamma};
     
   }
 

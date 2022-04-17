@@ -35,7 +35,7 @@ public class SiestaReader extends AtomSetCollectionReader {
   private final int STATE_OUTPUT = 2;
   
   private int state = STATE_UNKNOWN;
-  private float acfFactor;
+  private double acfFactor;
   
   
   @Override
@@ -128,7 +128,7 @@ public class SiestaReader extends AtomSetCollectionReader {
     return (pt < 0 ? s : s.substring(pt)).trim();
   }
 
-  private float getACFValue(float v) {
+  private double getACFValue(double v) {
     if (acfFactor == 0) {
       boolean isScaledCartesian = (acfUnits == "scaledcartesian");
       if (isScaledCartesian)
@@ -138,15 +138,15 @@ public class SiestaReader extends AtomSetCollectionReader {
       default:
       case 'b'://"bohr":
         setFractionalCoordinates(isScaledCartesian);
-        acfFactor = (float) (ACF_ANG / ACF_BOHR);
+        acfFactor = (ACF_ANG / ACF_BOHR);
         break;
       case 'm':
         setFractionalCoordinates(isScaledCartesian);
-        acfFactor = (float) (ACF_ANG / ACF_M);
+        acfFactor = (ACF_ANG / ACF_M);
         break;
       case 'n'://"nm":
         setFractionalCoordinates(isScaledCartesian);
-        acfFactor = (float) (ACF_ANG / ACF_NM);
+        acfFactor = (ACF_ANG / ACF_NM);
         break;
       case 'a'://"ang":
         setFractionalCoordinates(isScaledCartesian);
@@ -195,21 +195,21 @@ public class SiestaReader extends AtomSetCollectionReader {
     discardLinesUntilContains("%endblock AtomicCoordinatesAndAtomicSpecies");
   }
 
-  private float[] unitCellVectors, unitCellParamsS;
-  private float latticeConstant = 1;
+  private double[] unitCellVectors, unitCellParamsS;
+  private double latticeConstant = 1;
   private String latticeUnits;
 
   private boolean setCell(String key) throws Exception {
     if (key.equals("latticevectors")) {
-      unitCellVectors = new float[9];
-      fillFloatArray(null, 0, unitCellVectors);
+      unitCellVectors = new double[9];
+      fillDoubleArray(null, 0, unitCellVectors);
     } else if (key.equals("latticeconstant")) {
      String[] tokens = getTokens();
-      latticeConstant = this.parseFloatStr(tokens[1]);
+      latticeConstant = this.parseDoubleStr(tokens[1]);
       latticeUnits = tokens[2].toLowerCase();
     } else if (key.equals("latticeparameters")) {
-      unitCellParamsS = new float[6];
-      fillFloatArray(line.substring(line.indexOf("ters") + 4), 0, unitCellParamsS);
+      unitCellParamsS = new double[6];
+      fillDoubleArray(line.substring(line.indexOf("ters") + 4), 0, unitCellParamsS);
     }
     return true;
   }
@@ -269,7 +269,7 @@ public class SiestaReader extends AtomSetCollectionReader {
   
   
   @Override
-  public void setAtomCoordXYZ(Atom atom, float x, float y, float z) {
+  public void setAtomCoordXYZ(Atom atom, double x, double y, double z) {
     super.setAtomCoordXYZ(atom, getACFValue(x), getACFValue(y), getACFValue(z));
   }
 
@@ -307,9 +307,9 @@ public class SiestaReader extends AtomSetCollectionReader {
       String[] tokens = getTokens();
       Atom atom = asc.addNewAtom();
       atom.atomName = tokens[4];
-      float x = parseFloatStr(tokens[0]);
-      float y = parseFloatStr(tokens[1]);
-      float z = parseFloatStr(tokens[2]);
+      double x = parseDoubleStr(tokens[0]);
+      double y = parseDoubleStr(tokens[1]);
+      double z = parseDoubleStr(tokens[2]);
       atom.set(x, y, z); // will be set after reading unit cell
       rdSiesta();
     }

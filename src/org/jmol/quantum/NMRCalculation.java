@@ -400,7 +400,7 @@ public class NMRCalculation implements JmolNMRInterface {
   @Override
   public float getMagneticShielding(Atom atom) {
     Tensor t = vwr.ms.getAtomTensor(atom.i, "ms");
-    return (t == null ? Float.NaN : t.isotropy());
+    return (t == null ? Float.NaN : (float) t.isotropy());
   }
 
   private Map<String, Float> shiftRefsPPM = new Hashtable<String, Float>();

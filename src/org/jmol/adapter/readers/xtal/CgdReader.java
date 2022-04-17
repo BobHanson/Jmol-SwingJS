@@ -33,9 +33,12 @@ import org.jmol.util.Logger;
 
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * A reader for TOPOS systre file Crystal Graph Data format.
@@ -62,7 +65,7 @@ public class CgdReader extends AtomSetCollectionReader {
   }
 
   private String[] tokens;
-  private Map<Atom, V3[]> htEdges;
+  private Map<Atom, V3d[]> htEdges;
   private String lastName;
   private Lst<String> edgeData;
 
@@ -93,7 +96,7 @@ public class CgdReader extends AtomSetCollectionReader {
         case 6:
           //cell 1.1548 1.1548 1.1548 90.000 90.000 90.000
           for (int i = 0; i < 6; i++)
-            setUnitCellItem(i, (i < 3 ? 10 : 1) * parseFloatStr(tokens[i + 1]));
+            setUnitCellItem(i, (i < 3 ? 10 : 1) * parseDoubleStr(tokens[i + 1]));
           break;
         case 12:
           setSpaceGroupName("bilbao:" + group(tokens[1]));
@@ -138,15 +141,15 @@ public class CgdReader extends AtomSetCollectionReader {
     // check for  ATOM  1  4   5/8 5/8 5/8
     for (int i = 3; i < 6; i++)
       if (tokens[i].indexOf("/") >= 0)
-        tokens[i] = "" + PT.parseFloatFraction(tokens[i]);
+        tokens[i] = "" + PT.parseDoubleFraction(tokens[i]);
     Atom a = addAtomXYZSymName(tokens, 3, null, name);
     if (!doApplySymmetry)
       return;
     asc.atomSymbolicMap.put(name, a);
     asc.addVibrationVector(a.index, 1f, 3f, 7f);
     if (htEdges == null)
-      htEdges = new Hashtable<Atom, V3[]>();
-    htEdges.put(a, new V3[edgeCount]);
+      htEdges = new Hashtable<Atom, V3d[]>();
+    htEdges.put(a, new V3d[edgeCount]);
   }
 
   private String getName(String name) {
@@ -165,10 +168,10 @@ public class CgdReader extends AtomSetCollectionReader {
    * Now that we have all the edge data we can add edges to atoms
    */
   private void finalizeEdges() {
-    P3 p;
+    P3d p;
     String name;
     Atom a;
-    V3[] atomEdges;
+    V3d[] atomEdges;
     for (int j = 0; j < edgeData.size(); j++) {
       tokens = PT.getTokens(line = edgeData.get(j));
       switch (tokens.length) {
@@ -197,29 +200,29 @@ public class CgdReader extends AtomSetCollectionReader {
       }
       for (int i = 0, n = atomEdges.length; i < n; i++)
         if (atomEdges[i] == null) {
-          atomEdges[i] = V3.newV(p);
+          atomEdges[i] = V3d.newV(p);
           break;
         }
     }
   }
 
-  private P3 getCoord(int i) {
-    return P3.new3(PT.parseFloatFraction(tokens[i++]), PT.parseFloatFraction(tokens[i++]),
-        PT.parseFloatFraction(tokens[i++]));
+  private P3d getCoord(int i) {
+    return P3d.new3(PT.parseDoubleFraction(tokens[i++]), PT.parseDoubleFraction(tokens[i++]),
+        PT.parseDoubleFraction(tokens[i++]));
   }
 
-  private final static V3[] vecs = new V3[] { V3.new3(0, 0, -1), // -z   -7
-      V3.new3(1, 0, -1), //  x-z -6
-      null, V3.new3(0, 1, -1), //  y-z -4
-      V3.new3(0, -1, 0), // -y   -3
-      V3.new3(1, -1, 0), //  x-y -2
-      V3.new3(-1, 0, 0), // -x   -1
-      null, V3.new3(1, 0, 0), //  x    1
-      V3.new3(-1, 1, 0), //  y-x  2    
-      V3.new3(0, 1, 0), //  y    3
-      V3.new3(0, -1, 1), //  z-y  4
-      null, V3.new3(-1, 0, 1), //  z-x  6
-      V3.new3(0, 0, 1) //  z    7
+  private final static V3d[] vecs = new V3d[] { V3d.new3(0, 0, -1), // -z   -7
+      V3d.new3(1, 0, -1), //  x-z -6
+      null, V3d.new3(0, 1, -1), //  y-z -4
+      V3d.new3(0, -1, 0), // -y   -3
+      V3d.new3(1, -1, 0), //  x-y -2
+      V3d.new3(-1, 0, 0), // -x   -1
+      null, V3d.new3(1, 0, 0), //  x    1
+      V3d.new3(-1, 1, 0), //  y-x  2    
+      V3d.new3(0, 1, 0), //  y    3
+      V3d.new3(0, -1, 1), //  z-y  4
+      null, V3d.new3(-1, 0, 1), //  z-x  6
+      V3d.new3(0, 0, 1) //  z    7
   };
 
   // a.vib holds {1 3 7}, corresponding to 
@@ -236,14 +239,14 @@ public class CgdReader extends AtomSetCollectionReader {
     finalizeEdges();
     // atom vibration vector has been rotated and now gives us the needed orientations for the edges. 
     // could be a bit slow without partition. Let's see...
-    M3 m = new M3();
-    P3 pt = new P3();
+    M3d m = new M3d();
+    P3d pt = new P3d();
     for (int i = 0, n = asc.ac; i < n; i++) {
       Atom a = asc.atoms[i];
       Atom a0 = asc.atoms[a.atomSite];
       if (noBondSym && a != a0)
         continue;
-      V3[] edges = htEdges.get(a0);
+      V3d[] edges = htEdges.get(a0);
       if (edges == null)
         continue;
       int ix = (int) a.vib.x + 7;
@@ -271,9 +274,9 @@ public class CgdReader extends AtomSetCollectionReader {
 
   }
 
-  private Atom findAtom(P3 pt) {
+  private Atom findAtom(P3d pt) {
     for (int i = asc.ac; --i >= 0;) 
-      if (asc.atoms[i].distanceSquared(pt) < 0.00001f)
+      if (asc.atoms[i].distanceSquared(pt) < 0.00001)
         return asc.atoms[i];
     return null;
   }

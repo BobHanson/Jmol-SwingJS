@@ -31,7 +31,7 @@ import org.jmol.util.Logger;
 import javajs.util.PT;
 
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * 
@@ -104,7 +104,7 @@ public class XmlVaspReader extends XmlReader {
         asc.setCurrentModelInfo("enthalpy", Double.valueOf(enthalpy));
       }
       if (gibbsEnergy != null) {
-        asc.setAtomSetEnergy("" + gibbsEnergy, parseFloatStr(gibbsEnergy));
+        asc.setAtomSetEnergy("" + gibbsEnergy, parseDoubleStr(gibbsEnergy));
         asc.setCurrentModelInfo("gibbsEnergy", Double.valueOf(gibbsEnergy));
       }
       if (enthalpy != null && gibbsEnergy != null)
@@ -143,12 +143,12 @@ public class XmlVaspReader extends XmlReader {
   String[] atomSyms;
   String atomName;
   String atomSym;
-  float a;
-  float b;
-  float c;
-  float alpha;
-  float beta;
-  float gamma;
+  double a;
+  double b;
+  double c;
+  double alpha;
+  double beta;
+  double gamma;
   
   @Override
   void processEndElement(String localName) {
@@ -202,23 +202,23 @@ public class XmlVaspReader extends XmlReader {
         if (name == null) {
         } else if ("basis".equals(name) && !haveUnitCell) {
           haveUnitCell = true;
-          float[] ijk = getTokensFloat(data.toString(), null, 9);
-          V3 va = V3.new3(ijk[0], ijk[1], ijk[2]);
-          V3 vb = V3.new3(ijk[3], ijk[4], ijk[5]);
-          V3 vc = V3.new3(ijk[6], ijk[7], ijk[8]);
+          double[] ijk = getTokensDouble(data.toString(), null, 9);
+          V3d va = V3d.new3(ijk[0], ijk[1], ijk[2]);
+          V3d vb = V3d.new3(ijk[3], ijk[4], ijk[5]);
+          V3d vc = V3d.new3(ijk[6], ijk[7], ijk[8]);
           a = va.length();
           b = vb.length();
           c = vc.length();
           va.normalize();
           vb.normalize();
           vc.normalize();
-          alpha = (float) (Math.acos(vb.dot(vc)) * 180 / Math.PI);
-          beta = (float) (Math.acos(va.dot(vc)) * 180 / Math.PI);
-          gamma = (float) (Math.acos(va.dot(vb)) * 180 / Math.PI);
+          alpha = (Math.acos(vb.dot(vc)) * 180 / Math.PI);
+          beta = (Math.acos(va.dot(vc)) * 180 / Math.PI);
+          gamma = (Math.acos(va.dot(vb)) * 180 / Math.PI);
         } else if ("positions".equals(name)) {
           parent.setUnitCell(a, b, c, alpha, beta, gamma);
-          float[] fdata = new float[ac * 3];
-          getTokensFloat(data.toString(), fdata, ac * 3);
+          double[] fdata = new double[ac * 3];
+          getTokensDouble(data.toString(), fdata, ac * 3);
           int fpt = 0;
           for (int i = 0; i < ac; i++) {
             Atom atom = asc.addNewAtom();
@@ -227,8 +227,8 @@ public class XmlVaspReader extends XmlReader {
             atom.atomName = atomNames[i];
           }
         } else if ("forces".equals(name)) {
-          float[] fdata = new float[ac * 3];
-          getTokensFloat(data.toString(), fdata, ac * 3);
+          double[] fdata = new double[ac * 3];
+          getTokensDouble(data.toString(), fdata, ac * 3);
           int fpt = 0;
           int i0 = asc.getLastAtomSetAtomIndex();
 

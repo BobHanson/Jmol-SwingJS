@@ -131,7 +131,7 @@ void processAtomicCharges() throws Exception {
         throw new Exception("unexpected atom number in atomic charges");
       Atom atom = asc.addNewAtom();
       atom.elementSymbol = parseToken();
-      atom.partialCharge = parseFloat();
+      atom.partialCharge = parseDouble();
     }
     chargesFound = true;
   }
@@ -235,7 +235,7 @@ void processAtomicCharges() throws Exception {
       if (line.toUpperCase().indexOf("ROOT") >= 0) {
         discardLinesUntilNonBlank();
         tokens = getTokens();
-        if (Float.isNaN(PT.parseFloatStrict(tokens[tokens.length - 1]))) {
+        if (Double.isNaN(PT.parseDoubleStrict(tokens[tokens.length - 1]))) {
           discardLinesUntilNonBlank();
           tokens = getTokens();
         }
@@ -244,10 +244,10 @@ void processAtomicCharges() throws Exception {
         int iAtom0 = asc.ac;
         int ac = asc.getLastAtomSetAtomCount();
         boolean[] ignore = new boolean[frequencyCount];
-        float freq1 = PT.parseFloatStrict(tokens[0]);
+        double freq1 = PT.parseDoubleStrict(tokens[0]);
         boolean ignoreNegative = (freq1 < 0);
         for (int i = 0; i < frequencyCount; ++i) {
-          ignore[i] = done || (done = (!ignoreNegative && PT.parseFloatStrict(tokens[i]) < 1))
+          ignore[i] = done || (done = (!ignoreNegative && PT.parseDoubleStrict(tokens[i]) < 1))
           || !doGetVibration(++vibrationNumber);
           if (ignore[i])
             continue;  

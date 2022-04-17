@@ -253,7 +253,7 @@ OR
     String sym;
     int nSFO;
     int nBF;
-    float[][] coefs;
+    double[][] coefs;
     Map<String, Object>[] mos;
     int[] basisFunctions;
     public SymmetryData(int index, String sym) {
@@ -348,7 +348,7 @@ OR
         int y = parseIntStr(tokens[pt++]);
         int z = parseIntStr(tokens[pt++]);
         int r = parseIntStr(tokens[pt++]);
-        float zeta = parseFloatStr(tokens[pt++]);
+        double zeta = parseDoubleStr(tokens[pt++]);
         for (int i = 0; i < nAtoms; i++) {
           int ptBF = parseIntStr(tokens[pt++]) - 1;
           slaterArray[ptBF] = new SlaterData(atomList[i], x, y, z, r, zeta, 1);
@@ -375,7 +375,7 @@ OR
     boolean isLast = (ptSym == vSymmetries.size() - 1);
     int n = 0;
     int nBF = slaterArray.length;
-    sd.coefs = new float[sd.nSFO][nBF];
+    sd.coefs = new double[sd.nSFO][nBF];
     while (n < sd.nBF) {
       rd();
       int nLine = PT.getTokens(rd()).length;
@@ -386,7 +386,7 @@ OR
       for (int j = 1; j < nLine; j++) {
         int pt = sd.basisFunctions[n++];
         for (int i = 0; i < sd.nSFO; i++)
-          sd.coefs[i][pt] = parseFloatStr(data[i][j]);
+          sd.coefs[i][pt] = parseDoubleStr(data[i][j]);
       }
     }
     for (int i = 0; i < sd.nSFO; i++) {
@@ -451,8 +451,8 @@ OR
         sym = tokens[0];
       int moPt = parseIntStr(tokens[pt]);
       // could be spin here?
-      float occ = parseFloatStr(tokens[len - 4 + pt]);
-      float energy = parseFloatStr(tokens[len - 2 + pt]); // eV
+      double occ = parseDoubleStr(tokens[len - 4 + pt]);
+      double energy = parseDoubleStr(tokens[len - 2 + pt]); // eV
       addMo(sym, moPt, occ, energy);
     }
     int iAtom0 = asc.getLastAtomSetAtomIndex();
@@ -463,7 +463,7 @@ OR
     setMOs("eV");
   }
 
-  private void addMo(String sym, int moPt, float occ, float energy) {
+  private void addMo(String sym, int moPt, double occ, double energy) {
     SymmetryData sd = htSymmetries.get(sym);
     if (sd == null) {
       for (Map.Entry<String, SymmetryData> entry : htSymmetries.entrySet())
@@ -475,8 +475,8 @@ OR
         return;
     }
     Map<String, Object> mo = sd.mos[moPt - 1];
-    mo.put("occupancy", Float.valueOf(occ > 2 ? 2 : occ));
-    mo.put("energy", Float.valueOf(energy)); //eV
+    mo.put("occupancy", Double.valueOf(occ > 2 ? 2 : occ));
+    mo.put("energy", Double.valueOf(energy)); //eV
     mo.put("symmetry", sd.sym + "_" + moPt);
     setMO(mo);
   }  

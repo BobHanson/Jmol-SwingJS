@@ -243,7 +243,7 @@ public class MSCifParser extends MSRdr {
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        comSSMat.setElement(r - 1, c - 1, cr.parseFloatStr(cr.data)); 
+        comSSMat.setElement(r - 1, c - 1, (float) cr.parseDoubleStr(cr.data)); 
     }
   }
 
@@ -400,7 +400,7 @@ public class MSCifParser extends MSRdr {
           q = Cif2DataParser.getArrayFromStringList(field, modDim);
           break;
         default:
-          float f = cr.parseFloatStr(field);
+          double f = cr.parseDoubleStr(field);
           switch (tok) {
           case LEG_DISP_COEF:
           case LEG_OCC_COEF:
@@ -621,7 +621,7 @@ public class MSCifParser extends MSRdr {
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        a[r - 1][c - 1] = cr.parseFloatStr(field);
+        a[r - 1][c - 1] = cr.parseDoubleStr(field);
     }
     return m;
   }

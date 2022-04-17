@@ -70,8 +70,10 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -1062,11 +1064,11 @@ public class ModelSet extends BondCollection {
     if (!isP1) {
       boolean haveOccupancies = (occupancies != null);
       int nops = sg.getSpaceGroupOperationCount();
-      M4[] ops = sg.getSymmetryOperations();
-      P3 a = new P3(), b = new P3(), t = new P3();
+      M4d[] ops = sg.getSymmetryOperations();
+      P3d a = new P3d(), b = new P3d(), t = new P3d();
       for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
         Atom bb = at[j];
-        b.setT(bb);
+        b.setP(bb);
         sg.toFractional(b, true);
         sg.unitize(b);
         int site = bb.atomSite;
@@ -1076,7 +1078,7 @@ public class ModelSet extends BondCollection {
           int type = ba.atomicAndIsotopeNumber;
           if (ba.atomicAndIsotopeNumber != type || haveOccupancies && occj != occupancies[i])
             continue;
-          a.setT(ba);
+          a.setP(ba);
           sg.toFractional(a, true);
           sg.unitize(a);
           for (int k = 0; k < nops; k++) {
@@ -1178,17 +1180,17 @@ public class ModelSet extends BondCollection {
     return groups;
   }
 
-  /**
-   * deprecated due to multimodel issues, but required by an interface -- do NOT
-   * remove.
-   * 
-   * @return just the first unit cell
-   * 
-   */
-  public float[] getUnitCellParams() {
-    SymmetryInterface c = getUnitCell(0);
-    return (c == null ? null : c.getUnitCellParams());
-  }
+//  /**
+//   * deprecated due to multimodel issues, but required by an interface -- do NOT
+//   * remove.
+//   * 
+//   * @return just the first unit cell
+//   * 
+//   */
+//  public double[] getUnitCellParams() {
+//    SymmetryInterface c = getUnitCell(0);
+//    return (c == null ? null : c.getUnitCellParams());
+//  }
 
   public boolean setCrystallographicDefaults() {
     return !haveBioModels && someModelsHaveSymmetry
@@ -2319,7 +2321,7 @@ public class ModelSet extends BondCollection {
       for (int i = ac; --i >= 0;) {
         if (at[i] != null) {
           ptTemp1.setT(at[i]);
-          uc1.toFractional(ptTemp1, false);
+          uc1.toFractionalF(ptTemp1, false);
           if (SimpleUnitCell.checkPeriodic(ptTemp1))
             bs.set(i);
         }
@@ -3757,11 +3759,11 @@ public class ModelSet extends BondCollection {
       am[i].resetDSSR(false);
   }
 
-  public M4[] getSymMatrices(int modelIndex) {
+  public M4d[] getSymMatrices(int modelIndex) {
     int n = getModelSymmetryCount(modelIndex);
     if (n == 0)
       return null;
-    M4[] ops = new M4[n];
+    M4d[] ops = new M4d[n];
     SymmetryInterface unitcell = am[modelIndex].biosymmetry;
     if (unitcell == null)
       unitcell = getUnitCell(modelIndex);

@@ -34,13 +34,13 @@ import org.jmol.adapter.smarter.Atom;
  */
 abstract class MopacSlaterReader extends SlaterReader {
 
-  protected final static float MIN_COEF = 0.0001f; // sufficient?  
+  protected final static double MIN_COEF = 0.0001f; // sufficient?  
   protected int[] atomicNumbers;
 
   /**
    * GAMESS may need AM1, PMn, or RM1 zeta/coef data
    */
-  protected float[][] mopacBasis;
+  protected double[][] mopacBasis;
   protected boolean allowMopacDCoef;
 
   /**
@@ -212,7 +212,7 @@ abstract class MopacSlaterReader extends SlaterReader {
     }
   }
 
-  public void createMopacSlaters(int iAtom, int atomicNumber, float[] values, boolean allowD) {
+  public void createMopacSlaters(int iAtom, int atomicNumber, double[] values, boolean allowD) {
     double zeta;
     if ((zeta = values[0]) != 0) {
       createSphericalSlaterByType(iAtom, atomicNumber, "S", zeta, 1);
@@ -262,7 +262,7 @@ abstract class MopacSlaterReader extends SlaterReader {
         sphericalDValues[pt++], getNPQd(atomicNumber) - 3, zeta, coef);
   }
 
-  private static Map<String, float[][]> mopacParams;
+  private static Map<String, double[][]> mopacParams;
 
   public final static String MOPAC_TYPES = "AM1  MNDO PM3  PM6  PM7  RM1";
 
@@ -273,13 +273,13 @@ abstract class MopacSlaterReader extends SlaterReader {
    * @return [[zs,zp,zd],[zs,zp,zd]...] where [1] is for hydrogen, [6] is for
    *         carbon, etc.
    */
-  public static float[][] getMopacAtomZetaSPD(String type) {
+  public static double[][] getMopacAtomZetaSPD(String type) {
     if (mopacParams == null)
-      mopacParams = new Hashtable<String, float[][]>();
-    float[][] params = mopacParams.get(type);
+      mopacParams = new Hashtable<String, double[][]>();
+    double[][] params = mopacParams.get(type);
     if (params == null) {
-      mopacParams.put(type, params = new float[120][3]);
-      float[] data = null;
+      mopacParams.put(type, params = new double[120][3]);
+      double[] data = null;
       switch (MOPAC_TYPES.indexOf(type)) {
       case 0:
         data = _AM1_C;
@@ -317,9 +317,9 @@ abstract class MopacSlaterReader extends SlaterReader {
    * @param params
    * @param data
    */
-  private static void addData(float[][] params, float[] data) {
+  private static void addData(double[][] params, double[] data) {
     for (int i = 0, p = 0, a = 0; i < data.length; i++) {
-      float d = data[i];
+      double d = data[i];
       if (d < 0) {
         a = (int) -d;
         p = 0;
@@ -335,7 +335,7 @@ abstract class MopacSlaterReader extends SlaterReader {
    * 
    * Bob Hanson 2021.03.16
    */
-  final static float[] _AM1_C = {
+  final static double[] _AM1_C = {
 
       /* Hydrogen */-1, 1.188078f,
 
@@ -422,7 +422,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       /* Nobelium */-102, 4f, 0.3f, 0.3f, /* Rutherfordium */-104,
 
   };
-  private final static float[] _MNDO_C = {
+  private final static double[] _MNDO_C = {
 
       /* Hydrogen */-1, 1.331967f,
 
@@ -542,7 +542,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       /* Rutherfordium */-104, /* Dubnium */-105,
 
   };
-  private final static float[] _PM3_C = {
+  private final static double[] _PM3_C = {
 
       /* Hydrogen */-1, 0.967807f,
 
@@ -631,7 +631,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       /* Nobelium */-102, 4f, 0.3f, /* Rutherfordium */-104,
 
   };
-  private final static float[] _PM6_C = {
+  private final static double[] _PM6_C = {
 
       /* Hydrogen */-1, 1.268641f,
 
@@ -782,7 +782,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       /* Dubnium */-105,
 
   };
-  private final static float[] _PM7_C = {
+  private final static double[] _PM7_C = {
 
       /* Hydrogen */-1, 1.260237f,
 
@@ -933,7 +933,7 @@ abstract class MopacSlaterReader extends SlaterReader {
       /* Dubnium */-105,
 
   };
-  private final static float[] _RM1_C = {
+  private final static double[] _RM1_C = {
 
       /* Hydrogen */-1, 1.0826737f,
 

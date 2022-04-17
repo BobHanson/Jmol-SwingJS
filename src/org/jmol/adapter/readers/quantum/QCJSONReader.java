@@ -109,7 +109,7 @@ public class QCJSONReader extends MoldenReader {
         // m.m00, m.m10, m.m20, // Va
         // m.m01, m.m11, m.m21, // Vb
         // m.m02, m.m12, m.m22, // Vc
-        // dimension, (float) volume,
+        // dimension, volume,
         if (cell == null) {
           Logger.error("topology.unit_cell is missing even though atoms are listed as fractional");
         } else {
@@ -119,7 +119,7 @@ public class QCJSONReader extends MoldenReader {
               f = 1;
               //$FALL-THROUGH$
             default:
-              setUnitCellItem(i, (float)(cell[i] * f));
+              setUnitCellItem(i, (double)(cell[i] * f));
               break;
             }
           }
@@ -127,7 +127,7 @@ public class QCJSONReader extends MoldenReader {
       }
       for (int i = 0, pt = 0; i < modelAtomCount; i++) {
         Atom atom = asc.addNewAtom();
-        setAtomCoordXYZ(atom, (float)(coords[pt++] * f), (float)(coords[pt++] * f), (float) (coords[pt++]
+        setAtomCoordXYZ(atom, (double)(coords[pt++] * f), (double)(coords[pt++] * f), (coords[pt++]
             * f));
         String sym = (symbols == null ? JmolAdapter
             .getElementSymbol(atomNumbers[i]) : symbols[i]);
@@ -166,8 +166,8 @@ public class QCJSONReader extends MoldenReader {
         asc.setAtomSetFrequency(vibrationNumber, null, null, "" + freq, QCSchemaUnits.UNITS_CM_1);
         int i0 = asc.getLastAtomSetAtomIndex();
         for (int j = 0, pt = 0; j < modelAtomCount; j++) {
-          asc.addVibrationVector(j + i0, (float) (vectors[pt++] * ANGSTROMS_PER_BOHR),
-              (float) (vectors[pt++] * ANGSTROMS_PER_BOHR), (float) (vectors[pt++]
+          asc.addVibrationVector(j + i0, (vectors[pt++] * ANGSTROMS_PER_BOHR),
+              (vectors[pt++] * ANGSTROMS_PER_BOHR), (vectors[pt++]
                   * ANGSTROMS_PER_BOHR));
         }
       }
@@ -214,7 +214,7 @@ public class QCJSONReader extends MoldenReader {
         else if (spin.indexOf("alpha") >= 0)
           alphaBeta = "alpha";
       }
-      float[] coefs = toFloatArray(QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
+      float[] coefs = AU.toFloatA(QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
       line = "" + symmetry;
       if (filterMO()) {
         Map<String, Object> mo = new Hashtable<String, Object>();
@@ -246,13 +246,6 @@ public class QCJSONReader extends MoldenReader {
     return false;
   }
   
-  private float[] toFloatArray(double[] da) {
-    float[] fa = new float[da.length]; 
-    for (int j = da.length; --j >= 0;)
-      fa[j] = (float) da[j];
-    return fa;
-  }
-
   String lastBasisID = null;
   private boolean readBasis(String moBasisID) throws Exception {
     Map<String, Object> moBasisData = getMapSafely(job, "mo_bases");
@@ -294,7 +287,7 @@ public class QCJSONReader extends MoldenReader {
     nCoef = listS.size();
     for (int i = 0; i < nCoef; i++) {
       double[] a = QCSchemaUnits.getDoubleArray(listS.get(i), null);
-      addSlater((int) a[0], (int) a[1], (int) a[2], (int) a[3], (int) a[4], (float) a[5], (float) a[6]);
+      addSlater((int) a[0], (int) a[1], (int) a[2], (int) a[3], (int) a[4], a[5], (float) a[6]);
     }
     scaleSlaters = false;
     setSlaters(false);
@@ -309,7 +302,7 @@ public class QCJSONReader extends MoldenReader {
     float[][] garray = AU.newFloat2(gaussianPtr);
     // [[exp, coef], [exp, coef],...] with sp [exp, coef1, coef2]
     for (int i = 0; i < gaussianPtr; i++)
-      garray[i] = toFloatArray(QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
+      garray[i] = AU.toFloatA(QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
     moData.put("shells", shells);
     moData.put("gaussians", garray);
     Logger.info(shells.size() + " slater shells read");
@@ -362,13 +355,13 @@ public class QCJSONReader extends MoldenReader {
 //      // ANGS assumed here
 //      next[0] = 0;
 //      for (int i = 0; i < 6; i++)
-//        setUnitCellItem(i, parseFloat());
+//        setUnitCellItem(i, parseDouble());
 //      rd();
 //      return true;
 //    }
 //    if (line.startsWith("[CELLAXES]")) {
-//      float[] f = new float[9];
-//      fillFloatArray(null, 0, f);
+//      double[] f = new double[9];
+//      fillDoubleArray(null, 0, f);
 //      addExplicitLatticeVector(0, f, 0);
 //      addExplicitLatticeVector(1, f, 3);
 //      addExplicitLatticeVector(2, f, 6);

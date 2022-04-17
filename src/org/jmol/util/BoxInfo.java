@@ -28,6 +28,7 @@ package org.jmol.util;
 
 import javajs.util.P3;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
 
 /**
@@ -149,6 +150,26 @@ public class BoxInfo {
         vertices[i].add(oabc[3]);
     }
     return vertices;
+  }
+
+  public final static P3[] getVerticesFromOABCd(T3d[] oabc) {
+    P3[] vertices = new P3[8];
+    for (int i = 0; i <= XYZ; i++) {
+      oabc[0].setP(vertices[i] = new P3());
+      if ((i & X) == X)
+        addV(vertices[i], oabc[1]);
+      if ((i & Y) == Y)
+        addV(vertices[i], oabc[2]);
+      if ((i & Z) == Z)
+        addV(vertices[i], oabc[3]);
+    }
+    return vertices;
+  }
+
+  private static void addV(P3 p, T3d t) {
+    p.x += t.x;
+    p.y += t.y;
+    p.z += t.z;
   }
 
   public final static int[][] facePoints = new int[][] {
@@ -321,6 +342,13 @@ public class BoxInfo {
     margin = m;
   }
   
+  P3 ptTemp = new P3();
+  public void addBoundBoxPointD(T3d pt) {
+    isScaleSet = false;
+    ptTemp.set((float) pt.x, (float) pt.y, (float) pt.z); 
+    addPoint(ptTemp, bbCorner0, bbCorner1, margin);
+  }
+
   public void addBoundBoxPoint(T3 pt) {
     isScaleSet = false;
     addPoint(pt, bbCorner0, bbCorner1, margin);

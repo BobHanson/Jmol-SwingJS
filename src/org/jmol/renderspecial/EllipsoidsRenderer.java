@@ -37,7 +37,7 @@ import javajs.util.P3;
 
 import javajs.util.PT;
 import javajs.util.V3;
-
+import javajs.util.V3d;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
@@ -75,7 +75,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private int selectedOctant = -1;
 
   private int[] coords;
-  private V3[] axes;
+  private V3[] axes = new V3[] { new V3(), new V3(), new V3() };
   private P3 center;
   private float perspectiveFactor;
   private BS bsTemp = new BS();
@@ -236,7 +236,10 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
         maxPt = i;
       }        
     }
-    axes = e.tensor.eigenVectors;
+    V3d[] axesd = e.tensor.eigenVectors;
+    axesd[0].putP(axes[0]);
+    axesd[1].putP(axes[1]);
+    axesd[2].putP(axes[2]);
     setMatrices();
     setAxes(maxPt);
     if (g3d.isClippedXY(dx + dx, (int) s0.x, (int) s0.y))

@@ -76,16 +76,19 @@ import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
 
 public class MathExt {
@@ -417,7 +420,7 @@ public class MathExt {
       break;
     }
     int tok0 = (lastParam < 0 ? T.nada : args[0].tok);
-    T3[] ucnew = null;
+    T3d[] ucnew = null;
     Lst<SV> uc = null;
     switch (tok0) {
     case T.varray:
@@ -426,10 +429,10 @@ public class MathExt {
     case T.string:
       String s = args[0].asString();
       if (s.indexOf("a=") == 0) {
-        ucnew = new P3[4];
+        ucnew = new P3d[4];
         for (int i = 0; i < 4; i++)
-          ucnew[i] = new P3();
-        SimpleUnitCell.setOabc(s, null, ucnew);
+          ucnew[i] = new P3d();
+        SimpleUnitCell.setOabcD(s, null, ucnew);
       } else if (s.indexOf(",") >= 0) {
         return mp.addXObj(vwr.getV0abc(-1, s));
       }
@@ -444,48 +447,48 @@ public class MathExt {
       // unitcell() or {1.1}.unitcell
       u = (iatom < 0 ? vwr.getCurrentUnitCell() : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
       ucnew = (u == null
-          ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0), P3.new3(0, 1, 0),
-              P3.new3(0, 0, 1) }
+          ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0), P3d.new3(0, 1, 0),
+              P3d.new3(0, 0, 1) }
           : u.getUnitCellVectors());
     }
     if (ucnew == null) {
-      ucnew = new P3[4];
+      ucnew = new P3d[4];
       if (haveUC) {
         switch (uc.size()) {
         case 3:
           // [va. vb. vc]
-          ucnew[0] = new P3();
+          ucnew[0] = new P3d();
           for (int i = 0; i < 3; i++)
-            ucnew[i + 1] = P3.newP(SV.ptValue(uc.get(i)));
+            ucnew[i + 1] = P3d.newPd(SV.ptValue(uc.get(i)));
           break;
         case 4:
           for (int i = 0; i < 4; i++)
-            ucnew[i] = P3.newP(SV.ptValue(uc.get(i)));
+            ucnew[i] = P3d.newPd(SV.ptValue(uc.get(i)));
           break;
         case 6:
           // unitcell([a b c alpha beta gamma])
-          float[] params = new float[6];
+          double[] params = new double[6];
           for (int i = 0; i < 6; i++)
             params[i] = uc.get(i).asFloat();
-          SimpleUnitCell.setOabc(null, params, ucnew);
+          SimpleUnitCell.setOabcD(null, params, ucnew);
           break;
         default:
           return false;
         }
       } else {
-        ucnew[0] = SV.ptValue(args[0]);
+        ucnew[0] = P3d.newPd(SV.ptValue(args[0]));
         switch (lastParam) {
         case 3:
           // unitcell(origin, pa, pb, pc)
           for (int i = 1; i < 4; i++)
-            (ucnew[i] = P3.newP(SV.ptValue(args[i]))).sub(ucnew[0]);
+            (ucnew[i] = P3d.newPd(SV.ptValue(args[i]))).sub(ucnew[0]);
           break;
         case 1:
           // unitcell(origin, [va, vb, vc])
           Lst<SV> l = args[1].getList();
           if (l != null && l.size() == 3) {
             for (int i = 0; i < 3; i++)
-              ucnew[i + 1] = SV.ptValue(l.get(i));
+              ucnew[i + 1] = P3d.newPd(SV.ptValue(l.get(i)));
             break;
           }
           //$FALL-THROUGH$
@@ -512,7 +515,7 @@ public class MathExt {
         return false;
       if (u == null)
         u = vwr.getSymTemp();
-      M3 m3 = (M3) vwr.getModelForAtomIndex(iatom).auxiliaryInfo
+      M3d m3 = (M3d) vwr.getModelForAtomIndex(iatom).auxiliaryInfo
           .get("primitiveToCrystal");
       if (!u.toFromPrimitive(toPrimitive, stype.charAt(0), ucnew, m3))
         return false;
@@ -520,7 +523,7 @@ public class MathExt {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
       scale = 1;
     } else if ("vertices".equalsIgnoreCase(op)) {
-      return mp.addXObj(BoxInfo.getVerticesFromOABC(ucnew));
+      return mp.addXObj(BoxInfo.getVerticesFromOABCd(ucnew));
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)

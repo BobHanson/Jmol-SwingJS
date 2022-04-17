@@ -90,7 +90,7 @@ import javajs.util.PT;
       return true;
     }
   
-    float factor = 1;
+    double factor = 1;
   
     int[] pt = new int[1];
   
@@ -185,9 +185,9 @@ import javajs.util.PT;
         line = line.trim();
         String[] tokens = line.substring(1, line.length() - 1).split(",");
   
-        float x = parseFloatStr(tokens[0]) * factor;
-        float y = parseFloatStr(tokens[1]) * factor;
-        float z = parseFloatStr(tokens[2]) * factor;
+        double x = parseDoubleStr(tokens[0]) * factor;
+        double y = parseDoubleStr(tokens[1]) * factor;
+        double z = parseDoubleStr(tokens[2]) * factor;
         Atom atom = (iatom >= atomCount ? asc.addAtom(new Atom()) : atoms[iatom]);
         atom.set(x, y, z);
         iatom++;

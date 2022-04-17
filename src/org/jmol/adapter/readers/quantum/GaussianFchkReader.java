@@ -91,12 +91,12 @@ public class GaussianFchkReader extends GaussianReader {
     }
     try {
       int nModes  = n.intValue();
-      float[] vibE2 = (float[]) fileData.get("Vib-E2");
-      float[] modes = (float[]) fileData.get("Vib-Modes");      
-      float[] frequencies = fillFloat(vibE2, 0, nModes);
-      float[] red_masses = fillFloat(vibE2, nModes, nModes);
-      float[] frc_consts = fillFloat(vibE2, nModes * 2, nModes);
-      float[] intensities = fillFloat(vibE2, nModes * 3, nModes);
+      double[] vibE2 = (double[]) fileData.get("Vib-E2");
+      double[] modes = (double[]) fileData.get("Vib-Modes");      
+      double[] frequencies = fillFloat(vibE2, 0, nModes);
+      double[] red_masses = fillFloat(vibE2, nModes, nModes);
+      double[] frc_consts = fillFloat(vibE2, nModes * 2, nModes);
+      double[] intensities = fillFloat(vibE2, nModes * 3, nModes);
       int ac = asc.getLastAtomSetAtomCount();
       boolean[] ignore = new boolean[nModes];
       int fpt = 0;
@@ -127,8 +127,8 @@ public class GaussianFchkReader extends GaussianReader {
 
   }
 
-  private float[] fillFloat(float[] f0, int i, int n) {
-    float[] f = new float[n];
+  private double[] fillFloat(double[] f0, int i, int n) {
+    double[] f = new double[n];
     for (int i1 = 0, ilast = i + n; i < ilast; i++, i1++)
       f[i1] = f0[i];
     return f;
@@ -155,7 +155,7 @@ public class GaussianFchkReader extends GaussianReader {
         switch (type) {
         case 'I':
         case 'R':
-          o = fillFloatArray(null, 0, new float[parseIntStr(v)]);
+          o = fillDoubleArray(null, 0, new double[parseIntStr(v)]);
           line = null;
           break;
         default: // C H L
@@ -187,12 +187,12 @@ public class GaussianFchkReader extends GaussianReader {
   
   @Override
   protected void readAtoms() throws Exception {
-    float[] atomNumbers = (float[]) fileData.get("Atomicnumbers");
-    float[] data = (float[]) fileData.get("Currentcartesiancoordinates");
+    double[] atomNumbers = (double[]) fileData.get("Atomicnumbers");
+    double[] data = (double[]) fileData.get("Currentcartesiancoordinates");
     String e = "" + fileData.get("TotalEnergy"); 
-    asc.setAtomSetEnergy(e, parseFloatStr(e));
+    asc.setAtomSetEnergy(e, parseDoubleStr(e));
     atomCount = atomNumbers.length;
-    float f = ANGSTROMS_PER_BOHR;
+    double f = ANGSTROMS_PER_BOHR;
     for(int i = 0, pt = 0; i < atomCount; i++) {
       Atom atom = asc.addNewAtom();
       atom.elementNumber = (short) atomNumbers[i];
@@ -226,11 +226,11 @@ public class GaussianFchkReader extends GaussianReader {
 
   protected void readBonds() {
     try {
-      float[] nBond = (float[]) fileData.get("NBond");
-      float[] iBond = (float[]) fileData.get("IBond");
+      double[] nBond = (double[]) fileData.get("NBond");
+      double[] iBond = (double[]) fileData.get("IBond");
       if (nBond.length == 0)
         return;
-      float[] rBond = (float[]) fileData.get("RBond");
+      double[] rBond = (double[]) fileData.get("RBond");
       // MxBond record is not critical here
       int mxBond = rBond.length / nBond.length;
       for (int ia = 0, pt = 0; ia < atomCount; ia++)
@@ -238,7 +238,7 @@ public class GaussianFchkReader extends GaussianReader {
           int ib = (int) iBond[pt] - 1;
           if (ib <= ia)
             continue;
-          float order = rBond[pt];
+          double order = rBond[pt];
           int iorder = (order == 1.5f ? JmolAdapter.ORDER_AROMATIC
               : (int) order);
           asc.addBond(new Bond(ia, ib, iorder));
@@ -251,10 +251,10 @@ public class GaussianFchkReader extends GaussianReader {
   
   @Override
   protected void readDipoleMoment() throws Exception {
-    float[] data = (float[]) fileData.get("DipoleMoment");
+    double[] data = (double[]) fileData.get("DipoleMoment");
     if (data == null)
       return;
-    V3 dipole = V3.new3(data[0], data[1], data[2]);
+    V3 dipole = V3.new3((float) data[0], (float) data[1], (float) data[2]);
     Logger.info("Molecular dipole for model " + asc.atomSetCount
         + " = " + dipole);
     asc.setCurrentModelInfo("dipole", dipole);
@@ -262,15 +262,15 @@ public class GaussianFchkReader extends GaussianReader {
 
   @Override
   protected void readPartialCharges() throws Exception {
-    float[] data = (float[]) fileData.get("Mulliken Charges");
+    double[] data = (double[]) fileData.get("Mulliken Charges");
     if (data == null)
       return;
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < atomCount; ++i) {
-      float c = data[i];
+      double c = data[i];
       atoms[i].partialCharge = c;
-      if (Math.abs(c) > 0.8f)
-        atoms[i].formalCharge = Math.round(c);
+      if (Math.abs(c) > 0.8)
+        atoms[i].formalCharge = (int) Math.round(c);
     }
     Logger.info("Mulliken charges found for Model " + asc.atomSetCount);
   }
@@ -337,18 +337,18 @@ public class GaussianFchkReader extends GaussianReader {
   private static String[] AO_TYPES = {"F7", "D5", "L", "S", "P", "D", "F", "G", "H"};  
   @Override
   protected void readBasis() throws Exception {
-    float[] types = (float[]) fileData.get("Shelltypes");
+    double[] types = (double[]) fileData.get("Shelltypes");
     gaussianCount = 0;
     shellCount = 0;    
     if (types == null)
       return;
     shellCount = types.length;    
     shells = new  Lst<int[]>();
-    float[] pps = (float[]) fileData.get("Numberofprimitivespershell");
-    float[] atomMap = (float[]) fileData.get("Shelltoatommap");
-    float[] exps = (float[]) fileData.get("Primitiveexponents");
-    float[] coefs = (float[]) fileData.get("Contractioncoefficients");
-    float[] spcoefs = (float[]) fileData.get("P(S=P)Contractioncoefficients");
+    double[] pps = (double[]) fileData.get("Numberofprimitivespershell");
+    double[] atomMap = (double[]) fileData.get("Shelltoatommap");
+    double[] exps = (double[]) fileData.get("Primitiveexponents");
+    double[] coefs = (double[]) fileData.get("Contractioncoefficients");
+    double[] spcoefs = (double[]) fileData.get("P(S=P)Contractioncoefficients");
     gaussians = AU.newFloat2(exps.length);
     for (int i = 0; i < shellCount; i++) {
       String oType = AO_TYPES[(int) types[i] + 3];
@@ -367,10 +367,10 @@ public class GaussianFchkReader extends GaussianReader {
       shells.addLast(slater);
       for (int j = 0; j < nGaussians; j++) {
         float[] g = gaussians[gaussianCount] = new float[3];
-        g[0] = exps[gaussianCount]; 
-        g[1] = coefs[gaussianCount]; 
+        g[0] = (float) exps[gaussianCount]; 
+        g[1] = (float) coefs[gaussianCount]; 
         if (spcoefs != null)
-          g[2] = spcoefs[gaussianCount]; 
+          g[2] = (float) spcoefs[gaussianCount]; 
         gaussianCount++;
       }
     }
@@ -385,10 +385,10 @@ public class GaussianFchkReader extends GaussianReader {
     int nAlpha = ((Integer) fileData.get("Numberofalphaelectrons")).intValue();
     int nBeta = ((Integer) fileData.get("Numberofbetaelectrons")).intValue();
     //int mult = ((Integer) fileData.get("Multiplicity")).intValue();
-    float[] aenergies = (float[]) fileData.get("AlphaOrbitalEnergies");
-    float[] benergies = (float[]) fileData.get("BetaOrbitalEnergies");
-    float[] acoefs = (float[]) fileData.get("AlphaMOcoefficients");
-    float[] bcoefs = (float[]) fileData.get("BetaMOcoefficients");
+    double[] aenergies = (double[]) fileData.get("AlphaOrbitalEnergies");
+    double[] benergies = (double[]) fileData.get("BetaOrbitalEnergies");
+    double[] acoefs = (double[]) fileData.get("AlphaMOcoefficients");
+    double[] bcoefs = (double[]) fileData.get("BetaMOcoefficients");
     if (acoefs == null)
       return;
     int occ = (bcoefs == null ? 2 : 1);
@@ -399,7 +399,7 @@ public class GaussianFchkReader extends GaussianReader {
     setMOData(false); 
   }
   
-  private void getOrbitals(float[] e, float[] c, int occ, int nElec) {
+  private void getOrbitals(double[] e, double[] c, int occ, int nElec) {
     int nOrb = e.length;
     int nCoef = c.length;
     nCoef /= nOrb;
@@ -407,16 +407,16 @@ public class GaussianFchkReader extends GaussianReader {
     int pt = 0;
     int n = 0;
     for (int i = 0; i < nOrb; i++) {
-      float[] coefs = new float[nCoef];
+      double[] coefs = new double[nCoef];
       for (int j = 0; j < nCoef; j++)
         coefs[j] = c[pt++];
       Map<String, Object> mo = new Hashtable<String, Object>();
       mo.put("coefficients", coefs);
-      mo.put("occupancy", Float.valueOf(occ));
+      mo.put("occupancy", Double.valueOf(occ));
       n += occ;
       if (n >= nElec)
         occ = 0;
-      mo.put("energy", Float.valueOf(e[i]));
+      mo.put("energy", Double.valueOf(e[i]));
       mo.put("type", alphaBeta);
       setMO(mo);
     }

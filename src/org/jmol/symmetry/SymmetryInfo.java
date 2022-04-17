@@ -55,7 +55,7 @@ class SymmetryInfo {
    * @param sg space group determined by SpaceGroupFinder via modelkit
    * @return actual unit cell parameters
    */
-  float[] setSymmetryInfo(Map<String, Object> info, float[] unitCellParams,
+  double[] setSymmetryInfo(Map<String, Object> info, double[] unitCellParams,
                           SpaceGroup sg) {
     int symmetryCount;
     if (sg == null) {
@@ -106,10 +106,8 @@ class SymmetryInfo {
       infoStr += "\n";
     }
     if (unitCellParams == null)
-      unitCellParams = (float[]) info.get("unitCellParams");
-    if (!SimpleUnitCell.isValid(unitCellParams))
-      return null;
-    return unitCellParams;
+      unitCellParams = (double[]) info.get("unitCellParams");
+    return (SimpleUnitCell.isValidD(unitCellParams) ? unitCellParams : null);
   }
 }
 

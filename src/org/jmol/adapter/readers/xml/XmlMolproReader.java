@@ -116,8 +116,8 @@ public class XmlMolproReader extends XmlMOReader {
         tokens = PT.getTokens(chars.toString());
         for (int offset = tokens.length - ac * 3, i = 0; i < ac; i++) {
           asc.addVibrationVector(i + baseAtomIndex,
-              parseFloatStr(tokens[offset++]), parseFloatStr(tokens[offset++]),
-              parseFloatStr(tokens[offset++]));
+              parseDoubleStr(tokens[offset++]), parseDoubleStr(tokens[offset++]),
+              parseDoubleStr(tokens[offset++]));
         }
         setKeepChars(false);
       }

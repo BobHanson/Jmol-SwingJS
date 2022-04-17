@@ -224,7 +224,7 @@ public class NWChemReader extends MOReader {
         equivalentAtomSets);
     setNames(energyKey + " = " + energyValue,
         null, equivalentAtomSets);
-    asc.setAtomSetEnergy(value, parseFloatStr(value));
+    asc.setAtomSetEnergy(value, parseDoubleStr(value));
     haveEnergy = true;
   }
 
@@ -314,7 +314,7 @@ public class NWChemReader extends MOReader {
    * @throws Exception If an error occurs.
    **/
   private void readAtoms(String thisLine) throws Exception {
-    float scale = (thisLine.indexOf("angstroms") < 0 ? ANGSTROMS_PER_BOHR : 1);
+    double scale = (thisLine.indexOf("angstroms") < 0 ? ANGSTROMS_PER_BOHR : 1);
     readLines(3); // skip blank line, titles and dashes
     String tokens[];
     haveEnergy = false;
@@ -379,7 +379,7 @@ public class NWChemReader extends MOReader {
     asc.setAtomSetModelProperty("vector", "gradient");
     asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
         + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
-    float f = ANGSTROMS_PER_BOHR;
+    double f = ANGSTROMS_PER_BOHR;
     while (rd() != null && line.length() > 0) {
       tokens = getTokens(); // get the tokens in the line
       if (tokens.length < 8)
@@ -390,8 +390,8 @@ public class NWChemReader extends MOReader {
       // Keep gradients in a.u. (larger value that way)
       // need to multiply with -1 so the direction is in the direction the
       // atom needs to move to lower the energy
-      asc.addVibrationVector(atom.index, -parseFloatStr(tokens[5]),
-          -parseFloatStr(tokens[6]), -parseFloatStr(tokens[7]));
+      asc.addVibrationVector(atom.index, -parseDoubleStr(tokens[5]),
+          -parseDoubleStr(tokens[6]), -parseDoubleStr(tokens[7]));
     }
   }
 
@@ -581,7 +581,7 @@ public class NWChemReader extends MOReader {
           return;
         tokens = getTokens();
       } while (tokens[0].indexOf(".") >= 0);
-      atoms[i].partialCharge = parseIntStr(tokens[2]) - parseFloatStr(tokens[3]);
+      atoms[i].partialCharge = parseIntStr(tokens[2]) - parseDoubleStr(tokens[3]);
     }
   }
 
@@ -745,7 +745,7 @@ public class NWChemReader extends MOReader {
       while (line != null && line.length() > 3) {
         String[] tokens = getTokens();
         Object[] o = new Object[] { tokens[1],
-            new float[] { parseFloatStr(tokens[2]), parseFloatStr(tokens[3]) } };
+            new float[] { (float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]) } };
         shellData.addLast(o);
         rd();
       }
@@ -872,12 +872,12 @@ public class NWChemReader extends MOReader {
         line = line.replace('=', ' ');
         //  Vector    9  Occ=2.000000D+00  E=-1.152419D+00  Symmetry=a1
         String[] tokens = getTokens();
-        float occupancy = parseFloatStr(tokens[3]);
-        float energy = parseFloatStr(tokens[5]);
+        double occupancy = parseDoubleStr(tokens[3]);
+        double energy = parseDoubleStr(tokens[5]);
         String symmetry = (tokens.length > 7 ? tokens[7] : null);
         Map<String, Object> mo = new Hashtable<String, Object>();
-        mo.put("occupancy", Float.valueOf(occupancy));
-        mo.put("energy", Float.valueOf(energy));
+        mo.put("occupancy", Double.valueOf(occupancy));
+        mo.put("energy", Double.valueOf(energy));
         if (symmetry != null)
           mo.put("symmetry", symmetry);
         float[] coefs = null;
@@ -889,10 +889,10 @@ public class NWChemReader extends MOReader {
         //    68      2.509000   5 C  py               39     -2.096777   3 C  pz        
         while ((line = list.get(++i)) != null && line.length() > 3) {
           tokens = getTokens();
-          coefs[parseIntStr(tokens[0]) - 1] = parseFloatStr(tokens[1]);
+          coefs[parseIntStr(tokens[0]) - 1] = (float) parseDoubleStr(tokens[1]);
           int pt = tokens.length / 2;
           if (pt == 5 || pt == 6)
-            coefs[parseIntStr(tokens[pt]) - 1] = parseFloatStr(tokens[pt + 1]);
+            coefs[parseIntStr(tokens[pt]) - 1] = (float) parseDoubleStr(tokens[pt + 1]);
         }
       }
     }
@@ -969,10 +969,10 @@ public class NWChemReader extends MOReader {
 //          data[i].addLast(line.substring(pt, pt + fieldSize).trim());
 //
 //      for (int iMo = 0; iMo < nThisLine; iMo++) {
-//        float[] coefs = new float[data[iMo].size()];
+//        double[] coefs = new double[data[iMo].size()];
 //        int iCoeff = 0;
 //        while (iCoeff < coefs.length) {
-//          coefs[iCoeff] = parseFloatStr(data[iMo].get(iCoeff));
+//          coefs[iCoeff] = parseDoubleStr(data[iMo].get(iCoeff));
 //          iCoeff++;
 //        }
 //        mos[iMo].put("coefficients", coefs);

@@ -12,6 +12,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.V3;
 
@@ -73,10 +74,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     if (uc == null) {
       uc = vwr.getSymTemp();
       V3 bb = vwr.getBoundBoxCornerVector();
-      float len = Math.round(bb.length() * 2);
-      uc.setUnitCell(new float[] { len, len, len, 90, 90, 90 }, false);
+      double len = Math.round(bb.length() * 2);
+      uc.setUnitCell(new double[] { len, len, len, 90, 90, 90 }, false);
     }
-    P3[] abc = uc.getUnitCellVectors();
+    P3d[] abc = uc.getUnitCellVectors();
     String f = "%18.10p%18.10p%18.10p\n";
     oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
     oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
@@ -85,16 +86,16 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   }
 
   private void writePositions() {
-    float[] cx = getData("CONSTRAINTS_X");
-    float[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
-    float[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
+    double[] cx = getData("CONSTRAINTS_X");
+    double[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
+    double[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
     oc.append("Position, move_x, move_y, move_z\n");
     String f = "%4i%40s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
     Atom[] a = vwr.ms.at;
     P3 p = new P3();
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       p.setT(a[i]);
-      uc.toFractional(p, false);
+      uc.toFractionalF(p, false);
       String coord = clean(p.x) + clean(p.y) + clean(p.z);
       if (cz == null) {
         oc.append(PT.sprintf(f, "is", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord }));
@@ -108,20 +109,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     Logger.info("PWMATWriter: POSITIONS");
   }
   
-  private float[] getData(String name) { 
+  private double[] getData(String name) { 
     name = PWM_PREFIX + name.toLowerCase();
     for (int i = names.size(); --i >= 0;) {
       String n = names.get(i);
       if (name.equalsIgnoreCase(n)) {
         names.removeItemAt(i);
-        return (float[]) vwr.getDataObj(n, bs, JmolDataManager.DATA_TYPE_AF);
+        return (double[]) vwr.getDataObj(n, bs, JmolDataManager.DATA_TYPE_AD);
       }
     }
     return null;
   }
 
-  private float[][] getVectors(String name) {
-    float[][] vectors = new float[][] { getData(name + "_x"), getData(name + "_y"), getData(name + "_z") };
+  private double[][] getVectors(String name) {
+    double[][] vectors = new double[][] { getData(name + "_x"), getData(name + "_y"), getData(name + "_z") };
     return (vectors[0] == null || vectors[1] == null || vectors[2] == null ? null : vectors);
   }
 
@@ -133,11 +134,11 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   }
 
   private void writeVectors(String name) {
-    float[][] xyz = getVectors(name);
+    double[][] xyz = getVectors(name);
     if (xyz == null)
       return;
     Atom[] a = vwr.ms.at;
-    P3 p = new P3();
+    P3d p = new P3d();
     oc.append(name.toUpperCase()).append("\n");
     String f = "%4i%18.12p%18.12p%18.12p\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
@@ -148,40 +149,40 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   }
 
   private void writeMagnetic() {
-    float[] m = writeItems("MAGNETIC");
+    double[] m = writeItems("MAGNETIC");
     if (m == null)
       return;
     writeItem2(m, "CONSTRAINT_MAG");
 //    writeVectors("MAGNETIC_XYZ");
   }
 
-  private void writeItem2(float[] m, String name) {
-    float[] v = getData(name);
+  private void writeItem2(double[] m, String name) {
+    double[] v = getData(name);
     if (v == null)
       return;
     Atom[] a = vwr.ms.at;
     oc.append(name.toUpperCase()).append("\n");
-    String f = "%4i%18.12f%18.12f\n";
+    String f = "%4i%18.12D%18.12D\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "iff",
+      oc.append(PT.sprintf(f, "iDD",
           new Object[] { Integer.valueOf(a[i].getElementNumber()),
-              Float.valueOf(m[ic]), Float.valueOf(v[ic]) }));
+              Double.valueOf(m[ic]), Double.valueOf(v[ic]) }));
     }
   }
 
-  private float[] writeItems(String name) {
-    float[] m = getData(name);
+  private double[] writeItems(String name) {
+    double[] m = getData(name);
     if (m == null)
       return null;
     Atom[] a = vwr.ms.at;
     name = name.toUpperCase();
     oc.append(name).append("\n");
-    String f = "%4i%18.12f\n";
+    String f = "%4i%18.12D\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "if", new Object[] {
-          Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]) }));
+      oc.append(PT.sprintf(f, "iD", new Object[] {
+          Integer.valueOf(a[i].getElementNumber()), Double.valueOf(m[ic]) }));
     }
     Logger.info("PWMATWriter: " + name);
     return m;

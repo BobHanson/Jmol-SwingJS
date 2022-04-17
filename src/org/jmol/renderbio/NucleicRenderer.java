@@ -278,20 +278,20 @@ public class NucleicRenderer {
         if (ptTemp == null)
           ptTemp = new P3();
         ptTemp.setT(oxyz[0]);
-        uc.toFractional(ptTemp, true);
+        uc.toFractionalF(ptTemp, true);
         uc.setOffsetPt(P3.new3(ptTemp.x - 2.25f, ptTemp.y + 5f, ptTemp.z
             - blockHeight / 2));
         float x = 4.5f;
         float y = (isPurine ? -4.5f : -3f);
         float z = blockHeight;
-        uc.toCartesian(box[0] = P3.new3(0, 0, 0), false);
-        uc.toCartesian(box[1] = P3.new3(x, 0, 0), false);
-        uc.toCartesian(box[2] = P3.new3(x, y, 0), false);
-        uc.toCartesian(box[3] = P3.new3(0, y, 0), false);
-        uc.toCartesian(box[4] = P3.new3(0, 0, z), false);
-        uc.toCartesian(box[5] = P3.new3(x, 0, z), false);
-        uc.toCartesian(box[6] = P3.new3(x, y, z), false);
-        uc.toCartesian(box[7] = P3.new3(0, y, z), false);
+        uc.toCartesianF(box[0] = P3.new3(0, 0, 0), false);
+        uc.toCartesianF(box[1] = P3.new3(x, 0, 0), false);
+        uc.toCartesianF(box[2] = P3.new3(x, y, 0), false);
+        uc.toCartesianF(box[3] = P3.new3(0, y, 0), false);
+        uc.toCartesianF(box[4] = P3.new3(0, 0, z), false);
+        uc.toCartesianF(box[5] = P3.new3(x, 0, z), false);
+        uc.toCartesianF(box[6] = P3.new3(x, y, z), false);
+        uc.toCartesianF(box[7] = P3.new3(0, y, z), false);
       }
       for (int j = 0; j < 8; j++)
         vwr.tm.transformPt3f(box[j], scrBox[j]);      

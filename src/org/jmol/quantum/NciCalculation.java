@@ -330,7 +330,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
     }
 */  }
   
-  private float[] eigenValues = new float[3];
+  private double[] eigenValues = new double[3];
   
   private float getValue(double rho, boolean isReducedDensity) {
     double s;
@@ -348,7 +348,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
       hess[1][2] = hess[2][1] = gyzTemp;
       hess[2][2] = gzzTemp;
       eigen.calc(hess);
-      eigen.fillFloatArrays(null, eigenValues);
+      eigen.fillDoubleArrays(null, eigenValues);
       s = (eigenValues[1] < 0 ? -rho : rho);
     }
     return (float) s;

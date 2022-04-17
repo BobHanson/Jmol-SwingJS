@@ -64,22 +64,28 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 public class ScriptEval extends ScriptExpr {
 
@@ -5749,7 +5755,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.getSymTemp().setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 }, false);
+          uc = vwr.getSymTemp().setUnitCell(new double[] { 1, 1, 1, 90, 90, 90 }, false);
         }
         q = uc.getQuaternionRotation(abc);
         if (q == null)
@@ -8305,7 +8311,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.undoMoveAction(tok, n);
   }
 
-  public void setModelCagePts(int iModel, T3[] originABC, String name) {
+  public void setModelCagePts(int iModel, T3d[] originABC, String name) {
     if (iModel < 0)
       iModel = vwr.am.cmi;
     SymmetryInterface sym = Interface.getSymmetry(vwr, "eval");
@@ -8313,7 +8319,7 @@ public class ScriptEval extends ScriptExpr {
       throw new NullPointerException();
     try {
       vwr.ms.setModelCage(iModel,
-          originABC == null ? null : sym.getUnitCell(originABC, false, name));
+          originABC == null ? null : sym.getUnitCelld(originABC, false, name));
     } catch (Exception e) {
       //
     }
@@ -9731,4 +9737,5 @@ public class ScriptEval extends ScriptExpr {
     setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
     refresh(false);
   }
+
 }

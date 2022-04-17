@@ -103,7 +103,7 @@ public class Ellipsoid {
     if (lengths == null)
       lengths = new float[3];
     for (int i = 0; i < lengths.length; i++)
-      lengths[i] = tensor.getFactoredValue(i) * scale * (scaleXYZ == null ? 1 : Math.abs(scaleXYZ[i]));
+      lengths[i] = (float) (tensor.getFactoredValue(i) * scale * (scaleXYZ == null ? 1 : Math.abs(scaleXYZ[i])));
   }
 
   public void setScale(float scale, boolean isPercent) {

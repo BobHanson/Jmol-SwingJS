@@ -231,6 +231,23 @@ final public class AU {
     return t;
   }
 
+  public static double[] arrayCopyD(double[] array, int newLength) {
+    int oldLength = (array == null ? -1 : array.length);
+    if (newLength < 0) newLength = oldLength;
+    /**
+     * @j2sNative
+     * 
+     *     if (newLength < oldLength) return Clazz.array(-1, array, 0, newLength);
+     */
+    {}
+    double[] t = new double[newLength];
+    if (array != null) {
+      System.arraycopy(array, 0, t, 0, oldLength < newLength ? oldLength
+          : newLength);
+    }
+    return t;
+  }
+
   public static int[] arrayCopyI(int[] array, int newLength) {
     int oldLength = (array == null ? -1 : array.length);
     if (newLength < 0) newLength = oldLength;
@@ -546,6 +563,30 @@ final public class AU {
 		}
 		return b;
 	}
+
+  public static float[] toFloatA(double[] a) {
+    /**
+     * @j2sNative return a;
+     */
+    {
+      float[] f = new float[a.length];
+      for (int i = f.length; --i >= 0;)
+        f[i] = (float) a[i];
+      return f;
+    }
+  }
+
+  public static double[] toDoubleA(float[] a) {
+    /**
+     * @j2sNative return a;
+     */
+    {
+      double[] f = new double[a.length];
+      for (int i = f.length; --i >= 0;)
+        f[i] = a[i];
+      return f;
+    }
+  }
 
 
 }

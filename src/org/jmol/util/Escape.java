@@ -40,6 +40,7 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
 
 import org.jmol.api.JmolDataManager;
@@ -79,6 +80,17 @@ public class Escape {
     return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
   }
 
+  /**
+   * must be its own, because of the possibility of being null
+   * @param xyz
+   * @return  {x y z}
+   */
+  public static String ePd(T3d xyz) {
+    if (xyz == null)
+      return "null";
+    return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
+  }
+  
   public static String matrixToScript(Object m) {
     return PT.replaceAllCharacters(m.toString(), "\n\r ","").replace('\t',' ');
   }
@@ -208,6 +220,19 @@ public class Escape {
     return sb.toString();
   }
 
+  public static String escapeDoubleAA(double[][] f, boolean addSemi) {
+    SB sb = new SB();
+    String eol = (addSemi ? ";\n" : "\n");
+    for (int i = 0; i < f.length; i++)
+      if (f[i] != null) {
+        if (i > 0)
+          sb.append(eol);
+        for (int j = 0; j < f[i].length; j++)
+          sb.appendD(f[i][j]).appendC('\t');
+      }
+    return sb.toString();
+  }
+
   public static String escapeFloatAAA(float[][][] f, boolean addSemi) {
     SB sb = new SB();
     String eol = (addSemi ? ";\n" : "\n");
@@ -299,6 +324,19 @@ public class Escape {
       if (i > 0)
         s.append(", ");
       s.append(eP(plist[i]));
+    }
+    return s.append("]").toString();
+  }
+
+  public static String eAPd(T3d[] plist) {
+    if (plist == null)
+      return PT.esc("");
+    SB s = new SB();
+    s.append("[");
+    for (int i = 0; i < plist.length; i++) {
+      if (i > 0)
+        s.append(", ");
+      s.append(ePd(plist[i]));
     }
     return s.append("]").toString();
   }

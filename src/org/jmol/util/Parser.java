@@ -46,6 +46,10 @@ public class Parser {
     return Parser.parseFloatArrayBsData(PT.getTokens(str), bs, data);
   }
 
+  public static int parseStringInfestedDoubleArray(String str, BS bs, double[] data) {
+    return Parser.parseDoubleArrayBsData(PT.getTokens(str), bs, data);
+  }
+
   public static int parseFloatArrayBsData(String[] tokens, BS bs, float[] data) {
     int len = data.length;
     int nTokens = tokens.length;
@@ -58,6 +62,25 @@ public class Parser {
           && n < nTokens) {
       }
       if (!Float.isNaN(f))
+        data[(max = i)] = f;
+      if (n == nTokens)
+        break;
+    }
+    return max + 1;
+  }
+
+  public static int parseDoubleArrayBsData(String[] tokens, BS bs, double[] data) {
+    int len = data.length;
+    int nTokens = tokens.length;
+    int n = 0;
+    int max = 0;
+    boolean haveBitSet = (bs != null);
+    for (int i = (haveBitSet ? bs.nextSetBit(0) : 0); i >= 0 && i < len && n < nTokens; i = (haveBitSet ? bs.nextSetBit(i + 1) : i + 1)) {
+      double f;
+      while (Double.isNaN(f = PT.parseDouble(tokens[n++])) 
+          && n < nTokens) {
+      }
+      if (!Double.isNaN(f))
         data[(max = i)] = f;
       if (n == nTokens)
         break;

@@ -154,9 +154,9 @@ abstract class MapFileReader extends VolumeFileReader {
     vectors[0] = P3.new3(1, 0, 0);
     vectors[1] = P3.new3(0, 1, 0);
     vectors[2] = P3.new3(0, 0, 1);
-    unitCell.toCartesian(vectors[0], false);
-    unitCell.toCartesian(vectors[1], false);
-    unitCell.toCartesian(vectors[2], false);
+    unitCell.toCartesianF(vectors[0], false);
+    unitCell.toCartesianF(vectors[1], false);
+    unitCell.toCartesianF(vectors[2], false);
 
     Logger.info("Jmol unit cell vectors:");
     Logger.info("    a: " + vectors[0]);
@@ -204,7 +204,7 @@ abstract class MapFileReader extends VolumeFileReader {
     Logger.info("Use  isosurface OFFSET {x y z}  if you want to shift it.\n");
     
     p3.set(na, nb, nc);
-    unitCell.toCartesian(p3, true);
+    unitCell.toCartesianF(p3, true);
     p3.add(origin);
     Logger.info("boundbox corners " +  origin + " " + p3 + ";draw bbox boundbox mesh nofill");
 

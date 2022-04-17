@@ -57,7 +57,7 @@ public class PDBWriter implements JmolWriter {
     String occTemp = "%6.2Q%6.2b          ";
     if (isPQR) {
       occTemp = "%8.4P%7.4V       ";
-      float charge = 0;
+      double charge = 0;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         charge += atoms[i].getPartialCharge();
       oc.append(

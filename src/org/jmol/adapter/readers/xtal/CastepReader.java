@@ -44,16 +44,16 @@ package org.jmol.adapter.readers.xtal;
 
 import javajs.util.DF;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.V3d;
 import javajs.util.PT;
-
+import javajs.util.V3;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
-import javajs.util.P3;
 import org.jmol.util.Tensor;
-import javajs.util.V3;
 
 
 /**
@@ -86,7 +86,7 @@ import javajs.util.V3;
 
 public class CastepReader extends AtomSetCollectionReader {
 
-  private static final float RAD_TO_DEG = (float) (180.0 / Math.PI);
+  private static final double RAD_TO_DEG = (180.0 / Math.PI);
 
   private String[] tokens;
 
@@ -95,11 +95,11 @@ public class CastepReader extends AtomSetCollectionReader {
   private boolean isOutput;
   private boolean isCell;
 
-  private float a, b, c, alpha, beta, gamma;
-  private V3[] abc = new V3[3];
+  private double a, b, c, alpha, beta, gamma;
+  private V3d[] abc = new V3d[3];
   
   private int ac;
-  private P3[] atomPts;
+  private P3d[] atomPts;
 
   private boolean havePhonons = false;
   private String lastQPt;
@@ -135,8 +135,8 @@ public class CastepReader extends AtomSetCollectionReader {
   private void setDesiredQpt(String s) {
     desiredQpt = new V3();
     desiredQ = "";
-    float num = 1;
-    float denom = 1;
+    double num = 1;
+    double denom = 1;
     int ipt = 0;
     int xyz = 0;
     boolean useSpace = (s.indexOf(',') < 0);
@@ -149,7 +149,7 @@ public class CastepReader extends AtomSetCollectionReader {
         denom = 1;
         break;
       case '/':
-        num = parseFloatStr(s.substring(ipt, i));
+        num = parseDoubleStr(s.substring(ipt, i));
         ipt = i + 1;
         denom = 0;
         break;
@@ -161,20 +161,20 @@ public class CastepReader extends AtomSetCollectionReader {
         else if ((c == ' ') != useSpace)
           break;
         if (denom == 0) {
-          denom = parseFloatStr(s.substring(ipt, i));
+          denom = parseDoubleStr(s.substring(ipt, i));
         } else {
-          num = parseFloatStr(s.substring(ipt, i));
+          num = parseDoubleStr(s.substring(ipt, i));
         }
         num /= denom;
         switch (xyz++) {
         case 0:
-          desiredQpt.x = num;
+          desiredQpt.x = (float) num;
           break;
         case 1:
-          desiredQpt.y = num;
+          desiredQpt.y = (float) num;
           break;
         case 2:
-          desiredQpt.z = num;
+          desiredQpt.z = (float) num;
           break;
         }
         denom = 1;
@@ -411,7 +411,7 @@ public class CastepReader extends AtomSetCollectionReader {
       setUnitCell(a, b, c, alpha, beta, gamma);
       return;
     }
-    float[] lv = new float[3];
+    double[] lv = new double[3];
     for (int i = 0; i < 3; i++) {
       lv[0] = abc[i].x;
       lv[1] = abc[i].y;
@@ -423,11 +423,11 @@ public class CastepReader extends AtomSetCollectionReader {
   private void readLatticeAbc() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;
-    float factor = readLengthUnit(tokens[0]);
+    double factor = readLengthUnit(tokens[0]);
     if (tokens.length >= 3) {
-      a = parseFloatStr(tokens[0]) * factor;
-      b = parseFloatStr(tokens[1]) * factor;
-      c = parseFloatStr(tokens[2]) * factor;
+      a = parseDoubleStr(tokens[0]) * factor;
+      b = parseDoubleStr(tokens[1]) * factor;
+      c = parseDoubleStr(tokens[2]) * factor;
     } else {
       Logger
           .warn("error reading a,b,c in %BLOCK LATTICE_ABC in CASTEP .cell file");
@@ -437,9 +437,9 @@ public class CastepReader extends AtomSetCollectionReader {
     if (tokenizeCastepCell() == 0)
       return;
     if (tokens.length >= 3) {
-      alpha = parseFloatStr(tokens[0]);
-      beta = parseFloatStr(tokens[1]);
-      gamma = parseFloatStr(tokens[2]);
+      alpha = parseDoubleStr(tokens[0]);
+      beta = parseDoubleStr(tokens[1]);
+      gamma = parseDoubleStr(tokens[2]);
     } else {
       Logger
           .warn("error reading alpha,beta,gamma in %BLOCK LATTICE_ABC in CASTEP .cell file");
@@ -449,14 +449,14 @@ public class CastepReader extends AtomSetCollectionReader {
   private void readLatticeCart() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;
-    float factor = readLengthUnit(tokens[0]);
-    float x, y, z;
+    double factor = readLengthUnit(tokens[0]);
+    double x, y, z;
     for (int i = 0; i < 3; i++) {
       if (tokens.length >= 3) {
-        x = parseFloatStr(tokens[0]) * factor;
-        y = parseFloatStr(tokens[1]) * factor;
-        z = parseFloatStr(tokens[2]) * factor;
-        abc[i] = V3.new3(x, y, z);
+        x = parseDoubleStr(tokens[0]) * factor;
+        y = parseDoubleStr(tokens[1]) * factor;
+        z = parseDoubleStr(tokens[2]) * factor;
+        abc[i] = V3d.new3(x, y, z);
       } else {
         Logger.warn("error reading coordinates of lattice vector "
             + Integer.toString(i + 1)
@@ -483,7 +483,7 @@ public class CastepReader extends AtomSetCollectionReader {
   private void readPositionsAbs() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;
-    float factor = readLengthUnit(tokens[0]);
+    double factor = readLengthUnit(tokens[0]);
     readAtomData(factor);
   }
 
@@ -493,11 +493,11 @@ public class CastepReader extends AtomSetCollectionReader {
   private final static String[] lengthUnitIds = { "bohr", "m", "cm", "nm",
       "ang", "a0" };
 
-  private final static float[] lengthUnitFactors = { ANGSTROMS_PER_BOHR, 1E10f,
+  private final static double[] lengthUnitFactors = { ANGSTROMS_PER_BOHR, 1E10f,
       1E8f, 1E1f, 1.0f, ANGSTROMS_PER_BOHR };
 
-  private float readLengthUnit(String units) throws Exception {
-    float factor = 1.0f;
+  private double readLengthUnit(String units) throws Exception {
+    double factor = 1.0f;
     for (int i = 0; i < lengthUnitIds.length; i++)
       if (units.equalsIgnoreCase(lengthUnitIds[i])) {
         factor = lengthUnitFactors[i];
@@ -507,7 +507,7 @@ public class CastepReader extends AtomSetCollectionReader {
     return factor;
   }
 
-  private void readAtomData(float factor) throws Exception {
+  private void readAtomData(double factor) throws Exception {
     do {
       if (tokens.length >= 4) {
         Atom atom = asc.addNewAtom();
@@ -519,8 +519,8 @@ public class CastepReader extends AtomSetCollectionReader {
           atom.elementSymbol = tokens[0];
         }
         
-        atom.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-            parseFloatStr(tokens[3]));
+        atom.set(parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
+            parseDoubleStr(tokens[3]));
         atom.scale(factor);
       } else {
         Logger.warn("cannot read line with CASTEP atom data: " + line);
@@ -630,16 +630,16 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     boolean haveSpin = (line.indexOf("Spin") >= 0);
     rd();
     Atom[] atoms = asc.atoms;
-    float[] spins = (haveSpin ? new float[atoms.length] : null);
+    double[] spins = (haveSpin ? new double[atoms.length] : null);
     if (spins != null)
       for (int i = 0; i < spins.length; i++)
         spins[i] = 0;
     while (rd() != null && line.indexOf('=') < 0) {
       int index = readOutputAtomIndex();
-      float charge = parseFloatStr(tokens[haveSpin ? tokens.length - 2 : tokens.length - 1]);
+      double charge = parseDoubleStr(tokens[haveSpin ? tokens.length - 2 : tokens.length - 1]);
       atoms[index].partialCharge = charge;
       if (haveSpin)
-        spins[index] = parseFloatStr(tokens[tokens.length - 1]);
+        spins[index] = parseDoubleStr(tokens[tokens.length - 1]);
     }
     if (haveSpin)
       asc.setAtomProperties("spin", spins, -1, false);
@@ -668,15 +668,15 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     setFractionalCoordinates(true);
     while (rd() != null && line.indexOf("END") < 0) {
       tokens = getTokens();
-      addAtomXYZSymName(tokens, 1, tokens[4], null).bfactor = parseFloatStr(tokens[5]); // mass, actually
+      addAtomXYZSymName(tokens, 1, tokens[4], null).bfactor = parseDoubleStr(tokens[5]); // mass, actually
     }
     ac = asc.ac;
     // we collect the atom points, because any supercell business
     // will trash those, and we need the originals
-    atomPts = new P3[ac];
+    atomPts = new P3d[ac];
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < ac; i++)
-      atomPts[i] = P3.newP(atoms[i]);
+      atomPts[i] = P3d.newP(atoms[i]);
   }
 
   /*
@@ -706,8 +706,8 @@ Species   Ion     s      p      d      f     Total  Charge (e)
   private void readPhononFrequencies() throws Exception {
     tokens = getTokens();
     V3 v = new V3();
-    V3 qvec = V3.new3(parseFloatStr(tokens[2]), parseFloatStr(tokens[3]),
-        parseFloatStr(tokens[4]));
+    V3 qvec = V3.new3((float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]),
+        (float) parseDoubleStr(tokens[4]));
     String fcoord = getFractionalCoord(qvec);
     String qtoks = "{" + tokens[2] + " " + tokens[3] + " " + tokens[4] + "}";
     if (fcoord == null)
@@ -735,9 +735,9 @@ Species   Ion     s      p      d      f     Total  Charge (e)
         return;
     }
     boolean isGammaPoint = (qvec.length() == 0);
-    float nx = 1, ny = 1, nz = 1;
+    double nx = 1, ny = 1, nz = 1;
     if (ptSupercell != null && !isOK && !isSecond) {
-      matSupercell = new M4();
+      matSupercell = new M4d();
       matSupercell.m00 = ptSupercell.x;
       matSupercell.m11 = ptSupercell.y;
       matSupercell.m22 = ptSupercell.z;
@@ -748,9 +748,9 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       nz = ptSupercell.z;
       // only select corresponding phonon vector 
       // relating to this supercell -- one that has integral dot product
-      float dx = (qvec.x == 0 ? 1 : qvec.x) * nx;
-      float dy = (qvec.y == 0 ? 1 : qvec.y) * ny;
-      float dz = (qvec.z == 0 ? 1 : qvec.z) * nz;
+      double dx = (qvec.x == 0 ? 1 : qvec.x) * nx;
+      double dy = (qvec.y == 0 ? 1 : qvec.y) * ny;
+      double dz = (qvec.z == 0 ? 1 : qvec.z) * nz;
       if ((nx != 1 || ny != 1 || nz != 1) && isGammaPoint || !isInt(dx) || !isInt(dy) || !isInt(dz))
         return;
       isOK = true;
@@ -771,12 +771,12 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     Lst<Float> freqs = new  Lst<Float>();
     while (rd() != null && line.indexOf("Phonon") < 0) {
       tokens = getTokens();
-      freqs.addLast(Float.valueOf(parseFloatStr(tokens[1])));
+      freqs.addLast(Float.valueOf((float) parseDoubleStr(tokens[1])));
     }
     rd();
     int frequencyCount = freqs.size();
-    float[] data = new float[8];
-    V3 t = new V3();
+    double[] data = new double[8];
+    V3d td = new V3d();
     asc.setCollectionName(qname);
     for (int i = 0; i < frequencyCount; i++) {
       if (!doGetVibration(++vibrationNumber)) {
@@ -792,20 +792,20 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       }
       symmetry = asc.getSymmetry();
       int iatom = asc.getLastAtomSetAtomIndex();
-      float freq = freqs.get(i).floatValue();
+      double freq = freqs.get(i).floatValue();
       Atom[] atoms = asc.atoms;
       int aCount = asc.ac;
       for (int j = 0; j < ac; j++) {
-        fillFloatArray(null, 0, data);
+        fillDoubleArray(null, 0, data);
         for (int k = iatom++; k < aCount; k++)
           if (atoms[k].atomSite == j) {
-            t.sub2(atoms[k], atoms[atoms[k].atomSite]);
+            td.sub2(atoms[k], atoms[atoms[k].atomSite]);
             // for supercells, fractional coordinates end up
             // in terms of the SUPERCELL and need to be transformed.
             // TODO: UNTESTED
             if (matSupercell != null)
-              matSupercell.rotTrans(t);
-            setPhononVector(data, atoms[k], t, qvec, v);
+              matSupercell.rotTrans(td);
+            setPhononVector(data, atoms[k], td, qvec, v);
             asc.addVibrationVectorWithSymmetry(k, v.x, v.y, v.z, true);
           }
       }
@@ -817,7 +817,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     }
   }
 
-  private M4 matSupercell;
+  private M4d matSupercell;
 
   private String getFractionalCoord(V3 qvec) {
     return (symmetry != null && isInt(qvec.x * 12) 
@@ -825,7 +825,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
         : null);
   }
 
-  private static boolean isInt(float f) {
+  private static boolean isInt(double f) {
     return (Math.abs(f - Math.round(f)) < 0.001f);
   }
 
@@ -845,11 +845,11 @@ Species   Ion     s      p      d      f     Total  Charge (e)
    * @param v
    *        return vector
    */
-  private void setPhononVector(float[] data, Atom atom, V3 rTrans,
+  private void setPhononVector(double[] data, Atom atom, V3d rTrans,
                                V3 qvec, V3 v) {
     // complex[r/i] vx = data[2/3], vy = data[4/5], vz = data[6/7]
     if (qvec == null) {
-      v.set(data[2], data[4], data[6]);
+      v.set((float) data[2], (float) data[4], (float) data[6]);
     } else {
       // from CASTEP ceteprouts.pm:
       //  $phase = $qptx*$$sh[0] + $qpty*$$sh[1] + $qptz*$$sh[2];
@@ -858,7 +858,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       //  push @$pertyo, $cosph*$$perty_r[$iat] - $sinph*$$perty_i[$iat];
       //  push @$pertzo, $cosph*$$pertz_r[$iat] - $sinph*$$pertz_i[$iat];
 
-      double phase = qvec.dot(rTrans);
+      double phase = (qvec.x * rTrans.x + qvec.y * rTrans.y + qvec.z * rTrans.z);
       double cosph = Math.cos(TWOPI * phase);
       double sinph = Math.sin(TWOPI * phase);
       v.x = (float) (cosph * data[2] - sinph * data[3]);

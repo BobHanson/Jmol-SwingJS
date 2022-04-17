@@ -238,7 +238,7 @@ public class PsiReader extends MOReader {
       tokens = gdata.get(i);
       garray[i] = new float[tokens.length];
       for (int j = 0; j < tokens.length; j++)
-        garray[i][j] = parseFloatStr(tokens[j]);
+        garray[i][j] = (float) parseDoubleStr(tokens[j]);
     }
     moData.put("gaussians", garray);
     if (debugging) {
@@ -407,7 +407,7 @@ Orbital energies (a.u.):
         }
         tokens = getStrings(rd().substring(21), nThisLine, 10);
         for (int i = 0; i < nThisLine; i++) {
-          mos[i].put("energy", Float.valueOf(tokens[i]));
+          mos[i].put("energy", Double.valueOf(tokens[i]));
         }
         continue;
       }

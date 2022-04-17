@@ -80,7 +80,7 @@ public class SpartanReader extends BasisFunctionReader {
       Atom atom = asc.addNewAtom();
       atom.elementSymbol = parseTokenRange(line, 4, 6);
       atom.atomName = parseTokenRange(line, 7, 13);
-      setAtomCoordXYZ(atom, parseFloatRange(line, 17, 30), parseFloatRange(line, 31, 44), parseFloatRange(
+      setAtomCoordXYZ(atom, parseDoubleRange(line, 17, 30), parseDoubleRange(line, 31, 44), parseDoubleRange(
           line, 45, 58));
     }
   }
@@ -94,8 +94,8 @@ public class SpartanReader extends BasisFunctionReader {
       int lineFreqCount;
       boolean[] ignore = new boolean[3];
       for (lineFreqCount = 0; lineFreqCount < 3; ++lineFreqCount) {
-        float frequency = parseFloat();
-        if (Float.isNaN(frequency))
+        double frequency = parseDouble();
+        if (Double.isNaN(frequency))
           break; // ////////////// loop exit is here
         ignore[lineFreqCount] = !doGetVibration(++vibrationNumber);
         if (!ignore[lineFreqCount]) {
@@ -111,9 +111,9 @@ public class SpartanReader extends BasisFunctionReader {
         rd();
         for (int j = 0; j < lineFreqCount; ++j) {
           int ichCoords = j * 23 + 10;
-          float x = parseFloatRange(line, ichCoords, ichCoords + 7);
-          float y = parseFloatRange(line, ichCoords + 7, ichCoords + 14);
-          float z = parseFloatRange(line, ichCoords + 14, ichCoords + 21);
+          double x = parseDoubleRange(line, ichCoords, ichCoords + 7);
+          double y = parseDoubleRange(line, ichCoords + 7, ichCoords + 14);
+          double z = parseDoubleRange(line, ichCoords + 14, ichCoords + 21);
           if (!ignore[j])
             asc.addVibrationVector(i + (lineBaseFreqCount + j)
                 * ac, x, y, z);

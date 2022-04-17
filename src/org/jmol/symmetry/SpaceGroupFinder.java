@@ -16,6 +16,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 //import javajs.util.M3;
 import javajs.util.P3;
+import javajs.util.P3d;
 
 /**
  * A relatively simple space group finder given a unit cell.
@@ -36,13 +37,13 @@ public class SpaceGroupFinder {
   /**
    * maximum allowable distance fx, fy ,fz for atom finder
    */
-  private static final float SLOP0014 = (float) Math.sqrt(JC.UC_TOLERANCE2);
+  private static final double SLOP0014 = Math.sqrt(JC.UC_TOLERANCE2);
 
   /**
    * tolerance for fractional coord and 
    */
-  private final static float //SLOP02 = 0.02f, 
-      SLOP001 = 0.001f, SLOP0001= 0.0001f;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
+  private final static double //SLOP02 = 0.02f, 
+      SLOP001 = 0.001, SLOP0001= 0.0001;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
 
   private static int GROUP_COUNT; // 530
   private static int OP_COUNT; // 882
@@ -56,12 +57,12 @@ public class SpaceGroupFinder {
 
   private SGAtom[] atoms;
   private int nAtoms;
-  private P3 pt = new P3();
+  private P3d pt = new P3d();
 
   public SpaceGroupFinder() {
   }
 
-  private class SGAtom extends P3 {
+  private class SGAtom extends P3d {
     int typeAndOcc;
     int index;
     String name;
@@ -75,7 +76,7 @@ public class SpaceGroupFinder {
 
   public Object findSpaceGroup(Viewer vwr, BS atoms0, String opXYZ0,
                                SymmetryInterface uc, boolean asString) {
-    P3[] oabc = null;
+    P3d[] oabc = null;
     Atom[] cartesians = vwr.ms.at;
     int isg = 0;
     BS bsGroups = new BS();
@@ -475,11 +476,11 @@ public class SpaceGroupFinder {
    * @param uc
    */
   private void filterGroups(BS bsGroups, SymmetryInterface uc) {
-    float[] params = uc.getUnitCellParams();
+    double[] params = uc.getUnitCellParams();
     boolean isOrtho = false, isTet = false, isTri = false,
         isRhombo = false, isCubic = false;
-    boolean absame = approx0(params[0]-params[1]);
-    boolean bcsame = approx0(params[1] - params[2]);
+    boolean absame = approx0((params[0]-params[1]));
+    boolean bcsame = approx0((params[1] - params[2]));
     if (params[3] == 90) { // alpha
       if (params[4] == 90) { // beta
         // really?? 
@@ -496,7 +497,7 @@ public class SpaceGroupFinder {
         //       _space_group_IT_number     62
 
 
-        isTri = (absame && approx000(params[5] - 120));
+        isTri = (absame && approx000((params[5] - 120)));
         if (params[5] == 90) { // gamma
           isCubic = (absame && params[1] == params[2]);
           isTet = (!isCubic && absame);
@@ -601,8 +602,8 @@ public class SpaceGroupFinder {
 //    return uc;
 //  }
 
-  P3 toFractional(Atom a, SymmetryInterface uc) {
-    pt.setT(a);
+  P3d toFractional(Atom a, SymmetryInterface uc) {
+    pt.set(a.x, a.y, a.z);
     uc.toFractional(pt, false);
     return pt;
   }
@@ -688,7 +689,7 @@ public class SpaceGroupFinder {
       int type = a.typeAndOcc;
       //String name = a.name;
       SGAtom b;
-      float f;
+      double f;
       for (int j = bsPoints.nextSetBit(0); j >= 0; j = bsPoints
           .nextSetBit(j + 1)) {
         if (j == i || (b = atoms[j]).typeAndOcc != type)
@@ -732,7 +733,7 @@ public class SpaceGroupFinder {
     if (n < minF)
       return uc;
     // we have the smallest unit in this direction
-    P3[] oabc = uc.getUnitCellVectors();
+    P3d[] oabc = uc.getUnitCellVectors();
     oabc[abc].scale(1f / n);
     switch (abc) {
     case 1:
@@ -745,7 +746,7 @@ public class SpaceGroupFinder {
       scaling.z = n;
       break;
     }
-    uc = vwr.getSymTemp().getUnitCell(oabc, false, "scaled");
+    uc = vwr.getSymTemp().getUnitCelld(oabc, false, "scaled");
     // remove points not within this unitcell
     int f = 0;
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
@@ -770,15 +771,15 @@ public class SpaceGroupFinder {
     return uc;
   }
 
-  private boolean approx0(float f) {
+  private boolean approx0(double f) {
     return (Math.abs(f) < SLOP001);
   }
 
-  private boolean approx000(float f) {
+  private boolean approx000(double f) {
     return (Math.abs(f) < SLOP0001);
   }
 
-  private boolean approx0014(float f) {
+  private boolean approx0014(double f) {
     return (Math.abs(f) < SLOP0014);
   }
 
@@ -786,7 +787,7 @@ public class SpaceGroupFinder {
 //    return (Math.abs(f) < SLOP02);
 //  }
 //
-  private int approxInt(float finv) {
+  private int approxInt(double finv) {
 //    int i = Math.round (finv); // was 
     int i = (int) (finv + SLOP001);
     return (Math.abs(finv - i) < SLOP001 ? i : 0);
@@ -794,7 +795,7 @@ public class SpaceGroupFinder {
 
   @SuppressWarnings("unused")
   private int findEquiv(int iop, SymmetryOperation op, int i, BS bsPoints,
-                        P3 pt, boolean andClear) {
+                        P3d pt, boolean andClear) {
     SGAtom a = atoms[i];
     pt.setT(a);
     op.rotTrans(pt);
@@ -810,7 +811,7 @@ public class SpaceGroupFinder {
       SGAtom b = atoms[j];
       if (b.typeAndOcc != type)
         continue;
-      float d = b.distance(pt);
+      double d = b.distance(pt);
 //      if (iop == 15 && j == 98 && i == 46)
 //        System.out.println("???");
       if (d * d < JC.UC_TOLERANCE2 
@@ -837,7 +838,7 @@ public class SpaceGroupFinder {
    * @param b
    * @return true if a lattice shift
    */
-  private boolean latticeShift(P3 a, P3 b) {
+  private boolean latticeShift(P3d a, P3d b) {
     boolean is1 = (approx0014(Math.abs(a.x - b.x) - 1)
         || approx0014(Math.abs(a.y - b.y) - 1)
         || approx0014(Math.abs(a.z - b.z) - 1));

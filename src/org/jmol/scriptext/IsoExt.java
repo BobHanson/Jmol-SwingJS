@@ -61,7 +61,7 @@ import org.jmol.viewer.JmolAsyncException;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -405,7 +405,7 @@ public class IsoExt extends ScriptExt {
           pts = new P3[cpts.size()];
           for (int j = 0; j < cpts.size(); j++) {
             pts[j] = cpts.get(j);
-              uc.toCartesian(pts[j], true);
+              uc.toCartesianF(pts[j], true);
           }
         }
         isBest = false;
@@ -1593,7 +1593,7 @@ public class IsoExt extends ScriptExt {
     String translucency = null;
     String colorScheme = null;
     String mepOrMlp = null;
-    M4[] symops = null;
+    M4d[] symops = null;
     short[] discreteColixes = null;
     Lst<Object[]> propertyList = new Lst<Object[]>();
     boolean defaultMesh = false;
@@ -1637,9 +1637,9 @@ public class IsoExt extends ScriptExt {
         break;
       case T.symop:
         float[][] ff = floatArraySet(i + 2, intParameter(i + 1), 16);
-        symops = new M4[ff.length];
+        symops = new M4d[ff.length];
         for (int j = symops.length; --j >= 0;)
-          symops[j] = M4.newA16(ff[j]);
+          symops[j] = M4d.newA16(AU.toDoubleA(ff[j]));
         i = eval.iToken;
         break;
       case T.symmetry:

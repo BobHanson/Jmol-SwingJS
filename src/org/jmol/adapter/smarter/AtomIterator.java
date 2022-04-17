@@ -31,6 +31,7 @@ import org.jmol.script.T;
 
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.V3;
 
 
@@ -108,7 +109,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public float getPartialCharge() {
-		return atom.partialCharge;
+		return (float) atom.partialCharge;
 	}
 
 	
@@ -147,13 +148,13 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public float getBfactor() {
-		return atom.bfactor;
+		return (float) atom.bfactor;
 	}
 
 	
 	@Override
   public float getOccupancy() {
-		return atom.foccupancy * 100;
+		return (float) (atom.foccupancy * 100);
 	}
 
 	
@@ -200,7 +201,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public P3 getXYZ() {
+  public P3d getXYZ() {
 		return atom;
 	}
 

@@ -29,17 +29,17 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.V3;
-
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.P3d;
+import javajs.util.V3;
 
 @SuppressWarnings("unchecked")
 public class AtomSetCollection {
@@ -181,7 +181,7 @@ public class AtomSetCollection {
     if (n <= 1)
       return;
     P3[] trajectoryStep = new P3[n];
-    boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Float
+    boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Double
         .isNaN(atoms[0].vib.z));
     V3[] vibrationStep = (haveVibrations ? new V3[n] : null);
     P3[] prevSteps = (trajectoryStepCount == 0 ? null : (P3[]) trajectorySteps
@@ -189,7 +189,7 @@ public class AtomSetCollection {
     for (int i = 0, ii = 0; i < ac; i++) {
       if (bsAtoms != null && !bsAtoms.get(i))
         continue;
-      P3 pt = P3.newP(atoms[i]);
+      P3 pt = atoms[i].toP3();
       if (doFixPeriodic && prevSteps != null)
         pt = fixPeriodic(pt, prevSteps[i]);
       trajectoryStep[ii] = pt;
@@ -514,7 +514,7 @@ public class AtomSetCollection {
     return cloneLastAtomSetFromPoints(0, null);
   }
 
-  public int cloneLastAtomSetFromPoints(int ac, P3[] pts) {
+  public int cloneLastAtomSetFromPoints(int ac, P3d[] pts) {
     if (!allowMultiple) // CASTEP reader only
       return 0;
     int count = (ac > 0 ? ac : getLastAtomSetAtomCount());
@@ -669,8 +669,8 @@ public class AtomSetCollection {
     structures[structureCount++] = structure;
   }
 
-  public void addVibrationVectorWithSymmetry(int iatom, float vx, float vy,
-                                             float vz, boolean withSymmetry) {
+  public void addVibrationVectorWithSymmetry(int iatom, double vx, double vy,
+                                             double vz, boolean withSymmetry) {
     if (!withSymmetry) {
       addVibrationVector(iatom, vx, vy, vz);
       return;
@@ -684,10 +684,10 @@ public class AtomSetCollection {
     }
   }
 
-  public V3 addVibrationVector(int iatom, float x, float y, float z) {
+  public V3 addVibrationVector(int iatom, double x, double y, double z) {
     if (!allowMultiple)
       iatom = iatom % ac;
-    return (atoms[iatom].vib = V3.new3(x, y, z));
+    return (atoms[iatom].vib = V3.new3((float) x, (float) y, (float) z));
   }
 
   public void setCoordinatesAreFractional(boolean tf) {
@@ -699,17 +699,17 @@ public class AtomSetCollection {
 
   public boolean haveAnisou;
 
-  public void setAnisoBorU(Atom atom, float[] data, int type) {
+  public void setAnisoBorU(Atom atom, double[] data, int type) {
     haveAnisou = true;
     atom.anisoBorU = data;
     data[6] = type;
   }
 
-  public void setU(Atom atom, int i, float val) {
+  public void setU(Atom atom, int i, double val) {
     // Ortep Type 8: D = 2pi^2, C = 2, a*b*
-    float[] data = atom.anisoBorU;
+    double[] data = atom.anisoBorU;
     if (data == null)
-      setAnisoBorU(atom, data = new float[8], 8);
+      setAnisoBorU(atom, data = new double[8], 8);
     data[i] = val;
   }
 
@@ -766,15 +766,15 @@ public class AtomSetCollection {
   public boolean setAtomSetCollectionPartialCharges(String auxKey) {
     if (!atomSetInfo.containsKey(auxKey))
       return false;
-    Lst<Float> atomData = (Lst<Float>) atomSetInfo.get(auxKey);
+    Lst<Double> atomData = (Lst<Double>) atomSetInfo.get(auxKey);
     int n = atomData.size();
     for (int i = ac; --i >= 0;)
-      atoms[i].partialCharge = atomData.get(i % n).floatValue();
+      atoms[i].partialCharge = atomData.get(i % n).doubleValue();
     Logger.info("Setting partial charges type " + auxKey);
     return true;
   }
 
-  public void mapPartialCharge(String atomName, float charge) {
+  public void mapPartialCharge(String atomName, double charge) {
     getAtomFromName(atomName).partialCharge = charge;
   }
 
@@ -830,7 +830,7 @@ public class AtomSetCollection {
       if (vibrationSteps != null)
         atoms[i].vib = (vibrations == null ? v : vibrations[ii]);
       if (trajectory[ii] != null)
-        atoms[i].setT(trajectory[ii]);
+        atoms[i].setP(trajectory[ii]);
       ii++;
     }
     setInfo("trajectorySteps", trajectorySteps);
@@ -1014,10 +1014,10 @@ public class AtomSetCollection {
     if (!atomSetAuxiliaryInfo[iSet].containsKey(auxKey)) {
       return false;
     }
-    Lst<Float> atomData = (Lst<Float>) getAtomSetAuxiliaryInfoValue(iSet,
+    Lst<Double> atomData = (Lst<Double>) getAtomSetAuxiliaryInfoValue(iSet,
         auxKey);
     for (int i = atomData.size(); --i >= 0;) {
-      atoms[i].partialCharge = atomData.get(i).floatValue();
+      atoms[i].partialCharge = atomData.get(i).doubleValue();
     }
     return true;
   }
@@ -1080,12 +1080,12 @@ public class AtomSetCollection {
 
   //// for XmlChem3dReader, but could be for CUBE
 
-  public void setAtomSetEnergy(String energyString, float value) {
+  public void setAtomSetEnergy(String energyString, double value) {
     if (iSet < 0)
       return;
     Logger.info("Energy for model " + (iSet + 1) + " = " + energyString);
     setCurrentModelInfo("EnergyString", energyString);
-    setCurrentModelInfo("Energy", Float.valueOf(value));
+    setCurrentModelInfo("Energy", Double.valueOf(value));
     setAtomSetModelProperty("Energy", "" + value);
   }
 
@@ -1116,7 +1116,7 @@ public class AtomSetCollection {
   }
 
   public void centralize() {
-    P3 pt = new P3();
+    P3d pt = new P3d();
     for (int i = 0; i < atomSetCount; i++) {
       int n = atomSetAtomCounts[i];
       int atom0 = atomSetAtomIndexes[i];

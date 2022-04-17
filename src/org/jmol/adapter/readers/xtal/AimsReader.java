@@ -108,7 +108,7 @@ public class AimsReader extends AtomSetCollectionReader {
       Logger.warn("more than 3 FHI-aims lattice vectors found with line: "
           + line);
     } else {
-      addExplicitLatticeVector(nLatticeVectors++, new float[] {parseFloatStr(tokens[1]), parseFloatStr(tokens[2]), parseFloatStr(tokens[3])}, 0);
+      addExplicitLatticeVector(nLatticeVectors++, new double[] {parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3])}, 0);
       setFractionalCoordinates(nLatticeVectors == 3);
     }
   }
@@ -148,7 +148,7 @@ public class AimsReader extends AtomSetCollectionReader {
     }
     if (this.isFractional)
       setFractionalCoordinates(this.isFractional = false);
-    addAtomXYZSymName(tokens, 1, null, null).partialCharge = parseFloatStr(tokens[5]);
+    addAtomXYZSymName(tokens, 1, null, null).partialCharge = parseDoubleStr(tokens[5]);
     // we generally do not do this: atom.formalCharge = Math.round(atom.partialCharge);
   }
 

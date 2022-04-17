@@ -172,9 +172,9 @@ public class ShelxReader extends AtomSetCollectionReader {
     int ioff = tokens.length - 6;
     if (ioff == 2)
       asc.setInfo("wavelength",
-          Float.valueOf(parseFloatStr(tokens[1])));
+          Double.valueOf(parseDoubleStr(tokens[1])));
     for (int ipt = 0; ipt < 6; ipt++)
-      setUnitCellItem(ipt, parseFloatStr(tokens[ipt + ioff]));
+      setUnitCellItem(ipt, parseDoubleStr(tokens[ipt + ioff]));
   }
 
   private void parseSfacRecord() {
@@ -206,13 +206,13 @@ public class ShelxReader extends AtomSetCollectionReader {
   }
   
   private void parseSfacCoefficients(String[] sfacTokens) {
-    float a1 = parseFloatStr(sfacTokens[1]);
-    float a2 = parseFloatStr(sfacTokens[3]);
-    float a3 = parseFloatStr(sfacTokens[5]);
-    float a4 = parseFloatStr(sfacTokens[7]);
-    float c = parseFloatStr(sfacTokens[9]);
+    double a1 = parseDoubleStr(sfacTokens[1]);
+    double a2 = parseDoubleStr(sfacTokens[3]);
+    double a3 = parseDoubleStr(sfacTokens[5]);
+    double a4 = parseDoubleStr(sfacTokens[7]);
+    double c = parseDoubleStr(sfacTokens[9]);
     // element # is these floats rounded to nearest int
-    int z = Math.round(a1 + a2 + a3 + a4 + c);
+    int z = (int) Math.round(a1 + a2 + a3 + a4 + c);
     String elementSymbol = getElementSymbol(z);
     int oldCount = 0;
     if (sfacElementSymbols == null) {
@@ -230,10 +230,10 @@ public class ShelxReader extends AtomSetCollectionReader {
     // a SHELX command is an atom
     String atomName = tokens[0];
     int elementIndex = parseIntStr(tokens[1]);
-    float x = parseFloatStr(tokens[2]);
-    float y = parseFloatStr(tokens[3]);
-    float z = parseFloatStr(tokens[4]);
-    if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z)) {
+    double x = parseDoubleStr(tokens[2]);
+    double y = parseDoubleStr(tokens[3]);
+    double z = parseDoubleStr(tokens[4]);
+    if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
       Logger.error("skipping line " + line);
       return;
     }
@@ -246,15 +246,15 @@ public class ShelxReader extends AtomSetCollectionReader {
     setAtomCoordXYZ(atom, x, y, z);
     
     if (tokens.length == 12) {
-      float[] data = new float[8];
-      data[0] = parseFloatStr(tokens[6]);  //U11
-      data[1] = parseFloatStr(tokens[7]);  //U22
-      data[2] = parseFloatStr(tokens[8]);  //U33
-      data[3] = parseFloatStr(tokens[11]); //U12
-      data[4] = parseFloatStr(tokens[10]); //U13
-      data[5] = parseFloatStr(tokens[9]);  //U23
+      double[] data = new double[8];
+      data[0] = parseDoubleStr(tokens[6]);  //U11
+      data[1] = parseDoubleStr(tokens[7]);  //U22
+      data[2] = parseDoubleStr(tokens[8]);  //U33
+      data[3] = parseDoubleStr(tokens[11]); //U12
+      data[4] = parseDoubleStr(tokens[10]); //U13
+      data[5] = parseDoubleStr(tokens[9]);  //U23
       for (int i = 0; i < 6; i++)
-        if (Float.isNaN(data[i])) {
+        if (Double.isNaN(data[i])) {
             Logger.error("Bad anisotropic Uij data: " + line);
             return;
         }

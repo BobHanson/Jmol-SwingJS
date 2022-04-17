@@ -134,6 +134,7 @@ import javajs.util.Quat;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
 import javajs.util.ZipTools;
 
@@ -3711,7 +3712,7 @@ public class Viewer extends JmolViewer
   public float getUnitCellInfo(int infoType) {
     SymmetryInterface symmetry = getCurrentUnitCell();
     return (symmetry == null ? Float.NaN
-        : symmetry.getUnitCellInfoType(infoType));
+        : (float) symmetry.getUnitCellInfoType(infoType));
   }
 
   /**
@@ -3727,7 +3728,7 @@ public class Viewer extends JmolViewer
    *        a string or an M3 or M4
    * @return vectors [origin a b c]
    */
-  public T3[] getV0abc(int iModel, Object def) {
+  public T3d[] getV0abc(int iModel, Object def) {
     SymmetryInterface uc = (iModel < 0 ? getCurrentUnitCell()
         : getUnitCell(iModel));
     return (uc == null ? null : uc.getV0abc(def));
@@ -3897,7 +3898,7 @@ public class Viewer extends JmolViewer
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
-      unitCell.toCartesian(pt, ignoreOffset);
+      unitCell.toCartesianF(pt, ignoreOffset);
       if (!g.legacyJavaFloat)
         PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
     }
@@ -3919,7 +3920,7 @@ public class Viewer extends JmolViewer
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
-      unitCell.toFractional(pt, ignoreOffset);
+      unitCell.toFractionalF(pt, ignoreOffset);
       if (!g.legacyJavaFloat)
         PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }

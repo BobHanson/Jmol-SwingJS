@@ -178,8 +178,8 @@ public class BilbaoReader extends AtomSetCollectionReader {
         intTableNo = parseIntStr(line);
       setSpaceGroupName("bilbao:" + intTableNo);
     }
-    float[] data = new float[6];
-    fillFloatArray(rdLine(), 0, data);
+    double[] data = new double[6];
+    fillDoubleArray(rdLine(), 0, data);
     for (int i = 0; i < 6; i++)
       setUnitCellItem(i, data[i]);
     i0 = asc.ac;
@@ -193,7 +193,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
       else
         addAtomXYZSymName(tokens, 3, tokens[0], tokens[0] + tokens[1]);
     }
-    if (Float.isNaN(fAmp)) {
+    if (Double.isNaN(fAmp)) {
       if (ptPre >= 0)
         applySymmetryAndSetTrajectory();
       return;
@@ -212,8 +212,8 @@ public class BilbaoReader extends AtomSetCollectionReader {
         rdLine();
       String[] tokens = PT.split(line, "x|x");
       if (getSym || !tokens[0].contains("_"))
-        asc.atoms[i0 + i].vib = V3.new3(parseFloatStr(tokens[1]),
-            parseFloatStr(tokens[2]), parseFloatStr(tokens[3]));
+        asc.atoms[i0 + i].vib = V3.new3((float) parseDoubleStr(tokens[1]),
+            (float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]));
       line = null;
     }
     applySymmetryAndSetTrajectory();
@@ -225,7 +225,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
         v.setT(a.vib);
         a.vib = v;
         //v.modDim = Vibration.TYPE_DISPLACEMENT;
-        asc.getSymmetry().toCartesian(v, true);
+        asc.getSymmetry().toCartesianF(v, true);
         v.scale(1 / fAmp);
       }
     }
@@ -266,7 +266,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
     int pt = s.indexOf("The amplitude");
     pt = s.indexOf("=", pt);
     String amp = s.substring(pt + 2, s.indexOf(" ", pt + 2));
-    float fAmp = (normDispl ? parseFloatStr(amp) : 1);
+    float fAmp = (normDispl ? (float) parseDoubleStr(amp) : 1);
     String irrep = getAttr(s, "irrep");
     if (irrep.indexOf(":") >= 0)
       irrep = irrep.substring(0, irrep.indexOf(":"));

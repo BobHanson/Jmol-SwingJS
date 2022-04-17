@@ -211,7 +211,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
       SymmetryInterface unitCell = vwr.ms.getUnitCell(modelIndex);
       boolean isFractional = (unitCell != null && !unitCell.isBio());
       if (isFractional) {
-        float[] params = unitCell.getUnitCellAsArray(false);
+        double[] params = unitCell.getUnitCellAsArray(false);
         writePrefix_Units("unit_cell", "angstroms");
         mapAddKeyValue("unit_cell", params, ",\n");
       }
@@ -228,7 +228,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
           append("");
           pt.setT(a);
           if (isFractional)
-            unitCell.toFractional(pt, false);
+            unitCell.toFractionalF(pt, false);
           oc.append(formatNumber(pt.x)).append(",\t")
               .append(formatNumber(pt.y)).append(",\t")
               .append(formatNumber(pt.z)).append(i < last ? ",\n" : "\n");
@@ -255,7 +255,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
     mapClose();
   }
 
-  private String formatNumber(float x) {
+  private String formatNumber(double x) {
     return (x < 0 ? "" : " ") + DF.formatDecimal(x, -6);
   }
 
@@ -595,7 +595,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
     }
 
     public boolean allNaN() {
-      return (allSame() && PT.parseFloat(lastElement) == Float.NaN);
+      return (allSame() && PT.parseDouble(lastElement) == Float.NaN);
     }
 
     public boolean allNull() {
@@ -611,7 +611,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
     }
 
     public boolean allZero() {
-      return (allSame() && PT.parseFloat(lastElement) != Float.NaN);
+      return (allSame() && PT.parseDouble(lastElement) != Float.NaN);
     }
 
     public boolean hasValues() {

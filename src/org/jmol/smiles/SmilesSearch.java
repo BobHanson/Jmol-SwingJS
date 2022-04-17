@@ -168,6 +168,8 @@ public class SmilesSearch extends JmolMolecule {
       flags |= JC.SMILES_TYPE_OPENSMILES;
     if (strFlags.indexOf("BIO") >= 0)
       flags |= JC.SMILES_GEN_BIO;
+    if (strFlags.indexOf("NOBRANCH") >= 0)
+      flags |= JC.SMILES_GEN_NO_BRANCHES;
 
     if (strFlags.indexOf("HYDROGEN2") >= 0)
         flags |= JC.SMILES_GEN_EXPLICIT_H2_ONLY;

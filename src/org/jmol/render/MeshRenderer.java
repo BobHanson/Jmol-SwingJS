@@ -25,22 +25,23 @@ package org.jmol.render;
 
 
 
-import javajs.util.AU;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.SimpleUnitCell;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.M4d;
+import javajs.util.P3;
+import javajs.util.P3d;
+import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.T3;
+import javajs.util.V3;
 
 /**
  * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
@@ -106,17 +107,18 @@ public abstract class MeshRenderer extends ShapeRenderer {
 
       render2(isExport);
     } else {
-      P3 vTemp = new P3();
       SymmetryInterface unitcell = mesh.getUnitCell();
       if (unitcell != null) {
+        P3 p2 = new P3();
         if (mesh.symops != null) {
+          P3d vTemp = new P3d();
           if (mesh.symopNormixes == null)
             mesh.symopNormixes = AU.newShort2(mesh.symops.length);
           P3[] verticesTemp = null;
           int max = mesh.symops.length;
           short c = mesh.colix;
           for (int j = max; --j >= 0;) {
-            M4 m = mesh.symops[j];
+            M4d m = mesh.symops[j];
             if (m == null)
               continue;
             if (mesh.colorType == T.symop)
@@ -125,14 +127,15 @@ public abstract class MeshRenderer extends ShapeRenderer {
             boolean needNormals = (normals == null);
             verticesTemp = (needNormals ? new P3[vertexCount] : null);
             for (int i = vertexCount; --i >= 0;) {
-              vTemp.setT(vertices[i]);
+              vTemp.setP(vertices[i]);
               unitcell.toFractional(vTemp, true);
               m.rotTrans(vTemp);
               unitcell.toCartesian(vTemp, true);
-              tm.transformPtScr(vTemp, screens[i]);
+              vTemp.putP(p2);
+              tm.transformPtScr(p2, screens[i]);
               if (needNormals) {
-                verticesTemp[i] = vTemp;
-                vTemp = new P3();
+                verticesTemp[i] = p2;
+                p2 = new P3();
               }
             }
             if (needNormals)
@@ -152,10 +155,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
             for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
               for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
                 latticeOffset.set(tx, ty, tz);
-                unitcell.toCartesian(latticeOffset, false);
+                unitcell.toCartesianF(latticeOffset, false);
                 for (int i = vertexCount; --i >= 0;) {
-                  vTemp.add2(vertices[i], latticeOffset);
-                  tm.transformPtScr(vTemp, screens[i]);
+                  p2.add2(vertices[i], latticeOffset);
+                  tm.transformPtScr(p2, screens[i]);
                 }
                 render2(isExport);
               }
@@ -546,7 +549,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (diameter == -1) {
       g3d.drawLineAB(pt1f, pt2f);
     } else if (diameter < 0) {
-      int idash = (int) -diameter;
+      int idash = -diameter;
       g3d.drawDashedLineBits(idash<<1, idash, pt1f, pt2f);
     } else {
       g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);

@@ -138,7 +138,7 @@ public class Axes extends FontLineShape {
     P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
     originPoint.add2(offset, vertices[0]);
     if (voffset != 0)
-      unitcell.toCartesian(fixedOriginUC, false);
+      unitcell.toCartesianF(fixedOriginUC, false);
     else if (fixedOrigin != null)
       originPoint.setT(fixedOrigin);
     if (voffset != 0) {

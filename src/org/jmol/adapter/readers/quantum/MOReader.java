@@ -172,8 +172,8 @@ public abstract class MOReader extends BasisFunctionReader {
         ++i;
       // assign the partial charge
       String[] tokens = PT.getTokens(rd());
-      float charge;
-      if (tokens == null || tokens.length < 3 || Float.isNaN(charge = parseFloatStr(tokens[2]))) {
+      double charge;
+      if (tokens == null || tokens.length < 3 || Double.isNaN(charge = parseDoubleStr(tokens[2]))) {
         Logger.info("Error reading NBO charges: " + line);
         return;
       }
@@ -372,14 +372,14 @@ public abstract class MOReader extends BasisFunctionReader {
         if (str.indexOf("LZ VALUE") >= 0)
           discardLinesUntilBlank();
         for (int iMo = 0; iMo < nThisLine; iMo++) {
-          float[] coefs = new float[data[iMo].size()];
+          double[] coefs = new double[data[iMo].size()];
           int iCoeff = 0;
           while (iCoeff < coefs.length) {
-            coefs[iCoeff] = parseFloatStr(data[iMo].get(iCoeff));
+            coefs[iCoeff] = parseDoubleStr(data[iMo].get(iCoeff));
             iCoeff++;
           }
           haveMOs = true;
-          addCoef(mos[iMo], coefs, null, Float.NaN, Float.NaN, moCount++);
+          addCoef(mos[iMo], coefs, null, Double.NaN, Double.NaN, moCount++);
         }
         nThisLine = 0;
         if (line.length() == 0)
@@ -468,7 +468,7 @@ public abstract class MOReader extends BasisFunctionReader {
   protected void addSlaterBasis() {
   }
 
-  public void addCoef(Map<String, Object> mo, float[] coefs, String type, float energy, float occ, int moCount) {
+  public void addCoef(Map<String, Object> mo, double[] coefs, String type, double energy, double occ, int moCount) {
     mo.put("coefficients", coefs);
     if (moTypes != null) {
       type = moTypes.get(moCount % moTypes.size());
@@ -478,10 +478,10 @@ public abstract class MOReader extends BasisFunctionReader {
     } 
     if (type != null)
       mo.put("type", type);
-    if (!Float.isNaN(energy))
-      mo.put("energy", Float.valueOf(energy));
-    if (!Float.isNaN(occ))
-      mo.put("occupancy", Float.valueOf(occ));
+    if (!Double.isNaN(energy))
+      mo.put("energy", Double.valueOf(energy));
+    if (!Double.isNaN(occ))
+      mo.put("occupancy", Double.valueOf(occ));
     setMO(mo);
   }
 
@@ -496,7 +496,7 @@ public abstract class MOReader extends BasisFunctionReader {
       return;
     case HEADER_GAMESS_UK_MO:
       for (int i = 0; i < nThisLine; i++)
-        mos[i].put("energy", Float.valueOf(tokens[i]));
+        mos[i].put("energy", Double.valueOf(tokens[i]));
       readLines(5);
       return;
     case HEADER_GAMESS_ORIGINAL:
@@ -505,7 +505,7 @@ public abstract class MOReader extends BasisFunctionReader {
       if (tokens.length == 0)
         tokens = PT.getTokens(rd());
       for (int i = 0; i < nThisLine; i++) {
-        mos[i].put("energy", Float.valueOf(tokens[i]));
+        mos[i].put("energy", Double.valueOf(tokens[i]));
       }
       rd();
       break;
@@ -514,8 +514,8 @@ public abstract class MOReader extends BasisFunctionReader {
       boolean haveSymmetry = (line.length() > 0 || rd() != null);
       tokens = getTokens();
       for (int i = 0; i < nThisLine; i++)
-        mos[i].put("occupancy", Float.valueOf(tokens[i].charAt(0) == '-' ? 2.0f
-            : parseFloatStr(tokens[i])));
+        mos[i].put("occupancy", Double.valueOf(tokens[i].charAt(0) == '-' ? 2.0f
+            : parseDoubleStr(tokens[i])));
       rd(); // blank or symmetry
       if (!haveSymmetry)
         return;
@@ -531,9 +531,9 @@ public abstract class MOReader extends BasisFunctionReader {
 
   protected void addMOData(int nColumns, Lst<String>[] data, Map<String, Object>[] mos) {
     for (int i = 0; i < nColumns; i++) {
-      float[] coefs = new float[data[i].size()];
+      double[] coefs = new double[data[i].size()];
       for (int j = coefs.length; --j >= 0;)
-        coefs[j] = parseFloatStr(data[i].get(j));
+        coefs[j] = parseDoubleStr(data[i].get(j));
       mos[i].put("coefficients", coefs);
       setMO(mos[i]);
     }
@@ -588,7 +588,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyyyyyyyyy zzzzzzz ....... ffffffff
           PT.rep(line.substring(32, 54).trim(), " ", ""),
           line.substring(55, 62).trim(), line.substring(71).trim() });
     }
-    float[][] secondOrderData = new float[strSecondOrderData.size()][4];
+    double[][] secondOrderData = new double[strSecondOrderData.size()][4];
     lastMoData.put("secondOrderData", secondOrderData);
     lastMoData = null;
     Integer IMO;
@@ -600,8 +600,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyyyyyyyyy zzzzzzz ....... ffffffff
       IMO = ht.get(a[1]);
       if (IMO != null)
         secondOrderData[i][1] = IMO.intValue();
-      secondOrderData[i][2] = parseFloatStr(a[2]);
-      secondOrderData[i][3] = parseFloatStr(a[3]);
+      secondOrderData[i][2] = parseDoubleStr(a[2]);
+      secondOrderData[i][3] = parseDoubleStr(a[3]);
     }
   }
   

@@ -41,7 +41,7 @@ import org.jmol.util.Parser;
 public class JmolDataReader extends PdbReader {
 
   
-  private Map<String, float[]> props;
+  private Map<String, double[]> props;
   private String[] residueNames;
   private String[] atomNames;
   
@@ -60,7 +60,7 @@ public class JmolDataReader extends PdbReader {
         break;
       switch ("Ppard".indexOf(line.substring(16, 17))) {
       case 0: //Jmol PDB-encoded data
-        props = new Hashtable<String, float[]>();
+        props = new Hashtable<String, double[]>();
         asc.setInfo("jmolData", line);
         if (!line.endsWith("#noautobond"))
           line += "#noautobond";
@@ -74,9 +74,9 @@ public class JmolDataReader extends PdbReader {
         line = line.substring(pt1 + 1, pt2).replace(',', ' ');
         String[] tokens = getTokens();
         Logger.info("reading " + name + " " + tokens.length);
-        float[] prop = new float[tokens.length];
+        double[] prop = new double[tokens.length];
         for (int i = prop.length; --i >= 0;)
-          prop[i] = parseFloatStr(tokens[i]);
+          prop[i] = parseDoubleStr(tokens[i]);
         props.put(name, prop);
         break;
       case 2: // Jmol atom names
@@ -111,15 +111,15 @@ public class JmolDataReader extends PdbReader {
         // Jmol 12.0.RC23 uses this to pass through the adapter a quaternion,
         // ramachandran, or other sort of plot.
 
-        float[] data = new float[15];
-        Parser.parseStringInfestedFloatArray(
+        double[] data = new double[15];
+        Parser.parseStringInfestedDoubleArray(
             line.substring(10).replace('=', ' ').replace('{', ' ')
                 .replace('}', ' '), null, data);
-        P3 minXYZ = P3.new3(data[0], data[1], data[2]);
-        P3 maxXYZ = P3.new3(data[3], data[4], data[5]);
-        fileScaling = P3.new3(data[6], data[7], data[8]);
-        fileOffset = P3.new3(data[9], data[10], data[11]);
-        P3 plotScale = P3.new3(data[12], data[13], data[14]);
+        P3 minXYZ = P3.new3((float) data[0], (float) data[1], (float) data[2]);
+        P3 maxXYZ = P3.new3((float) data[3], (float) data[4], (float) data[5]);
+        fileScaling = P3.new3((float) data[6], (float) data[7], (float) data[8]);
+        fileOffset = P3.new3((float) data[9], (float) data[10], (float) data[11]);
+        P3 plotScale = P3.new3((float) data[12], (float) data[13], (float) data[14]);
         if (plotScale.x <= 0)
           plotScale.x = 100;
         if (plotScale.y <= 0)
@@ -139,7 +139,7 @@ public class JmolDataReader extends PdbReader {
         unitCellOffset = P3.newP(plotScale);
         unitCellOffset.scale(-1);
         getSymmetry();
-        symmetry.toFractional(unitCellOffset, false);
+        symmetry.toFractionalF(unitCellOffset, false);
         unitCellOffset.scaleAdd2(-1f, minXYZ, unitCellOffset);
         symmetry.setOffsetPt(unitCellOffset);
         asc.setInfo("jmolDataScaling", new P3[] { minXYZ, maxXYZ, plotScale });

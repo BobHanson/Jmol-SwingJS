@@ -8,11 +8,15 @@ import org.jmol.api.SymmetryInterface;
 
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * A class to group a set of modulations for an atom as a "vibration" Extends V3
@@ -47,7 +51,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   /**
    * unit cell axes -- used in Modulation for calculating magnetic modulations
    */
-  float[] axesLengths;
+  double[] axesLengths;
 
   /**
    * the number of operators in this space group -- needed for occupancy calculation
@@ -67,7 +71,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   /**
    * the spin operation for this atom: +1/0/-1 
    */
-  private float spinOp;
+  private int spinOp;
 
   /**
    * the matrix representation for this atom's symmetry operation
@@ -136,17 +140,17 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * current value of anisotropic parameter modulation
    *  
    */
-  public Map<String, Float> htUij;
+  public Map<String, Double> htUij;
   
   /**
    * the current value of the occupancy modulation
    */
-  public float vOcc = Float.NaN;
+  public double vOcc = Double.NaN;
   
   /**
    * final occupancy value -- absolute; in range [0,1]
    */
-  private float occValue = Float.NaN;
+  private double occValue = Double.NaN;
   
   // values set in setModTQ
   
@@ -176,7 +180,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   // generator parameters 
 
-  private M3 gammaE;
+  private M3d gammaE;
   private Matrix gammaIinv;
   private Matrix sigma;
   private Matrix tau;
@@ -212,8 +216,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * 
    */
 
-  public ModulationSet setMod(String id, P3 r00, P3 r0, int d,
-                              Lst<Modulation> mods, M3 gammaE,
+  public ModulationSet setMod(String id, P3d r00, P3d r0, int d,
+                              Lst<Modulation> mods, M3d gammaE,
                               Matrix[] factors, 
                               SymmetryInterface symmetry, int nOps, int iop, 
                               Vibration v, boolean isCommensurate) {
@@ -340,7 +344,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     this.iop = iop;
     this.nOps = nOps;
     
-    this.r0 = r0;
+    this.r0 = r0.toP3();
     modDim = d;
     rI = new Matrix(null, d, 1);
     this.mods = mods;
@@ -360,8 +364,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       mxyz = new V3(); // modulations of spin
       axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz        
     }
-    Matrix vR00 = Matrix.newT(r00, true);
-    Matrix vR0 = Matrix.newT(r0, true);
+    Matrix vR00 = Matrix.newT(r00.toP3(), true);
+    Matrix vR0 = Matrix.newT(r0.toP3(), true);
 
     rsvs = symmetry.getOperationRsVs(iop);
     gammaIinv = rsvs.getSubmatrix(3, 3, d, d).inverse();
@@ -371,7 +375,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     tau = gammaIinv.mul(sigma.mul(vR0).sub(gammaM.mul(vR00)).sub(sI));
 
     if (Logger.debuggingHigh)
-      Logger.debug("MODSET create " + id + " r0=" + Escape.eP(r0) + " tau="
+      Logger.debug("MODSET create " + id + " r0=" + Escape.ePd(r0) + " tau="
           + tau);
 
     return this;
@@ -433,24 +437,24 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, arI);
     // rotate by R3 rotation
-    gammaE.rotate(this);
+    gammaE.rotateF(this);
     if (mxyz != null){
-      gammaE.rotate(mxyz);
+      gammaE.rotateF(mxyz);
       if (spinOp < 0)
         mxyz.scale(spinOp);
     }
     return this;
   }
 
-  public void addUTens(String utens, float v) {
+  public void addUTens(String utens, double v) {
     if (htUij == null)
-      htUij = new Hashtable<String, Float>();
-    Float f = htUij.get(utens);
+      htUij = new Hashtable<String, Double>();
+    Double f = htUij.get(utens);
     if (Logger.debuggingHigh)
       Logger.debug("MODSET " + id + " utens=" + utens + " f=" + f + " v=" + v);
     if (f != null)
-      v += f.floatValue();
-    htUij.put(utens, Float.valueOf(v));
+      v += f.doubleValue();
+    htUij.put(utens, Double.valueOf(v));
   }
 
   /**
@@ -476,7 +480,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       if (isQ)
         qtOffset = null;
       calculate(qtOffset, isQ);
-      if (!Float.isNaN(vOcc))
+      if (!Double.isNaN(vOcc))
         occValue = getOccupancy();
     }
     if (isOn) {
@@ -495,7 +499,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (a != null) {
       //if (!isReset)
       //System.out.println(a + " ms " + ptTemp);
-      symmetry.toCartesian(ptTemp, true);
+      symmetry.toCartesianF(ptTemp, true);
       a.add(ptTemp);
     }
     // magnetic moment part
@@ -516,7 +520,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     }
     ptTemp.setT(mxyz);
     // vib.modScale is from VECTOR MAX <n> 
-    symmetry.toCartesian(ptTemp, true);
+    symmetry.toCartesianF(ptTemp, true);
     PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
     // we must scale v0 with mod to preserve angle
     ptTemp.add(v0);
@@ -676,7 +680,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public void setMoment() {
     if (mxyz == null)
       return;
-    symmetry.toCartesian(vib, true);
+    symmetry.toCartesianF(vib, true);
     v0 = V3.newV(vib);
   }
 
@@ -701,12 +705,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     occParams = pt;
     fileOcc = foccupancy;
     occSiteMultiplicity = siteMult;
-    return getOccupancy();
+    return (float) getOccupancy();
   }
   
   @Override
   public int getOccupancy100(boolean isTemp) {
-    if (isCommensurate || Float.isNaN(vOcc))
+    if (isCommensurate || Double.isNaN(vOcc))
       return Integer.MIN_VALUE;
     if (!isTemp && !enabled)
       return (int) (-fileOcc * 100);
@@ -717,7 +721,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     return (int) (occValue * 100);
   }
 
-  private float getOccupancy() {
+  private double getOccupancy() {
     double occ;
     if (occAbsolute) {
       // Crenel
@@ -738,8 +742,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     }
     // 49/50 is an important range for cutoffs -- we never return a value in this range
     occ = (occ > 0.49 && occ < 0.50 ? 0.489 : Math.min(1, Math.max(0, occ)));
-    return occValue = (float) occ;
+    return occValue = occ;
   }
-
 
 }

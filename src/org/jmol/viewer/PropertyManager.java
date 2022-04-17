@@ -1508,7 +1508,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("z", Float.valueOf(atom.z));
     if (ucell != null) {
       ptTemp.setT(atom);
-      ucell.toFractional(ptTemp, true);
+      ucell.toFractionalF(ptTemp, true);
       info.put("fx", Float.valueOf(ptTemp.x));
       info.put("fy", Float.valueOf(ptTemp.y));
       info.put("fz", Float.valueOf(ptTemp.z));

@@ -31,14 +31,18 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 /*
  * Bob Hanson 4/2006
@@ -53,7 +57,7 @@ import javajs.util.V3;
  * NEVER ACCESS THESE METHODS DIRECTLY! ONLY THROUGH CLASS Symmetry
  */
 
-public class SymmetryOperation extends M4 {
+public class SymmetryOperation extends M4d {
   String xyzOriginal;
   String xyzCanonical;
   String xyz;
@@ -100,7 +104,7 @@ public class SymmetryOperation extends M4 {
 
   private boolean unCentered;
   boolean isCenteringOp;
-  private float magOp = Float.MAX_VALUE;
+  private int magOp = Integer.MAX_VALUE;
   int divisor = 12; // could be 120 for magnetic;
 
   void setSigma(String subsystemCode, Matrix sigma) {
@@ -141,7 +145,7 @@ public class SymmetryOperation extends M4 {
   }
 
   private void setGamma(boolean isReverse) {
-    // standard M4 (this)
+    // standard M4d (this)
     //
     //  [ [rot]   | [trans] 
     //     [0]    |   1     ]
@@ -174,7 +178,7 @@ public class SymmetryOperation extends M4 {
     a = rsvs.getSubmatrix(0, 0, 3, 3).getArray();
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 4; j++)
-        setElement(i, j, (float) (j < 3 ? a[i][j] : t[i]));
+        setElement(i, j, (j < 3 ? a[i][j] : t[i]));
     setElement(3, 3, 1);
   }
 
@@ -188,21 +192,11 @@ public class SymmetryOperation extends M4 {
     isFinalized = true;
   }
 
-  private static M4 div12(M4 op, int divisor) {
-    op.m03 = finalizeF(op.m03, divisor);
-    op.m13 = finalizeF(op.m13, divisor);
-    op.m23 = finalizeF(op.m23, divisor);
+  private static M4d div12(M4d op, int divisor) {
+    op.m03 = finalizeD(op.m03, divisor);
+    op.m13 = finalizeD(op.m13, divisor);
+    op.m23 = finalizeD(op.m23, divisor);
     return op;
-  }
-
-  private static float finalizeF(float m, int divisor) {
-    if (divisor == 0) {
-      if (m == 0)
-        return 0;
-      int n = (int) m;
-      return ((n >> DIVISOR_OFFSET) * 1F / (n & DIVISOR_MASK));
-    } 
-    return m / divisor;
   }
 
   private static double finalizeD(double m, int divisor) {
@@ -220,8 +214,8 @@ public class SymmetryOperation extends M4 {
         : xyzOriginal);
   }
 
-  public String getxyzTrans(P3 t) {
-    M4 m = newM4(this);
+  public String getxyzTrans(T3d t) {
+    M4d m = newM4(this);
     m.add(t);
     return getXYZFromMatrix(m, false, false, false);
   }
@@ -230,15 +224,15 @@ public class SymmetryOperation extends M4 {
     return "\n" + xyz + "\ninternal matrix representation:\n" + toString();
   }
 
-  final static String dumpSeitz(M4 s, boolean isCanonical) {
+  final static String dumpSeitz(M4d s, boolean isCanonical) {
     SB sb = new SB();
-    float[] r = new float[4];
+    double[] r = new double[4];
     for (int i = 0; i < 3; i++) {
       s.getRow(i, r);
       sb.append("[\t");
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
-      float trans = r[3];
+      float trans = (float) r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
       sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans)).append("\t]\n");
@@ -285,7 +279,7 @@ public class SymmetryOperation extends M4 {
       xyz = xyz.replace('[', ' ').replace(']', ' ').replace(',', ' ');
       Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);
       for (int i = linearRotTrans.length; --i >= 0;)
-        if (Float.isNaN(linearRotTrans[i]))
+        if (Double.isNaN(linearRotTrans[i]))
           return false;
       setMatrix(isReverse);
       isFinalized = true;
@@ -367,9 +361,9 @@ public class SymmetryOperation extends M4 {
     if (linearRotTrans.length > 16) {
       setGamma(isReverse);
     } else {
-      setA(linearRotTrans);
+      setAF(linearRotTrans);
       if (isReverse) {
-        P3 p3 = P3.new3(m03, m13, m23);
+        P3d p3 = P3d.new3(m03, m13, m23);
         invert();
         rotate(p3);
         p3.scale(-1);
@@ -396,14 +390,14 @@ public class SymmetryOperation extends M4 {
         int denom =  (divisor == 0 ? ((int) v) & DIVISOR_MASK : divisor);
         if (denom == 0)
           denom = 12;
-        v = finalizeF(v, divisor);
+        v = (float) finalizeD(v, divisor);
         // offset == null only in the case of "xyz matrix:" option
         if (offset != null) {
           // magnetic centering only
           if (pt < offset.length)
             v += offset[pt++];
         }
-        v = normalizeTwelfths((v < 0 ? -1 : 1) * Math.abs(v * denom) / denom,
+        v = normalizeTwelfths(((v < 0 ? -1 : 1) * Math.abs(v * denom) / denom),
             denom, doNormalize);
         if (divisor == 0)
           v = toDivisor(v, denom);
@@ -418,10 +412,14 @@ public class SymmetryOperation extends M4 {
     return true;
   }
 
-  public static M4 getMatrixFromXYZ(String xyz) {
+  public static M4d getMatrixFromXYZ(String xyz) {
     float[] linearRotTrans = new float[16];
     xyz = getMatrixFromString(null, "!" + xyz, linearRotTrans, false);
-    return (xyz == null ? null : div12(M4.newA16(linearRotTrans), setDivisor(xyz)));
+    if (xyz == null)
+      return null;
+    M4d m = new M4d();
+    m.setAF(linearRotTrans);
+    return div12(m, setDivisor(xyz));
   }
 
   /**
@@ -473,7 +471,7 @@ public class SymmetryOperation extends M4 {
     float iValue = 0;
     int denom = 0;
     int numer = 0;
-    float decimalMultiplier = 1f;
+    double decimalMultiplier = 1f;
     String strT = "";
     String strOut = "";
     int[] ret = new int[1];
@@ -611,7 +609,7 @@ public class SymmetryOperation extends M4 {
     int n = (int) numer;
     if (n != numer) {
       // could happen with magnetic lattice centering 1/5 + 1/2 = 7/10
-      float f = numer - n;
+      double f = numer - n;
       denom = (int) Math.abs(denom/f);
       n = (int) (Math.abs(numer) / f);
     }
@@ -640,8 +638,8 @@ public class SymmetryOperation extends M4 {
     return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
-  //  private final static String xyzFraction48ths(float n48ths, boolean allPositive, boolean halfOrLess) {
-  //    float n = n48ths;
+  //  private final static String xyzFraction48ths(double n48ths, boolean allPositive, boolean halfOrLess) {
+  //    double n = n48ths;
   //    if (allPositive) {
   //      while (n < 0)
   //        n += 48f;
@@ -707,7 +705,7 @@ public class SymmetryOperation extends M4 {
     return str + n + "/" + m;
   }
 
-  //  final static String fortyEighthsOf(float n48ths) {
+  //  final static String fortyEighthsOf(double n48ths) {
   //    String str = "";
   //    if (n48ths < 0) {
   //      n48ths = -n48ths;
@@ -718,10 +716,10 @@ public class SymmetryOperation extends M4 {
   //    if (Math.abs(n - n48ths) > 0.01f) {
   //      // fifths? sevenths? eigths? ninths? sixteenths?
   //      // Juan Manuel suggests 10 is large enough here 
-  //      float f = n48ths / 48;
+  //      double f = n48ths / 48;
   //      int max = 20;
   //      for (m = 5; m < max; m++) {
-  //        float fm = f * m;
+  //        double fm = f * m;
   //        n = Math.round(fm);
   //        if (Math.abs(n - fm) < 0.01f)
   //          break;
@@ -777,7 +775,7 @@ public class SymmetryOperation extends M4 {
   //    "15/16", "23/24", "47/48"
   //  };
   //
-  private static String plusMinus(String strT, float x, String sx) {
+  private static String plusMinus(String strT, double x, String sx) {
     return (x == 0 ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
             + (x == 1 || x == -1 ? "" : "" + (int) Math.abs(x)) + sx);
@@ -796,7 +794,7 @@ public class SymmetryOperation extends M4 {
     return iValue;
   }
 
-  //  private static float normalize48ths(float iValue, boolean doNormalize) {
+  //  private static double normalize48ths(double iValue, boolean doNormalize) {
   //    iValue *= 48f;
   //    if (doNormalize) {
   //      while (iValue > 24)
@@ -813,7 +811,7 @@ public class SymmetryOperation extends M4 {
   final static String[] labelsXnSub = new String[] { "x", "y", "z", "a", "b",
       "c", "d", "e", "f", "g", "h", "i", "j" };
 
-  final public static String getXYZFromMatrix(M4 mat, boolean is12ths,
+  final public static String getXYZFromMatrix(M4d mat, boolean is12ths,
                                               boolean allPositive,
                                               boolean halfOrLess) {
     String str = "";
@@ -823,7 +821,7 @@ public class SymmetryOperation extends M4 {
     if (op != null && op.modDim > 0)
       return getXYZFromRsVs(op.rsvs.getRotation(), op.rsvs.getTranslation(),
           is12ths);
-    float[] row = new float[4];
+    double[] row = new double[4];
     int denom = (int) mat.getElement(3, 3);
     if (denom == 1)
       denom = 12;
@@ -836,7 +834,7 @@ public class SymmetryOperation extends M4 {
       for (int j = 0; j < 3; j++)
         if (row[j] != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction12((is12ths ? row[3] : row[3] * denom), denom, allPositive,
+      term += xyzFraction12((float) (is12ths ? row[3] : row[3] * denom), denom, allPositive,
           halfOrLess);
       str += "," + term;
     }
@@ -853,15 +851,15 @@ public class SymmetryOperation extends M4 {
   //
   //  }
 
-  V3[] rotateAxes(V3[] vectors, UnitCell unitcell, P3 ptTemp, M3 mTemp) {
-    V3[] vRot = new V3[3];
+  V3d[] rotateAxes(V3d[] vectors, UnitCell unitcell, P3d ptTemp, M3d mTemp) {
+    V3d[] vRot = new V3d[3];
     getRotationScale(mTemp);
     for (int i = vectors.length; --i >= 0;) {
       ptTemp.setT(vectors[i]);
-      unitcell.toFractional(ptTemp, true);
+      unitcell.toFractionalD(ptTemp, true);
       mTemp.rotate(ptTemp);
       unitcell.toCartesian(ptTemp, true);
-      vRot[i] = V3.newV(ptTemp);
+      vRot[i] = V3d.newV(ptTemp);
     }
     return vRot;
   }
@@ -869,17 +867,16 @@ public class SymmetryOperation extends M4 {
   public String fcoord2(T3 p) {
     if (divisor == 12)
       return fcoord(p);
-    return fc2(linearRotTrans[3]) + " " + fc2(linearRotTrans[7]) + " " + fc2(linearRotTrans[11]);
+    return fc2((int) linearRotTrans[3]) + " " + fc2((int) linearRotTrans[7]) + " " + fc2((int) linearRotTrans[11]);
   }
 
   /**
    * Get string version of fraction when divisor == 0 
    * 
-   * @param f
+   * @param num
    * @return "1/2" for example
    */
-  private String fc2(float f) {
-      int num = (int) f;
+  private String fc2(int num) {
       int denom = (num & DIVISOR_MASK);
       num = num >> DIVISOR_OFFSET;
     return (num == 0 ? "0" : num + "/" + denom);
@@ -909,8 +906,12 @@ public class SymmetryOperation extends M4 {
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
   }
   
-  static float approxF(float f) {
-    return PT.approx(f, 100);
+  static double approxF(float f) {
+    return PT.approxD(f, 100);
+  }
+
+  static double approxD(double f) {
+    return PT.approxD(f, 100);
   }
 
   static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
@@ -960,8 +961,8 @@ public class SymmetryOperation extends M4 {
    * 
    * @return +1, -1, or 0
    */
-  float getMagneticOp() {
-    return (magOp == Float.MAX_VALUE ? magOp = determinant3() * timeReversal
+  int getMagneticOp() {
+    return (magOp == Integer.MAX_VALUE ? magOp = (int) (determinant3() * timeReversal)
         : magOp);
   }
 
@@ -993,7 +994,7 @@ public class SymmetryOperation extends M4 {
           && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0 && m21 == 0
           && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;
-        centering = V3.new3(m03, m13, m23);
+        centering = V3.new3((float) m03, (float) m13, (float) m23);
       } else {
         unCentered = true;
         centering = null;
@@ -1002,7 +1003,7 @@ public class SymmetryOperation extends M4 {
     return centering;
   }
 
-  String fixMagneticXYZ(M4 m, String xyz, boolean addMag) {
+  String fixMagneticXYZ(M4d m, String xyz, boolean addMag) {
     if (timeReversal == 0)
       return xyz;
     int pt = xyz.indexOf("m");
@@ -1010,7 +1011,7 @@ public class SymmetryOperation extends M4 {
     xyz = (pt < 0 ? xyz : xyz.substring(0, pt));
     if (!addMag)
       return xyz + (timeReversal > 0 ? " +1" : " -1");
-    M4 m2 = M4.newM4(m);
+    M4d m2 = M4d.newM4(m);
     m2.m03 = m2.m13 = m2.m23 = 0;
     if (getMagneticOp() < 0)
       m2.scale(-1); // does not matter that we flip m33 - it is never checked
@@ -1022,7 +1023,7 @@ public class SymmetryOperation extends M4 {
   }
 
   private Hashtable<String, Object> info;
-  static P3 atomTest;
+  static P3d atomTest;
 
   public Map<String, Object> getInfo() {
     if (info == null) {
@@ -1035,9 +1036,9 @@ public class SymmetryOperation extends M4 {
       if (linearRotTrans != null)
         info.put("linearRotTrans", linearRotTrans);
       info.put("modulationDimension", Integer.valueOf(modDim));
-      info.put("matrix", M4.newM4(this));
-      if (magOp != Float.MAX_VALUE)
-        info.put("magOp", Float.valueOf(magOp));
+      info.put("matrix", M4d.newM4(this));
+      if (magOp != Double.MAX_VALUE)
+        info.put("magOp", Double.valueOf(magOp));
       info.put("id", Integer.valueOf(opId));
       info.put("timeReversal", Integer.valueOf(timeReversal));
       if (xyzOriginal != null)
@@ -1056,14 +1057,14 @@ public class SymmetryOperation extends M4 {
    * @param atomIndex first index
    * @param count number of atoms
    */
-  public static void normalizeOperationToCentroid(int dim, M4 m, P3[] atoms, int atomIndex, int count) {
+  public static void normalizeOperationToCentroid(int dim, M4d m, P3d[] atoms, int atomIndex, int count) {
     if (count <= 0)
       return;
-    float x = 0;
-    float y = 0;
-    float z = 0;
+    double x = 0;
+    double y = 0;
+    double z = 0;
     if (SymmetryOperation.atomTest == null)
-      SymmetryOperation.atomTest = new P3();
+      SymmetryOperation.atomTest = new P3d();
     for (int i = atomIndex, i2 = i + count; i < i2; i++) {
       Symmetry.newPoint(m, atoms[i], 0, 0, 0, SymmetryOperation.atomTest);
       x += SymmetryOperation.atomTest.x;
@@ -1099,6 +1100,5 @@ public class SymmetryOperation extends M4 {
     }
     return list;
   }
-
 
 }

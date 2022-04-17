@@ -46,6 +46,7 @@ import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 public class Ellipsoids extends AtomShape {
 
@@ -395,7 +396,7 @@ public class Ellipsoids extends AtomShape {
     switch (mode) {
     case 0: // axes
       e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script"))
-          .setFromAxes((V3[]) value));
+          .setFromAxes((V3d[]) value));
       break;
     case 1: // center
       e.setCenter((P3) value);
@@ -454,7 +455,7 @@ public class Ellipsoids extends AtomShape {
   }
 
   private void getStateID(SB sb) {
-    V3 v1 = new V3();
+    V3d v1 = new V3d();
     for (Ellipsoid ellipsoid : simpleEllipsoids.values()) {
       Tensor t = ellipsoid.tensor;
       if (!ellipsoid.isValid || t == null)
@@ -465,7 +466,7 @@ public class Ellipsoids extends AtomShape {
       for (int i = 0; i < 3; i++) {
         v1.setT(t.eigenVectors[i]);
         v1.scale(ellipsoid.lengths[i]);
-        sb.append(" ").append(Escape.eP(v1));
+        sb.append(" ").append(Escape.ePd(v1));
       }
       sb.append(" "
           + getColorCommandUnk("", ellipsoid.colix, translucentAllowed));

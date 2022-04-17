@@ -25,6 +25,7 @@
 package org.jmol.adapter.readers.simple;
 
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -55,7 +56,7 @@ public class JSONReader extends AtomSetCollectionReader {
 
    */
 
-  private P3 scale;
+  private P3d scale;
 
   @Override
   public void initializeReader() throws Exception {
@@ -77,18 +78,18 @@ public class JSONReader extends AtomSetCollectionReader {
 
   private void getScaling(String[] s) {
     String[] xyz = PT.split(s[0], ":");
-    scale = P3.new3(1, 1, 1);
+    scale = P3d.new3(1, 1, 1);
     for (int j = 0; j < xyz.length; j += 2)
       if (xyz[j].length() == 1)
         switch (xyz[j].charAt(0)) {
         case 'x':
-          scale.x = parseFloatStr(xyz[j + 1]);
+          scale.x = parseDoubleStr(xyz[j + 1]);
           break;
         case 'y':
-          scale.y = parseFloatStr(xyz[j + 1]);
+          scale.y = parseDoubleStr(xyz[j + 1]);
           break;
         case 'z':
-          scale.z = parseFloatStr(xyz[j + 1]);
+          scale.z = parseDoubleStr(xyz[j + 1]);
           break;
         }
     Logger.info("scale set to " + scale);
@@ -110,19 +111,19 @@ public class JSONReader extends AtomSetCollectionReader {
     for (int i = 0; i < atoms.length; ++i) {
       String[] lxyz = PT.split(atoms[i],":");
       Atom atom = asc.addNewAtom();
-      float x = 0, y = 0, z = 0;
+      double x = 0, y = 0, z = 0;
       String l = "C";
       for (int j = 0; j < lxyz.length; j += 2)
         if (lxyz[j].length() == 1)
           switch (lxyz[j].charAt(0)) {
           case 'x':
-            x = parseFloatStr(lxyz[j + 1]);
+            x = parseDoubleStr(lxyz[j + 1]);
             break;
           case 'y':
-            y = parseFloatStr(lxyz[j + 1]);
+            y = parseDoubleStr(lxyz[j + 1]);
             break;
           case 'z':
-            z = parseFloatStr(lxyz[j + 1]);
+            z = parseDoubleStr(lxyz[j + 1]);
             break;
           case 'l':
             l = lxyz[j + 1];
@@ -153,7 +154,7 @@ public class JSONReader extends AtomSetCollectionReader {
             break;
           case 'o':
             // allows 0, 1, 1.5, 2, 2.5, 3, 4
-            int o = (int) (parseFloatStr(beo[j + 1]) * 2);
+            int o = (int) (parseDoubleStr(beo[j + 1]) * 2);
             switch (o) {
             case 0:
               continue;

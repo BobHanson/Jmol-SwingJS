@@ -583,18 +583,18 @@ public class Resolver {
       // so the typical MOL file, with more parameters, will fail getting the spin
     String l = lines[i];
     if (l.length() < 3)
-    	return false;
+      return false;
       int spin = PT.parseInt(l.substring(2).trim());
       int charge = PT.parseInt(l.substring(0, 2).trim());
       // and if it does not, then we get the next lines of info
       if ((l = lines[i + 1]).length() < 2)
-    	  return false;
+        return false;
       int atom1 = PT.parseInt(l.substring(0, 2).trim());
       if (spin < 0 || spin > 5 || atom1 <= 0 || charge == Integer.MIN_VALUE || charge > 5)
         return false;
       // hard to believe we would get here for a MOL file
-      float[] atomline = AtomSetCollectionReader.getTokensFloat(l, null, 5);
-      return !Float.isNaN(atomline[1]) && !Float.isNaN(atomline[2]) && !Float.isNaN(atomline[3]) && Float.isNaN(atomline[4]);
+      double[] atomline = AtomSetCollectionReader.getTokensDouble(l, null, 5);
+      return !Double.isNaN(atomline[1]) && !Double.isNaN(atomline[2]) && !Double.isNaN(atomline[3]) && Double.isNaN(atomline[4]);
   }
   
   private static boolean checkWien2k(String[] lines) {

@@ -147,7 +147,7 @@ public class AlchemyReader extends AtomSetCollectionReader {
       }
       atom.elementSymbol = name;
       setAtomCoordTokens(atom, tokens, pt);
-      atom.partialCharge = (tokens.length >= 6 ? parseFloatStr(tokens[pt + 3]) : 0);
+      atom.partialCharge = (tokens.length >= 6 ? parseDoubleStr(tokens[pt + 3]) : 0);
       asc.addAtomWithMappedSerialNumber(atom);
     }
   }

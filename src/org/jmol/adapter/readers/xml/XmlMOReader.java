@@ -24,14 +24,14 @@ public abstract class XmlMOReader extends XmlCmlReader {
   private MOReader moReader;
   private boolean skipMOs;
   private Map<String, int[]> htSlaterIDs;
-  private Lst<float[]> basisData;
+  private Lst<double[]> basisData;
   private String basisId;
   private boolean isSpherical;
   private int minL, maxL;
   private String[] basisIds, basisAtoms;
-  private float orbOcc, orbEnergy;
+  private double orbOcc, orbEnergy;
   private int gaussianCount, slaterCount, coefCount, groupCount;
-  private Lst<Lst<float[]>> lstGaussians;
+  private Lst<Lst<double[]>> lstGaussians;
   private int moCount;
   private String calcType;
   private int iModelMO;
@@ -58,7 +58,7 @@ public abstract class XmlMOReader extends XmlCmlReader {
     }
     if (localName.equals("basisset")) {
       iModelMO = asc.iSet;
-      lstGaussians = new Lst<Lst<float[]>>();
+      lstGaussians = new Lst<Lst<double[]>>();
       htSlaterIDs = new Hashtable<String, int[]>();
       coefCount = groupCount = gaussianCount = slaterCount = 0;
       if (moReader == null && !skipMOs) {
@@ -106,8 +106,8 @@ public abstract class XmlMOReader extends XmlCmlReader {
         return true;
       }
       if (localName.equals("orbital") && gaussianCount > 0) {
-        orbOcc = PT.parseFloat(atts.get("occupation"));
-        orbEnergy = PT.parseFloat(atts.get("energy"));
+        orbOcc = PT.parseDouble(atts.get("occupation"));
+        orbEnergy = PT.parseDouble(atts.get("energy"));
         setKeepChars(true);
         return true;
       }
@@ -119,13 +119,13 @@ public abstract class XmlMOReader extends XmlCmlReader {
   protected boolean processEndMO(String localName) {
     if (moReader != null) {
       if (localName.equals("basisexponents")) {
-        basisData = new Lst<float[]>();
-        basisData.addLast(PT.parseFloatArray(chars.toString()));
+        basisData = new Lst<double[]>();
+        basisData.addLast(PT.parseDoubleArray(chars.toString()));
         setKeepChars(false);
         return true;
       }
       if (localName.equals("basiscontraction")) {
-        float[] data = PT.parseFloatArray(chars.toString());
+        double[] data = PT.parseDoubleArray(chars.toString());
         basisData.addLast(data);
         if (basisData.size() > maxContraction)
           maxContraction = basisData.size();
@@ -163,7 +163,7 @@ public abstract class XmlMOReader extends XmlCmlReader {
       if (localName.equals("orbital")) {
         if (gaussianCount == 0)
           return true;
-        float[] coef = PT.parseFloatArray(chars.toString());
+        double[] coef = PT.parseDoubleArray(chars.toString());
         if (moCount == 0) {
           if (coef.length != coefCount) {
             Logger.error("Number of orbital coefficients (" + coef.length
@@ -213,11 +213,11 @@ public abstract class XmlMOReader extends XmlCmlReader {
     float[][] gaussians = AU.newFloat2(gaussianCount);
     for (int i = 0, p = 0, n = lstGaussians.size(); i < n; i++) {
       basisData = lstGaussians.get(i);
-      float[] exp = basisData.get(0);
+      double[] exp = basisData.get(0);
       for (int ii = 1, nn = basisData.size(); ii < nn; ii++) {
-        float[] coef = basisData.get(ii);
+        double[] coef = basisData.get(ii);
         for (int j = 0; j < exp.length; j++)
-          gaussians[p++] = new float[] { exp[j], coef[j], 0 };
+          gaussians[p++] = new float[] { (float) exp[j], (float) coef[j], 0 };
       }
     }
     moReader.gaussians = gaussians;

@@ -25,18 +25,18 @@
 package org.jmol.adapter.smarter;
 
 
-import javajs.util.BS;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3;
-
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
-public class Atom extends P3 implements Cloneable {
+public class Atom extends P3d implements Cloneable {
   public int atomSetIndex;
   public int index;
   public BS bsSymmetry;
@@ -45,10 +45,10 @@ public class Atom extends P3 implements Cloneable {
   public short elementNumber = -1;
   public String atomName;
   public int formalCharge = Integer.MIN_VALUE;
-  public float partialCharge = Float.NaN;
-  public V3 vib; // .x and .y can be used for in-reader purposes as long as vib.z is left Float.NaN
-  public float bfactor = Float.NaN;
-  public float foccupancy = 1;
+  public double partialCharge = Double.NaN;
+  public V3 vib; // .x and .y can be used for in-reader purposes as long as vib.z is left Double.NaN
+  public double bfactor = Double.NaN;
+  public double foccupancy = 1;
   public float radius = Float.NaN;
   public boolean isHetero;
   public int atomSerial = Integer.MIN_VALUE;
@@ -60,11 +60,12 @@ public class Atom extends P3 implements Cloneable {
   public String group3;
   public int sequenceNumber = Integer.MIN_VALUE;
   public char insertionCode = '\0';
-  public float[] anisoBorU; //[6] = 1 for U, 0 for B; [7] = bFactor
+  public double[] anisoBorU; //[6] = 1 for U, 0 for B; [7] = bFactor
   public Lst<Object> tensors;
   public boolean ignoreSymmetry; // CIF _atom_site_disorder_group -1
   public String typeSymbol; // CIF only
 
+  public double dx, dy, dz;
   
   public Tensor addTensor(Tensor tensor, String type, boolean reset) {
     if (tensor == null)
@@ -78,7 +79,7 @@ public class Atom extends P3 implements Cloneable {
   }
 
   public Atom() {
-   set(Float.NaN, Float.NaN, Float.NaN);
+   set(Double.NaN, Double.NaN, Double.NaN);
   }
 
   public Atom getClone() {
@@ -96,7 +97,7 @@ public class Atom extends P3 implements Cloneable {
       }
     }
     if (anisoBorU != null)
-      a.anisoBorU = AU.arrayCopyF(anisoBorU, -1);
+      a.anisoBorU = AU.arrayCopyD(anisoBorU, -1);
     if (tensors != null) {
       a.tensors = new Lst<Object>();
       for (int i = tensors.size(); --i >= 0;)
@@ -314,7 +315,7 @@ public class Atom extends P3 implements Cloneable {
     return (ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] != 0);
   }
 
-  public Atom copyTo(P3 pt, AtomSetCollection asc) {
+  public Atom copyTo(P3d pt, AtomSetCollection asc) {
     Atom a = asc.newCloneAtom(this);
     a.setT(pt);
     return a;

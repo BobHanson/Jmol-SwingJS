@@ -27,8 +27,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -62,11 +62,11 @@ public class MMCifReader extends CifReader {
 
   protected boolean isBiomolecule;
   private boolean byChain, bySymop;
-  private Map<String, P3> chainAtomMap;
+  private Map<String, P3d> chainAtomMap;
   private Map<String, int[]> chainAtomCounts;
 
   protected Lst<Map<String, Object>> vBiomolecules;
-  private Map<String, M4> htBiomts;
+  private Map<String, M4d> htBiomts;
   protected Map<String, Map<String, Object>> htSites;
   protected Map<String, String> htHetero;
   private Map<String, Lst<Object[]>> htBondMap;
@@ -75,19 +75,19 @@ public class MMCifReader extends CifReader {
   private int thisChain = -1;
   private int modelIndex = 0;
   
-  private P3 chainSum;
+  private P3d chainSum;
   private int[] chainAtomCount;
   
   private boolean isLigandBondBug; 
   // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
   // Jmol-14.3.9_2014.11.11 fixes this. 
 
-  M4 mident;
+  M4d mident;
 
   @Override
   protected void initSubclass() {
     setIsPDB();
-    mident = M4.newM4(null);
+    mident = M4d.newM4(null);
     isMMCIF = true;
     if (isDSSP1)
       asc.setInfo("isDSSP1",Boolean.TRUE);      
@@ -104,7 +104,7 @@ public class MMCifReader extends CifReader {
     }    
     isCourseGrained = byChain || bySymop;
     if (isCourseGrained) {
-      chainAtomMap = new Hashtable<String, P3>();
+      chainAtomMap = new Hashtable<String, P3d>();
       chainAtomCounts = new Hashtable<String, int[]>();
     }
     // When this reader was split off from CifReader, a bug was introduced
@@ -308,12 +308,12 @@ public class MMCifReader extends CifReader {
     if (bsAtoms == null)
       bsAtoms = BSUtil.newBitSet2(0, asc.ac);
     Atom[] atoms = asc.atoms;
-    float seqid = -1;
+    double seqid = -1;
     String comp = null;
     Map<Object, Integer> map = null;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      float pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
+      double pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
       if (pt != seqid) {
         seqid = pt;
         if (comp != null)
@@ -337,7 +337,7 @@ public class MMCifReader extends CifReader {
       comp = null;
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
         Atom a = atoms[i];
-        float pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
+        double pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
         if (pt != seqid) {
           seqid = pt;
           String ckey = a.chainID + a.group3 + seqid;
@@ -528,7 +528,7 @@ public class MMCifReader extends CifReader {
       int iMolecule = parseIntStr(id);
       info.put("molecule",
         iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
-      info.put("biomts", new Lst<M4>());
+      info.put("biomts", new Lst<M4d>());
       info.put("chains", new Lst<String>());
       info.put("assemblies", new Lst<String>()); 
       info.put("operators", new Lst<String>());
@@ -604,37 +604,37 @@ public class MMCifReader extends CifReader {
           xyz = field;
           break;
         default:
-          m[p] = parseFloatStr(field);
+          m[p] = (float) parseDoubleStr(field);
           ++count;
         }
       }
       if (id != null && (count == 12 || xyz != null && symmetry != null)) {
         Logger.info((isNCS ? "noncrystallographic symmetry operator " : "assembly operator ") + id + " " + xyz);
-        M4 m4 = new M4();
+        M4d m4 = new M4d();
         if (count != 12) {
           symmetry.getMatrixFromString(xyz, m, false, 0);
           m[3] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A) / 12;
           m[7] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B) / 12;
           m[11] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C) / 12;
         }
-        m4.setA(m);
+        m4.setAF(m);
         addMatrix(id, m4, isNCS);
       }
     }
     return true;
   }
 
-  protected void addMatrix(String id, M4 m4, boolean isNCS) {
+  protected void addMatrix(String id, M4d m4, boolean isNCS) {
     if (isNCS) {
       if (m4.equals(mident))
         return;
       m4.m33 = 0; // flag for normalization
       if (lstNCS == null)
-        lstNCS = new Lst<M4>();
+        lstNCS = new Lst<M4d>();
       lstNCS.addLast(m4);
     } else {
       if (htBiomts == null)
-        htBiomts = new Hashtable<String, M4>();
+        htBiomts = new Hashtable<String, M4d>();
       htBiomts.put(id, m4);
     }
   }
@@ -925,10 +925,10 @@ public class MMCifReader extends CifReader {
   @SuppressWarnings("unchecked")
   private int setBiomolecule(Map<String, Object> biomolecule, BS bsAll) {
     Lst<String> biomtchains = (Lst<String>) biomolecule.get("chains");
-    Lst<M4> biomts = (Lst<M4>) biomolecule.get("biomts");
+    Lst<M4d> biomts = (Lst<M4d>) biomolecule.get("biomts");
     Lst<String> operators = (Lst<String>) biomolecule.get("operators");
     Lst<String> assemblies = (Lst<String>) biomolecule.get("assemblies");
-    P3 sum = new P3();
+    P3d sum = new P3d();
     int count = 0;
     BS bsAtoms = new BS();
     int nAtomsTotal = 0;
@@ -951,7 +951,7 @@ public class MMCifReader extends CifReader {
             nAtoms += bs.cardinality();
           }
         } else if (isBioCourse) {
-          P3 asum = chainAtomMap.get(id);
+          P3d asum = chainAtomMap.get(id);
           if (asum != null) {
             if (bySymop) {
               sum.add(asum);
@@ -966,7 +966,7 @@ public class MMCifReader extends CifReader {
       if (!isBiomolecule)
         continue;
       for (int j = 0; j < ops.length; j++) {
-        M4 m = getOpMatrix(ops[j]);
+        M4d m = getOpMatrix(ops[j]);
         if (m == null)
           return 0;
         if (m.equals(mident)) {
@@ -994,7 +994,7 @@ public class MMCifReader extends CifReader {
   }
 
   private void createParticle(String id) {
-    P3 asum = chainAtomMap.get(id);
+    P3d asum = chainAtomMap.get(id);
     int c = chainAtomCounts.get(id)[0];
     Atom a = new Atom();
     a.setT(asum);
@@ -1005,12 +1005,12 @@ public class MMCifReader extends CifReader {
     asc.addAtom(a);
   }
 
-  private M4 getOpMatrix(String ops) {
+  private M4d getOpMatrix(String ops) {
     if (htBiomts == null)
-      return M4.newM4(null);
+      return M4d.newM4(null);
     int pt = ops.indexOf("|");
     if (pt >= 0) {
-      M4 m = M4.newM4(htBiomts.get(ops.substring(0, pt)));
+      M4d m = M4d.newM4(htBiomts.get(ops.substring(0, pt)));
       m.mul(htBiomts.get(ops.substring(pt + 1)));
       return m;
     }
@@ -1091,10 +1091,10 @@ public class MMCifReader extends CifReader {
       if (htBondMap == null)
         htBondMap = new Hashtable<String, Lst<Object[]>>();
       String key1 = vwr.getChainID(getField(STRUCT_CONN_ASYM1), true) + getField(STRUCT_CONN_COMP1)
-          + parseFloatStr(getField(STRUCT_CONN_SEQ1))
+          + parseDoubleStr(getField(STRUCT_CONN_SEQ1))
           + getField(STRUCT_CONN_ATOM1) + getField(STRUCT_CONN_ALT1);
       String key2 = vwr.getChainID(getField(STRUCT_CONN_ASYM2), true) + getField(STRUCT_CONN_COMP2)
-          + parseFloatStr(getField(STRUCT_CONN_SEQ2))
+          + parseDoubleStr(getField(STRUCT_CONN_SEQ2))
           + getField(STRUCT_CONN_ATOM2) + getField(STRUCT_CONN_ALT2);
       int order = getBondOrder(getField(STRUCT_CONN_ORDER));
       if (structConnMap == null)
@@ -1163,9 +1163,9 @@ public class MMCifReader extends CifReader {
   public boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {
     if (isBiomolecule) {
       if (isCourseGrained) {
-        P3 sum = chainAtomMap.get(assemblyId);
+        P3d sum = chainAtomMap.get(assemblyId);
         if (sum == null) {
-          chainAtomMap.put(assemblyId, sum = new P3());
+          chainAtomMap.put(assemblyId, sum = new P3d());
           chainAtomCounts.put(assemblyId, new int[1]);
         }
         chainAtomCounts.get(assemblyId)[0]++;
@@ -1177,7 +1177,7 @@ public class MMCifReader extends CifReader {
         thisChain = atom.chainID;
         chainSum = chainAtomMap.get(strChain);
         if (chainSum == null) {
-          chainAtomMap.put(strChain, chainSum = new P3());
+          chainAtomMap.put(strChain, chainSum = new P3d());
           chainAtomCounts.put(strChain, chainAtomCount = new int[1]);
         }
       }

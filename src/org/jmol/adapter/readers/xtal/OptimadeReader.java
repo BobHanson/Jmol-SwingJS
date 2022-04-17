@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.util.SimpleUnitCell;
 
-import javajs.util.P3;
 import javajs.util.SB;
 
 /**
@@ -21,11 +21,17 @@ public class OptimadeReader extends AtomSetCollectionReader {
   
   private int modelNo;
   private boolean iHaveDesiredModel;
-  private float[] dimensionType;
-  private float ndims;
+  /**
+   * values 0, 1, or 2 indicate how to permute the lattice vectors
+   * to be of the form [1,0,0] for polymers or [1,1,0] for slabs 
+   */
+  private int permutation;
   private boolean isPolymer;
   private boolean isSlab;
 
+  public OptimadeReader() {
+    super();
+  }
 
   @Override
   protected void initializeReader() throws Exception {
@@ -58,13 +64,9 @@ public class OptimadeReader extends AtomSetCollectionReader {
     applySymmetryAndSetTrajectory();
     asc.newAtomSet();
     setFractionalCoordinates(false);
-    dimensionType = new float[3];
+    double[] dimensionType = new double[3];
     toFloatArray((List<Number>) map.get("dimension_types"), dimensionType);
-    if (!checkDimensionType()) {
-      throw new IllegalArgumentException(
-          "OptimadeReader does not support dimentionType " + dimensionType[0]
-              + " " + dimensionType[1] + " " + dimensionType[2]);
-    }
+    checkDimensionType(dimensionType);
     if (!isMolecular) {
       setSpaceGroupName("P1");
       asc.setInfo("symmetryType",
@@ -78,41 +80,66 @@ public class OptimadeReader extends AtomSetCollectionReader {
         (List<Object>) map.get("cartesian_site_positions"));
   }
 
-  private boolean checkDimensionType() {
-    float[] dt = dimensionType;
+  private void checkDimensionType(double[] dt) {
     isPolymer = isSlab = isMolecular = false;
-    ndims = dt[0] + dt[1] + dt[2];
-    return ndims == 3 || (isMolecular = (ndims == 0))
-        || (isSlab = (dt[0] + dt[1] == 2)) // xy plane only
-        || (isPolymer = (dt[0] == 1)); // z only
+    permutation = 0;
+    switch((int) (dt[0] + dt[1]*2 + dt[2]*4)) {
+    default:
+    case 0: // [0,0,0]
+      isMolecular = true;
+      break;
+    case 1: // [0,0,1]
+      isPolymer = true;
+      permutation = 1; // to [1,0,0]
+      break;
+    case 2: // [0,1,0]
+      isPolymer = true;
+      permutation = 2; // to [1,0,0]
+      break;
+    case 3: // [0,1,1]
+      isSlab = true;
+      permutation = 2; // to [1,1,0]
+      break;
+    case 5: // [1,0,1]
+      isSlab = true;
+      permutation = 1; // to [1,1,0]
+      break;
+    case 4: // [1,0,0]
+      isPolymer = true;
+      break;
+    case 6: // [1,1,0]
+      isSlab = true;
+      break;
+    case 7: // [1,1,1]
+      break;
+    }
   }
 
-  private float[] xyz = new float[3];
+  private double[] xyz = new double[3];
   
   private boolean readLattice(List<Object> lattice) {
     if (lattice == null)
       return false;
-    float[] abc = new float[3];
-    P3[] vabc = new P3[3]; 
+    double[] abc = new double[3];
     for (int i = 0; i < 3; i++) {
       if (!toFloatArray((List<Number>) lattice.get(i), xyz)) {
         return false;
       }
       // this will set [0-6] to -1
-      unitCellParams[0] = Float.NaN;
+      unitCellParamsD = new double[SimpleUnitCell.PARAM_COUNT];
+      unitCellParams[0] = Double.NaN;
       if (isSlab || isPolymer) {
-        vabc[i] = P3.new3(xyz[0], xyz[1], xyz[2]);
-        abc[i] = vabc[i].length();
+        abc[i] = Math.sqrt(xyz[0]*xyz[0]+xyz[1]*xyz[1]+xyz[2]*xyz[2]);
       }
       if (i == 2) {
         if (isSlab || isPolymer) {
-          unitCellParams[0] = abc[0];
+          unitCellParamsD[0] = abc[permutation];
           if (isSlab)
-            unitCellParams[1] = abc[1];
+            unitCellParamsD[1] = abc[(permutation + 1)%3];
         }
         
       }
-      addExplicitLatticeVector(i, xyz, 0);
+      addExplicitLatticeVectorD((i + permutation)%3, xyz, 0);
     }
     
     doApplySymmetry = true;
@@ -133,11 +160,11 @@ public class OptimadeReader extends AtomSetCollectionReader {
       List<Object> syms = (List<Object>) sp.get("chemical_symbols");
       int nOcc = syms.size();
       if (nOcc > 1) {
-        float[] conc = new float[nOcc];
+        double[] conc = new double[nOcc];
         toFloatArray((List<Number>) sp.get("concentration"), conc);
         for (int j = 0; j < conc.length; j++) {
           Atom a = addAtom(xyz, (String) syms.get(j), sname);
-          a.foccupancy = conc[j];
+          a.foccupancy = conc[j]; // todo --- double occupancy
         }
       } else {
         addAtom(xyz, (String) syms.get(0), sname);
@@ -148,7 +175,7 @@ public class OptimadeReader extends AtomSetCollectionReader {
   }
 
 
-  private Atom addAtom(float[] xyz, String sym, String name) {
+  private Atom addAtom(double[] xyz, String sym, String name) {
     Atom atom = asc.addNewAtom();
     if (sym != null)
       atom.elementSymbol = sym;
@@ -159,12 +186,12 @@ public class OptimadeReader extends AtomSetCollectionReader {
   }
 
 
-  private static boolean toFloatArray(List<Number> list, float[] a) {
+  private static boolean toFloatArray(List<Number> list, double[] a) {
     for (int i = a.length; --i >= 0;) {
       Number d = list.get(i);
       if (d == null)
         return false;
-      a[i] = list.get(i).floatValue();
+      a[i] = list.get(i).doubleValue();
     }
     return true;
   }

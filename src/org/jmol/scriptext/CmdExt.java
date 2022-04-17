@@ -83,15 +83,19 @@ import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 public class CmdExt extends ScriptExt {
 
@@ -463,7 +467,7 @@ public class CmdExt extends ScriptExt {
      // {i j k} ... UNITCELL [ax ay az bx by bz cx cy cz] 
      // {i j k} ... UNITCELL ""  // same as current
 
-     float[] fparams = null;
+     double[] fparams = null;
      if (tokAt(i) == T.unitcell) {
        ++i;
        String s = eval.optParameterAsString(i); 
@@ -476,10 +480,10 @@ public class CmdExt extends ScriptExt {
          }
        } else {
          if (tokAt(i) == T.string) {
-           fparams = new float[6];
-           SimpleUnitCell.setOabc(s, fparams, null);
+           fparams = new double[6];
+           SimpleUnitCell.setOabcD(s, fparams, null);
          } else { 
-           fparams = eval.floatParameterSet(i, 6, 9);
+           fparams = AU.toDoubleA(eval.floatParameterSet(i, 6, 9));
          }
        }
        if (fparams == null || fparams.length != 6 && fparams.length != 9)
@@ -1394,7 +1398,7 @@ public class CmdExt extends ScriptExt {
         showString("RMSD = " + stddev + " Angstroms");
 
         if (isFrames) {
-          T3[] oabc = vwr.getV0abc(iModel, new Object[] {m4 });
+          T3d[] oabc = vwr.getV0abc(iModel, new Object[] { m4 });
           if (oabc != null)
             eval.setModelCagePts(iModel, oabc, null);
         }
@@ -5403,12 +5407,12 @@ public class CmdExt extends ScriptExt {
     TickInfo tickInfo = eval.tickParamAsStr(i, true, false, false);
     i = eval.iToken;
     String id = null;
-    T3[] oabc = null;
+    T3d[] oabc = null;
     Object newUC = null;
     String ucname = null;
     boolean isOffset = false;
     boolean isReset = false;
-    SymmetryInterface sym = vwr.getCurrentUnitCell();
+    SymmetryInterface sym = (chk ? null : vwr.getCurrentUnitCell());
     int tok = tokAt(++i);
     switch (tok) {
     case T.restore:
@@ -5430,7 +5434,7 @@ public class CmdExt extends ScriptExt {
           i++;
         }
       }
-      float zoffset = Float.NaN;
+      double zoffset = Double.NaN;
       boolean zoffPercent = false;
       if (isFloatParameter(i + 1)) {
         zoffset = floatParameter(++i);
@@ -5447,7 +5451,7 @@ public class CmdExt extends ScriptExt {
       eval.iToken = i;
       if (hkl instanceof P3) {
         hkl = P4.new4(hkl.x, hkl.y, hkl.z, 0);
-      } else if (Float.isNaN(zoffset)) {
+      } else if (Double.isNaN(zoffset)) {
         zoffset = ((P4) hkl).w; 
       }
       oabc = getUVBoxFromHKL(sym, (P4) hkl, plane);
@@ -5461,16 +5465,18 @@ public class CmdExt extends ScriptExt {
         oabc[3].scale(-zscale);
       }
 
-      if (!Float.isNaN(zoffset) && zoffset != 0) {
+      V3d vtd = new V3d();
+      vtd.setP(vt);
+      if (!Double.isNaN(zoffset) && zoffset != 0) {
         // o ---pdist-----vt-------> p
         // o - offset--o'---------> p
         if (zoffPercent) {
-          zoffset = zoffset/100 * oabc[3].length();
+          zoffset = (zoffset/100 * oabc[3].length());
         }
-        oabc[0].scaleAdd2(zoffset, vt, oabc[0]);
+        oabc[0].scaleAdd2(zoffset, vtd, oabc[0]);
       }
       if (refTop)
-        oabc[0].scaleAdd2(-oabc[3].length(), vt, oabc[0]);
+        oabc[0].scaleAdd2(-oabc[3].length(), vtd, oabc[0]);
       ucname = "surface" + ((int) hkl.x)  + ((int) hkl.y)  + ((int) hkl.z);
       break;
     case T.scale:
@@ -5517,9 +5523,9 @@ public class CmdExt extends ScriptExt {
         if (ucname.equals("primitive") && tokAt(i + 1) == T.string)
           stype = paramAsStr(++i).toUpperCase();
       }
-      if (newUC instanceof T3[]) {
+      if (newUC instanceof T3d[]) {
         // from reader -- getting us to conventional
-        oabc = (T3[]) newUC;
+        oabc = (T3d[]) newUC;
       }
       if (stype == null)
         stype = (String) vwr.getModelInfo("latticeType");
@@ -5537,8 +5543,8 @@ public class CmdExt extends ScriptExt {
                     : floatParameter(++i));
             ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
             oabc = (sym == null
-                ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
-                    P3.new3(0, 1, 0), P3.new3(0, 0, 1) }
+                ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
+                    P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
                 : sym.getUnitCellVectors());
             if (stype == null)
               stype = (String) vwr.getSymmetryInfo(
@@ -5548,7 +5554,7 @@ public class CmdExt extends ScriptExt {
               sym = vwr.getSymTemp();
             sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
                 oabc,
-                (M3) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
+                (M3d) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
               SimpleUnitCell.getReciprocal(oabc, oabc, scale);
             }
@@ -5566,11 +5572,11 @@ public class CmdExt extends ScriptExt {
       id = eval.objectNameParameter(++i);
       break;
     case T.boundbox:
-      P3 o = P3.newP(vwr.getBoundBoxCenter());
+      P3d o = P3d.newPd(vwr.getBoundBoxCenter());
       pt = vwr.getBoundBoxCornerVector();
-      o.sub(pt);
-      oabc = new P3[] { o, P3.new3(pt.x * 2, 0, 0), P3.new3(0, pt.y * 2, 0),
-          P3.new3(0, 0, pt.z * 2) };
+      o.sub(P3d.newPd(pt));
+      oabc = new P3d[] { o, P3d.new3(pt.x * 2, 0, 0), P3d.new3(0, pt.y * 2, 0),
+          P3d.new3(0, 0, pt.z * 2) };
       pt = null;
       eval.iToken = i;
       break;
@@ -5651,7 +5657,10 @@ public class CmdExt extends ScriptExt {
       if (eval.isArrayParameter(i)) {
         // Origin vA vB vC
         // these are VECTORS, though
-        oabc = eval.getPointArray(i, 4, false);
+        P3[] pts = eval.getPointArray(i, 4, false);
+        oabc = new P3d[4];
+        for (i = 4; --i >=0;)
+          oabc[i] = P3d.newPd(pts[i]);
         i = eval.iToken;
       } else if (slen > i + 1) {
         pt = eval.getFractionalPoint(i);
@@ -5723,7 +5732,7 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    * 
    */
-  private P3[] getUVBoxFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
+  private P3d[] getUVBoxFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
       throws ScriptException {
     int h = (int) hkl.x;
     int k = (int) hkl.y;
@@ -5738,15 +5747,16 @@ public class CmdExt extends ScriptExt {
       k /= 2;
       l /= 2;
     }
-    P3[] oabc = uc.getUnitCellVectors();
+    P3d[] oabc = uc.getUnitCellVectors();
     float dist0 = plane.w;
     P4 p0 = P4.new4(plane.x, plane.y, plane.z, 0);
     Lst<P3> cpts = Measure.getLatticePoints(uc.getLatticeCentering(), h, k, l);
     for (int j = 0; j < cpts.size(); j++) {
-      uc.toCartesian(cpts.get(j), true);
+      uc.toCartesianF(cpts.get(j), true);
     }
     cpts = Measure.getPointsOnPlane(cpts.toArray(new P3[cpts.size()]), p0);
     P3 zero = new P3();
+    P3 pd = new P3();
     float amin = -179;
     float dmin = Float.MAX_VALUE, dmin2 = Float.MAX_VALUE;
     P3 v = null, v1 = null;
@@ -5819,14 +5829,16 @@ public class CmdExt extends ScriptExt {
     }
     if (u == null)
       invArg();
-    oabc[1] = u;
-    oabc[2] = v;
+    P3d ud = P3d.newPd(u);
+    P3d vd = P3d.newPd(v);
+    oabc[1] = ud;
+    oabc[2] = vd;
     // odd number of negatives -- reverse
     boolean doReverse = ((((h < 0 ? 1 : 0) + (k < 0 ? 1 : 0) + (l < 0 ? 1 : 0))
         % 2) == 1);
-    P3 w = oabc[3];
-    P3 a = P3.newP(oabc[1]);
-    P3 b = P3.newP(oabc[2]);
+    P3d w = oabc[3];
+    P3d a = P3d.newP(ud);
+    P3d b = P3d.newP(vd);
     if (h == 0 && k == 0) {
       // 001
       // no a,b intercept
@@ -5852,7 +5864,7 @@ public class CmdExt extends ScriptExt {
       oabc[1] = oabc[2];
       oabc[2] = a;
     }
-    w.cross(v, u);
+    w.cross(vd, ud);
     w.normalize();
     w.scale(dist0);
     return oabc;

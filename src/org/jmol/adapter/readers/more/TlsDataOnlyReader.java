@@ -106,8 +106,8 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
         */
         P3 origin = new P3();
         tlsGroup.put("origin", origin);
-        origin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-            parseFloatStr(tokens[3]));
+        origin.set((float) parseDoubleStr(tokens[1]), (float) parseDoubleStr(tokens[2]),
+            (float) parseDoubleStr(tokens[3]));
         if (Float.isNaN(origin.x) || Float.isNaN(origin.y)
             || Float.isNaN(origin.z)) {
           origin.set(Float.NaN, Float.NaN, Float.NaN);
@@ -122,13 +122,13 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
          */
         char tensorType = tokens[0].charAt(0);
         String[] nn = (tensorType == 'S' ? Snn : TLnn);
-        float[][] tensor = new float[3][3];
+        double[][] tensor = new double[3][3];
         tlsGroup.put("t" + tensorType, tensor);
 
         for (int i = 1; i < tokens.length; i++) {
           int ti = nn[i].charAt(0) - '1';
           int tj = nn[i].charAt(1) - '1';
-          tensor[ti][tj] = parseFloatStr(tokens[++i]);
+          tensor[ti][tj] = parseDoubleStr(tokens[++i]);
           if (ti < tj)
             tensor[tj][ti] = tensor[ti][tj];
         }
@@ -136,8 +136,8 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
           tensor[0][0] = -tensor[0][0];
         for (int i = 0; i < 3; i++)
           for (int j = 0; j < 3; j++)
-            if (Float.isNaN(tensor[i][j])) {
-              tlsAddError("invalid tensor: " + Escape.escapeFloatAA(tensor, false));
+            if (Double.isNaN(tensor[i][j])) {
+              tlsAddError("invalid tensor: " + Escape.escapeDoubleAA(tensor, false));
             }
       }
     }

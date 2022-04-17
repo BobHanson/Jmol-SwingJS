@@ -187,12 +187,12 @@ public class NBOParser {
     // decode the top table
     String[] tokens = PT.getTokens(PT.rep(PT.rep(parts[0], ".", ".1"), "Atom",
         "-1"));
-    float[] raw = new float[tokens.length];
-    int n = PT.parseFloatArrayInfested(tokens, raw);
+    double[] raw = new double[tokens.length];
+    int n = PT.parseDoubleArrayInfested(tokens, raw);
     int[][] table = new int[nAtoms][nAtoms];
     int atom1 = -1, atom2 = 0, atom0 = 0;
     for (int i = 0; i < n; i++) {
-      float f = raw[i];
+      double f = raw[i];
       if (f < 0) {
         // start of table
         atom1 = -1;
@@ -235,14 +235,14 @@ public class NBOParser {
     s = PT.rep(s, ")", " -2 ");
     s = PT.rep(s, ",", " -3 ");
     tokens = PT.getTokens(s);
-    raw = new float[tokens.length];
-    n = PT.parseFloatArrayInfested(tokens, raw);
+    raw = new double[tokens.length];
+    n = PT.parseDoubleArrayInfested(tokens, raw);
     Map<String, Object> htData = null;
     int dir = 1;
     atom1 = atom2 = -1;
     for (int i = 0, index = 0; i < n; i++) {
-      float f = raw[i];
-      float remain = f % 1;
+      double f = raw[i];
+      double remain = f % 1;
       if (remain == 0) {
         int v = (int) f;
         switch (v) {

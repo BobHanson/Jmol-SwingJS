@@ -790,6 +790,7 @@ public final class ModelLoader {
     if (ms.mc > 0)
       nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0),
           "", 0, -1, -1);
+    P3 xyz = new P3();
     while (iterAtom.hasNext()) {
       nRead++;
       int modelIndex = iterAtom.getAtomSetIndex() + baseModelIndex;
@@ -818,7 +819,7 @@ public final class ModelLoader {
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      
+      xyz = iterAtom.getXYZ().toP3();
       Atom atom = addAtom(isPdbThisModel, iterAtom.getSymmetry(),
           iterAtom.getAtomSite(),
           isotope,
@@ -828,7 +829,7 @@ public final class ModelLoader {
           iterAtom.getTensors(), 
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
-          iterAtom.getXYZ(),
+          xyz,
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 
           iterAtom.getSeqID(),
@@ -1101,15 +1102,14 @@ public final class ModelLoader {
           ms.unitCells[i] = modelSet0.unitCells[i];
         } else {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
-          float[] notionalCell = null;
+          double[] notionalCell = null;
           if (isTrajectory) {
             @SuppressWarnings("unchecked")
-            Lst<float[]> lst = (Lst<float[]>) ms.getInfoM("unitCells");
+            Lst<double[]> lst = (Lst<double[]>) ms.getInfoM("unitCells");
             if (lst != null)
               notionalCell = lst.get(pt++);
           }
-          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i),
-              notionalCell);
+          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i), notionalCell);
         }
       }
     }
@@ -1147,7 +1147,7 @@ public final class ModelLoader {
           // it is possible for atoms to have specific unit cells, not just models
           // this happens for commensurately modulated composite compounds
           c = atoms[i].getUnitCell();
-          c.toCartesian(c.toSupercell(atoms[i]), false);
+          c.toCartesianF(c.toSupercell(atoms[i]), false);
           if (roundCoords)
             PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }
@@ -1620,7 +1620,7 @@ public final class ModelLoader {
         .ms.ac);
     for (JmolAdapterAtomIterator iterAtom = adapter
         .getAtomIterator(asc); iterAtom.hasNext();) {
-      P3 xyz = iterAtom.getXYZ();
+      P3 xyz = iterAtom.getXYZ().toP3();
       if (Float.isNaN(xyz.x + xyz.y + xyz.z))
         continue;
       if (tokType == T.xyz) {

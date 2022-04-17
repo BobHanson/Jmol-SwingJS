@@ -274,7 +274,7 @@ public class WebMOReader extends MopacSlaterReader {
         int nData = strData.length;
         float[] data = new float[nData];
         for (int d = 0; d < nData; d++) {
-          data[d] = parseFloatStr(strData[d]);
+          data[d] = (float) parseDoubleStr(strData[d]);
         }
         gdata.addLast(data);
         gaussianPtr++;
@@ -306,7 +306,7 @@ public class WebMOReader extends MopacSlaterReader {
         continue;
       addSlater(parseIntStr(tokens[0]), parseIntStr(tokens[1]),
           parseIntStr(tokens[2]), parseIntStr(tokens[3]), parseIntStr(tokens[4]),
-          parseFloatStr(tokens[5]), parseFloatStr(tokens[6]));
+          parseDoubleStr(tokens[5]), (float) parseDoubleStr(tokens[6]));
     }
     scaleSlaters = false;
     setSlaters(false);
@@ -331,8 +331,8 @@ public class WebMOReader extends MopacSlaterReader {
     }
     Map<String, Object> mo = new Hashtable<String, Object>();
     Lst<String> data = new  Lst<String>();
-    float energy = parseFloatStr(rd());
-    float occupancy = parseFloatStr(rd());
+    float energy = (float) parseDoubleStr(rd());
+    float occupancy = (float) parseDoubleStr(rd());
     while (getLine()) {
       String[] tokens = getTokens();
       if (tokens.length == 0) {
@@ -342,7 +342,7 @@ public class WebMOReader extends MopacSlaterReader {
     }
     float[] coefs = new float[data.size()];
     for (int i = data.size(); --i >= 0;) {
-      coefs[i] = parseFloatStr(data.get(i));
+      coefs[i] = (float) parseDoubleStr(data.get(i));
     }
     mo.put("energy", Float.valueOf(energy));
     mo.put("occupancy", Float.valueOf(occupancy));

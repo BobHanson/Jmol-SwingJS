@@ -29,15 +29,14 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.Eigen;
-import javajs.util.M3;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import javajs.util.BS;
+import javajs.util.Eigen;
+import javajs.util.M3d;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * @author Bob Hanson hansonr@stolaf.edu 6/30/2013
@@ -47,10 +46,10 @@ public class Tensor {
 
   // factors that give reasonable first views of ellipsoids.
   
-  private static final float ADP_FACTOR = (float) (Math.sqrt(0.5) / Math.PI);
-  private static final float MAGNETIC_SUSCEPTIBILITY_FACTOR = 0.01f;
-  private static final float INTERACTION_FACTOR = 0.04f;
-  private static final float CHEMICAL_SHIFT_ANISOTROPY_FACTOR = 0.01f;
+  private static final double ADP_FACTOR = Math.sqrt(0.5) / Math.PI;
+  private static final double MAGNETIC_SUSCEPTIBILITY_FACTOR = 0.01d;
+  private static final double INTERACTION_FACTOR = 0.04d;
+  private static final double CHEMICAL_SHIFT_ANISOTROPY_FACTOR = 0.01d;
   
   private static EigenSort tSort; // used for sorting eigenvector/values
 
@@ -115,9 +114,9 @@ public class Tensor {
 
   public double[][] asymMatrix;
   public double[][] symMatrix;    
-  public V3[] eigenVectors;
-  public float[] eigenValues;
-  public float[] parBorU;  // unmodulated
+  public V3d[] eigenVectors;
+  public double[] eigenValues;
+  public double[] parBorU;  // unmodulated
 
   // derived type-based information, Jmol-centric, for rendering:
   
@@ -132,7 +131,7 @@ public class Tensor {
   public boolean isIsotropic; // just rendered as balls, not special features
   public boolean forThermalEllipsoid;
   public int eigenSignMask = 7; // signs of eigenvalues; bits 2,1,0 set to 1 if > 0
-  private float typeFactor = 1; // an ellipsoid scaling factor depending upon type
+  private double typeFactor = 1; // an ellipsoid scaling factor depending upon type
   private boolean sortIso;
 
   // added only after passing
@@ -197,48 +196,48 @@ public class Tensor {
     case 1:
       return eigenValues;
     case 2:
-      P3[] list = new P3[3];
+      P3d[] list = new P3d[3];
       for (int i = 0; i < 3; i++)
-        list[i] = P3.newP(eigenVectors[i]);
+        list[i] = P3d.newP(eigenVectors[i]);
       return list;
       
       
     case 3:
       if (asymMatrix == null)
         return null;
-      float[] a = new float[9];
+      double[] a = new double[9];
       int pt = 0;
       for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
-          a[pt++] = (float) asymMatrix[i][j];
-      return M3.newA9(a);
+          a[pt++] = asymMatrix[i][j];
+      return M3d.newA9(a);
     case 4: 
       if (symMatrix == null)
         return null;
-      float[] b = new float[9];
+      double[] b = new double[9];
       int p2 = 0;
       for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
-          b[p2++] = (float) symMatrix[i][j];
-      return M3.newA9(b);
+          b[p2++] = symMatrix[i][j];
+      return M3d.newA9(b);
     case 5: // value
-      return Float.valueOf(eigenValues[2]);
+      return Double.valueOf(eigenValues[2]);
     case 6: // isotropy
-      return Float.valueOf(isotropy());
+      return Double.valueOf(isotropy());
     case 7: // anisotropy
       // Anisotropy, defined as Vzz-(Vxx+Vyy)/2
-      return Float.valueOf(anisotropy()); 
+      return Double.valueOf(anisotropy()); 
     case 8: // asymmetry
       // Asymmetry, defined as (Vyy-Vxx)/(Vzz - Viso)
-      return Float.valueOf(asymmetry());
+      return Double.valueOf(asymmetry());
  
       
     case 9: // eulerzyz
-      return ((Quat) getInfo("quaternion")).getEulerZYZ();
+      return ((Qd) getInfo("quaternion")).getEulerZYZ();
     case 10: // eulerzxz
-      return ((Quat) getInfo("quaternion")).getEulerZXZ();
+      return ((Qd) getInfo("quaternion")).getEulerZXZ();
     case 11: // quaternion
-      return Quat.getQuaternionFrame(null, eigenVectors[0],
+      return Qd.getQuaternionFrame(null, eigenVectors[0],
           eigenVectors[1]);
       
       
@@ -253,9 +252,9 @@ public class Tensor {
       return id;
     
     case 16:
-      return Float.valueOf(span());
+      return Double.valueOf(span());
     case 17:
-      return Float.valueOf(skew());
+      return Double.valueOf(skew());
     
     }
   }
@@ -273,7 +272,7 @@ public class Tensor {
    * 
    * @return isotropy
    */
-  public float isotropy() {
+  public double isotropy() {
     return (eigenValues[0] + eigenValues[1] + eigenValues[2]) / 3;
   }
 
@@ -291,7 +290,7 @@ public class Tensor {
    * 
    * @return unitless; >= 0
    */
-  public float span() {
+  public double span() {
     return Math.abs(eigenValues[2] - eigenValues[0]);  
   }
 
@@ -312,7 +311,7 @@ public class Tensor {
    * 
    * @return range [-1, 1]
    */
-  public float skew() {
+  public double skew() {
     return (span() == 0 ? 0 : 3 * (eigenValues[1] - isotropy()) / span());
   }
 
@@ -329,7 +328,7 @@ public class Tensor {
    * anisotropy = directed distance from (center of two closest) to (the furthest)
    * @return unitless number
    */
-  public float anisotropy() {
+  public double anisotropy() {
     return eigenValues[2] - (eigenValues[0] + eigenValues[1]) / 2;
   }
 
@@ -350,7 +349,7 @@ public class Tensor {
    * @return unitless number
    * 
    */
-  public float reducedAnisotropy() {
+  public double reducedAnisotropy() {
     return anisotropy() * 2 / 3;  // = eigenValues[2]-iso();
   }
 
@@ -368,7 +367,7 @@ public class Tensor {
    * 
    * @return range [0,1]
    */
-  public float asymmetry() {
+  public double asymmetry() {
     return span() == 0 ? 0 : (eigenValues[1] - eigenValues[0]) / reducedAnisotropy();
   }
 
@@ -425,20 +424,20 @@ public class Tensor {
     if (a[0][2] != a[2][0]) {
       a[0][2] = a[2][0] = (a[0][2] + a[2][0])/2;
     }
-    M3 m = new M3();
-    float[] mm = new float[9];
+    M3d m = new M3d();
+    double[] mm = new double[9];
     for (int i = 0, p = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
-        mm[p++] = (float) a[i][j];
+        mm[p++] = a[i][j];
     m.setA(mm);
 
-    V3[] vectors = new V3[3];
-    float[] values = new float[3];
-    new Eigen().setM(a).fillFloatArrays(vectors, values);
+    V3d[] vectors = new V3d[3];
+    double[] values = new double[3];
+    new Eigen().setM(a).fillDoubleArrays(vectors, values);
 
 // this code was used for testing only
 //  Eigen e = new Eigen().setM(a);  
-//  V3[] evec = eigen.getEigenVectors3();
+//  V3d[] evec = eigen.getEigenVectors3();
 //  V3 n = new V3();
 //  V3 cross = new V3();
 //  for (int i = 0; i < 3; i++) {
@@ -472,12 +471,12 @@ public class Tensor {
    * @param t 
    * @return this
    */
-  public Tensor setFromEigenVectors(T3[] eigenVectors,
-                                            float[] eigenValues, String type, String id, Tensor t) {
-    float[] values = new float[3];
-    V3[] vectors = new V3[3];
+  public Tensor setFromEigenVectors(T3d[] eigenVectors,
+                                            double[] eigenValues, String type, String id, Tensor t) {
+    double[] values = new double[3];
+    V3d[] vectors = new V3d[3];
     for (int i = 0; i < 3; i++) {
-      vectors[i] = V3.newV(eigenVectors[i]);
+      vectors[i] = V3d.newV(eigenVectors[i]);
       values[i] = eigenValues[i];
     }    
     newTensorType(vectors, values, type, id);
@@ -495,11 +494,11 @@ public class Tensor {
    * @param axes
    * @return Tensor
    */
-  public Tensor setFromAxes(V3[] axes) {
-    eigenValues = new float[3];
-    eigenVectors = new V3[3];
+  public Tensor setFromAxes(V3d[] axes) {
+    eigenValues = new double[3];
+    eigenVectors = new V3d[3];
     for (int i = 0; i < 3; i++) {
-      eigenVectors[i] = V3.newV(axes[i]);
+      eigenVectors[i] = V3d.newV(axes[i]);
       eigenValues[i] = axes[i].length();
       if (eigenValues[i] == 0)
         return null;
@@ -523,8 +522,8 @@ public class Tensor {
    * @return this
    */
   public Tensor setFromThermalEquation(double[] coefs, String id) {
-    eigenValues = new float[3];
-    eigenVectors = new V3[3];
+    eigenValues = new double[3];
+    eigenVectors = new V3d[3];
     this.id = (id == null ? "coefs=" + Escape.eAD(coefs) : id);
     // assumes an ellipsoid centered on 0,0,0
     // called by UnitCell for the initial creation from PDB/CIF ADP data    
@@ -535,7 +534,7 @@ public class Tensor {
     mat[0][1] = mat[1][0] = coefs[3] / 2; //XY
     mat[0][2] = mat[2][0] = coefs[4] / 2; //XZ
     mat[1][2] = mat[2][1] = coefs[5] / 2; //YZ
-    new Eigen().setM(mat).fillFloatArrays(eigenVectors, eigenValues);
+    new Eigen().setM(mat).fillDoubleArrays(eigenVectors, eigenValues);
     setType("adp");
     sortAndNormalize();
     return this;
@@ -564,9 +563,9 @@ public class Tensor {
    * @param i
    * @return factored eigenvalue
    */
-  public float getFactoredValue(int i) {
-    float f = Math.abs(eigenValues[i]);
-    return (forThermalEllipsoid ? (float) Math.sqrt(f) : f) * typeFactor;
+  public double getFactoredValue(int i) {
+    double f = Math.abs(eigenValues[i]);
+    return (forThermalEllipsoid ? Math.sqrt(f) : f) * typeFactor;
   }
 
   public void setAtomIndexes(int index1, int index2) {
@@ -588,7 +587,7 @@ public class Tensor {
    * @param type
    * @param id 
    */
-  private void newTensorType(V3[] vectors, float[] values, String type, String id) {
+  private void newTensorType(V3d[] vectors, double[] values, String type, String id) {
     eigenValues = values;
     eigenVectors = vectors;
     for (int i = 0; i < 3; i++)
@@ -669,21 +668,21 @@ public class Tensor {
   private void sortAndNormalize() {
     // first sorted 3 2 1, then check for iso-sorting
     Object[] o = new Object[] {
-        new Object[] { V3.newV(eigenVectors[0]), Float.valueOf(eigenValues[0]) },
-        new Object[] { V3.newV(eigenVectors[1]), Float.valueOf(eigenValues[1]) },
-        new Object[] { V3.newV(eigenVectors[2]), Float.valueOf(eigenValues[2]) } };
+        new Object[] { V3d.newV(eigenVectors[0]), Double.valueOf(eigenValues[0]) },
+        new Object[] { V3d.newV(eigenVectors[1]), Double.valueOf(eigenValues[1]) },
+        new Object[] { V3d.newV(eigenVectors[2]), Double.valueOf(eigenValues[2]) } };
     Arrays.sort(o, getEigenSort());
     for (int i = 0; i < 3; i++) {
       int pt = i;
-      eigenVectors[i] = (V3) ((Object[]) o[pt])[0];
-      eigenValues[i] = ((Float) ((Object[]) o[pt])[1]).floatValue();
+      eigenVectors[i] = (V3d) ((Object[]) o[pt])[0];
+      eigenValues[i] = ((Double) ((Object[]) o[pt])[1]).doubleValue();
     }
     if (sortIso
         && eigenValues[2] - eigenValues[1] < eigenValues[1] - eigenValues[0]) {
-      V3 vTemp = eigenVectors[0];
+      V3d vTemp = eigenVectors[0];
       eigenVectors[0] = eigenVectors[2];
       eigenVectors[2] = vTemp;
-      float f = eigenValues[0];
+      double f = eigenValues[0];
       eigenValues[0] = eigenValues[2];
       eigenValues[2] = f;
     }
@@ -694,7 +693,7 @@ public class Tensor {
   public boolean isEquiv(Tensor t) {
     if (t.iType != iType) 
       return false;
-    float f = Math.abs(eigenValues[0] + eigenValues[1] + eigenValues[2]);
+    double f = Math.abs(eigenValues[0] + eigenValues[1] + eigenValues[2]);
     for (int i = 0; i < 3; i++)
       if (Math.abs(t.eigenValues[i] - eigenValues[i]) / f > 0.0003f)
         return false;

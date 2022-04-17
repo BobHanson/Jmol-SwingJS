@@ -6,7 +6,7 @@ import org.jmol.api.SymmetryInterface;
 
 import javajs.util.Lst;
 import javajs.util.Matrix;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 
 /**
@@ -31,7 +31,7 @@ public interface MSInterface {
 
   SymmetryInterface getAtomSymmetry(Atom a, SymmetryInterface symmetry);
 
-  void setMinMax0(P3 minXYZ0, P3 maxXYZ0);
+  void setMinMax0(P3d minXYZ0, P3d maxXYZ0);
 
   SymmetryInterface getSymmetryFromCode(String spaceGroupOperationCode);
 

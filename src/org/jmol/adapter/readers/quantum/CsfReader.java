@@ -110,9 +110,9 @@ public class CsfReader extends MopacSlaterReader {
   private void processLocalTransform() throws Exception {
     String[] tokens = PT.getTokens(rd() + " " + rd() + " "+ rd() + " " + rd());
     setTransform(
-        parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]), 
-        parseFloatStr(tokens[4]), parseFloatStr(tokens[5]), parseFloatStr(tokens[6]),
-        parseFloatStr(tokens[8]), parseFloatStr(tokens[9]), parseFloatStr(tokens[10])
+        parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]), 
+        parseDoubleStr(tokens[4]), parseDoubleStr(tokens[5]), parseDoubleStr(tokens[6]),
+        parseDoubleStr(tokens[8]), parseDoubleStr(tokens[9]), parseDoubleStr(tokens[10])
         );
   }
 
@@ -174,7 +174,7 @@ public class CsfReader extends MopacSlaterReader {
       if (isInteger)
         ((int[]) f)[i] = parseIntStr(tokens[ipt]);
       else
-        ((float[]) f)[i] = parseFloatStr(tokens[ipt]);
+        ((float[]) f)[i] = (float) (parseDoubleStr(tokens[ipt]));
     }
   }
 
@@ -311,7 +311,7 @@ public class CsfReader extends MopacSlaterReader {
           atom.formalCharge = parseIntStr(field);
           break;
         case PCHRG:
-          atom.partialCharge = parseFloatStr(field);
+          atom.partialCharge = parseDoubleStr(field);
           break;
         case XYZ:
           setAtomCoordTokens(atom, tokens, i);
@@ -319,7 +319,7 @@ public class CsfReader extends MopacSlaterReader {
           break;
         }
       }
-      if (Float.isNaN(atom.x) || Float.isNaN(atom.y) || Float.isNaN(atom.z)) {
+      if (Double.isNaN(atom.x) || Double.isNaN(atom.y) || Double.isNaN(atom.z)) {
         Logger.warn("atom " + atom.atomName + " has invalid/unknown coordinates");
       } else {
         nAtoms++;
@@ -396,7 +396,7 @@ public class CsfReader extends MopacSlaterReader {
 
   private void processVibrationObject() throws Exception {
     //int iatom = asc.getFirstAtomSetAtomCount();
-    float[][] vibData = new float[nVibrations][nAtoms * 3];
+    double[][] vibData = new double[nVibrations][nAtoms * 3];
     String[] energies = new String[nVibrations];
     rd();
     while (line != null && parseLineParameters(vibFields, vibFieldMap) > 0) {
@@ -511,10 +511,10 @@ public class CsfReader extends MopacSlaterReader {
 
     nOrbitals = (nSlaters + nGaussians);
     Logger.info("Reading CSF data for " + nOrbitals + " molecular orbitals");
-    float[] energy = new float[nOrbitals];
-    float[] occupancy = new float[nOrbitals];
-    float[][] list = new float[nOrbitals][nOrbitals];
-    float[][] listCompressed = null;
+    double[] energy = new double[nOrbitals];
+    double[] occupancy = new double[nOrbitals];
+    double[][] list = new double[nOrbitals][nOrbitals];
+    double[][] listCompressed = null;
     int[][] coefIndices = null;
     int ipt = 0;
     boolean isCompressed = false;
@@ -528,10 +528,10 @@ public class CsfReader extends MopacSlaterReader {
             ipt = parseIntStr(tokens[i]) - 1;
             break;
           case EIG_VAL:
-            energy[ipt] = parseFloatStr(tokens[i]);
+            energy[ipt] = parseDoubleStr(tokens[i]);
             break;
           case MO_OCC:
-            occupancy[ipt] = parseFloatStr(tokens[i]);
+            occupancy[ipt] = parseDoubleStr(tokens[i]);
             break;
           case EIG_VEC:
             fillCsfArray("eig_vec", tokens, i, list[ipt], false);
@@ -539,7 +539,7 @@ public class CsfReader extends MopacSlaterReader {
           case EIG_VEC_COMPRESSED:
             isCompressed = true;
             if (listCompressed == null)
-              listCompressed = new float[nOrbitals][nOrbitals];
+              listCompressed = new double[nOrbitals][nOrbitals];
             fillCsfArray("eig_vec_compressed", tokens, i, listCompressed[ipt], false);
             break;
           case COEF_INDICES:
@@ -564,8 +564,8 @@ public class CsfReader extends MopacSlaterReader {
         if (Math.abs(list[iMo][i]) < MIN_COEF)
           list[iMo][i] = 0;
       Map<String, Object> mo = new Hashtable<String, Object>();
-      mo.put("energy", Float.valueOf(energy[iMo]));
-      mo.put("occupancy", Float.valueOf(occupancy[iMo]));
+      mo.put("energy", Double.valueOf(energy[iMo]));
+      mo.put("occupancy", Double.valueOf(occupancy[iMo]));
       mo.put("coefficients", list[iMo]);
 //       System.out.print("MO " + iMo + " : ");
 //       for (int i = 0; i < nOrbitals; i++)

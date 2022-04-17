@@ -221,7 +221,7 @@ public class QchemReader extends MOReader {
     Atom[] atoms = asc.atoms;
     int ac = asc.getLastAtomSetAtomCount();
     for (int i = 0; i < ac && rd() != null; ++i)
-      atoms[i].partialCharge = parseFloatStr(getTokens()[2]);
+      atoms[i].partialCharge = parseDoubleStr(getTokens()[2]);
   }
   
   private void readEnergy() {
@@ -229,7 +229,7 @@ public class QchemReader extends MOReader {
     String tokens[] = getTokens();
     String energyKey = "E("+tokens[0]+")";
     String energyString = tokens[tokens.length-1]; // value is last one
-    asc.setAtomSetEnergy(energyString, parseFloatStr(energyString));
+    asc.setAtomSetEnergy(energyString, parseDoubleStr(energyString));
     asc.setAtomSetName(energyKey + " = " + energyString);
     asc.setModelInfoForSet("name", energyKey+" "+energyString, ac);
   }
@@ -323,7 +323,7 @@ $end
       tokens = gdata.get(i);
       gaussians[i] = new float[tokens.length];
       for (int j = 0; j < tokens.length; j++)
-        gaussians[i][j] = parseFloatStr(tokens[j]);
+        gaussians[i][j] = (float) parseDoubleStr(tokens[j]);
     }
     if (debugging) {
       Logger.debug(shellCount + " slater shells read");
@@ -681,19 +681,19 @@ $end
           break;
         }
         for (int j = tokens.length - nMO, k = 0; k < nMO; j++, k++)
-          mocoef[k][pt] = parseFloatStr(tokens[j]);
+          mocoef[k][pt] = (float) parseDoubleStr(tokens[j]);
         pt++;
       }
       // we have all the info we need 
       for (int i = 0; i < nMO; i++) {
         MOInfo moInfo = moInfos[moid[i]];
-        mos[i].put("energy", Float.valueOf(energy[i]));
+        mos[i].put("energy", Double.valueOf(energy[i]));
         mos[i].put("coefficients", mocoef[i]);
         String label = alphaBeta;
         int ne = moInfo.ne;
         if (restricted)
           ne = alphas[moid[i]].ne + betas[moid[i]].ne;
-        mos[i].put("occupancy", Float.valueOf(ne));
+        mos[i].put("occupancy", Double.valueOf(ne));
         switch (ne) {
         case 2:
           label = "AB";

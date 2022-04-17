@@ -38,8 +38,8 @@ public class AFLOWReader extends VaspPoscarReader {
   private String aabb;  
   private boolean readPRE;
 //  private boolean readPOST;
-  private float fracB = Float.NaN;
-  private Map<String, float[]> compositions;
+  private double fracB = Double.NaN;
+  private Map<String, double[]> compositions;
   private boolean getComposition;
   private String listKey, listKeyCase;
   private int fileModelNumber;
@@ -120,16 +120,16 @@ public class AFLOWReader extends VaspPoscarReader {
     
     s = getFilter("CA=");
     if (s != null)
-      fracB = (1 - parseFloatStr(s));
+      fracB = (1 - parseDoubleStr(s));
     
     s = getFilter("CB=");
     if (s != null)
-      fracB = parseFloatStr(s);
+      fracB = parseDoubleStr(s);
     
     s = getFilter("LIST=");
     listKey = (s == null ? "HF" : s);
     listKeyCase = listKey;
-    getComposition = !Float.isNaN(fracB);
+    getComposition = !Double.isNaN(fracB);
     discardLinesUntilStartsWith("[");
     //asc.setAtomSetName(title = line.trim());
     aabb = line.substring(1, line.indexOf("]"));
@@ -137,7 +137,7 @@ public class AFLOWReader extends VaspPoscarReader {
     defaultLabels = new String[] { aabb.substring(0, pt), aabb.substring(pt) };
     while (rd().indexOf("] REFERENCE:") >= 0)
       appendLoadNote(line);
-    compositions = new Hashtable<String, float[]>();
+    compositions = new Hashtable<String, double[]>();
     quiet = true;
     asc.bsAtoms = new BS();
     addJmolScript("unitcell off;axes off;");
@@ -224,10 +224,10 @@ public class AFLOWReader extends VaspPoscarReader {
     htAFLOW.put("AaBb", aabb);
     int pt = 0;
     SB sb = new SB();
-    float listVal = Float.MAX_VALUE;
+    double listVal = Double.MAX_VALUE;
     String strcb = "?";
     String listValStr = null;
-    float cb = 0;
+    double cb = 0;
     while (rdline() != null && (pt = line.indexOf(" # ")) >= 0) {
       String key = line.substring(pt + 3).trim();
       String val = line.substring(0, pt).trim();
@@ -236,27 +236,27 @@ public class AFLOWReader extends VaspPoscarReader {
         listKey = key.toUpperCase();
         listKeyCase = key;
         listValStr = val;
-        listVal = parseFloatStr(val);
+        listVal = parseDoubleStr(val);
       }
       if (key.equals("Ca")) {
-        float ca = parseFloatStr(val);
+        double ca = parseDoubleStr(val);
         if (getComposition && Math.abs((1 - ca) - fracB) > 0.01f)
           return false;
       } else if (key.equals("Cb")) {
-        cb = parseFloatStr(strcb = val);
+        cb = parseDoubleStr(strcb = val);
         if (getComposition && Math.abs(cb - fracB) > 0.01f)
           return false;
       } else if (key.equals("Hf_atom [eV] (VASP)")) {
-        float e = parseFloatStr(val);
+        double e = parseDoubleStr(val);
         asc.setAtomSetEnergy(val, e);
       }
     }
     asc.setAtomSetName(titleMsg + (getComposition ? "" : " Cb=" + cb) + " " + listKey + "=" + listValStr);
-    float[] count_min = compositions.get(strcb);
+    double[] count_min = compositions.get(strcb);
     if (!doGetModel(++modelNumber, null))
       return false;
     if (count_min == null)
-      compositions.put(strcb, count_min = new float[] { 0, Float.MAX_VALUE, 0 });
+      compositions.put(strcb, count_min = new double[] { 0, Double.MAX_VALUE, 0 });
     count_min[0]++;
     if (listVal < count_min[1]) {
       count_min[1] = listVal;
@@ -273,8 +273,8 @@ public class AFLOWReader extends VaspPoscarReader {
       String[] kv = pairs[i].split("=");
       if (kv.length < 2)
         continue;
-      float f = parseFloatStr(kv[1]);
-      Object o = Float.isNaN(f) ? kv[1] : Float.valueOf(f);
+      double f = parseDoubleStr(kv[1]);
+      Object o = Double.isNaN(f) ? kv[1] : Double.valueOf(f);
       htAFLOW.put(kv[0], o);
       String kvclean = cleanKey(kv[0]);
       if (kvclean != kv[0])
@@ -314,8 +314,8 @@ public class AFLOWReader extends VaspPoscarReader {
   @SuppressWarnings("cast")
   private void listCompositions() {
     Lst<String> list = new Lst<String>();
-    for (Entry<String, float[]> e : compositions.entrySet()) {
-      float[] count_min = (float[]) e.getValue();
+    for (Entry<String, double[]> e : compositions.entrySet()) {
+      double[] count_min = (double[]) e.getValue();
       list.addLast(e.getKey() + "\t" + ((int) count_min[0]) + "\t" + (int) count_min[2]  + "\t" + listKeyCase + "\t" + count_min[1]);
     }
     String[] a = new String[list.size()];

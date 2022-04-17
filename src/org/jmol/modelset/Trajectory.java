@@ -25,15 +25,14 @@
 
 package org.jmol.modelset;
 
+import org.jmol.api.SymmetryInterface;
+import org.jmol.modelsetbio.BioModel;
+import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.V3;
-
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.viewer.Viewer;
-
-import org.jmol.modelsetbio.BioModel;
 
 
 public class Trajectory {
@@ -203,7 +202,7 @@ public class Trajectory {
     P3 pt = steps.get(m)[a.i - ms.am[m].firstAtomIndex];
     pt.set(a.x, a.y, a.z);
     if (isFrac)
-      ms.unitCells[m].toFractional(pt, true);
+      ms.unitCells[m].toFractionalF(pt, true);
   }
 
   public void getFractional(Atom a, P3 ptTemp) {

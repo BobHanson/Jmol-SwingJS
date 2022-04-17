@@ -75,9 +75,9 @@ public class V3000Rdr {
       String elementSymbol = tokens[3];
       if (elementSymbol.equals("*"))
         continue;
-      float x = mr.parseFloatStr(tokens[4]);
-      float y = mr.parseFloatStr(tokens[5]);
-      float z = mr.parseFloatStr(tokens[6]);
+      double x = mr.parseDoubleStr(tokens[4]);
+      double y = mr.parseDoubleStr(tokens[5]);
+      double z = mr.parseDoubleStr(tokens[6]);
       int charge = 0;
       int isotope = 0;
       if (mr.is2D && z != 0)
@@ -158,9 +158,9 @@ public class V3000Rdr {
             at[i].partialCharge = 0;
         }
         String[] a = null;
-        float f = 0;
+        double f = 0;
         if (isPartial)
-          f = mr.parseFloatStr(data);
+          f = mr.parseDoubleStr(data);
         else if ((a = userData.get(name)) == null)
           userData.put(name, a = new String[ac]);
         try {
@@ -181,9 +181,9 @@ public class V3000Rdr {
       return;
     for (String key : userData.keySet()) {
       String[] a = userData.get(key);
-      float[] f = new float[a.length];
+      double[] f = new double[a.length];
       for (int i = 0; i < a.length; i++)
-        f[i] = (a[i] == null ? 0 : mr.parseFloatStr(a[i]));
+        f[i] = (a[i] == null ? 0 : mr.parseDoubleStr(a[i]));
       mr.asc.setAtomProperties(key, f, -1, false);
     }
   }

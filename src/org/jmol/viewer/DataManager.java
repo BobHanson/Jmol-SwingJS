@@ -120,6 +120,7 @@ public class DataManager implements JmolDataManager {
       data[JmolDataManager.DATA_TYPE] = Integer.valueOf(
           depth = (val instanceof String ? JmolDataManager.DATA_TYPE_STRING
               : AU.isAF(val) ? JmolDataManager.DATA_TYPE_AF
+                  : AU.isAD(val) ? JmolDataManager.DATA_TYPE_AD
                   : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF
                       : AU.isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
                           : JmolDataManager.DATA_TYPE_UNKNOWN));
@@ -392,7 +393,11 @@ public class DataManager implements JmolDataManager {
           sc.getAtomicPropertyStateBuffer(sb, AtomCollection.TAINT_MAX,
               (BS) obj[DATA_SELECTION], name, (float[]) data);
           sb.append("\n");
-        } else {
+        } else if (data != null && getType(obj) == JmolDataManager.DATA_TYPE_AD) {
+          sc.getAtomicPropertyStateBufferD(sb, AtomCollection.TAINT_MAX,
+              (BS) obj[DATA_SELECTION], name, (double[]) data);
+          sb.append("\n");
+        } else{
           // should not be here -- property_xxx is always float[]
           sb.append("\n").append(Escape.encapsulateData(name, data,
               JmolDataManager.DATA_TYPE_UNKNOWN));//j2s issue?

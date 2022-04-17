@@ -24,7 +24,7 @@
 
 package org.jmol.smiles;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,7 +66,6 @@ public class SmilesGenerator {
   private final int MODE_COMP_ALLOW_BIO      = 1;
   private final int MODE_COMP_ALLOW_OUTSIDE  = 2;
   private final int MODE_COMP_FORCE_BRACKETS = 4;
-  private final int MODE_COMP_ALLOW_BRANCHES = 8;
   
   private Lst<Integer> specialPoints = null;
   private int ptAtom, ptSp2Atom0;
@@ -122,6 +121,7 @@ public class SmilesGenerator {
   private boolean is2D;
   private boolean haveSmilesAtoms;
   private boolean isBio;
+  private boolean noBranches;
 
   // generation of SMILES strings
 
@@ -204,6 +204,8 @@ public class SmilesGenerator {
     isPolyhedral = ((flags
         & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     is2D = ((flags & JC.SMILES_2D) == JC.SMILES_2D);
+    noBranches = ((flags & JC.SMILES_GEN_NO_BRANCHES) == JC.SMILES_GEN_NO_BRANCHES);
+
     return getSmilesComponent(atoms[ipt], bsSelected, MODE_COMP_ALLOW_BIO);
   }
 
@@ -407,7 +409,7 @@ public class SmilesGenerator {
     SB sb = new SB();
     // The idea hear is to allow a hypervalent atom to be listed first
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
-      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
+      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral || noBranches) {
         if (atom == null)
           sb.append(".");
         getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
@@ -498,7 +500,7 @@ public class SmilesGenerator {
                     break;
                 }
                 inserts.add(++pt, a);
-                System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
+//               System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
                 break;
               }
           }
@@ -781,8 +783,8 @@ public class SmilesGenerator {
     // first look through the bonds for the best 
     // continuation -- bond0 -- and count hydrogens
     // and create a list of bonds to process.
-    if (bonds != null)
-      for (int i = bonds.length; --i >= 0;) {
+    if (bonds != null) {
+      for (int i = 0, nb = bonds.length; i < nb; i++) {
         Edge bond = bonds[i];
         if (!bond.isCovalent())
           continue;
@@ -810,6 +812,7 @@ public class SmilesGenerator {
           v.addLast(bonds[i]);
         }
       }
+    }
 
     // order of listing is critical for stereochemistry:
     //

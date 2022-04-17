@@ -8,9 +8,11 @@ import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.T3d;
 
 /**
  * An XCrysDen XSF writer
@@ -25,7 +27,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
 
   private boolean isP1;
 
-  private final static P3 fset0 = P3.new3(555, 555, 1);
+  private final static T3 fset0 = P3.new3(555, 555, 1);
 
   public CIFWriter() {
     // for JavaScript dynamic loading
@@ -48,10 +50,10 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 },
+        uc = vwr.getSymTemp().setUnitCell(new double[] { 1, 1, 1, 90, 90, 90 },
             false);
 
-      P3 offset = uc.getFractionalOffset();
+      P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
           || offset.y != (int) offset.y || offset.z != (int) offset.z);
       T3 fset;
@@ -84,13 +86,13 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
             PT.rep("\n" + uc.getUnitCellInfo(false), "\n", "\n##Jmol_orig "));
       }
       sb.append("\ndata_global");
-      float[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendF(params[0]);
-      appendKey(sb, "_cell_length_b").appendF(params[1]);
-      appendKey(sb, "_cell_length_c").appendF(params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendF(params[3]);
-      appendKey(sb, "_cell_angle_beta").appendF(params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendF(params[5]);
+      double[] params = uc.getUnitCellAsArray(false);
+      appendKey(sb, "_cell_length_a").appendF((float) params[0]);
+      appendKey(sb, "_cell_length_b").appendF((float) params[1]);
+      appendKey(sb, "_cell_length_c").appendF((float) params[2]);
+      appendKey(sb, "_cell_angle_alpha").appendF((float) params[3]);
+      appendKey(sb, "_cell_angle_beta").appendF((float) params[4]);
+      appendKey(sb, "_cell_angle_gamma").appendF((float) params[5]);
       sb.append("\n");
       int n;
       String hallName;
@@ -156,7 +158,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
-          uc.toFractional(p, !isP1);
+          uc.toFractionalF(p, !isP1);
         }
         
 //        if (isP1 && !SimpleUnitCell.checkPeriodic(p))

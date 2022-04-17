@@ -41,6 +41,7 @@ import org.jmol.viewer.Viewer;
 import javajs.api.GenericBinaryDocument;
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.V3;
