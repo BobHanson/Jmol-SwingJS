@@ -747,7 +747,7 @@ public class SpaceGroupFinder {
     }
     uc = vwr.getSymTemp().getUnitCell(oabc, false, "scaled");
     // remove points not within this unitcell
-    float f = 0;
+    int f = 0;
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
         .nextSetBit(i + 1)) {
       switch (abc) {
@@ -758,7 +758,7 @@ public class SpaceGroupFinder {
         f = approxInt(n * atoms[i].y);
         break;
       case 3:
-        f = approxInt(n * atoms[i].x);
+        f = approxInt(n * atoms[i].z);
         break;
       }
       if (f != 0) {

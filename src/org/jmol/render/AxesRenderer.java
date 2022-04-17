@@ -23,6 +23,7 @@
  */
 package org.jmol.render;
 
+import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.util.GData;
@@ -69,7 +70,8 @@ public class AxesRenderer extends CageRenderer {
         && !ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
-    if (isUnitCell && modelIndex < 0 && vwr.getCurrentUnitCell() == null)
+    SymmetryInterface unitcell = null;
+    if (isUnitCell && (unitcell = vwr.getCurrentUnitCell()) == null && modelIndex < 0)
       return false;
     imageFontScaling = vwr.imageFontScaling;
     if (vwr.areAxesTainted())
@@ -78,6 +80,9 @@ public class AxesRenderer extends CageRenderer {
     isUnitCell &= (ms.unitCells != null);
     String axisType = (isUnitCell ? axes.axisType : null);
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
+    isPolymer = isUnitCell && unitcell.isPolymer();
+    isSlab = isUnitCell && unitcell.isSlab();
+
     float scale = axes.scale;
     if (isabcxyz) {
       // both abc and xyz
@@ -207,8 +212,9 @@ public class AxesRenderer extends CageRenderer {
           tickInfo.first = 0;
           tickInfo.signFactor = (i % 6 >= 3 ? -1 : 1);
         }
-      }
-      renderLine(ptTemp, p3Screens[i], diameter, drawTicks && tickInfo != null);
+      }      
+      int d = (isSlab && i == 2 || isPolymer && i > 0 ? -4 : diameter);
+      renderLine(ptTemp, p3Screens[i], d , drawTicks && tickInfo != null);
     }
     if (showOrigin) { // a b c [orig]
       String label0 = (axes.labels == null || axes.labels.length == 3
