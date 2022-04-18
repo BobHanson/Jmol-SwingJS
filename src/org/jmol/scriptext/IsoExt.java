@@ -1867,7 +1867,7 @@ public class IsoExt extends ScriptExt {
           if (chk)
             continue;
           data = (float[]) vwr.getDataObj(str, null,
-              JmolDataManager.DATA_TYPE_AF);
+              JmolDataManager.DATA_TYPE_AFD);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);

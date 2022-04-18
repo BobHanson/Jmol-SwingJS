@@ -1218,7 +1218,7 @@ public class MathExt {
       return mp.addXList((Lst<?>) vwr.getDataObj(selected, null, 0));
     if (selected.indexOf("property_") == 0) {
       float[] f1 = (float[]) vwr.getDataObj(selected, null,
-          JmolDataManager.DATA_TYPE_AF);
+          JmolDataManager.DATA_TYPE_AFD);
       return (f1 == null ? mp.addXStr("") : mp.addXStr(Escape.escapeFloatA(f1, false)));
     }
 

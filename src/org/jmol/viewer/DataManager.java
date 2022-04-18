@@ -280,7 +280,7 @@ public class DataManager implements JmolDataManager {
   }
 
   private static int getType(Object[] data) {
-    return ((Integer) data[JmolDataManager.DATA_TYPE]).intValue();
+    return (data == null ? 0 : ((Integer) data[JmolDataManager.DATA_TYPE]).intValue());
   }
 
   /**
@@ -313,10 +313,10 @@ public class DataManager implements JmolDataManager {
         }
       }
       return list;
-
     }
     if (dataValues.size() == 0)
       return null;
+    boolean floatOrDouble = (dataType == JmolDataManager.DATA_TYPE_AFD);
     label = label.toLowerCase();
     switch (dataType) {
     case JmolDataManager.DATA_TYPE_UNKNOWN:
@@ -332,24 +332,19 @@ public class DataManager implements JmolDataManager {
       return info;
     default:
       Object[] data = dataValues.get(label);
-      if (data == null || getType(data) != dataType)
+      int t = getType(data);
+      if (t != dataType && (!floatOrDouble || t != JmolDataManager.DATA_TYPE_AD
+          && t != JmolDataManager.DATA_TYPE_AF)) {
         return null;
-      if (bsSelected == null)
-        return data[JmolDataManager.DATA_VALUE];
-      // When bsSelected is not null, this returns a truncated array, which must be of type float[] or float[][]
-      if (data[JmolDataManager.DATA_TYPE] == Integer
-          .valueOf(JmolDataManager.DATA_TYPE_AD)) {
-        double[] d = (double[]) data[JmolDataManager.DATA_VALUE];
-        double[] dnew = new double[bsSelected.cardinality()];
-        for (int i = 0, n = d.length, p = bsSelected.nextSetBit(0); p >= 0
-            && i < n; p = bsSelected.nextSetBit(p + 1)) {
-          dnew[i++] = d[p];
-        }
-        return dnew;
       }
-      if (data[JmolDataManager.DATA_TYPE] == Integer
-          .valueOf(JmolDataManager.DATA_TYPE_AFFF)) {
-        float[][][] fff = (float[][][]) data[JmolDataManager.DATA_VALUE];
+      Object o = data[JmolDataManager.DATA_VALUE];
+      if (o != null && bsSelected == null 
+          && (!floatOrDouble || t == JmolDataManager.DATA_TYPE_AF)
+         ) {
+        return o;
+      }
+      if (t == JmolDataManager.DATA_TYPE_AFFF) {
+        float[][][] fff = (float[][][]) o;
         float[][][] fnew = AU.newFloat3(bsSelected.cardinality(), 0);
         // load array
         for (int i = 0, n = fff.length, p = bsSelected.nextSetBit(0); p >= 0
@@ -358,9 +353,8 @@ public class DataManager implements JmolDataManager {
         }
         return fnew;
       }
-      if (data[JmolDataManager.DATA_TYPE] == Integer
-          .valueOf(JmolDataManager.DATA_TYPE_AFF)) {
-        float[][] ff = (float[][]) data[JmolDataManager.DATA_VALUE];
+      if (t == JmolDataManager.DATA_TYPE_AFF) {
+        float[][] ff = (float[][]) o;
         float[][] fnew = AU.newFloat2(bsSelected.cardinality());
         // load array
         for (int i = 0, n = ff.length, p = bsSelected.nextSetBit(0); p >= 0
@@ -368,7 +362,29 @@ public class DataManager implements JmolDataManager {
           fnew[i++] = ff[p];
         return fnew;
       }
-      float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
+      // includes floatOrDouble
+
+      if (floatOrDouble || t == JmolDataManager.DATA_TYPE_AD) {
+        double[] d = (double[]) o;
+        double[] dnew;
+        if (d == null && !floatOrDouble)
+          return null;
+        if (d != null) {
+          if (bsSelected == null) {
+            dnew = d;
+          } else {
+            dnew = new double[bsSelected.cardinality()];
+            for (int i = 0, n = d.length, p = bsSelected.nextSetBit(0); p >= 0
+                && i < n; p = bsSelected.nextSetBit(p + 1)) {
+              dnew[i++] = d[p];
+            }
+          }
+          return (floatOrDouble ? AU.toFloatA(dnew) : dnew);
+        }
+      }
+      // could be standard _AF here
+
+      float[] f = (float[]) o;
       float[] fnew = new float[bsSelected.cardinality()];
       // load array
       for (int i = 0, n = f.length, p = bsSelected.nextSetBit(0); p >= 0

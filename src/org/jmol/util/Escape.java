@@ -208,6 +208,24 @@ public class Escape {
     }
     return sb.toString();
   }
+  
+  /**
+   * 
+   * @param f
+   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
+   * @return tabular string
+   */
+  public static String escapeDoubleA(double[] f, boolean asArray) {
+    if (asArray)
+      return PT.toJSON(null, f); // or just use escape(f)
+    SB sb = new SB();
+    for (int i = 0; i < f.length; i++) {
+      if (i > 0)
+        sb.appendC('\n');
+      sb.appendD(f[i]);
+    }
+    return sb.toString();
+  }
 
   public static String escapeFloatAA(float[][] f, boolean addSemi) {
     SB sb = new SB();
@@ -620,6 +638,9 @@ public class Escape {
     switch (depth) {
     case JmolDataManager.DATA_TYPE_AF:
       s = escapeFloatA((float[]) data, false) + ";\n";
+      break;
+    case JmolDataManager.DATA_TYPE_AD:
+      s = escapeDoubleA((double[]) data, false) + ";\n";
       break;
     case JmolDataManager.DATA_TYPE_AFF:
       s = escapeFloatAA((float[][]) data, true) + ";\n";

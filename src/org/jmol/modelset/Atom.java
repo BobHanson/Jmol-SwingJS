@@ -1522,7 +1522,7 @@ public class Atom extends Point3fi implements Node {
   @Override
   public float getFloatProperty(String property) {
     Object data = group.chain.model.ms.vwr.getDataObj(property, null,
-        JmolDataManager.DATA_TYPE_AF);
+        JmolDataManager.DATA_TYPE_AFD);
     float f = Float.NaN;
     if (data != null) {
       try {

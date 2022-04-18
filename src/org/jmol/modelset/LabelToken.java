@@ -417,7 +417,7 @@ public class LabelToken {
         String propertyName = strFormat.substring(ich, ichClose).toLowerCase();
         if (propertyName.startsWith("property_")) {
           lt.tok = T.data;
-          lt.data = vwr.getDataObj(propertyName, null, JmolDataManager.DATA_TYPE_AF);
+          lt.data = vwr.getDataObj(propertyName, null, JmolDataManager.DATA_TYPE_AFD);
         } else if (propertyName.startsWith("validation.")) {
           lt.tok = T.validation;
           lt.data = vwr.getDataObj("property_" + propertyName.substring(11), null, JmolDataManager.DATA_TYPE_AF);

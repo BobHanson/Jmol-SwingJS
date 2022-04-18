@@ -4109,7 +4109,7 @@ public class Viewer extends JmolViewer
 
   public void setCurrentColorRange(String label) {
     float[] data = (float[]) getDataObj(label, null,
-        JmolDataManager.DATA_TYPE_AF);
+        JmolDataManager.DATA_TYPE_AFD);
     BS bs = (data == null ? null
         : (BS) ((Object[]) getDataObj(label, null,
             JmolDataManager.DATA_TYPE_UNKNOWN))[2]);

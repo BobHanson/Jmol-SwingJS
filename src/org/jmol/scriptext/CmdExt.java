@@ -2693,7 +2693,7 @@ public class CmdExt extends ScriptExt {
           // note: this was DATA_TYPE_STRING ?? 
           if (isProperty)
             vwr.setData(property2, new Object[] { property2, dataOut, bsOut,
-                Integer.valueOf(JmolDataManager.DATA_TYPE_AF), Boolean.TRUE }, vwr.ms.ac, 0,
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AFD), Boolean.TRUE }, vwr.ms.ac, 0,
                 0, Integer.MAX_VALUE, 0);
           else if (!T.tokAttr(tokProp2, T.settable))
             error(ScriptError.ERROR_cannotSet);
@@ -6424,7 +6424,7 @@ public class CmdExt extends ScriptExt {
     Object odata = (property == null || tok == (T.dssr | T.allfloat) ?
       e.getBitsetProperty(bs, null, tok, null, null, property,
           null, false, Integer.MAX_VALUE, false) 
-          : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AF));
+          : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AFD));
     if (odata == null || !AU.isAF(odata))
       return (bs == null ? null  : new float[bs.cardinality()]);
     float[] data = (float[]) odata;
