@@ -251,6 +251,8 @@ public class SV extends T implements JSONEncodable {
       return newI(((Integer) x).intValue());
     if (x instanceof Float)
       return newV(decimal, x);
+    if (x instanceof Double)
+      return newV(decimal, x);
     if (x instanceof String) {
       x = unescapePointOrBitsetAsVariable(x);
       if (x instanceof SV)
@@ -430,7 +432,7 @@ public class SV extends T implements JSONEncodable {
   public static SV getVariableAD(double[] f) {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < f.length; i++)
-      objects.addLast(newV(decimal, Float.valueOf((float) f[i])));
+      objects.addLast(newV(decimal, Double.valueOf(f[i])));
     return newV(varray, objects);
   }
 
@@ -1530,6 +1532,7 @@ public class SV extends T implements JSONEncodable {
     
     @Override
     public int compare(SV x, SV y) {
+      // TODO could compare as double
       if (x.tok != y.tok) {
         if (x.tok == decimal || x.tok == integer || y.tok == decimal
             || y.tok == integer) {
@@ -1957,4 +1960,7 @@ public class SV extends T implements JSONEncodable {
             0) : PT.toJSON(key, property)) + "}";
   }
 
+  public static double toDouble(float f) {
+    return Double.valueOf("" + f).doubleValue();
+  }
 }

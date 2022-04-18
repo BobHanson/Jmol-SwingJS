@@ -21,6 +21,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
 
+import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;
@@ -1562,8 +1563,9 @@ abstract class ScriptExpr extends ScriptParam {
   @SuppressWarnings({ "unchecked", "cast" })
   public Object getBitsetProperty(BS bs, Lst<SV> pts, int tok, P3 ptRef,
                                   P4 planeRef, Object tokenValue,
-                                  Object opValue, boolean useAtomMap,
-                                  int index, boolean asVectorIfAll) throws ScriptException {
+                                  Object opValue, boolean useAtomMap, int index,
+                                  boolean asVectorIfAll)
+      throws ScriptException {
 
     // index is a special argument set in parameterExpression that
     // indicates we are looking at only one atom within a for(...) loop
@@ -1571,8 +1573,8 @@ abstract class ScriptExpr extends ScriptParam {
 
     boolean haveIndex = (index != Integer.MAX_VALUE);
 
-    boolean isAtoms = haveIndex || !(tokenValue instanceof BondSet)
-        && !(bs instanceof BondSet);
+    boolean isAtoms = haveIndex
+        || !(tokenValue instanceof BondSet) && !(bs instanceof BondSet);
     // check minmax flags:
 
     int minmaxtype = tok & T.minmaxmask;
@@ -1582,6 +1584,7 @@ abstract class ScriptExpr extends ScriptParam {
       minmaxtype = T.minmaxmask;
     int ac = vwr.ms.ac;
     float[] fout = (minmaxtype == T.allfloat ? new float[ac] : null);
+    double[] dout = null;
     boolean isExplicitlyAll = (minmaxtype == T.minmaxmask || selectedFloat);
     tok &= ~T.minmaxmask;
     Object[] info = null;
@@ -1591,12 +1594,13 @@ abstract class ScriptExpr extends ScriptParam {
     // determine property type:
 
     boolean isPt = false;
-    boolean isHash  = false;
+    boolean isHash = false;
     boolean isInt = false;
     boolean isString = false;
     switch (tok) {
     case T.__:
-      return ((Map<String, Object>)vwr.getAuxiliaryInfoForAtoms(bs)).get("models");
+      return ((Map<String, Object>) vwr.getAuxiliaryInfoForAtoms(bs))
+          .get("models");
     case T.xyz:
     case T.vibxyz:
     case T.fracxyz:
@@ -1609,7 +1613,7 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     case T.polyhedra:
       isHash = true;
-      info = new Object[] {null, null};
+      info = new Object[] { null, null };
       break;
     case T.function:
     case T.distance:
@@ -1636,13 +1640,15 @@ abstract class ScriptExpr extends ScriptParam {
     P3 ptT = null;
     float[] data = null;
     float[][] ffdata = null;
+    double[] ddata = null;
     switch (tok) {
     case T.atoms:
     case T.bonds:
       if (chk)
         return bs;
       bsNew = (tok == T.atoms ? (isAtoms ? bs : vwr.ms.getAtoms(T.bonds, bs))
-          : (isAtoms ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs), null)
+          : (isAtoms
+              ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs), null)
               : bs));
       int i;
       switch (minmaxtype) {
@@ -1693,9 +1699,14 @@ abstract class ScriptExpr extends ScriptParam {
       ptT = new P3();
       break;
     case T.property:
-      data = (float[]) vwr.getDataObj((String) opValue, null, JmolDataManager.DATA_TYPE_AFD);
+      data = (float[]) vwr.getDataObj((String) opValue, null,
+          JmolDataManager.DATA_TYPE_AF);
       if (data == null)
-        ffdata = (float[][]) vwr.getDataObj((String) opValue, null, JmolDataManager.DATA_TYPE_AFF);
+        ddata = (double[]) vwr.getDataObj((String) opValue, null,
+            JmolDataManager.DATA_TYPE_AD);
+      if (data == null && ddata == null)
+        ffdata = (float[][]) vwr.getDataObj((String) opValue, null,
+            JmolDataManager.DATA_TYPE_AFF);
       if (ffdata != null) {
         minmaxtype = T.all;
         vout = new Lst<Object>();
@@ -1706,6 +1717,7 @@ abstract class ScriptExpr extends ScriptParam {
     int n = 0;
     int ivMinMax = 0;
     float fvMinMax = 0;
+    double dvMinMax = 0;
     double sum = 0;
     double sum2 = 0;
     switch (minmaxtype) {
@@ -1719,13 +1731,20 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     }
     ModelSet modelSet = vwr.ms;
-    int mode = (ffdata != null ? 5 : isHash ? 4 : isPt ? 3 : isString ? 2 : isInt ? 1 : 0);
+    int mode = (
+        ddata != null ? 6
+        : ffdata != null ? 5
+            : isHash ? 4 
+                : isPt ? 3 
+                : isString ? 2 
+                : isInt ? 1 
+                    : 0);
     if (isAtoms) {
       boolean haveBitSet = (bs != null);
       int i0, i1;
       if (pts != null) {
         i0 = 0;
-        i1 = pts.size(); 
+        i1 = pts.size();
       } else if (haveIndex) {
         i0 = index;
         i1 = index + 1;
@@ -1738,8 +1757,8 @@ abstract class ScriptExpr extends ScriptParam {
       }
       if (chk)
         i1 = 0;
-      for (int i = i0; i >= 0 && i < i1; i = (haveBitSet ? bs.nextSetBit(i + 1)
-          : i + 1)) {
+      for (int i = i0; i >= 0
+          && i < i1; i = (haveBitSet ? bs.nextSetBit(i + 1) : i + 1)) {
         n++;
         Atom atom;
         if (pts == null) {
@@ -1755,7 +1774,8 @@ abstract class ScriptExpr extends ScriptParam {
           switch (tok) {
           case T.function:
             bsAtom.set(i);
-            fv = SV.fValue(((ScriptEval) this).getUserFunctionResult(userFunction, params, tokenAtom));
+            fv = SV.fValue(((ScriptEval) this)
+                .getUserFunctionResult(userFunction, params, tokenAtom));
             bsAtom.clear(i);
             break;
           case T.property:
@@ -1765,7 +1785,9 @@ abstract class ScriptExpr extends ScriptParam {
             if (planeRef != null)
               fv = Measure.distanceToPlane(planeRef, atom);
             else
-              fv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef) : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef) : Float.NaN);
+              fv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef)
+                  : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef)
+                      : Float.NaN);
             break;
           default:
             fv = atom.atomPropertyFloat(vwr, tok, ptTemp);
@@ -1877,6 +1899,60 @@ abstract class ScriptExpr extends ScriptParam {
         case 5: // float[][]
           vout.addLast(ffdata[i]);
           break;
+        case 6: // float
+          double dv = Double.MAX_VALUE;
+          switch (tok) {
+          case T.function:
+            bsAtom.set(i);
+            dv = SV.dValue(((ScriptEval) this)
+                .getUserFunctionResult(userFunction, params, tokenAtom));
+            bsAtom.clear(i);
+            break;
+          case T.property:
+            dv = (ddata == null ? 0 : ddata[i]);
+            break;
+          case T.distance:
+            if (planeRef != null)
+              dv = SV.toDouble(Measure.distanceToPlane(planeRef, atom));
+            else
+              dv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef)
+                  : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef)
+                      : Float.NaN);
+            break;
+          default:
+            dv = SV.toDouble(atom.atomPropertyFloat(vwr, tok, ptTemp));
+          }
+          if (dv == Double.MAX_VALUE
+              || Double.isNaN(dv) && minmaxtype != T.all) {
+            n--; // don't count this one
+            continue;
+          }
+          switch (minmaxtype) {
+          case T.min:
+            if (dv < dvMinMax)
+              dvMinMax = dv;
+            break;
+          case T.max:
+            if (dv > dvMinMax)
+              dvMinMax = dv;
+            break;
+          case T.allfloat:
+            if (dout == null)
+              dout = new double[fout.length];
+            dout[i] = dv;
+            break;
+          case T.all:
+            vout.addLast(Double.valueOf(dv));
+            break;
+          case T.sum2:
+          case T.stddev:
+            sum2 += dv * dv;
+            //$FALL-THROUGH$
+          case T.sum:
+          default:
+            sum += dv;
+          }
+          break;
         }
         if (haveIndex)
           break;
@@ -1885,8 +1961,8 @@ abstract class ScriptExpr extends ScriptParam {
       boolean isAll = (bs == null);
       int i0 = (isAll ? 0 : bs.nextSetBit(0));
       int i1 = vwr.ms.bondCount;
-      for (int i = i0; i >= 0 && i < i1; i = (isAll ? i + 1 : bs
-          .nextSetBit(i + 1))) {
+      for (int i = i0; i >= 0
+          && i < i1; i = (isAll ? i + 1 : bs.nextSetBit(i + 1))) {
         n++;
         Bond bond = modelSet.bo[i];
         switch (tok) {
@@ -1941,7 +2017,7 @@ abstract class ScriptExpr extends ScriptParam {
       }
     }
     if (minmaxtype == T.allfloat)
-      return fout;
+      return (dout == null ? fout : dout);
     if (minmaxtype == T.all) {
       if (asVectorIfAll) {
         if (isPivot) {
@@ -1953,15 +2029,21 @@ abstract class ScriptExpr extends ScriptParam {
       if ((isString || isHash) && !isExplicitlyAll && len == 1)
         return vout.get(0);
       if (selectedFloat) {
+        if (mode == 6) {
+          dout = new double[len];
+          for (int i = len; --i >= 0;) {
+            Object v = vout.get(i);
+            dout[i] = ((Number) v).doubleValue();
+          }
+          return dout;
+        }
         fout = new float[len];
         for (int i = len; --i >= 0;) {
           Object v = vout.get(i);
           switch (mode) {
           case 0:
-            fout[i] = ((Number) v).floatValue();
-            break;
           case 1:
-            fout[i] = ((Integer) v).floatValue();
+            fout[i] = ((Number) v).floatValue();
             break;
           case 2:
             fout[i] = PT.parseFloat((String) v);
@@ -1990,11 +2072,15 @@ abstract class ScriptExpr extends ScriptParam {
       return sout; // potential j2s issue here
     }
     if (isPt)
-      return (n == 0 ? Integer.valueOf(-1) : P3.new3(pt.x / n, pt.y / n, pt.z / n));
+      return (n == 0 ? Integer.valueOf(-1)
+          : P3.new3(pt.x / n, pt.y / n, pt.z / n));
     if (isHash)
       return new Hashtable<String, Object>();
-    if (n == 0 || n == 1 && minmaxtype == T.stddev)
-      return Float.valueOf(Float.NaN);
+    if (n == 0 || n == 1 && minmaxtype == T.stddev) {
+      if (dout == null)
+        return Float.valueOf(Float.NaN);
+      return Double.valueOf(Double.NaN);      
+    }
     if (isInt) {
       switch (minmaxtype) {
       case T.min:
@@ -2014,7 +2100,7 @@ abstract class ScriptExpr extends ScriptParam {
     switch (minmaxtype) {
     case T.min:
     case T.max:
-      sum = fvMinMax;
+      sum = (mode == 6 ? dvMinMax : fvMinMax);
       break;
     case T.sum:
       break;
@@ -2032,7 +2118,7 @@ abstract class ScriptExpr extends ScriptParam {
       sum /= n;
       break;
     }
-    return Float.valueOf((float) sum);
+    return (mode == 6 ? (Number) Double.valueOf(sum) : (Number) Float.valueOf((float) sum));
   }
 
   private BS bitSetForModelFileNumber(int m) {

@@ -2133,7 +2133,12 @@ public class ModelKit {
       vwr.sm.setStatusStructureModified(ia0, mi, -Viewer.MODIFY_SET_COORD,
           "dragatom", n, bseq);
       return n;
-    } finally {
+    } catch (Exception e) {
+      System.err.println("Modelkit err" + e);
+      return 0;
+    }
+    finally {
+    
       setMKState(state);
     }
   }
@@ -2160,6 +2165,7 @@ public class ModelKit {
     sg.toFractional(fb, true);
     for (int k = 0, i = i0; i >= 0; i = bseq.nextSetBit(i + 1)) {
       P3d p = P3d.newPd(vwr.ms.at[i]);
+      P3d p0 = P3d.newP(p); 
       sg.toFractional(p, true);
       M4d m = sg.getTransform(fa, p, false);
       if (m == null) {
@@ -2169,7 +2175,7 @@ public class ModelKit {
       P3d p2 = P3d.newP(fb);
       m.rotTrans(p2);
       sg.toCartesian(p2, true);
-      if (Math.abs(d - p.distance(p2)) > 0.001f)
+      if (Math.abs(d - p0.distance(p2)) > 0.001f)
         return false;
       points[k++] = p2.toP3();
     }

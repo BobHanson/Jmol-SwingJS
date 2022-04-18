@@ -3261,6 +3261,9 @@ public class ModelSet extends BondCollection {
       bfactor100s = AU.arrayCopyShort(bfactor100s, newLength);
     if (partialCharges != null)
       partialCharges = AU.arrayCopyF(partialCharges, newLength);
+    if (precisionCoords != null)
+      precisionCoords = AU.arrayCopyP3e(precisionCoords, newLength);
+    
     if (atomTensorList != null)
       atomTensorList = (Object[][]) AU.arrayCopyObject(atomTensorList,
           newLength);
