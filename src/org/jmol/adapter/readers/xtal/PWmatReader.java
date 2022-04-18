@@ -28,10 +28,13 @@ public class PWmatReader extends AtomSetCollectionReader {
     doApplySymmetry = true;
   }
 
+  private boolean haveLattice;
+  private boolean havePositions;
+  
   @Override
   protected boolean checkLine() throws Exception {
+    // first line has atom count
     if (nAtoms == 0) {
-      readComments();
       setSpaceGroupName("P1");
       nAtoms = PT.parseInt(line);
       setFractionalCoordinates(true);
@@ -41,21 +44,26 @@ public class PWmatReader extends AtomSetCollectionReader {
     String lc = line.toLowerCase().trim();
     if (lc.length() == 0)
       return true;
-    if (lc.startsWith("lattice")) {
-      readUnitCell();
-    } else if (lc.startsWith("position")) {
-      readCoordinates();
-    } else {
-      readDataBlock(lc);
+    // do not read anything unit we get the lattice line
+    if (!haveLattice) {
+      if (lc.startsWith("lattice")) {
+        readUnitCell();
+        haveLattice = true;
+      }
+      return true;
     }
+    // and then also have positions
+    if (!havePositions) {
+      if (lc.startsWith("position")) {
+        readCoordinates();
+        havePositions = true;
+      }
+      return true;
+    }
+    readDataBlock(lc);
     return true;
   }
   
-  private void readComments() {
-    // TODO
-    
-  }
-
   private void readUnitCell() throws Exception {
     // The lattice section consists of 3 lines representing 
     // the lattice vector. For each line, there could be an extra 
