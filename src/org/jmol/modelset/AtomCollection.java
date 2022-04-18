@@ -58,9 +58,10 @@ import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -198,6 +199,7 @@ abstract public class AtomCollection {
   float[] dssrData;
   public Vibration[] vibrations;
   public float[] occupancies;
+  public P3d[] precisionCoords;
   short[] bfactor100s;
   float[] partialCharges;
   float[] bondingRadii;
@@ -223,6 +225,7 @@ abstract public class AtomCollection {
     atomSeqIDs = null;
     vibrations = null;
     occupancies = null;
+    precisionCoords = null;
     bfactor100s = null;
     resetPartialCharges();
     bondingRadii = null;
@@ -239,6 +242,7 @@ abstract public class AtomCollection {
     atomSeqIDs = mergeModelSet.atomSeqIDs;
     vibrations = mergeModelSet.vibrations;
     occupancies = mergeModelSet.occupancies;
+    precisionCoords = mergeModelSet.precisionCoords;
     bfactor100s = mergeModelSet.bfactor100s;
     bondingRadii = mergeModelSet.bondingRadii;
     partialCharges = mergeModelSet.partialCharges;
@@ -540,6 +544,8 @@ abstract public class AtomCollection {
     setVibrationVector(atomIndex, vib);  
     taintAtom(atomIndex, TAINT_VIBRATION);
   }
+
+  P3d[] doublCoord = null;
   
   public void setAtomCoord(int atomIndex, float x, float y, float z) {
     if (atomIndex < 0 || atomIndex >= ac)
@@ -548,6 +554,8 @@ abstract public class AtomCollection {
     a.set(x, y, z);
     fixTrajectory(a);
     taintAtom(atomIndex, TAINT_COORD);
+    if (getPrecisionCoord(atomIndex) != null)
+      setPrecisionCoord(atomIndex, null, false);
   }
 
   private void fixTrajectory(Atom a) {
@@ -912,6 +920,30 @@ abstract public class AtomCollection {
   
   public float getOccupancyFloat(int i) {
     return (occupancies == null || i >= occupancies.length? 100 : occupancies[i]);
+  }
+
+  protected void setPrecisionCoord(int atomIndex, P3d coord, boolean doTaint) {
+    if (coord != null && coord.equals(getPrecisionCoord(atomIndex)))
+      return;
+    if (precisionCoords == null) {
+      if (coord == null)
+        return;
+      precisionCoords = new P3d[at.length];
+    }
+    boolean valid = (coord != null && !Double.isNaN(coord.x));
+    if (coord == null)
+      coord = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
+    precisionCoords[atomIndex] = coord;
+    if (valid) {
+      at[atomIndex].set((float) coord.x, (float) coord.y, (float) coord.z);
+      if (doTaint)
+        taintAtom(atomIndex, TAINT_COORD);
+    }
+  }
+  
+  public P3d getPrecisionCoord(int i) {
+    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
+    return (coord == null || Double.isNaN(coord.x) ? null : coord);
   }
   
   protected void setPartialCharge(int atomIndex, float partialCharge, boolean doTaint) {
@@ -1766,7 +1798,7 @@ abstract public class AtomCollection {
         if (pt != 3) {
           x.normalize();
           // PI*2/3
-          new M3().setAA(A4.new4(z.x, z.y, z.z,
+          new M3d().setAA(A4.new4(z.x, z.y, z.z,
               (pt == 2 ? 1 : -1) * 2.09439507f)).rotate(x);
         }
         z.setT(x);
@@ -2673,28 +2705,25 @@ abstract public class AtomCollection {
       BSUtil.deleteBits(bsModulated, bsAtoms);
 
     deleteAtomTensors(bsAtoms);
-    atomNames = (String[]) AU.deleteElements(atomNames, firstAtomIndex,
-        nAtoms);
-    atomTypes = (String[]) AU.deleteElements(atomTypes, firstAtomIndex,
-        nAtoms);
-    atomResnos = (int[]) AU.deleteElements(atomResnos, firstAtomIndex,
-        nAtoms);
+    atomNames = (String[]) AU.deleteElements(atomNames, firstAtomIndex, nAtoms);
+    atomTypes = (String[]) AU.deleteElements(atomTypes, firstAtomIndex, nAtoms);
+    atomResnos = (int[]) AU.deleteElements(atomResnos, firstAtomIndex, nAtoms);
     atomSerials = (int[]) AU.deleteElements(atomSerials, firstAtomIndex,
         nAtoms);
-    atomSeqIDs = (int[]) AU.deleteElements(atomSeqIDs, firstAtomIndex,
+    atomSeqIDs = (int[]) AU.deleteElements(atomSeqIDs, firstAtomIndex, nAtoms);
+    dssrData = (float[]) AU.deleteElements(dssrData, firstAtomIndex, nAtoms);
+    bfactor100s = (short[]) AU.deleteElements(bfactor100s, firstAtomIndex,
         nAtoms);
-    dssrData = (float[]) AU.deleteElements(dssrData, firstAtomIndex,
-        nAtoms);
-    bfactor100s = (short[]) AU.deleteElements(bfactor100s,
-        firstAtomIndex, nAtoms);
     hasBfactorRange = false;
-    occupancies = (float[]) AU.deleteElements(occupancies,
-        firstAtomIndex, nAtoms);
+    occupancies = (float[]) AU.deleteElements(occupancies, firstAtomIndex,
+        nAtoms);
+    precisionCoords = (P3d[]) AU.deleteElements(precisionCoords, firstAtomIndex,
+        nAtoms);
     resetPartialCharges();
     atomTensorList = (Object[][]) AU.deleteElements(atomTensorList,
         firstAtomIndex, nAtoms);
-    vibrations = (Vibration[]) AU.deleteElements(vibrations,
-        firstAtomIndex, nAtoms);
+    vibrations = (Vibration[]) AU.deleteElements(vibrations, firstAtomIndex,
+        nAtoms);
     nSurfaceAtoms = 0;
     bsSurface = null;
     surfaceDistance100s = null;

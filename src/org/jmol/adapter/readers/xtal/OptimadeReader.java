@@ -29,12 +29,9 @@ public class OptimadeReader extends AtomSetCollectionReader {
   private boolean isPolymer;
   private boolean isSlab;
 
-  public OptimadeReader() {
-    super();
-  }
-
   @Override
   protected void initializeReader() throws Exception {
+    setHighPrecision();    
     super.initializeReader();
     SB sb = new SB();
     try {

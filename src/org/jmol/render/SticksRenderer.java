@@ -36,7 +36,7 @@ import org.jmol.viewer.JC;
 
 import javajs.util.A4;
 import javajs.util.BS;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.V3;
 
@@ -528,14 +528,14 @@ public class SticksRenderer extends FontLineShapeRenderer {
     return ((dx * dyAC - dy * dxAC) < 0 ? 2 : 1);
   }
 
-  private M3 rot;
+  private M3d rot;
   private A4 a4;
 
   private void drawBanana(Atom a, Atom b, V3 x, int deg) {
     g3d.addRenderer(T.hermitelevel);
     vectorT.sub2(b, a);
     if (rot == null) {
-      rot = new M3();
+      rot = new M3d();
       a4 = new A4();
     }
     a4.setVA(vectorT, (float) (deg * Math.PI / 180));

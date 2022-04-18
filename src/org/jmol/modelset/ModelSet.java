@@ -68,8 +68,8 @@ import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
@@ -180,8 +180,8 @@ public class ModelSet extends BondCollection {
   private Quat[] vOrientations;
 
   private final P3 ptTemp, ptTemp1, ptTemp2;
-  private final M3 matTemp, matInv;
-  private final M4 mat4, mat4t;
+  private final M3d matTemp, matInv;
+  private final M4d mat4, mat4t;
   private final V3 vTemp;
 
   ////////////////////////////////////////////////////////////////
@@ -214,10 +214,10 @@ public class ModelSet extends BondCollection {
     ptTemp = new P3();
     ptTemp1 = new P3();
     ptTemp2 = new P3();
-    matTemp = new M3();
-    matInv = new M3();
-    mat4 = new M4();
-    mat4t = new M4();
+    matTemp = new M3d();
+    matInv = new M3d();
+    mat4 = new M4d();
+    mat4t = new M4d();
     vTemp = new V3();
 
     setupBC();
@@ -969,8 +969,8 @@ public class ModelSet extends BondCollection {
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
-          atom1.getSeqID(), n, pts[i], Float.NaN, null, 0, 0, 100, Float.NaN,
-          null, false, (byte) 0, null, Float.NaN);
+          atom1.getSeqID(), n, pts[i], null, Float.NaN, null, 0, 0, 100,
+          Float.NaN, null, false, (byte) 0, null, Float.NaN);
 
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -3278,10 +3278,10 @@ public class ModelSet extends BondCollection {
 
   public Atom addAtom(int modelIndex, Group group, int atomicAndIsotopeNumber,
                       String atomName, String atomType, int atomSerial,
-                      int atomSeqID, int atomSite, P3 xyz, float radius,
-                      V3 vib, int formalCharge, float partialCharge,
-                      float occupancy, float bfactor, Lst<Object> tensors,
-                      boolean isHetero, byte specialAtomID, BS atomSymmetry, float bondRadius) {
+                      int atomSeqID, int atomSite, P3 xyz, P3d dxyz,
+                      float radius, V3 vib, int formalCharge,
+                      float partialCharge, float occupancy, float bfactor,
+                      Lst<Object> tensors, boolean isHetero, byte specialAtomID, BS atomSymmetry, float bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
         atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
@@ -3292,6 +3292,8 @@ public class ModelSet extends BondCollection {
       growAtomArrays(ac + 100); // only due to added hydrogens
 
     at[ac] = atom;
+    if (dxyz != null)
+      setPrecisionCoord(atom.i, dxyz, false);
     setBFactor(ac, bfactor, false);
     setOccupancy(ac, occupancy, false);
     setPartialCharge(ac, partialCharge, false);
@@ -3815,7 +3817,7 @@ public class ModelSet extends BondCollection {
     return bsBranches;
   }
 
-  public void recalculatePositionDependentQuantities(BS bs, M4 mat) {
+  public void recalculatePositionDependentQuantities(BS bs, M4d mat) {
     if ((vwr.shm.getShape(JC.SHAPE_POLYHEDRA) != null))
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "move", new Object[] {
           bs, mat });
@@ -3829,7 +3831,7 @@ public class ModelSet extends BondCollection {
         Model m = am[i];
         if (m.isContainedIn(bs)) {
           if (m.mat4 == null)
-            m.mat4 = M4.newM4(null);
+            m.mat4 = M4d.newM4(null);
           m.mat4.mul2(mat, m.mat4);
         }
       }
@@ -3846,7 +3848,7 @@ public class ModelSet extends BondCollection {
             */
   }
 
-  public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, BS bs,
+  public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3 translation, BS bs,
                         P3 center, boolean isInternal, boolean translationOnly) {
     if (m4 != null) {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {

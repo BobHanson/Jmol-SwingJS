@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -966,7 +966,7 @@ class PointGroup {
   final static String[] typeNames = { "plane", "proper axis", "improper axis",
       "center of inversion" };
 
-  final static M3 mInv = M3.newA9(new float[] {
+  final static M3d mInv = M3d.newA9(new float[] {
       -1, 0, 0, 
       0, -1, 0,
       0, 0, -1
@@ -1025,27 +1025,18 @@ class PointGroup {
       }
     }
 
-    M3 mat;
+    M3d mat;
     
-    public M3 getM3() {
+    public M3d getM3() {
       if (mat != null)
         return mat;
-      M3 m = M3.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrix());
+      M3d m = M3d.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrix());
       if (type == OPERATION_PLANE || type == OPERATION_IMPROPER_AXIS)
         m.mul(mInv);
-      cleanMatrix(m);
+      m.clean();
       return mat = m;
     }
 
-    private void cleanMatrix(M3 m) {
-      for (int i = 0; i < 3; i++)
-      for (int j = 0; j < 3; j++)
-        m.setElement(i,  j, approx0(m.getElement(i, j)));
-    }
-
-    private float approx0(float v) {
-      return (v > 1e-15f || v < -1e-15f ? v : 0);
-    }
   }
 
   Object getInfo(int modelIndex, String drawID, boolean asInfo, String type,
@@ -1183,7 +1174,7 @@ class PointGroup {
         nElements += nAxes[i];
         nType[axes[i][0].type][1] += n;
         Lst<V3> vinfo = (asInfo ? new  Lst<V3>() : null);
-        Lst<M3> minfo = (asInfo ? new  Lst<M3>() : null);
+        Lst<M3d> minfo = (asInfo ? new  Lst<M3d>() : null);
         for (int j = 0; j < nAxes[i]; j++) {
           //axes[i][j].typeIndex = j + 1;
           Operation aop = axes[i][j];
@@ -1232,7 +1223,7 @@ class PointGroup {
     info.put("nElements", Integer.valueOf(nElements));
     info.put("nCi", Integer.valueOf(haveInversionCenter ? 1 : 0));
     if (haveInversionCenter)
-      info.put("Ci_m", M3.newM3(mInv));
+      info.put("Ci_m", M3d.newM3(mInv));
     info.put("nCs", Integer.valueOf(nAxes[0]));
     info.put("nCn", Integer.valueOf(nType[OPERATION_PROPER_AXIS][0]));
     info.put("nSn", Integer.valueOf(nType[OPERATION_IMPROPER_AXIS][0]));

@@ -26,7 +26,7 @@ package org.jmol.jvxl.readers;
 import java.util.Date;
 
 import javajs.util.AU;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.SB;
@@ -155,7 +155,7 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected void getAtoms(BS bsSelected, boolean doAddHydrogens,
                           boolean getRadii, boolean getMolecules,
                           boolean getAllModels, boolean addNearbyAtoms,
-                          boolean getAtomMinMax, float marginAtoms, M4 modelInvRotation) {
+                          boolean getAtomMinMax, float marginAtoms, M4d modelInvRotation) {
     if (addNearbyAtoms)
       getRadii = true;
     // set atomRadiusData to 100% if it has not been set already

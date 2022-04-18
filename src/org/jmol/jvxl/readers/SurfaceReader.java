@@ -46,7 +46,7 @@ import javajs.util.SB;
 import org.jmol.util.Logger;
 
 import javajs.util.OC;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
@@ -226,8 +226,8 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected P3 center;
   protected float[] anisotropy;
   protected boolean isAnisotropic;
-  protected M3 eccentricityMatrix;
-  protected M3 eccentricityMatrixInverse;
+  protected M3d eccentricityMatrix;
+  protected M3d eccentricityMatrixInverse;
   protected boolean isEccentric;
   protected float eccentricityScale;
   protected float eccentricityRatio;

@@ -116,6 +116,20 @@ public class A4 implements JSONEncodable, Serializable {
     a.setVA(axis, angle);
     return a;
   }
+  
+  public static A4 newVA(V3d axis, double angle) {
+    A4 a = new A4();
+    a.setVA(axis, angle);
+    return a;
+  }
+
+
+  private void setVA(V3d axis, double angle) {
+    x = (float) axis.x;
+    y = (float) axis.y;
+    z = (float) axis.z;
+    this.angle = (float) angle;
+  }
 
   /**
    * Sets the value of this AxisAngle4f to the specified axis and angle.
@@ -174,6 +188,11 @@ public class A4 implements JSONEncodable, Serializable {
    *        the matrix3f
    */
   public final void setM(M3 m1) {
+    setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
+        m1.m22);
+  }
+
+  public final void setM(M3d m1) {
     setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
         m1.m22);
   }
@@ -248,4 +267,5 @@ public class A4 implements JSONEncodable, Serializable {
   public String toJSON() {
     return "[" + x + "," + y + "," + z + "," + (float) (angle * 180.0 / Math.PI) + "]";
   }
+
 }

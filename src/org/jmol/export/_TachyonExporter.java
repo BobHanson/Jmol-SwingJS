@@ -36,7 +36,7 @@ import org.jmol.util.GData;
 import javajs.util.Lst;
 import javajs.util.SB;
 import javajs.util.P3;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
@@ -201,7 +201,7 @@ public class _TachyonExporter extends __RayTracerExporter {
     tm.unTransformPoint(screenBase, tempP1);
     tm.unTransformPoint(screenTip, tempP2);
     radius = vwr.tm.unscaleToScreen(screenBase.z, radius);
-    M3 matRotateScale = getRotationMatrix(tempP1, tempP2, radius);
+    M3d matRotateScale = getRotationMatrix(tempP1, tempP2, radius);
     export3D.drawSurface(getConeMesh(tempP1, matRotateScale, colix), colix);
   }
 

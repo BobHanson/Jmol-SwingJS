@@ -115,7 +115,7 @@ package org.jmol.jvxl.data;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.SB;
@@ -158,8 +158,8 @@ public class VolumeData {
   private int yzCount;
 
   public final V3[] unitVolumetricVectors = new V3[3];
-  private final M3 volumetricMatrix = new M3();
-  private final M3 inverseMatrix = new M3();
+  private final M3d volumetricMatrix = new M3d();
+  private final M3d inverseMatrix = new M3d();
   private P4 thePlane;
 
   public boolean hasPlane() {

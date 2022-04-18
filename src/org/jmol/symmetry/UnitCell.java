@@ -39,7 +39,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3d;
@@ -277,7 +277,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     matrixFractionalToCartesianD.m03 = 0;
     matrixFractionalToCartesianD.m13 = 0;
     matrixFractionalToCartesianD.m23 = 0;
-    matrixFractionalToCartesianD.rotTransF(cartesianOffset);
+    matrixFractionalToCartesianD.rotTrans(cartesianOffset);
     matrixFractionalToCartesianD.m03 = cartesianOffset.x;
     matrixFractionalToCartesianD.m13 = cartesianOffset.y;
     matrixFractionalToCartesianD.m23 = cartesianOffset.z;
@@ -535,7 +535,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
             cell0.z + cell1.z * pt.z);
       }
       pts[i].scale(scale);
-      matrixFractionalToCartesianD.rotTransF(pt);
+      matrixFractionalToCartesianD.rotTrans(pt);
       if (!withOffset)
         pt.sub(cartesianOffset);
     }
@@ -554,7 +554,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     for (int i = 8; --i >= 0;) {
       P3 p = new P3();
       p.setT(BoxInfo.unitCubePoints[i]);
-      matrixFractionalToCartesianD.rotTransF(vertices[i] = p);
+      matrixFractionalToCartesianD.rotTrans(vertices[i] = p);
     }
   }
 
@@ -750,13 +750,13 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     x.cross(v1, v2);
     v.cross(x, v1);
-    return Quat.getQuaternionFrame(null, v, x).inv();
+    return Quat.getQuaternionFrame((P3d) null, v, x).inv();
   }
 
   /**
    * 
    * @param def
-   *        String "abc;offset" or M3 or M4 to origin; if String, can be
+   *        String "abc;offset" or M3d or M4d to origin; if String, can be
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
@@ -815,7 +815,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       }
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
-    } else if (def instanceof M4) {
+    } else if (def instanceof M4d) {
       m = (M4d) def;
     } else {
       // direct 4x4 Cartesian transform
@@ -978,7 +978,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     int n = list.size();
     for (int i = 0, nops = ops.length; i < nops; i++) {
       P3 p = P3.newP(pf);
-      ops[i].rotTransF(p);
+      ops[i].rotTrans(p);
       //not using unitize here, because it does some averaging
       p.x = (float) (p.x - Math.floor(p.x));
       p.y = (float) (p.y - Math.floor(p.y));

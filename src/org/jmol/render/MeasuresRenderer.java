@@ -38,7 +38,7 @@ import org.jmol.util.Point3fi;
 import org.jmol.util.Vibration;
 
 import javajs.util.A4;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -63,7 +63,7 @@ public class MeasuresRenderer extends LabelsRenderer {
   private int count;
 
   private A4 aaT;
-  private M3 matrixT;
+  private M3d matrixT;
   
   @Override
   protected void initRenderer() {
@@ -270,7 +270,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     }
     if (aaT == null) {
       aaT = new A4();
-      matrixT = new M3();
+      matrixT = new M3d();
     }
     int dotCount = (int) Math.floor((m.renderAxis.angle / (2 * Math.PI)) * 64);
     float stepAngle = m.renderAxis.angle / dotCount;

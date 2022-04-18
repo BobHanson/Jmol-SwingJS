@@ -1418,8 +1418,8 @@ public class PT {
         else if (strT != null)  // 'd' 'i' or 's'
           strLabel += formatS(strT, width, precision < 0 ? precision - 1 : precision, alignLeft,
               zeroPad);
-        else if (!Double.isNaN(doubleT)) // 'e'
-          strLabel += formatD(doubleT, width, precision - 1, alignLeft,
+        else if (!Double.isNaN(doubleT)) // 'e' or 'f'
+          strLabel += formatD(doubleT, width, (st.equals("e") ? precision - 1 : -1 - precision), alignLeft,
               zeroPad, true);
         if (doOne)
           break;
@@ -1488,6 +1488,8 @@ public class PT {
             break;
           case 'd':
             strFormat = formatString(strFormat, "e", null, Float.NaN,
+                ((Double) values[o]).doubleValue(), true);
+            strFormat = formatString(strFormat, "f", null, Float.NaN,
                 ((Double) values[o]).doubleValue(), true);
             break;
           case 'p':

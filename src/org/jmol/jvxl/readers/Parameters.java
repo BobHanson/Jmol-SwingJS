@@ -127,8 +127,8 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
 import javajs.util.A4;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -396,8 +396,8 @@ public class Parameters {
         center.set(0, 0, 0);
   }
   
-  M3 eccentricityMatrix;
-  M3 eccentricityMatrixInverse;
+  M3d eccentricityMatrix;
+  M3d eccentricityMatrixInverse;
   boolean isEccentric;
   float eccentricityScale;
   float eccentricityRatio;
@@ -422,8 +422,8 @@ public class Parameters {
     ecc.normalize();
     if (Float.isNaN(ecc.x)) // was exactly {0 0 -1} -- just rotate about x
       ecc.set(1, 0, 0);
-    eccentricityMatrixInverse = new M3();
-    eccentricityMatrixInverse.invertM(eccentricityMatrix = new M3().setAA(A4.newVA(ecc, (float) Math.PI)));
+    eccentricityMatrixInverse = new M3d();
+    eccentricityMatrixInverse.invertM(eccentricityMatrix = new M3d().setAA(A4.newVA(ecc, (float) Math.PI)));
     isEccentric = isAnisotropic = true;
     eccentricityScale = c;
     eccentricityRatio = fab_c;
@@ -802,7 +802,7 @@ public class Parameters {
   int fileIndex = -1; //one-based, although efvet reader uses 0 for "indicated color"
   public String fileName;
   public int modelIndex = -1; // zero-based
-  public M4 modelInvRotation = null; // MO calculations must be run using the ORIGINAL atom positions
+  public M4d modelInvRotation = null; // MO calculations must be run using the ORIGINAL atom positions
   public boolean isXLowToHigh;
   
   boolean insideOut;

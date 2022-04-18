@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.Quat;
 import javajs.util.T3;
@@ -86,7 +86,7 @@ public class MeshCapper {
 
   private int nPoints;
 
-  M3 m3, m3inv;
+  M3d m3, m3inv;
 
   /////////////// initialization //////////////////
 
@@ -321,7 +321,7 @@ public class MeshCapper {
     }
     Quat q = Quat.getQuaternionFrameV(vab, vac, null, false);
     m3 = q.getMatrix();
-    m3inv = M3.newM3(m3);
+    m3inv = M3d.newM3(m3);
     m3inv.invert();
     for (int i = vs.length; --i >= 0;)
       m3inv.rotate(vs[i]);

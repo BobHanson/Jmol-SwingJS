@@ -83,6 +83,13 @@ public class Qd {
     return q;
   }
 
+  public static Qd newP4(P4 pt) {
+    Qd q = new Qd();
+    q.setP4(P4d.new4(pt.x, pt.y, pt.z, pt.w));
+    return q;
+  }
+
+
   /**
    * Note that q0 is the last parameter here
    * 
@@ -331,13 +338,29 @@ public class Qd {
    */
   public static final Qd getQuaternionFrame(P3d center, T3d x,
                                                     T3d xy) {
-    V3d vA = V3d.newV(x);
-    V3d vB = V3d.newV(xy);
+    return newFrame(center, x, xy, true);
+  }
+
+  public static final Qd getQuaternionFrame(P3 center, T3 x, T3 xy) {
+    return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
+  }
+
+  private static Qd newFrame(P3d center, T3d vA, T3d vB, boolean doCopy) {
+    if (doCopy) {
+      vA = V3d.newV(vA);
+      vB = V3d.newV(vB);
+    }
     if (center != null) {
       vA.sub(center);
       vB.sub(center);
     }
-    return getQuaternionFrameV(vA, vB, null, false);
+    return getQuaternionFrameV((V3d) vA, (V3d) vB, null, false);
+  }
+
+  public static final Qd getQuaternionFrameV(V3 vA, V3 vB, V3 vC,
+                                             boolean yBased) {
+    return getQuaternionFrameV(V3d.newV(vA), V3d.newV(vB), V3d.newV(vC),
+        yBased);
   }
 
   /**

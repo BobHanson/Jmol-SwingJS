@@ -33,7 +33,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
 import javajs.util.A4;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -340,7 +340,7 @@ public class AminoMonomer extends AlphaMonomer {
       getNHPoint(ptTemp, vC, true, false);
       vB.sub2(ptCa, getNitrogenAtom());
       vB.cross(vC, vB);
-      new M3().setAA(A4.newVA(vB, -beta)).rotate(vC);
+      new M3d().setAA(A4.newVA(vB, -beta)).rotate(vC);
       vA.cross(vB, vC);
       break;
     case 'b': // backbone

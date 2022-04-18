@@ -75,9 +75,9 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.M3;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.OC;
 import javajs.util.P3;
@@ -874,7 +874,7 @@ public class MathExt {
         return mp.addXStr(stddev < 0.2f ? "IDENTICAL"
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
       }
-      M4 m = new M4();
+      M4d m = new M4d();
       Lst<P3> ptsA = null, ptsB = null;
       if (isSmiles) {
         // A, B, MAP
@@ -974,7 +974,7 @@ public class MathExt {
         }
         if (ptsA != null && ptsB != null && ptsA.size() == ptsB.size()) {
           Interface.getInterface("javajs.util.Eigen", vwr, "script");
-          stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, null);
+          stddev = ScriptParam.getTransformMatrix4(ptsA, ptsB, m, null);
         }
       }
       // now have m and stddev
@@ -1342,7 +1342,7 @@ public class MathExt {
                 for (int i = bs1.nextSetBit(0); i >= 0; i = bs1
                     .nextSetBit(i + 1)) {
                   float d = (isPoint2 ? atoms[i].distanceSquared(pt2)
-                      : ((Float) e.getBitsetProperty(bs2, list2, op, atoms[i],
+                      : ((Number) e.getBitsetProperty(bs2, list2, op, atoms[i],
                           plane2, x1.value, null, false, x1.index, false))
                               .floatValue());
                   if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
@@ -1357,7 +1357,7 @@ public class MathExt {
               for (int i = list1.size(); --i >= 0;) {
                 P3 pt = SV.ptValue(list1.get(i));
                 float d = (isPoint2 ? pt.distanceSquared(pt2)
-                    : ((Float) e.getBitsetProperty(bs2, list2, op, pt, plane2,
+                    : ((Number) e.getBitsetProperty(bs2, list2, op, pt, plane2,
                         x1.value, null, false, Integer.MAX_VALUE, false))
                             .floatValue());
                 if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
@@ -1389,14 +1389,14 @@ public class MathExt {
               if (isAtomSet1) {
                 for (int i = bs1.nextSetBit(0), p = 0; i >= 0; i = bs1
                     .nextSetBit(i + 1))
-                  data[p++] = ((Float) e.getBitsetProperty(bs2, list2, op,
+                  data[p++] = ((Number) e.getBitsetProperty(bs2, list2, op,
                       atoms[i], plane2, x1.value, null, false, x1.index, false))
                           .floatValue();
                 return mp.addXAF(data);
               }
               // list of points
               for (int i = data.length; --i >= 0;)
-                data[i] = ((Float) e.getBitsetProperty(bs2, list2, op,
+                data[i] = ((Number) e.getBitsetProperty(bs2, list2, op,
                     SV.ptValue(list1.get(i)), plane2, null, null, false,
                     Integer.MAX_VALUE, false)).floatValue();
               return mp.addXAF(data);
@@ -1470,7 +1470,7 @@ public class MathExt {
     case T.radius:
       return mp.addXObj(getHelixData(bs, tok));
     case T.angle:
-      return mp.addXFloat(((Float) getHelixData(bs, T.angle)).floatValue());
+      return mp.addXFloat(((Number) getHelixData(bs, T.angle)).floatValue());
     case T.draw:
     case T.measure:
       return mp.addXObj(getHelixData(bs, tok));
@@ -3203,7 +3203,7 @@ public class MathExt {
       } else if (tok == T.quaternion && args[0].tok == T.bitset) {
         qs = vwr.getAtomGroupQuaternions((BS) args[0].value, nMax);
       } else if (args[0].tok == T.matrix3f) {
-        q = Quat.newM((M3) args[0].value);
+        q = Quat.newM((M3d) args[0].value);
       } else if (args[0].tok == T.point4f) {
         p4 = (P4) args[0].value;
       } else {
@@ -3315,37 +3315,37 @@ public class MathExt {
       return false;
     int n = args[0].asInt() - 1;
     SV x1 = mp.getX();
-    float[] f;
+    double[] f;
     switch (x1.tok) {
     case T.matrix3f:
       if (n < 0 || n > 2)
         return false;
-      M3 m = (M3) x1.value;
+      M3d m = (M3d) x1.value;
       switch (tok) {
       case T.row:
-        f = new float[3];
+        f = new double[3];
         m.getRow(n, f);
-        return mp.addXAF(f);
+        return mp.addXAD(f);
       case T.col:
       default:
-        f = new float[3];
+        f = new double[3];
         m.getColumn(n, f);
-        return mp.addXAF(f);
+        return mp.addXAD(f);
       }
     case T.matrix4f:
       if (n < 0 || n > 2)
         return false;
-      M4 m4 = (M4) x1.value;
+      M4d m4 = (M4d) x1.value;
       switch (tok) {
       case T.row:
-        f = new float[4];
+        f = new double[4];
         m4.getRow(n, f);
-        return mp.addXAF(f);
+        return mp.addXAD(f);
       case T.col:
       default:
-        f = new float[4];
+        f = new double[4];
         m4.getColumn(n, f);
-        return mp.addXAF(f);
+        return mp.addXAD(f);
       }
     case T.varray:
       // column of a[][]
@@ -3743,7 +3743,7 @@ public class MathExt {
       }
     }
     if (map != null) {
-      M3 m;
+      M3d m;
       // pointgroup. 
       int pt = xyz.indexOf('.');
       int p1 = xyz.indexOf('^');
@@ -3773,22 +3773,22 @@ public class MathExt {
           centerPt = (P3) ((SV) map.get("center")).value;
           SV obj = (SV) o;
           if (obj.tok == T.matrix3f) {
-            m = (M3) obj.value;
+            m = (M3d) obj.value;
           } else if (obj.tok == T.varray) {
-            m = (M3) obj.getList().get(iOp - 1).value;
+            m = (M3d) obj.getList().get(iOp - 1).value;
           } else {
             return false;
           }
         } else {
           centerPt = (P3) map.get("center");
-          if (o instanceof M3) {
-            m = (M3) o;
+          if (o instanceof M3d) {
+            m = (M3d) o;
           } else {
-            m = ((Lst<M3>) o).get(iOp - 1);
+            m = ((Lst<M3d>) o).get(iOp - 1);
           }
         }
-        M3 m0 = m;
-        m = M3.newM3(m);
+        M3d m0 = m;
+        m = M3d.newM3(m);
         if (nth > 1) {
           for (int i = 1; i < nth; i++) {
             m.mul(m0);

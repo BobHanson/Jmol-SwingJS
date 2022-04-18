@@ -23,8 +23,12 @@ public class PWmatReader extends AtomSetCollectionReader {
 
   private int nAtoms;
 
+  public PWmatReader() {
+  }
+  
   @Override
   protected void initializeReader() throws Exception {
+    setHighPrecision();
     doApplySymmetry = true;
   }
 

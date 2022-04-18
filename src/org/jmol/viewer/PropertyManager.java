@@ -62,8 +62,8 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -372,23 +372,23 @@ public class PropertyManager implements JmolPropertyManager {
             ? extractProperty(v.get(pt), args, ptr, null, true)
             : "");
       }
-      if (property instanceof M3) {
-        M3 m = (M3) property;
-        float[][] f = new float[][] { new float[] { m.m00, m.m01, m.m02 },
-            new float[] { m.m10, m.m11, m.m12 },
-            new float[] { m.m20, m.m21, m.m22 } };
+      if (property instanceof M3d) {
+        M3d m = (M3d) property;
+        double[][] f = new double[][] { new double[] { m.m00, m.m01, m.m02 },
+            new double[] { m.m10, m.m11, m.m12 },
+            new double[] { m.m20, m.m21, m.m22 } };
         if (pt < 0)
           pt += 3;
         return (pt >= 0 && pt < 3 ? extractProperty(f, args, --ptr, null, true)
             : "");
       }
-      if (property instanceof M4) {
-        M4 m = (M4) property;
-        float[][] f = new float[][] {
-            new float[] { m.m00, m.m01, m.m02, m.m03 },
-            new float[] { m.m10, m.m11, m.m12, m.m13 },
-            new float[] { m.m20, m.m21, m.m22, m.m23 },
-            new float[] { m.m30, m.m31, m.m32, m.m33 } };
+      if (property instanceof M4d) {
+        M4d m = (M4d) property;
+        double[][] f = new double[][] {
+            new double[] { m.m00, m.m01, m.m02, m.m03 },
+            new double[] { m.m10, m.m11, m.m12, m.m13 },
+            new double[] { m.m20, m.m21, m.m22, m.m23 },
+            new double[] { m.m30, m.m31, m.m32, m.m33 } };
         if (pt < 0)
           pt += 4;
         return (pt >= 0 && pt < 4 ? extractProperty(f, args, --ptr, null, true)
@@ -874,7 +874,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_STATE_INFO:
       return vwr.getStateInfo3(myParam.toString(), 0, 0);
     case PROP_TRANSFORM_INFO:
-      return M3.newM3(vwr.tm.matrixRotate);
+      return M3d.newM3(vwr.tm.matrixRotate);
     case PROP_DOM_INFO:
       return getAnnotationInfo(myParam, T.domains);
     case PROP_VAL_INFO:

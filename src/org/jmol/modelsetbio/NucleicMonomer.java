@@ -26,7 +26,7 @@ package org.jmol.modelsetbio;
 
 import javajs.util.A4;
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.Quat;
 import javajs.util.V3;
@@ -631,7 +631,7 @@ public boolean isCrossLinked(Group g) {
       oxyz[2].normalize();
       A4 aa = A4.new4(oxyz[3].x, oxyz[3].y, oxyz[3].z,
           (float) (66.6 * Math.PI / 180));
-      M3 m3 = new M3();
+      M3d m3 = new M3d();
       m3.setAA(aa);
       m3.rotate(oxyz[2]);
       oxyz[0].scaleAdd2(5.1f, oxyz[2], getC6());

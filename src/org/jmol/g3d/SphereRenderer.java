@@ -26,8 +26,8 @@ package org.jmol.g3d;
 
 //import javax.vecmath.Vector4f;  !NO -- requires Vector4d in applet
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 
 import org.jmol.util.Shader;
@@ -69,9 +69,9 @@ public class SphereRenderer {
   final static int maxSphereDiameter = 1000;
   final static int maxSphereDiameter2 = maxSphereDiameter * 2;
   private double[] zroot = new double[2];
-  private M3 mat;
+  private M3d mat;
   private double[] coef;
-  private M4 mDeriv;
+  private M4d mDeriv;
   private int selectedOctant;
   private int planeShade;
   private int[] zbuf;
@@ -82,7 +82,7 @@ public class SphereRenderer {
   private int offsetPbufBeginLine;
 
   void render(int[] shades, int diameter, int x, int y,
-              int z, M3 mat, double[] coef, M4 mDeriv,
+              int z, M3d mat, double[] coef, M4d mDeriv,
               int selectedOctant, P3[] octantPoints) {
     //System.out.println("sphere " + x  + " " + y  + " " + z + " " + diameter);
     if (z == 1)
@@ -421,7 +421,7 @@ public class SphereRenderer {
     int[] pl = planeShades;
     byte[] indexes = s.sphereShadeIndexes;
     int ps = planeShade;
-    M3 m = mat;
+    M3d m = mat;
 
     for (int i = 0, i2 = 0, yC = y; i2 <= r2; i2 += i + (++i), ptLine += lineIncrement, yC += ySign) {
       if (yC < 0) {

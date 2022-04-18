@@ -30,13 +30,15 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M34;
+import javajs.util.M3;
+import javajs.util.M34d;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.A4;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.T3;
@@ -134,7 +136,7 @@ public class Escape {
       return eAP((T3[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
-    if (x instanceof M34) 
+    if (x instanceof M34d) 
       return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
     if (AU.isAFF(x)) {
       // for isosurface functionXY
@@ -356,7 +358,7 @@ public class Escape {
         && s.indexOf(',') < 0 && s.indexOf('.') < 0 && s.indexOf('-') < 0)
       return BS.unescape(s);
     if (s.startsWith("[["))
-      return unescapeMatrix(s);
+      return unescapeMatrixD(s);
     return s;
   }
 
@@ -389,31 +391,57 @@ public class Escape {
       return P4.new4(points[0], points[1], points[2], points[3]);
     return strPoint;
   }
-
-  public static Object unescapeMatrix(String strMatrix) {
+//
+//  public static Object unescapeMatrix(String strMatrix) {
+//    if (strMatrix == null || strMatrix.length() == 0)
+//      return strMatrix;
+//    String str = strMatrix.replace('\n', ' ').trim();
+//    if (str.lastIndexOf("[[") != 0 || str.indexOf("]]") != str.length() - 2)
+//      return strMatrix;
+//    float[] points = new float[16];
+//    str = str.substring(2, str.length() - 2).replace('[',' ').replace(']',' ').replace(',',' ');
+//    int[] next = new int[1];
+//    int nPoints = 0;
+//    for (; nPoints < 16; nPoints++) {
+//      points[nPoints] = PT.parseFloatNext(str, next);
+//      if (Float.isNaN(points[nPoints])) {
+//        break;
+//      }
+//    }
+//    if (!Float.isNaN(PT.parseFloatNext(str, next)))
+//      return strMatrix; // overflow
+//    if (nPoints == 9)
+//      return M3.newA9(points);
+//    if (nPoints == 16)
+//      return M4.newA16(points);
+//    return strMatrix;
+//  }
+  
+  public static Object unescapeMatrixD(String strMatrix) {
     if (strMatrix == null || strMatrix.length() == 0)
       return strMatrix;
     String str = strMatrix.replace('\n', ' ').trim();
     if (str.lastIndexOf("[[") != 0 || str.indexOf("]]") != str.length() - 2)
       return strMatrix;
-    float[] points = new float[16];
+    double[] points = new double[16];
     str = str.substring(2, str.length() - 2).replace('[',' ').replace(']',' ').replace(',',' ');
     int[] next = new int[1];
     int nPoints = 0;
     for (; nPoints < 16; nPoints++) {
-      points[nPoints] = PT.parseFloatNext(str, next);
-      if (Float.isNaN(points[nPoints])) {
+      points[nPoints] = PT.parseDoubleNext(str, next);
+      if (Double.isNaN(points[nPoints])) {
         break;
       }
     }
-    if (!Float.isNaN(PT.parseFloatNext(str, next)))
+    if (!Double.isNaN(PT.parseDoubleNext(str, next)))
       return strMatrix; // overflow
     if (nPoints == 9)
-      return M3.newA9(points);
+      return M3d.newA9(points);
     if (nPoints == 16)
-      return M4.newA16(points);
+      return M4d.newA16(points);
     return strMatrix;
   }
+
 /*
   public static Object unescapeArray(String strArray) {
     if (strArray == null || strArray.length() == 0)
@@ -551,7 +579,7 @@ public class Escape {
       }
       return packageReadableSb(name, "List[" + imax + "]", sb);
     }
-    if (info instanceof M34
+    if (info instanceof M34d
         || info instanceof T3
         || info instanceof P4
         || info instanceof A4) {

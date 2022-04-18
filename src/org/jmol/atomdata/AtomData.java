@@ -115,7 +115,7 @@ package org.jmol.atomdata;
 
 
 
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 
 import javajs.util.BS;
@@ -174,7 +174,7 @@ public class AtomData {
    * @param mat
    * @param bs
    */
-  public void transformXYZ(M4 mat, BS bs) {
+  public void transformXYZ(M4d mat, BS bs) {
     P3[] p = new P3[xyz.length];
     if (bs == null)
       bs = BSUtil.newBitSet2(0, xyz.length);

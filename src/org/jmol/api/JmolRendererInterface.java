@@ -8,8 +8,8 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
@@ -162,8 +162,8 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void fillEllipsoid(P3 center, P3[] points, int x,
                                      int y, int z, int diameter,
-                                     M3 mToEllipsoidal, double[] coef,
-                                     M4 mDeriv, int selectedOctant,
+                                     M3d mToEllipsoidal, double[] coef,
+                                     M4d mDeriv, int selectedOctant,
                                      P3[] octantPoints);
 
   public abstract void fillHermite(int tension, int diameterBeg,

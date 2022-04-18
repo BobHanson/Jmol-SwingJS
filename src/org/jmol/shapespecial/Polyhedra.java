@@ -32,7 +32,7 @@ import java.util.Map.Entry;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -549,7 +549,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       return true;
     }
     if (property == "move") {
-      M4 mat = (M4) data[1];
+      M4d mat = (M4d) data[1];
       if (mat == null)
         return false;
       BS bsMoved = (BS) data[0];

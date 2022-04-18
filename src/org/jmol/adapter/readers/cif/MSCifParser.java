@@ -24,7 +24,7 @@
 package org.jmol.adapter.readers.cif;
 
 
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.PT;
 
@@ -228,7 +228,7 @@ public class MSCifParser extends MSRdr {
 
   static final String SEP = "_";
 
-  private M3 comSSMat;
+  private M3d comSSMat;
   public void processEntry() throws Exception {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_commen_t_section_1")) {
@@ -238,7 +238,7 @@ public class MSCifParser extends MSRdr {
     if (cr.key.startsWith("_cell_commen_supercell_matrix")) {
       isCommensurate = true;
       if (comSSMat == null)
-        comSSMat = M3.newM3(null);
+        comSSMat = M3d.newM3((M3d) null);
       String[] tokens = PT.split(cr.key, "_");
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);

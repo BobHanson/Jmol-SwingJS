@@ -51,7 +51,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;

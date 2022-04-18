@@ -1016,7 +1016,7 @@ public class XtalSymmetry {
             asc.bsAtoms.set(atom1.index);
           if (spinOp != 0 && atom1.vib != null) {
             // spinOp is making the correction for spin being a pseudoVector, not a standard vector
-            sym.getSpaceGroupOperation(iSym).rotateF(atom1.vib);
+            sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
             atom1.vib.scale(spinOp);
           }
           atom1.atomSite = atomSite;

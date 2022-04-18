@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.P3;

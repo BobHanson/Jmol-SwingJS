@@ -40,9 +40,9 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M34;
 import javajs.util.M34d;
-import javajs.util.M4;
+import javajs.util.M34d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -1427,14 +1427,14 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       if (isBondOrMatrix) {
         Object m = lookingAtMatrix();
-        if (m instanceof M34) {
-          addTokenToPrefix(T.o((m instanceof M4 ? T.matrix4f : T.matrix3f), m));
-          return CONTINUE;
-        }
         if (m instanceof M34d) {
           addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
           return CONTINUE;
         }
+//        if (m instanceof M34d) {
+//          addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
+//          return CONTINUE;
+//        }
       }
     }
     return OK;
@@ -1453,7 +1453,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         || script.charAt(ichToken) != '['
         || script.charAt(ichToken + 1) != '['
         || (ipt = script.indexOf("]]", ichToken)) < 0
-        || (m = Escape.unescapeMatrix(script.substring(ichToken, ipt + 2))) == null)
+        || (m = Escape.unescapeMatrixD(script.substring(ichToken, ipt + 2))) == null)
       return null;
     cchToken = ipt + 2 - ichToken;
     return m;

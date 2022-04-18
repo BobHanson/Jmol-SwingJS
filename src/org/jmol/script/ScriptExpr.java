@@ -25,8 +25,8 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.M34;
-import javajs.util.M4;
+import javajs.util.M34d;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -1150,7 +1150,7 @@ abstract class ScriptExpr extends ScriptParam {
           comparisonFloat = comparisonInt = ((Integer) val).intValue();
         else if (val instanceof Float && isModel)
           comparisonInt = ModelSet
-              .modelFileNumberFromFloat(((Float) val).floatValue());
+              .modelFileNumberFromFloat(((Number) val).floatValue());
       }
     }
     if (isStringProperty && !(val instanceof String)) {
@@ -1165,11 +1165,12 @@ abstract class ScriptExpr extends ScriptParam {
       } else if (isFloatProperty) {
         comparisonFloat = comparisonInt;
       }        
-    } else if (val instanceof Float) {
+    } else if (val instanceof Float
+        || val instanceof Double) {
       if (isModel) {
         tokWhat = -T.model;
       } else {
-        comparisonFloat = ((Float) val).floatValue();
+        comparisonFloat = ((Number) val).floatValue();
         if (isIntOrFloat) {
           isIntProperty = false;
         } else if (isIntProperty) {
@@ -1957,7 +1958,7 @@ abstract class ScriptExpr extends ScriptParam {
           Object v = vout.get(i);
           switch (mode) {
           case 0:
-            fout[i] = ((Float) v).floatValue();
+            fout[i] = ((Number) v).floatValue();
             break;
           case 1:
             fout[i] = ((Integer) v).floatValue();
@@ -2304,7 +2305,7 @@ abstract class ScriptExpr extends ScriptParam {
     } else if (vv instanceof Integer) {
       setIntProperty(key, ((Integer) vv).intValue());
     } else if (vv instanceof Float) {
-      setFloatProperty(key, ((Float) vv).floatValue());
+      setFloatProperty(key, ((Number) vv).floatValue());
     } else if (vv instanceof String) {
       setStringProperty(key, (String) vv);
     } else {
@@ -2600,8 +2601,8 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = SV.newV(T.point3f, v);
         } else if (v instanceof P4) {
           fixed[j] = SV.newV(T.point4f, v);
-        } else if (v instanceof M34) {
-          fixed[j] = SV.newV(v instanceof M4 ? T.matrix4f : T.matrix3f, v);
+        } else if (v instanceof M34d) {
+          fixed[j] = SV.newV(v instanceof M4d ? T.matrix4f : T.matrix3f, v);
         } else if (v instanceof Map<?, ?> || v instanceof ScriptContext
             && (v = ((ScriptContext) v).getFullMap()) != null) {
           // x = @y -- do a deep copy -- Jmol 14.3.16

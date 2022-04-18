@@ -26,7 +26,7 @@ package org.jmol.scriptext;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 
@@ -38,6 +38,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
+import org.jmol.script.ScriptParam;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 
@@ -76,7 +77,7 @@ public class SmilesExt {
    * @throws ScriptException
    */
   public float getSmilesCorrelation(BS bsA, BS bsB, String smiles, Lst<P3> ptsA,
-                                    Lst<P3> ptsB, M4 m4, Lst<BS> vReturn,
+                                    Lst<P3> ptsB, M4d m4, Lst<BS> vReturn,
                                     boolean asMap, int[][] mapSet, P3 center,
                                     boolean bestMap, int flags)
       throws ScriptException {
@@ -88,7 +89,7 @@ public class SmilesExt {
         ptsA = new Lst<P3>();
         ptsB = new Lst<P3>();
       }
-      M4 m = new M4();
+      M4d m = new M4d();
       P3 c = new P3();
 
       Atom[] atoms = e.vwr.ms.at;
@@ -118,7 +119,7 @@ public class SmilesExt {
             ptsB.addLast(atoms[maps[i][j]]);
           Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
           float stddev = (ptsB.size() == 1 ? 0
-              : Measure.getTransformMatrix4(ptsA, ptsB, m, null));
+              : ScriptParam.getTransformMatrix4(ptsA, ptsB, m, null));
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {
             if (stddev < tolerance) {
@@ -304,7 +305,7 @@ public class SmilesExt {
   }
 
   @SuppressWarnings("unchecked")
-  public float mapPolyhedra(int i1, int i2, boolean isSmiles, M4 m)
+  public float mapPolyhedra(int i1, int i2, boolean isSmiles, M4d m)
       throws ScriptException {
     Lst<P3> ptsA = new Lst<P3>();
     Lst<P3> ptsB = new Lst<P3>();
@@ -336,7 +337,7 @@ public class SmilesExt {
     for (int i = 0, n = a.length; i < n; i++)
       ptsB.add(a[i]);
     Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
-    return Measure.getTransformMatrix4(ptsA, ptsB, m, null);
+    return ScriptParam.getTransformMatrix4(ptsA, ptsB, m, null);
   }
 
 }

@@ -32,7 +32,7 @@ import org.jmol.util.Parser;
 
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3;
@@ -315,7 +315,7 @@ public class SymmetryOperation extends M4d {
     xyzCanonical = strOut;
     if (mxyz != null) {
       // base time reversal on relationship between x and mx in relation to determinant
-      boolean isProper = (M4.newA16(linearRotTrans).determinant3() == 1);
+      boolean isProper = (M4d.newA16(linearRotTrans).determinant3() == 1);
       timeReversal = (((xyz.indexOf("-x") < 0) == (mxyz
           .indexOf("-mx") < 0)) == isProper ? 1 : -1);
     }

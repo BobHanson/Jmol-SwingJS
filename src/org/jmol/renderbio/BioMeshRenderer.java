@@ -25,7 +25,7 @@
 package org.jmol.renderbio;
 
 import javajs.util.A4;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -144,7 +144,7 @@ public class BioMeshRenderer extends MeshRenderer {
   private final P3 pt1 = new P3();
   private final P3 ptPrev = new P3();
   private final P3 ptNext = new P3();
-  private final M3 mat = new M3();
+  private final M3d mat = new M3d();
   private final static int MODE_TUBE = 0;
   private final static int MODE_FLAT = 1;
   private final static int MODE_ELLIPTICAL = 2;

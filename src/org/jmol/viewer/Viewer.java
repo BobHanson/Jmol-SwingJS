@@ -123,8 +123,8 @@ import javajs.util.CU;
 import javajs.util.DF;
 import javajs.util.JSJSONParser;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -1926,7 +1926,7 @@ public class Viewer extends JmolViewer
   }
 
   public void moveTo(JmolScriptEvaluator eval, float floatSecondsTotal,
-                     P3 center, V3 rotAxis, float degrees, M3 rotationMatrix,
+                     P3 center, V3 rotAxis, float degrees, M3d rotationMatrix,
                      float zoom, float xTrans, float yTrans,
                      float rotationRadius, P3 navCenter, float xNav, float yNav,
                      float navDepth, float cameraDepth, float cameraX,
@@ -2111,7 +2111,7 @@ public class Viewer extends JmolViewer
   }
 
   //  @Override
-  //  public M4 getUnscaledTransformMatrix() {
+  //  public M4d getUnscaledTransformMatrix() {
   //    // unused
   //    return tm.getUnscaledTransformMatrix();
   //  }
@@ -3717,7 +3717,7 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * convert string abc;offset or M3 or M4 to origin and three vectors -- a, b,
+   * convert string abc;offset or M3d or M4d to origin and three vectors -- a, b,
    * c. The string can be preceded by ! for "reverse of". For example,
    * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, but it still needs a
    * semicolon: "a/2,b/2,c;"
@@ -3725,7 +3725,7 @@ public class Viewer extends JmolViewer
    * @param iModel
    * 
    * @param def
-   *        a string or an M3 or M4
+   *        a string or an M3d or M4d
    * @return vectors [origin a b c]
    */
   public T3d[] getV0abc(int iModel, Object def) {
@@ -7884,7 +7884,7 @@ public class Viewer extends JmolViewer
                                            float endDegrees, boolean isSpin,
                                            BS bsSelected, V3 translation,
                                            Lst<P3> finalPoints,
-                                           float[] dihedralList, M4 m4) {
+                                           float[] dihedralList, M4d m4) {
     // Eval: rotate INTERNAL
 
     if (eval == null)
@@ -8140,7 +8140,7 @@ public class Viewer extends JmolViewer
     sm.setStatusAtomMoved(bsAtoms);
   }
 
-  public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, P3 center,
+  public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3 translation, P3 center,
                         boolean isInternal, BS bsAtoms,
                         boolean translationOnly) {
     // from TransformManager exclusively

@@ -163,7 +163,7 @@ class SpaceGroup {
   /**
    * 
    * @param name
-   * @param data Lst<SymmetryOperation> or Lst<M4>
+   * @param data Lst<SymmetryOperation> or Lst<M4d>
    * @return a new SpaceGroup if successful or null
    */
   private static SpaceGroup createSGFromList(String name, Lst<?> data) {

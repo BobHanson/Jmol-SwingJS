@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -462,7 +462,7 @@ public class Polyhedron {
         + (visible ? "" : "polyhedra " + ident + " off;") + "\n";
   }
 
-  void move(M4 mat, BS bsMoved) {
+  void move(M4d mat, BS bsMoved) {
     info = null;
     for (int i = 0; i < nVertices; i++) {
       P3 p = vertices[i];

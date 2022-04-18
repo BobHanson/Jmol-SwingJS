@@ -10,7 +10,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;

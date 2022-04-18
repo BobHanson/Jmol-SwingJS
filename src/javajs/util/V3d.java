@@ -38,10 +38,23 @@ public class V3d extends T3d {
   public static V3d newV(T3d t) {
     return new3(t.x, t.y, t.z);
   }
+  public static V3d newV(T3 t) {
+    return new3(t.x, t.y, t.z);
+  }
+
+  public V3 toV3() {
+    return V3.new3((float) x, (float) y, (float) z); 
+  }
+
 
   public static V3d newVsub(T3d t1, T3d t2) {
     return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
+
+  public static V3d newVsub(T3 t1, T3 t2) {
+    return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
+  }
+  
 
   public static V3d new3(double x, double y, double z) {
     V3d v = new V3d();
@@ -63,5 +76,4 @@ public class V3d extends T3d {
 
     return Math.abs(Math.atan2(cross, dot(v1)));
   }
-
 }

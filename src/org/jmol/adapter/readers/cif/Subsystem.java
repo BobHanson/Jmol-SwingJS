@@ -7,7 +7,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.T3;
 import javajs.util.T3d;
@@ -114,7 +114,7 @@ class Subsystem {
     // 
 
     Logger.info("unit cell parameters: " + symmetry.getUnitCellInfo(true));
-    symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4>(), d);
+    symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4d>(), d);
     int nOps = s0.getSpaceGroupOperationCount();
     for (int iop = 0; iop < nOps; iop++) {
       Matrix rv = s0.getOperationRsVs(iop);

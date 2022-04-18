@@ -103,8 +103,8 @@ import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -360,7 +360,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("moveIsosurface" == propertyName) {
       if (thisMesh != null && !thisMesh.isModelConnected) {
-        thisMesh.updateCoordinates((M4) value, null);
+        thisMesh.updateCoordinates((M4d) value, null);
         thisMesh.altVertices = null;
       }
       return;
@@ -372,7 +372,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         if (meshes[i].modelIndex == m
             && (meshes[i].connectedAtoms != null || meshes[i].isModelConnected))
           ((IsosurfaceMesh) meshes[i]).updateCoordinates(
-              (M4) ((Object[]) value)[2], (BS) ((Object[]) value)[1]);
+              (M4d) ((Object[]) value)[2], (BS) ((Object[]) value)[1]);
       return;
     }
 
@@ -624,9 +624,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (!isColorExplicit)
         isPhaseColored = true;
       if (sg == null || !sg.params.isMapped) {
-        M4 mat4 = ms.am[currentMesh.modelIndex].mat4;
+        M4d mat4 = ms.am[currentMesh.modelIndex].mat4;
         if (mat4 != null) {
-          M4 minv = M4.newM4(mat4);
+          M4d minv = M4d.newM4(mat4);
           minv.invert();
           setPropI("modelInvRotation", minv, null);
         }
@@ -1353,7 +1353,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         a.setVA(y, rotRadians);
       else
         a.setVA(z, rotRadians);
-      M3 m = new M3().setAA(a);
+      M3d m = new M3d().setAA(a);
       m.rotate(x);
       m.rotate(y);
       m.rotate(z);

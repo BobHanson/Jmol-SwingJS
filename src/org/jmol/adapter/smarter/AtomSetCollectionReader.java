@@ -41,7 +41,7 @@ import javajs.api.GenericBinaryDocument;
 import javajs.api.GenericLineReader;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.OC;
@@ -453,11 +453,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       }
     }
     if (!fixJavaDouble)
-      asc.setInfo("highPrecision", Boolean.TRUE);
+      setHighPrecision();
     setLoadNote();
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
+
+  protected void setHighPrecision() {
+    fixJavaDouble = false;
+    asc.setInfo("highPrecision", Boolean.TRUE);
+  }
 
   protected String setLoadNote() {
     String s = loadNote.toString();
@@ -1304,7 +1309,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         && (desiredVibrationNumber <= 0 || vibrationNumber == desiredVibrationNumber);
   }
 
-  private M3 matRot;
+  private M3d matRot;
 
   public MSInterface ms;
 
@@ -1312,7 +1317,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
                            double z2, double x3, double y3, double z3) {
     if (matRot != null || !doSetOrientation)
       return;
-    matRot = new M3();
+    matRot = new M3d();
     V3 v = V3.new3((float) x1, (float) y1, (float) z1);
     // rows in Sygress/CAChe and Spartan become columns here
     v.normalize();
@@ -1323,7 +1328,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     v.set((float) x3, (float) y3, (float) z3);
     v.normalize();
     matRot.setColumnV(2, v);
-    asc.setInfo("defaultOrientationMatrix", M3.newM3(matRot));
+    asc.setInfo("defaultOrientationMatrix", M3d.newM3(matRot));
     // first two matrix column vectors define quaternion X and XY plane
     Quat q = Quat.newM(matRot);
     asc.setInfo("defaultOrientationQuaternion", q);

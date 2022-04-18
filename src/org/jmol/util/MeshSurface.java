@@ -8,7 +8,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.V3;
 import javajs.util.T3;
@@ -84,7 +84,7 @@ public class MeshSurface {
   public int normalCount; // for export only
   public int normixCount;
   public BS bsPolygons;
-  public M4 mat4;
+  public M4d mat4;
   public BS[] surfaceSet;
   public int[] vertexSets;
   public int nSets = 0;

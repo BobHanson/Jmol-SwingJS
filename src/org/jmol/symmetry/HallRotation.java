@@ -52,7 +52,7 @@ package org.jmol.symmetry;
  *
  */
 
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.M4d;
 
 class HallRotation {

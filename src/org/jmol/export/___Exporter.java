@@ -34,8 +34,8 @@ import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.OC;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -398,7 +398,7 @@ public abstract class ___Exporter {
     return list;
   }
 
-  protected static MeshSurface getConeMesh(P3 centerBase, M3 matRotateScale, short colix) {
+  protected static MeshSurface getConeMesh(P3 centerBase, M3d matRotateScale, short colix) {
     MeshSurface ms = new MeshSurface();
     int ndeg = 10;
     int n = 360 / ndeg;
@@ -426,11 +426,11 @@ public abstract class ___Exporter {
     return ms;
   }
 
-  protected M3 getRotationMatrix(P3 pt1, P3 pt2, float radius) {    
-    M3 m = new M3();
-    M3 m1;
+  protected M3d getRotationMatrix(P3 pt1, P3 pt2, float radius) {    
+    M3d m = new M3d();
+    M3d m1;
     if (pt2.x == pt1.x && pt2.y == pt1.y) {
-      m1 = M3.newM3(null);
+      m1 = M3d.newM3((M3d) null);
       if (pt1.z > pt2.z) // 180-degree rotation about X
         m1.m11 = m1.m22 = -1;
     } else {
@@ -448,13 +448,13 @@ public abstract class ___Exporter {
     return m1;
   }
 
-  protected M3 getRotationMatrix(P3 pt1, P3 ptZ, float radius, P3 ptX, P3 ptY) {    
-    M3 m = new M3();
+  protected M3d getRotationMatrix(P3 pt1, P3 ptZ, float radius, P3 ptX, P3 ptY) {    
+    M3d m = new M3d();
     m.m00 = ptX.distance(pt1) * radius;
     m.m11 = ptY.distance(pt1) * radius;
     m.m22 = ptZ.distance(pt1) * 2;
     Quat q = Quat.getQuaternionFrame(pt1, ptX, ptY);
-    M3 m1 = q.getMatrix();
+    M3d m1 = q.getMatrix();
     m1.mul(m);
     return m1;
   }
@@ -556,8 +556,8 @@ public abstract class ___Exporter {
 
   abstract void fillEllipsoid(P3 center, P3[] points, short colix, 
                               int x, int y, int z, int diameter,
-                              M3 toEllipsoidal, double[] coef,
-                              M4 deriv, P3[] octantPoints);
+                              M3d toEllipsoidal, double[] coef,
+                              M4d deriv, P3[] octantPoints);
 
   void drawFilledCircle(short colixRing, short colixFill, int diameter, int x, int y, int z) {
     if (colixRing != 0)

@@ -36,7 +36,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.GData;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -402,7 +402,7 @@ public final class Navigator extends JmolThread implements
   private void alignZX(P3 pt0, P3 pt1, P3 ptVectorWing) {
     P3 pt0s = new P3();
     P3 pt1s = new P3();
-    M3 m = tm.matrixRotate;
+    M3d m = tm.matrixRotate;
     m.rotate2(pt0, pt0s);
     m.rotate2(pt1, pt1s);
     V3 vPath = V3.newVsub(pt0s, pt1s);

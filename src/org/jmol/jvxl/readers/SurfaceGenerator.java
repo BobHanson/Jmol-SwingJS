@@ -136,7 +136,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -510,7 +510,7 @@ public class SurfaceGenerator {
     }
 
     if ("modelInvRotation" == propertyName) {
-      params.modelInvRotation = (M4) value;
+      params.modelInvRotation = (M4d) value;
       return true;
     }
 

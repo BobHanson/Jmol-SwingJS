@@ -1,7 +1,7 @@
 package org.jmol.symmetry;
 
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3d;

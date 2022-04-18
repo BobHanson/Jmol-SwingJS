@@ -7,7 +7,7 @@ import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.P3;
@@ -348,7 +348,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     modDim = d;
     rI = new Matrix(null, d, 1);
     this.mods = mods;
-    this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix, as M3
+    this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix, as M3d
     sigma = factors[0];
     if (factors[1] != null) {
       isSubsystem = true;
@@ -437,9 +437,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, arI);
     // rotate by R3 rotation
-    gammaE.rotateF(this);
+    gammaE.rotate(this);
     if (mxyz != null){
-      gammaE.rotateF(mxyz);
+      gammaE.rotate(mxyz);
       if (spinOp < 0)
         mxyz.scale(spinOp);
     }

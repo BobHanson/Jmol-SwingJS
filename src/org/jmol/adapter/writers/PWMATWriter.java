@@ -92,11 +92,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     oc.append("Position, move_x, move_y, move_z\n");
     String f = "%4i%40s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
     Atom[] a = vwr.ms.at;
+    String coord;
     P3 p = new P3();
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
-      p.setT(a[i]);
-      uc.toFractionalF(p, false);
-      String coord = clean(p.x) + clean(p.y) + clean(p.z);
+      P3d dxyz = vwr.ms.getPrecisionCoord(i);
+      if (dxyz == null) {
+        // if there is no precision atom, then we need
+        // to write use float, not double, as that is 
+        // the only way to avoid garbage out
+        p.setT(a[i]);
+        uc.toFractionalF(p, false);
+        coord = cleanF(p.x) + cleanF(p.y) + cleanF(p.z);
+      } else {
+        coord = clean(dxyz.x) + clean(dxyz.y) + clean(dxyz.z);        
+      }
       if (cz == null) {
         oc.append(PT.sprintf(f, "is", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord }));
       } else {
@@ -162,10 +171,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       return;
     Atom[] a = vwr.ms.at;
     oc.append(name.toUpperCase()).append("\n");
-    String f = "%4i%18.12D%18.12D\n";
+    String f = "%4i%18.12f%18.12f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "iDD",
+      oc.append(PT.sprintf(f, "idd",
           new Object[] { Integer.valueOf(a[i].getElementNumber()),
               Double.valueOf(m[ic]), Double.valueOf(v[ic]) }));
     }
@@ -178,10 +187,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     Atom[] a = vwr.ms.at;
     name = name.toUpperCase();
     oc.append(name).append("\n");
-    String f = "%4i%18.12D\n";
+    String f = "%4i%18.12f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "iD", new Object[] {
+      oc.append(PT.sprintf(f, "id", new Object[] {
           Integer.valueOf(a[i].getElementNumber()), Double.valueOf(m[ic]) }));
     }
     Logger.info("PWMATWriter: " + name);

@@ -3868,9 +3868,9 @@ public class T {
           .equals(value)));
     switch (tok) {
     case integer:
-      return (t.tok == decimal && ((Float) t.value).floatValue() == intValue);
+      return (t.tok == decimal && ((Number) t.value).floatValue() == intValue);
     case decimal:
-      return (t.tok == integer && ((Float) value).floatValue() == t.intValue);
+      return (t.tok == integer && ((Number) value).floatValue() == t.intValue);
     default:
       return false;
     }

@@ -46,7 +46,7 @@ import org.jmol.util.Geodesic;
 import org.jmol.util.MeshSurface;
 import javajs.util.P3;
 import javajs.util.A4;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -253,7 +253,7 @@ public class _IdtfExporter extends __CartesianExporter {
   private int iObj;
   private Map<String, Boolean> htDefs = new Hashtable<String, Boolean>();
   
-  final private M4 m = new M4();
+  final private M4d m = new M4d();
 
   final private SB models = new SB();
   final private SB resources = new SB();
@@ -392,7 +392,7 @@ public class _IdtfExporter extends __CartesianExporter {
 //      +"\n\\end{comment}";
   
 
-  private String getParentItem(String name, M4 m) {
+  private String getParentItem(String name, M4d m) {
     SB sb= new SB();
     sb.append("PARENT_NAME \"" + name + "\"\n");
     sb.append("PARENT_TM {\n");
@@ -565,9 +565,9 @@ public class _IdtfExporter extends __CartesianExporter {
     outputEllipsoid(center, sphereMatrix, colix);
   }
 
-  private M4 cylinderMatrix = new M4();
+  private M4d cylinderMatrix = new M4d();
 
-  private void outputEllipsoid(T3 center, M4 sphereMatrix, short colix) {
+  private void outputEllipsoid(T3 center, M4d sphereMatrix, short colix) {
     if (!haveSphere) {
       models.append(getSphereResource());
       haveSphere = true;
@@ -742,7 +742,7 @@ public class _IdtfExporter extends __CartesianExporter {
     if (!haveCircle) {
       models.append(getCircleResource());
       haveCircle = true;
-      cylinderMatrix = new M4();
+      cylinderMatrix = new M4d();
     }
     addColix(colix, false);
     String key = "Ellipse_" + colix;
@@ -766,7 +766,7 @@ public class _IdtfExporter extends __CartesianExporter {
     if (!haveCircle) {
       models.append(getCircleResource());
       haveCircle = true;
-      cylinderMatrix = new M4();
+      cylinderMatrix = new M4d();
     }
     addColix(colix, false);
     String key = "Circle_" + colix;
@@ -1035,7 +1035,7 @@ public class _IdtfExporter extends __CartesianExporter {
     htNodes.put(key, v);
     addShader(key, colix);
     if (cylinderMatrix == null)
-      cylinderMatrix = new M4();
+      cylinderMatrix = new M4d();
     cylinderMatrix.setIdentity();
     v.addLast(getParentItem("Jmol", cylinderMatrix));
   }

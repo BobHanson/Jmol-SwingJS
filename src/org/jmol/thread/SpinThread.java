@@ -29,7 +29,7 @@ package org.jmol.thread;
 import javajs.util.BS;
 import org.jmol.script.T;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 
 import org.jmol.util.Logger;
 import javajs.util.P3;
@@ -56,7 +56,7 @@ public class SpinThread extends JmolThread {
   //private boolean navigatingSurface;
   private BS[] bsBranches;
   private boolean isDone = false;
-  private M4 m4;
+  private M4d m4;
   
   public SpinThread() {}
   

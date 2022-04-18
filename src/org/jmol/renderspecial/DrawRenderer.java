@@ -39,7 +39,7 @@ import org.jmol.util.GData;
 import javajs.util.Lst;
 
 import javajs.util.A4;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -250,7 +250,7 @@ public class DrawRenderer extends MeshRenderer {
     // crossing point
     pt1f.scaleAdd2(fractionalOffset, vTemp, v1);
     // define rotational axis
-    M3 mat = new M3().setAA(A4.newVA(vTemp,
+    M3d mat = new M3d().setAA(A4.newVA(vTemp,
         (float) (nDegreesOffset * Math.PI / 180)));
     // vector to rotate
     vTemp2.sub2(ptRef,

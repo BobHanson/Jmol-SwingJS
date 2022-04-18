@@ -44,7 +44,7 @@ import javajs.util.P3;
 import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
-import javajs.util.Qd;
+import javajs.util.Quat;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
@@ -537,8 +537,8 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    Qd q = Qd.getQuaternionFrame(pt0, pt1, pt2)
-        .div(Qd.getQuaternionFrame(pta00, pta01, pta02));
+    Quat q = Quat.getQuaternionFrame(pt0, pt1, pt2)
+        .div(Quat.getQuaternionFrame(pta00, pta01, pta02));
     Quat qF = Quat.new4((float) q.q1, (float) q.q2, (float) q.q3, (float) q.q0);
     T3[] info = Measure.computeHelicalAxis(pta00.toP3(), pt0.toP3(), qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };

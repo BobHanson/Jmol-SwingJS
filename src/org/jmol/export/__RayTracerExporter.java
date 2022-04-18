@@ -28,8 +28,8 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.T3;
 
@@ -253,8 +253,8 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   @Override
   void fillEllipsoid(P3 center, P3[] points, short colix, int x,
-                       int y, int z, int diameter, M3 toEllipsoidal,
-                       double[] coef, M4 deriv, P3[] octantPoints) {
+                       int y, int z, int diameter, M3d toEllipsoidal,
+                       double[] coef, M4d deriv, P3[] octantPoints) {
     float radius = diameter / 2f;
     if (radius == 0)
       return;

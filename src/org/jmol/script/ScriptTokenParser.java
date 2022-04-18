@@ -350,7 +350,7 @@ abstract class ScriptTokenParser {
     case T.integer:
       return theToken.intValue;
     case T.decimal:
-      return ((Float) theValue).floatValue();
+      return ((Number) theValue).floatValue();
     }
     return 0;
   }
@@ -1419,7 +1419,7 @@ abstract class ScriptTokenParser {
   private int fixModelSpec(T token) {
     int ival = token.intValue;
     if (ival == Integer.MAX_VALUE) {
-      float f = ((Float) theValue).floatValue();
+      float f = ((Number) theValue).floatValue();
       if (f == (int) f)
         ival = ((int) f) * 1000000; 
       if (ival < 0)

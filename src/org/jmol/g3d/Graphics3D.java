@@ -43,8 +43,8 @@ import org.jmol.util.Shader;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
@@ -341,7 +341,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void beginRendering(M3 rotationMatrix, boolean translucentMode,
+  public void beginRendering(M3d rotationMatrix, boolean translucentMode,
                              boolean isImageWrite, boolean renderLow) {
     if (currentlyRendering)
       endRendering();
@@ -895,8 +895,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void fillEllipsoid(P3 center, P3[] points, int x, int y, int z,
-                            int diameter, M3 mToEllipsoidal, double[] coef,
-                            M4 mDeriv, int selectedOctant, P3[] octantPoints) {
+                            int diameter, M3d mToEllipsoidal, double[] coef,
+                            M4d mDeriv, int selectedOctant, P3[] octantPoints) {
     switch (diameter) {
     case 1:
       plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf, pixel);
@@ -2051,7 +2051,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private final byte[] shadeIndexes2Sided = new byte[normixCount];
   public int pass2Flag01;
 
-  public void setRotationMatrix(M3 rotationMatrix) {
+  public void setRotationMatrix(M3d rotationMatrix) {
     V3[] vertexVectors = Normix.getVertexVectors();
     for (int i = normixCount; --i >= 0;) {
       V3 tv = transformedVectors[i];

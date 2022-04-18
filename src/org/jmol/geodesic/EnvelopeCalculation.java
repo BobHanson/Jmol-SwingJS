@@ -29,7 +29,7 @@ import org.jmol.util.Geodesic;
 import org.jmol.util.Normix;
 
 import javajs.util.AU;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
@@ -244,7 +244,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
    * @param bs
    * @param m
    */
-  public void reCalculate(BS bs, M3 m) {
+  public void reCalculate(BS bs, M3d m) {
     if (atomData.radiusData != null) {
       calculate(null, maxRadius, bs, bsIgnore, disregardNeighbors,
           onlySelectedDots, isSurface, multiModel);

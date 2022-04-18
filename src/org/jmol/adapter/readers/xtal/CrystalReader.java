@@ -34,14 +34,14 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.DF;
 import javajs.util.Lst;
-import javajs.util.M3;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Qd;
+import javajs.util.Quat;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.V3;
@@ -70,13 +70,13 @@ import org.jmol.util.Tensor;
  * 
  *          special model auxiliaryInfo include:
  * 
- *          primitiveToCrystal M3 transforming primitive lattice to conventional
+ *          primitiveToCrystal M3d transforming primitive lattice to conventional
  *          lattice
  * 
- *          mat4PrimitiveToCrystal M4 for use in transforming symmetry
+ *          mat4PrimitiveToCrystal M4d for use in transforming symmetry
  *          operations
  * 
- *          mat4CrystalToPrimitive M4 convenience inverse of
+ *          mat4CrystalToPrimitive M4d convenience inverse of
  *          mat4PrimitiveToCrystal
  * 
  *          fileSymmetryOperations List<String> symmetry operators (primitive)
@@ -914,7 +914,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       mp.getColumnV(0, a);
       mp.getColumnV(1, b);
     }
-    matUnitCellOrientation = Qd.getQuaternionFrame(new P3d(), a, b)
+    matUnitCellOrientation = Quat.getQuaternionFrame(new P3d(), a, b)
         .getMatrix();
     Logger.info("oriented unit cell is in model " + asc.atomSetCount);
   }
@@ -1425,7 +1425,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       m4c2p.invert();
       asc.setModelInfoForSet("mat4CrystalToPrimitive", m4c2p, asc.iSet);
       if (symops.size() > 0) {
-        //        M4[] ops = new M4[symops.size()];
+        //        M4d[] ops = new M4d[symops.size()];
         //        for (int i = ops.length; --i >= 0;) {
         //          ops[i] = SymmetryOperation.getMatrixFromXYZ(symops.get(i));
         //          if (false && isPrimitive) {

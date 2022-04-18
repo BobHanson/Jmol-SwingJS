@@ -32,7 +32,7 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.util.Logger;
 
 import javajs.util.Lst;
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.P3d;

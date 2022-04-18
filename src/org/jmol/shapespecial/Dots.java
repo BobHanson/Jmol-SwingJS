@@ -31,8 +31,8 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 
 import javajs.util.SB;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 
 import org.jmol.viewer.JC;
 
@@ -153,10 +153,10 @@ public class Dots extends AtomShape {
 
     if ("refreshTrajectories" == propertyName) {
       bs = (BS) ((Object[]) value)[1];
-      M4 m4 = (M4) ((Object[]) value)[2];
+      M4d m4 = (M4d) ((Object[]) value)[2];
       if (m4 == null) // end of compare command
         return;
-      M3 m = new M3();
+      M3d m = new M3d();
       m4.getRotationScale(m);
       ec.reCalculate(bs, m);
       return;

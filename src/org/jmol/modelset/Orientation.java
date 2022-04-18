@@ -1,6 +1,6 @@
 package org.jmol.modelset;
 
-import javajs.util.M3;
+import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.PT;
 
@@ -12,7 +12,7 @@ public class Orientation {
 
   public String saveName;
 
-  private M3 rotationMatrix = new M3();
+  private M3d rotationMatrix = new M3d();
   private float xTrans, yTrans;
   private float zoom, rotationRadius;
   private P3 center = new P3();
@@ -41,7 +41,7 @@ public class Orientation {
     }
     vwr.finalizeTransformParameters();
     if (asDefault) {
-      M3 rot = (M3) vwr.ms.getInfoM("defaultOrientationMatrix");
+      M3d rot = (M3d) vwr.ms.getInfoM("defaultOrientationMatrix");
       if (rot == null)
         rotationMatrix.setScale(1);
       else

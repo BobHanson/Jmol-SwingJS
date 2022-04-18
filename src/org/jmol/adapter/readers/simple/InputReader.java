@@ -41,7 +41,7 @@ import javajs.util.P3;
 import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
-import javajs.util.Qd;
+import javajs.util.Quat;
 import javajs.util.Quat;
 import javajs.util.V3;
 import javajs.util.V3d;

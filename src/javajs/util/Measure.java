@@ -454,18 +454,6 @@ final public class Measure {
     averagePoint.scale(1f / nPoints);
   }
 
-  public static Lst<P3> transformPoints(Lst<P3> vPts, M4 m4, P3 center) {
-    Lst<P3> v = new  Lst<P3>();
-    for (int i = 0; i < vPts.size(); i++) {
-      P3 pt = P3.newP(vPts.get(i));
-      pt.sub(center);
-      m4.rotTrans(pt);
-      pt.add(center);
-      v.addLast(pt);
-    }
-    return v;
-  }
-
   public static boolean isInTetrahedron(P3 pt, P3 ptA, P3 ptB,
                                         P3 ptC, P3 ptD,
                                         P4 plane, V3 vTemp,
@@ -683,37 +671,6 @@ final public class Measure {
 		retStddev[1] = getRmsd(centerAndPoints, q);
 		return q;
 	}
-
-  /**
-   * Fills a 4x4 matrix with rotation-translation of mapped points A to B.
-   * If centerA is null, this is a standard 4x4 rotation-translation matrix;
-   * otherwise, this 4x4 matrix is a rotation around a vector through the center of ptsA,
-   * and centerA is filled with that center; 
-   * Prior to Jmol 14.3.12_2014.02.14, when used from the JmolScript compare() function,
-   * this method returned the second of these options instead of the first.
-   * 
-   * @param ptsA
-   * @param ptsB
-   * @param m  4x4 matrix to be returned 
-   * @param centerA return center of rotation; if null, then standard 4x4 matrix is returned
-   * @return stdDev
-   */
-  public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4 m,
-                                          P3 centerA) {
-    P3[] cptsA = getCenterAndPoints(ptsA);
-    P3[] cptsB = getCenterAndPoints(ptsB);
-    float[] retStddev = new float[2];
-    Quat q = calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
-        retStddev);
-    M3 r = q.getMatrix();
-    if (centerA == null)
-      r.rotate(cptsA[0]);
-    else
-      centerA.setT(cptsA[0]);
-    V3 t = V3.newVsub(cptsB[0], cptsA[0]);
-    m.setMV(r, t);
-    return retStddev[1];
-  }
 
   /**
    * from a list of points, create an array that includes the center

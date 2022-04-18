@@ -328,7 +328,7 @@ public class AFLOWReader extends VaspPoscarReader {
   private void alignUnitCells() {
 //    for (int i = asc.atomSetCount; --i >= 0;) {
 //      
-////      M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo.get("matUnitCellOrientation");
+////      M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo.get("matUnitCellOrientation");
 //
 //      
 //    }

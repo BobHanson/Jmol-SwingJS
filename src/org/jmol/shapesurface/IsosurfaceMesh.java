@@ -43,7 +43,7 @@ import org.jmol.util.MeshSurface;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.CU;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.PT;
@@ -985,7 +985,7 @@ public class IsosurfaceMesh extends Mesh {
    * @param m
    * @param bs
    */
-  public void updateCoordinates(M4 m, BS bs) {
+  public void updateCoordinates(M4d m, BS bs) {
     boolean doUpdate = (bs == null || isModelConnected);
     if (!doUpdate)
       for (int i = 0; i < connectedAtoms.length; i++)
@@ -999,7 +999,7 @@ public class IsosurfaceMesh extends Mesh {
       mat4 = vwr.ms.am[modelIndex].mat4;
     } else {
       if (mat4 == null)
-        mat4 = M4.newM4(null);
+        mat4 = M4d.newM4(null);
       mat4.mul2(m, mat4);
     }
     recalcAltVertices = true;

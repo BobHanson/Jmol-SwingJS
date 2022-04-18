@@ -43,8 +43,8 @@ import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
@@ -382,7 +382,7 @@ public class Mesh extends MeshSurface {
         normal.normalize();
         normal.scale(scale3d);
         if (mat4 != null) {
-          M3 m3 = new M3();
+          M3d m3 = new M3d();
           mat4.getRotationScale(m3); 
           m3.rotate(normal);
         }
@@ -590,10 +590,10 @@ public class Mesh extends MeshSurface {
       mat4 = null;
       return;
     }
-    M3 m3 = new M3();
+    M3d m3 = new M3d();
     V3 v = new V3();
     if (mat4 == null)
-      mat4 = M4.newM4(null);
+      mat4 = M4d.newM4(null);
     mat4.getRotationScale(m3);
     mat4.getTranslation(v);
     if (q == null) {
@@ -604,7 +604,7 @@ public class Mesh extends MeshSurface {
     } else {
       m3.mul(q.getMatrix());
     }
-    mat4 = M4.newMV(m3, v);
+    mat4 = M4d.newMV(m3, v);
     recalcAltVertices = true;
   }
 

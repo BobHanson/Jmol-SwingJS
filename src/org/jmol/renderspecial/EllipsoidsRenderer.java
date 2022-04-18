@@ -31,8 +31,8 @@ import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.Normix;
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 
 import javajs.util.PT;
@@ -80,12 +80,12 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private float perspectiveFactor;
   private BS bsTemp = new BS();
   
-  private M3 mat = new M3();
-  private M3 mTemp = new M3();
-  private M4 mDeriv = new M4();
-  private M3 matScreenToCartesian = new M3();
-  private M3 matScreenToEllipsoid = new M3();
-  private M3 matEllipsoidToScreen = new M3();
+  private M3d mat = new M3d();
+  private M3d mTemp = new M3d();
+  private M4d mDeriv = new M4d();
+  private M3d matScreenToCartesian = new M3d();
+  private M3d matScreenToEllipsoid = new M3d();
+  private M3d matEllipsoidToScreen = new M3d();
   
   private final double[] coefs = new double[10];
   private final float[] factoredLengths = new float[3];
@@ -138,7 +138,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     bGlobals[OPT_WIREFRAME] = !isExport && !vwr.checkMotionRendering(T.ellipsoid);
     diameter0 = Math.round (((Float) vwr.getP("ellipsoidAxisDiameter"))
         .floatValue() * 1000);    
-    M4 m4 = tm.matrixTransform;
+    M4d m4 = tm.matrixTransform;
     mat.setRow(0, m4.m00, m4.m01, m4.m02);
     mat.setRow(1, m4.m10, m4.m11, m4.m12);
     mat.setRow(2, m4.m20, m4.m21, m4.m22);

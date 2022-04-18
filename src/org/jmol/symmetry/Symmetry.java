@@ -46,9 +46,9 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3;
@@ -169,7 +169,7 @@ public class Symmetry implements SymmetryInterface {
    * @param desiredSpaceGroupIndex
    * @param name
    * @param data
-   *        a Lst<SymmetryOperation> or Lst<M4>
+   *        a Lst<SymmetryOperation> or Lst<M4d>
    * @param modDim
    *        in [3+d] modulation dimension
    * @return true if a known space group

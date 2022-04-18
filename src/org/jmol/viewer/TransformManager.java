@@ -40,8 +40,8 @@ import org.jmol.util.Logger;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.A4;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3i;
 import javajs.util.Quat;
 import javajs.util.T3;
@@ -90,7 +90,7 @@ public class TransformManager {
   public final P3 navigationShiftXY = new P3();
   public float navigationDepthPercent;
 
-  protected final M4 matrixTemp = new M4();
+  protected final M4d matrixTemp = new M4d();
   protected final V3 vectorTemp = new V3();
 
   public TransformManager() {
@@ -133,7 +133,7 @@ public class TransformManager {
     setRotationCenterAndRadiusXYZ(null, true);
     resetRotation();
     //if (vwr.autoLoadOrientation()) {
-    M3 m = (M3) vwr.ms.getInfoM("defaultOrientationMatrix");
+    M3d m = (M3d) vwr.ms.getInfoM("defaultOrientationMatrix");
     if (m != null)
       setRotation(m);
     //}
@@ -153,7 +153,7 @@ public class TransformManager {
       setNavigationMode(true);
   }
 
-  public void setRotation(M3 m) {
+  public void setRotation(M3d m) {
     if (m.isRotation())
       matrixRotate.setM3(m);
     else
@@ -218,10 +218,10 @@ public class TransformManager {
    ***************************************************************/
 
   // this matrix only holds rotations ... no translations
-  public final M3 matrixRotate = new M3();
+  public final M3d matrixRotate = new M3d();
 
-  protected final M3 matrixTemp3 = new M3();
-  private final M4 matrixTemp4 = new M4();
+  protected final M3d matrixTemp3 = new M3d();
+  private final M4d matrixTemp4 = new M4d();
   private final A4 axisangleT = new A4();
   private final V3 vectorT = new V3();
   private final V3 vectorT2 = new V3();
@@ -266,7 +266,7 @@ public class TransformManager {
   //  final V3 arcBall0 = new V3();
   //  final V3 arcBall1 = new V3();
   //  final V3 arcBallAxis = new V3();
-  //  final M3 arcBall0Rotation = new M3();
+  //  final M3d arcBall0Rotation = new M3d();
 
   //  void rotateArcBall(float x, float y, float factor) {
   //    // radius is half the screen pixel count. 
@@ -310,8 +310,8 @@ public class TransformManager {
     rotateZRadians((float) (zDelta / degreesPerRadian));
   }
 
-  private void applyRotation(M3 mNew, boolean isInternal, BS bsAtoms,
-                             V3 translation, boolean translationOnly, M4 m4) {
+  private void applyRotation(M3d mNew, boolean isInternal, BS bsAtoms,
+                             V3 translation, boolean translationOnly, M4d m4) {
     if (bsAtoms == null) {
       matrixRotate.mul2(mNew, matrixRotate);
       return;
@@ -445,7 +445,7 @@ public class TransformManager {
                                     float endDegrees, boolean isClockwise,
                                     boolean isSpin, BS bsAtoms,
                                     boolean isGesture, V3 translation,
-                                    Lst<P3> finalPoints, float[] dihedralList, M4 m4) {
+                                    Lst<P3> finalPoints, float[] dihedralList, M4d m4) {
 
     // *THE* Viewer INTERNAL frame rotation entry point
 
@@ -502,7 +502,7 @@ public class TransformManager {
   }
 
   public synchronized void rotateAxisAngleRadiansInternal(float radians,
-                                                          BS bsAtoms, M4 m4) {
+                                                          BS bsAtoms, M4d m4) {
 
     // final matrix rotation when spinning or just rotating
 
@@ -706,7 +706,7 @@ public class TransformManager {
     return info;
   }
 
-  public void getRotation(M3 m) {
+  public void getRotation(M3d m) {
     // hmm ... I suppose that there could be a race condition here
     // if matrixRotate is being modified while this is called
     m.setM3(matrixRotate);
@@ -993,7 +993,7 @@ public class TransformManager {
     } else if (slabPlane != null) {
         return slabPlane;
     }
-    M4 m = matrixTransform;
+    M4d m = matrixTransform;
     P4 plane = P4.new4(-m.m20, -m.m21, -m.m22, -m.m23
         + (isDepth ? depthValue : slabValue));
     return plane;
@@ -1247,9 +1247,9 @@ public class TransformManager {
   }
 
 
-  //  M4 getUnscaledTransformMatrix() {
+  //  M4d getUnscaledTransformMatrix() {
   //    //for povray only
-  //    M4 unscaled = M4.newM4(null);
+  //    M4d unscaled = M4d.newM4(null);
   //    vectorTemp.setT(fixedRotationCenter);
   //    matrixTemp.setZero();
   //    matrixTemp.setTranslation(vectorTemp);
@@ -1376,8 +1376,8 @@ public class TransformManager {
    * TRANSFORMATIONS
    ****************************************************************/
 
-  public final M4 matrixTransform = new M4();
-  public final M4 matrixTransformInv = new M4();
+  public final M4d matrixTransform = new M4d();
+  public final M4d matrixTransformInv = new M4d();
 
    protected final P3 fScrPt = new P3();
   protected final P3i iScrPt = new P3i();
@@ -1694,7 +1694,7 @@ public class TransformManager {
   protected final P3 ptTest2 = new P3();
   protected final P3 ptTest3 = new P3();
   protected final A4 aaTest1 = new A4();
-  protected final M3 matrixTest = new M3();
+  protected final M3d matrixTest = new M3d();
 
   public boolean isInPosition(V3 axis, float degrees) {
     if (Float.isNaN(degrees))
@@ -1710,7 +1710,7 @@ public class TransformManager {
   public boolean moveToPyMOL(JmolScriptEvaluator eval, float floatSecondsTotal,
                              float[] pymolView) {
     // PyMOL matrices are inverted (row-based)
-    M3 m3 = M3.newA9(pymolView);
+    M3d m3 = M3d.newA9(pymolView);
     m3.invert();
     float cameraX = pymolView[9];
     float cameraY = -pymolView[10];
@@ -1785,12 +1785,12 @@ public class TransformManager {
 
   // from Viewer
   void moveTo(JmolScriptEvaluator eval, float floatSecondsTotal, P3 center,
-              T3 rotAxis, float degrees, M3 matrixEnd, float zoom,
+              T3 rotAxis, float degrees, M3d matrixEnd, float zoom,
               float xTrans, float yTrans, float newRotationRadius,
               P3 navCenter, float xNav, float yNav, float navDepth,
               float cameraDepth, float cameraX, float cameraY) {
     if (matrixEnd == null) {
-      matrixEnd = new M3();
+      matrixEnd = new M3d();
       V3 axis = V3.newV(rotAxis);
       if (Float.isNaN(degrees)) {
         matrixEnd.m00 = Float.NaN;
@@ -1858,11 +1858,11 @@ public class TransformManager {
     }
   }
 
-  public void setAll(P3 center, M3 m, P3 navCenter, float zoom, float xTrans,
+  public void setAll(P3 center, M3d m, P3 navCenter, float zoom, float xTrans,
                      float yTrans, float rotationRadius, float pixelScale,
                      float navDepth, float xNav, float yNav, float cameraDepth,
                      float cameraX, float cameraY) {
-    if (!Float.isNaN(m.m00))
+    if (!Double.isNaN(m.m00))
       setRotation(m);
     if (center != null)
       moveRotationCenter(center, !windowCentered);
@@ -1948,7 +1948,7 @@ public class TransformManager {
 
   private String getRotateXyzText() {
     SB sb = new SB();
-    float m20 = matrixRotate.m20;
+    float m20 = (float) matrixRotate.m20;
     float rY = -(float) (Math.asin(m20) * degreesPerRadian);
     float rX, rZ;
     if (m20 > .999f || m20 < -.999f) {
@@ -2014,15 +2014,15 @@ public class TransformManager {
 
   private String getRotateZyzText(boolean iAddComment) {
     SB sb = new SB();
-    M3 m = (M3) vwr.ms.getInfoM("defaultOrientationMatrix");
+    M3d m = (M3d) vwr.ms.getInfoM("defaultOrientationMatrix");
     if (m == null) {
       m = matrixRotate;
     } else {
-      m = M3.newM3(m);
+      m = M3d.newM3(m);
       m.invert();
       m.mul2(matrixRotate, m);
     }
-    float m22 = m.m22;
+    float m22 = (float) m.m22;
     float rY = (float) (Math.acos(m22) * degreesPerRadian);
     float rZ1, rZ2;
     if (m22 > .999f || m22 < -.999f) {
@@ -2281,9 +2281,9 @@ public class TransformManager {
 
   boolean stereoFrame;
 
-  protected final M3 matrixStereo = new M3();
+  protected final M3d matrixStereo = new M3d();
 
-  synchronized M3 getStereoRotationMatrix(boolean stereoFrame) {
+  synchronized M3d getStereoRotationMatrix(boolean stereoFrame) {
     this.stereoFrame = stereoFrame;
     if (!stereoFrame)
       return matrixRotate;

@@ -14,7 +14,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-//import javajs.util.M3;
+//import javajs.util.M3d;
 import javajs.util.P3;
 import javajs.util.P3d;
 
@@ -123,7 +123,7 @@ public class SpaceGroupFinder {
       // Look out for tetrgonal aac issue -- abandonded
 
       SymmetryInterface uc0 = uc;
-//      M3 mtet = new M3();
+//      M3d mtet = new M3d();
 //      uc = checkTetragonal(vwr, uc, mtet);
 //      if (uc == uc0) {
 //        mtet = null;
@@ -574,7 +574,7 @@ public class SpaceGroupFinder {
     return null;
   }
 
-//  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3 mtet) {    
+//  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3d mtet) {    
 //    float[] params = uc.getUnitCellParams();
 //    if (!approx0(params[0] - params[1])
 //        && approx0(params[1] - params[2])

@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javajs.util.A4;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.OC;
 import javajs.util.P3;
@@ -67,7 +67,7 @@ public class _StlExporter extends _VrmlExporter {
   private String header;
   private OC oc;
   private ByteArrayOutputStream bos;
-  private M4 m4;
+  private M4d m4;
 
   public _StlExporter() {
     super();
@@ -93,8 +93,8 @@ public class _StlExporter extends _VrmlExporter {
       oc.write(header.getBytes(), 0, 80);
       oc.write(new byte[4], 0, 4);
     }
-    lstMatrix = new Lst<M4>();
-    m4 = new M4();
+    lstMatrix = new Lst<M4d>();
+    m4 = new M4d();
     m4.setIdentity();
     lstMatrix.addLast(m4);
     outputInitialTransform();
@@ -110,13 +110,13 @@ public class _StlExporter extends _VrmlExporter {
     endloop
   endfacet
    */
-  Lst<M4> lstMatrix;
+  Lst<M4d> lstMatrix;
   
   
   @Override
   protected void pushMatrix() {
     lstMatrix.addLast(m4);
-    m4 = M4.newM4(m4);
+    m4 = M4d.newM4(m4);
   }
 
   @Override
@@ -139,7 +139,7 @@ public class _StlExporter extends _VrmlExporter {
     // not used!
   }
 
-  private M4 m4a = new M4();
+  private M4d m4a = new M4d();
 
   @Override
   protected void outputRotation(A4 a) {

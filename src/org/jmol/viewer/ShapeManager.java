@@ -42,7 +42,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Vibration;
 
 import javajs.util.BS;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P3i;
 
@@ -142,7 +142,7 @@ public class ShapeManager {
     return shapes[shapeID] = shape;
   }
 
-  public void notifyAtomPositionsChanged(int baseModel, BS bs, M4 mat) {
+  public void notifyAtomPositionsChanged(int baseModel, BS bs, M4d mat) {
     Integer Imodel = Integer.valueOf(baseModel);
     BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(baseModel);
     for (int i = 0; i < JC.SHAPE_MAX; i++)

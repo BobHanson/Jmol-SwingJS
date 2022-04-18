@@ -58,10 +58,10 @@ public class SimpleUnitCell {
   public static final int PARAM_COUNT = 26;
 
 //  protected float[] unitCellParams;
-//  public M4 matrixCartesianToFractional;
-//  public M4 matrixFractionalToCartesian;
-//  protected M4 matrixCtoFNoOffset;
-//  protected M4 matrixFtoCNoOffset;
+//  public M4d matrixCartesianToFractional;
+//  public M4d matrixFractionalToCartesian;
+//  protected M4d matrixCtoFNoOffset;
+//  protected M4d matrixFtoCNoOffset;
 
   protected double[] unitCellParamsD;
   public M4d matrixCartesianToFractionalD;
@@ -301,7 +301,7 @@ public class SimpleUnitCell {
 
 //  public static void addVectors(float[] params) {
 //    SimpleUnitCell c = SimpleUnitCell.newA(params);
-//    M4 m = c.matrixFractionalToCartesian;
+//    M4d m = c.matrixFractionalToCartesian;
 //    for (int i = 0; i < 9; i++)
 //    params[PARAM_VABC + i] = m.getElement(i%3, i/3);
 //  }
@@ -403,7 +403,7 @@ public class SimpleUnitCell {
   public final void toCartesianF(T3 pt, boolean ignoreOffset) {
     if (matrixFractionalToCartesianD != null)
       (ignoreOffset ? matrixFtoCNoOffsetD : matrixFractionalToCartesianD)
-          .rotTransF(pt);
+          .rotTrans(pt);
   }
 
   public void toFractionalM(M4d m) {
@@ -417,7 +417,7 @@ public class SimpleUnitCell {
     if (matrixCartesianToFractionalD == null)
       return;
     (ignoreOffset ? matrixCtoFNoOffsetD : matrixCartesianToFractionalD)
-        .rotTransF(pt);
+        .rotTrans(pt);
   }
 
   public final void toFractionalD(T3d pt, boolean ignoreOffset) {

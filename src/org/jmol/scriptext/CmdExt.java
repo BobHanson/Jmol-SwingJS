@@ -82,9 +82,9 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
-import javajs.util.M3;
 import javajs.util.M3d;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3d;
@@ -1352,7 +1352,7 @@ public class CmdExt extends ScriptExt {
         vAtomSets.add(new BitSet[] { bsAtoms1, bsAtoms2 });
         */
 
-        M4 m4 = new M4();
+        M4d m4 = new M4d();
         center = new P3();
         if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles) || "*".equals(strSmiles) || "".equals(strSmiles)))
           try {
@@ -1391,7 +1391,7 @@ public class CmdExt extends ScriptExt {
           m4.getTranslation(translation);
         }
         if (doRotate) {
-          M3 m3 = new M3();
+          M3d m3 = new M3d();
           m4.getRotationScale(m3);
           q = Quat.newM(m3);
         }
@@ -1436,8 +1436,8 @@ public class CmdExt extends ScriptExt {
       Lst<P3> ptsB = null;
       if (doRotate && doTranslate && nSeconds != 0) {
         Lst<P3> ptsA = vwr.ms.getAtomPointVector(bsFrom);
-        M4 m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
-        ptsB = Measure.transformPoints(ptsA, m4, center);
+        M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
+        ptsB = ScriptParam.transformPoints(ptsA, m4, center);
       }
       if (!eval.useThreads())
         doAnimate = false;
@@ -2373,14 +2373,14 @@ public class CmdExt extends ScriptExt {
             continue;
           break;
         case T.axes:
-          V3[] axes = new V3[3];
+          V3d[] axes = new V3d[3];
           Lst<SV> l = null;
           switch (getToken(i + 1).tok) {
           case T.matrix3f:
             i++;
-            M3 m = (M3) eval.theToken.value;
+            M3d m = (M3d) eval.theToken.value;
             for (int im = 3; --im >= 0;)
-              m.getColumnV(im, axes[im] = new V3());
+              m.getColumnV(im, axes[im] = new V3d());
             break;
           case T.spacebeforesquare:
             i += 2;
@@ -2423,8 +2423,7 @@ public class CmdExt extends ScriptExt {
             break;
           default:
             for (int j = 0; j < 3; j++) {
-              axes[j] = new V3();
-              axes[j].setT(centerParameter(++i));
+              axes[j] = V3d.newV(centerParameter(++i));
               i = eval.iToken;
             }
             break;
@@ -2434,12 +2433,12 @@ public class CmdExt extends ScriptExt {
               SV v = l.get(k);
               switch (v.tok) {
               case T.varray:
-                axes[k] = V3.new3(SV.fValue(v.getList().get(0)),
-                    SV.fValue(v.getList().get(1)),
-                    SV.fValue(v.getList().get(2)));
+                axes[k] = V3d.new3(SV.dValue(v.getList().get(0)),
+                    SV.dValue(v.getList().get(1)),
+                    SV.dValue(v.getList().get(2)));
                 break;
               case T.point3f:
-                axes[k] = V3.newV((T3) v.value);
+                axes[k] = V3d.newV((T3) v.value);
                 break;
               }
             }

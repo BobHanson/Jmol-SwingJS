@@ -12,7 +12,6 @@ import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
-import javajs.util.T3d;
 
 /**
  * An XCrysDen XSF writer
@@ -172,10 +171,10 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           elements += key;
         String label = sym + ++elemNums[elemno];
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
-            .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
-            .append(clean(p.y)).append(clean(p.z));
+            .append(PT.formatS(sym, 3, 0, true, false)).append(cleanF(p.x))
+            .append(cleanF(p.y)).append(cleanF(p.z));
         if (!haveUnitCell)
-          sb.append(clean(a.x)).append(clean(a.y)).append(clean(a.z));
+          sb.append(cleanF(a.x)).append(cleanF(a.y)).append(cleanF(a.z));
         sb.append("\n");
 
         jmol_atom.append(PT.formatS("" + a.getIndex(), 3, 0, false, false))

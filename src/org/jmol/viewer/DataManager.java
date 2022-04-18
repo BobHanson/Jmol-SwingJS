@@ -121,18 +121,25 @@ public class DataManager implements JmolDataManager {
           depth = (val instanceof String ? JmolDataManager.DATA_TYPE_STRING
               : AU.isAF(val) ? JmolDataManager.DATA_TYPE_AF
                   : AU.isAD(val) ? JmolDataManager.DATA_TYPE_AD
-                  : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF
-                      : AU.isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
-                          : JmolDataManager.DATA_TYPE_UNKNOWN));
+                      : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF
+                          : AU.isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
+                              : JmolDataManager.DATA_TYPE_UNKNOWN));
     if (data[JmolDataManager.DATA_SELECTION] != null && arrayCount > 0) {
       boolean createNew = (matchField != 0
           || field != Integer.MIN_VALUE && field != Integer.MAX_VALUE);
       Object[] oldData = dataValues.get(type);
       BS bs;
-      float[] f = (oldData == null || createNew ? new float[actualAtomCount]
-          : AU.ensureLengthA(((float[]) oldData[JmolDataManager.DATA_VALUE]),
-              actualAtomCount));
-
+      float[] f = null;
+      double[] d = null;
+      if (depth == JmolDataManager.DATA_TYPE_AD) {
+        d = (oldData == null || createNew ? new double[actualAtomCount]
+            : AU.ensureLengthD(((double[]) oldData[JmolDataManager.DATA_VALUE]),
+                actualAtomCount));
+      } else {
+        f = (oldData == null || createNew ? new float[actualAtomCount]
+            : AU.ensureLengthA(((float[]) oldData[JmolDataManager.DATA_VALUE]),
+                actualAtomCount));
+      }
       float[][] ff = null;
       // check to see if the data COULD be interpreted as a string of float values
       // and if so, do that. This pre-fetches the tokens in that case.
@@ -141,19 +148,28 @@ public class DataManager implements JmolDataManager {
         Logger.error("Cannot determine data type for " + val);
         return;
       }
-      String stringData = (depth == JmolDataManager.DATA_TYPE_STRING
-          ? (String) val
-          : null);
-      float[] floatData = (depth == JmolDataManager.DATA_TYPE_AF ? (float[]) val
-          : null);
+      String stringData = null;
+      double[] doubleData = null;
+      float[] floatData = null;
+      float[][] ffData = null;
       String[] strData = null;
-      float[][] ffData = (depth == JmolDataManager.DATA_TYPE_AFF
-          ? (float[][]) val
-          : null);
-      if (field == Integer.MIN_VALUE
-          && (strData = PT.getTokens(stringData)).length > 1)
-        field = 0;
+      switch (depth) {
+      case JmolDataManager.DATA_TYPE_STRING:
+        stringData = (String) val;
+        break;
+      case JmolDataManager.DATA_TYPE_AD:
+        doubleData = (double[]) val;
+        break;
+      case JmolDataManager.DATA_TYPE_AF:
+        floatData = (float[]) val;
+        break;
+      case JmolDataManager.DATA_TYPE_AFF:
+        ffData = (float[][]) val;
+        break;
+      }
       if (field == Integer.MIN_VALUE) {
+        if ((strData = PT.getTokens(stringData)).length > 1)
+          field = 0;
         // set the selected data elements to a single value
         bs = (BS) data[JmolDataManager.DATA_SELECTION];
         setSelectedFloats(PT.parseFloat(stringData), bs, f);
@@ -169,6 +185,15 @@ public class DataManager implements JmolDataManager {
                 && i < n; i = bs.nextSetBit(i + 1))
               f[i] = floatData[i];
           }
+        } else if (doubleData != null) {
+          int n = doubleData.length;
+          if (n == bs.cardinality()) {
+            fillSparseArrayD(doubleData, bs, d);
+          } else {
+            for (int i = bs.nextSetBit(0); i >= 0
+                && i < n; i = bs.nextSetBit(i + 1))
+              d[i] = doubleData[i];
+          }
         } else if (stringData != null) {
           Parser.parseFloatArrayBsData(
               strData == null ? PT.getTokens(stringData) : strData, bs, f);
@@ -180,7 +205,8 @@ public class DataManager implements JmolDataManager {
           if (n == bs.cardinality()) {
             for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
                 .nextSetBit(i + 1), pt++)
-              fillSparseArray(ffData[pt], bs, ff[i] = new float[actualAtomCount]);
+              fillSparseArray(ffData[pt], bs,
+                  ff[i] = new float[actualAtomCount]);
           } else {
             for (int i = bs.nextSetBit(0); i >= 0
                 && i < n; i = bs.nextSetBit(i + 1))
@@ -209,9 +235,15 @@ public class DataManager implements JmolDataManager {
         bs.or((BS) (oldData[JmolDataManager.DATA_SELECTION]));
       data[JmolDataManager.DATA_SELECTION] = bs;
       if (ff == null) {
-        data[JmolDataManager.DATA_TYPE] = Integer
-            .valueOf(JmolDataManager.DATA_TYPE_AF);
-        data[JmolDataManager.DATA_VALUE] = f;
+        if (d == null) {
+          data[JmolDataManager.DATA_TYPE] = Integer
+              .valueOf(JmolDataManager.DATA_TYPE_AF);
+          data[JmolDataManager.DATA_VALUE] = f;
+        } else {
+          data[JmolDataManager.DATA_TYPE] = Integer
+              .valueOf(JmolDataManager.DATA_TYPE_AD);
+          data[JmolDataManager.DATA_VALUE] = d;
+        }
       } else {
         data[JmolDataManager.DATA_TYPE] = Integer
             .valueOf(JmolDataManager.DATA_TYPE_AFF);
@@ -235,13 +267,19 @@ public class DataManager implements JmolDataManager {
     dataValues.put(type, data);
   }
 
-  private void fillSparseArray(float[] floatData, BS bs, float[] f) {
+  private static void fillSparseArray(float[] floatData, BS bs, float[] f) {
     for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
         .nextSetBit(i + 1), pt++)
       f[i] = floatData[pt];
   }
 
-  private int getType(Object[] data) {
+  private static void fillSparseArrayD(double[] doubleData, BS bs, double[] d) {
+    for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
+        .nextSetBit(i + 1), pt++)
+      d[i] = doubleData[pt];
+  }
+
+  private static int getType(Object[] data) {
     return ((Integer) data[JmolDataManager.DATA_TYPE]).intValue();
   }
 
@@ -268,13 +306,14 @@ public class DataManager implements JmolDataManager {
       Lst<String> list = new Lst<String>();
       label = label.substring(0, label.length() - 1);
       int len = label.length();
-      for (String key: dataValues.keySet()) {
-        if (len == 0 || key.length() >= len && key.substring(0, len).equalsIgnoreCase(label)) {
+      for (String key : dataValues.keySet()) {
+        if (len == 0 || key.length() >= len
+            && key.substring(0, len).equalsIgnoreCase(label)) {
           list.addLast(key);
         }
       }
       return list;
-      
+
     }
     if (dataValues.size() == 0)
       return null;
@@ -299,6 +338,16 @@ public class DataManager implements JmolDataManager {
         return data[JmolDataManager.DATA_VALUE];
       // When bsSelected is not null, this returns a truncated array, which must be of type float[] or float[][]
       if (data[JmolDataManager.DATA_TYPE] == Integer
+          .valueOf(JmolDataManager.DATA_TYPE_AD)) {
+        double[] d = (double[]) data[JmolDataManager.DATA_VALUE];
+        double[] dnew = new double[bsSelected.cardinality()];
+        for (int i = 0, n = d.length, p = bsSelected.nextSetBit(0); p >= 0
+            && i < n; p = bsSelected.nextSetBit(p + 1)) {
+          dnew[i++] = d[p];
+        }
+        return dnew;
+      }
+      if (data[JmolDataManager.DATA_TYPE] == Integer
           .valueOf(JmolDataManager.DATA_TYPE_AFFF)) {
         float[][][] fff = (float[][][]) data[JmolDataManager.DATA_VALUE];
         float[][][] fnew = AU.newFloat3(bsSelected.cardinality(), 0);
@@ -308,7 +357,8 @@ public class DataManager implements JmolDataManager {
           fnew[i++] = fff[p];
         }
         return fnew;
-      } else if (data[JmolDataManager.DATA_TYPE] == Integer
+      }
+      if (data[JmolDataManager.DATA_TYPE] == Integer
           .valueOf(JmolDataManager.DATA_TYPE_AFF)) {
         float[][] ff = (float[][]) data[JmolDataManager.DATA_VALUE];
         float[][] fnew = AU.newFloat2(bsSelected.cardinality());

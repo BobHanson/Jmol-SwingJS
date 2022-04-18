@@ -9,7 +9,7 @@ import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.OC;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -411,7 +411,7 @@ public class _ObjExporter extends __CartesianExporter {
       outputMtl(" map_Ka " + shortName + "\n");
     }
 
-    M4 matrix = M4.newM4(null);
+    M4d matrix = M4d.newM4(null);
     matrix.setTranslation(V3.newV(meshSurface.offset));
     BS bsValid = new BS();
     addMesh(name, data, matrix, null, colix, dim, bsValid);
@@ -522,7 +522,7 @@ public class _ObjExporter extends __CartesianExporter {
   private void outputCircle1(P3 ptCenter, P3 ptPerp, short colix,
                              float radius) {
     MeshSurface data = MeshData.getCircleData();
-    M4 matrix = new M4();
+    M4d matrix = new M4d();
     addTexture(colix, null);
     String name = "Circle" + circleNum++;
     matrix.setToM3(getRotationMatrix(ptCenter, ptPerp, radius));
@@ -544,7 +544,7 @@ public class _ObjExporter extends __CartesianExporter {
   private void outputCone1(P3 ptBase, P3 ptTip, float radius,
                            short colix) {
     MeshSurface data = MeshData.getConeData();
-    M4 matrix = new M4();
+    M4d matrix = new M4d();
     addTexture(colix, null);
     String name = "Cone" + coneNum++;
     matrix.setToM3(getRotationMatrix(ptBase, ptTip, radius));
@@ -568,7 +568,7 @@ public class _ObjExporter extends __CartesianExporter {
   private boolean outputEllipse1(P3 ptCenter, P3 ptZ, P3 ptX,
                                  P3 ptY, short colix) {
     MeshSurface data = MeshData.getCircleData();
-    M4 matrix = new M4();
+    M4d matrix = new M4d();
     addTexture(colix, null);
     String name = "Ellipse" + ellipseNum++;
     matrix.setToM3(getRotationMatrix(ptCenter, ptZ, 1, ptX, ptY));
@@ -624,7 +624,7 @@ public class _ObjExporter extends __CartesianExporter {
                                short colix, byte endcaps, float radius,
                                P3 ptX, P3 ptY) {
     MeshSurface data = MeshData.getCylinderData(false);
-    M4 matrix = new M4();
+    M4d matrix = new M4d();
     addTexture(colix, null);
     String name = "Cylinder" + cylinderNum++;
     int n = (ptX != null && endcaps == GData.ENDCAPS_NONE ? 2 : 1);
@@ -658,7 +658,7 @@ public class _ObjExporter extends __CartesianExporter {
     MeshSurface data = MeshData.getTriangleData(pt1, pt2, pt3);
     addTexture(colix, null);
     String name = "Triangle" + triangleNum++;
-    M4 matrix = M4.newM4(null);
+    M4d matrix = M4d.newM4(null);
     addMesh(name, data, matrix, matrix, colix, null, null);
   }
 
@@ -717,7 +717,7 @@ public class _ObjExporter extends __CartesianExporter {
    *          coordinates. If null no UV coordinates are used.
    * @param bsValid TODO
    */
-  private void addMesh(String name, MeshSurface data, M4 matrix, M4 matrix1,
+  private void addMesh(String name, MeshSurface data, M4d matrix, M4d matrix1,
                        short colix, int[] dim, BS bsValid) {
     // Use to only get surfaces in the output
     if (surfacesOnly) {
@@ -818,7 +818,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @param prefix
    * @param bsValid TODO
    */
-  private void outputList(T3[] pts, int nPts, M4 m, String prefix, BS bsValid) {
+  private void outputList(T3[] pts, int nPts, M4d m, String prefix, BS bsValid) {
     for (int i = 0; i < nPts; i++) {
       if (bsValid != null && !bsValid.get(i))
         continue;

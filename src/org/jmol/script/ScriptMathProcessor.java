@@ -32,7 +32,8 @@ import javajs.util.CU;
 import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -269,8 +270,13 @@ public class ScriptMathProcessor {
     putX(SV.newV(T.matrix3f, x));
     return wasX = true;
   }
+  
+  public boolean addXM3(M3d x) {
+    putX(SV.newV(T.matrix3f, x));
+    return wasX = true;
+  }
 
-  public boolean addXM4(M4 x) {
+  public boolean addXM4(M4d x) {
     putX(SV.newV(T.matrix4f, x));
     return wasX = true;
   }
@@ -279,6 +285,13 @@ public class ScriptMathProcessor {
     if (Float.isNaN(x))
       return addXStr("NaN");
     putX(SV.newF(x));
+    return wasX = true;
+  }
+
+  public boolean addXDouble(double x) {
+    if (Double.isNaN(x))
+      return addXStr("NaN");
+    putX(SV.newD(x));
     return wasX = true;
   }
 
@@ -310,7 +323,7 @@ public class ScriptMathProcessor {
       switch (x.tok) {
       case T.decimal:
         if (wasX) {
-          float f = ((Float) x.value).floatValue();
+          float f = ((Number) x.value).floatValue();
           if (f < 0 || f == 0 && 1 / f == Float.NEGATIVE_INFINITY) {
             addOp(T.tokenMinus);
             v = SV.newF(-f);
@@ -872,8 +885,8 @@ public class ScriptMathProcessor {
   private boolean operate() throws ScriptException {
     T op = oStack[oPt--];
     P3 pt;
-    M3 m;
-    M4 m4;
+    M3d m;
+    M4d m4;
     String s;
     SV x1;
     if (debugHigh) {
@@ -940,11 +953,11 @@ public class ScriptMathProcessor {
         pt4.scale4(-1f);
         return addXPt4(pt4);
       case T.matrix3f:
-        m = M3.newM3((M3) x2.value);
+        m = M3d.newM3((M3d) x2.value);
         m.invert();
         return addXM3(m);
       case T.matrix4f:
-        m4 = M4.newM4((M4) x2.value);
+        m4 = M4d.newM4((M4d) x2.value);
         m4.invert();
         return addXM4(m4);
       case T.bitset:
@@ -959,11 +972,11 @@ public class ScriptMathProcessor {
       case T.point4f: // quaternion
         return addXPt4((Quat.newP4((P4) x2.value)).inv().toPoint4f());
       case T.matrix3f:
-        m = M3.newM3((M3) x2.value);
+        m = M3d.newM3((M3d) x2.value);
         m.invert();
         return addXM3(m);
       case T.matrix4f:
-        return addXM4(M4.newM4((M4) x2.value).invert());
+        return addXM4(M4d.newM4((M4d) x2.value).invert());
       case T.bitset:
         return addXBs(BSUtil.copyInvert((BS) x2.value,
             (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr.ms.ac)));
@@ -1077,7 +1090,7 @@ public class ScriptMathProcessor {
   public boolean binaryOp(T op, SV x1, SV x2) throws ScriptException {
     P3 pt;
     P4 pt4;
-    M3 m;
+    M3d m;
     String s;
     float f;
 
@@ -1196,17 +1209,17 @@ public class ScriptMathProcessor {
       case T.matrix3f:
         switch (x2.tok) {
         case T.matrix3f:
-          m = M3.newM3((M3) x1.value);
-          m.add((M3) x2.value);
+          m = M3d.newM3((M3d) x1.value);
+          m.add((M3d) x2.value);
           return addXM3(m);
         case T.point3f:
-          return addXM4(getMatrix4f((M3) x1.value, (P3) x2.value));
+          return addXM4(getMatrix4f((M3d) x1.value, (P3) x2.value));
         }
         break;
       case T.matrix4f:
         switch (x2.tok) {
         case T.point3f:
-          M4 m4b = M4.newM4((M4) x1.value);
+          M4d m4b = M4d.newM4((M4d) x1.value);
           m4b.add((T3) x2.value);
           return addXM4(m4b);
         }
@@ -1241,14 +1254,14 @@ public class ScriptMathProcessor {
       case T.matrix3f:
         if (x2.tok != T.matrix3f)
           break;
-        m = M3.newM3((M3) x1.value);
-        m.sub((M3) x2.value);
+        m = M3d.newM3((M3d) x1.value);
+        m.sub((M3d) x2.value);
         return addXM3(m);
       case T.matrix4f:
         if (x2.tok != T.matrix4f)
           break;
-        M4 m4 = M4.newM4((M4) x1.value);
-        m4.sub((M4) x2.value);
+        M4d m4 = M4d.newM4((M4d) x1.value);
+        m4.sub((M4d) x2.value);
         return addXM4(m4);
       case T.point3f:
         pt = P3.newP((P3) x1.value);
@@ -1301,7 +1314,7 @@ public class ScriptMathProcessor {
       case T.matrix3f:
         if (pt != null) {
           // pt * m
-          M3 m3b = M3.newM3((M3) x2.value);
+          M3d m3b = M3d.newM3((M3d) x2.value);
           m3b.transpose();
           P3 pt1 = P3.newP(pt);
           m3b.rotate(pt1);
@@ -1312,13 +1325,13 @@ public class ScriptMathProcessor {
         if (pt4 != null)
           // q * m --> q
           return addXPt4(
-              (Quat.newP4(pt4).mulQ(Quat.newM((M3) x2.value))).toPoint4f());
+              (Quat.newP4(pt4).mulQ(Quat.newM((M3d) x2.value))).toPoint4f());
         break;
       case T.matrix4f:
         // pt4 * m4
         // [a b c d] * m4
         if (pt4 != null) {
-          M4 m4b = M4.newM4((M4) x2.value);
+          M4d m4b = M4d.newM4((M4d) x2.value);
           m4b.transpose();
           P4 pt41 = P4.newPt(pt4);
           m4b.transform(pt41);
@@ -1331,7 +1344,7 @@ public class ScriptMathProcessor {
       }
       switch (x1.tok) {
       case T.matrix3f:
-        M3 m3 = (M3) x1.value;
+        M3d m3 = (M3d) x1.value;
         if (pt != null) {
           P3 pt1 = P3.newP(pt);
           m3.rotate(pt1);
@@ -1341,7 +1354,7 @@ public class ScriptMathProcessor {
         }
         switch (x2.tok) {
         case T.matrix3f:
-          m = M3.newM3((M3) x2.value);
+          m = M3d.newM3((M3d) x2.value);
           m.mul2(m3, m);
           return addXM3(m);
         case T.point4f:
@@ -1362,9 +1375,9 @@ public class ScriptMathProcessor {
         A4 aa = new A4();
         aa.setM(m3);
         aa.angle *= f;
-        return addXM3(new M3().setAA(aa));
+        return addXM3(new M3d().setAA(aa));
       case T.matrix4f:
-        M4 m4 = (M4) x1.value;
+        M4d m4 = (M4d) x1.value;
         if (pt != null) {
           P3 pt1 = P3.newP(pt);
           m4.rotTrans(pt1);
@@ -1381,7 +1394,7 @@ public class ScriptMathProcessor {
         }
         switch (x2.tok) {
         case T.matrix4f:
-          M4 m4b = M4.newM4((M4) x2.value);
+          M4d m4b = M4d.newM4((M4d) x2.value);
           m4b.mul2(m4, m4b);
           return addXM4(m4b);
         case T.varray:
@@ -1578,10 +1591,10 @@ public class ScriptMathProcessor {
           return addXStr("NaN");
         }
       case T.matrix4f:
-        M4 m4 = (M4) x1.value;
+        M4d m4 = (M4d) x1.value;
         switch (n) {
         case 1:
-          M3 m3 = new M3();
+          M3d m3 = new M3d();
           m4.getRotationScale(m3);
           return addXM3(m3);
         case 2:
@@ -1690,8 +1703,8 @@ public class ScriptMathProcessor {
     return addXMap(ht);
   }
 
-  public static M4 getMatrix4f(M3 matRotate, T3 vTranslate) {
-    return M4.newMV(matRotate, vTranslate == null ? new V3() : V3.newV(vTranslate));
+  public static M4d getMatrix4f(M3d matRotate, T3 vTranslate) {
+    return M4d.newMV(matRotate, vTranslate == null ? new V3() : V3.newV(vTranslate));
   }
 
   private boolean getBoundBox(SV x2) {

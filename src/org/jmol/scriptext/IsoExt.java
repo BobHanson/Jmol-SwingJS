@@ -1426,7 +1426,7 @@ public class IsoExt extends ScriptExt {
     Lst<Map<String, Object>> mos = null;
     Map<String, Object> mo;
     int nOrb = 0;
-    Float f = null;
+    Number f = null;
     if (lc == null || lc.length < 2) {
       if (lc != null && lc.length == 1)
         offset = 0;
@@ -1458,14 +1458,14 @@ public class IsoExt extends ScriptExt {
           moNumber = nOrb;
           for (int i = 0; i < nOrb; i++) {
             mo = mos.get(i);
-            if ((f = (Float) mo.get("occupancy")) != null) {
+            if ((f = (Number) mo.get("occupancy")) != null) {
               if (f.floatValue() < 0.5f) {
                 // go for LUMO = first unoccupied
                 moNumber = i;
                 break;
               }
               continue;
-            } else if ((f = (Float) mo.get("energy")) != null) {
+            } else if ((f = (Number) mo.get("energy")) != null) {
               if (f.floatValue() > 0) {
                 // go for LUMO = first positive
                 moNumber = i;
@@ -1492,7 +1492,7 @@ public class IsoExt extends ScriptExt {
       lc = new float[] { -100, moNumber };
     if (lc != null && lc.length < 2) {
       mo = mos.get(moNumber - 1);
-      if ((f = (Float) mo.get("energy")) == null) {
+      if ((f = (Number) mo.get("energy")) == null) {
         lc = new float[] { 100, moNumber };
       } else {
 
@@ -1503,7 +1503,7 @@ public class IsoExt extends ScriptExt {
         int n = 0;
         boolean isAllElectrons = (lc.length == 1 && lc[0] == 1);
         for (int i = 0; i < nOrb; i++) {
-          if ((f = (Float) mos.get(i).get("energy")) == null)
+          if ((f = (Number) mos.get(i).get("energy")) == null)
             continue;
           float e = f.floatValue();
           if (isAllElectrons ? e <= energy : e == energy) {
@@ -2891,7 +2891,7 @@ public class IsoExt extends ScriptExt {
         sbCommand.append("[");
         try {
           for (int j = 0, ptf = 0; j < n; j++) {
-            factors[j] = ((Float) list.get(ptf++)).floatValue();
+            factors[j] = ((Number) list.get(ptf++)).floatValue();
             files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false,
                 (String) list.get(ptf++), i, false);
             sbCommand.appendF(factors[j]);
@@ -3254,7 +3254,7 @@ public class IsoExt extends ScriptExt {
     if (doCalcArea) {
       area = getShapeProperty(iShape, "area");
       if (area instanceof Float)
-        vwr.setFloatProperty("isosurfaceArea", ((Float) area).floatValue());
+        vwr.setFloatProperty("isosurfaceArea", ((Number) area).floatValue());
       else
         vwr.g.setUserVariable("isosurfaceArea",
             SV.getVariableAD((double[]) area));
@@ -3262,7 +3262,7 @@ public class IsoExt extends ScriptExt {
     if (doCalcVolume) {
       volume = (doCalcVolume ? getShapeProperty(iShape, "volume") : null);
       if (volume instanceof Float)
-        vwr.setFloatProperty("isosurfaceVolume", ((Float) volume).floatValue());
+        vwr.setFloatProperty("isosurfaceVolume", ((Number) volume).floatValue());
       else
         vwr.g.setUserVariable("isosurfaceVolume",
             SV.getVariableAD((double[]) volume));
@@ -3278,7 +3278,7 @@ public class IsoExt extends ScriptExt {
                 : " select " + Escape.eBS(bsSelect) + " ") + cmd);
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet && !isSilent) {
-          cutoff = ((Float) getShapeProperty(iShape, "cutoff")).floatValue();
+          cutoff = ((Number) getShapeProperty(iShape, "cutoff")).floatValue();
           if (Float.isNaN(cutoff) && !Float.isNaN(sigma))
             Logger.error("sigma not supported");
           s += " created " + getShapeProperty(iShape, "message");
@@ -3730,7 +3730,7 @@ public class IsoExt extends ScriptExt {
         for (int i = 0; i < vs.length; i++)
           v += (isFull ? vs[i] : Math.abs(vs[i])); // no abs value for full -- some are negative
       } else {
-        v = ((Float) volume).floatValue();
+        v = ((Number) volume).floatValue();
       }
       v = (Math.round(v * 1000) / 1000.);
       if (colorDensity || displayType != T.trim) {

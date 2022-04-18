@@ -59,11 +59,17 @@ public abstract class M34d implements JSONEncodable {
    */
   public double m22;
 
+  public int size;
+
+  protected void setAA33(A4 a) {
+    setXYZAngle(a.x, a.y, a.z, a.angle);
+  }
+
   protected void setAA33(A4d a) {
-    double x = a.x;
-    double y = a.y;
-    double z = a.z;
-    double angle = a.angle;
+    setXYZAngle(a.x, a.y, a.z, a.angle);
+  }
+  
+  protected void setXYZAngle(double x, double y, double z, double angle) {
     // Taken from Rick's which is taken from Wertz. pg. 412
     // Bug Fixed and changed into right-handed by hiranabe
     double n = Math.sqrt(x * x + y * y + z * z);
@@ -100,10 +106,8 @@ public abstract class M34d implements JSONEncodable {
     rotate2(t, t);
   }
 
-  public void rotateF(T3 t) {
-    t.set((float) (m00 * t.x + m01 * t.y + m02 * t.z), 
-        (float) (m10 * t.x + m11 * t.y + m12 * t.z), 
-        (float) (m20 * t.x + m21 * t.y + m22 * t.z));
+  public void rotate(T3 t) {
+    rotate2(t, t);
   }
 
   /**
@@ -119,6 +123,14 @@ public abstract class M34d implements JSONEncodable {
     // alias-safe
     result.set(m00 * t.x + m01 * t.y + m02 * t.z, m10 * t.x + m11 * t.y + m12
         * t.z, m20 * t.x + m21 * t.y + m22 * t.z);
+  }
+
+  public void rotate2(T3 t, T3 result) {
+    // alias-safe
+    result.set((float) (m00 * t.x + m01 * t.y + m02 * t.z), 
+        (float) (m10 * t.x + m11 * t.y + m12
+        * t.z), 
+        (float) (m20 * t.x + m21 * t.y + m22 * t.z));
   }
 
 
@@ -424,10 +436,9 @@ public abstract class M34d implements JSONEncodable {
   public String toJSON() {
     // M4 extends M3
     SB sb = new SB();
-    int len = (this instanceof M4d ? 4 : 3);
-    double[] x = new double[len];
+    double[] x = new double[size];
     sb.appendC('[');
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < size; i++) {
       if (i > 0)
         sb.appendC(',');
       getRow(i, x);
@@ -435,6 +446,19 @@ public abstract class M34d implements JSONEncodable {
     }
     sb.appendC(']');
     return sb.toString();
+  }
+
+  abstract double getElement(int row, int col);
+  abstract void setElement(int row, int col, double val);
+  
+  public void clean() {
+    for (int i = size; --i >= 0;)
+    for (int j = size; --j >= 0;)
+      setElement(i,  j, approx0(getElement(i, j)));
+  }
+
+  private double approx0(double v) {
+    return (v > 1e-15f || v < -1e-15f ? v : 0);
   }
 
 }

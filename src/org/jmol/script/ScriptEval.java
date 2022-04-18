@@ -64,7 +64,7 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.A4;
-import javajs.util.A4d;
+import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
@@ -73,6 +73,8 @@ import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M3d;
 import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.OC;
@@ -85,7 +87,6 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.T3d;
 import javajs.util.V3;
-import javajs.util.V3d;
 
 public class ScriptEval extends ScriptExpr {
 
@@ -5361,7 +5362,7 @@ public class ScriptEval extends ScriptExpr {
       if (tokAt(2) == T.decimal && tokAt(3) == T.matrix4f) {
         modelIndex = vwr.ms.getModelNumberIndex(getToken(2).intValue, false,
             false);
-        M4 mat4 = (M4) getToken(3).value;
+        M4d mat4 = (M4d) getToken(3).value;
         if (modelIndex >= 0)
           vwr.ms.am[modelIndex].mat4 = mat4;
         return;
@@ -6109,8 +6110,8 @@ public class ScriptEval extends ScriptExpr {
     P3[] points = new P3[2];
     V3 rotAxis = V3.new3(0, 1, 0);
     V3 translation = null;
-    M4 m4 = null;
-    M3 m3 = null;
+    M4d m4 = null;
+    M3d m3 = null;
     boolean is4x4 = false;
     int direction = 1;
     int tok;
@@ -6356,11 +6357,11 @@ public class ScriptEval extends ScriptExpr {
           iToken = i;
           invArg();
         }
-        m4 = new M4();
+        m4 = new M4d();
         points[0] = new P3();
         nPoints = 1;
         Interface.getInterface("javajs.util.Eigen", vwr, "script");
-        float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
+        double stddev = (chk ? 0 : ScriptParam.getTransformMatrix4(ptsA, ptsB, m4,
             points[0]));
         // if the standard deviation is very small, we leave ptsB
         // because it will be used to set the absolute final positions
@@ -6370,10 +6371,10 @@ public class ScriptEval extends ScriptExpr {
       case T.matrix4f:
       case T.matrix3f:
         haveRotation = true;
-        m3 = new M3();
+        m3 = new M3d();
         if (tok == T.matrix4f) {
           is4x4 = true;
-          m4 = (M4) theToken.value;
+          m4 = (M4d) theToken.value;
         }
         if (m4 != null) {
           // translation and rotation are calculated
@@ -6381,7 +6382,7 @@ public class ScriptEval extends ScriptExpr {
           m4.getTranslation(translation);
           m4.getRotationScale(m3);
         } else {
-          m3 = (M3) theToken.value;
+          m3 = (M3d) theToken.value;
         }
         q = (chk ? new Quat() : Quat.newM(m3));
         rotAxis.setT(q.getNormal());
@@ -6535,7 +6536,7 @@ public class ScriptEval extends ScriptExpr {
     if (bsAtoms != null && isSpin && ptsB == null && m4 != null) {
       ptsA = vwr.ms.getAtomPointVector(bsAtoms);
       // note that this m4 is NOT through 
-      ptsB = Measure.transformPoints(ptsA, m4, points[0]);
+      ptsB = ScriptParam.transformPoints(ptsA, m4, points[0]);
     }
     if (bsAtoms != null && !isSpin && ptsB != null) {
       vwr.setAtomCoords(bsAtoms, T.xyz, ptsB);

@@ -14,6 +14,8 @@ import org.jmol.util.SimpleUnitCell;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -22,6 +24,7 @@ import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+import javajs.util.V3d;
 
 
 /**
@@ -599,7 +602,7 @@ abstract public class ScriptParam extends ScriptError {
                 ? ((Integer) theToken.value).intValue()
                 : theToken.intValue);
           } else if (theToken.value instanceof Float) {
-            coord[n++] /= ((Float) theToken.value).floatValue();
+            coord[n++] /= ((Number) theToken.value).floatValue();
           }
           coordinatesAreFractional = true;
           break;
@@ -617,7 +620,7 @@ abstract public class ScriptParam extends ScriptError {
             isOK = false;
             return null;
           }
-          coord[n++] = ((Float) theToken.value).floatValue();
+          coord[n++] = ((Number) theToken.value).floatValue();
           break;
         default:
         	iToken--;
@@ -810,7 +813,25 @@ abstract public class ScriptParam extends ScriptError {
         return theToken.intValue;
       case T.spec_model2:
       case T.decimal:
-        return ((Float) theToken.value).floatValue();
+        return ((Number) theToken.value).floatValue();
+      }
+    }
+    error(ERROR_numberExpected);
+    return 0;
+  }
+
+  public double doubleParameter(int index) throws ScriptException {
+    if (checkToken(index)) {
+      getToken(index);
+      switch (theTok) {
+      case T.spec_seqcode_range:
+        return -theToken.intValue;
+      case T.spec_seqcode:
+      case T.integer:
+        return theToken.intValue;
+      case T.spec_model2:
+      case T.decimal:
+        return ((Number) theToken.value).doubleValue();
       }
     }
     error(ERROR_numberExpected);
@@ -981,7 +1002,7 @@ abstract public class ScriptParam extends ScriptError {
     if (fparams == null) {
       fparams = new float[n];
       for (int j = 0; j < n; j++)
-        fparams[j] = ((Float) v.get(j)).floatValue();
+        fparams[j] = ((Number) v.get(j)).floatValue();
     }
     return fparams;
   }
@@ -1484,6 +1505,49 @@ abstract public class ScriptParam extends ScriptError {
     }
     pt = Escape.uP(SV.sValue(x));
     return (pt instanceof P4 ? (P4) pt : null);
+  }
+
+  public static Lst<P3> transformPoints(Lst<P3> vPts, M4d m4, P3 center) {
+    Lst<P3> v = new  Lst<P3>();
+    for (int i = 0; i < vPts.size(); i++) {
+      P3 pt = P3.newP(vPts.get(i));
+      pt.sub(center);
+      m4.rotTrans(pt);
+      pt.add(center);
+      v.addLast(pt);
+    }
+    return v;
+  }
+
+  /**
+   * Fills a 4x4 matrix with rotation-translation of mapped points A to B.
+   * If centerA is null, this is a standard 4x4 rotation-translation matrix;
+   * otherwise, this 4x4 matrix is a rotation around a vector through the center of ptsA,
+   * and centerA is filled with that center; 
+   * Prior to Jmol 14.3.12_2014.02.14, when used from the JmolScript compare() function,
+   * this method returned the second of these options instead of the first.
+   * 
+   * @param ptsA
+   * @param ptsB
+   * @param m  4x4 matrix to be returned 
+   * @param centerA return center of rotation; if null, then standard 4x4 matrix is returned
+   * @return stdDev
+   */
+  public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4d m,
+                                          P3 centerA) {
+    P3[] cptsA = Measure.getCenterAndPoints(ptsA);
+    P3[] cptsB = Measure.getCenterAndPoints(ptsB);
+    float[] retStddev = new float[2];
+    Quat q = Measure.calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
+        retStddev);
+    M3d r = q.getMatrix();
+    if (centerA == null)
+      r.rotate(cptsA[0]);
+    else
+      centerA.setT(cptsA[0]);
+    V3d t = V3d.newVsub(cptsB[0], cptsA[0]);
+    m.setMV(r, t);
+    return retStddev[1];
   }
 
 

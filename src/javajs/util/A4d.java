@@ -248,4 +248,8 @@ public class A4d implements JSONEncodable, Serializable {
   public String toJSON() {
     return "[" + x + "," + y + "," + z + "," + (angle * 180.0 / Math.PI) + "]";
   }
+
+  public void setM(M3d m3) {
+    setM(m3.toM3());
+  }
 }

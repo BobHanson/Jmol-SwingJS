@@ -30,8 +30,8 @@ import java.util.Map;
 import org.jmol.modelset.Atom;
 import org.jmol.util.C;
 
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import org.jmol.util.Tensor;
 
@@ -177,10 +177,10 @@ public class Ellipsoid {
   //  }
 
   public static void getEquationForQuadricWithCenter(float x, float y, float z,
-                                                     M3 mToElliptical,
-                                                     V3 vTemp, M3 mTemp,
+                                                     M3d mToElliptical,
+                                                     V3 vTemp, M3d mTemp,
                                                      double[] coef,
-                                                     M4 mDeriv) {
+                                                     M4d mDeriv) {
     /* Starting with a center point and a matrix that converts cartesian 
      * or screen coordinates to ellipsoidal coordinates, 
      * this method fills a float[10] with the terms for the 

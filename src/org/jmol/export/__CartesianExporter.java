@@ -30,8 +30,8 @@ import java.util.Map;
 
 import javajs.util.A4;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.T3;
 
@@ -320,8 +320,8 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   @Override
   void fillEllipsoid(P3 center, P3[] points, short colix, int x,
-                     int y, int z, int diameter, M3 toEllipsoidal,
-                     double[] coef, M4 deriv, P3[] octantPoints) {
+                     int y, int z, int diameter, M3d toEllipsoidal,
+                     double[] coef, M4d deriv, P3[] octantPoints) {
     outputEllipsoid(center, points, colix);
   }
 
@@ -368,16 +368,16 @@ abstract public class __CartesianExporter extends ___Exporter {
     // VRML/STL only
   }
 
-  protected M4 sphereMatrix = new M4();
+  protected M4d sphereMatrix = new M4d();
 
   protected void setSphereMatrix(T3 center, float rx, float ry, float rz,
-                                 A4 a, M4 sphereMatrix) {
+                                 A4 a, M4d sphereMatrix) {
     if (a != null) {
-      M3 m = new M3();
+      M3d m = new M3d();
       m.m00 = rx;
       m.m11 = ry;
       m.m22 = rz;
-      M3 mq = new M3().setAA(a);
+      M3d mq = new M3d().setAA(a);
       mq.mul(m);
       sphereMatrix.setToM3(mq);
     } else {

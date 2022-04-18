@@ -59,6 +59,10 @@ final public class AU {
    return (array != null && array.length >= minimumLength ? array: arrayCopyF(array, minimumLength));
   }
 
+  public static double[] ensureLengthD(double[] array, int minimumLength) {
+    return (array != null && array.length >= minimumLength ? array: arrayCopyD(array, minimumLength));
+  }
+
   public static int[] ensureLengthI(int[] array, int minimumLength) {
     return (array != null && array.length >= minimumLength ? array : arrayCopyI(array, minimumLength));
   }
