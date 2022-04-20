@@ -5970,7 +5970,8 @@ public class CmdExt extends ScriptExt {
       case T.off:
         if (!chk) {
           vwr.setBooleanProperty("modelkitmode", tok == T.on);
-          vwr.setStringProperty("picking", "identify");
+          if (tok == T.off)
+            vwr.setStringProperty("picking", "identify");
         }
         continue;
       case T.display:

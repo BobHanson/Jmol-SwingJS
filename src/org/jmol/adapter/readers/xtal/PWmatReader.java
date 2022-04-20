@@ -20,7 +20,31 @@ import javajs.util.PT;
  */
 
 public class PWmatReader extends AtomSetCollectionReader {
-
+/**
+ * The format of pwmat config file specification is now clear, would like to
+ * adjust PWmatReader accordingly. The pwmat config file format accommodates
+ * conversion from other vendors and their formats.
+ * 
+ * The first line always has number of atoms, before the number, could be
+ * spaces. after the number, there could be comments such as "generated from
+ * pwmat". Please ignore those comments, only gets the number from the first
+ * line.
+ * 
+ * After the first line, there could be comments please ignore till reading of
+ * letter lattice or lattice vector. The letters are case non-sensitive.
+ * 
+ * The lattice section consists of 3 lines representing lattice vector. For
+ * each line, there could be extra 3 numbers followed, please ignore.
+ * 
+ * Following lattice section, there comes position section. As long as there
+ * is "position" case-insensitive leading the line, that is our position
+ * section. The position section consists of total lines of total atom number
+ * which is the from the first line.
+ * 
+ * The lattice section, following by position section, then there are optional
+ * sections. The cue is always the words case-insensitive. After the keywords,
+ * following by the total lines of total atom number.
+ */
   private int nAtoms;
 
   @Override
@@ -60,7 +84,9 @@ public class PWmatReader extends AtomSetCollectionReader {
       }
       return true;
     }
-    readDataBlock(lc);
+    if (!readDataBlock(lc)) {
+      continuing = false;
+    }      
     return true;
   }
   
@@ -109,21 +135,23 @@ public class PWmatReader extends AtomSetCollectionReader {
     setVectors("constraints", cx, cy, cz, nAtoms);
   }
 
-  private void readDataBlock(String name) throws Exception {
+  private boolean readDataBlock(String name) throws Exception {
     getLine();
+    if (line == null)
+      return false;
     String[] tokens = getTokens();
     switch (tokens.length) {
     case 1:
     case 2:
     case 3:
       readItems(name, tokens.length - 1, null);
-      break;
+      return true;
     case 4: // elemno, x,y,z
       readVectors(name, 1, true);
-      break;
+      return true;
     default:
       Logger.error("PWmatReader block " + name.toUpperCase() + " ignored");
-      break;
+      return false;
     }
   }
 
@@ -234,7 +262,7 @@ public class PWmatReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (!haveMagnetic) {
+    if (!haveMagnetic && asc.ac > 0) {
       setProperties("pwm_magnetic", new float[asc.ac], nAtoms, nAtoms);
     }
   }
