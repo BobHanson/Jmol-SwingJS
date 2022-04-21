@@ -3175,8 +3175,10 @@ public class Viewer extends JmolViewer
                                              boolean isAppend) {
     // loadInline, openStringInline
 
-    String type = getModelAdapter().getFileTypeName(Rdr.getBR(strModel));
-    if (type == null)
+    String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
+    if (type == null 
+        && (type = getModelAdapter().getFileTypeName(Rdr.getBR(strModel)))
+         == null)
       return "unknown file type";
     if (type.equals("spt")) {
       return "cannot open script inline";
