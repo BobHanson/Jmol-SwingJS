@@ -217,7 +217,9 @@ public class FileManager implements BytePoster {
     if (htParams.get("atomDataOnly") == null)
       setLoadState(htParams);
     String name0 = name;
-    name = vwr.resolveDatabaseFormat(name);
+    int pt = name.indexOf("::");
+    if (pt < 0)
+      name = vwr.resolveDatabaseFormat(name);
     if (!name0.equals(name) && name0.indexOf("/") < 0 
         && Viewer.hasDatabasePrefix(name0)) {
       htParams.put("dbName", name0);
@@ -227,7 +229,6 @@ public class FileManager implements BytePoster {
       htParams.put("filter", (filter == null ? "" : filter) + "2D");
       name = name.substring(0, name.length() - 4);
     }
-    int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);
     String fileType = (pt >= 0 ? name.substring(0, pt) : null);
     Logger.info("\nFileManager.getAtomSetCollectionFromFile(" + nameAsGiven
