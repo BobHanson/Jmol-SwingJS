@@ -6248,8 +6248,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
-      bs.andNot(vwr.getMotionFixedAtoms());
-      int nm = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;

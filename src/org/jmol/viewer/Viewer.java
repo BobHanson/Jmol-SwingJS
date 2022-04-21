@@ -8213,7 +8213,7 @@ public class Viewer extends JmolViewer
           tm.unTransformPoint(ptScreenNew, ptNew);
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
-            getModelkit(false).cmdAssignMoveAtom(bsSelected.nextSetBit(0),
+            getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom,
                 ptNew);
           }
           if (!Float.isNaN(ptNew.x)) {
