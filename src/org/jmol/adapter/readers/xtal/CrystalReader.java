@@ -1013,7 +1013,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       Logger.error("Cannot use FILTER \"conventional\" with POLYMER or SLAB");
       isPrimitive = true;
     }
-    asc.setInfo("unitCellType", (isPrimitive ? "primitive" : "conventional"));
+    asc.setInfo("unitCellType", (isPrimitive ? CELL_TYPE_PRIMITIVE : CELL_TYPE_CONVENTIONAL));
     if (type.indexOf("MOLECULAR") >= 0) {
       isMolecular = doProcessLines = true;
       rd();

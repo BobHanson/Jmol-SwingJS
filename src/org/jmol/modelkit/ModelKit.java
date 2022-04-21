@@ -1144,18 +1144,14 @@ public class ModelKit {
    * @param name "P1" or "1" or ignored
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name) {
+  public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
     clearAtomConstraints();
     try {
       if (bs != null && bs.isEmpty())
         return "";
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-      if (sym == null)
-        sym = vwr.getSymTemp()
-            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
-      // limit the atoms to 
-      BS bsAtoms = vwr.getThisModelAtoms();
+      // limit the atoms to this model if bs is null
+      BS bsAtoms = (mi < 0 ? vwr.getThisModelAtoms() : vwr.getModelUndeletedAtomsBitSet(mi));
       BS bsCell = (isP1 ? bsAtoms : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true));
       if (bs == null) {
         bs = bsAtoms;
@@ -1166,7 +1162,12 @@ public class ModelKit {
           bsAtoms.and(bsCell);
       }
       boolean noAtoms = bsAtoms.isEmpty();
-      int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      if (mi < 0)
+        mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      SymmetryInterface sym = vwr.ms.getUnitCell(mi);
+      if (sym == null)
+        sym = vwr.getSymTemp()
+            .setUnitCell(new float[] { 10, 10, 10, 90, 90, 90 }, false);
       T3 m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
@@ -1198,7 +1199,7 @@ public class ModelKit {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms);
       vwr.ms.setSpaceGroup(mi, sym, basis);
       P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
-      vwr.ms.setUnitCellOffset(sym, pt, 0);
+      ModelSet.setUnitCellOffset(sym, pt, 0);
       return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)

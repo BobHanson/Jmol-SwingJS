@@ -35,6 +35,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
 
 import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
@@ -75,6 +76,9 @@ import javajs.util.V3;
 public class CifReader extends AtomSetCollectionReader {
 
 
+  protected static final String CELL_TYPE_MAGNETIC_PARENT = "parent";
+  protected static final String CELL_TYPE_MAGNETIC_STANDARD = "standard";
+
   /**
    * Allows checking specific blocks 
    * 
@@ -94,6 +98,7 @@ public class CifReader extends AtomSetCollectionReader {
   Parser subParser; // TopoCifParser
   
   private static final String titleRecords = "__citation_title__publ_section_title__active_magnetic_irreps_details__";
+
   private MSCifParser modr; // Modulated Structure subreader
 //  private MagCifRdr magr;// Magnetic CIF subreader - not necessary
 
@@ -160,7 +165,7 @@ public class CifReader extends AtomSetCollectionReader {
     asc.checkSpecial = !checkFilterKey("NOSPECIAL");
     allowRotations = !checkFilterKey("NOSYM");
     if (strSupercell != null && strSupercell.indexOf(",") >= 0)
-      addCellType("conventional", strSupercell, true);
+      addCellType(CELL_TYPE_CONVENTIONAL, strSupercell, true);
     if (binaryDoc != null)
       return; // mmtf
     readCifData();
@@ -344,6 +349,13 @@ public class CifReader extends AtomSetCollectionReader {
       getModulationReader().processEntry();
   }
 
+  /**
+   * (magnetic CIF only)
+   * 
+   * Process the unit cell transformation as indicated by _parent_space_group or
+   *  _space_group_magn (or older _magentic_space_group)
+   * 
+   */
   private void processUnitCellTransform() {
     data = PT.replaceAllCharacters(data, " ", "");
     
@@ -362,18 +374,23 @@ public class CifReader extends AtomSetCollectionReader {
     // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'   -- no interest to us
     // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
 
-    
-      
-    
     if (key.contains("_from_parent") || key.contains("child_transform"))
-      addCellType("parent", data, true);
+      addCellType(CELL_TYPE_MAGNETIC_PARENT, data, true);
     else if (key.contains("_to_standard") || key.contains("transform_bns_pp_abc"))
-      addCellType("standard", data, false);
+      addCellType(CELL_TYPE_MAGNETIC_STANDARD, data, false);
     appendLoadNote(key + ": " + data);
   }
 
   private Map<String, String> htCellTypes;
 
+  /**
+   * (magnetic CIF or LOAD ... SUPERCELL)
+   * 
+   * Add a cell type such as "conventional"
+   * @param type
+   * @param data if starting with "!" then "opposite of"
+   * @param isFrom TRUE for SUPERCELL or "_from_parent" or "child_transform"
+   */
   private void addCellType(String type, String data, boolean isFrom) {
     if (htCellTypes == null)
       htCellTypes = new Hashtable<String, String>();
@@ -385,7 +402,7 @@ public class CifReader extends AtomSetCollectionReader {
     htCellTypes.put(type, cell);
     if (type.equalsIgnoreCase(strSupercell)) {
       strSupercell = cell;
-      htCellTypes.put("conventional", (isFrom ? "" : "!") + data);
+      htCellTypes.put(CELL_TYPE_CONVENTIONAL, (isFrom ? "" : "!") + data);
     }
   }
 
@@ -1957,9 +1974,9 @@ public class CifReader extends AtomSetCollectionReader {
       }
       asc.setCurrentModelInfo("unitCellParams", null);
       if (nMolecular++ == asc.iSet) {
-        asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_FRACTCOORD);
-        asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_SYMMETRY);
-        asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_UNITCELLS);
+        asc.clearGlobalBoolean(JC.GLOBAL_FRACTCOORD);
+        asc.clearGlobalBoolean(JC.GLOBAL_SYMMETRY);
+        asc.clearGlobalBoolean(JC.GLOBAL_UNITCELLS);
       }
 
     }

@@ -338,7 +338,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     modelInfo = vwr.ms.getModelAuxiliaryInfo(modelIndex);
     if (modelInfo == null)
       modelInfo = new Hashtable<String, Object>();
-    isPDB = checkBoolean("isPDB");
+    isPDB = checkBoolean(JC.getBoolName(JC.GLOBAL_ISPDB));
     isMultiFrame = (modelCount > 1);
     hasSymmetry = !isPDB && modelInfo.containsKey("hasSymmetry");
     isUnitCell = modelInfo.containsKey("unitCellParams");

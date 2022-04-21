@@ -3441,12 +3441,7 @@ public class ModelSet extends BondCollection {
     }
   }
 
-  public void setUnitCellOffset(SymmetryInterface unitCell, T3 pt, int ijk) {
-    //    for (int i = modelIndex; i < modelCount; i++) {
-    //      if (i < 0 || modelIndex >= 0 && i != modelIndex
-    //          && models[i].trajectoryBaseIndex != modelIndex)
-    //        continue;
-    //      unitCell = getUnitCell(i);
+  public static void setUnitCellOffset(SymmetryInterface unitCell, T3 pt, int ijk) {
     if (unitCell == null)
       return;
     if (pt == null)

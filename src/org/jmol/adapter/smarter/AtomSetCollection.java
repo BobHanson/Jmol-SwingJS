@@ -40,6 +40,7 @@ import javajs.util.BS;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 @SuppressWarnings("unchecked")
 public class AtomSetCollection {
@@ -60,29 +61,16 @@ public class AtomSetCollection {
 
   public Map<String, Object> atomSetInfo = new Hashtable<String, Object>();
 
-  private final static String[] globalBooleans = {
-      "someModelsHaveFractionalCoordinates", "someModelsHaveSymmetry",
-      "someModelsHaveUnitcells", "someModelsHaveCONECT", "isPDB", "someModelsHaveDomains", "someModelsHaveValidations" };
-
-  public final static int GLOBAL_FRACTCOORD = 0;
-  public final static int GLOBAL_SYMMETRY = 1;
-  public final static int GLOBAL_UNITCELLS = 2;
-  public final static int GLOBAL_CONECT = 3;
-  public final static int GLOBAL_ISPDB = 4;
-  public final static int GLOBAL_DOMAINS = 5;
-  public final static int GLOBAL_VALIDATIONS = 6;
-  
-
   public void clearGlobalBoolean(int globalIndex) {
-    atomSetInfo.remove(globalBooleans[globalIndex]);
+    atomSetInfo.remove(JC.getBoolName(globalIndex));
   }
 
   public void setGlobalBoolean(int globalIndex) {
-    setInfo(globalBooleans[globalIndex], Boolean.TRUE);
+    setInfo(JC.getBoolName(globalIndex), Boolean.TRUE);
   }
 
   boolean getGlobalBoolean(int globalIndex) {
-    return (atomSetInfo.get(globalBooleans[globalIndex]) == Boolean.TRUE);
+    return (atomSetInfo.get(JC.getBoolName(globalIndex)) == Boolean.TRUE);
   }
 
   public Atom[] atoms = new Atom[256];
@@ -276,7 +264,7 @@ public class AtomSetCollection {
           bond.atomIndex2 + existingAtomsCount, bond.order);
     }
     // Set globals
-    for (int i = globalBooleans.length; --i >= 0;)
+    for (int i = JC.globalBooleans.length; --i >= 0;)
       if (collection.getGlobalBoolean(i))
         setGlobalBoolean(i);
 
@@ -694,7 +682,7 @@ public class AtomSetCollection {
     coordinatesAreFractional = tf;
     setCurrentModelInfo("coordinatesAreFractional", Boolean.valueOf(tf));
     if (tf)
-      setGlobalBoolean(GLOBAL_FRACTCOORD);
+      setGlobalBoolean(JC.GLOBAL_FRACTCOORD);
   }
 
   public boolean haveAnisou;

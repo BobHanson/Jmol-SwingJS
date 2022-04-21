@@ -110,7 +110,7 @@ public final class BioResolver implements Comparator<String[]> {
       ms = modelLoader.ms;
       vwr = modelLoader.ms.vwr;
       modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
-      hasCONECT = (ms.getInfoM("someModelsHaveCONECT") == Boolean.TRUE);
+      hasCONECT = (ms.getInfoM(JC.getBoolName(JC.GLOBAL_CONECT)) == Boolean.TRUE);
     }
     return this;
   }

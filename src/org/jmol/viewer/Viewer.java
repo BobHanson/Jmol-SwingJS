@@ -3730,7 +3730,7 @@ public class Viewer extends JmolViewer
   public T3[] getV0abc(int iModel, Object def) {
     SymmetryInterface uc = (iModel < 0 ? getCurrentUnitCell()
         : getUnitCell(iModel));
-    return (uc == null ? null : uc.getV0abc(def));
+    return (uc == null ? null : uc.getV0abc(def, null));
   }
 
   public SymmetryInterface getCurrentUnitCell() {
@@ -5691,7 +5691,7 @@ public class Viewer extends JmolViewer
     case T.hiddenlinesdashed:
       return g.hiddenLinesDashed;
     case T.pdb:
-      return ms.getMSInfoB("isPDB");
+      return ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_ISPDB));
     case T.autoplaymovie:
       return g.autoplayMovie;
     case T.allowaudio:
@@ -9924,7 +9924,7 @@ public class Viewer extends JmolViewer
   }
 
   public void setModelSet(ModelSet modelSet) {
-    this.ms = mm.modelSet = modelSet;
+    ms = mm.modelSet = modelSet;
   }
 
   public String setObjectProp(String id, int tokCommand) {
@@ -10318,7 +10318,7 @@ public class Viewer extends JmolViewer
   }
 
   public String getPdbID() {
-    return (ms.getInfo(am.cmi, "isPDB") == Boolean.TRUE
+    return (ms.getInfo(am.cmi, JC.getBoolName(JC.GLOBAL_ISPDB)) == Boolean.TRUE
         ? (String) ms.getInfo(am.cmi, "pdbID")
         : null);
   }
@@ -10738,6 +10738,10 @@ public class Viewer extends JmolViewer
     ret[0] = p;
     ret[1] = e;
     return se + u;
+  }
+
+  public String assignSpaceGroup(BS bs, String type, int modelIndex) {
+    return getModelkit(false).cmdAssignSpaceGroup(bs, type, modelIndex);
   }
 
 

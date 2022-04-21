@@ -741,8 +741,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public T3[] getV0abc(Object def) {
-    return (unitCell == null ? null : unitCell.getV0abc(def));
+  public T3[] getV0abc(Object def, M4 retMatrix) {
+    return (unitCell == null ? null : unitCell.getV0abc(def, retMatrix));
   }
 
   @Override

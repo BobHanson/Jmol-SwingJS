@@ -153,6 +153,7 @@ public final class ModelLoader {
   public Group[] groups;
   private int groupCount;
   private P3 modulationTUV;
+  private boolean isSupercell;
   
 
   @SuppressWarnings("unchecked")
@@ -164,7 +165,7 @@ public final class ModelLoader {
     ms.msInfo = info;
     ms.modelSetProperties = (Properties) ms.getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
-    ms.haveBioModels = ms.getMSInfoB("isPDB");
+    ms.haveBioModels = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_ISPDB));
     isMutate = ms.getMSInfoB("isMutate");
     if (ms.haveBioModels)
       jbr = vwr.getJBR().setLoader(this);
@@ -199,30 +200,31 @@ public final class ModelLoader {
     is2D = ms.getMSInfoB("is2D");
     doMinimize = (is2D || ms.getMSInfoB("minimize3D")) && ms.getMSInfoB("doMinimize");
     adapterTrajectoryCount = (isTrajectory ? ms.trajectory.steps.size() : 0);
-    ms.someModelsHaveSymmetry = ms.getMSInfoB("someModelsHaveSymmetry");
-    someModelsHaveUnitcells = ms.getMSInfoB("someModelsHaveUnitcells");
-    someModelsAreModulated = ms.getMSInfoB("someModelsAreModulated");
+    ms.someModelsHaveSymmetry = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
+    someModelsHaveUnitcells = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_UNITCELLS));
+    someModelsAreModulated = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_MODULATED));
+    isSupercell = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_SUPERCELL));
     ms.someModelsHaveFractionalCoordinates = ms
-        .getMSInfoB("someModelsHaveFractionalCoordinates");
+        .getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
     if (merging) {
       ms.haveBioModels |= modelSet0.haveBioModels;
       ms.bioModelset = modelSet0.bioModelset;
       if (ms.bioModelset != null)
         ms.bioModelset.set(vwr, ms);
       ms.someModelsHaveSymmetry |= modelSet0
-          .getMSInfoB("someModelsHaveSymmetry");
+          .getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
       someModelsHaveUnitcells |= modelSet0
-          .getMSInfoB("someModelsHaveUnitcells");
+          .getMSInfoB(JC.getBoolName(JC.GLOBAL_UNITCELLS));
       ms.someModelsHaveFractionalCoordinates |= modelSet0
-          .getMSInfoB("someModelsHaveFractionalCoordinates");
+          .getMSInfoB(JC.getBoolName(JC.GLOBAL_FRACTCOORD));
       ms.someModelsHaveAromaticBonds |= modelSet0.someModelsHaveAromaticBonds;
-      ms.msInfo.put("someModelsHaveSymmetry",
+      ms.msInfo.put(JC.getBoolName(JC.GLOBAL_SYMMETRY),
           Boolean.valueOf(ms.someModelsHaveSymmetry));
-      ms.msInfo.put("someModelsHaveUnitcells",
+      ms.msInfo.put(JC.getBoolName(JC.GLOBAL_UNITCELLS),
           Boolean.valueOf(someModelsHaveUnitcells));
-      ms.msInfo.put("someModelsHaveFractionalCoordinates",
+      ms.msInfo.put(JC.getBoolName(JC.GLOBAL_FRACTCOORD),
           Boolean.valueOf(ms.someModelsHaveFractionalCoordinates));
-      ms.msInfo.put("someModelsHaveAromaticBonds",
+      ms.msInfo.put(JC.getBoolName(JC.GLOBAL_AROMATICBONDS),
           Boolean.valueOf(ms.someModelsHaveAromaticBonds));
     }
   }
@@ -278,17 +280,17 @@ public final class ModelLoader {
     return ms.ac;
   }
 
-  private void createModelSet(JmolAdapter adapter, Object asc,
-                              BS bsNew) {
+  private void createModelSet(JmolAdapter adapter, Object asc, BS bsNew) {
     int nAtoms = (adapter == null ? 0 : adapter.getAtomCount(asc));
     if (nAtoms > 0)
       Logger.info("reading " + nAtoms + " atoms");
-    adapterModelCount = (adapter == null ? 1 : adapter
-        .getAtomSetCount(asc));
+    adapterModelCount = (adapter == null ? 1 : adapter.getAtomSetCount(asc));
     // cannot append a trajectory into a previous model
-    appendToModelIndex = (ms.msInfo == null ? null : ((Integer) ms.msInfo.get("appendToModelIndex")));
-    appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
-        || isTrajectory || vwr.getBoolean(T.appendnew) && appendToModelIndex == null);
+    appendToModelIndex = (ms.msInfo == null ? null
+        : ((Integer) ms.msInfo.get("appendToModelIndex")));
+    appendNew = !isMutate
+        && (!merging || adapter == null || adapterModelCount > 1 || isTrajectory
+            || vwr.getBoolean(T.appendnew) && appendToModelIndex == null);
     htAtomMap.clear();
     chainOf = new Chain[defaultGroupCount];
     group3Of = new String[defaultGroupCount];
@@ -320,8 +322,8 @@ public final class ModelLoader {
       Quat q = (Quat) ms.getInfoM("defaultOrientationQuaternion");
       if (q != null) {
         Logger.info("defaultOrientationQuaternion = " + q);
-        Logger
-            .info("Use \"set autoLoadOrientation TRUE\" before loading or \"restore orientation DEFAULT\" after loading to view this orientation.");
+        Logger.info(
+            "Use \"set autoLoadOrientation TRUE\" before loading or \"restore orientation DEFAULT\" after loading to view this orientation.");
       }
       iterateOverAllNewModels(adapter, asc);
       JmolAdapterBondIterator iterBond = adapter.getBondIterator(asc);
@@ -334,12 +336,11 @@ public final class ModelLoader {
       }
       ms.defaultCovalentMad = mad;
       if (merging && !appendNew) {
-        Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(
-            asc, 0);
-        ms.setInfo(baseModelIndex, "initialAtomCount", info
-            .get("initialAtomCount"));
-        ms.setInfo(baseModelIndex, "initialBondCount", info
-            .get("initialBondCount"));
+        Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(asc, 0);
+        ms.setInfo(baseModelIndex, "initialAtomCount",
+            info.get("initialAtomCount"));
+        ms.setInfo(baseModelIndex, "initialBondCount",
+            info.get("initialBondCount"));
       }
       initializeUnitCellAndSymmetry();
       initializeBonding();
@@ -362,7 +363,6 @@ public final class ModelLoader {
         jbr.iterateOverAllNewStructures(adapter, asc);
     }
 
-    
     setDefaultRendering(vwr.getInt(T.smallmoleculemaxatoms));
 
     RadiusData rd = vwr.rd;
@@ -378,9 +378,14 @@ public final class ModelLoader {
     freeze();
     finalizeShapes();
     vwr.setModelSet(ms);
+    if (isSupercell && appendNew) {
+      for (int i = baseModelIndex; i < ms.mc; i++) {
+        vwr.assignSpaceGroup(null, "P1", i);
+      }
+    }
     setAtomProperties();
     if (adapter != null)
-      adapter.finish(asc);    
+      adapter.finish(asc);
     if (modelSet0 != null) {
       modelSet0.releaseModelSet();
     }
@@ -616,7 +621,7 @@ public final class ModelLoader {
                                             String jmolData) {
     if (appendNew) {
       boolean modelIsPDB = (modelAuxiliaryInfo != null && Boolean.TRUE == modelAuxiliaryInfo
-          .get("isPDB"));
+          .get(JC.getBoolName(JC.GLOBAL_ISPDB)));
       ms.am[modelIndex] = (modelIsPDB ? jbr.getBioModel(modelIndex,
           trajectoryBaseIndex, jmolData, modelProperties, modelAuxiliaryInfo)
           : new Model().set(ms, modelIndex, trajectoryBaseIndex, jmolData,
@@ -1169,7 +1174,7 @@ public final class ModelLoader {
     int modelAtomCount = 0;
     BS bsExclude = (BS) ms.getInfoM("bsExcludeBonding");
     if (bsExclude == null) {
-      bsExclude = (ms.getInfoM("someModelsHaveCONECT") == null ? null
+      bsExclude = (ms.getInfoM(JC.getBoolName(JC.GLOBAL_CONECT)) == null ? null
           : new BS());
       if (bsExclude != null)
         ms.setPdbConectBonding(baseAtomIndex, baseModelIndex, bsExclude);

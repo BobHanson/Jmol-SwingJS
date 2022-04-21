@@ -173,7 +173,7 @@ public interface SymmetryInterface {
 
   P3[] getUnitCellVerticesNoOffset();
 
-  T3[] getV0abc(Object def);
+  T3[] getV0abc(Object def, M4 m);
 
   boolean haveUnitCell();
 

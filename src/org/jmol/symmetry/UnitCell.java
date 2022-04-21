@@ -227,8 +227,12 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     T4 pt4 = (pt instanceof T4 ? (T4) pt : null);
     float w = (pt4 == null ? Float.MIN_VALUE : pt4.w);
     boolean isCell555P4 = (w > 999999);
-    if (pt4 != null ? w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
-      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4.newPt((P4) pt4) : P3.newP(pt));
+    if (pt4 != null ? 
+        w <= 0 || isCell555P4 
+        : pt.x >= 100 || pt.y >= 100) {
+      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 
+          ? null 
+          : isCell555P4 ? P4.newPt((P4) pt4) : P3.newP(pt));
       unitCellMultiplied = null;
       if (pt4 == null || pt4.w == 0 || isCell555P4)
         return;
@@ -711,10 +715,12 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
+   * @param retMatrix
+   *        if a string, return the M4 matrix corresponding to this definition
    * 
-   * @return [origin va vb vc]
+   * @return [origin va vb vc] or null if invalid syntax, or null for allowNull and is identity
    */
-  public T3[] getV0abc(Object def) {
+  public T3[] getV0abc(Object def, M4 retMatrix) {
     if (def instanceof T3[])
       return (T3[]) def;
     M4 m;
@@ -747,22 +753,23 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         return null;
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
-      if (strans != null) {
-        String[] atrans = PT.split(strans, ",");
-        float[] ftrans = new float[3];
-        if (atrans.length == 3)
-          for (int j = 0; j < 3; j++) {
-            String s = atrans[j];
-            int sfpt = s.indexOf("/");
-            if (sfpt >= 0) {
-              ftrans[j] = PT.parseFloat(s.substring(0, sfpt))
-                  / PT.parseFloat(s.substring(sfpt + 1));
-            } else {
-              ftrans[j] = PT.parseFloat(s);
-            }
+      String[] atrans = PT.split(strans, ",");
+      float[] ftrans = new float[3];
+      if (atrans.length == 3)
+        for (int j = 0; j < 3; j++) {
+          String s = atrans[j];
+          int sfpt = s.indexOf("/");
+          if (sfpt >= 0) {
+            ftrans[j] = PT.parseFloat(s.substring(0, sfpt))
+                / PT.parseFloat(s.substring(sfpt + 1));
+          } else {
+            ftrans[j] = PT.parseFloat(s);
           }
-        P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
-        m.setTranslation(ptrans);
+        }
+      P3 ptrans = P3.new3(ftrans[0], ftrans[1], ftrans[2]);
+      m.setTranslation(ptrans);
+      if (retMatrix != null) {
+        retMatrix.setM4(m);
       }
     } else if (def instanceof M3) {
       m = M4.newMV((M3) def, new P3());
