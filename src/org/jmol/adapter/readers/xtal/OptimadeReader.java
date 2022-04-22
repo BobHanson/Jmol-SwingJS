@@ -13,8 +13,13 @@ import javajs.util.SB;
 /**
  * A (preliminary) reader for OPTIMADE resources.
  * 
+ * load
+ * Optimade::https://aiida.materialscloud.org/2dtopo/optimade/v1/structures?filter=nperiodic_dimensions=2&page_limit=1
+ * 
+ * 
+ * 
  * @author Bob Hanson hansonr@stolaf.edu
-*/
+ */
 
 @SuppressWarnings("unchecked")
 public class OptimadeReader extends AtomSetCollectionReader {
