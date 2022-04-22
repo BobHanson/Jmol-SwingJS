@@ -36,6 +36,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -187,7 +188,7 @@ public class XtalSymmetry {
       }
       trajectoryUnitCells.addLast(unitCellParams);
     }
-    asc.setGlobalBoolean(AtomSetCollection.GLOBAL_UNITCELLS);
+    asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
     getSymmetry().setUnitCell(unitCellParams, false);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
@@ -309,10 +310,10 @@ public class XtalSymmetry {
       if (acr.fillRange instanceof String) {
 
         String type = (String) acr.fillRange; // conventional or primitive
-        if (type.equals("conventional")) {
+        if (type.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
           acr.fillRange = symmetry.getConventionalUnitCell(acr.latticeType,
               acr.primitiveToCrystal);
-        } else if (type.equals("primitive")) {
+        } else if (type.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
           acr.fillRange = symmetry.getUnitCellVectors();
           symmetry.toFromPrimitive(true, acr.latticeType.charAt(0),
               (T3d[]) acr.fillRange, acr.primitiveToCrystal);
@@ -349,7 +350,9 @@ public class XtalSymmetry {
         sym2.toFractional(pt0, false);
         if (acr.fixJavaDouble)
           PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
-        if (!isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
+        if (acr.noPack
+                ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
+                : !isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
           bsAtoms.clear(i);
 
       }
@@ -365,8 +368,12 @@ public class XtalSymmetry {
     if (isSuper) {
       // expand range to accommodate this alternative cell
       // oabc will be cartesian
-      oabc = symmetry.getV0abc(supercell);
-      if (oabc != null) {
+      M4 m = new M4();
+      if (mident == null)
+        mident = new M4();
+      oabc = symmetry.getV0abc(supercell, m);
+      if (oabc != null && !m.equals(mident)) {
+        // flag this to set symmetry to P1 in the end
         // set the bounds for atoms in the new unit cell
         // in terms of the old unit cell
         setMinMax(dim, kcode, maxX, maxY, maxZ);
@@ -388,6 +395,7 @@ public class XtalSymmetry {
       supercell = null;
       oabc = null;
     } else {
+      asc.setGlobalBoolean(JC.GLOBAL_SUPERCELL);
       boolean doPack0 = doPackUnitCell;
       doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
       bsAtoms = updateBSAtoms();
@@ -435,13 +443,13 @@ public class XtalSymmetry {
     setMinMax(dim, kcode, maxX, maxY, maxZ);
     if (oabc == null) {
       applyAllSymmetry(acr.ms, bsAtoms);
-      if (!applySymmetryToBonds || !acr.doPackUnitCell)
+      if (!acr.noPack && (!applySymmetryToBonds || !acr.doPackUnitCell))
         return;
       // fall through if packed and there are bonds, that is, when we did not shift atoms
       // so we reset to the original min and max and then trim.
       setMinMax(dim, kcode, maxX, maxY, maxZ);
     }
-    if (acr.forcePacked || acr.doPackUnitCell) {
+    if (acr.forcePacked || acr.doPackUnitCell || acr.noPack) {
       trimToUnitCell(iAtomFirst);
     }
 
@@ -458,12 +466,21 @@ public class XtalSymmetry {
     // trim atom set based on current min/max
     Atom[] atoms = asc.atoms;
     BS bs = updateBSAtoms();
+    if (acr.noPack) {
     for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
         .nextSetBit(i + 1)) {
+        if (!removePacking(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+            maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+          bs.clear(i);
+      }
+    } else {
+      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
+          .nextSetBit(i + 1)) {
       if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
           maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
         bs.clear(i);
     }
+  }
   }
 
   /**
@@ -568,6 +585,14 @@ public class XtalSymmetry {
         && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
   }
   
+  public boolean removePacking(int ndims, P3 pt, float minX, float maxX,
+          float minY, float maxY, float minZ, float maxZ,
+          float slop) {
+return (pt.x > minX - slop && pt.x < maxX - slop
+&& (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop) 
+&& (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
+}
+
   //  /**
   //   * A problem arises when converting to JavaScript, because JavaScript numbers are all
   //   * doubles, while here we have doubles. So what we do is to multiply by a number that
@@ -1458,7 +1483,7 @@ public class XtalSymmetry {
   private void reset() {
     asc.coordinatesAreFractional = false;
     asc.setCurrentModelInfo("hasSymmetry", Boolean.TRUE);
-    asc.setGlobalBoolean(AtomSetCollection.GLOBAL_SYMMETRY);
+    asc.setGlobalBoolean(JC.GLOBAL_SYMMETRY);
   }
 
   public Tensor addRotatedTensor(Atom a, Tensor t, int iSym, boolean reset,

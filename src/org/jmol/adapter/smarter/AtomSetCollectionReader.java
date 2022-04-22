@@ -137,7 +137,10 @@ import javajs.util.V3d;
 
 public abstract class AtomSetCollectionReader implements GenericLineReader {
 
-  public final static double ANGSTROMS_PER_BOHR = 0.5291772; // used by SpartanArchive
+  public final static double ANGSTROMS_PER_BOHR = 0.5291772f; // used by SpartanArchive
+
+  protected static final String CELL_TYPE_CONVENTIONAL = "conventional";
+  protected static final String CELL_TYPE_PRIMITIVE = "primitive";
 
   public boolean isBinary;
   public boolean debugging;
@@ -402,6 +405,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected boolean isFinalized;
 
+  protected boolean noPack;
+
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
@@ -419,7 +424,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
       if (info != null) {
         if (domains != null) {
-          asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS);
+          asc.setGlobalBoolean(JC.GLOBAL_DOMAINS);
           String s = ((SV) domains).getMapKeys(2, true);
           int pt = s.indexOf("{ ", 2);
           if (pt >= 0)
@@ -472,7 +477,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   public void setIsPDB() {
-    asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
+    asc.setGlobalBoolean(JC.GLOBAL_ISPDB);
     if (htParams.get("pdbNoHydrogens") != null)
       asc.setInfo("pdbNoHydrogens",
           htParams.get("pdbNoHydrogens"));
@@ -482,10 +487,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected void setModelPDB(boolean isPDB) {
     if (isPDB)
-      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
+      asc.setGlobalBoolean(JC.GLOBAL_ISPDB);
     else  
-      asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
-    asc.setCurrentModelInfo("isPDB", isPDB ? Boolean.TRUE : null);
+      asc.clearGlobalBoolean(JC.GLOBAL_ISPDB);
+    asc.setCurrentModelInfo(JC.getBoolName(JC.GLOBAL_ISPDB), isPDB ? Boolean.TRUE : null);
   }
 
   private Object finish() {
@@ -576,14 +581,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     bsFilter = (requiresBSFilter ? (BS) htParams.get("bsFilter") : null);
     setFilter(null);
     fillRange = htParams.get("fillRange");
-    if (strSupercell != null) {
-      if (!checkFilterKey("NOPACK"))
+    paramsLattice = (T3) htParams.get("lattice");
+    o = htParams.get("supercell");
+    // noPack does not work as advertised
+    noPack = checkFilterKey("NOPACK");
+    if (strSupercell != null && !noPack) {
+      // only for filter cell=
         forcePacked = true;
     }
-    o = htParams.get("supercell");
-    if (o instanceof P3d) {
-      P3d s = ptSupercell = (P3d) o; // only used by CASTEP phonon reader now
+    if (o instanceof P3) {
+      P3 s = ptSupercell = (P3) o; 
+      if (s.length() != 1) {
       strSupercell = ((int) s.x) + "a," +((int) s.y) + "b," + ((int) s.z) + "c"; 
+      }
     } else if (o instanceof String) {
       strSupercell = (String) o;
     }
@@ -631,7 +641,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
     symmetryRange = (htParams.containsKey("symmetryRange") ? ((Float) htParams
         .get("symmetryRange")).floatValue() : 0);
-    paramsLattice = (T3) htParams.get("lattice");
     paramsCentroid = htParams.containsKey("centroid");
     paramsPacked = htParams.containsKey("packed");
     initializeSymmetryOptions();
@@ -1146,6 +1155,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     
     // can't use getFilter() here because form includes a semicolon:
     // cell=a+b,a-b,c;0,1/2,1/2 
+    // also allows for NOPACKCELL by documentation 14.0
     if (checkFilterKey("CELL="))  
       strSupercell = filter.substring(filter.indexOf("CELL=") + 5).toLowerCase(); // must be last filter option
     nameRequired = PT.getQuotedAttribute(filter, "NAME");
