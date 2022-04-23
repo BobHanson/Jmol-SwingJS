@@ -143,10 +143,10 @@ public class PWmatReader extends AtomSetCollectionReader {
         break;
       getLine();
     }
-    setProperties(name, values, asc.iSet, n);
+    setProperties(name, values, n);
   }
 
-  private void setProperties(String name, double[] values, int iSet, int n) {
+  private void setProperties(String name, double[] values, int n) {
     asc.setAtomProperties(name, values, asc.iSet, false);
     Logger.info("PWmatReader: " + name.toUpperCase()  +" processed for " + n + " atoms");
     appendLoadNote("PWmatReader read property_" + name);
@@ -231,7 +231,7 @@ public class PWmatReader extends AtomSetCollectionReader {
   @Override
   protected void finalizeSubclassReader() throws Exception {
     if (!haveMagnetic && asc.ac > 0) {
-      setProperties("pwm_magnetic", new double[asc.ac], nAtoms, nAtoms);
+      setProperties("pwm_magnetic", new double[asc.ac], nAtoms);
     }
   }
 
