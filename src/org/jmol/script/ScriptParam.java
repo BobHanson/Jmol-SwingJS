@@ -512,7 +512,7 @@ abstract public class ScriptParam extends ScriptError {
   final protected static int MODE_P4  = 4;
   final public    static int MODE_P34 = 7; // P3 or P4
   final protected static int MODE_P_INT_ONLY = 8; // for HKL
-  final protected static int MODE_P_ALLOW_FRACTIONAL = 16; // to allow {1/2 1/2 1/2}
+  public final static int MODE_P_ALLOW_FRACTIONAL = 16; // to allow {1/2 1/2 1/2}
   final protected static int MODE_P_CONVERT_TO_CARTESIAN = 32; // to convert fractional to Cartesian
   final protected static int MODE_P_IMPLICIT_FRACTIONAL = 64; // assume fractional
   final protected static int MODE_P_NULL_ON_ERROR = 128; // avoid error throwing

@@ -551,7 +551,7 @@ public class ShapeManager {
   }
 
   public void setModelSet(ModelSet modelSet) {
-    ms = vwr.ms = modelSet;
+    ms = modelSet;
   }
 
   /**

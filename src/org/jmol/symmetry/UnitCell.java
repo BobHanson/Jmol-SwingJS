@@ -763,7 +763,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * 
    * @return [origin va vb vc]
    */
-  public T3d[] getV0abc(Object def) {
+  public T3d[] getV0abc(Object def, M4d retMatrix) {
     if (def instanceof T3d[])
       return (T3d[]) def;
     M4d m;
@@ -812,6 +812,9 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
           }
         P3d ptrans = P3d.new3(ftrans[0], ftrans[1], ftrans[2]);
         m.setTranslation(ptrans);
+      }
+      if (retMatrix != null) {
+        retMatrix.setM4(m);
       }
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());

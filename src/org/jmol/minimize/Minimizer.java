@@ -690,11 +690,13 @@ public class Minimizer {
       // only accept the minimization for the basis atoms
       // ModelKit will transfer the corresponding symmetry changes to the other atoms
       for (int i = 0; i < ac; i++) {
+        if (bsFixed != null && bsFixed.get(i))
+          continue;
         MinAtom minAtom = minAtoms[i];
-        if (bsBasis.get((a = minAtom.atom).i)) {
+        if (bsBasis.get((a = minAtom.atom).i)) { 
           p.set((float) minAtom.coord[0], (float) minAtom.coord[1],
               (float) minAtom.coord[2]);
-          vwr.getModelkit(false).constrain(a.i, p, bsFixed, true);
+          vwr.getModelkit(false).moveConstrained(a.i, p, true);
         }
       }
       // now transfer back all atom coordinates

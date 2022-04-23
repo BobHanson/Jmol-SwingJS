@@ -28,6 +28,7 @@ import org.jmol.util.Modulation;
 import org.jmol.util.ModulationSet;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
 
 /**
  * generalized modulated structure reader class for CIF and Jana
@@ -333,7 +334,7 @@ public class MSRdr implements MSInterface {
       return;
     if (modDebug)
       Logger.debugging = Logger.debuggingHigh = true;
-    cr.asc.setInfo("someModelsAreModulated", Boolean.TRUE);
+    cr.asc.setInfo(JC.getBoolName(JC.GLOBAL_MODULATED), Boolean.TRUE);
     this.symmetry = symmetry;
     setModulationForStructure(cr.asc.iSet, isPost);
     if (modDebug)

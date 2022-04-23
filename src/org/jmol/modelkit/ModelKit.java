@@ -1146,18 +1146,14 @@ public class ModelKit {
    * @param name "P1" or "1" or ignored
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name) {
+  public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
     clearAtomConstraints();
     try {
       if (bs != null && bs.isEmpty())
         return "";
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-      if (sym == null)
-        sym = vwr.getSymTemp()
-            .setUnitCell(new double[] { 10, 10, 10, 90, 90, 90 }, false);
-      // limit the atoms to 
-      BS bsAtoms = vwr.getThisModelAtoms();
+      // limit the atoms to this model if bs is null
+      BS bsAtoms = (mi < 0 ? vwr.getThisModelAtoms() : vwr.getModelUndeletedAtomsBitSet(mi));
       BS bsCell = (isP1 ? bsAtoms : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true));
       if (bs == null) {
         bs = bsAtoms;
@@ -1168,7 +1164,12 @@ public class ModelKit {
           bsAtoms.and(bsCell);
       }
       boolean noAtoms = bsAtoms.isEmpty();
-      int mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      if (mi < 0)
+        mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (sym == null)
+        sym = vwr.getSymTemp()
+            .setUnitCell(new double[] { 10, 10, 10, 90, 90, 90 }, false);
       T3 m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
@@ -1200,7 +1201,7 @@ public class ModelKit {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms);
       vwr.ms.setSpaceGroup(mi, sym, basis);
       P4 pt = SimpleUnitCell.ptToIJK(supercell, 1);
-      vwr.ms.setUnitCellOffset(sym, pt, 0);
+      ModelSet.setUnitCellOffset(sym, pt, 0);
       return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)
@@ -2048,33 +2049,51 @@ public class ModelKit {
    * Move all atoms that are equivalent to this atom PROVIDED that they have the
    * same symmetry-invariant properties.
    * 
+   * @param bsSelected
+   *        could be a single atom or a molecule
    * @param iatom
    *        atom index
-   * @param p
+   * @param p0
    *        new position for this atom, which may be modified
    * @return number of atoms moved
    */
-  public int cmdAssignMoveAtom(int iatom, P3 p) { 
-    BS bsFixed = vwr.getMotionFixedAtoms();
-    BS bs = new BS();
+  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3 p) {
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    if (sym == null)
+      return 0;
+    int nAtoms = bsSelected.cardinality();
+    if (bsSelected.intersects(vwr.getMotionFixedAtoms()) || nAtoms > 1
+        && (constraint != null || sym.getSpaceGroupOperationCount() > 1)) {
+      // abort - fixed or multiple atoms and not P1
+      p.x = Float.NaN;
+      return 0;
+    }
+    if (nAtoms > 1) {
+      // not handled - must be P1
+      return 0;
+    }
+
+    int n = 0;
+    BS bsOcc = new BS();
     boolean checkOcc = false;
     // pick up occupancies
     Atom a = vwr.ms.at[iatom];
     if (!checkOcc || vwr.ms.getOccupancyFloat(a.i) == 100) {
-      bs.set(a.i);
-    } else { 
-      vwr.getAtomsNearPt(0.0001f, a, bs);
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      bsOcc.set(a.i);
+    } else {
+      vwr.getAtomsNearPt(0.0001f, a, bsOcc);
+      for (int i = bsOcc.nextSetBit(0); i >= 0; i = bsOcc.nextSetBit(i + 1)) {
         // passing over another atom
         if (vwr.ms.getOccupancyFloat(i) == 100)
-          bs.clear(i);
+          bsOcc.clear(i);
       }
     }
-    int n = 0;
-    boolean isOccSet = (bs.cardinality() > 1);
-    if ((n = constrain(iatom, p, bsFixed, !isOccSet)) == 0 || Float.isNaN(p.x) || !isOccSet)
+    boolean isOccSet = (bsOcc.cardinality() > 1);
+    if ((n = moveConstrained(iatom, p, !isOccSet)) == 0 || Float.isNaN(p.x)
+        || !isOccSet) {
       return n;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    }
+    for (int i = bsOcc.nextSetBit(0); i >= 0; i = bsOcc.nextSetBit(i + 1)) {
       iatom = (constraint == null ? vwr.ms.getBasisAtom(i).i : i);
       n += assignMoveAtom(iatom, p, null);
     }
@@ -2215,19 +2234,16 @@ public class ModelKit {
    * 
    * @param iatom
    * @param ptNew
-   * @param bsFixed
    * @param doAssign allow for exit with setting ptNew but not creating atoms
    * @return number of atoms moved
    */
-  public int constrain(int iatom, P3 ptNew, BS bsFixed, boolean doAssign) {
+  public int moveConstrained(int iatom, P3 ptNew, boolean doAssign) {
     int n = 0;
     SymmetryInterface sym;
     if (iatom < 0 || (sym = vwr.getOperativeSymmetry()) == null) {
       // molecular crystals loaded without packed or centroid will not have operations
       return 0;
     }
-    if (bsFixed != null)
-      bsFixed = vwr.getMotionFixedAtoms();
     Atom a = vwr.ms.at[iatom];
     Constraint c = constraint;
     if (c == null) {

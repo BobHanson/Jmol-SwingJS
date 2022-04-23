@@ -90,6 +90,7 @@ public class SpaceGroupFinder {
     BS targets = BS.newN(nAtoms);
     int n = 0;
     int nChecked = 0;
+    // this will be set in checkSupercell
     P3 scaling = P3.new3(1, 1, 1);
 //    BS withinCell = null;
     try {
@@ -325,7 +326,7 @@ public class SpaceGroupFinder {
       return null;
     SpaceGroup sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
     String name = sg.asString();
-    uc.setSpaceGroupName(name);
+//    uc.setSpaceGroupName(name);
     BS basis = BSUtil.copy(
         //isg == 0 ? withinCell : 
           bsAtoms);

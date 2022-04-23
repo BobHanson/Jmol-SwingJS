@@ -1441,6 +1441,36 @@ public final class JC {
     return i;
   }
 
+  public final static String[] globalBooleans = {
+  "someModelsHaveFractionalCoordinates", 
+  "someModelsHaveSymmetry",
+  "someModelsHaveUnitcells", 
+  "someModelsHaveCONECT", 
+  "isPDB", 
+  "someModelsHaveDomains", 
+  "someModelsHaveValidations", 
+  "isSupercell",
+  "someModelsHaveAromaticBonds",
+  "someModelsAreModulated"
+  };
+  
+  public final static int GLOBAL_FRACTCOORD = 0;
+  public final static int GLOBAL_SYMMETRY = 1;
+  public final static int GLOBAL_UNITCELLS = 2;
+  public final static int GLOBAL_CONECT = 3;
+  public final static int GLOBAL_ISPDB = 4;
+  public final static int GLOBAL_DOMAINS = 5;
+  public final static int GLOBAL_VALIDATIONS = 6;
+  public final static int GLOBAL_SUPERCELL = 7;
+  public final static int GLOBAL_AROMATICBONDS = 8;
+  public static final int GLOBAL_MODULATED = 9;
+
+  public static String getBoolName(int g) {
+    return globalBooleans[g];
+  }
+  
+
+
 
 
 }

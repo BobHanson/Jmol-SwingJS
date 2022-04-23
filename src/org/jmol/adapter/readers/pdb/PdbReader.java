@@ -36,6 +36,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.c.STR;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.Lst;
 import javajs.util.M4d;
@@ -2061,7 +2062,7 @@ public class PdbReader extends AtomSetCollectionReader {
           new int[] { firstAtom, count, maxSerial }, i);
       if (vConnect != null) {
         asc.setModelInfoForSet("PDB_CONECT_bonds", vConnect, i);
-        asc.setGlobalBoolean(AtomSetCollection.GLOBAL_CONECT);
+        asc.setGlobalBoolean(JC.GLOBAL_CONECT);
       }
       firstAtom += count;
     }
@@ -2088,7 +2089,7 @@ public class PdbReader extends AtomSetCollectionReader {
     int firstAtom = connectNextAtomIndex;
     for (int i = a.atomSetCount; --i >= connectNextAtomSet;) {
       a.setModelInfoForSet("PDB_CONECT_bonds", vConnect, i);
-      a.setGlobalBoolean(AtomSetCollection.GLOBAL_CONECT);
+      a.setGlobalBoolean(JC.GLOBAL_CONECT);
       firstAtom += a.getAtomSetAtomCount(i);
     }
     vConnect = null;

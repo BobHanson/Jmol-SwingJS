@@ -71,6 +71,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
    */
   @Override
   public String getFileTypeName(Object ascOrReader) {
+    if (ascOrReader instanceof String)
+      return getFileTypefromFilter((String) ascOrReader);
     if (ascOrReader instanceof AtomSetCollection)
       return ((AtomSetCollection)ascOrReader).fileTypeName;
     if (ascOrReader instanceof BufferedReader)
@@ -462,6 +464,11 @@ public class SmarterJmolAdapter extends JmolAdapter {
       ((BufferedReader) bufferedReader).close();
       else
         ((GenericBinaryDocument) bufferedReader).close();
+  }
+
+  public static String getFileTypefromFilter(String filter) {
+    int pt = (filter == null ? -1 : filter.toLowerCase().indexOf("filetype"));
+    return (pt < 0 ? null : filter.substring(pt + 8, (filter+ ";").indexOf(";", pt)).replace('=', ' ').trim());
   }
 
 }

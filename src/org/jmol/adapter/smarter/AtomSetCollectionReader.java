@@ -35,6 +35,7 @@ import org.jmol.script.SV;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
@@ -207,7 +208,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected OC out;
   protected boolean iHaveFractionalCoordinates;
   public boolean doPackUnitCell;
-  protected P3d ptSupercell;
+  protected P3 ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
   public float packingError = 0.02f;

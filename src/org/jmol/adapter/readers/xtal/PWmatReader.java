@@ -230,7 +230,7 @@ public class PWmatReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (!haveMagnetic) {
+    if (!haveMagnetic && asc.ac > 0) {
       setProperties("pwm_magnetic", new double[asc.ac], nAtoms, nAtoms);
     }
   }

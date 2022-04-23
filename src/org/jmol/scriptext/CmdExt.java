@@ -5480,7 +5480,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.scale:
     case T.supercell:
-      pt = (tok == T.scale ? eval.getPointOrPlane(++i, ScriptParam.MODE_P3)
+      pt = (tok == T.scale ? eval.getPointOrPlane(++i, ScriptParam.MODE_P3 | ScriptParam.MODE_P_ALLOW_FRACTIONAL)
           : eval.checkHKL(eval.getFractionalPoint(++i)));
       i = eval.iToken;
       oabc = sym.getUnitCellVectors();
@@ -5679,7 +5679,7 @@ public class CmdExt extends ScriptExt {
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE) {
-      vwr.ms.setUnitCellOffset(sym, null, icell);
+      ModelSet.setUnitCellOffset(sym, null, icell);
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
@@ -5713,7 +5713,7 @@ public class CmdExt extends ScriptExt {
     }
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null)
-      vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
+      ModelSet.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
     if (ucname != null)
@@ -5981,7 +5981,8 @@ public class CmdExt extends ScriptExt {
       case T.off:
         if (!chk) {
           vwr.setBooleanProperty("modelkitmode", tok == T.on);
-          vwr.setStringProperty("picking", "identify");
+          if (tok == T.off)
+            vwr.setStringProperty("picking", "identify");
         }
         continue;
       case T.display:
@@ -6258,13 +6259,12 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
-      bs.andNot(vwr.getMotionFixedAtoms());
-      int nm = vwr.getModelkit(false).cmdAssignMoveAtom(bs.nextSetBit(0), pt);
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      e.showString(vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type));
+      e.showString(vwr.assignSpaceGroup(bs, type, -1));
       break;
     }
   }

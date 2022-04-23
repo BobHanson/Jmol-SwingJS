@@ -368,9 +368,9 @@ public class XtalSymmetry {
     if (isSuper) {
       // expand range to accommodate this alternative cell
       // oabc will be cartesian
-      M4 m = new M4();
+      M4d m = new M4d();
       if (mident == null)
-        mident = new M4();
+        mident = new M4d();
       oabc = symmetry.getV0abc(supercell, m);
       if (oabc != null && !m.equals(mident)) {
         // flag this to set symmetry to P1 in the end
@@ -467,8 +467,8 @@ public class XtalSymmetry {
     Atom[] atoms = asc.atoms;
     BS bs = updateBSAtoms();
     if (acr.noPack) {
-    for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
-        .nextSetBit(i + 1)) {
+      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
+          .nextSetBit(i + 1)) {
         if (!removePacking(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
             maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
           bs.clear(i);
@@ -585,13 +585,13 @@ public class XtalSymmetry {
         && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
   }
   
-  public boolean removePacking(int ndims, P3 pt, float minX, float maxX,
-          float minY, float maxY, float minZ, float maxZ,
-          float slop) {
-return (pt.x > minX - slop && pt.x < maxX - slop
-&& (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop) 
-&& (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
-}
+  public boolean removePacking(int ndims, P3d pt, double minX, double maxX,
+                               double minY, double maxY, double minZ,
+                               double maxZ, double slop) {
+    return (pt.x > minX - slop && pt.x < maxX - slop
+        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop)
+        && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
+  }
 
   //  /**
   //   * A problem arises when converting to JavaScript, because JavaScript numbers are all

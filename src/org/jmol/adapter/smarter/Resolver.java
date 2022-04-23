@@ -110,9 +110,7 @@ public class Resolver {
     fullName = FileManager.fixDOSName(fullName);
     String errMsg = null;
     if (type == null) {
-      type = (String) htParams.get("filter");
-      int pt = (type == null ? -1 : type.toLowerCase().indexOf("filetype"));
-      type = (pt < 0 ? null : type.substring(pt + 8, (type+ ";").indexOf(";", pt)).replace('=', ' ').trim());
+      type = SmarterJmolAdapter.getFileTypefromFilter((String) htParams.get("filter"));
     }      
     if (type != null) {
       readerName = getReaderFromType(type);
