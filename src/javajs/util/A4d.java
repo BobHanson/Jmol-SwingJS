@@ -35,28 +35,13 @@ import javajs.api.JSONEncodable;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public class A4d implements JSONEncodable, Serializable {
+public class A4d extends P3d {
 
   /*
    * I assumed that the length of the axis vector is not significant.
    */
 
-  /**
-   * The x coordinate.
-   */
-  public double x;
-
-  /**
-   * The y coordinate.
-   */
-  public double y;
-
-  /**
-   * The z coordinate.
-   */
-  public double z;
-
-  /**
+   /**
    * The angle.
    */
   public double angle;
@@ -127,9 +112,7 @@ public class A4d implements JSONEncodable, Serializable {
    * @since Java 3D 1.2
    */
   public final void setVA(V3d axis, double angle) {
-    x = axis.x;
-    y = axis.y;
-    z = axis.z;
+    setT(axis);
     this.angle = angle;
   }
 
@@ -146,9 +129,7 @@ public class A4d implements JSONEncodable, Serializable {
    *        the angle
    */
   public final void set4(double x, double y, double z, double angle) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    set(x, y, z);
     this.angle = angle;
   }
 
@@ -159,9 +140,7 @@ public class A4d implements JSONEncodable, Serializable {
    *        the axis angle to be copied
    */
   public final void setAA(A4d a) {
-    x = a.x;
-    y = a.y;
-    z = a.z;
+    setT(a);
     angle = a.angle;
   }
 

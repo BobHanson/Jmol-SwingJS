@@ -3,9 +3,6 @@
  * $Date: 2007-04-26 16:57:51 -0500 (Thu, 26 Apr 2007) $
  * $Revision: 7502 $
  *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright (C) 2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -1078,6 +1075,182 @@ public class PT {
         : a.startsWith(b.substring(0, b.length() - 1));
   }
 
+  public static void leftJustify(SB s, String s1, String s2) {
+    s.append(s2);
+    int n = s1.length() - s2.length();
+    if (n > 0)
+      s.append(s1.substring(0, n));
+  }
+
+  public static void rightJustify(SB s, String s1, String s2) {
+    int n = s1.length() - s2.length();
+    if (n > 0)
+      s.append(s1.substring(0, n));
+    s.append(s2);
+  }
+
+  public static String safeTruncate(float f, int n) {
+    if (f > -0.001 && f < 0.001)
+      f = 0;
+    return (f + "         ").substring(0,n);
+  }
+
+  public static boolean isWild(String s) {
+    return s != null && (s.indexOf("*") >= 0 || s.indexOf("?") >= 0);
+  }
+
+  /**
+   * A general non-regex (for performance) text matcher that utilizes ? and *.
+   * 
+   * ??? means "at most three" characters if at beginning or end; 
+   *   "exactly three" otherwise
+   * \1 in search is a stand-in for actual ?
+   * 
+   * @param search
+   *        the string to search
+   * @param match
+   *        the match string
+   * @param checkStar
+   * @param allowInitialStar
+   * @return true if found
+   */
+  public static boolean isMatch(String search, String match, boolean checkStar,
+                                boolean allowInitialStar) {
+    // search == match --> true
+    if (search.equals(match))
+      return true;
+    int mLen = match.length();
+    // match == ""  --> false
+    if (mLen == 0)
+      return false;
+    boolean isStar0 = (checkStar && allowInitialStar ? match.charAt(0) == '*'
+        : false);
+    // match == "*" --> true
+    if (mLen == 1 && isStar0)
+      return true;
+    boolean isStar1 = (checkStar && match.endsWith("*"));
+    boolean haveQ = (match.indexOf('?') >= 0);
+    // match == "**" --> true
+    // match == "*xxx*" --> search contains "xxx"
+    // match == "*xxx" --> search ends with "xxx"
+    // match == "xxx*" --> search starts with "xxx"
+    if (!haveQ) {
+      if (isStar0)
+        return (isStar1 ? (mLen < 3 || search.indexOf(match.substring(1,
+            mLen - 1)) >= 0) : search.endsWith(match.substring(1)));
+      else if (isStar1)
+        return search.startsWith(match.substring(0, mLen - 1));
+    }
+    int sLen = search.length();
+    // pad match with "?" -- same as *
+    String qqqq = "????";
+    int nq = 4;
+    while (nq < sLen) {
+      qqqq += qqqq;
+      nq += 4;
+    }
+    if (checkStar) {
+      if (isStar0) {
+        match = qqqq + match.substring(1);
+        mLen += nq - 1;
+      }
+      if (isStar1) {
+        match = match.substring(0, mLen - 1) + qqqq;
+        mLen += nq - 1;
+      }
+    }
+    // length of match < length of search --> false 
+    if (mLen < sLen)
+      return false;
+  
+    // -- each ? matches ONE character if not at end
+    // -- extra ? at end ignored
+  
+    // (allowInitialStar == true)
+    // -- extra ? at beginning reduced to match length
+  
+    int ich = 0;
+    while (mLen > sLen) {
+      if (allowInitialStar && match.charAt(ich) == '?') {
+        ++ich;
+      } else if (match.charAt(ich + mLen - 1) != '?') {
+        return false;
+      }
+      --mLen;
+    }
+  
+    // both are effectively same length now.
+    // \1 is stand-in for "?"
+  
+    for (int i = sLen; --i >= 0;) {
+      char chm = match.charAt(ich + i);
+      if (chm == '?')
+        continue;
+      char chs = search.charAt(i);
+      if (chm != chs && (chm != '\1' || chs != '?'))
+        return false;
+    }
+    return true;
+  }
+
+  public static String replaceQuotedStrings(String s, Lst<String> list,
+                                            Lst<String> newList) {
+    int n = list.size();
+    for (int i = 0; i < n; i++) {
+      String name = list.get(i);
+      String newName = newList.get(i);
+      if (!newName.equals(name))
+        s = rep(s, "\"" + name + "\"", "\"" + newName
+            + "\"");
+    }
+    return s;
+  }
+
+  public static String replaceStrings(String s, Lst<String> list,
+                                      Lst<String> newList) {
+    int n = list.size();
+    for (int i = 0; i < n; i++) {
+      String name = list.get(i);
+      String newName = newList.get(i);
+      if (!newName.equals(name))
+        s = rep(s, name, newName);
+    }
+    return s;
+  }
+
+  public static boolean isDigit(char ch) {
+    // just way simpler code than  Character.isDigit(ch);
+    int c = ch;
+    return (48 <= c && c <= 57);
+  }
+
+  public static boolean isUpperCase(char ch) {
+    int c = ch;
+    return (65 <= c && c <= 90);
+  }
+
+  public static boolean isLowerCase(char ch) {
+    int c = ch;
+    return (97 <= c && c <= 122);
+  }
+
+  public static boolean isLetter(char ch) {
+    // just way simpler code than     Character.isLetter(ch);
+    int c = ch;
+    return (65 <= c && c <= 90 || 97 <= c && c <= 122);
+  }
+
+  public static boolean isLetterOrDigit(char ch) {
+    // just way simpler code than     Character.isLetterOrDigit(ch);
+    int c = ch;
+    return (65 <= c && c <= 90 || 97 <= c && c <= 122 || 48 <= c && c <= 57);
+  }
+
+  public static boolean isWhitespace(char ch) {
+    int c = ch;
+    return (c >= 0x1c && c <= 0x20 || c >= 0x9 && c <= 0xd);
+  }
+
   public static Object getMapValueNoCase(Map<String, ?> h, String key) {
     if ("this".equals(key))
       return h;
@@ -1091,43 +1264,6 @@ public class PT {
 
   public static String clean(String s) {
     return rep(replaceAllCharacters(s, " \t\n\r", " "), "  ", " ").trim();
-  }
-
-  /**
-   * 
-   * fdup      duplicates p or q formats for formatCheck
-   *           and the format() function.
-   * 
-   * @param f
-   * @param pt
-   * @param n
-   * @return     %3.5q%3.5q%3.5q%3.5q or %3.5p%3.5p%3.5p
-   */
-  public static String fdup(String f, int pt, int n) {
-    char ch;
-    int count = 0;
-    for (int i = pt; --i >= 1; ) {
-      if (isDigit(ch = f.charAt(i)))
-        continue;
-      switch (ch) {
-      case '.':
-        if (count++ != 0)
-          return f;
-        continue;
-      case '-':
-        if (i != 1 && f.charAt(i - 1) != '.')
-          return f;
-        continue;
-      default:
-        return f;
-      }
-    }
-    String s = f.substring(0, pt + 1);
-    SB sb = new SB();
-    for (int i = 0; i < n; i++)
-      sb.append(s);
-    sb.append(f.substring(pt + 1));
-    return sb.toString();
   }
 
   /**
@@ -1388,180 +1524,41 @@ public class PT {
     return sb.toString().replace('\1', '%');
   }
 
-  public static void leftJustify(SB s, String s1, String s2) {
-    s.append(s2);
-    int n = s1.length() - s2.length();
-    if (n > 0)
-      s.append(s1.substring(0, n));
-  }
-
-  public static void rightJustify(SB s, String s1, String s2) {
-    int n = s1.length() - s2.length();
-    if (n > 0)
-      s.append(s1.substring(0, n));
-    s.append(s2);
-  }
-
-  public static String safeTruncate(float f, int n) {
-    if (f > -0.001 && f < 0.001)
-      f = 0;
-    return (f + "         ").substring(0,n);
-  }
-
-  public static boolean isWild(String s) {
-    return s != null && (s.indexOf("*") >= 0 || s.indexOf("?") >= 0);
-  }
-
   /**
-   * A general non-regex (for performance) text matcher that utilizes ? and *.
    * 
-   * ??? means "at most three" characters if at beginning or end; 
-   *   "exactly three" otherwise
-   * \1 in search is a stand-in for actual ?
+   * fdup      duplicates p or q formats for formatCheck
+   *           and the format() function.
    * 
-   * @param search
-   *        the string to search
-   * @param match
-   *        the match string
-   * @param checkStar
-   * @param allowInitialStar
-   * @return true if found
+   * @param f
+   * @param pt
+   * @param n
+   * @return     %3.5q%3.5q%3.5q%3.5q or %3.5p%3.5p%3.5p
    */
-  public static boolean isMatch(String search, String match, boolean checkStar,
-                                boolean allowInitialStar) {
-    // search == match --> true
-    if (search.equals(match))
-      return true;
-    int mLen = match.length();
-    // match == ""  --> false
-    if (mLen == 0)
-      return false;
-    boolean isStar0 = (checkStar && allowInitialStar ? match.charAt(0) == '*'
-        : false);
-    // match == "*" --> true
-    if (mLen == 1 && isStar0)
-      return true;
-    boolean isStar1 = (checkStar && match.endsWith("*"));
-    boolean haveQ = (match.indexOf('?') >= 0);
-    // match == "**" --> true
-    // match == "*xxx*" --> search contains "xxx"
-    // match == "*xxx" --> search ends with "xxx"
-    // match == "xxx*" --> search starts with "xxx"
-    if (!haveQ) {
-      if (isStar0)
-        return (isStar1 ? (mLen < 3 || search.indexOf(match.substring(1,
-            mLen - 1)) >= 0) : search.endsWith(match.substring(1)));
-      else if (isStar1)
-        return search.startsWith(match.substring(0, mLen - 1));
-    }
-    int sLen = search.length();
-    // pad match with "?" -- same as *
-    String qqqq = "????";
-    int nq = 4;
-    while (nq < sLen) {
-      qqqq += qqqq;
-      nq += 4;
-    }
-    if (checkStar) {
-      if (isStar0) {
-        match = qqqq + match.substring(1);
-        mLen += nq - 1;
-      }
-      if (isStar1) {
-        match = match.substring(0, mLen - 1) + qqqq;
-        mLen += nq - 1;
-      }
-    }
-    // length of match < length of search --> false 
-    if (mLen < sLen)
-      return false;
-  
-    // -- each ? matches ONE character if not at end
-    // -- extra ? at end ignored
-  
-    // (allowInitialStar == true)
-    // -- extra ? at beginning reduced to match length
-  
-    int ich = 0;
-    while (mLen > sLen) {
-      if (allowInitialStar && match.charAt(ich) == '?') {
-        ++ich;
-      } else if (match.charAt(ich + mLen - 1) != '?') {
-        return false;
-      }
-      --mLen;
-    }
-  
-    // both are effectively same length now.
-    // \1 is stand-in for "?"
-  
-    for (int i = sLen; --i >= 0;) {
-      char chm = match.charAt(ich + i);
-      if (chm == '?')
+  public static String fdup(String f, int pt, int n) {
+    char ch;
+    int count = 0;
+    for (int i = pt; --i >= 1; ) {
+      if (isDigit(ch = f.charAt(i)))
         continue;
-      char chs = search.charAt(i);
-      if (chm != chs && (chm != '\1' || chs != '?'))
-        return false;
+      switch (ch) {
+      case '.':
+        if (count++ != 0)
+          return f;
+        continue;
+      case '-':
+        if (i != 1 && f.charAt(i - 1) != '.')
+          return f;
+        continue;
+      default:
+        return f;
+      }
     }
-    return true;
-  }
-
-  public static String replaceQuotedStrings(String s, Lst<String> list,
-                                            Lst<String> newList) {
-    int n = list.size();
-    for (int i = 0; i < n; i++) {
-      String name = list.get(i);
-      String newName = newList.get(i);
-      if (!newName.equals(name))
-        s = rep(s, "\"" + name + "\"", "\"" + newName
-            + "\"");
-    }
-    return s;
-  }
-
-  public static String replaceStrings(String s, Lst<String> list,
-                                      Lst<String> newList) {
-    int n = list.size();
-    for (int i = 0; i < n; i++) {
-      String name = list.get(i);
-      String newName = newList.get(i);
-      if (!newName.equals(name))
-        s = rep(s, name, newName);
-    }
-    return s;
-  }
-
-  public static boolean isDigit(char ch) {
-    // just way simpler code than  Character.isDigit(ch);
-    int c = ch;
-    return (48 <= c && c <= 57);
-  }
-
-  public static boolean isUpperCase(char ch) {
-    int c = ch;
-    return (65 <= c && c <= 90);
-  }
-
-  public static boolean isLowerCase(char ch) {
-    int c = ch;
-    return (97 <= c && c <= 122);
-  }
-
-  public static boolean isLetter(char ch) {
-    // just way simpler code than     Character.isLetter(ch);
-    int c = ch;
-    return (65 <= c && c <= 90 || 97 <= c && c <= 122);
-  }
-
-  public static boolean isLetterOrDigit(char ch) {
-    // just way simpler code than     Character.isLetterOrDigit(ch);
-    int c = ch;
-    return (65 <= c && c <= 90 || 97 <= c && c <= 122 || 48 <= c && c <= 57);
-  }
-
-  public static boolean isWhitespace(char ch) {
-    int c = ch;
-    return (c >= 0x1c && c <= 0x20 || c >= 0x9 && c <= 0xd);
+    String s = f.substring(0, pt + 1);
+    SB sb = new SB();
+    for (int i = 0; i < n; i++)
+      sb.append(s);
+    sb.append(f.substring(pt + 1));
+    return sb.toString();
   }
 
   public static final double FRACTIONAL_PRECISION = 100000d;
