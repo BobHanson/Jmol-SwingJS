@@ -16,8 +16,10 @@
 */
 package javajs.util;
 
+
+
 /**
- * A 3 element point that is represented by single precision floating point
+ * A 3 element point that is represented by single precision doubleing point
  * x,y,z coordinates.
  * 
  * @version specification 1.1, implementation $Revision: 1.10 $, $Date:
@@ -29,36 +31,63 @@ package javajs.util;
  * for the optimization of compiled JavaScript using Java2Script
  * 
  */
-public class P3 extends T3 {
+public class P3d extends T3d {
 
-  public P3() {
+  public P3d() {
     // ignore T3
   }
   
-  public static P3 newP(T3 t) {
-    P3 p = new P3();
+  public static P3d newP(T3d t) {
+    P3d p = new P3d();
     p.x = t.x;
     p.y = t.y;
     p.z = t.z;
     return p;
   }
 
-  private static P3 unlikely;
+  private static P3d unlikely;
   
-  public static P3 getUnlikely() {
-    return (unlikely == null ? unlikely = new3((float) Math.PI, (float) Math.E, (float) (Math.PI * Math.E)) : unlikely);
+  public static P3d getUnlikely() {
+    return (unlikely == null ? unlikely = new3(Math.PI, Math.E, (Math.PI * Math.E)) : unlikely);
   }
   
-  public static P3 new3(float x, float y, float z) {
-    P3 p = new P3();
+  public static P3d new3(double x, double y, double z) {
+    P3d p = new P3d();
     p.x = x;
     p.y = y;
     p.z = z;
     return p;
   }
-  
-  public static P3 newA(float[] a) {
+
+  public static P3d newPd(T3 a) {
+    return new3(a.x, a.y, a.z);
+  }
+
+  public static P3d newA(double[] a) {
    return new3(a[0], a[1], a[2]);    
+  }
+
+  /**
+   * Copy to float version. Avoid using this, as it will slow down JavaScript unnecessarily.
+   * 
+   * @return new P3
+   */
+  public P3 copyToP3() {
+    return P3.new3((float) x, (float) y, (float) z);
+  }
+
+  /**
+   * Copy in Java; do nothing in JavaScript
+   * 
+   * @return this in JavaScript, P3 copy in Java
+   */
+  public P3 asP3() {
+    /** @j2sNative
+     * return this;
+     */
+    {
+      return copyToP3();
+    }
   }
 
 }

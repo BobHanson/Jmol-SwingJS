@@ -259,4 +259,6 @@ public interface SymmetryInterface {
 
   void unitize(T3 ptFrac);
 
+  void toFractionalF(P3 p, boolean b);
+
 }

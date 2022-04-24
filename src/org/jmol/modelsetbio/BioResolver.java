@@ -288,7 +288,7 @@ public final class BioResolver implements Comparator<String[]> {
     P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
-      ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
+      ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz, null,
           Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null, Float.NaN)
           .delete(null);
   }

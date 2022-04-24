@@ -27,6 +27,7 @@ package org.jmol.modelset;
 
 import org.jmol.util.Elements;
 import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -153,6 +154,7 @@ public final class ModelLoader {
   public Group[] groups;
   private int groupCount;
   private P3 modulationTUV;
+  private boolean highPrecision;
   private boolean isSupercell;
   
 
@@ -173,6 +175,7 @@ public final class ModelLoader {
     fileHeader = (String) ms.getInfoM("fileHeader");
     Lst<P3[]> steps = (Lst<P3[]>) ms.getInfoM("trajectorySteps");
     isTrajectory = (steps != null);
+    highPrecision = false;
     if (isTrajectory)
       ms.trajectory = newTrajectory(ms, steps);
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
@@ -185,7 +188,8 @@ public final class ModelLoader {
       info.remove("trajectorySteps");
       if (isTrajectory)
         ms.vibrationSteps = (Lst<V3[]>) info.remove("vibrationSteps");
-      if (info.containsKey("highPrecision")) {
+      highPrecision = info.containsKey("highPrecision");
+      if (highPrecision) {
         // we must RESET this, because 'ZAP' has unset it in the script
         vwr.setBooleanProperty("legacyJavaFloat", true);
       }
@@ -834,6 +838,7 @@ public final class ModelLoader {
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
           iterAtom.getXYZ(),
+          iterAtom.getXYZd(),
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 
           iterAtom.getSeqID(),
@@ -928,7 +933,7 @@ public final class ModelLoader {
   private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
                        String atomName, int formalCharge, float partialCharge,
                        Lst<Object> tensors, float occupancy, float bfactor,
-                       P3 xyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       P3 xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
                        String group3, V3 vib, char alternateLocationID,
                        float radius, float bondRadius) {
     byte specialAtomID = 0;
@@ -950,7 +955,7 @@ public final class ModelLoader {
       }
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
-        atomType, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
+        atomType, atomSerial, atomSeqID, atomSite, xyz, dxyz, radius, vib, formalCharge,
         partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
         atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
@@ -1625,8 +1630,13 @@ public final class ModelLoader {
         .ms.ac);
     for (JmolAdapterAtomIterator iterAtom = adapter
         .getAtomIterator(asc); iterAtom.hasNext();) {
-      P3 xyz = iterAtom.getXYZ();
-      if (Float.isNaN(xyz.x + xyz.y + xyz.z))
+      // Precision branch will do this differently
+      
+      P3d dxyz = iterAtom.getXYZd();
+      if (dxyz != null && Double.isNaN(dxyz.x + dxyz.y + dxyz.z))
+        continue;
+      P3 xyz = (dxyz == null ? iterAtom.getXYZ() : null);
+      if (xyz != null && Float.isNaN(xyz.x + xyz.y + xyz.z))
         continue;
       if (tokType == T.xyz) {
         // we are loading selected coordinates only
@@ -1634,13 +1644,19 @@ public final class ModelLoader {
         if (i < 0)
           break;
         n++;
-        if (Logger.debugging)
-          Logger.debug("atomIndex = " + i + ": " + atoms[i]
-              + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
-        modelSet.setAtomCoord(i, xyz.x, xyz.y, xyz.z);
+//        if (Logger.debugging)
+//          Logger.debug("atomIndex = " + i + ": " + atoms[i]
+//              + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
+        if (xyz == null)
+          modelSet.setPrecisionCoord(i, dxyz, true);
+        else
+          modelSet.setAtomCoord(i, xyz.x, xyz.y, xyz.z);
         continue;
       }
-      pt.setT(xyz);
+      if (xyz == null)
+        dxyz.putP(pt);
+      else
+        pt.setT(xyz);
       BS bs = BS.newN(modelSet.ac);
       modelSet.getAtomsWithin(tolerance, pt, bs, -1);
       bs.and(bsSelected);

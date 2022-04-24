@@ -12,6 +12,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.V3;
 
@@ -54,7 +55,12 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
       this.bs = bs = uc.removeDuplicates(vwr.ms, bs);
-      isPrecision = Viewer.isJS || false && !bs.isEmpty(); // temporary only
+      isPrecision = !bs.isEmpty();
+      for (int i = bs.nextSetBit(0); i >= 0
+          && isPrecision; i = bs.nextSetBit(i + 1)) {
+        if (vwr.ms.getPrecisionCoord(i) == null)
+          isPrecision = false;
+      }
       names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
       writeHeader();
       writeLattice();
@@ -78,11 +84,31 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       float len = Math.round(bb.length() * 2);
       uc.setUnitCell(new float[] { len, len, len, 90, 90, 90 }, false);
     }
-    P3[] abc = uc.getUnitCellVectors();
-    String f = (isPrecision ? "%18.10p%18.10p%18.10p\n" : "%12.6p%12.6p%12.6p\n");;
-    oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
-    oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
-    oc.append(PT.sprintf(f, "p", new Object[] { abc[3] }));
+
+    Object oabc = uc.getUnitCellVectors();
+    P3d[] abc = (Viewer.isJS || oabc instanceof P3d[] ? (P3d[]) oabc : null);
+    if (abc != null) {
+      if (isPrecision) {
+        String f = "%18.10P%18.10P%18.10P\n";
+        oc.append(PT.sprintf(f, "P", new Object[] { abc[1] }));
+        oc.append(PT.sprintf(f, "P", new Object[] { abc[2] }));
+        oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
+      } else {
+        String f = "%12.6p%12.6p%12.6p\n";
+        P3 p = new P3(); // toP3 here for rounding even in JavaScript
+        oc.append(PT.sprintf(f, "p", new Object[] { abc[1].copyToP3() }));
+        oc.append(PT.sprintf(f, "p", new Object[] { abc[2].copyToP3() }));
+        oc.append(PT.sprintf(f, "p", new Object[] { abc[3].copyToP3() }));
+      }
+    } else {
+      P3[] abcf = (P3[]) oabc;
+      String f = "%12.6p%12.6p%12.6p\n";
+      P3 p = new P3(); // toP3 here for rounding even in JavaScript
+      oc.append(PT.sprintf(f, "p", new Object[] { abcf[1] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abcf[2] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abcf[3] }));      
+    }
+
     Logger.info("PWMATWriter: LATTICE VECTORS");
   }
 
@@ -96,11 +122,15 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     P3 p = new P3();
     String f = (isPrecision ? "%4i%78s   " : "%4i%36s   ") + (cz == null ? "  1  1  1" : "%3i%3i%3i") + "\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
-      p.setT(a[i]);
-      uc.toFractional(p, false);
       if (isPrecision) {
-        coord = clean(p.x) + clean(p.y) + clean(p.z);
+        P3d dxyz = vwr.ms.getPrecisionCoord(i);
+        coord = clean(dxyz.x) + clean(dxyz.y) + clean(dxyz.z);                
       } else {
+        // if there is no precision atom, then we need
+        // to write use float, not double, as that is 
+        // the only way to avoid garbage out
+        p.setT(a[i]);
+        uc.toFractionalF(p, false);
         coord = cleanF(p.x) + cleanF(p.y) + cleanF(p.z);
       }
       if (cz == null) {
@@ -144,11 +174,12 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     if (xyz == null)
       return;
     Atom[] a = vwr.ms.at;
+    P3d p = new P3d();
     oc.append(name.toUpperCase()).append("\n");
-    String f = "%4i%26.15f%26.15f%26.15f\n";
+    String f = "%4i%26.15p%26.15p%26.15p\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "iddd", new Object[] { Integer.valueOf(a[i].getElementNumber()), 
-    		  Double.valueOf(xyz[0][ic]), Double.valueOf(xyz[1][ic]), Double.valueOf(xyz[2][ic]) }));
+      p.set(xyz[0][ic], xyz[1][ic], xyz[2][ic]);
+      oc.append(PT.sprintf(f, "ip", new Object[] { Integer.valueOf(a[i].getElementNumber()), p }));
     }    
     Logger.info("PWMATWriter: " + name);
   }

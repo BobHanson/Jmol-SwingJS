@@ -145,7 +145,8 @@ public class Atom extends Point3fi implements Node {
     if (formalCharge != 0 && formalCharge != Integer.MIN_VALUE)
       setFormalCharge(formalCharge);
     userDefinedVanDerWaalRadius = radius;
-    setT(xyz);
+    if (xyz != null)
+      setT(xyz);
     return this;
   }
 

@@ -31,6 +31,7 @@ import org.jmol.script.T;
 
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.V3;
 
 
@@ -203,5 +204,21 @@ class AtomIterator implements JmolAdapterAtomIterator {
   public P3 getXYZ() {
 		return atom;
 	}
+
+  @Override
+  public P3d getXYZd() {
+    return null;
+  }
+
+  
+//  @Override
+//  public P3 getXYZ() {
+//    return atom.asP3();
+//  }
+//
+//  @Override
+//  public P3d getXYZd() {
+//    return atom;
+//  }
 
 }

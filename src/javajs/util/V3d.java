@@ -34,60 +34,29 @@ package javajs.util;
  */
 public class V3d extends T3d {
 
-  /**
-   * Sets this vector to be the vector cross product of vectors v1 and v2.
-   * 
-   * @param v1
-   *        the first vector
-   * @param v2
-   *        the second vector
-   */
-  public final void cross(V3d v1, V3d v2) {
-    // store on stack once for aliasing-safty
-    // i.e. safe when a.cross(a, b)
-    set(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y
-        - v1.y * v2.x);
+  
+  public static V3d newV(T3d t) {
+    return new3(t.x, t.y, t.z);
+  }
+  public static V3d newV(T3 t) {
+    return new3(t.x, t.y, t.z);
   }
 
-  /**
-   * Normalizes this vector in place.
-   */
-  public final void normalize() {
-    double d = length();
-
-    // zero-div may occur.
-    x /= d;
-    y /= d;
-    z /= d;
+  public static V3d newVsub(T3d t1, T3d t2) {
+    return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
 
-  /**
-   * Computes the dot product of the this vector and vector v.
-   * 
-   * @param v
-   *        the other vector
-   * @return this.dot.v
-   */
-  public final double dot(V3d v) {
-    return x * v.x + y * v.y + z * v.z;
+  public static V3d newVsub(T3 t1, T3 t2) {
+    return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
+  
 
-  /**
-   * Returns the squared length of this vector.
-   * 
-   * @return the squared length of this vector
-   */
-  public final double lengthSquared() {
-    return x * x + y * y + z * z;
-  }
-
-  /**
-   * Returns the length of this vector.
-   * 
-   * @return the length of this vector
-   */
-  public final double length() {
-    return Math.sqrt(lengthSquared());
+  public static V3d new3(double x, double y, double z) {
+    V3d v = new V3d();
+    v.x = x;
+    v.y = y;
+    v.z = z;
+    return v;
   }
 
   public final double angle(V3d v1) {
@@ -102,5 +71,30 @@ public class V3d extends T3d {
 
     return Math.abs(Math.atan2(cross, dot(v1)));
   }
+  
+  /**
+   * Copy to float version. Avoid using this, as it will slow down JavaScript unnecessarily.
+   * 
+   * @return new P3
+   */
+  public V3 copyToV3() {
+    return V3.new3((float) x, (float) y, (float) z); 
+  }
+
+  /**
+   * Copy in Java; do nothing in JavaScript
+   * 
+   * @return this in JavaScript, P3 copy in Java
+   */
+  public V3 asV3() {
+    /**
+     * @j2sNative
+     * return this;
+     */
+    {
+      return copyToV3();
+    }
+  }
+
 
 }

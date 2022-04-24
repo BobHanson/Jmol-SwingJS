@@ -72,6 +72,7 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
@@ -967,8 +968,8 @@ public class ModelSet extends BondCollection {
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
-          atom1.getSeqID(), n, pts[i], Float.NaN, null, 0, 0, 100, Float.NaN,
-          null, false, (byte) 0, null, Float.NaN);
+          atom1.getSeqID(), n, pts[i], null, Float.NaN, null, 0, 0, 100,
+          Float.NaN, null, false, (byte) 0, null, Float.NaN);
 
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -3259,6 +3260,9 @@ public class ModelSet extends BondCollection {
       bfactor100s = AU.arrayCopyShort(bfactor100s, newLength);
     if (partialCharges != null)
       partialCharges = AU.arrayCopyF(partialCharges, newLength);
+    if (precisionCoords != null)
+      precisionCoords = AU.arrayCopyP3d(precisionCoords, newLength);
+    
     if (atomTensorList != null)
       atomTensorList = (Object[][]) AU.arrayCopyObject(atomTensorList,
           newLength);
@@ -3276,10 +3280,10 @@ public class ModelSet extends BondCollection {
 
   public Atom addAtom(int modelIndex, Group group, int atomicAndIsotopeNumber,
                       String atomName, String atomType, int atomSerial,
-                      int atomSeqID, int atomSite, P3 xyz, float radius,
-                      V3 vib, int formalCharge, float partialCharge,
-                      float occupancy, float bfactor, Lst<Object> tensors,
-                      boolean isHetero, byte specialAtomID, BS atomSymmetry, float bondRadius) {
+                      int atomSeqID, int atomSite, P3 xyz, P3d dxyz,
+                      float radius, V3 vib, int formalCharge,
+                      float partialCharge, float occupancy, float bfactor,
+                      Lst<Object> tensors, boolean isHetero, byte specialAtomID, BS atomSymmetry, float bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
         atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
@@ -3290,6 +3294,8 @@ public class ModelSet extends BondCollection {
       growAtomArrays(ac + 100); // only due to added hydrogens
 
     at[ac] = atom;
+    if (dxyz != null)
+      setPrecisionCoord(atom.i, dxyz, false);
     setBFactor(ac, bfactor, false);
     setOccupancy(ac, occupancy, false);
     setPartialCharge(ac, partialCharge, false);

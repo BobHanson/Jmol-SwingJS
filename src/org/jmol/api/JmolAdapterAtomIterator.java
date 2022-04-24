@@ -29,6 +29,7 @@ import javajs.util.BS;
 
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.V3;
 
 public interface JmolAdapterAtomIterator {
@@ -58,6 +59,8 @@ public interface JmolAdapterAtomIterator {
   abstract public V3 getVib();
 
 	abstract public P3 getXYZ();
+
+  abstract public P3d getXYZd();
 
   abstract public float getBfactor();
 	

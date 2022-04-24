@@ -73,7 +73,7 @@ public class DF {
    * 
    * @param value
    * @param decimalDigits
-   * @return  formatted decimal
+   * @return formatted decimal
    */
   public static String formatDecimal(double value, int decimalDigits) {
     if (value == Double.NEGATIVE_INFINITY || value == Double.POSITIVE_INFINITY || Double.isNaN(value))
@@ -114,9 +114,9 @@ public class DF {
           n++;
         }
       }
-      return (isNeg ? "-" : "") + sf  + "E" + (n >= 0 ? "+" : "") + n;
+      return (isNeg ? "-" : "") + sf + "E" + (n >= 0 ? "+" : "") + n;
     }
-  
+
     if (decimalDigits >= formattingStrings.length)
       decimalDigits = formattingStrings.length - 1;
     String s1 = ("" + value).toUpperCase();
@@ -130,9 +130,9 @@ public class DF {
       // 0.03567
       // -0.0001
       s1 = "0." + zeros.substring(0, -n - 1) + s1.substring(0, 1) + s1.substring(2, pt1);
-      pt = 1; 
+      pt = 1;
     }
-  
+
     pt1 = s1.indexOf("E");
     // 3.5678E+3
     // 3567.800000000
@@ -142,16 +142,16 @@ public class DF {
       s1 = s1.substring(0, 1) + s1.substring(2, pt1) + zeros;
       s1 = s1.substring(0, n + 1) + "." + s1.substring(n + 1);
       pt = s1.indexOf(".");
-    } 
+    }
     // "234.345667  len == 10; pt = 3
     // "  0.0 "  decimalDigits = 1
-    
+
     int len = s1.length();
     int pt2 = decimalDigits + pt + 1;
     if (pt2 < len && s1.charAt(pt2) >= '5') {
       return formatDecimal((isNeg ? -1 : 1) * (value + formatAdds[decimalDigits]), decimalDigits);
     }
-  
+
     String s0 = s1.substring(0, (decimalDigits == 0 ? pt
         : ++pt));
     SB sb = SB.newS(s0);

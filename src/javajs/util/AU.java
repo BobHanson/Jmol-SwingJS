@@ -187,6 +187,26 @@ final public class AU {
     }
   }
 
+  public static P3d[] arrayCopyP3d(P3d[] array, int newLength) {
+    int oldLength = (array == null ? -1 : array.length);
+    if (newLength < 0)
+      newLength = oldLength;
+    /**
+     * @j2sNative
+     * 
+     *            if (newLength < oldLength) return Clazz.array(-1, array, 0,
+     *            newLength);
+     */
+    {
+    }
+    P3d[] t = new P3d[newLength];
+    if (array != null) {
+      System.arraycopy(array, 0, t, 0,
+          oldLength < newLength ? oldLength : newLength);
+    }
+    return t;
+  }
+
   public static String[] arrayCopyS(String[] array, int newLength) {
     int oldLength = (array == null ? -1 : array.length);
     if (newLength < 0)

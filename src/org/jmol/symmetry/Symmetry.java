@@ -1069,4 +1069,11 @@ public class Symmetry implements SymmetryInterface {
     atom2.add3(x, y, z);
   }
 
+  @Override
+  public void toFractionalF(P3 pt, boolean ignoreOffset) {
+    // temporary only
+    if (!isBio)
+      unitCell.toFractional(pt, ignoreOffset);
+  }
+
 }
