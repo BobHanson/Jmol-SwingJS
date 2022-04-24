@@ -28,24 +28,25 @@ package org.jmol.util;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.jmol.api.JmolDataManager;
+import org.jmol.script.SV;
+import org.jmol.script.T;
+
+import javajs.api.JSONEncodable;
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M34;
+import javajs.util.M34d;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3;
+import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
-import javajs.util.A4;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
 import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.V3;
-
-import org.jmol.api.JmolDataManager;
-import javajs.util.BS;
-import org.jmol.script.SV;
-import org.jmol.script.T;
 
 
 
@@ -79,6 +80,17 @@ public class Escape {
     return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
   }
 
+  /**
+   * must be its own, because of the possibility of being null
+   * @param xyz
+   * @return  {x y z}
+   */
+  public static String ePd(T3d xyz) {
+    if (xyz == null)
+      return "null";
+    return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
+  }
+  
   public static String matrixToScript(Object m) {
     return PT.replaceAllCharacters(m.toString(), "\n\r ","").replace('\t',' ');
   }
@@ -114,16 +126,10 @@ public class Escape {
       return escapeMap((Map<String, Object>) x);
     if (x instanceof BS) 
       return eBS((BS) x);
-    if (x instanceof P4)
-      return eP4((P4) x);
-    if (x instanceof T3)
-      return eP((T3) x);
     if (AU.isAP(x))
       return eAP((T3[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
-    if (x instanceof M34) 
-      return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
     if (AU.isAFF(x)) {
       // for isosurface functionXY
       float[][] ff = (float[][])x;
@@ -136,12 +142,10 @@ public class Escape {
       sb.append("]");
       return sb.toString();
     }
-    if (x instanceof A4) {
-      A4 a = (A4) x;
-      return "{" + a.x + " " + a.y + " " + a.z + " " + (float) (a.angle * 180d/Math.PI) + "}";  
-    } 
-    if (x instanceof Quat)
-      return ((Quat) x).toString();
+    if (x instanceof T3 || x instanceof T3d)
+      return x.toString();
+    if (x instanceof JSONEncodable)
+      return ((JSONEncodable) x).toJSON();
     String s = PT.nonArrayString(x);
     return (s == null ? PT.toJSON(null, x) : s);
   }
@@ -195,6 +199,24 @@ public class Escape {
     return sb.toString();
   }
 
+  /**
+   * 
+   * @param f
+   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
+   * @return tabular string
+   */
+  public static String escapeDoubleA(double[] f, boolean asArray) {
+    if (asArray)
+      return PT.toJSON(null, f); // or just use escape(f)
+    SB sb = new SB();
+    for (int i = 0; i < f.length; i++) {
+      if (i > 0)
+        sb.appendC('\n');
+      sb.appendD(f[i]);
+    }
+    return sb.toString();
+  }
+
   public static String escapeFloatAA(float[][] f, boolean addSemi) {
     SB sb = new SB();
     String eol = (addSemi ? ";\n" : "\n");
@@ -204,6 +226,19 @@ public class Escape {
           sb.append(eol);
         for (int j = 0; j < f[i].length; j++)
           sb.appendF(f[i][j]).appendC('\t');
+      }
+    return sb.toString();
+  }
+
+  public static String escapeDoubleAA(double[][] f, boolean addSemi) {
+    SB sb = new SB();
+    String eol = (addSemi ? ";\n" : "\n");
+    for (int i = 0; i < f.length; i++)
+      if (f[i] != null) {
+        if (i > 0)
+          sb.append(eol);
+        for (int j = 0; j < f[i].length; j++)
+          sb.appendD(f[i][j]).appendC('\t');
       }
     return sb.toString();
   }
@@ -303,6 +338,19 @@ public class Escape {
     return s.append("]").toString();
   }
 
+  public static String eAPd(T3d[] plist) {
+    if (plist == null)
+      return PT.esc("");
+    SB s = new SB();
+    s.append("[");
+    for (int i = 0; i < plist.length; i++) {
+      if (i > 0)
+        s.append(", ");
+      s.append(ePd(plist[i]));
+    }
+    return s.append("]").toString();
+  }
+
   private static String escapeNice(String s) {
     if (s == null)
       return "null";
@@ -318,7 +366,7 @@ public class Escape {
         && s.indexOf(',') < 0 && s.indexOf('.') < 0 && s.indexOf('-') < 0)
       return BS.unescape(s);
     if (s.startsWith("[["))
-      return unescapeMatrix(s);
+      return unescapeMatrixD(s);
     return s;
   }
 
@@ -351,29 +399,54 @@ public class Escape {
       return P4.new4(points[0], points[1], points[2], points[3]);
     return strPoint;
   }
+//
+//  public static Object unescapeMatrix(String strMatrix) {
+//    if (strMatrix == null || strMatrix.length() == 0)
+//      return strMatrix;
+//    String str = strMatrix.replace('\n', ' ').trim();
+//    if (str.lastIndexOf("[[") != 0 || str.indexOf("]]") != str.length() - 2)
+//      return strMatrix;
+//    float[] points = new float[16];
+//    str = str.substring(2, str.length() - 2).replace('[',' ').replace(']',' ').replace(',',' ');
+//    int[] next = new int[1];
+//    int nPoints = 0;
+//    for (; nPoints < 16; nPoints++) {
+//      points[nPoints] = PT.parseFloatNext(str, next);
+//      if (Float.isNaN(points[nPoints])) {
+//        break;
+//      }
+//    }
+//    if (!Float.isNaN(PT.parseFloatNext(str, next)))
+//      return strMatrix; // overflow
+//    if (nPoints == 9)
+//      return M3.newA9(points);
+//    if (nPoints == 16)
+//      return M4.newA16(points);
+//    return strMatrix;
+//  }
 
-  public static Object unescapeMatrix(String strMatrix) {
+  public static Object unescapeMatrixD(String strMatrix) {
     if (strMatrix == null || strMatrix.length() == 0)
       return strMatrix;
     String str = strMatrix.replace('\n', ' ').trim();
     if (str.lastIndexOf("[[") != 0 || str.indexOf("]]") != str.length() - 2)
       return strMatrix;
-    float[] points = new float[16];
+    double[] points = new double[16];
     str = str.substring(2, str.length() - 2).replace('[',' ').replace(']',' ').replace(',',' ');
     int[] next = new int[1];
     int nPoints = 0;
     for (; nPoints < 16; nPoints++) {
-      points[nPoints] = PT.parseFloatNext(str, next);
-      if (Float.isNaN(points[nPoints])) {
+      points[nPoints] = PT.parseDoubleNext(str, next);
+      if (Double.isNaN(points[nPoints])) {
         break;
       }
     }
-    if (!Float.isNaN(PT.parseFloatNext(str, next)))
+    if (!Double.isNaN(PT.parseDoubleNext(str, next)))
       return strMatrix; // overflow
     if (nPoints == 9)
-      return M3.newA9(points);
+      return M3d.newA9(points);
     if (nPoints == 16)
-      return M4.newA16(points);
+      return M4d.newA16(points);
     return strMatrix;
   }
 /*
@@ -513,10 +586,8 @@ public class Escape {
       }
       return packageReadableSb(name, "List[" + imax + "]", sb);
     }
-    if (info instanceof M34
-        || info instanceof T3
-        || info instanceof P4
-        || info instanceof A4) {
+    if (info instanceof M34d
+        || info instanceof T3) {
       sb.append(e(info));
       return packageReadableSb(name, null, sb);
     }
@@ -554,6 +625,9 @@ public class Escape {
     switch (depth) {
     case JmolDataManager.DATA_TYPE_AF:
       s = escapeFloatA((float[]) data, false) + ";\n";
+      break;
+    case JmolDataManager.DATA_TYPE_AD:
+      s = escapeDoubleA((double[]) data, false) + ";\n";
       break;
     case JmolDataManager.DATA_TYPE_AFF:
       s = escapeFloatAA((float[][]) data, true) + ";\n";
@@ -639,7 +713,6 @@ public class Escape {
     }    
     return v.toArray(new String[v.size()]);
   }
-
 
   /**
    * Jmol-specific post-processing of 

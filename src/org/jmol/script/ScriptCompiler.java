@@ -40,8 +40,10 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M34;
-import javajs.util.M4;
+import javajs.util.M34d;
+import javajs.util.M34d;
+import javajs.util.M4d;
+import javajs.util.M4d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -1353,16 +1355,18 @@ public class ScriptCompiler extends ScriptTokenParser {
           T.o(T.identifier, script.substring(ichToken, ichToken + cchToken)));
       return CONTINUE;
     }
-    float value;
-    if (!Float.isNaN(value = lookingAtExponential())) {
-      addNumber(T.decimal, Integer.MAX_VALUE, Float.valueOf(value));
+    Number value;
+    if ((value = lookingAtExponential()) != null) {
+      addNumber(T.decimal, Integer.MAX_VALUE, value);
       return CONTINUE;
     }
     if (lookingAtDecimal()) {
-      value = Float.parseFloat(script.substring(ichToken, ichToken + cchToken));
+      String s = script.substring(ichToken, ichToken + cchToken);
+      boolean isDouble = (cchToken > 10);
+      value = Double.valueOf(isDouble ? Double.parseDouble(s) : Float.parseFloat(s));
       int intValue = (ScriptParam
           .getFloatEncodedInt(script.substring(ichToken, ichToken + cchToken)));
-      addNumber(T.decimal, intValue, Float.valueOf(value));
+      addNumber(T.decimal, intValue, value);
       return CONTINUE;
     }
     if (lookingAtSeqcode()) {
@@ -1425,8 +1429,8 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       if (isBondOrMatrix) {
         Object m = lookingAtMatrix();
-        if (m instanceof M34) {
-          addTokenToPrefix(T.o((m instanceof M4 ? T.matrix4f : T.matrix3f), m));
+        if (m instanceof M34d) {
+          addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
           return CONTINUE;
         }
       }
@@ -1447,7 +1451,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         || script.charAt(ichToken) != '['
         || script.charAt(ichToken + 1) != '['
         || (ipt = script.indexOf("]]", ichToken)) < 0
-        || (m = Escape.unescapeMatrix(script.substring(ichToken, ipt + 2))) == null)
+        || (m = Escape.unescapeMatrixD(script.substring(ichToken, ipt + 2))) == null)
       return null;
     cchToken = ipt + 2 - ichToken;
     return m;
@@ -2802,9 +2806,9 @@ public class ScriptCompiler extends ScriptTokenParser {
     return (cchToken = ichT - ichToken) > 0;
   }
 
-  private float lookingAtExponential() {
+  private Double lookingAtExponential() {
     if (ichToken == cchScript)
-      return Float.NaN; //end
+      return null; //end
     int ichT = ichToken;
     int pt0 = ichT;
     if (script.charAt(ichT) == '-')
@@ -2822,10 +2826,10 @@ public class ScriptCompiler extends ScriptTokenParser {
       isOK = true;
     }
     if (ichT == cchScript || !isOK)
-      return Float.NaN; //integer
+      return null; //integer
     isOK = (ch != 'E' && ch != 'e');
     if (isOK || ++ichT == cchScript)
-      return Float.NaN;
+      return null;
     ch = script.charAt(ichT);
     // I THOUGHT we only should allow "E+" or "E-" here, not "2E1" because
     // "2E1" might be a PDB het group by that name. BUT it turns out that
@@ -2839,9 +2843,9 @@ public class ScriptCompiler extends ScriptTokenParser {
       isOK = true;
     }
     if (!isOK)
-      return Float.NaN;
+      return null;
     cchToken = ichT - ichToken;
-    return Double.valueOf(script.substring(pt0, ichT)).floatValue();
+    return Double.valueOf(script.substring(pt0, ichT));
   }
 
   private boolean lookingAtDecimal() {
