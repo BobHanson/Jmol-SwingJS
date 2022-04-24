@@ -16,12 +16,6 @@
 */
 package javajs.util;
 
-import java.io.Serializable;
-
-import javajs.api.JSONEncodable;
-
-
-
 /**
  * A 4 element axis angle represented by single precision floating point
  * x,y,z,angle components. An axis angle is a rotation of angle (radians) about

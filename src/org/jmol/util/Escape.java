@@ -28,30 +28,26 @@ package org.jmol.util;
 import java.util.Iterator;
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M34;
-import javajs.util.M34d;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.SB;
+import org.jmol.api.JmolDataManager;
+import org.jmol.script.SV;
+import org.jmol.script.T;
+
 import javajs.api.JSONEncodable;
 import javajs.util.A4;
-import javajs.util.A4d;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M34d;
 import javajs.util.M3d;
-import javajs.util.M4;
 import javajs.util.M4d;
 import javajs.util.P3;
 import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.T3d;
 import javajs.util.V3;
-
-import org.jmol.api.JmolDataManager;
-import javajs.util.BS;
-import org.jmol.script.SV;
-import org.jmol.script.T;
 
 
 
