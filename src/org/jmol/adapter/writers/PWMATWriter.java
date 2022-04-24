@@ -28,6 +28,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   private SymmetryInterface uc;
   private Lst<String> names;
   private BS bs;
+  private boolean isPrecision;
   
 
   
@@ -52,7 +53,8 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       bs = vwr.bsA();
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-      this.bs = uc.removeDuplicates(vwr.ms, bs);
+      this.bs = bs = uc.removeDuplicates(vwr.ms, bs);
+      isPrecision = Viewer.isJS || false && !bs.isEmpty(); // temporary only
       names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
       writeHeader();
       writeLattice();
@@ -77,7 +79,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       uc.setUnitCell(new float[] { len, len, len, 90, 90, 90 }, false);
     }
     P3[] abc = uc.getUnitCellVectors();
-    String f = "%18.10p%18.10p%18.10p\n";
+    String f = (isPrecision ? "%18.10p%18.10p%18.10p\n" : "%12.6p%12.6p%12.6p\n");;
     oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
     oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
     oc.append(PT.sprintf(f, "p", new Object[] { abc[3] }));
@@ -85,17 +87,22 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   }
 
   private void writePositions() {
-    float[] cx = getData("CONSTRAINTS_X");
-    float[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
-    float[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
+    double[] cx = getData("CONSTRAINTS_X");
+    double[] cy = (cx == null ? null : getData("CONSTRAINTS_Y"));
+    double[] cz = (cy == null ? null : getData("CONSTRAINTS_Z"));
     oc.append("Position, move_x, move_y, move_z\n");
-    String f = "%4i%40s" + (cz == null ? "  1  1  1" : "%4i%4i%4i") + "\n";
     Atom[] a = vwr.ms.at;
+    String coord;
     P3 p = new P3();
+    String f = (isPrecision ? "%4i%78s   " : "%4i%36s   ") + (cz == null ? "  1  1  1" : "%3i%3i%3i") + "\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       p.setT(a[i]);
       uc.toFractional(p, false);
-      String coord = clean(p.x) + clean(p.y) + clean(p.z);
+      if (isPrecision) {
+        coord = clean(p.x) + clean(p.y) + clean(p.z);
+      } else {
+        coord = cleanF(p.x) + cleanF(p.y) + cleanF(p.z);
+      }
       if (cz == null) {
         oc.append(PT.sprintf(f, "is", new Object[] { Integer.valueOf(a[i].getElementNumber()), coord }));
       } else {
@@ -108,20 +115,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     Logger.info("PWMATWriter: POSITIONS");
   }
   
-  private float[] getData(String name) { 
+  private double[] getData(String name) { 
     name = PWM_PREFIX + name.toLowerCase();
     for (int i = names.size(); --i >= 0;) {
       String n = names.get(i);
       if (name.equalsIgnoreCase(n)) {
         names.removeItemAt(i);
-        return (float[]) vwr.getDataObj(n, bs, JmolDataManager.DATA_TYPE_AF);
+        return (double[]) vwr.getDataObj(n, bs, JmolDataManager.DATA_TYPE_AD);
       }
     }
     return null;
   }
 
-  private float[][] getVectors(String name) {
-    float[][] vectors = new float[][] { getData(name + "_x"), getData(name + "_y"), getData(name + "_z") };
+  private double[][] getVectors(String name) {
+    double[][] vectors = new double[][] { getData(name + "_x"), getData(name + "_y"), getData(name + "_z") };
     return (vectors[0] == null || vectors[1] == null || vectors[2] == null ? null : vectors);
   }
 
@@ -133,55 +140,54 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   }
 
   private void writeVectors(String name) {
-    float[][] xyz = getVectors(name);
+    double[][] xyz = getVectors(name);
     if (xyz == null)
       return;
     Atom[] a = vwr.ms.at;
-    P3 p = new P3();
     oc.append(name.toUpperCase()).append("\n");
-    String f = "%4i%18.12p%18.12p%18.12p\n";
+    String f = "%4i%26.15f%26.15f%26.15f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
-      p.set(xyz[0][ic], xyz[1][ic], xyz[2][ic]);
-      oc.append(PT.sprintf(f, "ip", new Object[] { Integer.valueOf(a[i].getElementNumber()), p }));
+      oc.append(PT.sprintf(f, "iddd", new Object[] { Integer.valueOf(a[i].getElementNumber()), 
+    		  Double.valueOf(xyz[0][ic]), Double.valueOf(xyz[1][ic]), Double.valueOf(xyz[2][ic]) }));
     }    
     Logger.info("PWMATWriter: " + name);
   }
 
   private void writeMagnetic() {
-    float[] m = writeItems("MAGNETIC");
+    double[] m = writeItems("MAGNETIC");
     if (m == null)
       return;
     writeItem2(m, "CONSTRAINT_MAG");
 //    writeVectors("MAGNETIC_XYZ");
   }
 
-  private void writeItem2(float[] m, String name) {
-    float[] v = getData(name);
+  private void writeItem2(double[] m, String name) {
+    double[] v = getData(name);
     if (v == null)
       return;
     Atom[] a = vwr.ms.at;
     oc.append(name.toUpperCase()).append("\n");
-    String f = "%4i%18.12f%18.12f\n";
+    String f = "%4i%26.15f%26.15f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "iff",
+      oc.append(PT.sprintf(f, "idd",
           new Object[] { Integer.valueOf(a[i].getElementNumber()),
-              Float.valueOf(m[ic]), Float.valueOf(v[ic]) }));
+              Double.valueOf(m[ic]), Double.valueOf(v[ic]) }));
     }
   }
 
-  private float[] writeItems(String name) {
-    float[] m = getData(name);
+  private double[] writeItems(String name) {
+    double[] m = getData(name);
     if (m == null)
       return null;
     Atom[] a = vwr.ms.at;
     name = name.toUpperCase();
     oc.append(name).append("\n");
-    String f = "%4i%18.12f\n";
+    String f = "%4i%26.15f\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs
         .nextSetBit(i + 1), ic++) {
-      oc.append(PT.sprintf(f, "if", new Object[] {
-          Integer.valueOf(a[i].getElementNumber()), Float.valueOf(m[ic]) }));
+      oc.append(PT.sprintf(f, "id", new Object[] {
+          Integer.valueOf(a[i].getElementNumber()), Double.valueOf(m[ic]) }));
     }
     Logger.info("PWMATWriter: " + name);
     return m;

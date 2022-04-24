@@ -156,7 +156,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Object validation, dssr;
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
-  public boolean fixJavaFloat = true;
+  public boolean fixJavaDouble = true;
   public Map<String, Object> thisBiomolecule;
   public Lst<M4> lstNCS;
 
@@ -453,12 +453,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         }
       }
     }
-    if (!fixJavaFloat)
-      asc.setInfo("highPrecision", Boolean.TRUE);
+    if (!fixJavaDouble)
+      setHighPrecision();
     setLoadNote();
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
+
+  protected void setHighPrecision() {
+    fixJavaDouble = false;
+    asc.setInfo("highPrecision", Boolean.TRUE);
+  }
 
   protected String setLoadNote() {
     String s = loadNote.toString();
@@ -553,8 +558,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     else if (htParams.get("highPrecision") != null) {
       // earlier versions were not fully JavaScript compatible
       // because XtalSymmetry.isWithinUnitCell was giving different answers
-      // for floats (Java) as for doubles (JavaScript).
-      fixJavaFloat = false;
+      // for doubles (Java) as for doubles (JavaScript).
+      fixJavaDouble = false;
     }
     merging = htParams.containsKey("merging");
     getHeader = htParams.containsKey("getHeader");
@@ -1320,8 +1325,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }
-    if (fixJavaFloat && fileCoordinatesAreFractional) 
+    if (fixJavaDouble && fileCoordinatesAreFractional) {
       PT.fixPtFloats(atom, PT.FRACTIONAL_PRECISION);
+    }
     doCheckUnitCell = true;
   }
 

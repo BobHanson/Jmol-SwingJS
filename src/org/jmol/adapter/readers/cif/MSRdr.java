@@ -621,7 +621,7 @@ public class MSRdr implements MSInterface {
   }
         
   private void fixDouble(double[] pt) {
-    if (cr.fixJavaFloat)
+    if (cr.fixJavaDouble)
       for (int i = pt.length; --i >= 0;)
         pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
   }
@@ -1076,7 +1076,7 @@ public class MSRdr implements MSInterface {
           pt.add(a.vib);
         getSymmetry(a).toCartesian(pt, false);
         sym.toFractional(pt, false);
-        if (cr.fixJavaFloat)
+        if (cr.fixJavaDouble)
           PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
         isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
             minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f);
@@ -1087,7 +1087,7 @@ public class MSRdr implements MSInterface {
         //              }
       }
       if (isOK) {
-        if (cr.fixJavaFloat)
+        if (cr.fixJavaDouble)
           PT.fixPtFloats(a, PT.FRACTIONAL_PRECISION);
       } else {
         bs.clear(i);

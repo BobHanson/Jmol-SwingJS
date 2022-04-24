@@ -316,7 +316,7 @@ public class GulpReader extends AtomSetCollectionReader {
         Atom atom = atoms[i];
         symmetry.toCartesian(atom, true);
         symFull.toFractional(atom, true);
-        if (fixJavaFloat)
+        if (fixJavaDouble)
           PT.fixPtFloats(atom, PT.FRACTIONAL_PRECISION);
       }
       setModelParameters(false);

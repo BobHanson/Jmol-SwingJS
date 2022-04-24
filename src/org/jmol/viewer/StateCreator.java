@@ -1654,6 +1654,43 @@ public class StateCreator extends JmolStateCreator {
   }
 
   
+  @Override
+  void getAtomicPropertyStateBufferD(SB commands, int type, BS bs,
+                                           String label, double[] fData) {
+    if (!vwr.g.preserveState)
+      return;
+    // see setAtomData()
+    SB s = new SB();
+    String dataLabel = label + " set";
+    int n = 0;
+    Atom[] atoms = vwr.ms.at;
+    BS[] tainted = vwr.ms.tainted;
+    if (bs != null)
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        if (AtomCollection.isDeleted(atoms[i]))
+          continue;
+        s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
+            .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(
+                " ");
+        switch (type) {
+        case AtomCollection.TAINT_MAX:
+          if (i < fData.length) // when data are appended, the array may not
+            // extend that far
+            s.appendD(fData[i]);
+          break;
+        }
+        s.append(" ;\n");
+        ++n;
+      }
+    if (n == 0)
+      return;
+    commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
+        " ;\nJmol Property Data Format 1 -- Jmol ").append(
+        Viewer.getJmolVersion()).append(";\n");
+    commands.appendSB(s);
+    commands.append("  end \"" + dataLabel + "\";\n");
+  }
+
   /////////////////////////////////  undo/redo functions /////////////////////
   
   

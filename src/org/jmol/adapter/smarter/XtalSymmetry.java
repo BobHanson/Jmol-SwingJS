@@ -343,7 +343,7 @@ public class XtalSymmetry {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
-        if (acr.fixJavaFloat)
+        if (acr.fixJavaDouble)
           PT.fixPtFloats(pt0, PT.FRACTIONAL_PRECISION);
         if (acr.noPack
             ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
@@ -798,7 +798,7 @@ public class XtalSymmetry {
               sym.toUnitCellRnd(c, ptOffset);
               pttemp.setT(c);
               sym.toFractional(pttemp, false);
-              if (acr.fixJavaFloat)
+              if (acr.fixJavaDouble)
                 PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
               // setting it to be correct for a 
@@ -958,7 +958,7 @@ public class XtalSymmetry {
               finalizeSymmetry(sym);
           }
         }
-        if (acr.fixJavaFloat)
+        if (acr.fixJavaDouble)
           PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
         P3 c = P3.newP(pttemp); // cartesian position
         sym.toCartesian(c, false);
@@ -966,7 +966,7 @@ public class XtalSymmetry {
           sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
-          if (acr.fixJavaFloat)
+          if (acr.fixJavaDouble)
             PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
           if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
               maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))

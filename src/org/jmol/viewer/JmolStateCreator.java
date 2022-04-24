@@ -32,6 +32,9 @@ public abstract class JmolStateCreator {
   abstract void getAtomicPropertyStateBuffer(SB commands, int type,
                                     BS bs, String name, float[] data);
 
+  abstract void getAtomicPropertyStateBufferD(SB commands, int type,
+                                             BS bs, String name, double[] data);
+
   abstract int undoMoveAction(int action, int n);
 
   abstract void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo);
