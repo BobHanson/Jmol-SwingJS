@@ -1413,13 +1413,13 @@ public class PT {
         }
         ich += len;
         if (!Float.isNaN(floatT)) // 'f'
-          strLabel += formatF(floatT, width, precision, alignLeft,
+          strLabel += formatF(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
               zeroPad);
         else if (strT != null)  // 'd' 'i' or 's'
           strLabel += formatS(strT, width, precision < 0 ? precision - 1 : precision, alignLeft,
               zeroPad);
         else if (!Double.isNaN(doubleT)) // 'e' or 'f'
-          strLabel += formatD(doubleT, width, (st.equals("e") ? precision - 1 : -1 - precision), alignLeft,
+          strLabel += formatD(doubleT, width, (st.equals("e") || st.equals("P") ? precision : -1 - precision), alignLeft,
               zeroPad, true);
         if (doOne)
           break;
@@ -1449,7 +1449,7 @@ public class PT {
   /**
    * sprintf emulation uses (almost) c++ standard string formats
    * 
-   * 's' string 'i' or 'd' integer, 'e' double, 'f' float, 'p' point3f 'q'
+   * 's' string 'i' or 'd' integer, 'e' double, 'f' float, 'p' point3f, 'P' exponential point3f, 'q'
    * quaternion/plane/axisangle with added "i" (equal to the insipid "d" --
    * digits?)
    * 
@@ -1471,7 +1471,8 @@ public class PT {
         for (int o = 0; o < n; o++) {
           if (values[o] == null)
             continue;
-          switch (list.charAt(o)) {
+          char c;
+          switch (c = list.charAt(o)) {
           case 's':
             strFormat = formatString(strFormat, "s", (String) values[o],
                 Float.NaN, Double.NaN, true);
@@ -1493,21 +1494,22 @@ public class PT {
                 ((Double) values[o]).doubleValue(), true);
             break;
           case 'p':
-            if (values[0] instanceof T3) {
+          case 'P':
+            if (values[o] instanceof T3) {
               T3 pVal = (T3) values[o];
-              strFormat = formatString(strFormat, "p", null, pVal.x, Double.NaN,
+              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.x, Double.NaN,
                   true);
-              strFormat = formatString(strFormat, "p", null, pVal.y, Double.NaN,
+              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.y, Double.NaN,
                   true);
-              strFormat = formatString(strFormat, "p", null, pVal.z, Double.NaN,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, pVal.z, Double.NaN,
                   true);
             } else {
               T3d pVal = (T3d) values[o];
-              strFormat = formatString(strFormat, "p", null, Float.NaN, pVal.x,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.x,
                   true);
-              strFormat = formatString(strFormat, "p", null, Float.NaN, pVal.y,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.y,
                   true);
-              strFormat = formatString(strFormat, "p", null, Float.NaN, pVal.z,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.z,
                   true);
             }
             break;
@@ -1568,10 +1570,11 @@ public class PT {
    * @return    f or dupicated format
    */
   public static String formatCheck(String strFormat) {
-    if (strFormat == null || strFormat.indexOf('p') < 0 && strFormat.indexOf('q') < 0)
+    if (strFormat == null || strFormat.indexOf('p') < 0 && strFormat.indexOf('P') < 0 && strFormat.indexOf('q') < 0)
       return strFormat;
     strFormat = rep(strFormat, "%%", "\1");
     strFormat = rep(strFormat, "%p", "%6.2p");
+    strFormat = rep(strFormat, "%P", "%6.2P");
     strFormat = rep(strFormat, "%q", "%6.2q");
     String[] format = split(strFormat, "%");
     SB sb = new SB();
@@ -1580,7 +1583,7 @@ public class PT {
       String f = "%" + format[i];
       int pt;
       if (f.length() >= 3) {
-        if ((pt = f.indexOf('p')) >= 0)
+        if ((pt = f.indexOf('p')) >= 0 || (pt = f.indexOf('P')) >= 0)
           f = fdup(f, pt, 3);
         if ((pt = f.indexOf('q')) >= 0)
           f = fdup(f, pt, 4);
@@ -1804,6 +1807,10 @@ public class PT {
     return (pt < 0 ? parseDouble(s) : parseDouble(s.substring(0, pt))
         / parseDouble(s.substring(pt + 1)));
 }
+
+  public static double toDouble(float f) {
+    return Double.valueOf("" + f).doubleValue();
+  }
 
 //static {
 //    

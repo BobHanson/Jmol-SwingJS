@@ -50,7 +50,9 @@ public class PWmatReader extends AtomSetCollectionReader {
     } else if (lc.startsWith("position")) {
       readCoordinates();
     } else {
-      readDataBlock(lc);
+      if (!readDataBlock(lc)) {
+        continuing = false;
+      }      
     }
     return true;
   }
@@ -105,21 +107,26 @@ public class PWmatReader extends AtomSetCollectionReader {
     setVectors("constraints", cx, cy, cz, nAtoms);
   }
 
-  private void readDataBlock(String name) throws Exception {
+  private boolean readDataBlock(String name) throws Exception {
+    int pt = name.indexOf(" ");
+    if (pt > 0)
+      name = name.substring(0, pt);
     getLine();
+    if (line == null)
+      return false;
     String[] tokens = getTokens();
     switch (tokens.length) {
     case 1:
     case 2:
     case 3:
       readItems(name, tokens.length - 1, null);
-      break;
+      return true;
     case 4: // elemno, x,y,z
       readVectors(name, 1, true);
-      break;
+      return true;
     default:
       Logger.error("PWmatReader block " + name.toUpperCase() + " ignored");
-      break;
+      return false;
     }
   }
 

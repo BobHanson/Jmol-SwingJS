@@ -1913,14 +1913,14 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.distance:
             if (planeRef != null)
-              dv = SV.toDouble(Measure.distanceToPlane(planeRef, atom));
+              dv = PT.toDouble(Measure.distanceToPlane(planeRef, atom));
             else
               dv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef)
                   : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef)
                       : Float.NaN);
             break;
           default:
-            dv = SV.toDouble(atom.atomPropertyFloat(vwr, tok, ptTemp));
+            dv = PT.toDouble(atom.atomPropertyFloat(vwr, tok, ptTemp));
           }
           if (dv == Double.MAX_VALUE
               || Double.isNaN(dv) && minmaxtype != T.all) {

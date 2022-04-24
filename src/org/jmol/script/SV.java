@@ -1297,9 +1297,9 @@ public class SV extends T implements JSONEncodable {
     float[] vf = (strFormat.indexOf("f") >= 0 ? new float[1] : null);
     double[] ve = (strFormat.indexOf("e") >= 0 ? new double[1] : null);
     boolean getS = (strFormat.indexOf("s") >= 0);
-    boolean getP = (strFormat.indexOf("p") >= 0 && (isArray || var.tok == point3f));
+    boolean getP = ((strFormat.indexOf("p") >= 0 || strFormat.indexOf("P") >= 0) && (isArray || var.tok == point3f));
     boolean getQ = (strFormat.indexOf("q") >= 0 && (isArray || var.tok == point4f));
-    Object[] of = new Object[] { vd, vf, ve, null, null, null};
+    Object[] of = new Object[] { vd, vf, ve, null, null, null, null};
      if (!isArray)
       return sprintf(strFormat, var, of, vd, vf, ve, getS, getP, getQ);
     Lst<SV> sv = var.getList();
@@ -1328,10 +1328,10 @@ public class SV extends T implements JSONEncodable {
     if (getS)
       of[3] = sValue(var);
     if (getP)
-      of[4]= var.value;
+      of[strFormat.indexOf("P") >= 0 ? 6 : 4] = var.value;
     if (getQ)
       of[5]= var.value;
-    return PT.sprintf(strFormat, "IFDspq", of );
+    return PT.sprintf(strFormat, "IFDspqP", of );
   }
 
   /**
@@ -1958,9 +1958,5 @@ public class SV extends T implements JSONEncodable {
     return "{"
         + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
             0) : PT.toJSON(key, property)) + "}";
-  }
-
-  public static double toDouble(float f) {
-    return Double.valueOf("" + f).doubleValue();
   }
 }

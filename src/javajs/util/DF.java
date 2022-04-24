@@ -36,14 +36,21 @@ public class DF {
       "0", "0.0", "0.00",
       "0.000", "0.0000", "0.00000", 
       "0.000000", "0.0000000", "0.00000000",
-      "0.000000000", "0.0000000000", "0.00000000000",  "0.000000000000", };
+      "0.000000000", 
+      "0.0000000000", 
+      "0.00000000000",  
+      "0.000000000000", 
+      "0.0000000000000",  
+      "0.00000000000000",  
+      "0.000000000000000", };
   private final static String zeros = "0000000000000000000000000000000000000000";
 
   private final static double[] formatAdds = { 
       0.5, 0.05, 0.005, 
       0.0005, 0.00005, 0.000005,
       0.0000005, 0.00000005, 0.000000005, 
-      0.0000000005, 0.00000000005 , 0.000000000005 , 0.0000000000005 };
+      0.0000000005, 0.00000000005 , 0.000000000005 , 0.0000000000005, 
+      0.00000000000005, 0.000000000000005, 0.0000000000000005};
 
   private final static Boolean[] useNumberLocalization = new Boolean[] { Boolean.TRUE };
 
@@ -78,7 +85,7 @@ public class DF {
       value = -value;
     int n;
     if (decimalDigits < 0) {
-      decimalDigits = -decimalDigits;
+      decimalDigits = -1-decimalDigits;
       if (decimalDigits > formattingStrings.length)
         decimalDigits = formattingStrings.length;
       if (value == 0)
@@ -100,7 +107,7 @@ public class DF {
         sf = "" + value;
       } else {
         n = PT.parseInt(s.substring(i1 + (s.indexOf("E+") == i1 ? 2 : 1))) + n;
-        double f = PT.parseFloat(s.substring(0, i1));
+        double f = PT.parseDouble(s.substring(0, i1));
         sf = formatDecimal(f, decimalDigits - 1);
         if (sf.startsWith("10.")) {
           sf = formatDecimal(1, decimalDigits - 1);
