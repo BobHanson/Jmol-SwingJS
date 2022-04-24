@@ -185,7 +185,7 @@ class JmolObject {
     case T.scene:
       sm.vwr.stm.saveScene(jmolName, (Map<String, Object>) info);
       sm.vwr.stm.saveOrientation(jmolName,
-          AU.toFloatA((double[]) ((Map<String, Object>) info).get("pymolView")));
+          AU.asFloatA((double[]) ((Map<String, Object>) info).get("pymolView")));
       return;
     case JC.SHAPE_LABELS:
       sm.loadShape(id);

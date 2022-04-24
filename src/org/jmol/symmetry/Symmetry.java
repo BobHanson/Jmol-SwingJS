@@ -851,7 +851,7 @@ public class Symmetry implements SymmetryInterface {
       pt0 = P3d.newPd(pt00);
     }
     if (ops == null || unitCell == null) {
-      lst.addLast(pt0.toP3());
+      lst.addLast(pt0.asP3());
     } else {
       unitCell.toFractionalD(pt0, true); // ignoreOffset
       P3d pt1 = null;
@@ -868,7 +868,7 @@ public class Symmetry implements SymmetryInterface {
       P3d pt = new P3d();
       out: for (int i = ops.length; --i >= 0;) {
         ops[i].rotate2(pt0, pt);
-        P3 ptf = pt.toP3();
+        P3 ptf = pt.copyToP3();// toP3 here even in JavaScript to copy
         iter.initialize(ptf, 0.001f, false);
         if (iter.hasMoreElements())
           continue out;
@@ -877,12 +877,12 @@ public class Symmetry implements SymmetryInterface {
         if (isRandom) {
           if (pt2 != null) {
             ops[i].rotate2(pt2, pt);
-            lst.addLast(pt.toP3());
+            lst.addLast(pt.copyToP3());
           }
           if (pt1 != null) {
             // pt2 is necessary to distinguish between Cs, Ci, and C1
             ops[i].rotate2(pt1, pt);
-            lst.addLast(pt.toP3());
+            lst.addLast(pt.copyToP3());
           }
         }
       }

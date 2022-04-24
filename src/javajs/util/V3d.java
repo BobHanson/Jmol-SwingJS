@@ -42,11 +42,6 @@ public class V3d extends T3d {
     return new3(t.x, t.y, t.z);
   }
 
-  public V3 toV3() {
-    return V3.new3((float) x, (float) y, (float) z); 
-  }
-
-
   public static V3d newVsub(T3d t1, T3d t2) {
     return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
@@ -76,4 +71,30 @@ public class V3d extends T3d {
 
     return Math.abs(Math.atan2(cross, dot(v1)));
   }
+  
+  /**
+   * Copy to float version. Avoid using this, as it will slow down JavaScript unnecessarily.
+   * 
+   * @return new P3
+   */
+  public V3 copyToV3() {
+    return V3.new3((float) x, (float) y, (float) z); 
+  }
+
+  /**
+   * Copy in Java; do nothing in JavaScript
+   * 
+   * @return this in JavaScript, P3 copy in Java
+   */
+  public V3 asV3() {
+    /**
+     * @j2sNative
+     * return this;
+     */
+    {
+      return copyToV3();
+    }
+  }
+
+
 }

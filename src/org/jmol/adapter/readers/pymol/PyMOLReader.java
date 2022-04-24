@@ -938,7 +938,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
             atomArray, vArray, lexStr, idx, coords,
             coordsArray, labelPositions, labelArray, bsAtoms, iState);
         if (a != null)
-          trajectoryStep[trajectoryPtr++] = a.toP3();
+          trajectoryStep[trajectoryPtr++] = a.asP3();
       }
     }
     addBonds(bonds);
@@ -1644,7 +1644,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   @SuppressWarnings("unchecked")
   static int getColorPt(Object o, P3d ptTemp) {
     return (o == null ? 0 : o instanceof Integer ? ((Integer) o).intValue() : CU
-        .colorPtToFFRGB(PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp).toP3()));
+        .colorPtToFFRGB(PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp).asP3()));
   }
 
   @SuppressWarnings("unchecked")

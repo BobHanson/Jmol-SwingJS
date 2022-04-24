@@ -325,7 +325,7 @@ public final class BioResolver implements Comparator<String[]> {
     Map<String, P3> htAtoms = new Hashtable<String, P3>();
     JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(model);
     while (iterAtom.hasNext())
-      htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ().toP3());      
+      htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ().asP3());      
     String[][] bondInfo = new String[dataIn.length * 2][];
     int n = 0;
     for (int i = 0; i < dataIn.length; i++) {

@@ -841,7 +841,7 @@ public final class ModelLoader {
           iterAtom.getTensors(), 
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
-          xyz.toP3(),
+          xyz.asP3(),
           highPrecision ? xyz : null,
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 

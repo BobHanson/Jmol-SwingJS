@@ -432,6 +432,19 @@ public abstract class M34d implements JSONEncodable {
         "matrix column/row out of bounds");
   }
 
+  abstract double getElement(int row, int col);
+  abstract void setElement(int row, int col, double val);
+  
+  public void clean() {
+    for (int i = size; --i >= 0;)
+    for (int j = size; --j >= 0;)
+      setElement(i,  j, approx0(getElement(i, j)));
+  }
+
+  private double approx0(double v) {
+    return (v > 1e-15 || v < -1e-15 ? v : 0);
+  }
+
   @Override
   public String toJSON() {
     // M4 extends M3
@@ -446,19 +459,6 @@ public abstract class M34d implements JSONEncodable {
     }
     sb.appendC(']');
     return sb.toString();
-  }
-
-  abstract double getElement(int row, int col);
-  abstract void setElement(int row, int col, double val);
-  
-  public void clean() {
-    for (int i = size; --i >= 0;)
-    for (int j = size; --j >= 0;)
-      setElement(i,  j, approx0(getElement(i, j)));
-  }
-
-  private double approx0(double v) {
-    return (v > 1e-15f || v < -1e-15f ? v : 0);
   }
 
 }

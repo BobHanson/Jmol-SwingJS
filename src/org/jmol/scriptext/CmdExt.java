@@ -483,7 +483,7 @@ public class CmdExt extends ScriptExt {
            fparams = new double[6];
            SimpleUnitCell.setOabcD(s, fparams, null);
          } else { 
-           fparams = AU.toDoubleA(eval.floatParameterSet(i, 6, 9));
+           fparams = AU.asDoubleA(eval.floatParameterSet(i, 6, 9));
          }
        }
        if (fparams == null || fparams.length != 6 && fparams.length != 9)

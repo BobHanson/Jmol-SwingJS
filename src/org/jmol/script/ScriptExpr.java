@@ -21,7 +21,6 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
 
-import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;

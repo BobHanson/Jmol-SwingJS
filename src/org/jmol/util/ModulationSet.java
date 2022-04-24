@@ -344,7 +344,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     this.iop = iop;
     this.nOps = nOps;
     
-    this.r0 = r0.toP3();
+    this.r0 = r0.asP3();
     modDim = d;
     rI = new Matrix(null, d, 1);
     this.mods = mods;
@@ -364,8 +364,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       mxyz = new V3(); // modulations of spin
       axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz        
     }
-    Matrix vR00 = Matrix.newT(r00.toP3(), true);
-    Matrix vR0 = Matrix.newT(r0.toP3(), true);
+    Matrix vR00 = Matrix.newT(r00.asP3(), true);
+    Matrix vR0 = Matrix.newT(r0.asP3(), true);
 
     rsvs = symmetry.getOperationRsVs(iop);
     gammaIinv = rsvs.getSubmatrix(3, 3, d, d).inverse();

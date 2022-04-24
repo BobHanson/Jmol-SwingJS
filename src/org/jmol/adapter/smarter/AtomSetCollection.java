@@ -177,7 +177,7 @@ public class AtomSetCollection {
     for (int i = 0, ii = 0; i < ac; i++) {
       if (bsAtoms != null && !bsAtoms.get(i))
         continue;
-      P3 pt = atoms[i].toP3();
+      P3 pt = atoms[i].asP3();
       if (doFixPeriodic && prevSteps != null)
         pt = fixPeriodic(pt, prevSteps[i]);
       trajectoryStep[ii] = pt;

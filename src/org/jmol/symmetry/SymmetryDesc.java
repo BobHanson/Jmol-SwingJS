@@ -539,8 +539,8 @@ public class SymmetryDesc {
 
     Quat q = Quat.getQuaternionFrame(pt0, pt1, pt2)
         .div(Quat.getQuaternionFrame(pta00, pta01, pta02));
-    Quat qF = Quat.new4((float) q.q1, (float) q.q2, (float) q.q3, (float) q.q0);
-    T3[] info = Measure.computeHelicalAxis(pta00.toP3(), pt0.toP3(), qF);
+    Quat qF = Quat.new4(q.q1, q.q2, q.q3, q.q0);
+    T3[] info = Measure.computeHelicalAxis(pta00.asP3(), pt0.asP3(), qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3d pa1 = P3d.newPd(info[0]);
     P3d ax1 = P3d.newPd(info[1]);
@@ -1409,7 +1409,7 @@ public class SymmetryDesc {
           sympt.addF(offset);
         }
         symTemp.toCartesian(sympt, false);
-        P3 ret = sympt.toP3();
+        P3 ret = sympt.asP3();
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),

@@ -92,11 +92,11 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       oc.append(PT.sprintf(f, "P", new Object[] { abc[2] }));
       oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
     } else {
-      String f = "%12.6P%12.6P%12.6P\n";
-      P3 p = new P3();
-      oc.append(PT.sprintf(f, "P", new Object[] { abc[1].toP3() }));
-      oc.append(PT.sprintf(f, "P", new Object[] { abc[2].toP3() }));
-      oc.append(PT.sprintf(f, "P", new Object[] { abc[3].toP3() }));
+      String f = "%12.6p%12.6p%12.6p\n";
+      P3 p = new P3(); // toP3 here for rounding even in JavaScript
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[1].copyToP3() }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[2].copyToP3() }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[3].copyToP3() }));
     }
     Logger.info("PWMATWriter: LATTICE VECTORS");
   }

@@ -1801,6 +1801,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return PT.parseDoubleRange(s, iEnd, next);
   }
 
+  protected float parseFloatRange(String s, int iStart, int iEnd) {
+    next[0] = iStart;
+    return PT.parseFloatRange(s, iEnd, next);
+  }
+
   protected int parseInt() {
     return PT.parseIntNext(line, next);
   }

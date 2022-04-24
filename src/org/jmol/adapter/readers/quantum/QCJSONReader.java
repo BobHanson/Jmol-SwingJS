@@ -214,7 +214,7 @@ public class QCJSONReader extends MoldenReader {
         else if (spin.indexOf("alpha") >= 0)
           alphaBeta = "alpha";
       }
-      float[] coefs = AU.toFloatA(QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
+      float[] coefs = AU.asFloatA(QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
       line = "" + symmetry;
       if (filterMO()) {
         Map<String, Object> mo = new Hashtable<String, Object>();
@@ -302,7 +302,7 @@ public class QCJSONReader extends MoldenReader {
     float[][] garray = AU.newFloat2(gaussianPtr);
     // [[exp, coef], [exp, coef],...] with sp [exp, coef1, coef2]
     for (int i = 0; i < gaussianPtr; i++)
-      garray[i] = AU.toFloatA(QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
+      garray[i] = AU.asFloatA(QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
     moData.put("shells", shells);
     moData.put("gaussians", garray);
     Logger.info(shells.size() + " slater shells read");

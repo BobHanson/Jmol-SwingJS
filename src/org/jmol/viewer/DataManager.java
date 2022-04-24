@@ -43,8 +43,13 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 /*
- * a class for storing and retrieving user data,
- * including atom-related and color-related data
+ * A class for storing and retrieving user data,
+ * including atom-related and color-related data.
+ * 
+ * Starting in Jmol 15.2.51p (precision branch), this code
+ * accepts double[ ] data and preserves its integrity. 
+ * 
+ * The DATA_TYPE_AForD allows for either AF or AD 
  * 
  */
 
@@ -131,7 +136,7 @@ public class DataManager implements JmolDataManager {
       int oldType = getType(oldData);
       if (newType == DATA_TYPE_AD || oldType == DATA_TYPE_AD) {
         if (oldType == DATA_TYPE_AF) {
-          oldValue = AU.toDoubleA((float[]) oldValue);
+          oldValue = AU.asDoubleA((float[]) oldValue);
         } else if (oldData != null && oldType != DATA_TYPE_AD) {
           Logger.error("DataManager types are not compatible.");
           return;

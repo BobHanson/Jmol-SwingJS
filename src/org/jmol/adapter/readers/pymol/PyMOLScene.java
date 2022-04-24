@@ -242,7 +242,7 @@ class PyMOLScene implements JmolSceneGenerator {
     if (o == null)
       return (int) PyMOL.getDefaultSetting(i, pymolVersion);
     return (o instanceof Integer ? ((Integer) o).intValue() : CU
-        .colorPtToFFRGB(PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp).toP3()));
+        .colorPtToFFRGB(PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp).asP3()));
   }
   
   @SuppressWarnings("unchecked")
@@ -1034,7 +1034,7 @@ class PyMOLScene implements JmolSceneGenerator {
         Lst<Object> points = new Lst<Object>();
         for (int i = 0; i < nCoord; i++, p += 3)
           points.addLast(newP3i(PyMOLReader.pointAt(list, p, new P3d())));
-        offset = AU.toFloatA(PyMOLReader.floatsAt(PyMOLReader.listAt(offsets, index), 0, new double[7], 7));
+        offset = AU.asFloatA(PyMOLReader.floatsAt(PyMOLReader.listAt(offsets, index), 0, new double[7], 7));
         if (offset == null)
           offset = setLabelPosition(labelPosition, new float[7]);
         md = mdList[index] = vwr.newMeasurementData(objectNameID + "_"

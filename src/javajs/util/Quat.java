@@ -352,11 +352,11 @@ public class Quat {
 
   public static final Quat getQuaternionFrame(P3d center, T3d t1,
                                               T3d t2) {
-     return getQuaternionFrame(center.toP3(), t1, t2);
+     return getQuaternionFrame(center.asP3(), t1, t2);
   }
 
   public static final Quat getQuaternionFrame(P3d center, T3 x, T3 xy) {
-    return getQuaternionFrame(center.toP3(), x, xy);
+    return getQuaternionFrame(center.asP3(), x, xy);
   }
   
   public static final Quat getQuaternionFrame(P3 center, T3 x, T3 xy) {

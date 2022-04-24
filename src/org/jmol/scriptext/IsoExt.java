@@ -1639,7 +1639,7 @@ public class IsoExt extends ScriptExt {
         float[][] ff = floatArraySet(i + 2, intParameter(i + 1), 16);
         symops = new M4d[ff.length];
         for (int j = symops.length; --j >= 0;)
-          symops[j] = M4d.newA16(AU.toDoubleA(ff[j]));
+          symops[j] = M4d.newA16(AU.asDoubleA(ff[j]));
         i = eval.iToken;
         break;
       case T.symmetry:

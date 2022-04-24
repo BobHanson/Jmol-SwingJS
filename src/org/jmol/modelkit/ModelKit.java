@@ -2196,7 +2196,7 @@ public class ModelKit {
       sg.toCartesian(p2, true);
       if (Math.abs(d - p0.distance(p2)) > 0.001f)
         return false;
-      points[k++] = p2.toP3();
+      points[k++] = p2.asP3();
     }
     fa.setP(points[0]);
     sg.toFractional(fa, true);

@@ -70,7 +70,6 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.M4d;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3d;
@@ -3262,7 +3261,7 @@ public class ModelSet extends BondCollection {
     if (partialCharges != null)
       partialCharges = AU.arrayCopyF(partialCharges, newLength);
     if (precisionCoords != null)
-      precisionCoords = AU.arrayCopyP3e(precisionCoords, newLength);
+      precisionCoords = AU.arrayCopyP3d(precisionCoords, newLength);
     
     if (atomTensorList != null)
       atomTensorList = (Object[][]) AU.arrayCopyObject(atomTensorList,
