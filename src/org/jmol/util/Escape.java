@@ -33,7 +33,6 @@ import org.jmol.script.SV;
 import org.jmol.script.T;
 
 import javajs.api.JSONEncodable;
-import javajs.util.A4;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -589,9 +588,7 @@ public class Escape {
       return packageReadableSb(name, "List[" + imax + "]", sb);
     }
     if (info instanceof M34d
-        || info instanceof T3
-        || info instanceof P4
-        || info instanceof A4) {
+        || info instanceof T3) {
       sb.append(e(info));
       return packageReadableSb(name, null, sb);
     }

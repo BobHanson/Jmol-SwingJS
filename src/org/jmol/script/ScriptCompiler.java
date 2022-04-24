@@ -1433,10 +1433,6 @@ public class ScriptCompiler extends ScriptTokenParser {
           addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
           return CONTINUE;
         }
-//        if (m instanceof M34d) {
-//          addTokenToPrefix(T.o((m instanceof M4d ? T.matrix4f : T.matrix3f), m));
-//          return CONTINUE;
-//        }
       }
     }
     return OK;
