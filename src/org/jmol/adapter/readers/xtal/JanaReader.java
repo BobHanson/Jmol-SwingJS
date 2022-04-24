@@ -32,27 +32,20 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-
-import javajs.util.A4;
-import javajs.util.A4;
-import javajs.util.M3d;
-import javajs.util.M3d;
-import javajs.util.P3;
-import javajs.util.P3d;
-import javajs.util.Quat;
-import javajs.util.Rdr;
-import javajs.util.Lst;
-import javajs.util.Matrix;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.T3d;
-import javajs.util.V3;
-import javajs.util.V3d;
-
 import org.jmol.util.Logger;
 import org.jmol.util.Modulation;
+
+import javajs.util.A4d;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.Matrix;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.Qd;
+import javajs.util.Rdr;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * A reader for Jana M50+M40 file pairs.
@@ -589,12 +582,12 @@ public class JanaReader extends AtomSetCollectionReader {
     
     //  isAxial: X Y Z (X first)
     // notAxial: Z X Z
-    Quat phi = Quat.newAA(A4.newVA(V3d.new3(0, 0, 1),
+    Qd phi = Qd.newAA(A4d.newVA(V3d.new3(0, 0, 1),
         (pos.anisoBorU[0] / 180 * Math.PI)));
-    Quat chi = Quat.newAA(A4.newVA(
+    Qd chi = Qd.newAA(A4d.newVA(
         isAxial ? V3d.new3(0, 1, 0) : V3d.new3(1, 0, 0),
         (pos.anisoBorU[1] / 180 * Math.PI)));
-    Quat psi = Quat.newAA(A4.newVA(
+    Qd psi = Qd.newAA(A4d.newVA(
         isAxial ? V3d.new3(1, 0, 0) : V3d.new3(0, 0, 1),
         (pos.anisoBorU[2] / 180 * Math.PI)));
     matR = phi.mulQ(chi).mulQ(psi).getMatrix();

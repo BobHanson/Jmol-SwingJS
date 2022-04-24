@@ -1360,7 +1360,7 @@ public class ScriptMathProcessor {
         case T.point4f:
           // m * q
           return addXM3(
-              Quat.newM(m3).mulQ(Quat.newP4((P4) x2.value)).getMatrix());
+              Quat.newM(m3).mulQ(Quat.newP4((P4) x2.value)).getMatrixd());
         case T.varray:
           Lst<SV> l = x2.getList();
           Lst<P3> lnew = new Lst<P3>();
@@ -1586,7 +1586,7 @@ public class ScriptMathProcessor {
           return addXPt4(
               P4.new4(ax.x, ax.y, ax.z, (float) (ax.angle * 180 / Math.PI)));
         case -9:
-          return addXM3(q.getMatrix());
+          return addXM3(q.getMatrixd());
         default:
           return addXStr("NaN");
         }

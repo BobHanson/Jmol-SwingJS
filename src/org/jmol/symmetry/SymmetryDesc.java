@@ -537,8 +537,8 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    Quat q = Quat.getQuaternionFrame(pt0, pt1, pt2)
-        .div(Quat.getQuaternionFrame(pta00, pta01, pta02));
+    Quat q = Quat.getQuaternionFramed3d(pt0, pt1, pt2)
+        .div(Quat.getQuaternionFramed3d(pta00, pta01, pta02));
     Quat qF = Quat.new4(q.q1, q.q2, q.q3, q.q0);
     T3[] info = Measure.computeHelicalAxis(pta00.asP3(), pt0.asP3(), qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };

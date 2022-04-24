@@ -320,7 +320,7 @@ public class MeshCapper {
       vac.cross(vac, vab);
     }
     Quat q = Quat.getQuaternionFrameV(vab, vac, null, false);
-    m3 = q.getMatrix();
+    m3 = q.getMatrixd();
     m3inv = M3d.newM3(m3);
     m3inv.invert();
     for (int i = vs.length; --i >= 0;)

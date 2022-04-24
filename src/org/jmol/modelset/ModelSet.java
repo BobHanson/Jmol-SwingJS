@@ -4019,7 +4019,7 @@ public class ModelSet extends BondCollection {
       pt = Measure.getCenterAndPoints(vNot)[0];
       V3 v = V3.newVsub(thisAtom, pt);
       Quat q = Quat.newVA(v, 180);
-      moveAtoms(null, null, q.getMatrix(), null, bsToMove, thisAtom, true, false);
+      moveAtoms(null, null, q.getMatrixd(), null, bsToMove, thisAtom, true, false);
     }
   }
 

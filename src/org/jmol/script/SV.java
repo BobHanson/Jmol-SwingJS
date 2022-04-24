@@ -1727,6 +1727,19 @@ public class SV extends T implements JSONEncodable {
     return list;
   }
 
+  public static double[] dlistValue(T x, int nMin) {
+    if (x == null || x.tok != varray)
+      return new double[] { dValue(x) };
+    Lst<SV> sv = ((SV) x).getList();
+    double[] list;
+    list = new double[Math.max(nMin, sv.size())];
+    if (nMin == 0)
+      nMin = list.length;
+    for (int i = Math.min(sv.size(), nMin); --i >= 0;)
+      list[i] = dValue(sv.get(i));
+    return list;
+  }
+
   public SV toArray() {
     int dim;
     Lst<SV> o2;

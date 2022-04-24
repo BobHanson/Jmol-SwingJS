@@ -439,7 +439,7 @@ public abstract class ___Exporter {
       tempV2.cross(tempV2, tempV1);
       tempV1.cross(tempV1, tempV2);
       Quat q = Quat.getQuaternionFrameV(tempV2, tempV1, null, false);
-      m1 = q.getMatrix();
+      m1 = q.getMatrixd();
     }
     m.m00 = radius;
     m.m11 = radius;
@@ -454,7 +454,7 @@ public abstract class ___Exporter {
     m.m11 = ptY.distance(pt1) * radius;
     m.m22 = ptZ.distance(pt1) * 2;
     Quat q = Quat.getQuaternionFrame(pt1, ptX, ptY);
-    M3d m1 = q.getMatrix();
+    M3d m1 = q.getMatrixd();
     m1.mul(m);
     return m1;
   }

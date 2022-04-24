@@ -31,11 +31,14 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3;
+import javajs.util.M34;
 import javajs.util.M34d;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
+import javajs.api.JSONEncodable;
 import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.M3d;
 import javajs.util.M4;
 import javajs.util.M4d;
@@ -128,16 +131,10 @@ public class Escape {
       return escapeMap((Map<String, Object>) x);
     if (x instanceof BS) 
       return eBS((BS) x);
-    if (x instanceof P4)
-      return eP4((P4) x);
-    if (x instanceof T3)
-      return eP((T3) x);
     if (AU.isAP(x))
       return eAP((T3[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
-    if (x instanceof M34d) 
-      return PT.rep(PT.rep(x.toString(), "[\n  ", "["), "] ]", "]]");
     if (AU.isAFF(x)) {
       // for isosurface functionXY
       float[][] ff = (float[][])x;
@@ -150,12 +147,10 @@ public class Escape {
       sb.append("]");
       return sb.toString();
     }
-    if (x instanceof A4) {
-      A4 a = (A4) x;
-      return "{" + a.x + " " + a.y + " " + a.z + " " + (float) (a.angle * 180d/Math.PI) + "}";  
-    } 
-    if (x instanceof Quat)
-      return ((Quat) x).toString();
+    if (x instanceof T3 || x instanceof T3d)
+      return x.toString();
+    if (x instanceof JSONEncodable)
+      return ((JSONEncodable) x).toJSON();
     String s = PT.nonArrayString(x);
     return (s == null ? PT.toJSON(null, x) : s);
   }

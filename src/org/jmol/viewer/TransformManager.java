@@ -1708,17 +1708,17 @@ public class TransformManager {
   }
 
   public boolean moveToPyMOL(JmolScriptEvaluator eval, float floatSecondsTotal,
-                             float[] pymolView) {
+                             double[] pymolView) {
     // PyMOL matrices are inverted (row-based)
     M3d m3 = M3d.newA9(pymolView);
     m3.invert();
-    float cameraX = pymolView[9];
-    float cameraY = -pymolView[10];
-    float pymolDistanceToCenter = -pymolView[11];
-    P3 center = P3.new3(pymolView[12], pymolView[13], pymolView[14]);
-    float pymolDistanceToSlab = pymolView[15]; // <=0 to ignore
-    float pymolDistanceToDepth = pymolView[16];
-    float fov = pymolView[17];
+    double cameraX = pymolView[9];
+    double cameraY = -pymolView[10];
+    double pymolDistanceToCenter = -pymolView[11];
+    P3 center = P3.new3((float) pymolView[12], (float) pymolView[13], (float) pymolView[14]);
+    double pymolDistanceToSlab = pymolView[15]; // <=0 to ignore
+    double pymolDistanceToDepth = pymolView[16];
+    double fov = pymolView[17];
     boolean isOrtho = (fov >= 0);
     setPerspectiveDepth(!isOrtho);
 
@@ -1741,16 +1741,16 @@ public class TransformManager {
     //
 
     // we convert fov to rotation radius
-    float theta = Math.abs(fov) / 2;
-    float tan = (float) Math.tan(theta * Math.PI / 180);
-    float rotationRadius = pymolDistanceToCenter * tan;
+    double theta = Math.abs(fov) / 2;
+    double tan = Math.tan(theta * Math.PI / 180);
+    double rotationRadius = pymolDistanceToCenter * tan;
 
     // Jmol camera units are fraction of screen size (height in this case)
-    float jmolCameraToCenter = 0.5f / tan;
-    float cameraDepth = jmolCameraToCenter - 0.5f;
+    double jmolCameraToCenter = 0.5f / tan;
+    double cameraDepth = jmolCameraToCenter - 0.5f;
 
     // other units are percent; this factor is 100% / (2*rotationRadius)
-    float f = 50 / rotationRadius;
+    double f = 50 / rotationRadius;
 
     if (pymolDistanceToSlab > 0) {
       int slab = 50 + (int) ((pymolDistanceToCenter - pymolDistanceToSlab) * f);
@@ -1763,7 +1763,7 @@ public class TransformManager {
         // from PSE file load only -- 
         boolean depthCue = (pymolView[18] != 0);
         boolean fog = (pymolView[19] != 0);
-        float fogStart = pymolView[20];
+        double fogStart = pymolView[20];
         // conversion to Jmol zShade, zSlab, zDepth
         setZShadeEnabled(depthCue);
         if (depthCue) {
@@ -1778,8 +1778,8 @@ public class TransformManager {
       }
     }
     moveTo(eval, floatSecondsTotal, center, null, 0, m3, 100, Float.NaN,
-        Float.NaN, rotationRadius, null, Float.NaN, Float.NaN, Float.NaN,
-        cameraDepth, cameraX, cameraY);
+        Float.NaN, (float) rotationRadius, null, Float.NaN, Float.NaN, Float.NaN,
+        (float) cameraDepth, (float) cameraX, (float) cameraY);
     return true;
   }
 

@@ -30,23 +30,20 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.jmol.atomdata.RadiusData;
-
-import javajs.util.AU;
-import javajs.util.BS;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
-
-import javajs.util.Lst;
-import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.P3d;
-import javajs.util.PT;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * a class to store rendering information prior to finishing file loading,
@@ -185,7 +182,7 @@ class JmolObject {
     case T.scene:
       sm.vwr.stm.saveScene(jmolName, (Map<String, Object>) info);
       sm.vwr.stm.saveOrientation(jmolName,
-          AU.asFloatA((double[]) ((Map<String, Object>) info).get("pymolView")));
+          (double[]) ((Map<String, Object>) info).get("pymolView"));
       return;
     case JC.SHAPE_LABELS:
       sm.loadShape(id);

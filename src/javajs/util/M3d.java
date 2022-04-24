@@ -55,10 +55,6 @@ public class M3d extends M34d implements Serializable {
     return m;
   }
 
-  public static M3d newA9(float[] v) {
-    return newA9(AU.toDoubleA(v));
-  }
-
   /**
    * Constructs a new matrix with the same values as the Matrix3f parameter.
    * 
@@ -153,6 +149,7 @@ public class M3d extends M34d implements Serializable {
    * @param v
    *        the new value
    */
+  @Override
   public void setElement(int row, int col, double v) {
     set33(row, col, v);
   }
@@ -166,6 +163,7 @@ public class M3d extends M34d implements Serializable {
    *        the column number to be retrieved (zero indexed)
    * @return the value at the indexed element
    */
+  @Override
   public double getElement(int row, int col) {
     return get33(row, col);
   }

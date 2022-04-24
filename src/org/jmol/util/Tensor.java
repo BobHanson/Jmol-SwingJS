@@ -237,7 +237,7 @@ public class Tensor {
     case 10: // eulerzxz
       return ((Quat) getInfo("quaternion")).getEulerZXZ();
     case 11: // quaternion
-      return Quat.getQuaternionFrame((P3d) null, eigenVectors[0],
+      return Quat.getQuaternionFramed3d((P3d) null, eigenVectors[0],
           eigenVectors[1]);
       
       
@@ -425,11 +425,9 @@ public class Tensor {
       a[0][2] = a[2][0] = (a[0][2] + a[2][0])/2;
     }
     M3d m = new M3d();
-    double[] mm = new double[9];
     for (int i = 0, p = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
-        mm[p++] = a[i][j];
-    m.setA(mm);
+        m.setElement(i, j, a[i][j]);
 
     V3d[] vectors = new V3d[3];
     double[] values = new double[3];

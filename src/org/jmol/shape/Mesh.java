@@ -602,7 +602,7 @@ public class Mesh extends MeshSurface {
       else
         v.add(offset);
     } else {
-      m3.mul(q.getMatrix());
+      m3.mul(q.getMatrixd());
     }
     mat4 = M4d.newMV(m3, v);
     recalcAltVertices = true;

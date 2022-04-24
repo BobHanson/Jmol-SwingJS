@@ -5653,7 +5653,7 @@ public class ScriptEval extends ScriptExpr {
     float cameraDepth = Float.NaN;
     float cameraX = Float.NaN;
     float cameraY = Float.NaN;
-    float[] pymolView = null;
+    double[] pymolView = null;
     Quat q = null;
     int tok = getToken(i).tok;
     switch (tok) {
@@ -5668,7 +5668,7 @@ public class ScriptEval extends ScriptExpr {
       // or 21-element extended matrix (PSE file reading)
       // [18,19] are boolean depth_cue and fog settings
       // [20] is fogStart (usually 0.45)
-      pymolView = floatParameterSet(++i, 18, 21);
+      pymolView = doubleParameterSet(++i, 18, 21);
       i = iToken + 1;
       if (chk && checkLength(i) > 0)
         return;
@@ -6457,7 +6457,7 @@ public class ScriptEval extends ScriptExpr {
         m4 = null;
       }
       if (isSpin && m4 == null)
-        m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
+        m4 = ScriptMathProcessor.getMatrix4f(q.getMatrixd(), translation);
       if (points[0] != null)
         nPoints = 1;
     }

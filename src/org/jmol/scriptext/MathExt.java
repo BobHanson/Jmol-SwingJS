@@ -2932,11 +2932,11 @@ public class MathExt {
           norm = V3.new3(0, 0, 1);
           pt2 = P3.new3(0, 1, 0);
           Quat q = Quat.newVA(pt2, phi);
-          q.getMatrix().rotate(norm);
+          q.getMatrixd().rotate(norm);
           // rotate that vector around z
           pt2.set(0, 0, 1);
           q = Quat.newVA(pt2, theta);
-          q.getMatrix().rotate(norm);
+          q.getMatrixd().rotate(norm);
           pt2.setT(norm);
           pt2.scale(r);
           plane = new P4();

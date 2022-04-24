@@ -1007,6 +1007,38 @@ abstract public class ScriptParam extends ScriptError {
     return fparams;
   }
 
+  public double[] doubleParameterSet(int i, int nMin, int nMax)
+      throws ScriptException {
+    Lst<Object> v = null;
+    double[] fparams = null;
+    int n = 0;
+    String s = null;
+    iToken = i;
+    switch (tokAt(i)) {
+    case T.string:
+      s = SV.sValue(st[i]);
+      s = PT.replaceWithCharacter(s, "{},[]\"'", ' ');
+      fparams = PT.parseDoubleArray(s);
+      n = fparams.length;
+      break;
+    case T.varray:
+      fparams = SV.dlistValue(st[i], 0);
+      n = fparams.length;
+      break;
+    default:
+      v = listParameter(i, nMin, nMax);
+      n = v.size();
+    }
+    if (n < nMin || n > nMax)
+      invArg();
+    if (fparams == null) {
+      fparams = new double[n];
+      for (int j = 0; j < n; j++)
+        fparams[j] = ((Number) v.get(j)).doubleValue();
+    }
+    return fparams;
+  }
+  
   public boolean isArrayParameter(int i) {
     switch (tokAt(i)) {
     case T.varray:
@@ -1540,7 +1572,7 @@ abstract public class ScriptParam extends ScriptError {
     float[] retStddev = new float[2];
     Quat q = Measure.calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
         retStddev);
-    M3d r = q.getMatrix();
+    M3d r = q.getMatrixd();
     if (centerA == null)
       r.rotate(cptsA[0]);
     else

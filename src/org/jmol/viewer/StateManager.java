@@ -394,7 +394,7 @@ public class StateManager {
     return (o != null && o.restore(vwr, timeSeconds));
   }
 
-  public void saveOrientation(String saveName, float[] pymolView) {
+  public void saveOrientation(String saveName, double[] pymolView) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("Orientation_");
       return;
@@ -493,7 +493,7 @@ class Scene {
     JmolSceneGenerator gen = (JmolSceneGenerator) scene.get("generator");
     if (gen != null)
       gen.generateScene(scene);
-    float[] pv = (float[]) scene.get("pymolView");
+    double[] pv = (double[]) scene.get("pymolView");
     return (pv != null && vwr.tm.moveToPyMOL(vwr.eval, timeSeconds, pv));
   }
 }

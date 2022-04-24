@@ -914,8 +914,8 @@ public class CrystalReader extends AtomSetCollectionReader {
       mp.getColumnV(0, a);
       mp.getColumnV(1, b);
     }
-    matUnitCellOrientation = Quat.getQuaternionFrame(new P3d(), a, b)
-        .getMatrix();
+    matUnitCellOrientation = Quat.getQuaternionFramed3d(new P3d(), a, b)
+        .getMatrixd();
     Logger.info("oriented unit cell is in model " + asc.atomSetCount);
   }
 

@@ -1436,7 +1436,7 @@ public class CmdExt extends ScriptExt {
       Lst<P3> ptsB = null;
       if (doRotate && doTranslate && nSeconds != 0) {
         Lst<P3> ptsA = vwr.ms.getAtomPointVector(bsFrom);
-        M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
+        M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrixd(), translation);
         ptsB = ScriptParam.transformPoints(ptsA, m4, center);
       }
       if (!eval.useThreads())

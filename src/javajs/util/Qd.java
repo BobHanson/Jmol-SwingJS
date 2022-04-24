@@ -341,7 +341,7 @@ public class Qd {
     return newFrame(center, x, xy, true);
   }
 
-  public static final Qd getQuaternionFrame(P3 center, T3 x, T3 xy) {
+  public static final Qd getQuaternionFrameP3(P3 center, T3 x, T3 xy) {
     return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
   }
 

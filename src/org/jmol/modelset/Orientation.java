@@ -28,15 +28,15 @@ public class Orientation {
   //boolean navigateSurface;
   private String moveToText;
 
-  private float[] pymolView;
+  private double[] pymolView;
 
   private Viewer vwr;
   
-  public Orientation(Viewer vwr, boolean asDefault, float[] pymolView) {
+  public Orientation(Viewer vwr, boolean asDefault, double[] pymolView) {
     this.vwr = vwr;
     if (pymolView != null) {
       this.pymolView = pymolView;
-      moveToText = "moveTo -1.0 PyMOL " + Escape.eAF(pymolView);
+      moveToText = "moveTo -1.0 PyMOL " + Escape.eAD(pymolView);
       return;
     }
     vwr.finalizeTransformParameters();

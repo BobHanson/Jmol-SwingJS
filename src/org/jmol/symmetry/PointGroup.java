@@ -966,7 +966,7 @@ class PointGroup {
   final static String[] typeNames = { "plane", "proper axis", "improper axis",
       "center of inversion" };
 
-  final static M3d mInv = M3d.newA9(new float[] {
+  final static M3d mInv = M3d.newA9(new double[] {
       -1, 0, 0, 
       0, -1, 0,
       0, 0, -1
@@ -1030,7 +1030,7 @@ class PointGroup {
     public M3d getM3() {
       if (mat != null)
         return mat;
-      M3d m = M3d.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrix());
+      M3d m = M3d.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrixd());
       if (type == OPERATION_PLANE || type == OPERATION_IMPROPER_AXIS)
         m.mul(mInv);
       m.clean();

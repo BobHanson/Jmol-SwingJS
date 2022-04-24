@@ -750,7 +750,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     x.cross(v1, v2);
     v.cross(x, v1);
-    return Quat.getQuaternionFrame((P3d) null, v, x).inv();
+    return Quat.getQuaternionFrame((P3) null, v, x).inv();
   }
 
   /**
