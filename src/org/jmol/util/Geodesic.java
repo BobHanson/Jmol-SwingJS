@@ -118,9 +118,9 @@ import javajs.util.V3d;
  
 public class Geodesic {
   
-  private final static float halfRoot5 = (float)(0.5 * Math.sqrt(5));
-  private final static float oneFifth = 2 * (float)Math.PI / 5;
-  private final static float oneTenth = oneFifth / 2;
+  private final static double halfRoot5 = (0.5 * Math.sqrt(5));
+  private final static double oneFifth = 2 * Math.PI / 5;
+  private final static double oneTenth = oneFifth / 2;
   
   // miguel 2005 01 11
   // within the context of this code, the term 'vertex' is used
