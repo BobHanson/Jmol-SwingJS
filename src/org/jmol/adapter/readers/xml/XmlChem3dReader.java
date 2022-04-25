@@ -107,26 +107,26 @@ public class XmlChem3dReader extends XmlReader {
       int nPointsX = parseIntStr(atts.get("griddatxdim"));
       int nPointsY = parseIntStr(atts.get("griddatydim"));
       int nPointsZ = parseIntStr(atts.get("griddatzdim"));
-      float xStep = (float) parseDoubleStr(atts.get("griddatxsize")) / (nPointsX);
-      float yStep = (float) parseDoubleStr(atts.get("griddatysize")) / (nPointsY);
-      float zStep = (float) parseDoubleStr(atts.get("griddatzsize")) / (nPointsZ);
+      double xStep = (double) parseDoubleStr(atts.get("griddatxsize")) / (nPointsX);
+      double yStep = (double) parseDoubleStr(atts.get("griddatysize")) / (nPointsY);
+      double zStep = (double) parseDoubleStr(atts.get("griddatzsize")) / (nPointsZ);
       tokens = PT.getTokens(atts.get("griddatorigin"));
-      float ox = (float) parseDoubleStr(tokens[0]);
-      float oy = (float) parseDoubleStr(tokens[1]);
-      float oz = (float) parseDoubleStr(tokens[2]);
+      double ox = (double) parseDoubleStr(tokens[0]);
+      double oy = (double) parseDoubleStr(tokens[1]);
+      double oz = (double) parseDoubleStr(tokens[2]);
       tokens = PT.getTokens(atts.get("griddatdata"));
       int pt = 1;
-      float[][][] voxelData = new float[nPointsX][nPointsY][nPointsZ];
-      float sum = 0;
+      double[][][] voxelData = new double[nPointsX][nPointsY][nPointsZ];
+      double sum = 0;
       for (int z = 0; z < nPointsZ; z++)
         for (int y = 0; y < nPointsY; y++)
           for (int x = 0; x < nPointsX; x++) {
-            float f = (float) parseDoubleStr(tokens[pt++]);
+            double f = (double) parseDoubleStr(tokens[pt++]);
             voxelData[x][y][z] = f;
             sum += f * f;
           }
       // normalizing!
-      sum = (float) (1 / Math.sqrt(sum));
+      sum = (double) (1 / Math.sqrt(sum));
       for (int z = 0; z < nPointsZ; z++)
         for (int y = 0; y < nPointsY; y++)
           for (int x = 0; x < nPointsX; x++) {
@@ -142,7 +142,7 @@ public class XmlChem3dReader extends XmlReader {
       vd.setVoxelDataAsArray(voxelData);
       if (moData == null) {
         moData = new Hashtable<String, Object>();
-        moData.put("defaultCutoff", Float.valueOf((float) 0.01));
+        moData.put("defaultCutoff", Double.valueOf((double) 0.01));
         moData.put("haveVolumeData", Boolean.TRUE);
         moData.put("calculationType", "Chem3D");
         orbitals = new  Lst<Map<String, Object>>();

@@ -38,18 +38,18 @@ public class V3d extends T3d {
   public static V3d newV(T3d t) {
     return new3(t.x, t.y, t.z);
   }
-  public static V3d newV(T3 t) {
-    return new3(t.x, t.y, t.z);
-  }
-
+//  public static V3d newV(T3d t) {
+//    return new3(t.x, t.y, t.z);
+//  }
+//
   public static V3d newVsub(T3d t1, T3d t2) {
     return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
 
-  public static V3d newVsub(T3 t1, T3 t2) {
-    return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
-  }
-  
+//  public static V3d newVsub(T3d t1, T3d t2) {
+//    return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
+//  }
+//  
 
   public static V3d new3(double x, double y, double z) {
     V3d v = new V3d();
@@ -77,8 +77,8 @@ public class V3d extends T3d {
    * 
    * @return new P3
    */
-  public V3 copyToV3() {
-    return V3.new3((float) x, (float) y, (float) z); 
+  public V3d copyToV3() {
+    return V3d.new3((float) x, (float) y, (float) z); 
   }
 
   /**
@@ -86,7 +86,7 @@ public class V3d extends T3d {
    * 
    * @return this in JavaScript, P3 copy in Java
    */
-  public V3 asV3() {
+  public V3d asV3() {
     /**
      * @j2sNative
      * return this;

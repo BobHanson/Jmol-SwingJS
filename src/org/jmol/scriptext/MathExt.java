@@ -78,18 +78,18 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.OC;
-import javajs.util.P3;
 import javajs.util.P3d;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public class MathExt {
 
@@ -122,7 +122,7 @@ public class MathExt {
     case T.abs:
       return (args.length == 1 && args[0].tok == T.integer
           ? mp.addXInt(args[0].intValue)
-          : mp.addXFloat(Math.abs(args[0].asFloat())));
+          : mp.addXDouble(Math.abs(args[0].asDouble())));
     case T.acos:
     case T.cos:
     case T.sin:
@@ -259,13 +259,13 @@ public class MathExt {
     // spacegroup("x,y,z,-x,-y,-z", [unitcellParams]);
     // spacegroup("all");
 
-    float[] unitCell = null;
+    double[] unitCell = null;
     switch (args.length) {
     case 0:
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
     case 2:
-      unitCell = SV.flistValue(args[1], 0);
+      unitCell = SV.dlistValue(args[1], 0);
       if (unitCell.length < 6)
         unitCell = null;
       //$FALL-THROUGH$
@@ -297,18 +297,18 @@ public class MathExt {
     // pointGroup(points, center)
     // pointGroup(points, center, distanceTolerance (def. 0.2 A), linearTolerance (def. 8 deg.)
     // center can be non-point to ignore, such as 0 or ""
-    T3[] pts = null;
-    P3 center = null;
-    float distanceTolerance = Float.NaN;
-    float linearTolerance = Float.NaN;
+    T3d[] pts = null;
+    P3d center = null;
+    double distanceTolerance = Double.NaN;
+    double linearTolerance = Double.NaN;
     BS bsAtoms = null;
     boolean isSpaceGroup = false;
     switch (args.length) {
     case 4:
-      linearTolerance = args[3].asFloat();
+      linearTolerance = args[3].asDouble();
       //$FALL-THROUGH$
     case 3:
-      distanceTolerance = args[2].asFloat();
+      distanceTolerance = args[2].asDouble();
       //$FALL-THROUGH$
     case 2:
       switch (args[1].tok) {
@@ -332,14 +332,14 @@ public class MathExt {
       switch (args[0].tok) {
       case T.varray:
         Lst<SV> points = args[0].getList();
-        pts = new T3[points.size()];
+        pts = new T3d[points.size()];
         for (int i = pts.length; --i >= 0;)
           pts[i] = SV.ptValue(points.get(i));
         break;
       case T.bitset:
         bsAtoms = SV.getBitSet(args[0], false);
-        Lst<P3> atoms = vwr.ms.getAtomPointVector(bsAtoms);
-        pts = new T3[atoms.size()];
+        Lst<P3d> atoms = vwr.ms.getAtomPointVector(bsAtoms);
+        pts = new T3d[atoms.size()];
         for (int i = pts.length; --i >= 0;)
           pts[i] = atoms.get(i);
         break;
@@ -371,22 +371,22 @@ public class MathExt {
       if (isSpaceGroup) {
         // @1.pointgroup("spacegroup")
         // pointgroup("spaceGroup", @1)
-        Lst<P3> lst = vwr.ms.generateCrystalClass(iatom,
-            P3.new3(Float.NaN, Float.NaN, Float.NaN));
-        pts = new T3[lst.size()];
+        Lst<P3d> lst = vwr.ms.generateCrystalClass(iatom,
+            P3d.new3(Double.NaN, Double.NaN, Double.NaN));
+        pts = new T3d[lst.size()];
         for (int i = pts.length; --i >= 0;)
           pts[i] = lst.get(i);
-        center = new P3();
+        center = new P3d();
       } else {
         center = vwr.ms.at[iatom];
       }
     }
     SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
         pts, null, false,
-        Float.isNaN(distanceTolerance)
-            ? vwr.getFloat(T.pointgroupdistancetolerance)
+        Double.isNaN(distanceTolerance)
+            ? vwr.getDouble(T.pointgroupdistancetolerance)
             : distanceTolerance,
-        Float.isNaN(linearTolerance) ? vwr.getFloat(T.pointgrouplineartolerance)
+        Double.isNaN(linearTolerance) ? vwr.getDouble(T.pointgrouplineartolerance)
             : linearTolerance,
         true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
@@ -411,11 +411,11 @@ public class MathExt {
     BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true) : null);
     int iatom = ((x1 == null ? vwr.getAllAtoms() : x1).nextSetBit(0));
     int lastParam = args.length - 1;
-    float scale = 1;
+    double scale = 1;
     switch (lastParam < 0 ? T.nada : args[lastParam].tok) {
     case T.integer:
     case T.decimal:
-      scale = args[lastParam].asFloat();
+      scale = args[lastParam].asDouble();
       lastParam--;
       break;
     }
@@ -469,7 +469,7 @@ public class MathExt {
           // unitcell([a b c alpha beta gamma])
           double[] params = new double[6];
           for (int i = 0; i < 6; i++)
-            params[i] = uc.get(i).asFloat();
+            params[i] = uc.get(i).asDouble();
           SimpleUnitCell.setOabcD(null, params, ucnew);
           break;
         default:
@@ -592,25 +592,25 @@ public class MathExt {
     boolean isListf = (x1.tok == T.listf);
     if (!isListf && x1.tok != T.varray)
       return mp.addX(x1);
-    float f0 = SV.fValue(args[0]);
-    float f1 = SV.fValue(args[1]);
-    float df = SV.fValue(args[2]);
+    double f0 = SV.dValue(args[0]);
+    double f1 = SV.dValue(args[1]);
+    double df = SV.dValue(args[2]);
     boolean addBins = (n >= 4 && args[n - 1].tok == T.on);
     String key = ((n == 5 || n == 4 && !addBins) && args[3].tok != T.off
         ? SV.sValue(args[3])
         : null);
-    float[] data;
+    double[] data;
     Map<String, SV>[] maps = null;
     if (isListf) {
-      data = (float[]) x1.value;
+      data = (double[]) x1.value;
     } else {
       Lst<SV> list = x1.getList();
-      data = new float[list.size()];
+      data = new double[list.size()];
       if (key != null)
         maps = AU.createArrayOfHashtable(list.size());
       try {
         for (int i = list.size(); --i >= 0;)
-          data[i] = SV.fValue(key == null ? list.get(i)
+          data[i] = SV.dValue(key == null ? list.get(i)
               : (maps[i] = list.get(i).getMap()).get(key));
       } catch (Exception e) {
         return false;
@@ -620,7 +620,7 @@ public class MathExt {
     int[] array = new int[nbins];
     int nPoints = data.length;
     for (int i = 0; i < nPoints; i++) {
-      float v = data[i];
+      double v = data[i];
       int bin = (int) Math.floor((v - f0) / df);
       if (bin < 0 || bin >= nbins)
         continue;
@@ -630,16 +630,16 @@ public class MathExt {
         if (map == null)
           continue;
         map.put("_bin", SV.newI(bin));
-        float v1 = f0 + df * bin;
-        float v2 = v1 + df;
-        map.put("_binMin", SV.newF(bin == 0 ? -Float.MAX_VALUE : v1));
-        map.put("_binMax", SV.newF(bin == nbins - 1 ? Float.MAX_VALUE : v2));
+        double v1 = f0 + df * bin;
+        double v2 = v1 + df;
+        map.put("_binMin", SV.newD(bin == 0 ? -Double.MAX_VALUE : v1));
+        map.put("_binMax", SV.newD(bin == nbins - 1 ? Double.MAX_VALUE : v2));
       }
     }
     if (addBins) {
-      Lst<float[]> lst = new Lst<float[]>();
+      Lst<double[]> lst = new Lst<double[]>();
       for (int i = 0; i < nbins; i++)
-        lst.addLast(new float[] { f0 + df * i, array[i] });
+        lst.addLast(new double[] { f0 + df * i, array[i] });
       return mp.addXList(lst);
     }
     return mp.addXAI(array);
@@ -666,17 +666,17 @@ public class MathExt {
     boolean isIsosurface = colorScheme.startsWith("$");
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TOHSL"))
       return mp.addXPt(
-          CU.rgbToHSL(P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+          CU.rgbToHSL(P3d.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
               : CU.colorPtFromString(args[1].asString())), true));
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TORGB")) {
-      P3 pt = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+      P3d pt = P3d.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
           : CU.colorPtFromString(args[1].asString()));
       return mp.addXPt(args[1].tok == T.point3f ? CU.hslToRGB(pt) : pt);
     }
     if (args.length == 4 && (args[3].tok == T.on || args[3].tok == T.off)) {
-      P3 pt1 = P3.newP(args[0].tok == T.point3f ? SV.ptValue(args[0])
+      P3d pt1 = P3d.newP(args[0].tok == T.point3f ? SV.ptValue(args[0])
           : CU.colorPtFromString(args[0].asString()));
-      P3 pt2 = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
+      P3d pt2 = P3d.newP(args[1].tok == T.point3f ? SV.ptValue(args[1])
           : CU.colorPtFromString(args[1].asString()));
       boolean usingHSL = (args[3].tok == T.on);
       if (usingHSL) {
@@ -685,7 +685,7 @@ public class MathExt {
       }
 
       SB sb = new SB();
-      V3 vd = V3.newVsub(pt2, pt1);
+      V3d vd = V3d.newVsub(pt2, pt1);
       int n = args[2].asInt();
       if (n < 2)
         n = 20;
@@ -702,15 +702,15 @@ public class MathExt {
         : vwr.cm.getColorEncoder(colorScheme));
     if (!isIsosurface && ce == null)
       return mp.addXStr("");
-    float lo = (args.length > 1 ? SV.fValue(args[1]) : Float.MAX_VALUE);
-    float hi = (args.length > 2 ? SV.fValue(args[2]) : Float.MAX_VALUE);
-    float value = (args.length > 3 ? SV.fValue(args[3]) : Float.MAX_VALUE);
-    boolean getValue = (value != Float.MAX_VALUE
-        || lo != Float.MAX_VALUE && hi == Float.MAX_VALUE);
-    boolean haveRange = (hi != Float.MAX_VALUE);
+    double lo = (args.length > 1 ? SV.dValue(args[1]) : Double.MAX_VALUE);
+    double hi = (args.length > 2 ? SV.dValue(args[2]) : Double.MAX_VALUE);
+    double value = (args.length > 3 ? SV.dValue(args[3]) : Double.MAX_VALUE);
+    boolean getValue = (value != Double.MAX_VALUE
+        || lo != Double.MAX_VALUE && hi == Double.MAX_VALUE);
+    boolean haveRange = (hi != Double.MAX_VALUE);
     if (!haveRange && colorScheme.length() == 0) {
       value = lo;
-      float[] range = vwr.getCurrentColorRange();
+      double[] range = vwr.getCurrentColorRange();
       lo = range[0];
       hi = range[1];
     }
@@ -728,7 +728,7 @@ public class MathExt {
     Map<String, Object> key = ce.getColorKey();
     if (getValue)
       return mp.addXPt(CU.colorPtFromInt(
-          ce.getArgb(hi == Float.MAX_VALUE ? lo : value), null));
+          ce.getArgb(hi == Double.MAX_VALUE ? lo : value), null));
     return mp.addX(SV.getVariableMap(key));
   }
 
@@ -747,7 +747,7 @@ public class MathExt {
     int narg = args.length;
     if (narg < 2 || narg > 5)
       return false;
-    float stddev;
+    double stddev;
     boolean isTrue = (args[narg - 1].tok == T.on);
     if (isTrue || args[narg - 1].tok == T.off)
       narg--;
@@ -763,7 +763,7 @@ public class MathExt {
     BS bs2 = (args[1].tok == T.bitset ? (BS) args[1].value : null);
     String smiles1 = (bs1 == null ? SV.sValue(args[0]) : "");
     String smiles2 = (bs2 == null ? SV.sValue(args[1]) : "");
-    stddev = Float.NaN;
+    stddev = Double.NaN;
     try {
       if (isBonds) {
         if (narg != 4)
@@ -778,9 +778,9 @@ public class MathExt {
         } catch (Exception ex) {
           e.evalError(ex.getMessage(), null);
         }
-        float[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1,
+        double[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1,
             !isSmiles);
-        return (data == null ? mp.addXStr("") : mp.addXAF(data));
+        return (data == null ? mp.addXStr("") : mp.addXAD(data));
       }
       if (isIsomer) {
         if (narg != 3)
@@ -875,7 +875,7 @@ public class MathExt {
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
       }
       M4d m = new M4d();
-      Lst<P3> ptsA = null, ptsB = null;
+      Lst<P3d> ptsA = null, ptsB = null;
       if (isSmiles) {
         // A, B, MAP
         // A, B, MAP, [pattern "H" "allH" "bestH"], ["stddev"]
@@ -903,8 +903,8 @@ public class MathExt {
           stddev = e.getSmilesExt().mapPolyhedra(bs1.nextSetBit(0),
               bs2.nextSetBit(0), isSmiles, m);
         } else {
-          ptsA = new Lst<P3>();
-          ptsB = new Lst<P3>();
+          ptsA = new Lst<P3d>();
+          ptsB = new Lst<P3d>();
           boolean allMaps = (("all".equalsIgnoreCase(sOpt)
               || "allH".equalsIgnoreCase(sOpt)));
           boolean bestMap = (("best".equalsIgnoreCase(sOpt)
@@ -957,7 +957,7 @@ public class MathExt {
           int n = a.size();
           if (n != ptsA.size() || n != ptsB.size())
             return false;
-          Lst<P3> list = new Lst<P3>();
+          Lst<P3d> list = new Lst<P3d>();
           for (int i = 0; i < n; i++)
             list.addLast(ptsA.get(a.get(i).intValue));
           ptsA = list;
@@ -978,7 +978,7 @@ public class MathExt {
         }
       }
       // now have m and stddev
-      return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev)
+      return (isStdDev || Double.isNaN(stddev) ? mp.addXDouble(stddev)
           : mp.addXM4(m.round(1e-7f)));
     } catch (Exception ex) {
       e.evalError(ex.getMessage() == null ? ex.toString() : ex.getMessage(),
@@ -1014,8 +1014,8 @@ public class MathExt {
 
     if (args.length > 5)
       return false;
-    float min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
-    float fmin = 0, fmax = Float.MAX_VALUE;
+    double min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
+    double fmin = 0, fmax = Double.MAX_VALUE;
 
     int order = Edge.BOND_ORDER_ANY;
     BS atoms1 = null;
@@ -1097,7 +1097,7 @@ public class MathExt {
         //$FALL-THROUGH$
       default:
         int n = var.asInt();
-        float f = var.asFloat();
+        double f = var.asDouble();
         if (max != Integer.MAX_VALUE)
           return false;
 
@@ -1138,12 +1138,12 @@ public class MathExt {
     if (args.length < 1 || args.length > 3)
       return false;
     int i = 0;
-    float distance = 100;
+    double distance = 100;
     int tok = args[0].tok;
     switch (tok) {
     case T.decimal:
     case T.integer:
-      distance = SV.fValue(args[i++]);
+      distance = SV.dValue(args[i++]);
       break;
     case T.bitset:
       break;
@@ -1157,7 +1157,7 @@ public class MathExt {
     RadiusData rd = new RadiusData(null,
         (distance > 10 ? distance / 100 : distance),
         (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET), VDW.AUTO);
-    bsB = setContactBitSets(bsA, bsB, true, Float.NaN, rd, false);
+    bsB = setContactBitSets(bsA, bsB, true, Double.NaN, rd, false);
     bsB.or(bsA);
     return mp.addXBs(bsB);
   }
@@ -1189,16 +1189,16 @@ public class MathExt {
       int iField = args[1].asInt();
       int nBytes = args[2].asInt();
       int firstLine = args[3].asInt();
-      float[] f = Parser.parseFloatArrayFromMatchAndField(SV.sValue(args[0]),
+      double[] f = Parser.parseDoubleArrayFromMatchAndField(SV.sValue(args[0]),
           null, 0, 0, null, iField, nBytes, null, firstLine);
-      return mp.addXStr(Escape.escapeFloatA(f, false));
+      return mp.addXStr(Escape.escapeDoubleA(f, false));
     default:
       return false;
     }
     if (selected.indexOf("data2d_") == 0) {
       // tab, newline separated data
-      float[][] f1 = (float[][]) vwr.getDataObj(selected, null,
-          JmolDataManager.DATA_TYPE_AFF);
+      double[][] f1 = (double[][]) vwr.getDataObj(selected, null,
+          JmolDataManager.DATA_TYPE_ADD);
       if (f1 == null)
         return mp.addXStr("");
       if (args.length == 2 && args[1].tok == T.integer) {
@@ -1206,20 +1206,20 @@ public class MathExt {
         if (pt < 0)
           pt += f1.length;
         if (pt >= 0 && pt < f1.length)
-          return mp.addXStr(Escape.escapeFloatA(f1[pt], false));
+          return mp.addXStr(Escape.escapeDoubleA(f1[pt], false));
         return mp.addXStr("");
       }
-      return mp.addXStr(Escape.escapeFloatAA(f1, false));
+      return mp.addXStr(Escape.escapeDoubleAA(f1, false));
     }
 
-    // parallel mp.addition of float property data sets
+    // parallel mp.addition of double property data sets
 
     if (selected.endsWith("*"))
       return mp.addXList((Lst<?>) vwr.getDataObj(selected, null, 0));
     if (selected.indexOf("property_") == 0) {
-      float[] f1 = (float[]) vwr.getDataObj(selected, null,
+      double[] f1 = (double[]) vwr.getDataObj(selected, null,
           JmolDataManager.DATA_TYPE_AFD);
-      return (f1 == null ? mp.addXStr("") : mp.addXStr(Escape.escapeFloatA(f1, false)));
+      return (f1 == null ? mp.addXStr("") : mp.addXStr(Escape.escapeDoubleA(f1, false)));
     }
 
     // some other data type -- just return it
@@ -1296,7 +1296,7 @@ public class MathExt {
     case 0:
       if (isDist) {
         x1 = mp.getX();
-        x2 = SV.getVariable(new P3());
+        x2 = SV.getVariable(new P3d());
         break;
       }
       //$FALL-THROUGH$
@@ -1304,16 +1304,16 @@ public class MathExt {
       return false;
     }
 
-    float f = Float.NaN;
+    double f = Double.NaN;
     try {
       if (tok == T.cross) {
-        P3 a = P3.newP(mp.ptValue(x1, null));
+        P3d a = P3d.newP(mp.ptValue(x1, null));
         a.cross(a, mp.ptValue(x2, null));
         return mp.addXPt(a);
       }
 
-      P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
-      P4 plane2 = e.planeValue(x2);
+      P3d pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
+      P4d plane2 = e.planeValue(x2);
       if (isDist) {
         int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
         boolean isMinMax = (minMax == T.min || minMax == T.max);
@@ -1336,15 +1336,15 @@ public class MathExt {
           case T.point3f:
             Atom[] atoms = vwr.ms.at;
             if (returnAtom) {
-              float dMinMax = Float.NaN;
+              double dMinMax = Double.NaN;
               int iMinMax = Integer.MAX_VALUE;
               if (isAtomSet1) {
                 for (int i = bs1.nextSetBit(0); i >= 0; i = bs1
                     .nextSetBit(i + 1)) {
-                  float d = (isPoint2 ? atoms[i].distanceSquared(pt2)
+                  double d = (isPoint2 ? atoms[i].distanceSquared(pt2)
                       : ((Number) e.getBitsetProperty(bs2, list2, op, atoms[i],
                           plane2, x1.value, null, false, x1.index, false))
-                              .floatValue());
+                              .doubleValue());
                   if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
                     continue;
                   dMinMax = d;
@@ -1355,11 +1355,11 @@ public class MathExt {
               }
               // list of points 
               for (int i = list1.size(); --i >= 0;) {
-                P3 pt = SV.ptValue(list1.get(i));
-                float d = (isPoint2 ? pt.distanceSquared(pt2)
+                P3d pt = SV.ptValue(list1.get(i));
+                double d = (isPoint2 ? pt.distanceSquared(pt2)
                     : ((Number) e.getBitsetProperty(bs2, list2, op, pt, plane2,
                         x1.value, null, false, Integer.MAX_VALUE, false))
-                            .floatValue());
+                            .doubleValue());
                 if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
                   continue;
                 dMinMax = d;
@@ -1369,53 +1369,53 @@ public class MathExt {
             }
             if (isAll) {
               if (bs2 == null) {
-                float[] data = new float[bs1.cardinality()];
+                double[] data = new double[bs1.cardinality()];
                 for (int p = 0, i = bs1.nextSetBit(0); i >= 0; i = bs1
                     .nextSetBit(i + 1), p++)
                   data[p] = atoms[i].distance(pt2);
-                return mp.addXAF(data);
+                return mp.addXAD(data);
               }
-              float[][] data2 = new float[bs1.cardinality()][bs2.cardinality()];
+              double[][] data2 = new double[bs1.cardinality()][bs2.cardinality()];
               for (int p = 0, i = bs1.nextSetBit(0); i >= 0; i = bs1
                   .nextSetBit(i + 1), p++)
                 for (int q = 0, j = bs2.nextSetBit(0); j >= 0; j = bs2
                     .nextSetBit(j + 1), q++)
                   data2[p][q] = atoms[i].distance(atoms[j]);
-              return mp.addXAFF(data2);
+              return mp.addXADD(data2);
             }
             if (isMinMax) {
-              float[] data = new float[isAtomSet1 ? bs1.cardinality()
+              double[] data = new double[isAtomSet1 ? bs1.cardinality()
                   : list1.size()];
               if (isAtomSet1) {
                 for (int i = bs1.nextSetBit(0), p = 0; i >= 0; i = bs1
                     .nextSetBit(i + 1))
                   data[p++] = ((Number) e.getBitsetProperty(bs2, list2, op,
                       atoms[i], plane2, x1.value, null, false, x1.index, false))
-                          .floatValue();
-                return mp.addXAF(data);
+                          .doubleValue();
+                return mp.addXAD(data);
               }
               // list of points
               for (int i = data.length; --i >= 0;)
                 data[i] = ((Number) e.getBitsetProperty(bs2, list2, op,
                     SV.ptValue(list1.get(i)), plane2, null, null, false,
-                    Integer.MAX_VALUE, false)).floatValue();
-              return mp.addXAF(data);
+                    Integer.MAX_VALUE, false)).doubleValue();
+              return mp.addXAD(data);
             }
             return mp.addXObj(e.getBitsetProperty(bs1, list1, op, pt2, plane2,
                 x1.value, null, false, x1.index, false));
           }
         }
       }
-      P3 pt1 = mp.ptValue(x1, null);
-      P4 plane1 = e.planeValue(x1);
+      P3d pt1 = mp.ptValue(x1, null);
+      P4d plane1 = e.planeValue(x1);
       if (isDist) {
         if (plane2 != null && x3 != null)
-          f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
+          f = MeasureD.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
         else
           f = (plane1 == null
               ? (plane2 == null ? pt2.distance(pt1)
-                  : Measure.distanceToPlane(plane2, pt1))
-              : Measure.distanceToPlane(plane1, pt2));
+                  : MeasureD.distanceToPlane(plane2, pt1))
+              : MeasureD.distanceToPlane(plane1, pt2));
       } else {
         if (plane1 != null && plane2 != null) {
           // q1.dot(q2) assume quaternions
@@ -1424,16 +1424,16 @@ public class MathExt {
           // plane.dot(point) =
         } else {
           if (plane1 != null)
-            pt1 = P3.new3(plane1.x, plane1.y, plane1.z);
+            pt1 = P3d.new3(plane1.x, plane1.y, plane1.z);
           // point.dot(plane)
           else if (plane2 != null)
-            pt2 = P3.new3(plane2.x, plane2.y, plane2.z);
+            pt2 = P3d.new3(plane2.x, plane2.y, plane2.z);
           f = pt1.dot(pt2);
         }
       }
     } catch (Exception e) {
     }
-    return mp.addXFloat(f);
+    return mp.addXDouble(f);
   }
 
   private boolean evaluateHelix(ScriptMathProcessor mp, SV[] args)
@@ -1451,13 +1451,13 @@ public class MathExt {
     int tok = T.getTokFromName(type);
     if (args.length > 2) {
       // helix(pt1, pt2, dq ...)
-      P3 pta = mp.ptValue(args[0], null);
-      P3 ptb = mp.ptValue(args[1], null);
+      P3d pta = mp.ptValue(args[0], null);
+      P3d ptb = mp.ptValue(args[1], null);
       if (tok == T.nada || args[2].tok != T.point4f || pta == null
           || ptb == null)
         return false;
-      Quat dq = Quat.newP4((P4) args[2].value);
-      T3[] data = Measure.computeHelicalAxis(pta, ptb, dq);
+      Qd dq = Qd.newP4((P4d) args[2].value);
+      T3d[] data = MeasureD.computeHelicalAxis(pta, ptb, dq);
       //new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn) };
       return (data == null ? false
           : mp.addXObj(Escape.escapeHelical(type, tok, pta, ptb, data)));
@@ -1470,7 +1470,7 @@ public class MathExt {
     case T.radius:
       return mp.addXObj(getHelixData(bs, tok));
     case T.angle:
-      return mp.addXFloat(((Number) getHelixData(bs, T.angle)).floatValue());
+      return mp.addXDouble(((Number) getHelixData(bs, T.angle)).doubleValue());
     case T.draw:
     case T.measure:
       return mp.addXObj(getHelixData(bs, tok));
@@ -1631,12 +1631,12 @@ public class MathExt {
         case T.bitset:
             return mp.addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value));
         case T.point3f:
-          return mp.addXList(vwr.getSymmetryEquivPoints((P3) x1.value, sFind + flags));
+          return mp.addXList(vwr.getSymmetryEquivPoints((P3d) x1.value, sFind + flags));
         case T.varray:
-          Lst<P3> lst = new Lst<P3>();
+          Lst<P3d> lst = new Lst<P3d>();
           Lst<SV> l0 = x1.getList();
           for (int i = 0, n = l0.size(); i < n; i++) {
-            P3 p = SV.ptValue(l0.get(i));
+            P3d p = SV.ptValue(l0.get(i));
             if (p == null)
               return false;
             lst.addLast(p);
@@ -2467,7 +2467,7 @@ public class MathExt {
             }
           else
             try {
-              la.addLast(SV.getVariable(Float.valueOf(Float.parseFloat(s))));
+              la.addLast(SV.getVariable(Double.valueOf(Double.parseDouble(s))));
               continue;
             } catch (Exception ee) {
             }
@@ -2484,8 +2484,8 @@ public class MathExt {
     boolean isScalar1 = SV.isScalar(x1);
     boolean isScalar2 = SV.isScalar(x2);
 
-    float[] list1 = null;
-    float[] list2 = null;
+    double[] list1 = null;
+    double[] list2 = null;
     Lst<SV> alist1 = x1.getList();
     Lst<SV> alist2 = x2.getList();
 
@@ -2495,19 +2495,19 @@ public class MathExt {
       len = Integer.MAX_VALUE;
     } else {
       sList1 = (PT.split(SV.sValue(x1), "\n"));
-      list1 = new float[len = sList1.length];
-      PT.parseFloatArrayData(sList1, list1);
+      list1 = new double[len = sList1.length];
+      PT.parseDoubleArrayData(sList1, list1);
     }
     if (isAll && tok != T.join) {
-      float sum = 0f;
+      double sum = 0f;
       if (isArray1) {
         for (int i = len; --i >= 0;)
-          sum += SV.fValue(alist1.get(i));
+          sum += SV.dValue(alist1.get(i));
       } else if (!isScalar1) {
         for (int i = len; --i >= 0;)
           sum += list1[i];
       }
-      return mp.addXFloat(sum);
+      return mp.addXDouble(sum);
     }
     if (tok == T.join && x2.tok == T.string) {
       SB sb = new SB();
@@ -2528,8 +2528,8 @@ public class MathExt {
       len = Math.min(len, alist2.size());
     } else {
       sList2 = PT.split(SV.sValue(x2), "\n");
-      list2 = new float[sList2.length];
-      PT.parseFloatArrayData(sList2, list2);
+      list2 = new double[sList2.length];
+      PT.parseDoubleArrayData(sList2, list2);
       len = Math.min(len, list2.length);
     }
 
@@ -2550,17 +2550,17 @@ public class MathExt {
         b = scalar;
       else if (x2.tok == T.varray)
         b = alist2.get(i);
-      else if (Float.isNaN(list2[i]))
+      else if (Double.isNaN(list2[i]))
         b = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList2[i]));
       else
-        b = SV.newF(list2[i]);
+        b = SV.newD(list2[i]);
       if (!isScalar1) {
         if (isArray1)
           a = alist1.get(i);
-        else if (Float.isNaN(list1[i]))
+        else if (Double.isNaN(list1[i]))
           a = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList1[i]));
         else
-          a = SV.newF(list1[i]);
+          a = SV.newD(list1[i]);
       }
       if (tok == T.join) {
         if (a.tok != T.varray) {
@@ -2633,7 +2633,7 @@ public class MathExt {
   }
 
   private boolean evaluateMath(ScriptMathProcessor mp, SV[] args, int tok) {
-    double x = SV.fValue(args[0]);
+    double x = SV.dValue(args[0]);
     switch (tok) {
     case T.sqrt:
       x = Math.sqrt(x);
@@ -2648,7 +2648,7 @@ public class MathExt {
       x = Math.acos(x) * 180 / Math.PI;
       break;
     }
-    return mp.addXFloat((float) x);
+    return mp.addXDouble((double) x);
   }
 
   //  private boolean evaluateVolume(ScriptVariable[] args) throws ScriptException {
@@ -2673,7 +2673,7 @@ public class MathExt {
       // measure({a} {b} "minArray") -- returns array of minimum distance values
       String property = null;
       Lst<Object> points = new Lst<Object>();
-      float[] rangeMinMax = new float[] { Float.MAX_VALUE, Float.MAX_VALUE };
+      double[] rangeMinMax = new double[] { Double.MAX_VALUE, Double.MAX_VALUE };
       String strFormat = null;
       String units = null;
       boolean isAllConnected = false;
@@ -2682,7 +2682,7 @@ public class MathExt {
       boolean isNull = false;
       RadiusData rd = null;
       int nBitSets = 0;
-      float vdw = Float.MAX_VALUE;
+      double vdw = Double.MAX_VALUE;
       boolean asMinArray = false;
       boolean asFloatArray = false;
       for (int i = 0; i < args.length; i++) {
@@ -2697,13 +2697,13 @@ public class MathExt {
           break;
         case T.point3f:
           Point3fi v = new Point3fi();
-          v.setT((P3) args[i].value);
+          v.setT((P3d) args[i].value);
           points.addLast(v);
           nPoints++;
           break;
         case T.integer:
         case T.decimal:
-          rangeMinMax[rPt++ % 2] = SV.fValue(args[i]);
+          rangeMinMax[rPt++ % 2] = SV.dValue(args[i]);
           break;
 
         case T.string:
@@ -2738,13 +2738,13 @@ public class MathExt {
         return false;
       if (isNull)
         return mp.addXStr("");
-      if (vdw != Float.MAX_VALUE && (nBitSets != 2 || nPoints != 2))
+      if (vdw != Double.MAX_VALUE && (nBitSets != 2 || nPoints != 2))
         return mp.addXStr("");
-      rd = (vdw == Float.MAX_VALUE ? new RadiusData(rangeMinMax, 0, null, null)
+      rd = (vdw == Double.MAX_VALUE ? new RadiusData(rangeMinMax, 0, null, null)
           : new RadiusData(null, vdw, EnumType.FACTOR, VDW.AUTO));
       Object obj = (vwr.newMeasurementData(null, points))
           .set(0, null, rd, property, strFormat, units, null, isAllConnected,
-              isNotConnected, null, true, 0, (short) 0, null, Float.NaN)
+              isNotConnected, null, true, 0, (short) 0, null, Double.NaN)
           .getMeasurements(asFloatArray, asMinArray);
       return mp.addXObj(obj);
     case T.angle:
@@ -2755,20 +2755,20 @@ public class MathExt {
       if ((nPoints = args.length) != 2)
         return false;
     }
-    P3[] pts = new P3[nPoints];
+    P3d[] pts = new P3d[nPoints];
     for (int i = 0; i < nPoints; i++) {
       if ((pts[i] = mp.ptValue(args[i], null)) == null)
         return false;
     }
     switch (nPoints) {
     case 2:
-      return mp.addXFloat(pts[0].distance(pts[1]));
+      return mp.addXDouble(pts[0].distance(pts[1]));
     case 3:
       return mp
-          .addXFloat(Measure.computeAngleABC(pts[0], pts[1], pts[2], true));
+          .addXDouble(MeasureD.computeAngleABC(pts[0], pts[1], pts[2], true));
     case 4:
-      return mp.addXFloat(
-          Measure.computeTorsion(pts[0], pts[1], pts[2], pts[3], true));
+      return mp.addXDouble(
+          MeasureD.computeTorsion(pts[0], pts[1], pts[2], pts[3], true));
     }
     return false;
   }
@@ -2776,32 +2776,32 @@ public class MathExt {
   private boolean evaluateModulation(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     String type = "";
-    float t = Float.NaN;
-    P3 t456 = null;
+    double t = Double.NaN;
+    P3d t456 = null;
     switch (args.length) {
     case 0:
       break;
     case 1:
       switch (args[0].tok) {
       case T.point3f:
-        t456 = (P3) args[0].value;
+        t456 = (P3d) args[0].value;
         break;
       case T.string:
         type = args[0].asString();
         break;
       default:
-        t = SV.fValue(args[0]);
+        t = SV.dValue(args[0]);
       }
       break;
     case 2:
       type = SV.sValue(args[0]);
-      t = SV.fValue(args[1]);
+      t = SV.dValue(args[1]);
       break;
     default:
       return false;
     }
     if (t456 == null && t < 1e6)
-      t456 = P3.new3(t, t, t);
+      t456 = P3d.new3(t, t, t);
     SV x = mp.getX();
     BS bs = (x.tok == T.bitset ? (BS) x.value : new BS());
     return mp.addXList(vwr.ms.getModulationList(bs,
@@ -2824,17 +2824,17 @@ public class MathExt {
         && args.length != 2 && args.length != 3 && args.length != 4
         || args.length == 0 || args.length > 4)
       return false;
-    P3 pt1, pt2, pt3;
-    P4 plane = e.planeValue(args[0]);
-    V3 norm, vTemp;
+    P3d pt1, pt2, pt3;
+    P4d plane = e.planeValue(args[0]);
+    V3d norm, vTemp;
     switch (args.length) {
     case 1:
       if (args[0].tok == T.bitset) {
         BS bs = (BS) args[0].value;
         if (bs.cardinality() == 3) {
-          Lst<P3> pts = vwr.ms.getAtomPointVector(bs);
-          return mp.addXPt4(Measure.getPlaneThroughPoints(pts.get(0),
-              pts.get(1), pts.get(2), new V3(), new V3(), new P4()));
+          Lst<P3d> pts = vwr.ms.getAtomPointVector(bs);
+          return mp.addXPt4(MeasureD.getPlaneThroughPoints(pts.get(0),
+              pts.get(1), pts.get(2), new V3d(), new V3d(), new P4d()));
         }
       }
       return (plane != null && mp.addXPt4(plane));
@@ -2842,15 +2842,15 @@ public class MathExt {
       if (tok == T.intersection) {
         // intersection(plane, plane)
         // intersection(point, plane)
-        P4 plane1 = e.planeValue(args[1]);
+        P4d plane1 = e.planeValue(args[1]);
         if (plane1 == null)
           return false;
-        pt3 = new P3();
-        norm = new V3();
-        vTemp = new V3();
+        pt3 = new P3d();
+        norm = new V3d();
+        vTemp = new V3d();
 
         if (plane != null) {
-          Lst<Object> list = Measure.getIntersectionPP(plane, plane1);
+          Lst<Object> list = MeasureD.getIntersectionPP(plane, plane1);
           if (list == null)
             return mp.addXStr("");
           return mp.addXList(list);
@@ -2859,7 +2859,7 @@ public class MathExt {
         if (pt2 == null)
           return mp.addXStr("");
         return mp.addXPt(
-            Measure.getIntersection(pt2, null, plane1, pt3, norm, vTemp));
+            MeasureD.getIntersection(pt2, null, plane1, pt3, norm, vTemp));
       }
       //$FALL-THROUGH$
     case 3:
@@ -2867,23 +2867,23 @@ public class MathExt {
       switch (tok) {
       case T.hkl:
         // hkl(i,j,k)
-        float offset = (args.length == 4 ? SV.fValue(args[3]) : Float.NaN);
-        return mp.addXPt4(e.getHklPlane(P3.new3(SV.fValue(args[0]),
-            SV.fValue(args[1]), SV.fValue(args[2])), offset, null));
+        double offset = (args.length == 4 ? SV.dValue(args[3]) : Double.NaN);
+        return mp.addXPt4(e.getHklPlane(P3d.new3(SV.dValue(args[0]),
+            SV.dValue(args[1]), SV.dValue(args[2])), offset, null));
       case T.intersection:
         pt1 = mp.ptValue(args[0], null);
         pt2 = mp.ptValue(args[1], null);
         if (pt1 == null || pt2 == null)
           return mp.addXStr("");
-        V3 vLine = V3.newV(pt2);
+        V3d vLine = V3d.newV(pt2);
         vLine.normalize();
-        P4 plane2 = e.planeValue(args[2]);
+        P4d plane2 = e.planeValue(args[2]);
         if (plane2 != null) {
           // intersection(ptLine, vLine, plane)
-          pt3 = new P3();
-          norm = new V3();
-          vTemp = new V3();
-          pt1 = Measure.getIntersection(pt1, vLine, plane2, pt3, norm, vTemp);
+          pt3 = new P3d();
+          norm = new V3d();
+          vTemp = new V3d();
+          pt1 = MeasureD.getIntersection(pt1, vLine, plane2, pt3, norm, vTemp);
           if (pt1 == null)
             return mp.addXStr("");
           return mp.addXPt(pt1);
@@ -2894,29 +2894,29 @@ public class MathExt {
         // intersection(ptLine, vLine, ptCenter, radius)
         // intersection(ptLine, vLine, pt2); 
         // IE intersection of plane perp to line through pt2
-        V3 v = new V3();
-        pt3 = P3.newP(pt3);
+        V3d v = new V3d();
+        pt3 = P3d.newP(pt3);
         if (args.length == 3) {
           // intersection(ptLine, vLine, pt2); 
           // IE intersection of plane perp to line through pt2
-          Measure.projectOntoAxis(pt3, pt1, vLine, v);
+          MeasureD.projectOntoAxis(pt3, pt1, vLine, v);
           return mp.addXPt(pt3);
         }
         // intersection(ptLine, vLine, ptCenter, radius)
         // IE intersection of a line with a sphere -- return list of 0, 1, or 2 points
-        float r = SV.fValue(args[3]);
-        P3 ptCenter = P3.newP(pt3);
-        Measure.projectOntoAxis(pt3, pt1, vLine, v);
-        float d = ptCenter.distance(pt3);
-        Lst<P3> l = new Lst<P3>();
+        double r = SV.dValue(args[3]);
+        P3d ptCenter = P3d.newP(pt3);
+        MeasureD.projectOntoAxis(pt3, pt1, vLine, v);
+        double d = ptCenter.distance(pt3);
+        Lst<P3d> l = new Lst<P3d>();
         if (d == r) {
           l.addLast(pt3);
         } else if (d < r) {
-          d = (float) Math.sqrt(r * r - d * d);
+          d = (double) Math.sqrt(r * r - d * d);
           v.scaleAdd2(d, vLine, pt3);
-          l.addLast(P3.newP(v));
+          l.addLast(P3d.newP(v));
           v.scaleAdd2(-d, vLine, pt3);
-          l.addLast(P3.newP(v));
+          l.addLast(P3d.newP(v));
         }
         return mp.addXList(l);
       }
@@ -2925,22 +2925,22 @@ public class MathExt {
       case T.decimal:
         if (args.length == 3) {
           // plane(r theta phi)
-          float r = SV.fValue(args[0]);
-          float theta = SV.fValue(args[1]); // longitude, azimuthal, in xy plane
-          float phi = SV.fValue(args[2]); // 90 - latitude, polar, from z
+          double r = SV.dValue(args[0]);
+          double theta = SV.dValue(args[1]); // longitude, azimuthal, in xy plane
+          double phi = SV.dValue(args[2]); // 90 - latitude, polar, from z
           // rotate {0 0 r} about y axis need to stay in the x-z plane
-          norm = V3.new3(0, 0, 1);
-          pt2 = P3.new3(0, 1, 0);
-          Quat q = Quat.newVA(pt2, phi);
-          q.getMatrixd().rotate(norm);
+          norm = V3d.new3(0, 0, 1);
+          pt2 = P3d.new3(0, 1, 0);
+          Qd q = Qd.newVA(pt2, phi);
+          q.getMatrix().rotate(norm);
           // rotate that vector around z
           pt2.set(0, 0, 1);
-          q = Quat.newVA(pt2, theta);
-          q.getMatrixd().rotate(norm);
+          q = Qd.newVA(pt2, theta);
+          q.getMatrix().rotate(norm);
           pt2.setT(norm);
           pt2.scale(r);
-          plane = new P4();
-          Measure.getPlaneThroughPoint(pt2, norm, plane);
+          plane = new P4d();
+          MeasureD.getPlaneThroughPoint(pt2, norm, plane);
           return mp.addXPt4(plane);
         }
         break;
@@ -2954,14 +2954,14 @@ public class MathExt {
             && (args[2].tok == T.bitset || args[2].tok == T.point3f)
                 ? mp.ptValue(args[2], null)
                 : null);
-        norm = V3.newV(pt2);
+        norm = V3d.newV(pt2);
         if (pt3 == null) {
-          plane = new P4();
+          plane = new P4d();
           if (args.length == 2 || args[2].tok != T.integer
               && args[2].tok != T.decimal && !args[2].asBoolean()) {
             // plane(<point1>,<point2>) or 
             // plane(<point1>,<point2>,false)
-            pt3 = P3.newP(pt1);
+            pt3 = P3d.newP(pt1);
             pt3.add(pt2);
             pt3.scale(0.5f);
             norm.sub(pt1);
@@ -2972,28 +2972,28 @@ public class MathExt {
           } else {
             // plane(<point1>,<point2>,f)
             norm.sub(pt1);
-            pt3 = new P3();
-            pt3.scaleAdd2(args[2].asFloat(), norm, pt1);
+            pt3 = new P3d();
+            pt3.scaleAdd2(args[2].asDouble(), norm, pt1);
           }
-          Measure.getPlaneThroughPoint(pt3, norm, plane);
+          MeasureD.getPlaneThroughPoint(pt3, norm, plane);
           return mp.addXPt4(plane);
         }
         // plane(<point1>,<point2>,<point3>)
         // plane(<point1>,<point2>,<point3>,<pointref>)
-        V3 vAB = new V3();
-        P3 ptref = (args.length == 4 ? mp.ptValue(args[3], null) : null);
-        float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3, ptref,
+        V3d vAB = new V3d();
+        P3d ptref = (args.length == 4 ? mp.ptValue(args[3], null) : null);
+        double nd = MeasureD.getDirectedNormalThroughPoints(pt1, pt2, pt3, ptref,
             norm, vAB);
-        return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));
+        return mp.addXPt4(P4d.new4(norm.x, norm.y, norm.z, nd));
       }
     }
     if (args.length != 4)
       return false;
-    float x = SV.fValue(args[0]);
-    float y = SV.fValue(args[1]);
-    float z = SV.fValue(args[2]);
-    float w = SV.fValue(args[3]);
-    return mp.addXPt4(P4.new4(x, y, z, w));
+    double x = SV.dValue(args[0]);
+    double y = SV.dValue(args[1]);
+    double z = SV.dValue(args[2]);
+    double w = SV.dValue(args[3]);
+    return mp.addXPt4(P4d.new4(x, y, z, w));
   }
 
   private boolean evaluatePoint(ScriptMathProcessor mp, SV[] args) {
@@ -3038,16 +3038,16 @@ public class MathExt {
       if (s == null)
         s = SV.sValue(args[0]);
       Object pt = Escape.uP(s);
-      return (pt instanceof P3 ? mp.addXPt((P3) pt) : mp.addXStr("" + pt));
+      return (pt instanceof P3d ? mp.addXPt((P3d) pt) : mp.addXStr("" + pt));
     case 2:
-      P3 pt3;
+      P3d pt3;
       switch (args[1].tok) {
       case T.off:
       case T.on:
         // to/from screen coordinates
         switch (args[0].tok) {
         case T.point3f:
-          pt3 = P3.newP((T3) args[0].value);
+          pt3 = P3d.newP((T3d) args[0].value);
           break;
         case T.bitset:
           pt3 = vwr.ms.getAtomSetCenter((BS) args[0].value);
@@ -3074,8 +3074,8 @@ public class MathExt {
         Lst<SV> sv = args[0].getList();
         if (sv == null || sv.size() != 4)
           return false;
-        P3 pt1 = SV.ptValue(args[1]);
-        pt3 = P3.newP(SV.ptValue(sv.get(0)));
+        P3d pt1 = SV.ptValue(args[1]);
+        pt3 = P3d.newP(SV.ptValue(sv.get(0)));
         pt3.scaleAdd2(pt1.x, SV.ptValue(sv.get(1)), pt3);
         pt3.scaleAdd2(pt1.y, SV.ptValue(sv.get(2)), pt3);
         pt3.scaleAdd2(pt1.z, SV.ptValue(sv.get(3)), pt3);
@@ -3086,10 +3086,10 @@ public class MathExt {
       return mp.addXPt(pt3);
     case 3:
       return mp.addXPt(
-          P3.new3(args[0].asFloat(), args[1].asFloat(), args[2].asFloat()));
+          P3d.new3(args[0].asDouble(), args[1].asDouble(), args[2].asDouble()));
     case 4:
-      return mp.addXPt4(P4.new4(args[0].asFloat(), args[1].asFloat(),
-          args[2].asFloat(), args[3].asFloat()));
+      return mp.addXPt4(P4d.new4(args[0].asDouble(), args[1].asDouble(),
+          args[2].asDouble(), args[3].asDouble()));
     }
   }
 
@@ -3117,7 +3117,7 @@ public class MathExt {
 
   private boolean evaluateQuaternion(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
-    P3 pt0 = null;
+    P3d pt0 = null;
     // quaternion([quaternion array]) // mean
     // quaternion([quaternion array1], [quaternion array2], "relative") //
     // difference array
@@ -3187,100 +3187,100 @@ public class MathExt {
     default:
       return false;
     }
-    Quat q = null;
-    Quat[] qs = null;
-    P4 p4 = null;
+    Qd q = null;
+    Qd[] qs = null;
+    P4d p4 = null;
     switch (nArgs) {
     case 0:
-      return mp.addXPt4(vwr.tm.getRotationQ().toPoint4f());
+      return mp.addXPt4(vwr.tm.getRotationQ().toPoint4d());
     case 1:
     default:
       if (tok == T.quaternion && args[0].tok == T.varray) {
-        Quat[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
-        Object mean = Quat.sphereMean(data1, null, 0.0001f);
-        q = (mean instanceof Quat ? (Quat) mean : null);
+        Qd[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
+        Object mean = Qd.sphereMean(data1, null, 0.0001f);
+        q = (mean instanceof Qd ? (Qd) mean : null);
         break;
       } else if (tok == T.quaternion && args[0].tok == T.bitset) {
         qs = vwr.getAtomGroupQuaternions((BS) args[0].value, nMax);
       } else if (args[0].tok == T.matrix3f) {
-        q = Quat.newM((M3d) args[0].value);
+        q = Qd.newM((M3d) args[0].value);
       } else if (args[0].tok == T.point4f) {
-        p4 = (P4) args[0].value;
+        p4 = (P4d) args[0].value;
       } else {
         String s = SV.sValue(args[0]);
         Object v = Escape.uP(s.equalsIgnoreCase("best")
             ? vwr.getOrientation(T.best, "best", null).toString()
             : s);
-        if (!(v instanceof P4))
+        if (!(v instanceof P4d))
           return false;
-        p4 = (P4) v;
+        p4 = (P4d) v;
       }
       if (tok == T.axisangle)
-        q = Quat.newVA(P3.new3(p4.x, p4.y, p4.z), p4.w);
+        q = Qd.newVA(P3d.new3(p4.x, p4.y, p4.z), p4.w);
       break;
     case 2:
       if (tok == T.quaternion) {
         if (args[0].tok == T.varray && args[1].tok == T.varray) {
-          Quat[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
-          Quat[] data2 = e.getQuaternionArray(args[1].getList(), T.list);
-          qs = Quat.div(data2, data1, nMax, isRelative);
+          Qd[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
+          Qd[] data2 = e.getQuaternionArray(args[1].getList(), T.list);
+          qs = Qd.div(data2, data1, nMax, isRelative);
           break;
         }
         if (args[0].tok == T.varray && args[1].tok == T.on) {
-          Quat[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
-          float[] stddev = new float[1];
-          Quat.sphereMean(data1, stddev, 0.0001f);
-          return mp.addXFloat(stddev[0]);
+          Qd[] data1 = e.getQuaternionArray(args[0].getList(), T.list);
+          double[] stddev = new double[1];
+          Qd.sphereMean(data1, stddev, 0.0001f);
+          return mp.addXDouble(stddev[0]);
         }
         if (args[0].tok == T.bitset && args[1].tok == T.bitset) {
-          Quat[] data1 = vwr.getAtomGroupQuaternions((BS) args[0].value,
+          Qd[] data1 = vwr.getAtomGroupQuaternions((BS) args[0].value,
               Integer.MAX_VALUE);
-          Quat[] data2 = vwr.getAtomGroupQuaternions((BS) args[1].value,
+          Qd[] data2 = vwr.getAtomGroupQuaternions((BS) args[1].value,
               Integer.MAX_VALUE);
-          qs = Quat.div(data2, data1, nMax, isRelative);
+          qs = Qd.div(data2, data1, nMax, isRelative);
           break;
         }
       }
-      P3 pt1 = mp.ptValue(args[1], null);
+      P3d pt1 = mp.ptValue(args[1], null);
       p4 = e.planeValue(args[0]);
       if (pt1 != null)
-        q = Quat.getQuaternionFrame(P3.new3(0, 0, 0), pt0, pt1);
+        q = Qd.getQuaternionFrame(P3d.new3(0, 0, 0), pt0, pt1);
       else
-        q = Quat.newVA(pt0, SV.fValue(args[1]));
+        q = Qd.newVA(pt0, SV.dValue(args[1]));
       break;
     case 3:
       if (args[0].tok == T.point4f) {
-        P3 pt = (args[2].tok == T.point3f ? (P3) args[2].value
+        P3d pt = (args[2].tok == T.point3f ? (P3d) args[2].value
             : vwr.ms.getAtomSetCenter((BS) args[2].value));
-        return mp.addXStr(Escape.drawQuat(Quat.newP4((P4) args[0].value), "q",
+        return mp.addXStr(Escape.drawQuat(Qd.newP4((P4d) args[0].value), "q",
             SV.sValue(args[1]), pt, 1f));
       }
-      P3[] pts = new P3[3];
+      P3d[] pts = new P3d[3];
       for (int i = 0; i < 3; i++)
-        pts[i] = (args[i].tok == T.point3f ? (P3) args[i].value
+        pts[i] = (args[i].tok == T.point3f ? (P3d) args[i].value
             : vwr.ms.getAtomSetCenter((BS) args[i].value));
-      q = Quat.getQuaternionFrame(pts[0], pts[1], pts[2]);
+      q = Qd.getQuaternionFrame(pts[0], pts[1], pts[2]);
       break;
     case 4:
       if (tok == T.quaternion)
-        p4 = P4.new4(SV.fValue(args[1]), SV.fValue(args[2]), SV.fValue(args[3]),
-            SV.fValue(args[0]));
+        p4 = P4d.new4(SV.dValue(args[1]), SV.dValue(args[2]), SV.dValue(args[3]),
+            SV.dValue(args[0]));
       else
-        q = Quat.newVA(
-            P3.new3(SV.fValue(args[0]), SV.fValue(args[1]), SV.fValue(args[2])),
-            SV.fValue(args[3]));
+        q = Qd.newVA(
+            P3d.new3(SV.dValue(args[0]), SV.dValue(args[1]), SV.dValue(args[2])),
+            SV.dValue(args[3]));
       break;
     }
     if (qs != null) {
       if (nMax != Integer.MAX_VALUE) {
-        Lst<P4> list = new Lst<P4>();
+        Lst<P4d> list = new Lst<P4d>();
         for (int i = 0; i < qs.length; i++)
-          list.addLast(qs[i].toPoint4f());
+          list.addLast(qs[i].toPoint4d());
         return mp.addXList(list);
       }
       q = (qs.length > 0 ? qs[0] : null);
     }
-    return mp.addXPt4((q == null ? Quat.newP4(p4) : q).toPoint4f());
+    return mp.addXPt4((q == null ? Qd.newP4(p4) : q).toPoint4d());
   }
 
   private Random rand;
@@ -3290,23 +3290,23 @@ public class MathExt {
       return false;
     if (rand == null)
       rand = new Random();
-    float lower = 0, upper = 1;
+    double lower = 0, upper = 1;
     switch (args.length) {
     case 3:
-      rand.setSeed((int) SV.fValue(args[2]));
+      rand.setSeed((int) SV.dValue(args[2]));
       //$FALL-THROUGH$
     case 2:
-      upper = SV.fValue(args[1]);
+      upper = SV.dValue(args[1]);
       //$FALL-THROUGH$
     case 1:
-      lower = SV.fValue(args[0]);
+      lower = SV.dValue(args[0]);
       //$FALL-THROUGH$
     case 0:
       break;
     default:
       return false;
     }
-    return mp.addXFloat((rand.nextFloat() * (upper - lower)) + lower);
+    return mp.addXDouble((rand.nextFloat() * (upper - lower)) + lower);
   }
 
   private boolean evaluateRowCol(ScriptMathProcessor mp, SV[] args, int tok)
@@ -3452,9 +3452,9 @@ public class MathExt {
       return mp.addX(vwr.jsEvalSV(s));
     }
     s = sb.toString();
-    float f;
-    return (Float.isNaN(f = PT.parseFloatStrict(s)) ? mp.addXStr(s)
-        : s.indexOf(".") >= 0 ? mp.addXFloat(f) : mp.addXInt(PT.parseInt(s)));
+    double f;
+    return (Double.isNaN(f = PT.parseDoubleStrict(s)) ? mp.addXStr(s)
+        : s.indexOf(".") >= 0 ? mp.addXDouble(f) : mp.addXInt(PT.parseInt(s)));
   }
 
   /**
@@ -3656,7 +3656,7 @@ public class MathExt {
     if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
       return false;
     BS bsAtoms = (x1 == null || isPoint ? null : (BS) x1.value);
-    P3 pt1 = (isPoint ? SV.ptValue(x1) : null);
+    P3d pt1 = (isPoint ? SV.ptValue(x1) : null);
     if (!isPoint && bsAtoms == null)
       bsAtoms = vwr.getThisModelAtoms();
     if (bsAtoms != null && bsAtoms.isEmpty())
@@ -3676,7 +3676,7 @@ public class MathExt {
     boolean invariant = false;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
-    P3 pt2 = null;
+    P3d pt2 = null;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
@@ -3713,15 +3713,15 @@ public class MathExt {
     }
 
     // allow for [ h k l ] lattice translation
-    P3 trans = null;
+    P3d trans = null;
     if (narg > apt && args[apt].tok == T.varray) {
       List<SV> a = args[apt++].getList();
       if (a.size() != 3)
         return false;
-      trans = P3.new3(SV.fValue(a.get(0)), SV.fValue(a.get(1)),
-          SV.fValue(a.get(2)));
+      trans = P3d.new3(SV.dValue(a.get(0)), SV.dValue(a.get(1)),
+          SV.dValue(a.get(2)));
     } else if (narg > apt && args[apt].tok == T.integer) {
-      SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3(), 0,
+      SimpleUnitCell.ijkToPoint3f(SV.iValue(args[apt++]), trans = new P3d(), 0,
           0);
     }
     if (pt1 == null && (pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
@@ -3767,10 +3767,10 @@ public class MathExt {
         o = map.get(xyz);
         return (o == null ? mp.addXStr("") : mp.addXObj(o));
       }
-      P3 centerPt;
+      P3d centerPt;
       try {
         if (o instanceof SV) {
-          centerPt = (P3) ((SV) map.get("center")).value;
+          centerPt = (P3d) ((SV) map.get("center")).value;
           SV obj = (SV) o;
           if (obj.tok == T.matrix3f) {
             m = (M3d) obj.value;
@@ -3780,7 +3780,7 @@ public class MathExt {
             return false;
           }
         } else {
-          centerPt = (P3) map.get("center");
+          centerPt = (P3d) map.get("center");
           if (o instanceof M3d) {
             m = (M3d) o;
           } else {
@@ -3796,7 +3796,7 @@ public class MathExt {
         }
         if (pt1 == null)
           return mp.addXObj(m);
-        pt1 = P3.newP(pt1);
+        pt1 = P3d.newP(pt1);
         pt1.sub(centerPt);
         m.rotate(pt1);
         pt1.add(centerPt);
@@ -3903,7 +3903,7 @@ public class MathExt {
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     BS bs = (isAtomProperty ? SV.getBitSet(mp.getX(), false) : null);
-    float distance = 0;
+    double distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;
     ModelSet ms = vwr.ms;
@@ -3924,7 +3924,7 @@ public class MathExt {
       if (len < 2
           || len == 3 && args[1].tok == T.varray && args[2].tok != T.varray)
         return false;
-      distance = (isVdw ? 100 : SV.fValue(args[0]));
+      distance = (isVdw ? 100 : SV.dValue(args[0]));
       switch (tok = args[1].tok) {
       case T.on:
       case T.off:
@@ -4048,11 +4048,11 @@ public class MathExt {
         Lst<SV> l = args[1].getList();
         if (l == null)
           return false;
-        P3[] oabc = null;
+        P3d[] oabc = null;
         SymmetryInterface uc = null;
         if (l.size() != 4)
           return false;
-        oabc = new P3[4];
+        oabc = new P3d[4];
         for (int i = 0; i < 4; i++) {
           if ((oabc[i] = SV.ptValue(l.get(i))) == null)
             return false;
@@ -4089,23 +4089,23 @@ public class MathExt {
       // within (distance, coord, [point or atom center] )
       break;
     }
-    P4 plane = null;
-    P3 pt = null;
+    P4d plane = null;
+    P3d pt = null;
     Lst<SV> pts1 = null;
     int last = args.length - 1;
     switch (args[last].tok) {
     case T.point4f:
-      plane = (P4) args[last].value;
+      plane = (P4d) args[last].value;
       break;
     case T.point3f:
-      pt = (P3) args[last].value;
+      pt = (P3d) args[last].value;
       if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
-        plane = e.getHklPlane(pt, Float.NaN, null);
+        plane = e.getHklPlane(pt, Double.NaN, null);
       break;
     case T.varray:
       pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList() : null);
       pt = (last == 2 ? SV.ptValue(args[1])
-          : last == 1 ? P3.new3(Float.NaN, 0, 0) : null);
+          : last == 1 ? P3d.new3(Double.NaN, 0, 0) : null);
       break;
     }
     if (plane != null)
@@ -4127,12 +4127,12 @@ public class MathExt {
         // within(dist, [pt1, pt2, pt3...])
         // {*}.within(0.1, [points])
         Lst<SV> sv = args[last].getList();
-        P3[] ap3 = new P3[sv.size()];
+        P3d[] ap3 = new P3d[sv.size()];
         for (int i = ap3.length; --i >= 0;)
           ap3[i] = SV.ptValue(sv.get(i));
-        P3[] ap31 = null;
+        P3d[] ap31 = null;
         if (pts1 != null) {
-          ap31 = new P3[pts1.size()];
+          ap31 = new P3d[pts1.size()];
           for (int i = ap31.length; --i >= 0;)
             ap31[i] = SV.ptValue(pts1.get(i));
         }
@@ -4146,7 +4146,7 @@ public class MathExt {
         case T.bitset:
           return mp.addXBs((BS) ret[0]);
         case T.point:
-          return mp.addXPt((P3) ret[0]);
+          return mp.addXPt((P3d) ret[0]);
         case T.list:
           return mp.addXList((Lst<?>) ret[0]);
         case T.array: // 
@@ -4215,21 +4215,21 @@ public class MathExt {
 
   ///////// private methods used by evaluateXXXXX ////////
 
-  private BS getAtomsNearSurface(float distance, String surfaceId) {
+  private BS getAtomsNearSurface(double distance, String surfaceId) {
     Object[] data = new Object[] { surfaceId, null, null };
     if (e.getShapePropertyData(JC.SHAPE_ISOSURFACE, "getVertices", data))
-      return getAtomsNearPts(distance, (T3[]) data[1], (BS) data[2]);
+      return getAtomsNearPts(distance, (T3d[]) data[1], (BS) data[2]);
     data[1] = Integer.valueOf(0);
     data[2] = Integer.valueOf(-1);
     if (e.getShapePropertyData(JC.SHAPE_DRAW, "getCenter", data))
-      return vwr.getAtomsNearPt(distance, (P3) data[2], null);
-    data[1] = Float.valueOf(distance);
+      return vwr.getAtomsNearPt(distance, (P3d) data[2], null);
+    data[1] = Double.valueOf(distance);
     if (e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "getAtomsWithin", data))
       return (BS) data[2];
     return new BS();
   }
 
-  private BS getAtomsNearPts(float distance, T3[] points, BS bsInclude) {
+  private BS getAtomsNearPts(double distance, T3d[] points, BS bsInclude) {
     BS bsResult = new BS();
     if (points.length == 0 || bsInclude != null && bsInclude.isEmpty())
       return bsResult;
@@ -4252,7 +4252,7 @@ public class MathExt {
 
   @SuppressWarnings("unchecked")
   public Object getMinMax(Object floatOrSVArray, int tok, boolean isSV) {
-    float[] data = null;
+    double[] data = null;
     Lst<?> sv = null;
     int ndata = 0;
     Map<String, Integer> htPivot = null;
@@ -4260,7 +4260,7 @@ public class MathExt {
       if (AU.isAF(floatOrSVArray)) {
         if (tok == T.pivot)
           return "NaN";
-        data = (float[]) floatOrSVArray;
+        data = (double[]) floatOrSVArray;
         ndata = data.length;
         if (ndata == 0)
           break;
@@ -4277,9 +4277,9 @@ public class MathExt {
               return getMinMaxPoint(sv, tok);
             if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
               Object pt = SV.ptValue(sv0);
-              if (pt instanceof P3)
+              if (pt instanceof P3d)
                 return getMinMaxPoint(sv, tok);
-              if (pt instanceof P4)
+              if (pt instanceof P4d)
                 return getMinMaxQuaternion((Lst<SV>) sv, tok);
               break;
             }
@@ -4298,11 +4298,11 @@ public class MathExt {
         break;
       case T.min:
         isMin = true;
-        sum = Float.MAX_VALUE;
+        sum = Double.MAX_VALUE;
         minMax = Integer.MAX_VALUE;
         break;
       case T.max:
-        sum = -Float.MAX_VALUE;
+        sum = -Double.MAX_VALUE;
         minMax = -Integer.MAX_VALUE;
         break;
       default:
@@ -4315,8 +4315,8 @@ public class MathExt {
       for (int i = ndata; --i >= 0;) {
         Object o = (sv == null ? null : sv.get(i));
         SV svi = (!isSV ? null : o == null ? SV.vF : (SV) o);
-        float v = (isPivot ? 1 : data == null ? SV.fValue(svi) : data[i]);
-        if (Float.isNaN(v))
+        double v = (isPivot ? 1 : data == null ? SV.dValue(svi) : data[i]);
+        if (Double.isNaN(v))
           continue;
         n++;
         switch (tok) {
@@ -4370,7 +4370,7 @@ public class MathExt {
         sum = sum2;
         break;
       }
-      return Float.valueOf((float) sum);
+      return Double.valueOf((double) sum);
     }
     return "NaN";
   }
@@ -4384,11 +4384,11 @@ public class MathExt {
    */
   @SuppressWarnings("unchecked")
   private Object getMinMaxPoint(Object pointOrSVArray, int tok) {
-    P3[] data = null;
+    P3d[] data = null;
     Lst<SV> sv = null;
     int ndata = 0;
-    if (pointOrSVArray instanceof Quat[]) {
-      data = (P3[]) pointOrSVArray;
+    if (pointOrSVArray instanceof Qd[]) {
+      data = (P3d[]) pointOrSVArray;
       ndata = data.length;
     } else if (pointOrSVArray instanceof Lst<?>) {
       sv = (Lst<SV>) pointOrSVArray;
@@ -4396,11 +4396,11 @@ public class MathExt {
     }
     if (sv == null && data == null)
       return "NaN";
-    P3 result = new P3();
-    float[] fdata = new float[ndata];
+    P3d result = new P3d();
+    double[] fdata = new double[ndata];
     for (int xyz = 0; xyz < 3; xyz++) {
       for (int i = 0; i < ndata; i++) {
-        P3 pt = (data == null ? SV.ptValue(sv.get(i)) : data[i]);
+        P3d pt = (data == null ? SV.ptValue(sv.get(i)) : data[i]);
         if (pt == null)
           return "NaN";
         switch (xyz) {
@@ -4418,7 +4418,7 @@ public class MathExt {
       Object f = getMinMax(fdata, tok, true);
       if (!(f instanceof Number))
         return "NaN";
-      float value = ((Number) f).floatValue();
+      double value = ((Number) f).doubleValue();
       switch (xyz) {
       case 0:
         result.x = value;
@@ -4435,7 +4435,7 @@ public class MathExt {
   }
 
   private Object getMinMaxQuaternion(Lst<SV> svData, int tok) {
-    Quat[] data;
+    Qd[] data;
     switch (tok) {
     case T.min:
     case T.max:
@@ -4450,13 +4450,13 @@ public class MathExt {
       data = e.getQuaternionArray(svData, T.list);
       if (data == null)
         break;
-      float[] retStddev = new float[1];
-      Quat result = Quat.sphereMean(data, retStddev, 0.0001f);
+      double[] retStddev = new double[1];
+      Qd result = Qd.sphereMean(data, retStddev, 0.0001f);
       switch (tok) {
       case T.average:
         return result;
       case T.stddev:
-        return Float.valueOf(retStddev[0]);
+        return Double.valueOf(retStddev[0]);
       }
       break;
     }
@@ -4489,7 +4489,7 @@ public class MathExt {
     return null;
   }
 
-  public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly, float distance,
+  public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly, double distance,
                               RadiusData rd, boolean warnMultiModel) {
     boolean withinAllModels;
     BS bs;
@@ -4514,17 +4514,17 @@ public class MathExt {
       boolean setBfirst = (!localOnly || bsA.cardinality() < bsB.cardinality());
       if (setBfirst) {
         bs = vwr.ms.getAtomsWithinRadius(distance, bsA, withinAllModels,
-            (Float.isNaN(distance) ? rd : null), null);
+            (Double.isNaN(distance) ? rd : null), null);
         bsB.and(bs);
       }
       if (localOnly) {
         // we can just get the near atoms for A as well.
         bs = vwr.ms.getAtomsWithinRadius(distance, bsB, withinAllModels,
-            (Float.isNaN(distance) ? rd : null), null);
+            (Double.isNaN(distance) ? rd : null), null);
         bsA.and(bs);
         if (!setBfirst) {
           bs = vwr.ms.getAtomsWithinRadius(distance, bsA, withinAllModels,
-              (Float.isNaN(distance) ? rd : null), null);
+              (Double.isNaN(distance) ? rd : null), null);
           bsB.and(bs);
         }
         // If the two sets are not the same,

@@ -28,11 +28,11 @@ import java.util.Random;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.api.Interface;
 import org.jmol.jvxl.data.VolumeData;
@@ -47,15 +47,15 @@ import org.jmol.viewer.Viewer;
 class IsoMOReader extends AtomDataReader {
 
   private Random random;
-  private P3[] points;
-  private V3 vTemp;
+  private P3d[] points;
+  private V3d vTemp;
   private QuantumCalculation q;
   private Lst<Map<String, Object>> mos;
   private boolean isNci;
-  private float[] coef;
+  private double[] coef;
   private int[][] dfCoefMaps;
-  private float[] linearCombination;
-  private float[][] coefs;
+  private double[] linearCombination;
+  private double[][] coefs;
   private boolean isElectronDensityCalc;
 
   IsoMOReader() {
@@ -118,15 +118,15 @@ class IsoMOReader extends AtomDataReader {
         if (linearCombination == null) {
           for (int i = params.title.length; --i >= 0;)
             fixTitleLine(i, mo);
-          coef = (float[]) mo.get("coefficients");
+          coef = (double[]) mo.get("coefficients");
           dfCoefMaps = (int[][]) mo.get("dfCoefMaps");
         } else {
-          coefs = AU.newFloat2(mos.size());
+          coefs = AU.newDouble2(mos.size());
           for (int i = 1; i < linearCombination.length; i += 2) {
             int j = (int) linearCombination[i];
             if (j > mos.size() || j < 1)
               return;
-            coefs[j - 1] = (float[]) mos.get(j - 1).get("coefficients");
+            coefs[j - 1] = (double[]) mos.get(j - 1).get("coefficients");
           }
           for (int i = params.title.length; --i >= 0;)
             fixTitleLine(i, null);
@@ -137,10 +137,10 @@ class IsoMOReader extends AtomDataReader {
     volumeData.sr = null;
     if (isMapData && !isElectronDensityCalc && !haveVolumeData) {
       volumeData.doIterate = false;
-      volumeData.setVoxelDataAsArray(voxelData = new float[1][1][1]);
+      volumeData.setVoxelDataAsArray(voxelData = new double[1][1][1]);
       volumeData.sr = this;
-      points = new P3[1];
-      points[0] = new P3();
+      points = new P3d[1];
+      points[0] = new P3d();
       if (!setupCalculation())
         q = null;
     } else if (params.psi_monteCarloCount > 0) {
@@ -185,13 +185,13 @@ class IsoMOReader extends AtomDataReader {
               : QS.getMOString(params.qm_moLinearCombination));
     if (line.indexOf("%N") >= 0)
       line = PT.formatStringS(line, "N", "" + params.qmOrbitalCount);
-    Float energy = null;
+    Number energy = null;
     if (mo == null) {
       // check to see if all orbitals have the same energy
       for (int i = 0; i < linearCombination.length; i += 2)
         if (linearCombination[i] != 0) {
           mo = mos.get((int) linearCombination[i + 1] - 1);
-          Float e = (Float) mo.get("energy");
+          Number e = (Number) mo.get("energy");
           if (energy == null) {
             if (e == null)
               break;
@@ -203,13 +203,13 @@ class IsoMOReader extends AtomDataReader {
         }
     } else {
       if (mo.containsKey("energy"))
-        energy = (Float) mo.get("energy");
+        energy = (Number) mo.get("energy");
     }
     if (line.indexOf("%E") >= 0) {
       line = PT.formatStringS(line, "E",
           energy != null && ++rep != 0 ? "" + energy : "");
     } else if (energy != null) {
-        String s = PT.formatStringF(line, "E", energy.floatValue());
+        String s = PT.formatStringF(line, "E", energy.doubleValue());
         if (s != line) {
           line = s;
           rep++;
@@ -234,8 +234,8 @@ class IsoMOReader extends AtomDataReader {
               ? "" + mo.get("symmetry")
               : "");
     if (line.indexOf("%O") >= 0) {
-      Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
-      float o = (obj == null ? 0 : obj.floatValue());
+      Number obj = (mo == null ? null : (Number) mo.get("occupancy"));
+      double o = (obj == null ? 0 : obj.doubleValue());
       line = PT.formatStringS(line, "O", obj != null 
           && params.qm_moLinearCombination == null && ++rep != 0
           ? (o == (int) o ? "" + (int) o : PT.formatF(o, 0, 4, false, false))
@@ -256,7 +256,7 @@ class IsoMOReader extends AtomDataReader {
         : rep > 0 && !line.trim().endsWith("=") ? line.substring(1) : "");
   }
 
-  private final float[] vDist = new float[3];
+  private final double[] vDist = new double[3];
 
   @Override
   protected void readSurfaceData(boolean isMapData) throws Exception {
@@ -268,19 +268,19 @@ class IsoMOReader extends AtomDataReader {
     }
     if (points != null)
       return; // already done
-    points = new P3[1000];
+    points = new P3d[1000];
     for (int j = 0; j < 1000; j++)
-      points[j] = new P3();
+      points[j] = new P3d();
     if (params.thePlane != null)
-      vTemp = new V3();
+      vTemp = new V3d();
     // presumes orthogonal
     for (int i = 0; i < 3; i++)
       vDist[i] = volumeData.volumetricVectorLengths[i]
           * volumeData.voxelCounts[i];
-    volumeData.setVoxelDataAsArray(voxelData = new float[1000][1][1]);
+    volumeData.setVoxelDataAsArray(voxelData = new double[1000][1][1]);
     getValues();
-    float value;
-    float f = 0;
+    double value;
+    double f = 0;
     for (int j = 0; j < 1000; j++)
       if ((value = Math.abs(voxelData[j][0][0])) > f)
         f = value;
@@ -288,13 +288,13 @@ class IsoMOReader extends AtomDataReader {
       return;
     if (f > params.cutoff)
       f = params.cutoff;
-    //minMax = new float[] {(params.mappedDataMin  = -f / 2), 
+    //minMax = new double[] {(params.mappedDataMin  = -f / 2), 
     //(params.mappedDataMax = f / 2)};
     for (int i = 0; i < params.psi_monteCarloCount;) {
       getValues();
       for (int j = 0; j < 1000; j++) {
         value = voxelData[j][0][0];
-        float absValue = Math.abs(value);
+        double absValue = Math.abs(value);
         if (absValue <= getRnd(f))
           continue;
         addVC(points[j], value, 0, false);
@@ -322,18 +322,18 @@ class IsoMOReader extends AtomDataReader {
           volumeData.volumetricOrigin.y + getRnd(vDist[1]),
           volumeData.volumetricOrigin.z + getRnd(vDist[2]));
       if (params.thePlane != null)
-        Measure
+        MeasureD
             .getPlaneProjection(points[j], params.thePlane, points[j], vTemp);
     }
     createOrbital();
   }
 
   @Override
-  public float getValueAtPoint(T3 pt, boolean getSource) {
+  public double getValueAtPoint(T3d pt, boolean getSource) {
     return (q == null ? 0 : q.processPt(pt));
   }
 
-  private float getRnd(float f) {
+  private double getRnd(double f) {
     return random.nextFloat() * f;
   }
 
@@ -356,7 +356,7 @@ class IsoMOReader extends AtomDataReader {
       for (int i = params.qm_moNumber; --i >= 0;) {
         Logger.info(" generating isosurface data for MO " + (i + 1));
         Map<String, Object> mo = mos.get(i);
-        coef = (float[]) mo.get("coefficients");
+        coef = (double[]) mo.get("coefficients");
         dfCoefMaps = (int[][]) mo.get("dfCoefMaps");
         if (!setupCalculation())
           return;
@@ -371,12 +371,12 @@ class IsoMOReader extends AtomDataReader {
       q.createCube();
       jvxlData.integration = q.getIntegration();
       if (mo != null)
-        mo.put("integration", Float.valueOf(jvxlData.integration));
+        mo.put("integration", Double.valueOf(jvxlData.integration));
     }
   }
 
   @Override
-  public float[] getPlane(int x) {
+  public double[] getPlane(int x) {
     if (!qSetupDone)
       setupCalculation();
     return getPlaneSR(x);
@@ -409,15 +409,15 @@ class IsoMOReader extends AtomDataReader {
   }
 
   @Override
-  protected float getSurfacePointAndFraction(float cutoff,
+  protected double getSurfacePointAndFraction(double cutoff,
                                              boolean isCutoffAbsolute,
-                                             float valueA, float valueB,
-                                             T3 pointA, V3 edgeVector, int x,
+                                             double valueA, double valueB,
+                                             T3d pointA, V3d edgeVector, int x,
                                              int y, int z, int vA, int vB,
-                                             float[] fReturn, T3 ptReturn) {
-    float zero = getSPF(cutoff, isCutoffAbsolute, valueA, valueB, pointA,
+                                             double[] fReturn, T3d ptReturn) {
+    double zero = getSPF(cutoff, isCutoffAbsolute, valueA, valueB, pointA,
         edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
-    if (q != null && !Float.isNaN(zero)) {
+    if (q != null && !Double.isNaN(zero)) {
       zero = q.processPt(ptReturn);
       if (params.isSquared)
         zero *= zero;

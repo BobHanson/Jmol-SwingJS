@@ -6,11 +6,11 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
@@ -35,20 +35,20 @@ public class Polyhedron {
   Map<String, Object> info;
 
   public String id;
-  public P3 center;
+  public P3d center;
 
   public Atom centralAtom;
-  public P3[] vertices;
+  public P3d[] vertices;
   public int[][] triangles;
   public int[][] faces;
   int nVertices;
   public boolean collapsed;
   private BS bsFlat;
-  private float distanceRef;
-  private V3[] normals;
+  private double distanceRef;
+  private V3d[] normals;
   private short[] normixes;
   
-  P4[] planes; // used only for distance calculation
+  P4d[] planes; // used only for distance calculation
   
   
 
@@ -61,7 +61,7 @@ public class Polyhedron {
    * includes vertices as generic points
    */
   private SymmetryInterface pointGroupFamily;
-  private Float volume;
+  private Double volume;
 
   boolean visible = true;
   boolean isFullyLit;
@@ -72,21 +72,21 @@ public class Polyhedron {
   public short colix = C.GOLD;
   public int modelIndex = Integer.MIN_VALUE;
 
-  private P3 offset;
+  private P3d offset;
 
-  public float scale = 1;
+  public double scale = 1;
 
-  public float pointScale;
+  public double pointScale;
 
   private int[][] faceTriangles;
 
   Polyhedron() {
   }
 
-  Polyhedron set(String id, int modelIndex, P3 atomOrPt, P3[] points,
+  Polyhedron set(String id, int modelIndex, P3d atomOrPt, P3d[] points,
                  int nPoints, int vertexCount, int[][] triangles,
-                 int triangleCount, int[][] faces, int[][] faceTriangles, V3[] normals, BS bsFlat,
-                 boolean collapsed, float distanceRef, float pointScale) {
+                 int triangleCount, int[][] faces, int[][] faceTriangles, V3d[] normals, BS bsFlat,
+                 boolean collapsed, double distanceRef, double pointScale) {
     this.pointScale = pointScale;
     this.distanceRef = distanceRef;
     if (id == null) {
@@ -98,8 +98,8 @@ public class Polyhedron {
       this.modelIndex = modelIndex;
     }
     this.nVertices = vertexCount;
-    this.vertices = new P3[nPoints + 1];
-    this.normals = new V3[triangleCount];
+    this.vertices = new P3d[nPoints + 1];
+    this.normals = new V3d[triangleCount];
     this.faces = faces;
     this.faceTriangles = faceTriangles;
     this.bsFlat = bsFlat;
@@ -108,7 +108,7 @@ public class Polyhedron {
       // includes central atom as last atom or possibly reference point
       vertices[i] = points[i];
     for (int i = triangleCount; --i >= 0;)
-      this.normals[i] = V3.newV(normals[i]);
+      this.normals[i] = V3d.newV(normals[i]);
     for (int i = triangleCount; --i >= 0;)
       this.triangles[i] = triangles[i];
     this.collapsed = collapsed;
@@ -127,7 +127,7 @@ public class Polyhedron {
         modelIndex = centralAtom.mi;
       } else {
         o = info.get("center");
-        center = P3.newP(isSV ? SV.ptValue((SV)o) : (P3) o);
+        center = P3d.newP(isSV ? SV.ptValue((SV)o) : (P3d) o);
         o = info.get("modelIndex");
         modelIndex = (o == null ? vwr.am.cmi : isSV ? ((SV)o).intValue : ((Integer) o).intValue());
         o = info.get("color");
@@ -137,10 +137,10 @@ public class Polyhedron {
         colixEdge = C.getColixS(isSV ? ((SV)o).asString() : o.toString());
         o = info.get("offset");
         if (o != null)
-          offset = P3.newP(isSV ? SV.ptValue((SV) o) : (P3) o);
+          offset = P3d.newP(isSV ? SV.ptValue((SV) o) : (P3d) o);
         o = info.get("scale");
         if (o != null)
-          scale = (isSV ? SV.fValue((SV) o) : ((Float) o).floatValue());
+          scale = (isSV ? SV.dValue((SV) o) : ((Double) o).doubleValue());
       }
       o = info.get("vertices");
       Lst<?> lst = (isSV ? ((SV) o).getList() : (Lst<?>) o);
@@ -148,13 +148,13 @@ public class Polyhedron {
       boolean needTriangles = false;
       if (o != null) {
         nVertices = (isSV ? ((SV) o).intValue : ((Integer) o).intValue());
-        vertices = new P3[lst.size()];
+        vertices = new P3d[lst.size()];
         o = info.get("r");
         if (o != null)
-          distanceRef = (isSV ? ((SV) o).asFloat() : ((Float) o).floatValue());
+          distanceRef = (isSV ? ((SV) o).asDouble() : ((Double) o).doubleValue());
       } else {
         nVertices = lst.size();
-        vertices = new P3[nVertices + 1];
+        vertices = new P3d[nVertices + 1];
         if (center == null) {
           // old style
           vertices[nVertices] = SV.ptValue((SV)info.get("ptRef"));
@@ -168,7 +168,7 @@ public class Polyhedron {
       // because lst will contain the central atom and any collapsed points
       for (int i = lst.size(); --i >= 0;) {
         o = lst.get(i);
-        vertices[i] = (isSV ? SV.ptValue((SV) o) : (P3) o);
+        vertices[i] = (isSV ? SV.ptValue((SV) o) : (P3d) o);
       }
       o = info.get("elemNos");
       if (o != null) {
@@ -186,7 +186,7 @@ public class Polyhedron {
       }
       o = info.get("pointScale");
       if (o != null)
-        pointScale = Math.max(0, (isSV ? SV.fValue((SV) o) : ((Float) o).floatValue()));
+        pointScale = Math.max(0, (isSV ? SV.dValue((SV) o) : ((Double) o).doubleValue()));
       this.faces = toInt2(isSV, info.get("faces"));
       o = info.get("triangles");
       if (o == null) {
@@ -204,12 +204,12 @@ public class Polyhedron {
       } else {
         triangles = toInt2(isSV, o);        
       }
-      normals = new V3[triangles.length];
-      V3 vAB = new V3();
+      normals = new V3d[triangles.length];
+      V3d vAB = new V3d();
       for (int i = triangles.length; --i >= 0;) {
-        normals[i] = new V3();
+        normals[i] = new V3d();
         int[] a = triangles[i];
-        Measure.getNormalThroughPoints(vertices[a[0]], vertices[a[1]],
+        MeasureD.getNormalThroughPoints(vertices[a[0]], vertices[a[1]],
             vertices[a[2]], normals[i], vAB);
       }
       o = info.get("bsFlat");
@@ -250,9 +250,9 @@ public class Polyhedron {
 
     // get COPY of vertices to prevent script variable from referencing Atom
     int nv = (isState ? vertices.length : nVertices);
-    P3[] pts = new P3[nv];
+    P3d[] pts = new P3d[nv];
     for (int i = 0; i < nv; i++)
-      pts[i] = P3.newP(vertices[i]);
+      pts[i] = P3d.newP(vertices[i]);
     info.put("vertices", pts);
     info.put("elemNos", getElemNos());
 
@@ -260,20 +260,20 @@ public class Polyhedron {
       info.put("atomIndex", Integer.valueOf(centralAtom.i));
     } else {
       info.put("id", id);
-      info.put("center", P3.newP(center));
+      info.put("center", P3d.newP(center));
       info.put("color", C.getHexCode(colix));
       info.put("colorEdge", C.getHexCode(colixEdge == C.INHERIT_ALL ? colix : colixEdge));
       if (offset != null)
         info.put("offset", offset);
       if (scale != 1)
-        info.put("scale", Float.valueOf(scale));
+        info.put("scale", Double.valueOf(scale));
     }
     if (id != null || !isState)
       info.put("modelIndex", Integer.valueOf(modelIndex));
     if (!isState) {
       this.info = info;
       if (id == null) {
-        info.put("center", P3.newP(centralAtom));
+        info.put("center", P3d.newP(centralAtom));
         info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
         info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
         info.put("atomName", centralAtom.getInfo());
@@ -288,7 +288,7 @@ public class Polyhedron {
       String[] names = new String[nVertices];
       int[] indices = new int[nVertices];
       for (int i = nVertices; --i >= 0;) {
-        P3 pt = vertices[i];
+        P3d pt = vertices[i];
         boolean isNode = pt instanceof Node;
         names[i] = (isNode ? ((Node) pt).getAtomName()
             : pt instanceof Point3fi ? Elements
@@ -303,22 +303,22 @@ public class Polyhedron {
         info.put("faceTriangles", faceTriangles);
         if (isFaceCalc) {
           int[] faceTypes = new int[faces.length];
-          float[] faceAreas = new float[faces.length];
-          Lst<P3[]> facePoints = new Lst<P3[]>();
-          V3 vAB = new V3();
-          V3 vAC = new V3();
-          V3 vTemp = new V3();
+          double[] faceAreas = new double[faces.length];
+          Lst<P3d[]> facePoints = new Lst<P3d[]>();
+          V3d vAB = new V3d();
+          V3d vAC = new V3d();
+          V3d vTemp = new V3d();
           for (int i = faces.length; --i >= 0;) {
             int[] face = faces[i];
             faceTypes[i] = face.length;
-            float f = 0;
+            double f = 0;
             int[] ft = faceTriangles[i];
             for (int j = ft.length; --j >= 0;) {
               int[] t = triangles[ft[j]];
               f += triangleArea(t[0], t[1], t[2], vAB, vAC, vTemp);
             }
             faceAreas[i] = f;
-            P3[] fpts = new P3[face.length];
+            P3d[] fpts = new P3d[face.length];
             for (int j = face.length; --j >= 0;)
               fpts[j] = vertices[face[j]];
             facePoints.addLast(fpts);
@@ -342,7 +342,7 @@ public class Polyhedron {
         info.put("pointGroupFamily", pointGroupFamily.getPointGroupName());
     }
     if (pointScale > 0)
-      info.put("pointScale", Float.valueOf(pointScale));
+      info.put("pointScale", Double.valueOf(pointScale));
     if (faces != null)
       info.put("faces", faces);
     if (isState || Logger.debugging) {
@@ -350,10 +350,10 @@ public class Polyhedron {
       if (collapsed)
         info.put("collapsed", Boolean.valueOf(collapsed));
       if (distanceRef != 0)
-        info.put("r", Float.valueOf(distanceRef));
-      P3[] n = new P3[normals.length];
+        info.put("r", Double.valueOf(distanceRef));
+      P3d[] n = new P3d[normals.length];
       for (int i = n.length; --i >= 0;)
-        n[i] = P3.newP(normals[i]);
+        n[i] = P3d.newP(normals[i]);
       if (!isState)
         info.put("normals", n);
       info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
@@ -367,7 +367,7 @@ public class Polyhedron {
     if (elemNos == null) {      
       elemNos = new int[nVertices];
       for (int i = 0; i < nVertices; i++) {
-        P3 pt = vertices[i];
+        P3d pt = vertices[i];
         elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
             : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
       }
@@ -396,19 +396,19 @@ public class Polyhedron {
     if (!withPointGroup)
       return null;
     if (pointGroup == null) {
-      T3[] pts = new T3[nVertices];
+      T3d[] pts = new T3d[nVertices];
       // first time through includes all atoms as atoms
       for (int i = pts.length; --i >= 0;)
         pts[i] = vertices[i];
       pointGroup = vwr.getSymTemp().setPointGroup(null, null, pts, null,
-          false, vwr.getFloat(T.pointgroupdistancetolerance),
-          vwr.getFloat(T.pointgrouplineartolerance), true);
+          false, vwr.getDouble(T.pointgroupdistancetolerance),
+          vwr.getDouble(T.pointgrouplineartolerance), true);
       // second time through includes all atoms as points only
       for (int i = pts.length; --i >= 0;)
-        pts[i] = P3.newP(vertices[i]);
+        pts[i] = P3d.newP(vertices[i]);
       pointGroupFamily = vwr.getSymTemp().setPointGroup(null, null, pts,
-          null, false, vwr.getFloat(T.pointgroupdistancetolerance),
-          vwr.getFloat(T.pointgrouplineartolerance), true);
+          null, false, vwr.getDouble(T.pointgroupdistancetolerance),
+          vwr.getDouble(T.pointgrouplineartolerance), true);
     }
     return (center == null ? centralAtom : center) + "    \t"
         + pointGroup.getPointGroupName() + "\t"
@@ -421,23 +421,23 @@ public class Polyhedron {
    * 
    * @return volume
    */
-  private Float getVolume() {
+  private Double getVolume() {
     // this will give spurious results for overlapping faces triangles
     if (volume != null)
       return volume;
-    V3 vAB = new V3();
-    V3 vAC = new V3();
-    V3 vTemp = new V3();
-    float v = 0;
+    V3d vAB = new V3d();
+    V3d vAC = new V3d();
+    V3d vTemp = new V3d();
+    double v = 0;
     if (bsFlat.cardinality() < triangles.length)
       for (int i = triangles.length; --i >= 0;) {
         int[] t = triangles[i];
         v += triangleVolume(t[0], t[1], t[2], vAB, vAC, vTemp);
       }
-    return Float.valueOf(v / 6);
+    return Double.valueOf(v / 6);
   }
 
-  private float triangleArea(int i, int j, int k, V3 vAB, V3 vAC, V3 vTemp) {
+  private double triangleArea(int i, int j, int k, V3d vAB, V3d vAC, V3d vTemp) {
     // area
     vAB.sub2(vertices[j], vertices[i]);
     vAC.sub2(vertices[k], vertices[i]);
@@ -445,7 +445,7 @@ public class Polyhedron {
     return vTemp.length();
   }
 
-  private float triangleVolume(int i, int j, int k, V3 vAB, V3 vAC, V3 vTemp) {
+  private double triangleVolume(int i, int j, int k, V3d vAB, V3d vAC, V3d vTemp) {
     // volume
     vAB.setT(vertices[i]);
     vAC.setT(vertices[j]);
@@ -465,11 +465,11 @@ public class Polyhedron {
   void move(M4d mat, BS bsMoved) {
     info = null;
     for (int i = 0; i < nVertices; i++) {
-      P3 p = vertices[i];
+      P3d p = vertices[i];
       if (p instanceof Atom) {
         if (bsMoved.get(((Atom) p).i))
           continue;
-        p = vertices[i] = P3.newP(p);
+        p = vertices[i] = P3d.newP(p);
       }
       mat.rotTrans(p);
     }
@@ -489,11 +489,11 @@ public class Polyhedron {
     return normixes;
   }
 
-  void setOffset(P3 value) {
+  void setOffset(P3d value) {
     planes = null; // clear all planes
     if (center == null)
       return; // ID  polyhedra only
-    P3 v = P3.newP(value);
+    P3d v = P3d.newP(value);
     if (offset != null)
       value.sub(offset);
     offset = v;

@@ -24,12 +24,12 @@
  */
 package org.jmol.modelsetbio;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.Qd;
+import javajs.util.V3d;
 
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
@@ -279,22 +279,22 @@ public class NucleicMonomer extends PhosphorusMonomer {
   private final static byte[] ring6OffsetIndexes = {C5, C6, N1, C2, N3, C4};
   private final static byte[] ring5OffsetIndexes = {C5, N7, C8, N9, C4};
   private final static byte[] riboseOffsetIndexes = {C1P, C2P, C3P, C4P, O4P, O3P, C5P, O5P, P};
-  public void getBaseRing6Points(P3[] pts) {
+  public void getBaseRing6Points(P3d[] pts) {
     getPoints(ring6OffsetIndexes, pts);
   }
   
-  private void getPoints(byte[] a, P3[] pts) {
+  private void getPoints(byte[] a, P3d[] pts) {
     for (int i = a.length; --i >= 0;)
       pts[i] = getAtomFromOffsetIndex(a[i]);
   }
 
-  public boolean maybeGetBaseRing5Points(P3[] pts) {
+  public boolean maybeGetBaseRing5Points(P3d[] pts) {
     if (isPurine)
       getPoints(ring5OffsetIndexes, pts);
     return isPurine;
   }
 
-  public void getRiboseRing5Points(P3[] pts) {
+  public void getRiboseRing5Points(P3d[] pts) {
     getPoints(riboseOffsetIndexes, pts);
   }
   
@@ -369,10 +369,10 @@ public class NucleicMonomer extends PhosphorusMonomer {
     return getHelixData2(tokType, qType, mStep);
   }
    
-  P3 baseCenter;
+  P3d baseCenter;
 
   @Override
-  P3 getQuaternionFrameCenter(char qType) {
+  P3d getQuaternionFrameCenter(char qType) {
     switch (qType) {
     case 'x':
     case 'a':
@@ -383,7 +383,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
       // Sarver's base center; does not include C4'
       if (baseCenter == null) {
         int n = 0;
-        baseCenter = new P3();
+        baseCenter = new P3d();
         for (int i = 0; i < heavyAtomIndexes.length; i++) {
           Atom a = getAtomFromOffsetIndex(heavyAtomIndexes[i]);
           if (a == null)
@@ -401,7 +401,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
   }
 
   @Override
-  public Quat getQuaternion(char qType) {
+  public Qd getQuaternion(char qType) {
     if (bioPolymer == null)
       return null;
     // quaternionFrame 'c' from  
@@ -492,11 +492,11 @@ public class NucleicMonomer extends PhosphorusMonomer {
     if (ptA == null || ptB == null)
       return null;
 
-    V3 vA = V3.newVsub(ptA, ptNorP);
-    V3 vB = V3.newVsub(ptB, ptNorP);
+    V3d vA = V3d.newVsub(ptA, ptNorP);
+    V3d vB = V3d.newVsub(ptB, ptNorP);
     if (reverseY)
       vB.scale(-1);
-    return Quat.getQuaternionFrameV(vA, vB, null, yBased);
+    return Qd.getQuaternionFrameV(vA, vB, null, yBased);
   }
  
  @Override
@@ -539,7 +539,7 @@ public boolean isCrossLinked(Group g) {
     return vReturn != null && vReturn.size() > 0;
   }
 
-  public boolean getEdgePoints(P3[] pts) {
+  public boolean getEdgePoints(P3d[] pts) {
     pts[0] = getLeadAtom();
     pts[1] = getC4P();
     pts[2] = pts[5] = getC1P();
@@ -568,9 +568,9 @@ public boolean isCrossLinked(Group g) {
   }
 
   private Lst<BasePair> bps;
-  public P3[] dssrBox;
-  public float dssrBoxHeight;
-  public P3[] dssrFrame;
+  public P3d[] dssrBox;
+  public double dssrBoxHeight;
+  public P3d[] dssrFrame;
   
   public void addBasePair(BasePair bp) {
     if (bps == null)
@@ -601,36 +601,36 @@ public boolean isCrossLinked(Group g) {
     return (g1 == null ? Character.toLowerCase(g3.charAt(g3.length() - 1)) : g1.charAt(0));
   }
 
-  public P3[] getDSSRFrame(Viewer vwr) {
+  public P3d[] getDSSRFrame(Viewer vwr) {
     if (dssrFrame != null)
       return dssrFrame;
     if (dssrNT != null)
       return dssrFrame = vwr.getAnnotationParser(true).getDSSRFrame(dssrNT);
-    P3[] oxyz = dssrFrame = new P3[4];
+    P3d[] oxyz = dssrFrame = new P3d[4];
     for (int i = 4; --i >= 0;)
-      oxyz[i] = new P3();
+      oxyz[i] = new P3d();
     if (isPurine()) {
-      P3 v85 = P3.newP(getC5());
+      P3d v85 = P3d.newP(getC5());
       v85.sub(getC8());
       v85.normalize();
       oxyz[2].setT(v85);
       oxyz[2].scale(-1);
       oxyz[0].scaleAdd2(4.9f, v85, getC8());
-      P3 v89 = P3.newP(getN0());
+      P3d v89 = P3d.newP(getN0());
       v89.sub(getC8());
       oxyz[3].cross(v89, v85);
       oxyz[3].normalize();
     } else {
-      P3 v61 = P3.newP(getN0());
+      P3d v61 = P3d.newP(getN0());
       v61.sub(getC6());
-      P3 v65 = P3.newP(getC5());
+      P3d v65 = P3d.newP(getC5());
       v65.sub(getC6());
       oxyz[3].cross(v61, v65);
       oxyz[3].normalize();
       oxyz[2].setT(v61);
       oxyz[2].normalize();
-      A4 aa = A4.new4(oxyz[3].x, oxyz[3].y, oxyz[3].z,
-          (float) (66.6 * Math.PI / 180));
+      A4d aa = A4d.new4(oxyz[3].x, oxyz[3].y, oxyz[3].z,
+          (double) (66.6 * Math.PI / 180));
       M3d m3 = new M3d();
       m3.setAA(aa);
       m3.rotate(oxyz[2]);

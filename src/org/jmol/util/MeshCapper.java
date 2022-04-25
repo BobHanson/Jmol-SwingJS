@@ -8,10 +8,10 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * A class to properly cap a convoluted, closed slice of an isosurface
@@ -115,15 +115,15 @@ public class MeshCapper {
    * @param faceTriangles optional return list by face
    * @return array of triangles [a b c mask]
    */
-  public int[][] triangulateFaces(int[][] faces, P3[] vertices,
+  public int[][] triangulateFaces(int[][] faces, P3d[] vertices,
                                   int[][] faceTriangles) {
     lstTriangles = new Lst<int[]>();
-    P3[] points = new P3[10];
+    P3d[] points = new P3d[10];
     for (int f = 0, n = faces.length; f < n; f++) {
       int[] face = faces[f];
       int npts = face.length;
       if (points.length < npts)
-        points = new P3[npts];
+        points = new P3d[npts];
       int n0 = lstTriangles.size();
       for (int i = npts; --i >= 0;)
         points[i] = vertices[face[i]];
@@ -153,7 +153,7 @@ public class MeshCapper {
    * @param nPoints number of points or -1
    * @return int[][i j k mask]
    */
-  public int[][] triangulatePolygon(P3[] points, int nPoints) {
+  public int[][] triangulatePolygon(P3d[] points, int nPoints) {
     clear();
     boolean haveList = (nPoints >= 0);
     // this is winding backward
@@ -209,7 +209,7 @@ public class MeshCapper {
     Integer ii = Integer.valueOf(i);
     CapVertex v = capMap.get(ii);
     if (v == null) {
-      T3 pt = slicer.m.vs[i];
+      T3d pt = slicer.m.vs[i];
       // copy this point to a new one to avoid shading across the edge
       i = slicer.addIntersectionVertex(pt, 0, -1, thisSet, null, -1, -1);
       v = new CapVertex(pt, i);
@@ -227,8 +227,8 @@ public class MeshCapper {
    * @param v
    * @return external point or test point
    */
-  private T3 getInputPoint(CapVertex v) {
-    return (slicer == null ? P3.newP(v) : slicer.m.vs[v.ipt]);
+  private T3d getInputPoint(CapVertex v) {
+    return (slicer == null ? P3d.newP(v) : slicer.m.vs[v.ipt]);
   }
 
   /**
@@ -288,7 +288,7 @@ public class MeshCapper {
    * 
    * @param norm
    */
-  void createCap(V3 norm) {
+  void createCap(V3d norm) {
 
     capMap = null;
     lstRegions = new Lst<CapVertex[]>();
@@ -311,16 +311,16 @@ public class MeshCapper {
 
     // Transform to xy plane to give best precision.
 
-    V3 vab = V3.newVsub(vs[0], vs[1]);
-    V3 vac;
+    V3d vab = V3d.newVsub(vs[0], vs[1]);
+    V3d vac;
     if (norm == null) {
-      vac = V3.newVsub(vs[0], vs[vs.length - 1]);
+      vac = V3d.newVsub(vs[0], vs[vs.length - 1]);
     } else {
-      vac = V3.newV(norm);
+      vac = V3d.newV(norm);
       vac.cross(vac, vab);
     }
-    Quat q = Quat.getQuaternionFrameV(vab, vac, null, false);
-    m3 = q.getMatrixd();
+    Qd q = Qd.getQuaternionFrameV(vab, vac, null, false);
+    m3 = q.getMatrix();
     m3inv = M3d.newM3(m3);
     m3inv.invert();
     for (int i = vs.length; --i >= 0;)
@@ -404,12 +404,12 @@ public class MeshCapper {
    * @return nearest vertex or null if we can't match
    */
   private CapVertex findNearestVertex(Lst<CapVertex> v1s, CapVertex v0) {
-    float min = Float.MAX_VALUE;
+    double min = Double.MAX_VALUE;
     CapVertex vmin = null;
     int imin = -1;
     for (int i = v1s.size(); --i >= 0;) {
       CapVertex v1 = v1s.get(i);
-      float d = v1.distanceSquared(v0);
+      double d = v1.distanceSquared(v0);
       if (d < min) {
         min = d;
         vmin = v1;
@@ -753,7 +753,7 @@ public class MeshCapper {
     //              /
 
     CapVertex closest = null;
-    float ymin = Float.MAX_VALUE;
+    double ymin = Double.MAX_VALUE;
     for (int i = lstRegions.size(); --i >= 0;) {
       CapVertex[] r = lstRegions.get(i);
       // check that the descending edge is to the left
@@ -770,7 +770,7 @@ public class MeshCapper {
         // d is an unfinished edge on the right
         // and closest is further to the right
         closest = null;
-        ymin = Float.MAX_VALUE;
+        ymin = Double.MAX_VALUE;
       }
       if (!isOK)
         continue;
@@ -786,7 +786,7 @@ public class MeshCapper {
         // a is an unfinished edge on the right 
         // and closest is further to the right
         closest = null;
-        ymin = Float.MAX_VALUE;
+        ymin = Double.MAX_VALUE;
       }
       if (!isOK)
         continue;
@@ -851,9 +851,9 @@ public class MeshCapper {
    */
   private void drawTriangle(int index, CapVertex v0, CapVertex v1,
                             CapVertex v2, String color) {
-    T3 p0 = getInputPoint(v0);
-    T3 p1 = getInputPoint(v1);
-    T3 p2 = getInputPoint(v2);
+    T3d p0 = getInputPoint(v0);
+    T3d p1 = getInputPoint(v1);
+    T3d p2 = getInputPoint(v2);
     Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id + " "
         + v2.id + " */" + p0 + p1 + p2 + " color " + color);
   }
@@ -862,7 +862,7 @@ public class MeshCapper {
    * A class to provide linked vertices for MeshCapper
    * 
    */
-  private class CapVertex extends T3 implements Cloneable {
+  private class CapVertex extends T3d implements Cloneable {
 
     /**
      * external reference
@@ -891,7 +891,7 @@ public class MeshCapper {
 
     CapVertex[] region;
 
-    CapVertex(T3 p, int i) {
+    CapVertex(T3d p, int i) {
       ipt = i;
       id = "" + i;
       setT(p);
@@ -916,11 +916,11 @@ public class MeshCapper {
      * @param v2
      * @return x
      */
-    protected float interpolateX(CapVertex v1, CapVertex v2) {
-      float dy12 = v2.y - v1.y;
-      float dx12 = v2.x - v1.x;
+    protected double interpolateX(CapVertex v1, CapVertex v2) {
+      double dy12 = v2.y - v1.y;
+      double dx12 = v2.x - v1.x;
       return (dy12 != 0 ? v1.x + (y - v1.y) * dx12 / dy12
-          : dx12 > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
+          : dx12 > 0 ? Double.MAX_VALUE : -Double.MAX_VALUE);
     }
 
     /**
@@ -971,7 +971,7 @@ public class MeshCapper {
     @Override
     public String toString() {
       // for debugging only
-      T3 c = (m3 == null ? this : new P3());
+      T3d c = (m3 == null ? this : new P3d());
       if (m3 != null)
         m3.rotate2(this, c);
       return "draw p" + id + " {" + c.x + " " + c.y + " " + c.z + "} # "

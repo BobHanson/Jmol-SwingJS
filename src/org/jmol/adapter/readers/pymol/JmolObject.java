@@ -275,7 +275,7 @@ class JmolObject {
         String only = (String) ((Object[]) info)[1];
         only = " only";
         BS bsCarve = (BS) ((Object[]) info)[2];
-        double carveDistance = ((Float) ((Object[]) info)[3]).floatValue();
+        double carveDistance = ((Float) ((Object[]) info)[3]).doubleValue();
         // not implementing "not only" yet because if we did that, since we have so
         // many sets of atoms, we could have real problems here.
         String resolution = "";

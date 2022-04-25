@@ -34,7 +34,7 @@ import javajs.util.Eigen;
 import javajs.util.M3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -233,11 +233,11 @@ public class Tensor {
  
       
     case 9: // eulerzyz
-      return ((Quat) getInfo("quaternion")).getEulerZYZ();
+      return ((Qd) getInfo("quaternion")).getEulerZYZ();
     case 10: // eulerzxz
-      return ((Quat) getInfo("quaternion")).getEulerZXZ();
+      return ((Qd) getInfo("quaternion")).getEulerZXZ();
     case 11: // quaternion
-      return Quat.getQuaternionFramed3d((P3d) null, eigenVectors[0],
+      return Qd.getQuaternionFrame((P3d) null, eigenVectors[0],
           eigenVectors[1]);
       
       

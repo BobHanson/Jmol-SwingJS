@@ -33,8 +33,8 @@ import java.util.Map;
 import javajs.util.BS;
 
 import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 
 public class _MayaExporter extends __CartesianExporter {
@@ -90,7 +90,7 @@ public class _MayaExporter extends __CartesianExporter {
         + ".iog\" \":initialShadingGroup.dsm\" -na;\n");
   }
 
-  private void setAttr(String attr, float val) {
+  private void setAttr(String attr, double val) {
     output(" setAttr \"." + attr + "\" " + val + ";\n");
   }
 
@@ -98,31 +98,31 @@ public class _MayaExporter extends __CartesianExporter {
     output(" setAttr \"." + attr + "\" " + val + ";\n");
   }
 
-  private void setAttr(String attr, T3 pt) {
+  private void setAttr(String attr, T3d pt) {
     output(" setAttr \"." + attr + "\" -type \"double3\" " + pt.x + " "
         + pt.y + " " + pt.z + ";\n");
   }
 
   @Override
-  protected boolean outputCylinder(P3 ptCenter, P3 pt1, P3 pt2, short colix,
-                      byte endcaps, float radius, P3 ptX, P3 ptY, boolean checkRadius) {
+  protected boolean outputCylinder(P3d ptCenter, P3d pt1, P3d pt2, short colix,
+                      byte endcaps, double radius, P3d ptX, P3d ptY, boolean checkRadius) {
     if (ptX != null)
       return false;
     nCyl++;
     name = "nurbsCylinder" + nCyl;
     id = "nurbsCylinderShape" + nCyl;
     output(" createNode transform -n \"" + name + "\";\n");
-    float length = pt1.distance(pt2);
+    double length = pt1.distance(pt2);
     tempV1.ave(pt2, pt1);
     setAttr("t", tempV1);
     tempV1.sub(pt1);
     tempV2.setT(tempV1);
     tempV2.normalize();
-    float r = tempV1.length();
-    float rX = (float) Math.acos(tempV1.y / r) * degreesPerRadian;
+    double r = tempV1.length();
+    double rX = (double) Math.acos(tempV1.y / r) * degreesPerRadian;
     if (tempV1.x < 0)
       rX += 180;
-    float rY = (float) Math.atan2(tempV1.x, tempV1.z) * degreesPerRadian;
+    double rY = (double) Math.atan2(tempV1.x, tempV1.z) * degreesPerRadian;
     tempV2.set(rX, rY, 0);
     setAttr("r", tempV2);
     output(" createNode nurbsSurface -n \"" + id + "\" -p \"" + name
@@ -138,7 +138,7 @@ public class _MayaExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSphere(P3 pt, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(P3d pt, double radius, short colix, boolean checkRadius) {
     //String color = rgbFromColix(colix);
     nBalls++;
     name = "nurbsSphere" + nBalls;
@@ -165,41 +165,41 @@ public class _MayaExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTextPixel(P3 pt, int argb) {
+  protected void outputTextPixel(P3d pt, int argb) {
   }
   
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals,
+  protected void outputSurface(T3d[] vertices, T3d[] normals,
                                   short[] colixes, int[][] indices,
                                   short[] polygonColixes,
                                   int nVertices, int nPolygons, int nTriangles, BS bsPolygons,
                                   int faceVertexMax, short colix,
-                                  Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                                  Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
   }
 
   @Override
-  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3,
+  protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3,
                                 short colix) {
     // TODO
     
   }
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius,
                               short colix, boolean doFill) {
     // TODO
     
   }
 
   @Override
-  protected void outputCone(P3 ptBase, P3 ptTip, float radius,
+  protected void outputCone(P3d ptBase, P3d ptTip, double radius,
                             short colix) {
     // TODO
     
   }
 
   @Override
-  protected void outputEllipsoid(P3 center, P3[] points, short colix) {
+  protected void outputEllipsoid(P3d center, P3d[] points, short colix) {
     // TODO
     
   }
@@ -211,7 +211,7 @@ public class _MayaExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     // TODO
     
   }

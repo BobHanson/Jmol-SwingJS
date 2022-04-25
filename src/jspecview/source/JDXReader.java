@@ -81,7 +81,7 @@ public class JDXReader implements JmolJDXMOLReader {
 
   final static String ERROR_SEPARATOR = "=====================\n";
   
-  private float nmrMaxY = Float.NaN;
+  private double nmrMaxY = Double.NaN;
   
 //  static {
 //    Arrays.sort(TABULAR_DATA_LABELS);  OUCH! - Breaks J2S
@@ -109,12 +109,12 @@ public class JDXReader implements JmolJDXMOLReader {
   private boolean ignorePeakTables;
 
   private JDXReader(String filePath, boolean obscure, boolean loadImaginary,
-      int iSpecFirst, int iSpecLast, float nmrNormalization) {
+      int iSpecFirst, int iSpecLast, double nmrNormalization) {
     filePath = PT.trimQuotes(filePath);
     isSimulation = (filePath != null && filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL)); 
     if (isSimulation) {
       //TODO: H1 vs. C13 here?
-      nmrMaxY = (Float.isNaN(nmrNormalization) ? 10000 : nmrNormalization);
+      nmrMaxY = (Double.isNaN(nmrNormalization) ? 10000 : nmrNormalization);
       //filePath = JSVFileManager.getAbbrSimulationFileName(filePath);
     }
     // this.filePath is used for sending information back to Jmol
@@ -137,7 +137,7 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    * @throws Exception
    */
-  public static JDXSource createJDXSourceFromStream(InputStream in, boolean obscure, boolean loadImaginary, float nmrMaxY)
+  public static JDXSource createJDXSourceFromStream(InputStream in, boolean obscure, boolean loadImaginary, double nmrMaxY)
       throws Exception {
     return createJDXSource(null, in,
         "stream", obscure, loadImaginary, -1, -1, nmrMaxY);
@@ -184,7 +184,7 @@ public class JDXReader implements JmolJDXMOLReader {
   public static JDXSource createJDXSource(GenericFileInterface file, Object in,
                                           String filePath, boolean obscure,
                                           boolean loadImaginary, int iSpecFirst,
-                                          int iSpecLast, float nmrMaxY)
+                                          int iSpecLast, double nmrMaxY)
       throws Exception {
     boolean isHeaderOnly = (iSpecLast < iSpecFirst);
     String data = null;
@@ -443,7 +443,7 @@ public class JDXReader implements JmolJDXMOLReader {
       if (acdMolFile != null)
         JSVFileManager.cachePut("mol", acdMolFile);
     }
-    if (!Float.isNaN(nmrMaxY))
+    if (!Double.isNaN(nmrMaxY))
       spectrum.normalizeSimulation(nmrMaxY);
     else if (spectrum.getMaxY() >= 10000)
       spectrum.normalizeSimulation(1000);
@@ -860,8 +860,8 @@ public class JDXReader implements JmolJDXMOLReader {
       return false;
     case 10:
       jdxHeader.jcampdx = value;
-      float version = PT.parseFloat(value);
-      if (version >= 6.0 || Float.isNaN(version)) {
+      double version = PT.parseDouble(value);
+      if (version >= 6.0 || Double.isNaN(version)) {
         if (errorLog != null)
           errorLog
               .append("Warning: JCAMP-DX version may not be fully supported: "
@@ -1175,7 +1175,7 @@ public class JDXReader implements JmolJDXMOLReader {
 
   @Override
   public void processModelData(String id, String data, String type,
-      String base, String last, float modelScale, float vibScale, boolean isFirst)
+      String base, String last, double modelScale, double vibScale, boolean isFirst)
       throws Exception {
     // Jmol only
   }

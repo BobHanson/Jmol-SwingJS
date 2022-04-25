@@ -30,10 +30,10 @@ import java.util.Map.Entry;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.api.JmolNMRInterface;
 import org.jmol.modelset.Atom;
@@ -97,11 +97,11 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   @Override
-  public float getQuadrupolarConstant(Tensor efg) {
+  public double getQuadrupolarConstant(Tensor efg) {
     if (efg == null)
       return 0;
     Atom a = vwr.ms.at[efg.atomIndex1];
-    return (float) (getIsotopeData(a, QUADRUPOLE_MOMENT) * efg.eigenValues[2] * Q_FACTOR);
+    return (double) (getIsotopeData(a, QUADRUPOLE_MOMENT) * efg.eigenValues[2] * Q_FACTOR);
   }
 
   /**
@@ -214,12 +214,12 @@ public class NMRCalculation implements JmolNMRInterface {
     return bs;
   }
 
-  public float getJCouplingHz(Atom a1, Atom a2, String type, Tensor isc) {
+  public double getJCouplingHz(Atom a1, Atom a2, String type, Tensor isc) {
     return getIsoOrAnisoHz(true, a1, a2, type, isc);
   }
 
   @Override
-  public float getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String units,
+  public double getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String units,
                                Tensor isc) {
     if (isc == null) {
       String type = getISCtype(a1, units);
@@ -227,20 +227,20 @@ public class NMRCalculation implements JmolNMRInterface {
         if (!units.equals("hz"))
           return 0;
         double[] data = calc2or3JorNOE(vwr, new Atom[]{a1, null, null, a2}, null, MODE_CALC_JHH); // H-H only here; no NOE, no JCH
-        return (data == null ? Float.NaN : (float) data[1]);
+        return (data == null ? Double.NaN : (double) data[1]);
       }
       BS bs = new BS();
       bs.set(a1.i);
       bs.set(a2.i);
       Lst<Tensor> list = getInteractionTensorList(type, bs);
       if (list.size() == 0)
-        return Float.NaN;
+        return Double.NaN;
       isc = list.get(0);
     } else {
       a1 = vwr.ms.at[isc.atomIndex1];
       a2 = vwr.ms.at[isc.atomIndex2];
     }
-    return (float) (getIsotopeData(a1, MAGNETOGYRIC_RATIO)
+    return (double) (getIsotopeData(a1, MAGNETOGYRIC_RATIO)
         * getIsotopeData(a2, MAGNETOGYRIC_RATIO)
         * (isIso ? isc.isotropy() : isc.anisotropy()) * J_FACTOR);
   }
@@ -262,21 +262,21 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   @Override
-  public float getDipolarConstantHz(Atom a1, Atom a2) {
+  public double getDipolarConstantHz(Atom a1, Atom a2) {
     if (Logger.debugging)
       Logger.debug(a1 + " g=" + getIsotopeData(a1, MAGNETOGYRIC_RATIO) + "; "
           + a2 + " g=" + getIsotopeData(a2, MAGNETOGYRIC_RATIO));
-    float v = (float) (-getIsotopeData(a1, MAGNETOGYRIC_RATIO)
+    double v = (double) (-getIsotopeData(a1, MAGNETOGYRIC_RATIO)
         * getIsotopeData(a2, MAGNETOGYRIC_RATIO) / Math.pow(a1.distance(a2), 3) * DIPOLAR_FACTOR);
-    return (v == 0 || a1 == a2 ? Float.NaN : v);
+    return (v == 0 || a1 == a2 ? Double.NaN : v);
   }
 
   @Override
-  public float getDipolarCouplingHz(Atom a1, Atom a2, V3 vField) {
-    V3 v12 = V3.newVsub(a2, a1);
+  public double getDipolarCouplingHz(Atom a1, Atom a2, V3d vField) {
+    V3d v12 = V3d.newVsub(a2, a1);
     double r = v12.length();
     double costheta = v12.dot(vField) / r / vField.length();
-    return (float) (getDipolarConstantHz(a1, a2) * (3 * costheta - 1) / 2);
+    return (double) (getDipolarConstantHz(a1, a2) * (3 * costheta - 1) / 2);
   }
 
   /**
@@ -313,7 +313,7 @@ public class NMRCalculation implements JmolNMRInterface {
   /**
    * Creates the data set necessary for doing NMR calculations. Values are
    * retrievable using getProperty "nmrInfo" "Xx"; each entry is
-   * float[+/-isotopeNumber, g, Q], where [0] < 0 for the default value.
+   * double[+/-isotopeNumber, g, Q], where [0] < 0 for the default value.
    * 
    */
   @SuppressWarnings("resource")
@@ -389,40 +389,40 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   @Override
-  public float getChemicalShift(Atom atom) {
-    float v = getMagneticShielding(atom);
-    if (Float.isNaN(v))
+  public double getChemicalShift(Atom atom) {
+    double v = getMagneticShielding(atom);
+    if (Double.isNaN(v))
       return v;
-    Float ref = shiftRefsPPM.get(atom.getElementSymbol());
-    return (ref == null ? 0 : ref.floatValue()) - v;
+    Double ref = shiftRefsPPM.get(atom.getElementSymbol());
+    return (ref == null ? 0 : ref.doubleValue()) - v;
   }
 
   @Override
-  public float getMagneticShielding(Atom atom) {
+  public double getMagneticShielding(Atom atom) {
     Tensor t = vwr.ms.getAtomTensor(atom.i, "ms");
-    return (t == null ? Float.NaN : (float) t.isotropy());
+    return (t == null ? Double.NaN : (double) t.isotropy());
   }
 
-  private Map<String, Float> shiftRefsPPM = new Hashtable<String, Float>();
+  private Map<String, Double> shiftRefsPPM = new Hashtable<String, Double>();
 
   @Override
   public boolean getState(SB sb) {
     if (shiftRefsPPM.isEmpty())
       return false;
-    for (Entry<String, Float> nuc : shiftRefsPPM.entrySet())
+    for (Entry<String, Double> nuc : shiftRefsPPM.entrySet())
       sb.append("  set shift_").append(nuc.getKey()).append(" ")
           .appendO(nuc.getValue()).append("\n");
     return true;
   }
 
   @Override
-  public boolean setChemicalShiftReference(String element, float value) {
+  public boolean setChemicalShiftReference(String element, double value) {
     if (element == null) {
       shiftRefsPPM.clear();
       return false;
     }
     element = element.substring(0, 1).toUpperCase() + element.substring(1);
-    shiftRefsPPM.put(element, Float.valueOf(value));
+    shiftRefsPPM.put(element, Double.valueOf(value));
     return true;
   }
 
@@ -442,7 +442,7 @@ public class NMRCalculation implements JmolNMRInterface {
           list1.addLast(Integer.valueOf(atoms[i].i));
           list1.addLast(Integer.valueOf(atoms[j].i));
           list1
-              .addLast(Float.valueOf(getDipolarConstantHz(atoms[i], atoms[j])));
+              .addLast(Double.valueOf(getDipolarConstantHz(atoms[i], atoms[j])));
           data.addLast(list1);
         }
       return data;
@@ -457,7 +457,7 @@ public class NMRCalculation implements JmolNMRInterface {
         list1 = new Lst<Object>();
         list1.addLast(Integer.valueOf(t.atomIndex1));
         list1.addLast(Integer.valueOf(t.atomIndex2));
-        list1.addLast(isEta || isJ ? Float.valueOf(getIsoOrAnisoHz(isJ, null,
+        list1.addLast(isEta || isJ ? Double.valueOf(getIsoOrAnisoHz(isJ, null,
             null, null, t)) : t.getInfo(infoType));
         data.addLast(list1);
       }
@@ -475,8 +475,8 @@ public class NMRCalculation implements JmolNMRInterface {
             data.addLast(((Tensor) a[j]).getInfo(infoType));
       } else {
         Tensor t = vwr.ms.getAtomTensor(i, tensorType);
-        data.addLast(t == null ? (isFloat ? Float.valueOf(0) : "")
-            : isChi ? Float.valueOf(getQuadrupolarConstant(t)) : t
+        data.addLast(t == null ? (isFloat ? Double.valueOf(0) : "")
+            : isChi ? Double.valueOf(getQuadrupolarConstant(t)) : t
                 .getInfo(infoType));
       }
     }
@@ -626,7 +626,7 @@ public class NMRCalculation implements JmolNMRInterface {
   }
 
   private static double getIncrementalJValue(int nNonH, String element,
-                                             V3 sA_cA, V3 v21, V3 v23,
+                                             V3d sA_cA, V3d v21, V3d v23,
                                              double theta, int f) {
     if (nNonH < 0 || nNonH > 5)
       return 0;
@@ -658,8 +658,8 @@ public class NMRCalculation implements JmolNMRInterface {
    * @param f 1 for carbon A; -1 for carbon B
    * @return f or -f (+1 or -1)
    */
-  private static int getSubSign(V3 sA_cA, V3 v21, V3 v23, int f) {
-    V3 cross = new V3();
+  private static int getSubSign(V3d sA_cA, V3d v21, V3d v23, int f) {
+    V3d cross = new V3d();
     cross.cross(v23, v21);
     return (cross.dot(sA_cA) > 0 ? f : -f);
   }
@@ -683,8 +683,8 @@ public class NMRCalculation implements JmolNMRInterface {
    * @param is23Double
    * @return estimated coupling constant
    */
-  private static double calc3JHHOnly(String[][] subElements, V3[][] subVectors,
-                                     V3 v21, V3 v34, V3 v23, double theta,
+  private static double calc3JHHOnly(String[][] subElements, V3d[][] subVectors,
+                                     V3d v21, V3d v34, V3d v23, double theta,
                                      boolean is23Double) {
     
     // Substituents on atoms A and B
@@ -822,11 +822,11 @@ public class NMRCalculation implements JmolNMRInterface {
       break;
     }
     String[][] subElements = new String[2][3];
-    V3[][] subVectors = new V3[2][3];
+    V3d[][] subVectors = new V3d[2][3];
 
-    V3 v23 = V3.newVsub(atoms[2], atoms[1]);
-    V3 v21 = V3.newVsub(atoms[0], atoms[1]);
-    V3 v34 = V3.newVsub(atoms[3], atoms[2]);
+    V3d v23 = V3d.newVsub(atoms[2], atoms[1]);
+    V3d v21 = V3d.newVsub(atoms[0], atoms[1]);
+    V3d v34 = V3d.newVsub(atoms[3], atoms[2]);
 
     Lst<Atom> subs = new Lst<Atom>();
 
@@ -839,7 +839,7 @@ public class NMRCalculation implements JmolNMRInterface {
         continue;
       }
       subElements[0][pt] = sub.getElementSymbol();
-      subVectors[0][pt] = V3.newVsub(sub, atoms[1]);
+      subVectors[0][pt] = V3d.newVsub(sub, atoms[1]);
       pt++;
     }
     subs.clear();
@@ -849,11 +849,11 @@ public class NMRCalculation implements JmolNMRInterface {
       if (sub == atoms[1])
         continue;
       subElements[1][pt] = sub.getElementSymbol();
-      subVectors[1][pt] = V3.newVsub(sub, atoms[2]);
+      subVectors[1][pt] = V3d.newVsub(sub, atoms[2]);
       pt++;
     }
 
-    double theta = Measure.computeTorsion(atoms[0], atoms[1], atoms[2],
+    double theta = MeasureD.computeTorsion(atoms[0], atoms[1], atoms[2],
         atoms[3], false);
     double jvalue = Double.NaN;
     if (is23Double || subElements[0][2] != null && subElements[1][2] != null) {
@@ -952,7 +952,7 @@ public class NMRCalculation implements JmolNMRInterface {
     default:
       return null;
     }
-    float angle = Measure.computeAngle(h1, c, h2, new V3(), new V3(), false);
+    double angle = MeasureD.computeAngle(h1, c, h2, new V3d(), new V3d(), false);
     return new double[] { angle, val, c.i };
   }
 

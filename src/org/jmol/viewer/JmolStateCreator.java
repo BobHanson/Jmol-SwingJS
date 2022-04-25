@@ -29,9 +29,9 @@ public abstract class JmolStateCreator {
 
   abstract String getAtomicPropertyState(int taintCoord, BS bsSelected);
 
-  abstract void getAtomicPropertyStateBuffer(SB commands, int type,
-                                             BS bs, String name, float[] data);
-
+//  abstract void getAtomicPropertyStateBuffer(SB commands, int type,
+//                                             BS bs, String name, float[] data);
+//
   abstract void getAtomicPropertyStateBufferD(SB commands, int type,
                                              BS bs, String name, double[] data);
 

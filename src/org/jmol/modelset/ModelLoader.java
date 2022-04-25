@@ -26,14 +26,16 @@
 package org.jmol.modelset;
 
 import org.jmol.util.Elements;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-import javajs.util.V3;
+import javajs.util.V3d;
+import javajs.util.V3d;
+
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
@@ -54,7 +56,7 @@ import org.jmol.modelsetbio.BioResolver;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
 
 import java.util.Arrays;
@@ -153,7 +155,7 @@ public final class ModelLoader {
   private BioResolver jbr;
   public Group[] groups;
   private int groupCount;
-  private P3 modulationTUV;
+  private P3d modulationTUV;
   private boolean highPrecision;
   private boolean isSupercell;
   
@@ -174,7 +176,7 @@ public final class ModelLoader {
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
-    Lst<P3[]> steps = (Lst<P3[]>) ms.getInfoM("trajectorySteps");
+    Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM("trajectorySteps");
     isTrajectory = (steps != null);
     highPrecision = false;
     if (isTrajectory)
@@ -188,7 +190,7 @@ public final class ModelLoader {
       info.remove("pdbAddHydrogens");
       info.remove("trajectorySteps");
       if (isTrajectory)
-        ms.vibrationSteps = (Lst<V3[]>) info.remove("vibrationSteps");
+        ms.vibrationSteps = (Lst<V3d[]>) info.remove("vibrationSteps");
       highPrecision = info.containsKey("highPrecision");
       if (highPrecision) {
         // we must RESET this, because 'ZAP' has unset it in the script
@@ -199,7 +201,7 @@ public final class ModelLoader {
     Object mod = ms.getInfoM("modulationOn");
     if (mod != null) {
       modulationOn = true;
-      modulationTUV = (mod == Boolean.TRUE ? null : (P3) mod);
+      modulationTUV = (mod == Boolean.TRUE ? null : (P3d) mod);
     }
     noAutoBond = ms.getMSInfoB("noAutoBond");
     is2D = ms.getMSInfoB("is2D");
@@ -234,7 +236,7 @@ public final class ModelLoader {
     }
   }
 
-  private Trajectory newTrajectory(ModelSet ms, Lst<P3[]> steps) {
+  private Trajectory newTrajectory(ModelSet ms, Lst<P3d[]> steps) {
     return ((Trajectory) Interface.getInterface("org.jmol.modelset.Trajectory", vwr, "load")).set(vwr, ms, steps);
   }
 
@@ -324,7 +326,7 @@ public final class ModelLoader {
             + " in this collection. Use getProperty \"modelInfo\" or"
             + " getProperty \"auxiliaryInfo\" to inspect them.");
       }
-      Quat q = (Quat) ms.getInfoM("defaultOrientationQuaternion");
+      Qd q = (Qd) ms.getInfoM("defaultOrientationQuaternion");
       if (q != null) {
         Logger.info("defaultOrientationQuaternion = " + q);
         Logger
@@ -405,7 +407,7 @@ public final class ModelLoader {
     baseTrajectoryCount = 0;
     if (oldSet.trajectory == null) {
       if (isTrajectory)
-        newTrajectory(oldSet, new Lst<P3[]>());
+        newTrajectory(oldSet, new Lst<P3d[]>());
     }
     if (oldSet.trajectory == null || oldSet.mc == 0)
       return;
@@ -415,7 +417,7 @@ public final class ModelLoader {
       oldSet.trajectory.steps.addLast(null);
     if (isTrajectory) {
       if (oldSet.vibrationSteps == null) {
-        oldSet.vibrationSteps = new Lst<V3[]>();
+        oldSet.vibrationSteps = new Lst<V3d[]>();
         for (int i = n; --i >= 0;)
           oldSet.vibrationSteps.addLast(null);
       }
@@ -455,14 +457,14 @@ public final class ModelLoader {
   @SuppressWarnings("unchecked")
   private void setAtomProperties() {
     // Crystal reader, PDB tlsGroup
-    // assumes String line-encoded float[] or just float[] values
+    // assumes String line-encoded double[] or just double[] values
     int modelCount = ms.mc;
     for (int i = baseModelIndex; i < modelCount; i++) {
       Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
       // list of properties that are to be transfered to H atoms as well.
       if (jmolData != null)
-        addJmolDataProperties(ms.am[i], (Map<String, float[]>) ms.getInfo(i, "jmolDataProperties"));
+        addJmolDataProperties(ms.am[i], (Map<String, double[]>) ms.getInfo(i, "jmolDataProperties"));
       String groupList = (String) ms.getInfo(i,
           "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, "dssr") != null)
@@ -841,7 +843,7 @@ public final class ModelLoader {
           iterAtom.getTensors(), 
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
-          xyz.asP3(),
+          xyz,
           highPrecision ? xyz : null,
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 
@@ -881,14 +883,14 @@ public final class ModelLoader {
   }
 
   private void addJmolDataProperties(Model m,
-                                     Map<String, float[]> jmolDataProperties) {
+                                     Map<String, double[]> jmolDataProperties) {
     if (jmolDataProperties == null)
       return;
     BS bs = m.bsAtoms;
     int nAtoms = bs.cardinality();
-    for (Entry<String, float[]> e : jmolDataProperties.entrySet()) {
+    for (Entry<String, double[]> e : jmolDataProperties.entrySet()) {
       String key = e.getKey();
-      float[] data = e.getValue();
+      double[] data = e.getValue();
       if (data.length != nAtoms)
         return;
       int tok = (key.startsWith("property_") ? T.property : T
@@ -935,11 +937,11 @@ public final class ModelLoader {
   }
 
   private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
-                       String atomName, int formalCharge, float partialCharge,
-                       Lst<Object> tensors, float occupancy, float bfactor,
-                       P3 xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
-                       String group3, V3 vib, char alternateLocationID,
-                       float radius, float bondRadius) {
+                       String atomName, int formalCharge, double partialCharge,
+                       Lst<Object> tensors, double occupancy, double bfactor,
+                       P3d xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       String group3, V3d vib, char alternateLocationID,
+                       double radius, double bondRadius) {
     byte specialAtomID = 0;
     String atomType = null;
     if (atomName != null) {
@@ -1025,7 +1027,7 @@ public final class ModelLoader {
         if (order > 1 && order != Edge.BOND_STEREO_NEAR
             && order != Edge.BOND_STEREO_FAR)
           haveMultipleBonds = true;
-        float radius = iterBond.getRadius();
+        double radius = iterBond.getRadius();
         if (radius > 0)
           b.setMad((short) (radius * 2000));
         short colix = iterBond.getColix();
@@ -1408,7 +1410,7 @@ public final class ModelLoader {
     // 1) initialize average bond lengths
     set2DLengths(baseAtomIndex, ms.ac);
     
-    V3 v = new V3();
+    V3d v = new V3d();
     
     if (vStereo != null) {
       out: for (int i = vStereo.size(); --i >= 0;) {
@@ -1444,11 +1446,11 @@ public final class ModelLoader {
       bsToTest.setBits(baseAtomIndex, ms.ac);
       for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
-        float dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
+        double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
         b.order = 1;
         if (b.atom2.z != b.atom1.z && (dz2 < 0) == (b.atom2.z < b.atom1.z))
           dz2 /= 3;
-        //float dz1 = dz2/3;
+        //double dz1 = dz2/3;
         //b.atom1.z += dz1;
         BS bs = JmolMolecule.getBranchBitSet(ms.at, b.atom2.i, bsToTest, null, b.atom1.i, false, true);
         bs.set(b.atom2.i); // ring structures
@@ -1464,7 +1466,7 @@ public final class ModelLoader {
   }
 
   private void set2DLengths(int iatom1, int iatom2) {
-    float scaling = 0;
+    double scaling = 0;
     int n = 0;
     for (int i = iatom1; i < iatom2; i++) {
       Atom a = ms.at[i];
@@ -1489,11 +1491,11 @@ public final class ModelLoader {
     }
   }
 
-  private void set2dZ(int iatom1, int iatom2, V3 v) {
+  private void set2dZ(int iatom1, int iatom2, V3d v) {
     BS atomlist = BS.newN(iatom2);
     BS bsBranch = new BS();
-    V3 v0 = V3.new3(0, 1, 0);
-    V3 v1 = new V3();
+    V3d v0 = V3d.new3(0, 1, 0);
+    V3d v1 = new V3d();
     BS bs0 = new BS();
     bs0.setBits(iatom1, iatom2);
     for (int i = iatom1; i < iatom2; i++)
@@ -1516,7 +1518,7 @@ public final class ModelLoader {
    * @return   atom bitset
    */
   private BS getBranch2dZ(int atomIndex, int atomIndexNot, BS bs0, 
-                              BS bsBranch, V3 v, V3 v0, V3 v1, int dir) {
+                              BS bsBranch, V3d v, V3d v0, V3d v1, int dir) {
     BS bs = BS.newN(ms.ac);
     if (atomIndex < 0)
       return bs;
@@ -1529,8 +1531,8 @@ public final class ModelLoader {
   }
 
   private static void setBranch2dZ(Atom atom, BS bs,
-                                            BS bsToTest, V3 v,
-                                            V3 v0, V3 v1, int dir) {
+                                            BS bsToTest, V3d v,
+                                            V3d v0, V3d v1, int dir) {
     int atomIndex = atom.i;
     if (!bsToTest.get(atomIndex))
       return;
@@ -1575,13 +1577,13 @@ public final class ModelLoader {
    * @param v1
    * @param dir 
    */
-  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3 v, V3 v0, V3 v1, int dir) {
+  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3d v, V3d v0, V3d v1, int dir) {
     v.sub2(atom2, atomRef);
     v.z = 0;
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    float f = (float) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
+    double f = (double) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
 //    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
@@ -1617,9 +1619,9 @@ public final class ModelLoader {
       return null;
     // must be one of JmolConstants.LOAD_ATOM_DATA_TYPES
     JmolAdapter adapter = vwr.getModelAdapter();
-    P3 pt = new P3();
+    P3d pt = new P3d();
     Atom[] atoms = modelSet.at;
-    float tolerance = vwr.getFloat(T.loadatomdatatolerance);
+    double tolerance = vwr.getDouble(T.loadatomdatatolerance);
     if (modelSet.unitCells != null)
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1))
@@ -1648,7 +1650,7 @@ public final class ModelLoader {
         modelSet.setPrecisionCoord(i, xyz, true);
         continue;
       }
-      xyz.setP(pt);
+      xyz.setT(pt);
       BS bs = BS.newN(modelSet.ac);
       modelSet.getAtomsWithin(tolerance, pt, bs, -1);
       bs.and(bsSelected);
@@ -1664,7 +1666,7 @@ public final class ModelLoader {
       }
       switch (tokType) {
       case T.vibxyz:
-        V3 vib = iterAtom.getVib();
+        V3d vib = iterAtom.getVib();
         if (vib == null)
           continue;
         if (Logger.debugging)

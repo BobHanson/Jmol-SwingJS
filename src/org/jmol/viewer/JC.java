@@ -35,7 +35,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 
 public final class JC {
@@ -436,7 +436,7 @@ public final class JC {
 
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";
       
-  public final static float radiansPerDegree = (float) (Math.PI / 180);
+  public final static double radiansPerDegree = (double) (Math.PI / 180);
 
   public final static String allowedQuaternionFrames = "RC;RP;a;b;c;n;p;q;x;";
 
@@ -444,14 +444,14 @@ public final class JC {
   //do not capitalize any other letter in the word. Separate by semicolon.
   public final static String EXPORT_DRIVER_LIST = "Idtf;Maya;Povray;Vrml;X3d;Stl;Tachyon;Obj"; 
 
-  public final static V3 center = V3.new3(0, 0, 0);
-  public final static V3 axisX = V3.new3(1, 0, 0);
-  public final static V3 axisY = V3.new3(0, 1, 0);
-  public final static V3 axisZ = V3.new3(0, 0, 1);
-  public final static V3 axisNX = V3.new3(-1, 0, 0);
-  public final static V3 axisNY = V3.new3(0, -1, 0);
-  public final static V3 axisNZ = V3.new3(0, 0, -1);
-  public final static V3[] unitAxisVectors = {
+  public final static V3d center = V3d.new3(0, 0, 0);
+  public final static V3d axisX = V3d.new3(1, 0, 0);
+  public final static V3d axisY = V3d.new3(0, 1, 0);
+  public final static V3d axisZ = V3d.new3(0, 0, 1);
+  public final static V3d axisNX = V3d.new3(-1, 0, 0);
+  public final static V3d axisNY = V3d.new3(0, -1, 0);
+  public final static V3d axisNZ = V3d.new3(0, 0, -1);
+  public final static V3d[] unitAxisVectors = {
     axisX, axisY, axisZ, axisNX, axisNY, axisNZ };
 
   public final static int XY_ZTOP = 100; // Z value for [x y] positioned echos and axis origin

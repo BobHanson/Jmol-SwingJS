@@ -25,7 +25,7 @@ package javajs.util;
  *         constructor and method names for the optimization of compiled
  *         JavaScript using Java2Script
  */
-public class M4 extends M34 {
+public class M4d extends M34d {
 
   /**
    * The fourth element of the first row.
@@ -65,7 +65,7 @@ public class M4 extends M34 {
   /**
    * all zeros
    */
-  public M4() {
+  public M4d() {
   }
   /**
    * Constructs and initializes a Matrix4f from the specified 16 element array.
@@ -75,8 +75,8 @@ public class M4 extends M34 {
    *        the array of length 16 containing in order
    * @return m
    */
-  public static M4 newA16(float[] v) {
-    M4 m = new M4();
+  public static M4d newA16(float[] v) {
+    M4d m = new M4d();
     m.m00 = v[0];
     m.m01 = v[1];
     m.m02 = v[2];
@@ -107,8 +107,8 @@ public class M4 extends M34 {
    *        the source matrix
    * @return m
    */
-  public static M4 newM4(M4 m1) {
-    M4 m = new M4();
+  public static M4d newM4(M4d m1) {
+    M4d m = new M4d();
     if (m1 == null) {
       m.setIdentity();
       return m;
@@ -134,8 +134,8 @@ public class M4 extends M34 {
    *        The translational components of the matrix
    * @return m
    */
-  public static M4 newMV(M3 m1, T3 t) {
-    M4 m = new M4();
+  public static M4d newMV(M3d m1, T3d t) {
+    M4d m = new M4d();
     m.setMV(m1, t);
     return m;
   }
@@ -163,7 +163,7 @@ public class M4 extends M34 {
    *        the matrix to be copied
    * @return this
    */
-  public M4 setM4(M4 m1) {
+  public M4d setM4(M4d m1) {
     setM33(m1);
     m03 = m1.m03;
     m13 = m1.m13;
@@ -183,7 +183,7 @@ public class M4 extends M34 {
    * @param t
    *        The translational components of the matrix
    */
-  public void setMV(M3 m1, T3 t) {
+  public void setMV(M3d m1, T3d t) {
     setM33(m1);
     setTranslation(t);
     m33 = 1;
@@ -198,7 +198,7 @@ public class M4 extends M34 {
    * @param m1
    *        the 3x3 matrix
    */
-  public void setToM3(M34 m1) {
+  public void setToM3(M34d m1) {
     setM33(m1);
     m03 = m13 = m23 = m30 = m31 = m32 = 0.0f;
     m33 = 1.0f;
@@ -211,7 +211,7 @@ public class M4 extends M34 {
    * @param a
    *        the axis and angle to be converted
    */
-  public void setToAA(A4 a) {
+  public void setToAA(A4d a) {
     setIdentity();
     setAA33(a);
   }
@@ -249,7 +249,7 @@ public class M4 extends M34 {
    * @param trans
    *        the translational component
    */
-  public void setTranslation(T3 trans) {
+  public void setTranslation(T3d trans) {
     m03 = trans.x;
     m13 = trans.y;
     m23 = trans.z;
@@ -342,7 +342,7 @@ public class M4 extends M34 {
    * @param trans
    *        the vector that will receive the translational component
    */
-  public void getTranslation(T3 trans) {
+  public void getTranslation(T3d trans) {
     trans.x = m03;
     trans.y = m13;
     trans.z = m23;
@@ -355,7 +355,7 @@ public class M4 extends M34 {
    * @param m1
    *        The matrix that will hold the values
    */
-  public void getRotationScale(M3 m1) {
+  public void getRotationScale(M3d m1) {
     m1.m00 = m00;
     m1.m01 = m01;
     m1.m02 = m02;
@@ -374,7 +374,7 @@ public class M4 extends M34 {
    * @param m1
    *        The matrix that will be the new upper 3x3
    */
-  public void setRotationScale(M3 m1) {
+  public void setRotationScale(M3d m1) {
     m00 = m1.m00;
     m01 = m1.m01;
     m02 = m1.m02;
@@ -560,7 +560,7 @@ public class M4 extends M34 {
    * @param m1
    *        the other matrix
    */
-  public void sub(M4 m1) {
+  public void sub(M4d m1) {
     sub33(m1);
     m03 -= m1.m03;
     m13 -= m1.m13;
@@ -576,7 +576,7 @@ public class M4 extends M34 {
    * 
    * @param pt
    */
-  public void add(T3 pt) {
+  public void add(T3d pt) {
     m03 += pt.x;
     m13 += pt.y;
     m23 += pt.z;
@@ -604,7 +604,7 @@ public class M4 extends M34 {
    * Sets the value of this matrix to its inverse.
    * @return this
    */
-  public M4 invert() {
+  public M4d invert() {
     float s = determinant4();
     if (s == 0.0)
       return this;
@@ -723,7 +723,7 @@ public class M4 extends M34 {
    * @param m1
    *        the other matrix
    */
-  public void mul(M4 m1) {
+  public void mul(M4d m1) {
     mul2(this, m1);
   }
 
@@ -736,7 +736,7 @@ public class M4 extends M34 {
    * @param m2
    *        the second matrix
    */
-  public void mul2(M4 m1, M4 m2) {
+  public void mul2(M4d m1, M4d m2) {
     // alias-safe way.
     set(m1.m00 * m2.m00 + m1.m01 * m2.m10 + m1.m02 * m2.m20 + m1.m03 * m2.m30,
         m1.m00 * m2.m01 + m1.m01 * m2.m11 + m1.m02 * m2.m21 + m1.m03 * m2.m31,
@@ -766,7 +766,7 @@ public class M4 extends M34 {
    * @param vec
    *        the single precision vector to be transformed
    */
-  public void transform(T4 vec) {
+  public void transform(T4d vec) {
     transform2(vec, vec);
   }
 
@@ -779,7 +779,7 @@ public class M4 extends M34 {
    * @param vecOut
    *        the vector into which the transformed values are placed
    */
-  public void transform2(T4 vec, T4 vecOut) {
+  public void transform2(T4d vec, T4d vecOut) {
     // alias-safe
     vecOut.set4(m00 * vec.x + m01 * vec.y + m02 * vec.z + m03 * vec.w, m10
         * vec.x + m11 * vec.y + m12 * vec.z + m13 * vec.w, m20 * vec.x + m21
@@ -795,7 +795,7 @@ public class M4 extends M34 {
    * @param point
    *        the input point to be transformed.
    */
-  public void rotTrans(T3 point) {
+  public void rotTrans(T3d point) {
     rotTrans2(point, point);
   }
 
@@ -810,7 +810,7 @@ public class M4 extends M34 {
    *        the transformed point
    * @return pointOut
    */
-  public T3 rotTrans2(T3 point, T3 pointOut) {
+  public T3d rotTrans2(T3d point, T3d pointOut) {
       pointOut.set(
           m00 * point.x + m01 * point.y + m02 * point.z + m03, 
           m10 * point.x + m11 * point.y + m12 * point.z + m13, 
@@ -826,7 +826,7 @@ public class M4 extends M34 {
    *        the angle to rotate about the W axis in radians
    * @return this
    */
-  public M4 setAsXYRotation(float angle) {
+  public M4d setAsXYRotation(float angle) {
     setIdentity();
     double c = Math.cos(angle);
     double s = Math.sin(angle);
@@ -845,7 +845,7 @@ public class M4 extends M34 {
    *        the angle to rotate about the W axis in radians
    * @return this
    */
-  public M4 setAsYZRotation(float angle) {
+  public M4d setAsYZRotation(float angle) {
     setIdentity();
     double c = Math.cos(angle);
     double s = Math.sin(angle);
@@ -864,7 +864,7 @@ public class M4 extends M34 {
    *        the angle to rotate about the W axis in radians
    * @return this
    */
-  public M4 setAsXZRotation(float angle) {
+  public M4d setAsXZRotation(float angle) {
     setIdentity();
     double c = Math.cos(angle);
     double s = Math.sin(angle);
@@ -884,9 +884,9 @@ public class M4 extends M34 {
    */
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof M4))
+    if (!(o instanceof M4d))
       return false;
-    M4 m = (M4) o;
+    M4d m = (M4d) o;
     return (this.m00 == m.m00 && this.m01 == m.m01 && this.m02 == m.m02
         && this.m03 == m.m03 && this.m10 == m.m10 && this.m11 == m.m11
         && this.m12 == m.m12 && this.m13 == m.m13 && this.m20 == m.m20
@@ -905,14 +905,14 @@ public class M4 extends M34 {
    */
   @Override
   public int hashCode() {
-    return T3.floatToIntBits(m00) ^ T3.floatToIntBits(m01)
-        ^ T3.floatToIntBits(m02) ^ T3.floatToIntBits(m03)
-        ^ T3.floatToIntBits(m10) ^ T3.floatToIntBits(m11)
-        ^ T3.floatToIntBits(m12) ^ T3.floatToIntBits(m13)
-        ^ T3.floatToIntBits(m20) ^ T3.floatToIntBits(m21)
-        ^ T3.floatToIntBits(m22) ^ T3.floatToIntBits(m23)
-        ^ T3.floatToIntBits(m30) ^ T3.floatToIntBits(m31)
-        ^ T3.floatToIntBits(m32) ^ T3.floatToIntBits(m33);
+    return T3d.floatToIntBits(m00) ^ T3d.floatToIntBits(m01)
+        ^ T3d.floatToIntBits(m02) ^ T3d.floatToIntBits(m03)
+        ^ T3d.floatToIntBits(m10) ^ T3d.floatToIntBits(m11)
+        ^ T3d.floatToIntBits(m12) ^ T3d.floatToIntBits(m13)
+        ^ T3d.floatToIntBits(m20) ^ T3d.floatToIntBits(m21)
+        ^ T3d.floatToIntBits(m22) ^ T3d.floatToIntBits(m23)
+        ^ T3d.floatToIntBits(m30) ^ T3d.floatToIntBits(m31)
+        ^ T3d.floatToIntBits(m32) ^ T3d.floatToIntBits(m33);
   }
 
   /**
@@ -927,7 +927,7 @@ public class M4 extends M34 {
         + m20 + "\t" + m21 + "\t" + m22 + "\t" + m23 + "]" + "\n  [" + m30
         + "\t" + m31 + "\t" + m32 + "\t" + m33 + "] ]";
   }
-  public M4 round(float f) {
+  public M4d round(float f) {
     m00 = rnd(m00, f);
     m01 = rnd(m01, f);
     m02 = rnd(m02, f);

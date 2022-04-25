@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -232,9 +232,9 @@ public class BioModelSet {
     getBioExt().getAllPolymerInfo(bs, info);
   }
 
-  public void getAllPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
+  public void getAllPolymerPointsAndVectors(BS bs, Lst<P3d[]> vList,
                                             boolean isTraceAlpha,
-                                            float sheetSmoothing) {
+                                            double sheetSmoothing) {
     for (int i = 0; i < ms.mc; ++i)
       if (ms.am[i].isBioModel) {
         BioModel m = (BioModel) ms.am[i];
@@ -441,8 +441,8 @@ public class BioModelSet {
     if (bsAtoms != null && mode == T.ramachandran) {
       bsAtoms = BSUtil.copy(bsAtoms);
       for (int i = ms.ac; --i >= 0;)
-        if (atoms[i] == null || Float.isNaN(atoms[i].group.getGroupParameter(T.phi))
-            || Float.isNaN(atoms[i].group.getGroupParameter(T.psi)))
+        if (atoms[i] == null || Double.isNaN(atoms[i].group.getGroupParameter(T.phi))
+            || Double.isNaN(atoms[i].group.getGroupParameter(T.psi)))
           bsAtoms.clear(i);
     }
     int at1 = (bsAtoms == null ? vwr.getAllAtoms() : bsAtoms).length() - 1;
@@ -546,7 +546,7 @@ public class BioModelSet {
     return bs;
   }
 
-  public boolean mutate(BS bs, String group, String[] sequence, String alphaType, float[] phipsi) {
+  public boolean mutate(BS bs, String group, String[] sequence, String alphaType, double[] phipsi) {
     return getBioExt().mutate(vwr, bs, group, sequence, alphaType, phipsi);
   }
 
@@ -624,7 +624,7 @@ public class BioModelSet {
     }
   }
 
-  public void setAllStructureList(Map<STR, float[]> structureList) {
+  public void setAllStructureList(Map<STR, double[]> structureList) {
     for (int iModel = ms.mc; --iModel >= 0;)
       if (ms.am[iModel].isBioModel) {
         BioModel m = (BioModel) ms.am[iModel];

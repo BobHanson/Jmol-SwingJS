@@ -66,7 +66,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -126,14 +126,14 @@ import org.jmol.util.ContactPair;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.viewer.JC;
 
@@ -153,7 +153,7 @@ public class Parameters {
   boolean logCube = false;
   public boolean isSilent = false;
   
-  float assocCutoff = 0.3f; // fraction along the edge to use as a cutoff for averaging of normals  
+  double assocCutoff = 0.3f; // fraction along the edge to use as a cutoff for averaging of normals  
 
   final static int NO_ANISOTROPY = 1 << 5;
   final static int IS_SILENT = 1 << 6;
@@ -208,7 +208,7 @@ public class Parameters {
     bsSelected = null;
     bsSolvent = null;
     calculationType = "";
-    center = new P3();
+    center = new P3d();
     resetForMapping(true);
     colorBySign = colorByPhase = colorBySets = false;
     colorEncoder = null;
@@ -223,10 +223,10 @@ public class Parameters {
     contoursDiscrete = null;
     contourColixes = null;
     contourFromZero = true;
-    cutoff = Float.MAX_VALUE;
+    cutoff = Double.MAX_VALUE;
     cutoffAutomatic = true;
     dataXYReversed = false;
-    distance = Float.MAX_VALUE;
+    distance = Double.MAX_VALUE;
     doFullMolecular = false;
     envelopeRadius = 10f;
     extendGrid = 0;
@@ -259,7 +259,7 @@ public class Parameters {
     modelInvRotation = null;
     nContours = 0;
     pocket = null;
-    pointSize = Float.NaN;
+    pointSize = Double.NaN;
     probes = null;
     probeValues = null;
     propertyDistanceMax = Integer.MAX_VALUE;
@@ -268,10 +268,10 @@ public class Parameters {
     rangeDefined = false;
     rangeAll = false;
     rangeSelected = false;
-    resolution = Float.MAX_VALUE;
-    scale = Float.NaN;
+    resolution = Double.MAX_VALUE;
+    scale = Double.NaN;
     scale3d = 0;
-    sigma = Float.NaN;
+    sigma = Double.NaN;
     slabInfo = null;
     solventExtendedAtomRadius = 0;
     state = STATE_INITIALIZED;
@@ -292,13 +292,13 @@ public class Parameters {
   public void resetForMapping(boolean haveSurface) {
     if (!haveSurface) 
       state = Parameters.STATE_DATA_READ;
-    center.x = Float.NaN;
+    center.x = Double.NaN;
     colorDensity = false;
     func = null;
     intersection = null;
     isAnisotropic = false;
     isMapped = true;
-    mappedDataMin = Float.MAX_VALUE;
+    mappedDataMin = Double.MAX_VALUE;
     origin = null;
     parameters = null;
     points = null;
@@ -312,52 +312,52 @@ public class Parameters {
   //solvent/molecular-related:
   public RadiusData atomRadiusData;
   boolean addHydrogens;
-  float solventRadius;
-  float solventExtendedAtomRadius;
+  double solventRadius;
+  double solventExtendedAtomRadius;
   boolean propertySmoothing;
   int propertySmoothingPower = 4;
-  float envelopeRadius;
-  float cavityRadius;
+  double envelopeRadius;
+  double cavityRadius;
   boolean isCavity;
   Boolean pocket; //three states: TRUE, FALSE, and NULL
   int minSet;
   public Lst<Object[]> slabInfo;
-  float slabPlaneOffset = Float.NaN;
+  double slabPlaneOffset = Double.NaN;
 
-  float[] theProperty;
+  double[] theProperty;
   ///// solvent-accessible, solvent-excluded surface //////
 
-  float solvent_ptsPerAngstrom = 4f;
+  double solvent_ptsPerAngstrom = 4f;
   int solvent_gridMax = 60;
 
-  float plane_ptsPerAngstrom = 4f;
+  double plane_ptsPerAngstrom = 4f;
   int plane_gridMax = 81;
 
   //defaults
   
-  final static float ANGSTROMS_PER_BOHR = JC.ANGSTROMS_PER_BOHR;
+  final static double ANGSTROMS_PER_BOHR = JC.ANGSTROMS_PER_BOHR;
   final static int defaultEdgeFractionBase = 35; //#$%.......
   final static int defaultEdgeFractionRange = 90;
   final static int defaultColorFractionBase = 35;
   final static int defaultColorFractionRange = 90;
-  final static float defaultMappedDataMin = 0f;
-  final static float defaultMappedDataMax = 1.0f;
-  final static float defaultCutoff = 0.02f;
-  final static float defaultOrbitalCutoff = 0.04f;
-  final static float defaultLobeCutoff = 0.14f;
-  final static float defaultOrbitalCutoffOld = 0.14f;
-  public final static float defaultQMOrbitalCutoff = 0.050f; // WebMO
-  final static float defaultQMElectronDensityCutoff = 0.010f;
+  final static double defaultMappedDataMin = 0f;
+  final static double defaultMappedDataMax = 1.0f;
+  final static double defaultCutoff = 0.02f;
+  final static double defaultOrbitalCutoff = 0.04f;
+  final static double defaultLobeCutoff = 0.14f;
+  final static double defaultOrbitalCutoffOld = 0.14f;
+  public final static double defaultQMOrbitalCutoff = 0.050f; // WebMO
+  final static double defaultQMElectronDensityCutoff = 0.010f;
   final static int defaultContourCount = 11; //odd is better
   final static int nContourMax = 100;
   final static int defaultColorNegative = 0xFFFF0000; //red
   final static int defaultColorPositive =  0xFF0000FF; //blue
   final static int defaultColorNegativeLCAO = 0xFF800080; //purple
   final static int defaultColorPositiveLCAO = 0xFFFFA500; //orange
-  final static float defaultSolventRadius = 1.2f;
-  final static float defaultMepCutoff = 0.1f;
-  final static float defaultMepMin = -0.1f;
-  final static float defaultMepMax = 0.1f;
+  final static double defaultSolventRadius = 1.2f;
+  final static double defaultMepCutoff = 0.1f;
+  final static double defaultMepMin = -0.1f;
+  final static double defaultMepMax = 0.1f;
 
   //color
   
@@ -381,29 +381,29 @@ public class Parameters {
   int atomIndex; //for lcaoCartoons
   
   boolean isAngstroms;
-  float scale;
-  public float scale3d;
+  double scale;
+  public double scale3d;
   
-  float[] anisotropy = new float[3];
+  double[] anisotropy = new double[3];
   boolean isAnisotropic;
 
-  void setAnisotropy(P3 pt) { 
+  void setAnisotropy(P3d pt) { 
       anisotropy[0] = pt.x;
       anisotropy[1] = pt.y;
       anisotropy[2] = pt.z;
       isAnisotropic = true;
-      if (Float.isNaN(center.x))
+      if (Double.isNaN(center.x))
         center.set(0, 0, 0);
   }
   
   M3d eccentricityMatrix;
   M3d eccentricityMatrixInverse;
   boolean isEccentric;
-  float eccentricityScale;
-  float eccentricityRatio;
-  float[] aniosU;
+  double eccentricityScale;
+  double eccentricityRatio;
+  double[] aniosU;
 
-  void setEccentricity(P4 info) {
+  void setEccentricity(P4d info) {
     /*
      * {cx cy cz fab/c}
      * 
@@ -413,17 +413,17 @@ public class Parameters {
      *    rotation turns {0 0 1} into ecc. 
      * 
      */
-    V3 ecc = V3.new3(info.x, info.y, info.z);
-    float c = (scale > 0 ? scale : info.w < 0 ? 1f : ecc.length());
-    float fab_c = Math.abs(info.w);
+    V3d ecc = V3d.new3(info.x, info.y, info.z);
+    double c = (scale > 0 ? scale : info.w < 0 ? 1f : ecc.length());
+    double fab_c = Math.abs(info.w);
     ecc.normalize();
-    V3 z = V3.new3(0, 0, 1);
+    V3d z = V3d.new3(0, 0, 1);
     ecc.add(z);
     ecc.normalize();
-    if (Float.isNaN(ecc.x)) // was exactly {0 0 -1} -- just rotate about x
+    if (Double.isNaN(ecc.x)) // was exactly {0 0 -1} -- just rotate about x
       ecc.set(1, 0, 0);
     eccentricityMatrixInverse = new M3d();
-    eccentricityMatrixInverse.invertM(eccentricityMatrix = new M3d().setAA(A4.newVA(ecc, (float) Math.PI)));
+    eccentricityMatrixInverse.invertM(eccentricityMatrix = new M3d().setAA(A4d.newVA(ecc, (double) Math.PI)));
     isEccentric = isAnisotropic = true;
     eccentricityScale = c;
     eccentricityRatio = fab_c;
@@ -432,11 +432,11 @@ public class Parameters {
     anisotropy[0] = fab_c * c;
     anisotropy[1] = fab_c * c;
     anisotropy[2] = c;
-    if (Float.isNaN(center.x))
+    if (Double.isNaN(center.x))
       center.set(0, 0, 0);
   }
 
-  void setPlane(P4 plane) {
+  void setPlane(P4d plane) {
     thePlane = plane;
     if (thePlane.x == 0 && thePlane.y == 0
         && thePlane.z == 0)
@@ -444,17 +444,17 @@ public class Parameters {
     isContoured = true;
   }
 
-  void setSphere(float radius, boolean isGeodesic) {
+  void setSphere(double radius, boolean isGeodesic) {
     dataType = (isGeodesic ? SURFACE_GEODESIC : SURFACE_SPHERE);
     distance = radius;
-    setEccentricity(P4.new4(0, 0, 1, 1));
+    setEccentricity(P4d.new4(0, 0, 1, 1));
     cutoff = PT.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
     script = getScriptParams() + " SPHERE " + radius + ";";
   }
   
-  void setEllipsoidP4(P4 v) {
+  void setEllipsoidP4(P4d v) {
     dataType = SURFACE_ELLIPSOID2;
     distance = 1f;
     setEccentricity(v);
@@ -462,32 +462,32 @@ public class Parameters {
     isCutoffAbsolute = false;
     isSilent = !logMessages;
     //script = " center " + Escape.escape(center)
-      //  + (Float.isNaN(scale) ? "" : " scale " + scale) + " ELLIPSOID {" + v.x
+      //  + (Double.isNaN(scale) ? "" : " scale " + scale) + " ELLIPSOID {" + v.x
         //+ " " + v.y + " " + v.z + " " + v.w + "};";
   }
 
-  float[] anisoB;
-  public void setEllipsoidAF(float[] bList) {
+  double[] anisoB;
+  public void setEllipsoidAF(double[] bList) {
     anisoB = bList;
     //for (int i = 0; i < 6; i++)System.out.print(bList[i] + " ");System.out.println( " in Parameters setEllipsoid" + center);
     dataType = SURFACE_ELLIPSOID3;
-    distance = 0.3f * (Float.isNaN(scale) ? 1f : scale);
+    distance = 0.3f * (Double.isNaN(scale) ? 1f : scale);
     cutoff = PT.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
-    if (Float.isNaN(center.x))
+    if (Double.isNaN(center.x))
       center.set(0, 0, 0);
-    if (resolution == Float.MAX_VALUE)
+    if (resolution == Double.MAX_VALUE)
       resolution = 6;
     //script = " center " + Escape.escape(center)
-      //  + (Float.isNaN(scale) ? "" : " scale " + scale) + " ELLIPSOID {" + bList[0]
+      //  + (Double.isNaN(scale) ? "" : " scale " + scale) + " ELLIPSOID {" + bList[0]
         //+ " " + bList[1] + " " + bList[2] + " " + bList[3] + " " + bList[4] + " " + bList[5] + "};";
   }
 
-  void setLobe(P4 v) {
+  void setLobe(P4d v) {
     dataType = SURFACE_LOBE;
     setEccentricity(v);
-    if (cutoff == Float.MAX_VALUE) {
+    if (cutoff == Double.MAX_VALUE) {
       cutoff = defaultLobeCutoff;
       if (isSquared)
         cutoff = cutoff * cutoff;
@@ -499,34 +499,34 @@ public class Parameters {
   
   private String getScriptParams() {
     return " center "
-        + Escape.eP(center) + (Float.isNaN(scale) ? "" : " scale " + scale);
+        + Escape.eP(center) + (Double.isNaN(scale) ? "" : " scale " + scale);
   }
 
-  void setLp(P4 v) {
+  void setLp(P4d v) {
     dataType = SURFACE_LONEPAIR;
     setEccentricity(v);
-    if (cutoff == Float.MAX_VALUE) {
+    if (cutoff == Double.MAX_VALUE) {
       cutoff = defaultLobeCutoff;
       if (isSquared)
         cutoff = cutoff * cutoff;
     } 
     isSilent = !logMessages;
     script = " center " + Escape.eP(center)
-        + (Float.isNaN(scale) ? "" : " scale " + scale) + " LP {" + v.x + " "
+        + (Double.isNaN(scale) ? "" : " scale " + scale) + " LP {" + v.x + " "
         + v.y + " " + v.z + " " + v.w + "};";
   }
   
-  void setRadical(P4 v) {
+  void setRadical(P4d v) {
     dataType = SURFACE_RADICAL;
     setEccentricity(v);
-    if (cutoff == Float.MAX_VALUE) {
+    if (cutoff == Double.MAX_VALUE) {
       cutoff = defaultLobeCutoff;
       if (isSquared)
         cutoff = cutoff * cutoff;
     }
     isSilent = !logMessages;
     script = " center " + Escape.eP(center)
-        + (Float.isNaN(scale) ? "" : " scale " + scale) + " RAD {" + v.x + " "
+        + (Double.isNaN(scale) ? "" : " scale " + scale) + " RAD {" + v.x + " "
         + v.y + " " + v.z + " " + v.w + "};";
   }
   
@@ -539,7 +539,7 @@ public class Parameters {
     isSilent = !logMessages;
   }
     
-  void setSolvent(String propertyName, float radius) {
+  void setSolvent(String propertyName, double radius) {
     isEccentric = isAnisotropic = false;
     //anisotropy[0] = anisotropy[1] = anisotropy[2] = 1f;
     solventRadius = Math.abs(radius);
@@ -551,7 +551,7 @@ public class Parameters {
 
     if (state < Parameters.STATE_DATA_READ
         && (cutoffAutomatic || !colorDensity)
-        && (intersection == null || cutoff == Float.MAX_VALUE))
+        && (intersection == null || cutoff == Double.MAX_VALUE))
       cutoff = 0.0f;
 
     switch (dataType) {
@@ -618,7 +618,7 @@ public class Parameters {
   void setFunctionXYZ(Lst<Object> value) {
     dataType = SURFACE_FUNCTIONXYZ;
     functionInfo = value;
-    if (cutoff == Float.MAX_VALUE)
+    if (cutoff == Double.MAX_VALUE)
       cutoff = PT.FLOAT_MIN_SAFE;
     isEccentric = isAnisotropic = false;
   }
@@ -626,13 +626,13 @@ public class Parameters {
   int psi_n = 2;
   int psi_l = 1;
   int psi_m = 1;
-  float psi_Znuc = 1; // hydrogen
-  float psi_ptsPerAngstrom = 5f;
+  double psi_Znuc = 1; // hydrogen
+  double psi_ptsPerAngstrom = 5f;
   public int psi_monteCarloCount = 0;
 
-  boolean setAtomicOrbital(float[] nlmZprs) {
+  boolean setAtomicOrbital(double[] nlmZprs) {
     dataType = SURFACE_ATOMICORBITAL;
-    setEccentricity(P4.new4(0, 0, 1, 1));
+    setEccentricity(P4d.new4(0, 0, 1, 1));
     psi_n = (int) nlmZprs[0];
     psi_l = (int) nlmZprs[1];
     psi_m = (int) nlmZprs[2];
@@ -644,7 +644,7 @@ public class Parameters {
     randomSeed = (int) nlmZprs[6];
     psi_ptsPerAngstrom = 10;
     // quantum rule is abs(m) <= l < n
-    if (cutoff == Float.MAX_VALUE || cutoff == defaultOrbitalCutoffOld) {
+    if (cutoff == Double.MAX_VALUE || cutoff == defaultOrbitalCutoffOld) {
       cutoff = (psi_monteCarloCount > 0 ? 0 : defaultOrbitalCutoff);
       if (isSquared)
         cutoff = cutoff * cutoff;
@@ -657,16 +657,16 @@ public class Parameters {
 
   public final static int MEP_MAX_GRID = 40;
   int mep_gridMax = MEP_MAX_GRID;
-  float mep_ptsPerAngstrom = 3f;
-  float mep_marginAngstroms = 1f; // may have to adjust this
+  double mep_ptsPerAngstrom = 3f;
+  double mep_marginAngstroms = 1f; // may have to adjust this
   public int mep_calcType = -1;
 
-  void setMep(float[] charges, boolean isMLP) {
+  void setMep(double[] charges, boolean isMLP) {
     dataType = (isMLP ? SURFACE_MLP : SURFACE_MEP);
     theProperty = charges;
     usePropertyForColorRange = false;
     isEccentric = isAnisotropic = false;
-    if (cutoff == Float.MAX_VALUE) {
+    if (cutoff == Double.MAX_VALUE) {
       cutoff = defaultMepCutoff;
       if (isSquared)
         cutoff = cutoff * cutoff;
@@ -702,11 +702,11 @@ public class Parameters {
   public Map<String, Object> moData;
   public final static int MO_MAX_GRID = 80;
   int qm_gridMax = MO_MAX_GRID;
-  float qm_ptsPerAngstrom = 10f;
-  float qm_marginAngstroms = 1f; // may have to adjust this
+  double qm_ptsPerAngstrom = 10f;
+  double qm_marginAngstroms = 1f; // may have to adjust this
   int qm_nAtoms;
   int qm_moNumber = Integer.MAX_VALUE;
-  float[] qm_moLinearCombination = null;
+  double[] qm_moLinearCombination = null;
   
   void setNci(boolean isPromolecular) {
     fullyLit = true;
@@ -718,10 +718,10 @@ public class Parameters {
 
     if (isPromolecular) {
       if (parameters == null || parameters.length < 2)
-        parameters = new float[] { cutoff, 2 }; // default intermolecular
+        parameters = new double[] { cutoff, 2 }; // default intermolecular
     }
 
-    if (cutoff == Float.MAX_VALUE || cutoff == 0)
+    if (cutoff == Double.MAX_VALUE || cutoff == 0)
       cutoff = 0.3f;
     if (isSquared)
       cutoff *= cutoff;
@@ -732,7 +732,7 @@ public class Parameters {
   }
    
   @SuppressWarnings("unchecked")
-  void setMO(int iMo, float[] linearCombination) {
+  void setMO(int iMo, double[] linearCombination) {
     isModelConnected = true;
     qm_moLinearCombination = linearCombination;
     qm_moNumber = (linearCombination == null ? Math.abs(iMo) : (int) linearCombination[1]);
@@ -768,7 +768,7 @@ public class Parameters {
     dataType = SURFACE_MOLECULARORBITAL;
     //  colorBySign = false;
     //  isBicolorMap = false;
-    if (cutoff == Float.MAX_VALUE) {
+    if (cutoff == Double.MAX_VALUE) {
       cutoff = (isElectronDensity ? defaultQMElectronDensityCutoff
           : defaultQMOrbitalCutoff);
     }
@@ -784,8 +784,8 @@ public class Parameters {
     isBicolorMap = true;
   }
   
-  P3 center, point;
-  float distance;
+  P3d center, point;
+  double distance;
   public boolean allowVolumeRender;
   
   public String script;
@@ -807,8 +807,8 @@ public class Parameters {
   
   boolean insideOut;
   boolean dataXYReversed;
-  public float cutoff = Float.MAX_VALUE;
-  public float sigma = Float.MAX_VALUE; // for MrcReader
+  public double cutoff = Double.MAX_VALUE;
+  public double sigma = Double.MAX_VALUE; // for MrcReader
   boolean cutoffAutomatic = true;
   public boolean isCutoffAbsolute;
   public boolean isPositiveOnly;
@@ -816,29 +816,29 @@ public class Parameters {
   boolean rangeAll;
   boolean rangeSelected;
   public boolean rangeDefined;
-  float valueMappedToRed, valueMappedToBlue;
-  float mappedDataMin;
-  float mappedDataMax;
+  double valueMappedToRed, valueMappedToBlue;
+  double mappedDataMin;
+  double mappedDataMax;
   boolean isColorReversed;
   public boolean isBicolorMap;
   public boolean isSquared;
   public boolean isSquaredLinear;
 
-  public P4 thePlane;
+  public P4d thePlane;
   public boolean isContoured;
   
   int nContours;
   int thisContour; 
   boolean contourFromZero;
-  float[] parameters; // additional parameters
+  double[] parameters; // additional parameters
  
-  public float resolution;
+  public double resolution;
   int downsampleFactor;
   int maxSet;
-  public float[] contoursDiscrete;
+  public double[] contoursDiscrete;
   public short[] contourColixes;
-  P3 contourIncrements;
-  public P3[] boundingBox;
+  P3d contourIncrements;
+  public P3d[] boundingBox;
   public BS[] bsExcluded;
   public int contourType;
   public boolean colorSchemeTranslucent;
@@ -846,26 +846,26 @@ public class Parameters {
   public boolean usePropertyForColorRange = true;
   public boolean isPeriodic;
   public boolean doFullMolecular;
-  public float propertyDistanceMax = Integer.MAX_VALUE;
+  public double propertyDistanceMax = Integer.MAX_VALUE;
   public int randomSeed;
   public boolean fullyLit;
   public int[] vertexSource;
   public BS[] intersection;
-  public P3 origin;
-  public P3 steps;
-  public P3 points;
+  public P3d origin;
+  public P3d steps;
+  public P3d points;
   public VolumeData volumeData; // can be set by Contact or MO reader
   public ContactPair contactPair;
-  public P3 mapLattice;
-  public float extendGrid;
+  public P3d mapLattice;
+  public double extendGrid;
   public boolean isMapped;
   public boolean showTiming;
-  public float pointSize;
-  public P3[] probes;
+  public double pointSize;
+  public P3d[] probes;
   public boolean isModelConnected;
   public BS surfaceAtoms;
-  public Object[] filesData; // originally [ String[] names, float[] factors ]
-  public float[] probeValues;
+  public Object[] filesData; // originally [ String[] names, double[] factors ]
+  public double[] probeValues;
   public SB sbOut;
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
@@ -874,8 +874,8 @@ public class Parameters {
       mappedDataMin = -1;
       mappedDataMax = 1;
     }
-    if (mappedDataMin == Float.MAX_VALUE || mappedDataMin == mappedDataMax) {
-      float[] minMax = surfaceReader.getMinMaxMappedValues(haveData);
+    if (mappedDataMin == Double.MAX_VALUE || mappedDataMin == mappedDataMax) {
+      double[] minMax = surfaceReader.getMinMaxMappedValues(haveData);
       System.out.println("parameters - setmapranges " + minMax[0] + " " + minMax[1]);
       mappedDataMin = minMax[0];
       mappedDataMax = minMax[1];

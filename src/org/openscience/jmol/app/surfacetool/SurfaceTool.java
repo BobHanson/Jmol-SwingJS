@@ -41,9 +41,9 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 import org.jmol.viewer.JC;
 import org.openscience.jmol.app.HistoryFile;
 
@@ -55,10 +55,10 @@ public class SurfaceTool {
   private SurfaceToolGUI gui;
   boolean useGUI;
   protected JmolViewer vwr;
-  private final P3 negCorner = new P3();
-  private final P3 posCorner = new P3();
-  private final P3 center = new P3();
-  private final V3 boxVec = new V3();
+  private final P3d negCorner = new P3d();
+  private final P3d posCorner = new P3d();
+  private final P3d center = new P3d();
+  private final V3d boxVec = new V3d();
   //surface specific parameters
   private final List<SurfaceStatus> surfaces = new  ArrayList<SurfaceStatus>();
 
@@ -133,7 +133,7 @@ public class SurfaceTool {
       if (m.thisID.equalsIgnoreCase("_slicerleft")
           || m.thisID.equalsIgnoreCase("_slicerright"))
         continue;
-      P3[] bb = m.getBoundingBox();
+      P3d[] bb = m.getBoundingBox();
       if (bb == null)
         continue;
       box.addBoundBoxPoint(bb[0]);
@@ -146,7 +146,7 @@ public class SurfaceTool {
     //TODO should get stored parameters from History file upon initialization
     // probably belongs in another routine called only on start up.
     thicknessMax = 2 * boxVec.length();
-    float delta = position - positionMin;
+    double delta = position - positionMin;
     if (useMolecular) {
       //set positionMin to minimum of BBoxCornerMin.x .y or .z or if all are 
       //negative -1* distance from origin. PositionMax similarly.
@@ -250,23 +250,23 @@ public class SurfaceTool {
     angleUnits = units;
   }
 
-  P3 getNegCorner() {
+  P3d getNegCorner() {
     return negCorner;
   }
 
-  P3 getPosCorner() {
+  P3d getPosCorner() {
     return posCorner;
   }
 
   /* Slicer section Begins
    * 
    */
-  private float angleXY;
-  private float anglefromZ;
-  private float positionMin;
-  private float position;
-  private float thickness;
-  private float thicknessMax;
+  private double angleXY;
+  private double anglefromZ;
+  private double positionMin;
+  private double position;
+  private double thickness;
+  private double thicknessMax;
   private Slice slice = new Slice();
 
   private boolean leftOn = false;
@@ -279,7 +279,7 @@ public class SurfaceTool {
   private void initSlice() {
     //set to middle and full width
     angleXY = 0;
-    anglefromZ = (float) (Math.PI / 2);
+    anglefromZ = (double) (Math.PI / 2);
     position = 0;
     thickness = negCorner.distance(posCorner) / 5;
     slice.setSlice(angleXY, anglefromZ, position, thickness, center, boxVec,
@@ -299,15 +299,15 @@ public class SurfaceTool {
    * displayed.
    * 
    * @param angleXY
-   *        (float)angle in radians from X-axis to projection in XY plane
+   *        (double)angle in radians from X-axis to projection in XY plane
    * @param anglefromZ
-   *        (float)angle in radians from z-axis to vector
+   *        (double)angle in radians from z-axis to vector
    * @param position
-   *        (float) position along direction vector in absolute units
+   *        (double) position along direction vector in absolute units
    * @param thickness
-   *        (float) thickness of slice in absolute units
+   *        (double) thickness of slice in absolute units
    */
-  void setSlice(float angleXY, float anglefromZ, float position, float thickness) {
+  void setSlice(double angleXY, double anglefromZ, double position, double thickness) {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
@@ -325,9 +325,9 @@ public class SurfaceTool {
   /**
    * 
    * @param angle
-   *        (float) angle from X-axis of projection on XY plane in radians.
+   *        (double) angle from X-axis of projection on XY plane in radians.
    */
-  void setSliceAngleXY(float angle) {
+  void setSliceAngleXY(double angle) {
     if (angleXY != angle) {
       angleXY = angle;
       slice.setSlice(angleXY, anglefromZ, position, thickness, center, boxVec,
@@ -335,16 +335,16 @@ public class SurfaceTool {
     }
   }
 
-  float getSliceAngleXY() {
+  double getSliceAngleXY() {
     return (angleXY);
   }
 
   /**
    * 
    * @param angle
-   *        (float) angle of vector from Z axis in radians.
+   *        (double) angle of vector from Z axis in radians.
    */
-  void setSliceAnglefromZ(float angle) {
+  void setSliceAnglefromZ(double angle) {
     if (anglefromZ != angle) {
       anglefromZ = angle;
       slice.setSlice(angleXY, anglefromZ, position, thickness, center, boxVec,
@@ -352,16 +352,16 @@ public class SurfaceTool {
     }
   }
 
-  float getAnglefromZ() {
+  double getAnglefromZ() {
     return (anglefromZ);
   }
 
   /**
    * 
    * @param where
-   *        (float) position of slice center along direction vector.
+   *        (double) position of slice center along direction vector.
    */
-  void setSlicePosition(float where) {
+  void setSlicePosition(double where) {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
@@ -375,16 +375,16 @@ public class SurfaceTool {
     }
   }
 
-  float getSlicePosition() {
+  double getSlicePosition() {
     return (position);
   }
 
   /**
    * 
    * @param width
-   *        (float) thickness of slice.
+   *        (double) thickness of slice.
    */
-  void setSliceThickness(float width) {
+  void setSliceThickness(double width) {
     if (usePercent) {//convert to absolute units
       //TODO
       JOptionPane.showMessageDialog(null,
@@ -398,7 +398,7 @@ public class SurfaceTool {
     }
   }
 
-  float getSliceThickness() {
+  double getSliceThickness() {
     return (thickness);
   }
 
@@ -448,7 +448,7 @@ public class SurfaceTool {
   private void drawSlicePlane(SB cmd, int side, boolean on) {
     String color;
     String name = T.nameOf(side);
-    P4 plane;
+    P4d plane;
     switch (side) {
     default:
     case T.left:
@@ -505,23 +505,23 @@ public class SurfaceTool {
     useMolecular = on;
   }
 
-  float getPositionMin() {
+  double getPositionMin() {
     return positionMin;
   }
 
-  float getThicknessMax() {
+  double getThicknessMax() {
     return thicknessMax;
   }
 
-  P3 getCenter() {
+  P3d getCenter() {
     return center;
   }
 
-  V3 getBoxVec() {
+  V3d getBoxVec() {
     return boxVec;
   }
 
-  P4 getSliceMiddle() {
+  P4d getSliceMiddle() {
     return slice.getMiddle();
   }
 

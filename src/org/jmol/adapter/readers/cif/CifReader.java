@@ -44,7 +44,7 @@ import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * A true line-free CIF file reader for CIF files.
@@ -498,14 +498,14 @@ public class CifReader extends AtomSetCollectionReader {
     for (int i = asc.ac; --i >= 0;) {
       Atom a = asc.atoms[i];
       String sym = a.typeSymbol;
-      float[] data;
+      double[] data;
       if (sym != null && (data = htOxStates.get(sym)) != null) {
-        float charge = data[0];
-        float radius = data[1];
-        if (!Float.isNaN(charge)) {
-          a.formalCharge = Math.round(charge);
+        double charge = data[0];
+        double radius = data[1];
+        if (!Double.isNaN(charge)) {
+          a.formalCharge = (int) Math.round(charge);
         }
-        if (!Float.isNaN(radius)) {
+        if (!Double.isNaN(radius)) {
           a.bondingRadius = radius;
         }
       }
@@ -718,10 +718,10 @@ public class CifReader extends AtomSetCollectionReader {
       // or   0.5+x,0.5+y,z,+1
       //
       latticeType = "Magnetic";
-      lattvecs = new Lst<float[]>();
+      lattvecs = new Lst<double[]>();
       for (int i = 0; i < magCenterings.size(); i++) {
         String s = magCenterings.get(i);
-        float[] f = new float[modDim + 4];
+        double[] f = new double[modDim + 4];
         if (s.indexOf("x1") >= 0)
           for (int j = 1; j <= modDim + 3; j++)
             s = PT.rep(s, "x" + j, "");
@@ -731,7 +731,7 @@ public class CifReader extends AtomSetCollectionReader {
           s = tokens[j].trim();
           if (s.length() == 0)
             continue;
-          if ((f[j] = PT.parseFloatFraction(s)) != 0)
+          if ((f[j] = PT.parseDoubleFraction(s)) != 0)
             n++;
         }
         if (n >= 2) // needs to have an x y or z as well as a +/-1;
@@ -739,7 +739,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       magCenterings = null;
     } else if (latticeType != null && "ABCFI".indexOf(latticeType) >= 0) {
-      lattvecs = new Lst<float[]>();
+      lattvecs = new Lst<double[]>();
       try {
         ms.addLatticeVector(lattvecs, latticeType);
       } catch (Exception e) {
@@ -1007,12 +1007,12 @@ public class CifReader extends AtomSetCollectionReader {
   // atom type data
   ////////////////////////////////////////////////////////////////
 
-  private Map<String, float[]> htOxStates;
+  private Map<String, double[]> htOxStates;
   private Lst<Object[]> bondTypes = new Lst<Object[]>();
 
   private String disorderAssembly = ".";
   private String lastDisorderAssembly;
-  private Lst<float[]> lattvecs;
+  private Lst<double[]> lattvecs;
   private Lst<String> magCenterings;
   protected int maxSerial;
 
@@ -1036,13 +1036,13 @@ public class CifReader extends AtomSetCollectionReader {
       String sym = getField(ATOM_TYPE_SYMBOL);
       if (sym == null)
         continue;
-      float oxno = (float) parseDoubleStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
-      float radius = (float) parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
-      if (Float.isNaN(oxno) && Float.isNaN(radius))
+      double oxno = (double) parseDoubleStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
+      double radius = (double) parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
+      if (Double.isNaN(oxno) && Double.isNaN(radius))
         continue;
         if (htOxStates == null)
-          htOxStates = new Hashtable<String, float[]>();
-        htOxStates.put(sym, new float[] {oxno, radius});
+          htOxStates = new Hashtable<String, double[]>();
+        htOxStates.put(sym, new double[] {oxno, radius});
     }
   }
 
@@ -1468,10 +1468,10 @@ public class CifReader extends AtomSetCollectionReader {
         case MOMENT_Y:
         case MOMENT_Z:
           isMagCIF = true;
-          V3 pt = atom.vib;
+          V3d pt = atom.vib;
           if (pt == null)
             atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
-          float v = (float) parseDoubleStr(field);
+          double v = (double) parseDoubleStr(field);
           switch (tok) {
           case MOMENT_PRELIM_X:
           case MOMENT_X:
@@ -1517,13 +1517,13 @@ public class CifReader extends AtomSetCollectionReader {
         continue;
       if (id != null && seqID > 0) {
         // co-op vibration vector when we have both id and seqID
-        V3 pt = atom.vib;
+        V3d pt = atom.vib;
         if (pt == null)
           pt = asc.addVibrationVector(atom.index, 0, Double.NaN, T.seqid);
         pt.x = seqID;
       }
       if (modDim > 0 && siteMult != 0)
-        atom.vib = V3.new3(siteMult, 0, Float.NaN);
+        atom.vib = V3d.new3(siteMult, 0, Double.NaN);
     }
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (isMMCIF)
@@ -2095,7 +2095,7 @@ public class CifReader extends AtomSetCollectionReader {
     // not overlaying another atom -- if that happens
     // go ahead and move it, but mark it as excluded.
 
-    double bondTolerance = vwr.getFloat(T.bondtolerance);
+    double bondTolerance = vwr.getDouble(T.bondtolerance);
     BS bsBranch = new BS();
     P3d cart1 = new P3d();
     P3d cart2 = new P3d();

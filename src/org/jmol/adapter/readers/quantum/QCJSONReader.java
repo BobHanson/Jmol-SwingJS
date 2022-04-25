@@ -214,7 +214,7 @@ public class QCJSONReader extends MoldenReader {
         else if (spin.indexOf("alpha") >= 0)
           alphaBeta = "alpha";
       }
-      float[] coefs = AU.asFloatA(QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
+      double[] coefs = (QCSchemaUnits.getDoubleArray(thisMO, "coefficients"));
       line = "" + symmetry;
       if (filterMO()) {
         Map<String, Object> mo = new Hashtable<String, Object>();
@@ -222,10 +222,10 @@ public class QCJSONReader extends MoldenReader {
         if (Double.isNaN(energy)) {
           haveEnergy = false;
         } else {
-          mo.put("energy", Float.valueOf((float) energy));
+          mo.put("energy", Double.valueOf((double) energy));
         }
         if (!Double.isNaN(occupancy))
-          mo.put("occupancy", Float.valueOf((float) occupancy));
+          mo.put("occupancy", Double.valueOf((double) occupancy));
         if (symmetry != null)
           mo.put("symmetry", symmetry);
         if (alphaBeta.length() > 0)
@@ -287,7 +287,7 @@ public class QCJSONReader extends MoldenReader {
     nCoef = listS.size();
     for (int i = 0; i < nCoef; i++) {
       double[] a = QCSchemaUnits.getDoubleArray(listS.get(i), null);
-      addSlater((int) a[0], (int) a[1], (int) a[2], (int) a[3], (int) a[4], a[5], (float) a[6]);
+      addSlater((int) a[0], (int) a[1], (int) a[2], (int) a[3], (int) a[4], a[5], (double) a[6]);
     }
     scaleSlaters = false;
     setSlaters(false);
@@ -299,10 +299,10 @@ public class QCJSONReader extends MoldenReader {
     for (int i = 0; i < listS.size(); i++)
       shells.addLast(QCSchemaUnits.getIntArray(listS.get(i), null));
     int gaussianPtr = listG.size();
-    float[][] garray = AU.newFloat2(gaussianPtr);
+    double[][] garray = AU.newDouble2(gaussianPtr);
     // [[exp, coef], [exp, coef],...] with sp [exp, coef1, coef2]
     for (int i = 0; i < gaussianPtr; i++)
-      garray[i] = AU.asFloatA(QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
+      garray[i] = (QCSchemaUnits.getDoubleArray(listG.get(i), null)); 
     moData.put("shells", shells);
     moData.put("gaussians", garray);
     Logger.info(shells.size() + " slater shells read");

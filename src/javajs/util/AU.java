@@ -97,6 +97,10 @@ final public class AU {
     return arrayCopyF(array, (array == null ? 16 : 2 * array.length));
   }
 
+  public static double[] doubleLengthD(double[] array) {
+    return arrayCopyD(array, (array == null ? 16 : 2 * array.length));
+  }
+
   public static int[] doubleLengthI(int[] array) {
     return arrayCopyI(array, (array == null ? 16 : 2 * array.length));
   }
@@ -235,10 +239,10 @@ final public class AU {
     return t;
   }
 
-  public static T3[] arrayCopyPt(T3[] array, int newLength) {
+  public static T3d[] arrayCopyPt(T3d[] array, int newLength) {
     if (newLength < 0)
       newLength = array.length;
-    T3[] t = new T3[newLength];
+    T3d[] t = new T3d[newLength];
     if (array != null) {
       int oldLength = array.length;
       System.arraycopy(array, 0, t, 0,
@@ -516,6 +520,10 @@ final public class AU {
     return (ny < 0 ? new float[nx][][] : new float[nx][ny][]);
   }
 
+  public static double[][][] newDouble3(int nx, int ny) {
+    return (ny < 0 ? new double[nx][][] : new double[nx][ny][]);
+  }
+
   public static int[][][][] newInt4(int n) {
     return new int[n][][][];
   }
@@ -558,7 +566,7 @@ final public class AU {
   }
 
   public static boolean isAP(Object x) {
-    return x instanceof T3[];
+    return x instanceof T3d[];
   }
 
   public static boolean isAF(Object x) {

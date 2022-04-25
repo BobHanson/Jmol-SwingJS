@@ -29,35 +29,35 @@ package javajs.util;
  * for the optimization of compiled JavaScript using Java2Script
  * 
  */
-public class P3 extends T3 {
+public class P3d extends T3d {
 
-  public P3() {
+  public P3d() {
     // ignore T3
   }
   
-  public static P3 newP(T3 t) {
-    P3 p = new P3();
+  public static P3d newP(T3d t) {
+    P3d p = new P3d();
     p.x = t.x;
     p.y = t.y;
     p.z = t.z;
     return p;
   }
 
-  private static P3 unlikely;
+  private static P3d unlikely;
   
-  public static P3 getUnlikely() {
+  public static P3d getUnlikely() {
     return (unlikely == null ? unlikely = new3((float) Math.PI, (float) Math.E, (float) (Math.PI * Math.E)) : unlikely);
   }
   
-  public static P3 new3(float x, float y, float z) {
-    P3 p = new P3();
+  public static P3d new3(float x, float y, float z) {
+    P3d p = new P3d();
     p.x = x;
     p.y = y;
     p.z = z;
     return p;
   }
   
-  public static P3 newA(float[] a) {
+  public static P3d newA(float[] a) {
    return new3(a[0], a[1], a[2]);    
   }
 

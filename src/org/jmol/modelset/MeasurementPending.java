@@ -37,7 +37,7 @@ public class MeasurementPending extends Measurement {
   public int numSet = 0;
   
   public MeasurementPending set(ModelSet modelSet) {
-    return (MeasurementPending) setM(modelSet, null, Float.NaN, (short) 0,
+    return (MeasurementPending) setM(modelSet, null, Double.NaN, (short) 0,
         null, 0);
   }
 

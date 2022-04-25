@@ -190,11 +190,11 @@ public class MopacGraphfReader extends MopacSlaterReader {
       for (int i = nOrbitals; --i >= 0;)
         list[i] = orbitalData.get(i);
     }
-    float[][] list2 = new float[nOrbitals][nCoefficients];
+    double[][] list2 = new double[nOrbitals][nCoefficients];
     for (int i = 0; i < nOrbitals; i++)
       for (int j = 0; j < nCoefficients; j++) {
         for (int k = 0; k < nCoefficients; k++)
-          list2[i][j] += (float) (list[i][k]
+          list2[i][j] += (double) (list[i][k]
               * (k >= j ? invMatrix[k][j] : invMatrix[j][k]));
         if (Math.abs(list2[i][j]) < MIN_COEF)
           list2[i][j] = 0;

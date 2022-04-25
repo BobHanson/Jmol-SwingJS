@@ -43,7 +43,7 @@ import org.jmol.util.Vibration;
 
 import javajs.util.BS;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 public class ShapeManager {
@@ -430,8 +430,8 @@ public class ShapeManager {
       vwr.finalizeTransformParameters();
     if (bsTranslateSelected != null) {
       // translateSelected operation
-      P3 ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
-      P3 pt = new P3();
+      P3d ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
+      P3d pt = new P3d();
       tm.transformPt3f(ptCenter, pt);
       pt.add(tm.ptOffset);
       tm.unTransformPoint(pt, pt);
@@ -465,7 +465,7 @@ public class ShapeManager {
       atom.sZ = screen.z;
       int d = Math.abs(atom.madAtom);
       if (d == Atom.MAD_GLOBAL)
-        d = (int) (vwr.getFloat(T.atoms) * 2000);
+        d = (int) (vwr.getDouble(T.atoms) * 2000);
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
       if (checkOccupancy
           && vibrationVectors[i] != null

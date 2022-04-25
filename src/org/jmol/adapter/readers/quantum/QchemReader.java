@@ -318,12 +318,12 @@ $end
       }
     }
     // now rearrange the gaussians (direct copy from GaussianReader)
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++) {
       tokens = gdata.get(i);
-      gaussians[i] = new float[tokens.length];
+      gaussians[i] = new double[tokens.length];
       for (int j = 0; j < tokens.length; j++)
-        gaussians[i][j] = (float) parseDoubleStr(tokens[j]);
+        gaussians[i][j] = (double) parseDoubleStr(tokens[j]);
     }
     if (debugging) {
       Logger.debug(shellCount + " slater shells read");
@@ -632,7 +632,7 @@ $end
   
   private int readMOs(boolean restricted, MOInfo[] moInfos) throws Exception {
     Map<String, Object>[] mos = AU.createArrayOfHashtable(6); // max 6 MO's per line
-    float[][] mocoef = AU.newFloat2(6); // coefficients for each MO
+    double[][] mocoef = AU.newDouble2(6); // coefficients for each MO
     int[] moid = new int[6]; // mo numbers
     String[] tokens, energy;
     int nMOs = 0;
@@ -643,7 +643,7 @@ $end
       energy = PT.getTokens(rd().substring(13));
       for (int i = 0; i < nMO; i++) {
         moid[i] = parseIntStr(tokens[i]) - 1;
-        mocoef[i] = new float[nBasis];
+        mocoef[i] = new double[nBasis];
         mos[i] = new Hashtable<String, Object>();
       }
       for (int i = 0, pt = 0; i < nBasis; i++) {
@@ -681,7 +681,7 @@ $end
           break;
         }
         for (int j = tokens.length - nMO, k = 0; k < nMO; j++, k++)
-          mocoef[k][pt] = (float) parseDoubleStr(tokens[j]);
+          mocoef[k][pt] = (double) parseDoubleStr(tokens[j]);
         pt++;
       }
       // we have all the info we need 

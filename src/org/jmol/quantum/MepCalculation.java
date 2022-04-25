@@ -27,7 +27,7 @@ import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 
@@ -85,8 +85,8 @@ public class MepCalculation extends QuantumCalculation {
   protected final static int E_MINUS_D = 3;
   
   protected int distanceMode = ONE_OVER_D;
-  private float[] potentials;
-  private P3[] atomCoordAngstroms;
+  private double[] potentials;
+  private P3d[] atomCoordAngstroms;
   private BS bsSelected;
   private Viewer vwr;
   
@@ -108,17 +108,17 @@ public class MepCalculation extends QuantumCalculation {
    * @param bsIgnore 
    * @param data 
    */
-  public void assignPotentials(Atom[] atoms, float[] potentials,
+  public void assignPotentials(Atom[] atoms, double[] potentials,
                                BS bsAromatic, BS bsCarbonyl,
                                BS bsIgnore, String data) {
     getAtomicPotentials(data, null);
     for (int i = 0; i < atoms.length; i++) {
-      float f;
+      double f;
       if (bsIgnore != null && bsIgnore.get(i)) {
-        f = Float.NaN;
+        f = Double.NaN;
       } else {
         f = getTabulatedPotential(atoms[i]);
-        if (Float.isNaN(f))
+        if (Double.isNaN(f))
           f = 0;
       }
       if (Logger.debugging)
@@ -127,8 +127,8 @@ public class MepCalculation extends QuantumCalculation {
     }
   }
 
-  public void setup(int calcType, float[] potentials,
-                    P3[] atomCoordAngstroms, BS bsSelected) {
+  public void setup(int calcType, double[] potentials,
+                    P3d[] atomCoordAngstroms, BS bsSelected) {
     if (calcType >= 0)
       distanceMode = calcType;
     this.potentials = potentials;
@@ -137,7 +137,7 @@ public class MepCalculation extends QuantumCalculation {
   }
   
   public void calculate(VolumeData volumeData, BS bsSelected,
-                        P3[] xyz, Atom[] atoms, float[] potentials,
+                        P3d[] xyz, Atom[] atoms, double[] potentials,
                         int calcType) {
     setup(calcType, potentials, atoms, bsSelected);
     voxelData = volumeData.getVoxelData();
@@ -149,12 +149,12 @@ public class MepCalculation extends QuantumCalculation {
     process();
   }
 
-  public float getValueAtPoint(P3 pt) {
-    float value = 0;
+  public double getValueAtPoint(P3d pt) {
+    double value = 0;
     for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
         .nextSetBit(i + 1)) {
-      float x = potentials[i];
-      float d2 = pt.distanceSquared(atomCoordAngstroms[i]);
+      double x = potentials[i];
+      double d2 = pt.distanceSquared(atomCoordAngstroms[i]);
       value += valueFor(x, d2, distanceMode);
     }
     return value;
@@ -165,14 +165,14 @@ public class MepCalculation extends QuantumCalculation {
     for (int atomIndex = qmAtoms.length; --atomIndex >= 0;) {
       if ((thisAtom = qmAtoms[atomIndex]) == null)
         continue;
-      float x0 = potentials[atomIndex];
+      double x0 = potentials[atomIndex];
       if (Logger.debugging)
         Logger.debug("process map for atom " + atomIndex + thisAtom + "  charge=" + x0);
       thisAtom.setXYZ(this, true);
       for (int ix = xMax; --ix >= xMin;) {
-        float dX = X2[ix];
+        double dX = X2[ix];
         for (int iy = yMax; --iy >= yMin;) {
-          float dXY = dX + Y2[iy];
+          double dXY = dX + Y2[iy];
           for (int iz = zMax; --iz >= zMin;) {
             voxelData[ix][iy][iz] += valueFor(x0, dXY + Z2[iz], distanceMode);
           }
@@ -182,23 +182,23 @@ public class MepCalculation extends QuantumCalculation {
     
   }
 
-  public float valueFor(float x0, float d2, int distanceMode) {
+  public double valueFor(double x0, double d2, int distanceMode) {
     switch (distanceMode) {
     case ONE_OVER_D:
-      return (d2 == 0 ? x0 * Float.POSITIVE_INFINITY : x0 / (float) Math.sqrt(d2));
+      return (d2 == 0 ? x0 * Double.POSITIVE_INFINITY : x0 / (double) Math.sqrt(d2));
     case ONE_OVER_ONE_PLUS_D:
-      return  x0 / (1 + (float) Math.sqrt(d2));
+      return  x0 / (1 + (double) Math.sqrt(d2));
     case E_MINUS_D_OVER_2:
-      return x0 * (float) Math.exp(-Math.sqrt(d2) / 2);
+      return x0 * (double) Math.exp(-Math.sqrt(d2) / 2);
     case E_MINUS_D:
-      return x0 * (float) Math.exp(-Math.sqrt(d2));
+      return x0 * (double) Math.exp(-Math.sqrt(d2));
     }
     return x0;
   }
 
   protected Map<String, Object> htAtomicPotentials;
   
-  protected float getTabulatedPotential(Atom atom) {
+  protected double getTabulatedPotential(Atom atom) {
     String name = atom.getAtomType();
     String g1 = atom.getGroup1('\0');
     String type = atom.getBioStructureTypeName();
@@ -211,7 +211,7 @@ public class MepCalculation extends QuantumCalculation {
     Object o = htAtomicPotentials.get(key);
     if (o == null && type.length() > 0)
       o = htAtomicPotentials.get("_" + type.charAt(0) + name);
-    return (o instanceof Float ? ((Float)o).floatValue() : Float.NaN);
+    return (o instanceof Double ? ((Double)o).doubleValue() : Double.NaN);
   }
 
   protected String resourceName;
@@ -232,7 +232,7 @@ public class MepCalculation extends QuantumCalculation {
           continue;
         if (Logger.debugging)
           Logger.debug(line);
-        htAtomicPotentials.put(vs[0], Float.valueOf(PT.parseFloat(vs[1])));
+        htAtomicPotentials.put(vs[0], Double.valueOf(PT.parseDouble(vs[1])));
       }
       br.close();
     } catch (Exception e) {

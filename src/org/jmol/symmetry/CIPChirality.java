@@ -1328,7 +1328,7 @@ public class CIPChirality {
     /**
      * Rule 1a nominal element number; may be fractional for Kekule issues
      */
-    float elemNo;
+    double elemNo;
 
     /**
      * Rule 2 isotope mass number if identified or average atomic mass if not
@@ -1338,7 +1338,7 @@ public class CIPChirality {
      * Source:
      * 
      */
-    private float mass = UNDETERMINED;
+    private double mass = UNDETERMINED;
 
     ///// SUBSTITUENTS ////
 
@@ -1751,7 +1751,7 @@ public class CIPChirality {
      * 
      * @return mass or mass surrogate
      */
-    private float getMass() {
+    private double getMass() {
       if (isDuplicate)
         return 0;
       if (mass == UNDETERMINED) {
@@ -1783,10 +1783,10 @@ public class CIPChirality {
      * 
      * @return an averaged element number
      */
-    private float getKekuleElementNumber() {
+    private double getKekuleElementNumber() {
       SimpleEdge[] edges = atom.getEdges();
       SimpleEdge bond;
-      float ave = 0;//atom.getElementNumber();
+      double ave = 0;//atom.getElementNumber();
       int n = 0;//1;
       for (int i = edges.length; --i >= 0;)
         if ((bond = edges[i]).isCovalent()) {

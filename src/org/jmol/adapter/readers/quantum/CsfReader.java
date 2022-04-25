@@ -174,7 +174,7 @@ public class CsfReader extends MopacSlaterReader {
       if (isInteger)
         ((int[]) f)[i] = parseIntStr(tokens[ipt]);
       else
-        ((float[]) f)[i] = (float) (parseDoubleStr(tokens[ipt]));
+        ((double[]) f)[i] = (double) (parseDoubleStr(tokens[ipt]));
     }
   }
 
@@ -594,8 +594,8 @@ public class CsfReader extends MopacSlaterReader {
 
     nOrbitals = (nSlaters + nGaussians);
     boolean isGaussian = (sto_gto.equals("gto"));
-    float[][] zetas = AU.newFloat2(nOrbitals);
-    float[][] contractionCoefs = null;
+    double[][] zetas = AU.newDouble2(nOrbitals);
+    double[][] contractionCoefs = null;
     String[] types = new String[nOrbitals];
     int[] shells = new int[nOrbitals];
     int nZetas = 0;
@@ -618,7 +618,7 @@ public class CsfReader extends MopacSlaterReader {
             break;
           case STO_EXP:
           case GTO_EXP:
-            zetas[ipt] = new float[nZetas];
+            zetas[ipt] = new double[nZetas];
             fillCsfArray(sto_gto + "_exp", tokens, i, zetas[ipt], false);
             break;
           case SHELL:
@@ -626,7 +626,7 @@ public class CsfReader extends MopacSlaterReader {
             break;
           case CONTRACTIONS:
             if (contractionCoefs == null)
-              contractionCoefs = new float[nOrbitals][nZetas];
+              contractionCoefs = new double[nOrbitals][nZetas];
             fillCsfArray("contractions", tokens, i, contractionCoefs[ipt], false);
           }
         }
@@ -634,7 +634,7 @@ public class CsfReader extends MopacSlaterReader {
     }
     if (isGaussian) {
       Lst<int[]> sdata = new  Lst<int[]>();
-      Lst<float[]> gdata = new  Lst<float[]>();
+      Lst<double[]> gdata = new  Lst<double[]>();
       int iShell = 0;
       int gaussianCount = 0;
       for (int ipt = 0; ipt < nGaussians; ipt++) {
@@ -654,10 +654,10 @@ public class CsfReader extends MopacSlaterReader {
           sdata.addLast(slater);
           gaussianCount += nZ;
           for (int i = 0; i < nZ; i++)
-            gdata.addLast(new float[] { zetas[ipt][i], contractionCoefs[ipt][i] });
+            gdata.addLast(new double[] { zetas[ipt][i], contractionCoefs[ipt][i] });
         }
       }
-      float[][] garray = AU.newFloat2(gaussianCount);
+      double[][] garray = AU.newDouble2(gaussianCount);
       for (int i = 0; i < gaussianCount; i++)
         garray[i] = gdata.get(i);
       moData.put("shells", sdata);

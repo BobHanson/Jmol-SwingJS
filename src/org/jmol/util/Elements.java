@@ -170,7 +170,7 @@ public class Elements {
   // Thomas Prohaska  Published Online: 2016-02-24 | DOI: https://doi.org/10.1515/pac-2015-0305
   // https://www.degruyter.com/view/j/pac.2016.88.issue-3/pac-2015-0305/pac-2015-0305.xml
 
-   public final static float[] atomicMass = {
+   public final static double[] atomicMass = {
     0, 
     /* 1 H */ 1.008f, 4.002f, 
     /* 2 Li */ 6.9675f, 9.012f,      10.8135f, 12.0106f, 14.006f, 15.999f, 18.998f, 20.1797f, 
@@ -205,7 +205,7 @@ public class Elements {
      return isotopeMass[elementNumber & 0x7F];
    }
 
-   public static float getAtomicMass(int i) {
+   public static double getAtomicMass(int i) {
      return (i < 1 || i >= atomicMass.length ? 0 : atomicMass[i]);
    }
    
@@ -717,7 +717,7 @@ public class Elements {
    * @param charge
    * @return a bonding radius, either ionic or covalent
    */
-  public static float getBondingRadius(int atomicNumberAndIsotope,
+  public static double getBondingRadius(int atomicNumberAndIsotope,
                                             int charge) {
     int atomicNumber = atomicNumberAndIsotope & 127;
     return (charge > 0 && bsCations.get(atomicNumber) ? getBondingRadFromTable(
@@ -733,7 +733,7 @@ public class Elements {
    * @param atomicNumberAndIsotope
    * @return BODR covalent data, generally.
    */
-  public static float getCovalentRadius(int atomicNumberAndIsotope) {
+  public static double getCovalentRadius(int atomicNumberAndIsotope) {
     return defaultBondingMars[((atomicNumberAndIsotope & 127) << 1)
         + covalentVersion] / 1000f;
 
@@ -1119,7 +1119,7 @@ public class Elements {
       bsCations.set(cationLookupTable[i]>>4);
   }
 
-  public static float getBondingRadFromTable(int atomicNumber, int charge, short[] table) {
+  public static double getBondingRadFromTable(int atomicNumber, int charge, short[] table) {
     // when found, return the corresponding value in ionicMars
     // if atom is not found, just return covalent radius
     // if atom is found, but charge is not found, return next lower charge
@@ -1148,7 +1148,7 @@ public class Elements {
     return vanderwaalsMars[((atomicAndIsotopeNumber & 127) << 2) + (type.pt % 4)];
   }
 
-  public static float getHydrophobicity(int i) {
+  public static double getHydrophobicity(int i) {
     return (i < 1 || i >= Elements.hydrophobicities.length ? 0 : Elements.hydrophobicities[i]);
   }
 
@@ -1168,7 +1168,7 @@ public class Elements {
   // Hydrophobicity of amino acid residues in globular proteins. 
   // Science, 229(4716):834-838.
 
-  private final static float[] hydrophobicities = {
+  private final static double[] hydrophobicities = {
                 0f,
       /* Ala*/  0.62f,
       /* Arg*/ -2.53f,
@@ -1208,7 +1208,7 @@ public class Elements {
     }
   }
 
-  private static float[] electroNegativities = {
+  private static double[] electroNegativities = {
     // from http://chemwiki.ucdavis.edu/Physical_Chemistry/Physical_Properties_of_Matter/Atomic_and_Molecular_Properties/Allred-Rochow_Electronegativity
     0,
     2.2f,//H
@@ -1265,7 +1265,7 @@ public class Elements {
     2.01f,//Te
     2.21f//I    
   };
-  public static float getAllredRochowElectroNeg(int elemno) {
+  public static double getAllredRochowElectroNeg(int elemno) {
     return (elemno > 0 && elemno < electroNegativities.length ? electroNegativities[elemno] : 0);
   }
   

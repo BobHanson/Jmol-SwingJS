@@ -322,7 +322,7 @@ public class SiestaReader extends AtomSetCollectionReader {
     discardLinesUntilContains("siesta: E_KS(eV) = ");
     String[] tokens = getTokens();
     Double energy = Double.valueOf(Double.parseDouble(tokens[3]));
-    asc.setAtomSetEnergy("" + energy, energy.floatValue());
+    asc.setAtomSetEnergy("" + energy, energy.doubleValue());
     asc.setCurrentModelInfo("Energy", energy);
     asc.setInfo("Energy", energy);
     asc.setAtomSetName("Energy = " + energy + " eV");

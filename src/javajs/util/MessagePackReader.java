@@ -183,7 +183,7 @@ public class MessagePackReader {
         case FLOAT32:
           return Float.valueOf(doc.readFloat());
         case FLOAT64:
-          return Float.valueOf((float) doc.readDouble());
+          return Double.valueOf(doc.readDouble());
         case UINT8:
           return Integer.valueOf(doc.readUInt8());
         case UINT16:

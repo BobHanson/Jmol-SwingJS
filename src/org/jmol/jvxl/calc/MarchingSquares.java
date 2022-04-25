@@ -32,8 +32,8 @@ import org.jmol.jvxl.data.VolumeData;
 import org.jmol.util.Logger;
 
 import javajs.util.AU;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 
 public class MarchingSquares {
 
@@ -57,13 +57,13 @@ public class MarchingSquares {
   private int nContourSegments;
   public int contourType;//0, 1, or 2
   int thisContour = 0;
-  private float valueMin, valueMax;
+  private double valueMin, valueMax;
 
-  final P3 pointA = new P3();
-  final P3 pointB = new P3();
+  final P3d pointA = new P3d();
+  final P3d pointB = new P3d();
 
   private boolean contourFromZero = true;
-  private float[] contoursDiscrete;
+  private double[] contoursDiscrete;
 
   /**
    * 
@@ -76,7 +76,7 @@ public class MarchingSquares {
    * @param contourFromZero
    */
   public MarchingSquares(VertexDataServer surfaceReader, VolumeData volumeData,
-      P4 thePlane, float[] contoursDiscrete, int nContours,
+      P4d thePlane, double[] contoursDiscrete, int nContours,
       int thisContour, boolean contourFromZero) {
     this.surfaceReader = surfaceReader;
     this.volumeData = volumeData;
@@ -95,7 +95,7 @@ public class MarchingSquares {
     }
   }
 
-  public void setMinMax(float valueMin, float valueMax) {
+  public void setMinMax(double valueMin, double valueMax) {
     this.valueMin = valueMin;
     this.valueMax = valueMax;
   }
@@ -103,14 +103,14 @@ public class MarchingSquares {
   public int contourVertexCount;
   ContourVertex[] contourVertexes = new ContourVertex[1000];
 
-  private class ContourVertex extends P3 {
-    float value;
+  private class ContourVertex extends P3d {
+    double value;
 
-    ContourVertex(P3 vertexXYZ) {
+    ContourVertex(P3d vertexXYZ) {
       setT(vertexXYZ);
     }
 
-    void setValue(float value) {
+    void setValue(double value) {
       this.value = value;
     }
     
@@ -121,7 +121,7 @@ public class MarchingSquares {
 
   }
 
-  public int addContourVertex(P3 vertexXYZ, float value) {
+  public int addContourVertex(P3d vertexXYZ, double value) {
     if (contourVertexCount == contourVertexes.length)
       contourVertexes = (ContourVertex[]) AU
           .doubleLength(contourVertexes);
@@ -130,32 +130,32 @@ public class MarchingSquares {
     return vPt;
   }
 
-  public void setContourData(int i, float value) {
+  public void setContourData(int i, double value) {
     contourVertexes[i].setValue(value);
   }
 
-  float contourPlaneMinimumValue;
-  float contourPlaneMaximumValue;
+  double contourPlaneMinimumValue;
+  double contourPlaneMaximumValue;
 
-  public float[] contourValuesUsed;
+  public double[] contourValuesUsed;
 
   /* save - was used previously
    * 
-   private boolean isInside2d(float voxelValue, float max) {
+   private boolean isInside2d(double voxelValue, double max) {
      return contourFromZero ? 
          (max > 0 && voxelValue >= max) || (max <= 0 && voxelValue <= max)
          : voxelValue < max;
    }
   */
   
-  float calcContourPoint(float cutoff, float valueA, float valueB,
-                         P3 pt) {
+  double calcContourPoint(double cutoff, double valueA, double valueB,
+                         P3d pt) {
     
     return volumeData.calculateFractionalPoint(cutoff, pointA, pointB, valueA,
         valueB, pt);
   }
 
-  final P3 ptTemp = new P3();
+  final P3d ptTemp = new P3d();
 
   /////////// MUCH simpler!
 
@@ -194,16 +194,16 @@ public class MarchingSquares {
 
 /*
     void setValidity() {
-      isValid &= (!Float.isNaN(contourVertexes[pts[0]].value)
-          && !Float.isNaN(contourVertexes[pts[1]].value)
-          && !Float.isNaN(contourVertexes[pts[2]].value));
+      isValid &= (!Double.isNaN(contourVertexes[pts[0]].value)
+          && !Double.isNaN(contourVertexes[pts[1]].value)
+          && !Double.isNaN(contourVertexes[pts[2]].value));
     }
 */    
   }
 
   
   
-  public int generateContourData(boolean haveData, float zeroOffset) {
+  public int generateContourData(boolean haveData, double zeroOffset) {
     Logger.info("generateContours: " + nContourSegments + " segments");
     getVertexValues(haveData);
     createContours(valueMin, valueMax, zeroOffset);
@@ -212,13 +212,13 @@ public class MarchingSquares {
   }
 
   private void getVertexValues(boolean haveData) {
-    contourPlaneMinimumValue = Float.MAX_VALUE;
-    contourPlaneMaximumValue = -Float.MAX_VALUE;
+    contourPlaneMinimumValue = Double.MAX_VALUE;
+    contourPlaneMaximumValue = -Double.MAX_VALUE;
     for (int i = 0; i < contourVertexCount; i++) {
       ContourVertex c = contourVertexes[i];
       //Point3i pt = locatePixel(c);
       //c.setPixelLocation(pt);
-      float value;
+      double value;
       if (haveData) {
         value = c.value;
       } else {
@@ -232,22 +232,22 @@ public class MarchingSquares {
     }
   }
 
-  private boolean createContours(float min, float max, float zeroOffset) {
-    float diff = max - min;
-    contourValuesUsed = new float[nContourSegments];
+  private boolean createContours(double min, double max, double zeroOffset) {
+    double diff = max - min;
+    contourValuesUsed = new double[nContourSegments];
     for (int i = triangleCount; --i >= 0;)
       triangles[i].check = 0;
 
-    //float maxCutoff = Float.MAX_VALUE;
-    float minCutoff = -Float.MAX_VALUE;
-    //float lastCutoff = 0;
-    float cutoff = minCutoff;
+    //double maxCutoff = Double.MAX_VALUE;
+    double minCutoff = -Double.MAX_VALUE;
+    //double lastCutoff = 0;
+    double cutoff = minCutoff;
     for (int i = 0; i < nContourSegments; i++) {
       //lastCutoff = cutoff;
       cutoff = (contoursDiscrete != null ? contoursDiscrete[i]
           : contourFromZero ? min + (i * 1f / nContourSegments) * diff
-              : i == 0 ? -Float.MAX_VALUE
-                  : i == nContourSegments - 1 ? Float.MAX_VALUE : min
+              : i == 0 ? -Double.MAX_VALUE
+                  : i == nContourSegments - 1 ? Double.MAX_VALUE : min
                       + ((i - 1) * 1f / (nContourSegments - 1)) * diff);
       /*
        * cutoffs right near zero cause problems, so we adjust just a tad
@@ -286,9 +286,9 @@ public class MarchingSquares {
       
       
       for (int i = 0; i < contourVertexCount; i++) {
-        float v = contourVertexes[i].value;
+        double v = contourVertexes[i].value;
         if (v > maxCutoff || v < minCutoff)
-          contourVertexes[i].value = Float.NaN;
+          contourVertexes[i].value = Double.NaN;
       }
       
       
@@ -300,7 +300,7 @@ public class MarchingSquares {
     return true;
   }
 
-  private int intercept(Triangle t, int i, float value) {
+  private int intercept(Triangle t, int i, double value) {
     int iA = t.pts[i];
     int iB = t.pts[(i + 1) % 3];
     if (iA == Integer.MAX_VALUE || iB == Integer.MAX_VALUE)
@@ -308,16 +308,16 @@ public class MarchingSquares {
     String key = (iA < iB ? iA + "_" + iB : iB + "_" + iA);
     if (htPts.containsKey(key))
       return htPts.get(key).intValue();
-    float valueA = contourVertexes[iA].value;
-    float valueB = contourVertexes[iB].value;
+    double valueA = contourVertexes[iA].value;
+    double valueB = contourVertexes[iB].value;
     int iPt = -1;
     if (valueA != valueB) {
-      float f = (value - valueA) / (valueB - valueA);
+      double f = (value - valueA) / (valueB - valueA);
       if (f >= 0 && f <= 1) {
         pointA.setT(contourVertexes[iA]);
         pointB.setT(contourVertexes[iB]);
         value = calcContourPoint(value, valueA, valueB, ptTemp);
-        if (!Float.isNaN(value)) {
+        if (!Double.isNaN(value)) {
           iPt = addContourVertex(ptTemp, value);
           if (iPt < 0)
             return -1;
@@ -332,7 +332,7 @@ public class MarchingSquares {
     return iPt;
   }
 
-  private void checkContour(Triangle t, int i, float value) {
+  private void checkContour(Triangle t, int i, double value) {
     if (thisContour > 0 && i + 1 != thisContour)
       return;
     int ipt0 = intercept(t, 0, value);
@@ -371,8 +371,8 @@ public class MarchingSquares {
     t.isValid = false;
   }
 
-  public float[] getMinMax() {
-    return new float[] { valueMin, valueMax };
+  public double[] getMinMax() {
+    return new double[] { valueMin, valueMax };
   }
   private void addAllTriangles() {
     for (int i = 0; i < triangleCount; i++)

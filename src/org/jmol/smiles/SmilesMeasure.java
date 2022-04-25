@@ -25,9 +25,9 @@
 package org.jmol.smiles;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 public class SmilesMeasure  {
 
@@ -41,10 +41,10 @@ public class SmilesMeasure  {
   
   private int[] indices = new int[4];
   static final String TYPES = "__dat";
-  final private float[] minmax;
+  final private double[] minmax;
   
   SmilesMeasure(SmilesSearch search, int index, int type, boolean isNot,
-      float[] minmax) {
+      double[] minmax) {
     this.search = search;
     this.type = Math.min(4, Math.max(type, 2));
     this.index = index;
@@ -52,7 +52,7 @@ public class SmilesMeasure  {
     this.minmax = minmax;
     for (int i = minmax.length - 2; i >= 0; i -= 2)
       if (minmax[i] > minmax[i + 1]) {
-        float min = minmax[i + 1];
+        double min = minmax[i + 1];
         minmax[i + 1] = minmax[i];
         minmax[i] = min;
       }
@@ -68,18 +68,18 @@ public class SmilesMeasure  {
     return true;
   }
   
-  private final static float radiansPerDegree = (float) (2 * Math.PI / 360);
+  private final static double radiansPerDegree = (double) (2 * Math.PI / 360);
 
-  private final P3[] points = new P3[4];
+  private final P3d[] points = new P3d[4];
   
   boolean check() {
     for (int i = 0; i < type; i++) {
       int iAtom = search.patternAtoms[indices[i]].getMatchingAtomIndex();
       //System.out.print(iAtom + "-");
-      points[i] = (P3) search.targetAtoms[iAtom];
+      points[i] = (P3d) search.targetAtoms[iAtom];
       //System.out.println(points[i]);
     }
-    float d = 0;
+    double d = 0;
     switch (type) {
     case 2:
       d = points[0].distance(points[1]);
@@ -109,8 +109,8 @@ public class SmilesMeasure  {
    * @param withDihedral
    * @return dihedral or 0
    */
-  public static float setTorsionData(T3 pt1a, T3 pt1,
-                                    T3 pt2, T3 pt2a,
+  public static double setTorsionData(T3d pt1a, T3d pt1,
+                                    T3d pt2, T3d pt2a,
                                     VTemp v, boolean withDihedral) {
     // We cross dihedral bonds with the bond axis
     // to get two vector projections in the

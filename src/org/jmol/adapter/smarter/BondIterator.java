@@ -74,7 +74,7 @@ class BondIterator extends JmolAdapterBondIterator {
 	}
 	
 	@Override
-  public float getRadius() {
+  public double getRadius() {
     return bond.radius;
   }
 

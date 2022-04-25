@@ -26,7 +26,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   private String thisModelID;
   private String baseModel;
 
-  private float vibScale;
+  private double vibScale;
   private String peakXLabel, peakYLabel;
 
   private JmolJDXMOLReader loader;
@@ -197,7 +197,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 			model = " model=" + PT.esc(model + " (assigned)");
 			peakXLabel = "";
 			peakYLabel = "";
-			float dx = getACDPeakWidth(mytype) / 2;
+			double dx = getACDPeakWidth(mytype) / 2;
 			Map<String, Object[]> htSets = new Hashtable<String, Object[]>();
 			Lst<Object[]> list = new Lst<Object[]>();
 			Map<String, String> zzcMap = null;
@@ -223,7 +223,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 			int nPeaks = acdlist.size();
 			for (int i = 0; i < nPeaks; i++) {
 				String[] data = acdlist.get(i);
-				float x = PT.parseFloat(data[ptx]);
+				double x = PT.parseDouble(data[ptx]);
 				String a = data[pta];
 				if (isMS)
 					a = fixACDAtomList(a, zzcMap, nAtoms);
@@ -271,7 +271,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
     return s.substring(1, s.length() - 1);
   }
 
-  private float getACDPeakWidth(String type) {
+  private double getACDPeakWidth(String type) {
 	  return (type.indexOf("HNMR") >= 0 ? 0.05f
 	  		: type.indexOf("CNMR") >= 0 ? 1f 
 	      : type.indexOf("MASS") >= 0 ? 1f
@@ -305,10 +305,10 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 					if (mytype == null)
 						mytype = PT.getQuotedAttribute(line, "type");
 					String atoms = PT.getQuotedAttribute(line, "atoms");
-					String key = ((int) (PT.parseFloat(PT
+					String key = ((int) (PT.parseDouble(PT
 							.getQuotedAttribute(line, "xMin")) * 100))
 							+ "_"
-							+ ((int) (PT.parseFloat(PT.getQuotedAttribute(line, "xMax")) * 100));
+							+ ((int) (PT.parseDouble(PT.getQuotedAttribute(line, "xMax")) * 100));
 					getStringInfo(file, title, mytype,
 							(PT.getQuotedAttribute(line, "model") == null ? model : ""),
 							atoms, htSets, key, list, line.substring(tag2.length()).trim());
@@ -390,7 +390,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
     while (line.indexOf(">") < 0 && line.indexOf("type") < 0)
       readLine();
     String modelType = getAttribute(line, "type").toLowerCase();
-    vibScale = PT.parseFloat(getAttribute(line, "vibrationScale"));
+    vibScale = PT.parseDouble(getAttribute(line, "vibrationScale"));
     if (modelType.equals("xyzvib"))
       modelType = "xyz";
     else if (modelType.length() == 0)
@@ -399,7 +399,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
     while (readLine() != null && !line.contains("</ModelData>"))
       sb.append(line).appendC('\n');
     loader.processModelData(sb.toString(), thisModelID, modelType, baseModel,
-        lastModel, Float.NaN, vibScale, isFirst);
+        lastModel, Double.NaN, vibScale, isFirst);
   }
 
   /**

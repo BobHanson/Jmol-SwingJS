@@ -237,7 +237,7 @@ public class DataAdder7F implements DataAdder {
           cyyy = norm3 * y * yy;
           cxyy = norm2 * x * yy;
           cxxy = norm2 * xx * y;
-          float[] vd = calc.voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = calc.voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = calc.zMax; --iz >= calc.zMin;) {
             z = calc.Z[iz];
             zz = z * z;

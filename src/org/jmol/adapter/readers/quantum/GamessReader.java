@@ -146,12 +146,12 @@ abstract public class GamessReader extends MopacSlaterReader {
     }
     if (atomType != null)
       shellsByAtomType.put(atomType, slatersByAtomType);
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++) {
       tokens = gdata.get(i);
-      gaussians[i] = new float[tokens.length - 3];
+      gaussians[i] = new double[tokens.length - 3];
       for (int j = 3; j < tokens.length; j++)
-        gaussians[i][j - 3] = (float) parseDoubleStr(tokens[j]);
+        gaussians[i][j - 3] = (double) parseDoubleStr(tokens[j]);
     }
     int ac = atomNames.size();
     if (shells == null && ac > 0) {

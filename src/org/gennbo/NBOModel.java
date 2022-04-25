@@ -1677,7 +1677,7 @@ class NBOModel {
    * @param s
    */
   void processHBonds(String s) {
-    float[] atomList = PT.parseFloatArray(s);
+    double[] atomList = PT.parseDoubleArray(s);
     if (atomList.length == 0 || atomList[0] == 0)
       return;
     String script = "";

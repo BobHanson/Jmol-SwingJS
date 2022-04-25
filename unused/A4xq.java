@@ -29,7 +29,7 @@ package javajs.util;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public class A4 extends P3 {
+public class A4d extends P3d {
 
   /*
    * I assumed that the length of the axis vector is not significant.
@@ -43,7 +43,7 @@ public class A4 extends P3 {
   /**
    * Constructs and initializes a AxisAngle4f to (0,0,1,0).
    */
-  public A4() {
+  public A4d() {
     z = 1.0f;
   }
 
@@ -61,8 +61,8 @@ public class A4 extends P3 {
    *        the angle.
    * @return a
    */
-  public static A4 new4(float x, float y, float z, float angle) {
-    A4 a = new A4();
+  public static A4d new4(float x, float y, float z, float angle) {
+    A4d a = new A4d();
     a.set4(x, y, z, angle);
     return a;
   }
@@ -74,8 +74,8 @@ public class A4 extends P3 {
    *        the AxisAngle4f containing the initialization x y z angle data
    * @return a
    */
-  public static A4 newAA(A4 a1) {
-    A4 a = new A4();
+  public static A4d newAA(A4d a1) {
+    A4d a = new A4d();
     a.set4(a1.x, a1.y, a1.z, a1.angle);
     return a;
   }
@@ -90,8 +90,8 @@ public class A4 extends P3 {
    *        the angle
    * @return a
    */
-  public static A4 newVA(V3 axis, float angle) {
-    A4 a = new A4();
+  public static A4d newVA(V3d axis, float angle) {
+    A4d a = new A4d();
     a.setVA(axis, angle);
     return a;
   }
@@ -105,7 +105,7 @@ public class A4 extends P3 {
    *        the angle
    * @since Java 3D 1.2
    */
-  public final void setVA(V3 axis, float angle) {
+  public final void setVA(V3d axis, float angle) {
     setT(axis);
     this.angle = angle;
   }
@@ -133,7 +133,7 @@ public class A4 extends P3 {
    * @param a
    *        the axis angle to be copied
    */
-  public final void setAA(A4 a) {
+  public final void setAA(A4d a) {
     setT(a);
     angle = a.angle;
   }
@@ -146,11 +146,6 @@ public class A4 extends P3 {
    * @param m1
    *        the matrix3f
    */
-  public final void setM(M3 m1) {
-    setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
-        m1.m22);
-  }
-
   public final void setM(M3d m1) {
     setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
         m1.m22);
@@ -190,8 +185,8 @@ public class A4 extends P3 {
    */
   @Override
   public int hashCode() {
-    return T3.floatToIntBits(x) ^ T3.floatToIntBits(y)
-        ^ T3.floatToIntBits(z) ^ T3.floatToIntBits(angle);
+    return T3d.doubleToIntBits(x) ^ T3d.doubleToIntBits(y)
+        ^ T3d.doubleToIntBits(z) ^ T3d.doubleToIntBits(angle);
   }
 
   /**
@@ -205,9 +200,9 @@ public class A4 extends P3 {
    */
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof A4))
+    if (!(o instanceof A4d))
       return false;
-    A4 a1 = (A4) o;
+    A4d a1 = (A4d) o;
     return x == a1.x && y == a1.y && z == a1.z && angle == a1.angle;
   }
 

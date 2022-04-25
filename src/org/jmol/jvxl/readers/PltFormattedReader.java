@@ -77,12 +77,12 @@ class PltFormattedReader extends VolumeFileReader {
 
     -0.41532E+01 0.78468E+01-0.40155E+01 0.79845E+01-0.38912E+01 0.71088E+01
 */
-    float xmin = parseFloatStr(rd().substring(0, 12));
-    float xmax = parseFloatRange(line, 12, 24);
-    float ymin = parseFloatRange(line, 24, 36);
-    float ymax = parseFloatRange(line, 36, 48);
-    float zmin = parseFloatRange(line, 48, 60);
-    float zmax = parseFloatRange(line, 60, 72);
+    double xmin = parseFloatStr(rd().substring(0, 12));
+    double xmax = parseFloatRange(line, 12, 24);
+    double ymin = parseFloatRange(line, 24, 36);
+    double ymax = parseFloatRange(line, 36, 48);
+    double zmin = parseFloatRange(line, 48, 60);
+    double zmax = parseFloatRange(line, 60, 72);
     volumetricOrigin.set(xmin, ymin, zmin);
     voxelCounts[0] = nPointsX;
     voxelCounts[1] = nPointsY;

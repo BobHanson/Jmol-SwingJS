@@ -25,14 +25,14 @@ package org.jmol.modelset;
 
 
 import javajs.util.Lst;
-import javajs.util.Quat;
+import javajs.util.Qd;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.c.STR;
 import javajs.util.BS;
 
@@ -354,7 +354,7 @@ public class Group implements Structure {
     return (seqcode == Integer.MIN_VALUE ? '\0' : (char)(seqcode & INSERTION_CODE_MASK));
   }
   
-  protected float scaleToScreen(int Z, int mar) {
+  protected double scaleToScreen(int Z, int mar) {
     return chain.model.ms.vwr.tm.scaleToScreen(Z, mar);
   }
   
@@ -403,15 +403,15 @@ public class Group implements Structure {
    * @param qType
    * @return quaternion
    */
-  public Quat getQuaternion(char qType) {
+  public Qd getQuaternion(char qType) {
     return null;
   }
   
-  public Quat getQuaternionFrame(Atom[] atoms) {
+  public Qd getQuaternionFrame(Atom[] atoms) {
     if (lastAtomIndex - firstAtomIndex < 3)
       return null;
     int pt = firstAtomIndex;
-    return Quat.getQuaternionFrame(atoms[pt], atoms[++pt], atoms[++pt]);
+    return Qd.getQuaternionFrame(atoms[pt], atoms[++pt], atoms[++pt]);
   }
 
   /**
@@ -493,7 +493,7 @@ public class Group implements Structure {
       BSUtil.deleteBits(bsAdded, bsDeleted);
   }
 
-  public Map<String, Object> getGroupInfo(int igroup, P3 ptTemp) {
+  public Map<String, Object> getGroupInfo(int igroup, P3d ptTemp) {
     Map<String, Object> infoGroup = new Hashtable<String, Object>();
     infoGroup.put("groupIndex", Integer.valueOf(igroup));
     infoGroup.put("groupID", Short.valueOf(groupID));
@@ -531,8 +531,8 @@ public class Group implements Structure {
    * @param tok  
    * @return NaN 
    */
-  public float getGroupParameter(int tok) {
-    return Float.NaN;
+  public double getGroupParameter(int tok) {
+    return Double.NaN;
   }
 
   /**

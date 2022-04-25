@@ -32,7 +32,7 @@ import org.jmol.shapecgo.CGOMesh;
 import org.jmol.util.C;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 
@@ -44,7 +44,7 @@ public class CGORenderer extends DrawRenderer {
 
   private CGOMesh cgoMesh;
   private Lst<Object> cmds;
-  private P3 pt3 = new P3();
+  private P3d pt3 = new P3d();
   private short colix0, colix1, colix2, normix0, normix1, normix2, normix;
   private boolean doColor;
   private int ptNormal;
@@ -53,11 +53,11 @@ public class CGORenderer extends DrawRenderer {
   /**
    * UV mapping Cartesian origin, X, and Y
    */
-  private P3 map0, vX, vY;
+  private P3d map0, vX, vY;
   /**
    * UV mapping min/max x and y
    */
-  private float x0, y0, dx, dy, scaleX, scaleY;
+  private double x0, y0, dx, dy, scaleX, scaleY;
   
   private boolean is2D, is2DPercent, isMapped, isPS;
   private int screenZ;
@@ -92,7 +92,7 @@ public class CGORenderer extends DrawRenderer {
     width = 0;
     screenZ = Integer.MAX_VALUE;
     doColor = !mesh.useColix;
-    P3 pt;
+    P3d pt;
     P3i spt;
     g3d.addRenderer(T.triangles);
     is2D = isMapped = false;
@@ -122,7 +122,7 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.JMOL_SCREEN:
         isMapped = false;
-        float f = cgoMesh.getFloat(j + 1);
+        double f = cgoMesh.getFloat(j + 1);
         if (f == 0) {
           is2D = false;
         } else {
@@ -136,9 +136,9 @@ public class CGORenderer extends DrawRenderer {
         //$FALL-THROUGH$
       case CGOMesh.JMOL_UVMAP:
         is2D = isMapped = true;
-        map0 = new P3();
-        vX = new P3();
-        vY = new P3();
+        map0 = new P3d();
+        vX = new P3d();
+        vY = new P3d();
         cgoMesh.getPoint(j + 1, map0);
         cgoMesh.getPoint(j + 4, vX);
         vX.sub(map0);
@@ -336,14 +336,14 @@ public class CGORenderer extends DrawRenderer {
     return colix;
   }
 
- void getPoint(int i, P3 pt, P3i pti) {
+ void getPoint(int i, P3d pt, P3i pti) {
     cgoMesh.getPoint(i + 1, pt);
     if (isMapped) { 
       // The vertex coordinates x and y are map coordinates
       // on a plane with origin map0 and axis vectors vX and vY;
       // x0, dx, y0, dy are scalings on the plane 
-      float fx = (pt.x * scaleX - x0) / dx;
-      float fy = (pt.y * scaleY - y0) / dy;
+      double fx = (pt.x * scaleX - x0) / dx;
+      double fy = (pt.y * scaleY - y0) / dy;
       pt.scaleAdd2(fx, vX, map0);
       pt.scaleAdd2(fy, vY, pt);      
     } else if (is2D) {

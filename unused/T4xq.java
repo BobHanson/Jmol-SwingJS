@@ -28,7 +28,7 @@ package javajs.util;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public abstract class T4 extends T3 {
+public abstract class T4d extends T3d {
 
   /**
    * The w coordinate.
@@ -39,7 +39,7 @@ public abstract class T4 extends T3 {
    * Constructs and initializes a Tuple4f to (0,0,0,0).
    * 
    */
-  public T4() {
+  public T4d() {
   }
 
   /**
@@ -81,8 +81,8 @@ public abstract class T4 extends T3 {
    */
   @Override
   public int hashCode() {
-    return T3.floatToIntBits(x) ^ T3.floatToIntBits(y)
-        ^ T3.floatToIntBits(z) ^ T3.floatToIntBits(w);
+    return T3d.floatToIntBits(x) ^ T3d.floatToIntBits(y)
+        ^ T3d.floatToIntBits(z) ^ T3d.floatToIntBits(w);
   }
 
   /**
@@ -94,9 +94,9 @@ public abstract class T4 extends T3 {
    */
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof T4))
+    if (!(o instanceof T4d))
       return false;
-    T4 t = (T4) o;
+    T4d t = (T4d) o;
     return (this.x == t.x && this.y == t.y && this.z == t.z && this.w == t.w);
   }
 

@@ -103,11 +103,11 @@ public class HalosRenderer extends ShapeRenderer {
         return needTranslucent;      
     }
     int z = atom.sZ;
-    float d = mad;
+    double d = mad;
     if (d < 0) { //unsized selection
       d = atom.sD;
       if (d == 0) {
-        float ellipsemax = (atom.isVisible(JC.SHAPE_ELLIPSOIDS) ? atom.getADPMinMax(true) : 0);
+        double ellipsemax = (atom.isVisible(JC.SHAPE_ELLIPSOIDS) ? atom.getADPMinMax(true) : 0);
         if (ellipsemax > 0)
           d = vwr.tm.scaleToScreen(z, (int) Math.floor(ellipsemax * 2000));
         if (d == 0) {
@@ -120,7 +120,7 @@ public class HalosRenderer extends ShapeRenderer {
 //    System.out.println(atom + "scaleToScreen(" + z + "," + mad +")=" + d);
     if (isAntialiased)
       d /= 2;
-    float more = (d / 2);
+    double more = (d / 2);
     if (mad == -2)
       more /= 2;
     if (more < 8)

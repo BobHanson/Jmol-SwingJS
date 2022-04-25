@@ -25,7 +25,7 @@ package org.jmol.quantum;
 
 import javajs.util.AU;
 import javajs.util.Eigen;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
@@ -105,12 +105,12 @@ public class NciCalculation extends QuantumPlaneCalculation {
   
   private final static double NO_VALUE = 100;
   
-  private float dataScaling = 1; // set to 0.01 to read NCIPLOT-generated density files
+  private double dataScaling = 1; // set to 0.01 to read NCIPLOT-generated density files
   private boolean dataIsReducedDensity; // for mapping actual NCIPLOT data and doing -1 or -2 flags
   
   @Override
-  public float getNoValue() {
-    return (float) NO_VALUE;
+  public double getNoValue() {
+    return (double) NO_VALUE;
   }
   
   public NciCalculation() {
@@ -128,10 +128,10 @@ public class NciCalculation extends QuantumPlaneCalculation {
   public boolean setupCalculation(VolumeData volumeData,
                                   BS bsSelected, BS bsExcluded,
                                   BS[] bsMolecules,
-                                  T3[] atomCoordAngstroms, 
+                                  T3d[] atomCoordAngstroms, 
                                   int firstAtomOffset, 
                                   boolean isReducedDensity,
-                                  T3[] points, float[] parameters, int testFlags) {
+                                  T3d[] points, double[] parameters, int testFlags) {
     useAbsolute = (testFlags == 2);
     this.bsExcluded = bsExcluded;
     BS bsLigand = new BS();
@@ -143,7 +143,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
     havePoints = (points != null);
     this.isReducedDensity = isReducedDensity;
     if (parameters != null)
-      Logger.info("NCI calculation parameters = " + Escape.eAF(parameters));
+      Logger.info("NCI calculation parameters = " + Escape.eAD(parameters));
     // parameters[0] is the cutoff.
     type = (int) getParameter(parameters, 1, TYPE_ALL, "type");
     if (type != TYPE_ALL && bsMolecules == null)
@@ -152,7 +152,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
     rhoPlot = getParameter(parameters, 3, (isPromolecular ? DEFAULT_RHOPLOT_PRO
         : DEFAULT_RHOPLOT_SCF), "rhoPlot");
     rhoParam = getParameter(parameters, 4, DEFAULT_RHOPARAM, "rhoParam");
-    dataScaling = (float) getParameter(parameters, 5, 1, "dataScaling");
+    dataScaling = (double) getParameter(parameters, 5, 1, "dataScaling");
     dataIsReducedDensity = (type < 0);
     String stype;
     switch (type) {
@@ -240,7 +240,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
     return true;
   }  
   
-  private static double getParameter(float[] parameters, int i, double def, String name) {
+  private static double getParameter(double[] parameters, int i, double def, String name) {
     double param = (parameters == null || parameters.length < i + 1 ? 0 : parameters[i]);
     if (param == 0)
       param = def;
@@ -292,10 +292,10 @@ public class NciCalculation extends QuantumPlaneCalculation {
   private double grad, gxTemp, gyTemp, gzTemp, gxxTemp, gyyTemp, gzzTemp, gxyTemp, gyzTemp, gxzTemp;
   
   @Override
-  public void getPlane(int ix, float[] yzPlane) {
+  public void getPlane(int ix, double[] yzPlane) {
     if (noValuesAtAll) {
       for (int j = 0; j < yzCount; j++)
-        yzPlane[j] = Float.NaN;
+        yzPlane[j] = Double.NaN;
       return;
     }
     isReducedDensity = true;
@@ -307,7 +307,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
         if (bsOK == null || bsOK.get(index + i))
           yzPlane[i] = getValue(processAtoms(ix, iy, iz, -1), isReducedDensity);
         else
-          yzPlane[i] = Float.NaN;
+          yzPlane[i] = Double.NaN;
   }
 
   @Override
@@ -316,7 +316,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
       return;
     for (int ix = xMax; --ix >= xMin;) {
       for (int iy = yMin; iy < yMax; iy++) {
-        float[] vd = voxelData[ix][(havePoints ? 0 : iy)];
+        double[] vd = voxelData[ix][(havePoints ? 0 : iy)];
         for (int iz = zMin; iz < zMax; iz++)
           vd[(havePoints ? 0 : iz)] = getValue(processAtoms(ix, iy, iz, -1), isReducedDensity);
       }
@@ -332,10 +332,10 @@ public class NciCalculation extends QuantumPlaneCalculation {
   
   private double[] eigenValues = new double[3];
   
-  private float getValue(double rho, boolean isReducedDensity) {
+  private double getValue(double rho, boolean isReducedDensity) {
     double s;
     if (rho == NO_VALUE)
-      return Float.NaN; 
+      return Double.NaN; 
     if (isReducedDensity) {
       s = c * grad * Math.pow(rho, rpower);
     } else if (useAbsolute) {
@@ -351,7 +351,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
       eigen.fillDoubleArrays(null, eigenValues);
       s = (eigenValues[1] < 0 ? -rho : rho);
     }
-    return (float) s;
+    return (double) s;
   }
 
   /**
@@ -470,7 +470,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
   
   ///////////////////////// DISCRETE SCF METHODS /////////////////////
 
-  private float[][] yzPlanesRaw;
+  private double[][] yzPlanesRaw;
   private int yzCount;
 
   /**
@@ -479,13 +479,13 @@ public class NciCalculation extends QuantumPlaneCalculation {
    * @param planes 
    */
   @Override
-  public void setPlanes(float[][] planes) {
+  public void setPlanes(double[][] planes) {
     yzPlanesRaw = planes;
     yzCount = nY * nZ;
   }
   
-  private float[][] yzPlanesRho = AU.newFloat2(2);
-  private float[] p0, p1, p2;
+  private double[][] yzPlanesRho = AU.newDouble2(2);
+  private double[] p0, p1, p2;
   
   /**
    * For reduced density only; coloring is done point by point.
@@ -497,7 +497,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
    * 
    */
   @Override
-  public void calcPlane(int x, float[] plane) {
+  public void calcPlane(int x, double[] plane) {
 
     // (1) shift planes:
 
@@ -506,7 +506,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
 
     if (noValuesAtAll) {
       for (int j = 0; j < yzCount; j++)
-        plane[j] = Float.NaN;
+        plane[j] = Double.NaN;
       return;
     }
 
@@ -546,14 +546,14 @@ public class NciCalculation extends QuantumPlaneCalculation {
       for (int z = 0; z < nZ; z++, i++) {
         double rho = p1[i];
         if (bsOK != null && !bsOK.get(index + i)) {
-          plane[i] = Float.NaN;
+          plane[i] = Double.NaN;
         } else if (dataIsReducedDensity) {
           continue;
         } else if (rho == 0) {
           plane[i] = 0;
         } else if (rho > rhoPlot || rho < rhoMin || y == 0 || y == nY - 1 || z == 0
             || z == nZ - 1) {
-          plane[i] = Float.NaN;
+          plane[i] = Double.NaN;
         } else {
           gxTemp = (p2[i] - p0[i]) / (2 * stepBohr[0]);
           gyTemp = (p1[i + nZ] - p1[i - nZ]) / (2 * stepBohr[1]);
@@ -577,10 +577,10 @@ public class NciCalculation extends QuantumPlaneCalculation {
    * 
    */
   @Override
-  public float process(int vA, int vB, float f) {
+  public double process(int vA, int vB, double f) {
     double valueA = getPlaneValue(vA);
     double valueB = getPlaneValue(vB);
-    return (float) (valueA + f * (valueB - valueA));
+    return (double) (valueA + f * (valueB - valueA));
   }
 
   /**
@@ -600,9 +600,9 @@ public class NciCalculation extends QuantumPlaneCalculation {
         || z == 0 || z == nZ - 1)
       return NO_VALUE;
     int iPlane = x % 2;
-    float[] p0 = yzPlanesRaw[iPlane++];
-    float[] p1 = yzPlanesRaw[iPlane++];
-    float[] p2 = yzPlanesRaw[iPlane++];
+    double[] p0 = yzPlanesRaw[iPlane++];
+    double[] p1 = yzPlanesRaw[iPlane++];
+    double[] p2 = yzPlanesRaw[iPlane++];
     double rho = p1[i];
     
     // Shouldn't be possible to be too large, because the MarchingCubes algorithm
@@ -611,9 +611,9 @@ public class NciCalculation extends QuantumPlaneCalculation {
     
     if (rho > rhoPlot || rho < rhoMin)  
       return NO_VALUE; 
-    float dx = stepBohr[0];
-    float dy = stepBohr[1];
-    float dz = stepBohr[2];
+    double dx = stepBohr[0];
+    double dy = stepBohr[1];
+    double dz = stepBohr[2];
 
     // Using explicit discrete second partial derivatives here. 
     // Worked these out myself; just seemed right! Note that
@@ -635,7 +635,7 @@ public class NciCalculation extends QuantumPlaneCalculation {
         || Double.isNaN(gxzTemp)
         || Double.isNaN(gyzTemp)
         )
-      return Float.NaN;
+      return Double.NaN;
     return getValue(rho, false);
   }
   

@@ -33,9 +33,9 @@ import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import javajs.util.Lst;
 
@@ -108,32 +108,32 @@ public class AminoPolymer extends AlphaPolymer {
      * proline itself but the one prior to it.
      * 
      */
-    P3 nitrogen1 = residue1.getNitrogenAtom();
-    P3 alphacarbon1 = residue1.getLeadAtom();
-    P3 carbon1 = residue1.getCarbonylCarbonAtom();
-    P3 nitrogen2 = residue2.getNitrogenAtom();
-    P3 alphacarbon2 = residue2.getLeadAtom();
-    P3 carbon2 = residue2.getCarbonylCarbonAtom();
+    P3d nitrogen1 = residue1.getNitrogenAtom();
+    P3d alphacarbon1 = residue1.getLeadAtom();
+    P3d carbon1 = residue1.getCarbonylCarbonAtom();
+    P3d nitrogen2 = residue2.getNitrogenAtom();
+    P3d alphacarbon2 = residue2.getLeadAtom();
+    P3d carbon2 = residue2.getCarbonylCarbonAtom();
 
-    residue2.setGroupParameter(T.phi, Measure.computeTorsion(carbon1,
+    residue2.setGroupParameter(T.phi, MeasureD.computeTorsion(carbon1,
         nitrogen2, alphacarbon2, carbon2, true));
-    residue1.setGroupParameter(T.psi, Measure.computeTorsion(nitrogen1,
+    residue1.setGroupParameter(T.psi, MeasureD.computeTorsion(nitrogen1,
         alphacarbon1, carbon1, nitrogen2, true));
     // to offset omega so cis-prolines show up off the plane, 
     // we would have to use residue2 here:
-    residue1.setGroupParameter(T.omega, Measure.computeTorsion(
+    residue1.setGroupParameter(T.omega, MeasureD.computeTorsion(
         alphacarbon1, carbon1, nitrogen2, alphacarbon2, true));
   }
 
   @Override
-  protected float calculateRamachandranHelixAngle(int m, char qtype) {
-    float psiLast = (m == 0 ? Float.NaN : monomers[m - 1]
+  protected double calculateRamachandranHelixAngle(int m, char qtype) {
+    double psiLast = (m == 0 ? Double.NaN : monomers[m - 1]
         .getGroupParameter(T.psi));
-    float psi = monomers[m].getGroupParameter(T.psi);
-    float phi = monomers[m].getGroupParameter(T.phi);
-    float phiNext = (m == monomerCount - 1 ? Float.NaN : monomers[m + 1]
+    double psi = monomers[m].getGroupParameter(T.psi);
+    double phi = monomers[m].getGroupParameter(T.phi);
+    double phiNext = (m == monomerCount - 1 ? Double.NaN : monomers[m + 1]
         .getGroupParameter(T.phi));
-    float psiNext = (m == monomerCount - 1 ? Float.NaN : monomers[m + 1]
+    double psiNext = (m == monomerCount - 1 ? Double.NaN : monomers[m + 1]
         .getGroupParameter(T.psi));
     switch (qtype) {
     default:
@@ -158,9 +158,9 @@ public class AminoPolymer extends AlphaPolymer {
        *   dPsi = psi[i+1] - psi[i]
        * 
        */
-      float dPhi = (float) ((phiNext - phi) / 2 * Math.PI / 180);
-      float dPsi = (float) ((psiNext - psi) / 2 * Math.PI / 180);
-      return (float) (180 / Math.PI * 2 * Math.acos(Math.cos(dPsi)
+      double dPhi = (double) ((phiNext - phi) / 2 * Math.PI / 180);
+      double dPsi = (double) ((psiNext - psi) / 2 * Math.PI / 180);
+      return (double) (180 / Math.PI * 2 * Math.acos(Math.cos(dPsi)
           * Math.cos(dPhi) - Math.sin(dPsi) * Math.sin(dPhi) / 3));
     case 'c':
     case 'C':
@@ -194,8 +194,8 @@ public class AminoPolymer extends AlphaPolymer {
       polymer = this;
     if (!(polymer instanceof AminoPolymer))
       return;
-    P3 pt = new P3();
-    V3 vNH = new V3();
+    P3d pt = new P3d();
+    V3d vNH = new V3d();
     AminoMonomer source;
     int[][] min1 = (min == null ? new int[2][3] : null);
     for (int i = 1; i < monomerCount; ++i) { //not first N
@@ -221,18 +221,18 @@ public class AminoPolymer extends AlphaPolymer {
   }
 
   // max distance from RasMol 2.7.2.1.1  #define MaxHDist ((Long)2250*2250) 
-  private final static float maxHbondAlphaDistance = 9;
-  private final static float maxHbondAlphaDistance2 = maxHbondAlphaDistance
+  private final static double maxHbondAlphaDistance = 9;
+  private final static double maxHbondAlphaDistance2 = maxHbondAlphaDistance
       * maxHbondAlphaDistance;
   // this next was fixed in Jmol 12.1.14; was just 0.5f (0.71*0.71) since Jmol 10.0.00
-  private final static float minimumHbondDistance2 = 0.5f * 0.5f; 
+  private final static double minimumHbondDistance2 = 0.5f * 0.5f; 
 
   private void checkRasmolHydrogenBond(AminoMonomer source, BioPolymer polymer,
-                                       int indexDonor, P3 hydrogenPoint,
+                                       int indexDonor, P3d hydrogenPoint,
                                        BS bsB, Lst<Bond> vHBonds,
                                        int[][] min, boolean checkDistances) {
-    P3 sourceAlphaPoint = source.getLeadAtom();
-    P3 sourceNitrogenPoint = source.getNitrogenAtom();
+    P3d sourceAlphaPoint = source.getLeadAtom();
+    P3d sourceNitrogenPoint = source.getNitrogenAtom();
     Atom nitrogen = source.getNitrogenAtom();
     int[] m;
     for (int i = polymer.monomerCount; --i >= 0;) {
@@ -244,8 +244,8 @@ public class AminoPolymer extends AlphaPolymer {
       Atom oxygen = target.getCarbonylOxygenAtom();
       if (oxygen == null || bsB != null && !bsB.get(oxygen.i))
         continue;
-      P3 targetAlphaPoint = target.getLeadAtom();
-      float dist2 = sourceAlphaPoint.distanceSquared(targetAlphaPoint);
+      P3d targetAlphaPoint = target.getLeadAtom();
+      double dist2 = sourceAlphaPoint.distanceSquared(targetAlphaPoint);
       if (dist2 >= maxHbondAlphaDistance2)
         continue;
       int energy = calcHbondEnergy(sourceNitrogenPoint, hydrogenPoint, target,
@@ -297,26 +297,26 @@ public class AminoPolymer extends AlphaPolymer {
    * @param checkDistances
    * @return               energy in cal/mol or 0 (none)
    */
-  private int calcHbondEnergy(P3 nitrogenPoint, P3 hydrogenPoint,
+  private int calcHbondEnergy(P3d nitrogenPoint, P3d hydrogenPoint,
                               AminoMonomer target, boolean checkDistances) {
-    P3 targetOxygenPoint = target.getCarbonylOxygenAtom();
+    P3d targetOxygenPoint = target.getCarbonylOxygenAtom();
 
     if (targetOxygenPoint == null)
       return 0;
-    float distON2 = targetOxygenPoint.distanceSquared(nitrogenPoint);
+    double distON2 = targetOxygenPoint.distanceSquared(nitrogenPoint);
     if (distON2 < minimumHbondDistance2)
       return 0;
 
-    float distOH2 = targetOxygenPoint.distanceSquared(hydrogenPoint);
+    double distOH2 = targetOxygenPoint.distanceSquared(hydrogenPoint);
     if (distOH2 < minimumHbondDistance2)
       return 0;
 
-    P3 targetCarbonPoint = target.getCarbonylCarbonAtom();
-    float distCH2 = targetCarbonPoint.distanceSquared(hydrogenPoint);
+    P3d targetCarbonPoint = target.getCarbonylCarbonAtom();
+    double distCH2 = targetCarbonPoint.distanceSquared(hydrogenPoint);
     if (distCH2 < minimumHbondDistance2)
       return 0;
 
-    float distCN2 = targetCarbonPoint.distanceSquared(nitrogenPoint);
+    double distCN2 = targetCarbonPoint.distanceSquared(nitrogenPoint);
     if (distCN2 < minimumHbondDistance2)
       return 0;
 
@@ -341,7 +341,7 @@ public class AminoPolymer extends AlphaPolymer {
 
   private void addResidueHydrogenBond(Atom nitrogen, Atom oxygen,
                                       int indexAminoGroup,
-                                      int indexCarbonylGroup, float energy,
+                                      int indexCarbonylGroup, double energy,
                                       Lst<Bond> vHBonds) {
     int order;
     switch (indexAminoGroup - indexCarbonylGroup) {
@@ -393,8 +393,8 @@ public class AminoPolymer extends AlphaPolymer {
     for (int i = 0; i < monomerCount - 1; ++i) {
       AminoMonomer leadingResidue = (AminoMonomer) monomers[i];
       AminoMonomer trailingResidue = (AminoMonomer) monomers[i + 1];
-      float phi = trailingResidue.getGroupParameter(T.phi);
-      float psi = leadingResidue.getGroupParameter(T.psi);
+      double phi = trailingResidue.getGroupParameter(T.phi);
+      double psi = leadingResidue.getGroupParameter(T.psi);
       if (isHelix(psi, phi)) {
         //this next is just Bob's attempt to separate different helices
         //it is CONSERVATIVE -- it displays fewer helices than before
@@ -482,22 +482,22 @@ public class AminoPolymer extends AlphaPolymer {
    * @param phi C-CA-N-C torsion for THIS group
    * @return whether this corresponds to a helix
    */
-  private boolean isTurn(float psi, float phi) {
+  private boolean isTurn(double psi, double phi) {
     return checkPhiPsi(structureList.get(STR.TURN),
         psi, phi);
   }
 
-  private boolean isSheet(float psi, float phi) {
+  private boolean isSheet(double psi, double phi) {
     return checkPhiPsi(structureList.get(STR.SHEET),
         psi, phi);
   }
 
-  private boolean isHelix(float psi, float phi) {
+  private boolean isHelix(double psi, double phi) {
     return checkPhiPsi(structureList.get(STR.HELIX),
         psi, phi);
   }
 
-  private static boolean checkPhiPsi(float[] list, float psi, float phi) {
+  private static boolean checkPhiPsi(double[] list, double psi, double phi) {
     for (int i = 0; i < list.length; i += 4)
       if (phi >= list[i] && phi <= list[i + 1] && psi >= list[i + 2]
           && psi <= list[i + 3])
@@ -505,13 +505,13 @@ public class AminoPolymer extends AlphaPolymer {
     return false;
   }
 
-  private Map<STR, float[]> structureList; // kept in StateManager.globalSettings
+  private Map<STR, double[]> structureList; // kept in StateManager.globalSettings
 
   /**
    * @param structureList
    *        protein only -- helix, sheet, turn definitions
    */
-  public void setStructureList(Map<STR, float[]> structureList) {
+  public void setStructureList(Map<STR, double[]> structureList) {
     this.structureList = structureList;
   }
 

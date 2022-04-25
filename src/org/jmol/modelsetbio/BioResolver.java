@@ -48,12 +48,12 @@ import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 
 import javajs.util.AU;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.api.JmolAdapter;
@@ -81,9 +81,9 @@ public final class BioResolver implements Comparator<String[]> {
     // only implemented via reflection, and only for PDB/mmCIF files
   }
 
-  private V3 vAB;
-  private V3 vNorm;
-  private P4 plane;
+  private V3d vAB;
+  private V3d vNorm;
+  private P4d plane;
 
   private ModelLoader ml;
   private ModelSet ms;
@@ -245,9 +245,9 @@ public final class BioResolver implements Comparator<String[]> {
     htBondMap = new Hashtable<String, String>();
     htGroupBonds = new Hashtable<String, Boolean>();
     hNames = new String[3];
-    vAB = new V3();
-    vNorm = new V3();
-    plane = new P4();
+    vAB = new V3d();
+    vNorm = new V3d();
+    plane = new P4d();
   }
   
   /**
@@ -285,11 +285,11 @@ public final class BioResolver implements Comparator<String[]> {
     bsAtomsForHs.setBits(iFirst, ac);
     bsAddedHydrogens.setBits(ac, ac + nH);
     boolean isHetero = ms.at[iFirst].isHetero();
-    P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
+    P3d xyz = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
       ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
-          null, Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null, Float.NaN)
+          null, Double.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null, Double.NaN)
           .delete(null);
   }
 
@@ -322,10 +322,10 @@ public final class BioResolver implements Comparator<String[]> {
    */
   private String[][] getLigandBondInfo(JmolAdapter adapter, Object model, String group3) {
     String[][] dataIn = adapter.getBondList(model);
-    Map<String, P3> htAtoms = new Hashtable<String, P3>();
+    Map<String, P3d> htAtoms = new Hashtable<String, P3d>();
     JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(model);
     while (iterAtom.hasNext())
-      htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ().asP3());      
+      htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ());      
     String[][] bondInfo = new String[dataIn.length * 2][];
     int n = 0;
     for (int i = 0; i < dataIn.length; i++) {
@@ -371,9 +371,9 @@ public final class BioResolver implements Comparator<String[]> {
         String name1 = bondInfo[pt + nH][1];
         String name2 = bondInfo[pt + nH + 1][1];
         int factor = name1.compareTo(name2);
-        Measure.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name), htAtoms.get(name2), vNorm, vAB,
+        MeasureD.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name), htAtoms.get(name2), vNorm, vAB,
             plane);
-        float d = Measure.distanceToPlane(plane, htAtoms.get(bondInfo[pt][1])) * factor;
+        double d = MeasureD.distanceToPlane(plane, htAtoms.get(bondInfo[pt][1])) * factor;
         bondInfo[pt][1] = (d > 0 ? bondInfo[pt][1] + "@" + bondInfo[pt + 1][1]
             :  bondInfo[pt + 1][1] + "@" + bondInfo[pt][1]);
         bondInfo[pt + 1] = null;
@@ -410,7 +410,7 @@ public final class BioResolver implements Comparator<String[]> {
     bsAddedMask = BSUtil.copy(bsAddedHydrogens);
     finalizePdbCharges();
     int[] nTotal = new int[1];
-    P3[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
+    P3d[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
     Group groupLast = null;
     int ipt = 0;
     Atom atom;
@@ -452,7 +452,7 @@ public final class BioResolver implements Comparator<String[]> {
       case 2:
         String hName1,
         hName2;
-        float d = -1;
+        double d = -1;
         Bond[] bonds = atom.bonds;
         if (bonds != null)
           switch (bonds.length) {
@@ -461,7 +461,7 @@ public final class BioResolver implements Comparator<String[]> {
             Atom atom1 = bonds[0].getOtherAtom(atom);
             Atom atom2 = bonds[1].getOtherAtom(atom);
             int factor = atom1.getAtomName().compareTo(atom2.getAtomName());
-            d = Measure.distanceToPlane(Measure.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB,
+            d = MeasureD.distanceToPlane(MeasureD.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB,
                 plane), pts[i][0]) * factor;
             break;
           }
@@ -687,7 +687,7 @@ public final class BioResolver implements Comparator<String[]> {
     }
   }
 
-  private void setHydrogen(int iTo, int iAtom, String name, P3 pt) {
+  private void setHydrogen(int iTo, int iAtom, String name, P3d pt) {
     if (!bsAddedHydrogens.get(iAtom))
       return;
     Atom[] atoms = ms.at;
@@ -724,10 +724,10 @@ public final class BioResolver implements Comparator<String[]> {
 //      }
 //      return PT.join(newData, '\n', 0);
 //    }
-    // already float data
-    float[] fData = (float[]) data;
-    float[] newData = new float[bsAtoms.cardinality()];
-    float lastData = 0;
+    // already double data
+    double[] fData = (double[]) data;
+    double[] newData = new double[bsAtoms.cardinality()];
+    double lastData = 0;
     for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
         .nextSetBit(i + 1), iAtom++) {
       if (atoms[i].getElementNumber() == 1) {

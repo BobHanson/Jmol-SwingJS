@@ -31,20 +31,20 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 
 public class Trajectory {
   private Viewer vwr;
   ModelSet ms;
-  Lst<P3[]> steps;
+  Lst<P3d[]> steps;
 
   public Trajectory() {
     
   }
   
-  Trajectory set(Viewer vwr, ModelSet ms, Lst<P3[]> steps) {
+  Trajectory set(Viewer vwr, ModelSet ms, Lst<P3d[]> steps) {
     this.vwr = vwr;
     this.ms = ms;
     this.steps = steps;
@@ -54,7 +54,7 @@ public class Trajectory {
   void setUnitCell(int imodel) {
     SymmetryInterface c = ms.getUnitCell(imodel);
     if (c != null && c.getCoordinatesAreFractional() && c.isSupercell()) {
-      P3[] list = ms.trajectory.steps.get(imodel);
+      P3d[] list = ms.trajectory.steps.get(imodel);
       for (int i = list.length; --i >= 0;)
         if (list[i] != null)
           c.toSupercell(list[i]);
@@ -99,11 +99,11 @@ public class Trajectory {
    * @param isFractional
    */
   private void setAtomPositions(int baseModelIndex, int modelIndex,
-                                P3[] t1, P3[] t2,
-                                float f, V3[] vibs,
+                                P3d[] t1, P3d[] t2,
+                                double f, V3d[] vibs,
                                 boolean isFractional) {
     BS bs = new BS();
-    V3 vib = new V3();
+    V3d vib = new V3d();
     Model[] am = ms.am;
     Atom[] at = ms.at;
     int iFirst = am[baseModelIndex].firstAtomIndex;
@@ -128,7 +128,7 @@ public class Trajectory {
         bs.set(i);
       }
     } else {
-      P3 p = new P3();
+      P3d p = new P3d();
       int n = Math.min(t1.length, t2.length);
       for (int pt = 0, i = iFirst; i < iMax && pt < n; i++, pt++) {
         Atom a = at[i];
@@ -176,7 +176,7 @@ public class Trajectory {
     return bsModels;
   }
 
-  void morph(int m1, int m2, float f) {
+  void morph(int m1, int m2, double f) {
     if (f == 0) {
       ms.setTrajectory(m1);
       return;
@@ -199,13 +199,13 @@ public class Trajectory {
     int m = a.mi;
     boolean isFrac = (ms.unitCells != null && ms.unitCells[m]
         .getCoordinatesAreFractional());
-    P3 pt = steps.get(m)[a.i - ms.am[m].firstAtomIndex];
+    P3d pt = steps.get(m)[a.i - ms.am[m].firstAtomIndex];
     pt.set(a.x, a.y, a.z);
     if (isFrac)
       ms.unitCells[m].toFractionalF(pt, true);
   }
 
-  public void getFractional(Atom a, P3 ptTemp) {
+  public void getFractional(Atom a, P3d ptTemp) {
     a.setFractionalCoordPt(ptTemp, steps.get(a.mi)[a.i
         - ms.am[a.mi].firstAtomIndex], true);
   }

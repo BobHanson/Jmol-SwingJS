@@ -35,13 +35,13 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 /*
@@ -70,7 +70,7 @@ public class SymmetryOperation extends M4d {
   private boolean doNormalize = true;
   boolean isFinalized;
   private int opId;
-  private V3 centering;
+  private V3d centering;
 
   private String[] myLabels;
   int modDim;
@@ -79,7 +79,7 @@ public class SymmetryOperation extends M4d {
    * A linear array for the matrix. Note that the last value in this array may
    * indicate 120 to indicate that the integer divisor should be 120, not 12.
    */
-  float[] linearRotTrans;
+  double[] linearRotTrans;
 
   /**
    * rsvs is the superspace group rotation-translation matrix. It is a (3 +
@@ -232,7 +232,7 @@ public class SymmetryOperation extends M4d {
       sb.append("[\t");
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
-      float trans = (float) r[3];
+      double trans = (double) r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
       sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans)).append("\t]\n");
@@ -272,12 +272,12 @@ public class SymmetryOperation extends M4d {
        * 
        */
       this.xyz = xyz;
-      Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);
+      Parser.parseStringInfestedDoubleArray(xyz, null, linearRotTrans);
       return setFromMatrix(null, isReverse);
     }
     if (xyz.indexOf("[[") == 0) {
       xyz = xyz.replace('[', ' ').replace(']', ' ').replace(',', ' ');
-      Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);
+      Parser.parseStringInfestedDoubleArray(xyz, null, linearRotTrans);
       for (int i = linearRotTrans.length; --i >= 0;)
         if (Double.isNaN(linearRotTrans[i]))
           return false;
@@ -354,14 +354,14 @@ public class SymmetryOperation extends M4d {
     modDim = dim;
     if (dim > 0)
       myLabels = labelsXn;
-    linearRotTrans = new float[n];
+    linearRotTrans = new double[n];
   }
 
   private void setMatrix(boolean isReverse) {
     if (linearRotTrans.length > 16) {
       setGamma(isReverse);
     } else {
-      setAF(linearRotTrans);
+      setA(linearRotTrans);
       if (isReverse) {
         P3d p3 = P3d.new3(m03, m13, m23);
         invert();
@@ -372,14 +372,14 @@ public class SymmetryOperation extends M4d {
     }
   }
 
-  boolean setFromMatrix(float[] offset, boolean isReverse) {
-    float v = 0;
+  boolean setFromMatrix(double[] offset, boolean isReverse) {
+    double v = 0;
     int pt = 0;
     myLabels = (modDim == 0 ? labelsXYZ : labelsXn);
     int rowPt = 0;
     int n = 3 + modDim;
     for (int i = 0; rowPt < n; i++) {
-      if (Float.isNaN(linearRotTrans[i]))
+      if (Double.isNaN(linearRotTrans[i]))
         return false;
       v = linearRotTrans[i];
       
@@ -390,7 +390,7 @@ public class SymmetryOperation extends M4d {
         int denom =  (divisor == 0 ? ((int) v) & DIVISOR_MASK : divisor);
         if (denom == 0)
           denom = 12;
-        v = (float) finalizeD(v, divisor);
+        v = (double) finalizeD(v, divisor);
         // offset == null only in the case of "xyz matrix:" option
         if (offset != null) {
           // magnetic centering only
@@ -413,12 +413,12 @@ public class SymmetryOperation extends M4d {
   }
 
   public static M4d getMatrixFromXYZ(String xyz) {
-    float[] linearRotTrans = new float[16];
+    double[] linearRotTrans = new double[16];
     xyz = getMatrixFromString(null, "!" + xyz, linearRotTrans, false);
     if (xyz == null)
       return null;
     M4d m = new M4d();
-    m.setAF(linearRotTrans);
+    m.setA(linearRotTrans);
     return div12(m, setDivisor(xyz));
   }
 
@@ -435,7 +435,7 @@ public class SymmetryOperation extends M4d {
    * @return canonized Jones-Faithful string
    */
   static String getMatrixFromString(SymmetryOperation op, String xyz,
-                                    float[] linearRotTrans,
+                                    double[] linearRotTrans,
                                     boolean allowScaling) {
     boolean isDenominator = false;
     boolean isDecimal = false;
@@ -468,7 +468,7 @@ public class SymmetryOperation extends M4d {
     int tpt0 = 0;
     int rowPt = 0;
     char ch;
-    float iValue = 0;
+    double iValue = 0;
     int denom = 0;
     int numer = 0;
     double decimalMultiplier = 1f;
@@ -605,7 +605,7 @@ public class SymmetryOperation extends M4d {
   private final static int DIVISOR_MASK = 0xFF;
   private final static int DIVISOR_OFFSET = 8;
   
-  private final static int toDivisor(float numer, int denom) {
+  private final static int toDivisor(double numer, int denom) {
     int n = (int) numer;
     if (n != numer) {
       // could happen with magnetic lattice centering 1/5 + 1/2 = 7/10
@@ -616,9 +616,9 @@ public class SymmetryOperation extends M4d {
     return ((n << DIVISOR_OFFSET) + denom);
   }
 
-  private final static String xyzFraction12(float n12ths, int denom, boolean allPositive,
+  private final static String xyzFraction12(double n12ths, int denom, boolean allPositive,
                                             boolean halfOrLess) {
-    float n = n12ths;
+    double n = n12ths;
     if (denom != 12) {
       int in = (int) n;
       denom = (in & DIVISOR_MASK);
@@ -653,22 +653,22 @@ public class SymmetryOperation extends M4d {
   //    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   //  }
 
-  final static String twelfthsOf(float n12ths) {
+  final static String twelfthsOf(double n12ths) {
     String str = "";
     if (n12ths < 0) {
       n12ths = -n12ths;
       str = "-";
     }
     int m = 12;
-    int n = Math.round(n12ths);
+    int n = (int) Math.round(n12ths);
     if (Math.abs(n - n12ths) > 0.01f) {
       // fifths? sevenths? eigths? ninths? sixteenths?
       // Juan Manuel suggests 10 is large enough here 
-      float f = n12ths / 12;
+      double f = n12ths / 12;
       int max = 20;
       for (m = 3; m < max; m++) {
-        float fm = f * m;
-        n = Math.round(fm);
+        double fm = f * m;
+        n = (int) Math.round(fm);
         if (Math.abs(n - fm) < 0.01f)
           break;
       }
@@ -712,7 +712,7 @@ public class SymmetryOperation extends M4d {
   //      str = "-";
   //    }
   //    int m = 12;
-  //    int n = Math.round(n48ths);
+  //    int n = (int) Math.round(n48ths);
   //    if (Math.abs(n - n48ths) > 0.01f) {
   //      // fifths? sevenths? eigths? ninths? sixteenths?
   //      // Juan Manuel suggests 10 is large enough here 
@@ -720,7 +720,7 @@ public class SymmetryOperation extends M4d {
   //      int max = 20;
   //      for (m = 5; m < max; m++) {
   //        double fm = f * m;
-  //        n = Math.round(fm);
+  //        n = (int) Math.round(fm);
   //        if (Math.abs(n - fm) < 0.01f)
   //          break;
   //      }
@@ -781,7 +781,7 @@ public class SymmetryOperation extends M4d {
             + (x == 1 || x == -1 ? "" : "" + (int) Math.abs(x)) + sx);
   }
 
-  private static float normalizeTwelfths(float iValue, int divisor,
+  private static double normalizeTwelfths(double iValue, int divisor,
                                          boolean doNormalize) {
     iValue *= divisor;
     int half = divisor / 2;
@@ -834,7 +834,7 @@ public class SymmetryOperation extends M4d {
       for (int j = 0; j < 3; j++)
         if (row[j] != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction12((float) (is12ths ? row[3] : row[3] * denom), denom, allPositive,
+      term += xyzFraction12((double) (is12ths ? row[3] : row[3] * denom), denom, allPositive,
           halfOrLess);
       str += "," + term;
     }
@@ -864,7 +864,7 @@ public class SymmetryOperation extends M4d {
     return vRot;
   }
 
-  public String fcoord2(T3 p) {
+  public String fcoord2(T3d p) {
     if (divisor == 12)
       return fcoord(p);
     return fc2((int) linearRotTrans[3]) + " " + fc2((int) linearRotTrans[7]) + " " + fc2((int) linearRotTrans[11]);
@@ -888,14 +888,14 @@ public class SymmetryOperation extends M4d {
    * @param p
    * @return "1/2" for example
    */
-  static String fcoord(T3 p) {
+  static String fcoord(T3d p) {
     // Castep reader only
     return fc(p.x) + " " + fc(p.y) + " " + fc(p.z);
   }
 
-  private static String fc(float x) {
+  private static String fc(double x) {
     // Castep reader only
-    float xabs = Math.abs(x);
+    double xabs = Math.abs(x);
     String m = (x < 0 ? "-" : "");
     int x24 = (int) approxF(xabs * 24);
     if (x24 / 24f == (int) (x24 / 24f))
@@ -906,7 +906,7 @@ public class SymmetryOperation extends M4d {
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
   }
   
-  static double approxF(float f) {
+  static double approxF(double f) {
     return PT.approxD(f, 100);
   }
 
@@ -986,7 +986,7 @@ public class SymmetryOperation extends M4d {
    * 
    * @return centering
    */
-  V3 getCentering() {
+  V3d getCentering() {
     if (!isFinalized)
       doFinalize();
     if (centering == null && !unCentered) {
@@ -994,7 +994,7 @@ public class SymmetryOperation extends M4d {
           && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0 && m21 == 0
           && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;
-        centering = V3.new3((float) m03, (float) m13, (float) m23);
+        centering = V3d.new3((double) m03, (double) m13, (double) m23);
       } else {
         unCentered = true;
         centering = null;
@@ -1090,13 +1090,13 @@ public class SymmetryOperation extends M4d {
     }
   }
 
-  public static Lst<P3> getLatticeCentering(SymmetryOperation[] ops) {
+  public static Lst<P3d> getLatticeCentering(SymmetryOperation[] ops) {
     // TODO -- check 'R' types
-    Lst<P3> list = new Lst<P3>();
+    Lst<P3d> list = new Lst<P3d>();
     for (int i = 0; i < ops.length; i++) {
-      T3 c = (ops[i]  == null ? null : ops[i].getCentering());
+      T3d c = (ops[i]  == null ? null : ops[i].getCentering());
       if (c != null)
-        list.addLast(P3.newP(c));
+        list.addLast(P3d.newP(c));
     }
     return list;
   }

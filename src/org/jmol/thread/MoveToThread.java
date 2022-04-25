@@ -25,20 +25,20 @@
 
 package org.jmol.thread;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.M3d;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 public class MoveToThread extends JmolThread {
 
   public MoveToThread() {
-    aaStepCenter = new V3();
-    aaStepNavCenter = new V3();
-    aaStep = new A4();
-    aaTotal = new A4();
+    aaStepCenter = new V3d();
+    aaStepNavCenter = new V3d();
+    aaStep = new A4d();
+    aaTotal = new A4d();
     matrixStart = new M3d();
     matrixStartInv = new M3d();
     matrixStep = new M3d();
@@ -49,18 +49,18 @@ public class MoveToThread extends JmolThread {
 
   ///// MOVETO command parameters:
 
-  private final V3 aaStepCenter;
-  private final V3 aaStepNavCenter;
-  private final A4 aaStep;
-  private final A4 aaTotal;
+  private final V3d aaStepCenter;
+  private final V3d aaStepNavCenter;
+  private final A4d aaStep;
+  private final A4d aaTotal;
   private final M3d matrixStart;
   private final M3d matrixStartInv;
   private M3d matrixStep;
   private final M3d matrixEnd;
 
-  private P3 center;
-  private P3 navCenter;
-  private P3 ptMoveToCenter;
+  private P3d center;
+  private P3d navCenter;
+  private P3d ptMoveToCenter;
 
   private Slider zoom;
   private Slider xTrans;
@@ -77,35 +77,35 @@ public class MoveToThread extends JmolThread {
   private int fps;
   private long frameTimeMillis;
   private boolean doEndMove;
-  private float fStep;
+  private double fStep;
 
   ///// common to both:
 
   private TransformManager transformManager;
-  private float floatSecondsTotal;
+  private double floatSecondsTotal;
   private int totalSteps;
   private int iStep;
 
   ///// MOVE command uses a different set of parameters:
 
   private int timePerStep;
-  private float radiansXStep;
-  private float radiansYStep;
-  private float radiansZStep;
-  private V3 dRot;
-  private V3 dTrans;
-  private float dZoom;
-  private float dSlab;
-  private float zoomPercent0;
+  private double radiansXStep;
+  private double radiansYStep;
+  private double radiansZStep;
+  private V3d dRot;
+  private V3d dTrans;
+  private double dZoom;
+  private double dSlab;
+  private double zoomPercent0;
   private int slab;
-  private float transX;
-  private float transY;
-  //private float transZ;
+  private double transX;
+  private double transY;
+  //private double transZ;
 
   @Override
   public int setManager(Object manager, Viewer vwr, Object params) {
     Object[] options = (Object[]) params;
-    isMove = (options[0] instanceof V3);
+    isMove = (options[0] instanceof V3d);
     setViewer(vwr, (isMove ? "moveThread" : "MoveToThread"));
     transformManager = (TransformManager) manager;
     return (isMove ? setManagerMove(options) : setManagerMoveTo(options));
@@ -142,9 +142,9 @@ public class MoveToThread extends JmolThread {
     //    ]
     //  }
 
-    dRot = (V3) options[0];
-    dTrans = (V3) options[1];
-    float[] f = (float[]) options[2];
+    dRot = (V3d) options[0];
+    dTrans = (V3d) options[1];
+    double[] f = (double[]) options[2];
     dZoom = f[0];
     dSlab = f[1];
     floatSecondsTotal = f[2];
@@ -159,7 +159,7 @@ public class MoveToThread extends JmolThread {
     totalSteps = (int) (fps * floatSecondsTotal);
     if (totalSteps <= 0)
       totalSteps = 1; // to catch a zero secondsTotal parameter
-    float radiansPerDegreePerStep = (float) (1 / TransformManager.degreesPerRadian / totalSteps);
+    double radiansPerDegreePerStep = (double) (1 / TransformManager.degreesPerRadian / totalSteps);
     radiansXStep = radiansPerDegreePerStep * dRot.x;
     radiansYStep = radiansPerDegreePerStep * dRot.y;
     radiansZStep = radiansPerDegreePerStep * dRot.z;
@@ -192,9 +192,9 @@ public class MoveToThread extends JmolThread {
     //   11 cameraY 
     //   }
     // }
-    center = (P3) options[0];
+    center = (P3d) options[0];
     matrixEnd.setM3((M3d) options[1]);
-    float[] f = (float[]) options[3];
+    double[] f = (double[]) options[3];
     ptMoveToCenter = (center == null ? transformManager.fixedRotationCenter
         : center);
     floatSecondsTotal = f[0];
@@ -202,11 +202,11 @@ public class MoveToThread extends JmolThread {
     xTrans = newSlider(transformManager.getTranslationXPercent(), f[2]);
     yTrans = newSlider(transformManager.getTranslationYPercent(), f[3]);
     rotationRadius = newSlider(transformManager.modelRadius,
-        (center == null || Float.isNaN(f[4]) ? transformManager.modelRadius
+        (center == null || Double.isNaN(f[4]) ? transformManager.modelRadius
             : f[4] <= 0 ? vwr.ms.calcRotationRadius(vwr.am.cmi, center, false) : f[4]));
     pixelScale = newSlider(transformManager.scaleDefaultPixelsPerAngstrom, f[5]);
     if (f[6] != 0) {
-      navCenter = (P3) options[2];
+      navCenter = (P3d) options[2];
       navDepth = newSlider(transformManager.navigationDepthPercent, f[6]);
       xNav = newSlider(transformManager.getNavigationOffsetPercent('X'), f[7]);
       yNav = newSlider(transformManager.getNavigationOffsetPercent('Y'), f[8]);
@@ -233,8 +233,8 @@ public class MoveToThread extends JmolThread {
     return totalSteps;
   }
 
-  private Slider newSlider(float start, float value) {
-    return (Float.isNaN(value) || value == Float.MAX_VALUE ? null : new Slider(
+  private Slider newSlider(double start, double value) {
+    return (Double.isNaN(value) || value == Double.MAX_VALUE ? null : new Slider(
         start, value));
   }
 
@@ -370,7 +370,7 @@ public class MoveToThread extends JmolThread {
       transformManager.fixedRotationCenter.add(aaStepCenter);
     if (navCenter != null
         && transformManager.mode == TransformManager.MODE_NAVIGATION) {
-      P3 pt = P3.newP(transformManager.navigationCenter);
+      P3d pt = P3d.newP(transformManager.navigationCenter);
       pt.add(aaStepNavCenter);
       transformManager.setNavigatePt(pt);
     }
@@ -382,29 +382,29 @@ public class MoveToThread extends JmolThread {
     setValues(matrixEnd, center, navCenter);
   }
 
-  private void setValues(M3d m, P3 center, P3 navCenter) {
+  private void setValues(M3d m, P3d center, P3d navCenter) {
     transformManager.setAll(center, m, navCenter, getVal(zoom), getVal(xTrans),
         getVal(yTrans), getVal(rotationRadius), getVal(pixelScale),
         getVal(navDepth), getVal(xNav), getVal(yNav), getVal(cameraDepth),
         getVal(cameraX), getVal(cameraY));
   }
 
-  private float getVal(Slider s) {
-    return (s == null ? Float.NaN : s.getVal(fStep));
+  private double getVal(Slider s) {
+    return (s == null ? Double.NaN : s.getVal(fStep));
   }
 
   private class Slider {
-    float start;
-    float delta;
-    float value;
+    double start;
+    double delta;
+    double value;
 
-    Slider(float start, float value) {
+    Slider(double start, double value) {
       this.start = start;
       this.value = value;
       this.delta = value - start;
     }
 
-    float getVal(float fStep) {
+    double getVal(double fStep) {
       return (fStep < 0 ? value : start + fStep * delta);
     }
 

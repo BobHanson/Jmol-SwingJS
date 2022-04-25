@@ -39,15 +39,15 @@ import org.jmol.viewer.JC;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
 import javajs.util.P3d;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.Quat;
+import javajs.util.Qd;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -362,10 +362,10 @@ public class SymmetryDesc {
   private static P3d pta01 = new P3d();
   private static P3d pta02 = new P3d();
   private static V3d vtrans = new V3d();
-  private static P3 p1 = new P3();
-  private static P3 p0 = new P3();
-  private static P3 p3 = new P3();
-  private static P3 p4 = new P3();
+  private static P3d p1 = new P3d();
+  private static P3d p0 = new P3d();
+  private static P3d p3 = new P3d();
+  private static P3d p4 = new P3d();
 
   /**
    * 
@@ -425,8 +425,8 @@ public class SymmetryDesc {
    * 
    */
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
-                                 P3 ptAtom, P3 ptTarget, String id,
-                                 float scaleFactor, int options,
+                                 P3d ptAtom, P3d ptTarget, String id,
+                                 double scaleFactor, int options,
                                  boolean haveTranslation, BS bsInfo) {
     if (!op.isFinalized)
       op.doFinalize();
@@ -436,8 +436,8 @@ public class SymmetryDesc {
       scaleFactor = 1f;
     ptemp.set(0, 0, 0);
     vtrans.set(0, 0, 0);
-    P4 plane = null;
-    P3d pta00 = (ptAtom == null || Float.isNaN(ptAtom.x) ? new P3d() : P3d.newPd(ptAtom));
+    P4d plane = null;
+    P3d pta00 = (ptAtom == null || Double.isNaN(ptAtom.x) ? new P3d() : P3d.newPd(ptAtom));
 
     if (ptTarget != null) {
 
@@ -461,7 +461,7 @@ public class SymmetryDesc {
       //      vtrans.sub2(pta02, pta01)
 
       pta01.setT(pta00);
-      pta02.setP(ptTarget);
+      pta02.setT(ptTarget);
       uc.toFractional(pta01, true);
       uc.toFractional(pta02, true);
       op.rotTrans(pta01);
@@ -537,15 +537,15 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    Quat q = Quat.getQuaternionFramed3d(pt0, pt1, pt2)
-        .div(Quat.getQuaternionFramed3d(pta00, pta01, pta02));
-    Quat qF = Quat.new4(q.q1, q.q2, q.q3, q.q0);
-    T3[] info = Measure.computeHelicalAxis(pta00.asP3(), pt0.asP3(), qF);
+    Qd q = Qd.getQuaternionFrame(pt0, pt1, pt2)
+        .div(Qd.getQuaternionFrame(pta00, pta01, pta02));
+    Qd qF = Qd.new4(q.q1, q.q2, q.q3, q.q0);
+    T3d[] info = MeasureD.computeHelicalAxis(pta00, pt0, qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3d pa1 = P3d.newPd(info[0]);
     P3d ax1 = P3d.newPd(info[1]);
-    int ang1 = (int) Math.abs(PT.approx(((P3) info[3]).x, 1));
-    float pitch1 = (float) SymmetryOperation.approxF(((P3) info[3]).y);
+    int ang1 = (int) Math.abs(PT.approxD(((P3d) info[3]).x, 1));
+    double pitch1 = (double) SymmetryOperation.approxF(((P3d) info[3]).y);
 
     if (haveInversion) {
 
@@ -568,7 +568,7 @@ public class SymmetryDesc {
     P3d ptref = null; // reflection center
 
     double w = 0;
-    float margin = 0; // for plane
+    double margin = 0; // for plane
 
     boolean isTranslation = (ang1 == 0);
     boolean isRotation = !isTranslation;
@@ -686,7 +686,7 @@ public class SymmetryDesc {
         // ax + by + cz + d = 0
         // so if a point is in the plane, then N dot X = -d
         w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
-        plane = P4.new4((float) vtemp.x, (float) vtemp.y, (float) vtemp.z, (float) w);
+        plane = P4d.new4((double) vtemp.x, (double) vtemp.y, (double) vtemp.z, (double) w);
         margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30f
             : 1.05f);
         isRotation = false;
@@ -751,19 +751,19 @@ public class SymmetryDesc {
         ptr.add2(pa1, vtemp);
         ptr.putP(p3);
         ptinv.putP(p4);
-        ang2 = Math.round(Measure.computeTorsion(p4, p1, p3, p0, true));
+        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
       } else if (pitch1 == 0) {
         ptr.setT(pa1);
         ptemp.scaleAdd2(1, ptr, vtemp);
         ptemp.putP(p3);
         pta00.putP(p4);
-        ang2 = Math.round(Measure.computeTorsion(p4, p1, p3, p0, true));
+        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
       } else {
         ptemp.add2(pa1, vtemp);
         ptr.scaleAdd2(0.5f, vtemp,pa1);
         ptemp.putP(p3);
         pta00.putP(p4);
-        ang2 = Math.round(Measure.computeTorsion(p4, p1, p3, p0, true));
+        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
       }
 
       if (ang2 != 0)
@@ -964,8 +964,8 @@ public class SymmetryDesc {
             .append(Escape.ePd(ptr)).append(Escape.ePd(ptemp));
         ptemp.setT(haveInversion ? ptinv : pta00);
         if (ptemp.distance(pt0) < 0.1f)
-          ptemp.set((float) Math.random(), (float) Math.random(),
-              (float) Math.random());
+          ptemp.set((double) Math.random(), (double) Math.random(),
+              (double) Math.random());
         draw1.append(Escape.ePd(ptemp));
         ptemp.set(0, ang, 0);
         draw1.append(Escape.ePd(ptemp)).append(" color red");
@@ -1007,7 +1007,7 @@ public class SymmetryDesc {
             uc.getCanonicalCopy(margin, true), 3);
         if (v != null)
           for (int i = v.size(); --i >= 0;) {
-            P3[] pts = (P3[]) v.get(i);
+            P3d[] pts = (P3d[]) v.get(i);
             draw1.append(drawid).append("planep").appendI(i).append(" ")
                 .append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
             if (pts.length == 3)
@@ -1192,7 +1192,7 @@ public class SymmetryDesc {
         break;
       case RET_PLANE:
         if (plane != null && bsInfo.get(RET_INVARIANT)) {
-          float d = Measure.distanceToPlane(plane, pta00.putP(p1));
+          double d = MeasureD.distanceToPlane(plane, pta00.putP(p1));
           plane.w += d;
         }
         ret[i] = plane;
@@ -1227,13 +1227,13 @@ public class SymmetryDesc {
     return ret;
   }
 
-  private static void drawLine(SB s, String id, float diameter, P3d pt0, P3d pt1,
+  private static void drawLine(SB s, String id, double diameter, P3d pt0, P3d pt1,
                                String color) {
     s.append(id).append(" diameter ").appendF(diameter).append(Escape.ePd(pt0))
         .append(Escape.ePd(pt1)).append(" color ").append(color);
   }
 
-  private static void drawFrameLine(String xyz, P3d pt, V3d v, float width,
+  private static void drawFrameLine(String xyz, P3d pt, V3d v, double width,
                                     P3d ptemp, SB draw1, String key, String color) {
     ptemp.setT(pt);
     ptemp.add(v);
@@ -1292,9 +1292,9 @@ public class SymmetryDesc {
 
   private static T3d approx(T3d pt) {
     if (pt != null) {
-      pt.x = SymmetryOperation.approxF((float) pt.x);
-      pt.y = SymmetryOperation.approxF((float) pt.y);
-      pt.z = SymmetryOperation.approxF((float) pt.z);
+      pt.x = SymmetryOperation.approxF((double) pt.x);
+      pt.y = SymmetryOperation.approxF((double) pt.y);
+      pt.z = SymmetryOperation.approxF((double) pt.z);
     }
     return pt;
   }
@@ -1327,9 +1327,9 @@ public class SymmetryDesc {
    * @return a string or an Object[] containing information
    */
   private Object getSymmetryInfo(SymmetryInterface sym, int iModel, int iatom,
-                                 SymmetryInterface uc, String xyz, int op, P3 translation,
-                                 P3 pt, P3 pt2, String id,
-                                 int type, float scaleFactor, int nth, int options) {
+                                 SymmetryInterface uc, String xyz, int op, P3d translation,
+                                 P3d pt, P3d pt2, String id,
+                                 int type, double scaleFactor, int nth, int options) {
     int returnType = 0;
     Object nullRet = nullReturn(type);
     switch (type) {
@@ -1359,7 +1359,7 @@ public class SymmetryDesc {
     BS bsInfo = getInfoBS(returnType);
 
     int iop = op;
-    P3 offset = (options == T.offset  && (type == T.atoms || type == T.point)? pt2 : null);
+    P3d offset = (options == T.offset  && (type == T.atoms || type == T.point)? pt2 : null);
     if (offset != null)
       pt2 = null;
     Object[] info = null;
@@ -1398,7 +1398,7 @@ public class SymmetryDesc {
         if (isBio)
           return nullRet;
         symTemp.setUnitCell(uc);
-        ptemp.setP(pt);
+        ptemp.setT(pt);
         uc.toFractional(ptemp, false);
         if (Double.isNaN(ptemp.x))
           return nullRet;
@@ -1409,7 +1409,7 @@ public class SymmetryDesc {
           sympt.addF(offset);
         }
         symTemp.toCartesian(sympt, false);
-        P3 ret = sympt.asP3();
+        P3d ret = sympt;
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
@@ -1459,7 +1459,7 @@ public class SymmetryDesc {
         if (!(pt instanceof Atom) && !(pt2 instanceof Atom))
           iatom = -1;
         return (info == null ? nullRet : getAtom(uc, iModel, iatom,
-            (T3) info[7]));
+            (T3d) info[7]));
       }
     }
     if (info == null)
@@ -1480,7 +1480,7 @@ public class SymmetryDesc {
     return getInfo(info, type);
   }
 
-  private BS getAtom(SymmetryInterface uc, int iModel, int iAtom, T3 sympt) {
+  private BS getAtom(SymmetryInterface uc, int iModel, int iAtom, T3d sympt) {
     BS bsElement = null;
     if (iAtom >= 0)
       modelSet.getAtomBitsMDa(T.elemno,
@@ -1491,7 +1491,7 @@ public class SymmetryDesc {
     if (bsElement != null)
       bsResult.and(bsElement);
     if (bsResult.isEmpty()) {
-      sympt = P3.newP(sympt);
+      sympt = P3d.newP(sympt);
       uc.toUnitCell(sympt, null);
       uc.toCartesianF(sympt, false);
       modelSet.getAtomsWithin(0.02f, sympt, bsResult, iModel);
@@ -1522,8 +1522,8 @@ public class SymmetryDesc {
    * 
    */
   Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
-                                       P3 translation, P3 pt1, P3 pt2,
-                                       String drawID, String stype, float scaleFactor,
+                                       P3d translation, P3d pt1, P3d pt2,
+                                       String drawID, String stype, double scaleFactor,
                                        int nth, int options, BS bsInfo) {
     boolean asString = (bsInfo.get(RET_LIST) || bsInfo.get(RET_DRAW) && bsInfo.cardinality() == 3);
     bsInfo.clear(RET_LIST);
@@ -1589,8 +1589,8 @@ public class SymmetryDesc {
    * @param options 0 or T.offset
    * @return "" or a bitset of matching atoms, or 
    */
-  Object getSymopInfo(int iAtom, String xyz, int op, P3 translation, P3 pt, P3 pt2,
-                      String id, int type, float scaleFactor, int nth, int options) {
+  Object getSymopInfo(int iAtom, String xyz, int op, P3d translation, P3d pt, P3d pt2,
+                      String id, int type, double scaleFactor, int nth, int options) {
     if (type == 0)
       type = getType(id);
     Object ret = (type == T.atoms ? new BS() : "");
@@ -1628,9 +1628,9 @@ public class SymmetryDesc {
 
   @SuppressWarnings("unchecked")
   Map<String, Object> getSpaceGroupInfo(SymmetryInterface sym, int modelIndex,
-                                        String sgName, int symOp, P3 pt1,
-                                        P3 pt2, String drawID,
-                                        float scaleFactor, int nth,
+                                        String sgName, int symOp, P3d pt1,
+                                        P3d pt2, String drawID,
+                                        double scaleFactor, int nth,
                                         boolean isFull, boolean isForModel,
                                         int options, SymmetryInterface cellInfo,
                                         BS bsInfo) {

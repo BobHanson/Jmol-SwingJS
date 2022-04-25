@@ -27,11 +27,12 @@ package org.jmol.modelset;
 
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
@@ -72,14 +73,14 @@ public class Atom extends Point3fi implements Node {
 
   
   public static final int RADIUS_MAX = 16;
-  public static final float RADIUS_GLOBAL = 16.1f;
+  public static final double RADIUS_GLOBAL = 16.1f;
   public static short MAD_GLOBAL = 32200;
 
   public char altloc = '\0';
   public byte atomID;
   int atomSite;
   public Group group;
-  private float userDefinedVanDerWaalRadius;
+  private double userDefinedVanDerWaalRadius;
   byte valence;
   short atomicAndIsotopeNumber;
   public BS atomSymmetry;
@@ -131,7 +132,7 @@ public class Atom extends Point3fi implements Node {
    */
   
   public Atom setAtom(int modelIndex, int atomIndex,
-        P3 xyz, float radius,
+        P3d xyz, double radius,
         BS atomSymmetry, int atomSite,
         short atomicAndIsotopeNumber, int formalCharge, 
         boolean isHetero) {
@@ -244,7 +245,7 @@ public class Atom extends Point3fi implements Node {
   public short calculateMad(Viewer vwr, RadiusData rd) {
     if (rd == null)
       return 0;
-    float f = rd.value;
+    double f = rd.value;
     if (f == 0)
       return 0;
     switch (rd.factorType) {
@@ -252,10 +253,10 @@ public class Atom extends Point3fi implements Node {
        return (short) f;
     case FACTOR:
     case OFFSET:
-      float r = 0;
+      double r = 0;
       switch (rd.vdwType) {
       case TEMP:
-        float tmax = vwr.ms.getBfactor100Hi();
+        double tmax = vwr.ms.getBfactor100Hi();
         r = (tmax > 0 ? getBfactor100() / tmax : 0);
         break;
       case HYDRO:
@@ -287,7 +288,7 @@ public class Atom extends Point3fi implements Node {
     return mad; 
   }
 
-  public float getADPMinMax(boolean isMax) {
+  public double getADPMinMax(boolean isMax) {
     Object[] tensors = getTensors();
     if (tensors == null)
       return 0;
@@ -296,7 +297,7 @@ public class Atom extends Point3fi implements Node {
       return 0;
     if (group.chain.model.ms.isModulated(i) && t.isUnmodulated)
       t = (Tensor) tensors[1];
-    return (float) t.getFactoredValue(isMax ? 2 : 1); 
+    return (double) t.getFactoredValue(isMax ? 2 : 1); 
   }
 
   public Object[] getTensors() {
@@ -317,7 +318,7 @@ public class Atom extends Point3fi implements Node {
     return (bonds == null ? 0 : bonds.length);    
   }
   
-  public void setTranslucent(boolean isTranslucent, float translucentLevel) {
+  public void setTranslucent(boolean isTranslucent, double translucentLevel) {
     colixAtom = C.getColixTranslucent3(colixAtom, isTranslucent, translucentLevel);    
   }
 
@@ -378,13 +379,13 @@ public class Atom extends Point3fi implements Node {
 
   // a percentage value in the range 0-100
   public int getOccupancy100() {
-    float[] occupancies = group.chain.model.ms.occupancies;
-    return (occupancies == null ? 100 : Math.round(occupancies[i]));
+    double[] occupancies = group.chain.model.ms.occupancies;
+    return (occupancies == null ? 100 : (int) Math.round(occupancies[i]));
   }
 
   // a percentage value in the range 0-100
   public boolean isOccupied() {
-    float[] occupancies = group.chain.model.ms.occupancies;
+    double[] occupancies = group.chain.model.ms.occupancies;
     return (occupancies == null || occupancies[i] >= 50);
   }
 
@@ -395,13 +396,13 @@ public class Atom extends Point3fi implements Node {
     return (bfactor100s == null ? 0 : bfactor100s[i]);
   }
 
-  public float getHydrophobicity() {
-    float[] values = group.chain.model.ms.hydrophobicities;
+  public double getHydrophobicity() {
+    double[] values = group.chain.model.ms.hydrophobicities;
     return (values == null ? Elements.getHydrophobicity(group.groupID) : values[i]);
   }
 
-  public boolean setRadius(float radius) {
-    return !Float.isNaN(userDefinedVanDerWaalRadius = (radius > 0 ? radius : Float.NaN));  
+  public boolean setRadius(double radius) {
+    return !Double.isNaN(userDefinedVanDerWaalRadius = (radius > 0 ? radius : Double.NaN));  
   }
   
   public void delete(BS bsBonds) {
@@ -516,17 +517,17 @@ public class Atom extends Point3fi implements Node {
   }
 
 
-  public float getDimensionValue(int dimension) {
+  public double getDimensionValue(int dimension) {
     return (dimension == 0 ? x : (dimension == 1 ? y : z));
   }
 
-  public float getVanderwaalsRadiusFloat(Viewer vwr, VDW type) {
+  public double getVanderwaalsRadiusFloat(Viewer vwr, VDW type) {
     // called by atomPropertyFloat as VDW_AUTO,
     // AtomCollection.fillAtomData with VDW_AUTO or VDW_NOJMOL
     // AtomCollection.findMaxRadii with VDW_AUTO
     // AtomCollection.getAtomPropertyState with VDW_AUTO
     // AtomCollection.getVdwRadius with passed on type
-    return (Float.isNaN(userDefinedVanDerWaalRadius) 
+    return (Double.isNaN(userDefinedVanDerWaalRadius) 
         ? vwr.getVanderwaalsMarType(atomicAndIsotopeNumber, getVdwType(type)) / 1000f
         : userDefinedVanDerWaalRadius);
   }
@@ -552,16 +553,16 @@ public class Atom extends Point3fi implements Node {
     return type;
   }
 
-  public float getBondingRadius() {
-    float[] rr = group.chain.model.ms.bondingRadii;
-    float r = (rr == null  || i >= rr.length ? 0 : rr[i]);
+  public double getBondingRadius() {
+    double[] rr = group.chain.model.ms.bondingRadii;
+    double r = (rr == null  || i >= rr.length ? 0 : rr[i]);
     return (r == 0 ? Elements.getBondingRadius(atomicAndIsotopeNumber,
         getFormalCharge()) : r);
   }
 
-  float getVolume(Viewer vwr, VDW vType) {
-    float r1 = (vType == null ? userDefinedVanDerWaalRadius : Float.NaN);
-    if (Float.isNaN(r1))
+  double getVolume(Viewer vwr, VDW vType) {
+    double r1 = (vType == null ? userDefinedVanDerWaalRadius : Double.NaN);
+    if (Double.isNaN(r1))
       r1 = vwr.getVanderwaalsMarType(getElementNumber(), getVdwType(vType)) / 1000f;
     double volume = 0;
     if (bonds != null)
@@ -569,11 +570,11 @@ public class Atom extends Point3fi implements Node {
         if (!bonds[j].isCovalent())
           continue;
         Atom atom2 = bonds[j].getOtherAtom(this);
-        float r2 = (vType == null ? atom2.userDefinedVanDerWaalRadius : Float.NaN);
-        if (Float.isNaN(r2))
+        double r2 = (vType == null ? atom2.userDefinedVanDerWaalRadius : Double.NaN);
+        if (Double.isNaN(r2))
           r2 = vwr.getVanderwaalsMarType(atom2.getElementNumber(), atom2
               .getVdwType(vType)) / 1000f;
-        float d = distance(atom2);
+        double d = distance(atom2);
         if (d > r1 + r2)
           continue;
         if (d + r1 <= r2)
@@ -585,14 +586,14 @@ public class Atom extends Point3fi implements Node {
         double h = r1 - (r1 * r1 + d * d - r2 * r2) / (2.0 * d);
         volume -= Math.PI / 3 * h * h * (3 * r1 - h);
       }
-    return (float) (volume + 4 * Math.PI / 3 * r1 * r1 * r1);
+    return (double) (volume + 4 * Math.PI / 3 * r1 * r1 * r1);
   }
 
   int getCurrentBondCount() {
     return bonds == null ? 0 : bonds.length;
   }
 
-  public float getRadius() {
+  public double getRadius() {
     return Math.abs(madAtom / 2000f);
   }
 
@@ -640,8 +641,8 @@ public class Atom extends Point3fi implements Node {
      return ((shapeVisibilityFlags & flags) == flags);
    }
 
-   public float getPartialCharge() {
-     float[] partialCharges = group.chain.model.ms.partialCharges;
+   public double getPartialCharge() {
+     double[] partialCharges = group.chain.model.ms.partialCharges;
      return partialCharges == null ? 0 : partialCharges[i];
    }
 
@@ -743,22 +744,22 @@ public class Atom extends Point3fi implements Node {
     return (group.chain.model.ms.getMoleculeIndex(i, inModel) + 1);
   }
    
-  private float getFractionalCoord(boolean fixJavaFloat, char ch, boolean ignoreOffset, P3 pt) {
+  private double getFractionalCoord(boolean fixJavaFloat, char ch, boolean ignoreOffset, P3d pt) {
     pt = getFractionalCoordPt(fixJavaFloat, ignoreOffset, pt);
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
     
   @Override
-  public P3 getXYZ() {
+  public P3d getXYZ() {
     return this;
   }
   
-  public P3 getFractionalCoordPt(boolean fixJavaFloat, boolean ignoreOffset,
-                                 P3 pt) {
+  public P3d getFractionalCoordPt(boolean fixJavaFloat, boolean ignoreOffset,
+                                 P3d pt) {
     // ignoreOffset TRUE uses the original unshifted matrix
     SymmetryInterface c = getUnitCell();
     if (pt == null)
-      pt = P3.newP(this);
+      pt = P3d.newP(this);
     else
       pt.setT(this);
     if (c != null) {
@@ -774,7 +775,7 @@ public class Atom extends Point3fi implements Node {
     return group.chain.model.ms.getUnitCellForAtom(this.i);
   }
   
-  private float getFractionalUnitCoord(boolean fixJavaFloat, char ch, P3 pt) {
+  private double getFractionalUnitCoord(boolean fixJavaFloat, char ch, P3d pt) {
     pt = getFractionalUnitCoordPt(fixJavaFloat, false, pt);
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
@@ -785,10 +786,10 @@ public class Atom extends Point3fi implements Node {
    * @param pt
    * @return unit cell coord
    */
-  P3 getFractionalUnitCoordPt(boolean fixJavaFloat, boolean asCartesian, P3 pt) {
+  P3d getFractionalUnitCoordPt(boolean fixJavaFloat, boolean asCartesian, P3d pt) {
     SymmetryInterface c = getUnitCell();
     if (pt == null)
-      pt = P3.newP(this);
+      pt = P3d.newP(this);
     else
       pt.setT(this);
     if (c == null)
@@ -808,7 +809,7 @@ public class Atom extends Point3fi implements Node {
     return pt;
   }
   
-  float getFractionalUnitDistance(T3 pt, T3 ptTemp1, T3 ptTemp2) {
+  double getFractionalUnitDistance(T3d pt, T3d ptTemp1, T3d ptTemp2) {
     SymmetryInterface c = getUnitCell();
     if (c == null) 
       return distance(pt);
@@ -824,7 +825,7 @@ public class Atom extends Point3fi implements Node {
     return ptTemp1.distance(ptTemp2);
   }
   
-  void setFractionalCoord(int tok, float fValue, boolean asAbsolute) {
+  void setFractionalCoord(int tok, double fValue, boolean asAbsolute) {
     SymmetryInterface c = getUnitCell();
     if (c != null)
       c.toFractionalF(this, asAbsolute);
@@ -846,11 +847,11 @@ public class Atom extends Point3fi implements Node {
       c.toCartesianF(this, asAbsolute);
   }
   
-  void setFractionalCoordTo(P3 ptNew, boolean asAbsolute) {
+  void setFractionalCoordTo(P3d ptNew, boolean asAbsolute) {
     setFractionalCoordPt(this, ptNew, asAbsolute);
   }
   
-  public void setFractionalCoordPt(P3 pt, P3 ptNew, boolean asAbsolute) {
+  public void setFractionalCoordPt(P3d pt, P3d ptNew, boolean asAbsolute) {
     pt.setT(ptNew);
     SymmetryInterface c = getUnitCell();
     if (c != null)
@@ -905,7 +906,7 @@ public class Atom extends Point3fi implements Node {
   public final static int ID_XTAL = 3;
   public final static int ID_CHIME = 4;
   
-  public String getIdentityXYZ(P3 pt, int mode) {
+  public String getIdentityXYZ(P3d pt, int mode) {
     pt = (mode == ID_XTAL || group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
     String s = (mode == ID_XTAL ? "" : getIdentity(mode) + " ")
         + PT.formatF(pt.x, 0, 3, true, true) 
@@ -1151,7 +1152,7 @@ public class Atom extends Point3fi implements Node {
       //or it could be a sequential model in file number when multiple files
       return getModelNumber();
     case -T.model:
-      //float is handled differently
+      //double is handled differently
       return group.chain.model.ms.modelFileNumbers[mi];
     case T.modelindex:
       return mi;
@@ -1198,11 +1199,11 @@ public class Atom extends Point3fi implements Node {
    * 
    * @param tokWhat
    * @param ptTemp 
-   * @return float value or value*100 (asInt=true) or throw an error if not
+   * @return double value or value*100 (asInt=true) or throw an error if not
    *         found
    * 
    */
-  public float atomPropertyFloat(Viewer vwr, int tokWhat, P3 ptTemp) {
+  public double atomPropertyFloat(Viewer vwr, int tokWhat, P3d ptTemp) {
     switch (tokWhat) {
     case T.adpmax:
       return getADPMinMax(true);
@@ -1276,7 +1277,7 @@ public class Atom extends Point3fi implements Node {
           if (group.chain.model.isJmolDataFrame
               && group.chain.model.jmolFrameType
                   .equals("plot ramachandran")) {
-            float omega = getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
+            double omega = getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
             return (omega < -180 ? 360 + omega : omega);
           }
         }
@@ -1307,8 +1308,8 @@ public class Atom extends Point3fi implements Node {
     case T.vanderwaals:
       return getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
     case T.vectorscale:
-      V3 v = getVibrationVector();
-      return (v == null ? 0 : v.length() * vwr.getFloat(T.vectorscale));
+      V3d v = getVibrationVector();
+      return (v == null ? 0 : v.length() * vwr.getDouble(T.vectorscale));
     case T.vibx:
       return getVib('x');
     case T.viby:
@@ -1338,13 +1339,13 @@ public class Atom extends Point3fi implements Node {
     case T.vibxyz:
     case T.modxyz:
     case T.xyz:
-      T3 v3 = atomPropertyTuple(vwr, tokWhat, ptTemp);
+      T3d v3 = atomPropertyTuple(vwr, tokWhat, ptTemp);
       return (v3 == null ? -1 : v3.length());
     }
     return atomPropertyInt(tokWhat);
   }
 
-  public float getVib(char ch) {
+  public double getVib(char ch) {
     return group.chain.model.ms.getVibCoord(i, ch);
   }
 
@@ -1354,8 +1355,8 @@ public class Atom extends Point3fi implements Node {
   }
   
   @Override
-  public float getMass() {
-    float mass = getIsotopeNumber();
+  public double getMass() {
+    double mass = getIsotopeNumber();
     return (mass > 0 ? mass : Elements.getAtomicMass(getElementNumber()));
   }
 
@@ -1456,10 +1457,10 @@ public class Atom extends Point3fi implements Node {
     return group.getInsertionCode();
   }
   
-  public T3 atomPropertyTuple(Viewer vwr, int tok, P3 ptTemp) {
+  public T3d atomPropertyTuple(Viewer vwr, int tok, P3d ptTemp) {
     switch (tok) {
     case T.coord:
-      return P3.newP(this);
+      return P3d.newP(this);
     case T.fracxyz:
       return getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp); // was !group.chain.model.isJmolDataFrame
     case T.fuxyz:
@@ -1468,7 +1469,7 @@ public class Atom extends Point3fi implements Node {
       return (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
           : getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
     case T.screenxyz:
-      return P3.new3(vwr.antialiased ? sX / 2 : sX, vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY), vwr.antialiased ? sZ / 2 : sZ);
+      return P3d.new3(vwr.antialiased ? sX / 2 : sX, vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY), vwr.antialiased ? sZ / 2 : sZ);
     case T.vibxyz:
       return getVibrationVector();
     case T.modxyz:
@@ -1520,13 +1521,13 @@ public class Atom extends Point3fi implements Node {
   }
 
   @Override
-  public float getFloatProperty(String property) {
+  public double getFloatProperty(String property) {
     Object data = group.chain.model.ms.vwr.getDataObj(property, null,
         JmolDataManager.DATA_TYPE_AFD);
-    float f = Float.NaN;
+    double f = Double.NaN;
     if (data != null) {
       try {
-        f = ((float[]) data)[i];
+        f = ((double[]) data)[i];
       } catch (Exception e) {
       }
     }

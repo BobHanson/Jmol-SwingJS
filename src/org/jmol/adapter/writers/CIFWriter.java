@@ -7,11 +7,11 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 /**
  * An XCrysDen XSF writer
@@ -26,7 +26,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
 
   private boolean isP1;
 
-  private final static T3 fset0 = P3.new3(555, 555, 1);
+  private final static T3d fset0 = P3d.new3(555, 555, 1);
 
   public CIFWriter() {
     // for JavaScript dynamic loading
@@ -55,7 +55,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
           || offset.y != (int) offset.y || offset.z != (int) offset.z);
-      T3 fset;
+      T3d fset;
       boolean haveCustom = (fractionalOffset
           || (fset = uc.getUnitCellMultiplier()) != null
               && (fset.z == 1 ? !fset.equals(fset0) : fset.z != 0));
@@ -86,12 +86,12 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
       sb.append("\ndata_global");
       double[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendF((float) params[0]);
-      appendKey(sb, "_cell_length_b").appendF((float) params[1]);
-      appendKey(sb, "_cell_length_c").appendF((float) params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendF((float) params[3]);
-      appendKey(sb, "_cell_angle_beta").appendF((float) params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendF((float) params[5]);
+      appendKey(sb, "_cell_length_a").appendF((double) params[0]);
+      appendKey(sb, "_cell_length_b").appendF((double) params[1]);
+      appendKey(sb, "_cell_length_c").appendF((double) params[2]);
+      appendKey(sb, "_cell_angle_alpha").appendF((double) params[3]);
+      appendKey(sb, "_cell_angle_beta").appendF((double) params[4]);
+      appendKey(sb, "_cell_angle_gamma").appendF((double) params[5]);
       sb.append("\n");
       int n;
       String hallName;
@@ -150,7 +150,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           + "\n_jmol_atom_site_label\n");
 
       int nAtoms = 0;
-      P3 p = new P3();
+      P3d p = new P3d();
       int[] elemNums = new int[130];
       for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut
           .nextSetBit(i + 1)) {

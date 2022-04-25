@@ -11,9 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
-import javajs.util.P3;
-import javajs.util.Rdr;
-
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
@@ -26,6 +23,8 @@ import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
 import org.jmol.util.Font;
 
+import javajs.util.P3d;
+import javajs.util.Rdr;
 import jspecview.api.JSVPanel;
 
 
@@ -44,7 +43,7 @@ public class AwtPlatform implements GenericPlatform {
   ///// Display 
 
   @Override
-  public void convertPointFromScreen(Object display, P3 ptTemp) {
+  public void convertPointFromScreen(Object display, P3d ptTemp) {
     Display.convertPointFromScreen(display, ptTemp);
   }
 

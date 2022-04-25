@@ -3,7 +3,7 @@ package org.jmol.adapter.readers.pymol;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 
 import org.jmol.util.Logger;

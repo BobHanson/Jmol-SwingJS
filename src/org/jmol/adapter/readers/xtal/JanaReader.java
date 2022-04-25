@@ -58,7 +58,7 @@ import javajs.util.V3d;
 
 public class JanaReader extends AtomSetCollectionReader {
 
-  private Lst<float[]> lattvecs;
+  private Lst<double[]> lattvecs;
   private int thisSub;
   private String modAxes;
   private boolean haveM40Data;
@@ -125,7 +125,7 @@ public class JanaReader extends AtomSetCollectionReader {
         break;
       case LATT:
         if (lattvecs == null)
-          lattvecs = new Lst<float[]>();
+          lattvecs = new Lst<double[]>();
         if (!ms.addLatticeVector(lattvecs, line.substring(8)))
           appendLoadNote(line + " not supported");
         break;
@@ -912,7 +912,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private void parseM40Floats() {
     int ptLast = line.length() - 9;
     for (int i = 0, pt = 0; i < 6; i++, pt += 9) {
-      floats[i] = (pt <= ptLast ? (float) parseDoubleStr(line.substring(pt, pt + 9)) : Float.NaN);
+      floats[i] = (pt <= ptLast ? (double) parseDoubleStr(line.substring(pt, pt + 9)) : Double.NaN);
     }
   }
 

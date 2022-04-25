@@ -31,7 +31,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 
 import javajs.util.CU;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
@@ -97,7 +97,7 @@ class PmeshReader extends PolygonFileReader {
 //  4 bytes: (int) nPolygons -- may be -1
 // 64 bytes: reserved
 //  ------------------------------
-//  float[nVertices*3]vertices {x,y,z}
+//  double[nVertices*3]vertices {x,y,z}
 //  [nPolygons] polygons 
 //  --each polygon--
 //    4 bytes: (int)nVertices (1,2,3, or 4)
@@ -225,7 +225,7 @@ class PmeshReader extends PolygonFileReader {
     pmeshError = type + " ERROR: invalid vertex list";
     vertexMap = new int[nVertices];
     for (int i = 0; i < nVertices; i++) {
-      P3 pt = P3.new3(getFloat(), getFloat(), getFloat());
+      P3d pt = P3d.new3(getFloat(), getFloat(), getFloat());
       if (isAnisotropic)
         setVertexAnisotropy(pt);
       if (Logger.debugging)
@@ -349,7 +349,7 @@ class PmeshReader extends PolygonFileReader {
     return (isBinary ? binarydoc.readInt() : parseIntStr(nextToken()));
   }
 
-  private float getFloat() throws Exception {
+  private double getFloat() throws Exception {
     return (isBinary ? binarydoc.readFloat() : parseFloatStr(nextToken()));
   }
 

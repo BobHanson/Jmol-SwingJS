@@ -31,7 +31,7 @@ import org.jmol.util.Logger;
 
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.P4;
+import javajs.util.P4d;
 import org.jmol.jvxl.data.JvxlCoder;
 
 public class JvxlReader extends JvxlXmlReader {
@@ -187,12 +187,12 @@ public class JvxlReader extends JvxlXmlReader {
     if (param1 == -1) {
       // a plane is defined
       try {
-        params.thePlane = P4.new4(parseFloat(), parseFloat(), parseFloat(),
+        params.thePlane = P4d.new4(parseFloat(), parseFloat(), parseFloat(),
             parseFloat());
       } catch (Exception e) {
         Logger
             .error("Error reading 4 floats for PLANE definition -- setting to 0 0 1 0  (z=0)");
-        params.thePlane = P4.new4(0, 0, 1, 0);
+        params.thePlane = P4d.new4(0, 0, 1, 0);
       }
       Logger.info("JVXL read: plane " + params.thePlane);
       if (param2 == -1 && param3 < 0)
@@ -209,7 +209,7 @@ public class JvxlReader extends JvxlXmlReader {
       if (nContoursRead == Integer.MIN_VALUE) {
         if (line.charAt(next[0]) == '[') {
            jvxlData.contourValues = params.contoursDiscrete = parseFloatArray(null, null, null);
-           Logger.info("JVXL read: contourValues " + Escape.eAF(jvxlData.contourValues));            
+           Logger.info("JVXL read: contourValues " + Escape.eAD(jvxlData.contourValues));            
            jvxlData.contourColixes = params.contourColixes = C.getColixArray(getQuotedStringNext());
            jvxlData.contourColors = C.getHexCodes(jvxlData.contourColixes);
            Logger.info("JVXL read: contourColixes " + jvxlData.contourColors); 
@@ -251,10 +251,10 @@ public class JvxlReader extends JvxlXmlReader {
         : param3 > 0 ? param3 : 0);
     if (params.colorBySign)
       params.isBicolorMap = true;
-    float dataMin = Float.NaN;
-    float dataMax = Float.NaN;
-    float red = Float.NaN;
-    float blue = Float.NaN;
+    double dataMin = Double.NaN;
+    double dataMax = Double.NaN;
+    double red = Double.NaN;
+    double blue = Double.NaN;
     boolean insideOut = (line.indexOf("insideOut") >= 0);
     if (jvxlDataIsColorMapped) {
       dataMin = parseFloat();

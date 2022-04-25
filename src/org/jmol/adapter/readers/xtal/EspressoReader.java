@@ -216,7 +216,7 @@ public class EspressoReader extends AtomSetCollectionReader {
 
   private void setEnergy() {
 
-    asc.setAtomSetEnergy("" + totEnergy, totEnergy.floatValue());
+    asc.setAtomSetEnergy("" + totEnergy, totEnergy.doubleValue());
     asc.setInfo("Energy", totEnergy);
     asc.setAtomSetName("E = " + totEnergy + " Ry");
   }

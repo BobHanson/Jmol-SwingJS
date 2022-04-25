@@ -234,7 +234,7 @@ class CalculationsMMFF extends Calculations {
 
   @Override
   String getDebugLine(int iType, Calculation c) {
-    float energy = ff.toUserUnits(c.energy);
+    double energy = ff.toUserUnits(c.energy);
     switch (iType) {
     case CALC_ANGLE:
     case CALC_STRETCH_BEND:
@@ -242,8 +242,8 @@ class CalculationsMMFF extends Calculations {
           "%11s  %-5s %-5s %-5s  %8.3f  %8.3f     %8.3f   %8.3f", 
           "ssssFI", new Object[] { MinObject.decodeKey(c.key), minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
               minAtoms[c.ic].sType,
-          new float[] { (float)(c.theta * RAD_TO_DEG), (float) c.dData[1] /*THETA0*/, 
-              (float)c.dData[0]/*Kijk*/, energy },
+          new double[] { (double)(c.theta * RAD_TO_DEG), c.dData[1] /*THETA0*/, 
+              (double)c.dData[0]/*Kijk*/, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber(),
               minAtoms[c.ic].atom.getAtomNumber()} });
       case CALC_TORSION:
@@ -252,7 +252,7 @@ class CalculationsMMFF extends Calculations {
               "sssssF", new Object[] { MinObject.decodeKey(c.key), 
                  minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
                  minAtoms[c.ic].sType, minAtoms[c.id].sType, 
-            new float[] { (float) (c.theta * RAD_TO_DEG), (float) c.dData[0]/*v1*/, (float) c.dData[1]/*v2*/, (float) c.dData[2]/*v3*/, 
+            new double[] { (c.theta * RAD_TO_DEG), c.dData[0]/*v1*/, c.dData[1]/*v2*/, c.dData[2]/*v3*/, 
               energy } });
       default:
         return getDebugLineC(iType, c);

@@ -39,10 +39,10 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 public abstract class MeshCollection extends Shape {
 
@@ -60,9 +60,9 @@ public abstract class MeshCollection extends Shape {
   protected Mesh linkedMesh;
   protected int modelIndex;
 
-  protected float displayWithinDistance2;
+  protected double displayWithinDistance2;
   protected boolean isDisplayWithinNot;
-  protected Lst<P3> displayWithinPoints;
+  protected Lst<P3d> displayWithinPoints;
   protected BS bsDisplay;
 
   public String[] title;
@@ -70,7 +70,7 @@ public abstract class MeshCollection extends Shape {
   protected Mesh pickedMesh;
   protected int pickedModel;
   protected int pickedVertex;
-  protected T3 pickedPt;
+  protected T3d pickedPt;
   
   protected int[] connections;
 
@@ -166,7 +166,7 @@ public abstract class MeshCollection extends Shape {
 
     if ("lattice" == propertyName) {
       if (currentMesh != null)
-        currentMesh.lattice = (P3) value;
+        currentMesh.lattice = (P3d) value;
       return;
     }
 
@@ -430,7 +430,7 @@ public abstract class MeshCollection extends Shape {
       if ((m = getMesh(id)) == null || m.vs == null)
         return false;
       if (index == Integer.MAX_VALUE)
-        data[2] = P3.new3(m.index + 1, meshCount, m.vc);
+        data[2] = P3d.new3(m.index + 1, meshCount, m.vc);
       else
         data[2] = m.vs[m.getVertexIndexFromNumber(index)];
       return true;
@@ -500,9 +500,9 @@ public abstract class MeshCollection extends Shape {
             .append("; model:" + vwr.getModelNumberDotted(m.modelIndex))
             .append("; vertices:" + m.vc).append("; polygons:" + m.pc)
             .append("; visible:" + m.visible);
-        float[] range = (float[]) getProperty("dataRange", 0);
+        double[] range = (double[]) getProperty("dataRange", 0);
         if (range != null)
-          sb.append("; dataRange:").append(Escape.eAF(range));
+          sb.append("; dataRange:").append(Escape.eAD(range));
         if (m.title != null) {
           String s = "";
           for (int j = 0; j < m.title.length; j++)
@@ -650,7 +650,7 @@ public abstract class MeshCollection extends Shape {
     }
   }
  
-  protected void setStatusPicked(int flag, T3 v, Map<String, Object> map) {
+  protected void setStatusPicked(int flag, T3d v, Map<String, Object> map) {
     // for draw and isosurface
     vwr.setStatusAtomPicked(flag, "[\"" + myType + "\"," + PT.esc(pickedMesh.thisID) + "," +
         + pickedModel + "," + pickedVertex + "," + v.x + "," + v.y + "," + v.z + "," 
@@ -658,7 +658,7 @@ public abstract class MeshCollection extends Shape {
                : PT.esc(pickedMesh.title[0]))+"]", map, false);
   }
 
-  protected Map<String, Object> getPickedPoint(T3 v, int modelIndex) {
+  protected Map<String, Object> getPickedPoint(T3d v, int modelIndex) {
     Map<String, Object> map = new Hashtable<String, Object>();
     if (v != null) {
       map.put("pt", v);

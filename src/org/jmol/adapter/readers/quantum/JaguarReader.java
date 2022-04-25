@@ -167,7 +167,7 @@ public class JaguarReader extends MOReader {
     String lastAtom = "";
     int iAtom = 0;
     int[][] sdata = new int[moCount][4];
-    Lst<float[]>[] sgdata = AU.createArrayOfArrayList(moCount);
+    Lst<double[]>[] sgdata = AU.createArrayOfArrayList(moCount);
     String[] tokens;
     gaussianCount = 0;
 
@@ -189,21 +189,21 @@ public class JaguarReader extends MOReader {
           sdata[iFunc][1] = iType;
           sdata[iFunc][2] = 0; //pointer
           sdata[iFunc][3] = 0; //count
-          sgdata[iFunc] = new  Lst<float[]>();
+          sgdata[iFunc] = new  Lst<double[]>();
         }
         double factor = 1;//(iType == 3 ? 1.73205080756887729f : 1);
         //System.out.println("slater: " + iAtom + " " + iType + " " + gaussianCount + " " + nGaussians);
-        sgdata[iFunc].addLast(new float[] { (float) parseDoubleStr(tokens[6]),
-            (float) (parseDoubleStr(tokens[8]) * factor) });
+        sgdata[iFunc].addLast(new double[] { (double) parseDoubleStr(tokens[6]),
+            (double) (parseDoubleStr(tokens[8]) * factor) });
         gaussianCount += jCont;
         for (int i = jCont - 1; --i >= 0;) {
           tokens = PT.getTokens(rd());
-          sgdata[iFunc].addLast(new float[] { (float) parseDoubleStr(tokens[6]),
-              (float) (parseDoubleStr(tokens[8]) * factor) });
+          sgdata[iFunc].addLast(new double[] { (double) parseDoubleStr(tokens[6]),
+              (double) (parseDoubleStr(tokens[8]) * factor) });
         }
       }
     }
-    float[][] garray = AU.newFloat2(gaussianCount);
+    double[][] garray = AU.newDouble2(gaussianCount);
     Lst<int[]> sarray = new  Lst<int[]>();
     gaussianCount = 0;
     for (int i = 0; i < moCount; i++)
@@ -256,7 +256,7 @@ public class JaguarReader extends MOReader {
     int iFunc = 0;
     int iFuncLast = -1;
     Lst<int[]> sarray = new  Lst<int[]>();
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     gaussianCount = 0;
     int[] sdata = null;
     discardLinesUntilContains("--------");
@@ -302,10 +302,10 @@ public class JaguarReader extends MOReader {
       double rCoef = parseDoubleStr(tokens[5]);
       if (id.equals("XX"))
         rCoef *= ROOT3;
-      gdata.add(gPtr, new float[] { (float) z, (float) rCoef, iFunc});
+      gdata.add(gPtr, new double[] { (double) z, (double) rCoef, iFunc});
     }
 
-    float[][] garray = AU.newFloat2(gaussianCount);
+    double[][] garray = AU.newDouble2(gaussianCount);
     for (int i = gdata.size(); --i >= 0;)
       garray[i] = gdata.get(i);
     moData.put("shells", shells = sarray);

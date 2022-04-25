@@ -14,7 +14,7 @@ public interface JSInterface {
   String getFullName();
   void openFileAsyncSpecial(String fileName, int flags);
   boolean processMouseEvent(int id, int x, int y, int modifiers, long time);
-  void processTwoPointGesture(float[][][] touches);
+  void processTwoPointGesture(double[][][] touches);
   void setDisplay(Object canvas);
   void setScreenDimension(int width, int height);
   boolean setStatusDragDropped(int mode, int x, int y, String fileName);

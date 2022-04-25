@@ -29,10 +29,10 @@ import java.util.Map;
 
 import org.jmol.shape.Mesh;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public class Pmesh extends Isosurface {
   @Override
@@ -60,10 +60,10 @@ public class Pmesh extends Isosurface {
    * @param m
    * @return set of points constituting this face
    */
-  private P3[] getFace(Mesh m) {
+  private P3d[] getFace(Mesh m) {
     if (m.haveQuads)
       return null;
-    T3[] vs = m.vs;
+    T3d[] vs = m.vs;
     Map<String, int[]> htEdges = new Hashtable<String, int[]>();
     int v1 = 0, v0, v01;
     int n = 0;
@@ -93,19 +93,19 @@ public class Pmesh extends Isosurface {
       return null;
     int[][] a = new int[n][2];
     a[0] = edge0;
-    V3 vectorBA = new V3();
-    V3 vectorBC = new V3();
+    V3d vectorBA = new V3d();
+    V3d vectorBC = new V3d();
     v01 = v0 = a[0][0];
     v1 = a[0][1];
     int pt = 0;
-    float min = 0.0001f;
+    double min = 0.0001f;
     while (v1 != v0) {
       int[] edge = htEdges.get("" + v1);
       if (edge == null)
         break;
-      float angle = Measure.computeAngle(vs[v01], vs[v1], vs[edge[1]],
+      double angle = MeasureD.computeAngle(vs[v01], vs[v1], vs[edge[1]],
           vectorBA, vectorBC, true);
-      float d2 = vs[v1].distanceSquared(vs[edge[1]]);
+      double d2 = vs[v1].distanceSquared(vs[edge[1]]);
       //System.out.println("pmesh getFace " + angle + " " + d2 + " " + v01 + " " + v1 + " " + edge[1]);
       //System.out.println("draw " + vs[v01] + " " + vs[v1] + " " + vs[edge[1]]);
       v1 = edge[1];
@@ -116,14 +116,14 @@ public class Pmesh extends Isosurface {
         a[pt][1] = v1;
       }
     }
-    if (Measure.computeAngle(vs[v01], vs[v1], vs[a[0][1]],
+    if (MeasureD.computeAngle(vs[v01], vs[v1], vs[a[0][1]],
           vectorBA, vectorBC, true) >= 179 || vs[v1].distanceSquared(vs[a[0][1]]) <= min) {
       a[0][0] = a[pt--][0];
     }
     n = (pt < 0 ? 1 : ++pt);
-    P3[] pts = new P3[n];
+    P3d[] pts = new P3d[n];
     for (int i = 0; i < n; i++)
-      pts[i] = P3.newP(vs[a[i][0]]);
+      pts[i] = P3d.newP(vs[a[i][0]]);
     //System.out.println("pmesh getFace now " + n);
     return pts;
   }

@@ -29,7 +29,7 @@ import org.jmol.util.Logger;
 
 import javajs.util.AU;
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 class VolumeDataReader extends SurfaceReader {
 
@@ -54,8 +54,8 @@ class VolumeDataReader extends SurfaceReader {
   protected int dataType;
   protected boolean precalculateVoxelData;
   protected boolean allowMapData;
-  protected P3 point;
-  protected float ptsPerAngstrom;
+  protected P3d point;
+  protected double ptsPerAngstrom;
   protected int maxGrid;
   protected boolean useOriginStepsPoints;
 
@@ -120,11 +120,11 @@ class VolumeDataReader extends SurfaceReader {
     }
     newVoxelDataCube();
     for (int x = 0; x < nPointsX; ++x) {
-      float[][] plane = AU.newFloat2(nPointsY);
+      double[][] plane = AU.newDouble2(nPointsY);
       voxelData[x] = plane;
       int ptyz = 0;
       for (int y = 0; y < nPointsY; ++y) {
-        float[] strip = plane[y] = new float[nPointsZ];
+        double[] strip = plane[y] = new double[nPointsZ];
         for (int z = 0; z < nPointsZ; ++z, ++ptyz) {
           strip[z] = getValue(x, y, z, ptyz);
         }
@@ -179,18 +179,18 @@ class VolumeDataReader extends SurfaceReader {
    * @param minPointsPerAngstrom -- necessary for highly prolate models such a 6ef8
    * @return  number of grid points total
    */
-  protected int setVoxelRange(int index, float min, float max,
-                              float ptsPerAngstrom, int gridMax, 
-                              float minPointsPerAngstrom) {
+  protected int setVoxelRange(int index, double min, double max,
+                              double ptsPerAngstrom, int gridMax, 
+                              double minPointsPerAngstrom) {
     int nGrid;
-    float d;
+    double d;
     if (min - max >= -0.0001f) {
       min = -10;
       max = 10;
     }
-    float range = max - min;
-    float resolution = params.resolution;
-    if (resolution != Float.MAX_VALUE) {
+    double range = max - min;
+    double resolution = params.resolution;
+    if (resolution != Double.MAX_VALUE) {
       ptsPerAngstrom = resolution;
       minPointsPerAngstrom = 0;
     }
@@ -198,7 +198,7 @@ class VolumeDataReader extends SurfaceReader {
     nGrid = (int) Math.floor(range * ptsPerAngstrom) + 1;
     if (nGrid > gridMax) {
       if ((dataType & Parameters.HAS_MAXGRID) > 0) {
-        if (resolution == Float.MAX_VALUE) {
+        if (resolution == Double.MAX_VALUE) {
           if (!isQuiet)
             Logger.info("Maximum number of voxels for index=" + index
                 + " exceeded (" + nGrid + ") -- set to " + gridMax);
@@ -207,7 +207,7 @@ class VolumeDataReader extends SurfaceReader {
           if (!isQuiet)
             Logger.info("Warning -- high number of grid points: " + nGrid);
         }
-      } else if (resolution == Float.MAX_VALUE) {
+      } else if (resolution == Double.MAX_VALUE) {
         nGrid = gridMax;
       }
     }
@@ -239,7 +239,7 @@ class VolumeDataReader extends SurfaceReader {
       volumetricOrigin.z = min;
       if (isEccentric)
         eccentricityMatrix.rotate(volumetricOrigin);
-      if (center != null && !Float.isNaN(center.x))
+      if (center != null && !Double.isNaN(center.x))
         volumetricOrigin.add(center);
       if (params.sbOut != null)
         params.sbOut.append((voxelCounts[0] * voxelCounts[1] * voxelCounts[2]) + " voxels total\n");

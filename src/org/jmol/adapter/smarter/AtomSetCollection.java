@@ -38,9 +38,9 @@ import org.jmol.viewer.JC;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.P3d;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 @SuppressWarnings("unchecked")
 public class AtomSetCollection {
@@ -95,8 +95,8 @@ public class AtomSetCollection {
   boolean isTrajectory;
   private int trajectoryStepCount = 0;
 
-  private Lst<P3[]> trajectorySteps;
-  private Lst<V3[]> vibrationSteps;
+  private Lst<P3d[]> trajectorySteps;
+  private Lst<V3d[]> vibrationSteps;
   private Lst<String> trajectoryNames;
 
   public boolean doFixPeriodic;
@@ -163,21 +163,21 @@ public class AtomSetCollection {
 
   public void setTrajectory() {
     if (!isTrajectory)
-      trajectorySteps = new Lst<P3[]>();
+      trajectorySteps = new Lst<P3d[]>();
     isTrajectory = true;
     int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
     if (n <= 1)
       return;
-    P3[] trajectoryStep = new P3[n];
+    P3d[] trajectoryStep = new P3d[n];
     boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Double
         .isNaN(atoms[0].vib.z));
-    V3[] vibrationStep = (haveVibrations ? new V3[n] : null);
-    P3[] prevSteps = (trajectoryStepCount == 0 ? null : (P3[]) trajectorySteps
+    V3d[] vibrationStep = (haveVibrations ? new V3d[n] : null);
+    P3d[] prevSteps = (trajectoryStepCount == 0 ? null : (P3d[]) trajectorySteps
         .get(trajectoryStepCount - 1));
     for (int i = 0, ii = 0; i < ac; i++) {
       if (bsAtoms != null && !bsAtoms.get(i))
         continue;
-      P3 pt = atoms[i].asP3();
+      P3d pt = atoms[i];
       if (doFixPeriodic && prevSteps != null)
         pt = fixPeriodic(pt, prevSteps[i]);
       trajectoryStep[ii] = pt;
@@ -187,7 +187,7 @@ public class AtomSetCollection {
     }
     if (haveVibrations) {
       if (vibrationSteps == null) {
-        vibrationSteps = new Lst<V3[]>();
+        vibrationSteps = new Lst<V3d[]>();
         for (int i = 0; i < trajectoryStepCount; i++)
           vibrationSteps.addLast(null);
       }
@@ -672,10 +672,10 @@ public class AtomSetCollection {
     }
   }
 
-  public V3 addVibrationVector(int iatom, double x, double y, double z) {
+  public V3d addVibrationVector(int iatom, double x, double y, double z) {
     if (!allowMultiple)
       iatom = iatom % ac;
-    return (atoms[iatom].vib = V3.new3((float) x, (float) y, (float) z));
+    return (atoms[iatom].vib = V3d.new3((double) x, (double) y, (double) z));
   }
 
   public void setCoordinatesAreFractional(boolean tf) {
@@ -770,14 +770,14 @@ public class AtomSetCollection {
   // atomSet stuff
   ////////////////////////////////////////////////////////////////
 
-  private static P3 fixPeriodic(P3 pt, P3 pt0) {
+  private static P3d fixPeriodic(P3d pt, P3d pt0) {
     pt.x = fixPoint(pt.x, pt0.x);
     pt.y = fixPoint(pt.y, pt0.y);
     pt.z = fixPoint(pt.z, pt0.z);
     return pt;
   }
 
-  private static float fixPoint(float x, float x0) {
+  private static double fixPoint(double x, double x0) {
     while (x - x0 > 0.9) {
       x -= 1;
     }
@@ -787,8 +787,8 @@ public class AtomSetCollection {
     return x;
   }
 
-  public void finalizeTrajectoryAs(Lst<P3[]> trajectorySteps,
-                                   Lst<V3[]> vibrationSteps) {
+  public void finalizeTrajectoryAs(Lst<P3d[]> trajectorySteps,
+                                   Lst<V3d[]> vibrationSteps) {
     this.trajectorySteps = trajectorySteps;
     this.vibrationSteps = vibrationSteps;
     trajectoryStepCount = trajectorySteps.size();
@@ -801,24 +801,24 @@ public class AtomSetCollection {
     //reset atom positions to original trajectory
     
     
-    P3[] trajectory = trajectorySteps.get(0);
+    P3d[] trajectory = trajectorySteps.get(0);
     
     
-    V3[] vibrations = (vibrationSteps == null ? null : vibrationSteps.get(0));
+    V3d[] vibrations = (vibrationSteps == null ? null : vibrationSteps.get(0));
     int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
     if (vibrationSteps != null && vibrations != null && vibrations.length < n
         || trajectory.length < n) {
       errorMessage = "File cannot be loaded as a trajectory";
       return;
     }
-    V3 v = new V3();
+    V3d v = new V3d();
     for (int i = 0, ii = 0; i < ac; i++) {
       if (bsAtoms != null && !bsAtoms.get(i))
         continue;
       if (vibrationSteps != null)
         atoms[i].vib = (vibrations == null ? v : vibrations[ii]);
       if (trajectory[ii] != null)
-        atoms[i].setP(trajectory[ii]);
+        atoms[i].setT(trajectory[ii]);
       ii++;
     }
     setInfo("trajectorySteps", trajectorySteps);

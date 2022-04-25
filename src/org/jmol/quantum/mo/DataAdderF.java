@@ -155,7 +155,7 @@ public class DataAdderF implements DataAdder {
           cyyy = ayyy * yy * y;
           cxxy = axxy * xx * y;
           cxyy = axyy * x * yy;
-          float[] vd = calc.voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = calc.voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
 
           for (int iz = calc.zMax; --iz >= calc.zMin;) {
             z = calc.Z[iz];

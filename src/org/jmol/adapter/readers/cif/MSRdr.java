@@ -8,10 +8,10 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.Matrix;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.T3d;
 
 import org.jmol.adapter.smarter.Atom;
@@ -247,11 +247,11 @@ public class MSRdr implements MSInterface {
     modAverage = r.checkFilterKey("MODAVE");
     String smodTUV = r.getFilter("MODT=");
     if (smodTUV != null || (smodTUV = r.getFilter("MODTUV=")) != null) {
-      modTUV = new P3();
+      modTUV = new P3d();
       String[] tuv = (PT.replaceAllCharacters(smodTUV,"{}()","") + ",0,0,0").split(",");
-      modTUV.x = (float) PT.parseDoubleFraction(tuv[0]);
-      modTUV.y = (float) PT.parseDoubleFraction(tuv[1]);
-      modTUV.z = (float) PT.parseDoubleFraction(tuv[2]);
+      modTUV.x = (double) PT.parseDoubleFraction(tuv[0]);
+      modTUV.y = (double) PT.parseDoubleFraction(tuv[1]);
+      modTUV.z = (double) PT.parseDoubleFraction(tuv[2]);
       if (Double.isNaN(modTUV.lengthSquared())) {
         Logger.error("MSRdr cannot read modTUV=" + smodTUV);
         modTUV = null;
@@ -667,7 +667,7 @@ public class MSRdr implements MSInterface {
 
   private int modCount;
 
-  private T3 modTUV;
+  private T3d modTUV;
 
   /**
    * determine simple linear combination assuming simple -3 to 3 no more than
@@ -1023,7 +1023,7 @@ public class MSRdr implements MSInterface {
     P3d pt = new P3d();
     symmetry.toCartesian(pt0, true);
     symmetry.toCartesian(pt1, true);
-    P3[] pts = BoxInfo.unitCubePoints;
+    P3d[] pts = BoxInfo.unitCubePoints;
     if (sigma == null) {
       Logger.error("Why are we in MSRdr.setMinMax0 without modulation init?");
       return;
@@ -1108,9 +1108,9 @@ public class MSRdr implements MSInterface {
   }
 
   @Override
-  public boolean addLatticeVector(Lst<float[]> lattvecs, String data)
+  public boolean addLatticeVector(Lst<double[]> lattvecs, String data)
       throws Exception {
-    float[] a = null;
+    double[] a = null;
     char c = data.charAt(0);
     int dim = modDim + 3;
     switch (c) {
@@ -1121,7 +1121,7 @@ public class MSRdr implements MSInterface {
     case 'B':
     case 'C':
     case 'I':
-      a = new float[] { 0.5f, 0.5f, 0.5f };
+      a = new double[] { 0.5f, 0.5f, 0.5f };
       if (c != 'I')
         a[c - 'A'] = 0;
       break;
@@ -1136,7 +1136,7 @@ public class MSRdr implements MSInterface {
     case '0': // X explicit
       if (data.indexOf(".") >= 0) {
         double[] d = AtomSetCollectionReader.getTokensDouble(data, null, dim);
-        a = new float[] { (float) d[0], (float) d[1], (float) d[2] };
+        a = new double[] { (double) d[0], (double) d[1], (double) d[2] };
       }
       break;
     default:

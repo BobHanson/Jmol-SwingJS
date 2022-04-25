@@ -30,9 +30,9 @@ import javajs.util.BS;
 import org.jmol.script.T;
 
 import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.P3d;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 
 /* **************************************************************
@@ -108,8 +108,8 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public float getPartialCharge() {
-		return (float) atom.partialCharge;
+  public double getPartialCharge() {
+		return (double) atom.partialCharge;
 	}
 
 	
@@ -120,12 +120,12 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public float getRadius() {
+  public double getRadius() {
 		return atom.radius;
 	}
 	
   @Override
-  public float getBondRadius() {
+  public double getBondRadius() {
     return atom.bondingRadius;
   }
   
@@ -134,27 +134,27 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	 * data items.
 	 */
 	@Override
-  public V3 getVib() {
-	  return (atom.vib == null || Float.isNaN(atom.vib.z) ? null : 
+  public V3d getVib() {
+	  return (atom.vib == null || Double.isNaN(atom.vib.z) ? null : 
 	    atom.vib);
 	}
 
   @Override
   public int getSeqID() {
-    return (atom.vib == null || !Float.isNaN(atom.vib.y) || atom.vib.z != T.seqid ? 0 : 
+    return (atom.vib == null || !Double.isNaN(atom.vib.y) || atom.vib.z != T.seqid ? 0 : 
       (int) atom.vib.x);
   }
 
 	
 	@Override
-  public float getBfactor() {
-		return (float) atom.bfactor;
+  public double getBfactor() {
+		return (double) atom.bfactor;
 	}
 
 	
 	@Override
-  public float getOccupancy() {
-		return (float) (atom.foccupancy * 100);
+  public double getOccupancy() {
+		return (double) (atom.foccupancy * 100);
 	}
 
 	

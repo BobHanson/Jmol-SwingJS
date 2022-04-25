@@ -27,7 +27,7 @@ package org.jmol.jvxl.readers;
 import java.util.List;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 
@@ -52,12 +52,12 @@ class CifDensityReader extends BCifDensityReader {
   }
 
   @Override
-  protected P3 readCifP3(String key, P3 p3) {
+  protected P3d readCifP3(String key, P3d p3) {
     if (p3 == null)
-      p3 = new P3();
-    float x = getCifFloat(key + "[0]");
-    if (Float.isNaN(x)) {
-      p3.x = Float.NaN;
+      p3 = new P3d();
+    double x = getCifFloat(key + "[0]");
+    if (Double.isNaN(x)) {
+      p3.x = Double.NaN;
     } else {
       p3.x = x;
       p3.y = getCifFloat(key + "[1]");
@@ -80,14 +80,14 @@ class CifDensityReader extends BCifDensityReader {
   }
   
   @Override
-  protected float getCifFloat(String key) {
+  protected double getCifFloat(String key) {
     Object o = thisData.get(key);
-    float x = Float.NaN;
+    double x = Double.NaN;
     if (o != null) {
       if (o instanceof String) {
         x = PT.parseFloat((String) o);
       } else if (o instanceof Number) {
-        x = ((Number) o).floatValue();
+        x = ((Number) o).doubleValue();
       }
     }
     return x;
@@ -95,7 +95,7 @@ class CifDensityReader extends BCifDensityReader {
 
   @Override
   @SuppressWarnings("unchecked")
-  protected float[] readCifFloats(String key, float[] values) {
+  protected double[] readCifFloats(String key, double[] values) {
     List<Object> list = (List<Object>) thisData.get(key);
     for (int i = 0, n = values.length; i < n; i++)
       values[i] = PT.parseFloat((String) list.get(i));

@@ -134,9 +134,9 @@ public class AnimationManager {
   int frameStep;
   int backgroundModelIndex = -1;
   
-  float currentMorphModel;
-  float firstFrameDelay;
-  float lastFrameDelay = 1;
+  double currentMorphModel;
+  double firstFrameDelay;
+  double lastFrameDelay = 1;
   
   void clear() {
     setMovie(null);
@@ -180,13 +180,13 @@ public class AnimationManager {
     morphCount = (isMovie ? 0 : n); // for now -- no morphing in movies
   }
 
-  public void morph(float modelIndex) {
+  public void morph(double modelIndex) {
     int m = (int) modelIndex;
     if (Math.abs(m - modelIndex) < 0.001f)
       modelIndex = m;
     else if (Math.abs(m - modelIndex) > 0.999f)
       modelIndex = m = m + 1;
-    float f = modelIndex - m;
+    double f = modelIndex - m;
     m -= 1;
     if (f == 0) {
       currentMorphModel = m;
@@ -286,8 +286,8 @@ public class AnimationManager {
   // 2 = palindrome
   
   public void setAnimationReplayMode(int animationReplayMode,
-                                     float firstFrameDelay,
-                                     float lastFrameDelay) {
+                                     double firstFrameDelay,
+                                     double lastFrameDelay) {
     this.firstFrameDelay = firstFrameDelay > 0 ? firstFrameDelay : 0;
     firstFrameDelayMs = (int)(this.firstFrameDelay * 1000);
     this.lastFrameDelay = lastFrameDelay > 0 ? lastFrameDelay : 0;
@@ -355,7 +355,7 @@ public class AnimationManager {
     return setAnimationRelative(-animationDirection);
   }
 
-  float getAnimRunTimeSeconds() {
+  double getAnimRunTimeSeconds() {
     int frameCount = getFrameCount();
     if (firstFrameIndex == lastFrameIndex || lastFrameIndex < 0
         || firstFrameIndex < 0 || lastFrameIndex >= frameCount
@@ -363,7 +363,7 @@ public class AnimationManager {
       return 0;
     int i0 = Math.min(firstFrameIndex, lastFrameIndex);
     int i1 = Math.max(firstFrameIndex, lastFrameIndex);
-    float nsec = 1f * (i1 - i0) / animationFps + firstFrameDelay
+    double nsec = 1f * (i1 - i0) / animationFps + firstFrameDelay
         + lastFrameDelay;
     for (int i = i0; i <= i1; i++)
       nsec += vwr.ms.getFrameDelayMs(modelIndexForFrame(i)) / 1000f;
@@ -504,7 +504,7 @@ public class AnimationManager {
     int frameStep = getFrameStep(direction);
     int thisFrame = (isMovie ? caf : cmi);
     int frameNext = thisFrame + frameStep;
-    float morphStep = 0f, nextMorphFrame = 0f;
+    double morphStep = 0f, nextMorphFrame = 0f;
     boolean isDone;
     if (morphCount > 0) {
       morphStep = 1f / (morphCount + 1);
@@ -537,8 +537,8 @@ public class AnimationManager {
     return true;
   }
 
-  private boolean isNotInRange(float frameNext) {
-    float f = frameNext - 0.001f;
+  private boolean isNotInRange(double frameNext) {
+    double f = frameNext - 0.001f;
     return (f > firstFrameIndex && f > lastFrameIndex 
         || (f = frameNext + 0.001f) < firstFrameIndex
         && f < lastFrameIndex);

@@ -30,7 +30,7 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
@@ -524,12 +524,12 @@ public class GaussianReader extends MOReader {
     }
     if (ac == 0)
       ac = 1;
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++) {
       tokens = gdata.get(i);
-      gaussians[i] = new float[tokens.length];
+      gaussians[i] = new double[tokens.length];
       for (int j = 0; j < tokens.length; j++)
-        gaussians[i][j] = (float) parseDoubleStr(tokens[j]);
+        gaussians[i][j] = (double) parseDoubleStr(tokens[j]);
     }
     Logger.info(shellCount + " slater shells read");
     Logger.info(gaussianCount + " gaussian primitives read");
@@ -779,8 +779,8 @@ public class GaussianReader extends MOReader {
     String tokens[] = PT.getTokens(rd());
     if (tokens.length != 8)
       return;
-    V3 dipole = V3.new3((float) parseDoubleStr(tokens[1]),
-        (float) parseDoubleStr(tokens[3]), (float) parseDoubleStr(tokens[5]));
+    V3d dipole = V3d.new3((double) parseDoubleStr(tokens[1]),
+        (double) parseDoubleStr(tokens[3]), (double) parseDoubleStr(tokens[5]));
     Logger.info("Molecular dipole for model " + asc.atomSetCount
         + " = " + dipole);
     asc.setCurrentModelInfo("dipole", dipole);

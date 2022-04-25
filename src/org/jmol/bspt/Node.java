@@ -24,7 +24,8 @@ package org.jmol.bspt;
 
 
 //import org.jmol.util.Logger;
-import javajs.util.T3;
+import javajs.util.T3d;
+import javajs.util.T3d;
 
 /**
  * Nodes of the bspt. It is a binary tree so nodes contain two children,
@@ -45,9 +46,9 @@ import javajs.util.T3;
  */
 class Node extends Element {
   int dim;
-  float minLeft, maxLeft;
+  double minLeft, maxLeft;
   Element eleLeft;
-  float minRight, maxRight;
+  double minRight, maxRight;
   Element eleRight;
   
   /**
@@ -81,8 +82,8 @@ class Node extends Element {
   }
   
   @Override
-  Element addTuple(int level, T3 tuple) {
-    float dimValue = getDimensionValue(tuple, dim);
+  Element addTuple(int level, T3d tuple) {
+    double dimValue = getDimensionValue(tuple, dim);
     ++count;
     boolean addLeft;
     if (dimValue < maxLeft) {
@@ -137,7 +138,7 @@ class Node extends Element {
 //      return eleLeft.toString() + dim + ":" + "\n" + eleRight.toString();
 //    }
   
-  static float getDimensionValue(T3 pt, int dim) {
+  static double getDimensionValue(T3d pt, int dim) {
     if (pt == null)
       System.out.println("bspt.Node ???");
     switch (dim) {

@@ -44,12 +44,12 @@ import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.Geodesic;
 import org.jmol.util.MeshSurface;
-import javajs.util.P3;
-import javajs.util.A4;
+import javajs.util.P3d;
+import javajs.util.A4d;
 import javajs.util.M4d;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 
 public class _IdtfExporter extends __CartesianExporter {
@@ -222,20 +222,20 @@ public class _IdtfExporter extends __CartesianExporter {
   private boolean haveCircle;
   
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     output(pt, sbTemp, true);
   }
 
-  private void output(T3 pt, SB sb, boolean checkpt) {
+  private void output(T3d pt, SB sb, boolean checkpt) {
     if (checkpt)
       checkPoint(pt);
     sb.append(round(pt.x)).append(" ").append(round(pt.y)).append(" ").append(round(pt.z)).append(" ");
   }
   
-  private P3 ptMin = P3.new3(1e10f,1e10f,1e10f);
-  private P3 ptMax = P3.new3(-1e10f,-1e10f,-1e10f);
+  private P3d ptMin = P3d.new3(1e10f,1e10f,1e10f);
+  private P3d ptMax = P3d.new3(-1e10f,-1e10f,-1e10f);
   
-  private void checkPoint(T3 pt) {
+  private void checkPoint(T3d pt) {
     if (pt.x < ptMin.x)
       ptMin.x = pt.x;
     if (pt.y < ptMin.y)
@@ -265,7 +265,7 @@ public class _IdtfExporter extends __CartesianExporter {
     output("FILE_FORMAT \"IDTF\"\nFORMAT_VERSION 100\n");
 
     /*
-    float angle = getFieldOfView();
+    double angle = getFieldOfView();
     output("NODE \"VIEW\" {\n");
     output("NODE_NAME \"DefaultView\"\n");
     output("PARENT_LIST {\nPARENT_COUNT 1\n"); 
@@ -552,22 +552,22 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputEllipsoid(P3 center, P3[] points, short colix) {
+  protected void outputEllipsoid(P3d center, P3d[] points, short colix) {
     //Hey, hey -- quaternions to the rescue!
     // Just send three points to Quaternion to define a plane and return
     // the AxisAngle required to rotate to that position. That's all there is to it.
     
-    A4 a = Quat.getQuaternionFrame(center, points[1], points[3]).toAxisAngle4f();
-    float sx = points[1].distance(center);
-    float sy = points[3].distance(center);
-    float sz = points[5].distance(center);
+    A4d a = Qd.getQuaternionFrame(center, points[1], points[3]).toAxisAngle4d();
+    double sx = points[1].distance(center);
+    double sy = points[3].distance(center);
+    double sz = points[5].distance(center);
     setSphereMatrix(center, sx, sy, sz, a, sphereMatrix);
     outputEllipsoid(center, sphereMatrix, colix);
   }
 
   private M4d cylinderMatrix = new M4d();
 
-  private void outputEllipsoid(T3 center, M4d sphereMatrix, short colix) {
+  private void outputEllipsoid(T3d center, M4d sphereMatrix, short colix) {
     if (!haveSphere) {
       models.append(getSphereResource());
       haveSphere = true;
@@ -599,13 +599,13 @@ public class _IdtfExporter extends __CartesianExporter {
     for (int i = 0, p = 0; i < nFaces; i++)
       for (int j = 0; j < 3; j++)
         faces[i][j] = f[p++];
-    V3[] vertexes = new V3[vertexCount];
+    V3d[] vertexes = new V3d[vertexCount];
     for (int i = 0; i < vertexCount;i++)
       vertexes[i] = Geodesic.getVertexVector(i);
     return getMeshData("Sphere", faces, vertexes, vertexes);
   }
 
-  private String getMeshData(String type, int[][] indices, T3[] vertexes, T3[] normals) {
+  private String getMeshData(String type, int[][] indices, T3d[] vertexes, T3d[] normals) {
     int nFaces = indices.length;
     int vertexCount = vertexes.length;
     int normalCount = normals.length;
@@ -661,9 +661,9 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected boolean outputCylinder(P3 ptCenter, P3 pt1, P3 pt2,
-                                   short colix, byte endcaps, float radius,
-                                   P3 ptX, P3 ptY, boolean checkRadius) {
+  protected boolean outputCylinder(P3d ptCenter, P3d pt1, P3d pt2,
+                                   short colix, byte endcaps, double radius,
+                                   P3d ptX, P3d ptY, boolean checkRadius) {
     if (ptX != null) {
       if (endcaps == GData.ENDCAPS_FLAT) {
         outputEllipse(ptCenter, pt1, ptX, ptY, colix);
@@ -715,7 +715,7 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius,
                               short colix, boolean doFill) {
     if (doFill) {
       outputCircle(pt1, pt2, colix, radius);
@@ -723,10 +723,10 @@ public class _IdtfExporter extends __CartesianExporter {
     }
    /*
     // the halo edges really slow rendering and aren't that important.
-    float rpd = 3.1415926f / 180;
+    double rpd = 3.1415926f / 180;
     Point3f[] pts = new Point3f[73];
     for (int i = 0, p = 0; i <= 360; i += 5, p++) {
-      pts[p] = Point3f.new3((float) (Math.cos(i * rpd) * radius), (float) (Math
+      pts[p] = Point3f.new3((double) (Math.cos(i * rpd) * radius), (double) (Math
           .sin(i * rpd) * radius), 0);
       pts[p].add(pt1);
     }
@@ -737,7 +737,7 @@ public class _IdtfExporter extends __CartesianExporter {
     */
   }
 
-  private boolean outputEllipse(P3 ptCenter, P3 ptZ, P3 ptX, P3 ptY,
+  private boolean outputEllipse(P3d ptCenter, P3d ptZ, P3d ptX, P3d ptY,
                         short colix) {
     if (!haveCircle) {
       models.append(getCircleResource());
@@ -762,7 +762,7 @@ public class _IdtfExporter extends __CartesianExporter {
     return true;
   }
 
-  private void outputCircle(P3 ptCenter, P3 ptPerp, short colix, float radius) {
+  private void outputCircle(P3d ptCenter, P3d ptPerp, short colix, double radius) {
     if (!haveCircle) {
       models.append(getCircleResource());
       haveCircle = true;
@@ -806,18 +806,18 @@ public class _IdtfExporter extends __CartesianExporter {
         faces[++fpt] = new int[] { (i + 1) % n, (i + 1) % n + n, i + n };
       }
     }
-    P3[] vertexes = new P3[vertexCount];
-    P3[] normals = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
+    P3d[] normals = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI)); 
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI)); 
-      vertexes[i] = P3.new3(x, y, 0);
-      normals[i] =  P3.new3(x, y, 0);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI)); 
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI)); 
+      vertexes[i] = P3d.new3(x, y, 0);
+      normals[i] =  P3d.new3(x, y, 0);
     }
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI)); 
-      float y = (float) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI)); 
-      vertexes[i + n] = P3.new3(x, y, 1);
+      double x = (double) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI)); 
+      double y = (double) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI)); 
+      vertexes[i + n] = P3d.new3(x, y, 1);
       normals[i + n] = normals[i];
     }
     if (inSide)
@@ -840,13 +840,13 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals,
+  protected void outputSurface(T3d[] vertices, T3d[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nTriangles, BS bsPolygons,
                                int faceVertexMax, short colix,
                                Lst<Short> colorList, Map<Short, Integer> htColixes,
-                               P3 offset) {
+                               P3d offset) {
     addColix(colix, polygonColixes != null || colixes != null);
     if (polygonColixes != null) {
       // output(" colorPerVertex='FALSE'\n");
@@ -965,7 +965,7 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputCone(P3 ptBase, P3 ptTip, float radius,
+  protected void outputCone(P3d ptBase, P3d ptTip, double radius,
                             short colix) {
     if (!haveCone) {
       models.append(getConeResource());
@@ -1001,33 +1001,33 @@ public class _IdtfExporter extends __CartesianExporter {
     int[][] faces = AU.newInt2(n);
     for (int i = 0; i < n; i++)
       faces[i] = new int[] { i, (i + 1) % n, n };
-    P3[] vertexes = new P3[vertexCount];
-    P3[] normals = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
+    P3d[] normals = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI));
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI));
-      vertexes[i] = P3.new3(x, y, 0);
-      normals[i] = P3.new3(0, 0, 1);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI));
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI));
+      vertexes[i] = P3d.new3(x, y, 0);
+      normals[i] = P3d.new3(0, 0, 1);
     }
-    vertexes[n] = P3.new3(0, 0, 0);
-    normals[n] = P3.new3(0, 0, 1);
+    vertexes[n] = P3d.new3(0, 0, 0);
+    normals[n] = P3d.new3(0, 0, 1);
     return getMeshData("Circle", faces, vertexes, normals);
   }
   
   @Override
-  protected void outputSphere(P3 center, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(P3d center, double radius, short colix, boolean checkRadius) {
     setSphereMatrix(center, radius, radius, radius, null, sphereMatrix);
     outputEllipsoid(center, sphereMatrix, colix);
   }
 
   @Override
-  protected void outputTextPixel(P3 pt, int argb) {    
+  protected void outputTextPixel(P3d pt, int argb) {    
     short colix = C.getColix(argb); 
     outputSphere(pt, 0.02f, colix, true);
   }
 
   @Override
-  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
+  protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3, short colix) {
     addColix(colix, false);
     String key = "T" + (++iObj);
     models.append(getTriangleResource(key, pt1, pt2, pt3));
@@ -1045,14 +1045,14 @@ public class _IdtfExporter extends __CartesianExporter {
     triangleFace[0] = new int[] { 0, 1, 2 };
   }
   
-  private String getTriangleResource(String key, T3 pt1,
-                                     T3 pt2, T3 pt3) {
-    T3[] vertexes = new T3[] { pt1, pt2, pt3 };
+  private String getTriangleResource(String key, T3d pt1,
+                                     T3d pt2, T3d pt3) {
+    T3d[] vertexes = new T3d[] { pt1, pt2, pt3 };
     tempV1.sub2(pt3, pt1);
     tempV2.sub2(pt2, pt1);
     tempV2.cross(tempV2, tempV1);
     tempV2.normalize();
-    V3[] normals = new V3[] { tempV2, tempV2, tempV2 };
+    V3d[] normals = new V3d[] { tempV2, tempV2, tempV2 };
     return getMeshData(key, triangleFace, vertexes, normals);
   }
 }

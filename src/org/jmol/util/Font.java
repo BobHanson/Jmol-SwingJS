@@ -45,10 +45,10 @@ final public class Font {
   public final int fid;
   public final String fontFace;
   public final String fontStyle;
-  public final float fontSizeNominal;
+  public final double fontSizeNominal;
   public final int idFontFace;
   public final int idFontStyle;
-  public final float fontSize;
+  public final double fontSize;
   public final Object font;
   private final Object fontMetrics;
   private FontManager manager;
@@ -58,7 +58,7 @@ final public class Font {
   private boolean isItalic;
   
   private Font(FontManager manager, int fid, int idFontFace,
-      int idFontStyle, float fontSize, float fontSizeNominal, Object graphics) {
+      int idFontStyle, double fontSize, double fontSizeNominal, Object graphics) {
     this.manager = manager;
     this.fid = fid;
     this.fontFace = fontFaces[idFontFace];
@@ -70,7 +70,7 @@ final public class Font {
     this.isItalic = (idFontStyle & FONT_STYLE_ITALIC) == FONT_STYLE_ITALIC;
     this.fontSizeNominal = fontSizeNominal;
     font = manager.newFont(fontFaces[idFontFace], isBold, isItalic,
-        fontSize);
+        (float) fontSize);
     fontMetrics = manager.getFontMetrics(this, graphics);
     descent = manager.getFontDescent(fontMetrics);
     ascent = manager.getFontAscent(fontMetrics);
@@ -90,8 +90,8 @@ final public class Font {
   }
   
   public static synchronized Font createFont3D(int fontface, int fontstyle,
-                                               float fontsize,
-                                               float fontsizeNominal,
+                                               double fontsize,
+                                               double fontsizeNominal,
                                                FontManager manager,
                                                Object graphicsForMetrics) {
     //if (graphicsForMetrics == null)

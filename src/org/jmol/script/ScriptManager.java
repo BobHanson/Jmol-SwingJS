@@ -33,7 +33,7 @@ import javax.swing.JOptionPane;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -742,7 +742,7 @@ public class ScriptManager implements JmolScriptManager {
    *        list of point positions for the added hydrogens?
    */
   @Override
-  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                                Map<String, Object> htParams)
       throws Exception {
     int iatom = bsAtoms.nextSetBit(0);

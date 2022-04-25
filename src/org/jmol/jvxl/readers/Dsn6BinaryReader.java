@@ -66,7 +66,7 @@ class Dsn6BinaryReader extends MapFileReader {
     nSurfaces = 1; 
   }
 
-  private float byteFactor;
+  private double byteFactor;
   private int xyCount;
   private int nBrickX, nBrickY;
   private int brickLayerVoxelCount;
@@ -105,10 +105,10 @@ class Dsn6BinaryReader extends MapFileReader {
     beta = header[13];
     gamma = header[14];
 
-    float header16 = header[15]; // 100 * 255 / (dmax - dmin)
-    float header17 = header[16]; // -255dmin / (dmax - dmin)
-    float scalingFactor = header[17];
-    float header19 = header[18];
+    double header16 = header[15]; // 100 * 255 / (dmax - dmin)
+    double header17 = header[16]; // -255dmin / (dmax - dmin)
+    double scalingFactor = header[17];
+    double header19 = header[18];
 
     maps = 3;
     mapr = 2;
@@ -172,13 +172,13 @@ class Dsn6BinaryReader extends MapFileReader {
     
     // just to satisfy my curiosity:
     
-    float dminError1 = (0 - header17 - 0.5f) * header19 / (header16 - 0.5f);
-    float dminError2 = (0 - header17 + 0.5f) * header19 / (header16 + 0.5f);
-    float dmaxError1 = (255 - header17 - 0.5f) * header19 / (header16 - 0.5f);
-    float dmaxError2 = (255 - header17 + 0.5f) * header19 / (header16 + 0.5f);
+    double dminError1 = (0 - header17 - 0.5f) * header19 / (header16 - 0.5f);
+    double dminError2 = (0 - header17 + 0.5f) * header19 / (header16 + 0.5f);
+    double dmaxError1 = (255 - header17 - 0.5f) * header19 / (header16 - 0.5f);
+    double dmaxError2 = (255 - header17 + 0.5f) * header19 / (header16 + 0.5f);
 
-    float dminError = Math.round((dminError2 - dminError1) / 0.002f) * 0.001f;
-    float dmaxError = Math.round((dmaxError2 - dmaxError1) / 0.002f) * 0.001f;
+    double dminError = (int) Math.round((dminError2 - dminError1) / 0.002f) * 0.001f;
+    double dmaxError = (int) Math.round((dmaxError2 - dmaxError1) / 0.002f) * 0.001f;
     
     Logger.info("DNS6 dmin,dmax = " + dmin + "+/-" + dminError + "," + dmax + "+/-" + dmaxError);
 
@@ -224,7 +224,7 @@ class Dsn6BinaryReader extends MapFileReader {
     //System.out.println("DNs6B reader: " + nBytes);
   }
   
-  private float getBrickValue(int pt) {
+  private double getBrickValue(int pt) {
     /*
      * pt runs from [0, n), where n is the number of voxels in a layer of bricks
      * But we are running at a specific z through the xy plane, rapidly throuch x.
@@ -276,12 +276,12 @@ class Dsn6BinaryReader extends MapFileReader {
     else
       bPt--;
     // bytes read can be negative
-    float value = (brickLayer[bPt] + 256) % 256; 
+    double value = (brickLayer[bPt] + 256) % 256; 
     return dmin + value * byteFactor;
   }
   
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     if ((pt % brickLayerVoxelCount) == 0)
       readBrickLayer();
     return getBrickValue(pt++);

@@ -1363,7 +1363,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (lookingAtDecimal()) {
       String s = script.substring(ichToken, ichToken + cchToken);
       boolean isDouble = (cchToken > 10);
-      value = Double.valueOf(isDouble ? Double.parseDouble(s) : Float.parseFloat(s));
+      value = Double.valueOf(isDouble ? Double.parseDouble(s) : Double.parseDouble(s));
       int intValue = (ScriptParam
           .getFloatEncodedInt(script.substring(ichToken, ichToken + cchToken)));
       addNumber(T.decimal, intValue, value);

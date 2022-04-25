@@ -34,11 +34,11 @@ import org.jmol.util.SimpleEdge;
 import org.jmol.util.SimpleNode;
 
 import javajs.util.AU;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 //import org.jmol.util.Logger;
 
@@ -362,7 +362,7 @@ public class SmilesStereo {
       sAtom0.set(0, 0, 0.2f);
       double a = Math.PI * 2 / cAtoms.length;
       for (int i = cAtoms.length; --i >= 0;) {
-        cAtoms[map[i]].set((float)(Math.cos(i * a)), (float) Math.sin(i * a), isNot ? 1 : -1);
+        cAtoms[map[i]].set((double)(Math.cos(i * a)), (double) Math.sin(i * a), isNot ? 1 : -1);
       }
       break;
     case ALLENE:
@@ -527,9 +527,9 @@ public class SmilesStereo {
    * @param bonds
    * @param vTemp 
    */
-  void sortPolyBondsByStereo(SimpleNode atom, SimpleNode ref, T3 center, SimpleEdge[] bonds,
-                          V3 vTemp) {
-    if (bonds.length < 2 || !(atom instanceof T3))
+  void sortPolyBondsByStereo(SimpleNode atom, SimpleNode ref, T3d center, SimpleEdge[] bonds,
+                          V3d vTemp) {
+    if (bonds.length < 2 || !(atom instanceof T3d))
       return;
     boolean checkAlign = (ref != null);
     //if (ref == null) // some early idea?
@@ -537,16 +537,16 @@ public class SmilesStereo {
     Object[][] aTemp = new Object[bonds.length][0];
     if (sorter == null)
       sorter = new PolyhedronStereoSorter();
-    vTemp.sub2((T3)ref, center);
+    vTemp.sub2((T3d)ref, center);
     sorter.setRef(vTemp);
     int nb = bonds.length;
-    float f0 = 0;//(nb > 2 ? 360 : 0);
+    double f0 = 0;//(nb > 2 ? 360 : 0);
     for (int i = nb; --i >= 0;) {
       SimpleNode a = bonds[i].getOtherNode(atom);
-      float f = f0 + (a == ref ? 0 : 
-        checkAlign && sorter.isAligned((T3) a, center, (T3) ref) ? -999 : 
-          Measure.computeTorsion((T3) ref, (T3) atom, center, (T3) a, true));
-      aTemp[i] = new Object[] { bonds[i], Float.valueOf(f), a };
+      double f = f0 + (a == ref ? 0 : 
+        checkAlign && sorter.isAligned((T3d) a, center, (T3d) ref) ? -999 : 
+          MeasureD.computeTorsion((T3d) ref, (T3d) atom, center, (T3d) a, true));
+      aTemp[i] = new Object[] { bonds[i], Double.valueOf(f), a };
     }
     Arrays.sort(aTemp, sorter);
     if (Logger.debugging)
@@ -642,10 +642,10 @@ public class SmilesStereo {
           return -1;
         v.vA.set(0, 0, 0);
         for (int j = 0; j < 3; j++)
-          v.vA.add((T3) bonds[j].getOtherAtom(sAtom0).getMatchingAtom());
+          v.vA.add((T3d) bonds[j].getOtherAtom(sAtom0).getMatchingAtom());
         v.vA.scale(0.3333f);
-        v.vA.sub2((T3) atom0, v.vA);
-        v.vA.add((T3) atom0);
+        v.vA.sub2((T3d) atom0, v.vA);
+        v.vA.add((T3d) atom0);
       }
       int[][] po = pAtom.stereo.polyhedralOrders;
       int pt;
@@ -655,26 +655,26 @@ public class SmilesStereo {
           continue;
         // the atom we are looking down
         pt = (j > jHpt ? j - nH : j);
-        T3 ta1 = (j == jHpt ? v.vA : (T3) bonds[pt].getOtherAtom(pAtom)
+        T3d ta1 = (j == jHpt ? v.vA : (T3d) bonds[pt].getOtherAtom(pAtom)
             .getMatchingAtom());
-        float flast = (isNot ? Float.MAX_VALUE : 0);
-        T3 ta2 = null;
+        double flast = (isNot ? Double.MAX_VALUE : 0);
+        T3d ta2 = null;
         for (int k = 0; k < orders.length; k++) {
           pt = orders[k];
-          T3 ta3;
+          T3d ta3;
           if (pt == jHpt) { // attached H
             ta3 = v.vA;
           } else {
             if (pt > jHpt)
               pt--;
-            ta3 = (T3) bonds[pt].getOtherAtom(pAtom).getMatchingAtom();
+            ta3 = (T3d) bonds[pt].getOtherAtom(pAtom).getMatchingAtom();
           }
           if (k == 0) {
             ta2 = ta3;
             continue;
           }
-          float f = Measure.computeTorsion(ta3, ta1, (T3) atom0, ta2, true);
-          if (Float.isNaN(f))
+          double f = MeasureD.computeTorsion(ta3, ta1, (T3d) atom0, ta2, true);
+          if (Double.isNaN(f))
             f = 180; // directly across the center from the previous atom
           if (orders.length == 2)
             return ((f < 0) != isNot ? 1 : -1); // SHOULD BE 0 : -1???
@@ -856,20 +856,20 @@ public class SmilesStereo {
 
     // add a dummy point for stereochemical reference
     // imines and diazines only
-    V3 v = new V3();
+    V3d v = new V3d();
     for (int i = 0; i < 4; i++)
       if (jn[i] != null)
-        v.sub((P3) jn[i]);
+        v.sub((P3d) jn[i]);
     if (v.length() == 0) {
-      v.setT(((P3) jn[4]));
+      v.setT(((P3d) jn[4]));
     } else {
       // d = x - ((a-x)+(b-x)+(c-x))/3
       //   = 2x - a - b - c
       //   = 2x + v
-      v.scaleAdd2(2, (P3) pAtom.getMatchingAtom(), v);
+      v.scaleAdd2(2, (P3d) pAtom.getMatchingAtom(), v);
     }
     jn[k] = new SmilesAtom().setIndex(Integer.MIN_VALUE);
-    ((P3) jn[k]).setT(v);
+    ((P3d) jn[k]).setT(v);
   }
 
   /**
@@ -901,9 +901,9 @@ public class SmilesStereo {
     case 4: // tetrahedral, square planar
       if (atom3 == null || atom4 == null)
         return "";
-      float d = Measure.getNormalThroughPoints((P3) atom1, (P3) atom2, (P3) atom3,
+      double d = MeasureD.getNormalThroughPoints((P3d) atom1, (P3d) atom2, (P3d) atom3,
           v.vTemp, v.vA);
-      if (Math.abs(Measure.distanceToPlaneV(v.vTemp, d, (P3) atom4)) < 0.2f) {
+      if (Math.abs(MeasureD.distanceToPlaneV(v.vTemp, d, (P3d) atom4)) < 0.2f) {
         if (is2D)
           return "";
         chiralClass = SQUARE_PLANAR;
@@ -937,7 +937,7 @@ public class SmilesStereo {
     case TETRAHEDRAL:
       return (isNot == (getHandedness(atom2, atom3, atom4, atom1, v) != order));
     case SQUARE_PLANAR:
-      getPlaneNormals((P3) atom1, (P3) atom2, (P3) atom3, (P3) atom4, v);
+      getPlaneNormals((P3d) atom1, (P3d) atom2, (P3d) atom3, (P3d) atom4, v);
       // vNorm1 vNorm2 vNorm3 are right-hand normals for the given
       // triangles
       // 1-2-3, 2-3-4, 3-4-1
@@ -988,13 +988,13 @@ public class SmilesStereo {
           || !isDiaxial(atom0, atom0, atom2, atom4, v, -0.95f)
           || !isDiaxial(atom0, atom0, atom3, atom5, v, -0.95f))
         return false;
-      getPlaneNormals((P3) atom2, (P3) atom3, (P3) atom4, (P3) atom5, v);
+      getPlaneNormals((P3d) atom2, (P3d) atom3, (P3d) atom4, (P3d) atom5, v);
       // check for proper order 2-3-4-5
       //                          n1n2n3
       if (v.vNorm2.dot(v.vNorm3) < 0 || v.vNorm3.dot(v.vNorm4) < 0)
         return false;
       // check for CW or CCW set in relation to the first atom
-      v.vNorm3.sub2((P3) atom0, (P3) atom1);
+      v.vNorm3.sub2((P3d) atom0, (P3d) atom1);
       return (isNot == ((v.vNorm2.dot(v.vNorm3) < 0 ? 2 : 1) == order));
     case POLYHEDRAL:
       return true;
@@ -1002,9 +1002,9 @@ public class SmilesStereo {
   }
 
   static boolean isDiaxial(SimpleNode atomA, SimpleNode atomB, SimpleNode atom1, SimpleNode atom2,
-                           VTemp v, float f) {
-    v.vA.sub2((P3) atomA, (P3) atom1);
-    v.vB.sub2((P3) atomB, (P3) atom2);
+                           VTemp v, double f) {
+    v.vA.sub2((P3d) atomA, (P3d) atom1);
+    v.vB.sub2((P3d) atomB, (P3d) atom2);
     v.vA.normalize();
     v.vB.normalize();
     // -0.95f about 172 degrees
@@ -1022,7 +1022,7 @@ public class SmilesStereo {
    * @return 1 for "@", 2 for "@@"
    */
   static int getHandedness(SimpleNode a, SimpleNode b, SimpleNode c, SimpleNode pt, VTemp v) {
-    float d = Measure.getNormalThroughPoints((P3) a, (P3) b, (P3) c, v.vTemp, v.vA);
+    double d = MeasureD.getNormalThroughPoints((P3d) a, (P3d) b, (P3d) c, v.vTemp, v.vA);
     //int atat = (Measure.distanceToPlaneV(v.vTemp, d, (P3) pt) > 0 ? 1 : 2);
 //    System.out.println("$ draw p1 " + P3.newP((P3)a) +" color red '"+a+" [2]'");
 //    System.out.println("$ draw p2 " + P3.newP((P3)b) +"  color green '"+b+" [3]'");
@@ -1030,18 +1030,18 @@ public class SmilesStereo {
 //    System.out.println("$ draw p " + P3.newP((P3)a) +" " + P3.newP((P3)b) +" " + P3.newP((P3)c) +"" );
 //    System.out.println("$ draw v vector {" + P3.newP((P3)pt) +"}  " + v.vTemp+" '"+ (atat==2 ? "@@" : "@")+ pt + " [1]' color " + (atat == 2 ? "white" : "yellow"));
 //    double e = v.vTemp.dot((P3) pt);
-    d = Measure.distanceToPlaneV(v.vTemp, d, (P3) pt);
+    d = MeasureD.distanceToPlaneV(v.vTemp, d, (P3d) pt);
 //    System.out.println("# " + d);
     return (d > 0 ? 1 : 2);
   }
 
-  private static void getPlaneNormals(P3 atom1, P3 atom2, P3 atom3,
-                                      P3 atom4, VTemp v) {
-    Measure.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm2,
+  private static void getPlaneNormals(P3d atom1, P3d atom2, P3d atom3,
+                                      P3d atom4, VTemp v) {
+    MeasureD.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm2,
         v.vTemp1);
-    Measure.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm3,
+    MeasureD.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm3,
         v.vTemp1);
-    Measure.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm4,
+    MeasureD.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm4,
         v.vTemp1);
   }
 
@@ -1199,8 +1199,8 @@ public class SmilesStereo {
   }
 
   public static int getAtropicStereoFlag(Node[] nodes) {
-    return (Measure.computeTorsion((T3) nodes[0], 
-        (T3) nodes[1], (T3)nodes[2], (T3) nodes[3], true) < 0 ? 1 : -1); 
+    return (MeasureD.computeTorsion((T3d) nodes[0], 
+        (T3d) nodes[1], (T3d)nodes[2], (T3d) nodes[3], true) < 0 ? 1 : -1); 
   }
 }
  

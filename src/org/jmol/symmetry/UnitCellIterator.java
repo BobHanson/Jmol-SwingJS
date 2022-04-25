@@ -3,10 +3,10 @@ package org.jmol.symmetry;
 import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.SymmetryInterface;
@@ -21,16 +21,16 @@ import org.jmol.util.Point3fi;
 public class UnitCellIterator implements AtomIndexIterator {
 
   private Atom[] atoms;
-  private T3 center;
-  private T3 translation;
+  private T3d center;
+  private T3d translation;
   private int nFound;
-  private float maxDistance2;
-  private float distance2;
+  private double maxDistance2;
+  private double distance2;
   private SymmetryInterface unitCell;
   private P3i minXYZ, maxXYZ, t;
-  private P3 p;
+  private P3d p;
   private int ipt = Integer.MIN_VALUE;
-  private Lst<P3[]> unitList;
+  private Lst<P3d[]> unitList;
   private boolean done;
   private int nAtoms;
   private int listPt;
@@ -51,11 +51,11 @@ public class UnitCellIterator implements AtomIndexIterator {
    * @return this
    */
   public UnitCellIterator set(SymmetryInterface unitCell, Atom atom,
-                              Atom[] atoms, BS bsAtoms, float distance) {
+                              Atom[] atoms, BS bsAtoms, double distance) {
     this.unitCell = unitCell;
     this.atoms = atoms;
     addAtoms(bsAtoms);
-    p = new P3();
+    p = new P3d();
     if (distance > 0)
       setCenter(atom, distance);
     return this;
@@ -63,22 +63,22 @@ public class UnitCellIterator implements AtomIndexIterator {
 
   @Override
   public void setModel(ModelSet modelSet, int modelIndex, int zeroBase,
-                       int atomIndex, T3 center, float distance, RadiusData rd) {
+                       int atomIndex, T3d center, double distance, RadiusData rd) {
     // not implemented for UnitCell iterator
   }
 
   @Override
-  public void setCenter(T3 center, float distance) {
+  public void setCenter(T3d center, double distance) {
     if (distance == 0)
       return;
     maxDistance2 = distance * distance;
     this.center = center;
-    translation = new P3();
-    T3[] pts = BoxInfo.unitCubePoints;
-    P3 min = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-    P3 max = P3.new3(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
-    p = new P3();
-    P3 ptC = new P3();
+    translation = new P3d();
+    T3d[] pts = BoxInfo.unitCubePoints;
+    P3d min = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    P3d max = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
+    p = new P3d();
+    P3d ptC = new P3d();
     ptC.setT(center);
     unitCell.toFractionalF(ptC, true);
     for (int i = 0; i < 8; i++) {
@@ -113,17 +113,17 @@ public class UnitCellIterator implements AtomIndexIterator {
     done = (bsAtoms == null);
     if (done)
       return;
-    unitList = new Lst<P3[]>();
+    unitList = new Lst<P3d[]>();
     String cat = "";
     M4d[] ops = unitCell.getSymmetryOperations();
     int nOps = ops.length;
     P3d pt = new P3d();
-    P3 pa = new P3();
+    P3d pa = new P3d();
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       for (int j = 0; j < nOps; j++) {
         if (j > 0) {
-          pt.setP(a);
+          pt.setT(a);
           unitCell.toFractional(pt, false);
           ops[j].rotTrans(pt);
           unitCell.unitize(pt);
@@ -138,8 +138,8 @@ public class UnitCellIterator implements AtomIndexIterator {
         if (cat.indexOf(key) >= 0)
           continue;
         cat += key;
-        unitList.addLast(new P3[] { a, pa });
-        pa = new P3();
+        unitList.addLast(new P3d[] { a, pa });
+        pa = new P3d();
       }
     }
     nAtoms = unitList.size();
@@ -191,12 +191,12 @@ public class UnitCellIterator implements AtomIndexIterator {
   }
 
   @Override
-  public float foundDistance2() {
-    return (nFound > 0 ? distance2 : Float.MAX_VALUE);
+  public double foundDistance2() {
+    return (nFound > 0 ? distance2 : Double.MAX_VALUE);
   }
 
   @Override
-  public P3 getPosition() {
+  public P3d getPosition() {
     Atom a = getAtom();
     if (Logger.debugging)
       Logger.info("draw ID p_" + nFound + " " + p + " //" + a + " " + t);

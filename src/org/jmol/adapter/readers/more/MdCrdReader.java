@@ -29,7 +29,7 @@ import java.util.Map;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.util.Logger;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 
 
@@ -69,7 +69,7 @@ public class MdCrdReader extends AtomSetCollectionReader {
     int floatCount = templateAtomCount * 3 + (isPeriodic ? 3 : 0);
     while (true)
       if (doGetModel(++modelNumber, null)) {
-        P3[] trajectoryStep = new P3[ac];
+        P3d[] trajectoryStep = new P3d[ac];
         if (!getTrajectoryStep(trajectoryStep, isPeriodic))
           return;
         trajectorySteps.addLast(trajectoryStep);
@@ -84,30 +84,30 @@ public class MdCrdReader extends AtomSetCollectionReader {
   private int ptFloat = 0;
   private int lenLine = 0;
 
-  private float getFloat() throws Exception {
+  private double getFloat() throws Exception {
     while (line == null || ptFloat >= lenLine) {
       if (rd() == null)
-        return Float.NaN;
+        return Double.NaN;
       ptFloat = 0;
       lenLine = line.length();
     }
     ptFloat += 8;
-    return parseFloatRange(line, ptFloat - 8, ptFloat);
+    return parseDoubleRange(line, ptFloat - 8, ptFloat);
   }
 
-  private P3 getPoint() throws Exception {
-    float x = getFloat();
-    float y = getFloat();
-    float z = getFloat();
-    return (Float.isNaN(z) ? null : P3.new3(x, y, z));
+  private P3d getPoint() throws Exception {
+    double x = getFloat();
+    double y = getFloat();
+    double z = getFloat();
+    return (Double.isNaN(z) ? null : P3d.new3(x, y, z));
   }
 
-  private boolean getTrajectoryStep(P3[] trajectoryStep, boolean isPeriodic)
+  private boolean getTrajectoryStep(P3d[] trajectoryStep, boolean isPeriodic)
       throws Exception {
     int ac = trajectoryStep.length;
     int n = -1;
     for (int i = 0; i < templateAtomCount; i++) {
-      P3 p = getPoint();
+      P3d p = getPoint();
       if (p == null)
         return false;
       if (bsFilter == null || bsFilter.get(i)) {

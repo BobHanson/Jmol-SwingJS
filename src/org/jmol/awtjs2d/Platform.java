@@ -19,7 +19,7 @@ import org.jmol.script.ScriptContext;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import swingjs.api.JSUtilI;
@@ -112,7 +112,7 @@ public class Platform implements GenericPlatform {
   // /// Display
 
 	@Override
-  public void convertPointFromScreen(Object canvas, P3 ptTemp) {
+  public void convertPointFromScreen(Object canvas, P3d ptTemp) {
 	  // from JmolMultiTouchClientAdapter.fixXY
 		Display.convertPointFromScreen(canvas, ptTemp);
 	}

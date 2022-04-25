@@ -118,7 +118,7 @@ public class SB {
    * @param f
    * @return this
    */
-  public SB appendF(float f) {
+  public SB appendF(double f) {
     /**
      * @j2sNative
      * 

@@ -206,7 +206,7 @@ public class InChIJNI implements JmolInChI {
       int n = 0;
       while (ai.hasNext() && n < atoms.length) {
         P3d p = ai.getXYZ();
-        JniInchiAtom a = new JniInchiAtom((float) p.x, (float) p.y, (float) p.z,
+        JniInchiAtom a = new JniInchiAtom((double) p.x, (double) p.y, (double) p.z,
             Elements.elementSymbolFromNumber(ai.getElementNumber()));
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
@@ -293,7 +293,7 @@ public class InChIJNI implements JmolInChI {
 
       };
       atoms.addLast(n);
-      n.set((float) a.getX(), (float) a.getY(), (float) a.getZ());
+      n.set((double) a.getX(), (double) a.getY(), (double) a.getZ());
       n.setIndex(na++);
       n.setCharge(a.getCharge());
       n.setSymbol(a.getElementType());

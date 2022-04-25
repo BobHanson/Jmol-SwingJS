@@ -122,16 +122,16 @@ abstract class SurfaceFileReader extends SurfaceReader {
     return PT.getTokensAt(line, 0);
   }
 
-  protected float parseFloat() {
+  protected double parseFloat() {
     return PT.parseFloatNext(line, next);
   }
 
-  protected float parseFloatStr(String s) {
+  protected double parseFloatStr(String s) {
     next[0] = 0;
     return PT.parseFloatNext(s, next);
   }
 
-  protected float parseFloatRange(String s, int iStart, int iEnd) {
+  protected double parseFloatRange(String s, int iStart, int iEnd) {
     next[0] = iStart;
     return PT.parseFloatRange(s, iEnd, next);
   }
@@ -149,13 +149,13 @@ abstract class SurfaceFileReader extends SurfaceReader {
     return PT.parseIntNext(s, next);
   }
 
-  protected float[] parseFloatArrayStr(String s) {
+  protected double[] parseFloatArrayStr(String s) {
     next[0] = 0;
-    return PT.parseFloatArrayNext(s, next, null, null, null);
+    return PT.parseDoubleArrayNext(s, next, null, null, null);
   }
 
-  protected float[] parseFloatArray(float[] a, String strStart, String strEnd) {
-    return PT.parseFloatArrayNext(line, next, a, strStart, strEnd);
+  protected double[] parseFloatArray(double[] a, String strStart, String strEnd) {
+    return PT.parseDoubleArrayNext(line, next, a, strStart, strEnd);
   }
 
   protected String getQuotedStringNext() {

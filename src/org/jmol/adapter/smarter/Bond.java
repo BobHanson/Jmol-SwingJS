@@ -27,7 +27,7 @@ public class Bond extends AtomSetObject {
   public int atomIndex1;
   public int atomIndex2;
   public int order;
-  public float radius = -1;
+  public double radius = -1;
   public short colix = -1;
   public int uniqueID = -1;
   public double distance;

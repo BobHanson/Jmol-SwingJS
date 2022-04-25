@@ -25,8 +25,8 @@
 package org.jmol.util;
 
 import javajs.util.Lst;
-import javajs.util.P3;
-
+import javajs.util.P3d;
+import javajs.util.P3d;
 import javajs.util.BS;
 
 public interface Node extends SimpleNode {
@@ -53,18 +53,18 @@ public interface Node extends SimpleNode {
   public int getIsotopeNumber();
   @Override
   public int getValence();
-  public void set(float x, float y, float z);
+  public void set(double x, double y, double z);
   public int getMoleculeNumber(boolean inModel);
   @Override
-  public float getMass();
+  public double getMass();
 
   
   /**
    * @param property  "property_xxxx"
-   * @return value or Float.NaN
+   * @return value or Double.NaN
    */
 
-  public float getFloatProperty(String property);
+  public double getFloatProperty(String property);
 
   // abstracts out the essential pieces for SMARTS processing
   
@@ -99,7 +99,7 @@ public interface Node extends SimpleNode {
   @Override
   void setCIPChirality(int c);
   @Override
-  public P3 getXYZ();
+  public P3d getXYZ();
   public boolean modelIsRawPDB();
 
 

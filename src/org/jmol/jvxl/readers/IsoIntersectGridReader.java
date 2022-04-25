@@ -29,13 +29,13 @@ import org.jmol.util.Logger;
 /**
  * A class to read a linear combination of cube file data.
  * 
- * readerData is Object[] { VolumeFileReader[], float[] }
+ * readerData is Object[] { VolumeFileReader[], double[] }
  * 
  */
 class IsoIntersectGridReader extends VolumeFileReader {
 
   private VolumeFileReader[] readers;
-  private float[] factors;
+  private double[] factors;
   public IsoIntersectGridReader(){
     super();
   }
@@ -45,7 +45,7 @@ class IsoIntersectGridReader extends VolumeFileReader {
     initSR(sg);
     Object[] data = (Object[]) sg.getReaderData();
     readers = (VolumeFileReader[]) data[0];
-    factors = (float[]) data[1];
+    factors = (double[]) data[1];
   }
   
   @Override
@@ -57,8 +57,8 @@ class IsoIntersectGridReader extends VolumeFileReader {
   }
 
   @Override
-  protected float getNextVoxelValue() throws Exception {
-    float f = 0;
+  protected double getNextVoxelValue() throws Exception {
+    double f = 0;
     for (int i = readers.length; -- i >= 0;)
       f += factors[i] * readers[i].getNextVoxelValue();
     return f;
@@ -71,7 +71,7 @@ class IsoIntersectGridReader extends VolumeFileReader {
     readerClosed = true;
     for (int i = readers.length; -- i >= 0;)
       readers[i].closeReaderSFR();
-    if (nData == 0 || dataMax == -Float.MAX_VALUE)
+    if (nData == 0 || dataMax == -Double.MAX_VALUE)
       return;
     dataMean /= nData;
     Logger.info("IsoIntersectFileReader closing file: " + nData

@@ -26,8 +26,8 @@
 package org.jmol.renderspecial;
 
 
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 import org.jmol.render.ShapeRenderer;
@@ -39,18 +39,18 @@ import org.jmol.util.GData;
 
 public class DipolesRenderer extends ShapeRenderer {
 
-  private float dipoleVectorScale;
-  private final V3 offset = new V3();
-  private final P3[] screens3f = new P3[6];
-  private final P3[] points = new P3[6];
+  private double dipoleVectorScale;
+  private final V3d offset = new V3d();
+  private final P3d[] screens3f = new P3d[6];
+  private final P3d[] points = new P3d[6];
   {
     for (int i = 0; i < 6; i++) {
-      screens3f[i] = new P3();
-      points[i] = new P3();
+      screens3f[i] = new P3d();
+      points[i] = new P3d();
     }
   }
-  private P3 cross0 = new P3();
-  private P3 cross1 = new P3();
+  private P3d cross0 = new P3d();
+  private P3d cross1 = new P3d();
   
   private final static int cylinderBase = 0;
   private final static int cross = 1;
@@ -62,21 +62,21 @@ public class DipolesRenderer extends ShapeRenderer {
   private int diameter;
   private int headWidthPixels;
   private int crossWidthPixels;
-  private float offsetSide;
+  private double offsetSide;
   private short colixA;
   private short colixB;
   private boolean noCross;
 
-  private final static float arrowHeadOffset = 0.9f;
-  private final static float arrowHeadWidthFactor = 2f;
-  private final static float crossOffset = 0.1f;
-  private final static float crossWidth = 0.04f;
+  private final static double arrowHeadOffset = 0.9f;
+  private final static double arrowHeadWidthFactor = 2f;
+  private final static double crossOffset = 0.1f;
+  private final static double crossWidth = 0.04f;
 
 
   @Override
   protected boolean render() {
     Dipoles dipoles = (Dipoles) shape;
-    dipoleVectorScale = vwr.getFloat(T.dipolescale);
+    dipoleVectorScale = vwr.getDouble(T.dipolescale);
     boolean needTranslucent = false;
     BS vis = vwr.ms.getVisibleSet(false);
     for (int i = dipoles.dipoleCount; --i >= 0;) {
@@ -110,15 +110,15 @@ public class DipolesRenderer extends ShapeRenderer {
       colixA = colixB;
       colixB = c;
     }
-    float factor = dipole.offsetAngstroms / dipole.dipoleValue;
+    double factor = dipole.offsetAngstroms / dipole.dipoleValue;
     if (dipole.lstDipoles == null)
       return renderVector(dipole.vector, dipole.origin, dipole.center,
           factor, false);
     boolean needTranslucent = false;
     for (int i = dipole.lstDipoles.size(); --i >= 0;) {
       Object[] o = (Object[]) dipole.lstDipoles.get(i);
-      V3 v = (V3) o[0];
-      P3 origin = (P3) o[1];
+      V3d v = (V3d) o[0];
+      P3d origin = (P3d) o[1];
       BS bsAtoms = (BS) o[2];
       if (bsAtoms.intersects(vis))
         needTranslucent = renderVector(v, origin, null, dipole.offsetAngstroms, true);
@@ -126,7 +126,7 @@ public class DipolesRenderer extends ShapeRenderer {
     return needTranslucent;
   }
  
-  private boolean renderVector(V3 vector, P3 origin, P3 dcenter, float factor, boolean isGroup) {
+  private boolean renderVector(V3d vector, P3d origin, P3d dcenter, double factor, boolean isGroup) {
     offset.setT(vector);
     if (dcenter == null) {
       if (isGroup) {
@@ -172,7 +172,7 @@ public class DipolesRenderer extends ShapeRenderer {
       tm.transformPtScrT3(points[i], screens3f[i]);
     tm.transformPt3f(points[cross], cross0);
     tm.transformPt3f(points[crossEnd], cross1);
-    float d = vwr.tm.scaleToScreen((int) screens3f[center].z, mad);
+    double d = vwr.tm.scaleToScreen((int) screens3f[center].z, mad);
     diameter = (int) d;
     headWidthPixels = (int) Math.floor(d * arrowHeadWidthFactor);
     if (headWidthPixels < diameter + 5)

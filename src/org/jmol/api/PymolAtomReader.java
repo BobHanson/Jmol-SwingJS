@@ -4,7 +4,7 @@ public interface PymolAtomReader {
 
   int getUniqueID(int iAtom);
 
-  float getVDW(int iAtom);
+  double getVDW(int iAtom);
 
   int getCartoonType(int iAtom);
 

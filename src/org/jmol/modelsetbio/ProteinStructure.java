@@ -26,8 +26,8 @@ package org.jmol.modelsetbio;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import org.jmol.c.STR;
 import javajs.util.BS;
@@ -49,12 +49,12 @@ public abstract class ProteinStructure implements Structure {
   public AlphaPolymer apolymer;
   protected int monomerIndexFirst;
   int monomerIndexLast;
-  protected P3 axisA, axisB;
-  protected V3 axisUnitVector;
-  protected V3 vectorProjection;
+  protected P3d axisA, axisB;
+  protected V3d axisUnitVector;
+  protected V3d vectorProjection;
 
   private static int globalStrucNo = 1000;
-  private P3[] segments;
+  private P3d[] segments;
 
   protected ProteinStructure() {
     id = ++ids;
@@ -71,7 +71,7 @@ public abstract class ProteinStructure implements Structure {
     strucNo = ++globalStrucNo;
     this.apolymer = apolymer;
     this.type = type;
-    vectorProjection = new V3();
+    vectorProjection = new V3d();
     monomerIndexFirst = monomerIndex;
     addMonomer(monomerIndex + monomerCount - 1);
     if (Logger.debugging)
@@ -158,13 +158,13 @@ public abstract class ProteinStructure implements Structure {
    * 
    * @return points for rocket segment rendering
    */
-  public P3[] getSegments() {
+  public P3d[] getSegments() {
     if (segments == null)
       calcSegments();
     return segments;
   }
 
-  P3 getStructureMidPoint(int index) {
+  P3d getStructureMidPoint(int index) {
     if (segments == null)
       calcSegments();
     return segments[index];
@@ -174,13 +174,13 @@ public abstract class ProteinStructure implements Structure {
     if (segments != null)
       return;
     calcAxis();
-    segments = new P3[nRes + 1];
+    segments = new P3d[nRes + 1];
     segments[nRes] = axisB;
     segments[0] = axisA;
-    V3 axis = V3.newV(axisUnitVector);
+    V3d axis = V3d.newV(axisUnitVector);
     axis.scale(axisB.distance(axisA) / nRes);
     for (int i = 1; i < nRes; i++) {
-      P3 point = segments[i] = new P3();
+      P3d point = segments[i] = new P3d();
       point.add2(segments[i - 1], axis);
       //now it's just a constant-distance segmentation. 
       //there isn't anything significant about seeing the
@@ -192,12 +192,12 @@ public abstract class ProteinStructure implements Structure {
     }
   }
 
-  public P3 getAxisStartPoint() {
+  public P3d getAxisStartPoint() {
     calcAxis();
     return axisA;
   }
 
-  public P3 getAxisEndPoint() {
+  public P3d getAxisEndPoint() {
     calcAxis();
     return axisB;
   }

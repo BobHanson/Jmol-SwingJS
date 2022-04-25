@@ -24,8 +24,8 @@
 package org.jmol.quantum;
 
 
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -38,20 +38,20 @@ abstract public class QuantumCalculation {
   protected boolean doDebug = false;
   protected BS bsExcluded;
 
-  protected float integration = Float.NaN;
+  protected double integration = Double.NaN;
   
-  public float getIntegration() {
+  public double getIntegration() {
     return integration;
   }
   
 
-  protected final static float bohr_per_angstrom = 1 / 0.52918f;
+  protected final static double bohr_per_angstrom = 1 / 0.52918f;
 
-  protected float[][][] voxelData;
-  public float[][][] voxelDataTemp;
+  protected double[][][] voxelData;
+  public double[][][] voxelDataTemp;
   protected int[] countsXYZ;
   
-  protected T3[] points;
+  protected T3d[] points;
   public int xMin, xMax, yMin, yMax, zMin, zMax;
 
   protected QMAtom[] qmAtoms;
@@ -65,28 +65,28 @@ abstract public class QuantumCalculation {
   // and getting values for them during a 
   // progressive calculation.
   
-  protected float[] xBohr, yBohr, zBohr;
-  protected float[] originBohr = new float[3];
-  protected float[] stepBohr = new float[3];
+  protected double[] xBohr, yBohr, zBohr;
+  protected double[] originBohr = new double[3];
+  protected double[] stepBohr = new double[3];
   protected int nX, nY, nZ;
   
   // grid coordinates relative to orbital center in Bohr 
-  public float[] X, Y, Z;
+  public double[] X, Y, Z;
 
   // grid coordinate squares relative to orbital center in Bohr
-  public float[] X2, Y2, Z2;
+  public double[] X2, Y2, Z2;
 
   // range in bohr to consider affected by an atomic orbital
   // this is a cube centered on an atom of side rangeBohr*2
-  protected float rangeBohrOrAngstroms = 10; //bohr; about 5 Angstroms
+  protected double rangeBohrOrAngstroms = 10; //bohr; about 5 Angstroms
   
-  protected float unitFactor = bohr_per_angstrom;
+  protected double unitFactor = bohr_per_angstrom;
 
-  protected void initialize(int nX, int nY, int nZ, T3[] points) {
+  protected void initialize(int nX, int nY, int nZ, T3d[] points) {
     initialize0(nX, nY ,nZ, points);
   }
 
-  protected void initialize0(int nX, int nY, int nZ, T3[] points) {
+  protected void initialize0(int nX, int nY, int nZ, T3d[] points) {
     if (points != null) {
       this.points = points;
       nX = nY = nZ = points.length;
@@ -100,22 +100,22 @@ abstract public class QuantumCalculation {
       return;
     
     // absolute grid coordinates in Bohr
-    xBohr = new float[nX];
-    yBohr = new float[nY];
-    zBohr = new float[nZ];
+    xBohr = new double[nX];
+    yBohr = new double[nY];
+    zBohr = new double[nZ];
 
     // grid coordinates relative to orbital center in Bohr 
-    X = new float[nX];
-    Y = new float[nY];
-    Z = new float[nZ];
+    X = new double[nX];
+    Y = new double[nY];
+    Z = new double[nZ];
 
     // grid coordinate squares relative to orbital center in Bohr
-    X2 = new float[nX];
-    Y2 = new float[nY];
-    Z2 = new float[nZ];
+    X2 = new double[nX];
+    Y2 = new double[nY];
+    Z2 = new double[nZ];
   }
 
-  protected float volume = 1;
+  protected double volume = 1;
 
 
   /**
@@ -130,9 +130,9 @@ abstract public class QuantumCalculation {
    * @param points
    * @param renumber
    */
-  protected void setupCoordinates(float[] originXYZ, float[] stepsXYZ,
-                                  BS bsSelected, T3[] xyz, Atom[] atoms,
-                                  T3[] points, boolean renumber) {
+  protected void setupCoordinates(double[] originXYZ, double[] stepsXYZ,
+                                  BS bsSelected, T3d[] xyz, Atom[] atoms,
+                                  T3d[] points, boolean renumber) {
 
     // all coordinates come in as angstroms, not bohr, and are converted here into bohr
 
@@ -146,9 +146,9 @@ abstract public class QuantumCalculation {
         volume *= stepBohr[i];
       }
       Logger.info("QuantumCalculation:" + "\n origin = "
-          + Escape.eAF(originXYZ) + "\n steps = " + Escape.eAF(stepsXYZ)
-          + "\n origin(Bohr)= " + Escape.eAF(originBohr) + "\n steps(Bohr)= "
-          + Escape.eAF(stepBohr) + "\n counts= " + nX + " " + nY + " " + nZ);
+          + Escape.eAD(originXYZ) + "\n steps = " + Escape.eAD(stepsXYZ)
+          + "\n origin(Bohr)= " + Escape.eAD(originBohr) + "\n steps(Bohr)= "
+          + Escape.eAD(stepBohr) + "\n counts= " + nX + " " + nY + " " + nZ);
     }
     
      // Allowing missing atoms allows for selectively removing
@@ -166,7 +166,7 @@ abstract public class QuantumCalculation {
           X2, Y2, Z2, unitFactor);
   }
 
-  public float processPt(T3 pt) {
+  public double processPt(T3d pt) {
     // implementation from QuantumCalculationInterface for NCI and MO calculations
     // it IS called.
     doDebug = false;
@@ -190,13 +190,13 @@ abstract public class QuantumCalculation {
   }
 
   protected void initializeOnePointQC() {
-    points = new P3[1];
-    points[0] = new P3();
+    points = new P3d[1];
+    points[0] = new P3d();
     if (voxelData == null || voxelData == voxelDataTemp) {
-      voxelData = voxelDataTemp = new float[1][1][1];
+      voxelData = voxelDataTemp = new double[1][1][1];
     } else {
-      voxelData = new float[1][1][1];
-      voxelDataTemp = new float[1][1][1];
+      voxelData = new double[1][1][1];
+      voxelDataTemp = new double[1][1][1];
     }
     xMin = yMin = zMin = 0;
     initialize(1, 1, 1, points);
@@ -204,25 +204,25 @@ abstract public class QuantumCalculation {
 
   protected abstract void process();
   
-  protected void setXYZBohr(T3[] points) {
+  protected void setXYZBohr(T3d[] points) {
     setXYZBohrI(xBohr, 0, nX, points);
     setXYZBohrI(yBohr, 1, nY, points);
     setXYZBohrI(zBohr, 2, nZ, points);
   }
 
-  private void setXYZBohrI(float[] bohr, int i, int n, T3[] points) {
+  private void setXYZBohrI(double[] bohr, int i, int n, T3d[] points) {
     if (points != null) {
-      float x = 0;
+      double x = 0;
       for (int j = 0; j < n; j++) {
         switch (i) {
         case 0:
-          x = points[j].x;
+          x = (double) points[j].x;
           break;
         case 1:
-          x = points[j].y;
+          x = (double) points[j].y;
           break;
         case 2:
-          x = points[j].z;
+          x = (double) points[j].z;
           break;
         }
         bohr[j] = x * unitFactor;
@@ -230,7 +230,7 @@ abstract public class QuantumCalculation {
       return;
     }
     bohr[0] = originBohr[i];
-    float inc = stepBohr[i];
+    double inc = stepBohr[i];
     for (int j = 0; ++j < n;)
       bohr[j] = bohr[j - 1] + inc;
   }

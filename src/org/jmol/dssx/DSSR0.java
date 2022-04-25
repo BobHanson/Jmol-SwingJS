@@ -220,9 +220,9 @@ public class DSSR0 {// extends AnnotationParser {
 //      data.put("atno2", Integer.valueOf(PT.parseInt(tokens[1])));
 //      data.put("id", tokens[2]);
 //      data.put("hbType", tokens[3]);
-//      data.put("distAng", Float.valueOf(tokens[4]));
+//      data.put("distAng", Double.valueOf(tokens[4]));
 //      int pt = (tokens.length > 8 ? 6 : 5);
-//      data.put("energy", Float.valueOf(pt == 6 ? tokens[5] : "0"));
+//      data.put("energy", Double.valueOf(pt == 6 ? tokens[5] : "0"));
 //      data.put("label", tokens[pt++]);
 //      data.put("atom1", fix(tokens[pt++], true));
 //      data.put("atom2", fix(tokens[pt++], true));
@@ -700,7 +700,7 @@ public class DSSR0 {// extends AnnotationParser {
 //      line = PT.rep(line, "_pars", "-pars");
 //      if (isBP) {
 //        if (line.indexOf("bp-pars:") >= 0) {
-//          addArray(data, "bp", PT.parseFloatArray(line.substring(pt + 1)));
+//          addArray(data, "bp", PT.parseDoubleArray(line.substring(pt + 1)));
 //        } else if (line.indexOf("lambda") >= 0) {
 //          //[-156.7(anti) C3'-endo lambda=84.4] [-165.6(anti) C3'-endo lambda=38.0]
 //          extractFloats(data, htPar.get("bpChiLambda"));
@@ -711,11 +711,11 @@ public class DSSR0 {// extends AnnotationParser {
 //        info += line + "\n";
 //      } else {
 //        if (isRev && line.indexOf("bp1-pars:") >= 0) {
-//          addArray(data, "bp", PT.parseFloatArray(line.substring(pt + 1)));
+//          addArray(data, "bp", PT.parseDoubleArray(line.substring(pt + 1)));
 //        } else if (line.indexOf("heli-pars:") >= 0) {
-//          addArray(data, "hel", PT.parseFloatArray(line.substring(pt + 1)));
+//          addArray(data, "hel", PT.parseDoubleArray(line.substring(pt + 1)));
 //        } else if (line.indexOf("step-pars:") >= 0) {
-//          addArray(data, "step", PT.parseFloatArray(line.substring(pt + 1)));
+//          addArray(data, "step", PT.parseDoubleArray(line.substring(pt + 1)));
 //        } else if ((pt = line.indexOf("h-rise=")) >= 0) {
 //          addFloat(data, "heRiseC1", pt + 7);
 //          addFloat(data, "heTwistC1", line.indexOf("h-twist=") + 8);
@@ -738,7 +738,7 @@ public class DSSR0 {// extends AnnotationParser {
 //    for (int i = 0, pt = 0; i < n; i++) {
 //      if ((next[0] = pt = line.indexOf("=", pt) + 1) == 0)
 //        break;
-//      data.put(names[i], Float.valueOf(PT.parseFloatNext(line, next)));
+//      data.put(names[i], Double.valueOf(PT.parseDoubleNext(line, next)));
 //    }
 //  }
 //
@@ -746,13 +746,13 @@ public class DSSR0 {// extends AnnotationParser {
 //    String[] keys = htPar.get(key);
 //    int n = Math.min(f.length, keys == null ? f.length : keys.length);
 //    for (int i = 0; i < n; i++)
-//      data.put(keys == null ? key + (i + 1) : keys[i], Float.valueOf(f[i]));
+//      data.put(keys == null ? key + (i + 1) : keys[i], Double.valueOf(f[i]));
 //  }
 //
 //  private void addFloat(Map<String, Object> data, String key, int pt) {
 //    data.put(
 //        key,
-//        Float.valueOf(PT.parseFloat(line.substring(pt,
+//        Double.valueOf(PT.parseDouble(line.substring(pt,
 //            Math.min(line.length(), pt + 10)))));
 //  }
 //
@@ -813,7 +813,7 @@ public class DSSR0 {// extends AnnotationParser {
 //  }
 //
 //  private P3 getPoint(String data) {
-//    float[] a = PT.parseFloatArray(after(data, ":"));
+//    float[] a = PT.parseDoubleArray(after(data, ":"));
 //    return P3.new3(a[0], a[1], a[2]);
 //
 //  }
@@ -999,7 +999,7 @@ public class DSSR0 {// extends AnnotationParser {
 //        int a1 = ((Integer) hbond.get("atno1")).intValue() + a0;
 //        int a2 = ((Integer) hbond.get("atno2")).intValue() + a0;
 //        float energy = (hbond.containsKey("energy") ? ((Float) hbond
-//            .get("energy")).floatValue() : 0);
+//            .get("energy")).doubleValue() : 0);
 //        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
 //            (short) 1, C.INHERIT_ALL, energy));
 //      }

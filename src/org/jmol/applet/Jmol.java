@@ -518,7 +518,7 @@ public class Jmol extends GenericApplet {
   }
 
   @Override
-  public float[][] functionXY(String functionName, int nX, int nY) {
+  public double[][] functionXY(String functionName, int nX, int nY) {
     if (isJS) {
       return super.functionXY(functionName, nX, nY);
     }
@@ -526,7 +526,7 @@ public class Jmol extends GenericApplet {
   }
 
   @Override
-  public float[][][] functionXYZ(String functionName, int nX, int nY,
+  public double[][][] functionXYZ(String functionName, int nX, int nY,
                                    int nZ) {
     if (isJS) {
       return super.functionXYZ(functionName, nX, nY, nZ);

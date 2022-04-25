@@ -210,14 +210,14 @@ public abstract class XmlMOReader extends XmlCmlReader {
   }
 
   private void buildSlaters() {
-    float[][] gaussians = AU.newFloat2(gaussianCount);
+    double[][] gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0, p = 0, n = lstGaussians.size(); i < n; i++) {
       basisData = lstGaussians.get(i);
       double[] exp = basisData.get(0);
       for (int ii = 1, nn = basisData.size(); ii < nn; ii++) {
         double[] coef = basisData.get(ii);
         for (int j = 0; j < exp.length; j++)
-          gaussians[p++] = new float[] { (float) exp[j], (float) coef[j], 0 };
+          gaussians[p++] = new double[] { (double) exp[j], (double) coef[j], 0 };
       }
     }
     moReader.gaussians = gaussians;

@@ -123,7 +123,7 @@ abstract public class BondCollection extends AtomCollection {
     return bs;
   }
 
-  public Bond bondAtoms(Atom atom1, Atom atom2, int order, short mad, BS bsBonds, float energy, boolean addGroup, boolean isNew) {
+  public Bond bondAtoms(Atom atom1, Atom atom2, int order, short mad, BS bsBonds, double energy, boolean addGroup, boolean isNew) {
     // this method used when a bond must be flagged as new
     Bond bond = getOrAddBond(atom1, atom2, order, mad, bsBonds, energy, true);
     if (isNew) {
@@ -138,7 +138,7 @@ abstract public class BondCollection extends AtomCollection {
   }
 
   protected Bond getOrAddBond(Atom atom, Atom atomOther, int order, short mad,
-                            BS bsBonds, float energy, boolean overrideBonding) {
+                            BS bsBonds, double energy, boolean overrideBonding) {
     int i;
     if (order == Edge.BOND_ORDER_NULL || order == Edge.BOND_ORDER_ANY)
       order = 1;
@@ -166,7 +166,7 @@ abstract public class BondCollection extends AtomCollection {
     return bo[bond.index = index] = bond;
   }
 
-  protected Bond bondMutually(Atom atom, Atom atomOther, int order, short mad, float energy) {
+  protected Bond bondMutually(Atom atom, Atom atomOther, int order, short mad, double energy) {
     Bond bond;
     if (Edge.isOrderH(order)) {
       bond = new HBond(atom, atomOther, order, mad, C.INHERIT_ALL, energy);
@@ -214,7 +214,7 @@ abstract public class BondCollection extends AtomCollection {
 
   ////// bonding methods //////
 
-  public int addHBond(Atom atom1, Atom atom2, int order, float energy) {
+  public int addHBond(Atom atom1, Atom atom2, int order, double energy) {
     // from autoHbond and BioModel.getRasmolHydrogenBonds
     if (bondCount == bo.length)
       bo = (Bond[]) AU.arrayCopyObject(bo, bondCount
@@ -242,10 +242,10 @@ abstract public class BondCollection extends AtomCollection {
   public short getDefaultMadFromOrder(int order) {
     return (short) (Edge.isOrderH(order) ? 1
         : order == Edge.BOND_STRUT  ? (int) Math.floor(vwr
-            .getFloat(T.strutdefaultradius) * 2000) : defaultCovalentMad);
+            .getDouble(T.strutdefaultradius) * 2000) : defaultCovalentMad);
   }
 
-  protected int[] deleteConnections(float minD, float maxD, int order,
+  protected int[] deleteConnections(double minD, double maxD, int order,
                                     BS bsA, BS bsB, boolean isBonds,
                                     boolean matchNull) {
     boolean minDIsFraction = (minD < 0);
@@ -288,7 +288,7 @@ abstract public class BondCollection extends AtomCollection {
     return new int[] { 0, nDeleted };
   }
   
-  protected float fixD(float d, boolean isF) {
+  protected double fixD(double d, boolean isF) {
     return (isF ? -d : d * d);
   }
 
@@ -304,13 +304,13 @@ abstract public class BondCollection extends AtomCollection {
    * @param isFractional
    * @return true if in range
    */
-  protected boolean isInRange(Atom atom1, Atom atom2, float minD, float maxD,
+  protected boolean isInRange(Atom atom1, Atom atom2, double minD, double maxD,
                             boolean minFrac, boolean maxfrac,
                             boolean isFractional) {
-    float d2 = atom1.distanceSquared(atom2);
+    double d2 = atom1.distanceSquared(atom2);
     if (isFractional) {
-      float dAB = (float) Math.sqrt(d2);
-      float dABcalc = atom1.getBondingRadius() + atom2.getBondingRadius();
+      double dAB = (double) Math.sqrt(d2);
+      double dABcalc = atom1.getBondingRadius() + atom2.getBondingRadius();
       return ((minFrac ? dAB >= dABcalc * minD : d2 >= minD)
           && (maxfrac ? dAB <= dABcalc * maxD : d2 <= maxD));
     } 
@@ -770,7 +770,7 @@ abstract public class BondCollection extends AtomCollection {
         bo[i].setShapeVisibility(isDisplay);
   }
 
-  public BS getAtomsConnected(float min, float max, int intType, BS bs) {
+  public BS getAtomsConnected(double min, double max, int intType, BS bs) {
     boolean isBonds = bs instanceof BondSet;
     BS bsResult = (isBonds ? new BondSet() : new BS());
     int[] nBonded = new int[ac];

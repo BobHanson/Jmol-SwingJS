@@ -32,7 +32,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolTouchSimulatorInterface;
 import org.jmol.awtjs.Event;
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.viewer.binding.Binding;
@@ -237,7 +237,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
   
   @Override
   public void processMultitouchEvent(int groupID, int eventType, int touchID, int iData,
-                           P3 pt, long time) {
+                           P3d pt, long time) {
     if (Logger.debugging)
       Logger.debug(this + " time=" + time + " groupID=" + groupID + " "
           + Integer.toHexString(groupID) + " eventType=" + eventType + "("
@@ -293,7 +293,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
       }
       break;
     case ZOOM_EVENT:
-      float scale = pt.z;
+      double scale = pt.z;
       if (scale == -1 || scale == 1) {
         zoomByFactor((int)scale, Integer.MAX_VALUE, Integer.MAX_VALUE);
         logEvent("Zoom", pt);
@@ -302,7 +302,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
     }
   }
 
-  private void logEvent(String type, P3 pt) {
+  private void logEvent(String type, P3d pt) {
     if (!vwr.g.logGestures)
       return;
     long time = System.currentTimeMillis(); 
@@ -365,7 +365,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
   }
 
   @Override
-  protected float getDegrees(float delta, boolean isX) {
+  protected double getDegrees(double delta, boolean isX) {
     return delta / (isX ? vwr.getScreenWidth() : vwr.getScreenHeight()) * 180 * mouseDragFactor;
   }
 

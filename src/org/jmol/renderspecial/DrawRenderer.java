@@ -38,13 +38,13 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 import javajs.util.Lst;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.M3d;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 
@@ -53,12 +53,12 @@ public class DrawRenderer extends MeshRenderer {
   private EnumDrawType drawType;
   protected DrawMesh dmesh;
 
-  private P3[] controlHermites;
-  protected P3 pt0 = new P3();
-  protected P3 pt1 = new P3();
-  protected P3 pt2 = new P3();
-  protected final V3 vTemp = new V3();
-  protected final V3 vTemp2 = new V3();
+  private P3d[] controlHermites;
+  protected P3d pt0 = new P3d();
+  protected P3d pt1 = new P3d();
+  protected P3d pt2 = new P3d();
+  protected final V3d vTemp = new V3d();
+  protected final V3d vTemp2 = new V3d();
 
   @Override
   protected boolean render() {
@@ -86,7 +86,7 @@ public class DrawRenderer extends MeshRenderer {
         // atom-bond [ a -1  c d  ]
         // atom-atom [ a -1  c -1 ]
 
-        mesh.vs = new P3[4];
+        mesh.vs = new P3d[4];
         mesh.vc = 4;
         int[] c = mesh.connectedAtoms;
         for (int j = 0; j < 4; j++)
@@ -143,13 +143,13 @@ public class DrawRenderer extends MeshRenderer {
       if (dmesh.isVector) {
         int ptXY = 0;
         // [x y] or [x,y] refers to an xy point on the screen
-        // just a Point3f with z = Float.MAX_VALUE
+        // just a Point3f with z = Double.MAX_VALUE
         //  [x y %] or [x,y %] refers to an xy point on the screen
         // as a percent 
-        // just a Point3f with z = -Float.MAX_VALUE
+        // just a Point3f with z = -Double.MAX_VALUE
         for (int i = 0; i < 2; i++)
-          if (vertices[i].z == Float.MAX_VALUE
-              || vertices[i].z == -Float.MAX_VALUE)
+          if (vertices[i].z == Double.MAX_VALUE
+              || vertices[i].z == -Double.MAX_VALUE)
             ptXY += i + 1;
         if (--ptXY < 2) {
           renderXyArrow(ptXY);
@@ -195,12 +195,12 @@ public class DrawRenderer extends MeshRenderer {
       //renderArrowHead(controlHermites[nHermites - 2], controlHermites[nHermites - 1], false);
       // 
       // {pt1} {pt2} {ptref} {nDegreesOffset, theta, fractionalOffset}
-      T3 ptRef = (vertexCount > 2 ? vertices[2] : Draw.randomPoint());
-      float nDegreesOffset = (vertexCount > 3 ? vertices[3].x : 0);
-      float theta = (vertexCount > 3 ? vertices[3].y : 360);
+      T3d ptRef = (vertexCount > 2 ? vertices[2] : Draw.randomPoint());
+      double nDegreesOffset = (vertexCount > 3 ? vertices[3].x : 0);
+      double theta = (vertexCount > 3 ? vertices[3].y : 360);
       if (theta == 0)
         return;
-      float fractionalOffset = (vertexCount > 3 ? vertices[3].z : 0);
+      double fractionalOffset = (vertexCount > 3 ? vertices[3].z : 0);
       nPoints = setArc(vertices[0], vertices[1], ptRef, nDegreesOffset, theta,
           fractionalOffset, dmesh.scale);
       if (dmesh.isVector && !dmesh.noHead) {
@@ -217,7 +217,7 @@ public class DrawRenderer extends MeshRenderer {
       }
       int nHermites = 5;
       if (controlHermites == null || controlHermites.length < nHermites + 1) {
-        controlHermites = new P3[nHermites + 1];
+        controlHermites = new P3d[nHermites + 1];
       }
       GData.getHermiteList(tension, vertices[vertexCount - 3],
           vertices[vertexCount - 2], vertices[vertexCount - 1],
@@ -244,14 +244,14 @@ public class DrawRenderer extends MeshRenderer {
 
   }
 
-  private int setArc(T3 v1, T3 v2, T3 ptRef, float nDegreesOffset,
-                       float theta, float fractionalOffset, float scale) {
+  private int setArc(T3d v1, T3d v2, T3d ptRef, double nDegreesOffset,
+                       double theta, double fractionalOffset, double scale) {
     vTemp.sub2(v2, v1);
     // crossing point
     pt1f.scaleAdd2(fractionalOffset, vTemp, v1);
     // define rotational axis
-    M3d mat = new M3d().setAA(A4.newVA(vTemp,
-        (float) (nDegreesOffset * Math.PI / 180)));
+    M3d mat = new M3d().setAA(A4d.newVA(vTemp,
+        (double) (nDegreesOffset * Math.PI / 180)));
     // vector to rotate
     vTemp2.sub2(ptRef,
         v1);
@@ -261,15 +261,15 @@ public class DrawRenderer extends MeshRenderer {
     vTemp2.scale(scale / 2);
     mat.rotate(vTemp2);
     //control points
-    float degrees = theta / 5;
+    double degrees = theta / 5;
     while (Math.abs(degrees) > 5)
       degrees /= 2;
-    int nPoints = Math.round(theta / degrees) + 1;
+    int nPoints = (int) Math.round(theta / degrees) + 1;
     while (nPoints < 10) {
       degrees /= 2;
-      nPoints = Math.round(theta / degrees) + 1;
+      nPoints = (int) Math.round(theta / degrees) + 1;
     }
-    mat.setAA(A4.newVA(vTemp, (float) (degrees * Math.PI / 180)));
+    mat.setAA(A4d.newVA(vTemp, (double) (degrees * Math.PI / 180)));
     screens = vwr.allocTempScreens(nPoints);
     p3Screens = vwr.allocTempPoints(nPoints);
     int iBase = nPoints - (dmesh.scale < 2 ? 3 : 3);
@@ -292,12 +292,12 @@ public class DrawRenderer extends MeshRenderer {
     
     
     vertexCount = 3;
-    float dmax = Float.MAX_VALUE;
+    double dmax = Double.MAX_VALUE;
     int i0 = 0;
     int j0 = 0;
     for (int i = 0; i < 2; i++)
       for (int j = 2; j < 4; j++) {
-        float d = vertices[i].distance(vertices[j]);
+        double d = vertices[i].distance(vertices[j]);
         if (d < dmax) {
           dmax = d;
           i0 = i;
@@ -307,27 +307,27 @@ public class DrawRenderer extends MeshRenderer {
     pt0.ave(vertices[0], vertices[1]);
     pt2.ave(vertices[2], vertices[3]);
     pt1.ave(pt0, pt2);
-    vertices[3] = P3.newP(vertices[i0]);
+    vertices[3] = P3d.newP(vertices[i0]);
     vertices[3].add(vertices[j0]);
     vertices[3].scale(0.5f);
-    vertices[1] = P3.newP(pt1); 
-    vertices[0] = P3.newP(pt0);
-    vertices[2] = P3.newP(pt2);
+    vertices[1] = P3d.newP(pt1); 
+    vertices[0] = P3d.newP(pt0);
+    vertices[2] = P3d.newP(pt2);
 
     for (int i = 0; i < 4; i++)
       tm.transformPtScr(vertices[i], screens[i]);
 
-    float f = 4 * getArrowScale(); // bendiness
-    float endoffset = 0.2f;
-    float offsetside = (width == 0 ? 0.1f : width);
+    double f = 4 * getArrowScale(); // bendiness
+    double endoffset = 0.2f;
+    double offsetside = (width == 0 ? 0.1f : width);
     
     pt0.set(screens[0].x, screens[0].y, screens[0].z);
     pt1.set(screens[1].x, screens[1].y, screens[1].z);
     pt2.set(screens[3].x, screens[3].y, screens[3].z);
-    float dx = (screens[1].x - screens[0].x) * f;
-    float dy = (screens[1].y - screens[0].y) * f;
+    double dx = (screens[1].x - screens[0].x) * f;
+    double dy = (screens[1].y - screens[0].y) * f;
     
-    if (dmax == 0 || Measure.computeTorsion(pt2, pt0, P3.new3(pt0.x, pt0.y, 10000f), pt1, false) > 0) {
+    if (dmax == 0 || MeasureD.computeTorsion(pt2, pt0, P3d.new3(pt0.x, pt0.y, 10000f), pt1, false) > 0) {
       dx = -dx;
       dy = -dy;
     }
@@ -352,11 +352,11 @@ public class DrawRenderer extends MeshRenderer {
     }
   }
 
-  private void drawLineData(Lst<P3[]> lineData) {
+  private void drawLineData(Lst<P3d[]> lineData) {
     if (diameter == 0)
       diameter = 3;
     for (int i = lineData.size(); --i >= 0;) {
-      P3[] pts = lineData.get(i);
+      P3d[] pts = lineData.get(i);
       tm.transformPtScr(pts[0], pt1i);
       tm.transformPtScr(pts[1], pt2i);
       drawEdge(-1, -2, true, pts[0], pts[1], pt1i, pt2i);
@@ -369,7 +369,7 @@ public class DrawRenderer extends MeshRenderer {
     pt0.setT(vertices[0]);
     if (diameter == 0)
       diameter = (int) width;
-    if (pt0.z == -Float.MAX_VALUE) {
+    if (pt0.z == -Double.MAX_VALUE) {
       pt0.x *= vwr.tm.width / 100f;
       pt0.y *= vwr.tm.height / 100f;
       diameter = (int) (diameter * vwr.getScreenDim() / 100f);
@@ -382,15 +382,15 @@ public class DrawRenderer extends MeshRenderer {
   private void renderXyArrow(int ptXY) {
     // only 0 or 1 here; so ptXYZ is 1 or 0
     int ptXYZ = 1 - ptXY;
-    P3[] arrowPt = new P3[2];
+    P3d[] arrowPt = new P3d[2];
     arrowPt[ptXYZ] = pt1;
     arrowPt[ptXY] = pt0;
     // set up (0,0,0) to ptXYZ in real and screen coordinates
     pt0.set(screens[ptXY].x, screens[ptXY].y, screens[ptXY].z);
     tm.rotatePoint(vertices[ptXYZ], pt1);
     pt1.z *= -1;
-    float zoomDimension = vwr.getScreenDim();
-    float scaleFactor = zoomDimension / 20f;
+    double zoomDimension = vwr.getScreenDim();
+    double scaleFactor = zoomDimension / 20f;
     pt1.scaleAdd2(dmesh.scale * scaleFactor, pt1, pt0);
     if (diameter == 0)
       diameter = 1;
@@ -401,23 +401,23 @@ public class DrawRenderer extends MeshRenderer {
     renderArrowHead(pt0, pt1, 0, true, false, false);
   }
 
-  private final P3 pt0f = new P3();
+  private final P3d pt0f = new P3d();
   protected P3i pt0i = new P3i();
-  private P3 s0f;
-  private P3 s1f;
-  private P3 s2f;
+  private P3d s0f;
+  private P3d s1f;
+  private P3d s2f;
 
-  private void renderArrowHead(T3 pt1, T3 pt2, float factor2,
+  private void renderArrowHead(T3d pt1, T3d pt2, double factor2,
                                boolean isTransformed, boolean withShaft,
                                boolean isBarb) {
     if (dmesh.noHead)
       return;
     if (s0f == null) {
-      s0f = new P3();
-      s1f = new P3();
-      s2f = new P3();
+      s0f = new P3d();
+      s1f = new P3d();
+      s2f = new P3d();
     }
-    float fScale = getArrowScale();
+    double fScale = getArrowScale();
     if (isTransformed)
       fScale *= 40;
     if (factor2 > 0)
@@ -425,7 +425,7 @@ public class DrawRenderer extends MeshRenderer {
 
     pt0f.setT(pt1);
     pt2f.setT(pt2);
-    float d = pt0f.distance(pt2f);
+    double d = pt0f.distance(pt2f);
     if (d == 0)
       return;
     vTemp.sub2(pt2f, pt0f);
@@ -450,7 +450,7 @@ public class DrawRenderer extends MeshRenderer {
       headDiameter = diameter * 3;
     } else {
       vTemp.set(s2f.x - s1f.x, s2f.y - s1f.y, s2f.z - s1f.z);
-      headDiameter = Math.round(vTemp.length() * .5f);
+      headDiameter = (int) Math.round(vTemp.length() * .5f);
       diameter = headDiameter / 5;
     }
     if (diameter < 1)
@@ -462,10 +462,10 @@ public class DrawRenderer extends MeshRenderer {
       g3d.fillCylinderScreen3I(GData.ENDCAPS_FLAT, diameter, s0f, s1f, null, null, 0);
   }
 
-  private float getArrowScale() {
-    float fScale = (dmesh.isScaleSet ? dmesh.scale : 0);
+  private double getArrowScale() {
+    double fScale = (dmesh.isScaleSet ? dmesh.scale : 0);
     if (fScale == 0)
-      fScale = vwr.getFloat(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1f : 0.5f);
+      fScale = vwr.getDouble(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1f : 0.5f);
     if (fScale <= 0)
       fScale = 0.5f;
     return fScale;
@@ -474,7 +474,7 @@ public class DrawRenderer extends MeshRenderer {
   private final BS bsHandles = new BS();
   
   private void renderHandles() {
-    int diameter = Math.round(10 * imageFontScaling);
+    int diameter = (int) Math.round(10 * imageFontScaling);
     switch (drawType) {
     case NONE:
       return;
@@ -530,7 +530,7 @@ public class DrawRenderer extends MeshRenderer {
         if (drawType != EnumDrawType.ARC)
           pt1f.setT(vertices[dmesh.pis[i][pt]]);
         tm.transformPtScr(pt1f, pt1i);
-        int offset = Math.round(5 * imageFontScaling);
+        int offset = (int) Math.round(5 * imageFontScaling);
         if (dmesh.titleColor != null)
           vwr.gdata.setColor(dmesh.titleColor.intValue());
         g3d.drawString(s, null, pt1i.x + offset, pt1i.y - offset, pt1i.z,

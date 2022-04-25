@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.AU;
-import javajs.util.V3;
+import javajs.util.V3d;
 
   /**
    * 
@@ -177,7 +177,7 @@ public class Geodesic {
   public final static int standardLevel = 3;
   private final static int maxLevel = 3;
   private static short[] vertexCounts;
-  private static V3[] vertexVectors;
+  private static V3d[] vertexVectors;
   private static short[][] faceVertexesArrays;
   private static short[][] neighborVertexesArrays;
   private static int currentLevel;
@@ -196,13 +196,13 @@ public class Geodesic {
 
   // these next all require preliminary call to getVertexCount()
   
-  static public V3[] getVertexVectors() {
+  static public V3d[] getVertexVectors() {
     if (vertexCounts == null)
       createGeodesic(maxLevel);
     return vertexVectors;
   }
 
-  static public V3 getVertexVector(int i) {
+  static public V3d getVertexVector(int i) {
     return vertexVectors[i];
   }
 
@@ -221,15 +221,15 @@ public class Geodesic {
     short[] v = new short[lvl + 1];
     neighborVertexesArrays = AU.newShort2(lvl + 1);
     faceVertexesArrays = AU.newShort2(lvl + 1);
-    vertexVectors = new V3[12];
-    vertexVectors[0] = V3.new3(0, 0, halfRoot5);
+    vertexVectors = new V3d[12];
+    vertexVectors[0] = V3d.new3(0, 0, halfRoot5);
     for (int i = 0; i < 5; ++i) {
-      vertexVectors[i + 1] = V3.new3((float) Math.cos(i * oneFifth),
-          (float) Math.sin(i * oneFifth), 0.5f);
-      vertexVectors[i + 6] = V3.new3((float) Math.cos(i * oneFifth
-          + oneTenth), (float) Math.sin(i * oneFifth + oneTenth), -0.5f);
+      vertexVectors[i + 1] = V3d.new3((double) Math.cos(i * oneFifth),
+          (double) Math.sin(i * oneFifth), 0.5f);
+      vertexVectors[i + 6] = V3d.new3((double) Math.cos(i * oneFifth
+          + oneTenth), (double) Math.sin(i * oneFifth + oneTenth), -0.5f);
     }
-    vertexVectors[11] = V3.new3(0, 0, -halfRoot5);
+    vertexVectors[11] = V3d.new3(0, 0, -halfRoot5);
     for (int i = 12; --i >= 0;)
       vertexVectors[i].normalize();
     faceVertexesArrays[0] = faceVertexesIcosahedron;
@@ -274,7 +274,7 @@ public class Geodesic {
     int oldEdgesCount = oldVertexCount + oldFaceCount - 2;
     int newVertexCount = oldVertexCount + oldEdgesCount;
     int newFaceCount = 4 * oldFaceCount;
-    vertexVectors = (V3[]) AU.arrayCopyObject(vertexVectors, newVertexCount);
+    vertexVectors = (V3d[]) AU.arrayCopyObject(vertexVectors, newVertexCount);
 
     short[] newFacesVertexes = new short[3 * newFaceCount];
     faceVertexesArrays[level + 1] = newFacesVertexes;
@@ -407,7 +407,7 @@ public class Geodesic {
     if (iv != null) {
       return iv.shortValue();
     }
-    V3 newVertexVector = vertexVectors[vertexNext] = new V3();
+    V3d newVertexVector = vertexVectors[vertexNext] = new V3d();
     newVertexVector.add2(vertexVectors[v1], vertexVectors[v2]);
     newVertexVector.normalize();
     htVertex.put(hashKey, Short.valueOf(vertexNext));

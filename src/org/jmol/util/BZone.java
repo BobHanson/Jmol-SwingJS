@@ -26,10 +26,10 @@ package org.jmol.util;
 import java.util.Hashtable;
 
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.bspt.PointIterator;
@@ -54,12 +54,12 @@ public class BZone {
   //global variables:
 
   private Lst<BZone> bzones = null; // Brillouin zones
-  private P3 bzGamma = new P3();
-  private Lst<P3> bzFaceCenters = null;
-  private Lst<P3> bzLatticePts = null;
-  private P3[] bzLatticePtsAll = null;
+  private P3d bzGamma = new P3d();
+  private Lst<P3d> bzFaceCenters = null;
+  private Lst<P3d> bzLatticePts = null;
+  private P3d[] bzLatticePtsAll = null;
 //  private Lst<P3> bzPlanePtsAll = null;
-  private Lst<P3> bzPlanePts = null;
+  private Lst<P3d> bzPlanePts = null;
   private Lst<BZone> subzones = null;
 
   private boolean isWignerSeitz;
@@ -69,18 +69,18 @@ public class BZone {
   private String id;
   private int index;
   private String color;
-  private Lst<P3> latticePts, newLatticePts, newPlanePts;
-  private Lst<P4> planes, newPlanes;
-  float volume = 0;
+  private Lst<P3d> latticePts, newLatticePts, newPlanePts;
+  private Lst<P4d> planes, newPlanes;
+  double volume = 0;
   int zoneIndex;
-  P3 offset, center;
-  private Lst<P4> planesUnused;
-  private Lst<P3> ptsUnused;
+  P3d offset, center;
+  private Lst<P4d> planesUnused;
+  private Lst<P3d> ptsUnused;
   private Lst<Object> pmeshes;
   private Lst<Double> areas;
-  private Lst<P3[]> faces;
+  private Lst<P3d[]> faces;
   private Lst<int[]> faceIndices;
-  private Lst<P3> faceCenters;
+  private Lst<P3d> faceCenters;
   private double totalArea;
 
   public BZone() {
@@ -108,7 +108,7 @@ public class BZone {
    * @param scale 
    * 
    */
-  public void createBZ(int zone, Object[] array, boolean isK, String id, float scale) {
+  public void createBZ(int zone, Object[] array, boolean isK, String id, double scale) {
     if (vwr == null)
       return;
     if (array != null)
@@ -151,7 +151,7 @@ public class BZone {
    * @param scale 
    * 
    */
-  private void createAllBZs(int n, boolean discardPrev, String id, float scale) {
+  private void createAllBZs(int n, boolean discardPrev, String id, double scale) {
 
     // set up the unit cell as a reciprocal lattice
     // scaling it by 2 pi just to make it somewhat larger
@@ -168,7 +168,7 @@ public class BZone {
     } else {
       if (n == 0)
         n = 1;      
-      if (Float.isNaN(scale))
+      if (Double.isNaN(scale))
         scale = 2;
       //id = "";
       cmd("unitcell 'reciprocal' " + scale);
@@ -183,10 +183,10 @@ public class BZone {
     }
 
     bzones = new Lst<BZone>();
-    bzLatticePts = new Lst<P3>();
-    bzPlanePts = new Lst<P3>();
+    bzLatticePts = new Lst<P3d>();
+    bzPlanePts = new Lst<P3d>();
     //bzPlanePtsAll = new Lst<P3>();
-    bzFaceCenters = new Lst<P3>();
+    bzFaceCenters = new Lst<P3d>();
 
     boolean wasPrecise = vwr.getBoolean(T.legacyjavafloat);
     vwr.setBooleanProperty("legacyJavaFloat", true);
@@ -247,19 +247,19 @@ public class BZone {
     subzone.id = zone.id + id + index + "_";
     subzone.zoneIndex = zone.index;
     subzone.newLatticePts = zone.newLatticePts;
-    subzone.planes = new Lst<P4>();
-    subzone.latticePts = new Lst<P3>();
-    subzone.planesUnused = new Lst<P4>();
-    subzone.ptsUnused = new Lst<P3>();
+    subzone.planes = new Lst<P4d>();
+    subzone.latticePts = new Lst<P3d>();
+    subzone.planesUnused = new Lst<P4d>();
+    subzone.ptsUnused = new Lst<P3d>();
     subzone.pmeshes = new Lst<Object>();
     subzone.areas = new Lst<Double>();
-    subzone.faces = new Lst<P3[]>();
+    subzone.faces = new Lst<P3d[]>();
     subzone.faceIndices = new Lst<int[]>();
-    subzone.faceCenters = new Lst<P3>();
+    subzone.faceCenters = new Lst<P3d>();
     subzone.volume = 0;
     subzone.color = zone.color;
-    subzone.offset = new P3();
-    subzone.center = new P3();
+    subzone.offset = new P3d();
+    subzone.center = new P3d();
     zone.subzones.addLast(subzone);
     return subzone;
   }
@@ -281,17 +281,17 @@ public class BZone {
 
       // ...each subzone of the previous zone has a set of planes. 
 
-      Lst<P4> planesNew = zone.newPlanes;
-      Lst<P3> ptsNew = zone.newLatticePts;
+      Lst<P4d> planesNew = zone.newPlanes;
+      Lst<P3d> ptsNew = zone.newLatticePts;
 
       BZone prev = zonePrev.subzones.get(i);
-      Lst<P4> planesPrev = prev.planes;
-      Lst<P3> ptsPrev = prev.latticePts;
+      Lst<P4d> planesPrev = prev.planes;
+      Lst<P3d> ptsPrev = prev.latticePts;
 
-      Lst<P4> planesUnusedPrev = prev.planesUnused;
-      Lst<P3> ptsUnusedPrev = prev.ptsUnused;
+      Lst<P4d> planesUnusedPrev = prev.planesUnused;
+      Lst<P3d> ptsUnusedPrev = prev.ptsUnused;
       
-      Lst<P3> centersPrev = prev.faceCenters;
+      Lst<P3d> centersPrev = prev.faceCenters;
 
       String id = prev.id.substring(4);
 
@@ -329,12 +329,12 @@ public class BZone {
    * Note that subzone.latticepts is for reference only and is not used in the calculation.
    *    
    */
-  private void addBZ(Lst<P4> planes, Lst<P3> pts, Lst<P4> planes0, Lst<P3> pts0, int j) {
+  private void addBZ(Lst<P4d> planes, Lst<P3d> pts, Lst<P4d> planes0, Lst<P3d> pts0, int j) {
 
     // designated j is inverted and introduced first
 
     if (j >= 0) {
-      P4 pt4 = P4.newPt(planes0.get(j));
+      P4d pt4 = P4d.newPt(planes0.get(j));
       pt4.scale4(-1f);
       planes.addLast(pt4);
       pts.addLast(pts0.get(j));
@@ -355,22 +355,22 @@ public class BZone {
    */
   private void getNewLatticePoints(BZone zone) {
 
-    Lst<P3> unusedPts = new Lst<P3>();
-    Lst<P3> unusedLatticePts = new Lst<P3>();
-    Lst<P3> centers = zone.newPlanePts;
-    Lst<P3> zoneLPs = zone.newLatticePts;
-    Lst<P4> planes = zone.newPlanes;
-    Lst<P3> ap;
-    Lst<P3> al;
+    Lst<P3d> unusedPts = new Lst<P3d>();
+    Lst<P3d> unusedLatticePts = new Lst<P3d>();
+    Lst<P3d> centers = zone.newPlanePts;
+    Lst<P3d> zoneLPs = zone.newLatticePts;
+    Lst<P4d> planes = zone.newPlanes;
+    Lst<P3d> ap;
+    Lst<P3d> al;
     for (int i = 0; i < bzPlanePts.size(); i++) {
-      P3 p = bzPlanePts.get(i);
-      P3 center = P3.newP(p);
+      P3d p = bzPlanePts.get(i);
+      P3d center = P3d.newP(p);
       center.scale(0.5f);
 
       // just a bit over so that all excluding points are found
 
-      float radius = 0.501f * p.length();
-      Lst<P3> inSphere = within(radius, center, bzPlanePts);
+      double radius = 0.501f * p.length();
+      Lst<P3d> inSphere = within(radius, center, bzPlanePts);
 
       // there is always at least one point within this radius -- point p itself
 
@@ -396,21 +396,21 @@ public class BZone {
     bzLatticePts = unusedLatticePts;
   }
 
-  private P4 plane(P3 pt1, P3 pt2, float f) {
+  private P4d plane(P3d pt1, P3d pt2, double f) {
     // plane(<point1>,<point2>,f)
-    V3 norm = V3.newVsub(pt2, pt1);
-    P3 pt3 = new P3();
+    V3d norm = V3d.newVsub(pt2, pt1);
+    P3d pt3 = new P3d();
     pt3.scaleAdd2(f, norm, pt1);
-    P4 plane = new P4();
-    Measure.getPlaneThroughPoint(pt3, norm, plane);
+    P4d plane = new P4d();
+    MeasureD.getPlaneThroughPoint(pt3, norm, plane);
     return plane;
   }
 
-  private Lst<P3> within(float radius, P3 center, Lst<P3> pts) {
-    Lst<P3> ret = new Lst<P3>();
-    float r2 = radius * radius;
+  private Lst<P3d> within(double radius, P3d center, Lst<P3d> pts) {
+    Lst<P3d> ret = new Lst<P3d>();
+    double r2 = radius * radius;
     for (int i = 0, n = pts.size(); i < n; i++) {
-      P3 pt = pts.get(i);
+      P3d pt = pts.get(i);
       if (center.distanceSquared(pt) < r2)
         ret.addLast(pt);
     }
@@ -432,9 +432,9 @@ public class BZone {
     // each subzone will ultimately be a single polyhedron
 
     bzone.subzones = new Lst<BZone>();
-    bzone.newLatticePts = new Lst<P3>();
-    bzone.newPlanePts = new Lst<P3>();
-    bzone.newPlanes = new Lst<P4>();
+    bzone.newLatticePts = new Lst<P3d>();
+    bzone.newPlanePts = new Lst<P3d>();
+    bzone.newPlanes = new Lst<P4d>();
     bzone.volume = 0;
     return bzone;
   }
@@ -464,26 +464,26 @@ public class BZone {
 
     int[][] minmax = new int[3][3];
     // get the max length of an edge
-    P3 pt = new P3();
-    float[] abc = new float[] { newPoint(1, 0, 0, pt).length(),
+    P3d pt = new P3d();
+    double[] abc = new double[] { newPoint(1, 0, 0, pt).length(),
         newPoint(0, 1, 0, pt).length(), newPoint(0, 0, 1, pt).length() };
-    float abcmax = Math.max(abc[0], Math.max(abc[1], abc[2]));
+    double abcmax = Math.max(abc[0], Math.max(abc[1], abc[2]));
 
     for (int i = 0; i < 3; i++) {
       int m = (int) (n * abcmax / abc[i]);
       minmax[i] = new int[] { -m, m };
     }
     //print "setting lattice ranges to " + minmax.format("JSON")
-    Lst<P3> pts = new Lst<P3>();
+    Lst<P3d> pts = new Lst<P3d>();
     for (int i = minmax[0][0]; i <= minmax[0][1]; i++) {
       for (int j = minmax[1][0]; j <= minmax[1][1]; j++) {
         for (int k = minmax[2][0]; k <= minmax[2][1]; k++) {
           // skip Gamma itself
           if (i != 0 || j != 0 || k != 0) {
-            P3 lppt = newPoint(i, j, k, new P3());
-            pts.addLast(P3.newP(lppt));
+            P3d lppt = newPoint(i, j, k, new P3d());
+            pts.addLast(P3d.newP(lppt));
             bzLatticePts.addLast(lppt);
-            P3 ppt = P3.newP(lppt);
+            P3d ppt = P3d.newP(lppt);
             ppt.scale(0.5f);
             bzPlanePts.addLast(ppt);
             System.out.println("draw ID 'pt"  + i + j + k + "' " + lppt); // for testing
@@ -491,10 +491,10 @@ public class BZone {
         }
       }
     }
-    bzLatticePtsAll = pts.toArray(new P3[pts.size()]);
+    bzLatticePtsAll = pts.toArray(new P3d[pts.size()]);
   }
 
-  private P3 newPoint(int i, int j, int k, P3 pt) {
+  private P3d newPoint(int i, int j, int k, P3d pt) {
     pt.x = i;
     pt.y = j;
     pt.z = k;
@@ -544,8 +544,8 @@ public class BZone {
       // subzone.planes will be replaced by planesUsed 
       // subzone.latticePts will be replaced by ptsUsed
 
-      Lst<P4> planesUsed = new Lst<P4>();
-      Lst<P3> ptsUsed = new Lst<P3>();
+      Lst<P4d> planesUsed = new Lst<P4d>();
+      Lst<P3d> ptsUsed = new Lst<P3d>();
 
       double totalArea = 0; 
       for (int i = 0; i < nPlanes; i++) {
@@ -567,8 +567,8 @@ public class BZone {
           }
           totalArea += area;
         }
-        P3 a = null;
-        P3[] face = null;
+        P3d a = null;
+        P3d[] face = null;
         if (area > 0) {
 
           // The new Jmol feature pmesh.getProperty("face") allows us to extract an 
@@ -578,7 +578,7 @@ public class BZone {
           // Here we are seeing if there are already two faces at this center,
           // indicating that we are re-entrant this time.
 
-          face = (P3[]) getProperty(pid, "face");
+          face = (P3d[]) getProperty(pid, "face");
                         
           // this can be [] if a very tiny triangle was found. 
           a = average(face);
@@ -615,14 +615,14 @@ public class BZone {
       return (totalArea > 0);
     }
     
-  private String toScript(P4 p4) {
+  private String toScript(P4d p4) {
     return "{" + p4.x + " " + p4.y + " " + p4.z + " " + p4.w + "}";
   }
 
-  private static P3 ptInner = P3.new3(Float.NaN,  0,  0);
+  private static P3d ptInner = P3d.new3(Double.NaN,  0,  0);
   private Object[] ret = new Object[1];
   String polyid;
-  P3[] pts;
+  P3d[] pts;
   
   private Object getProperty(String name, String key) {
     Object[] data = new Object[3];
@@ -657,16 +657,16 @@ public class BZone {
       // We want a flat array using .join() and a new Jmol feature that
       // uses within(distance, array) to remove the duplicate points.
 
-      P3[] apts = join(subzone.faces);
+      P3d[] apts = join(subzone.faces);
       //print "var pts =" + pts
-      P3[] pts = cleanFace(apts);
+      P3d[] pts = cleanFace(apts);
       //print "pts =" + pts
       subzone.pts = pts;
       subzone.center = average(pts);
       subzone.offset = closest(subzone.center, bzLatticePtsAll); // closest
       subzone.faceIndices = new Lst<int[]>();
       Lst<int[]> ifaces = subzone.faceIndices;
-      Lst<P3[]> faces = subzone.faces;
+      Lst<P3d[]> faces = subzone.faces;
       for (int i = 0, n = faces.size(); i < n; i++) {
         ifaces.addLast(faceIndices(faces.get(i), pts)); 
       }
@@ -683,7 +683,7 @@ public class BZone {
       Hashtable<String, Object> p = new Hashtable<String, Object>();
       p.put("id", id);
       p.put("center", subzone.center);
-      Lst<P3> lst = new Lst<P3>();
+      Lst<P3d> lst = new Lst<P3d>();
       for (int i = 0, n = pts.length; i < n; i++)
         lst.addLast(pts[i]);
       p.put("vertices", lst);
@@ -701,39 +701,39 @@ public class BZone {
       }
   }
 
-  private int[] faceIndices(P3[] p3s, P3[] pts) {
+  private int[] faceIndices(P3d[] p3s, P3d[] pts) {
     PointIterator.withinDistPoints(0, null, pts, p3s, null, ret);
     return (int[]) ret[0];
   }
 
-  private P3 closest(P3 center, P3[] ap3) {
+  private P3d closest(P3d center, P3d[] ap3) {
     PointIterator.withinDistPoints(0, center, ap3, null, null, ret);
-    return (P3) ret[0];
+    return (P3d) ret[0];
   }
 
-  private P3[] cleanFace(P3[] face) {
+  private P3d[] cleanFace(P3d[] face) {
     PointIterator.withinDistPoints(0.01f, ptInner, face, null, null, ret);
     @SuppressWarnings("unchecked")
-    Lst<P3> l = (Lst<P3>) ret[0];
-    return l.toArray(new P3[l.size()]);
+    Lst<P3d> l = (Lst<P3d>) ret[0];
+    return l.toArray(new P3d[l.size()]);
   }
 
-  private P3 average(P3[] face) {
-    P3 a = new P3();
+  private P3d average(P3d[] face) {
+    P3d a = new P3d();
     for (int i = face.length; --i >= 0;)
       a.add(face[i]);
     a.scale(1f/face.length);
     return a;
   }
 
-  private P3[] join(Lst<P3[]> faces) {
+  private P3d[] join(Lst<P3d[]> faces) {
     int n = 0;
     for (int i = faces.size(); --i >= 0;)
       n += faces.get(i).length;
-    P3[] pts = new P3[n];
+    P3d[] pts = new P3d[n];
     n = 0;
     for (int i = faces.size(); --i >= 0;) {
-      P3[] face = faces.get(i);
+      P3d[] face = faces.get(i);
       for (int j = face.length; --j >= 0;)
         pts[n++] = face[j];
     }

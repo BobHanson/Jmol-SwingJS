@@ -3,10 +3,10 @@ package org.jmol.util;
 
 import javajs.util.AU;
 import javajs.util.M3d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 
 import org.jmol.api.GenericPlatform;
@@ -263,7 +263,7 @@ public class GData implements JmolGraphicsInterface {
     if (shader.phongExponent == val && shader.usePhongExponent)
       return;
     shader.phongExponent = val;
-    float x = (float) (Math.log(val) / Math.log(2));
+    double x = (double) (Math.log(val) / Math.log(2));
     shader.usePhongExponent = (x != (int) x);
     if (!shader.usePhongExponent)
       shader.specularExponent = (int) x;
@@ -331,7 +331,7 @@ public class GData implements JmolGraphicsInterface {
     shader.setCel(shader.celOn || shader.celPower == 0, celPower, bgcolor);
   }
 
-  public V3 getLightSource() {
+  public V3d getLightSource() {
     return shader.lightSource;
   }
 
@@ -399,21 +399,21 @@ public class GData implements JmolGraphicsInterface {
    * a fontID is a byte that contains the size + the face + the style
    * ***************************************************************/
 
-  public Font getFont3D(float fontSize) {
+  public Font getFont3D(double fontSize) {
     return Font.createFont3D(Font.FONT_FACE_SANS, Font.FONT_STYLE_PLAIN,
         fontSize, fontSize, apiPlatform, graphicsForMetrics);
   }
 
-  public Font getFont3DFS(String fontFace, float fontSize) {
+  public Font getFont3DFS(String fontFace, double fontSize) {
     return Font.createFont3D(Font.getFontFaceID(fontFace),
         Font.FONT_STYLE_PLAIN, fontSize, fontSize, apiPlatform, graphicsForMetrics);
   }
 
-  public int getFontFidFS(String fontFace, float fontSize) {
+  public int getFontFidFS(String fontFace, double fontSize) {
     return getFont3DFSS(fontFace, "Bold", fontSize).fid;
   }
 
-  public Font getFont3DFSS(String fontFace, String fontStyle, float fontSize) {
+  public Font getFont3DFSS(String fontFace, String fontStyle, double fontSize) {
     int iStyle = Font.getFontStyleID(fontStyle);
     if (iStyle < 0)
       iStyle = 0;
@@ -421,14 +421,14 @@ public class GData implements JmolGraphicsInterface {
         fontSize, apiPlatform, graphicsForMetrics);
   }
 
-  public Font getFont3DScaled(Font font, float scale) {
+  public Font getFont3DScaled(Font font, double scale) {
     // TODO: problem here is that we are assigning a bold font, then not DEassigning it
-    float newScale = font.fontSizeNominal * scale;
+    double newScale = font.fontSizeNominal * scale;
     return (newScale == font.fontSize ? font : Font.createFont3D(
         font.idFontFace, font.idFontStyle, newScale, font.fontSizeNominal, apiPlatform, graphicsForMetrics));
   }
 
-  public int getFontFidI(float fontSize) {
+  public int getFontFidI(double fontSize) {
     return getFont3D(fontSize).fid;
   }
 
@@ -445,7 +445,7 @@ public class GData implements JmolGraphicsInterface {
     // see Graphics3D
   }
   
-  public void setFontBold(String fontFace, float fontSize) {
+  public void setFontBold(String fontFace, double fontSize) {
     setFont(getFont3DFSS(fontFace, "Bold", fontSize));
   }
 
@@ -556,8 +556,8 @@ public class GData implements JmolGraphicsInterface {
   public void clearFontCache() {
   }
 
-  public void drawQuadrilateralBits(JmolRendererInterface jmolRenderer, short colix, P3 screenA, P3 screenB,
-                                    P3 screenC, P3 screenD) {
+  public void drawQuadrilateralBits(JmolRendererInterface jmolRenderer, short colix, P3d screenA, P3d screenB,
+                                    P3d screenC, P3d screenD) {
     //mesh only -- translucency has been checked
     jmolRenderer.drawLineBits(colix, colix, screenA, screenB);
     jmolRenderer.drawLineBits(colix, colix, screenB, screenC);
@@ -565,8 +565,8 @@ public class GData implements JmolGraphicsInterface {
     jmolRenderer.drawLineBits(colix, colix, screenD, screenA);
   }
 
-  public void drawTriangleBits(JmolRendererInterface renderer, P3 screenA, short colixA, P3 screenB,
-                               short colixB, P3 screenC, short colixC, int check) {
+  public void drawTriangleBits(JmolRendererInterface renderer, P3d screenA, short colixA, P3d screenB,
+                               short colixB, P3d screenC, short colixC, int check) {
     // primary method for mapped Mesh
     if ((check & 1) == 1)
       renderer.drawLineBits(colixA, colixB, screenA, screenB);
@@ -685,23 +685,23 @@ public class GData implements JmolGraphicsInterface {
    * @param n
    * @param isPt
    */
-  public static void getHermiteList(int tension, T3 p0, T3 p1,
-                                    T3 p2, T3 p3, T3 p4,
-                                    T3[] list, int index0, int n, boolean isPt) {
+  public static void getHermiteList(int tension, T3d p0, T3d p1,
+                                    T3d p2, T3d p3, T3d p4,
+                                    T3d[] list, int index0, int n, boolean isPt) {
     //always deliver ONE MORE than one might expect, to provide a normal
     int nPoints = n + 1;
-    float fnPoints = n - 1;
-    float x1 = p1.x, y1 = p1.y, z1 = p1.z;
-    float x2 = p2.x, y2 = p2.y, z2 = p2.z;
-    float xT1 = ((x2 - p0.x) * tension) / 8;
-    float yT1 = ((y2 - p0.y) * tension) / 8;
-    float zT1 = ((z2 - p0.z) * tension) / 8;
-    float xT2 = ((p3.x - x1) * tension) / 8;
-    float yT2 = ((p3.y - y1) * tension) / 8;
-    float zT2 = ((p3.z - z1) * tension) / 8;
-    float xT3 = ((p4.x - x2) * tension) / 8;
-    float yT3 = ((p4.y - y2) * tension) / 8;
-    float zT3 = ((p4.z - z2) * tension) / 8;
+    double fnPoints = n - 1;
+    double x1 = p1.x, y1 = p1.y, z1 = p1.z;
+    double x2 = p2.x, y2 = p2.y, z2 = p2.z;
+    double xT1 = ((x2 - p0.x) * tension) / 8;
+    double yT1 = ((y2 - p0.y) * tension) / 8;
+    double zT1 = ((z2 - p0.z) * tension) / 8;
+    double xT2 = ((p3.x - x1) * tension) / 8;
+    double yT2 = ((p3.y - y1) * tension) / 8;
+    double zT2 = ((p3.z - z1) * tension) / 8;
+    double xT3 = ((p4.x - x2) * tension) / 8;
+    double yT3 = ((p4.y - y2) * tension) / 8;
+    double zT3 = ((p4.z - z2) * tension) / 8;
     list[index0] = p1;
     for (int i = 0; i < nPoints; i++) {
       double s = i / fnPoints;
@@ -726,10 +726,10 @@ public class GData implements JmolGraphicsInterface {
       double h2 = -2 * s3 + 3 * s2;
       double h3 = s3 - 2 * s2 + s;
       double h4 = s3 - s2;
-      float x = (float) (h1 * x1 + h2 * x2 + h3 * xT1 + h4 * xT2);
-      float y = (float) (h1 * y1 + h2 * y2 + h3 * yT1 + h4 * yT2);
-      float z = (float) (h1 * z1 + h2 * z2 + h3 * zT1 + h4 * zT2);
-      list[index0 + i] = (isPt ? P3.new3(x, y, z) : V3.new3(x, y, z));
+      double x = (double) (h1 * x1 + h2 * x2 + h3 * xT1 + h4 * xT2);
+      double y = (double) (h1 * y1 + h2 * y2 + h3 * yT1 + h4 * yT2);
+      double z = (double) (h1 * z1 + h2 * z2 + h3 * zT1 + h4 * zT2);
+      list[index0 + i] = (isPt ? P3d.new3(x, y, z) : V3d.new3(x, y, z));
     }
   }
 
@@ -741,9 +741,9 @@ public class GData implements JmolGraphicsInterface {
     return textY;
   }
 
-  protected V3[] transformedVectors = new V3[normixCount];
+  protected V3d[] transformedVectors = new V3d[normixCount];
 
-  public V3[] getTransformedVertexVectors() {
+  public V3d[] getTransformedVertexVectors() {
     return transformedVectors;
   }
 

@@ -332,17 +332,17 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
   public void stateChanged(ChangeEvent e) {
     JSlider source = (JSlider) e.getSource();
     if (source == angleXYSlider || source == angleZSlider) {
-      float tempAngleZ = (float) (Math.PI * angleZSlider.getValue() / 180);
-      float tempAngleXY = (float) (Math.PI * angleXYSlider.getValue() / 180);
+      double tempAngleZ = (double) (Math.PI * angleZSlider.getValue() / 180);
+      double tempAngleXY = (double) (Math.PI * angleXYSlider.getValue() / 180);
       slicer.setSliceAnglefromZ(tempAngleZ);
       slicer.setSliceAngleXY(tempAngleXY);
       if (!source.getValueIsAdjusting())
         sliceSelected();
     }
     if (source == positionSlider || source == thicknessSlider) {
-      float tempThickness = thicknessSlider.getValue()
+      double tempThickness = thicknessSlider.getValue()
           * slicer.getThicknessMax() / 180;
-      float tempPos = positionSlider.getValue() * slicer.getThicknessMax()
+      double tempPos = positionSlider.getValue() * slicer.getThicknessMax()
           / 180 + slicer.getPositionMin();
       slicer.setSliceThickness(tempThickness);
       slicer.setSlicePosition(tempPos);
@@ -403,7 +403,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
     Hashtable<Integer, JLabel> positionLabels = new Hashtable<Integer, JLabel>();
     String temp = "";
     for (int i = 0; i < 7; i++) {
-      float tempVal = (float) (slicer.getPositionMin() + i * 0.16666666666
+      double tempVal = (double) (slicer.getPositionMin() + i * 0.16666666666
           * slicer.getThicknessMax());
       if (Math.abs(tempVal) < 0.001)
         tempVal = 0;
@@ -428,7 +428,7 @@ class SurfaceToolGUI extends JPanel implements WindowConstants, WindowListener,
     Hashtable<Integer, JLabel> thicknessLabels = new Hashtable<Integer, JLabel>();
     String temp = "";
     for (int i = 0; i < 7; i++) {
-      float tempVal = (float) (i * 0.16666666666 * slicer.getThicknessMax());
+      double tempVal = (double) (i * 0.16666666666 * slicer.getThicknessMax());
       temp = "" + tempVal;
       if (temp.length() > 5) {
         temp = temp.substring(0, 4);

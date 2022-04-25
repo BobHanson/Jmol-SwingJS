@@ -45,7 +45,7 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
 
   private final static int DEFAULT = 64;
   private int[] ax = new int[3], ay = new int[3], az = new int[3];
-  private float[] aa = new float[DEFAULT], bb = new float[DEFAULT];
+  private double[] aa = new double[DEFAULT], bb = new double[DEFAULT];
   private int[] axW = new int[DEFAULT], azW = new int[DEFAULT];
   private int[] axE = new int[DEFAULT], azE = new int[DEFAULT];
 
@@ -166,8 +166,8 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       azW = new int[n];
       axE = new int[n];
       azE = new int[n];
-      aa = new float[n];
-      bb = new float[n];
+      aa = new double[n];
+      bb = new double[n];
       rgb16sW = reallocRgb16s(rgb16sW, n);
       rgb16sE = reallocRgb16s(rgb16sE, n);
     }
@@ -351,8 +351,8 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       xMajorError = width % dy;
     }
     setRastAB(ay[iN], az[iN], ay[iS], az[iS]);
-    float a0 = a;
-    float b0 = b;
+    double a0 = a;
+    double b0 = b;
     boolean isEast = (axRaster == axE);
     for (int y = 0, zy = ay[iN], lastY = dy - 1, i = iRaster; y <= lastY; ++i, ++y, ++zy) {
       if (i == 0 || i > iRaster) { // must always skip first on second time around

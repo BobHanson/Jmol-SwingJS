@@ -27,7 +27,7 @@ import java.io.BufferedReader;
 
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 class CastepDensityReader extends PeriodicVolumeFileReader {
 
@@ -72,7 +72,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
       // skip front stuff
     }
     for (int i = 0; i < 3; ++i) {
-      V3 voxelVector = volumetricVectors[i];
+      V3d voxelVector = volumetricVectors[i];
       voxelVector.set(parseFloatStr(line), parseFloat(), parseFloat());
       rd();
     }

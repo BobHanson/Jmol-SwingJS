@@ -27,7 +27,7 @@ package org.jmol.multitouch;
 
 
 import java.util.List;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import com.sparshui.GestureType;
 
@@ -44,5 +44,5 @@ public interface JmolMultiTouchClient {
   public int getGroupID(int x, int y);
   public List<GestureType> getAllowedGestures(int groupID);
   public void processMultitouchEvent(int groupID, int eventType, int touchID, 
-                           int iData, P3 pt, long time);
+                           int iData, P3d pt, long time);
 }

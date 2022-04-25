@@ -164,7 +164,7 @@ public class JmolMolecule {
     return molecules;
   }
   
-  public static String getMolecularFormulaAtoms(Node[] atoms, BS bsSelected,float[] wts, boolean isEmpirical) {
+  public static String getMolecularFormulaAtoms(Node[] atoms, BS bsSelected,double[] wts, boolean isEmpirical) {
     JmolMolecule m = new JmolMolecule();
     m.nodes = atoms;
     m.atomList = bsSelected;
@@ -172,12 +172,12 @@ public class JmolMolecule {
   }
   
   public String getMolecularFormula(boolean includeMissingHydrogens,
-                                    float[] wts, boolean isEmpirical) {
+                                    double[] wts, boolean isEmpirical) {
     return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical);
   }
   
   public String getMolecularFormulaImpl(boolean includeMissingHydrogens,
-                                        float[] wts, boolean isEmpirical) {
+                                        double[] wts, boolean isEmpirical) {
     if (mf != null)
       return mf;
     // get element and atom counts

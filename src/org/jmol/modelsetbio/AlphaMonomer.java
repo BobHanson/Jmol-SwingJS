@@ -32,9 +32,9 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Structure;
 
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.Qd;
+import javajs.util.V3d;
 import org.jmol.viewer.JC;
 
 public class AlphaMonomer extends Monomer {
@@ -63,7 +63,7 @@ public class AlphaMonomer extends Monomer {
   boolean isAlphaMonomer() { return true; }
 
   public ProteinStructure proteinStructure;
-  protected P3 nitrogenHydrogenPoint;
+  protected P3d nitrogenHydrogenPoint;
 //  private Map<String, Annotation> annotations;
   
   @Override
@@ -169,7 +169,7 @@ public class AlphaMonomer extends Monomer {
             : null);
   }
 
-  final public P3 getAtomPoint(byte specialAtomID) {
+  final public P3d getAtomPoint(byte specialAtomID) {
     return (specialAtomID == JC.ATOMID_ALPHA_CARBON
             ? getLeadAtom()
             : null);
@@ -186,7 +186,7 @@ public class AlphaMonomer extends Monomer {
   }
   
   @Override
-  P3 getQuaternionFrameCenter(char qType) {
+  P3d getQuaternionFrameCenter(char qType) {
     return getQuaternionFrameCenterAlpha(qType);
   }
 
@@ -195,7 +195,7 @@ public class AlphaMonomer extends Monomer {
     return (proteinStructure != null && proteinStructure.type == type && proteinStructure.isWithin(monomerIndex));
   }
   
-  protected P3 getQuaternionFrameCenterAlpha(char qType) {
+  protected P3d getQuaternionFrameCenterAlpha(char qType) {
     switch (qType) {
     case 'b':
     case 'c':
@@ -218,11 +218,11 @@ public class AlphaMonomer extends Monomer {
   }
   
   @Override
-  public Quat getQuaternion(char qType) {
+  public Qd getQuaternion(char qType) {
     return getQuaternionAlpha(qType);
   }
 
-  protected Quat getQuaternionAlpha(char qType) {
+  protected Qd getQuaternionAlpha(char qType) {
     if (monomerIndex < 0)
       return null;
     /*
@@ -232,9 +232,9 @@ public class AlphaMonomer extends Monomer {
      *   
      */
     
-    V3 vA = new V3();
-    V3 vB = new V3();
-    V3 vC = null;
+    V3d vA = new V3d();
+    V3d vB = new V3d();
+    V3d vC = null;
 
     switch (qType) {
     default:
@@ -251,14 +251,14 @@ public class AlphaMonomer extends Monomer {
       if (monomerIndex == 0 
           || monomerIndex == bioPolymer.monomerCount - 1)
         return null;
-      P3 ptCa = getLeadAtom();
-      P3 ptCaNext = bioPolymer.getLeadPoint(monomerIndex + 1);
-      P3 ptCaPrev = bioPolymer.getLeadPoint(monomerIndex - 1);
+      P3d ptCa = getLeadAtom();
+      P3d ptCaNext = bioPolymer.getLeadPoint(monomerIndex + 1);
+      P3d ptCaPrev = bioPolymer.getLeadPoint(monomerIndex - 1);
       vA.sub2(ptCaNext, ptCa);
       vB.sub2(ptCaPrev, ptCa);
       break;
     }
-    return Quat.getQuaternionFrameV(vA, vB, vC, false);
+    return Qd.getQuaternionFrameV(vA, vB, vC, false);
   }
   
 

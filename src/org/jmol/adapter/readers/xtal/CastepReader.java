@@ -48,7 +48,7 @@ import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.V3d;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
@@ -104,7 +104,7 @@ public class CastepReader extends AtomSetCollectionReader {
   private boolean havePhonons = false;
   private String lastQPt;
   private int qpt2;
-  private V3 desiredQpt;
+  private V3d desiredQpt;
   private String desiredQ;
 
   private String chargeType = "MULL";
@@ -133,7 +133,7 @@ public class CastepReader extends AtomSetCollectionReader {
   }
 
   private void setDesiredQpt(String s) {
-    desiredQpt = new V3();
+    desiredQpt = new V3d();
     desiredQ = "";
     double num = 1;
     double denom = 1;
@@ -168,13 +168,13 @@ public class CastepReader extends AtomSetCollectionReader {
         num /= denom;
         switch (xyz++) {
         case 0:
-          desiredQpt.x = (float) num;
+          desiredQpt.x = (double) num;
           break;
         case 1:
-          desiredQpt.y = (float) num;
+          desiredQpt.y = (double) num;
           break;
         case 2:
-          desiredQpt.z = (float) num;
+          desiredQpt.z = (double) num;
           break;
         }
         denom = 1;
@@ -337,7 +337,7 @@ public class CastepReader extends AtomSetCollectionReader {
     try {
       Double energy = Double.valueOf(Double.parseDouble(tokens[pt]));
       asc.setAtomSetName(prefix + "Energy = " + energy + " eV");
-      asc.setAtomSetEnergy("" + energy, energy.floatValue());
+      asc.setAtomSetEnergy("" + energy, energy.doubleValue());
       asc.setCurrentModelInfo("Energy", energy);
     } catch (Exception e) {
       appendLoadNote("CASTEP Energy could not be read: " + line);
@@ -705,9 +705,9 @@ Species   Ion     s      p      d      f     Total  Charge (e)
 
   private void readPhononFrequencies() throws Exception {
     tokens = getTokens();
-    V3 v = new V3();
-    V3 qvec = V3.new3((float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]),
-        (float) parseDoubleStr(tokens[4]));
+    V3d v = new V3d();
+    V3d qvec = V3d.new3((double) parseDoubleStr(tokens[2]), (double) parseDoubleStr(tokens[3]),
+        (double) parseDoubleStr(tokens[4]));
     String fcoord = getFractionalCoord(qvec);
     String qtoks = "{" + tokens[2] + " " + tokens[3] + " " + tokens[4] + "}";
     if (fcoord == null)
@@ -768,10 +768,10 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     applySymmetryAndSetTrajectory();
     if (isGammaPoint)
       qvec = null;
-    Lst<Float> freqs = new  Lst<Float>();
+    Lst<Double> freqs = new  Lst<Double>();
     while (rd() != null && line.indexOf("Phonon") < 0) {
       tokens = getTokens();
-      freqs.addLast(Float.valueOf((float) parseDoubleStr(tokens[1])));
+      freqs.addLast(Double.valueOf((double) parseDoubleStr(tokens[1])));
     }
     rd();
     int frequencyCount = freqs.size();
@@ -792,7 +792,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       }
       symmetry = asc.getSymmetry();
       int iatom = asc.getLastAtomSetAtomIndex();
-      double freq = freqs.get(i).floatValue();
+      double freq = freqs.get(i).doubleValue();
       Atom[] atoms = asc.atoms;
       int aCount = asc.ac;
       for (int j = 0; j < ac; j++) {
@@ -819,7 +819,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
 
   private M4d matSupercell;
 
-  private String getFractionalCoord(V3 qvec) {
+  private String getFractionalCoord(V3d qvec) {
     return (symmetry != null && isInt(qvec.x * 12) 
         && isInt(qvec.y * 12) && isInt(qvec.z * 12) ? symmetry.fcoord(qvec)
         : null);
@@ -846,10 +846,10 @@ Species   Ion     s      p      d      f     Total  Charge (e)
    *        return vector
    */
   private void setPhononVector(double[] data, Atom atom, V3d rTrans,
-                               V3 qvec, V3 v) {
+                               V3d qvec, V3d v) {
     // complex[r/i] vx = data[2/3], vy = data[4/5], vz = data[6/7]
     if (qvec == null) {
-      v.set((float) data[2], (float) data[4], (float) data[6]);
+      v.set((double) data[2], (double) data[4], (double) data[6]);
     } else {
       // from CASTEP ceteprouts.pm:
       //  $phase = $qptx*$$sh[0] + $qpty*$$sh[1] + $qptz*$$sh[2];
@@ -861,11 +861,11 @@ Species   Ion     s      p      d      f     Total  Charge (e)
       double phase = (qvec.x * rTrans.x + qvec.y * rTrans.y + qvec.z * rTrans.z);
       double cosph = Math.cos(TWOPI * phase);
       double sinph = Math.sin(TWOPI * phase);
-      v.x = (float) (cosph * data[2] - sinph * data[3]);
-      v.y = (float) (cosph * data[4] - sinph * data[5]);
-      v.z = (float) (cosph * data[6] - sinph * data[7]);
+      v.x = (double) (cosph * data[2] - sinph * data[3]);
+      v.y = (double) (cosph * data[4] - sinph * data[5]);
+      v.z = (double) (cosph * data[6] - sinph * data[7]);
     }
-    v.scale((float) Math.sqrt(1 / atom.bfactor)); // mass stored in bfactor
+    v.scale((double) Math.sqrt(1 / atom.bfactor)); // mass stored in bfactor
   }
 
 }

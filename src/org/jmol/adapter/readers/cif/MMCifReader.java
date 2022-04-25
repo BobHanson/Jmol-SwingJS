@@ -585,7 +585,7 @@ public class MMCifReader extends CifReader {
 
   private boolean processStructOperListBlock(boolean isNCS) throws Exception {
     parseLoopParametersFor((isNCS ? FAMILY_NCS : FAMILY_OPER), isNCS ? ncsoperFields : operFields);
-    float[] m = new float[16];
+    double[] m = new double[16];
     m[15] = 1;
     while (cifParser.getData()) {
       int count = 0;
@@ -604,7 +604,7 @@ public class MMCifReader extends CifReader {
           xyz = field;
           break;
         default:
-          m[p] = (float) parseDoubleStr(field);
+          m[p] = (double) parseDoubleStr(field);
           ++count;
         }
       }
@@ -617,7 +617,7 @@ public class MMCifReader extends CifReader {
           m[7] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B) / 12;
           m[11] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C) / 12;
         }
-        m4.setAF(m);
+        m4.setA(m);
         addMatrix(id, m4, isNCS);
       }
     }

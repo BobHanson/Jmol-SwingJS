@@ -109,7 +109,7 @@ import org.openscience.jmol.app.webexport.WebExport;
 
 import javajs.async.AsyncFileChooser;
 import javajs.util.JSJSONParser;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
@@ -2135,7 +2135,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     // raw touch event
     vwr.acm.processMultitouchEvent(
         0, JsonNioService.getInt(json, "eventType"), JsonNioService.getInt(json, "touchID"),
-        JsonNioService.getInt(json, "iData"), P3.new3((float) JsonNioService.getDouble(json, "x"),
+        JsonNioService.getInt(json, "iData"), P3d.new3((float) JsonNioService.getDouble(json, "x"),
             (float) JsonNioService.getDouble(json, "y"), (float) JsonNioService.getDouble(json, "z")),
         JsonNioService.getLong(json, "time"));
     break;

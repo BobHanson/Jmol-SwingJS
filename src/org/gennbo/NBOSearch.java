@@ -1750,8 +1750,8 @@ class NBOSearch extends NBOView {
   private boolean processSearchLabel(SB sbLog, SB sb, String line, int count, int mode) {
     switch (mode) {
     case MODE_SEARCH_ATOM_VALUES:
-      float v = PT.parseFloat(line);
-      if (Float.isNaN(v)) {
+      double v = PT.parseDouble(line);
+      if (Double.isNaN(v)) {
         System.out
             .println("SEARCH: atomic value list processing ended unexpectedly!");
         return false;
@@ -1764,14 +1764,14 @@ class NBOSearch extends NBOView {
       break;
     case MODE_SEARCH_BOND_VALUES:
       String[] toks = PT.getTokens(line);
-      float order = Float.NaN;
+      double order = Double.NaN;
       int atom1 = 0, atom2 = 0;
       if (toks.length == 3) {
         atom1 = PT.parseInt(toks[0]);
         atom2 = PT.parseInt(toks[1]);
-        order = PT.parseFloat(toks[2]);
+        order = PT.parseDouble(toks[2]);
       }
-      if (Float.isNaN(order)) {
+      if (Double.isNaN(order)) {
         System.out
             .println("SEARCH: bond value list processing ended unexpectedly!");
         return false;

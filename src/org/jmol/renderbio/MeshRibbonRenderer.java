@@ -39,12 +39,12 @@ public class MeshRibbonRenderer extends StrandsRenderer {
   protected void renderMeshRibbon() {
     if (!setStrandCount())
       return;
-    float offset = ((strandCount >> 1) * strandSeparation) + baseStrandOffset;
+    double offset = ((strandCount >> 1) * strandSeparation) + baseStrandOffset;
     render2Strand(false, offset, offset);
     renderStrands();
   }
 
-  protected void render2Strand(boolean doFill, float offsetTop, float offsetBottom) {
+  protected void render2Strand(boolean doFill, double offsetTop, double offsetBottom) {
     calcScreenControlPoints();
     ribbonTopScreens = calcScreens(offsetTop, mads);
     ribbonBottomScreens = calcScreens(-offsetBottom, mads);

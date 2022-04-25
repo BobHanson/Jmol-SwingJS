@@ -33,10 +33,10 @@ import java.util.Map;
 import javajs.util.BS;
 
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.T3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.T3d;
 import org.jmol.viewer.Viewer;
 
 /*
@@ -99,7 +99,7 @@ public class _PovrayExporter extends __RayTracerExporter {
     output("#declare showBonds = true;\n");
     output("#declare noShadows = true;\n");
     output("camera{\n");
-    float offsetX, offsetY, f;
+    double offsetX, offsetY, f;
     if (wasPerspective) {
       offsetX = vwr.tm.getTranslationXPercent() / 100 * screenWidth;
       offsetY = vwr.tm.getTranslationYPercent() / 100 * screenHeight;
@@ -130,7 +130,7 @@ public class _PovrayExporter extends __RayTracerExporter {
 
     // light source
 
-    float distance = Math.max(screenWidth, screenHeight);
+    double distance = Math.max(screenWidth, screenHeight);
     output("light_source { <" + lightSource.x * distance + "," + lightSource.y
         * distance + ", " + (-1 * lightSource.z * distance) + "> "
         + " rgb <0.6,0.6,0.6> }\n");
@@ -319,8 +319,8 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected String getTriad(T3 pt) {
-    if (Float.isNaN(pt.x))
+  protected String getTriad(T3d pt) {
+    if (Double.isNaN(pt.x))
       return "0,0,0";
     return pt.x + "," + pt.y + "," + pt.z;
   }
@@ -358,12 +358,12 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     output(", <" + getTriad(pt) + ">");    
   }
   
   @Override
-  protected void outputCircle(int x, int y, int z, float radius, short colix,
+  protected void outputCircle(int x, int y, int z, double radius, short colix,
                               boolean doFill) {
     output((doFill ? "b(" : "c(") + x + "," + y + "," + z + "," + radius + ","
         + x + "," + y + "," + (z + 1) + "," + (radius + (doFill ? 0 : 2)) + ","
@@ -371,14 +371,14 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCone(P3 screenBase, P3 screenTip, float radius,
+  protected void outputCone(P3d screenBase, P3d screenTip, double radius,
                             short colix, boolean isBarb) {
     if (isBarb) {
       if (!haveMacros)
         writeMacros2();
       tempP1.set(screenBase.x, screenTip.y, 12345.6789f);
-      P4 plane = Measure.getPlaneThroughPoints(screenBase, screenTip, tempP1,
-          tempV1, tempV2, new P4());
+      P4d plane = MeasureD.getPlaneThroughPoints(screenBase, screenTip, tempP1,
+          tempV1, tempV2, new P4d());
       output("barb(" + getTriad(screenBase) + "," + radius + ","
           + getTriad(screenTip) + ",0" + "," + color4(colix) + "," + plane.x
           + "," + plane.y + "," + plane.z + "," + -plane.w + ")\n");
@@ -389,7 +389,7 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCylinder(P3 screenA, P3 screenB, float radius,
+  protected void outputCylinder(P3d screenA, P3d screenB, double radius,
                               short colix, boolean withCaps) {
     String color = color4(colix);
     output((withCaps ? "b(" : "c(") 
@@ -398,14 +398,14 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected void outputCylinderConical(P3 screenA, P3 screenB,
-                                       float radius1, float radius2, short colix) {
+  protected void outputCylinderConical(P3d screenA, P3d screenB,
+                                       double radius1, double radius2, short colix) {
     output("b(" + getTriad(screenA) + "," + radius1 + "," + getTriad(screenB) + ","
         + radius2 + "," + color4(colix) + ")\n");
   }
 
   @Override
-  protected void outputEllipsoid(P3 center, float radius, double[] coef, short colix) {
+  protected void outputEllipsoid(P3d center, double radius, double[] coef, short colix) {
     // no quadrant cut-out here
     String s = coef[0] + "," + coef[1] + "," + coef[2] + "," + coef[3] + ","
         + coef[4] + "," + coef[5] + "," + coef[6] + "," + coef[7] + ","
@@ -414,12 +414,12 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals,
+  protected void outputSurface(T3d[] vertices, T3d[] normals,
                                   short[] colixes, int[][] indices, 
                                   short[] polygonColixes,
                                   int nVertices, int nPolygons, int nTriangles, BS bsPolygons,
                                   int faceVertexMax, short colix,
-                                  Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                                  Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
     if (polygonColixes != null) {
       boolean isAll = (bsPolygons == null);
       int i0 = (isAll ? nPolygons - 1 : bsPolygons.nextSetBit(0));
@@ -531,7 +531,7 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputSphere(float x, float y, float z, float radius,
+  protected void outputSphere(double x, double y, double z, double radius,
                                   short colix) {
    output("a(" + x + "," + y + "," + z + "," + radius + ","
         + color4(colix) + ")\n");
@@ -542,7 +542,7 @@ public class _PovrayExporter extends __RayTracerExporter {
     if (!haveMacros)
       writeMacros2();
     //text only
-    float tr = ((argb>>24) & 0xFF);
+    double tr = ((argb>>24) & 0xFF);
     
     tr = (255 - tr) / 255;
     output("p(" + x + "," + y + "," + z + "," + 
@@ -550,7 +550,7 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix) {
+  protected void outputTriangle(T3d ptA, T3d ptB, T3d ptC, short colix) {
     if (!haveMacros)
       writeMacros2();
     //cartoons, mesh, isosurface

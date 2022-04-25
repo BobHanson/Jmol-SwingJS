@@ -37,8 +37,8 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 
 /**
@@ -50,7 +50,7 @@ public class NucleicRenderer {
   private boolean cartoonBaseEdges;
   
   private boolean cartoonBlocks;
-  private float blockHeight;
+  private double blockHeight;
     
     
 
@@ -63,11 +63,11 @@ public class NucleicRenderer {
   
   //// nucleic acid base rendering
   
-  private P3[] rPt, rPt5;
-  private P3[] rScr, rScr5;
-  private P3 basePt, backbonePt;
-  private P3 baseScreen, backboneScreen;
-  private P3 ptTemp;
+  private P3d[] rPt, rPt5;
+  private P3d[] rScr, rScr5;
+  private P3d basePt, backbonePt;
+  private P3d baseScreen, backboneScreen;
+  private P3d ptTemp;
   private Viewer vwr;
   private TransformManager tm;
   private JmolRendererInterface g3d;
@@ -78,19 +78,19 @@ public class NucleicRenderer {
   
   void renderNucleic(BioShapeRenderer renderer) {
     if (this.vwr == null) {
-      rPt = new P3[10];
-      rScr = new P3[10];
-      rPt5 = new P3[5];
-      rScr5 = new P3[5];
-      backboneScreen = new P3();
-      backbonePt = new P3();
+      rPt = new P3d[10];
+      rScr = new P3d[10];
+      rPt5 = new P3d[5];
+      rScr5 = new P3d[5];
+      backboneScreen = new P3d();
+      backbonePt = new P3d();
       bsr = renderer;
       tm = renderer.vwr.tm;
       vwr = renderer.vwr;
     }
     this.g3d = renderer.g3d;
-    T3[] screens = renderer.controlPointScreens;
-    T3[] pts = renderer.controlPoints;
+    T3d[] screens = renderer.controlPointScreens;
+    T3d[] pts = renderer.controlPoints;
     
     // order of checking for TRUE is:
     // Blocks, BaseEdges, Steps, Ladders, Ribose
@@ -99,12 +99,12 @@ public class NucleicRenderer {
     cartoonSteps = vwr.getBoolean(T.cartoonsteps);
     cartoonLadders = vwr.getBoolean(T.cartoonladders);
     cartoonRibose = vwr.getBoolean(T.cartoonribose);
-    blockHeight = vwr.getFloat(T.cartoonblockheight);
+    blockHeight = vwr.getDouble(T.cartoonblockheight);
     boolean isTraceAlpha = vwr.getBoolean(T.tracealpha);
     BS bsVisible = bsr.bsVisible;
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible
         .nextSetBit(i + 1)) {
-      T3 scr = screens[i + 1];
+      T3d scr = screens[i + 1];
       if (isTraceAlpha) {
         backboneScreen.ave(screens[i], scr);
         backbonePt.ave(pts[i], pts[i + 1]);
@@ -123,19 +123,19 @@ public class NucleicRenderer {
     }
   }
 
-  private void renderNucleicBaseStep(int im, T3 ptPnext, T3 scrPnext) {
+  private void renderNucleicBaseStep(int im, T3d ptPnext, T3d scrPnext) {
     if (bsr.isPhosphorusOnly)
       return;
     NucleicMonomer nucleotide = (NucleicMonomer) bsr.monomers[im];
     short thisMad = bsr.mad = bsr.mads[im];
     if (rScr[0] == null) {
       for (int i = 10; --i >= 0;)
-        rScr[i] = new P3();
+        rScr[i] = new P3d();
       for (int i = 5; --i >= 0;)
-        rScr5[i] = new P3();
-      baseScreen = new P3();
-      basePt = new P3();
-      rPt[9] = new P3(); // ribose center
+        rScr5[i] = new P3d();
+      baseScreen = new P3d();
+      basePt = new P3d();
+      rPt[9] = new P3d(); // ribose center
     }
     if (cartoonBlocks) {
       renderBlock(nucleotide);
@@ -153,8 +153,8 @@ public class NucleicRenderer {
     transformPoints(6, rPt, rScr);
     if (!cartoonLadders)
       renderRing6();
-    P3 stepScreen;
-    P3 stepPt;
+    P3d stepScreen;
+    P3d stepPt;
     int pt;
 
     //private final static byte[] ring6OffsetIndexes = {C5, C6, N1, C2, N3, C4};
@@ -178,7 +178,7 @@ public class NucleicRenderer {
       stepPt = rPt[pt];
     }
     short mad = (short) (thisMad > 1 ? thisMad / 2 : thisMad);
-    float r = mad / 2000f;
+    double r = mad / 2000f;
     int w = (int) vwr.tm.scaleToScreen((int) backboneScreen.z, mad);
     if (cartoonLadders || !cartoonRibose)
       g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, w, backboneScreen,
@@ -194,7 +194,7 @@ public class NucleicRenderer {
       baseScreen.setT(stepScreen);
       basePt.setT(stepPt);
       nucleotide.getRiboseRing5Points(rPt);
-      P3 c = rPt[9];
+      P3d c = rPt[9];
       c.set(0, 0, 0);
       for (int i = 0; i < 5; i++)
         c.add(rPt[i]);
@@ -208,7 +208,7 @@ public class NucleicRenderer {
       renderEdge(rScr, rPt, 0, 4); // C1' - O4'
       renderCyl(rScr[0], baseScreen, rPt[0], basePt); // C1' - N1 or N9
       if (ptPnext != null)
-        renderCyl(rScr[5], (P3) scrPnext, rPt[5], (P3) ptPnext); // O3' - P(+1)
+        renderCyl(rScr[5], (P3d) scrPnext, rPt[5], (P3d) ptPnext); // O3' - P(+1)
       drawEdges(rScr, rPt, 5);
     }
   }
@@ -232,7 +232,7 @@ public class NucleicRenderer {
     }  
   }
 
-  private P3[] scrBox;
+  private P3d[] scrBox;
   private final int[] triangles = new int[] {
      1, 0, 3, 1, 3, 2, 
      0, 4, 7, 0, 7, 3,
@@ -242,12 +242,12 @@ public class NucleicRenderer {
      0, 1, 5, 0, 5, 4
   };
 
-  private void transformPoints(int count, T3[] angstroms, P3[] screens) {
+  private void transformPoints(int count, T3d[] angstroms, P3d[] screens) {
     for (int i = count; --i >= 0;)
       tm.transformPtScrT3(angstroms[i], screens[i]);
   }
 
-  private void drawEdges(P3[] scr, P3[] pt, int n) {
+  private void drawEdges(P3d[] scr, P3d[] pt, int n) {
     for (int i = n; --i >= 0; )
       scr[i].z--;
     for (int i = n; --i > 0; )
@@ -258,40 +258,40 @@ public class NucleicRenderer {
     Atom atomA = g.getLeadAtom();
     short cA = colix;
       if (scrBox == null) {
-        scrBox = new P3[8];
+        scrBox = new P3d[8];
         for (int j = 0; j < 8; j++)
-          scrBox[j] = new P3();
+          scrBox[j] = new P3d();
       }
-      P3[] oxyz = g.getDSSRFrame(vwr);
-      P3[] box = g.dssrBox;
-      float lastHeight = g.dssrBoxHeight;
+      P3d[] oxyz = g.getDSSRFrame(vwr);
+      P3d[] box = g.dssrBox;
+      double lastHeight = g.dssrBoxHeight;
       boolean isPurine = g.isPurine();
       if (box == null || lastHeight != blockHeight) {
         g.dssrBoxHeight = blockHeight;
         if (box == null) {
-        box = new P3[8];
+        box = new P3d[8];
         for (int j = 8; --j >= 0;)
-          box[j] = new P3();
+          box[j] = new P3d();
         g.dssrBox = box;
         }
         SymmetryInterface uc = vwr.getSymTemp().getUnitCell(oxyz, false, null);
         if (ptTemp == null)
-          ptTemp = new P3();
+          ptTemp = new P3d();
         ptTemp.setT(oxyz[0]);
         uc.toFractionalF(ptTemp, true);
-        uc.setOffsetPt(P3.new3(ptTemp.x - 2.25f, ptTemp.y + 5f, ptTemp.z
+        uc.setOffsetPt(P3d.new3(ptTemp.x - 2.25f, ptTemp.y + 5f, ptTemp.z
             - blockHeight / 2));
-        float x = 4.5f;
-        float y = (isPurine ? -4.5f : -3f);
-        float z = blockHeight;
-        uc.toCartesianF(box[0] = P3.new3(0, 0, 0), false);
-        uc.toCartesianF(box[1] = P3.new3(x, 0, 0), false);
-        uc.toCartesianF(box[2] = P3.new3(x, y, 0), false);
-        uc.toCartesianF(box[3] = P3.new3(0, y, 0), false);
-        uc.toCartesianF(box[4] = P3.new3(0, 0, z), false);
-        uc.toCartesianF(box[5] = P3.new3(x, 0, z), false);
-        uc.toCartesianF(box[6] = P3.new3(x, y, z), false);
-        uc.toCartesianF(box[7] = P3.new3(0, y, z), false);
+        double x = 4.5f;
+        double y = (isPurine ? -4.5f : -3f);
+        double z = blockHeight;
+        uc.toCartesianF(box[0] = P3d.new3(0, 0, 0), false);
+        uc.toCartesianF(box[1] = P3d.new3(x, 0, 0), false);
+        uc.toCartesianF(box[2] = P3d.new3(x, y, 0), false);
+        uc.toCartesianF(box[3] = P3d.new3(0, y, 0), false);
+        uc.toCartesianF(box[4] = P3d.new3(0, 0, z), false);
+        uc.toCartesianF(box[5] = P3d.new3(x, 0, z), false);
+        uc.toCartesianF(box[6] = P3d.new3(x, y, z), false);
+        uc.toCartesianF(box[7] = P3d.new3(0, y, z), false);
       }
       for (int j = 0; j < 8; j++)
         vwr.tm.transformPt3f(box[j], scrBox[j]);      
@@ -319,7 +319,7 @@ public class NucleicRenderer {
     renderEdge(rScr, rPt, 0, 1);
     renderEdge(rScr, rPt, 1, 2);
     boolean isTranslucent = C.isColixTranslucent(colix);
-    float tl = C.getColixTranslucencyLevel(colix);
+    double tl = C.getColixTranslucencyLevel(colix);
     short colixSugarEdge = C.getColixTranslucent3(C.RED, isTranslucent,
         tl);
     short colixWatsonCrickEdge = C.getColixTranslucent3(C.GREEN,
@@ -334,11 +334,11 @@ public class NucleicRenderer {
     renderEdge(rScr, rPt, 4, 5);
   }
 
-  private void renderEdge(P3[] scr, P3[] pt, int i, int j) {
+  private void renderEdge(P3d[] scr, P3d[] pt, int i, int j) {
     renderCyl(scr[i], scr[j], pt[i], pt[j]);
   }
 
-  private void renderCyl(P3 s1, P3 s2, P3 p1, P3 p2) {
+  private void renderCyl(P3d s1, P3d s2, P3d p1, P3d p2) {
     g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, 3, s1, s2, p1, p2, 0.005f);
   }
 
@@ -351,7 +351,7 @@ public class NucleicRenderer {
    * @param k 
    * @param doShade    if shade was not calculated previously;
    */
-  private void renderTriangle(P3[] scr, P3[] pt, int i, int j, int k, boolean doShade) {
+  private void renderTriangle(P3d[] scr, P3d[] pt, int i, int j, int k, boolean doShade) {
     g3d.fillTriangle3i(scr[i], scr[j], scr[k], pt[i], pt[j], pt[k], doShade);
   }
 

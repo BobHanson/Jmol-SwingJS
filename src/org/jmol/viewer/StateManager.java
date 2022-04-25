@@ -388,7 +388,7 @@ public class StateManager {
     saved.put(o.saveName, o);
   }
 
-  public boolean restoreScene(String saveName, float timeSeconds) {
+  public boolean restoreScene(String saveName, double timeSeconds) {
     Scene o = (Scene) getNoCase(saved,
         (saveName.length() > 0 ? "Scene_" + saveName : lastScene));
     return (o != null && o.restore(vwr, timeSeconds));
@@ -405,7 +405,7 @@ public class StateManager {
     saved.put(o.saveName, o);
   }
 
-  public boolean restoreOrientation(String saveName, float timeSeconds,
+  public boolean restoreOrientation(String saveName, double timeSeconds,
                                     boolean isAll) {
     Orientation o = getOrientationFor(saveName);
     return (o != null && o.restore(timeSeconds, isAll));
@@ -489,7 +489,7 @@ class Scene {
     this.scene = scene;
   }
 
-  protected boolean restore(Viewer vwr, float timeSeconds) {
+  protected boolean restore(Viewer vwr, double timeSeconds) {
     JmolSceneGenerator gen = (JmolSceneGenerator) scene.get("generator");
     if (gen != null)
       gen.generateScene(scene);
@@ -549,11 +549,11 @@ class Connection {
   protected short mad;
   protected short colix;
   protected int order;
-  protected float energy;
+  protected double energy;
   protected int shapeVisibilityFlags;
 
   protected Connection(int atom1, int atom2, short mad, short colix, int order,
-      float energy, int shapeVisibilityFlags) {
+      double energy, int shapeVisibilityFlags) {
     atomIndex1 = atom1;
     atomIndex2 = atom2;
     this.mad = mad;

@@ -30,9 +30,9 @@ import java.util.Map;
 
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.atomdata.AtomData;
@@ -80,7 +80,7 @@ public class Contact extends Isosurface {
       thisMesh.setJvxlColorMap(false);
       if (displayType == T.plane) {
         JvxlCoder.jvxlCreateColorData(jvxlData, thisMesh.vvs);
-        float[] minmax = thisMesh.getDataMinMax();
+        double[] minmax = thisMesh.getDataMinMax();
         jvxlData.mappedDataMin = minmax[0];
         jvxlData.mappedDataMax = minmax[1];
       }
@@ -105,10 +105,10 @@ public class Contact extends Isosurface {
     
   protected Atom[] atoms;
   private int ac;
-  private float minData, maxData;
+  private double minData, maxData;
 
   //private final static String hbondH = "_H & connected(_O|_N and his and not *.N |_S)";
-  //private final static float HBOND_CUTOFF = -0.8f;
+  //private final static double HBOND_CUTOFF = -0.8f;
   private final static RadiusData rdVDW =  new RadiusData(null, 1, EnumType.FACTOR, VDW.AUTO);
   
   private void setContacts(Object[] value, boolean doEditCpList) {
@@ -119,11 +119,11 @@ public class Contact extends Isosurface {
     BS bsA = (BS) value[4];
     BS bsB = (BS) value[5];
     RadiusData rd = (RadiusData) value[6];
-    float saProbeRadius = ((Float) value[7]).floatValue();
-    float[] parameters = (float[]) value[8];
+    double saProbeRadius = ((Double) value[7]).doubleValue();
+    double[] parameters = (double[]) value[8];
     int modelIndex = ((Integer) value[9]).intValue();
     String command = (String) value[10];
-    if (Float.isNaN(saProbeRadius))
+    if (Double.isNaN(saProbeRadius))
       saProbeRadius = 0;
     if (rd == null)
       rd = new RadiusData(null, saProbeRadius, EnumType.OFFSET, VDW.AUTO);
@@ -152,7 +152,7 @@ public class Contact extends Isosurface {
 
     int intramolecularMode = (int) (parameters == null || parameters.length < 2 ? 0
         : parameters[1]);
-    float ptSize = (colorDensity && parameters != null && parameters[0] < 0 ? Math
+    double ptSize = (colorDensity && parameters != null && parameters[0] < 0 ? Math
         .abs(parameters[0])
         : 0.15f);
     if (Logger.debugging) {
@@ -233,12 +233,12 @@ public class Contact extends Isosurface {
               rd = new RadiusData(0.25f, EnumType.OFFSET,
                   EnumVdw.AUTO);
       */
-      float volume = 0;
+      double volume = 0;
       Lst<ContactPair> pairs = getPairs(bsA, bsB, rd, intramolecularMode, doEditCpList);
       thisMesh.info = pairs;
       volume += combineSurfaces(pairs, contactType, displayType, parameters,
           func, colorDensity, colorByType);
-      thisMesh.calculatedVolume = Float.valueOf(volume);
+      thisMesh.calculatedVolume = Double.valueOf(volume);
       mergeMesh(null);
       break;
     }
@@ -254,7 +254,7 @@ public class Contact extends Isosurface {
     }
     setPropI("finalize", command, null);
     if (colorDensity) {
-      setPropI("pointSize", Float.valueOf(ptSize), null);
+      setPropI("pointSize", Double.valueOf(ptSize), null);
     } else {
       setPropI("token", Integer.valueOf(fullyLit ? T.fullylit : T.frontlit), null);
     }
@@ -306,22 +306,22 @@ public class Contact extends Isosurface {
    * @param colorByType  
    * @return               volume
    */
-  private float combineSurfaces(Lst<ContactPair> pairs, int contactType,
-                                int displayType, float[] parameters,
+  private double combineSurfaces(Lst<ContactPair> pairs, int contactType,
+                                int displayType, double[] parameters,
                                 Object func, boolean isColorDensity,
                                 boolean colorByType) {
     VolumeData volumeData = new VolumeData();
     int logLevel = Logger.getLogLevel();
     Logger.setLogLevel(0);
-    float resolution = sg.params.resolution;
+    double resolution = sg.params.resolution;
     int nContacts = pairs.size();
     double volume = 0;
-    if (displayType == T.full && resolution == Float.MAX_VALUE)
+    if (displayType == T.full && resolution == Double.MAX_VALUE)
       resolution = (nContacts > 1000 ? 3 : 10);
     BoxInfo box = new BoxInfo();
     for (int i = nContacts; --i >= 0;) {
       ContactPair cp = pairs.get(i);
-      float oldScore = cp.score;
+      double oldScore = cp.score;
       boolean isVdwClash = (displayType == T.plane 
           && (contactType == T.vanderwaals || contactType == T.nada) 
           && cp.setForVdwClash(true));
@@ -375,10 +375,10 @@ public class Contact extends Isosurface {
       jvxlData.boundingBox[1] = box.bbCorner1;
     }
     this.displayType = displayType;
-    return (float) volume;
+    return (double) volume;
   }
   
-  private int setColorByScore(float score, int nV) {
+  private int setColorByScore(double score, int nV) {
     for (int iv = thisMesh.vc; --iv >= nV;)
       thisMesh.vvs[iv] = score;
     return thisMesh.vc;
@@ -412,7 +412,7 @@ public class Contact extends Isosurface {
     vwr.fillAtomData(ad, AtomData.MODE_FILL_RADII
         | (isMultiModel ? AtomData.MODE_FILL_MULTIMODEL : AtomData.MODE_FILL_MODEL)
         | AtomData.MODE_FILL_MOLECULES);
-    float maxRadius = 0;
+    double maxRadius = 0;
     for (int ib = bsB.nextSetBit(0); ib >= 0; ib = bsB.nextSetBit(ib + 1))
       if (ad.atomRadius[ib] > maxRadius)
         maxRadius = ad.atomRadius[ib];
@@ -420,7 +420,7 @@ public class Contact extends Isosurface {
         isMultiModel);
     for (int ia = bsA.nextSetBit(0); ia >= 0; ia = bsA.nextSetBit(ia + 1)) {
       Atom atomA = atoms[ia];
-      float vdwA = atomA.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
+      double vdwA = atomA.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
       if (isMultiModel)
         vwr.setIteratorForPoint(iter, -1, ad.atoms[ia], ad.atomRadius[ia]
             + maxRadius);
@@ -442,10 +442,10 @@ public class Contact extends Isosurface {
           if (isSameMolecule != (intramolecularMode == 1))
             continue;
         }
-        float vdwB = atomB.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
-        float ra = ad.atomRadius[ia];
-        float rb = ad.atomRadius[ib];
-        float d = atomA.distance(atomB);
+        double vdwB = atomB.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
+        double ra = ad.atomRadius[ia];
+        double rb = ad.atomRadius[ib];
+        double d = atomA.distance(atomB);
         if (d > ra + rb)
           continue;
         ContactPair cp = new ContactPair(atoms, ia, ib, ra, rb, vdwA, vdwB);
@@ -461,8 +461,8 @@ public class Contact extends Isosurface {
         HB typeB = (typeA == HB.NOT ? HB.NOT
             : HB.getType(atomB));
         boolean isHBond = HB.isPossibleHBond(typeA, typeB);
-        //float hbondCutoff = -1.0f;//HBOND_CUTOFF;
-        float hbondCutoff = (atomA.getElementNumber() == 1 || atomB.getElementNumber() == 1 ? -1.2f : -1.0f);
+        //double hbondCutoff = -1.0f;//HBOND_CUTOFF;
+        double hbondCutoff = (atomA.getElementNumber() == 1 || atomB.getElementNumber() == 1 ? -1.2f : -1.0f);
         
         if (isHBond && cp.score < hbondCutoff)
           isHBond = false;
@@ -543,8 +543,8 @@ public class Contact extends Isosurface {
   }
 
   private void newSurface(int displayType, ContactPair cp, BS bs1, BS bs2,
-                          RadiusData rd, float[] parameters, Object func,
-                          boolean isColorDensity, VolumeData volumeData, float sasurfaceRadius) {
+                          RadiusData rd, double[] parameters, Object func,
+                          boolean isColorDensity, VolumeData volumeData, double sasurfaceRadius) {
     Parameters params = sg.params;
     params.isSilent = true;
     if (cp == null) {
@@ -572,7 +572,7 @@ public class Contact extends Isosurface {
       }
       params.colorDensity = isColorDensity;
       if (isColorDensity) {
-        setPropI("cutoffRange", new float[] { -100f, 0f }, null);
+        setPropI("cutoffRange", new double[] { -100f, 0f }, null);
       }
       if (cp == null) {
         params.atomRadiusData = rdA;
@@ -581,7 +581,7 @@ public class Contact extends Isosurface {
         params.bsSolvent = null;
       }
       params.volumeData = volumeData;
-      setPropI("sasurface", Float.valueOf(sasurfaceRadius), null);
+      setPropI("sasurface", Double.valueOf(sasurfaceRadius), null);
       setPropI("map", Boolean.TRUE, null);
       if (cp == null) {
         params.atomRadiusData = rdB;
@@ -589,7 +589,7 @@ public class Contact extends Isosurface {
         params.bsSelected = bs2;
       }
       params.volumeData = volumeData;
-      setPropI("sasurface", Float.valueOf(sasurfaceRadius), null);
+      setPropI("sasurface", Double.valueOf(sasurfaceRadius), null);
       switch (displayType) {
       case T.full:
       case T.trim:
@@ -618,12 +618,12 @@ public class Contact extends Isosurface {
       params.volumeData = volumeData;
       params.colorDensity = isColorDensity;
       if (isColorDensity)
-        setPropI("cutoffRange", new float[] { -5f, 0f }, null);
-      setPropI("sasurface", Float.valueOf(0), null);
+        setPropI("cutoffRange", new double[] { -5f, 0f }, null);
+      setPropI("sasurface", Double.valueOf(0), null);
       // mapping
       setPropI("map", Boolean.TRUE, null);
       params.volumeData = volumeData;
-      setPropI("sasurface", Float.valueOf(0), null);
+      setPropI("sasurface", Double.valueOf(0), null);
       if (displayType == T.plane) {
         iSlab0 = -100;
       }
@@ -636,21 +636,21 @@ public class Contact extends Isosurface {
       thisMesh.setMerged(true);
   }
 
-  private V3 vZ = new V3();
-  private V3 vY = new V3();
-  private V3 vX = new V3();
-  private P3 pt1 = new P3();
-  private P3 pt2 = new P3();
+  private V3d vZ = new V3d();
+  private V3d vY = new V3d();
+  private V3d vX = new V3d();
+  private P3d pt1 = new P3d();
+  private P3d pt2 = new P3d();
   
   private void setVolumeData(int type, VolumeData volumeData, ContactPair cp,
-                             float resolution, int nPairs) {
+                             double resolution, int nPairs) {
     pt1.setT(cp.myAtoms[0]);
     pt2.setT(cp.myAtoms[1]);
     vX.sub2(pt2, pt1);
-    float dAB = vX.length();
-    float dYZ = (cp.radii[0] * cp.radii[0] + dAB * dAB - cp.radii[1] * cp.radii[1])/(2 * dAB * cp.radii[0]);
-    dYZ = 2.1f * (float) (cp.radii[0] * Math.sin(Math.acos(dYZ)));
-    Measure.getNormalToLine(pt1, pt2, vZ);
+    double dAB = vX.length();
+    double dYZ = (cp.radii[0] * cp.radii[0] + dAB * dAB - cp.radii[1] * cp.radii[1])/(2 * dAB * cp.radii[0]);
+    dYZ = 2.1f * (double) (cp.radii[0] * Math.sin(Math.acos(dYZ)));
+    MeasureD.getNormalToLine(pt1, pt2, vZ);
     vZ.scale(dYZ);
     vY.cross(vZ, vX);
     vY.normalize();
@@ -661,7 +661,7 @@ public class Contact extends Isosurface {
       pt2.scaleAdd2((cp.radii[0] - dAB) * 0.95f, vX, pt2);
       vX.sub2(pt2, pt1);
     }
-    if (resolution == Float.MAX_VALUE)
+    if (resolution == Double.MAX_VALUE)
       resolution = (nPairs > 100 ? 3 : 10);
     
     // now set voxel counts and vectors, and grid origin
@@ -694,9 +694,9 @@ public class Contact extends Isosurface {
 
   private void mergeMesh(MeshData md) {
     thisMesh.merge(md);
-    if (minData == Float.MAX_VALUE) {
+    if (minData == Double.MAX_VALUE) {
       // just assign it
-    } else if (jvxlData.mappedDataMin == Float.MAX_VALUE) {
+    } else if (jvxlData.mappedDataMin == Double.MAX_VALUE) {
       jvxlData.mappedDataMin = minData;
       jvxlData.mappedDataMax = maxData;
     } else {
@@ -725,7 +725,7 @@ public class Contact extends Isosurface {
       cpInfo.put("type", T.nameOf(cp.contactType));
       cpInfo.put("volume", Double.valueOf(cp.volume));
       cpInfo.put("vdwVolume", Double.valueOf(cp.vdwVolume));
-      if (!Float.isNaN(cp.xVdwClash)) {
+      if (!Double.isNaN(cp.xVdwClash)) {
         cpInfo.put("xVdwClash", Double.valueOf(cp.xVdwClash));
       }
       cpInfo.put("score", Double.valueOf(cp.score));
@@ -873,7 +873,7 @@ x3 == f + g/h^(1/3) + h^(1/3)
     x = f + (g/vvu + vvu) * costheta;
     //System.out.println(d + "\t" + x + "\t" + ((a + x)*(a + x) * (b + 2 * x)) + " = " + c);
     if (x > 0) {
-      cp.xVdwClash = ((float) (x / 2));
+      cp.xVdwClash = ((double) (x / 2));
     }
   }
 

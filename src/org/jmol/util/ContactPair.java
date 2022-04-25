@@ -1,26 +1,26 @@
 package org.jmol.util;
 
 
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 
 public class ContactPair {
-  public float[] radii = new float[2];
-  public float[] vdws = new float[2];
+  public double[] radii = new double[2];
+  public double[] vdws = new double[2];
   public Atom[] myAtoms = new Atom[2];
-  public P3 pt;
+  public P3d pt;
   public double volume = 0;
   public double vdwVolume = 0; 
-  public float score;
-  public float d;
-  public float chord;
+  public double score;
+  public double d;
+  public double chord;
   public int contactType;
-  public float xVdwClash = Float.NaN;
+  public double xVdwClash = Double.NaN;
 
-  public ContactPair(Atom[] atoms, int i1, int i2, float R, float r, float vdwA, float vdwB) {
+  public ContactPair(Atom[] atoms, int i1, int i2, double R, double r, double vdwA, double vdwB) {
     radii[0] = R;
     radii[1] = r;
     vdws[0] = vdwA;
@@ -40,15 +40,15 @@ public class ContactPair {
     // r is not necessarily VDW(B). That's certainly true for clashes,
     // for attractive Van der Waals forces R and r will be larger
     
-    V3 v = V3.newVsub(myAtoms[1], myAtoms[0]);
+    V3d v = V3d.newVsub(myAtoms[1], myAtoms[0]);
     d = v.length();
     
     // find center of asymmetric lens
-    //NOT float f = (vdw1*vdw1 - vdw2*vdw2 + dAB*dAB) / (2 * dAB*dAB);
+    //NOT double f = (vdw1*vdw1 - vdw2*vdw2 + dAB*dAB) / (2 * dAB*dAB);
     // as that would be for truly planar section, but it is not quite planar
 
-    float f = (R - r + d) / (2 * d);
-    pt = new P3();
+    double f = (R - r + d) / (2 * d);
+    pt = new P3d();
     pt.scaleAdd2(f, v, myAtoms[0]);
 
     // http://mathworld.wolfram.com/Sphere-SphereIntersection.html
@@ -77,12 +77,12 @@ public class ContactPair {
         / 12 / d;
     vdwVolume = (score > 0 ? -volume : volume);
     double a = (d * d - r * r + R * R);
-    chord = (float) Math.sqrt(4 * d * d * R * R - a * a) / d;
+    chord = (double) Math.sqrt(4 * d * d * R * R - a * a) / d;
   }
 
   private int oldType = 0;
   public boolean setForVdwClash(boolean isVdw) {
-    if (Float.isNaN(xVdwClash))
+    if (Double.isNaN(xVdwClash))
       return false;
     if (isVdw) {
       oldType  = contactType;
@@ -102,7 +102,7 @@ public class ContactPair {
     Atom atom = myAtoms[0];
     myAtoms[0] = myAtoms[1];
     myAtoms[1] = atom;
-    float r = radii[0];
+    double r = radii[0];
     radii[0] = radii[1];
     radii[1] = r;
     r = vdws[0];

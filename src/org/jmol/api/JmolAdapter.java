@@ -86,7 +86,7 @@ public abstract class JmolAdapter {
     return Elements.getNaturalIsotope(elementNumber);
   }
 
-  public static float getBondingRadius(int atomicNumberWithIsotope, int charge) {
+  public static double getBondingRadius(int atomicNumberWithIsotope, int charge) {
     return Elements.getBondingRadius(atomicNumberWithIsotope, charge);
   }
 

@@ -1696,17 +1696,17 @@ class SpaceGroup {
    *        lattice parameter that is time reversal
    * @return true if successful
    */
-  boolean addLatticeVectors(Lst<float[]> lattvecs) {
+  boolean addLatticeVectors(Lst<double[]> lattvecs) {
     if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
     boolean isMagnetic = (lattvecs.get(0).length == modDim + 4);
     int magRev = -2;
     for (int j = 0; j < lattvecs.size(); j++) {
-      float[] data = lattvecs.get(j);
+      double[] data = lattvecs.get(j);
       if (isMagnetic) {
         magRev = (int) data[modDim + 3];
-        data = AU.arrayCopyF(data, modDim + 3);
+        data = AU.arrayCopyD(data, modDim + 3);
       }
       if (data.length > modDim + 3)
         return false;
@@ -1715,7 +1715,7 @@ class SpaceGroup {
         newOp.modDim = modDim;
         SymmetryOperation op = operations[i];
         newOp.divisor = op.divisor;
-        newOp.linearRotTrans = AU.arrayCopyF(op.linearRotTrans, -1);
+        newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
         newOp.setFromMatrix(data, false);
         if (magRev != -2)
           newOp.setTimeReversal(op.timeReversal * magRev);

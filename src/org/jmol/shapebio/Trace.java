@@ -52,7 +52,7 @@ public class Trace extends BioShapeCollection {
   @Override
   public void setProperty(String propertyName, Object value, BS bsSelected) {
     if (propertyName == "putty") {
-      setPutty((float[]) value, bsSelected);
+      setPutty((double[]) value, bsSelected);
       return;
     }
     setPropBSC(propertyName, value, bsSelected);
@@ -64,16 +64,16 @@ public class Trace extends BioShapeCollection {
    * @param info [quality,radius,range,scale_min,scale_max,scale_power,transform]
    * @param bsAtoms
    */
-  private void setPutty(float[] info, BS bsAtoms) {
+  private void setPutty(double[] info, BS bsAtoms) {
     int n = bsAtoms.cardinality();
     if (n == 0)
       return;
-    float[] data = new float[bsAtoms.length()];
+    double[] data = new double[bsAtoms.length()];
     double sum = 0.0, sumsq = 0.0;
-    float min = Float.MAX_VALUE;
-    float max = 0;
+    double min = Double.MAX_VALUE;
+    double max = 0;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-      float value = atoms[i].atomPropertyFloat(null, T.temperature, null);
+      double value = atoms[i].atomPropertyFloat(null, T.temperature, null);
       sum += value;
       sumsq += (value * value);
       if (value < min)
@@ -81,17 +81,17 @@ public class Trace extends BioShapeCollection {
       if (value > max)
         max = value;
     }
-    float mean = (float) (sum / n);
-    float stdev = (float) Math.sqrt((sumsq - (sum * sum / n)) / n);
+    double mean = (double) (sum / n);
+    double stdev = (double) Math.sqrt((sumsq - (sum * sum / n)) / n);
 
-    float rad = info[1];
-    float range = info[2];
-    float scale_min = info[3];
-    float scale_max = info[4];
-    float power = info[5];
+    double rad = info[1];
+    double range = info[2];
+    double scale_min = info[3];
+    double scale_max = info[4];
+    double power = info[5];
 
     int transform = (int) info[6];
-    float data_range = max - min;
+    double data_range = max - min;
     boolean nonlinear = false;
     switch (transform) {
     case PUTTY_NormalizedNonlinear:
@@ -103,7 +103,7 @@ public class Trace extends BioShapeCollection {
     }
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
         .nextSetBit(i + 1)) {
-      float scale = atoms[i].atomPropertyFloat(null, T.temperature, null);
+      double scale = atoms[i].atomPropertyFloat(null, T.temperature, null);
       switch (transform) {
       case PUTTY_AbsoluteNonlinear:
       case PUTTY_AbsoluteLinear:
@@ -125,13 +125,13 @@ public class Trace extends BioShapeCollection {
       case PUTTY_ImpliedRMS:
         if (scale < 0.0F)
           scale = 0.0F;
-        scale = (float) (Math.sqrt(scale / 8.0) / Math.PI);
+        scale = (double) (Math.sqrt(scale / 8.0) / Math.PI);
         break;
       }
       if (scale < 0.0F)
         scale = 0.0F;
       if (nonlinear)
-        scale = (float) Math.pow(scale, power);
+        scale = (double) Math.pow(scale, power);
       if ((scale < scale_min) && (scale_min >= 0.0))
         scale = scale_min;
       if ((scale > scale_max) && (scale_max >= 0.0))

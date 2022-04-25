@@ -111,8 +111,8 @@ class JaguarReader extends VolumeFileReader {
     voxelCounts[0] = parseIntStr(tokens[1]);
     voxelCounts[1] = parseIntStr(tokens[2]);
     voxelCounts[2] = parseIntStr(tokens[3]);
-    float factor = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
-    float d = extents[0] / (voxelCounts[0] - 1);
+    double factor = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
+    double d = extents[0] / (voxelCounts[0] - 1);
     volumetricVectors[0].set(d * factor, 0, 0);
     jvxlFileHeaderBuffer.append(voxelCounts[0] + " " + d + " 0.0 0.0\n");
 
@@ -133,7 +133,7 @@ class JaguarReader extends VolumeFileReader {
 
   }
 
-  private float[] extents = new float[3];
+  private double[] extents = new double[3];
   
   /**
    * read the extentx=, extenty=, extentz= lines and cache them

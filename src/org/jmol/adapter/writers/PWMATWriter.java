@@ -11,10 +11,10 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * 
@@ -55,12 +55,13 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
       this.bs = bs = uc.removeDuplicates(vwr.ms, bs);
-      isPrecision = !bs.isEmpty();
-      for (int i = bs.nextSetBit(0); i >= 0
-          && isPrecision; i = bs.nextSetBit(i + 1)) {
-        if (vwr.ms.getPrecisionCoord(i) == null)
-          isPrecision = false;
-      }
+      isPrecision = true;
+//      !bs.isEmpty();
+//      for (int i = bs.nextSetBit(0); i >= 0
+//          && isPrecision; i = bs.nextSetBit(i + 1)) {
+//        if (vwr.ms.getPrecisionCoord(i) == null)
+//          isPrecision = false;
+//      }
       names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
       writeHeader();
       writeLattice();
@@ -80,8 +81,8 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     oc.append("Lattice vector\n");
     if (uc == null) {
       uc = vwr.getSymTemp();
-      V3 bb = vwr.getBoundBoxCornerVector();
-      double len = Math.round(bb.length() * 2);
+      V3d bb = vwr.getBoundBoxCornerVector();
+      double len = (int) Math.round(bb.length() * 2);
       uc.setUnitCell(new double[] { len, len, len, 90, 90, 90 }, false);
     }
 
@@ -93,10 +94,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
     } else {
       String f = "%12.6p%12.6p%12.6p\n";
-      P3 p = new P3(); // toP3 here for rounding even in JavaScript
-      oc.append(PT.sprintf(f, "p", new Object[] { abc[1].copyToP3() }));
-      oc.append(PT.sprintf(f, "p", new Object[] { abc[2].copyToP3() }));
-      oc.append(PT.sprintf(f, "p", new Object[] { abc[3].copyToP3() }));
+      P3d p = new P3d(); // toP3 here for rounding even in JavaScript
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[3] }));
     }
     Logger.info("PWMATWriter: LATTICE VECTORS");
   }
@@ -108,7 +109,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     oc.append("Position, move_x, move_y, move_z\n");
     Atom[] a = vwr.ms.at;
     String coord;
-    P3 p = new P3();
+    P3d p = new P3d();
     String f = (isPrecision ? "%4i%78s   " : "%4i%36s   ") + (cz == null ? "  1  1  1" : "%3i%3i%3i") + "\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       if (isPrecision) {

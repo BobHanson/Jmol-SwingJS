@@ -25,19 +25,19 @@
 
 package org.jmol.quantum;
 
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 
-class QMAtom extends P3 {
+class QMAtom extends P3d {
 
   // grid coordinates relative to orbital center in Bohr 
-  private float[] myX, myY, myZ;
+  private double[] myX, myY, myZ;
 
   // grid coordinate squares relative to orbital center in Bohr
-  private float[] myX2, myY2, myZ2;
+  private double[] myX2, myY2, myZ2;
 
   Atom atom;
   int index;
@@ -57,8 +57,8 @@ class QMAtom extends P3 {
    * @param Z2
    * @param unitFactor
    */
-  QMAtom(int i, T3 xyzAng, Atom atom, float[] X, float[] Y, float[] Z, 
-      float[] X2, float[] Y2, float[] Z2, float unitFactor) {
+  QMAtom(int i, T3d xyzAng, Atom atom, double[] X, double[] Y, double[] Z, 
+      double[] X2, double[] Y2, double[] Z2, double unitFactor) {
     index = i;
     myX = X;
     myY = Y;

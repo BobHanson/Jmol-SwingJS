@@ -9,7 +9,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.SymmetryInterface;
 
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -39,7 +39,7 @@ public class GulpReader extends AtomSetCollectionReader {
   private boolean isPrimitive;
   private String sep = "-------";
   private boolean coordinatesArePrimitive;
-  private Map<String, Float> atomCharges;
+  private Map<String, Double> atomCharges;
 
   @Override
   protected void initializeReader() throws Exception {
@@ -53,11 +53,11 @@ public class GulpReader extends AtomSetCollectionReader {
     if (atomCharges == null)
       return;
     Atom[] atoms = asc.atoms;
-    Float f;
+    Double f;
     for (int i = asc.ac; --i >= 0;)
       if ((f = atomCharges.get(atoms[i].atomName)) != null
           || (f = atomCharges.get(atoms[i].getElementSymbol())) != null)
-        atoms[i].partialCharge = f.floatValue();
+        atoms[i].partialCharge = f.doubleValue();
   }
   
   private boolean bTest;
@@ -412,15 +412,15 @@ public class GulpReader extends AtomSetCollectionReader {
 --------------------------------------------------------------------------------
    */
   private void readPartialCharges() throws Exception {
-    atomCharges = new Hashtable<String, Float>();
+    atomCharges = new Hashtable<String, Double>();
     discardLinesUntilContains(sep);
     discardLinesUntilContains(sep);
     String[] tokens;
     while ((tokens = PT.getTokens(rd())).length > 5) {
       String species = tokens[0];
-      Float charge = atomCharges.get(species);
-      float f = (charge == null ? 0 : charge.floatValue());
-      atomCharges.put(species, Float.valueOf((f + (float) parseDoubleStr(tokens[4]))));
+      Double charge = atomCharges.get(species);
+      double f = (charge == null ? 0 : charge.doubleValue());
+      atomCharges.put(species, Double.valueOf((f + (double) parseDoubleStr(tokens[4]))));
     }
   }
 
@@ -457,7 +457,7 @@ public class GulpReader extends AtomSetCollectionReader {
   }
 
   private void setEnergy() {
-    asc.setAtomSetEnergy("" + totEnergy, totEnergy.floatValue());
+    asc.setAtomSetEnergy("" + totEnergy, totEnergy.doubleValue());
     asc.setInfo("Energy", totEnergy);
     asc.setAtomSetName("E = " + totEnergy + " " + energyUnits);
     totEnergy = null;

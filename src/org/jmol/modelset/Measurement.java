@@ -35,10 +35,10 @@ import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -65,7 +65,7 @@ public class Measurement {
   public int count;
   public int[] countPlusIndices = new int[5];
   public Point3fi[] pts;
-  public float value;
+  public double value;
   
   public String strFormat;
   public String property;
@@ -80,10 +80,10 @@ public class Measurement {
   // next three are used by MeaurementRenderer
   
   private boolean tainted;
-  public A4 renderAxis;
-  public P3 renderArc;
+  public A4d renderAxis;
+  public P3d renderArc;
   private String newUnits;
-  public float fixedValue = Float.NaN;
+  public double fixedValue = Double.NaN;
   private boolean isPending;
   public boolean inFront;
   
@@ -91,9 +91,9 @@ public class Measurement {
     return (tainted && !(tainted = false));
   }
   
-  public Measurement setM(ModelSet modelSet, Measurement m, float value, short colix,
+  public Measurement setM(ModelSet modelSet, Measurement m, double value, short colix,
                           String strFormat, int index) {
-    //value Float.isNaN ==> pending
+    //value Double.isNaN ==> pending
     this.ms = modelSet;
     this.index = index;
     this.vwr = modelSet.vwr;
@@ -121,7 +121,7 @@ public class Measurement {
       System.arraycopy(indices, 0, countPlusIndices, 0, count + 1);
       isTrajectory = modelSet.isTrajectoryMeasurement(countPlusIndices);
     }
-    isPending = Float.isNaN(value);
+    isPending = Double.isNaN(value);
     this.value = (isPending || isTrajectory ? getMeasurement(null) : value);
     formatMeasurement(null);
     return this;
@@ -217,7 +217,7 @@ public class Measurement {
 
   public void formatMeasurement(String units) {
     tainted = true;
-    switch (Float.isNaN(value) ? 0 : count) {
+    switch (Double.isNaN(value) ? 0 : count) {
     default:
       strMeasurement = null;
       return;
@@ -270,7 +270,7 @@ public class Measurement {
       if (label.length() == 0)
         label = "%VALUE";
     }
-    float f = fixValue(units, (label.indexOf("%V") >= 0));
+    double f = fixValue(units, (label.indexOf("%V") >= 0));
     return formatString(f, newUnits, label);
   }
 
@@ -278,9 +278,9 @@ public class Measurement {
    * 
    * @param units  final units
    * @param andRound
-   * @return  float value
+   * @return  double value
    */
-  public float fixValue(String units, boolean andRound) {
+  public double fixValue(String units, boolean andRound) {
     checkJ(units);
     if(units != null && units.startsWith("+")) {
       if (!isPending)
@@ -290,7 +290,7 @@ public class Measurement {
     newUnits = units;
     if (count != 2)
       return value;
-    float dist = value;
+    double dist = value;
     if (units == null && property != null)
       units = "";
     if (units != null) {
@@ -308,10 +308,10 @@ public class Measurement {
           if (itype == NMR_NOE_OR_J) {
             double[] result = vwr.getNMRCalculation().getNOEorJHH(new Atom[] { a1, null, null, a2}, NMRCalculation.MODE_CALC_NOE | NMRCalculation.MODE_CALC_JHH);
             if (result == null) {
-              dist = Float.NaN;
+              dist = Double.NaN;
               newUnits = units = "";
             } else {
-              dist = (float) result[1];
+              dist = (double) result[1];
               units = newUnits = (result.length == 2 ? "noe" :"hz");
             }
           } else {
@@ -321,7 +321,7 @@ public class Measurement {
                 .getNMRCalculation().getDipolarConstantHz(a1, a2) : vwr
                 .getNMRCalculation().getIsoOrAnisoHz(true, a1, a2, units, null));
           }
-          isValid = !Float.isNaN(dist);
+          isValid = !Double.isNaN(dist);
           if (isPercent)
             units = "pm";
         }
@@ -351,10 +351,10 @@ public class Measurement {
     return (units.indexOf("hz") < 0 ? NMR_NOT : units.equals("noe_hz") ? NMR_NOE_OR_J : units.startsWith("dc_") || units.equals("khz") ? NMR_DC : NMR_JC);
   }
 
-  private String formatAngle(float angle) {
+  private String formatAngle(double angle) {
     String label = getLabelString();
     if (label.indexOf("%V") >= 0)
-      angle = Math.round(angle * 10) / 10f;
+      angle = (int) Math.round(angle * 10) / 10f;
     return formatString(angle, "\u00B0", label);
   }
 
@@ -378,7 +378,7 @@ public class Measurement {
     return label;
   }
 
-  private String formatString(float value, String units, String label) {
+  private String formatString(double value, String units, String label) {
     return LabelToken.formatLabelMeasure(vwr, this, label, value, units);
   }
 
@@ -421,40 +421,40 @@ public class Measurement {
   }
 
   
-  public float getPropMeasurement(Point3fi[] pts) {
+  public double getPropMeasurement(Point3fi[] pts) {
     if (countPlusIndices == null || count != 2)
-      return Float.NaN;
+      return Double.NaN;
     for (int i = count; --i >= 0;)
       if (countPlusIndices[i + 1] < 0) {
-        return Float.NaN;
+        return Double.NaN;
       }
     try {
      Atom ptA = (Atom) (pts == null ? getAtom(1) : pts[0]);
      Atom ptB = (Atom) (pts == null ? getAtom(2) : pts[1]);
-    float[][] props = (float[][]) vwr.getDataObj(property, null,
-        JmolDataManager.DATA_TYPE_AFF);
+    double[][] props = (double[][]) vwr.getDataObj(property, null,
+        JmolDataManager.DATA_TYPE_ADD);
     int ia = ptA.i;
     int ib = ptB.i;
-    return (props == null || ib >= props.length || ia >= props.length ? Float.NaN : props[ia][ib]);
+    return (props == null || ib >= props.length || ia >= props.length ? Double.NaN : props[ia][ib]);
     } catch (Throwable t) {
-      return Float.NaN;
+      return Double.NaN;
     }
   }
 
 
-  public float getMeasurement(Point3fi[] pts) {
+  public double getMeasurement(Point3fi[] pts) {
     checkJ(null);
-    if (!Float.isNaN(fixedValue))
+    if (!Double.isNaN(fixedValue))
       return fixedValue;
     if (property != null)
       return getPropMeasurement(pts);
     if (countPlusIndices == null)
-      return Float.NaN;
+      return Double.NaN;
     if (count < 2)
-      return Float.NaN;
+      return Double.NaN;
     for (int i = count; --i >= 0;)
       if (countPlusIndices[i + 1] == -1) {
-        return Float.NaN;
+        return Double.NaN;
       }
     Point3fi ptA = (pts == null ? getAtom(1) : pts[0]);
     Point3fi ptB = (pts == null ? getAtom(2) : pts[1]);
@@ -464,13 +464,13 @@ public class Measurement {
       return ptA.distance(ptB);
     case 3:
       ptC = (pts == null ? getAtom(3) : pts[2]);
-      return Measure.computeAngleABC(ptA, ptB, ptC, true);
+      return MeasureD.computeAngleABC(ptA, ptB, ptC, true);
     case 4:
       ptC = (pts == null ? getAtom(3) : pts[2]);
       Point3fi ptD = (pts == null ? getAtom(4) : pts[3]);
-      return Measure.computeTorsion(ptA, ptB, ptC, ptD, true);
+      return MeasureD.computeTorsion(ptA, ptB, ptC, ptD, true);
     default:
-      return Float.NaN;
+      return Double.NaN;
     }
   }
 
@@ -525,7 +525,7 @@ public class Measurement {
   }
 
   public String getInfoAsString(String units) {
-    float f = fixValue(units, true);
+    double f = fixValue(units, true);
     SB sb = new SB();
     sb.append(count == 2 ? (property != null ? property : type == null ? "distance" : type) : count == 3 ? "angle" : "dihedral");
     sb.append(" \t").appendF(f);
@@ -537,16 +537,16 @@ public class Measurement {
     return sb.toString();
   }
 
-  public boolean isInRange(RadiusData radiusData, float value) {
+  public boolean isInRange(RadiusData radiusData, double value) {
     if (radiusData.factorType == EnumType.FACTOR) {
       Atom atom1 = (Atom) getAtom(1);
       Atom atom2 = (Atom) getAtom(2);
-      float d = (atom1.getVanderwaalsRadiusFloat(vwr, radiusData.vdwType) + atom2
+      double d = (atom1.getVanderwaalsRadiusFloat(vwr, radiusData.vdwType) + atom2
           .getVanderwaalsRadiusFloat(vwr, radiusData.vdwType))
           * radiusData.value;
       return (value <= d);
     }
-    return (radiusData.values[0] == Float.MAX_VALUE || value >= radiusData.values[0]
+    return (radiusData.values[0] == Double.MAX_VALUE || value >= radiusData.values[0]
         && value <= radiusData.values[1]);
   }
 
@@ -582,9 +582,9 @@ public class Measurement {
       || s.indexOf(" ") < 0 && s.endsWith("hz"));
   }
 
-  public static float toUnits(float dist, String units, boolean andRound) {
-    if (Float.isNaN(dist))
-      return Float.NaN;
+  public static double toUnits(double dist, String units, boolean andRound) {
+    if (Double.isNaN(dist))
+      return Double.NaN;
     if (units.equals("hz"))
       return (andRound ? Math.round(dist * 10) / 10f : dist);
     if (units.equals("nm"))
@@ -601,7 +601,7 @@ public class Measurement {
     return (andRound ? Math.round(dist * 100) / 100f : dist);
   }
 
-  public static float fromUnits(float dist, String units) {
+  public static double fromUnits(double dist, String units) {
     if (units.equals("nm"))
       return dist * 10;
     if (units.equals("pm"))

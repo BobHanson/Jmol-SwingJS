@@ -2,11 +2,11 @@ package org.jmol.util;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.BS;
 
 public class Triangulator extends TriangleData {
@@ -67,32 +67,32 @@ public class Triangulator extends TriangleData {
   };
 
   @SuppressWarnings("null")
-  public P3[] intersectLine(P3[] points, int nPoints, P3 ptA,
-                                   V3 unitVector) {
+  public P3d[] intersectLine(P3d[] points, int nPoints, P3d ptA,
+                                   V3d unitVector) {
     if (nPoints < 0)
       nPoints = points.length;
-    V3 v1 = new V3();
-    V3 v2 = new V3();
-    V3 v3 = new V3();
-    V3 vAB = new V3();
-    P3 pmin = null, pmax = null, p = new P3();
-    P4 plane = new P4();
-    float dmin = Float.MAX_VALUE, dmax = -Float.MAX_VALUE;
+    V3d v1 = new V3d();
+    V3d v2 = new V3d();
+    V3d v3 = new V3d();
+    V3d vAB = new V3d();
+    P3d pmin = null, pmax = null, p = new P3d();
+    P4d plane = new P4d();
+    double dmin = Double.MAX_VALUE, dmax = -Double.MAX_VALUE;
     for (int i = 0; i < 12; i++) {
       int[] c = fullCubePolygon[i];
       if (i % 2 == 0) {
-        Measure.getPlaneThroughPoints(points[c[0]], points[c[1]], points[c[2]],
+        MeasureD.getPlaneThroughPoints(points[c[0]], points[c[1]], points[c[2]],
             v1, v2, plane);
-        P3 ret = Measure.getIntersection(ptA, unitVector, plane, p, v1, v3);
+        P3d ret = MeasureD.getIntersection(ptA, unitVector, plane, p, v1, v3);
         if (ret == null) {
           i++;
           continue;
         }
         vAB.sub2(p, ptA);
       }
-      if (Measure.isInTriangle(p, points[c[0]], points[c[1]], points[c[2]], v1,
+      if (MeasureD.isInTriangle(p, points[c[0]], points[c[1]], points[c[2]], v1,
           v2, v3)) {
-        float d = unitVector.dot(vAB);
+        double d = unitVector.dot(vAB);
         if (d < dmin) {
           dmin = d;
           pmin = p;
@@ -106,26 +106,26 @@ public class Triangulator extends TriangleData {
         }
         if (dmax - dmin > 0.01f)
           break;
-        p = new P3();
+        p = new P3d();
       }
 
     }
-    return (pmin == null || (pmax == null || pmin.distance(pmax) < 0.001f) && (pmax = pmin) == null ? null : new P3[] { pmin, pmax });
+    return (pmin == null || (pmax == null || pmin.distance(pmax) < 0.001f) && (pmax = pmin) == null ? null : new P3d[] { pmin, pmax });
   }
 
-  private Lst<Object> getCellProjection(P4 plane, T3[] pts) {
-    V3 vTemp = new V3();
+  private Lst<Object> getCellProjection(P4d plane, T3d[] pts) {
+    V3d vTemp = new V3d();
     // find the point furthest from the plane
-    float d = 0, dmax = -Float.MAX_VALUE;
+    double d = 0, dmax = -Double.MAX_VALUE;
     int imax = 0;
-    P3[] newPts = new P3[8];
+    P3d[] newPts = new P3d[8];
     for (int i = 0; i < 8; i++) {
       d = pts[i].dot(plane);
       if (d > dmax) {
         dmax = d;
         imax = i;
       }
-      Measure.getPlaneProjection(pts[i], plane, newPts[i] = new P3(), vTemp);
+      MeasureD.getPlaneProjection(pts[i], plane, newPts[i] = new P3d(), vTemp);
     }
     int t = fullCubeCorners[imax][3];
     int[][]polygons = AU.newInt2(6);
@@ -160,14 +160,14 @@ public class Triangulator extends TriangleData {
    * @return Lst of P3[3] triangles and P3[2] edge lines
    */
 
-  public Lst<Object> intersectPlane(P4 plane, T3[] vertices, int flags) {
+  public Lst<Object> intersectPlane(P4d plane, T3d[] vertices, int flags) {
     if (flags == -1 && vertices.length == 8) {
       return getCellProjection(plane, vertices);
     }
     Lst<Object> v = new Lst<Object>();
-    P3[] edgePoints = new P3[12];
+    P3d[] edgePoints = new P3d[12];
     int insideMask = 0;
-    float[] values = new float[8];
+    double[] values = new double[8];
     for (int i = 0; i < 8; i++) {
       values[i] = plane.x * vertices[i].x + plane.y * vertices[i].y + plane.z
           * vertices[i].z + plane.w;
@@ -183,7 +183,7 @@ public class Triangulator extends TriangleData {
       // (P - P1) / (P2 - P1) = (0 - v1) / (v2 - v1)
       // or
       // P = P1 + (P2 - P1) * (0 - v1) / (v2 - v1)
-      P3 result = P3.newP(vertices[v2]);
+      P3d result = P3d.newP(vertices[v2]);
       result.sub(vertices[v1]);
       result.scale(values[v1] / (values[v1] - values[v2]));
       result.add(vertices[v1]);
@@ -197,7 +197,7 @@ public class Triangulator extends TriangleData {
           i++;
       }
       int nPoints = bsPoints.cardinality();
-      P3[] pts = new P3[nPoints];
+      P3d[] pts = new P3d[nPoints];
       v.addLast(pts);
       int[]list = new int[12];
       int ptList = 0;
@@ -220,19 +220,19 @@ public class Triangulator extends TriangleData {
       return v;
     }
     for (int i = 0; i < triangles.length; i++) {
-      P3 pt1 = edgePoints[triangles[i++]];
-      P3 pt2 = edgePoints[triangles[i++]];
-      P3 pt3 = edgePoints[triangles[i++]];
+      P3d pt1 = edgePoints[triangles[i++]];
+      P3d pt2 = edgePoints[triangles[i++]];
+      P3d pt3 = edgePoints[triangles[i++]];
       if ((flags & 1) == 1)
-        v.addLast(new P3[] { pt1, pt2, pt3 });
+        v.addLast(new P3d[] { pt1, pt2, pt3 });
       if ((flags & 2) == 2) {
         byte b = triangles[i];
         if ((b & 1) == 1)
-          v.addLast(new P3[] { pt1, pt2 });
+          v.addLast(new P3d[] { pt1, pt2 });
         if ((b & 2) == 2)
-          v.addLast(new P3[] { pt2, pt3 });
+          v.addLast(new P3d[] { pt2, pt3 });
         if ((b & 4) == 4)
-          v.addLast(new P3[] { pt1, pt3 });
+          v.addLast(new P3d[] { pt1, pt3 });
       }
     }
     return v;

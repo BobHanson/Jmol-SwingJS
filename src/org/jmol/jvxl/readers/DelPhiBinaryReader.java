@@ -29,7 +29,7 @@ import java.io.BufferedReader;
 import org.jmol.util.Logger;
 
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 class DelPhiBinaryReader extends VolumeFileReader {
 
@@ -42,7 +42,7 @@ class DelPhiBinaryReader extends VolumeFileReader {
    * 
    * <byte*4 len>data<byte*4 len>
    * 
-   * All we do here is read strings and float arrays.
+   * All we do here is read strings and double arrays.
    * 
    */
 
@@ -78,7 +78,7 @@ class DelPhiBinaryReader extends VolumeFileReader {
     isAngstroms = true;
   }
       
-  private float[] data;
+  private double[] data;
   
   /**
    * this reader has the critical scaling information at the end,
@@ -102,17 +102,17 @@ class DelPhiBinaryReader extends VolumeFileReader {
     Logger.info("DelPhi data length: " + data.length);
     String botlbl = readString(); 
     Logger.info(botlbl);
-    float[] scalemid = readFloatArray();
-    float scale = scalemid[0];
+    double[] scalemid = readFloatArray();
+    double scale = scalemid[0];
     Logger.info("DelPhi scale: " + scale);
     
     // I don't understand why this would be needed this way, 
     // but it seems to be the case.
     
-    float dx = (scale == 1 ? 54f/64f : 1/scale);
-    volumetricVectors[0] = V3.new3(0, 0, dx);
-    volumetricVectors[1] = V3.new3(0, dx, 0);
-    volumetricVectors[2] = V3.new3(dx, 0, 0);
+    double dx = (scale == 1 ? 54f/64f : 1/scale);
+    volumetricVectors[0] = V3d.new3(0, 0, dx);
+    volumetricVectors[1] = V3d.new3(0, dx, 0);
+    volumetricVectors[2] = V3d.new3(dx, 0, 0);
     Logger.info("DelPhi resolution (pts/angstrom) set to: " + dx);    
     int nx = 65;
     voxelCounts[0] = voxelCounts[1] = voxelCounts[2] = nx;
@@ -139,9 +139,9 @@ class DelPhiBinaryReader extends VolumeFileReader {
     return new String(buf);
   }
 
-  private float[] readFloatArray() throws Exception {
+  private double[] readFloatArray() throws Exception {
     int n = binarydoc.readInt() >> 2;
-    float[] a = new float[n];
+    double[] a = new double[n];
     for (int i = 0; i < n; i++)
       a[i] = binarydoc.readFloat();
     binarydoc.readInt(); // trailing byte count
@@ -151,7 +151,7 @@ class DelPhiBinaryReader extends VolumeFileReader {
   private int pt;
   
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     nBytes += 4;
     return data[pt++];
   }

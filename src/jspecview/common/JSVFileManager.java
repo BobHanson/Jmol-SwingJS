@@ -30,23 +30,19 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.GenericFileInterface;
+import org.jmol.util.Logger;
+
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Encoding;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-
-import org.jmol.api.GenericFileInterface;
-import org.jmol.util.Logger;
-
-import jspecview.api.JSVPanel;
 import jspecview.api.JSVZipInterface;
-import jspecview.api.ScriptInterface;
 import jspecview.exception.JSVException;
-import jspecview.source.JDXSource;
 
 public class JSVFileManager {
 
@@ -601,8 +597,8 @@ public class JSVFileManager {
 	 * @return int[]
 	 */
 	private static int[] getAtomMap(String jsonMolFile, String jmolMolFile) {
-		P3[] acJson = getCoord(jsonMolFile);
-		P3[] acJmol = getCoord(jmolMolFile);
+		P3d[] acJson = getCoord(jsonMolFile);
+		P3d[] acJmol = getCoord(jmolMolFile);
 		int n = acJson.length; 
 		if (n != acJmol.length)
 			return null;
@@ -611,7 +607,7 @@ public class JSVFileManager {
 		bs.setBits(0, n);
 		boolean haveMap = false;
 		for (int i = 0; i < n; i++) {
-			P3 a = acJson[i];
+			P3d a = acJson[i];
 			for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
 				if (a.distanceSquared(acJmol[j]) < 0.1f) {
 					bs.clear(j);
@@ -631,15 +627,15 @@ public class JSVFileManager {
 	 * @param mol
 	 * @return P3[]
 	 */
-	private static P3[] getCoord(String mol) {
+	private static P3d[] getCoord(String mol) {
 		String[] lines = PT.split(mol,  "\n");
-		float[] data = new float[3];
+		double[] data = new double[3];
 		int n = Integer.parseInt(lines[3].substring(0, 3).trim());
-		P3[] pts = new P3[n];
+		P3d[] pts = new P3d[n];
 		for (int i = 0; i < n; i++) {
 			String line = lines[4 + i];
-			PT.parseFloatArrayInfested(PT.getTokens(line.substring(0, 31)), data);
-			pts[i] = P3.new3(data[0], data[1], data[2]); 
+			PT.parseDoubleArrayInfested(PT.getTokens(line.substring(0, 31)), data);
+			pts[i] = P3d.new3(data[0], data[1], data[2]); 
 		}
 		return pts;
 	}

@@ -226,7 +226,7 @@ public class GenericMouse implements GenericMouseInterface {
 	}
 
 	@Override
-	public void processTwoPointGesture(float[][][] touches) {
+	public void processTwoPointGesture(double[][][] touches) {
 	}
 
 	private boolean disposed;

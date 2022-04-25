@@ -85,16 +85,16 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
 import javajs.util.P3d;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class CmdExt extends ScriptExt {
@@ -312,7 +312,7 @@ public class CmdExt extends ScriptExt {
     boolean haveSout = (sout != null);
     if (!haveSout)
       sout = new String[nmax];
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     for (int j = (haveIndex ? index : bs.nextSetBit(0)); j >= 0; j = bs
         .nextSetBit(j + 1)) {
       String str;
@@ -346,7 +346,7 @@ public class CmdExt extends ScriptExt {
    ScriptEval eval = e;
    chk = eval.chk;
    slen = eval.slen;
-   T3 lattice = null;
+   T3d lattice = null;
    int tok = tokAt(i);
    if (tok == T.leftbrace || tok == T.point3f) {
      lattice = eval.getFractionalPoint(i);
@@ -365,12 +365,12 @@ public class CmdExt extends ScriptExt {
    case T.spacegroup:
    case T.unitcell:
      if (lattice == null)
-       lattice = P3.new3(555, 555, -1);
+       lattice = P3d.new3(555, 555, -1);
      // re-read this token
      eval.iToken = i - 1;
    }
    
-   P3 offset = null;
+   P3d offset = null;
    if (lattice != null) {
      htParams.put("lattice", lattice);
      i = eval.iToken + 1;
@@ -391,7 +391,7 @@ public class CmdExt extends ScriptExt {
        Object supercell;
        sOptions.append(" SUPERCELL ");
        if (eval.isPoint3f(++i)) {
-         P3 pt = getPoint3f(i, false);
+         P3d pt = getPoint3f(i, false);
          if (pt.x != (int) pt.x || pt.y != (int) pt.y || pt.z != (int) pt.z
              || pt.x < 1 || pt.y < 1 || pt.z < 1) {
            eval.iToken = i;
@@ -410,7 +410,7 @@ public class CmdExt extends ScriptExt {
      // {i j k} ... RANGE x.y  (from full unit cell set)
      // {i j k} ... RANGE -x.y (from non-symmetry set)
 
-     float distance = 0;
+     double distance = 0;
      if (tokAt(i) == T.range) {
        /*
         * # Jmol 11.3.9 introduces the capability of visualizing the close
@@ -430,10 +430,10 @@ public class CmdExt extends ScriptExt {
         * these options may be desirable.
         */
        i++;
-       distance = floatParameter(i++);
+       distance = doubleParameter(i++);
        sOptions.append( " range " + distance);
      }
-     htParams.put("symmetryRange", Float.valueOf(distance));
+     htParams.put("symmetryRange", Double.valueOf(distance));
 
      // {i j k} ... SPACEGROUP "nameOrNumber"
      // {i j k} ... SPACEGROUP "IGNOREOPERATORS"
@@ -483,7 +483,7 @@ public class CmdExt extends ScriptExt {
            fparams = new double[6];
            SimpleUnitCell.setOabcD(s, fparams, null);
          } else { 
-           fparams = AU.asDoubleA(eval.floatParameterSet(i, 6, 9));
+           fparams = eval.doubleParameterSet(i, 6, 9);
          }
        }
        if (fparams == null || fparams.length != 6 && fparams.length != 9)
@@ -538,7 +538,7 @@ public class CmdExt extends ScriptExt {
     switch (tokAt(i)) {
     case T.fill:
       htParams.put("packed", Boolean.TRUE);
-      T3[] oabc = null;
+      T3d[] oabc = null;
       int tok = tokAt(++i);
       switch (tok) {
       case T.unitcell:
@@ -549,10 +549,10 @@ public class CmdExt extends ScriptExt {
           oabc = e.getPointArray(i, -1, false);
           i = e.iToken;
         } else if (isFloatParameter(i)) {
-          float d = floatParameter(i);
-          oabc = new P3[] { new P3(), P3.new3(d, d, d) };
+          double d = doubleParameter(i);
+          oabc = new P3d[] { new P3d(), P3d.new3(d, d, d) };
         } else {
-          oabc = new P3[0];
+          oabc = new P3d[0];
           --i;
         }
       }
@@ -583,35 +583,35 @@ public class CmdExt extends ScriptExt {
       switch (oabc.length) {
       case 2:
         // origin and diagonal vector
-        T3 a = oabc[1];
-        oabc = new T3[] { oabc[0], P3.newP(oabc[0]), new P3(), new P3() };
+        T3d a = oabc[1];
+        oabc = new T3d[] { oabc[0], P3d.newP(oabc[0]), new P3d(), new P3d() };
         oabc[1].x = a.x;
         oabc[2].y = a.y;
         oabc[3].z = a.z;
         break;
       case 3:
         // implicit origin {0 0 0} with three vectors
-        oabc = new T3[] { new P3(), oabc[0], oabc[1], oabc[2] };
+        oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
         break;
       case 4:
         break;
       default:
         // {0 0 0} with 10x10x10 cell
-        oabc = new T3[] { new P3(), P3.new3(10, 0, 0), P3.new3(0, 10, 0),
-            P3.new3(0, 0, 10) };
+        oabc = new T3d[] { new P3d(), P3d.new3(10, 0, 0), P3d.new3(0, 10, 0),
+            P3d.new3(0, 0, 10) };
       }
       htParams.put("fillRange", oabc);
       sOptions.append(" FILL [" + oabc[0] + oabc[1] + oabc[2] + oabc[3] + "]");
       break;
     case T.packed:
-      float f = Float.NaN;
+      double f = Double.NaN;
       if (isFloatParameter(++i))
-        f = floatParameter(i++);
+        f = doubleParameter(i++);
       if (!e.chk) {
         htParams.put("packed", Boolean.TRUE);
         sOptions.append(" PACKED");
-        if (!Float.isNaN(f)) {
-          htParams.put("packingError", Float.valueOf(f));
+        if (!Double.isNaN(f)) {
+          htParams.put("packingError", Double.valueOf(f));
           sOptions.append(" " + f);
         }
       }
@@ -789,7 +789,7 @@ public class CmdExt extends ScriptExt {
           // calculate structure DSSP
           // calculate structure DSSP 1.0
           // calculate structure DSSP 2.0
-          version = (slen == e.iToken + 1 ? -1 : (int) floatParameter(++e.iToken));
+          version = (slen == e.iToken + 1 ? -1 : (int) doubleParameter(++e.iToken));
           break;
         case T.nada:
           asDSSP = vwr.getBoolean(T.defaultstructuredssp);
@@ -845,7 +845,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (e.iToken + 1 < slen ? atomExpressionAt(++e.iToken) : vwr.bsA());
         checkLength(++e.iToken);
         if (!chk)
-          vwr.calculateSurface(bs1, (isFrom ? Float.MAX_VALUE : -1));
+          vwr.calculateSurface(bs1, (isFrom ? Double.MAX_VALUE : -1));
         return;
       }
     }
@@ -867,7 +867,7 @@ public class CmdExt extends ScriptExt {
     }
     Map<String, Object> params = vwr.captureParams;
     String type = (params == null ? "GIF" : (String) params.get("type"));
-    float endTime = 0; // indefinitely by default
+    double endTime = 0; // indefinitely by default
     int mode = 0;
     int slen = e.slen;
     String fileName = "";
@@ -944,7 +944,7 @@ public class CmdExt extends ScriptExt {
         break;
       case T.decimal:
       case T.integer:
-        endTime = floatParameter(i++);
+        endTime = doubleParameter(i++);
         break;
       }
       if (chk)
@@ -1024,12 +1024,12 @@ public class CmdExt extends ScriptExt {
     default:
       invArg();
     }
-    P3 pt = P3.new3(0, 0, 0);
+    P3d pt = P3d.new3(0, 0, 0);
     if (slen == 5) {
       // centerAt xxx x y z
-      pt.x = floatParameter(2);
-      pt.y = floatParameter(3);
-      pt.z = floatParameter(4);
+      pt.x = doubleParameter(2);
+      pt.y = doubleParameter(3);
+      pt.z = doubleParameter(4);
     } else if (e.isCenterParameter(2)) {
       pt = centerParameter(2);
       e.checkLast(e.iToken);
@@ -1075,19 +1075,19 @@ public class CmdExt extends ScriptExt {
     boolean doTranslate = false;
     boolean doAnimate = false;
     boolean isFlexFit = false;
-    Quat[] data1 = null, data2 = null;
+    Qd[] data1 = null, data2 = null;
     BS bsAtoms1 = null, bsAtoms2 = null;
     Lst<Object[]> vAtomSets = null;
     Lst<Object[]> vQuatSets = null;
     eval.iToken = 0;
-    float nSeconds = (isFloatParameter(1) ? floatParameter(++eval.iToken)
-        : Float.NaN);
+    double nSeconds = (isFloatParameter(1) ? doubleParameter(++eval.iToken)
+        : Double.NaN);
 
     ///BS bsFrom = (tokAt(++iToken) == T.subset ? null : atomExpressionAt(iToken));
     //BS bsTo = (tokAt(++iToken) == T.subset ? null : atomExpressionAt(iToken));
     //if (bsFrom == null || bsTo == null)
     ///invArg();
-    P3[] coordTo = null;
+    P3d[] coordTo = null;
     BS bsFrom = null, bsTo = null;
     int tok = 0;
     if (tokAt(1) == T.frame) {
@@ -1148,7 +1148,7 @@ public class CmdExt extends ScriptExt {
         break;
       case T.decimal:
       case T.integer:
-        nSeconds = Math.abs(floatParameter(i));
+        nSeconds = Math.abs(doubleParameter(i));
         if (nSeconds > 0)
           doAnimate = true;
         break;
@@ -1225,7 +1225,7 @@ public class CmdExt extends ScriptExt {
     // processing
     if (isFrames)
       nSeconds = 0;
-    if (Float.isNaN(nSeconds) || nSeconds < 0)
+    if (Double.isNaN(nSeconds) || nSeconds < 0)
       nSeconds = 1;
     else if (!doRotate && !doTranslate)
       doRotate = doTranslate = true;
@@ -1278,15 +1278,15 @@ public class CmdExt extends ScriptExt {
     }
     for (int iFrame = 0, iModel = bsModels.nextSetBit(0); iFrame < bsFrames.length; iFrame++, iModel = bsModels.nextSetBit(iModel + 1)) {
       bsFrom = bsFrames[iFrame];
-      float[] retStddev = new float[2]; // [0] final, [1] initial for atoms
+      double[] retStddev = new double[2]; // [0] final, [1] initial for atoms
       if (isFrames && isPolyhedral && iFrame == 0) {
         bsTo = bsFrom;
         continue;
       }
 
-      Quat q = null;
-      Lst<Quat> vQ = new Lst<Quat>();
-      P3[][] centerAndPoints = null;
+      Qd q = null;
+      Lst<Qd> vQ = new Lst<Qd>();
+      P3d[][] centerAndPoints = null;
       Lst<Object[]> vAtomSets2 = (isFrames ? new Lst<Object[]>() : vAtomSets);
       for (int i = 0; i < vAtomSets.size(); ++i) {
         BS[] bss = (BS[]) vAtomSets.get(i);
@@ -1294,8 +1294,8 @@ public class CmdExt extends ScriptExt {
           vAtomSets2.addLast(bss = new BS[] { BSUtil.copy(bss[0]), bss[1] });
         bss[0].and(bsFrom);
       }
-      P3 center = null;
-      V3 translation = null;
+      P3d center = null;
+      V3d translation = null;
       if (isAtoms) {
         if (coordTo != null) {
           vAtomSets2.clear();
@@ -1308,18 +1308,18 @@ public class CmdExt extends ScriptExt {
         }
         int n = centerAndPoints[0].length - 1;
         for (int i = 1; i <= n; i++) {
-          P3 aij = centerAndPoints[0][i];
-          P3 bij = centerAndPoints[1][i];
+          P3d aij = centerAndPoints[0][i];
+          P3d bij = centerAndPoints[1][i];
           if (!(aij instanceof Atom) || !(bij instanceof Atom))
             break;
           if (!isFrames)
             Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
                + ((Atom) bij).getInfo());
         }
-        q = Measure.calculateQuaternionRotation(centerAndPoints, retStddev);
-        float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN
+        q = MeasureD.calculateQuaternionRotation(centerAndPoints, retStddev);
+        double r0 = (Double.isNaN(retStddev[1]) ? Double.NaN
             : Math.round(retStddev[0] * 100) / 100f);
-        float r1 = (Float.isNaN(retStddev[1]) ? Float.NaN
+        double r1 = (Double.isNaN(retStddev[1]) ? Double.NaN
             : Math.round(retStddev[1] * 100) / 100f);
         showString("RMSD " + r0 + " --> " + r1 + " Angstroms");
       } else if (isQuaternion) {
@@ -1338,8 +1338,8 @@ public class CmdExt extends ScriptExt {
           }
         }
         retStddev[0] = 0;
-        data1 = vQ.toArray(new Quat[vQ.size()]);
-        q = Quat.sphereMean(data1, retStddev, 0.0001f);
+        data1 = vQ.toArray(new Qd[vQ.size()]);
+        q = Qd.sphereMean(data1, retStddev, 0.0001);
         showString("RMSD = " + retStddev[0] + " degrees");
       } else {
         // SMILES
@@ -1353,7 +1353,7 @@ public class CmdExt extends ScriptExt {
         */
 
         M4d m4 = new M4d();
-        center = new P3();
+        center = new P3d();
         if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles) || "*".equals(strSmiles) || "".equals(strSmiles)))
           try {
             strSmiles = vwr.getSmilesOpt(bsFrom, -1, -1, ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0), null);
@@ -1361,13 +1361,13 @@ public class CmdExt extends ScriptExt {
             eval.evalError(ex.getMessage(), null);
           }
         if (isFlexFit) {
-          float[] list;
+          double[] list;
           if (bsFrom == null || bsTo == null || (list = eval.getSmilesExt()
               .getFlexFitList(bsFrom, bsTo, strSmiles, !isSmiles)) == null)
             return;
           vwr.setDihedrals(list, null, 1);
         }
-        float stddev;
+        double stddev;
         if (isPolyhedral) {
           BS bs1 = BS.copy(bsAtoms1);
           bs1.and(bsFrom);
@@ -1382,18 +1382,18 @@ public class CmdExt extends ScriptExt {
                   | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
         }
         //        System.out.println("compare:\n" + m4);
-        if (Float.isNaN(stddev)) {
+        if (Double.isNaN(stddev)) {
           showString("structures do not match from " + bsFrom + " to " + bsTo);
           return;
         }
         if (doTranslate) {
-          translation = new V3();
+          translation = new V3d();
           m4.getTranslation(translation);
         }
         if (doRotate) {
           M3d m3 = new M3d();
           m4.getRotationScale(m3);
-          q = Quat.newM(m3);
+          q = Qd.newM(m3);
         }
         showString("RMSD = " + stddev + " Angstroms");
 
@@ -1410,11 +1410,11 @@ public class CmdExt extends ScriptExt {
         centerAndPoints = vwr.getCenterAndPoints(vAtomSets2, true);
         center = centerAndPoints[0][0];
       }
-      P3 pt1 = new P3();
-      float endDegrees = Float.NaN;
+      P3d pt1 = new P3d();
+      double endDegrees = Double.NaN;
       if (doTranslate) {
         if (translation == null)
-          translation = V3.newVsub(centerAndPoints[1][0], center);
+          translation = V3d.newVsub(centerAndPoints[1][0], center);
         endDegrees = 1e10f;
       }
       if (doRotate) {
@@ -1431,12 +1431,12 @@ public class CmdExt extends ScriptExt {
             doRotate = doTranslate = doAnimate = false;
         }
       }
-      if (Float.isNaN(endDegrees) || Float.isNaN(pt1.x))
+      if (Double.isNaN(endDegrees) || Double.isNaN(pt1.x))
         continue;
-      Lst<P3> ptsB = null;
+      Lst<P3d> ptsB = null;
       if (doRotate && doTranslate && nSeconds != 0) {
-        Lst<P3> ptsA = vwr.ms.getAtomPointVector(bsFrom);
-        M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrixd(), translation);
+        Lst<P3d> ptsA = vwr.ms.getAtomPointVector(bsFrom);
+        M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
         ptsB = ScriptParam.transformPoints(ptsA, m4, center);
       }
       if (!eval.useThreads())
@@ -1490,7 +1490,7 @@ public class CmdExt extends ScriptExt {
     String id = null;
     int pt = 1;
     short colix = 0;
-    float[] offset = null;
+    double[] offset = null;
     if (slen == 2)
       switch (tokAt(1)) {
       case T.off:
@@ -1561,7 +1561,7 @@ public class CmdExt extends ScriptExt {
     int atomIndex = -1;
     int ptFloat = -1;
     int[] countPlusIndexes = new int[5];
-    float[] rangeMinMax = new float[] { Float.MAX_VALUE, Float.MAX_VALUE };
+    double[] rangeMinMax = new double[] { Double.MAX_VALUE, Double.MAX_VALUE };
     boolean isAll = false;
     boolean isAllConnected = false;
     boolean isNotConnected = false;
@@ -1580,7 +1580,7 @@ public class CmdExt extends ScriptExt {
     TickInfo tickInfo = null;
     int nBitSets = 0;
     int mad = 0;
-    float value = Float.NaN;
+    double value = Double.NaN;
     String alignment = null;
     for (int i = 1; i < slen; ++i) {
       switch (getToken(i).tok) {
@@ -1621,17 +1621,17 @@ public class CmdExt extends ScriptExt {
       case T.offset:
         if (eval.isPoint3f(++i)) {
           // PyMOL offsets -- {x, y, z} in angstroms
-          P3 p = getPoint3f(i, false);
-          offset = new float[] { 1, p.x, p.y, p.z, 0, 0, 0 };
+          P3d p = getPoint3f(i, false);
+          offset = new double[] { 1, p.x, p.y, p.z, 0, 0, 0 };
         } else {
-          offset = eval.floatParameterSet(i, 7, 7);
+          offset = eval.doubleParameterSet(i, 7, 7);
         }
         i = eval.iToken;
         break;
       case T.radius:
       case T.diameter:
         mad = (int) ((eval.theTok == T.radius ? 2000 : 1000)
-            * floatParameter(++i));
+            * doubleParameter(++i));
         if (id != null && mad <= 0)
           mad = -1;
         break;
@@ -1641,7 +1641,7 @@ public class CmdExt extends ScriptExt {
         isAll = true;
         isRange = true;
         ptFloat = (ptFloat + 1) % 2;
-        rangeMinMax[ptFloat] = floatParameter(i);
+        rangeMinMax[ptFloat] = doubleParameter(i);
         break;
       case T.delete:
         if (tokAction != T.opToggle)
@@ -1649,7 +1649,7 @@ public class CmdExt extends ScriptExt {
         tokAction = T.delete;
         break;
       case T.font:
-        float fontsize = floatParameter(++i);
+        double fontsize = doubleParameter(++i);
         String fontface = paramAsStr(++i);
         String fontstyle = paramAsStr(++i);
         if (!chk)
@@ -1734,9 +1734,9 @@ public class CmdExt extends ScriptExt {
           if (!chk && bs.length() == 0)
             return;
         }
-        if (target instanceof P3) {
+        if (target instanceof P3d) {
           Point3fi v = new Point3fi();
-          v.setT((P3) target);
+          v.setT((P3d) target);
           v.mi = (short) modelIndex;
           target = v;
         }
@@ -1749,7 +1749,7 @@ public class CmdExt extends ScriptExt {
         property = paramAsStr(i);
         break;
       case T.val:
-          value = floatParameter(++i);
+          value = doubleParameter(++i);
           break;
       case T.string:
         // measures "%a1 %a2 %v %u"
@@ -1775,7 +1775,7 @@ public class CmdExt extends ScriptExt {
     if (isRange) {
       if (rangeMinMax[1] < rangeMinMax[0]) {
         rangeMinMax[1] = rangeMinMax[0];
-        rangeMinMax[0] = (rangeMinMax[1] == Float.MAX_VALUE ? Float.MAX_VALUE
+        rangeMinMax[0] = (rangeMinMax[1] == Double.MAX_VALUE ? Double.MAX_VALUE
             : -200);
       }
     }
@@ -1838,10 +1838,10 @@ public class CmdExt extends ScriptExt {
    */
   private void connect(int index) throws ScriptException {
     ScriptEval eval = e;
-    final float[] distances = new float[2];
+    final double[] distances = new double[2];
     BS[] atomSets = new BS[2];
     atomSets[0] = atomSets[1] = vwr.bsA();
-    float radius = Float.NaN;
+    double radius = Double.NaN;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int distanceCount = 0;
     int bondOrder = Edge.BOND_ORDER_NULL;
@@ -1850,7 +1850,7 @@ public class CmdExt extends ScriptExt {
     boolean isDelete = false;
     boolean haveType = false;
     boolean haveOperation = false;
-    float translucentLevel = Float.MAX_VALUE;
+    double translucentLevel = Double.MAX_VALUE;
     boolean isColorOrRadius = false;
     int nAtomSets = 0;
     int nDistances = 0;
@@ -1858,7 +1858,7 @@ public class CmdExt extends ScriptExt {
     boolean isBonds = false;
     int expression2 = 0;
     int ptColor = 0;
-    float energy = 0;
+    double energy = 0;
     boolean addGroup = false;
     /*
      * connect [<=2 distance parameters] [<=2 atom sets] [<=1 bond type] [<=1
@@ -1890,7 +1890,7 @@ public class CmdExt extends ScriptExt {
         if (nAtomSets > 0) {
           if (haveType || isColorOrRadius)
             eval.error(ScriptError.ERROR_invalidParameterOrder);
-          bo = Edge.getBondOrderFromFloat(floatParameter(i));
+          bo = Edge.getBondOrderFromFloat(doubleParameter(i));
           if (bo == Edge.BOND_ORDER_NULL)
             invArg();
           bondOrder = bo;
@@ -1899,7 +1899,7 @@ public class CmdExt extends ScriptExt {
         }
         if (++nDistances > 2)
           eval.bad();
-        float dist = floatParameter(i);
+        double dist = doubleParameter(i);
         if (tokAt(i + 1) == T.percent) {
           dist = -dist / 100f;
           i++;
@@ -1975,7 +1975,7 @@ public class CmdExt extends ScriptExt {
         if (!isColorOrRadius) {
           colorArgb[0] = 0xFFFFFF;
           translucentLevel = 0.5f;
-          radius = vwr.getFloat(T.strutdefaultradius);
+          radius = vwr.getDouble(T.strutdefaultradius);
           isColorOrRadius = true;
         }
         if (!haveOperation) {
@@ -2016,7 +2016,7 @@ public class CmdExt extends ScriptExt {
         case Edge.BOND_H_REGULAR:
           if (tokAt(i + 1) == T.integer) {
             bo = (short) (intParameter(++i) << Edge.BOND_HBOND_SHIFT);
-            energy = floatParameter(++i);
+            energy = doubleParameter(++i);
           }
           break;
         case Edge.TYPE_ATROPISOMER:
@@ -2029,7 +2029,7 @@ public class CmdExt extends ScriptExt {
         bondOrder = bo;
         break;
       case T.radius:
-        radius = floatParameter(++i);
+        radius = doubleParameter(++i);
         isColorOrRadius = true;
         break;
       case T.none:
@@ -2103,8 +2103,8 @@ public class CmdExt extends ScriptExt {
     }
     if (isColorOrRadius) {
       vwr.selectBonds(bsBonds);
-      if (!Float.isNaN(radius))
-        eval.setShapeSizeBs(JC.SHAPE_STICKS, Math.round(radius * 2000), null);
+      if (!Double.isNaN(radius))
+        eval.setShapeSizeBs(JC.SHAPE_STICKS, (int) Math.round(radius * 2000), null);
       finalizeObject(JC.SHAPE_STICKS, colorArgb[0], translucentLevel, 0, false,
           null, 0, bsBonds);
       vwr.selectBonds(null);
@@ -2177,7 +2177,7 @@ public class CmdExt extends ScriptExt {
       return;
     boolean isDefault = (dataLabel.toLowerCase().indexOf("(default)") >= 0);
     if (dataType.equals("connect_atoms")) {
-      vwr.ms.connect((float[][]) parseDataArray(dataString, false));
+      vwr.ms.connect((double[][]) parseDataArray(dataString, false));
       return;
     }
     if (dataType.indexOf("ligand_") == 0) {
@@ -2211,7 +2211,7 @@ public class CmdExt extends ScriptExt {
       // data2d_someName
       d[JmolDataManager.DATA_LABEL] = dataLabel;
       d[JmolDataManager.DATA_VALUE] = parseDataArray(dataString, false);
-      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFF);
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_ADD);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
@@ -2219,7 +2219,7 @@ public class CmdExt extends ScriptExt {
       // data3d_someName
       d[JmolDataManager.DATA_LABEL] = dataLabel;
       d[JmolDataManager.DATA_VALUE] = parseDataArray(dataString, true);
-      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFFF);
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_ADDD);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
@@ -2300,7 +2300,7 @@ public class CmdExt extends ScriptExt {
     ScriptEval eval = e;
     int mad = 0;
     int i = 1;
-    float translucentLevel = Float.MAX_VALUE;
+    double translucentLevel = Double.MAX_VALUE;
     boolean checkMore = false;
     boolean isSet = false;
     setShapeProperty(JC.SHAPE_ELLIPSOIDS, "thisID", null);
@@ -2438,7 +2438,7 @@ public class CmdExt extends ScriptExt {
                     SV.dValue(v.getList().get(2)));
                 break;
               case T.point3f:
-                axes[k] = V3d.newV((T3) v.value);
+                axes[k] = V3d.newV((T3d) v.value);
                 break;
               }
             }
@@ -2471,12 +2471,12 @@ public class CmdExt extends ScriptExt {
           break;
         case T.scale:
           if (isFloatParameter(i + 1)) {
-            value = Float.valueOf(floatParameter(++i));
+            value = Double.valueOf(doubleParameter(++i));
           } else if (eval.isCenterParameter(i)){
-            P3 p = centerParameter(i);
-            value = new float[] {p.x, p.y, p.z};
+            P3d p = centerParameter(i);
+            value = new double[] {p.x, p.y, p.z};
           } else {
-            value = eval.floatParameterSet(++i, 3, 3);
+            value = eval.doubleParameterSet(++i, 3, 3);
           }
           i = eval.iToken;
           break;
@@ -2569,8 +2569,8 @@ public class CmdExt extends ScriptExt {
     // invertSelected STEREO {sp3Atom} {one or two groups)
     // invertSelected ATOM {ring atom sets}
     ScriptEval e = this.e;
-    P3 pt = null;
-    P4 plane = null;
+    P3d pt = null;
+    P4d plane = null;
     BS bs = null;
     int iAtom = Integer.MIN_VALUE;
     int ipt = 1;
@@ -2664,30 +2664,30 @@ public class CmdExt extends ScriptExt {
       if (T.tokAttrOr(tokProp1, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokProp2, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokKey, T.intproperty, T.floatproperty)) {
-        float[] data1 = getBitsetPropertyFloat(bsFrom, tokProp1
-            | T.selectedfloat, null, Float.NaN, Float.NaN);
-        float[] data2 = getBitsetPropertyFloat(bsFrom, tokKey
-            | T.selectedfloat, null, Float.NaN, Float.NaN);
-        float[] data3 = getBitsetPropertyFloat(bsTo, tokKey
-            | T.selectedfloat, null, Float.NaN, Float.NaN);
+        double[] data1 = getBitsetPropertyFloat(bsFrom, tokProp1
+            | T.selectedfloat, null, Double.NaN, Double.NaN);
+        double[] data2 = getBitsetPropertyFloat(bsFrom, tokKey
+            | T.selectedfloat, null, Double.NaN, Double.NaN);
+        double[] data3 = getBitsetPropertyFloat(bsTo, tokKey
+            | T.selectedfloat, null, Double.NaN, Double.NaN);
         boolean isProperty = (tokProp2 == T.property);
-        float[] dataOut = new float[isProperty ? vwr.ms.ac
+        double[] dataOut = new double[isProperty ? vwr.ms.ac
             : data3.length];
         bsOut = new BS();
         if (data1.length == data2.length) {
-          Map<Float, Float> ht = new Hashtable<Float, Float>();
+          Map<Double, Double> ht = new Hashtable<Double, Double>();
           for (int i = 0; i < data1.length; i++) {
-            ht.put(Float.valueOf(data2[i]), Float.valueOf(data1[i]));
+            ht.put(Double.valueOf(data2[i]), Double.valueOf(data1[i]));
           }
           int pt = -1;
           int nOut = 0;
           for (int i = 0; i < data3.length; i++) {
             pt = bsTo.nextSetBit(pt + 1);
-            Float F = ht.get(Float.valueOf(data3[i]));
+            Double F = ht.get(Double.valueOf(data3[i]));
             if (F == null)
               continue;
             bsOut.set(pt);
-            dataOut[(isProperty ? pt : nOut)] = F.floatValue();
+            dataOut[(isProperty ? pt : nOut)] = F.doubleValue();
             nOut++;
           }
           // note: this was DATA_TYPE_STRING ?? 
@@ -2734,7 +2734,7 @@ public class CmdExt extends ScriptExt {
   private void minimize() throws ScriptException {
     BS bsSelected = null;
     int steps = Integer.MAX_VALUE;
-    float crit = 0;
+    double crit = 0;
     boolean addHydrogen = false;
     boolean isSilent = false;
     BS bsFixed = null;
@@ -2763,7 +2763,7 @@ public class CmdExt extends ScriptExt {
         if (i != 1)
           invArg();
         int n = 0;
-        float targetValue = 0;
+        double targetValue = 0;
         int[] aList = new int[5];
         if (tokAt(++i) == T.clear) {
           checkLength(3);
@@ -2775,14 +2775,14 @@ public class CmdExt extends ScriptExt {
           aList[0] = n;
           if (n == 1)
             invArg();
-          targetValue = floatParameter(e.checkLast(i));
+          targetValue = doubleParameter(e.checkLast(i));
         }
         if (!chk)
           vwr.getMinimizer(true).setProperty("constraint",
-              new Object[] { aList, Float.valueOf(targetValue) });
+              new Object[] { aList, Double.valueOf(targetValue) });
         return;
       case T.criterion:
-        crit = floatParameter(++i);
+        crit = doubleParameter(++i);
         continue;
       case T.energy:
         steps = 0;
@@ -2850,7 +2850,7 @@ public class CmdExt extends ScriptExt {
     // modulation x.x  t-offset
     // modulation {t1 t2 t3} 
     // modulation {q1 q2 q3} TRUE 
-    P3 qtOffset = null;
+    P3d qtOffset = null;
     //    int frameN = Integer.MAX_VALUE;
     ScriptEval eval = e;
     boolean mod = true;
@@ -2898,13 +2898,13 @@ public class CmdExt extends ScriptExt {
       //$FALL-THROUGH$
     case T.decimal:
     case T.integer:
-      // allows for form of number -- integer or float -- to determine type,
+      // allows for form of number -- integer or double -- to determine type,
       // but allso allows using "t" or "q" followed by a number or {t1 t2 t3}
       switch (eval.theTok) {
       case T.decimal:
         if (isFloatParameter(i)) {
-          float t1 = floatParameter(i);
-          qtOffset = P3.new3(t1, t1, t1);
+          double t1 = doubleParameter(i);
+          qtOffset = P3d.new3(t1, t1, t1);
         } else {
           qtOffset = eval.getPoint3f(i, false, true);
         }
@@ -2912,7 +2912,7 @@ public class CmdExt extends ScriptExt {
       case T.integer:
         if (tokAt(i) == T.integer) {
           int t = intParameter(i);
-          qtOffset = P3.new3(t, t, t);
+          qtOffset = P3d.new3(t, t, t);
         } else {
           qtOffset = eval.getPoint3f(i, false, true);
         }
@@ -2921,7 +2921,7 @@ public class CmdExt extends ScriptExt {
       }
       break;
     case T.scale:
-      float scale = floatParameter(2);
+      double scale = doubleParameter(2);
       if (!chk)
         vwr.setFloatProperty("modulationScale", scale);
       return;
@@ -2944,7 +2944,7 @@ public class CmdExt extends ScriptExt {
     BS bs;
     String alphaType = null;
     String sequence = null;
-    float[] phipsi = null;
+    double[] phipsi = null;
     boolean isCreate = false;
     switch (tokAt(++i)) {
     case T.create:
@@ -2965,7 +2965,7 @@ public class CmdExt extends ScriptExt {
         case T.spacebeforesquare:
         case T.varray:
           alphaType = null;
-          phipsi = e.floatParameterSet(++i, 2, Integer.MAX_VALUE);
+          phipsi = e.doubleParameterSet(++i, 2, Integer.MAX_VALUE);
           if (phipsi.length % 2 == 1)
             invArg();
           i = e.iToken;
@@ -3047,9 +3047,9 @@ public class CmdExt extends ScriptExt {
       eval.setBooleanProperty("navigationMode", true);
       return;
     }
-    V3 rotAxis = V3.new3(0, 1, 0);
+    V3d rotAxis = V3d.new3(0, 1, 0);
     Lst<Object[]> list = new Lst<Object[]>();
-    P3 pt;
+    P3d pt;
     if (slen == 2) {
       switch (getToken(1).tok) {
       case T.on:
@@ -3058,7 +3058,7 @@ public class CmdExt extends ScriptExt {
           return;
         eval.setObjectMad10(JC.SHAPE_AXES, "axes", 10);
         setShapeProperty(JC.SHAPE_AXES, "position",
-            P3.new3(50, 50, Float.MAX_VALUE));
+            P3d.new3(50, 50, Double.MAX_VALUE));
         eval.setBooleanProperty("navigationMode", true);
         vwr.tm.setNavOn(eval.theTok == T.on);
         return;
@@ -3076,7 +3076,7 @@ public class CmdExt extends ScriptExt {
     if (!chk && !vwr.getBoolean(T.navigationmode))
       eval.setBooleanProperty("navigationMode", true);
     for (int i = 1; i < slen; i++) {
-      float timeSec = (isFloatParameter(i) ? floatParameter(i++) : 2f);
+      double timeSec = (isFloatParameter(i) ? doubleParameter(i++) : 2f);
       if (timeSec < 0)
         invArg();
       if (!chk && timeSec > 0)
@@ -3093,10 +3093,10 @@ public class CmdExt extends ScriptExt {
           vwr.tm.setNavXYZ(pt.x, pt.y, pt.z);
         return;
       case T.depth:
-        float depth = floatParameter(++i);
+        double depth = doubleParameter(++i);
         if (!chk)
           list.addLast(new Object[] { Integer.valueOf(T.depth),
-              Float.valueOf(timeSec), Float.valueOf(depth) });
+              Double.valueOf(timeSec), Double.valueOf(depth) });
         //vwr.setNavigationDepthPercent(timeSec, depth);
         continue;
       case T.center:
@@ -3104,7 +3104,7 @@ public class CmdExt extends ScriptExt {
         i = eval.iToken;
         if (!chk)
           list.addLast(new Object[] { Integer.valueOf(T.point),
-              Float.valueOf(timeSec), pt });
+              Double.valueOf(timeSec), pt });
         //vwr.navigatePt(timeSec, pt);
         continue;
       case T.rotate:
@@ -3130,46 +3130,46 @@ public class CmdExt extends ScriptExt {
           invArg(); // for now
           break;
         }
-        float degrees = floatParameter(i);
+        double degrees = doubleParameter(i);
         if (!chk)
           list.addLast(new Object[] { Integer.valueOf(T.rotate),
-              Float.valueOf(timeSec), rotAxis, Float.valueOf(degrees) });
+              Double.valueOf(timeSec), rotAxis, Double.valueOf(degrees) });
         //          vwr.navigateAxis(timeSec, rotAxis, degrees);
         continue;
       case T.translate:
-        float x = Float.NaN;
-        float y = Float.NaN;
+        double x = Double.NaN;
+        double y = Double.NaN;
         if (isFloatParameter(++i)) {
-          x = floatParameter(i);
-          y = floatParameter(++i);
+          x = doubleParameter(i);
+          y = doubleParameter(++i);
         } else {
           switch (tokAt(i)) {
           case T.x:
-            x = floatParameter(++i);
+            x = doubleParameter(++i);
             break;
           case T.y:
-            y = floatParameter(++i);
+            y = doubleParameter(++i);
             break;
           default:
             pt = centerParameter(i);
             i = eval.iToken;
             if (!chk)
               list.addLast(new Object[] { Integer.valueOf(T.translate),
-                  Float.valueOf(timeSec), pt });
+                  Double.valueOf(timeSec), pt });
             //vwr.navTranslate(timeSec, pt);
             continue;
           }
         }
         if (!chk)
           list.addLast(new Object[] { Integer.valueOf(T.percent),
-              Float.valueOf(timeSec), Float.valueOf(x), Float.valueOf(y) });
+              Double.valueOf(timeSec), Double.valueOf(x), Double.valueOf(y) });
         //vwr.navTranslatePercent(timeSec, x, y);
         continue;
       case T.divide:
         continue;
       case T.trace:
-        P3[][] pathGuide;
-        Lst<P3[]> vp = new Lst<P3[]>();
+        P3d[][] pathGuide;
+        Lst<P3d[]> vp = new Lst<P3d[]>();
         BS bs;
         if (eval.isAtomExpression(i + 1)) {
           bs = atomExpressionAt(++i);
@@ -3182,19 +3182,19 @@ public class CmdExt extends ScriptExt {
         vwr.getPolymerPointsAndVectors(bs, vp);
         int n;
         if ((n = vp.size()) > 0) {
-          pathGuide = new P3[n][];
+          pathGuide = new P3d[n][];
           for (int j = 0; j < n; j++) {
             pathGuide[j] = vp.get(j);
           }
           list.addLast(new Object[] { Integer.valueOf(T.trace),
-              Float.valueOf(timeSec), pathGuide });
+              Double.valueOf(timeSec), pathGuide });
           //vwr.navigateGuide(timeSec, pathGuide);
           continue;
         }
         break;
       case T.path:
-        P3[] path;
-        float[] theta = null; // orientation; null for now
+        P3d[] path;
+        double[] theta = null; // orientation; null for now
         if (getToken(i + 1).tok == T.dollarsign) {
           i++;
           // navigate timeSeconds path $id indexStart indexEnd
@@ -3202,30 +3202,30 @@ public class CmdExt extends ScriptExt {
           if (chk)
             return;
           setShapeProperty(JC.SHAPE_DRAW, "thisID", pathID);
-          path = (P3[]) getShapeProperty(JC.SHAPE_DRAW, "vertices");
+          path = (P3d[]) getShapeProperty(JC.SHAPE_DRAW, "vertices");
           eval.refresh(false);
           if (path == null)
             invArg();
-          int indexStart = (int) (isFloatParameter(i + 1) ? floatParameter(++i)
+          int indexStart = (int) (isFloatParameter(i + 1) ? doubleParameter(++i)
               : 0);
-          int indexEnd = (int) (isFloatParameter(i + 1) ? floatParameter(++i)
+          int indexEnd = (int) (isFloatParameter(i + 1) ? doubleParameter(++i)
               : Integer.MAX_VALUE);
           list.addLast(new Object[] { Integer.valueOf(T.path),
-              Float.valueOf(timeSec), path, theta,
+              Double.valueOf(timeSec), path, theta,
               new int[] { indexStart, indexEnd } });
           //vwr.navigatePath(timeSec, path, theta, indexStart, indexEnd);
           continue;
         }
-        Lst<P3> v = new Lst<P3>();
+        Lst<P3d> v = new Lst<P3d>();
         while (eval.isCenterParameter(i + 1)) {
           v.addLast(centerParameter(++i));
           i = eval.iToken;
         }
         if (v.size() > 0) {
-          path = v.toArray(new P3[v.size()]);
+          path = v.toArray(new P3d[v.size()]);
           if (!chk)
             list.addLast(new Object[] { Integer.valueOf(T.path),
-                Float.valueOf(timeSec), path, theta,
+                Double.valueOf(timeSec), path, theta,
                 new int[] { 0, Integer.MAX_VALUE } });
           //vwr.navigatePath(timeSec, path, theta, 0, Integer.MAX_VALUE);
           continue;
@@ -3301,8 +3301,8 @@ public class CmdExt extends ScriptExt {
     BS bs = BSUtil.copy(vwr.bsA());
     String preSelected = "; select " + Escape.eBS(bs) + ";\n ";
     String type = e.optParameterAsString(pt).toLowerCase();
-    P3 minXYZ = null;
-    P3 maxXYZ = null;
+    P3d minXYZ = null;
+    P3d maxXYZ = null;
     String format = null;
     int tok = tokAtArray(pt0, args);
     if (tok == T.string)
@@ -3423,40 +3423,40 @@ public class CmdExt extends ScriptExt {
 
     // prepare data for property plotting
 
-    float[] dataX = null, dataY = null, dataZ = null;
+    double[] dataX = null, dataY = null, dataZ = null;
     String[] propData = new String[3];
     if (tok == T.property) {
       dataX = getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
-          propToks[0] == T.property? props[0] : null, (minXYZ == null ? Float.NaN : minXYZ.x), (maxXYZ == null ? Float.NaN
+          propToks[0] == T.property? props[0] : null, (minXYZ == null ? Double.NaN : minXYZ.x), (maxXYZ == null ? Double.NaN
               : maxXYZ.x));
-      propData[0] = props[0] + " " + Escape.eAF(dataX);
+      propData[0] = props[0] + " " + Escape.eAD(dataX);
       if (props[1] != null) {
         dataY = getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
-            propToks[1] == T.property? props[1] : null, (minXYZ == null ? Float.NaN : minXYZ.y),
-            (maxXYZ == null ? Float.NaN : maxXYZ.y));
-        propData[1] = props[1] + " " + Escape.eAF(dataY);
+            propToks[1] == T.property? props[1] : null, (minXYZ == null ? Double.NaN : minXYZ.y),
+            (maxXYZ == null ? Double.NaN : maxXYZ.y));
+        propData[1] = props[1] + " " + Escape.eAD(dataY);
       }
       if (props[2] != null) {
         dataZ = getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
-            propToks[2] == T.property? props[2] : null, (minXYZ == null ? Float.NaN : minXYZ.z),
-            (maxXYZ == null ? Float.NaN : maxXYZ.z));
-        propData[2] = props[2] + " " + Escape.eAF(dataZ);
+            propToks[2] == T.property? props[2] : null, (minXYZ == null ? Double.NaN : minXYZ.z),
+            (maxXYZ == null ? Double.NaN : maxXYZ.z));
+        propData[2] = props[2] + " " + Escape.eAD(dataZ);
       }
       if (minXYZ == null)
-        minXYZ = P3.new3(getPlotMinMax(dataX, false, propToks[0]),
+        minXYZ = P3d.new3(getPlotMinMax(dataX, false, propToks[0]),
             getPlotMinMax(dataY, false, propToks[1]),
             getPlotMinMax(dataZ, false, propToks[2]));
       if (maxXYZ == null)
-        maxXYZ = P3.new3(getPlotMinMax(dataX, true, propToks[0]),
+        maxXYZ = P3d.new3(getPlotMinMax(dataX, true, propToks[0]),
             getPlotMinMax(dataY, true, propToks[1]),
             getPlotMinMax(dataZ, true, propToks[2]));
       Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
-      P3 center = null;
-      P3 factors = null;
+      P3d center = null;
+      P3d factors = null;
 
       if (pdbFormat) {
-        factors = P3.new3(1, 1, 1);
-        center = new P3();
+        factors = P3d.new3(1, 1, 1);
+        center = new P3d();
         center.ave(maxXYZ, minXYZ);
         factors.sub2(maxXYZ, minXYZ);
         factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
@@ -3533,7 +3533,7 @@ public class CmdExt extends ScriptExt {
 
     // get post-processing script
 
-    float radius = 150;
+    double radius = 150;
     String script;
     switch (tok) {
     default:
@@ -3619,26 +3619,26 @@ public class CmdExt extends ScriptExt {
     boolean onOffDelete = false;
     boolean typeSeen = false;
     boolean edgeParameterSeen = false;
-    float scale = Float.NaN;
+    double scale = Double.NaN;
     //    int lighting = T.nada; // never implemented; fullyLit does nothing
     int nAtomSets = 0;
     eval.sm.loadShape(JC.SHAPE_POLYHEDRA);
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
-    float translucentLevel = Float.MAX_VALUE;
-    float radius = -1;
+    double translucentLevel = Double.MAX_VALUE;
+    double radius = -1;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int noToParam = -1;
-    P3 offset = null;
+    P3d offset = null;
     String id = null;
     boolean ok = false;
     int[][] faces = null;
-    P3[] points = null;
+    P3d[] points = null;
     for (int i = 1; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
       switch (getToken(i).tok) {
       case T.wigner: // Wigner-Seitz; like Brillouin, but not reciprocal lattice, and no inclusion of scale
-        scale = Float.NaN;
+        scale = Double.NaN;
         //$FALL-THROUGH$
       case T.brillouin:
         int index = (e.theTok == T.wigner ? -1 : (tokAt(i + 1) == T.integer ? intParameter(++i) : 1));
@@ -3653,12 +3653,12 @@ public class CmdExt extends ScriptExt {
         break;
       case T.point:
         propertyName = "points";
-        propertyValue = Float.valueOf(tokAt(++i) == T.off ? 0 : e
-            .floatParameter(i));
+        propertyValue = Double.valueOf(tokAt(++i) == T.off ? 0 : e
+            .doubleParameter(i));
         ok = true;
         break;
       case T.scale:
-        scale = floatParameter(++i);
+        scale = doubleParameter(++i);
         ok = true;
         continue;
       case T.unitcell:
@@ -3729,8 +3729,8 @@ public class CmdExt extends ScriptExt {
         if (nAtomSets > 0)
           invPO();
         propertyName = (radius <= 0 ? "radius" : "radius1");
-        propertyValue = Float.valueOf(radius = (radius == 0 ? 0
-            : floatParameter(i)));
+        propertyValue = Double.valueOf(radius = (radius == 0 ? 0
+            : doubleParameter(i)));
         needsGenerating = true;
         break;
       case T.offset:
@@ -3754,7 +3754,7 @@ public class CmdExt extends ScriptExt {
           i++;
           break;
         }
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(doubleParameter(++i));
         break;
       case T.model:
         if (id == null)
@@ -3819,7 +3819,7 @@ public class CmdExt extends ScriptExt {
         propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
         if (needsGenerating && isFloatParameter(i + 1))
           setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
-              Float.valueOf(floatParameter(++i)));
+              Double.valueOf(doubleParameter(++i)));
         break;
       case T.noedges:
       case T.edges:
@@ -3884,12 +3884,12 @@ public class CmdExt extends ScriptExt {
     }
     if (offset != null)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "offset", offset);
-    if (!Float.isNaN(scale))
-      setShapeProperty(JC.SHAPE_POLYHEDRA, "scale", Float.valueOf(scale));
+    if (!Double.isNaN(scale))
+      setShapeProperty(JC.SHAPE_POLYHEDRA, "scale", Double.valueOf(scale));
     if (colorArgb[0] != Integer.MIN_VALUE)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "colorThis",
           Integer.valueOf(colorArgb[0]));
-    if (translucentLevel != Float.MAX_VALUE)
+    if (translucentLevel != Double.MAX_VALUE)
       eval.setShapeTranslucency(JC.SHAPE_POLYHEDRA, "", "translucentThis",
           translucentLevel, null);
     //    if (lighting != T.nada)
@@ -4421,7 +4421,7 @@ public class CmdExt extends ScriptExt {
       } else if (data == "SPT") {
         if (isCoord) {
           BS tainted = vwr.ms.getTaintedAtoms(AtomCollection.TAINT_COORD);
-          vwr.setAtomCoordsRelative(P3.new3(0, 0, 0), null);
+          vwr.setAtomCoordsRelative(P3d.new3(0, 0, 0), null);
           data = vwr.getStateInfo();
           vwr.ms.setTaintedAtoms(tainted, AtomCollection.TAINT_COORD);
         } else {
@@ -4703,7 +4703,7 @@ public class CmdExt extends ScriptExt {
     case T.dssp:
       int version = 2;
       if (slen == 3)
-        version = ((int) floatParameter((len = 3) - 1));
+        version = ((int) doubleParameter((len = 3) - 1));
       else
         checkLength(2 + filterLen);
       if (!chk)
@@ -4847,7 +4847,7 @@ public class CmdExt extends ScriptExt {
       // symop only here
       int iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
       String xyz = (tokAt(2) == T.string || tokAt(2) == T.matrix4f ? paramAsStr(2) : null);
-      P3 pt1 = null,
+      P3d pt1 = null,
       pt2 = null;
       int nth = -1;
       if (slen > 3 && tokAt(3) != T.string) {
@@ -5333,7 +5333,7 @@ public class CmdExt extends ScriptExt {
     // stereo color1 color2 6
     // stereo redgreen 5
 
-    float degrees = TransformManager.DEFAULT_STEREO_DEGREES;
+    double degrees = TransformManager.DEFAULT_STEREO_DEGREES;
     boolean degreesSeen = false;
     int[] colors = null;
     int colorpt = 0;
@@ -5362,7 +5362,7 @@ public class CmdExt extends ScriptExt {
         break;
       case T.integer:
       case T.decimal:
-        degrees = floatParameter(i);
+        degrees = doubleParameter(i);
         degreesSeen = true;
         break;
       case T.identifier:
@@ -5388,7 +5388,7 @@ public class CmdExt extends ScriptExt {
     if (mad == Integer.MAX_VALUE)
       return false;
     if (defOn)
-      mad = Math.round(vwr.getFloat(T.strutdefaultradius) * 2000f);
+      mad = (int) Math.round(vwr.getDouble(T.strutdefaultradius) * 2000);
     setShapeProperty(JC.SHAPE_STICKS, "type",
         Integer.valueOf(Edge.BOND_STRUT));
     eval.setShapeSizeBs(JC.SHAPE_STICKS, mad, null);
@@ -5402,7 +5402,7 @@ public class CmdExt extends ScriptExt {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
-    T3 pt = null;
+    T3d pt = null;
     TickInfo tickInfo = eval.tickParamAsStr(i, true, false, false);
     i = eval.iToken;
     String id = null;
@@ -5417,17 +5417,17 @@ public class CmdExt extends ScriptExt {
     case T.restore:
     case T.reset:
       isReset = true;
-      pt = P4.new4(0, 0, 0, -1); // reset offset and range
+      pt = P4d.new4(0, 0, 0, -1); // reset offset and range
       eval.iToken++;
       break;
     case T.surface:
-      P4 plane = eval.hklParameter(i + 1, null, false);
-      T3 hkl = eval.getPointOrPlane(i 
+      P4d plane = eval.hklParameter(i + 1, null, false);
+      T3d hkl = eval.getPointOrPlane(i 
           + 1, ScriptParam.MODE_P34);
       i = eval.iToken;
-      float zscale = Float.NaN;
+      double zscale = Double.NaN;
       if (isFloatParameter(i + 1)) {
-        zscale = floatParameter(++i);
+        zscale = doubleParameter(++i);
         if (tokAt(i + 1) == T.percent) {
           zscale = -zscale / 100;
           i++;
@@ -5436,7 +5436,7 @@ public class CmdExt extends ScriptExt {
       double zoffset = Double.NaN;
       boolean zoffPercent = false;
       if (isFloatParameter(i + 1)) {
-        zoffset = floatParameter(++i);
+        zoffset = doubleParameter(++i);
         if (tokAt(i + 1) == T.percent) {
           zoffPercent = true;
           i++;
@@ -5448,15 +5448,15 @@ public class CmdExt extends ScriptExt {
       if (refTop)
         i++;
       eval.iToken = i;
-      if (hkl instanceof P3) {
-        hkl = P4.new4(hkl.x, hkl.y, hkl.z, 0);
+      if (hkl instanceof P3d) {
+        hkl = P4d.new4(hkl.x, hkl.y, hkl.z, 0);
       } else if (Double.isNaN(zoffset)) {
-        zoffset = ((P4) hkl).w; 
+        zoffset = ((P4d) hkl).w; 
       }
-      oabc = getUVBoxFromHKL(sym, (P4) hkl, plane);
-      P3 p = new P3();
-      V3 vt = new V3();
-      Measure.getPlaneProjection(new P3(), plane, p, vt);
+      oabc = getUVBoxFromHKL(sym, (P4d) hkl, plane);
+      P3d p = new P3d();
+      V3d vt = new V3d();
+      MeasureD.getPlaneProjection(new P3d(), plane, p, vt);
       if (zscale > 0) {
         oabc[3].normalize();
         oabc[3].scale(zscale);
@@ -5465,7 +5465,7 @@ public class CmdExt extends ScriptExt {
       }
 
       V3d vtd = new V3d();
-      vtd.setP(vt);
+      vtd.setT(vt);
       if (!Double.isNaN(zoffset) && zoffset != 0) {
         // o ---pdist-----vt-------> p
         // o - offset--o'---------> p
@@ -5536,10 +5536,10 @@ public class CmdExt extends ScriptExt {
         if (s == null) {
           boolean isPrimitive = ucname.equals("primitive");
           if (isPrimitive || ucname.equals("reciprocal")) {
-            float scale = (slen == i + 1 ? 1
+            double scale = (slen == i + 1 ? 1
                 : tokAt(i + 1) == T.integer
-                    ? intParameter(++i) * (float) Math.PI
-                    : floatParameter(++i));
+                    ? intParameter(++i) * (double) Math.PI
+                    : doubleParameter(++i));
             ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
             oabc = (sym == null
                 ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
@@ -5630,21 +5630,21 @@ public class CmdExt extends ScriptExt {
       //$FALL-THROUGH$
     case T.range:
       pt = eval.getFractionalPoint(++i);
-      if (pt instanceof P4) {
+      if (pt instanceof P4d) {
         if (isOffset)
           invArg();       
       } else {
         if (!isOffset && pt.x < 555) {
           pt = SimpleUnitCell.ptToIJK(eval.checkHKL(pt), 1);
         } else {
-          pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
+          pt = P4d.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
         }
       }
       i = eval.iToken;
       break;
     case T.decimal:
     case T.integer:
-      float f = floatParameter(i);
+      double f = doubleParameter(i);
       if (f < 111) {
         // diameter
         i--;
@@ -5656,7 +5656,7 @@ public class CmdExt extends ScriptExt {
       if (eval.isArrayParameter(i)) {
         // Origin vA vB vC
         // these are VECTORS, though
-        P3[] pts = eval.getPointArray(i, 4, false);
+        P3d[] pts = eval.getPointArray(i, 4, false);
         oabc = new P3d[4];
         for (i = 4; --i >=0;)
           oabc[i] = P3d.newPd(pts[i]);
@@ -5690,10 +5690,10 @@ public class CmdExt extends ScriptExt {
         int n = bsAtoms.cardinality();
         isReset = (n == 0);
         if (!isReset) {
-          P3[] fxyz = new P3[n];
+          P3d[] fxyz = new P3d[n];
           Atom[] a = vwr.ms.at;
           for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms.nextSetBit(j + 1), k++) {  
-            fxyz[k] = P3.newP(a[j]);
+            fxyz[k] = P3d.newP(a[j]);
             vwr.toFractionalUC(unitCell, fxyz[k], false);
           }
           eval.setModelCagePts(-1, oabc, ucname);
@@ -5731,7 +5731,7 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    * 
    */
-  private P3d[] getUVBoxFromHKL(SymmetryInterface uc, P4 hkl, P4 plane)
+  private P3d[] getUVBoxFromHKL(SymmetryInterface uc, P4d hkl, P4d plane)
       throws ScriptException {
     int h = (int) hkl.x;
     int k = (int) hkl.y;
@@ -5747,27 +5747,27 @@ public class CmdExt extends ScriptExt {
       l /= 2;
     }
     P3d[] oabc = uc.getUnitCellVectors();
-    float dist0 = plane.w;
-    P4 p0 = P4.new4(plane.x, plane.y, plane.z, 0);
-    Lst<P3> cpts = Measure.getLatticePoints(uc.getLatticeCentering(), h, k, l);
+    double dist0 = plane.w;
+    P4d p0 = P4d.new4(plane.x, plane.y, plane.z, 0);
+    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(), h, k, l);
     for (int j = 0; j < cpts.size(); j++) {
       uc.toCartesianF(cpts.get(j), true);
     }
-    cpts = Measure.getPointsOnPlane(cpts.toArray(new P3[cpts.size()]), p0);
-    P3 zero = new P3();
-    P3 pd = new P3();
-    float amin = -179;
-    float dmin = Float.MAX_VALUE, dmin2 = Float.MAX_VALUE;
-    P3 v = null, v1 = null;
-    float da = amin, damin = Float.MAX_VALUE, d;
+    cpts = MeasureD.getPointsOnPlane(cpts.toArray(new P3d[cpts.size()]), p0);
+    P3d zero = new P3d();
+    P3d pd = new P3d();
+    double amin = -179;
+    double dmin = Double.MAX_VALUE, dmin2 = Double.MAX_VALUE;
+    P3d v = null, v1 = null;
+    double da = amin, damin = Double.MAX_VALUE, d;
     for (int i = cpts.size(); --i >= 0;) {
-      P3 pt = cpts.get(i);
+      P3d pt = cpts.get(i);
       d = pt.length();
       boolean checkv1 = false;
       boolean isnew = false;
 //      boolean checkAngle = false;
       // check for 0 or linear
-      if (d < 0.01f || v != null && ((da = Math.abs(Measure.computeTorsion(v, zero, plane, pt, true))) > -amin))
+      if (d < 0.01f || v != null && ((da = Math.abs(MeasureD.computeTorsion(v, zero, plane, pt, true))) > -amin))
         continue;
       if (v == null) {
         // load v
@@ -5775,11 +5775,11 @@ public class CmdExt extends ScriptExt {
         dmin = d;
       } else if (d < dmin - 0.01f) {
         isnew = true;
-        damin = Float.MAX_VALUE;
-        da = Float.MAX_VALUE;
+        damin = Double.MAX_VALUE;
+        da = Double.MAX_VALUE;
         checkv1 = true;
       } else if (d < dmin2 - 0.01f) {
-        damin = Float.MAX_VALUE;
+        damin = Double.MAX_VALUE;
         // new v1
         checkv1 = true;
       } else if (d < dmin2 + 0.01f) {
@@ -5789,7 +5789,7 @@ public class CmdExt extends ScriptExt {
   }
       if (checkv1) {
         boolean okAng = (da > 89);
-        if (isnew || d < dmin + 0.1f && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Float.MAX_VALUE || damin < 89)) {
+        if (isnew || d < dmin + 0.1f && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Double.MAX_VALUE || damin < 89)) {
           // special first-quadrant check
           v1 = v;
           dmin2 = dmin;
@@ -5807,9 +5807,9 @@ public class CmdExt extends ScriptExt {
     }
     if (v == null)
       invArg();
-    P3 u = null;
+    P3d u = null;
     if (v1 != null) {
-      da = Measure.computeTorsion(v, zero, plane, v1, true);
+      da = MeasureD.computeTorsion(v, zero, plane, v1, true);
       if (da > 0) {
         u = v;
         v = v1;
@@ -5818,8 +5818,8 @@ public class CmdExt extends ScriptExt {
       }
     } else {
       for (int i = cpts.size(); --i >= 0;) {
-        P3 pt = cpts.get(i);
-        da = Measure.computeTorsion(v, zero, plane, pt, true);
+        P3d pt = cpts.get(i);
+        da = MeasureD.computeTorsion(v, zero, plane, pt, true);
         if (da < -89.9f && da > amin + 0.01f) {
           amin = da;
           u = pt;
@@ -5994,8 +5994,8 @@ public class CmdExt extends ScriptExt {
         key = "constraint";
         value = "";
         int type = tokAt(++i);
-        T3 v1 = null, v2 = null;
-        P4 plane = null;
+        T3d v1 = null, v2 = null;
+        P4d plane = null;
         switch (type) {
         case T.off:
         case T.none:
@@ -6195,7 +6195,7 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
     }
     String type = null;
-    P3 pt = null;
+    P3d pt = null;
     boolean isPacked = false;
     if (isAdd) {
       if (e.isAtomExpression(i)) {
@@ -6350,7 +6350,7 @@ public class CmdExt extends ScriptExt {
     return (i < args.length && args[i] != null ? args[i].tok : T.nada);
   }
 
-  private float getPlotMinMax(float[] data, boolean isMax, int tok) {
+  private double getPlotMinMax(double[] data, boolean isMax, int tok) {
     if (data == null)
       return 0;
     switch (tok) {
@@ -6364,10 +6364,10 @@ public class CmdExt extends ScriptExt {
     case T.straightness:
       return (isMax ? 1 : -1);
     }
-    float fmax = (isMax ? -1E10f : 1E10f);
+    double fmax = (isMax ? -1E10f : 1E10f);
     for (int i = data.length; --i >= 0;) {
-      float f = data[i];
-      if (Float.isNaN(f))
+      double f = data[i];
+      if (Double.isNaN(f))
         continue;
       if (isMax == (f > fmax))
         fmax = f;
@@ -6380,30 +6380,30 @@ public class CmdExt extends ScriptExt {
     int[] lines = Parser.markLines(str, '\n');
     int nLines = lines.length;
     if (!is3D) {
-      float[][] data = AU.newFloat2(nLines);
+      double[][] data = AU.newDouble2(nLines);
       for (int iLine = 0, pt = 0; iLine < nLines; pt = lines[iLine++]) {
         String[] tokens = PT.getTokens(str.substring(pt, lines[iLine]));
-        PT.parseFloatArrayData(tokens, data[iLine] = new float[tokens.length]);
+        PT.parseDoubleArrayData(tokens, data[iLine] = new double[tokens.length]);
       }
       return data;
     }
 
     String[] tokens = PT.getTokens(str.substring(0, lines[0]));
     if (tokens.length != 3)
-      return new float[0][0][0];
+      return new double[0][0][0];
     int nX = PT.parseInt(tokens[0]);
     int nY = PT.parseInt(tokens[1]);
     int nZ = PT.parseInt(tokens[2]);
     if (nX < 1 || nY < 1 || nZ < 1)
-      return new float[1][1][1];
-    float[][][] data = AU.newFloat3(nX, nY);
+      return new double[1][1][1];
+    double[][][] data = AU.newDouble3(nX, nY);
     int iX = 0;
     int iY = 0;
     for (int iLine = 1, pt = lines[0]; iLine < nLines && iX < nX; pt = lines[iLine++]) {
       tokens = PT.getTokens(str.substring(pt, lines[iLine]));
       if (tokens.length < nZ)
         continue;
-      PT.parseFloatArrayData(tokens, data[iX][iY] = new float[tokens.length]);
+      PT.parseDoubleArrayData(tokens, data[iX][iY] = new double[tokens.length]);
       if (++iY == nY) {
         iX++;
         iY = 0;
@@ -6412,13 +6412,13 @@ public class CmdExt extends ScriptExt {
     if (iX != nX) {
       System.out.println("Error reading 3D data -- nX = " + nX + ", but only "
           + iX + " blocks read");
-      return new float[1][1][1];
+      return new double[1][1][1];
     }
     return data;
   }
 
-  public float[] getBitsetPropertyFloat(BS bs, int tok, String property,
-                                        float min, float max)
+  public double[] getBitsetPropertyFloat(BS bs, int tok, String property,
+                                        double min, double max)
       throws ScriptException {
 
     Object odata = (property == null || tok == (T.dssr | T.allfloat) ?
@@ -6426,16 +6426,16 @@ public class CmdExt extends ScriptExt {
           null, false, Integer.MAX_VALUE, false) 
           : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AFD));
     if (odata == null || !AU.isAF(odata))
-      return (bs == null ? null  : new float[bs.cardinality()]);
-    float[] data = (float[]) odata;
-    if (!Float.isNaN(min))
+      return (bs == null ? null  : new double[bs.cardinality()]);
+    double[] data = (double[]) odata;
+    if (!Double.isNaN(min))
       for (int i = 0; i < data.length; i++)
         if (data[i] < min)
-          data[i] = Float.NaN;
-    if (!Float.isNaN(max))
+          data[i] = Double.NaN;
+    if (!Double.isNaN(max))
       for (int i = 0; i < data.length; i++)
         if (data[i] > max)
-          data[i] = Float.NaN;
+          data[i] = Double.NaN;
     return data;
   }
   

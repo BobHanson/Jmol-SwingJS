@@ -58,10 +58,10 @@ public class Parser {
     boolean haveBitSet = (bs != null);
     for (int i = (haveBitSet ? bs.nextSetBit(0) : 0); i >= 0 && i < len && n < nTokens; i = (haveBitSet ? bs.nextSetBit(i + 1) : i + 1)) {
       float f;
-      while (Float.isNaN(f = PT.parseFloat(tokens[n++])) 
+      while (Double.isNaN(f = PT.parseFloat(tokens[n++])) 
           && n < nTokens) {
       }
-      if (!Float.isNaN(f))
+      if (!Double.isNaN(f))
         data[(max = i)] = f;
       if (n == nTokens)
         break;
@@ -132,11 +132,11 @@ public class Parser {
       // and parse data
       if (fieldColumnCount <= 0) {
         if (tokens.length < minLen
-            || Float.isNaN(f = PT.parseFloat(tokens[field - 1])))
+            || Double.isNaN(f = PT.parseFloat(tokens[field - 1])))
           continue;
       } else {
         if (line.length() < minLen
-            || Float.isNaN(f = PT.parseFloat(line.substring(field - 1, field
+            || Double.isNaN(f = PT.parseFloat(line.substring(field - 1, field
                 + fieldColumnCount - 1))))
           continue;
       }

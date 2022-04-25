@@ -621,7 +621,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
             int i0 = s.lastIndexOf("\n", pt) + 5;
             int i1 = s.indexOf("\n", pt);
             String coord = s.substring(i0, i1);
-            if (Float.isNaN(PT.parseFloat(coord)))
+            if (Double.isNaN(PT.parseDouble(coord)))
               return;
             vwr.scriptWait("select on within(0.1,{" + coord + "})");
             getCommand(vwr.bsA().nextSetBit(0), false);

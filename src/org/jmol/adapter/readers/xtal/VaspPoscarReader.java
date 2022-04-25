@@ -175,7 +175,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
           tokens[j] = "" + parseDoubleStr(tokens[j]) * scaleFac;
       Atom atom = addAtomXYZSymName(tokens, 0, null, label);
       if (!Double.isNaN(radius))
-        atom.radius = (float) (radius * scaleFac);
+        atom.radius = (double) (radius * scaleFac);
       if (asc.bsAtoms != null)
         asc.bsAtoms.set(atom.index);
     }

@@ -243,7 +243,7 @@ abstract class MopacSlaterReader extends SlaterReader {
    */
   protected void createSphericalSlaterByType(int iAtom, int atomicNumber,
                                              String type, double zeta,
-                                             float coef) {
+                                             double coef) {
     int pt = "S Px Py Pz  Dx2-y2Dxz Dz2 Dyz Dxy".indexOf(type);
     //....... 0 2  5  8   12    18  22  26  30
     switch (pt) {

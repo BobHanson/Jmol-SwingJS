@@ -16,14 +16,17 @@ import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 
@@ -52,7 +55,7 @@ abstract public class ScriptParam extends ScriptError {
   /**
    * set in getPointOrPlane
    */
-  public P3 fractionalPoint;
+  public P3d fractionalPoint;
   /**
    * set in getPointOrPlane
    */
@@ -201,16 +204,16 @@ abstract public class ScriptParam extends ScriptError {
    * 
    * @throws ScriptException
    */
-  public P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
+  public P3d atomCenterOrCoordinateParameter(int i, Object[] ret)
       throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
     case T.expressionBegin:
       BS bs = ((ScriptEval) this).atomExpression(st, i, 0, true, false, ret, true);
       if (bs == null) {
-        if (ret == null || !(ret[0] instanceof P3))
+        if (ret == null || !(ret[0] instanceof P3d))
           invArg();
-        return (P3) ret[0];
+        return (P3d) ret[0];
       }
       if (ret != null) {
         if (ret.length == 2 && ret[1] instanceof BS) {
@@ -236,21 +239,21 @@ abstract public class ScriptParam extends ScriptError {
         || tok == T.expressionBegin || tok == T.point3f || tok == T.bitset);
   }
 
-  public P3 centerParameter(int i, Object[] ret) throws ScriptException {
+  public P3d centerParameter(int i, Object[] ret) throws ScriptException {
     return centerParameterForModel(i, Integer.MIN_VALUE, ret);
   }
 
-  protected P3 centerParameterForModel(int i, int modelIndex, Object[] ret)
+  protected P3d centerParameterForModel(int i, int modelIndex, Object[] ret)
       throws ScriptException {
-    P3 center = null;
+    P3d center = null;
     if (checkToken(i)) {
       switch (getToken(i).tok) {
       case T.unitcell:
-        center = new P3();
+        center = new P3d();
         SymmetryInterface uc = vwr.getCurrentUnitCell();
         if (uc != null) {
-          P3[] pts = uc.getUnitCellVerticesNoOffset();
-          P3 off = uc.getCartesianOffset();
+          P3d[] pts = uc.getUnitCellVerticesNoOffset();
+          P3d off = uc.getCartesianOffset();
           for (int j = 0; j < 8; j++) {
             center.add(pts[j]);
             center.add(off);
@@ -268,7 +271,7 @@ abstract public class ScriptParam extends ScriptError {
             invArg();
         }
         if (chk)
-          return new P3();
+          return new P3d();
         if (tokAt(i + 1) == T.per
             && (tokAt(i + 2) == T.length || tokAt(i + 2) == T.size)) {
           index = Integer.MAX_VALUE;
@@ -292,15 +295,15 @@ abstract public class ScriptParam extends ScriptError {
     return center;
   }
 
-  public P4 planeParameter(int i, boolean isBest) throws ScriptException {
-    V3 vTemp = new V3();
-    V3 vTemp2 = new V3();
-    P4 plane = null;
-    P3 pt1 = null, pt2 = null, pt3 = null;
+  public P4d planeParameter(int i, boolean isBest) throws ScriptException {
+    V3d vTemp = new V3d();
+    V3d vTemp2 = new V3d();
+    P4d plane = null;
+    P3d pt1 = null, pt2 = null, pt3 = null;
     boolean have3 = false;
     if (tokAt(i) == T.plane)
       i++;
-    P3[] bestPoints = null;
+    P3d[] bestPoints = null;
     boolean isNegated = (tokAt(i) == T.minus);
     if (isNegated)
       i++;
@@ -309,23 +312,23 @@ abstract public class ScriptParam extends ScriptError {
       case T.dollarsign:
         String id = objectNameParameter(++i);
         if (chk)
-          return new P4();
+          return new P4d();
         plane = ((ScriptEval) this).getPlaneForObject(id, vTemp);
         break;
       case T.x:
         if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
           evalError("x=?", null);
-        plane = P4.new4(1, 0, 0, -floatParameter(i));
+        plane = P4d.new4(1, 0, 0, -floatParameter(i));
         break;
       case T.y:
         if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
           evalError("y=?", null);
-        plane = P4.new4(0, 1, 0, -floatParameter(i));
+        plane = P4d.new4(0, 1, 0, -floatParameter(i));
         break;
       case T.z:
         if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
           evalError("z=?", null);
-        plane = P4.new4(0, 0, 1, -floatParameter(i));
+        plane = P4d.new4(0, 0, 1, -floatParameter(i));
         break;
       case T.identifier:
       case T.string:
@@ -345,7 +348,7 @@ abstract public class ScriptParam extends ScriptError {
           // best plane {atoms}
           // best plane @1 @3 @5 @6 ...
           BS bs = getAtomsStartingAt(i);
-          bestPoints = new P3[bs.cardinality()];
+          bestPoints = new P3d[bs.cardinality()];
           for (int p = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
             bestPoints[p++] = vwr.ms.at[j];
           }
@@ -359,11 +362,11 @@ abstract public class ScriptParam extends ScriptError {
           if (getToken(++iToken).tok == T.comma)
             ++iToken;
           if (isFloatParameter(iToken)) {
-            float frac = floatParameter(iToken);
-            plane = new P4();
+            double frac = floatParameter(iToken);
+            plane = new P4d();
             vTemp.sub2(pt2, pt1);
             vTemp.scale(frac * 2);
-            Measure.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
+            MeasureD.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
           } else {
             pt3 = atomCenterOrCoordinateParameter(iToken, null);
             i = iToken;
@@ -377,7 +380,7 @@ abstract public class ScriptParam extends ScriptError {
             // best plane [array]
             bestPoints = getPointArray(i, -1, false);
           } else {
-            Lst<P3> list = getPointOrCenterVector(getToken(i));
+            Lst<P3d> list = getPointOrCenterVector(getToken(i));
             int n = list.size();
             if (n != 3)
               invArg();
@@ -389,12 +392,12 @@ abstract public class ScriptParam extends ScriptError {
         }
       }
       if (isBest) {
-        plane = new P4();
-        Measure.calcBestPlaneThroughPoints(bestPoints, -1, plane);
+        plane = new P4d();
+        MeasureD.calcBestPlaneThroughPoints(bestPoints, -1, plane);
       } else if (have3) {
-        plane = new P4();
-        P3 norm = new P3();
-        float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
+        plane = new P4d();
+        P3d norm = new P3d();
+        double w = MeasureD.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
         plane.set4(norm.x, norm.y, norm.z, w);
       }
       if (!chk && Logger.debugging)
@@ -419,9 +422,9 @@ abstract public class ScriptParam extends ScriptError {
     return bs;
   }
 
-  public Lst<P3> getPointOrCenterVector(T t) throws ScriptException {
-    Lst<P3> data = new Lst<P3>();
-    P3 pt;
+  public Lst<P3d> getPointOrCenterVector(T t) throws ScriptException {
+    Lst<P3d> data = new Lst<P3d>();
+    P3d pt;
     BS bs;
     Lst<SV> pts = ((SV) t).getList();
     if (pts == null)
@@ -430,7 +433,7 @@ abstract public class ScriptParam extends ScriptError {
       if ((pt = SV.ptValue(pts.get(j))) != null) {
         data.addLast(pt);
       } else if ((bs = SV.getBitSet(pts.get(j), true)) != null) {
-        data.addLast(bs.cardinality() == 1 ? P3.newP(vwr.ms.at[bs.nextSetBit(0)]) 
+        data.addLast(bs.cardinality() == 1 ? P3d.newP(vwr.ms.at[bs.nextSetBit(0)]) 
             : vwr.ms.getAtomSetCenter(bs));
       } else {
         invArg();
@@ -439,21 +442,21 @@ abstract public class ScriptParam extends ScriptError {
     return data;
   }
 
-  public P4 hklParameter(int i, Lst<P3> pts, boolean allowOffset)
+  public P4d hklParameter(int i, Lst<P3d> pts, boolean allowOffset)
       throws ScriptException {
     if (!chk && vwr.getCurrentUnitCell() == null)
       error(ERROR_noUnitCell);
-    T3 pt = getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
-    float offset = Float.NaN;
+    T3d pt = getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
+    double offset = Double.NaN;
     if (allowOffset) {
-      offset = (pt instanceof P4 ? ((P4) pt).w : Float.NaN);
+      offset = (pt instanceof P4d ? ((P4d) pt).w : Double.NaN);
       if (tokAt(iToken + 1) == T.offset) {
         iToken++;
         offset = floatParameter(++iToken);
       }
     }
     
-    P4 p = getHklPlane(pt, offset, pts);
+    P4d p = getHklPlane(pt, offset, pts);
     if (p == null)
       error(ERROR_badMillerIndices);
     if (!chk && Logger.debugging)
@@ -461,10 +464,10 @@ abstract public class ScriptParam extends ScriptError {
     return p;
   }
 
-  public P4 getHklPlane(T3 pt, float offset, Lst<P3> pts) {
-    P3 pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
-    P3 pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
-    P3 pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
+  public P4d getHklPlane(T3d pt, double offset, Lst<P3d> pts) {
+    P3d pt1 = P3d.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
+    P3d pt2 = P3d.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
+    P3d pt3 = P3d.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
     // trick for 001 010 100 is to define the other points on other edges
     if (pt.x == 0 && pt.y == 0 && pt.z == 0) {
       return null;
@@ -488,15 +491,15 @@ abstract public class ScriptParam extends ScriptError {
     vwr.toCartesian(pt1, false);
     vwr.toCartesian(pt2, false);
     vwr.toCartesian(pt3, false);    
-    V3 v3 = new V3();
-    P4 plane = Measure.getPlaneThroughPoints(pt1,  pt2, pt3, new V3(), v3, new P4());
-    if (!Float.isNaN(offset)) {
+    V3d v3 = new V3d();
+    P4d plane = MeasureD.getPlaneThroughPoints(pt1,  pt2, pt3, new V3d(), v3, new P4d());
+    if (!Double.isNaN(offset)) {
       plane.w = -offset;
       if (pts != null) {
       // for draw
-        Measure.getPlaneProjection(pt1, plane, pt1, v3);
-        Measure.getPlaneProjection(pt2, plane, pt2, v3);
-        Measure.getPlaneProjection(pt3, plane, pt3, v3);
+        MeasureD.getPlaneProjection(pt1, plane, pt1, v3);
+        MeasureD.getPlaneProjection(pt2, plane, pt2, v3);
+        MeasureD.getPlaneProjection(pt3, plane, pt3, v3);
       }
     }
     if (pts != null) {
@@ -525,12 +528,12 @@ abstract public class ScriptParam extends ScriptError {
    * @return P3 or P4 or null
    * @throws ScriptException
    */
-  public T3 getPointOrPlane(int index, int mode) throws ScriptException {
+  public T3d getPointOrPlane(int index, int mode) throws ScriptException {
     // { x y z } or {a/b c/d e/f} are encoded now as seqcodes and model numbers
     // so we decode them here. It's a bit of a pain, but it isn't too bad.
     // implicit fractional for unitcell and hkl also allows 1500500500, which is
-    // too large for float P3 to handle. So we use P4, 
-    float[] coord = new float[6];
+    // too large for double P3 to handle. So we use P4, 
+    double[] coord = new double[6];
     int[] code555 = new int[6];
     boolean useCell555P4 = false;
     int n = 0;
@@ -543,13 +546,13 @@ abstract public class ScriptParam extends ScriptError {
       coordinatesAreFractional = implicitFractional;
       if (tokAt(index) == T.point3f) {
         if (minDim <= 3 && maxDim >= 3)
-          return /*Point3f*/(P3) getToken(index).value;
+          return /*Point3f*/(P3d) getToken(index).value;
         isOK = false;
         return null;
       }
       if (tokAt(index) == T.point4f) {
         if (minDim <= 4 && maxDim >= 4)
-          return /*Point4f*/(P4) getToken(index).value;
+          return /*Point4f*/(P4d) getToken(index).value;
         isOK = false;
         return null;
       }
@@ -602,13 +605,13 @@ abstract public class ScriptParam extends ScriptError {
                 ? ((Integer) theToken.value).intValue()
                 : theToken.intValue);
           } else if (theToken.value instanceof Float) {
-            coord[n++] /= ((Number) theToken.value).floatValue();
+            coord[n++] /= ((Number) theToken.value).doubleValue();
           }
           coordinatesAreFractional = true;
           break;
         case T.spec_chain: //? 
         case T.misc: // NaN
-          coord[n++] = Float.NaN;
+          coord[n++] = Double.NaN;
           break;
         case T.decimal:
         case T.spec_model2:
@@ -620,7 +623,7 @@ abstract public class ScriptParam extends ScriptError {
             isOK = false;
             return null;
           }
-          coord[n++] = ((Number) theToken.value).floatValue();
+          coord[n++] = ((Number) theToken.value).doubleValue();
           break;
         default:
         	iToken--;
@@ -636,12 +639,12 @@ abstract public class ScriptParam extends ScriptError {
           // {1500500501 1500500502 1}
           // --> {1500000 1500500 1 1501502}
           // because lower digits are lost in Java
-          return P4.new4(coord[0], coord[1], coord[2],
+          return P4d.new4(coord[0], coord[1], coord[2],
               (code555[0] % 1000) * 1000 + (code555[1] % 1000) + 1000000);
         }
-        P3 pt = P3.new3(coord[0], coord[1], coord[2]);
+        P3d pt = P3d.new3(coord[0], coord[1], coord[2]);
         if (coordinatesAreFractional && (mode & MODE_P_CONVERT_TO_CARTESIAN) != 0) {
-          fractionalPoint = P3.newP(pt);
+          fractionalPoint = P3d.newP(pt);
           if (!chk)
             vwr.toCartesian(pt, false);//!vwr.getBoolean(T.fractionalrelative));
         }
@@ -649,7 +652,7 @@ abstract public class ScriptParam extends ScriptError {
       }
       if (n == 4) {
         if (implicitFractional || !coordinatesAreFractional) {
-          P4 plane = P4.new4(coord[0], coord[1], coord[2], coord[3]);
+          P4d plane = P4d.new4(coord[0], coord[1], coord[2], coord[3]);
           return plane;
         }
         // don't allow P4 with fractional coord
@@ -698,8 +701,8 @@ abstract public class ScriptParam extends ScriptError {
    * @return P3
    * @throws ScriptException
    */
-  public P3 getPoint3f(int i, boolean allowFractional, boolean throwE) throws ScriptException {
-    return (P3) getPointOrPlane(i, MODE_P3 | MODE_P_CONVERT_TO_CARTESIAN 
+  public P3d getPoint3f(int i, boolean allowFractional, boolean throwE) throws ScriptException {
+    return (P3d) getPointOrPlane(i, MODE_P3 | MODE_P_CONVERT_TO_CARTESIAN 
         | (allowFractional ? MODE_P_ALLOW_FRACTIONAL : 0) 
         | (throwE ? 0 : MODE_P_NULL_ON_ERROR));
   }
@@ -710,27 +713,27 @@ abstract public class ScriptParam extends ScriptError {
    * @return P3 or P4
    * @throws ScriptException
    */
-  public T3 getFractionalPoint(int i) throws ScriptException {
+  public T3d getFractionalPoint(int i) throws ScriptException {
     return getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
   }
   
-  public P4 getPoint4f(int i) throws ScriptException {
-    return (P4) getPointOrPlane(i, MODE_P4);
+  public P4d getPoint4f(int i) throws ScriptException {
+    return (P4d) getPointOrPlane(i, MODE_P4);
   }
 
-  public P3 xypParameter(int index) throws ScriptException {
+  public P3d xypParameter(int index) throws ScriptException {
     // [x y] or [x,y] refers to an xy point on the screen
-    //     return a Point3f with z = Float.MAX_VALUE
+    //     return a Point3f with z = Double.MAX_VALUE
     // [x y %] or [x,y %] refers to an xy point on the screen
     // as a percent
-    //     return a Point3f with z = -Float.MAX_VALUE
+    //     return a Point3f with z = -Double.MAX_VALUE
 
     int tok = tokAt(index);
     if (tok == T.spacebeforesquare)
       tok = tokAt(++index);
     if (tok != T.leftsquare || !isFloatParameter(++index))
       return null;
-    P3 pt = new P3();
+    P3d pt = new P3d();
     pt.x = floatParameter(index);
     if (tokAt(++index) == T.comma)
       index++;
@@ -743,23 +746,23 @@ abstract public class ScriptParam extends ScriptError {
     if (tokAt(index) != T.rightsquare)
       return null;
     iToken = index;
-    pt.z = (isPercent ? -1 : 1) * Float.MAX_VALUE;
+    pt.z = (isPercent ? -1 : 1) * Double.MAX_VALUE;
     return pt;
   }
 
-  public P4 xyzpParameter(int index) throws ScriptException {
+  public P4d xyzpParameter(int index) throws ScriptException {
     // [x y z] or [x,y,z] refers to an xy point on the screen
-    //     return a P4 with w = Float.MAX_VALUE
+    //     return a P4 with w = Double.MAX_VALUE
     // [x y z%] or [x,y,z %] refers to an xyz point on the screen
     // as a percent
-    //     return a P4 with w = -Float.MAX_VALUE
+    //     return a P4 with w = -Double.MAX_VALUE
 
     int tok = tokAt(index);
     if (tok == T.spacebeforesquare)
       tok = tokAt(++index);
     if (tok != T.leftsquare || !isFloatParameter(++index))
       return null;
-    P4 pt = new P4();
+    P4d pt = new P4d();
     pt.x = floatParameter(index);
     if (tokAt(++index) == T.comma)
       index++;
@@ -777,7 +780,7 @@ abstract public class ScriptParam extends ScriptError {
     if (tokAt(index) != T.rightsquare)
       return null;
     iToken = index;
-    pt.w = (isPercent ? -1 : 1) * Float.MAX_VALUE;
+    pt.w = (isPercent ? -1 : 1) * Double.MAX_VALUE;
     return pt;
   }
 
@@ -802,7 +805,7 @@ abstract public class ScriptParam extends ScriptError {
     return false;
   }
 
-  public float floatParameter(int index) throws ScriptException {
+  public double floatParameter(int index) throws ScriptException {
     if (checkToken(index)) {
       getToken(index);
       switch (theTok) {
@@ -813,7 +816,7 @@ abstract public class ScriptParam extends ScriptError {
         return theToken.intValue;
       case T.spec_model2:
       case T.decimal:
-        return ((Number) theToken.value).floatValue();
+        return ((Number) theToken.value).doubleValue();
       }
     }
     error(ERROR_numberExpected);
@@ -846,11 +849,11 @@ abstract public class ScriptParam extends ScriptError {
    * @return array of P3, with possible null values
    * @throws ScriptException
    */
-  public P3[] getPointArray(int i, int nPoints, boolean allowNull) throws ScriptException {
+  public P3d[] getPointArray(int i, int nPoints, boolean allowNull) throws ScriptException {
     if (nPoints == Integer.MAX_VALUE)
       nPoints = -1;
-    P3[] points = (nPoints < 0 ? null : new P3[nPoints]);
-    Lst<P3> vp = (nPoints < 0 ? new Lst<P3>() : null);
+    P3d[] points = (nPoints < 0 ? null : new P3d[nPoints]);
+    Lst<P3d> vp = (nPoints < 0 ? new Lst<P3d>() : null);
     int tok = (i < 0 ? T.varray : getToken(i++).tok);
     switch (tok) {
     case T.varray:
@@ -859,7 +862,7 @@ abstract public class ScriptParam extends ScriptError {
         invArg();
       nPoints = v.size();
       if (points == null)
-        points = new P3[nPoints];
+        points = new P3d[nPoints];
       for (int j = 0; j < nPoints; j++) 
         if ((points[j] = SV.ptValue(v.get(j))) == null && !allowNull)
           invArg();  
@@ -885,7 +888,7 @@ abstract public class ScriptParam extends ScriptError {
           tok = T.nada;
           break;
         }
-        P3 pt = centerParameter(i, null);
+        P3d pt = centerParameter(i, null);
         if (points == null)
           vp.addLast(pt);
         else
@@ -897,7 +900,7 @@ abstract public class ScriptParam extends ScriptError {
     if (tok != T.rightsquare)
       invArg();
     if (points == null)
-      points = vp.toArray(new P3[vp.size()]);
+      points = vp.toArray(new P3d[vp.size()]);
     if (nPoints > 0 && points[nPoints -  1] == null)
       invArg();
     return points;
@@ -936,24 +939,24 @@ abstract public class ScriptParam extends ScriptError {
           v.addLast(stringParameter(i));
         break;
       case T.point4f:
-        P4 pt4 = getPoint4f(i);
-        v.addLast(Float.valueOf(pt4.x));
-        v.addLast(Float.valueOf(pt4.y));
-        v.addLast(Float.valueOf(pt4.z));
-        v.addLast(Float.valueOf(pt4.w));
+        P4d pt4 = getPoint4f(i);
+        v.addLast(Double.valueOf(pt4.x));
+        v.addLast(Double.valueOf(pt4.y));
+        v.addLast(Double.valueOf(pt4.z));
+        v.addLast(Double.valueOf(pt4.w));
         n += 4;
         break;
       default:
         if (isCenterParameter(i)) {
-          P3 pt = centerParameter(i, null);
+          P3d pt = centerParameter(i, null);
           i = iToken;
-          v.addLast(Float.valueOf(pt.x));
-          v.addLast(Float.valueOf(pt.y));
-          v.addLast(Float.valueOf(pt.z));
+          v.addLast(Double.valueOf(pt.x));
+          v.addLast(Double.valueOf(pt.y));
+          v.addLast(Double.valueOf(pt.z));
           n += 3;
           break;
         }
-        v.addLast(Float.valueOf(floatParameter(i)));
+        v.addLast(Double.valueOf(floatParameter(i)));
         n++;
       }
       i += (n == nMax && haveSquare && tokAt(i + 1) == T.rightbrace ? 2 : 1);
@@ -965,47 +968,47 @@ abstract public class ScriptParam extends ScriptError {
     return v;
   }
 
-  /**
-   * process a general string or set of parameters as an array of floats,
-   * allowing for relatively free form input
-   * 
-   * @param i
-   * @param nMin
-   * @param nMax
-   * @return array of floats
-   * @throws ScriptException
-   */
-  public float[] floatParameterSet(int i, int nMin, int nMax)
-      throws ScriptException {
-    Lst<Object> v = null;
-    float[] fparams = null;
-    int n = 0;
-    String s = null;
-    iToken = i;
-    switch (tokAt(i)) {
-    case T.string:
-      s = SV.sValue(st[i]);
-      s = PT.replaceWithCharacter(s, "{},[]\"'", ' ');
-      fparams = PT.parseFloatArray(s);
-      n = fparams.length;
-      break;
-    case T.varray:
-      fparams = SV.flistValue(st[i], 0);
-      n = fparams.length;
-      break;
-    default:
-      v = listParameter(i, nMin, nMax);
-      n = v.size();
-    }
-    if (n < nMin || n > nMax)
-      invArg();
-    if (fparams == null) {
-      fparams = new float[n];
-      for (int j = 0; j < n; j++)
-        fparams[j] = ((Number) v.get(j)).floatValue();
-    }
-    return fparams;
-  }
+//  /**
+//   * process a general string or set of parameters as an array of floats,
+//   * allowing for relatively free form input
+//   * 
+//   * @param i
+//   * @param nMin
+//   * @param nMax
+//   * @return array of floats
+//   * @throws ScriptException
+//   */
+//  public double[] doubleParameterSet(int i, int nMin, int nMax)
+//      throws ScriptException {
+//    Lst<Object> v = null;
+//    double[] fparams = null;
+//    int n = 0;
+//    String s = null;
+//    iToken = i;
+//    switch (tokAt(i)) {
+//    case T.string:
+//      s = SV.sValue(st[i]);
+//      s = PT.replaceWithCharacter(s, "{},[]\"'", ' ');
+//      fparams = PT.parseDoubleArray(s);
+//      n = fparams.length;
+//      break;
+//    case T.varray:
+//      fparams = SV.dlistValue(st[i], 0);
+//      n = fparams.length;
+//      break;
+//    default:
+//      v = listParameter(i, nMin, nMax);
+//      n = v.size();
+//    }
+//    if (n < nMin || n > nMax)
+//      invArg();
+//    if (fparams == null) {
+//      fparams = new double[n];
+//      for (int j = 0; j < n; j++)
+//        fparams[j] = ((Number) v.get(j)).doubleValue();
+//    }
+//    return fparams;
+//  }
 
   public double[] doubleParameterSet(int i, int nMin, int nMax)
       throws ScriptException {
@@ -1051,18 +1054,18 @@ abstract public class ScriptParam extends ScriptError {
     return false;
   }
 
-  public Quat getQuaternionParameter(int i, BS bsAtoms, boolean divideByCurrent) throws ScriptException {
+  public Qd getQuaternionParameter(int i, BS bsAtoms, boolean divideByCurrent) throws ScriptException {
     switch (tokAt(i)) {
     case T.varray:
       Lst<SV> sv = ((SV) getToken(i)).getList();
-      P4 p4 = null;
+      P4d p4 = null;
       if (sv.size() == 0 || (p4 = SV.pt4Value(sv.get(0))) == null)
         invArg();
-      return Quat.newP4(p4);
+      return Qd.newP4(p4);
     case T.best:
-      return (chk ? null : (Quat) vwr.getOrientation(T.best, (divideByCurrent ? "best" : ""), bsAtoms));
+      return (chk ? null : (Qd) vwr.getOrientation(T.best, (divideByCurrent ? "best" : ""), bsAtoms));
     default:
-      return Quat.newP4(getPoint4f(i));
+      return Qd.newP4(getPoint4f(i));
     }
   }
 
@@ -1152,8 +1155,8 @@ abstract public class ScriptParam extends ScriptError {
       mad = radiusRasMol * 4 * 2;
       break;
     case T.decimal:
-      float f = floatParameterRange(1, -3, 3);
-      mad = (Float.isNaN(f) ? Integer.MAX_VALUE : (int) Math.floor(f * 1000 * 2));
+      double f = floatParameterRange(1, -3, 3);
+      mad = (Double.isNaN(f) ? Integer.MAX_VALUE : (int) Math.floor(f * 1000 * 2));
       if (mad < 0) {
         ((ScriptEval) this).restrictSelected(false, false);
         mad = -mad;
@@ -1174,23 +1177,23 @@ abstract public class ScriptParam extends ScriptError {
     return val;
   }
 
-  protected float floatParameterRange(int i, float min, float max)
+  protected double floatParameterRange(int i, double min, double max)
       throws ScriptException {
-    float val = floatParameter(i);
+    double val = floatParameter(i);
     if (val < min || val > max) {
       numberOutOfRange(min, max);
-      return Float.NaN;
+      return Double.NaN;
     }
     return val;
   }
 
-  public Lst<P3> getPointVector(T t, int i) throws ScriptException {
+  public Lst<P3d> getPointVector(T t, int i) throws ScriptException {
     switch (t.tok) {
     case T.bitset:
       return vwr.ms.getAtomPointVector((BS) t.value);
     case T.varray:
-      Lst<P3> data = new Lst<P3>();
-      P3 pt;
+      Lst<P3d> data = new Lst<P3d>();
+      P3d pt;
       Lst<SV> pts = ((SV) t).getList();
       for (int j = 0; j < pts.size(); j++)
         if ((pt = SV.ptValue(pts.get(j))) != null)
@@ -1205,13 +1208,13 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   /**
-   * Encodes a string such as "2.10" as an integer instead of a float so as to
+   * Encodes a string such as "2.10" as an integer instead of a double so as to
    * distinguish "2.1" from "2.10" used for model numbers and partial bond
    * orders. 2147483647 is maxvalue, so this allows loading simultaneously up to
    * 2147 files, each with 999999 models (or trajectories)
    * 
    * @param strDecimal
-   * @return float encoded as an integer
+   * @return double encoded as an integer
    */
   static int getFloatEncodedInt(String strDecimal) {
     int pt = strDecimal.indexOf(".");
@@ -1240,7 +1243,7 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   /**
-   * reads standard n.m float-as-integer n*1000000 + m and returns (n % 7) << 5
+   * reads standard n.m double-as-integer n*1000000 + m and returns (n % 7) << 5
    * + (m % 0x1F)
    * 
    * @param bondOrderInteger
@@ -1282,7 +1285,7 @@ abstract public class ScriptParam extends ScriptError {
 
   public int getArgbParamOrNone(int index, boolean allowNone)
       throws ScriptException {
-    P3 pt = null;
+    P3d pt = null;
     if (checkToken(index)) {
       switch (getToken(index).tok) {
       default:
@@ -1297,12 +1300,12 @@ abstract public class ScriptParam extends ScriptError {
       case T.leftsquare:
         return getColorTriad(++index);
       case T.varray:
-        float[] rgb = SV.flistValue(theToken, 3);
+        double[] rgb = SV.dlistValue(theToken, 3);
         if (rgb != null && rgb.length != 3)
-          pt = P3.new3(rgb[0], rgb[1], rgb[2]);
+          pt = P3d.new3(rgb[0], rgb[1], rgb[2]);
         break;
       case T.point3f:
-        pt = (P3) theToken.value;
+        pt = (P3d) theToken.value;
         break;
       case T.leftbrace:
         pt = getPoint3f(index, false, true);
@@ -1318,12 +1321,12 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   private int getColorTriad(int i) throws ScriptException {
-    float[] colors = new float[3];
+    double[] colors = new double[3];
     int n = 0;
     String hex = "";
     getToken(i);
-    P3 pt = null;
-    float val = 0;
+    P3d pt = null;
+    double val = 0;
     out: switch (theTok) {
     case T.integer:
     case T.spec_seqcode:
@@ -1356,7 +1359,7 @@ abstract public class ScriptParam extends ScriptError {
           if (n != 3)
             error(ERROR_badRGBColor);
           --i;
-          pt = P3.new3(colors[0], colors[1], colors[2]);
+          pt = P3d.new3(colors[0], colors[1], colors[2]);
           break out;
         default:
           error(ERROR_badRGBColor);
@@ -1366,7 +1369,7 @@ abstract public class ScriptParam extends ScriptError {
       error(ERROR_badRGBColor);
       break;
     case T.point3f:
-      pt = (P3) theToken.value;
+      pt = (P3d) theToken.value;
       break;
     case T.identifier:
       hex = paramAsStr(i);
@@ -1416,9 +1419,9 @@ abstract public class ScriptParam extends ScriptError {
       iToken = index;
       return tickInfo;
     }
-    tickInfo = new TickInfo((P3) getPointOrPlane(index, MODE_P3 | MODE_P_ALLOW_FRACTIONAL));
+    tickInfo = new TickInfo((P3d) getPointOrPlane(index, MODE_P3 | MODE_P_ALLOW_FRACTIONAL));
     if (coordinatesAreFractional || tokAt(iToken + 1) == T.unitcell) {
-      tickInfo.scale = P3.new3(Float.NaN, Float.NaN, Float.NaN);
+      tickInfo.scale = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
       allowScale = false;
     }
     if (tokAt(iToken + 1) == T.unitcell)
@@ -1430,15 +1433,15 @@ abstract public class ScriptParam extends ScriptError {
       return tickInfo;
     if (tokAt(iToken + 1) == T.scale) {
       if (isFloatParameter(iToken + 2)) {
-        float f = floatParameter(iToken + 2);
-        tickInfo.scale = P3.new3(f, f, f);
+        double f = floatParameter(iToken + 2);
+        tickInfo.scale = P3d.new3(f, f, f);
       } else {
         tickInfo.scale = getPoint3f(iToken + 2, true, true);
       }
     }
     if (allowFirst)
       if (tokAt(iToken + 1) == T.first)
-        tickInfo.first = floatParameter(iToken + 2);
+        tickInfo.first = doubleParameter(iToken + 2);
     // POINT {x,y,z} reference point not implemented
     //if (tokAt(iToken + 1) == Token.point)
     // tickInfo.reference = centerParameter(iToken + 2);
@@ -1458,7 +1461,7 @@ abstract public class ScriptParam extends ScriptError {
     return true;
   }
 
-  protected boolean setFloatProperty(String key, float value) {
+  protected boolean setFloatProperty(String key, double value) {
     if (!chk)
       vwr.setFloatProperty(key, value);
     return true;
@@ -1475,28 +1478,28 @@ abstract public class ScriptParam extends ScriptError {
    * @return pt or throw invArg
    * @throws ScriptException
    */
-  public T3 checkHKL(T3 pt) throws ScriptException {
+  public T3d checkHKL(T3d pt) throws ScriptException {
     if (Math.abs(pt.x) < 1 || Math.abs(pt.y) < 1 || Math.abs(pt.z) < 1 || pt.x != (int) pt.x
         || pt.y != (int) pt.y || pt.z != (int) pt.z)
       invArg();
     return pt;
   }
 
-  public P4 planeValue(T x) {
+  public P4d planeValue(T x) {
     Object pt;
     switch (x.tok) {
     case T.point4f:
-      return (P4) x.value;
+      return (P4d) x.value;
     case T.varray:
       break;
     case T.string:
     case T.misc:
       String s = (String) x.value;
       boolean isMinus = s.startsWith("-");
-      float f = (isMinus ? -1 : 1);
+      double f = (isMinus ? -1 : 1);
       if (isMinus)
         s = s.substring(1);
-      P4 p4 = null;
+      P4d p4 = null;
       boolean is1 = (s.length() > 2 && s.charAt(2) == '1');
       int mode = (s.length() < 2 ? -1
           : "xy yz xz x= y= z= ab bc ac".indexOf(s.substring(0, 2)));
@@ -1505,44 +1508,44 @@ abstract public class ScriptParam extends ScriptError {
       }
       switch (mode) {
       case 0:
-        return P4.new4(1, 1, 0, f);
+        return P4d.new4(1, 1, 0, f);
       case 3:
-        return P4.new4(0, 1, 1, f);
+        return P4d.new4(0, 1, 1, f);
       case 6:
-        return P4.new4(1, 0, 1, f);
+        return P4d.new4(1, 0, 1, f);
       case 9:
-        p4 = P4.new4(1, 0, 0, -f * PT.parseFloat(s.substring(2)));
+        p4 = P4d.new4(1, 0, 0, -f * PT.parseDouble(s.substring(2)));
         break;
       case 12:
-        p4 = P4.new4(0, 1, 0, -f * PT.parseFloat(s.substring(2)));
+        p4 = P4d.new4(0, 1, 0, -f * PT.parseDouble(s.substring(2)));
         break;
       case 15:
-        p4 = P4.new4(0, 0, 1, -f * PT.parseFloat(s.substring(2)));
+        p4 = P4d.new4(0, 0, 1, -f * PT.parseDouble(s.substring(2)));
         break;
       case 18: // ab
-        p4 = getHklPlane(P3.new3(0, 0, 1), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_C) : 0, null);
+        p4 = getHklPlane(P3d.new3(0, 0, 1), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_C) : 0, null);
         break;
       case 21: // bc
-        p4 = getHklPlane(P3.new3(1, 0, 0), is1 ? -vwr.getUnitCellInfo(SimpleUnitCell.INFO_A) : 0, null);
+        p4 = getHklPlane(P3d.new3(1, 0, 0), is1 ? -vwr.getUnitCellInfo(SimpleUnitCell.INFO_A) : 0, null);
         break;
       case 24: // ac
-        p4 = getHklPlane(P3.new3(0, 1, 0), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_B) : 0, null);
+        p4 = getHklPlane(P3d.new3(0, 1, 0), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_B) : 0, null);
         break;
       }
-      if (p4 != null && !Float.isNaN(p4.w))
+      if (p4 != null && !Double.isNaN(p4.w))
         return p4;
       break;
     default:
       return null;
     }
     pt = Escape.uP(SV.sValue(x));
-    return (pt instanceof P4 ? (P4) pt : null);
+    return (pt instanceof P4d ? (P4d) pt : null);
   }
 
-  public static Lst<P3> transformPoints(Lst<P3> vPts, M4d m4, P3 center) {
-    Lst<P3> v = new  Lst<P3>();
+  public static Lst<P3d> transformPoints(Lst<P3d> vPts, M4d m4, P3d center) {
+    Lst<P3d> v = new  Lst<P3d>();
     for (int i = 0; i < vPts.size(); i++) {
-      P3 pt = P3.newP(vPts.get(i));
+      P3d pt = P3d.newP(vPts.get(i));
       pt.sub(center);
       m4.rotTrans(pt);
       pt.add(center);
@@ -1565,14 +1568,14 @@ abstract public class ScriptParam extends ScriptError {
    * @param centerA return center of rotation; if null, then standard 4x4 matrix is returned
    * @return stdDev
    */
-  public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4d m,
-                                          P3 centerA) {
-    P3[] cptsA = Measure.getCenterAndPoints(ptsA);
-    P3[] cptsB = Measure.getCenterAndPoints(ptsB);
-    float[] retStddev = new float[2];
-    Quat q = Measure.calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
+  public static double getTransformMatrix4(Lst<P3d> ptsA, Lst<P3d> ptsB, M4d m,
+                                          P3d centerA) {
+    P3d[] cptsA = MeasureD.getCenterAndPoints(ptsA);
+    P3d[] cptsB = MeasureD.getCenterAndPoints(ptsB);
+    double[] retStddev = new double[2];
+    Qd q = MeasureD.calculateQuaternionRotation(new P3d[][] { cptsA, cptsB },
         retStddev);
-    M3d r = q.getMatrixd();
+    M3d r = q.getMatrix();
     if (centerA == null)
       r.rotate(cptsA[0]);
     else

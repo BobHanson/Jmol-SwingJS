@@ -37,10 +37,10 @@ import org.jmol.util.GData;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Vibration;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.M3d;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 
@@ -62,7 +62,7 @@ public class MeasuresRenderer extends LabelsRenderer {
   private Point3fi[] p;
   private int count;
 
-  private A4 aaT;
+  private A4d aaT;
   private M3d matrixT;
   
   @Override
@@ -148,7 +148,7 @@ public class MeasuresRenderer extends LabelsRenderer {
         pt = new Point3fi();
       pt.setT(ms.at[i]);
       if (vwr.tm.vibrationOn)
-        vwr.tm.getVibrationPoint((Vibration) v, pt, Float.NaN);
+        vwr.tm.getVibrationPoint((Vibration) v, pt, Double.NaN);
       pt.sD = -1;
     }
     if (ii != null)
@@ -199,8 +199,8 @@ public class MeasuresRenderer extends LabelsRenderer {
       tickA = a;
       tickB = b;
       if (tickAs == null) {
-        tickAs = new P3();
-        tickBs = new P3();
+        tickAs = new P3d();
+        tickBs = new P3d();
       }
       tickAs.set(a.sX, a.sY, a.sZ);
       tickBs.set(b.sX, b.sY, b.sZ);
@@ -260,20 +260,20 @@ public class MeasuresRenderer extends LabelsRenderer {
       return;
     }
     if (m.isTainted()) {
-      float radians = Measure.computeAngle(p[0], p[1], p[2],
+      double radians = MeasureD.computeAngle(p[0], p[1], p[2],
           vectorT2, vectorT3, false);
       vectorT.cross(vectorT2, vectorT3);
-      m.renderAxis = A4.new4(vectorT.x, vectorT.y, vectorT.z, radians);
+      m.renderAxis = A4d.new4(vectorT.x, vectorT.y, vectorT.z, radians);
       vectorT2.normalize();
       vectorT2.scale(0.5f);
-      m.renderArc = P3.newP(vectorT2);
+      m.renderArc = P3d.newP(vectorT2);
     }
     if (aaT == null) {
-      aaT = new A4();
+      aaT = new A4d();
       matrixT = new M3d();
     }
     int dotCount = (int) Math.floor((m.renderAxis.angle / (2 * Math.PI)) * 64);
-    float stepAngle = m.renderAxis.angle / dotCount;
+    double stepAngle = m.renderAxis.angle / dotCount;
     aaT.setAA(m.renderAxis);
     int iMid = dotCount / 2;
     for (int i = dotCount; --i >= 0;) {

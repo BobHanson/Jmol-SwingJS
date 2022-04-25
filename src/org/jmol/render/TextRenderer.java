@@ -39,8 +39,8 @@ class TextRenderer {
   static final int MODE_IS_ANTIALIASED = 4;
   
   static boolean render(TransformManager tm, Text text, JmolRendererInterface g3d,
-                        float scalePixelsPerMicron, float imageFontScaling,
-                        float[] boxXY, float[] temp,
+                        double scalePixelsPerMicron, double imageFontScaling,
+                        double[] boxXY, double[] temp,
                         P3i pTemp, short pointerColix,
                         int pointerWidth, int mode) {
     if (text == null
@@ -100,7 +100,7 @@ class TextRenderer {
       if (andSet)
         t.setXYZs(pTemp.x, pTemp.y, pTemp.z, pTemp.z);
       if (barPixels > 0 && tm.perspectiveDepth) {
-        float d = tm.unscaleToScreen(pTemp.z, barPixels);
+        double d = tm.unscaleToScreen(pTemp.z, barPixels);
         barPixels = t.barPixelsXYZ = (int) (barPixels * t.barDistance / d);
       }
     }
@@ -115,7 +115,7 @@ class TextRenderer {
    * @param barPixels 
    * @param isAntialiased
    */
-  private static void renderScale(JmolRendererInterface g3d, Text text, float[] temp, int barPixels, boolean isAntialiased) {
+  private static void renderScale(JmolRendererInterface g3d, Text text, double[] temp, int barPixels, boolean isAntialiased) {
     int z = text.z;
     int xoff = (text.xyz == null ? 0 : 2);
     // barPixels has a 4-pixel margin
@@ -139,15 +139,15 @@ class TextRenderer {
 
 
   private static void drawLineXYZ(JmolRendererInterface g3d, int x0, int y0,
-                                  int z0, float x1, float y1, int z1, float w,
-                                  float h, short pointerColix,
+                                  int z0, double x1, double y1, int z1, double w,
+                                  double h, short pointerColix,
                                   int pointerWidth) {
     
 
     // This complex sequence ensures that the label is pointed to in a reasonable manner.
     
-    float offsetX = x1 - x0;
-    float offsetY = y1 - y0;
+    double offsetX = x1 - x0;
+    double offsetY = y1 - y0;
 
     // Set picking label and then drag!
     // System.out.println(offsetX  +"/" + w + " " + offsetY + "/" + h);
@@ -156,10 +156,10 @@ class TextRenderer {
       return;
     
     boolean setX = (offsetY > 0 || offsetY < -h);
-    float pt = Float.NaN;
+    double pt = Double.NaN;
     x1 += (setX ? (offsetX > w/2 ? 0 : offsetX < -w*3/2 ? w : (pt = w / 2))
         : (offsetX > 0 ? 0 : w));
-    boolean setY = !Float.isNaN(pt);
+    boolean setY = !Double.isNaN(pt);
     y1 += (setY && offsetY > 0 ? 0 : setY && offsetY < -h ? h : h / 2);
     if (pointerWidth > 1) {
       g3d.fillCylinderXYZ(pointerColix, pointerColix, GData.ENDCAPS_FLAT,
@@ -173,15 +173,15 @@ class TextRenderer {
 
   static void renderSimpleLabel(JmolRendererInterface g3d, Font font,
                                 String strLabel, short colix, short bgcolix,
-                                float[] boxXY, int z, int zSlab, int xOffset,
-                                int yOffset, float ascent, int descent,
+                                double[] boxXY, int z, int zSlab, int xOffset,
+                                int yOffset, double ascent, int descent,
                                short pointerColix, int pointerWidth, int mode) {
 
     // old static style -- quick, simple, no line breaks, odd alignment?
     // LabelsRenderer only
 
-    float w = font.stringWidth(strLabel) + 8;
-    float h = ascent + descent + 8;
+    double w = font.stringWidth(strLabel) + 8;
+    double h = ascent + descent + 8;
 
     int x0 = (int) boxXY[0];
     int y0 = (int) boxXY[1];
@@ -191,8 +191,8 @@ class TextRenderer {
     boolean isAntialiased = ((mode & MODE_IS_ANTIALIASED) != 0);
     Text.setBoxXY(w, h, xOffset, yOffset, boxXY, isAbsolute );
 
-    float x = boxXY[0];
-    float y = boxXY[1];
+    double x = boxXY[0];
+    double y = boxXY[1];
     if (bgcolix != 0 && g3d.setC(bgcolix)) {
       showBox(g3d, colix, (int) x, (int) y, z, zSlab, (int) w,
           (int) h, 1, true);
@@ -209,7 +209,7 @@ class TextRenderer {
   private static void showBox(JmolRendererInterface g3d, short colix,
                               int x, int y, int z, int zSlab,
                               int boxWidth, int boxHeight,
-                              float imageFontScaling, boolean atomBased) {
+                              double imageFontScaling, boolean atomBased) {
     g3d.fillTextRect(x, y, z, zSlab, boxWidth, boxHeight);
     g3d.setC(colix);
     if (!atomBased)

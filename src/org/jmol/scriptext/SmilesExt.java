@@ -27,8 +27,8 @@ package org.jmol.scriptext;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 
 import java.util.Map;
 
@@ -76,21 +76,21 @@ public class SmilesExt {
    * @return standard deviation
    * @throws ScriptException
    */
-  public float getSmilesCorrelation(BS bsA, BS bsB, String smiles, Lst<P3> ptsA,
-                                    Lst<P3> ptsB, M4d m4, Lst<BS> vReturn,
-                                    boolean asMap, int[][] mapSet, P3 center,
+  public double getSmilesCorrelation(BS bsA, BS bsB, String smiles, Lst<P3d> ptsA,
+                                    Lst<P3d> ptsB, M4d m4, Lst<BS> vReturn,
+                                    boolean asMap, int[][] mapSet, P3d center,
                                     boolean bestMap, int flags)
       throws ScriptException {
 
     //   middle two: boolean isSmarts,boolean firstMatchOnly, 
-    float tolerance = (mapSet == null ? 0.1f : Float.MAX_VALUE);
+    double tolerance = (mapSet == null ? 0.1f : Double.MAX_VALUE);
     try {
       if (ptsA == null) {
-        ptsA = new Lst<P3>();
-        ptsB = new Lst<P3>();
+        ptsA = new Lst<P3d>();
+        ptsB = new Lst<P3d>();
       }
       M4d m = new M4d();
-      P3 c = new P3();
+      P3d c = new P3d();
 
       Atom[] atoms = e.vwr.ms.at;
       int ac = e.vwr.ms.ac;
@@ -100,7 +100,7 @@ public class SmilesExt {
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
-        return Float.NaN;
+        return Double.NaN;
       int[] mapFirst = maps[0];
       for (int i = 0; i < mapFirst.length; i++)
         ptsA.addLast(atoms[mapFirst[i]]);
@@ -108,17 +108,17 @@ public class SmilesExt {
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
-        return Float.NaN;
+        return Double.NaN;
       Logger.info(maps.length + " mappings found");
       if (bestMap || !asMap) {
-        float lowestStdDev = Float.MAX_VALUE;
+        double lowestStdDev = Double.MAX_VALUE;
         int[] mapBest = null;
         for (int i = 0; i < maps.length; i++) {
           ptsB.clear();
           for (int j = 0; j < maps[i].length; j++)
             ptsB.addLast(atoms[maps[i][j]]);
           Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
-          float stddev = (ptsB.size() == 1 ? 0
+          double stddev = (ptsB.size() == 1 ? 0
               : ScriptParam.getTransformMatrix4(ptsA, ptsB, m, null));
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {
@@ -237,9 +237,9 @@ public class SmilesExt {
       // getting a correlation
 
       Lst<BS> vReturn = new Lst<BS>();
-      float stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
+      double stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
           null, null, vReturn, false, null, null, false, flags);
-      if (Float.isNaN(stddev))
+      if (Double.isNaN(stddev))
         return (asOneBitset ? new BS() : new String[] {});
       e.showString("RMSD " + stddev + " Angstroms");
       b = vReturn.toArray(new BS[vReturn.size()]);
@@ -257,7 +257,7 @@ public class SmilesExt {
     return list;
   }
 
-  public float[] getFlexFitList(BS bs1, BS bs2, String smiles1,
+  public double[] getFlexFitList(BS bs1, BS bs2, String smiles1,
                                 boolean isSmarts)
       throws ScriptException {
     int[][] mapSet = AU.newInt2(2);
@@ -271,11 +271,11 @@ public class SmilesExt {
         : e.vwr.ms.getDihedralMap(mapSet[1]));
     if (bondMap2 == null || bondMap2.length != bondMap1.length)
       return null;
-    float[][] angles = new float[bondMap1.length][3];
+    double[][] angles = new double[bondMap1.length][3];
     Atom[] atoms = e.vwr.ms.at;
     getTorsions(atoms, bondMap2, angles, 0);
     getTorsions(atoms, bondMap1, angles, 1);
-    float[] data = new float[bondMap1.length * 6];
+    double[] data = new double[bondMap1.length * 6];
     for (int i = 0, pt = 0; i < bondMap1.length; i++) {
       int[] map = bondMap1[i];
       data[pt++] = map[0];
@@ -288,11 +288,11 @@ public class SmilesExt {
     return data;
   }
 
-  private static void getTorsions(Atom[] atoms, int[][] bondMap, float[][] diff,
+  private static void getTorsions(Atom[] atoms, int[][] bondMap, double[][] diff,
                                   int pt) {
     for (int i = bondMap.length; --i >= 0;) {
       int[] map = bondMap[i];
-      float v = Measure.computeTorsion(atoms[map[0]], atoms[map[1]],
+      double v = MeasureD.computeTorsion(atoms[map[0]], atoms[map[1]],
           atoms[map[2]], atoms[map[3]], true);
       if (pt == 1) {
         if (v - diff[i][0] > 180)
@@ -305,10 +305,10 @@ public class SmilesExt {
   }
 
   @SuppressWarnings("unchecked")
-  public float mapPolyhedra(int i1, int i2, boolean isSmiles, M4d m)
+  public double mapPolyhedra(int i1, int i2, boolean isSmiles, M4d m)
       throws ScriptException {
-    Lst<P3> ptsA = new Lst<P3>();
-    Lst<P3> ptsB = new Lst<P3>();
+    Lst<P3d> ptsA = new Lst<P3d>();
+    Lst<P3d> ptsB = new Lst<P3d>();
     Object[] data;
     data = new Object[] { Integer.valueOf(i1), null };
     e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "syminfo", data);
@@ -318,7 +318,7 @@ public class SmilesExt {
     e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "syminfo", data);
     Map<String, Object> p2 = (Map<String, Object>) data[1];
     if (p1 == null || p2 == null)
-      return Float.NaN;
+      return Double.NaN;
     String smiles1 = (String) p1.get("polySmiles");
     String smiles2 = (String) p2.get("polySmiles");
     int[] map = (int[]) getSmilesMatches(smiles2, smiles1, null, null,
@@ -326,14 +326,14 @@ public class SmilesExt {
             : JC.SMILES_GEN_TOPOLOGY | JC.SMILES_TYPE_SMILES,
         false, true);
     if (map.length == 0)
-      return Float.NaN;
+      return Double.NaN;
     // map new list
-    ptsA.addLast((P3) p1.get("center"));
-    P3[] a = (P3[]) p1.get("vertices");
+    ptsA.addLast((P3d) p1.get("center"));
+    P3d[] a = (P3d[]) p1.get("vertices");
     for (int i = 0, n = a.length; i < n; i++)
       ptsA.add(a[map[i + 1] - 1]);
-    ptsB.addLast((P3) p2.get("center"));
-    a = (P3[]) p2.get("vertices");
+    ptsB.addLast((P3d) p2.get("center"));
+    a = (P3d[]) p2.get("vertices");
     for (int i = 0, n = a.length; i < n; i++)
       ptsB.add(a[i]);
     Interface.getInterface("javajs.util.Eigen", e.vwr, "script");

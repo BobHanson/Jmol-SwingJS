@@ -266,7 +266,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     if (gibbsEnergy == null)
       return;
     asc.setAtomSetEnergy("" + gibbsEnergy,
-        gibbsEnergy.floatValue());
+        gibbsEnergy.doubleValue());
     asc.setCurrentModelInfo("Energy", gibbsEnergy);
     asc.setCurrentModelInfo("Entropy", gibbsEntropy);
     asc.setInfo("Energy", gibbsEnergy);

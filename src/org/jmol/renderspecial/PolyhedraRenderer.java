@@ -24,10 +24,10 @@
 package org.jmol.renderspecial;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -44,7 +44,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
   private int drawEdges;
   private boolean isAll;
   private boolean frontOnly, edgesOnly;
-  private P3[] screens3f;
+  private P3d[] screens3f;
   private P3i scrVib;
   private boolean vibs;
   private BS bsSelected;
@@ -73,7 +73,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
     short[] colixes = ((Polyhedra) shape).colixes;
     int iAtom = -1;
     short colix;
-    float scale = 1;
+    double scale = 1;
     if (p.id == null) {
       iAtom = p.centralAtom.i;
       colix = (colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
@@ -89,22 +89,22 @@ public class PolyhedraRenderer extends ShapeRenderer {
     } else if (!g3d.setC(colix)) {
       return false;
     }
-    T3[] vertices = p.vertices;
+    T3d[] vertices = p.vertices;
     if (scale != 1) {
-      T3[] v = new T3[vertices.length];
+      T3d[] v = new T3d[vertices.length];
       if (scale < 0) {
         // explode from {0 0 0}
-        V3 a = V3.newV(p.center);
+        V3d a = V3d.newV(p.center);
         a.scale(-scale - 1);
         for (int i = v.length; --i >= 0;) {
-          V3 b = V3.newV(vertices[i]);
+          V3d b = V3d.newV(vertices[i]);
           b.add(a);
           v[i] = b;
         }
       } else {
         // enlarge
         for (int i = v.length; --i >= 0;) {
-          V3 a = V3.newVsub(vertices[i], p.center);
+          V3d a = V3d.newVsub(vertices[i], p.center);
           a.scaleAdd2(scale, a, p.center);
           v[i] = a;
         }
@@ -113,16 +113,16 @@ public class PolyhedraRenderer extends ShapeRenderer {
     }
 
     if (screens3f == null || screens3f.length < vertices.length) {
-      screens3f = new P3[vertices.length];
+      screens3f = new P3d[vertices.length];
       for (int i = vertices.length; --i >= 0;)
-        screens3f[i] = new P3();
+        screens3f[i] = new P3d();
     }
-    P3[] sc = this.screens3f;
+    P3d[] sc = this.screens3f;
     int[][] planes = p.triangles;
     int[] elemNos = (p.pointScale > 0 ? p.getElemNos() : null);
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
-      P3 v = sc[i];
+      P3d v = sc[i];
       if (atom == null) {
         tm.transformPtScrT3(vertices[i], v);
         //      } else if (atom.isVisible(myVisibilityFlag)) {
@@ -206,7 +206,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
     return needTranslucent;
   }
 
-  private void drawEdges(short normix, P3 a, P3 b, P3 c, int edgeMask) {
+  private void drawEdges(short normix, P3d a, P3d b, P3d c, int edgeMask) {
     if (isAll || edgesOnly || frontOnly && vwr.gdata.isDirectedTowardsCamera(normix)) {
       int d = (g3d.isAntialiased() ? 6 : 3);
       if ((edgeMask & 1) == 1)

@@ -11,7 +11,7 @@ public interface JmolJDXMOLReader {
   String discardLinesUntilNonBlank() throws Exception;
 
   void processModelData(String data, String id, String type, String base,
-                        String last, float modelScale, float vibScale, boolean isFirst)
+                        String last, double modelScale, double vibScale, boolean isFirst)
       throws Exception;
 
   String rd() throws Exception;

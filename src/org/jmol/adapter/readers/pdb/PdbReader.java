@@ -40,7 +40,7 @@ import org.jmol.viewer.JC;
 
 import javajs.util.Lst;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -1770,18 +1770,18 @@ public class PdbReader extends AtomSetCollectionReader {
            * Parse tightly packed numbers e.g. -999.1234-999.1234-999.1234
            * assuming there are 4 places to the right of each decimal point
            */
-          P3 origin = new P3();
+          P3d origin = new P3d();
           tlsGroup.put("origin", origin);
           if (tokens.length == 8) {
-            origin.set((float) parseDoubleStr(tokens[5]), (float) parseDoubleStr(tokens[6]),
-                (float) parseDoubleStr(tokens[7]));
+            origin.set((double) parseDoubleStr(tokens[5]), (double) parseDoubleStr(tokens[6]),
+                (double) parseDoubleStr(tokens[7]));
           } else {
             int n = line.length();
-            origin.set((float) parseDoubleRange(line, n - 27, n - 18),
-                (float) parseDoubleRange(line, n - 18, n - 9), (float) parseDoubleRange(line, n - 9, n));
+            origin.set((double) parseDoubleRange(line, n - 27, n - 18),
+                (double) parseDoubleRange(line, n - 18, n - 9), (double) parseDoubleRange(line, n - 9, n));
           }
-          if (Float.isNaN(origin.x) || Float.isNaN(origin.y) || Float.isNaN(origin.z)) {
-            origin.set(Float.NaN, Float.NaN, Float.NaN);
+          if (Double.isNaN(origin.x) || Double.isNaN(origin.y) || Double.isNaN(origin.z)) {
+            origin.set(Double.NaN, Double.NaN, Double.NaN);
             tlsAddError("invalid origin: " + line);
           }
         } else if (tokens[1].equalsIgnoreCase("TENSOR")) {
@@ -1947,7 +1947,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private Map<Atom, double[]>tlsU;
   
   private void setTlsTensor(Atom atom, Map<String, Object> group, SymmetryInterface symmetry) {
-    P3 origin = (P3) group.get("origin");
+    P3d origin = (P3d) group.get("origin");
     if (Double.isNaN(origin.x))
       return;
     
@@ -2020,8 +2020,8 @@ public class PdbReader extends AtomSetCollectionReader {
         tlsGroupID).appendC('\t').append(error).appendC('\n');
   }
 
-  protected static float fixRadius(double r) {    
-    return (float) (r < 0.9 ? 1 : r);
+  protected static double fixRadius(double r) {    
+    return (double) (r < 0.9 ? 1 : r);
     // based on parameters in http://pdb2pqr.svn.sourceforge.net/viewvc/pdb2pqr/trunk/pdb2pqr/dat/
     // AMBER forcefield, H atoms may be given 0 (on O) or 0.6 (on N) for radius
     // PARSE forcefield, lots of H atoms may be given 0 radius

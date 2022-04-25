@@ -27,9 +27,9 @@ package org.jmol.smiles;
 import java.util.Hashtable;
 
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 import org.jmol.util.BSUtil;
@@ -85,7 +85,7 @@ public class SmilesAromatic {
     for (int r = vR.size(); --r >= 0;) {
       BS bs = (BS) vR.get(r);
       boolean isOK = isSp2Ring(n, jmolAtoms, bsSelected, bs,
-          (justCheckBonding ? Float.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f),
+          (justCheckBonding ? Double.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f),
           checkExplicit,
           strictness == 0);
       if (!isOK)
@@ -169,7 +169,7 @@ public class SmilesAromatic {
    *        must not be null
    * @param cutoff
    *        an arbitrary value to test the standard deviation against. 0.01 is
-   *        appropriate here. Use Float.MAX_VALUE to just do bond connectivity
+   *        appropriate here. Use Double.MAX_VALUE to just do bond connectivity
    *        check
    * @param checkExplicit
    *        check bonds that are explicit only - for XYZ and QM calcs
@@ -179,7 +179,7 @@ public class SmilesAromatic {
    */
 
   private final static boolean isSp2Ring(int n, Node[] atoms, BS bsSelected,
-                                         BS bs, float cutoff,
+                                         BS bs, double cutoff,
                                          boolean checkExplicit,
                                          boolean allowSOxide) {
     ///
@@ -247,19 +247,19 @@ public class SmilesAromatic {
         if (atoms[i].getCovalentBondCountPlusMissingH() > 3)
           return false;
     }
-    if (cutoff == Float.MAX_VALUE)
+    if (cutoff == Double.MAX_VALUE)
       return true;
 
     if (cutoff <= 0)
       cutoff = 0.01f;
 
-    V3 vNorm = null;
-    V3 vTemp = null;
-    V3 vMean = null;
+    V3d vNorm = null;
+    V3d vTemp = null;
+    V3d vMean = null;
     int nPoints = bs.cardinality();
-    V3[] vNorms = new V3[nPoints * 2];
+    V3d[] vNorms = new V3d[nPoints * 2];
     int nNorms = 0;
-    float maxDev = (1 - cutoff * 5);
+    double maxDev = (1 - cutoff * 5);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
       Edge[] bonds = ringAtom.getEdges();
@@ -288,20 +288,20 @@ public class SmilesAromatic {
       }
 
       if (vMean == null) {
-        vMean = new V3();
-        vNorm = new V3();
-        vTemp = new V3();
+        vMean = new V3d();
+        vNorm = new V3d();
+        vTemp = new V3d();
       }
 
       // check the normal for r1 - i - r2 plane
       // check the normal for r1 - iSub - r2 plane
 
       for (int k = 0, j = i; k < 2; k++) {
-        Measure.getNormalThroughPoints((P3) atoms[r1], (P3) atoms[j], (P3) atoms[r2],
+        MeasureD.getNormalThroughPoints((P3d) atoms[r1], (P3d) atoms[j], (P3d) atoms[r2],
             vNorm, vTemp);
         if (!addNormal(vNorm, vMean, maxDev))
           return false;
-        vNorms[nNorms++] = V3.newV(vNorm);
+        vNorms[nNorms++] = V3d.newV(vNorm);
         if ((j = iSub) < 0)
           break;
       }
@@ -317,8 +317,8 @@ public class SmilesAromatic {
    * @param maxDev
    * @return true if successful
    */
-  private final static boolean addNormal(V3 vTemp, V3 vMean, float maxDev) {
-    float similarity = vMean.dot(vTemp);
+  private final static boolean addNormal(V3d vTemp, V3d vMean, double maxDev) {
+    double similarity = vMean.dot(vTemp);
     if (similarity != 0 && Math.abs(similarity) < maxDev)
       return false;
     if (similarity < 0)
@@ -338,12 +338,12 @@ public class SmilesAromatic {
    * @param cutoff
    * @return true if stddev < cutoff
    */
-  private final static boolean checkStandardDeviation(V3[] vNorms, V3 vMean,
-                                                      int n, float cutoff) {
+  private final static boolean checkStandardDeviation(V3d[] vNorms, V3d vMean,
+                                                      int n, double cutoff) {
     double sum = 0;
     double sum2 = 0;
     for (int i = 0; i < n; i++) {
-      float v = vNorms[i].dot(vMean);
+      double v = vNorms[i].dot(vMean);
       sum += v;
       sum2 += ((double) v) * v;
     }

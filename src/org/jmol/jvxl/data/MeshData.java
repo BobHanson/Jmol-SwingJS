@@ -67,7 +67,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -125,8 +125,8 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.MeshSurface;
 
 import javajs.util.AU;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public class MeshData extends MeshSurface {
   
@@ -140,7 +140,7 @@ public class MeshData extends MeshSurface {
 
   public String polygonColorData;
 
-  public int addVertexCopy(T3 vertex, float value, int assocVertex, boolean asCopy) {
+  public int addVertexCopy(T3d vertex, double value, int assocVertex, boolean asCopy) {
     if (assocVertex < 0)
       vertexIncrement = -assocVertex;  //3 in some cases
     return addVCVal(vertex, value, asCopy);
@@ -289,11 +289,11 @@ public class MeshData extends MeshSurface {
   
   public void invalidateSurfaceSet(int i) {
     for (int j = surfaceSet[i].nextSetBit(0); j >= 0; j = surfaceSet[i].nextSetBit(j + 1))
-      vvs[j] = Float.NaN;
+      vvs[j] = Double.NaN;
     surfaceSet[i] = null;
   }
   
-  public static boolean checkCutoff(int iA, int iB, int iC, float[] vertexValues) {
+  public static boolean checkCutoff(int iA, int iB, int iC, double[] vertexValues) {
     // never cross a +/- junction with a triangle in the case of orbitals, 
     // where we are using |psi| instead of psi for the surface generation.
     // note that for bicolor maps, where the values are all positive, we 
@@ -301,9 +301,9 @@ public class MeshData extends MeshSurface {
     if (iA < 0 || iB < 0 || iC < 0)
       return false;
 
-    float val1 = vertexValues[iA];
-    float val2 = vertexValues[iB];
-    float val3 = vertexValues[iC];
+    double val1 = vertexValues[iA];
+    double val2 = vertexValues[iB];
+    double val3 = vertexValues[iC];
     return (val1 >= 0 && val2 >= 0 && val3 >= 0 
         || val1 <= 0 && val2 <= 0 && val3 <= 0);
   }
@@ -312,10 +312,10 @@ public class MeshData extends MeshSurface {
    * 
    * @param m 
    * @param thisSet set to Integer.MIN_VALUE to ensure an array.
-   *        If a set has been selected, we return a Float 
+   *        If a set has been selected, we return a Double 
    * @param isArea
    * @param getSets
-   * @return Float or double[]
+   * @return Double or double[]
    */
   public static Object calculateVolumeOrArea(MeshData m, BS thisSet, boolean isArea, boolean getSets) {
     if (getSets || m.nSets <= 0)
@@ -323,9 +323,9 @@ public class MeshData extends MeshSurface {
     boolean justOne = (thisSet != null && thisSet.cardinality() == 1);
     int n = (justOne || m.nSets <= 0 ? 1 : m.nSets);
     double[] v = new double[n];
-    V3 vAB = new V3();
-    V3 vAC = new V3();
-    V3 vTemp = new V3();
+    V3d vAB = new V3d();
+    V3d vAC = new V3d();
+    V3d vTemp = new V3d();
     for (int i = m.pc; --i >= 0;) {
       if (m.setABC(i) == null)
         continue;
@@ -350,7 +350,7 @@ public class MeshData extends MeshSurface {
     for (int i = 0; i < n; i++)
       v[i] /= factor;
     if (justOne)
-      return Float.valueOf((float) v[0]);
+      return Double.valueOf((double) v[0]);
     //System.out.println("MeshData calcVolume " + Escape.e(v));
     if (thisSet != null) {
       thisSet.and(BSUtil.newBitSet2(0, v.length));
@@ -366,13 +366,13 @@ public class MeshData extends MeshSurface {
   public void updateInvalidatedVertices(BS bs) {
     bs.clearAll();
     for (int i = 0; i < vc; i += vertexIncrement)
-      if (Float.isNaN(vvs[i]))
+      if (Double.isNaN(vvs[i]))
         bs.set(i);
   }
 
   public void invalidateVertices(BS bsInvalid) {
     for (int i = bsInvalid.nextSetBit(0); i >= 0; i = bsInvalid.nextSetBit(i + 1))
-      vvs[i] = Float.NaN;
+      vvs[i] = Double.NaN;
   }
 
 

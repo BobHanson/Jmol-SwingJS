@@ -1,6 +1,6 @@
 package javajs.api;
 
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 public interface EigenInterface {
@@ -13,9 +13,5 @@ public interface EigenInterface {
 
   double[][] getEigenvectorsDoubleTransposed();
 
-  void fillFloatArrays(V3[] eigenVectors, float[] eigenValues);
-
-  float[][] getEigenvectorsFloatTransposed();
-
-
+ 
 }

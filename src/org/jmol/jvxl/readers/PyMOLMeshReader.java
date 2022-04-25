@@ -50,7 +50,7 @@ class PyMOLMeshReader extends MapFileReader {
   private String surfaceName;
   private int pymolType;
   private boolean isMesh;
-  //private float cutoff = Float.NaN;
+  //private double cutoff = Double.NaN;
 
   final static int cMapSourceCrystallographic = 1;
   final static int cMapSourceCCP4 = 2;
@@ -266,12 +266,12 @@ class PyMOLMeshReader extends MapFileReader {
    
   private int pt;
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     return getFloat(voxelList, pt++);
   }
 
-  private float getFloat(Lst<Object> list, int i) {
-    return ((Number) list.get(i)).floatValue();
+  private double getFloat(Lst<Object> list, int i) {
+    return ((Number) list.get(i)).doubleValue();
   }
 
   @Override
@@ -282,11 +282,11 @@ class PyMOLMeshReader extends MapFileReader {
   protected void setCutoffAutomatic() {
     if (params.thePlane != null)
       return;
-    if (Float.isNaN(params.sigma)) {
+    if (Double.isNaN(params.sigma)) {
       if (!params.cutoffAutomatic)
         return;
       params.cutoff = (boundingBox == null ? 3.0f : 1.6f);
-      if (dmin != Float.MAX_VALUE) {
+      if (dmin != Double.MAX_VALUE) {
         if (params.cutoff > dmax)
           params.cutoff = dmax / 4; // just a guess
       }
@@ -298,17 +298,17 @@ class PyMOLMeshReader extends MapFileReader {
         + (boundingBox == null ? " (no BOUNDBOX parameter)\n" : "\n"));
   }
 
-  private float calculateCutoff() {
+  private double calculateCutoff() {
     int n = voxelList.size();
-    float sum = 0;
-    float sum2 = 0;
+    double sum = 0;
+    double sum2 = 0;
     for (int i = 0; i < n; i++) {
-      float v = getFloat(voxelList, i);
+      double v = getFloat(voxelList, i);
       sum += v;
       sum2 += v * v;
     }
-    float mean = sum / n;
-    float rmsd = (float) Math.sqrt(sum2 / n);
+    double mean = sum / n;
+    double rmsd = (double) Math.sqrt(sum2 / n);
     Logger.info("PyMOLMeshReader rmsd=" + rmsd + " mean=" + mean);
     return params.sigma * rmsd + mean;
   }

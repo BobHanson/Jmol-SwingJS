@@ -31,7 +31,8 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
+import javajs.util.P3d;
 import javajs.util.SB;
 
 import javajs.util.BS;
@@ -112,7 +113,7 @@ public class SmilesGenerator {
   private boolean aromaticDouble;
   private boolean noStereo;
   private boolean openSMILES;
-  public P3 polySmilesCenter;
+  public P3d polySmilesCenter;
   private SmilesStereo smilesStereo;
   private boolean isPolyhedral;
   private Lst<BS> aromaticRings;
@@ -1065,9 +1066,9 @@ public class SmilesGenerator {
     int charge = atom.getFormalCharge();
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();
-    float osclass = (openSMILES
+    double osclass = (openSMILES
         ? ((Node) atom).getFloatProperty("property_atomclass")
-        : Float.NaN);
+        : Double.NaN);
     String atomName = atom.getAtomName();
     String groupType = ((Node) atom).getBioStructureTypeName();
     // for bioSMARTS we provide the connecting atom if 
@@ -1198,7 +1199,7 @@ public class SmilesGenerator {
     return false;
   }
 
-  void sortPolyBonds(SimpleNode atom, SimpleNode refAtom, P3 center) {
+  void sortPolyBonds(SimpleNode atom, SimpleNode refAtom, P3d center) {
     if (smilesStereo == null)
       try {
         smilesStereo = SmilesStereo.newStereo(null);
@@ -1354,11 +1355,11 @@ public class SmilesGenerator {
     return SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D);
   }
 
-  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, float z) {
+  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, double z) {
     for (int i = 0; i < 4; i++) {
       if (stereo[i] == a) {
         SmilesAtom b = new SmilesAtom();
-        P3 c = a.getXYZ();
+        P3d c = a.getXYZ();
         b.set(c.x, c.y, z);
         stereo[i] = b;
         break;

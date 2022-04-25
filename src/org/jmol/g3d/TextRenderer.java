@@ -141,7 +141,7 @@ class TextRenderer {
     //int subscale = 1; //could be something less than that
     int w = 0;
     int len = text.length();
-    int suboffset = Math.round(font3d.getHeight() * 0.25f);
+    int suboffset = (int) Math.round(font3d.getHeight() * 0.25f);
     int supoffset = -Math.round(font3d.getHeight() * 0.3f);
     int argb0 = 0;
     for (int i = 0; i < len; i++) {

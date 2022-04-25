@@ -44,7 +44,7 @@ package org.jmol.adapter.readers.xtal;
 
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -103,15 +103,15 @@ public class BilbaoReader extends AtomSetCollectionReader {
         appendLoadNote(line + "\n");
     } else if (line.contains("High symmetry structure<")) {
       if (getHigh)
-        readBilbaoFormat("high symmetry", Float.NaN);
+        readBilbaoFormat("high symmetry", Double.NaN);
     } else if (line.contains("Low symmetry structure<")) {
       if (!doDisplace)
-        readBilbaoFormat("low symmetry", Float.NaN);
+        readBilbaoFormat("low symmetry", Double.NaN);
     } else if (line.contains("structure in the subgroup basis<")) {
       if (!doDisplace)
-        readBilbaoFormat("high symmetry in the subgroup basis", Float.NaN);
+        readBilbaoFormat("high symmetry in the subgroup basis", Double.NaN);
     } else if (line.contains("Low symmetry structure after the origin shift<")) {
-      readBilbaoFormat("low symmetry after origin shift", Float.NaN);
+      readBilbaoFormat("low symmetry after origin shift", Double.NaN);
     } else if (line.contains("<h3>Irrep:")) {
       readVirtual();
     }
@@ -122,7 +122,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
     isBCSfile = true;
     checkComment();
     while (line != null) {
-      readBilbaoFormat(null, Float.NaN);
+      readBilbaoFormat(null, Double.NaN);
       if (rdLine() == null || line.indexOf("##disp-par##") < 0) {
         applySymmetryAndSetTrajectory();
       } else {
@@ -155,7 +155,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
   O     3   8f    0.6420 0.2800 0.6120
   O     4   8f    0.4910 0.2220 0.4200 
   */
-  private void readBilbaoFormat(String title, float fAmp) throws Exception {
+  private void readBilbaoFormat(String title, double fAmp) throws Exception {
     setFractionalCoordinates(true);
     if (!doGetModel(++modelNumber, title))
       return;
@@ -202,7 +202,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
     readDisplacements(fAmp);
   }
 
-  private void readDisplacements(float fAmp) throws Exception {
+  private void readDisplacements(double fAmp) throws Exception {
     /*
     ##disp-par## Rb1x|x0.000000x|x0.000791x|x-0.001494
     ##disp-par## Rb1_2x|x0.000000x|x0.000791x|x0.001494
@@ -212,8 +212,8 @@ public class BilbaoReader extends AtomSetCollectionReader {
         rdLine();
       String[] tokens = PT.split(line, "x|x");
       if (getSym || !tokens[0].contains("_"))
-        asc.atoms[i0 + i].vib = V3.new3((float) parseDoubleStr(tokens[1]),
-            (float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]));
+        asc.atoms[i0 + i].vib = V3d.new3((double) parseDoubleStr(tokens[1]),
+            (double) parseDoubleStr(tokens[2]), (double) parseDoubleStr(tokens[3]));
       line = null;
     }
     applySymmetryAndSetTrajectory();
@@ -266,7 +266,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
     int pt = s.indexOf("The amplitude");
     pt = s.indexOf("=", pt);
     String amp = s.substring(pt + 2, s.indexOf(" ", pt + 2));
-    float fAmp = (normDispl ? (float) parseDoubleStr(amp) : 1);
+    double fAmp = (normDispl ? (double) parseDoubleStr(amp) : 1);
     String irrep = getAttr(s, "irrep");
     if (irrep.indexOf(":") >= 0)
       irrep = irrep.substring(0, irrep.indexOf(":"));

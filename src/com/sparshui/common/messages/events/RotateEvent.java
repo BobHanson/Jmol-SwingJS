@@ -98,11 +98,11 @@ public class RotateEvent implements Event {
 	}
 
   public float getX() {
-    return _center.getX();
+    return (float) _center.getX();
   }
   
   public float getY() {
-    return _center.getY();
+    return (float) _center.getY();
   }
   
 

@@ -32,11 +32,11 @@ import javajs.api.JSONEncodable;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public abstract class T3 implements JSONEncodable, Serializable {
+public abstract class T3d implements JSONEncodable, Serializable {
 
   public float x, y, z;
 
-  public T3() {
+  public T3d() {
   }
 
   /**
@@ -74,7 +74,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t1
    *        the tuple to be copied
    */
-  public final void setT(T3 t1) {
+  public final void setT(T3d t1) {
     x = t1.x;
     y = t1.y;
     z = t1.z;
@@ -88,7 +88,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t2
    *        the second tuple
    */
-  public final void add2(T3 t1, T3 t2) {
+  public final void add2(T3d t1, T3d t2) {
     x = t1.x + t2.x;
     y = t1.y + t2.y;
     z = t1.z + t2.z;
@@ -100,7 +100,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t1
    *        the other tuple
    */
-  public final void add(T3 t1) {
+  public final void add(T3d t1) {
     x += t1.x;
     y += t1.y;
     z += t1.z;
@@ -113,7 +113,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    *        the other point
    * @return the square of distance between these two points as a float
    */
-  public final float distanceSquared(T3 p1) {
+  public final float distanceSquared(T3d p1) {
     double dx = x - p1.x;
     double dy = y - p1.y;
     double dz = z - p1.z;
@@ -127,7 +127,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    *        the other point
    * @return the distance between these two points
    */
-  public final float distance(T3 p1) {
+  public final float distance(T3d p1) {
     return (float) Math.sqrt(distanceSquared(p1));
   }
 
@@ -140,7 +140,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t2
    *        the second tuple
    */
-  public final void sub2(T3 t1, T3 t2) {
+  public final void sub2(T3d t1, T3d t2) {
     x = t1.x - t2.x;
     y = t1.y - t2.y;
     z = t1.z - t2.z;
@@ -153,7 +153,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t1
    *        the other tuple
    */
-  public final void sub(T3 t1) {
+  public final void sub(T3d t1) {
     x -= t1.x;
     y -= t1.y;
     z -= t1.z;
@@ -190,7 +190,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * 
    * @param p
    */
-  public final void scaleT(T3 p) {
+  public final void scaleT(T3d p) {
     x *= p.x;
     y *= p.y;
     z *= p.z;
@@ -208,7 +208,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param t2
    *        the tuple to be added
    */
-  public final void scaleAdd2(float s, T3 t1, T3 t2) {
+  public final void scaleAdd2(float s, T3d t1, T3d t2) {
     x = s * t1.x + t2.x;
     y = s * t1.y + t2.y;
     z = s * t1.z + t2.z;
@@ -221,7 +221,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param a
    * @param b
    */
-  public void ave(T3 a, T3 b) {
+  public void ave(T3d a, T3d b) {
     x = (a.x + b.x) / 2f;
     y = (a.y + b.y) / 2f;
     z = (a.z + b.z) / 2f; 
@@ -234,7 +234,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    *        the other vector
    * @return this.dot.v
    */
-  public final float dot(T3 v) {
+  public final float dot(T3d v) {
     return x * v.x + y * v.y + z * v.z;
   }
 
@@ -279,7 +279,7 @@ public abstract class T3 implements JSONEncodable, Serializable {
    * @param v2
    *        the second vector
    */
-  public final void cross(T3 v1, T3 v2) {
+  public final void cross(T3d v1, T3d v2) {
     set(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y
         - v1.y * v2.x);
   }
@@ -313,9 +313,9 @@ public abstract class T3 implements JSONEncodable, Serializable {
    */
   @Override
   public boolean equals(Object t1) {
-    if (!(t1 instanceof T3))
+    if (!(t1 instanceof T3d))
       return false;
-    T3 t2 = (T3) t1;
+    T3d t2 = (T3d) t1;
     return (x == t2.x && y == t2.y && z == t2.z);
   }
 

@@ -27,9 +27,9 @@ import org.jmol.c.STR;
 import javajs.util.BS;
 import org.jmol.util.Logger;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public class AlphaPolymer extends BioPolymer {
 
@@ -51,12 +51,12 @@ public class AlphaPolymer extends BioPolymer {
   }
 
   @Override
-  protected P3 getControlPoint(int i, V3 v) {
+  protected P3d getControlPoint(int i, V3d v) {
     if (!monomers[i].isSheet())
       return leadPoints[i];
     v.sub2(leadMidpoints[i], leadPoints[i]);
     v.scale(sheetSmoothing);
-    P3 pt = P3.newP(leadPoints[i]);
+    P3d pt = P3d.newP(leadPoints[i]);
     pt.add(v);
     return pt;
   }
@@ -162,7 +162,7 @@ public class AlphaPolymer extends BioPolymer {
   public void calculateStructures(boolean alphaOnly) { 
     if (monomerCount < 4)
       return;
-    float[] angles = calculateAnglesInDegrees();
+    double[] angles = calculateAnglesInDegrees();
     Code[] codes = calculateCodes(angles);
     checkBetaSheetAlphaHelixOverlap(codes, angles);
     STR[] tags = calculateRunsFourOrMore(codes);
@@ -175,21 +175,21 @@ public class AlphaPolymer extends BioPolymer {
     NADA, RIGHT_HELIX, BETA_SHEET, LEFT_HELIX, LEFT_TURN, RIGHT_TURN;
   }
   
-  private float[] calculateAnglesInDegrees() {
-    float[] angles = new float[monomerCount];
+  private double[] calculateAnglesInDegrees() {
+    double[] angles = new double[monomerCount];
     for (int i = monomerCount - 1; --i >= 2; )
       angles[i] = 
-        Measure.computeTorsion(monomers[i - 2].getLeadAtom(),
+        MeasureD.computeTorsion(monomers[i - 2].getLeadAtom(),
                                    monomers[i - 1].getLeadAtom(),
                                    monomers[i    ].getLeadAtom(),
                                    monomers[i + 1].getLeadAtom(), true);
     return angles;
   }
 
-  private Code[] calculateCodes(float[] angles) {
+  private Code[] calculateCodes(double[] angles) {
     Code[] codes = new Code[monomerCount];
     for (int i = monomerCount - 1; --i >= 2; ) {
-      float degrees = angles[i];
+      double degrees = angles[i];
       codes[i] = ((degrees >= 10 && degrees < 120)
                   ? Code.RIGHT_HELIX
                   : ((degrees >= 120 || degrees < -90)
@@ -201,7 +201,7 @@ public class AlphaPolymer extends BioPolymer {
     return codes;
   }
 
-  private void checkBetaSheetAlphaHelixOverlap(Code[] codes, float[] angles) {
+  private void checkBetaSheetAlphaHelixOverlap(Code[] codes, double[] angles) {
     for (int i = monomerCount - 2; --i >= 2; )
       if (codes[i] == Code.BETA_SHEET &&
           angles[i] <= 140 &&
@@ -244,11 +244,11 @@ public class AlphaPolymer extends BioPolymer {
     tags[monomerCount - 1] = tags[monomerCount - 2];
   }
 
-  private void searchForTurns(Code[] codes, float[] angles, STR[] tags) {
+  private void searchForTurns(Code[] codes, double[] angles, STR[] tags) {
     for (int i = monomerCount - 1; --i >= 2; ) {
       codes[i] = Code.NADA;
       if (tags[i] == null || tags[i] == STR.NONE) {
-        float angle = angles[i];
+        double angle = angles[i];
         if (angle >= -90 && angle < 0)
           codes[i] = Code.LEFT_TURN;
         else if (angle >= 0 && angle < 90)

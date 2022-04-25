@@ -30,9 +30,9 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.util.BSUtil;
@@ -1255,8 +1255,8 @@ public class SmilesSearch extends JmolMolecule {
           break;
 
         if (!ignoreAtomClass || isSmarts) {
-          // :<n> atom class  -- will be Float.NaN, and Float.NaN is not equal to any number
-          if (!Float.isNaN(patternAtom.atomClass)
+          // :<n> atom class  -- will be Double.NaN, and Double.NaN is not equal to any number
+          if (!Double.isNaN(patternAtom.atomClass)
               && patternAtom.atomClass != targetAtom
                   .getFloatProperty("property_atomclass"))
             break;
@@ -1588,8 +1588,8 @@ public class SmilesSearch extends JmolMolecule {
       if (haveTopo)
         setTopoCoordinates((SmilesAtom) dbAtom1, (SmilesAtom) dbAtom2,
             (SmilesAtom) dbAtom1a, (SmilesAtom) dbAtom2a, bondType);
-      float d = SmilesMeasure.setTorsionData((T3) dbAtom1a, (T3) dbAtom1,
-          (T3) dbAtom2, (T3) dbAtom2a, v, isAtropisomer);
+      double d = SmilesMeasure.setTorsionData((T3d) dbAtom1a, (T3d) dbAtom1,
+          (T3d) dbAtom2, (T3d) dbAtom2a, v, isAtropisomer);
       if (isAtropisomer) {
         // just looking for d value that is positive (0 to 180)
         // the dihedral, from front to back, will be positive:  0 to 180 range 
@@ -1757,9 +1757,9 @@ public class SmilesSearch extends JmolMolecule {
     // and switch Y positions of 3 and 4 if necessary
     //  
     if ((dir1 * dir2 > 0) == (Math.abs(dir1) % 2 == Math.abs(dir2) % 2)) {
-      float y = ((P3) atoms[0]).y;
-      ((P3) atoms[0]).y = ((P3) atoms[1]).y;
-      ((P3) atoms[1]).y = y;
+      double y = ((P3d) atoms[0]).y;
+      ((P3d) atoms[0]).y = ((P3d) atoms[1]).y;
+      ((P3d) atoms[1]).y = y;
     }
   }
 

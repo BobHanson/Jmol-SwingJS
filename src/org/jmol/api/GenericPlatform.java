@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.jmol.util.Font;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public interface GenericPlatform extends FontManager {
 
@@ -25,7 +25,7 @@ public interface GenericPlatform extends FontManager {
   
   boolean isJS();
   
-  void convertPointFromScreen(Object display, P3 ptTemp);
+  void convertPointFromScreen(Object display, P3d ptTemp);
 
   void getFullScreenDimensions(Object display, int[] widthHeight);
   

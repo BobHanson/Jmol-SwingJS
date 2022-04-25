@@ -34,7 +34,7 @@ import org.jmol.util.GData;
 import org.jmol.util.Geodesic;
 
 import javajs.util.P3i;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 
 
@@ -47,7 +47,7 @@ public class DotsRenderer extends ShapeRenderer {
   public int[] scrCoords;
   public int[] faceMap = null; // used only by GeoSurface, but set here
   
-  private V3 v3temp = new V3();
+  private V3d v3temp = new V3d();
   private P3i scrTemp = new P3i();
 
   private int dotScale;
@@ -85,7 +85,7 @@ public class DotsRenderer extends ShapeRenderer {
           || !g3d.isInDisplayRange(atom.sX, atom.sY))
         continue;
       try {
-        float radius = dots.ec.getAppropriateRadius(i);
+        double radius = dots.ec.getAppropriateRadius(i);
         if (iShowSolid && exportType == GData.EXPORT_CARTESIAN) {
           // for VRML, X3D, and STL, just output the atom;
           // (not showing unclosed surfaces)

@@ -39,8 +39,8 @@ import org.jmol.util.C;
 import org.jmol.util.GData;
 
 import javajs.api.Interface;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 /**
    * @author Alexander Rose
@@ -56,9 +56,9 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   private boolean isTraceAlpha;
   private boolean ribbonBorder = false;
   private boolean haveControlPointScreens;
-  float aspectRatio;
+  double aspectRatio;
   int hermiteLevel;
-  private float sheetSmoothing;
+  private double sheetSmoothing;
   protected boolean cartoonsFancy;
 
   protected int monomerCount;
@@ -68,13 +68,13 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   protected boolean isPhosphorusOnly;
   protected boolean isCarbohydrate;
   protected BS bsVisible = new BS();
-  protected P3[] ribbonTopScreens;
-  protected P3[] ribbonBottomScreens;
-  protected P3[] controlPoints;
-  protected P3[] controlPointScreens;
+  protected P3d[] ribbonTopScreens;
+  protected P3d[] ribbonBottomScreens;
+  protected P3d[] controlPoints;
+  protected P3d[] controlPointScreens;
 
   protected int[] leadAtomIndices;
-  protected V3[] wingVectors;
+  protected V3d[] wingVectors;
   protected short[] mads;
   protected short[] colixes;
   protected short[] colixesBack;
@@ -151,7 +151,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     isTraceAlpha = TF;
 
     invalidateSheets = false;
-    float fval = vwr.getFloat(T.sheetsmoothing);
+    double fval = vwr.getDouble(T.sheetsmoothing);
     if (fval != sheetSmoothing && isTraceAlpha) {
       sheetSmoothing = fval;
       invalidateMesh = true;
@@ -252,8 +252,8 @@ abstract class BioShapeRenderer extends ShapeRenderer {
 
   protected void calcScreenControlPoints() {
     int count = monomerCount + 1;
-    P3[] scr = controlPointScreens = vwr.allocTempPoints(count);
-    P3[] points = controlPoints;
+    P3d[] scr = controlPointScreens = vwr.allocTempPoints(count);
+    P3d[] points = controlPoints;
     for (int i = count; --i >= 0;)
       tm.transformPtScrT3(points[i], scr[i]);
     haveControlPointScreens = true;
@@ -267,14 +267,14 @@ abstract class BioShapeRenderer extends ShapeRenderer {
    * @param mads 
    * @return Point3i array THAT MUST BE LATER FREED
    */
-  protected P3[] calcScreens(float offsetFraction, short[] mads) {
+  protected P3d[] calcScreens(double offsetFraction, short[] mads) {
     int count = controlPoints.length;
-    P3[] screens = vwr.allocTempPoints(count);
+    P3d[] screens = vwr.allocTempPoints(count);
     if (offsetFraction == 0) {
       for (int i = count; --i >= 0;)
         tm.transformPtScrT3(controlPoints[i], screens[i]);
     } else {
-      float offset_1000 = offsetFraction / 1000f;
+      double offset_1000 = offsetFraction / 1000f;
       for (int i = count; --i >= 0;)
         calc1Screen(controlPoints[i], wingVectors[i],
             (mads[i] == 0 && i > 0 ? mads[i - 1] : mads[i]), offset_1000,
@@ -283,10 +283,10 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     return screens;
   }
 
-  private final P3 pointT = new P3();
+  private final P3d pointT = new P3d();
 
-  private void calc1Screen(P3 center, V3 vector, short mad,
-                           float offset_1000, P3 screen) {
+  private void calc1Screen(P3d center, V3d vector, short mad,
+                           double offset_1000, P3d screen) {
     pointT.scaleAdd2(mad * offset_1000, vector, center);
     tm.transformPtScrT3(pointT, screen);
   }
@@ -367,7 +367,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     return (aspectRatio > 0 && meshRenderer != null && meshRenderer.check(doCap0, doCap1));
   }
 
-  protected void renderHermiteCylinder(P3[] screens, int i) {
+  protected void renderHermiteCylinder(P3d[] screens, int i) {
     //strands
     colix = getLeadColix(i);
     if (!setBioColix(colix))
@@ -434,10 +434,10 @@ abstract class BioShapeRenderer extends ShapeRenderer {
 
   //// cardinal hermite (box or flat) arrow head (cartoon)
 
-  private final P3 screenArrowTop = new P3();
-  private final P3 screenArrowTopPrev = new P3();
-  private final P3 screenArrowBot = new P3();
-  private final P3 screenArrowBotPrev = new P3();
+  private final P3d screenArrowTop = new P3d();
+  private final P3d screenArrowTopPrev = new P3d();
+  private final P3d screenArrowBot = new P3d();
+  private final P3d screenArrowBotPrev = new P3d();
 
   protected void renderHermiteArrowHead(int i) {
     // cartoons only
@@ -451,8 +451,8 @@ abstract class BioShapeRenderer extends ShapeRenderer {
       return;
     }
 
-    P3 cp = controlPoints[i];
-    V3 wv = wingVectors[i];
+    P3d cp = controlPoints[i];
+    V3d wv = wingVectors[i];
     calc1Screen(cp, wv, madBeg, .0007f, screenArrowTop);
     calc1Screen(cp, wv, madBeg, -.0007f, screenArrowBot);
     calc1Screen(cp, wv, madBeg, 0.001f, screenArrowTopPrev);
@@ -470,7 +470,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     }
   }
   
-  protected void drawSegmentAB(Atom atomA, Atom atomB, short colixA, short colixB, float max) {
+  protected void drawSegmentAB(Atom atomA, Atom atomB, short colixA, short colixB, double max) {
     int xA = atomA.sX, yA = atomA.sY, zA = atomA.sZ;
     int xB = atomB.sX, yB = atomB.sY, zB = atomB.sZ;
     int mad = this.mad;

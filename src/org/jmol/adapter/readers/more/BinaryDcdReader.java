@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import javajs.util.BS;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -270,7 +270,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
         .get("filteredAtomCount")).intValue());
     for (int i = 0; i < nModels; i++)
       if (doGetModel(++modelNumber, null)) {
-        P3[] trajectoryStep = new P3[ac];
+        P3d[] trajectoryStep = new P3d[ac];
         if (!getTrajectoryStep(trajectoryStep))
           return;
         trajectorySteps.addLast(trajectoryStep);
@@ -285,7 +285,7 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
       }
   }
 
-  private boolean getTrajectoryStep(P3[] trajectoryStep)
+  private boolean getTrajectoryStep(P3d[] trajectoryStep)
       throws Exception {
     try {
     int ac = trajectoryStep.length;
@@ -302,12 +302,12 @@ public class BinaryDcdReader extends AtomSetCollectionReader {
       zAll = z;
     }
     for (int i = 0, vpt = 0; i < nAtoms; i++) {
-      P3 pt = new P3();
+      P3d pt = new P3d();
       if (bs == null || bs.get(i)) {
-        pt.set((float) x[vpt], (float) y[vpt], (float) z[vpt]);
+        pt.set((double) x[vpt], (double) y[vpt], (double) z[vpt]);
         vpt++;
       } else {
-        pt.set((float) xAll[i], (float) yAll[i], (float) zAll[i]);
+        pt.set((double) xAll[i], (double) yAll[i], (double) zAll[i]);
       }
       if (bsFilter == null || bsFilter.get(i)) {
         if (++n == ac)

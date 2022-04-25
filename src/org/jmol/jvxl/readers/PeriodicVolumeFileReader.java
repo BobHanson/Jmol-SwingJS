@@ -25,7 +25,7 @@ public abstract class PeriodicVolumeFileReader extends VolumeFileReader {
       nPointsX = voxelCounts[0];
       nPointsY = voxelCounts[1];
       nPointsZ = voxelCounts[2];
-      float[][][] vd = new float[nPointsX][nPointsY][nPointsZ];
+      double[][][] vd = new double[nPointsX][nPointsY][nPointsZ];
       for (int i = nPointsX; --i >= 0;)
         for (int j = nPointsY; --j >= 0;)
           for (int k = nPointsZ; --k >= 0;) {
@@ -57,7 +57,7 @@ public abstract class PeriodicVolumeFileReader extends VolumeFileReader {
       for (int x = 0; x < nPointsX; ++x) {
         for (int y = 0; y < nPointsY; ++y) {
           for (int z = 0; z < nPointsZ; ++z) {
-            float f = volumeData.getToPlaneParameter();
+            double f = volumeData.getToPlaneParameter();
             if (volumeData.isNearPlane(x, y, z, f))
               volumeData.setVoxelMapValue(x, y, z, voxelData[x][y][z]);
           }

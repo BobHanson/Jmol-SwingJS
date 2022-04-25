@@ -146,7 +146,7 @@ abstract public class ForceField {
     calc.setPreliminary(stepMax > 0);
     e0 = energyFull(false, false);
     s = PT.sprintf(" Initial " + name + " E = %10.3f " + minimizer.units + "/mol criterion = %8.6f max steps = " + stepMax, 
-        "ff", new Object[] {Float.valueOf(toUserUnits(e0)), Float.valueOf(toUserUnits(criterion)) });
+        "ff", new Object[] {Double.valueOf(toUserUnits(e0)), Double.valueOf(toUserUnits(criterion)) });
     minimizer.report(s, false);
     calc.appendLogData(s);
   }
@@ -179,7 +179,7 @@ abstract public class ForceField {
 
       if (done || currentStep % 10 == 0 || stepMax <= currentStep) {
         String s = PT.sprintf(name + " Step %-4d E = %10.6f    dE = %8.6f ",
-            "Fi", new Object[] {new float[] { toUserUnits(e1), toUserUnits(dE) },
+            "Fi", new Object[] {new double[] { toUserUnits(e1), toUserUnits(dE) },
             Integer.valueOf(currentStep) });
         minimizer.report(s, false);
         calc.appendLogData(s);
@@ -310,7 +310,7 @@ abstract public class ForceField {
 
     if (!isSilent && calc.loggingEnabled)      
       calc.appendLogData(PT.sprintf("\nTOTAL %s ENERGY = %8.3f %s/mol\n", 
-          "sfs", new Object[] {name, Float.valueOf(toUserUnits(energy)), minimizer.units }));
+          "sfs", new Object[] {name, Double.valueOf(toUserUnits(energy)), minimizer.units }));
     return energy;
   }
 
@@ -477,12 +477,12 @@ abstract public class ForceField {
     return Math.abs(dE/criterion);
   }
 
-  public float toUserUnits(double energy) {
+  public double toUserUnits(double energy) {
     return toUnits(energy, calc.getUnits());
   }
   
-  private float toUnits(double energy, String units) {
-    return (float) (units.equalsIgnoreCase(minimizer.units) ? energy : energy
+  private double toUnits(double energy, String units) {
+    return (units.equalsIgnoreCase(minimizer.units) ? energy : energy
         * (minimizer.units.equals("kJ") ? Calculations.KCAL_TO_KJ
             : 1 / Calculations.KCAL_TO_KJ));
   }

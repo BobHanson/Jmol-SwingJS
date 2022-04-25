@@ -33,6 +33,8 @@ import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.c.PAL;
 import javajs.util.BS;
+import javajs.util.PT;
+
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Model;
@@ -62,7 +64,7 @@ public class ColorManager {
 
   // for properties.
 
-  private float[] colorData;
+  private double[] colorData;
 
   ColorManager(Viewer vwr, GData gdata) {
     this.vwr = vwr;
@@ -118,7 +120,7 @@ public class ColorManager {
     int argb = 0;
     switch (pid) {
     case PAL.PALETTE_ENERGY:
-      return ce.getColorIndexFromPalette(bond.getEnergy(),
+      return ce.getColorIndexFromPalette((double) bond.getEnergy(),
           -2.5f, -0.5f, ColorEncoder.BWR, false);
     }
     return (argb == 0 ? C.RED : C.getColix(argb));
@@ -134,8 +136,8 @@ public class ColorManager {
     // we need to use the byte form here for speed
     switch (pid) {
     case PAL.PALETTE_PROPERTY:
-      return (colorData == null || atom.i >= colorData.length || Float.isNaN(colorData[atom.i]) ? C.GRAY : 
-        ce.getColorIndex(colorData[atom.i]));
+      return (colorData == null || atom.i >= colorData.length || Double.isNaN(colorData[atom.i]) ? C.GRAY : 
+        ce.getColorIndex((double) colorData[atom.i]));
     case PAL.PALETTE_NONE:
     case PAL.PALETTE_CPK:
       // Note that CPK colors can be changed based upon user preference
@@ -152,7 +154,7 @@ public class ColorManager {
       return g3d.getChangeableColix(id, argbsCpk[id]);
     case PAL.PALETTE_PARTIAL_CHARGE:
       // This code assumes that the range of partial charges is [-1, 1].
-      index = ColorEncoder.quantize4(atom.getPartialCharge(), -1, 1,
+      index = ColorEncoder.quantize4((double) atom.getPartialCharge(), -1, 1,
           JC.PARTIAL_CHARGE_RANGE_SIZE);
       return g3d.getChangeableColix(JC.PARTIAL_CHARGE_COLIX_RED + index,
           JC.argbsRwbScale[index]);
@@ -172,7 +174,7 @@ public class ColorManager {
       return ce.getColorIndexFromPalette(atom.getBfactor100(), lo, hi,
           ColorEncoder.BWR, false);
     case PAL.PALETTE_STRAIGHTNESS:
-      return ce.getColorIndexFromPalette(
+      return ce.getColorIndexFromPalette((double)
           atom.group.getGroupParameter(T.straightness), -1, 1,
           ColorEncoder.BWR, false);
     case PAL.PALETTE_SURFACE:
@@ -303,32 +305,41 @@ public class ColorManager {
 
   ///////////////////  propertyColorScheme ///////////////
 
-  float[] getPropertyColorRange() {
-    return (ce.isReversed ? new float[] { ce.hi, ce.lo } : new float[] { ce.lo,
+  double[] getPropertyColorRange() {
+    return (ce.isReversed ? new double[] { ce.hi, ce.lo } : new double[] { ce.lo,
         ce.hi });
   }
 
-  public void setPropertyColorRangeData(float[] data, BS bs) {
+  void getPropertyColorRangeF(double[] ret) {
+    ret[ce.isReversed ? 0 : 1] = ce.hi;
+    ret[ce.isReversed ? 1 : 0] = ce.lo;
+  }
+
+  public void setPropertyColorRangeData(double[] data, BS bs) {
     colorData = data;
     ce.currentPalette = ce.createColorScheme(
         vwr.g.propertyColorScheme, true, false);
-    ce.hi = -Float.MAX_VALUE;
-    ce.lo = Float.MAX_VALUE;
+    ce.hi = -Double.MAX_VALUE;
+    ce.lo = Double.MAX_VALUE;
     if (data == null)
       return;
     boolean isAll = (bs == null);
-    float d;
+    double min = Double.MAX_VALUE;
+    double max = -Double.MAX_VALUE;
+    double d;
     int i0 = (isAll ? data.length - 1 : bs.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bs.nextSetBit(i + 1))) {
-      if (Float.isNaN(d = data[i]))
+      if (Double.isNaN(d = data[i]))
         continue;
-      ce.hi = Math.max(ce.hi, d);
-      ce.lo = Math.min(ce.lo, d);
-    }
-    setPropertyColorRange(ce.lo, ce.hi);
+      if (d > max)
+        max = d;
+      if (d < min)
+        min = d;
+    }    
+    setPropertyColorRange(ce.lo = min, ce.hi = max);
   }
 
-  public void setPropertyColorRange(float min, float max) {
+  public void setPropertyColorRange(double min, double max) {
     ce.setRange(min, max, min > max);
     if (Logger.debugging)
       Logger.debug("ColorManager: color \""
@@ -336,16 +347,18 @@ public class ColorManager {
         + max);
   }
 
+  double[] frange = new double[2];
+  
   void setPropertyColorScheme(String colorScheme, boolean isTranslucent,
                               boolean isOverloaded) {
     boolean isReset = (colorScheme.length() == 0);
     if (isReset)
       colorScheme = "="; // reset roygb
-    float[] range = getPropertyColorRange();
+    getPropertyColorRangeF(frange);
     ce.currentPalette = ce.createColorScheme(
         colorScheme, true, isOverloaded);
     if (!isReset)
-      setPropertyColorRange(range[0], range[1]);
+      setPropertyColorRange(frange[0], frange[1]);
     ce.isTranslucent = isTranslucent;
   }
 

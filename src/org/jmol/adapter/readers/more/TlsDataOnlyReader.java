@@ -36,7 +36,7 @@ import java.util.Map;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /*
  * TLS output reader -- data only; no atoms
@@ -104,13 +104,13 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
         /*
         ORIGIN    11.6283   8.2746  10.6813
         */
-        P3 origin = new P3();
+        P3d origin = new P3d();
         tlsGroup.put("origin", origin);
-        origin.set((float) parseDoubleStr(tokens[1]), (float) parseDoubleStr(tokens[2]),
-            (float) parseDoubleStr(tokens[3]));
-        if (Float.isNaN(origin.x) || Float.isNaN(origin.y)
-            || Float.isNaN(origin.z)) {
-          origin.set(Float.NaN, Float.NaN, Float.NaN);
+        origin.set((double) parseDoubleStr(tokens[1]), (double) parseDoubleStr(tokens[2]),
+            (double) parseDoubleStr(tokens[3]));
+        if (Double.isNaN(origin.x) || Double.isNaN(origin.y)
+            || Double.isNaN(origin.z)) {
+          origin.set(Double.NaN, Double.NaN, Double.NaN);
           tlsAddError("invalid origin: " + line);
         }
       } else if (tokens[0].equals("T") || tokens[0].equals("L")

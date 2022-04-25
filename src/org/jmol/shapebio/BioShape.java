@@ -29,7 +29,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.c.PAL;
 import javajs.util.BS;
@@ -69,7 +69,7 @@ public class BioShape extends AtomShape {
 
   public Monomer[] monomers;
 
-  public V3[] wingVectors;
+  public V3d[] wingVectors;
   int[] leadAtomIndices;
 
   BioShape(BioShapeCollection shape, int modelIndex, BioPolymer bioPolymer) {
@@ -95,7 +95,7 @@ public class BioShape extends AtomShape {
   boolean hasBfactorRange = false;
   int bfactorMin, bfactorMax;
   int range;
-  float floatRange;
+  double floatRange;
 
   void calcBfactorRange() {
     bfactorMin = bfactorMax =
@@ -189,7 +189,7 @@ public class BioShape extends AtomShape {
         shape.vf, bsNot);
   }
   
-  void setMad(short mad, BS bsSelected, float[] values) {
+  void setMad(short mad, BS bsSelected, double[] values) {
     if (monomerCount < 2)
       return;
     isActive = true;
@@ -201,7 +201,7 @@ public class BioShape extends AtomShape {
       int leadAtomIndex = leadAtomIndices[i];
       if (bsSelected.get(leadAtomIndex)) {
         if (values != null && leadAtomIndex < values.length) {
-          if (Float.isNaN(values[leadAtomIndex]))
+          if (Double.isNaN(values[leadAtomIndex]))
             continue;
           mad = (short) (values[leadAtomIndex] * 2000);
         }
@@ -247,7 +247,7 @@ public class BioShape extends AtomShape {
         int scaled = bfactor100 - bfactorMin;
         if (range == 0)
           return (short)0;
-        float percentile = scaled / floatRange;
+        double percentile = scaled / floatRange;
         if (percentile < 0 || percentile > 1)
           Logger.error("Que ha ocurrido? " + percentile);
         return (short)((1750 * percentile) + 250);
@@ -328,8 +328,8 @@ public class BioShape extends AtomShape {
     // only implemented for simple colixes, really.
     short[] c = (short[]) data[0];
     // would have to do something like this here as well;
-    float[] atrans = (float[]) data[1];
-    //float[] sizes = (float[]) data[2];
+    double[] atrans = (double[]) data[1];
+    //double[] sizes = (double[]) data[2];
 
     isActive = true;
     if (bsColixSet == null)
@@ -340,7 +340,7 @@ public class BioShape extends AtomShape {
       if (bsSelected.get(atomIndex) && i < colixes.length && atomIndex < n) {
         int pt = atomMap[atomIndex];
         short colix = (c == null ? C.INHERIT_ALL : c[pt]);
-        float f = (atrans == null ? 0 : atrans[pt]);
+        double f = (atrans == null ? 0 : atrans[pt]);
         if (f > 0.01f)
           colix = C.getColixTranslucent3(colix, true, f);
         colixes[i] = shape.getColixI(colix, PAL.UNKNOWN.id, atomIndex);
@@ -352,7 +352,7 @@ public class BioShape extends AtomShape {
     }    
   }
 
-  void setTranslucent(boolean isTranslucent, BS bsSelected, float translucentLevel) {
+  void setTranslucent(boolean isTranslucent, BS bsSelected, double translucentLevel) {
     isActive = true;
     if (bsColixSet == null)
       bsColixSet = BS.newN(monomerCount);

@@ -37,7 +37,7 @@ import javajs.util.PT;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public class GamessUSReader extends GamessReader {
 
@@ -476,8 +476,8 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
     if ("DX".equals(tokens[0]) && "DY".equals(tokens[1])
         && "DZ".equals(tokens[2])) {
       tokens = PT.getTokens(rd());
-      V3 dipole = V3.new3((float) parseDoubleStr(tokens[0]),
-          (float) parseDoubleStr(tokens[1]), (float) parseDoubleStr(tokens[2]));
+      V3d dipole = V3d.new3((double) parseDoubleStr(tokens[0]),
+          (double) parseDoubleStr(tokens[1]), (double) parseDoubleStr(tokens[2]));
       Logger.info("Molecular dipole for model "
           + asc.atomSetCount + " = " + dipole);
       asc.setCurrentModelInfo("dipole", dipole);

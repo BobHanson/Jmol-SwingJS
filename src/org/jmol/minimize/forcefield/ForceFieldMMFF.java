@@ -208,13 +208,13 @@ public class ForceFieldMMFF extends ForceField {
 
   private int[] rawAtomTypes;
   private int[] rawBondTypes;
-  private float[] rawMMFF94Charges; // calculated here
+  private double[] rawMMFF94Charges; // calculated here
   
   public String[] getAtomTypeDescriptions() {
     return getAtomTypeDescs(rawAtomTypes);
   }
 
-  public float[] getPartialCharges() {
+  public double[] getPartialCharges() {
     return rawMMFF94Charges;
   }
 
@@ -420,13 +420,13 @@ public class ForceFieldMMFF extends ForceField {
               dval(28,35) };
           break;
         case TYPE_CHRG: // bond chrg
-          value = Float.valueOf(fval(10,20));
+          value = Double.valueOf(fval(10,20));
           break;
         case TYPE_OOP: // oop: koop  
           value = new double[] { dval(24,30) };
           break;
         case TYPE_PBCI:
-          value = Float.valueOf(fval(5,15));
+          value = Double.valueOf(fval(5,15));
           break;
         case TYPE_SBDEF: // default stretch-bend: F(I_J,K),F(K_J,I)  
           double v1 = dval(19,25);
@@ -459,7 +459,7 @@ public class ForceFieldMMFF extends ForceField {
         Integer key = MinObject.getKey(type, a1, a2, a3, a4);
         data.put(key, value);
         if (Logger.debugging)
-          Logger.debug(MinObject.decodeKey(key) + " " + (value instanceof Float ? value : Escape.eAD((double[])value)));
+          Logger.debug(MinObject.decodeKey(key) + " " + (value instanceof Double ? value : Escape.eAD((double[])value)));
       } while (!(line = br.readLine()).startsWith("$"));
   }
   
@@ -467,8 +467,8 @@ public class ForceFieldMMFF extends ForceField {
     return PT.parseInt(line.substring(i,j).trim());
   }
 
-  private float fval(int i, int j) {
-    return Float.valueOf(line.substring(i,j).trim()).floatValue();
+  private double fval(int i, int j) {
+    return Double.valueOf(line.substring(i,j).trim()).doubleValue();
   }
 
   private double dval(int i, int j) {
@@ -496,7 +496,7 @@ public class ForceFieldMMFF extends ForceField {
         int elemNo = ival(3,5);
         int mmType = ival(6,8);
         int hType = ival(9,11);
-        float formalCharge = fval(12,15)/12;
+        double formalCharge = fval(12,15)/12;
         int val = ival(16,18);
         String desc = line.substring(19,44).trim();
         String smarts = line.substring(45).trim();
@@ -679,13 +679,13 @@ public class ForceFieldMMFF extends ForceField {
    * @param doRound
    * @return full array of partial charges
    */
-  public float[] calculatePartialCharges(Bond[] bonds, int[] bTypes,
+  public double[] calculatePartialCharges(Bond[] bonds, int[] bTypes,
                                          Atom[] atoms, int[] aTypes, BS bsAtoms,
                                          boolean doRound) {
 
     // start with formal charges specified by MMFF94 (not what is in file!)
 
-    float[] partialCharges = new float[atoms.length];
+    double[] partialCharges = new double[atoms.length];
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1))
       partialCharges[i] = atomTypes.get(Math.max(0, aTypes[i])).formalCharge;
     // run through all bonds, adjusting formal charges as necessary
@@ -718,14 +718,14 @@ public class ForceFieldMMFF extends ForceField {
       // where type1 < type2. In addition, we encode the partial bci values
       // with key (100 * type)
 
-      float dq = Float.NaN; // the difference in charge to be added or subtracted from the formal charges
+      double dq = Double.NaN; // the difference in charge to be added or subtracted from the formal charges
       try {
         int bondType = bTypes[i];
-        float bFactor = (type1 < type2 ? -1 : 1);
+        double bFactor = (type1 < type2 ? -1 : 1);
         Integer key = MinObject.getKey(bondType, bFactor == 1 ? type2 : type1,
             bFactor == 1 ? type1 : type2, 127, A4_CHRG);
-        Float bciValue = (Float) ffParams.get(key);
-        float bci = Float.NaN;
+        Double bciValue = (Double) ffParams.get(key);
+        double bci = Double.NaN;
         String msg = (Logger.debugging
             ? a1 + "/" + a2 + " mmTypes=" + type1 + "/" + type2
                 + " formalCharges=" + at1.formalCharge + "/" + at2.formalCharge
@@ -734,19 +734,19 @@ public class ForceFieldMMFF extends ForceField {
         if (bciValue == null) {
           // no bci was found; we have to use partial bond charge increments
           // a failure here indicates we don't have information
-          Float a, b;
-          if ((a = (Float) ffParams
+          Double a, b;
+          if ((a = (Double) ffParams
               .get(MinObject.getKey(KEY_PBCI, type1, 127, 127, 127))) != null
-              && (b = (Float) ffParams.get(
+              && (b = (Double) ffParams.get(
                   MinObject.getKey(KEY_PBCI, type2, 127, 127, 127))) != null) {
-            float pa = a.floatValue();
-            float pb = b.floatValue();
+            double pa = a.doubleValue();
+            double pb = b.doubleValue();
             bci = pa - pb;
             if (Logger.debugging)
               msg += pa + " - " + pb + " = ";
           }
         } else {
-          bci = bFactor * bciValue.floatValue();
+          bci = bFactor * bciValue.doubleValue();
         }
         if (Logger.debugging) {
           msg += bci;
@@ -767,7 +767,7 @@ public class ForceFieldMMFF extends ForceField {
 
         dq = at2.fcadj * at2.formalCharge - at1.fcadj * at1.formalCharge + bci;
       } catch (Exception e) {
-        dq = Float.NaN;
+        dq = Double.NaN;
       }
       if (ok1)
         partialCharges[a1.i] += dq;
@@ -778,7 +778,7 @@ public class ForceFieldMMFF extends ForceField {
     // just rounding to 0.001 here:
 
     if (doRound) {
-      float abscharge = 0;
+      double abscharge = 0;
       for (int i = partialCharges.length; --i >= 0;) {
         partialCharges[i] = (Math.round(partialCharges[i] * 1000)) / 1000f;
         abscharge += Math.abs(partialCharges[i]);

@@ -46,14 +46,14 @@ import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.T4;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.T4d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 
@@ -154,7 +154,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected GenericBinaryDocument binaryDoc;
   protected String readerName;
   public Map<String, Object> htParams;
-  public Lst<P3[]> trajectorySteps;
+  public Lst<P3d[]> trajectorySteps;
   private Object domains;
   public Object validation, dssr;
   protected boolean isConcatenated;
@@ -208,10 +208,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected OC out;
   protected boolean iHaveFractionalCoordinates;
   public boolean doPackUnitCell;
-  protected P3 ptSupercell;
+  protected P3d ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
-  public float packingError = 0.02f;
+  public double packingError = 0.02f;
   protected boolean rotateHexCell; // aflow CIF reader only
   protected boolean isPrimitive; // VASP POSCAR reasder
   public int modDim; // modulation dimension
@@ -223,22 +223,22 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean doConvertToFractional;
   boolean fileCoordinatesAreFractional;
   boolean merging;
-  float symmetryRange;
+  double symmetryRange;
   private int[] firstLastStep;
   private int lastModelNumber = Integer.MAX_VALUE;
   public int desiredSpaceGroupIndex = -1;
   protected double latticeScaling = Double.NaN;
-  protected P3 unitCellOffset;
+  protected P3d unitCellOffset;
   private boolean unitCellOffsetFractional;
   private Lst<String> moreUnitCellInfo;
-  public T3 paramsLattice;
+  public T3d paramsLattice;
   public boolean paramsCentroid;
   private boolean paramsPacked;
 
   // JmolDataReader and GenNBOReader only
-  protected P3 fileScaling;
-  protected P3 fileOffset;
-  private P3 fileOffsetFractional;
+  protected P3d fileScaling;
+  protected P3d fileOffset;
+  private P3d fileOffsetFractional;
 
   protected String filePath;
   protected String fileName;
@@ -391,9 +391,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void initializeTrajectoryFile() {
     // add a dummy atom, just so not "no atoms found"
     asc.addAtom(new Atom());
-    trajectorySteps = (Lst<P3[]>) htParams.get("trajectorySteps");
+    trajectorySteps = (Lst<P3d[]>) htParams.get("trajectorySteps");
     if (trajectorySteps == null)
-      htParams.put("trajectorySteps", trajectorySteps = new  Lst<P3[]>());
+      htParams.put("trajectorySteps", trajectorySteps = new  Lst<P3d[]>());
   }
 
   /**
@@ -559,7 +559,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           .intValue();
     Object o = htParams.get("packingError");
     if (o != null)
-      packingError = ((Float) o).floatValue();
+      packingError = ((Double) o).doubleValue();
     else if (htParams.get("highPrecision") != null) {
       // earlier versions were not fully JavaScript compatible
       // because XtalSymmetry.isWithinUnitCell was giving different answers
@@ -582,7 +582,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     bsFilter = (requiresBSFilter ? (BS) htParams.get("bsFilter") : null);
     setFilter(null);
     fillRange = htParams.get("fillRange");
-    paramsLattice = (T3) htParams.get("lattice");
+    paramsLattice = (T3d) htParams.get("lattice");
     o = htParams.get("supercell");
     // noPack does not work as advertised
     noPack = checkFilterKey("NOPACK");
@@ -590,8 +590,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // only for filter cell=
         forcePacked = true;
     }
-    if (o instanceof P3) {
-      P3 s = ptSupercell = (P3) o; 
+    if (o instanceof P3d) {
+      P3d s = ptSupercell = (P3d) o; 
       if (s.length() != 1) {
       strSupercell = ((int) s.x) + "a," +((int) s.y) + "b," + ((int) s.z) + "c"; 
       }
@@ -640,8 +640,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (bsModels != null && (firstLastStep == null || firstLastStep[1] != -1))
       lastModelNumber = bsModels.length();
 
-    symmetryRange = (htParams.containsKey("symmetryRange") ? ((Float) htParams
-        .get("symmetryRange")).floatValue() : 0);
+    symmetryRange = (htParams.containsKey("symmetryRange") ? ((Double) htParams
+        .get("symmetryRange")).doubleValue() : 0);
     paramsCentroid = htParams.containsKey("centroid");
     paramsPacked = htParams.containsKey("packed");
     initializeSymmetryOptions();
@@ -665,9 +665,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       ignoreFileSymmetryOperators = (desiredSpaceGroupIndex != -1);
     }
     if (htParams.containsKey("unitCellOffset")) {
-      fileScaling = P3.new3(1, 1, 1);
-      fileOffset = (P3) htParams.get("unitCellOffset");
-      fileOffsetFractional = P3.newP(fileOffset);
+      fileScaling = P3d.new3(1, 1, 1);
+      fileOffset = (P3d) htParams.get("unitCellOffset");
+      fileOffsetFractional = P3d.newP(fileOffset);
       unitCellOffsetFractional = htParams
           .containsKey("unitCellOffsetFractional");
     }
@@ -698,17 +698,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void initializeSymmetryOptions() {
     latticeCells = new int[4];
     doApplySymmetry = false;
-    T3 pt = paramsLattice; 
+    T3d pt = paramsLattice; 
     if (pt == null || pt.length() == 0) {
       if (!forcePacked && strSupercell == null)
         return;
-      pt = P3.new3(1, 1, 1);
+      pt = P3d.new3(1, 1, 1);
     }
     latticeCells[0] = (int) pt.x;
     latticeCells[1] = (int) pt.y;
     latticeCells[2] = (int) pt.z;
-    if (pt instanceof T4)
-      latticeCells[3] = (int) ((T4) pt).w;
+    if (pt instanceof T4d)
+      latticeCells[3] = (int) ((T4d) pt).w;
     doCentroidUnitCell = paramsCentroid;
     if (doCentroidUnitCell && (latticeCells[2] == -1 || latticeCells[2] == 0))
       latticeCells[2] = 1;
@@ -1329,19 +1329,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (matRot != null || !doSetOrientation)
       return;
     matRot = new M3d();
-    V3 v = V3.new3((float) x1, (float) y1, (float) z1);
+    V3d v = V3d.new3((double) x1, (double) y1, (double) z1);
     // rows in Sygress/CAChe and Spartan become columns here
     v.normalize();
     matRot.setColumnV(0, v);
-    v.set((float) x2, (float) y2, (float) z2);
+    v.set((double) x2, (double) y2, (double) z2);
     v.normalize();
     matRot.setColumnV(1, v);
-    v.set((float) x3, (float) y3, (float) z3);
+    v.set((double) x3, (double) y3, (double) z3);
     v.normalize();
     matRot.setColumnV(2, v);
     asc.setInfo("defaultOrientationMatrix", M3d.newM3(matRot));
     // first two matrix column vectors define quaternion X and XY plane
-    Quat q = Quat.newM(matRot);
+    Qd q = Qd.newM(matRot);
     asc.setInfo("defaultOrientationQuaternion", q);
     Logger.info("defaultOrientationMatrix = " + matRot);
 
@@ -1801,7 +1801,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return PT.parseDoubleRange(s, iEnd, next);
   }
 
-  protected float parseFloatRange(String s, int iStart, int iEnd) {
+  protected double parseFloatRange(String s, int iStart, int iEnd) {
     next[0] = iStart;
     return PT.parseFloatRange(s, iEnd, next);
   }

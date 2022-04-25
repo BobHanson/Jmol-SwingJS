@@ -283,7 +283,7 @@ public class Matrix implements Cloneable {
     return getSubmatrix(0, n - 1, m - 1, 1);
   }
 
-  public static Matrix newT(T3 r, boolean asColumn) {
+  public static Matrix newT(T3d r, boolean asColumn) {
     return (asColumn ? new Matrix(new double[][] { new double[] { r.x },
         new double[] { r.y }, new double[] { r.z } }, 3, 1) : new Matrix(
         new double[][] { new double[] { r.x, r.y, r.z } }, 1, 3));

@@ -36,12 +36,12 @@ import org.jmol.util.SimpleUnitCell;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P4d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
@@ -49,17 +49,17 @@ import javajs.util.V3;
 public abstract class MeshRenderer extends ShapeRenderer {
 
   protected Mesh mesh;
-  protected T3[] vertices;
+  protected T3d[] vertices;
   protected short[] normixes;
   protected P3i[] screens;
-  protected P3[] p3Screens;
-  protected V3[] transformedVectors;
+  protected P3d[] p3Screens;
+  protected V3d[] transformedVectors;
   protected int vertexCount;
   
-  protected float imageFontScaling;
-  protected float scalePixelsPerMicron;
+  protected double imageFontScaling;
+  protected double scalePixelsPerMicron;
   protected int diameter;
-  protected float width;
+  protected double width;
   
 
   protected boolean isTranslucent;
@@ -71,11 +71,11 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected boolean isGhostPass;
   //protected boolean isPrecision; // DRAW, bioshape
 
-  protected P4 thePlane;
-  protected P3 latticeOffset = new P3();
+  protected P4d thePlane;
+  protected P3d latticeOffset = new P3d();
 
-  protected final P3 pt1f = new P3();
-  protected final P3 pt2f = new P3();
+  protected final P3d pt1f = new P3d();
+  protected final P3d pt2f = new P3d();
 
   protected P3i pt1i = new P3i();
   protected P3i pt2i = new P3i();
@@ -109,12 +109,12 @@ public abstract class MeshRenderer extends ShapeRenderer {
     } else {
       SymmetryInterface unitcell = mesh.getUnitCell();
       if (unitcell != null) {
-        P3 p2 = new P3();
+        P3d p2 = new P3d();
         if (mesh.symops != null) {
           P3d vTemp = new P3d();
           if (mesh.symopNormixes == null)
             mesh.symopNormixes = AU.newShort2(mesh.symops.length);
-          P3[] verticesTemp = null;
+          P3d[] verticesTemp = null;
           int max = mesh.symops.length;
           short c = mesh.colix;
           for (int j = max; --j >= 0;) {
@@ -125,9 +125,9 @@ public abstract class MeshRenderer extends ShapeRenderer {
               mesh.colix = mesh.symopColixes[j];
             short[] normals = mesh.symopNormixes[j];
             boolean needNormals = (normals == null);
-            verticesTemp = (needNormals ? new P3[vertexCount] : null);
+            verticesTemp = (needNormals ? new P3d[vertexCount] : null);
             for (int i = vertexCount; --i >= 0;) {
-              vTemp.setP(vertices[i]);
+              vTemp.setT(vertices[i]);
               unitcell.toFractional(vTemp, true);
               m.rotTrans(vTemp);
               unitcell.toCartesian(vTemp, true);
@@ -135,7 +135,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
               tm.transformPtScr(p2, screens[i]);
               if (needNormals) {
                 verticesTemp[i] = p2;
-                p2 = new P3();
+                p2 = new P3d();
               }
             }
             if (needNormals)
@@ -458,8 +458,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return (normix < 0 || transformedVectors[normix].z >= 0);
   }
 
-  private void drawTriangleBits(P3 screenA, short colixA, P3 screenB, short colixB,
-                                P3 screenC, short colixC, int check, int diam) {
+  private void drawTriangleBits(P3d screenA, short colixA, P3d screenB, short colixB,
+                                P3d screenC, short colixC, int check, int diam) {
     if (!antialias && diam == 1) {
      vwr.gdata.drawTriangleBits(g3d, screenA, colixA, screenB, colixB, screenC, colixC,
           check);
@@ -507,7 +507,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return check;
   }
 
-  protected void drawEdge(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
+  protected void drawEdge(int iA, int iB, boolean fill, T3d vA, T3d vB, P3i sA,
                           @SuppressWarnings("unused") P3i sB) {
     byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
         || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT

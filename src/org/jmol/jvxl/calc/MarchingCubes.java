@@ -32,11 +32,11 @@ import org.jmol.jvxl.data.VolumeData;
 import org.jmol.jvxl.readers.Parameters;
 
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
+import javajs.util.P4d;
 import org.jmol.util.TriangleData;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public class MarchingCubes extends TriangleData {
 
@@ -78,7 +78,7 @@ public class MarchingCubes extends TriangleData {
   protected VolumeData volumeData;
   protected int contourType;
   protected boolean isContoured;
-  protected float cutoff;
+  protected double cutoff;
   protected boolean isCutoffAbsolute;
   protected boolean isSquared;
   protected boolean isXLowToHigh;
@@ -153,7 +153,7 @@ public class MarchingCubes extends TriangleData {
     edgeVertexPointers = (isXLowToHigh ? edgeVertexPointersLowToHigh : edgeVertexPointersHighToLow);
     edgeVertexPlanes =  (isXLowToHigh ? edgeVertexPlanesLowToHigh : edgeVertexPlanesHighToLow);
     isoPointIndexPlanes = new int[2][yzCount][3];
-    yzPlanes = (mode == MODE_PLANES ? new float[2][yzCount] : null);
+    yzPlanes = (mode == MODE_PLANES ? new double[2][yzCount] : null);
     setLinearOffsets();
     calcVoxelVertexVectors();
   }
@@ -163,21 +163,21 @@ public class MarchingCubes extends TriangleData {
   protected final static int MODE_JVXL = 2;
   protected final static int MODE_PLANES = 3;
 
-  protected final float[] vertexValues = new float[8];
+  protected final double[] vertexValues = new double[8];
 
   protected int edgeCount;
 
-  protected final V3[] voxelVertexVectors = new V3[8];
-  protected final V3[] edgeVectors = new V3[12];
+  protected final V3d[] voxelVertexVectors = new V3d[8];
+  protected final V3d[] edgeVectors = new V3d[12];
   {
     for (int i = 12; --i >= 0;)
-      edgeVectors[i] = new V3();
+      edgeVectors[i] = new V3d();
   }
 
   protected void calcVoxelVertexVectors() {
     for (int i = 8; --i >= 0;)
       volumeData.transform(cubeVertexVectors[i],
-          voxelVertexVectors[i] = new V3());
+          voxelVertexVectors[i] = new V3d());
     for (int i = 12; --i >= 0;)
       edgeVectors[i].sub2(voxelVertexVectors[edgeVertexes[i + i + 1]],
           voxelVertexVectors[edgeVertexes[i + i]]);
@@ -195,7 +195,7 @@ public class MarchingCubes extends TriangleData {
   };
   protected final int[] edgePointIndexes = new int[12];
   protected int[][][] isoPointIndexPlanes;
-  protected float[][] yzPlanes;
+  protected double[][] yzPlanes;
 
   protected int[][] resetIndexPlane(int[][] plane) {
     for (int i = 0; i < yzCount; i++)
@@ -204,11 +204,11 @@ public class MarchingCubes extends TriangleData {
     return plane;
   }
 
-  private P4 mappingPlane;
+  private P4d mappingPlane;
   private boolean allInside;
   private boolean isInside;
   private P3i offset;
-  private float[][][] voxelData;
+  private double[][][] voxelData;
   
   public String getEdgeData() {
 
@@ -279,7 +279,7 @@ public class MarchingCubes extends TriangleData {
     allInside = (colorDensity && (cutoff == 0 
         || mode == MODE_JVXL && bsVoxels.nextSetBit(0) < 0));
     boolean colorDensityAll = (colorDensity && cutoff == 0);
-    float v = 0;
+    double v = 0;
     for (int x = x0; x != x1; x += xStep, ptX += ptStep, pt = ptX) {
 
       // we swap planes of grid data when
@@ -337,7 +337,7 @@ public class MarchingCubes extends TriangleData {
           }
           // last value for i is 0, the x,y,z point itself
           // so we need only check it for noValues -- on THIS plane
-          if (noValues && !Float.isNaN(v))
+          if (noValues && !Double.isNaN(v))
             noValues = false;
           if (insideMask == 0) {
             //++outsideCount;
@@ -365,8 +365,8 @@ public class MarchingCubes extends TriangleData {
     return edgeData.toString();
   }
 
-  private float getValue(int x, int y, int z, int pt, int i) {
-    float v;
+  private double getValue(int x, int y, int z, int pt, int i) {
+    double v;
 
     // cubeVertexOffsets just gets us 
     // the specific grid point relative
@@ -382,7 +382,7 @@ public class MarchingCubes extends TriangleData {
       break;
     case MODE_JVXL:
       isInside = (allInside || bsVoxels.get(pti));
-      v = vertexValues[i] = (bsExcludedVertices.get(pti) ? Float.NaN
+      v = vertexValues[i] = (bsExcludedVertices.get(pti) ? Double.NaN
           : isInside ? 1 : 0);
       break;
     default:
@@ -409,16 +409,16 @@ public class MarchingCubes extends TriangleData {
   private void getPlane(int i, boolean andSwap) {
     if (i < 0 || i > cubeCountX)
       return;
-    /*float[] p = */surfaceReader.getPlane(i);
+    /*double[] p = */surfaceReader.getPlane(i);
     //dumpPlane(i, p);
     if (andSwap) {
-      float[] plane = yzPlanes[0];
+      double[] plane = yzPlanes[0];
       yzPlanes[0] = yzPlanes[1];
       yzPlanes[1] = plane;
     }
   }
-//  private void dumpPlane(int n, float[] plane) {
-//    float test = 0;
+//  private void dumpPlane(int n, double[] plane) {
+//    double test = 0;
 //    if (plane == null)
 //      for (int y = 0; y <= cubeCountY; y++)
 //        for (int z = 0; z <= cubeCountZ; z++)
@@ -440,7 +440,7 @@ public class MarchingCubes extends TriangleData {
           triangles[i + 3]);   
   }
 
-  protected void addVertex(int x, int y, int z, int pti, float value) {
+  protected void addVertex(int x, int y, int z, int pti, double value) {
     volumeData.voxelPtToXYZ(x, y, z, pt0);
     if (surfaceReader.addVertexCopy(pt0, value, -4, true) < 0)
       bsExcludedVertices.set(pti);
@@ -459,12 +459,12 @@ public class MarchingCubes extends TriangleData {
 
   protected BS bsValues = new BS();
 
-  protected float getValueArray(int x, int y, int z, int pt, float[] tempValues) {
+  protected double getValueArray(int x, int y, int z, int pt, double[] tempValues) {
     int ptyz = pt % yzCount;
     //if (bsValues.get(pt))
       //return tempValues[ptyz];
     bsValues.set(pt);
-    float value = surfaceReader.getValue(x, y, z, ptyz);
+    double value = surfaceReader.getValue(x, y, z, ptyz);
     if (isSquared)
       value *= value;
     tempValues[ptyz] = value;
@@ -473,12 +473,12 @@ public class MarchingCubes extends TriangleData {
     return value;
   }
 
-  public static boolean isInside(float voxelValue, float max, boolean isAbsolute) {
+  public static boolean isInside(double voxelValue, double max, boolean isAbsolute) {
     return ((max > 0 && (isAbsolute ? Math.abs(voxelValue) : voxelValue) >= max) || (max <= 0 && voxelValue <= max));
   }
 
-  protected final P3 pt0 = new P3();
-  protected final P3 pointA = new P3();
+  protected final P3d pt0 = new P3d();
+  protected final P3d pointA = new P3d();
 
   protected final static int[] edgeVertexPointersLowToHigh = new int[] {
       1, 1, 2, 0, 
@@ -591,8 +591,8 @@ public class MarchingCubes extends TriangleData {
       // pick up the actual value at each vertex
       // this array of 8 values is updated as we go.
 
-      float valueA = vertexValues[vertexA];
-      float valueB = vertexValues[vertexB];
+      double valueA = vertexValues[vertexA];
+      double valueB = vertexValues[vertexB];
 
       // we allow for NaN values -- missing triangles
 
@@ -614,40 +614,40 @@ public class MarchingCubes extends TriangleData {
               cubeVertexOffsets[vertexA], vertexA, vertexB, valueA, valueB,
               pointA, edgeVectors[iEdge], iType == contourType, fReturn);
 
-      addEdgeData(i < 0 ? Float.NaN : fReturn[0]);
+      addEdgeData(i < 0 ? Double.NaN : fReturn[0]);
 
       // If the fraction returns NaN, this is because one of the end points
       // is NaN; if the point index returns -1, then the point has been 
       // excluded by the meshDataServer (Isosurface) for some other reason,
       // for example because it is outside the limits of the box.
       
-      if (Float.isNaN(fReturn[0]) || i < 0)
+      if (Double.isNaN(fReturn[0]) || i < 0)
         isNaN = excludePartialCubes;
     }
     return !isNaN;
   }
 
-  protected void addEdgeData(float f) {
+  protected void addEdgeData(double f) {
     char ch = JvxlCoder.jvxlFractionAsCharacter(f);
     edgeData.appendC(ch);
   }
 
-  protected float[] fReturn = new float[1];
+  protected double[] fReturn = new double[1];
   
-  public void calcVertexPoint(int x, int y, int z, int vertex, P3 pt) {
+  public void calcVertexPoint(int x, int y, int z, int vertex, P3d pt) {
     volumeData.voxelPtToXYZ(x, y, z, pt0);
     pt.add2(pt0, voxelVertexVectors[vertex]);
   }
 
-  protected final static V3[] cubeVertexVectors = { 
-    V3.new3(0, 0, 0),
-    V3.new3(1, 0, 0), 
-    V3.new3(1, 0, 1), 
-    V3.new3(0, 0, 1),
-    V3.new3(0, 1, 0), 
-    V3.new3(1, 1, 0), 
-    V3.new3(1, 1, 1),
-    V3.new3(0, 1, 1) };
+  protected final static V3d[] cubeVertexVectors = { 
+    V3d.new3(0, 0, 0),
+    V3d.new3(1, 0, 0), 
+    V3d.new3(1, 0, 1), 
+    V3d.new3(0, 0, 1),
+    V3d.new3(0, 1, 0), 
+    V3d.new3(1, 1, 0), 
+    V3d.new3(1, 1, 1),
+    V3d.new3(0, 1, 1) };
 
 
   /*                     Y 

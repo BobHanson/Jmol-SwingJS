@@ -35,10 +35,10 @@ import org.jmol.util.Edge;
 import javajs.util.Lst;
 
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 
 public class NucleicPolymer extends PhosphorusPolymer {
@@ -65,20 +65,20 @@ public class NucleicPolymer extends PhosphorusPolymer {
     //   eta (C4_i-1 - P_i - C4_i - P_i+1) 
     // theta (P_i - C4_i - P_i+1 - C4_i+1)
 
-    float eta = Float.NaN;
+    double eta = Double.NaN;
     for (int i = 0; i < monomerCount - 2; ++i) {
       NucleicMonomer m1 = (NucleicMonomer) monomers[i];
       NucleicMonomer m2 = (NucleicMonomer) monomers[i + 1];
-      P3 p1 = m1.getP();
-      P3 c41 = m1.getC4P();
-      P3 p2 = m2.getP();
-      P3 c42 = m2.getC4P();
+      P3d p1 = m1.getP();
+      P3d c41 = m1.getC4P();
+      P3d p2 = m2.getP();
+      P3d c42 = m2.getC4P();
       if (i > 0) {
         NucleicMonomer m0 = (NucleicMonomer) monomers[i - 1];
-        P3 c40 = m0.getC4P();
-        eta = Measure.computeTorsion(c40, p1, c41, p2, true);
+        P3d c40 = m0.getC4P();
+        eta = MeasureD.computeTorsion(c40, p1, c41, p2, true);
       }
-      float theta = Measure.computeTorsion(p1, c41, p2, c42, true);
+      double theta = MeasureD.computeTorsion(p1, c41, p2, c42, true);
       if (eta < 0)
         eta += 360;
       if (theta < 0)
@@ -96,8 +96,8 @@ public class NucleicPolymer extends PhosphorusPolymer {
                                       int nMaxPerResidue, int[][][] min, 
                                       boolean checkDistances, boolean dsspIgnoreHydrogens) {
     NucleicPolymer other = (NucleicPolymer) polymer;
-    V3 vNorm = new V3();
-    V3 vAB = new V3();
+    V3d vNorm = new V3d();
+    V3d vAB = new V3d();
     for (int i = monomerCount; --i >= 0;) {
       NucleicMonomer myNucleotide = (NucleicMonomer) monomers[i];
       if (!myNucleotide.isPurine())
@@ -108,10 +108,10 @@ public class NucleicPolymer extends PhosphorusPolymer {
         continue;
       Atom myN1 = myNucleotide.getN1();
       Atom myN9 = myNucleotide.getN0();
-      P4 plane  = Measure.getPlaneThroughPoints(myN3, myN1, myN9, vNorm,
-          vAB, new P4());
+      P4d plane  = MeasureD.getPlaneThroughPoints(myN3, myN1, myN9, vNorm,
+          vAB, new P4d());
       Atom bestN3 = null;
-      float minDist2 = 25;
+      double minDist2 = 25;
       NucleicMonomer bestNucleotide = null;
       for (int j = other.monomerCount; --j >= 0;) {
         NucleicMonomer otherNucleotide = (NucleicMonomer) other.monomers[j];
@@ -121,9 +121,9 @@ public class NucleicPolymer extends PhosphorusPolymer {
         if (isInA ? !bsB.get(otherN3.i) : !bsA.get(otherN3.i))
           continue;
         Atom otherN1 = otherNucleotide.getN0();
-        float dist2 = myN1.distanceSquared(otherN3);
+        double dist2 = myN1.distanceSquared(otherN3);
         if (dist2 < minDist2 && myN9.distanceSquared(otherN1) > 50 // not stacked
-            && Math.abs(Measure.distanceToPlane(plane, otherN3)) < 1 // in plane
+            && Math.abs(MeasureD.distanceToPlane(plane, otherN3)) < 1 // in plane
         ) {
           bestNucleotide = otherNucleotide;
           bestN3 = otherN3;

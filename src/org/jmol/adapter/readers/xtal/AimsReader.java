@@ -149,7 +149,7 @@ public class AimsReader extends AtomSetCollectionReader {
     if (this.isFractional)
       setFractionalCoordinates(this.isFractional = false);
     addAtomXYZSymName(tokens, 1, null, null).partialCharge = parseDoubleStr(tokens[5]);
-    // we generally do not do this: atom.formalCharge = Math.round(atom.partialCharge);
+    // we generally do not do this: atom.formalCharge = (int) Math.round(atom.partialCharge);
   }
 
 }

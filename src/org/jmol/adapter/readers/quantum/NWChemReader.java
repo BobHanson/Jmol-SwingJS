@@ -745,7 +745,7 @@ public class NWChemReader extends MOReader {
       while (line != null && line.length() > 3) {
         String[] tokens = getTokens();
         Object[] o = new Object[] { tokens[1],
-            new float[] { (float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]) } };
+            new double[] { (double) parseDoubleStr(tokens[2]), (double) parseDoubleStr(tokens[3]) } };
         shellData.addLast(o);
         rd();
       }
@@ -754,7 +754,7 @@ public class NWChemReader extends MOReader {
 
     int nD = (isD6F10 ? 6 : 5);
     int nF = (isD6F10 ? 10 : 7);
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     for (int i = 0; i < atomTypes.size(); i++) {
       atomData = atomInfo.get(atomTypes.get(i));
       int nShells = atomData.size();
@@ -785,11 +785,11 @@ public class NWChemReader extends MOReader {
         slater[3] = nGaussians;
         shells.addLast(slater);
         for (int ifunc = 0; ifunc < nGaussians; ifunc++)
-          gdata.addLast((float[]) shellData.get(ifunc)[1]);
+          gdata.addLast((double[]) shellData.get(ifunc)[1]);
         gaussianCount += nGaussians;
       }
     }
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++)
       gaussians[i] = gdata.get(i);
     Logger.info(gaussianCount + " Gaussians read");
@@ -880,19 +880,19 @@ public class NWChemReader extends MOReader {
         mo.put("energy", Double.valueOf(energy));
         if (symmetry != null)
           mo.put("symmetry", symmetry);
-        float[] coefs = null;
+        double[] coefs = null;
         setMO(mo);
         mo.put("type", alphaBeta + (++moCount));
-        coefs = new float[nBasisFunctions];
+        coefs = new double[nBasisFunctions];
         mo.put("coefficients", coefs);
         i += 3;
         //    68      2.509000   5 C  py               39     -2.096777   3 C  pz        
         while ((line = list.get(++i)) != null && line.length() > 3) {
           tokens = getTokens();
-          coefs[parseIntStr(tokens[0]) - 1] = (float) parseDoubleStr(tokens[1]);
+          coefs[parseIntStr(tokens[0]) - 1] = (double) parseDoubleStr(tokens[1]);
           int pt = tokens.length / 2;
           if (pt == 5 || pt == 6)
-            coefs[parseIntStr(tokens[pt]) - 1] = (float) parseDoubleStr(tokens[pt + 1]);
+            coefs[parseIntStr(tokens[pt]) - 1] = (double) parseDoubleStr(tokens[pt + 1]);
         }
       }
     }

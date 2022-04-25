@@ -496,7 +496,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           .getAtom(i));
     }
     define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, m.property, strFormat, null, tickInfo,
-        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Float.NaN),
+        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Double.NaN),
         (isDelete ? T.delete : T.define));
   }
 
@@ -537,7 +537,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   }
 
   private void defineMeasurement(int i, Measurement m, boolean doSelect) {
-    float value = m.getMeasurement(null);
+    double value = m.getMeasurement(null);
     if (htMin != null && !m.isMin(htMin) 
         || radiusData != null && !m.isInRange(radiusData, value))
       return;
@@ -670,7 +670,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     info.put("strMeasurement", m.getString());
     info.put("count", Integer.valueOf(count));
     info.put("id",  "" + m.thisID);
-    info.put("value", Float.valueOf(m.value));
+    info.put("value", Double.valueOf(m.value));
     info.put("hidden", Boolean.valueOf(m.isHidden));
     info.put("visible", Boolean.valueOf(m.isVisible));
     TickInfo tickInfo = m.tickInfo;
@@ -680,8 +680,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         info.put("tickScale", tickInfo.scale);
       if (tickInfo.tickLabelFormats != null)
         info.put("tickLabelFormats", tickInfo.tickLabelFormats);
-      if (!Float.isNaN(tickInfo.first))
-        info.put("tickStart", Float.valueOf(tickInfo.first));
+      if (!Double.isNaN(tickInfo.first))
+        info.put("tickStart", Double.valueOf(tickInfo.first));
     }
     Lst<Map<String, Object>> atomsInfo = new  Lst<Map<String,Object>>();
     Atom[] atoms = ms.at;

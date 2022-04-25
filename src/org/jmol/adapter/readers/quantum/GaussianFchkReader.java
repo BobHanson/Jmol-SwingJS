@@ -30,7 +30,7 @@ import org.jmol.adapter.smarter.Bond;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -254,7 +254,7 @@ public class GaussianFchkReader extends GaussianReader {
     double[] data = (double[]) fileData.get("DipoleMoment");
     if (data == null)
       return;
-    V3 dipole = V3.new3((float) data[0], (float) data[1], (float) data[2]);
+    V3d dipole = V3d.new3((double) data[0], (double) data[1], (double) data[2]);
     Logger.info("Molecular dipole for model " + asc.atomSetCount
         + " = " + dipole);
     asc.setCurrentModelInfo("dipole", dipole);
@@ -349,7 +349,7 @@ public class GaussianFchkReader extends GaussianReader {
     double[] exps = (double[]) fileData.get("Primitiveexponents");
     double[] coefs = (double[]) fileData.get("Contractioncoefficients");
     double[] spcoefs = (double[]) fileData.get("P(S=P)Contractioncoefficients");
-    gaussians = AU.newFloat2(exps.length);
+    gaussians = AU.newDouble2(exps.length);
     for (int i = 0; i < shellCount; i++) {
       String oType = AO_TYPES[(int) types[i] + 3];
       int nGaussians = (int) pps[i];
@@ -366,11 +366,11 @@ public class GaussianFchkReader extends GaussianReader {
         Logger.debug("Slater " + shells.size() + " " + Escape.eAI(slater));
       shells.addLast(slater);
       for (int j = 0; j < nGaussians; j++) {
-        float[] g = gaussians[gaussianCount] = new float[3];
-        g[0] = (float) exps[gaussianCount]; 
-        g[1] = (float) coefs[gaussianCount]; 
+        double[] g = gaussians[gaussianCount] = new double[3];
+        g[0] = (double) exps[gaussianCount]; 
+        g[1] = (double) coefs[gaussianCount]; 
         if (spcoefs != null)
-          g[2] = (float) spcoefs[gaussianCount]; 
+          g[2] = (double) spcoefs[gaussianCount]; 
         gaussianCount++;
       }
     }

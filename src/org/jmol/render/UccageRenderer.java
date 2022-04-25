@@ -27,10 +27,10 @@ package org.jmol.render;
 
 import javajs.util.DF;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.T4;
+import javajs.util.T3d;
+import javajs.util.T4d;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
@@ -44,12 +44,12 @@ import org.jmol.viewer.StateManager;
 
 public class UccageRenderer extends CageRenderer {
 
-  private final P3[] verticesT = new P3[8]; 
+  private final P3d[] verticesT = new P3d[8]; 
 
   @Override
   protected void initRenderer() {
     for (int i = 8; --i >= 0; ) 
-      verticesT[i] = new P3();
+      verticesT[i] = new P3d();
     tickEdges = BoxInfo.uccageTickEdges;    
     draw000 = false;
   }
@@ -71,11 +71,11 @@ public class UccageRenderer extends CageRenderer {
     return false;
   }
 
-  private P3 fset0 = P3.new3(555,555,1);
-  private P3 cell0 = new P3();
-  private P3 cell1 = new P3();
-  private P3 offset = new P3();
-  private P3 offsetT = new P3();
+  private P3d fset0 = P3d.new3(555,555,1);
+  private P3d cell0 = new P3d();
+  private P3d cell1 = new P3d();
+  private P3d offset = new P3d();
+  private P3d offsetT = new P3d();
 
   private SymmetryInterface unitcell;
 
@@ -92,17 +92,17 @@ public class UccageRenderer extends CageRenderer {
       return;
     isPolymer = unitcell.isPolymer();
     isSlab = unitcell.isSlab();
-    P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
+    P3d[] vertices = unitcell.getUnitCellVerticesNoOffset();
     offset.setT(unitcell.getCartesianOffset());
     offsetT.setT(unitcell.getFractionalOrigin());
     unitcell.toCartesianF(offsetT, true);
     offset.sub(offsetT);
     boolean hiddenLines = vwr.getBoolean(T.hiddenlinesdashed);
-    T3 fset = unitcell.getUnitCellMultiplier();
+    T3d fset = unitcell.getUnitCellMultiplier();
     boolean haveMultiple = (fset != null && !fset.equals(fset0));
     if (!haveMultiple)
       fset = fset0;
-    int t3w = (fset instanceof T4 ? (int) ((T4) fset).w : 0);
+    int t3w = (fset instanceof T4d ? (int) ((T4d) fset).w : 0);
     SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0, t3w);
     SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1, t3w);
     int firstLine, allow0, allow1;
@@ -110,11 +110,11 @@ public class UccageRenderer extends CageRenderer {
       cell0.scale(-1 / fset.z);
       cell1.scale(-1 / fset.z);
     }
-    float scale = Math.abs(fset.z);
+    double scale = Math.abs(fset.z);
     Axes axes = (Axes) vwr.shm.getShape(JC.SHAPE_AXES);
     if (axes != null && vwr.areAxesTainted())
       axes.reinitShape();
-    P3[] axisPoints = (axes == null
+    P3d[] axisPoints = (axes == null
         || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 
         || axes.axisXY.z != 0 && axes.axes2 == null
         || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0
@@ -122,8 +122,8 @@ public class UccageRenderer extends CageRenderer {
             : axes.axisPoints);
     boolean drawAllLines = (isExport
         || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0
-        || vwr.getFloat(T.axesscale) < 2 || axisPoints == null);
-    P3[] aPoints = axisPoints;
+        || vwr.getDouble(T.axesscale) < 2 || axisPoints == null);
+    P3d[] aPoints = axisPoints;
     int[][] faces = (hiddenLines ? BoxInfo.facePoints : null);
     if (fset.z == 0) {
       offsetT.setT(cell0);
@@ -134,9 +134,9 @@ public class UccageRenderer extends CageRenderer {
       firstLine = 0;
       allow0 = 0xFF;
       allow1 = 0xFF;
-      P3[] pts = BoxInfo.unitCubePoints;
+      P3d[] pts = BoxInfo.unitCubePoints;
       for (int i = 8; --i >= 0;) {
-        P3 v = P3.new3(pts[i].x * (cell1.x - cell0.x),
+        P3d v = P3d.new3(pts[i].x * (cell1.x - cell0.x),
             pts[i].y * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
         unitcell.toCartesianF(v, true);
         verticesT[i].add2(v, offsetT);

@@ -17,7 +17,7 @@ import javajs.util.BS;
 import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -222,7 +222,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
         oc.append("\n");
         BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
         int last = bs.length() - 1;
-        P3 pt = new P3();
+        P3d pt = new P3d();
         for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
           Atom a = vwr.ms.at[i];
           append("");
@@ -595,7 +595,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
     }
 
     public boolean allNaN() {
-      return (allSame() && PT.parseDouble(lastElement) == Float.NaN);
+      return (allSame() && PT.parseDouble(lastElement) == Double.NaN);
     }
 
     public boolean allNull() {
@@ -611,7 +611,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
     }
 
     public boolean allZero() {
-      return (allSame() && PT.parseDouble(lastElement) != Float.NaN);
+      return (allSame() && PT.parseDouble(lastElement) != Double.NaN);
     }
 
     public boolean hasValues() {

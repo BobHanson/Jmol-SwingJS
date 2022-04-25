@@ -31,12 +31,12 @@ import java.io.Serializable;
  *         
  *         
  */
-public class M3 extends M34 implements Serializable {
+public class M3d extends M34d implements Serializable {
 
   /**
    * Constructs and initializes a Matrix3f to all zeros.
    */
-  public M3() {
+  public M3d() {
   }
 
   /**
@@ -47,8 +47,8 @@ public class M3 extends M34 implements Serializable {
    *        the array of length 9 containing in order
    * @return m
    */
-  public static M3 newA9(float[] v) {
-    M3 m = new M3();
+  public static M3d newA9(float[] v) {
+    M3d m = new M3d();
     m.setA(v);
     return m;
   }
@@ -60,8 +60,8 @@ public class M3 extends M34 implements Serializable {
    *        The source matrix.
    * @return m
    */
-  public static M3 newM3(M3 m1) {
-    M3 m = new M3();
+  public static M3d newM3(M3d m1) {
+    M3d m = new M3d();
     if (m1 == null) {
       m.setScale(1);
       return m;
@@ -95,7 +95,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the matrix3f
    */
-  public void setM3(M34 m1) {
+  public void setM3(M34d m1) {
     setM33(m1);
   }
   /**
@@ -186,7 +186,7 @@ public class M3 extends M34 implements Serializable {
    * @param v
    *        the replacement row
    */
-  public void setRowV(int row, T3 v) {
+  public void setRowV(int row, T3d v) {
     switch (row) {
     case 0:
       m00 = v.x;
@@ -275,7 +275,7 @@ public class M3 extends M34 implements Serializable {
    * @param v
    *        the replacement column
    */
-  public void setColumnV(int column, T3 v) {
+  public void setColumnV(int column, T3d v) {
     switch (column) {
     case 0:
       m00 = v.x;
@@ -305,7 +305,7 @@ public class M3 extends M34 implements Serializable {
    * @param v
    *        The vector into which the matrix row values will be copied
    */
-  public void getColumnV(int column, T3 v) {
+  public void getColumnV(int column, T3d v) {
     switch (column) {
     case 0:
       v.x = m00;
@@ -357,7 +357,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the other matrix
    */
-  public void add(M3 m1) {
+  public void add(M3d m1) {
     add33(m1);
   }
 
@@ -368,7 +368,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the other matrix
    */
-  public void sub(M3 m1) {
+  public void sub(M3d m1) {
     sub33(m1);
   }
 
@@ -385,7 +385,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the matrix to be transposed
    */
-  public void transposeM(M3 m1) {
+  public void transposeM(M3d m1) {
     // alias-safe
     setM33(m1);
     transpose33();
@@ -398,7 +398,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the matrix to be inverted
    */
-  public void invertM(M3 m1) {
+  public void invertM(M3d m1) {
     setM33(m1);
     invert();
   }
@@ -426,7 +426,7 @@ public class M3 extends M34 implements Serializable {
    *        the angle to rotate about the X axis in radians
    * @return this
    */
-  public M3 setAsXRotation(float angle) {
+  public M3d setAsXRotation(float angle) {
     setXRot(angle);
     return this;
   }
@@ -439,7 +439,7 @@ public class M3 extends M34 implements Serializable {
    *        the angle to rotate about the Y axis in radians
    * @return this
    */
-  public M3 setAsYRotation(float angle) {
+  public M3d setAsYRotation(float angle) {
     setYRot(angle);
     return this;
   }
@@ -452,7 +452,7 @@ public class M3 extends M34 implements Serializable {
    *        the angle to rotate about the Z axis in radians
    * @return this
    */
-  public M3 setAsZRotation(float angle) {
+  public M3d setAsZRotation(float angle) {
     setZRot(angle);
     return this;
   }
@@ -474,7 +474,7 @@ public class M3 extends M34 implements Serializable {
    * @param m1
    *        the other matrix
    */
-  public void mul(M3 m1) {
+  public void mul(M3d m1) {
     mul2(this, m1);
   }
 
@@ -487,7 +487,7 @@ public class M3 extends M34 implements Serializable {
    * @param m2
    *        the second matrix
    */
-  public void mul2(M3 m1, M3 m2) {
+  public void mul2(M3d m1, M3d m2) {
     // alias-safe way.
     set9(m1.m00 * m2.m00 + m1.m01 * m2.m10 + m1.m02 * m2.m20, m1.m00 * m2.m01
         + m1.m01 * m2.m11 + m1.m02 * m2.m21, m1.m00 * m2.m02 + m1.m01 * m2.m12
@@ -511,9 +511,9 @@ public class M3 extends M34 implements Serializable {
    */
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof M3))
+    if (!(o instanceof M3d))
       return false;
-    M3 m = (M3) o;
+    M3d m = (M3d) o;
     return m00 == m.m00 && m01 == m.m01 && m02 == m.m02 && m10 == m.m10
         && m11 == m.m11 && m12 == m.m12 && m20 == m.m20 && m21 == m.m21
         && m22 == m.m22;
@@ -530,11 +530,11 @@ public class M3 extends M34 implements Serializable {
    */
   @Override
   public int hashCode() {
-    return T3.floatToIntBits(m00) ^ T3.floatToIntBits(m01)
-        ^ T3.floatToIntBits(m02) ^ T3.floatToIntBits(m10)
-        ^ T3.floatToIntBits(m11) ^ T3.floatToIntBits(m12)
-        ^ T3.floatToIntBits(m20) ^ T3.floatToIntBits(m21)
-        ^ T3.floatToIntBits(m22);
+    return T3d.floatToIntBits(m00) ^ T3d.floatToIntBits(m01)
+        ^ T3d.floatToIntBits(m02) ^ T3d.floatToIntBits(m10)
+        ^ T3d.floatToIntBits(m11) ^ T3d.floatToIntBits(m12)
+        ^ T3d.floatToIntBits(m20) ^ T3d.floatToIntBits(m21)
+        ^ T3d.floatToIntBits(m22);
   }
 
   /**
@@ -590,7 +590,7 @@ public class M3 extends M34 implements Serializable {
    *        the axis and angle to be converted
    * @return this
    */
-  public M3 setAA(A4 a) {
+  public M3d setAA(A4d a) {
     setAA33(a);
     return this;
   }

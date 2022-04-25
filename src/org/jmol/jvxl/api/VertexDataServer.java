@@ -3,8 +3,8 @@ package org.jmol.jvxl.api;
 
 
 import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public interface VertexDataServer {
   
@@ -64,13 +64,13 @@ public interface VertexDataServer {
    * @param fReturn 
    * @return                 new vertex index or Integer.MAX_VALUE
    */
-  public abstract int getSurfacePointIndexAndFraction(float cutoff,
+  public abstract int getSurfacePointIndexAndFraction(double cutoff,
                                            boolean isCutoffAbsolute, int x,
                                            int y, int z, P3i offset,
                                            int vertexA, int vertexB, 
-                                           float valueA, float valueB,
-                                           T3 pointA, V3 edgeVector,
-                                           boolean isContourType, float[] fReturn);
+                                           double valueA, double valueB,
+                                           T3d pointA, V3d edgeVector,
+                                           boolean isContourType, double[] fReturn);
 
   /**
    * addVertexCopy is used by the Marching Squares algorithm to
@@ -87,7 +87,7 @@ public interface VertexDataServer {
    * @return                  new vertex index
    * 
    */
-  public abstract int addVertexCopy(T3 vertexXYZ, float value, int assocVertex, boolean asCopy);
+  public abstract int addVertexCopy(T3d vertexXYZ, double value, int assocVertex, boolean asCopy);
 
   /**
    * addTriangleCheck adds a triangle along with a 3-bit check indicating
@@ -115,8 +115,8 @@ public interface VertexDataServer {
    * @param ptyz 
    * @return  value[x][y][z]
    */
-  public abstract float getValue(int x, int y, int z, int ptyz);
+  public abstract double getValue(int x, int y, int z, int ptyz);
 
-  public abstract float[] getPlane(int x);
+  public abstract double[] getPlane(int x);
 
 }

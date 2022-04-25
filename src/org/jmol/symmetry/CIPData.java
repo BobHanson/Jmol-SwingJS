@@ -2,10 +2,10 @@ package org.jmol.symmetry;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 import org.jmol.symmetry.CIPChirality.CIPAtom;
 import org.jmol.util.BSUtil;
@@ -30,7 +30,7 @@ public class CIPData {
    * measure of planarity in a trigonal system, in Angstroms
    * 
    */
-  static final float TRIGONALITY_MIN = 0.2f;
+  static final double TRIGONALITY_MIN = 0.2f;
   
   /**
    * Subclass identifier
@@ -479,21 +479,21 @@ public class CIPData {
    * @return distance from plane of first three covalently bonded nodes to this
    *         node
    */
-  float getTrigonality(SimpleNode a, V3 vNorm) {
-    P3[] pts = new P3[4];
+  double getTrigonality(SimpleNode a, V3d vNorm) {
+    P3d[] pts = new P3d[4];
     SimpleEdge[] bonds = a.getEdges();
     for (int n = bonds.length, i = n, pt = 0; --i >= 0 && pt < 4;)
       if (bonds[i].isCovalent())
         pts[pt++] = bonds[i].getOtherNode(a).getXYZ();
-    P4 plane = Measure.getPlaneThroughPoints(pts[0], pts[1], pts[2], vNorm,
-        vTemp, new P4());
-    return Measure.distanceToPlane(plane,
+    P4d plane = MeasureD.getPlaneThroughPoints(pts[0], pts[1], pts[2], vNorm,
+        vTemp, new P4d());
+    return MeasureD.distanceToPlane(plane,
         (pts[3] == null ? a.getXYZ() : pts[3]));
   }
 
   // temporary fields
 
-  protected V3 vNorm = new V3(), vTemp = new V3();
+  protected V3d vNorm = new V3d(), vTemp = new V3d();
 
 
 //  public boolean canBeChiralBond(SimpleEdge bond) {
@@ -510,10 +510,10 @@ public class CIPData {
    * @return true if this is a cis relationship
    */
   int isCis(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
-    Measure.getNormalThroughPoints(a.atom.getXYZ(), b.atom.getXYZ(),
+    MeasureD.getNormalThroughPoints(a.atom.getXYZ(), b.atom.getXYZ(),
         c.atom.getXYZ(), vNorm, vTemp);
-    V3 vNorm2 = new V3();
-    Measure.getNormalThroughPoints(b.atom.getXYZ(), c.atom.getXYZ(),
+    V3d vNorm2 = new V3d();
+    MeasureD.getNormalThroughPoints(b.atom.getXYZ(), c.atom.getXYZ(),
         d.atom.getXYZ(), vNorm2, vTemp);
     return (vNorm.dot(vNorm2) > 0 ? CIPChirality.STEREO_Z : CIPChirality.STEREO_E);
   }
@@ -528,7 +528,7 @@ public class CIPData {
    * @return true if torsion angle is
    */
   int isPositiveTorsion(CIPAtom a, CIPAtom b, CIPAtom c, CIPAtom d) {
-    float angle = Measure.computeTorsion(a.atom.getXYZ(), b.atom.getXYZ(),
+    double angle = MeasureD.computeTorsion(a.atom.getXYZ(), b.atom.getXYZ(),
         c.atom.getXYZ(), d.atom.getXYZ(), true);
     return (angle > 0 ? CIPChirality.STEREO_P : CIPChirality.STEREO_M);
   }
@@ -564,10 +564,10 @@ public class CIPData {
     CIPAtom[] atoms = a.atoms; 
     if (!setCoord(a.atom, atoms))
       return CIPChirality.NO_CHIRALITY;
-    P3 p0 = (atoms[3].atom == null ? a.atom : atoms[3].atom).getXYZ();
-    P3 p1 = atoms[0].atom.getXYZ(), p2 = atoms[1].atom.getXYZ(), p3 = atoms[2].atom
+    P3d p0 = (atoms[3].atom == null ? a.atom : atoms[3].atom).getXYZ();
+    P3d p1 = atoms[0].atom.getXYZ(), p2 = atoms[1].atom.getXYZ(), p3 = atoms[2].atom
         .getXYZ();
-    Measure.getNormalThroughPoints(p1, p2, p3, vNorm, vTemp);
+    MeasureD.getNormalThroughPoints(p1, p2, p3, vNorm, vTemp);
     vTemp.setT(p0);
     vTemp.sub(p1);
     return (vTemp.dot(vNorm) > 0 ? CIPChirality.STEREO_R : CIPChirality.STEREO_S);

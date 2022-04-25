@@ -40,7 +40,7 @@ import org.jmol.util.Logger;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 class SpartanArchive {
   
@@ -234,7 +234,7 @@ class SpartanArchive {
      */
 
     Lst<int[]> shells = new  Lst<int[]>();
-    float[][] gaussians = AU.newFloat2(gaussianCount);
+    double[][] gaussians = AU.newDouble2(gaussianCount);
     int[] typeArray = new int[gaussianCount];
     //if (false) { // checking these still
     // r.getDFMap(DC_LIST, JmolAdapter.SHELL_D_CARTESIAN, BasisFunctionReader.CANONICAL_DC_LIST, 3);
@@ -274,20 +274,20 @@ class SpartanArchive {
       double alpha = parseDouble(readLine());
       String[] tokens = PT.getTokens(readLine());
       int nData = tokens.length;
-      float[] data = new float[nData + 1];
-      data[0] = (float) alpha;
+      double[] data = new double[nData + 1];
+      data[0] = (double) alpha;
       //we put D and F into coef 1. This may change if I find that Gaussian output
       //lists D and F in columns 3 and 4 as well.
       switch (typeArray[i]) {
       case QS.S:
-        data[1] = (float) parseDouble(tokens[0]);
+        data[1] = (double) parseDouble(tokens[0]);
         break;
       case QS.P:
-        data[1] = (float) parseDouble(tokens[1]);
+        data[1] = (double) parseDouble(tokens[1]);
         break;
       case QS.SP:
-        data[1] = (float) parseDouble(tokens[0]);
-        data[2] = (float) parseDouble(tokens[1]);
+        data[1] = (double) parseDouble(tokens[0]);
+        data[2] = (double) parseDouble(tokens[1]);
         if (data[1] == 0) {
           data[1] = data[2];
           typeArray[i] = QS.SP;
@@ -295,11 +295,11 @@ class SpartanArchive {
         break;
       case QS.DC:
       case QS.DS:
-        data[1] = (float) parseDouble(tokens[2]);
+        data[1] = (double) parseDouble(tokens[2]);
         break;
       case QS.FC:
       case QS.FS:
-        data[1] = (float) parseDouble(tokens[3]);
+        data[1] = (double) parseDouble(tokens[3]);
         break;
       }
       gaussians[i] = data;
@@ -411,8 +411,8 @@ class SpartanArchive {
   private void setDipole(String[] tokens) {
     if (tokens.length != 3)
       return;
-    V3 dipole = V3.new3((float) parseDouble(tokens[0]),
-        (float) parseDouble(tokens[1]), (float) parseDouble(tokens[2]));
+    V3d dipole = V3d.new3((double) parseDouble(tokens[0]),
+        (double) parseDouble(tokens[1]), (double) parseDouble(tokens[2]));
     r.asc.setCurrentModelInfo("dipole", dipole);
   }
 
@@ -437,7 +437,7 @@ class SpartanArchive {
       if (nValues == 0)
         nValues = 1;
       boolean isArray = (tokens.length == 6);
-      Lst<Float> atomInfo = new  Lst<Float>();
+      Lst<Double> atomInfo = new  Lst<Double>();
       int ipt = 0;
       while (readLine() != null
           && !line.substring(0, 3).equals("END")) {
@@ -450,10 +450,10 @@ class SpartanArchive {
             setDipole(tokens2);
           for (int i = 0; i < tokens2.length; i++, ipt++) {
             if (isArray) {
-              atomInfo.addLast(Float.valueOf((float) parseDouble(tokens2[i])));
+              atomInfo.addLast(Double.valueOf((double) parseDouble(tokens2[i])));
               if ((ipt + 1) % nValues == 0) {
                 vector.addLast(atomInfo);
-                atomInfo = new  Lst<Float>();
+                atomInfo = new  Lst<Double>();
               }
             } else {
               value = Double.valueOf(parseDouble(tokens2[i]));
@@ -481,7 +481,7 @@ class SpartanArchive {
     readLine();
     String label = "";
     int frequencyCount = parseInt(line);
-    Lst<Lst<Lst<Float>>> vibrations = new  Lst<Lst<Lst<Float>>>();
+    Lst<Lst<Lst<Double>>> vibrations = new  Lst<Lst<Lst<Double>>>();
     Lst<Map<String, Object>> freqs = new  Lst<Map<String,Object>>();
     if (Logger.debugging) {
       Logger.debug("reading VIBFREQ vibration records: frequencyCount = "
@@ -509,23 +509,23 @@ class SpartanArchive {
     }
     r.asc.setInfo("VibFreqs", freqs);
     int ac = r.asc.getAtomSetAtomCount(0);
-    Lst<Lst<Float>> vib = new  Lst<Lst<Float>>();
-    Lst<Float> vibatom = new  Lst<Float>();
+    Lst<Lst<Double>> vib = new  Lst<Lst<Double>>();
+    Lst<Double> vibatom = new  Lst<Double>();
     int ifreq = 0;
     int iatom = ac;
     int nValues = 3;
-    float[] atomInfo = new float[3];
+    double[] atomInfo = new double[3];
     while (readLine() != null) {
       String tokens2[] = PT.getTokens(line);
       for (int i = 0; i < tokens2.length; i++) {
-        float f = (float) parseDouble(tokens2[i]);
+        double f = (double) parseDouble(tokens2[i]);
         atomInfo[i % nValues] = f;
-        vibatom.addLast(Float.valueOf(f));
+        vibatom.addLast(Double.valueOf(f));
         if ((i + 1) % nValues == 0) {
           if (!ignore[ifreq]) {
             r.asc.addVibrationVector(iatom, atomInfo[0], atomInfo[1], atomInfo[2]);
             vib.addLast(vibatom);
-            vibatom = new  Lst<Float>();
+            vibatom = new  Lst<Double>();
           }
           ++iatom;
         }
@@ -534,7 +534,7 @@ class SpartanArchive {
         if (!ignore[ifreq]) {
           vibrations.addLast(vib);
         }
-        vib = new  Lst<Lst<Float>>();
+        vib = new  Lst<Lst<Double>>();
         if (++ifreq == frequencyCount) {
           break; // /loop exit
         }
@@ -545,27 +545,27 @@ class SpartanArchive {
 
   @SuppressWarnings("unchecked")
   private void setVibrationsFromProperties() throws Exception {
-    Lst<Lst<Float>> freq_modes = (Lst<Lst<Float>>) r.asc.atomSetInfo.get("FREQ_MODES");
+    Lst<Lst<Double>> freq_modes = (Lst<Lst<Double>>) r.asc.atomSetInfo.get("FREQ_MODES");
     if (freq_modes == null) {
       return;
     }
     Lst<String> freq_lab = (Lst<String>) r.asc.atomSetInfo.get("FREQ_LAB");
-    Lst<Float> freq_val = (Lst<Float>) r.asc.atomSetInfo.get("FREQ_VAL");
+    Lst<Double> freq_val = (Lst<Double>) r.asc.atomSetInfo.get("FREQ_VAL");
     int frequencyCount = freq_val.size();
-    Lst<Lst<Lst<Float>>> vibrations = new  Lst<Lst<Lst<Float>>>();
+    Lst<Lst<Lst<Double>>> vibrations = new  Lst<Lst<Lst<Double>>>();
     Lst<Map<String, Object>> freqs = new  Lst<Map<String,Object>>();
     if (Logger.debugging) {
       Logger.debug(
           "reading PROP VALUE:VIB FREQ_MODE vibration records: frequencyCount = " + frequencyCount);
     }
-    Float v;
+    Double v;
     for (int i = 0; i < frequencyCount; ++i) {
       int ac0 = r.asc.ac;
       r.asc.cloneLastAtomSet();
       addBonds(bondData, ac0);
       Map<String, Object> info = new Hashtable<String, Object>();
       info.put("freq", (v = freq_val.get(i)));
-      double freq = v.floatValue();
+      double freq = v.doubleValue();
       String label = freq_lab.get(i);
       if (!label.equals("???")) {
         info.put("label", label);
@@ -582,15 +582,15 @@ class SpartanArchive {
       if (!r.doGetVibration(i + 1))
         continue;
       int ipt = 0;
-      Lst<Lst<Float>> vib = new  Lst<Lst<Float>>();
-      Lst<Float> mode = freq_modes.get(i);
+      Lst<Lst<Double>> vib = new  Lst<Lst<Double>>();
+      Lst<Double> mode = freq_modes.get(i);
       for (int ia = 0; ia < ac; ia++, iatom++) {
-        Lst<Float> vibatom = new  Lst<Float>();
-        double vx = (v = mode.get(ipt++)).floatValue();
+        Lst<Double> vibatom = new  Lst<Double>();
+        double vx = (v = mode.get(ipt++)).doubleValue();
         vibatom.addLast(v);
-        double vy = (v = mode.get(ipt++)).floatValue();
+        double vy = (v = mode.get(ipt++)).doubleValue();
         vibatom.addLast(v);
-        double vz = (v = mode.get(ipt++)).floatValue();
+        double vz = (v = mode.get(ipt++)).doubleValue();
         vibatom.addLast(v);
         r.asc.addVibrationVector(iatom, vx, vy, vz);
         vib.addLast(vibatom);

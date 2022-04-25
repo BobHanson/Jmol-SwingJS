@@ -127,7 +127,7 @@ public class XyzReader extends AtomSetCollectionReader {
         case 5:
           continue;
         case 6:
-          atom.radius = (float) parseDoubleStr(tokens[5]);
+          atom.radius = (double) parseDoubleStr(tokens[5]);
           continue;
         case 9:
           atom.atomSerial = parseIntStr(tokens[8]);

@@ -32,10 +32,10 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.script.SV;
@@ -235,7 +235,7 @@ public class LabelToken {
 
   //////////// label formatting for atoms, bonds, and measurements ///////////
 
-  public String formatLabel(Viewer vwr, Atom atom, String strFormat, P3 ptTemp) {
+  public String formatLabel(Viewer vwr, Atom atom, String strFormat, P3d ptTemp) {
     return (strFormat == null || strFormat.length() == 0 ? null
         : formatLabelAtomArray(vwr, atom, compile(vwr, strFormat, '\0', null),
             '\0', null, ptTemp));
@@ -254,7 +254,7 @@ public class LabelToken {
    */
   public static String formatLabelAtomArray(Viewer vwr, Atom atom,
                                    LabelToken[] tokens, char chAtom,
-                                   int[] indices, P3 ptTemp) {
+                                   int[] indices, P3d ptTemp) {
     if (atom == null)
       return null;
     SB strLabel = (chAtom > '0' ? null : new SB());
@@ -283,19 +283,19 @@ public class LabelToken {
     htValues.put("#", "");
     htValues.put("ORDER", "");
     htValues.put("TYPE", "");
-    htValues.put("LENGTH", Float.valueOf(0));
-    htValues.put("ENERGY", Float.valueOf(0));
+    htValues.put("LENGTH", Double.valueOf(0));
+    htValues.put("ENERGY", Double.valueOf(0));
     return htValues;
   }
 
   public static String formatLabelBond(Viewer vwr, Bond bond,
                                    LabelToken[] tokens,
-                                   Map<String, Object> values, int[] indices, P3 ptTemp) {
+                                   Map<String, Object> values, int[] indices, P3d ptTemp) {
     values.put("#", "" + (bond.index + 1));
     values.put("ORDER", "" + Edge.getBondOrderNumberFromOrder(bond.order));
     values.put("TYPE", Edge.getBondOrderNameFromOrder(bond.order));
-    values.put("LENGTH", Float.valueOf(bond.atom1.distance(bond.atom2)));
-    values.put("ENERGY", Float.valueOf(bond.getEnergy()));
+    values.put("LENGTH", Double.valueOf(bond.atom1.distance(bond.atom2)));
+    values.put("ENERGY", Double.valueOf(bond.getEnergy()));
     setValues(tokens, values);
     formatLabelAtomArray(vwr, bond.atom1, tokens, '1', indices, ptTemp);
     formatLabelAtomArray(vwr, bond.atom2, tokens, '2', indices, ptTemp);
@@ -303,10 +303,10 @@ public class LabelToken {
   }
 
   public static String formatLabelMeasure(Viewer vwr, Measurement m,
-                                   String label, float value, String units) {
+                                   String label, double value, String units) {
     Map<String, Object> htValues = new Hashtable<String, Object>();
     htValues.put("#", "" + (m.index + 1));
-    htValues.put("VALUE", Float.valueOf(value));
+    htValues.put("VALUE", Double.valueOf(value));
     htValues.put("UNITS", units);
     LabelToken[] tokens = compile(vwr, label, '\1', htValues);
     if (tokens == null)
@@ -329,8 +329,8 @@ public class LabelToken {
       if (lt.key == null)
         continue;
       Object value = values.get(lt.key);
-      lt.text = (value instanceof Float ? lt.format(((Float) value)
-          .floatValue(), null, null) : lt.format(Float.NaN, (String) value,
+      lt.text = (value instanceof Double ? lt.format(((Double) value)
+          .doubleValue(), null, null) : lt.format(Double.NaN, (String) value,
           null));
     }
   }
@@ -487,10 +487,10 @@ public class LabelToken {
   }
 
   private static void appendAtomTokenValue(Viewer vwr, Atom atom, LabelToken t,
-                                           SB strLabel, int[] indices, P3 ptTemp) {
+                                           SB strLabel, int[] indices, P3d ptTemp) {
     String strT = null;
-    float floatT = Float.NaN;
-    T3 ptT = null;
+    double floatT = Double.NaN;
+    T3d ptT = null;
     try {
       switch (t.tok) {
 
@@ -508,16 +508,16 @@ public class LabelToken {
       case T.data:
       case T.validation:
         if (t.data != null) {
-          floatT = ((float[]) t.data)[atom.i];
+          floatT = ((double[]) t.data)[atom.i];
           if (t.tok == T.validation && floatT != 1 && floatT != 0) {
-            Lst<Float> o = vwr.getAtomValidation(
+            Lst<Double> o = vwr.getAtomValidation(
                 t.text.substring(13, t.text.length() - 1), atom);
             if (o == null) {
               System.out.println("?? o is null ??");
             } else if (o.size() == 1) {
-              floatT = o.get(0).floatValue();
+              floatT = o.get(0).doubleValue();
             } else {
-              floatT = Float.NaN;
+              floatT = Double.NaN;
               strT = "";
               for (int i = 0, n = o.size(); i < n; i++) {
                 strT += "," + o.get(i);
@@ -546,12 +546,12 @@ public class LabelToken {
           }
         if (o == null) {
           strT = "";
-        } else if (o instanceof Float) {
-          floatT = ((Float) o).floatValue();
+        } else if (o instanceof Double) {
+          floatT = ((Double) o).doubleValue();
         } else if (o instanceof Integer) {
           floatT = ((Integer) o).intValue();
-        } else if (o instanceof T3) {
-          ptT = (T3) o;
+        } else if (o instanceof T3d) {
+          ptT = (T3d) o;
         } else {
           strT = o.toString();
         }
@@ -584,7 +584,7 @@ public class LabelToken {
         strT = (id <= 0 ? "" : "" + id);
         break;
       case T.straightness:
-        if (Float.isNaN(floatT = atom.group.getGroupParameter(T.straightness)))
+        if (Double.isNaN(floatT = atom.group.getGroupParameter(T.straightness)))
           strT = "null";
         break;
       case T.vibx:
@@ -595,7 +595,7 @@ public class LabelToken {
       case T.modz:
       case T.modo:
         floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
-        if (Float.isNaN(floatT))
+        if (Double.isNaN(floatT))
           strT = "";
         break;
       case T.nbo:
@@ -645,7 +645,7 @@ public class LabelToken {
         }
       }
     } catch (IndexOutOfBoundsException ioobe) {
-      floatT = Float.NaN;
+      floatT = Double.NaN;
       strT = null;
       ptT = null;
     }
@@ -656,8 +656,8 @@ public class LabelToken {
       strLabel.append(strT);
   }
 
-  private String format(float floatT, String strT, T3 ptT) {
-    if (!Float.isNaN(floatT)) {
+  private String format(double floatT, String strT, T3d ptT) {
+    if (!Double.isNaN(floatT)) {
       return PT.formatF(floatT, width, precision, alignLeft, zeroPad);
     } else if (strT != null) {
       return PT.formatS(strT, width, precision, alignLeft, zeroPad);

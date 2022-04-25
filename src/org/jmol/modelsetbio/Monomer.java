@@ -32,12 +32,12 @@ import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.Quat;
+import javajs.util.MeasureD;
+import javajs.util.Qd;
 
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 
@@ -215,7 +215,7 @@ public abstract class Monomer extends Group {
     return null;
   }
 
-  protected final P3 getSpecialAtomPoint(byte[] interestingIDs,
+  protected final P3d getSpecialAtomPoint(byte[] interestingIDs,
                                     byte specialAtomID) {
     for (int i = interestingIDs.length; --i >= 0; ) {
       int interestingID = interestingIDs[i];
@@ -272,7 +272,7 @@ public abstract class Monomer extends Group {
                             short madBegin, short madEnd) {
   }
 
-  public Map<String, Object> getMyInfo(P3 ptTemp) {
+  public Map<String, Object> getMyInfo(P3d ptTemp) {
     Map<String, Object> info = getGroupInfo(groupIndex, ptTemp);
     info.put("chain", chain.getIDStr());
     int seqNum = getResno();
@@ -281,18 +281,18 @@ public abstract class Monomer extends Group {
     char insCode = getInsertionCode();
     if (insCode != 0)      
       info.put("insertionCode","" + insCode);
-    float f = getGroupParameter(T.phi);
-    if (!Float.isNaN(f))
-      info.put("phi", Float.valueOf(f));
+    double f = getGroupParameter(T.phi);
+    if (!Double.isNaN(f))
+      info.put("phi", Double.valueOf(f));
     f = getGroupParameter(T.psi);
-    if (!Float.isNaN(f))
-      info.put("psi", Float.valueOf(f));
+    if (!Double.isNaN(f))
+      info.put("psi", Double.valueOf(f));
     f = getGroupParameter(T.eta);
-    if (!Float.isNaN(f))
-      info.put("mu", Float.valueOf(f));
+    if (!Double.isNaN(f))
+      info.put("mu", Double.valueOf(f));
     f = getGroupParameter(T.theta);
-    if (!Float.isNaN(f))
-      info.put("theta", Float.valueOf(f));
+    if (!Double.isNaN(f))
+      info.put("theta", Double.valueOf(f));
     Object structure = getStructure();
     if(structure instanceof ProteinStructure) {
       info.put("structureId", Integer.valueOf(((ProteinStructure)structure).strucNo));
@@ -364,7 +364,7 @@ public abstract class Monomer extends Group {
    * @param qtype
    * @return center
    */
-  P3 getQuaternionFrameCenter(char qtype) {
+  P3d getQuaternionFrameCenter(char qtype) {
     return null; 
   }
 
@@ -374,17 +374,17 @@ public abstract class Monomer extends Group {
     int iPrev = monomerIndex - mStep;
     Monomer prev = (mStep < 1 || monomerIndex <= 0 ? null
         : bioPolymer.monomers[iPrev]);
-    Quat q2 = getQuaternion(qType);
-    Quat q1 = (mStep < 1 ? Quat.getQuaternionFrameV(JC.axisX, JC.axisY,
+    Qd q2 = getQuaternion(qType);
+    Qd q1 = (mStep < 1 ? Qd.getQuaternionFrameV(JC.axisX, JC.axisY,
         JC.axisZ, false) : prev == null ? null : prev.getQuaternion(qType));
     if (q1 == null || q2 == null)
       return super.getHelixData(tokType, qType, mStep);
-    P3 a = (mStep < 1 ? P3.new3(0, 0, 0) : prev.getQuaternionFrameCenter(qType));
-    P3 b = getQuaternionFrameCenter(qType);
+    P3d a = (mStep < 1 ? P3d.new3(0, 0, 0) : prev.getQuaternionFrameCenter(qType));
+    P3d b = getQuaternionFrameCenter(qType);
     return (a == null || b == null ? getHelixData(tokType, qType, mStep)
         : Escape.escapeHelical((tokType == T.draw ? "helixaxis" + getUniqueID()
             : null), tokType, a, b,
-            Measure.computeHelicalAxis(a, b, q2.div(q1))));
+            MeasureD.computeHelicalAxis(a, b, q2.div(q1))));
   }
 
   public String getUniqueID() {
@@ -472,16 +472,16 @@ public abstract class Monomer extends Group {
     return true; // but not nec. for carbohydrates... see 1k7c
   }
 
-  private float phi = Float.NaN;
-  private float psi = Float.NaN;
-  private float omega = Float.NaN;
-  private float straightness = Float.NaN;
-  private float mu = Float.NaN;
-  private float theta = Float.NaN;
+  private double phi = Double.NaN;
+  private double psi = Double.NaN;
+  private double omega = Double.NaN;
+  private double straightness = Double.NaN;
+  private double mu = Double.NaN;
+  private double theta = Double.NaN;
 
   public boolean backboneBlockVis;
   
-  void setGroupParameter(int tok, float f) {
+  void setGroupParameter(int tok, double f) {
     switch (tok) {
     case T.phi:
       phi = f;
@@ -505,7 +505,7 @@ public abstract class Monomer extends Group {
   }
 
   @Override
-  public float getGroupParameter(int tok) {
+  public double getGroupParameter(int tok) {
     if (bioPolymer == null)
       return 0;
     if (!bioPolymer.haveParameters)
@@ -526,7 +526,7 @@ public abstract class Monomer extends Group {
     case T.straightness:
       return straightness;
     }
-    return Float.NaN;
+    return Double.NaN;
   }
 
   @Override

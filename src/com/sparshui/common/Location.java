@@ -4,7 +4,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.Serializable;
 
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * Represents a 2D location with float values.
@@ -73,8 +73,8 @@ public class Location implements Serializable {
     return (float) Math.sqrt((dx = _x - location._x) * dx + (dy = _y - location._y) * dy);
   }
 
-  public V3 getVector(Location location) {
-    return V3.new3(location._x - _x, location._y - _y, 0);  
+  public V3d getVector(Location location) {
+    return V3d.new3(location._x - _x, location._y - _y, 0);  
   }
   
   public static Location getCenter(Location a, Location b) {

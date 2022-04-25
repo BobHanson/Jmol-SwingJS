@@ -28,10 +28,10 @@ package org.jmol.jvxl.data;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.XmlUtil;
 
 import javajs.util.BS;
@@ -207,8 +207,8 @@ public class JvxlCoder {
   private static String jvxlSetCompressionRatio(SB data,
                                                 JvxlData jvxlData, int len) {
     String s = data.toString();
-    int r = (int) (jvxlData.nBytes > 0 ? ((float) jvxlData.nBytes) / len
-        : ((float) (jvxlData.nPointsX
+    int r = (int) (jvxlData.nBytes > 0 ? ((double) jvxlData.nBytes) / len
+        : ((double) (jvxlData.nPointsX
           * jvxlData.nPointsY * jvxlData.nPointsZ * 13)) / len);
     return PT.rep(s, "\"not calculated\"", (r > 0 ? "\"" + r +":1\"": "\"?\""));
   }
@@ -242,8 +242,8 @@ public class JvxlCoder {
                                          String data,
                                          boolean isEncoded,
                                          boolean isPrecisionColor,
-                                         float value1,
-                                         float value2) {
+                                         double value1,
+                                         double value2) {
     int n;
     if (data == null || (n = data.length() - 1) < 0)
       return;
@@ -307,7 +307,7 @@ public class JvxlCoder {
       addAttrib(attribs, "\n  precisionColor", "true");
     if (jvxlData.colorDensity)
       addAttrib(attribs, "\n  colorDensity", "true");
-    if (!Float.isNaN(jvxlData.pointSize))
+    if (!Double.isNaN(jvxlData.pointSize))
       addAttrib(attribs, "\n  pointSize", "" + jvxlData.pointSize);
     else if (jvxlData.diameter != 0)
       addAttrib(attribs, "\n  diameter", "" + jvxlData.diameter);
@@ -360,10 +360,10 @@ public class JvxlCoder {
     if (jvxlData.nVertexColors > 0)
       addAttrib(attribs, "\n  nVertexColors", "" + jvxlData.nVertexColors);
 
-    float min = (jvxlData.mappedDataMin == Float.MAX_VALUE ? 0f
+    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0f
         : jvxlData.mappedDataMin);
-    float blue = (jvxlData.isColorReversed ? jvxlData.valueMappedToRed : jvxlData.valueMappedToBlue);
-    float red = (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue : jvxlData.valueMappedToRed);
+    double blue = (jvxlData.isColorReversed ? jvxlData.valueMappedToRed : jvxlData.valueMappedToBlue);
+    double red = (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue : jvxlData.valueMappedToRed);
 
     if (jvxlData.jvxlColorData != null && jvxlData.jvxlColorData.length() > 0 && !jvxlData.isBicolorMap) {
       addAttrib(attribs, "\n  dataMinimum", "" + min);
@@ -379,7 +379,7 @@ public class JvxlCoder {
         if (jvxlData.jvxlPlane != null)
           addAttrib(attribs, "\n  contoured", "true");
         addAttrib(attribs, "\n  nContours", "" + jvxlData.contourValues.length);
-        addAttrib(attribs, "\n  contourValues", Escape.eAF(jvxlData.contourValuesUsed == null ? jvxlData.contourValues : jvxlData.contourValuesUsed));
+        addAttrib(attribs, "\n  contourValues", Escape.eAD(jvxlData.contourValuesUsed == null ? jvxlData.contourValues : jvxlData.contourValuesUsed));
         addAttrib(attribs, "\n  contourColors", jvxlData.contourColors);
       }
       if (jvxlData.thisContour > 0)
@@ -444,7 +444,7 @@ public class JvxlCoder {
    * Each contour is a Vector containing:
    *   0 Integer number of polygons (length of BitSet) 
    *   1 BitSet of critical triangles
-   *   2 Float value
+   *   2 Double value
    *   3 int[] [colorArgb]
    *   4 StringXBuilder containing encoded data for each segment:
    *     char type ('3', '6', '5') indicating which two edges
@@ -494,7 +494,7 @@ public class JvxlCoder {
    * @param polygonIndexes
    * @param vertices
    */
-  public static void set3dContourVector(Lst<Object> v, int[][] polygonIndexes, T3[] vertices) {
+  public static void set3dContourVector(Lst<Object> v, int[][] polygonIndexes, T3d[] vertices) {
     // we must add points only after the MarchingCubes process has completed.
     if (v.size() < CONTOUR_POINTS)
       return;
@@ -518,8 +518,8 @@ public class JvxlCoder {
       while (pt < nBuf && PT.isWhitespace(c2 = fData.charAt(pt++))) {
         // skip whitespace
       }
-      float f1 = jvxlFractionFromCharacter(c1, defaultEdgeFractionBase, defaultEdgeFractionRange, 0);
-      float f2 = jvxlFractionFromCharacter(c2, defaultEdgeFractionBase, defaultEdgeFractionRange, 0);
+      double f1 = jvxlFractionFromCharacter(c1, defaultEdgeFractionBase, defaultEdgeFractionRange, 0);
+      double f2 = jvxlFractionFromCharacter(c2, defaultEdgeFractionBase, defaultEdgeFractionRange, 0);
       int i1, i2, i3, i4;
       /*
        *     char type ('3', '6', '5') indicating which two edges
@@ -548,8 +548,8 @@ public class JvxlCoder {
     }
   }
 
-  private static T3 getContourPoint(T3[] vertices, int i, int j, float f) {
-    P3 pt = new P3();
+  private static T3d getContourPoint(T3d[] vertices, int i, int j, double f) {
+    P3d pt = new P3d();
     pt.sub2(vertices[j], vertices[i]);
     pt.scaleAdd2(f, pt, vertices[i]);
     return pt;
@@ -570,7 +570,7 @@ public class JvxlCoder {
    * @param f2 -- character-encoded fraction
    * @param fData
    */
-  public static void appendContourTriangleIntersection(int type, float f1, float f2, SB fData) {
+  public static void appendContourTriangleIntersection(int type, double f1, double f2, SB fData) {
     fData.appendI(type);
     fData.appendC(jvxlFractionAsCharacter(f1));
     fData.appendC(jvxlFractionAsCharacter(f2));    
@@ -581,7 +581,7 @@ public class JvxlCoder {
    * @param jvxlData
    * @param vertexValues
    */
-  public static void jvxlCreateColorData(JvxlData jvxlData, float[] vertexValues) {
+  public static void jvxlCreateColorData(JvxlData jvxlData, double[] vertexValues) {
     if (vertexValues == null) {
       jvxlData.jvxlColorData = "";
       return;
@@ -590,21 +590,21 @@ public class JvxlCoder {
     boolean doTruncate = jvxlData.isTruncated;
     int colorFractionBase = jvxlData.colorFractionBase;
     int colorFractionRange = jvxlData.colorFractionRange;
-    float valueBlue = jvxlData.valueMappedToBlue;
-    float valueRed = jvxlData.valueMappedToRed;
+    double valueBlue = jvxlData.valueMappedToBlue;
+    double valueRed = jvxlData.valueMappedToRed;
     int vertexCount = (jvxlData.saveVertexCount > 0 ? jvxlData.saveVertexCount
         : jvxlData.vertexCount);
     if(vertexCount > vertexValues.length)
       System.out.println("JVXLCODER ERROR");
-    float min = jvxlData.mappedDataMin;
-    float max = jvxlData.mappedDataMax;
+    double min = jvxlData.mappedDataMin;
+    double max = jvxlData.mappedDataMax;
     SB list1 = new SB();
     SB list2 = new SB();
     if (vertexValues.length < vertexCount)
       System.out.println("JVXLCOLOR OHOHO");  
     for (int i = 0; i < vertexCount; i++) {
-      float value = vertexValues[i];
-      if (Float.isNaN(value))
+      double value = vertexValues[i];
+      if (Double.isNaN(value))
         value = min;
       if (doTruncate)
         value = (value > 0 ? 0.999f : -0.999f);
@@ -801,8 +801,8 @@ public class JvxlCoder {
    * @param escapeXml
    */
   private static void appendXmlVertexData(SB sb, JvxlData jvxlData,
-                                          int[] vertexIdNew, T3[] vertices,
-                                          float[] vertexValues,
+                                          int[] vertexIdNew, T3d[] vertices,
+                                          double[] vertexValues,
                                           int vertexCount,
                                           String polygonColorData,
                                           int polygonCount, BS bsSlabDisplay,
@@ -811,9 +811,9 @@ public class JvxlCoder {
                                           boolean escapeXml) {
     int colorFractionBase = jvxlData.colorFractionBase;
     int colorFractionRange = jvxlData.colorFractionRange;
-    T3 p;
-    P3 min = jvxlData.boundingBox[0];
-    P3 max = jvxlData.boundingBox[1];
+    T3d p;
+    P3d min = jvxlData.boundingBox[0];
+    P3d max = jvxlData.boundingBox[1];
     SB list1 = new SB();
     SB list2 = new SB();
     int[] vertexIdOld = null;
@@ -857,7 +857,7 @@ public class JvxlCoder {
     if (vertexColors == null) {
       for (int i = 0; i < vertexCount; i++)
         if (!removeSlabbed || bsSlabDisplay.get(i)) {
-          float value = vertexValues[polygonCount == 0 ? i : vertexIdOld[i]];
+          double value = vertexValues[polygonCount == 0 ? i : vertexIdOld[i]];
           jvxlAppendCharacter2(value, jvxlData.mappedDataMin,
               jvxlData.mappedDataMax, colorFractionBase, colorFractionRange,
               list1, list2);
@@ -899,14 +899,14 @@ public class JvxlCoder {
    * is only XML-safe when quoted as an attribute. 
    * 
    */
-  public static char jvxlFractionAsCharacter(float fraction) {
+  public static char jvxlFractionAsCharacter(double fraction) {
     return jvxlFractionAsCharacterRange(fraction, defaultEdgeFractionBase, defaultEdgeFractionRange);  
   }
   
-  public static char jvxlFractionAsCharacterRange(float fraction, int base, int range) {
+  public static char jvxlFractionAsCharacterRange(double fraction, int base, int range) {
     if (fraction > 0.9999f)
       fraction = 0.9999f;
-    else if (Float.isNaN(fraction))
+    else if (Double.isNaN(fraction))
       fraction = 1.0001f;
     int ich = (int) Math.floor(fraction * range + base);
     if (ich < base)
@@ -918,24 +918,24 @@ public class JvxlCoder {
     return (char) ich;
   }
 
-  private static void jvxlAppendCharacter2(float value, float min, float max,
+  private static void jvxlAppendCharacter2(double value, double min, double max,
                                            int base, int range,
                                            SB list1,
                                            SB list2) {
-    float fraction = (min == max ? value : (value - min) / (max - min));
+    double fraction = (min == max ? value : (value - min) / (max - min));
     char ch1 = jvxlFractionAsCharacterRange(fraction, base, range);
     list1.appendC(ch1);
     fraction -= jvxlFractionFromCharacter(ch1, base, range, 0);
     list2.appendC(jvxlFractionAsCharacterRange(fraction * range, base, range));
   }
 
-  public static float jvxlFractionFromCharacter(int ich, int base, int range,
-                                                float fracOffset) {
+  public static double jvxlFractionFromCharacter(int ich, int base, int range,
+                                                double fracOffset) {
     if (ich == base + range)
-      return Float.NaN;
+      return Double.NaN;
     if (ich < base)
       ich = 92; // ! --> \
-    float fraction = (ich - base + fracOffset) / range;
+    double fraction = (ich - base + fracOffset) / range;
     if (fraction < 0f)
       return 0f;
     if (fraction > 1f)
@@ -945,22 +945,22 @@ public class JvxlCoder {
     return fraction;
   }
 
-  public static float jvxlFractionFromCharacter2(int ich1, int ich2, int base,
+  public static double jvxlFractionFromCharacter2(int ich1, int ich2, int base,
                                           int range) {
-    float fraction = jvxlFractionFromCharacter(ich1, base, range, 0);
-    float remains = jvxlFractionFromCharacter(ich2, base, range, 0.5f);
+    double fraction = jvxlFractionFromCharacter(ich1, base, range, 0);
+    double remains = jvxlFractionFromCharacter(ich2, base, range, 0.5f);
     return fraction + remains / range;
   }
 
-  public static char jvxlValueAsCharacter(float value, float min, float max, int base,
+  public static char jvxlValueAsCharacter(double value, double min, double max, int base,
                                    int range) {
-    float fraction = (min == max ? value : (value - min) / (max - min));
+    double fraction = (min == max ? value : (value - min) / (max - min));
     return jvxlFractionAsCharacterRange(fraction, base, range);
   }
 
-  protected static float jvxlValueFromCharacter2(int ich, int ich2, float min,
-                                                 float max, int base, int range) {
-    float fraction = jvxlFractionFromCharacter2(ich, ich2, base, range);
+  protected static double jvxlValueFromCharacter2(int ich, int ich2, double min,
+                                                 double max, int base, int range) {
+    double fraction = jvxlFractionFromCharacter2(ich, ich2, base, range);
     return (max == min ? fraction : min + fraction * (max - min));
   }
 
@@ -1412,7 +1412,7 @@ public class JvxlCoder {
       }
     }
     // ... mappedDataMin mappedDataMax valueMappedToRed valueMappedToBlue ...
-    float min = (jvxlData.mappedDataMin == Float.MAX_VALUE ? 0f
+    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0f
         : jvxlData.mappedDataMin);
     definitionLine += " " + min + " " + jvxlData.mappedDataMax + " "
         + jvxlData.valueMappedToRed + " " + jvxlData.valueMappedToBlue;

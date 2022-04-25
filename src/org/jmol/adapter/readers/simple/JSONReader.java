@@ -24,7 +24,7 @@
 
 package org.jmol.adapter.readers.simple;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 

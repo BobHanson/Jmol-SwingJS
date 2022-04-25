@@ -75,7 +75,7 @@ public interface JmolScriptEvaluator {
 
   void runScriptBuffer(String string, SB outputBuffer, boolean isFuncReturn) throws ScriptException;
 
-  float evalFunctionFloat(Object func, Object params, float[] values);
+  double evalFunctionFloat(Object func, Object params, double[] values);
 
   void evaluateCompiledScript(boolean isSyntaxCheck,
                               boolean isSyntaxAndFileCheck,

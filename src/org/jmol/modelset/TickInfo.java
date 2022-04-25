@@ -24,21 +24,21 @@
 package org.jmol.modelset;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class TickInfo {
   
-  public TickInfo(P3 ticks) {
+  public TickInfo(P3d ticks) {
     this.ticks = ticks;
   }
 
   public String id = "";
   public String type = " ";
-  public P3 ticks;
+  public P3d ticks;
   public String[] tickLabelFormats;
-  public P3 scale;
-  public float first; 
-  public float signFactor = 1;
-  public P3 reference;
+  public P3d scale;
+  public double first; 
+  public double signFactor = 1;
+  public P3d reference;
 }
 

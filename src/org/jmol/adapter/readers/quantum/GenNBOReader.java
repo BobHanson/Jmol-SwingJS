@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -119,10 +119,10 @@ public class GenNBOReader extends MOReader {
     is47File = (line1.indexOf("$GENNBO") >= 0 || line1.indexOf("$NBO") >= 0); // GENNBO 6
     if (is47File) {
       if (line1.indexOf("BOHR") >= 0) {
-        fileOffset = new P3();
-        fileScaling = P3.new3((float) ANGSTROMS_PER_BOHR,
-            (float) ANGSTROMS_PER_BOHR,
-            (float) ANGSTROMS_PER_BOHR);
+        fileOffset = new P3d();
+        fileScaling = P3d.new3((double) ANGSTROMS_PER_BOHR,
+            (double) ANGSTROMS_PER_BOHR,
+            (double) ANGSTROMS_PER_BOHR);
       }
       readData47();
       return;
@@ -459,9 +459,9 @@ public class GenNBOReader extends MOReader {
       int[] nptr = getIntData();
       // read basis functions
       shells = new  Lst<int[]>();
-      gaussians = AU.newFloat2(gaussianCount);
+      gaussians = AU.newDouble2(gaussianCount);
       for (int i = 0; i < gaussianCount; i++)
-        gaussians[i] = new float[6];
+        gaussians[i] = new double[6];
       nOrbitals = 0;
       int ptCenter = 0;
       String l = line;
@@ -593,9 +593,9 @@ public class GenNBOReader extends MOReader {
       line = line.substring(line.indexOf("=") + 1);
       double[] temp = fillDoubleArray(line, 0, new double[gaussianCount]);
       for (int i = 0; i < gaussianCount; i++) {
-        gaussians[i][j] = (float) temp[i];
+        gaussians[i][j] = (double) temp[i];
         if (j > 1)
-          gaussians[i][5] += (float) temp[i];
+          gaussians[i][5] += (double) temp[i];
       }
     }
     // GenNBO lists S, P, D, F, G orbital coefficients separately
@@ -672,9 +672,9 @@ public class GenNBOReader extends MOReader {
 
     // read basis functions
     shells = new  Lst<int[]>();
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++)
-      gaussians[i] = new float[6];
+      gaussians[i] = new double[6];
     rd(); // ----------
     nOrbitals = 0;
     for (int i = 0; i < shellCount; i++) {

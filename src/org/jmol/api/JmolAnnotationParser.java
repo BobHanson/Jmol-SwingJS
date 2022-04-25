@@ -3,7 +3,7 @@ package org.jmol.api;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -22,7 +22,7 @@ public interface JmolAnnotationParser {
 
   String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds, boolean doReport);
 
-  void getAtomicDSSRData(ModelSet ms, int modelIndex, float[] dssrData,
+  void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData,
                          String dataType);
 
   String calculateDSSRStructure(Viewer vwr, BS bsAtoms);
@@ -35,7 +35,7 @@ public interface JmolAnnotationParser {
 
   Lst<SV> initializeAnnotation(SV objAnn, int type, int modelIndex);
 
-  Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom);
+  Lst<Double> getAtomValidation(Viewer vwr, String type, Atom atom);
 
   void fixAtoms(int modelIndex, SV v, BS bsAddedMask, int type, int margin);
 
@@ -45,6 +45,6 @@ public interface JmolAnnotationParser {
 
   void setGroup1(ModelSet ms, int modelIndex);
 
-  P3[] getDSSRFrame(Map<String, Object> dssrNT);
+  P3d[] getDSSRFrame(Map<String, Object> dssrNT);
 
 }

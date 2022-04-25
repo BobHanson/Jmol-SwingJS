@@ -15,7 +15,7 @@ import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import javajs.util.Lst;
 //import javajs.util.M3d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 
 /**
@@ -91,7 +91,7 @@ public class SpaceGroupFinder {
     int n = 0;
     int nChecked = 0;
     // this will be set in checkSupercell
-    P3 scaling = P3.new3(1, 1, 1);
+    P3d scaling = P3d.new3(1, 1, 1);
 //    BS withinCell = null;
     try {
       if (bsOpGroups == null)
@@ -679,7 +679,7 @@ public class SpaceGroupFinder {
    * @return revised unit cell
    */
   public SymmetryInterface checkSupercell(Viewer vwr, SymmetryInterface uc,
-                                          BS bsPoints, int abc, P3 scaling) {
+                                          BS bsPoints, int abc, P3d scaling) {
     if (bsPoints.cardinality() == 0)
       return uc;
     int minF = Integer.MAX_VALUE, maxF = Integer.MIN_VALUE;
@@ -789,7 +789,7 @@ public class SpaceGroupFinder {
 //  }
 //
   private int approxInt(double finv) {
-//    int i = Math.round (finv); // was 
+//    int i = (int) Math.round (finv); // was 
     int i = (int) (finv + SLOP001);
     return (Math.abs(finv - i) < SLOP001 ? i : 0);
   }

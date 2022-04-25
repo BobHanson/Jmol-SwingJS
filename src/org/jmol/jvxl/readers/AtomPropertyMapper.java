@@ -28,8 +28,8 @@ import org.jmol.quantum.MepCalculation;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
@@ -55,7 +55,7 @@ class AtomPropertyMapper extends AtomDataReader {
   
   private boolean doSmoothProperty;
   private AtomIndexIterator iter;
-  private float smoothingPower;
+  private double smoothingPower;
   
   @Override
   protected void setup(boolean isMapData) {
@@ -90,7 +90,7 @@ class AtomPropertyMapper extends AtomDataReader {
       maxDistance = 5; // usually just local to a group
     //if (maxDistance == Integer.MAX_VALUE && calcType != params.mep_calcType)
       //maxDistance = 5; // max distance just for mep 
-    getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true, false, Float.NaN, null);
+    getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true, false, Double.NaN, null);
     if (meshDataServer != null)
       meshDataServer.fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
     if (!doSmoothProperty && meshData.vertexSource != null) {
@@ -98,7 +98,7 @@ class AtomPropertyMapper extends AtomDataReader {
       for (int i = meshData.vc; --i >= 0;) {
         int iAtom = meshData.vertexSource[i];
         if (iAtom >= 0) {
-          meshData.vvs[i] = params.theProperty[iAtom];
+          meshData.vvs[i] = (double) params.theProperty[iAtom];
         } else {
           hasColorData = false;
           break;
@@ -152,31 +152,31 @@ class AtomPropertyMapper extends AtomDataReader {
   }
   
   @Override
-  public float getValueAtPoint(T3 pt, boolean getSource) {
+  public double getValueAtPoint(T3d pt, boolean getSource) {
     if (haveOneProperty && !getSource)
       return theProperty;
-    float dmin = Float.MAX_VALUE;
-    float dminNearby = Float.MAX_VALUE;
-    float value = (doSmoothProperty ? 0 : Float.NaN);
-    float vdiv = 0;
+    double dmin = Double.MAX_VALUE;
+    double dminNearby = Double.MAX_VALUE;
+    double value = (doSmoothProperty ? 0 : Double.NaN);
+    double vdiv = 0;
     sg.atomDataServer.setIteratorForPoint(iter, modelIndex, pt, maxDistance);
     iAtomSurface = -1;
     while (iter.hasNext()) {
       int ia = iter.next();
       int myAtom = myIndex[ia];
       boolean isNearby = (myAtom >= firstNearbyAtom);
-      P3 ptA = atomXyzTruncated[myAtom];
-      float p = atomProp[myAtom];
+      P3d ptA = atomXyzTruncated[myAtom];
+      double p = atomProp[myAtom];
       //System.out.println(iAtom + " " + ia + ptA + " " + isNearby + " " + p);
-      if (Float.isNaN(p))
+      if (Double.isNaN(p))
         continue;
-      float d2 = pt.distanceSquared(ptA);
+      double d2 = pt.distanceSquared(ptA);
       if (isNearby) {
         if (d2 < dminNearby) {
           dminNearby = d2;
           if (!doSmoothProperty && dminNearby < dmin) {
             dmin = d2;
-            value = Float.NaN;
+            value = Double.NaN;
           }
         }
       } else if (d2 < dmin) {
@@ -188,14 +188,14 @@ class AtomPropertyMapper extends AtomDataReader {
       if (mepCalc != null) {
         value += mepCalc.valueFor(p, d2, calcType);
       } else if (doSmoothProperty) {
-        d2 = (float) Math.pow(d2, smoothingPower);
+        d2 = (double) Math.pow(d2, smoothingPower);
         vdiv += d2;
         value += d2 * p;
       }
     }
     //System.out.println(pt + " " + value + " " + vdiv + " " + value / vdiv);
     return (mepCalc != null ? value : doSmoothProperty ? (vdiv == 0
-        || dminNearby < dmin ? Float.NaN : value / vdiv) : value);
+        || dminNearby < dmin ? Double.NaN : value / vdiv) : value);
   }
 
 }

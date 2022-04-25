@@ -33,10 +33,10 @@ import org.jmol.util.Normix;
 
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -75,9 +75,9 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private int selectedOctant = -1;
 
   private int[] coords;
-  private V3[] axes = new V3[] { new V3(), new V3(), new V3() };
-  private P3 center;
-  private float perspectiveFactor;
+  private V3d[] axes = new V3d[] { new V3d(), new V3d(), new V3d() };
+  private P3d center;
+  private double perspectiveFactor;
   private BS bsTemp = new BS();
   
   private M3d mat = new M3d();
@@ -88,25 +88,25 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private M3d matEllipsoidToScreen = new M3d();
   
   private final double[] coefs = new double[10];
-  private final float[] factoredLengths = new float[3];
-  private final P3[] selectedPoints = new P3[3];
-  private final V3 v1 = new V3();
-  private final V3 v2 = new V3();
-  private final V3 v3 = new V3();  
-  private final P3 pt1 = new P3();
-  private final P3 pt2 = new P3();
-  private final P3 s0 = new P3();
-  private final P3 s1 = new P3();
-  private final P3 s2 = new P3();
+  private final double[] factoredLengths = new double[3];
+  private final P3d[] selectedPoints = new P3d[3];
+  private final V3d v1 = new V3d();
+  private final V3d v2 = new V3d();
+  private final V3d v3 = new V3d();  
+  private final P3d pt1 = new P3d();
+  private final P3d pt2 = new P3d();
+  private final P3d s0 = new P3d();
+  private final P3d s1 = new P3d();
+  private final P3d s2 = new P3d();
 
-  private final static float toRadians = (float) Math.PI/180f;
-  private final static float[] cossin = new float[36];
+  private final static double toRadians = (double) Math.PI/180f;
+  private final static double[] cossin = new double[36];
 
   static {
     // OK for J2S compilation because this is a final class
     for (int i = 5, pt = 0; i <= 90; i += 5) {
-      cossin[pt++] = (float) Math.cos(i * toRadians);
-      cossin[pt++] = (float) Math.sin(i * toRadians);
+      cossin[pt++] = (double) Math.cos(i * toRadians);
+      cossin[pt++] = (double) Math.sin(i * toRadians);
     }
   }
 
@@ -136,8 +136,8 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     bGlobals[OPT_DOTS] = vwr.getBooleanProperty("ellipsoidDots");
     bGlobals[OPT_FILL] = vwr.getBooleanProperty("ellipsoidFill");
     bGlobals[OPT_WIREFRAME] = !isExport && !vwr.checkMotionRendering(T.ellipsoid);
-    diameter0 = Math.round (((Float) vwr.getP("ellipsoidAxisDiameter"))
-        .floatValue() * 1000);    
+    diameter0 = (int) Math.round (((Float) vwr.getP("ellipsoidAxisDiameter"))
+        .doubleValue() * 1000);    
     M4d m4 = tm.matrixTransform;
     mat.setRow(0, m4.m00, m4.m01, m4.m02);
     mat.setRow(1, m4.m10, m4.m11, m4.m12);
@@ -228,9 +228,9 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     center = e.center;
     // for extremely flat ellipsoids, we need at least some length
     int maxPt = 2;
-    float maxLen = 0;
+    double maxLen = 0;
     for (int i = 3; --i >= 0;) {
-      float f = factoredLengths[i] = Math.max(e.getLength(i), 0.02f);
+      double f = factoredLengths[i] = Math.max(e.getLength(i), 0.02f);
       if (f > maxLen) {
         maxLen = f;
         maxPt = i;
@@ -293,18 +293,18 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     matScreenToEllipsoid.scale(1f/perspectiveFactor);
   }
   
-  private final static V3[] unitAxisVectors = {
+  private final static V3d[] unitAxisVectors = {
     JC.axisNX, JC.axisX, 
     JC.axisNY, JC.axisY, 
     JC.axisNZ, JC.axisZ };
 
-  private final P3[] screens = new P3[38];
-  private final P3[] points = new P3[6];
+  private final P3d[] screens = new P3d[38];
+  private final P3d[] points = new P3d[6];
   {
     for (int i = 0; i < points.length; i++)
-      points[i] = new P3();
+      points[i] = new P3d();
     for (int i = 0; i < screens.length; i++)
-      screens[i] = new P3();
+      screens[i] = new P3d();
   }
 
   private static int[] axisPoints = {-1, 1, -2, 2, -3, 3};
@@ -339,8 +339,8 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
           Math.round(s0.y + pt1.y * perspectiveFactor * 1.05f), Math
               .round(pt1.z * 1.05f + s0.z));
     }
-    dx = 2 + (int) vwr.tm.scaleToScreen((int) s0.z, Math
-        .round((Float.isNaN(factoredLengths[maxPt]) ? 1.0f
+    dx = 2 + (int) vwr.tm.scaleToScreen((int) s0.z, (int) Math
+        .round((Double.isNaN(factoredLengths[maxPt]) ? 1.0f
             : factoredLengths[maxPt]) * 1000));
   }
 
@@ -359,10 +359,10 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
       fillConeScreen(screens[i], screens[i + 1], (eigenSignMask & pt) != 0);
     }
   }
-  private void fillConeScreen(P3 p1, P3 p2, boolean isPositive) {
+  private void fillConeScreen(P3d p1, P3d p2, boolean isPositive) {
     if (diameter == 0)
       return;
-    float diam = (diameter == 0 ? 1 : diameter) * 8;
+    double diam = (diameter == 0 ? 1 : diameter) * 8;
     v1.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
     v1.normalize();
     v1.scale(diam);
@@ -435,12 +435,12 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   }
   private void renderDots() {
     for (int i = 0; i < coords.length;) {
-      float fx = (float) Math.random();
-      float fy = (float) Math.random();
+      double fx = (double) Math.random();
+      double fy = (double) Math.random();
       fx *= (Math.random() > 0.5 ? -1 : 1);
       fy *= (Math.random() > 0.5 ? -1 : 1);
-      float fz = (float) Math.sqrt(1 - fx * fx - fy * fy);
-      if (Float.isNaN(fz))
+      double fz = (double) Math.sqrt(1 - fx * fx - fy * fy);
+      if (Double.isNaN(fz))
         continue;
       fz = (Math.random() > 0.5 ? -1 : 1) * fz;
       pt1.scaleAdd2(fx * factoredLengths[0], axes[0], center);
@@ -471,8 +471,8 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private void renderArc(int ptA, int ptB) {
     v1.sub2(points[ptA], center);
     v2.sub2(points[ptB], center);
-    float d1 = v1.length();
-    float d2 = v2.length();
+    double d1 = v1.length();
+    double d2 = v2.length();
     v1.normalize();
     v2.normalize();
     v3.cross(v1, v2);

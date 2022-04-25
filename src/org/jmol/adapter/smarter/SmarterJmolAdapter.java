@@ -40,11 +40,11 @@ import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public class SmarterJmolAdapter extends JmolAdapter {
   
@@ -330,8 +330,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
         if (asc.length > 1)
           asc[0].setInfo("ignoreUnitCell", asc[1].atomSetInfo.get("ignoreUnitCell"));
         result.finalizeTrajectoryAs(
-            (Lst<P3[]>) htParams.get("trajectorySteps"),
-            (Lst<V3[]>) htParams.get("vibrationSteps"));
+            (Lst<P3d[]>) htParams.get("trajectorySteps"),
+            (Lst<V3d[]>) htParams.get("vibrationSteps"));
       } catch (Exception e) {
         if (result.errorMessage == null)
           result.errorMessage = "" + e;

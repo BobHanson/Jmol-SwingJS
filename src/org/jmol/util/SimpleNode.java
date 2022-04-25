@@ -1,7 +1,7 @@
 package org.jmol.util;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /**
  * Just the bare minimum for CIP, and non-BioSMILES
@@ -57,7 +57,7 @@ public interface SimpleNode {
    *
    * @return the mass or, if specified, the mass number
    */
-  float getMass();
+  double getMass();
 
   /**
    *
@@ -69,7 +69,7 @@ public interface SimpleNode {
    * 
    * @return the position of this atom
    */
-  P3 getXYZ();
+  P3d getXYZ();
 
 
 }

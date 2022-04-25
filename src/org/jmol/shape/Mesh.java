@@ -46,14 +46,14 @@ import org.jmol.viewer.Viewer;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.api.SymmetryInterface;
 
@@ -67,12 +67,12 @@ public class Mesh extends MeshSurface {
   
   public short meshColix;
   public short[] normixes;
-  public Lst<P3[]> lineData;
+  public Lst<P3d[]> lineData;
   public String thisID;
   public boolean isValid = true;
   public String scriptCommand;
   public String colorCommand;
-  public P3 lattice;
+  public P3d lattice;
   public M4d[] symops;
   public short[][] symopNormixes;
   public boolean visible = true;
@@ -81,18 +81,18 @@ public class Mesh extends MeshSurface {
 
   public boolean haveXyPoints;
   public int diameter;
-  public float width;
-  public P3 ptCenter;
+  public double width;
+  public P3d ptCenter;
   public Mesh linkedMesh; //for lcaoOrbitals
   public Map<String, BS> vertexColorMap;
   
-  public V3 vAB, vTemp;
+  public V3d vAB, vTemp;
 
   public int color;
   public boolean useColix = true;
   public SymmetryInterface unitCell;
   
-  public float scale3d = 0;
+  public double scale3d = 0;
 
   public int index;
   public int atomIndex = -1;
@@ -132,9 +132,9 @@ public class Mesh extends MeshSurface {
     this.thisID = thisID;
     this.colix = colix;
     this.index = index;
-    ptCenter = new P3();
-    vAB = new V3();
-    vTemp = new V3();
+    ptCenter = new P3d();
+    vAB = new V3d();
+    vTemp = new V3d();
 
     //System.out.println("Mesh " + this + " constructed");
     return this;
@@ -195,10 +195,10 @@ public class Mesh extends MeshSurface {
 
   protected BS bsTemp;
 
-  public void initialize(int lighting, T3[] vertices, P4 plane) {
+  public void initialize(int lighting, T3d[] vertices, P4d plane) {
     if (vertices == null)
       vertices = this.vs;
-    V3[] normals = getNormals(vertices, plane);
+    V3d[] normals = getNormals(vertices, plane);
     setNormixes(normals);
     this.lighting = T.frontlit;
     if (insideOut)
@@ -208,7 +208,7 @@ public class Mesh extends MeshSurface {
     setLighting(lighting);
   }
 
-  public short[] setNormixes(V3[] normals) {
+  public short[] setNormixes(V3d[] normals) {
     if (normals == null)
       return (normixes = null);
     normixes = new short[normixCount];
@@ -223,17 +223,17 @@ public class Mesh extends MeshSurface {
     return normixes; 
   }
 
-  public V3[] getNormals(T3[] vertices, P4 plane) {
+  public V3d[] getNormals(T3d[] vertices, P4d plane) {
     normixCount = (isDrawPolygon ? pc : vc);
     if (normixCount < 0)
       return null;
-    V3[] normals = new V3[normixCount];
+    V3d[] normals = new V3d[normixCount];
     for (int i = normixCount; --i >= 0;)
-      normals[i] = new V3();
+      normals[i] = new V3d();
     if (plane == null) {
       sumVertexNormals(vertices, normals);
     }else {
-      V3 normal = V3.new3(plane.x, plane.y, plane.z); 
+      V3d normal = V3d.new3(plane.x, plane.y, plane.z); 
       for (int i = normixCount; --i >= 0;)
         normals[i] = normal;
     }
@@ -267,7 +267,7 @@ public class Mesh extends MeshSurface {
       normixes[i] = Normix.getInverseNormix(normixes[i]);
   }
 
-  public void setTranslucent(boolean isTranslucent, float iLevel) {
+  public void setTranslucent(boolean isTranslucent, double iLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, iLevel);
   }
 
@@ -277,7 +277,7 @@ public class Mesh extends MeshSurface {
   public boolean colorDensity;
   public Object cappingObject;
   public Object slabbingObject;
-  public float volumeRenderPointSize = 0.15f;
+  public double volumeRenderPointSize = 0.15f;
 
   public int[] connectedAtoms;
   public boolean isModelConnected;
@@ -286,31 +286,31 @@ public class Mesh extends MeshSurface {
 
   public short[] symopColixes;
 
-  protected void sumVertexNormals(T3[] vertices, V3[] normals) {
+  protected void sumVertexNormals(T3d[] vertices, V3d[] normals) {
     // subclassed in IsosurfaceMesh
     sumVertexNormals2(this, vertices, normals);
   }
 
-  protected static void sumVertexNormals2(Mesh m, T3[] vertices, V3[] normals) {
+  protected static void sumVertexNormals2(Mesh m, T3d[] vertices, V3d[] normals) {
     int adjustment = m.checkByteCount;
-    float min = m.getMinDistance2ForVertexGrouping();
+    double min = m.getMinDistance2ForVertexGrouping();
     for (int i = m.pc; --i >= 0;) {
       try {
         int[] face = m.setABC(i);
         if (face == null)
           continue;
-        T3 vA = vertices[face[0]];
-        T3 vB = vertices[face[1]];
-        T3 vC = vertices[face[2]];
+        T3d vA = vertices[face[0]];
+        T3d vB = vertices[face[1]];
+        T3d vC = vertices[face[2]];
         // no skinny triangles
         if (vA.distanceSquared(vB) < min || vB.distanceSquared(vC) < min
             || vA.distanceSquared(vC) < min)
           continue;
-        Measure.calcNormalizedNormal(vA, vB, vC, m.vTemp, m.vAB);
+        MeasureD.calcNormalizedNormal(vA, vB, vC, m.vTemp, m.vAB);
         if (m.isDrawPolygon) {
           normals[i].setT(m.vTemp);
         } else {
-          float l = m.vTemp.length();
+          double l = m.vTemp.length();
           if (l > 0.9 && l < 1.1) // test for not infinity or -infinity or isNaN
             for (int j = face.length - adjustment; --j >= 0;) {
               int k = face[j];
@@ -323,7 +323,7 @@ public class Mesh extends MeshSurface {
     }
   }
 
-  protected float getMinDistance2ForVertexGrouping() {
+  protected double getMinDistance2ForVertexGrouping() {
     return 1e-8f; // different for an isosurface
   }
 
@@ -369,16 +369,16 @@ public class Mesh extends MeshSurface {
     return s.toString();
   }
 
-  public P3[] getOffsetVertices(P4 thePlane) {
+  public P3d[] getOffsetVertices(P4d thePlane) {
     if (altVertices != null && !recalcAltVertices)
-      return (P3[]) altVertices;
-    altVertices = new P3[vc];
+      return (P3d[]) altVertices;
+    altVertices = new P3d[vc];
     for (int i = 0; i < vc; i++)
-      altVertices[i] = P3.newP(vs[i]);
-    V3 normal = null;
-    float val = 0;
+      altVertices[i] = P3d.newP(vs[i]);
+    V3d normal = null;
+    double val = 0;
     if (scale3d != 0 && vvs != null && thePlane != null) {
-        normal = V3.new3(thePlane.x, thePlane.y, thePlane.z);
+        normal = V3d.new3(thePlane.x, thePlane.y, thePlane.z);
         normal.normalize();
         normal.scale(scale3d);
         if (mat4 != null) {
@@ -388,9 +388,9 @@ public class Mesh extends MeshSurface {
         }
     }
     for (int i = 0; i < vc; i++) {
-      if (vvs != null && Float.isNaN(val = vvs[i]))
+      if (vvs != null && Double.isNaN(val = vvs[i]))
         continue;
-      P3 pt = (P3) altVertices[i];
+      P3d pt = (P3d) altVertices[i];
       if (mat4 != null)
         mat4.rotTrans(pt);
       if (normal != null && val != 0)
@@ -399,7 +399,7 @@ public class Mesh extends MeshSurface {
     
     initialize(lighting, altVertices, null);
     recalcAltVertices = false;
-    return (P3[]) altVertices;
+    return (P3d[]) altVertices;
   }
 
   /**
@@ -408,8 +408,8 @@ public class Mesh extends MeshSurface {
    * @param showWithinDistance2
    * @param isWithinNot
    */
-  public void setShowWithin(Lst<P3> showWithinPoints,
-                            float showWithinDistance2, boolean isWithinNot) {
+  public void setShowWithin(Lst<P3d> showWithinPoints,
+                            double showWithinDistance2, boolean isWithinNot) {
     if (showWithinPoints.size() == 0) {
       bsDisplay = (isWithinNot ? BSUtil.newBitSet2(0, vc) : null);
       return;
@@ -420,8 +420,8 @@ public class Mesh extends MeshSurface {
         bsDisplay.set(i);
   }
 
-  public static boolean checkWithin(T3 pti, Lst<P3> withinPoints,
-                                    float withinDistance2, boolean isWithinNot) {
+  public static boolean checkWithin(T3d pti, Lst<P3d> withinPoints,
+                                    double withinDistance2, boolean isWithinNot) {
     if (withinPoints.size() != 0)
       for (int i = withinPoints.size(); --i >= 0;)
         if (pti.distanceSquared(withinPoints.get(i)) <= withinDistance2)
@@ -530,7 +530,7 @@ public class Mesh extends MeshSurface {
           info.put("bsVertices", getVisibleVBS());
       }
       if (vvs != null) {
-        info.put("vertexValues", AU.arrayCopyF(vvs, vc));
+        info.put("vertexValues", AU.arrayCopyD(vvs, vc));
       }
       if (np > 0) {
         int[][] ii = nonNull(pis, np);
@@ -573,7 +573,7 @@ public class Mesh extends MeshSurface {
     return ii;
   }
 
-  public P3[] getBoundingBox() {
+  public P3d[] getBoundingBox() {
     return null;
   }
 
@@ -585,13 +585,13 @@ public class Mesh extends MeshSurface {
     return null;
   }
 
-  public void rotateTranslate(Quat q, T3 offset, boolean isAbsolute) {
+  public void rotateTranslate(Qd q, T3d offset, boolean isAbsolute) {
     if (q == null && offset == null) {
       mat4 = null;
       return;
     }
     M3d m3 = new M3d();
-    V3 v = new V3();
+    V3d v = new V3d();
     if (mat4 == null)
       mat4 = M4d.newM4(null);
     mat4.getRotationScale(m3);
@@ -602,13 +602,13 @@ public class Mesh extends MeshSurface {
       else
         v.add(offset);
     } else {
-      m3.mul(q.getMatrixd());
+      m3.mul(q.getMatrix());
     }
     mat4 = M4d.newMV(m3, v);
     recalcAltVertices = true;
   }
 
-  public V3[] getNormalsTemp() {
+  public V3d[] getNormalsTemp() {
     return (normalsTemp == null ? (normalsTemp = getNormals(vs, null))
         : normalsTemp);
   }

@@ -10,12 +10,12 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.Matrix;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -39,7 +39,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * note that x,y,z extended from Vibration(V3) is the current displacement modulation itself 
    *
    */
-  private P3 r0;
+  private P3d r0;
 
   
   /**
@@ -134,7 +134,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   /**
    * the modulated magnetic spin
    */
-  public V3 mxyz;
+  public V3d mxyz;
 
   /**
    * current value of anisotropic parameter modulation
@@ -154,7 +154,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   
   // values set in setModTQ
   
-  private P3 qtOffset = new P3();
+  private P3d qtOffset = new P3d();
   private boolean isQ;
 
   /**
@@ -171,10 +171,10 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * an adjustable scaling factor, as for vibrations
    * 
    */
-  private float scale = 1;
+  private double scale = 1;
 
   @Override
-  public float getScale() {
+  public double getScale() {
     return scale;
   }
 
@@ -344,7 +344,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     this.iop = iop;
     this.nOps = nOps;
     
-    this.r0 = r0.asP3();
+    this.r0 = r0;
     modDim = d;
     rI = new Matrix(null, d, 1);
     this.mods = mods;
@@ -361,11 +361,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       // just a simple vibration that just needs a place to be.
       vib = v;
       vib.modScale = 1;
-      mxyz = new V3(); // modulations of spin
+      mxyz = new V3d(); // modulations of spin
       axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz        
     }
-    Matrix vR00 = Matrix.newT(r00.asP3(), true);
-    Matrix vR0 = Matrix.newT(r0.asP3(), true);
+    Matrix vR00 = Matrix.newT(r00, true);
+    Matrix vR0 = Matrix.newT(r0, true);
 
     rsvs = symmetry.getOperationRsVs(iop);
     gammaIinv = rsvs.getSubmatrix(3, 3, d, d).inverse();
@@ -389,11 +389,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * @return this ModulationSet, with this.rI set to the coordinate
    */
 
-  public synchronized ModulationSet calculate(T3 tuv, boolean isQ) {
+  public synchronized ModulationSet calculate(T3d tuv, boolean isQ) {
     // initialize modulation components
     x = y = z = 0;
     htUij = null;
-    vOcc = Float.NaN;
+    vOcc = Double.NaN;
     if (mxyz != null)
       mxyz.set(0, 0, 0);
     double[][] a;
@@ -468,10 +468,10 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * 
    */
   @Override
-  public synchronized void setModTQ(T3 a, boolean isOn, T3 qtOffset,
-                                    boolean isQ, float scale) {
+  public synchronized void setModTQ(T3d a, boolean isOn, T3d qtOffset,
+                                    boolean isQ, double scale) {
     if (enabled)
-      addTo(a, Float.NaN);
+      addTo(a, Double.NaN);
     enabled = false;
     this.scale = scale;
     if (qtOffset != null) {
@@ -490,8 +490,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public void addTo(T3 a, float scale) {
-    boolean isReset = (Float.isNaN(scale));
+  public void addTo(T3d a, double scale) {
+    boolean isReset = (Double.isNaN(scale));
     if (isReset)
       scale = -1;
     ptTemp.setT(this);
@@ -507,7 +507,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       setVib(isReset, scale);
   }
 
-  private void setVib(boolean isReset, float modulationScale) {
+  private void setVib(boolean isReset, double modulationScale) {
     // vib.modScale will be dynamically set
     // it can be turned off using VECTOR MAX 0
     // modulationScale will be -1 on a reset. 
@@ -538,44 +538,44 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public T3 getModPoint(boolean asEnabled) {
+  public T3d getModPoint(boolean asEnabled) {
     return (asEnabled ? this : r0);
   }
 
   @Override
-  public Object getModulation(char type, T3 tuv) {
+  public Object getModulation(char type, T3d tuv) {
     getModCalc();
     switch (type) {
     case 'D':
       // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
-      return P3.newP(tuv == null ? r0 : modCalc.calculate(tuv, false));
+      return P3d.newP(tuv == null ? r0 : modCalc.calculate(tuv, false));
     case 'M':
       // return v0 if t456 is null, otherwise calculate vx,vy,vz for a given t4,5,6
-      return P3.newP(tuv == null ? v0 : modCalc.calculate(tuv, false).mxyz);
+      return P3d.newP(tuv == null ? v0 : modCalc.calculate(tuv, false).mxyz);
     case 'T':
       // do a calculation and return the t-value for the first three dimensions of modulation
       modCalc.calculate(tuv, false);
       double[][] ta = modCalc.rI.getArray();
-      return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0),
-          (modDim > 2 ? (float) ta[2][0] : 0));
+      return P3d.new3((double) ta[0][0], (modDim > 1 ? (double) ta[1][0] : 0),
+          (modDim > 2 ? (double) ta[2][0] : 0));
     case 'O':
       // return the currently modulated or calculated occupation on [0,100]
-      return Float.valueOf(Math.abs(tuv == null ? getOccupancy100(false)
+      return Double.valueOf(Math.abs(tuv == null ? getOccupancy100(false)
           : modCalc.calculate(tuv, false).getOccupancy100(false)));
     }
     return null;
   }
 
-  P3 ptTemp = new P3();
-  private V3 v0;
+  P3d ptTemp = new P3d();
+  private V3d v0;
 
   /**
    * get updated value for offset vector and for occupancy
    */
   @Override
-  public T3 setCalcPoint(T3 pt, T3 t456, float vibScale, float scale) {
+  public T3d setCalcPoint(T3d pt, T3d t456, double vibScale, double scale) {
     if (enabled) {
-      addTo(pt, Float.NaN);
+      addTo(pt, Double.NaN);
       getModCalc().calculate(t456, false).addTo(pt, scale);
       //System.out.println("MS setTempPoint " + id + " v=" + vOcc);
       // note: this does not include setting occValue
@@ -606,7 +606,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       modCalc.v0 = v0;
       modCalc.vib = vib;
       if (mxyz != null)
-        modCalc.mxyz = new V3();
+        modCalc.mxyz = new V3d();
     }
     return modCalc;
   }
@@ -632,7 +632,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public void setXYZ(T3 v) {
+  public void setXYZ(T3d v) {
     // we do not allow setting of the modulation vector,
     // but if there is an associated magnetic spin "vibration"
     // or an associated simple vibration,
@@ -660,12 +660,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public V3 getV3() {
+  public V3d getV3() {
     return (mxyz == null ? this : mxyz);
   }
 
   @Override
-  public void scaleVibration(float m) {
+  public void scaleVibration(double m) {
     if (vib == null)
       return;
     if (m == 0) {
@@ -681,7 +681,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (mxyz == null)
       return;
     symmetry.toCartesianF(vib, true);
-    v0 = V3.newV(vib);
+    v0 = V3d.newV(vib);
   }
 
   @Override
@@ -700,12 +700,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * 
    * @return occupancy on [0,1]
    */
-  public float setOccupancy(double[] pt, double foccupancy,
+  public double setOccupancy(double[] pt, double foccupancy,
                             double siteMult) {
     occParams = pt;
     fileOcc = foccupancy;
     occSiteMultiplicity = siteMult;
-    return (float) getOccupancy();
+    return (double) getOccupancy();
   }
   
   @Override

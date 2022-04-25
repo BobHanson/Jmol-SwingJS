@@ -111,7 +111,7 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
-  public void processTwoPointGesture(float[][][] touches) {
+  public void processTwoPointGesture(double[][][] touches) {
     viewer.processTwoPointGesture(touches);
   }
 
@@ -941,8 +941,8 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
 
   @Override
   public int[] resizeInnerPanel(String data) {
-    float[] dims = new float[2];
-    Parser.parseStringInfestedFloatArray(data, null, dims);
+    double[] dims = new double[2];
+    Parser.parseStringInfestedDoubleArray(data, null, dims);
     resizeDisplay((int) dims[0], (int) dims[1]);
     return new int[] { (int) dims[0], (int) dims[1] };
   }
@@ -1031,17 +1031,17 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
-  public float[][] functionXY(String functionName, int nX, int nY) {
+  public double[][] functionXY(String functionName, int nX, int nY) {
     /*three options:
      * 
      *  nX > 0  and  nY > 0        return one at a time, with (slow) individual function calls
      *  nX < 0  and  nY > 0        return a string that can be parsed to give the list of values
-     *  nX < 0  and  nY < 0        fill the supplied float[-nX][-nY] array directly in JavaScript 
+     *  nX < 0  and  nY < 0        fill the supplied double[-nX][-nY] array directly in JavaScript 
      *  
      */
 
     //System.out.println("functionXY" + nX + " " + nY  + " " + functionName);
-    float[][] fxy = new float[Math.abs(nX)][Math.abs(nY)];
+    double[][] fxy = new double[Math.abs(nX)][Math.abs(nY)];
     if (!mayScript || !haveDocumentAccess || nX == 0 || nY == 0)
       return fxy;
     try {
@@ -1068,14 +1068,14 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
           data = "";
         }
         nX = Math.abs(nX);
-        float[] fdata = new float[nX * nY];
-        Parser.parseStringInfestedFloatArray(data, null, fdata);
+        double[] fdata = new double[nX * nY];
+        Parser.parseStringInfestedDoubleArray(data, null, fdata);
         for (int i = 0, ipt = 0; i < nX; i++) {
           for (int j = 0; j < nY; j++, ipt++) {
             fxy[i][j] = fdata[ipt];
           }
         }
-      } else { // fill float[][] directly using JavaScript
+      } else { // fill double[][] directly using JavaScript
         /**
          * @j2sNative
          * 
@@ -1096,8 +1096,8 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
-  public float[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
-    float[][][] fxyz = new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
+  public double[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
+    double[][][] fxyz = new double[Math.abs(nX)][Math.abs(nY)][Math.abs(nZ)];
     if (!mayScript || !haveDocumentAccess || nX == 0 || nY == 0 || nZ == 0)
       return fxyz;
     try {

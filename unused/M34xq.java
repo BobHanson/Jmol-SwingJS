@@ -12,7 +12,7 @@ import javajs.api.JSONEncodable;
  *         JavaScript using Java2Script and for subclassing to M3 and M4
  * 
  */
-public abstract class M34 implements JSONEncodable {
+public abstract class M34d implements JSONEncodable {
 
   /**
    * The first element of the first row
@@ -59,7 +59,7 @@ public abstract class M34 implements JSONEncodable {
    */
   public float m22;
 
-  protected void setAA33(A4 a) {
+  protected void setAA33(A4d a) {
     double x = a.x;
     double y = a.y;
     double z = a.z;
@@ -95,7 +95,7 @@ public abstract class M34 implements JSONEncodable {
     m21 = (float) (tmp1 + tmp2);
   }
 
-  public void rotate(T3 t) {
+  public void rotate(T3d t) {
     // alias-safe
     rotate2(t, t);
   }
@@ -109,7 +109,7 @@ public abstract class M34 implements JSONEncodable {
    * @param result
    *        the vector into which the transformed values are placed
    */
-  public void rotate2(T3 t, T3 result) {
+  public void rotate2(T3d t, T3d result) {
     // alias-safe
     result.set(m00 * t.x + m01 * t.y + m02 * t.z, m10 * t.x + m11 * t.y + m12
         * t.z, m20 * t.x + m21 * t.y + m22 * t.z);
@@ -122,7 +122,7 @@ public abstract class M34 implements JSONEncodable {
    * @param m1
    *        the matrix3f
    */
-  protected void setM33(M34 m1) {
+  protected void setM33(M34d m1) {
     m00 = m1.m00;
     m01 = m1.m01;
     m02 = m1.m02;
@@ -309,7 +309,7 @@ public abstract class M34 implements JSONEncodable {
     }
   }
 
-  protected void add33(M34 m1) {
+  protected void add33(M34d m1) {
     m00 += m1.m00;
     m01 += m1.m01;
     m02 += m1.m02;
@@ -321,7 +321,7 @@ public abstract class M34 implements JSONEncodable {
     m22 += m1.m22;
   }
 
-  protected void sub33(M34 m1) {
+  protected void sub33(M34d m1) {
     m00 -= m1.m00;
     m01 -= m1.m01;
     m02 -= m1.m02;
@@ -418,7 +418,7 @@ public abstract class M34 implements JSONEncodable {
   public String toJSON() {
     // M4 extends M3
     SB sb = new SB();
-    int len = (this instanceof M4 ? 4 : 3);
+    int len = (this instanceof M4d ? 4 : 3);
     float[] x = new float[len];
     sb.appendC('[');
     for (int i = 0; i < len; i++) {

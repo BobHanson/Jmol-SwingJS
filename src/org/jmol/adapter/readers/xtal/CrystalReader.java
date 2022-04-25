@@ -38,13 +38,13 @@ import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.Quat;
+import javajs.util.Qd;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.Atom;
@@ -159,7 +159,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   private Lst<String> lstCoords;
 
   private Double energy;
-  private P3 ptOriginShift = new P3();
+  private P3d ptOriginShift = new P3d();
   private V3d[] directLatticeVectors;
   private String spaceGroupName;
   private boolean checkModelTrigger;
@@ -715,9 +715,9 @@ public class CrystalReader extends AtomSetCollectionReader {
           //      COORD(AU)  (X  Y  Z)           : -1.4548E-18  1.6226E-19  1.4949E+00
           //                                      0         1         2         3          
           //                                      0123456789012345678901234567890123456        
-          P3 xyz = P3.new3((float) (f * parseDoubleStr(value.substring(0, 12))),
-              (float) (f * parseDoubleStr(value.substring(12, 24))),
-              (float) (f * parseDoubleStr(value.substring(24, 36))));
+          P3d xyz = P3d.new3((double) (f * parseDoubleStr(value.substring(0, 12))),
+              (double) (f * parseDoubleStr(value.substring(12, 24))),
+              (double) (f * parseDoubleStr(value.substring(24, 36))));
           m.put("point", xyz);
           Logger.info("CRYSTAL TOPOND critical point " + type + " " + xyz);
         } else if (key.equals("PROPERTIES (RHO,GRHO,LAP)")) {
@@ -914,8 +914,8 @@ public class CrystalReader extends AtomSetCollectionReader {
       mp.getColumnV(0, a);
       mp.getColumnV(1, b);
     }
-    matUnitCellOrientation = Quat.getQuaternionFramed3d(new P3d(), a, b)
-        .getMatrixd();
+    matUnitCellOrientation = Qd.getQuaternionFrame(new P3d(), a, b)
+        .getMatrix();
     Logger.info("oriented unit cell is in model " + asc.atomSetCount);
   }
 
@@ -1456,7 +1456,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   }
 
   private void setEnergy() {
-    asc.setAtomSetEnergy("" + energy, energy.floatValue());
+    asc.setAtomSetEnergy("" + energy, energy.doubleValue());
     asc.setCurrentModelInfo("Energy", energy);
     asc.setInfo("Energy", energy);
     asc.setAtomSetName("Energy = " + energy + " Hartree");

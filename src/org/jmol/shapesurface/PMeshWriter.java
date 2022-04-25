@@ -1,7 +1,7 @@
 package org.jmol.shapesurface;
 
 import javajs.util.OC;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.util.C;
@@ -34,7 +34,7 @@ public class PMeshWriter {
   private short[] vertexColixes;
   private boolean noColor;
   private short[] contourColixes;
-  private float[] vertexValues;
+  private double[] vertexValues;
   private int vertexCount;
   private int[] imap;
 
@@ -153,7 +153,7 @@ public class PMeshWriter {
     int incr = imesh.vertexIncrement;
     for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
         : imesh.firstRealVertex); i < vertexCount; i += incr) {
-      if (vertexValues != null && Float.isNaN(vertexValues[i])
+      if (vertexValues != null && Double.isNaN(vertexValues[i])
           || imesh.jvxlData.thisSet != null
           && !imesh.jvxlData.thisSet.get(imesh.vertexSets[i])
           || !imesh.isColorSolid || haveBsDisplay && !imesh.bsDisplay.get(i)
@@ -238,11 +238,11 @@ public class PMeshWriter {
     return 1;
   }
 
-  private void outputXYZ(T3 pt) {
+  private void outputXYZ(T3d pt) {
     if (isBinary) {
-      oc.writeFloat(pt.x);
-      oc.writeFloat(pt.y);
-      oc.writeFloat(pt.z);
+      oc.writeFloat((float) pt.x);
+      oc.writeFloat((float) pt.y);
+      oc.writeFloat((float) pt.z);
     } else {
       oc.append(pt.x + " " + pt.y + " " + pt.z + "\n");
     }

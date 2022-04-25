@@ -9,7 +9,7 @@ import javajs.util.Lst;
 import javajs.util.SB;
 
 import org.jmol.util.Tensor;
-import javajs.util.V3;
+import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 
 public interface JmolNMRInterface {
@@ -21,9 +21,9 @@ public interface JmolNMRInterface {
    * quadrupolar moment of the isotope considered
    * 
    * @param efg
-   * @return float value
+   * @return double value
    */
-  public float getQuadrupolarConstant(Tensor efg);
+  public double getQuadrupolarConstant(Tensor efg);
 
   /**
    * If t is null, then a1, a2, and type are used to find the appropriate
@@ -36,7 +36,7 @@ public interface JmolNMRInterface {
    * @param t
    * @return 0 if not found
    */
-  public float getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String type, Tensor t);
+  public double getIsoOrAnisoHz(boolean isIso, Atom a1, Atom a2, String type, Tensor t);
 
   /**
    * 
@@ -44,7 +44,7 @@ public interface JmolNMRInterface {
    * @param a2
    * @return desired constant
    */
-  public float getDipolarConstantHz(Atom a1, Atom a2);
+  public double getDipolarConstantHz(Atom a1, Atom a2);
 
   /**
    * 
@@ -53,7 +53,7 @@ public interface JmolNMRInterface {
    * @param vField
    * @return projected value
    */
-  public float getDipolarCouplingHz(Atom a1, Atom a2, V3 vField);
+  public double getDipolarCouplingHz(Atom a1, Atom a2, V3d vField);
 
   /**
    * An attempt to find unique atoms using tensors.
@@ -70,7 +70,7 @@ public interface JmolNMRInterface {
    */
   public Object getInfo(String sym);
 
-  public float getMagneticShielding(Atom atom);
+  public double getMagneticShielding(Atom atom);
 
   /**
    * If shift reference has not been set, it defaults to 0 and just
@@ -79,8 +79,8 @@ public interface JmolNMRInterface {
    * @param atom
    * @return value
    */
-  public float getChemicalShift(Atom atom);  
-  public boolean setChemicalShiftReference(String element, float value);
+  public double getChemicalShift(Atom atom);  
+  public boolean setChemicalShiftReference(String element, double value);
 
   public Lst<Object> getTensorInfo(String tensorType, String infoType, BS bs);
 

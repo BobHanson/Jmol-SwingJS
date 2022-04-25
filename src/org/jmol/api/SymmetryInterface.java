@@ -14,11 +14,11 @@ import javajs.util.M3d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
-import javajs.util.P3;
 import javajs.util.P3d;
-import javajs.util.Quat;
+import javajs.util.P3d;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -35,7 +35,7 @@ public interface SymmetryInterface {
 
   int addBioMoleculeOperation(M4d mat, boolean isReverse);
 
-  boolean addLatticeVectors(Lst<float[]> lattvecs);
+  boolean addLatticeVectors(Lst<double[]> lattvecs);
 
   boolean checkDistance(P3d f1, P3d f2, double distance, 
                                         double dx, int iRange, int jRange, int kRange, P3d ptOffset);
@@ -52,7 +52,7 @@ public interface SymmetryInterface {
 
   boolean getCoordinatesAreFractional();
 
-  void getEquivPointList(Lst<P3> pts, int nIgnore, String flags);
+  void getEquivPointList(Lst<P3d> pts, int nIgnore, String flags);
 
   P3d getFractionalOffset();
 
@@ -62,7 +62,7 @@ public interface SymmetryInterface {
 
   char getLatticeType();
 
-  String getMatrixFromString(String xyz, float[] temp, boolean allowScaling, int modDim);
+  String getMatrixFromString(String xyz, double[] temp, boolean allowScaling, int modDim);
 
   Lst<String> getMoreInfo();
 
@@ -70,13 +70,13 @@ public interface SymmetryInterface {
 
   String getPointGroupName();
 
-  Quat getQuaternionRotation(String abc);
+  Qd getQuaternionRotation(String abc);
 
   int getSiteMultiplicity(P3d a);
 
   Object getSpaceGroup();
 
-  Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, float[] cellParams);
+  Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, double[] cellParams);
 
   Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
                               boolean isFull, boolean addNonstandard);
@@ -114,7 +114,7 @@ public interface SymmetryInterface {
 
   SymmetryInterface getUnitCelld(T3d[] points, boolean setRelative, String name);
 
-  SymmetryInterface getUnitCell(T3[] points, boolean setRelative, String name);
+  SymmetryInterface getUnitCell(T3d[] points, boolean setRelative, String name);
 
   double[] getUnitCellAsArray(boolean vectorsOnly);
 
@@ -132,7 +132,7 @@ public interface SymmetryInterface {
 
   P3d[] getUnitCellVectors();
 
-  P3[] getUnitCellVerticesNoOffset();
+  P3d[] getUnitCellVerticesNoOffset();
 
   T3d[] getV0abc(Object def, M4d m);
 
@@ -172,7 +172,7 @@ public interface SymmetryInterface {
 
   void setOffset(int nnn);
 
-  void setOffsetPt(T3 pt);
+  void setOffsetPt(T3d pt);
 
   void setSpaceGroup(boolean doNormalize);
 
@@ -211,7 +211,7 @@ public interface SymmetryInterface {
 
   void initializeOrientation(M3d matUnitCellOrientation);
 
-  String fcoord(T3 p);
+  String fcoord(T3d p);
 
   // floats
   
@@ -232,50 +232,48 @@ public interface SymmetryInterface {
    * @return a variety of object types
    */
   Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
-                                    P3 translation, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth, int options);
+                                    P3d translation, P3d pt, P3d pt2, String id, int type, double scaleFactor, int nth, int options);
 
-  void toUnitCell(T3 pt, T3 offset);
-
-
-  P3 toSupercell(P3 fpt);
+  void toUnitCell(T3d pt, T3d offset);
 
 
-  T3 getUnitCellMultiplier();
+  P3d toSupercell(P3d fpt);
 
-  void toCartesianF(T3 pt, boolean asAbsolute);
 
-  void toFractionalF(T3 pt, boolean asAbsolute);
+  T3d getUnitCellMultiplier();
 
-  P3 getCartesianOffset();
+  void toCartesianF(T3d pt, boolean asAbsolute);
 
-  P3[] getCanonicalCopy(float scale, boolean withOffset);
+  void toFractionalF(T3d pt, boolean asAbsolute);
 
-  Lst<P3> getLatticeCentering();
+  P3d getCartesianOffset();
+
+  P3d[] getCanonicalCopy(double scale, boolean withOffset);
+
+  Lst<P3d> getLatticeCentering();
 
   Object getLatticeDesignation();
 
   Object getPointGroupInfo(int modelIndex, String drawID,
                            boolean asInfo, String type,
-                           int index, float scale);
+                           int index, double scale);
 
   SymmetryInterface setPointGroup(
                                   SymmetryInterface pointGroupPrevious,
-                                  T3 center, T3[] atomset,
+                                  T3d center, T3d[] atomset,
                                   BS bsAtoms,
                                   boolean haveVibration,
-                                  float distanceTolerance, float linearTolerance, boolean localEnvOnly);
+                                  double distanceTolerance, double linearTolerance, boolean localEnvOnly);
 
-  int[] getInvariantSymops(P3 p3, int[] v0);
+  int[] getInvariantSymops(P3d p3, int[] v0);
 
-  float[] getUnitCellParamsF();
-
-  Lst<P3> getEquivPoints(Lst<P3> pts, P3 pt, String flags);
+  Lst<P3d> getEquivPoints(Lst<P3d> pts, P3d pt, String flags);
   
-  Lst<P3> generateCrystalClass(P3 pt0);
+  Lst<P3d> generateCrystalClass(P3d pt0);
 
-  P3 getFractionalOrigin();
+  P3d getFractionalOrigin();
 
-  AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, float radius);
+  AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, double radius);
 
 
 }

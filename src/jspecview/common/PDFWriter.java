@@ -168,7 +168,7 @@ public class PDFWriter implements GenericGraphics, JSVPdfWriter {
 			fname += "-Oblique";
 			break;
 		}
-		pdf.setFont(fname, font.fontSizeNominal);
+		pdf.setFont(fname, (float) font.fontSizeNominal);
 		return font;
 	}
 

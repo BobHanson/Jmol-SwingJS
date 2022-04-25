@@ -32,7 +32,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
@@ -345,12 +345,12 @@ abstract class ScriptTokenParser {
         && (theToken.tok == T.integer || theToken.tok == T.decimal));
   }
   
-  private float floatValue() {
+  private double floatValue() {
     switch (theToken.tok) {
     case T.integer:
       return theToken.intValue;
     case T.decimal:
-      return ((Number) theValue).floatValue();
+      return ((Number) theValue).doubleValue();
     }
     return 0;
   }
@@ -683,7 +683,7 @@ abstract class ScriptTokenParser {
       return false;
     if (getToken() == null)
       return false;
-    float distance = Float.MAX_VALUE;
+    double distance = Double.MAX_VALUE;
     String key = null;
     boolean allowComma = isWithin;
     int tok;
@@ -725,7 +725,7 @@ abstract class ScriptTokenParser {
       allowComma = false;
       break;
     }
-    if (isWithin && distance == Float.MAX_VALUE)
+    if (isWithin && distance == Double.MAX_VALUE)
       switch (tok0) {
       case T.define:
         break;
@@ -794,7 +794,7 @@ abstract class ScriptTokenParser {
         break;
       }
     if (key == null)
-      addTokenToPostfix(T.decimal, Float.valueOf(distance));
+      addTokenToPostfix(T.decimal, Double.valueOf(distance));
     else if (key.length() > 0)
       addTokenToPostfix(T.string, key);
     boolean done = false;
@@ -841,7 +841,7 @@ abstract class ScriptTokenParser {
             returnToken();
             isCoordOrPlane = true;
             addTokenToPostfixToken(T
-                .getTokenFromName(distance == Float.MAX_VALUE ? "plane"
+                .getTokenFromName(distance == Double.MAX_VALUE ? "plane"
                     : "coord"));
           }
         if (!done)
@@ -1039,7 +1039,7 @@ abstract class ScriptTokenParser {
   }
 
   private boolean clauseCell(int tok) {
-    P3 cell = new P3();
+    P3d cell = new P3d();
     tokenNext(); // CELL
     if (tok != T.point3f) {
       if (!tokenNextTok(T.opEQ)) // =
@@ -1419,7 +1419,7 @@ abstract class ScriptTokenParser {
   private int fixModelSpec(T token) {
     int ival = token.intValue;
     if (ival == Integer.MAX_VALUE) {
-      float f = ((Number) theValue).floatValue();
+      double f = ((Number) theValue).doubleValue();
       if (f == (int) f)
         ival = ((int) f) * 1000000; 
       if (ival < 0)

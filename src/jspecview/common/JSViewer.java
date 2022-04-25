@@ -21,7 +21,7 @@ import javajs.api.BytePoster;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import jspecview.api.ExportInterface;
@@ -1756,7 +1756,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
         modifiers, time));
   }
 
-  public void processTwoPointGesture(float[][][] touches) {
+  public void processTwoPointGesture(double[][][] touches) {
     if (!isClosed())
       selectedPanel.processTwoPointGesture(touches);
   }
@@ -2133,7 +2133,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
   }
 
   public String getSolutionColorStr(boolean asFit) {
-    P3 pt = CU.colorPtFromInt(getSolutionColor(asFit), null);
+    P3d pt = CU.colorPtFromInt(getSolutionColor(asFit), null);
     return (int) pt.x + "," + (int) pt.y + "," + (int) pt.z;
   }
 

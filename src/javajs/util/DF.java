@@ -79,7 +79,7 @@ public class DF {
     if (value == Double.NEGATIVE_INFINITY || value == Double.POSITIVE_INFINITY || Double.isNaN(value))
       return "" + value;
     if (decimalDigits == Integer.MAX_VALUE)
-      return "" + (float) value;
+      return "" + value;
     boolean isNeg = (value < 0);
     if (isNeg)
       value = -value;

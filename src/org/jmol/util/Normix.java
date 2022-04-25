@@ -24,8 +24,8 @@
 
 package org.jmol.util;
 
-import javajs.util.V3;
-
+import javajs.util.V3d;
+import javajs.util.V3d;
 import javajs.util.BS;
 
 
@@ -52,8 +52,8 @@ public class Normix {
     return BS.newN(getNormixCount());
   }
 
-  private static V3[] vertexVectors;
-  public static V3[] getVertexVectors() {
+  private static V3d[] vertexVectors;
+  public static V3d[] getVertexVectors() {
     // Graphics3D, isosurfaceRenderer normals, below
     if (vertexVectors == null)
       vertexVectors = Geodesic.getVertexVectors();
@@ -72,7 +72,7 @@ public class Normix {
     // vertices 12, 42, 162, 642
     BS bsTemp = new BS();
     for (int n = normixCount; --n >= 0;) {
-      V3 v = vertexVectors[n];
+      V3d v = vertexVectors[n];
       inverseNormixes[n] = getNormix(-v.x, -v.y, -v.z, NORMIX_GEODESIC_LEVEL,
           bsTemp);
     }
@@ -93,12 +93,12 @@ public class Normix {
   public static final short NORMIX_NULL = 9999;
      // graphics3D, Mesh
   
-  public static short getNormixV(V3 v, BS bsTemp) {
+  public static short getNormixV(V3d v, BS bsTemp) {
     // envelope, mesh, polyhedra only
     return getNormix(v.x, v.y, v.z, NORMIX_GEODESIC_LEVEL, bsTemp);
   }
 
-  public static short get2SidedNormix(V3 v, BS bsTemp) {
+  public static short get2SidedNormix(V3d v, BS bsTemp) {
     // ellipsoid arc and CGO and polyhedra only
     return (short) ~getNormixV(v, bsTemp);
   }
@@ -128,7 +128,7 @@ public class Normix {
         if (bsConsidered.get(challenger))
             continue;
         bsConsidered.set(challenger);
-        V3 v = vertexVectors[challenger];
+        V3d v = vertexVectors[challenger];
         double d;
         d = v.x - x;
         double d2 = d * d;

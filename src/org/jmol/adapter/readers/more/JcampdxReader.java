@@ -151,7 +151,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       break;
     case 36:// $MOLFILE
       acdMolFile = mpr.readACDMolFile();
-      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Float.NaN, true);
+      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Double.NaN, true);
       if (asc.errorMessage != null) {
         continuing = false;
         return false;
@@ -189,8 +189,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
 
   @Override
   public void processModelData(String data, String id, String type,
-                               String base, String last, float modelScale,
-                               float vibScale, boolean isFirst) throws Exception {
+                               String base, String last, double modelScale,
+                               double vibScale, boolean isFirst) throws Exception {
     int model0 = asc.iSet;
     AtomSetCollection model = null;
     while (true) {

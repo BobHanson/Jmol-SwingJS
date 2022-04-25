@@ -28,12 +28,12 @@ import org.jmol.api.SymmetryInterface;
 
 import javajs.util.AU;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -93,7 +93,7 @@ public class SimpleUnitCell {
 
 //  public static boolean isValid(float[] parameters) {
 //    return (parameters != null && (parameters[0] > 0 || parameters.length > 14
-//        && !Float.isNaN(parameters[14])));
+//        && !Double.isNaN(parameters[14])));
 //  }
 //
   public static boolean isValidD(double[] parameters) {
@@ -146,7 +146,7 @@ public class SimpleUnitCell {
     if (params != null) {
       paramsD = new double[params.length];
       for (int i = params.length; --i >= 0;)
-        paramsD[i] = (Float.isNaN(params[i]) ? Double.NaN : params[i]);
+        paramsD[i] = (Double.isNaN(params[i]) ? Double.NaN : params[i]);
     }
     initD(paramsD);
   }
@@ -278,19 +278,19 @@ public class SimpleUnitCell {
       
       if (rotateHex) {
         // 1, 2. align a and b symmetrically about the x axis (AFLOW)
-        m.setColumn4(0, (float) (-b * cosGamma), (float) (-b * sinGamma), 0, 0);
+        m.setColumn4(0, (double) (-b * cosGamma), (double) (-b * sinGamma), 0, 0);
         // 2. place the b is in xy plane making a angle gamma with a
-        m.setColumn4(1, (float) (-b * cosGamma), (float) (b * sinGamma), 0, 0);
+        m.setColumn4(1, (double) (-b * cosGamma), (double) (b * sinGamma), 0, 0);
       } else {
         // 1. align the a axis with x axis
         m.setColumn4(0, a, 0, 0, 0);
         // 2. place the b is in xy plane making a angle gamma with a
-        m.setColumn4(1, (float) (b * cosGamma), (float) (b * sinGamma), 0, 0);
+        m.setColumn4(1, (double) (b * cosGamma), (double) (b * sinGamma), 0, 0);
       }
       // 3. now the c axis,
       // http://server.ccl.net/cca/documents/molecular-modeling/node4.html
-      m.setColumn4(2, (float) (c * cosBeta), (float) (c
-          * (cosAlpha - cosBeta * cosGamma) / sinGamma), (float) (volume / (a
+      m.setColumn4(2, (double) (c * cosBeta), (double) (c
+          * (cosAlpha - cosBeta * cosGamma) / sinGamma), (double) (volume / (a
           * b * sinGamma)), 0);
       m.setColumn4(3, 0, 0, 0, 1);
       matrixCartesianToFractionalD = M4d.newM4(matrixFractionalToCartesianD).invert();
@@ -367,10 +367,10 @@ public class SimpleUnitCell {
     c_ = a * b * sinGamma / volume;
   }
 
-  private P3 fo = new P3();
+  private P3d fo = new P3d();
   
-  public P3 getFractionalOrigin() {
-    return (P3) fractionalOriginD.putP(fo);
+  public P3d getFractionalOrigin() {
+    return (P3d) fractionalOriginD.putP(fo);
   }
 
   public final static int INFO_DIMENSIONS = 6;
@@ -387,7 +387,7 @@ public class SimpleUnitCell {
    * @param fpt
    * @return adjusted fpt
    */
-  public P3 toSupercell(P3 fpt) {
+  public P3d toSupercell(P3d fpt) {
     fpt.x /= na;
     fpt.y /= nb;
     fpt.z /= nc;
@@ -400,7 +400,7 @@ public class SimpleUnitCell {
           .rotTrans(pt);
   }
 
-  public final void toCartesianF(T3 pt, boolean ignoreOffset) {
+  public final void toCartesianF(T3d pt, boolean ignoreOffset) {
     if (matrixFractionalToCartesianD != null)
       (ignoreOffset ? matrixFtoCNoOffsetD : matrixFractionalToCartesianD)
           .rotTrans(pt);
@@ -413,7 +413,7 @@ public class SimpleUnitCell {
     m.mul2(matrixCartesianToFractionalD, m);
   }
   
-  public final void toFractionalF(T3 pt, boolean ignoreOffset) {
+  public final void toFractionalF(T3d pt, boolean ignoreOffset) {
     if (matrixCartesianToFractionalD == null)
       return;
     (ignoreOffset ? matrixCtoFNoOffsetD : matrixCartesianToFractionalD)
@@ -481,7 +481,7 @@ public class SimpleUnitCell {
     case INFO_DIMENSIONS:
       return dimension;
     }
-    return Float.NaN;
+    return Double.NaN;
   }
 
   public final static float SLOP = 0.02f;
@@ -493,7 +493,7 @@ public class SimpleUnitCell {
 //   * @param tolerance fractional allowance to consider this on an edge
    * @return weighting
    */
-  public static float getCellWeight(P3 pt) {
+  public static float getCellWeight(P3d pt) {
     float f = 1;
     if (pt.x <= SLOP || pt.x >= SLOP1)
       f /= 2;
@@ -542,7 +542,7 @@ public class SimpleUnitCell {
    * @param ucnew  to create and return; null if only to set params
    * @return T3[4] origin, a, b c
    */
-  public static T3[] setOabc(String abcabg, float[] params, T3[] ucnew) {
+  public static T3d[] setOabc(String abcabg, float[] params, T3d[] ucnew) {
     if (abcabg != null) {
       if (params == null)
         params = new float[6];
@@ -639,14 +639,14 @@ public class SimpleUnitCell {
    * @param pt 
    * @return true if in [0, 1)
    */
-  public static boolean checkPeriodic(P3 pt) {
+  public static boolean checkPeriodic(P3d pt) {
     return (pt.x >= -SLOP2 && pt.x < 1 - SLOP2
         && pt.y >= -SLOP2 && pt.y < 1 - SLOP2
         && pt.z >= -SLOP2 && pt.z < 1 - SLOP2
         );
   }
 
-  public static boolean checkUnitCell(SymmetryInterface uc, P3 cell, P3 ptTemp) {
+  public static boolean checkUnitCell(SymmetryInterface uc, P3d cell, P3d ptTemp) {
     uc.toFractionalF(ptTemp, false);
     // {1 1 1} here is the original cell
     return (ptTemp.x >= cell.x - 1f - SLOP && ptTemp.x <= cell.x + SLOP
@@ -678,7 +678,7 @@ public class SimpleUnitCell {
    *        looking at, the first one or the second one.
    * 
    */
-  public static void ijkToPoint3f(int nnn, P3 cell, int offset, int kcode) {
+  public static void ijkToPoint3f(int nnn, P3d cell, int offset, int kcode) {
     int f = (nnn > 1000000000 ? 1000 : nnn > 1000000 ? 100 : 10);
     int f2 = f * f;
     offset -= (offset >= 0 ? 5 * f / 10 : offset);
@@ -695,12 +695,12 @@ public class SimpleUnitCell {
    * @param scale 1 for block of unit cells; 0 for one large supercell
    * @return converted P4
    */
-  public static P4 ptToIJK(T3 pt, int scale) {
+  public static P4d ptToIJK(T3d pt, int scale) {
     if (pt.x <= 5 && pt.y <= 5 && pt.z <= 5) {
-      return P4.new4(555, (pt.x + 4) * 100 + (pt.y + 4) * 10 + pt.z + 4, scale, 0);
+      return P4d.new4(555, (pt.x + 4) * 100 + (pt.y + 4) * 10 + pt.z + 4, scale, 0);
     } 
     int i555 = 1500500500;
-    return P4.new4(i555, i555 + pt.x*1000000 + pt.y * 1000 + pt.z, scale, 1500500 + pt.z);
+    return P4d.new4(i555, i555 + pt.x*1000000 + pt.y * 1000 + pt.z, scale, 1500500 + pt.z);
   }
 
   /**
@@ -711,9 +711,9 @@ public class SimpleUnitCell {
    * @param pt
    * @return String representation for state
    */
-  public static String escapeMultiplier(T3 pt) {
-    if (pt instanceof P4) {
-      P4 pt4 = (P4) pt;
+  public static String escapeMultiplier(T3d pt) {
+    if (pt instanceof P4d) {
+      P4d pt4 = (P4d) pt;
       int x = (int) Math.floor(pt4.x / 1000)*1000 
                   + (int) Math.floor(pt4.w / 1000) - 1000;
       int y = (int) Math.floor(pt4.y / 1000)*1000 
@@ -742,7 +742,7 @@ public class SimpleUnitCell {
       //alternative format for indicating a range of cells:
       //{111 666}
       //555 --> {0 0 0}
-      P3 pt = new P3();
+      P3d pt = new P3d();
       ijkToPoint3f(maxXYZ.x, pt, 0, kcode);
       minXYZ.x = (int) pt.x;
       minXYZ.y = (int) pt.y;

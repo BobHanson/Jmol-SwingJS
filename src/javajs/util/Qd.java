@@ -83,12 +83,12 @@ public class Qd {
     return q;
   }
 
-  public static Qd newP4(P4 pt) {
-    Qd q = new Qd();
-    q.setP4(P4d.new4(pt.x, pt.y, pt.z, pt.w));
-    return q;
-  }
-
+//  public static Qd newP4(P4d pt) {
+//    Qd q = new Qd();
+//    q.setP4(P4d.new4(pt.x, pt.y, pt.z, pt.w));
+//    return q;
+//  }
+//
 
   /**
    * Note that q0 is the last parameter here
@@ -341,9 +341,9 @@ public class Qd {
     return newFrame(center, x, xy, true);
   }
 
-  public static final Qd getQuaternionFrameP3(P3 center, T3 x, T3 xy) {
-    return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
-  }
+//  public static final Qd getQuaternionFrameP3(P3d center, T3d x, T3d xy) {
+//    return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
+//  }
 
   private static Qd newFrame(P3d center, T3d vA, T3d vB, boolean doCopy) {
     if (doCopy) {
@@ -357,11 +357,11 @@ public class Qd {
     return getQuaternionFrameV((V3d) vA, (V3d) vB, null, false);
   }
 
-  public static final Qd getQuaternionFrameV(V3 vA, V3 vB, V3 vC,
-                                             boolean yBased) {
-    return getQuaternionFrameV(V3d.newV(vA), V3d.newV(vB), V3d.newV(vC),
-        yBased);
-  }
+//  public static final Qd getQuaternionFrameV(V3d vA, V3d vB, V3d vC,
+//                                             boolean yBased) {
+//    return getQuaternionFrameV(V3d.newV(vA), V3d.newV(vB), V3d.newV(vC),
+//        yBased);
+//  }
 
   /**
    * Create a quaternion based on a frame

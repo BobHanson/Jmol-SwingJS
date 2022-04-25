@@ -243,7 +243,7 @@ public class MSCifParser extends MSRdr {
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        comSSMat.setElement(r - 1, c - 1, (float) cr.parseDoubleStr(cr.data)); 
+        comSSMat.setElement(r - 1, c - 1, (double) cr.parseDoubleStr(cr.data)); 
     }
   }
 

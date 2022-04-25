@@ -35,10 +35,10 @@ import javajs.util.BS;
 import org.jmol.util.GData;
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.M3d;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 
 /*
@@ -124,16 +124,16 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     output(triad(pt));
   }
 
-  private String triad(float x, float y, float z) {
+  private String triad(double x, double y, double z) {
     return (int) x + " " + (int) (-y) + " " + (int) z;
   }
 
-  private String triad(T3 pt) {
-    if (Float.isNaN(pt.x))
+  private String triad(T3d pt) {
+    if (Double.isNaN(pt.x))
       return "0 0 0";
     return triad(pt.x, pt.y, pt.z);
   }
@@ -175,13 +175,13 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCircle(int x, int y, int z, float radius, short colix,
+  protected void outputCircle(int x, int y, int z, double radius, short colix,
                               boolean doFill) {
     tempV1.set(0,0,-1);
     outputRing(x, y, z, tempV1, radius, colix, doFill);
   }
 
-  private void outputRing(int x, int y, int z, V3 tempV1, float radius,
+  private void outputRing(int x, int y, int z, V3d tempV1, double radius,
                           short colix, boolean doFill) {
     outputTexture(colix, true);
     output("Ring Center ");
@@ -193,7 +193,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCone(P3 screenBase, P3 screenTip, float radius,
+  protected void outputCone(P3d screenBase, P3d screenTip, double radius,
                             short colix, boolean isBarb) {
     
     // as mesh, which uses Cartesian coordinates
@@ -206,8 +206,8 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCylinder(P3 screenA, P3 screenB,
-                                      float radius, short colix, boolean withCaps) {
+  protected void outputCylinder(P3d screenA, P3d screenB,
+                                      double radius, short colix, boolean withCaps) {
     outputTexture(colix, true);
     output("FCylinder Base ");
     output(triad(screenA));
@@ -224,7 +224,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }  
   
   @Override
-  protected void fillConicalCylinder(P3 screenA, P3 screenB,
+  protected void fillConicalCylinder(P3d screenA, P3d screenB,
                                      int madBond, short colix, byte endcaps) {
     // conic sections not implemented in Tachyon
     int diameter = (int) vwr.tm.scaleToScreen((int) ((screenA.z + screenB.z)/2f), madBond);
@@ -233,25 +233,25 @@ public class _TachyonExporter extends __RayTracerExporter {
 
 
   @Override
-  protected void outputCylinderConical(P3 screenA, P3 screenB,
-                                       float radius1, float radius2, short colix) {
+  protected void outputCylinderConical(P3d screenA, P3d screenB,
+                                       double radius1, double radius2, short colix) {
     //not applicable
   }
 
   @Override
-  protected void outputEllipsoid(P3 center, float radius, double[] coef, short colix) {
+  protected void outputEllipsoid(P3d center, double radius, double[] coef, short colix) {
     tm.transformPt3f(center, tempP1);
     // no support for ellipsoids -- just draw ball
     outputSphere(tempP1.x, tempP1.y, tempP1.z, radius, colix);
   }
 
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals,
+  protected void outputSurface(T3d[] vertices, T3d[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nTriangles, BS bsPolygons,
                                int faceVertexMax, short colix,
-                               Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                               Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
     if (polygonColixes != null) {
       boolean isAll = (bsPolygons == null);
       int i0 = (isAll ? nPolygons - 1 : bsPolygons.nextSetBit(0));
@@ -293,7 +293,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputSphere(float x, float y, float z, float radius,
+  protected void outputSphere(double x, double y, double z, double radius,
                                   short colix) {
 
     outputTexture(colix, true);
@@ -319,7 +319,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix) {
+  protected void outputTriangle(T3d ptA, T3d ptB, T3d ptC, short colix) {
     outputTexture(colix, true);
     output("TRI");
     output(" V0 " + triad(ptA));

@@ -2,7 +2,7 @@ package org.jmol.adapter.writers;
 
 import org.apache.log4j.helpers.AbsoluteTimeDateFormat;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 
@@ -46,13 +46,14 @@ public class XtlWriter {
         : (f < 0 ? "        -" : "         ") + twelfths[t]);
   }
 
-  protected String cleanF(float f) {
-    int t;
-    if (!haveUnitCell || (t = twelfthsOf(f, 0.00015)) < 0) {
-      String s =   "   " + f + "                 "; 
-      return s.substring(0, 12);
-    }
-    return (f < 0 ? "  -" : "   ") + twelfthsF[t];
+  protected String cleanF(double f) {
+    return clean(f);
+//    int t;
+//    if (!haveUnitCell || (t = twelfthsOf(f, 0.00015)) < 0) {
+//      String s =   "   " + f + "                 "; 
+//      return s.substring(0, 12);
+//    }
+//    return (f < 0 ? "  -" : "   ") + twelfthsF[t];
   }
 
 }

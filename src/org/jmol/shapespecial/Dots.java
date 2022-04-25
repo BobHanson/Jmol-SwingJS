@@ -53,7 +53,7 @@ public class Dots extends AtomShape {
   public EnvelopeCalculation ec;
   public boolean isSurface = false;
 
-  final static float SURFACE_DISTANCE_FOR_CALCULATION = 10f;
+  final static double SURFACE_DISTANCE_FOR_CALCULATION = 10f;
 
   BS bsOn = new BS();
   private BS bsSelected, bsIgnore;
@@ -61,7 +61,7 @@ public class Dots extends AtomShape {
   public static int MAX_LEVEL = JC.ENV_CALC_MAX_LEVEL;
 
   int thisAtom;
-  float thisRadius;
+  double thisRadius;
   int thisArgb;
 
   RadiusData rdLast = new RadiusData(null, 0, null, null);
@@ -104,7 +104,7 @@ public class Dots extends AtomShape {
 
     // next four are for serialization
     if ("radius" == propertyName) {
-      thisRadius = ((Float) value).floatValue();
+      thisRadius = ((Float) value).doubleValue();
       if (thisRadius > Atom.RADIUS_MAX)
         thisRadius = Atom.RADIUS_GLOBAL;
       return;
@@ -198,7 +198,7 @@ public class Dots extends AtomShape {
     // Short.MAX_VALUE -- ADP max
 
     boolean isVisible = true;
-    float setRadius = Float.MAX_VALUE;
+    double setRadius = Double.MAX_VALUE;
     isActive = true;
 
     switch (rd.factorType) {
@@ -210,10 +210,10 @@ public class Dots extends AtomShape {
       setRadius = rd.value;
       //$FALL-THROUGH$
     default:
-      rd.valueExtended = (vwr.getBoolean(T.solventprobe) ? vwr.getFloat(T.solventproberadius) : 0);
+      rd.valueExtended = (vwr.getBoolean(T.solventprobe) ? vwr.getDouble(T.solventproberadius) : 0);
     }
 
-    float maxRadius;
+    double maxRadius;
     switch (rd.vdwType) {
     case ADPMIN:
     case ADPMAX:
@@ -309,7 +309,7 @@ public class Dots extends AtomShape {
         BSUtil.setMapBitSet(temp, i, i, getColorCommand(type, paletteIDs[i], colixes[i], translucentAllowed));
       BS bs = dotsConvexMaps[i];
       if (!bs.isEmpty()) {
-        float r = ec.getAppropriateRadius(i);
+        double r = ec.getAppropriateRadius(i);
         appendCmd(s, type + i + " radius " + r + " "
             + Escape.eBS(bs));
       }

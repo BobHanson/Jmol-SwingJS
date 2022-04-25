@@ -27,7 +27,7 @@ package org.jmol.adapter.readers.pdb;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
@@ -115,11 +115,11 @@ public class JmolDataReader extends PdbReader {
         Parser.parseStringInfestedDoubleArray(
             line.substring(10).replace('=', ' ').replace('{', ' ')
                 .replace('}', ' '), null, data);
-        P3 minXYZ = P3.new3((float) data[0], (float) data[1], (float) data[2]);
-        P3 maxXYZ = P3.new3((float) data[3], (float) data[4], (float) data[5]);
-        fileScaling = P3.new3((float) data[6], (float) data[7], (float) data[8]);
-        fileOffset = P3.new3((float) data[9], (float) data[10], (float) data[11]);
-        P3 plotScale = P3.new3((float) data[12], (float) data[13], (float) data[14]);
+        P3d minXYZ = P3d.new3((double) data[0], (double) data[1], (double) data[2]);
+        P3d maxXYZ = P3d.new3((double) data[3], (double) data[4], (double) data[5]);
+        fileScaling = P3d.new3((double) data[6], (double) data[7], (double) data[8]);
+        fileOffset = P3d.new3((double) data[9], (double) data[10], (double) data[11]);
+        P3d plotScale = P3d.new3((double) data[12], (double) data[13], (double) data[14]);
         if (plotScale.x <= 0)
           plotScale.x = 100;
         if (plotScale.y <= 0)
@@ -136,13 +136,13 @@ public class JmolDataReader extends PdbReader {
         setUnitCell(plotScale.x * 2 / (maxXYZ.x - minXYZ.x), plotScale.y * 2
             / (maxXYZ.y - minXYZ.y), plotScale.z * 2
             / (maxXYZ.z == minXYZ.z ? 1 : maxXYZ.z - minXYZ.z), 90, 90, 90);
-        unitCellOffset = P3.newP(plotScale);
+        unitCellOffset = P3d.newP(plotScale);
         unitCellOffset.scale(-1);
         getSymmetry();
         symmetry.toFractionalF(unitCellOffset, false);
         unitCellOffset.scaleAdd2(-1f, minXYZ, unitCellOffset);
         symmetry.setOffsetPt(unitCellOffset);
-        asc.setInfo("jmolDataScaling", new P3[] { minXYZ, maxXYZ, plotScale });
+        asc.setInfo("jmolDataScaling", new P3d[] { minXYZ, maxXYZ, plotScale });
         doApplySymmetry = true;
         break;
       }

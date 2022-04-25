@@ -28,7 +28,7 @@ package org.jmol.g3d;
 
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.util.Shader;
 
@@ -83,7 +83,7 @@ public class SphereRenderer {
 
   void render(int[] shades, int diameter, int x, int y,
               int z, M3d mat, double[] coef, M4d mDeriv,
-              int selectedOctant, P3[] octantPoints) {
+              int selectedOctant, P3d[] octantPoints) {
     //System.out.println("sphere " + x  + " " + y  + " " + z + " " + diameter);
     if (z == 1)
       return;
@@ -117,9 +117,9 @@ public class SphereRenderer {
       if (octantPoints != null) {
         planeShade = -1;
         for (int i = 0; i < 3; i ++) {
-          float dx = dxyz[i][0] = octantPoints[i].x - x;
-          float dy = dxyz[i][1] = octantPoints[i].y - y;
-          float dz = dxyz[i][2] = octantPoints[i].z - z;
+          double dx = dxyz[i][0] = octantPoints[i].x - x;
+          double dy = dxyz[i][1] = octantPoints[i].y - y;
+          double dz = dxyz[i][2] = octantPoints[i].z - z;
           planeShades[i] = sh.getShadeIndex(dx, dy, -dz);
           if (dx == 0 && dy == 0) {
             planeShade = planeShades[i];
@@ -145,16 +145,16 @@ public class SphereRenderer {
       if (ss == null) {
         int countSE = 0;
         boolean d = (diameter & 1) != 0;
-        float radiusF = diameter / 2.0f;
-        float radiusF2 = radiusF * radiusF;
+        double radiusF = diameter / 2.0f;
+        double radiusF2 = radiusF * radiusF;
         radius = (diameter + 1) / 2;
-        float ys = d ? 0 : 0.5f;
+        double ys = d ? 0 : 0.5f;
         for (int i = 0; i < radius; ++i, ++ys) {
-          float y2 = ys * ys;
-          float xs = d ? 0 : 0.5f;
+          double y2 = ys * ys;
+          double xs = d ? 0 : 0.5f;
           for (int j = 0; j < radius; ++j, ++xs) {
-            float x2 = xs * xs;
-            float z2 = radiusF2 - y2 - x2;
+            double x2 = xs * xs;
+            double z2 = radiusF2 - y2 - x2;
             if (z2 >= 0)
               ++countSE;
           }
@@ -163,13 +163,13 @@ public class SphereRenderer {
         int offset = 0;
         ys = d ? 0 : 0.5f;
         for (int i = 0; i < radius; ++i, ++ys) {
-          float y2 = ys * ys;
-          float xs = d ? 0 : 0.5f;
+          double y2 = ys * ys;
+          double xs = d ? 0 : 0.5f;
           for (int j = 0; j < radius; ++j, ++xs) {
-            float x2 = xs * xs;
-            float z2 = radiusF2 - y2 - x2;
+            double x2 = xs * xs;
+            double z2 = radiusF2 - y2 - x2;
             if (z2 >= 0) {
-              float zs = (float)Math.sqrt(z2);
+              double zs = (double)Math.sqrt(z2);
               int height = (int)zs;
               int shadeIndexSE = sh.getShadeN( xs,  ys, zs, radiusF);
               int shadeIndexSW = sh.getShadeN(-xs,  ys, zs, radiusF);
@@ -388,9 +388,9 @@ public class SphereRenderer {
     }
   }
 
-  private final P3 ptTemp = new P3();  
+  private final P3d ptTemp = new P3d();  
   private final int[] planeShades = new int[3];
-  private final float[][] dxyz = new float[3][3];
+  private final double[][] dxyz = new double[3][3];
   
   private void renderQuadrantClipped(int radius, int xSign, int ySign, int x, int y, int z, int[] shades) {
     boolean isEllipsoid = (mat != null);
@@ -408,12 +408,12 @@ public class SphereRenderer {
     int w = width;
     int x0 = x;
     int[] zb = zbuf;
-    float[][] xyz = dxyz;
+    double[][] xyz = dxyz;
     int y0 = y;
     int z0 = z;
     int sl = slab;
     int de = depth;
-    P3 pt = ptTemp;
+    P3d pt = ptTemp;
     double[] c = coef;
     double[] rt = zroot;
     int oct = selectedOctant;
@@ -501,12 +501,12 @@ public class SphereRenderer {
                 iShade = ps;
               } else {
                 int iMin = 3;
-                float dz;
-                float zMin = Float.MAX_VALUE;
+                double dz;
+                double zMin = Double.MAX_VALUE;
                 for (int ii = 0; ii < 3; ii++) {
                   if ((dz = xyz[ii][2]) == 0)
                     continue;
-                  float ptz = z0
+                  double ptz = z0
                       + (-xyz[ii][0] * (xC - x) - xyz[ii][1]
                           * (yC - y0)) / dz;
                   if (ptz < zMin) {
@@ -553,7 +553,7 @@ public class SphereRenderer {
           mode = 1;
           break;
         case 2: //ellipsoid
-          iShade = s.getEllipsoidShade(xC, yC, (float) rt[iRoot],
+          iShade = s.getEllipsoidShade(xC, yC, (double) rt[iRoot],
               radius, mDeriv);
           break;
         case 3: //ellipsoid fill

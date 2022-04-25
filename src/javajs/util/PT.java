@@ -260,10 +260,10 @@ public class PT {
     int max = 0;
     for (int i = 0; i >= 0 && i < len && n < nTokens; i++) {
       float f;
-      while (Float.isNaN(f = parseFloat(tokens[n++])) 
+      while (Double.isNaN(f = parseFloat(tokens[n++])) 
           && n < nTokens) {
       }
-      if (!Float.isNaN(f))
+      if (!Double.isNaN(f))
         data[(max = i)] = f;
       if (n == nTokens)
         break;
@@ -689,7 +689,7 @@ public class PT {
     return str;
   }
 
-  public static String formatF(float value, int width, int precision,
+  public static String formatF(double value, int width, int precision,
                               boolean alignLeft, boolean zeroPad) {
     return formatS(DF.formatDecimal(value, precision), width, 0, alignLeft, zeroPad);
   }
@@ -1280,7 +1280,7 @@ public class PT {
    */
   
   private static String formatString(String strFormat, String key, String strT,
-                                    float floatT, double doubleT, boolean doOne) {
+                                    double floatT, double doubleT, boolean doOne) {
     if (strFormat == null)
       return null;
     if ("".equals(strFormat))
@@ -1343,8 +1343,8 @@ public class PT {
           continue;
         }
         ich += len;
-        if (!Float.isNaN(floatT)) // 'f'
-          strLabel += formatF(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
+        if (!Double.isNaN(floatT)) // 'f'
+          strLabel += formatD(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
               zeroPad);
         else if (strT != null)  // 'd' 'i' or 's'
           strLabel += formatS(strT, width, precision < 0 ? precision - 1 : precision, alignLeft,
@@ -1369,7 +1369,7 @@ public class PT {
     return formatString(strFormat, key, strT, Float.NaN, Double.NaN, false);
   }
 
-  public static String formatStringF(String strFormat, String key, float floatT) {
+  public static String formatStringF(String strFormat, String key, double floatT) {
     return formatString(strFormat, key, null, floatT, Double.NaN, false);
   }
 
@@ -1410,7 +1410,7 @@ public class PT {
             break;
           case 'f':
             strFormat = formatString(strFormat, "f", null,
-                ((Float) values[o]).floatValue(), Double.NaN, true);
+                ((Number) values[o]).floatValue(), Double.NaN, true);
             break;
           case 'i':
             strFormat = formatString(strFormat, "d", "" + values[o], Float.NaN,
@@ -1420,14 +1420,14 @@ public class PT {
             break;
           case 'd':
             strFormat = formatString(strFormat, "e", null, Float.NaN,
-                ((Double) values[o]).doubleValue(), true);
+                ((Number) values[o]).doubleValue(), true);
             strFormat = formatString(strFormat, "f", null, Float.NaN,
-                ((Double) values[o]).doubleValue(), true);
+                ((Number) values[o]).doubleValue(), true);
             break;
           case 'p':
           case 'P':
-            if (values[o] instanceof T3) {
-              T3 pVal = (T3) values[o];
+            if (values[o] instanceof T3d) {
+              T3d pVal = (T3d) values[o];
               strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.x, Double.NaN,
                   true);
               strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.y, Double.NaN,
@@ -1445,7 +1445,7 @@ public class PT {
             }
             break;
           case 'q':
-            T4 qVal = (T4) values[o];
+            T4d qVal = (T4d) values[o];
             strFormat = formatString(strFormat, "q", null, qVal.x, Double.NaN,
                 true);
             strFormat = formatString(strFormat, "q", null, qVal.y, Double.NaN,
@@ -1462,7 +1462,7 @@ public class PT {
                   Double.NaN, true);
             break;
           case 'F':
-            float[] fVal = (float[]) values[o];
+            double[] fVal = (double[]) values[o];
             for (int i = 0; i < fVal.length; i++)
               strFormat = formatString(strFormat, "f", null, fVal[i],
                   Double.NaN, true);
@@ -1564,11 +1564,11 @@ public class PT {
   public static final double FRACTIONAL_PRECISION = 100000d;
   public static final double CARTESIAN_PRECISION =  10000d;
   
-  public static void fixPtFloats(T3 pt, double d) {
-	    //this will equate float and double as long as -256 <= x <= 256
-	    pt.x = (float) (Math.round(pt.x * d) / d);
-	    pt.y = (float) (Math.round(pt.y * d) / d);
-	    pt.z = (float) (Math.round(pt.z * d) / d);
+  public static void fixPtFloats(T3d pt, double d) {
+	    //this will equate double and double as long as -256 <= x <= 256
+	    pt.x = (Math.round(pt.x * d) / d);
+	    pt.y = (Math.round(pt.y * d) / d);
+	    pt.z = (Math.round(pt.z * d) / d);
 	  }
 	  
   public static double fixDouble(double d, double f) {

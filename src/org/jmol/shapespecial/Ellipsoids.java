@@ -41,11 +41,11 @@ import org.jmol.util.Tensor;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class Ellipsoids extends AtomShape {
@@ -140,7 +140,7 @@ public class Ellipsoids extends AtomShape {
   private BS selectedAtoms;
   private Lst<Ellipsoid> ellipsoidSet;
   
-  private float scale;
+  private double scale;
 
   @Override
   public int getIndexFromName(String thisID) {
@@ -237,7 +237,7 @@ public class Ellipsoids extends AtomShape {
   public void setProperty(String propertyName, Object value, BS bs) {
     //System.out.println(propertyName + " " + value + " " + bs);
     if (propertyName == "thisID") {
-      scale = Float.NaN;
+      scale = Double.NaN;
       if (initEllipsoids(value) && ellipsoidSet.size() == 0) {
         String id = (String) value;
         Ellipsoid e = Ellipsoid.getEmptyEllipsoid(id, vwr.am.cmi);
@@ -295,7 +295,7 @@ public class Ellipsoids extends AtomShape {
       if (selectedAtoms != null)
         bs = selectedAtoms;
       if (isOn) {
-        setSize(Float.isNaN(scale) ? Integer.MAX_VALUE : (int) (scale * 100), bs);
+        setSize(Double.isNaN(scale) ? Integer.MAX_VALUE : (int) (scale * 100), bs);
       }
       for (Ellipsoid e : atomEllipsoids.values()) {
         Tensor t = e.tensor;
@@ -337,7 +337,7 @@ public class Ellipsoids extends AtomShape {
     }
 
     if ("scale" == propertyName) {
-      scale = ((Float) value).floatValue();
+      scale = ((Float) value).doubleValue();
       setSize((int) (scale * 100), bs);
       return;
     }
@@ -399,7 +399,7 @@ public class Ellipsoids extends AtomShape {
           .setFromAxes((V3d[]) value));
       break;
     case 1: // center
-      e.setCenter((P3) value);
+      e.setCenter((P3d) value);
       break;
     case 2: // color
       e.colix = C.getColixO(value);
@@ -425,9 +425,9 @@ public class Ellipsoids extends AtomShape {
       break;
     case 8: // scale
       if (value instanceof Float) {
-        e.setScale(((Float) value).floatValue(), false);
+        e.setScale(((Float) value).doubleValue(), false);
       } else {
-        e.scaleAxes((float[]) value);
+        e.scaleAxes((double[]) value);
       }
       break;
     case 9: // translucency

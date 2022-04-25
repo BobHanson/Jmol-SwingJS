@@ -709,10 +709,10 @@ public class SmilesParser {
           String[] tokens = PT.split(strMeasure, ",");
           if(tokens.length % 2 == 1 || isNot && tokens.length != 2)
             break;
-          float[] vals = new float[tokens.length];
+          double[] vals = new double[tokens.length];
           int i = tokens.length;
           for (; --i >= 0;)
-             if (Float.isNaN(vals[i] = Float.parseFloat(tokens[i])))
+             if (Double.isNaN(vals[i] = Float.parseFloat(tokens[i])))
                break;
           if (i >= 0)
             break;

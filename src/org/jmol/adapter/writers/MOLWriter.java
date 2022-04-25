@@ -16,21 +16,21 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public class MOLWriter {
 
   private Viewer vwr;
 
-  private P3 ptTemp;
-  private T3 vNorm;
-  private T3 vTemp;
+  private P3d ptTemp;
+  private T3d vNorm;
+  private T3d vTemp;
 
   private int[] connections;
 
@@ -46,7 +46,7 @@ public class MOLWriter {
 
   public boolean addMolFile(int iModel, SB mol, BS bsAtoms, BS bsBonds,
                             boolean asV3000, boolean asJSON,
-                            boolean noAromatic, Quat q) {
+                            boolean noAromatic, Qd q) {
    int nAtoms = bsAtoms.cardinality();
    int nBonds = bsBonds.cardinality();
    if (!asV3000 && !asJSON && (nAtoms > 999 || nBonds > 999))
@@ -60,7 +60,7 @@ public class MOLWriter {
    Lst<String> _keyList = (asSDF ? (Lst<String>) vwr.ms.getInfo(iModel, "molDataKeys") : null);
    ModelSet ms = vwr.ms;
    int[] atomMap = new int[ms.ac];
-   P3 pTemp = new P3();
+   P3d pTemp = new P3d();
    if (asV3000) {
      mol.append("  0  0  0  0  0  0            999 V3000");
    } else if (asJSON) {
@@ -109,7 +109,7 @@ public class MOLWriter {
    }
    if (asSDF) {
      try {
-       float[] pc = ms.getPartialCharges();
+       double[] pc = ms.getPartialCharges();
        if (molData == null)
          molData = new Hashtable<String, Object>();
        SB sb = new SB();
@@ -182,8 +182,8 @@ public class MOLWriter {
   M  END
    */
 
-  private void getAtomRecordMOL(int iModel, ModelSet ms, SB mol, int n, Atom a, Quat q,
-                                P3 pTemp, boolean asV3000, boolean asJSON, SB atomValues, 
+  private void getAtomRecordMOL(int iModel, ModelSet ms, SB mol, int n, Atom a, Qd q,
+                                P3d pTemp, boolean asV3000, boolean asJSON, SB atomValues, 
                                 int tokValue, boolean asSDF) {
     //https://cactus.nci.nih.gov/chemical/structure/caffeine/file?format=sdf&get3d=true
     //__Jmol-14_06161707413D 1   1.00000     0.00000     0
@@ -251,8 +251,8 @@ public class MOLWriter {
     if (a.getCovalentBondCount() == 4) {
       if (connections == null) {
         connections = new int[4];
-        vTemp = new V3();
-        vNorm = new V3();
+        vTemp = new V3d();
+        vNorm = new V3d();
       }
       Bond[] bonds = a.bonds;
       int nH = 0;
@@ -267,7 +267,7 @@ public class MOLWriter {
       if (nH < 3) {
         Arrays.sort(connections);
         Atom[] atoms = vwr.ms.at;
-        Measure.getNormalThroughPoints(atoms[connections[0]],
+        MeasureD.getNormalThroughPoints(atoms[connections[0]],
             atoms[connections[1]], atoms[connections[2]], vNorm, vTemp);
         vTemp.sub2(atoms[connections[3]], atoms[connections[0]]);
         return (vTemp.dot(vNorm) > 0 ? "1" : "2");
@@ -285,11 +285,11 @@ public class MOLWriter {
     case T.strproperty:
       return a.atomPropertyString(vwr, tok);
     case T.floatproperty:
-      float f = a.atomPropertyFloat(vwr, tok, null);
-      return (Float.isNaN(f) ? null : "" + f);
+      double f = a.atomPropertyFloat(vwr, tok, null);
+      return (Double.isNaN(f) ? null : "" + f);
     default: // point property
       if (ptTemp == null)
-        ptTemp = new P3();
+        ptTemp = new P3d();
       a.atomPropertyTuple(vwr, tok, ptTemp);
       return  (ptTemp == null ? null : ptTemp.toString());
     }

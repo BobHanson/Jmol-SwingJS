@@ -218,18 +218,18 @@ public class ForceFieldUFF extends ForceField {
           p.sVal = new String[1];
           p.sVal[0] = vs[1]; // atom type
           
-          p.dVal[CalculationsUFF.PAR_R] = PT.parseFloat(vs[2]); // r1
-          p.dVal[CalculationsUFF.PAR_THETA] = PT.parseFloat(vs[3]) 
+          p.dVal[CalculationsUFF.PAR_R] = PT.parseDouble(vs[2]); // r1
+          p.dVal[CalculationsUFF.PAR_THETA] = PT.parseDouble(vs[3]) 
              * Calculations.DEG_TO_RAD; // theta0(radians)
-          p.dVal[CalculationsUFF.PAR_X] = PT.parseFloat(vs[4]); // x1
-          p.dVal[CalculationsUFF.PAR_D] = PT.parseFloat(vs[5]); // D1
-          p.dVal[CalculationsUFF.PAR_ZETA] = PT.parseFloat(vs[6]); // zeta
-          p.dVal[CalculationsUFF.PAR_Z] = PT.parseFloat(vs[7]); // Z1
-          p.dVal[CalculationsUFF.PAR_V] = PT.parseFloat(vs[8]); // Vi
-          p.dVal[CalculationsUFF.PAR_U] = PT.parseFloat(vs[9]); // Uj
-          p.dVal[CalculationsUFF.PAR_XI] = PT.parseFloat(vs[10]); // Xi
-          p.dVal[CalculationsUFF.PAR_HARD] = PT.parseFloat(vs[11]); // Hard
-          p.dVal[CalculationsUFF.PAR_RADIUS] = PT.parseFloat(vs[12]); // Radius
+          p.dVal[CalculationsUFF.PAR_X] = PT.parseDouble(vs[4]); // x1
+          p.dVal[CalculationsUFF.PAR_D] = PT.parseDouble(vs[5]); // D1
+          p.dVal[CalculationsUFF.PAR_ZETA] = PT.parseDouble(vs[6]); // zeta
+          p.dVal[CalculationsUFF.PAR_Z] = PT.parseDouble(vs[7]); // Z1
+          p.dVal[CalculationsUFF.PAR_V] = PT.parseDouble(vs[8]); // Vi
+          p.dVal[CalculationsUFF.PAR_U] = PT.parseDouble(vs[9]); // Uj
+          p.dVal[CalculationsUFF.PAR_XI] = PT.parseDouble(vs[10]); // Xi
+          p.dVal[CalculationsUFF.PAR_HARD] = PT.parseDouble(vs[11]); // Hard
+          p.dVal[CalculationsUFF.PAR_RADIUS] = PT.parseDouble(vs[12]); // Radius
           
           p.iVal = new int[1];
 

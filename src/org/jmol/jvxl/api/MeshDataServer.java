@@ -8,7 +8,7 @@ import org.jmol.shapesurface.IsosurfaceMesh;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public interface MeshDataServer extends VertexDataServer {
   
@@ -36,7 +36,7 @@ public interface MeshDataServer extends VertexDataServer {
   public abstract void fillMeshData(MeshData meshData, int mode, IsosurfaceMesh mesh);
   public abstract boolean notifySurfaceGenerationCompleted();
   public abstract void notifySurfaceMappingCompleted();
-  public abstract P3[] calculateGeodesicSurface(BS bsSelected, float envelopeRadius);
+  public abstract P3d[] calculateGeodesicSurface(BS bsSelected, double envelopeRadius);
   public abstract void addRequiredFile(String fileName);
   public abstract void setOutputChannel(GenericBinaryDocument binaryDoc, OC out);
   public abstract void setRequiredFile(String oldName, String fileName);

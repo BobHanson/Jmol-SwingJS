@@ -67,7 +67,7 @@ import org.jmol.script.T;
 import org.jmol.util.Logger;
 
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -560,7 +560,7 @@ ActionListener, ChangeListener, Runnable {
           for (int i = 0, n = vwr.ms.ac; i < n;  i++) {
             if (vwr.ms.at[i].mi == modelIndex) {
               natoms++;
-              P3 p = vwr.ms.at[i];
+              P3d p = vwr.ms.at[i];
               // should really be getElementSymbol(i) in stead
               str.append(vwr.ms.at[i].getAtomName()).append("\t");
               str.appendF(p.x).append("\t").appendF(p.y).append("\t").appendF(p.z).append("\n");

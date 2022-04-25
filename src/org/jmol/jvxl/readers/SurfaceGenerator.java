@@ -66,7 +66,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -137,14 +137,14 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.M4d;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.OC;
 import javajs.util.PT;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 public class SurfaceGenerator {
 
@@ -254,14 +254,14 @@ public class SurfaceGenerator {
     }
 
     if ("withinPoints" == propertyName) {
-      params.boundingBox = (P3[]) ((Object[]) value)[1];
+      params.boundingBox = (P3d[]) ((Object[]) value)[1];
       return true;
     }
 
     if ("boundingBox" == propertyName) {
-      P3[] pts = (P3[]) value;
-      params.boundingBox = new P3[] { P3.newP(pts[0]),
-          P3.newP(pts[pts.length - 1]) };
+      P3d[] pts = (P3d[]) value;
+      params.boundingBox = new P3d[] { P3d.newP(pts[0]),
+          P3d.newP(pts[pts.length - 1]) };
       return true;
     }
 
@@ -296,7 +296,7 @@ public class SurfaceGenerator {
     }
 
     if ("propertyDistanceMax" == propertyName) {
-      params.propertyDistanceMax = ((Float) value).floatValue();
+      params.propertyDistanceMax = ((Double) value).doubleValue();
       return true;
     }
 
@@ -322,28 +322,28 @@ public class SurfaceGenerator {
     if ("sigma" == propertyName) {
       // not all readers will take this, so we assign
       // cutoff to the value as well.
-      params.cutoff = params.sigma = ((Float) value).floatValue();
+      params.cutoff = params.sigma = ((Double) value).doubleValue();
       //params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
     }
 
     if ("cutoff" == propertyName) {
-      params.cutoff = ((Float) value).floatValue();
+      params.cutoff = ((Double) value).doubleValue();
       params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
     }
 
     if ("parameters" == propertyName) {
-      params.parameters = AU.ensureLengthA((float[]) value, 2);
+      params.parameters = AU.ensureLengthD((double[]) value, 2);
       if (params.parameters.length > 0 && params.parameters[0] != 0)
         params.cutoff = params.parameters[0];
       return true;
     }
 
     if ("cutoffPositive" == propertyName) {
-      params.cutoff = ((Float) value).floatValue();
+      params.cutoff = ((Double) value).doubleValue();
       params.isPositiveOnly = true;
       params.isCutoffAbsolute = false;
       return true;
@@ -356,12 +356,12 @@ public class SurfaceGenerator {
     }
 
     if ("scale" == propertyName) {
-      params.scale = ((Float) value).floatValue();
+      params.scale = ((Double) value).doubleValue();
       return true;
     }
 
     if ("scale3d" == propertyName) {
-      params.scale3d = ((Float) value).floatValue();
+      params.scale3d = ((Double) value).doubleValue();
       return true;
     }
 
@@ -371,8 +371,8 @@ public class SurfaceGenerator {
     }
 
     if ("resolution" == propertyName) {
-      float resolution = ((Float) value).floatValue();
-      params.resolution = (resolution > 0 ? resolution : Float.MAX_VALUE);
+      double resolution = ((Double) value).doubleValue();
+      params.resolution = (resolution > 0 ? resolution : Double.MAX_VALUE);
       return true;
     }
 
@@ -384,12 +384,12 @@ public class SurfaceGenerator {
 
     if ("anisotropy" == propertyName) {
       if ((params.dataType & Parameters.NO_ANISOTROPY) == 0)
-        params.setAnisotropy((P3) value);
+        params.setAnisotropy((P3d) value);
       return true;
     }
 
     if ("eccentricity" == propertyName) {
-      params.setEccentricity((P4) value);
+      params.setEccentricity((P4d) value);
       return true;
     }
 
@@ -460,14 +460,14 @@ public class SurfaceGenerator {
     }
 
     if ("red" == propertyName) {
-      params.valueMappedToRed = ((Float) value).floatValue();
+      params.valueMappedToRed = ((Double) value).doubleValue();
       return true;
     }
 
     if ("blue" == propertyName) {
-      params.valueMappedToBlue = ((Float) value).floatValue();
+      params.valueMappedToBlue = ((Double) value).doubleValue();
       if (params.valueMappedToRed > params.valueMappedToBlue) {
-        float f = params.valueMappedToRed;
+        double f = params.valueMappedToRed;
         params.valueMappedToRed = params.valueMappedToBlue;
         params.valueMappedToBlue = f;
         params.isColorReversed = !params.isColorReversed;
@@ -490,7 +490,7 @@ public class SurfaceGenerator {
     }
 
     if ("center" == propertyName) {
-      params.center.setT((P3) value);
+      params.center.setT((P3d) value);
       return true;
     }
 
@@ -500,12 +500,12 @@ public class SurfaceGenerator {
 //    }
 
     if ("origin" == propertyName) {
-      params.origin = (P3) value;
+      params.origin = (P3d) value;
       return true;
     }
 
     if ("step" == propertyName) {
-      params.steps = (P3) value;
+      params.steps = (P3d) value;
       return true;
     }
 
@@ -515,17 +515,17 @@ public class SurfaceGenerator {
     }
 
     if ("point" == propertyName) {
-      params.points = (P3) value;
+      params.points = (P3d) value;
       return true;
     }
 
     if ("withinDistance" == propertyName) {
-      params.distance = ((Float) value).floatValue();
+      params.distance = ((Double) value).doubleValue();
       return true;
     }
 
     if ("withinPoint" == propertyName) {
-      params.point = (P3) value;
+      params.point = (P3d) value;
       return true;
     }
 
@@ -564,7 +564,7 @@ public class SurfaceGenerator {
      * +1.2 offset [0 - 10] x -1.2 offset 0) x 1.2 absolute (0 - 10] x + 10 -30%
      * 70% (-100 - 0) x + 200 +30% 130% (0 x + 200 80% percent (0 x + 100
      * 
-     * in each case, numbers can be integer or float
+     * in each case, numbers can be integer or double
      */
 
     if ("radius" == propertyName) {
@@ -574,12 +574,12 @@ public class SurfaceGenerator {
     }
 
     if ("envelopeRadius" == propertyName) {
-      params.envelopeRadius = ((Float) value).floatValue();
+      params.envelopeRadius = ((Double) value).doubleValue();
       return true;
     }
 
     if ("cavityRadius" == propertyName) {
-      params.cavityRadius = ((Float) value).floatValue();
+      params.cavityRadius = ((Double) value).doubleValue();
       return true;
     }
 
@@ -610,7 +610,7 @@ public class SurfaceGenerator {
     }
 
     if ("plane" == propertyName) {
-      params.setPlane((P4) value);
+      params.setPlane((P4d) value);
       return true;
     }
 
@@ -619,20 +619,20 @@ public class SurfaceGenerator {
       int n;
       if (AU.isAF(value)) {
         // discrete values
-        params.contoursDiscrete = (float[]) value;
+        params.contoursDiscrete = (double[]) value;
         params.nContours = params.contoursDiscrete.length;
-      } else if (value instanceof P3) {
-        P3 pt = params.contourIncrements = (P3) value;
-        float from = pt.x;
-        float to = pt.y;
-        float step = pt.z;
+      } else if (value instanceof P3d) {
+        P3d pt = params.contourIncrements = (P3d) value;
+        double from = pt.x;
+        double to = pt.y;
+        double step = pt.z;
         if (step <= 0)
           step = 1;
         n = 0;
-        for (float p = from; p <= to + step / 10; p += step, n++) {
+        for (double p = from; p <= to + step / 10; p += step, n++) {
         }
-        params.contoursDiscrete = new float[n];
-        float p = from;
+        params.contoursDiscrete = new double[n];
+        double p = from;
         for (int i = 0; i < n; i++, p += step) {
           params.contoursDiscrete[i] = p;
         }
@@ -658,7 +658,7 @@ public class SurfaceGenerator {
     if ("colorDensity" == propertyName) {
       params.colorDensity = true;
       if (value != null)
-        params.pointSize = ((Float) value).floatValue();
+        params.pointSize = ((Double) value).doubleValue();
       return false;
     }
     if ("fullPlane" == propertyName) {
@@ -676,12 +676,12 @@ public class SurfaceGenerator {
     }
 
     if ("mapLattice" == propertyName) {
-      params.mapLattice = (P3) value;
+      params.mapLattice = (P3d) value;
       return true;
     }
 
     if ("extendGrid" == propertyName) {
-      params.extendGrid = ((Float) value).floatValue();
+      params.extendGrid = ((Double) value).doubleValue();
       return true;
     }
 
@@ -689,15 +689,15 @@ public class SurfaceGenerator {
 
     if ("property" == propertyName) {
       params.dataType = Parameters.SURFACE_PROPERTY;
-      params.theProperty = (float[]) value;
+      params.theProperty = (double[]) value;
       mapSurface();
       return true;
     }
 
     // these next four set the reader themselves.
     if ("sphere" == propertyName) {
-      params.setSphere(((Float) value).floatValue(), false);
-      readerData = Float.valueOf(params.distance);
+      params.setSphere(((Double) value).doubleValue(), false);
+      readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
@@ -705,64 +705,64 @@ public class SurfaceGenerator {
 
     // these next four set the reader themselves.
     if ("geodesic" == propertyName) {
-      params.setSphere(((Float) value).floatValue(), true);
-      readerData = Float.valueOf(params.distance);
+      params.setSphere(((Double) value).doubleValue(), true);
+      readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("ellipsoid" == propertyName) {
-      if (value instanceof P4)
-        params.setEllipsoidP4((P4) value);
+      if (value instanceof P4d)
+        params.setEllipsoidP4((P4d) value);
       else if (AU.isAF(value))
-        params.setEllipsoidAF((float[]) value);
+        params.setEllipsoidAF((double[]) value);
       else
         return true;
-      readerData = Float.valueOf(params.distance);
+      readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("ellipsoid3" == propertyName) {
-      params.setEllipsoidAF((float[]) value);
-      readerData = Float.valueOf(params.distance);
+      params.setEllipsoidAF((double[]) value);
+      readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("lp" == propertyName) {
-      params.setLp((P4) value);
-      readerData = new float[] { 3, 2, 0, 15, 0 };
+      params.setLp((P4d) value);
+      readerData = new double[] { 3, 2, 0, 15, 0 };
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("rad" == propertyName) {
-      params.setRadical((P4) value);
-      readerData = new float[] { 3, 2, 0, 15, 0 };
+      params.setRadical((P4d) value);
+      readerData = new double[] { 3, 2, 0, 15, 0 };
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("lobe" == propertyName) {
-      params.setLobe((P4) value);
-      readerData = new float[] { 3, 2, 0, 15, 0 };
+      params.setLobe((P4d) value);
+      readerData = new double[] { 3, 2, 0, 15, 0 };
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
       return true;
     }
 
     if ("hydrogenOrbital" == propertyName) {
-      if (!params.setAtomicOrbital((float[]) value)) {
+      if (!params.setAtomicOrbital((double[]) value)) {
         isValid = false;
         return true;
       }
-      readerData = new float[] { params.psi_n, params.psi_l, params.psi_m,
+      readerData = new double[] { params.psi_n, params.psi_l, params.psi_m,
           params.psi_Znuc, params.psi_monteCarloCount };
       surfaceReader = newReader("IsoShapeReader");
       processState();
@@ -773,7 +773,7 @@ public class SurfaceGenerator {
       params.setFunctionXY((Lst<Object>) value);
       if (params.isContoured)      // xy plane through origin
         volumeDataTemp.setPlaneParameters(
-            params.thePlane == null ? params.thePlane = P4.new4(0, 0, 1, 0)
+            params.thePlane == null ? params.thePlane = P4d.new4(0, 0, 1, 0)
             : params.thePlane); 
       if (((String) params.functionInfo.get(0)).indexOf("_xyz") >= 0)
         getFunctionZfromXY();
@@ -795,14 +795,14 @@ public class SurfaceGenerator {
     if ("lcaoCartoonCenter" == propertyName) {
       if (++params.state != Parameters.STATE_DATA_READ)
         return true;
-      if (Float.isNaN(params.center.x))
-        params.center.setT((V3) value);
+      if (Double.isNaN(params.center.x))
+        params.center.setT((V3d) value);
       return false;
     }
 
     if ("molecular" == propertyName || "solvent" == propertyName
         || "sasurface" == propertyName || "nomap" == propertyName) {
-      params.setSolvent(propertyName, ((Float) value).floatValue());
+      params.setSolvent(propertyName, ((Double) value).doubleValue());
       if (!params.isSilent)
         Logger.info(params.calculationType);
       processState();
@@ -820,13 +820,13 @@ public class SurfaceGenerator {
     }
 
     if ("mep" == propertyName) {
-      params.setMep((float[]) value, false); // mep charges
+      params.setMep((double[]) value, false); // mep charges
       processState();
       return true;
     }
 
     if ("mlp" == propertyName) {
-      params.setMep((float[]) value, true); // mlp charges
+      params.setMep((double[]) value, true); // mlp charges
       processState();
       return true;
     }
@@ -845,7 +845,7 @@ public class SurfaceGenerator {
     }
 
     if ("charges" == propertyName) {
-      params.theProperty = (float[]) value;
+      params.theProperty = (double[]) value;
       return true;
     }
 
@@ -858,11 +858,11 @@ public class SurfaceGenerator {
 
     if ("molecularOrbital" == propertyName) {
       int iMo = 0;
-      float[] linearCombination = null;
+      double[] linearCombination = null;
       if (value instanceof Integer) {
         iMo = ((Integer) value).intValue();
       } else {
-        linearCombination = (float[]) value;
+        linearCombination = (double[]) value;
       }
       params.setMO(iMo, linearCombination);
       Logger.info(params.calculationType);
@@ -1032,7 +1032,7 @@ public class SurfaceGenerator {
     }
     if (!surfaceReader.createIsosurface(false)) {
       Logger.error("Could not create isosurface");
-      params.cutoff = Float.NaN;
+      params.cutoff = Double.NaN;
       surfaceReader.closeReader();
       return;
     }
@@ -1078,7 +1078,7 @@ public class SurfaceGenerator {
     surfaceReader.jvxlUpdateInfo();
     marchingSquares = surfaceReader.marchingSquares;
     surfaceReader.discardTempData(false);
-    params.mappedDataMin = Float.MAX_VALUE;
+    params.mappedDataMin = Double.MAX_VALUE;
     surfaceReader.closeReader();
     if (params.state != Parameters.STATE_DATA_COLORED &&
         (surfaceReader.hasColorData || params.colorDensity)) {
@@ -1114,13 +1114,13 @@ public class SurfaceGenerator {
         return;
       }
       params.isSquared = isSquared;
-      params.mappedDataMin = Float.MAX_VALUE;
+      params.mappedDataMin = Double.MAX_VALUE;
       surfaceReader.readVolumeData(true);
       if (params.mapLattice != null)
         surfaceReader.volumeData.isPeriodic = true;
     } else if (!params.colorBySets && !params.colorDensity) {
       surfaceReader.readAndSetVolumeParameters(true);
-      params.mappedDataMin = Float.MAX_VALUE;
+      params.mappedDataMin = Double.MAX_VALUE;
       surfaceReader.readVolumeData(true);
     }
     colorIsosurface();
@@ -1185,7 +1185,7 @@ public class SurfaceGenerator {
       value = Rdr.getBR((String) value);
     }
     if (value instanceof Object[]) {
-      // [BufferedFileReader[], float[]] -> [VolumeFileReader[], float[]]
+      // [BufferedFileReader[], double[]] -> [VolumeFileReader[], double[]]
       Object[] a = (Object[]) ((Object[]) value)[0];
       VolumeFileReader[] b = new VolumeFileReader[a.length];
       for (int i = 0; i < a.length; i++)
@@ -1264,25 +1264,25 @@ public class SurfaceGenerator {
   }
 
   private void getFunctionZfromXY() {
-    P3 origin = (P3) params.functionInfo.get(1);
+    P3d origin = (P3d) params.functionInfo.get(1);
     int[] counts = new int[3];
     int[] nearest = new int[3];
-    V3[] vectors = new V3[3];
+    V3d[] vectors = new V3d[3];
     for (int i = 0; i < 3; i++) {
-      P4 info = (P4) params.functionInfo.get(i + 2);
+      P4d info = (P4d) params.functionInfo.get(i + 2);
       counts[i] = Math.abs((int) info.x);
-      vectors[i] = V3.new3(info.y, info.z, info.w);
+      vectors[i] = V3d.new3(info.y, info.z, info.w);
     }
     int nx = counts[0];
     int ny = counts[1];
-    P3 pt = new P3();
-    P3 pta = new P3();
-    P3 ptb = new P3();
-    P3 ptc = new P3();
+    P3d pt = new P3d();
+    P3d pta = new P3d();
+    P3d ptb = new P3d();
+    P3d ptc = new P3d();
 
-    float[][] data = (float[][]) params.functionInfo.get(5);
-    float[][] data2 = new float[nx][ny];
-    float[] d;
+    double[][] data = (double[][]) params.functionInfo.get(5);
+    double[][] data2 = new double[nx][ny];
+    double[] d;
     //int n = 0;
     //for (int i = 0; i < data.length; i++) 
       //System.out.println("draw pt"+(++n)+" {" + data[i][0] + " " + data[i][1] + " " + data[i][2] + "} color yellow");
@@ -1290,7 +1290,7 @@ public class SurfaceGenerator {
       for (int j = 0; j < ny; j++) {
         pt.scaleAdd2(i, vectors[0], origin);
         pt.scaleAdd2(j, vectors[1], pt);
-        float dist = findNearestThreePoints(pt.x, pt.y, data, nearest);
+        double dist = findNearestThreePoints(pt.x, pt.y, data, nearest);
         pta.set((d = data[nearest[0]])[0], d[1], d[2]);
         if (dist < 0.00001) {
           pt.z = d[2];
@@ -1305,24 +1305,24 @@ public class SurfaceGenerator {
     params.functionInfo.set(5, data2);
   }
 
-  private final V3 vAB = new V3();
-  private final V3 vNorm = new V3();
-  private final P3 ptRef = P3.new3(0, 0, 1e15f);
+  private final V3d vAB = new V3d();
+  private final V3d vNorm = new V3d();
+  private final P3d ptRef = P3d.new3(0, 0, 1e15f);
   
-  private float distanceVerticalToPlane(float x, float y, P3 pta,
-                                              P3 ptb, P3 ptc) {
+  private double distanceVerticalToPlane(double x, double y, P3d pta,
+                                              P3d ptb, P3d ptc) {
     // ax + by + cz + d = 0
 
-    float d = Measure.getDirectedNormalThroughPoints(pta, ptb, ptc, ptRef, vNorm, vAB);
+    double d = MeasureD.getDirectedNormalThroughPoints(pta, ptb, ptc, ptRef, vNorm, vAB);
     return (vNorm.x * x + vNorm.y * y + d) / -vNorm.z;
   }
   
-  private static float findNearestThreePoints(float x, float y, float[][] xyz, int[] result) {
+  private static double findNearestThreePoints(double x, double y, double[][] xyz, int[] result) {
     //result should be int[3];
-    float d, dist1, dist2, dist3;
+    double d, dist1, dist2, dist3;
     int i1, i2, i3;
     i1 = i2 = i3 = -1;
-    dist1 = dist2 = dist3 = Float.MAX_VALUE;
+    dist1 = dist2 = dist3 = Double.MAX_VALUE;
     for (int i = xyz.length; --i >= 0;) {
       d = (d = xyz[i][0] - x) * d + (d = xyz[i][1] - y) * d;
       if (d < dist1) {
@@ -1384,7 +1384,7 @@ public class SurfaceGenerator {
     atomDataServer.fillAtomData(atomData, mode);
   }
 
-  public V3[] getOriginVaVbVc() {
+  public V3d[] getOriginVaVbVc() {
     return (surfaceReader.volumeData == null ? null : surfaceReader.volumeData.oabc);
   }
 

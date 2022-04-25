@@ -32,11 +32,11 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 
@@ -78,7 +78,7 @@ public class _X3dExporter extends _VrmlExporter {
     output("<Background skyColor='" + rgbFractionalFromColix(backgroundColix)
         + "'/>\n");
     // next is an approximation only
-    float angle = getViewpoint();
+    double angle = getViewpoint();
     output("<Viewpoint fieldOfView='" + angle);
     output("' position='");
     // remove export scaling for from Viewpoint so on-screen version is good.
@@ -95,7 +95,7 @@ public class _X3dExporter extends _VrmlExporter {
   }
   
   @Override
-  protected void outputAttrPt(String attr, T3 pt) {
+  protected void outputAttrPt(String attr, T3d pt) {
     output(" " + attr + "='" + pt.x + " " + pt.y + " " + pt.z + "'");
   }
 
@@ -110,12 +110,12 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputAttr(String attr, float x, float y, float z) {
+  protected void outputAttr(String attr, double x, double y, double z) {
     output(" " + attr + "='" + round(x) + " " + round(y) + " " + round(z) + "'");
   }
   
   @Override
-  protected void outputRotation(A4 a) {
+  protected void outputRotation(A4d a) {
     output(" rotation='" + a.x + " " + a.y + " " + a.z + " " + a.angle + "'");
   }
 
@@ -206,7 +206,7 @@ public class _X3dExporter extends _VrmlExporter {
 
 
   @Override
-  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
+  protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3, short colix) {
     // nucleic base
     // cartoons
     output("<Shape>\n");
@@ -226,7 +226,7 @@ public class _X3dExporter extends _VrmlExporter {
 
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius, short colix,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius, short colix,
                               boolean doFill) {
     
     // not fixed -- still duplicated in X3d
@@ -240,7 +240,7 @@ public class _X3dExporter extends _VrmlExporter {
         output("'><Billboard axisOfRotation='0 0 0'>");
         pushMatrix();
           output ("rotation='1 0 0 1.5708'");
-          float height = pt1.distance(pt2);
+          double height = pt1.distance(pt2);
           outputAttr("scale", radius, height, radius);
           output(">");
           outputCylinderChildScaled(colix, GData.ENDCAPS_FLAT);
@@ -266,8 +266,8 @@ public class _X3dExporter extends _VrmlExporter {
         pushMatrix();
           output("<Shape><Extrusion beginCap='false' convex='false' endCap='false' creaseAngle='1.57'");
           output(" crossSection='");
-          float rpd = 3.1415926f / 180;
-          float scale = 0.02f / radius;
+          double rpd = 3.1415926f / 180;
+          double scale = 0.02f / radius;
           for (int i = 0; i <= 360; i += 10) {
             output(round(Math.cos(i * rpd) * scale) + " ");
             output(round(Math.sin(i * rpd) * scale) + " ");
@@ -289,12 +289,12 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputGeometry(T3[] vertices, T3[] normals,
+  protected void outputGeometry(T3d[] vertices, T3d[] normals,
                               short[] colixes, int[][] indices,
                               short[] polygonColixes,
                               int nVertices, int nPolygons,
                               BS bsPolygons,
-                              int faceVertexMax, Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                              int faceVertexMax, Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
     
     output(" creaseAngle='0.5'\n");
 
@@ -357,7 +357,7 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputTextPixel(P3 pt, int argb) {
+  protected void outputTextPixel(P3d pt, int argb) {
 //    // text only
 //    String color = rgbFractionalFromArgb(argb);
 //    output("<Transform translation='");
@@ -420,9 +420,9 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   //  @Override
-  //  protected void outputCone(P3 ptBase, P3 ptTip, float radius,
+  //  protected void outputCone(P3 ptBase, P3 ptTip, double radius,
   //                            short colix) {
-  //    float height = ptBase.distance(ptTip);
+  //    double height = ptBase.distance(ptTip);
   //    pushMatrix();
   //      outputTransRot(ptBase, ptTip, 0, 1, 0);
   //      outputAttr("scale", radius, height, radius);
@@ -443,8 +443,8 @@ public class _X3dExporter extends _VrmlExporter {
   //
   //  @Override
   //  protected boolean outputCylinder(P3 ptCenter, P3 pt1, P3 pt2,
-  //                                short colix, byte endcaps, float radius, P3 ptX, P3 ptY, boolean checkRadius) {
-  //    float height = pt1.distance(pt2);
+  //                                short colix, byte endcaps, double radius, P3 ptX, P3 ptY, boolean checkRadius) {
+  //    double height = pt1.distance(pt2);
   //    pushMatrix();
   //      if (ptX == null) {
   //        outputTransRot(pt1, pt2, 0, 1, 0);

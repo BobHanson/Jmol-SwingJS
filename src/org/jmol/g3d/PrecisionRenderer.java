@@ -38,7 +38,7 @@ package org.jmol.g3d;
  * 
  *  b = (xb * zb - xa * za) / (zb - za)
  * 
- * These values must be floats, not integers, to work properly, because
+ * These values must be doubles, not integers, to work properly, because
  * these are extrapolations from long distances in some cases. So there is
  * considerable overhead there. It will take some experimentation to figure this
  * out.
@@ -54,19 +54,19 @@ package org.jmol.g3d;
  */
 public class PrecisionRenderer {
 
-  protected float a, b;
+  protected double a, b;
   boolean isOrthographic;
 
-  protected int getZCurrent(float a, float b, int x) {
-    return Math.round(a == Float.MIN_VALUE ? b : isOrthographic ? a * x + b : a / (b - x));
+  protected int getZCurrent(double a, double b, int x) {
+    return (int) Math.round(a == Double.MIN_VALUE ? b : isOrthographic ? a * x + b : a / (b - x));
   }
 
   
-  protected void setRastABFloat(float xa, float za, float xb, float zb) {
-    float zdif = (zb - za);
-    float xdif = (xb - xa);
+  protected void setRastABFloat(double xa, double za, double xb, double zb) {
+    double zdif = (zb - za);
+    double xdif = (xb - xa);
     if (zdif == 0 || xdif == 0) {
-      a = Float.MIN_VALUE;
+      a = Double.MIN_VALUE;
       b = za;
       return;
     }
@@ -80,10 +80,10 @@ public class PrecisionRenderer {
   }
 
   protected void setRastAB(int xa, int za, int xb, int zb) {
-    float zdif = (zb - za);
-    float xdif = (xb - xa);
-    if (xa == Float.MIN_VALUE || zdif == 0 || xdif == 0) {
-      a = Float.MIN_VALUE;
+    double zdif = (zb - za);
+    double xdif = (xb - xa);
+    if (xa == Double.MIN_VALUE || zdif == 0 || xdif == 0) {
+      a = Double.MIN_VALUE;
       b = zb;
       return;
     }

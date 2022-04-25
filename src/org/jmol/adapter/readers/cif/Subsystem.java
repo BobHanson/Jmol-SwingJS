@@ -9,9 +9,9 @@ import org.jmol.util.SimpleUnitCell;
 import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.Matrix;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 

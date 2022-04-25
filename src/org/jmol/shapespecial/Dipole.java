@@ -33,8 +33,8 @@ import javajs.util.BS;
 
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public class Dipole {
 
@@ -43,17 +43,17 @@ public class Dipole {
   public short colix = 0;
   short type;
 
-  public P3 origin;
-  public P3 center;
-  public V3 vector;
+  public P3d origin;
+  public P3d center;
+  public V3d vector;
 
   String dipoleInfo = "";
-  public float dipoleValue;
+  public double dipoleValue;
 
   boolean isUserValue;
-  public float offsetSide;
-  public float offsetAngstroms;
-  public P3 offsetPt;
+  public double offsetSide;
+  public double offsetAngstroms;
+  public P3d offsetPt;
   int offsetPercent;
   public int visibilityFlags;
   int modelIndex;
@@ -64,7 +64,7 @@ public class Dipole {
   boolean isValid;
 
   public Atom[] atoms = new Atom[2]; //for reference only
-  P3[] coords = new P3[2]; //for reference only
+  P3d[] coords = new P3d[2]; //for reference only
   public Bond bond;
   public BS bsMolecule;
   public Lst<Object> lstDipoles;
@@ -88,7 +88,7 @@ public class Dipole {
     return this;
   }
 
-  void setTranslucent(boolean isTranslucent, float translucentLevel) {
+  void setTranslucent(boolean isTranslucent, double translucentLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, translucentLevel);
   }
 
@@ -103,11 +103,11 @@ public class Dipole {
     offsetAngstroms = d.offsetAngstroms;
     offsetPercent = d.offsetPercent;
     offsetSide = d.offsetSide;
-    vector = V3.newV(d.vector);
-    origin = P3.newP(d.origin);
+    vector = V3d.newV(d.vector);
+    origin = P3d.newP(d.origin);
     if (d.offsetPt != null) {
       origin.add(d.offsetPt);
-      offsetPt = P3.newP(d.offsetPt);
+      offsetPt = P3d.newP(d.offsetPt);
     }
     bsMolecule = d.bsMolecule;
     haveAtoms = (d.atoms[0] != null);
@@ -120,18 +120,18 @@ public class Dipole {
     }
   }
 
-  private void set2(P3 pt1, P3 pt2) {
-    coords[0] = P3.newP(pt1);
-    coords[1] = P3.newP(pt2);
+  private void set2(P3d pt1, P3d pt2) {
+    coords[0] = P3d.newP(pt1);
+    coords[1] = P3d.newP(pt2);
     isValid = (coords[0].distance(coords[1]) > 0.1f);
 
     if (dipoleValue < 0) {
-      origin = P3.newP(pt2);
-      vector = V3.newV(pt1);
+      origin = P3d.newP(pt2);
+      vector = V3d.newV(pt1);
       dipoleValue = -dipoleValue;
     } else {
-      origin = P3.newP(pt1);
-      vector = V3.newV(pt2);
+      origin = P3d.newP(pt1);
+      vector = V3d.newV(pt2);
     }
     dipoleInfo = "" + origin + vector;
     vector.sub(origin);
@@ -142,8 +142,8 @@ public class Dipole {
     this.type = DIPOLE_TYPE_POINTS;
   }
 
-  void setValue(float value) {
-    float d = dipoleValue;
+  void setValue(double value) {
+    double d = dipoleValue;
     dipoleValue = value;
     if (value == 0)
       isValid = false;
@@ -154,21 +154,21 @@ public class Dipole {
       origin.sub(vector);
   }
 
-  void set2Value(P3 pt1, P3 pt2, float value) {
+  void set2Value(P3d pt1, P3d pt2, double value) {
     dipoleValue = value;
     atoms[0] = null;
     set2(pt1, pt2);
   }
 
-  void setPtVector(P3 pt1, V3 dipole) {
+  void setPtVector(P3d pt1, V3d dipole) {
     setValue(dipole.length());
-    P3 pt2 = P3.newP(pt1);
+    P3d pt2 = P3d.newP(pt1);
     pt2.add(dipole);
     set2(pt1, pt2);
     type = DIPOLE_TYPE_POINTVECTOR;
   }
 
-  void set2AtomValue(Atom atom1, Atom atom2, float value) {
+  void set2AtomValue(Atom atom1, Atom atom2, double value) {
     //also from frame
     setValue(value);
     set2(atom1, atom2);
@@ -184,9 +184,9 @@ public class Dipole {
     isValid = (atoms[0] != atoms[1] && dipoleValue != 0);
     if (!isValid)
       return;
-    float f = atoms[0].distance(atoms[1]) / (2 * dipoleValue) - 0.5f;
+    double f = atoms[0].distance(atoms[1]) / (2 * dipoleValue) - 0.5f;
     origin.scaleAdd2(f, vector, atoms[0]);
-    center = new P3();
+    center = new P3d();
     center.scaleAdd2(0.5f, vector, origin);
     bond = atoms[0].getBond(atoms[1]);
     type = (bond == null ? Dipole.DIPOLE_TYPE_ATOMS : Dipole.DIPOLE_TYPE_BOND);
@@ -231,7 +231,7 @@ public class Dipole {
     return s.toString();
   }
 
-  public void setOffsetPt(P3 pt) {
+  public void setOffsetPt(P3d pt) {
     if (offsetPt != null)
       origin.sub(offsetPt);
     offsetPt = pt;

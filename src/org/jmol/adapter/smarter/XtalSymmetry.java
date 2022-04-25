@@ -42,13 +42,13 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -83,7 +83,7 @@ public class XtalSymmetry {
   private double[] unitCellParams = new double[6];
   private double[] baseUnitCell;
   private int[] latticeCells;
-  private V3[] unitCellTranslations;
+  private V3d[] unitCellTranslations;
   
   // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
 
@@ -142,9 +142,9 @@ public class XtalSymmetry {
     return (this.symmetry = symmetry);
   }
 
-  private void setSymmetryRange(float factor) {
+  private void setSymmetryRange(double factor) {
     symmetryRange = factor;
-    asc.setInfo("symmetryRange", Float.valueOf(factor));
+    asc.setInfo("symmetryRange", Double.valueOf(factor));
   }
 
   private void setLatticeCells() {
@@ -174,7 +174,7 @@ public class XtalSymmetry {
   }
 
   private void setUnitCell(double[] info, M3d matUnitCellOrientation,
-                                   P3 unitCellOffset) {
+                                   P3d unitCellOffset) {
     unitCellParams = new double[info.length];
     //this.unitCellOffset = unitCellOffset;
     for (int i = 0; i < info.length; i++)
@@ -358,7 +358,7 @@ public class XtalSymmetry {
       }
       return;
     }
-    P3 offset = null;
+    P3d offset = null;
     nVib = 0;
     T3d va = null, vb = null, vc = null;
     baseSymmetry = symmetry;
@@ -722,7 +722,7 @@ public class XtalSymmetry {
     for (int i = 0; i < n; i++)
       atoms[firstAtom + i].bsSymmetry = BS.newN(operationCount * (nCells + 1));
     int pt = 0;
-    unitCellTranslations = new V3[nCells];
+    unitCellTranslations = new V3d[nCells];
     int iCell = 0;
     int cell555Count = 0;
     double absRange = Math.abs(symmetryRange);
@@ -777,7 +777,7 @@ public class XtalSymmetry {
     for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
       for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
         for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
-          unitCellTranslations[iCell] = V3.new3(tx, ty, tz);
+          unitCellTranslations[iCell] = V3d.new3(tx, ty, tz);
           unitCells[iCell++] = 555 + tx * 100 + ty * 10 + tz;
           if (tx != 0 || ty != 0 || tz != 0 || cartesians.length == 0)
             continue;
@@ -1462,7 +1462,7 @@ public class XtalSymmetry {
       }
       // reset bondingRadius to NaN
       for (int i = atomMax, n = asc.ac; i < n; i++) {
-        asc.atoms[i].bondingRadius = Float.NaN;
+        asc.atoms[i].bondingRadius = Double.NaN;
       }
 
     }
@@ -1553,7 +1553,7 @@ public class XtalSymmetry {
    */
   public void scaleFractionalVibs() {
     double[] params = getBaseSymmetry().getUnitCellParams();
-    P3 ptScale = P3.new3(1 / (float) params[0], 1 / (float) params[1], 1 / (float) params[2]);
+    P3d ptScale = P3d.new3(1 / (double) params[0], 1 / (double) params[1], 1 / (double) params[2]);
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;

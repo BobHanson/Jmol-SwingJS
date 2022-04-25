@@ -96,7 +96,7 @@ public class DgridReader extends SlaterReader {
     }
   }
 
-  Map<String, Float> htExponents = new Hashtable<String, Float>();
+  Map<String, Double> htExponents = new Hashtable<String, Double>();
   private void readSlaterBasis() throws Exception {
      /*
 :                           +--------------------------+
@@ -125,7 +125,7 @@ public class DgridReader extends SlaterReader {
         code += "_" + ch++;
       }
       String exp = line.substring(34);
-      htExponents.put(code, Float.valueOf((float) parseDoubleStr(exp)));
+      htExponents.put(code, Double.valueOf(parseDoubleStr(exp)));
     }
   }
 
@@ -271,12 +271,12 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
     String code = atomSymbol + xyz.substring(0, 2);
     if (type != ' ')
       code += "_" + type;
-    Float f = htExponents.get(code);
+    Double f = htExponents.get(code);
     double zeta = 0;
     if (f == null)
       Logger.error("Exponent for " + code + " not found");
     else
-      zeta = f.floatValue();
+      zeta = f.doubleValue();
     //System.out.println("DgridReader [" + iAtom + " " 
         //+ x + " " + y + " " + z + " " + r + "]" + " " + alpha);
     return new SlaterData(iAtom, x, y, z, r, zeta, 1);

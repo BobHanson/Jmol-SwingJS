@@ -35,7 +35,7 @@ public interface MSInterface {
 
   SymmetryInterface getSymmetryFromCode(String spaceGroupOperationCode);
 
-  boolean addLatticeVector(Lst<float[]> lattvecs, String substring) throws Exception;
+  boolean addLatticeVector(Lst<double[]> lattvecs, String substring) throws Exception;
 
   Map<String, double[]> getModulationMap();
 

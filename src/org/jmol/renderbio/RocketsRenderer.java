@@ -30,17 +30,17 @@ import org.jmol.script.T;
 import org.jmol.shapebio.BioShape;
 
 import javajs.api.Interface;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class RocketsRenderer extends StrandsRenderer {
 
-  //private final static float MIN_CONE_HEIGHT = 0.05f;
+  //private final static double MIN_CONE_HEIGHT = 0.05f;
 
   boolean isRockets;
   protected boolean helixRockets = true;
   protected boolean renderArrowHeads;
 
-  protected P3[] cordMidPoints;
+  protected P3d[] cordMidPoints;
   private RocketRenderer rr;
 
   @Override
@@ -78,10 +78,10 @@ public class RocketsRenderer extends StrandsRenderer {
     int midPointCount = monomerCount + 1;
     cordMidPoints = vwr.allocTempPoints(midPointCount);
     ProteinStructure proteinstructurePrev = null;
-    P3 point;
+    P3d point;
     int ptLastRocket = -10;
-    P3 pt1 = new P3();
-    P3 pt2 = new P3();
+    P3d pt1 = new P3d();
+    P3d pt2 = new P3d();
     for (int i = 0; i <= monomerCount; ++i) {
       point = cordMidPoints[i];
       if (i < monomerCount && (helixRockets && structureTypes[i] == STR.HELIX || isRockets && structureTypes[i] == STR.SHEET)) {

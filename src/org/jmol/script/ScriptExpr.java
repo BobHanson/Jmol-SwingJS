@@ -27,12 +27,12 @@ import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M34d;
 import javajs.util.M4d;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 /**
  * The ScriptExpr class holds the main functions for 
@@ -347,9 +347,9 @@ abstract class ScriptExpr extends ScriptParam {
       case T.semicolon: // for (i = 1; i < 3; i=i+1)
         break out;
       case T.integer:
-        // checking here for nnn.? or nnn.*, which is not treated as "float" in the compiler
+        // checking here for nnn.? or nnn.*, which is not treated as "double" in the compiler
         if (tokAt(iToken + 1) == T.per && ((tok = tokAt(iToken + 2)) == T.opIf || tok == T.times)) {
-          theToken.value = Float.valueOf(theToken.intValue);
+          theToken.value = Double.valueOf(theToken.intValue);
           theToken.tok = T.decimal;
           theToken.intValue = Integer.MAX_VALUE;
           i++;
@@ -386,7 +386,7 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addXStr("$" + paramAsStr(++i));
         } else {
           ignoreError = true;
-          P3 ptc;
+          P3d ptc;
           try {
             ptc = centerParameter(i, null);
             rpn.addX(SV.newV(T.point3f, ptc));
@@ -753,7 +753,7 @@ abstract class ScriptExpr extends ScriptParam {
         break expression_loop;
       case T.leftbrace:
         if (isPoint3f(pc)) {
-          P3 pt = getPoint3f(pc, true, true);
+          P3d pt = getPoint3f(pc, true, true);
           if (pt != null) {
             rpn.addXPt(pt);
             pc = iToken;
@@ -989,12 +989,12 @@ abstract class ScriptExpr extends ScriptParam {
         int tokWhat = instruction.intValue;
         if ((tokWhat == T.configuration) && tok != T.opEQ)
           invArg();
-        float[] data = null;
+        double[] data = null;
         if (tokWhat == T.property) {
           if (pc + 2 == code.length)
             invArg();
           if (!chk)
-            data = (float[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AFD);
+            data = (double[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AFD);
         }
         if (++pc == code.length)
           invArg(); // compiler would not let this happen, actually
@@ -1009,7 +1009,7 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addXBs(bs1);
         break;
       case T.point3f:
-        rpn.addXPt((P3) value);
+        rpn.addXPt((P3d) value);
         break;
       default:
         if (T.tokAttr(instruction.tok, T.mathop)) {
@@ -1069,7 +1069,7 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   private BS getComparison(T t, int tokWhat, int tokOp, String strOp,
-                           float[] data) throws ScriptException {
+                           double[] data) throws ScriptException {
     int tokValue = t.tok;
     if (tokValue == T.varray) {
       BS bs = new BS();
@@ -1087,7 +1087,7 @@ abstract class ScriptExpr extends ScriptParam {
     }
     
     int comparisonInt = t.intValue;
-    float comparisonFloat = Float.NaN;
+    double comparisonFloat = Double.NaN;
 
     boolean isModel = (tokWhat == T.model);
     boolean isIntProperty = T.tokAttr(tokWhat, T.intproperty);
@@ -1117,9 +1117,9 @@ abstract class ScriptExpr extends ScriptParam {
       }
     }
 
-    if (val instanceof P3) {
+    if (val instanceof P3d) {
       if (tokWhat == T.color) {
-        comparisonInt = CU.colorPtToFFRGB((P3) val);
+        comparisonInt = CU.colorPtToFFRGB((P3d) val);
         tokValue = T.integer;
         isIntProperty = true;
       }
@@ -1130,8 +1130,8 @@ abstract class ScriptExpr extends ScriptParam {
           val = getVarParameter((String) val, true);
           if (((String) val).startsWith("{")) {
             val = Escape.uP((String) val);
-            if (val instanceof P3)
-              comparisonInt = CU.colorPtToFFRGB((P3) val);
+            if (val instanceof P3d)
+              comparisonInt = CU.colorPtToFFRGB((P3d) val);
             else
               comparisonInt = 0;
           } else {
@@ -1148,9 +1148,9 @@ abstract class ScriptExpr extends ScriptParam {
           val = SV.nValue(t);
         if (val instanceof Integer)
           comparisonFloat = comparisonInt = ((Integer) val).intValue();
-        else if (val instanceof Float && isModel)
+        else if (val instanceof Double && isModel)
           comparisonInt = ModelSet
-              .modelFileNumberFromFloat(((Number) val).floatValue());
+              .modelFileNumberFromFloat(((Number) val).doubleValue());
       }
     }
     if (isStringProperty && !(val instanceof String)) {
@@ -1165,12 +1165,12 @@ abstract class ScriptExpr extends ScriptParam {
       } else if (isFloatProperty) {
         comparisonFloat = comparisonInt;
       }        
-    } else if (val instanceof Float
+    } else if (val instanceof Double
         || val instanceof Double) {
       if (isModel) {
         tokWhat = -T.model;
       } else {
-        comparisonFloat = ((Number) val).floatValue();
+        comparisonFloat = ((Number) val).doubleValue();
         if (isIntOrFloat) {
           isIntProperty = false;
         } else if (isIntProperty) {
@@ -1192,7 +1192,7 @@ abstract class ScriptExpr extends ScriptParam {
     if (strOp != null && strOp.indexOf("-") >= 0) {
       if (isIntProperty)
         comparisonInt = -comparisonInt;
-      else if (!Float.isNaN(comparisonFloat))
+      else if (!Double.isNaN(comparisonFloat))
         comparisonFloat = -comparisonFloat;
     }
     return (isIntProperty ? compareInt(tokWhat, tokOp, comparisonInt)
@@ -1258,7 +1258,7 @@ abstract class ScriptExpr extends ScriptParam {
     return l;
   }
 
-  private P3 ptTemp;
+  private P3d ptTemp;
 
   /**
    * 
@@ -1268,17 +1268,17 @@ abstract class ScriptExpr extends ScriptParam {
    * @param comparisonFloat
    * @return BitSet
    */
-  protected BS compareFloatData(int tokWhat, float[] data, int tokOperator,
-                                float comparisonFloat) {
+  protected BS compareFloatData(int tokWhat, double[] data, int tokOperator,
+                                double comparisonFloat) {
     BS bs = new BS();
     int ac = vwr.ms.ac;
     ModelSet modelSet = vwr.ms;
     Atom[] atoms = modelSet.at;
-    float propertyFloat = 0;
+    double propertyFloat = 0;
     vwr.autoCalculate(tokWhat, null);
     boolean isProp = (tokWhat == T.property);
     if (!isProp && ptTemp == null)
-      ptTemp = new P3();
+      ptTemp = new P3d();
     for (int i = ac; --i >= 0;) {
       boolean match = false;
       Atom atom = atoms[i];
@@ -1298,7 +1298,7 @@ abstract class ScriptExpr extends ScriptParam {
     return bs;
   }
 
-  protected boolean compareFloat(int tokOperator, float a, float b) {
+  protected boolean compareFloat(int tokOperator, double a, double b) {
     switch (tokOperator) {
     case T.opLT:
       return a < b;
@@ -1311,7 +1311,7 @@ abstract class ScriptExpr extends ScriptParam {
     case T.opEQ:
       return a == b;
     case T.opNE:
-      return a != b && !Float.isNaN(a);
+      return a != b && !Double.isNaN(a);
     }
     return false;
   }
@@ -1560,8 +1560,8 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   @SuppressWarnings({ "unchecked", "cast" })
-  public Object getBitsetProperty(BS bs, Lst<SV> pts, int tok, P3 ptRef,
-                                  P4 planeRef, Object tokenValue,
+  public Object getBitsetProperty(BS bs, Lst<SV> pts, int tok, P3d ptRef,
+                                  P4d planeRef, Object tokenValue,
                                   Object opValue, boolean useAtomMap, int index,
                                   boolean asVectorIfAll)
       throws ScriptException {
@@ -1582,8 +1582,7 @@ abstract class ScriptExpr extends ScriptParam {
     if (isPivot)
       minmaxtype = T.minmaxmask;
     int ac = vwr.ms.ac;
-    float[] fout = (minmaxtype == T.allfloat ? new float[ac] : null);
-    double[] dout = null;
+    double[] fout = (minmaxtype == T.allfloat ? new double[ac] : null);
     boolean isExplicitlyAll = (minmaxtype == T.minmaxmask || selectedFloat);
     tok &= ~T.minmaxmask;
     Object[] info = null;
@@ -1626,7 +1625,7 @@ abstract class ScriptExpr extends ScriptParam {
 
     // preliminarty checks we only want to do once:
 
-    P3 pt = (isPt || !isAtoms ? new P3() : null);
+    P3d pt = (isPt || !isAtoms ? new P3d() : null);
     if (isExplicitlyAll || isString && !haveIndex && minmaxtype != T.allfloat
         && minmaxtype != T.min)
       minmaxtype = T.all;
@@ -1636,10 +1635,9 @@ abstract class ScriptExpr extends ScriptParam {
     Lst<SV> params = null;
     BS bsAtom = null;
     SV tokenAtom = null;
-    P3 ptT = null;
-    float[] data = null;
-    float[][] ffdata = null;
-    double[] ddata = null;
+    P3d ptT = null;
+    double[] data = null;
+    double[][] ffdata = null;
     switch (tok) {
     case T.atoms:
     case T.bonds:
@@ -1660,7 +1658,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.stddev:
       case T.sum:
       case T.sum2:
-        return Float.valueOf(Float.NaN);
+        return Double.valueOf(Double.NaN);
       default:
         return bsNew;
       }
@@ -1684,7 +1682,7 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     case T.dssr:
       for (int j = fout.length; --j >= 0;)
-        fout[j] = Float.NaN;
+        fout[j] = Double.NaN;
       //$FALL-THROUGH$
     case T.straightness:
     case T.surfacedistance:
@@ -1692,20 +1690,17 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     case T.distance:
       if (ptRef == null && planeRef == null)
-        return new P3();
+        return new P3d();
       break;
     case T.color:
-      ptT = new P3();
+      ptT = new P3d();
       break;
     case T.property:
-      data = (float[]) vwr.getDataObj((String) opValue, null,
-          JmolDataManager.DATA_TYPE_AF);
+      data = (double[]) vwr.getDataObj((String) opValue, null,
+          JmolDataManager.DATA_TYPE_AD);
       if (data == null)
-        ddata = (double[]) vwr.getDataObj((String) opValue, null,
-            JmolDataManager.DATA_TYPE_AD);
-      if (data == null && ddata == null)
-        ffdata = (float[][]) vwr.getDataObj((String) opValue, null,
-            JmolDataManager.DATA_TYPE_AFF);
+        ffdata = (double[][]) vwr.getDataObj((String) opValue, null,
+            JmolDataManager.DATA_TYPE_ADD);
       if (ffdata != null) {
         minmaxtype = T.all;
         vout = new Lst<Object>();
@@ -1715,24 +1710,22 @@ abstract class ScriptExpr extends ScriptParam {
 
     int n = 0;
     int ivMinMax = 0;
-    float fvMinMax = 0;
-    double dvMinMax = 0;
+    double fvMinMax = 0;
     double sum = 0;
     double sum2 = 0;
     switch (minmaxtype) {
     case T.min:
       ivMinMax = Integer.MAX_VALUE;
-      fvMinMax = Float.MAX_VALUE;
+      fvMinMax = Double.MAX_VALUE;
       break;
     case T.max:
       ivMinMax = Integer.MIN_VALUE;
-      fvMinMax = -Float.MAX_VALUE;
+      fvMinMax = -Double.MAX_VALUE;
       break;
     }
     ModelSet modelSet = vwr.ms;
     int mode = (
-        ddata != null ? 6
-        : ffdata != null ? 5
+        ffdata != null ? 5
             : isHash ? 4 
                 : isPt ? 3 
                 : isString ? 2 
@@ -1768,12 +1761,12 @@ abstract class ScriptExpr extends ScriptParam {
           atom = null;
         }
         switch (mode) {
-        case 0: // float
-          float fv = Float.MAX_VALUE;
+        case 0: // double
+          double fv = Double.MAX_VALUE;
           switch (tok) {
           case T.function:
             bsAtom.set(i);
-            fv = SV.fValue(((ScriptEval) this)
+            fv = SV.dValue(((ScriptEval) this)
                 .getUserFunctionResult(userFunction, params, tokenAtom));
             bsAtom.clear(i);
             break;
@@ -1782,16 +1775,16 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.distance:
             if (planeRef != null)
-              fv = Measure.distanceToPlane(planeRef, atom);
+              fv = MeasureD.distanceToPlane(planeRef, atom);
             else
               fv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef)
                   : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef)
-                      : Float.NaN);
+                      : Double.NaN);
             break;
           default:
             fv = atom.atomPropertyFloat(vwr, tok, ptTemp);
           }
-          if (fv == Float.MAX_VALUE || Float.isNaN(fv) && minmaxtype != T.all) {
+          if (fv == Double.MAX_VALUE || Double.isNaN(fv) && minmaxtype != T.all) {
             n--; // don't count this one
             continue;
           }
@@ -1808,7 +1801,7 @@ abstract class ScriptExpr extends ScriptParam {
             fout[i] = fv;
             break;
           case T.all:
-            vout.addLast(Float.valueOf(fv));
+            vout.addLast(Double.valueOf(fv));
             break;
           case T.sum2:
           case T.stddev:
@@ -1857,7 +1850,7 @@ abstract class ScriptExpr extends ScriptParam {
           String s = atom.atomPropertyString(vwr, tok);
           switch (minmaxtype) {
           case T.allfloat:
-            fout[i] = PT.parseFloat(s);
+            fout[i] = PT.parseDouble(s);
             break;
           default:
             if (vout == null)
@@ -1866,13 +1859,13 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case 3: // isPt
-          T3 t = atom.atomPropertyTuple(vwr, tok, ptTemp);
+          T3d t = atom.atomPropertyTuple(vwr, tok, ptTemp);
           switch (minmaxtype) {
           case T.allfloat:
             fout[i] = (pt == null ? -1 : t == null ? 0 : t.length());
             break;
           case T.all:
-            vout.addLast(t == null ? Integer.valueOf(-1) : P3.newP(t));
+            vout.addLast(t == null ? Integer.valueOf(-1) : P3d.newP(t));
             break;
           default:
             if (t == null)
@@ -1895,62 +1888,8 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           }
           break;
-        case 5: // float[][]
+        case 5: // double[][]
           vout.addLast(ffdata[i]);
-          break;
-        case 6: // float
-          double dv = Double.MAX_VALUE;
-          switch (tok) {
-          case T.function:
-            bsAtom.set(i);
-            dv = SV.dValue(((ScriptEval) this)
-                .getUserFunctionResult(userFunction, params, tokenAtom));
-            bsAtom.clear(i);
-            break;
-          case T.property:
-            dv = (ddata == null ? 0 : ddata[i]);
-            break;
-          case T.distance:
-            if (planeRef != null)
-              dv = PT.toDouble(Measure.distanceToPlane(planeRef, atom));
-            else
-              dv = (pts != null ? SV.ptValue(pts.get(i)).distance(ptRef)
-                  : atom != ptRef || minmaxtype != T.min ? atom.distance(ptRef)
-                      : Float.NaN);
-            break;
-          default:
-            dv = PT.toDouble(atom.atomPropertyFloat(vwr, tok, ptTemp));
-          }
-          if (dv == Double.MAX_VALUE
-              || Double.isNaN(dv) && minmaxtype != T.all) {
-            n--; // don't count this one
-            continue;
-          }
-          switch (minmaxtype) {
-          case T.min:
-            if (dv < dvMinMax)
-              dvMinMax = dv;
-            break;
-          case T.max:
-            if (dv > dvMinMax)
-              dvMinMax = dv;
-            break;
-          case T.allfloat:
-            if (dout == null)
-              dout = new double[fout.length];
-            dout[i] = dv;
-            break;
-          case T.all:
-            vout.addLast(Double.valueOf(dv));
-            break;
-          case T.sum2:
-          case T.stddev:
-            sum2 += dv * dv;
-            //$FALL-THROUGH$
-          case T.sum:
-          default:
-            sum += dv;
-          }
           break;
         }
         if (haveIndex)
@@ -1966,7 +1905,7 @@ abstract class ScriptExpr extends ScriptParam {
         Bond bond = modelSet.bo[i];
         switch (tok) {
         case T.length:
-          float fv = bond.atom1.distance(bond.atom2);
+          double fv = bond.atom1.distance(bond.atom2);
           switch (minmaxtype) {
           case T.min:
             if (fv < fvMinMax)
@@ -1977,7 +1916,7 @@ abstract class ScriptExpr extends ScriptParam {
               fvMinMax = fv;
             break;
           case T.all:
-            vout.addLast(Float.valueOf(fv));
+            vout.addLast(Double.valueOf(fv));
             break;
           case T.sum2:
           case T.stddev:
@@ -1992,7 +1931,7 @@ abstract class ScriptExpr extends ScriptParam {
           switch (minmaxtype) {
           case T.all:
             pt.ave(bond.atom1, bond.atom2);
-            vout.addLast(P3.newP(pt));
+            vout.addLast(P3d.newP(pt));
             break;
           default:
             pt.add(bond.atom1);
@@ -2004,7 +1943,7 @@ abstract class ScriptExpr extends ScriptParam {
           CU.colorPtFromInt(vwr.gdata.getColorArgbOrGray(bond.colix), ptT);
           switch (minmaxtype) {
           case T.all:
-            vout.addLast(P3.newP(ptT));
+            vout.addLast(P3d.newP(ptT));
             break;
           default:
             pt.add(ptT);
@@ -2016,7 +1955,7 @@ abstract class ScriptExpr extends ScriptParam {
       }
     }
     if (minmaxtype == T.allfloat)
-      return (dout == null ? fout : dout);
+      return fout;
     if (minmaxtype == T.all) {
       if (asVectorIfAll) {
         if (isPivot) {
@@ -2028,27 +1967,19 @@ abstract class ScriptExpr extends ScriptParam {
       if ((isString || isHash) && !isExplicitlyAll && len == 1)
         return vout.get(0);
       if (selectedFloat) {
-        if (mode == 6) {
-          dout = new double[len];
-          for (int i = len; --i >= 0;) {
-            Object v = vout.get(i);
-            dout[i] = ((Number) v).doubleValue();
-          }
-          return dout;
-        }
-        fout = new float[len];
+        fout = new double[len];
         for (int i = len; --i >= 0;) {
           Object v = vout.get(i);
           switch (mode) {
           case 0:
           case 1:
-            fout[i] = ((Number) v).floatValue();
+            fout[i] = ((Number) v).doubleValue();
             break;
           case 2:
-            fout[i] = PT.parseFloat((String) v);
+            fout[i] = PT.parseDouble((String) v);
             break;
           case 3:
-            fout[i] = (v == null ? -1 : ((P3) v).length());
+            fout[i] = (v == null ? -1 : ((P3d) v).length());
             break;
           }
         }
@@ -2063,8 +1994,8 @@ abstract class ScriptExpr extends ScriptParam {
       String[] sout = new String[len];
       for (int i = len; --i >= 0;) {
         Object v = vout.get(i);
-        if (v instanceof P3)
-          sout[i] = Escape.eP((P3) v);
+        if (v instanceof P3d)
+          sout[i] = Escape.eP((P3d) v);
         else
           sout[i] = "" + vout.get(i);
       }
@@ -2072,12 +2003,10 @@ abstract class ScriptExpr extends ScriptParam {
     }
     if (isPt)
       return (n == 0 ? Integer.valueOf(-1)
-          : P3.new3(pt.x / n, pt.y / n, pt.z / n));
+          : P3d.new3(pt.x / n, pt.y / n, pt.z / n));
     if (isHash)
       return new Hashtable<String, Object>();
     if (n == 0 || n == 1 && minmaxtype == T.stddev) {
-      if (dout == null)
-        return Float.valueOf(Float.NaN);
       return Double.valueOf(Double.NaN);      
     }
     if (isInt) {
@@ -2093,13 +2022,13 @@ abstract class ScriptExpr extends ScriptParam {
       default:
         if (sum / n == (int) (sum / n))
           return Integer.valueOf((int) (sum / n));
-        return Float.valueOf((float) (sum / n));
+        return Double.valueOf((double) (sum / n));
       }
     }
     switch (minmaxtype) {
     case T.min:
     case T.max:
-      sum = (mode == 6 ? dvMinMax : fvMinMax);
+      sum = fvMinMax;
       break;
     case T.sum:
       break;
@@ -2117,7 +2046,7 @@ abstract class ScriptExpr extends ScriptParam {
       sum /= n;
       break;
     }
-    return (mode == 6 ? (Number) Double.valueOf(sum) : (Number) Float.valueOf((float) sum));
+    return Double.valueOf((double) sum);
   }
 
   private BS bitSetForModelFileNumber(int m) {
@@ -2300,8 +2229,8 @@ abstract class ScriptExpr extends ScriptParam {
           t.setSelectedValue(t.intValue, sel.asInt(), tv);
         break;
       case T.point3f:
-        P3 p = (P3) (t.value = P3.newP((P3) t.value));
-        float f = tv.asFloat();
+        P3d p = (P3d) (t.value = P3d.newP((P3d) t.value));
+        double f = tv.asDouble();
         switch (T.getTokFromName(sel.asString())) {
         case T.x:
           p.x = f;
@@ -2326,8 +2255,8 @@ abstract class ScriptExpr extends ScriptParam {
             Object obj;
             if (tv.tok == T.varray) {
               int nmin = (tv.getList().size() == nbs ? nbs : nAtoms);
-              obj = (SV.getArrayDepth(tv) > 1 ? SV.fflistValue(tv, nmin)
-                  : SV.flistValue(tv, nmin));
+              obj = (SV.getArrayDepth(tv) > 1 ? SV.ddlistValue(tv, nmin)
+                  : SV.dlistValue(tv, nmin));
             } else {
               obj = tv.asString();
             }
@@ -2346,7 +2275,7 @@ abstract class ScriptExpr extends ScriptParam {
           vwr.shm.loadShape(JC.SHAPE_LABELS);
           //$FALL-THROUGH$
         default:
-          setBitsetProperty(bs, tok, tv.asInt(), tv.asFloat(), tv);
+          setBitsetProperty(bs, tok, tv.asInt(), tv.asDouble(), tv);
           break;
         }
         break;
@@ -2359,11 +2288,11 @@ abstract class ScriptExpr extends ScriptParam {
     // -- simple assignment; single value only
 
     // create user variable if needed for list now, so we can do the copying
-    // no variable needed if it's a String, integer, float, or boolean.
+    // no variable needed if it's a String, integer, double, or boolean.
 
     boolean needVariable = (!settingData && t == null
         && (isThrown || !(tv.value instanceof String || tv.tok == T.integer
-            || tv.value instanceof Integer || tv.value instanceof Float
+            || tv.value instanceof Integer || tv.value instanceof Double
             || tv.value instanceof Boolean)));
 
     if (needVariable && key != null) {
@@ -2389,8 +2318,8 @@ abstract class ScriptExpr extends ScriptParam {
       setBooleanProperty(key, ((Boolean) vv).booleanValue());
     } else if (vv instanceof Integer) {
       setIntProperty(key, ((Integer) vv).intValue());
-    } else if (vv instanceof Float) {
-      setFloatProperty(key, ((Number) vv).floatValue());
+    } else if (vv instanceof Double) {
+      setFloatProperty(key, ((Number) vv).doubleValue());
     } else if (vv instanceof String) {
       setStringProperty(key, (String) vv);
     } else {
@@ -2399,14 +2328,14 @@ abstract class ScriptExpr extends ScriptParam {
     return tv;
   }
 
-  private void setBitsetProperty(BS bs, int tok, int iValue, float fValue,
+  private void setBitsetProperty(BS bs, int tok, int iValue, double fValue,
                                  T tokenValue) throws ScriptException {
     if (chk || bs.cardinality() == 0)
       return;
     String[] list = null;
     String sValue = null;
-    float[] fvalues = null;
-    P3 pt;
+    double[] fvalues = null;
+    P3d pt;
     Lst<SV> sv = null;
     int nValues = 0;
     boolean isStrProperty = T.tokAttr(tok, T.strproperty);
@@ -2455,7 +2384,7 @@ abstract class ScriptExpr extends ScriptParam {
         prop = "colorValues";
         break;
       case T.point3f:
-        value = Integer.valueOf(CU.colorPtToFFRGB((P3) tokenValue.value));
+        value = Integer.valueOf(CU.colorPtToFFRGB((P3d) tokenValue.value));
         break;
       case T.string:
         value = tokenValue.value;
@@ -2482,7 +2411,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (isStrProperty)
         list = SV.strListValue(tokenValue);
       else
-        fvalues = SV.flistValue(tokenValue, nValues);
+        fvalues = SV.dlistValue(tokenValue, nValues);
       break;
     case T.string:
       if (sValue == null)
@@ -2492,10 +2421,10 @@ abstract class ScriptExpr extends ScriptParam {
     if (list != null) {
       nValues = list.length;
       if (!isStrProperty) {
-        fvalues = new float[nValues];
+        fvalues = new double[nValues];
         for (int i = nValues; --i >= 0;)
           fvalues[i] = (tok == T.element ? Elements.elementNumberFromSymbol(
-              list[i], false) : PT.parseFloat(list[i]));
+              list[i], false) : PT.parseDouble(list[i]));
       }
       if (tokenValue.tok != T.varray && nValues == 1) {
         if (isStrProperty)
@@ -2629,7 +2558,7 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = (((Boolean) v).booleanValue() ? T.tokenOn : T.tokenOff);
         } else if (v instanceof Integer) {
           fixed[j] = T.tv(T.integer, ((Integer) v).intValue(), v);
-        } else if (v instanceof Float) {
+        } else if (v instanceof Double) {
           fixed[j] = T.tv(T.decimal, getFloatEncodedInt("" + v), v);
         } else if (v instanceof String) {
           if (!forceString && !isExpression) {
@@ -2682,9 +2611,9 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = SV.newV(T.barray, v);
         } else if (v instanceof BS) {
           fixed[j] = SV.newV(T.bitset, v);
-        } else if (v instanceof P3) {
+        } else if (v instanceof P3d) {
           fixed[j] = SV.newV(T.point3f, v);
-        } else if (v instanceof P4) {
+        } else if (v instanceof P4d) {
           fixed[j] = SV.newV(T.point4f, v);
         } else if (v instanceof M34d) {
           fixed[j] = SV.newV(v instanceof M4d ? T.matrix4f : T.matrix3f, v);
@@ -2715,7 +2644,7 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = (bs == null ? SV.getVariable(v) : T.o(T.bitset, bs));
         } else {
           // assume we want a center
-          P3 center = ((ScriptEval) this).getObjectCenter(var, Integer.MIN_VALUE, Integer.MIN_VALUE);
+          P3d center = ((ScriptEval) this).getObjectCenter(var, Integer.MIN_VALUE, Integer.MIN_VALUE);
           if (center == null)
             invArg();
           fixed[j] = T.o(T.point3f, center);

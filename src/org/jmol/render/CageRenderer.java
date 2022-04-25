@@ -24,8 +24,8 @@
 package org.jmol.render;
 
 
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.shape.Bbcage;
@@ -36,10 +36,10 @@ abstract class CageRenderer extends FontLineShapeRenderer {
 
   // Bbcage and Uccage
 
-  protected final P3[] p3Screens = new P3[8];
+  protected final P3d[] p3Screens = new P3d[8];
   {
     for (int i = 8; --i >= 0; )
-      p3Screens[i] = new P3();
+      p3Screens[i] = new P3d();
   }
 
   protected char[] tickEdges;
@@ -47,11 +47,11 @@ abstract class CageRenderer extends FontLineShapeRenderer {
   protected boolean isSlab;
   protected boolean isPolymer;
   
-  private P3 pt = new P3();
+  private P3d pt = new P3d();
   
-  protected void renderCage(int mad, P3[] vertices, int[][] faces,
-                        P3[] axisPoints, int firstLine, int allowedEdges0,
-                        int allowedEdges1, float scale) {
+  protected void renderCage(int mad, P3d[] vertices, int[][] faces,
+                        P3d[] axisPoints, int firstLine, int allowedEdges0,
+                        int allowedEdges1, double scale) {
     //clearBox();
     g3d.setC(colix);
     FontLineShape fls = (FontLineShape) shape;
@@ -60,7 +60,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
     imageFontScaling = vwr.imageFontScaling;
     font3d = vwr.gdata.getFont3DScaled(fls.font3d, imageFontScaling);
 
-    float zSum = 0;
+    double zSum = 0;
     for (int i = 8; --i >= 0;) {
       pt.setT(vertices[i]);
       if (scale != 1) {
@@ -77,7 +77,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
       bsSolid = new BS();
       for (int i = 12; --i >= 0;) {
         int[] face = faces[i];
-        Measure.getNormalThroughPoints(p3Screens[face[0]], p3Screens[face[1]], p3Screens[face[2]], pt1, pt);
+        MeasureD.getNormalThroughPoints(p3Screens[face[0]], p3Screens[face[1]], p3Screens[face[2]], pt1, pt);
         if (pt1.z <= 0) {
           bsSolid.set(face[0]);
           bsSolid.set(face[1]);
@@ -106,7 +106,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
         checkTickTemps();
         tickA.setT(vertices[edge0]);
         tickB.setT(vertices[edge1]);
-        float start = 0;
+        double start = 0;
         if (shape instanceof Bbcage)
           switch (edge) {
           case 'x':

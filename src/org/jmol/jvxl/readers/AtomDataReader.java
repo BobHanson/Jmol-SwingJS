@@ -27,11 +27,11 @@ import java.util.Date;
 
 import javajs.util.AU;
 import javajs.util.M4d;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
@@ -46,7 +46,7 @@ import org.jmol.util.Logger;
 
 abstract class AtomDataReader extends VolumeDataReader {
 
-  protected float maxDistance;
+  protected double maxDistance;
   protected ContactPair contactPair;
 
   AtomDataReader() {
@@ -63,9 +63,9 @@ abstract class AtomDataReader extends VolumeDataReader {
 
   protected AtomData atomData = new AtomData();
 
-  protected P3[] atomXyzTruncated;
-  protected float[] atomRadius;
-  protected float[] atomProp;
+  protected P3d[] atomXyzTruncated;
+  protected double[] atomRadius;
+  protected double[] atomProp;
   protected int[] atomNo;
   protected int[] atomIndex;
   protected int[] myIndex;
@@ -80,9 +80,9 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected boolean doAddHydrogens;
   protected boolean havePlane;
   protected boolean doUseIterator;
-  protected float theProperty;
+  protected double theProperty;
   protected boolean haveOneProperty;
-  private float minPtsPerAng;
+  private double minPtsPerAng;
 
   /**
    * @param isMapData
@@ -113,7 +113,7 @@ abstract class AtomDataReader extends VolumeDataReader {
       volumeData.setPlaneParameters(params.thePlane);
   }
 
-  protected void markPlaneVoxels(P3 p, float r) {
+  protected void markPlaneVoxels(P3d p, double r) {
     for (int i = 0, pt = thisX * yzCount, pt1 = pt + yzCount; pt < pt1; pt++, i++) {
       volumeData.getPoint(pt, ptV);
       thisPlane[i] = ptV.distance(p) - r;
@@ -122,20 +122,20 @@ abstract class AtomDataReader extends VolumeDataReader {
 
   protected void setVolumeForPlane() {
     if (useOriginStepsPoints) {
-      xyzMin = P3.newP(params.origin);
-      xyzMax = P3.newP(params.origin);
+      xyzMin = P3d.newP(params.origin);
+      xyzMax = P3d.newP(params.origin);
       xyzMax.add3((params.points.x - 1) * params.steps.x, (params.points.y - 1)
           * params.steps.y, (params.points.z - 1) * params.steps.z);
     } else if (params.boundingBox == null) {
       getAtoms(params.bsSelected, false, true, false, false, false, false,
           params.mep_marginAngstroms, params.modelInvRotation);
       if (xyzMin == null) {
-        xyzMin = P3.new3(-10, -10, -10);
-        xyzMax = P3.new3(10, 10, 10);
+        xyzMin = P3d.new3(-10, -10, -10);
+        xyzMax = P3d.new3(10, 10, 10);
       }
     } else {
-      xyzMin = P3.newP(params.boundingBox[0]);
-      xyzMax = P3.newP(params.boundingBox[1]);
+      xyzMin = P3d.newP(params.boundingBox[0]);
+      xyzMax = P3d.newP(params.boundingBox[1]);
     }
     setRanges(params.plane_ptsPerAngstrom, params.plane_gridMax, 0);
   }
@@ -155,7 +155,7 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected void getAtoms(BS bsSelected, boolean doAddHydrogens,
                           boolean getRadii, boolean getMolecules,
                           boolean getAllModels, boolean addNearbyAtoms,
-                          boolean getAtomMinMax, float marginAtoms, M4d modelInvRotation) {
+                          boolean getAtomMinMax, double marginAtoms, M4d modelInvRotation) {
     if (addNearbyAtoms)
       getRadii = true;
     // set atomRadiusData to 100% if it has not been set already
@@ -197,22 +197,22 @@ abstract class AtomDataReader extends VolumeDataReader {
         atomData.atomRadius[i] = getWorkingRadius(i, marginAtoms);
     }
 
-    float rH = (getRadii && doAddHydrogens ? getWorkingRadius(-1, marginAtoms)
+    double rH = (getRadii && doAddHydrogens ? getWorkingRadius(-1, marginAtoms)
         : 0);
     myAtomCount = BSUtil.cardinalityOf(bsMySelected);
     BS atomSet = BSUtil.copy(bsMySelected);
     int nH = 0;
     atomProp = null;
-    theProperty = Float.MAX_VALUE;
+    theProperty = Double.MAX_VALUE;
     haveOneProperty = false;
-    float[] props = params.theProperty;
+    double[] props = params.theProperty;
     if (myAtomCount > 0) {
-      P3[] hAtoms = null;
+      P3d[] hAtoms = null;
       if (doAddHydrogens) {
         atomData.bsSelected = atomSet;
         sg.atomDataServer.fillAtomData(atomData,
             AtomData.MODE_GET_ATTACHED_HYDROGENS);
-        hAtoms = new P3[nH = atomData.hydrogenAtomCount];
+        hAtoms = new P3d[nH = atomData.hydrogenAtomCount];
         for (int i = 0; i < atomData.hAtoms.length; i++)
           if (atomData.hAtoms[i] != null)
             for (int j = atomData.hAtoms[i].length; --j >= 0;)
@@ -222,10 +222,10 @@ abstract class AtomDataReader extends VolumeDataReader {
       }
       int n = nH + myAtomCount;
       if (getRadii)
-        atomRadius = new float[n];
-      atomXyzTruncated = new P3[n];
+        atomRadius = new double[n];
+      atomXyzTruncated = new P3d[n];
       if (params.theProperty != null)
-        atomProp = new float[n];
+        atomProp = new double[n];
       atomNo = new int[n];
       atomIndex = new int[n];
       myIndex = new int[ac];
@@ -236,7 +236,7 @@ abstract class AtomDataReader extends VolumeDataReader {
         atomXyzTruncated[i] = hAtoms[i];
         atomNo[i] = -1;
         if (atomProp != null)
-          addAtomProp(i, Float.NaN);
+          addAtomProp(i, Double.NaN);
         // if (params.logMessages)
         // Logger.debug("draw {" + hAtoms[i].x + " " + hAtoms[i].y + " "
         // + hAtoms[i].z + "};");
@@ -245,7 +245,7 @@ abstract class AtomDataReader extends VolumeDataReader {
       for (int i = atomSet.nextSetBit(0); i >= 0; i = atomSet.nextSetBit(i + 1)) {
         if (atomProp != null)
           addAtomProp(myAtomCount,
-              (props != null && i < props.length ? props[i] : Float.NaN));
+              (props != null && i < props.length ? props[i] : Double.NaN));
         atomXyzTruncated[myAtomCount] = atomData.xyz[i];
         atomNo[myAtomCount] = atomData.atomicNumber[i];
         atomIndex[myAtomCount] = i;
@@ -260,13 +260,13 @@ abstract class AtomDataReader extends VolumeDataReader {
       Logger.info(myAtomCount + " atoms will be used in the surface calculation");
 
     if (myAtomCount == 0) {
-      setBBox(P3.new3(10, 10, 10), 0);
-      setBBox(P3.new3(-10, -10, -10), 0);
+      setBBox(P3d.new3(10, 10, 10), 0);
+      setBBox(P3d.new3(-10, -10, -10), 0);
     }
     for (int i = 0; i < myAtomCount; i++)
       setBBox(atomXyzTruncated[i], getRadii ? atomRadius[i] + 0.5f : 0); 
-    if (!Float.isNaN(params.scale)) {
-      V3 v = V3.newVsub(xyzMax, xyzMin);
+    if (!Double.isNaN(params.scale)) {
+      V3d v = V3d.newVsub(xyzMax, xyzMin);
       v.scale(0.5f);
       xyzMin.add(v);
       v.scale(params.scale);
@@ -278,13 +278,13 @@ abstract class AtomDataReader extends VolumeDataReader {
 
     if (!addNearbyAtoms || myAtomCount == 0)
       return;
-    P3 pt = new P3();
+    P3d pt = new P3d();
 
     bsNearby = new BS();
     for (int i = 0; i < ac; i++) {
       if (atomSet.get(i) || bsMyIgnored.get(i))
         continue;
-      float rA = atomData.atomRadius[i];
+      double rA = atomData.atomRadius[i];
       if (params.thePlane != null
           && Math.abs(volumeData.distancePointToPlane(atomData.xyz[i])) > 2 * rA)
         continue;
@@ -301,13 +301,13 @@ abstract class AtomDataReader extends VolumeDataReader {
     int nAtoms = myAtomCount;
     if (nearbyAtomCount != 0) {
       nAtoms += nearbyAtomCount;
-      atomRadius = AU.arrayCopyF(atomRadius, nAtoms);
-      atomXyzTruncated = (P3[]) AU.arrayCopyObject(atomXyzTruncated, nAtoms);
+      atomRadius = AU.arrayCopyD(atomRadius, nAtoms);
+      atomXyzTruncated = (P3d[]) AU.arrayCopyObject(atomXyzTruncated, nAtoms);
       if (atomIndex != null)
         atomIndex = AU.arrayCopyI(atomIndex, nAtoms);
 
       if (props != null)
-        atomProp = AU.arrayCopyF(atomProp, nAtoms);
+        atomProp = AU.arrayCopyD(atomProp, nAtoms);
       for (int i = bsNearby.nextSetBit(0); i >= 0; i = bsNearby
           .nextSetBit(i + 1)) {
         if (props != null)
@@ -322,50 +322,50 @@ abstract class AtomDataReader extends VolumeDataReader {
     if (getRadii)
       setRadii();
     
-    haveOneProperty = (!Float.isNaN(theProperty));
+    haveOneProperty = (!Double.isNaN(theProperty));
   }
 
   /**
    * solvent radius
    */
-  protected float sr;
+  protected double sr;
   /**
    * atom radius + solvent radius
    */
-  protected float[] rs;
+  protected double[] rs;
   /**
    * square of (atom radius + solvent radius)
    */
-  protected float[] rs2;
+  protected double[] rs2;
   /**
    * maximun (atom radius + solvent radius) 
    */
-  protected float maxRS;
+  protected double maxRS;
 
   protected void setRadii() {
     if (rs != null)
       return;
     maxRS = 0;
-    rs = new float[myAtomCount];
-    rs2 = new float[myAtomCount];
+    rs = new double[myAtomCount];
+    rs2 = new double[myAtomCount];
     for (int i = 0; i < myAtomCount; i++) {
-      float r = rs[i] = atomRadius[i] + sr;
+      double r = rs[i] = atomRadius[i] + sr;
       if (r > maxRS)
         maxRS = r;
       rs2[i] = rs[i] * rs[i];
     }   
   }
 
-  private void addAtomProp(int i, float f) {
+  private void addAtomProp(int i, double f) {
     atomProp[i] = f;
-    if (!Float.isNaN(theProperty))
+    if (!Double.isNaN(theProperty))
       if (f != theProperty)
-        theProperty = (theProperty == Float.MAX_VALUE ? f : Float.NaN);
+        theProperty = (theProperty == Double.MAX_VALUE ? f : Double.NaN);
   }
 
-  private float getWorkingRadius(int i, float marginAtoms) {
-    float r = (i < 0 ? atomData.hAtomRadius : atomData.atomRadius[i]);
-    return (Float.isNaN(marginAtoms) ? Math.max(r, 0.1f) : r + marginAtoms);
+  private double getWorkingRadius(int i, double marginAtoms) {
+    double r = (i < 0 ? atomData.hAtomRadius : atomData.atomRadius[i]);
+    return (Double.isNaN(marginAtoms) ? Math.max(r, 0.1f) : r + marginAtoms);
   }
 
   protected void setHeader(String calcType, String line2) {
@@ -377,7 +377,7 @@ abstract class AtomDataReader extends VolumeDataReader {
         .append("\n");
   }
 
-  protected void setRanges(float ptsPerAngstrom, int maxGrid, float minPtsPerAng) {
+  protected void setRanges(double ptsPerAngstrom, int maxGrid, double minPtsPerAng) {
     if (xyzMin == null)
       return;
     this.ptsPerAngstrom = ptsPerAngstrom;
@@ -414,23 +414,23 @@ abstract class AtomDataReader extends VolumeDataReader {
     }
   }
 
-  protected void resetPlane(float value) {
+  protected void resetPlane(double value) {
     for (int i = 0; i < yzCount; i++)
       thisPlane[i] = value;
   }
 
-  protected void resetVoxelData(float value) {
+  protected void resetVoxelData(double value) {
     for (int x = 0; x < nPointsX; ++x)
       for (int y = 0; y < nPointsY; ++y)
         for (int z = 0; z < nPointsZ; ++z)
           voxelData[x][y][z] = value;
   }
 
-  protected float[] thisPlane;
+  protected double[] thisPlane;
   protected BS thisAtomSet;
   protected int thisX;
 
-  private float getVoxel(int i, int j, int k, int ipt) {
+  private double getVoxel(int i, int j, int k, int ipt) {
     return (isProgressive ? thisPlane[ipt % yzCount] : voxelData[i][j][k]);
   }
 
@@ -441,21 +441,21 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected void unsetVoxelData2() {
     if (isProgressive)
       for (int i = 0; i < yzCount; i++) {
-        if (thisPlane[i] == Float.MAX_VALUE)
-          thisPlane[i] = Float.NaN;
+        if (thisPlane[i] == Double.MAX_VALUE)
+          thisPlane[i] = Double.NaN;
       }
     else
       for (int x = 0; x < nPointsX; ++x)
         for (int y = 0; y < nPointsY; ++y)
           for (int z = 0; z < nPointsZ; ++z)
-            if (voxelData[x][y][z] == Float.MAX_VALUE)
-              voxelData[x][y][z] = Float.NaN;
+            if (voxelData[x][y][z] == Double.MAX_VALUE)
+              voxelData[x][y][z] = Double.NaN;
   }
 
-  protected float margin;
-  protected float vl0, vl1, vl2;
+  protected double margin;
+  protected double vl0, vl1, vl2;
 
-  protected void setGridLimitsForAtom(P3 ptA, float rA, P3i pt0, P3i pt1) {
+  protected void setGridLimitsForAtom(P3d ptA, double rA, P3i pt0, P3i pt1) {
     rA += margin; // to span corner-to-corner possibility
     volumeData.xyzToVoxelPt(ptA.x, ptA.y, ptA.z, pt0);
     int x = (int) Math.floor(rA / volumeData.volumetricVectorLengths[0]);
@@ -489,28 +489,28 @@ abstract class AtomDataReader extends VolumeDataReader {
     }
   }
 
-  protected final P3 ptY0 = new P3();
-  protected final P3 ptZ0 = new P3();
+  protected final P3d ptY0 = new P3d();
+  protected final P3d ptZ0 = new P3d();
   protected final P3i pt0 = new P3i();
   protected final P3i pt1 = new P3i();
-  protected final P3 ptV = new P3();
+  protected final P3d ptV = new P3d();
 
-  protected void markSphereVoxels(float r0, float distance) {
-    boolean isWithin = (distance != Float.MAX_VALUE && point != null);
-    T3 v0 = volumetricVectors[0];
-    T3 v1 = volumetricVectors[1];
-    T3 v2 = volumetricVectors[2];
+  protected void markSphereVoxels(double r0, double distance) {
+    boolean isWithin = (distance != Double.MAX_VALUE && point != null);
+    T3d v0 = volumetricVectors[0];
+    T3d v1 = volumetricVectors[1];
+    T3d v2 = volumetricVectors[2];
     for (int iAtom = thisAtomSet.nextSetBit(0); iAtom >= 0; iAtom = thisAtomSet
         .nextSetBit(iAtom + 1)) {
       if (!havePlane && validSpheres != null && !validSpheres.get(iAtom))
         continue;
       boolean isSurface = (noFaceSpheres != null && noFaceSpheres.get(iAtom));
       boolean isNearby = (iAtom >= firstNearbyAtom);
-      P3 ptA = atomXyzTruncated[iAtom];
-      float rA = atomRadius[iAtom];
+      P3d ptA = atomXyzTruncated[iAtom];
+      double rA = atomRadius[iAtom];
       if (isWithin && ptA.distance(point) > distance + rA + 0.5)
         continue;
-      float rA0 = rA + r0;
+      double rA0 = rA + r0;
       setGridLimitsForAtom(ptA, rA0, pt0, pt1);
       //pt1.y = nPointsY;
       //pt1.z = nPointsZ;
@@ -524,13 +524,13 @@ abstract class AtomDataReader extends VolumeDataReader {
         for (int j = pt0.y; j < pt1.y; j++, ptV.add2(v1, ptZ0)) {
           ptZ0.setT(ptV);
           for (int k = pt0.z; k < pt1.z; k++, ptV.add(v2)) {
-            float value = ptV.distance(ptA) - rA;
+            double value = ptV.distance(ptA) - rA;
             int ipt = volumeData.getPointIndex(i, j, k);
             if ((r0 == 0 || value <= rA0) && value < getVoxel(i, j, k, ipt)) {
               if (isNearby || isWithin && ptV.distance(point) > distance)
-                value = Float.NaN;
+                value = Double.NaN;
               setVoxel(i, j, k, ipt, value);
-              if (!Float.isNaN(value)) {
+              if (!Double.isNaN(value)) {
                 if (voxelSource != null)
                   voxelSource[ipt] = iAtom + 1;
                 if (value < 0 && isSurface)
@@ -543,7 +543,7 @@ abstract class AtomDataReader extends VolumeDataReader {
     }
   }
 
-  protected void setVoxel(int i, int j, int k, int ipt, float value) {
+  protected void setVoxel(int i, int j, int k, int ipt, double value) {
     if (isProgressive)
       thisPlane[ipt % yzCount] = value;
     else

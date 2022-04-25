@@ -30,7 +30,7 @@ import java.util.Set;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -310,7 +310,7 @@ public class AnnotationParser implements JmolAnnotationParser {
 
   /**
    * Returns a Lst<Object> of property data in the form name(String),
-   * data(float[]), modelIndex (Integer), isGroup (Boolean);
+   * data(double[]), modelIndex (Integer), isGroup (Boolean);
    * 
    */
   @Override
@@ -349,9 +349,9 @@ public class AnnotationParser implements JmolAnnotationParser {
       SV sv;
       Map<String, SV> map;
       for (Entry<String, SV> e : set) {
-        float[][] floats = AU.newFloat2(nModels);
+        double[][] floats = AU.newDouble2(nModels);
         for (int m = nModels; --m >= 0;)
-          floats[m] = new float[modelAtomIndices[m + 1] - modelAtomIndices[m]];
+          floats[m] = new double[modelAtomIndices[m + 1] - modelAtomIndices[m]];
         sv = e.getValue();
         Lst<SV> outliers = sv.getList();
         if (outliers == null) {
@@ -369,7 +369,7 @@ public class AnnotationParser implements JmolAnnotationParser {
             map = out.getMap();
             sv = map.get("units");
             SV svv = map.get("value");
-            float val = (svv == null ? 1 : SV.fValue(svv));
+            double val = (svv == null ? 1 : SV.dValue(svv));
             Lst<SV> units = (val == 0 || sv == null || sv.tok == T.varray ? sv
                 .getList() : sv.tok == T.string ? new Lst<SV>() : null);
             if (units != null) {
@@ -595,7 +595,7 @@ public class AnnotationParser implements JmolAnnotationParser {
    * 
    * @param viewer
    * @param vals
-   *        model-based array of float values for a given validation type
+   *        model-based array of double values for a given validation type
    * @param unitID
    * @param val
    * @param bsAtoms
@@ -608,8 +608,8 @@ public class AnnotationParser implements JmolAnnotationParser {
    * @return true if this is residue-based validation (to be added to H atoms
    *         when pdbAddHydrogens is set
    */
-  private boolean catalogUnit(Viewer viewer, float[][] vals, String unitID,
-                              float val, BS bsAtoms, int[] modelAtomIndices,
+  private boolean catalogUnit(Viewer viewer, double[][] vals, String unitID,
+                              double val, BS bsAtoms, int[] modelAtomIndices,
                               Map<String, int[]> resMap,
                               Map<String, Integer> atomMap,
                               Map<String, Integer> modelMap
@@ -725,20 +725,20 @@ public class AnnotationParser implements JmolAnnotationParser {
    * @param type
    *        e.g. "clashes"
    * @param atom
-   * @return a list of Float values associated with this atom and this type of
+   * @return a list of Double values associated with this atom and this type of
    *         validation
    */
   @Override
-  public Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom) {
+  public Lst<Double> getAtomValidation(Viewer vwr, String type, Atom atom) {
     int i = 0;
     int n = 0;
 
-    Lst<Float> l = null;
+    Lst<Double> l = null;
     Map<String, SV> map = null;
     Lst<SV> list = null;
     try {
       int ia = atom.i;
-      l = new Lst<Float>();
+      l = new Lst<Double>();
       list = ((SV) vwr.ms.getModelAuxiliaryInfo(atom.mi).get("validation"))
           .mapGet("_list").getList();
 
@@ -747,8 +747,8 @@ public class AnnotationParser implements JmolAnnotationParser {
         if (map.get("_path").value.equals(type)
             && ((BS) map.get("_atoms").value).get(ia)) {
           SV v = map.get("value");
-          l.addLast(v.tok == T.decimal ? (Float) v.value : Float.valueOf(v
-              .asFloat()));
+          l.addLast(v.tok == T.decimal ? (Double) v.value : Double.valueOf(v
+              .asDouble()));
         }
       }
       return l;
@@ -899,7 +899,7 @@ public class AnnotationParser implements JmolAnnotationParser {
   }
 
   @Override
-  public void getAtomicDSSRData(ModelSet ms, int modelIndex, float[] dssrData, String dataType) {
+  public void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData, String dataType) {
   }
 
   @Override
@@ -907,7 +907,7 @@ public class AnnotationParser implements JmolAnnotationParser {
   }
   
   @Override
-  public P3[] getDSSRFrame(Map<String, Object> dssrNT) {
+  public P3d[] getDSSRFrame(Map<String, Object> dssrNT) {
     return null;
   }
 

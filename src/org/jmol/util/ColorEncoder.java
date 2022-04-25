@@ -38,7 +38,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.c.PAL;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /*
  * 
@@ -149,8 +149,8 @@ import javajs.util.P3;
   public int currentPalette = ROYGB;
   public int currentSegmentCount = 1;
   public boolean isTranslucent = false;
-  public float lo;
-  public float hi;
+  public double lo;
+  public double hi;
   public boolean isReversed;
 
 
@@ -424,12 +424,12 @@ import javajs.util.P3;
 
   }
   
-  public short getColorIndexFromPalette(float val, float lo,
-                                                     float hi, int palette,
+  public short getColorIndexFromPalette(double val, double lo,
+                                                     double hi, int palette,
                                                      boolean isTranslucent) {
     short colix = C.getColix(getArgbFromPalette(val, lo, hi, palette));
     if (isTranslucent) {
-      float f = (hi - val) / (hi - lo); 
+      double f = (hi - val) / (hi - lo); 
       if (f > 1)
         f = 1; // transparent
       else if (f < 0.125f) // never fully opaque
@@ -475,8 +475,8 @@ import javajs.util.P3;
     }
   }
   
-  public int getArgbFromPalette(float val, float lo, float hi, int palette) {
-    if (Float.isNaN(val))
+  public int getArgbFromPalette(double val, double lo, double hi, int palette) {
+    if (Double.isNaN(val))
       return GRAY;
     int n = getPaletteColorCount(palette);
     switch (palette) {
@@ -535,17 +535,17 @@ import javajs.util.P3;
   
   // nonstatic methods:
   
-  public int getArgb(float val) {
+  public int getArgb(double val) {
     return (isReversed ? getArgbFromPalette(-val, -hi, -lo, currentPalette)
         : getArgbFromPalette(val, lo, hi, currentPalette));
   }
   
-  public int getArgbMinMax(float val, float min, float max) {
+  public int getArgbMinMax(double val, double min, double max) {
     return (isReversed ? getArgbFromPalette(-val, -max, -min, currentPalette)
         : getArgbFromPalette(val, min, max, currentPalette));
   }
   
-  public short getColorIndex(float val) {
+  public short getColorIndex(double val) {
     return (isReversed ? getColorIndexFromPalette(-val, -hi, -lo, currentPalette, isTranslucent)
         : getColorIndexFromPalette(val, lo, hi, currentPalette, isTranslucent));
   }
@@ -553,10 +553,10 @@ import javajs.util.P3;
   public Map<String, Object> getColorKey() {
     Map<String, Object> info = new Hashtable<String, Object>();
     int segmentCount = getPaletteColorCount(currentPalette);
-    Lst<P3> colors = new  Lst<P3>();//segmentCount);
-    float[] values = new float[segmentCount + 1];
-    float quantum = (hi - lo) / segmentCount;
-    float f = quantum * (isReversed ? -0.5f : 0.5f);
+    Lst<P3d> colors = new  Lst<P3d>();//segmentCount);
+    double[] values = new double[segmentCount + 1];
+    double quantum = (hi - lo) / segmentCount;
+    double f = quantum * (isReversed ? -0.5f : 0.5f);
 
     for (int i = 0; i < segmentCount; i++) {
       values[i] = (isReversed ? hi - i * quantum : lo + i * quantum);
@@ -565,8 +565,8 @@ import javajs.util.P3;
     values[segmentCount] = (isReversed ? lo : hi);
     info.put("values", values);
     info.put("colors", colors);
-    info.put("min", Float.valueOf(lo));
-    info.put("max", Float.valueOf(hi));
+    info.put("min", Double.valueOf(lo));
+    info.put("max", Double.valueOf(hi));
     info.put("reversed", Boolean.valueOf(isReversed));
     info.put("name", getCurrentColorSchemeName());
     return info;
@@ -589,8 +589,8 @@ import javajs.util.P3;
       currentPalette = createColorScheme(colorScheme, true, false);
   }
 
-  public void setRange(float lo, float hi, boolean isReversed) {
-    if (hi == Float.MAX_VALUE) {
+  public void setRange(double lo, double hi, boolean isReversed) {
+    if (hi == Double.MAX_VALUE) {
       lo = 1; 
       hi = getPaletteColorCount(currentPalette) + 1;
     }
@@ -684,13 +684,13 @@ import javajs.util.P3;
    * @param isLowEnd
    * @return quantized value
    */
-  public float quantize(float x, boolean isLowEnd) {
+  public double quantize(double x, boolean isLowEnd) {
     int n = getPaletteColorCount(currentPalette);
     x = (((int) (x * n)) + (isLowEnd ? 0f : 1f)) / n;
     return (x <= 0 ? lo : x >= 1 ? hi : lo + (hi - lo) * x);
   }
   
-  public final static int quantize4(float val, float lo, float hi, int segmentCount) {
+  public final static int quantize4(double val, double lo, double hi, int segmentCount) {
     /* oy! Say you have an array with 10 values, so segmentCount=10
      * then we expect 0,1,2,...,9  EVENLY
      * If f = fractional distance from lo to hi, say 0.0 to 10.0 again,
@@ -731,24 +731,24 @@ import javajs.util.P3;
      * Bob Hanson, 5/2006
      * 
      */
-    float range = hi - lo;
-    if (range <= 0 || Float.isNaN(val))
+    double range = hi - lo;
+    if (range <= 0 || Double.isNaN(val))
       return segmentCount / 2;
-    float t = val - lo;
+    double t = val - lo;
     if (t <= 0)
       return 0;
-    float quanta = range / segmentCount;
+    double quanta = range / segmentCount;
     int q = (int)(t / quanta + 0.0001f);  //was 0.5f!
     if (q >= segmentCount)
       q = segmentCount - 1;
     return q;
   }
 
-  private final static int colorIndex(float q, int segmentCount) {
+  private final static int colorIndex(double q, int segmentCount) {
     return (int) Math.floor(q <= 0 || q >= segmentCount ? 0 : q);
   }
 
-  private final static int colorIndexRepeat(float q, int segmentCount) {
+  private final static int colorIndexRepeat(double q, int segmentCount) {
     int i = (int) Math.floor(q <= 0 ? 0 : q);
     return i % segmentCount;
   }

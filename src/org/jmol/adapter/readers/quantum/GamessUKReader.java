@@ -187,16 +187,16 @@ public class GamessUKReader extends GamessReader {
 
    */
   private Lst<String> symmetries;
-  private Lst<Float> occupancies;
+  private Lst<Double> occupancies;
    
    private void readOrbitalSymmetryAndOccupancy() throws Exception {
      readLines(4);
      symmetries = new  Lst<String>();
-     occupancies = new  Lst<Float>();
+     occupancies = new  Lst<Double>();
      while (rd() != null && line.indexOf("====") < 0) {
        String[] tokens = PT.getTokens(line.substring(20));
        symmetries.addLast(tokens[0] + " " + tokens[1]);
-       occupancies.addLast(Float.valueOf((float) parseDoubleStr(tokens[5])));
+       occupancies.addLast(Double.valueOf((double) parseDoubleStr(tokens[5])));
      }
    }
 

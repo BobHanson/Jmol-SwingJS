@@ -469,7 +469,7 @@ public class Resolver {
       if (tokens.length == 0)
         continue;
       if (tokens[0].startsWith("atom") && tokens.length > 4
-          && Float.isNaN(PT.parseFloat(tokens[4]))
+          && Double.isNaN(PT.parseDouble(tokens[4]))
           || tokens[0].startsWith("multipole") && tokens.length >= 6
           || tokens[0].startsWith("lattice_vector") && tokens.length >= 4)
         return true;
@@ -497,7 +497,7 @@ public class Resolver {
   }
 
   private static boolean isFloat(String s) {
-    return !Float.isNaN(PT.parseFloat(s));
+    return !Double.isNaN(PT.parseDouble(s));
   }
 
 

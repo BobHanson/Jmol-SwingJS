@@ -2,19 +2,19 @@ package org.jmol.smiles;
 
 import java.util.Comparator;
 
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 class PolyhedronStereoSorter implements Comparator<Object[]> {
 
-  private V3 vTemp = new V3();
-  private V3 vRef;
+  private V3d vTemp = new V3d();
+  private V3d vRef;
 
   PolyhedronStereoSorter() {
   }
   
-  void setRef(V3 vRef) {
+  void setRef(V3d vRef) {
     this.vRef = vRef;
   }
 
@@ -25,20 +25,20 @@ class PolyhedronStereoSorter implements Comparator<Object[]> {
    */
   @Override
   public int compare(Object[] a, Object[] b) {
-    float torA = ((Float) a[1]).floatValue();
-    float torB = ((Float) b[1]).floatValue();
+    double torA = ((Float) a[1]).doubleValue();
+    double torB = ((Float) b[1]).doubleValue();
       if (Math.abs(torA - torB) < 1f) {
       torA = 0;
-      vTemp.sub2((P3) b[2], (P3) a[2]);
+      vTemp.sub2((P3d) b[2], (P3d) a[2]);
       torB = vRef.dot(vTemp);
     }
     return (torA < torB ? -1 : torA > torB ? 1 : 0);
   }
 
-  private V3 align1 = new V3();
-  private V3 align2 = new V3();
+  private V3d align1 = new V3d();
+  private V3d align2 = new V3d();
 
-  private static final float MIN_ALIGNED = (float) (10f/180*Math.PI);
+  private static final double MIN_ALIGNED = (double) (10f/180*Math.PI);
 
   /**
    * check alignment, within 10 degrees is considered aligned.
@@ -48,10 +48,10 @@ class PolyhedronStereoSorter implements Comparator<Object[]> {
    * @param pt3
    * @return true if within 10 degrees
    */
-  boolean isAligned(T3 pt1, T3 pt2, T3 pt3) {
+  boolean isAligned(T3d pt1, T3d pt2, T3d pt3) {
     align1.sub2(pt1, pt2);
     align2.sub2(pt2, pt3);
-    float angle = align1.angle(align2);
+    double angle = align1.angle(align2);
     return (angle < MIN_ALIGNED);
   }
 

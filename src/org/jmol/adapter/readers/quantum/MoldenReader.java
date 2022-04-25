@@ -219,7 +219,7 @@ public class MoldenReader extends MopacSlaterReader {
       double zeta = parseDoubleStr(tokens[5]) * stoFactor;
       addSlater(parseIntStr(tokens[0]), parseIntStr(tokens[1]),
           parseIntStr(tokens[2]), parseIntStr(tokens[3]), parseIntStr(tokens[4]),
-          zeta, (float) parseDoubleStr(tokens[6]));
+          zeta, (double) parseDoubleStr(tokens[6]));
       nCoef++;
     }
     setSlaters(false);
@@ -245,7 +245,7 @@ public class MoldenReader extends MopacSlaterReader {
       s   10 1.00
      */
     shells = new  Lst<int[]>();
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     int atomIndex = 0;
     int gaussianPtr = 0;
     nCoef = 0;
@@ -285,10 +285,10 @@ public class MoldenReader extends MopacSlaterReader {
           // or two (sp) contraction coefficient(s)
           String[] primTokens = PT.getTokens(rd());
           int nTokens = primTokens.length;
-          float orbData[] = new float[nTokens];
+          double orbData[] = new double[nTokens];
 
           for (int d = 0; d < nTokens; d++)
-            orbData[d] = (float) parseDoubleStr(primTokens[d]);
+            orbData[d] = (double) parseDoubleStr(primTokens[d]);
           gdata.addLast(orbData);
           gaussianPtr++;
         }
@@ -299,7 +299,7 @@ public class MoldenReader extends MopacSlaterReader {
       rd();
     }
 
-    float[][] garray = AU.newFloat2(gaussianPtr);
+    double[][] garray = AU.newDouble2(gaussianPtr);
     for (int i = 0; i < gaussianPtr; i++) {
       garray[i] = gdata.get(i);
     }

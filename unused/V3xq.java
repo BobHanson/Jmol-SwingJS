@@ -30,21 +30,21 @@ package javajs.util;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public class V3 extends T3 {
+public class V3d extends T3d {
 
-  public V3() {
+  public V3d() {
   }
   
-  public static V3 newV(T3 t) {
+  public static V3d newV(T3d t) {
     return new3(t.x, t.y, t.z);
   }
 
-  public static V3 newVsub(T3 t1, T3 t2) {
+  public static V3d newVsub(T3d t1, T3d t2) {
     return new3(t1.x - t2.x, t1.y - t2.y,t1.z - t2.z);
   }
 
-  public static V3 new3(float x, float y, float z) {
-    V3 v = new V3();
+  public static V3d new3(float x, float y, float z) {
+    V3d v = new V3d();
     v.x = x;
     v.y = y;
     v.z = z;
@@ -59,7 +59,7 @@ public class V3 extends T3 {
    *        the other vector
    * @return the angle in radians in the range [0,PI]
    */
-  public final float angle(V3 v1) {
+  public final float angle(V3d v1) {
     // return (double)Math.acos(dot(v1)/v1.length()/v.length());
     // Numerically, near 0 and PI are very bad condition for acos.
     // In 3-space, |atan2(sin,cos)| is much stable.

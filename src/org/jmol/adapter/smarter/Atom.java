@@ -33,7 +33,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class Atom extends P3d implements Cloneable {
@@ -46,15 +46,15 @@ public class Atom extends P3d implements Cloneable {
   public String atomName;
   public int formalCharge = Integer.MIN_VALUE;
   public double partialCharge = Double.NaN;
-  public V3 vib; // .x and .y can be used for in-reader purposes as long as vib.z is left Double.NaN
+  public V3d vib; // .x and .y can be used for in-reader purposes as long as vib.z is left Double.NaN
   public double bfactor = Double.NaN;
   public double foccupancy = 1;
-  public float radius = Float.NaN;
+  public double radius = Double.NaN;
   public boolean isHetero;
   public int atomSerial = Integer.MIN_VALUE;
   public int chainID; // not public -- set using AtomSetCollectionReader.setChainID
 
-  public float bondingRadius = Float.NaN; // only for CIF oxidation state and TopoCifParser; co-opted for Biomolecule 
+  public double bondingRadius = Double.NaN; // only for CIF oxidation state and TopoCifParser; co-opted for Biomolecule 
 
   public char altLoc = '\0';
   public String group3;
@@ -93,7 +93,7 @@ public class Atom extends P3d implements Cloneable {
       if (vib instanceof Vibration) {
         a.vib = (Vibration) ((Vibration) vib).clone();
       } else {
-        a.vib = V3.newV(a.vib);
+        a.vib = V3d.newV(a.vib);
       }
     }
     if (anisoBorU != null)

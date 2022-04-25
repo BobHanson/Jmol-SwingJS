@@ -34,8 +34,8 @@ import org.jmol.bspt.Bspf;
 import org.jmol.bspt.CubeIterator;
 import javajs.util.BS;
 
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import org.jmol.viewer.Viewer;
 
@@ -50,7 +50,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
   protected int modelIndex = Integer.MAX_VALUE;
   private int atomIndex = -1;
   private int zeroBase;
-  private float distanceSquared;
+  private double distanceSquared;
 
   private BS bsSelected;
   private boolean isGreaterOnly;
@@ -86,7 +86,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
   }
 
   private RadiusData radiusData;
-  private float vdw1;
+  private double vdw1;
   private boolean isVdw;
   private Atom[] atoms;
   private Viewer vwr;
@@ -94,7 +94,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
   
  
   @Override
-  public void setModel(ModelSet modelSet, int modelIndex, int firstModelAtom, int atomIndex, T3 center, float distance, RadiusData rd) {
+  public void setModel(ModelSet modelSet, int modelIndex, int firstModelAtom, int atomIndex, T3d center, double distance, RadiusData rd) {
     if (threadSafe)
       modelIndex = -1 - modelIndex; // no caching
     if (modelIndex != this.modelIndex || cubeIterator == null) {
@@ -120,11 +120,11 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
 
 
   @Override
-  public void setCenter(T3 center, float distance) {
+  public void setCenter(T3d center, double distance) {
     setCenter2(center, distance);
   }
   
-  protected void setCenter2(T3 center, float distance) {
+  protected void setCenter2(T3d center, double distance) {
     if (cubeIterator == null)
       return;
     cubeIterator.initialize(center, distance, hemisphereOnly);
@@ -166,7 +166,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
   
  
   @Override
-  public float foundDistance2() {
+  public double foundDistance2() {
     return (cubeIterator == null ? -1 : cubeIterator.foundDistance2());
   }
   
@@ -184,7 +184,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
     int iAtom;
     while (hasNext())
       if ((iAtom = next()) >= 0) {
-        float d;
+        double d;
         if (isVdw) {
           d = atoms[iAtom].getVanderwaalsRadiusFloat(vwr, radiusData.vdwType) + vdw1;
           switch (radiusData.factorType) {
@@ -215,7 +215,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
 
 
   @Override
-  public P3 getPosition() {
+  public P3d getPosition() {
     return null;
   }
 
