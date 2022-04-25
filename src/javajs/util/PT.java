@@ -1410,7 +1410,7 @@ public class PT {
             break;
           case 'f':
             strFormat = formatString(strFormat, "f", null,
-                ((Number) values[o]).floatValue(), Double.NaN, true);
+                ((Number) values[o]).doubleValue(), Double.NaN, true);
             break;
           case 'i':
             strFormat = formatString(strFormat, "d", "" + values[o], Float.NaN,
