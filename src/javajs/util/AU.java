@@ -569,9 +569,9 @@ final public class AU {
     return x instanceof T3d[];
   }
 
-//  public static boolean isAF(Object x) {
-//    return x instanceof float[];
-//  }
+  public static boolean isAF(Object x) {
+    return x instanceof float[];
+  }
 
   public static boolean isADouble(Object x) {
     return x instanceof Double[];
