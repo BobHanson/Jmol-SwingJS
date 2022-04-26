@@ -1779,8 +1779,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     info = JOptionPane.showInputDialog(GT.$("width height?"), data);
     if (info == null)
       return new int[] { width, height };
-    float[] dims = new float[2];
-    int n = Parser.parseStringInfestedFloatArray(info.replace(',', ' '), null,
+    double[] dims = new double[2];
+    int n = Parser.parseStringInfestedDoubleArray(info.replace(',', ' '), null,
         dims);
     if (n < 2)
       return new int[] { width, height };
@@ -2079,9 +2079,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     long now = handler.latestMoveTime = System.currentTimeMillis();
     switch (JsonNioService.getString(json, "style")) {
     case "rotate":
-      float dx = (float) JsonNioService.getDouble(json, "x");
-      float dy = (float) JsonNioService.getDouble(json, "y");
-      float dxdy = dx * dx + dy * dy;
+      double dx = (double) JsonNioService.getDouble(json, "x");
+      double dy = (double) JsonNioService.getDouble(json, "y");
+      double dxdy = dx * dx + dy * dy;
       boolean isFast = (dxdy > TouchHandler.swipeCutoff);
       boolean disallowSpinGesture = vwr.getBooleanProperty("isNavigating")
           || !vwr.getBooleanProperty("allowGestures");
@@ -2121,7 +2121,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     case "zoom":
       if (!handler.isPaused)
         handler.pauseScript(vwr, true);
-      float zoomFactor = (float) (JsonNioService.getDouble(json, "scale")
+      double zoomFactor = (double) (JsonNioService.getDouble(json, "scale")
           / (vwr.tm.zmPct / 100.0d));
       syncScript("Mouse: zoomByFactor " + zoomFactor);
       break;
@@ -2135,8 +2135,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     // raw touch event
     vwr.acm.processMultitouchEvent(
         0, JsonNioService.getInt(json, "eventType"), JsonNioService.getInt(json, "touchID"),
-        JsonNioService.getInt(json, "iData"), P3d.new3((float) JsonNioService.getDouble(json, "x"),
-            (float) JsonNioService.getDouble(json, "y"), (float) JsonNioService.getDouble(json, "z")),
+        JsonNioService.getInt(json, "iData"), P3d.new3((double) JsonNioService.getDouble(json, "x"),
+            (double) JsonNioService.getDouble(json, "y"), (double) JsonNioService.getDouble(json, "z")),
         JsonNioService.getLong(json, "time"));
     break;
   }

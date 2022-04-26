@@ -1661,7 +1661,7 @@ public class StateCreator extends JmolStateCreator {
       return;
     // see setAtomData()
     SB s = new SB();
-    String dataLabel = label + " setd";
+    String dataLabel = label + " set";
     int n = 0;
     Atom[] atoms = vwr.ms.at;
     BS[] tainted = vwr.ms.tainted;
