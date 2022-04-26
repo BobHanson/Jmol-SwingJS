@@ -1,0 +1,96 @@
+
+//globals
+
+newuc = unitcell();
+
+
+// h k l miller plane
+// d - depth in fraction
+// o - offset in fraction
+function doslab(h, k, l, depth, offset) {
+
+//BH I do not see the need for this: save state s1
+
+	// dhkl = perpendicular distance of this plane to the origin.
+
+	var dhkl = -hkl(h, k, l).w;
+	var thickness = dhkl * depth;
+	var offset = dhkl * offset - thickness;		
+	var olduc = unitcell();	
+	unitcell surface {@h @k @l 0} @thickness  @offset
+	newuc = unitcell();	
+	unitcell @olduc;
+
+//BH why this?	//unitcell @olduc;
+//BH why this?   restore state s1
+
+	// diameter -4 meaning dash line, the distance between dashes
+	draw id cleave diameter -4 unitcell @newuc mesh nofill color blue;
+}
+
+function reloadPWmat(uc) {
+ //BH we need "pwslab" here in WRITE to indicate that we do NOT want to remove
+ //BH atoms that are packing atoms, just write all the atoms selected
+	if (uc == "slab") {
+	  select *;load inline @{write('pwslab')} filter "fileType=PWmat;"; 
+	} else if (uc) {
+	  select *; load inline @{write('pwmat')} fill @uc filter "filetype=PWmat";
+	  unitcell @uc;
+	  reloadPWmat("slab");
+	} else {
+	  select *; load inline @{write('pwmat')} packed filter "filetype=PWmat";
+	}
+	select none
+}
+
+function reloadPWmatsuper(a, b, c) {
+	select *; load orientation inline @{write('pwmat')} supercell @{point(a, b, c)} filter "filetype=PWmat";
+	zoom unitcell 0
+}
+
+function cleave() {
+	reloadPWMat(newuc);
+	delete fz < 0.001;
+	{*}.fz = {*}.fz.all.sub({*}.fz.min);
+	var zmax =  {*}.fz.max;
+	if(zmax<0.00001){zmax = 1}; // BH was 0;
+	unitcell scale {1 1 @zmax};
+	reloadPWmat("slab"); //BH one more "slab" load after this change
+	newuc = unitcell();
+	center unitcell;
+	zoom unitcell 0;
+	save state cleave;
+  unbind "_setMeasure"
+}
+
+function buildVacuum(offsetAng, vacuumAng) {
+	restore state cleave;	
+	unitcell @newuc;
+	var at = {*};
+	var currentC = newuc[4].length;
+	var fmin =at.fz.min;
+	var fSlabThickness = at.fz.max - fmin;
+	var surfaceDepthAng = currentC * fSlabThickness;
+	var newC = surfaceDepthAng + vacuumAng;
+	var f = newC / currentC;
+	unitcell scale {1 1 @f};
+	var fOffset = offsetAng/newC;
+	unitcell offset @{point(0,0,-fOffset)};
+	reloadPWmat;
+	center unitcell;
+	zoom unitcell 0;
+}
+
+print "#usage;slab 1 1 1 1.5 1.5";
+print "#usage; cleave";
+print "#usage; buildVacuum 5 10";
+print "#usage; reloadPWMat";
+print "#usage; reloadPWMat(newuc)";
+print "#usage; reloadPWMatSuper(2, 2, 1)";
+ 
+/**
+script c:/data/slab_function-zxx-bh.spt
+load "c:/data/zincblende-GaN.cif" packed
+doslab 1 1 1 1 0
+cleave
+buildvacuum 0 10
