@@ -201,7 +201,7 @@ public class BioMeshRenderer extends MeshRenderer {
 
     wing.setT(bsr.wingVectors[bsr.iPrev]);
     if (madEnd == 0)
-      wing.scale(2.0f); //adds a flair to an arrow
+      wing.scale(2.0d); //adds a flair to an arrow
     GData.getHermiteList(tension, wing, bsr.wingVectors[i],
         bsr.wingVectors[bsr.iNext], bsr.wingVectors[bsr.iNext2], bsr.wingVectors[bsr.iNext3],
         wingHermites, 0, nHermites, false);

@@ -154,14 +154,14 @@ public class Dipoles extends Shape {
     }
 
     if ("width" == propertyName) {
-      mad = tempDipole.mad = (short) (((Float) value).doubleValue() * 1000);
+      mad = tempDipole.mad = (short) (((Number) value).doubleValue() * 1000);
       if (currentDipole == null)
         setPropertyTok(T.wireframe, isBond, mad, 0); //
       return;
     }
 
     if ("offset" == propertyName) {
-      double offset = tempDipole.offsetAngstroms = ((Float) value).doubleValue();
+      double offset = tempDipole.offsetAngstroms = ((Number) value).doubleValue();
       if (currentDipole == null)
         setPropertyTok(T.axes, isBond, 0, offset);
       return;
@@ -187,7 +187,7 @@ public class Dipoles extends Shape {
     }
 
     if ("offsetSide" == propertyName) {
-      double offsetSide = ((Float) value).doubleValue();
+      double offsetSide = ((Number) value).doubleValue();
       setPropertyTok(T.sidechain, isBond, 0, offsetSide);
       return;
     }
@@ -291,7 +291,7 @@ public class Dipoles extends Shape {
     }
 
     if ("value" == propertyName) {
-      dipoleValue = ((Float) value).doubleValue();
+      dipoleValue = ((Number) value).doubleValue();
       isUserValue = true;
       tempDipole.setValue(dipoleValue);
       if (tempDipole.offsetPercent != 0)
@@ -498,11 +498,11 @@ public class Dipoles extends Shape {
     currentDipole.modelIndex = vwr.am.cmi;
   }
 
-  final private static double E_ANG_PER_DEBYE = 0.208194f;
+  final private static double E_ANG_PER_DEBYE = 0.208194d;
 
   private void setDipoleAtoms(Atom atom1, Atom atom2, double c1, double c2) {
     Dipole dipole = findAtomDipole(atom1, atom2, true);
-    double value = (c1 - c2) / 2f * atom1.distance(atom2) / E_ANG_PER_DEBYE;
+    double value = (c1 - c2) / 2d * atom1.distance(atom2) / E_ANG_PER_DEBYE;
     if (value < 0) {
       dipole.set2AtomValue(atom2, atom1, -value);
     } else {

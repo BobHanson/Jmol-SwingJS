@@ -131,7 +131,6 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
-import org.jmol.util.TempArray;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -301,7 +300,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("pointSize" == propertyName) {
       if (thisMesh != null) {
-        thisMesh.volumeRenderPointSize = ((Float) value).doubleValue();
+        thisMesh.volumeRenderPointSize = ((Number) value).doubleValue();
       }
       return;
     }
@@ -444,7 +443,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if ("displayWithin" == propertyName) {
       Object[] o = (Object[]) value;
-      displayWithinDistance2 = ((Float) o[0]).doubleValue();
+      displayWithinDistance2 = ((Number) o[0]).doubleValue();
       isDisplayWithinNot = (displayWithinDistance2 < 0);
       displayWithinDistance2 *= displayWithinDistance2;
       displayWithinPoints = (Lst<P3d>) o[3];
@@ -640,7 +639,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       // lighting = (pocket.booleanValue() ? JmolConstants.FULLYLIT
       //     : JmolConstants.FRONTLIT);
     } else if ("scale3d" == propertyName) {
-      scale3d = ((Float) value).doubleValue();
+      scale3d = ((Number) value).doubleValue();
       if (thisMesh != null) {
         thisMesh.scale3d = thisMesh.jvxlData.scale3d = scale3d;
         thisMesh.altVertices = null;
@@ -652,7 +651,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       value = title;
     } else if ("withinPoints" == propertyName) {
       Object[] o = (Object[]) value;
-      withinDistance2 = ((Float) o[0]).doubleValue();
+      withinDistance2 = ((Number) o[0]).doubleValue();
       isWithinNot = (withinDistance2 < 0);
       withinDistance2 *= withinDistance2;
       withinPoints = (Lst<P3d>) o[3];
@@ -699,7 +698,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("colorDensity" == propertyName) {
       if (value != null && currentMesh != null)
-        currentMesh.volumeRenderPointSize = ((Float) value).doubleValue();
+        currentMesh.volumeRenderPointSize = ((Number) value).doubleValue();
       return;
     }
     /*
@@ -890,7 +889,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           return false;
         P3d p = P3d.newP(m.jvxlData.boundingBox[0]);
         p.add(m.jvxlData.boundingBox[1]);
-        p.scale(0.5f);
+        p.scale(0.5d);
         if (m.mat4 != null) {
           V3d v = new V3d();
           m.mat4.getTranslation(v);
@@ -1221,13 +1220,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     try {
       if (s.indexOf("array") == 0) {
         String[] pts = PT.split(s.substring(6, s.length() - 1), ",");
-        return TempArray.getSlabObjectType(T.boundbox,
+        return MeshSurface.getSlabObjectType(T.boundbox,
             new P3d[] { (P3d) Escape.uP(pts[0]), (P3d) Escape.uP(pts[1]),
                 (P3d) Escape.uP(pts[2]), (P3d) Escape.uP(pts[3]) }, isCap, null);
       }
       Object plane = Escape.uP(s);
       if (plane instanceof P4d)
-        return TempArray.getSlabObjectType(T.plane, plane, isCap, null);
+        return MeshSurface.getSlabObjectType(T.plane, plane, isCap, null);
     } catch (Exception e) {
       //
     }
@@ -1445,12 +1444,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       Logger.debug("creating isosurface ID " + thisMesh.thisID);
     }
     if (lobeAxis == null) {
-      setProperty("sphere", Double.valueOf(factor / 2f), null);
+      setProperty("sphere", Double.valueOf(factor / 2d), null);
     } else {
       lcaoDir.x = lobeAxis.x * factor;
       lcaoDir.y = lobeAxis.y * factor;
       lcaoDir.z = lobeAxis.z * factor;
-      lcaoDir.w = 0.7f;
+      lcaoDir.w = 0.7d;
       setProperty(nElectrons == 2 ? "lp" : nElectrons == 1 ? "rad" : "lobe", 
           lcaoDir, null);
     }
@@ -1789,7 +1788,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private void hoverKey(int x, int y) {
     try {
       String s;
-      double f = 1 - 1.0f * (y - keyXy[1]) / (keyXy[3] - keyXy[1]);
+      double f = 1 - 1.0d * (y - keyXy[1]) / (keyXy[3] - keyXy[1]);
       if (thisMesh.showContourLines) {
         Lst<Object>[] vContours = thisMesh.getContours();
         if (vContours == null) {
@@ -1804,7 +1803,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           if (i < 0 || i > vContours.length)
             return;
           s = ""
-              + ((Float) vContours[i].get(JvxlCoder.CONTOUR_VALUE))
+              + ((Number) vContours[i].get(JvxlCoder.CONTOUR_VALUE))
                   .doubleValue();
         }
       } else {

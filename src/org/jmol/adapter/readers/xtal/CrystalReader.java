@@ -1083,7 +1083,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       double b = parseDoubleStr(tokens[1]);
       if (!isSlab && !isPolymer && tokens.length == 7) {
         primitiveVolume =  parseDoubleStr(tokens[6]);
-        if (Math.abs(primitiveVolume - a * b) < 0.1f) {
+        if (Math.abs(primitiveVolume - a * b) < 0.1d) {
           isSlab = true;
         }       
       }
@@ -1527,7 +1527,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   /**
    * Select only specific atoms for frequency generation. (See
-   * freq_6for_001.out)
+   * freq_6dor_001.out)
    * 
    * @throws Exception
    * 

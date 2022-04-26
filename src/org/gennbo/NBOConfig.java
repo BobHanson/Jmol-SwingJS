@@ -415,12 +415,12 @@ class NBOConfig  {
     if (options.equals("default") || options.equals("nboView")) {
       orbColor1 = Color.cyan;
       orbColor2 = Color.yellow;
-      opacityOp = 0.7f;
+      opacityOp = 0.7d;
       useWireMesh = false;
     } else if (options.equals("jmol")) {
       orbColor1 = Color.blue;
       orbColor2 = Color.red;
-      opacityOp = 1f;
+      opacityOp = 1d;
       useWireMesh = true;
     } else {
       // color1, color2, useMesh

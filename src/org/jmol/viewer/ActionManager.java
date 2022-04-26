@@ -588,9 +588,9 @@ public class ActionManager implements EventManager {
   private final static long MAX_DOUBLE_CLICK_MILLIS = 700;
   protected final static long MININUM_GESTURE_DELAY_MILLISECONDS = 10;
   private final static int SLIDE_ZOOM_X_PERCENT = 98;
-  public final static double DEFAULT_MOUSE_DRAG_FACTOR = 1f;
-  public final static double DEFAULT_MOUSE_WHEEL_FACTOR = 1.15f;
-  public final static double DEFAULT_GESTURE_SWIPE_FACTOR = 1f;
+  public final static double DEFAULT_MOUSE_DRAG_FACTOR = 1d;
+  public final static double DEFAULT_MOUSE_WHEEL_FACTOR = 1.15d;
+  public final static double DEFAULT_GESTURE_SWIPE_FACTOR = 1d;
 
 
   public final static int XY_RANGE = 10; // BH 2019.04.21 was 0

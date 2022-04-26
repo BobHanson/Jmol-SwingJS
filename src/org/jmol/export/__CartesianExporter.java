@@ -228,7 +228,7 @@ abstract public class __CartesianExporter extends ___Exporter {
     tempV2.sub2(ptY, ptCenter);
     tempV2.cross(tempV1, tempV2);
     tempV2.normalize();
-    tempV2.scale(doFill ? 0.002f : 0.005f);
+    tempV2.scale(doFill ? 0.002f : 0.005d);
     tempP1.sub2(ptCenter, tempV2);
     tempP2.add2(ptCenter, tempV2);
     return outputCylinder(ptCenter, tempP1, tempP2, colix,
@@ -258,8 +258,8 @@ abstract public class __CartesianExporter extends ___Exporter {
     tm.unTransformPoint(screenBase, tempP1);
     tm.unTransformPoint(screenTip, tempP2);
     double radius = vwr.tm.unscaleToScreen(screenBase.z, screenDiameter) / 2;
-    if (radius < 0.05f)
-      radius = 0.05f;
+    if (radius < 0.05d)
+      radius = 0.05d;
     outputCone(tempP1, tempP2, radius, colix);
   }
 

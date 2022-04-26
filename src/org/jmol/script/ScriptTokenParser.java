@@ -345,7 +345,7 @@ abstract class ScriptTokenParser {
         && (theToken.tok == T.integer || theToken.tok == T.decimal));
   }
   
-  private double floatValue() {
+  private double doubleValue() {
     switch (theToken.tok) {
     case T.integer:
       return theToken.intValue;
@@ -715,7 +715,7 @@ abstract class ScriptTokenParser {
       break;
     case T.integer:
     case T.decimal:
-      distance = floatValue();
+      distance = doubleValue();
       break;
     case T.define:
       addTokenToPostfixToken(theToken);
@@ -1054,17 +1054,17 @@ abstract class ScriptTokenParser {
     } else {
       if (theToken.tok != T.leftbrace || !getNumericalToken())
         return error(ERROR_coordinateExpected); // i
-      cell.x = floatValue();
+      cell.x = doubleValue();
       if (tokPeekIs(T.comma)) // ,
         tokenNext();
       if (!getNumericalToken())
         return error(ERROR_coordinateExpected); // j
-      cell.y = floatValue();
+      cell.y = doubleValue();
       if (tokPeekIs(T.comma)) // ,
         tokenNext();
       if (!getNumericalToken() || !tokenNextTok(T.rightbrace))
         return error(ERROR_coordinateExpected); // k
-      cell.z = floatValue();
+      cell.z = doubleValue();
     }
     return addTokenToPostfix(tok, cell);
   }

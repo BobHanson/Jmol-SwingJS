@@ -104,8 +104,8 @@ public class _PovrayExporter extends __RayTracerExporter {
       offsetX = vwr.tm.getTranslationXPercent() / 100 * screenWidth;
       offsetY = vwr.tm.getTranslationYPercent() / 100 * screenHeight;
       // factor for 50% depth -- not quite right around the edges, perhaps
-      f = 1f/vwr.tm.getPerspectiveFactor((vwr.tm.getCameraDepth() - 0.5f) * vwr.getScreenDim());
-//      f = 1f/vwr.tm.getPerspectiveFactor(2500);
+      f = 1d/vwr.tm.getPerspectiveFactor((vwr.tm.getCameraDepth() - 0.5d) * vwr.getScreenDim());
+//      f = 1d/vwr.tm.getPerspectiveFactor(2500);
       output("  perspective\n");
       output("  angle " + apertureAngle + "\n");
       output("  right < " + screenWidth + ", 0, 0>\n");
@@ -117,9 +117,9 @@ public class _PovrayExporter extends __RayTracerExporter {
       output("  up < 0, " + screenHeight + ", 0 >\n");
     }
     output("  sky < 0, -1, 0 >\n");
-    output("  location < " + (screenWidth / 2f + offsetX) + ", " + (screenHeight / 2f + offsetY)
+    output("  location < " + (screenWidth / 2d + offsetX) + ", " + (screenHeight / 2d + offsetY)
         + ", 0>\n");
-    output("  look_at < " + (screenWidth / 2f + f * offsetX) + ", " + (screenHeight / 2f + f * offsetY)
+    output("  look_at < " + (screenWidth / 2d + f * offsetX) + ", " + (screenHeight / 2d + f * offsetY)
         + ", 1000 >\n");
     output("}\n");
     output("\n");
@@ -376,7 +376,7 @@ public class _PovrayExporter extends __RayTracerExporter {
     if (isBarb) {
       if (!haveMacros)
         writeMacros2();
-      tempP1.set(screenBase.x, screenTip.y, 12345.6789f);
+      tempP1.set(screenBase.x, screenTip.y, 12345.6789d);
       P4d plane = MeasureD.getPlaneThroughPoints(screenBase, screenTip, tempP1,
           tempV1, tempV2, new P4d());
       output("barb(" + getTriad(screenBase) + "," + radius + ","

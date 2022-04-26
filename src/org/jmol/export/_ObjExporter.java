@@ -238,7 +238,7 @@ public class _ObjExporter extends __CartesianExporter {
     }
 
     A4d a = Qd.getQuaternionFrame(center, points[1], points[3])
-        .toAxisAngle4d();
+        .toA4d();
     double sx = points[1].distance(center);
     double sy = points[3].distance(center);
     double sz = points[5].distance(center);
@@ -432,7 +432,7 @@ public class _ObjExporter extends __CartesianExporter {
       return false;
     }
 
-//    pixelSize = 0.5f / scalePixelsPerAngstrom;
+//    pixelSize = 0.5d / scalePixelsPerAngstrom;
 
     // Get the root path
     int dot = fileName.lastIndexOf(".");
@@ -774,11 +774,11 @@ public class _ObjExporter extends __CartesianExporter {
       int height = dim[1];
       double u, v;
       for (int row = 0, iFace = 0; row < height; row++) {
-        v = row + .5f;
+        v = row + .5d;
         if (normalizeUV)
           v /= height;
         for (int col = 0; col < width; col++) {
-          u = col + .5f;
+          u = col + .5d;
           if (normalizeUV)
             u /= width;
           output("vt " + u + " " + v + "\n");
@@ -939,7 +939,7 @@ public class _ObjExporter extends __CartesianExporter {
         sum.set(0, 0, 0);
         for (int iVertex : face)
           sum.add(CU.colorPtFromInt(gdata.getColorArgbOrGray(colixes[iVertex]), ptTemp));
-        sum.scale(1.0f / face.length);
+        sum.scale(1.0d / face.length);
         rgb = CU.colorPtToFFRGB(sum);
       } else {
         rgb = gdata.getColorArgbOrGray(colixes[i]);

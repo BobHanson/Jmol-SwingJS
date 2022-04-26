@@ -55,15 +55,15 @@ public class MlpCalculation extends MepCalculation {
           if (Double.isNaN(f))
             switch (atoms[i].getElementNumber()) {
             case 6:
-              f = (bsAromatic.get(i) ? 0.31f : bsCarbonyl.get(i) ? -0.54f
-                  : 0.45f);
+              f = (bsAromatic.get(i) ? 0.31f : bsCarbonyl.get(i) ? -0.54d
+                  : 0.45d);
               break;
             case 7:
-              f = (bsAromatic.get(i) ? -0.6f : bsCarbonyl.get(i) ? -0.44f
-                  : -1.0f);
+              f = (bsAromatic.get(i) ? -0.6d : bsCarbonyl.get(i) ? -0.44d
+                  : -1.0d);
               break;
             case 8:
-              f = (bsCarbonyl.get(i) ? -0.9f : -0.17f);
+              f = (bsCarbonyl.get(i) ? -0.9d : -0.17d);
               break;
             default:
               f = Double.NaN;

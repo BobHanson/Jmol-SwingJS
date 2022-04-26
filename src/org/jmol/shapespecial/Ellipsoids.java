@@ -337,7 +337,7 @@ public class Ellipsoids extends AtomShape {
     }
 
     if ("scale" == propertyName) {
-      scale = ((Float) value).doubleValue();
+      scale = ((Number) value).doubleValue();
       setSize((int) (scale * 100), bs);
       return;
     }
@@ -369,7 +369,7 @@ public class Ellipsoids extends AtomShape {
   //    P3 ptCenter = new P3();
   //    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
   //      ptCenter.add(points[i]);
-  //    ptCenter.scale(1.0f/n);
+  //    ptCenter.scale(1.0d/n);
   //    double Sxx = 0, Syy = 0, Szz = 0, Sxy = 0, Sxz = 0, Syz = 0;
   //    P3 pt = new P3();
   //    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -387,7 +387,7 @@ public class Ellipsoids extends AtomShape {
   //    N[1][1] = Sxx + Szz;
   //    N[2][2] = Sxx + Syy;
   //    Eigen eigen = Eigen.newM(N);
-  //    ellipsoid.setEigen(ptCenter, eigen, 1f / n / 3);
+  //    ellipsoid.setEigen(ptCenter, eigen, 1d / n / 3);
   //  }
 
   private void setProp(Ellipsoid e, int mode, Object value) {
@@ -425,7 +425,7 @@ public class Ellipsoids extends AtomShape {
       break;
     case 8: // scale
       if (value instanceof Float) {
-        e.setScale(((Float) value).doubleValue(), false);
+        e.setScale(((Number) value).doubleValue(), false);
       } else {
         e.scaleAxes((double[]) value);
       }

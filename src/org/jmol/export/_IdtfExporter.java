@@ -557,7 +557,7 @@ public class _IdtfExporter extends __CartesianExporter {
     // Just send three points to Quaternion to define a plane and return
     // the AxisAngle required to rotate to that position. That's all there is to it.
     
-    A4d a = Qd.getQuaternionFrame(center, points[1], points[3]).toAxisAngle4d();
+    A4d a = Qd.getQuaternionFrame(center, points[1], points[3]).toA4d();
     double sx = points[1].distance(center);
     double sy = points[3].distance(center);
     double sz = points[5].distance(center);
@@ -708,7 +708,7 @@ public class _IdtfExporter extends __CartesianExporter {
       cylinderMatrix.m23 = pt1.z;
       cylinderMatrix.m33 = 1;
       v.addLast(getParentItem("Jmol", cylinderMatrix));
-      radius *= 0.95f;// in case they ever fix that IDTF bug
+      radius *= 0.95d;// in case they ever fix that IDTF bug
     }
 
     return true;
@@ -723,7 +723,7 @@ public class _IdtfExporter extends __CartesianExporter {
     }
    /*
     // the halo edges really slow rendering and aren't that important.
-    double rpd = 3.1415926f / 180;
+    double rpd = 3.1415926d / 180;
     Point3f[] pts = new Point3f[73];
     for (int i = 0, p = 0; i <= 360; i += 5, p++) {
       pts[p] = Point3f.new3((double) (Math.cos(i * rpd) * radius), (double) (Math

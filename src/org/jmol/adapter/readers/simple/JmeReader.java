@@ -100,7 +100,7 @@ public class JmeReader extends AtomSetCollectionReader {
       return;
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < ac; i++) {
-      atoms[i].z += ((i % 2) == 0 ? 0.05f : -0.05f);
+      atoms[i].z += ((i % 2) == 0 ? 0.05d : -0.05d);
     }
     */
   }

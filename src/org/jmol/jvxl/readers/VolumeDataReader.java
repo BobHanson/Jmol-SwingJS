@@ -219,7 +219,7 @@ class VolumeDataReader extends SurfaceReader {
       nGrid = (int) Math.floor(ptsPerAngstrom * range + 1);
       ptsPerAngstrom = (nGrid - 1) / range;
     }
-    d = volumeData.volumetricVectorLengths[index] = 1f / ptsPerAngstrom;
+    d = volumeData.volumetricVectorLengths[index] = 1d / ptsPerAngstrom;
     voxelCounts[index] = nGrid;// + ((dataType & Parameters.IS_SOLVENTTYPE) != 0 ? 3 : 0);
     if (params.sbOut != null)
       params.sbOut.append("isosurface resolution for axis " + (index + 1) + " set to "

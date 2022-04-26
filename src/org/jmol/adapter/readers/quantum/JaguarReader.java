@@ -161,7 +161,7 @@ public class JaguarReader extends MOReader {
 
    */
   
-  private final static double ROOT3 = 1.73205080756887729f;
+  private final static double ROOT3 = 1.73205080756887729d;
   
   private void readUnnormalizedBasis() throws Exception {
     String lastAtom = "";
@@ -191,7 +191,7 @@ public class JaguarReader extends MOReader {
           sdata[iFunc][3] = 0; //count
           sgdata[iFunc] = new  Lst<double[]>();
         }
-        double factor = 1;//(iType == 3 ? 1.73205080756887729f : 1);
+        double factor = 1;//(iType == 3 ? 1.73205080756887729d : 1);
         //System.out.println("slater: " + iAtom + " " + iType + " " + gaussianCount + " " + nGaussians);
         sgdata[iFunc].addLast(new double[] { (double) parseDoubleStr(tokens[6]),
             (double) (parseDoubleStr(tokens[8]) * factor) });

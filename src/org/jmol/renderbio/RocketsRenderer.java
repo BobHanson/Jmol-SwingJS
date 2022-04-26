@@ -34,7 +34,7 @@ import javajs.util.P3d;
 
 public class RocketsRenderer extends StrandsRenderer {
 
-  //private final static double MIN_CONE_HEIGHT = 0.05f;
+  //private final static double MIN_CONE_HEIGHT = 0.05d;
 
   boolean isRockets;
   protected boolean helixRockets = true;
@@ -94,7 +94,7 @@ public class RocketsRenderer extends StrandsRenderer {
           pt1.setT(proteinstructure.getAxisStartPoint());
           pt2.sub2(proteinstructure.getAxisEndPoint(), pt1);
           //System.out.println("barrel " + i + "  " + pt1 + " " + proteinstructure.getAxisEndPoint());
-          pt2.scale(1f / (proteinstructure.nRes - 1));
+          pt2.scale(1d / (proteinstructure.nRes - 1));
           if (ptLastRocket == i - 3) {
             // too tight! Thank you, Frieda!
             // TODO: in 1crn 30-32, this is still not satisfactory

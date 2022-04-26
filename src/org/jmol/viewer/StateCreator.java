@@ -997,7 +997,7 @@ public class StateCreator extends JmolStateCreator {
       for (int j = 1; j <= count; j++)
         sb.append(" ").append(m.getLabel(j, true, true));
       if (isProperty)
-        sb.append(" " + m.property + " value " + (Double.isNaN(m.value) ? 0f : m.value))
+        sb.append(" " + m.property + " value " + (Double.isNaN(m.value) ? 0d : m.value))
         .append(" " + PT.esc(m.getString()));
       //sb.append("; # " + shape.getInfoAsString(i));
       app(commands, sb.toString());

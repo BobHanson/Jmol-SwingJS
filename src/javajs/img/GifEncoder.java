@@ -325,7 +325,7 @@ public class GifEncoder extends ImageEncoder {
       center = new P3d();
       for (int i = count; --i >= 0;)
         center.add(get(i));
-      center.scale(1f / count);
+      center.scale(1d / count);
       // Jmol visualization only
       //volume = 0;
       //getVolume(true); 

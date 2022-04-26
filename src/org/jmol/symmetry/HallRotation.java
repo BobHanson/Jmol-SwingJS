@@ -66,7 +66,7 @@ class HallRotation {
     //order = code.charAt(0) - '0';
     double[] data = new double[16];
     double[] dataInv = new double[16];
-    data[15] = dataInv[15] = 1f;
+    data[15] = dataInv[15] = 1d;
     
     for (int i = 0, ipt = 0; ipt < 11; i++) {
       int value = 0;

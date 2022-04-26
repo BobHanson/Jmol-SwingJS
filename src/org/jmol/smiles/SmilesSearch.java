@@ -1597,7 +1597,7 @@ public class SmilesSearch extends JmolMolecule {
         d *= dir1 * (bondType == Edge.TYPE_ATROPISOMER ? 1 : -1) * (indexOrder ? 1 : -1)* ATROPIC_SWITCH * -1;
         if (Logger.debugging)
           Logger.info("atrop dihedral " + d + " " + sAtom1 + " " + sAtom2 + " " +  b);
-        if (d < 1.0f) // don't count a fraction of a degree as sufficient
+        if (d < 1.0d) // don't count a fraction of a degree as sufficient
           return false;
       } else {
         // for \C=C\, (dir1*dir2 == -1), dot product should be negative
@@ -1667,7 +1667,7 @@ public class SmilesSearch extends JmolMolecule {
       boolean ok2 = dbAtom2.getBondedAtomIndex(bond.atropType[1]) == dbAtom2a.index;
       int dir = (bond.order == Edge.TYPE_ATROPISOMER ? 1 : -1) * (ok1 == ok2 ? 1 : -1);
       dbAtom1a.set(-1, 1, 0);
-      dbAtom2a.set(1, 1, dir / 2.0f * ATROPIC_SWITCH * -1);
+      dbAtom2a.set(1, 1, dir / 2.0d * ATROPIC_SWITCH * -1);
       //System.out.println(Arrays.toString(bond.atropType) + " " + bond.order + " " + dbAtom1a + " " + dbAtom1 + " " + dbAtom2 + " " + dbAtom2a + " " + dir);
       return;
     }

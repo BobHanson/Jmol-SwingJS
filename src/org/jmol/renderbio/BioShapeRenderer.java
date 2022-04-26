@@ -453,8 +453,8 @@ abstract class BioShapeRenderer extends ShapeRenderer {
 
     P3d cp = controlPoints[i];
     V3d wv = wingVectors[i];
-    calc1Screen(cp, wv, madBeg, .0007f, screenArrowTop);
-    calc1Screen(cp, wv, madBeg, -.0007f, screenArrowBot);
+    calc1Screen(cp, wv, madBeg, .0007d, screenArrowTop);
+    calc1Screen(cp, wv, madBeg, -.0007d, screenArrowBot);
     calc1Screen(cp, wv, madBeg, 0.001f, screenArrowTopPrev);
     calc1Screen(cp, wv, madBeg, -0.001f, screenArrowBotPrev);
     g3d.drawHermite7(true, ribbonBorder, isNucleic ? 4 : 7, screenArrowTopPrev,

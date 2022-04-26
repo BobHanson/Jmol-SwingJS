@@ -172,7 +172,7 @@ public class AFLOWReader extends VaspPoscarReader {
       applySymmetryAndSetTrajectory();
 //      XtalSymmetry sym = asc.getXSymmetry();
   //    T3 offset = sym.getOverallSpan();
-    //  offset.scale(-0.5f);
+    //  offset.scale(-0.5d);
       //asc.setModelInfoForSet("unitCellOffset", offset, asc.iSet);
     } else {
       asc.bsAtoms.clearBits(asc.getLastAtomSetAtomIndex(), asc.ac);

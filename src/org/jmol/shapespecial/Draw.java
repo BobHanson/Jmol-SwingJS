@@ -169,7 +169,7 @@ public void initShape() {
     }
     
     if ("length" == propertyName) {
-      length = ((Float) value).doubleValue();
+      length = ((Number) value).doubleValue();
       return;
     }
 
@@ -338,12 +338,12 @@ public void initShape() {
     }
 
     if ("diameter" == propertyName) {
-      diameter = ((Float) value).intValue();
+      diameter = ((Number) value).intValue();
       return;
     }
 
     if ("width" == propertyName) {
-      width = ((Float) value).doubleValue();
+      width = ((Number) value).doubleValue();
       return;
     }
 
@@ -390,7 +390,7 @@ public void initShape() {
       vData.addLast(new Object[] { Integer.valueOf(PT_BITSET), bsAtoms });
       //nbitsets++;
       if (isCircle && diameter == 0 && width == 0)
-        width = ms.calcRotationRadiusBs(bsAtoms) * 2.0f;
+        width = ms.calcRotationRadiusBs(bsAtoms) * 2.0d;
       return;
     }
 
@@ -959,7 +959,7 @@ private void initDraw() {
         if (dist < 0)
           vAC.scale(-1);
         if (isCircle) {
-          vAC.scale(0.005f);
+          vAC.scale(0.005d);
           ptList[0].sub(vAC);
           vAC.scale(2);
         }
@@ -1006,7 +1006,7 @@ private void initDraw() {
         // three points define a plane
         pt = P3d.newP(ptList[1]);
         pt.sub(ptList[0]);
-        pt.scale(0.5f);
+        pt.scale(0.5d);
         ptList[3] = P3d.newP(ptList[2]);
         ptList[2].add(pt);
         ptList[3].sub(pt);
@@ -1029,7 +1029,7 @@ private void initDraw() {
         dist = (length == Double.MAX_VALUE ? ptList[0].distance(center)
             : length);
         if (isPlane && length != Double.MAX_VALUE)
-          dist /= 2f;
+          dist /= 2d;
         if (isPlane && isRotated45)
           dist *= 1.4142f;
         MeasureD.getNormalToLine(ptList[0], ptList[1], normal);
@@ -1074,7 +1074,7 @@ private void initDraw() {
       } else if (nVertices == 2 && length != Double.MAX_VALUE) {
         MeasureD.calcAveragePoint(ptList[0], ptList[1], center);
         normal.sub2(ptList[1], center);
-        normal.scale(0.5f / normal.length() * (length == 0 ? 0.01f : length));
+        normal.scale(0.5d / normal.length() * (length == 0 ? 0.01f : length));
         if (length == 0)
           center.setT(ptList[0]);
         ptList[0].sub2(center, normal);
@@ -1191,7 +1191,7 @@ private void initDraw() {
     }
     if (n == 0)
       return;
-    m.axis.scale(1f / n);
+    m.axis.scale(1d / n);
   }
 
   @Override

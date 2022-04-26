@@ -264,10 +264,10 @@ abstract class AtomDataReader extends VolumeDataReader {
       setBBox(P3d.new3(-10, -10, -10), 0);
     }
     for (int i = 0; i < myAtomCount; i++)
-      setBBox(atomXyzTruncated[i], getRadii ? atomRadius[i] + 0.5f : 0); 
+      setBBox(atomXyzTruncated[i], getRadii ? atomRadius[i] + 0.5d : 0); 
     if (!Double.isNaN(params.scale)) {
       V3d v = V3d.newVsub(xyzMax, xyzMin);
-      v.scale(0.5f);
+      v.scale(0.5d);
       xyzMin.add(v);
       v.scale(params.scale);
       xyzMax.add2(xyzMin, v);
@@ -365,7 +365,7 @@ abstract class AtomDataReader extends VolumeDataReader {
 
   private double getWorkingRadius(int i, double marginAtoms) {
     double r = (i < 0 ? atomData.hAtomRadius : atomData.atomRadius[i]);
-    return (Double.isNaN(marginAtoms) ? Math.max(r, 0.1f) : r + marginAtoms);
+    return (Double.isNaN(marginAtoms) ? Math.max(r, 0.1d) : r + marginAtoms);
   }
 
   protected void setHeader(String calcType, String line2) {

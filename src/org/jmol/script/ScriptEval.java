@@ -2896,7 +2896,7 @@ public class ScriptEval extends ScriptExpr {
     case T.halo:
     case T.spacefill: // aka cpk
     case T.star:
-      setSize(iShape, (tok == T.halo ? -1000f : 1f));
+      setSize(iShape, (tok == T.halo ? -1000f : 1d));
       return;
     case T.label:
       cmdLabel(1, null);
@@ -5638,7 +5638,7 @@ public class ScriptEval extends ScriptExpr {
     V3d axis = V3d.new3(Double.NaN, 0, 0);
     P3d center = null;
     int i = 1;
-    floatSecondsTotal = (isFloatParameter(i) ? floatParameter(i++) : 2.0f);
+    floatSecondsTotal = (isFloatParameter(i) ? floatParameter(i++) : 2.0d);
     double degrees = 90;
     BS bsCenter = null;
     boolean isChange = true;
@@ -5714,7 +5714,7 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.front:
       axis.set(1, 0, 0);
-      degrees = 0f;
+      degrees = 0d;
       checkLength(++i);
       break;
     case T.back:
@@ -5745,10 +5745,10 @@ public class ScriptEval extends ScriptExpr {
       checkLength(++i);
       switch ("xyz".indexOf(abc)) {
       case 0:
-        q = Qd.new4(0.5f,0.5f,0.5f,-0.5f);
+        q = Qd.new4(0.5d,0.5d,0.5d,-0.5d);
         break;
       case 1:
-        q = Qd.new4(0.5f,0.5f,0.5f,0.5f);
+        q = Qd.new4(0.5d,0.5d,0.5d,0.5d);
         break;
       case 2:
         q = Qd.new4(0, 0, 0, 1);
@@ -5773,7 +5773,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (q != null) {
       A4d aa;
-      aa = q.toAxisAngle4d();
+      aa = q.toA4d();
       axis.set(aa.x, aa.y, aa.z);
       /*
        * The quaternion angle for an atom represents the angle by which the
@@ -8492,8 +8492,8 @@ public class ScriptEval extends ScriptExpr {
     int i = 1;
     // zoomTo time-sec
     double floatSecondsTotal = (isZoomTo ? (isFloatParameter(i) ? floatParameter(i++)
-        : 1f)
-        : 0f);
+        : 1d)
+        : 0d);
     if (floatSecondsTotal < 0) {
       // zoom -10
       i--;
@@ -9295,7 +9295,7 @@ public class ScriptEval extends ScriptExpr {
       switch (tok) {
       case T.out:
       case T.in:
-        zoom = currentZoom * (tok == T.out ? 0.5f : 2f);
+        zoom = currentZoom * (tok == T.out ? 0.5d : 2d);
         i++;
         break;
       case T.divide:

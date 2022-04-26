@@ -146,7 +146,7 @@ public class CgdReader extends AtomSetCollectionReader {
     if (!doApplySymmetry)
       return;
     asc.atomSymbolicMap.put(name, a);
-    asc.addVibrationVector(a.index, 1f, 3f, 7f);
+    asc.addVibrationVector(a.index, 1d, 3d, 7d);
     if (htEdges == null)
       htEdges = new Hashtable<Atom, V3d[]>();
     htEdges.put(a, new V3d[edgeCount]);

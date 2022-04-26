@@ -36,6 +36,6 @@ public class RibbonsRenderer extends MeshRibbonRenderer {
     if (wireframeOnly)
       renderStrands();
     else
-      render2Strand(true, isNucleic ? 1f : 0.5f, isNucleic ? 0f : 0.5f);
+      render2Strand(true, isNucleic ? 1d : 0.5d, isNucleic ? 0d : 0.5d);
   }
 }

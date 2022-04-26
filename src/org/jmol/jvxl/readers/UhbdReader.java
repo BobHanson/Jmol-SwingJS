@@ -41,7 +41,7 @@ class UhbdReader extends VolumeFileReader {
 
   //  This code is based on
   //
-  //  http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
+  //  http://sourceforge.net/p/apbs/code/ci/9527462a39126db6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
   //
   //    Vio_printf(sock, "%72s\n", title);
   //    Vio_printf(sock, "%12.5e%12.5e%7d%7d%7d%7d%7d\n", 1.0, 0.0, -1, 0, nz, 1, nz);
@@ -85,7 +85,7 @@ class UhbdReader extends VolumeFileReader {
     //                                                        POTENTIAL (kT/e)
     jvxlFileHeaderBuffer = SB.newS(line);
     jvxlFileHeaderBuffer.append("UHBD format ").append(line).append("\n");
-    jvxlFileHeaderBuffer.append("see http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
+    jvxlFileHeaderBuffer.append("see http://sourceforge.net/p/apbs/code/ci/9527462a39126db6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
     rd(); // ignored
     // 1.00000e+00 0.00000e+00     -1      0    161      1    161
     rd();

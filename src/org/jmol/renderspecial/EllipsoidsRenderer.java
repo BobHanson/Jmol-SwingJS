@@ -136,7 +136,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     bGlobals[OPT_DOTS] = vwr.getBooleanProperty("ellipsoidDots");
     bGlobals[OPT_FILL] = vwr.getBooleanProperty("ellipsoidFill");
     bGlobals[OPT_WIREFRAME] = !isExport && !vwr.checkMotionRendering(T.ellipsoid);
-    diameter0 = (int) Math.round (((Float) vwr.getP("ellipsoidAxisDiameter"))
+    diameter0 = (int) Math.round (((Number) vwr.getP("ellipsoidAxisDiameter"))
         .doubleValue() * 1000);    
     M4d m4 = tm.matrixTransform;
     mat.setRow(0, m4.m00, m4.m01, m4.m02);
@@ -255,7 +255,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
       renderBall();
       if (bOptions[OPT_ARCS] || bOptions[OPT_AXES]) {
         g3d.setC(vwr.cm.colixBackgroundContrast);
-        //setAxes(atom, 1.0f);
+        //setAxes(atom, 1.0d);
         if (bOptions[OPT_AXES])
           renderAxes();
         if (bOptions[OPT_ARCS])
@@ -289,8 +289,8 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     // make this screen coordinates to ellisoidal coordinates
     matScreenToEllipsoid.mul2(mat, matScreenToCartesian);
     matEllipsoidToScreen.invertM(matScreenToEllipsoid);
-    perspectiveFactor = vwr.tm.scaleToPerspective((int) s0.z, 1.0f);
-    matScreenToEllipsoid.scale(1f/perspectiveFactor);
+    perspectiveFactor = vwr.tm.scaleToPerspective((int) s0.z, 1.0d);
+    matScreenToEllipsoid.scale(1d/perspectiveFactor);
   }
   
   private final static V3d[] unitAxisVectors = {
@@ -335,12 +335,12 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
       matEllipsoidToScreen.rotate(pt1);
       screens[i].set(Math.round(s0.x + pt1.x * perspectiveFactor), Math
           .round(s0.y + pt1.y * perspectiveFactor), Math.round(pt1.z + s0.z));
-      screens[i + 32].set(Math.round(s0.x + pt1.x * perspectiveFactor * 1.05f),
-          Math.round(s0.y + pt1.y * perspectiveFactor * 1.05f), Math
-              .round(pt1.z * 1.05f + s0.z));
+      screens[i + 32].set(Math.round(s0.x + pt1.x * perspectiveFactor * 1.05d),
+          Math.round(s0.y + pt1.y * perspectiveFactor * 1.05d), Math
+              .round(pt1.z * 1.05d + s0.z));
     }
     dx = 2 + (int) vwr.tm.scaleToScreen((int) s0.z, (int) Math
-        .round((Double.isNaN(factoredLengths[maxPt]) ? 1.0f
+        .round((Double.isNaN(factoredLengths[maxPt]) ? 1.0d
             : factoredLengths[maxPt]) * 1000));
   }
 

@@ -341,9 +341,9 @@ public abstract class ___Exporter {
     int red = (argb >> 16) & 0xFF;
     int green = (argb >> 8) & 0xFF;
     int blue = argb & 0xFF;
-    tempC.set(red == 0 ? 0 : (red + 1)/ 256f, 
-        green == 0 ? 0 : (green + 1) / 256f, 
-        blue == 0 ? 0 : (blue + 1) / 256f);
+    tempC.set(red == 0 ? 0 : (red + 1)/ 256d, 
+        green == 0 ? 0 : (green + 1) / 256d, 
+        blue == 0 ? 0 : (blue + 1) / 256d);
     return getTriadC(tempC);
   }
 
@@ -357,7 +357,7 @@ public abstract class ___Exporter {
 
   protected static String opacityFractionalFromArgb(int argb) {
     int opacity = (argb >> 24) & 0xFF;
-    return round(opacity == 0 ? 0 : (opacity + 1) / 256f);
+    return round(opacity == 0 ? 0 : (opacity + 1) / 256d);
   }
 
   protected static String round(double number) { // AH

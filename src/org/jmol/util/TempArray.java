@@ -25,7 +25,6 @@ package org.jmol.util;
 
 
 import org.jmol.c.STR;
-import org.jmol.script.T;
 
 import javajs.util.P3d;
 import javajs.util.P3i;
@@ -183,15 +182,4 @@ public class TempArray {
       freeEnum[iFree] = tempEnum;
   }
 
-
-  // admittedly an odd place for these two; just avoidng making a new class just for them.
-  
-  public static Object[] getSlabWithinRange(float min, float max) {
-    return new Object[] { Integer.valueOf(T.range), 
-        new Double[] {Double.valueOf(min), Double.valueOf(max)}, Boolean.FALSE, null };
-  }
-
-  public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
-    return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
-  }
 }

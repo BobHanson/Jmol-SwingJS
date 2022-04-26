@@ -125,7 +125,7 @@ import javajs.util.PT;
         pt[0] = line.indexOf(":");
         units = PT.getQuotedStringNext(line, pt);
         if (units != null && (units.equalsIgnoreCase("NM") || units.toUpperCase().indexOf("NANOMETER") >= 0)) {
-          factor = 0.1f;
+          factor = 0.1d;
         }
         Logger.info("FAHReader units are " + units + " factor = " + factor);
       }
@@ -213,7 +213,7 @@ import javajs.util.PT;
           }
         }
       }
-      if (d < 0.5f) {
+      if (d < 0.5d) {
         for (int i = asc.ac; --i >= 0;) {
           asc.atoms[i].scale(10);
         }

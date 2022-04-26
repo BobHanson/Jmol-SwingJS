@@ -245,10 +245,10 @@ public class MarchingSquares {
     for (int i = 0; i < nContourSegments; i++) {
       //lastCutoff = cutoff;
       cutoff = (contoursDiscrete != null ? contoursDiscrete[i]
-          : contourFromZero ? min + (i * 1f / nContourSegments) * diff
+          : contourFromZero ? min + (i * 1d / nContourSegments) * diff
               : i == 0 ? -Double.MAX_VALUE
                   : i == nContourSegments - 1 ? Double.MAX_VALUE : min
-                      + ((i - 1) * 1f / (nContourSegments - 1)) * diff);
+                      + ((i - 1) * 1d / (nContourSegments - 1)) * diff);
       /*
        * cutoffs right near zero cause problems, so we adjust just a tad
        * 

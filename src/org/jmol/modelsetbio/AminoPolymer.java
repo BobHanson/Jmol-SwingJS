@@ -224,8 +224,8 @@ public class AminoPolymer extends AlphaPolymer {
   private final static double maxHbondAlphaDistance = 9;
   private final static double maxHbondAlphaDistance2 = maxHbondAlphaDistance
       * maxHbondAlphaDistance;
-  // this next was fixed in Jmol 12.1.14; was just 0.5f (0.71*0.71) since Jmol 10.0.00
-  private final static double minimumHbondDistance2 = 0.5f * 0.5f; 
+  // this next was fixed in Jmol 12.1.14; was just 0.5d (0.71*0.71) since Jmol 10.0.00
+  private final static double minimumHbondDistance2 = 0.5d * 0.5d; 
 
   private void checkRasmolHydrogenBond(AminoMonomer source, BioPolymer polymer,
                                        int indexDonor, P3d hydrogenPoint,
@@ -335,7 +335,7 @@ public class AminoPolymer extends AlphaPolymer {
     int energy = HBond.getEnergy(distOH, distCH, distCN, distON);
 
     boolean isHbond = (energy < -500 
-        && (!checkDistances || distCN > distCH && distOH <= 3.0f));
+        && (!checkDistances || distCN > distCH && distOH <= 3.0d));
     return (!isHbond && checkDistances || energy < -9900 ? 0 : energy);
   }
 

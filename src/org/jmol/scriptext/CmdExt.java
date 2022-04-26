@@ -739,7 +739,7 @@ public class CmdExt extends ScriptExt {
           if (andBond) {
             if (bs1 == null)
               bs1 = vwr.bsA();
-            vwr.makeConnections(0.1f, 1e8f, Edge.BOND_AROMATIC,
+            vwr.makeConnections(0.1d, 1e8d, Edge.BOND_AROMATIC,
                 T.modify, bs1, bs1, null, false, false, 0);
             vwr.ms.assignAromaticBondsBs(true, null);            
           }
@@ -811,7 +811,7 @@ public class CmdExt extends ScriptExt {
                 Integer.valueOf(Edge.BOND_STRUT));
             e.setShapePropertyBs(JC.SHAPE_STICKS, "color",
                 Integer.valueOf(0x0FFFFFF), null);
-            e.setShapeTranslucency(JC.SHAPE_STICKS, "", "translucent", 0.5f,
+            e.setShapeTranslucency(JC.SHAPE_STICKS, "", "translucent", 0.5d,
                 null);
             setShapeProperty(JC.SHAPE_STICKS, "type",
                 Integer.valueOf(Edge.BOND_COVALENT_MASK));
@@ -1974,7 +1974,7 @@ public class CmdExt extends ScriptExt {
       case T.struts:
         if (!isColorOrRadius) {
           colorArgb[0] = 0xFFFFFF;
-          translucentLevel = 0.5f;
+          translucentLevel = 0.5d;
           radius = vwr.getDouble(T.strutdefaultradius);
           isColorOrRadius = true;
         }
@@ -2693,7 +2693,7 @@ public class CmdExt extends ScriptExt {
           // note: this was DATA_TYPE_STRING ?? 
           if (isProperty)
             vwr.setData(property2, new Object[] { property2, dataOut, bsOut,
-                Integer.valueOf(JmolDataManager.DATA_TYPE_AFD), Boolean.TRUE }, vwr.ms.ac, 0,
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AD), Boolean.TRUE }, vwr.ms.ac, 0,
                 0, Integer.MAX_VALUE, 0);
           else if (!T.tokAttr(tokProp2, T.settable))
             error(ScriptError.ERROR_cannotSet);
@@ -3076,7 +3076,7 @@ public class CmdExt extends ScriptExt {
     if (!chk && !vwr.getBoolean(T.navigationmode))
       eval.setBooleanProperty("navigationMode", true);
     for (int i = 1; i < slen; i++) {
-      double timeSec = (isFloatParameter(i) ? doubleParameter(i++) : 2f);
+      double timeSec = (isFloatParameter(i) ? doubleParameter(i++) : 2d);
       if (timeSec < 0)
         invArg();
       if (!chk && timeSec > 0)
@@ -4358,7 +4358,7 @@ public class CmdExt extends ScriptExt {
         data = vwr.getMenu("");
       } else if (data == "PGRP") {
         data = vwr.ms.getPointGroupAsString(vwr.bsA(),
-            null, 0, 1.0f, null, null, type2.equals("draw") ? "" : null);
+            null, 0, 1.0d, null, null, type2.equals("draw") ? "" : null);
       } else if (data == "PDB" || data == "PQR") {
         if (showOnly) {
           data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
@@ -5605,9 +5605,9 @@ public class CmdExt extends ScriptExt {
         }
         invArg();
       }
-      pt.x -= 0.5f;
-      pt.y -= 0.5f;
-      pt.z -= 0.5f;
+      pt.x -= 0.5d;
+      pt.y -= 0.5d;
+      pt.z -= 0.5d;
       break;
     case T.define:
     case T.bitset:
@@ -5789,7 +5789,7 @@ public class CmdExt extends ScriptExt {
   }
       if (checkv1) {
         boolean okAng = (da > 89);
-        if (isnew || d < dmin + 0.1f && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Double.MAX_VALUE || damin < 89)) {
+        if (isnew || d < dmin + 0.1d && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Double.MAX_VALUE || damin < 89)) {
           // special first-quadrant check
           v1 = v;
           dmin2 = dmin;
@@ -5797,7 +5797,7 @@ public class CmdExt extends ScriptExt {
           dmin = d;
           if (!isnew && da < damin)
             damin = da;
-        } else if (d < dmin2 + 0.1f && okAng) {
+        } else if (d < dmin2 + 0.1d && okAng) {
           v1 = pt;
           dmin2 = d;
           if (da < damin)
@@ -5820,7 +5820,7 @@ public class CmdExt extends ScriptExt {
       for (int i = cpts.size(); --i >= 0;) {
         P3d pt = cpts.get(i);
         da = MeasureD.computeTorsion(v, zero, plane, pt, true);
-        if (da < -89.9f && da > amin + 0.01f) {
+        if (da < -89.9d && da > amin + 0.01f) {
           amin = da;
           u = pt;
         }
@@ -6424,8 +6424,8 @@ public class CmdExt extends ScriptExt {
     Object odata = (property == null || tok == (T.dssr | T.allfloat) ?
       e.getBitsetProperty(bs, null, tok, null, null, property,
           null, false, Integer.MAX_VALUE, false) 
-          : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AFD));
-    if (odata == null || !AU.isAF(odata))
+          : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AD));
+    if (odata == null || !AU.isAD(odata))
       return (bs == null ? null  : new double[bs.cardinality()]);
     double[] data = (double[]) odata;
     if (!Double.isNaN(min))

@@ -169,8 +169,8 @@ abstract class SlaterReader extends MOReader {
   class OrbitalSorter implements Comparator<Map<String, Object>> {
     @Override
     public int compare(Map<String, Object> mo1, Map<String, Object> mo2) {
-      double e1 = ((Float) mo1.get("energy")).doubleValue();
-      double e2 = ((Float) mo2.get("energy")).doubleValue();
+      double e1 = ((Number) mo1.get("energy")).doubleValue();
+      double e2 = ((Number) mo2.get("energy")).doubleValue();
       return ( e1 < e2 ? -1 : e2 < e1 ? 1 : 0);
     }    
   }

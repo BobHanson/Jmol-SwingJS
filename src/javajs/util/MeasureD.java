@@ -67,8 +67,8 @@ final public class MeasureD {
     double cy = kjz * klx - kjx * klz;
     double cz = kjx * kly - kjy * klx;
   
-    double ai2 = 1f / (ax * ax + ay * ay + az * az);
-    double ci2 = 1f / (cx * cx + cy * cy + cz * cz);
+    double ai2 = 1d / (ax * ax + ay * ay + az * az);
+    double ci2 = 1d / (cx * cx + cy * cy + cz * cz);
   
     double ai = (double) Math.sqrt(ai2);
     double ci = (double) Math.sqrt(ci2);
@@ -285,7 +285,7 @@ final public class MeasureD {
     double d = getNormalThroughPoints(ptA, ptB, ptC, normal, vTemp);
     boolean isReversed = (distanceToPlaneV(normal, d, ptCenter) > 0);
     if (isReversed == isOutward)
-      normal.scale(-1f);
+      normal.scale(-1d);
     return !isReversed;
   }
 
@@ -451,7 +451,7 @@ final public class MeasureD {
     averagePoint.setT(points[0]);
     for (int i = 1; i < nPoints; i++)
       averagePoint.add(points[i]);
-    averagePoint.scale(1f / nPoints);
+    averagePoint.scale(1d / nPoints);
   }
 
   public static boolean isInTetrahedron(P3d pt, P3d ptA, P3d ptB,
@@ -688,7 +688,7 @@ final public class MeasureD {
 	    for (int i = 0; i < n; i++) {
 	      pts[0].add(pts[i + 1] = vPts.get(i));
 	    }
-	    pts[0].scale(1f / n);
+	    pts[0].scale(1d / n);
 	  }
 	  return pts;
 	}
@@ -939,7 +939,7 @@ final public class MeasureD {
       P3d p = rndPt();
       getPlaneProjection(p, plane, ptProj, vNorm );
       pts[i].setT(ptProj);
-      double d = (double)Math.random()*0.1f;
+      double d = (double)Math.random()*0.1d;
       pts[i].scaleAdd2(d, vNorm, ptProj);
       System.out.println(pts[i] + " d=" + d);
     }

@@ -110,7 +110,7 @@ public class Wien2kReader extends AtomSetCollectionReader {
         name = name.substring(name.indexOf("_") + 1);
       setSpaceGroupName(name);
     }
-    double factor = (rd().toLowerCase().indexOf("ang") >= 0 ? 1f : ANGSTROMS_PER_BOHR);
+    double factor = (rd().toLowerCase().indexOf("ang") >= 0 ? 1d : ANGSTROMS_PER_BOHR);
     rd();
     double a = parseDoubleRange(line, 0,10) * factor;
     double b = parseDoubleRange(line, 10,20) * factor;

@@ -202,7 +202,7 @@ abstract class Calculations {
   }
 
   double energyStrBnd(@SuppressWarnings("unused") boolean gradients) {
-    return 0.0f;
+    return 0.0d;
   }
 
   double energyBond(boolean gradients) {

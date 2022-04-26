@@ -391,7 +391,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
           baseCenter.add(a);
           n++;
         }
-        baseCenter.scale(1f / n);
+        baseCenter.scale(1d / n);
       }
       return baseCenter;
     case 'n':
@@ -615,7 +615,7 @@ public boolean isCrossLinked(Group g) {
       v85.normalize();
       oxyz[2].setT(v85);
       oxyz[2].scale(-1);
-      oxyz[0].scaleAdd2(4.9f, v85, getC8());
+      oxyz[0].scaleAdd2(4.9d, v85, getC8());
       P3d v89 = P3d.newP(getN0());
       v89.sub(getC8());
       oxyz[3].cross(v89, v85);
@@ -634,7 +634,7 @@ public boolean isCrossLinked(Group g) {
       M3d m3 = new M3d();
       m3.setAA(aa);
       m3.rotate(oxyz[2]);
-      oxyz[0].scaleAdd2(5.1f, oxyz[2], getC6());
+      oxyz[0].scaleAdd2(5.1d, oxyz[2], getC6());
       oxyz[2].scale(-1);
     }
     oxyz[1].cross(oxyz[2], oxyz[3]);

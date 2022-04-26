@@ -265,7 +265,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       vectorT.cross(vectorT2, vectorT3);
       m.renderAxis = A4d.new4(vectorT.x, vectorT.y, vectorT.z, radians);
       vectorT2.normalize();
-      vectorT2.scale(0.5f);
+      vectorT2.scale(0.5d);
       m.renderArc = P3d.newP(vectorT2);
     }
     if (aaT == null) {
@@ -291,7 +291,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       if (i != iMid)
         continue;
       pointT.setT(m.renderArc);
-      pointT.scale(1.1f);
+      pointT.scale(1.1d);
       // next line modifies Point3i point3iScreenTemp
       matrixT.rotate(pointT);
       pointT.add(b);
@@ -336,7 +336,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       atomPt.add2(a, b);
       atomPt.add(c);
       atomPt.add(d);
-      atomPt.scale(0.25f);
+      atomPt.scale(0.25d);
       renderLabelOrMeasure(m.text, s);
     }
   }

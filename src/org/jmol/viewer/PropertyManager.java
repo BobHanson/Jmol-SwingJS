@@ -406,12 +406,12 @@ public class PropertyManager implements JmolPropertyManager {
           pt += dlist.length;
         return (pt >= 0 && pt < dlist.length ? Double.valueOf(dlist[pt]) : "");
       }
-      if (AU.isAF(property)) {
-        float[] flist = (float[]) property;
-        if (pt < 0)
-          pt += flist.length;
-        return (pt >= 0 && pt < flist.length ? Double.valueOf(flist[pt]) : "");
-      }
+//      if (AU.isAF(property)) {
+//        float[] flist = (float[]) property;
+//        if (pt < 0)
+//          pt += flist.length;
+//        return (pt >= 0 && pt < flist.length ? Double.valueOf(flist[pt]) : "");
+//      }
       if (AU.isAII(property)) {
         int[][] iilist = (int[][]) property;
         if (pt < 0)
@@ -420,8 +420,8 @@ public class PropertyManager implements JmolPropertyManager {
             ? extractProperty(iilist[pt], args, ptr, null, true)
             : "");
       }
-      if (AU.isAFF(property)) {
-        float[][] fflist = (float[][]) property;
+      if (AU.isADD(property)) {
+        double[][] fflist = (double[][]) property;
         if (pt < 0)
           pt += fflist.length;
         return (pt >= 0 && pt < fflist.length
@@ -1067,7 +1067,7 @@ public class PropertyManager implements JmolPropertyManager {
       if (mi.properties != null) {
         model.put("modelProperties", mi.properties);
       }
-      Float energy = (Float) m.getInfo(i, "Energy");
+      Number energy = (Number) m.getInfo(i, "Energy");
       if (energy != null) {
         model.put("energy", energy);
       }
@@ -1536,7 +1536,7 @@ public class PropertyManager implements JmolPropertyManager {
       info.put("translucent", Boolean.valueOf(isTranslucent));
     info.put("formalCharge", Integer.valueOf(atom.getFormalCharge()));
     info.put("partialCharge", Double.valueOf(atom.getPartialCharge()));
-    float d = atom.getSurfaceDistance100() / 100f;
+    double d = atom.getSurfaceDistance100() / 100f;
     if (d >= 0)
       info.put("surfaceDistance", Double.valueOf(d));
     if (ms.am[atom.mi].isBioModel) {
@@ -1884,9 +1884,9 @@ public class PropertyManager implements JmolPropertyManager {
     } else {
       // plot property x y z....
       bsAtoms = (BS) parameters[0];
-      float[] dataX = (float[]) parameters[1];
-      float[] dataY = (float[]) parameters[2];
-      float[] dataZ = (float[]) parameters[3];
+      double[] dataX = (double[]) parameters[1];
+      double[] dataY = (double[]) parameters[2];
+      double[] dataZ = (double[]) parameters[3];
       boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
       P3d minXYZ = (P3d) parameters[4];
@@ -1951,9 +1951,9 @@ public class PropertyManager implements JmolPropertyManager {
       }
       for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
           .nextSetBit(i + 1), n++) {
-        float x = dataX[n];
-        float y = (haveY ? dataY[n] : 0f);
-        float z = (haveZ ? dataZ[n] : 0f);
+        double x = dataX[n];
+        double y = (haveY ? dataY[n] : 0d);
+        double z = (haveZ ? dataZ[n] : 0d);
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
           continue;
         Atom a = atoms[i];
@@ -1963,9 +1963,9 @@ public class PropertyManager implements JmolPropertyManager {
           if (isPDB)
             bsWritten.set(i);
           out.append(PT.sprintf(
-              "%-8.2f%-8.2f%-10.2f    %6.3f          %2s    %s\n", "ssF",
+              "%-8.2d%-8.2d%-10.2d    %6.3f          %2s    %s\n", "ssF",
               new Object[] { a.getElementSymbolIso(false).toUpperCase(),
-                  strExtra, new float[] { x, y, z, 0f } }));
+                  strExtra, new double[] { x, y, z, 0d } }));
           if (atomLast != null
               && atomLast.group.getBioPolymerIndexInModel() == a.group
                   .getBioPolymerIndexInModel())
@@ -1978,19 +1978,19 @@ public class PropertyManager implements JmolPropertyManager {
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x, y, z } }));
+                  a.getAtomName(), new double[] { x, y, z } }));
         } else if (haveY) {
           out.append(PT.sprintf(
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x, y } }));
+                  a.getAtomName(), new double[] { x, y } }));
         } else {
           out.append(PT.sprintf(
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x } }));
+                  a.getAtomName(), new double[] { x } }));
         }
         atomLast = a;
       }

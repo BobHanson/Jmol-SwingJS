@@ -178,7 +178,7 @@ public class Echo extends TextShape {
 
     if ("scalereference" == propertyName) {
       if (currentObject != null) {
-        double val = ((Float) value).doubleValue();
+        double val = ((Number) value).doubleValue();
         currentObject.setScalePixelsPerMicron(val == 0 ? 0 : 10000f / val);
       }
       return;
@@ -203,10 +203,10 @@ public class Echo extends TextShape {
 
     if ("scale" == propertyName) {
       if (currentObject != null) {
-        (currentObject).setScale(((Float) value).doubleValue());
+        (currentObject).setScale(((Number) value).doubleValue());
       } else if (isAll) {
         for (Text t : objects.values())
-          t.setScale(((Float) value).doubleValue());
+          t.setScale(((Number) value).doubleValue());
       }
       return;
     }

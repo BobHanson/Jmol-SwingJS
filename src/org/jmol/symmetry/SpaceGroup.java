@@ -690,16 +690,16 @@ class SpaceGroup {
   }
 
   private final static SpaceGroup determineSpaceGroupN(String name) {
-    return determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1);
+    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1);
   }
 
   private final static SpaceGroup determineSpaceGroupNS(String name, SpaceGroup sg) {
-    return determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, sg.index);
+    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, sg.index);
   }
 
   final static SpaceGroup determineSpaceGroupNA(String name,
                                                      double[] unitCellParams) {
-    return (unitCellParams == null ? determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1)
+    return (unitCellParams == null ? determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1)
         : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
         unitCellParams[2], unitCellParams[3], unitCellParams[4],
         unitCellParams[5], -1));

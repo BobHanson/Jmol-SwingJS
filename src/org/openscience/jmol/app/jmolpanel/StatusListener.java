@@ -445,13 +445,13 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     // boolean isSecond = (functionName.indexOf("2") >= 0);
     for (int i = nX; --i >= 0;)
       for (int j = nY; --j >= 0;) {
-        double x = i / 5f; // / 15f - 1;
-        double y = j / 5f; // / 15f - 1;
+        double x = i / 5d; // / 15d - 1;
+        double y = j / 5d; // / 15d - 1;
         f[i][j] = /* (double) Math.sqrt */(x * x + y);
         if (Double.isNaN(f[i][j]))
           f[i][j] = -(double) Math.sqrt(-x * x - y);
-        // f[i][j] = (isSecond ? (double) ((i + j - nX) / (2f)) : (double) Math
-        // .sqrt(Math.abs(i * i + j * j)) / 2f);
+        // f[i][j] = (isSecond ? (double) ((i + j - nX) / (2d)) : (double) Math
+        // .sqrt(Math.abs(i * i + j * j)) / 2d);
         // if (i < 10 && j < 10)
         //System.out.println(" functionXY " + i + " " + j + " " + f[i][j]);
       }
@@ -469,9 +469,9 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     for (int i = nX; --i >= 0;)
       for (int j = nY; --j >= 0;)
         for (int k = nZ; --k >= 0;) {
-          double x = i / ((nX - 1) / 2f) - 1;
-          double y = j / ((nY - 1) / 2f) - 1;
-          double z = k / ((nZ - 1) / 2f) - 1;
+          double x = i / ((nX - 1) / 2d) - 1;
+          double y = j / ((nY - 1) / 2d) - 1;
+          double z = k / ((nZ - 1) / 2d) - 1;
           f[i][j][k] = x * x + y * y - z * z;//(double) x * x + y - z * z;
           // if (i == 22 || i == 23)
           //System.out.println(" functionXYZ " + i + " " + j + " " + k + " " +

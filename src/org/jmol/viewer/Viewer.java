@@ -757,9 +757,9 @@ public class Viewer extends JmolViewer
     if (!isExport && !isImageWrite
         && (width > 0 || wasAntialiased != antialiased))
       setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
-    imageFontScaling = (antialiased ? 2f : 1f)
+    imageFontScaling = (antialiased ? 2d : 1d)
         * (isReset || tm.scale3D || width <= 0 ? 1
-            : (g.zoomLarge == (height > width) ? height : width) * 1f
+            : (g.zoomLarge == (height > width) ? height : width) * 1d
                 / getScreenDim());
     if (width > 0) {
       dimScreen.width = width;
@@ -2057,7 +2057,7 @@ public class Viewer extends JmolViewer
   public void translate(char xyz, double x, char type, BS bsAtoms) {
     double xy = (type == '\0' ? x
         : type == '%' ? tm.percentToPixels(xyz, x)
-            : tm.angstromsToPixels(x * (type == 'n' ? 10f : 1f)));
+            : tm.angstromsToPixels(x * (type == 'n' ? 10f : 1d)));
     if (bsAtoms != null) {
       if (x == 0)
         return;
@@ -2127,7 +2127,7 @@ public class Viewer extends JmolViewer
 
   public double getScalePixelsPerAngstrom(boolean asAntialiased) {
     return tm.scalePixelsPerAngstrom
-        * (asAntialiased || !antialiased ? 1f : 0.5f);
+        * (asAntialiased || !antialiased ? 1d : 0.5d);
   }
 
   public void setSpin(String key, int value) {
@@ -3647,7 +3647,7 @@ public class Viewer extends JmolViewer
       return;
     openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams,
         true);
-    setRotationRadius(5.0f, true);
+    setRotationRadius(5.0d, true);
     setStringProperty("picking", "assignAtom_C");
     setStringProperty("picking", "assignBond_p");
   }
@@ -4116,7 +4116,7 @@ public class Viewer extends JmolViewer
 
   public void setCurrentColorRange(String label) {
     double[] data = (double[]) getDataObj(label, null,
-        JmolDataManager.DATA_TYPE_AFD);
+        JmolDataManager.DATA_TYPE_AD);
     BS bs = (data == null ? null
         : (BS) ((Object[]) getDataObj(label, null,
             JmolDataManager.DATA_TYPE_UNKNOWN))[2]);
@@ -6267,7 +6267,7 @@ public class Viewer extends JmolViewer
     case T.modulationscale:
       // 14.0.1
       ms.setModulation(null, false, null, false);
-      g.modulationScale = value = Math.max(0.1f, value);
+      g.modulationScale = value = Math.max(0.1d, value);
       ms.setModulation(null, true, null, false);
       break;
     case T.particleradius:
@@ -8292,7 +8292,7 @@ public class Viewer extends JmolViewer
 
   /**
    * fills an array with data -- if nX < 0 and this would involve JavaScript,
-   * then this reads a full set of Double[][] in one function call. Otherwise it
+   * then this reads a full set of double[][] in one function call. Otherwise it
    * reads the values using individual function calls, which each return Double.
    * 
    * If the functionName begins with "file:" then data are read from a file
@@ -9737,7 +9737,7 @@ public class Viewer extends JmolViewer
     if (bsSelected.isEmpty())
       return;
     //    // this forces an array if it does not exist 
-    //    setAtomProperty(BSUtil.newAndSetBit(pt), T.partialcharge, 0, 1f, null,
+    //    setAtomProperty(BSUtil.newAndSetBit(pt), T.partialcharge, 0, 1d, null,
     //        null, null);
     Logger.info("Calculating MMFF94 partial charges for "
         + bsSelected.cardinality() + " atoms");
@@ -10727,8 +10727,8 @@ public class Viewer extends JmolViewer
     }
     double d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
-    double af = (!tm.perspectiveDepth && isAntialiased ? 2f : 1f);
-    double f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1) / af;   
+    double af = (!tm.perspectiveDepth && isAntialiased ? 2d : 1d);
+    double f = (tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5d) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
     double e = 0, mp = 0;
     while (p < min) {

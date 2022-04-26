@@ -51,9 +51,9 @@ import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
+import org.jmol.util.MeshSurface;
 import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.TempArray;
 import org.jmol.util.Triangulator;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
@@ -1459,7 +1459,7 @@ public class IsoExt extends ScriptExt {
           for (int i = 0; i < nOrb; i++) {
             mo = mos.get(i);
             if ((f = (Number) mo.get("occupancy")) != null) {
-              if (f.doubleValue() < 0.5f) {
+              if (f.doubleValue() < 0.5d) {
                 // go for LUMO = first unoccupied
                 moNumber = i;
                 break;
@@ -1725,10 +1725,10 @@ public class IsoExt extends ScriptExt {
         } else if (tokAt(eval.iToken + 1) == T.expressionBegin
             || tokAt(eval.iToken + 1) == T.bitset) {
           bs = atomExpressionAt(++eval.iToken);
-          bs.and(vwr.ms.getAtomsWithinRadius(5.0f, bsSelect, false, null, null));
+          bs.and(vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, false, null, null));
         } else {
           // default is "within(5.0, selected) and not within(molecule,selected)"
-          bs = vwr.ms.getAtomsWithinRadius(5.0f, bsSelect, true, null, null);
+          bs = vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, true, null, null);
           bs.andNot(vwr.ms.getAtoms(T.molecule, bsSelect));
         }
         bs.andNot(bsSelect);
@@ -1867,7 +1867,7 @@ public class IsoExt extends ScriptExt {
           if (chk)
             continue;
           data = (double[]) vwr.getDataObj(str, null,
-              JmolDataManager.DATA_TYPE_AFD);
+              JmolDataManager.DATA_TYPE_AD);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);
@@ -2376,7 +2376,7 @@ public class IsoExt extends ScriptExt {
         nlmZprs[0] = intParameter(++i);
         nlmZprs[1] = intParameter(++i);
         nlmZprs[2] = intParameter(++i);
-        nlmZprs[3] = (isFloatParameter(i + 1) ? floatParameter(++i) : 6f);
+        nlmZprs[3] = (isFloatParameter(i + 1) ? floatParameter(++i) : 6d);
         //if (surfaceObjectSeen)
         sbCommand.append(" atomicOrbital ").appendI((int) nlmZprs[0])
             .append(" ").appendI((int) nlmZprs[1]).append(" ")
@@ -2416,7 +2416,7 @@ public class IsoExt extends ScriptExt {
           invArg();
         isCavity = true;
         double cavityRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
-            : 1.2f);
+            : 1.2d);
         double envelopeRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
             : 10f);
         if (chk)
@@ -2774,7 +2774,7 @@ public class IsoExt extends ScriptExt {
         if (tok == T.molecular) {
           propertyName = "molecular";
           sbCommand.append(" molecular");
-          radius = (isFloatParameter(i + 1) ? floatParameter(++i) : 1.4f);
+          radius = (isFloatParameter(i + 1) ? floatParameter(++i) : 1.4d);
         } else {
           addShapeProperty(propertyList, "bsSolvent",
               eval.lookupIdentifierValue("solvent"));
@@ -2978,7 +2978,7 @@ public class IsoExt extends ScriptExt {
               modelIndex = vwr.am.cmi;
             bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
             if (bs.nextSetBit(0) >= 0) {
-              pts = getWithinDistanceVector(propertyList, 2.0f, null, bs,
+              pts = getWithinDistanceVector(propertyList, 2.0d, null, bs,
                   false);
               sbCommand.append(" within 2.0 ").append(Escape.eBS(bs));
             }
@@ -3667,7 +3667,7 @@ public class IsoExt extends ScriptExt {
       if (contactType == T.vanderwaals && rd == null)
         rd = new RadiusData(null, 0, EnumType.OFFSET, VDW.AUTO);
       RadiusData rd1 = (rd == null
-          ? new RadiusData(null, 0.26f, EnumType.OFFSET, VDW.AUTO)
+          ? new RadiusData(null, 0.26d, EnumType.OFFSET, VDW.AUTO)
           : rd);
       if (displayType == T.nci && bsB == null && intramolecular != null
           && intramolecular.booleanValue())
@@ -3692,7 +3692,7 @@ public class IsoExt extends ScriptExt {
         setShapeProperty(JC.SHAPE_CONTACT, "minset", Integer.valueOf(minSet));
         sbCommand.append(" minSet ").appendI(minSet);
         if (params == null)
-          params = new double[] { 0.5f, 2 };
+          params = new double[] { 0.5d, 2 };
       }
 
       if (intramolecular != null) {
@@ -3872,7 +3872,7 @@ public class IsoExt extends ScriptExt {
       throws ScriptException {
     if (i < 0) {
       // standard range -100 to 0
-      return TempArray.getSlabWithinRange(i, 0);
+      return MeshSurface.getSlabWithinRange(i, 0);
     }
     ScriptEval eval = e;
     Object data = null;
@@ -3887,7 +3887,7 @@ public class IsoExt extends ScriptExt {
     Integer slabMeshType = null;
     if (tok == T.translucent) {
       double slabTranslucency = (isFloatParameter(++i + 1) ? floatParameter(++i)
-          : 0.5f);
+          : 0.5d);
       if (eval.isColorParam(i + 1)) {
         slabColix = Short.valueOf(
             C.getColixTranslucent3(C.getColix(eval.getArgbParam(i + 1)),
@@ -4038,7 +4038,7 @@ public class IsoExt extends ScriptExt {
     }
     Object colorData = (slabMeshType == null ? null
         : new Object[] { slabMeshType, slabColix });
-    return TempArray.getSlabObjectType(tok, data, !isSlab, colorData);
+    return MeshSurface.getSlabObjectType(tok, data, !isSlab, colorData);
   }
 
   private String setColorOptions(SB sb, int index, int iShape, int nAllowed)

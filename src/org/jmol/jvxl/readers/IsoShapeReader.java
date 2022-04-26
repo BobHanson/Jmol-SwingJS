@@ -73,7 +73,7 @@ final class IsoShapeReader extends VolumeDataReader {
 
   private final static double A0 = 0.52918; //x10^-10 meters
   private final static double ROOT2 = 1.414214;
-  private static final double ATOMIC_ORBITAL_ZERO_CUT_OFF = 1e-7f;
+  private static final double ATOMIC_ORBITAL_ZERO_CUT_OFF = 1e-7d;
 
   private double radius;
   private final P3d ptPsi = new P3d();
@@ -90,7 +90,7 @@ final class IsoShapeReader extends VolumeDataReader {
     case Parameters.SURFACE_ATOMICORBITAL:
       calcFactors(psi_n, psi_l, psi_m);
       autoScaleOrbital();
-      ptsPerAngstrom = 5f;
+      ptsPerAngstrom = 5d;
       maxGrid = 40;
       type = "hydrogen-like orbital";
       if (monteCarloCount > 0) {
@@ -113,7 +113,7 @@ final class IsoShapeReader extends VolumeDataReader {
       allowNegative = false;
       calcFactors(psi_n, psi_l, psi_m);
       psi_normalization = 1;
-      radius = 1.1f * eccentricityRatio * eccentricityScale;
+      radius = 1.1d * eccentricityRatio * eccentricityScale;
       if (eccentricityScale > 0 && eccentricityScale < 1)
         radius /= eccentricityScale;
       ptsPerAngstrom = 10f;
@@ -122,7 +122,7 @@ final class IsoShapeReader extends VolumeDataReader {
       break;
     case Parameters.SURFACE_ELLIPSOID3:
       type = "ellipsoid(thermal)";
-      radius = 3.0f * sphere_radiusAngstroms;
+      radius = 3.0d * sphere_radiusAngstroms;
       ptsPerAngstrom = 10f;
       maxGrid = 22;
       break;
@@ -137,7 +137,7 @@ final class IsoShapeReader extends VolumeDataReader {
       //$FALL-THROUGH$
     case Parameters.SURFACE_SPHERE:
     default:
-      radius = 1.2f * sphere_radiusAngstroms * eccentricityScale;
+      radius = 1.2d * sphere_radiusAngstroms * eccentricityScale;
       ptsPerAngstrom = 10f;
       maxGrid = 22;
       break;
@@ -338,7 +338,7 @@ final class IsoShapeReader extends VolumeDataReader {
       planeU.set(params.thePlane.x, params.thePlane.y, params.thePlane.z);
       planeU.normalize();
       planeV = V3d.new3(1, 0, 0);
-      if (Math.abs(planeU.dot(planeV)) > 0.5f)
+      if (Math.abs(planeU.dot(planeV)) > 0.5d)
         planeV.set(0, 1, 0);
       planeV.cross(planeU, planeV);
       planeU.cross(planeU, planeV);

@@ -268,7 +268,7 @@ abstract public class ForceField {
 
 /*  
   //  
-  //          f(x + 2delta) - 2f(x + delta) + f(x)
+  //          f(x + 2delta) - 2d(x + delta) + f(x)
   // f''(x) = ------------------------------------
   //                        (delta)^2        
   //

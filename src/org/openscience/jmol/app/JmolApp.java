@@ -73,7 +73,7 @@ public class JmolApp implements JmolAppAPI {
   public boolean isSilent;
   public Map<String, Object> info = new Hashtable<String, Object>();
   public Point jmolPosition;
-  public double autoAnimationDelay = 0.2f; // sec
+  public double autoAnimationDelay = 0.2d; // sec
 
   private String modelFilename;
   private String scriptFilename;

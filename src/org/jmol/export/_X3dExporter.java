@@ -266,7 +266,7 @@ public class _X3dExporter extends _VrmlExporter {
         pushMatrix();
           output("<Shape><Extrusion beginCap='false' convex='false' endCap='false' creaseAngle='1.57'");
           output(" crossSection='");
-          double rpd = 3.1415926f / 180;
+          double rpd = 3.1415926d / 180;
           double scale = 0.02f / radius;
           for (int i = 0; i <= 360; i += 10) {
             output(round(Math.cos(i * rpd) * scale) + " ");
@@ -452,8 +452,8 @@ public class _X3dExporter extends _VrmlExporter {
   //      } else {
   //        outputAttrPt("translation", ptCenter);
   //        outputQuaternionFrame(ptCenter, ptY, pt1, ptX, 2, 2, 2);
-  //        pt1.set(0, 0, -0.5f);
-  //        pt2.set(0, 0, 0.5f);
+  //        pt1.set(0, 0, -0.5d);
+  //        pt2.set(0, 0, 0.5d);
   //      }
   //      outputCloseTag();
   //      outputCylinderChildScaled(colix, endcaps);

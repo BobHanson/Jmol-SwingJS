@@ -194,7 +194,7 @@ public class _VrmlExporter extends __CartesianExporter {
 
     tempQ1.setT(ptX);
     tempQ2.setT(ptY);
-    A4d a = Qd.getQuaternionFrame(ptCenter, tempQ1, tempQ2).toAxisAngle4d();
+    A4d a = Qd.getQuaternionFrame(ptCenter, tempQ1, tempQ2).toA4d();
     if (!Double.isNaN(a.x)) {
       tempQ1.set(a.x, a.y, a.z);
       outputRotation(a);
@@ -285,7 +285,7 @@ public class _VrmlExporter extends __CartesianExporter {
             output(" Shape{");
               output("geometry Extrusion{beginCap FALSE convex FALSE endCap FALSE creaseAngle 1.57");
                 output(" crossSection [");
-                double rpd = 3.1415926f / 180;
+                double rpd = 3.1415926d / 180;
                 double scale = 0.02f / radius;
                 for (int i = 0; i <= 360; i += 10) {
                   output(round(Math.cos(i * rpd) * scale) + " ");
@@ -346,11 +346,11 @@ public class _VrmlExporter extends __CartesianExporter {
     for (int i = 0; i < n; i++) {
       double x = (double) (Math.cos(i * ndeg / 180. * Math.PI)); 
       double y = (double) (Math.sin(i * ndeg / 180. * Math.PI)); 
-      vertexes[i] = P3d.new3(x, -0.5f, y);
+      vertexes[i] = P3d.new3(x, -0.5d, y);
     }    
-    vertexes[n++] = P3d.new3(0, 0.5f, 0);
+    vertexes[n++] = P3d.new3(0, 0.5d, 0);
     if (addBase)
-      vertexes[n++] = P3d.new3(0, -0.5f, 0);
+      vertexes[n++] = P3d.new3(0, -0.5d, 0);
     outputGeometry(vertexes, null, null, faces, null, vertexCount, faces.length, null, 3,
         null, null, null);
   }
@@ -361,7 +361,7 @@ public class _VrmlExporter extends __CartesianExporter {
                                    boolean checkRadius) {
     double height = (pt1.distance(pt2));
     if (radius < 0.01f || height == 0)
-      return false; // nucleic edges are 0.005f
+      return false; // nucleic edges are 0.005d
     pushMatrix();
     if (ptX == null) {
       outputTransRot(pt1, pt2, 0, 1, 0);
@@ -370,13 +370,13 @@ public class _VrmlExporter extends __CartesianExporter {
       // arcs of ellipsoid rendering only
       outputAttrPt("translation", ptCenter);
       outputQuaternionFrame(ptCenter, ptY, pt1, ptX, 2, 2, 2);
-      pt1.set(0, 0, -0.5f);
-      pt2.set(0, 0, 0.5f);
+      pt1.set(0, 0, -0.5d);
+      pt2.set(0, 0, 0.5d);
     }
     outputCloseTag();
     outputCylinderChildScaled(colix, endcaps);
     popMatrix();
-    if (radius > 0.1f)
+    if (radius > 0.1d)
       switch (endcaps) {
       case GData.ENDCAPS_SPHERICAL:
         outputSphere(pt1, radius * 1.01f, colix, checkRadius);
@@ -436,16 +436,16 @@ public class _VrmlExporter extends __CartesianExporter {
     for (int i = 0; i < n; i++) {
       double x = (double) (Math.cos(i * ndeg / 180. * Math.PI)); 
       double y = (double) (Math.sin(i * ndeg / 180. * Math.PI)); 
-      vertexes[i] = P3d.new3(x, 0.5f, y);
+      vertexes[i] = P3d.new3(x, 0.5d, y);
     }
     for (int i = 0; i < n; i++) {
       double x = (double) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI)); 
       double y = (double) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI)); 
-      vertexes[i + n] = P3d.new3(x, -0.5f, y);
+      vertexes[i + n] = P3d.new3(x, -0.5d, y);
     }
     if (addEndcaps) {
-      vertexes[vertexCount - 2] = P3d.new3(0, 0.5f, 0);
-      vertexes[vertexCount - 1] = P3d.new3(0, -0.5f, 0);
+      vertexes[vertexCount - 2] = P3d.new3(0, 0.5d, 0);
+      vertexes[vertexCount - 1] = P3d.new3(0, -0.5d, 0);
     }
     outputGeometry(vertexes, null, null, faces, null, vertexCount, faces.length, null, 3,
         null, null, null);
@@ -464,7 +464,7 @@ public class _VrmlExporter extends __CartesianExporter {
 
   @Override
   protected void outputEllipsoid(P3d ptCenter, P3d[] points, short colix) {
-    outputSphereChildScaled(ptCenter, 1.0f, points, colix);
+    outputSphereChildScaled(ptCenter, 1.0d, points, colix);
   }
 
   private void outputSphereChildScaled(P3d ptCenter, double radius,
@@ -530,7 +530,7 @@ public class _VrmlExporter extends __CartesianExporter {
           { 1, 3, 4 }, { 1, 4, 2 }, { 2, 4, 5 }, { 2, 5, 0 }, { 0, 5, 3 } };
     }
     MeasureD.calcNormalizedNormal(tempP1, tempP2, tempP3, tempV1, tempV2);
-    tempV1.scale(0.2f);
+    tempV1.scale(0.2d);
     plateVertices[0].setT(tempP1);
     plateVertices[1].setT(tempP2);
     plateVertices[2].setT(tempP3);
@@ -757,7 +757,7 @@ public class _VrmlExporter extends __CartesianExporter {
     fontFace = font3d.fontFace.toUpperCase();
     fontFace = (fontFace.equals("MONOSPACED") ? "TYPEWRITER" 
         : fontFace.equals("SERIF") ? "SERIF" : "Arial");
-    fontSize = font3d.fontSize * 0.015f;
+    fontSize = font3d.fontSize * 0.015d;
     fontChild = getDef("T" + colix + fontFace + fontStyle + fontSize + "_" + text);
   }
 

@@ -122,7 +122,7 @@ public class Labels extends AtomShape {
     if ("scalereference" == propertyName) {
       if (strings == null)
         return;
-      double val = ((Float) value).doubleValue();
+      double val = ((Number) value).doubleValue();
       double scalePixelsPerMicron = (val == 0 ? 0 : 10000f / val);
       int n = Math.min(ac, strings.length);
       for (int i = bs.nextSetBit(0); i >= 0

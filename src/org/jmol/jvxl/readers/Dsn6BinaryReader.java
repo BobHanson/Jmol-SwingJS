@@ -172,10 +172,10 @@ class Dsn6BinaryReader extends MapFileReader {
     
     // just to satisfy my curiosity:
     
-    double dminError1 = (0 - header17 - 0.5f) * header19 / (header16 - 0.5f);
-    double dminError2 = (0 - header17 + 0.5f) * header19 / (header16 + 0.5f);
-    double dmaxError1 = (255 - header17 - 0.5f) * header19 / (header16 - 0.5f);
-    double dmaxError2 = (255 - header17 + 0.5f) * header19 / (header16 + 0.5f);
+    double dminError1 = (0 - header17 - 0.5d) * header19 / (header16 - 0.5d);
+    double dminError2 = (0 - header17 + 0.5d) * header19 / (header16 + 0.5d);
+    double dmaxError1 = (255 - header17 - 0.5d) * header19 / (header16 - 0.5d);
+    double dmaxError2 = (255 - header17 + 0.5d) * header19 / (header16 + 0.5d);
 
     double dminError = (int) Math.round((dminError2 - dminError1) / 0.002f) * 0.001f;
     double dmaxError = (int) Math.round((dmaxError2 - dmaxError1) / 0.002f) * 0.001f;

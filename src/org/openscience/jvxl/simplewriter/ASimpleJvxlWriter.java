@@ -64,9 +64,9 @@ public class ASimpleJvxlWriter {
     VoxelDataCreator vdc;
     volumeData = new VolumeData();
     volumeData.setVolumetricOrigin(0, 0, 0);
-    volumeData.setVolumetricVector(0, 1f, 0f, 0f);
-    volumeData.setVolumetricVector(1, 0f, 1f, 0f);
-    volumeData.setVolumetricVector(2, 0f, 0f, 1f);
+    volumeData.setVolumetricVector(0, 1d, 0d, 0d);
+    volumeData.setVolumetricVector(1, 0d, 1d, 0d);
+    volumeData.setVolumetricVector(2, 0d, 0d, 1d);
     volumeData.setVoxelCounts(nX, nY, nZ);
 
     vdc = new VoxelDataCreator(volumeData);

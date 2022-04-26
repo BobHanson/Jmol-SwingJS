@@ -151,7 +151,7 @@ public class MeshSlicer {
     case T.range:
     case T.mesh:
       Object[] o = (Object[]) slabbingObject;
-      double distance = ((Float) o[0]).doubleValue();
+      double distance = ((Number) o[0]).doubleValue();
       switch (slabType) {
       case T.within:
         P3d[] points = (P3d[]) o[1];
@@ -166,7 +166,7 @@ public class MeshSlicer {
         // if y.y < x.x then this effectively means "NOT within range y.y x.x"
         if (m.vvs == null)
           return false;
-        double distanceMax = ((Float) o[1]).doubleValue();
+        double distanceMax = ((Number) o[1]).doubleValue();
         sb.append("within range ").appendF(distance).append(" ")
             .appendF(distanceMax);
         bs = (distanceMax < distance ? BSUtil.copy(m.bsSlabDisplay) : null);

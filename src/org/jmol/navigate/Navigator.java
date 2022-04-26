@@ -280,7 +280,7 @@ public final class Navigator extends JmolThread implements
     double y = pt1.y;
     if (!Double.isNaN(x))
       x = tm.width * x / 100f
-          + (Double.isNaN(y) ? tm.navigationOffset.x : (tm.width / 2f));
+          + (Double.isNaN(y) ? tm.navigationOffset.x : (tm.width / 2d));
     if (!Double.isNaN(y))
       y = tm.height * y / 100f
           + (Double.isNaN(x) ? tm.navigationOffset.y : tm.getNavPtHeight());
@@ -298,7 +298,7 @@ public final class Navigator extends JmolThread implements
       return;
     }
     tm.navigating = true;
-    double fStep = (iStep + 1f) / totalSteps;
+    double fStep = (iStep + 1d) / totalSteps;
     if (!Double.isNaN(degrees))
       tm.navigateAxis(this.axis, degreeStep);
     if (center != null) {
@@ -343,7 +343,7 @@ public final class Navigator extends JmolThread implements
       degreeStep = degrees / (totalSteps + 1);
       aaStepCenter = V3d.newVsub(center == null ? tm.navigationCenter : center,
           tm.navigationCenter);
-      aaStepCenter.scale(1f / (totalSteps + 1));
+      aaStepCenter.scale(1d / (totalSteps + 1));
       centerStart = P3d.newP(tm.navigationCenter);
     }
   }
@@ -459,7 +459,7 @@ public final class Navigator extends JmolThread implements
         System.out.println(navZ);
         
         if (vwr.getNavigationPeriodic())
-          range = Math.min(range, 0.8f * modelRadius);      
+          range = Math.min(range, 0.8d * modelRadius);      
         visualRange = range;  
     */
   }
@@ -483,7 +483,7 @@ public final class Navigator extends JmolThread implements
     case TransformManager.NAV_MODE_RESET:
       // simply place the navigation center front and center and recalculate
       // modelCenterOffset
-      tm.navigationOffset.set(tm.width / 2f, tm.getNavPtHeight(),
+      tm.navigationOffset.set(tm.width / 2d, tm.getNavPtHeight(),
           tm.referencePlaneOffset);
       tm.zoomFactor = Double.MAX_VALUE;
       tm.calcCameraFactors();
@@ -682,7 +682,7 @@ public final class Navigator extends JmolThread implements
         break;
       }
       if (isAltKey) {
-        tm.rotateXRadians(JC.radiansPerDegree * -.2f * multiplier,
+        tm.rotateXRadians(JC.radiansPerDegree * -.2d * multiplier,
             null);
         tm.navMode = TransformManager.NAV_MODE_NEWXYZ;
         break;
@@ -714,7 +714,7 @@ public final class Navigator extends JmolThread implements
         break;
       }
       if (isAltKey) {
-        tm.rotateXRadians(JC.radiansPerDegree * .2f * multiplier,
+        tm.rotateXRadians(JC.radiansPerDegree * .2d * multiplier,
             null);
         tm.navMode = TransformManager.NAV_MODE_NEWXYZ;
         break;
@@ -738,7 +738,7 @@ public final class Navigator extends JmolThread implements
         tm.navMode = TransformManager.NAV_MODE_NEWXY;
         break;
       }
-      tm.rotateYRadians(JC.radiansPerDegree * 3 * -.2f * multiplier,
+      tm.rotateYRadians(JC.radiansPerDegree * 3 * -.2d * multiplier,
           null);
       tm.navMode = TransformManager.NAV_MODE_NEWXYZ;
       break;
@@ -757,7 +757,7 @@ public final class Navigator extends JmolThread implements
         tm.navMode = TransformManager.NAV_MODE_NEWXY;
         break;
       }
-      tm.rotateYRadians(JC.radiansPerDegree * 3 * .2f * multiplier,
+      tm.rotateYRadians(JC.radiansPerDegree * 3 * .2d * multiplier,
           null);
       tm.navMode = TransformManager.NAV_MODE_NEWXYZ;
       break;

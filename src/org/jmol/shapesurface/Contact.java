@@ -54,7 +54,7 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.ContactPair;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.TempArray;
+import org.jmol.util.MeshSurface;
 
 public class Contact extends Isosurface {
 
@@ -108,7 +108,7 @@ public class Contact extends Isosurface {
   private double minData, maxData;
 
   //private final static String hbondH = "_H & connected(_O|_N and his and not *.N |_S)";
-  //private final static double HBOND_CUTOFF = -0.8f;
+  //private final static double HBOND_CUTOFF = -0.8d;
   private final static RadiusData rdVDW =  new RadiusData(null, 1, EnumType.FACTOR, VDW.AUTO);
   
   private void setContacts(Object[] value, boolean doEditCpList) {
@@ -154,7 +154,7 @@ public class Contact extends Isosurface {
         : parameters[1]);
     double ptSize = (colorDensity && parameters != null && parameters[0] < 0 ? Math
         .abs(parameters[0])
-        : 0.15f);
+        : 0.15d);
     if (Logger.debugging) {
       Logger.debug("Contact intramolecularMode " + intramolecularMode);
       Logger.debug("Contacts for " + bsA.cardinality() + ": "
@@ -230,7 +230,7 @@ public class Contact extends Isosurface {
     case T.connect:
     case T.plane:
       /*      if (rd == null)
-              rd = new RadiusData(0.25f, EnumType.OFFSET,
+              rd = new RadiusData(0.25d, EnumType.OFFSET,
                   EnumVdw.AUTO);
       */
       double volume = 0;
@@ -278,7 +278,7 @@ public class Contact extends Isosurface {
     ColorEncoder ce = null;
     if (colorByType) {
       ce = vwr.cm.getColorEncoder("rwb");
-      ce.setRange(-0.5f, 0.5f, false);
+      ce.setRange(-0.5d, 0.5d, false);
     } else if (defaultColor != null) {
       setPropI("color", Integer.valueOf(CU
           .getArgbFromString(defaultColor)), null);
@@ -288,9 +288,9 @@ public class Contact extends Isosurface {
     } else {
       ce = vwr.cm.getColorEncoder("rgb");
       if (colorDensity)
-        ce.setRange(-0.3f, 0.3f, false);
+        ce.setRange(-0.3d, 0.3d, false);
       else
-        ce.setRange(-0.5f, 1f, false);
+        ce.setRange(-0.5d, 1d, false);
     }
     if (ce != null)
       thisMesh.remapColors(vwr, ce, translucentLevel);
@@ -461,8 +461,8 @@ public class Contact extends Isosurface {
         HB typeB = (typeA == HB.NOT ? HB.NOT
             : HB.getType(atomB));
         boolean isHBond = HB.isPossibleHBond(typeA, typeB);
-        //double hbondCutoff = -1.0f;//HBOND_CUTOFF;
-        double hbondCutoff = (atomA.getElementNumber() == 1 || atomB.getElementNumber() == 1 ? -1.2f : -1.0f);
+        //double hbondCutoff = -1.0d;//HBOND_CUTOFF;
+        double hbondCutoff = (atomA.getElementNumber() == 1 || atomB.getElementNumber() == 1 ? -1.2d : -1.0d);
         
         if (isHBond && cp.score < hbondCutoff)
           isHBond = false;
@@ -572,7 +572,7 @@ public class Contact extends Isosurface {
       }
       params.colorDensity = isColorDensity;
       if (isColorDensity) {
-        setPropI("cutoffRange", new double[] { -100f, 0f }, null);
+        setPropI("cutoffRange", new double[] { -100f, 0d }, null);
       }
       if (cp == null) {
         params.atomRadiusData = rdA;
@@ -618,7 +618,7 @@ public class Contact extends Isosurface {
       params.volumeData = volumeData;
       params.colorDensity = isColorDensity;
       if (isColorDensity)
-        setPropI("cutoffRange", new double[] { -5f, 0f }, null);
+        setPropI("cutoffRange", new double[] { -5d, 0d }, null);
       setPropI("sasurface", Double.valueOf(0), null);
       // mapping
       setPropI("map", Boolean.TRUE, null);
@@ -630,7 +630,7 @@ public class Contact extends Isosurface {
       break;
     }
     if (iSlab0 != iSlab1)
-      thisMesh.getMeshSlicer().slabPolygons(TempArray.getSlabWithinRange(iSlab0, iSlab1),
+      thisMesh.getMeshSlicer().slabPolygons(MeshSurface.getSlabWithinRange(iSlab0, iSlab1),
           false);
     if (displayType != T.surface)
       thisMesh.setMerged(true);
@@ -649,7 +649,7 @@ public class Contact extends Isosurface {
     vX.sub2(pt2, pt1);
     double dAB = vX.length();
     double dYZ = (cp.radii[0] * cp.radii[0] + dAB * dAB - cp.radii[1] * cp.radii[1])/(2 * dAB * cp.radii[0]);
-    dYZ = 2.1f * (double) (cp.radii[0] * Math.sin(Math.acos(dYZ)));
+    dYZ = 2.1d * (double) (cp.radii[0] * Math.sin(Math.acos(dYZ)));
     MeasureD.getNormalToLine(pt1, pt2, vZ);
     vZ.scale(dYZ);
     vY.cross(vZ, vX);
@@ -657,8 +657,8 @@ public class Contact extends Isosurface {
     vY.scale(dYZ);
     if (type != T.connect) {
       vX.normalize();
-      pt1.scaleAdd2((dAB - cp.radii[1]) * 0.95f, vX, pt1);
-      pt2.scaleAdd2((cp.radii[0] - dAB) * 0.95f, vX, pt2);
+      pt1.scaleAdd2((dAB - cp.radii[1]) * 0.95d, vX, pt1);
+      pt2.scaleAdd2((cp.radii[0] - dAB) * 0.95d, vX, pt2);
       vX.sub2(pt2, pt1);
     }
     if (resolution == Double.MAX_VALUE)
@@ -673,8 +673,8 @@ public class Contact extends Isosurface {
     if ((nYZ % 2) == 0)
       nYZ++;
     volumeData.setVoxelCounts(nX, nYZ, nYZ);
-    pt1.scaleAdd2(-0.5f, vY, pt1);
-    pt1.scaleAdd2(-0.5f, vZ, pt1);
+    pt1.scaleAdd2(-0.5d, vY, pt1);
+    pt1.scaleAdd2(-0.5d, vZ, pt1);
     volumeData.setVolumetricOrigin(pt1.x, pt1.y, pt1.z);
     /*
     System.out.println("draw pt1 "+pt1+" color red");
@@ -683,9 +683,9 @@ public class Contact extends Isosurface {
     System.out.println("draw vz vector "+pt1+" "+vZ+" color blue");
     */
 
-    vX.scale(1f/(nX-1));
-    vY.scale(1f/(nYZ-1));
-    vZ.scale(1f/(nYZ-1));
+    vX.scale(1d/(nX-1));
+    vY.scale(1d/(nYZ-1));
+    vZ.scale(1d/(nYZ-1));
     volumeData.setVolumetricVector(0, vX.x, vX.y, vX.z);
     volumeData.setVolumetricVector(1, vY.x, vY.y, vY.z);
     volumeData.setVolumetricVector(2, vZ.x, vZ.y, vZ.z);

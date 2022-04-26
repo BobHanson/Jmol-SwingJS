@@ -272,9 +272,9 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   }
 
   private double getACDPeakWidth(String type) {
-	  return (type.indexOf("HNMR") >= 0 ? 0.05f
-	  		: type.indexOf("CNMR") >= 0 ? 1f 
-	      : type.indexOf("MASS") >= 0 ? 1f
+	  return (type.indexOf("HNMR") >= 0 ? 0.05d
+	  		: type.indexOf("CNMR") >= 0 ? 1d 
+	      : type.indexOf("MASS") >= 0 ? 1d
 	      : 10); // IR, Raman, UV/VIS
   }
 

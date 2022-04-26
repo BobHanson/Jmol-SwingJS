@@ -70,9 +70,9 @@ import javajs.util.V3d;
 
 abstract public class AtomCollection {
   
-  private final static double almost180 = (double) Math.PI * 0.95f;
+  private final static double almost180 = (double) Math.PI * 0.95d;
   private final static double sqrt3_2 = (double) (Math.sqrt(3) / 2);
-  private final static V3d vRef = V3d.new3(3.14159f, 2.71828f, 1.41421f);
+  private final static V3d vRef = V3d.new3(3.14159d, 2.71828d, 1.41421f);
 
   public Viewer vwr;
   protected GData g3d;
@@ -756,7 +756,7 @@ abstract public class AtomCollection {
     case 'Z':
       return v.z;
     case 'O':
-      return ((Float) ms.getModulation('O', null)).doubleValue();
+      return ((Number) ms.getModulation('O', null)).doubleValue();
     case '1':
     case '2':
     case '3':
@@ -974,7 +974,7 @@ abstract public class AtomCollection {
         return;
       bfactor100s = new short[at.length];
     }
-    bfactor100s[atomIndex] = (short) ((bfactor < -327.68f ? -327.68f
+    bfactor100s[atomIndex] = (short) ((bfactor < -327.68d ? -327.68d
         : bfactor > 327.67 ? 327.67 : bfactor) * 100 + (bfactor < 0 ? -0.5 : 0.5));
     if (doTaint)
       taintAtom(atomIndex, TAINT_TEMPERATURE);
@@ -1080,7 +1080,7 @@ abstract public class AtomCollection {
         taintAtom(atomIndex, type);
       }
       if (type == TAINT_MAX && n > 0)
-        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AF)}, 0, 0, 0, 0, 0);
+        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AD)}, 0, 0, 0, 0, 0);
         
     } catch (Exception e) {
       Logger.error("loadData error: " + e);
@@ -1098,8 +1098,8 @@ abstract public class AtomCollection {
         int atomIndex = PT.parseInt(tokens[0]) - 1;
         // JavaScript will not be exact, and we will be checking for the exact value
         // Modulation setting modScale
-        double x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseDouble(tokens[3]));
-        double y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseDouble(tokens[4]));
+        double x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[3]));
+        double y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[4]));
         double z = PT.parseDouble(tokens[5]);
         if (isVibrationVectors) {
           v.set(x, y, z);
@@ -1357,13 +1357,13 @@ abstract public class AtomCollection {
         int atomicNumber = atom.getElementNumber();
         if (justCarbon && atomicNumber != 6)
           continue;
-        double dHX = (atomicNumber <= 6 ? 1.1f // B, C
-            : atomicNumber <= 10 ? 1.0f       // N, O
-            : 1.3f);                          // S
+        double dHX = (atomicNumber <= 6 ? 1.1d // B, C
+            : atomicNumber <= 10 ? 1.0d       // N, O
+            : 1.3d);                          // S
         switch (atomicNumber) {
         case 7:
         case 8:
-          dHX = 1.0f;
+          dHX = 1.0d;
           break;
         case 6:
         }
@@ -1389,7 +1389,7 @@ abstract public class AtomCollection {
           switch (n) {
           case 4:
             // methane
-            z.set(0.635f, 0.635f, 0.635f);
+            z.set(0.635d, 0.635d, 0.635d);
             pt = P3d.newP(z);
             pt.add(atom);
             hAtoms[i][hPt++] = pt;
@@ -1398,7 +1398,7 @@ abstract public class AtomCollection {
             //$FALL-THROUGH$
           case 3:
             // nitrogen
-            z.set(-0.635f, -0.635f, 0.635f);
+            z.set(-0.635d, -0.635d, 0.635d);
             pt = P3d.newP(z);
             pt.add(atom);
             hAtoms[i][hPt++] = pt;
@@ -1407,7 +1407,7 @@ abstract public class AtomCollection {
             //$FALL-THROUGH$
           case 2:
             // oxygen
-            z.set(-0.635f, 0.635f, -0.635f);
+            z.set(-0.635d, 0.635d, -0.635d);
             pt = P3d.newP(z);
             pt.add(atom);
             hAtoms[i][hPt++] = pt;
@@ -1415,7 +1415,7 @@ abstract public class AtomCollection {
               vConnect.addLast(atom);
             //$FALL-THROUGH$
           case 1:
-            z.set(0.635f, -0.635f, -0.635f);
+            z.set(0.635d, -0.635d, -0.635d);
             pt = P3d.newP(z);
             pt.add(atom);
             hAtoms[i][hPt++] = pt;
@@ -1639,7 +1639,7 @@ abstract public class AtomCollection {
       else
         vTemp2.cross(x, v[2]);
       vTemp2.normalize();
-      isPlanar = (Math.abs(vTemp2.dot(vTemp)) >= 0.95f);
+      isPlanar = (Math.abs(vTemp2.dot(vTemp)) >= 0.95d);
     }
 
     boolean isSp3 = (lcaoType.indexOf("sp3") == 0);
@@ -1691,7 +1691,7 @@ abstract public class AtomCollection {
         }
         break;
       case 2:
-        if (z.length() < 0.1f) {
+        if (z.length() < 0.1d) {
           // linear A--X--B
           if (lcaoType.indexOf("2") >= 0 || lcaoType.indexOf("3") >= 0)
             return null;
@@ -1744,10 +1744,10 @@ abstract public class AtomCollection {
     case 0:
       if (lcaoType.equals("sp3c") || lcaoType.equals("sp2d")
           || lcaoType.equals("lpa")) {
-        z.set(-0.5f, -0.7f, 1);
+        z.set(-0.5d, -0.7d, 1);
         x.set(1, 0, 0);
       } else if (lcaoType.equals("sp3b") || lcaoType.equals("lpb")) {
-        z.set(0.5f, -0.7f, -1f);
+        z.set(0.5d, -0.7d, -1d);
         x.set(1, 0, 0);
       } else if (lcaoType.equals("sp3a")) {
         z.set(0, 1, 0);
@@ -1787,12 +1787,12 @@ abstract public class AtomCollection {
         vTemp.normalize();
         // y1 is perp to bond and x
         z.normalize();
-        x.scaleAdd2(2.828f, x, z); // 2*sqrt(2)
+        x.scaleAdd2(2.828d, x, z); // 2*sqrt(2)
         if (pt != 3) {
           x.normalize();
           // PI*2/3
           new M3d().setAA(A4d.new4(z.x, z.y, z.z,
-              (pt == 2 ? 1 : -1) * 2.09439507f)).rotate(x);
+              (pt == 2 ? 1 : -1) * 2.09439507d)).rotate(x);
         }
         z.setT(x);
         x.cross(vTemp, z);
@@ -1828,20 +1828,20 @@ abstract public class AtomCollection {
               }
             }
           vTemp.cross(vTemp, x);
-          if (vTemp.length() > 0.1f || a.getCovalentBondCount() != 2)
+          if (vTemp.length() > 0.1d || a.getCovalentBondCount() != 2)
             break;
           atom = a0;
           a0 = a;
         }
         if (isSp) {
-        } else if (vTemp.length() > 0.1f) {
+        } else if (vTemp.length() > 0.1d) {
           z.cross(vTemp, x);
           // C=C or RC=C
           z.normalize();
           if (pt == 1)
             z.scale(-1);
           z.scale(sqrt3_2);
-          z.scaleAdd2(0.5f, x, z);
+          z.scaleAdd2(0.5d, x, z);
           if (isP) {
             vTemp.cross(z, x);
             z.setT(vTemp);
@@ -1863,7 +1863,7 @@ abstract public class AtomCollection {
           if (pt == 1)
             x.scale(-1);
           x.scale(sqrt3_2);
-          z.scaleAdd2(0.5f, z, x);
+          z.scaleAdd2(0.5d, z, x);
         } else if (isSp) {
           
         } else {
@@ -1876,7 +1876,7 @@ abstract public class AtomCollection {
       break;
     case 2:
       // two attached atoms -- check for linearity
-      if (z.length() < 0.1f) {
+      if (z.length() < 0.1d) {
         // linear A--X--B
         if (!lcaoType.equals("pz")) {
           Atom a = attached[0];
@@ -1911,9 +1911,9 @@ abstract public class AtomCollection {
         z.normalize();
         if (!lcaoType.equals("lp")) {
           if (pt == 0 || pt == 2) 
-            z.scaleAdd2(-1.2f, vTemp, z);
+            z.scaleAdd2(-1.2d, vTemp, z);
           else
-            z.scaleAdd2(1.2f, vTemp, z);
+            z.scaleAdd2(1.2d, vTemp, z);
         }
         x.cross(z, vTemp);
         break;
@@ -2112,7 +2112,7 @@ abstract public class AtomCollection {
           int i = bs.nextSetBit(0);
           x.sub2(attached[i], atom);
           x.normalize();
-          x.scale(0.5f);
+          x.scale(0.5d);
           z.scaleAdd2(sqrt3_2, z, x);
           pt = -1;
           break;

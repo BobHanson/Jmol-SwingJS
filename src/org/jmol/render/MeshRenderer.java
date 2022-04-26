@@ -202,7 +202,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (!doRender || isGhostPass && !(doRender = g3d.setC(mesh.slabColix))) {
       vertices = mesh.vs;
       if (needTranslucent)
-        g3d.setC(C.getColixTranslucent3(C.BLACK, true, 0.5f));
+        g3d.setC(C.getColixTranslucent3(C.BLACK, true, 0.5d));
       return true;
     }
     if (mesh.isModelConnected)
@@ -244,7 +244,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (isGhostPass)
       return true;
     if (volumeRender && !isTranslucent)
-      colix = C.getColixTranslucent3(colix, true, 0.8f);
+      colix = C.getColixTranslucent3(colix, true, 0.8d);
     this.colix = colix;
     if (C.isColixLastAvailable(colix))
       vwr.gdata.setColor(mesh.color);

@@ -507,7 +507,7 @@ public class Qd {
   }
   
   public V3d getVector(int i) {
-    return getVectorScaled(i, 1f);
+    return getVectorScaled(i, 1d);
   }
 
   public V3d getVectorScaled(int i, double scale) {
@@ -519,7 +519,7 @@ public class Qd {
       setMatrix();
     V3d v = new V3d();
     mat.getColumnV(i, v);
-    if (scale != 1f)
+    if (scale != 1d)
       v.scale(scale);
     return v;
   }
@@ -616,11 +616,11 @@ public class Qd {
    * rotation angle (axisangle), and cos(theta/2) (quaternion).
    * @return {x y z w} (unnormalized)
    */
-  public P4d toPoint4d() {
+  public P4d toP4d() {
     return P4d.new4(q1, q2, q3, q0); // x,y,z,w
   }
 
-  public A4d toAxisAngle4d() {
+  public A4d toA4d() {
     double theta = 2 * Math.acos(Math.abs(q0));
     double sinTheta2 = Math.sin(theta/2);
     V3d v = getNormal();
@@ -786,7 +786,7 @@ public class Qd {
       v.scale(dq.getTheta());
       sum.add(v);
     }
-    sum.scale(1f/data.length);
+    sum.scale(1d/data.length);
     Qd dqMean = newVA(sum, sum.length());
     //System.out.println("newMean dqMean " + dqMean + " " + dqMean.getNormal() + " " + dqMean.getTheta());
     return dqMean.mulQ(mean);

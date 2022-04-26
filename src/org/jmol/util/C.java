@@ -396,8 +396,8 @@ public final class C {
 
   public static double getColixTranslucencyFractional(short colix) {
     int translevel = getColixTranslucencyLevel(colix);
-    return (translevel == -1 ? 0.5f : translevel == 0 ? 0
-        : translevel == 255 ? 1 : translevel / 256f);
+    return (translevel == -1 ? 0.5d : translevel == 0 ? 0
+        : translevel == 255 ? 1 : translevel / 256d);
   }
 
   public static String getColixTranslucencyLabel(short colix) {
@@ -463,7 +463,7 @@ public final class C {
 
   public static short getColixTranslucent(int argb) {
     int a = (argb >> 24) & 0xFF;
-    return (a == 0xFF ? getColix(argb) : getColixTranslucent3(getColix(argb), true, a / 255f));
+    return (a == 0xFF ? getColix(argb) : getColixTranslucent3(getColix(argb), true, a / 255d));
   }  
 
   public static short getBgContrast(int argb) {

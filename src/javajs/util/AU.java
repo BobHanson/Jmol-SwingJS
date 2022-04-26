@@ -569,12 +569,12 @@ final public class AU {
     return x instanceof T3d[];
   }
 
-  public static boolean isAF(Object x) {
-    return x instanceof float[];
-  }
+//  public static boolean isAF(Object x) {
+//    return x instanceof float[];
+//  }
 
-  public static boolean isAFloat(Object x) {
-    return x instanceof Float[];
+  public static boolean isADouble(Object x) {
+    return x instanceof Double[];
   }
 
   public static boolean isAD(Object x) {
@@ -583,6 +583,10 @@ final public class AU {
 
   public static boolean isADD(Object x) {
     return x instanceof double[][];
+  }
+
+  public static boolean isADDD(Object x) {
+    return x instanceof double[][][];
   }
 
   public static boolean isAB(Object x) {
@@ -597,14 +601,14 @@ final public class AU {
     return (x instanceof int[][]);
   }
 
-  public static boolean isAFF(Object x) {
-    return x instanceof float[][];
-  }
-
-  public static boolean isAFFF(Object x) {
-    return x instanceof float[][][];
-  }
-
+//  public static boolean isAFF(Object x) {
+//    return x instanceof float[][];
+//  }
+//
+//  public static boolean isAFFF(Object x) {
+//    return x instanceof float[][][];
+//  }
+//
   /**
    * Ensure that we have signed and not unsigned bytes coming out of any
    * process, but particularly out of file reading.

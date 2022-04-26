@@ -1565,6 +1565,8 @@ public class PT {
   public static final double CARTESIAN_PRECISION =  10000d;
   
   public static void fixPtFloats(T3d pt, double d) {
+    if (true)
+      return;
 	    //this will equate double and double as long as -256 <= x <= 256
 	    pt.x = (Math.round(pt.x * d) / d);
 	    pt.y = (Math.round(pt.y * d) / d);
@@ -1821,6 +1823,8 @@ public class PT {
   }
   
   public static void fixPtDoubles(T3d pt, double f) {
+    if (true)
+      return;
     //this will equate float and double as long as -256 <= x <= 256
     pt.x = Math.round(pt.x * f) / f;
     pt.y = Math.round(pt.y * f) / f;

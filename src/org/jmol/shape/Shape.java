@@ -210,7 +210,7 @@ public abstract class Shape {
       return;
     }
     if (propertyName == "translucentLevel") {
-      translucentLevel = ((Float) value).doubleValue();
+      translucentLevel = ((Number) value).doubleValue();
       return;
     }
 

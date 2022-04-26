@@ -113,8 +113,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
   private PyMOLScene pymolScene;
 
-  private P3d xyzMin = P3d.new3(1e6f, 1e6f, 1e6f);
-  private P3d xyzMax = P3d.new3(-1e6f, -1e6f, -1e6f);
+  private P3d xyzMin = P3d.new3(1e6d, 1e6d, 1e6d);
+  private P3d xyzMax = P3d.new3(-1e6d, -1e6d, -1e6d);
 
   private int nModels;
   private boolean logging;

@@ -436,7 +436,7 @@ public final class JC {
 
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";
       
-  public final static double radiansPerDegree = (double) (Math.PI / 180);
+  public final static double radiansPerDegree = Math.PI / 180;
 
   public final static String allowedQuaternionFrames = "RC;RP;a;b;c;n;p;q;x;";
 
@@ -456,18 +456,18 @@ public final class JC {
 
   public final static int XY_ZTOP = 100; // Z value for [x y] positioned echos and axis origin
   public final static int DEFAULT_PERCENT_VDW_ATOM = 23; // matches C sizes of AUTO with 20 for Jmol set
-  public final static float DEFAULT_BOND_RADIUS = 0.15f;
+  public final static double DEFAULT_BOND_RADIUS = 0.15d;
   public final static short DEFAULT_BOND_MILLIANGSTROM_RADIUS = (short) (DEFAULT_BOND_RADIUS * 1000);
-  public final static float DEFAULT_STRUT_RADIUS = 0.3f;
+  public final static double DEFAULT_STRUT_RADIUS = 0.3d;
   //angstroms of slop ... from OpenBabel ... mth 2003 05 26
-  public final static float DEFAULT_BOND_TOLERANCE = 0.45f;
+  public final static double DEFAULT_BOND_TOLERANCE = 0.45d;
   //minimum acceptable bonding distance ... from OpenBabel ... mth 2003 05 26
-  public final static float DEFAULT_MIN_BOND_DISTANCE = 0.4f;
-  public final static float DEFAULT_MAX_CONNECT_DISTANCE = 100000000f;
-  public final static float DEFAULT_MIN_CONNECT_DISTANCE = 0.1f;
-  public final static float MINIMIZE_FIXED_RANGE = 5.0f;
+  public final static double DEFAULT_MIN_BOND_DISTANCE = 0.4d;
+  public final static double DEFAULT_MAX_CONNECT_DISTANCE = 100000000d;
+  public final static double DEFAULT_MIN_CONNECT_DISTANCE = 0.1d;
+  public final static double MINIMIZE_FIXED_RANGE = 5.0d;
 
-  public final static float ENC_CALC_MAX_DIST = 3f;
+  public final static double ENC_CALC_MAX_DIST = 3.0d;
   public final static int ENV_CALC_MAX_LEVEL = 3;//Geodesic.standardLevel;
 
 
@@ -487,7 +487,7 @@ public final class JC {
   public final static short madMultipleBondSmallMaximum = 500;
 
   /* .cube files need this */
-  public final static float ANGSTROMS_PER_BOHR = 0.5291772f;
+  public final static double ANGSTROMS_PER_BOHR = 0.5291772d;
 
   public final static int[] altArgbsCpk = {
     0xFFFF1493, // Xx 0
@@ -890,7 +890,7 @@ public final class JC {
 
   public final static int MEASURE_DEFAULT_FONTSIZE = 18;
   public final static int AXES_DEFAULT_FONTSIZE = 16;
-  public static final float DRAW_DEFAULT_FONTSIZE = 16;
+  public static final double DRAW_DEFAULT_FONTSIZE = 16;
 
   ////////////////////////////////////////////////////////////////
   // do not rearrange/modify these shapes without
@@ -1415,7 +1415,7 @@ public final class JC {
   public final static int UNITID_TRIM = 16;
 
   public static final String DEFAULT_DRAG_DROP_SCRIPT = "zap; load SYNC \"%FILE\";if (%ALLOWCARTOONS && _loadScript == '' && defaultLoadScript == '' && _filetype == 'Pdb') {if ({(protein or nucleic)&*/1.1} && {*/1.1}[1].groupindex != {*/1.1}[0].groupindex){select protein or nucleic;cartoons only;}if ({visible && cartoons > 0}){color structure}else{wireframe -0.1};if (!{visible}){spacefill 23%};select *}";
-  public static final float UC_TOLERANCE2 =  0.0014f*0.0014f; // always use check for LT this, not LTE
+  public static final double UC_TOLERANCE2 =  0.0014*0.0014; // always use check for LT this, not LTE
 
   /**
    * Get a unitID type

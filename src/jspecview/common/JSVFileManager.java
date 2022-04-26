@@ -609,7 +609,7 @@ public class JSVFileManager {
 		for (int i = 0; i < n; i++) {
 			P3d a = acJson[i];
 			for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
-				if (a.distanceSquared(acJmol[j]) < 0.1f) {
+				if (a.distanceSquared(acJmol[j]) < 0.1d) {
 					bs.clear(j);
 					map[i] = j;
 					if (i != j)

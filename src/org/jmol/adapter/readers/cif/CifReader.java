@@ -2024,8 +2024,8 @@ public class CifReader extends AtomSetCollectionReader {
       if (bsBondDuplicates.get(i))
         continue;
       Object[] o = bondTypes.get(i);
-      double distance = ((Float) o[2]).doubleValue();
-      double dx = ((Float) o[3]).doubleValue();
+      double distance = ((Number) o[2]).doubleValue();
+      double dx = ((Number) o[3]).doubleValue();
       int order = ((Integer) o[4]).intValue();
       Atom a1 = getAtomFromNameCheckCase((String) o[0]);
       Atom a2 = getAtomFromNameCheckCase((String) o[1]);
@@ -2073,7 +2073,7 @@ public class CifReader extends AtomSetCollectionReader {
                 && atoms[k].elementNumber != 1
                 && (!checkAltLoc || atoms[k].altLoc == '\0' || atoms[k].altLoc == atoms[i].altLoc)) {
               if (!bsConnected[i].get(k)
-                  && checkBondDistance(atoms[i], atoms[k], 1.1f, 0))
+                  && checkBondDistance(atoms[i], atoms[k], 1.1d, 0))
                 addNewBond(i, k, 1);
             }
         }
@@ -2119,7 +2119,7 @@ public class CifReader extends AtomSetCollectionReader {
                   if (ii + firstAtom == k)
                     continue;
                   fixAtomForBonding(cart2, ii + firstAtom);
-                  if (cart2.distance(cart1) < 0.1f) {
+                  if (cart2.distance(cart1) < 0.1d) {
                     bsExclude.set(k);
                     break;
                   }
@@ -2135,7 +2135,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (iHaveFractionalCoordinates)
       return  symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
     double d = a.distance(b);
-    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1f); // same as in Symmetry
+    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
   }
 
   /**

@@ -477,7 +477,7 @@ public class CastepReader extends AtomSetCollectionReader {
   private void readPositionsFrac() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;
-    readAtomData(1.0f);
+    readAtomData(1.0d);
   }
 
   private void readPositionsAbs() throws Exception {
@@ -494,10 +494,10 @@ public class CastepReader extends AtomSetCollectionReader {
       "ang", "a0" };
 
   private final static double[] lengthUnitFactors = { ANGSTROMS_PER_BOHR, 1E10f,
-      1E8f, 1E1f, 1.0f, ANGSTROMS_PER_BOHR };
+      1E8d, 1E1f, 1.0d, ANGSTROMS_PER_BOHR };
 
   private double readLengthUnit(String units) throws Exception {
-    double factor = 1.0f;
+    double factor = 1.0d;
     for (int i = 0; i < lengthUnitIds.length; i++)
       if (units.equalsIgnoreCase(lengthUnitIds[i])) {
         factor = lengthUnitFactors[i];

@@ -12,11 +12,9 @@ public interface JmolDataManager {
   public static final int DATA_TYPE_LAST = -2;
   public final static int DATA_TYPE_UNKNOWN = -1;
   public final static int DATA_TYPE_STRING = 0;
-  public final static int DATA_TYPE_AF = 1;
+  public final static int DATA_TYPE_AD = 1;
   public final static int DATA_TYPE_ADD = 2;
   public final static int DATA_TYPE_ADDD = 3;
-  public final static int DATA_TYPE_AD = 4;
-  public final static int DATA_TYPE_AFD = 5;
   // indexes into Object[] data
   public final static int DATA_LABEL = 0;
   public final static int DATA_VALUE = 1;

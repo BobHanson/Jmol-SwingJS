@@ -628,7 +628,7 @@ public class ModelKit {
       if (key == "distance") {
         setDefaultState(STATE_XTALEDIT);
         double d = (value == null ? Double.NaN
-            : value instanceof Float ? ((Float) value).doubleValue()
+            : value instanceof Float ? ((Number) value).doubleValue()
                 : PT.parseDouble((String) value));
         if (!Double.isNaN(d)) {
           notImplemented("setProperty: distance");
@@ -741,7 +741,7 @@ public class ModelKit {
       atomMove = ms.at[bondAtomIndex2];
     }
     V3d v1 = V3d.new3(atomMove.sX - atomFix.sX, atomMove.sY - atomFix.sY, 0);
-    v1.scale(1f/v1.length());
+    v1.scale(1d/v1.length());
     V3d v2 = V3d.new3(deltaX, deltaY, 0);
     v1.cross(v1, v2);
     
@@ -1098,7 +1098,7 @@ public class ModelKit {
       if (wasH) {
         dx = 1.50f;
       } else if (!wasH && atomicNumber == 1) {
-        dx = 1.0f;
+        dx = 1.0d;
       }
     if (dx != 0) {
       V3d v = V3d.newVsub(atom, vwr.ms.at[atom.getBondedAtomIndex(0)]);
@@ -1117,7 +1117,7 @@ public class ModelKit {
 
       // 4) clear out all atoms within 1.0 angstrom
       vwr.ms.validateBspf(false);
-      bs = vwr.ms.getAtomsWithinRadius(1.0f, bsA, false, null, null);
+      bs = vwr.ms.getAtomsWithinRadius(1.0d, bsA, false, null, null);
       bs.andNot(bsA);
       if (bs.nextSetBit(0) >= 0)
         vwr.deleteAtoms(bs, false);
@@ -1126,7 +1126,7 @@ public class ModelKit {
 
       bs = vwr.getModelUndeletedAtomsBitSet(atom.mi);
       bs.andNot(vwr.ms.getAtomBitsMDa(T.hydrogen, null, new BS()));
-      vwr.ms.makeConnections2(0.1f, 1.8f, 1, T.create, bsA, bs, null, false,
+      vwr.ms.makeConnections2(0.1d, 1.8d, 1, T.create, bsA, bs, null, false,
           false, 0);
 
       // 6) add hydrogen atoms
@@ -1769,7 +1769,7 @@ public class ModelKit {
 //        htParams.put("fixedElement", type);
       bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
       if (bd > 0 && !isConnected && vConnections.isEmpty()) {
-        appRunScript("connect " + (bd - 0.1f) + " " + (bd + 0.01f) + " " + bs0 + " " + bs);
+        appRunScript("connect " + (bd - 0.1d) + " " + (bd + 0.01f) + " " + bs0 + " " + bs);
       }
 
       // bs now points to the new atoms
@@ -2208,7 +2208,7 @@ public class ModelKit {
         return false;
       }
       for (int i = points.length; --i > k;) {
-        if (points[i].distance(points[k]) < 0.1f)
+        if (points[i].distance(points[k]) < 0.1d)
           return false;
       }
     }
@@ -2360,10 +2360,10 @@ public class ModelKit {
           line1 = line2;
         } else {
           T3d v1 = (T3d) line1[1];
-          if (Math.abs(v1.dot((T3d) line2[1])) < 0.999f)
+          if (Math.abs(v1.dot((T3d) line2[1])) < 0.999d)
             return locked;
           //          V3d v = V3.newVsub((T3d) line1[0], (T3d) line2[0]);
-          //          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999f)
+          //          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999d)
           //            return locked;
           }
         if (plane1 != null) {

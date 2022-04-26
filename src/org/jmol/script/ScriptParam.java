@@ -259,7 +259,7 @@ abstract public class ScriptParam extends ScriptError {
             center.add(off);
           }
         }
-        center.scale(1f/8);
+        center.scale(1d/8);
         break;
       case T.dollarsign:
         String id = objectNameParameter(++i);

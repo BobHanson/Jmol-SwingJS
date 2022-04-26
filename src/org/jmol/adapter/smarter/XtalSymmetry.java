@@ -1230,7 +1230,7 @@ public class XtalSymmetry {
         BS bs = e.getValue();
         for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
           a.add(atoms[i]);
-        a.scale(1f / bs.cardinality());
+        a.scale(1d / bs.cardinality());
         a.atomName = "Pt" + ichain;
         a.chainID = e.getKey().intValue();
       }
@@ -1245,7 +1245,7 @@ public class XtalSymmetry {
       a.set(0, 0, 0);
       for (int i = atomMax; --i >= firstAtom;)
         a.add(atoms[i]);
-      a.scale(1f / (atomMax - firstAtom));
+      a.scale(1d / (atomMax - firstAtom));
       a.atomName = "Pt";
       a.radius = 16;
       asc.addAtom(a);
@@ -1586,15 +1586,15 @@ public class XtalSymmetry {
 
   
 //  static {
-//    System.out.println(.01999998f);
-//    System.out.println(1.01999998f);
-//    System.out.println(2.01999998f);
-//    System.out.println(9910.01999998f);
-//    System.out.println(Math.round(100000*.01999998f));
+//    System.out.println(.01999998d);
+//    System.out.println(1.01999998d);
+//    System.out.println(2.01999998d);
+//    System.out.println(9910.01999998d);
+//    System.out.println(Math.round(100000*.01999998d));
 //    System.out.println(Math.round(100000*.020000000000015));
-//    System.out.println(Math.round(100000*-.01999998f));
+//    System.out.println(Math.round(100000*-.01999998d));
 //    System.out.println(Math.round(100000*-.020000000000015));
-//    System.out.println(.01999998f+ Integer.MAX_VALUE);
+//    System.out.println(.01999998d+ Integer.MAX_VALUE);
 //  }
 
 }

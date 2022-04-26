@@ -25,9 +25,9 @@ class PolyhedronStereoSorter implements Comparator<Object[]> {
    */
   @Override
   public int compare(Object[] a, Object[] b) {
-    double torA = ((Float) a[1]).doubleValue();
-    double torB = ((Float) b[1]).doubleValue();
-      if (Math.abs(torA - torB) < 1f) {
+    double torA = ((Number) a[1]).doubleValue();
+    double torB = ((Number) b[1]).doubleValue();
+      if (Math.abs(torA - torB) < 1d) {
       torA = 0;
       vTemp.sub2((P3d) b[2], (P3d) a[2]);
       torB = vRef.dot(vTemp);

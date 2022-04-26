@@ -236,13 +236,13 @@ public class AxesRenderer extends CageRenderer {
     double dy = y - yCenter;
     if ((dx != 0 || dy != 0)) {
       double dist = (double) Math.sqrt(dx * dx + dy * dy);
-      dx = (strWidth * 0.75f * dx / dist);
-      dy = (strAscent * 0.75f * dy / dist);
+      dx = (strWidth * 0.75d * dx / dist);
+      dy = (strAscent * 0.75d * dy / dist);
       x += dx;
       y += dy;
     }
-    double xStrBaseline = Math.floor(x - strWidth / 2f);
-    double yStrBaseline = Math.floor(y + strAscent / 2f);
+    double xStrBaseline = Math.floor(x - strWidth / 2d);
+    double yStrBaseline = Math.floor(y + strAscent / 2d);
     g3d.drawString(str, font3d, (int) xStrBaseline, (int) yStrBaseline, (int) z, (int) z, (short) 0);
   }
 }

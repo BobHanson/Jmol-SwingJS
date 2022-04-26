@@ -113,8 +113,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     String f = (isPrecision ? "%4i%78s   " : "%4i%36s   ") + (cz == null ? "  1  1  1" : "%3i%3i%3i") + "\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       if (isPrecision) {
-        P3d dxyz = vwr.ms.getPrecisionCoord(i);
-        coord = clean(dxyz.x) + clean(dxyz.y) + clean(dxyz.z);                
+//        P3d dxyz = vwr.ms.getPrecisionCoord(i);
+        p.setT(a[i]);
+        uc.toFractionalF(p, false);
+        coord = clean(p.x) + clean(p.y) + clean(p.z);                
       } else {
         // if there is no precision atom, then we need
         // to write use float, not double, as that is 

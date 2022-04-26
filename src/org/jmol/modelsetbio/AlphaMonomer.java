@@ -181,7 +181,7 @@ public class AlphaMonomer extends Monomer {
       return true;
     Atom atom1 = getLeadAtom();
     Atom atom2 = possiblyPreviousMonomer.getLeadAtom();
-    return atom1.isBonded(atom2) || atom1.distance(atom2) <= 4.2f;
+    return atom1.isBonded(atom2) || atom1.distance(atom2) <= 4.2d;
     // jan reichert in email to miguel on 10 May 2004 said 4.2 looked good
   }
   

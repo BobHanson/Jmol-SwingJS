@@ -432,8 +432,8 @@ import javajs.util.P3d;
       double f = (hi - val) / (hi - lo); 
       if (f > 1)
         f = 1; // transparent
-      else if (f < 0.125f) // never fully opaque
-        f = 0.125f;
+      else if (f < 0.125d) // never fully opaque
+        f = 0.125d;
       colix = C.getColixTranslucent3(colix, true, f);
     }
     return colix;
@@ -556,7 +556,7 @@ import javajs.util.P3d;
     Lst<P3d> colors = new  Lst<P3d>();//segmentCount);
     double[] values = new double[segmentCount + 1];
     double quantum = (hi - lo) / segmentCount;
-    double f = quantum * (isReversed ? -0.5f : 0.5f);
+    double f = quantum * (isReversed ? -0.5d : 0.5d);
 
     for (int i = 0; i < segmentCount; i++) {
       values[i] = (isReversed ? hi - i * quantum : lo + i * quantum);
@@ -686,7 +686,7 @@ import javajs.util.P3d;
    */
   public double quantize(double x, boolean isLowEnd) {
     int n = getPaletteColorCount(currentPalette);
-    x = (((int) (x * n)) + (isLowEnd ? 0f : 1f)) / n;
+    x = (((int) (x * n)) + (isLowEnd ? 0d : 1d)) / n;
     return (x <= 0 ? lo : x >= 1 ? hi : lo + (hi - lo) * x);
   }
   
@@ -738,7 +738,7 @@ import javajs.util.P3d;
     if (t <= 0)
       return 0;
     double quanta = range / segmentCount;
-    int q = (int)(t / quanta + 0.0001f);  //was 0.5f!
+    int q = (int)(t / quanta + 0.0001f);  //was 0.5d!
     if (q >= segmentCount)
       q = segmentCount - 1;
     return q;

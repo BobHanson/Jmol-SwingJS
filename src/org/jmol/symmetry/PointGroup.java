@@ -139,10 +139,10 @@ class PointGroup {
   private Operation[][] axes = new Operation[maxAxis][];
   private int nAtoms;
   private double radius;
-  private double distanceTolerance = 0.25f; // making this just a bit more generous
+  private double distanceTolerance = 0.25d; // making this just a bit more generous
   private double distanceTolerance2;
-  private double linearTolerance = 8f;
-  private double cosTolerance = 0.99f; // 8 degrees
+  private double linearTolerance = 8d;
+  private double cosTolerance = 0.99d; // 8 degrees
   private String name = "C_1?";
   private Operation principalAxis;
   private Operation principalPlane;
@@ -215,7 +215,7 @@ class PointGroup {
     PointGroup pg = new PointGroup();
     if (distanceTolerance == 0) {
       distanceTolerance = 0.01f;
-      linearTolerance = 0.5f;
+      linearTolerance = 0.5d;
     }
     pg.distanceTolerance = distanceTolerance;
     pg.distanceTolerance2 = distanceTolerance * distanceTolerance;
@@ -481,7 +481,7 @@ class PointGroup {
     }
     iter = bspt.allocateCubeIterator();
     if (needCenter)
-      center.scale(1f / nAtoms);
+      center.scale(1d / nAtoms);
     for (int i = nAtoms; --i >= 0;) {
       double r2 = center.distanceSquared(points[i]);
       if (isAtoms && r2 < distanceTolerance2)
@@ -489,7 +489,7 @@ class PointGroup {
       radius = Math.max(radius, r2);
     }
     radius = (double) Math.sqrt(radius);
-    if (radius < 1.5f && distanceTolerance > 0.15f) {
+    if (radius < 1.5d && distanceTolerance > 0.15d) {
       distanceTolerance = radius / 10;
       distanceTolerance2 = distanceTolerance * distanceTolerance;
       System.out
@@ -743,7 +743,7 @@ class PointGroup {
     if (!haveInversionCenter)
       for (int i = 0; i < maxElement; i++)
         if (vs[i] != null)
-          vs[i].scale(1f / eCounts[i]);
+          vs[i].scale(1d / eCounts[i]);
 
     // check for vectors from {0 0 0} to
     // the midpoint of each pair of atoms
@@ -894,7 +894,7 @@ class PointGroup {
 
         T3d a2 = points[j];
         pt.add2(a1, a2);
-        pt.scale(0.5f);
+        pt.scale(0.5d);
         v1.sub2(a1, center);
         v2.sub2(a2, center);
         if (!isParallel(v1, v2)) {
@@ -1070,14 +1070,14 @@ class PointGroup {
         sb.append(drawID + "pg0").append(m).append(
             haveInversionCenter ? "inv " : " ").append(
             Escape.eP(center)).append(haveInversionCenter ? "\"i\";\n" : ";\n");
-      double offset = 0.1f;
+      double offset = 0.1d;
       for (int i = 2; i < maxAxis; i++) {
         if (i == firstProper)
-          offset = 0.1f;
+          offset = 0.1d;
         if (nAxes[i] == 0)
           continue;
         String label = axes[i][0].getLabel();
-        offset += 0.25f;
+        offset += 0.25d;
         double scale = scaleFactor * radius + offset;
         boolean isProper = (i >= firstProper);
         if (!haveType || type.equalsIgnoreCase(label) || anyProperAxis

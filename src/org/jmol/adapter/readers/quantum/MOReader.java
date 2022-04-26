@@ -514,7 +514,7 @@ public abstract class MOReader extends BasisFunctionReader {
       boolean haveSymmetry = (line.length() > 0 || rd() != null);
       tokens = getTokens();
       for (int i = 0; i < nThisLine; i++)
-        mos[i].put("occupancy", Double.valueOf(tokens[i].charAt(0) == '-' ? 2.0f
+        mos[i].put("occupancy", Double.valueOf(tokens[i].charAt(0) == '-' ? 2.0d
             : parseDoubleStr(tokens[i])));
       rd(); // blank or symmetry
       if (!haveSymmetry)

@@ -100,10 +100,10 @@ public class Escape {
   }
 
   public static String drawQuat(Qd q, String prefix, String id, P3d ptCenter, 
-                         float scale) {
+                         double scale) {
     String strV = " VECTOR " + eP(ptCenter) + " ";
     if (scale == 0)
-      scale = 1f;
+      scale = 1d;
     return "draw " + prefix + "x" + id + strV
         + eP(q.getVectorScaled(0, scale)) + " color red\n"
         + "draw " + prefix + "y" + id + strV
@@ -130,13 +130,25 @@ public class Escape {
       return eAP((T3d[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
-    if (AU.isAFF(x)) {
+    if (AU.isADD(x)) {
       // for isosurface functionXY
-      float[][] ff = (float[][])x;
+      double[][] ff = (double[][])x;
       SB sb = new SB().append("[");
       String sep = "";
       for (int i = 0; i < ff.length; i++) {
-        sb.append(sep).append(eAF(ff[i]));
+        sb.append(sep).append(eAD(ff[i]));
+        sep = ",";
+      }
+      sb.append("]");
+      return sb.toString();
+    }
+    if (AU.isADD(x)) {
+      // for isosurface functionXY
+      double[][] ff = (double[][])x;
+      SB sb = new SB().append("[");
+      String sep = "";
+      for (int i = 0; i < ff.length; i++) {
+        sb.append(sep).append(eAD(ff[i]));
         sep = ",";
       }
       sb.append("]");
@@ -181,23 +193,23 @@ public class Escape {
     return sb.toString();
   }
   
-  /**
-   * 
-   * @param f
-   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
-   * @return tabular string
-   */
-  public static String escapeFloatA(float[] f, boolean asArray) {
-    if (asArray)
-      return PT.toJSON(null, f); // or just use escape(f)
-    SB sb = new SB();
-    for (int i = 0; i < f.length; i++) {
-      if (i > 0)
-        sb.appendC('\n');
-      sb.appendF(f[i]);
-    }
-    return sb.toString();
-  }
+//  /**
+//   * 
+//   * @param f
+//   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
+//   * @return tabular string
+//   */
+//  public static String escapeFloatA(float[] f, boolean asArray) {
+//    if (asArray)
+//      return PT.toJSON(null, f); // or just use escape(f)
+//    SB sb = new SB();
+//    for (int i = 0; i < f.length; i++) {
+//      if (i > 0)
+//        sb.appendC('\n');
+//      sb.appendF(f[i]);
+//    }
+//    return sb.toString();
+//  }
   
   /**
    * 
@@ -217,19 +229,19 @@ public class Escape {
     return sb.toString();
   }
 
-  public static String escapeFloatAA(float[][] f, boolean addSemi) {
-    SB sb = new SB();
-    String eol = (addSemi ? ";\n" : "\n");
-    for (int i = 0; i < f.length; i++)
-      if (f[i] != null) {
-        if (i > 0)
-          sb.append(eol);
-        for (int j = 0; j < f[i].length; j++)
-          sb.appendF(f[i][j]).appendC('\t');
-      }
-    return sb.toString();
-  }
-
+//  public static String escapeFloatAA(float[][] f, boolean addSemi) {
+//    SB sb = new SB();
+//    String eol = (addSemi ? ";\n" : "\n");
+//    for (int i = 0; i < f.length; i++)
+//      if (f[i] != null) {
+//        if (i > 0)
+//          sb.append(eol);
+//        for (int j = 0; j < f[i].length; j++)
+//          sb.appendF(f[i][j]).appendC('\t');
+//      }
+//    return sb.toString();
+//  }
+//
   public static String escapeDoubleAA(double[][] f, boolean addSemi) {
     SB sb = new SB();
     String eol = (addSemi ? ";\n" : "\n");
@@ -264,26 +276,26 @@ public class Escape {
     return sb.toString();
   }
 
-  public static String escapeFloatAAA(float[][][] f, boolean addSemi) {
-    SB sb = new SB();
-    String eol = (addSemi ? ";\n" : "\n");
-    if (f[0] == null || f[0][0] == null)
-      return "0 0 0" + eol;
-    sb.appendI(f.length).append(" ")
-      .appendI(f[0].length).append(" ")
-      .appendI(f[0][0].length);
-    for (int i = 0; i < f.length; i++)
-      if (f[i] != null) {
-        sb.append(eol);
-        for (int j = 0; j < f[i].length; j++)
-          if (f[i][j] != null) {
-            sb.append(eol);
-            for (int k = 0; k < f[i][j].length; k++)
-              sb.appendF(f[i][j][k]).appendC('\t');
-          }
-      }
-    return sb.toString();
-  }
+//  public static String escapeFloatAAA(float[][][] f, boolean addSemi) {
+//    SB sb = new SB();
+//    String eol = (addSemi ? ";\n" : "\n");
+//    if (f[0] == null || f[0][0] == null)
+//      return "0 0 0" + eol;
+//    sb.appendI(f.length).append(" ")
+//      .appendI(f[0].length).append(" ")
+//      .appendI(f[0][0].length);
+//    for (int i = 0; i < f.length; i++)
+//      if (f[i] != null) {
+//        sb.append(eol);
+//        for (int j = 0; j < f[i].length; j++)
+//          if (f[i][j] != null) {
+//            sb.append(eol);
+//            for (int k = 0; k < f[i][j].length; k++)
+//              sb.appendF(f[i][j][k]).appendC('\t');
+//          }
+//      }
+//    return sb.toString();
+//  }
 
   /**
    * 
@@ -333,18 +345,18 @@ public class Escape {
     return s.append("]").toString();
   }
 
-  public static String eAF(float[] flist) {
-    if (flist == null)
-      return PT.esc("");
-    SB s = new SB();
-    s.append("[");
-    for (int i = 0; i < flist.length; i++) {
-      if (i > 0)
-        s.append(", ");
-      s.appendF(flist[i]);
-    }
-    return s.append("]").toString();
-  }
+//  public static String eAF(float[] flist) {
+//    if (flist == null)
+//      return PT.esc("");
+//    SB s = new SB();
+//    s.append("[");
+//    for (int i = 0; i < flist.length; i++) {
+//      if (i > 0)
+//        s.append(", ");
+//      s.appendF(flist[i]);
+//    }
+//    return s.append("]").toString();
+//  }
 
   public static String eAP(T3d[] plist) {
     if (plist == null)
@@ -531,16 +543,16 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "]", sb);
     }
-    if (AU.isAF(info)) {
-      sb.append("[");
-      int imax = ((float[]) info).length;
-      for (int i = 0; i < imax; i++) {
-        sb.append(sep).appendF(((float[]) info)[i]);
-        sep = ",";
-      }
-      sb.append("]");
-      return packageReadableSb(name, "float[" + imax + "]", sb);
-    }
+//    if (AU.isAF(info)) {
+//      sb.append("[");
+//      int imax = ((float[]) info).length;
+//      for (int i = 0; i < imax; i++) {
+//        sb.append(sep).appendF(((float[]) info)[i]);
+//        sep = ",";
+//      }
+//      sb.append("]");
+//      return packageReadableSb(name, "float[" + imax + "]", sb);
+//    }
     if (AU.isAD(info)) {
       sb.append("[");
       int imax = ((double[]) info).length;
@@ -549,7 +561,7 @@ public class Escape {
         sep = ",";
       }
       sb.append("]");
-      return packageReadableSb(name, "double[" + imax + "]", sb);
+      return packageReadableSb(name, "decimal[" + imax + "]", sb);
     }
     if (AU.isAP(info)) {
       sb.append("[");
@@ -581,16 +593,6 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "][]", sb);
     }
-    if (AU.isAFF(info)) {
-      sb.append("[\n");
-      int imax = ((float[][]) info).length;
-      for (int i = 0; i < imax; i++) {
-        sb.append(sep).append(toReadable(null, ((float[][]) info)[i]));
-        sep = ",\n";
-      }
-      sb.append("]");
-      return packageReadableSb(name, "float[][]", sb);
-    }
     if (AU.isADD(info)) {
       sb.append("[\n");
       int imax = ((double[][]) info).length;
@@ -599,7 +601,7 @@ public class Escape {
         sep = ",\n";
       }
       sb.append("]");
-      return packageReadableSb(name, "double[][]", sb);
+      return packageReadableSb(name, "decimal[][]", sb);
     }
     if (info instanceof Lst<?>) {
       int imax = ((Lst<?>) info).size();
@@ -645,9 +647,6 @@ public class Escape {
   public static String encapsulateData(String name, Object data, int depth) {
     String s;
     switch (depth) {
-    case JmolDataManager.DATA_TYPE_AF:
-      s = escapeDoubleA((double[]) data, false) + ";\n";
-      break;
     case JmolDataManager.DATA_TYPE_AD:
       s = escapeDoubleA((double[]) data, false) + ";\n";
       break;

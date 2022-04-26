@@ -371,8 +371,8 @@ public class JvxlXmlReader extends VolumeFileReader {
       red = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToRed"));
       blue = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToBlue"));
       if (Double.isNaN(dataMin)) {
-        dataMin = red = -1f;
-        dataMax = blue = 1f;
+        dataMin = red = -1d;
+        dataMax = blue = 1d;
       }
     }
     jvxlSetColorRanges(dataMin, dataMax, red, blue, insideOut);
@@ -404,8 +404,8 @@ public class JvxlXmlReader extends VolumeFileReader {
           params.isColorReversed = (red > blue);
           params.rangeDefined = true;
         } else {
-          params.valueMappedToRed = 0f;
-          params.valueMappedToBlue = 1f;
+          params.valueMappedToRed = 0d;
+          params.valueMappedToBlue = 1d;
           params.rangeDefined = true;
         }
       Logger.info("JVXL read: color red/blue: " + params.valueMappedToRed + "/"
@@ -443,7 +443,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (params.thePlane != null) {
       volumeData.setDataDistanceToPlane(params.thePlane);
       setVolumeDataV(volumeData);
-      params.cutoff = 0f;
+      params.cutoff = 0d;
       jvxlData.setSurfaceInfo(params.thePlane, params.mapLattice, 0, "");
       jvxlData.scale3d = params.scale3d;
       return true;
@@ -532,7 +532,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       return getSPFv(cutoff, isCutoffAbsolute, valueA,
           valueB, pointA, edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
     ptReturn.scaleAdd2(fReturn[0] = jvxlGetNextFraction(edgeFractionBase,
-        edgeFractionRange, 0.5f), edgeVector, pointA);
+        edgeFractionRange, 0.5d), edgeVector, pointA);
     if (Double.isNaN(valueMin))
       setValueMinMax();      
     return (valueCount == 0 || includeValueNaN && Double.isNaN(fReturn[0]) 
@@ -556,7 +556,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         // my original encoding scheme
         // low precision only allows for mapping relative to the defined color range
         fraction = JvxlCoder.jvxlFractionFromCharacter(jvxlColorDataRead
-            .charAt(colorPtr++), colorFractionBase, colorFractionRange, 0.5f);
+            .charAt(colorPtr++), colorFractionBase, colorFractionRange, 0.5d);
       }
       break;
     }
@@ -654,7 +654,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         }
       if (haveTranslucent && trans == 0){
         // set to show in pass2
-        jvxlData.translucency = 0.5f;
+        jvxlData.translucency = 0.5d;
       }
       return "-";
     }    

@@ -83,7 +83,7 @@ public class SmilesExt {
       throws ScriptException {
 
     //   middle two: boolean isSmarts,boolean firstMatchOnly, 
-    double tolerance = (mapSet == null ? 0.1f : Double.MAX_VALUE);
+    double tolerance = (mapSet == null ? 0.1d : Double.MAX_VALUE);
     try {
       if (ptsA == null) {
         ptsA = new Lst<P3d>();

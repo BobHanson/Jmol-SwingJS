@@ -94,7 +94,7 @@ public class HalosRenderer extends ShapeRenderer {
   }
 
   boolean render1(Atom atom) {
-    short colixFill = (mad == -2 ? 0 : C.getColixTranslucent3(colix, true, 0.5f));
+    short colixFill = (mad == -2 ? 0 : C.getColixTranslucent3(colix, true, 0.5d));
     boolean needTranslucent = (mad != -2);
     if (!g3d.setC(colix)) {
       needTranslucent = true;

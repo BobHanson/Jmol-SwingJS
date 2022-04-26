@@ -68,7 +68,7 @@ public class TransformManager {
 
   static final int DEFAULT_PERSPECTIVE_MODEL = 11;
   static final boolean DEFAULT_PERSPECTIVE_DEPTH = true;
-  static final double DEFAULT_CAMERA_DEPTH = 3.0f;
+  static final double DEFAULT_CAMERA_DEPTH = 3.0d;
 
   public JmolThread movetoThread;
   public JmolThread vibrationThread;
@@ -463,7 +463,7 @@ public class TransformManager {
     if (dihedralList == null) {
       axis = V3d.newVsub(point2, point1);
       if (isClockwise)
-        axis.scale(-1f);
+        axis.scale(-1d);
       internalRotationCenter.setT(point1);
       rotationAxis.setT(axis);
       internalTranslation = (translation == null ? null : V3d.newV(translation));
@@ -481,7 +481,7 @@ public class TransformManager {
               / Math.abs(degreesPerSecond) * spinFps + 0.5);
           rotationRate = degreesPerSecond = endDegrees / nFrames * spinFps;
           if (translation != null)
-            internalTranslation.scale(1f / nFrames);
+            internalTranslation.scale(1d / nFrames);
         }
         internalRotationAxis.setVA(axis, (Double.isNaN(rotationRate) ? 0
             : rotationRate) * JC.radiansPerDegree);
@@ -517,7 +517,7 @@ public class TransformManager {
     // NOW apply that rotation  
 
     applyRotation(matrixTemp3.setAA(axisangleT), true, bsAtoms,
-        internalTranslation, radians > 1e6f, m4);
+        internalTranslation, radians > 1e6d, m4);
     if (bsAtoms == null)
       getNewFixedRotationCenter();
   }
@@ -564,8 +564,8 @@ public class TransformManager {
   public final P3d camera = new P3d();
   public final P3d cameraSetting = new P3d();
 
-  double xTranslationFraction = 0.5f;
-  double yTranslationFraction = 0.5f;
+  double xTranslationFraction = 0.5d;
+  double yTranslationFraction = 0.5d;
   protected double prevZoomSetting;
 
   public double previousX;
@@ -618,11 +618,11 @@ public class TransformManager {
   public void translateToPercent(char type, double percent) {
     switch (type) {
     case 'x':
-      xTranslationFraction = 0.5f + percent / 100;
+      xTranslationFraction = 0.5d + percent / 100;
       fixedTranslation.x = width * xTranslationFraction;
       return;
     case 'y':
-      yTranslationFraction = 0.5f + percent / 100;
+      yTranslationFraction = 0.5d + percent / 100;
       fixedTranslation.y = height * yTranslationFraction;
       return;
     case 'z':
@@ -633,11 +633,11 @@ public class TransformManager {
   }
 
   public double getTranslationXPercent() {
-    return (width == 0 ? 0 : (fixedTranslation.x - width / 2f) * 100 / width);
+    return (width == 0 ? 0 : (fixedTranslation.x - width / 2d) * 100 / width);
   }
 
   public double getTranslationYPercent() {
-    return (height == 0 ? 0 : (fixedTranslation.y - height / 2f) * 100 / height);
+    return (height == 0 ? 0 : (fixedTranslation.y - height / 2d) * 100 / height);
   }
 
   public String getTranslationScript() {
@@ -685,7 +685,7 @@ public class TransformManager {
     A4d aa = new A4d();
     aa.setM(matrixRotate);
     info.put("axisAngle", aa);
-    info.put("quaternion", getRotationQ().toPoint4d());
+    info.put("quaternion", getRotationQ().toP4d());
     info.put("rotationMatrix", matrixRotate);
     info.put("rotateZYZ", getRotateZyzText(false));
     info.put("rotateXYZ", getRotateXyzText());
@@ -780,7 +780,7 @@ public class TransformManager {
     if (pixels >= screenPixelCount)
       return;
     double sppa = scalePixelsPerAngstrom
-        / (1 - pixels * 1.0f / screenPixelCount);
+        / (1 - pixels * 1.0d / screenPixelCount);
     if (sppa >= screenPixelCount)
       return;
     double newZoomPercent = sppa / scaleDefaultPixelsPerAngstrom * 100f;
@@ -851,7 +851,7 @@ public class TransformManager {
   public int zSlabValue;
   public int zDepthValue;
 
-  double slabRange = 0f;
+  double slabRange = 0d;
 
   public void setSlabRange(double value) {
     slabRange = value;
@@ -1157,9 +1157,9 @@ public class TransformManager {
 
   public boolean perspectiveDepth = true;
   protected boolean scale3D = false;
-  protected double cameraDepth = 3f;
-  protected double cameraDepthSetting = 3f;
-  public double visualRangeAngstroms; // set in stateManager to 5f;
+  protected double cameraDepth = 3d;
+  protected double cameraDepthSetting = 3d;
+  public double visualRangeAngstroms; // set in stateManager to 5d;
   public double cameraDistance = 1000f; // prevent divide by zero on startup
 
   /**
@@ -1169,7 +1169,7 @@ public class TransformManager {
    * @return a set of camera data
    */
   public P3d[] getCameraFactors() {
-    aperatureAngle = (double) (Math.atan2(screenPixelCount / 2f,
+    aperatureAngle = (double) (Math.atan2(screenPixelCount / 2d,
         referencePlaneOffset) * 2 * 180 / Math.PI);
     cameraDistanceFromCenter = referencePlaneOffset / scalePixelsPerAngstrom;
 
@@ -1310,7 +1310,7 @@ public class TransformManager {
      * of any calculation that would change the rotation radius.  hansonr
      * 
      */
-    return screenPixelCount / 2f / radius;
+    return screenPixelCount / 2d / radius;
   }
 
   private void resetFitToScreen(boolean andCenter) {
@@ -1324,8 +1324,8 @@ public class TransformManager {
     } else {
 
       // translate to the middle of the screen
-      fixedTranslation.set(width * (andCenter ? 0.5f : xTranslationFraction),
-          height * (andCenter ? 0.5f : yTranslationFraction), 0);
+      fixedTranslation.set(width * (andCenter ? 0.5d : xTranslationFraction),
+          height * (andCenter ? 0.5d : yTranslationFraction), 0);
       setTranslationFractions();
       if (andCenter)
         camera.set(0, 0, 0);
@@ -1700,7 +1700,7 @@ public class TransformManager {
     if (Double.isNaN(degrees))
       return true;
     aaTest1.setVA(axis, (double) (degrees / degreesPerRadian));
-    ptTest1.set(4.321f, 1.23456f, 3.14159f);
+    ptTest1.set(4.321f, 1.23456d, 3.14159d);
     getRotation(matrixTest);
     matrixTest.rotate2(ptTest1, ptTest2);
     matrixTest.setAA(aaTest1).rotate2(ptTest1, ptTest3);
@@ -1746,8 +1746,8 @@ public class TransformManager {
     double rotationRadius = pymolDistanceToCenter * tan;
 
     // Jmol camera units are fraction of screen size (height in this case)
-    double jmolCameraToCenter = 0.5f / tan;
-    double cameraDepth = jmolCameraToCenter - 0.5f;
+    double jmolCameraToCenter = 0.5d / tan;
+    double cameraDepth = jmolCameraToCenter - 0.5d;
 
     // other units are percent; this factor is 100% / (2*rotationRadius)
     double f = 50 / rotationRadius;
@@ -1771,7 +1771,7 @@ public class TransformManager {
             vwr.setIntProperty("zSlab",
                 (int) Math.min(100, slab + fogStart * (depth - slab)));
           } else {
-            vwr.setIntProperty("zSlab", (int) ((slab + depth) / 2f));
+            vwr.setIntProperty("zSlab", (int) ((slab + depth) / 2d));
           }
           vwr.setIntProperty("zDepth", depth);
         }
@@ -1951,7 +1951,7 @@ public class TransformManager {
     double m20 = (double) matrixRotate.m20;
     double rY = -(double) (Math.asin(m20) * degreesPerRadian);
     double rX, rZ;
-    if (m20 > .999f || m20 < -.999f) {
+    if (m20 > .999d || m20 < -.999d) {
       rX = -(double) (Math.atan2(matrixRotate.m12, matrixRotate.m11) * degreesPerRadian);
       rZ = 0;
     } else {
@@ -2025,7 +2025,7 @@ public class TransformManager {
     double m22 = (double) m.m22;
     double rY = (double) (Math.acos(m22) * degreesPerRadian);
     double rZ1, rZ2;
-    if (m22 > .999f || m22 < -.999f) {
+    if (m22 > .999d || m22 < -.999d) {
       rZ1 = (double) (Math.atan2(m.m10, m.m11) * degreesPerRadian);
       rZ2 = 0;
     } else {
@@ -2473,7 +2473,7 @@ public class TransformManager {
 
     // distance from camera to midPlane of model (p=0.5)
     // the factor to apply based on screen Z
-    referencePlaneOffset = cameraDistance + screenPixelCount / 2f; // (s)
+    referencePlaneOffset = cameraDistance + screenPixelCount / 2d; // (s)
 
     // conversion factor Angstroms --> pixels
     // so that "full window" is visualRange
@@ -2652,14 +2652,14 @@ public class TransformManager {
 
   public double getNavPtHeight() {
     //boolean navigateSurface = vwr.getNavigateSurface();
-    return height / 2f;//(navigateSurface ? 1f : 2f);
+    return height / 2d;//(navigateSurface ? 1d : 2d);
   }
 
   public double getNavigationOffsetPercent(char XorY) {
     getNavigationOffset();
     if (width == 0 || height == 0)
       return 0;
-    return (XorY == 'X' ? (navigationOffset.x - width / 2f) * 100f / width
+    return (XorY == 'X' ? (navigationOffset.x - width / 2d) * 100f / width
         : (navigationOffset.y - getNavPtHeight()) * 100f / height);
   }
 

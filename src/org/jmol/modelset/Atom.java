@@ -73,7 +73,7 @@ public class Atom extends Point3fi implements Node {
 
   
   public static final int RADIUS_MAX = 16;
-  public static final double RADIUS_GLOBAL = 16.1f;
+  public static final double RADIUS_GLOBAL = 16.1d;
   public static short MAD_GLOBAL = 32200;
 
   public char altloc = '\0';
@@ -1523,7 +1523,7 @@ public class Atom extends Point3fi implements Node {
   @Override
   public double getFloatProperty(String property) {
     Object data = group.chain.model.ms.vwr.getDataObj(property, null,
-        JmolDataManager.DATA_TYPE_AFD);
+        JmolDataManager.DATA_TYPE_AD);
     double f = Double.NaN;
     if (data != null) {
       try {

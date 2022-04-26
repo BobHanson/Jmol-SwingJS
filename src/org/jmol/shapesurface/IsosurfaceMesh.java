@@ -217,7 +217,7 @@ public class IsosurfaceMesh extends Mesh {
       P3d pt = centers[i] = P3d.newP(vs[p[0]]);
       pt.add(vs[p[1]]);
       pt.add(vs[p[2]]);
-      pt.scale(1 / 3f);
+      pt.scale(1 / 3d);
     }
     return centers;
   }
@@ -285,7 +285,7 @@ public class IsosurfaceMesh extends Mesh {
     jvxlData.contourColixes = new short[n];
     jvxlData.contourValues = new double[n];
     for (int i = 0; i < n; i++) {
-      jvxlData.contourValues[i] = ((Float) vContours[i].get(2)).doubleValue();
+      jvxlData.contourValues[i] = ((Number) vContours[i].get(2)).doubleValue();
       jvxlData.contourColixes[i] = ((short[]) vContours[i].get(3))[0];
     }
     return jvxlData.vContours = vContours;
@@ -794,7 +794,7 @@ public class IsosurfaceMesh extends Mesh {
     boolean isTranslucent = C.isColixTranslucent(colix);
     if (ce.isTranslucent) {
       if (!isTranslucent)
-        colix = C.getColixTranslucent3(colix, true, 0.5f);
+        colix = C.getColixTranslucent3(colix, true, 0.5d);
       // still, if the scheme is translucent, we don't want to color the vertices translucent
       isTranslucent = false;
     }
@@ -806,7 +806,7 @@ public class IsosurfaceMesh extends Mesh {
     Lst<Object>[] contours = getContours();
     if (contours != null) {
       for (int i = contours.length; --i >= 0;) {
-        double value = ((Float) contours[i].get(JvxlCoder.CONTOUR_VALUE))
+        double value = ((Number) contours[i].get(JvxlCoder.CONTOUR_VALUE))
             .doubleValue();
         short[] colix = ((short[]) contours[i].get(JvxlCoder.CONTOUR_COLIX));
         colix[0] = ce.getColorIndex(value);
@@ -964,7 +964,7 @@ public class IsosurfaceMesh extends Mesh {
       if (d2 < 5)
         return 1e-10f;
     }
-    return 1e-8f;
+    return 1e-8d;
   }
 
   @Override

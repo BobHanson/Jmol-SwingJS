@@ -2122,7 +2122,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       if (!handler.isPaused)
         handler.pauseScript(vwr, true);
       float zoomFactor = (float) (JsonNioService.getDouble(json, "scale")
-          / (vwr.tm.zmPct / 100.0f));
+          / (vwr.tm.zmPct / 100.0d));
       syncScript("Mouse: zoomByFactor " + zoomFactor);
       break;
     }

@@ -243,7 +243,7 @@ public class Text {
         // [1,2,3] are in Angstroms, not screen pixels
         double pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         double pz = pymolOffset[3];
-        double dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5f : 0, Math.abs(pz) - 1)
+        double dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5d : 0, Math.abs(pz) - 1)
             * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
@@ -320,7 +320,7 @@ public class Text {
     //if (!isAbsolute)
     y0 = boxY + yAdj;
     if (isMeasure && align != JC.TEXT_ALIGN_CENTER)
-      y0 += ascent + (lines.length - 1)/2f * lineHeight;
+      y0 += ascent + (lines.length - 1)/2d * lineHeight;
   }
 
   private double getPymolXYOffset(double off, int width, double ppa) {

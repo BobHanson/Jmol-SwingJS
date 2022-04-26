@@ -243,7 +243,7 @@ abstract class MapFileReader extends VolumeFileReader {
   
   protected void setCutoffAutomatic() {
     if (params.thePlane == null && params.cutoffAutomatic) {
-      params.cutoff = -1f;
+      params.cutoff = -1d;
       Logger.info("MapReader: setting cutoff to default value of "
           + params.cutoff
           + (boundingBox == null ? " (no BOUNDBOX parameter)\n" : "\n"));

@@ -50,8 +50,8 @@ public class CartoonRenderer extends RocketsRenderer {
       bioShape.falsifyMesh();
       helixRockets = val;
     }
-    ribbonTopScreens = calcScreens(0.5f, mads);
-    ribbonBottomScreens = calcScreens(-0.5f, mads);
+    ribbonTopScreens = calcScreens(0.5d, mads);
+    ribbonBottomScreens = calcScreens(-0.5d, mads);
     calcRopeMidPoints();
     renderProtein();
     vwr.freeTempPoints(cordMidPoints);

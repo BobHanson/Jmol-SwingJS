@@ -727,22 +727,22 @@ public class MSRdr implements MSInterface {
           }
           // test linear combination 1/[-3 to +3]:
           pt.setT(qs[0]);
-          pt.scale(1f/i);
+          pt.scale(1d/i);
           if (modDim > 1 && qs[1] != null)
-            pt.scaleAdd2(1f/j, qs[1], pt);
+            pt.scaleAdd2(1d/j, qs[1], pt);
           if (modDim > 2 && qs[2] != null)
-            pt.scaleAdd2(1f/k, qs[2], pt);
+            pt.scaleAdd2(1d/k, qs[2], pt);
           if (pt.distanceSquared(p3) < 0.0001f) {
             p = new double[modDim];
             switch (modDim) {
             default:
-              p[2] = 1f/k;
+              p[2] = 1d/k;
               //$FALL-THROUGH$
             case 2:
-              p[1] = 1f/j;
+              p[1] = 1d/j;
               //$FALL-THROUGH$
             case 1:
-              p[0] = 1f/i;
+              p[0] = 1d/i;
               break;
             }
             return p;
@@ -1070,7 +1070,7 @@ public class MSRdr implements MSInterface {
       bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5f);
+      boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
       if (isOK) {
         pt.setT(a);
         // add in modulation
@@ -1121,7 +1121,7 @@ public class MSRdr implements MSInterface {
     case 'B':
     case 'C':
     case 'I':
-      a = new double[] { 0.5f, 0.5f, 0.5f };
+      a = new double[] { 0.5d, 0.5d, 0.5d };
       if (c != 'I')
         a[c - 'A'] = 0;
       break;

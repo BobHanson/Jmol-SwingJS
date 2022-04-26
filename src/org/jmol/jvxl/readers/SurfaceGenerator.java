@@ -617,7 +617,7 @@ public class SurfaceGenerator {
     if ("contour" == propertyName) {
       params.isContoured = true;
       int n;
-      if (AU.isAF(value)) {
+      if (AU.isAD(value)) {
         // discrete values
         params.contoursDiscrete = (double[]) value;
         params.nContours = params.contoursDiscrete.length;
@@ -715,7 +715,7 @@ public class SurfaceGenerator {
     if ("ellipsoid" == propertyName) {
       if (value instanceof P4d)
         params.setEllipsoidP4((P4d) value);
-      else if (AU.isAF(value))
+      else if (AU.isAD(value))
         params.setEllipsoidAF((double[]) value);
       else
         return true;
@@ -1307,7 +1307,7 @@ public class SurfaceGenerator {
 
   private final V3d vAB = new V3d();
   private final V3d vNorm = new V3d();
-  private final P3d ptRef = P3d.new3(0, 0, 1e15f);
+  private final P3d ptRef = P3d.new3(0, 0, 1e15d);
   
   private double distanceVerticalToPlane(double x, double y, P3d pta,
                                               P3d ptb, P3d ptc) {

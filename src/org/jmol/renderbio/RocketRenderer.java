@@ -120,7 +120,7 @@ public class RocketRenderer {
     if (g3d.setC(colix)) {
       tm.transformPt3f(pointStart, screenA);
       tm.transformPt3f((renderArrowHead ? pointBeforeEnd : pointEnd), screenB);
-      int zMid = (int) Math.floor((screenA.z + screenB.z) / 2f);
+      int zMid = (int) Math.floor((screenA.z + screenB.z) / 2d);
       int diameter = ((int) vwr.tm.scaleToScreen(zMid, mad));
       if (!renderArrowHead || pointStart != pointBeforeEnd)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, screenA, screenB);
@@ -183,8 +183,8 @@ public class RocketRenderer {
       }
     }
     if (renderArrowHead) {
-      setBox(1.25f, 0.333f, pointBeforeEnd);
-      ptTip.scaleAdd2(-0.5f, vH, ptEnd);
+      setBox(1.25d, 0.333f, pointBeforeEnd);
+      ptTip.scaleAdd2(-0.5d, vH, ptEnd);
       for (int i = 4; --i >= 0;) {
         P3d corner = corners[i];
         corner.setT(ptC);
@@ -198,7 +198,7 @@ public class RocketRenderer {
       renderPart(arrowHeadFaces);
       ptEnd = pointBeforeEnd;
     }
-    setBox(1f, 0.25f, ptStart);
+    setBox(1d, 0.25d, ptStart);
     vtemp.sub2(ptEnd, ptStart);
     if (vtemp.lengthSquared() == 0)
       return;

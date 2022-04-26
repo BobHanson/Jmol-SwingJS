@@ -39,7 +39,7 @@ public class PhosphorusMonomer extends Monomer {
 
   private final static byte[] phosphorusOffsets = { P };
 
-  private static double MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0f;
+  private static double MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0d;
  
   @Override
   public final boolean isNucleic() {return true;}

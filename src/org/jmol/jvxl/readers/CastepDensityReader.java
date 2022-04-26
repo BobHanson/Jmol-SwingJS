@@ -84,7 +84,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
     nFilePoints = (nPointsX++) * (nPointsY++) * (nPointsZ++);
     volumetricOrigin.set(0, 0, 0);
     for (int i = 0; i < 3; i++) {
-      volumetricVectors[i].scale(1f/(voxelCounts[i] - 1));
+      volumetricVectors[i].scale(1d/(voxelCounts[i] - 1));
       if (isAnisotropic)
         setVectorAnisotropy(volumetricVectors[i]);
     }

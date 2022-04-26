@@ -270,7 +270,7 @@ public class SV extends T implements JSONEncodable {
     // the fourth then gives us offset to {0,0,0} (plane), 
     // rotation angle (axisangle), and cos(theta/2) (quaternion).
     if (x instanceof Qd)
-      return newV(point4f, ((Qd) x).toPoint4d());
+      return newV(point4f, ((Qd) x).toP4d());
     if (x instanceof M34d)
       return newV(x instanceof M4d ? matrix4f : matrix3f, x);
     if (x instanceof M34d)
@@ -291,8 +291,8 @@ public class SV extends T implements JSONEncodable {
       return getVariableAI((int[]) x);
     if (AU.isAB(x))
       return getVariableAB((byte[]) x);
-    if (AU.isAF(x))
-      return getVariableAF((float[]) x);
+//    if (AU.isAF(x))
+//      return getVariableAF((float[]) x);
     if (AU.isAD(x))
       return getVariableAD((double[]) x);
     if (AU.isAS(x))
@@ -303,13 +303,13 @@ public class SV extends T implements JSONEncodable {
       return getVariableAP((T3d[]) x);
     if (AU.isAII(x))
       return getVariableAII((int[][]) x);
-    if (AU.isAFF(x))
-      return getVariableAFF((float[][]) x);
+//    if (AU.isAFF(x))
+//      return getVariableAFF((float[][]) x);
     if (AU.isASS(x))
       return getVariableASS((String[][]) x);
     if (AU.isADD(x))
       return getVariableADD((double[][]) x);
-    if (AU.isAFloat(x))
+    if (AU.isADouble(x))
       return newV(listf, x);
     return newJSVar(x);
   }

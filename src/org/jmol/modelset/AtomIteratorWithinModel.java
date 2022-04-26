@@ -111,7 +111,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
       radiusData = rd;
       atoms = modelSet.at;
       vwr = modelSet.vwr;
-      distance = (rd.factorType == EnumType.OFFSET ? 5f + rd.value : 5f * rd.value);
+      distance = (rd.factorType == EnumType.OFFSET ? 5d + rd.value : 5d * rd.value);
       vdw1 = atoms[atomIndex].getVanderwaalsRadiusFloat(vwr, rd.vdwType);
     }
     checkGreater = (isGreaterOnly && atomIndex != Integer.MAX_VALUE);

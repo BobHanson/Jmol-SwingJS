@@ -337,17 +337,17 @@ public class IsosurfaceRenderer extends MeshRenderer {
       }
       if (incr == 3) {
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.GRAY, true, 0.5f) : C.GRAY);
+            C.GRAY, true, 0.5d) : C.GRAY);
         for (int i = 1; i < vertexCount; i += 3)
           g3d.fillCylinder(GData.ENDCAPS_SPHERICAL, diam / 4, screens[i],
               screens[i + 1]);
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.YELLOW, true, 0.5f) : C.YELLOW);
+            C.YELLOW, true, 0.5d) : C.YELLOW);
         for (int i = 1; i < vertexCount; i += 3)
           g3d.fillSphereI(diam, screens[i]);
 
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.BLUE, true, 0.5f) : C.BLUE);
+            C.BLUE, true, 0.5d) : C.BLUE);
         for (int i = 2; i < vertexCount; i += 3) {
           g3d.fillSphereI(diam, screens[i]);
         }
@@ -464,7 +464,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
                 screens[iB]);
         //} else if (iShowTriangles) {
           //g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
-            //  screens[iC], colixC, nC, 0.1f);
+            //  screens[iC], colixC, nC, 0.1d);
         } else if (mesh.colorsExplicit) {
             vwr.gdata.setColor(polygon[MeshSurface.P_EXPLICIT_COLOR]);
             colixA = C.copyColixTranslucency(mesh.colix, (short) C.LAST_AVAILABLE_COLIX); 
@@ -539,7 +539,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       // -n is an intensity2sided and does not correspond to a true normal
       // index
       if (n >= 0) {
-        pt2f.scaleAdd2(0.3f, vertexVectors[n], pt1f);
+        pt2f.scaleAdd2(0.3d, vertexVectors[n], pt1f);
         tm.transformPtScrT3(pt2f, pt2f);
         pt1f.set(screens[i].x, screens[i].y, screens[i].z);
         g3d.drawLineAB(pt1f, pt2f);

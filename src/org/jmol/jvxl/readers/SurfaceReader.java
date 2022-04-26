@@ -211,7 +211,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected boolean allowSigma = false;
   protected boolean isProgressive = false;
   protected boolean isXLowToHigh = false; //can be overridden in some readers by --progressive
-  private double assocCutoff = 0.3f;
+  private double assocCutoff = 0.3d;
   protected boolean isQuiet;
   protected boolean isPeriodic;
   
@@ -263,8 +263,8 @@ public abstract class SurfaceReader implements VertexDataServer {
   }
 
   final static double ANGSTROMS_PER_BOHR = 0.5291772f;
-  final static double defaultMappedDataMin = 0f;
-  final static double defaultMappedDataMax = 1.0f;
+  final static double defaultMappedDataMin = 0d;
+  final static double defaultMappedDataMax = 1.0d;
   final static double defaultCutoff = 0.02f;
 
   private int edgeCount;
@@ -361,7 +361,7 @@ public abstract class SurfaceReader implements VertexDataServer {
       if (params.sigma > 0)
         Logger
             .error("Reader does not support SIGMA option -- using cutoff 1.6");
-      params.cutoff = 1.6f;
+      params.cutoff = 1.6d;
     }
     // negative sigma just ignores the error message
     // and means it was inserted by Jmol as a default option
@@ -422,7 +422,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData.cutoff = (isJvxl ? jvxlCutoff : params.cutoff);
     jvxlData.isCutoffAbsolute = params.isCutoffAbsolute;
     jvxlData.isModelConnected = params.isModelConnected;
-    jvxlData.pointsPerAngstrom = 1f / volumeData.volumetricVectorLengths[0];
+    jvxlData.pointsPerAngstrom = 1d / volumeData.volumetricVectorLengths[0];
     jvxlData.jvxlColorData = "";
     jvxlData.jvxlPlane = params.thePlane;
     jvxlData.jvxlEdgeData = edgeData;
@@ -767,7 +767,7 @@ public abstract class SurfaceReader implements VertexDataServer {
           params.valueMappedToBlue);
       jvxlData.saveVertexCount = marchingSquares.contourVertexCount;
       contourVertexCount = marchingSquares
-          .generateContourData(jvxlDataIs2dContour, (params.isSquared ? 1e-8f : 1e-4f));      
+          .generateContourData(jvxlDataIs2dContour, (params.isSquared ? 1e-8d : 1e-4d));      
       jvxlData.contourValuesUsed = marchingSquares.contourValuesUsed;
       minMax = marchingSquares.getMinMax();
       if (meshDataServer != null)
@@ -964,7 +964,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     case 7:
       return (pt.x * pt.x - pt.y * pt.y > 0 ? 1 : -1);
     case 8:
-      return (pt.z * pt.z * 2f - pt.x * pt.x - pt.y * pt.y > 0 ? 1 : -1);
+      return (pt.z * pt.z * 2d - pt.x * pt.x - pt.y * pt.y > 0 ? 1 : -1);
     }
     return 1;
   }

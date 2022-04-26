@@ -219,7 +219,7 @@ public class XmlChemDrawReader extends XmlReader {
         continue;
       for (int j = asc.bsAtoms.nextSetBit(0); j >= 0; j = asc.bsAtoms.nextSetBit(j + 1)) {
         Atom a = asc.atoms[j];
-        if (Math.abs(a.x - pt.x) < 0.1f && Math.abs(a.y - pt.y) < 0.1f) {
+        if (Math.abs(a.x - pt.x) < 0.1d && Math.abs(a.y - pt.y) < 0.1d) {
           if (pt == a1) {
             b.atomIndex1 = (a1 = a).index;
           } else {
@@ -248,7 +248,7 @@ public class XmlChemDrawReader extends XmlReader {
     }
     double f = 1;
     if (sum > 0) {
-      f = 1.45f * n / sum;
+      f = 1.45d * n / sum;
     }
 
     double cx = (maxX + minX) / 2;

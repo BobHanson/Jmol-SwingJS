@@ -239,7 +239,7 @@ public class GaussianFchkReader extends GaussianReader {
           if (ib <= ia)
             continue;
           double order = rBond[pt];
-          int iorder = (order == 1.5f ? JmolAdapter.ORDER_AROMATIC
+          int iorder = (order == 1.5d ? JmolAdapter.ORDER_AROMATIC
               : (int) order);
           asc.addBond(new Bond(ia, ib, iorder));
         }

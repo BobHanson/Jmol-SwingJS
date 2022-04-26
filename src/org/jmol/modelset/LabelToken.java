@@ -417,10 +417,10 @@ public class LabelToken {
         String propertyName = strFormat.substring(ich, ichClose).toLowerCase();
         if (propertyName.startsWith("property_")) {
           lt.tok = T.data;
-          lt.data = vwr.getDataObj(propertyName, null, JmolDataManager.DATA_TYPE_AFD);
+          lt.data = vwr.getDataObj(propertyName, null, JmolDataManager.DATA_TYPE_AD);
         } else if (propertyName.startsWith("validation.")) {
           lt.tok = T.validation;
-          lt.data = vwr.getDataObj("property_" + propertyName.substring(11), null, JmolDataManager.DATA_TYPE_AF);
+          lt.data = vwr.getDataObj("property_" + propertyName.substring(11), null, JmolDataManager.DATA_TYPE_AD);
         } else if (propertyName.startsWith("unitid")) {
            lt.tok = T.id;
            lt.data = Integer.valueOf(JC.getUnitIDFlags(propertyName.substring(6)));
@@ -442,7 +442,7 @@ public class LabelToken {
           break;
         }
         String s = strFormat.substring(ich, ichCloseBracket);
-        lt.data = vwr.getDataObj(s, null, JmolDataManager.DATA_TYPE_AF);
+        lt.data = vwr.getDataObj(s, null, JmolDataManager.DATA_TYPE_AD);
         // TODO untested j2s issue fix
         if (lt.data == null) {
           lt.data = vwr.getDataObj(s, null, JmolDataManager.DATA_TYPE_UNKNOWN);

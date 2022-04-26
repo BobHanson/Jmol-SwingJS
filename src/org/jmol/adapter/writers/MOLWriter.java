@@ -330,7 +330,7 @@ public class MOLWriter {
       if (order != 1) {
         mol.append(",\"o\":");
         if (order < 0) {
-          mol.appendF(-order / 2f);
+          mol.appendF(-order / 2d);
         } else {
           mol.appendI(order);   
         }

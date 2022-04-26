@@ -30,7 +30,7 @@ public class CIPData {
    * measure of planarity in a trigonal system, in Angstroms
    * 
    */
-  static final double TRIGONALITY_MIN = 0.2f;
+  static final double TRIGONALITY_MIN = 0.2d;
   
   /**
    * Subclass identifier

@@ -66,7 +66,7 @@ class XsfReader extends VolumeFileReader {
       continue;
     }
     if (needCutoff)
-      params.cutoff = 0.05f;
+      params.cutoff = 0.05d;
     if (isBXSF)
       nSurfaces = parseIntStr(rd());
     voxelCounts[0] = parseIntStr(rd());
@@ -77,14 +77,14 @@ class XsfReader extends VolumeFileReader {
     for (int i = 0; i < 3; ++i) {
       volumetricVectors[i].set(parseFloatStr(rd()), parseFloat(),
           parseFloat());
-      volumetricVectors[i].scale(1.0f / (voxelCounts[i] - 1));
+      volumetricVectors[i].scale(1.0d / (voxelCounts[i] - 1));
     }
     if (isBXSF) {
 /*      
       System.out.println("testing XSFREADER");
-      volumetricVectors[0].set(0.1f, 0, 0);
-      volumetricVectors[1].set(0, 0.1f, 0);
-      volumetricVectors[2].set(0,0, 0.1f);
+      volumetricVectors[0].set(0.1d, 0, 0);
+      volumetricVectors[1].set(0, 0.1d, 0);
+      volumetricVectors[2].set(0,0, 0.1d);
 */      
       // data are slowest-x
       // standard Jmol order

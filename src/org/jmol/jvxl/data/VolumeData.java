@@ -455,9 +455,9 @@ public class VolumeData {
 
   void offsetCenter(P3d center) {
     P3d pt = new P3d();
-    pt.scaleAdd2((voxelCounts[0] - 1) / 2f, volumetricVectors[0], pt);
-    pt.scaleAdd2((voxelCounts[1] - 1) / 2f, volumetricVectors[1], pt);
-    pt.scaleAdd2((voxelCounts[2] - 1) / 2f, volumetricVectors[2], pt);
+    pt.scaleAdd2((voxelCounts[0] - 1) / 2d, volumetricVectors[0], pt);
+    pt.scaleAdd2((voxelCounts[1] - 1) / 2d, volumetricVectors[1], pt);
+    pt.scaleAdd2((voxelCounts[2] - 1) / 2d, volumetricVectors[2], pt);
     volumetricOrigin.sub2(center, pt);
   }
 
@@ -508,7 +508,7 @@ public class VolumeData {
     int nz = voxelCounts[2];
     V3d normal = V3d.new3(plane.x, plane.y, plane.z);
     normal.normalize();
-    double f = 1f;
+    double f = 1d;
     for (int x = 0; x < nx; x++)
       for (int y = 0; y < ny; y++)
         for (int z = 0; z < nz; z++) {
@@ -563,7 +563,7 @@ public class VolumeData {
     edgeVector.sub2(pointB, pointA);
     pt.scaleAdd2(fraction, edgeVector, pointA);
     if (sr == null || !doIterate || valueB == valueA || fraction < 0.01f
-        || fraction > 0.99f || (edgeVector.length()) < 0.01f)
+        || fraction > 0.99d || (edgeVector.length()) < 0.01f)
       return cutoff;
     // Do a nonlinear interpolation here and get a better value
     // such is the case for atomic orbitals.
@@ -586,7 +586,7 @@ public class VolumeData {
         break;
       pt.setT(ptTemp);
       v0 = v;
-      if (Math.abs(diff) < 0.005f)
+      if (Math.abs(diff) < 0.005d)
         break;
       ptTemp.scaleAdd2(diff, edgeVector, pt);
       v = lookupInterpolatedVoxelValue(ptTemp, false);

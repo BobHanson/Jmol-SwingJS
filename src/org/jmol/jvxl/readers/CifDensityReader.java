@@ -110,7 +110,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:05:27' 
-//_density_server_result.guid               6b9aaa27-a562-4e00-a888-6f500847868f 
+//_density_server_result.guid               6b9aaa27-a562-4e00-a888-6d500847868f 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 
@@ -165,7 +165,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:49:16' 
-//_density_server_result.guid               d7da5dff-3343-4082-a96f-95fd979d8567 
+//_density_server_result.guid               d7da5dff-3343-4082-a96d-95fd979d8567 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 
@@ -271,7 +271,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:49:16' 
-//_density_server_result.guid               d7da5dff-3343-4082-a96f-95fd979d8567 
+//_density_server_result.guid               d7da5dff-3343-4082-a96d-95fd979d8567 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 

@@ -106,7 +106,7 @@ public class Balls extends AtomShape {
     if ("colors" == propertyName) {
       Object[] data = (Object[]) value;
       short[] colixes = (short[]) data[0];
-      //double translucency  = ((Float) data[1]).doubleValue();
+      //double translucency  = ((Number) data[1]).doubleValue();
       if (bsColixSet == null)
         bsColixSet = new BS();
       short c;

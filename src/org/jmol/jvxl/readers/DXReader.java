@@ -141,7 +141,7 @@ class DXReader extends ApbsReader {
 //
 //  protected void setCutoffAutomatic() {
 //    if (params.thePlane == null && params.cutoffAutomatic) {
-//      params.cutoff = 0.5f;
+//      params.cutoff = 0.5d;
 //      Logger.info(
 //          "DXReader: setting cutoff to default value of " + params.cutoff);
 //    }

@@ -270,13 +270,13 @@ public class Sticks extends Shape {
       v.ave(atom1, atom2);
       int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
       if (d2 >= 0 && Math.abs(atom1.sY - atom2.sY) + Math.abs(atom1.sX - atom2.sX)> XY_THREASHOLD  ) {
-        double f = 1f * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
-        if (f < 0.4f || f > 0.6f)
+        double f = 1d * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
+        if (f < 0.4d || f > 0.6d)
           continue;
         dmin2 = d2;
         pickedBond = bond;
         if (closestAtom != null)
-          closestAtom[0] = (f < 0.5f ? atom1.i : atom2.i);
+          closestAtom[0] = (f < 0.5d ? atom1.i : atom2.i);
         pt.setT(v);
       }
     }

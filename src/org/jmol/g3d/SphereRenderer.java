@@ -145,13 +145,13 @@ public class SphereRenderer {
       if (ss == null) {
         int countSE = 0;
         boolean d = (diameter & 1) != 0;
-        double radiusF = diameter / 2.0f;
+        double radiusF = diameter / 2.0d;
         double radiusF2 = radiusF * radiusF;
         radius = (diameter + 1) / 2;
-        double ys = d ? 0 : 0.5f;
+        double ys = d ? 0 : 0.5d;
         for (int i = 0; i < radius; ++i, ++ys) {
           double y2 = ys * ys;
-          double xs = d ? 0 : 0.5f;
+          double xs = d ? 0 : 0.5d;
           for (int j = 0; j < radius; ++j, ++xs) {
             double x2 = xs * xs;
             double z2 = radiusF2 - y2 - x2;
@@ -161,10 +161,10 @@ public class SphereRenderer {
         }        
         ss = new int[countSE];
         int offset = 0;
-        ys = d ? 0 : 0.5f;
+        ys = d ? 0 : 0.5d;
         for (int i = 0; i < radius; ++i, ++ys) {
           double y2 = ys * ys;
-          double xs = d ? 0 : 0.5f;
+          double xs = d ? 0 : 0.5d;
           for (int j = 0; j < radius; ++j, ++xs) {
             double x2 = xs * xs;
             double z2 = radiusF2 - y2 - x2;

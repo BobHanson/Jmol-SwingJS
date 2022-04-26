@@ -82,7 +82,7 @@ public class UnitCellIterator implements AtomIndexIterator {
     ptC.setT(center);
     unitCell.toFractionalF(ptC, true);
     for (int i = 0; i < 8; i++) {
-      p.scaleAdd2(-2f, pts[i], pts[7]);
+      p.scaleAdd2(-2d, pts[i], pts[7]);
       p.scaleAdd2(distance, p, center);
       unitCell.toFractionalF(p, true);
       if (min.x > p.x)
@@ -153,7 +153,7 @@ public class UnitCellIterator implements AtomIndexIterator {
     while ((ipt < nAtoms || nextCell())) {
       p.add2(unitList.get(listPt = ipt++)[1], translation);
       if ((distance2 = p.distanceSquared(center)) < maxDistance2
-          && distance2 > 0.1f) {
+          && distance2 > 0.1d) {
         nFound++;
         return true;
       }

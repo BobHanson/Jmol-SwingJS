@@ -536,13 +536,13 @@ public class ForceFieldMMFF extends ForceField {
       // 32  TERMINAL O IN SULFONATES
       // 35  OXIDE OXYGEN ON SP2 CARBON, NEGATIVELY CHARGED
       // 72  TERMINAL SULFUR BONDED TO PHOSPHORUS
-      at.fcadj = 0.5f;
+      at.fcadj = 0.5d;
       break;
     case 62:
     case 76:
       // 62  DEPROTONATED SULFONAMIDE N-; FORMAL CHARGE=-1
       // 76  NEGATIVELY CHARGED N IN, E.G, TRI- OR TETRAZOLE ANION
-      at.fcadj = 0.25f;
+      at.fcadj = 0.25d;
       break;
     }
 
@@ -784,7 +784,7 @@ public class ForceFieldMMFF extends ForceField {
         abscharge += Math.abs(partialCharges[i]);
       }
       if (abscharge == 0 && a1 != null) {
-        partialCharges[a1.i] = -0.0f;
+        partialCharges[a1.i] = -0.0d;
       }
     }
     return partialCharges;

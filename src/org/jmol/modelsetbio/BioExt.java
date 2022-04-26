@@ -208,7 +208,7 @@ public class BioExt {
         pdbATOM.append("  NHX_______ NHY_______ NHZ_______");
       pdbATOM.append("\n\n");
     }
-    double factor = (ctype == 'R' ? 1f : 10f);
+    double factor = (ctype == 'R' ? 1d : 10d);
     bothEnds = false;//&= !isDraw && !isRamachandran;
     for (int j = 0; j < (bothEnds ? 2 : 1); j++, factor *= -1)
       for (int i = 0; i < (mStep < 1 ? 1 : mStep); i++)
@@ -312,14 +312,14 @@ public class BioExt {
             // standard dihedral/Jmol definitions for anticlockwise positive
             // angles
             AminoMonomer aa = (AminoMonomer) monomer;
-            pt.set(-x, x, 0.5f);
+            pt.set(-x, x, 0.5d);
             pdbATOM.append("draw ID \"phi").append(id).append("\" ARROW ARC ")
                 .append(Escape.eP(aa.getNitrogenAtom())).append(Escape.eP(a))
                 .append(Escape.eP(aa.getCarbonylCarbonAtom()))
                 .append(Escape.eP(pt)).append(" \"phi = ")
                 .append(String.valueOf(Math.round(x))).append("\" color ")
                 .append(qColor[2]).append("\n");
-            pt.set(0, y, 0.5f);
+            pt.set(0, y, 0.5d);
             pdbATOM.append("draw ID \"psi").append(id).append("\" ARROW ARC ")
                 .append(Escape.eP(a))
                 .append(Escape.eP(aa.getCarbonylCarbonAtom()))
@@ -507,7 +507,7 @@ public class BioExt {
               continue;
             int deg = (int) Math.floor(Math.acos(w) * 360 / Math.PI);
             if (derivType == 0) {
-              pdbATOM.append(Escape.drawQuat(q, prefix, id, ptCenter, 1f));
+              pdbATOM.append(Escape.drawQuat(q, prefix, id, ptCenter, 1d));
               if (qtype == 'n' && isAmino) {
                 P3d ptH = ((AminoMonomer) monomer).getNitrogenHydrogenPoint();
                 if (ptH != null)
@@ -564,7 +564,7 @@ public class BioExt {
   }
 
   private static String getQInfo(Qd q) {
-    A4d axis = q.toAxisAngle4d();
+    A4d axis = q.toA4d();
     return PT.sprintf("%10.6f%10.6f%10.6f%10.6f  %6.2f  %10.5f %10.5f %10.5f",
         "F", new Object[] { new double[] { q.q0, q.q1, q.q2, q.q3,
             (double) (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
@@ -574,7 +574,7 @@ public class BioExt {
                          double scale) {
     String strV = " VECTOR " + Escape.eP(ptCenter) + " ";
     if (scale == 0)
-      scale = 1f;
+      scale = 1d;
     return "draw " + prefix + "x" + id + strV
         + Escape.eP(q.getVectorScaled(0, scale)) + " color red\n" + "draw "
         + prefix + "y" + id + strV + Escape.eP(q.getVectorScaled(1, scale))

@@ -616,7 +616,7 @@ public class SimpleUnitCell {
   public static double unitizeXRnd(double x) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
-    if (x > 0.9999f || x < 0.0001f) 
+    if (x > 0.9999d || x < 0.0001f) 
       x = 0;
     return x;
   }
@@ -649,9 +649,9 @@ public class SimpleUnitCell {
   public static boolean checkUnitCell(SymmetryInterface uc, P3d cell, P3d ptTemp) {
     uc.toFractionalF(ptTemp, false);
     // {1 1 1} here is the original cell
-    return (ptTemp.x >= cell.x - 1f - SLOP && ptTemp.x <= cell.x + SLOP
-        && ptTemp.y >= cell.y - 1f - SLOP && ptTemp.y <= cell.y + SLOP
-        && ptTemp.z >= cell.z - 1f - SLOP && ptTemp.z <= cell.z + SLOP);
+    return (ptTemp.x >= cell.x - 1d - SLOP && ptTemp.x <= cell.x + SLOP
+        && ptTemp.y >= cell.y - 1d - SLOP && ptTemp.y <= cell.y + SLOP
+        && ptTemp.z >= cell.z - 1d - SLOP && ptTemp.z <= cell.z + SLOP);
   }
 
   ////// lattice methods //////

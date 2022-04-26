@@ -121,19 +121,19 @@ public class SticksRenderer extends FontLineShapeRenderer {
     useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
     // negative spacing is relative, depending upon atom-atom distance;
     // positive spacing is absolute, for fixed in-plane (radiusFactor > 0) or perp-plane (radiusFactor < 0)
-    multipleBondSpacing = (isPymol ? 0.15f : vwr
+    multipleBondSpacing = (isPymol ? 0.15d : vwr
         .getDouble(T.multiplebondspacing));
     // negative radius factor indicates perpendicular fixed double bond
-    multipleBondRadiusFactor = (isPymol ? 0.4f : vwr
+    multipleBondRadiusFactor = (isPymol ? 0.4d : vwr
         .getDouble(T.multiplebondradiusfactor));
     bondsPerp = (useBananas || multipleBondSpacing > 0
         && multipleBondRadiusFactor < 0);
     if (useBananas)
-      multipleBondSpacing = (multipleBondSpacing < 0 ? -multipleBondSpacing * 0.4f
+      multipleBondSpacing = (multipleBondSpacing < 0 ? -multipleBondSpacing * 0.4d
           : multipleBondSpacing);
     multipleBondRadiusFactor = Math.abs(multipleBondRadiusFactor);
     if (multipleBondSpacing == 0 && isCartesian)
-      multipleBondSpacing = 0.2f;
+      multipleBondSpacing = 0.2d;
     modeMultipleBond = vwr.g.modeMultipleBond;
     showMultipleBonds = (multipleBondSpacing != 0
         && modeMultipleBond != JC.MULTIBOND_NEVER && vwr
@@ -328,7 +328,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
         drawBond(mask);
         bondsPerp = !bondsPerp;
         bondOrder = 2;
-        multipleBondSpacing *= 1.5f;
+        multipleBondSpacing *= 1.5d;
         drawBond(mask >> 3);
         bondsPerp = !bondsPerp;
         multipleBondSpacing = m;
@@ -341,11 +341,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
           width = (int) (width * 0.5);
         double m = multipleBondSpacing;
         if (m < 0)
-          multipleBondSpacing = 0.15f;
+          multipleBondSpacing = 0.15d;
         drawBond(mask);
         bondsPerp = !bondsPerp;
         bondOrder = 2;
-        multipleBondSpacing *= 1.5f;
+        multipleBondSpacing *= 1.5d;
         drawBond(mask >> 4);
         bondsPerp = !bondsPerp;
         multipleBondSpacing = m;
@@ -414,7 +414,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
         y.cross(y, x);
       y.scale(multipleBondSpacing);
       x.setT(y);
-      x.scale((bondOrder - 1) / 2f);
+      x.scale((bondOrder - 1) / 2d);
       if (useBananas) {
         drawBanana(a, b, x, 0);
         switch (bondOrder) {
@@ -469,7 +469,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
           zB, renderD, asLineOnly);
       stepAxisCoordinates();
       x.sub2(b, a);
-      x.scale(0.05f);
+      x.scale(0.05d);
       p1.sub2(a, x);
       p2.add2(b, x);
       g3d.drawBond(p1, p2, colixA, colixB, endcaps, mad, -2);

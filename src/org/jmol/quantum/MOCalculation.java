@@ -94,7 +94,7 @@ import org.jmol.util.Logger;
 
 public class MOCalculation extends QuantumCalculation {
 
-  public final static double ROOT3 = 1.73205080756887729f;
+  public final static double ROOT3 = 1.73205080756887729d;
 
   private final static double CUT = -50;
   
@@ -533,7 +533,7 @@ public class MOCalculation extends QuantumCalculation {
       break;
     case NORM_STANDARD:
       // (128 alpha^5/pi^3)^0.25 [x|y|z]exp(-alpha r^2)
-      norm = 1.42541094f;
+      norm = 1.42541094d;
       normalizeAlpha = true;
       break;
     case NORM_NWCHEM:
@@ -571,7 +571,7 @@ public class MOCalculation extends QuantumCalculation {
       break;
     case NORM_STANDARD:
       norm1 = 0.712705470f;
-      norm2 = 1.42541094f;
+      norm2 = 1.42541094d;
       doNormalize = true;
       break;
     case NORM_NWCHEM:
@@ -827,7 +827,7 @@ public class MOCalculation extends QuantumCalculation {
             cyz = norm1 * y * z;
 
             vd[(havePoints ? 0 : iz)] += (
-                ad0 * norm5 * (czz - 0.5f * (cxx + cyy)) 
+                ad0 * norm5 * (czz - 0.5d * (cxx + cyy)) 
                 + ad1p * cxz 
                 + ad1n * cyz 
                 + ad2p * norm3 * (cxx - cyy) 
@@ -873,7 +873,7 @@ public class MOCalculation extends QuantumCalculation {
     if (moCoeff >= moCoefficients.length)
       return false;
     double coef = slater.coef * moCoefficients[moCoeff++];
-    //coefMax = 0.2f;
+    //coefMax = 0.2d;
     if (coef == 0) { //|| coefMax != Integer.MAX_VALUE && Math.abs(coef) > coefMax) {
       atomIndex = -1;
       return true;

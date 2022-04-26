@@ -121,7 +121,7 @@ public class ColorManager {
     switch (pid) {
     case PAL.PALETTE_ENERGY:
       return ce.getColorIndexFromPalette((double) bond.getEnergy(),
-          -2.5f, -0.5f, ColorEncoder.BWR, false);
+          -2.5d, -0.5d, ColorEncoder.BWR, false);
     }
     return (argb == 0 ? C.RED : C.getColix(argb));
   }

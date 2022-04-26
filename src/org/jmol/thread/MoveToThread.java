@@ -223,11 +223,11 @@ public class MoveToThread extends JmolThread {
     frameTimeMillis = 1000 / fps;
     targetTime = System.currentTimeMillis();
     aaStepCenter.sub2(ptMoveToCenter, transformManager.fixedRotationCenter);
-    aaStepCenter.scale(1f / totalSteps);
+    aaStepCenter.scale(1d / totalSteps);
     if (navCenter != null
         && transformManager.mode == TransformManager.MODE_NAVIGATION) {
       aaStepNavCenter.sub2(navCenter, transformManager.navigationCenter);
-      aaStepNavCenter.scale(1f / totalSteps);
+      aaStepNavCenter.scale(1d / totalSteps);
     }
     iStep = 0;
     return totalSteps;
@@ -365,7 +365,7 @@ public class MoveToThread extends JmolThread {
         matrixStep.setAA(aaStep);
       matrixStep.mul(matrixStart);
     }
-    fStep = iStep / (totalSteps - 1f);
+    fStep = iStep / (totalSteps - 1d);
     if (center != null)
       transformManager.fixedRotationCenter.add(aaStepCenter);
     if (navCenter != null

@@ -103,7 +103,7 @@ public class Ellipsoid {
     if (lengths == null)
       lengths = new double[3];
     for (int i = 0; i < lengths.length; i++)
-      lengths[i] = (double) (tensor.getFactoredValue(i) * scale * (scaleXYZ == null ? 1 : Math.abs(scaleXYZ[i])));
+      lengths[i] = (tensor.getFactoredValue(i) * scale * (scaleXYZ == null ? 1 : Math.abs(scaleXYZ[i])));
   }
 
   public void setScale(double scale, boolean isPercent) {
@@ -116,7 +116,7 @@ public class Ellipsoid {
         scale = (tensor.forThermalEllipsoid ? 50 : 100);
       percent = (int) scale;
       scale = (tensor.forThermalEllipsoid ? getThermalRadius(percent)
-          : percent < 1 ? 0 : percent / 100.0f);
+          : percent < 1 ? 0 : percent / 100.0d);
     }
     this.scale = scale;
     validate(true);
@@ -124,20 +124,20 @@ public class Ellipsoid {
 
   // from ORTEP manual ftp://ftp.ornl.gov/pub/ortep/man/pdf/chap6.pdf
 
-  private final static double[] crtval = new double[] { 0.3389f, 0.4299f,
-      0.4951f, 0.5479f, 0.5932f, 0.6334f, 0.6699f, 0.7035f, 0.7349f, 0.7644f,
-      0.7924f, 0.8192f, 0.8447f, 0.8694f, 0.8932f, 0.9162f, 0.9386f, 0.9605f,
-      0.9818f, 1.0026f, 1.0230f, 1.0430f, 1.0627f, 1.0821f, 1.1012f, 1.1200f,
-      1.1386f, 1.1570f, 1.1751f, 1.1932f, 1.2110f, 1.2288f, 1.2464f, 1.2638f,
-      1.2812f, 1.2985f, 1.3158f, 1.3330f, 1.3501f, 1.3672f, 1.3842f, 1.4013f,
-      1.4183f, 1.4354f, 1.4524f, 1.4695f, 1.4866f, 1.5037f, 1.5209f, 1.5382f,
-      1.5555f, 1.5729f, 1.5904f, 1.6080f, 1.6257f, 1.6436f, 1.6616f, 1.6797f,
-      1.6980f, 1.7164f, 1.7351f, 1.7540f, 1.7730f, 1.7924f, 1.8119f, 1.8318f,
-      1.8519f, 1.8724f, 1.8932f, 1.9144f, 1.9360f, 1.9580f, 1.9804f, 2.0034f,
-      2.0269f, 2.0510f, 2.0757f, 2.1012f, 2.1274f, 2.1544f, 2.1824f, 2.2114f,
-      2.2416f, 2.2730f, 2.3059f, 2.3404f, 2.3767f, 2.4153f, 2.4563f, 2.5003f,
-      2.5478f, 2.5997f, 2.6571f, 2.7216f, 2.7955f, 2.8829f, 2.9912f, 3.1365f,
-      3.3682f };
+  private final static double[] crtval = new double[] { 0.3389d, 0.4299d,
+      0.4951d, 0.5479d, 0.5932d, 0.6334d, 0.6699d, 0.7035d, 0.7349d, 0.7644d,
+      0.7924d, 0.8192d, 0.8447d, 0.8694d, 0.8932d, 0.9162d, 0.9386d, 0.9605d,
+      0.9818d, 1.0026d, 1.0230d, 1.0430d, 1.0627d, 1.0821d, 1.1012d, 1.1200d,
+      1.1386d, 1.1570d, 1.1751d, 1.1932d, 1.2110d, 1.2288d, 1.2464d, 1.2638d,
+      1.2812d, 1.2985d, 1.3158d, 1.3330d, 1.3501d, 1.3672d, 1.3842d, 1.4013d,
+      1.4183d, 1.4354d, 1.4524d, 1.4695d, 1.4866d, 1.5037d, 1.5209d, 1.5382d,
+      1.5555d, 1.5729d, 1.5904d, 1.6080d, 1.6257d, 1.6436d, 1.6616d, 1.6797d,
+      1.6980d, 1.7164d, 1.7351d, 1.7540d, 1.7730d, 1.7924d, 1.8119d, 1.8318d,
+      1.8519d, 1.8724d, 1.8932d, 1.9144d, 1.9360d, 1.9580d, 1.9804d, 2.0034d,
+      2.0269d, 2.0510d, 2.0757d, 2.1012d, 2.1274d, 2.1544d, 2.1824d, 2.2114d,
+      2.2416d, 2.2730d, 2.3059d, 2.3404d, 2.3767d, 2.4153d, 2.4563d, 2.5003d,
+      2.5478d, 2.5997d, 2.6571d, 2.7216d, 2.7955d, 2.8829d, 2.9912d, 3.1365d,
+      3.3682d };
 
   final public static double getThermalRadius(int prob) {
     return crtval[prob < 1 ? 0 : prob > 99 ? 98 : prob - 1];
@@ -172,7 +172,7 @@ public class Ellipsoid {
   //        mat, v1, mTemp, coefs, null);
   //    double[] a = new double[10];
   //    for (int i = 0; i < 10; i++)
-  //      a[i] = (double) coefs[i];
+  //      a[i] = coefs[i];
   //    return a;
   //  }
 
@@ -218,17 +218,17 @@ public class Ellipsoid {
     if (mDeriv == null)
       return;
     mDeriv.setIdentity();
-    mDeriv.m00 = (double) (2 * coef[0]);
-    mDeriv.m11 = (double) (2 * coef[1]);
-    mDeriv.m22 = (double) (2 * coef[2]);
+    mDeriv.m00 = (2 * coef[0]);
+    mDeriv.m11 = (2 * coef[1]);
+    mDeriv.m22 = (2 * coef[2]);
 
-    mDeriv.m01 = mDeriv.m10 = (double) coef[3];
-    mDeriv.m02 = mDeriv.m20 = (double) coef[4];
-    mDeriv.m12 = mDeriv.m21 = (double) coef[5];
+    mDeriv.m01 = mDeriv.m10 = coef[3];
+    mDeriv.m02 = mDeriv.m20 = coef[4];
+    mDeriv.m12 = mDeriv.m21 = coef[5];
 
-    mDeriv.m03 = (double) coef[6];
-    mDeriv.m13 = (double) coef[7];
-    mDeriv.m23 = (double) coef[8];
+    mDeriv.m03 = coef[6];
+    mDeriv.m13 = coef[7];
+    mDeriv.m23 = coef[8];
   }
 
 }

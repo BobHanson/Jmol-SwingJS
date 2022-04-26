@@ -141,9 +141,9 @@ public class HermiteRenderer implements G3DRenderer {
           // but drawing spheres was faster
           double s = sLeft[sp];
           if (fill) {
-            int d =(s < 0.5f
+            int d =(s < 0.5d
                     ? diameterBeg + (int)(dDiameterFirstHalf * s)
-                    : diameterMid + (int)(dDiameterSecondHalf * (s - 0.5f)));
+                    : diameterMid + (int)(dDiameterSecondHalf * (s - 0.5d)));
             g3d.fillSphereI(d, a);
           } else {
             g3d.plotPixelClippedP3i(a);
@@ -223,7 +223,7 @@ public class HermiteRenderer implements G3DRenderer {
     boolean isRev = (tension < 0);
     if (isRev)
       tension = -tension;
-    double ratio = 1f / aspectRatio;
+    double ratio = 1d / aspectRatio;
     int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
     int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
     int xT1 = ((x2 - (int) p0.x) * tension) / 8;
@@ -399,13 +399,13 @@ public class HermiteRenderer implements G3DRenderer {
     int whichPoint = 0;
 
     int numTopStrandPoints = 2; //first and last points automatically included
-    double numPointsPerSegment = 5.0f;//use 5 for mesh
+    double numPointsPerSegment = 5.0d;//use 5 for mesh
 
     //if (fill)
-      //numPointsPerSegment = 10.0f;
+      //numPointsPerSegment = 10.0d;
 
-    double interval = (1.0f / numPointsPerSegment);
-    double currentInt = 0.0f;
+    double interval = (1.0d / numPointsPerSegment);
+    double currentInt = 0.0d;
 
     int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
     int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
@@ -455,7 +455,7 @@ public class HermiteRenderer implements G3DRenderer {
            g3d.fillSphereI(3, a);
            //draw outside edges of mesh
 
-           if (s < 1.0f - currentInt) { //if first point over the interval
+           if (s < 1.0d - currentInt) { //if first point over the interval
              P3d temp = new P3d();
              temp.set(a.x, a.y, a.z);
              points.addLast(temp); //store it

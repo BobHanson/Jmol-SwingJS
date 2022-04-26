@@ -994,7 +994,7 @@ abstract class ScriptExpr extends ScriptParam {
           if (pc + 2 == code.length)
             invArg();
           if (!chk)
-            data = (double[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AFD);
+            data = (double[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AD);
         }
         if (++pc == code.length)
           invArg(); // compiler would not let this happen, actually

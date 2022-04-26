@@ -577,7 +577,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
           ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
           toCartesian(ptOffset, true);
           double d = p1.distance(ptOffset);
-          if (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1f) {
+          if (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d) {
             ptOffset.set(i, j, k);
             return true;
           }
@@ -888,25 +888,25 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         mf = M3d.newA9(new double[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
         break;
       case 'A':
-        mf = M3d.newA9(new double[] { 1, 0, 0, 0, 0.5f, 0.5f, 0, -0.5f, 0.5f });
+        mf = M3d.newA9(new double[] { 1, 0, 0, 0, 0.5d, 0.5d, 0, -0.5d, 0.5d });
         break;
       case 'B':
-        mf = M3d.newA9(new double[] { 0.5f, 0, 0.5f, 0, 1, 0, -0.5f, 0, 0.5f });
+        mf = M3d.newA9(new double[] { 0.5d, 0, 0.5d, 0, 1, 0, -0.5d, 0, 0.5d });
         break;
       case 'C':
-        mf = M3d.newA9(new double[] { 0.5f, 0.5f, 0, -0.5f, 0.5f, 0, 0, 0, 1 });
+        mf = M3d.newA9(new double[] { 0.5d, 0.5d, 0, -0.5d, 0.5d, 0, 0, 0, 1 });
         break;
       case 'R':
-        mf = M3d.newA9(new double[] { 2 / 3f, -1 / 3f, -1 / 3f, 1 / 3f, 1 / 3f,
-            -2 / 3f, 1 / 3f, 1 / 3f, 1 / 3f });
+        mf = M3d.newA9(new double[] { 2 / 3d, -1 / 3d, -1 / 3d, 1 / 3d, 1 / 3d,
+            -2 / 3d, 1 / 3d, 1 / 3d, 1 / 3d });
         break;
       case 'I':
         mf = M3d.newA9(
-            new double[] { -.5f, .5f, .5f, .5f, -.5f, .5f, .5f, .5f, -.5f });
+            new double[] { -.5d, .5d, .5d, .5d, -.5d, .5d, .5d, .5d, -.5d });
         break;
       case 'F':
         mf = M3d
-            .newA9(new double[] { 0, 0.5f, 0.5f, 0.5f, 0, 0.5f, 0.5f, 0.5f, 0 });
+            .newA9(new double[] { 0, 0.5d, 0.5d, 0.5d, 0, 0.5d, 0.5d, 0.5d, 0 });
         break;
       }
       if (!toPrimitive)

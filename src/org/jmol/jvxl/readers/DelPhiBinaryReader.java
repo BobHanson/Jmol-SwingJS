@@ -109,7 +109,7 @@ class DelPhiBinaryReader extends VolumeFileReader {
     // I don't understand why this would be needed this way, 
     // but it seems to be the case.
     
-    double dx = (scale == 1 ? 54f/64f : 1/scale);
+    double dx = (scale == 1 ? 54d/64d : 1/scale);
     volumetricVectors[0] = V3d.new3(0, 0, dx);
     volumetricVectors[1] = V3d.new3(0, dx, 0);
     volumetricVectors[2] = V3d.new3(dx, 0, 0);

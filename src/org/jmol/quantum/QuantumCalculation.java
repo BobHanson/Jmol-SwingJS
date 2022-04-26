@@ -45,7 +45,7 @@ abstract public class QuantumCalculation {
   }
   
 
-  protected final static double bohr_per_angstrom = 1 / 0.52918f;
+  protected final static double bohr_per_angstrom = 1 / 0.52918d;
 
   protected double[][][] voxelData;
   public double[][][] voxelDataTemp;

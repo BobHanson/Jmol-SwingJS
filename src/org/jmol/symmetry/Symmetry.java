@@ -705,22 +705,22 @@ public class Symmetry implements SymmetryInterface {
 
   private boolean isNotCentroid(P3d center, int n, int[] minmax,
                                 boolean centroidPacked) {
-    center.scale(1f / n);
+    center.scale(1d / n);
     toFractionalF(center, false);
     // we have to disallow just a tiny slice of atoms due to rounding errors
     // so  -0.000001 is OK, but 0.999991 is not.
     if (centroidPacked)
-      return (center.x + 0.000005f <= minmax[0]
-          || center.x - 0.000005f > minmax[3]
-          || center.y + 0.000005f <= minmax[1]
-          || center.y - 0.000005f > minmax[4]
-          || center.z + 0.000005f <= minmax[2]
-          || center.z - 0.000005f > minmax[5]);
+      return (center.x + 0.000005d <= minmax[0]
+          || center.x - 0.000005d > minmax[3]
+          || center.y + 0.000005d <= minmax[1]
+          || center.y - 0.000005d > minmax[4]
+          || center.z + 0.000005d <= minmax[2]
+          || center.z - 0.000005d > minmax[5]);
 
-    return (center.x + 0.000005f <= minmax[0] || center.x + 0.00005f > minmax[3]
-        || center.y + 0.000005f <= minmax[1] || center.y + 0.00005f > minmax[4]
-        || center.z + 0.000005f <= minmax[2]
-        || center.z + 0.00005f > minmax[5]);
+    return (center.x + 0.000005d <= minmax[0] || center.x + 0.00005d > minmax[3]
+        || center.y + 0.000005d <= minmax[1] || center.y + 0.00005d > minmax[4]
+        || center.z + 0.000005d <= minmax[2]
+        || center.z + 0.00005d > minmax[5]);
   }
 
   // info

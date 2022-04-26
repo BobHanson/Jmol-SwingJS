@@ -981,7 +981,7 @@ public class MMCifReader extends CifReader {
         nAtoms = 1;
         Atom a1 = new Atom();
         a1.setT(sum);
-        a1.scale(1f / count);
+        a1.scale(1d / count);
         a1.radius = 16;
         asc.addAtom(a1);
       }
@@ -998,7 +998,7 @@ public class MMCifReader extends CifReader {
     int c = chainAtomCounts.get(id)[0];
     Atom a = new Atom();
     a.setT(asum);
-    a.scale(1f / c);
+    a.scale(1d / c);
     a.elementSymbol = "Pt";
     setChainID(a, id); 
     a.radius = 16;

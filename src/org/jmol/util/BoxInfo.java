@@ -91,7 +91,7 @@ public class BoxInfo {
     V3d v = new V3d();
     for (int i = 0; i < 8; i++)
       center.add(pts[i]);
-    center.scale(1/8f);
+    center.scale(1/8d);
     for (int i = 0; i < 8; i++) {
       v.sub2(pts[i], center);
       v.scale(scale);
@@ -387,7 +387,7 @@ public class BoxInfo {
   public void setBbcage(double scale) {
     isScaleSet = true;
     bbCenter.add2(bbCorner0, bbCorner1);
-    bbCenter.scale(0.5f);
+    bbCenter.scale(0.5d);
     bbVector.sub2(bbCorner1, bbCenter);
     if (scale > 0) {
       bbVector.scale(scale);

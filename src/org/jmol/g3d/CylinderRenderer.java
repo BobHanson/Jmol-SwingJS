@@ -484,10 +484,10 @@ class CylinderRenderer {
   }
 
   private void calcPoints(int count, boolean isPrecise) {
-    calcRotatedPoint(0f, 0, isPrecise, xyzfRaster, xyztRaster);
-    calcRotatedPoint(0.5f, 1, isPrecise, xyzfRaster, xyztRaster);
+    calcRotatedPoint(0d, 0, isPrecise, xyzfRaster, xyztRaster);
+    calcRotatedPoint(0.5d, 1, isPrecise, xyzfRaster, xyztRaster);
     if ((rasterCount = count) == 3)
-      calcRotatedPoint(1f, 2, isPrecise, xyzfRaster, xyztRaster);
+      calcRotatedPoint(1d, 2, isPrecise, xyzfRaster, xyztRaster);
   }
 
   private void calcCosSin(double dx, double dy, double dz) {
@@ -732,7 +732,7 @@ class CylinderRenderer {
 
   private void calcArgbEndcap(boolean tCylinder, boolean isFloat) {
     tEvenDiameter = ((diameter & 1) == 0);
-    radius = diameter / 2.0f;
+    radius = diameter / 2.0d;
     radius2 = radius * radius;
     endCapHidden = false;
     double dzf = (isFloat ? dzBf : (double) dzB);

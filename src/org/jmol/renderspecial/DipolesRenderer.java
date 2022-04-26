@@ -67,10 +67,10 @@ public class DipolesRenderer extends ShapeRenderer {
   private short colixB;
   private boolean noCross;
 
-  private final static double arrowHeadOffset = 0.9f;
-  private final static double arrowHeadWidthFactor = 2f;
-  private final static double crossOffset = 0.1f;
-  private final static double crossWidth = 0.04f;
+  private final static double arrowHeadOffset = 0.9d;
+  private final static double arrowHeadWidthFactor = 2d;
+  private final static double crossOffset = 0.1d;
+  private final static double crossWidth = 0.04d;
 
 
   @Override
@@ -139,7 +139,7 @@ public class DipolesRenderer extends ShapeRenderer {
       }
       points[cylinderBase].add2(origin, offset);
     } else {
-      offset.scale(-0.5f * dipoleVectorScale);
+      offset.scale(-0.5d * dipoleVectorScale);
       points[cylinderBase].add2(dcenter, offset);
       if (factor != 0) {
         offset.setT(vector);
@@ -161,7 +161,7 @@ public class DipolesRenderer extends ShapeRenderer {
     offset.setT(points[center]);
     offset.cross(offset, vector);
     if (offset.length() == 0) {
-      offset.set(points[center].x + 0.2345f, points[center].y + 0.1234f,
+      offset.set(points[center].x + 0.2345d, points[center].y + 0.1234d,
           points[center].z + 0.4321f);
       offset.cross(offset, vector);
     }

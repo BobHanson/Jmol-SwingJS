@@ -335,7 +335,7 @@ public class BZone {
 
     if (j >= 0) {
       P4d pt4 = P4d.newPt(planes0.get(j));
-      pt4.scale4(-1f);
+      pt4.scale4(-1d);
       planes.addLast(pt4);
       pts.addLast(pts0.get(j));
     }
@@ -365,7 +365,7 @@ public class BZone {
     for (int i = 0; i < bzPlanePts.size(); i++) {
       P3d p = bzPlanePts.get(i);
       P3d center = P3d.newP(p);
-      center.scale(0.5f);
+      center.scale(0.5d);
 
       // just a bit over so that all excluding points are found
 
@@ -484,7 +484,7 @@ public class BZone {
             pts.addLast(P3d.newP(lppt));
             bzLatticePts.addLast(lppt);
             P3d ppt = P3d.newP(lppt);
-            ppt.scale(0.5f);
+            ppt.scale(0.5d);
             bzPlanePts.addLast(ppt);
             System.out.println("draw ID 'pt"  + i + j + k + "' " + lppt); // for testing
           }
@@ -722,7 +722,7 @@ public class BZone {
     P3d a = new P3d();
     for (int i = face.length; --i >= 0;)
       a.add(face[i]);
-    a.scale(1f/face.length);
+    a.scale(1d/face.length);
     return a;
   }
 

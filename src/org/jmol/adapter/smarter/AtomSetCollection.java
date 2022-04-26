@@ -1111,7 +1111,7 @@ public class AtomSetCollection {
       pt.set(0, 0, 0);
       for (int j = atom0 + n; --j >= atom0;)
         pt.add(atoms[j]);
-      pt.scale(1f / n);
+      pt.scale(1d / n);
       for (int j = atom0 + n; --j >= atom0;)
         atoms[j].sub(pt);
     }

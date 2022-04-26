@@ -189,7 +189,7 @@ public class Mesh extends MeshSurface {
     vertexCount0 = polygonCount0 = vc = pc = 0;
     vs = null;
     vertexSource = null;
-    volumeRenderPointSize = 0.15f;
+    volumeRenderPointSize = 0.15d;
     this.meshType = meshType;
   }
 
@@ -277,7 +277,7 @@ public class Mesh extends MeshSurface {
   public boolean colorDensity;
   public Object cappingObject;
   public Object slabbingObject;
-  public double volumeRenderPointSize = 0.15f;
+  public double volumeRenderPointSize = 0.15d;
 
   public int[] connectedAtoms;
   public boolean isModelConnected;
@@ -324,7 +324,7 @@ public class Mesh extends MeshSurface {
   }
 
   protected double getMinDistance2ForVertexGrouping() {
-    return 1e-8f; // different for an isosurface
+    return 1e-8d; // different for an isosurface
   }
 
   public String getState(String type) {

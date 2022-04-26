@@ -714,7 +714,7 @@ public class SpaceGroupFinder {
         int n = approxInt(1 / f);
         // must be positive
         //System.out.println(n + " " + f + " " + abc + " " + pt + " " + a + " " + b + " " + nAtoms + " " + n + " " + counts[n]);
-        if (n == 0 || nAtoms / n != 1f * nAtoms / n || n > MAX_COUNT)
+        if (n == 0 || nAtoms / n != 1d * nAtoms / n || n > MAX_COUNT)
           continue;
         //System.out.println(abc + " " + pt + " " + a + " " + b + " " + nAtoms + " " + n + " " + counts[n]);
         if (n > maxF)
@@ -735,7 +735,7 @@ public class SpaceGroupFinder {
       return uc;
     // we have the smallest unit in this direction
     P3d[] oabc = uc.getUnitCellVectors();
-    oabc[abc].scale(1f / n);
+    oabc[abc].scale(1d / n);
     switch (abc) {
     case 1:
       scaling.x = n;

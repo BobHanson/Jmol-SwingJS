@@ -39,8 +39,6 @@ import javajs.util.MeasureD;
 //import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.T3d;
-
-import org.jmol.util.TempArray;
 import javajs.util.V3d;
 
 import org.jmol.api.AtomIndexIterator;
@@ -214,13 +212,13 @@ class IsoSolventReader extends AtomDataReader {
       if (havePlane || !isMapData) {
         // when we have a solvent or molecular calculation, we can have a problem if we go too low in 
         // resolution in any one direction. This avoids the problem. "1.5" was determined empirically using 1u19.
-        double r = Math.max(1f, Math.max(params.solventExtendedAtomRadius, params.solventRadius));    
-        double minPtsPerAng = (r >= 1 ? 1.5f / r : 0); 
+        double r = Math.max(1d, Math.max(params.solventExtendedAtomRadius, params.solventRadius));    
+        double minPtsPerAng = (r >= 1 ? 1.5d / r : 0); 
         if (minPtsPerAng > 0)
           System.out.println("IsoSolventReader.minPtsPerAng=" + minPtsPerAng);
         setRanges(params.solvent_ptsPerAngstrom, params.solvent_gridMax, minPtsPerAng);
         volumeData.getYzCount();
-        margin = volumeData.maxGrid * 2.0f;
+        margin = volumeData.maxGrid * 2.0d;
       }
       if (bsNearby != null)
         bsMySelected.or(bsNearby);
@@ -410,7 +408,7 @@ class IsoSolventReader extends AtomDataReader {
         + volumeData.getPointIndex(x, y, z) + "\t" 
         + vA + "\t" + vB + "\t" 
         + valueA + "\t" + valueB + "\t" 
-        + fractionLinear + "\t" + fraction + "\td=" + ptReturn.distance(Point3f.new3(2.75f, 0, 0)));
+        + fractionLinear + "\t" + fraction + "\td=" + ptReturn.distance(Point3f.new3(2.75d, 0, 0)));
     */
     return valueA + fraction * diff;
   }
@@ -533,7 +531,7 @@ class IsoSolventReader extends AtomDataReader {
       }
     }
     if (params.thePlane != null && params.slabInfo == null)
-      params.addSlabInfo(TempArray.getSlabWithinRange(-100, 0));
+      params.addSlabInfo(MeshSurface.getSlabWithinRange(-100, 0));
   }
 
   /////////////// calculation methods //////////////
@@ -958,7 +956,7 @@ class IsoSolventReader extends AtomDataReader {
             if (MeasureD.isInTetrahedron(ptV, ptA, ptB, ptC, ptS, plane, vTemp,
                 vTemp2, false)) {
               if (!firstPass ? !bsSurfaceDone.get(ipt) && value < 0
-                  && value > -volumeData.maxGrid * 1.8f
+                  && value > -volumeData.maxGrid * 1.8d
                   && (value > v) == bsThisPass.get(ipt)
                   : (value > 0 && (v < 0 || v == Double.MAX_VALUE || (value > v) == bsThisPass
                       .get(ipt)))) {
@@ -1158,7 +1156,7 @@ class IsoSolventReader extends AtomDataReader {
     P3d ptC = atomXyzTruncated[ic];
     double rCS = rs[ic];
     double dCT = MeasureD.distanceToPlane(plane, ptC);
-    if (Math.abs(dCT) >= rCS * 0.9f) 
+    if (Math.abs(dCT) >= rCS * 0.9d) 
       // need a fudge factor here to avoid extremely 
       // flat situations (1bna isosurface solvent 1.4)
       return false; // out of range

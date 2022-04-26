@@ -98,7 +98,7 @@ public class DrawRenderer extends MeshRenderer {
       if (!isExport 
           && mesh.visibilityFlags != 0
           && vwr.getPickingMode() == ActionManager.PICKING_DRAW) {
-        if (!g3d.setC(C.getColixTranslucent3(C.GOLD, true, 0.5f)))
+        if (!g3d.setC(C.getColixTranslucent3(C.GOLD, true, 0.5d)))
           needTranslucent = true;
         else
           renderHandles();
@@ -132,7 +132,7 @@ public class DrawRenderer extends MeshRenderer {
       int n = (drawType == EnumDrawType.ARC ? 2 : vertexCount);
       for (int i = 0; i < n; i++)
         pt1f.add(vertices[i]);
-      pt1f.scale(1f / n);
+      pt1f.scale(1d / n);
       tm.transformPtScr(pt1f, pt1i);
       diameter = (int) vwr.tm.scaleToScreen(pt1i.z,
           (int) Math.floor(width * 1000));
@@ -172,7 +172,7 @@ public class DrawRenderer extends MeshRenderer {
     case CIRCLE:
       tm.transformPtScr(vertices[0], pt1i);
       if (diameter == 0 && width == 0)
-        width = 1.0f;
+        width = 1.0d;
       if (dmesh.scale > 0)
         width *= dmesh.scale;
       if (width > 0)
@@ -204,7 +204,7 @@ public class DrawRenderer extends MeshRenderer {
       nPoints = setArc(vertices[0], vertices[1], ptRef, nDegreesOffset, theta,
           fractionalOffset, dmesh.scale);
       if (dmesh.isVector && !dmesh.noHead) {
-        renderArrowHead(pt0, pt1, 0.3f, false, false, dmesh.isBarb);
+        renderArrowHead(pt0, pt1, 0.3d, false, false, dmesh.isBarb);
         tm.transformPtScr(pt1f, screens[nPoints - 1]);
         tm.transformPtScrT3(pt1f, p3Screens[nPoints - 1]);
       }
@@ -309,7 +309,7 @@ public class DrawRenderer extends MeshRenderer {
     pt1.ave(pt0, pt2);
     vertices[3] = P3d.newP(vertices[i0]);
     vertices[3].add(vertices[j0]);
-    vertices[3].scale(0.5f);
+    vertices[3].scale(0.5d);
     vertices[1] = P3d.newP(pt1); 
     vertices[0] = P3d.newP(pt0);
     vertices[2] = P3d.newP(pt2);
@@ -318,8 +318,8 @@ public class DrawRenderer extends MeshRenderer {
       tm.transformPtScr(vertices[i], screens[i]);
 
     double f = 4 * getArrowScale(); // bendiness
-    double endoffset = 0.2f;
-    double offsetside = (width == 0 ? 0.1f : width);
+    double endoffset = 0.2d;
+    double offsetside = (width == 0 ? 0.1d : width);
     
     pt0.set(screens[0].x, screens[0].y, screens[0].z);
     pt1.set(screens[1].x, screens[1].y, screens[1].z);
@@ -450,7 +450,7 @@ public class DrawRenderer extends MeshRenderer {
       headDiameter = diameter * 3;
     } else {
       vTemp.set(s2f.x - s1f.x, s2f.y - s1f.y, s2f.z - s1f.z);
-      headDiameter = (int) Math.round(vTemp.length() * .5f);
+      headDiameter = (int) Math.round(vTemp.length() * .5d);
       diameter = headDiameter / 5;
     }
     if (diameter < 1)
@@ -465,9 +465,9 @@ public class DrawRenderer extends MeshRenderer {
   private double getArrowScale() {
     double fScale = (dmesh.isScaleSet ? dmesh.scale : 0);
     if (fScale == 0)
-      fScale = vwr.getDouble(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1f : 0.5f);
+      fScale = vwr.getDouble(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1d : 0.5d);
     if (fScale <= 0)
-      fScale = 0.5f;
+      fScale = 0.5d;
     return fScale;
   }
 
@@ -480,7 +480,7 @@ public class DrawRenderer extends MeshRenderer {
       return;
     default:
       short colixFill = C.getColixTranslucent3(C.GOLD, true,
-          0.5f);
+          0.5d);
       bsHandles.clearAll();
       g3d.addRenderer(T.circle);
       for (int i = dmesh.pc; --i >= 0;) {

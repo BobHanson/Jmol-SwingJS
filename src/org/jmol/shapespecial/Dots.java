@@ -104,7 +104,7 @@ public class Dots extends AtomShape {
 
     // next four are for serialization
     if ("radius" == propertyName) {
-      thisRadius = ((Float) value).doubleValue();
+      thisRadius = ((Number) value).doubleValue();
       if (thisRadius > Atom.RADIUS_MAX)
         thisRadius = Atom.RADIUS_GLOBAL;
       return;

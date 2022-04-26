@@ -75,7 +75,7 @@ class AtomPropertyMapper extends AtomDataReader {
         smoothingPower = 10;
       if (smoothingPower == 0)
         doSmoothProperty = false;
-      smoothingPower = (smoothingPower - 11) / 2f;
+      smoothingPower = (smoothingPower - 11) / 2d;
       // 0 to 10 becomes d^-10 to d^-1, and we'll be using distance^2
     }
     maxDistance = params.propertyDistanceMax;

@@ -1763,7 +1763,7 @@ public class CIPChirality {
         // adjust integer mass number down just a bit to account
         // for average mass being slightly higher than actual isotope mass, not lower
         if (isType(RULE_2_REDUCE_ISOTOPE_MASS_NUMBER))
-          mass -= 0.1f;
+          mass -= 0.1d;
       }
       return mass;
     }

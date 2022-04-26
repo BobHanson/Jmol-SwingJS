@@ -198,7 +198,7 @@ public class NucleicRenderer {
       c.set(0, 0, 0);
       for (int i = 0; i < 5; i++)
         c.add(rPt[i]);
-      c.scale(0.2f);
+      c.scale(0.2d);
       transformPoints(10, rPt, rScr);
       renderRibose();
       renderEdge(rScr, rPt, 2, 5); // C3' - O3'
@@ -279,10 +279,10 @@ public class NucleicRenderer {
           ptTemp = new P3d();
         ptTemp.setT(oxyz[0]);
         uc.toFractionalF(ptTemp, true);
-        uc.setOffsetPt(P3d.new3(ptTemp.x - 2.25f, ptTemp.y + 5f, ptTemp.z
+        uc.setOffsetPt(P3d.new3(ptTemp.x - 2.25d, ptTemp.y + 5d, ptTemp.z
             - blockHeight / 2));
-        double x = 4.5f;
-        double y = (isPurine ? -4.5f : -3f);
+        double x = 4.5d;
+        double y = (isPurine ? -4.5d : -3d);
         double z = blockHeight;
         uc.toCartesianF(box[0] = P3d.new3(0, 0, 0), false);
         uc.toCartesianF(box[1] = P3d.new3(x, 0, 0), false);
@@ -339,7 +339,7 @@ public class NucleicRenderer {
   }
 
   private void renderCyl(P3d s1, P3d s2, P3d p1, P3d p2) {
-    g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, 3, s1, s2, p1, p2, 0.005f);
+    g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, 3, s1, s2, p1, p2, 0.005d);
   }
 
   /**

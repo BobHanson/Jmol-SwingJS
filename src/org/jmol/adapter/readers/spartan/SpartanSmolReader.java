@@ -196,7 +196,7 @@ public class SpartanSmolReader extends SpartanInputReader {
         && bondData != null)
       spartanArchive.addBonds(bondData, 0);
     if (moData != null) {
-      Float n = (Float) asc.atomSetInfo.get("HOMO_N");
+      Number n = (Number) asc.atomSetInfo.get("HOMO_N");
       if (n != null) {
         int i = n.intValue();
         moData.put("HOMO", Integer.valueOf(i));

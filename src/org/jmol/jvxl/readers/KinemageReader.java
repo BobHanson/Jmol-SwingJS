@@ -228,16 +228,16 @@ class KinemageReader extends PmeshReader {
      */
     private double assignValueFromGapColorForKin(String color) {
        double value = (
-         color.equals("greentint") ? 4f
-           : color.equals("blue") ? 0.35f
-           : color.equals("sky") ? 0.25f
-           : color.equals("sea") ? 0.15f
-           : color.equals("green") ? 0.0f
-           : color.equals("yellowtint") ? -0.1f
-           : color.equals("yellow") ? -0.2f
-           : color.equals("orange") ? -0.3f
-           : color.equals("red") ? -0.4f
-           : -0.5f);
+         color.equals("greentint") ? 4d
+           : color.equals("blue") ? 0.35d
+           : color.equals("sky") ? 0.25d
+           : color.equals("sea") ? 0.15d
+           : color.equals("green") ? 0.0d
+           : color.equals("yellowtint") ? -0.1d
+           : color.equals("yellow") ? -0.2d
+           : color.equals("orange") ? -0.3d
+           : color.equals("red") ? -0.4d
+           : -0.5d);
        return (value >= vMin && value <= vMax ? value : Double.NaN);
     }
 

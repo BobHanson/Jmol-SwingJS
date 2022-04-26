@@ -90,14 +90,14 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     String[] counts = getTokens();
     for (int i = 0; i < 3; ++i) {
       volumetricVectors[i]
-          .scale(1f / ((voxelCounts[i] = parseIntStr(counts[i]) + 1) - 1));
+          .scale(1d / ((voxelCounts[i] = parseIntStr(counts[i]) + 1) - 1));
       if (isAnisotropic)
         setVectorAnisotropy(volumetricVectors[i]);
     }
     swapXZ();
     volumetricOrigin.set(0, 0, 0);
     if (params.thePlane == null && (params.cutoffAutomatic || !Double.isNaN(params.sigma))) {
-      params.cutoff = 0.5f;
+      params.cutoff = 0.5d;
       Logger.info("Cutoff set to " + params.cutoff);
     }
   }

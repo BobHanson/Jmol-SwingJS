@@ -1251,7 +1251,7 @@ public class SmilesGenerator {
           continue;
         bond2 = v.get(j);
         a2 = bond2.getOtherNode(atom);
-        if (SmilesStereo.isDiaxial(atom, atom, a1, a2, vTemp, -0.95f)) {
+        if (SmilesStereo.isDiaxial(atom, atom, a1, a2, vTemp, -0.95d)) {
           switch (++naxial) {
           case 1:
             a01 = a1;

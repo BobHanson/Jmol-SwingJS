@@ -153,7 +153,7 @@ public class Parameters {
   boolean logCube = false;
   public boolean isSilent = false;
   
-  double assocCutoff = 0.3f; // fraction along the edge to use as a cutoff for averaging of normals  
+  double assocCutoff = 0.3d; // fraction along the edge to use as a cutoff for averaging of normals  
 
   final static int NO_ANISOTROPY = 1 << 5;
   final static int IS_SILENT = 1 << 6;
@@ -327,10 +327,10 @@ public class Parameters {
   double[] theProperty;
   ///// solvent-accessible, solvent-excluded surface //////
 
-  double solvent_ptsPerAngstrom = 4f;
+  double solvent_ptsPerAngstrom = 4d;
   int solvent_gridMax = 60;
 
-  double plane_ptsPerAngstrom = 4f;
+  double plane_ptsPerAngstrom = 4d;
   int plane_gridMax = 81;
 
   //defaults
@@ -340,12 +340,12 @@ public class Parameters {
   final static int defaultEdgeFractionRange = 90;
   final static int defaultColorFractionBase = 35;
   final static int defaultColorFractionRange = 90;
-  final static double defaultMappedDataMin = 0f;
-  final static double defaultMappedDataMax = 1.0f;
+  final static double defaultMappedDataMin = 0d;
+  final static double defaultMappedDataMax = 1.0d;
   final static double defaultCutoff = 0.02f;
-  final static double defaultOrbitalCutoff = 0.04f;
-  final static double defaultLobeCutoff = 0.14f;
-  final static double defaultOrbitalCutoffOld = 0.14f;
+  final static double defaultOrbitalCutoff = 0.04d;
+  final static double defaultLobeCutoff = 0.14d;
+  final static double defaultOrbitalCutoffOld = 0.14d;
   public final static double defaultQMOrbitalCutoff = 0.050f; // WebMO
   final static double defaultQMElectronDensityCutoff = 0.010f;
   final static int defaultContourCount = 11; //odd is better
@@ -354,10 +354,10 @@ public class Parameters {
   final static int defaultColorPositive =  0xFF0000FF; //blue
   final static int defaultColorNegativeLCAO = 0xFF800080; //purple
   final static int defaultColorPositiveLCAO = 0xFFFFA500; //orange
-  final static double defaultSolventRadius = 1.2f;
-  final static double defaultMepCutoff = 0.1f;
-  final static double defaultMepMin = -0.1f;
-  final static double defaultMepMax = 0.1f;
+  final static double defaultSolventRadius = 1.2d;
+  final static double defaultMepCutoff = 0.1d;
+  final static double defaultMepMin = -0.1d;
+  final static double defaultMepMax = 0.1d;
 
   //color
   
@@ -414,7 +414,7 @@ public class Parameters {
      * 
      */
     V3d ecc = V3d.new3(info.x, info.y, info.z);
-    double c = (scale > 0 ? scale : info.w < 0 ? 1f : ecc.length());
+    double c = (scale > 0 ? scale : info.w < 0 ? 1d : ecc.length());
     double fab_c = Math.abs(info.w);
     ecc.normalize();
     V3d z = V3d.new3(0, 0, 1);
@@ -456,7 +456,7 @@ public class Parameters {
   
   void setEllipsoidP4(P4d v) {
     dataType = SURFACE_ELLIPSOID2;
-    distance = 1f;
+    distance = 1d;
     setEccentricity(v);
     cutoff = PT.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
@@ -471,7 +471,7 @@ public class Parameters {
     anisoB = bList;
     //for (int i = 0; i < 6; i++)System.out.print(bList[i] + " ");System.out.println( " in Parameters setEllipsoid" + center);
     dataType = SURFACE_ELLIPSOID3;
-    distance = 0.3f * (Double.isNaN(scale) ? 1f : scale);
+    distance = 0.3d * (Double.isNaN(scale) ? 1d : scale);
     cutoff = PT.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
@@ -541,18 +541,18 @@ public class Parameters {
     
   void setSolvent(String propertyName, double radius) {
     isEccentric = isAnisotropic = false;
-    //anisotropy[0] = anisotropy[1] = anisotropy[2] = 1f;
+    //anisotropy[0] = anisotropy[1] = anisotropy[2] = 1d;
     solventRadius = Math.abs(radius);
     dataType = (intersection != null ? SURFACE_INTERSECT_ATOM
         : "nomap" == propertyName ? SURFACE_NOMAP
             : "molecular" == propertyName ? SURFACE_MOLECULAR
-                : "sasurface" == propertyName || solventRadius == 0f ? SURFACE_SASURFACE
+                : "sasurface" == propertyName || solventRadius == 0d ? SURFACE_SASURFACE
                     : SURFACE_SOLVENT);
 
     if (state < Parameters.STATE_DATA_READ
         && (cutoffAutomatic || !colorDensity)
         && (intersection == null || cutoff == Double.MAX_VALUE))
-      cutoff = 0.0f;
+      cutoff = 0.0d;
 
     switch (dataType) {
     case Parameters.SURFACE_INTERSECT_ATOM:
@@ -582,14 +582,14 @@ public class Parameters {
     switch (dataType) {
     case SURFACE_NOMAP:
       solventExtendedAtomRadius = solventRadius;
-      solventRadius = 0f;
+      solventRadius = 0d;
       isContoured = false;
       break;
     case SURFACE_MOLECULAR:
-      solventExtendedAtomRadius = 0f;
+      solventExtendedAtomRadius = 0d;
       break;
     case SURFACE_SOLVENT:
-      solventExtendedAtomRadius = 0f;
+      solventExtendedAtomRadius = 0d;
       if (bsIgnore == null)
         bsIgnore = bsSolvent;
       else if (bsSolvent != null)
@@ -597,7 +597,7 @@ public class Parameters {
       break;
     case SURFACE_SASURFACE:
       solventExtendedAtomRadius = solventRadius;
-      solventRadius = 0f;
+      solventRadius = 0d;
       if (bsIgnore == null)
         bsIgnore = bsSolvent;
       else if (bsSolvent != null)
@@ -627,7 +627,7 @@ public class Parameters {
   int psi_l = 1;
   int psi_m = 1;
   double psi_Znuc = 1; // hydrogen
-  double psi_ptsPerAngstrom = 5f;
+  double psi_ptsPerAngstrom = 5d;
   public int psi_monteCarloCount = 0;
 
   boolean setAtomicOrbital(double[] nlmZprs) {
@@ -657,8 +657,8 @@ public class Parameters {
 
   public final static int MEP_MAX_GRID = 40;
   int mep_gridMax = MEP_MAX_GRID;
-  double mep_ptsPerAngstrom = 3f;
-  double mep_marginAngstroms = 1f; // may have to adjust this
+  double mep_ptsPerAngstrom = 3d;
+  double mep_marginAngstroms = 1d; // may have to adjust this
   public int mep_calcType = -1;
 
   void setMep(double[] charges, boolean isMLP) {
@@ -703,7 +703,7 @@ public class Parameters {
   public final static int MO_MAX_GRID = 80;
   int qm_gridMax = MO_MAX_GRID;
   double qm_ptsPerAngstrom = 10f;
-  double qm_marginAngstroms = 1f; // may have to adjust this
+  double qm_marginAngstroms = 1d; // may have to adjust this
   int qm_nAtoms;
   int qm_moNumber = Integer.MAX_VALUE;
   double[] qm_moLinearCombination = null;
@@ -713,7 +713,7 @@ public class Parameters {
     qm_gridMax = 200;
     if (isPromolecular)
       dataType = SURFACE_NCI;
-    qm_marginAngstroms = 2f;
+    qm_marginAngstroms = 2d;
     qmOrbitalType = (isPromolecular ? QM_TYPE_NCI_PRO : QM_TYPE_NCI_SCF);
 
     if (isPromolecular) {
@@ -722,7 +722,7 @@ public class Parameters {
     }
 
     if (cutoff == Double.MAX_VALUE || cutoff == 0)
-      cutoff = 0.3f;
+      cutoff = 0.3d;
     if (isSquared)
       cutoff *= cutoff;
 

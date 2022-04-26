@@ -471,7 +471,7 @@ public class SymmetryOperation extends M4d {
     double iValue = 0;
     int denom = 0;
     int numer = 0;
-    double decimalMultiplier = 1f;
+    double decimalMultiplier = 1d;
     String strT = "";
     String strOut = "";
     int[] ret = new int[1];
@@ -553,7 +553,7 @@ public class SymmetryOperation extends M4d {
         break;
       case '.':
         isDecimal = true;
-        decimalMultiplier = 1f;
+        decimalMultiplier = 1d;
         continue;
       case '0':
         if (!isDecimal && divisor == 12 && (isDenominator || !allowScaling))
@@ -642,12 +642,12 @@ public class SymmetryOperation extends M4d {
   //    double n = n48ths;
   //    if (allPositive) {
   //      while (n < 0)
-  //        n += 48f;
+  //        n += 48d;
   //    } else if (halfOrLess) {
-  //      while (n > 24f)
-  //        n -= 48f;
-  //      while (n < -24f)
-  //        n += 48f;
+  //      while (n > 24d)
+  //        n -= 48d;
+  //      while (n < -24d)
+  //        n += 48d;
   //    }
   //    String s = fortyEighthsOf(n);
   //    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
@@ -795,7 +795,7 @@ public class SymmetryOperation extends M4d {
   }
 
   //  private static double normalize48ths(double iValue, boolean doNormalize) {
-  //    iValue *= 48f;
+  //    iValue *= 48d;
   //    if (doNormalize) {
   //      while (iValue > 24)
   //        iValue -= 48;
@@ -898,7 +898,7 @@ public class SymmetryOperation extends M4d {
     double xabs = Math.abs(x);
     String m = (x < 0 ? "-" : "");
     int x24 = (int) approxF(xabs * 24);
-    if (x24 / 24f == (int) (x24 / 24f))
+    if (x24 / 24d == (int) (x24 / 24d))
       return m + (x24 / 24);
     if (x24 % 8 != 0) {
       return m + twelfthsOf(x24 >> 1);

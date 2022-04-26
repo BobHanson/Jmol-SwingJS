@@ -124,14 +124,14 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   @Override
   void drawAtom(Atom atom, double radius) {
-    outputSphere(atom.sX, atom.sY, atom.sZ, atom.sD / 2f, atom.colixAtom);
+    outputSphere(atom.sX, atom.sY, atom.sZ, atom.sD / 2d, atom.colixAtom);
   }
 
   @Override
   void drawCircle(int x, int y, int z,
                          int diameter, short colix, boolean doFill) {
     //draw circle
-    double radius = diameter / 2f;
+    double radius = diameter / 2d;
     outputCircle(x, y, z, radius, colix, doFill);
   }
 
@@ -145,7 +145,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void drawPixel(short colix, int x, int y, int z, int scale) {
     //measures, meshRibbon, dots
-    outputSphere(x, y, z, 0.75f * scale, colix);
+    outputSphere(x, y, z, 0.75d * scale, colix);
   }
 
   @Override
@@ -156,7 +156,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void fillConeScreen(short colix, byte endcap, int screenDiameter, P3d screenBase,
                 P3d screenTip, boolean isBarb) {
-    outputCone(screenBase, screenTip, screenDiameter / 2f, colix, isBarb);
+    outputCone(screenBase, screenTip, screenDiameter / 2d, colix, isBarb);
   }
 
   @Override
@@ -175,11 +175,11 @@ abstract class __RayTracerExporter extends ___Exporter {
     if (endcaps != GData.ENDCAPS_SPHERICAL)
       return;
     
-    double radius = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2f;
+    double radius = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2d;
     if (radius <= 1)
       return;
     outputSphere(screenA.x, screenA.y, screenA.z, radius, colix1);
-    radius = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2f;
+    radius = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2d;
     if (radius <= 1)
       return;
     outputSphere(screenB.x, screenB.y, screenB.z, radius, colix2);
@@ -197,7 +197,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   protected void fillConicalCylinder(P3d screenA, P3d screenB,
                                     int madBond, short colix, 
                                     byte endcaps) {
-    double radius1 = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2f;
+    double radius1 = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2d;
     if (radius1 == 0)
       return;
     if (radius1 < 1)
@@ -206,7 +206,7 @@ abstract class __RayTracerExporter extends ___Exporter {
       outputSphere(screenA.x, screenA.y, screenA.z, radius1, colix);
       return;
     }
-    double radius2 = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2f;
+    double radius2 = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2d;
     if (radius2 == 0)
       return;
     if (radius2 < 1)
@@ -221,7 +221,7 @@ abstract class __RayTracerExporter extends ___Exporter {
       return;
     if (diameter < 1)
       diameter = 1;
-    double radius = diameter / 2f;
+    double radius = diameter / 2d;
     if (screenA.distance(screenB) == 0) {
       outputSphere(screenA.x, screenA.y, screenA.z, radius, colix);
       return;
@@ -243,7 +243,7 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   @Override
   void fillSphere(short colix, int diameter, P3d pt) {
-    outputSphere(pt.x, pt.y, pt.z, diameter / 2f, colix);
+    outputSphere(pt.x, pt.y, pt.z, diameter / 2d, colix);
   }
   
   @Override
@@ -255,7 +255,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   void fillEllipsoid(P3d center, P3d[] points, short colix, int x,
                        int y, int z, int diameter, M3d toEllipsoidal,
                        double[] coef, M4d deriv, P3d[] octantPoints) {
-    double radius = diameter / 2f;
+    double radius = diameter / 2d;
     if (radius == 0)
       return;
     if (radius < 1)

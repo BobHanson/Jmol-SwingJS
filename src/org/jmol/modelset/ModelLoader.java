@@ -914,7 +914,7 @@ public final class ModelLoader {
         vwr.setData(
             key,
             new Object[] { key, data, bs,
-                Integer.valueOf(JmolDataManager.DATA_TYPE_AF) }, 0, 0, 0, 0, 0);
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AD) }, 0, 0, 0, 0, 0);
       }
     }
   }
@@ -1485,7 +1485,7 @@ public final class ModelLoader {
     }
     if (n == 0)
       return;
-    scaling = 1.45f / (scaling/n);
+    scaling = 1.45d / (scaling/n);
     for (int i = iatom1; i < iatom2; i++) {
       ms.at[i].scale(scaling);
     }
@@ -1583,7 +1583,7 @@ public final class ModelLoader {
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    double f = (double) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
+    double f = (double) (0.4d * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
 //    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }

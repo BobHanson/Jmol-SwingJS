@@ -79,7 +79,7 @@ public class SpinThread extends JmolThread {
     if (options == null) {
       isNav = true;
     } else {
-      endDegrees = ((Float) options[0]).doubleValue();
+      endDegrees = ((Number) options[0]).doubleValue();
       endPositions = (Lst<P3d>) options[1];
       dihedralList = (double[]) options[2];
       if (dihedralList != null)
@@ -211,9 +211,9 @@ public class SpinThread extends JmolThread {
 
   private void doTransform() {
     if (dihedralList != null) {
-      double f = 1f / myFps / endDegrees;
+      double f = 1d / myFps / endDegrees;
       vwr.setDihedrals(dihedralList, bsBranches, f);
-      nDegrees += 1f / myFps;
+      nDegrees += 1d / myFps;
     } else if (isNav) {
       transformManager.setNavigationOffsetRelative();//navigatingSurface);
     } else if (transformManager.isSpinInternal

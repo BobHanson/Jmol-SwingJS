@@ -164,7 +164,7 @@ public class MeasurementData implements JmolMeasurementClient {
     if (asMinArray) {
       minArray = new double[((BS) points.get(0)).cardinality()];
       for (int i = 0; i < minArray.length; i++)
-        minArray[i] = -0f;
+        minArray[i] = -0d;
       define(null, ms);
       return minArray;      
     }

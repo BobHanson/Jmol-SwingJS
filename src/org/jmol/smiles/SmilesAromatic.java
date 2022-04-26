@@ -85,7 +85,7 @@ public class SmilesAromatic {
     for (int r = vR.size(); --r >= 0;) {
       BS bs = (BS) vR.get(r);
       boolean isOK = isSp2Ring(n, jmolAtoms, bsSelected, bs,
-          (justCheckBonding ? Double.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f),
+          (justCheckBonding ? Double.MAX_VALUE : strictness > 0 ? 0.1d : 0.01f),
           checkExplicit,
           strictness == 0);
       if (!isOK)

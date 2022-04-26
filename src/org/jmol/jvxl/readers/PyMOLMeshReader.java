@@ -285,7 +285,7 @@ class PyMOLMeshReader extends MapFileReader {
     if (Double.isNaN(params.sigma)) {
       if (!params.cutoffAutomatic)
         return;
-      params.cutoff = (boundingBox == null ? 3.0f : 1.6f);
+      params.cutoff = (boundingBox == null ? 3.0d : 1.6d);
       if (dmin != Double.MAX_VALUE) {
         if (params.cutoff > dmax)
           params.cutoff = dmax / 4; // just a guess

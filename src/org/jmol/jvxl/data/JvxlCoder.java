@@ -360,7 +360,7 @@ public class JvxlCoder {
     if (jvxlData.nVertexColors > 0)
       addAttrib(attribs, "\n  nVertexColors", "" + jvxlData.nVertexColors);
 
-    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0f
+    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0d
         : jvxlData.mappedDataMin);
     double blue = (jvxlData.isColorReversed ? jvxlData.valueMappedToRed : jvxlData.valueMappedToBlue);
     double red = (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue : jvxlData.valueMappedToRed);
@@ -607,7 +607,7 @@ public class JvxlCoder {
       if (Double.isNaN(value))
         value = min;
       if (doTruncate)
-        value = (value > 0 ? 0.999f : -0.999f);
+        value = (value > 0 ? 0.999d : -0.999d);
       if (writePrecisionColor)
         jvxlAppendCharacter2(value, min, max, colorFractionBase,
             colorFractionRange, list1, list2);
@@ -904,8 +904,8 @@ public class JvxlCoder {
   }
   
   public static char jvxlFractionAsCharacterRange(double fraction, int base, int range) {
-    if (fraction > 0.9999f)
-      fraction = 0.9999f;
+    if (fraction > 0.9999d)
+      fraction = 0.9999d;
     else if (Double.isNaN(fraction))
       fraction = 1.0001f;
     int ich = (int) Math.floor(fraction * range + base);
@@ -936,10 +936,10 @@ public class JvxlCoder {
     if (ich < base)
       ich = 92; // ! --> \
     double fraction = (ich - base + fracOffset) / range;
-    if (fraction < 0f)
-      return 0f;
-    if (fraction > 1f)
-      return 0.999999f;
+    if (fraction < 0d)
+      return 0d;
+    if (fraction > 1d)
+      return 0.999999d;
     //System.out.println("ffc: " + fraction + " <-- " + ich + " " + (char)
     // ich);
     return fraction;
@@ -948,7 +948,7 @@ public class JvxlCoder {
   public static double jvxlFractionFromCharacter2(int ich1, int ich2, int base,
                                           int range) {
     double fraction = jvxlFractionFromCharacter(ich1, base, range, 0);
-    double remains = jvxlFractionFromCharacter(ich2, base, range, 0.5f);
+    double remains = jvxlFractionFromCharacter(ich2, base, range, 0.5d);
     return fraction + remains / range;
   }
 
@@ -1412,7 +1412,7 @@ public class JvxlCoder {
       }
     }
     // ... mappedDataMin mappedDataMax valueMappedToRed valueMappedToBlue ...
-    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0f
+    double min = (jvxlData.mappedDataMin == Double.MAX_VALUE ? 0d
         : jvxlData.mappedDataMin);
     definitionLine += " " + min + " " + jvxlData.mappedDataMax + " "
         + jvxlData.valueMappedToRed + " " + jvxlData.valueMappedToBlue;

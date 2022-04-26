@@ -998,7 +998,7 @@ public class DSSR0 {// extends AnnotationParser {
 //        Map<String, Object> hbond = list.get(i);
 //        int a1 = ((Integer) hbond.get("atno1")).intValue() + a0;
 //        int a2 = ((Integer) hbond.get("atno2")).intValue() + a0;
-//        float energy = (hbond.containsKey("energy") ? ((Float) hbond
+//        float energy = (hbond.containsKey("energy") ? ((Number) hbond
 //            .get("energy")).doubleValue() : 0);
 //        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
 //            (short) 1, C.INHERIT_ALL, energy));

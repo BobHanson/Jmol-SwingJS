@@ -1249,7 +1249,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void drawPoints(int count, int[] coordinates, int scale) {
     // for dots only
     if (scale > 1) {
-      double s2 = scale * scale * 0.8f;
+      double s2 = scale * scale * 0.8d;
       for (int i = -scale; i < scale; i++) {
         for (int j = -scale; j < scale; j++) {
           if (i * i + j * j > s2)

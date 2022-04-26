@@ -64,7 +64,7 @@ public class Shader {
   private double xLight, yLight, zLight;
   
   public Shader() {
-    setLightSource(-1f, -1f, 2.5f); 
+    setLightSource(-1d, -1d, 2.5d); 
   }
   
   V3d lightSource = new V3d();
@@ -208,9 +208,9 @@ public class Shader {
     double f = ambientFraction;
 
     while (true) {
-      red = red0 * f + 0.5f;
-      grn = grn0 * f + 0.5f;
-      blu = blu0 * f + 0.5f;
+      red = red0 * f + 0.5d;
+      grn = grn0 * f + 0.5d;
+      blu = blu0 * f + 0.5d;
       if (f > 0 && red < 4 && grn < 4 && blu < 4) {
         // with antialiasing, black shades with all 
         // components less than 4 will be considered 0
@@ -218,8 +218,8 @@ public class Shader {
         red0++;
         grn0++;
         blu0++;
-        if (f < 0.1f)
-          f += 0.1f;
+        if (f < 0.1d)
+          f += 0.1d;
         rgb = CU.rgb((int) Math.floor(red0), (int) Math.floor(grn0),
             (int) Math.floor(blu0));
         continue;
@@ -269,9 +269,9 @@ public class Shader {
       shades[i++] = rgb;
 
       f = intenseFraction / (SHADE_INDEX_MAX - i);
-      redStep = (255.5f - red) * f;
-      grnStep = (255.5f - grn) * f;
-      bluStep = (255.5f - blu) * f;
+      redStep = (255.5d - red) * f;
+      grnStep = (255.5d - grn) * f;
+      bluStep = (255.5d - blu) * f;
 
       for (; i < SHADE_INDEX_MAX; i++) {
         red += redStep;
@@ -354,7 +354,7 @@ public class Shader {
         intensity += k_specular * specularFactor;
       }
     }
-    return (celOn && z < celZ ? 0f : intensity > 1 ? 1f : intensity);
+    return (celOn && z < celZ ? 0d : intensity > 1 ? 1d : intensity);
   }
 
   /*
@@ -420,10 +420,10 @@ public class Shader {
   public byte[] sphereShadeIndexes = new byte[256 * 256];
 
   private synchronized void calcSphereShading() {
-    double xF = -127.5f;
+    double xF = -127.5d;
     double r2 = 130 * 130;
     for (int i = 0; i < 256; ++xF, ++i) {
-      double yF = -127.5f;
+      double yF = -127.5d;
       double xF2 = xF * xF;
       for (int j = 0; j < 256; ++yF, ++j) {
         byte shadeIndex = 0;
@@ -492,7 +492,7 @@ public class Shader {
     double tx = mDeriv.m00 * x + mDeriv.m01 * y + mDeriv.m02 * z + mDeriv.m03;
     double ty = mDeriv.m10 * x + mDeriv.m11 * y + mDeriv.m12 * z + mDeriv.m13;
     double tz = mDeriv.m20 * x + mDeriv.m21 * y + mDeriv.m22 * z + mDeriv.m23;
-    double f = Math.min(radius/2f, 45) / 
+    double f = Math.min(radius/2d, 45) / 
         (double) Math.sqrt(tx * tx + ty * ty + tz * tz);
     // optimized for about 30-100% inclusion
     int i = (int) (-tx * f);

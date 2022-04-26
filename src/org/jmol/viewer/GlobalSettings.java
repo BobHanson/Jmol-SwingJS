@@ -145,7 +145,7 @@ public class GlobalSettings {
     setB("showUnitcell", false); // maintained by Uccage
     setI("slab", 100); // maintained by TransformManager
     setB("slabEnabled", false); // maintained by TransformManager     
-    setF("slabrange", 0f); // maintained by TransformManager
+    setF("slabrange", 0d); // maintained by TransformManager
     setI("spinX", 0); // maintained by TransformManager
     setI("spinY", TransformManager.DEFAULT_SPIN_Y);
     setI("spinZ", 0); // maintained by TransformManager
@@ -555,8 +555,8 @@ public class GlobalSettings {
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;
   double hbondsAngleMinimum = 90f;
-  double hbondNODistanceMaximum = 3.25f; // O----N
-  double hbondHXDistanceMaximum = 2.5f;  // O--H
+  double hbondNODistanceMaximum = 3.25d; // O----N
+  double hbondHXDistanceMaximum = 2.5d;  // O--H
   boolean hbondsRasmol = true; // 12.0.RC3
   boolean hbondsSolid = false;
   public byte modeMultipleBond = JC.MULTIBOND_NOTSMALL;
@@ -572,7 +572,7 @@ public class GlobalSettings {
 
   boolean cartoonBaseEdges = false;
   boolean cartoonRockets = false;
-  double cartoonBlockHeight = 0.5f;
+  double cartoonBlockHeight = 0.5d;
   boolean cartoonBlocks = false;
   boolean cartoonSteps = false;
   boolean cartoonFancy = false;
@@ -610,16 +610,16 @@ public class GlobalSettings {
   public int axesMode = T.axeswindow;
   double axesScale = 2;
   double axesOffset = 0;
-  double starWidth = 0.05f;
+  double starWidth = 0.05d;
   boolean bondPicking = false;
   String dataSeparator = "~~~";
   boolean debugScript = false;
-  double defaultDrawArrowScale = 0.5f;
+  double defaultDrawArrowScale = 0.5d;
   String defaultLabelXYZ = "%a";
   String defaultLabelPDB = "%m%r";
-  double defaultTranslucent = 0.5f;
+  double defaultTranslucent = 0.5d;
   int delayMaximumMs = 0;
-  double dipoleScale = 1f;
+  double dipoleScale = 1d;
   double drawFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   boolean disablePopupMenu = false;
   boolean dragSelected = false;
@@ -627,7 +627,7 @@ public class GlobalSettings {
   boolean drawPicking = false;
   boolean dsspCalcHydrogen = true;
   public String energyUnits = "kJ";
-  double exportScale = 0f;
+  double exportScale = 0d;
   String helpPath = JC.DEFAULT_HELP_PATH;
   boolean fontScaling = false;
   boolean fontCaching = true;
@@ -648,22 +648,22 @@ public class GlobalSettings {
   double particleRadius = 20;
   int pickingSpinRate = 10;
   String pickLabel = "";
-  double pointGroupDistanceTolerance = 0.2f;
-  double pointGroupLinearTolerance = 8.0f;
+  double pointGroupDistanceTolerance = 0.2d;
+  double pointGroupLinearTolerance = 8.0d;
   public boolean preserveState = true;
   String propertyColorScheme = "roygb";
   String quaternionFrame = "p"; // was c prior to Jmol 11.7.47
   boolean saveProteinStructureState = true;
   boolean showModVecs = false;
   boolean showUnitCellDetails = true;
-  double solventProbeRadius = 1.2f;
+  double solventProbeRadius = 1.2d;
   int scriptDelay = 0;
   boolean selectAllModels = true;
   boolean statusReporting = true;
   int strandCountForStrands = 5;
   int strandCountForMeshRibbon = 7;
   int strutSpacing = 6;
-  double strutLengthMaximum = 7.0f;
+  double strutLengthMaximum = 7.0d;
   double strutDefaultRadius = JC.DEFAULT_STRUT_RADIUS;
   boolean strutsMultiple = false; //on a single position    
   //boolean useArcBall = false;
@@ -680,12 +680,12 @@ public class GlobalSettings {
    * 
    */
   public boolean noDelay = false;
-  double vectorScale = 1f;
+  double vectorScale = 1d;
   boolean vectorSymmetry = false; // Jmol 12.3.2
   boolean vectorsCentered = false; // Jmol 14.1.14
   int vectorTrail = 0; // Jmol 14.4.4
-  double vibrationPeriod = 1f;
-  double vibrationScale = 1f;
+  double vibrationPeriod = 1d;
+  double vibrationScale = 1d;
   boolean wireframeRotation = false;
 
   // window

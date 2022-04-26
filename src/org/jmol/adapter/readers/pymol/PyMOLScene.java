@@ -1387,7 +1387,7 @@ class PyMOLScene implements JmolSceneGenerator {
       bs.and(bsNonbonded);
       if (bs.isEmpty())
         return;
-      setUniqueObjects(JC.SHAPE_STARS, bs, 0, 0, PyMOL.nonbonded_transparency, nonbondedTranslucency, 0, nonbondedSize, 0.5f);
+      setUniqueObjects(JC.SHAPE_STARS, bs, 0, 0, PyMOL.nonbonded_transparency, nonbondedTranslucency, 0, nonbondedSize, 0.5d);
       break;
     case PyMOL.REP_NBSPHERES:
     case PyMOL.REP_SPHERES:
@@ -1582,7 +1582,7 @@ class PyMOLScene implements JmolSceneGenerator {
     double rayScale = floatSetting(PyMOL.ray_pixel_scale);
     if (r == 0)
       r = floatSetting(PyMOL.ribbon_width)
-          * (isTrace ? 1 : (rayScale <= 1 ? 0.5f : rayScale)) * 0.1f;
+          * (isTrace ? 1 : (rayScale <= 1 ? 0.5d : rayScale)) * 0.1d;
     JmolObject jo = setUniqueObjects((isTrace ? JC.SHAPE_TRACE : JC.SHAPE_BACKBONE), bs,
         PyMOL.ribbon_color, ribbonColor, 0, 0, 0, 0, 0);
     jo.setSize(r);

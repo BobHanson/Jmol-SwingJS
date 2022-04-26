@@ -258,9 +258,9 @@ public abstract class T3d implements JSONEncodable, Serializable {
    * @param b
    */
   public void ave(T3d a, T3d b) {
-    x = (a.x + b.x) / 2f;
-    y = (a.y + b.y) / 2f;
-    z = (a.z + b.z) / 2f; 
+    x = (a.x + b.x) / 2d;
+    y = (a.y + b.y) / 2d;
+    z = (a.z + b.z) / 2d; 
   }
 
   /**

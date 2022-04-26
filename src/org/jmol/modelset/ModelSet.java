@@ -170,7 +170,7 @@ public class ModelSet extends BondCollection {
 
   public ShapeManager sm;
 
-  private static double hbondMinRasmol = 2.5f;
+  private static double hbondMinRasmol = 2.5d;
 
   public boolean proteinStructureTainted;
 
@@ -409,7 +409,7 @@ public class ModelSet extends BondCollection {
       for (int i = 0; i <= ac; i++) {
         if (i == ac || at[i].mi != lastModel) {
           if (n > 0) {
-            offset.scale(-1.0f / n);
+            offset.scale(-1.0d / n);
             if (lastModel != 0)
               offset.sub(offsets[0]);
             n = 0;
@@ -1266,7 +1266,7 @@ public class ModelSet extends BondCollection {
       return (r == 0 ? 10 : r);
     }
     if (useBoundBox && getDefaultBoundBox() != null)
-      return defaultBBox.getMaxDim() / 2 * 1.2f;
+      return defaultBBox.getMaxDim() / 2 * 1.2d;
     double maxRadius = 0;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
@@ -1434,8 +1434,8 @@ public class ModelSet extends BondCollection {
       }
     }
     if (addCenters) {
-      points[0][0].scale(1f / (points[0].length - 1));
-      points[1][0].scale(1f / (points[1].length - 1));
+      points[0][0].scale(1d / (points[0].length - 1));
+      points[1][0].scale(1d / (points[1].length - 1));
     }
     return points;
   }
@@ -1450,7 +1450,7 @@ public class ModelSet extends BondCollection {
       }
     }
     if (nPoints > 1)
-      ptCenter.scale(1.0f / nPoints);
+      ptCenter.scale(1.0d / nPoints);
     return ptCenter;
   }
 
@@ -1972,7 +1972,7 @@ public class ModelSet extends BondCollection {
     if (nNeg == 0 || nPos == 0)
       return null;
     pos.add(neg);
-    pos.scale(4.8f); //1e-10f * 1.6e-19f/ 3.336e-30f;
+    pos.scale(4.8d); //1e-10f * 1.6e-19d/ 3.336e-30f;
     // 1 Debye = 3.336e-30 Coulomb-meter; C_e = 1.6022e-19 C
     return pos;
   }
@@ -2932,7 +2932,7 @@ public class ModelSet extends BondCollection {
     if (haveHAtoms) {
       // no set maximumn for this anymore -- default is 2.5A
       dmax = vwr.getDouble(T.hbondhxdistancemaximum);
-      min2 = 1f;
+      min2 = 1d;
     } else {
       dmax = vwr.getDouble(T.hbondnodistancemaximum);
       // default 3.25 for pseudo; user can make longer or shorter
@@ -3643,7 +3643,7 @@ public class ModelSet extends BondCollection {
         for (int i = -7; i <= 7; i++)
           for (int j = -7; j <= 7; j++)
             for (int k = 0; k <= 14; k++, n++)
-              if ((av[n] = V3d.new3(i / 7f, j / 7f, k / 14f)).length() > 1)
+              if ((av[n] = V3d.new3(i / 7d, j / 7d, k / 14d)).length() > 1)
                 --n;
         vOrientations = new Qd[n];
         for (int i = n; --i >= 0;) {
@@ -3659,7 +3659,7 @@ public class ModelSet extends BondCollection {
       BoxInfo bBest = null;
       double v;
       BoxInfo b = new BoxInfo();
-      b.setMargin(type == T.volume ? 0 : 0.1f);
+      b.setMargin(type == T.volume ? 0 : 0.1d);
       for (int i = 0; i < n; i++) {
         q = vOrientations[i];
         b.reset();
@@ -3687,7 +3687,7 @@ public class ModelSet extends BondCollection {
           qBest = q;
           bBest = b;
           b = new BoxInfo();
-          b.setMargin(0.1f);
+          b.setMargin(0.1d);
           vMin = v;
         }
       }
@@ -3786,7 +3786,7 @@ public class ModelSet extends BondCollection {
     Map<String, Boolean> map = new Hashtable<String, Boolean>();
     for (int i = 0, pt = 0; i < n; i++, pt += 6) {
       double dv = dihedralList[pt + 5] - dihedralList[pt + 4];
-      if (Math.abs(dv) < 1f)
+      if (Math.abs(dv) < 1d)
         continue;
       int i0 = (int) dihedralList[pt + 1];
       int i1 = (int) dihedralList[pt + 2];
@@ -3898,7 +3898,7 @@ public class ModelSet extends BondCollection {
         taintAtom(i, TAINT_COORD);
       }
       if (!isInternal) {
-        ptTemp.scale(1f / bs.cardinality());
+        ptTemp.scale(1d / bs.cardinality());
         if (translation == null)
           translation = new V3d();
         translation.add(ptTemp);

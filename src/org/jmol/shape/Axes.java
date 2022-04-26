@@ -60,7 +60,7 @@ public class Axes extends FontLineShape {
       axisPoints[i] = new P3d();
   }
 
-  private final static double MIN_AXIS_LEN = 1.5f;
+  private final static double MIN_AXIS_LEN = 1.5d;
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
@@ -126,7 +126,7 @@ public class Axes extends FontLineShape {
       originPoint.setT(fixedOrigin != null ? fixedOrigin
           : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() : pt0);
       // We must divide by 2 because that is the default for non-unitcell axis types.
-      setScale(vwr.getDouble(T.axesscale) / 2f);
+      setScale(vwr.getDouble(T.axesscale) / 2d);
       return;
     }
     // have unit cell
@@ -144,7 +144,7 @@ public class Axes extends FontLineShape {
     if (voffset != 0) {
       originPoint.add(fixedOriginUC);
     }
-    double scale = this.scale = vwr.getDouble(T.axesscale) / 2f;
+    double scale = this.scale = vwr.getDouble(T.axesscale) / 2d;
     if (fset != null && fset.z > 0)
       scale *= Math.abs(fset.z);
     axisPoints[0].scaleAdd2(scale, vertices[4], originPoint);
@@ -172,7 +172,7 @@ public class Axes extends FontLineShape {
       ptTemp.setT(axisPoints[i]);
     } else {
       ptTemp.sub2(axisPoints[i], originPoint);
-      ptTemp.scale(0.5f);
+      ptTemp.scale(0.5d);
     }
     return ptTemp; 
   }

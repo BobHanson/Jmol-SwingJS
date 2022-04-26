@@ -42,7 +42,7 @@ import org.jmol.util.Vibration;
 
 public class VectorsRenderer extends ShapeRenderer {
 
-  private final static double arrowHeadOffset = -0.2f;
+  private final static double arrowHeadOffset = -0.2d;
   private final Point3fi ptTemp = new Point3fi();
   private final P3d pointVectorStart = new P3d();
   private final Point3fi pointVectorEnd = new Point3fi();
@@ -202,8 +202,8 @@ public class VectorsRenderer extends ShapeRenderer {
       //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
       //        vwr.tm.getVibrationPoint(vib, v, Double.NaN);
       //      }
-      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, ptTemp);
-      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, ptTemp);
+      pointVectorEnd.scaleAdd2(0.5d * vectorScale, vib, ptTemp);
+      pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
     } else {
       pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
       pointArrowHead.add2(pointVectorEnd, headOffsetVector);

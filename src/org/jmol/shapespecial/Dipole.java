@@ -123,7 +123,7 @@ public class Dipole {
   private void set2(P3d pt1, P3d pt2) {
     coords[0] = P3d.newP(pt1);
     coords[1] = P3d.newP(pt2);
-    isValid = (coords[0].distance(coords[1]) > 0.1f);
+    isValid = (coords[0].distance(coords[1]) > 0.1d);
 
     if (dipoleValue < 0) {
       origin = P3d.newP(pt2);
@@ -184,10 +184,10 @@ public class Dipole {
     isValid = (atoms[0] != atoms[1] && dipoleValue != 0);
     if (!isValid)
       return;
-    double f = atoms[0].distance(atoms[1]) / (2 * dipoleValue) - 0.5f;
+    double f = atoms[0].distance(atoms[1]) / (2 * dipoleValue) - 0.5d;
     origin.scaleAdd2(f, vector, atoms[0]);
     center = new P3d();
-    center.scaleAdd2(0.5f, vector, origin);
+    center.scaleAdd2(0.5d, vector, origin);
     bond = atoms[0].getBond(atoms[1]);
     type = (bond == null ? Dipole.DIPOLE_TYPE_ATOMS : Dipole.DIPOLE_TYPE_BOND);
   }

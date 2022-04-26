@@ -51,7 +51,7 @@ public class StrandsRenderer extends BioShapeRenderer {
     if (wingVectors == null)
       return false;
     strandCount = (shape instanceof Strands ? vwr.getStrandCount(((Strands) shape).shapeID) : 10);
-    strandSeparation = (strandCount <= 1) ? 0 : 1f / (strandCount - 1);
+    strandSeparation = (strandCount <= 1) ? 0 : 1d / (strandCount - 1);
     baseStrandOffset = ((strandCount & 1) == 0 ? strandSeparation / 2
         : strandSeparation);
     return true;
@@ -69,7 +69,7 @@ public class StrandsRenderer extends BioShapeRenderer {
       vwr.freeTempPoints(screens);
     }
     if (strandCount % 2 == 1) {
-      screens = calcScreens(0f, mads);
+      screens = calcScreens(0d, mads);
       renderStrand(screens);
       vwr.freeTempPoints(screens);
     }

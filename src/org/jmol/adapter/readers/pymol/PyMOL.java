@@ -6365,7 +6365,7 @@ class PyMOL {
   static P3d getDefaultSettingPt(int i, int pymolVersion, P3d pt) {
     switch (i) {
     case label_position:
-      pt.set(0,  0,  0.75f);
+      pt.set(0,  0,  0.75d);
       break;
     default:
       Logger.error("PyMOL " + pymolVersion + " default point setting not found: " + i);

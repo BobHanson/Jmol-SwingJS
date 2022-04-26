@@ -184,7 +184,7 @@ public class AnimationManager {
     int m = (int) modelIndex;
     if (Math.abs(m - modelIndex) < 0.001f)
       modelIndex = m;
-    else if (Math.abs(m - modelIndex) > 0.999f)
+    else if (Math.abs(m - modelIndex) > 0.999d)
       modelIndex = m = m + 1;
     double f = modelIndex - m;
     m -= 1;
@@ -363,7 +363,7 @@ public class AnimationManager {
       return 0;
     int i0 = Math.min(firstFrameIndex, lastFrameIndex);
     int i1 = Math.max(firstFrameIndex, lastFrameIndex);
-    double nsec = 1f * (i1 - i0) / animationFps + firstFrameDelay
+    double nsec = 1d * (i1 - i0) / animationFps + firstFrameDelay
         + lastFrameDelay;
     for (int i = i0; i <= i1; i++)
       nsec += vwr.ms.getFrameDelayMs(modelIndexForFrame(i)) / 1000f;
@@ -504,10 +504,10 @@ public class AnimationManager {
     int frameStep = getFrameStep(direction);
     int thisFrame = (isMovie ? caf : cmi);
     int frameNext = thisFrame + frameStep;
-    double morphStep = 0f, nextMorphFrame = 0f;
+    double morphStep = 0d, nextMorphFrame = 0d;
     boolean isDone;
     if (morphCount > 0) {
-      morphStep = 1f / (morphCount + 1);
+      morphStep = 1d / (morphCount + 1);
       nextMorphFrame = currentMorphModel + frameStep * morphStep;
       isDone = isNotInRange(nextMorphFrame);
     } else {

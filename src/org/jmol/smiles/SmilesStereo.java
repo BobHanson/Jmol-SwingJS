@@ -359,7 +359,7 @@ public class SmilesStereo {
     int pt;
     switch (chClass) {
     case POLYHEDRAL:
-      sAtom0.set(0, 0, 0.2f);
+      sAtom0.set(0, 0, 0.2d);
       double a = Math.PI * 2 / cAtoms.length;
       for (int i = cAtoms.length; --i >= 0;) {
         cAtoms[map[i]].set((double)(Math.cos(i * a)), (double) Math.sin(i * a), isNot ? 1 : -1);
@@ -903,7 +903,7 @@ public class SmilesStereo {
         return "";
       double d = MeasureD.getNormalThroughPoints((P3d) atom1, (P3d) atom2, (P3d) atom3,
           v.vTemp, v.vA);
-      if (Math.abs(MeasureD.distanceToPlaneV(v.vTemp, d, (P3d) atom4)) < 0.2f) {
+      if (Math.abs(MeasureD.distanceToPlaneV(v.vTemp, d, (P3d) atom4)) < 0.2d) {
         if (is2D)
           return "";
         chiralClass = SQUARE_PLANAR;
@@ -951,7 +951,7 @@ public class SmilesStereo {
       return (isNot == (getHandedness(atom1, atom2, atom3, atom0, v) != order));
     case TRIGONAL_BIPYRAMIDAL:
       // check for axial-axial'
-      if (!isDiaxial(atom0, atom0, atom5, atom1, v, -0.95f))
+      if (!isDiaxial(atom0, atom0, atom5, atom1, v, -0.95d))
         return false;
       return (isNot == (getHandedness(atom2, atom3, atom4, atom1, v) != order));
     case T_SHAPED:
@@ -978,15 +978,15 @@ public class SmilesStereo {
         atom1 = atom2;
         break;
       }
-      return (isNot == !isDiaxial(atom0, atom0, atom1, atom3, v, -0.95f));
+      return (isNot == !isDiaxial(atom0, atom0, atom1, atom3, v, -0.95d));
     case SEESAW:
-      if (!isDiaxial(atom0, atom0, atom4, atom1, v, -0.95f))
+      if (!isDiaxial(atom0, atom0, atom4, atom1, v, -0.95d))
         return false;
       return (isNot == (getHandedness(atom2, atom3, atom4, atom1, v) != order));
     case OCTAHEDRAL:
-      if (!isDiaxial(atom0, atom0, atom6, atom1, v, -0.95f)
-          || !isDiaxial(atom0, atom0, atom2, atom4, v, -0.95f)
-          || !isDiaxial(atom0, atom0, atom3, atom5, v, -0.95f))
+      if (!isDiaxial(atom0, atom0, atom6, atom1, v, -0.95d)
+          || !isDiaxial(atom0, atom0, atom2, atom4, v, -0.95d)
+          || !isDiaxial(atom0, atom0, atom3, atom5, v, -0.95d))
         return false;
       getPlaneNormals((P3d) atom2, (P3d) atom3, (P3d) atom4, (P3d) atom5, v);
       // check for proper order 2-3-4-5
@@ -1007,7 +1007,7 @@ public class SmilesStereo {
     v.vB.sub2((P3d) atomB, (P3d) atom2);
     v.vA.normalize();
     v.vB.normalize();
-    // -0.95f about 172 degrees
+    // -0.95d about 172 degrees
     return (v.vA.dot(v.vB) < f);
   }
 

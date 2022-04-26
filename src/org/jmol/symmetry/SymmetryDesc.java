@@ -433,7 +433,7 @@ public class SymmetryDesc {
     boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     boolean isTimeReversed = (op.timeReversal == -1);
     if (scaleFactor == 0)
-      scaleFactor = 1f;
+      scaleFactor = 1d;
     ptemp.set(0, 0, 0);
     vtrans.set(0, 0, 0);
     P4d plane = null;
@@ -453,7 +453,7 @@ public class SymmetryDesc {
       //      uc.toUnitCell(pta01, ptemp);
       //      pta02.setT(ptTarget);
       //      uc.toUnitCell(pta02, ptemp);
-      //      if (pta01.distance(pta02) > 0.1f)
+      //      if (pta01.distance(pta02) > 0.1d)
       //        return null;
       //      setFractional(uc, pta00, pta01, null);
       //      op.rotTrans(pta01);
@@ -471,7 +471,7 @@ public class SymmetryDesc {
       uc.unitize(pta02);
       //      uc.toCartesian(pta01, true);
       //      uc.toCartesian(pta02, true);
-      //      if (pta01.distanceSquared(pta02) > 0.1f)
+      //      if (pta01.distanceSquared(pta02) > 0.1d)
       //        return null;
       if (pta01.distanceSquared(pta02) >= JC.UC_TOLERANCE2)
         return null;
@@ -588,7 +588,7 @@ public class SymmetryDesc {
 
       ipt = P3d.newP(pta00);
       ipt.add(pt0);
-      ipt.scale(0.5f);
+      ipt.scale(0.5d);
       ptinv = pt0;
       isInversionOnly = true;
 
@@ -674,7 +674,7 @@ public class SymmetryDesc {
         ptref = P3d.newP(pta00);
         ptref.add(d);
         pa1.scaleAdd2(0.5, d, pta00);
-        if (ptref.distance(pt0) > 0.1f) {
+        if (ptref.distance(pt0) > 0.1d) {
           trans = V3d.newVsub(pt0, ptref);
           setFractional(uc, trans, ptemp, null);
           ftrans.setT(ptemp);
@@ -688,7 +688,7 @@ public class SymmetryDesc {
         w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
         plane = P4d.new4((double) vtemp.x, (double) vtemp.y, (double) vtemp.z, (double) w);
         margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30f
-            : 1.05f);
+            : 1.05d);
         isRotation = false;
         haveInversion = false;
         isMirrorPlane = true;
@@ -760,7 +760,7 @@ public class SymmetryDesc {
         ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
       } else {
         ptemp.add2(pa1, vtemp);
-        ptr.scaleAdd2(0.5f, vtemp,pa1);
+        ptr.scaleAdd2(0.5d, vtemp,pa1);
         ptemp.putP(p3);
         pta00.putP(p4);
         ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
@@ -890,9 +890,9 @@ public class SymmetryDesc {
 
       // draw the initial frame
 
-      drawLine(draw1, drawid + "frame1X", 0.15f, pta00, pta01, "red");
-      drawLine(draw1, drawid + "frame1Y", 0.15f, pta00, pta02, "green");
-      drawLine(draw1, drawid + "frame1Z", 0.15f, pta00, pta03, "blue");
+      drawLine(draw1, drawid + "frame1X", 0.15d, pta00, pta01, "red");
+      drawLine(draw1, drawid + "frame1Y", 0.15d, pta00, pta02, "green");
+      drawLine(draw1, drawid + "frame1Z", 0.15d, pta00, pta03, "blue");
 
       String color;
 
@@ -903,7 +903,7 @@ public class SymmetryDesc {
         color = "red";
 
         ang = ang1;
-        double scale = 1f;
+        double scale = 1d;
         vtemp.setT(ax1);
 
         // draw the lines associated with a rotation
@@ -937,7 +937,7 @@ public class SymmetryDesc {
               isTimeReversed ? "gray" : "red");
           ptr.setT(pa1);
           if (pitch1 == 0 && pta00.distance(pt0) < 0.2)
-            ptr.scaleAdd2(0.5f, vtemp, ptr);
+            ptr.scaleAdd2(0.5d, vtemp, ptr);
         } else {
           opType = drawid + "screw";
           color = "orange";
@@ -946,7 +946,7 @@ public class SymmetryDesc {
           ptemp.add2(pa1, vtemp);
           draw1.append(drawid).append("rotLine2 ").append(Escape.ePd(pt0))
               .append(Escape.ePd(ptemp)).append(" color red");
-          ptr.scaleAdd2(0.5f, vtemp, pa1);
+          ptr.scaleAdd2(0.5d, vtemp, pa1);
         }
 
         // draw arc arrow
@@ -963,7 +963,7 @@ public class SymmetryDesc {
                 "rotRotArrow arrow width 0.1 scale " + PT.escD(scale) + " arc ")
             .append(Escape.ePd(ptr)).append(Escape.ePd(ptemp));
         ptemp.setT(haveInversion ? ptinv : pta00);
-        if (ptemp.distance(pt0) < 0.1f)
+        if (ptemp.distance(pt0) < 0.1d)
           ptemp.set((double) Math.random(), (double) Math.random(),
               (double) Math.random());
         draw1.append(Escape.ePd(ptemp));
@@ -989,9 +989,9 @@ public class SymmetryDesc {
         opType = drawid + "plane";
         if (trans != null) {
           opType = drawid + "glide";
-          drawFrameLine("X", ptref, vt1, 0.15f, ptemp, draw1, opType, "red");
-          drawFrameLine("Y", ptref, vt2, 0.15f, ptemp, draw1, opType, "green");
-          drawFrameLine("Z", ptref, vt3, 0.15f, ptemp, draw1, opType, "blue");
+          drawFrameLine("X", ptref, vt1, 0.15d, ptemp, draw1, opType, "red");
+          drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, draw1, opType, "green");
+          drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, draw1, opType, "blue");
         }
 
         color = (trans == null ? "green" : "blue");
@@ -1034,9 +1034,9 @@ public class SymmetryDesc {
             isTimeReversed ? "gray" : "cyan");
         if (!isInversionOnly && options != T.offset) {
           // n-bar: draw a faint frame showing the inversion
-          drawFrameLine("X", ptinv, vt1, 0.15f, ptemp, draw1, opType, "red");
-          drawFrameLine("Y", ptinv, vt2, 0.15f, ptemp, draw1, opType, "green");
-          drawFrameLine("Z", ptinv, vt3, 0.15f, ptemp, draw1, opType, "blue");
+          drawFrameLine("X", ptinv, vt1, 0.15d, ptemp, draw1, opType, "red");
+          drawFrameLine("Y", ptinv, vt2, 0.15d, ptemp, draw1, opType, "green");
+          drawFrameLine("Z", ptinv, vt3, 0.15d, ptemp, draw1, opType, "blue");
         }
       }
 
@@ -1056,14 +1056,14 @@ public class SymmetryDesc {
 
       ptemp2.setT(pt0);
       ptemp.sub2(pt1, pt0);
-      ptemp.scaleAdd2(0.9f, ptemp, ptemp2);
-      drawLine(draw1, drawid + "frame2X", 0.2f, ptemp2, ptemp, "red");
+      ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+      drawLine(draw1, drawid + "frame2X", 0.2d, ptemp2, ptemp, "red");
       ptemp.sub2(pt2, pt0);
-      ptemp.scaleAdd2(0.9f, ptemp, ptemp2);
-      drawLine(draw1, drawid + "frame2Y", 0.2f, ptemp2, ptemp, "green");
+      ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+      drawLine(draw1, drawid + "frame2Y", 0.2d, ptemp2, ptemp, "green");
       ptemp.sub2(pt3, pt0);
-      ptemp.scaleAdd2(0.9f, ptemp, ptemp2);
-      drawLine(draw1, drawid + "frame2Z", 0.2f, ptemp2, ptemp, "purple");
+      ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+      drawLine(draw1, drawid + "frame2Z", 0.2d, ptemp2, ptemp, "purple");
 
       // color the targeted atoms opaque and add another frame if necessary
 

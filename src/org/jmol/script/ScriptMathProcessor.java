@@ -956,11 +956,11 @@ public class ScriptMathProcessor {
         return addXInt(-x2.asInt());
       case T.point3f:
         pt = P3d.newP((P3d) x2.value);
-        pt.scale(-1f);
+        pt.scale(-1d);
         return addXPt(pt);
       case T.point4f:
         P4d pt4 = P4d.newPt((P4d) x2.value);
-        pt4.scale4(-1f);
+        pt4.scale4(-1d);
         return addXPt4(pt4);
       case T.matrix3f:
         m = M3d.newM3((M3d) x2.value);
@@ -980,7 +980,7 @@ public class ScriptMathProcessor {
         return addXBool(true);
       switch (x2.tok) {
       case T.point4f: // quaternion
-        return addXPt4((Qd.newP4((P4d) x2.value)).inv().toPoint4d());
+        return addXPt4((Qd.newP4((P4d) x2.value)).inv().toP4d());
       case T.matrix3f:
         m = M3d.newM3((M3d) x2.value);
         m.invert();
@@ -1238,9 +1238,9 @@ public class ScriptMathProcessor {
         Qd q1 = Qd.newP4((P4d) x1.value);
         switch (x2.tok) {
         default:
-          return addXPt4(q1.add(x2.asDouble()).toPoint4d());
+          return addXPt4(q1.add(x2.asDouble()).toP4d());
         case T.point4f:
-          return addXPt4(q1.mulQ(Qd.newP4((P4d) x2.value)).toPoint4d());
+          return addXPt4(q1.mulQ(Qd.newP4((P4d) x2.value)).toP4d());
         }
       case T.varray:
         return addX(SV.concatList(x1, x2, true));
@@ -1291,9 +1291,9 @@ public class ScriptMathProcessor {
         Qd q1 = Qd.newP4((P4d) x1.value);
         if (x2.tok == T.point4f) {
           Qd q2 = Qd.newP4((P4d) x2.value);
-          return addXPt4(q2.mulQ(q1.inv()).toPoint4d());
+          return addXPt4(q2.mulQ(q1.inv()).toP4d());
         }
-        return addXPt4(q1.add(-x2.asDouble()).toPoint4d());
+        return addXPt4(q1.add(-x2.asDouble()).toP4d());
       }
       return addXDouble(x1.asDouble() - x2.asDouble());
     case T.mul3:
@@ -1335,7 +1335,7 @@ public class ScriptMathProcessor {
         if (pt4 != null)
           // q * m --> q
           return addXPt4(
-              (Qd.newP4(pt4).mulQ(Qd.newM((M3d) x2.value))).toPoint4d());
+              (Qd.newP4(pt4).mulQ(Qd.newM((M3d) x2.value))).toP4d());
         break;
       case T.matrix4f:
         // pt4 * m4
@@ -1433,8 +1433,8 @@ public class ScriptMathProcessor {
           // note that Point4f is {x,y,z,w} so we use that for
           // quaternion notation as well here.
           return addXPt4(Qd.newP4((P4d) x1.value)
-              .mulQ(Qd.newP4((P4d) x2.value)).toPoint4d());
-        return addXPt4(Qd.newP4((P4d) x1.value).mul(x2.asDouble()).toPoint4d());
+              .mulQ(Qd.newP4((P4d) x2.value)).toP4d());
+        return addXPt4(Qd.newP4((P4d) x1.value).mul(x2.asDouble()).toP4d());
       }
       return addXDouble(x1.asDouble() * x2.asDouble());
     case T.divide:
@@ -1460,10 +1460,10 @@ public class ScriptMathProcessor {
       case T.point4f:
         return addXPt4(x2.tok == T.point4f
             ? Qd.newP4((P4d) x1.value).div(Qd.newP4((P4d) x2.value))
-                .toPoint4d()
+                .toP4d()
             : (f2 = x2.asDouble()) == 0
                 ? P4d.new4(Double.NaN, Double.NaN, Double.NaN, Double.NaN)
-                : Qd.newP4((P4d) x1.value).mul(1 / f2).toPoint4d());
+                : Qd.newP4((P4d) x1.value).mul(1 / f2).toP4d());
       }
       return addXDouble(x1.asDouble() / x2.asDouble());
     case T.leftdivide:
@@ -1473,8 +1473,8 @@ public class ScriptMathProcessor {
             ? addXPt4(P4d.new4(Double.NaN, Double.NaN, Double.NaN, Double.NaN))
             : x2.tok == T.point4f
                 ? addXPt4(Qd.newP4((P4d) x1.value)
-                    .divLeft(Qd.newP4((P4d) x2.value)).toPoint4d())
-                : addXPt4(Qd.newP4((P4d) x1.value).mul(1 / f).toPoint4d()));
+                    .divLeft(Qd.newP4((P4d) x2.value)).toP4d())
+                : addXPt4(Qd.newP4((P4d) x1.value).mul(1 / f).toP4d()));
       }
       return addXInt(
           f == 0 ? 0 : (int) Math.floor(x1.asDouble() / x2.asDouble()));
@@ -1592,7 +1592,7 @@ public class ScriptMathProcessor {
         case -5:
           return addXPt(P3d.newP(q.getVector(2)));
         case -6:
-          A4d ax = q.toAxisAngle4d();
+          A4d ax = q.toA4d();
           return addXPt4(
               P4d.new4(ax.x, ax.y, ax.z, (ax.angle * 180 / Math.PI)));
         case -9:

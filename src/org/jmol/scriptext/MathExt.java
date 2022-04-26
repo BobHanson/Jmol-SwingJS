@@ -689,7 +689,7 @@ public class MathExt {
       int n = args[2].asInt();
       if (n < 2)
         n = 20;
-      vd.scale(1f / (n - 1));
+      vd.scale(1d / (n - 1));
       for (int i = 0; i < n; i++) {
         sb.append(Escape
             .escapeColor(CU.colorPtToFFRGB(usingHSL ? CU.hslToRGB(pt1) : pt1)));
@@ -871,7 +871,7 @@ public class MathExt {
           return mp.addXStr("IDENTICAL");
         stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, smiles1, null,
             null, null, null, false, null, null, false, JC.SMILES_TYPE_SMILES);
-        return mp.addXStr(stddev < 0.2f ? "IDENTICAL"
+        return mp.addXStr(stddev < 0.2d ? "IDENTICAL"
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
       }
       M4d m = new M4d();
@@ -979,7 +979,7 @@ public class MathExt {
       }
       // now have m and stddev
       return (isStdDev || Double.isNaN(stddev) ? mp.addXDouble(stddev)
-          : mp.addXM4(m.round(1e-7f)));
+          : mp.addXM4(m.round(1e-7d)));
     } catch (Exception ex) {
       e.evalError(ex.getMessage() == null ? ex.toString() : ex.getMessage(),
           null);
@@ -1218,7 +1218,7 @@ public class MathExt {
       return mp.addXList((Lst<?>) vwr.getDataObj(selected, null, 0));
     if (selected.indexOf("property_") == 0) {
       double[] f1 = (double[]) vwr.getDataObj(selected, null,
-          JmolDataManager.DATA_TYPE_AFD);
+          JmolDataManager.DATA_TYPE_AD);
       return (f1 == null ? mp.addXStr("") : mp.addXStr(Escape.escapeDoubleA(f1, false)));
     }
 
@@ -2499,7 +2499,7 @@ public class MathExt {
       PT.parseDoubleArrayData(sList1, list1);
     }
     if (isAll && tok != T.join) {
-      double sum = 0f;
+      double sum = 0d;
       if (isArray1) {
         for (int i = len; --i >= 0;)
           sum += SV.dValue(alist1.get(i));
@@ -2868,8 +2868,9 @@ public class MathExt {
       case T.hkl:
         // hkl(i,j,k)
         double offset = (args.length == 4 ? SV.dValue(args[3]) : Double.NaN);
-        return mp.addXPt4(e.getHklPlane(P3d.new3(SV.dValue(args[0]),
-            SV.dValue(args[1]), SV.dValue(args[2])), offset, null));
+        plane = e.getHklPlane(P3d.new3(SV.dValue(args[0]),
+            SV.dValue(args[1]), SV.dValue(args[2])), offset, null);
+        return plane != null && mp.addXPt4(plane);
       case T.intersection:
         pt1 = mp.ptValue(args[0], null);
         pt2 = mp.ptValue(args[1], null);
@@ -2963,7 +2964,7 @@ public class MathExt {
             // plane(<point1>,<point2>,false)
             pt3 = P3d.newP(pt1);
             pt3.add(pt2);
-            pt3.scale(0.5f);
+            pt3.scale(0.5d);
             norm.sub(pt1);
             norm.normalize();
           } else if (args[2].tok == T.on) {
@@ -3060,11 +3061,11 @@ public class MathExt {
           vwr.tm.transformPt3f(pt3, pt3);
           pt3.y = vwr.tm.height - pt3.y;
           if (vwr.antialiased)
-            pt3.scale(0.5f);
+            pt3.scale(0.5d);
         } else {
           // this is FROM screen coordinates
           if (vwr.antialiased)
-            pt3.scale(2f);
+            pt3.scale(2d);
           pt3.y = vwr.tm.height - pt3.y;
           vwr.tm.unTransformPoint(pt3, pt3);
         }
@@ -3192,7 +3193,7 @@ public class MathExt {
     P4d p4 = null;
     switch (nArgs) {
     case 0:
-      return mp.addXPt4(vwr.tm.getRotationQ().toPoint4d());
+      return mp.addXPt4(vwr.tm.getRotationQ().toP4d());
     case 1:
     default:
       if (tok == T.quaternion && args[0].tok == T.varray) {
@@ -3253,7 +3254,7 @@ public class MathExt {
         P3d pt = (args[2].tok == T.point3f ? (P3d) args[2].value
             : vwr.ms.getAtomSetCenter((BS) args[2].value));
         return mp.addXStr(Escape.drawQuat(Qd.newP4((P4d) args[0].value), "q",
-            SV.sValue(args[1]), pt, 1f));
+            SV.sValue(args[1]), pt, 1d));
       }
       P3d[] pts = new P3d[3];
       for (int i = 0; i < 3; i++)
@@ -3275,12 +3276,12 @@ public class MathExt {
       if (nMax != Integer.MAX_VALUE) {
         Lst<P4d> list = new Lst<P4d>();
         for (int i = 0; i < qs.length; i++)
-          list.addLast(qs[i].toPoint4d());
+          list.addLast(qs[i].toP4d());
         return mp.addXList(list);
       }
       q = (qs.length > 0 ? qs[0] : null);
     }
-    return mp.addXPt4((q == null ? Qd.newP4(p4) : q).toPoint4d());
+    return mp.addXPt4((q == null ? Qd.newP4(p4) : q).toP4d());
   }
 
   private Random rand;
@@ -4257,7 +4258,7 @@ public class MathExt {
     int ndata = 0;
     Map<String, Integer> htPivot = null;
     while (true) {
-      if (AU.isAF(floatOrSVArray)) {
+      if (AU.isAD(floatOrSVArray)) {
         if (tok == T.pivot)
           return "NaN";
         data = (double[]) floatOrSVArray;
