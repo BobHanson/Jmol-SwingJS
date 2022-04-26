@@ -3181,6 +3181,7 @@ public class Viewer extends JmolViewer
                                              boolean isAppend) {
     // loadInline, openStringInline
 
+    htParams = setLoadParameters(htParams, isAppend);
     String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
     if (type == null 
         && (type = getModelAdapter().getFileTypeName(Rdr.getBR(strModel)))
@@ -3190,7 +3191,6 @@ public class Viewer extends JmolViewer
       return "cannot open script inline";
     }
 
-    htParams = setLoadParameters(htParams, isAppend);
     SB loadScript = (SB) htParams.get("loadScript");
     boolean isLoadCommand = htParams.containsKey("isData");
     if (loadScript == null)

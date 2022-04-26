@@ -23,6 +23,9 @@ import javajs.util.V3d;
  */
 public class PWMATWriter extends XtlWriter implements JmolWriter {
 
+  private final static String PWM_PREFIX = "property_pwm_";
+  private final static int PREFIX_LEN = 13;
+  
 
   private Viewer vwr;
   private OC oc;
@@ -30,6 +33,8 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   private Lst<String> names;
   private BS bs;
   private boolean isPrecision;
+  
+  boolean isSlab;
   
 
   
@@ -40,12 +45,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   @Override
   public void set(Viewer viewer, OC oc, Object[] data) {
     vwr = viewer;
+    isSlab = (data != null && data[0] != null && data[0].equals("slab"));
     this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
   }
 
-  
-  private final static String PWM_PREFIX = "property_pwm_";
-  private final static int PREFIX_LEN = 13;
   
   @SuppressWarnings("unchecked")
   @Override
@@ -54,7 +57,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       bs = vwr.bsA();
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-      this.bs = bs = uc.removeDuplicates(vwr.ms, bs);
+      this.bs = (isSlab ? bs : uc.removeDuplicates(vwr.ms, bs));
       isPrecision = true;
 //      !bs.isEmpty();
 //      for (int i = bs.nextSetBit(0); i >= 0
@@ -115,7 +118,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       if (isPrecision) {
 //        P3d dxyz = vwr.ms.getPrecisionCoord(i);
         p.setT(a[i]);
-        uc.toFractionalF(p, false);
+        uc.toFractional(p, false);
         coord = clean(p.x) + clean(p.y) + clean(p.z);                
       } else {
         // if there is no precision atom, then we need
