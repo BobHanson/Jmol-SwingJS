@@ -43,17 +43,14 @@ import javajs.api.GenericLineReader;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.OC;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.T4d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 
@@ -159,7 +156,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Object validation, dssr;
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
-  public boolean fixJavaDouble = true;
+  public boolean fixJavaDouble = false;//true; -- removed in Jmol 15.32.53 - all high precision
   public Map<String, Object> thisBiomolecule;
   public Lst<M4d> lstNCS;
 

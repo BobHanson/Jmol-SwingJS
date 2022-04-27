@@ -26,33 +26,27 @@ package org.jmol.script;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.A4d;
-import javajs.util.A4d;
-import javajs.util.AU;
-import javajs.util.CU;
-import javajs.util.DF;
-import javajs.util.Lst;
-import javajs.util.M3d;
-import javajs.util.M3d;
-import javajs.util.M4d;
-import javajs.util.P3d;
-import javajs.util.P3d;
-import javajs.util.P4d;
-import javajs.util.P4d;
-import javajs.util.PT;
-import javajs.util.Qd;
-import javajs.util.Qd;
-import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
-import javajs.util.V3d;
-import javajs.util.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.A4d;
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.DF;
+import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.PT;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * Reverse Polish Notation Engine for IF, SET, and @{...}
@@ -286,13 +280,6 @@ public class ScriptMathProcessor {
     return wasX = true;
   }
 
-  public boolean addXFloat(float x) {
-    if (Float.isNaN(x))
-      return addXStr("NaN");
-    putX(SV.newD(PT.toDouble(x)));
-    return wasX = true;
-  }
-
   public boolean addXDouble(double x) {
     if (Double.isNaN(x))
       return addXStr("NaN");
@@ -329,7 +316,7 @@ public class ScriptMathProcessor {
       case T.decimal:
         if (wasX) {
           double f = ((Number) x.value).doubleValue();
-          if (f < 0 || f == 0 && 1 / f == Float.NEGATIVE_INFINITY) {
+          if (f < 0 || f == 0 && 1 / f == Double.NEGATIVE_INFINITY) {
             addOp(T.tokenMinus);
             v = SV.newD(-f);
             break;
@@ -371,18 +358,8 @@ public class ScriptMathProcessor {
     return wasX = true;
   }
 
-  public boolean addXAF(float[] x) {
-    putX(SV.getVariableAF(x));
-    return wasX = true;
-  }
-
   public boolean addXAD(double[] x) {
     putX(SV.getVariableAD(x));
-    return wasX = true;
-  }
-
-  public boolean addXAFF(float[][] x) {
-    putX(SV.getVariableAFF(x));
     return wasX = true;
   }
 
@@ -1479,7 +1456,7 @@ public class ScriptMathProcessor {
       return addXInt(
           f == 0 ? 0 : (int) Math.floor(x1.asDouble() / x2.asDouble()));
     case T.timestimes:
-      f = (double) Math.pow(x1.asDouble(), x2.asDouble());
+      f = Math.pow(x1.asDouble(), x2.asDouble());
       return (x1.tok == T.integer && x2.tok == T.integer ? addXInt((int) f)
           : addXDouble(f));
     case T.percent:
