@@ -1258,7 +1258,7 @@ public class SmilesSearch extends JmolMolecule {
           // :<n> atom class  -- will be Double.NaN, and Double.NaN is not equal to any number
           if (!Double.isNaN(patternAtom.atomClass)
               && patternAtom.atomClass != targetAtom
-                  .getFloatProperty("property_atomclass"))
+                  .getDoubleProperty("property_atomclass"))
             break;
         }
         

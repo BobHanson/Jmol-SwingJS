@@ -79,8 +79,8 @@ public class JvxlReader extends JvxlXmlReader {
     }
     if (ac == Integer.MIN_VALUE)
       return;
-    volumetricOrigin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-        parseFloatStr(tokens[3]));
+    volumetricOrigin.set(parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
+        parseDoubleStr(tokens[3]));
     isAngstroms = VolumeFileReader.checkAtomLine(isXLowToHigh, isAngstroms,
         null, atomLine, jvxlFileHeaderBuffer);
     if (!isAngstroms)
@@ -154,7 +154,7 @@ public class JvxlReader extends JvxlXmlReader {
     if (showMsg)
       Logger.info("reading jvxl data set: " + comment + line);
     haveContourData = (comment.indexOf("+contourlines") >= 0);
-    jvxlCutoff = parseFloatStr(line);
+    jvxlCutoff = parseDoubleStr(line);
     Logger.info("JVXL read: cutoff " + jvxlCutoff);
 
     //  optional comment line for compatibility with earlier Jmol versions:
@@ -187,8 +187,8 @@ public class JvxlReader extends JvxlXmlReader {
     if (param1 == -1) {
       // a plane is defined
       try {
-        params.thePlane = P4d.new4(parseFloat(), parseFloat(), parseFloat(),
-            parseFloat());
+        params.thePlane = P4d.new4(parseDouble(), parseDouble(), parseDouble(),
+            parseDouble());
       } catch (Exception e) {
         Logger
             .error("Error reading 4 floats for PLANE definition -- setting to 0 0 1 0  (z=0)");
@@ -208,7 +208,7 @@ public class JvxlReader extends JvxlXmlReader {
       int nContoursRead = parseInt();
       if (nContoursRead == Integer.MIN_VALUE) {
         if (line.charAt(next[0]) == '[') {
-           jvxlData.contourValues = params.contoursDiscrete = parseFloatArray(null, null, null);
+           jvxlData.contourValues = params.contoursDiscrete = parseDoubleArray(null, null, null);
            Logger.info("JVXL read: contourValues " + Escape.eAD(jvxlData.contourValues));            
            jvxlData.contourColixes = params.contourColixes = C.getColixArray(getQuotedStringNext());
            jvxlData.contourColors = C.getHexCodes(jvxlData.contourColixes);
@@ -257,10 +257,10 @@ public class JvxlReader extends JvxlXmlReader {
     double blue = Double.NaN;
     boolean insideOut = (line.indexOf("insideOut") >= 0);
     if (jvxlDataIsColorMapped) {
-      dataMin = parseFloat();
-      dataMax = parseFloat();
-      red = parseFloat();
-      blue = parseFloat();
+      dataMin = parseDouble();
+      dataMax = parseDouble();
+      red = parseDouble();
+      blue = parseDouble();
     }
     jvxlSetColorRanges(dataMin, dataMax, red, blue, insideOut);
   }

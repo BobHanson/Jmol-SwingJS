@@ -1067,7 +1067,7 @@ public class SmilesGenerator {
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();
     double osclass = (openSMILES
-        ? ((Node) atom).getFloatProperty("property_atomclass")
+        ? ((Node) atom).getDoubleProperty("property_atomclass")
         : Double.NaN);
     String atomName = atom.getAtomName();
     String groupType = ((Node) atom).getBioStructureTypeName();

@@ -179,7 +179,7 @@ class Pmesh4Reader extends PolygonFileReader {
   }
 
   private double getFloat() throws Exception {
-    return parseFloatStr(nextToken());
+    return parseDoubleStr(nextToken());
   }
 
 }

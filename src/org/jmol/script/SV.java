@@ -594,8 +594,8 @@ public class SV extends T implements JSONEncodable {
       break;
     case string:
       if (((String) x.value).indexOf(".") >= 0)
-        return Double.valueOf(toFloat((String) x.value));
-      iValue = (int) toFloat((String) x.value);
+        return Double.valueOf(toDouble((String) x.value));
+      iValue = (int) toDouble((String) x.value);
       break;
     case point3f:
       return Double.valueOf(((T3d) x.value).length());
@@ -890,12 +890,6 @@ public class SV extends T implements JSONEncodable {
       return (P4d) o;
     }
     return null;
-  }
-
-  private static float toFloat(String s) {
-    return (s.equalsIgnoreCase("true") ? 1 
-        : s.length() == 0 || s.equalsIgnoreCase("false") ? 0 
-        : PT.parseFloatStrict(PT.trim(s," \t\n")));
   }
 
   private static double toDouble(String s) {

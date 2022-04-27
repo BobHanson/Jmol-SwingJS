@@ -209,7 +209,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     String s;
     String data = xr.getXmlData("jvxlSurfaceInfo", null, true, true);
     isXLowToHigh = XmlReader.getXmlAttrib(data, "isXLowToHigh").equals("true");
-    jvxlCutoff = parseFloatStr(XmlReader.getXmlAttrib(data, "cutoff"));
+    jvxlCutoff = parseDoubleStr(XmlReader.getXmlAttrib(data, "cutoff"));
     if (!Double.isNaN(jvxlCutoff))
       Logger.info("JVXL read: cutoff " + jvxlCutoff);
     int nContourData = parseIntStr(XmlReader.getXmlAttrib(data, "nContourData"));
@@ -226,7 +226,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         s = XmlReader.getXmlAttrib(data, "contourValues");
         if (s.length() > 0) {
           s = s.replace('[',' ').replace(']',' ');
-          jvxlData.contourValues = params.contoursDiscrete = parseFloatArrayStr(s);
+          jvxlData.contourValues = params.contoursDiscrete = parseDoubleArrayStr(s);
           Logger.info("JVXL read: contourValues " + Escape.eAD(jvxlData.contourValues));            
         }
         s = XmlReader.getXmlAttrib(data, "contourColors");
@@ -265,7 +265,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (jvxlData.jvxlDataIsColorDensity && Double.isNaN(params.pointSize)) {
       s = XmlReader.getXmlAttrib(data, "pointSize");
       if (s.length() > 0)
-        jvxlData.pointSize = params.pointSize = parseFloatStr(s);
+        jvxlData.pointSize = params.pointSize = parseDoubleStr(s);
     }
     s = XmlReader.getXmlAttrib(data, "allowVolumeRender");
       jvxlData.allowVolumeRender = params.allowVolumeRender = (s.length() == 0 || s.equalsIgnoreCase("true"));
@@ -282,7 +282,7 @@ public class JvxlXmlReader extends VolumeFileReader {
           Logger.info("JVXL read: mapLattice " + params.mapLattice);
         }
         if (params.scale3d == 0)
-          params.scale3d = parseFloatStr(XmlReader.getXmlAttrib(data, "scale3d"));
+          params.scale3d = parseDoubleStr(XmlReader.getXmlAttrib(data, "scale3d"));
         if (Double.isNaN(params.scale3d))
           params.scale3d = 0;
       } catch (Exception e) {
@@ -319,7 +319,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     jvxlData.color = XmlReader.getXmlAttrib(data, "color");
     if (jvxlData.color.length() == 0 || jvxlData.color.indexOf("null") >= 0)
       jvxlData.color = "orange";
-    jvxlData.translucency = parseFloatStr(XmlReader.getXmlAttrib(data, "translucency"));
+    jvxlData.translucency = parseDoubleStr(XmlReader.getXmlAttrib(data, "translucency"));
     if (Double.isNaN(jvxlData.translucency))
       jvxlData.translucency = 0;
     s = XmlReader.getXmlAttrib(data, "meshColor");
@@ -366,10 +366,10 @@ public class JvxlXmlReader extends VolumeFileReader {
     double red = Double.NaN;
     double blue = Double.NaN;
     if (jvxlDataIsColorMapped) {
-      dataMin = parseFloatStr(XmlReader.getXmlAttrib(data, "dataMinimum"));
-      dataMax = parseFloatStr(XmlReader.getXmlAttrib(data, "dataMaximum"));
-      red = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToRed"));
-      blue = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToBlue"));
+      dataMin = parseDoubleStr(XmlReader.getXmlAttrib(data, "dataMinimum"));
+      dataMax = parseDoubleStr(XmlReader.getXmlAttrib(data, "dataMaximum"));
+      red = parseDoubleStr(XmlReader.getXmlAttrib(data, "valueMappedToRed"));
+      blue = parseDoubleStr(XmlReader.getXmlAttrib(data, "valueMappedToBlue"));
       if (Double.isNaN(dataMin)) {
         dataMin = red = -1d;
         dataMax = blue = 1d;
@@ -971,7 +971,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     while ((pt = data.indexOf("<jvxlContour", pt + 1)) >= 0) {
       Lst<Object> v = new  Lst<Object>();
       String s = xr.getXmlData("jvxlContour", data.substring(pt), true, false);
-      double value = parseFloatStr(XmlReader.getXmlAttrib(s, "value"));
+      double value = parseDoubleStr(XmlReader.getXmlAttrib(s, "value"));
       values.append(" ").appendF(value);
       int color = getColor(XmlReader.getXmlAttrib(s, "color"));
       short colix = C.getColix(color);

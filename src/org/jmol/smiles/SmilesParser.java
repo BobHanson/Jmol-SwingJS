@@ -712,7 +712,7 @@ public class SmilesParser {
           double[] vals = new double[tokens.length];
           int i = tokens.length;
           for (; --i >= 0;)
-             if (Double.isNaN(vals[i] = Float.parseFloat(tokens[i])))
+             if (Double.isNaN(vals[i] = Double.parseDouble(tokens[i])))
                break;
           if (i >= 0)
             break;

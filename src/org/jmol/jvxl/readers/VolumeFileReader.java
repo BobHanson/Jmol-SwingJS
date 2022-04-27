@@ -189,7 +189,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     V3d voxelVector = volumetricVectors[voxelVectorIndex];
     if ((voxelCounts[voxelVectorIndex] = parseIntStr(line)) == Integer.MIN_VALUE) //unreadable
       next[0] = line.indexOf(" ");
-    voxelVector.set(parseFloat(), parseFloat(), parseFloat());
+    voxelVector.set(parseDouble(), parseDouble(), parseDouble());
     if (isAnisotropic)
       setVectorAnisotropy(voxelVector);
   }
@@ -470,9 +470,9 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   }
 
   protected double nextVoxel() throws Exception {
-    double voxelValue = parseFloat();
+    double voxelValue = parseDouble();
     if (Double.isNaN(voxelValue)) {
-      while (rd() != null && Double.isNaN(voxelValue = parseFloatStr(line))) {
+      while (rd() != null && Double.isNaN(voxelValue = parseDoubleStr(line))) {
       }
       if (line == null) {
         if (!endOfData)

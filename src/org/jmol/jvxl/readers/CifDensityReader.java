@@ -85,7 +85,7 @@ class CifDensityReader extends BCifDensityReader {
     double x = Double.NaN;
     if (o != null) {
       if (o instanceof String) {
-        x = PT.parseFloat((String) o);
+        x = PT.parseDouble((String) o);
       } else if (o instanceof Number) {
         x = ((Number) o).doubleValue();
       }
@@ -98,7 +98,7 @@ class CifDensityReader extends BCifDensityReader {
   protected double[] readCifFloats(String key, double[] values) {
     List<Object> list = (List<Object>) thisData.get(key);
     for (int i = 0, n = values.length; i < n; i++)
-      values[i] = PT.parseFloat((String) list.get(i));
+      values[i] = PT.parseDouble((String) list.get(i));
     return values;
   }
 }

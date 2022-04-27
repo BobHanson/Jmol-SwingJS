@@ -59,7 +59,7 @@ class XsfReader extends VolumeFileReader {
         isBXSF = true;
         beginKey = "BEGIN_BANDGRID_3D";
         if (needCutoff) {
-          params.cutoff = parseFloatStr(getTokens()[2]);
+          params.cutoff = parseDoubleStr(getTokens()[2]);
           needCutoff = false;
         }
       }
@@ -72,11 +72,11 @@ class XsfReader extends VolumeFileReader {
     voxelCounts[0] = parseIntStr(rd());
     voxelCounts[1] = parseInt();
     voxelCounts[2] = parseInt();
-    volumetricOrigin.set(parseFloatStr(rd()), parseFloat(), parseFloat());
+    volumetricOrigin.set(parseDoubleStr(rd()), parseDouble(), parseDouble());
     // SPANNING vectors here.
     for (int i = 0; i < 3; ++i) {
-      volumetricVectors[i].set(parseFloatStr(rd()), parseFloat(),
-          parseFloat());
+      volumetricVectors[i].set(parseDoubleStr(rd()), parseDouble(),
+          parseDouble());
       volumetricVectors[i].scale(1.0d / (voxelCounts[i] - 1));
     }
     if (isBXSF) {

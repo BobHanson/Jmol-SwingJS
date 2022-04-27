@@ -200,14 +200,14 @@ public class CGOMesh extends DrawMesh {
     Lst<Object> stack = new Lst<Object>();
     int[] next = new int[] {pt + 14};
     for (int i = 0; i < 4; i++)
-      data.addLast(Double.valueOf(PT.parseFloatNext(eps, next)));
+      data.addLast(Double.valueOf(PT.parseDoubleNext(eps, next)));
     pt = eps.indexOf("%%EndProlog");
     if (pt < 0)
       return false;
     next[0] = pt + 11;
     int len = eps.length();
     while (true) {
-      double f = PT.parseFloatChecked(eps, len, next, false);
+      double f = PT.parseDoubleChecked(eps, len, next, false);
       if (next[0] >= len)
         break;
       if (Double.isNaN(f)) {

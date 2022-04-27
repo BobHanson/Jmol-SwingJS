@@ -76,12 +76,12 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     jvxlFileHeaderBuffer = new SB();
     jvxlFileHeaderBuffer.append("Vasp CHGCAR format\n\n\n");
     rd(); // atoms
-    double scale = parseFloatStr(rd());
+    double scale = parseDoubleStr(rd());
     double[] data = new double[15];
     data[0] = -1;
     for (int i = 0, pt = 6; i < 3; ++i)
-      volumetricVectors[i].set(data[pt++] = parseFloatStr(rd()) * scale,
-          data[pt++] = parseFloat() * scale, data[pt++] = parseFloat() * scale);
+      volumetricVectors[i].set(data[pt++] = parseDoubleStr(rd()) * scale,
+          data[pt++] = parseDouble() * scale, data[pt++] = parseDouble() * scale);
     volume = (double) SimpleUnitCell.newAD(data).volume;
     // v0 here will be the slowest, not the fastest
     while (rd().length() > 2) {
@@ -110,7 +110,7 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
       rd();
       next[0] = 0;
     }
-    return parseFloat() / volume;
+    return parseDouble() / volume;
   }
 
   @Override

@@ -350,7 +350,7 @@ class PmeshReader extends PolygonFileReader {
   }
 
   private double getFloat() throws Exception {
-    return (isBinary ? binarydoc.readFloat() : parseFloatStr(nextToken()));
+    return (isBinary ? binarydoc.readFloat() : parseDoubleStr(nextToken()));
   }
 
 }

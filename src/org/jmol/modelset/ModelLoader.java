@@ -482,7 +482,7 @@ public final class ModelLoader {
         }
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
-        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, 
+        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE, entry }, 
             ms.ac, 0, 0, Integer.MAX_VALUE, 0);
       }
     }

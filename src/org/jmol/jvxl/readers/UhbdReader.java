@@ -93,10 +93,10 @@ class UhbdReader extends VolumeFileReader {
     voxelCounts[0] = parseIntStr(line.substring(0, 7));
     voxelCounts[1] = parseIntStr(line.substring(7,14));
     voxelCounts[2] = parseIntStr(line.substring(14, 21));
-    double dx = parseFloatStr(line.substring(21, 33));    
-    volumetricOrigin.set(parseFloatStr(line.substring(33, 45)), 
-        parseFloatStr(line.substring(45,57)), 
-        parseFloatStr(line.substring(57, 69)));
+    double dx = parseDoubleStr(line.substring(21, 33));    
+    volumetricOrigin.set(parseDoubleStr(line.substring(33, 45)), 
+        parseDoubleStr(line.substring(45,57)), 
+        parseDoubleStr(line.substring(57, 69)));
     volumetricVectors[0].set(0, 0, dx);
     volumetricVectors[1].set(0, dx, 0);
     volumetricVectors[2].set(dx, 0, 0);
@@ -122,7 +122,7 @@ class UhbdReader extends VolumeFileReader {
       pt = 0;
     }
     voxelCount++;
-    double voxelValue = parseFloatStr(line.substring(pt, pt + 13));
+    double voxelValue = parseDoubleStr(line.substring(pt, pt + 13));
     pt += 13;
     return voxelValue;
   }

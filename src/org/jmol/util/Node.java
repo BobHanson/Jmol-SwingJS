@@ -64,7 +64,7 @@ public interface Node extends SimpleNode {
    * @return value or Double.NaN
    */
 
-  public double getFloatProperty(String property);
+  public double getDoubleProperty(String property);
 
   // abstracts out the essential pieces for SMARTS processing
   

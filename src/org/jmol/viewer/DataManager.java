@@ -77,6 +77,7 @@ public class DataManager implements JmolDataManager {
   /**
    * This method needs to be redone using a class instead of Object[]
    */
+  @SuppressWarnings("unchecked")
   @Override
   public void setData(String type, Object[] data, int arrayCount,
                       int actualAtomCount, int matchField,
@@ -97,10 +98,13 @@ public class DataManager implements JmolDataManager {
        *   Integer.MAX_VALUE ==> values are a simple list; don't clear the data
        *   Integer.MIN_VALUE ==> one SINGLE data value should be used for all selected atoms
        */
+      
       if (type == null) {
         clear();
         return;
       }
+      System.out.println(PT.toJSON(null, data));
+      System.out.println(PT.toJSON(null, dataValues));
       type = type.toLowerCase();
       if (type.equals("element_vdw")) {
         setVDW(data);
@@ -119,9 +123,6 @@ public class DataManager implements JmolDataManager {
         Logger.error("Cannot determine data type for " + newVal);
         return;
       }
-
-      //TODO      need to make all double
-
       BS bs;
       double[] d = null;
       double[][] dd = null;
@@ -134,10 +135,17 @@ public class DataManager implements JmolDataManager {
           || field != Integer.MIN_VALUE && field != Integer.MAX_VALUE);
       Object[] oldData = dataValues.get(type);
       Object oldValue = (oldData == null ? null : oldData[DATA_VALUE]);
-      int oldType = getType(oldData);
+      //int oldType = getType(oldData);
       if (newType != DATA_TYPE_ADD) {
         d = (oldData == null || createNew ? new double[actualAtomCount]
             : AU.ensureLengthD(((double[]) oldValue), actualAtomCount));
+        if (d != oldValue && data.length > DATA_ATOM_PROP_ENTRY) {
+          @SuppressWarnings("rawtypes")
+          Map.Entry e = (Map.Entry) data[DATA_ATOM_PROP_ENTRY];
+          if (e != null)
+            e.setValue(d);
+        }
+        
       }
 
       // check to see if the data COULD be interpreted as a string of double values
@@ -161,7 +169,7 @@ public class DataManager implements JmolDataManager {
       if (field == Integer.MIN_VALUE) {
         // set the selected data elements to a single value
         bs = (BS) data[DATA_SELECTION];
-        setSelectedFloats(PT.parseFloat(stringData), bs, d);
+        setSelected(PT.parseDouble(stringData), bs, d);
       } else if (field == 0 || field == Integer.MAX_VALUE) {
         // just get the selected token values
         // set f, d, or ff 
@@ -271,31 +279,11 @@ public class DataManager implements JmolDataManager {
       f[i] = doubleData[pt];
   }
 
-  private static void fillSparseArrayD(double[] doubleData, BS bs, double[] d) {
-    for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
-        .nextSetBit(i + 1), pt++)
-      d[i] = doubleData[pt];
-  }
-
   private static int getType(Object[] data) {
     return (data == null ? 0 : ((Integer) data[DATA_TYPE]).intValue());
   }
 
-  /**
-   * 
-   * @param f
-   * @param bs
-   * @param data
-   */
-  private static void setSelectedFloats(double f, BS bs, double[] data) {
-    boolean isAll = (bs == null);
-    int i0 = (isAll ? 0 : bs.nextSetBit(0));
-    for (int i = i0; i >= 0
-        && i < data.length; i = (isAll ? i + 1 : bs.nextSetBit(i + 1)))
-      data[i] = f;
-  }
-
-  private static void setSelectedDoubles(double f, BS bs, double[] data) {
+  private static void setSelected(double f, BS bs, double[] data) {
     boolean isAll = (bs == null);
     int i0 = (isAll ? 0 : bs.nextSetBit(0));
     for (int i = i0; i >= 0
@@ -338,10 +326,10 @@ public class DataManager implements JmolDataManager {
     }
     Object[] data = dataValues.get(label);
     int oldType = getType(data);
-    Object oldData = data[DATA_VALUE];
     if (oldType != dataType) {
       return null;
     }
+    Object oldData = data[DATA_VALUE];
     if (bsSelected == null && oldData != null) {
       return oldData;
     }

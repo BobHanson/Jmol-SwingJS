@@ -118,8 +118,8 @@ class Ras3DReader extends PolygonFileReader {
       v0[1] = getPoint(tokens, 3);
       v0[2] = getPoint(tokens, 6);
       nTriangles++;
-      c0 = CU.colorTriadToFFRGB((float) parseFloatStr(tokens[9]),
-          (float) parseFloatStr(tokens[10]), (float) parseFloatStr(tokens[11]));
+      c0 = CU.colorTriadToFFRGB((float) parseDoubleStr(tokens[9]),
+          (float) parseDoubleStr(tokens[10]), (float) parseDoubleStr(tokens[11]));
       if (asQuads) {
         if (nTriangles % 2 == 1) {
           v2 = v1;
@@ -144,7 +144,7 @@ class Ras3DReader extends PolygonFileReader {
     String key = tokens[i] + ";" + tokens[i+1] + ";" + tokens[i+2];
     Integer v = htVertices.get(key);
     if (v == null) {
-      addVertexCopy(P3d.new3(parseFloatStr(tokens[i]),parseFloatStr(tokens[i+1]),parseFloatStr(tokens[i+2])), 0, nVertices, false);
+      addVertexCopy(P3d.new3(parseDoubleStr(tokens[i]),parseDoubleStr(tokens[i+1]),parseDoubleStr(tokens[i+2])), 0, nVertices, false);
       htVertices.put(key,  v = Integer.valueOf(nVertices++));
     }
     return v.intValue();

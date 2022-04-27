@@ -134,11 +134,11 @@ class EfvetReader extends PolygonFileReader {
       Logger.info(line);
     for (int i = 0; i < nVertices; i++) {
       skipTo("<vertex", "image");
-      parseFloatArray(values, null, ">");
+      parseDoubleArray(values, null, ">");
       pt.set(values[0], values[1], values[2]);
       skipTo(null, "property");
       for(int j = 0; j < dataIndex; j++)
-        value = parseFloat();
+        value = parseDouble();
       if (isAnisotropic)
         setVertexAnisotropy(pt);
       int v = vertexMap[i + 1] = addVC(pt, value, i, true);

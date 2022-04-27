@@ -1521,7 +1521,7 @@ public class Atom extends Point3fi implements Node {
   }
 
   @Override
-  public double getFloatProperty(String property) {
+  public double getDoubleProperty(String property) {
     Object data = group.chain.model.ms.vwr.getDataObj(property, null,
         JmolDataManager.DATA_TYPE_AD);
     double f = Double.NaN;

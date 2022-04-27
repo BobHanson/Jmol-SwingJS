@@ -51,8 +51,8 @@ class CubeReader extends VolumeFileReader {
     negativeAtomCount = (ac < 0); // MO list
     if (negativeAtomCount)
       ac = -ac;
-    volumetricOrigin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-        parseFloatStr(tokens[3]));
+    volumetricOrigin.set(parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
+        parseDoubleStr(tokens[3]));
     VolumeFileReader.checkAtomLine(isXLowToHigh, isAngstroms, tokens[0],
         atomLine, jvxlFileHeaderBuffer);
     if (!isAngstroms)

@@ -185,8 +185,8 @@ class KinemageReader extends PmeshReader {
     }
     retColor[0] = getColor(tokens[0]);
     tokens = PT.getTokens(tokens[i].replace(',', ' '));
-    P3d pt = P3d.new3(PT.parseFloat(tokens[0]), PT
-        .parseFloat(tokens[1]), PT.parseFloat(tokens[2]));
+    P3d pt = P3d.new3(PT.parseDouble(tokens[0]), PT
+        .parseDouble(tokens[1]), PT.parseDouble(tokens[2]));
     if (isAnisotropic)
       setVertexAnisotropy(pt);
     return addVertexCopy(pt, value, nVertices++, false);
