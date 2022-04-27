@@ -135,7 +135,7 @@ import javajs.util.V3d;
 
 public abstract class AtomSetCollectionReader implements GenericLineReader {
 
-  public final static double ANGSTROMS_PER_BOHR = 0.5291772f; // used by SpartanArchive
+  public final static double ANGSTROMS_PER_BOHR = 0.5291772; // used by SpartanArchive
 
   protected static final String CELL_TYPE_CONVENTIONAL = "conventional";
   protected static final String CELL_TYPE_PRIMITIVE = "primitive";
@@ -208,7 +208,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected P3d ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
-  public double packingError = 0.02f;
+  public double packingError = 0.02;
   protected boolean rotateHexCell; // aflow CIF reader only
   protected boolean isPrimitive; // VASP POSCAR reasder
   public int modDim; // modulation dimension
@@ -1326,14 +1326,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (matRot != null || !doSetOrientation)
       return;
     matRot = new M3d();
-    V3d v = V3d.new3((double) x1, (double) y1, (double) z1);
+    V3d v = V3d.new3(x1, y1, z1);
     // rows in Sygress/CAChe and Spartan become columns here
     v.normalize();
     matRot.setColumnV(0, v);
-    v.set((double) x2, (double) y2, (double) z2);
+    v.set(x2, y2, z2);
     v.normalize();
     matRot.setColumnV(1, v);
-    v.set((double) x3, (double) y3, (double) z3);
+    v.set(x3, y3, z3);
     v.normalize();
     matRot.setColumnV(2, v);
     asc.setInfo("defaultOrientationMatrix", M3d.newM3(matRot));

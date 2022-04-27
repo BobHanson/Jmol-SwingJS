@@ -43,12 +43,10 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -1553,7 +1551,7 @@ public class XtalSymmetry {
    */
   public void scaleFractionalVibs() {
     double[] params = getBaseSymmetry().getUnitCellParams();
-    P3d ptScale = P3d.new3(1 / (double) params[0], 1 / (double) params[1], 1 / (double) params[2]);
+    P3d ptScale = P3d.new3(1 / params[0], 1 / params[1], 1 / params[2]);
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;

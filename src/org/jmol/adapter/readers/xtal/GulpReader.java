@@ -3,13 +3,11 @@ package org.jmol.adapter.readers.xtal;
 import java.util.Hashtable;
 import java.util.Map;
 
-
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.SymmetryInterface;
 
 import javajs.util.PT;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -420,7 +418,7 @@ public class GulpReader extends AtomSetCollectionReader {
       String species = tokens[0];
       Double charge = atomCharges.get(species);
       double f = (charge == null ? 0 : charge.doubleValue());
-      atomCharges.put(species, Double.valueOf((f + (double) parseDoubleStr(tokens[4]))));
+      atomCharges.put(species, Double.valueOf((f + parseDoubleStr(tokens[4]))));
     }
   }
 
