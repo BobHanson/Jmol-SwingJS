@@ -623,9 +623,10 @@ public class MSRdr implements MSInterface {
   }
         
   private void fixDouble(double[] pt) {
-    if (cr.fixJavaDouble)
-      for (int i = pt.length; --i >= 0;)
-        pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
+    // was fixFloat(float[] pt  -- removed in Jmol 15.32.53
+//    if (cr.fixJavaDouble)
+//      for (int i = pt.length; --i >= 0;)
+//        pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
   }
 
   @Override
@@ -1078,8 +1079,8 @@ public class MSRdr implements MSInterface {
           pt.addF(a.vib);
         getSymmetry(a).toCartesian(pt, false);
         sym.toFractional(pt, false);
-        if (cr.fixJavaDouble)
-          PT.fixPtDoubles(pt, PT.FRACTIONAL_PRECISION);
+//        if (cr.fixJavaDouble)
+//          PT.fixPtDoubles(pt, PT.FRACTIONAL_PRECISION);
         isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
             minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f);
         //          || (cr.legacyJavaFloat ? !asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
@@ -1089,8 +1090,8 @@ public class MSRdr implements MSInterface {
         //              }
       }
       if (isOK) {
-        if (cr.fixJavaDouble)
-          PT.fixPtDoubles(a, PT.FRACTIONAL_PRECISION);
+//        if (cr.fixJavaDouble)
+//          PT.fixPtDoubles(a, PT.FRACTIONAL_PRECISION);
       } else {
         bs.clear(i);
       }

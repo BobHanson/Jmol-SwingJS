@@ -1561,23 +1561,13 @@ public class PT {
     return sb.toString();
   }
 
-  public static final double FRACTIONAL_PRECISION = 100000d;
-  public static final double CARTESIAN_PRECISION =  10000d;
-  
-  @Deprecated
-  public static void fixPtFloats(T3d pt, double d) {
-//    if (true)
-      return;
-//	    //this will equate double and double as long as -256 <= x <= 256
-//	    pt.x = (Math.round(pt.x * d) / d);
-//	    pt.y = (Math.round(pt.y * d) / d);
-//	    pt.z = (Math.round(pt.z * d) / d);
-	  }
-	  
-  public static double fixDouble(double d, double f) {
-    return Math.round(d * f) / f;
-  }
-
+//  public static final double FRACTIONAL_PRECISION = 100000d;
+//  public static final double CARTESIAN_PRECISION =  10000d;
+//  
+//  public static double fixDouble(double d, double f) {
+//    return Math.round(d * f) / f;
+//  }
+//
   /**
    * parse a float or "float/float"
    * @param s

@@ -1151,7 +1151,7 @@ public final class ModelLoader {
       int modelIndex = -1;
       SymmetryInterface c = null;
       boolean isFractional = false;
-      boolean roundCoords = (!vwr.getBoolean(T.doubleprecision) && !vwr.getBoolean(T.legacyjavafloat));
+//      boolean roundCoords = (!vwr.getBoolean(T.doubleprecision) && !vwr.getBoolean(T.legacyjavafloat));
       for (int i = baseAtomIndex; i < ms.ac; i++) {
         if (atoms[i].mi != modelIndex) {
           modelIndex = atoms[i].mi;
@@ -1163,8 +1163,8 @@ public final class ModelLoader {
           // this happens for commensurately modulated composite compounds
           c = atoms[i].getUnitCell();
           c.toCartesianF(c.toSupercell(atoms[i]), false);
-          if (roundCoords)
-            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
+//          if (roundCoords)
+//            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }
       }
       for (int imodel = baseModelIndex; imodel < ms.mc; imodel++)

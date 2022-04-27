@@ -3906,8 +3906,8 @@ public class Viewer extends JmolViewer
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toCartesianF(pt, ignoreOffset);
-      if (!g.legacyJavaFloat)
-        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
+//      if (!g.legacyJavaFloat)
+//        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
     }
   }
 
@@ -3928,8 +3928,8 @@ public class Viewer extends JmolViewer
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toFractionalF(pt, ignoreOffset);
-      if (!g.legacyJavaFloat)
-        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+//      if (!g.legacyJavaFloat)
+//        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
   }
 

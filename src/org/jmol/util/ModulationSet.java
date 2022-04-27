@@ -521,7 +521,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.setT(mxyz);
     // vib.modScale is from VECTOR MAX <n> 
     symmetry.toCartesianF(ptTemp, true);
-    PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
+//    PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
     // we must scale v0 with mod to preserve angle
     ptTemp.add(v0);
     ptTemp.scale(vib.modScale * modulationScale * this.scale);

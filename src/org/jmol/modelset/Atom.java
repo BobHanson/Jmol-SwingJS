@@ -765,8 +765,8 @@ public class Atom extends Point3fi implements Node {
     if (c != null) {
       c = c.getUnitCellMultiplied();
       c.toFractionalF(pt, ignoreOffset);
-      if (fixJavaFloat)
-        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+//      if (fixJavaFloat)
+//        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
     return pt;
   }
@@ -804,8 +804,8 @@ public class Atom extends Point3fi implements Node {
       if (!asCartesian)
         c.toFractionalF(pt, false);
     }
-    if (fixJavaFloat)
-      PT.fixPtFloats(pt, asCartesian ? PT.CARTESIAN_PRECISION : PT.FRACTIONAL_PRECISION);      
+//    if (fixJavaFloat)
+//      PT.fixPtFloats(pt, asCartesian ? PT.CARTESIAN_PRECISION : PT.FRACTIONAL_PRECISION);      
     return pt;
   }
   

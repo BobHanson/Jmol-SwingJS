@@ -348,8 +348,8 @@ public class XtalSymmetry {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
-        if (acr.fixJavaDouble)
-          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
+//        if (acr.fixJavaDouble)
+//          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
         if (acr.noPack
                 ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
                 : !isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
@@ -803,8 +803,8 @@ public class XtalSymmetry {
               sym.toUnitCellRnd(c, ptOffset);
               pttemp.setT(c);
               sym.toFractional(pttemp, false);
-              if (acr.fixJavaDouble)
-                PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
+//              if (acr.fixJavaDouble)
+//                PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
               // setting it to be correct for a 
               // second unit cell -- the supercell
@@ -963,16 +963,16 @@ public class XtalSymmetry {
               finalizeSymmetry(sym);
           }
         }
-        if (acr.fixJavaDouble)
-          PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
+//        if (acr.fixJavaDouble)
+//          PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
         P3d c = P3d.newP(pttemp); // cartesian position
         sym.toCartesian(c, false);
         if (doPackUnitCell) {
           sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
-          if (acr.fixJavaDouble)
-            PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
+//          if (acr.fixJavaDouble)
+//            PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
           if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
               maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
             continue;

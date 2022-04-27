@@ -1390,9 +1390,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }
-    if (fixJavaDouble && fileCoordinatesAreFractional) {
-      PT.fixPtDoubles(atom, PT.FRACTIONAL_PRECISION);
-    }
+//    if (fixJavaDouble && fileCoordinatesAreFractional) {
+//      PT.fixPtDoubles(atom, PT.FRACTIONAL_PRECISION);
+//    }
     doCheckUnitCell = true;
   }
 
