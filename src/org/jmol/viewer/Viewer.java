@@ -10734,7 +10734,7 @@ public class Viewer extends JmolViewer
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
-      mp = (double) Math.pow(10, m);
+      mp = Math.pow(10, m);
       e = Measurement.fromUnits(mp + 0.000001f, u);
       p = (int) (e * tm.scalePixelsPerAngstrom * f);
       if (p < min) {

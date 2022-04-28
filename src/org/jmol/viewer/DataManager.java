@@ -77,7 +77,6 @@ public class DataManager implements JmolDataManager {
   /**
    * This method needs to be redone using a class instead of Object[]
    */
-  @SuppressWarnings("unchecked")
   @Override
   public void setData(String type, Object[] data, int atomCount,
                       int actualAtomCount, int matchField,

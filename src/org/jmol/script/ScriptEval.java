@@ -64,29 +64,21 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.A4d;
-import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
-import javajs.util.M4d;
-import javajs.util.M3d;
-import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.OC;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class ScriptEval extends ScriptExpr {
@@ -5789,7 +5781,7 @@ public class ScriptEval extends ScriptExpr {
        * the orientation quaternion refers to how the reference plane has been
        * changed (the orientation matrix)
        */
-      degrees = (isMolecular ? -1 : 1) * (double) (aa.angle * 180.0 / Math.PI);
+      degrees = (isMolecular ? -1 : 1) * (aa.angle * 180.0 / Math.PI);
     }
     if (Double.isNaN(axis.x) || Double.isNaN(axis.y) || Double.isNaN(axis.z))
       axis.set(0, 0, 0);
