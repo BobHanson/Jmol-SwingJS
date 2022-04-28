@@ -25,20 +25,11 @@
 
 package org.jmol.modelset;
 
-import org.jmol.util.Elements;
-import javajs.util.P3d;
-import javajs.util.P3d;
-
-import org.jmol.util.BSUtil;
-import org.jmol.util.Edge;
-import org.jmol.util.JmolMolecule;
-import org.jmol.util.Logger;
-import javajs.util.V3d;
-import javajs.util.V3d;
-
-import org.jmol.viewer.JC;
-import org.jmol.script.T;
-import org.jmol.viewer.Viewer;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
@@ -48,24 +39,25 @@ import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
-import javajs.util.BS;
-
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioResolver;
+import org.jmol.script.T;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Edge;
+import org.jmol.util.Elements;
+import org.jmol.util.JmolMolecule;
+import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.SB;
-
-import java.util.Arrays;
-
-import java.util.Hashtable;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import javajs.util.V3d;
 
 /* 
  * 
@@ -485,6 +477,7 @@ public final class ModelLoader {
         vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE, entry }, 
             ms.ac, 0, 0, Integer.MAX_VALUE, 0);
       }
+      ms.setInfo(i, "atomProperties", null);
     }
   }
 
@@ -1583,7 +1576,7 @@ public final class ModelLoader {
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    double f = (double) (0.4d * -dir * Math.sin(4*theta)); // was 0.8
+    double f = (0.4d * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
 //    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }

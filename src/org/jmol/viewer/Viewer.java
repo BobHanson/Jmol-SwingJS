@@ -4150,7 +4150,7 @@ public class Viewer extends JmolViewer
    * 
    *        data[4] -- Boolean.TRUE == saveInState
    * 
-   * @param dataType
+   * @param atomCount
    * 
    *        see JmolDataManager interface
    * 
@@ -4181,10 +4181,10 @@ public class Viewer extends JmolViewer
    * 
    *        if 0, reference is to tokens, not characters
    */
-  public void setData(String key, Object[] data, int dataType, int matchField,
+  public void setData(String key, Object[] data, int atomCount, int matchField,
                       int matchFieldColumnCount, int dataField,
                       int dataFieldColumnCount) {
-    getDataManager().setData(key, lastData = data, dataType, ms.ac, matchField,
+    getDataManager().setData(key, lastData = data, atomCount, ms.ac, matchField,
         matchFieldColumnCount, dataField, dataFieldColumnCount);
   }
 

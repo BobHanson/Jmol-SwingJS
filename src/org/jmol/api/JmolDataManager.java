@@ -46,7 +46,7 @@ public interface JmolDataManager {
 
   String getDefaultVdwNameOrData(VDW type, BS bs);
 
-  void setData(String type, Object[] data, int dataType, int ac,
+  void setData(String type, Object[] data, int atomCount, int ac,
                int matchField, int matchFieldColumnCount, int dataField,
                int dataFieldColumnCount);
 

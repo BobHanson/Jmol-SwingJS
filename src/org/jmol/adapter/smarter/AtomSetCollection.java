@@ -39,7 +39,6 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.V3d;
 
 @SuppressWarnings("unchecked")
@@ -675,7 +674,7 @@ public class AtomSetCollection {
   public V3d addVibrationVector(int iatom, double x, double y, double z) {
     if (!allowMultiple)
       iatom = iatom % ac;
-    return (atoms[iatom].vib = V3d.new3((double) x, (double) y, (double) z));
+    return (atoms[iatom].vib = V3d.new3(x, y, z));
   }
 
   public void setCoordinatesAreFractional(boolean tf) {

@@ -79,18 +79,23 @@ public class DataManager implements JmolDataManager {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public void setData(String type, Object[] data, int arrayCount,
+  public void setData(String type, Object[] data, int atomCount,
                       int actualAtomCount, int matchField,
                       int matchFieldColumnCount, int field,
                       int fieldColumnCount) {
     try {
-      //Eval
       /*
        * data[0] -- label
+       * 
        * data[1] -- string or double[] or double[][] or double[][][]
+       * 
        * data[2] -- selection bitset or int[] atomMap when field > 0
+       *
        * data[3] -- arrayDepth 0(String),1(double[]),2,3(double[][][]) or -1 for set by data type
+      *
        * data[4] -- Boolean.TRUE == saveInState
+       * 
+       * data[5] -- ModelLoader atomProperty Map.Entry for revising array data
        * 
        * matchField = data must match atomNo in this column, >= 1
        * field = column containing the data, >= 1:
@@ -98,13 +103,13 @@ public class DataManager implements JmolDataManager {
        *   Integer.MAX_VALUE ==> values are a simple list; don't clear the data
        *   Integer.MIN_VALUE ==> one SINGLE data value should be used for all selected atoms
        */
-      
+
       if (type == null) {
         clear();
         return;
       }
-      System.out.println(PT.toJSON(null, data));
-      System.out.println(PT.toJSON(null, dataValues));
+//      System.out.println(PT.toJSON(null, data));
+//      System.out.println(PT.toJSON(null, dataValues));
       type = type.toLowerCase();
       if (type.equals("element_vdw")) {
         setVDW(data);
@@ -115,10 +120,13 @@ public class DataManager implements JmolDataManager {
       Object newVal = data[DATA_VALUE];
       if (newType == DATA_TYPE_UNKNOWN)
         data[DATA_TYPE] = Integer.valueOf(newType = getTypeFor(newVal));
-      if (data[DATA_SELECTION] == null || arrayCount == 0) {
+      if (data[DATA_SELECTION] == null || atomCount <= 0) {
         dataValues.put(type, data);
         return;
       }
+      
+      // must be atom-based bit set DATA_SELECTION on arrays
+
       if (newType == DATA_TYPE_UNKNOWN) {
         Logger.error("Cannot determine data type for " + newVal);
         return;
@@ -139,13 +147,13 @@ public class DataManager implements JmolDataManager {
       if (newType != DATA_TYPE_ADD) {
         d = (oldData == null || createNew ? new double[actualAtomCount]
             : AU.ensureLengthD(((double[]) oldValue), actualAtomCount));
-        if (d != oldValue && data.length > DATA_ATOM_PROP_ENTRY) {
-          @SuppressWarnings("rawtypes")
-          Map.Entry e = (Map.Entry) data[DATA_ATOM_PROP_ENTRY];
-          if (e != null)
-            e.setValue(d);
+        // check for a atomProperty 
+        if (d != oldValue && type.startsWith("property_") && !type.startsWith("property_atom.")) {
+//          @SuppressWarnings("rawtypes")    
+//          Map.Entry e = (Map.Entry) data[DATA_ATOM_PROP_ENTRY];
+//          if (e != null)
+//            e.setValue(d);
         }
-        
       }
 
       // check to see if the data COULD be interpreted as a string of double values
@@ -171,7 +179,7 @@ public class DataManager implements JmolDataManager {
         bs = (BS) data[DATA_SELECTION];
         setSelected(PT.parseDouble(stringData), bs, d);
       } else if (field == 0 || field == Integer.MAX_VALUE) {
-        // just get the selected token values
+        // just set the selected token values
         // set f, d, or ff 
         bs = (BS) data[DATA_SELECTION];
         if (dData != null) {
@@ -230,6 +238,7 @@ public class DataManager implements JmolDataManager {
         data[DATA_VALUE] = d;
       }
       if (type.indexOf("property_atom.") == 0) {
+        // these must be double[] only
         int tok = T.getSettableTokFromString(type = type.substring(14));
         if (tok == T.nada) {
           Logger.error("Unknown atom property: " + type);
@@ -246,6 +255,7 @@ public class DataManager implements JmolDataManager {
       dataValues.put(type, data);
     } catch (Exception e) {
       Logger.error("DataManager failed :" + e);
+      e.printStackTrace();
     }
   }
 

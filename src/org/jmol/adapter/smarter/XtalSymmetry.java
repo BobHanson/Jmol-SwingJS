@@ -848,14 +848,16 @@ public class XtalSymmetry {
 
     // now apply all the translations
     iCell = 0;
-    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++)
-      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
+    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
+      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
         for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
           iCell++;
           if (tx != 0 || ty != 0 || tz != 0)
             pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt,
                 iCell * operationCount, cartesians, ms, excludedOps, atomMap);
         }
+      }
+    }
     if (iCell * n == asc.ac - firstAtom)
       duplicateAtomProperties(iCell);
     setSymmetryOps();

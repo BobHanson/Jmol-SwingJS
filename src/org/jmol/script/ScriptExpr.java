@@ -1771,7 +1771,7 @@ abstract class ScriptExpr extends ScriptParam {
             bsAtom.clear(i);
             break;
           case T.property:
-            fv = (data == null ? 0 : data[i]);
+            fv = (data == null || i >= data.length ? 0 : data[i]);
             break;
           case T.distance:
             if (planeRef != null)

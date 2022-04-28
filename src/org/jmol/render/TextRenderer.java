@@ -120,21 +120,25 @@ class TextRenderer {
     int xoff = (text.xyz == null ? 0 : 2);
     // barPixels has a 4-pixel margin
     int ia = (isAntialiased? 2 : 1);
-    for (int i = (ia == 2 ? 3 : 1); i > 0; i -= 1) {
+    //for (int i = (ia == 2 ? 3 : 1); i > 0; i -= 1) {
+    int i = 1;
     int x1 = xoff + (int) temp[0] - barPixels - i - ia * 2;
     int x2 = xoff + (int) temp[0] - i - ia * 2;
-    int h = text.lineHeight / 4;
-    int y = (int) temp[1] - h - i;
-    P3i sA = P3i.new3(x1, y, z);
-    P3i sB = P3i.new3(x2, y, z);
-    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
-    sA.y = y + h;
-    sB.y = y - h;    
-    sB.x = x1;
-    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
-    sA.x = sB.x = x2;
-    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
-    }
+    int h = (text.lineHeight)/3;
+    int y = (int) temp[1] - i;
+    g3d.fillTextRect(x1, y-h/2-2-ia, z, text.zSlab, x2-x1, 2*ia);
+    g3d.fillTextRect(x1, y-h*3/2, z, text.zSlab, 2*ia, h*3/2);
+    g3d.fillTextRect(x2, y-h*3/2, z, text.zSlab, 2*ia, h*3/2);
+//
+//    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
+//    sA.y = y + h;
+//    sB.y = y - h;    
+//    sB.x = x1;
+//    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
+//    sA.x = sB.x = x2;
+//    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
+//    
+    //}
   }
 
 

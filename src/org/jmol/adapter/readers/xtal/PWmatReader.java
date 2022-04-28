@@ -86,8 +86,8 @@ public class PWmatReader extends AtomSetCollectionReader {
     int i = 0;
     while (i++ < nAtoms && getLine() != null) {
       String[] tokens = getTokens();
-      addAtomXYZSymName(tokens, 1, null,
-          getElementSymbol(Integer.parseInt(tokens[0])));
+      int z = Integer.parseInt(tokens[0]);
+      addAtomXYZSymName(tokens, 1, getElementSymbol(z), null).elementNumber = (short) z;
       haveConstraints = (tokens.length >= 7) && haveConstraints;
       if (haveConstraints)
         constraints.addLast(new double[] { Double.parseDouble(tokens[4]),
@@ -108,9 +108,7 @@ public class PWmatReader extends AtomSetCollectionReader {
   }
 
   private boolean readDataBlock(String name) throws Exception {
-    int pt = name.indexOf(" ");
-    if (pt > 0)
-      name = name.substring(0, pt);
+    name = trimPWPropertyNameTo(name, " ([,");
     getLine();
     if (line == null)
       return false;
@@ -128,6 +126,15 @@ public class PWmatReader extends AtomSetCollectionReader {
       Logger.error("PWmatReader block " + name.toUpperCase() + " ignored");
       return false;
     }
+  }
+
+  private String trimPWPropertyNameTo(String name, String chars) {
+    for (int i = chars.length(); --i >= 0;) {
+      int pt = name.indexOf(chars.charAt(i));
+      if (pt > 0)
+        name = name.substring(0, pt);
+    }
+    return name;
   }
 
   private boolean haveMagnetic = false;
@@ -221,13 +228,23 @@ public class PWmatReader extends AtomSetCollectionReader {
           .getAtomSetAuxiliaryInfoValue(asc.iSet, "atomProperties");
       if (p != null) {
         Atom[] atoms = asc.atoms;
+        // we must only provide data for actual atoms. 
+        int n = (asc.bsAtoms == null ? nAtoms : asc.bsAtoms.cardinality());
+        int[] map = (n == nAtoms ? null : new int[nAtoms]);
+        if (map != null) {
+          for (int j = 0, k = 0; j < nAtoms; j++) {
+            if (asc.bsAtoms.get(j))
+              map[j] = k++;
+          }
+        }
         for (Entry<String, Object> e : p.entrySet()) {
           String key = e.getKey();
           if (key.startsWith("pwm_")) {
             double[] af = (double[]) e.getValue();
-            double[] af2 = new double[nAtoms];
-            for (int j = 0; j < nAtoms; j++)
-              af2[j] = af[atoms[j].atomSite];
+            double[] af2 = new double[n];
+            for (int j = 0; j < nAtoms; j++) {
+              af2[map == null ? j : map[j]] = af[atoms[j].atomSite];
+            }
             e.setValue(af2);
           }
         }

@@ -1206,7 +1206,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           filter2Cased = ";" + filter.substring(ipt).trim();
         }
         filter1 = filter1Cased.toUpperCase();
-        filter2 = filter2Cased.toUpperCase();
+        filter2 = (filter2Cased.length() == 0 ? null : filter2Cased.toUpperCase());
       }
     }
   }
