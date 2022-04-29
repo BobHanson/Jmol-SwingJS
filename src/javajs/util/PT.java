@@ -83,7 +83,7 @@ public class PT {
   }
 
   /**
-   * A float parser that is 30% faster than Float.parseFloat(x) and also accepts
+   * A float parser that is 30% faster than Double.parseFloat(x) and also accepts
    * x.yD+-n
    * 
    * @param str
@@ -1366,7 +1366,7 @@ public class PT {
   }
 
   public static String formatStringS(String strFormat, String key, String strT) {
-    return formatString(strFormat, key, strT, Float.NaN, Double.NaN, false);
+    return formatString(strFormat, key, strT, Double.NaN, Double.NaN, false);
   }
 
   public static String formatStringF(String strFormat, String key, double floatT) {
@@ -1374,7 +1374,7 @@ public class PT {
   }
 
   public static String formatStringI(String strFormat, String key, int intT) {
-    return formatString(strFormat, key, "" + intT, Float.NaN, Double.NaN, false);
+    return formatString(strFormat, key, "" + intT, Double.NaN, Double.NaN, false);
   }
 
   /**
