@@ -297,7 +297,7 @@ public class BioExt {
           double straightness = (calcRamachandranStraightness
               || writeRamachandranStraightness
                   ? getStraightness(
-                      (double) Math.cos(angledeg / 2 / 180 * Math.PI))
+                      Math.cos(angledeg / 2 / 180 * Math.PI))
                   : 0);
           if (ctype == 'S') {
             monomer.setGroupParameter(T.straightness, straightness);
@@ -567,7 +567,7 @@ public class BioExt {
     A4d axis = q.toA4d();
     return PT.sprintf("%10.6f%10.6f%10.6f%10.6f  %6.2f  %10.5f %10.5f %10.5f",
         "F", new Object[] { new double[] { q.q0, q.q1, q.q2, q.q3,
-            (double) (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
+            (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
   }
 
   static String drawQuat(Qd q, String prefix, String id, P3d ptCenter,
@@ -619,7 +619,7 @@ public class BioExt {
   }
 
   private static double getStraightness(double cosHalfTheta) {
-    return (double) (1 - 2 * Math.acos(Math.abs(cosHalfTheta)) / Math.PI);
+    return (1 - 2 * Math.acos(Math.abs(cosHalfTheta)) / Math.PI);
   }
 
   void getPdbDataM(BioModel m, Viewer vwr, String type, char ctype,

@@ -38,7 +38,7 @@ class PolyhedronStereoSorter implements Comparator<Object[]> {
   private V3d align1 = new V3d();
   private V3d align2 = new V3d();
 
-  private static final double MIN_ALIGNED = (double) (10d/180*Math.PI);
+  private static final double MIN_ALIGNED = (10d/180*Math.PI);
 
   /**
    * check alignment, within 10 degrees is considered aligned.

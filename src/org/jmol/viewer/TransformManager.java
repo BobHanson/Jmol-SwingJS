@@ -1920,7 +1920,7 @@ public class TransformManager {
     sb.append("moveto ");
     if (addComments)
       sb.append("/* time, axisAngle */ ");
-    sb.appendF(timespan);
+    sb.appendD(timespan);
     sb.append(" ").append(getRotationText());
     if (addComments)
       sb.append(" /* zoom, translation */ ");
@@ -1931,7 +1931,7 @@ public class TransformManager {
     if (addComments)
       sb.append(" /* center, rotationRadius */ ");
     sb.append(getCenterText());
-    sb.append(" ").appendF(modelRadius);
+    sb.append(" ").appendD(modelRadius);
     sb.append(getNavigationText(addComments));
     if (addComments)
       sb.append(" /* cameraDepth, cameraX, cameraY */ ");
@@ -2060,7 +2060,7 @@ public class TransformManager {
 
   static private void truncate2(SB sb, double val) {
     sb.appendC(' ');
-    sb.appendF(Math.round(val * 100) / 100d);
+    sb.appendD(Math.round(val * 100) / 100d);
   }
 
   /* ***************************************************************

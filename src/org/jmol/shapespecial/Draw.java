@@ -1456,9 +1456,9 @@ private void initDraw() {
         && (dmesh.haveXyPoints || dmesh.connectedAtoms != null
             || dmesh.drawType == EnumDrawType.CIRCLE
             || dmesh.drawType == EnumDrawType.ARC))
-      str.append(" scale ").appendF(dmesh.scale);
+      str.append(" scale ").appendD(dmesh.scale);
     if (dmesh.width != 0)
-      str.append(" diameter ").appendF(
+      str.append(" diameter ").appendD(
           (dmesh.drawType == EnumDrawType.CYLINDER ? Math.abs(dmesh.width)
               : dmesh.drawType == EnumDrawType.CIRCULARPLANE
                   ? Math.abs(dmesh.width * dmesh.scale)
@@ -1687,7 +1687,7 @@ private void initDraw() {
   }
 
   public static P3d randomPoint() {
-    return P3d.new3((double) Math.random(), (double) Math.random(), (double) Math.random());
+    return P3d.new3(Math.random(), Math.random(), Math.random());
   }
 
   public enum EnumDrawType {

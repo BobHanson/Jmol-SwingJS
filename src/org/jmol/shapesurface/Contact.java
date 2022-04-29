@@ -375,7 +375,7 @@ public class Contact extends Isosurface {
       jvxlData.boundingBox[1] = box.bbCorner1;
     }
     this.displayType = displayType;
-    return (double) volume;
+    return volume;
   }
   
   private int setColorByScore(double score, int nV) {
@@ -649,7 +649,7 @@ public class Contact extends Isosurface {
     vX.sub2(pt2, pt1);
     double dAB = vX.length();
     double dYZ = (cp.radii[0] * cp.radii[0] + dAB * dAB - cp.radii[1] * cp.radii[1])/(2 * dAB * cp.radii[0]);
-    dYZ = 2.1d * (double) (cp.radii[0] * Math.sin(Math.acos(dYZ)));
+    dYZ = 2.1d * (cp.radii[0] * Math.sin(Math.acos(dYZ)));
     MeasureD.getNormalToLine(pt1, pt2, vZ);
     vZ.scale(dYZ);
     vY.cross(vZ, vX);
@@ -873,7 +873,7 @@ x3 == f + g/h^(1/3) + h^(1/3)
     x = f + (g/vvu + vvu) * costheta;
     //System.out.println(d + "\t" + x + "\t" + ((a + x)*(a + x) * (b + 2 * x)) + " = " + c);
     if (x > 0) {
-      cp.xVdwClash = ((double) (x / 2));
+      cp.xVdwClash = ((x / 2));
     }
   }
 

@@ -181,7 +181,7 @@ public class BioMeshRenderer extends MeshRenderer {
 
     int nHermites = (bsr.hermiteLevel + 1) * 2 + 1; // 5 for hermiteLevel = 1; 13 for hermitelevel 5
     int nPer = (isFlatMesh ? 4 : (bsr.hermiteLevel + 1) * 4 - 2); // 6 for hermiteLevel 1; 22 for hermiteLevel 5
-    double angle = (double) ((isFlatMesh ? Math.PI / (nPer - 1) : 2 * Math.PI
+    double angle = ((isFlatMesh ? Math.PI / (nPer - 1) : 2 * Math.PI
         / nPer));
     Mesh mesh = meshes[i] = new Mesh().mesh1(vwr, "mesh_" + shapeID + "_" + i, (short) 0, i);
     boolean variableRadius = (madBeg != madMid || madMid != madEnd);
@@ -274,12 +274,12 @@ public class BioMeshRenderer extends MeshRenderer {
         switch (mode) {
         case MODE_FLAT:
           wingT.setT(wing1);
-          wingT.scale((double) Math.cos(theta));
+          wingT.scale(Math.cos(theta));
           break;
         case MODE_ELLIPTICAL:
           wingT.setT(wing1);
-          wingT.scale((double) Math.sin(theta));
-          wingT.scaleAdd2((double) Math.cos(theta), wing, wingT);
+          wingT.scale(Math.sin(theta));
+          wingT.scaleAdd2(Math.cos(theta), wing, wingT);
           break;
         case MODE_NONELLIPTICAL:
           wingT.setT(wing);

@@ -156,7 +156,7 @@ public class MeshSlicer {
       case T.within:
         P3d[] points = (P3d[]) o[1];
         BS bs = (BS) o[2];
-        sb.append("within ").appendF(distance)
+        sb.append("within ").appendD(distance)
             .append(bs == null ? Escape.e(points) : Escape.e(bs));
         getIntersection(distance, null, points, null, null, null, null, andCap,
             false, T.distance, isGhost);
@@ -167,8 +167,8 @@ public class MeshSlicer {
         if (m.vvs == null)
           return false;
         double distanceMax = ((Number) o[1]).doubleValue();
-        sb.append("within range ").appendF(distance).append(" ")
-            .appendF(distanceMax);
+        sb.append("within range ").appendD(distance).append(" ")
+            .appendD(distanceMax);
         bs = (distanceMax < distance ? BSUtil.copy(m.bsSlabDisplay) : null);
         getIntersection(distance, null, null, null, null, null, null, andCap,
             false, T.min, isGhost);

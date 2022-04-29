@@ -972,7 +972,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       Lst<Object> v = new  Lst<Object>();
       String s = xr.getXmlData("jvxlContour", data.substring(pt), true, false);
       double value = parseDoubleStr(XmlReader.getXmlAttrib(s, "value"));
-      values.append(" ").appendF(value);
+      values.append(" ").appendD(value);
       int color = getColor(XmlReader.getXmlAttrib(s, "color"));
       short colix = C.getColix(color);
       colors.append(" ").append(Escape.escapeColor(color));

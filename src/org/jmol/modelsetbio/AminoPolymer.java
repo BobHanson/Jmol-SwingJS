@@ -158,9 +158,9 @@ public class AminoPolymer extends AlphaPolymer {
        *   dPsi = psi[i+1] - psi[i]
        * 
        */
-      double dPhi = (double) ((phiNext - phi) / 2 * Math.PI / 180);
-      double dPsi = (double) ((psiNext - psi) / 2 * Math.PI / 180);
-      return (double) (180 / Math.PI * 2 * Math.acos(Math.cos(dPsi)
+      double dPhi = ((phiNext - phi) / 2 * Math.PI / 180);
+      double dPsi = ((psiNext - psi) / 2 * Math.PI / 180);
+      return (180 / Math.PI * 2 * Math.acos(Math.cos(dPsi)
           * Math.cos(dPhi) - Math.sin(dPsi) * Math.sin(dPhi) / 3));
     case 'c':
     case 'C':

@@ -1805,7 +1805,7 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.sum2:
           case T.stddev:
-            sum2 += ((double) fv) * fv;
+            sum2 += fv * fv;
             //$FALL-THROUGH$
           case T.sum:
           default:
@@ -1839,7 +1839,7 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.sum2:
           case T.stddev:
-            sum2 += ((double) iv) * iv;
+            sum2 += iv * iv;
             //$FALL-THROUGH$
           case T.sum:
           default:
@@ -1920,7 +1920,7 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.sum2:
           case T.stddev:
-            sum2 += (double) fv * fv;
+            sum2 += fv * fv;
             //$FALL-THROUGH$
           case T.sum:
           default:
@@ -2022,7 +2022,7 @@ abstract class ScriptExpr extends ScriptParam {
       default:
         if (sum / n == (int) (sum / n))
           return Integer.valueOf((int) (sum / n));
-        return Double.valueOf((double) (sum / n));
+        return Double.valueOf((sum / n));
       }
     }
     switch (minmaxtype) {
@@ -2046,7 +2046,7 @@ abstract class ScriptExpr extends ScriptParam {
       sum /= n;
       break;
     }
-    return Double.valueOf((double) sum);
+    return Double.valueOf(sum);
   }
 
   private BS bitSetForModelFileNumber(int m) {

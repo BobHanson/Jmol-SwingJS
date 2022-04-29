@@ -138,7 +138,7 @@ public class QS {
     for (int i = 0; i < lc.length; i += 2) {
       if (i > 0)
         sb.append(", ");
-      sb.appendF(lc[i]).append(" ").appendI((int) lc[i + 1]);
+      sb.appendD(lc[i]).append(" ").appendI((int) lc[i + 1]);
     }
     sb.appendC(']');
     return sb.toString();

@@ -81,8 +81,8 @@ public class Trace extends BioShapeCollection {
       if (value > max)
         max = value;
     }
-    double mean = (double) (sum / n);
-    double stdev = (double) Math.sqrt((sumsq - (sum * sum / n)) / n);
+    double mean = (sum / n);
+    double stdev = Math.sqrt((sumsq - (sum * sum / n)) / n);
 
     double rad = info[1];
     double range = info[2];
@@ -125,13 +125,13 @@ public class Trace extends BioShapeCollection {
       case PUTTY_ImpliedRMS:
         if (scale < 0.0F)
           scale = 0.0F;
-        scale = (double) (Math.sqrt(scale / 8.0) / Math.PI);
+        scale = (Math.sqrt(scale / 8.0) / Math.PI);
         break;
       }
       if (scale < 0.0F)
         scale = 0.0F;
       if (nonlinear)
-        scale = (double) Math.pow(scale, power);
+        scale = Math.pow(scale, power);
       if ((scale < scale_min) && (scale_min >= 0.0))
         scale = scale_min;
       if ((scale > scale_max) && (scale_max >= 0.0))

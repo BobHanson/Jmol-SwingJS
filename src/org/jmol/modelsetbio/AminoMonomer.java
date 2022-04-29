@@ -243,7 +243,7 @@ public class AminoMonomer extends AlphaMonomer {
     return true;
   }
 
-  final private static double beta = (double) (17 * Math.PI/180);
+  final private static double beta = (17 * Math.PI/180);
   
   @Override
   P3d getQuaternionFrameCenter(char qType) {

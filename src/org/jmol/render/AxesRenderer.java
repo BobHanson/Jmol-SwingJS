@@ -235,7 +235,7 @@ public class AxesRenderer extends CageRenderer {
     double dx = x - xCenter;
     double dy = y - yCenter;
     if ((dx != 0 || dy != 0)) {
-      double dist = (double) Math.sqrt(dx * dx + dy * dy);
+      double dist = Math.sqrt(dx * dx + dy * dy);
       dx = (strWidth * 0.75d * dx / dist);
       dy = (strAscent * 0.75d * dy / dist);
       x += dx;

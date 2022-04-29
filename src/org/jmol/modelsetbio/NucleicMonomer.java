@@ -630,7 +630,7 @@ public boolean isCrossLinked(Group g) {
       oxyz[2].setT(v61);
       oxyz[2].normalize();
       A4d aa = A4d.new4(oxyz[3].x, oxyz[3].y, oxyz[3].z,
-          (double) (66.6 * Math.PI / 180));
+          (66.6 * Math.PI / 180));
       M3d m3 = new M3d();
       m3.setAA(aa);
       m3.rotate(oxyz[2]);

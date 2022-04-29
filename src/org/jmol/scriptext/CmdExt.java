@@ -5559,7 +5559,7 @@ public class CmdExt extends ScriptExt {
           if (isPrimitive || ucname.equals("reciprocal")) {
             double scale = (slen == i + 1 ? 1
                 : tokAt(i + 1) == T.integer
-                    ? intParameter(++i) * (double) Math.PI
+                    ? intParameter(++i) * Math.PI
                     : doubleParameter(++i));
             ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
             oabc = (sym == null

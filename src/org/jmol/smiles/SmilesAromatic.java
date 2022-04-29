@@ -345,7 +345,7 @@ public class SmilesAromatic {
     for (int i = 0; i < n; i++) {
       double v = vNorms[i].dot(vMean);
       sum += v;
-      sum2 += ((double) v) * v;
+      sum2 += v * v;
     }
     sum = Math.sqrt((sum2 - sum * sum / n) / (n - 1));
     return (sum < cutoff);

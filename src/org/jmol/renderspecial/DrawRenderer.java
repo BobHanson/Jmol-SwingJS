@@ -251,7 +251,7 @@ public class DrawRenderer extends MeshRenderer {
     pt1f.scaleAdd2(fractionalOffset, vTemp, v1);
     // define rotational axis
     M3d mat = new M3d().setAA(A4d.newVA(vTemp,
-        (double) (nDegreesOffset * Math.PI / 180)));
+        (nDegreesOffset * Math.PI / 180)));
     // vector to rotate
     vTemp2.sub2(ptRef,
         v1);
@@ -269,7 +269,7 @@ public class DrawRenderer extends MeshRenderer {
       degrees /= 2;
       nPoints = (int) Math.round(theta / degrees) + 1;
     }
-    mat.setAA(A4d.newVA(vTemp, (double) (degrees * Math.PI / 180)));
+    mat.setAA(A4d.newVA(vTemp, (degrees * Math.PI / 180)));
     screens = vwr.allocTempScreens(nPoints);
     p3Screens = vwr.allocTempPoints(nPoints);
     int iBase = nPoints - (dmesh.scale < 2 ? 3 : 3);

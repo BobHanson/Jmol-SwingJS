@@ -117,7 +117,7 @@ public class MOLWriter {
          sb.appendI(nAtoms).appendC('\n');
          for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
              .nextSetBit(i + 1))
-           sb.appendI(++n).append(" ").appendF(pc[i]).appendC('\n');
+           sb.appendI(++n).append(" ").appendD(pc[i]).appendC('\n');
          molData.put("jmol_partial_charges", sb.toString());
        }
        sb.setLength(0);
@@ -219,8 +219,8 @@ public class MOLWriter {
         mol.append("\"c\":").appendI(charge).append(",");
       if (isotope != 0)
         mol.append("\"m\":").appendI(isotope).append(",");
-      mol.append("\"x\":").appendF(a.x).append(",\"y\":").appendF(a.y)
-          .append(",\"z\":").appendF(a.z).append("}");
+      mol.append("\"x\":").appendD(a.x).append(",\"y\":").appendD(a.y)
+          .append(",\"z\":").appendD(a.z).append("}");
     } else {
       mol.append(PT.sprintf("%10.4p%10.4p%10.4p", "p", o));
       mol.append(" ").append(sym);
@@ -330,7 +330,7 @@ public class MOLWriter {
       if (order != 1) {
         mol.append(",\"o\":");
         if (order < 0) {
-          mol.appendF(-order / 2d);
+          mol.appendD(-order / 2d);
         } else {
           mol.appendI(order);   
         }

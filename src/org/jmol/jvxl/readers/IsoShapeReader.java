@@ -201,12 +201,12 @@ final class IsoShapeReader extends VolumeDataReader {
     jvxlFileHeaderBuffer = new SB();
     jvxlFileHeaderBuffer.append(line1);
     if (sphere_radiusAngstroms > 0) {
-      jvxlFileHeaderBuffer.append(" rad=").appendF(sphere_radiusAngstroms);
+      jvxlFileHeaderBuffer.append(" rad=").appendD(sphere_radiusAngstroms);
     } else {
       jvxlFileHeaderBuffer.append(" n=").appendI(psi_n).append(", l=").appendI(
-          psi_l).append(", m=").appendI(psi_m).append(" Znuc=").appendF(psi_Znuc)
-          .append(" res=").appendF(ptsPerAngstrom).append(" rad=")
-          .appendF(radius);
+          psi_l).append(", m=").appendI(psi_m).append(" Znuc=").appendD(psi_Znuc)
+          .append(" res=").appendD(ptsPerAngstrom).append(" rad=")
+          .appendD(radius);
     }
     jvxlFileHeaderBuffer.append(isAnisotropic ? " anisotropy=(" + anisotropy[0]
         + "," + anisotropy[1] + "," + anisotropy[2] + ")\n" : "\n");

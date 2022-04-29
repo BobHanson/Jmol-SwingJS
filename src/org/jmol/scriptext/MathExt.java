@@ -2648,7 +2648,7 @@ public class MathExt {
       x = Math.acos(x) * 180 / Math.PI;
       break;
     }
-    return mp.addXDouble((double) x);
+    return mp.addXDouble(x);
   }
 
   //  private boolean evaluateVolume(ScriptVariable[] args) throws ScriptException {
@@ -2913,7 +2913,7 @@ public class MathExt {
         if (d == r) {
           l.addLast(pt3);
         } else if (d < r) {
-          d = (double) Math.sqrt(r * r - d * d);
+          d = Math.sqrt(r * r - d * d);
           v.scaleAdd2(d, vLine, pt3);
           l.addLast(P3d.newP(v));
           v.scaleAdd2(-d, vLine, pt3);
@@ -4323,7 +4323,7 @@ public class MathExt {
         switch (tok) {
         case T.sum2:
         case T.stddev:
-          sum2 += ((double) v) * v;
+          sum2 += v * v;
           //$FALL-THROUGH$
         case T.sum:
         case T.average:
@@ -4371,7 +4371,7 @@ public class MathExt {
         sum = sum2;
         break;
       }
-      return Double.valueOf((double) sum);
+      return Double.valueOf(sum);
     }
     return "NaN";
   }

@@ -99,14 +99,14 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private final P3d s1 = new P3d();
   private final P3d s2 = new P3d();
 
-  private final static double toRadians = (double) Math.PI/180d;
+  private final static double toRadians = Math.PI/180d;
   private final static double[] cossin = new double[36];
 
   static {
     // OK for J2S compilation because this is a final class
     for (int i = 5, pt = 0; i <= 90; i += 5) {
-      cossin[pt++] = (double) Math.cos(i * toRadians);
-      cossin[pt++] = (double) Math.sin(i * toRadians);
+      cossin[pt++] = Math.cos(i * toRadians);
+      cossin[pt++] = Math.sin(i * toRadians);
     }
   }
 
@@ -435,11 +435,11 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   }
   private void renderDots() {
     for (int i = 0; i < coords.length;) {
-      double fx = (double) Math.random();
-      double fy = (double) Math.random();
+      double fx = Math.random();
+      double fy = Math.random();
       fx *= (Math.random() > 0.5 ? -1 : 1);
       fy *= (Math.random() > 0.5 ? -1 : 1);
-      double fz = (double) Math.sqrt(1 - fx * fx - fy * fy);
+      double fz = Math.sqrt(1 - fx * fx - fy * fy);
       if (Double.isNaN(fz))
         continue;
       fz = (Math.random() > 0.5 ? -1 : 1) * fz;

@@ -86,12 +86,12 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
       sb.append("\ndata_global");
       double[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendF((double) params[0]);
-      appendKey(sb, "_cell_length_b").appendF((double) params[1]);
-      appendKey(sb, "_cell_length_c").appendF((double) params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendF((double) params[3]);
-      appendKey(sb, "_cell_angle_beta").appendF((double) params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendF((double) params[5]);
+      appendKey(sb, "_cell_length_a").appendD((double) params[0]);
+      appendKey(sb, "_cell_length_b").appendD((double) params[1]);
+      appendKey(sb, "_cell_length_c").appendD((double) params[2]);
+      appendKey(sb, "_cell_angle_alpha").appendD((double) params[3]);
+      appendKey(sb, "_cell_angle_beta").appendD((double) params[4]);
+      appendKey(sb, "_cell_angle_gamma").appendD((double) params[5]);
       sb.append("\n");
       int n;
       String hallName;

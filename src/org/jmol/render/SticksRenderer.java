@@ -538,7 +538,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       rot = new M3d();
       a4 = new A4d();
     }
-    a4.setVA(vectorT, (double) (deg * Math.PI / 180));
+    a4.setVA(vectorT, (deg * Math.PI / 180));
     rot.setAA(a4);
     pointT.setT(a);
     pointT3.setT(b);

@@ -67,7 +67,6 @@ import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
-import org.jmol.util.Vibration;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -282,8 +281,8 @@ public class StateCreator extends JmolStateCreator {
               index = -1 - index;
             sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC('\t')
                 .appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
-                .appendF(bond.mad / 1000d).appendC('\t')
-                .appendF(bond.getEnergy()).appendC('\t')
+                .appendD(bond.mad / 1000d).appendC('\t')
+                .appendD(bond.getEnergy()).appendC('\t')
                 .append(Edge.getBondOrderNameFromOrder(bond.order))
                 .append(";\n");
           }
@@ -347,7 +346,7 @@ public class StateCreator extends JmolStateCreator {
           sb.append("  ").append(m.orientation.getMoveToText(false))
               .append(";\n");
         if (m.frameDelay != 0 && !ms.isTrajectorySubFrame(i))
-          sb.append("  frame delay ").appendF(m.frameDelay / 1000d)
+          sb.append("  frame delay ").appendD(m.frameDelay / 1000d)
               .append(";\n");
         if (m.simpleCage != null) {
           sb.append("  unitcell ")
@@ -797,7 +796,7 @@ public class StateCreator extends JmolStateCreator {
     commands.append("  slab ").appendI(tm.slabPercentSetting).append(";depth ")
         .appendI(tm.depthPercentSetting).append(
             tm.slabEnabled && !navigating ? ";slab on" : "").append(";\n");
-    commands.append("  set slabRange ").appendF(tm.slabRange).append(";\n");
+    commands.append("  set slabRange ").appendD(tm.slabRange).append(";\n");
     if (tm.slabPlane != null)
       commands.append("  slab plane ").append(Escape.eP4(tm.slabPlane)).append(
           ";\n");
@@ -956,7 +955,7 @@ public class StateCreator extends JmolStateCreator {
     if (!isUnitCell && tickInfo.scale != null)
       sb.append(" scale ").append(Escape.eP(tickInfo.scale));
     if (addFirst && !Double.isNaN(tickInfo.first) && tickInfo.first != 0)
-      sb.append(" first ").appendF(tickInfo.first);
+      sb.append(" first ").appendD(tickInfo.first);
     if (tickInfo.reference != null) // not implemented
       sb.append(" point ").append(Escape.eP(tickInfo.reference));
   }
@@ -979,7 +978,7 @@ public class StateCreator extends JmolStateCreator {
       if (m.thisID != null)
         sb.append(" ID ").append(PT.esc(m.thisID));
       if (m.mad != 0)
-        sb.append(" radius ").appendF(
+        sb.append(" radius ").appendD(
             m.thisID == null || m.mad > 0 ? m.mad / 2000d : 0);
       if (m.colix != 0)
         sb.append(" color ").append(Escape.escapeColor(C.getArgb(m.colix)));
@@ -1030,7 +1029,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append(";\n");
     }
     if (shape.mad >= 0)
-      commands.append(" set measurements ").appendF(shape.mad / 2000d).append(";\n");
+      commands.append(" set measurements ").appendD(shape.mad / 2000d).append(";\n");
     String s = getCommands(temp, null, "select measures");
     if (s != null && s.length() != 0) {
       commands.append(s);
@@ -1387,7 +1386,7 @@ public class StateCreator extends JmolStateCreator {
     sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
     sb.append(";\n");
     if (isImage && t.imageScale != 1)
-      sb.append("  ").append(echoCmd).append(" scale ").appendF(t.imageScale)
+      sb.append("  ").append(echoCmd).append(" scale ").appendD(t.imageScale)
           .append(";\n");
     if (t.script != null)
       sb.append("  ").append(echoCmd).append(" script ").append(

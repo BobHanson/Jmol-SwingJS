@@ -68,7 +68,7 @@ public class SmilesMeasure  {
     return true;
   }
   
-  private final static double radiansPerDegree = (double) (2 * Math.PI / 360);
+  private final static double radiansPerDegree = (2 * Math.PI / 360);
 
   private final P3d[] points = new P3d[4];
   

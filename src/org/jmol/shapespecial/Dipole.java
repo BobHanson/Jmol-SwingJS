@@ -212,15 +212,15 @@ public class Dipole {
       s.append(" ").append(Escape.eP(coords[0])).append(" ")
           .append(Escape.eP(coords[1]));
     if (isUserValue)
-      s.append(" value ").appendF(dipoleValue);
+      s.append(" value ").appendD(dipoleValue);
     if (mad != Dipoles.DEFAULT_MAD)
-      s.append(" width ").appendF(mad / 1000d);
+      s.append(" width ").appendD(mad / 1000d);
     if (offsetAngstroms != 0)
-      s.append(" offset ").appendF(offsetAngstroms);
+      s.append(" offset ").appendD(offsetAngstroms);
     else if (offsetPercent != 0)
       s.append(" offset ").appendI(offsetPercent);
     if (offsetSide != Dipoles.DEFAULT_OFFSETSIDE)
-      s.append(" offsetSide ").appendF(offsetSide);
+      s.append(" offsetSide ").appendD(offsetSide);
     if (offsetPt != null)
       s.append(" offset ").append(Escape.eP(offsetPt));
     if (noCross)

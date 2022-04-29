@@ -1812,7 +1812,7 @@ public class IsoExt extends ScriptExt {
             ptc = (bs == null ? new P3d() : vwr.ms.getAtomSetCenter(bs));
           pts = getWithinDistanceVector(propertyList, distance, ptc, bs,
               isDisplay);
-          sbCommand.append(" within ").appendF(distance).append(" ")
+          sbCommand.append(" within ").appendD(distance).append(" ")
               .append(bs == null ? Escape.eP(ptc) : Escape.eBS(bs));
         }
         continue;
@@ -2041,7 +2041,7 @@ public class IsoExt extends ScriptExt {
             double max = floatParameter(++i);
             addShapeProperty(propertyList, "red", Double.valueOf(min));
             addShapeProperty(propertyList, "blue", Double.valueOf(max));
-            sbCommand.append(" ").appendF(min).append(" ").appendF(max);
+            sbCommand.append(" ").appendD(min).append(" ").appendD(max);
             continue;
           }
           if (eval.isColorParam(i + 1)) {
@@ -2380,7 +2380,7 @@ public class IsoExt extends ScriptExt {
         //if (surfaceObjectSeen)
         sbCommand.append(" atomicOrbital ").appendI((int) nlmZprs[0])
             .append(" ").appendI((int) nlmZprs[1]).append(" ")
-            .appendI((int) nlmZprs[2]).append(" ").appendF(nlmZprs[3]);
+            .appendI((int) nlmZprs[2]).append(" ").appendD(nlmZprs[3]);
         if (tokAt(i + 1) == T.point) {
           i += 2;
           nlmZprs[4] = intParameter(i);
@@ -2389,7 +2389,7 @@ public class IsoExt extends ScriptExt {
               : ((int) -System.currentTimeMillis()) % 10000);
           //if (surfaceObjectSeen)
           sbCommand.append(" points ").appendI((int) nlmZprs[4]).appendC(' ')
-              .appendF(nlmZprs[5]).appendC(' ').appendI((int) nlmZprs[6]);
+              .appendD(nlmZprs[5]).appendC(' ').appendI((int) nlmZprs[6]);
         }
         propertyName = "hydrogenOrbital";
         propertyValue = nlmZprs;
@@ -2425,8 +2425,8 @@ public class IsoExt extends ScriptExt {
           eval.integerOutOfRange(0, 50);
           return;
         }
-        sbCommand.append(" cavity ").appendF(cavityRadius).append(" ")
-            .appendF(envelopeRadius);
+        sbCommand.append(" cavity ").appendD(cavityRadius).append(" ")
+            .appendD(envelopeRadius);
         addShapeProperty(propertyList, "envelopeRadius",
             Double.valueOf(envelopeRadius));
         addShapeProperty(propertyList, "cavityRadius",
@@ -2783,7 +2783,7 @@ public class IsoExt extends ScriptExt {
           radius = (isFloatParameter(i + 1) ? floatParameter(++i)
               : vwr.getDouble(T.solventproberadius));
         }
-        sbCommand.append(" ").appendF(radius);
+        sbCommand.append(" ").appendD(radius);
         propertyValue = Double.valueOf(radius);
         if (tokAt(i + 1) == T.full) {
           addShapeProperty(propertyList, "doFullMolecular", null);
@@ -2894,7 +2894,7 @@ public class IsoExt extends ScriptExt {
             factors[j] = ((Number) list.get(ptf++)).doubleValue();
             files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false,
                 (String) list.get(ptf++), i, false);
-            sbCommand.appendF(factors[j]);
+            sbCommand.appendD(factors[j]);
             sbCommand.append(" /*file*/").append(PT.esc(files[j]));
           }
           sbCommand.append("]");
@@ -3579,7 +3579,7 @@ public class IsoExt extends ScriptExt {
       case T.resolution:
         double resolution = floatParameter(++i);
         if (resolution > 0) {
-          sbCommand.append(" resolution ").appendF(resolution);
+          sbCommand.append(" resolution ").appendD(resolution);
           setShapeProperty(JC.SHAPE_CONTACT, "resolution",
               Double.valueOf(resolution));
         }
@@ -3593,7 +3593,7 @@ public class IsoExt extends ScriptExt {
       case T.within:
       case T.distance:
         distance = floatParameter(++i);
-        sbCommand.append(" within ").appendF(distance);
+        sbCommand.append(" within ").appendD(distance);
         break;
       case T.plus:
       case T.integer:
@@ -3635,7 +3635,7 @@ public class IsoExt extends ScriptExt {
         displayType = tok;
         sbCommand.append(" ").appendO(eval.theToken.value);
         if (tok == T.sasurface)
-          sbCommand.append(" ").appendF(saProbeRadius);
+          sbCommand.append(" ").appendD(saProbeRadius);
         break;
       case T.parameters:
         params = eval.doubleParameterSet(++i, 1, 10);
@@ -4055,7 +4055,7 @@ public class IsoExt extends ScriptExt {
         if (sb != null) {
           sb.append(" translucent");
           if (value != Double.MAX_VALUE)
-            sb.append(" ").appendF(value);
+            sb.append(" ").appendD(value);
         }
       } else {
         eval.setMeshDisplayProperty(iShape, index, eval.theTok);

@@ -98,7 +98,7 @@ public class Sheet extends ProteinStructure {
         amino = (AminoMonomer) apolymer.monomers[i];
         vectorCO.sub2(amino.getCarbonylOxygenAtom(), amino
             .getCarbonylCarbonAtom());
-        if (vectorCOSum.angle(vectorCO) < (double) Math.PI / 2)
+        if (vectorCOSum.angle(vectorCO) < Math.PI / 2)
           vectorCOSum.add(vectorCO);
         else
           vectorCOSum.sub(vectorCO);

@@ -215,7 +215,7 @@ public class Axes extends FontLineShape {
   }
   
   public String getAxesState(SB sb) {
-    sb.append("  axes scale ").appendF(vwr.getDouble(T.axesscale)).append(";\n"); 
+    sb.append("  axes scale ").appendD(vwr.getDouble(T.axesscale)).append(";\n"); 
     if (fixedOrigin != null)
       sb.append("  axes center ")
           .append(Escape.eP(fixedOrigin)).append(";\n");

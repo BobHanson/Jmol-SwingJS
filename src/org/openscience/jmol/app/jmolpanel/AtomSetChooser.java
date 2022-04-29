@@ -563,7 +563,7 @@ ActionListener, ChangeListener, Runnable {
               P3d p = vwr.ms.at[i];
               // should really be getElementSymbol(i) in stead
               str.append(vwr.ms.at[i].getAtomName()).append("\t");
-              str.appendF(p.x).append("\t").appendF(p.y).append("\t").appendF(p.z).append("\n");
+              str.appendD(p.x).append("\t").appendD(p.y).append("\t").appendD(p.z).append("\n");
               // not sure how to get the vibration vector and charge here...
             }
           }

@@ -1229,7 +1229,7 @@ public class SymmetryDesc {
 
   private static void drawLine(SB s, String id, double diameter, P3d pt0, P3d pt1,
                                String color) {
-    s.append(id).append(" diameter ").appendF(diameter).append(Escape.ePd(pt0))
+    s.append(id).append(" diameter ").appendD(diameter).append(Escape.ePd(pt0))
         .append(Escape.ePd(pt1)).append(" color ").append(color);
   }
 

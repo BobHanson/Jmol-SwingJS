@@ -397,7 +397,7 @@ public class DataManager implements JmolDataManager {
     for (int i = i0; i < i1
         && i >= 0; i = (isAll ? i + 1 : bs.nextSetBit(i + 1)))
       sb.appendI(i).appendC('\t')
-          .appendF(type == VDW.USER ? vwr.userVdws[i]
+          .appendD(type == VDW.USER ? vwr.userVdws[i]
               : Elements.getVanderwaalsMar(i, type) / 1000d)
           .appendC('\t').append(Elements.elementSymbolFromNumber(i))
           .appendC('\n');

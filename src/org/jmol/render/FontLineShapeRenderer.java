@@ -317,7 +317,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
         s1 = new P3i();
       double d2 = (dx * dx + dy * dy)  / (width * width);
       if (isNdots) {
-        f = (double) (Math.sqrt(d2) / 1.5);
+        f = (Math.sqrt(d2) / 1.5);
         n = (int) f + 2;
       } else if (d2 < 8) {
         array = twodots;

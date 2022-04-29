@@ -528,7 +528,7 @@ public class Measurement {
     double f = fixValue(units, true);
     SB sb = new SB();
     sb.append(count == 2 ? (property != null ? property : type == null ? "distance" : type) : count == 3 ? "angle" : "dihedral");
-    sb.append(" \t").appendF(f);
+    sb.append(" \t").appendD(f);
     sb.append(" \t").append(PT.esc(strMeasurement));
     for (int i = 1; i <= count; i++)
       sb.append(" \t").append(getLabel(i, false, false));

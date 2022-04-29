@@ -781,8 +781,8 @@ public class ScriptManager implements JmolScriptManager {
     sb.appendI(pts.length).append("\n").append(JC.ADD_HYDROGEN_TITLE)
         .append("#noautobond").append("\n");
     for (int i = 0; i < pts.length; i++)
-      sb.append("H ").appendF(pts[i].x).append(" ").appendF(pts[i].y)
-          .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
+      sb.append("H ").appendD(pts[i].x).append(" ").appendD(pts[i].y)
+          .append(" ").appendD(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
 
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);

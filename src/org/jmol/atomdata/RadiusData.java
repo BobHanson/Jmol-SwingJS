@@ -151,10 +151,10 @@ public class RadiusData {
     SB sb = new SB();
     switch (factorType) {
     case ABSOLUTE:
-      sb.appendF(value);
+      sb.appendD(value);
       break;
     case OFFSET:
-      sb.append(value > 0 ? "+" : "").appendF(value);
+      sb.append(value > 0 ? "+" : "").appendD(value);
       break;
     case FACTOR:
       sb.appendI((int) (value * 100)).append("%");

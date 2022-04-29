@@ -1090,7 +1090,7 @@ class PointGroup {
             if (op.type == OPERATION_IMPROPER_AXIS)
               scale = -scale;
             sb.append(drawID + "pgva").append(m).append(label).append("_").appendI(
-                j + 1).append(" width 0.05 scale ").appendF(scale).append(" ").append(
+                j + 1).append(" width 0.05 scale ").appendD(scale).append(" ").append(
                 Escape.eP(v));
             v.scaleAdd2(-2, op.normalOrAxis, v);
             boolean isPA = (principalAxis != null && op.index == principalAxis.index);
@@ -1106,13 +1106,13 @@ class PointGroup {
             continue;
           op = axes[0][j];
           sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
-              "disk scale ").appendF(scaleFactor * radius * 2).append(" CIRCLE PLANE ")
+              "disk scale ").appendD(scaleFactor * radius * 2).append(" CIRCLE PLANE ")
               .append(Escape.eP(center));
           v.add2(op.normalOrAxis, center);
           sb.append(Escape.eP(v)).append(" color translucent yellow;\n");
           v.add2(op.normalOrAxis, center);
           sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
-              "ring width 0.05 scale ").appendF(scaleFactor * radius * 2).append(" arc ")
+              "ring width 0.05 scale ").appendD(scaleFactor * radius * 2).append(" arc ")
               .append(Escape.eP(v));
           v.scaleAdd2(-2, op.normalOrAxis, v);
           sb.append(Escape.eP(v));

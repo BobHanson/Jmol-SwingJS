@@ -362,7 +362,7 @@ public class SmilesStereo {
       sAtom0.set(0, 0, 0.2d);
       double a = Math.PI * 2 / cAtoms.length;
       for (int i = cAtoms.length; --i >= 0;) {
-        cAtoms[map[i]].set((double)(Math.cos(i * a)), (double) Math.sin(i * a), isNot ? 1 : -1);
+        cAtoms[map[i]].set((Math.cos(i * a)), Math.sin(i * a), isNot ? 1 : -1);
       }
       break;
     case ALLENE:

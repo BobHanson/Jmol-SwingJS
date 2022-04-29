@@ -270,7 +270,7 @@ public class Escape {
           if (f[i][j] != null) {
             sb.append(eol);
             for (int k = 0; k < f[i][j].length; k++)
-              sb.appendF(f[i][j][k]).appendC('\t');
+              sb.appendD(f[i][j][k]).appendC('\t');
           }
       }
     return sb.toString();
