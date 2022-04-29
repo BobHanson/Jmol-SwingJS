@@ -311,7 +311,7 @@ public class Measurement {
               dist = Double.NaN;
               newUnits = units = "";
             } else {
-              dist = (double) result[1];
+              dist = result[1];
               units = newUnits = (result.length == 2 ? "noe" :"hz");
             }
           } else {

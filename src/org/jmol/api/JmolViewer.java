@@ -36,7 +36,6 @@ import org.jmol.script.SV;
 import org.jmol.util.BoxInfo;
 
 import javajs.util.P3d;
-import javajs.util.T3d;
 import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 

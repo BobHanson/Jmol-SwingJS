@@ -31,7 +31,7 @@ import javajs.api.Interface;
 
 final public class MeasureD {
 
-  public final static double radiansPerDegree = (double) (2 * Math.PI / 360);
+  public final static double radiansPerDegree = (2 * Math.PI / 360);
   
   public static double computeAngle(T3d pointA, T3d pointB, T3d pointC, V3d vectorBA, V3d vectorBC, boolean asDegrees) {
     vectorBA.sub2(pointA, pointB);
@@ -70,8 +70,8 @@ final public class MeasureD {
     double ai2 = 1d / (ax * ax + ay * ay + az * az);
     double ci2 = 1d / (cx * cx + cy * cy + cz * cz);
   
-    double ai = (double) Math.sqrt(ai2);
-    double ci = (double) Math.sqrt(ci2);
+    double ai = Math.sqrt(ai2);
+    double ci = Math.sqrt(ci2);
     double denom = ai * ci;
     double cross = ax * cx + ay * cy + az * cz;
     double cosang = cross * denom;
@@ -82,7 +82,7 @@ final public class MeasureD {
       cosang = -1;
     }
   
-    double torsion = (double) Math.acos(cosang);
+    double torsion = Math.acos(cosang);
     double dot = ijx * cx + ijy * cy + ijz * cz;
     double absDot = Math.abs(dot);
     torsion = (dot / absDot > 0) ? torsion : -torsion;
@@ -138,7 +138,7 @@ final public class MeasureD {
     vcb.scale(v_dot_n);
     vda.sub2(vcb, vab);
     vda.scale(0.5f);
-    va_prime_d.scale(theta == 0 ? 0 : (double) (vda.length() / Math.tan(theta
+    va_prime_d.scale(theta == 0 ? 0 : (vda.length() / Math.tan(theta
         / 2 / 180 * Math.PI)));
     V3d r = V3d.newV(va_prime_d);
     if (theta != 0)
@@ -180,13 +180,13 @@ final public class MeasureD {
   
   public static double distanceToPlane(P4d plane, T3d pt) {
     return (plane == null ? Double.NaN 
-        : (plane.dot(pt) + plane.w) / (double) Math.sqrt(plane.dot(plane)));
+        : (plane.dot(pt) + plane.w) / Math.sqrt(plane.dot(plane)));
   }
 
   public static double directedDistanceToPlane(P3d pt, P4d plane, P3d ptref) {
     double f = plane.dot(pt) + plane.w;
     double f1 = plane.dot(ptref) + plane.w;
-    return Math.signum(f1) * f /  (double) Math.sqrt(plane.dot(plane));
+    return Math.signum(f1) * f /  Math.sqrt(plane.dot(plane));
   }
 
   public static double distanceToPlaneD(P4d plane, double d, P3d pt) {
@@ -195,7 +195,7 @@ final public class MeasureD {
 
   public static double distanceToPlaneV(V3d norm, double w, P3d pt) {
     return (norm == null ? Double.NaN 
-        : (norm.dot(pt) + w)  / (double) Math.sqrt(norm.dot(norm)));
+        : (norm.dot(pt) + w)  / Math.sqrt(norm.dot(norm)));
   }
 
   /**
@@ -637,15 +637,15 @@ final public class MeasureD {
 		for (int i = nPts + 1; --i >= 1;) {
 			ptA.sub2(ptsA[i], ptA0);
 			ptB.sub2(ptsB[i], ptB0);
-			Sxx += (double) ptA.x * (double) ptB.x;
-			Sxy += (double) ptA.x * (double) ptB.y;
-			Sxz += (double) ptA.x * (double) ptB.z;
-			Syx += (double) ptA.y * (double) ptB.x;
-			Syy += (double) ptA.y * (double) ptB.y;
-			Syz += (double) ptA.y * (double) ptB.z;
-			Szx += (double) ptA.z * (double) ptB.x;
-			Szy += (double) ptA.z * (double) ptB.y;
-			Szz += (double) ptA.z * (double) ptB.z;
+			Sxx += ptA.x * ptB.x;
+			Sxy += ptA.x * ptB.y;
+			Sxz += ptA.x * ptB.z;
+			Syx += ptA.y * ptB.x;
+			Syy += ptA.y * ptB.y;
+			Syz += ptA.y * ptB.z;
+			Szx += ptA.z * ptB.x;
+			Szy += ptA.z * ptB.y;
+			Szz += ptA.z * ptB.z;
 		}
 		retStddev[0] = getRmsd(centerAndPoints, q);
 		double[][] N = new double[4][4];
@@ -667,7 +667,7 @@ final public class MeasureD {
 
 		double[] v = ((EigenInterface) Interface.getInterface("javajs.util.Eigen"))
 				.setM(N).getEigenvectorsDoubleTransposed()[3];
-		q = Qd.newP4(P4d.new4((double) v[1], (double) v[2], (double) v[3], (double) v[0]));
+		q = Qd.newP4(P4d.new4(v[1], v[2], v[3], v[0]));
 		retStddev[1] = getRmsd(centerAndPoints, q);
 		return q;
 	}
@@ -707,7 +707,7 @@ final public class MeasureD {
       q.transform2(ptAnew, ptAnew).add(cB);
       sum2 += ptAnew.distanceSquared(ptsB[i]);
     }
-    return (double) Math.sqrt(sum2 / n);
+    return Math.sqrt(sum2 / n);
   }
 
   /**
@@ -858,7 +858,7 @@ final public class MeasureD {
         for (int k = nPoints; --k >= 0;) {
           d += AT[i][k] * A[k][j];
         }
-        m.set33(i, j, (double) d);
+        m.set33(i, j, d);
       }
     }
     m.invert();
@@ -897,37 +897,37 @@ final public class MeasureD {
       case 0:
         len2 += v * v;
         if (mode == 'x')
-          plane.z = (double) v;
+          plane.z = v;
         else
-          plane.x = (double) v;
+          plane.x = v;
         break;
       case 1:
         len2 += v * v;
         if (mode == 'y')
-          plane.z = (double) v;
+          plane.z = v;
         else 
-          plane.y = (double) v;
+          plane.y = v;
         break;
       case 2:
-        plane.w = (double) v;
+        plane.w = v;
       }
     }
-    double f = (double) Math.sqrt(len2);
+    double f = Math.sqrt(len2);
     plane.scale4((1/plane.w > 0 ? 1 : -1)/f);
     double sum2 = 0;
     for (int i = 0; i < nPoints; i++) {
       double d = distanceToPlane(plane, points[i]);
       sum2 += d*d;
     }
-    double ret = (double) Math.sqrt(sum2 / nPoints);
+    double ret = Math.sqrt(sum2 / nPoints);
     return ret;
   }
 
   static P3d rndPt() {
-    return P3d.new3((double) Math.random()*20,(double) (Math.random()*20),(double) (Math.random()*20) );
+    return P3d.new3(Math.random()*20,(Math.random()*20),(Math.random()*20) );
   }
   static void testRnd() {
-    P4d plane = P4d.new4((double) Math.random()*20, (double) Math.random()*20, (double) Math.random()*20, (double) Math.random()*20);
+    P4d plane = P4d.new4(Math.random()*20, Math.random()*20, Math.random()*20, Math.random()*20);
     plane.scale4(1/plane.length());
     System.out.println("\n==========\n ");
     System.out.println("plane is " + plane);
@@ -939,7 +939,7 @@ final public class MeasureD {
       P3d p = rndPt();
       getPlaneProjection(p, plane, ptProj, vNorm );
       pts[i].setT(ptProj);
-      double d = (double)Math.random()*0.1d;
+      double d = Math.random()*0.1d;
       pts[i].scaleAdd2(d, vNorm, ptProj);
       System.out.println(pts[i] + " d=" + d);
     }

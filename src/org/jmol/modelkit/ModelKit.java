@@ -1142,6 +1142,7 @@ public class ModelKit {
    * Assign a given space group, currently only "P1"
    * @param bs atoms in the set defining the space group
    * @param name "P1" or "1" or ignored
+   * @param mi 
    * @return new name or "" or error message
    */
   public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
@@ -2051,7 +2052,7 @@ public class ModelKit {
    *        could be a single atom or a molecule
    * @param iatom
    *        atom index
-   * @param p0
+   * @param p
    *        new position for this atom, which may be modified
    * @return number of atoms moved
    */
@@ -2265,7 +2266,7 @@ public class ModelKit {
           sym.toFractional(p, true);
           m.rotTrans(p);
           sym.toCartesian(p, true);
-          ptNew.set((double) p.x, (double) p.y, (double) p.z);
+          ptNew.set(p.x, p.y, p.z);
           c.constrain(b, ptNew);
           iatom = b.i;
         }
