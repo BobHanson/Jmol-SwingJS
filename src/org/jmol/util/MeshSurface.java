@@ -384,7 +384,7 @@ public class MeshSurface {
     double q = ra2 - rb * rb + 1;
     double p = 4 * (r * r - ra2);
     double factor = (ra < rb ? 1 : -1);
-    return (double) (((q) + factor * Math.sqrt(q * q + p)) / 2);
+    return (((q) + factor * Math.sqrt(q * q + p)) / 2);
   }
 
 }
