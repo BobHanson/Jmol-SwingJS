@@ -67,6 +67,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
+import org.jmol.util.Vibration;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -1664,6 +1665,7 @@ public class StateCreator extends JmolStateCreator {
     int n = 0;
     Atom[] atoms = vwr.ms.at;
     BS[] tainted = vwr.ms.tainted;
+    boolean isDefault = (type == AtomCollection.TAINT_COORD);
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (AtomCollection.isDeleted(atoms[i]))
@@ -1677,12 +1679,74 @@ public class StateCreator extends JmolStateCreator {
             // extend that far
             s.appendD(fData[i]);
           break;
+        case AtomCollection.TAINT_ATOMNO:
+          s.appendI(atoms[i].getAtomNumber());
+          break;
+        case AtomCollection.TAINT_CHAIN:
+          s.append(atoms[i].getChainIDStr());
+          break;
+        case AtomCollection.TAINT_RESNO:
+          s.appendI(atoms[i].group.getResno());
+          break;
+        case AtomCollection.TAINT_SEQID:
+          s.appendI(atoms[i].getSeqID());
+          break;
+        case AtomCollection.TAINT_ATOMNAME:
+          s.append(atoms[i].getAtomName());
+          break;
+        case AtomCollection.TAINT_ATOMTYPE:
+          s.append(atoms[i].getAtomType());
+          break;
+        case AtomCollection.TAINT_COORD:
+          if (isTainted(tainted, i, AtomCollection.TAINT_COORD))
+            isDefault = false;
+          s.appendD(atoms[i].x).append(" ").appendD(atoms[i].y).append(" ")
+              .appendD(atoms[i].z);
+          break;
+        case AtomCollection.TAINT_VIBRATION:
+          Vibration v = atoms[i].getVibrationVector();
+          if (v == null)
+            s.append("0 0 0");
+          else if (Double.isNaN(v.modScale))
+            s.appendD(v.x).append(" ").appendD(v.y).append(" ").appendD(v.z);
+          else
+            s.appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(v.modScale);
+          break;
+        case AtomCollection.TAINT_SITE:
+          s.appendI(atoms[i].getAtomSite());
+          break;
+        case AtomCollection.TAINT_ELEMENT:
+          s.appendI(atoms[i].getAtomicAndIsotopeNumber());
+          break;
+        case AtomCollection.TAINT_FORMALCHARGE:
+          s.appendI(atoms[i].getFormalCharge());
+          break;
+        case AtomCollection.TAINT_BONDINGRADIUS:
+          s.appendD(atoms[i].getBondingRadius());
+          break;
+        case AtomCollection.TAINT_OCCUPANCY:
+          s.appendI(atoms[i].getOccupancy100());
+          break;
+        case AtomCollection.TAINT_PARTIALCHARGE:
+          s.appendD(atoms[i].getPartialCharge());
+          break;
+        case AtomCollection.TAINT_TEMPERATURE:
+          s.appendD(atoms[i].getBfactor100() / 100d);
+          break;
+        case AtomCollection.TAINT_VALENCE:
+          s.appendI(atoms[i].getValence());
+          break;
+        case AtomCollection.TAINT_VANDERWAALS:
+          s.appendD(atoms[i].getVanderwaalsRadiusFloat(vwr, VDW.AUTO));
+          break;
         }
         s.append(" ;\n");
         ++n;
       }
     if (n == 0)
       return;
+    if (isDefault)
+      dataLabel += "(default)";
     commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
         " ;\nJmol Property Data Format 1 -- Jmol ").append(
         Viewer.getJmolVersion()).append(";\n");
