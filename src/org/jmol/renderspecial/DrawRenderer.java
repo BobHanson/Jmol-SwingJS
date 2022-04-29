@@ -327,7 +327,7 @@ public class DrawRenderer extends MeshRenderer {
     double dx = (screens[1].x - screens[0].x) * f;
     double dy = (screens[1].y - screens[0].y) * f;
     
-    if (dmax == 0 || MeasureD.computeTorsion(pt2, pt0, P3d.new3(pt0.x, pt0.y, 10000f), pt1, false) > 0) {
+    if (dmax == 0 || MeasureD.computeTorsion(pt2, pt0, P3d.new3(pt0.x, pt0.y, 10000d), pt1, false) > 0) {
       dx = -dx;
       dy = -dy;
     }
@@ -370,9 +370,9 @@ public class DrawRenderer extends MeshRenderer {
     if (diameter == 0)
       diameter = (int) width;
     if (pt0.z == -Double.MAX_VALUE) {
-      pt0.x *= vwr.tm.width / 100f;
-      pt0.y *= vwr.tm.height / 100f;
-      diameter = (int) (diameter * vwr.getScreenDim() / 100f);
+      pt0.x *= vwr.tm.width / 100d;
+      pt0.y *= vwr.tm.height / 100d;
+      diameter = (int) (diameter * vwr.getScreenDim() / 100d);
     }
     diameter *= f;
     pt1i.set((int) (pt0.x), (int) (vwr.tm.height - pt0.y), (int) vwr.tm.cameraDistance);
@@ -390,7 +390,7 @@ public class DrawRenderer extends MeshRenderer {
     tm.rotatePoint(vertices[ptXYZ], pt1);
     pt1.z *= -1;
     double zoomDimension = vwr.getScreenDim();
-    double scaleFactor = zoomDimension / 20f;
+    double scaleFactor = zoomDimension / 20d;
     pt1.scaleAdd2(dmesh.scale * scaleFactor, pt1, pt0);
     if (diameter == 0)
       diameter = 1;
@@ -401,9 +401,9 @@ public class DrawRenderer extends MeshRenderer {
     renderArrowHead(pt0, pt1, 0, true, false, false);
   }
 
-  private final P3d pt0f = new P3d();
+  private final P3d pt0d = new P3d();
   protected P3i pt0i = new P3i();
-  private P3d s0f;
+  private P3d s0d;
   private P3d s1f;
   private P3d s2f;
 
@@ -412,8 +412,8 @@ public class DrawRenderer extends MeshRenderer {
                                boolean isBarb) {
     if (dmesh.noHead)
       return;
-    if (s0f == null) {
-      s0f = new P3d();
+    if (s0d == null) {
+      s0d = new P3d();
       s1f = new P3d();
       s2f = new P3d();
     }
@@ -423,12 +423,12 @@ public class DrawRenderer extends MeshRenderer {
     if (factor2 > 0)
       fScale *= factor2;
 
-    pt0f.setT(pt1);
+    pt0d.setT(pt1);
     pt2f.setT(pt2);
-    double d = pt0f.distance(pt2f);
+    double d = pt0d.distance(pt2f);
     if (d == 0)
       return;
-    vTemp.sub2(pt2f, pt0f);
+    vTemp.sub2(pt2f, pt0d);
     vTemp.normalize();
     vTemp.scale(fScale / 5);
     if (!withShaft)
@@ -441,7 +441,7 @@ public class DrawRenderer extends MeshRenderer {
     } else {
       tm.transformPtScrT3(pt2f, s2f);
       tm.transformPtScrT3(pt1f, s1f);
-      tm.transformPtScrT3(pt0f, s0f);
+      tm.transformPtScrT3(pt0d, s0d);
     }
     if (s2f.z == 1 || s1f.z == 1) //slabbed
       return;
@@ -459,7 +459,7 @@ public class DrawRenderer extends MeshRenderer {
       g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, headDiameter, s1f, s2f,
           isBarb);
     if (withShaft)
-      g3d.fillCylinderScreen3I(GData.ENDCAPS_FLAT, diameter, s0f, s1f, null, null, 0);
+      g3d.fillCylinderScreen3I(GData.ENDCAPS_FLAT, diameter, s0d, s1f, null, null, 0);
   }
 
   private double getArrowScale() {

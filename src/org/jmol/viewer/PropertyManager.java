@@ -406,12 +406,6 @@ public class PropertyManager implements JmolPropertyManager {
           pt += dlist.length;
         return (pt >= 0 && pt < dlist.length ? Double.valueOf(dlist[pt]) : "");
       }
-//      if (AU.isAF(property)) {
-//        float[] flist = (float[]) property;
-//        if (pt < 0)
-//          pt += flist.length;
-//        return (pt >= 0 && pt < flist.length ? Double.valueOf(flist[pt]) : "");
-//      }
       if (AU.isAII(property)) {
         int[][] iilist = (int[][]) property;
         if (pt < 0)
@@ -1538,7 +1532,7 @@ public class PropertyManager implements JmolPropertyManager {
       info.put("translucent", Boolean.valueOf(isTranslucent));
     info.put("formalCharge", Integer.valueOf(atom.getFormalCharge()));
     info.put("partialCharge", Double.valueOf(atom.getPartialCharge()));
-    double d = atom.getSurfaceDistance100() / 100f;
+    double d = atom.getSurfaceDistance100() / 100d;
     if (d >= 0)
       info.put("surfaceDistance", Double.valueOf(d));
     if (ms.am[atom.mi].isBioModel) {

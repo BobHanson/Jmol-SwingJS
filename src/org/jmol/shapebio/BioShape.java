@@ -400,7 +400,7 @@ public class BioShape extends AtomShape {
                 type + (bsSizeSet.get(i) ? " on" : " off"));
           } else {
             BSUtil.setMapBitSet(temp, atomIndex1, atomIndex2,
-                type + " " + PT.escF(mads[i] / 2000f));
+                type + " " + PT.escD(mads[i] / 2000d));
           }
         }
         if (bsColixSet == null || !bsColixSet.get(i))

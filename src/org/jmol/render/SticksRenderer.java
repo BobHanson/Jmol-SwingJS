@@ -308,7 +308,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
           width = (int) (width * 0.5);
         double m = multipleBondSpacing;
         if (m < 0)
-          multipleBondSpacing = 0.30f;
+          multipleBondSpacing = 0.30d;
         drawBond(mask);
         bondsPerp = !bondsPerp;
         bondOrder = 2;
@@ -324,7 +324,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
           width = (int) (width * 0.5);
         double m = multipleBondSpacing;
         if (m < 0)
-          multipleBondSpacing = 0.20f;
+          multipleBondSpacing = 0.20d;
         drawBond(mask);
         bondsPerp = !bondsPerp;
         bondOrder = 2;

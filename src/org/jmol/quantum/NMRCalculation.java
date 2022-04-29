@@ -570,7 +570,7 @@ public class NMRCalculation implements JmolNMRInterface {
         // Haasnoot and Altona 1981 https://www.researchgate.net/publication/230009488_The_relationship_between_proton-proton_NMR_coupling_constants_and_substituent_electronegativities_II-conformational_analysis_of_the_sugar_ring_in_nucleosides_and_nucleotides_in_solution_using_a_genera
         //     April 1981Magnetic Resonance in Chemistry 15(1):43 - 52
         // see also http://www.colby.edu/chemistry/NMR/scripts/altona/altonaref.html
-        // and https://www.spectroscopynow.com/userfiles/sepspec/file/specNOW/HTML%20files/proton-proton2.htm
+        // and https://www.spectroscopynow.com/userfiles/sepspec/file/specNOW/HTML%20diles/proton-proton2.htm
         p[1] = 13.7;
         p[2] = -0.73;
         p[3] = 0;

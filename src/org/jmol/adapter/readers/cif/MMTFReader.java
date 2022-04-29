@@ -208,7 +208,7 @@ public class MMTFReader extends MMCifReader {
     boolean haveSerial = (atomId != null);
     char[] altloc = (char[]) decode("altLocList"); // rldecode32
     double[] occ = (double[]) decode("occupancyList");
-    double[] x = (double[]) decode("xCoordList");//getFloatsSplit("xCoord", 1000f);
+    double[] x = (double[]) decode("xCoordList");//getFloatsSplit("xCoord", 1000d);
     double[] y = (double[]) decode("yCoordList");
     double[] z = (double[]) decode("zCoordList");
     double[] bf = (double[]) decode("bFactorList");

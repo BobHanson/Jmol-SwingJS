@@ -50,7 +50,7 @@ import org.jmol.util.Logger;
 public class Dipoles extends Shape {
 
   final static short DEFAULT_MAD = 10;
-  final static double DEFAULT_OFFSETSIDE = 0.40f;
+  final static double DEFAULT_OFFSETSIDE = 0.40d;
 
   public int dipoleCount = 0;
   public Dipole[] dipoles = new Dipole[4];
@@ -179,10 +179,10 @@ public class Dipoles extends Shape {
       int offsetPercent = tempDipole.offsetPercent = ((Integer) value)
           .intValue();
       if (tempDipole.dipoleValue != 0)
-        tempDipole.offsetAngstroms = offsetPercent / 100f
+        tempDipole.offsetAngstroms = offsetPercent / 100d
             * tempDipole.dipoleValue;
       if (currentDipole == null)
-        setPropertyTok(T.percent, isBond, 0, offsetPercent / 100f);
+        setPropertyTok(T.percent, isBond, 0, offsetPercent / 100d);
       return;
     }
 
@@ -295,7 +295,7 @@ public class Dipoles extends Shape {
       isUserValue = true;
       tempDipole.setValue(dipoleValue);
       if (tempDipole.offsetPercent != 0)
-        tempDipole.offsetAngstroms = tempDipole.offsetPercent / 100f
+        tempDipole.offsetAngstroms = tempDipole.offsetPercent / 100d
             * tempDipole.dipoleValue;
       return;
     }

@@ -493,7 +493,7 @@ public class CastepReader extends AtomSetCollectionReader {
   private final static String[] lengthUnitIds = { "bohr", "m", "cm", "nm",
       "ang", "a0" };
 
-  private final static double[] lengthUnitFactors = { ANGSTROMS_PER_BOHR, 1E10f,
+  private final static double[] lengthUnitFactors = { ANGSTROMS_PER_BOHR, 1E10d,
       1E8d, 1E1f, 1.0d, ANGSTROMS_PER_BOHR };
 
   private double readLengthUnit(String units) throws Exception {

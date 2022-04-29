@@ -498,7 +498,7 @@ public class Text {
   public void appendFontCmd(SB s) {
     s.append("  " + Shape.getFontCommand("echo", font));
     if (scalePixelsPerMicron > 0)
-      s.append(" " + (10000f / scalePixelsPerMicron)); // Angstroms per pixel
+      s.append(" " + (10000d / scalePixelsPerMicron)); // Angstroms per pixel
   }
 
   public boolean isMeasure;

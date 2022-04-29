@@ -528,7 +528,7 @@ public class Atom extends Point3fi implements Node {
     // AtomCollection.getAtomPropertyState with VDW_AUTO
     // AtomCollection.getVdwRadius with passed on type
     return (Double.isNaN(userDefinedVanDerWaalRadius) 
-        ? vwr.getVanderwaalsMarType(atomicAndIsotopeNumber, getVdwType(type)) / 1000f
+        ? vwr.getVanderwaalsMarType(atomicAndIsotopeNumber, getVdwType(type)) / 1000d
         : userDefinedVanDerWaalRadius);
   }
 
@@ -563,7 +563,7 @@ public class Atom extends Point3fi implements Node {
   double getVolume(Viewer vwr, VDW vType) {
     double r1 = (vType == null ? userDefinedVanDerWaalRadius : Double.NaN);
     if (Double.isNaN(r1))
-      r1 = vwr.getVanderwaalsMarType(getElementNumber(), getVdwType(vType)) / 1000f;
+      r1 = vwr.getVanderwaalsMarType(getElementNumber(), getVdwType(vType)) / 1000d;
     double volume = 0;
     if (bonds != null)
       for (int j = 0; j < bonds.length; j++) {
@@ -573,7 +573,7 @@ public class Atom extends Point3fi implements Node {
         double r2 = (vType == null ? atom2.userDefinedVanDerWaalRadius : Double.NaN);
         if (Double.isNaN(r2))
           r2 = vwr.getVanderwaalsMarType(atom2.getElementNumber(), atom2
-              .getVdwType(vType)) / 1000f;
+              .getVdwType(vType)) / 1000d;
         double d = distance(atom2);
         if (d > r1 + r2)
           continue;
@@ -594,7 +594,7 @@ public class Atom extends Point3fi implements Node {
   }
 
   public double getRadius() {
-    return Math.abs(madAtom / 2000f);
+    return Math.abs(madAtom / 2000d);
   }
 
   @Override
@@ -1259,7 +1259,7 @@ public class Atom extends Point3fi implements Node {
     case T.mass:
       return getMass();
     case T.occupancy:
-      return getOccupancy100() / 100f;
+      return getOccupancy100() / 100d;
     case T.partialcharge:
       return getPartialCharge();
     case T.phi:
@@ -1296,9 +1296,9 @@ public class Atom extends Point3fi implements Node {
       return (vwr.slm.isAtomSelected(i) ? 1 : 0);
     case T.surfacedistance:
       vwr.ms.getSurfaceDistanceMax();
-      return getSurfaceDistance100() / 100f;
+      return getSurfaceDistance100() / 100d;
     case T.temperature: // 0 - 9999
-      return getBfactor100() / 100f;
+      return getBfactor100() / 100d;
     case T.unitx:
       return getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'X', ptTemp);
     case T.unity:

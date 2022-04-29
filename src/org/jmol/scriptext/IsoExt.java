@@ -398,7 +398,7 @@ public class IsoExt extends ScriptExt {
         }
         if (lattice == null) {
           pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
-              intScale / 100f);
+              intScale / 100d);
         } else {
           Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
               (int) lattice.x, (int) lattice.y, (int) lattice.z);
@@ -457,7 +457,7 @@ public class IsoExt extends ScriptExt {
           if (!chk && tok != T.line && pts == null) {
             uc = vwr.getCurrentUnitCell();
             tokIntersectBox = (uc == null ? T.boundbox : T.unitcell);
-            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100f);
+            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100d);
             isIntersect = true;
           }
         }
@@ -584,7 +584,7 @@ public class IsoExt extends ScriptExt {
           type = eval.optParameterAsString(i);
           break;
         }
-        double scale = (intScale == 0 ? 1 : intScale / 100f);
+        double scale = (intScale == 0 ? 1 : intScale / 100d);
         int index = 0;
         if (type.length() > 0) {
           if (isFloatParameter(++i))
@@ -800,7 +800,7 @@ public class IsoExt extends ScriptExt {
             if (options != 0) {
               // options is T.offset, and target is an {i j k} offset from cell 555
               Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.point, null, intScale / 100f, nth, options);
+                  target, T.point, null, intScale / 100d, nth, options);
               if (o instanceof P3d)
                 target = (P3d) o;
               else
@@ -810,7 +810,7 @@ public class IsoExt extends ScriptExt {
               thisId = "sym";
             if (s == null)
               s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.draw, thisId, intScale / 100f, nth, options);
+                  target, T.draw, thisId, intScale / 100d, nth, options);
           }
           eval.runBufferedSafely(
               s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
@@ -832,7 +832,7 @@ public class IsoExt extends ScriptExt {
             if (!chk)
               eval.runScript(Escape.drawQuat(Qd.newP4((P4d) propertyValue),
                   (thisId == null ? "frame" : thisId), " " + swidth,
-                  (center == null ? new P3d() : center), intScale / 100f));
+                  (center == null ? new P3d() : center), intScale / 100d));
             return;
           }
           propertyName = "planedef";
@@ -2418,10 +2418,10 @@ public class IsoExt extends ScriptExt {
         double cavityRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
             : 1.2d);
         double envelopeRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
-            : 10f);
+            : 10d);
         if (chk)
           continue;
-        if (envelopeRadius > 50f) {
+        if (envelopeRadius > 50d) {
           eval.integerOutOfRange(0, 50);
           return;
         }
@@ -3986,17 +3986,17 @@ public class IsoExt extends ScriptExt {
           break;
         case 1: // polymer
           v2 = V3d.newVsub(pts[2], pts[0]);
-          v2.scale(1000f);
+          v2.scale(1000d);
           //$FALL-THROUGH$
         case 2: // slab
           // "a b c" is really "z y x"
           v1 = V3d.newVsub(pts[1], pts[0]);
-          v1.scale(1000f);
+          v1.scale(1000d);
           pts[0].sub(v1);
-          pts[1].scale(2000f);
+          pts[1].scale(2000d);
           if (iType == 1) {
             pts[0].sub(v2);
-            pts[2].scale(2000f);
+            pts[2].scale(2000d);
           }
           break;
         }

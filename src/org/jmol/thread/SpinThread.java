@@ -135,7 +135,7 @@ public class SpinThread extends JmolThread {
           break;
         }
         //navigatingSurface = vwr.getNavigateSurface();
-        boolean refreshNeeded = (endDegrees >= 1e10f ? true : isNav ? //navigatingSurface ||
+        boolean refreshNeeded = (endDegrees >= 1e10d ? true : isNav ? //navigatingSurface ||
         transformManager.navX != 0 || transformManager.navY != 0
             || transformManager.navZ != 0
             : transformManager.isSpinInternal
@@ -178,7 +178,7 @@ public class SpinThread extends JmolThread {
             vwr.requestRepaintAndWait("spin thread");
         else
           vwr.refresh(Viewer.REFRESH_REPAINT, "SpinThread");
-        if (endDegrees >= 1e10f ? nDegrees/endDegrees > 0.99 
+        if (endDegrees >= 1e10d ? nDegrees/endDegrees > 0.99 
             : !isNav && endDegrees >= 0 ? nDegrees >= endDegrees - 0.001
             : -nDegrees <= endDegrees + 0.001) {
           isDone = true;

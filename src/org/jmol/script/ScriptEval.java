@@ -2888,7 +2888,7 @@ public class ScriptEval extends ScriptExpr {
     case T.halo:
     case T.spacefill: // aka cpk
     case T.star:
-      setSize(iShape, (tok == T.halo ? -1000f : 1d));
+      setSize(iShape, (tok == T.halo ? -1000d : 1d));
       return;
     case T.label:
       cmdLabel(1, null);
@@ -5711,7 +5711,7 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.back:
       axis.set(0, 1, 0);
-      degrees = 180f;
+      degrees = 180d;
       checkLength(++i);
       break;
     case T.left:
@@ -6227,7 +6227,7 @@ public class ScriptEval extends ScriptExpr {
         haveRotation = true;
         if ((q = getQuaternionParameter(i, bsBest, tok == T.best)) != null) {
           if (q.q0 == 0)
-            q.q0 = 1e-10f;
+            q.q0 = 1e-10d;
           rotAxis.setT(q.getNormal());
           endDegrees = q.getTheta(); // returns [0-180]
         }

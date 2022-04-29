@@ -207,7 +207,7 @@ public class RocketRenderer {
   }
   
   private void setBox(double w, double h, P3d pt) {
-    ((Sheet) proteinstructurePending).setBox(w, h, pt, vW, vH, ptC, mad / 1000f);
+    ((Sheet) proteinstructurePending).setBox(w, h, pt, vW, vH, ptC, mad / 1000d);
   }
 
   private void buildBox(P3d pointCorner, V3d scaledWidthVector,

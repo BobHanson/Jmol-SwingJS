@@ -179,7 +179,7 @@ public class Echo extends TextShape {
     if ("scalereference" == propertyName) {
       if (currentObject != null) {
         double val = ((Number) value).doubleValue();
-        currentObject.setScalePixelsPerMicron(val == 0 ? 0 : 10000f / val);
+        currentObject.setScalePixelsPerMicron(val == 0 ? 0 : 10000d / val);
       }
       return;
     }
@@ -197,7 +197,7 @@ public class Echo extends TextShape {
     if ("xyz" == propertyName) {
       if (currentObject != null && vwr.getBoolean(T.fontscaling))
         currentObject.setScalePixelsPerMicron(
-            vwr.getScalePixelsPerAngstrom(false) * 10000f);
+            vwr.getScalePixelsPerAngstrom(false) * 10000d);
       // continue on to Object2d setting
     }
 

@@ -478,7 +478,7 @@ public class MOCalculation extends QuantumCalculation {
       break;
     case NORM_STANDARD:
       // (8 alpha^3/pi^3)^0.25 exp(-alpha r^2)
-      norm = 0.712705470f; // (8/pi^3)^0.25 = (2/pi)^3/4
+      norm = 0.712705470d; // (8/pi^3)^0.25 = (2/pi)^3/4
       normalizeAlpha = true;
       break;
     case NORM_NWCHEM:
@@ -570,7 +570,7 @@ public class MOCalculation extends QuantumCalculation {
       norm1 = norm2 = 1;
       break;
     case NORM_STANDARD:
-      norm1 = 0.712705470f;
+      norm1 = 0.712705470d;
       norm2 = 1.42541094d;
       doNormalize = true;
       break;

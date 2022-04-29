@@ -236,7 +236,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 					a = PT.split(a.substring(pt + 14), " ")[0];
 				}
 				String title = (isMS ? "m/z=" + Math.round(x) + ": " + data[2] + " (" + data[1] + ")" : 
-					pta == 2 ? "" + (Math.round(x * 10) / 10f) : null);
+					pta == 2 ? "" + (Math.round(x * 10) / 10d) : null);
 				getStringInfo(file, title, mytype, model, a, htSets, "" + x, list,
 						" atoms=\"%ATOMS%\" xMin=\"" + (x - dx) + "\" xMax=\"" + (x + dx)
 								+ "\">");

@@ -366,7 +366,7 @@ public class AnimationManager {
     double nsec = 1d * (i1 - i0) / animationFps + firstFrameDelay
         + lastFrameDelay;
     for (int i = i0; i <= i1; i++)
-      nsec += vwr.ms.getFrameDelayMs(modelIndexForFrame(i)) / 1000f;
+      nsec += vwr.ms.getFrameDelayMs(modelIndexForFrame(i)) / 1000d;
     return nsec;
   }
 

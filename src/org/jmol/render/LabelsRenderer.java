@@ -92,7 +92,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
     sppm = vwr.getScalePixelsPerAngstrom(true);
-    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000f : 0);
+    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000d : 0);
     imageFontScaling = vwr.imageFontScaling;
     int iGroup = -1;
     minZ[0] = Integer.MAX_VALUE;

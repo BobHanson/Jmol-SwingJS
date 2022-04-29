@@ -209,7 +209,7 @@ public class GData implements JmolGraphicsInterface {
     if (shader.specularPower == val)
       return;
     shader.specularPower = val;
-    shader.intenseFraction = val / 100f;
+    shader.intenseFraction = val / 100d;
     shader.flushCaches();
   }
 
@@ -227,7 +227,7 @@ public class GData implements JmolGraphicsInterface {
     if (shader.specularPercent == val)
       return;
     shader.specularPercent = val;
-    shader.specularFactor = val / 100f;
+    shader.specularFactor = val / 100d;
     shader.flushCaches();
   }
 
@@ -283,7 +283,7 @@ public class GData implements JmolGraphicsInterface {
     if (shader.diffusePercent == val)
       return;
     shader.diffusePercent = val;
-    shader.diffuseFactor = val / 100f;
+    shader.diffuseFactor = val / 100d;
     shader.flushCaches();
   }
 
@@ -300,7 +300,7 @@ public class GData implements JmolGraphicsInterface {
     if (shader.ambientPercent == val)
       return;
     shader.ambientPercent = val;
-    shader.ambientFraction = val / 100f;
+    shader.ambientFraction = val / 100d;
     shader.flushCaches();
   }
 

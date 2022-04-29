@@ -2715,7 +2715,7 @@ public class MathExt {
           if (s.equalsIgnoreCase("vdw") || s.equalsIgnoreCase("vanderwaals"))
             vdw = (i + 1 < args.length && args[i + 1].tok == T.integer
                 ? args[++i].asInt()
-                : 100) / 100f;
+                : 100) / 100d;
           else if (s.equalsIgnoreCase("notConnected"))
             isNotConnected = true;
           else if (s.equalsIgnoreCase("connected"))

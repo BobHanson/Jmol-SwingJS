@@ -962,7 +962,7 @@ public class IsosurfaceMesh extends Mesh {
       double d2 = jvxlData.boundingBox[1]
           .distanceSquared(jvxlData.boundingBox[0]);
       if (d2 < 5)
-        return 1e-10f;
+        return 1e-10d;
     }
     return 1e-8d;
   }

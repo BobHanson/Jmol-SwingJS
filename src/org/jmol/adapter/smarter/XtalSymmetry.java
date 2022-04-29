@@ -1508,7 +1508,7 @@ public class XtalSymmetry {
       // getTensor will return correct type
       a.addTensor(symmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
       if (Double.isNaN(a.bfactor))
-        a.bfactor = a.anisoBorU[7] * 100f;
+        a.bfactor = a.anisoBorU[7] * 100d;
       // prevent multiple additions
       a.anisoBorU = null;
     }

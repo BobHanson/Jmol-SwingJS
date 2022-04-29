@@ -207,7 +207,7 @@ abstract public class __CartesianExporter extends ___Exporter {
     if (Logger.debugging)
       outputComment("atom " + atom);
     short colix = atom.colixAtom;
-    outputSphere(atom, radius == 0 ? atom.madAtom / 2000f : radius, colix, C.isColixTranslucent(colix));
+    outputSphere(atom, radius == 0 ? atom.madAtom / 2000d : radius, colix, C.isColixTranslucent(colix));
   }
 
   @Override
@@ -271,7 +271,7 @@ abstract public class __CartesianExporter extends ___Exporter {
   void drawCylinder(P3d ptA, P3d ptB, short colix1, short colix2,
                     byte endcaps, int mad, int bondOrder) {
     setTempPoints(ptA, ptB, bondOrder < 0);
-    double radius = mad / 2000f;
+    double radius = mad / 2000d;
     if (Logger.debugging)
       outputComment("bond " + ptA + " " + ptB);
     if (colix1 == colix2 || noColor) {
@@ -299,7 +299,7 @@ abstract public class __CartesianExporter extends ___Exporter {
   @Override
   void fillCylinderScreenMad(short colix, byte endcaps, int mad,
                              P3d screenA, P3d screenB) {
-    double radius = mad / 2000f;
+    double radius = mad / 2000d;
     setTempPoints(screenA, screenB, false);
     outputCylinder(null, tempP1, tempP2, colix, endcaps, radius, null, null, true);
   }
@@ -308,7 +308,7 @@ abstract public class __CartesianExporter extends ___Exporter {
   void fillCylinderScreen(short colix, byte endcaps, int screenDiameter,
                           P3d screenA, P3d screenB, P3d ptA, P3d ptB, double radius) {
     if (ptA != null) {
-      drawCylinder(ptA, ptB, colix, colix, endcaps, (int) Math.round(radius * 2000f), -1);
+      drawCylinder(ptA, ptB, colix, colix, endcaps, (int) Math.round(radius * 2000d), -1);
       return;
     }    
     // vectors, polyhedra

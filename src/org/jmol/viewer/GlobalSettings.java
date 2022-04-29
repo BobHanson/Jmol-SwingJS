@@ -292,7 +292,7 @@ public class GlobalSettings {
     setB("hideNavigationPoint", hideNavigationPoint);
     setB("hiddenLinesDashed", hiddenLinesDashed);
     setB("highResolution", highResolutionFlag);
-    setF("hoverDelay", hoverDelayMs / 1000f);
+    setF("hoverDelay", hoverDelayMs / 1000d);
     setB("imageState", imageState);
     setI("infoFontSize", infoFontSize);
     setB("isosurfaceKey", isosurfaceKey);
@@ -554,7 +554,7 @@ public class GlobalSettings {
   boolean partialDots = false;
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;
-  double hbondsAngleMinimum = 90f;
+  double hbondsAngleMinimum = 90d;
   double hbondNODistanceMaximum = 3.25d; // O----N
   double hbondHXDistanceMaximum = 2.5d;  // O--H
   boolean hbondsRasmol = true; // 12.0.RC3
@@ -892,8 +892,8 @@ public class GlobalSettings {
        */
       {
         Runtime runtime = Runtime.getRuntime();
-        bTotal = runtime.totalMemory() / 1000000f;
-        bFree = runtime.freeMemory() / 1000000f;
+        bTotal = runtime.totalMemory() / 1000000d;
+        bFree = runtime.freeMemory() / 1000000d;
       }
       String value = DF.formatDecimal(bTotal - bFree, 1) + "/"
           + DF.formatDecimal(bTotal, 1);

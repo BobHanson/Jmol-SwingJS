@@ -90,7 +90,7 @@ public class TransformManager4D extends TransformManager {
   }
 
   protected void rotate4DBall(double xDelta, double yDelta, double zDelta) {
-    double scale = 50f;
+    double scale = 50d;
     setAsBallRotation(m4, scale, xDelta, yDelta, zDelta);
     m2_rotate.mul2(m4, m2_rotate);
   }

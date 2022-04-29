@@ -724,7 +724,7 @@ public class Elements {
         atomicNumber, charge, cationLookupTable) : charge < 0
         && bsAnions.get(atomicNumber) ? getBondingRadFromTable(atomicNumber,
         charge, anionLookupTable) : defaultBondingMars[(atomicNumber << 1)
-        + bondingVersion] / 1000f);
+        + bondingVersion] / 1000d);
   }
 
   /**
@@ -735,7 +735,7 @@ public class Elements {
    */
   public static double getCovalentRadius(int atomicNumberAndIsotope) {
     return defaultBondingMars[((atomicNumberAndIsotope & 127) << 1)
-        + covalentVersion] / 1000f;
+        + covalentVersion] / 1000d;
 
   }
   
@@ -1133,7 +1133,7 @@ public class Elements {
       else if (iVal < ionic)
         iMin = iMid + 1;
       else
-        return table[(iMid << 1) + 1] / 1000f;
+        return table[(iMid << 1) + 1] / 1000d;
     }
     // find closest with same element and charge <= this charge
     if (iVal > ionic) 
@@ -1141,7 +1141,7 @@ public class Elements {
     iVal = table[iMid << 1];
     if (atomicNumber != (iVal >> 4)) 
       iMid++; // must be same element and not a negative charge;
-    return table[(iMid << 1) + 1] / 1000f;
+    return table[(iMid << 1) + 1] / 1000d;
   }
 
   public static int getVanderwaalsMar(int atomicAndIsotopeNumber, VDW type) {

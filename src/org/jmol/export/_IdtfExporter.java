@@ -232,8 +232,8 @@ public class _IdtfExporter extends __CartesianExporter {
     sb.append(round(pt.x)).append(" ").append(round(pt.y)).append(" ").append(round(pt.z)).append(" ");
   }
   
-  private P3d ptMin = P3d.new3(1e10f,1e10f,1e10f);
-  private P3d ptMax = P3d.new3(-1e10f,-1e10f,-1e10f);
+  private P3d ptMin = P3d.new3(1e10d,1e10d,1e10d);
+  private P3d ptMax = P3d.new3(-1e10d,-1e10d,-1e10d);
   
   private void checkPoint(T3d pt) {
     if (pt.x < ptMin.x)

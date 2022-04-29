@@ -190,7 +190,7 @@ public class MMCifValidationParser {
           max = Math.max(f[j], max);
         }
       note += "\n  property_" + key + " (" + (isGroup ? "residues: ": "atoms: ") + count 
-          + (max == 1 ? "" : ", max: " + ((int) (max * 100)) / 100f) + ")";
+          + (max == 1 ? "" : ", max: " + ((int) (max * 100)) / 100d) + ")";
       reader.asc.setAtomProperties(key, f, model, isGroup);
     }
     return note;

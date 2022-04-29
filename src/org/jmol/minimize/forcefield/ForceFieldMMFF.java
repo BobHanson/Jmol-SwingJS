@@ -780,7 +780,7 @@ public class ForceFieldMMFF extends ForceField {
     if (doRound) {
       double abscharge = 0;
       for (int i = partialCharges.length; --i >= 0;) {
-        partialCharges[i] = (Math.round(partialCharges[i] * 1000)) / 1000f;
+        partialCharges[i] = (Math.round(partialCharges[i] * 1000)) / 1000d;
         abscharge += Math.abs(partialCharges[i]);
       }
       if (abscharge == 0 && a1 != null) {

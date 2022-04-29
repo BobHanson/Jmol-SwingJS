@@ -282,7 +282,7 @@ public class StateCreator extends JmolStateCreator {
               index = -1 - index;
             sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC('\t')
                 .appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
-                .appendF(bond.mad / 1000f).appendC('\t')
+                .appendF(bond.mad / 1000d).appendC('\t')
                 .appendF(bond.getEnergy()).appendC('\t')
                 .append(Edge.getBondOrderNameFromOrder(bond.order))
                 .append(";\n");
@@ -347,7 +347,7 @@ public class StateCreator extends JmolStateCreator {
           sb.append("  ").append(m.orientation.getMoveToText(false))
               .append(";\n");
         if (m.frameDelay != 0 && !ms.isTrajectorySubFrame(i))
-          sb.append("  frame delay ").appendF(m.frameDelay / 1000f)
+          sb.append("  frame delay ").appendF(m.frameDelay / 1000d)
               .append(";\n");
         if (m.simpleCage != null) {
           sb.append("  unitcell ")
@@ -927,7 +927,7 @@ public class StateCreator extends JmolStateCreator {
     SB s = new SB().append("\n");
     app(s, myType
         + (mad == 0 ? " off" : mad == 1 ? " on" : mad == -1 ? " dotted"
-            : mad < 20 ? " " + mad : " " + (mad / 20000f)));
+            : mad < 20 ? " " + mad : " " + (mad / 20000d)));
     if (s.length() < 3)
       return "";
     String fcmd = Shape.getFontCommand(myType, font3d);
@@ -980,7 +980,7 @@ public class StateCreator extends JmolStateCreator {
         sb.append(" ID ").append(PT.esc(m.thisID));
       if (m.mad != 0)
         sb.append(" radius ").appendF(
-            m.thisID == null || m.mad > 0 ? m.mad / 2000f : 0);
+            m.thisID == null || m.mad > 0 ? m.mad / 2000d : 0);
       if (m.colix != 0)
         sb.append(" color ").append(Escape.escapeColor(C.getArgb(m.colix)));
       if (m.text != null) {
@@ -1030,7 +1030,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append(";\n");
     }
     if (shape.mad >= 0)
-      commands.append(" set measurements ").appendF(shape.mad / 2000f).append(";\n");
+      commands.append(" set measurements ").appendF(shape.mad / 2000d).append(";\n");
     String s = getCommands(temp, null, "select measures");
     if (s != null && s.length() != 0) {
       commands.append(s);
@@ -1084,7 +1084,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : shape.bsSizeSet
           .nextSetBit(i + 1)))
         BSUtil.setMapBitSet(temp, i, i, "wireframe "
-            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escF(r / 2000f)));
+            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escD(r / 2000d)));
     }
     if (reportAll || bsOrderSet != null) {
       int i0 = (reportAll ? bondCount - 1 : bsOrderSet.nextSetBit(0));
@@ -1222,7 +1222,7 @@ public class StateCreator extends JmolStateCreator {
         double sppm = (text != null ? text.scalePixelsPerMicron : 0);
         if (sppm > 0)
           BSUtil.setMapBitSet(temp2, i, i,
-              "set labelScaleReference " + (10000f / sppm));
+              "set labelScaleReference " + (10000d / sppm));
         if (l.offsets != null && l.offsets.length > i) {
           int offsetFull = l.offsets[i];
           BSUtil.setMapBitSet(temp2, i, i,
@@ -1272,7 +1272,7 @@ public class StateCreator extends JmolStateCreator {
           if ((r = atoms[i].madAtom) < 0)
             BSUtil.setMapBitSet(temp, i, i, "Spacefill on");
           else
-            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + PT.escD(r / 2000f));
+            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + PT.escD(r / 2000d));
         }
         if (shape.bsColixSet != null && shape.bsColixSet.get(i)) {
           byte pid = atoms[i].paletteID;
@@ -1329,7 +1329,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = shape.bsSizeSet.nextSetBit(0); i >= 0; i = shape.bsSizeSet
           .nextSetBit(i + 1))
         BSUtil.setMapBitSet(temp, i, i, type
-            + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escF(mad / 2000f)));
+            + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escD(mad / 2000d)));
     if (shape.bsColixSet != null)
       for (int i = shape.bsColixSet.nextSetBit(0); i >= 0; i = shape.bsColixSet
           .nextSetBit(i + 1))
@@ -1630,7 +1630,7 @@ public class StateCreator extends JmolStateCreator {
 //          s.appendF(atoms[i].getPartialCharge());
 //          break;
 //        case AtomCollection.TAINT_TEMPERATURE:
-//          s.appendF(atoms[i].getBfactor100() / 100f);
+//          s.appendF(atoms[i].getBfactor100() / 100d);
 //          break;
 //        case AtomCollection.TAINT_VALENCE:
 //          s.appendI(atoms[i].getValence());

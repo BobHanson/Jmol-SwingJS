@@ -672,7 +672,7 @@ public class StatusManager {
       if (mouseCommand != null)
         syncSend(mouseCommand, "*", 0);
     } else if (!syncingScripts)
-      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000f, false), "*", 0);
+      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000d, false), "*", 0);
   }
 
   private boolean drivingSync;

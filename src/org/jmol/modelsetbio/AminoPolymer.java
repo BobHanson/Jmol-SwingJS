@@ -270,7 +270,7 @@ public class AminoPolymer extends AlphaPolymer {
           addResidueHydrogenBond(nitrogen,
               ((AminoMonomer) ((AminoPolymer) polymer).monomers[min[i][1]])
                   .getCarbonylOxygenAtom(), (polymer == this ? indexDonor : -99), min[i][1],
-              min[i][2] / 1000f, vHBonds);
+              min[i][2] / 1000d, vHBonds);
   }
 
   /**

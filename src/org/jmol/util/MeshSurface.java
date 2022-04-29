@@ -369,7 +369,7 @@ public class MeshSurface {
     return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
   }
 
-  public static Object[] getSlabWithinRange(float min, float max) {
+  public static Object[] getSlabWithinRange(double min, double max) {
     return new Object[] { Integer.valueOf(T.range), 
         new Double[] {Double.valueOf(min), Double.valueOf(max)}, Boolean.FALSE, null };
   }

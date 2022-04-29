@@ -296,7 +296,7 @@ public class ShapeManager {
       shapes[JC.SHAPE_CONTACT].setProperty("deleteVdw", null, bs);
   }
   
-  public float getAtomShapeValue(int tok, Group group, int atomIndex) {
+  public double getAtomShapeValue(int tok, Group group, int atomIndex) {
     int iShape = JC.shapeTokenIndex(tok);
     if (iShape < 0 || shapes[iShape] == null) 
       return 0;
@@ -306,7 +306,7 @@ public class ShapeManager {
         return 0;
       mad = shapes[iShape].getSizeG(group);
     }
-    return mad / 2000f;
+    return mad / 2000d;
   }
 
   public void replaceGroup(Group g0, Group g1) {

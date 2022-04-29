@@ -328,7 +328,7 @@ public class Measurement {
       }
       return toUnits(dist, units, andRound);
     }
-    return (andRound ? Math.round(dist * 100) / 100f : dist);
+    return (andRound ? Math.round(dist * 100) / 100d : dist);
   }
 
   private void checkJ(String units) {
@@ -354,7 +354,7 @@ public class Measurement {
   private String formatAngle(double angle) {
     String label = getLabelString();
     if (label.indexOf("%V") >= 0)
-      angle = (int) Math.round(angle * 10) / 10f;
+      angle = (int) Math.round(angle * 10) / 10d;
     return formatString(angle, "\u00B0", label);
   }
 
@@ -586,19 +586,19 @@ public class Measurement {
     if (Double.isNaN(dist))
       return Double.NaN;
     if (units.equals("hz"))
-      return (andRound ? Math.round(dist * 10) / 10f : dist);
+      return (andRound ? Math.round(dist * 10) / 10d : dist);
     if (units.equals("nm"))
-      return (andRound ? Math.round(dist * 100) / 1000f : dist / 10);
+      return (andRound ? Math.round(dist * 100) / 1000d : dist / 10);
     if (units.equals("pm"))
-      return (andRound ? Math.round(dist * 1000) / 10f : dist * 100);
+      return (andRound ? Math.round(dist * 1000) / 10d : dist * 100);
     if (units.equals("au"))
-      return (andRound ? Math.round(dist / JC.ANGSTROMS_PER_BOHR * 1000) / 1000f
+      return (andRound ? Math.round(dist / JC.ANGSTROMS_PER_BOHR * 1000) / 1000d
           : dist / JC.ANGSTROMS_PER_BOHR);
     if (units.endsWith("khz"))
-      return (andRound ? Math.round(dist / 10) / 100f : dist / 1000);
+      return (andRound ? Math.round(dist / 10) / 100d : dist / 1000);
 //    if (units.equals("noe"))
-//      return (andRound ? Math.round(dist * 100) / 100f : dist);
-    return (andRound ? Math.round(dist * 100) / 100f : dist);
+//      return (andRound ? Math.round(dist * 100) / 100d : dist);
+    return (andRound ? Math.round(dist * 100) / 100d : dist);
   }
 
   public static double fromUnits(double dist, String units) {

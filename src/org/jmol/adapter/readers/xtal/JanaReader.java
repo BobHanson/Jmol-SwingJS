@@ -873,7 +873,7 @@ public class JanaReader extends AtomSetCollectionReader {
       if (csin == 0 && ccos == 0) {
         if (!isPos)
           continue;
-        csin = 1e-10f;
+        csin = 1e-10d;
       }
       String axis = XYZ[k % 3];
       if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)

@@ -1593,7 +1593,7 @@ public class ModelSet extends BondCollection {
     }
     if ((mode & AtomData.MODE_GET_ATTACHED_HYDROGENS) != 0) {
       int[] nH = new int[1];
-      atomData.hAtomRadius = vwr.getVanderwaalsMar(1) / 1000f;
+      atomData.hAtomRadius = vwr.getVanderwaalsMar(1) / 1000d;
       atomData.hAtoms = calculateHydrogens(atomData.bsSelected, nH, null, AtomCollection.CALC_H_JUSTC);
       atomData.hydrogenAtomCount = nH[0];
       return;
@@ -1972,7 +1972,7 @@ public class ModelSet extends BondCollection {
     if (nNeg == 0 || nPos == 0)
       return null;
     pos.add(neg);
-    pos.scale(4.8d); //1e-10f * 1.6e-19d/ 3.336e-30f;
+    pos.scale(4.8d); //1e-10d * 1.6e-19d/ 3.336e-30d;
     // 1 Debye = 3.336e-30 Coulomb-meter; C_e = 1.6022e-19 C
     return pos;
   }
@@ -3013,7 +3013,7 @@ public class ModelSet extends BondCollection {
           //    AH args[0], CH args[1], CD args[2], DA args[3]
           //
           energy = HBond.getEnergy((double) Math.sqrt(d2), C.distance(atom),
-              C.distance(D), atomNear.distance(D)) / 1000f;
+              C.distance(D), atomNear.distance(D)) / 1000d;
         } else {
           bo = Edge.BOND_H_REGULAR;
         }
@@ -3475,7 +3475,7 @@ public class ModelSet extends BondCollection {
       int order = (f.length > 2 ? (int) f[2] : Edge.BOND_COVALENT_SINGLE);
       if (order < 0)
         order &= 0xFFFF; // 12.0.1 was saving struts as negative numbers
-      short mad = (f.length > 3 ? (short) (1000f * connections[i][3])
+      short mad = (f.length > 3 ? (short) (1000d * connections[i][3])
           : getDefaultMadFromOrder(order));
       if (order == 0 || mad == 0 && order != Edge.BOND_STRUT
           && !Edge.isOrderH(order)) {

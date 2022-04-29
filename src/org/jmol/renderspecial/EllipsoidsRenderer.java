@@ -99,7 +99,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
   private final P3d s1 = new P3d();
   private final P3d s2 = new P3d();
 
-  private final static double toRadians = (double) Math.PI/180f;
+  private final static double toRadians = (double) Math.PI/180d;
   private final static double[] cossin = new double[36];
 
   static {

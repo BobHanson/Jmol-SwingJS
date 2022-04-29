@@ -502,7 +502,7 @@ public class DSSP {
       htTemp.put(key, Boolean.TRUE);
     }
     vHBonds.addLast(new HBond(nitrogen, oxygen, type, (short) 1, C.INHERIT_ALL,
-        iEnergy / 1000f));
+        iEnergy / 1000d));
   }
 
   /**

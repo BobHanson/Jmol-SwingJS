@@ -122,7 +122,7 @@ public class Wien2kReader extends AtomSetCollectionReader {
     if (isrhombohedral) {
       double ar = Math.sqrt(a * a /3 + c * c / 9) ;
       alpha = beta = gamma = (Math.acos( (2*c * c  - 3 * a * a) 
-          / (2 * c * c + 6 * a * a)) * 180f / Math.PI);
+          / (2 * c * c + 6 * a * a)) * 180d / Math.PI);
       a = b = c = ar;
     }
     if (Double.isNaN(alpha) || alpha == 0)

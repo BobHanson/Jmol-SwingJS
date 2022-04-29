@@ -525,11 +525,11 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void fillCylinderScreen3I(byte endcaps, int diameter, P3d pointA,
-                                   P3d pointB, P3d pt0f, P3d pt1f, double radius) {
+                                   P3d pointB, P3d pt0d, P3d pt1f, double radius) {
     // from Draw arrow and NucleicMonomer
     if (diameter <= 0)
       return;
-    exporter.fillCylinderScreen(colix, endcaps, diameter, pointA, pointB, pt0f, pt1f,
+    exporter.fillCylinderScreen(colix, endcaps, diameter, pointA, pointB, pt0d, pt1f,
         radius);
   }
 

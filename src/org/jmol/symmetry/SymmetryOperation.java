@@ -564,7 +564,7 @@ public class SymmetryOperation extends M4d {
         int ich = ch - '0';
         if (ich >= 0 && ich <= 9) {
           if (isDecimal) {
-            decimalMultiplier /= 10f;
+            decimalMultiplier /= 10d;
             if (iValue < 0)
               isNegative = true;
             iValue += decimalMultiplier * ich * (isNegative ? -1 : 1);

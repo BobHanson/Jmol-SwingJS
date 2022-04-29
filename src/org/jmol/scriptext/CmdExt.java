@@ -1110,6 +1110,8 @@ public class CmdExt extends ScriptExt {
     boolean isToSubsetOfFrom = (coordTo == null && bsTo != null
         && bs.equals(bsFrom));
     boolean isFrames = isToSubsetOfFrom;
+    boolean isAtoms = (tok == T.atoms);
+    boolean isCoords = false;
     for (int i = eval.iToken + 1; i < slen; ++i) {
       switch (getToken(i).tok) {
       case T.frame:
@@ -1175,13 +1177,22 @@ public class CmdExt extends ScriptExt {
             bsAtoms2.and(bsSubset);
         }
 
-        if (bsAtoms2 == null)
-          coordTo = eval.getPointArray(++eval.iToken, -1, false);
-        else if (bsTo != null)
+        if (bsAtoms2 == null) {
+          int ipt = eval.iToken;
+          coordTo = eval.getPointArray(eval.iToken + 1, -1, false);
+          if (coordTo == null)
+            eval.iToken = ipt;
+          else
+            isCoords = true;
+        } else if (bsTo != null) {
           bsAtoms2.and(bsTo);
+        }
         if (vAtomSets == null)
           vAtomSets = new Lst<Object[]>();
-        vAtomSets.addLast(new BS[] { bsAtoms1, bsAtoms2 });
+        vAtomSets.addLast(
+            new Object[] { bsAtoms1, (bsAtoms2 == null ? coordTo : bsAtoms2) });
+        if (isAtoms)
+          coordTo = null;
         i = eval.iToken;
         break;
       case T.polyhedra:
@@ -1189,7 +1200,7 @@ public class CmdExt extends ScriptExt {
         isSmiles = isPolyhedral = true;
         break;
       case T.mapproperty:
-        
+
         break;
       case T.varray:
         if (vAtomSets != null)
@@ -1205,8 +1216,11 @@ public class CmdExt extends ScriptExt {
       case T.orientation:
         isQuaternion = true;
         break;
-      case T.point:
       case T.atoms:
+        isAtoms = true;
+        isQuaternion = false;
+        break;
+      case T.point:
         isQuaternion = false;
         break;
       case T.rotate:
@@ -1231,7 +1245,7 @@ public class CmdExt extends ScriptExt {
       doRotate = doTranslate = true;
     doAnimate = (nSeconds != 0);
 
-    boolean isAtoms = (!isQuaternion && strSmiles == null && !isPolyhedral
+    isAtoms = (!isQuaternion && strSmiles == null && !isPolyhedral
         || coordTo != null);
     if (isAtoms)
       Interface.getInterface("javajs.util.Eigen", vwr, "script"); // preload interface
@@ -1276,7 +1290,9 @@ public class CmdExt extends ScriptExt {
       bsModels = BSUtil.newAndSetBit(0);
       bsFrames = new BS[] { bsFrom };
     }
-    for (int iFrame = 0, iModel = bsModels.nextSetBit(0); iFrame < bsFrames.length; iFrame++, iModel = bsModels.nextSetBit(iModel + 1)) {
+    for (int iFrame = 0, iModel = bsModels
+        .nextSetBit(0); iFrame < bsFrames.length; iFrame++, iModel = bsModels
+            .nextSetBit(iModel + 1)) {
       bsFrom = bsFrames[iFrame];
       double[] retStddev = new double[2]; // [0] final, [1] initial for atoms
       if (isFrames && isPolyhedral && iFrame == 0) {
@@ -1288,11 +1304,13 @@ public class CmdExt extends ScriptExt {
       Lst<Qd> vQ = new Lst<Qd>();
       P3d[][] centerAndPoints = null;
       Lst<Object[]> vAtomSets2 = (isFrames ? new Lst<Object[]>() : vAtomSets);
-      for (int i = 0; i < vAtomSets.size(); ++i) {
-        BS[] bss = (BS[]) vAtomSets.get(i);
-        if (isFrames)
-          vAtomSets2.addLast(bss = new BS[] { BSUtil.copy(bss[0]), bss[1] });
-        bss[0].and(bsFrom);
+      if (!isCoords) {
+        for (int i = 0; i < vAtomSets.size(); ++i) {
+          BS[] bss = (BS[]) vAtomSets.get(i);
+          if (isFrames)
+            vAtomSets2.addLast(bss = new BS[] { BSUtil.copy(bss[0]), bss[1] });
+          bss[0].and(bsFrom);
+        }
       }
       P3d center = null;
       V3d translation = null;
@@ -1314,13 +1332,13 @@ public class CmdExt extends ScriptExt {
             break;
           if (!isFrames)
             Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
-               + ((Atom) bij).getInfo());
+                + ((Atom) bij).getInfo());
         }
         q = MeasureD.calculateQuaternionRotation(centerAndPoints, retStddev);
         double r0 = (Double.isNaN(retStddev[1]) ? Double.NaN
-            : Math.round(retStddev[0] * 100) / 100f);
+            : Math.round(retStddev[0] * 100) / 100d);
         double r1 = (Double.isNaN(retStddev[1]) ? Double.NaN
-            : Math.round(retStddev[1] * 100) / 100f);
+            : Math.round(retStddev[1] * 100) / 100d);
         showString("RMSD " + r0 + " --> " + r1 + " Angstroms");
       } else if (isQuaternion) {
         if (vQuatSets == null) {
@@ -1354,9 +1372,12 @@ public class CmdExt extends ScriptExt {
 
         M4d m4 = new M4d();
         center = new P3d();
-        if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles) || "*".equals(strSmiles) || "".equals(strSmiles)))
+        if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles)
+            || "*".equals(strSmiles) || "".equals(strSmiles)))
           try {
-            strSmiles = vwr.getSmilesOpt(bsFrom, -1, -1, ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0), null);
+            strSmiles = vwr.getSmilesOpt(bsFrom, -1, -1,
+                ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0),
+                null);
           } catch (Exception ex) {
             eval.evalError(ex.getMessage(), null);
           }
@@ -1415,7 +1436,7 @@ public class CmdExt extends ScriptExt {
       if (doTranslate) {
         if (translation == null)
           translation = V3d.newVsub(centerAndPoints[1][0], center);
-        endDegrees = 1e10f;
+        endDegrees = 1e10d;
       }
       if (doRotate) {
         if (q == null)
@@ -1424,7 +1445,7 @@ public class CmdExt extends ScriptExt {
         endDegrees = q.getTheta();
         if (endDegrees == 0 && doTranslate) {
           if (translation.length() > 0.01f)
-            endDegrees = 1e10f;
+            endDegrees = 1e10d;
           else if (isFrames)
             continue;
           else
@@ -1901,7 +1922,7 @@ public class CmdExt extends ScriptExt {
           eval.bad();
         double dist = doubleParameter(i);
         if (tokAt(i + 1) == T.percent) {
-          dist = -dist / 100f;
+          dist = -dist / 100d;
           i++;
         }
         distances[distanceCount++] = dist;
@@ -6364,7 +6385,7 @@ public class CmdExt extends ScriptExt {
     case T.straightness:
       return (isMax ? 1 : -1);
     }
-    double fmax = (isMax ? -1E10f : 1E10f);
+    double fmax = (isMax ? -1E10d : 1E10d);
     for (int i = data.length; --i >= 0;) {
       double f = data[i];
       if (Double.isNaN(f))

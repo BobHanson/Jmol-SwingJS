@@ -178,7 +178,7 @@ public class NucleicRenderer {
       stepPt = rPt[pt];
     }
     short mad = (short) (thisMad > 1 ? thisMad / 2 : thisMad);
-    double r = mad / 2000f;
+    double r = mad / 2000d;
     int w = (int) vwr.tm.scaleToScreen((int) backboneScreen.z, mad);
     if (cartoonLadders || !cartoonRibose)
       g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, w, backboneScreen,

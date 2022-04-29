@@ -228,7 +228,7 @@ public class Parameters {
     dataXYReversed = false;
     distance = Double.MAX_VALUE;
     doFullMolecular = false;
-    envelopeRadius = 10f;
+    envelopeRadius = 10d;
     extendGrid = 0;
     fileIndex = 1;
     readAllData = true;
@@ -346,8 +346,8 @@ public class Parameters {
   final static double defaultOrbitalCutoff = 0.04d;
   final static double defaultLobeCutoff = 0.14d;
   final static double defaultOrbitalCutoffOld = 0.14d;
-  public final static double defaultQMOrbitalCutoff = 0.050f; // WebMO
-  final static double defaultQMElectronDensityCutoff = 0.010f;
+  public final static double defaultQMOrbitalCutoff = 0.050d; // WebMO
+  final static double defaultQMElectronDensityCutoff = 0.010d;
   final static int defaultContourCount = 11; //odd is better
   final static int nContourMax = 100;
   final static int defaultColorNegative = 0xFFFF0000; //red
@@ -702,7 +702,7 @@ public class Parameters {
   public Map<String, Object> moData;
   public final static int MO_MAX_GRID = 80;
   int qm_gridMax = MO_MAX_GRID;
-  double qm_ptsPerAngstrom = 10f;
+  double qm_ptsPerAngstrom = 10d;
   double qm_marginAngstroms = 1d; // may have to adjust this
   int qm_nAtoms;
   int qm_moNumber = Integer.MAX_VALUE;

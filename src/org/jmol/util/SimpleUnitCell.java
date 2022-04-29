@@ -29,11 +29,9 @@ import org.jmol.api.SymmetryInterface;
 import javajs.util.AU;
 import javajs.util.M4d;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -56,12 +54,6 @@ public class SimpleUnitCell {
   public static final int PARAM_SUPERCELL = 22;
   public static final int PARAM_SCALE = 25;
   public static final int PARAM_COUNT = 26;
-
-//  protected float[] unitCellParams;
-//  public M4d matrixCartesianToFractional;
-//  public M4d matrixFractionalToCartesian;
-//  protected M4d matrixCtoFNoOffset;
-//  protected M4d matrixFtoCNoOffset;
 
   protected double[] unitCellParamsD;
   public M4d matrixCartesianToFractionalD;
@@ -129,26 +121,10 @@ public class SimpleUnitCell {
    * 
    * @return a simple unit cell
    */
-  public static SimpleUnitCell newA(float[] params) {
-    SimpleUnitCell c = new SimpleUnitCell();
-    c.init(params);
-    return c;
-  }
-  
   public static SimpleUnitCell newAD(double[] params) {
     SimpleUnitCell c = new SimpleUnitCell();
     c.initD(params);
     return c;
-  }
-
-  protected void init(float[] params) {
-    double[] paramsD = null;
-    if (params != null) {
-      paramsD = new double[params.length];
-      for (int i = params.length; --i >= 0;)
-        paramsD[i] = (Double.isNaN(params[i]) ? Double.NaN : params[i]);
-    }
-    initD(paramsD);
   }
 
   protected void initD(double[] params) {
@@ -278,19 +254,19 @@ public class SimpleUnitCell {
       
       if (rotateHex) {
         // 1, 2. align a and b symmetrically about the x axis (AFLOW)
-        m.setColumn4(0, (double) (-b * cosGamma), (double) (-b * sinGamma), 0, 0);
+        m.setColumn4(0, (-b * cosGamma), (-b * sinGamma), 0, 0);
         // 2. place the b is in xy plane making a angle gamma with a
-        m.setColumn4(1, (double) (-b * cosGamma), (double) (b * sinGamma), 0, 0);
+        m.setColumn4(1, (-b * cosGamma), (b * sinGamma), 0, 0);
       } else {
         // 1. align the a axis with x axis
         m.setColumn4(0, a, 0, 0, 0);
         // 2. place the b is in xy plane making a angle gamma with a
-        m.setColumn4(1, (double) (b * cosGamma), (double) (b * sinGamma), 0, 0);
+        m.setColumn4(1, (b * cosGamma), (b * sinGamma), 0, 0);
       }
       // 3. now the c axis,
       // http://server.ccl.net/cca/documents/molecular-modeling/node4.html
-      m.setColumn4(2, (double) (c * cosBeta), (double) (c
-          * (cosAlpha - cosBeta * cosGamma) / sinGamma), (double) (volume / (a
+      m.setColumn4(2, (c * cosBeta), (c
+          * (cosAlpha - cosBeta * cosGamma) / sinGamma), (volume / (a
           * b * sinGamma)), 0);
       m.setColumn4(3, 0, 0, 0, 1);
       matrixCartesianToFractionalD = M4d.newM4(matrixFractionalToCartesianD).invert();
@@ -298,13 +274,6 @@ public class SimpleUnitCell {
     matrixCtoFNoOffsetD = matrixCartesianToFractionalD;
     matrixFtoCNoOffsetD = matrixFractionalToCartesianD;
   }
-
-//  public static void addVectors(float[] params) {
-//    SimpleUnitCell c = SimpleUnitCell.newA(params);
-//    M4d m = c.matrixFractionalToCartesian;
-//    for (int i = 0; i < 9; i++)
-//    params[PARAM_VABC + i] = m.getElement(i%3, i/3);
-//  }
 
   public static void addVectorsD(double[] params) {
     SimpleUnitCell c = SimpleUnitCell.newAD(params);
@@ -439,14 +408,6 @@ public class SimpleUnitCell {
     return unitCellParamsD;
   }
 
-  public final float[] getUnitCellParamsF() {
-    return AU.toFloatA(unitCellParamsD);
-  }
-
-  public final float[] getUnitCellAsArray(boolean vectorsOnly) {
-    return AU.toFloatA(getUnitCellAsArrayD(vectorsOnly));
-  }
-
   public final double[] getUnitCellAsArrayD(boolean vectorsOnly) {
     M4d m = matrixFractionalToCartesianD;
     return (vectorsOnly ? new double[] { 
@@ -484,8 +445,8 @@ public class SimpleUnitCell {
     return Double.NaN;
   }
 
-  public final static float SLOP = 0.02f;
-  private final static float SLOP1 = 1 - SLOP;
+  public final static double SLOP = 0.02d;
+  private final static double SLOP1 = 1 - SLOP;
 
   /**
    * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
@@ -493,8 +454,8 @@ public class SimpleUnitCell {
 //   * @param tolerance fractional allowance to consider this on an edge
    * @return weighting
    */
-  public static float getCellWeight(P3d pt) {
-    float f = 1;
+  public static double getCellWeight(P3d pt) {
+    double f = 1;
     if (pt.x <= SLOP || pt.x >= SLOP1)
       f /= 2;
     if (pt.y <= SLOP || pt.y >= SLOP1)
@@ -540,26 +501,8 @@ public class SimpleUnitCell {
    * @param abcabg "a=...,b=...,c=...,alpha=...,beta=..., gamma=..." or null  
    * @param params to use if not null 
    * @param ucnew  to create and return; null if only to set params
-   * @return T3[4] origin, a, b c
+   * @return T3d[4] origin, a, b c
    */
-  public static T3d[] setOabc(String abcabg, float[] params, T3d[] ucnew) {
-    if (abcabg != null) {
-      if (params == null)
-        params = new float[6];
-      String[] tokens = PT.split(abcabg.replace(',', '='), "=");
-      if (tokens.length >= 12)
-        for (int i = 0; i < 6; i++)
-          params[i] = PT.parseFloat(tokens[i * 2 + 1]);
-    }
-    if (ucnew == null)
-      return null;
-    float[] f = newA(params).getUnitCellAsArray(true);
-      ucnew[1].set(f[0], f[1], f[2]);
-      ucnew[2].set(f[3], f[4], f[5]);
-      ucnew[3].set(f[6], f[7], f[8]);
-    return ucnew;
-  }
-
   public static T3d[] setOabcD(String abcabg, double[] params, T3d[] ucnew) {
     if (abcabg != null) {
       if (params == null)
@@ -623,7 +566,7 @@ public class SimpleUnitCell {
   
 
 
-  public static float normalizeX12ths(double x) {
+  public static double normalizeX12ths(double x) {
     return Math.round(x*12) / 12;
   }
 
@@ -631,7 +574,7 @@ public class SimpleUnitCell {
   /**
    * allowance for rounding in [0,1)
    */
-  private final static float SLOP2 = 0.0001f;
+  private final static double SLOP2 = 0.0001f;
   
   /**
    * check atom position for range [0, 1) allowing for rounding

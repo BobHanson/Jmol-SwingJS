@@ -274,7 +274,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
       for (int i = count; --i >= 0;)
         tm.transformPtScrT3(controlPoints[i], screens[i]);
     } else {
-      double offset_1000 = offsetFraction / 1000f;
+      double offset_1000 = offsetFraction / 1000d;
       for (int i = count; --i >= 0;)
         calc1Screen(controlPoints[i], wingVectors[i],
             (mads[i] == 0 && i > 0 ? mads[i - 1] : mads[i]), offset_1000,

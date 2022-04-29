@@ -1382,7 +1382,7 @@ public class CifReader extends AtomSetCollectionReader {
             atom.foccupancy = doubleOccupancy;
           break;
         case B_ISO:
-          atom.bfactor = parseDoubleStr(field) * (isMMCIF ? 1 : 100f);
+          atom.bfactor = parseDoubleStr(field) * (isMMCIF ? 1 : 100d);
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;

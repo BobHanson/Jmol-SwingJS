@@ -1096,7 +1096,7 @@ public class ModelKit {
     double dx = 0;
     if (atom.getCovalentBondCount() == 1)
       if (wasH) {
-        dx = 1.50f;
+        dx = 1.50d;
       } else if (!wasH && atomicNumber == 1) {
         dx = 1.0d;
       }

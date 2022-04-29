@@ -53,7 +53,7 @@ public class Dots extends AtomShape {
   public EnvelopeCalculation ec;
   public boolean isSurface = false;
 
-  final static double SURFACE_DISTANCE_FOR_CALCULATION = 10f;
+  final static double SURFACE_DISTANCE_FOR_CALCULATION = 10d;
 
   BS bsOn = new BS();
   private BS bsSelected, bsIgnore;
@@ -142,7 +142,7 @@ public class Dots extends AtomShape {
             }
         ec.setMads(mads);
       }
-      mads[thisAtom] = (short) (thisRadius * 1000f);
+      mads[thisAtom] = (short) (thisRadius * 1000d);
       if (colixes == null) 
         checkColixLength(C.BLACK, ac);
       colixes[thisAtom] = C.getColix(thisArgb);

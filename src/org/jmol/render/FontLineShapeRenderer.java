@@ -91,7 +91,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     switch (exportType) {
     case GData.EXPORT_CARTESIAN:
       diameter = (isMad10 ? mad10OrPixels 
-          : (int) Math.floor(vwr.tm.unscaleToScreen(z, mad10OrPixels * 2/10f) * 1000));
+          : (int) Math.floor(vwr.tm.unscaleToScreen(z, mad10OrPixels * 2/10d) * 1000));
       break;
     default:
       if (isMad10) {

@@ -783,7 +783,7 @@ public class TransformManager {
         / (1 - pixels * 1.0d / screenPixelCount);
     if (sppa >= screenPixelCount)
       return;
-    double newZoomPercent = sppa / scaleDefaultPixelsPerAngstrom * 100f;
+    double newZoomPercent = sppa / scaleDefaultPixelsPerAngstrom * 100d;
     zoomRatio = newZoomPercent / zmPctSet;
     zmPctSet = newZoomPercent;
   }
@@ -1160,7 +1160,7 @@ public class TransformManager {
   protected double cameraDepth = 3d;
   protected double cameraDepthSetting = 3d;
   public double visualRangeAngstroms; // set in stateManager to 5d;
-  public double cameraDistance = 1000f; // prevent divide by zero on startup
+  public double cameraDistance = 1000d; // prevent divide by zero on startup
 
   /**
    * This method returns data needed by the VRML, X3D, and IDTF/U3D exporters.
@@ -1463,7 +1463,7 @@ public class TransformManager {
   }
 
   public int zValueFromPercent(int zPercent) {
-    return (int) Math.floor((1 - zPercent / 50f) * modelRadiusPixels
+    return (int) Math.floor((1 - zPercent / 50d) * modelRadiusPixels
         + modelCenterOffset);
   }
 
@@ -2060,7 +2060,7 @@ public class TransformManager {
 
   static private void truncate2(SB sb, double val) {
     sb.appendC(' ');
-    sb.appendF(Math.round(val * 100) / 100f);
+    sb.appendF(Math.round(val * 100) / 100d);
   }
 
   /* ***************************************************************
@@ -2659,8 +2659,8 @@ public class TransformManager {
     getNavigationOffset();
     if (width == 0 || height == 0)
       return 0;
-    return (XorY == 'X' ? (navigationOffset.x - width / 2d) * 100f / width
-        : (navigationOffset.y - getNavPtHeight()) * 100f / height);
+    return (XorY == 'X' ? (navigationOffset.x - width / 2d) * 100d / width
+        : (navigationOffset.y - getNavPtHeight()) * 100d / height);
   }
 
   protected String getNavigationText(boolean addComments) {

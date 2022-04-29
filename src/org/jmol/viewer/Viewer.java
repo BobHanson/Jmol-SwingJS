@@ -2057,7 +2057,7 @@ public class Viewer extends JmolViewer
   public void translate(char xyz, double x, char type, BS bsAtoms) {
     double xy = (type == '\0' ? x
         : type == '%' ? tm.percentToPixels(xyz, x)
-            : tm.angstromsToPixels(x * (type == 'n' ? 10f : 1d)));
+            : tm.angstromsToPixels(x * (type == 'n' ? 10d : 1d)));
     if (bsAtoms != null) {
       if (x == 0)
         return;
@@ -7606,7 +7606,7 @@ public class Viewer extends JmolViewer
   public void setPercentVdwAtom(int value) {
     g.setI("percentVdwAtom", value);
     g.percentVdwAtom = value;
-    rd.value = value / 100f;
+    rd.value = value / 100d;
     rd.factorType = EnumType.FACTOR;
     rd.vdwType = VDW.AUTO;
     shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, rd, null);
@@ -8717,7 +8717,7 @@ public class Viewer extends JmolViewer
       mode = VDW.JMOL;
     for (int i = 1; i < Elements.elementNumberMax; i++) {
       userVdwMars[i] = Elements.getVanderwaalsMar(i, mode);
-      userVdws[i] = userVdwMars[i] / 1000f;
+      userVdws[i] = userVdwMars[i] / 1000d;
     }
   }
 
@@ -10750,11 +10750,6 @@ public class Viewer extends JmolViewer
 
   public String assignSpaceGroup(BS bs, String type, int modelIndex) {
     return getModelkit(false).cmdAssignSpaceGroup(bs, type, modelIndex);
-  }
-
-  @Override
-  public float getFloat(int tok) {
-    return (float) getDouble(tok);
   }
 
 //  @Override

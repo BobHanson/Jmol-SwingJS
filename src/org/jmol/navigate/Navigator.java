@@ -279,10 +279,10 @@ public final class Navigator extends JmolThread implements
     double x = pt1.x;
     double y = pt1.y;
     if (!Double.isNaN(x))
-      x = tm.width * x / 100f
+      x = tm.width * x / 100d
           + (Double.isNaN(y) ? tm.navigationOffset.x : (tm.width / 2d));
     if (!Double.isNaN(y))
-      y = tm.height * y / 100f
+      y = tm.height * y / 100d
           + (Double.isNaN(x) ? tm.navigationOffset.y : tm.getNavPtHeight());
     pt1.x = x;
     pt1.y = y;
@@ -565,7 +565,7 @@ public final class Navigator extends JmolThread implements
     //          + " modelRadiusPixels: " + modelRadiusPixels + "\nmodelLeadingEdge: "
     //          + (modelCenterOffset - modelRadiusPixels) + " slabValue: "
     //          + slabValue + "\nzoom: " + zoomPercent + " navDepth: "
-    //          + ((int) (100 * getNavigationDepthPercent()) / 100f)
+    //          + ((int) (100 * getNavigationDepthPercent()) / 100d)
     //          + " visualRange: " + visualRange + "\nnavX/Y/Z/modelCenterOffset: "
     //          + navigationOffset.x + "/" + navigationOffset.y + "/"
     //          + navigationOffset.z + "/" + modelCenterOffset + " navCenter:"

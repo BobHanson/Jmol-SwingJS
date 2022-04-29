@@ -316,7 +316,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     ac = atomData.ac;
     if (mads != null)
       for (int i = 0; i < ac; i++)
-        atomData.atomRadius[i] = mads[i] / 1000f;
+        atomData.atomRadius[i] = mads[i] / 1000d;
 
     bsMySelected = (onlySelectedDots && bsSelected != null ? BSUtil
         .copy(bsSelected) : bsIgnore != null ? BSUtil.setAll(ac) : null);
@@ -403,7 +403,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
   */
   public double getAppropriateRadius(int atomIndex) {
     return (mads != null ? (atomIndex >= mads.length ? 0
-        : mads[atomIndex] / 1000f) : atomData.atomRadius[atomIndex]);
+        : mads[atomIndex] / 1000d) : atomData.atomRadius[atomIndex]);
   }
 
   private int indexI;

@@ -293,7 +293,7 @@ class JmolObject {
         String type = (size < 0 ? " sasurface " : " solvent ");
         sb.append(" model ").append(model).append(resolution)
             .append(" select ").append(Escape.eBS(bsAtoms)).append(only)
-            .append(ignore).append(type).appendF(Math.abs(size / 1000f));
+            .append(ignore).append(type).appendF(Math.abs(size / 1000d));
         if (!haveMep) {
           if (argb == 0)
             sb.append(" map property color");

@@ -207,9 +207,9 @@ public class BioMeshRenderer extends MeshRenderer {
         wingHermites, 0, nHermites, false);
     //    }
     // radius hermites determine the thickness of the cartoon
-    double radius1 = madBeg / 2000f;
-    double radius2 = madMid / 2000f;
-    double radius3 = madEnd / 2000f;
+    double radius1 = madBeg / 2000d;
+    double radius2 = madMid / 2000d;
+    double radius3 = madEnd / 2000d;
     if (variableRadius) {
       if (radiusHermites == null
           || radiusHermites.length < ((nHermites + 1) >> 1) + 1) {

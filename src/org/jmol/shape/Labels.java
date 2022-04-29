@@ -123,7 +123,7 @@ public class Labels extends AtomShape {
       if (strings == null)
         return;
       double val = ((Number) value).doubleValue();
-      double scalePixelsPerMicron = (val == 0 ? 0 : 10000f / val);
+      double scalePixelsPerMicron = (val == 0 ? 0 : 10000d / val);
       int n = Math.min(ac, strings.length);
       for (int i = bs.nextSetBit(0); i >= 0
           && i < n; i = bs.nextSetBit(i + 1)) {
@@ -475,7 +475,7 @@ public class Labels extends AtomShape {
       bsSizeSet = BS.newN(ms.ac);
     isScaled = vwr.getBoolean(T.fontscaling);
     scalePixelsPerMicron = (isScaled
-        ? vwr.getScalePixelsPerAngstrom(false) * 10000f
+        ? vwr.getScalePixelsPerAngstrom(false) * 10000d
         : 0);
   }
 

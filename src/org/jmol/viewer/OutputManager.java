@@ -468,7 +468,7 @@ abstract class OutputManager {
       sb = new SB();
       for (int i = 0; i < nVibes; i++) {
         for (int j = 0; j < 20; j++) {
-          vwr.tm.setVibrationT(j / 20f + 0.2501f);
+          vwr.tm.setVibrationT(j / 20d + 0.25d);
           if (!writeFrame(++n, rootExt, params, sb))
             return "ERROR WRITING FILE SET: \n" + info;
         }

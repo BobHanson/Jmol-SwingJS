@@ -156,7 +156,7 @@ public class AxesRenderer extends CageRenderer {
       }
       ptTemp.set(pt0i.x, pt0i.y, pt0i.z);
       double zoomDimension = vwr.getScreenDim();
-      double scaleFactor = zoomDimension / 10f * scale;
+      double scaleFactor = zoomDimension / 10d * scale;
       if (g3d.isAntialiased())
         scaleFactor *= 2;
       if (isUnitCell && isXY)

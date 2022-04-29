@@ -177,7 +177,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           if (pt2f.z > z1)
             z1 = pt2f.z;
         }
-        thisSlabValue = (int) Math.round(z0 + (z1 - z0) * (100f - meshSlabValue)/100);
+        thisSlabValue = (int) Math.round(z0 + (z1 - z0) * (100d - meshSlabValue)/100);
         frontOnly &= (meshSlabValue >= 100);
         isShell &= (meshSlabValue >= 100);
       }

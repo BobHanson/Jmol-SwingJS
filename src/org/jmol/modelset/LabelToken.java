@@ -616,7 +616,7 @@ public class LabelToken {
         strT = atom.getSymmetryOperatorList(false);
         break;
       case 81://'Q':
-        floatT = atom.getOccupancy100() / 100f;
+        floatT = atom.getOccupancy100() / 100d;
         break;
 
       // standard 

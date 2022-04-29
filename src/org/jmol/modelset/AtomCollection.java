@@ -349,7 +349,7 @@ abstract public class AtomCollection {
 
   protected double getRadiusVdwJmol(Atom atom) {
     return Elements.getVanderwaalsMar(atom.getElementNumber(),
-        VDW.JMOL) / 1000f;
+        VDW.JMOL) / 1000d;
   }
   
   public double getMaxVanderwaalsRadius() {

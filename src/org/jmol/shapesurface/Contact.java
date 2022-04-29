@@ -572,7 +572,7 @@ public class Contact extends Isosurface {
       }
       params.colorDensity = isColorDensity;
       if (isColorDensity) {
-        setPropI("cutoffRange", new double[] { -100f, 0d }, null);
+        setPropI("cutoffRange", new double[] { -100d, 0d }, null);
       }
       if (cp == null) {
         params.atomRadiusData = rdA;

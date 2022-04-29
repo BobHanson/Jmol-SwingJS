@@ -1440,8 +1440,8 @@ public class ActionManager implements EventManager {
     if (vwr.getBoolean(T.navigationmode)
         && apm == PICKING_NAVIGATE
         && bnd(clickAction, ACTION_pickNavigate)) {
-      vwr.navTranslatePercent(x * 100f / vwr.getScreenWidth() - 50f, y
-          * 100f / vwr.getScreenHeight() - 50f);
+      vwr.navTranslatePercent(x * 100d / vwr.getScreenWidth() - 50d, y
+          * 100d / vwr.getScreenHeight() - 50d);
       return;
     }
 
@@ -1645,7 +1645,7 @@ public class ActionManager implements EventManager {
 
   private boolean isZoomArea(int x) {
     return x > vwr.getScreenWidth() * (vwr.tm.stereoDoubleFull || vwr.tm.stereoDoubleDTI ? 2 : 1)
-        * SLIDE_ZOOM_X_PERCENT / 100f;
+        * SLIDE_ZOOM_X_PERCENT / 100d;
   }
 
   private Point3fi getPoint(Map<String, Object> t) {

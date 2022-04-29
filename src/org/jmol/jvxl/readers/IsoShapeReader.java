@@ -116,14 +116,14 @@ final class IsoShapeReader extends VolumeDataReader {
       radius = 1.1d * eccentricityRatio * eccentricityScale;
       if (eccentricityScale > 0 && eccentricityScale < 1)
         radius /= eccentricityScale;
-      ptsPerAngstrom = 10f;
+      ptsPerAngstrom = 10d;
       maxGrid = 21;
       type = "lobe";
       break;
     case Parameters.SURFACE_ELLIPSOID3:
       type = "ellipsoid(thermal)";
       radius = 3.0d * sphere_radiusAngstroms;
-      ptsPerAngstrom = 10f;
+      ptsPerAngstrom = 10d;
       maxGrid = 22;
       break;
     case Parameters.SURFACE_GEODESIC:
@@ -138,7 +138,7 @@ final class IsoShapeReader extends VolumeDataReader {
     case Parameters.SURFACE_SPHERE:
     default:
       radius = 1.2d * sphere_radiusAngstroms * eccentricityScale;
-      ptsPerAngstrom = 10f;
+      ptsPerAngstrom = 10d;
       maxGrid = 22;
       break;
     }
@@ -255,7 +255,7 @@ final class IsoShapeReader extends VolumeDataReader {
     double d;
     if (params.distance == 0) {
       for (int ir = 0; ir < 1000; ir++) {
-        double r = ir / 10f;
+        double r = ir / 10d;
         d = Math.abs(radialPart(r));
         if (Logger.debugging)
           Logger.debug("R\t" + r + "\t" + d);
@@ -313,7 +313,7 @@ final class IsoShapeReader extends VolumeDataReader {
     }
     double r0 = 0;
     for (int ir = 1000; --ir >= 0; ir -= 1) {
-      double r = ir / 10f;
+      double r = ir / 10d;
       d = Math.abs(radialPart(r));
       if (d >= min) {
         r0 = r;
@@ -350,8 +350,8 @@ final class IsoShapeReader extends VolumeDataReader {
         for (int ix = -ir; ix <= ir; ix++)
           for (int iy = -ir; iy <= ir; iy++) {
             ptPsi.setT(planeU);
-            ptPsi.scale(ix / 10f);
-            ptPsi.scaleAdd2(iy / 10f, planeV, ptPsi);
+            ptPsi.scale(ix / 10d);
+            ptPsi.scaleAdd2(iy / 10d, planeV, ptPsi);
             d = hydrogenAtomPsi(ptPsi);
             // we need an approximation  of the max value here
             d = Math.abs(hydrogenAtomPsi(ptPsi));

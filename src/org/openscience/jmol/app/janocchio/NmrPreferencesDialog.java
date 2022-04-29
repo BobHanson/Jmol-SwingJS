@@ -413,7 +413,7 @@
 //			public void stateChanged(ChangeEvent e) {
 //
 //				JSlider source = (JSlider) e.getSource();
-//				bondTolerance = source.getValue() / 100f;
+//				bondTolerance = source.getValue() / 100d;
 //				viewer.setFloatProperty("bondTolerance", bondTolerance);
 //				currentProperties.put("bondTolerance", "" + bondTolerance);
 //				viewer.rebond();
@@ -456,7 +456,7 @@
 //			public void stateChanged(ChangeEvent e) {
 //
 //				JSlider source = (JSlider) e.getSource();
-//				minBondDistance = source.getValue() / 100f;
+//				minBondDistance = source.getValue() / 100d;
 //				viewer.setFloatProperty("minBondDistance", minBondDistance);
 //				currentProperties.put("minBondDistance", "" + minBondDistance);
 //				viewer.rebond();

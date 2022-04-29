@@ -641,11 +641,11 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.setIntProperty("PercentVdwAtom", percentVdwAtom);
     currentProperties.put("percentVdwAtom", "" + percentVdwAtom);
 
-    bondTolerance = btSlider.getValue() / 100f;
+    bondTolerance = btSlider.getValue() / 100d;
     vwr.setFloatProperty("bondTolerance", bondTolerance);
     currentProperties.put("bondTolerance", "" + bondTolerance);
 
-    minBondDistance = bdSlider.getValue() / 100f;
+    minBondDistance = bdSlider.getValue() / 100d;
     vwr.setFloatProperty("minBondDistance", minBondDistance);
     currentProperties.put("minBondDistance", "" + minBondDistance);
 

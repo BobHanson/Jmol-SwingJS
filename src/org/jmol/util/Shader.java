@@ -100,10 +100,10 @@ public class Shader {
   // p in I = df * (N dot L) + sf * (R dot V)^p
   int phongExponent = 64;
   
-  double ambientFraction = ambientPercent / 100f;
-  double diffuseFactor = diffusePercent / 100f;
-  double intenseFraction = specularPower / 100f;
-  double specularFactor = specularPercent / 100f;
+  double ambientFraction = ambientPercent / 100d;
+  double diffuseFactor = diffusePercent / 100d;
+  double intenseFraction = specularPower / 100d;
+  double specularFactor = specularPercent / 100d;
   
   private int[][] ashades = AU.newInt2(128);
   private int[][] ashadesGreyscale;
@@ -125,7 +125,7 @@ public class Shader {
     celOn = celShading;
     celPower = celShadingPower;
     useLight = (!celOn || celShadingPower > 0);
-    celZ = 1 - (double) Math.pow(2, -Math.abs(celShadingPower)/10f);
+    celZ = 1 - (double) Math.pow(2, -Math.abs(celShadingPower)/10d);
     celRGB = argb;
     flushCaches();
   }

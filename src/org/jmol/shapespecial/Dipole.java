@@ -214,7 +214,7 @@ public class Dipole {
     if (isUserValue)
       s.append(" value ").appendF(dipoleValue);
     if (mad != Dipoles.DEFAULT_MAD)
-      s.append(" width ").appendF(mad / 1000f);
+      s.append(" width ").appendF(mad / 1000d);
     if (offsetAngstroms != 0)
       s.append(" offset ").appendF(offsetAngstroms);
     else if (offsetPercent != 0)

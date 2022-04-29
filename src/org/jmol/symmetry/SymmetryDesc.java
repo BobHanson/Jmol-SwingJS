@@ -687,7 +687,7 @@ public class SymmetryDesc {
         // so if a point is in the plane, then N dot X = -d
         w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
         plane = P4d.new4((double) vtemp.x, (double) vtemp.y, (double) vtemp.z, (double) w);
-        margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30f
+        margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30d
             : 1.05d);
         isRotation = false;
         haveInversion = false;

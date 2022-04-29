@@ -45,6 +45,9 @@ import org.jmol.viewer.Viewer;
  * (Mosty) we try to not change this (much), whereas the varius 
  * "public" methods of Viewer, ModelSet, and other classes are public
  * only for internal cross-package access, not for external use.
+ * 
+ * Note, this interface was changed to all double
+ * 
  *
  **/
 
@@ -149,8 +152,6 @@ abstract public class JmolViewer {
   // several methods were deprecated and removed in 13.1.15. All are accessible via "getXxxx" methods:
 
   //abstract public int getZoomPercent(); //deprecated
-
-  abstract public float getFloat(int tok);
 
   abstract public double getDouble(int tok);
   abstract public int getInt(int tok);

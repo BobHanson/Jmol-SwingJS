@@ -177,7 +177,7 @@ public class SV extends T implements JSONEncodable {
     return (x instanceof SV
         || x instanceof Boolean
         || x instanceof Integer
-        || x instanceof Float
+        || x instanceof Double
         || x instanceof String
         || x instanceof T3d    // stored as point3f
         || x instanceof BS
@@ -209,15 +209,13 @@ public class SV extends T implements JSONEncodable {
        return x instanceof SV[] 
            || x instanceof int[] 
            || x instanceof byte[] 
-           || x instanceof float[]
            || x instanceof double[] 
            || x instanceof String[]
            || x instanceof T3d[]
            || x instanceof int[][] 
-           || x instanceof float[][] 
            || x instanceof String[][] 
            || x instanceof double[][] 
-           || x instanceof Float[]
+           || x instanceof Double[]
            || x instanceof Object[];
     }
   }

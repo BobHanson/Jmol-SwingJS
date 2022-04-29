@@ -150,8 +150,8 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                         P3d screenA, P3d screenB);
 
   public abstract void fillCylinderScreen3I(byte endcaps, 
-                                            int diameter, P3d s0f, P3d s1f, 
-                                          P3d pt0f, P3d pt1f, double radius);
+                                            int diameter, P3d s0d, P3d s1f, 
+                                          P3d pt0d, P3d pt1f, double radius);
 
   public abstract void fillCylinderBits2(short colixA, short colixB, byte endcaps,
                                        int diameter, P3d screenA, P3d screenB);
