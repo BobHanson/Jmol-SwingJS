@@ -243,8 +243,8 @@ public class SV extends T implements JSONEncodable {
       return getBoolean(((Boolean) x).booleanValue());
     if (x instanceof Integer)
       return newI(((Integer) x).intValue());
-    if (x instanceof Float)
-      return newV(decimal, x);
+//    if (x instanceof Float)
+//      return newV(decimal, x);
     if (x instanceof Double)
       return newV(decimal, x);
     if (x instanceof String) {

@@ -3253,7 +3253,7 @@ public class IsoExt extends ScriptExt {
     Object volume = null;
     if (doCalcArea) {
       area = getShapeProperty(iShape, "area");
-      if (area instanceof Float)
+      if (area instanceof Double)
         vwr.setFloatProperty("isosurfaceArea", ((Number) area).doubleValue());
       else
         vwr.g.setUserVariable("isosurfaceArea",
@@ -3261,7 +3261,7 @@ public class IsoExt extends ScriptExt {
     }
     if (doCalcVolume) {
       volume = (doCalcVolume ? getShapeProperty(iShape, "volume") : null);
-      if (volume instanceof Float)
+      if (volume instanceof Double)
         vwr.setFloatProperty("isosurfaceVolume", ((Number) volume).doubleValue());
       else
         vwr.g.setUserVariable("isosurfaceVolume",
@@ -3287,7 +3287,7 @@ public class IsoExt extends ScriptExt {
       String sarea, svol;
       if (doCalcArea || doCalcVolume) {
         sarea = (doCalcArea ? "isosurfaceArea = "
-            + (area instanceof Float ? "" + area : Escape.eAD((double[]) area))
+            + (area instanceof Double ? "" + area : Escape.eAD((double[]) area))
             : null);
         svol = (doCalcVolume
             ? "isosurfaceVolume = " + (volume instanceof Float ? "" + volume

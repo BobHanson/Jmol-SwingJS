@@ -604,7 +604,7 @@ abstract public class ScriptParam extends ScriptError {
             coord[n++] /= (theToken.intValue == Integer.MAX_VALUE
                 ? ((Integer) theToken.value).intValue()
                 : theToken.intValue);
-          } else if (theToken.value instanceof Float) {
+          } else if (theToken.value instanceof Double) {
             coord[n++] /= ((Number) theToken.value).doubleValue();
           }
           coordinatesAreFractional = true;

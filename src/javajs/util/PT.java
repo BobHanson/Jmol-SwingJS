@@ -1406,22 +1406,22 @@ public class PT {
           switch (c = list.charAt(o)) {
           case 's':
             strFormat = formatString(strFormat, "s", (String) values[o],
-                Float.NaN, Double.NaN, true);
+                Double.NaN, Double.NaN, true);
             break;
           case 'f':
             strFormat = formatString(strFormat, "f", null,
                 ((Number) values[o]).doubleValue(), Double.NaN, true);
             break;
           case 'i':
-            strFormat = formatString(strFormat, "d", "" + values[o], Float.NaN,
+            strFormat = formatString(strFormat, "d", "" + values[o], Double.NaN,
                 Double.NaN, true);
-            strFormat = formatString(strFormat, "i", "" + values[o], Float.NaN,
+            strFormat = formatString(strFormat, "i", "" + values[o], Double.NaN,
                 Double.NaN, true);
             break;
           case 'd':
-            strFormat = formatString(strFormat, "e", null, Float.NaN,
+            strFormat = formatString(strFormat, "e", null, Double.NaN,
                 ((Number) values[o]).doubleValue(), true);
-            strFormat = formatString(strFormat, "f", null, Float.NaN,
+            strFormat = formatString(strFormat, "f", null, Double.NaN,
                 ((Number) values[o]).doubleValue(), true);
             break;
           case 'p':
@@ -1436,11 +1436,11 @@ public class PT {
                   true);
             } else {
               T3d pVal = (T3d) values[o];
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.x,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.x,
                   true);
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.y,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.y,
                   true);
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.z,
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.z,
                   true);
             }
             break;
@@ -1458,7 +1458,7 @@ public class PT {
           case 'S':
             String[] sVal = (String[]) values[o];
             for (int i = 0; i < sVal.length; i++)
-              strFormat = formatString(strFormat, "s", sVal[i], Float.NaN,
+              strFormat = formatString(strFormat, "s", sVal[i], Double.NaN,
                   Double.NaN, true);
             break;
           case 'F':
@@ -1470,16 +1470,16 @@ public class PT {
           case 'I':
             int[] iVal = (int[]) values[o];
             for (int i = 0; i < iVal.length; i++)
-              strFormat = formatString(strFormat, "d", "" + iVal[i], Float.NaN,
+              strFormat = formatString(strFormat, "d", "" + iVal[i], Double.NaN,
                   Double.NaN, true);
             for (int i = 0; i < iVal.length; i++)
-              strFormat = formatString(strFormat, "i", "" + iVal[i], Float.NaN,
+              strFormat = formatString(strFormat, "i", "" + iVal[i], Double.NaN,
                   Double.NaN, true);
             break;
           case 'D':
             double[] dVal = (double[]) values[o];
             for (int i = 0; i < dVal.length; i++)
-              strFormat = formatString(strFormat, "e", null, Float.NaN, dVal[i],
+              strFormat = formatString(strFormat, "e", null, Double.NaN, dVal[i],
                   true);
           }
 
@@ -1760,7 +1760,7 @@ public class PT {
 
   public static double parseDoubleNext(String str, int[] next) {
     int cch = (str == null ? -1 : str.length());
-    return (next[0] < 0 || next[0] >= cch ? Float.NaN : parseDoubleChecked(str, cch, next, false));
+    return (next[0] < 0 || next[0] >= cch ? Double.NaN : parseDoubleChecked(str, cch, next, false));
   }
 
   public static double parseDoubleStrict(String str) {

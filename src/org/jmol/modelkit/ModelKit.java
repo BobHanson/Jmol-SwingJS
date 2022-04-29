@@ -628,7 +628,7 @@ public class ModelKit {
       if (key == "distance") {
         setDefaultState(STATE_XTALEDIT);
         double d = (value == null ? Double.NaN
-            : value instanceof Float ? ((Number) value).doubleValue()
+            : value instanceof Double ? ((Number) value).doubleValue()
                 : PT.parseDouble((String) value));
         if (!Double.isNaN(d)) {
           notImplemented("setProperty: distance");

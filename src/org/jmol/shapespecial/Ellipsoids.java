@@ -424,7 +424,7 @@ public class Ellipsoids extends AtomShape {
       e.options = ((String) value).toLowerCase();
       break;
     case 8: // scale
-      if (value instanceof Float) {
+      if (value instanceof Double) {
         e.setScale(((Number) value).doubleValue(), false);
       } else {
         e.scaleAxes((double[]) value);

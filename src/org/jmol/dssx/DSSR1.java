@@ -494,7 +494,7 @@ public class DSSR1 extends AnnotationParser {
 
   @SuppressWarnings("unchecked")
   private void getPoint(Map<String, Object> frame, String item, P3d pt) {
-    Lst<Float> xyz = (Lst<Float>) frame.get(item);
+    Lst<Double> xyz = (Lst<Double>) frame.get(item);
     pt.x = xyz.get(0).doubleValue();
     pt.y = xyz.get(1).doubleValue();
     pt.z = xyz.get(2).doubleValue();    
