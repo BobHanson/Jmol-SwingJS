@@ -33,15 +33,11 @@ import org.jmol.util.Parser;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.M4d;
 import javajs.util.Matrix;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 /*

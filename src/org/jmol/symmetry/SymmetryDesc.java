@@ -41,13 +41,10 @@ import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
-import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 

@@ -25,15 +25,6 @@
 
 package org.jmol.modelset;
 
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.T3d;
-import javajs.util.V3d;
-
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
@@ -41,7 +32,6 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
-import javajs.util.BS;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.T;
 import org.jmol.util.C;
@@ -53,6 +43,15 @@ import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 
 
@@ -754,6 +753,12 @@ public class Atom extends Point3fi implements Node {
     return this;
   }
   
+  /**
+   * @param fixJavaFloat  
+   * @param ignoreOffset 
+   * @param pt 
+   * @return fractional coord
+   */
   public P3d getFractionalCoordPt(boolean fixJavaFloat, boolean ignoreOffset,
                                  P3d pt) {
     // ignoreOffset TRUE uses the original unshifted matrix
