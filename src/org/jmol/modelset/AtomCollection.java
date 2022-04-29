@@ -70,8 +70,8 @@ import javajs.util.V3d;
 
 abstract public class AtomCollection {
   
-  private final static double almost180 = (double) Math.PI * 0.95d;
-  private final static double sqrt3_2 = (double) (Math.sqrt(3) / 2);
+  private final static double almost180 = Math.PI * 0.95d;
+  private final static double sqrt3_2 = (Math.sqrt(3) / 2);
   private final static V3d vRef = V3d.new3(3.14159d, 2.71828d, 1.41421f);
 
   public Viewer vwr;
@@ -762,7 +762,7 @@ abstract public class AtomCollection {
     case '3':
       T3d t = (T3d) ms.getModulation('T', null);
       double x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
-      return (double) (x - Math.floor(x));
+      return (x - Math.floor(x));
     default:
       return Double.NaN;
     }

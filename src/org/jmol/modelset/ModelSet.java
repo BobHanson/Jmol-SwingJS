@@ -72,7 +72,6 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
@@ -2939,7 +2938,7 @@ public class ModelSet extends BondCollection {
       min2 = hbondMinRasmol * hbondMinRasmol;
     }
     double max2 = dmax * dmax;
-    double minAttachedAngle = (double) (vwr.getDouble(T.hbondsangleminimum)
+    double minAttachedAngle = (vwr.getDouble(T.hbondsangleminimum)
         * Math.PI / 180);
     int nNew = 0;
     double d2 = 0;
@@ -3012,7 +3011,7 @@ public class ModelSet extends BondCollection {
           //
           //    AH args[0], CH args[1], CD args[2], DA args[3]
           //
-          energy = HBond.getEnergy((double) Math.sqrt(d2), C.distance(atom),
+          energy = HBond.getEnergy(Math.sqrt(d2), C.distance(atom),
               C.distance(D), atomNear.distance(D)) / 1000d;
         } else {
           bo = Edge.BOND_H_REGULAR;
@@ -3647,7 +3646,7 @@ public class ModelSet extends BondCollection {
                 --n;
         vOrientations = new Qd[n];
         for (int i = n; --i >= 0;) {
-          double cos = (double) Math.sqrt(1 - av[i].lengthSquared());
+          double cos = Math.sqrt(1 - av[i].lengthSquared());
           if (Double.isNaN(cos))
             cos = 0;
           p4.set4(av[i].x, av[i].y, av[i].z, cos);
@@ -3929,7 +3928,7 @@ public class ModelSet extends BondCollection {
       Atom a1 = at[(int) dihedralList[pt + 1]];
       V3d v = V3d.newVsub(at[(int) dihedralList[pt + 2]], a1);
       double angle = (dihedralList[pt + 5] - dihedralList[pt + 4]) * f;
-      A4d aa = A4d.newVA(v, (double) (-angle / TransformManager.degreesPerRadian));
+      A4d aa = A4d.newVA(v, (-angle / TransformManager.degreesPerRadian));
       matTemp.setAA(aa);
       ptTemp.setT(a1);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -3985,7 +3984,7 @@ public class ModelSet extends BondCollection {
       // ax + by + cz + d = 0
       V3d norm = V3d.new3(plane.x, plane.y, plane.z);
       norm.normalize();
-      double d = (double) Math.sqrt(plane.x * plane.x + plane.y * plane.y
+      double d = Math.sqrt(plane.x * plane.x + plane.y * plane.y
           + plane.z * plane.z);
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
         double twoD = -MeasureD.distanceToPlaneD(plane, d, at[i]) * 2;

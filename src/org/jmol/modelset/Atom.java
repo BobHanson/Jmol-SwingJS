@@ -297,7 +297,7 @@ public class Atom extends Point3fi implements Node {
       return 0;
     if (group.chain.model.ms.isModulated(i) && t.isUnmodulated)
       t = (Tensor) tensors[1];
-    return (double) t.getFactoredValue(isMax ? 2 : 1); 
+    return t.getFactoredValue(isMax ? 2 : 1); 
   }
 
   public Object[] getTensors() {
@@ -586,7 +586,7 @@ public class Atom extends Point3fi implements Node {
         double h = r1 - (r1 * r1 + d * d - r2 * r2) / (2.0 * d);
         volume -= Math.PI / 3 * h * h * (3 * r1 - h);
       }
-    return (double) (volume + 4 * Math.PI / 3 * r1 * r1 * r1);
+    return (volume + 4 * Math.PI / 3 * r1 * r1 * r1);
   }
 
   int getCurrentBondCount() {

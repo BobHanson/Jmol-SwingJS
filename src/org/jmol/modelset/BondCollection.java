@@ -309,7 +309,7 @@ abstract public class BondCollection extends AtomCollection {
                             boolean isFractional) {
     double d2 = atom1.distanceSquared(atom2);
     if (isFractional) {
-      double dAB = (double) Math.sqrt(d2);
+      double dAB = Math.sqrt(d2);
       double dABcalc = atom1.getBondingRadius() + atom2.getBondingRadius();
       return ((minFrac ? dAB >= dABcalc * minD : d2 >= minD)
           && (maxfrac ? dAB <= dABcalc * maxD : d2 <= maxD));
