@@ -228,7 +228,7 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
           append("");
           pt.setT(a);
           if (isFractional)
-            unitCell.toFractionalF(pt, false);
+            unitCell.toFractional(pt, false);
           oc.append(formatNumber(pt.x)).append(",\t")
               .append(formatNumber(pt.y)).append(",\t")
               .append(formatNumber(pt.z)).append(i < last ? ",\n" : "\n");

@@ -2319,7 +2319,7 @@ public class ModelSet extends BondCollection {
       for (int i = ac; --i >= 0;) {
         if (at[i] != null) {
           ptTemp1.setT(at[i]);
-          uc1.toFractionalF(ptTemp1, false);
+          uc1.toFractional(ptTemp1, false);
           if (SimpleUnitCell.checkPeriodic(ptTemp1))
             bs.set(i);
         }

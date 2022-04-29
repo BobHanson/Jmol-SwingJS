@@ -1155,7 +1155,7 @@ public final class ModelLoader {
           // it is possible for atoms to have specific unit cells, not just models
           // this happens for commensurately modulated composite compounds
           c = atoms[i].getUnitCell();
-          c.toCartesianF(c.toSupercell(atoms[i]), false);
+          c.toCartesian(c.toSupercell(atoms[i]), false);
 //          if (roundCoords)
 //            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }

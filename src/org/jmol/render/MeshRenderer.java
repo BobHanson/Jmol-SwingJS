@@ -155,7 +155,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
             for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
               for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
                 latticeOffset.set(tx, ty, tz);
-                unitcell.toCartesianF(latticeOffset, false);
+                unitcell.toCartesian(latticeOffset, false);
                 for (int i = vertexCount; --i >= 0;) {
                   p2.add2(vertices[i], latticeOffset);
                   tm.transformPtScr(p2, screens[i]);

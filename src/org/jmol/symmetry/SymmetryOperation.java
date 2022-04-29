@@ -232,7 +232,7 @@ public class SymmetryOperation extends M4d {
       sb.append("[\t");
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
-      double trans = (double) r[3];
+      double trans =  r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
       sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans)).append("\t]\n");
@@ -390,7 +390,7 @@ public class SymmetryOperation extends M4d {
         int denom =  (divisor == 0 ? ((int) v) & DIVISOR_MASK : divisor);
         if (denom == 0)
           denom = 12;
-        v = (double) finalizeD(v, divisor);
+        v =  finalizeD(v, divisor);
         // offset == null only in the case of "xyz matrix:" option
         if (offset != null) {
           // magnetic centering only
@@ -834,7 +834,7 @@ public class SymmetryOperation extends M4d {
       for (int j = 0; j < 3; j++)
         if (row[j] != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction12((double) (is12ths ? row[3] : row[3] * denom), denom, allPositive,
+      term += xyzFraction12( (is12ths ? row[3] : row[3] * denom), denom, allPositive,
           halfOrLess);
       str += "," + term;
     }
@@ -856,7 +856,7 @@ public class SymmetryOperation extends M4d {
     getRotationScale(mTemp);
     for (int i = vectors.length; --i >= 0;) {
       ptTemp.setT(vectors[i]);
-      unitcell.toFractionalD(ptTemp, true);
+      unitcell.toFractional(ptTemp, true);
       mTemp.rotate(ptTemp);
       unitcell.toCartesian(ptTemp, true);
       vRot[i] = V3d.newV(ptTemp);
@@ -994,7 +994,7 @@ public class SymmetryOperation extends M4d {
           && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0 && m21 == 0
           && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;
-        centering = V3d.new3((double) m03, (double) m13, (double) m23);
+        centering = V3d.new3( m03, m13, m23);
       } else {
         unCentered = true;
         centering = null;

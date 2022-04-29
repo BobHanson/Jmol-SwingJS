@@ -95,7 +95,7 @@ public class UccageRenderer extends CageRenderer {
     P3d[] vertices = unitcell.getUnitCellVerticesNoOffset();
     offset.setT(unitcell.getCartesianOffset());
     offsetT.setT(unitcell.getFractionalOrigin());
-    unitcell.toCartesianF(offsetT, true);
+    unitcell.toCartesian(offsetT, true);
     offset.sub(offsetT);
     boolean hiddenLines = vwr.getBoolean(T.hiddenlinesdashed);
     T3d fset = unitcell.getUnitCellMultiplier();
@@ -127,7 +127,7 @@ public class UccageRenderer extends CageRenderer {
     int[][] faces = (hiddenLines ? BoxInfo.facePoints : null);
     if (fset.z == 0) {
       offsetT.setT(cell0);
-      unitcell.toCartesianF(offsetT, true);
+      unitcell.toCartesian(offsetT, true);
       offsetT.add(offset);
       aPoints = (cell0.x == 0 && cell0.y == 0 && cell0.z == 0 ? axisPoints
           : null);
@@ -138,7 +138,7 @@ public class UccageRenderer extends CageRenderer {
       for (int i = 8; --i >= 0;) {
         P3d v = P3d.new3(pts[i].x * (cell1.x - cell0.x),
             pts[i].y * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
-        unitcell.toCartesianF(v, true);
+        unitcell.toCartesian(v, true);
         verticesT[i].add2(v, offsetT);
       }
       renderCage(mad10, verticesT, faces, aPoints, firstLine, allow0, allow1,
@@ -150,7 +150,7 @@ public class UccageRenderer extends CageRenderer {
             if (haveMultiple) {
               offsetT.set(x, y, z);
               offsetT.scale(scale);
-              unitcell.toCartesianF(offsetT, true);
+              unitcell.toCartesian(offsetT, true);
               offsetT.add(offset);
               aPoints = (x == 0 && y == 0 && z == 0 ? axisPoints : null);
               firstLine = (drawAllLines || aPoints == null ? 0 : 3);

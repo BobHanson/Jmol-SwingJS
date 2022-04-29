@@ -36,20 +36,15 @@ import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.M4d;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.T3d;
-import javajs.util.T3d;
 import javajs.util.T4d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -120,7 +115,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   static UnitCell fromOABCd(T3d[] oabc, boolean setRelative) {
-    return from(P3d.new3((double) oabc[0].x, (double) oabc[0].y, (double) oabc[0].z),
+    return from(P3d.new3( oabc[0].x,  oabc[0].y,  oabc[0].z),
         new double[] { -1, 0, 0, 0, 0, 0, oabc[1].x,
         oabc[1].y, oabc[1].z, oabc[2].x, oabc[2].y, oabc[2].z,
         oabc[3].x, oabc[3].y, oabc[3].z }, setRelative);
@@ -185,17 +180,17 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   private void to(T3d p, T3d offset) {
     if (offset == null) {
       // used redefined unitcell 
-      matrixCartesianToFractionalD.rotTrans(ptT);
-      unitize(ptT);
-      matrixFractionalToCartesianD.rotTrans(ptT);
+      matrixCartesianToFractionalD.rotTrans(p);
+      unitize(p);
+      matrixFractionalToCartesianD.rotTrans(p);
     } else {
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
       // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffsetD.rotTrans(ptT);
-      unitize(ptT);
-      ptT.add(offset);
-      matrixFtoCNoOffsetD.rotTrans(ptT);
+      matrixCtoFNoOffsetD.rotTrans(p);
+      unitize(p);
+      p.add(offset);
+      matrixFtoCNoOffsetD.rotTrans(p);
     }
   }
 
@@ -612,7 +607,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   private double fix(double x) {
-    return (double)(Math.abs(x) < 0.001 ? 0 : x);
+    return (Math.abs(x) < 0.001 ? 0 : x);
   }
 
   public boolean isSameAs(UnitCell uc) {
@@ -757,6 +752,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
+   * @param retMatrix 
    * 
    * @return [origin va vb vc]
    */
@@ -918,7 +914,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     for (int i = uc.length; --i >= offset;) {
       T3d p = uc[i];
-      toFractionalD(p, false);
+      toFractional(p, false);
       mf.rotate(p);
       toCartesian(p, false);
     }
@@ -974,15 +970,15 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       list = new Lst<P3d>();
     P3d pf = P3d.newP(pt);
     if (!fromfractional)
-      toFractionalF(pf, true);
+      toFractional(pf, true);
     int n = list.size();
     for (int i = 0, nops = ops.length; i < nops; i++) {
       P3d p = P3d.newP(pf);
       ops[i].rotTrans(p);
       //not using unitize here, because it does some averaging
-      p.x = (double) (p.x - Math.floor(p.x));
-      p.y = (double) (p.y - Math.floor(p.y));
-      p.z = (double) (p.z - Math.floor(p.z));
+      p.x =  (p.x - Math.floor(p.x));
+      p.y =  (p.y - Math.floor(p.y));
+      p.z =  (p.z - Math.floor(p.z));
       list.addLast(p);
       n++;
     }
@@ -992,24 +988,24 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         ptT.setT(list.get(i));
         unitizeRnd(ptT);
         if (ptT.x == 0) {
-          list.addLast(P3d.new3(1, (double) ptT.y, (double) ptT.z));
+          list.addLast(P3d.new3(1,  ptT.y,  ptT.z));
           if (ptT.y == 0) {
-            list.addLast(P3d.new3(1, 1, (double) ptT.z));
+            list.addLast(P3d.new3(1, 1,  ptT.z));
             if (ptT.z == 0) {
               list.addLast(P3d.new3(1, 1, 1));
             }
           }
         }
         if (ptT.y == 0) {
-          list.addLast(P3d.new3((double) ptT.x, 1, (double) ptT.z));
+          list.addLast(P3d.new3( ptT.x, 1,  ptT.z));
           if (ptT.z == 0) {
-            list.addLast(P3d.new3((double) ptT.x, 1, 1));
+            list.addLast(P3d.new3( ptT.x, 1, 1));
           }
         }
         if (ptT.z == 0) {
-          list.addLast(P3d.new3((double) ptT.x, (double) ptT.y, 1));
+          list.addLast(P3d.new3( ptT.x,  ptT.y, 1));
           if (ptT.x == 0) {
-            list.addLast(P3d.new3(1, (double) ptT.y, 1));
+            list.addLast(P3d.new3(1,  ptT.y, 1));
           }
         }
       }

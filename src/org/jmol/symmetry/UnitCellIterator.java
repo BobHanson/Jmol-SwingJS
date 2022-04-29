@@ -1,22 +1,20 @@
 package org.jmol.symmetry;
 
-import javajs.util.Lst;
-import javajs.util.M4d;
-import javajs.util.M4d;
-import javajs.util.P3d;
-import javajs.util.P3d;
-import javajs.util.P3i;
-import javajs.util.T3d;
-
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.P3i;
+import javajs.util.T3d;
 
 public class UnitCellIterator implements AtomIndexIterator {
 
@@ -80,11 +78,11 @@ public class UnitCellIterator implements AtomIndexIterator {
     p = new P3d();
     P3d ptC = new P3d();
     ptC.setT(center);
-    unitCell.toFractionalF(ptC, true);
+    unitCell.toFractional(ptC, true);
     for (int i = 0; i < 8; i++) {
       p.scaleAdd2(-2d, pts[i], pts[7]);
       p.scaleAdd2(distance, p, center);
-      unitCell.toFractionalF(p, true);
+      unitCell.toFractional(p, true);
       if (min.x > p.x)
         min.x = p.x;
       if (max.x < p.x)
@@ -131,7 +129,7 @@ public class UnitCellIterator implements AtomIndexIterator {
           pt.putP(pa);
         } else {
           pa.setT(a);
-          unitCell.toUnitCell(pa, null);
+          unitCell.toUnitCellD(pa, null);
         }
         String key = "_" + (int) (pa.x * 100) + "_" + (int) (pa.y * 100) + "_"
             + (int) (pa.z * 100) + "_";
@@ -176,7 +174,7 @@ public class UnitCellIterator implements AtomIndexIterator {
       }
     }
     translation.set(t.x, t.y, t.z);
-    unitCell.toCartesianF(translation, false);
+    unitCell.toCartesian(translation, false);
     ipt = 0;
     return true;
   }

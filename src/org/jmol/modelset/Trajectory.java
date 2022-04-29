@@ -202,7 +202,7 @@ public class Trajectory {
     P3d pt = steps.get(m)[a.i - ms.am[m].firstAtomIndex];
     pt.set(a.x, a.y, a.z);
     if (isFrac)
-      ms.unitCells[m].toFractionalF(pt, true);
+      ms.unitCells[m].toFractional(pt, true);
   }
 
   public void getFractional(Atom a, P3d ptTemp) {

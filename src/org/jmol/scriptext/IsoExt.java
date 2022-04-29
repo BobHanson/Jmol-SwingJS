@@ -405,7 +405,7 @@ public class IsoExt extends ScriptExt {
           pts = new P3d[cpts.size()];
           for (int j = 0; j < cpts.size(); j++) {
             pts[j] = cpts.get(j);
-              uc.toCartesianF(pts[j], true);
+              uc.toCartesian(pts[j], true);
           }
         }
         isBest = false;

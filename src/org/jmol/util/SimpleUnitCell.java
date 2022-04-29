@@ -381,15 +381,8 @@ public class SimpleUnitCell {
     m.mul(matrixFractionalToCartesianD);
     m.mul2(matrixCartesianToFractionalD, m);
   }
-  
-  public final void toFractionalF(T3d pt, boolean ignoreOffset) {
-    if (matrixCartesianToFractionalD == null)
-      return;
-    (ignoreOffset ? matrixCtoFNoOffsetD : matrixCartesianToFractionalD)
-        .rotTrans(pt);
-  }
 
-  public final void toFractionalD(T3d pt, boolean ignoreOffset) {
+  public final void toFractional(T3d pt, boolean ignoreOffset) {
     if (matrixCartesianToFractionalD == null)
       return;
     (ignoreOffset ? matrixCtoFNoOffsetD : matrixCartesianToFractionalD)
@@ -590,7 +583,7 @@ public class SimpleUnitCell {
   }
 
   public static boolean checkUnitCell(SymmetryInterface uc, P3d cell, P3d ptTemp) {
-    uc.toFractionalF(ptTemp, false);
+    uc.toFractional(ptTemp, false);
     // {1 1 1} here is the original cell
     return (ptTemp.x >= cell.x - 1d - SLOP && ptTemp.x <= cell.x + SLOP
         && ptTemp.y >= cell.y - 1d - SLOP && ptTemp.y <= cell.y + SLOP

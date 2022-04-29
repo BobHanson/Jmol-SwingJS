@@ -250,7 +250,7 @@ class PointGroup {
   }
   
   private boolean set(PointGroup pgLast, T3d[] atomset) {
-    cosTolerance = (double) (Math.cos(linearTolerance / 180 * Math.PI));
+    cosTolerance =  (Math.cos(linearTolerance / 180 * Math.PI));
     if (!getPointsAndElements(atomset)) {
       Logger.error("Too many atoms for point group calculation");
       name = "point group not determined -- ac > " + ATOM_COUNT_MAX
@@ -488,7 +488,7 @@ class PointGroup {
         centerAtomIndex = i;
       radius = Math.max(radius, r2);
     }
-    radius = (double) Math.sqrt(radius);
+    radius =  Math.sqrt(radius);
     if (radius < 1.5d && distanceTolerance > 0.15d) {
       distanceTolerance = radius / 10;
       distanceTolerance2 = distanceTolerance * distanceTolerance;
@@ -654,7 +654,7 @@ class PointGroup {
 
         // look for the axis perpendicular to the A -- 0 -- B plane
 
-        double order = (double) (2 * Math.PI / v1.angle(v2));
+        double order =  (2 * Math.PI / v1.angle(v2));
         int iOrder = (int) Math.floor(order + 0.01f);
         boolean isIntegerOrder = (order - iOrder <= 0.02f);
         if (!isIntegerOrder || (iOrder = iOrder + firstProper) >= maxAxis)

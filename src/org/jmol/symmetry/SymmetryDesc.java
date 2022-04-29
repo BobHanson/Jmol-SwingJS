@@ -545,7 +545,7 @@ public class SymmetryDesc {
     P3d pa1 = P3d.newPd(info[0]);
     P3d ax1 = P3d.newPd(info[1]);
     int ang1 = (int) Math.abs(PT.approxD(((P3d) info[3]).x, 1));
-    double pitch1 = (double) SymmetryOperation.approxF(((P3d) info[3]).y);
+    double pitch1 =  SymmetryOperation.approxF(((P3d) info[3]).y);
 
     if (haveInversion) {
 
@@ -686,7 +686,7 @@ public class SymmetryDesc {
         // ax + by + cz + d = 0
         // so if a point is in the plane, then N dot X = -d
         w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
-        plane = P4d.new4((double) vtemp.x, (double) vtemp.y, (double) vtemp.z, (double) w);
+        plane = P4d.new4( vtemp.x, vtemp.y, vtemp.z, w);
         margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30d
             : 1.05d);
         isRotation = false;
@@ -964,8 +964,8 @@ public class SymmetryDesc {
             .append(Escape.ePd(ptr)).append(Escape.ePd(ptemp));
         ptemp.setT(haveInversion ? ptinv : pta00);
         if (ptemp.distance(pt0) < 0.1d)
-          ptemp.set((double) Math.random(), (double) Math.random(),
-              (double) Math.random());
+          ptemp.set(Math.random(), Math.random(),
+              Math.random());
         draw1.append(Escape.ePd(ptemp));
         ptemp.set(0, ang, 0);
         draw1.append(Escape.ePd(ptemp)).append(" color red");
@@ -1292,9 +1292,9 @@ public class SymmetryDesc {
 
   private static T3d approx(T3d pt) {
     if (pt != null) {
-      pt.x = SymmetryOperation.approxF((double) pt.x);
-      pt.y = SymmetryOperation.approxF((double) pt.y);
-      pt.z = SymmetryOperation.approxF((double) pt.z);
+      pt.x = SymmetryOperation.approxF( pt.x);
+      pt.y = SymmetryOperation.approxF( pt.y);
+      pt.z = SymmetryOperation.approxF( pt.z);
     }
     return pt;
   }
@@ -1492,8 +1492,8 @@ public class SymmetryDesc {
       bsResult.and(bsElement);
     if (bsResult.isEmpty()) {
       sympt = P3d.newP(sympt);
-      uc.toUnitCell(sympt, null);
-      uc.toCartesianF(sympt, false);
+      uc.toUnitCellD(sympt, null);
+      uc.toCartesian(sympt, false);
       modelSet.getAtomsWithin(0.02f, sympt, bsResult, iModel);
       if (bsElement != null)
         bsResult.and(bsElement);

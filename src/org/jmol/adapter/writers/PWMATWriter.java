@@ -125,7 +125,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
         // to write use float, not double, as that is 
         // the only way to avoid garbage out
         p.setT(a[i]);
-        uc.toFractionalF(p, false);
+        uc.toFractional(p, false);
         coord = cleanF(p.x) + cleanF(p.y) + cleanF(p.z);
       }
       if (cz == null) {

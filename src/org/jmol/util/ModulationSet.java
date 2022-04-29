@@ -499,7 +499,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (a != null) {
       //if (!isReset)
       //System.out.println(a + " ms " + ptTemp);
-      symmetry.toCartesianF(ptTemp, true);
+      symmetry.toCartesian(ptTemp, true);
       a.add(ptTemp);
     }
     // magnetic moment part
@@ -520,7 +520,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     }
     ptTemp.setT(mxyz);
     // vib.modScale is from VECTOR MAX <n> 
-    symmetry.toCartesianF(ptTemp, true);
+    symmetry.toCartesian(ptTemp, true);
 //    PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
     // we must scale v0 with mod to preserve angle
     ptTemp.add(v0);
@@ -680,7 +680,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public void setMoment() {
     if (mxyz == null)
       return;
-    symmetry.toCartesianF(vib, true);
+    symmetry.toCartesian(vib, true);
     v0 = V3d.newV(vib);
   }
 

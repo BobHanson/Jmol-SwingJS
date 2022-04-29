@@ -1641,7 +1641,7 @@ public class ModelKit {
     double bd = (pt != null && atom != null ? pt.distance(atom) : -1);
     if (points != null) {
       np = nIgnored = points.size();
-      uc.toFractionalF(pt, true);
+      uc.toFractional(pt, true);
       points.addLast(pt);
       if (newPoint && haveAtom)
         nIgnored++;
@@ -1709,7 +1709,7 @@ public class ModelKit {
             isConnected = true;
           } else if (uc != null) {
             P3d p = P3d.newP(atom);
-            uc.toFractionalF(p, true);
+            uc.toFractional(p, true);
             bs.or(bsEquiv);
             Lst<P3d> list = uc.getEquivPoints(null, p, packing);
             for (int j = 0, n = list.size(); j < n; j++) {
@@ -1989,14 +1989,14 @@ public class ModelKit {
       isPoint = (pt != null);
       if (isPoint) {
         pf = P3d.newP(pt);
-        uc.toFractionalF(pf, true);
+        uc.toFractional(pf, true);
       }
       Lst<P3d> list = new Lst<P3d>();
       int atomicNo = -1;
       int site = 0;
       for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
           P3d p = P3d.newP(vwr.ms.at[i]);
-          uc.toFractionalF(p, true);
+          uc.toFractional(p, true);
           if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
             site = vwr.ms.at[i].getAtomSite();
             if (type == null)

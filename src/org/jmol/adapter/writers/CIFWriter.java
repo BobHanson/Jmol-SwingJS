@@ -157,7 +157,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
-          uc.toFractionalF(p, !isP1);
+          uc.toFractional(p, !isP1);
         }
         
 //        if (isP1 && !SimpleUnitCell.checkPeriodic(p))

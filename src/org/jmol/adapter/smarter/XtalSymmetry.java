@@ -1531,7 +1531,7 @@ public class XtalSymmetry {
           ((JmolModulationSet) v).setMoment();
         } else {
           v = (Vibration) v.clone(); // this could be a modulation set
-          sym.toCartesianF(v, true);
+          sym.toCartesian(v, true);
           asc.atoms[i].vib = v;
         }
         nVib++;

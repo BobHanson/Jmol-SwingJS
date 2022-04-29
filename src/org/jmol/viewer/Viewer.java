@@ -3905,7 +3905,7 @@ public class Viewer extends JmolViewer
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
-      unitCell.toCartesianF(pt, ignoreOffset);
+      unitCell.toCartesian(pt, ignoreOffset);
 //      if (!g.legacyJavaFloat)
 //        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
     }
@@ -3927,7 +3927,7 @@ public class Viewer extends JmolViewer
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
-      unitCell.toFractionalF(pt, ignoreOffset);
+      unitCell.toFractional(pt, ignoreOffset);
 //      if (!g.legacyJavaFloat)
 //        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
@@ -3946,7 +3946,7 @@ public class Viewer extends JmolViewer
   public void toUnitCell(P3d pt, P3d offset) {
     SymmetryInterface unitCell = getCurrentUnitCell();
     if (unitCell != null)
-      unitCell.toUnitCell(pt, offset);
+      unitCell.toUnitCellD(pt, offset);
   }
 
   public void setCurrentCage(String isosurfaceId) {

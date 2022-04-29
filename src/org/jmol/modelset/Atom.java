@@ -764,7 +764,7 @@ public class Atom extends Point3fi implements Node {
       pt.setT(this);
     if (c != null) {
       c = c.getUnitCellMultiplied();
-      c.toFractionalF(pt, ignoreOffset);
+      c.toFractional(pt, ignoreOffset);
 //      if (fixJavaFloat)
 //        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
@@ -796,13 +796,13 @@ public class Atom extends Point3fi implements Node {
       return pt;
     c = c.getUnitCellMultiplied();
     if (group.chain.model.isJmolDataFrame) {
-      c.toFractionalF(pt, false);
+      c.toFractional(pt, false);
       if (asCartesian)
-        c.toCartesianF(pt, false);
+        c.toCartesian(pt, false);
     } else {
-      c.toUnitCell(pt, null);
+      c.toUnitCellD(pt, null);
       if (!asCartesian)
-        c.toFractionalF(pt, false);
+        c.toFractional(pt, false);
     }
 //    if (fixJavaFloat)
 //      PT.fixPtFloats(pt, asCartesian ? PT.CARTESIAN_PRECISION : PT.FRACTIONAL_PRECISION);      
@@ -816,11 +816,11 @@ public class Atom extends Point3fi implements Node {
     ptTemp1.setT(this);
     ptTemp2.setT(pt);
     if (group.chain.model.isJmolDataFrame) {
-      c.toFractionalF(ptTemp1, true);
-      c.toFractionalF(ptTemp2, true);
+      c.toFractional(ptTemp1, true);
+      c.toFractional(ptTemp2, true);
     } else {
-      c.toUnitCell(ptTemp1, null);
-      c.toUnitCell(ptTemp2, null);
+      c.toUnitCellD(ptTemp1, null);
+      c.toUnitCellD(ptTemp2, null);
     }
     return ptTemp1.distance(ptTemp2);
   }
@@ -828,7 +828,7 @@ public class Atom extends Point3fi implements Node {
   void setFractionalCoord(int tok, double fValue, boolean asAbsolute) {
     SymmetryInterface c = getUnitCell();
     if (c != null)
-      c.toFractionalF(this, asAbsolute);
+      c.toFractional(this, asAbsolute);
     switch (tok) {
     case T.fux:
     case T.fracx:
@@ -844,7 +844,7 @@ public class Atom extends Point3fi implements Node {
       break;
     }
     if (c != null)
-      c.toCartesianF(this, asAbsolute);
+      c.toCartesian(this, asAbsolute);
   }
   
   void setFractionalCoordTo(P3d ptNew, boolean asAbsolute) {
@@ -855,7 +855,7 @@ public class Atom extends Point3fi implements Node {
     pt.setT(ptNew);
     SymmetryInterface c = getUnitCell();
     if (c != null)
-      c.toCartesianF(pt, asAbsolute && !group.chain.model.isJmolDataFrame);
+      c.toCartesian(pt, asAbsolute && !group.chain.model.isJmolDataFrame);
   }
 
   boolean isCursorOnTopOf(int xCursor, int yCursor,

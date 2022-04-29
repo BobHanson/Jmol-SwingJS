@@ -139,7 +139,7 @@ public class JmolDataReader extends PdbReader {
         unitCellOffset = P3d.newP(plotScale);
         unitCellOffset.scale(-1);
         getSymmetry();
-        symmetry.toFractionalF(unitCellOffset, false);
+        symmetry.toFractional(unitCellOffset, false);
         unitCellOffset.scaleAdd2(-1d, minXYZ, unitCellOffset);
         symmetry.setOffsetPt(unitCellOffset);
         asc.setInfo("jmolDataScaling", new P3d[] { minXYZ, maxXYZ, plotScale });

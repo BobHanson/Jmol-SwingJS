@@ -1023,9 +1023,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     fileOffset.setT(fileOffsetFractional);
     if (unitCellOffsetFractional != fileCoordinatesAreFractional) {
       if (unitCellOffsetFractional)
-        symmetry.toCartesianF(fileOffset, false);
+        symmetry.toCartesian(fileOffset, false);
       else
-        symmetry.toFractionalF(fileOffset, false);
+        symmetry.toFractional(fileOffset, false);
     }
   }
 

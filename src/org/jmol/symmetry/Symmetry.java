@@ -474,11 +474,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toUnitCell(T3d pt, T3d offset) {
-    unitCell.toUnitCell(pt, offset);
-  }
-
-  @Override
   public void toUnitCellD(T3d pt, T3d offset) {
     unitCell.toUnitCellD(pt, offset);
   }
@@ -494,15 +489,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toFractionalF(T3d pt, boolean ignoreOffset) {
-    if (!isBio)
-      unitCell.toFractionalF(pt, ignoreOffset);
-  }
-
-  @Override
   public void toFractional(T3d pt, boolean ignoreOffset) {
     if (!isBio)
-      unitCell.toFractionalD(pt, ignoreOffset);    
+      unitCell.toFractional(pt, ignoreOffset);
   }
 
   @Override
@@ -510,13 +499,6 @@ public class Symmetry implements SymmetryInterface {
     if (!isBio)
       unitCell.toFractionalM(m);
   }
-
-  @Override
-  public void toCartesianF(T3d fpt, boolean ignoreOffset) {
-    if (!isBio)
-      unitCell.toCartesianF(fpt, ignoreOffset);
-  }
-
 
   @Override
   public void toCartesian(T3d pt, boolean ignoreOffset) {
@@ -706,7 +688,7 @@ public class Symmetry implements SymmetryInterface {
   private boolean isNotCentroid(P3d center, int n, int[] minmax,
                                 boolean centroidPacked) {
     center.scale(1d / n);
-    toFractionalF(center, false);
+    toFractional(center, false);
     // we have to disallow just a tiny slice of atoms due to rounding errors
     // so  -0.000001 is OK, but 0.999991 is not.
     if (centroidPacked)
@@ -847,15 +829,14 @@ public class Symmetry implements SymmetryInterface {
     if (ops == null || unitCell == null) {
       lst.addLast(pt0);
     } else {
-      unitCell.toFractionalD(pt0, true); // ignoreOffset
+      unitCell.toFractional(pt0, true); // ignoreOffset
       P3d pt1 = null;
       P3d pt2 = null;
-      P3d pt3 = null;
       if (isRandom) {
         pt1 = P3d.new3(rand2 + 4, rand3 + 5, rand1 + 6);
-        unitCell.toFractionalD(pt1, true); // ignoreOffset
+        unitCell.toFractional(pt1, true); // ignoreOffset
         pt2 = P3d.new3(rand3 + 7, rand1 + 8, rand2 + 9);
-        unitCell.toFractionalD(pt2, true); // ignoreOffset
+        unitCell.toFractional(pt2, true); // ignoreOffset
       }
       Bspt bspt = new Bspt(3, 0);
       CubeIterator iter = bspt.allocateCubeIterator();
@@ -973,7 +954,7 @@ public class Symmetry implements SymmetryInterface {
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       pt.setT(a);
-      uc.toFractionalD(pt, false);
+      uc.toFractional(pt, false);
       uc.unitizeRnd(pt);
       int type = a.getAtomicAndIsotopeNumber();
 
@@ -984,7 +965,7 @@ public class Symmetry implements SymmetryInterface {
             || (haveOccupancies && occ != occs[j]))
           continue;
         pt2.setT(b);
-        uc.toFractionalD(pt2, false);
+        uc.toFractional(pt2, false);
         uc.unitizeRnd(pt2);
         if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
           bs.clear(j);
@@ -1013,7 +994,7 @@ public class Symmetry implements SymmetryInterface {
     // fractionalize all points if necessary
     if (flags.indexOf("fromfractional") < 0) {
       for (int i = 0; i < pts.size(); i++) {
-        toFractionalF(pts.get(i), true);
+        toFractional(pts.get(i), true);
       }
     }
     // signal to make no changes in points
@@ -1047,7 +1028,7 @@ public class Symmetry implements SymmetryInterface {
     // and turn these to Cartesians if desired
     if (!tofractional) {
       for (int i = pts.size(); --i >= nIgnored;)
-        toCartesianF(pts.get(i), true);
+        toCartesian(pts.get(i), true);
     }
   }
 

@@ -83,18 +83,14 @@ import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class CmdExt extends ScriptExt {
@@ -2056,6 +2052,7 @@ public class CmdExt extends ScriptExt {
       case T.none:
         if (++i != slen)
           invArg();
+        //$FALL-THROUGH$
       case T.delete:
         operation = T.delete;
         // if (isColorOrRadius) / for struts automatic color
@@ -5772,11 +5769,10 @@ public class CmdExt extends ScriptExt {
     P4d p0 = P4d.new4(plane.x, plane.y, plane.z, 0);
     Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(), h, k, l);
     for (int j = 0; j < cpts.size(); j++) {
-      uc.toCartesianF(cpts.get(j), true);
+      uc.toCartesian(cpts.get(j), true);
     }
     cpts = MeasureD.getPointsOnPlane(cpts.toArray(new P3d[cpts.size()]), p0);
     P3d zero = new P3d();
-    P3d pd = new P3d();
     double amin = -179;
     double dmin = Double.MAX_VALUE, dmin2 = Double.MAX_VALUE;
     P3d v = null, v1 = null;

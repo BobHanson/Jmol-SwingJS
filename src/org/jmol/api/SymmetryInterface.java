@@ -5,20 +5,16 @@ import java.util.Map;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.Tensor;
-import org.jmol.util.Vibration;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -234,17 +230,10 @@ public interface SymmetryInterface {
   Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
                                     P3d translation, P3d pt, P3d pt2, String id, int type, double scaleFactor, int nth, int options);
 
-  void toUnitCell(T3d pt, T3d offset);
-
-
   P3d toSupercell(P3d fpt);
 
 
   T3d getUnitCellMultiplier();
-
-  void toCartesianF(T3d pt, boolean asAbsolute);
-
-  void toFractionalF(T3d pt, boolean asAbsolute);
 
   P3d getCartesianOffset();
 
