@@ -1766,7 +1766,7 @@ public class ActionManager implements EventManager {
     if (dz == 0)
       return;
     setMotion(GenericPlatform.CURSOR_ZOOM, true);
-    vwr.zoomByFactor((double) Math.pow(mouseWheelFactor, dz), x, y);
+    vwr.zoomByFactor(Math.pow(mouseWheelFactor, dz), x, y);
     moved.setCurrent(current, 0);
     vwr.setInMotion(true);
     zoomTrigger = true;
@@ -2167,7 +2167,7 @@ class Gesture {
     MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
     double dx = ((double) (mp1.x - mp0.x)) / vwr.getScreenWidth() * 360;
     double dy = ((double) (mp1.y - mp0.y)) / vwr.getScreenHeight() * 360;
-    return (double) Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
+    return Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
   }
 
   int getDX(int nPoints, int nPointsPrevious) {

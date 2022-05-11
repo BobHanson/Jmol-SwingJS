@@ -146,7 +146,7 @@ public class TransformManager {
       fixedRotationCenter.set(0, 0, 0);
     } else {
       if (vwr.g.axesOrientationRasmol)
-        matrixRotate.setAsXRotation((double) Math.PI);
+        matrixRotate.setAsXRotation(Math.PI);
     }
     vwr.stm.saveOrientation("default", null);
     if (mode == MODE_NAVIGATION)
@@ -274,7 +274,7 @@ public class TransformManager {
   //    x -= fixedTranslation.x;
   //    y -= fixedTranslation.y;
   //    double z = radius2 - x * x - y * y;
-  //    z = (z < 0 ? -1 : 1) * (double) Math.sqrt(Math.abs(z));
+  //    z = (z < 0 ? -1 : 1) * Math.sqrt(Math.abs(z));
   //    if (factor == 0) {
   //      // mouse down sets the initial rotation and point on the sphere
   //      arcBall0Rotation.setM3(matrixRotate);
@@ -289,7 +289,7 @@ public class TransformManager {
   //    arcBall1.normalize();
   //    arcBallAxis.cross(arcBall0, arcBall1);
   //    axisangleT.setVA(arcBallAxis, factor
-  //        * (double) Math.acos(arcBall0.dot(arcBall1)));
+  //        * Math.acos(arcBall0.dot(arcBall1)));
   //    setRotation(arcBall0Rotation);
   //    rotateAxisAngle2(axisangleT, null);
   //  }
@@ -307,7 +307,7 @@ public class TransformManager {
   void rotateZBy(int zDelta, int x, int y) {
     if (x != Integer.MAX_VALUE && y != Integer.MAX_VALUE)
       resetXYCenter(x, y);
-    rotateZRadians((double) (zDelta / degreesPerRadian));
+    rotateZRadians(zDelta / degreesPerRadian);
   }
 
   private void applyRotation(M3d mNew, boolean isInternal, BS bsAtoms,
@@ -1169,7 +1169,7 @@ public class TransformManager {
    * @return a set of camera data
    */
   public P3d[] getCameraFactors() {
-    aperatureAngle = (double) (Math.atan2(screenPixelCount / 2d,
+    aperatureAngle = (Math.atan2(screenPixelCount / 2d,
         referencePlaneOffset) * 2 * 180 / Math.PI);
     cameraDistanceFromCenter = referencePlaneOffset / scalePixelsPerAngstrom;
 
@@ -1699,7 +1699,7 @@ public class TransformManager {
   public boolean isInPosition(V3d axis, double degrees) {
     if (Double.isNaN(degrees))
       return true;
-    aaTest1.setVA(axis, (double) (degrees / degreesPerRadian));
+    aaTest1.setVA(axis, degrees / degreesPerRadian);
     ptTest1.set(4.321f, 1.23456d, 3.14159d);
     getRotation(matrixTest);
     matrixTest.rotate2(ptTest1, ptTest2);
@@ -1715,7 +1715,7 @@ public class TransformManager {
     double cameraX = pymolView[9];
     double cameraY = -pymolView[10];
     double pymolDistanceToCenter = -pymolView[11];
-    P3d center = P3d.new3((double) pymolView[12], (double) pymolView[13], (double) pymolView[14]);
+    P3d center = P3d.new3(pymolView[12], pymolView[13], pymolView[14]);
     double pymolDistanceToSlab = pymolView[15]; // <=0 to ignore
     double pymolDistanceToDepth = pymolView[16];
     double fov = pymolView[17];
@@ -1778,8 +1778,8 @@ public class TransformManager {
       }
     }
     moveTo(eval, floatSecondsTotal, center, null, 0, m3, 100, Double.NaN,
-        Double.NaN, (double) rotationRadius, null, Double.NaN, Double.NaN, Double.NaN,
-        (double) cameraDepth, (double) cameraX, (double) cameraY);
+        Double.NaN, rotationRadius, null, Double.NaN, Double.NaN, Double.NaN,
+        cameraDepth, cameraX, cameraY);
     return true;
   }
 
@@ -1808,7 +1808,7 @@ public class TransformManager {
           return;
         }
         A4d aaMoveTo = new A4d();
-        aaMoveTo.setVA(axis, (double) (degrees / degreesPerRadian));
+        aaMoveTo.setVA(axis, degrees / degreesPerRadian);
         matrixEnd.setAA(aaMoveTo);
       }
     }
@@ -1898,7 +1898,7 @@ public class TransformManager {
 
   String getRotationText() {
     axisangleT.setM(matrixRotate);
-    double degrees = (double) (axisangleT.angle * degreesPerRadian);
+    double degrees = axisangleT.angle * degreesPerRadian;
     SB sb = new SB();
     vectorT.set(axisangleT.x, axisangleT.y, axisangleT.z);
     if (degrees < 0.01f)
@@ -1948,15 +1948,15 @@ public class TransformManager {
 
   private String getRotateXyzText() {
     SB sb = new SB();
-    double m20 = (double) matrixRotate.m20;
-    double rY = -(double) (Math.asin(m20) * degreesPerRadian);
+    double m20 = matrixRotate.m20;
+    double rY = -(Math.asin(m20) * degreesPerRadian);
     double rX, rZ;
     if (m20 > .999d || m20 < -.999d) {
-      rX = -(double) (Math.atan2(matrixRotate.m12, matrixRotate.m11) * degreesPerRadian);
+      rX = -(Math.atan2(matrixRotate.m12, matrixRotate.m11) * degreesPerRadian);
       rZ = 0;
     } else {
-      rX = (double) (Math.atan2(matrixRotate.m21, matrixRotate.m22) * degreesPerRadian);
-      rZ = (double) (Math.atan2(matrixRotate.m10, matrixRotate.m00) * degreesPerRadian);
+      rX = (Math.atan2(matrixRotate.m21, matrixRotate.m22) * degreesPerRadian);
+      rZ = (Math.atan2(matrixRotate.m10, matrixRotate.m00) * degreesPerRadian);
     }
     sb.append("reset");
     sb.append(";center ").append(getCenterText());
@@ -2022,15 +2022,15 @@ public class TransformManager {
       m.invert();
       m.mul2(matrixRotate, m);
     }
-    double m22 = (double) m.m22;
-    double rY = (double) (Math.acos(m22) * degreesPerRadian);
+    double m22 = m.m22;
+    double rY = (Math.acos(m22) * degreesPerRadian);
     double rZ1, rZ2;
     if (m22 > .999d || m22 < -.999d) {
-      rZ1 = (double) (Math.atan2(m.m10, m.m11) * degreesPerRadian);
+      rZ1 = (Math.atan2(m.m10, m.m11) * degreesPerRadian);
       rZ2 = 0;
     } else {
-      rZ1 = (double) (Math.atan2(m.m21, -m.m20) * degreesPerRadian);
-      rZ2 = (double) (Math.atan2(m.m12, m.m02) * degreesPerRadian);
+      rZ1 = (Math.atan2(m.m21, -m.m20) * degreesPerRadian);
+      rZ2 = (Math.atan2(m.m12, m.m02) * degreesPerRadian);
     }
     if (rZ1 != 0 && rY != 0 && rZ2 != 0 && iAddComment)
       sb.append("#Follows Z-Y-Z convention for Euler angles\n");
