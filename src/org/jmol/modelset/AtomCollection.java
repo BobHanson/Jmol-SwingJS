@@ -2593,8 +2593,10 @@ abstract public class AtomCollection {
           if (bs == null)
             bs = BS.newN(i + 1);
           bs.set(i);
-          while (--i >= 0 && at[i].getGroup3(true).equals(g3))
-            bs.set(i);
+          while (--i >= 0) {
+            if (!isDeleted(at[i]) && at[i].getGroup3(true).equals(g3))
+              bs.set(i);
+          }
           i++;
         }
       } else if (isAtomNameMatch(at[i], name, checkStar, allowInitialStar)) {
