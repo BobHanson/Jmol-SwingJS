@@ -4393,6 +4393,8 @@ public class ModelSet extends BondCollection {
   public void updateBasisFromSite(int imodel) {
     if (getUnitCell(imodel) != null) {
       BS bsAU = am[imodel].bsAsymmetricUnit;
+      if (bsAU == null)
+        return;
       //BS bsSym = getAtomBitsMDb(T.symmetry, null);
       bsAU.clearAll();//andNot(bs);
       //bsSym.or(bs);
