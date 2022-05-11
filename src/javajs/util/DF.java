@@ -122,7 +122,7 @@ public class DF {
     String s1 = ("" + value).toUpperCase();
     int pt = s1.indexOf(".");
     if (pt < 0) // specifically JavaScript "-2" not "-2.0"
-      return s1 + formattingStrings[decimalDigits].substring(1);
+      return (isNeg ? "-" : "") + s1 + formattingStrings[decimalDigits].substring(1);
     int pt1 = s1.indexOf("E-");
     if (pt1 > 0) {
       n = PT.parseInt(s1.substring(pt1 + 1));
