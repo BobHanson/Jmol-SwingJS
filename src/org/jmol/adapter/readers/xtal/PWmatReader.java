@@ -20,7 +20,31 @@ import javajs.util.PT;
  */
 
 public class PWmatReader extends AtomSetCollectionReader {
-
+/**
+ * The format of pwmat config file specification is now clear, would like to
+ * adjust PWmatReader accordingly. The pwmat config file format accommodates
+ * conversion from other vendors and their formats.
+ * 
+ * The first line always has number of atoms, before the number, could be
+ * spaces. after the number, there could be comments such as "generated from
+ * pwmat". Please ignore those comments, only gets the number from the first
+ * line.
+ * 
+ * After the first line, there could be comments please ignore till reading of
+ * letter lattice or lattice vector. The letters are case non-sensitive.
+ * 
+ * The lattice section consists of 3 lines representing lattice vector. For
+ * each line, there could be extra 3 numbers followed, please ignore.
+ * 
+ * Following lattice section, there comes position section. As long as there
+ * is "position" case-insensitive leading the line, that is our position
+ * section. The position section consists of total lines of total atom number
+ * which is the from the first line.
+ * 
+ * The lattice section, following by position section, then there are optional
+ * sections. The cue is always the words case-insensitive. After the keywords,
+ * following by the total lines of total atom number.
+ */
   private int nAtoms;
 
   public PWmatReader() {
@@ -32,8 +56,12 @@ public class PWmatReader extends AtomSetCollectionReader {
     doApplySymmetry = true;
   }
 
+  private boolean haveLattice;
+  private boolean havePositions;
+  
   @Override
   protected boolean checkLine() throws Exception {
+    // first line has atom count
     if (nAtoms == 0) {
       readComments();
       setSpaceGroupName("P1");
@@ -45,21 +73,29 @@ public class PWmatReader extends AtomSetCollectionReader {
     String lc = line.toLowerCase().trim();
     if (lc.length() == 0)
       return true;
+    // do not read anything unit we get the lattice line
+    if (!haveLattice) {
     if (lc.startsWith("lattice")) {
       readUnitCell();
-    } else if (lc.startsWith("position")) {
+        haveLattice = true;
+      }
+      return true;
+    }
+    // and then also have positions
+    if (!havePositions) {
+      if (lc.startsWith("position")) {
       readCoordinates();
-    } else {
+        havePositions = true;
+      }
+      return true;
+    }
       if (!readDataBlock(lc)) {
         continuing = false;
       }      
-    }
     return true;
   }
   
   private void readComments() {
-    // TODO
-    
   }
 
   private void readUnitCell() throws Exception {
