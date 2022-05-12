@@ -1441,9 +1441,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     //if (sym != null && ptSupercell != null)
       //asc.getXSymmetry().finalizeUnitCell(ptSupercell);
     
-    if (sym != null && iHaveFractionalCoordinates && iHaveUnitCell && merging) {
+    if (merging && sym != null && iHaveFractionalCoordinates && iHaveUnitCell && iHaveSymmetryOperators) {
+      // only do this if XtalSymmetry has not done it already
       fractionalizeCoordinates(false);
-      addJmolScript("modelkit spacegroup p1");
+      addJmolScript("modelkit spacegroup P1");
     }
     initializeSymmetry();
     return sym;
