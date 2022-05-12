@@ -579,7 +579,7 @@ public class JSVApplet implements JSVAppletInterface,
 	}
 
 	@Override
-	public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+	public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
 		// TODO Auto-generated method stub
 		return true;
 	}

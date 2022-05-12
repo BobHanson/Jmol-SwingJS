@@ -515,7 +515,9 @@ abstract public class JmolViewer {
   abstract public JmolAdapter getModelAdapter();
 
   abstract public void openFileAsyncSpecial(String fileName, int flags);
-  
+
+  abstract public void openFileAsyncSpecialType(String fileName, int flags, String type);
+
   public void openFileAsync(String fileName) {
     openFileAsyncSpecial(fileName, 0);    
   }

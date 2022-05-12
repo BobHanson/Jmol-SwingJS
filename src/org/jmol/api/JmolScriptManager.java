@@ -59,7 +59,7 @@ public interface JmolScriptManager {
 
   boolean isQueueProcessing();
 
-  void openFileAsync(String fileName, int flags);
+  void openFileAsync(String fileName, int flags, String type);
 
   String evalFile(String strFilename);
 

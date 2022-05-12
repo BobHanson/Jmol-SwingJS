@@ -17,7 +17,7 @@ public interface JSInterface {
   void processTwoPointGesture(double[][][] touches);
   void setDisplay(Object canvas);
   void setScreenDimension(int width, int height);
-  boolean setStatusDragDropped(int mode, int x, int y, String fileName);
+  boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType);
 	void startHoverWatcher(boolean enable);
 	void update();
 

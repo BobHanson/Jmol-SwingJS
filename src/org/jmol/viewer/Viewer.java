@@ -2603,7 +2603,12 @@ public class Viewer extends JmolViewer
    */
   @Override
   public void openFileAsyncSpecial(String fileName, int flags) {
-    getScriptManager().openFileAsync(fileName, flags);
+    getScriptManager().openFileAsync(fileName, flags, null);
+  }
+
+  @Override
+  public void openFileAsyncSpecialType(String fileName, int flags, String type) {
+    getScriptManager().openFileAsync(fileName, flags, type);
   }
 
   /**
@@ -5430,28 +5435,49 @@ public class Viewer extends JmolViewer
     return (!g.disablePopupMenu && getPopupMenu() != null);
   }
 
-  public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+  /**
+   * Allows a handler to set Jmol variable doDrop=false to cancel
+   * and also set the file type if desired.
+   * 
+   * @param mode
+   * @param x
+   * @param y
+   * @param fileName
+   * @param retType
+   * @return true if we should still handle this. 
+   */
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
     if (mode == 0) {
       g.setO("_fileDropped", fileName);
       g.setUserVariable("doDrop", SV.vT);
+      g.setUserVariable("dropFileType", SV.newS(""));
     }
-    boolean handled = sm.setStatusDragDropped(mode, x, y, fileName);
+    // we should handle this if it wasn't handled or the handler did not set doDrop = false
+    boolean handled = sm.setStatusDragDropped(mode, x, y, fileName, retType);
+    String type = getP("dropFileType").toString();
+    if (type.length() > 0 && retType != null) {
+      retType[0] = type;
+    }
     return (!handled || getP("doDrop").toString().equals("true"));
   }
 
-  /*
+  /**
    * resizeCallback is called whenever the applet gets a resize notification
    * from the browser
    * 
-   * jmolSetCallback("resizeCallback", "myResizeCallback") function
-   * myResizeCallback(width, height) {}
+   * jmolSetCallback("resizeCallback", "myResizeCallback") 
+   * 
+   * function myResizeCallback(width, height) {}
+   * 
+   * @param width 
+   * @param height 
    */
 
   public void setStatusResized(int width, int height) {
     sm.setStatusResized(width, height);
   }
 
-  /*
+  /**
    * scriptCallback is the primary way to monitor script status. In addition, it
    * serves to for passing information to the user over the status line of the
    * browser as well as to the console. Note that console messages are also sent
@@ -5481,6 +5507,8 @@ public class Viewer extends JmolViewer
    * "pick one more atom in order to spin..." for example
    * Viewer.evalStringWaitStatus -- see above -2, 0 only if error, >=1 at
    * termination Viewer.reportSelection "xxx atoms selected"
+   * 
+   * @param strStatus 
    */
 
   public void scriptStatus(String strStatus) {
@@ -5498,7 +5526,7 @@ public class Viewer extends JmolViewer
         strErrorMessageUntranslated);
   }
 
-  /*
+  /**
    * syncCallback traps script synchronization messages and allows for
    * cancellation (by returning "") or modification
    * 
@@ -5507,6 +5535,7 @@ public class Viewer extends JmolViewer
    * newScript }
    * 
    * StatusManager.syncSend Viewer.setSyncTarget Viewer.syncScript
+   * 
    */
 
   @Override
@@ -7437,7 +7466,7 @@ public class Viewer extends JmolViewer
   }
 
   public boolean getShowNavigationPoint() {
-    if (!g.navigationMode/* || !tm.canNavigate()*/)
+    if (!g.navigationMode)
       return false;
     return (tm.isNavigating() && !g.hideNavigationPoint
         || g.showNavigationPointAlways || getInMotion(true));

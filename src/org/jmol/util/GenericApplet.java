@@ -91,8 +91,8 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
-  public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
-    return viewer.setStatusDragDropped(mode, x, y, fileName);
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
+    return viewer.setStatusDragDropped(mode, x, y, fileName, retType);
   }
 
   @Override

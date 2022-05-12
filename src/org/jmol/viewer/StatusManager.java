@@ -550,14 +550,14 @@ public class StatusManager {
   }
 
   synchronized boolean setStatusDragDropped(int mode, int x, int y,
-                                            String fileName) {
+                                            String fileName, String[] retType) {
     setStatusChanged("dragDrop", 0, "", false);
     String sJmol = getJmolScriptCallback(CBK.DRAGDROP);
     boolean isEnabled = notifyEnabled(CBK.DRAGDROP);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.DRAGDROP,
           new Object[] { sJmol, Integer.valueOf(mode), Integer.valueOf(x),
-              Integer.valueOf(y), fileName });
+              Integer.valueOf(y), fileName, retType == null ? new String[1] : retType });
     return isEnabled;
   }
 

@@ -545,7 +545,7 @@ public class ScriptManager implements JmolScriptManager {
    * 
    */
   @Override
-  public void openFileAsync(String fname, int flags) {
+  public void openFileAsync(String fname, int flags, String type) {
     boolean scriptOnly = ((flags & SCRIPT_ONLY) != 0);
     if (!scriptOnly && (flags & CHECK_DIMS) != 0 && FileManager.isEmbeddable(fname)) 
       checkResize(fname);
@@ -571,7 +571,10 @@ public class ScriptManager implements JmolScriptManager {
       if (fname.endsWith("jvxl")) {
         cmd = "isosurface ";
       } else if (!fname.toLowerCase().endsWith(".spt")) {
-        String type = getDragDropFileTypeName(fname);
+        if (type == null)
+          type = getDragDropFileTypeName(fname);
+        else if (!type.endsWith("::"))
+          type += "::";
         if (type == null) {
           try {
             BufferedInputStream bis = vwr.getBufferedInputStream(fname);

@@ -112,10 +112,11 @@ public class FileDropper implements DropTargetListener {
     fname = fname.replace('\\', '/').trim();
     if (fname.indexOf("://") < 0)
       fname = (fname.startsWith("/") ? "file://" : "file:///") + fname;
-    if (!vwr.setStatusDragDropped(0, x, y, fname))
+    String[] retType = new String[1];
+    if (!vwr.setStatusDragDropped(0, x, y, fname, retType))
       return;
-    vwr.openFileAsyncSpecial(fname, JmolScriptManager.FILE_DROPPED 
-        | (statusListener == null ? 0 : JmolScriptManager.CHECK_DIMS));
+    vwr.openFileAsyncSpecialType(fname, JmolScriptManager.FILE_DROPPED 
+        | (statusListener == null ? 0 : JmolScriptManager.CHECK_DIMS), retType[0]);
 //    vwr.openFileDropped(fname, statusListener != null);
   }
 
