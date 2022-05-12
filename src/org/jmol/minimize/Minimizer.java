@@ -27,7 +27,6 @@ package org.jmol.minimize;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.P3d;
 
 import java.util.Hashtable;
 
@@ -697,7 +696,7 @@ public class Minimizer {
         if (bsBasis.get((a = minAtom.atom).i)) { 
           p.set(minAtom.coord[0], minAtom.coord[1],
               minAtom.coord[2]);
-          vwr.getModelkit(false).moveConstrained(a.i, p, true);
+          vwr.getModelkit(false).moveConstrained(a.i, p, true, true);
         }
       }
       // now transfer back all atom coordinates

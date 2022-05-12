@@ -316,14 +316,16 @@ final public class MeasureD {
    * @param ptA input point on line
    * @param axisUnitVector input unit vector
    * @param vectorProjection return for pt.sub(ptA) parallel to the axis
+   * @return distance moved
    */
-  public static void projectOntoAxis(P3d pt, P3d ptA,
+  public static double projectOntoAxis(P3d pt, P3d ptA,
                                      V3d axisUnitVector,
                                      V3d vectorProjection) {
     vectorProjection.sub2(pt, ptA);
     double projectedLength = vectorProjection.dot(axisUnitVector);
     pt.scaleAdd2(projectedLength, axisUnitVector, ptA);
     vectorProjection.sub2(pt, ptA);
+    return projectedLength;
   }
 
   /**

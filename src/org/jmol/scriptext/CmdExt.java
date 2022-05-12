@@ -6276,7 +6276,8 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
-      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt);
+      // do not allow projection using this command
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt, false);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;

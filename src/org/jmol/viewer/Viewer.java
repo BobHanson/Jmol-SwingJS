@@ -8052,8 +8052,7 @@ public class Viewer extends JmolViewer
     sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD,
         "setAtomCoords", n, bs);
     ms.setAtomCoords(bs, tokType, xyzValues);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
+    setStatusAtomMoved(true, bs);
     sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
         bs);
   }
@@ -8074,7 +8073,7 @@ public class Viewer extends JmolViewer
     ms.setAtomCoordsRelative(offset, bs);
     checkMinimization();
     if (doNotify) {
-      sm.setStatusAtomMoved(bs);
+      setStatusAtomMoved(false, bs);
       sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
           bs);
     }
@@ -8127,8 +8126,7 @@ public class Viewer extends JmolViewer
     sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD,
         "invertAtomCoords", n, bs);
     ms.invertSelected(pt, plane, ringAtomIndex, bs);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
+    setStatusAtomMoved(true, bs);
     sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
         bs);
     if (isClick)
@@ -8143,8 +8141,7 @@ public class Viewer extends JmolViewer
     if (bsAtoms.cardinality() == 0)
       return;
     ms.invertSelected(pt, plane, iAtom, bsAtoms);
-    checkMinimization();
-    sm.setStatusAtomMoved(bsAtoms);
+    setStatusAtomMoved(true, bsAtoms);
   }
 
   public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3d translation, P3d center,
@@ -8155,8 +8152,7 @@ public class Viewer extends JmolViewer
       return;
     ms.moveAtoms(m4, mNew, rotation, translation, bsAtoms, center, isInternal,
         translationOnly);
-    checkMinimization();
-    sm.setStatusAtomMoved(bsAtoms);
+    setStatusAtomMoved(true, bsAtoms);
   }
 
   private boolean movingSelected;
@@ -8222,7 +8218,7 @@ public class Viewer extends JmolViewer
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
             getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom,
-                ptNew);
+                ptNew, true);
           }
           if (!Double.isNaN(ptNew.x)) {
             ptNew.sub(ptCenter);
@@ -10752,67 +10748,11 @@ public class Viewer extends JmolViewer
     return getModelkit(false).cmdAssignSpaceGroup(bs, type, modelIndex);
   }
 
-//  @Override
-//  public void setIteratorForAtom(AtomIndexIterator iterator, int atomIndex,
-//                                 float distance) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setIteratorForPoint(AtomIndexIterator iter, int modelIndex, T3d pt,
-//                                  float maxDistance) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public float evalFunctionFloat(Object func, Object params, float[] values) {
-//    // TODO
-//    return 0;
-//  }
-//
-//  @Override
-//  public float getFloat(int tok) {
-//    // TODO
-//    return 0;
-//  }
-//
-//  @Override
-//  public void setFloatProperty(String propertyName, float value) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setBondTolerance(float bondTolerance) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setMinBondDistance(float minBondDistance) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setVectorScale(float vectorScaleValue) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setVibrationScale(float vibrationScaleValue) {
-//    // TODO
-//    
-//  }
-//
-//  @Override
-//  public void setVibrationPeriod(float vibrationPeriod) {
-//    // TODO
-//    
-//  }
-//
+  public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
+	    if (andCheckMinimize)
+	      checkMinimization();
+	    sm.setStatusAtomMoved(bs);
+	  }
+
 
 }

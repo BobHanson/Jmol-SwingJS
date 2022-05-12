@@ -134,13 +134,13 @@ public class ModelKit {
       default:
         throw new IllegalArgumentException();
       }      
-
     }
 
     
-    public void constrain(P3d ptOld, P3d ptNew) {
+    public void constrain(P3d ptOld, P3d ptNew, boolean allowProjection) {
       V3d v = new V3d();
       P3d p = P3d.newP(ptOld);
+      double d = 0;
       switch (type) {
       case TYPE_NONE:
         return;
@@ -151,24 +151,27 @@ public class ModelKit {
         return;
       case TYPE_VECTOR:
         if (pt == null) { // generic constraint 
-          MeasureD.projectOntoAxis(p, offset, unitVector, v);
-          if (p.distanceSquared(ptOld) >= JC.UC_TOLERANCE2) {
+          d = MeasureD.projectOntoAxis(p, offset, unitVector, v);
+          if (d * d >= JC.UC_TOLERANCE2) {
             ptNew.x = Double.NaN;
-            return;
+            break;
           }
         }
-        MeasureD.projectOntoAxis(ptNew, offset, unitVector, v);
+        d = MeasureD.projectOntoAxis(ptNew, offset, unitVector, v);        
         break;
       case TYPE_PLANE:
         if (pt == null) { // generic constraint 
           if (Math.abs(MeasureD.getPlaneProjection(p, plane, v, v)) > 0.01f) {
             ptNew.x = Double.NaN;
-            return;
+            break;
           }
         }
-        MeasureD.getPlaneProjection(ptNew, plane, v, v);
+        d = MeasureD.getPlaneProjection(ptNew, plane, v, v);
         ptNew.setT(v);
         break;
+      }
+      if (!allowProjection && Math.abs(d) > 1e-10) {
+        ptNew.x = Double.NaN;
       }
     }
     
@@ -2054,9 +2057,10 @@ public class ModelKit {
    *        atom index
    * @param p
    *        new position for this atom, which may be modified
+   * @param allowProjection 
    * @return number of atoms moved
    */
-  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p) {
+  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, boolean allowProjection) {
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return 0;
@@ -2088,14 +2092,17 @@ public class ModelKit {
       }
     }
     boolean isOccSet = (bsOcc.cardinality() > 1);
-    if ((n = moveConstrained(iatom, p, !isOccSet)) == 0 || Double.isNaN(p.x)
+    if ((n = moveConstrained(iatom, p, !isOccSet, allowProjection)) == 0 || Double.isNaN(p.x)
         || !isOccSet) {
+      if (n > 0)
+        vwr.setStatusAtomMoved(true, bsOcc);
       return n;
     }
     for (int i = bsOcc.nextSetBit(0); i >= 0; i = bsOcc.nextSetBit(i + 1)) {
       iatom = (constraint == null ? vwr.ms.getBasisAtom(i).i : i);
       n += assignMoveAtom(iatom, p, null);
     }
+    vwr.setStatusAtomMoved(true, bsOcc);
     return n;
   }
 
@@ -2236,7 +2243,7 @@ public class ModelKit {
    * @param doAssign allow for exit with setting ptNew but not creating atoms
    * @return number of atoms moved
    */
-  public int moveConstrained(int iatom, P3d ptNew, boolean doAssign) {
+  public int moveConstrained(int iatom, P3d ptNew, boolean doAssign, boolean allowProjection) {
     int n = 0;
     SymmetryInterface sym;
     if (iatom < 0 || (sym = vwr.getOperativeSymmetry()) == null) {
@@ -2267,12 +2274,12 @@ public class ModelKit {
           m.rotTrans(p);
           sym.toCartesian(p, true);
           ptNew.set(p.x, p.y, p.z);
-          c.constrain(b, ptNew);
+          c.constrain(b, ptNew, allowProjection);
           iatom = b.i;
         }
       }
     } else {
-      c.constrain(vwr.ms.at[iatom], ptNew);
+      c.constrain(vwr.ms.at[iatom], ptNew, allowProjection);
     }
     if (iatom >= 0 && !Double.isNaN(ptNew.x)) {
       if (!doAssign)
