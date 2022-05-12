@@ -349,7 +349,7 @@ public class DataManager implements JmolDataManager {
       // load array
       for (int i = 0, n = ddd.length, p = bsSelected.nextSetBit(0); p >= 0
           && i < n; p = bsSelected.nextSetBit(p + 1)) {
-        dddnew[i++] = ddd[p];
+        dddnew[i++] = (p < ddd.length ? ddd[p] : null);
       }
       return dddnew;
     case DATA_TYPE_ADD:
@@ -358,7 +358,7 @@ public class DataManager implements JmolDataManager {
       // load array
       for (int i = 0, n = dd.length, p = bsSelected.nextSetBit(0); p >= 0
           && i < n; p = bsSelected.nextSetBit(p + 1))
-        ddnew[i++] = dd[p];
+        ddnew[i++] = (p < dd.length ? dd[p] : null);
       return ddnew;
     case DATA_TYPE_AD:
       // standard double[]
@@ -367,7 +367,7 @@ public class DataManager implements JmolDataManager {
       // load array
       for (int i = 0, n = d.length, p = bsSelected.nextSetBit(0); p >= 0
           && i < n; p = bsSelected.nextSetBit(p + 1))
-        dnew[i++] = d[p];
+       dnew[i++] = (p < d.length ? d[p] : 0);
       return dnew;
     }
     return null;
