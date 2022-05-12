@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Collect -D & -m options as java arguments
+command=java
+while [ `echo $1 | egrep '^-D|^-m' | wc -l` != 0 ]; do
+	command="$command $1"
+	shift
+done
+
+if [ -f ./JmolD.jar ] ; then
+  jarpath=./JmolD.jar
+elif [ -f ./build/JmolD.jar ] ; then
+  jarpath=./build/JmolD.jar
+elif [ -f $JMOL_HOME/JmolD.jar ] ; then
+  jarpath=$JMOL_HOME/JmolD.jar
+elif [ -f /usr/share/jmol/JmolD.jar ] ; then
+  jarpath=/usr/share/jmol/JmolD.jar
+else
+  echo JmolD.jar not found
+  exit
+fi
+$command -Xmx512m -jar $jarpath $@

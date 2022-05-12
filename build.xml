@@ -539,9 +539,9 @@ all support for previous versions removed
 
     <copy todir="build">
       <fileset dir=".">
-        <include name="jmol" />
-        <include name="jmol.bat" />
-        <include name="jmol.sh" />
+        <include name="jmolD" />
+        <include name="jmolD.bat" />
+        <include name="jmolD.sh" />
       </fileset>
     </copy>
 
@@ -1148,19 +1148,19 @@ all support for previous versions removed
         <include name="jspecview.properties" />
       </fileset>
       <fileset dir=".">
-        <include name="jmol" />
-        <include name="jmol.sh" />
-        <include name="jmol.mac" />
-        <include name="jmol.bat" />
+        <include name="jmolD" />
+        <include name="jmolD.sh" />
+        <!-- include name="jmolD.mac" / -->
+        <include name="jmolD.bat" />
         <include name="*.txt" />
       </fileset>
     </copy>
     <copy file="src/org/jmol/viewer/Jmol.properties" tofile="build/dist/jmol-${version}/CHANGES.txt" />
     <chmod perm="ugo+rx">
       <fileset dir="build/dist/jmol-${version}">
-        <include name="jmol"/>
-        <include name="jmol.sh"/>
-        <include name="jmol.bat"/>
+        <include name="jmolD"/>
+        <include name="jmolD.sh"/>
+        <include name="jmolD.bat"/>
       </fileset>
     </chmod>
 
@@ -1181,11 +1181,11 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmol-${version}-binary.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmol-${version}/**" />
       <tarfileset dir="build/dist"
                   mode="755"
-    	    includes="jmol-${version}/jmol,jmol-${version}/jmol.sh" />
+    	    includes="jmol-${version}/jmol,jmol-${version}/jmol.sh,jmol-${version}/jmolD,jmol-${version}/jmolD.sh" />
     </tar>
 
     <!-- then build source distribution -->
@@ -1257,11 +1257,11 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmol-${version}-full.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmol-${version}/**" />
       <tarfileset dir="build/dist/jmol-${version}"
                   mode="755"
-                  includes="jmol,jmol.sh" />
+                  includes="jmol,jmol.sh,jmolD,jmolD.sh" />
     </tar>
 
     <!-- Copy other files to have a complete distribution -->
@@ -1323,7 +1323,7 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmolapisio-${version}.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmolapisio-${version}/**" />
     </tar>
   </target>

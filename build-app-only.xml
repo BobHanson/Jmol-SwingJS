@@ -183,6 +183,47 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
     </jar>
   	<echo>build/JmolD.jar created (unsigned)</echo>
   	<copy file="build/JmolD.jar" tofile="dist/JmolD.jar" />
+  	
+  	
+    <echo message="Creating JmolDataD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
+	<jar destfile="build/JmolDataD.jar"
+	 manifest="manifest/applicationData.txt">
+	<fileset dir="${classes.dir}" >
+	<exclude name="**/Test*.class" />
+	<exclude name="**/jmol/jcamp/**" />
+	<exclude name="**/jmol/applet/*" /> 
+	<exclude name="**/.*" />
+	<exclude name="**/*.dx" />
+	<exclude name="**/Test*.class" />
+	<exclude name="ant/**" />
+	<exclude name="com/**" />
+	<include name="net/sf/**" />
+	<include name="javajs/api/**" />
+	<include name="javajs/awt/**" />
+	<include name="javajs/export/**" />
+	<include name="javajs/img/**" />
+	<include name="javajs/util/**" />
+	<include name="**/jspecview/**" />
+	<include name="**/org/gennbo/**" />
+	<include name="**/org/apache/**" />
+	<include name="**/org/qcschema/**" />
+	<include name="**/jmol/**" />
+	<exclude name="**/jmol/_documents/**" />
+	<exclude name="**/jmol/applet/**" />
+	<exclude name="**/jmol/*js/**" />
+	<exclude name="**/jmol/console/**" />
+	<exclude name="**/jmol/popup/**" />
+	<exclude name="org/jmol/util/BitSet32.class" />
+	<exclude name="**/openscience/jmol/Data/**" />
+	<exclude name="**/openscience/jmol/app/Jmol.class" />
+	<exclude name="**/openscience/jmol/app/images/**" />
+	<exclude name="**/openscience/jmol/app/jmolpanel/**" />
+	<exclude name="**/openscience/jmol/app/webexport/**" />
+	</fileset>
+	<fileset dir="${appjars.dir}" includes="**/*"/>
+	</jar>
+
+  	
   </target>
 
   <target name="clean" id="clean">
