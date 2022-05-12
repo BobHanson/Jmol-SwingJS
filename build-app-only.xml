@@ -6,7 +6,7 @@
 
 see build.README.txt
 
-build-app-min just builds Jmol.jar with no internationalization, just for quick testing. 
+build-app-min just builds JmolD.jar with no internationalization, just for quick testing. 
 
   -->
 	
@@ -155,7 +155,7 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
 
   <target name="jar" id="jar"
           depends="init,classes,libjars">
-     <jar destfile="build/Jmol.jar"
+     <jar destfile="build/JmolD.jar"
          manifest="manifest/application.txt">
       <fileset dir="${classes.dir}" >
         <exclude name="**/.*" />
@@ -181,8 +181,8 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
       <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
       <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
     </jar>
-  	<echo>build/Jmol.jar created (unsigned)</echo>
-  	<copy file="build/Jmol.jar" tofile="dist/Jmol.jar" />
+  	<echo>build/JmolD.jar created (unsigned)</echo>
+  	<copy file="build/JmolD.jar" tofile="dist/JmolD.jar" />
   </target>
 
   <target name="clean" id="clean">
@@ -206,7 +206,7 @@ build-app-min just builds Jmol.jar with no internationalization, just for quick 
   </target>
   
   <target name="run" id="run" depends="main">
-    <java fork="true" jar="build/Jmol.jar" />
+    <java fork="true" jar="build/JmolD.jar" />
   </target>
 
   	
