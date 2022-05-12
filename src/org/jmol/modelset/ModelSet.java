@@ -1841,7 +1841,7 @@ public class ModelSet extends BondCollection {
           || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
       int a0 = (modelIndex <= 0 ? 0 : am[modelIndex].firstAtomIndex);
       for (int i = a1; --i >= a0;) {
-        if ((modelIndex < 0 || at[i].mi == modelIndex)
+        if ((modelIndex < 0 || !isDeleted(at[i]) && at[i].mi == modelIndex)
             && ((tok == T.modulation || tok == 0)
                 && (v = (Vibration) getModulation(i)) != null || (tok == T.vibration || tok == 0)
                 && (v = getVibration(i, false)) != null) && v.isNonzero())
@@ -1949,7 +1949,7 @@ public class ModelSet extends BondCollection {
       bsAtoms = getModelAtomBitSetIncludingDeleted(-1, false);
     vwr.getOrCalcPartialCharges(am[modelIndex].bsAtoms, null);
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-      if (at[i].mi != modelIndex || at[i].isDeleted()) {
+      if (isDeleted(at[i]) || at[i].mi != modelIndex) {
         continue;
       }
       double c = partialCharges[i];
