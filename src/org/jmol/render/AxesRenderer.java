@@ -86,8 +86,10 @@ public class AxesRenderer extends CageRenderer {
     double scale = axes.scale;
     if (isabcxyz) {
       // both abc and xyz
-      render1(axes, mad10, false, axisType, isUnitCell, 2, null);
-      vwr.setBooleanProperty("axesmolecular", true);
+      if ("xyzabc".equals(axes.axes2))
+        render1(axes, mad10, false, axisType, isUnitCell, 2, null);
+      if (!"abc".equals(axes.axes2))
+        vwr.setBooleanProperty("axesmolecular", true);
       axes.initShape();
       render1(axes, mad10, true, null, false, scale, axes.axes2);
       vwr.setBooleanProperty("axesunitcell", true);
@@ -159,7 +161,7 @@ public class AxesRenderer extends CageRenderer {
       double scaleFactor = zoomDimension / 10d * scale;
       if (g3d.isAntialiased())
         scaleFactor *= 2;
-      if (isUnitCell && isXY)
+      if ((isUnitCell || "abc".equals(axes.axes2)) && isXY)
         scaleFactor /= 2;
       for (int i = 0; i < 3; i++) {
         P3d pt = p3Screens[i];

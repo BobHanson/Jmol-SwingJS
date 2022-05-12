@@ -116,7 +116,7 @@ public class UccageRenderer extends CageRenderer {
       axes.reinitShape();
     P3d[] axisPoints = (axes == null
         || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 
-        || axes.axisXY.z != 0 && axes.axes2 == null
+        || axes.axisXY.z != 0 && (axes.axes2 == null || axes.axes2.length() == 3)
         || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0
             ? null
             : axes.axisPoints);
