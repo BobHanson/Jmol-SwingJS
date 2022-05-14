@@ -657,8 +657,9 @@ public final class ModelLoader {
     models[modelIndex].insertionCount = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
         && ms.modelSetName.startsWith("Jmol Model Kit")
-        || modelName.startsWith("Jmol Model Kit") || "Jme".equals(ms.getInfo(
-        modelIndex, "fileType")));
+        || modelName.startsWith("Jmol Model Kit") 
+        || "Jme".equals(ms.getInfo(
+        modelIndex, "fileType")) && is2D);
     models[modelIndex].isModelKit = isModelKit;
   }
 

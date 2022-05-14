@@ -520,7 +520,7 @@ public class GlobalSettings {
   int minimizationSteps = 100;
   boolean minimizationRefresh = true;
   boolean minimizationSilent = false;
-  double minimizationCriterion = 0.001f;
+  double minimizationCriterion = 0.001;
 
   //rendering
 
@@ -636,7 +636,7 @@ public class GlobalSettings {
   boolean hideNameInPopup = false;
   int hoverDelayMs = 500;
   public int labelPointerWidth = 2; // BH 2022.01.22
-  double loadAtomDataTolerance = 0.01f;
+  double loadAtomDataTolerance = 0.01d;
   public boolean logCommands = false;
   public boolean logGestures = false;
   public String measureDistanceUnits = "nanometers";
@@ -713,7 +713,7 @@ public class GlobalSettings {
   boolean ellipsoidBall = true;
 
   int ellipsoidDotCount = 200;
-  double ellipsoidAxisDiameter = 0.02f;
+  double ellipsoidAxisDiameter = 0.02d;
 
   //testing
 

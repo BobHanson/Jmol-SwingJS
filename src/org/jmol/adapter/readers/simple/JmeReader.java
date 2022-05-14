@@ -73,7 +73,13 @@ public class JmeReader extends AtomSetCollectionReader {
     int bondCount = parseInt();
     readAtoms(ac);
     readBonds(bondCount);
-    set2D();
+    if (asc.ac == 0 && line.equals("0") && !merging) {
+      Atom atom = asc.addNewAtom();
+      setAtomCoordXYZ(atom, Double.NaN, Double.NaN, 0);
+      addJmolScript("delete thisModel");
+    } else {
+      set2D();
+    }
     continuing = false;
   }
 
@@ -94,7 +100,8 @@ public class JmeReader extends AtomSetCollectionReader {
       }
       atom.elementSymbol = elementSymbol;
     }
-    asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+    if (ac > 0)
+      asc.setModelInfoForSet("dimension", "2D", asc.iSet);
     /*
     if (!doMinimize)
       return;

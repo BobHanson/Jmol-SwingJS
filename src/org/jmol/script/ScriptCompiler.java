@@ -1249,6 +1249,7 @@ public class ScriptCompiler extends ScriptTokenParser {
               //$FALL-THROUGH$
             case T.data:
             case T.file:
+            case T.spacegroup:
             case T.inline:
             case T.model:
             case T.smiles:

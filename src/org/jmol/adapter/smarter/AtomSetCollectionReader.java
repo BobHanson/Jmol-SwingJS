@@ -220,7 +220,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private SB loadNote = new SB();
   public boolean doConvertToFractional;
   boolean fileCoordinatesAreFractional;
-  boolean merging;
+  protected boolean merging;
   double symmetryRange;
   private int[] firstLastStep;
   private int lastModelNumber = Integer.MAX_VALUE;
@@ -524,7 +524,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (asc.errorMessage != null)
       return asc.errorMessage + "\nfor file " + filePath
           + "\ntype " + name;
-    if ((asc.bsAtoms == null ? asc.ac == 0
+    if (!merging && (asc.bsAtoms == null ? asc.ac == 0
         : asc.bsAtoms.nextSetBit(0) < 0)
         && fileType.indexOf("DataOnly") < 0 && asc.atomSetInfo.get("dataOnly") == null)
       return "No atoms found\nfor file " + filePath + "\ntype " + name;

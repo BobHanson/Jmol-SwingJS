@@ -4527,10 +4527,14 @@ public class ScriptEval extends ScriptExpr {
             nFiles = filenames.length;
         }
         break;
+      case T.spacegroup:
+        i-= 2;
+        filename = "0";
+        //$FALL-THROUGH$
       case T.inline:
         isInline = true;
         i++;
-        loadScript.append(" " + modelName);
+        loadScript.append(" inline");
         break;
       case T.smiles:
         isSmiles = true;
