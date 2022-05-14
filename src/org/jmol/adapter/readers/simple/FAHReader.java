@@ -229,7 +229,7 @@ import javajs.util.PT;
     }
   
     private void getTopData() {
-      String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
+      String fileName = filePath;//FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
       int pt = fileName.lastIndexOf(".");
       if (pt < 0)
         pt = fileName.length();

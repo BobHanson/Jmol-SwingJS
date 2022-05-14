@@ -35,6 +35,7 @@ import org.jmol.script.SV;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -259,7 +260,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     debugging = Logger.debugging;
     this.htParams = htParams;
-    filePath = "" + htParams.get("fullPathName");
+    // check for drag-drop or coerced type
+    filePath = FileManager.stripTypePrefix("" + htParams.get("fullPathName"));
     int i = filePath.lastIndexOf('/');
     fileName = filePath.substring(i + 1);
     if (readerOrDocument instanceof BufferedReader)

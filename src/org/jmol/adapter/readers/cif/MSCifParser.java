@@ -340,8 +340,9 @@ public class MSCifParser extends MSRdr {
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
-            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
-                + "_";
+            type_id = modulationFields[tok].substring(11, 12).toUpperCase();
+//            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
+//                + "_";
             break;
           }
           type_id += sep + field;

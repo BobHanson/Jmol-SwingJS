@@ -252,7 +252,7 @@ public class GenNBOReader extends MOReader {
   }
 
   private String getFileData(String ext) throws Exception {
-    String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
+    String fileName = filePath;//FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
     int pt = fileName.lastIndexOf(".");
     if (pt < 0)
       pt = fileName.length();

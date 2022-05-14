@@ -4388,7 +4388,7 @@ public class CmdExt extends ScriptExt {
         if ("?".equals(fileName))
           fileName = "?Jmol." + vwr.getP("_fileType");
         if (showOnly)
-          data = vwr.getCurrentFileAsString("script");
+          data = getCurrentModelFileAsString();
         else
           writeFileData = true;
       } else if (PT.isOneOf(data,";CIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;PWSLAB;XSF;")) {
@@ -5141,7 +5141,7 @@ public class CmdExt extends ScriptExt {
         if (!chk) {
           if (filter == null)
             vwr.sm.clearConsole();
-          msg = vwr.getCurrentFileAsString("script");
+          msg = getCurrentModelFileAsString();
         }
         if (msg == null)
           msg = "<unavailable>";
@@ -5329,6 +5329,10 @@ public class CmdExt extends ScriptExt {
         showString(str + " = "
             + ((SV) eval.getParameter(str, T.variable, true)).escape());
     }
+  }
+
+  public String getCurrentModelFileAsString() {
+    return vwr.getFileAsString("" + vwr.getParameter("_modelFile"));
   }
 
   private String filterShow(String msg, String name) {

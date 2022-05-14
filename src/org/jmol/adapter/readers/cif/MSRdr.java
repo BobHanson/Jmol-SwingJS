@@ -920,8 +920,8 @@ public class MSRdr implements MSInterface {
                 + a.atomName);
       } else {
         if (Logger.debuggingHigh) {
-          Logger.debug("setModulation Uij(initial)=" + Escape.eAD(a.anisoBorU));
-          Logger.debug("setModulation tensor="
+          Logger.info("setModulation Uij(initial) " + a.atomName + " =" + Escape.eAD(a.anisoBorU));
+          Logger.info("setModulation tensor "+ a.atomName + "="
               + Escape.e(((Tensor) a.tensors.get(0)).getInfo("all")));
         }
         for (Entry<String, Double> e : ms.htUij.entrySet())

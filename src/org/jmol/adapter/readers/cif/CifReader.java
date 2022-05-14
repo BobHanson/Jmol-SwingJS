@@ -333,6 +333,9 @@ public class CifReader extends AtomSetCollectionReader {
         pdbID = data;
       } else if (key.startsWith("_topol_")){
         getTopologyParser().ProcessRecord(key, data);
+      } else {
+        // see MMCifReader or MSRdr
+        processSubclassEntry();
       }
     }
     return true;
@@ -1720,6 +1723,8 @@ public class CifReader extends AtomSetCollectionReader {
               field = field.replace(';', ' ');
               symops.addLast(field);
               setSymmetryOperator(field);
+              if (modulated && modDim == 0)
+                modDim = getModulationReader().modDim;
             }
           break;
         case SYM_MAGN_CENTERING:
