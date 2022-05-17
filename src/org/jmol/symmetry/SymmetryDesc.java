@@ -1335,11 +1335,13 @@ public class SymmetryDesc {
     case T.list:
       returnType = T.label;
       break;
+    case T.draw:
+      returnType = T.draw;
+      break;
     case T.array:
       returnType = getType(id);
       switch (returnType) {
       case T.atoms:
-      case T.draw:
       case T.full:
       case T.list:
       case T.point:
@@ -1447,8 +1449,9 @@ public class SymmetryDesc {
       }
       Object ret1 = getSymopInfoForPoints(sym, iModel, op, translation, pt, pt2, id,
           stype, scaleFactor, nth, options, bsInfo);
-      if (asString)
+      if (asString) {
         return ret1;
+      }
       if (ret1 instanceof String)
         return nullRet; // two atoms are not connected, no such oper
       info = (Object[]) ret1;
