@@ -111,6 +111,11 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
+  public void openFileAsyncSpecialType(String fileName, int flags, String type) {
+    viewer.openFileAsyncSpecialType(fileName, flags, type);
+  }
+
+  @Override
   public void processTwoPointGesture(double[][][] touches) {
     viewer.processTwoPointGesture(touches);
   }

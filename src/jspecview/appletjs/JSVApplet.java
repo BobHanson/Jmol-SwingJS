@@ -638,6 +638,12 @@ public class JSVApplet implements JSVAppletInterface,
 		app.vwr.openFileAsyncSpecial(fileName, flags);
 	}
 
+  @Override
+  public void openFileAsyncSpecialType(String fileName, int flags,
+                                       String type) {
+    openFileAsyncSpecial(fileName, flags);
+  }
+
 	@Override
 	public void processTwoPointGesture(double[][][] touches) {
 		app.vwr.processTwoPointGesture(touches);

@@ -13,6 +13,7 @@ public interface JSInterface {
   void destroy();
   String getFullName();
   void openFileAsyncSpecial(String fileName, int flags);
+  void openFileAsyncSpecialType(String fileName, int flags, String type);
   boolean processMouseEvent(int id, int x, int y, int modifiers, long time);
   void processTwoPointGesture(double[][][] touches);
   void setDisplay(Object canvas);
