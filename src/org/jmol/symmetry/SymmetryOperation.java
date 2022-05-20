@@ -828,10 +828,11 @@ public class SymmetryOperation extends M4d {
       mat.getRow(i, row);
       String term = "";
       for (int j = 0; j < 3; j++)
-        if (row[j] != 0)
+        if (approxD(row[j]) != 0)
           term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      term += xyzFraction12( (is12ths ? row[3] : row[3] * denom), denom, allPositive,
-          halfOrLess);
+      if (approxD(row[3]) != 0)
+        term += xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
+            allPositive, halfOrLess);
       str += "," + term;
     }
     return str.substring(1);
@@ -893,7 +894,7 @@ public class SymmetryOperation extends M4d {
     // Castep reader only
     double xabs = Math.abs(x);
     String m = (x < 0 ? "-" : "");
-    int x24 = (int) approxF(xabs * 24);
+    int x24 = (int) approxD(xabs * 24);
     if (x24 / 24d == (int) (x24 / 24d))
       return m + (x24 / 24);
     if (x24 % 8 != 0) {
@@ -902,10 +903,6 @@ public class SymmetryOperation extends M4d {
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
   }
   
-  static double approxF(double f) {
-    return PT.approxD(f, 100);
-  }
-
   static double approxD(double f) {
     return PT.approxD(f, 100);
   }

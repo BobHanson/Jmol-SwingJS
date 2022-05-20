@@ -93,7 +93,8 @@ public class SymmetryDesc {
   private final static int RET_ID = 16;
   private final static int RET_CIF2 = 17;
   private final static int RET_XYZCANON = 18;
-  private final static int RET_COUNT = 19;
+  private final static int RET_XYZNORMALIZED = 19;
+  private final static int RET_COUNT = 20;
 
   // additional flags
   final static int RET_LIST = 21;
@@ -118,12 +119,13 @@ public class SymmetryDesc {
       "_type", 
       "id", 
       "cif2", 
-      "xyzCanonical" };
+      "xyzCanonical",
+      "xyzNormalized"};
 
   //////////// private methods ///////////
 
   /** Determine the type of this request. 
-   * Note that label and xyz will be returned as T.xys and T.label 
+   * Note that label and xyz will be returned as T.xyz and T.label 
    * 
    * @param id
    * @return a code that identifies this request.
@@ -171,6 +173,7 @@ public class SymmetryDesc {
     case T.label:
     case T.id:
     case T.xyz:
+    case T.fuxyz:
     case T.matrix3f:
     case T.origin:
       return "";
@@ -220,6 +223,8 @@ public class SymmetryDesc {
       return io[RET_XYZ] + "  \t" + io[RET_LABEL];
     case T.xyz:
       return io[RET_XYZ];
+    case T.fuxyz:
+      return io[RET_XYZNORMALIZED];
     case T.origin:
       return io[RET_XYZORIGINAL];
     default:
@@ -286,6 +291,9 @@ public class SymmetryDesc {
       break;
     case T.xyz:
       bsInfo.set(RET_XYZ);
+      break;
+    case T.fuxyz:
+      bsInfo.set(RET_XYZNORMALIZED);
       break;
     case T.origin:
       bsInfo.set(RET_XYZORIGINAL);
@@ -359,16 +367,12 @@ public class SymmetryDesc {
   private static P3d pta01 = new P3d();
   private static P3d pta02 = new P3d();
   private static V3d vtrans = new V3d();
-  private static P3d p1 = new P3d();
-  private static P3d p0 = new P3d();
-  private static P3d p3 = new P3d();
-  private static P3d p4 = new P3d();
 
   /**
    * 
    * @param op
    * @param uc
-   * @param ptAtom
+   * @param ptFrom
    *        optional initial atom point
    * @param ptTarget
    *        optional target atom point
@@ -422,9 +426,9 @@ public class SymmetryDesc {
    * 
    */
   private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
-                                 P3d ptAtom, P3d ptTarget, String id,
-                                 double scaleFactor, int options,
-                                 boolean haveTranslation, BS bsInfo) {
+                                   P3d ptFrom, P3d ptTarget, String id,
+                                   double scaleFactor, int options,
+                                   boolean haveTranslation, BS bsInfo) {
     if (!op.isFinalized)
       op.doFinalize();
     boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
@@ -434,8 +438,7 @@ public class SymmetryDesc {
     ptemp.set(0, 0, 0);
     vtrans.set(0, 0, 0);
     P4d plane = null;
-    P3d pta00 = (ptAtom == null || Double.isNaN(ptAtom.x) ? new P3d() : P3d.newPd(ptAtom));
-
+    P3d pta00 = (ptFrom == null || Double.isNaN(ptFrom.x) ? new P3d() : ptFrom);
     if (ptTarget != null) {
 
       // Check to see that this is the correct operator
@@ -443,19 +446,6 @@ public class SymmetryDesc {
       // Check to see if the two points only differ by
       // a translation after transformation.
       // If so, add that difference to the matrix transformation
-
-      //      setFractional(uc, pta00, pta01, ptemp);
-      //      op.rotTrans(pta01);
-      //      uc.toCartesian(pta01, false);
-      //      uc.toUnitCell(pta01, ptemp);
-      //      pta02.setT(ptTarget);
-      //      uc.toUnitCell(pta02, ptemp);
-      //      if (pta01.distance(pta02) > 0.1d)
-      //        return null;
-      //      setFractional(uc, pta00, pta01, null);
-      //      op.rotTrans(pta01);
-      //      setFractional(uc, ptTarget, pta02, null);
-      //      vtrans.sub2(pta02, pta01)
 
       pta01.setT(pta00);
       pta02.setT(ptTarget);
@@ -466,10 +456,6 @@ public class SymmetryDesc {
       uc.unitize(pta01);
       vtrans.setT(pta02);
       uc.unitize(pta02);
-      //      uc.toCartesian(pta01, true);
-      //      uc.toCartesian(pta02, true);
-      //      if (pta01.distanceSquared(pta02) > 0.1d)
-      //        return null;
       if (pta01.distanceSquared(pta02) >= JC.UC_TOLERANCE2)
         return null;
       vtrans.sub(ptemp);
@@ -542,7 +528,7 @@ public class SymmetryDesc {
     P3d pa1 = P3d.newPd(info[0]);
     P3d ax1 = P3d.newPd(info[1]);
     int ang1 = (int) Math.abs(PT.approxD(((P3d) info[3]).x, 1));
-    double pitch1 =  SymmetryOperation.approxF(((P3d) info[3]).y);
+    double pitch1 = SymmetryOperation.approxD(((P3d) info[3]).y);
 
     if (haveInversion) {
 
@@ -683,7 +669,7 @@ public class SymmetryDesc {
         // ax + by + cz + d = 0
         // so if a point is in the plane, then N dot X = -d
         w = -vtemp.x * pa1.x - vtemp.y * pa1.y - vtemp.z * pa1.z;
-        plane = P4d.new4( vtemp.x, vtemp.y, vtemp.z, w);
+        plane = P4d.new4(vtemp.x, vtemp.y, vtemp.z, w);
         margin = (Math.abs(w) < 0.01f && vtemp.x * vtemp.y > 0.4 ? 1.30d
             : 1.05d);
         isRotation = false;
@@ -704,24 +690,13 @@ public class SymmetryDesc {
         ipt = new P3d();
         ipt.scaleAdd2(0.5, d, pa1);
         ptinv = new P3d();
-        ptinv.scaleAdd2(-2, ipt, pta00);
+        ptinv.scaleAdd2(-2, ipt, pt0);
         ptinv.scale(-1);
       }
 
     } else if (trans != null) {
-
-      // get rid of unnecessary translations added to keep most operations
-      // within cell 555
-
       ptemp.setT(trans);
       uc.toFractional(ptemp, false);
-      //      if (SymmetryOperation.approxF(ptemp.x) == 1)
-      //        ptemp.x = 0;
-      //      if (SymmetryOperation.approxF(ptemp.y) == 1)
-      //        ptemp.y = 0;
-      //      if (SymmetryOperation.approxF(ptemp.z) == 1)
-      //        ptemp.z = 0;
-
       ftrans.setT(ptemp);
       uc.toCartesian(ptemp, false);
       trans.setT(ptemp);
@@ -732,40 +707,28 @@ public class SymmetryDesc {
     int ang = ang1;
     approx0(ax1);
 
-    pa1.putP(p1);
-    pt0.putP(p0);
-    
     if (isRotation) {
-      
+
       P3d ptr = new P3d();
 
       vtemp.setT(ax1);
-
-      // draw the lines associated with a rotation
-
       int ang2 = ang1;
+      P3d p0;
       if (haveInversion) {
-        ptr.add2(pa1, vtemp);
-        ptr.putP(p3);
-        ptinv.putP(p4);
-        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
+        ptr.setT(ptinv);
+        p0 = ptinv;
       } else if (pitch1 == 0) {
+        p0 = pt0;
         ptr.setT(pa1);
-        ptemp.scaleAdd2(1, ptr, vtemp);
-        ptemp.putP(p3);
-        pta00.putP(p4);
-        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
       } else {
-        ptemp.add2(pa1, vtemp);
-        ptr.scaleAdd2(0.5d, vtemp,pa1);
-        ptemp.putP(p3);
-        pta00.putP(p4);
-        ang2 = (int) Math.round(MeasureD.computeTorsion(p4, p1, p3, p0, true));
+        p0 = pt0;
+        ptr.scaleAdd2(0.5D, vtemp, pa1);
       }
-
-      if (ang2 != 0)
+      ptemp.add2(pa1, vtemp);
+      ang2 = (int) Math
+          .round(MeasureD.computeTorsion(pta00, pa1, ptemp, p0, true));
+      if (SymmetryOperation.approxD(ang2) != 0)
         ang1 = ang2;
-
       if (!haveInversion && pitch1 == 0 && (ax1.z < 0
           || ax1.z == 0 && (ax1.y < 0 || ax1.y == 0 && ax1.x < 0))) {
         ax1.scale(-1);
@@ -773,7 +736,6 @@ public class SymmetryDesc {
       }
 
     }
-
     // time to get the description
 
     String info1 = null;
@@ -893,6 +855,8 @@ public class SymmetryDesc {
 
       String color;
 
+      boolean isSpecial = (pta00.distance(pt0) < 0.2d);
+
       if (isRotation) {
 
         P3d ptr = new P3d();
@@ -907,68 +871,80 @@ public class SymmetryDesc {
 
         if (haveInversion) {
           opType = drawid + "rotinv";
-          ptr.add2(pa1, vtemp);
           if (pitch1 == 0) {
+            // atom to atom or no change in atom position
             ptr.setT(ipt);
             vtemp.scale(3 * scaleFactor);
-            ptemp.scaleAdd2(-1, vtemp, pa1);
-            drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
+            if (isSpecial) {
+              ptemp.scaleAdd2(0.25d, vtemp, pa1);
+              pa1.scaleAdd2(-0.24d, vtemp, pa1);
+              ptr.scaleAdd2(0.31d, vtemp, ptr);
+              color = "cyan";
+            } else {
+              ptemp.scaleAdd2(-1, vtemp, pa1);
+              drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
+            }
+          } else {
+            ptr.setT(pa1);
+            if (!isSpecial) {
+              scale = pta00.distance(ptr);
+              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(ptr))
+                  .append(Escape.eP(ptinv)).append(" color red");
+              draw1.append(drawid).append("rotLine2 ").append(Escape.eP(ptr))
+                  .append(Escape.eP(pta00)).append(" color red");
+            }
           }
-          scale = pt0.distance(ptr);
-          draw1.append(drawid).append("rotLine1 ").append(Escape.ePd(ptr))
-              .append(Escape.ePd(ptinv)).append(" color red");
-          draw1.append(drawid).append("rotLine2 ").append(Escape.ePd(ptr))
-              .append(Escape.ePd(pt0)).append(" color red");
-        } else if (pitch1 == 0) {
-          opType = drawid + "rot";
-          boolean isSpecial = (pta00.distance(pt0) < 0.2d);
-          if (!isSpecial) {
-            draw1.append(drawid).append("rotLine1 ").append(Escape.ePd(pta00))
-                .append(Escape.ePd(pa1)).append(" color red");
-            draw1.append(drawid).append("rotLine2 ").append(Escape.ePd(pt0))
-                .append(Escape.ePd(pa1)).append(" color red");
-          }
-          vtemp.scale(3 * scaleFactor);
-          ptemp.scaleAdd2(-1, vtemp, pa1);
-          drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp,
-              isTimeReversed ? "gray" : "red");
-          ptr.setT(pa1);
-          if (pitch1 == 0 && pta00.distance(pt0) < 0.2)
-            ptr.scaleAdd2(0.5d, vtemp, ptr);
-        } else {
-          opType = drawid + "screw";
-          color = "orange";
-          draw1.append(drawid).append("rotLine1 ").append(Escape.ePd(pta00))
-              .append(Escape.ePd(pa1)).append(" color red");
-          ptemp.add2(pa1, vtemp);
-          draw1.append(drawid).append("rotLine2 ").append(Escape.ePd(pt0))
-              .append(Escape.ePd(ptemp)).append(" color red");
-          ptr.scaleAdd2(0.5d, vtemp, pa1);
-        }
 
+        } else {
+          if (pitch1 == 0) {
+            opType = drawid + "rot";
+            vtemp.scale(3 * scaleFactor);
+            if (isSpecial) {
+              ptemp.scaleAdd2(0.5d, vtemp, pa1);
+              pa1.scaleAdd2(-0.45d, vtemp, pa1);
+            } else {
+              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
+                  .append(Escape.eP(pa1)).append(" color red");
+              draw1.append(drawid).append("rotLine2 ").append(Escape.eP(pt0))
+                  .append(Escape.eP(pa1)).append(" color red");
+              ptemp.scaleAdd2(-1, vtemp, pa1);
+            }
+            drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp,
+                isTimeReversed ? "gray" : "red");
+            ptr.setT(pa1);
+            if (pitch1 == 0 && isSpecial)
+              ptr.scaleAdd2(0.75d, vtemp, ptr);
+          } else {
+            opType = drawid + "screw";
+            color = "orange";
+            draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
+                .append(Escape.eP(pa1)).append(" color red");
+            ptemp.add2(pa1, vtemp);
+            draw1.append(drawid).append("rotLine2 ").append(Escape.eP(pt0))
+                .append(Escape.eP(ptemp)).append(" color red");
+            ptr.scaleAdd2(0.5d, vtemp, pa1);
+          }
+        }
         // draw arc arrow
 
         ptemp.add2(ptr, vtemp);
-        if (haveInversion && pitch1 != 0) {
-          draw1.append(drawid).append("rotRotLine1").append(Escape.ePd(ptr))
-              .append(Escape.ePd(ptinv)).append(" color red");
-          draw1.append(drawid).append("rotRotLine2").append(Escape.ePd(ptr))
-              .append(Escape.ePd(pt0)).append(" color red");
-        }
         draw1.append(drawid)
             .append(
                 "rotRotArrow arrow width 0.1 scale " + PT.escD(scale) + " arc ")
-            .append(Escape.ePd(ptr)).append(Escape.ePd(ptemp));
-        ptemp.setT(haveInversion ? ptinv : pta00);
+            .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
+        ptemp.setT(pta00);
         if (ptemp.distance(pt0) < 0.1d)
-          ptemp.set(Math.random(), Math.random(),
-              Math.random());
-        draw1.append(Escape.ePd(ptemp));
-        ptemp.set(0, ang, 0);
-        draw1.append(Escape.ePd(ptemp)).append(" color red");
+          ptemp.set(Math.random(), Math.random(), Math.random());
+        draw1.append(Escape.eP(ptemp));
+        ptemp.set(0, ang - 5 * Math.signum(ang), 0);
+        draw1.append(Escape.eP(ptemp)).append(" color red");
 
         // draw the main vector
 
+        if (pitch1 == 0 && !haveInversion) {
+          ptemp.scaleAdd2(0.5d, vtemp, pa1);
+          pa1.scaleAdd2(-0.45d, vtemp, pa1);
+        }
         drawVector(draw1, drawid, "rotVector1", "vector", pa1, vtemp,
             isTimeReversed ? "Gray" : color);
 
@@ -1017,7 +993,7 @@ public class SymmetryDesc {
         if (v == null || v.size() == 0) {
           ptemp.add2(pa1, ax1);
           draw1.append(drawid).append("planeCircle scale 2.0 circle ")
-              .append(Escape.ePd(pa1)).append(Escape.ePd(ptemp))
+              .append(Escape.eP(pa1)).append(Escape.eP(ptemp))
               .append(" color translucent ").append(color).append(" mesh fill");
         }
       }
@@ -1025,15 +1001,32 @@ public class SymmetryDesc {
       if (haveInversion) {
         opType = drawid + "inv";
         draw1.append(drawid).append("invPoint diameter 0.4 ")
-            .append(Escape.ePd(ipt));
-        ptemp.sub2(ptinv, pta00);
-        drawVector(draw1, drawid, "invArrow", "vector", pta00, ptemp,
-            isTimeReversed ? "gray" : "cyan");
-        if (!isInversionOnly && options != T.offset) {
-          // n-bar: draw a faint frame showing the inversion
-          drawFrameLine("X", ptinv, vt1, 0.15d, ptemp, draw1, opType, "red");
-          drawFrameLine("Y", ptinv, vt2, 0.15d, ptemp, draw1, opType, "green");
-          drawFrameLine("Z", ptinv, vt3, 0.15d, ptemp, draw1, opType, "blue");
+            .append(Escape.eP(ipt));
+        if (isInversionOnly) {
+          ptemp.sub2(ptinv, pta00);
+          drawVector(draw1, drawid, "invArrow", "vector", pta00, ptemp,
+              isTimeReversed ? "gray" : "cyan");
+        } else {
+          if (!isSpecial) {
+            ptemp.sub2(pt0, ptinv);
+            drawVector(draw1, drawid, "invArrow", "vector", ptinv, ptemp,
+                isTimeReversed ? "gray" : "cyan");
+          }
+          if (options != T.offset) {
+            // n-bar: draw a faint frame showing the inversion
+            vtemp.setT(vt1);
+            vtemp.scale(-1);
+            drawFrameLine("X", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                "red");
+            vtemp.setT(vt2);
+            vtemp.scale(-1);
+            drawFrameLine("Y", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                "green");
+            vtemp.setT(vt3);
+            vtemp.scale(-1);
+            drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                "blue");
+          }
         }
       }
 
@@ -1064,16 +1057,15 @@ public class SymmetryDesc {
 
       // color the targeted atoms opaque and add another frame if necessary
 
-      draw1.append("\nsym_point = " + Escape.ePd(pta00));
-      draw1.append("\nvar p0 = " + Escape.ePd(ptemp2));
+      draw1.append("\nsym_point = " + Escape.eP(pta00));
+      draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
 
-      if (ptAtom instanceof Atom) {
+      if (pta00 instanceof Atom) {
         draw1.append(
             "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
-        draw1.append("\n set2 &= {_" + ((Atom) ptAtom).getElementSymbol() + "}");
+        draw1.append("\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
       } else {
-        draw1.append(
-            "\nvar set2 = p0.uxyz");
+        draw1.append("\nvar set2 = p0.uxyz");
       }
       draw1.append("\nsym_target = set2;if (set2) {");
       //      if (haveCentering)
@@ -1082,13 +1074,13 @@ public class SymmetryDesc {
       if (options != T.offset && ptTarget == null && !haveTranslation) {
         draw1.append(drawid)
             .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-            .append(Escape.ePd(vt1)).append("*0.9} color red");
+            .append(Escape.eP(vt1)).append("*0.9} color red");
         draw1.append(drawid)
             .append("offsetFrameY diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-            .append(Escape.ePd(vt2)).append("*0.9} color green");
+            .append(Escape.eP(vt2)).append("*0.9} color green");
         draw1.append(drawid)
             .append("offsetFrameZ diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-            .append(Escape.ePd(vt3)).append("*0.9} color purple");
+            .append(Escape.eP(vt3)).append("*0.9} color purple");
       }
       draw1.append("\n}\n");
       cmds = draw1.toString();
@@ -1147,6 +1139,23 @@ public class SymmetryDesc {
       case RET_XYZ:
         ret[i] = xyzNew;
         break;
+      case RET_XYZNORMALIZED:
+        if (ptFrom != null && ptTarget == null && !op.isBio && op.modDim == 0) {
+          String xyzN;
+          pta02.setT(ptFrom);
+          uc.toFractional(pta02, true);
+          m2.rotTrans(pta02);
+          ptemp.setT(pta02);
+          uc.unitize(pta02);
+          vtrans.sub2(pta02, ptemp);
+          m2 = M4d.newM4(op);
+          m2.add(vtrans);
+          xyzN = SymmetryOperation.getXYZFromMatrix(m2, false, false, false);
+          if (isMagnetic)
+            xyzN = op.fixMagneticXYZ(m2, xyzN, true);
+          ret[i] = xyzN;
+        }
+        break;
       case RET_XYZORIGINAL:
         ret[i] = op.xyzOriginal;
         break;
@@ -1166,14 +1175,14 @@ public class SymmetryDesc {
         ret[i] = approx0(ipt);
         break;
       case RET_POINT:
-        ret[i] = approx0(pa1 != null && bsInfo.get(RET_INVARIANT) ? pta00 : pa1);
+        ret[i] = approx0(
+            pa1 != null && bsInfo.get(RET_INVARIANT) ? pta00 : pa1);
         break;
       case RET_AXISVECTOR:
         ret[i] = (plane == null ? approx0(ax1) : null);
         break;
       case RET_ROTANGLE:
-        ret[i] = 
-            (ang1 != 0 ? Integer.valueOf(ang1) : null);
+        ret[i] = (ang1 != 0 ? Integer.valueOf(ang1) : null);
         break;
       case RET_MATRIX:
         ret[i] = m2;
@@ -1189,7 +1198,7 @@ public class SymmetryDesc {
         break;
       case RET_PLANE:
         if (plane != null && bsInfo.get(RET_INVARIANT)) {
-          double d = MeasureD.distanceToPlane(plane, pta00.putP(p1));
+          double d = MeasureD.distanceToPlane(plane, pta00);
           plane.w += d;
         }
         ret[i] = plane;
@@ -1226,8 +1235,8 @@ public class SymmetryDesc {
 
   private static void drawLine(SB s, String id, double diameter, P3d pt0, P3d pt1,
                                String color) {
-    s.append(id).append(" diameter ").appendD(diameter).append(Escape.ePd(pt0))
-        .append(Escape.ePd(pt1)).append(" color ").append(color);
+    s.append(id).append(" diameter ").appendD(diameter).append(Escape.eP(pt0))
+        .append(Escape.eP(pt1)).append(" color ").append(color);
   }
 
   private static void drawFrameLine(String xyz, P3d pt, V3d v, double width,
@@ -1240,7 +1249,7 @@ public class SymmetryDesc {
   private static void drawVector(SB draw1, String drawid, String label,
                                  String type, T3d pt1, T3d v, String color) {
     draw1.append(drawid).append(label).append(" diameter 0.1 ").append(type)
-        .append(Escape.ePd(pt1)).append(Escape.ePd(v)).append(" color ")
+        .append(Escape.eP(pt1)).append(Escape.eP(v)).append(" color ")
         .append(color);
   }
 
@@ -1272,7 +1281,7 @@ public class SymmetryDesc {
 
   private static String strCoord(SymmetryOperation op, T3d p, boolean isBio) {
     approx0(p);
-    return (isBio ? p.x + " " + p.y + " " + p.z : op.fcoord2(p.putP(p4)));
+    return (isBio ? p.x + " " + p.y + " " + p.z : op.fcoord2(p));
   }
 
   private static T3d approx0(T3d pt) {
@@ -1289,9 +1298,9 @@ public class SymmetryDesc {
 
   private static T3d approx(T3d pt) {
     if (pt != null) {
-      pt.x = SymmetryOperation.approxF( pt.x);
-      pt.y = SymmetryOperation.approxF( pt.y);
-      pt.z = SymmetryOperation.approxF( pt.z);
+      pt.x = SymmetryOperation.approxD( pt.x);
+      pt.y = SymmetryOperation.approxD( pt.y);
+      pt.z = SymmetryOperation.approxD( pt.z);
     }
     return pt;
   }
@@ -1433,6 +1442,8 @@ public class SymmetryDesc {
           nth = -1;
         asString = true;
         bsInfo.set(RET_LIST);
+        bsInfo.set(RET_XYZ);
+        bsInfo.set(RET_XYZNORMALIZED);
         break;
       case T.draw:
         if (id == null)
@@ -1494,7 +1505,7 @@ public class SymmetryDesc {
       sympt = P3d.newP(sympt);
       uc.toUnitCellD(sympt, null);
       uc.toCartesian(sympt, false);
-      modelSet.getAtomsWithin(0.02f, sympt, bsResult, iModel);
+      modelSet.getAtomsWithin(0.02d, sympt, bsResult, iModel);
       if (bsElement != null)
         bsResult.and(bsElement);
     }
@@ -1638,8 +1649,7 @@ public class SymmetryDesc {
       // just for SHOW SYMOP
       bsInfo = new BS();
       bsInfo.setBits(0, keys.length);
-      bsInfo.set(RET_XYZ);
-      bsInfo.set(RET_LABEL);
+      bsInfo.clear(RET_XYZNORMALIZED);
     }
     boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     Map<String, Object> info = null;
@@ -1731,7 +1741,7 @@ public class SymmetryDesc {
               continue;
             infolist[i] = ret;
             if (!matrixOnly)
-              sops += "\n" + (i + 1) + "\t" + ret[RET_XYZ] + "\t"
+              sops += "\n" + (i + 1) + "\t" + ret[bsInfo.get(RET_XYZNORMALIZED) ? RET_XYZNORMALIZED : RET_XYZ] + "\t"
                   + ret[RET_LABEL];
             opCount++;
           }

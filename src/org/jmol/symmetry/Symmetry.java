@@ -776,7 +776,7 @@ public class Symmetry implements SymmetryInterface {
     T3d pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
-      commands.append("; set unitcell ").append(Escape.ePd(pt));
+      commands.append("; set unitcell ").append(Escape.eP(pt));
       loadUC = true;
     }
     T3d ptm = getUnitCellMultiplier();

@@ -1043,7 +1043,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     String s = "";
     // unitcell offset {1 1 1}
     if (fractionalOffset != null && fractionalOffset.lengthSquared() != 0)
-      s += "  unitcell offset " + Escape.ePd(fractionalOffset) + ";\n";
+      s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
     // unitcell range {444 555 1}
     if (unitCellMultiplier != null)
       s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";

@@ -343,7 +343,7 @@ class JmolObject {
         sb.append(";isosurface slab within ").appendD(within).append(" [ ");
         for (int j = list.size() - 3; j >= 0; j -= 3) {
           PyMOLReader.pointAt(list, j, pt);
-          sb.append(Escape.ePd(pt));
+          sb.append(Escape.eP(pt));
         }
         sb.append(" ]");
       }

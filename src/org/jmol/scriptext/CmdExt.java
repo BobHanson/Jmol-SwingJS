@@ -337,78 +337,82 @@ public class CmdExt extends ScriptExt {
 
   
   public int getLoadSymmetryParams(int i, SB sOptions,
-                                   Map<String, Object> htParams) throws ScriptException {
-   // {i j k}
-   ScriptEval eval = e;
-   chk = eval.chk;
-   slen = eval.slen;
-   T3d lattice = null;
-   int tok = tokAt(i);
-   if (tok == T.leftbrace || tok == T.point3f) {
-     lattice = eval.getFractionalPoint(i);
-     tok = tokAt(i = eval.iToken + 1);
-   }
+                                   Map<String, Object> htParams)
+      throws ScriptException {
+    // {i j k}
+    ScriptEval eval = e;
+    chk = eval.chk;
+    slen = eval.slen;
+    boolean isEmptyLoad = false;
+    T3d lattice = null;
+    int tok = tokAt(i);
+    if (tok == T.leftbrace || tok == T.point3f) {
+      lattice = eval.getFractionalPoint(i);
+      tok = tokAt(i = eval.iToken + 1);
+    }
 
-   // default lattice {555 555 -1} (packed) 
-   // for PACKED, CENTROID, SUPERCELL, RANGE, SPACEGROUP, UNITCELL
+    // default lattice {555 555 -1} (packed) 
+    // for PACKED, CENTROID, SUPERCELL, RANGE, SPACEGROUP, UNITCELL
 
-   switch (tok) {
-   case T.fill:
-   case T.packed:
-   case T.centroid:
-   case T.supercell:
-   case T.range:
-   case T.spacegroup:
-   case T.unitcell:
-     if (lattice == null)
-       lattice = P3d.new3(555, 555, -1);
-     // re-read this token
-     eval.iToken = i - 1;
-   }
-   
-   P3d offset = null;
-   if (lattice != null) {
-     htParams.put("lattice", lattice);
-     i = eval.iToken + 1;
-     sOptions.append(" " + SimpleUnitCell.escapeMultiplier(lattice));
+    switch (tok) {
+    case T.spacegroup:
+      isEmptyLoad = (htParams.get("isEmptyLoad") == Boolean.TRUE);
+      //$FALL-THROUGH$
+    case T.fill:
+    case T.packed:
+    case T.centroid:
+    case T.supercell:
+    case T.range:
+    case T.unitcell:
+      if (lattice == null)
+        lattice = P3d.new3(555, 555, -1);
+      // re-read this token
+      eval.iToken = i - 1;
+    }
 
-     // {i j k} PACKED, CENTROID -- either or both; either order
+    P3d offset = null;
+    if (lattice != null) {
+      htParams.put("lattice", lattice);
+      i = eval.iToken + 1;
+      sOptions.append(" " + SimpleUnitCell.escapeMultiplier(lattice));
 
-     i = checkPacked(i, htParams, sOptions);
-     if (tokAt(i) == T.centroid) {
-       htParams.put("centroid", Boolean.TRUE);
-       sOptions.append(" CENTROID");
-       i = checkPacked(++i, htParams, sOptions);
-     }
+      // {i j k} PACKED, CENTROID -- either or both; either order
 
-     // {i j k} ... SUPERCELL {i' j' k'}
+      i = checkPacked(i, htParams, sOptions);
+      if (tokAt(i) == T.centroid) {
+        htParams.put("centroid", Boolean.TRUE);
+        sOptions.append(" CENTROID");
+        i = checkPacked(++i, htParams, sOptions);
+      }
 
-     if (tokAt(i) == T.supercell) {
-       Object supercell;
-       sOptions.append(" SUPERCELL ");
-       if (eval.isPoint3f(++i)) {
-         P3d pt = getPoint3f(i, false);
-         if (pt.x != (int) pt.x || pt.y != (int) pt.y || pt.z != (int) pt.z
-             || pt.x < 1 || pt.y < 1 || pt.z < 1) {
-           eval.iToken = i;
-           invArg();
-         }
-         supercell = pt;
-         i = eval.iToken;
-       } else {
-         supercell = stringParameter(i);
-       }
-       sOptions.append(Escape.e(supercell));
-       htParams.put("supercell", supercell);
-       i = checkPacked(++i, htParams, sOptions);
-     }
+      // {i j k} ... SUPERCELL {i' j' k'}
 
-     // {i j k} ... RANGE x.y  (from full unit cell set)
-     // {i j k} ... RANGE -x.y (from non-symmetry set)
+      if (tokAt(i) == T.supercell) {
+        Object supercell;
+        sOptions.append(" SUPERCELL ");
+        if (eval.isPoint3f(++i)) {
+          P3d pt = getPoint3f(i, false);
+          if (pt.x != (int) pt.x || pt.y != (int) pt.y || pt.z != (int) pt.z
+              || pt.x < 1 || pt.y < 1 || pt.z < 1) {
+            eval.iToken = i;
+            invArg();
+          }
+          supercell = pt;
+          i = eval.iToken;
+        } else {
+          supercell = stringParameter(i);
+        }
+        sOptions.append(Escape.e(supercell));
+        htParams.put("supercell", supercell);
+        i = checkPacked(++i, htParams, sOptions);
+      }
 
-     double distance = 0;
-     if (tokAt(i) == T.range) {
-       /*
+      // {i j k} ... RANGE x.y  (from full unit cell set)
+      // {i j k} ... RANGE -x.y (from non-symmetry set)
+
+      double distance = 0;
+      if (tokAt(i) == T.range) {
+        /*
         * # Jmol 11.3.9 introduces the capability of visualizing the close
         * contacts around a crystalline protein (or any other crystal
         * structure) that are to atoms that are in proteins in adjacent unit
@@ -425,100 +429,105 @@ public class CmdExt extends ScriptExt {
         * set are found. Depending upon the application, one or the other of
         * these options may be desirable.
         */
-       i++;
-       distance = doubleParameter(i++);
-       sOptions.append( " range " + distance);
-     }
-     htParams.put("symmetryRange", Double.valueOf(distance));
+        i++;
+        distance = doubleParameter(i++);
+        sOptions.append(" range " + distance);
+      }
+      htParams.put("symmetryRange", Double.valueOf(distance));
 
-     // {i j k} ... SPACEGROUP "nameOrNumber"
-     // {i j k} ... SPACEGROUP "IGNOREOPERATORS"
-     // {i j k} ... SPACEGROUP ""
+      // {i j k} ... SPACEGROUP "nameOrNumber"
+      // {i j k} ... SPACEGROUP "IGNOREOPERATORS"
+      // {i j k} ... SPACEGROUP ""
 
-     String spacegroup = null;
-     SymmetryInterface sg;
-     int iGroup = Integer.MIN_VALUE;
-     if (tokAt(i) == T.spacegroup) {
-       ++i;
-       spacegroup = PT.rep(paramAsStr(i++), "''", "\"");
-       sOptions.append( " spacegroup " + PT.esc(spacegroup));
-       if (spacegroup.equalsIgnoreCase("ignoreOperators")) {
-         iGroup = -999;
-       } else {
-         if (spacegroup.length() == 0) {
-           sg = vwr.getCurrentUnitCell();
-           if (sg != null)
-             spacegroup = sg.getSpaceGroupName();
-         } else {
-           if (spacegroup.indexOf(",") >= 0) // Jones Faithful
-             if ((lattice.x < 9 && lattice.y < 9 && lattice.z == 0))
-               spacegroup += "#doNormalize=0";
-         }
-         htParams.put("spaceGroupName", spacegroup);
-         iGroup = -2;
-       }
-     }
+      String spacegroup = null;
+      SymmetryInterface sg;
+      int iGroup = Integer.MIN_VALUE;
+      if (tokAt(i) == T.spacegroup) {
+        ++i;
+        spacegroup = PT.rep(paramAsStr(i++), "''", "\"");
+        sOptions.append(" spacegroup " + PT.esc(spacegroup));
+        if (spacegroup.equalsIgnoreCase("ignoreOperators")) {
+          iGroup = -999;
+        } else {
+          if (spacegroup.length() == 0) {
+            sg = vwr.getCurrentUnitCell();
+            if (sg != null)
+              spacegroup = sg.getSpaceGroupName();
+          } else {
+            if (spacegroup.indexOf(",") >= 0) // Jones Faithful
+              if ((lattice.x < 9 && lattice.y < 9 && lattice.z == 0))
+                spacegroup += "#doNormalize=0";
+          }
+          htParams.put("spaceGroupName", spacegroup);
+          iGroup = -2;
+        }
+      }
 
-     // {i j k} ... UNITCELL [a b c alpha beta gamma]
-     // {i j k} ... UNITCELL [ax ay az bx by bz cx cy cz] 
-     // {i j k} ... UNITCELL ""  // same as current
+      // {i j k} ... UNITCELL [a b c alpha beta gamma]
+      // {i j k} ... UNITCELL [ax ay az bx by bz cx cy cz] 
+      // {i j k} ... UNITCELL ""  // same as current
 
-     double[] fparams = null;
-     if (tokAt(i) == T.unitcell) {
-       ++i;
-       String s = eval.optParameterAsString(i); 
-       if (s.length() == 0) {
-         // unitcell "" -- use current unit cell
-         sg = vwr.getCurrentUnitCell();
-         if (sg != null) {
-           fparams = sg.getUnitCellAsArray(true);
-           offset = sg.getCartesianOffset();
-         }
-       } else {
-         if (tokAt(i) == T.string) {
-           fparams = new double[6];
-           SimpleUnitCell.setOabcD(s, fparams, null);
-         } else { 
-           fparams = eval.doubleParameterSet(i, 6, 9);
-         }
-       }
-       if (fparams == null || fparams.length != 6 && fparams.length != 9)
-         invArg();
-       sOptions.append( " unitcell [");
-       for (int j = 0; j < fparams.length; j++)
-         sOptions.append( (j == 0 ? "" : " ") + fparams[j]);
-       sOptions.append( "]");
-       htParams.put("unitcell", fparams);
-       if (iGroup == Integer.MIN_VALUE)
-         iGroup = -1;
-       i = eval.iToken + 1;
-     }
-     if (iGroup != Integer.MIN_VALUE)
-       htParams.put("spaceGroupIndex", Integer.valueOf(iGroup));
-   }
+      double[] fparams = null;
+      if (tokAt(i) == T.unitcell) {
+        ++i;
+        String s = eval.optParameterAsString(i);
+        if (s.length() == 0) {
+          // unitcell "" -- use current unit cell
+          sg = vwr.getCurrentUnitCell();
+          if (sg != null) {
+            fparams = sg.getUnitCellAsArray(true);
+            offset = sg.getCartesianOffset();
+          }
+        } else {
+          if (tokAt(i) == T.string) {
+            fparams = new double[6];
+            SimpleUnitCell.setOabcD(s, fparams, null);
+          } else {
+            fparams = eval.doubleParameterSet(i, 6, 9);
+          }
+        }
+        if (fparams == null || fparams.length != 6 && fparams.length != 9)
+          invArg();
+        sOptions.append(" unitcell [");
+        for (int j = 0; j < fparams.length; j++)
+          sOptions.append((j == 0 ? "" : " ") + fparams[j]);
+        sOptions.append("]");
+        htParams.put("unitcell", fparams);
+        if (iGroup == Integer.MIN_VALUE)
+          iGroup = -1;
+        i = eval.iToken + 1;
+      }
+      if (iGroup != Integer.MIN_VALUE)
+        htParams.put("spaceGroupIndex", Integer.valueOf(iGroup));
+      if (isEmptyLoad && fparams == null && spacegroup != null
+          && (iGroup = PT.parseInt(spacegroup)) != Integer.MIN_VALUE) {
+            // TODO check here for number and set unit cell appropriately.
+      
+      }
+    }
 
-   // OFFSET {x y z} (fractional or not) (Jmol 12.1.17)
+    // OFFSET {x y z} (fractional or not) (Jmol 12.1.17)
 
-   boolean areFractional = false;
-   if (offset == null && tokAt(i) == T.offset) {
-     offset = getPoint3f(++i, true);
-     areFractional = eval.coordinatesAreFractional;
-   }
-   if (offset != null) {
-     if (areFractional) {
-       offset.setT(eval.fractionalPoint);
-       htParams.put("unitCellOffsetFractional",
-           (areFractional ? Boolean.TRUE : Boolean.FALSE));
-       sOptions.append( " offset {" + offset.x + " " + offset.y + " " + offset.z
-           + "/1}");
-     } else {
-       sOptions.append( " offset " + Escape.eP(offset));
-     }
-     htParams.put("unitCellOffset", offset);
-     i = eval.iToken + 1;
-   }
-   return i;
- }
+    boolean areFractional = false;
+    if (offset == null && tokAt(i) == T.offset) {
+      offset = getPoint3f(++i, true);
+      areFractional = eval.coordinatesAreFractional;
+    }
+    if (offset != null) {
+      if (areFractional) {
+        offset.setT(eval.fractionalPoint);
+        htParams.put("unitCellOffsetFractional",
+            (areFractional ? Boolean.TRUE : Boolean.FALSE));
+        sOptions.append(
+            " offset {" + offset.x + " " + offset.y + " " + offset.z + "/1}");
+      } else {
+        sOptions.append(" offset " + Escape.eP(offset));
+      }
+      htParams.put("unitCellOffset", offset);
+      i = eval.iToken + 1;
+    }
+    return i;
+  }
 
   /**
    * Process FILL and PACKED and all their variants.

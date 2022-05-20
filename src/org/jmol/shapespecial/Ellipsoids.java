@@ -466,7 +466,7 @@ public class Ellipsoids extends AtomShape {
       for (int i = 0; i < 3; i++) {
         v1.setT(t.eigenVectors[i]);
         v1.scale(ellipsoid.lengths[i]);
-        sb.append(" ").append(Escape.ePd(v1));
+        sb.append(" ").append(Escape.eP(v1));
       }
       sb.append(" "
           + getColorCommandUnk("", ellipsoid.colix, translucentAllowed));

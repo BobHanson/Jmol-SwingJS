@@ -8,14 +8,10 @@ import org.jmol.api.SymmetryInterface;
 
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.Matrix;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 /**
@@ -375,7 +371,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     tau = gammaIinv.mul(sigma.mul(vR0).sub(gammaM.mul(vR00)).sub(sI));
 
     if (Logger.debuggingHigh)
-      Logger.debug("MODSET create " + id + " r0=" + Escape.ePd(r0) + " tau="
+      Logger.debug("MODSET create " + id + " r0=" + Escape.eP(r0) + " tau="
           + tau);
 
     return this;
@@ -556,8 +552,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       // do a calculation and return the t-value for the first three dimensions of modulation
       modCalc.calculate(tuv, false);
       double[][] ta = modCalc.rI.getArray();
-      return P3d.new3((double) ta[0][0], (modDim > 1 ? (double) ta[1][0] : 0),
-          (modDim > 2 ? (double) ta[2][0] : 0));
+      return P3d.new3(ta[0][0], (modDim > 1 ? ta[1][0] : 0),
+          (modDim > 2 ? ta[2][0] : 0));
     case 'O':
       // return the currently modulated or calculated occupation on [0,100]
       return Double.valueOf(Math.abs(tuv == null ? getOccupancy100(false)
@@ -705,7 +701,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     occParams = pt;
     fileOcc = foccupancy;
     occSiteMultiplicity = siteMult;
-    return (double) getOccupancy();
+    return getOccupancy();
   }
   
   @Override

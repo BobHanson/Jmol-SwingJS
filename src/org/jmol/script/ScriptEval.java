@@ -4474,6 +4474,7 @@ public class ScriptEval extends ScriptExpr {
         vwr.stm.saveOrientation("preload", null);
         modelName = optParameterAsString(++i);
         tok = T.getTokFromName(modelName);
+        i++;
         break;
       case T.audio:
         isAudio = true;
@@ -4530,6 +4531,7 @@ public class ScriptEval extends ScriptExpr {
       case T.spacegroup:
         i-= 2;
         filename = "0";
+        htParams.put("isEmptyLoad", Boolean.TRUE);
         //$FALL-THROUGH$
       case T.inline:
         isInline = true;

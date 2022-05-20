@@ -351,7 +351,7 @@ public class StateCreator extends JmolStateCreator {
               .append(";\n");
         if (m.simpleCage != null) {
           sb.append("  unitcell ")
-              .append(Escape.eAPd(m.simpleCage.getUnitCellVectors()))
+              .append(Escape.eAP(m.simpleCage.getUnitCellVectors()))
               .append(";\n");
           getShapeStatePriv(sb, isAll, JC.SHAPE_UCCAGE);
         }
