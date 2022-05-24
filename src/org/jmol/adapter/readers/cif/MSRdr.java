@@ -1,25 +1,15 @@
 package org.jmol.adapter.readers.cif;
 
+//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javajs.util.Lst;
-import javajs.util.M3d;
-import javajs.util.M3d;
-import javajs.util.Matrix;
-import javajs.util.P3d;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.T3d;
-import javajs.util.T3d;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
@@ -29,6 +19,14 @@ import org.jmol.util.ModulationSet;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.Matrix;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.T3d;
 
 /**
  * generalized modulated structure reader class for CIF and Jana
@@ -220,7 +218,10 @@ public class MSRdr implements MSInterface {
   private int ac;
   private boolean haveAtomMods;
 
-  private boolean modCoord;
+  /**
+   * not used
+   */
+  boolean modCoord; 
 
   private boolean finalized;
 
@@ -249,9 +250,9 @@ public class MSRdr implements MSInterface {
     if (smodTUV != null || (smodTUV = r.getFilter("MODTUV=")) != null) {
       modTUV = new P3d();
       String[] tuv = (PT.replaceAllCharacters(smodTUV,"{}()","") + ",0,0,0").split(",");
-      modTUV.x = (double) PT.parseDoubleFraction(tuv[0]);
-      modTUV.y = (double) PT.parseDoubleFraction(tuv[1]);
-      modTUV.z = (double) PT.parseDoubleFraction(tuv[2]);
+      modTUV.x = PT.parseDoubleFraction(tuv[0]);
+      modTUV.y = PT.parseDoubleFraction(tuv[1]);
+      modTUV.z = PT.parseDoubleFraction(tuv[2]);
       if (Double.isNaN(modTUV.lengthSquared())) {
         Logger.error("MSRdr cannot read modTUV=" + smodTUV);
         modTUV = null;
@@ -444,6 +445,8 @@ public class MSRdr implements MSInterface {
     htSubsystems = null;
   }
 
+  private final static String generic = "#*;*";
+
   private void initModForStructure(int iModel) throws Exception {
     String key;
 
@@ -467,7 +470,7 @@ public class MSRdr implements MSInterface {
         cr.appendLoadNote("NOTE!: Not enough cell wave vectors for d=" + modDim);
         return;
       }
-      fixDouble(pt);
+      fixDoubleA(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
       cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
           + pt[2]);
@@ -482,10 +485,12 @@ public class MSRdr implements MSInterface {
     // F: Jana-type wave vector, referencing W vectors (set pt to coefficients, including harmonics)
     Map<String, double[]> map = new Hashtable<String, double[]>();
     for (Entry<String, double[]> e : htModulation.entrySet()) {
-      if ((key = checkKey(e.getKey(), false)) == null)
+      String k = e.getKey();
+      if ((key = checkKey(k, false)) == null)
         continue;
       pt = e.getValue();
-      switch (key.charAt(0)) {
+      char ch = key.charAt(0);
+      switch (ch) {
       case 'O':
         haveOccupancy = true;
         //$FALL-THROUGH$
@@ -496,8 +501,14 @@ public class MSRdr implements MSInterface {
         if (pt[2] == 1 && key.charAt(2) != 'S' && key.charAt(2) != 'T' && key.charAt(2) != 'L') {
           int ipt = key.indexOf("?");
           if (ipt >= 0) {
-            String s = key.substring(ipt + 1);
-            pt = getMod(key.substring(0, 2) + MSCifParser.SEP + s + "#*;*");
+            k = key.substring(0, 2) + MSCifParser.SEP + key.substring(ipt + 1) + generic;
+            // look for specific parameter from _atom_site_displace_Fourier_cos entry
+            pt = getMod(k);
+            if (pt == null) {
+              // look for generic parameter from displace_Fourier_param block
+              k = key.substring(0, 1) + MSCifParser.SEP + key.substring(ipt + 1) + generic;
+              pt = getMod(k);
+            }
             // may have       Vy1    0.0          0.0   , resulting in null pt here
             if (pt != null)
               addModulation(map, key = key.substring(0, ipt), pt, iModel);
@@ -557,7 +568,8 @@ public class MSRdr implements MSInterface {
       htAtomMods = new Hashtable<String, Lst<Modulation>>();
     }
     for (Entry<String, double[]> e : htModulation.entrySet()) {
-      if ((key = checkKey(e.getKey(), true)) == null)
+      String k = e.getKey();
+      if ((key = checkKey(k, true)) == null)
         continue;
       double[] params = e.getValue();
       String atomName = key.substring(key.indexOf(";") + 1);
@@ -622,11 +634,16 @@ public class MSRdr implements MSInterface {
     }
   }
         
-  private void fixDouble(double[] pt) {
+  private void fixDoubleA(double[] pt) {
+    for (int i = pt.length; --i >= 0;)
+      pt[i] = fixDouble(pt[i]);
+  }
+
+  private double fixDouble(double d) {
     // was fixFloat(float[] pt  -- removed in Jmol 15.32.53
-//    if (cr.fixJavaDouble)
-//      for (int i = pt.length; --i >= 0;)
-//        pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
+    // this is fine -- we are just removing the lower-order bits; 
+    // none of these numbers will have much precision
+    return Math.round(d * 10000000000.) / 10000000000.;
   }
 
   @Override
@@ -641,9 +658,10 @@ public class MSRdr implements MSInterface {
     }     
     // BH 2020.09.16 the addition of 2018.05.30 puts fn just after f_. 
     // it is not clear that anything puts it after it, but leaving that as an option.
-    double[] p = getMod("F_coefs_" + fn );
-    if (p == null)
-      p = getMod("F_" + fn + "_coefs_");
+    double[] p = getMod("F_" + fn + "_coefs_");
+    if (p == null) {
+      p = getMod("F_coefs_" + fn);
+    }
     return p;
   }
 
@@ -871,7 +889,7 @@ public class MSRdr implements MSInterface {
     if (modLast)
       iop = Math.max((a.bsSymmetry.length() - 1) % nOps, iop);
     if (Logger.debuggingHigh)
-      Logger.debug("\nsetModulation: i=" + a.index + " " + a.atomName + " xyz="
+      Logger.info("\nsetModulation: i=" + a.index + " " + a.atomName + " xyz="
           + a + " occ=" + a.foccupancy);
     if (iop != iopLast) {
       // for each new operator, we need to generate new matrices.
@@ -1137,7 +1155,7 @@ public class MSRdr implements MSInterface {
     case '0': // X explicit
       if (data.indexOf(".") >= 0) {
         double[] d = AtomSetCollectionReader.getTokensDouble(data, null, dim);
-        a = new double[] { (double) d[0], (double) d[1], (double) d[2] };
+        a = new double[] { d[0], d[1], d[2] };
       }
       break;
     default:

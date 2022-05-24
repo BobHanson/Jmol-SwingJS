@@ -883,6 +883,10 @@ public class SymmetryDesc {
             } else {
               ptemp.scaleAdd2(-1, vtemp, pa1);
               drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
+              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
+              .append(Escape.eP(ipt)).append(" color red");
+          draw1.append(drawid).append("rotLine2 ").append(Escape.eP(ptinv))
+              .append(Escape.eP(ipt)).append(" color red");
             }
           } else {
             ptr.setT(pa1);
@@ -1007,6 +1011,7 @@ public class SymmetryDesc {
           drawVector(draw1, drawid, "invArrow", "vector", pta00, ptemp,
               isTimeReversed ? "gray" : "cyan");
         } else {
+          draw1.append(" color cyan");
           if (!isSpecial) {
             ptemp.sub2(pt0, ptinv);
             drawVector(draw1, drawid, "invArrow", "vector", ptinv, ptemp,

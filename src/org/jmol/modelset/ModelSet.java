@@ -1857,7 +1857,7 @@ public class ModelSet extends BondCollection {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         if (vibrations[i] instanceof JmolModulationSet)
           list.addLast(((JmolModulationSet) vibrations[i]).getModulation(type,
-              t456));
+              t456, false));
         else
           list.addLast(Double.valueOf(type == 'O' ? Double.NaN : -1));
     return list;

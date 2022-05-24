@@ -756,11 +756,11 @@ abstract public class AtomCollection {
     case 'Z':
       return v.z;
     case 'O':
-      return ((Number) ms.getModulation('O', null)).doubleValue();
+      return ((Number) ms.getModulation('O', null, true)).doubleValue();
     case '1':
     case '2':
     case '3':
-      T3d t = (T3d) ms.getModulation('T', null);
+      T3d t = (T3d) ms.getModulation('T', null, true);
       double x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
       return (x - Math.floor(x));
     default:

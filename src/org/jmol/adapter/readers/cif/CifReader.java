@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
@@ -1039,8 +1038,8 @@ public class CifReader extends AtomSetCollectionReader {
       String sym = getField(ATOM_TYPE_SYMBOL);
       if (sym == null)
         continue;
-      double oxno = (double) parseDoubleStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
-      double radius = (double) parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
+      double oxno = parseDoubleStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
+      double radius = parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
       if (Double.isNaN(oxno) && Double.isNaN(radius))
         continue;
         if (htOxStates == null)
@@ -1474,7 +1473,7 @@ public class CifReader extends AtomSetCollectionReader {
           V3d pt = atom.vib;
           if (pt == null)
             atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
-          double v = (double) parseDoubleStr(field);
+          double v = parseDoubleStr(field);
           switch (tok) {
           case MOMENT_PRELIM_X:
           case MOMENT_X:

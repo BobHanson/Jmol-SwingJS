@@ -7,7 +7,7 @@ import javajs.util.V3d;
 
 public interface JmolModulationSet {
 
-  Object getModulation(char type, T3d t456);
+  Object getModulation(char type, T3d t456, boolean occ100);
 
   String getState();
 
@@ -30,5 +30,6 @@ public interface JmolModulationSet {
   void scaleVibration(double m);
 
   void setMoment();
+
 
 }

@@ -2775,6 +2775,12 @@ public class MathExt {
 
   private boolean evaluateModulation(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
+    // modulation(t456)
+    // modulation(type)
+    // modulation(type, t)
+    // where type is a string starting with case-insensitive D, O, or M
+    // (displacement, occupation, magnetic)
+    
     String type = "";
     double t = Double.NaN;
     P3d t456 = null;

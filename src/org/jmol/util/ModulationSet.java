@@ -539,7 +539,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public Object getModulation(char type, T3d tuv) {
+  public Object getModulation(char type, T3d tuv, boolean occ100) {
     getModCalc();
     switch (type) {
     case 'D':
@@ -556,8 +556,15 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
           (modDim > 2 ? ta[2][0] : 0));
     case 'O':
       // return the currently modulated or calculated occupation on [0,100]
-      return Double.valueOf(Math.abs(tuv == null ? getOccupancy100(false)
-          : modCalc.calculate(tuv, false).getOccupancy100(false)));
+        if (tuv == null) {
+            return Double.valueOf(occ100 ? getOccupancy100(false) : getOccupancy());
+          } 
+            modCalc.calculate(tuv, false);
+            double f = modCalc.getOccupancy();
+            if (occ100)
+              f = modCalc.getOccupancy100(false);
+          // return the currently modulated or calculated occupation on [0,100]
+          return Double.valueOf(Math.abs(f));
     }
     return null;
   }
@@ -714,7 +721,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       modCalc.getOccupancy();
       return modCalc.getOccupancy100(false);
     }
-    return (int) (occValue * 100);
+    return (int) (getOccupancy() * 100);
   }
 
   private double getOccupancy() {
