@@ -723,7 +723,7 @@ abstract public class AtomCollection {
    * also handles modulation info
    * 
    * @param atomIndex
-   * @param c
+   * @param c generally x, y, z, but for modulation could be 1, 2, 3, or O (oh, not zero)
    * @return value or NaN
    */
   public double getVibCoord(int atomIndex, char c) {

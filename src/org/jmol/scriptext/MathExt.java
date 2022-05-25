@@ -93,6 +93,7 @@ import javajs.util.V3d;
 
 public class MathExt {
 
+  private static final Double nan = Double.valueOf(Double.NaN);
   private Viewer vwr;
   private ScriptEval e;
 
@@ -4266,7 +4267,7 @@ public class MathExt {
     while (true) {
       if (AU.isAD(floatOrSVArray)) {
         if (tok == T.pivot)
-          return "NaN";
+          return nan;
         data = (double[]) floatOrSVArray;
         ndata = data.length;
         if (ndata == 0)
@@ -4379,7 +4380,7 @@ public class MathExt {
       }
       return Double.valueOf(sum);
     }
-    return "NaN";
+    return nan;
   }
 
   /**
@@ -4387,7 +4388,7 @@ public class MathExt {
    * 
    * @param pointOrSVArray
    * @param tok
-   * @return Point3f or "NaN"
+   * @return Point3f or NaN
    */
   @SuppressWarnings("unchecked")
   private Object getMinMaxPoint(Object pointOrSVArray, int tok) {
@@ -4402,14 +4403,14 @@ public class MathExt {
       ndata = sv.size();
     }
     if (sv == null && data == null)
-      return "NaN";
+      return nan;
     P3d result = new P3d();
     double[] fdata = new double[ndata];
     for (int xyz = 0; xyz < 3; xyz++) {
       for (int i = 0; i < ndata; i++) {
         P3d pt = (data == null ? SV.ptValue(sv.get(i)) : data[i]);
         if (pt == null)
-          return "NaN";
+          return nan;
         switch (xyz) {
         case 0:
           fdata[i] = pt.x;
@@ -4424,7 +4425,7 @@ public class MathExt {
       }
       Object f = getMinMax(fdata, tok, true);
       if (!(f instanceof Number))
-        return "NaN";
+        return nan;
       double value = ((Number) f).doubleValue();
       switch (xyz) {
       case 0:
@@ -4448,7 +4449,7 @@ public class MathExt {
     case T.max:
     case T.sum:
     case T.sum2:
-      return "NaN";
+      return nan;
     }
 
     // only stddev and average
@@ -4467,7 +4468,7 @@ public class MathExt {
       }
       break;
     }
-    return "NaN";
+    return nan;
   }
 
   private JmolPatternMatcher pm;

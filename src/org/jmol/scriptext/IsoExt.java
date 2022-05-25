@@ -4097,7 +4097,7 @@ public class IsoExt extends ScriptExt {
           "function " + fname + "(" + xyz + ") { return " + ret + "}", false);
       Lst<SV> params = new Lst<SV>();
       for (int i = 0; i < xyz.length(); i += 2)
-        params.addLast(SV.newF(0).setName(xyz.substring(i, i + 1)));
+        params.addLast(SV.newD(0).setName(xyz.substring(i, i + 1)));
       return new Object[] { e.aatoken[0][1].value, params };
     } catch (Exception ex) {
       return null;

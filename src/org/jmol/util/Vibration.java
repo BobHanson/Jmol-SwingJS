@@ -82,7 +82,7 @@ public class Vibration extends V3d {
   }
 
   /**
-   * @param isTemp used only in ModulationSet
+   * @param isTemp used only in ModulationSet when calculating actual display offset
    * @return Integer.MIN_VALUE if not applicable, occupancy if enabled, -occupancy if not enabled
    */
   public int getOccupancy100(boolean isTemp) {

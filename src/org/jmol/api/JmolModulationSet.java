@@ -7,6 +7,13 @@ import javajs.util.V3d;
 
 public interface JmolModulationSet {
 
+  /**
+   * 
+   * @param type
+   * @param t456
+   * @param occ100 true for vibration visualization
+   * @return point or (for occupancy) value
+   */
   Object getModulation(char type, T3d t456, boolean occ100);
 
   String getState();

@@ -145,6 +145,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   
   /**
    * final occupancy value -- absolute; in range [0,1]
+   * (useful?) 
    */
   private double occValue = Double.NaN;
   
@@ -477,7 +478,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         qtOffset = null;
       calculate(qtOffset, isQ);
       if (!Double.isNaN(vOcc))
-        occValue = getOccupancy();
+        occValue = getOccupancy(true);
     }
     if (isOn) {
       addTo(a, 1);
@@ -540,6 +541,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public Object getModulation(char type, T3d tuv, boolean occ100) {
+    // occ100 is for vibration (including occupancy) visualization only
     getModCalc();
     switch (type) {
     case 'D':
@@ -556,15 +558,16 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
           (modDim > 2 ? ta[2][0] : 0));
     case 'O':
       // return the currently modulated or calculated occupation on [0,100]
-        if (tuv == null) {
-            return Double.valueOf(occ100 ? getOccupancy100(false) : getOccupancy());
-          } 
-            modCalc.calculate(tuv, false);
-            double f = modCalc.getOccupancy();
-            if (occ100)
-              f = modCalc.getOccupancy100(false);
-          // return the currently modulated or calculated occupation on [0,100]
-          return Double.valueOf(Math.abs(f));
+      if (tuv == null) {
+        return Double
+            .valueOf(occ100 ? getOccupancy100(false) : getOccupancy(false));
+      }
+      modCalc.calculate(tuv, false);
+      double f = modCalc.getOccupancy(occ100);
+      if (occ100)
+        f = modCalc.getOccupancy100(false);
+      // return the currently modulated or calculated occupation on [0,100]
+      return Double.valueOf(Math.abs(f));
     }
     return null;
   }
@@ -708,26 +711,31 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     occParams = pt;
     fileOcc = foccupancy;
     occSiteMultiplicity = siteMult;
-    return getOccupancy();
+    return getOccupancy(true);
   }
   
   @Override
-  public int getOccupancy100(boolean isTemp) {
+  public int getOccupancy100(boolean forVibVis) {
     if (isCommensurate || Double.isNaN(vOcc))
       return Integer.MIN_VALUE;
-    if (!isTemp && !enabled)
-      return (int) (-fileOcc * 100);
-    if (isTemp && modCalc != null) {
-      modCalc.getOccupancy();
-      return modCalc.getOccupancy100(false);
+    if (forVibVis) {
+      if (modCalc != null) {
+        modCalc.getOccupancy(true);
+        return modCalc.getOccupancy100(false);
+      }     
+    } else {
+      if (!enabled)
+        return (int) (-fileOcc * 100);
     }
-    return (int) (getOccupancy() * 100);
+    // here we were using occValue, but that caused problems
+    // with variability.
+    return (int) (getOccupancy(forVibVis) * 100);
   }
 
-  private double getOccupancy() {
+  private double getOccupancy(boolean checkCutoff) {
     double occ;
     if (occAbsolute) {
-      // Crenel
+      // Crenel, legendre
       occ = vOcc;
     } else if (occParams == null) {
       // cif Fourier
@@ -743,8 +751,15 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       // occ_site * (occ_0 + SUM)
       occ = occParams[0] * (occParams[1] + vOcc);
     }
-    // 49/50 is an important range for cutoffs -- we never return a value in this range
-    occ = (occ > 0.49 && occ < 0.50 ? 0.489 : Math.min(1, Math.max(0, occ)));
+    if (checkCutoff) {
+      // only for visualization purposes, from ShapeManager
+      // and possibly for commensurate?
+      // never for crenel
+      // 49/50 is an important range for cutoffs -- no return in this range?
+      // this seems rather arbitrary??
+      // disabled for double presision
+      //occ = (occ > 0.49 && occ < 0.50 ? 0.489 : Math.min(1, Math.max(0, occ)));
+    }
     return occValue = occ;
   }
 

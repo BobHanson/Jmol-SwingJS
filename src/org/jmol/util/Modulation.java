@@ -3,6 +3,7 @@ package org.jmol.util;
 import java.util.Hashtable;
 
 import javajs.util.AU;
+import javajs.util.PT;
 
 /**
  * A class to allow for more complex vibrations and associated phenomena, such
@@ -368,5 +369,9 @@ public class Modulation {
 //      pn = p;
 //    }
 //  }
+
+  public String toString() {
+    return "[Modulation " + type + " " + PT.toJSON(null, params) + "]";
+  }
 
 }

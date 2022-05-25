@@ -443,7 +443,7 @@ public class ShapeManager {
     BS bsOK = bsRenderableAtoms;
     ms.getAtomsInFrame(bsOK);
     Vibration[] vibrationVectors = ms.vibrations;
-    boolean vibs = (vibrationVectors != null && tm.vibrationOn);
+    boolean vibsOn = (vibrationVectors != null && tm.vibrationOn);
     boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
@@ -455,7 +455,7 @@ public class ShapeManager {
       // PDB objects such as cartoons and traces, which 
       // use Cartesian coordinates, not screen coordinates
       Atom atom = atoms[i];
-      P3i screen = (vibs && atom.hasVibration() ? tm.transformPtVib(atom,
+      P3i screen = (vibsOn && atom.hasVibration() ? tm.transformPtVib(atom,
           vibrationVectors[i]) : tm.transformPt(atom));
       if (screen.z == 1 && tm.internalSlab && tm.xyzIsSlabbedInternal(atom)) {
         bsSlabbed.set(i);
@@ -469,7 +469,7 @@ public class ShapeManager {
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
       if (checkOccupancy
           && vibrationVectors[i] != null
-          && (occ = vibrationVectors[i].getOccupancy100(vibs)) != Integer.MIN_VALUE) {
+          && (occ = vibrationVectors[i].getOccupancy100(vibsOn)) != Integer.MIN_VALUE) {
         //System.out.println(atom + " " + occ);
         haveMods = true;
         atom.setShapeVisibility(Atom.ATOM_VISSET, false);
