@@ -281,8 +281,6 @@ public class ScriptMathProcessor {
   }
 
   public boolean addXDouble(double x) {
-    if (Double.isNaN(x))
-      return addXStr("NaN");
     putX(SV.newD(x));
     return wasX = true;
   }
@@ -1394,7 +1392,7 @@ public class ScriptMathProcessor {
           }
           return addXList(lnew);
         }
-        return addXStr("NaN");
+        return addXDouble(Double.NaN);
       case T.point3f:
         pt = P3d.newP((P3d) x1.value);
         switch (x2.tok) {
@@ -1575,7 +1573,7 @@ public class ScriptMathProcessor {
         case -9:
           return addXM3d(q.getMatrix());
         default:
-          return addXStr("NaN");
+          return addXDouble(Double.NaN);
         }
       case T.matrix4f:
         M4d m4 = (M4d) x1.value;

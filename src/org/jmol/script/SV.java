@@ -63,7 +63,8 @@ public class SV extends T implements JSONEncodable {
 
   public final static SV vT = newSV(on, 1, "true");
   public final static SV vF = newSV(off, 0, "false");
-
+  public final static SV vNaN = newSV(decimal, Integer.MAX_VALUE, Double.valueOf(Double.NaN));
+  
   public int index = Integer.MAX_VALUE;    
 
   public String myName;
@@ -82,14 +83,16 @@ public class SV extends T implements JSONEncodable {
     return sv;
   }
   
-  public static SV newF(float f) {
-    SV sv = new SV();
-    sv.tok = decimal;
-    sv.value = Double.valueOf(f);
-    return sv;
-  }
+//  public static SV newF(float f) {
+//    SV sv = new SV();
+//    sv.tok = decimal;
+//    sv.value = Double.valueOf(f);
+//    return sv;
+//  }
   
   public static SV newD(double d) {
+    if (d != d)
+      return vNaN;
     SV sv = new SV();
     sv.tok = decimal;
     sv.value = Double.valueOf(d);
@@ -362,7 +365,7 @@ public class SV extends T implements JSONEncodable {
       return (itest ? vT : vF);
     case 1:
       return (inum > Integer.MAX_VALUE || inum != Math.floor(inum)
-          ? SV.newF(inum) : newI((int) inum));
+          ? SV.newD(inum) : newI((int) inum));
     case 2:
       Lst<SV> v = new javajs.util.Lst<SV>();
       for (int i = 0, n = array.length; i < n; i++)
@@ -1453,6 +1456,8 @@ public class SV extends T implements JSONEncodable {
   public static boolean areEqual(SV x1, SV x2) {
     if (x1 == null || x2 == null)
       return false;
+    if (x1.value == x2.value)
+        return true;
     if (x1.tok == x2.tok) {
       switch (x1.tok) {
       case integer:
@@ -1478,7 +1483,7 @@ public class SV extends T implements JSONEncodable {
         return ((M4d) x1.value).equals(x2.value);
       }
     }
-    return (Math.abs(dValue(x1) - dValue(x2)) < 1e-15);
+    return (x1.isNaN() ? x2.isNaN() : Math.abs(dValue(x1) - dValue(x2)) < 1e-15);
   }
 
   /**
@@ -1933,6 +1938,10 @@ public class SV extends T implements JSONEncodable {
     return "{"
         + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
             0) : PT.toJSON(key, property)) + "}";
+  }
+
+  public boolean isNaN() {
+    return (this == vNaN || "NaN".equals(value));
   }
 
 }

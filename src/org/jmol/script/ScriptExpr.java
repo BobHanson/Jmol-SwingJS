@@ -1299,19 +1299,26 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   protected boolean compareFloat(int tokOperator, double a, double b) {
+    // simple NaN check all comparisons are false
+    // Jmol DOES allow NaN == NaN
+    // check for one but not the other being NaN
+    // which is always false
+    if ((a == a) != (b == b))
+      return (tokOperator == T.opNE);
+    // either both are NaN or both are not NaN
     switch (tokOperator) {
     case T.opLT:
       return a < b;
     case T.opLE:
-      return a <= b;
+      return a <= b || a != a;
     case T.opGE:
-      return a >= b;
+      return a >= b || a != a;
     case T.opGT:
       return a > b;
     case T.opEQ:
-      return a == b;
+      return a == b || a != a; // a is NaN and thus b is also NaN
     case T.opNE:
-      return a != b && !Double.isNaN(a);
+      return a != b && a == a; // opposite of the above
     }
     return false;
   }

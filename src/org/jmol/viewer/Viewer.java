@@ -6037,7 +6037,8 @@ public class Viewer extends JmolViewer
       setIntPropertyTok(key, tok, SV.newV(T.string, value).asInt());
       break;
     case T.floatparam:
-      setFloatPropertyTok(key, tok, PT.parseDouble(value));
+      if (!"NaN".equals(value))
+        setFloatPropertyTok(key, tok, PT.parseDouble(value));
       break;
     default:
       setStringPropertyTok(key, tok, value);
@@ -6265,7 +6266,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public void setFloatProperty(String key, double value) {
-    if (Double.isNaN(value) || key == null || key.length() == 0)
+    if (key == null || key.length() == 0)
       return;
     if (key.charAt(0) == '_') {
       g.setF(key, value);
@@ -6282,12 +6283,17 @@ public class Viewer extends JmolViewer
     case T.intparam:
       setIntPropertyTok(key, tok, (int) value);
       break;
+    case T.floatparam:
+      if (Double.isNaN(value))
+        return;
+      //$FALL-THROUGH$
     default:
       setFloatPropertyTok(key, tok, value);
     }
   }
 
   private void setFloatPropertyTok(String key, int tok, double value) {
+    // ensure that the value passed here is not NaN
     switch (tok) {
     case T.cartoonblockheight:
       // 14.11.0
