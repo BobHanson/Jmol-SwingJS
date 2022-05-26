@@ -89,10 +89,12 @@ public class ModelKit {
     int type;
     
     private P3d pt;
-    private P3d[] points;
     private P3d offset;
     private P4d plane;
     private V3d unitVector;
+
+    // not used to date
+    private P3d[] points;
     private double value;
       
     public Constraint(P3d pt, int type, Object[] params) throws IllegalArgumentException {
@@ -1962,14 +1964,14 @@ public class ModelKit {
    * MODELKIT ADD @3 ...
    * 
    * @param type
-   * @param pt the new point
+   * @param pts one or more new points
    * @param bsAtoms the atoms to process, presumably from different sites
    * @param packing  "packed" or ""
    * @param cmd the command generating this call
    * @param isClick 
    * @return the number of atoms added
    */
-  public int cmdAssignAddAtoms(String type, P3d pt, BS bsAtoms, String packing,
+  public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms, String packing,
                                String cmd, boolean isClick) {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
@@ -1979,24 +1981,25 @@ public class ModelKit {
         return 0;
       SymmetryInterface uc = vwr.getOperativeSymmetry();
       if (uc == null) {
-        if (isPoint)
-          assignAtoms(pt, true, -1, type, cmd, false, null, 1, -1, null, null, "");
-        return (isPoint ? 1 : 0);
+        if (isPoint) {
+          for (int i = 0; i < pts.length; i++)
+            assignAtoms(pts[i], true, -1, type, cmd, false, null, 1, -1, null, null, "");
+        }
+        return (isPoint ? pts.length : 0);
       }
       BS bsM = vwr.getThisModelAtoms();
       int n = bsM.cardinality();
       if (n == 0)
         packing = "zapped;" + packing;
       String stype = "" + type;
-      P3d pf = null;
-      isPoint = (pt != null);
-      if (isPoint) {
-        pf = P3d.newP(pt);
-        uc.toFractional(pf, true);
-      }
       Lst<P3d> list = new Lst<P3d>();
       int atomicNo = -1;
       int site = 0;
+      P3d pf = null;
+      if (pts.length == 1) {
+        pf = P3d.newP(pts[0]);
+        uc.toFractional(pf, true);
+      }       
       for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
           P3d p = P3d.newP(vwr.ms.at[i]);
           uc.toFractional(p, true);
@@ -2014,8 +2017,10 @@ public class ModelKit {
       if (isPoint) {
         // new atom, but connected to an current atom (multiple versions
         BS bsEquiv = (bsAtoms == null ? null : vwr.ms.getSymmetryEquivAtoms(bsAtoms));
-        assignAtoms(P3d.newP(pt), true, atomIndex, stype, null, false, bsEquiv, atomicNo, site, uc,
-            list, packing);
+        for (int i = 0; i < pts.length; i++) {
+            assignAtoms(P3d.newP(pts[i]), true, atomIndex, stype, null, false, bsEquiv, atomicNo, site, uc,
+                list, packing);
+        }
       } else {
         // not a new point
         BS sites = new BS();
@@ -2241,6 +2246,7 @@ public class ModelKit {
    * @param iatom
    * @param ptNew
    * @param doAssign allow for exit with setting ptNew but not creating atoms
+   * @param allowProjection 
    * @return number of atoms moved
    */
   public int moveConstrained(int iatom, P3d ptNew, boolean doAssign, boolean allowProjection) {

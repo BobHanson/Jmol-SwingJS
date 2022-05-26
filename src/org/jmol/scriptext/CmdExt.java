@@ -6164,6 +6164,7 @@ public class CmdExt extends ScriptExt {
     boolean isAdd = (mode == T.add);
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
+    P3d[] pts = null;
     if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove || isAdd)
       i++;
     else
@@ -6240,8 +6241,11 @@ public class CmdExt extends ScriptExt {
       } else {
         type = e.optParameterAsString(i);      
       }
-      if (e.isPoint3f(e.iToken + 1))
+      if (e.isPoint3f(e.iToken + 1)) {
         pt = getPoint3f(++e.iToken, true);
+      } else if (e.isArrayParameter(e.iToken + 1)) {
+        pts = e.getPointArray(e.iToken + 1, -1, false);
+      }
       if (type.length() == 0)
         type = null;
       if (tokAt(e.iToken + 1) == T.packed) {
@@ -6279,7 +6283,11 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
     case T.add:
-      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pt, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
+      if (pt == null && bsAtoms == null && pts == null)
+        invArg();
+      if (pts == null)
+        pts = new P3d[] { pt };
+      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pts, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms added"), na), false);
       break;
