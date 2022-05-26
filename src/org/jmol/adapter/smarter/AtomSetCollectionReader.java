@@ -1066,6 +1066,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private String filterAtomNameTerminator = ";";  
   private boolean filterElement;
   protected boolean filterHetero;
+  protected boolean filterAllHetero;
   private boolean filterEveryNth;
   String filterSymop;
   private int filterN;
@@ -1147,10 +1148,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (checkFilterKey("HETATM")) {
       filterHetero = true;
       filter = PT.rep(filter, "HETATM", "HETATM-Y");
+      filterCased = PT.rep(filterCased, "HETATM", "HETATM-Y");
     }
     if (checkFilterKey("ATOM")) {
       filterHetero = true;
       filter = PT.rep(filter, "ATOM", "HETATM-N");
+      filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
     }
     
     // can't use getFilter() here because form includes a semicolon:
@@ -1175,6 +1178,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     filterChain = checkFilterKey(":");
     filterAltLoc = checkFilterKey("%");
     filterEveryNth = checkFilterKey("/=");
+    filterAllHetero = checkFilterKey("ALLHET");
     if (filterEveryNth)
       filterN = parseIntAt(filter, filter.indexOf("/=") + 2);
     else if (filter.startsWith("=") || filter.indexOf(";=") >= 0)
@@ -1258,7 +1262,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     boolean isOK = checkFilter(atom, filter1, filter1Cased);
     if (filter2 != null)
       isOK |= checkFilter(atom, filter2, filter2Cased);
-    if (isOK && filterEveryNth)
+    if (isOK && filterEveryNth && (!atom.isHetero || !filterAllHetero))
       isOK = (((nFiltered++) % filterN) == 0);
     bsFilter.setBitTo(iAtom >= 0 ? iAtom : asc.ac, isOK);
     return isOK;
@@ -1272,6 +1276,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * @return  true if a filter is found
    */
   private boolean checkFilter(Atom atom, String f, String fCased) {
+    if (atom.isHetero && filterAllHetero)
+      return true;
     return (!filterGroup3 || atom.group3 == null || !filterReject(f, "[",
         atom.group3.toUpperCase() + "]"))
         && (!filterAtomName || allowAtomName(atom.atomName, f))
