@@ -5451,6 +5451,7 @@ public class Viewer extends JmolViewer
       g.setO("_fileDropped", fileName);
       g.setUserVariable("doDrop", SV.vT);
       g.setUserVariable("dropFileType", SV.newS(""));
+      g.setUserVariable("dropFileName", SV.newS(fileName));
     }
     // we should handle this if it wasn't handled or the handler did not set doDrop = false
     boolean handled = sm.setStatusDragDropped(mode, x, y, fileName, retType);
