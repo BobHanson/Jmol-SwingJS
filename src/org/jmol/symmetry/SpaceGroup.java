@@ -543,6 +543,7 @@ class SpaceGroup {
       init(false);
       return -1;
     }
+    xyz0 = PT.rep(xyz0, " ", "");
     boolean isSpecial = (xyz0.charAt(0) == '=');
     if (isSpecial)
       xyz0 = xyz0.substring(1);
