@@ -3743,7 +3743,7 @@ public class MathExt {
     if (iOp == Integer.MIN_VALUE)
       iOp = 0;
     Map<String, ?> map = null;
-    if (xyz != null) {
+    if (xyz != null && xyz.indexOf(",") < 0) {
       if (apt == narg) {
         map = vwr.ms.getPointGroupInfo(null);
       } else if (args[apt].tok == T.hash) {
