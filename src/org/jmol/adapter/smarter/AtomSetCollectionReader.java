@@ -200,7 +200,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean ignoreFileUnitCell;
   protected boolean ignoreFileSpaceGroupName;
   public double[] unitCellParams; //0-5 a b c alpha beta gamma; 6-21 matrix c->f
-  public double[] unitCellParamsD;
   protected int desiredModelNumber = Integer.MIN_VALUE;
   public SymmetryInterface symmetry;
   protected OC out;
@@ -884,7 +883,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (ignoreFileUnitCell)
       return;
     if (i == 0)
-      for (int j = 0; j < 6; j++)
+      for (int j = 0; j < SimpleUnitCell.PARAM_STD; j++)
         unitCellParams[j] = 0;  
     i = 6 + i * 3;
     unitCellParams[i++] = xyz[i0++];
@@ -901,69 +900,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       if (polymerX)
         unitCellParams[1] = -1;
     }
-  }
-
-  public void addExplicitLatticeVectorD(int i, double[] xyz, int i0) {
-    if (ignoreFileUnitCell)
-      return;
-    if (i == 0)
-      for (int j = 0; j < 6; j++)
-        unitCellParamsD[j] = 0;  
-    i = 6 + i * 3;
-    unitCellParamsD[i++] = xyz[i0++];
-    unitCellParamsD[i++] = xyz[i0++];
-    unitCellParamsD[i] = xyz[i0];
-    if (Double.isNaN(unitCellParamsD[0])) {
-      for (i = 0; i < SimpleUnitCell.PARAM_STD; i++)
-        unitCellParamsD[i] = -1;
-    }
-    iHaveUnitCell = checkUnitCellD(SimpleUnitCell.PARAM_VABC+9);
-    if (iHaveUnitCell) {
-      if (slabXY || polymerX)
-        unitCellParamsD[2] = -1;
-      if (polymerX)
-        unitCellParamsD[1] = -1;
-    }
-  }
-
-  private boolean checkUnitCellD(int n) {
-    for (int i = 0; i < n; i++)
-      if (Double.isNaN(unitCellParamsD[i]))
-        return false;
-    if (n == SimpleUnitCell.PARAM_M4+16 && unitCellParamsD[0] == 1) {
-      if (unitCellParamsD[1] == 1 
-          && unitCellParamsD[2] == 1 
-          && unitCellParamsD[SimpleUnitCell.PARAM_M4] == 1 
-          && unitCellParamsD[SimpleUnitCell.PARAM_M4+5] == 1 
-          && unitCellParamsD[SimpleUnitCell.PARAM_M4+10] == 1 
-          ) {
-        // this is an mmCIF or PDB case for NMR models having
-        // CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          
-        // ORIGX1      1.000000  0.000000  0.000000        0.00000                         
-        // ORIGX2      0.000000  1.000000  0.000000        0.00000                         
-        // ORIGX3      0.000000  0.000000  1.000000        0.00000                         
-        // SCALE1      1.000000  0.000000  0.000000        0.00000                         
-        // SCALE2      0.000000  1.000000  0.000000        0.00000                         
-        // SCALE3      0.000000  0.000000  1.000000        0.00000 
-        return false; 
-      }
-    }
-    if (n == SimpleUnitCell.PARAM_STD && Double.isNaN(unitCellParamsD[SimpleUnitCell.PARAM_VABC])) {
-      if (slabXY && unitCellParamsD[2] > 0) {
-        SimpleUnitCell.addVectorsD(unitCellParamsD);
-        unitCellParamsD[2] = -1;
-      } else if (polymerX && unitCellParamsD[1] > 0) {
-        SimpleUnitCell.addVectorsD(unitCellParamsD);
-        unitCellParamsD[1] = unitCellParamsD[2] = -1;
-      }
-    }
-    if (doApplySymmetry) {
-      getSymmetry();
-      doConvertToFractional = !fileCoordinatesAreFractional;
-    }
-    //if (but not only if) applying symmetry do we force conversion
-//    checkUnitCellOffset();
-    return true;
   }
 
   private boolean checkUnitCell(int n) {
@@ -990,10 +926,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     if (n == SimpleUnitCell.PARAM_STD && Double.isNaN(unitCellParams[SimpleUnitCell.PARAM_VABC])) {
       if (slabXY && unitCellParams[2] > 0) {
-        SimpleUnitCell.addVectorsD(unitCellParams);
+        SimpleUnitCell.addVectors(unitCellParams);
         unitCellParams[2] = -1;
       } else if (polymerX && unitCellParams[1] > 0) {
-        SimpleUnitCell.addVectorsD(unitCellParams);
+        SimpleUnitCell.addVectors(unitCellParams);
         unitCellParams[1] = unitCellParams[2] = -1;
       }
     }

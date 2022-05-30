@@ -433,7 +433,7 @@ public class MathExt {
         ucnew = new P3d[4];
         for (int i = 0; i < 4; i++)
           ucnew[i] = new P3d();
-        SimpleUnitCell.setOabcD(s, null, ucnew);
+        SimpleUnitCell.setOabc(s, null, ucnew);
       } else if (s.indexOf(",") >= 0) {
         return mp.addXObj(vwr.getV0abc(-1, s));
       }
@@ -471,7 +471,7 @@ public class MathExt {
           double[] params = new double[6];
           for (int i = 0; i < 6; i++)
             params[i] = uc.get(i).asDouble();
-          SimpleUnitCell.setOabcD(null, params, ucnew);
+          SimpleUnitCell.setOabc(null, params, ucnew);
           break;
         default:
           return false;

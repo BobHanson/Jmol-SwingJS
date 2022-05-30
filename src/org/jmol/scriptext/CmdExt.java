@@ -481,7 +481,7 @@ public class CmdExt extends ScriptExt {
         } else {
           if (tokAt(i) == T.string) {
             fparams = new double[6];
-            SimpleUnitCell.setOabcD(s, fparams, null);
+            SimpleUnitCell.setOabc(s, fparams, null);
           } else {
             fparams = eval.doubleParameterSet(i, 6, 9);
           }

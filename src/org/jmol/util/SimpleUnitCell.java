@@ -55,18 +55,18 @@ public class SimpleUnitCell {
   public static final int PARAM_SCALE = 25;
   public static final int PARAM_COUNT = 26;
 
-  protected double[] unitCellParamsD;
-  public M4d matrixCartesianToFractionalD;
-  public M4d matrixFractionalToCartesianD;
-  protected M4d matrixCtoFNoOffsetD;
-  protected M4d matrixFtoCNoOffsetD;
+  protected double[] unitCellParams;
+  public M4d matrixCartesianToFractional;
+  public M4d matrixFractionalToCartesian;
+  protected M4d matrixCtoFNoOffset;
+  protected M4d matrixFtoCNoOffset;
 
   
 
   protected int dimension = 3;
   public double volume;
 
-  private P3d fractionalOriginD;
+  private P3d fractionalOrigin;
 
   protected final static double toRadians = Math.PI * 2 / 360;
   private int na, nb, nc;
@@ -88,13 +88,13 @@ public class SimpleUnitCell {
 //        && !Double.isNaN(parameters[14])));
 //  }
 //
-  public static boolean isValidD(double[] parameters) {
+  public static boolean isValid(double[] parameters) {
     return (parameters != null && (parameters[0] > 0 || parameters.length > 14
         && !Double.isNaN(parameters[14])));
   }
 
   protected SimpleUnitCell() {
-    fractionalOriginD = new P3d();
+    fractionalOrigin = new P3d();
   }
 
   /**
@@ -121,28 +121,30 @@ public class SimpleUnitCell {
    * 
    * @return a simple unit cell
    */
-  public static SimpleUnitCell newAD(double[] params) {
+  public static SimpleUnitCell newA(double[] params) {
     SimpleUnitCell c = new SimpleUnitCell();
-    c.initD(params);
+    c.init(params);
     return c;
   }
 
-  protected void initD(double[] params) {
+  protected void init(double[] params) {
     if (params == null)
       params = new double[] {1, 1, 1, 90, 90, 90};
-    if (!isValidD(params))
+    if (!isValid(params))
       return;
-    params = unitCellParamsD = AU.arrayCopyD(params, params.length);
+    params = unitCellParams = AU.arrayCopyD(params, params.length);
 
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
     
     a = params[0];
     b = params[1];
     c = params[2];
-    if (b < 0) {
-      dimension = 1;
-    } else if (c < 0) {
-      dimension = 2;
+    if (a > 0) {
+      if (b < 0) {
+        dimension = 1;
+      } else if (c < 0) {
+        dimension = 2;
+      }
     }
     
     alpha = params[3];
@@ -160,9 +162,11 @@ public class SimpleUnitCell {
     double fc = nc = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Double.isNaN(params[PARAM_SUPERCELL+2]) ? (int) params[PARAM_SUPERCELL+2] : 1);
     if (params.length > PARAM_SCALE && !Double.isNaN(params[PARAM_SCALE])) {
       double fScale = params[PARAM_SCALE];
-      fa *= fScale;
-      fb *= fScale;
-      fc *= fScale;
+      if (fScale > 0) {
+        fa *= fScale;
+        fb *= fScale;
+        fc *= fScale;
+      }
     } else {
       fa = fb = fc = 1;
     }
@@ -235,22 +239,22 @@ public class SimpleUnitCell {
         }
         scaleMatrix[i] = params[6 + i] * f;
       }      
-      matrixCartesianToFractionalD = M4d.newA16(scaleMatrix);
-      matrixCartesianToFractionalD.getTranslation(fractionalOriginD);
-      matrixFractionalToCartesianD = M4d.newM4(matrixCartesianToFractionalD).invert();
+      matrixCartesianToFractional = M4d.newA16(scaleMatrix);
+      matrixCartesianToFractional.getTranslation(fractionalOrigin);
+      matrixFractionalToCartesian = M4d.newM4(matrixCartesianToFractional).invert();
       if (params[0] == 1)
         setParamsFromMatrix();
     } else if (params.length > 14 && !Double.isNaN(params[14])) {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
-      M4d m = matrixFractionalToCartesianD = new M4d();
+      M4d m = matrixFractionalToCartesian = new M4d();
       m.setColumn4(0, params[6] * fa, params[7] * fa, params[8] * fa, 0);
       m.setColumn4(1, params[9] * fb, params[10] * fb, params[11] * fb, 0);
       m.setColumn4(2, params[12] * fc, params[13] * fc, params[14] * fc, 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractionalD = M4d.newM4(matrixFractionalToCartesianD).invert();
+      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian).invert();
     } else {
-      M4d m = matrixFractionalToCartesianD = new M4d();
+      M4d m = matrixFractionalToCartesian = new M4d();
       
       if (rotateHex) {
         // 1, 2. align a and b symmetrically about the x axis (AFLOW)
@@ -269,15 +273,15 @@ public class SimpleUnitCell {
           * (cosAlpha - cosBeta * cosGamma) / sinGamma), (volume / (a
           * b * sinGamma)), 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractionalD = M4d.newM4(matrixFractionalToCartesianD).invert();
+      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian).invert();
     }
-    matrixCtoFNoOffsetD = matrixCartesianToFractionalD;
-    matrixFtoCNoOffsetD = matrixFractionalToCartesianD;
+    matrixCtoFNoOffset = matrixCartesianToFractional;
+    matrixFtoCNoOffset = matrixFractionalToCartesian;
   }
 
-  public static void addVectorsD(double[] params) {
-    SimpleUnitCell c = SimpleUnitCell.newAD(params);
-    M4d m = c.matrixFractionalToCartesianD;
+  public static void addVectors(double[] params) {
+    SimpleUnitCell c = SimpleUnitCell.newA(params);
+    M4d m = c.matrixFractionalToCartesian;
     for (int i = 0; i < 9; i++)
     params[PARAM_VABC + i] = m.getElement(i%3, i/3);
   }
@@ -288,9 +292,9 @@ public class SimpleUnitCell {
     V3d va = V3d.new3(1,  0,  0);
     V3d vb = V3d.new3(0,  1,  0);
     V3d vc = V3d.new3(0,  0,  1);
-    matrixFractionalToCartesianD.rotate(va);
-    matrixFractionalToCartesianD.rotate(vb);
-    matrixFractionalToCartesianD.rotate(vc);
+    matrixFractionalToCartesian.rotate(va);
+    matrixFractionalToCartesian.rotate(vb);
+    matrixFractionalToCartesian.rotate(vc);
     setABC(va, vb, vc);
     setCellParams();
   }
@@ -308,7 +312,7 @@ public class SimpleUnitCell {
     alpha = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
     beta = (c < 0 ? 90 : va.angle(vc) / toRadians);
     gamma = (b < 0 ? 90 : va.angle(vb) / toRadians);
-    double[] p = unitCellParamsD;
+    double[] p = unitCellParams;
     p[0] = a;
     p[1] = b;
     p[2] = c;
@@ -339,7 +343,7 @@ public class SimpleUnitCell {
   private P3d fo = new P3d();
   
   public P3d getFractionalOrigin() {
-    return (P3d) fractionalOriginD.putP(fo);
+    return (P3d) fractionalOrigin.putP(fo);
   }
 
   public final static int INFO_DIMENSIONS = 6;
@@ -364,28 +368,22 @@ public class SimpleUnitCell {
   }
 
   public final void toCartesian(T3d pt, boolean ignoreOffset) {
-    if (matrixFractionalToCartesianD != null)
-      (ignoreOffset ? matrixFtoCNoOffsetD : matrixFractionalToCartesianD)
-          .rotTrans(pt);
-  }
-
-  public final void toCartesianF(T3d pt, boolean ignoreOffset) {
-    if (matrixFractionalToCartesianD != null)
-      (ignoreOffset ? matrixFtoCNoOffsetD : matrixFractionalToCartesianD)
+    if (matrixFractionalToCartesian != null)
+      (ignoreOffset ? matrixFtoCNoOffset : matrixFractionalToCartesian)
           .rotTrans(pt);
   }
 
   public void toFractionalM(M4d m) {
-    if (matrixCartesianToFractionalD == null)
+    if (matrixCartesianToFractional == null)
       return;
-    m.mul(matrixFractionalToCartesianD);
-    m.mul2(matrixCartesianToFractionalD, m);
+    m.mul(matrixFractionalToCartesian);
+    m.mul2(matrixCartesianToFractional, m);
   }
 
   public final void toFractional(T3d pt, boolean ignoreOffset) {
-    if (matrixCartesianToFractionalD == null)
+    if (matrixCartesianToFractional == null)
       return;
-    (ignoreOffset ? matrixCtoFNoOffsetD : matrixCartesianToFractionalD)
+    (ignoreOffset ? matrixCtoFNoOffset : matrixCartesianToFractional)
         .rotTrans(pt);
   }
 
@@ -397,12 +395,12 @@ public class SimpleUnitCell {
     return (dimension == 2);
   }
 
-  public final double[] getUnitCellParamsD() {
-    return unitCellParamsD;
+  public final double[] getUnitCellParams() {
+    return unitCellParams;
   }
 
-  public final double[] getUnitCellAsArrayD(boolean vectorsOnly) {
-    M4d m = matrixFractionalToCartesianD;
+  public final double[] getUnitCellAsArray(boolean vectorsOnly) {
+    M4d m = matrixFractionalToCartesian;
     return (vectorsOnly ? new double[] { 
         m.m00, m.m10, m.m20, // Va
         m.m01, m.m11, m.m21, // Vb
@@ -496,7 +494,7 @@ public class SimpleUnitCell {
    * @param ucnew  to create and return; null if only to set params
    * @return T3d[4] origin, a, b c
    */
-  public static T3d[] setOabcD(String abcabg, double[] params, T3d[] ucnew) {
+  public static T3d[] setOabc(String abcabg, double[] params, T3d[] ucnew) {
     if (abcabg != null) {
       if (params == null)
         params = new double[6];
@@ -507,7 +505,7 @@ public class SimpleUnitCell {
     }
     if (ucnew == null)
       return null;
-    double[] f = newAD(params).getUnitCellAsArrayD(true);
+    double[] f = newA(params).getUnitCellAsArray(true);
       ucnew[1].set(f[0], f[1], f[2]);
       ucnew[2].set(f[3], f[4], f[5]);
       ucnew[3].set(f[6], f[7], f[8]);

@@ -107,7 +107,7 @@ class SymmetryInfo {
     }
     if (unitCellParams == null)
       unitCellParams = (double[]) info.get("unitCellParams");
-    return (SimpleUnitCell.isValidD(unitCellParams) ? unitCellParams : null);
+    return (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
   }
 }
 

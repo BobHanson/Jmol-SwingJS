@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.SB;
 
@@ -128,22 +127,21 @@ public class OptimadeReader extends AtomSetCollectionReader {
         return false;
       }
       // this will set [0-6] to -1
-      unitCellParamsD = new double[SimpleUnitCell.PARAM_COUNT];
       unitCellParams[0] = Double.NaN;
       if (isSlab || isPolymer) {
         abc[i] = Math.sqrt(xyz[0]*xyz[0]+xyz[1]*xyz[1]+xyz[2]*xyz[2]);
       }
+      unitCellParams[0] = 0;    
       if (i == 2) {
         if (isSlab || isPolymer) {
-          unitCellParamsD[0] = abc[permutation];
+          unitCellParams[0] = abc[permutation];
           if (isSlab)
-            unitCellParamsD[1] = abc[(permutation + 1)%3];
+            unitCellParams[1] = abc[(permutation + 1)%3];
         }
         
       }
-      addExplicitLatticeVectorD((i + permutation)%3, xyz, 0);
+      addExplicitLatticeVector((i + permutation)%3, xyz, 0);
     }
-    
     doApplySymmetry = true;
     return true;
   }

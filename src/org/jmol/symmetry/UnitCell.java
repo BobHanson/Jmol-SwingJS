@@ -123,7 +123,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
 
   private static UnitCell from(T3d origin, double[] parameters, boolean setRelative) {
     UnitCell c = new UnitCell();
-    c.initD(parameters);
+    c.init(parameters);
     c.allFractionalRelative = setRelative;
     c.initUnitcellVertices();
     c.setCartesianOffset(origin);
@@ -138,7 +138,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    */
   public static UnitCell fromParams(double[] params, boolean setRelative) {
     UnitCell c = new UnitCell();
-    c.initD(params);
+    c.init(params);
     c.initUnitcellVertices();
     c.allFractionalRelative = setRelative;
     return  c;
@@ -149,8 +149,8 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       return;
     M4d m = new M4d();
     m.setToM3(mat);
-    matrixFractionalToCartesianD.mul2(m, matrixFractionalToCartesianD);
-    matrixCartesianToFractionalD.setM4(matrixFractionalToCartesianD).invert();
+    matrixFractionalToCartesian.mul2(m, matrixFractionalToCartesian);
+    matrixCartesianToFractional.setM4(matrixFractionalToCartesian).invert();
     initUnitcellVertices();
   }
 
@@ -165,14 +165,14 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param offset
    */
   final void toUnitCell(T3d p, T3d offset) {
-    if (matrixCartesianToFractionalD == null)
+    if (matrixCartesianToFractional == null)
       return;
     to(ptT.setP(p), (offset == null ? null : ptT2.setP(offset)));
     ptT.putP(p);    
   }
   
   final void toUnitCellD(T3d p, T3d offset) {
-    if (matrixCartesianToFractionalD == null)
+    if (matrixCartesianToFractional == null)
       return;
     to(p, offset);
   }
@@ -180,17 +180,17 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   private void to(T3d p, T3d offset) {
     if (offset == null) {
       // used redefined unitcell 
-      matrixCartesianToFractionalD.rotTrans(p);
+      matrixCartesianToFractional.rotTrans(p);
       unitize(p);
-      matrixFractionalToCartesianD.rotTrans(p);
+      matrixFractionalToCartesian.rotTrans(p);
     } else {
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
       // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffsetD.rotTrans(p);
+      matrixCtoFNoOffset.rotTrans(p);
       unitize(p);
       p.add(offset);
-      matrixFtoCNoOffsetD.rotTrans(p);
+      matrixFtoCNoOffset.rotTrans(p);
     }
   }
 
@@ -201,21 +201,21 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param offset
    */
   final void toUnitCellRnd(T3d pt, T3d offset) {
-    if (matrixCartesianToFractionalD == null)
+    if (matrixCartesianToFractional == null)
       return;
     if (offset == null) {
       // used redefined unitcell 
-      matrixCartesianToFractionalD.rotTrans(pt);
+      matrixCartesianToFractional.rotTrans(pt);
       unitizeRnd(pt);
-      matrixFractionalToCartesianD.rotTrans(pt);
+      matrixFractionalToCartesian.rotTrans(pt);
     } else {
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
       // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffsetD.rotTrans(pt);
+      matrixCtoFNoOffset.rotTrans(pt);
       unitizeRnd(pt);
       pt.add(offset); 
-      matrixFtoCNoOffsetD.rotTrans(pt);
+      matrixFtoCNoOffset.rotTrans(pt);
     }
   }
   
@@ -262,41 +262,41 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       fractionalOffset = new P3d();
       fractionalOffset.setT(pt);
     }
-    matrixCartesianToFractionalD.m03 = -pt.x;
-    matrixCartesianToFractionalD.m13 = -pt.y;
-    matrixCartesianToFractionalD.m23 = -pt.z;
+    matrixCartesianToFractional.m03 = -pt.x;
+    matrixCartesianToFractional.m13 = -pt.y;
+    matrixCartesianToFractional.m23 = -pt.z;
     cartesianOffset.setT(pt);
-    matrixFractionalToCartesianD.m03 = 0;
-    matrixFractionalToCartesianD.m13 = 0;
-    matrixFractionalToCartesianD.m23 = 0;
-    matrixFractionalToCartesianD.rotTrans(cartesianOffset);
-    matrixFractionalToCartesianD.m03 = cartesianOffset.x;
-    matrixFractionalToCartesianD.m13 = cartesianOffset.y;
-    matrixFractionalToCartesianD.m23 = cartesianOffset.z;
+    matrixFractionalToCartesian.m03 = 0;
+    matrixFractionalToCartesian.m13 = 0;
+    matrixFractionalToCartesian.m23 = 0;
+    matrixFractionalToCartesian.rotTrans(cartesianOffset);
+    matrixFractionalToCartesian.m03 = cartesianOffset.x;
+    matrixFractionalToCartesian.m13 = cartesianOffset.y;
+    matrixFractionalToCartesian.m23 = cartesianOffset.z;
     if (allFractionalRelative) {
-      matrixCtoFNoOffsetD.setM4(matrixCartesianToFractionalD);
-      matrixFtoCNoOffsetD.setM4(matrixFractionalToCartesianD);
+      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
+      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
     }
   }
 
   private void setCartesianOffset(T3d origin) {
     cartesianOffset.setT(origin);
-    matrixFractionalToCartesianD.m03 = cartesianOffset.x;
-    matrixFractionalToCartesianD.m13 = cartesianOffset.y;
-    matrixFractionalToCartesianD.m23 = cartesianOffset.z;
+    matrixFractionalToCartesian.m03 = cartesianOffset.x;
+    matrixFractionalToCartesian.m13 = cartesianOffset.y;
+    matrixFractionalToCartesian.m23 = cartesianOffset.z;
     boolean wasOffset = hasOffset();
     fractionalOffset = new P3d();
     fractionalOffset.setT(cartesianOffset);
-    matrixCartesianToFractionalD.m03 = 0;
-    matrixCartesianToFractionalD.m13 = 0;
-    matrixCartesianToFractionalD.m23 = 0;
-    matrixCartesianToFractionalD.rotTrans(fractionalOffset);
-    matrixCartesianToFractionalD.m03 = -fractionalOffset.x;
-    matrixCartesianToFractionalD.m13 = -fractionalOffset.y;
-    matrixCartesianToFractionalD.m23 = -fractionalOffset.z;
+    matrixCartesianToFractional.m03 = 0;
+    matrixCartesianToFractional.m13 = 0;
+    matrixCartesianToFractional.m23 = 0;
+    matrixCartesianToFractional.rotTrans(fractionalOffset);
+    matrixCartesianToFractional.m03 = -fractionalOffset.x;
+    matrixCartesianToFractional.m13 = -fractionalOffset.y;
+    matrixCartesianToFractional.m23 = -fractionalOffset.z;
     if (allFractionalRelative) {
-      matrixCtoFNoOffsetD.setM4(matrixCartesianToFractionalD);
-      matrixFtoCNoOffsetD.setM4(matrixFractionalToCartesianD);
+      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
+      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
     }
     if (!wasOffset && fractionalOffset.lengthSquared() == 0)
       fractionalOffset = null;
@@ -307,11 +307,11 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     if (m != this)
       return m.getInfo();       
     Map<String, Object> info = new Hashtable<String, Object>();
-    info.put("params", unitCellParamsD);
+    info.put("params", unitCellParams);
     info.put("oabc", getUnitCellVectorsD());
     info.put("volume", Double.valueOf(volume));
-    info.put("matFtoC", matrixFractionalToCartesianD);
-    info.put("matCtoF", matrixCartesianToFractionalD);
+    info.put("matFtoC", matrixFractionalToCartesian);
+    info.put("matCtoF", matrixCartesianToFractional);
     return info;
   }
   
@@ -322,8 +322,8 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
        + "\noabc=" + Escape.eAP(getUnitCellVectorsF())
        + "\nvolume=" + volume
-       + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesianD 
-       + "\ncartesian to fractional: " + matrixCartesianToFractionalD : "");
+       + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
+       + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
   }
 
   UnitCell getUnitCellMultiplied() {
@@ -527,7 +527,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
             cell0.z + cell1.z * pt.z);
       }
       pts[i].scale(scale);
-      matrixFractionalToCartesianD.rotTrans(pt);
+      matrixFractionalToCartesian.rotTrans(pt);
       if (!withOffset)
         pt.sub(cartesianOffset);
     }
@@ -538,15 +538,15 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   
   
   private void initUnitcellVertices() {
-    if (matrixFractionalToCartesianD == null)
+    if (matrixFractionalToCartesian == null)
       return;
-    matrixCtoFNoOffsetD = M4d.newM4(matrixCartesianToFractionalD);
-    matrixFtoCNoOffsetD = M4d.newM4(matrixFractionalToCartesianD);
+    matrixCtoFNoOffset = M4d.newM4(matrixCartesianToFractional);
+    matrixFtoCNoOffset = M4d.newM4(matrixFractionalToCartesian);
     vertices = new P3d[8];
     for (int i = 8; --i >= 0;) {
       P3d p = new P3d();
       p.setT(BoxInfo.unitCubePoints[i]);
-      matrixFractionalToCartesianD.rotTrans(vertices[i] = p);
+      matrixFractionalToCartesian.rotTrans(vertices[i] = p);
     }
   }
 
@@ -585,7 +585,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   public P3d[] getUnitCellVectorsD() {
-    M4d m = matrixFractionalToCartesianD;
+    M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newPd(cartesianOffset),
         P3d.new3(fixd(m.m00), fixd(m.m10), fixd(m.m20)), 
@@ -594,7 +594,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   public P3d[] getUnitCellVectorsF() {
-    M4d m = matrixFractionalToCartesianD;
+    M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newP(cartesianOffset),
         P3d.new3(fix(m.m00), fix(m.m10), fix(m.m20)), 
@@ -611,12 +611,12 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   public boolean isSameAs(UnitCell uc) {
-    if (uc.unitCellParamsD.length != unitCellParamsD.length)
+    if (uc.unitCellParams.length != unitCellParams.length)
       return false;
-    for (int i = unitCellParamsD.length; --i >= 0;)
-      if (unitCellParamsD[i] != uc.unitCellParamsD[i]
-          && !(Double.isNaN(unitCellParamsD[i]) && Double
-              .isNaN(uc.unitCellParamsD[i])))
+    for (int i = unitCellParams.length; --i >= 0;)
+      if (unitCellParams[i] != uc.unitCellParams[i]
+          && !(Double.isNaN(unitCellParams[i]) && Double
+              .isNaN(uc.unitCellParams[i])))
         return false;
     return (fractionalOffset == null ? !uc.hasOffset()
         : uc.fractionalOffset == null ? !hasOffset() 
@@ -771,7 +771,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
       String sdef = (String) def;
       String strans = "0,0,0";
       if (sdef.indexOf("a=") == 0)
-        return setOabcD(sdef, null, pts);
+        return setOabc(sdef, null, pts);
       // a,b,c;0,0,0
       int ptc = sdef.indexOf(";");
       if (ptc >= 0) {
@@ -1013,7 +1013,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     checkDuplicate(list, i0, n0, -1);
     if (!tofractional) {
       for (int i = list.size(); --i >= n0;)
-        toCartesianF(list.get(i), true);
+        toCartesian(list.get(i), true);
     }
     return list;
   }

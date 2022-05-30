@@ -508,7 +508,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public double[] getUnitCellParams() {
-    return unitCell.getUnitCellParamsD();
+    return unitCell.getUnitCellParams();
   }
 
 //  @Override
@@ -518,7 +518,7 @@ public class Symmetry implements SymmetryInterface {
 //
   @Override
   public double[] getUnitCellAsArray(boolean vectorsOnly) {
-    return unitCell.getUnitCellAsArrayD(vectorsOnly);
+    return unitCell.getUnitCellAsArray(vectorsOnly);
   }
 
   @Override
@@ -862,7 +862,7 @@ public class Symmetry implements SymmetryInterface {
         }
       }
       for (int j = lst.size(); --j >= 0;)
-        unitCell.toCartesianF(lst.get(j), true); // ignoreOffset
+        unitCell.toCartesian(lst.get(j), true); // ignoreOffset
     }
     return lst;
   }

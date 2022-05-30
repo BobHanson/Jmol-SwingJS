@@ -82,7 +82,7 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     for (int i = 0, pt = 6; i < 3; ++i)
       volumetricVectors[i].set(data[pt++] = parseDoubleStr(rd()) * scale,
           data[pt++] = parseDouble() * scale, data[pt++] = parseDouble() * scale);
-    volume = (double) SimpleUnitCell.newAD(data).volume;
+    volume = (double) SimpleUnitCell.newA(data).volume;
     // v0 here will be the slowest, not the fastest
     while (rd().length() > 2) {
     }    
