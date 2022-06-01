@@ -171,7 +171,7 @@ public class SimpleUnitCell {
       fa = fb = fc = 1;
     }
 
-    if (c <= 0) {
+    if (a < 0 && c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
       V3d va = V3d.new3(params[PARAM_VABC], params[PARAM_VABC+1], params[PARAM_VABC+2]);
       V3d vb = V3d.new3(params[PARAM_VABC+3], params[PARAM_VABC+4], params[PARAM_VABC+5]);

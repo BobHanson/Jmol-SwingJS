@@ -434,8 +434,7 @@ public class AtomSetCollection {
     for (int i = ac; --i >= 0;)
       atoms[i] = null;
     ac = 0;
-    atomSymbolicMap.clear();
-    atomMapAnyCase = false;
+    clearMap();
     atomSetCount = 0;
     iSet = -1;
     for (int i = atomSetAuxiliaryInfo.length; --i >= 0;) {
@@ -868,10 +867,14 @@ public class AtomSetCollection {
       atomSetNumbers[iSet] = atomSetCount;
     }
     if (doClearMap) { // false for CASTEP reader only
-      atomSymbolicMap.clear();
-      atomMapAnyCase = false;
+      clearMap();
     }
     setCurrentModelInfo("title", collectionName);
+  }
+
+  private void clearMap() {
+    atomSymbolicMap.clear();
+    atomMapAnyCase = false;
   }
 
   public int getAtomSetAtomIndex(int i) {

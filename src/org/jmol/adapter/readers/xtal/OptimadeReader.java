@@ -31,18 +31,36 @@ public class OptimadeReader extends AtomSetCollectionReader {
    */
   private int permutation;
   private boolean isPolymer;
-  private boolean isSlab;
+  private boolean isSlab, noSlab;
 
   @Override
   protected void initializeReader() throws Exception {
     setHighPrecision();    
     super.initializeReader();
-    SB sb = new SB();
+    noSlab = checkFilterKey("NOSLAB");
     try {
-      while (rd() != null)
-        sb.append(line);
-      Map<String, Object> json = vwr.parseJSONMap(sb.toString());
-      List<Object> aData = (List<Object>) json.get("data");
+      String strJSON = (String) htParams.get("fileData");
+      if (strJSON == null) {
+        SB sb = new SB();
+        while (rd() != null)
+          sb.append(line);
+        strJSON = sb.toString();
+        line = null;
+      }
+      List<Object> aData = null;
+      if (strJSON.startsWith("[")) {
+        List<Object> data = vwr.parseJSONArray(strJSON);
+        for (int i = 0; i < data.size(); i++) {
+          if (data.get(i) instanceof Map) {
+            aData = (List<Object>) ((Map<String, Object>) data.get(i)).get("data");
+            if (aData != null) {
+              break;
+            }
+          }
+        }
+      } else {
+        aData = (List<Object>) vwr.parseJSONMap(strJSON).get("data");
+      }
       if (aData != null) {
         for (int i = 0; !iHaveDesiredModel && i < aData.size(); i++) {
           Map<String, Object> data = (Map<String, Object>) aData.get(i);
@@ -83,8 +101,10 @@ public class OptimadeReader extends AtomSetCollectionReader {
 
   private void checkDimensionType(double[] dt) {
     isPolymer = isSlab = isMolecular = false;
+    if (noSlab)
+      return;
     permutation = 0;
-    switch((int) (dt[0] + dt[1]*2 + dt[2]*4)) {
+    switch((int) (dt[2] + dt[1]*2 + dt[0]*4)) {
     default:
     case 0: // [0,0,0]
       isMolecular = true;
@@ -126,19 +146,24 @@ public class OptimadeReader extends AtomSetCollectionReader {
       if (!toFloatArray((List<Number>) lattice.get(i), xyz)) {
         return false;
       }
-      // this will set [0-6] to -1
+      // this will set [0-6] to 0
       unitCellParams[0] = Double.NaN;
       if (isSlab || isPolymer) {
         abc[i] = Math.sqrt(xyz[0]*xyz[0]+xyz[1]*xyz[1]+xyz[2]*xyz[2]);
+        if (abc[i] >= 500) {
+          xyz[0] /= abc[i];
+          xyz[1] /= abc[i];
+          xyz[2] /= abc[i];         
+        }
       }
-      unitCellParams[0] = 0;    
+      if (isSlab || isPolymer)
+        unitCellParams[0] = 0;    
       if (i == 2) {
         if (isSlab || isPolymer) {
           unitCellParams[0] = abc[permutation];
           if (isSlab)
             unitCellParams[1] = abc[(permutation + 1)%3];
-        }
-        
+        }        
       }
       addExplicitLatticeVector((i + permutation)%3, xyz, 0);
     }

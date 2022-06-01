@@ -885,7 +885,6 @@ public class TopoCifParser implements Parser {
     String label;
     String specialDetails;
 
-    @SuppressWarnings("unused")
     int idx;
     boolean hasAtoms;
 
@@ -1428,9 +1427,9 @@ public class TopoCifParser implements Parser {
       finalized = true;
     }
 
-    public String getMolecularFormula() {
-      return (mf == null ? (mf = getMF(tatoms)) : mf);
-    }
+//    public String getMolecularFormula() {
+//      return (mf == null ? (mf = getMF(tatoms)) : mf);
+//    }
 
     /**
      * 

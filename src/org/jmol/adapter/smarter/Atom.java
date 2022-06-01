@@ -32,8 +32,6 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 public class Atom extends P3d implements Cloneable {
