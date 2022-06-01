@@ -205,7 +205,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean continueWith(String key) {
-    boolean ret = (key != null && !key.equals("_shelx_hkl_file"));
+    boolean ret = (key != null && (ac == 0 || !key.equals("_shelx_hkl_file")));
     return ret;
   }
 
@@ -282,6 +282,7 @@ public class CifReader extends AtomSetCollectionReader {
         modDim = parseIntStr(data);
         if (modr != null)
           modr.setModDim(modDim);
+      } else if (key.startsWith("_shelx_")) {
       } else if (key.startsWith("_cell_") && key.indexOf("_commen_") < 0) {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
@@ -839,7 +840,12 @@ public class CifReader extends AtomSetCollectionReader {
     key = (String) cifParser.getTokenPeeked();
     if (!continueWith(key))
       return false;
-    data = cifParser.getNextToken();
+    if (key.startsWith("_shelx")) {
+      Logger.error("CifReader skipping " + key);
+      data = cifParser.skipNextToken();
+    } else {
+      data = cifParser.getNextToken();
+    }
     if (debugging && data != null && data.length() > 0 && data.charAt(0) != '\0')
       Logger.debug(">> " + key  + " " + data);
     if (data == null) {
@@ -864,6 +870,7 @@ public class CifReader extends AtomSetCollectionReader {
       key = (String) cifParser.peekToken();
       if (key == null)
         return;
+      System.out.println("CIF loop " + key);
       key = cifParser.fixKey(key0 = key);
     }
     if (modDim > 0)
