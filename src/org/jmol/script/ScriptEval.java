@@ -4395,6 +4395,15 @@ public class ScriptEval extends ScriptExpr {
       }
 
       tok = tokAt(i);
+      switch (tok) {
+      case T.orientation:
+        doOrient = true;
+        loadScript.append(" orientation");
+        vwr.stm.saveOrientation("preload", null);
+        modelName = paramAsStr(++i);
+        tok = T.getTokFromName(modelName);
+        break;
+      }
       // load MENU
       // load DATA "xxx" ...(data here)...END "xxx"
       // load DATA "append_and/or_orientation xxx" ...(data here)...END "append_and/or_orientation xxx"
@@ -4468,14 +4477,6 @@ public class ScriptEval extends ScriptExpr {
         }
         tok = T.getTokFromName(modelName);
         break;
-      case T.orientation:
-        doOrient = true;
-        loadScript.append(" orientation");
-        vwr.stm.saveOrientation("preload", null);
-        modelName = optParameterAsString(++i);
-        tok = T.getTokFromName(modelName);
-        i++;
-        break;
       case T.audio:
         isAudio = true;
         i++;
@@ -4484,8 +4485,9 @@ public class ScriptEval extends ScriptExpr {
         i++;
         loadScript.append(" " + modelName);
         tokType = (tok == T.identifier
-            && PT.isOneOf(modelName.toLowerCase(), JC.LOAD_ATOM_DATA_TYPES) ? T
-            .getTokFromName(modelName) : T.nada);
+            && PT.isOneOf(modelName.toLowerCase(), JC.LOAD_ATOM_DATA_TYPES)
+                ? T.getTokFromName(modelName)
+                : T.nada);
         if (tokType != T.nada) {
           // loading just some data here
           // xyz vxyz vibration temperature occupancy partialcharge
@@ -4529,7 +4531,7 @@ public class ScriptEval extends ScriptExpr {
         }
         break;
       case T.spacegroup:
-        i-= 2;
+        i -= 2;
         filename = "0";
         htParams.put("isEmptyLoad", Boolean.TRUE);
         //$FALL-THROUGH$
@@ -4557,8 +4559,8 @@ public class ScriptEval extends ScriptExpr {
           P3d pt = getPoint3f(i, false, true);
           i = iToken + 1;
           // first last stride
-          htParams.put("firstLastStep", new int[] { (int) pt.x, (int) pt.y,
-              (int) pt.z });
+          htParams.put("firstLastStep",
+              new int[] { (int) pt.x, (int) pt.y, (int) pt.z });
           loadScript.append(" " + Escape.eP(pt));
         } else {
           switch (tokAt(i)) {
@@ -4580,11 +4582,11 @@ public class ScriptEval extends ScriptExpr {
         modelName = optParameterAsString(i + 1);
         isAppend = key.startsWith("append");
         if (isAppend && key.startsWith("append modelindex=")) {
-           int ami = PT.parseInt(key.substring(18));
-           if (ami >= 0) {
-             appendNew = false;
-             htParams.put("appendToModelIndex", Integer.valueOf(ami));
-           }
+          int ami = PT.parseInt(key.substring(18));
+          if (ami >= 0) {
+            appendNew = false;
+            htParams.put("appendToModelIndex", Integer.valueOf(ami));
+          }
         }
         doOrient = (key.indexOf("orientation") >= 0);
         i = addLoadData(loadScript, key, htParams, i);
@@ -4624,19 +4626,17 @@ public class ScriptEval extends ScriptExpr {
     String appendedData = null;
     String appendedKey = null;
 
-    if (isSmiles && tokAt(i+1) == T.filter) {
-        ++i;
-        filter = stringParameter(++i);
+    if (isSmiles && tokAt(i + 1) == T.filter) {
+      ++i;
+      filter = stringParameter(++i);
     }
-    
 
     if (slen == i + 1) {
       // end-of-command options:
       // LOAD SMILES "xxxx" --> load "$xxxx"
 
-      if (filename == null
-          && (i == 0 || filenames == null
-              && (filename = paramAsStr(filePt)).length() == 0))
+      if (filename == null && (i == 0 || filenames == null
+          && (filename = paramAsStr(filePt)).length() == 0))
         filename = getFullPathName(true);
       if (filename == null && filenames == null) {
         cmdZap(false);
@@ -4790,7 +4790,9 @@ public class ScriptEval extends ScriptExpr {
             .append(filename.substring(1)).append(" = ")
             .append(PT.esc((String) o)).append(";\n    ").appendSB(loadScript);
         htParams.put("fileData", o);
-      } else if (!isData && !((filename.startsWith("=") || filename.startsWith("*")) && filename.indexOf("/") > 0)) {
+      } else if (!isData
+          && !((filename.startsWith("=") || filename.startsWith("*"))
+              && filename.indexOf("/") > 0)) {
         // only for cases that can get filename changed to actual reference
         String type = "";
         int pt = filename.indexOf("::");
@@ -4798,10 +4800,11 @@ public class ScriptEval extends ScriptExpr {
           type = filename.substring(0, pt + 2);
           filename = filename.substring(pt + 2);
         }
-        filename = type + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), 
-            isAsync, filename, filePt, !isAppend && pc != pcResume);
-        
-        if (filename.startsWith("cache://")) 
+        filename = type
+            + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
+                filename, filePt, !isAppend && pc != pcResume);
+
+        if (filename.startsWith("cache://"))
           localName = null;
         // on first pass, a ScriptInterruption will be thrown; 
         // on the second pass, we will have the file name, which will be cache://localLoad_n__m
@@ -4815,9 +4818,8 @@ public class ScriptEval extends ScriptExpr {
     if (localName != null) {
       if (localName.equals("."))
         localName = vwr.fm.getFilePath(filename, false, true);
-      if (localName.length() == 0
-          || vwr.fm.getFilePath(localName, false, false).equalsIgnoreCase(
-              vwr.fm.getFilePath(filename, false, false)))
+      if (localName.length() == 0 || vwr.fm.getFilePath(localName, false, false)
+          .equalsIgnoreCase(vwr.fm.getFilePath(filename, false, false)))
         invArg();
       String[] fullPath = new String[] { localName };
       out = vwr.getOutputChannel(localName, fullPath);
@@ -4835,14 +4837,15 @@ public class ScriptEval extends ScriptExpr {
 
       loadScript.append(" ");
       if (isVariable || isInline) {
-        loadScript.append(filename.indexOf('\n') >= 0 || isVariable ? PT
-            .esc(filename) : filename);
+        loadScript
+            .append(filename.indexOf('\n') >= 0 || isVariable ? PT.esc(filename)
+                : filename);
       } else if (!isData) {
         if (localName != null)
           localName = vwr.fm.getFilePath(localName, false, false);
         if (!filename.equals("String[]"))
-          loadScript.append("/*file*/").append(
-              (localName != null ? PT.esc(localName) : "$FILENAME$"));
+          loadScript.append("/*file*/")
+              .append((localName != null ? PT.esc(localName) : "$FILENAME$"));
       }
       if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
           && filename.indexOf("/") > 0) {
@@ -4872,9 +4875,9 @@ public class ScriptEval extends ScriptExpr {
             || ext.startsWith("dssr--")) {
           if (filename.startsWith("="))
             filename += ".cif";
-          filenames = (ext.equals("all") ? new String[] { filename,
-              "*dom/" + id, "*val/" + id } : new String[] { filename,
-              "*" + ext + "/" + id });
+          filenames = (ext.equals("all")
+              ? new String[] { filename, "*dom/" + id, "*val/" + id }
+              : new String[] { filename, "*" + ext + "/" + id });
           filename = "fileSet";
           loadScript = null;
           isVariable = false;
@@ -4917,8 +4920,8 @@ public class ScriptEval extends ScriptExpr {
       htParams.put("isMutate", Boolean.TRUE);
     htParams.put("eval", this);
     errMsg = vwr.loadModelFromFile(null, filename, filenames, null, isAppend,
-        htParams, loadScript, sOptions, tokType, filecat != null ? filecat
-            : isConcat ? "+" : " ");
+        htParams, loadScript, sOptions, tokType,
+        filecat != null ? filecat : isConcat ? "+" : " ");
     if (timeMsg)
       showString(Logger.getTimerMsg("load", 0));
 
@@ -4947,7 +4950,8 @@ public class ScriptEval extends ScriptExpr {
       // note that as ZAP will already have been issued here.
       if (errMsg.indexOf(JC.NOTE_SCRIPT_FILE) == 0) {
         filename = errMsg.substring(JC.NOTE_SCRIPT_FILE.length()).trim();
-        if (filename.indexOf("png|") >= 0 && filename.endsWith("pdb|state.spt")) {
+        if (filename.indexOf("png|") >= 0
+            && filename.endsWith("pdb|state.spt")) {
           // fix for earlier version in JavaScript saving the full state instead of just the PDB file. 
           filename = filename.substring(0, filename.lastIndexOf("|"));
           filename += filename.substring(filename.lastIndexOf("|"));
