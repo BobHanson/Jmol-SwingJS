@@ -282,7 +282,7 @@ public class CifReader extends AtomSetCollectionReader {
         modDim = parseIntStr(data);
         if (modr != null)
           modr.setModDim(modDim);
-      } else if (key.startsWith("_shelx_")) {
+      } else if (skipKey(key)) {
       } else if (key.startsWith("_cell_") && key.indexOf("_commen_") < 0) {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
@@ -340,6 +340,14 @@ public class CifReader extends AtomSetCollectionReader {
     }
     return true;
   }
+
+  private boolean skipKey(String key) {
+    return key.startsWith("_shelx_")
+    || key.startsWith("_reflns_")
+    || key.startsWith("_diffrn_");
+  }
+
+
 
   private void addModelTitle(String key) {
     if (asc.atomSetCount > titleAtomSet)
@@ -840,8 +848,7 @@ public class CifReader extends AtomSetCollectionReader {
     key = (String) cifParser.getTokenPeeked();
     if (!continueWith(key))
       return false;
-    if (key.startsWith("_shelx")) {
-      Logger.error("CifReader skipping " + key);
+    if (skipKey(key)) {
       data = cifParser.skipNextToken();
     } else {
       data = cifParser.getNextToken();
@@ -870,7 +877,6 @@ public class CifReader extends AtomSetCollectionReader {
       key = (String) cifParser.peekToken();
       if (key == null)
         return;
-      System.out.println("CIF loop " + key);
       key = cifParser.fixKey(key0 = key);
     }
     if (modDim > 0)

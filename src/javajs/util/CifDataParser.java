@@ -961,6 +961,7 @@ public class CifDataParser implements GenericCifDataParser {
 
   @Override
   public String skipNextToken() throws Exception {
+    //Logger.error("CifReader skipping " + strPeeked);
     skipToken = true;
     getNextToken();
     skipToken = false;
