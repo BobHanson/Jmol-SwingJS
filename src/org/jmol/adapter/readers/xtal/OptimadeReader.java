@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.util.Logger;
 
 import javajs.util.SB;
 
@@ -84,8 +85,10 @@ public class OptimadeReader extends AtomSetCollectionReader {
     asc.newAtomSet();
     setFractionalCoordinates(false);
     double[] dimensionType = new double[3];
-    toFloatArray((List<Number>) map.get("dimension_types"), dimensionType);
-    checkDimensionType(dimensionType);
+    if (toFloatArray((List<Number>) map.get("dimension_types"),
+        dimensionType)) {
+      checkDimensionType(dimensionType);
+    }
     if (!isMolecular) {
       setSpaceGroupName("P1");
       asc.setInfo("symmetryType",
@@ -171,32 +174,42 @@ public class OptimadeReader extends AtomSetCollectionReader {
     return true;
   }
 
-  private void readAtoms(List<Object> species, List<Object> sites, List<Object> coords) {
+  private void readAtoms(List<Object> species, List<Object> sites,
+                         List<Object> coords) {
     int natoms = sites.size();
-    Map<String, Object> speciesByName = new HashMap<String, Object>();
-    for (int i = species.size(); --i >= 0;) {
-      Map<String, Object> s = (Map<String, Object>) species.get(i);
-      speciesByName.put((String) s.get("name"), s);
+    Map<String, Object> speciesByName = null;
+    if (species == null) {
+      Logger.error("OptimadeReader - no 'species' key");
+    } else {
+      speciesByName = new HashMap<String, Object>();
+      for (int i = species.size(); --i >= 0;) {
+        Map<String, Object> s = (Map<String, Object>) species.get(i);
+        speciesByName.put((String) s.get("name"), s);
+      }
     }
     for (int i = 0; i < natoms; i++) {
       String sname = (String) sites.get(i);
       toFloatArray((List<Number>) coords.get(i), xyz);
-      Map<String, Object> sp = (Map<String, Object>) speciesByName.get(sname);
-      List<Object> syms = (List<Object>) sp.get("chemical_symbols");
-      int nOcc = syms.size();
-      if (nOcc > 1) {
-        double[] conc = new double[nOcc];
-        toFloatArray((List<Number>) sp.get("concentration"), conc);
-        for (int j = 0; j < conc.length; j++) {
-          Atom a = addAtom(xyz, (String) syms.get(j), sname);
-          a.foccupancy = conc[j]; // todo --- double occupancy
-        }
+      if (species == null) {
+        addAtom(xyz, (String) sites.get(i), sname);
       } else {
+        Map<String, Object> sp = (Map<String, Object>) speciesByName.get(sname);
+        List<Object> syms = (List<Object>) sp.get("chemical_symbols");
+        int nOcc = syms.size();
+        if (nOcc > 1) {
+          double[] conc = new double[nOcc];
+          if (toFloatArray((List<Number>) sp.get("concentration"), conc)) {
+            for (int j = 0; j < conc.length; j++) {
+              Atom a = addAtom(xyz, (String) syms.get(j), sname);
+              a.foccupancy = conc[j]; // todo --- double occupancy
+            }
+            continue;
+          }
+        }
         addAtom(xyz, (String) syms.get(0), sname);
       }
-      
     }
-    
+
   }
 
 
@@ -212,6 +225,8 @@ public class OptimadeReader extends AtomSetCollectionReader {
 
 
   private static boolean toFloatArray(List<Number> list, double[] a) {
+    if (list == null)
+      return false;
     for (int i = a.length; --i >= 0;) {
       Number d = list.get(i);
       if (d == null)
