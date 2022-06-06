@@ -1456,7 +1456,7 @@ public class SV extends T implements JSONEncodable {
   public static boolean areEqual(SV x1, SV x2) {
     if (x1 == null || x2 == null)
       return false;
-    if (x1.value == x2.value)
+    if (x1.value != null && x1.value == x2.value)
         return true;
     if (x1.tok == x2.tok) {
       switch (x1.tok) {
