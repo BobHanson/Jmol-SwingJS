@@ -4868,7 +4868,7 @@ public class CmdExt extends ScriptExt {
       if (info != null) {
         msg = (tok == T.spacegroup ? "" + info.get("spaceGroupInfo")
             + info.get("spaceGroupNote") : "")
-            + info.get("symmetryInfo");
+            + (info.containsKey("symmetryInfo") ? info.get("symmetryInfo") : "");
         break;
       }
       // symop only here
