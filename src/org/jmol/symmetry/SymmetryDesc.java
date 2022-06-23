@@ -74,6 +74,9 @@ public class SymmetryDesc {
     return this;
   }
 
+  private final static String THIN_LINE = "0.05";
+  private final static String THICK_LINE = "0.1";
+  
   private final static int RET_XYZ = 0;
   private final static int RET_XYZORIGINAL = 1;
   private final static int RET_LABEL = 2;
@@ -557,6 +560,7 @@ public class SymmetryDesc {
     boolean isRotation = !isTranslation;
     boolean isInversionOnly = false;
     boolean isMirrorPlane = false;
+    boolean isTranslationOnly = !isRotation && !haveInversion;
 
     if (isRotation || haveInversion) {
       // the translation will be taken care of other ways
@@ -706,7 +710,6 @@ public class SymmetryDesc {
 
     int ang = ang1;
     approx0(ax1);
-
     if (isRotation) {
 
       P3d ptr = new P3d();
@@ -729,12 +732,6 @@ public class SymmetryDesc {
           .round(MeasureD.computeTorsion(pta00, pa1, ptemp, p0, true));
       if (SymmetryOperation.approxD(ang2) != 0)
         ang1 = ang2;
-      if (!haveInversion && pitch1 == 0 && (ax1.z < 0
-          || ax1.z == 0 && (ax1.y < 0 || ax1.y == 0 && ax1.x < 0))) {
-        ax1.scale(-1);
-        ang1 = -ang1;
-      }
-
     }
     // time to get the description
 
@@ -869,66 +866,85 @@ public class SymmetryDesc {
 
         // draw the lines associated with a rotation
 
-        if (haveInversion) {
-          opType = drawid + "rotinv";
-          if (pitch1 == 0) {
-            // atom to atom or no change in atom position
-            ptr.setT(ipt);
-            vtemp.scale(3 * scaleFactor);
-            if (isSpecial) {
-              ptemp.scaleAdd2(0.25d, vtemp, pa1);
-              pa1.scaleAdd2(-0.24d, vtemp, pa1);
-              ptr.scaleAdd2(0.31d, vtemp, ptr);
-              color = "cyan";
+        
+        
+        if (pitch1 != 0 && !haveInversion) {
+          // screw axis
+          opType = drawid + "screw";
+          color = "orange";
+          drawLine(draw1, drawid + "rotLine1", 0.1, pta00, pa1, "red");
+          ptemp.add2(pa1, vtemp);
+          drawLine(draw1, drawid + "rotLine2", 0.1, pt0, ptemp, "red");
+          ptr.scaleAdd2(0.5d, vtemp, pa1);
+        } else {
+          
+          // check here for correct direction
+          
+          ptr.setT(pa1);
+
+          double a, b, c;
+          ptemp.set(1, 0, 0);
+          uc.toCartesian(ptemp, false);
+          a = approx0d(ptemp.dot(ax1));
+          ptemp.set(0, 1, 0);
+          uc.toCartesian(ptemp, false);
+          b = approx0d(ptemp.dot(ax1));
+          ptemp.set(0, 0, 1);
+          uc.toCartesian(ptemp, false);
+          c = approx0d(ptemp.dot(ax1));
+          boolean isOK = (a == 0 ? (b == 0 ? c > 0 : b > 0)
+              : c == 0 ? a > 0 : (b == 0 ? c > 0 : a * b * c > 0));
+          if (!isOK) {
+            if (!isSpecial)
+              pa1.add2(pa1, vtemp);
+            vtemp.scale(-1);
+            ang = -ang;
+          }        
+          if (ang < 0)
+            ang = 360 + ang;
+          
+          if (haveInversion) {
+            // rotation-inversion
+            opType = drawid + "rotinv";
+            if (pitch1 == 0) {
+              // atom to atom or no change in atom position
+              ptr.setT(ipt);
+              vtemp.scale(3 * scaleFactor);
+              if (isSpecial) {
+                ptemp.scaleAdd2(0.25d, vtemp, pa1);
+                pa1.scaleAdd2(-0.24d, vtemp, pa1);
+                ptr.scaleAdd2(0.31d, vtemp, ptr);
+                color = "cyan";
+              } else {
+                ptemp.scaleAdd2(-1, vtemp, pa1);
+//                drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
+                drawLine(draw1, drawid + "rotLine1", 0.1, pta00, ipt, "red");
+                drawLine(draw1, drawid + "rotLine2", 0.1, ptinv, ipt, "red");
+              }
             } else {
-              ptemp.scaleAdd2(-1, vtemp, pa1);
-              drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
-              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
-              .append(Escape.eP(ipt)).append(" color red");
-          draw1.append(drawid).append("rotLine2 ").append(Escape.eP(ptinv))
-              .append(Escape.eP(ipt)).append(" color red");
+              if (!isSpecial) {
+                scale = pta00.distance(ptr);
+                drawLine(draw1, drawid + "rotLine1", 0.1, pta00, ptr, "red");
+                drawLine(draw1, drawid + "rotLine2", 0.1, ptinv, ptr, "red");
+              }
             }
           } else {
-            ptr.setT(pa1);
-            if (!isSpecial) {
-              scale = pta00.distance(ptr);
-              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(ptr))
-                  .append(Escape.eP(ptinv)).append(" color red");
-              draw1.append(drawid).append("rotLine2 ").append(Escape.eP(ptr))
-                  .append(Escape.eP(pta00)).append(" color red");
-            }
-          }
-
-        } else {
-          if (pitch1 == 0) {
+            // simple rotation
             opType = drawid + "rot";
             vtemp.scale(3 * scaleFactor);
             if (isSpecial) {
-              ptemp.scaleAdd2(0.5d, vtemp, pa1);
-              pa1.scaleAdd2(-0.45d, vtemp, pa1);
+              // flat
             } else {
-              draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
-                  .append(Escape.eP(pa1)).append(" color red");
-              draw1.append(drawid).append("rotLine2 ").append(Escape.eP(pt0))
-                  .append(Escape.eP(pa1)).append(" color red");
-              ptemp.scaleAdd2(-1, vtemp, pa1);
+              // lines from base
+              drawLine(draw1, drawid + "rotLine1", 0.1, pta00, ptr, "red");
+              drawLine(draw1, drawid + "rotLine2", 0.1, pt0, ptr, "red");
             }
-            drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp,
-                isTimeReversed ? "gray" : "red");
             ptr.setT(pa1);
             if (pitch1 == 0 && isSpecial)
-              ptr.scaleAdd2(0.75d, vtemp, ptr);
-          } else {
-            opType = drawid + "screw";
-            color = "orange";
-            draw1.append(drawid).append("rotLine1 ").append(Escape.eP(pta00))
-                .append(Escape.eP(pa1)).append(" color red");
-            ptemp.add2(pa1, vtemp);
-            draw1.append(drawid).append("rotLine2 ").append(Escape.eP(pt0))
-                .append(Escape.eP(ptemp)).append(" color red");
-            ptr.scaleAdd2(0.5d, vtemp, pa1);
+              ptr.scaleAdd2(0.25d, vtemp, ptr);
           }
         }
+
         // draw arc arrow
 
         ptemp.add2(ptr, vtemp);
@@ -949,8 +965,8 @@ public class SymmetryDesc {
           ptemp.scaleAdd2(0.5d, vtemp, pa1);
           pa1.scaleAdd2(-0.45d, vtemp, pa1);
         }
-        drawVector(draw1, drawid, "rotVector1", "vector", pa1, vtemp,
-            isTimeReversed ? "Gray" : color);
+        drawVector(draw1, drawid, "rotVector1", "vector", THICK_LINE, pa1, vtemp,
+            isTimeReversed ? "gray" : color);
 
       } else if (isMirrorPlane) {
 
@@ -958,8 +974,8 @@ public class SymmetryDesc {
 
         ptemp.sub2(ptref, pta00);
         if (pta00.distance(ptref) > 0.2)
-          drawVector(draw1, drawid, "planeVector", "vector", pta00, ptemp,
-              isTimeReversed ? "Gray" : "cyan");
+          drawVector(draw1, drawid, "planeVector", "vector", THIN_LINE, pta00, ptemp,
+              isTimeReversed ? "gray" : "cyan");
 
         // faint inverted frame if mirror trans is not null
 
@@ -1008,13 +1024,13 @@ public class SymmetryDesc {
             .append(Escape.eP(ipt));
         if (isInversionOnly) {
           ptemp.sub2(ptinv, pta00);
-          drawVector(draw1, drawid, "invArrow", "vector", pta00, ptemp,
+          drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, pta00, ptemp,
               isTimeReversed ? "gray" : "cyan");
         } else {
           draw1.append(" color cyan");
           if (!isSpecial) {
             ptemp.sub2(pt0, ptinv);
-            drawVector(draw1, drawid, "invArrow", "vector", ptinv, ptemp,
+            drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, ptinv, ptemp,
                 isTimeReversed ? "gray" : "cyan");
           }
           if (options != T.offset) {
@@ -1040,7 +1056,7 @@ public class SymmetryDesc {
       if (trans != null) {
         if (ptref == null)
           ptref = P3d.newP(pta00);
-        drawVector(draw1, drawid, "transVector", "vector", ptref, trans,
+        drawVector(draw1, drawid, "transVector", "vector", (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
             isTimeReversed && !haveInversion && !isMirrorPlane && !isRotation
                 ? "darkGray"
                 : "gold");
@@ -1076,7 +1092,7 @@ public class SymmetryDesc {
       //      if (haveCentering)
       //      draw1.append(drawid).append(
       //        "cellOffsetVector arrow @p0 @set2 color grey");
-      if (options != T.offset && ptTarget == null && !haveTranslation) {
+      if (!isSpecial && options != T.offset && ptTarget == null && !haveTranslation) {
         draw1.append(drawid)
             .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
             .append(Escape.eP(vt1)).append("*0.9} color red");
@@ -1099,16 +1115,12 @@ public class SymmetryDesc {
 
     if (trans == null)
       ftrans = null;
-    if (isRotation) {
-      if (haveInversion) {
-      } else if (pitch1 == 0) {
-      } else {
+    if (isRotation && !haveInversion && pitch1 != 0) {
         // screw
         trans = V3d.newV(ax1);
         ptemp.setT(trans);
         uc.toFractional(ptemp, false);
         ftrans = V3d.newV(ptemp);
-      }
     }
     if (isMirrorPlane) {
       ang1 = 0;
@@ -1252,8 +1264,14 @@ public class SymmetryDesc {
   }
 
   private static void drawVector(SB draw1, String drawid, String label,
-                                 String type, T3d pt1, T3d v, String color) {
-    draw1.append(drawid).append(label).append(" diameter 0.1 ").append(type)
+                                 String type, String d, T3d pt1, T3d v, String color) {
+    if (type.equals("vline")) {
+      ptemp2.add2(pt1, v);
+      type = "";
+      v = ptemp2;
+    }
+    d += " ";
+    draw1.append(drawid).append(label).append(" diameter ").append(d).append(type)
         .append(Escape.eP(pt1)).append(Escape.eP(v)).append(" color ")
         .append(color);
   }
@@ -1291,14 +1309,15 @@ public class SymmetryDesc {
 
   private static T3d approx0(T3d pt) {
     if (pt != null) {
-      if (Math.abs(pt.x) < 0.0001)
-        pt.x = 0;
-      if (Math.abs(pt.y) < 0.0001)
-        pt.y = 0;
-      if (Math.abs(pt.z) < 0.0001)
-        pt.z = 0;
+      pt.x = approx0d(pt.x);
+      pt.y = approx0d(pt.y);
+      pt.z = approx0d(pt.z);
     }
     return pt;
+  }
+
+  private static double approx0d(double x) {
+    return (Math.abs(x) < 0.0001 ? 0 : x);
   }
 
   private static T3d approx(T3d pt) {
