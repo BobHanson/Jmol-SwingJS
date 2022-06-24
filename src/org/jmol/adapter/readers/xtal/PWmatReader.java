@@ -1,5 +1,6 @@
 package org.jmol.adapter.readers.xtal;
 
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -175,25 +176,42 @@ public class PWmatReader extends AtomSetCollectionReader {
 
   private boolean haveMagnetic = false;
   
-  private void readItems(String name, int offset, double[] values) throws Exception {
+  private String global3 =";STRESS_MASK;STRESS_EXTERNAL;PTENSOR_EXTERNAL;";
+  
+  private void readItems(String name, int offset, double[] values)
+      throws Exception {
     if (name.equalsIgnoreCase("magnetic"))
       haveMagnetic = true;
-    name = "pwm_" + name;
-    if (values == null) {
-      values = new double[nAtoms];
+    boolean isGlobal = PT.isOneOf(name.toUpperCase(), global3);
+    if (isGlobal) {
+      String[] lines = new String[3];
+      lines[0] = line;
+      lines[1] = getLine();
+      lines[2] = getLine();
+      Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> data = (Map<String, Object>) info.get("globalPWmatData");
+      if (data == null)
+        info.put("globalPWmatData", data = new Hashtable<String, Object>());
+      data.put(name, lines);
     } else {
-      getLine();
+      name = "pwm_" + name;
+      if (values == null) {
+        values = new double[nAtoms];
+      } else {
+        getLine();
+      }
+      int n = 0;
+      for (int i = 0;;) {
+        String[] tokens = getTokens();
+        if ((values[i] = Double.parseDouble(tokens[offset])) != 0)
+          n++;
+        if (++i == nAtoms)
+          break;
+        getLine();
+      }
+      setProperties(name, values, n);
     }
-    int n = 0;
-    for (int i = 0;;) {
-      String[] tokens = getTokens();
-      if ((values[i] = Double.parseDouble(tokens[offset])) != 0)
-        n++;
-      if (++i == nAtoms)
-        break;
-      getLine();
-    }
-    setProperties(name, values, n);
   }
 
   private void setProperties(String name, double[] values, int n) {

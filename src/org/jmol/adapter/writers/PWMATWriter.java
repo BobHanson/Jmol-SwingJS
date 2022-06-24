@@ -1,5 +1,8 @@
 package org.jmol.adapter.writers;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
@@ -7,11 +10,9 @@ import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.V3d;
@@ -35,8 +36,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   private boolean isPrecision;
   
   boolean isSlab;
-  
-
+  private boolean writeGlobals = false; // for now
   
   public PWMATWriter() {
     // for JavaScript dynamic loading
@@ -70,6 +70,8 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       writeLattice();
       writePositions();
       writeDataBlocks();
+      if (writeGlobals)
+        writeGlobalBlocks();
     } catch (Exception e) {
       System.err.println("Error writing PWmat file " + e);
     }
@@ -97,7 +99,6 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
     } else {
       String f = "%12.6p%12.6p%12.6p\n";
-      P3d p = new P3d(); // toP3 here for rounding even in JavaScript
       oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
       oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
       oc.append(PT.sprintf(f, "p", new Object[] { abc[3] }));
@@ -184,7 +185,6 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     if (m == null)
       return;
     writeItem2(m, "CONSTRAINT_MAG");
-//    writeVectors("MAGNETIC_XYZ");
   }
 
   private void writeItem2(double[] m, String name) {
@@ -236,6 +236,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
         writeItems(name);
       }
     }
+  }
+
+  private void writeGlobalBlocks() {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> globals = (Map<String, Object>) vwr
+        .getModelForAtomIndex(bs.nextSetBit(0)).auxiliaryInfo
+            .get("globalPWmatData");
+    if (globals != null)
+      for (Entry<String, Object> e : globals.entrySet()) {
+        oc.append(e.getKey()).append("\n");
+        String[] lines = (String[]) e.getValue();
+        for (int i = 0; i < lines.length; i++)
+          oc.append(lines[i]).append("\n");
+      }
   }
 
   @Override
