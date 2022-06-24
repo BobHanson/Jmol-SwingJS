@@ -1216,7 +1216,7 @@ public class SymmetryDesc {
       case RET_PLANE:
         if (plane != null && bsInfo.get(RET_INVARIANT)) {
           double d = MeasureD.distanceToPlane(plane, pta00);
-          plane.w += d;
+          plane.w -= d;
         }
         ret[i] = plane;
         break;

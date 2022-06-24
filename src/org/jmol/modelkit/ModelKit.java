@@ -2062,7 +2062,7 @@ public class ModelKit {
    *        atom index
    * @param p
    *        new position for this atom, which may be modified
-   * @param allowProjection 
+   * @param allowProjection always true
    * @return number of atoms moved
    */
   public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, boolean allowProjection) {
