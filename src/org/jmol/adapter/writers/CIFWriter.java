@@ -8,7 +8,6 @@ import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import javajs.util.OC;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
@@ -60,7 +59,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           || (fset = uc.getUnitCellMultiplier()) != null
               && (fset.z == 1 ? !fset.equals(fset0) : fset.z != 0));
       SymmetryInterface ucm = uc.getUnitCellMultiplied();
-      isP1 |= (ucm != uc || fractionalOffset);
+      isP1 = (isP1 || ucm != uc || fractionalOffset || uc.getSpaceGroupOperationCount() < 2);
       uc = ucm;
 
       // only write the asymmetric unit set
@@ -86,12 +85,12 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
       sb.append("\ndata_global");
       double[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendD((double) params[0]);
-      appendKey(sb, "_cell_length_b").appendD((double) params[1]);
-      appendKey(sb, "_cell_length_c").appendD((double) params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendD((double) params[3]);
-      appendKey(sb, "_cell_angle_beta").appendD((double) params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendD((double) params[5]);
+      appendKey(sb, "_cell_length_a").appendD(params[0]);
+      appendKey(sb, "_cell_length_b").appendD(params[1]);
+      appendKey(sb, "_cell_length_c").appendD(params[2]);
+      appendKey(sb, "_cell_angle_alpha").appendD(params[3]);
+      appendKey(sb, "_cell_angle_beta").appendD(params[4]);
+      appendKey(sb, "_cell_angle_gamma").appendD(params[5]);
       sb.append("\n");
       int n;
       String hallName;
