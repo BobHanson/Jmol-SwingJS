@@ -907,6 +907,7 @@ public class ScriptEval extends ScriptExpr {
     return (ret == null ? SV.vT : ret);
   }
     
+  @SuppressWarnings("cast")
   private Object evaluate(Object expr, boolean asVariable, boolean compileOnly) {
     try {
       if (expr instanceof String) {
@@ -917,13 +918,14 @@ public class ScriptEval extends ScriptExpr {
           return (asVariable ? parameterExpressionList(2, -1, false).get(0)
               : parameterExpressionString(2, 0));
         }
-      } else if (expr instanceof T[]) {
-        BS bs = atomExpression((T[]) expr, 0, 0, true, false, null, false);
-        return (asVariable ? SV.newV(T.bitset, bs) : bs);
-      } else if (expr instanceof T[][]) {
+      } else if (expr instanceof T[][] && ((T[][])expr)[0] instanceof T[]) {
+        // in JavaScript legacy we must checking for [][] explicitly first
         setStatement(((T[][])expr)[0], 1);
         return (asVariable ? parameterExpressionList(0, -1, false).get(0)
             : parameterExpressionString(0, -1));
+      } else if (expr instanceof T[]) {
+        BS bs = atomExpression((T[]) expr, 0, 0, true, false, null, false);
+        return (asVariable ? SV.newV(T.bitset, bs) : bs);
       }
     } catch (Exception ex) {
       Logger.error("Error evaluating: " + expr + "\n" + ex);
@@ -6128,10 +6130,12 @@ public class ScriptEval extends ScriptExpr {
     P3d invPoint = null;
     P4d invPlane = null;
     boolean axesOrientationRasmol = vwr.getBoolean(T.axesorientationrasmol);
+    boolean checkModelKit = false;
     for (int i = 1; i < slen; ++i) {
       switch (tok = getToken(i).tok) {
       case T.rotate:
-        // from MODELKIT - ignore
+      case T.rotateSelected:
+        checkModelKit = (vwr.getOperativeSymmetry() != null);
         continue;
       case T.define:
       case T.bitset:
@@ -6477,7 +6481,7 @@ public class ScriptEval extends ScriptExpr {
     // just turn this into a rotation if we cannot spin
     if (isSpin && !requiresThread)
       isSpin = false;
-    if (nPoints < 2 && dihedralList == null) {
+    if (!checkModelKit && nPoints < 2 && dihedralList == null) {
       if (!isMolecular) {
         // fixed-frame rotation
         // rotate x 10 # Chime-like
@@ -6524,6 +6528,17 @@ public class ScriptEval extends ScriptExpr {
     }
     if (endDegrees == Double.MAX_VALUE)
       endDegrees = 0;
+    if (checkModelKit) {
+      if (endDegrees == 0)
+        return;
+      if ( bsAtoms == null || nPoints != 2 || isSpin || translation != null || dihedralList != null || ptsB != null 
+          || is4x4)
+        invArg();
+      int na = vwr.getModelkit(false).cmdRotateAtoms(bsAtoms, points, endDegrees);
+      if (doReport())
+        report(GT.i(GT.$("{0} atoms rotated"), na), false);
+      return;
+    }
     if (endDegrees != 0 && translation != null && !haveRotation)
       translation.scale(endDegrees / translation.length());
     if (isSpin && translation != null

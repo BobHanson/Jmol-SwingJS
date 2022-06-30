@@ -566,9 +566,11 @@ public final class ModelLoader {
       if (modelAuxiliaryInfo.containsKey("modelID"))
         modelAuxiliaryInfo.put("modelID0", modelAuxiliaryInfo.get("modelID"));
       Properties modelProperties = (Properties) modelAuxiliaryInfo.get("modelProperties");
-      String ftype = (String) modelAuxiliaryInfo.get("fileType");
-      vwr.setStringProperty("_fileType", ftype);
-      vwr.fm.setFileType(ftype);
+      if (!merging || appendNew) {
+        String ftype = (String) modelAuxiliaryInfo.get("fileType");
+        vwr.setStringProperty("_fileType", ftype);
+        vwr.fm.setFileType(ftype);
+      }
       if (modelName == null)
         modelName = (jmolData != null && jmolData.indexOf(";") > 2 ? jmolData.substring(jmolData
             .indexOf(":") + 2, jmolData.indexOf(";"))

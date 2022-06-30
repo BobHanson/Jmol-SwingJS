@@ -51,11 +51,13 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
+import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
@@ -2062,7 +2064,7 @@ public class ModelKit {
    *        atom index
    * @param p
    *        new position for this atom, which may be modified
-   * @param allowProjection always true
+   * @param allowProjection always true here
    * @return number of atoms moved
    */
   public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, boolean allowProjection) {
@@ -2115,8 +2117,6 @@ public class ModelKit {
     // check to see if a constraint has stopped this changae
     if (Double.isNaN(pt.x) || iatom < 0)
       return 0;
-    if (iatom < 0)
-      return 0;
     // check that this is an atom in the current model set.
     // must be an atom in the current model set
     BS bs = BSUtil.newAndSetBit(iatom);
@@ -2167,8 +2167,7 @@ public class ModelKit {
       System.err.println("Modelkit err" + e);
       return 0;
     }
-    finally {
-    
+    finally {    
       setMKState(state);
     }
   }
@@ -2427,5 +2426,75 @@ public class ModelKit {
     }
   }
 
+  public int cmdRotateAtoms(BS bsAtoms, P3d[] points, double endDegrees) {
+    P3d center = points[0];
+    P3d p = new P3d();
+    SymmetryInterface sg = vwr.getOperativeSymmetry();
+    // (1) do not allow any locked atoms; skip equivalent positions
+    BS bsAU = new BS();
+    BS bsAtoms2 = new BS();
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      int bai = vwr.ms.getBasisAtom(i).i;
+      if (bsAU.get(bai)) {
+        continue;
+      }
+      if (getConstraint(sg, bai, GET_CREATE).type == Constraint.TYPE_LOCKED) {
+        return 0;
+      }
+      bsAU.set(bai);
+      bsAtoms2.set(i);
+    }
+    // (2) save all atom positions in case we need to reset
+    int nAtoms = bsAtoms.cardinality();
+    P3d[] apos0 = new P3d[vwr.ms.at.length];
+    for (int i = apos0.length; --i >= 0;) {
+      Atom a = vwr.ms.at[i];
+      if (!AtomCollection.isDeleted(a))
+        apos0[i] = P3d.newP(a);
+    }
+    // (3) get all new points and ensure that they are allowed
+    M3d m = Qd.newVA(V3d.newVsub(points[1], points[0]), endDegrees).getMatrix();
+    V3d vt = new V3d();
+    P3d[] apos = new P3d[nAtoms];
+    for (int ip = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      Atom a = vwr.ms.at[i];
+      p = apos[ip++] = P3d.newP(a);
+      vt.sub2(p, center);
+      m.rotate(vt);
+      p.add2(center, vt);
+      getConstraint(sg, i, GET_CREATE).constrain(a, p, false);
+      if (Double.isNaN(p.x))
+        return 0;
+    }
+    // (4) move all symmetry-equivalent atoms
+    nAtoms = 0;
+    for (int ip = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms2
+        .nextSetBit(i + 1), ip++) {
+      if (bsAtoms2.get(i)) {
+        nAtoms += assignMoveAtom(i, apos[ip], null);
+      }
+    }
+    // (5) check to see that all equivalent atoms have been placed where they should be
+    boolean ok = true;
+    for (int ip = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), ip++) {
+      if (!bsAtoms2.get(i)) {
+        if (vwr.ms.at[i].distance(apos[ip]) > 0.0001d) {
+          ok = false;
+          break;
+        }
+      }
+    }
+    // (6) if not ok, revert all atom positions and return 0
+    if (!ok) {
+      for (int i = apos0.length; --i >= 0;) {
+        Atom a = vwr.ms.at[i];
+        if (!AtomCollection.isDeleted(a))
+          a.setT(apos0[i]);
+      }
+      return 0;
+    }
+    // return the number of atoms moved
+    return nAtoms;
+  }
 
 }

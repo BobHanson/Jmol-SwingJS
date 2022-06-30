@@ -5982,8 +5982,6 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
       break;
     case T.rotate:
-      e.cmdRotate(false, false);
-      return;
     case T.rotateSelected:
       e.cmdRotate(false, true);
       return;

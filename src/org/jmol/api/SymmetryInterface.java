@@ -188,9 +188,9 @@ public interface SymmetryInterface {
 
   void setUnitCell(SymmetryInterface uc);
 
-  void toCartesian(T3d pt, boolean asAbsolute);
+  void toCartesian(T3d pt, boolean ignoreOffset);
 
-  void toFractional(T3d pt, boolean asAbsolute);
+  void toFractional(T3d pt, boolean ignoreOffset);
   
   void toFractionalM(M4d m);
 
