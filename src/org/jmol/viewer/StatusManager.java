@@ -327,10 +327,7 @@ public class StatusManager {
       Object[] args = _args;
       _args = o;
       o[0] = callback.name();
-      try {
-        vwr.eval.runScript(cmd);
-      } catch (ScriptException e) {
-      }
+        vwr.evalStringQuietSync(cmd, true, false);
       o[0] = cmd;
       _args = args;
     }

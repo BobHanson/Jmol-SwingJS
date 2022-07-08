@@ -28,6 +28,7 @@ package org.jmol.render;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
+import org.jmol.shapespecial.Draw;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
@@ -101,10 +102,16 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (vertices[i] != null)
           tm.transformPtScr(vertices[i], screens[i]);
       //if (isPrecision) 
+      if (mesh.haveXyPoints) {
+        for (int i = vertexCount; --i >= 0;)
+          if (vertices[i] != null)
+            tm.transformPtScrT32D(vertices[i], p3Screens[i]);
+      } else {
         for (int i = vertexCount; --i >= 0;)
           if (vertices[i] != null)
             tm.transformPtScrT3(vertices[i], p3Screens[i]);
-
+      } 
+       
       render2(isExport);
     } else {
       SymmetryInterface unitcell = mesh.getUnitCell();
@@ -544,8 +551,9 @@ public abstract class MeshRenderer extends ShapeRenderer {
     }
     if (diameter == 0)
       diameter = 1;
-    tm.transformPt3f(vA, pt1f);
-    tm.transformPt3f(vB, pt2f);
+    // allows for 2D possibility for lines
+    tm.transformPt2Df(vA, pt1f);
+    tm.transformPt2Df(vB, pt2f);
     if (diameter == -1) {
       g3d.drawLineAB(pt1f, pt2f);
     } else if (diameter < 0) {

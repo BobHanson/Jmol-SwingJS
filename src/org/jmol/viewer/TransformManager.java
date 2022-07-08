@@ -1562,6 +1562,24 @@ public class TransformManager {
         (Double.isNaN(scale) ? vibrationScale : scale), vwr.g.modulationScale);
   }
 
+  public void transformPt2Df(T3d v, P3d pt) {
+    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
+      transformPt2D(v);
+      pt.set(iScrPt.x, iScrPt.y, iScrPt.z);
+    } else {
+      transformPt3f(v, pt);
+    }
+  }
+  
+  public void transformPtScrT32D(T3d v, P3d pt) {
+    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
+      transformPt2D(v);
+      pt.set(iScrPt.x, iScrPt.y, iScrPt.z);
+    } else {
+      transformPtScrT3(v, pt);
+    }
+  }
+  
   public synchronized P3i transformPt2D(T3d ptXyp) {
     // axes position [50 50]
     // just does the processing for [x y] and [x y %]
