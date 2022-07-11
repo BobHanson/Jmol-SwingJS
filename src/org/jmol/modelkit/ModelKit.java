@@ -1847,9 +1847,10 @@ public class ModelKit {
       bsAtoms.set(vwr.ms.bo[bondIndex].atom2.i);
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_MAKE_BOND,
           cmd, 1, bsAtoms);
-      boolean ok = assignBond(bondIndex, type, bsAtoms);
+      //boolean ok = 
+      assignBond(bondIndex, type, bsAtoms);
       vwr.ms.setAtomNamesAndNumbers(a1.i, -ac, null, true);
-      if (!ok || type == '0')
+//fails to refresh in JavaScript if we don't do this here      if (!ok || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_MAKE_BOND, "" + type, 1, bsAtoms);
     } catch (Exception ex) {
