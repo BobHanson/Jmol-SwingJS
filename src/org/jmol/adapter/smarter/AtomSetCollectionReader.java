@@ -136,7 +136,7 @@ import javajs.util.V3d;
 
 public abstract class AtomSetCollectionReader implements GenericLineReader {
 
-  public final static double ANGSTROMS_PER_BOHR = 0.5291772; // used by SpartanArchive
+  public final static double ANGSTROMS_PER_BOHR = 0.5291772; // used by SpartanArchive and others
 
   protected static final String CELL_TYPE_CONVENTIONAL = "conventional";
   protected static final String CELL_TYPE_PRIMITIVE = "primitive";

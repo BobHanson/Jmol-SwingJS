@@ -54,7 +54,7 @@ public class Resolver {
                  "WebMO;MO;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
-    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
+    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;Orca;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;",
@@ -177,9 +177,10 @@ public class Resolver {
 
     String set;
     int pt;
-    for (int i = readerSets.length; --i >= 0;)
+    for (int i = readerSets.length; --i >= 0;) {
       if ((pt = (set = readerSets[i--]).toLowerCase().indexOf(type)) >= 0)
         return set.substring(pt + 1, set.indexOf(";", pt + 2));
+    }
     return null;
   }
   
@@ -703,13 +704,16 @@ public class Resolver {
   private final static String[] vaspOutcarLineStartRecords = 
   { "VaspOutcar", " vasp.", " INCAR:" };
 
+  private final static String[] orcaInputLineStartRecords = 
+  { "Orca", "* xyz", "*xyz" };
+
   private final static String[][] lineStartsWithRecords =
   { mmcifLineStartRecords, cifLineStartRecords,
     pdbLineStartRecords, cgdLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 
     mol2Records, mdTopLineStartRecords, hyperChemLineStartRecords,
-    vaspOutcarLineStartRecords
+    vaspOutcarLineStartRecords, orcaInputLineStartRecords
     };
 
  
@@ -871,6 +875,10 @@ public class Resolver {
 
   private final static String[] optimadeContainsRecords = 
   { "Optimade", "\"cartesian_site_positions\":", "\"api_version\":", "optimade"};
+
+  private final static String[] orcaContainsRecords = 
+  { "Orca", "* O   R   C   A *" };
+
   /*
   private final static String[] gaussianWfnRecords =
   { "GaussianWfn", "MO ORBITALS" };
@@ -900,7 +908,7 @@ public class Resolver {
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     inputContainsRecords, aflowContainsRecords, magCifContainsRecords, 
-    qcJsonContainsRecords, optimadeContainsRecords
+    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords,
   };
 
   private final static String[][] jsonContainsRecords =
