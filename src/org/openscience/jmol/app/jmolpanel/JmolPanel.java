@@ -2079,8 +2079,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     long now = handler.latestMoveTime = System.currentTimeMillis();
     switch (JsonNioService.getString(json, "style")) {
     case "rotate":
-      double dx = (double) JsonNioService.getDouble(json, "x");
-      double dy = (double) JsonNioService.getDouble(json, "y");
+      double dx = JsonNioService.getDouble(json, "x");
+      double dy = JsonNioService.getDouble(json, "y");
       double dxdy = dx * dx + dy * dy;
       boolean isFast = (dxdy > TouchHandler.swipeCutoff);
       boolean disallowSpinGesture = vwr.getBooleanProperty("isNavigating")
@@ -2121,8 +2121,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     case "zoom":
       if (!handler.isPaused)
         handler.pauseScript(vwr, true);
-      double zoomFactor = (double) (JsonNioService.getDouble(json, "scale")
-          / (vwr.tm.zmPct / 100.0d));
+      double zoomFactor = JsonNioService.getDouble(json, "scale")
+          / (vwr.tm.zmPct / 100.0d);
       syncScript("Mouse: zoomByFactor " + zoomFactor);
       break;
     }
@@ -2135,8 +2135,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     // raw touch event
     vwr.acm.processMultitouchEvent(
         0, JsonNioService.getInt(json, "eventType"), JsonNioService.getInt(json, "touchID"),
-        JsonNioService.getInt(json, "iData"), P3d.new3((double) JsonNioService.getDouble(json, "x"),
-            (double) JsonNioService.getDouble(json, "y"), (double) JsonNioService.getDouble(json, "z")),
+        JsonNioService.getInt(json, "iData"), P3d.new3(JsonNioService.getDouble(json, "x"),
+            JsonNioService.getDouble(json, "y"), JsonNioService.getDouble(json, "z")),
         JsonNioService.getLong(json, "time"));
     break;
   }
