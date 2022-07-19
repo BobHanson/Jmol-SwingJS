@@ -1311,10 +1311,10 @@ public class CmdExt extends ScriptExt {
       Lst<Object[]> vAtomSets2 = (isFrames ? new Lst<Object[]>() : vAtomSets);
       if (!isCoords) {
         for (int i = 0; i < vAtomSets.size(); ++i) {
-          BS[] bss = (BS[]) vAtomSets.get(i);
+          Object[] bss = vAtomSets.get(i);
           if (isFrames)
-            vAtomSets2.addLast(bss = new BS[] { BSUtil.copy(bss[0]), bss[1] });
-          bss[0].and(bsFrom);
+            vAtomSets2.addLast(bss = new BS[] { BSUtil.copy((BS) bss[0]), (BS) bss[1] });
+          ((BS) bss[0]).and(bsFrom);
         }
       }
       P3d center = null;
@@ -6133,7 +6133,7 @@ public class CmdExt extends ScriptExt {
       }
       if (!chk && value != null && (value = kit.setProperty(key, value)) != null
           && key != "hidden" && !kit.isHidden())
-        vwr.showString("modelkit " + key + " = " + value.toString(), false);
+        vwr.showString("modelkit " + key + " " + value.toString(), false);
     }
   }
 
