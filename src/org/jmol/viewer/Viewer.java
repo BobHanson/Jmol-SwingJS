@@ -10785,10 +10785,9 @@ public class Viewer extends JmolViewer
   }
 
   public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
-	    if (andCheckMinimize)
-	      checkMinimization();
-	    sm.setStatusAtomMoved(bs);
-	  }
-
-
+    if (andCheckMinimize)
+      checkMinimization();
+      sm.setStatusAtomMoved(bs);
+  }
+  
 }
