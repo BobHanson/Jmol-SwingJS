@@ -1219,7 +1219,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_atom_id" // 73 mCIF dev 
       };
 
-//  final private static String singleAtomID = atomFields[CC_COMP_ID];
+  //  final private static String singleAtomID = atomFields[CC_COMP_ID];
 
   /* to: hansonr@stolaf.edu
    * from: Zukang Feng zfeng@rcsb.rutgers.edu
@@ -1232,7 +1232,8 @@ public class CifReader extends AtomSetCollectionReader {
 
   /**
    * reads atom data in any order
-   * @param isLigand 
+   * 
+   * @param isLigand
    * 
    * @return TRUE if successful; FALS if EOF encountered
    * @throws Exception
@@ -1280,19 +1281,41 @@ public class CifReader extends AtomSetCollectionReader {
           continue;
       }
       Atom atom = null;
-      // check for atom reference before atom definition
-      int f = getAtomNameRef();
-      if (f != NONE)
-        atom = asc.getAtomFromName(field);
-      if (atom == null) {
+      if (isMMCIF) {
+        if (haveCoord) {
+          atom = new Atom();
+        } else {
+          if (fieldProperty(key2col[ANISO_LABEL]) != NONE
+              || fieldProperty(key2col[ANISO_MMCIF_ID]) != NONE
+              || fieldProperty(key2col[MOMENT_LABEL]) != NONE) {
+            if ((atom = asc.getAtomFromName(field)) == null)
+              continue; // atom has been filtered out
+          } else {
+            continue;
+          }
+        }
+      } else {
+        // check for atom reference before atom definition
+        int f = NONE;
+        if ((f = fieldProperty(key2col[LABEL])) != NONE
+            || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
+            || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
+            || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
+            || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
+            || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE
+            ) {
+          atom = asc.getAtomFromName(field);
+        }
+        if (atom == null) {
           atom = new Atom();
           if (f != NONE) {
             if (asc.iSet < 0) {
-              nextAtomSet();   
+              nextAtomSet();
               asc.newAtomSet();
             }
             asc.atomSymbolicMap.put(field, atom);
           }
+        }
       }
       String componentId = null;
       String id = null;
@@ -1333,7 +1356,7 @@ public class CifReader extends AtomSetCollectionReader {
         case LABEL:
         case LABEL_ATOM_ID:
           atom.atomName = field;
-          break;          
+          break;
         case AUTH_ATOM_ID:
           haveAuth = true;
           authAtom = field;
@@ -1440,7 +1463,8 @@ public class CifReader extends AtomSetCollectionReader {
           if (field.equalsIgnoreCase("Uiso")) {
             int j = key2col[U_ISO_OR_EQUIV];
             if (j != NONE)
-              asc.setU(atom, 7, parseDoubleStr((String) cifParser.getColumnData(j)));
+              asc.setU(atom, 7,
+                  parseDoubleStr((String) cifParser.getColumnData(j)));
           }
           break;
         case ANISO_U11:
@@ -1476,7 +1500,8 @@ public class CifReader extends AtomSetCollectionReader {
         case ANISO_BETA_23:
           //Ortep Type 0: D = 1, c = 2 -- see org.jmol.symmetry/UnitCell.java
           asc.setU(atom, 6, 0);
-          asc.setU(atom, (col2key[i] - ANISO_BETA_11) % 6, parseDoubleStr(field));
+          asc.setU(atom, (col2key[i] - ANISO_BETA_11) % 6,
+              parseDoubleStr(field));
           break;
         case MOMENT_PRELIM_X:
         case MOMENT_PRELIM_Y:
@@ -1509,9 +1534,10 @@ public class CifReader extends AtomSetCollectionReader {
       }
       if (!haveCoord)
         continue;
-      if (Double.isNaN(atom.x) || Double.isNaN(atom.y) || Double.isNaN(atom.z)) {
-        Logger.warn("atom " + atom.atomName
-            + " has invalid/unknown coordinates");
+      if (Double.isNaN(atom.x) || Double.isNaN(atom.y)
+          || Double.isNaN(atom.z)) {
+        Logger
+            .warn("atom " + atom.atomName + " has invalid/unknown coordinates");
         continue;
       }
       // auth_xxx are optional; label_xxx are required
@@ -1549,22 +1575,6 @@ public class CifReader extends AtomSetCollectionReader {
       skipping = false;
     return true;
   }
-
-  private int getAtomNameRef() {
-    int f = NONE;
-    if ((f = fieldProperty(key2col[LABEL])) != NONE
-          || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
-          || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
-          || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
-          || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
-          || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE
-        ) {
-      // just sets f
-    }
-    return f;
-  }
-
-
 
   protected boolean addCifAtom(Atom atom, String id, String componentId, String strChain) {
     if (atom.elementSymbol == null && atom.atomName != null)

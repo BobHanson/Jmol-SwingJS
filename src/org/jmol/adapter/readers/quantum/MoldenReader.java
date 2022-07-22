@@ -197,7 +197,7 @@ public class MoldenReader extends MopacSlaterReader {
   private BS bsAtomOK = new BS();
   private BS bsBadIndex = new BS();
   private int[] nSPDF;
-  private boolean haveEnergy = true;
+  protected boolean haveEnergy = true;
   
   boolean readSlaterBasis() throws Exception {
     /*
@@ -454,7 +454,7 @@ public class MoldenReader extends MopacSlaterReader {
   }
 
   @SuppressWarnings("unchecked")
-  private void sortMOs() {
+  protected void sortMOs() {
     Object[] list = orbitals.toArray(new Object[orbitals.size()]);
     Arrays.sort(list, new MOEnergySorter());
     orbitals.clear();
