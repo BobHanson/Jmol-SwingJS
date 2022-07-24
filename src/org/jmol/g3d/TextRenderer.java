@@ -101,11 +101,8 @@ class TextRenderer {
       return text3d.width;
     //TODO: text width/height are calculated 4x correct size here when antialiased.
     // this is wasteful, as it requires drawing larger than necessary images
-    if (antialias && (argb & 0xC0C0C0) == 0) {
-      // an interesting problem with antialiasing occurs if 
-      // the label is black or almost black.
-      argb = argb | 0x040404;
-    }
+    if (antialias)
+      argb = Graphics3D.fixTextImageRGB(argb);
     int textHeight = text3d.height;
     int textWidth = text3d.width;
     byte[] tmap = text3d.tmap;

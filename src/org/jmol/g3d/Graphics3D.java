@@ -1035,6 +1035,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (y + heightFill > height)
       heightFill = height - y;
     int c = argbCurrent;
+    if (isAntialiased())
+      c = fixTextImageRGB(c);
     int[] zb = zbuf;
     Pixelator p = pixel;
     while (--heightFill >= 0)
@@ -2104,6 +2106,14 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                   Map<String, Object> params) {
     // N/A
     return false;
+  }
+
+  public static int fixTextImageRGB(int argb) {
+    // an interesting problem with antialiasing occurs if 
+    // the label is black or almost black.
+    // specifically, I think, argb < 0x00000004
+    // such is also the case for a black scale on a white background
+    return ((argb & 0xC0C0C0) == 0 ? argb | 0x040404 : argb);
   }
 
 }
