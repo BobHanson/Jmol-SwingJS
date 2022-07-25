@@ -219,7 +219,7 @@ public class Labels extends AtomShape {
       bsFontSet = BS.newN(ac);
 
     if ("fontsize" == propertyName) {
-      int fontsize = ((Integer) value).intValue();
+      int fontsize = ((Number) value).intValue();
       if (fontsize < 0) {
         fids = null;
         return;

@@ -4018,6 +4018,7 @@ public class ScriptEval extends ScriptExpr {
     String name = "font";
     int sizeAdjust = 0;
     double scaleAngstromsPerPixel = -1;
+    // font [shapeName] [size] [face] [style] [scaleAngstromsPerPixel]
     switch (iToken = slen) {
     case 6:
       scaleAngstromsPerPixel = floatParameter(5);
@@ -4071,8 +4072,8 @@ public class ScriptEval extends ScriptExpr {
             JC.LABEL_MAXIMUM_FONTSIZE - sizeAdjust);
         return;
       }
-      if (fontsize == 0)
-        setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
+      if (!chk)
+        setShapeProperty(JC.SHAPE_LABELS, "setDefaults", fontsize == 0 ? vwr.slm.noneSelected : Boolean.FALSE);
     }
     if (chk)
       return;

@@ -1404,6 +1404,9 @@ public class StateCreator extends JmolStateCreator {
       sb.append("  ").append(echoCmd).append(" offset ").append(
           Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
     }
+    if ("%SCALE".equals(text)) {
+      sb.append("  set measurementUnits " + vwr.getDistanceUnits("")).append(";\n");
+    }
     //    }
     //isDefine and target==top: do all
     //isDefine and target!=top: just start
