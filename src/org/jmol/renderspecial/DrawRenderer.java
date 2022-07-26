@@ -161,12 +161,16 @@ public class DrawRenderer extends MeshRenderer {
     }
     int tension = 5;
     switch (drawType) {
+    case CYLINDER:
+      allowDashed = false;
+      //$FALL-THROUGH$
     default:
       render2b(false);
       return;
     case CIRCULARPLANE:
       if (dmesh.scale > 0)
         width *= dmesh.scale;
+      allowDashed = false; // width may be negative
       render2b(false);
       return;
     case CIRCLE:

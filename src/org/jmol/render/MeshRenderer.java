@@ -63,6 +63,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected double width;
   
 
+  protected boolean allowDashed = true;
   protected boolean isTranslucent;
   protected boolean frontOnly;
   protected boolean isShell;
@@ -542,7 +543,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
     } else {
       pt1f.ave(vA, vB);
       tm.transformPtScr(pt1f, pt1i);
-      if (width < 0) {
+      if (allowDashed && width < 0) {
+        // not draw cylinder
         diameter = -1;
       } else {
         int mad = (int) Math.floor(Math.abs(width) * 1000);
