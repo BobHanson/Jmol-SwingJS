@@ -1388,9 +1388,9 @@ public class StateCreator extends JmolStateCreator {
     if (isImage) {
       sb.append("; ").append(echoCmd).append(" IMAGE /*file*/");
     } else {
-      if ("%SCALE".equals(text)) {
-        text += "//" + vwr.getScaleText("", false, 0, null);
-      }
+//      if ("%SCALE".equals(text)) {
+//        text += "//" + vwr.getScaleText("", false, 0, null);
+//      }
       sb.append("; echo ");
     }
     sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
