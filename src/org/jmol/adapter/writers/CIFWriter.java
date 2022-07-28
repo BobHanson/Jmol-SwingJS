@@ -63,7 +63,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       uc = ucm;
 
       // only write the asymmetric unit set
-      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs) : vwr.ms.am[mi].bsAsymmetricUnit);
+      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs, false) : vwr.ms.am[mi].bsAsymmetricUnit);
       BS bsOut;
       if (modelAU == null) {
         bsOut = bs;

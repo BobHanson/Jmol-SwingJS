@@ -150,7 +150,7 @@ public interface SymmetryInterface {
   BS notInCentroid(ModelSet modelSet, BS bsAtoms,
                           int[] minmax);
 
-  BS removeDuplicates(ModelSet ms, BS bs);
+  BS removeDuplicates(ModelSet ms, BS bs, boolean highPrec);
 
   V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp);
 

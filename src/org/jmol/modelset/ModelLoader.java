@@ -789,6 +789,7 @@ public final class ModelLoader {
     // atom is created, but not all methods are safe, because it
     // has no group -- this is only an issue for debugging
     int iLast = -1;
+    int siteBase = 0;
     boolean isPdbThisModel = false;
     boolean addH = false;
     boolean isLegacyHAddition = false;//vwr.getBoolean(T.legacyhaddition);
@@ -808,11 +809,15 @@ public final class ModelLoader {
         iChain = 0;
         iModel = modelIndex;
         model = models[modelIndex];
+        BS mbs = model.bsAtoms;
+        if (merging && !appendNew && vwr.getOperativeSymmetry() != null) {
+          siteBase = getAtomSiteBase(mbs);
+        }
         currentChainID = Integer.MAX_VALUE;
         isNewChain = true;
         // set the internal array for model.bsAtoms to be large enough
-        model.bsAtoms.set(ms.ac + nAtoms);
-        model.bsAtoms.clearAll();
+        mbs.set(ms.ac + nAtoms);
+        mbs.clearAll();
         model.isOrderly = (appendToModelIndex == null);
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
@@ -831,7 +836,7 @@ public final class ModelLoader {
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
       xyz = iterAtom.getXYZ();
       Atom atom = addAtom(isPdbThisModel, iterAtom.getSymmetry(),
-          iterAtom.getAtomSite(),
+          iterAtom.getAtomSite() + siteBase,
           isotope,
           name,
           charge, 
@@ -876,6 +881,17 @@ public final class ModelLoader {
       }
     }
     Logger.info(nRead + " atoms created");
+  }
+
+  private int getAtomSiteBase(BS mbs) {
+    int base = 0;
+      for (int i = mbs.nextSetBit(0); i >= 0; i = mbs.nextSetBit(i + 1)) {
+        Atom a = ms.at[i];
+        if (!AtomCollection.isDeleted(a) && a.atomSite > base) {
+          base = a.atomSite;
+        }
+      }
+    return base;
   }
 
   private void addJmolDataProperties(Model m,

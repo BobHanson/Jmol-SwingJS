@@ -57,7 +57,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       bs = vwr.bsA();
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-      this.bs = (isSlab ? bs : uc.removeDuplicates(vwr.ms, bs));
+      this.bs = (isSlab ? bs : uc.removeDuplicates(vwr.ms, bs, false));
       isPrecision = true;
 //      !bs.isEmpty();
 //      for (int i = bs.nextSetBit(0); i >= 0

@@ -10743,20 +10743,24 @@ public class Viewer extends JmolViewer
   /**
    * Depending upon the measure text, we need to indicate
    * |-------| 1 A or 0.1 A for example.
-   * @param units 
+   * @param units possibly //angstroms or //nm or "", not null
    * @param isAntialiased 
    * @param min 
-   * @param ret return bar length in pixels
+   * @param ret return bar length in pixels, or null to just return units for StateCreator
    * @return text
    */
   public String getScaleText(String units, boolean isAntialiased, int min, double[] ret) {
     String u = Measurement
-        .fixUnits(units.length() > 0 ? units.toLowerCase() : g.measureDistanceUnits.equals("vdw") ? "angstroms"
+        .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
+          : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
+    System.out.println(g.measureDistanceUnits);
     if (Measurement.fromUnits(1, u) == 0) {
       // unrecognized units
       u = Measurement.fixUnits(g.measureDistanceUnits);
     }
+    if (ret == null)
+      return u;
     double d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
     double af = (!tm.perspectiveDepth && isAntialiased ? 2d : 1d);

@@ -946,32 +946,35 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public BS removeDuplicates(ModelSet ms, BS bs) {
+  public BS removeDuplicates(ModelSet ms, BS bs, boolean highPrec) {
     UnitCell uc = this.unitCell;
     Atom[] atoms = ms.at;
     double[] occs = ms.occupancies;
     boolean haveOccupancies = (occs != null);
-    P3d pt = new P3d();
-    P3d pt2 = new P3d();
+    P3d[] unitized = new P3d[bs.length()];
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      P3d pt = unitized[i] =  P3d.newP(atoms[i]);
+      uc.toFractional(pt, false);
+      if (highPrec)
+        uc.unitizeRnd(pt); 
+      else
+        uc.unitize(pt);
+    }
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      pt.setT(a);
-      uc.toFractional(pt, false);
-      uc.unitizeRnd(pt);
+      P3d pt = unitized[i];
       int type = a.getAtomicAndIsotopeNumber();
-
       double occ = (haveOccupancies ? occs[i] : 0);
       for (int j = bs.nextSetBit(i + 1); j >= 0; j = bs.nextSetBit(j + 1)) {
         Atom b = atoms[j];
         if (type != b.getAtomicAndIsotopeNumber()
             || (haveOccupancies && occ != occs[j]))
           continue;
-        pt2.setT(b);
-        uc.toFractional(pt2, false);
-        uc.unitizeRnd(pt2);
+        P3d pt2 = unitized[j];
+        System.out.println(i  + " " + j + " " + pt.distanceSquared(pt2));
         if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
           bs.clear(j);
-        }
+        } 
       }
     }
     return bs;

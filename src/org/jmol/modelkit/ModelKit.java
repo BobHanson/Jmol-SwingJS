@@ -1204,7 +1204,7 @@ public class ModelKit {
       sym.setSpaceGroupTo(ita);
       sym.setSpaceGroupName(name);
       if (basis == null)
-        basis = sym.removeDuplicates(vwr.ms, bsAtoms);
+        basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       vwr.ms.setSpaceGroup(mi, sym, basis);
       P4d pt = SimpleUnitCell.ptToIJK(supercell, 1);
       ModelSet.setUnitCellOffset(sym, pt, 0);

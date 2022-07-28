@@ -1380,10 +1380,14 @@ public class StateCreator extends JmolStateCreator {
     if (t.movableZPercent != Integer.MAX_VALUE)
       sb.append(";  ").append(echoCmd).append(" depth ").appendI(
           t.movableZPercent);
-    if (isImage)
+    if (isImage) {
       sb.append("; ").append(echoCmd).append(" IMAGE /*file*/");
-    else
+    } else {
+      if ("%SCALE".equals(text)) {
+        text += "//" + vwr.getScaleText("", false, 0, null);
+      }
       sb.append("; echo ");
+    }
     sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
     sb.append(";\n");
     if (isImage && t.imageScale != 1)
@@ -1403,9 +1407,6 @@ public class StateCreator extends JmolStateCreator {
     if (t.pymolOffset != null) {
       sb.append("  ").append(echoCmd).append(" offset ").append(
           Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
-    }
-    if ("%SCALE".equals(text)) {
-      sb.append("  set measurementUnits " + vwr.getDistanceUnits("")).append(";\n");
     }
     //    }
     //isDefine and target==top: do all
