@@ -209,17 +209,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         return;
       }
       Measurement m = setSingleItem(md.points);
-      if (md.thisID != null) {
-        m.thisID = md.thisID;
-        m.mad = md.mad;
-        if (md.colix != 0)
-          m.colix = md.colix;
-        m.strFormat = md.strFormat;
-        m.text = md.text;
-      }
-      m.units = md.units;
-      m.property = md.property;
-      m.fixedValue = md.fixedValue;
+      m.setFromMD(md, false);
       switch (md.tokAction) {
       case T.refresh:
         doAction(md, md.thisID, T.refresh);
@@ -591,28 +581,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           || isWild && PT.isMatch(m.thisID.toUpperCase(), id, true, true)))
         switch (tok) {
         case T.refresh:
-          if (md.colix != 0)
-            m.colix = md.colix;
-          if (md.mad != 0)
-            m.mad = md.mad;
-          if (md.strFormat != null) {
-            m.strFormat = m.strFormat.substring(0, 2)
-                + md.strFormat.substring(2);
-          }
-          if (md.text != null) {
-            if (m.text == null) {
-              m.text = md.text;
-            } else {
-              if (md.text.font != null)
-                m.text.font = md.text.font;
-              m.text.text = null;
-              if (md.text.align != 0)
-                m.text.align = md.text.align;
-              if (md.colix != 0)
-                m.labelColix = m.text.colix = md.text.colix;
-            }
-          }
-          m.formatMeasurement(null);
+          m.setFromMD(md, true);
           break;
         case T.radius:
           m.mad = md.mad;

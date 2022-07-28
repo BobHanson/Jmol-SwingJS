@@ -990,15 +990,20 @@ public class StateCreator extends JmolStateCreator {
           sb.append(" align ").append(JC.getHorizAlignmentName(m.text.align));
         if (m.text.pymolOffset != null)
           sb.append(" offset ").append(Escape.eAD(m.text.pymolOffset));
-      }
+      } 
       TickInfo tickInfo = m.tickInfo;
       if (tickInfo != null)
         addTickInfo(sb, tickInfo, true);
       for (int j = 1; j <= count; j++)
         sb.append(" ").append(m.getLabel(j, true, true));
-      if (isProperty)
+      if (isProperty) {
         sb.append(" " + m.property + " value " + (Double.isNaN(m.value) ? 0d : m.value))
-        .append(" " + PT.esc(m.getString()));
+         .append(" " + PT.esc(m.getString()));
+      } else if (count == 2) {
+        String s = m.getDistanceFormatForState();
+        if (s != null)
+          sb.append(" ").append(PT.esc(s));
+      }
       //sb.append("; # " + shape.getInfoAsString(i));
       app(commands, sb.toString());
     }

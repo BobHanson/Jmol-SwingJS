@@ -66,10 +66,10 @@ public class Measurement {
   public int[] countPlusIndices = new int[5];
   public Point3fi[] pts;
   public double value;
-  
-  public String strFormat;
   public String property;
-  public String units;
+  
+  String strFormat;
+  String units;
   
   public Text text;
 
@@ -86,6 +86,7 @@ public class Measurement {
   public double fixedValue = Double.NaN;
   private boolean isPending;
   public boolean inFront;
+  private boolean useDefaultLabel;
   
   public boolean isTainted() {
     return (tainted && !(tainted = false));
@@ -232,11 +233,13 @@ public class Measurement {
   }
 
   public void reformatDistanceIfSelected() {
-    if (count != 2)
-      return;
-    if (vwr.slm.isSelected(countPlusIndices[1])
-        && vwr.slm.isSelected(countPlusIndices[2]))
+    if (count == 2 && vwr.slm.isSelected(countPlusIndices[1])
+        && vwr.slm.isSelected(countPlusIndices[2])) {
+      int pt;
+      if (useDefaultLabel && strFormat != null && (pt = strFormat.indexOf("//")) >= 0)
+        strFormat = strFormat.substring(0, pt);
       formatMeasurement(null);
+    }
   }
 
   /**
@@ -359,7 +362,8 @@ public class Measurement {
   }
 
   private String getLabelString() {
-    String s = countPlusIndices[0] + ":";
+    int atomCount = countPlusIndices[0];
+    String s = atomCount + ":";
     String label = null;
     if (strFormat != null) {
       if (strFormat.length() == 0)
@@ -370,6 +374,7 @@ public class Measurement {
     if (label == null) {
       strFormat = null;
       label = vwr.getDefaultMeasurementLabel(countPlusIndices[0]);
+      useDefaultLabel = true;
     }
     if (label.indexOf(s) == 0)
       label = label.substring(2);
@@ -626,6 +631,48 @@ public class Measurement {
     else if (units.equals("vanderwaal") || units.equals("vdw"))
       return "%";
     return u;
+  }
+
+  public String getDistanceFormatForState() {
+    return (useDefaultLabel ? null : strFormat);
+  }
+  
+  public void setFromMD(MeasurementData md, boolean andText) {
+    if (md.thisID != null) {
+      thisID = md.thisID;
+      mad = md.mad;
+      if (md.colix != 0)
+        colix = md.colix;
+      strFormat = md.strFormat;
+      text = md.text;
+    }
+    units = md.units;
+    property = md.property;
+    fixedValue = md.fixedValue;
+    if (!andText)
+      return;
+    if (md.colix != 0)
+      colix = md.colix;
+    if (md.mad != 0)
+      mad = md.mad;
+    if (md.strFormat != null) {
+      strFormat = strFormat.substring(0, 2)
+          + md.strFormat.substring(2);
+    }
+    if (md.text != null) {
+      if (text == null) {
+        text = md.text;
+      } else {
+        if (md.text.font != null)
+          text.font = md.text.font;
+        text.text = null;
+        if (md.text.align != 0)
+          text.align = md.text.align;
+        if (md.colix != 0)
+          labelColix = text.colix = md.text.colix;
+      }
+    }
+    formatMeasurement(null);
   }
 
 
