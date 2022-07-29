@@ -51,10 +51,10 @@ public class Resolver {
     "more.", ";AFLOW;BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Psi;Qchem;QCJSON;" +
-                 "WebMO;MO;", // MO is for XmlMolpro 
+                 "WebMO;Orca;MO;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
-    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;Orca;",
+    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;",

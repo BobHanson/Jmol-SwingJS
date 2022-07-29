@@ -24,23 +24,21 @@
 
 package org.jmol.adapter.readers.quantum;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import java.util.Hashtable;
-import java.util.Properties;
-
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
-import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
 
 /**
  * A reader for NWChem 4.6
@@ -355,45 +353,45 @@ public class NWChemReader extends MOReader {
   */
   // NB one could consider removing the previous read structure since that
   // must have been the input structure for the optimizition?
-  /**
-   * Reads the energy gradients section into a new AtomSet.
-   * 
-   * <p>
-   * One could consider not adding a new AtomSet for this, but just adding the
-   * gradient vectors to the last AtomSet read (if that was indeed the same
-   * nuclear arrangement).
-   * 
-   * @throws Exception
-   *         If an error occurs.
-   **/
-  private void readGradients() throws Exception {
-    readLines(3); // skip blank line, titles and dashes
-    String tokens[];
-    asc.newAtomSet();
-    if (equivalentAtomSets > 1) {
-      Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
-          asc.iSet - 1, "modelProperties");
-      if (p != null)
-        asc.setCurrentModelInfo("modelProperties", p.clone());
-    }
-    asc.setAtomSetModelProperty("vector", "gradient");
-    asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
-        + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
-    double f = ANGSTROMS_PER_BOHR;
-    while (rd() != null && line.length() > 0) {
-      tokens = getTokens(); // get the tokens in the line
-      if (tokens.length < 8)
-        break; // make sure I have enough tokens
-      Atom atom = setAtomCoordScaled(null, tokens, 2, f);
-      atom.atomName = fixTag(tokens[1]);
-
-      // Keep gradients in a.u. (larger value that way)
-      // need to multiply with -1 so the direction is in the direction the
-      // atom needs to move to lower the energy
-      asc.addVibrationVector(atom.index, -parseDoubleStr(tokens[5]),
-          -parseDoubleStr(tokens[6]), -parseDoubleStr(tokens[7]));
-    }
-  }
+//  /**
+//   * Reads the energy gradients section into a new AtomSet.
+//   * 
+//   * <p>
+//   * One could consider not adding a new AtomSet for this, but just adding the
+//   * gradient vectors to the last AtomSet read (if that was indeed the same
+//   * nuclear arrangement).
+//   * 
+//   * @throws Exception
+//   *         If an error occurs.
+//   **/
+//  private void readGradients() throws Exception {
+//    readLines(3); // skip blank line, titles and dashes
+//    String tokens[];
+//    asc.newAtomSet();
+//    if (equivalentAtomSets > 1) {
+//      Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
+//          asc.iSet - 1, "modelProperties");
+//      if (p != null)
+//        asc.setCurrentModelInfo("modelProperties", p.clone());
+//    }
+//    asc.setAtomSetModelProperty("vector", "gradient");
+//    asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
+//        + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
+//    double f = ANGSTROMS_PER_BOHR;
+//    while (rd() != null && line.length() > 0) {
+//      tokens = getTokens(); // get the tokens in the line
+//      if (tokens.length < 8)
+//        break; // make sure I have enough tokens
+//      Atom atom = setAtomCoordScaled(null, tokens, 2, f);
+//      atom.atomName = fixTag(tokens[1]);
+//
+//      // Keep gradients in a.u. (larger value that way)
+//      // need to multiply with -1 so the direction is in the direction the
+//      // atom needs to move to lower the energy
+//      asc.addVibrationVector(atom.index, -parseDoubleStr(tokens[5]),
+//          -parseDoubleStr(tokens[6]), -parseDoubleStr(tokens[7]));
+//    }
+//  }
 
   // SAMPLE FREQUENCY OUTPUT
   // First the structure. The atom column has real element names (not the tags)
@@ -745,7 +743,7 @@ public class NWChemReader extends MOReader {
       while (line != null && line.length() > 3) {
         String[] tokens = getTokens();
         Object[] o = new Object[] { tokens[1],
-            new double[] { (double) parseDoubleStr(tokens[2]), (double) parseDoubleStr(tokens[3]) } };
+            new double[] { parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3]) } };
         shellData.addLast(o);
         rd();
       }
@@ -889,10 +887,10 @@ public class NWChemReader extends MOReader {
         //    68      2.509000   5 C  py               39     -2.096777   3 C  pz        
         while ((line = list.get(++i)) != null && line.length() > 3) {
           tokens = getTokens();
-          coefs[parseIntStr(tokens[0]) - 1] = (double) parseDoubleStr(tokens[1]);
+          coefs[parseIntStr(tokens[0]) - 1] = parseDoubleStr(tokens[1]);
           int pt = tokens.length / 2;
           if (pt == 5 || pt == 6)
-            coefs[parseIntStr(tokens[pt]) - 1] = (double) parseDoubleStr(tokens[pt + 1]);
+            coefs[parseIntStr(tokens[pt]) - 1] = parseDoubleStr(tokens[pt + 1]);
         }
       }
     }
