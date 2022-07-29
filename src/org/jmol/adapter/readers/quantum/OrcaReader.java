@@ -125,6 +125,9 @@ public class OrcaReader extends MOReader {
   //    H     -1.887600    1.248970   -0.201650
 
   void processAtoms() throws Exception {
+    modelNumber++;
+    if (!doGetModel(modelNumber, null))
+      return;
     asc.newAtomSet();
     baseAtomIndex = asc.ac;
     rd(); // -------------
