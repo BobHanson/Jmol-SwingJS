@@ -1031,16 +1031,19 @@ public class ModelSet extends BondCollection {
     unitCells[mi] = sg;
     haveUnitCells = true;
     sg.setFinalOperations(3, null, null, -1, -1, false, null);
+    int nops = sg.getSpaceGroupOperationCount();
     am[mi].bsAsymmetricUnit = basis;
     // set symmetry at least for symop=1555
     bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
     BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
     bsSymmetry.or(bs);
     bsSymmetry.andNot(basis);
+    // next is not actually true -- we may have face atoms
     boolean isP1 = (basis.cardinality() == bs.cardinality());
     // remove any cage created by UNITCELL command
     // move any origin offset into atom positions
-    setModelCage(mi, null);
+    if (nops > 1)
+      setModelCage(mi, null);
     P3d offset = P3d.newP(sg.getCartesianOffset());
     if (offset.length() == 0) {
       offset = null;
@@ -1061,7 +1064,6 @@ public class ModelSet extends BondCollection {
     bs.andNot(basis);
     if (!isP1) {
       boolean haveOccupancies = (occupancies != null);
-      int nops = sg.getSpaceGroupOperationCount();
       M4d[] ops = sg.getSymmetryOperations();
       P3d a = new P3d(), b = new P3d(), t = new P3d();
       for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
@@ -1105,9 +1107,16 @@ public class ModelSet extends BondCollection {
       if (sgName != null)
         setInfo(mi, "spaceGroupOriginal", sgName);
     }    
+    setInfo(mi, "spaceGroupAssigned", Boolean.TRUE);
     setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
     setInfo(mi, "spaceGroupInfo", null);
-    setModelCage(mi, null);
+    if (am[mi].simpleCage != null) {
+      sg.getUnitCelld(am[mi].simpleCage.getUnitCellVectors(), false, null);
+      setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+      setModelCage(mi, null);
+    } else {
+      setModelCage(mi, null);
+    }
   }
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {

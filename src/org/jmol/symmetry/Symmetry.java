@@ -787,10 +787,11 @@ public class Symmetry implements SymmetryInterface {
           .append(SimpleUnitCell.escapeMultiplier(ptm));
       loadUC = true;
     }
-    String sg0 = (String) ms.getInfo(modelIndex, "spaceGroupOriginal");
+    boolean isAssigned = (ms.getInfo(modelIndex, "spaceGroupAssigned") != null);
     String sg = (String) ms.getInfo(modelIndex, "spaceGroup");
-    if (sg0 != null && sg != null && !sg.equals(sg0)) {
-      commands.append("\nMODELKIT SPACEGROUP " + PT.esc(sg));
+    if (isAssigned && sg != null) {
+      commands.append("\n UNITCELL " + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors()));
+      commands.append("\n MODELKIT SPACEGROUP " + PT.esc(sg));
       loadUC = true;
     }
     return loadUC;
@@ -971,7 +972,6 @@ public class Symmetry implements SymmetryInterface {
             || (haveOccupancies && occ != occs[j]))
           continue;
         P3d pt2 = unitized[j];
-        System.out.println(i  + " " + j + " " + pt.distanceSquared(pt2));
         if (pt.distanceSquared(pt2) < JC.UC_TOLERANCE2) {
           bs.clear(j);
         } 
