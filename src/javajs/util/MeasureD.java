@@ -1005,7 +1005,7 @@ final public class MeasureD {
       }
     }
     for (int i = n; --i >= 0;)
-      cpts.removeItemAt(i);
+      cpts.removeItemAt(0);
     return cpts;
   }
 

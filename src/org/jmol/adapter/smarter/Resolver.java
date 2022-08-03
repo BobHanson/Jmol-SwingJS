@@ -876,6 +876,9 @@ public class Resolver {
   private final static String[] optimadeContainsRecords = 
   { "Optimade", "\"cartesian_site_positions\":", "\"api_version\":", "optimade"};
 
+  private final static String[] jsonArrayContainsRecords = 
+  { "JSON", "\"atomArray\":[", "\"atomArray\" : ["};
+
   private final static String[] orcaContainsRecords = 
   { "Orca", "* O   R   C   A *" };
 
@@ -908,12 +911,11 @@ public class Resolver {
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     inputContainsRecords, aflowContainsRecords, magCifContainsRecords, 
-    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords,
+    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords, jsonArrayContainsRecords
   };
 
   private final static String[][] jsonContainsRecords =
-  { optimadeContainsRecords 
-  };
+  { optimadeContainsRecords };
   
   ////////////////////////////////////////////////////////////////
   // Test 6. check second time for special file types

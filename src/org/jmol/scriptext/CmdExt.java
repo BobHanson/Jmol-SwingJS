@@ -5780,7 +5780,8 @@ public class CmdExt extends ScriptExt {
     P3d[] oabc = uc.getUnitCellVectors();
     double dist0 = plane.w;
     P4d p0 = P4d.new4(plane.x, plane.y, plane.z, 0);
-    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(), h, k, l);
+    int max = Math.max(Math.max(h, k), l);
+    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(), (h == 0 ? 0 : max), (k == 0 ? 0 : max), (l == 0 ? 0 : max));
     for (int j = 0; j < cpts.size(); j++) {
       uc.toCartesian(cpts.get(j), true);
     }

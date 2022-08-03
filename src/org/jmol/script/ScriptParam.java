@@ -303,105 +303,112 @@ abstract public class ScriptParam extends ScriptError {
     boolean isNegated = (tokAt(i) == T.minus);
     if (isNegated)
       i++;
-    if (i < slen) {
-      switch (getToken(i).tok) {
-      case T.dollarsign:
-        String id = objectNameParameter(++i);
-        if (chk)
-          return new P4d();
-        plane = ((ScriptEval) this).getPlaneForObject(id, vTemp);
-        break;
-      case T.x:
-        if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
-          evalError("x=?", null);
-        plane = P4d.new4(1, 0, 0, -floatParameter(i));
-        break;
-      case T.y:
-        if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
-          evalError("y=?", null);
-        plane = P4d.new4(0, 1, 0, -floatParameter(i));
-        break;
-      case T.z:
-        if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
-          evalError("z=?", null);
-        plane = P4d.new4(0, 0, 1, -floatParameter(i));
-        break;
-      case T.identifier:
-      case T.string:
-      case T.point4f:
-        plane = planeValue(theToken);
-        break;
-      case T.leftbrace:
-      case T.point3f:
-        if (!isPoint3f(i)) {
-          plane = getPoint4f(i);
+    try {
+      if (i < slen) {
+        switch (getToken(i).tok) {
+        case T.dollarsign:
+          String id = objectNameParameter(++i);
+          if (chk)
+            return new P4d();
+          plane = ((ScriptEval) this).getPlaneForObject(id, vTemp);
           break;
-        }
-        //$FALL-THROUGH$
-      case T.bitset:
-      case T.expressionBegin:
-        if (isBest) {
-          // best plane {atoms}
-          // best plane @1 @3 @5 @6 ...
-          BS bs = getAtomsStartingAt(i);
-          bestPoints = new P3d[bs.cardinality()];
-          for (int p = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
-            bestPoints[p++] = vwr.ms.at[j];
+        case T.x:
+          if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
+            evalError("x=?", null);
+          plane = P4d.new4(1, 0, 0, -floatParameter(i));
+          break;
+        case T.y:
+          if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
+            evalError("y=?", null);
+          plane = P4d.new4(0, 1, 0, -floatParameter(i));
+          break;
+        case T.z:
+          if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
+            evalError("z=?", null);
+          plane = P4d.new4(0, 0, 1, -floatParameter(i));
+          break;
+        case T.identifier:
+        case T.string:
+        case T.point4f:
+          plane = planeValue(theToken);
+          break;
+        case T.leftbrace:
+        case T.point3f:
+          if (!isPoint3f(i)) {
+            plane = getPoint4f(i);
+            break;
           }
-        } else {
-          // @1 @2 fraction
-          // @1 @2 @3
-          pt1 = atomCenterOrCoordinateParameter(i, null);
-          if (getToken(++iToken).tok == T.comma)
-            ++iToken;
-          pt2 = atomCenterOrCoordinateParameter(iToken, null);
-          if (getToken(++iToken).tok == T.comma)
-            ++iToken;
-          if (isFloatParameter(iToken)) {
-            double frac = floatParameter(iToken);
-            plane = new P4d();
-            vTemp.sub2(pt2, pt1);
-            vTemp.scale(frac * 2);
-            MeasureD.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
-          } else {
-            pt3 = atomCenterOrCoordinateParameter(iToken, null);
-            i = iToken;
-            have3 = true;
-          }
-        }
-        break;
-      default:
-        if (isArrayParameter(i)) {
+          //$FALL-THROUGH$
+        case T.bitset:
+        case T.expressionBegin:
           if (isBest) {
-            // best plane [array]
-            bestPoints = getPointArray(i, -1, false);
+            // best plane {atoms}
+            // best plane @1 @3 @5 @6 ...
+            BS bs = getAtomsStartingAt(i);
+            bestPoints = new P3d[bs.cardinality()];
+            for (int p = 0, j = bs.nextSetBit(0); j >= 0; j = bs
+                .nextSetBit(j + 1)) {
+              bestPoints[p++] = vwr.ms.at[j];
+            }
           } else {
-            Lst<P3d> list = getPointOrCenterVector(getToken(i));
-            int n = list.size();
-            if (n != 3)
-              invArg();
-            pt1 = list.get(0);
-            pt2 = list.get(1);
-            pt3 = list.get(2);
-            have3 = true;
+            // @1 @2 fraction
+            // @1 @2 @3
+            pt1 = atomCenterOrCoordinateParameter(i, null);
+            if (getToken(++iToken).tok == T.comma)
+              ++iToken;
+            pt2 = atomCenterOrCoordinateParameter(iToken, null);
+            if (getToken(++iToken).tok == T.comma)
+              ++iToken;
+            if (isFloatParameter(iToken)) {
+              double frac = floatParameter(iToken);
+              plane = new P4d();
+              vTemp.sub2(pt2, pt1);
+              vTemp.scale(frac * 2);
+              MeasureD.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
+            } else {
+              pt3 = atomCenterOrCoordinateParameter(iToken, null);
+              i = iToken;
+              have3 = true;
+            }
+          }
+          break;
+        default:
+          if (isArrayParameter(i)) {
+            if (isBest) {
+              // best plane [array]
+              bestPoints = getPointArray(i, -1, false);
+            } else {
+              Lst<P3d> list = getPointOrCenterVector(getToken(i));
+              int n = list.size();
+              if (n != 3)
+                invArg();
+              pt1 = list.get(0);
+              pt2 = list.get(1);
+              pt3 = list.get(2);
+              have3 = true;
+            }
           }
         }
+        if (isBest) {
+          plane = new P4d();
+          MeasureD.calcBestPlaneThroughPoints(bestPoints, -1, plane);
+        } else if (have3) {
+          plane = new P4d();
+          P3d norm = new P3d();
+          double w = MeasureD.getNormalThroughPoints(pt1, pt2, pt3, norm,
+              vTemp);
+          plane.set4(norm.x, norm.y, norm.z, w);
+        }
+        if (!chk && Logger.debugging)
+          Logger.debug(" defined plane: " + plane);
       }
-      if (isBest) {
-        plane = new P4d();
-        MeasureD.calcBestPlaneThroughPoints(bestPoints, -1, plane);
-      } else if (have3) {
-        plane = new P4d();
-        P3d norm = new P3d();
-        double w = MeasureD.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
-        plane.set4(norm.x, norm.y, norm.z, w);
-      }
-      if (!chk && Logger.debugging)
-        Logger.debug(" defined plane: " + plane);
+    } catch (Exception e) {
+      plane = null;
     }
     if (plane == null)
       errorMore(ERROR_planeExpected, "{a b c d}",
-          "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\" \"ab\" \"bc\" \"ac\" \"ab1\" \"bc1\" \"ac1\"", "$xxxxx");
+          "\"xy\" \"xz\" \"yz\" \"x=...\" \"y=...\" \"z=...\" \"ab\" \"bc\" \"ac\" \"ab1\" \"bc1\" \"ac1\"",
+          "$xxxxx");
     if (isNegated) {
       plane.scale4(-1);
     }
