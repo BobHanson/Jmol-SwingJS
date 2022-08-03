@@ -1113,10 +1113,8 @@ public class ModelSet extends BondCollection {
     if (am[mi].simpleCage != null) {
       sg.getUnitCelld(am[mi].simpleCage.getUnitCellVectors(), false, null);
       setInfo(mi, "unitCellParams", sg.getUnitCellParams());
-      setModelCage(mi, null);
-    } else {
-      setModelCage(mi, null);
     }
+    setModelCage(mi, null);
   }
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
