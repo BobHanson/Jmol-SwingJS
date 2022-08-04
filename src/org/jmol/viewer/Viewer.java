@@ -3777,7 +3777,7 @@ public class Viewer extends JmolViewer
   public String getHybridizationAndAxes(int atomIndex, V3d z, V3d x,
                                         String lcaoType) {
     return ms.getHybridizationAndAxes(atomIndex, 0, z, x, lcaoType, true, true,
-        false);
+        false, null);
   }
 
   public BS getAllAtoms() {
