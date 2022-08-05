@@ -205,21 +205,27 @@ class PointGroup {
    * @param haveVibration     if true, then all items in atomset must be Atom class 
    * @param distanceTolerance
    * @param linearTolerance
+   * @param maxAtoms
    * @param localEnvOnly
    * @return a PointGroup object, possibly the last calculated for efficiency
    */
   static PointGroup getPointGroup(PointGroup pgLast, T3d center,
                                          T3d[] atomset, BS bsAtoms,
                                          boolean haveVibration,
-                                         double distanceTolerance, double linearTolerance, boolean localEnvOnly) {
+                                         double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly) {
     PointGroup pg = new PointGroup();
-    if (distanceTolerance == 0) {
+    if (distanceTolerance <= 0) {
       distanceTolerance = 0.01f;
+    }
+    if (linearTolerance <= 0) {
       linearTolerance = 0.5d;
     }
+    if (maxAtoms <= 0)
+      maxAtoms = 250;
     pg.distanceTolerance = distanceTolerance;
     pg.distanceTolerance2 = distanceTolerance * distanceTolerance;
     pg.linearTolerance = linearTolerance;
+    pg.maxAtoms = maxAtoms;
     pg.isAtoms = (bsAtoms != null);
     pg.bsAtoms = (pg.isAtoms ? bsAtoms : BSUtil.newBitSet2(0, atomset.length));
     pg.haveVibration = haveVibration;
@@ -253,7 +259,7 @@ class PointGroup {
     cosTolerance =  (Math.cos(linearTolerance / 180 * Math.PI));
     if (!getPointsAndElements(atomset)) {
       Logger.error("Too many atoms for point group calculation");
-      name = "point group not determined -- ac > " + ATOM_COUNT_MAX
+      name = "point group not determined -- ac > " + maxAtoms
           + " -- select fewer atoms and try again.";
       return true;
     }
@@ -432,11 +438,11 @@ class PointGroup {
     return null;
   }
 
-  private final static int ATOM_COUNT_MAX = 100;
+  int maxAtoms = 250;
 
   private boolean getPointsAndElements(T3d[] atomset) {
     int ac = bsAtoms.cardinality();
-    if (isAtoms && ac > ATOM_COUNT_MAX)
+    if (isAtoms && ac > maxAtoms)
       return false;
     points = new P3d[ac];
     elements = new int[ac];

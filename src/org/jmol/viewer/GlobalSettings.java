@@ -345,6 +345,7 @@ public class GlobalSettings {
     setI("platformSpeed", platformSpeed);
     setF("pointGroupLinearTolerance", pointGroupLinearTolerance);
     setF("pointGroupDistanceTolerance", pointGroupDistanceTolerance);
+//    setI("pointGroupMaxAtoms", pointGroupMaxAtoms);
     setB("preserveState", preserveState);
     setO("propertyColorScheme", propertyColorScheme);
     setO("quaternionFrame", quaternionFrame);
@@ -650,6 +651,7 @@ public class GlobalSettings {
   String pickLabel = "";
   double pointGroupDistanceTolerance = 0.2d;
   double pointGroupLinearTolerance = 8.0d;
+//  int pointGroupMaxAtoms = 250;
   public boolean preserveState = true;
   String propertyColorScheme = "roygb";
   String quaternionFrame = "p"; // was c prior to Jmol 11.7.47
@@ -993,8 +995,9 @@ public class GlobalSettings {
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
       + ";checkcir;resolverresolver;showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
       // removed in Jmol 14.29.18
-      + ";selecthetero;selecthydrogen;"
-      
+      + ";selecthetero;selecthydrogen"
+      // removed in Jmol 14.32.68
+      + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
       + ";")
       .toLowerCase();
 

@@ -565,7 +565,7 @@ public class ModelSet extends BondCollection {
     }
     pointGroup = symmetry.setPointGroup(pointGroup, center, pts, bs,
         haveVibration, (isPoints ? 0 : vwr.getDouble(T.pointgroupdistancetolerance)),
-        vwr.getDouble(T.pointgrouplineartolerance), localEnvOnly);
+        vwr.getDouble(T.pointgrouplineartolerance), (bs == null ? pts.length : bs.cardinality()), localEnvOnly);
     if (!isPolyhedron && !isPoints)
       this.pointGroup = pointGroup;
     if (!doAll && !asInfo)

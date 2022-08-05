@@ -292,6 +292,7 @@ public class MathExt {
   private boolean evaluatePointGroup(ScriptMathProcessor mp, SV[] args,
                                      boolean isAtomProperty)
       throws ScriptException {
+    // {*}.pointGroup();
     // @1.pointGroup("spacegroup")
     // pointGroup("spacegroup",@1)
     // pointGroup(points)
@@ -300,8 +301,8 @@ public class MathExt {
     // center can be non-point to ignore, such as 0 or ""
     T3d[] pts = null;
     P3d center = null;
-    double distanceTolerance = Double.NaN;
-    double linearTolerance = Double.NaN;
+    double distanceTolerance = -1;
+    double linearTolerance = -1;
     BS bsAtoms = null;
     boolean isSpaceGroup = false;
     switch (args.length) {
@@ -339,10 +340,7 @@ public class MathExt {
         break;
       case T.bitset:
         bsAtoms = SV.getBitSet(args[0], false);
-        Lst<P3d> atoms = vwr.ms.getAtomPointVector(bsAtoms);
-        pts = new T3d[atoms.size()];
-        for (int i = pts.length; --i >= 0;)
-          pts[i] = atoms.get(i);
+        pts = vwr.ms.at;
         break;
       case T.string:
         if (isAtomProperty) {
@@ -361,13 +359,17 @@ public class MathExt {
       }
       break;
     case 0:
-      return mp.addXObj(vwr.ms.getPointGroupInfo(null));
+      if (!isAtomProperty) {
+        return mp.addXObj(vwr.ms.getPointGroupInfo(null));
+      }
+      bsAtoms = SV.getBitSet(mp.getX(), false);
+      break;
     default:
       return false;
     }
     if (bsAtoms != null) {
       int iatom = bsAtoms.nextSetBit(0);
-      if (iatom < 0 || iatom >= vwr.ms.ac || bsAtoms.cardinality() != 1)
+      if (iatom < 0 || iatom >= vwr.ms.ac || isSpaceGroup && bsAtoms.cardinality() != 1)
         return false;
       if (isSpaceGroup) {
         // @1.pointgroup("spacegroup")
@@ -379,16 +381,18 @@ public class MathExt {
           pts[i] = lst.get(i);
         center = new P3d();
       } else {
-        center = vwr.ms.at[iatom];
+        if (bsAtoms.cardinality() == 1)
+          center = vwr.ms.at[iatom];
       }
     }
     SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
-        pts, null, false,
-        Double.isNaN(distanceTolerance)
+        (pts == null ? vwr.ms.at : pts), bsAtoms, false,
+        distanceTolerance < 0
             ? vwr.getDouble(T.pointgroupdistancetolerance)
             : distanceTolerance,
-        Double.isNaN(linearTolerance) ? vwr.getDouble(T.pointgrouplineartolerance)
-            : linearTolerance,
+        linearTolerance < 0 ? vwr.getDouble(T.pointgrouplineartolerance)
+            : linearTolerance, 
+        (bsAtoms == null ? pts.length : bsAtoms.cardinality()), 
         true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
         true, null, 0, 1));

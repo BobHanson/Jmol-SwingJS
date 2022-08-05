@@ -5687,6 +5687,8 @@ public class Viewer extends JmolViewer
       return g.percentVdwAtom;
     case T.pickingspinrate:
       return g.pickingSpinRate;
+//    case T.pointgroupmaxatoms:
+//      return g.pointGroupMaxAtoms;
     case T.ribbonaspectratio:
       return g.ribbonAspectRatio;
     case T.showscript:
@@ -6518,6 +6520,9 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+//    case T.pointgroupmaxatoms:
+//      g.pointGroupMaxAtoms = value;
+//      break;
     case T.undomax:
       // 14.32.25
       stm.setUndoMax(value);

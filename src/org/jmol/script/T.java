@@ -944,8 +944,9 @@ public class T {
   public final static int phongexponent                  = intparam | 28;
   public final static int pickingspinrate                = intparam | 29;
   public final static int platformspeed                  = intparam | 30;
-  public final static int propertyatomnumberfield        = intparam | 31;
-  public final static int propertyatomnumbercolumncount  = intparam | 32;
+//  public final static int pointgroupmaxatoms             = intparam | 31;
+  public final static int propertyatomnumberfield        = intparam | 32;
+  public final static int propertyatomnumbercolumncount  = intparam | 33;
   public final static int propertydatacolumncount        = intparam | 34;
   public final static int propertydatafield              = intparam | 36;
   public final static int repaintwaitms                  = intparam | 37;
@@ -2482,6 +2483,7 @@ public class T {
        "particleRadius",
        "pointGroupDistanceTolerance",
        "pointGroupLinearTolerance",
+//       "pointGroupMaxAtoms",
        "radius",
        "rotationRadius",
        "scaleAngstromsPerInch",
@@ -3554,6 +3556,7 @@ public class T {
         particleradius,                     //        "particleRadius"
         pointgroupdistancetolerance,        //        "pointGroupDistanceTolerance"
         pointgrouplineartolerance,          //        "pointGroupLinearTolerance"
+//        pointgroupmaxatoms,
         radius,                             //        "radius"
         rotationradius,                     //        "rotationRadius"
         scaleangstromsperinch,              //        "scaleAngstromsPerInch"

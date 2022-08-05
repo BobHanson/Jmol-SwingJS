@@ -103,10 +103,10 @@ public class Symmetry implements SymmetryInterface {
                                          boolean haveVibration,
                                          double distanceTolerance,
                                          double linearTolerance,
-                                         boolean localEnvOnly) {
+                                         int maxAtoms, boolean localEnvOnly) {
     pointGroup = PointGroup.getPointGroup(
         siLast == null ? null : ((Symmetry) siLast).pointGroup, center, atomset,
-        bsAtoms, haveVibration, distanceTolerance, linearTolerance,
+        bsAtoms, haveVibration, distanceTolerance, linearTolerance, maxAtoms,
         localEnvOnly);
     return this;
   }

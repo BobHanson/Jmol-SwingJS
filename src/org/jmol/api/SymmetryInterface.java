@@ -252,7 +252,7 @@ public interface SymmetryInterface {
                                   T3d center, T3d[] atomset,
                                   BS bsAtoms,
                                   boolean haveVibration,
-                                  double distanceTolerance, double linearTolerance, boolean localEnvOnly);
+                                  double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly);
 
   int[] getInvariantSymops(P3d p3, int[] v0);
 
