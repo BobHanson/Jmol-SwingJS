@@ -177,8 +177,8 @@ version=12.3.3_dev
  * 
  *      Move commands include:
  * 
- *      {"type" : "move", "style" : "rotate", "x" : deltaX, "y", deltaY }
- *      {"type" : "move", "style" : "translate", "x" : deltaX, "y", deltaY }
+ *      {"type" : "move", "style" : "rotate", "x" : deltaX, "y" : deltaY }
+ *      {"type" : "move", "style" : "translate", "x" : deltaX, "y" : deltaY }
  *      {"type" : "move", "style" : "zoom", "scale" : scale } (1.0 = 100%)
  *      {"type" : "sync", "sync" : syncText }
  * 
