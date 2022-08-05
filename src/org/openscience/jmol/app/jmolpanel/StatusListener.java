@@ -449,7 +449,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         double y = j / 5d; // / 15d - 1;
         f[i][j] = /* (double) Math.sqrt */(x * x + y);
         if (Double.isNaN(f[i][j]))
-          f[i][j] = -(double) Math.sqrt(-x * x - y);
+          f[i][j] = -Math.sqrt(-x * x - y);
         // f[i][j] = (isSecond ? (double) ((i + j - nX) / (2d)) : (double) Math
         // .sqrt(Math.abs(i * i + j * j)) / 2d);
         // if (i < 10 && j < 10)
@@ -577,7 +577,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
   @Override
   public void syncScript(String script) {
     // called from JSpecView to send "Select: <Peaks...." script
-    jmolPanel.syncScript(script);    
+    vwr.syncScript(script, "~", 0);
   }
 
   

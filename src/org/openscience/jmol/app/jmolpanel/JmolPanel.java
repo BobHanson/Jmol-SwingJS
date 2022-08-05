@@ -109,7 +109,6 @@ import org.openscience.jmol.app.webexport.WebExport;
 
 import javajs.async.AsyncFileChooser;
 import javajs.util.JSJSONParser;
-import javajs.util.P3d;
 import javajs.util.PT;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
@@ -1946,10 +1945,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   }
 
-  public void syncScript(String script) {
-    vwr.syncScript(script, "~", 0);
-  }
-
   public AppConsole getConsole() {
     return   (AppConsole) vwr.getProperty("DATA_API", "getAppConsole", null);
   }
@@ -2050,7 +2045,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     case "touch":
       if (touchHandler == null)
         touchHandler = new TouchHandler();
-      nioSync(json, touchHandler);
+      touchHandler.nioSync(vwr, json);
       break;
     }
   }
@@ -2066,79 +2061,5 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     return serverService != null;
   }
 
-  /**
-   * process touch or gesture commands driven by hardware. From MolecularPlayground.
-   * 
-   * @param json
-   * @param handler
-   * @throws Exception
-   */
-  public void nioSync(Map<String, Object> json, TouchHandler handler) throws Exception {    
-  switch (JsonNioService.getString(json, "type")) {
-  case "move":
-    long now = handler.latestMoveTime = System.currentTimeMillis();
-    switch (JsonNioService.getString(json, "style")) {
-    case "rotate":
-      double dx = JsonNioService.getDouble(json, "x");
-      double dy = JsonNioService.getDouble(json, "y");
-      double dxdy = dx * dx + dy * dy;
-      boolean isFast = (dxdy > TouchHandler.swipeCutoff);
-      boolean disallowSpinGesture = vwr.getBooleanProperty("isNavigating")
-          || !vwr.getBooleanProperty("allowGestures");
-      if (disallowSpinGesture || isFast
-          || now - handler.swipeStartTime > TouchHandler.swipeDelayMs) {
-        // it's been a while since the last swipe....
-        // ... send rotation in all cases
-        String msg = null;
-        if (disallowSpinGesture) {
-          // just rotate
-        } else if (isFast) {
-          if (++handler.nFast > TouchHandler.swipeCount) {
-            // critical number of fast motions reached
-            // start spinning
-            handler.swipeStartTime = now;
-            msg = "Mouse: spinXYBy " + (int) dx + " " + (int) dy + " "
-                + (Math.sqrt(dxdy) * TouchHandler.swipeFactor / (now - handler.previousMoveTime));
-          }
-        } else if (handler.nFast > 0) {
-          // slow movement detected -- turn off spinning
-          // and reset the number of fast actions
-          handler.nFast = 0;
-          msg = "Mouse: spinXYBy 0 0 0";
-        }
-        if (msg == null)
-          msg = "Mouse: rotateXYBy " + dx + " " + dy;
-        syncScript(msg);
-      }
-      handler.previousMoveTime = now;
-      break;
-    case "translate":
-      if (!handler.isPaused)
-        handler.pauseScript(vwr, true);
-      syncScript("Mouse: translateXYBy " + JsonNioService.getString(json, "x") + " "
-          + JsonNioService.getString(json, "y"));
-      break;
-    case "zoom":
-      if (!handler.isPaused)
-        handler.pauseScript(vwr, true);
-      double zoomFactor = JsonNioService.getDouble(json, "scale")
-          / (vwr.tm.zmPct / 100.0d);
-      syncScript("Mouse: zoomByFactor " + zoomFactor);
-      break;
-    }
-    break;
-  case "sync":
-    //sync -3000;sync slave;sync 3000 '{"type":"sync","sync":"rotateZBy 30"}'
-    syncScript("Mouse: " + JsonNioService.getString(json, "sync"));
-    break;
-  case "touch":
-    // raw touch event
-    vwr.acm.processMultitouchEvent(
-        0, JsonNioService.getInt(json, "eventType"), JsonNioService.getInt(json, "touchID"),
-        JsonNioService.getInt(json, "iData"), P3d.new3(JsonNioService.getDouble(json, "x"),
-            JsonNioService.getDouble(json, "y"), JsonNioService.getDouble(json, "z")),
-        JsonNioService.getLong(json, "time"));
-    break;
-  }
-}
+
 }
