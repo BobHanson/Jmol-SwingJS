@@ -37,7 +37,6 @@ import org.jmol.script.SV;
 import org.jmol.util.Logger;
 import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
@@ -277,7 +276,7 @@ public class MPJmolApp implements JsonNioClient {
           .equals("true");
       Logger.info("startJsonNioKiosk: contentDisabled=" + contentDisabled);
 
-      service = JmolPanel.getJsonNioServer();
+      service = new JsonNioService();
       if (service == null) {
         Logger.info("Cannot start JsonNioServer");
         System.exit(1);
