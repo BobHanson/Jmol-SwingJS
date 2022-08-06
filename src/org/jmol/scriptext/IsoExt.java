@@ -535,10 +535,15 @@ public class IsoExt extends ScriptExt {
         break;
       case T.pointgroup:
         // draw pointgroup [array  of points] CENTER xx
+        // draw pointgroup {atoms} CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
         pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false)
             : null);
+        if (pts == null && eval.isAtomExpression(i)) {
+          bs = eval.atomExpressionAt(i);
+          pts = vwr.ms.getAtomPointVector(bs).toArray(new P3d[bs.cardinality()]);
+        }
         if (pts != null) {
           i = eval.iToken + 1;
           if (tokAt(i) == T.center) {

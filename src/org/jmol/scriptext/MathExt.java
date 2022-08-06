@@ -380,9 +380,6 @@ public class MathExt {
         for (int i = pts.length; --i >= 0;)
           pts[i] = lst.get(i);
         center = new P3d();
-      } else {
-        if (bsAtoms.cardinality() == 1)
-          center = vwr.ms.at[iatom];
       }
     }
     SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,

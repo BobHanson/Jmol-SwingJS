@@ -231,6 +231,8 @@ class PointGroup {
     pg.haveVibration = haveVibration;
     pg.center = center;
     pg.localEnvOnly = localEnvOnly;
+    if (Logger.debugging)
+      pgLast = null;
     return (pg.set(pgLast, atomset) ? pg : pgLast);
   }
 

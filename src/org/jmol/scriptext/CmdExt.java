@@ -766,7 +766,8 @@ public class CmdExt extends ScriptExt {
             Object[] data = new Object[] { id, null, bs1 };            
             showString(e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "symmetry", data) ? (String) data[1] : "");
           } else {
-            showString(vwr.ms.calculatePointGroup(vwr.bsA()));
+            bs1 = (slen == 2 ? vwr.bsA() : atomExpressionAt(2));
+            showString(vwr.ms.calculatePointGroup(bs1));
           }
         }
         return;
