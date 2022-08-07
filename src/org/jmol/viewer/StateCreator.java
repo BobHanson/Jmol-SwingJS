@@ -1348,7 +1348,7 @@ public class StateCreator extends JmolStateCreator {
   private void getEchoState(SB sb, Text t) {
     // ECHO "%SCALE" uses unformatted text
     boolean isScale = (t != null && t.barPixels > 0);
-    String text = (t == null ? null : isScale ? t.textUnformatted : t.text); 
+    String text = (t == null ? null : isScale ? t.textUnformatted : t.text);
     if (text == null || !t.isEcho || t.target.equals("error"))
       return;
     //set echo top left
@@ -1375,22 +1375,19 @@ public class StateCreator extends JmolStateCreator {
         strOff = Escape.eP(t.xyz);
       sb.append("  ").append(echoCmd).append(" ").append(strOff);
       if (t.align != JC.TEXT_ALIGN_LEFT)
-        sb.append(";  ").append(echoCmd).append(" ").append(
-            JC.getHorizAlignmentName(t.align));
+        sb.append(";  ").append(echoCmd).append(" ")
+            .append(JC.getHorizAlignmentName(t.align));
       break;
     default:
       sb.append("  set echo ").append(JC.getEchoName(t.valign)).append(" ")
           .append(JC.getHorizAlignmentName(t.align));
     }
     if (t.movableZPercent != Integer.MAX_VALUE)
-      sb.append(";  ").append(echoCmd).append(" depth ").appendI(
-          t.movableZPercent);
+      sb.append(";  ").append(echoCmd).append(" depth ")
+          .appendI(t.movableZPercent);
     if (isImage) {
       sb.append("; ").append(echoCmd).append(" IMAGE /*file*/");
     } else {
-//      if ("%SCALE".equals(text)) {
-//        text += "//" + vwr.getScaleText("", false, 0, null);
-//      }
       sb.append("; echo ");
     }
     sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
@@ -1399,21 +1396,22 @@ public class StateCreator extends JmolStateCreator {
       sb.append("  ").append(echoCmd).append(" scale ").appendD(t.imageScale)
           .append(";\n");
     if (t.script != null)
-      sb.append("  ").append(echoCmd).append(" script ").append(
-          PT.esc(t.script)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" script ")
+          .append(PT.esc(t.script)).append(";\n");
     if (t.modelIndex >= 0)
-      sb.append("  ").append(echoCmd).append(" model ").append(
-          vwr.getModelNumberDotted(t.modelIndex)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" model ")
+          .append(vwr.getModelNumberDotted(t.modelIndex)).append(";\n");
     if (t.pointerPt != null) {
-      sb.append("  ").append(echoCmd).append(" point ").append(
-          t.pointerPt instanceof Atom ? "({" + ((Atom) t.pointerPt).i
-              + "})" : Escape.eP(t.pointerPt)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" point ")
+          .append(
+              t.pointerPt instanceof Atom ? "({" + ((Atom) t.pointerPt).i + "})"
+                  : Escape.eP(t.pointerPt))
+          .append(";\n");
     }
     if (t.pymolOffset != null) {
-      sb.append("  ").append(echoCmd).append(" offset ").append(
-          Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" offset ")
+          .append(Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
     }
-    //    }
     //isDefine and target==top: do all
     //isDefine and target!=top: just start
     //!isDefine and target==top: do nothing
@@ -1435,10 +1433,13 @@ public class StateCreator extends JmolStateCreator {
       sb.append(C.getHexCode(t.bgcolix));
     }
     sb.append(";\n");
-    if (t.hidden)
-      sb.append("  set echo ID ").append(PT.esc(t.target))
-          .append(" hidden;\n");
-    return;
+    if (t.hidden) {
+      if (isScale)
+        sb.append("  set echo \"%SCALE\" hidden;\n");
+      else
+        sb.append("  set echo ID ").append(PT.esc(t.target))
+            .append(" hidden;\n");
+    }
   }
 
   @Override

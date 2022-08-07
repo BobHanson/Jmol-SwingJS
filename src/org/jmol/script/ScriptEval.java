@@ -7540,6 +7540,45 @@ public class ScriptEval extends ScriptExpr {
       vwr.showParameter(key, true, 80);
   }
 
+
+  private void cmdScale(int pt) throws ScriptException {
+    // also set SCALE (for script compatibility with older versions)
+    if (chk)
+      return;
+    String text = "%SCALE";
+    switch (tokAt(pt)) {
+    case T.off:
+      setShapeProperty(JC.SHAPE_ECHO, "%SCALE", null);
+      checkLast(pt);
+      return;
+    case T.on:
+      pt++;
+      break;
+    default:
+      String units = Measurement.fixUnits(optParameterAsString(pt));
+      if (Measurement.fromUnits(1, units) != 0) {
+        text += " " + units;
+        pt++;
+      } else {
+        text = null;
+      }
+      break;
+    }
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", "%SCALE");    
+    if (tokAt(pt) == T.nada) {
+      vwr.ms.setEchoStateActive(true);
+      vwr.shm.loadShape(JC.SHAPE_ECHO);
+      setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
+    } else {
+      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");    
+      cmdSetEcho(pt);
+    }
+    if (text != null)
+      setShapeProperty(JC.SHAPE_ECHO, "text", text);  
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
+    refresh(false);
+  }
+
   private void cmdSetEcho(int i) throws ScriptException {
     String propertyName = null;
     Object propertyValue = null;
@@ -9722,41 +9761,6 @@ public class ScriptEval extends ScriptExpr {
     }
     str.append("END\n");
     return str.toString();
-  }
-
-  private void cmdScale(int pt) throws ScriptException {
-    // also set SCALE (for script compatibility with older versions)
-    if (chk)
-      return;
-    String text = "%SCALE";
-    switch (tokAt(pt)) {
-    case T.off:
-      setShapeProperty(JC.SHAPE_ECHO, "%SCALE", null);
-      checkLast(pt);
-      return;
-    case T.on:
-      pt++;
-      break;
-    default:
-      String units = Measurement.fixUnits(optParameterAsString(pt));
-      if (Measurement.fromUnits(1, units) != 0) {
-        text += " " + units;
-        pt++;
-      }
-      break;
-    }
-    setShapeProperty(JC.SHAPE_ECHO, "thisID", "%SCALE");    
-    if (tokAt(pt) == T.nada) {
-      vwr.ms.setEchoStateActive(true);
-      vwr.shm.loadShape(JC.SHAPE_ECHO);
-      setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
-    } else {
-      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");    
-      cmdSetEcho(pt);
-    }
-    setShapeProperty(JC.SHAPE_ECHO, "text", text);  
-    setShapeProperty(JC.SHAPE_ECHO, "thisID", null);
-    refresh(false);
   }
 
 }
