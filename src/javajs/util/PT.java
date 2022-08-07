@@ -1486,7 +1486,8 @@ public class PT {
         }
         return rep(strFormat, "%%", "%");
       } catch (Exception e) {
-        //System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
+      }
+    System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
     return rep(strFormat, "%", "?");
   }
 
