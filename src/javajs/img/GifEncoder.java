@@ -67,14 +67,14 @@
 
 package javajs.img;
 
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.P3d;
-
-import java.util.Hashtable;
-import java.util.Map;
-import java.io.IOException;
 
 /**
  * 
@@ -139,15 +139,18 @@ public class GifEncoder extends ImageEncoder {
     Integer ic = (Integer) params.get("transparentColor");
     if (ic == null) {
       ic = (Integer) params.get("backgroundColor");
-      if (ic != null) {
+      if (ic != null)
         backgroundColor = ic.intValue();
-        if (backgroundColor == 0xFF000000) {
-          backgroundColor = 0xFF040404;
-        }
-      }
     } else {
       backgroundColor = ic.intValue();
       isTransparent = true;
+    }
+
+    if (backgroundColor == 0xFF000000) {
+      // fix speckling of text Jmol 14.32.69
+      // must return background to true color
+      for (int i = pixels.length; --i >= 0;)
+          pixels[i] = pixels[i] &~0x040404;
     }
 
     interlaced = (Boolean.TRUE == params.get("interlaced"));
@@ -655,7 +658,7 @@ public class GifEncoder extends ImageEncoder {
 
   private double sxyz(double x) {
     x /= 255;
-    return (double) (x <= 0.04045 ? x / 12.92 : Math.pow(((x + 0.055) / 1.055),
+    return  (x <= 0.04045 ? x / 12.92 : Math.pow(((x + 0.055) / 1.055),
         2.4)) * 100;
   }
 
@@ -674,7 +677,7 @@ public class GifEncoder extends ImageEncoder {
   }
 
   private double srgb(double x) {
-    return (double) (x > 0.0031308f ? (1.055 * Math.pow(x, 1.0 / 2.4)) - 0.055
+    return (x > 0.0031308f ? (1.055 * Math.pow(x, 1.0 / 2.4)) - 0.055
         : x * 12.92) * 255;
   }
 
@@ -695,7 +698,7 @@ public class GifEncoder extends ImageEncoder {
   }
 
   private double flab(double t) {
-    return (double) (t > 8.85645168E-3 /* (24/116)^3 */? Math.pow(t,
+    return  (t > 8.85645168E-3 /* (24/116)^3 */? Math.pow(t,
         0.333333333) : 7.78703704 /* 1/3*116/24*116/24 */* t + 0.137931034 /* 16/116 */
     );
   }
@@ -719,7 +722,7 @@ public class GifEncoder extends ImageEncoder {
   }
 
   private double fxyz(double t) {
-    return (double) (t > 0.206896552 /* (24/116) */? t * t * t
+    return  (t > 0.206896552 /* (24/116) */? t * t * t
         : 0.128418549 /* 3*24/116*24/116 */* (t - 0.137931034 /* 16/116 */));
   }
 
