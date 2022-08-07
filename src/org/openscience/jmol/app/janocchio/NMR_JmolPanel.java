@@ -1042,7 +1042,7 @@ public class NMR_JmolPanel extends JmolPanel {
       String strInfo = (data == null || data[1] == null ? null : data[1]
           .toString());
 
-//      System.out.println("NMR_JmolPanel notifyCallback "+type + " " + strInfo + " " + data[2]);
+//System.out.println("NMR_JmolPanel notifyCallback "+type + " " + strInfo + " " + data[2]);
       super.notifyCallback(type, data);
       switch (type) {
       case LOADSTRUCT:

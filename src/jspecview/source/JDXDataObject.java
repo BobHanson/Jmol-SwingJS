@@ -539,9 +539,9 @@ public abstract class JDXDataObject extends JDXHeader {
     for (int i = 0, n = gyroData.length - 1; i < n; i += 2)
       gyroMap.put("" + (int)gyroData[i], Double.valueOf(gyroData[i + 1]));
 
-//    System.out.println(getGyroMagneticRatio("13C"));
-//    System.out.println(getGyroMagneticRatio("1H"));
-//    System.out.println(getNominalSpecFreq("13C", 100.612769));
+//System.out.println(getGyroMagneticRatio("13C"));
+//System.out.println(getGyroMagneticRatio("1H"));
+//System.out.println(getNominalSpecFreq("13C", 100.612769));
   }
 
   public static int getNominalSpecFreq(String nuc, double freq) {

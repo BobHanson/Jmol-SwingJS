@@ -276,13 +276,12 @@ public final class JC {
   }
 
 //  static {
-//    
-//    System.out.println(fixOptimadeCall("test?filter&response_fields=lkadfs"));
-//    System.out.println(fixOptimadeCall("test?response_fields=species"));
-//    System.out.println(fixOptimadeCall("test?response_fields=lkadfs,species"));
-//    System.out.println(fixOptimadeCall("test?response_fields=lkadfs,species_at_sites,species&more"));
-//    System.out.println(fixOptimadeCall("test?filter&response_fields=species,lkadfs&more"));
-//    System.out.println(fixOptimadeCall("test?response_fields=species,lkadfs&more"));
+//System.out.println(fixOptimadeCall("test?filter&response_fields=lkadfs"));
+//System.out.println(fixOptimadeCall("test?response_fields=species"));
+//System.out.println(fixOptimadeCall("test?response_fields=lkadfs,species"));
+//System.out.println(fixOptimadeCall("test?response_fields=lkadfs,species_at_sites,species&more"));
+//System.out.println(fixOptimadeCall("test?filter&response_fields=species,lkadfs&more"));
+//System.out.println(fixOptimadeCall("test?response_fields=species,lkadfs&more"));
 //    
 //    
 //  }

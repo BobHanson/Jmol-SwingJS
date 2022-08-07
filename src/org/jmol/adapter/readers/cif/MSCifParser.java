@@ -558,7 +558,7 @@ public class MSCifParser extends MSRdr {
   
   private void addMod(@SuppressWarnings("unused") String key, String id, String fid, double[] params) {
     String k = (fid == null ? id : id + fid);
-//    System.out.println("!mscifp addMod id=" + id + " fid=" + fid + " key = " + k + " " + Arrays.toString(params) + " for " + key);
+//System.out.println("!mscifp addMod id=" + id + " fid=" + fid + " key = " + k + " " + Arrays.toString(params) + " for " + key);
     addModulation(null, k, params, -1);
   }
 
@@ -609,7 +609,7 @@ public class MSCifParser extends MSRdr {
 
 //  private void addTwin(String id, Matrix m) {
 //    //TODO implement twinning
-//    System.out.println("twin " + id + " = " + m);    
+//System.out.println("twin " + id + " = " + m);    
 //  }
 
   private Matrix getSparseMatrix(CifReader cr, String term, int i, int dim) {

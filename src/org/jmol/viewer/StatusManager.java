@@ -955,7 +955,7 @@ public class StatusManager {
    */
   synchronized public void notifyAudioStatus(Map<String, Object> htParams) {
     String status = (String) htParams.get("status");
-    System.out.println(status);
+//System.out.println(status);
     String script = (String) htParams.get(status);
     if (script != null)
       vwr.script(script);

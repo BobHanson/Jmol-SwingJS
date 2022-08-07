@@ -137,7 +137,7 @@ private final static byte LONG = 76; /* L */
       case APPEND:
         o = pop();
 //        if (o instanceof byte[])
-//          System.out.println("APPEND " + o);
+//System.out.println("APPEND " + o);
 //
         ((Lst<Object>) peek()).addLast(o);
         break;
@@ -145,7 +145,7 @@ private final static byte LONG = 76; /* L */
         l = getObjects(getMark());
         if (inNames && markCount == 2) {// && l.size() > 0 && l.get(0) == thisName) {
           int pt = (int) binaryDoc.getPosition();
-//          System.out.println(" " + thisName + " " + filePt + " "
+//System.out.println(" " + thisName + " " + filePt + " "
 //              + (pt - filePt));
           Lst<Object> l2 = new Lst<Object>();
           l2.addLast(Integer.valueOf(filePt));
@@ -250,7 +250,7 @@ private final static byte LONG = 76; /* L */
           for (i = 0; i < l.size(); i++) {
             Object oo = l.get(i);
 //            if (oo instanceof byte[])
-//              System.out.println("SETITEMS " + oo);
+//System.out.println("SETITEMS " + oo);
             ((Lst<Object>) o).addLast(oo);
           }
         } else {
@@ -283,7 +283,7 @@ private final static byte LONG = 76; /* L */
           pop();
           // extraneous list; already packaged "global"
           //Lst lred = (Lst) pop();          
-//          System.out.println(new String((byte[])args[1]) + " " + new String((byte[])args[2]));
+//System.out.println(new String((byte[])args[1]) + " " + new String((byte[])args[2]));
 //            Object c = (pop());
             //System.out.println("REDUCE " + c);
 //          push(pop());//constructor.construct(args));
@@ -430,10 +430,10 @@ private final static byte LONG = 76; /* L */
 //        return;
       memo.put(Integer.valueOf(i), o);
 //      if (((String) o).indexOf('\0') >= 0)
-//        System.out.println("caching byte[" + ((String) o).length() + "] at "
+//System.out.println("caching byte[" + ((String) o).length() + "] at "
 //            + binaryDoc.getPosition() + " ipt " + ipt);
 //      else
-//        System.out.println("caching String \"" + o + "\" at "
+//System.out.println("caching String \"" + o + "\" at "
 //            + binaryDoc.getPosition() + " ipt " + ipt);
     }
   }
@@ -454,7 +454,7 @@ private final static byte LONG = 76; /* L */
     for (int i = mark; i < stack.size(); ++i) {
       Object oo = stack.get(i);
 //      if (oo instanceof byte[])
-//        System.out.println("getObjects " + oo);
+//System.out.println("getObjects " + oo);
       args.addLast(oo);
     }
     for (int i = stack.size(); --i >= mark;)

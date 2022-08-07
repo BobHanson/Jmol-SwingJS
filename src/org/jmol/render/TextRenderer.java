@@ -154,7 +154,7 @@ class TextRenderer {
     double offsetY = y1 - y0;
 
     // Set picking label and then drag!
-    // System.out.println(offsetX  +"/" + w + " " + offsetY + "/" + h);
+    //System.out.println(offsetX  +"/" + w + " " + offsetY + "/" + h);
     if (offsetX <= 0 && -offsetX <= w
       && offsetY <= 0 && -offsetY <= h)
       return;

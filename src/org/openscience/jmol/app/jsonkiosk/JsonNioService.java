@@ -650,7 +650,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
         while (!halt) {
           selectNonBlocking();
           client.serverCycle();
-//          System.out.println("ClientThread active");
+//System.out.println("ClientThread active");
           Thread.sleep(50);
         }
       } catch (Throwable e) {

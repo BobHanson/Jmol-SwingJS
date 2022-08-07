@@ -320,11 +320,11 @@ public class Atom extends P3d implements Cloneable {
   }
 
 //  static {
-//    System.out.println(isValidSymChar1('A'));
-//    System.out.println(isValidSym1('A'));
-//    System.out.println(isValidSymNoCase('A', 'l'));
-//    System.out.println(isValidSym1('W'));
-//    System.out.println(isValidSymNoCase('A', 'L'));
+//System.out.println(isValidSymChar1('A'));
+//System.out.println(isValidSym1('A'));
+//System.out.println(isValidSymNoCase('A', 'l'));
+//System.out.println(isValidSym1('W'));
+//System.out.println(isValidSymNoCase('A', 'L'));
 //  }
   
 }

@@ -1597,7 +1597,7 @@ public final class ModelLoader {
     double theta = Math.acos(v.dot(v0));
     double f = (0.4d * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
-//    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
+//System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
 
   ///////////////  shapes  ///////////////

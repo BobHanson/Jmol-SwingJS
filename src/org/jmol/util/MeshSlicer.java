@@ -744,11 +744,11 @@ public class MeshSlicer {
             pts[pt].scaleAdd2(k, vectors[3], pts[pt]);
           }
 
-//    System.out.println("draw line1 {0 0 0} color red"
+//System.out.println("draw line1 {0 0 0} color red"
 //        + Escape.eP(m.spanningVectors[1]));
-//    System.out.println("draw line2 {0 0 0} color green"
+//System.out.println("draw line2 {0 0 0} color green"
 //        + Escape.eP(m.spanningVectors[2]));
-//    System.out.println("draw line3 {0 0 0} color blue"
+//System.out.println("draw line3 {0 0 0} color blue"
 //        + Escape.eP(m.spanningVectors[3]));
 
     P3d ptTemp = new P3d();

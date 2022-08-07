@@ -568,9 +568,9 @@ public class JDXDecompressor implements Iterator<Double> {
 //  private void testAlgorithm() {
 //     line = "4265A8431K85L83L71K55P5j05k35k84k51j63n5K4M1j2j10j97k28j88j01j7K4or4k04k89";
 //     lineLen = line.length();
-//     System.out.println(getValue(allDelim));
+//System.out.println(getValue(allDelim));
 //     while (ich < lineLen)
-//       System.out.println(line.substring(0, ich) + "\n" + ipt++ + " " + (yval = getYValue()));
+//System.out.println(line.substring(0, ich) + "\n" + ipt++ + " " + (yval = getYValue()));
 //     ipt= 0;
 //  }
 

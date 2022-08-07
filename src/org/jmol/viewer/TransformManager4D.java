@@ -155,7 +155,7 @@ public class TransformManager4D extends TransformManager {
     // negate y (for screen) and z (for zbuf)
     m3_toScreen.m11 = m3_toScreen.m22 = -scalePixelsPerAngstrom;
 
-    System.out.println(m2_rotate);
+    //System.out.println(m2_rotate);
 
     zOffset = modelCenterOffset;
   }

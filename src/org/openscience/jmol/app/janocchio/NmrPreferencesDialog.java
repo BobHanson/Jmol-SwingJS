@@ -525,7 +525,7 @@
 //			currentProperties.store(fileOutputStream, "Jmol");
 //			fileOutputStream.close();
 //		} catch (Exception e) {
-//			System.out.println("Error saving preferences" + e);
+//System.out.println("Error saving preferences" + e);
 //		}
 //		viewer.refresh(0, "PreferencesDialog:save()");
 //	}

@@ -418,7 +418,7 @@ public class Orbitals extends JPanel {//implements ActionListener {
 //      out.println("      <td style=\"vertical-align: top;\">");
 //      out.println("      <script>");
 //      out.println("jmolInitialize(\"" + appletPath + "\");");
-//      //System.out.println (Rendering);
+//System.out.println (Rendering);
 //      switch (Rendering) {
 //      case SmallAtomDot: {
 //        //Appropriate for displaying orbitals on one atom
@@ -467,7 +467,7 @@ public class Orbitals extends JPanel {//implements ActionListener {
 //          color2 = " ";
 //          color3 = " ";
 //          color4 = " ";
-//          //               System.out.println(j+": executing case 1");
+//System.out.println(j+": executing case 1");
 //          break;
 //        }
 //        case 2: {
@@ -477,7 +477,7 @@ public class Orbitals extends JPanel {//implements ActionListener {
 //          color2 = "'true'";
 //          color3 = " ";
 //          color4 = " ";
-//          //               System.out.println(j+": executing case 2");
+//System.out.println(j+": executing case 2");
 //          break;
 //        }
 //        case 3: {
@@ -487,7 +487,7 @@ public class Orbitals extends JPanel {//implements ActionListener {
 //          color2 = " ";
 //          color3 = "'true'";
 //          color4 = " ";
-//          //               System.out.println(j+": executing case 3");
+//System.out.println(j+": executing case 3");
 //          break;
 //        }
 //        case 4: {
@@ -497,11 +497,11 @@ public class Orbitals extends JPanel {//implements ActionListener {
 //          color2 = " ";
 //          color3 = " ";
 //          color4 = "'true'";
-//          //               System.out.println(j+": executing case 4");
+//System.out.println(j+": executing case 4");
 //          break;
 //        }
 //        default: {
-//          //System.out.println(j + ": executing default");
+//System.out.println(j + ": executing default");
 //          break;
 //        }
 //        }

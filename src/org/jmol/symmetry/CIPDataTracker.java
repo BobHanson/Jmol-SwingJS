@@ -101,7 +101,7 @@ public class CIPDataTracker extends CIPData {
             + "\n";
         s += t.getTrackerLine(t.b, t.bsb, (t.rule == CIPChirality.RULE_5 ? t.b.listRS[2] : null), n);
         //        if (t.mode == TRACK_DUPLICATE)
-        //          System.out.println(s);
+        //System.out.println(s);
       }
     }
     s += "\t" + root.atoms[3] + "\t--------------\n";

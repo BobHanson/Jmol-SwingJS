@@ -252,7 +252,7 @@ public class JmolUtil {
           continue;
         byte[] bytes = Rdr.getLimitedStreamBytes(zis, ze.getSize());
         //        String s = new String(bytes);
-        //        System.out.println("ziputil " + s.substring(0, 100));
+        //System.out.println("ziputil " + s.substring(0, 100));
         if (Rdr.isGzipB(bytes))
           bytes = Rdr.getLimitedStreamBytes(ZipTools.getUnGzippedInputStream(bytes),
               -1);
@@ -406,7 +406,7 @@ public class JmolUtil {
       return (byte[]) fm.pngjCache.get(shortName);
     }
     //    for (String key : pngjCache.keySet())
-    //    System.out.println(" key=" + key);
+    //System.out.println(" key=" + key);
     //System.out.println("FileManager memory cache size=" + pngjCache.size()
     //  + " did not find " + pathName + " as " + shortName);
     if (!isMin || !clearAndCachePngjFile(fm, new String[] { pathName, null }))

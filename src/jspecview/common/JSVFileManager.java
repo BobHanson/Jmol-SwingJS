@@ -487,7 +487,7 @@ public class JSVFileManager {
 		{
 			// JAVA only
 			System.out.println("type/name: " + type + "/" + name);
-			// System.out.println("molFile is \n" + molFile);
+			//System.out.println("molFile is \n" + molFile);
 			System.out.println("jsonMolFile is \n" + jsonMolFile);
 			viewer.syncScript("JSVSTR:" + molFile);
 		}

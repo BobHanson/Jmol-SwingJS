@@ -347,8 +347,8 @@ public class Modulation {
       }
     }
     legendre = l;
-//    System.out.println(PT.toJSON(null, legendre));
-//    System.out.println("----");
+//System.out.println(PT.toJSON(null, legendre));
+//System.out.println("----");
   }
   
 //  synchronized void calcLegendre0(int m) {

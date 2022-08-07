@@ -635,7 +635,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     Atom[] atoms = ms.at;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       for (int f = faces.length; --f >= 0;) {
-        System.out.println(MeasureD.distanceToPlane(p.planes[f], atoms[i]));
+        //System.out.println(MeasureD.distanceToPlane(p.planes[f], atoms[i]));
         if (MeasureD.distanceToPlane(p.planes[f], atoms[i]) > offset + 0.001f) {
           bsAtoms.clear(i);
           break;
@@ -1171,7 +1171,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     MeasureD.getNormalFromCenter(points[k], ptRef, points[ii], points[jj], false, normal, vTemp);
     normals[planeCount] = normal;
     faces[planeCount] = new int[] { nRef, ii, jj, -2 };
-    //        System.out.println("draw ID \"d" + i+ j+ k + "\" VECTOR "
+    //System.out.println("draw ID \"d" + i+ j+ k + "\" VECTOR "
       //           + ptRef + " " + normal + " color blue \">" + i + j +k + isWindingOK
         //        + "\"");
   }
@@ -1205,7 +1205,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     // Check here for a 3D convex hull:
 
 //    if (t[2] == 3)
-//      System.out.println(index + ": t = " + PT.toJSON(null, t));
+//System.out.println(index + ": t = " + PT.toJSON(null, t));
     int i0 = t[0];
     MeasureD.getPlaneThroughPoints(points[i0], points[t[1]],
         points[t[2]], vNorm, vAC, pTemp);
@@ -1263,8 +1263,8 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
     //    if (p1[0] == 3 && p1[1] == 11 &&  p1[2] == 16)
     //        if (normix == 629) {
-    //          System.out.println("testing poly" + PT.toJSON(null, p1) + normix);
-    //          System.out.println(normix);
+    //System.out.println("testing poly" + PT.toJSON(null, p1) + normix);
+    //System.out.println(normix);
     //
     //        }
     //       
@@ -1322,7 +1322,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     int[] b;
     
 //    if (normix == 389)
-//      System.out.println(normix + " normix " + edge0);
+//System.out.println(normix + " normix " + edge0);
     if (o == null) {
       P3d coord2 = points[pt1];
       P3d coord1 = points[pt];

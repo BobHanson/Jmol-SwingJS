@@ -32,7 +32,6 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.SB;
 
 import javajs.util.BS;
@@ -501,7 +500,7 @@ public class SmilesGenerator {
                     break;
                 }
                 inserts.add(++pt, a);
-//               System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
+//System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
                 break;
               }
           }

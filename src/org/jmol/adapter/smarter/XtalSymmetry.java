@@ -1586,15 +1586,15 @@ public class XtalSymmetry {
 
   
 //  static {
-//    System.out.println(.01999998d);
-//    System.out.println(1.01999998d);
-//    System.out.println(2.01999998d);
-//    System.out.println(9910.01999998d);
-//    System.out.println(Math.round(100000*.01999998d));
-//    System.out.println(Math.round(100000*.020000000000015));
-//    System.out.println(Math.round(100000*-.01999998d));
-//    System.out.println(Math.round(100000*-.020000000000015));
-//    System.out.println(.01999998d+ Integer.MAX_VALUE);
+//System.out.println(.01999998d);
+//System.out.println(1.01999998d);
+//System.out.println(2.01999998d);
+//System.out.println(9910.01999998d);
+//System.out.println(Math.round(100000*.01999998d));
+//System.out.println(Math.round(100000*.020000000000015));
+//System.out.println(Math.round(100000*-.01999998d));
+//System.out.println(Math.round(100000*-.020000000000015));
+//System.out.println(.01999998d+ Integer.MAX_VALUE);
 //  }
 
 }

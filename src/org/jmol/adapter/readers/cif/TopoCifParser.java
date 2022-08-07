@@ -1006,7 +1006,7 @@ public class TopoCifParser implements Parser {
 
       // add this atom to the AtomSetCollection
       atomName = atomLabel;
-//      System.out.println("TAtom adding " + this);
+//System.out.println("TAtom adding " + this);
       
       if (node != null) {
         node.addAtom(this);

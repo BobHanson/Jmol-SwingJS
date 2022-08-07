@@ -256,7 +256,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         htMenus.get("undo").setEnabled(vwr.undoMoveAction(T.undomove, T.count) > 0);
         htMenus.get("redo").setEnabled(vwr.undoMoveAction(T.redomove, T.count) > 0);
     }
-    //    System.out.println("active menu is " + activeMenu + " state=" + getMKState());
+    //System.out.println("active menu is " + activeMenu + " state=" + getMKState());
     return active;
   }
 

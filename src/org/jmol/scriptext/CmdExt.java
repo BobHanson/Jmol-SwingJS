@@ -1408,7 +1408,7 @@ public class CmdExt extends ScriptExt {
               JC.SMILES_IGNORE_STEREOCHEMISTRY
                   | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
         }
-        //        System.out.println("compare:\n" + m4);
+        //System.out.println("compare:\n" + m4);
         if (Double.isNaN(stddev)) {
           showString("structures do not match from " + bsFrom + " to " + bsTo);
           return;
@@ -4208,10 +4208,10 @@ public class CmdExt extends ScriptExt {
       // here we override that
       // write PDB "xxx.pdb"
       SV.sValue(tokenAt(++pt, args));
-//    System.out.println(val);
+//System.out.println(val);
 //    if (s.length() > 0 && s.charAt(0) != '.') {
 //      if (val == null) {
-//        System.out.println("??");
+//System.out.println("??");
 //        type = val.toUpperCase();
 //      }
 //    }

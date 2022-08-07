@@ -139,8 +139,12 @@ public class GifEncoder extends ImageEncoder {
     Integer ic = (Integer) params.get("transparentColor");
     if (ic == null) {
       ic = (Integer) params.get("backgroundColor");
-      if (ic != null)
+      if (ic != null) {
         backgroundColor = ic.intValue();
+        if (backgroundColor == 0xFF000000) {
+          backgroundColor = 0xFF040404;
+        }
+      }
     } else {
       backgroundColor = ic.intValue();
       isTransparent = true;
@@ -297,8 +301,8 @@ public class GifEncoder extends ImageEncoder {
       //        xyzToLab(pt0, pt0);
       //        rgbToXyz(pt1, pt1);
       //        xyzToLab(pt1, pt1);
-      //        System.out.println("boundbox corners " + pt0 + " " + pt1);
-      //        System.out.println("draw d" + index + " boundbox color " + ptRGB
+      //System.out.println("boundbox corners " + pt0 + " " + pt1);
+      //System.out.println("draw d" + index + " boundbox color " + ptRGB
       //            + " mesh nofill");
       //      }
       return volume = dx * dx + dy * dy + dz * dz;
@@ -309,7 +313,7 @@ public class GifEncoder extends ImageEncoder {
     //        boolean isMain = (i < 0);
     //      P3 lab = rgbToXyz(rgb, null);
     //      xyzToLab(lab, lab);
-    //      System.out.println("draw d" + index + (isMain ? "_" : "_" + i) + " width "
+    //System.out.println("draw d" + index + (isMain ? "_" : "_" + i) + " width "
     //          + (isMain ? 1.0 : 0.2) + " " + lab
     //          + " color " + rgb + (isMain ? " '" + -i + "'" : ""));
     //      }

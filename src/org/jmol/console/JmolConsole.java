@@ -106,7 +106,7 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
   }
   
   //public void finalize() {
-  //  System.out.println("Console " + this + " finalize");
+  //System.out.println("Console " + this + " finalize");
   //}
   
   @Override

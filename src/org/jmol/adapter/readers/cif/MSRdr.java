@@ -702,7 +702,7 @@ public class MSRdr implements MSInterface {
         qs[i] = toP3(getMod("W_" + (i + 1)));
       }
     }
-//    System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
+//System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
     P3d pt = toP3(p);
     // test n * q
     for (int i = 0; i < modDim; i++)

@@ -621,10 +621,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           molecule.patternAtoms, nAtoms, bs, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
       int[][] map2 = getCorrelationMaps(s, 
           at, bsAtoms.cardinality(), bsAtoms, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
-//      System.out.println(s);
-//      System.out.println(jme);
-//      System.out.println(PT.toJSON(null,  map));
-//      System.out.println(PT.toJSON(null,  map2));
+//System.out.println(s);
+//System.out.println(jme);
+//System.out.println(PT.toJSON(null,  map));
+//System.out.println(PT.toJSON(null,  map2));
       return new int[][] {map[0], map2[0]};
     } catch (Exception e) {
       e.printStackTrace();

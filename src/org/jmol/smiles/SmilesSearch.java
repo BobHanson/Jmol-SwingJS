@@ -946,7 +946,7 @@ public class SmilesSearch extends JmolMolecule {
       throws InvalidSmilesException {
 
 //      if (!this.isRingCheck) {
-//          System.out.println("testing " + patternAtom + " " + jmolAtom);
+//System.out.println("testing " + patternAtom + " " + jmolAtom);
 //        }
 
 

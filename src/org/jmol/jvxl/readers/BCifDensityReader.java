@@ -119,7 +119,7 @@ class BCifDensityReader extends MapFileReader {
 //    Map<String, Object> encoding = (Map<String, Object>) ((Object[]) map
 //        .get("encoding"))[0];
 //    Object o = encoding.get("offsetEncoding");
-//    System.out.println(encoding + " " + f);
+//System.out.println(encoding + " " + f);
 //    return null;
 //  }
 
@@ -145,7 +145,7 @@ class BCifDensityReader extends MapFileReader {
     } catch (Exception e) {
       e.printStackTrace();
     }
-//    System.out.println(encoding + " " + f);
+//System.out.println(encoding + " " + f);
     return f;
   }
 

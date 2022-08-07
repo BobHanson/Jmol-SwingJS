@@ -1024,14 +1024,14 @@ public class SmilesStereo {
   static int getHandedness(SimpleNode a, SimpleNode b, SimpleNode c, SimpleNode pt, VTemp v) {
     double d = MeasureD.getNormalThroughPoints((P3d) a, (P3d) b, (P3d) c, v.vTemp, v.vA);
     //int atat = (Measure.distanceToPlaneV(v.vTemp, d, (P3) pt) > 0 ? 1 : 2);
-//    System.out.println("$ draw p1 " + P3.newP((P3)a) +" color red '"+a+" [2]'");
-//    System.out.println("$ draw p2 " + P3.newP((P3)b) +"  color green '"+b+" [3]'");
-//    System.out.println("$ draw p3 " + P3.newP((P3)c) +"  color blue '"+c+" [4]'");
-//    System.out.println("$ draw p " + P3.newP((P3)a) +" " + P3.newP((P3)b) +" " + P3.newP((P3)c) +"" );
-//    System.out.println("$ draw v vector {" + P3.newP((P3)pt) +"}  " + v.vTemp+" '"+ (atat==2 ? "@@" : "@")+ pt + " [1]' color " + (atat == 2 ? "white" : "yellow"));
+//System.out.println("$ draw p1 " + P3.newP((P3)a) +" color red '"+a+" [2]'");
+//System.out.println("$ draw p2 " + P3.newP((P3)b) +"  color green '"+b+" [3]'");
+//System.out.println("$ draw p3 " + P3.newP((P3)c) +"  color blue '"+c+" [4]'");
+//System.out.println("$ draw p " + P3.newP((P3)a) +" " + P3.newP((P3)b) +" " + P3.newP((P3)c) +"" );
+//System.out.println("$ draw v vector {" + P3.newP((P3)pt) +"}  " + v.vTemp+" '"+ (atat==2 ? "@@" : "@")+ pt + " [1]' color " + (atat == 2 ? "white" : "yellow"));
 //    double e = v.vTemp.dot((P3) pt);
     d = MeasureD.distanceToPlaneV(v.vTemp, d, (P3d) pt);
-//    System.out.println("# " + d);
+//System.out.println("# " + d);
     return (d > 0 ? 1 : 2);
   }
 

@@ -141,7 +141,7 @@ public class Mesh extends MeshSurface {
   }
 
   //public void finalize() {
-  //  System.out.println("Mesh " + this + " finalized");
+  //System.out.println("Mesh " + this + " finalized");
   //}
   
   public void clear(String meshType) {

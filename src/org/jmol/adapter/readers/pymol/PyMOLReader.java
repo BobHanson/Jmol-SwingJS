@@ -1183,7 +1183,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       if (formalCharge > 125)
         formalCharge -= 512;
       intReps = atomInt(atomArray, pt, vArray[PyMOL.VISREP]);
-//      System.out.println(apt + " " + pt + " " + intReps);
+//System.out.println(apt + " " + pt + " " + intReps);
       atomColor = atomInt(atomArray, pt, vArray[PyMOL.COLOR]);
       serNo = atomInt(atomArray, pt, vArray[PyMOL.ID]);
       cartoonType = atomInt(atomArray, pt, vArray[PyMOL.CARTOON]);

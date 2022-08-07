@@ -1562,7 +1562,7 @@ public class ModelSet extends BondCollection {
       if (m.isOrderly)
         i = m.firstAtomIndex + m.act - 1;
     }
-   // System.out.println("MS " + atomList + " " + bs);
+   //System.out.println("MS " + atomList + " " + bs);
     return bs;
   }
 

@@ -179,10 +179,7 @@ class Image {
 //  static void renderScreenImage(PlatformViewer vwr, Object g, Object size) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println("" + vwr + g + size);
+//System.out.println("" + vwr + g + size);
 //    }
 //  }
 

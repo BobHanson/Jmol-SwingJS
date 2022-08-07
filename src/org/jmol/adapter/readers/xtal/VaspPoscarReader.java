@@ -83,7 +83,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     if (isVolume) {
       M3d m = M3d.newA9(unitCellData);
       scaleFac /= m.determinant3();
- //     System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
+ //System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
     }
     if (scaleFac != 1)
       for (int i = 0; i < unitCellData.length; i++)

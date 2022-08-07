@@ -846,7 +846,7 @@ public class IsosurfaceMesh extends Mesh {
   
   //private void dumpData() {
   //for (int i =0;i<10;i++) {
-  //  System.out.println("P["+i+"]="+polygonIndexes[i][0]+" "+polygonIndexes[i][1]+" "+polygonIndexes[i][2]+" "+ polygonIndexes[i][3]+" "+vertices[i]);
+  //System.out.println("P["+i+"]="+polygonIndexes[i][0]+" "+polygonIndexes[i][1]+" "+polygonIndexes[i][2]+" "+ polygonIndexes[i][3]+" "+vertices[i]);
   //}
   //}
   

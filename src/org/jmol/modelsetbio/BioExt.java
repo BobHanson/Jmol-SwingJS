@@ -1275,7 +1275,7 @@ public class BioExt {
     //res1.chain.model.freeze();
     //ms.recalculatePolymers(bsExclude);      
     //} catch (Exception e) {
-    // System.out.println("" + e);
+    //System.out.println("" + e);
     // }
     vwr.fm.setFileInfo(info);
     return true;

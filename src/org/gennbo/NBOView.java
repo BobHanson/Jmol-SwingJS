@@ -2325,14 +2325,14 @@ class NBOView {
       killMouseTimer();
       mouseTimer = getMouseTimer();
 
-      //      System.out.println("PRESS" + e);
-      //      System.out.println("press " + PT.toJSON(null, getSelectedIndices()) + e.getClickCount());
+      //System.out.println("PRESS" + e);
+      //System.out.println("press " + PT.toJSON(null, getSelectedIndices()) + e.getClickCount());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-      //      System.out.println("RELEASE" + e);      
-      //      System.out.println("release " + PT.toJSON(null, getSelectedIndices()));
+      //System.out.println("RELEASE" + e);      
+      //System.out.println("release " + PT.toJSON(null, getSelectedIndices()));
       //boolean toggled = this.toggled;
       killMouseTimer();
       int i = getSelectedIndex();
@@ -2403,12 +2403,12 @@ class NBOView {
 
     @Override
     public void keyPressed(KeyEvent e) {
-      //      System.out.println("KEYDN" +  orbitals.getSelectedIndex() + " " + e);
+      //System.out.println("KEYDN" +  orbitals.getSelectedIndex() + " " + e);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-      //      System.out.println("KEYUP" + orbitals.getSelectedIndex() + " " + e);
+      //System.out.println("KEYUP" + orbitals.getSelectedIndex() + " " + e);
       updateIsosurfacesInJmol(Integer.MAX_VALUE);
     }
 

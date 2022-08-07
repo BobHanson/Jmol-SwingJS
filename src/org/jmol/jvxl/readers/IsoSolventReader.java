@@ -756,7 +756,7 @@ class IsoSolventReader extends AtomDataReader {
     }
 
 //    void dump() {
-//      System.out.println("draw e" + (nTest++) + " " + P3.newP(atomXyz[ia])
+//System.out.println("draw e" + (nTest++) + " " + P3.newP(atomXyz[ia])
 //          + P3.newP(atomXyz[ib]) + " color green # "
 //          + (ia + " " + ib + " f " + nFaces + " " + nInvalid));
 //    }
@@ -1039,10 +1039,7 @@ class IsoSolventReader extends AtomDataReader {
 //              setVoxel(i, j, k, ipt, value);
 //              if (voxelSource != null)
 //                voxelSource[ipt] = -1 - ia;
-//            }
-//          }
-//        }
-//    System.out.println("nt=" + nt + " n1=" + n1);
+//System.out.println("nt=" + nt + " n1=" + n1);
 //  }
   
   private void markToroidVoxels() {
@@ -1336,7 +1333,7 @@ class IsoSolventReader extends AtomDataReader {
     double value = Double.MAX_VALUE;
     for (int iAtom = 0; iAtom < firstNearbyAtom; iAtom++) {
 //      if (rs == null  || atomXyz == null || atomXyz[iAtom] == null || pt == null)
-//        System.out.println("HOH");
+//System.out.println("HOH");
       double r = pt.distance(atomXyzTruncated[iAtom]) - rs[iAtom];
       if (r < value)
         value = r;

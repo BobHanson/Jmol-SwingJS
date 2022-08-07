@@ -727,8 +727,8 @@ public class NMRCalculation implements JmolNMRInterface {
 
   //  static {
   //    for (int n = 0; n < 360; n+= 10)
-  //    System.out.println(n + "\t" + getInitialJValue(2, n*Math.PI/180));
-  //    System.out.println("NMRCalc???");
+  //System.out.println(n + "\t" + getInitialJValue(2, n*Math.PI/180));
+  //System.out.println("NMRCalc???");
   //  }
   final public static String JCH3_NONE = "none";
   final public static String JCH3_WASYLISHEN_SCHAEFER = "was";

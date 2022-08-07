@@ -122,7 +122,7 @@ public class AppletConsole extends JmolConsole {
   }
   
   //public void finalize() {
-  //  System.out.println("Console " + this + " finalize");
+  //System.out.println("Console " + this + " finalize");
   //}
 
   

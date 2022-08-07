@@ -129,7 +129,7 @@ public class SpaceGroupFinder {
 //      if (uc == uc0) {
 //        mtet = null;
 //      } else {
-//        System.out.println("tetragonoal setting issue detected");
+//System.out.println("tetragonoal setting issue detected");
 //      }
 
 //      // 2. Check that packing atoms, if any, are complete and only those packed.
@@ -143,7 +143,7 @@ public class SpaceGroupFinder {
 //        if (packedAtoms.cardinality() == nExtra) {
 //          bsPoints.andNot(packedAtoms);
 //        } else {
-//          System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
+//System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
 //          bsPoints.clearAll();
 //        }
 //      }
@@ -227,7 +227,7 @@ public class SpaceGroupFinder {
             .nextSetBit(i + 1)) {
           bsPoints.clear(i);
 //          if (iop == 15 && i == 46)
-//            System.out.println("????");
+//System.out.println("????");
           int j = findEquiv(iop, op, i, bsPoints, pt, true);
           if (j < 0) {
               System.out.println("failed op " + iop + " for atom " + i + " " + atoms[i].name + " " + atoms[i] + " looking for " + pt + "\n" + op);
@@ -297,16 +297,16 @@ public class SpaceGroupFinder {
           uncheckedOps.clear(0);
 
           bsPoints.or(bsPoints0);
-//          System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
-//          System.out.println("test2 targets " + targets.cardinality() + " " + targets);
-//          System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
-//          System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
+//System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
+//System.out.println("test2 targets " + targets.cardinality() + " " + targets);
+//System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
+//System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
           bsPoints.andNot(targets);
           if (!checkBasis(uncheckedOps, bsPoints, targets)) {
             isg = 0;
           }
-//          System.out.println("test2b targets " + targets.cardinality() + " " + targets);
-//          System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
+//System.out.println("test2b targets " + targets.cardinality() + " " + targets);
+//System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
         }
         if (isg == 0)
           targets.clearAll();
@@ -369,7 +369,7 @@ public class SpaceGroupFinder {
 
   @SuppressWarnings("unused")
   private void dumpBasis(BS ops, BS bs1, BS bsPoints) {
-//    System.out.println("----");
+//System.out.println("----");
 //    for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
 //      for (int iop = ops.nextSetBit(1); iop >= 0; iop = ops
 //          .nextSetBit(iop + 1)) {
@@ -385,9 +385,7 @@ public class SpaceGroupFinder {
 //          i0 = j;
 //        }
 //        System.out.print("\n");
-//      }
-//    }
-//    System.out.println("----");
+//System.out.println("----");
   }
 
   private boolean checkBasis(BS uncheckedOps, BS bsPoints, BS targets) {
@@ -425,9 +423,9 @@ public class SpaceGroupFinder {
 //    int[] basis = new int[nAtoms];
 //    for (int i = nAtoms; --i >= 0;)
 //      basis[i] = Integer.MAX_VALUE;
-//    System.out.println("finishing check for basis for " + n + " operations");
+//System.out.println("finishing check for basis for " + n + " operations");
 //    bs.setBits(0, nAtoms);
-//    System.out.println(
+//System.out.println(
 //        "checkBasis " + bs.cardinality() + " " + targets.cardinality() + " " + bs);
 //    for (int iop = uncheckedOps.nextSetBit(1); iop >= 0; iop = uncheckedOps
 //        .nextSetBit(iop + 1)) {
@@ -437,7 +435,7 @@ public class SpaceGroupFinder {
 //        if (j < 0)
 //          return false;
 //        if (i == 12 || j == 12)
-//          System.out.println("??" + op + iop + " " + i + " " + j + atoms[i] + atoms[j]);
+//System.out.println("??" + op + iop + " " + i + " " + j + atoms[i] + atoms[j]);
 //          if (i < basis[j]) {
 //            basis[j] = i;
 //          } else if (j < basis[i]) {
@@ -454,7 +452,7 @@ public class SpaceGroupFinder {
 //    bs.andNot(targets);
 //    targets.setBits(0, nAtoms);
 //    targets.andNot(bs);
-//    System.out.println(
+//System.out.println(
 //        "checkBasis " + bs.cardinality() + " " + targets.cardinality() + " " + bs);
 //    return true;
 //  }
@@ -814,7 +812,7 @@ public class SpaceGroupFinder {
         continue;
       double d = b.distance(pt);
 //      if (iop == 15 && j == 98 && i == 46)
-//        System.out.println("???");
+//System.out.println("???");
       if (d * d < JC.UC_TOLERANCE2 
           || (1 - d) * (1 - d) < JC.UC_TOLERANCE2
           && latticeShift(pt, b)
@@ -844,7 +842,7 @@ public class SpaceGroupFinder {
         || approx0014(Math.abs(a.y - b.y) - 1)
         || approx0014(Math.abs(a.z - b.z) - 1));
     if (is1) {
-      // System.out.println("was 1 for " + a + b); 
+      //System.out.println("was 1 for " + a + b); 
       // Heulandite, Jalpaite, Letovicite, Merrillite, 
       // Schreyerite, Supierite, Shigaite, Tobermorite
     }

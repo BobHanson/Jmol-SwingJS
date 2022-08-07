@@ -240,7 +240,7 @@ public class Geodesic {
       quadruple(i, v);
 
    //for (int i = 0; i <= lvl; ++i) {
-   //  System.out.println("geodesic level " + i + " vertexCount= "
+   //System.out.println("geodesic level " + i + " vertexCount= "
    //  + v[i] + " faceCount=" + faceVertexesArrays[i].length / 3);
    //}
     vertexCounts = v;

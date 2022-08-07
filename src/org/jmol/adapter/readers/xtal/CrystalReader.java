@@ -477,7 +477,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 //          f * parseDoubleStr(tokens[1]), 
 //          f * parseDoubleStr(tokens[2]));
 //      String type = null;
-//      System.out.println(tokens[3] + " " + line);
+//System.out.println(tokens[3] + " " + line);
 //      switch ("-3,-1,+1,+3".indexOf(tokens[3].substring(3,5))) {
 //      /////////0..3..6..9
 //      case 0:
@@ -930,7 +930,7 @@ public class CrystalReader extends AtomSetCollectionReader {
    */
   private void readPrimitiveLatticeVectors() throws Exception {
     primitiveToCrystal = M3d.newA9(fillDoubleArray(null, 0, new double[9]));
-    //   System.out.println("Prim-to-Cryst=" + primitiveToCryst);
+    //System.out.println("Prim-to-Cryst=" + primitiveToCryst);
   }
 
   // SHIFT OF THE ORIGIN                  :    3/4    1/4      0

@@ -263,7 +263,7 @@ public class MOCalculation extends QuantumCalculation {
 //        c = 0;
 //        for (int i = 0; i < nShells; i++)
 //          c += normalizeShell(i);
-//        //System.out.println("sum[c^2] = " + c + "\t" + Math.sqrt(c));
+//System.out.println("sum[c^2] = " + c + "\t" + Math.sqrt(c));
 //        c = Math.sqrt(c);
 //        atomIndex = firstAtomOffset - 1;
 //        moCoeff = 0;
@@ -310,7 +310,7 @@ public class MOCalculation extends QuantumCalculation {
 //    gaussianPtr = shell[2] - 1;
 //    nGaussians = shell[3];
 //    doShowShellType = doDebug;
-//    //System.out.println(iShell + " basistype is " + basisType);
+//System.out.println(iShell + " basistype is " + basisType);
 //    if (!setCoeffs(basisType, false))
 //      return 0;
 //    for (int i = map.length; --i >= 0;)
@@ -885,7 +885,7 @@ public class MOCalculation extends QuantumCalculation {
     int b = slater.y;
     int c = slater.z;
     int d = slater.r;
-    //  System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
+    //System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
           //+ " minmax " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + zMin + " " + zMax
     if (a == -2) /* if dz2 */
       for (int ix = xMax; --ix >= xMin;) {

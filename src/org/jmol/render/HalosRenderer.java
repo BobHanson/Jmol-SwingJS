@@ -117,7 +117,7 @@ public class HalosRenderer extends ShapeRenderer {
     } else {
       d = vwr.tm.scaleToScreen(z, mad);
     }
-//    System.out.println(atom + "scaleToScreen(" + z + "," + mad +")=" + d);
+//System.out.println(atom + "scaleToScreen(" + z + "," + mad +")=" + d);
     if (isAntialiased)
       d /= 2;
     double more = (d / 2);

@@ -10759,7 +10759,7 @@ public class Viewer extends JmolViewer
         .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
           : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
-    System.out.println(g.measureDistanceUnits);
+    //System.out.println(g.measureDistanceUnits);
     if (Measurement.fromUnits(1, u) == 0) {
       // unrecognized units
       u = Measurement.fixUnits(g.measureDistanceUnits);

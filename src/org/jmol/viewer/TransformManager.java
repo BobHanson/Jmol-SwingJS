@@ -1199,7 +1199,7 @@ public class TransformManager {
     pt.sub(fixedRotationCenter);
     ptCamera.add(pt);
 
-    //        System.out.println("TM no " + navigationOffset + " rpo "
+    //System.out.println("TM no " + navigationOffset + " rpo "
     //            + referencePlaneOffset + " aa " + aperatureAngle + " sppa "
     //            + scalePixelsPerAngstrom + " vr " + visualRange + " sw/vr "
     //            + screenWidth / visualRange + " " + ptRef + " " + fixedRotationCenter);
@@ -2513,7 +2513,7 @@ public class TransformManager {
     // model center offset for zoom 100
     double offset100 = (2 * modelRadius) / visualRangeAngstroms * referencePlaneOffset; // (s)
 
-    //    System.out.println("sppA " + scalePixelsPerAngstrom + " pD " +
+    //System.out.println("sppA " + scalePixelsPerAngstrom + " pD " +
     //     perspectiveDepth + " s3dspi " + scale3DAngstromsPerInch + " " 
     //     + " spC " + screenPixelCount + " vR " + visualRange
     //     + " sDPPA " + scaleDefaultPixelsPerAngstrom);
@@ -2537,10 +2537,10 @@ public class TransformManager {
 
     modelRadiusPixels = modelRadius * scalePixelsPerAngstrom; // (s)
 
-    //    System.out.println("transformman zoom scalppa modelrad " + zoomPercent + " " +
+    //System.out.println("transformman zoom scalppa modelrad " + zoomPercent + " " +
     //     scalePixelsPerAngstrom + " " + modelRadiusPixels + " " + visualRange 
     //     + " -- "+ vwr.dimScreen.width+ "  "+ vwr.dimScreen.height);
-    //    System.out.println("modelCenterOffset " + modelCenterOffset + " " + modelRadius);
+    //System.out.println("modelCenterOffset " + modelCenterOffset + " " + modelRadius);
   }
 
   private void calcNavCameraFactors(double offset100) {

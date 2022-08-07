@@ -567,7 +567,7 @@ class PointGroup {
         //System.out.println("draw a" + i + " " + a2 + " color green");
           continue out;
         } 
-//        System.out.println("none found for " + a1 + " "  +a2 + " " + pt);
+//System.out.println("none found for " + a1 + " "  +a2 + " " + pt);
       }
       return false;
     }

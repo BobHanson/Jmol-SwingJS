@@ -426,7 +426,7 @@ public class MarchingCubes extends TriangleData {
 //    else
 //      for (int i = 0; i < yzCount; i++)
 //        test += plane[i];
-//    System.out.println(isXLowToHigh + " test " + n + "=" + test);
+//System.out.println(isXLowToHigh + " test " + n + "=" + test);
 //  }
   
   protected void processTriangles(int insideMask) {

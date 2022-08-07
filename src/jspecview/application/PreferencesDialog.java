@@ -851,7 +851,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     // Display Schemes Tab
     preferences.setProperty("defaultDisplaySchemeName", currentDS.name);
-//    System.out.println(currentDS.name);
+//System.out.println(currentDS.name);
 
     //TreeMap<String,DisplayScheme> dispSchemes;
     if(currentDS.name.equals("Current")){

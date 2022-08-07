@@ -973,7 +973,7 @@ class SpaceGroup {
     lastInfo = info;
     name = hallSymbol + " [" + hmSymbolFull + "] #" + intlTableNumber;
 
-    //    System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
+    //System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
     //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
     //    + hallSymbol);
   }

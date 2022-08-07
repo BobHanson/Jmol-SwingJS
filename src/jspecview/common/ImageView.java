@@ -210,7 +210,7 @@ class ImageView implements XYScaleConverter {
         return null;
 //      double f = subSpectra.get(i).getUserYFactor();
 //      if (f !=1)
-//      	System.out.println("???? imageveiw");
+//System.out.println("???? imageveiw");
       for (int j = 0; j < xyCoords.length; j++) {
         double y = points[j].getYVal();
         int gray = 255 - Coordinate.intoRange((int) ((y/* * f*/ - minZ) * grayFactor), 0, 255); 

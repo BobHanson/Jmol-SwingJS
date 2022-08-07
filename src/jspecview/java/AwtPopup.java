@@ -45,7 +45,7 @@ public class AwtPopup extends JSVGenericPopup  {
 	
 	// @Override
 	// public void finalize() {
-	// System.out.println("SwingPopup Finalize " + this);
+	//System.out.println("SwingPopup Finalize " + this);
 	// }
 
 	@Override

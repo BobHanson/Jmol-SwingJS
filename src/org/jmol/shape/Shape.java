@@ -94,11 +94,11 @@ public abstract class Shape {
   abstract public void setProperty(String propertyName, Object value, BS bsSelected);
 
   //public Shape () {
-  //  System.out.println("Shape " + this + " constructed");
+  //System.out.println("Shape " + this + " constructed");
   //}
   
   //public void finalize() {
-  //  System.out.println("Shape " + shapeID + " " + this + " finalized");
+  //System.out.println("Shape " + shapeID + " " + this + " finalized");
   //}
   
   public static final double RADIUS_MAX = 4;

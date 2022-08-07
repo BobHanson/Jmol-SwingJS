@@ -107,8 +107,8 @@ public class DataManager implements JmolDataManager {
         clear();
         return;
       }
-//      System.out.println(PT.toJSON(null, data));
-//      System.out.println(PT.toJSON(null, dataValues));
+//System.out.println(PT.toJSON(null, data));
+//System.out.println(PT.toJSON(null, dataValues));
       type = type.toLowerCase();
       if (type.equals("element_vdw")) {
         setVDW(data);

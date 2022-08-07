@@ -264,16 +264,15 @@ public class _StlExporter extends _VrmlExporter {
 //  try {
 //    for (int j = 0; j < 20; j++)
 //      doc.readInt();
-//    System.out.println(doc.readInt());
+//System.out.println(doc.readInt());
 //    for (int j = 0; j < 10; j++) {
 //      for (int k = 0; k < 12; k++) {
 //        double f = doc.readFloat();
-//        System.out.println(j + " " + f + "\t"
+//System.out.println(j + " " + f + "\t"
 //            + Integer.toHexString(Float.floatToIntBits(f)));
 //        if (k % 3 == 2)
-//          System.out.println("");
-//      }
-//      System.out.println(j + " " + doc.readShort() + "\n");
+//System.out.println("");
+//System.out.println(j + " " + doc.readShort() + "\n");
 //    }
 //  } catch (Exception e) {
 //    // ignore

@@ -333,7 +333,7 @@ public class InChIJNI implements JmolInChI {
       int i1 = map.get(an[1]).getIndex();
       int i2 = map.get(an[2]).getIndex();
       int i3 = map.get(an[3]).getIndex();
-//      System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
+//System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
       boolean isEven = (sd.getParity() == INCHI_PARITY.EVEN);
       INCHI_STEREOTYPE type = sd.getStereoType();
       switch (type) {
@@ -472,7 +472,7 @@ public class InChIJNI implements JmolInChI {
   private static Integer getIntKey(int i, int iA, int j) {
     Integer v =  Integer.valueOf((Math.min(i, j) << 24) +
         (iA << 12) +  Math.max(i, j));
-//    System.out.println("getIntKey " + i + " " + iA + " "+ j + " " + 
+//System.out.println("getIntKey " + i + " " + iA + " "+ j + " " + 
 //        (v == null ? null : Integer.toHexString(v.intValue())));
     return v;
   }

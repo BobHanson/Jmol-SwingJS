@@ -55,10 +55,7 @@ class Display {
 //  static void setTransparentCursor(Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println(canvas);
+//System.out.println(canvas);
 //    }
 //  }
 

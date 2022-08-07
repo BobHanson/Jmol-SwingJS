@@ -181,7 +181,7 @@ public class ScriptMathProcessor {
       try {
         addOp(T.tokenComma);
       } catch (ScriptException e) {
-       // System.out.println("Error adding comma");
+       //System.out.println("Error adding comma");
       }      
     }
     if (++xPt == xStack.length)
@@ -1620,7 +1620,7 @@ public class ScriptMathProcessor {
       Object o = (bs.cardinality() == 0 ? null : eval.getBitsetProperty(bs, null, T.xyz, null,
           null, x.value, null, false, Integer.MAX_VALUE, false));
 //      if (o != null && !(o instanceof P3))
-//        System.out.println("ScriptMathProc OHOH");
+//System.out.println("ScriptMathProc OHOH");
       return (P3d) o;
     case T.string:
       pt = Escape.uP(SV.sValue(x));

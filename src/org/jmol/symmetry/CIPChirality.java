@@ -1792,7 +1792,7 @@ public class CIPChirality {
         if ((bond = edges[i]).isCovalent()) {
           SimpleNode other = bond.getOtherNode(atom);
           if (data.bsKekuleAmbiguous.get(other.getIndex())) {
-//            System.out.println(this + " adding " + other + " " + ave + " " + n);
+//System.out.println(this + " adding " + other + " " + ave + " " + n);
             n++;
             ave += other.getElementNumber();
           }

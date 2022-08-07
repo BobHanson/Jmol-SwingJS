@@ -236,7 +236,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
         continue;
       ScriptToken st = ScriptToken.getScriptToken(key);
       String value = ScriptToken.getValue(st, eachParam, token);
-      // System.out.println("KEY-> " + key + " VALUE-> " + value + " : " + st);
+      //System.out.println("KEY-> " + key + " VALUE-> " + value + " : " + st);
       try {
         switch (st) {
         case UNKNOWN:
@@ -979,7 +979,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     pd().addPeakHighlight(pi);
     // the above line is what caused problems with GC/MS selection
     syncToJmol(pi);
-    // System.out.println(Thread.currentThread() +
+    //System.out.println(Thread.currentThread() +
     // "processPeakEvent --selectSpectrum " + pi);
     if (pi.isClearAll()) // was not in app version??
       repaint(false);
@@ -1246,15 +1246,15 @@ public class JSViewer implements PlatformViewer, BytePoster {
     } else if (strUrl != null) {
       try {
         file = apiPlatform.newFile(strUrl);
-        // System.out.println("strURL=" + strUrl);
-        // System.out.println("JSVFileManager.appletDocumentBase=" +
+        //System.out.println("strURL=" + strUrl);
+        //System.out.println("JSVFileManager.appletDocumentBase=" +
         // JSVFileManager.appletDocumentBase);
         URL u = new URL(JSVFileManager.appletDocumentBase, strUrl, null);
-        // System.out.println("u=" + u);
+        //System.out.println("u=" + u);
         filePath = u.toString();
         recentURL = filePath;
         fileName = JSVFileManager.getTagName(filePath);
-        // System.out.println("fileName=" + fileName);
+        //System.out.println("fileName=" + fileName);
       } catch (MalformedURLException e) {
         fileName = file.getName();
         newPath = filePath = file.getFullPath();
@@ -1716,7 +1716,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     width = Math.min(width, maximumSize);
     if (screenWidth == width && screenHeight == height)
       return;
-    // System.out.println("HMM " + width + " " + height + " " + maximumSize);
+    //System.out.println("HMM " + width + " " + height + " " + maximumSize);
     resizeImage(width, height);
   }
 

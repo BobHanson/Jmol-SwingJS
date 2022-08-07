@@ -1486,9 +1486,7 @@ public class PT {
         }
         return rep(strFormat, "%%", "%");
       } catch (Exception e) {
-        //
-      }
-    System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
+        //System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
     return rep(strFormat, "%", "?");
   }
 
@@ -1824,15 +1822,14 @@ public class PT {
 //  double d = 790.8999998888;
 //  float x  = 790.8999998888f;
 //  for (int i = 0; i < 50; i++) {
-//  System.out.println(x + " " + d);
-//  System.out.println(Math.round(x * 100000) / 100000f);
-//  System.out.println(Math.round(d * 100000) / 100000.);
-//  System.out.println(Math.round(x * 10000) / 10000f);
-//  System.out.println(Math.round(d * 10000) / 10000.);
+//System.out.println(x + " " + d);
+//System.out.println(Math.round(x * 100000) / 100000f);
+//System.out.println(Math.round(d * 100000) / 100000.);
+//System.out.println(Math.round(x * 10000) / 10000f);
+//System.out.println(Math.round(d * 10000) / 10000.);
 //  x+=1; 
 //  d+=1;
-//  }
-//  System.out.println(100.123456789f);
+//System.out.println(100.123456789f);
 //}
 
 //  static {
@@ -1841,21 +1838,17 @@ public class PT {
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = PT.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
+//System.out.println(System.currentTimeMillis() - t);
 //
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = Character.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
+//System.out.println(System.currentTimeMillis() - t);
 //    
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = PT.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
-//
-//    System.out.println("PT test");
+//System.out.println(System.currentTimeMillis() - t);
+//System.out.println("PT test");
 //  }
 }

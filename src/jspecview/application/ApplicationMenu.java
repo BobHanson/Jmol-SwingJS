@@ -754,10 +754,10 @@ public class ApplicationMenu extends JMenuBar {
 //    }
 //  
 //  static {
-//    System.out.println(fixExponent(3.56));
-//    System.out.println(parseDouble("29"));
-//    System.out.println(fixExponent(12.34567E15));
-//    System.out.println(fixExponent(3.56));
-//    System.out.println(fixExponent(3.56));
+//System.out.println(fixExponent(3.56));
+//System.out.println(parseDouble("29"));
+//System.out.println(fixExponent(12.34567E15));
+//System.out.println(fixExponent(3.56));
+//System.out.println(fixExponent(3.56));
 //  }
 }
