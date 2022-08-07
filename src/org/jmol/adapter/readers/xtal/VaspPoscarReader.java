@@ -8,7 +8,6 @@ import org.jmol.util.Parser;
 
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
