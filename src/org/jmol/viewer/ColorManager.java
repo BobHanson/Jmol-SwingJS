@@ -23,24 +23,21 @@
  */
 package org.jmol.viewer;
 
-import org.jmol.script.T;
-
-import javajs.util.AU;
-
-import org.jmol.util.C;
-import org.jmol.util.Elements;
-import org.jmol.util.GData;
-import org.jmol.util.Logger;
 import org.jmol.c.PAL;
-import javajs.util.BS;
-import javajs.util.PT;
-
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.BioModel;
+import org.jmol.script.T;
+import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
+import org.jmol.util.Elements;
+import org.jmol.util.GData;
+import org.jmol.util.Logger;
+
+import javajs.util.AU;
+import javajs.util.BS;
 
 
 public class ColorManager {
@@ -120,7 +117,7 @@ public class ColorManager {
     int argb = 0;
     switch (pid) {
     case PAL.PALETTE_ENERGY:
-      return ce.getColorIndexFromPalette((double) bond.getEnergy(),
+      return ce.getColorIndexFromPalette(bond.getEnergy(),
           -2.5d, -0.5d, ColorEncoder.BWR, false);
     }
     return (argb == 0 ? C.RED : C.getColix(argb));
@@ -137,7 +134,7 @@ public class ColorManager {
     switch (pid) {
     case PAL.PALETTE_PROPERTY:
       return (colorData == null || atom.i >= colorData.length || Double.isNaN(colorData[atom.i]) ? C.GRAY : 
-        ce.getColorIndex((double) colorData[atom.i]));
+        ce.getColorIndex(colorData[atom.i]));
     case PAL.PALETTE_NONE:
     case PAL.PALETTE_CPK:
       // Note that CPK colors can be changed based upon user preference
@@ -154,7 +151,7 @@ public class ColorManager {
       return g3d.getChangeableColix(id, argbsCpk[id]);
     case PAL.PALETTE_PARTIAL_CHARGE:
       // This code assumes that the range of partial charges is [-1, 1].
-      index = ColorEncoder.quantize4((double) atom.getPartialCharge(), -1, 1,
+      index = ColorEncoder.quantize4(atom.getPartialCharge(), -1, 1,
           JC.PARTIAL_CHARGE_RANGE_SIZE);
       return g3d.getChangeableColix(JC.PARTIAL_CHARGE_COLIX_RED + index,
           JC.argbsRwbScale[index]);
@@ -174,8 +171,7 @@ public class ColorManager {
       return ce.getColorIndexFromPalette(atom.getBfactor100(), lo, hi,
           ColorEncoder.BWR, false);
     case PAL.PALETTE_STRAIGHTNESS:
-      return ce.getColorIndexFromPalette((double)
-          atom.group.getGroupParameter(T.straightness), -1, 1,
+      return ce.getColorIndexFromPalette(atom.group.getGroupParameter(T.straightness), -1, 1,
           ColorEncoder.BWR, false);
     case PAL.PALETTE_SURFACE:
       hi = vwr.ms.getSurfaceDistanceMax();

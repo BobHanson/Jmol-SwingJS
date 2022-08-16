@@ -797,10 +797,10 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
             String s = atrans[j];
             int sfpt = s.indexOf("/");
             if (sfpt >= 0) {
-              ftrans[j] = PT.parseFloat(s.substring(0, sfpt))
-                  / PT.parseFloat(s.substring(sfpt + 1));
+              ftrans[j] = PT.parseDouble(s.substring(0, sfpt))
+                  / PT.parseDouble(s.substring(sfpt + 1));
             } else {
-              ftrans[j] = PT.parseFloat(s);
+              ftrans[j] = PT.parseDouble(s);
             }
           }
         P3d ptrans = P3d.new3(ftrans[0], ftrans[1], ftrans[2]);

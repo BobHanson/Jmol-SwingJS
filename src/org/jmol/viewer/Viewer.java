@@ -9793,6 +9793,7 @@ public class Viewer extends JmolViewer
     ligandModelSet = null;
     ligandModels = null;
     ms.clearCache();
+    cm.ce.clearCache();
   }
 
   /**

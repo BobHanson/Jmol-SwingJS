@@ -3281,7 +3281,7 @@ public class ScriptEval extends ScriptExpr {
       int tok = getToken(1).tok;
       if (tok == T.string) {
         tok = T.getTokFromName(strColor);
-        if (tok == T.nada)
+        if (tok == T.nada || tok == T.user)
           tok = T.string;
       }
       switch (tok) {
@@ -3314,7 +3314,6 @@ public class ScriptEval extends ScriptExpr {
       case T.surfacedistance:
       case T.temperature:
       case T.translucent:
-      case T.user:
       case T.vanderwaals:
         theTok = T.atoms;
         i = 1;
@@ -7540,7 +7539,6 @@ public class ScriptEval extends ScriptExpr {
       vwr.showParameter(key, true, 80);
   }
 
-
   private void cmdScale(int pt) throws ScriptException {
     // also set SCALE (for script compatibility with older versions)
     if (chk)
@@ -8779,7 +8777,9 @@ public class ScriptEval extends ScriptExpr {
         if (pal == PAL.PROPERTY) {
           String scheme = null;
           if (tokAt(index) == T.string) {
-            scheme = paramAsStr(index++).toLowerCase();
+            scheme = paramAsStr(index++);
+            if (scheme.indexOf("/") < 0)
+              scheme = scheme.toLowerCase();
             if (isArrayParameter(index)) {
               scheme += "="
                   + SV.sValue(SV.getVariableAS(stringParameterSet(index)))

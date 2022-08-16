@@ -559,7 +559,7 @@ public class StateCreator extends JmolStateCreator {
     int n = 0;
     for (Map.Entry<String, int[]> entry : p.schemes.entrySet()) {
       String name = entry.getKey();
-      if (name.length() > 0 & n++ >= 0)
+      if (name.length() > 0 && !name.startsWith("=") && n++ >= 0)
         s.append("color \"" + name + "="
             + ColorEncoder.getColorSchemeList(entry.getValue()) + "\";\n");
     }

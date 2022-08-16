@@ -501,7 +501,7 @@ public class SimpleUnitCell {
       String[] tokens = PT.split(abcabg.replace(',', '='), "=");
       if (tokens.length >= 12)
         for (int i = 0; i < 6; i++)
-          params[i] = PT.parseFloat(tokens[i * 2 + 1]);
+          params[i] = PT.parseDouble(tokens[i * 2 + 1]);
     }
     if (ucnew == null)
       return null;

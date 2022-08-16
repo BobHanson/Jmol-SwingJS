@@ -1490,6 +1490,9 @@ abstract public class ScriptParam extends ScriptError {
 
   public P4d planeValue(T x) {
     Object pt;
+    SymmetryInterface sym = null;
+    double offset = Double.NaN;
+    P3d vc = null;
     switch (x.tok) {
     case T.point4f:
       return (P4d) x.value;
@@ -1503,41 +1506,79 @@ abstract public class ScriptParam extends ScriptError {
       if (isMinus)
         s = s.substring(1);
       P4d p4 = null;
-      boolean is1 = (s.length() > 2 && s.charAt(2) == '1');
-      int mode = (s.length() < 2 ? -1
-          : "xy yz xz x= y= z= ab bc ac".indexOf(s.substring(0, 2)));
-      if (mode >= 18 && vwr.getCurrentUnitCell() == null) {
+      int len = s.length();
+      // also allows ab1, ac1, and bc1, basically c=1, b=1, and a=1
+      int mode = (len < 2 ? -1
+          : "xy yz xz x= y= z= ab bc ac a= b= c=".indexOf(s.substring(0, 2).toLowerCase()));
+      if (mode >= 18 && (sym = vwr.getCurrentUnitCell()) == null) {
         mode -= 18; // to xy yz xz if no unit cell       
       }
+      boolean isab = (s.indexOf("=") < 0);
+      if (len > 2) {
+        if (!isab)
+          offset = -f * PT.parseDouble(s.substring(2));
+        else if (mode >= 18 && s.charAt(2) == '1')
+          offset = -1;
+      }
+      // -xy, -yz, -x=2, etc. are reverse of the following:
       switch (mode) {
       case 0:
-        return P4d.new4(1, 1, 0, f);
+        // xy; z > 0 removed
+        return P4d.new4(0, 0, f, 0);
       case 3:
-        return P4d.new4(0, 1, 1, f);
+        // yz; x > 0 removed
+        return P4d.new4(f, 0, 0, 0);
       case 6:
-        return P4d.new4(1, 0, 1, f);
-      case 9:
-        p4 = P4d.new4(1, 0, 0, -f * PT.parseDouble(s.substring(2)));
+        // xz; y > 0 removed
+        return P4d.new4(0, f, 0, 0);
+      case 9: // x > value removed
+        // note that -x=1 is not the same as x=-1
+        p4 = P4d.new4(f, 0, 0, offset);
         break;
-      case 12:
-        p4 = P4d.new4(0, 1, 0, -f * PT.parseDouble(s.substring(2)));
+      case 12: // y > value removed
+        p4 = P4d.new4(0, f, 0, offset);
         break;
-      case 15:
-        p4 = P4d.new4(0, 0, 1, -f * PT.parseDouble(s.substring(2)));
+      case 15: // z > value removed
+        p4 = P4d.new4(0, 0, f, offset);
         break;
-      case 18: // ab
-        p4 = getHklPlane(P3d.new3(0, 0, 1), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_C) : 0, null);
+      case 18: // ab, outside unitcell removed
+        if (Double.isNaN(offset))
+          offset = 0;
+        //$FALL-THROUGH$
+      case 33: // c>value removed
+        p4 = getHklPlane(vc = P3d.new3(0, 0, 1), 0, null);
+        p4.scale4(f = -f);
         break;
-      case 21: // bc
-        p4 = getHklPlane(P3d.new3(1, 0, 0), is1 ? -vwr.getUnitCellInfo(SimpleUnitCell.INFO_A) : 0, null);
+      case 21: // bc, outside unitcell removed
+        if (Double.isNaN(offset))
+          offset = 0;
+        //$FALL-THROUGH$
+      case 27: // a>value removed
+        p4 = getHklPlane(vc = P3d.new3(1, 0, 0), 0, null);
+        p4.scale4(-(f = -f));
         break;
-      case 24: // ac
-        p4 = getHklPlane(P3d.new3(0, 1, 0), is1 ? vwr.getUnitCellInfo(SimpleUnitCell.INFO_B) : 0, null);
+      case 24: // ac, outside unitcell removed
+        if (Double.isNaN(offset))
+          offset = 0;
+        //$FALL-THROUGH$
+      case 30: // b>value removed
+        p4 = getHklPlane(vc = P3d.new3(0, 1, 0), 0, null);
+        p4.scale4(-f);
         break;
       }
-      if (p4 != null && !Double.isNaN(p4.w))
+      if (p4 == null || Double.isNaN(p4.w)) 
+        break;
+      if (sym != null && !Double.isNaN(offset)) {
+        // slab external of a=1, b=1, or c=1
+        sym.toCartesian(vc, true);
+        if (isab || !isMinus) {
+          offset = -offset;
+        }
+        p4.w = vc.dot(p4) * offset;
+        if (!isab || offset != 0)
+          p4.scale(-1);
+      }
         return p4;
-      break;
     default:
       return null;
     }

@@ -985,7 +985,7 @@ public class GlobalSettings {
       //    more settable Jmol variables    
       + ";ambient;bonds;colorrasmol;diffuse;fractionalrelative;frank;hetero;hidenotselected"
       + ";hoverlabel;hydrogen;languagetranslation;measurementunits;navigationdepth;navigationslab"
-      + ";picking;pickingstyle;propertycolorschemeoverload;radius;rgbblue;rgbgreen;rgbred"
+      + ";picking;pickingstyle;propertycolorscheme;radius;rgbblue;rgbgreen;rgbred"
       + ";scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount"
       + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;"
       + CBK.getNameList()
