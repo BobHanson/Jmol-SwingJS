@@ -340,9 +340,9 @@ import javajs.util.P3d;
               Logger.info("ColorEncoder read " + b.length + " bytes");
               int i0 = 0;
               int n = b.length;
-              if (n == 3 * 256 + 32)
+              if (n == 3 * 256 + 32 || n == 3 * 256 + 32 + 2) // JSmol bug adds CR LF to binary from string
                 i0 = 32;
-              if (n - i0 == 3 * 256) {
+              if (n - i0 == 3 * 256 ||  n - i0 == 3 * 256 + 2) {
                 scale = new int[256];
                 n = 256 + i0;
                 for (int i = 0; i < 256; i++) {
