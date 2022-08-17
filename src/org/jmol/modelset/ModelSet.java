@@ -593,18 +593,23 @@ public class ModelSet extends BondCollection {
                                int connectOperation, BS bsA, BS bsB,
                                BS bsBonds, boolean isBonds, boolean addGroup,
                                double energy) {
-    if (connectOperation == T.auto && order != Edge.BOND_H_REGULAR) {
-      String stateScript = "connect ";
-      if (minDistance != JC.DEFAULT_MIN_CONNECT_DISTANCE)
-        stateScript += minDistance + " ";
-      if (maxDistance != JC.DEFAULT_MAX_CONNECT_DISTANCE)
-        stateScript += maxDistance + " ";
-      addStateScript(stateScript, (isBonds ? bsA : null),
-          (isBonds ? null : bsA), (isBonds ? null : bsB), " auto", false, true);
-    }
+//    if (connectOperation == T.auto && order != Edge.BOND_H_REGULAR) {
+//      String stateScript = "connect ";
+//      if (minDistance != JC.DEFAULT_MIN_CONNECT_DISTANCE)
+//        stateScript += minDistance + " ";
+//      if (maxDistance != JC.DEFAULT_MAX_CONNECT_DISTANCE)
+//        stateScript += maxDistance + " ";
+//      addStateScript(stateScript, (isBonds ? bsA : null),
+//          (isBonds ? null : bsA), (isBonds ? null : bsB), " auto", false, true);
+//    }
     moleculeCount = 0;
-    return makeConnections2(minDistance, maxDistance, order, connectOperation,
-        bsA, bsB, bsBonds, isBonds, addGroup, energy);
+    SB autoState = (connectOperation == T.auto && order != Edge.BOND_H_REGULAR ? new SB() : null);
+    int[] result = makeConnections2(minDistance, maxDistance, order, connectOperation,
+        bsA, bsB, bsBonds, isBonds, addGroup, energy, autoState);
+    if (autoState != null) {
+      addStateScript(autoState.toString(), null, null, null, null, false, true);
+    }
+    return result;
   }
 
   @SuppressWarnings("unchecked")
@@ -2523,7 +2528,7 @@ public class ModelSet extends BondCollection {
   public int[] makeConnections2(double minD, double maxD, int order,
                                 int connectOperation, BS bsA, BS bsB,
                                 BS bsBonds, boolean isBonds, boolean addGroup,
-                                double energy) {
+                                double energy, SB state) {
     if (bsBonds == null)
       bsBonds = new BS();
 
@@ -2558,7 +2563,7 @@ public class ModelSet extends BondCollection {
         return new int[] {
             matchHbond ? autoHbond(bsA, bsB, false) : autoBondBs4(bsA, bsB,
                 null, bsBonds, vwr.getMadBond(),
-                connectOperation == T.legacyautobonding), 0 };
+                connectOperation == T.legacyautobonding, state), 0 };
       }
       idOrModifyOnly = autoAromatize = true;
       break;
@@ -2660,7 +2665,7 @@ public class ModelSet extends BondCollection {
   }
 
   public int autoBondBs4(BS bsA, BS bsB, BS bsExclude, BS bsBonds, short mad,
-                         boolean preJmol11_9_24) {
+                         boolean preJmol11_9_24, SB state) {
     // unfortunately, 11.9.24 changed the order with which atoms were processed
     // for autobonding. This means that state script prior to that that use
     // select BOND will be misread by later version.
@@ -2748,8 +2753,11 @@ public class ModelSet extends BondCollection {
           continue;
         int order = (isBondable(myBondingRadius, atomNear.getBondingRadius(),
             iter.foundDistance2(), minBondDistance2, bondTolerance) ? 1 : 0);
-        if (order > 0 && autoBondCheck(atom, atomNear, order, mad, bsBonds))
+        if (order > 0 && autoBondCheck(atom, atomNear, order, mad, bsBonds)) {
           nNew++;
+          if (state != null)
+            state.append("connect ({"+i+"}) ({"+j+"});");
+        }
       }
       iter.release();
     }

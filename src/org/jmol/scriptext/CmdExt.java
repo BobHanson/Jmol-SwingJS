@@ -1975,7 +1975,7 @@ public class CmdExt extends ScriptExt {
         vwr.ms.setPdbConectBonding(0, 0, bsExclude);
         if (isAuto) {
           boolean isLegacy = eval.isStateScript && vwr.getBoolean(T.legacyautobonding);
-          vwr.ms.autoBondBs4(null, null, bsExclude, null, vwr.getMadBond(), isLegacy);
+          vwr.ms.autoBondBs4(null, null, bsExclude, null, vwr.getMadBond(), isLegacy, null);
           vwr.addStateScript(
               (isLegacy ? "set legacyAutoBonding TRUE;connect PDB AUTO;set legacyAutoBonding FALSE;"
                   : "connect PDB auto;"), false, true);

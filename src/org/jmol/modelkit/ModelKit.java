@@ -1134,7 +1134,7 @@ public class ModelKit {
       bs = vwr.getModelUndeletedAtomsBitSet(atom.mi);
       bs.andNot(vwr.ms.getAtomBitsMDa(T.hydrogen, null, new BS()));
       vwr.ms.makeConnections2(0.1d, 1.8d, 1, T.create, bsA, bs, null, false,
-          false, 0);
+          false, 0, null);
 
       // 6) add hydrogen atoms
 

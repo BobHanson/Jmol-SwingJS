@@ -669,7 +669,7 @@ public class BioExt {
     vwr.setModelVisibility();
     // select only ONE model
     ms.makeConnections2(0, Double.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1, bs2,
-        null, false, false, 0);
+        null, false, false, 0, null);
     int iAtom = bs1.nextSetBit(0);
     if (iAtom < 0)
       return 0;

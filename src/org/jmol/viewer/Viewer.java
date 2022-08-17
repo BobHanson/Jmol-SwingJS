@@ -7633,7 +7633,7 @@ public class Viewer extends JmolViewer
     clearModelDependentObjects();
     ms.deleteAllBonds();
     boolean isLegacy = isStateScript && g.legacyAutoBonding;
-    ms.autoBondBs4(null, null, null, null, getMadBond(), isLegacy);
+    ms.autoBondBs4(null, null, null, null, getMadBond(), isLegacy, null);
     addStateScript((isLegacy
         ? "set legacyAutoBonding TRUE;connect;set legacyAutoBonding FALSE;"
         : "connect;"), false, true);

@@ -1247,7 +1247,7 @@ public final class ModelLoader {
       ms.setModulation(null, true, modulationTUV, false);
     if (autoBonding) {
       ms.autoBondBs4(bs, bs, bsExclude, null, ms.defaultCovalentMad,
-          vwr.getBoolean(T.legacyautobonding));
+          vwr.getBoolean(T.legacyautobonding), null);
       Logger.info(
           "ModelSet: autobonding; use  autobond=false  to not generate bonds automatically");
     } else {
