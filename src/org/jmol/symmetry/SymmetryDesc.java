@@ -1288,7 +1288,7 @@ public class SymmetryDesc {
                                     P3d offset) {
     pt01.setT(pt00);
     if (offset != null)
-      uc.toUnitCellD(pt01, offset);
+      uc.toUnitCell(pt01, offset);
     uc.toFractional(pt01, false);
   }
 
@@ -1527,7 +1527,7 @@ public class SymmetryDesc {
       bsResult.and(bsElement);
     if (bsResult.isEmpty()) {
       sympt = P3d.newP(sympt);
-      uc.toUnitCellD(sympt, null);
+      uc.toUnitCell(sympt, null);
       uc.toCartesian(sympt, false);
       modelSet.getAtomsWithin(0.02d, sympt, bsResult, iModel);
       if (bsElement != null)
@@ -1798,7 +1798,7 @@ public class SymmetryDesc {
     } else {
       if (haveName && !haveRawName)
         sym.setSpaceGroupName(sgName);
-      data = sym.getSpaceGroupInfoObj(sgName, cellInfo, isFull, !isForModel);
+      data = sym.getSpaceGroupInfoObj(sgName, (cellInfo == null ? null : cellInfo.getUnitCellParams()), isFull, !isForModel);
       if (data == null || data.equals("?")) {
         data = "?";
         info.put("spaceGroupNote",

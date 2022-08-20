@@ -1154,6 +1154,7 @@ public class ModelKit {
    */
   public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
+    boolean isDefined = (!isP1 && name.length() > 0);
     clearAtomConstraints();
     try {
       if (bs != null && bs.isEmpty())
@@ -1184,24 +1185,26 @@ public class ModelKit {
       P3d[] oabc;
       String ita;
       BS basis;
+      Object sg = null;
       @SuppressWarnings("unchecked")
-      Map<String, Object> sg = (noAtoms || isP1 ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(bsAtoms, null, false));
-      if (sg == null) {
+      Map<String, Object> sgInfo = (noAtoms || isP1 ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? name : null, sym.getUnitCellParams(), false, true));
+      if (sgInfo == null) {
         name = "P1";
         supercell = P3d.new3(1, 1, 1);
         oabc = sym.getUnitCellVectors();
         ita = "1";
         basis = null;
       } else {
-        supercell = (P3d) sg.get("supercell");
-        oabc = (P3d[]) sg.get("unitcell");
-        name = (String) sg.get("name");
-        ita = (String) sg.get("itaFull");
-        basis = (BS) sg.get("basis");
+        supercell = (P3d) sgInfo.get("supercell");
+        oabc = (P3d[]) sgInfo.get("unitcell");
+        name = (String) sgInfo.get("name");
+        ita = (String) sgInfo.get("itaFull");
+        basis = (BS) sgInfo.get("basis");
+        sg = sgInfo.remove("sg");
       }
       sym.getUnitCelld(oabc,  false, null);
-      sym.setSpaceGroupTo(ita);
+      sym.setSpaceGroupTo(sg == null ? ita : sg);
       sym.setSpaceGroupName(name);
       if (basis == null)
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
@@ -1999,7 +2002,7 @@ public class ModelKit {
       int atomicNo = -1;
       int site = 0;
       P3d pf = null;
-      if (pts.length == 1) {
+      if (pts != null && pts.length == 1) {
         pf = P3d.newP(pts[0]);
         uc.toFractional(pf, true);
       }       
@@ -2008,7 +2011,7 @@ public class ModelKit {
           uc.toFractional(p, true);
           if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
             site = vwr.ms.at[i].getAtomSite();
-            if (type == null)
+            if (type == null || pts == null)
               type = vwr.ms.at[i].getElementSymbolIso(true);
           }
           list.addLast(p);

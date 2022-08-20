@@ -4533,6 +4533,8 @@ public class ScriptEval extends ScriptExpr {
         }
         break;
       case T.spacegroup:
+        if (slen < i + 4)
+          invArg();
         i -= 2;
         filename = "0";
         htParams.put("isEmptyLoad", Boolean.TRUE);
@@ -5111,35 +5113,35 @@ public class ScriptEval extends ScriptExpr {
   private boolean isLoadOption(int tok) {
     switch (tok) {
     case T.manifest:
-      // model/vibration index or list of model indices
     case T.integer:
     case T.varray:
     case T.leftsquare:
     case T.spacebeforesquare:
-    // {i j k} (lattice)
+      // model/vibration index or list of model indices
     case T.leftbrace:
     case T.point3f:
-    // PACKED/CENTROID, either order
+      // {i j k} (lattice)
     case T.packed:
+      // PACKED/CENTROID, either order
     case T.centroid:
-    // SUPERCELL {i j k}
     case T.supercell:
-    // RANGE x.x or RANGE -x.x
+      // SUPERCELL {i j k}
     case T.fill:  // new in Jmol 14.3.14
     // FILL BOUNDBOX
     // FILL UNITCELL
     case T.range:
+      // RANGE x.x or RANGE -x.x
+    case T.spacegroup:
     // SPACEGROUP "nameOrNumber" 
     // or SPACEGROUP "IGNOREOPERATORS" 
     // or SPACEGROUP "" (same as current)
-    case T.spacegroup:
-    // UNITCELL [a b c alpha beta gamma]
-    // or UNITCELL [ax ay az bx by bz cx cy cz] 
-    // or UNITCELL "" (same as current)
-    // UNITCELL "..." or UNITCELL ""
     case T.unitcell:
-    // OFFSET {x y z}
+      // UNITCELL [a b c alpha beta gamma]
+      // or UNITCELL [ax ay az bx by bz cx cy cz] 
+      // or UNITCELL "" (same as current)
+      // UNITCELL "..." or UNITCELL ""
     case T.offset:
+      // OFFSET {x y z}
     case T.data:
     // FILTER "..."
     case T.append:

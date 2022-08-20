@@ -455,7 +455,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean haveGlobalDummy;
   protected void newModel(int modelNo) throws Exception {
     if (modelNo < 0) {
-      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy) {
+      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy && !skipping) {
         modelNumber = 0;
         haveModel = false;
         haveGlobalDummy = true;
@@ -480,7 +480,7 @@ public class CifReader extends AtomSetCollectionReader {
         modelNumber--;
         haveModel = false;
         asc.removeCurrentAtomSet();
-      } else {
+      } else if (asc.iSet >= 0) {
         applySymmetryAndSetTrajectory();
       }
  }

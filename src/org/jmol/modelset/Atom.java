@@ -805,7 +805,7 @@ public class Atom extends Point3fi implements Node {
       if (asCartesian)
         c.toCartesian(pt, false);
     } else {
-      c.toUnitCellD(pt, null);
+      c.toUnitCell(pt, null);
       if (!asCartesian)
         c.toFractional(pt, false);
     }
@@ -824,8 +824,8 @@ public class Atom extends Point3fi implements Node {
       c.toFractional(ptTemp1, true);
       c.toFractional(ptTemp2, true);
     } else {
-      c.toUnitCellD(ptTemp1, null);
-      c.toUnitCellD(ptTemp2, null);
+      c.toUnitCell(ptTemp1, null);
+      c.toUnitCell(ptTemp2, null);
     }
     return ptTemp1.distance(ptTemp2);
   }

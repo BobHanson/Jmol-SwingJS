@@ -40,7 +40,7 @@ public interface SymmetryInterface {
                                            String name,
                                            Object data, int modDim);
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String op, boolean asString);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, boolean asString, boolean isAssign);
 
   int[] getCellRange();
 
@@ -74,7 +74,7 @@ public interface SymmetryInterface {
 
   Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, double[] cellParams);
 
-  Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
+  Object getSpaceGroupInfoObj(String name, double[] params,
                               boolean isFull, boolean addNonstandard);
 
   String getSpaceGroupName();
@@ -91,8 +91,6 @@ public interface SymmetryInterface {
   String getSpaceGroupOperationCode(int op);
 
   int getSpaceGroupOperationCount();
-  
-//  M4d getSpaceGroupOperationRaw(int i);
   
   String getSpaceGroupXyz(int i, boolean doNormalize);
 
@@ -197,7 +195,7 @@ public interface SymmetryInterface {
   boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] oabc,
                           M3d primitiveToCrystal);
 
-  void toUnitCellD(T3d pt, T3d offset);
+  void toUnitCell(T3d pt, T3d offset);
 
   void toUnitCellRnd(T3d pt, T3d offset);
 

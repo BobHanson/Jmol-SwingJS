@@ -260,6 +260,8 @@ class SpaceGroup {
   }
 
   int getOperationCount() {
+    if (finalOperations == null)
+      setFinalOperations();
     return finalOperations.length;
   }
 
@@ -273,21 +275,20 @@ class SpaceGroup {
   }
 
   static Object getInfo(SpaceGroup sg, String spaceGroup,
-                        SymmetryInterface cellInfo, boolean asMap, boolean andNonstandard) {
+                        double[] params, boolean asMap, boolean andNonstandard) {
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
       if (sgDerived != null)
         sg = sgDerived;
     }
-    if (cellInfo != null) {
+    if (params != null) {
       if (sg == null) {
         if (spaceGroup.indexOf("[") >= 0)
           spaceGroup = spaceGroup.substring(0, spaceGroup.indexOf("[")).trim();
         if (spaceGroup.equals("unspecified!"))
           return "no space group identified in file";
-        sg = SpaceGroup.determineSpaceGroupNA(spaceGroup,
-            cellInfo.getUnitCellParams());
+        sg = SpaceGroup.determineSpaceGroupNA(spaceGroup, params);
       }
     } else if (spaceGroup.equalsIgnoreCase("ALL")) {
       return SpaceGroup.dumpAll(asMap);
@@ -516,7 +517,7 @@ class SpaceGroup {
       latticeParameter = -latticeParameter;
   }
   
-  private final static SpaceGroup createSpaceGroupN(String name) {
+  final static SpaceGroup createSpaceGroupN(String name) {
     getSpaceGroups();
     name = name.trim();
     SpaceGroup sg = determineSpaceGroupN(name);
@@ -651,6 +652,7 @@ class SpaceGroup {
     M4d[] newOps = new M4d[7];
     for (int i = 0; i < 7; i++)
       newOps[i] = new M4d();
+    operationCount = 1;
     // prior to Jmol 11.7.36/11.6.23 this was setting nOps within the loop
     // and setIdentity() outside the loop. That caused a multiplication of
     // operations, not a resetting of them each time.
@@ -690,7 +692,7 @@ class SpaceGroup {
     return iop;
   }
 
-  private final static SpaceGroup determineSpaceGroupN(String name) {
+  final static SpaceGroup determineSpaceGroupN(String name) {
     return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1);
   }
 
@@ -724,6 +726,8 @@ class SpaceGroup {
                                                     double b, double c,
                                                     double alpha, double beta,
                                                     double gamma, int lastIndex) {
+    if (name.indexOf("x") >= 0)
+      return -1;
 
     getSpaceGroups();
     if (lastIndex < 0)
@@ -840,7 +844,9 @@ class SpaceGroup {
         // no extension or unknown extension, so we look for unique axis
         for (i = 0; i < lastIndex; i++)
           if (((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr) 
-              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)) 
+              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)
+              || s.intlTableNumber.equals(abbr)
+              ) 
               && (!checkBilbao || s.isBilbao))
             switch (s.ambiguityType) {
             case '\0':
@@ -1592,7 +1598,7 @@ class SpaceGroup {
     "151;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
     "152;6;d3^4;p 31 2 1;p 31 2\"",  
     "153;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
-    "154:_1;6;d3^6;p 32 2 1;p 32 2\"",    
+    "154;6;d3^6;p 32 2 1;p 32 2\"",    
     "154:_2;6;d3^6;p 32 2 1;p 32 2\" (0 0 4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
     "155:h;18;d3^7;r 3 2:h;r 3 2\"",  
     "155:r;6;d3^7;r 3 2:r;p 3* 2",  
@@ -1777,7 +1783,7 @@ class SpaceGroup {
       return ret;
     // find the space group using canonical Seitz
     if (info == null)
-      info = getInfo(this,hmSymbol, uc, true, false);
+      info = getInfo(this, hmSymbol, uc.getUnitCellParams(), true, false);
     if (info instanceof String)
       return null;
     @SuppressWarnings("unchecked")
@@ -1798,12 +1804,12 @@ class SpaceGroup {
         return SG[i];
     return null;
   }
- 
-  public static String getID(int i) {
-    getSpaceGroups();
-    return SG[i].asString();
-  }
 
+  public void checkHallOperators() {
+    if (nHallOperators != null && nHallOperators.intValue() != operationCount)
+      generateAllOperators(hallInfo);
+  }
+ 
 //  private int[] latticeOps;
 //  public int[] getAllLatticeOps() {
 //    // presumes all lattice operations are listed at end of operations list

@@ -155,9 +155,6 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   
-  private P3d ptT = new P3d();
-  private P3d ptT2 = new P3d();
- 
   /**
    * when offset is null, use the current cell, otherwise use the original unit cell
    * 
@@ -167,17 +164,6 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   final void toUnitCell(T3d p, T3d offset) {
     if (matrixCartesianToFractional == null)
       return;
-    to(ptT.setP(p), (offset == null ? null : ptT2.setP(offset)));
-    ptT.putP(p);    
-  }
-  
-  final void toUnitCellD(T3d p, T3d offset) {
-    if (matrixCartesianToFractional == null)
-      return;
-    to(p, offset);
-  }
-
-  private void to(T3d p, T3d offset) {
     if (offset == null) {
       // used redefined unitcell 
       matrixCartesianToFractional.rotTrans(p);
@@ -985,27 +971,34 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     if (packed) {
       // duplicate all the points. 
       for (int i = n0; i < n; i++) {
-        ptT.setT(list.get(i));
-        unitizeRnd(ptT);
-        if (ptT.x == 0) {
-          list.addLast(P3d.new3(1,  ptT.y,  ptT.z));
-          if (ptT.y == 0) {
-            list.addLast(P3d.new3(1, 1,  ptT.z));
-            if (ptT.z == 0) {
+        pf.setT(list.get(i));
+        unitizeRnd(pf);
+        if (pf.x == 0) {
+          list.addLast(P3d.new3(0,  pf.y,  pf.z));
+          list.addLast(P3d.new3(1,  pf.y,  pf.z));
+          if (pf.y == 0) {
+            list.addLast(P3d.new3(1, 1,  pf.z));
+            list.addLast(P3d.new3(0, 0,  pf.z));
+            if (pf.z == 0) {
               list.addLast(P3d.new3(1, 1, 1));
+              list.addLast(P3d.new3(0, 0, 0));
             }
           }
         }
-        if (ptT.y == 0) {
-          list.addLast(P3d.new3( ptT.x, 1,  ptT.z));
-          if (ptT.z == 0) {
-            list.addLast(P3d.new3( ptT.x, 1, 1));
+        if (pf.y == 0) {
+          list.addLast(P3d.new3( pf.x, 0,  pf.z));
+          list.addLast(P3d.new3( pf.x, 1,  pf.z));
+          if (pf.z == 0) {
+            list.addLast(P3d.new3( pf.x, 0, 0));
+            list.addLast(P3d.new3( pf.x, 1, 1));
           }
         }
-        if (ptT.z == 0) {
-          list.addLast(P3d.new3( ptT.x,  ptT.y, 1));
-          if (ptT.x == 0) {
-            list.addLast(P3d.new3(1,  ptT.y, 1));
+        if (pf.z == 0) {
+          list.addLast(P3d.new3( pf.x,  pf.y, 0));
+          list.addLast(P3d.new3( pf.x,  pf.y, 1));
+          if (pf.x == 0) {
+            list.addLast(P3d.new3(0,  pf.y, 0));
+            list.addLast(P3d.new3(1,  pf.y, 1));
           }
         }
       }

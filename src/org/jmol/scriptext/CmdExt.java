@@ -686,7 +686,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
         e.checkLast(e.iToken);
         if (!chk) 
-          e.showString("" + vwr.findSpaceGroup(bs1, null, true));
+          e.showString("" + vwr.findSpaceGroup(bs1, null, null, true, false));
         return;
       case T.chirality:
         e.iToken = 1;
@@ -5995,6 +5995,7 @@ public class CmdExt extends ScriptExt {
     case T.delete:
     case T.add:
     case T.moveto:
+    case T.packed:
       assign();
       return;
     case T.mutate:
@@ -6164,8 +6165,9 @@ public class CmdExt extends ScriptExt {
     boolean isAdd = (mode == T.add);
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
+    boolean isPacked = (mode == T.packed);
     P3d[] pts = null;
-    if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove || isAdd)
+    if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove || isAdd || isPacked)
       i++;
     else
       mode = T.atoms;
@@ -6209,7 +6211,10 @@ public class CmdExt extends ScriptExt {
         }
       }
       i = ++e.iToken;
-    } else if (mode == T.atoms && tokAt(i) == T.string || mode == T.add) {
+    } else if (mode == T.packed) {
+      // new Jmol 14.32.73
+      bs = bsAtoms;
+    } else if (mode == T.atoms && tokAt(i) == T.string || mode == T.add) {    
       // new Jmol 14.29.28
       // assign ATOM "C" {0 0 0}
       // assign ADD "C" {0 0 0}
@@ -6227,7 +6232,6 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3d pt = null;
-    boolean isPacked = false;
     if (isAdd) {
       if (e.isAtomExpression(i)) {
         bs = expFor(++e.iToken, bsAtoms);
@@ -6256,6 +6260,10 @@ public class CmdExt extends ScriptExt {
       pt = getPoint3f(i, true);
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
+      if (tokAt(e.iToken + 1) == T.packed) {
+        isPacked = true;
+        ++e.iToken;
+      }
     } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
@@ -6282,11 +6290,15 @@ public class CmdExt extends ScriptExt {
     case T.connect:
       vwr.getModelkit(false).cmdAssignConnect(index, index2, (type + "1").charAt(0), e.fullCommand);
       break;
+    case T.packed:
+      type = null;
+      //$FALL-THROUGH$
     case T.add:
       if (pt == null && bsAtoms == null && pts == null)
         invArg();
-      if (pts == null)
+      if (pts == null && pt != null) {
         pts = new P3d[] { pt };
+      }
       int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pts, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms added"), na), false);
@@ -6303,7 +6315,13 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      e.showString(vwr.assignSpaceGroup(bs, type, -1));
+      if (e.doReport())
+        e.showString(vwr.assignSpaceGroup(bs, type, -1));
+      if (isPacked) {
+        int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null, bsAtoms, "packed", e.fullCommand, false);
+        if (e.doReport())
+          e.report(GT.i(GT.$("{0} atoms added"), n), false);
+      }
       break;
     }
   }

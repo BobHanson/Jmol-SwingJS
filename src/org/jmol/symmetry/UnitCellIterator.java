@@ -129,7 +129,7 @@ public class UnitCellIterator implements AtomIndexIterator {
           pt.putP(pa);
         } else {
           pa.setT(a);
-          unitCell.toUnitCellD(pa, null);
+          unitCell.toUnitCell(pa, null);
         }
         String key = "_" + (int) (pa.x * 100) + "_" + (int) (pa.y * 100) + "_"
             + (int) (pa.z * 100) + "_";

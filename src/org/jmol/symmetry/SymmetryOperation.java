@@ -418,6 +418,13 @@ public class SymmetryOperation extends M4d {
     return div12(m, setDivisor(xyz));
   }
 
+  static String getJmolCanonicalXYZ(String xyz) {
+    try {
+      return getMatrixFromString(null, xyz, null, false);
+    } catch (Exception e) {
+      return null;
+    }
+  }
   /**
    * Convert the Jones-Faithful notation "x, -z+1/2, y" or "x1, x3-1/2, x2,
    * x5+1/2, -x6+1/2, x7..." to a linear array
@@ -442,7 +449,8 @@ public class SymmetryOperation extends M4d {
     int divisor = (op == null ? setDivisor(xyz) : op.divisor);
     boolean doNormalize = (op == null ? !xyz.startsWith("!") : op.doNormalize);
     int dimOffset = (modDim > 0 ? 3 : 0); // allow a b c to represent x y z
-    linearRotTrans[linearRotTrans.length - 1] = 1;
+    if (linearRotTrans != null)
+      linearRotTrans[linearRotTrans.length - 1] = 1;
     // may be a-b,-5a-5b,-c;0,0,0 form
     int transPt = xyz.indexOf(';') + 1;
     if (transPt != 0) {
@@ -508,11 +516,12 @@ public class SymmetryOperation extends M4d {
         xpt = tpt0 + ipt;
         int val = (isNegative ? -1 : 1);
         if (allowScaling && iValue != 0) {
-          linearRotTrans[xpt] = iValue;
+          if (linearRotTrans != null)
+            linearRotTrans[xpt] = iValue;
           val = (int) iValue;
           iValue = 0;
-        } else {
-          linearRotTrans[xpt] = val;
+        } else if (linearRotTrans != null) {
+            linearRotTrans[xpt] = val;
         }
         strT += plusMinus(strT, val, myLabels[ipt]);
         break;
@@ -532,7 +541,8 @@ public class SymmetryOperation extends M4d {
         }
         // add translation in 12ths
         iValue = normalizeTwelfths(iValue, denom == 0 ? 12 : divisor == 0 ? denom : divisor, doNormalize);
-        linearRotTrans[tpt0 + nRows - 1] = (divisor == 0 && denom > 0 ? iValue = toDivisor(numer, denom) : iValue);
+        if (linearRotTrans != null)
+          linearRotTrans[tpt0 + nRows - 1] = (divisor == 0 && denom > 0 ? iValue = toDivisor(numer, denom) : iValue);
         strT += xyzFraction12(iValue, (divisor == 0 ? denom : divisor), false, true);
         // strT += xyzFraction48(iValue, false, true);
         strOut += (strOut == "" ? "" : ",") + strT;
@@ -574,7 +584,8 @@ public class SymmetryOperation extends M4d {
             i = ret[0] - 1;
             if (iValue == 0) {
               // a/2,....
-              linearRotTrans[xpt] /= denom;
+              if (linearRotTrans != null)
+                linearRotTrans[xpt] /= denom;
             } else {
               numer = (int) iValue;
               iValue /= denom;

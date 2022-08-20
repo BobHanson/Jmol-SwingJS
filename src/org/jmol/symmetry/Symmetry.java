@@ -179,9 +179,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object getSpaceGroupInfoObj(String name, SymmetryInterface cellInfo,
+  public Object getSpaceGroupInfoObj(String name, double[] params,
                                      boolean isFull, boolean addNonstandard) {
-    return SpaceGroup.getInfo(spaceGroup, name, cellInfo, isFull,
+    return SpaceGroup.getInfo(spaceGroup, name, params, isFull,
         addNonstandard);
   }
 
@@ -476,8 +476,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toUnitCellD(T3d pt, T3d offset) {
-    unitCell.toUnitCellD(pt, offset);
+  public void toUnitCell(T3d pt, T3d offset) {
+    unitCell.toUnitCell(pt, offset);
   }
 
   @Override
@@ -929,11 +929,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object findSpaceGroup(Viewer vwr, BS atoms, String opXYZ,
-                               boolean asString) {
+  public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCell,
+                               boolean asString, boolean isAssign) {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
-            .findSpaceGroup(vwr, atoms, opXYZ, this, asString);
+            .findSpaceGroup(vwr, atoms, xyzList, unitCell, this, asString, isAssign);
   }
 
   @Override

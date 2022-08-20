@@ -3951,7 +3951,7 @@ public class Viewer extends JmolViewer
   public void toUnitCell(P3d pt, P3d offset) {
     SymmetryInterface unitCell = getCurrentUnitCell();
     if (unitCell != null)
-      unitCell.toUnitCellD(pt, offset);
+      unitCell.toUnitCell(pt, offset);
   }
 
   public void setCurrentCage(String isosurfaceId) {
@@ -10609,18 +10609,28 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public Object findSpaceGroup(BS bsAtoms, String opXYZ, boolean asString) {
+  /**
+   * 
+   * @param bsAtoms
+   * @param xyzList if present, a semicolon-separated list of operators
+   * @param unitCell 
+   * @param asString
+   * @param isAssign from ModelKit
+   * @return either an array of space group identifiers or, if asString, "", or null
+   * 
+   */
+  public Object findSpaceGroup(BS bsAtoms, String xyzList, double[] unitCell, boolean asString, boolean isAssign) {
     Object ret = null;
-    if (opXYZ == null) {
-      if (bsAtoms == null)
-        bsAtoms = getThisModelAtoms();
+    if (bsAtoms == null && xyzList == null || isAssign)
+      bsAtoms = getThisModelAtoms();
+    if (xyzList == null) {
       if (!bsAtoms.isEmpty()) {
         SymmetryInterface uc = getCurrentUnitCell();
         ret = (uc == null ? null
-            : uc.findSpaceGroup(this, bsAtoms, opXYZ, asString));
+            : uc.findSpaceGroup(this, bsAtoms, null, unitCell, asString, isAssign));
       }
     } else {
-      ret = getSymTemp().findSpaceGroup(this, null, opXYZ, asString);
+      ret = getSymTemp().findSpaceGroup(this, bsAtoms, xyzList, unitCell, asString, isAssign);
     }
     return (ret == null && asString ? "" : ret);
   }
