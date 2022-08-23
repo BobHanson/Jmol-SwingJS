@@ -71,7 +71,7 @@ import org.jmol.util.Vibration;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -282,8 +282,8 @@ public class StateCreator extends JmolStateCreator {
               index = -1 - index;
             sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC('\t')
                 .appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
-                .appendF(bond.mad / 1000f).appendC('\t')
-                .appendF(bond.getEnergy()).appendC('\t')
+                .appendD(bond.mad / 1000d).appendC('\t')
+                .appendD(bond.getEnergy()).appendC('\t')
                 .append(Edge.getBondOrderNameFromOrder(bond.order))
                 .append(";\n");
           }
@@ -347,7 +347,7 @@ public class StateCreator extends JmolStateCreator {
           sb.append("  ").append(m.orientation.getMoveToText(false))
               .append(";\n");
         if (m.frameDelay != 0 && !ms.isTrajectorySubFrame(i))
-          sb.append("  frame delay ").appendF(m.frameDelay / 1000f)
+          sb.append("  frame delay ").appendD(m.frameDelay / 1000d)
               .append(";\n");
         if (m.simpleCage != null) {
           sb.append("  unitcell ")
@@ -559,7 +559,7 @@ public class StateCreator extends JmolStateCreator {
     int n = 0;
     for (Map.Entry<String, int[]> entry : p.schemes.entrySet()) {
       String name = entry.getKey();
-      if (name.length() > 0 & n++ >= 0)
+      if (name.length() > 0 && !name.startsWith("=") && n++ >= 0)
         s.append("color \"" + name + "="
             + ColorEncoder.getColorSchemeList(entry.getValue()) + "\";\n");
     }
@@ -587,7 +587,7 @@ public class StateCreator extends JmolStateCreator {
       app(commands, "frame align " + Escape.eBS(vwr.tm.bsFrameOffsets));
     } else if (vwr.ms.translations != null) {
       for (int i = modelCount; --i >= 0;) {
-        P3 t = (vwr.ms.getTranslation(i));
+        P3d t = (vwr.ms.getTranslation(i));
         if (t != null)
           app(commands, "frame " + vwr.ms.getModelNumberDotted(i) + " align "
               + t);
@@ -696,13 +696,13 @@ public class StateCreator extends JmolStateCreator {
     // structure defaults
 
     if (global.haveSetStructureList) {
-      Map<STR, float[]> slist = global.structureList;
+      Map<STR, double[]> slist = global.structureList;
       commands.append("struture HELIX set "
-          + Escape.eAF(slist.get(STR.HELIX)));
+          + Escape.eAD(slist.get(STR.HELIX)));
       commands.append("struture SHEET set "
-          + Escape.eAF(slist.get(STR.SHEET)));
+          + Escape.eAD(slist.get(STR.SHEET)));
       commands.append("struture TURN set "
-          + Escape.eAF(slist.get(STR.TURN)));
+          + Escape.eAD(slist.get(STR.TURN)));
     }
     if (sfunc != null)
       commands.append("\n}\n\n");
@@ -797,7 +797,7 @@ public class StateCreator extends JmolStateCreator {
     commands.append("  slab ").appendI(tm.slabPercentSetting).append(";depth ")
         .appendI(tm.depthPercentSetting).append(
             tm.slabEnabled && !navigating ? ";slab on" : "").append(";\n");
-    commands.append("  set slabRange ").appendF(tm.slabRange).append(";\n");
+    commands.append("  set slabRange ").appendD(tm.slabRange).append(";\n");
     if (tm.slabPlane != null)
       commands.append("  slab plane ").append(Escape.eP4(tm.slabPlane)).append(
           ";\n");
@@ -849,7 +849,7 @@ public class StateCreator extends JmolStateCreator {
     String s = "  set spinX " + (int) tm.spinX + "; set spinY "
         + (int) tm.spinY + "; set spinZ " + (int) tm.spinZ + "; set spinFps "
         + (int) tm.spinFps + ";";
-    if (!Float.isNaN(tm.navFps))
+    if (!Double.isNaN(tm.navFps))
       s += "  set navX " + (int) tm.navX + "; set navY " + (int) tm.navY
           + "; set navZ " + (int) tm.navZ + "; set navFps " + (int) tm.navFps
           + ";";
@@ -861,7 +861,7 @@ public class StateCreator extends JmolStateCreator {
         + Escape.eBS(vwr.bsA()) + ";\n  rotateSelected"
         : "\n ");
     if (tm.isSpinInternal) {
-      P3 pt = P3.newP(tm.internalRotationCenter);
+      P3d pt = P3d.newP(tm.internalRotationCenter);
       pt.sub(tm.rotationAxis);
       s += prefix + " spin " + tm.rotationRate + " "
           + Escape.eP(tm.internalRotationCenter) + " " + Escape.eP(pt);
@@ -927,7 +927,7 @@ public class StateCreator extends JmolStateCreator {
     SB s = new SB().append("\n");
     app(s, myType
         + (mad == 0 ? " off" : mad == 1 ? " on" : mad == -1 ? " dotted"
-            : mad < 20 ? " " + mad : " " + (mad / 20000f)));
+            : mad < 20 ? " " + mad : " " + (mad / 20000d)));
     if (s.length() < 3)
       return "";
     String fcmd = Shape.getFontCommand(myType, font3d);
@@ -946,7 +946,7 @@ public class StateCreator extends JmolStateCreator {
   private static void addTickInfo(SB sb, TickInfo tickInfo, boolean addFirst) {
     sb.append(" ticks ").append(tickInfo.type).append(" ").append(
         Escape.eP(tickInfo.ticks));
-    boolean isUnitCell = (tickInfo.scale != null && Float
+    boolean isUnitCell = (tickInfo.scale != null && Double
         .isNaN(tickInfo.scale.x));
     if (isUnitCell)
       sb.append(" UNITCELL");
@@ -955,8 +955,8 @@ public class StateCreator extends JmolStateCreator {
           .append(Escape.eAS(tickInfo.tickLabelFormats, false));
     if (!isUnitCell && tickInfo.scale != null)
       sb.append(" scale ").append(Escape.eP(tickInfo.scale));
-    if (addFirst && !Float.isNaN(tickInfo.first) && tickInfo.first != 0)
-      sb.append(" first ").appendF(tickInfo.first);
+    if (addFirst && !Double.isNaN(tickInfo.first) && tickInfo.first != 0)
+      sb.append(" first ").appendD(tickInfo.first);
     if (tickInfo.reference != null) // not implemented
       sb.append(" point ").append(Escape.eP(tickInfo.reference));
   }
@@ -972,15 +972,15 @@ public class StateCreator extends JmolStateCreator {
     for (int i = 0; i < measurementCount; i++) {
       Measurement m = mList.get(i);
       boolean isProperty = (m.property != null);
-      if (isProperty && Float.isNaN(m.value))
+      if (isProperty && Double.isNaN(m.value))
         continue;
       int count = m.count;
       SB sb = new SB().append("measure");
       if (m.thisID != null)
         sb.append(" ID ").append(PT.esc(m.thisID));
       if (m.mad != 0)
-        sb.append(" radius ").appendF(
-            m.thisID == null || m.mad > 0 ? m.mad / 2000f : 0);
+        sb.append(" radius ").appendD(
+            m.thisID == null || m.mad > 0 ? m.mad / 2000d : 0);
       if (m.colix != 0)
         sb.append(" color ").append(Escape.escapeColor(C.getArgb(m.colix)));
       if (m.text != null) {
@@ -989,16 +989,21 @@ public class StateCreator extends JmolStateCreator {
         if (m.text.align != JC.TEXT_ALIGN_NONE)
           sb.append(" align ").append(JC.getHorizAlignmentName(m.text.align));
         if (m.text.pymolOffset != null)
-          sb.append(" offset ").append(Escape.eAF(m.text.pymolOffset));
-      }
+          sb.append(" offset ").append(Escape.eAD(m.text.pymolOffset));
+      } 
       TickInfo tickInfo = m.tickInfo;
       if (tickInfo != null)
         addTickInfo(sb, tickInfo, true);
       for (int j = 1; j <= count; j++)
         sb.append(" ").append(m.getLabel(j, true, true));
-      if (isProperty)
-        sb.append(" " + m.property + " value " + (Float.isNaN(m.value) ? 0f : m.value))
-        .append(" " + PT.esc(m.getString()));
+      if (isProperty) {
+        sb.append(" " + m.property + " value " + (Double.isNaN(m.value) ? 0d : m.value))
+         .append(" " + PT.esc(m.getString()));
+      } else if (count == 2) {
+        String s = m.getDistanceFormatForState();
+        if (s != null)
+          sb.append(" ").append(PT.esc(s));
+      }
       //sb.append("; # " + shape.getInfoAsString(i));
       app(commands, sb.toString());
     }
@@ -1030,7 +1035,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append(";\n");
     }
     if (shape.mad >= 0)
-      commands.append(" set measurements ").appendF(shape.mad / 2000f).append(";\n");
+      commands.append(" set measurements ").appendD(shape.mad / 2000d).append(";\n");
     String s = getCommands(temp, null, "select measures");
     if (s != null && s.length() != 0) {
       commands.append(s);
@@ -1084,7 +1089,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : shape.bsSizeSet
           .nextSetBit(i + 1)))
         BSUtil.setMapBitSet(temp, i, i, "wireframe "
-            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escF(r / 2000f)));
+            + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escD(r / 2000d)));
     }
     if (reportAll || bsOrderSet != null) {
       int i0 = (reportAll ? bondCount - 1 : bsOrderSet.nextSetBit(0));
@@ -1209,7 +1214,7 @@ public class StateCreator extends JmolStateCreator {
         } else {
           cmd += PT.esc(t.textUnformatted);
           if (t.pymolOffset != null)
-            cmd += ";set labelOffset " + Escape.eAF(t.pymolOffset);
+            cmd += ";set labelOffset " + Escape.eAD(t.pymolOffset);
         }
         BSUtil.setMapBitSet(temp, i, i, cmd);
         if (l.bsColixSet != null && l.bsColixSet.get(i))
@@ -1219,10 +1224,10 @@ public class StateCreator extends JmolStateCreator {
           BSUtil.setMapBitSet(temp2, i, i,
               "background label " + Shape.encodeColor(l.bgcolixes[i]));
         Text text = l.getLabel(i);
-        float sppm = (text != null ? text.scalePixelsPerMicron : 0);
+        double sppm = (text != null ? text.scalePixelsPerMicron : 0);
         if (sppm > 0)
           BSUtil.setMapBitSet(temp2, i, i,
-              "set labelScaleReference " + (10000f / sppm));
+              "set labelScaleReference " + (10000d / sppm));
         if (l.offsets != null && l.offsets.length > i) {
           int offsetFull = l.offsets[i];
           BSUtil.setMapBitSet(temp2, i, i,
@@ -1263,7 +1268,7 @@ public class StateCreator extends JmolStateCreator {
       Balls balls = (Balls) shape;
       short[] colixes = balls.colixes;
       byte[] pids = balls.paletteIDs;
-      float r = 0;
+      double r = 0;
       for (int i = 0; i < ac; i++) {
         if (atoms[i] == null)
           continue;
@@ -1272,7 +1277,7 @@ public class StateCreator extends JmolStateCreator {
           if ((r = atoms[i].madAtom) < 0)
             BSUtil.setMapBitSet(temp, i, i, "Spacefill on");
           else
-            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + PT.escF(r / 2000f));
+            BSUtil.setMapBitSet(temp, i, i, "Spacefill " + PT.escD(r / 2000d));
         }
         if (shape.bsColixSet != null && shape.bsColixSet.get(i)) {
           byte pid = atoms[i].paletteID;
@@ -1329,7 +1334,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = shape.bsSizeSet.nextSetBit(0); i >= 0; i = shape.bsSizeSet
           .nextSetBit(i + 1))
         BSUtil.setMapBitSet(temp, i, i, type
-            + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escF(mad / 2000f)));
+            + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escD(mad / 2000d)));
     if (shape.bsColixSet != null)
       for (int i = shape.bsColixSet.nextSetBit(0); i >= 0; i = shape.bsColixSet
           .nextSetBit(i + 1))
@@ -1343,7 +1348,7 @@ public class StateCreator extends JmolStateCreator {
   private void getEchoState(SB sb, Text t) {
     // ECHO "%SCALE" uses unformatted text
     boolean isScale = (t != null && t.barPixels > 0);
-    String text = (t == null ? null : isScale ? t.textUnformatted : t.text); 
+    String text = (t == null ? null : isScale ? t.textUnformatted : t.text);
     if (text == null || !t.isEcho || t.target.equals("error"))
       return;
     //set echo top left
@@ -1370,41 +1375,43 @@ public class StateCreator extends JmolStateCreator {
         strOff = Escape.eP(t.xyz);
       sb.append("  ").append(echoCmd).append(" ").append(strOff);
       if (t.align != JC.TEXT_ALIGN_LEFT)
-        sb.append(";  ").append(echoCmd).append(" ").append(
-            JC.getHorizAlignmentName(t.align));
+        sb.append(";  ").append(echoCmd).append(" ")
+            .append(JC.getHorizAlignmentName(t.align));
       break;
     default:
       sb.append("  set echo ").append(JC.getEchoName(t.valign)).append(" ")
           .append(JC.getHorizAlignmentName(t.align));
     }
     if (t.movableZPercent != Integer.MAX_VALUE)
-      sb.append(";  ").append(echoCmd).append(" depth ").appendI(
-          t.movableZPercent);
-    if (isImage)
+      sb.append(";  ").append(echoCmd).append(" depth ")
+          .appendI(t.movableZPercent);
+    if (isImage) {
       sb.append("; ").append(echoCmd).append(" IMAGE /*file*/");
-    else
+    } else {
       sb.append("; echo ");
+    }
     sb.append(PT.esc(text)); // was textUnformatted, but that is not really the STATE
     sb.append(";\n");
     if (isImage && t.imageScale != 1)
-      sb.append("  ").append(echoCmd).append(" scale ").appendF(t.imageScale)
+      sb.append("  ").append(echoCmd).append(" scale ").appendD(t.imageScale)
           .append(";\n");
     if (t.script != null)
-      sb.append("  ").append(echoCmd).append(" script ").append(
-          PT.esc(t.script)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" script ")
+          .append(PT.esc(t.script)).append(";\n");
     if (t.modelIndex >= 0)
-      sb.append("  ").append(echoCmd).append(" model ").append(
-          vwr.getModelNumberDotted(t.modelIndex)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" model ")
+          .append(vwr.getModelNumberDotted(t.modelIndex)).append(";\n");
     if (t.pointerPt != null) {
-      sb.append("  ").append(echoCmd).append(" point ").append(
-          t.pointerPt instanceof Atom ? "({" + ((Atom) t.pointerPt).i
-              + "})" : Escape.eP(t.pointerPt)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" point ")
+          .append(
+              t.pointerPt instanceof Atom ? "({" + ((Atom) t.pointerPt).i + "})"
+                  : Escape.eP(t.pointerPt))
+          .append(";\n");
     }
     if (t.pymolOffset != null) {
-      sb.append("  ").append(echoCmd).append(" offset ").append(
-          Escape.escapeFloatA(t.pymolOffset, true)).append(";\n");
+      sb.append("  ").append(echoCmd).append(" offset ")
+          .append(Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
     }
-    //    }
     //isDefine and target==top: do all
     //isDefine and target!=top: just start
     //!isDefine and target==top: do nothing
@@ -1417,7 +1424,7 @@ public class StateCreator extends JmolStateCreator {
     t.appendFontCmd(sb);
     sb.append("; color echo");
     if (C.isColixTranslucent(t.colix))
-      sb.append(C.getColixTranslucencyLabel(t.colix));
+      sb.append(" ").append(C.getColixTranslucencyLabel(t.colix));
     sb.append(" ").append(C.getHexCode(t.colix));
     if (t.bgcolix != 0) {
       sb.append("; color echo background ");
@@ -1426,10 +1433,13 @@ public class StateCreator extends JmolStateCreator {
       sb.append(C.getHexCode(t.bgcolix));
     }
     sb.append(";\n");
-    if (t.hidden)
-      sb.append("  set echo ID ").append(PT.esc(t.target))
-          .append(" hidden;\n");
-    return;
+    if (t.hidden) {
+      if (isScale)
+        sb.append("  set echo \"%SCALE\" hidden;\n");
+      else
+        sb.append("  set echo ID ").append(PT.esc(t.target))
+            .append(" hidden;\n");
+    }
   }
 
   @Override
@@ -1547,13 +1557,116 @@ public class StateCreator extends JmolStateCreator {
       if (taintWhat < 0 || type == taintWhat)
         if ((bs = (bsSelected != null ? bsSelected : vwr
             .ms.getTaintedAtoms(type))) != null)
-          getAtomicPropertyStateBuffer(commands, type, bs, null, null);
+          getAtomicPropertyStateBufferD(commands, type, bs, null, null);
     return commands.toString();
   }
 
+//  @Override
+//  void getAtomicPropertyStateBuffer(SB commands, int type, BS bs,
+//                                           String label, double[] fData) {
+//    if (!vwr.g.preserveState)
+//      return;
+//    // see setAtomData()
+//    SB s = new SB();
+//    String dataLabel = (label == null ? AtomCollection.userSettableValues[type]
+//        : label)
+//        + " set";
+//    int n = 0;
+//    boolean isDefault = (type == AtomCollection.TAINT_COORD);
+//    Atom[] atoms = vwr.ms.at;
+//    BS[] tainted = vwr.ms.tainted;
+//    if (bs != null)
+//      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+//        if (AtomCollection.isDeleted(atoms[i]))
+//          continue;
+//        s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
+//            .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(
+//                " ");
+//        switch (type) {
+//        case AtomCollection.TAINT_MAX:
+//          if (i < fData.length) // when data are appended, the array may not
+//            // extend that far
+//            s.appendF(fData[i]);
+//          break;
+//        case AtomCollection.TAINT_ATOMNO:
+//          s.appendI(atoms[i].getAtomNumber());
+//          break;
+//        case AtomCollection.TAINT_CHAIN:
+//          s.append(atoms[i].getChainIDStr());
+//          break;
+//        case AtomCollection.TAINT_RESNO:
+//          s.appendI(atoms[i].group.getResno());
+//          break;
+//        case AtomCollection.TAINT_SEQID:
+//          s.appendI(atoms[i].getSeqID());
+//          break;
+//        case AtomCollection.TAINT_ATOMNAME:
+//          s.append(atoms[i].getAtomName());
+//          break;
+//        case AtomCollection.TAINT_ATOMTYPE:
+//          s.append(atoms[i].getAtomType());
+//          break;
+//        case AtomCollection.TAINT_COORD:
+//          if (isTainted(tainted, i, AtomCollection.TAINT_COORD))
+//            isDefault = false;
+//          s.appendF(atoms[i].x).append(" ").appendF(atoms[i].y).append(" ")
+//              .appendF(atoms[i].z);
+//          break;
+//        case AtomCollection.TAINT_VIBRATION:
+//          Vibration v = atoms[i].getVibrationVector();
+//          if (v == null)
+//            s.append("0 0 0");
+//          else if (Double.isNaN(v.modScale))
+//            s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
+//          else
+//            s.appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(v.modScale);
+//          break;
+//        case AtomCollection.TAINT_SITE:
+//          s.appendI(atoms[i].getAtomSite());
+//          break;
+//        case AtomCollection.TAINT_ELEMENT:
+//          s.appendI(atoms[i].getAtomicAndIsotopeNumber());
+//          break;
+//        case AtomCollection.TAINT_FORMALCHARGE:
+//          s.appendI(atoms[i].getFormalCharge());
+//          break;
+//        case AtomCollection.TAINT_BONDINGRADIUS:
+//          s.appendF(atoms[i].getBondingRadius());
+//          break;
+//        case AtomCollection.TAINT_OCCUPANCY:
+//          s.appendI(atoms[i].getOccupancy100());
+//          break;
+//        case AtomCollection.TAINT_PARTIALCHARGE:
+//          s.appendF(atoms[i].getPartialCharge());
+//          break;
+//        case AtomCollection.TAINT_TEMPERATURE:
+//          s.appendF(atoms[i].getBfactor100() / 100d);
+//          break;
+//        case AtomCollection.TAINT_VALENCE:
+//          s.appendI(atoms[i].getValence());
+//          break;
+//        case AtomCollection.TAINT_VANDERWAALS:
+//          s.appendF(atoms[i].getVanderwaalsRadiusFloat(vwr, VDW.AUTO));
+//          break;
+//        }
+//        s.append(" ;\n");
+//        ++n;
+//      }
+//    if (n == 0)
+//      return;
+//    if (isDefault)
+//      dataLabel += "(default)";
+//    commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
+//        " ;\nJmol Property Data Format 1 -- Jmol ").append(
+//        Viewer.getJmolVersion()).append(";\n");
+//    commands.appendSB(s);
+//    commands.append("  end \"" + dataLabel + "\";\n");
+//  }
+//
+
   @Override
-  void getAtomicPropertyStateBuffer(SB commands, int type, BS bs,
-                                           String label, float[] fData) {
+  void getAtomicPropertyStateBufferD(SB commands, int type, BS bs,
+                                           String label, double[] fData) {
     if (!vwr.g.preserveState)
       return;
     // see setAtomData()
@@ -1562,9 +1675,9 @@ public class StateCreator extends JmolStateCreator {
         : label)
         + " set";
     int n = 0;
-    boolean isDefault = (type == AtomCollection.TAINT_COORD);
     Atom[] atoms = vwr.ms.at;
     BS[] tainted = vwr.ms.tainted;
+    boolean isDefault = (type == AtomCollection.TAINT_COORD);
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (AtomCollection.isDeleted(atoms[i]))
@@ -1576,7 +1689,7 @@ public class StateCreator extends JmolStateCreator {
         case AtomCollection.TAINT_MAX:
           if (i < fData.length) // when data are appended, the array may not
             // extend that far
-            s.appendF(fData[i]);
+            s.appendD(fData[i]);
           break;
         case AtomCollection.TAINT_ATOMNO:
           s.appendI(atoms[i].getAtomNumber());
@@ -1599,17 +1712,17 @@ public class StateCreator extends JmolStateCreator {
         case AtomCollection.TAINT_COORD:
           if (isTainted(tainted, i, AtomCollection.TAINT_COORD))
             isDefault = false;
-          s.appendF(atoms[i].x).append(" ").appendF(atoms[i].y).append(" ")
-              .appendF(atoms[i].z);
+          s.appendD(atoms[i].x).append(" ").appendD(atoms[i].y).append(" ")
+              .appendD(atoms[i].z);
           break;
         case AtomCollection.TAINT_VIBRATION:
           Vibration v = atoms[i].getVibrationVector();
           if (v == null)
             s.append("0 0 0");
-          else if (Float.isNaN(v.modScale))
-            s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
+          else if (Double.isNaN(v.modScale))
+            s.appendD(v.x).append(" ").appendD(v.y).append(" ").appendD(v.z);
           else
-            s.appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(v.modScale);
+            s.appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(v.modScale);
           break;
         case AtomCollection.TAINT_SITE:
           s.appendI(atoms[i].getAtomSite());
@@ -1621,22 +1734,22 @@ public class StateCreator extends JmolStateCreator {
           s.appendI(atoms[i].getFormalCharge());
           break;
         case AtomCollection.TAINT_BONDINGRADIUS:
-          s.appendF(atoms[i].getBondingRadius());
+          s.appendD(atoms[i].getBondingRadius());
           break;
         case AtomCollection.TAINT_OCCUPANCY:
           s.appendI(atoms[i].getOccupancy100());
           break;
         case AtomCollection.TAINT_PARTIALCHARGE:
-          s.appendF(atoms[i].getPartialCharge());
+          s.appendD(atoms[i].getPartialCharge());
           break;
         case AtomCollection.TAINT_TEMPERATURE:
-          s.appendF(atoms[i].getBfactor100() / 100f);
+          s.appendD(atoms[i].getBfactor100() / 100d);
           break;
         case AtomCollection.TAINT_VALENCE:
           s.appendI(atoms[i].getValence());
           break;
         case AtomCollection.TAINT_VANDERWAALS:
-          s.appendF(atoms[i].getVanderwaalsRadiusFloat(vwr, VDW.AUTO));
+          s.appendD(atoms[i].getVanderwaalsRadiusFloat(vwr, VDW.AUTO));
           break;
         }
         s.append(" ;\n");
@@ -1646,44 +1759,6 @@ public class StateCreator extends JmolStateCreator {
       return;
     if (isDefault)
       dataLabel += "(default)";
-    commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
-        " ;\nJmol Property Data Format 1 -- Jmol ").append(
-        Viewer.getJmolVersion()).append(";\n");
-    commands.appendSB(s);
-    commands.append("  end \"" + dataLabel + "\";\n");
-  }
-
-  
-  @Override
-  void getAtomicPropertyStateBufferD(SB commands, int type, BS bs,
-                                           String label, double[] fData) {
-    if (!vwr.g.preserveState)
-      return;
-    // see setAtomData()
-    SB s = new SB();
-    String dataLabel = label + " set";
-    int n = 0;
-    Atom[] atoms = vwr.ms.at;
-    BS[] tainted = vwr.ms.tainted;
-    if (bs != null)
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (AtomCollection.isDeleted(atoms[i]))
-          continue;
-        s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
-            .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(
-                " ");
-        switch (type) {
-        case AtomCollection.TAINT_MAX:
-          if (i < fData.length) // when data are appended, the array may not
-            // extend that far
-            s.appendD(fData[i]);
-          break;
-        }
-        s.append(" ;\n");
-        ++n;
-      }
-    if (n == 0)
-      return;
     commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
         " ;\nJmol Property Data Format 1 -- Jmol ").append(
         Viewer.getJmolVersion()).append(";\n");
