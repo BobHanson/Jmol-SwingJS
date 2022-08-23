@@ -1,5 +1,8 @@
 package org.jmol.adapter.writers;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
@@ -7,14 +10,12 @@ import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
 import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * 
@@ -23,6 +24,9 @@ import javajs.util.V3;
  */
 public class PWMATWriter extends XtlWriter implements JmolWriter {
 
+  private final static String PWM_PREFIX = "property_pwm_";
+  private final static int PREFIX_LEN = 13;
+  
 
   private Viewer vwr;
   private OC oc;
@@ -31,7 +35,8 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   private BS bs;
   private boolean isPrecision;
   
-
+  boolean isSlab;
+  private boolean writeGlobals = false; // for now
   
   public PWMATWriter() {
     // for JavaScript dynamic loading
@@ -40,12 +45,10 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
   @Override
   public void set(Viewer viewer, OC oc, Object[] data) {
     vwr = viewer;
+    isSlab = (data != null && data[0] != null && data[0].equals("slab"));
     this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
   }
 
-  
-  private final static String PWM_PREFIX = "property_pwm_";
-  private final static int PREFIX_LEN = 13;
   
   @SuppressWarnings("unchecked")
   @Override
@@ -54,18 +57,21 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       bs = vwr.bsA();
     try {
       uc = vwr.ms.getUnitCellForAtom(bs.nextSetBit(0));
-      this.bs = bs = uc.removeDuplicates(vwr.ms, bs);
-      isPrecision = !bs.isEmpty();
-      for (int i = bs.nextSetBit(0); i >= 0
-          && isPrecision; i = bs.nextSetBit(i + 1)) {
-        if (vwr.ms.getPrecisionCoord(i) == null)
-          isPrecision = false;
-      }
+      this.bs = (isSlab ? bs : uc.removeDuplicates(vwr.ms, bs, false));
+      isPrecision = true;
+//      !bs.isEmpty();
+//      for (int i = bs.nextSetBit(0); i >= 0
+//          && isPrecision; i = bs.nextSetBit(i + 1)) {
+//        if (vwr.ms.getPrecisionCoord(i) == null)
+//          isPrecision = false;
+//      }
       names = (Lst<String>) vwr.getDataObj(PWM_PREFIX + "*", null, -1);
       writeHeader();
       writeLattice();
       writePositions();
       writeDataBlocks();
+      if (writeGlobals)
+        writeGlobalBlocks();
     } catch (Exception e) {
       System.err.println("Error writing PWmat file " + e);
     }
@@ -80,35 +86,23 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     oc.append("Lattice vector\n");
     if (uc == null) {
       uc = vwr.getSymTemp();
-      V3 bb = vwr.getBoundBoxCornerVector();
-      float len = Math.round(bb.length() * 2);
-      uc.setUnitCell(new float[] { len, len, len, 90, 90, 90 }, false);
+      V3d bb = vwr.getBoundBoxCornerVector();
+      double len = (int) Math.round(bb.length() * 2);
+      uc.setUnitCell(new double[] { len, len, len, 90, 90, 90 }, false);
     }
 
-    Object oabc = uc.getUnitCellVectors();
-    P3d[] abc = (Viewer.isJS || oabc instanceof P3d[] ? (P3d[]) oabc : null);
-    if (abc != null) {
-      if (isPrecision) {
-        String f = "%18.10P%18.10P%18.10P\n";
-        oc.append(PT.sprintf(f, "P", new Object[] { abc[1] }));
-        oc.append(PT.sprintf(f, "P", new Object[] { abc[2] }));
-        oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
-      } else {
-        String f = "%12.6p%12.6p%12.6p\n";
-        P3 p = new P3(); // toP3 here for rounding even in JavaScript
-        oc.append(PT.sprintf(f, "p", new Object[] { abc[1].copyToP3() }));
-        oc.append(PT.sprintf(f, "p", new Object[] { abc[2].copyToP3() }));
-        oc.append(PT.sprintf(f, "p", new Object[] { abc[3].copyToP3() }));
-      }
+    P3d[] abc = uc.getUnitCellVectors();
+    if (isPrecision) {
+      String f = "%18.10P%18.10P%18.10P\n";
+      oc.append(PT.sprintf(f, "P", new Object[] { abc[1] }));
+      oc.append(PT.sprintf(f, "P", new Object[] { abc[2] }));
+      oc.append(PT.sprintf(f, "P", new Object[] { abc[3] }));
     } else {
-      P3[] abcf = (P3[]) oabc;
       String f = "%12.6p%12.6p%12.6p\n";
-      P3 p = new P3(); // toP3 here for rounding even in JavaScript
-      oc.append(PT.sprintf(f, "p", new Object[] { abcf[1] }));
-      oc.append(PT.sprintf(f, "p", new Object[] { abcf[2] }));
-      oc.append(PT.sprintf(f, "p", new Object[] { abcf[3] }));      
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[1] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[2] }));
+      oc.append(PT.sprintf(f, "p", new Object[] { abc[3] }));
     }
-
     Logger.info("PWMATWriter: LATTICE VECTORS");
   }
 
@@ -119,18 +113,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     oc.append("Position, move_x, move_y, move_z\n");
     Atom[] a = vwr.ms.at;
     String coord;
-    P3 p = new P3();
+    P3d p = new P3d();
     String f = (isPrecision ? "%4i%78s   " : "%4i%36s   ") + (cz == null ? "  1  1  1" : "%3i%3i%3i") + "\n";
     for (int ic = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ic++) {
       if (isPrecision) {
-        P3d dxyz = vwr.ms.getPrecisionCoord(i);
-        coord = clean(dxyz.x) + clean(dxyz.y) + clean(dxyz.z);                
+//        P3d dxyz = vwr.ms.getPrecisionCoord(i);
+        p.setT(a[i]);
+        uc.toFractional(p, false);
+        coord = clean(p.x) + clean(p.y) + clean(p.z);                
       } else {
         // if there is no precision atom, then we need
         // to write use float, not double, as that is 
         // the only way to avoid garbage out
         p.setT(a[i]);
-        uc.toFractionalF(p, false);
+        uc.toFractional(p, false);
         coord = cleanF(p.x) + cleanF(p.y) + cleanF(p.z);
       }
       if (cz == null) {
@@ -189,7 +185,6 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
     if (m == null)
       return;
     writeItem2(m, "CONSTRAINT_MAG");
-//    writeVectors("MAGNETIC_XYZ");
   }
 
   private void writeItem2(double[] m, String name) {
@@ -241,6 +236,20 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
         writeItems(name);
       }
     }
+  }
+
+  private void writeGlobalBlocks() {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> globals = (Map<String, Object>) vwr
+        .getModelForAtomIndex(bs.nextSetBit(0)).auxiliaryInfo
+            .get("globalPWmatData");
+    if (globals != null)
+      for (Entry<String, Object> e : globals.entrySet()) {
+        oc.append(e.getKey()).append("\n");
+        String[] lines = (String[]) e.getValue();
+        for (int i = 0; i < lines.length; i++)
+          oc.append(lines[i]).append("\n");
+      }
   }
 
   @Override

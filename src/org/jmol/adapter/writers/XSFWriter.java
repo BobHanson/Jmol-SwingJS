@@ -7,7 +7,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
@@ -84,7 +84,7 @@ public class XSFWriter implements JmolWriter {
   }
 
   private void writeLattice(String sn) {
-    P3[] abc = uc.getUnitCellVectors();
+    P3d[] abc = uc.getUnitCellVectors();
     String f = "%18.10p%18.10p%18.10p\n";
     String s = PT.sprintf(f, "p", new Object[] { abc[1] })
         + PT.sprintf(f, "p", new Object[] { abc[2] })

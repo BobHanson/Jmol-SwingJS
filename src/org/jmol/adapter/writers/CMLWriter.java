@@ -20,7 +20,6 @@ import javajs.util.SB;
  */
 public class CMLWriter implements JmolWriter {
 
-
   private Viewer vwr;
   private OC oc;
   private int atomsMax;

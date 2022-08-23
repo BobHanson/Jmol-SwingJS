@@ -7,10 +7,10 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 /**
  * An XCrysDen XSF writer
@@ -25,7 +25,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
 
   private boolean isP1;
 
-  private final static P3 fset0 = P3.new3(555, 555, 1);
+  private final static T3d fset0 = P3d.new3(555, 555, 1);
 
   public CIFWriter() {
     // for JavaScript dynamic loading
@@ -48,22 +48,22 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 },
+        uc = vwr.getSymTemp().setUnitCell(new double[] { 1, 1, 1, 90, 90, 90 },
             false);
 
-      P3 offset = uc.getFractionalOffset();
+      P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
           || offset.y != (int) offset.y || offset.z != (int) offset.z);
-      T3 fset;
+      T3d fset;
       boolean haveCustom = (fractionalOffset
           || (fset = uc.getUnitCellMultiplier()) != null
               && (fset.z == 1 ? !fset.equals(fset0) : fset.z != 0));
       SymmetryInterface ucm = uc.getUnitCellMultiplied();
-      isP1 |= (ucm != uc || fractionalOffset);
+      isP1 = (isP1 || ucm != uc || fractionalOffset || uc.getSpaceGroupOperationCount() < 2);
       uc = ucm;
 
       // only write the asymmetric unit set
-      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs) : vwr.ms.am[mi].bsAsymmetricUnit);
+      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs, false) : vwr.ms.am[mi].bsAsymmetricUnit);
       BS bsOut;
       if (modelAU == null) {
         bsOut = bs;
@@ -84,13 +84,13 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
             PT.rep("\n" + uc.getUnitCellInfo(false), "\n", "\n##Jmol_orig "));
       }
       sb.append("\ndata_global");
-      float[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendF(params[0]);
-      appendKey(sb, "_cell_length_b").appendF(params[1]);
-      appendKey(sb, "_cell_length_c").appendF(params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendF(params[3]);
-      appendKey(sb, "_cell_angle_beta").appendF(params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendF(params[5]);
+      double[] params = uc.getUnitCellAsArray(false);
+      appendKey(sb, "_cell_length_a").appendD(params[0]);
+      appendKey(sb, "_cell_length_b").appendD(params[1]);
+      appendKey(sb, "_cell_length_c").appendD(params[2]);
+      appendKey(sb, "_cell_angle_alpha").appendD(params[3]);
+      appendKey(sb, "_cell_angle_beta").appendD(params[4]);
+      appendKey(sb, "_cell_angle_gamma").appendD(params[5]);
       sb.append("\n");
       int n;
       String hallName;
@@ -149,7 +149,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           + "\n_jmol_atom_site_label\n");
 
       int nAtoms = 0;
-      P3 p = new P3();
+      P3d p = new P3d();
       int[] elemNums = new int[130];
       for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut
           .nextSetBit(i + 1)) {
@@ -170,10 +170,10 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           elements += key;
         String label = sym + ++elemNums[elemno];
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
-            .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
-            .append(clean(p.y)).append(clean(p.z));
+            .append(PT.formatS(sym, 3, 0, true, false)).append(cleanF(p.x))
+            .append(cleanF(p.y)).append(cleanF(p.z));
         if (!haveUnitCell)
-          sb.append(clean(a.x)).append(clean(a.y)).append(clean(a.z));
+          sb.append(cleanF(a.x)).append(cleanF(a.y)).append(cleanF(a.z));
         sb.append("\n");
 
         jmol_atom.append(PT.formatS("" + a.getIndex(), 3, 0, false, false))

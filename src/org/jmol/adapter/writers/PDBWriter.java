@@ -15,9 +15,9 @@ import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 
 /**
  * An XCrysDen XSF writer
@@ -57,7 +57,7 @@ public class PDBWriter implements JmolWriter {
     String occTemp = "%6.2Q%6.2b          ";
     if (isPQR) {
       occTemp = "%8.4P%7.4V       ";
-      float charge = 0;
+      double charge = 0;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         charge += atoms[i].getPartialCharge();
       oc.append(
@@ -95,9 +95,9 @@ public class PDBWriter implements JmolWriter {
       }
     }
     LabelToken[] tokens;
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     Object[] o = new Object[] { ptTemp };
-    Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
+    Qd q = (doTransform ? vwr.tm.getRotationQ() : null);
     Map<String, Integer> map = new Hashtable<String, Integer>();
     boolean isBiomodel = false;
     int[] firstAtomIndexNew = (uniqueAtomNumbers ? new int[nModels] : null);
