@@ -39,14 +39,13 @@ import javajs.util.Lst;
 import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
 import javajs.util.T3d;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 
 
@@ -74,36 +73,25 @@ public class Escape {
    * @param xyz
    * @return  {x y z}
    */
-  public static String eP(T3 xyz) {
+  public static String eP(T3d xyz) {
     if (xyz == null)
       return "null";
     return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
   }
 
-  /**
-   * must be its own, because of the possibility of being null
-   * @param xyz
-   * @return  {x y z}
-   */
-  public static String ePd(T3d xyz) {
-    if (xyz == null)
-      return "null";
-    return "{" + xyz.x + " " + xyz.y + " " + xyz.z + "}";
-  }
-  
   public static String matrixToScript(Object m) {
     return PT.replaceAllCharacters(m.toString(), "\n\r ","").replace('\t',' ');
   }
 
-  public static String eP4(P4 x) {
+  public static String eP4(P4d x) {
     return "{" + x.x + " " + x.y + " " + x.z + " " + x.w + "}";
   }
 
-  public static String drawQuat(Quat q, String prefix, String id, P3 ptCenter, 
-                         float scale) {
+  public static String drawQuat(Qd q, String prefix, String id, P3d ptCenter, 
+                         double scale) {
     String strV = " VECTOR " + eP(ptCenter) + " ";
     if (scale == 0)
-      scale = 1f;
+      scale = 1d;
     return "draw " + prefix + "x" + id + strV
         + eP(q.getVectorScaled(0, scale)) + " color red\n"
         + "draw " + prefix + "y" + id + strV
@@ -127,22 +115,34 @@ public class Escape {
     if (x instanceof BS) 
       return eBS((BS) x);
     if (AU.isAP(x))
-      return eAP((T3[]) x);
+      return eAP((T3d[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
-    if (AU.isAFF(x)) {
+    if (AU.isADD(x)) {
       // for isosurface functionXY
-      float[][] ff = (float[][])x;
+      double[][] ff = (double[][])x;
       SB sb = new SB().append("[");
       String sep = "";
       for (int i = 0; i < ff.length; i++) {
-        sb.append(sep).append(eAF(ff[i]));
+        sb.append(sep).append(eAD(ff[i]));
         sep = ",";
       }
       sb.append("]");
       return sb.toString();
     }
-    if (x instanceof T3 || x instanceof T3d)
+    if (AU.isADD(x)) {
+      // for isosurface functionXY
+      double[][] ff = (double[][])x;
+      SB sb = new SB().append("[");
+      String sep = "";
+      for (int i = 0; i < ff.length; i++) {
+        sb.append(sep).append(eAD(ff[i]));
+        sep = ",";
+      }
+      sb.append("]");
+      return sb.toString();
+    }
+    if (x instanceof T3d || x instanceof T3d)
       return x.toString();
     if (x instanceof JSONEncodable)
       return ((JSONEncodable) x).toJSON();
@@ -181,24 +181,24 @@ public class Escape {
     return sb.toString();
   }
   
-  /**
-   * 
-   * @param f
-   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
-   * @return tabular string
-   */
-  public static String escapeFloatA(float[] f, boolean asArray) {
-    if (asArray)
-      return PT.toJSON(null, f); // or just use escape(f)
-    SB sb = new SB();
-    for (int i = 0; i < f.length; i++) {
-      if (i > 0)
-        sb.appendC('\n');
-      sb.appendF(f[i]);
-    }
-    return sb.toString();
-  }
-
+//  /**
+//   * 
+//   * @param f
+//   * @param asArray -- FALSE allows bypassing of escape(Object f); TRUE: unnecssary
+//   * @return tabular string
+//   */
+//  public static String escapeFloatA(float[] f, boolean asArray) {
+//    if (asArray)
+//      return PT.toJSON(null, f); // or just use escape(f)
+//    SB sb = new SB();
+//    for (int i = 0; i < f.length; i++) {
+//      if (i > 0)
+//        sb.appendC('\n');
+//      sb.appendF(f[i]);
+//    }
+//    return sb.toString();
+//  }
+  
   /**
    * 
    * @param f
@@ -217,19 +217,19 @@ public class Escape {
     return sb.toString();
   }
 
-  public static String escapeFloatAA(float[][] f, boolean addSemi) {
-    SB sb = new SB();
-    String eol = (addSemi ? ";\n" : "\n");
-    for (int i = 0; i < f.length; i++)
-      if (f[i] != null) {
-        if (i > 0)
-          sb.append(eol);
-        for (int j = 0; j < f[i].length; j++)
-          sb.appendF(f[i][j]).appendC('\t');
-      }
-    return sb.toString();
-  }
-
+//  public static String escapeFloatAA(float[][] f, boolean addSemi) {
+//    SB sb = new SB();
+//    String eol = (addSemi ? ";\n" : "\n");
+//    for (int i = 0; i < f.length; i++)
+//      if (f[i] != null) {
+//        if (i > 0)
+//          sb.append(eol);
+//        for (int j = 0; j < f[i].length; j++)
+//          sb.appendF(f[i][j]).appendC('\t');
+//      }
+//    return sb.toString();
+//  }
+//
   public static String escapeDoubleAA(double[][] f, boolean addSemi) {
     SB sb = new SB();
     String eol = (addSemi ? ";\n" : "\n");
@@ -243,7 +243,7 @@ public class Escape {
     return sb.toString();
   }
 
-  public static String escapeFloatAAA(float[][][] f, boolean addSemi) {
+  public static String escapeDoubleAAA(double[][][] f, boolean addSemi) {
     SB sb = new SB();
     String eol = (addSemi ? ";\n" : "\n");
     if (f[0] == null || f[0][0] == null)
@@ -258,11 +258,32 @@ public class Escape {
           if (f[i][j] != null) {
             sb.append(eol);
             for (int k = 0; k < f[i][j].length; k++)
-              sb.appendF(f[i][j][k]).appendC('\t');
+              sb.appendD(f[i][j][k]).appendC('\t');
           }
       }
     return sb.toString();
   }
+
+//  public static String escapeFloatAAA(float[][][] f, boolean addSemi) {
+//    SB sb = new SB();
+//    String eol = (addSemi ? ";\n" : "\n");
+//    if (f[0] == null || f[0][0] == null)
+//      return "0 0 0" + eol;
+//    sb.appendI(f.length).append(" ")
+//      .appendI(f[0].length).append(" ")
+//      .appendI(f[0][0].length);
+//    for (int i = 0; i < f.length; i++)
+//      if (f[i] != null) {
+//        sb.append(eol);
+//        for (int j = 0; j < f[i].length; j++)
+//          if (f[i][j] != null) {
+//            sb.append(eol);
+//            for (int k = 0; k < f[i][j].length; k++)
+//              sb.appendF(f[i][j][k]).appendC('\t');
+//          }
+//      }
+//    return sb.toString();
+//  }
 
   /**
    * 
@@ -312,20 +333,20 @@ public class Escape {
     return s.append("]").toString();
   }
 
-  public static String eAF(float[] flist) {
-    if (flist == null)
-      return PT.esc("");
-    SB s = new SB();
-    s.append("[");
-    for (int i = 0; i < flist.length; i++) {
-      if (i > 0)
-        s.append(", ");
-      s.appendF(flist[i]);
-    }
-    return s.append("]").toString();
-  }
+//  public static String eAF(float[] flist) {
+//    if (flist == null)
+//      return PT.esc("");
+//    SB s = new SB();
+//    s.append("[");
+//    for (int i = 0; i < flist.length; i++) {
+//      if (i > 0)
+//        s.append(", ");
+//      s.appendF(flist[i]);
+//    }
+//    return s.append("]").toString();
+//  }
 
-  public static String eAP(T3[] plist) {
+  public static String eAP(T3d[] plist) {
     if (plist == null)
       return PT.esc("");
     SB s = new SB();
@@ -338,24 +359,11 @@ public class Escape {
     return s.append("]").toString();
   }
 
-  public static String eAPd(T3d[] plist) {
-    if (plist == null)
-      return PT.esc("");
-    SB s = new SB();
-    s.append("[");
-    for (int i = 0; i < plist.length; i++) {
-      if (i > 0)
-        s.append(", ");
-      s.append(ePd(plist[i]));
-    }
-    return s.append("]").toString();
-  }
-
   private static String escapeNice(String s) {
     if (s == null)
       return "null";
-    float f = PT.parseFloatStrict(s);
-    return (Float.isNaN(f) ? PT.esc(s) : s);
+    double f = PT.parseDoubleStrict(s);
+    return (Double.isNaN(f) ? PT.esc(s) : s);
   }
 
   public static Object uABsM(String s) {
@@ -380,13 +388,13 @@ public class Escape {
     String str = strPoint.replace('\n', ' ').trim();
     if (str.charAt(0) != '{' || str.charAt(str.length() - 1) != '}')
       return strPoint;
-    float[] points = new float[5];
+    double[] points = new double[5];
     int nPoints = 0;
     str = str.substring(1, str.length() - 1);
     int[] next = new int[1];
     for (; nPoints < 5; nPoints++) {
-      points[nPoints] = PT.parseFloatNext(str, next);
-      if (Float.isNaN(points[nPoints])) {
+      points[nPoints] = PT.parseDoubleNext(str, next);
+      if (Double.isNaN(points[nPoints])) {
         if (next[0] >= str.length() || str.charAt(next[0]) != ',')
           break;
         next[0]++;
@@ -394,9 +402,9 @@ public class Escape {
       }
     }
     if (nPoints == 3)
-      return P3.new3(points[0], points[1], points[2]);
+      return P3d.new3(points[0], points[1], points[2]);
     if (nPoints == 4)
-      return P4.new4(points[0], points[1], points[2], points[3]);
+      return P4d.new4(points[0], points[1], points[2], points[3]);
     return strPoint;
   }
 //
@@ -411,12 +419,12 @@ public class Escape {
 //    int[] next = new int[1];
 //    int nPoints = 0;
 //    for (; nPoints < 16; nPoints++) {
-//      points[nPoints] = PT.parseFloatNext(str, next);
-//      if (Float.isNaN(points[nPoints])) {
+//      points[nPoints] = PT.parseDoubleNext(str, next);
+//      if (Double.isNaN(points[nPoints])) {
 //        break;
 //      }
 //    }
-//    if (!Float.isNaN(PT.parseFloatNext(str, next)))
+//    if (!Double.isNaN(PT.parseDoubleNext(str, next)))
 //      return strMatrix; // overflow
 //    if (nPoints == 9)
 //      return M3.newA9(points);
@@ -424,7 +432,7 @@ public class Escape {
 //      return M4.newA16(points);
 //    return strMatrix;
 //  }
-
+  
   public static Object unescapeMatrixD(String strMatrix) {
     if (strMatrix == null || strMatrix.length() == 0)
       return strMatrix;
@@ -449,6 +457,7 @@ public class Escape {
       return M4d.newA16(points);
     return strMatrix;
   }
+
 /*
   public static Object unescapeArray(String strArray) {
     if (strArray == null || strArray.length() == 0)
@@ -456,9 +465,9 @@ public class Escape {
     String str = strArray.replace('\n', ' ').replace(',', ' ').trim();
     if (str.lastIndexOf("[") != 0 || str.indexOf("]") != str.length() - 1)
       return strArray;
-    float[] points = Parser.parseFloatArray(str);
+    float[] points = Parser.parseDoubleArray(str);
     for (int i = 0; i < points.length; i++)
-      if (Float.isNaN(points[i]))
+      if (Double.isNaN(points[i]))
         return strArray;
     return points;
   }
@@ -509,16 +518,16 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "]", sb);
     }
-    if (AU.isAF(info)) {
-      sb.append("[");
-      int imax = ((float[]) info).length;
-      for (int i = 0; i < imax; i++) {
-        sb.append(sep).appendF(((float[]) info)[i]);
-        sep = ",";
-      }
-      sb.append("]");
-      return packageReadableSb(name, "float[" + imax + "]", sb);
-    }
+//    if (AU.isAF(info)) {
+//      sb.append("[");
+//      int imax = ((float[]) info).length;
+//      for (int i = 0; i < imax; i++) {
+//        sb.append(sep).appendF(((float[]) info)[i]);
+//        sep = ",";
+//      }
+//      sb.append("]");
+//      return packageReadableSb(name, "float[" + imax + "]", sb);
+//    }
     if (AU.isAD(info)) {
       sb.append("[");
       int imax = ((double[]) info).length;
@@ -527,13 +536,13 @@ public class Escape {
         sep = ",";
       }
       sb.append("]");
-      return packageReadableSb(name, "double[" + imax + "]", sb);
+      return packageReadableSb(name, "decimal[" + imax + "]", sb);
     }
     if (AU.isAP(info)) {
       sb.append("[");
-      int imax = ((T3[]) info).length;
+      int imax = ((T3d[]) info).length;
       for (int i = 0; i < imax; i++) {
-        sb.append(sep).append(eP(((T3[])info)[i]));
+        sb.append(sep).append(eP(((T3d[])info)[i]));
         sep = ",";
       }
       sb.append("]");
@@ -559,16 +568,6 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "][]", sb);
     }
-    if (AU.isAFF(info)) {
-      sb.append("[\n");
-      int imax = ((float[][]) info).length;
-      for (int i = 0; i < imax; i++) {
-        sb.append(sep).append(toReadable(null, ((float[][]) info)[i]));
-        sep = ",\n";
-      }
-      sb.append("]");
-      return packageReadableSb(name, "float[][]", sb);
-    }
     if (AU.isADD(info)) {
       sb.append("[\n");
       int imax = ((double[][]) info).length;
@@ -577,7 +576,7 @@ public class Escape {
         sep = ",\n";
       }
       sb.append("]");
-      return packageReadableSb(name, "double[][]", sb);
+      return packageReadableSb(name, "decimal[][]", sb);
     }
     if (info instanceof Lst<?>) {
       int imax = ((Lst<?>) info).size();
@@ -587,7 +586,7 @@ public class Escape {
       return packageReadableSb(name, "List[" + imax + "]", sb);
     }
     if (info instanceof M34d
-        || info instanceof T3) {
+        || info instanceof T3d) {
       sb.append(e(info));
       return packageReadableSb(name, null, sb);
     }
@@ -623,17 +622,14 @@ public class Escape {
   public static String encapsulateData(String name, Object data, int depth) {
     String s;
     switch (depth) {
-    case JmolDataManager.DATA_TYPE_AF:
-      s = escapeFloatA((float[]) data, false) + ";\n";
-      break;
     case JmolDataManager.DATA_TYPE_AD:
       s = escapeDoubleA((double[]) data, false) + ";\n";
       break;
-    case JmolDataManager.DATA_TYPE_AFF:
-      s = escapeFloatAA((float[][]) data, true) + ";\n";
+    case JmolDataManager.DATA_TYPE_ADD:
+      s = escapeDoubleAA((double[][]) data, true) + ";\n";
       break;
-    case JmolDataManager.DATA_TYPE_AFFF:
-      s = escapeFloatAAA((float[][][]) data, true) + ";\n";
+    case JmolDataManager.DATA_TYPE_ADDD:
+      s = escapeDoubleAAA((double[][][]) data, true) + ";\n";
       break;
     default:
       s = data.toString();
@@ -714,6 +710,7 @@ public class Escape {
     return v.toArray(new String[v.size()]);
   }
 
+
   /**
    * Jmol-specific post-processing of 
    * the array data returned by Measure.computeHelicalAxis
@@ -725,16 +722,16 @@ public class Escape {
    * @param pts
    * @return various objects depending upon tokType
    */
-  public static Object escapeHelical(String id, int tokType, P3 a, P3 b, T3[] pts) {
+  public static Object escapeHelical(String id, int tokType, P3d a, P3d b, T3d[] pts) {
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     switch (tokType) {
     case T.point:
-      return (pts == null ? new P3() : pts[0]);
+      return (pts == null ? new P3d() : pts[0]);
     case T.axis:
     case T.radius:
-      return (pts == null ? new V3() : pts[tokType == T.axis ? 1 : 2]);
+      return (pts == null ? new V3d() : pts[tokType == T.axis ? 1 : 2]);
     case T.angle:
-      return Float.valueOf(pts == null ? Float.NaN : pts[3].x);
+      return Double.valueOf(pts == null ? Double.NaN : pts[3].x);
     case T.draw:
       return (pts == null ? "" : "draw ID \"" + id + "\" VECTOR "
           + Escape.eP(pts[0]) + " " + Escape.eP(pts[1]) + " color "
@@ -744,7 +741,7 @@ public class Escape {
           + Escape.eP(pts[4]))
           + Escape.eP(b);
     default:
-      return (pts == null ? new T3[0] : pts);
+      return (pts == null ? new T3d[0] : pts);
     }
   }
 

@@ -42,33 +42,33 @@ public class Parser {
    *  @param data    the (sparce) array to fill
    * @return  number of floats
    */
-  public static int parseStringInfestedFloatArray(String str, BS bs, float[] data) {
-    return Parser.parseFloatArrayBsData(PT.getTokens(str), bs, data);
-  }
-
+//  public static int parseStringInfestedFloatArray(String str, BS bs, float[] data) {
+//    return Parser.parseFloatArrayBsData(PT.getTokens(str), bs, data);
+//  }
+//
   public static int parseStringInfestedDoubleArray(String str, BS bs, double[] data) {
     return Parser.parseDoubleArrayBsData(PT.getTokens(str), bs, data);
   }
 
-  public static int parseFloatArrayBsData(String[] tokens, BS bs, float[] data) {
-    int len = data.length;
-    int nTokens = tokens.length;
-    int n = 0;
-    int max = 0;
-    boolean haveBitSet = (bs != null);
-    for (int i = (haveBitSet ? bs.nextSetBit(0) : 0); i >= 0 && i < len && n < nTokens; i = (haveBitSet ? bs.nextSetBit(i + 1) : i + 1)) {
-      float f;
-      while (Float.isNaN(f = PT.parseFloat(tokens[n++])) 
-          && n < nTokens) {
-      }
-      if (!Float.isNaN(f))
-        data[(max = i)] = f;
-      if (n == nTokens)
-        break;
-    }
-    return max + 1;
-  }
-
+//  public static int parseFloatArrayBsData(String[] tokens, BS bs, float[] data) {
+//    int len = data.length;
+//    int nTokens = tokens.length;
+//    int n = 0;
+//    int max = 0;
+//    boolean haveBitSet = (bs != null);
+//    for (int i = (haveBitSet ? bs.nextSetBit(0) : 0); i >= 0 && i < len && n < nTokens; i = (haveBitSet ? bs.nextSetBit(i + 1) : i + 1)) {
+//      float f;
+//      while (Double.isNaN(f = PT.parseFloat(tokens[n++])) 
+//          && n < nTokens) {
+//      }
+//      if (!Double.isNaN(f))
+//        data[(max = i)] = f;
+//      if (n == nTokens)
+//        break;
+//    }
+//    return max + 1;
+//  }
+//
   public static int parseDoubleArrayBsData(String[] tokens, BS bs, double[] data) {
     int len = data.length;
     int nTokens = tokens.length;
@@ -102,73 +102,73 @@ public class Parser {
    * @param firstLine   first line to parse (1 indicates all)
    * @return            data
    */
-  public static float[] parseFloatArrayFromMatchAndField(
-                                                         String str,
-                                                         BS bs,
-                                                         int fieldMatch,
-                                                         int fieldMatchColumnCount,
-                                                         int[] matchData,
-                                                         int field,
-                                                         int fieldColumnCount,
-                                                         float[] data, int firstLine) {
-    float f;
-    int i = -1;
-    boolean isMatch = (matchData != null);
-    int[] lines = markLines(str, (str.indexOf('\n') >= 0 ? '\n' : ';'));
-    int iLine = (firstLine <= 1 || firstLine >= lines.length ? 0 : firstLine - 1);
-    int pt = (iLine == 0 ? 0 : lines[iLine - 1]);
-    int nLines = lines.length;
-    if (data == null)
-      data = new float[nLines - iLine];
-    int len = data.length;
-    int minLen = (fieldColumnCount <= 0 ? Math.max(field, fieldMatch) : Math
-        .max(field + fieldColumnCount, fieldMatch + fieldMatchColumnCount) - 1);
-    boolean haveBitSet = (bs != null);
-    for (; iLine < nLines; iLine++) {
-      String line = str.substring(pt, lines[iLine]).trim();
-      pt = lines[iLine];
-      String[] tokens = (fieldColumnCount <= 0 ? PT.getTokens(line) : null);
-      // check for inappropriate data -- line too short or too few tokens or NaN for data
-      // and parse data
-      if (fieldColumnCount <= 0) {
-        if (tokens.length < minLen
-            || Float.isNaN(f = PT.parseFloat(tokens[field - 1])))
-          continue;
-      } else {
-        if (line.length() < minLen
-            || Float.isNaN(f = PT.parseFloat(line.substring(field - 1, field
-                + fieldColumnCount - 1))))
-          continue;
-      }
-      int iData;
-      if (isMatch) {
-        iData = PT.parseInt(tokens == null ? line.substring(fieldMatch - 1,
-            fieldMatch + fieldMatchColumnCount - 1) : tokens[fieldMatch - 1]);
-        // in the fieldMatch column we have an integer pointing into matchData
-        // we replace that number then with the corresponding number in matchData
-        if (iData == Integer.MIN_VALUE || iData < 0 || iData >= len
-            || (iData = matchData[iData]) < 0)
-          continue;
-        // and we set bs to indicate we are updating that value
-        if (haveBitSet)
-          bs.set(iData);
-      } else {
-        // no match data
-        // bs here indicates the specific data elements that need filling
-        if (haveBitSet) 
-          i = bs.nextSetBit(i + 1);
-        else
-          i++;
-        if (i < 0 || i >= len)
-          return data;
-        iData = i;
-      }
-      data[iData] = f;
-      //System.out.println("data[" + iData + "] = " + data[iData]);
-    }
-    return data;
-  }
-
+//  public static float[] parseFloatArrayFromMatchAndField(
+//                                                         String str,
+//                                                         BS bs,
+//                                                         int fieldMatch,
+//                                                         int fieldMatchColumnCount,
+//                                                         int[] matchData,
+//                                                         int field,
+//                                                         int fieldColumnCount,
+//                                                         float[] data, int firstLine) {
+//    float f;
+//    int i = -1;
+//    boolean isMatch = (matchData != null);
+//    int[] lines = markLines(str, (str.indexOf('\n') >= 0 ? '\n' : ';'));
+//    int iLine = (firstLine <= 1 || firstLine >= lines.length ? 0 : firstLine - 1);
+//    int pt = (iLine == 0 ? 0 : lines[iLine - 1]);
+//    int nLines = lines.length;
+//    if (data == null)
+//      data = new float[nLines - iLine];
+//    int len = data.length;
+//    int minLen = (fieldColumnCount <= 0 ? Math.max(field, fieldMatch) : Math
+//        .max(field + fieldColumnCount, fieldMatch + fieldMatchColumnCount) - 1);
+//    boolean haveBitSet = (bs != null);
+//    for (; iLine < nLines; iLine++) {
+//      String line = str.substring(pt, lines[iLine]).trim();
+//      pt = lines[iLine];
+//      String[] tokens = (fieldColumnCount <= 0 ? PT.getTokens(line) : null);
+//      // check for inappropriate data -- line too short or too few tokens or NaN for data
+//      // and parse data
+//      if (fieldColumnCount <= 0) {
+//        if (tokens.length < minLen
+//            || Double.isNaN(f = PT.parseFloat(tokens[field - 1])))
+//          continue;
+//      } else {
+//        if (line.length() < minLen
+//            || Double.isNaN(f = PT.parseFloat(line.substring(field - 1, field
+//                + fieldColumnCount - 1))))
+//          continue;
+//      }
+//      int iData;
+//      if (isMatch) {
+//        iData = PT.parseInt(tokens == null ? line.substring(fieldMatch - 1,
+//            fieldMatch + fieldMatchColumnCount - 1) : tokens[fieldMatch - 1]);
+//        // in the fieldMatch column we have an integer pointing into matchData
+//        // we replace that number then with the corresponding number in matchData
+//        if (iData == Integer.MIN_VALUE || iData < 0 || iData >= len
+//            || (iData = matchData[iData]) < 0)
+//          continue;
+//        // and we set bs to indicate we are updating that value
+//        if (haveBitSet)
+//          bs.set(iData);
+//      } else {
+//        // no match data
+//        // bs here indicates the specific data elements that need filling
+//        if (haveBitSet) 
+//          i = bs.nextSetBit(i + 1);
+//        else
+//          i++;
+//        if (i < 0 || i >= len)
+//          return data;
+//        iData = i;
+//      }
+//      data[iData] = f;
+//System.out.println("data[" + iData + "] = " + data[iData]);
+//    }
+//    return data;
+//  }
+//  
   public static double[] parseDoubleArrayFromMatchAndField(
                                                          String str,
                                                          BS bs,
