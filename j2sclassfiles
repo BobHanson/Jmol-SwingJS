@@ -399,12 +399,8 @@ org/jmol/api/JmolViewer.js
 org/jmol/api/PlatformViewer.js
 org/jmol/api/SC.js
 org/jmol/api/Translator.js
-org/jmol/applet/AppletWrapper.js
-org/jmol/applet/ClassPreloader.js
 org/jmol/applet/Jmol.js
 org/jmol/applet/JmolApplet.js
-org/jmol/applet/WrappedApplet.js
-org/jmol/applet/WrappedAppletLoader.js
 org/jmol/atomdata/AtomDataServer.js
 org/jmol/atomdata/RadiusData.js
 org/jmol/awt/AwtFile.js
