@@ -25,18 +25,11 @@
 
 package org.jmol.modelset;
 
-import org.jmol.util.Elements;
-import javajs.util.P3;
-import javajs.util.P3d;
-
-import org.jmol.util.BSUtil;
-import org.jmol.util.Edge;
-import org.jmol.util.JmolMolecule;
-import org.jmol.util.Logger;
-import javajs.util.V3;
-import org.jmol.viewer.JC;
-import org.jmol.script.T;
-import org.jmol.viewer.Viewer;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
@@ -46,24 +39,25 @@ import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
-import javajs.util.BS;
-
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioResolver;
+import org.jmol.script.T;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Edge;
+import org.jmol.util.Elements;
+import org.jmol.util.JmolMolecule;
+import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-
-import java.util.Arrays;
-
-import java.util.Hashtable;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import javajs.util.V3d;
 
 /* 
  * 
@@ -153,9 +147,10 @@ public final class ModelLoader {
   private BioResolver jbr;
   public Group[] groups;
   private int groupCount;
-  private P3 modulationTUV;
+  private P3d modulationTUV;
   private boolean highPrecision;
   private boolean isSupercell;
+  
   
 
   @SuppressWarnings("unchecked")
@@ -173,7 +168,7 @@ public final class ModelLoader {
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
-    Lst<P3[]> steps = (Lst<P3[]>) ms.getInfoM("trajectorySteps");
+    Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM("trajectorySteps");
     isTrajectory = (steps != null);
     highPrecision = false;
     if (isTrajectory)
@@ -187,7 +182,7 @@ public final class ModelLoader {
       info.remove("pdbAddHydrogens");
       info.remove("trajectorySteps");
       if (isTrajectory)
-        ms.vibrationSteps = (Lst<V3[]>) info.remove("vibrationSteps");
+        ms.vibrationSteps = (Lst<V3d[]>) info.remove("vibrationSteps");
       highPrecision = info.containsKey("highPrecision");
       if (highPrecision) {
         // we must RESET this, because 'ZAP' has unset it in the script
@@ -198,7 +193,7 @@ public final class ModelLoader {
     Object mod = ms.getInfoM("modulationOn");
     if (mod != null) {
       modulationOn = true;
-      modulationTUV = (mod == Boolean.TRUE ? null : (P3) mod);
+      modulationTUV = (mod == Boolean.TRUE ? null : (P3d) mod);
     }
     noAutoBond = ms.getMSInfoB("noAutoBond");
     is2D = ms.getMSInfoB("is2D");
@@ -233,7 +228,7 @@ public final class ModelLoader {
     }
   }
 
-  private Trajectory newTrajectory(ModelSet ms, Lst<P3[]> steps) {
+  private Trajectory newTrajectory(ModelSet ms, Lst<P3d[]> steps) {
     return ((Trajectory) Interface.getInterface("org.jmol.modelset.Trajectory", vwr, "load")).set(vwr, ms, steps);
   }
 
@@ -284,17 +279,17 @@ public final class ModelLoader {
     return ms.ac;
   }
 
-  private void createModelSet(JmolAdapter adapter, Object asc, BS bsNew) {
+  private void createModelSet(JmolAdapter adapter, Object asc,
+                              BS bsNew) {
     int nAtoms = (adapter == null ? 0 : adapter.getAtomCount(asc));
     if (nAtoms > 0)
       Logger.info("reading " + nAtoms + " atoms");
-    adapterModelCount = (adapter == null ? 1 : adapter.getAtomSetCount(asc));
+    adapterModelCount = (adapter == null ? 1 : adapter
+        .getAtomSetCount(asc));
     // cannot append a trajectory into a previous model
-    appendToModelIndex = (ms.msInfo == null ? null
-        : ((Integer) ms.msInfo.get("appendToModelIndex")));
-    appendNew = !isMutate
-        && (!merging || adapter == null || adapterModelCount > 1 || isTrajectory
-            || vwr.getBoolean(T.appendnew) && appendToModelIndex == null);
+    appendToModelIndex = (ms.msInfo == null ? null : ((Integer) ms.msInfo.get("appendToModelIndex")));
+    appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
+        || isTrajectory || vwr.getBoolean(T.appendnew) && appendToModelIndex == null);
     htAtomMap.clear();
     chainOf = new Chain[defaultGroupCount];
     group3Of = new String[defaultGroupCount];
@@ -323,11 +318,11 @@ public final class ModelLoader {
             + " in this collection. Use getProperty \"modelInfo\" or"
             + " getProperty \"auxiliaryInfo\" to inspect them.");
       }
-      Quat q = (Quat) ms.getInfoM("defaultOrientationQuaternion");
+      Qd q = (Qd) ms.getInfoM("defaultOrientationQuaternion");
       if (q != null) {
         Logger.info("defaultOrientationQuaternion = " + q);
-        Logger.info(
-            "Use \"set autoLoadOrientation TRUE\" before loading or \"restore orientation DEFAULT\" after loading to view this orientation.");
+        Logger
+            .info("Use \"set autoLoadOrientation TRUE\" before loading or \"restore orientation DEFAULT\" after loading to view this orientation.");
       }
       iterateOverAllNewModels(adapter, asc);
       JmolAdapterBondIterator iterBond = adapter.getBondIterator(asc);
@@ -340,11 +335,12 @@ public final class ModelLoader {
       }
       ms.defaultCovalentMad = mad;
       if (merging && !appendNew) {
-        Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(asc, 0);
-        ms.setInfo(baseModelIndex, "initialAtomCount",
-            info.get("initialAtomCount"));
-        ms.setInfo(baseModelIndex, "initialBondCount",
-            info.get("initialBondCount"));
+        Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(
+            asc, 0);
+        ms.setInfo(baseModelIndex, "initialAtomCount", info
+            .get("initialAtomCount"));
+        ms.setInfo(baseModelIndex, "initialBondCount", info
+            .get("initialBondCount"));
       }
       initializeUnitCellAndSymmetry();
       initializeBonding();
@@ -367,6 +363,7 @@ public final class ModelLoader {
         jbr.iterateOverAllNewStructures(adapter, asc);
     }
 
+    
     setDefaultRendering(vwr.getInt(T.smallmoleculemaxatoms));
 
     RadiusData rd = vwr.rd;
@@ -389,7 +386,7 @@ public final class ModelLoader {
     }
     setAtomProperties();
     if (adapter != null)
-      adapter.finish(asc);
+      adapter.finish(asc);    
     if (modelSet0 != null) {
       modelSet0.releaseModelSet();
     }
@@ -402,7 +399,7 @@ public final class ModelLoader {
     baseTrajectoryCount = 0;
     if (oldSet.trajectory == null) {
       if (isTrajectory)
-        newTrajectory(oldSet, new Lst<P3[]>());
+        newTrajectory(oldSet, new Lst<P3d[]>());
     }
     if (oldSet.trajectory == null || oldSet.mc == 0)
       return;
@@ -412,7 +409,7 @@ public final class ModelLoader {
       oldSet.trajectory.steps.addLast(null);
     if (isTrajectory) {
       if (oldSet.vibrationSteps == null) {
-        oldSet.vibrationSteps = new Lst<V3[]>();
+        oldSet.vibrationSteps = new Lst<V3d[]>();
         for (int i = n; --i >= 0;)
           oldSet.vibrationSteps.addLast(null);
       }
@@ -452,14 +449,14 @@ public final class ModelLoader {
   @SuppressWarnings("unchecked")
   private void setAtomProperties() {
     // Crystal reader, PDB tlsGroup
-    // assumes String line-encoded float[] or just float[] values
+    // assumes String line-encoded double[] or just double[] values
     int modelCount = ms.mc;
     for (int i = baseModelIndex; i < modelCount; i++) {
       Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
       // list of properties that are to be transfered to H atoms as well.
       if (jmolData != null)
-        addJmolDataProperties(ms.am[i], (Map<String, float[]>) ms.getInfo(i, "jmolDataProperties"));
+        addJmolDataProperties(ms.am[i], (Map<String, double[]>) ms.getInfo(i, "jmolDataProperties"));
       String groupList = (String) ms.getInfo(i,
           "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, "dssr") != null)
@@ -477,9 +474,10 @@ public final class ModelLoader {
         }
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
-        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, 
+        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE, entry }, 
             ms.ac, 0, 0, Integer.MAX_VALUE, 0);
       }
+      ms.setInfo(i, "atomProperties", null);
     }
   }
 
@@ -568,9 +566,11 @@ public final class ModelLoader {
       if (modelAuxiliaryInfo.containsKey("modelID"))
         modelAuxiliaryInfo.put("modelID0", modelAuxiliaryInfo.get("modelID"));
       Properties modelProperties = (Properties) modelAuxiliaryInfo.get("modelProperties");
-      String ftype = (String) modelAuxiliaryInfo.get("fileType");
-      vwr.setStringProperty("_fileType", ftype);
-      vwr.fm.setFileType(ftype);
+      if (!merging || appendNew) {
+        String ftype = (String) modelAuxiliaryInfo.get("fileType");
+        vwr.setStringProperty("_fileType", ftype);
+        vwr.fm.setFileType(ftype);
+      }
       if (modelName == null)
         modelName = (jmolData != null && jmolData.indexOf(";") > 2 ? jmolData.substring(jmolData
             .indexOf(":") + 2, jmolData.indexOf(";"))
@@ -659,8 +659,9 @@ public final class ModelLoader {
     models[modelIndex].insertionCount = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
         && ms.modelSetName.startsWith("Jmol Model Kit")
-        || modelName.startsWith("Jmol Model Kit") || "Jme".equals(ms.getInfo(
-        modelIndex, "fileType")));
+        || modelName.startsWith("Jmol Model Kit") 
+        || "Jme".equals(ms.getInfo(
+        modelIndex, "fileType")) && is2D);
     models[modelIndex].isModelKit = isModelKit;
   }
 
@@ -788,6 +789,7 @@ public final class ModelLoader {
     // atom is created, but not all methods are safe, because it
     // has no group -- this is only an issue for debugging
     int iLast = -1;
+    int siteBase = 0;
     boolean isPdbThisModel = false;
     boolean addH = false;
     boolean isLegacyHAddition = false;//vwr.getBoolean(T.legacyhaddition);
@@ -799,6 +801,7 @@ public final class ModelLoader {
     if (ms.mc > 0)
       nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0),
           "", 0, -1, -1);
+    P3d xyz = new P3d();
     while (iterAtom.hasNext()) {
       nRead++;
       int modelIndex = iterAtom.getAtomSetIndex() + baseModelIndex;
@@ -806,11 +809,15 @@ public final class ModelLoader {
         iChain = 0;
         iModel = modelIndex;
         model = models[modelIndex];
+        BS mbs = model.bsAtoms;
+        if (merging && !appendNew && vwr.getOperativeSymmetry() != null) {
+          siteBase = getAtomSiteBase(mbs);
+        }
         currentChainID = Integer.MAX_VALUE;
         isNewChain = true;
         // set the internal array for model.bsAtoms to be large enough
-        model.bsAtoms.set(ms.ac + nAtoms);
-        model.bsAtoms.clearAll();
+        mbs.set(ms.ac + nAtoms);
+        mbs.clearAll();
         model.isOrderly = (appendToModelIndex == null);
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
@@ -827,9 +834,9 @@ public final class ModelLoader {
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      
+      xyz = iterAtom.getXYZ();
       Atom atom = addAtom(isPdbThisModel, iterAtom.getSymmetry(),
-          iterAtom.getAtomSite(),
+          iterAtom.getAtomSite() + siteBase,
           isotope,
           name,
           charge, 
@@ -837,8 +844,8 @@ public final class ModelLoader {
           iterAtom.getTensors(), 
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
-          iterAtom.getXYZ(),
-          iterAtom.getXYZd(),
+          xyz,
+          highPrecision ? xyz : null,
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 
           iterAtom.getSeqID(),
@@ -876,15 +883,26 @@ public final class ModelLoader {
     Logger.info(nRead + " atoms created");
   }
 
+  private int getAtomSiteBase(BS mbs) {
+    int base = 0;
+      for (int i = mbs.nextSetBit(0); i >= 0; i = mbs.nextSetBit(i + 1)) {
+        Atom a = ms.at[i];
+        if (!AtomCollection.isDeleted(a) && a.atomSite > base) {
+          base = a.atomSite;
+        }
+      }
+    return base;
+  }
+
   private void addJmolDataProperties(Model m,
-                                     Map<String, float[]> jmolDataProperties) {
+                                     Map<String, double[]> jmolDataProperties) {
     if (jmolDataProperties == null)
       return;
     BS bs = m.bsAtoms;
     int nAtoms = bs.cardinality();
-    for (Entry<String, float[]> e : jmolDataProperties.entrySet()) {
+    for (Entry<String, double[]> e : jmolDataProperties.entrySet()) {
       String key = e.getKey();
-      float[] data = e.getValue();
+      double[] data = e.getValue();
       if (data.length != nAtoms)
         return;
       int tok = (key.startsWith("property_") ? T.property : T
@@ -908,7 +926,7 @@ public final class ModelLoader {
         vwr.setData(
             key,
             new Object[] { key, data, bs,
-                Integer.valueOf(JmolDataManager.DATA_TYPE_AF) }, 0, 0, 0, 0, 0);
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AD) }, 0, 0, 0, 0, 0);
       }
     }
   }
@@ -931,11 +949,11 @@ public final class ModelLoader {
   }
 
   private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
-                       String atomName, int formalCharge, float partialCharge,
-                       Lst<Object> tensors, float occupancy, float bfactor,
-                       P3 xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
-                       String group3, V3 vib, char alternateLocationID,
-                       float radius, float bondRadius) {
+                       String atomName, int formalCharge, double partialCharge,
+                       Lst<Object> tensors, double occupancy, double bfactor,
+                       P3d xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       String group3, V3d vib, char alternateLocationID,
+                       double radius, double bondRadius) {
     byte specialAtomID = 0;
     String atomType = null;
     if (atomName != null) {
@@ -955,9 +973,9 @@ public final class ModelLoader {
       }
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
-        atomType, atomSerial, atomSeqID, atomSite, xyz, dxyz, radius, vib, formalCharge,
-        partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
-        atomSymmetry, bondRadius);
+        atomType, atomSerial, atomSeqID, atomSite, xyz, dxyz, radius, vib,
+        formalCharge, partialCharge, occupancy, bfactor, tensors, isHetero,
+        specialAtomID, atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
     return atom;
   }
@@ -1021,7 +1039,7 @@ public final class ModelLoader {
         if (order > 1 && order != Edge.BOND_STEREO_NEAR
             && order != Edge.BOND_STEREO_FAR)
           haveMultipleBonds = true;
-        float radius = iterBond.getRadius();
+        double radius = iterBond.getRadius();
         if (radius > 0)
           b.setMad((short) (radius * 2000));
         short colix = iterBond.getColix();
@@ -1111,15 +1129,14 @@ public final class ModelLoader {
           ms.unitCells[i] = modelSet0.unitCells[i];
         } else {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
-          float[] notionalCell = null;
+          double[] notionalCell = null;
           if (isTrajectory) {
             @SuppressWarnings("unchecked")
-            Lst<float[]> lst = (Lst<float[]>) ms.getInfoM("unitCells");
+            Lst<double[]> lst = (Lst<double[]>) ms.getInfoM("unitCells");
             if (lst != null)
               notionalCell = lst.get(pt++);
           }
-          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i),
-              notionalCell);
+          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i), notionalCell);
         }
       }
     }
@@ -1146,7 +1163,7 @@ public final class ModelLoader {
       int modelIndex = -1;
       SymmetryInterface c = null;
       boolean isFractional = false;
-      boolean roundCoords = (!vwr.getBoolean(T.doubleprecision) && !vwr.getBoolean(T.legacyjavafloat));
+//      boolean roundCoords = (!vwr.getBoolean(T.doubleprecision) && !vwr.getBoolean(T.legacyjavafloat));
       for (int i = baseAtomIndex; i < ms.ac; i++) {
         if (atoms[i].mi != modelIndex) {
           modelIndex = atoms[i].mi;
@@ -1158,8 +1175,8 @@ public final class ModelLoader {
           // this happens for commensurately modulated composite compounds
           c = atoms[i].getUnitCell();
           c.toCartesian(c.toSupercell(atoms[i]), false);
-          if (roundCoords)
-            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
+//          if (roundCoords)
+//            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }
       }
       for (int imodel = baseModelIndex; imodel < ms.mc; imodel++)
@@ -1230,7 +1247,7 @@ public final class ModelLoader {
       ms.setModulation(null, true, modulationTUV, false);
     if (autoBonding) {
       ms.autoBondBs4(bs, bs, bsExclude, null, ms.defaultCovalentMad,
-          vwr.getBoolean(T.legacyautobonding));
+          vwr.getBoolean(T.legacyautobonding), null);
       Logger.info(
           "ModelSet: autobonding; use  autobond=false  to not generate bonds automatically");
     } else {
@@ -1405,7 +1422,7 @@ public final class ModelLoader {
     // 1) initialize average bond lengths
     set2DLengths(baseAtomIndex, ms.ac);
     
-    V3 v = new V3();
+    V3d v = new V3d();
     
     if (vStereo != null) {
       out: for (int i = vStereo.size(); --i >= 0;) {
@@ -1441,11 +1458,11 @@ public final class ModelLoader {
       bsToTest.setBits(baseAtomIndex, ms.ac);
       for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
-        float dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
+        double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
         b.order = 1;
         if (b.atom2.z != b.atom1.z && (dz2 < 0) == (b.atom2.z < b.atom1.z))
           dz2 /= 3;
-        //float dz1 = dz2/3;
+        //double dz1 = dz2/3;
         //b.atom1.z += dz1;
         BS bs = JmolMolecule.getBranchBitSet(ms.at, b.atom2.i, bsToTest, null, b.atom1.i, false, true);
         bs.set(b.atom2.i); // ring structures
@@ -1461,7 +1478,7 @@ public final class ModelLoader {
   }
 
   private void set2DLengths(int iatom1, int iatom2) {
-    float scaling = 0;
+    double scaling = 0;
     int n = 0;
     for (int i = iatom1; i < iatom2; i++) {
       Atom a = ms.at[i];
@@ -1480,17 +1497,17 @@ public final class ModelLoader {
     }
     if (n == 0)
       return;
-    scaling = 1.45f / (scaling/n);
+    scaling = 1.45d / (scaling/n);
     for (int i = iatom1; i < iatom2; i++) {
       ms.at[i].scale(scaling);
     }
   }
 
-  private void set2dZ(int iatom1, int iatom2, V3 v) {
+  private void set2dZ(int iatom1, int iatom2, V3d v) {
     BS atomlist = BS.newN(iatom2);
     BS bsBranch = new BS();
-    V3 v0 = V3.new3(0, 1, 0);
-    V3 v1 = new V3();
+    V3d v0 = V3d.new3(0, 1, 0);
+    V3d v1 = new V3d();
     BS bs0 = new BS();
     bs0.setBits(iatom1, iatom2);
     for (int i = iatom1; i < iatom2; i++)
@@ -1513,7 +1530,7 @@ public final class ModelLoader {
    * @return   atom bitset
    */
   private BS getBranch2dZ(int atomIndex, int atomIndexNot, BS bs0, 
-                              BS bsBranch, V3 v, V3 v0, V3 v1, int dir) {
+                              BS bsBranch, V3d v, V3d v0, V3d v1, int dir) {
     BS bs = BS.newN(ms.ac);
     if (atomIndex < 0)
       return bs;
@@ -1526,8 +1543,8 @@ public final class ModelLoader {
   }
 
   private static void setBranch2dZ(Atom atom, BS bs,
-                                            BS bsToTest, V3 v,
-                                            V3 v0, V3 v1, int dir) {
+                                            BS bsToTest, V3d v,
+                                            V3d v0, V3d v1, int dir) {
     int atomIndex = atom.i;
     if (!bsToTest.get(atomIndex))
       return;
@@ -1572,15 +1589,15 @@ public final class ModelLoader {
    * @param v1
    * @param dir 
    */
-  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3 v, V3 v0, V3 v1, int dir) {
+  private static void setAtom2dZ(Atom atomRef, Atom atom2, V3d v, V3d v0, V3d v1, int dir) {
     v.sub2(atom2, atomRef);
     v.z = 0;
     v.normalize();
     v1.cross(v0, v);
     double theta = Math.acos(v.dot(v0));
-    float f = (float) (0.4f * -dir * Math.sin(4*theta)); // was 0.8
+    double f = (0.4d * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
-//    System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
+//System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
 
   ///////////////  shapes  ///////////////
@@ -1614,9 +1631,9 @@ public final class ModelLoader {
       return null;
     // must be one of JmolConstants.LOAD_ATOM_DATA_TYPES
     JmolAdapter adapter = vwr.getModelAdapter();
-    P3 pt = new P3();
+    P3d pt = new P3d();
     Atom[] atoms = modelSet.at;
-    float tolerance = vwr.getFloat(T.loadatomdatatolerance);
+    double tolerance = vwr.getDouble(T.loadatomdatatolerance);
     if (modelSet.unitCells != null)
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1))
@@ -1630,13 +1647,8 @@ public final class ModelLoader {
         .ms.ac);
     for (JmolAdapterAtomIterator iterAtom = adapter
         .getAtomIterator(asc); iterAtom.hasNext();) {
-      // Precision branch will do this differently
-      
-      P3d dxyz = iterAtom.getXYZd();
-      if (dxyz != null && Double.isNaN(dxyz.x + dxyz.y + dxyz.z))
-        continue;
-      P3 xyz = (dxyz == null ? iterAtom.getXYZ() : null);
-      if (xyz != null && Float.isNaN(xyz.x + xyz.y + xyz.z))
+      P3d xyz = iterAtom.getXYZ();
+      if (Double.isNaN(xyz.x + xyz.y + xyz.z))
         continue;
       if (tokType == T.xyz) {
         // we are loading selected coordinates only
@@ -1644,19 +1656,13 @@ public final class ModelLoader {
         if (i < 0)
           break;
         n++;
-//        if (Logger.debugging)
-//          Logger.debug("atomIndex = " + i + ": " + atoms[i]
-//              + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
-        if (xyz == null)
-          modelSet.setPrecisionCoord(i, dxyz, true);
-        else
-          modelSet.setAtomCoord(i, xyz.x, xyz.y, xyz.z);
+        if (Logger.debugging)
+          Logger.debug("atomIndex = " + i + ": " + atoms[i]
+              + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
+        modelSet.setPrecisionCoord(i, xyz, true);
         continue;
       }
-      if (xyz == null)
-        dxyz.putP(pt);
-      else
-        pt.setT(xyz);
+      xyz.setT(pt);
       BS bs = BS.newN(modelSet.ac);
       modelSet.getAtomsWithin(tolerance, pt, bs, -1);
       bs.and(bsSelected);
@@ -1672,7 +1678,7 @@ public final class ModelLoader {
       }
       switch (tokType) {
       case T.vibxyz:
-        V3 vib = iterAtom.getVib();
+        V3d vib = iterAtom.getVib();
         if (vib == null)
           continue;
         if (Logger.debugging)

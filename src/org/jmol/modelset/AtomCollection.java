@@ -54,25 +54,24 @@ import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.M3d;
+import javajs.util.MeasureD;
 import javajs.util.P3d;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 abstract public class AtomCollection {
   
-  private final static float almost180 = (float) Math.PI * 0.95f;
-  private final static float sqrt3_2 = (float) (Math.sqrt(3) / 2);
-  private final static V3 vRef = V3.new3(3.14159f, 2.71828f, 1.41421f);
+  private final static double almost180 = Math.PI * 0.95d;
+  private final static double sqrt3_2 = (Math.sqrt(3) / 2);
+  private final static V3d vRef = V3d.new3(3.14159d, 2.71828d, 1.41421f);
 
   public Viewer vwr;
   protected GData g3d;
@@ -101,8 +100,8 @@ abstract public class AtomCollection {
   
   // the maximum BondingRadius seen in this set of atoms
   // used in autobonding
-  protected float maxBondingRadius = PT.FLOAT_MIN_SAFE;
-  private float maxVanderwaalsRadius = PT.FLOAT_MIN_SAFE;
+  protected double maxBondingRadius = PT.FLOAT_MIN_SAFE;
+  private double maxVanderwaalsRadius = PT.FLOAT_MIN_SAFE;
 
   private boolean hasBfactorRange;
   private int bfactor100Lo;
@@ -149,7 +148,7 @@ abstract public class AtomCollection {
   //
   // 1) Add a new static value to the following TAINT_XXXX list.
   // 2) Add its T.map name to the list in setupAC().
-  // 3) Follow all references to both atomType (for a string), formalCharge (for an int), or partialCharge (for a float) 
+  // 3) Follow all references to both atomType (for a string), formalCharge (for an int), or partialCharge (for a double) 
   //    These will include a reference in setAPa() and setAtomData() here and
   //    to getAtomicPropertyStateBuffer() in viewer.StateCreator
   // 4) add the settable attribute to the static int XXXX definition in script.T
@@ -196,14 +195,14 @@ abstract public class AtomCollection {
   int[] atomSerials;
   int[] atomResnos;
   int[] atomSeqIDs;
-  float[] dssrData;
+  double[] dssrData;
   public Vibration[] vibrations;
-  public float[] occupancies;
+  public double[] occupancies;
   public P3d[] precisionCoords;
   short[] bfactor100s;
-  float[] partialCharges;
-  float[] bondingRadii;
-  float[] hydrophobicities;
+  double[] partialCharges;
+  double[] bondingRadii;
+  double[] hydrophobicities;
   public BS bsPartialCharges;
   
   
@@ -254,8 +253,8 @@ abstract public class AtomCollection {
     surfaceDistance100s = null;
   }
   
-  public Lst<P3> getAtomPointVector(BS bs) {
-    Lst<P3> v = new  Lst<P3>();
+  public Lst<P3d> getAtomPointVector(BS bs) {
+    Lst<P3d> v = new  Lst<P3d>();
     int n = ac;
     if (bs != null) {
       for (int i = bs.nextSetBit(0); i >= 0 && i < n; i = bs.nextSetBit(i+1)) {
@@ -273,11 +272,11 @@ abstract public class AtomCollection {
     return atomTypes;
   }
 
-  public float[] getPartialCharges() {
+  public double[] getPartialCharges() {
     return partialCharges;
   }
 
-  public float[] getBondingRadii() {
+  public double[] getBondingRadii() {
     return bondingRadii;
   }
   
@@ -285,7 +284,7 @@ abstract public class AtomCollection {
     return bfactor100s;
   }
 
-  public float[] getHydrophobicity() {
+  public double[] getHydrophobicity() {
     return hydrophobicities;
   }
   
@@ -306,7 +305,7 @@ abstract public class AtomCollection {
     return (labeler == null ? labeler = (LabelToken) Interface.getInterface("org.jmol.modelset.LabelToken", vwr, "ms") : labeler);
   }
 
-  public String getAtomInfo(int i, String format, P3 ptTemp) {
+  public String getAtomInfo(int i, String format, P3d ptTemp) {
     return (format == null ? at[i].getInfo() 
         : getLabeler().formatLabel(vwr, at[i], format, ptTemp));
   }
@@ -316,7 +315,7 @@ abstract public class AtomCollection {
           .getAtomicAndIsotopeNumber());
   }
 
-  public Quat getQuaternion(int i, char qtype) {
+  public Qd getQuaternion(int i, char qtype) {
     return (i < 0 ? null : at[i].group.getQuaternion(qtype));
   } 
 
@@ -340,19 +339,19 @@ abstract public class AtomCollection {
     }
   }
   
-  public float[] getAtomicCharges() {
-    float[] charges = new float[ac];
+  public double[] getAtomicCharges() {
+    double[] charges = new double[ac];
     for (int i = ac; --i >= 0; )
       charges[i] = (isDeleted(at[i]) ? 0 : at[i].getElementNumber());
     return charges;
   }
 
-  protected float getRadiusVdwJmol(Atom atom) {
+  protected double getRadiusVdwJmol(Atom atom) {
     return Elements.getVanderwaalsMar(atom.getElementNumber(),
-        VDW.JMOL) / 1000f;
+        VDW.JMOL) / 1000d;
   }
   
-  public float getMaxVanderwaalsRadius() {
+  public double getMaxVanderwaalsRadius() {
     //Dots
     if (maxVanderwaalsRadius == PT.FLOAT_MIN_SAFE)
       findMaxRadii();
@@ -360,7 +359,7 @@ abstract public class AtomCollection {
   }
 
   protected void findMaxRadii() {
-    float r;
+    double r;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
       if (isDeleted(atom))
@@ -426,9 +425,9 @@ abstract public class AtomCollection {
     return surfaceDistanceMax;
   }
 
-  public float calculateVolume(BS bs, VDW vType) {
+  public double calculateVolume(BS bs, VDW vType) {
     // Eval
-    float volume = 0;
+    double volume = 0;
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         volume += at[i].getVolume(vwr, vType);
@@ -448,30 +447,30 @@ abstract public class AtomCollection {
     calculateSurface(null, -1);
   }
   
-  public P3[] calculateSurface(BS bsSelected, float envelopeRadius) {
+  public P3d[] calculateSurface(BS bsSelected, double envelopeRadius) {
     if (envelopeRadius < 0)
       envelopeRadius = JC.ENC_CALC_MAX_DIST;
     
     JmolEnvCalc ec = ((JmolEnvCalc) Interface.getOption("geodesic.EnvelopeCalculation", vwr, "ms"))
     .set(vwr, ac, null);
     ec.calculate(new RadiusData(null, envelopeRadius, EnumType.ABSOLUTE, null), 
-        Float.MAX_VALUE, 
+        Double.MAX_VALUE, 
         bsSelected, BSUtil.copyInvert(bsSelected, ac), 
         false, false, false, true);
-    P3[] points = ec.getPoints();
+    P3d[] points = ec.getPoints();
     surfaceDistanceMax = 0;
     bsSurface = ec.getBsSurfaceClone();
     surfaceDistance100s = new int[ac];
     nSurfaceAtoms = BSUtil.cardinalityOf(bsSurface);
     if (nSurfaceAtoms == 0 || points == null || points.length == 0)
       return points;
-    float radiusAdjust = (envelopeRadius == Float.MAX_VALUE ? 0 : envelopeRadius);
+    double radiusAdjust = (envelopeRadius == Double.MAX_VALUE ? 0 : envelopeRadius);
     for (int i = 0; i < ac; i++) {
       //surfaceDistance100s[i] = Integer.MIN_VALUE;
       if (bsSurface.get(i) || isDeleted(at[i])) {
         surfaceDistance100s[i] = 0;
       } else {
-        float dMin = Float.MAX_VALUE;
+        double dMin = Double.MAX_VALUE;
         Atom atom = at[i];
         for (int j = points.length; --j >= 0;) {
           dMin = Math.min(Math.abs(points[j].distance(atom) - radiusAdjust), dMin);
@@ -485,20 +484,20 @@ abstract public class AtomCollection {
 
   @SuppressWarnings("unchecked")
   protected void setAtomCoord2(BS bs, int tokType, Object xyzValues) {
-    P3 xyz = null;
-    P3[] values = null;
-    Lst<P3> v = null;
+    P3d xyz = null;
+    P3d[] values = null;
+    Lst<P3d> v = null;
     int type = 0;
     int nValues = 1;
-    if (xyzValues instanceof P3) {
-      xyz = (P3) xyzValues;
+    if (xyzValues instanceof P3d) {
+      xyz = (P3d) xyzValues;
     } else if (xyzValues instanceof Lst<?>) {
-      v = (Lst<P3>) xyzValues;
+      v = (Lst<P3d>) xyzValues;
       if ((nValues = v.size()) == 0)
         return;
       type = 1;
     } else if (AU.isAP(xyzValues)) {
-      values = (P3[]) xyzValues;
+      values = (P3d[]) xyzValues;
       if ((nValues = values.length) == 0)
         return;
       type = 2;
@@ -540,22 +539,22 @@ abstract public class AtomCollection {
       }
   }
 
-  private void setAtomVibrationVector(int atomIndex, T3 vib) {
+  private void setAtomVibrationVector(int atomIndex, T3d vib) {
     setVibrationVector(atomIndex, vib);  
     taintAtom(atomIndex, TAINT_VIBRATION);
   }
-  
+
   P3d[] doublCoord = null;
   
-  public void setAtomCoord(int atomIndex, float x, float y, float z) {
+  public void setAtomCoord(int atomIndex, double x, double y, double z) {
     if (atomIndex < 0 || atomIndex >= ac)
       return;
     Atom a = at[atomIndex];
     a.set(x, y, z);
     fixTrajectory(a);
     taintAtom(atomIndex, TAINT_COORD);
-    if (getPrecisionCoord(atomIndex) != null)
-      setPrecisionCoord(atomIndex, null, false);
+//    if (getPrecisionCoord(atomIndex) != null)
+//      setPrecisionCoord(atomIndex, null, false);
   }
 
   private void fixTrajectory(Atom a) {
@@ -563,7 +562,7 @@ abstract public class AtomCollection {
       trajectory.fixAtom(a);
   }
 
-  public void setAtomCoordRelative(int atomIndex, float x, float y, float z) {
+  public void setAtomCoordRelative(int atomIndex, double x, double y, double z) {
     if (atomIndex < 0 || atomIndex >= ac)
       return;
     Atom a = at[atomIndex];
@@ -572,15 +571,15 @@ abstract public class AtomCollection {
     taintAtom(atomIndex, TAINT_COORD);
   }
 
-  protected void setAtomsCoordRelative(BS bs, float x, float y,
-                                      float z) {
+  protected void setAtomsCoordRelative(BS bs, double x, double y,
+                                      double z) {
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1))
         setAtomCoordRelative(i, x, y, z);
   }
 
-  protected void setAPa(BS bs, int tok, int iValue, float fValue,
-                              String sValue, float[] values, String[] list) {
+  protected void setAPa(BS bs, int tok, int iValue, double fValue,
+                              String sValue, double[] values, String[] list) {
     int n = 0;
 
     if (values != null && values.length == 0 || bs == null)
@@ -594,7 +593,7 @@ abstract public class AtomCollection {
         if (n >= values.length)
           return;
         fValue = values[n++];
-        if (Float.isNaN(fValue))
+        if (Double.isNaN(fValue))
           continue;
         iValue = (int) fValue;
       } else if (list != null) {
@@ -603,7 +602,7 @@ abstract public class AtomCollection {
         sValue = list[n++];
       }
       Atom atom = at[i];
-      float f;
+      double f;
       switch (tok) {
       case T.atomname:
         setAtomName(i, sValue, true);
@@ -723,10 +722,10 @@ abstract public class AtomCollection {
    * also handles modulation info
    * 
    * @param atomIndex
-   * @param c
+   * @param c generally x, y, z, but for modulation could be 1, 2, 3, or O (oh, not zero)
    * @return value or NaN
    */
-  public float getVibCoord(int atomIndex, char c) {
+  public double getVibCoord(int atomIndex, char c) {
     JmolModulationSet ms = null;
     Vibration v = null;
     switch (c) {
@@ -744,7 +743,7 @@ abstract public class AtomCollection {
       }
     }
     if (v == null && ms == null)
-      return Float.NaN;
+      return Double.NaN;
     switch (c) {
     case 'x':
     case 'X':
@@ -756,15 +755,15 @@ abstract public class AtomCollection {
     case 'Z':
       return v.z;
     case 'O':
-      return ((Float) ms.getModulation('O', null)).floatValue();
+      return ((Number) ms.getModulation('O', null, true)).doubleValue();
     case '1':
     case '2':
     case '3':
-      T3 t = (T3) ms.getModulation('T', null);
-      float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
-      return (float) (x - Math.floor(x));
+      T3d t = (T3d) ms.getModulation('T', null, true);
+      double x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
+      return (x - Math.floor(x));
     default:
-      return Float.NaN;
+      return Double.NaN;
     }
   }
 
@@ -779,8 +778,8 @@ abstract public class AtomCollection {
     return (JmolModulationSet) (v != null && v.modDim > 0 ? v : null);
   }
 
-  protected void setVibrationVector(int atomIndex, T3 vib) {
-    if (Float.isNaN(vib.x) || Float.isNaN(vib.y) || Float.isNaN(vib.z))
+  protected void setVibrationVector(int atomIndex, T3d vib) {
+    if (Double.isNaN(vib.x) || Double.isNaN(vib.y) || Double.isNaN(vib.z))
       return;
     if (vibrations == null || vibrations.length < atomIndex)
       vibrations = new Vibration[at.length];
@@ -794,7 +793,7 @@ abstract public class AtomCollection {
     at[atomIndex].setVibrationVector();
   }
 
-  private void setVibrationVector2(int atomIndex, int tok, float fValue) {
+  private void setVibrationVector2(int atomIndex, int tok, double fValue) {
     Vibration v = getVibration(atomIndex, true);
     if (v == null)
       return;
@@ -903,13 +902,13 @@ abstract public class AtomCollection {
     taintAtom(atomIndex, TAINT_SEQID);
   }
   
-  protected void setOccupancy(int atomIndex, float occupancy, boolean doTaint) {
+  protected void setOccupancy(int atomIndex, double occupancy, boolean doTaint) {
     if (doTaint && occupancy == at[atomIndex].getOccupancy100())
       return;
     if (occupancies == null) {
       if (occupancy == 100)
         return; // 100 is the default;
-      occupancies = new float[at.length];
+      occupancies = new double[at.length];
       for (int i = at.length; --i >= 0;)
         occupancies[i] = 100;
     }
@@ -918,42 +917,35 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_OCCUPANCY);
   }
   
-  public float getOccupancyFloat(int i) {
+  public double getOccupancyFloat(int i) {
     return (occupancies == null || i >= occupancies.length? 100 : occupancies[i]);
   }
-  
+
   protected void setPrecisionCoord(int atomIndex, P3d coord, boolean doTaint) {
-    if (coord != null && coord.equals(getPrecisionCoord(atomIndex)))
+    if (coord != null && coord.equals(at[atomIndex]))
       return;
-    if (precisionCoords == null) {
-      if (coord == null)
-        return;
-      precisionCoords = new P3d[at.length];
-    }
     boolean valid = (coord != null && !Double.isNaN(coord.x));
-    if (coord == null)
-      coord = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
-    precisionCoords[atomIndex] = coord;
     if (valid) {
-      at[atomIndex].set((float) coord.x, (float) coord.y, (float) coord.z);
+      at[atomIndex].setT(coord);
       if (doTaint)
         taintAtom(atomIndex, TAINT_COORD);
     }
   }
   
   public P3d getPrecisionCoord(int i) {
-    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
-    return (coord == null || Double.isNaN(coord.x) ? null : coord);
+    return at[i];
+//    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
+//    return (coord == null || Double.isNaN(coord.x) ? null : coord);
   }
   
-  protected void setPartialCharge(int atomIndex, float partialCharge, boolean doTaint) {
-    if (Float.isNaN(partialCharge))
+  protected void setPartialCharge(int atomIndex, double partialCharge, boolean doTaint) {
+    if (Double.isNaN(partialCharge))
       return;
     if (partialCharges == null) {
       bsPartialCharges = new BS();
       if (partialCharge == 0)
         return; // no need to store a 0.
-      partialCharges = new float[at.length];
+      partialCharges = new double[at.length];
     }
     bsPartialCharges.set(atomIndex);
     partialCharges[atomIndex] = partialCharge;   
@@ -961,37 +953,37 @@ abstract public class AtomCollection {
       taintAtom(atomIndex, TAINT_PARTIALCHARGE);
   }
 
-  protected void setBondingRadius(int atomIndex, float radius) {
-    if (Float.isNaN(radius) || radius == at[atomIndex].getBondingRadius())
+  protected void setBondingRadius(int atomIndex, double radius) {
+    if (Double.isNaN(radius) || radius == at[atomIndex].getBondingRadius())
       return;
     if (bondingRadii == null) {
-      bondingRadii = new float[at.length];
+      bondingRadii = new double[at.length];
     } else if (bondingRadii.length < at.length) {
-      bondingRadii = (float[]) AU.ensureLength(bondingRadii, at.length);
+      bondingRadii = (double[]) AU.ensureLength(bondingRadii, at.length);
     }
     bondingRadii[atomIndex] = radius;
     taintAtom(atomIndex, TAINT_BONDINGRADIUS);
   }
 
-  protected void setBFactor(int atomIndex, float bfactor, boolean doTaint) {
-    if (Float.isNaN(bfactor) || doTaint && bfactor == at[atomIndex].getBfactor100())
+  protected void setBFactor(int atomIndex, double bfactor, boolean doTaint) {
+    if (Double.isNaN(bfactor) || doTaint && bfactor == at[atomIndex].getBfactor100())
       return;
     if (bfactor100s == null) {
       if (bfactor == 0) // there's no need to store a 0.
         return;
       bfactor100s = new short[at.length];
     }
-    bfactor100s[atomIndex] = (short) ((bfactor < -327.68f ? -327.68f
+    bfactor100s[atomIndex] = (short) ((bfactor < -327.68d ? -327.68d
         : bfactor > 327.67 ? 327.67 : bfactor) * 100 + (bfactor < 0 ? -0.5 : 0.5));
     if (doTaint)
       taintAtom(atomIndex, TAINT_TEMPERATURE);
   }
 
-  private void setHydrophobicity(int atomIndex, float value) {
-    if (Float.isNaN(value) || value == at[atomIndex].getHydrophobicity())
+  private void setHydrophobicity(int atomIndex, double value) {
+    if (Double.isNaN(value) || value == at[atomIndex].getHydrophobicity())
       return;
     if (hydrophobicities == null) {
-      hydrophobicities = new float[at.length];
+      hydrophobicities = new double[at.length];
       for (int i = 0; i < at.length; i++)
         hydrophobicities[i] = Elements.getHydrophobicity(at[i].group.groupID);
     }
@@ -1003,7 +995,7 @@ abstract public class AtomCollection {
   
   public void setAtomData(int type, String name, String dataString,
                           boolean isDefault) {
-    float[] fData = null;
+    double[] fData = null;
     BS bs = null;
     switch(type) {
     case TAINT_COORD:
@@ -1013,7 +1005,7 @@ abstract public class AtomCollection {
       loadCoordinates(dataString, true, true);
       return;
     case TAINT_MAX:
-      fData = new float[ac];
+      fData = new double[ac];
       bs = BS.newN(ac);
       break;
     }
@@ -1030,7 +1022,7 @@ abstract public class AtomCollection {
         Atom atom = at[atomIndex];
         n++;
         int pt = tokens.length - 1;
-        float x = PT.parseFloat(tokens[pt]);
+        double x = PT.parseDouble(tokens[pt]);
         switch (type) {
         case TAINT_MAX:
           fData[atomIndex] = x;
@@ -1087,7 +1079,7 @@ abstract public class AtomCollection {
         taintAtom(atomIndex, type);
       }
       if (type == TAINT_MAX && n > 0)
-        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AF)}, 0, 0, 0, 0, 0);
+        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AD)}, 0, 0, 0, 0, 0);
         
     } catch (Exception e) {
       Logger.error("loadData error: " + e);
@@ -1096,7 +1088,7 @@ abstract public class AtomCollection {
   
   private void loadCoordinates(String data, boolean isVibrationVectors, boolean doTaint) {
     int[] lines = Parser.markLines(data, ';');
-    V3 v = (isVibrationVectors ? new V3() : null);
+    V3d v = (isVibrationVectors ? new V3d() : null);
     try {
       int nData = PT.parseInt(data.substring(0, lines[0] - 1));
       for (int i = 1; i <= nData; i++) {
@@ -1105,9 +1097,9 @@ abstract public class AtomCollection {
         int atomIndex = PT.parseInt(tokens[0]) - 1;
         // JavaScript will not be exact, and we will be checking for the exact value
         // Modulation setting modScale
-        float x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[3]));
-        float y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45f : PT.parseFloat(tokens[4]));
-        float z = PT.parseFloat(tokens[5]);
+        double x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[3]));
+        double y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[4]));
+        double z = PT.parseDouble(tokens[5]);
         if (isVibrationVectors) {
           v.set(x, y, z);
           setAtomVibrationVector(atomIndex, v);
@@ -1271,7 +1263,7 @@ abstract public class AtomCollection {
     atomData.atomicNumber = new int[ac];
     boolean includeRadii = ((mode & AtomData.MODE_FILL_RADII) != 0);
     if (includeRadii)
-      atomData.atomRadius = new float[ac];
+      atomData.atomRadius = new double[ac];
     boolean isMultiModel = ((mode & AtomData.MODE_FILL_MULTIMODEL) != 0);
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];
@@ -1292,8 +1284,8 @@ abstract public class AtomCollection {
   ////// hybridization ///////////
 
   @SuppressWarnings("incomplete-switch")
-  private float getWorkingRadius(Atom atom, AtomData atomData) {
-    float r = 0;
+  private double getWorkingRadius(Atom atom, AtomData atomData) {
+    double r = 0;
     RadiusData rd = atomData.radiusData;
     switch (rd.factorType) {
     case ABSOLUTE:
@@ -1337,197 +1329,209 @@ abstract public class AtomCollection {
    * 
    * @param bs
    * @param nTotal
-   * @param vConnect 
+   * @param vConnect
    * @param flags [CALC_H_DOALL | CALC_H_JUSTC | CALC_H_HAVEH | CALC_H_QUICK
-   * @return     array of arrays of points added to specific atoms
+   * @return array of arrays of points added to specific atoms
    */
-  public P3[][] calculateHydrogens(BS bs, int[] nTotal,
+  public P3d[][] calculateHydrogens(BS bs, int[] nTotal,
                                             Lst<Atom> vConnect, int flags) {
     boolean doAll = ((flags & CALC_H_DOALL) == CALC_H_DOALL);
     boolean justCarbon = ((flags & CALC_H_JUSTC) == CALC_H_JUSTC);
     boolean isQuick = ((flags & CALC_H_QUICK) == CALC_H_QUICK);
     boolean ignoreH = ((flags & CALC_H_IGNORE_H) == CALC_H_IGNORE_H);
     boolean allowH = ((flags & CALC_H_ALLOW_H) == CALC_H_ALLOW_H);
-    V3 z = new V3();
-    V3 x = new V3();
-    P3[][] hAtoms = new P3[ac][];
+    V3d z = new V3d();
+    V3d x = new V3d();
+    P3d[][] hAtoms = new P3d[ac][];
     BS bsDeleted = vwr.slm.bsDeleted;
-    P3 pt;
-    int nH = 0;
-    
+    P3d pt;
+    int nH = nTotal[0] = 0;
     // just not doing aldehydes here -- all A-X-B bent == sp3 for now
-    if (bs != null)
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (bsDeleted != null && bsDeleted.get(i))
-          continue;
-        Atom atom = at[i];
-        int atomicNumber = atom.getElementNumber();
-        if (justCarbon && atomicNumber != 6)
-          continue;
-        float dHX = (atomicNumber <= 6 ? 1.1f // B, C
-            : atomicNumber <= 10 ? 1.0f       // N, O
-            : 1.3f);                          // S
-        switch (atomicNumber) {
-        case 7:
-        case 8:
-          dHX = 1.0f;
-          break;
-        case 6:
-        }
-        int n = (doAll || ignoreH || allowH ? atom.getCovalentHydrogenCount() : 0);
-        if (doAll && n > 0 || ignoreH && n == 0)
-          continue;
-        int nMissing = getMissingHydrogenCount(atom, false);
-        if (doAll && nMissing == 0)
-          continue;
-        if (!ignoreH)
-          n = nMissing;
-        
-        // TODO - NPE while working with model kit after deleting and adding and dragging atoms.
-        
-        int targetValence = aaRet[0];
-        int hybridization = aaRet[2];
-        int nBonds = aaRet[3] - (ignoreH ? n : 0);
-        if (nBonds == 0 && atom.isHetero())
-          continue; // no adding to water
-        hAtoms[i] = new P3[n];
-        int hPt = 0;
-        if (nBonds == 0) {
-          switch (n) {
-          case 4:
-            // methane
-            z.set(0.635f, 0.635f, 0.635f);
-            pt = P3.newP(z);
-            pt.add(atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            //$FALL-THROUGH$
-          case 3:
-            // nitrogen
-            z.set(-0.635f, -0.635f, 0.635f);
-            pt = P3.newP(z);
-            pt.add(atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            //$FALL-THROUGH$
-          case 2:
-            // oxygen
-            z.set(-0.635f, 0.635f, -0.635f);
-            pt = P3.newP(z);
-            pt.add(atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            //$FALL-THROUGH$
-          case 1:
-            z.set(0.635f, -0.635f, -0.635f);
-            pt = P3.newP(z);
-            pt.add(atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-          }
-        } else {
-          switch (n) {
-          default:
-            break;
-          case 3: // three bonds needed RC
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3b", false, true, isQuick);
-            pt = new P3();
-            pt.scaleAdd2(dHX, z, atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3c", false, true, isQuick);
-            pt = new P3();
-            pt.scaleAdd2(dHX, z, atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            getHybridizationAndAxes(i, atomicNumber, z, x, "sp3d", false, true, isQuick);
-            pt = new P3();
-            pt.scaleAdd2(dHX, z, atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            break;
-          case 2:
-            // 2 bonds needed R2C or R-N or R2C=C or O
-            //                    or RC=C or C=C
-            boolean isEne = (hybridization == 2 || atomicNumber == 5 || nBonds == 1
-                && targetValence == 4 
-                || atomicNumber == 7 && isAdjacentSp2(atom));
-            getHybridizationAndAxes(i, atomicNumber, z, x, (isEne ? "sp2b"
-                : targetValence == 3 ? "sp3c" : "lpa"), false, true, isQuick);
-            pt = P3.newP(z);
-            pt.scaleAdd2(dHX, z, atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            getHybridizationAndAxes(i, atomicNumber, z, x, (isEne ? "sp2c"
-                : targetValence == 3 ? "sp3d" : "lpb"), false, true, isQuick);
-            pt = P3.newP(z);
-            pt.scaleAdd2(dHX, z, atom);
-            hAtoms[i][hPt++] = pt;
-            if (vConnect != null)
-              vConnect.addLast(atom);
-            break;
-          case 1:
-            // one bond needed R2B, R3C, R-N-R, R-O R=C-R R=N R-3-C
-            // nbonds ......... 2 .. 3 .. 2 ... 1 ... 2 .. 1 .. 1
-            // nval ........... 2 .. 3 .. 2 ... 1 ... 3 .. 2 .. 3
-            // targetValence .. 3 .. 4 .. 3 ... 2 ... 4 .. 3 .. 4
-            // tV - nbonds   .. 1    1    1     1     2    2    3
-            // ................ sp2c sp3d sp3d  sp3b  sp2c sp2b sp
-            switch (targetValence - nBonds) {
-            case 1:
-              // sp3 or Boron sp2 or N sp2
-              if (atomicNumber == 8 && atom == atom.group.getCarbonylOxygenAtom()) {
-                hAtoms[i] = null;
-                continue;
-              }
-              if (getHybridizationAndAxes(i, atomicNumber, z, x, 
-                  (hybridization == 2 || atomicNumber == 5 
-                  || atomicNumber == 6 &&  aaRet[1] == 1
-                  || atomicNumber == 7 
-                  && (atom.group.getNitrogenAtom() == atom & atom.getFormalCharge() == 0 || isAdjacentSp2(atom))
-                  ? "sp2c"
-                  : "sp3d"), true, false, isQuick) != null) {
-                pt = P3.newP(z);
-                pt.scaleAdd2(dHX, z, atom);
-                hAtoms[i][hPt++] = pt;
-                if (vConnect != null)
-                  vConnect.addLast(atom);
-              } else {
-                hAtoms[i] = new P3[0];
-              }
-              break;
-            case 2:
-              // sp2
-              getHybridizationAndAxes(i, atomicNumber, z, x, (targetValence == 4 ? "sp2c"
-                  : "sp2b"), false, false, isQuick);
-              pt = P3.newP(z);
-              pt.scaleAdd2(dHX, z, atom);
-              hAtoms[i][hPt++] = pt;
-              if (vConnect != null)
-                vConnect.addLast(atom);
-              break;
-            case 3:
-              // sp
-              getHybridizationAndAxes(i, atomicNumber, z, x, "spb", false, true, isQuick);
-              pt = P3.newP(z);
-              pt.scaleAdd2(dHX, z, atom);
-              hAtoms[i][hPt++] = pt;
-              if (vConnect != null)
-                vConnect.addLast(atom);
-              break;
-            }
-          }
-        }
-        nH += hPt;
+    if (bs == null) {
+      return hAtoms;
+    }
+    int nAtoms = bs.cardinality();
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (bsDeleted != null && bsDeleted.get(i))
+        continue;
+      Atom atom = at[i];
+      int atomicNumber = atom.getElementNumber();
+      if (justCarbon && atomicNumber != 6)
+        continue;
+      double dHX = (atomicNumber <= 6 ? 1.1d // B, C
+          : atomicNumber <= 10 ? 1.0d // N, O
+              : 1.3d); // S
+      switch (atomicNumber) {
+      case 7:
+      case 8:
+        dHX = 1.0d;
+        break;
+      case 6:
       }
+      int n = (doAll || ignoreH || allowH ? atom.getCovalentHydrogenCount()
+          : 0);
+      if (doAll && n > 0 || ignoreH && n == 0)
+        continue;
+      int nMissing = getMissingHydrogenCount(atom, false);
+      if (doAll && nMissing == 0)
+        continue;
+      if (!ignoreH)
+        n = nMissing;
+
+      // TODO - NPE while working with model kit after deleting and adding and dragging atoms.
+
+      int targetValence = aaRet[0];
+      int hybridization = aaRet[2];
+      int nBonds = aaRet[3] - (ignoreH ? n : 0);
+      if (nBonds == 0 && atom.isHetero())
+        continue; // no adding to water
+      hAtoms[i] = new P3d[n];
+      int hPt = 0;
+      if (nBonds == 0) {
+        switch (n) {
+        case 4:
+          // methane
+          z.set(0.635d, 0.635d, 0.635d);
+          pt = P3d.newP(z);
+          pt.add(atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          //$FALL-THROUGH$
+        case 3:
+          // nitrogen
+          z.set(-0.635d, -0.635d, 0.635d);
+          pt = P3d.newP(z);
+          pt.add(atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          //$FALL-THROUGH$
+        case 2:
+          // oxygen
+          z.set(-0.635d, 0.635d, -0.635d);
+          pt = P3d.newP(z);
+          pt.add(atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          //$FALL-THROUGH$
+        case 1:
+          z.set(0.635d, -0.635d, -0.635d);
+          pt = P3d.newP(z);
+          pt.add(atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+        }
+      } else {
+        switch (n) {
+        default:
+          break;
+        case 3: // three bonds needed RC
+          getHybridizationAndAxes(i, atomicNumber, z, x, "sp3b", false, true,
+              isQuick, null);
+          pt = new P3d();
+          pt.scaleAdd2(dHX, z, atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          getHybridizationAndAxes(i, atomicNumber, z, x, "sp3c", false, true,
+              isQuick, null);
+          pt = new P3d();
+          pt.scaleAdd2(dHX, z, atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          getHybridizationAndAxes(i, atomicNumber, z, x, "sp3d", false, true,
+              isQuick, null);
+          pt = new P3d();
+          pt.scaleAdd2(dHX, z, atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          break;
+        case 2:
+          // 2 bonds needed R2C or R-N or R2C=C or O
+          //                    or RC=C or C=C
+          boolean isEne = (hybridization == 2 || atomicNumber == 5
+              || nBonds == 1 && targetValence == 4
+              || atomicNumber == 7 && isAdjacentSp2(atom));
+          getHybridizationAndAxes(i, atomicNumber, z, x,
+              (isEne ? "sp2b" : targetValence == 3 ? "sp3c" : "lpa"), false,
+              true, isQuick, null);
+          pt = P3d.newP(z);
+          pt.scaleAdd2(dHX, z, atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          getHybridizationAndAxes(i, atomicNumber, z, x,
+              (isEne ? "sp2c" : targetValence == 3 ? "sp3d" : "lpb"), false,
+              true, isQuick, null);
+     //     null = hAtoms[i][0];
+          pt = P3d.newP(z);
+          pt.scaleAdd2(dHX, z, atom);
+          hAtoms[i][hPt++] = pt;
+          if (vConnect != null)
+            vConnect.addLast(atom);
+          break;
+        case 1:
+          // one bond needed R2B, R3C, R-N-R, R-O R=C-R R=N R-3-C
+          // nbonds ......... 2 .. 3 .. 2 ... 1 ... 2 .. 1 .. 1
+          // nval ........... 2 .. 3 .. 2 ... 1 ... 3 .. 2 .. 3
+          // targetValence .. 3 .. 4 .. 3 ... 2 ... 4 .. 3 .. 4
+          // tV - nbonds   .. 1    1    1     1     2    2    3
+          // ................ sp2c sp3d sp3d  sp3b  sp2c sp2b sp
+          switch (targetValence - nBonds) {
+          case 1:
+            // sp3 or Boron sp2 or N sp2
+            if (atomicNumber == 8
+                && atom == atom.group.getCarbonylOxygenAtom()) {
+              hAtoms[i] = null;
+              continue;
+            }
+            if (getHybridizationAndAxes(i, atomicNumber, z, x,
+                (hybridization == 2 || atomicNumber == 5
+                    || atomicNumber == 6 && aaRet[1] == 1
+                    || atomicNumber == 7
+                        && (atom.group.getNitrogenAtom() == atom
+                            & atom.getFormalCharge() == 0
+                            || isAdjacentSp2(atom)) ? "sp2c" : "sp3d"),
+                true, false, isQuick, null) != null) {
+              pt = P3d.newP(z);
+              pt.scaleAdd2(dHX, z, atom);
+              hAtoms[i][hPt++] = pt;
+              if (vConnect != null)
+                vConnect.addLast(atom);
+            } else {
+              hAtoms[i] = new P3d[0];
+            }
+            break;
+          case 2:
+            // sp2
+            getHybridizationAndAxes(i, atomicNumber, z, x,
+                (targetValence == 4 ? "sp2c" : "sp2b"), false, false, isQuick, null);
+            pt = P3d.newP(z);
+            pt.scaleAdd2(dHX, z, atom);
+            hAtoms[i][hPt++] = pt;
+            if (vConnect != null)
+              vConnect.addLast(atom);
+            break;
+          case 3:
+            // sp
+            getHybridizationAndAxes(i, atomicNumber, z, x, "spb", false, true,
+                isQuick, null);
+            pt = P3d.newP(z);
+            pt.scaleAdd2(dHX, z, atom);
+            hAtoms[i][hPt++] = pt;
+            if (vConnect != null)
+              vConnect.addLast(atom);
+            break;
+          }
+        }
+      }
+      nH += hPt;
+    }
     nTotal[0] = nH;
     return hAtoms;
   }
@@ -1597,13 +1601,14 @@ abstract public class AtomCollection {
     return n;
   }
 
-  public String getHybridizationAndAxes(int atomIndex, int atomicNumber, V3 z, V3 x,
-                                        String lcaoTypeRaw,
+  public String getHybridizationAndAxes(int atomIndex, int atomicNumber, V3d z,
+                                        V3d x, String lcaoTypeRaw,
                                         boolean hybridizationCompatible,
-                                        boolean doAlignZ, boolean isQuick) {
+                                        boolean doAlignZ, boolean isQuick,
+                                        T3d ref) {
 
-    String lcaoType = (lcaoTypeRaw.length() > 0 && lcaoTypeRaw.charAt(0) == '-' ? lcaoTypeRaw
-        .substring(1)
+    String lcaoType = (lcaoTypeRaw.length() > 0 && lcaoTypeRaw.charAt(0) == '-'
+        ? lcaoTypeRaw.substring(1)
         : lcaoTypeRaw);
 
     if (lcaoTypeRaw.indexOf("d") >= 0 && !lcaoTypeRaw.endsWith("sp3d"))
@@ -1619,34 +1624,34 @@ abstract public class AtomCollection {
       pt = 0;
     z.set(0, 0, 0);
     x.set(0, 0, 0);
-    V3[] v = new V3[4];
+    V3d[] v = new V3d[4];
     for (int i = 0; i < nAttached; i++) {
       Atom a = attached[i];
       if (a == null) {
         nAttached = i;
         break;
       }
-      v[i] = V3.newVsub(atom, a);
+      v[i] = V3d.newVsub(atom, a);
       v[i].normalize();
       z.add(v[i]);
     }
     if (nAttached > 0)
       x.setT(v[0]);
     boolean isPlanar = false;
-    V3 vTemp = new V3();
+    V3d vTemp = new V3d();
     if (nAttached >= 3) {
       if (x.angle(v[1]) < almost180)
         vTemp.cross(x, v[1]);
       else
         vTemp.cross(x, v[2]);
       vTemp.normalize();
-      V3 vTemp2 = new V3();
+      V3d vTemp2 = new V3d();
       if (v[1].angle(v[2]) < almost180)
         vTemp2.cross(v[1], v[2]);
       else
         vTemp2.cross(x, v[2]);
       vTemp2.normalize();
-      isPlanar = (Math.abs(vTemp2.dot(vTemp)) >= 0.95f);
+      isPlanar = (Math.abs(vTemp2.dot(vTemp)) >= 0.95d);
     }
 
     boolean isSp3 = (lcaoType.indexOf("sp3") == 0);
@@ -1654,7 +1659,7 @@ abstract public class AtomCollection {
     boolean isSp = (!isSp3 && !isSp2 && lcaoType.indexOf("sp") == 0);
     boolean isP = (lcaoType.indexOf("p") == 0);
     boolean isLp = (lcaoType.indexOf("lp") == 0);
-    
+
     String hybridization = null;
     if (hybridizationCompatible) {
       if (nAttached == 0)
@@ -1698,7 +1703,7 @@ abstract public class AtomCollection {
         }
         break;
       case 2:
-        if (z.length() < 0.1f) {
+        if (z.length() < 0.1d) {
           // linear A--X--B
           if (lcaoType.indexOf("2") >= 0 || lcaoType.indexOf("3") >= 0)
             return null;
@@ -1751,10 +1756,10 @@ abstract public class AtomCollection {
     case 0:
       if (lcaoType.equals("sp3c") || lcaoType.equals("sp2d")
           || lcaoType.equals("lpa")) {
-        z.set(-0.5f, -0.7f, 1);
+        z.set(-0.5d, -0.7d, 1);
         x.set(1, 0, 0);
       } else if (lcaoType.equals("sp3b") || lcaoType.equals("lpb")) {
-        z.set(0.5f, -0.7f, -1f);
+        z.set(0.5d, -0.7d, -1d);
         x.set(1, 0, 0);
       } else if (lcaoType.equals("sp3a")) {
         z.set(0, 1, 0);
@@ -1766,7 +1771,7 @@ abstract public class AtomCollection {
       break;
     case 1:
       // X-C
-      vTemp.setT(vRef);        
+      vTemp.setT(vRef);
       x.cross(vTemp, z);
       if (isSp3) {
         // align z as sp3 orbital
@@ -1785,7 +1790,7 @@ abstract public class AtomCollection {
           }
         }
         x.normalize();
-        if (Float.isNaN(x.x)) {
+        if (Double.isNaN(x.x)) {
           x.setT(vRef);
           x.cross(x, z);
         }
@@ -1794,12 +1799,13 @@ abstract public class AtomCollection {
         vTemp.normalize();
         // y1 is perp to bond and x
         z.normalize();
-        x.scaleAdd2(2.828f, x, z); // 2*sqrt(2)
+        x.scaleAdd2(2.828d, x, z); // 2*sqrt(2)
         if (pt != 3) {
           x.normalize();
           // PI*2/3
-          new M3().setAA(A4.new4(z.x, z.y, z.z,
-              (pt == 2 ? 1 : -1) * 2.09439507f)).rotate(x);
+          new M3d()
+              .setAA(A4d.new4(z.x, z.y, z.z, (pt == 2 ? 1 : -1) * 2.09439507d))
+              .rotate(x);
         }
         z.setT(x);
         x.cross(vTemp, z);
@@ -1807,9 +1813,35 @@ abstract public class AtomCollection {
       }
       // not "sp3" -- sp2 or lone pair
       vTemp.cross(x, z); //x and vTemp are now perpendicular to z
-      switch (attached[0].getCovalentBondCount()) {
+      int na = attached[0].getCovalentBondCount();
+      switch (na) {
+      case 3:
+        // special case, for example R2C=O oxygen
+        // look out for iterative calling
+        if (ref != attached[0]) {
+          getHybridizationAndAxes(attached[0].i, 0, x, vTemp, "pz", false,
+              doAlignZ, isQuick, atom);
+          vTemp.setT(x);
+          if (isSp2) { // align z as sp2 orbital
+            x.cross(x, z);
+            if (pt == 1)
+              x.scale(-1);
+            x.scale(sqrt3_2);
+            z.scaleAdd2(0.5d, z, x);
+          } else if (isSp) {
+
+          } else {
+            vTemp.setT(z);
+            z.setT(x);
+          }
+          x.cross(vTemp, z);
+          break;
+        }
+        na = 2;
+        // skip to case 2
+        //$FALL-THROUGH$
       case 1:
-        if (attached[0].getValence() != 2) {
+        if (na == 1 && attached[0].getValence() != 2) {
           // C-t-C
           break;
         }
@@ -1821,7 +1853,7 @@ abstract public class AtomCollection {
         boolean isCumulated = false;
         Atom a0 = attached[0];
         x.setT(z);
-        vTemp.setT(vRef);        
+        vTemp.setT(vRef);
         while (a0 != null && a0.getCovalentBondCount() == 2) {
           Bond[] bonds = a0.bonds;
           Atom a = null;
@@ -1835,55 +1867,36 @@ abstract public class AtomCollection {
               }
             }
           vTemp.cross(vTemp, x);
-          if (vTemp.length() > 0.1f || a.getCovalentBondCount() != 2)
+          if (vTemp.length() > 0.1d || a.getCovalentBondCount() != 2)
             break;
           atom = a0;
           a0 = a;
         }
         if (isSp) {
-        } else if (vTemp.length() > 0.1f) {
+        } else if (vTemp.length() > 0.1d) {
           z.cross(vTemp, x);
           // C=C or RC=C
           z.normalize();
           if (pt == 1)
             z.scale(-1);
           z.scale(sqrt3_2);
-          z.scaleAdd2(0.5f, x, z);
+          z.scaleAdd2(0.5d, x, z);
           if (isP) {
             vTemp.cross(z, x);
             z.setT(vTemp);
             vTemp.setT(x);
-          } 
+          }
           x.cross(vTemp, z);
         } else {
           z.setT(x);
           x.cross(vRef, x);
         }
         break;
-      case 3:
-        // special case, for example R2C=O oxygen
-        getHybridizationAndAxes(attached[0].i, 0, x, vTemp, "pz", false,
-            doAlignZ, isQuick);
-        vTemp.setT(x);
-        if (isSp2) { // align z as sp2 orbital
-          x.cross(x, z);
-          if (pt == 1)
-            x.scale(-1);
-          x.scale(sqrt3_2);
-          z.scaleAdd2(0.5f, z, x);
-        } else if (isSp) {
-          
-        } else {
-          vTemp.setT(z);
-          z.setT(x);
-        }
-        x.cross(vTemp, z);
-        break;
       }
       break;
     case 2:
       // two attached atoms -- check for linearity
-      if (z.length() < 0.1f) {
+      if (z.length() < 0.1d) {
         // linear A--X--B
         if (!lcaoType.equals("pz")) {
           Atom a = attached[0];
@@ -1892,14 +1905,15 @@ abstract public class AtomCollection {
             ok = ((a = attached[1]).getCovalentBondCount() == 3);
           if (ok) {
             // special case, for example R2C=C=CR2 central carbon
-            getHybridizationAndAxes(a.i, 0, x, z, "pz", false, doAlignZ, isQuick);
+            getHybridizationAndAxes(a.i, 0, x, z, "pz", false, doAlignZ,
+                isQuick, ref);
             if (lcaoType.equals("px"))
               x.scale(-1);
             z.setT(v[0]);
             break;
           }
           // O-C*-O
-          vTemp.setT(vRef);    
+          vTemp.setT(vRef);
           z.cross(vTemp, x);
           vTemp.cross(z, x);
         }
@@ -1913,14 +1927,15 @@ abstract public class AtomCollection {
         x.cross(z, vTemp);
         break;
       }
+
       if (isSp3 || isLp) { // align z as lone pair
         vTemp.normalize();
         z.normalize();
         if (!lcaoType.equals("lp")) {
-          if (pt == 0 || pt == 2) 
-            z.scaleAdd2(-1.2f, vTemp, z);
+          if (pt == 0 || pt == 2)
+            z.scaleAdd2(-1.2d, vTemp, z);
           else
-            z.scaleAdd2(1.2f, vTemp, z);
+            z.scaleAdd2(1.2d, vTemp, z);
         }
         x.cross(z, vTemp);
         break;
@@ -1966,7 +1981,7 @@ abstract public class AtomCollection {
    * @param lcaoType
    * @return valid hybridization or null
    */
-  private String getHybridizationAndAxesD(int atomIndex, V3 z, V3 x,
+  private String getHybridizationAndAxesD(int atomIndex, V3d z, V3d x,
                                          String lcaoType) {
     // note -- d2sp3, not sp3d2; dsp3, not sp3d
     if (lcaoType.startsWith("sp3d2"))
@@ -2011,7 +2026,7 @@ abstract public class AtomCollection {
     int n120_atom0 = 0;
     for (int i = 0; i < nAttached - 1; i++)
       for (int j = i + 1; j < nAttached; j++) {
-        float angle = Measure
+        double angle = MeasureD
             .computeAngleABC(attached[i], atom, attached[j], true);
         // cutoffs determined empirically and meant to be generous
         int itype = (angle < 105 ? _90 : angle >= 150 ? _180 : _120);
@@ -2043,7 +2058,7 @@ abstract public class AtomCollection {
       case 120:
       case 210:
       case 300:
-        if (Math.abs(Measure.computeTorsion(attached[0], atom, attached[1], attached[2], true)) > 162)
+        if (Math.abs(MeasureD.computeTorsion(attached[0], atom, attached[1], attached[2], true)) > 162)
             return "trigonal planar";// -- AX3
         return "trigonal pyramidal";// -- AX3E
       case 330: 
@@ -2119,7 +2134,7 @@ abstract public class AtomCollection {
           int i = bs.nextSetBit(0);
           x.sub2(attached[i], atom);
           x.normalize();
-          x.scale(0.5f);
+          x.scale(0.5d);
           z.scaleAdd2(sqrt3_2, z, x);
           pt = -1;
           break;
@@ -2600,8 +2615,10 @@ abstract public class AtomCollection {
           if (bs == null)
             bs = BS.newN(i + 1);
           bs.set(i);
-          while (--i >= 0 && at[i].getGroup3(true).equals(g3))
-            bs.set(i);
+          while (--i >= 0) {
+            if (!isDeleted(at[i]) && at[i].getGroup3(true).equals(g3))
+              bs.set(i);
+          }
           i++;
         }
       } else if (isAtomNameMatch(at[i], name, checkStar, allowInitialStar)) {
@@ -2631,13 +2648,13 @@ abstract public class AtomCollection {
     return indices;
   }
 
-  public BS getAtomsNearPlane(float distance, P4 plane) {
+  public BS getAtomsNearPlane(double distance, P4d plane) {
     BS bsResult = new BS();
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
       if (isDeleted(atom))
         continue;
-      float d = Measure.distanceToPlane(plane, atom);
+      double d = MeasureD.distanceToPlane(plane, atom);
       if (distance > 0 && d >= -0.1 && d <= distance || distance < 0
           && d <= 0.1 && d >= distance || distance == 0 && Math.abs(d) < 0.01)
         bsResult.set(atom.i);
@@ -2711,11 +2728,11 @@ abstract public class AtomCollection {
     atomSerials = (int[]) AU.deleteElements(atomSerials, firstAtomIndex,
         nAtoms);
     atomSeqIDs = (int[]) AU.deleteElements(atomSeqIDs, firstAtomIndex, nAtoms);
-    dssrData = (float[]) AU.deleteElements(dssrData, firstAtomIndex, nAtoms);
+    dssrData = (double[]) AU.deleteElements(dssrData, firstAtomIndex, nAtoms);
     bfactor100s = (short[]) AU.deleteElements(bfactor100s, firstAtomIndex,
         nAtoms);
     hasBfactorRange = false;
-    occupancies = (float[]) AU.deleteElements(occupancies, firstAtomIndex,
+    occupancies = (double[]) AU.deleteElements(occupancies, firstAtomIndex,
         nAtoms);
     precisionCoords = (P3d[]) AU.deleteElements(precisionCoords, firstAtomIndex,
         nAtoms);
@@ -2733,7 +2750,7 @@ abstract public class AtomCollection {
     // what about data?
   }
 
-  public void getAtomIdentityInfo(int i, Map<String, Object> info, P3 ptTemp) {
+  public void getAtomIdentityInfo(int i, Map<String, Object> info, P3d ptTemp) {
     info.put("_ipt", Integer.valueOf(i));
     info.put("atomIndex", Integer.valueOf(i));
     info.put("atomno", Integer.valueOf(at[i].getAtomNumber()));
@@ -2865,10 +2882,10 @@ abstract public class AtomCollection {
    * 
    * @param max
    */
-  public void scaleVectorsToMax(float max) {
+  public void scaleVectorsToMax(double max) {
     if (vibrations == null)
       return;
-    float m = 0;
+    double m = 0;
     BS bsVib = BS.newN(ac);
     for (int i = vibrations.length; --i >= 0;) {
       Vibration v = getVibration(i, false);
@@ -2910,11 +2927,11 @@ abstract public class AtomCollection {
   }
 
 
-  public Lst<P3> generateCrystalClass(int atomIndex, P3 pt) {
+  public Lst<P3d> generateCrystalClass(int atomIndex, P3d pt) {
     SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? null
         : at[atomIndex].getUnitCell());
-    boolean isRandom = (pt != null && Float.isNaN(pt.x));
-    return (sym == null ? new Lst<P3>() : sym
+    boolean isRandom = (pt != null && Double.isNaN(pt.x));
+    return (sym == null ? new Lst<P3d>() : sym
         .generateCrystalClass(isRandom ? null : pt != null ? pt : at[atomIndex]));
 
   }
