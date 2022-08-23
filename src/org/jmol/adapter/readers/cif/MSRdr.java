@@ -1,23 +1,15 @@
 package org.jmol.adapter.readers.cif;
 
+//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.Matrix;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.T3;
-//import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
@@ -27,6 +19,14 @@ import org.jmol.util.ModulationSet;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.Matrix;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.T3d;
 
 /**
  * generalized modulated structure reader class for CIF and Jana
@@ -211,14 +211,17 @@ public class MSRdr implements MSInterface {
   private Map<String, Lst<Modulation>> htAtomMods;
 
   private int iopLast = -1;
-  private M3 gammaE; // standard operator rotation matrix
+  private M3d gammaE; // standard operator rotation matrix
   private int nOps;
   private boolean haveOccupancy;
   private Atom[] atoms;
   private int ac;
   private boolean haveAtomMods;
 
-  private boolean modCoord;
+  /**
+   * not used
+   */
+  boolean modCoord; 
 
   private boolean finalized;
 
@@ -245,12 +248,12 @@ public class MSRdr implements MSInterface {
     modAverage = r.checkFilterKey("MODAVE");
     String smodTUV = r.getFilter("MODT=");
     if (smodTUV != null || (smodTUV = r.getFilter("MODTUV=")) != null) {
-      modTUV = new P3();
+      modTUV = new P3d();
       String[] tuv = (PT.replaceAllCharacters(smodTUV,"{}()","") + ",0,0,0").split(",");
-      modTUV.x = PT.parseFloatFraction(tuv[0]);
-      modTUV.y = PT.parseFloatFraction(tuv[1]);
-      modTUV.z = PT.parseFloatFraction(tuv[2]);
-      if (Float.isNaN(modTUV.lengthSquared())) {
+      modTUV.x = PT.parseDoubleFraction(tuv[0]);
+      modTUV.y = PT.parseDoubleFraction(tuv[1]);
+      modTUV.z = PT.parseDoubleFraction(tuv[2]);
+      if (Double.isNaN(modTUV.lengthSquared())) {
         Logger.error("MSRdr cannot read modTUV=" + smodTUV);
         modTUV = null;
       }
@@ -442,6 +445,8 @@ public class MSRdr implements MSInterface {
     htSubsystems = null;
   }
 
+  private final static String generic = "#*;*";
+
   private void initModForStructure(int iModel) throws Exception {
     String key;
 
@@ -465,7 +470,7 @@ public class MSRdr implements MSInterface {
         cr.appendLoadNote("NOTE!: Not enough cell wave vectors for d=" + modDim);
         return;
       }
-      fixDouble(pt);
+      fixDoubleA(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
       cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
           + pt[2]);
@@ -480,10 +485,12 @@ public class MSRdr implements MSInterface {
     // F: Jana-type wave vector, referencing W vectors (set pt to coefficients, including harmonics)
     Map<String, double[]> map = new Hashtable<String, double[]>();
     for (Entry<String, double[]> e : htModulation.entrySet()) {
-      if ((key = checkKey(e.getKey(), false)) == null)
+      String k = e.getKey();
+      if ((key = checkKey(k, false)) == null)
         continue;
       pt = e.getValue();
-      switch (key.charAt(0)) {
+      char ch = key.charAt(0);
+      switch (ch) {
       case 'O':
         haveOccupancy = true;
         //$FALL-THROUGH$
@@ -494,8 +501,14 @@ public class MSRdr implements MSInterface {
         if (pt[2] == 1 && key.charAt(2) != 'S' && key.charAt(2) != 'T' && key.charAt(2) != 'L') {
           int ipt = key.indexOf("?");
           if (ipt >= 0) {
-            String s = key.substring(ipt + 1);
-            pt = getMod(key.substring(0, 2) + MSCifParser.SEP + s + "#*;*");
+            k = key.substring(0, 2) + MSCifParser.SEP + key.substring(ipt + 1) + generic;
+            // look for specific parameter from _atom_site_displace_Fourier_cos entry
+            pt = getMod(k);
+            if (pt == null) {
+              // look for generic parameter from displace_Fourier_param block
+              k = key.substring(0, 1) + MSCifParser.SEP + key.substring(ipt + 1) + generic;
+              pt = getMod(k);
+            }
             // may have       Vy1    0.0          0.0   , resulting in null pt here
             if (pt != null)
               addModulation(map, key = key.substring(0, ipt), pt, iModel);
@@ -504,8 +517,8 @@ public class MSRdr implements MSInterface {
             //  --> A cos(2pi(p)) cos(2pi(q.r)) + A sin(-2pi(p)) sin(2pi(q.r))
             double a = pt[0];
             double d = 2 * Math.PI * pt[1];
-            pt[0] = (float) (a * Math.cos(d));
-            pt[1] = (float) (a * Math.sin(-d));
+            pt[0] = (a * Math.cos(d));
+            pt[1] = (a * Math.sin(-d));
             pt[2] = 0;
             Logger.info("msCIF setting " + key + " " + Escape.e(pt));
           }
@@ -555,7 +568,8 @@ public class MSRdr implements MSInterface {
       htAtomMods = new Hashtable<String, Lst<Modulation>>();
     }
     for (Entry<String, double[]> e : htModulation.entrySet()) {
-      if ((key = checkKey(e.getKey(), true)) == null)
+      String k = e.getKey();
+      if ((key = checkKey(k, true)) == null)
         continue;
       double[] params = e.getValue();
       String atomName = key.substring(key.indexOf(";") + 1);
@@ -612,7 +626,7 @@ public class MSRdr implements MSInterface {
         double[] pt1 = htModulation.get(key1);
         if (pt1 == null) {
           Logger.error("Crenel " + key1 + " not found for legendre modulation " + key);
-          pt[2] = Float.NaN;
+          pt[2] = Double.NaN;
         } else {
           htModulation.put(key, new double[] { pt1[0], pt1[1], pt[0], pt[1] });
         }
@@ -620,10 +634,16 @@ public class MSRdr implements MSInterface {
     }
   }
         
-  private void fixDouble(double[] pt) {
-    if (cr.fixJavaDouble)
-      for (int i = pt.length; --i >= 0;)
-        pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
+  private void fixDoubleA(double[] pt) {
+    for (int i = pt.length; --i >= 0;)
+      pt[i] = fixDouble(pt[i]);
+  }
+
+  private double fixDouble(double d) {
+    // was fixFloat(float[] pt  -- removed in Jmol 15.32.53
+    // this is fine -- we are just removing the lower-order bits; 
+    // none of these numbers will have much precision
+    return Math.round(d * 10000000000.) / 10000000000.;
   }
 
   @Override
@@ -638,9 +658,10 @@ public class MSRdr implements MSInterface {
     }     
     // BH 2020.09.16 the addition of 2018.05.30 puts fn just after f_. 
     // it is not clear that anything puts it after it, but leaving that as an option.
-    double[] p = getMod("F_coefs_" + fn );
-    if (p == null)
-      p = getMod("F_" + fn + "_coefs_");
+    double[] p = getMod("F_" + fn + "_coefs_");
+    if (p == null) {
+      p = getMod("F_coefs_" + fn);
+    }
     return p;
   }
 
@@ -661,11 +682,11 @@ public class MSRdr implements MSInterface {
         : '?');
   }
 
-  private P3[] qs;
+  private P3d[] qs;
 
   private int modCount;
 
-  private T3 modTUV;
+  private T3d modTUV;
 
   /**
    * determine simple linear combination assuming simple -3 to 3 no more than
@@ -676,13 +697,13 @@ public class MSRdr implements MSInterface {
    */
   private double[] calculateQCoefs(double[] p) {
     if (qs == null) {
-      qs = new P3[modDim];
+      qs = new P3d[modDim];
       for (int i = 0; i < modDim; i++) {
         qs[i] = toP3(getMod("W_" + (i + 1)));
       }
     }
-//    System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
-    P3 pt = toP3(p);
+//System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
+    P3d pt = toP3(p);
     // test n * q
     for (int i = 0; i < modDim; i++)
       if (qs[i] != null) {
@@ -693,7 +714,7 @@ public class MSRdr implements MSInterface {
           return p;
         }
       }
-    P3 p3 = toP3(p);
+    P3d p3 = toP3(p);
     int jmin = (modDim < 2 ? 0 : -3);
     int jmax = (modDim < 2 ? 0 : 3);
     int kmin = (modDim < 3 ? 0 : -3);
@@ -725,22 +746,22 @@ public class MSRdr implements MSInterface {
           }
           // test linear combination 1/[-3 to +3]:
           pt.setT(qs[0]);
-          pt.scale(1f/i);
+          pt.scale(1d/i);
           if (modDim > 1 && qs[1] != null)
-            pt.scaleAdd2(1f/j, qs[1], pt);
+            pt.scaleAdd2(1d/j, qs[1], pt);
           if (modDim > 2 && qs[2] != null)
-            pt.scaleAdd2(1f/k, qs[2], pt);
+            pt.scaleAdd2(1d/k, qs[2], pt);
           if (pt.distanceSquared(p3) < 0.0001f) {
             p = new double[modDim];
             switch (modDim) {
             default:
-              p[2] = 1f/k;
+              p[2] = 1d/k;
               //$FALL-THROUGH$
             case 2:
-              p[1] = 1f/j;
+              p[1] = 1d/j;
               //$FALL-THROUGH$
             case 1:
-              p[0] = 1f/i;
+              p[0] = 1d/i;
               break;
             }
             return p;
@@ -778,13 +799,13 @@ public class MSRdr implements MSInterface {
     return null;
   }
 
-  private int approxInt(float fn) {
-    int ifn = Math.round(fn);
+  private int approxInt(double fn) {
+    int ifn = (int) Math.round(fn);
     return (Math.abs(fn - ifn) < 0.001f ? ifn : 0);
   }
 
-  private P3 toP3(double[] x) {
-    return P3.new3((float) x[0], (float) x[1], (float) x[2]);
+  private P3d toP3(double[] x) {
+    return P3d.new3(x[0], x[1], x[2]);
   }
 
   /**
@@ -826,7 +847,7 @@ public class MSRdr implements MSInterface {
 
   private final static String U_LIST = "U11U22U33U12U13U23UISO";
 
-  private void addUStr(Atom atom, String id, float val) {
+  private void addUStr(Atom atom, String id, double val) {
     int i = U_LIST.indexOf(id) / 3;
     if (Logger.debuggingHigh)
       Logger.debug("MOD RDR adding " + id + " " + i + " " + val + " to "
@@ -844,17 +865,17 @@ public class MSRdr implements MSInterface {
    * 
    * @param a
    */
-  private void /*float*/ modulateAtom(Atom a) {
+  private void /*double*/ modulateAtom(Atom a) {
 
     // Modulation is based on an atom's first symmetry operation.
     // (Special positions should generate the same atom regardless of which operation is employed.)
 
-    if (modCoord && htSubsystems != null) {
-      // I think this does nothing.....
-      P3 ptc = P3.newP(a);
-      SymmetryInterface spt = getSymmetry(a);
-      spt.toCartesian(ptc, true);
-    }
+//    if (modCoord && htSubsystems != null) {
+//      // I think this does nothing.....
+//      P3d ptc = P3d.newP(a);
+//      SymmetryInterface spt = getSymmetry(a);
+//      spt.toCartesian(ptc, true);
+//    }
 
     Lst<Modulation> list = htAtomMods.get(a.atomName);
     if (list == null && a.altLoc != '\0' && htSubsystems != null) {
@@ -868,14 +889,14 @@ public class MSRdr implements MSInterface {
     if (modLast)
       iop = Math.max((a.bsSymmetry.length() - 1) % nOps, iop);
     if (Logger.debuggingHigh)
-      Logger.debug("\nsetModulation: i=" + a.index + " " + a.atomName + " xyz="
+      Logger.info("\nsetModulation: i=" + a.index + " " + a.atomName + " xyz="
           + a + " occ=" + a.foccupancy);
     if (iop != iopLast) {
       // for each new operator, we need to generate new matrices.
       // gammaE is the pure rotation part of the operation;
       // nOps is used as a factor in occupation modulation only.
       iopLast = iop;
-      gammaE = new M3();
+      gammaE = new M3d();
       getSymmetry(a).getSpaceGroupOperation(iop).getRotationScale(gammaE);
     }
     if (Logger.debugging) {
@@ -895,7 +916,7 @@ public class MSRdr implements MSInterface {
     // ms parameter values are used to set occupancies, 
     // vibrations, and anisotropy tensors.
 
-    if (!Float.isNaN(ms.vOcc)) {
+    if (!Double.isNaN(ms.vOcc)) {
       // a.vib may be used to temporarily store an M40 site multiplicity
       a.foccupancy = ms.setOccupancy(getMod("J_O#0;" + a.atomName), a.foccupancy, (a.vib == null ? 0 : a.vib.x));
       //Logger.info("atom " + a.atomName + " occupancy = " + a.foccupancy);
@@ -906,7 +927,7 @@ public class MSRdr implements MSInterface {
       Tensor t = (a.tensors == null ? null : (Tensor) a.tensors.get(0));
       if (t != null && t.parBorU != null) {
         // restore ORIGINAL (unrotated) anisotropy parameters
-        a.anisoBorU = new float[8];
+        a.anisoBorU = new double[8];
         for (int i = 0; i < 8; i++)
           a.anisoBorU[i] = t.parBorU[i];
         t.isUnmodulated = true;
@@ -917,12 +938,12 @@ public class MSRdr implements MSInterface {
                 + a.atomName);
       } else {
         if (Logger.debuggingHigh) {
-          Logger.debug("setModulation Uij(initial)=" + Escape.eAF(a.anisoBorU));
-          Logger.debug("setModulation tensor="
+          Logger.info("setModulation Uij(initial) " + a.atomName + " =" + Escape.eAD(a.anisoBorU));
+          Logger.info("setModulation tensor "+ a.atomName + "="
               + Escape.e(((Tensor) a.tensors.get(0)).getInfo("all")));
         }
-        for (Entry<String, Float> e : ms.htUij.entrySet())
-          addUStr(a, e.getKey(), e.getValue().floatValue());
+        for (Entry<String, Double> e : ms.htUij.entrySet())
+          addUStr(a, e.getKey(), e.getValue().doubleValue());
 
         SymmetryInterface sym = getAtomSymmetry(a, symmetry);
         t = cr.asc.getXSymmetry().addRotatedTensor(a,
@@ -930,18 +951,18 @@ public class MSRdr implements MSInterface {
         t.isModulated = true;
         t.id = Escape.e(a.anisoBorU);
         // note that a.bFactor will be modulated value
-        a.bfactor = a.anisoBorU[7] * 100f;
+        a.bfactor = a.anisoBorU[7] * 100;
         // prevent further tensor production
         a.anisoBorU = null;
         if (Logger.debuggingHigh) {
-          Logger.debug("setModulation Uij(final)=" + Escape.eAF(a.anisoBorU)
+          Logger.debug("setModulation Uij(final)=" + Escape.eAD(a.anisoBorU)
               + "\n");
           Logger.debug("setModulation tensor="
               + Escape.e(((Tensor) a.tensors.get(1)).getInfo("all")));
         }
       }
     }
-    if (Float.isNaN(ms.x))
+    if (Double.isNaN(ms.x))
       ms.set(0, 0, 0);
     // notice that if we had a spin, it is REPLACED by its 
     // modulation, which now refers to it. 
@@ -954,15 +975,15 @@ public class MSRdr implements MSInterface {
 //    // set property_modT to be Math.floor (q.r/|q|) -- really only for d=1
 //
 //    if (!modVib && a.foccupancy == 0)
-//      return Float.NaN;
-//    float t = q1Norm.dot(a);
+//      return Double.NaN;
+//    double t = q1Norm.dot(a);
 //    if (Math.abs(t - (int) t) > 0.001f)
 //      t = (int) Math.floor(t);
 //    return (int) t;
   }
 
-  private P3 getAtomR0(Atom atom) {
-    P3 r0 = P3.newP(atom);
+  private P3d getAtomR0(Atom atom) {
+    P3d r0 = P3d.newP(atom);
     if (supercellSymmetry != null) {
       supercellSymmetry.toCartesian(r0, true);
       symmetry.toFractional(r0, true);
@@ -1007,21 +1028,21 @@ public class MSRdr implements MSInterface {
     return (htSubsystems == null ? null : htSubsystems.get("" + a.altLoc));
   }
 
-  private P3 minXYZ0, maxXYZ0;
+  private P3d minXYZ0, maxXYZ0;
 
   @Override
-  public void setMinMax0(P3 minXYZ, P3 maxXYZ) {
+  public void setMinMax0(P3d minXYZ, P3d maxXYZ) {
     if (htSubsystems == null)
       return;
     SymmetryInterface symmetry = getDefaultUnitCell();
-    minXYZ0 = P3.newP(minXYZ);
-    maxXYZ0 = P3.newP(maxXYZ);
-    P3 pt0 = P3.newP(minXYZ);
-    P3 pt1 = P3.newP(maxXYZ);
-    P3 pt = new P3();
+    minXYZ0 = P3d.newP(minXYZ);
+    maxXYZ0 = P3d.newP(maxXYZ);
+    P3d pt0 = P3d.newP(minXYZ);
+    P3d pt1 = P3d.newP(maxXYZ);
+    P3d pt = new P3d();
     symmetry.toCartesian(pt0, true);
     symmetry.toCartesian(pt1, true);
-    P3[] pts = BoxInfo.unitCubePoints;
+    P3d[] pts = BoxInfo.unitCubePoints;
     if (sigma == null) {
       Logger.error("Why are we in MSRdr.setMinMax0 without modulation init?");
       return;
@@ -1038,9 +1059,9 @@ public class MSRdr implements MSInterface {
     //System.out.println("msreader min max " + minXYZ + " " + maxXYZ);
   }
 
-  private void expandMinMax(P3 pt, SymmetryInterface sym, P3 minXYZ, P3 maxXYZ) {
-    P3 pt2 = P3.newP(pt);
-    float slop = 0.0001f;
+  private void expandMinMax(P3d pt, SymmetryInterface sym, P3d minXYZ, P3d maxXYZ) {
+    P3d pt2 = P3d.newP(pt);
+    double slop = 0.0001;
     sym.toFractional(pt2, false);
     if (minXYZ.x > pt2.x + slop)
       minXYZ.x = (int) Math.floor(pt2.x) - 1;
@@ -1063,21 +1084,21 @@ public class MSRdr implements MSInterface {
     BS bs = asc.bsAtoms;
     SymmetryInterface sym = getDefaultUnitCell();
     Atom[] atoms = asc.atoms;
-    P3 pt = new P3();
+    P3d pt = new P3d();
     if (bs == null)
       bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5f);
+      boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
       if (isOK) {
         pt.setT(a);
         // add in modulation
         if (a.vib != null)
-          pt.add(a.vib);
+          pt.addF(a.vib);
         getSymmetry(a).toCartesian(pt, false);
         sym.toFractional(pt, false);
-        if (cr.fixJavaDouble)
-          PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+//        if (cr.fixJavaDouble)
+//          PT.fixPtDoubles(pt, PT.FRACTIONAL_PRECISION);
         isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
             minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f);
         //          || (cr.legacyJavaFloat ? !asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
@@ -1087,8 +1108,8 @@ public class MSRdr implements MSInterface {
         //              }
       }
       if (isOK) {
-        if (cr.fixJavaDouble)
-          PT.fixPtFloats(a, PT.FRACTIONAL_PRECISION);
+//        if (cr.fixJavaDouble)
+//          PT.fixPtDoubles(a, PT.FRACTIONAL_PRECISION);
       } else {
         bs.clear(i);
       }
@@ -1106,9 +1127,9 @@ public class MSRdr implements MSInterface {
   }
 
   @Override
-  public boolean addLatticeVector(Lst<float[]> lattvecs, String data)
+  public boolean addLatticeVector(Lst<double[]> lattvecs, String data)
       throws Exception {
-    float[] a = null;
+    double[] a = null;
     char c = data.charAt(0);
     int dim = modDim + 3;
     switch (c) {
@@ -1119,7 +1140,7 @@ public class MSRdr implements MSInterface {
     case 'B':
     case 'C':
     case 'I':
-      a = new float[] { 0.5f, 0.5f, 0.5f };
+      a = new double[] { 0.5d, 0.5d, 0.5d };
       if (c != 'I')
         a[c - 'A'] = 0;
       break;
@@ -1132,8 +1153,10 @@ public class MSRdr implements MSInterface {
       dim++;
       //$FALL-THROUGH$
     case '0': // X explicit
-      if (data.indexOf(".") >= 0)
-        a = AtomSetCollectionReader.getTokensFloat(data, null, dim);
+      if (data.indexOf(".") >= 0) {
+        double[] d = AtomSetCollectionReader.getTokensDouble(data, null, dim);
+        a = new double[] { d[0], d[1], d[2] };
+      }
       break;
     default:
       return false;
@@ -1282,7 +1305,7 @@ public class MSRdr implements MSInterface {
 //  endif
 //  if(ml.gt.1) then
 //    i=isign(iabs(ml)/2,nl)
-//    b=pi2*float(i)
+//    b=pi2*double(i)
 //  endif
 //  i=isign(iabs(nl)/2,nl)
 //  knl=mod(nl,2)

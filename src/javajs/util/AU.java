@@ -29,24 +29,22 @@ package javajs.util;
 // 4/23/15 BH getComponentType fix
 
 import java.lang.reflect.Array;
-
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
-
 
 final public class AU {
 
   /**
    * Very important that this not be used with Int32Array or Float32Array,
-   * because it is not initialize to all zeros in MSIE 9. 
+   * because it is not initialize to all zeros in MSIE 9.
    * 
    * @param array
    * @param minimumLength
    * @return array
    */
   public static Object ensureLength(Object array, int minimumLength) {
-    return (array != null && getLength(array) >= minimumLength ? array 
+    return (array != null && getLength(array) >= minimumLength ? array
         : arrayCopyObject(array, minimumLength));
   }
 
@@ -99,6 +97,10 @@ final public class AU {
     return arrayCopyF(array, (array == null ? 16 : 2 * array.length));
   }
 
+  public static double[] doubleLengthD(double[] array) {
+    return arrayCopyD(array, (array == null ? 16 : 2 * array.length));
+  }
+
   public static int[] doubleLengthI(int[] array) {
     return arrayCopyI(array, (array == null ? 16 : 2 * array.length));
   }
@@ -116,7 +118,7 @@ final public class AU {
   }
 
   public static Object deleteElements(Object array, int firstElement,
-                                     int nElements) {
+                                      int nElements) {
     if (nElements == 0 || array == null)
       return array;
     int oldLength = getLength(array);
@@ -140,12 +142,12 @@ final public class AU {
    * @param newLength
    * @return array
    */
-  public static Object arrayCopyObject(Object array, int newLength) {  
+  public static Object arrayCopyObject(Object array, int newLength) {
     int oldLength = (array == null ? -1 : getLength(array));
     if (newLength < 0)
       newLength = oldLength;
     if (newLength == oldLength)
-     return array;
+      return array;
     /**
      * @j2sNative
      * 
@@ -179,8 +181,8 @@ final public class AU {
     /**
      * @j2sNative
      * 
-     *  return array.length
-     *   
+     *            return array.length
+     * 
      */
     {
       return Array.getLength(array);
@@ -237,10 +239,10 @@ final public class AU {
     return t;
   }
 
-  public static T3[] arrayCopyPt(T3[] array, int newLength) {
+  public static T3d[] arrayCopyPt(T3d[] array, int newLength) {
     if (newLength < 0)
       newLength = array.length;
-    T3[] t = new T3[newLength];
+    T3d[] t = new T3d[newLength];
     if (array != null) {
       int oldLength = array.length;
       System.arraycopy(array, 0, t, 0,
@@ -329,14 +331,14 @@ final public class AU {
     /**
      * @j2sNative
      * 
-     * return Clazz.array(-1, array, i0, n);
+     *            return Clazz.array(-1, array, i0, n);
      * 
      */
     {
-        n -= i0;
-        int[] t = new int[n];
-        System.arraycopy(array, i0, t, 0, n);
-        return t;
+      n -= i0;
+      int[] t = new int[n];
+      System.arraycopy(array, i0, t, 0, n);
+      return t;
     }
   }
 
@@ -346,15 +348,15 @@ final public class AU {
     /**
      * @j2sNative
      * 
-     * return Clazz.array(-1, array, i0, n).reverse();
+     *            return Clazz.array(-1, array, i0, n).reverse();
      */
     {
-        int[] t = arrayCopyRangeI(array, i0, n);
-        if (n < 0)
-          n = array.length;
-        for (int i = n / 2; --i >= 0;)
-          swapInt(t, i, n - 1 - i);
-        return t;
+      int[] t = arrayCopyRangeI(array, i0, n);
+      if (n < 0)
+        n = array.length;
+      for (int i = n / 2; --i >= 0;)
+        swapInt(t, i, n - 1 - i);
+      return t;
     }
   }
 
@@ -430,8 +432,8 @@ final public class AU {
    * 
    * public static void swap(float[] array, int indexA, int indexB) { float t =
    * array[indexA]; array[indexA] = array[indexB]; array[indexB] = t; }
-  */
-  
+   */
+
   public static String dumpArray(String msg, float[][] A, int x1, int x2,
                                  int y1, int y2) {
     String s = "dumpArray: " + msg + "\n";
@@ -502,9 +504,9 @@ final public class AU {
     return new float[n][];
   }
 
-	public static boolean[][] newBool2(int n) {
-	return new boolean[n][];
-	}
+  public static boolean[][] newBool2(int n) {
+    return new boolean[n][];
+  }
 
   public static int[][] newInt2(int n) {
     return new int[n][];
@@ -516,6 +518,10 @@ final public class AU {
 
   public static float[][][] newFloat3(int nx, int ny) {
     return (ny < 0 ? new float[nx][][] : new float[nx][ny][]);
+  }
+
+  public static double[][][] newDouble3(int nx, int ny) {
+    return (ny < 0 ? new double[nx][][] : new double[nx][ny][]);
   }
 
   public static int[][][][] newInt4(int n) {
@@ -543,7 +549,7 @@ final public class AU {
    */
   public static int removeMapKeys(Map<String, ?> map, String root) {
     Lst<String> list = new Lst<String>();
-    for (String key: map.keySet())
+    for (String key : map.keySet())
       if (key.startsWith(root))
         list.addLast(key);
     for (int i = list.size(); --i >= 0;)
@@ -551,75 +557,79 @@ final public class AU {
     return list.size();
   }
 
-	public static boolean isAS(Object x) {
-		return x instanceof String[];
-	}
+  public static boolean isAS(Object x) {
+    return x instanceof String[];
+  }
 
-	public static boolean isASS(Object x) {
-		return x instanceof String[][];
-	}
+  public static boolean isASS(Object x) {
+    return x instanceof String[][];
+  }
 
-	public static boolean isAP(Object x) {
-		return x instanceof T3[];
-	}
+  public static boolean isAP(Object x) {
+    return x instanceof T3d[];
+  }
 
-	public static boolean isAF(Object x) {
-	  return x instanceof float[];
-	}
+  public static boolean isAF(Object x) {
+    return x instanceof float[];
+  }
 
-	public static boolean isAFloat(Object x) {
-	  return x instanceof Float[];
-	}
+  public static boolean isADouble(Object x) {
+    return x instanceof Double[];
+  }
 
-	public static boolean isAD(Object x) {
-	  return x instanceof double[];
-	}
+  public static boolean isAD(Object x) {
+    return x instanceof double[];
+  }
 
-	public static boolean isADD(Object x) {
-	  return x instanceof double[][];
-	}
+  public static boolean isADD(Object x) {
+    return x instanceof double[][];
+  }
 
-	public static boolean isAB(Object x) {
-	  return x instanceof byte[];
-	}
+  public static boolean isADDD(Object x) {
+    return x instanceof double[][][];
+  }
 
-	public static boolean isAI(Object x) {
-	  return x instanceof int[];
-	}
+  public static boolean isAB(Object x) {
+    return x instanceof byte[];
+  }
 
-	public static boolean isAII(Object x) {
-	  return (x instanceof int[][]);
-	}
+  public static boolean isAI(Object x) {
+    return x instanceof int[];
+  }
 
-	public static boolean isAFF(Object x) {
-	  return x instanceof float[][];
-	}
+  public static boolean isAII(Object x) {
+    return (x instanceof int[][]);
+  }
 
-	public static boolean isAFFF(Object x) {
-	  return x instanceof float[][][];
-	}
-	
-	/**
-	 * Ensure that we have signed and not unsigned bytes coming out of any
-	 * process, but particularly out of file reading.
-	 * 
-	 * @param b
-	 * @return b
-	 */
-	public static byte[] ensureSignedBytes(byte[] b) {
-		if (b != null) {
-			/**
-			 * @j2sNative
-			 * 
+//  public static boolean isAFF(Object x) {
+//    return x instanceof float[][];
+//  }
+//
+//  public static boolean isAFFF(Object x) {
+//    return x instanceof float[][][];
+//  }
+//
+  /**
+   * Ensure that we have signed and not unsigned bytes coming out of any
+   * process, but particularly out of file reading.
+   * 
+   * @param b
+   * @return b
+   */
+  public static byte[] ensureSignedBytes(byte[] b) {
+    if (b != null) {
+      /**
+       * @j2sNative
+       * 
        *            for (var i = b.length; --i >= 0;) { var j = b[i] & 0xFF; if
        *            (j >= 0x80) j -= 0x100; b[i] = j; }
-			 * 
-			 */
-			{
-			}
-		}
-		return b;
-	}
+       * 
+       */
+      {
+      }
+    }
+    return b;
+  }
 
   /**
    * No copy in JavaScript; copy in Java.

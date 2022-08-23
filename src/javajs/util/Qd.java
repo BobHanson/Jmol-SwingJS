@@ -83,12 +83,12 @@ public class Qd {
     return q;
   }
 
-  public static Qd newP4(P4 pt) {
-    Qd q = new Qd();
-    q.setP4(P4d.new4(pt.x, pt.y, pt.z, pt.w));
-    return q;
-  }
-
+//  public static Qd newP4(P4d pt) {
+//    Qd q = new Qd();
+//    q.setP4(P4d.new4(pt.x, pt.y, pt.z, pt.w));
+//    return q;
+//  }
+//
 
   /**
    * Note that q0 is the last parameter here
@@ -341,9 +341,9 @@ public class Qd {
     return newFrame(center, x, xy, true);
   }
 
-  public static final Qd getQuaternionFrame(P3 center, T3 x, T3 xy) {
-    return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
-  }
+//  public static final Qd getQuaternionFrameP3(P3d center, T3d x, T3d xy) {
+//    return newFrame(center == null ? null : P3d.newPd(center), V3d.newV(x), V3d.newV(xy), false);
+//  }
 
   private static Qd newFrame(P3d center, T3d vA, T3d vB, boolean doCopy) {
     if (doCopy) {
@@ -357,11 +357,11 @@ public class Qd {
     return getQuaternionFrameV((V3d) vA, (V3d) vB, null, false);
   }
 
-  public static final Qd getQuaternionFrameV(V3 vA, V3 vB, V3 vC,
-                                             boolean yBased) {
-    return getQuaternionFrameV(V3d.newV(vA), V3d.newV(vB), V3d.newV(vC),
-        yBased);
-  }
+//  public static final Qd getQuaternionFrameV(V3d vA, V3d vB, V3d vC,
+//                                             boolean yBased) {
+//    return getQuaternionFrameV(V3d.newV(vA), V3d.newV(vB), V3d.newV(vC),
+//        yBased);
+//  }
 
   /**
    * Create a quaternion based on a frame
@@ -507,7 +507,7 @@ public class Qd {
   }
   
   public V3d getVector(int i) {
-    return getVectorScaled(i, 1f);
+    return getVectorScaled(i, 1d);
   }
 
   public V3d getVectorScaled(int i, double scale) {
@@ -519,7 +519,7 @@ public class Qd {
       setMatrix();
     V3d v = new V3d();
     mat.getColumnV(i, v);
-    if (scale != 1f)
+    if (scale != 1d)
       v.scale(scale);
     return v;
   }
@@ -616,11 +616,11 @@ public class Qd {
    * rotation angle (axisangle), and cos(theta/2) (quaternion).
    * @return {x y z w} (unnormalized)
    */
-  public P4d toPoint4d() {
+  public P4d toP4d() {
     return P4d.new4(q1, q2, q3, q0); // x,y,z,w
   }
 
-  public A4d toAxisAngle4d() {
+  public A4d toA4d() {
     double theta = 2 * Math.acos(Math.abs(q0));
     double sinTheta2 = Math.sin(theta/2);
     V3d v = getNormal();
@@ -786,7 +786,7 @@ public class Qd {
       v.scale(dq.getTheta());
       sum.add(v);
     }
-    sum.scale(1f/data.length);
+    sum.scale(1d/data.length);
     Qd dqMean = newVA(sum, sum.length());
     //System.out.println("newMean dqMean " + dqMean + " " + dqMean.getNormal() + " " + dqMean.getTheta());
     return dqMean.mulQ(mean);

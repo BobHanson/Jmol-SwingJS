@@ -146,7 +146,7 @@ public class A4d extends P3d {
    * @param m1
    *        the matrix3f
    */
-  public final void setM(M3 m1) {
+  public final void setM(M3d m1) {
     setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
         m1.m22);
   }
@@ -222,7 +222,7 @@ public class A4d extends P3d {
     return "[" + x + "," + y + "," + z + "," + (angle * 180.0 / Math.PI) + "]";
   }
 
-  public void setM(M3d m3) {
-    setM(m3.toM3());
-  }
+//  public void setM(M3d m3) {
+//    setM(m3.toM3());
+//  }
 }

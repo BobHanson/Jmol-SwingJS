@@ -167,7 +167,7 @@ public class JSJSONParser {
           return Integer.valueOf(string);
         // not allowing infinity or NaN
         // using float here because Jmol does not use Double
-        Float d = Float.valueOf(string);
+        Double d = Double.valueOf(string);
         if (!d.isInfinite() && !d.isNaN())
           return d;
       } catch (Exception e) {

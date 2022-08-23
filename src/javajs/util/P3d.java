@@ -59,35 +59,12 @@ public class P3d extends T3d {
     return p;
   }
 
-  public static P3d newPd(T3 a) {
+  public static P3d newPd(T3d a) {
     return new3(a.x, a.y, a.z);
   }
 
   public static P3d newA(double[] a) {
    return new3(a[0], a[1], a[2]);    
-  }
-
-  /**
-   * Copy to float version. Avoid using this, as it will slow down JavaScript unnecessarily.
-   * 
-   * @return new P3
-   */
-  public P3 copyToP3() {
-    return P3.new3((float) x, (float) y, (float) z);
-  }
-
-  /**
-   * Copy in Java; do nothing in JavaScript
-   * 
-   * @return this in JavaScript, P3 copy in Java
-   */
-  public P3 asP3() {
-    /** @j2sNative
-     * return this;
-     */
-    {
-      return copyToP3();
-    }
   }
 
 }

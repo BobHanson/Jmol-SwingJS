@@ -3,9 +3,6 @@
  * $Date: 2007-04-26 16:57:51 -0500 (Thu, 26 Apr 2007) $
  * $Revision: 7502 $
  *
- * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
- * for use in SwingJS via transpilation into JavaScript using Java2Script.
- *
  * Copyright (C) 2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -86,7 +83,7 @@ public class PT {
   }
 
   /**
-   * A float parser that is 30% faster than Float.parseFloat(x) and also accepts
+   * A float parser that is 30% faster than Double.parseFloat(x) and also accepts
    * x.yD+-n
    * 
    * @param str
@@ -263,10 +260,10 @@ public class PT {
     int max = 0;
     for (int i = 0; i >= 0 && i < len && n < nTokens; i++) {
       float f;
-      while (Float.isNaN(f = parseFloat(tokens[n++])) 
+      while (Double.isNaN(f = parseFloat(tokens[n++])) 
           && n < nTokens) {
       }
-      if (!Float.isNaN(f))
+      if (!Double.isNaN(f))
         data[(max = i)] = f;
       if (n == nTokens)
         break;
@@ -692,7 +689,7 @@ public class PT {
     return str;
   }
 
-  public static String formatF(float value, int width, int precision,
+  public static String formatF(double value, int width, int precision,
                               boolean alignLeft, boolean zeroPad) {
     return formatS(DF.formatDecimal(value, precision), width, 0, alignLeft, zeroPad);
   }
@@ -835,17 +832,17 @@ public class PT {
      return info instanceof Number || info instanceof Boolean;
   }
 
-  @SuppressWarnings({ "unused", "unchecked", "null" })
-  public static String toJSON(String infoType, Object info) {
-    if (info == null)
-      return packageJSON(infoType, null);
-    if (isNonStringPrimitive(info))
-      return packageJSON(infoType, info.toString());
-    String s = null;
-    SB sb = null;
-    while (true) {
-      if (info instanceof String) {
-        s = (String) info;
+	@SuppressWarnings({ "unused", "unchecked", "null" })
+	public static String toJSON(String infoType, Object info) {
+		if (info == null)
+			return packageJSON(infoType, null);
+		if (isNonStringPrimitive(info))
+			return packageJSON(infoType, info.toString());
+		String s = null;
+		SB sb = null;
+		while (true) {
+			if (info instanceof String) {
+				s = (String) info;
 //        /**
 //         * @j2sNative
 //         * 
@@ -853,69 +850,69 @@ public class PT {
 //         * 
 //         */
 
-        if (s.indexOf("{\"") != 0) {
-          // don't doubly fix JSON strings when retrieving status
-          // what about \1 \2 \3 etc.?
-          s = esc(s);
-        }
-        break;
-      }
-      if (info instanceof JSONEncodable) {
-        // includes javajs.util.BS, org.jmol.script.SV
-        if ((s = ((JSONEncodable) info).toJSON()) == null)
-          s = "null"; // perhaps a list has a null value (group3List, for example)
-        break;
-      }
-      sb = new SB();
-      if (info instanceof Map) {
-        sb.append("{ ");
-        String sep = "";
-        for (String key : ((Map<String, ?>) info).keySet()) {
+				if (s.indexOf("{\"") != 0) {
+					// don't doubly fix JSON strings when retrieving status
+					// what about \1 \2 \3 etc.?
+					s = esc(s);
+				}
+				break;
+			}
+			if (info instanceof JSONEncodable) {
+				// includes javajs.util.BS, org.jmol.script.SV
+				if ((s = ((JSONEncodable) info).toJSON()) == null)
+					s = "null"; // perhaps a list has a null value (group3List, for example)
+				break;
+			}
+			sb = new SB();
+			if (info instanceof Map) {
+				sb.append("{ ");
+				String sep = "";
+				for (String key : ((Map<String, ?>) info).keySet()) {
           if (key == null)
             key = "null";
-          sb.append(sep).append(packageJSON(key, toJSON(null, ((Map<?, ?>) info).get(key))));
-          sep = ",";
-        }
-        sb.append(" }");
-        break;
-      }
-      if (info instanceof Lst) {
-        sb.append("[ ");
-        int n = ((Lst<?>) info).size();
-        for (int i = 0; i < n; i++) {
-          if (i > 0)
-            sb.appendC(',');
-          sb.append(toJSON(null, ((Lst<?>) info).get(i)));
-        }
-        sb.append(" ]");
-        break;
-      }
-      s = nonArrayString(info);
-      if (s == null) {
-        sb.append("[");
-        int n = AU.getLength(info);
-        Object o = null;
+					sb.append(sep).append(packageJSON(key, toJSON(null, ((Map<?, ?>) info).get(key))));
+					sep = ",";
+				}
+				sb.append(" }");
+				break;
+			}
+			if (info instanceof Lst) {
+				sb.append("[ ");
+				int n = ((Lst<?>) info).size();
+				for (int i = 0; i < n; i++) {
+					if (i > 0)
+						sb.appendC(',');
+					sb.append(toJSON(null, ((Lst<?>) info).get(i)));
+				}
+				sb.append(" ]");
+				break;
+			}
+			s = nonArrayString(info);
+			if (s == null) {
+				sb.append("[");
+				int n = AU.getLength(info);
+				Object o = null;
         /** @j2sNative 
          *  o = info[0];
          *  typeof o != "number" && typeof 0 != "boolean" && (o = null);
          */
         {}
         if (o != null) {
-          sb.appendO(info);
-        } else {
-          for (int i = 0; i < n; i++) {
-            if (i > 0)
-              sb.appendC(',');
-            sb.append(toJSON(null, Array.get(info, i)));
-          }
-        }
-        sb.append("]");
-        break;
-      }
-      info = info.toString();
-    }
-    return packageJSON(infoType, (s == null ? sb.toString() : s));
-  }
+					sb.appendO(info);
+				} else {
+					for (int i = 0; i < n; i++) {
+						if (i > 0)
+							sb.appendC(',');
+						sb.append(toJSON(null, Array.get(info, i)));
+					}
+				}
+				sb.append("]");
+				break;
+			}
+			info = info.toString();
+		}
+		return packageJSON(infoType, (s == null ? sb.toString() : s));
+	}
 
 
   /**
@@ -1076,316 +1073,6 @@ public class PT {
         : isStart && isEnd ? b.length() == 1 || a.contains(b.substring(1, b.length() - 1))
         : isStart ? a.endsWith(b.substring(1))
         : a.startsWith(b.substring(0, b.length() - 1));
-  }
-
-  public static Object getMapValueNoCase(Map<String, ?> h, String key) {
-    if ("this".equals(key))
-      return h;
-    Object val = h.get(key);
-    if (val == null)
-      for (Entry<String, ?> e : h.entrySet())
-        if (e.getKey().equalsIgnoreCase(key))
-          return e.getValue();
-    return val;
-  }
-
-  public static String clean(String s) {
-    return rep(replaceAllCharacters(s, " \t\n\r", " "), "  ", " ").trim();
-  }
-
-  /**
-   * 
-   * fdup      duplicates p or q formats for formatCheck
-   *           and the format() function.
-   * 
-   * @param f
-   * @param pt
-   * @param n
-   * @return     %3.5q%3.5q%3.5q%3.5q or %3.5p%3.5p%3.5p
-   */
-  public static String fdup(String f, int pt, int n) {
-    char ch;
-    int count = 0;
-    for (int i = pt; --i >= 1; ) {
-      if (isDigit(ch = f.charAt(i)))
-        continue;
-      switch (ch) {
-      case '.':
-        if (count++ != 0)
-          return f;
-        continue;
-      case '-':
-        if (i != 1 && f.charAt(i - 1) != '.')
-          return f;
-        continue;
-      default:
-        return f;
-      }
-    }
-    String s = f.substring(0, pt + 1);
-    SB sb = new SB();
-    for (int i = 0; i < n; i++)
-      sb.append(s);
-    sb.append(f.substring(pt + 1));
-    return sb.toString();
-  }
-
-  /**
-   * generic string formatter  based on formatLabel in Atom
-   * 
-   * 
-   * @param strFormat   .... %width.precisionKEY....
-   * @param key      any string to match
-   * @param strT     replacement string or null
-   * @param floatT   replacement float or Float.NaN
-   * @param doubleT  replacement double or Double.NaN -- for exponential
-   * @param doOne    mimic sprintf    
-   * @return         formatted string
-   */
-  
-  private static String formatString(String strFormat, String key, String strT,
-                                    float floatT, double doubleT, boolean doOne) {
-    if (strFormat == null)
-      return null;
-    if ("".equals(strFormat))
-      return "";
-    int len = key.length();
-    if (strFormat.indexOf("%") < 0 || len == 0 || strFormat.indexOf(key) < 0)
-      return strFormat;
-  
-    String strLabel = "";
-    int ich, ichPercent, ichKey;
-    for (ich = 0; (ichPercent = strFormat.indexOf('%', ich)) >= 0
-        && (ichKey = strFormat.indexOf(key, ichPercent + 1)) >= 0;) {
-      if (ich != ichPercent)
-        strLabel += strFormat.substring(ich, ichPercent);
-      ich = ichPercent + 1;
-      if (ichKey > ichPercent + 6) {
-        strLabel += '%';
-        continue;//%12.10x
-      }
-      try {
-        boolean alignLeft = false;
-        if (strFormat.charAt(ich) == '-') {
-          alignLeft = true;
-          ++ich;
-        }
-        boolean zeroPad = false;
-        if (strFormat.charAt(ich) == '0') {
-          zeroPad = true;
-          ++ich;
-        }
-        char ch;
-        int width = 0;
-        while ((ch = strFormat.charAt(ich)) >= '0' && (ch <= '9')) {
-          width = (10 * width) + (ch - '0');
-          ++ich;
-        }
-        int precision = Integer.MAX_VALUE;
-        boolean isExponential = false;
-        if (strFormat.charAt(ich) == '.') {
-          ++ich;
-          if ((ch = strFormat.charAt(ich)) == '-') {
-            isExponential = true;//(strT == null);
-            ++ich;
-          } 
-          if ((ch = strFormat.charAt(ich)) >= '0' && ch <= '9') {
-            precision = ch - '0';
-            ++ich;
-            if ((ch = strFormat.charAt(ich)) >= '0' && ch <= '9') {
-              precision = 10*precision + (ch - '0');
-              ++ich;
-            }
-          }
-          if (isExponential)
-            precision = -precision;
-        }
-        String st = strFormat.substring(ich, ich + len);
-        if (!st.equals(key)) {
-          ich = ichPercent + 1;
-          strLabel += '%';
-          continue;
-        }
-        ich += len;
-        if (!Float.isNaN(floatT)) // 'f'
-          strLabel += formatF(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
-              zeroPad);
-        else if (strT != null)  // 'd' 'i' or 's'
-          strLabel += formatS(strT, width, precision < 0 ? precision - 1 : precision, alignLeft,
-              zeroPad);
-        else if (!Double.isNaN(doubleT)) // 'e' or 'f'
-          strLabel += formatD(doubleT, width, (st.equals("e") || st.equals("P") ? precision : -1 - precision), alignLeft,
-              zeroPad, true);
-        if (doOne)
-          break;
-      } catch (IndexOutOfBoundsException ioobe) {
-        ich = ichPercent;
-        break;
-      }
-    }
-    strLabel += strFormat.substring(ich);
-    //if (strLabel.length() == 0)
-      //return null;
-    return strLabel;
-  }
-
-  public static String formatStringS(String strFormat, String key, String strT) {
-    return formatString(strFormat, key, strT, Float.NaN, Double.NaN, false);
-  }
-
-  public static String formatStringF(String strFormat, String key, float floatT) {
-    return formatString(strFormat, key, null, floatT, Double.NaN, false);
-  }
-
-  public static String formatStringI(String strFormat, String key, int intT) {
-    return formatString(strFormat, key, "" + intT, Float.NaN, Double.NaN, false);
-  }
-
-  /**
-   * sprintf emulation uses (almost) c++ standard string formats
-   * 
-   * 's' string 'i' or 'd' integer, 'e' double, 'f' float, 'p' point3f, 'P' exponential point3f, 'q'
-   * quaternion/plane/axisangle with added "i" (equal to the insipid "d" --
-   * digits?)
-   * 
-   * @param strFormat
-   * @param list
-   *        a listing of what sort of data will be found in Object[] values, in
-   *        order: s string, f float, i integer, d double, p point3f, q
-   *        quaternion/point4f, S String[], F float[], I int[], and D double[]
-   * @param values
-   *        Object[] containing above types
-   * @return formatted string
-   */
-  public static String sprintf(String strFormat, String list, Object[] values) {
-    if (values == null)
-      return strFormat;
-    int n = list.length();
-    if (n == values.length)
-      try {
-        for (int o = 0; o < n; o++) {
-          if (values[o] == null)
-            continue;
-          char c;
-          switch (c = list.charAt(o)) {
-          case 's':
-            strFormat = formatString(strFormat, "s", (String) values[o],
-                Float.NaN, Double.NaN, true);
-            break;
-          case 'f':
-            strFormat = formatString(strFormat, "f", null,
-                ((Float) values[o]).floatValue(), Double.NaN, true);
-            break;
-          case 'i':
-            strFormat = formatString(strFormat, "d", "" + values[o], Float.NaN,
-                Double.NaN, true);
-            strFormat = formatString(strFormat, "i", "" + values[o], Float.NaN,
-                Double.NaN, true);
-            break;
-          case 'd':
-            strFormat = formatString(strFormat, "e", null, Float.NaN,
-                ((Double) values[o]).doubleValue(), true);
-            strFormat = formatString(strFormat, "f", null, Float.NaN,
-                ((Double) values[o]).doubleValue(), true);
-            break;
-          case 'p':
-          case 'P':
-            if (values[o] instanceof T3) {
-              T3 pVal = (T3) values[o];
-              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.x, Double.NaN,
-                  true);
-              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.y, Double.NaN,
-                  true);
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, pVal.z, Double.NaN,
-                  true);
-            } else {
-              T3d pVal = (T3d) values[o];
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.x,
-                  true);
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.y,
-                  true);
-              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.z,
-                  true);
-            }
-            break;
-          case 'q':
-            T4 qVal = (T4) values[o];
-            strFormat = formatString(strFormat, "q", null, qVal.x, Double.NaN,
-                true);
-            strFormat = formatString(strFormat, "q", null, qVal.y, Double.NaN,
-                true);
-            strFormat = formatString(strFormat, "q", null, qVal.z, Double.NaN,
-                true);
-            strFormat = formatString(strFormat, "q", null, qVal.w, Double.NaN,
-                true);
-            break;
-          case 'S':
-            String[] sVal = (String[]) values[o];
-            for (int i = 0; i < sVal.length; i++)
-              strFormat = formatString(strFormat, "s", sVal[i], Float.NaN,
-                  Double.NaN, true);
-            break;
-          case 'F':
-            float[] fVal = (float[]) values[o];
-            for (int i = 0; i < fVal.length; i++)
-              strFormat = formatString(strFormat, "f", null, fVal[i],
-                  Double.NaN, true);
-            break;
-          case 'I':
-            int[] iVal = (int[]) values[o];
-            for (int i = 0; i < iVal.length; i++)
-              strFormat = formatString(strFormat, "d", "" + iVal[i], Float.NaN,
-                  Double.NaN, true);
-            for (int i = 0; i < iVal.length; i++)
-              strFormat = formatString(strFormat, "i", "" + iVal[i], Float.NaN,
-                  Double.NaN, true);
-            break;
-          case 'D':
-            double[] dVal = (double[]) values[o];
-            for (int i = 0; i < dVal.length; i++)
-              strFormat = formatString(strFormat, "e", null, Float.NaN, dVal[i],
-                  true);
-          }
-
-        }
-        return rep(strFormat, "%%", "%");
-      } catch (Exception e) {
-        //
-      }
-    System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
-    return rep(strFormat, "%", "?");
-  }
-
-  /**
-   * 
-   * formatCheck   checks p and q formats and duplicates if necessary
-   *               "%10.5p xxxx" ==> "%10.5p%10.5p%10.5p xxxx" 
-   * 
-   * @param strFormat
-   * @return    f or duplicated format
-   */
-  public static String formatCheck(String strFormat) {
-    if (strFormat == null || strFormat.indexOf('p') < 0 && strFormat.indexOf('P') < 0 && strFormat.indexOf('q') < 0)
-      return strFormat;
-    strFormat = rep(strFormat, "%%", "\1");
-    strFormat = rep(strFormat, "%p", "%6.2p");
-    strFormat = rep(strFormat, "%P", "%6.2P");
-    strFormat = rep(strFormat, "%q", "%6.2q");
-    String[] format = split(strFormat, "%");
-    SB sb = new SB();
-    sb.append(format[0]);
-    for (int i = 1; i < format.length; i++) {
-      String f = "%" + format[i];
-      int pt;
-      if (f.length() >= 3) {
-        if ((pt = f.indexOf('p')) >= 0 || (pt = f.indexOf('P')) >= 0)
-          f = fdup(f, pt, 3);
-        if ((pt = f.indexOf('q')) >= 0)
-          f = fdup(f, pt, 4);
-      }
-      sb.append(f);
-    }
-    return sb.toString().replace('\1', '%');
   }
 
   public static void leftJustify(SB s, String s1, String s2) {
@@ -1564,20 +1251,322 @@ public class PT {
     return (c >= 0x1c && c <= 0x20 || c >= 0x9 && c <= 0xd);
   }
 
-  public static final double FRACTIONAL_PRECISION = 100000d;
-  public static final double CARTESIAN_PRECISION =  10000d;
-  
-  public static void fixPtFloats(T3 pt, double d) {
-      //this will equate float and double as long as -256 <= x <= 256
-      pt.x = (float) (Math.round(pt.x * d) / d);
-      pt.y = (float) (Math.round(pt.y * d) / d);
-      pt.z = (float) (Math.round(pt.z * d) / d);
-    }
-    
-  public static double fixDouble(double d, double f) {
-    return Math.round(d * f) / f;
+  public static Object getMapValueNoCase(Map<String, ?> h, String key) {
+    if ("this".equals(key))
+      return h;
+    Object val = h.get(key);
+    if (val == null)
+      for (Entry<String, ?> e : h.entrySet())
+        if (e.getKey().equalsIgnoreCase(key))
+          return e.getValue();
+    return val;
   }
 
+  public static String clean(String s) {
+    return rep(replaceAllCharacters(s, " \t\n\r", " "), "  ", " ").trim();
+  }
+
+  /**
+   * generic string formatter  based on formatLabel in Atom
+   * 
+   * 
+   * @param strFormat   .... %width.precisionKEY....
+   * @param key      any string to match
+   * @param strT     replacement string or null
+   * @param floatT   replacement float or Float.NaN
+   * @param doubleT  replacement double or Double.NaN -- for exponential
+   * @param doOne    mimic sprintf    
+   * @return         formatted string
+   */
+  
+  private static String formatString(String strFormat, String key, String strT,
+                                    double floatT, double doubleT, boolean doOne) {
+    if (strFormat == null)
+      return null;
+    if ("".equals(strFormat))
+      return "";
+    int len = key.length();
+    if (strFormat.indexOf("%") < 0 || len == 0 || strFormat.indexOf(key) < 0)
+      return strFormat;
+  
+    String strLabel = "";
+    int ich, ichPercent, ichKey;
+    for (ich = 0; (ichPercent = strFormat.indexOf('%', ich)) >= 0
+        && (ichKey = strFormat.indexOf(key, ichPercent + 1)) >= 0;) {
+      if (ich != ichPercent)
+        strLabel += strFormat.substring(ich, ichPercent);
+      ich = ichPercent + 1;
+      if (ichKey > ichPercent + 6) {
+        strLabel += '%';
+        continue;//%12.10x
+      }
+      try {
+        boolean alignLeft = false;
+        if (strFormat.charAt(ich) == '-') {
+          alignLeft = true;
+          ++ich;
+        }
+        boolean zeroPad = false;
+        if (strFormat.charAt(ich) == '0') {
+          zeroPad = true;
+          ++ich;
+        }
+        char ch;
+        int width = 0;
+        while ((ch = strFormat.charAt(ich)) >= '0' && (ch <= '9')) {
+          width = (10 * width) + (ch - '0');
+          ++ich;
+        }
+        int precision = Integer.MAX_VALUE;
+        boolean isExponential = false;
+        if (strFormat.charAt(ich) == '.') {
+          ++ich;
+          if ((ch = strFormat.charAt(ich)) == '-') {
+            isExponential = true;//(strT == null);
+            ++ich;
+          } 
+          if ((ch = strFormat.charAt(ich)) >= '0' && ch <= '9') {
+            precision = ch - '0';
+            ++ich;
+            if ((ch = strFormat.charAt(ich)) >= '0' && ch <= '9') {
+              precision = 10*precision + (ch - '0');
+              ++ich;
+            }
+          }
+          if (isExponential)
+            precision = -precision;
+        }
+        String st = strFormat.substring(ich, ich + len);
+        if (!st.equals(key)) {
+          ich = ichPercent + 1;
+          strLabel += '%';
+          continue;
+        }
+        ich += len;
+        if (!Double.isNaN(floatT)) // 'f'
+          strLabel += formatD(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
+              zeroPad);
+        else if (strT != null)  // 'd' 'i' or 's'
+          strLabel += formatS(strT, width, precision < 0 ? precision - 1 : precision, alignLeft,
+              zeroPad);
+        else if (!Double.isNaN(doubleT)) // 'e' or 'f'
+          strLabel += formatD(doubleT, width, (st.equals("e") || st.equals("P") ? precision : -1 - precision), alignLeft,
+              zeroPad, true);
+        if (doOne)
+          break;
+      } catch (IndexOutOfBoundsException ioobe) {
+        ich = ichPercent;
+        break;
+      }
+    }
+    strLabel += strFormat.substring(ich);
+    //if (strLabel.length() == 0)
+      //return null;
+    return strLabel;
+  }
+
+  public static String formatStringS(String strFormat, String key, String strT) {
+    return formatString(strFormat, key, strT, Double.NaN, Double.NaN, false);
+  }
+
+  public static String formatStringF(String strFormat, String key, double floatT) {
+    return formatString(strFormat, key, null, floatT, Double.NaN, false);
+  }
+
+  public static String formatStringI(String strFormat, String key, int intT) {
+    return formatString(strFormat, key, "" + intT, Double.NaN, Double.NaN, false);
+  }
+
+  /**
+   * sprintf emulation uses (almost) c++ standard string formats
+   * 
+   * 's' string 'i' or 'd' integer, 'e' double, 'f' float, 'p' point3f, 'P' exponential point3f, 'q'
+   * quaternion/plane/axisangle with added "i" (equal to the insipid "d" --
+   * digits?)
+   * 
+   * @param strFormat
+   * @param list
+   *        a listing of what sort of data will be found in Object[] values, in
+   *        order: s string, f float, i integer, d double, p point3f, q
+   *        quaternion/point4f, S String[], F float[], I int[], and D double[]
+   * @param values
+   *        Object[] containing above types
+   * @return formatted string
+   */
+  public static String sprintf(String strFormat, String list, Object[] values) {
+    if (values == null)
+      return strFormat;
+    int n = list.length();
+    if (n == values.length)
+      try {
+        for (int o = 0; o < n; o++) {
+          if (values[o] == null)
+            continue;
+          char c;
+          switch (c = list.charAt(o)) {
+          case 's':
+            strFormat = formatString(strFormat, "s", (String) values[o],
+                Double.NaN, Double.NaN, true);
+            break;
+          case 'f':
+            strFormat = formatString(strFormat, "f", null,
+                ((Number) values[o]).doubleValue(), Double.NaN, true);
+            break;
+          case 'i':
+            strFormat = formatString(strFormat, "d", "" + values[o], Double.NaN,
+                Double.NaN, true);
+            strFormat = formatString(strFormat, "i", "" + values[o], Double.NaN,
+                Double.NaN, true);
+            break;
+          case 'd':
+            strFormat = formatString(strFormat, "e", null, Double.NaN,
+                ((Number) values[o]).doubleValue(), true);
+            strFormat = formatString(strFormat, "f", null, Double.NaN,
+                ((Number) values[o]).doubleValue(), true);
+            break;
+          case 'p':
+          case 'P':
+            if (values[o] instanceof T3d) {
+              T3d pVal = (T3d) values[o];
+              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.x, Double.NaN,
+                  true);
+              strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, pVal.y, Double.NaN,
+                  true);
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, pVal.z, Double.NaN,
+                  true);
+            } else {
+              T3d pVal = (T3d) values[o];
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.x,
+                  true);
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.y,
+                  true);
+              strFormat = formatString(strFormat,  (c == 'p' ? "p" : "P"), null, Double.NaN, pVal.z,
+                  true);
+            }
+            break;
+          case 'q':
+            T4d qVal = (T4d) values[o];
+            strFormat = formatString(strFormat, "q", null, qVal.x, Double.NaN,
+                true);
+            strFormat = formatString(strFormat, "q", null, qVal.y, Double.NaN,
+                true);
+            strFormat = formatString(strFormat, "q", null, qVal.z, Double.NaN,
+                true);
+            strFormat = formatString(strFormat, "q", null, qVal.w, Double.NaN,
+                true);
+            break;
+          case 'S':
+            String[] sVal = (String[]) values[o];
+            for (int i = 0; i < sVal.length; i++)
+              strFormat = formatString(strFormat, "s", sVal[i], Double.NaN,
+                  Double.NaN, true);
+            break;
+          case 'F':
+            double[] fVal = (double[]) values[o];
+            for (int i = 0; i < fVal.length; i++)
+              strFormat = formatString(strFormat, "f", null, fVal[i],
+                  Double.NaN, true);
+            break;
+          case 'I':
+            int[] iVal = (int[]) values[o];
+            for (int i = 0; i < iVal.length; i++)
+              strFormat = formatString(strFormat, "d", "" + iVal[i], Double.NaN,
+                  Double.NaN, true);
+            for (int i = 0; i < iVal.length; i++)
+              strFormat = formatString(strFormat, "i", "" + iVal[i], Double.NaN,
+                  Double.NaN, true);
+            break;
+          case 'D':
+            double[] dVal = (double[]) values[o];
+            for (int i = 0; i < dVal.length; i++)
+              strFormat = formatString(strFormat, "e", null, Double.NaN, dVal[i],
+                  true);
+          }
+
+        }
+        return rep(strFormat, "%%", "%");
+      } catch (Exception e) {
+      }
+    System.out.println("TextFormat.sprintf error " + list + " " + strFormat);
+    return rep(strFormat, "%", "?");
+  }
+
+  /**
+   * 
+   * formatCheck   checks p and q formats and duplicates if necessary
+   *               "%10.5p xxxx" ==> "%10.5p%10.5p%10.5p xxxx" 
+   * 
+   * @param strFormat
+   * @return    f or duplicated format
+   */
+  public static String formatCheck(String strFormat) {
+    if (strFormat == null || strFormat.indexOf('p') < 0 && strFormat.indexOf('P') < 0 && strFormat.indexOf('q') < 0)
+      return strFormat;
+    strFormat = rep(strFormat, "%%", "\1");
+    strFormat = rep(strFormat, "%p", "%6.2p");
+    strFormat = rep(strFormat, "%P", "%6.2P");
+    strFormat = rep(strFormat, "%q", "%6.2q");
+    String[] format = split(strFormat, "%");
+    SB sb = new SB();
+    sb.append(format[0]);
+    for (int i = 1; i < format.length; i++) {
+      String f = "%" + format[i];
+      int pt;
+      if (f.length() >= 3) {
+        if ((pt = f.indexOf('p')) >= 0 || (pt = f.indexOf('P')) >= 0)
+          f = fdup(f, pt, 3);
+        if ((pt = f.indexOf('q')) >= 0)
+          f = fdup(f, pt, 4);
+      }
+      sb.append(f);
+    }
+    return sb.toString().replace('\1', '%');
+  }
+
+  /**
+   * 
+   * fdup      duplicates p or q formats for formatCheck
+   *           and the format() function.
+   * 
+   * @param f
+   * @param pt
+   * @param n
+   * @return     %3.5q%3.5q%3.5q%3.5q or %3.5p%3.5p%3.5p
+   */
+  public static String fdup(String f, int pt, int n) {
+    char ch;
+    int count = 0;
+    for (int i = pt; --i >= 1; ) {
+      if (isDigit(ch = f.charAt(i)))
+        continue;
+      switch (ch) {
+      case '.':
+        if (count++ != 0)
+          return f;
+        continue;
+      case '-':
+        if (i != 1 && f.charAt(i - 1) != '.')
+          return f;
+        continue;
+      default:
+        return f;
+      }
+    }
+    String s = f.substring(0, pt + 1);
+    SB sb = new SB();
+    for (int i = 0; i < n; i++)
+      sb.append(s);
+    sb.append(f.substring(pt + 1));
+    return sb.toString();
+  }
+
+//  public static final double FRACTIONAL_PRECISION = 100000d;
+//  public static final double CARTESIAN_PRECISION =  10000d;
+//  
+//  public static double fixDouble(double d, double f) {
+//    return Math.round(d * f) / f;
+//  }
+//
   /**
    * parse a float or "float/float"
    * @param s
@@ -1770,7 +1759,7 @@ public class PT {
 
   public static double parseDoubleNext(String str, int[] next) {
     int cch = (str == null ? -1 : str.length());
-    return (next[0] < 0 || next[0] >= cch ? Float.NaN : parseDoubleChecked(str, cch, next, false));
+    return (next[0] < 0 || next[0] >= cch ? Double.NaN : parseDoubleChecked(str, cch, next, false));
   }
 
   public static double parseDoubleStrict(String str) {
@@ -1811,7 +1800,6 @@ public class PT {
    * @param f
    * @return true double value
    */
-  
   public static double toDouble(float f) {
     /** 
      * @j2sNative
@@ -1835,15 +1823,14 @@ public class PT {
 //  double d = 790.8999998888;
 //  float x  = 790.8999998888f;
 //  for (int i = 0; i < 50; i++) {
-//  System.out.println(x + " " + d);
-//  System.out.println(Math.round(x * 100000) / 100000f);
-//  System.out.println(Math.round(d * 100000) / 100000.);
-//  System.out.println(Math.round(x * 10000) / 10000f);
-//  System.out.println(Math.round(d * 10000) / 10000.);
+//System.out.println(x + " " + d);
+//System.out.println(Math.round(x * 100000) / 100000f);
+//System.out.println(Math.round(d * 100000) / 100000.);
+//System.out.println(Math.round(x * 10000) / 10000f);
+//System.out.println(Math.round(d * 10000) / 10000.);
 //  x+=1; 
 //  d+=1;
-//  }
-//  System.out.println(100.123456789f);
+//System.out.println(100.123456789f);
 //}
 
 //  static {
@@ -1852,21 +1839,17 @@ public class PT {
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = PT.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
+//System.out.println(System.currentTimeMillis() - t);
 //
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = Character.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
+//System.out.println(System.currentTimeMillis() - t);
 //    
 //    t = System.currentTimeMillis();
 //    for (int i = 0; i < 10000000; i++) {
 //      boolean b = PT.isUpperCase(c);
-//    }
-//    System.out.println(System.currentTimeMillis() - t);
-//
-//    System.out.println("PT test");
+//System.out.println(System.currentTimeMillis() - t);
+//System.out.println("PT test");
 //  }
 }

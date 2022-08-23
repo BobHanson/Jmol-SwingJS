@@ -40,14 +40,14 @@ import org.jmol.viewer.JC;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * 
@@ -60,7 +60,7 @@ public class XtalSymmetry {
   private final static int PARTICLE_NONE = 0;
   private final static int PARTICLE_CHAIN = 1;
   private final static int PARTICLE_SYMOP = 2;
-  private static final float MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
+  private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
 
   private AtomSetCollectionReader acr;
   private AtomSetCollection asc;
@@ -76,17 +76,17 @@ public class XtalSymmetry {
   private boolean doPackUnitCell;
   private boolean latticeOnly;
 
-  private Lst<float[]> trajectoryUnitCells;
+  private Lst<double[]> trajectoryUnitCells;
 
-  private float[] unitCellParams = new float[6];
-  private float[] baseUnitCell;
+  private double[] unitCellParams = new double[6];
+  private double[] baseUnitCell;
   private int[] latticeCells;
-  private V3[] unitCellTranslations;
+  private V3d[] unitCellTranslations;
   
   // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
 
-  private float symmetryRange;
-  private float packingError;
+  private double symmetryRange;
+  private double packingError;
   private String filterSymop;
   private SB bondsFound = new SB();
   
@@ -96,8 +96,8 @@ public class XtalSymmetry {
   private int noSymmetryCount;
   private int nVib;
 
-  private P3 ptTemp;
-  private M3 mTemp;
+  private P3d ptTemp;
+  private M3d mTemp;
 
 
 
@@ -105,14 +105,14 @@ public class XtalSymmetry {
    * range minima and maxima -- also usedf for cartesians comparisons
    * 
    */
-  private float rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
+  private double rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
 
-  private final P3 ptOffset = new P3();
+  private final P3d ptOffset = new P3d();
 
-  //private P3 unitCellOffset;
+  //private P3d unitCellOffset;
 
   private P3i minXYZ, maxXYZ;
-  private P3 minXYZ0, maxXYZ0;
+  private P3d minXYZ0, maxXYZ0;
 
   private boolean checkAll;
   private int bondCount0;
@@ -140,9 +140,9 @@ public class XtalSymmetry {
     return (this.symmetry = symmetry);
   }
 
-  private void setSymmetryRange(float factor) {
+  private void setSymmetryRange(double factor) {
     symmetryRange = factor;
-    asc.setInfo("symmetryRange", Float.valueOf(factor));
+    asc.setInfo("symmetryRange", Double.valueOf(factor));
   }
 
   private void setLatticeCells() {
@@ -167,11 +167,13 @@ public class XtalSymmetry {
     doCentroidUnitCell = acr.doCentroidUnitCell;
     centroidPacked = acr.centroidPacked;
     filterSymop = acr.filterSymop;
+    //if (acr.strSupercell == null)
+      //setSupercellFromPoint(acr.ptSupercell);
   }
 
-  private void setUnitCell(float[] info, M3 matUnitCellOrientation,
-                                   P3 unitCellOffset) {
-    unitCellParams = new float[info.length];
+  private void setUnitCell(double[] info, M3d matUnitCellOrientation,
+                                   P3d unitCellOffset) {
+    unitCellParams = new double[info.length];
     //this.unitCellOffset = unitCellOffset;
     for (int i = 0; i < info.length; i++)
       unitCellParams[i] = info[i];
@@ -179,7 +181,7 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("unitCellParams", unitCellParams);
     if (asc.isTrajectory) {
       if (trajectoryUnitCells == null) {
-        trajectoryUnitCells = new Lst<float[]>();
+        trajectoryUnitCells = new Lst<double[]>();
         asc.setInfo("unitCells", trajectoryUnitCells);
       }
       trajectoryUnitCells.addLast(unitCellParams);
@@ -274,8 +276,8 @@ public class XtalSymmetry {
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
     /* kcode:  Generally the multiplier is just {ijk ijk scale}, but when we have
-    *        1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java float
-    *        precision issues so we use P4 {1iiijjjkkk 1iiijjjkkk scale,
+    *        1iiijjjkkk 1iiijjjkkk scale, doubles lose kkk due to Java double
+    *        precision issues so we use P4d {1iiijjjkkk 1iiijjjkkk scale,
     *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
     *        renderer, but later -500 or -499 -- tells us which code we are
     *        looking at, the first one or the second one.
@@ -289,9 +291,9 @@ public class XtalSymmetry {
       updateBSAtoms();
       firstAtom = bsAtoms.nextSetBit(firstAtom);
     }
-    rminx = rminy = rminz = Float.MAX_VALUE;
-    rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
-    P3 pt0 = null;
+    rminx = rminy = rminz = Double.MAX_VALUE;
+    rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
+    P3d pt0 = null;
     if (acr.latticeType == null)
       acr.latticeType = "" + symmetry.getLatticeType();
     if (acr.isPrimitive) {
@@ -312,7 +314,7 @@ public class XtalSymmetry {
         } else if (type.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
           acr.fillRange = symmetry.getUnitCellVectors();
           symmetry.toFromPrimitive(true, acr.latticeType.charAt(0),
-              (T3[]) acr.fillRange, acr.primitiveToCrystal);
+              (T3d[]) acr.fillRange, acr.primitiveToCrystal);
         } else {
           acr.fillRange = null;
         }
@@ -321,50 +323,52 @@ public class XtalSymmetry {
       }
     }
     if (acr.fillRange != null) {
+
       bsAtoms = updateBSAtoms();
       acr.forcePacked = true;
       doPackUnitCell = false;
       minXYZ = new P3i();
       maxXYZ = P3i.new3(1, 1, 1);
-      P3[] oabc = new P3[4];
+      P3d[] oabc = new P3d[4];
       for (int i = 0; i < 4; i++)
-        oabc[i] = P3.newP(((T3[]) acr.fillRange)[i]);
+        oabc[i] = P3d.newP(((T3d[]) acr.fillRange)[i]);
       adjustRangeMinMax(oabc);
       //Logger.info("setting min/max for original lattice to " + minXYZ + " and "
       //  + maxXYZ);
       if (sym2 == null) {
         sym2 = new Symmetry();
-        sym2.getUnitCell((T3[]) acr.fillRange, false, null);
+        sym2.getUnitCelld((T3d[]) acr.fillRange, false, null);
       }
       applyAllSymmetry(acr.ms, bsAtoms);
-      pt0 = new P3();
+      pt0 = new P3d();
       Atom[] atoms = asc.atoms;
       for (int i = asc.ac; --i >= firstAtom;) {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
-        if (acr.fixJavaDouble)
-          PT.fixPtFloats(pt0, PT.FRACTIONAL_PRECISION);
+//        if (acr.fixJavaDouble)
+//          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
         if (acr.noPack
-            ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
-            : !isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
+                ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
+                : !isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
           bsAtoms.clear(i);
+
       }
       return;
     }
-    P3 offset = null;
+    P3d offset = null;
     nVib = 0;
-    T3 va = null, vb = null, vc = null;
+    T3d va = null, vb = null, vc = null;
     baseSymmetry = symmetry;
     String supercell = acr.strSupercell;
-    T3[] oabc = null;
+    T3d[] oabc = null;
     boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
     if (isSuper) {
       // expand range to accommodate this alternative cell
       // oabc will be cartesian
-      M4 m = new M4();
+      M4d m = new M4d();
       if (mident == null)
-        mident = new M4();
+        mident = new M4d();
       oabc = symmetry.getV0abc(supercell, m);
       if (oabc != null && !m.equals(mident)) {
         // flag this to set symmetry to P1 in the end
@@ -372,12 +376,12 @@ public class XtalSymmetry {
         // in terms of the old unit cell
         setMinMax(dim, kcode, maxX, maxY, maxZ);
         // base origin for new unit cell
-        pt0 = P3.newP(oabc[0]);
+        pt0 = P3d.newP(oabc[0]);
 
         // base vectors for new unit cell
-        va = P3.newP(oabc[1]);
-        vb = P3.newP(oabc[2]);
-        vc = P3.newP(oabc[3]);
+        va = P3d.newP(oabc[1]);
+        vb = P3d.newP(oabc[2]);
+        vc = P3d.newP(oabc[3]);
 
         adjustRangeMinMax(oabc);
       }
@@ -385,7 +389,7 @@ public class XtalSymmetry {
     int iAtomFirst = asc.getLastAtomSetAtomIndex();
     if (bsAtoms != null)
       iAtomFirst = bsAtoms.nextSetBit(iAtomFirst);
-    if (rminx == Float.MAX_VALUE) {
+    if (rminx == Double.MAX_VALUE) {
       supercell = null;
       oabc = null;
     } else {
@@ -409,7 +413,7 @@ public class XtalSymmetry {
 
       symmetry = null;
       symmetry = getSymmetry();
-      setUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y,
+      setUnitCell(new double[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y,
           vb.z, vc.x, vc.y, vc.z }, null, offset);
       setAtomSetSpaceGroupName(
           oabc == null || supercell == null ? "P1" : "cell=" + supercell);
@@ -470,11 +474,11 @@ public class XtalSymmetry {
     } else {
       for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
           .nextSetBit(i + 1)) {
-        if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-            maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
-          bs.clear(i);
-      }
+      if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+          maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+        bs.clear(i);
     }
+  }
   }
 
   /**
@@ -492,14 +496,14 @@ public class XtalSymmetry {
     return bs;
   }
 
-  private void adjustRangeMinMax(T3[] oabc) {
+  private void adjustRangeMinMax(T3d[] oabc) {
 
     // be sure to add in packing error adjustments 
     // so that we include all needed atoms
     // load "" packed x.x supercell...
-    P3 pa = new P3();
-    P3 pb = new P3();
-    P3 pc = new P3();
+    P3d pa = new P3d();
+    P3d pb = new P3d();
+    P3d pc = new P3d();
     if (acr.forcePacked) {
       pa.setT(oabc[1]);
       pb.setT(oabc[2]);
@@ -520,7 +524,7 @@ public class XtalSymmetry {
     oabc[0].sub(pc);
 
     // fractionalize and adjust min/max
-    P3 pt = P3.newP(oabc[0]);
+    P3d pt = P3d.newP(oabc[0]);
     symmetry.toFractional(pt, true);
     setSymmetryMinMax(pt);
 
@@ -556,7 +560,7 @@ public class XtalSymmetry {
         (int) Math.max(1,Math.ceil(rmaxz - 0.001f)));
   }
 
-  private void setSymmetryMinMax(P3 c) {
+  private void setSymmetryMinMax(P3d c) {
     if (rminx > c.x)
       rminx = c.x;
     if (rminy > c.y)
@@ -571,28 +575,27 @@ public class XtalSymmetry {
       rmaxz = c.z;
   }
 
-  public boolean isWithinCell(int ndims, P3 pt, float minX, float maxX,
-                              float minY, float maxY, float minZ, float maxZ,
-                              float slop) {
+  public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
+                              double minY, double maxY, double minZ, double maxZ,
+                              double slop) {
     return (pt.x > minX - slop && pt.x < maxX + slop
         && (ndims < 2 || pt.y > minY - slop && pt.y < maxY + slop) 
         && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
   }
   
-  public boolean removePacking(int ndims, P3 pt, float minX, float maxX,
-                              float minY, float maxY, float minZ, float maxZ,
-                              float slop) {
+  public boolean removePacking(int ndims, P3d pt, double minX, double maxX,
+                               double minY, double maxY, double minZ,
+                               double maxZ, double slop) {
     return (pt.x > minX - slop && pt.x < maxX - slop
-        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop) 
+        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop)
         && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
   }
 
-  
   //  /**
   //   * A problem arises when converting to JavaScript, because JavaScript numbers are all
-  //   * doubles, while here we have floats. So what we do is to multiply by a number that
-  //   * is beyond the precision of our data but within the range of floats -- namely, 100000,
-  //   * and then integerize. This ensures that both doubles and floats compare the same number.
+  //   * doubles, while here we have doubles. So what we do is to multiply by a number that
+  //   * is beyond the precision of our data but within the range of doubles -- namely, 100000,
+  //   * and then integerize. This ensures that both doubles and doubles compare the same number.
   //   * Unfortunately, it will break Java reading of older files, so we check for legacy versions. 
   //   * 
   //   * @param dtype
@@ -606,8 +609,8 @@ public class XtalSymmetry {
   //   * @param slop
   //   * @return  true if within range
   //   */
-  //  private boolean xxxisWithinCellInt(int dtype, P3 pt, float minX, float maxX,
-  //                              float minY, float maxY, float minZ, float maxZ,
+  //  private boolean xxxisWithinCellInt(int dtype, P3d pt, double minX, double maxX,
+  //                              double minY, double maxY, double minZ, double maxZ,
   //                              int slop) {
   //    switch (dtype) {
   //    case 3:
@@ -679,8 +682,8 @@ public class XtalSymmetry {
         || symmetryRange != 0 && maxXYZ.x - minXYZ.x == 1
             && maxXYZ.y - minXYZ.y == 1 && maxXYZ.z - minXYZ.z == 1) {
       // weird Mac bug does not allow   Point3i.new3(minXYZ) !!
-      minXYZ0 = P3.new3(minXYZ.x, minXYZ.y, minXYZ.z);
-      maxXYZ0 = P3.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
+      minXYZ0 = P3d.new3(minXYZ.x, minXYZ.y, minXYZ.z);
+      maxXYZ0 = P3d.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
       if (ms != null) {
         ms.setMinMax0(minXYZ0, maxXYZ0);
         minXYZ.set((int) minXYZ0.x, (int) minXYZ0.y, (int) minXYZ0.z);
@@ -712,21 +715,21 @@ public class XtalSymmetry {
             //        : symmetryRange < 0 ? 1 // checking against symop=1555 set; just a box
             : 1 // not checking
     );
-    P3[] cartesians = new P3[cartesianCount];
+    P3d[] cartesians = new P3d[cartesianCount];
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < n; i++)
       atoms[firstAtom + i].bsSymmetry = BS.newN(operationCount * (nCells + 1));
     int pt = 0;
-    unitCellTranslations = new V3[nCells];
+    unitCellTranslations = new V3d[nCells];
     int iCell = 0;
     int cell555Count = 0;
-    float absRange = Math.abs(symmetryRange);
+    double absRange = Math.abs(symmetryRange);
     boolean checkCartesianRange = (symmetryRange != 0);
     boolean checkRangeNoSymmetry = (symmetryRange < 0);
     boolean checkRange111 = (symmetryRange > 0);
     if (checkCartesianRange) {
-      rminx = rminy = rminz = Float.MAX_VALUE;
-      rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
+      rminx = rminy = rminz = Double.MAX_VALUE;
+      rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
     }
     // incommensurate symmetry can have lattice centering, resulting in 
     // duplication of operators. There's a bug later on that requires we 
@@ -735,19 +738,19 @@ public class XtalSymmetry {
     SymmetryInterface lastSymmetry = sym;
     checkAll = (latticeOnly
         || asc.atomSetCount == 1 && asc.checkSpecial && latticeOp >= 0);
-    Lst<M4> lstNCS = acr.lstNCS;
+    Lst<M4d> lstNCS = acr.lstNCS;
     if (lstNCS != null && lstNCS.get(0).m33 == 0) {
       int nOp = sym.getSpaceGroupOperationCount();
       int nn = lstNCS.size();
       for (int i = nn; --i >= 0;) {
-        M4 m = lstNCS.get(i);
+        M4d m = lstNCS.get(i);
         m.m33 = 1;
         sym.toFractionalM(m);
       }
       for (int i = 1; i < nOp; i++) {
-        M4 m1 = sym.getSpaceGroupOperation(i);
+        M4d m1 = sym.getSpaceGroupOperation(i);
         for (int j = 0; j < nn; j++) {
-          M4 m = M4.newM4(lstNCS.get(j));
+          M4d m = M4d.newM4(lstNCS.get(j));
           m.mul2(m1, m);
           if (doNormalize && noSymmetryCount > 0)
             SymmetryOperation.normalizeOperationToCentroid(3, m, atoms, firstAtom, noSymmetryCount);
@@ -758,10 +761,10 @@ public class XtalSymmetry {
 
     // always do the 555 cell first, just operation 0 -- but for incommensurate systems this may not be x,y,z
 
-    P3 pttemp = null;
-    M4 op = sym.getSpaceGroupOperation(0);
+    P3d pttemp = null;
+    M4d op = sym.getSpaceGroupOperation(0);
     if (doPackUnitCell) {
-      pttemp = new P3();
+      pttemp = new P3d();
       ptOffset.set(0, 0, 0);
     }
     int[] atomMap = (bondCount0 > asc.bondIndex0 && applySymmetryToBonds
@@ -772,7 +775,7 @@ public class XtalSymmetry {
     for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
       for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
         for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
-          unitCellTranslations[iCell] = V3.new3(tx, ty, tz);
+          unitCellTranslations[iCell] = V3d.new3(tx, ty, tz);
           unitCells[iCell++] = 555 + tx * 100 + ty * 10 + tz;
           if (tx != 0 || ty != 0 || tz != 0 || cartesians.length == 0)
             continue;
@@ -789,7 +792,7 @@ public class XtalSymmetry {
                 op = sym.getSpaceGroupOperation(0);
               }
             }
-            P3 c = P3.newP(atom);
+            P3d c = P3d.newP(atom);
             op.rotTrans(c);
             sym.toCartesian(c, false);
             if (doPackUnitCell) {
@@ -798,8 +801,8 @@ public class XtalSymmetry {
               sym.toUnitCellRnd(c, ptOffset);
               pttemp.setT(c);
               sym.toFractional(pttemp, false);
-              if (acr.fixJavaDouble)
-                PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
+//              if (acr.fixJavaDouble)
+//                PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
               // setting it to be correct for a 
               // second unit cell -- the supercell
@@ -845,14 +848,16 @@ public class XtalSymmetry {
 
     // now apply all the translations
     iCell = 0;
-    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++)
-      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
+    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
+      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
         for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
           iCell++;
           if (tx != 0 || ty != 0 || tz != 0)
             pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt,
                 iCell * operationCount, cartesians, ms, excludedOps, atomMap);
         }
+      }
+    }
     if (iCell * n == asc.ac - firstAtom)
       duplicateAtomProperties(iCell);
     setSymmetryOps();
@@ -862,13 +867,13 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("unitCellRange", unitCells);
     asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
     baseUnitCell = unitCellParams;
-    unitCellParams = new float[6];
+    unitCellParams = new double[6];
     reset();
   }
 
   private int symmetryAddAtoms(int transX, int transY, int transZ,
                                int baseCount, int pt, int iCellOpPt,
-                               P3[] cartesians, MSInterface ms, BS excludedOps,
+                               P3d[] cartesians, MSInterface ms, BS excludedOps,
                                int[] atomMap)
       throws Exception {
     boolean isBaseCell = (baseCount == 0);
@@ -884,13 +889,13 @@ public class XtalSymmetry {
     // target set. The user can later use select within() to narrow that down
     // This saves immensely on time.
 
-    float range2 = symmetryRange * symmetryRange;
+    double range2 = symmetryRange * symmetryRange;
     boolean checkRangeNoSymmetry = (symmetryRange < 0);
     boolean checkRange111 = (symmetryRange > 0);
     boolean checkSymmetryMinMax = (isBaseCell && checkRange111);
     checkRange111 &= !isBaseCell;
     int nOp = symmetry.getSpaceGroupOperationCount();
-    Lst<M4> lstNCS = acr.lstNCS;
+    Lst<M4d> lstNCS = acr.lstNCS;
     int nNCS = (lstNCS == null ? 0 : lstNCS.size());
     int nOperations = nOp + nNCS;
     nNCS = nNCS / nOp;
@@ -905,9 +910,9 @@ public class XtalSymmetry {
     if (checkRangeNoSymmetry)
       baseCount = noSymmetryCount;
     int atomMax = firstAtom + noSymmetryCount;
-    P3 pttemp = new P3();
+    P3d pttemp = new P3d();
     String code = null;
-    float d0 = (checkOps ? 0.01f : 0.0001f);
+    double d0 = (checkOps ? 0.01f : 0.0001f);
     char subSystemId = '\0';
     int j00 = (bsAtoms == null ? firstAtom : bsAtoms.nextSetBit(firstAtom));
     out: for (int iSym = 0; iSym < nOperations; iSym++) {
@@ -929,7 +934,7 @@ public class XtalSymmetry {
 
       int pt0 = firstAtom + (checkSpecial || excludedOps != null ? pt
           : checkRange111 ? baseCount : 0);
-      float spinOp = (iSym >= nOp ? 0
+      int spinOp = (iSym >= nOp ? 0
           : asc.vibScale == 0 ? sym.getSpinOp(iSym) : asc.vibScale);
       int i0 = Math.max(firstAtom,
           (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
@@ -948,7 +953,7 @@ public class XtalSymmetry {
         } else {
           sym = ms.getAtomSymmetry(a, this.symmetry);
           sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
-          // COmmensurate structures may use a symmetry operator
+          // COmmensurate structures may  a symmetry operator
           // to changes space groups.
           code = sym.getSpaceGroupOperationCode(iSym);
           if (code != null) {
@@ -958,16 +963,16 @@ public class XtalSymmetry {
               finalizeSymmetry(sym);
           }
         }
-        if (acr.fixJavaDouble)
-          PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
-        P3 c = P3.newP(pttemp); // cartesian position
+//        if (acr.fixJavaDouble)
+//          PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
+        P3d c = P3d.newP(pttemp); // cartesian position
         sym.toCartesian(c, false);
         if (doPackUnitCell) {
           sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
-          if (acr.fixJavaDouble)
-            PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
+//          if (acr.fixJavaDouble)
+//            PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
           if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
               maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
             continue;
@@ -981,7 +986,7 @@ public class XtalSymmetry {
           if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz
               || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
             continue;
-          float minDist2 = Float.MAX_VALUE;
+          double minDist2 = Double.MAX_VALUE;
           // checkAll means we have to check against operations that have
           // just been done; otherwise we can check only to the base set
           int j0 = (checkAll ? asc.ac : pt0);
@@ -990,10 +995,10 @@ public class XtalSymmetry {
           for (int j = j00; j < j0; j++) {
             if (bsAtoms != null && !bsAtoms.get(j))
               continue;
-            P3 pc = cartesians[j - firstAtom];
+            P3d pc = cartesians[j - firstAtom];
             if (pc == null)
               continue;
-            float d2 = c.distanceSquared(pc);
+            double d2 = c.distanceSquared(pc);
             if (checkSpecial && d2 < d0) {
               /* checkSpecial indicates that we are looking for atoms with (nearly) the
                * same cartesian position.  
@@ -1076,7 +1081,7 @@ public class XtalSymmetry {
 
           int ia1 = atomMap[atom1.atomSite];
           int ia2 = atomMap[atom2.atomSite];
-          //          float d = 0;
+          //          double d = 0;
           if (ia1 > ia2) {
             int i = ia1;
             ia1 = ia2;
@@ -1108,8 +1113,8 @@ public class XtalSymmetry {
             s.append(data);
           p.put(key, s.toString());
         } else {
-          float[] f = (float[]) val;
-          float[] fnew = new float[f.length * nTimes];
+          double[] f = (double[]) val;
+          double[] fnew = new double[f.length * nTimes];
           for (int i = nTimes; --i >= 0;)
             System.arraycopy(f, 0, fnew, i * f.length, f.length);
         }
@@ -1142,23 +1147,23 @@ public class XtalSymmetry {
       setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
   }
 
-  public T3 getOverallSpan() {
-    return (maxXYZ0 == null ? V3.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
-        maxXYZ.z - minXYZ.z) : V3.newVsub(maxXYZ0, minXYZ0));
+  public T3d getOverallSpan() {
+    return (maxXYZ0 == null ? V3d.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
+        maxXYZ.z - minXYZ.z) : V3d.newVsub(maxXYZ0, minXYZ0));
   }
 
-  static M4 mident;
+  M4d mident;
   
   @SuppressWarnings("unchecked")
   public void applySymmetryBio(Map<String, Object> thisBiomolecule,
                                boolean applySymmetryToBonds, String filter) {
-    Lst<M4> biomts = (Lst<M4>) thisBiomolecule.get("biomts");
+    Lst<M4d> biomts = (Lst<M4d>) thisBiomolecule.get("biomts");
     int len = biomts.size();
     // this was a bad idea - biomt can be just the identity matrix, in which case this is just a selection set -- 7OJP
     //    if (len < 2)
     //      return;
     if (mident == null) {
-      mident = new M4();
+      mident = new M4d();
       mident.setIdentity();
     }
     acr.lstNCS = null; // disable NCS
@@ -1185,7 +1190,7 @@ public class XtalSymmetry {
     //      biomtchains = null;
     symmetry = null;
     // it's not clear to me why you would do this:
-    //if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
+    //if (!Double.isNaN(unitCellParams[0])) // PDB can do this; 
     //setUnitCell(unitCellParams, null, unitCellOffset);
     getSymmetry().setSpaceGroup(doNormalize);
     //symmetry.setUnitCell(null);
@@ -1225,7 +1230,7 @@ public class XtalSymmetry {
         BS bs = e.getValue();
         for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
           a.add(atoms[i]);
-        a.scale(1f / bs.cardinality());
+        a.scale(1d / bs.cardinality());
         a.atomName = "Pt" + ichain;
         a.chainID = e.getKey().intValue();
       }
@@ -1240,7 +1245,7 @@ public class XtalSymmetry {
       a.set(0, 0, 0);
       for (int i = atomMax; --i >= firstAtom;)
         a.add(atoms[i]);
-      a.scale(1f / (atomMax - firstAtom));
+      a.scale(1d / (atomMax - firstAtom));
       a.atomName = "Pt";
       a.radius = 16;
       asc.addAtom(a);
@@ -1277,7 +1282,7 @@ public class XtalSymmetry {
           && filter.indexOf("#" + (imt + 1) + ";") < 0) {
         continue;
       }
-      M4 mat = biomts.get(imt);
+      M4d mat = biomts.get(imt);
       boolean notIdentity = !mat.equals(mident);
 
       // if asym_id is given, that is what is being referred to, not author chains
@@ -1457,7 +1462,7 @@ public class XtalSymmetry {
       }
       // reset bondingRadius to NaN
       for (int i = atomMax, n = asc.ac; i < n; i++) {
-        asc.atoms[i].bondingRadius = Float.NaN;
+        asc.atoms[i].bondingRadius = Double.NaN;
       }
 
     }
@@ -1484,8 +1489,8 @@ public class XtalSymmetry {
   public Tensor addRotatedTensor(Atom a, Tensor t, int iSym, boolean reset,
                                  SymmetryInterface symmetry) {
     if (ptTemp == null) {
-      ptTemp = new P3();
-      mTemp = new M3();
+      ptTemp = new P3d();
+      mTemp = new M3d();
     }
     return a.addTensor(((Tensor) acr.getInterface("org.jmol.util.Tensor"))
         .setFromEigenVectors(
@@ -1502,8 +1507,8 @@ public class XtalSymmetry {
         continue;
       // getTensor will return correct type
       a.addTensor(symmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
-      if (Float.isNaN(a.bfactor))
-        a.bfactor = a.anisoBorU[7] * 100f;
+      if (Double.isNaN(a.bfactor))
+        a.bfactor = a.anisoBorU[7] * 100d;
       // prevent multiple additions
       a.anisoBorU = null;
     }
@@ -1547,8 +1552,8 @@ public class XtalSymmetry {
    * 
    */
   public void scaleFractionalVibs() {
-    float[] params = getBaseSymmetry().getUnitCellParams();
-    P3 ptScale = P3.new3(1 / params[0], 1 / params[1], 1 / params[2]);
+    double[] params = getBaseSymmetry().getUnitCellParams();
+    P3d ptScale = P3d.new3(1 / params[0], 1 / params[1], 1 / params[2]);
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
@@ -1571,7 +1576,7 @@ public class XtalSymmetry {
    * 
    * @param ptSupercell
    */
-  public void finalizeUnitCell(P3 ptSupercell) {
+  public void finalizeUnitCell(P3d ptSupercell) {
     if (ptSupercell != null && baseUnitCell != null) {
       baseUnitCell[22] = Math.max(1, (int) ptSupercell.x);
       baseUnitCell[23] = Math.max(1, (int) ptSupercell.y);
@@ -1581,15 +1586,15 @@ public class XtalSymmetry {
 
   
 //  static {
-//    System.out.println(.01999998f);
-//    System.out.println(1.01999998f);
-//    System.out.println(2.01999998f);
-//    System.out.println(9910.01999998f);
-//    System.out.println(Math.round(100000*.01999998f));
-//    System.out.println(Math.round(100000*.020000000000015));
-//    System.out.println(Math.round(100000*-.01999998f));
-//    System.out.println(Math.round(100000*-.020000000000015));
-//    System.out.println(.01999998f+ Integer.MAX_VALUE);
+//System.out.println(.01999998d);
+//System.out.println(1.01999998d);
+//System.out.println(2.01999998d);
+//System.out.println(9910.01999998d);
+//System.out.println(Math.round(100000*.01999998d));
+//System.out.println(Math.round(100000*.020000000000015));
+//System.out.println(Math.round(100000*-.01999998d));
+//System.out.println(Math.round(100000*-.020000000000015));
+//System.out.println(.01999998d+ Integer.MAX_VALUE);
 //  }
 
 }

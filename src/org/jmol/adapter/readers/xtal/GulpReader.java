@@ -3,13 +3,12 @@ package org.jmol.adapter.readers.xtal;
 import java.util.Hashtable;
 import java.util.Map;
 
-
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.SymmetryInterface;
 
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * Problems identified (Bob Hanson) --
@@ -38,7 +37,7 @@ public class GulpReader extends AtomSetCollectionReader {
   private boolean isPrimitive;
   private String sep = "-------";
   private boolean coordinatesArePrimitive;
-  private Map<String, Float> atomCharges;
+  private Map<String, Double> atomCharges;
 
   @Override
   protected void initializeReader() throws Exception {
@@ -52,11 +51,11 @@ public class GulpReader extends AtomSetCollectionReader {
     if (atomCharges == null)
       return;
     Atom[] atoms = asc.atoms;
-    Float f;
+    Double f;
     for (int i = asc.ac; --i >= 0;)
       if ((f = atomCharges.get(atoms[i].atomName)) != null
           || (f = atomCharges.get(atoms[i].getElementSymbol())) != null)
-        atoms[i].partialCharge = f.floatValue();
+        atoms[i].partialCharge = f.doubleValue();
   }
   
   private boolean bTest;
@@ -138,8 +137,8 @@ public class GulpReader extends AtomSetCollectionReader {
     sgName = line.substring(line.indexOf(":") + 1).trim();
   }
 
-  private float a, b, c, alpha, beta, gamma;
-  private float[] primitiveData;
+  private double a, b, c, alpha, beta, gamma;
+  private double[] primitiveData;
   final private static String[] tags = { "a", "b", "c", "alpha", "beta", "gamma" };
 
   private static int parameterIndex(String key) {
@@ -149,7 +148,7 @@ public class GulpReader extends AtomSetCollectionReader {
     return -1;
   }
 
-  private void setParameter(String key, float value) {
+  private void setParameter(String key, double value) {
     switch (parameterIndex(key)) {
     case 0:
       a = value;
@@ -225,7 +224,7 @@ public class GulpReader extends AtomSetCollectionReader {
   private void readCellParameters(boolean isLatticeVectors) throws Exception {
     if (isLatticeVectors) {
       rd();
-      primitiveData = fillFloatArray(null, 0, new float[9]);
+      primitiveData = fillDoubleArray(null, 0, new double[9]);
       a = 0;
       return;
     }
@@ -238,7 +237,7 @@ public class GulpReader extends AtomSetCollectionReader {
       String[] tokens = PT.getTokens(line.replace('=', ' '));
       for (int i = i0; i < i0 + 4; i += 2)
         if (tokens.length > i + 1)
-          setParameter(tokens[i], parseFloatStr(tokens[i + 1]));
+          setParameter(tokens[i], parseDoubleStr(tokens[i + 1]));
     }
   }
 
@@ -267,7 +266,7 @@ public class GulpReader extends AtomSetCollectionReader {
     discardLinesUntilContains(sep);
     String tokens[];
     while (rd() != null && (tokens = getTokens()).length >= 2)
-      setParameter(tokens[0], parseFloatStr(tokens[1]));
+      setParameter(tokens[0], parseDoubleStr(tokens[1]));
     if (primitiveData != null) {
       scalePrimitiveData(0, a);
       scalePrimitiveData(3, b);
@@ -279,9 +278,9 @@ public class GulpReader extends AtomSetCollectionReader {
             rd();
             for (int i = 0; i < 2; i++) {
               tokens = PT.getTokens(rd().replace('=', ' '));
-              setParameter(tokens[0], parseFloatStr(tokens[1]));
-              setParameter(tokens[2], parseFloatStr(tokens[3]));
-              setParameter(tokens[4], parseFloatStr(tokens[5]));
+              setParameter(tokens[0], parseDoubleStr(tokens[1]));
+              setParameter(tokens[2], parseDoubleStr(tokens[3]));
+              setParameter(tokens[4], parseDoubleStr(tokens[5]));
             }
             break;
           }
@@ -292,8 +291,8 @@ public class GulpReader extends AtomSetCollectionReader {
       setEnergy();
   }
 
-  private void scalePrimitiveData(int i, float value) {
-    V3 v = V3.new3(primitiveData[i], primitiveData[i + 1], primitiveData[i + 2]);
+  private void scalePrimitiveData(int i, double value) {
+    V3d v = V3d.new3(primitiveData[i], primitiveData[i + 1], primitiveData[i + 2]);
     v.normalize();
     v.scale(value);
     primitiveData[i++] = v.x;
@@ -316,8 +315,8 @@ public class GulpReader extends AtomSetCollectionReader {
         Atom atom = atoms[i];
         symmetry.toCartesian(atom, true);
         symFull.toFractional(atom, true);
-        if (fixJavaDouble)
-          PT.fixPtFloats(atom, PT.FRACTIONAL_PRECISION);
+//        if (fixJavaDouble)
+//          PT.fixPtDoubles(atom, PT.FRACTIONAL_PRECISION);
       }
       setModelParameters(false);
     }
@@ -411,15 +410,15 @@ public class GulpReader extends AtomSetCollectionReader {
 --------------------------------------------------------------------------------
    */
   private void readPartialCharges() throws Exception {
-    atomCharges = new Hashtable<String, Float>();
+    atomCharges = new Hashtable<String, Double>();
     discardLinesUntilContains(sep);
     discardLinesUntilContains(sep);
     String[] tokens;
     while ((tokens = PT.getTokens(rd())).length > 5) {
       String species = tokens[0];
-      Float charge = atomCharges.get(species);
-      float f = (charge == null ? 0 : charge.floatValue());
-      atomCharges.put(species, Float.valueOf((f + parseFloatStr(tokens[4]))));
+      Double charge = atomCharges.get(species);
+      double f = (charge == null ? 0 : charge.doubleValue());
+      atomCharges.put(species, Double.valueOf((f + parseDoubleStr(tokens[4]))));
     }
   }
 
@@ -456,7 +455,7 @@ public class GulpReader extends AtomSetCollectionReader {
   }
 
   private void setEnergy() {
-    asc.setAtomSetEnergy("" + totEnergy, totEnergy.floatValue());
+    asc.setAtomSetEnergy("" + totEnergy, totEnergy.doubleValue());
     asc.setInfo("Energy", totEnergy);
     asc.setAtomSetName("E = " + totEnergy + " " + energyUnits);
     totEnergy = null;

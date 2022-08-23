@@ -211,7 +211,7 @@ public class CompoundDocument extends BinaryDocument{
     nShortSectorsPerStandardSector = sectorSize / shortSectorSize; // e.g. 512 / 64 = 8
     nIntPerSector = sectorSize / 4; // e.g. 512 / 4 = 128
     nDirEntriesperSector = sectorSize / 128; // e.g. 512 / 128 = 4
-//    System.out.println(
+//System.out.println(
 //          "compound document: revNum=" + header.revNumber +
 //          " verNum=" + header.verNumber + " isBigEndian=" + isBigEndian +
 //          " bytes per standard/short sector=" + sectorSize + "/" + shortSectorSize);
@@ -297,7 +297,7 @@ public class CompoundDocument extends BinaryDocument{
     } catch (Exception e) {
       System.out.println(e.toString());
     }
-//    System.out.println("CompoundDocument directory entry: \n"
+//System.out.println("CompoundDocument directory entry: \n"
 //        + getDirectoryListing("\n"));
   }
 

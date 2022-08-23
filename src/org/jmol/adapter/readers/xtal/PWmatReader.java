@@ -1,5 +1,6 @@
 package org.jmol.adapter.readers.xtal;
 
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -75,8 +76,8 @@ public class PWmatReader extends AtomSetCollectionReader {
       return true;
     // do not read anything unit we get the lattice line
     if (!haveLattice) {
-      if (lc.startsWith("lattice")) {
-        readUnitCell();
+    if (lc.startsWith("lattice")) {
+      readUnitCell();
         haveLattice = true;
       }
       return true;
@@ -84,20 +85,18 @@ public class PWmatReader extends AtomSetCollectionReader {
     // and then also have positions
     if (!havePositions) {
       if (lc.startsWith("position")) {
-        readCoordinates();
+      readCoordinates();
         havePositions = true;
       }
       return true;
     }
-    if (!readDataBlock(lc)) {
-      continuing = false;
-    }      
+      if (!readDataBlock(lc)) {
+        continuing = false;
+      }      
     return true;
   }
   
   private void readComments() {
-    // TODO
-    
   }
 
   private void readUnitCell() throws Exception {
@@ -105,10 +104,10 @@ public class PWmatReader extends AtomSetCollectionReader {
     // the lattice vector. For each line, there could be an extra 
     // 3 numbers followed, please ignore.
     
-    float[] unitCellData = new float[3];
-    addExplicitLatticeVector(0, fillFloatArray(getLine(), 0, unitCellData), 0);
-    addExplicitLatticeVector(1, fillFloatArray(getLine(), 0, unitCellData), 0);
-    addExplicitLatticeVector(2, fillFloatArray(getLine(), 0, unitCellData), 0);
+    double[] unitCellData = new double[3];
+    addExplicitLatticeVector(0, fillDoubleArray(getLine(), 0, unitCellData), 0);
+    addExplicitLatticeVector(1, fillDoubleArray(getLine(), 0, unitCellData), 0);
+    addExplicitLatticeVector(2, fillDoubleArray(getLine(), 0, unitCellData), 0);
   }
 
 
@@ -124,8 +123,8 @@ public class PWmatReader extends AtomSetCollectionReader {
     int i = 0;
     while (i++ < nAtoms && getLine() != null) {
       String[] tokens = getTokens();
-      addAtomXYZSymName(tokens, 1, null,
-          getElementSymbol(Integer.parseInt(tokens[0])));
+      int z = Integer.parseInt(tokens[0]);
+      addAtomXYZSymName(tokens, 1, getElementSymbol(z), null).elementNumber = (short) z;
       haveConstraints = (tokens.length >= 7) && haveConstraints;
       if (haveConstraints)
         constraints.addLast(new double[] { Double.parseDouble(tokens[4]),
@@ -146,9 +145,7 @@ public class PWmatReader extends AtomSetCollectionReader {
   }
 
   private boolean readDataBlock(String name) throws Exception {
-    int pt = name.indexOf(" ");
-    if (pt > 0)
-      name = name.substring(0, pt);
+    name = trimPWPropertyNameTo(name, " ([,");
     getLine();
     if (line == null)
       return false;
@@ -168,27 +165,53 @@ public class PWmatReader extends AtomSetCollectionReader {
     }
   }
 
+  private String trimPWPropertyNameTo(String name, String chars) {
+    for (int i = chars.length(); --i >= 0;) {
+      int pt = name.indexOf(chars.charAt(i));
+      if (pt > 0)
+        name = name.substring(0, pt);
+    }
+    return name;
+  }
+
   private boolean haveMagnetic = false;
   
-  private void readItems(String name, int offset, double[] values) throws Exception {
+  private String global3 =";STRESS_MASK;STRESS_EXTERNAL;PTENSOR_EXTERNAL;";
+  
+  private void readItems(String name, int offset, double[] values)
+      throws Exception {
     if (name.equalsIgnoreCase("magnetic"))
       haveMagnetic = true;
-    name = "pwm_" + name;
-    if (values == null) {
-      values = new double[nAtoms];
+    boolean isGlobal = PT.isOneOf(name.toUpperCase(), global3);
+    if (isGlobal) {
+      String[] lines = new String[3];
+      lines[0] = line;
+      lines[1] = getLine();
+      lines[2] = getLine();
+      Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> data = (Map<String, Object>) info.get("globalPWmatData");
+      if (data == null)
+        info.put("globalPWmatData", data = new Hashtable<String, Object>());
+      data.put(name, lines);
     } else {
-      getLine();
+      name = "pwm_" + name;
+      if (values == null) {
+        values = new double[nAtoms];
+      } else {
+        getLine();
+      }
+      int n = 0;
+      for (int i = 0;;) {
+        String[] tokens = getTokens();
+        if ((values[i] = Double.parseDouble(tokens[offset])) != 0)
+          n++;
+        if (++i == nAtoms)
+          break;
+        getLine();
+      }
+      setProperties(name, values, n);
     }
-    int n = 0;
-    for (int i = 0;;) {
-      String[] tokens = getTokens();
-      if ((values[i] = Double.parseDouble(tokens[offset])) != 0)
-        n++;
-      if (++i == nAtoms)
-        break;
-      getLine();
-    }
-    setProperties(name, values, n);
   }
 
   private void setProperties(String name, double[] values, int n) {
@@ -243,7 +266,7 @@ public class PWmatReader extends AtomSetCollectionReader {
     appendLoadNote("PWmatReader read property_" + name + "_x/_y/_z");
     if (name.equals("pwm_magnetic_xyz")) {
       for (int i = 0; i < nAtoms; i++) {
-        asc.addVibrationVector(i, (float) valuesX[i], (float) valuesY[i], (float) valuesZ[i]);
+        asc.addVibrationVector(i, valuesX[i], valuesY[i], valuesZ[i]);
       }
       addJmolScript("vectors 0.2;set vectorscentered");
     }
@@ -259,13 +282,23 @@ public class PWmatReader extends AtomSetCollectionReader {
           .getAtomSetAuxiliaryInfoValue(asc.iSet, "atomProperties");
       if (p != null) {
         Atom[] atoms = asc.atoms;
+        // we must only provide data for actual atoms. 
+        int n = (asc.bsAtoms == null ? nAtoms : asc.bsAtoms.cardinality());
+        int[] map = (n == nAtoms ? null : new int[nAtoms]);
+        if (map != null) {
+          for (int j = 0, k = 0; j < nAtoms; j++) {
+            if (asc.bsAtoms.get(j))
+              map[j] = k++;
+          }
+        }
         for (Entry<String, Object> e : p.entrySet()) {
           String key = e.getKey();
           if (key.startsWith("pwm_")) {
             double[] af = (double[]) e.getValue();
-            double[] af2 = new double[nAtoms];
-            for (int j = 0; j < nAtoms; j++)
-              af2[j] = af[atoms[j].atomSite];
+            double[] af2 = new double[n];
+            for (int j = 0; j < nAtoms; j++) {
+              af2[map == null ? j : map[j]] = af[atoms[j].atomSite];
+            }
             e.setValue(af2);
           }
         }

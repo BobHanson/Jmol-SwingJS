@@ -101,32 +101,7 @@ public class M4d extends M34d {
 
     return m;
   }
-
-  public static M4d newA16(float[] v) {
-    M4d m = new M4d();
-    m.m00 = v[0];
-    m.m01 = v[1];
-    m.m02 = v[2];
-    m.m03 = v[3];
-
-    m.m10 = v[4];
-    m.m11 = v[5];
-    m.m12 = v[6];
-    m.m13 = v[7];
-
-    m.m20 = v[8];
-    m.m21 = v[9];
-    m.m22 = v[10];
-    m.m23 = v[11];
-
-    m.m30 = v[12];
-    m.m31 = v[13];
-    m.m32 = v[14];
-    m.m33 = v[15];
-
-    return m;
-  }
-
+  
   /**
    * Constructs a new matrix with the same values as the Matrix4f parameter.
    * 
@@ -167,17 +142,17 @@ public class M4d extends M34d {
     return m;
   }
 
-  public static M4d newMV(M3 m1, T3 t) {
-    M4d m = new M4d();
-    m.setMV(M3d.newM3(m1), V3d.newV(t));
-    return m;
-  }
-  
-  public static M4d newMV(M3d m1, T3 t) {
-    M4d m = new M4d();
-    m.setMV(M3d.newM3(m1), V3d.newV(t));
-    return m;
-  }
+//  public static M4d newMV(M3d m1, T3d t) {
+//    M4d m = new M4d();
+//    m.setMV(M3d.newM3(m1), V3d.newV(t));
+//    return m;
+//  }
+//  
+//  public static M4d newMV(M3d m1, T3d t) {
+//    M4d m = new M4d();
+//    m.setMV(M3d.newM3(m1), V3d.newV(t));
+//    return m;
+//  }
 
 
 
@@ -257,11 +232,11 @@ public class M4d extends M34d {
     setAA33(a);
   }
 
-  public void setToAA(A4 a) {
-    setIdentity();
-    setAA33(a);
-  }
-
+//  public void setToAA(A4d a) {
+//    setIdentity();
+//    setAA33(a);
+//  }
+//
   /**
    * Sets the values in this Matrix4f equal to the row-major array parameter
    * (ie, the first four elements of the array will be copied into the first row
@@ -288,24 +263,6 @@ public class M4d extends M34d {
     m33 = a[15];
   }
 
-  public void setAF(float[] a) {
-    m00 = a[0];
-    m01 = a[1];
-    m02 = a[2];
-    m03 = a[3];
-    m10 = a[4];
-    m11 = a[5];
-    m12 = a[6];
-    m13 = a[7];
-    m20 = a[8];
-    m21 = a[9];
-    m22 = a[10];
-    m23 = a[11];
-    m30 = a[12];
-    m31 = a[13];
-    m32 = a[14];
-    m33 = a[15];
-  }
   /**
    * Modifies the translational components of this matrix to the values of the
    * Vector3f argument; the other values of this matrix are not modified.
@@ -319,13 +276,6 @@ public class M4d extends M34d {
     m23 = trans.z;
   }
 
-  public void setTranslation(T3 trans) {
-    m03 = trans.x;
-    m13 = trans.y;
-    m23 = trans.z;
-  }
-
-
   /**
    * Sets the specified element of this matrix4f to the value provided.
    * 
@@ -336,6 +286,7 @@ public class M4d extends M34d {
    * @param v
    *        the new value
    */
+  @Override
   public void setElement(int row, int col, double v) {
     if (row < 3 && col < 3) {
       set33(row, col, v);
@@ -379,6 +330,7 @@ public class M4d extends M34d {
    *        the column number to be retrieved (zero indexed)
    * @return the value at the indexed element
    */
+  @Override
   public double getElement(int row, int col) {
     if (row < 3 && col < 3)
       return get33(row, col);
@@ -653,12 +605,12 @@ public class M4d extends M34d {
     m23 += pt.z;
   }
 
-  public void add(T3 pt) {
-    m03 += pt.x;
-    m13 += pt.y;
-    m23 += pt.z;
-  }
-
+//  public void add(T3d pt) {
+//    m03 += pt.x;
+//    m13 += pt.y;
+//    m23 += pt.z;
+//  }
+//
   /**
    * Sets the value of this matrix to its transpose.
    */
@@ -847,9 +799,9 @@ public class M4d extends M34d {
     transform2(vec, vec);
   }
 
-  public void transform(T4 vec) {
-    transform2(vec, vec);
-  }
+//  public void transform(T4d vec) {
+//    transform2(vec, vec);
+//  }
 
   /**
    * Transform the vector vec using this Matrix4f and place the result into
@@ -868,14 +820,6 @@ public class M4d extends M34d {
         * vec.z + m33 * vec.w);
   }
 
-  public void transform2(T4 vec, T4 vecOut) {
-    // alias-safe
-    vecOut.set4((float) (m00 * vec.x + m01 * vec.y + m02 * vec.z + m03 * vec.w),
-        (float) (m10 * vec.x + m11 * vec.y + m12 * vec.z + m13 * vec.w),
-        (float) (m20 * vec.x + m21 * vec.y + m22 * vec.z + m23 * vec.w),
-        (float) (m30 * vec.x + m31 * vec.y + m32 * vec.z + m33 * vec.w));
-  }
-
   /**
    * Transforms the point parameter with this Matrix4f and places the result
    * back into point. The fourth element of the point input parameter is assumed
@@ -888,16 +832,6 @@ public class M4d extends M34d {
     rotTrans2(point, point);
   }
 
-  public void rotTrans(T3 point) {
-    rotTrans2(point, point);
-  }
-
-  public T3 rotTrans2(T3 point, T3 ret) {
-    ret.set((float) (m00 * point.x + m01 * point.y + m02 * point.z + m03),
-        (float) (m10 * point.x + m11 * point.y + m12 * point.z + m13),
-        (float) (m20 * point.x + m21 * point.y + m22 * point.z + m23));
-    return ret;
-  }
   /**
    * Transforms the point parameter with this Matrix4f and places the result
    * into pointOut. The fourth element of the point input parameter is assumed to
@@ -1049,9 +983,10 @@ public class M4d extends M34d {
   private double rnd(double n, double f) {
     return (Math.abs(n) < f ? 0 : n);
   }
-  public void getTranslation(V3 trans) {
-      trans.x = (float) m03;
-      trans.y = (float) m13;
-      trans.z = (float) m23;
-  }
+
+//  public void getTranslation(V3d trans) {
+//      trans.x =  m03;
+//      trans.y =  m13;
+//      trans.z =  m23;
+//  }
 }

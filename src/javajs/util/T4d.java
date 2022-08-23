@@ -95,9 +95,9 @@ public abstract class T4d extends T3d {
    */
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof T4))
+    if (!(o instanceof T4d))
       return false;
-    T4 t = (T4) o;
+    T4d t = (T4d) o;
     return (this.x == t.x && this.y == t.y && this.z == t.z && this.w == t.w);
   }
 

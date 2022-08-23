@@ -181,9 +181,9 @@ public class MessagePackReader {
       if (array == null) {
         switch (b) {
         case FLOAT32:
-          return Float.valueOf(doc.readFloat());
+          return Double.valueOf(doc.readFloat());
         case FLOAT64:
-          return Float.valueOf((float) doc.readDouble());
+          return Double.valueOf(doc.readDouble());
         case UINT8:
           return Integer.valueOf(doc.readUInt8());
         case UINT16:
@@ -210,10 +210,10 @@ public class MessagePackReader {
       } else {
         switch (b) {
         case FLOAT32:
-          ((float[]) array)[pt] = doc.readFloat();
+          ((double[]) array)[pt] = doc.readFloat();
           break;
         case FLOAT64:
-          ((float[]) array)[pt] = (float) doc.readDouble();
+          ((double[]) array)[pt] = doc.readDouble();
           break;
         case UINT8:
           ((int[]) array)[pt] = doc.readUInt8();
@@ -268,8 +268,12 @@ public class MessagePackReader {
         a[0] = ((Integer) v).intValue();
         v = a;
       } else if (v instanceof Float) {
-        float[] a = new float[n];
-        a[0] = ((Float) v).floatValue();
+        double[] a = new double[n];
+        a[0] = ((Float) v).doubleValue();
+        v = a;
+      } else if (v instanceof Double) {
+        double[] a = new double[n];
+        a[0] = ((Double) v).doubleValue();
         v = a;
       } else if (v instanceof String) {
         String[] a = new String[n];
@@ -366,10 +370,10 @@ public class MessagePackReader {
    * @param divisor
    * @return array of floats
    */
-  public static float[] getFloats(byte[] b, int n, float divisor) {
+  public static double[] getFloats(byte[] b, int n, float divisor) {
     if (b == null)
       return null;
-    float[] a = new float[n];
+    double[] a = new double[n];
     try {
       switch ((b.length - 12) / n) {  
       case 2:
@@ -522,10 +526,10 @@ public class MessagePackReader {
    * @param divisor
    * @return array of floats
    */
-  public static float[] rldecodef(byte[] b, int n, float divisor) {
+  public static double[] rldecodef(byte[] b, int n, float divisor) {
     if (b == null)
       return null;
-    float[] ret = new float[n];
+    double[] ret = new double[n];
     for (int i = 0, pt = 3; i < n;) {
       int val = BC.bytesToInt(b, (pt++) << 2, true);
       for (int j = BC.bytesToInt(b, (pt++) << 2, true); --j >= 0;)
@@ -545,10 +549,10 @@ public class MessagePackReader {
    * @param divisor
    * @return array of floats
    */
-  public static float[] unpack16Deltaf(byte[] b, int n, float divisor) {
+  public static double[] unpack16Deltaf(byte[] b, int n, float divisor) {
     if (b == null)
       return null;
-    float[] ret = new float[n];
+    double[] ret = new double[n];
     for (int i = 0, pt = 6, val = 0, buf = 0; i < n;) {
       int diff = BC.bytesToShort(b, (pt++) << 1, true);
       if (diff == Short.MAX_VALUE || diff == Short.MIN_VALUE) {
@@ -575,10 +579,10 @@ public class MessagePackReader {
    * @param divisor 
    * @return array of floats
    */
-  public static float[] unpackf(byte[] b, int nBytes, int n, float divisor) {
+  public static double[] unpackf(byte[] b, int nBytes, int n, float divisor) {
     if (b == null)
       return null;
-    float[] ret = new float[n];
+    double[] ret = new double[n];
     switch (nBytes) {
     case 1:
       for (int i = 0, pt = 12, offset = 0; i < n;) {

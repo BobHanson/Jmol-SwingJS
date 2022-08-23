@@ -121,7 +121,7 @@ public abstract class T3d implements JSONEncodable, Serializable {
     z += t.z;
   }
   
-  public void addF(T3 t) {
+  public void addF(T3d t) {
     x += t.x;
     y += t.y;
     z += t.z;
@@ -195,6 +195,16 @@ public abstract class T3d implements JSONEncodable, Serializable {
   }
 
   /**
+   * {x*p.x, y*p.y, z*p.z)  used for three-way scaling
+   * 
+   * @param p
+   */
+  public final void scaleT(T3d p) {
+    x *= p.x;
+    y *= p.y;
+    z *= p.z;
+  }
+  /**
    * Add {a b c}
    * 
    * @param a
@@ -248,9 +258,9 @@ public abstract class T3d implements JSONEncodable, Serializable {
    * @param b
    */
   public void ave(T3d a, T3d b) {
-    x = (a.x + b.x) / 2f;
-    y = (a.y + b.y) / 2f;
-    z = (a.z + b.z) / 2f; 
+    x = (a.x + b.x) / 2d;
+    y = (a.y + b.y) / 2d;
+    z = (a.z + b.z) / 2d; 
   }
 
   /**
@@ -366,13 +376,13 @@ public abstract class T3d implements JSONEncodable, Serializable {
     return "[" + x + "," + y + "," + z + "]";
   }
 
-  public T3d setP(T3 t) {
+  public T3d setP(T3d t) {
     set(t.x, t.y, t.z);
     return this;
   }
 
-  public T3 putP(T3 t) {
-    t.set((float) x, (float) y, (float) z);
+  public T3d putP(T3d t) {
+    t.set(x, y, z);
     return t;
   }
   
